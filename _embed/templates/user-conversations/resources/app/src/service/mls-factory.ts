@@ -22,23 +22,16 @@ export async function MLSFactory(
 	directory: Directory,
 	actor: APActor,
 	clientConfig: ClientConfig,
-	clientName: string
+	clientName: string,
 ): Promise<MLS> {
 	//
-
-	console.log("MLSFactory: Starting MLS Factory")
-
 	// Use MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519 (ID: 1)
 	// Using nobleCryptoProvider for compatibility (pure JS implementation)
 	const cipherSuiteName = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519"
 	const cipherSuite = await nobleCryptoProvider.getCiphersuiteImpl(getCiphersuiteFromName(cipherSuiteName))
 
-	console.log("MLSFactory: loaded cipher suite", cipherSuiteName)
-
 	// Try to load the KeyPackage from the IndexedDB database
 	var dbKeyPackage = await database.loadKeyPackage()
-
-	console.log("MLSFactory: loaded dbKeyPackage", dbKeyPackage)
 
 	// Create a new KeyPackage if none exists
 	if (dbKeyPackage == undefined) {
@@ -54,30 +47,18 @@ export async function MLSFactory(
 				identity: new TextEncoder().encode(actor.id),
 			}
 
-			console.log("Generating Key package for actor:", actor)
-
-			console.log(
-				"Ima break??",
-				generateKeyPackage,
-				credential,
-				defaultCapabilities,
-				defaultLifetime,
-				cipherSuite
-			)
 			// Generate initial key package for this user
 			var keyPackageResult = await generateKeyPackage(
 				credential,
 				defaultCapabilities(),
 				defaultLifetime,
 				[],
-				cipherSuite
+				cipherSuite,
 			)
 		} catch (error) {
 			console.error("Error generating KeyPackage:", error)
 			throw error
 		}
-
-		console.log("Generated Key package", keyPackageResult)
 
 		// Publish the KeyPackage to the server
 		const apKeyPackage = NewAPKeyPackage(clientName, actor.id, keyPackageResult.publicPackage)
@@ -109,7 +90,7 @@ export async function MLSFactory(
 		cipherSuite,
 		dbKeyPackage.publicKeyPackage,
 		dbKeyPackage.privateKeyPackage,
-		actor
+		actor,
 	)
 }
 
@@ -117,7 +98,7 @@ export async function MLSFactory(
 // Using nobleCryptoProvider for compatibility (pure JS implementation)
 // Other implementations can be added in the future.
 async function makeCipherSuite(
-	cipherSuiteName: "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519"
+	cipherSuiteName: "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519",
 ): Promise<CiphersuiteImpl> {
 	const cs = getCiphersuiteFromName(cipherSuiteName)
 	return await nobleCryptoProvider.getCiphersuiteImpl(cs)

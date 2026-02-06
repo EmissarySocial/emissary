@@ -9,7 +9,6 @@ type NewConversationVnode = Vnode<NewConversationArgs, NewConversationState>
 
 interface NewConversationArgs {
 	controller: Controller
-	modal: string
 	close: () => void
 }
 
@@ -29,11 +28,6 @@ export class NewConversation {
 	}
 
 	view(vnode: NewConversationVnode) {
-		// RULE: Only display when state is correct
-		if (vnode.attrs.modal != "NEW-CONVERSATION") {
-			return null
-		}
-
 		return (
 			<Modal close={vnode.attrs.close}>
 				<form onsubmit={(event: SubmitEvent) => this.onsubmit(event, vnode)}>

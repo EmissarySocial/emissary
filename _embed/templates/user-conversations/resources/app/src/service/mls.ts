@@ -1,19 +1,26 @@
-import {type APActor} from "../model/ap-actor"
-import {type Group} from "../model/group"
-import {createCommit, getCiphersuiteImpl} from "ts-mls"
+// MLS functions
+import {createCommit, type MlsFramedMessage} from "ts-mls"
 import {createGroup} from "ts-mls"
+import {createApplicationMessage} from "ts-mls"
+import {defaultProposalTypes} from "ts-mls"
+import {unsafeTestingAuthenticationService} from "ts-mls"
+
+// MLS Types
 import {type Proposal} from "ts-mls"
 import {type PrivateKeyPackage} from "ts-mls"
 import {type KeyPackage} from "ts-mls"
-import type {MLSMessage} from "ts-mls/message.js"
-import {type Welcome} from "ts-mls"
+import {type MlsContext} from "ts-mls"
+import {type MlsWelcomeMessage} from "ts-mls"
 import {type PrivateMessage} from "ts-mls"
 import {type CiphersuiteImpl} from "ts-mls"
 import {type ClientConfig} from "ts-mls"
 
-import {type APKeyPackage, NewAPKeyPackage} from "../model/ap-keypackage"
-import type {DBMessage} from "../model/db-message"
-import type {DBKeyPackage} from "../model/db-keypackage"
+// Application Types
+import {type APActor} from "../model/ap-actor"
+import {type Group} from "../model/group"
+import {type APKeyPackage} from "../model/ap-keypackage"
+import {type DBMessage} from "../model/db-message"
+import {type DBKeyPackage} from "../model/db-keypackage"
 
 // IDatabase wraps all of the methods that the MLS service
 // uses to store group state.
@@ -33,9 +40,9 @@ interface IDatabase {
 // IDelivery wraps all of the methods that the MLS service
 // uses to send messages.
 interface IDelivery {
-	sendWelcome(recipients: string[], welcome: Welcome): Promise<void>
-	sendCommit(recipients: string[], commit: MLSMessage): Promise<void>
-	sendPrivateMessage(recipients: string[], privateMessage: PrivateMessage): Promise<void>
+	sendWelcome(recipients: string[], welcome: MlsWelcomeMessage): Promise<void>
+	sendCommit(recipients: string[], commit: MlsFramedMessage): Promise<void>
+	sendPrivateMessage(recipients: string[], privateMessage: MlsFramedMessage): Promise<void>
 }
 
 // IDirectory wraps all of the methods that the MLS service
@@ -69,7 +76,7 @@ export class MLS {
 		cipherSuite: CiphersuiteImpl,
 		publicKeyPackage: KeyPackage,
 		privateKeyPackage: PrivateKeyPackage,
-		actor: APActor
+		actor: APActor,
 	) {
 		this.#database = database
 		this.#delivery = delivery
@@ -83,23 +90,21 @@ export class MLS {
 	}
 
 	// createGroup creates a new MLS group and saves it to the database
-	public async createGroup(): Promise<Group> {
+	async createGroup(): Promise<Group> {
 		const groupID = crypto.randomUUID()
 		const groupIDBytes = new TextEncoder().encode(groupID)
 
 		// Create group using ts-mls
-		const clientState = await createGroup(
-			groupIDBytes,
-			this.#publicKeyPackage!,
-			this.#privateKeyPackage!,
-			[],
-			this.#cipherSuite,
-			this.#clientConfig
-		)
+		const clientState = await createGroup({
+			context: this.#context(),
+			groupId: groupIDBytes,
+			keyPackage: this.#publicKeyPackage,
+			privateKeyPackage: this.#privateKeyPackage,
+		})
 
 		// Populate a Group record
 		const result: Group = {
-			groupID: groupID,
+			id: groupID,
 			members: [this.#actor.id],
 			name: "New Group",
 			clientState: clientState,
@@ -117,11 +122,8 @@ export class MLS {
 
 	// addGroupMembers updates the group state.  It sends a Commit
 	// message to existing members, and a Welcome message to new members,
-	public async addGroupMembers(groupID: string, newMembers: string[]) {
+	async addGroupMembers(groupID: string, newMembers: string[]) {
 		//
-
-		console.log("mls.addGroupMembers: Adding members", newMembers, "to group", groupID)
-
 		// load the group from the database
 		const group = await this.#database.loadGroup(groupID)
 		const currentMembers = group.members
@@ -129,25 +131,20 @@ export class MLS {
 		// Look up all KeyPackages for the new Members
 		const keyPackages = await this.#directory.getKeyPackages(newMembers)
 
-		console.log("mls.addGroupMembers: KeyPackages", keyPackages)
-
 		// Create add proposals for each key package
 		const addProposals: Proposal[] = keyPackages.map((keyPackage) => ({
-			proposalType: "add",
+			proposalType: defaultProposalTypes.add,
 			add: {
 				keyPackage: keyPackage,
 			},
 		}))
 
-		console.log("mls.addGroupMembers: Add Proposals", addProposals)
-
 		// Create commit with add proposals
-		const commitResult = await createCommit(
-			{state: group.clientState, cipherSuite: this.#cipherSuite},
-			{extraProposals: addProposals}
-		)
-
-		console.log("mls.addGroupMembers: Commit Result", commitResult)
+		const commitResult = await createCommit({
+			context: this.#context(),
+			state: group.clientState,
+			extraProposals: addProposals,
+		})
 
 		// (async) Send commit to existing members
 		this.#delivery.sendCommit(currentMembers, commitResult.commit)
@@ -159,7 +156,6 @@ export class MLS {
 		group.clientState = commitResult.newState
 		group.members = currentMembers.concat(newMembers)
 		await this.#database.saveGroup(group)
-		console.log(group)
 
 		// KEEPING THIS (DEAD?) CODE FOR NOW....
 		// How will we use this rachet tree info??
@@ -169,19 +165,57 @@ export class MLS {
 		// const strippedTree = stripTrailingNulls(ratchetTreeArray)
 	}
 
-	public async sendGroupMessage(groupID: string, plaintext: string): Promise<void> {
-		const message: DBMessage = {
-			messageID: crypto.randomUUID(),
-			groupID: groupID,
-			senderID: this.#actor.id,
+	async sendGroupMessage(group: string, plaintext: string): Promise<void> {
+		//
+		// Encrypt the message using the current group state
+		// (This is a placeholder - the actual encryption logic will depend on the ts-mls API)
+		const mlsGroup = await this.#database.loadGroup(group)
+
+		// Create the message object as JSON-LD
+		const messageObject = {
+			"@context": "https://www.w3.org/ns/activitystreams",
+			type: "Note",
+			content: plaintext,
+		}
+
+		// Encrypt the message using MLS
+		const messageText = JSON.stringify(messageObject)
+		const messageBytes = new TextEncoder().encode(messageText)
+		const result = await createApplicationMessage({
+			context: this.#context(),
+			state: mlsGroup.clientState,
+			message: messageBytes,
+		})
+
+		// Send the message via the Delivery service
+		this.#delivery.sendPrivateMessage(mlsGroup.members, result.message)
+
+		// update the Group with the new group state
+		mlsGroup.clientState = result.newState
+		mlsGroup.updateDate = Date.now()
+		await this.#database.saveGroup(mlsGroup)
+
+		// Create a new Message object
+		const dbMessage: DBMessage = {
+			id: crypto.randomUUID(),
+			group: group,
+			sender: this.#actor.id,
 			plaintext: plaintext,
-			ciphertext: new Uint8Array(),
 			createDate: Date.now(),
 		}
-		await this.#database.saveMessage(message)
+
+		// Save the message to the database
+		await this.#database.saveMessage(dbMessage)
 	}
 
-	public encryptMessage(): string {
+	encryptMessage(): string {
 		return ""
+	}
+
+	#context(): MlsContext {
+		return {
+			cipherSuite: this.#cipherSuite,
+			authService: unsafeTestingAuthenticationService,
+		}
 	}
 }

@@ -5,7 +5,6 @@ import {type Group} from "../model/group"
 import {type DBGroup} from "../model/db-group"
 import {type DBMessage} from "../model/db-message"
 import type {DBKeyPackage} from "../model/db-keypackage"
-import {decodeGroupState, encodeGroupState} from "ts-mls"
 import {type ClientConfig} from "ts-mls/clientConfig.js"
 import {type ClientState} from "ts-mls"
 
@@ -14,20 +13,33 @@ interface Schema extends DBSchema {
 	config: {
 		key: string
 		value: Config
+		indexes: {
+			id: string
+		}
 	}
 	group: {
 		key: string
 		value: DBGroup
+		indexes: {
+			id: string
+		}
 	}
 
 	keyPackage: {
 		key: string
 		value: DBKeyPackage
+		indexes: {
+			id: string
+		}
 	}
 
 	message: {
 		key: string
 		value: DBMessage
+		indexes: {
+			id: string
+			group: string
+		}
 	}
 }
 
@@ -36,9 +48,11 @@ export async function NewIndexedDB(): Promise<IDBPDatabase<Schema>> {
 		upgrade(db, oldVersion, newVersion) {
 			console.log("Upgrading database from version", oldVersion, "to:", newVersion)
 			db.createObjectStore("config", {keyPath: "id"})
-			db.createObjectStore("group", {keyPath: "groupID"})
+			db.createObjectStore("group", {keyPath: "id"})
 			db.createObjectStore("keyPackage", {keyPath: "id"})
-			db.createObjectStore("message", {keyPath: "messageID"})
+
+			const messages = db.createObjectStore("message", {keyPath: "id"})
+			messages.createIndex("group", "group", {unique: false})
 		},
 	})
 }
@@ -79,14 +93,24 @@ export class Database {
 	// Groups
 	/////////////////////////////////////////////
 
+	// allGroups returns all groups from the database, sorted by updateDate descending
+	async allGroups(): Promise<DBGroup[]> {
+		//
+		// List all groups, sorted by updateDate descending
+		var groups = await this.#db.getAll("group")
+		groups.sort((a, b) => b.updateDate - a.updateDate)
+		return groups
+	}
+
 	// saveGroup saves a group to the database
 	async saveGroup(group: Group) {
+		//
 		// Encode the group (with serialized clientState)
 		const dbGroup: DBGroup = {
-			groupID: group.groupID,
+			id: group.id,
 			members: group.members,
 			name: group.name,
-			clientState: encodeGroupState(group.clientState),
+			clientState: group.clientState,
 			createDate: group.createDate,
 			updateDate: group.updateDate,
 			readDate: group.readDate,
@@ -107,10 +131,10 @@ export class Database {
 
 		// Create an in-memory group record
 		const result: Group = {
-			groupID: dbGroup.groupID,
+			id: dbGroup.id,
 			members: dbGroup.members,
 			name: dbGroup.name,
-			clientState: this.decodeClientState(dbGroup.clientState),
+			clientState: dbGroup.clientState,
 			createDate: dbGroup.createDate,
 			updateDate: dbGroup.updateDate,
 			readDate: dbGroup.readDate,
@@ -118,6 +142,21 @@ export class Database {
 
 		// Success?
 		return result
+	}
+
+	// deleteGroup removes a group from the database
+	async deleteGroup(group: string) {
+		//
+		// List all messages in the group
+		const messages = await this.#db.getAllKeysFromIndex("message", "group", group)
+
+		// Delete messages in the group
+		for (const message of messages) {
+			await this.#db.delete("message", message)
+		}
+
+		// Delete the group itself
+		await this.#db.delete("group", group)
 	}
 
 	/////////////////////////////////////////////
@@ -151,21 +190,9 @@ export class Database {
 		return message
 	}
 
-	/////////////////////////////////////////////
-	// Utilities
-	/////////////////////////////////////////////
-
-	decodeClientState(serialized: Uint8Array): ClientState {
-		// Decode the group (with deserialized clientState)
-		const decodedGroupState = decodeGroupState(serialized, 0)
-
-		if (decodedGroupState == null) {
-			throw new Error("Unable to decode group state")
-		}
-
-		var clientState: any = decodedGroupState[0]
-		clientState.clientConfig = this.#clientConfig
-
-		return clientState
+	async listMessages(group: string): Promise<DBMessage[]> {
+		var messages = await this.#db.getAllFromIndex("message", "group", group)
+		messages.sort((a, b) => a.createDate - b.createDate)
+		return messages
 	}
 }

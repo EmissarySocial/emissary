@@ -1,5 +1,9 @@
 import {type KeyPackage} from "ts-mls"
-import {decodeMlsMessage} from "ts-mls"
+import {encode} from "ts-mls"
+import {decode} from "ts-mls"
+import {mlsMessageEncoder} from "ts-mls"
+import {mlsMessageDecoder} from "ts-mls"
+import {wireformats} from "ts-mls"
 import {type APActor} from "../model/ap-actor"
 import {type APKeyPackage} from "../model/ap-keypackage"
 import {loadActivityStream} from "./network"
@@ -20,24 +24,30 @@ export class Directory {
 		var result: KeyPackage[] = []
 
 		for (const actorID of actorIDs) {
-			console.log("getKeyPackages: Loading KeyPackages for: " + actorID)
 			const actor = (await loadActivityStream(actorID)) as APActor
-			console.log("actor:", actor)
 			const rangeKeyPackages = rangeCollection<APKeyPackage>(actor.keyPackages)
 
 			for await (const item of rangeKeyPackages) {
-				console.log("KeyPackage item", item)
 				const contentBytes = base64ToUint8Array(item.content)
-				const mlsMessage = decodeMlsMessage(contentBytes, 0)![0]
+				console.log("Getting KeyPackage:", item.content, contentBytes)
 
-				if (mlsMessage.wireformat != "mls_key_package") {
-					throw new Error("Invalid KeyPackage message")
+				const decodedKeyPackage = decode(mlsMessageDecoder, contentBytes)
+
+				if (decodedKeyPackage == undefined) {
+					console.warn("Failed to decode KeyPackage for item:", item)
+					continue
 				}
 
-				result.push(mlsMessage.keyPackage)
+				if (decodedKeyPackage.wireformat !== wireformats.mls_key_package) {
+					console.warn("Unexpected wireformat for KeyPackage:", decodedKeyPackage.wireformat)
+					continue
+				}
+
+				result.push(decodedKeyPackage.keyPackage)
 			}
 		}
 
+		console.log("Available KeyPackages:", result)
 		return result
 	}
 
@@ -66,8 +76,6 @@ export class Directory {
 			body: JSON.stringify(activity),
 			credentials: "include",
 		})
-
-		console.log("directory.send", response)
 
 		if (!response.ok) {
 			throw new Error(`Failed to fetch ${outbox}: ${response.status} ${response.statusText}`)

@@ -3,49 +3,36 @@
  ******************************************/
 
 .app {
-	display:flex;
-	flex-direction:row;
-	align-items:stretch;
-    background-color: var(--page-background);
-    padding: 0px;
-    position:relative;
-	line-height:150%;
-	height:100%;
-	width:100%;
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+	background-color: var(--page-background);
+	padding: 0px;
+	position: relative;
+	line-height: 150%;
+	height: 100%;
+	width: 100%;
 }
 
 #app-sidebar {
 	flex-grow: 0;
-	flex-shrink:0;
+	flex-shrink: 0;
 	box-sizing: border-box;
-	background-color:var(--gray04);
-	border-right:solid 1px var(--gray15);
-	color:var(--gray80);
+	background-color: var(--gray04);
+	border-right: solid 1px var(--gray15);
+	color: var(--gray80);
 	view-transition-name: app-sidebar;
-
-	&.expanded {
-		width:25%;
-		padding: 12px 8px;
-		min-width:160px;
-		max-width:240px;
-	}
-
-	&.collapsed {
-		width:auto;
-		padding: 12px 4px;
-
-		& .menu-item {
-			padding:8px 16px;
-		}
-	}
+	width: 20%;
+	padding: 12px 8px;
+	min-width: 160px;
+	max-width: 200px;
 }
 
-
 #app-sidebar .menu-item {
-	display:block;
+	display: block;
 	padding: 4px 32px 4px 8px;
-	border-radius:4px;
-	color:var(--gray80);
+	border-radius: 4px;
+	color: var(--gray80);
 }
 
 #app-sidebar .menu-item:hover {
@@ -54,65 +41,67 @@
 }
 
 #app-sidebar .menu-item.link {
-	color:var(--link-color);
+	color: var(--link-color);
 }
 
 #app-sidebar .menu-item.link:hover {
-	color:var(--link-color-hover);
+	color: var(--link-color-hover);
 }
 
 #app-sidebar .selected {
-	font-weight:bold;
+	font-weight: bold;
 	color: var(--black);
 }
 
 #app-sidebar button {
-	margin-right:0px;
+	margin-right: 0px;
 }
 
 .app-content {
-	flex-grow:1;
-	flex-shrink:1;
-	padding:0px 12px 24px 12px;
-	position:relative;
-	container-type:inline;
-	overflow-x:hidden;
-	overflow-y:auto;
-	overscroll-behavior:none;
+	flex-grow: 1;
+	flex-shrink: 1;
+	padding: 0px 12px 24px 12px;
+	position: relative;
+	container-type: inline;
+	overflow-x: hidden;
+	overflow-y: auto;
+	overscroll-behavior: none;
 	view-transition-name: app-content;
 }
 
 .app.page .app-content {
-	view-transition-name:app-content;
-	padding-top:12px;
+	view-transition-name: app-content;
+	padding-top: 12px;
 }
 
 .pill {
-	position:relative;
-	top:-2px;
-	padding:2px 8px;
-	border-radius:1em;
-	background-color:var(--gray15);
-	color:var(--gray80);
-	font-size:12px;
-	font-weight:400;
+	position: relative;
+	top: -2px;
+	padding: 2px 8px;
+	border-radius: 1em;
+	background-color: var(--gray15);
+	color: var(--gray80);
+	font-size: 12px;
+	font-weight: 400;
 	vertical-align: middle;
 }
 
 .pill.pill-red {
-	background-color:var(--red50);
-	color:var(--white);
+	background-color: var(--red50);
+	color: var(--white);
 }
 
 .pill.pill-blue {
-	background-color:var(--blue60);
-	color:var(--white);
+	background-color: var(--blue60);
+	color: var(--white);
 }
 
 button > .pill,
 .button > .pill {
-	position:unset;
-	background-color:var(--gray20);
+	position: unset;
+	background-color: var(--gray20);
 }
 
-i.bi {min-width:calc(1.5 * var(--rhythm))px;}
+i.bi {
+	min-width: calc(1.5 * var(--rhythm)) px;
+}

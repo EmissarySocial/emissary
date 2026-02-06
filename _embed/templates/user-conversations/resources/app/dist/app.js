@@ -1064,9 +1064,9 @@
         var path = template.slice(0, pathEnd);
         var query = {};
         Object.assign(query, params);
-        var resolved = path.replace(/:([^\/\.-]+)(\.{3})?/g, function(m10, key, variadic) {
+        var resolved = path.replace(/:([^\/\.-]+)(\.{3})?/g, function(m11, key, variadic) {
           delete query[key];
-          if (params[key] == null) return m10;
+          if (params[key] == null) return m11;
           return variadic ? params[key] : encodeURIComponent(String(params[key]));
         });
         var newQueryIndex = resolved.indexOf("?");
@@ -1343,8 +1343,8 @@
           // don't also accidentally escape `-` and make it harder to detect it to
           // ban it from template parameters.
           /:([^\/.-]+)(\.{3}|\.(?!\.)|-)?|[\\^$*+.()|\[\]{}]/g,
-          function(m10, key, extra) {
-            if (key == null) return "\\" + m10;
+          function(m11, key, extra) {
+            if (key == null) return "\\" + m11;
             keys.push({ k: key, r: extra === "..." });
             if (extra === "...") return "(.*)";
             if (extra === ".") return "([^/]+)\\.";
@@ -1597,26 +1597,26 @@
       var mountRedraw = require_mount_redraw2();
       var request2 = require_request2();
       var router = require_route();
-      var m10 = function m11() {
+      var m11 = function m12() {
         return hyperscript.apply(this, arguments);
       };
-      m10.m = hyperscript;
-      m10.trust = hyperscript.trust;
-      m10.fragment = hyperscript.fragment;
-      m10.Fragment = "[";
-      m10.mount = mountRedraw.mount;
-      m10.route = router;
-      m10.render = require_render2();
-      m10.redraw = mountRedraw.redraw;
-      m10.request = request2.request;
-      m10.parseQueryString = require_parse();
-      m10.buildQueryString = require_build();
-      m10.parsePathname = require_parse2();
-      m10.buildPathname = require_build2();
-      m10.vnode = require_vnode();
-      m10.censor = require_censor();
-      m10.domFor = require_domFor();
-      module.exports = m10;
+      m11.m = hyperscript;
+      m11.trust = hyperscript.trust;
+      m11.fragment = hyperscript.fragment;
+      m11.Fragment = "[";
+      m11.mount = mountRedraw.mount;
+      m11.route = router;
+      m11.render = require_render2();
+      m11.redraw = mountRedraw.redraw;
+      m11.request = request2.request;
+      m11.parseQueryString = require_parse();
+      m11.buildQueryString = require_build();
+      m11.parsePathname = require_parse2();
+      m11.buildPathname = require_build2();
+      m11.vnode = require_vnode();
+      m11.censor = require_censor();
+      m11.domFor = require_domFor();
+      module.exports = m11;
     }
   });
 
@@ -2556,9 +2556,9 @@
     while (a !== _0n3) {
       const q = b / a;
       const r = b % a;
-      const m10 = x - u * q;
+      const m11 = x - u * q;
       const n = y - v * q;
-      b = a, a = r, x = u, y = v, u = m10, v = n;
+      b = a, a = r, x = u, y = v, u = m11, v = n;
     }
     const gcd = b;
     if (gcd !== _1n3)
@@ -3789,13 +3789,13 @@
       k: "number",
       hash: "function"
     });
-    const { p, k, m: m10, hash, expand, DST } = options;
+    const { p, k, m: m11, hash, expand, DST } = options;
     asafenumber(hash.outputLen, "valid hash");
     abytes2(msg);
     asafenumber(count);
     const log2p = p.toString(2).length;
     const L = Math.ceil((log2p + k) / 8);
-    const len_in_bytes = count * m10 * L;
+    const len_in_bytes = count * m11 * L;
     let prb;
     if (expand === "xmd") {
       prb = expand_message_xmd(msg, DST, len_in_bytes, hash);
@@ -3808,9 +3808,9 @@
     }
     const u = new Array(count);
     for (let i = 0; i < count; i++) {
-      const e = new Array(m10);
-      for (let j = 0; j < m10; j++) {
-        const elm_offset = L * (j + i * m10);
+      const e = new Array(m11);
+      for (let j = 0; j < m11; j++) {
+        const elm_offset = L * (j + i * m11);
         const tv = prb.subarray(elm_offset, elm_offset + L);
         e[j] = mod2(os2ip(tv), p);
       }
@@ -4172,8 +4172,8 @@
       evaluate: (secretKey, input) => evaluate(ctxVOPRF, secretKey, input)
     };
     const poprf = (info) => {
-      const m10 = hashToScalarPrefixed(encode2("Info", info), ctxPOPRF);
-      const T = Point.BASE.multiply(m10);
+      const m11 = hashToScalarPrefixed(encode2("Info", info), ctxPOPRF);
+      const T = Point.BASE.multiply(m11);
       return {
         generateKeyPair,
         deriveKeyPair: (seed, keyInfo) => deriveKeyPair(ctxPOPRF, seed, keyInfo),
@@ -4197,7 +4197,7 @@
           if (!Array.isArray(blinded))
             throw new Error("expected array");
           const skS = Fn3.fromBytes(secretKey);
-          const t = Fn3.add(skS, m10);
+          const t = Fn3.add(skS, m11);
           const invT = Fn3.inv(t);
           const blindedPoints = blinded.map(Point.fromBytes);
           const evalPoints = blindedPoints.map((i) => i.multiply(invT));
@@ -4228,7 +4228,7 @@
           const inputPoint = hashToGroup(input, ctxPOPRF);
           if (inputPoint.equals(Point.ZERO))
             throw new Error("Input point at infinity");
-          const t = Fn3.add(skS, m10);
+          const t = Fn3.add(skS, m11);
           const invT = Fn3.inv(t);
           const unblinded = inputPoint.multiply(invT).toBytes();
           return hashInput(input, info, unblinded);
@@ -6039,7 +6039,7 @@
         seedArgs.push(abytes2(e, void 0, "extraEntropy"));
       }
       const seed = concatBytes(...seedArgs);
-      const m10 = h1int;
+      const m11 = h1int;
       function k2sig(kBytes) {
         const k = bits2int(kBytes);
         if (!Fn3.isValidNot0(k))
@@ -6049,7 +6049,7 @@
         const r = Fn3.create(q.x);
         if (r === _0n9)
           return;
-        const s = Fn3.create(ik * Fn3.create(m10 + r * d));
+        const s = Fn3.create(ik * Fn3.create(m11 + r * d));
         if (s === _0n9)
           return;
         let recovery = (q.x === r ? 0 : 2) | Number(q.y & _1n10);
@@ -6125,8 +6125,8 @@
       init_modular();
       divNearest = (num, den) => (num + (num >= 0 ? den : -den) / _2n8) / den;
       DERErr = class extends Error {
-        constructor(m10 = "") {
-          super(m10);
+        constructor(m11 = "") {
+          super(m11);
         }
       };
       DER = {
@@ -7240,14 +7240,7 @@
   });
 
   // src/app.tsx
-  var import_mithril14 = __toESM(require_mithril(), 1);
-
-  // node_modules/ts-mls/dist/src/authenticationService.js
-  var defaultAuthenticationService = {
-    async validateCredential(_credential, _signaturePublicKey) {
-      return true;
-    }
-  };
+  var import_mithril16 = __toESM(require_mithril(), 1);
 
   // node_modules/ts-mls/dist/src/util/constantTimeCompare.js
   function constantTimeEqual(a, b) {
@@ -7279,8 +7272,8 @@
 
   // node_modules/ts-mls/dist/src/lifetimeConfig.js
   var defaultLifetimeConfig = {
-    maximumTotalLifetime: 2628000n,
-    // 1 month
+    maximumTotalLifetime: 10368000n,
+    // 4 months
     validateLifetimeOnReceive: false
   };
 
@@ -7298,11 +7291,71 @@
     keyRetentionConfig: defaultKeyRetentionConfig,
     lifetimeConfig: defaultLifetimeConfig,
     keyPackageEqualityConfig: defaultKeyPackageEqualityConfig,
-    paddingConfig: defaultPaddingConfig,
-    authService: defaultAuthenticationService
+    paddingConfig: defaultPaddingConfig
+  };
+
+  // node_modules/ts-mls/dist/src/codec/number.js
+  var uint8Encoder = (n) => [
+    1,
+    (offset, buffer) => {
+      const view = new DataView(buffer);
+      view.setUint8(offset, n);
+    }
+  ];
+  var uint8Decoder = (b, offset) => {
+    const value = b.at(offset);
+    return value !== void 0 ? [value, 1] : void 0;
+  };
+  var uint16Encoder = (n) => [
+    2,
+    (offset, buffer) => {
+      const view = new DataView(buffer);
+      view.setUint16(offset, n);
+    }
+  ];
+  var uint16Decoder = (b, offset) => {
+    const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
+    try {
+      return [view.getUint16(offset), 2];
+    } catch (e) {
+      return void 0;
+    }
+  };
+  var uint32Encoder = (n) => [
+    4,
+    (offset, buffer) => {
+      const view = new DataView(buffer);
+      view.setUint32(offset, n);
+    }
+  ];
+  var uint32Decoder = (b, offset) => {
+    const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
+    try {
+      return [view.getUint32(offset), 4];
+    } catch (e) {
+      return void 0;
+    }
+  };
+  var uint64Encoder = (n) => [
+    8,
+    (offset, buffer) => {
+      const view = new DataView(buffer);
+      view.setBigUint64(offset, n);
+    }
+  ];
+  var uint64Decoder = (b, offset) => {
+    const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
+    try {
+      return [view.getBigUint64(offset), 8];
+    } catch (e) {
+      return void 0;
+    }
   };
 
   // node_modules/ts-mls/dist/src/codec/tlsDecoder.js
+  function decode(dec, t) {
+    return dec(t, 0)?.[0];
+  }
   function mapDecoder(dec, f) {
     return (b, offset) => {
       const x = dec(b, offset);
@@ -7312,9 +7365,9 @@
       }
     };
   }
-  function mapDecodersOption(decoders, f) {
+  function mapDecodersOption(rsDecoder, f) {
     return (b, offset) => {
-      const initial = mapDecoders(decoders, f)(b, offset);
+      const initial = mapDecoders(rsDecoder, f)(b, offset);
       if (initial === void 0)
         return void 0;
       else {
@@ -7323,9 +7376,9 @@
       }
     };
   }
-  function mapDecoders(decoders, f) {
+  function mapDecoders(rsDecoder, f) {
     return (b, offset) => {
-      const result = decoders.reduce((acc, decoder) => {
+      const result = rsDecoder.reduce((acc, decoder) => {
         if (!acc)
           return void 0;
         const decoded = decoder(b, acc.offset);
@@ -7367,8 +7420,8 @@
       const decodedT = dec(b, offset);
       if (decodedT !== void 0) {
         const [t, len] = decodedT;
-        const decoderU = f(t);
-        const decodedU = decoderU(b, offset + len);
+        const rUDecoder = f(t);
+        const decodedU = rUDecoder(b, offset + len);
         if (decodedU !== void 0) {
           const [u, len2] = decodedU;
           return [g(t, u), len + len2];
@@ -7384,13 +7437,11 @@
   }
 
   // node_modules/ts-mls/dist/src/codec/tlsEncoder.js
-  function encode(enc) {
-    return (t) => {
-      const [len, write] = enc(t);
-      const buf = new ArrayBuffer(len);
-      write(0, buf);
-      return new Uint8Array(buf);
-    };
+  function encode(enc, t) {
+    const [len, write] = enc(t);
+    const buf = new ArrayBuffer(len);
+    write(0, buf);
+    return new Uint8Array(buf);
   }
   function contramapBufferEncoder(enc, f) {
     return (u) => enc(f(u));
@@ -7519,68 +7570,12 @@
     result.set(b, a.length);
     return result;
   }
-
-  // node_modules/ts-mls/dist/src/codec/number.js
-  var uint8Encoder = (n) => [
-    1,
-    (offset, buffer) => {
-      const view = new DataView(buffer);
-      view.setUint8(offset, n);
+  function zeroOutUint8Array(buf) {
+    crypto.getRandomValues(buf);
+    for (let i = 0; i < buf.length; i++) {
+      buf[i] ^= buf[i];
     }
-  ];
-  var encodeUint8 = encode(uint8Encoder);
-  var decodeUint8 = (b, offset) => {
-    const value = b.at(offset);
-    return value !== void 0 ? [value, 1] : void 0;
-  };
-  var uint16Encoder = (n) => [
-    2,
-    (offset, buffer) => {
-      const view = new DataView(buffer);
-      view.setUint16(offset, n);
-    }
-  ];
-  var encodeUint16 = encode(uint16Encoder);
-  var decodeUint16 = (b, offset) => {
-    const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
-    try {
-      return [view.getUint16(offset), 2];
-    } catch (e) {
-      return void 0;
-    }
-  };
-  var uint32Encoder = (n) => [
-    4,
-    (offset, buffer) => {
-      const view = new DataView(buffer);
-      view.setUint32(offset, n);
-    }
-  ];
-  var encodeUint32 = encode(uint32Encoder);
-  var decodeUint32 = (b, offset) => {
-    const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
-    try {
-      return [view.getUint32(offset), 4];
-    } catch (e) {
-      return void 0;
-    }
-  };
-  var uint64Encoder = (n) => [
-    8,
-    (offset, buffer) => {
-      const view = new DataView(buffer);
-      view.setBigUint64(offset, n);
-    }
-  ];
-  var encodeUint64 = encode(uint64Encoder);
-  var decodeUint64 = (b, offset) => {
-    const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
-    try {
-      return [view.getBigUint64(offset), 8];
-    } catch (e) {
-      return void 0;
-    }
-  };
+  }
 
   // node_modules/ts-mls/dist/src/codec/variableLength.js
   var varLenDataEncoder = (data) => {
@@ -7650,7 +7645,7 @@
       throw new CodecError("8-byte length not supported in this implementation");
     }
   }
-  var decodeVarLenData = (buf, offset) => {
+  var varLenDataDecoder = (buf, offset) => {
     if (offset >= buf.length) {
       throw new CodecError("Offset beyond buffer");
     }
@@ -7687,9 +7682,9 @@
       ];
     };
   }
-  function decodeVarLenType(dec) {
+  function varLenTypeDecoder(dec) {
     return (b, offset) => {
-      const d = decodeVarLenData(b, offset);
+      const d = varLenDataDecoder(b, offset);
       if (d === void 0)
         return;
       const [totalBytes, totalLength] = d;
@@ -7710,8 +7705,8 @@
     const entryEncoder = contramapBufferEncoders([contramapBufferEncoder(varLenDataEncoder, base64ToBytes), valueEncoder], ([key, value]) => [key, value]);
     return contramapBufferEncoders([varLenTypeEncoder(entryEncoder)], (record) => [Object.entries(record)]);
   }
-  function decodeBase64Record(decodeValue) {
-    return mapDecoder(decodeVarLenType(mapDecoders([mapDecoder(decodeVarLenData, bytesToBase64), decodeValue], (key, value) => [key, value])), (entries) => {
+  function base64RecordDecoder(valueDecoder) {
+    return mapDecoder(varLenTypeDecoder(mapDecoders([mapDecoder(varLenDataDecoder, bytesToBase64), valueDecoder], (key, value) => [key, value])), (entries) => {
       const record = {};
       for (const [key, value] of entries) {
         record[key] = value;
@@ -7723,8 +7718,8 @@
     const entryEncoder = contramapBufferEncoders([numberEncoder, valueEncoder], ([key, value]) => [key, value]);
     return contramapBufferEncoder(varLenTypeEncoder(entryEncoder), (record) => Object.entries(record).map(([key, value]) => [Number(key), value]));
   }
-  function decodeNumberRecord(decodeNumber, decodeValue) {
-    return mapDecoder(decodeVarLenType(mapDecoders([decodeNumber, decodeValue], (key, value) => [key, value])), (entries) => {
+  function numberRecordDecoder(numberDecoder, valueDecoder) {
+    return mapDecoder(varLenTypeDecoder(mapDecoders([numberDecoder, valueDecoder], (key, value) => [key, value])), (entries) => {
       const record = {};
       for (const [key, value] of entries) {
         record[key] = value;
@@ -7736,77 +7731,53 @@
     const entryEncoder = contramapBufferEncoders([uint64Encoder, valueEncoder], ([key, value]) => [key, value]);
     return contramapBufferEncoder(varLenTypeEncoder(entryEncoder), (map) => Array.from(map.entries()));
   }
-  function decodeBigintMap(decodeValue) {
-    return mapDecoder(decodeVarLenType(mapDecoders([decodeUint64, decodeValue], (key, value) => [key, value])), (entries) => new Map(entries));
+  function bigintMapDecoder(valueDecoder) {
+    return mapDecoder(varLenTypeDecoder(mapDecoders([uint64Decoder, valueDecoder], (key, value) => [key, value])), (entries) => new Map(entries));
   }
 
-  // node_modules/ts-mls/dist/src/util/enumHelpers.js
-  function enumNumberToKey(t) {
-    return (n) => Object.values(t).includes(n) ? reverseMap(t)[n] : void 0;
-  }
-  function reverseMap(obj) {
-    return Object.entries(obj).reduce((acc, [key, value]) => ({
-      ...acc,
-      [value]: key
-    }), {});
-  }
-  function openEnumNumberToKey(rec) {
-    return (n) => {
-      const decoded = enumNumberToKey(rec)(n);
-      if (decoded === void 0)
-        return n.toString();
-      else
-        return decoded;
-    };
-  }
-  function openEnumNumberEncoder(rec) {
-    return (s) => {
-      const x = rec[s];
-      if (x === void 0)
-        return Number(s);
-      else
-        return x;
-    };
-  }
-
-  // node_modules/ts-mls/dist/src/credentialType.js
-  var credentialTypes = {
+  // node_modules/ts-mls/dist/src/defaultCredentialType.js
+  var defaultCredentialTypes = {
     basic: 1,
     x509: 2
   };
-  var credentialTypeEncoder = contramapBufferEncoder(uint16Encoder, openEnumNumberEncoder(credentialTypes));
-  var encodeCredentialType = encode(credentialTypeEncoder);
-  var decodeCredentialType = mapDecoderOption(decodeUint16, openEnumNumberToKey(credentialTypes));
+  var defaultCredentialTypeValues = new Set(Object.values(defaultCredentialTypes));
+  function isDefaultCredentialTypeValue(v) {
+    return defaultCredentialTypeValues.has(v);
+  }
 
   // node_modules/ts-mls/dist/src/credential.js
-  var credentialBasicEncoder = contramapBufferEncoders([credentialTypeEncoder, varLenDataEncoder], (c) => [c.credentialType, c.identity]);
-  var encodeCredentialBasic = encode(credentialBasicEncoder);
-  var credentialX509Encoder = contramapBufferEncoders([credentialTypeEncoder, varLenTypeEncoder(varLenDataEncoder)], (c) => [c.credentialType, c.certificates]);
-  var encodeCredentialX509 = encode(credentialX509Encoder);
-  var credentialCustomEncoder = contramapBufferEncoders([credentialTypeEncoder, varLenDataEncoder], (c) => [c.credentialType, c.data]);
-  var encodeCredentialCustom = encode(credentialCustomEncoder);
+  function isDefaultCredential(c) {
+    return isDefaultCredentialTypeValue(c.credentialType);
+  }
+  var credentialBasicEncoder = contramapBufferEncoders([uint16Encoder, varLenDataEncoder], (c) => [c.credentialType, c.identity]);
+  var credentialX509Encoder = contramapBufferEncoders([uint16Encoder, varLenTypeEncoder(varLenDataEncoder)], (c) => [c.credentialType, c.certificates]);
+  var credentialCustomEncoder = contramapBufferEncoders([uint16Encoder, varLenDataEncoder], (c) => [c.credentialType, c.data]);
   var credentialEncoder = (c) => {
+    if (!isDefaultCredential(c))
+      return credentialCustomEncoder(c);
     switch (c.credentialType) {
-      case "basic":
+      case defaultCredentialTypes.basic:
         return credentialBasicEncoder(c);
-      case "x509":
+      case defaultCredentialTypes.x509:
         return credentialX509Encoder(c);
-      default:
-        return credentialCustomEncoder(c);
     }
   };
-  var encodeCredential = encode(credentialEncoder);
-  var decodeCredentialBasic = mapDecoder(decodeVarLenData, (identity) => ({
-    credentialType: "basic",
+  var credentialBasicDecoder = mapDecoder(varLenDataDecoder, (identity) => ({
+    credentialType: defaultCredentialTypes.basic,
     identity
   }));
-  var decodeCredentialX509 = mapDecoder(decodeVarLenType(decodeVarLenData), (certificates) => ({ credentialType: "x509", certificates }));
-  var decodeCredential = flatMapDecoder(decodeCredentialType, (credentialType) => {
+  var credentialX509Decoder = mapDecoder(varLenTypeDecoder(varLenDataDecoder), (certificates) => ({ credentialType: defaultCredentialTypes.x509, certificates }));
+  function credentialCustomDecoder(credentialType) {
+    return mapDecoder(varLenDataDecoder, (data) => ({ credentialType, data }));
+  }
+  var credentialDecoder = flatMapDecoder(uint16Decoder, (credentialType) => {
     switch (credentialType) {
-      case "basic":
-        return decodeCredentialBasic;
-      case "x509":
-        return decodeCredentialX509;
+      case defaultCredentialTypes.basic:
+        return credentialBasicDecoder;
+      case defaultCredentialTypes.x509:
+        return credentialX509Decoder;
+      default:
+        return credentialCustomDecoder(credentialType);
     }
   });
 
@@ -8059,54 +8030,6 @@
     };
   }
 
-  // node_modules/ts-mls/dist/src/defaultProposalType.js
-  var defaultProposalTypes = {
-    add: 1,
-    update: 2,
-    remove: 3,
-    psk: 4,
-    reinit: 5,
-    external_init: 6,
-    group_context_extensions: 7
-  };
-  var defaultProposalTypeEncoder = contramapBufferEncoder(uint16Encoder, (n) => defaultProposalTypes[n]);
-  var encodeDefaultProposalType = encode(defaultProposalTypeEncoder);
-  var decodeDefaultProposalType = mapDecoderOption(decodeUint16, enumNumberToKey(defaultProposalTypes));
-
-  // node_modules/ts-mls/dist/src/defaultExtensionType.js
-  var defaultExtensionTypes = {
-    application_id: 1,
-    ratchet_tree: 2,
-    required_capabilities: 3,
-    external_pub: 4,
-    external_senders: 5
-  };
-  var defaultExtensionTypeEncoder = contramapBufferEncoder(uint16Encoder, (n) => defaultExtensionTypes[n]);
-  var encodeDefaultExtensionType = encode(defaultExtensionTypeEncoder);
-  var decodeDefaultExtensionType = mapDecoderOption(decodeUint16, enumNumberToKey(defaultExtensionTypes));
-
-  // node_modules/ts-mls/dist/src/extension.js
-  var extensionTypeEncoder = (t) => typeof t === "number" ? uint16Encoder(t) : defaultExtensionTypeEncoder(t);
-  var encodeExtensionType = encode(extensionTypeEncoder);
-  var decodeExtensionType = orDecoder(decodeDefaultExtensionType, decodeUint16);
-  var extensionEncoder = contramapBufferEncoders([extensionTypeEncoder, varLenDataEncoder], (e) => [e.extensionType, e.extensionData]);
-  var encodeExtension = encode(extensionEncoder);
-  var decodeExtension = mapDecoders([decodeExtensionType, decodeVarLenData], (extensionType, extensionData) => ({ extensionType, extensionData }));
-  function extensionsSupportedByCapabilities(requiredExtensions, capabilities) {
-    return requiredExtensions.filter((ex) => !isDefaultExtension(ex.extensionType)).every((ex) => capabilities.extensions.includes(extensionTypeToNumber(ex.extensionType)));
-  }
-  function isDefaultExtension(t) {
-    return typeof t !== "number";
-  }
-  function extensionTypeToNumber(t) {
-    return typeof t === "number" ? t : defaultExtensionTypes[t];
-  }
-
-  // node_modules/ts-mls/dist/src/externalSender.js
-  var externalSenderEncoder = contramapBufferEncoders([varLenDataEncoder, credentialEncoder], (e) => [e.signaturePublicKey, e.credential]);
-  var encodeExternalSender = encode(externalSenderEncoder);
-  var decodeExternalSender = mapDecoders([decodeVarLenData, decodeCredential], (signaturePublicKey, credential) => ({ signaturePublicKey, credential }));
-
   // node_modules/ts-mls/dist/src/crypto/hash.js
   function refhash(label, value, h) {
     return h.digest(encodeRefHash(label, value));
@@ -8114,7 +8037,7 @@
   function encodeRefHash(label, value) {
     const labelBytes = new TextEncoder().encode(label);
     const enc = composeBufferEncoders([varLenDataEncoder, varLenDataEncoder]);
-    return encode(enc)([labelBytes, value]);
+    return encode(enc, [labelBytes, value]);
   }
 
   // node_modules/ts-mls/dist/src/codec/optional.js
@@ -8141,9 +8064,9 @@
       }
     };
   }
-  function decodeOptional(decodeT) {
+  function optionalDecoder(decodeT) {
     return (b, offset) => {
-      const presenceOctet = decodeUint8(b, offset)?.[0];
+      const presenceOctet = uint8Decoder(b, offset)?.[0];
       if (presenceOctet == 1) {
         const result = decodeT(b, offset + 1);
         return result === void 0 ? void 0 : [result[0], result[1] + 1];
@@ -8175,9 +8098,11 @@
     MLS_256_XWING_AES256GCM_SHA512_MLDSA87: 87,
     MLS_256_XWING_CHACHA20POLY1305_SHA512_MLDSA87: 88
   };
-  var ciphersuiteEncoder = contramapBufferEncoder(uint16Encoder, openEnumNumberEncoder(ciphersuites));
-  var encodeCiphersuite = encode(ciphersuiteEncoder);
-  var decodeCiphersuite = mapDecoderOption(decodeUint16, openEnumNumberToKey(ciphersuites));
+  var ciphersuiteEncoder = uint16Encoder;
+  var ciphersuiteDecoder = (b, offset) => {
+    const decoded = uint16Decoder(b, offset);
+    return decoded === void 0 ? void 0 : [decoded[0], decoded[1]];
+  };
   function getCiphersuiteFromName(name) {
     return ciphersuiteValues[ciphersuites[name]];
   }
@@ -8190,7 +8115,7 @@
         kdf: "HKDF-SHA256"
       },
       signature: "Ed25519",
-      name: "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519"
+      name: 1
     },
     2: {
       hash: "SHA-256",
@@ -8200,7 +8125,7 @@
         kdf: "HKDF-SHA256"
       },
       signature: "P256",
-      name: "MLS_128_DHKEMP256_AES128GCM_SHA256_P256"
+      name: 2
     },
     3: {
       hash: "SHA-256",
@@ -8210,7 +8135,7 @@
         kdf: "HKDF-SHA256"
       },
       signature: "Ed25519",
-      name: "MLS_128_DHKEMX25519_CHACHA20POLY1305_SHA256_Ed25519"
+      name: 3
     },
     4: {
       hash: "SHA-512",
@@ -8220,7 +8145,7 @@
         kdf: "HKDF-SHA512"
       },
       signature: "Ed448",
-      name: "MLS_256_DHKEMX448_AES256GCM_SHA512_Ed448"
+      name: 4
     },
     5: {
       hash: "SHA-512",
@@ -8230,7 +8155,7 @@
         kdf: "HKDF-SHA512"
       },
       signature: "P521",
-      name: "MLS_256_DHKEMP521_AES256GCM_SHA512_P521"
+      name: 5
     },
     6: {
       hash: "SHA-512",
@@ -8240,7 +8165,7 @@
         kdf: "HKDF-SHA512"
       },
       signature: "Ed448",
-      name: "MLS_256_DHKEMX448_CHACHA20POLY1305_SHA512_Ed448"
+      name: 6
     },
     7: {
       hash: "SHA-384",
@@ -8250,7 +8175,7 @@
         kdf: "HKDF-SHA384"
       },
       signature: "P384",
-      name: "MLS_256_DHKEMP384_AES256GCM_SHA384_P384"
+      name: 7
     },
     77: {
       hash: "SHA-256",
@@ -8260,7 +8185,7 @@
         kdf: "HKDF-SHA512"
       },
       signature: "Ed25519",
-      name: "MLS_128_MLKEM512_AES128GCM_SHA256_Ed25519"
+      name: 77
     },
     78: {
       hash: "SHA-256",
@@ -8270,7 +8195,7 @@
         kdf: "HKDF-SHA512"
       },
       signature: "Ed25519",
-      name: "MLS_128_MLKEM512_CHACHA20POLY1305_SHA256_Ed25519"
+      name: 78
     },
     79: {
       hash: "SHA-384",
@@ -8280,7 +8205,7 @@
         kdf: "HKDF-SHA512"
       },
       signature: "Ed25519",
-      name: "MLS_256_MLKEM768_AES256GCM_SHA384_Ed25519"
+      name: 79
     },
     80: {
       hash: "SHA-384",
@@ -8290,7 +8215,7 @@
         kdf: "HKDF-SHA512"
       },
       signature: "Ed25519",
-      name: "MLS_256_MLKEM768_CHACHA20POLY1305_SHA384_Ed25519"
+      name: 80
     },
     81: {
       hash: "SHA-512",
@@ -8300,7 +8225,7 @@
         kdf: "HKDF-SHA512"
       },
       signature: "Ed25519",
-      name: "MLS_256_MLKEM1024_AES256GCM_SHA512_Ed25519"
+      name: 81
     },
     82: {
       hash: "SHA-512",
@@ -8310,7 +8235,7 @@
         kdf: "HKDF-SHA512"
       },
       signature: "Ed25519",
-      name: "MLS_256_MLKEM1024_CHACHA20POLY1305_SHA512_Ed25519"
+      name: 82
     },
     83: {
       hash: "SHA-512",
@@ -8320,7 +8245,7 @@
         kdf: "HKDF-SHA512"
       },
       signature: "Ed25519",
-      name: "MLS_256_XWING_AES256GCM_SHA512_Ed25519"
+      name: 83
     },
     84: {
       hash: "SHA-512",
@@ -8330,7 +8255,7 @@
         kdf: "HKDF-SHA512"
       },
       signature: "Ed25519",
-      name: "MLS_256_XWING_CHACHA20POLY1305_SHA512_Ed25519"
+      name: 84
     },
     85: {
       hash: "SHA-512",
@@ -8340,7 +8265,7 @@
         kdf: "HKDF-SHA512"
       },
       signature: "ML-DSA-87",
-      name: "MLS_256_MLKEM1024_AES256GCM_SHA512_MLDSA87"
+      name: 85
     },
     86: {
       hash: "SHA-512",
@@ -8350,7 +8275,7 @@
         kdf: "HKDF-SHA512"
       },
       signature: "ML-DSA-87",
-      name: "MLS_256_MLKEM1024_CHACHA20POLY1305_SHA512_MLDSA87"
+      name: 86
     },
     87: {
       hash: "SHA-512",
@@ -8360,7 +8285,7 @@
         kdf: "HKDF-SHA512"
       },
       signature: "ML-DSA-87",
-      name: "MLS_256_XWING_AES256GCM_SHA512_MLDSA87"
+      name: 87
     },
     88: {
       hash: "SHA-512",
@@ -8370,31 +8295,103 @@
         kdf: "HKDF-SHA512"
       },
       signature: "ML-DSA-87",
-      name: "MLS_256_XWING_CHACHA20POLY1305_SHA512_MLDSA87"
+      name: 88
     }
   };
 
+  // node_modules/ts-mls/dist/src/defaultExtensionType.js
+  var defaultExtensionTypes = {
+    application_id: 1,
+    ratchet_tree: 2,
+    required_capabilities: 3,
+    external_pub: 4,
+    external_senders: 5
+  };
+  function isDefaultExtensionTypeValue(v) {
+    return Object.values(defaultExtensionTypes).includes(v);
+  }
+
+  // node_modules/ts-mls/dist/src/externalSender.js
+  var externalSenderEncoder = contramapBufferEncoders([varLenDataEncoder, credentialEncoder], (e) => [e.signaturePublicKey, e.credential]);
+  var externalSenderDecoder = mapDecoders([varLenDataDecoder, credentialDecoder], (signaturePublicKey, credential) => ({ signaturePublicKey, credential }));
+
+  // node_modules/ts-mls/dist/src/requiredCapabilities.js
+  var requiredCapabilitiesEncoder = contramapBufferEncoders([varLenTypeEncoder(uint16Encoder), varLenTypeEncoder(uint16Encoder), varLenTypeEncoder(uint16Encoder)], (rc) => [rc.extensionTypes, rc.proposalTypes, rc.credentialTypes]);
+  var requiredCapabilitiesDecoder = mapDecoders([varLenTypeDecoder(uint16Decoder), varLenTypeDecoder(uint16Decoder), varLenTypeDecoder(uint16Decoder)], (extensionTypes, proposalTypes, credentialTypes) => ({ extensionTypes, proposalTypes, credentialTypes }));
+
+  // node_modules/ts-mls/dist/src/extension.js
+  function isDefaultExtension(e) {
+    return isDefaultExtensionTypeValue(e.extensionType);
+  }
+  var extensionEncoder = contramapBufferEncoders([uint16Encoder, varLenDataEncoder], (e) => {
+    if (isDefaultExtension(e)) {
+      if (e.extensionType === defaultExtensionTypes.required_capabilities) {
+        return [e.extensionType, encode(requiredCapabilitiesEncoder, e.extensionData)];
+      } else if (e.extensionType === defaultExtensionTypes.external_senders) {
+        return [e.extensionType, encode(externalSenderEncoder, e.extensionData)];
+      }
+      return [e.extensionType, e.extensionData];
+    } else
+      return [e.extensionType, e.extensionData];
+  });
+  var customExtensionDecoder = mapDecoders([uint16Decoder, varLenDataDecoder], (extensionType, extensionData) => ({ extensionType, extensionData }));
+  var leafNodeExtensionDecoder = flatMapDecoder(uint16Decoder, (extensionType) => {
+    if (extensionType === defaultExtensionTypes.application_id) {
+      return mapDecoder(varLenDataDecoder, (extensionData) => {
+        return { extensionType: defaultExtensionTypes.application_id, extensionData };
+      });
+    } else
+      return mapDecoder(varLenDataDecoder, (extensionData) => ({ extensionType, extensionData }));
+  });
+  var groupInfoExtensionDecoder = flatMapDecoder(uint16Decoder, (extensionType) => {
+    if (extensionType === defaultExtensionTypes.external_pub) {
+      return mapDecoder(varLenDataDecoder, (extensionData) => {
+        return { extensionType: defaultExtensionTypes.external_pub, extensionData };
+      });
+    } else if (extensionType === defaultExtensionTypes.ratchet_tree) {
+      return mapDecoder(varLenDataDecoder, (extensionData) => {
+        return { extensionType: defaultExtensionTypes.ratchet_tree, extensionData };
+      });
+    } else
+      return mapDecoder(varLenDataDecoder, (extensionData) => ({ extensionType, extensionData }));
+  });
+  var groupContextExtensionDecoder = flatMapDecoder(uint16Decoder, (extensionType) => {
+    if (extensionType === defaultExtensionTypes.external_senders) {
+      return mapDecoderOption(varLenDataDecoder, (extensionData) => {
+        const res = decode(externalSenderDecoder, extensionData);
+        if (res)
+          return { extensionType: defaultExtensionTypes.external_senders, extensionData: res };
+      });
+    } else if (extensionType === defaultExtensionTypes.required_capabilities) {
+      return mapDecoderOption(varLenDataDecoder, (extensionData) => {
+        const res = decode(requiredCapabilitiesDecoder, extensionData);
+        if (res)
+          return { extensionType: defaultExtensionTypes.required_capabilities, extensionData: res };
+      });
+    } else
+      return mapDecoder(varLenDataDecoder, (extensionData) => ({ extensionType, extensionData }));
+  });
+  function extensionsSupportedByCapabilities(requiredExtensions, capabilities) {
+    return requiredExtensions.filter((ex) => !isDefaultExtensionTypeValue(ex.extensionType)).every((ex) => capabilities.extensions.includes(ex.extensionType));
+  }
+
   // node_modules/ts-mls/dist/src/crypto/signature.js
   async function signWithLabel(signKey, label, content, s) {
-    return s.sign(signKey, encode(composeBufferEncoders([varLenDataEncoder, varLenDataEncoder]))([
-      new TextEncoder().encode(`MLS 1.0 ${label}`),
-      content
-    ]));
+    const messageEncoder = composeBufferEncoders([varLenDataEncoder, varLenDataEncoder]);
+    return s.sign(signKey, encode(messageEncoder, [new TextEncoder().encode(`MLS 1.0 ${label}`), content]));
   }
   async function verifyWithLabel(publicKey, label, content, signature, s) {
-    return s.verify(publicKey, encode(composeBufferEncoders([varLenDataEncoder, varLenDataEncoder]))([
-      new TextEncoder().encode(`MLS 1.0 ${label}`),
-      content
-    ]), signature);
+    const messageEncoder = composeBufferEncoders([varLenDataEncoder, varLenDataEncoder]);
+    return s.verify(publicKey, encode(messageEncoder, [new TextEncoder().encode(`MLS 1.0 ${label}`), content]), signature);
   }
 
   // node_modules/ts-mls/dist/src/protocolVersion.js
   var protocolVersions = {
     mls10: 1
   };
-  var protocolVersionEncoder = contramapBufferEncoder(uint16Encoder, (t) => protocolVersions[t]);
-  var encodeProtocolVersion = encode(protocolVersionEncoder);
-  var decodeProtocolVersion = mapDecoderOption(decodeUint16, enumNumberToKey(protocolVersions));
+  var protocolVersionValues = new Set(Object.values(protocolVersions));
+  var protocolVersionEncoder = uint16Encoder;
+  var protocolVersionDecoder = mapDecoderOption(uint16Decoder, (v) => protocolVersionValues.has(v) ? v : void 0);
 
   // node_modules/ts-mls/dist/src/capabilities.js
   var capabilitiesEncoder = contramapBufferEncoders([
@@ -8402,15 +8399,14 @@
     varLenTypeEncoder(ciphersuiteEncoder),
     varLenTypeEncoder(uint16Encoder),
     varLenTypeEncoder(uint16Encoder),
-    varLenTypeEncoder(credentialTypeEncoder)
+    varLenTypeEncoder(uint16Encoder)
   ], (cap) => [cap.versions, cap.ciphersuites, cap.extensions, cap.proposals, cap.credentials]);
-  var encodeCapabilities = encode(capabilitiesEncoder);
-  var decodeCapabilities = mapDecoders([
-    decodeVarLenType(decodeProtocolVersion),
-    decodeVarLenType(decodeCiphersuite),
-    decodeVarLenType(decodeUint16),
-    decodeVarLenType(decodeUint16),
-    decodeVarLenType(decodeCredentialType)
+  var capabilitiesDecoder = mapDecoders([
+    varLenTypeDecoder(protocolVersionDecoder),
+    varLenTypeDecoder(ciphersuiteDecoder),
+    varLenTypeDecoder(uint16Decoder),
+    varLenTypeDecoder(uint16Decoder),
+    varLenTypeDecoder(uint16Decoder)
   ], (versions, ciphersuites2, extensions, proposals, credentials) => ({
     versions,
     ciphersuites: ciphersuites2,
@@ -8425,146 +8421,180 @@
     update: 2,
     commit: 3
   };
-  var leafNodeSourceEncoder = contramapBufferEncoder(uint8Encoder, (t) => leafNodeSources[t]);
-  var encodeLeafNodeSource = encode(leafNodeSourceEncoder);
-  var decodeLeafNodeSource = mapDecoderOption(decodeUint8, enumNumberToKey(leafNodeSources));
+  var leafNodeSourceValues = new Set(Object.values(leafNodeSources));
+  var leafNodeSourceValueEncoder = uint8Encoder;
+  var leafNodeSourceValueDecoder = mapDecoderOption(uint8Decoder, (v) => leafNodeSourceValues.has(v) ? v : void 0);
 
   // node_modules/ts-mls/dist/src/lifetime.js
   var lifetimeEncoder = contramapBufferEncoders([uint64Encoder, uint64Encoder], (lt) => [lt.notBefore, lt.notAfter]);
-  var encodeLifetime = encode(lifetimeEncoder);
-  var decodeLifetime = mapDecoders([decodeUint64, decodeUint64], (notBefore, notAfter) => ({
+  var lifetimeDecoder = mapDecoders([uint64Decoder, uint64Decoder], (notBefore, notAfter) => ({
     notBefore,
     notAfter
   }));
-  var defaultLifetime = {
-    notBefore: 0n,
-    notAfter: 9223372036854775807n
-  };
+  function defaultLifetime() {
+    const now = Math.floor(Date.now() / 1e3);
+    return {
+      notBefore: BigInt(now - 86400),
+      notAfter: BigInt(now + 1314e3)
+      // Half month
+    };
+  }
 
   // node_modules/ts-mls/dist/src/leafNode.js
   var leafNodeDataEncoder = contramapBufferEncoders([varLenDataEncoder, varLenDataEncoder, credentialEncoder, capabilitiesEncoder], (data) => [data.hpkePublicKey, data.signaturePublicKey, data.credential, data.capabilities]);
-  var encodeLeafNodeData = encode(leafNodeDataEncoder);
-  var decodeLeafNodeData = mapDecoders([decodeVarLenData, decodeVarLenData, decodeCredential, decodeCapabilities], (hpkePublicKey, signaturePublicKey, credential, capabilities) => ({
+  var leafNodeDataDecoder = mapDecoders([varLenDataDecoder, varLenDataDecoder, credentialDecoder, capabilitiesDecoder], (hpkePublicKey, signaturePublicKey, credential, capabilities) => ({
     hpkePublicKey,
     signaturePublicKey,
     credential,
     capabilities
   }));
-  var leafNodeInfoKeyPackageEncoder = contramapBufferEncoders([leafNodeSourceEncoder, lifetimeEncoder, varLenTypeEncoder(extensionEncoder)], (info) => ["key_package", info.lifetime, info.extensions]);
-  var encodeLeafNodeInfoKeyPackage = encode(leafNodeInfoKeyPackageEncoder);
-  var leafNodeInfoUpdateOmittedEncoder = contramapBufferEncoders([leafNodeSourceEncoder, varLenTypeEncoder(extensionEncoder)], (i) => [i.leafNodeSource, i.extensions]);
-  var encodeLeafNodeInfoUpdateOmitted = encode(leafNodeInfoUpdateOmittedEncoder);
-  var leafNodeInfoCommitOmittedEncoder = contramapBufferEncoders([leafNodeSourceEncoder, varLenDataEncoder, varLenTypeEncoder(extensionEncoder)], (info) => [info.leafNodeSource, info.parentHash, info.extensions]);
-  var encodeLeafNodeInfoCommitOmitted = encode(leafNodeInfoCommitOmittedEncoder);
+  var leafNodeInfoKeyPackageEncoder = contramapBufferEncoders([leafNodeSourceValueEncoder, lifetimeEncoder, varLenTypeEncoder(extensionEncoder)], (info) => [leafNodeSources.key_package, info.lifetime, info.extensions]);
+  var leafNodeInfoUpdateOmittedEncoder = contramapBufferEncoders([leafNodeSourceValueEncoder, varLenTypeEncoder(extensionEncoder)], (i) => [i.leafNodeSource, i.extensions]);
+  var leafNodeInfoCommitOmittedEncoder = contramapBufferEncoders([leafNodeSourceValueEncoder, varLenDataEncoder, varLenTypeEncoder(extensionEncoder)], (info) => [info.leafNodeSource, info.parentHash, info.extensions]);
   var leafNodeInfoOmittedEncoder = (info) => {
     switch (info.leafNodeSource) {
-      case "key_package":
+      case leafNodeSources.key_package:
         return leafNodeInfoKeyPackageEncoder(info);
-      case "update":
+      case leafNodeSources.update:
         return leafNodeInfoUpdateOmittedEncoder(info);
-      case "commit":
+      case leafNodeSources.commit:
         return leafNodeInfoCommitOmittedEncoder(info);
     }
   };
-  var encodeLeafNodeInfoOmitted = encode(leafNodeInfoOmittedEncoder);
-  var decodeLeafNodeInfoKeyPackage = mapDecoders([decodeLifetime, decodeVarLenType(decodeExtension)], (lifetime, extensions) => ({
-    leafNodeSource: "key_package",
+  var leafNodeInfoKeyPackageDecoder = mapDecoders([lifetimeDecoder, varLenTypeDecoder(leafNodeExtensionDecoder)], (lifetime, extensions) => ({
+    leafNodeSource: leafNodeSources.key_package,
     lifetime,
     extensions
   }));
-  var decodeLeafNodeInfoUpdateOmitted = mapDecoder(decodeVarLenType(decodeExtension), (extensions) => ({
-    leafNodeSource: "update",
+  var leafNodeInfoUpdateOmittedDecoder = mapDecoder(varLenTypeDecoder(leafNodeExtensionDecoder), (extensions) => ({
+    leafNodeSource: leafNodeSources.update,
     extensions
   }));
-  var decodeLeafNodeInfoCommitOmitted = mapDecoders([decodeVarLenData, decodeVarLenType(decodeExtension)], (parentHash, extensions) => ({
-    leafNodeSource: "commit",
+  var leafNodeInfoCommitOmittedDecoder = mapDecoders([varLenDataDecoder, varLenTypeDecoder(leafNodeExtensionDecoder)], (parentHash, extensions) => ({
+    leafNodeSource: leafNodeSources.commit,
     parentHash,
     extensions
   }));
-  var decodeLeafNodeInfoOmitted = flatMapDecoder(decodeLeafNodeSource, (leafNodeSource) => {
+  var leafNodeInfoOmittedDecoder = flatMapDecoder(leafNodeSourceValueDecoder, (leafNodeSource) => {
     switch (leafNodeSource) {
-      case "key_package":
-        return decodeLeafNodeInfoKeyPackage;
-      case "update":
-        return decodeLeafNodeInfoUpdateOmitted;
-      case "commit":
-        return decodeLeafNodeInfoCommitOmitted;
+      case leafNodeSources.key_package:
+        return leafNodeInfoKeyPackageDecoder;
+      case leafNodeSources.update:
+        return leafNodeInfoUpdateOmittedDecoder;
+      case leafNodeSources.commit:
+        return leafNodeInfoCommitOmittedDecoder;
     }
   });
   var leafNodeInfoUpdateEncoder = contramapBufferEncoders([leafNodeInfoUpdateOmittedEncoder, varLenDataEncoder, uint32Encoder], (i) => [i, i.groupId, i.leafIndex]);
-  var encodeLeafNodeInfoUpdate = encode(leafNodeInfoUpdateEncoder);
   var leafNodeInfoCommitEncoder = contramapBufferEncoders([leafNodeInfoCommitOmittedEncoder, varLenDataEncoder, uint32Encoder], (info) => [info, info.groupId, info.leafIndex]);
-  var encodeLeafNodeInfoCommit = encode(leafNodeInfoCommitEncoder);
   var leafNodeInfoEncoder = (info) => {
     switch (info.leafNodeSource) {
-      case "key_package":
+      case leafNodeSources.key_package:
         return leafNodeInfoKeyPackageEncoder(info);
-      case "update":
+      case leafNodeSources.update:
         return leafNodeInfoUpdateEncoder(info);
-      case "commit":
+      case leafNodeSources.commit:
         return leafNodeInfoCommitEncoder(info);
     }
   };
-  var encodeLeafNodeInfo = encode(leafNodeInfoEncoder);
-  var decodeLeafNodeInfoUpdate = mapDecoders([decodeLeafNodeInfoUpdateOmitted, decodeVarLenData, decodeUint32], (ln, groupId, leafIndex) => ({
+  var leafNodeInfoUpdateDecoder = mapDecoders([leafNodeInfoUpdateOmittedDecoder, varLenDataDecoder, uint32Decoder], (ln, groupId, leafIndex) => ({
     ...ln,
     groupId,
     leafIndex
   }));
-  var decodeLeafNodeInfoCommit = mapDecoders([decodeLeafNodeInfoCommitOmitted, decodeVarLenData, decodeUint32], (ln, groupId, leafIndex) => ({
+  var leafNodeInfoCommitDecoder = mapDecoders([leafNodeInfoCommitOmittedDecoder, varLenDataDecoder, uint32Decoder], (ln, groupId, leafIndex) => ({
     ...ln,
     groupId,
     leafIndex
   }));
-  var decodeLeafNodeInfo = flatMapDecoder(decodeLeafNodeSource, (leafNodeSource) => {
-    switch (leafNodeSource) {
-      case "key_package":
-        return decodeLeafNodeInfoKeyPackage;
-      case "update":
-        return decodeLeafNodeInfoUpdate;
-      case "commit":
-        return decodeLeafNodeInfoCommit;
-    }
-  });
   var leafNodeTBSEncoder = contramapBufferEncoders([leafNodeDataEncoder, leafNodeInfoEncoder], (tbs) => [tbs, tbs]);
-  var encodeLeafNodeTBS = encode(leafNodeTBSEncoder);
   var leafNodeEncoder = contramapBufferEncoders([leafNodeDataEncoder, leafNodeInfoOmittedEncoder, varLenDataEncoder], (leafNode) => [leafNode, leafNode, leafNode.signature]);
-  var encodeLeafNode = encode(leafNodeEncoder);
-  var decodeLeafNode = mapDecoders([decodeLeafNodeData, decodeLeafNodeInfoOmitted, decodeVarLenData], (data, info, signature) => ({
+  var leafNodeDecoder = mapDecoders([leafNodeDataDecoder, leafNodeInfoOmittedDecoder, varLenDataDecoder], (data, info, signature) => ({
     ...data,
     ...info,
     signature
   }));
-  var decodeLeafNodeKeyPackage = mapDecoderOption(decodeLeafNode, (ln) => ln.leafNodeSource === "key_package" ? ln : void 0);
-  var decodeLeafNodeCommit = mapDecoderOption(decodeLeafNode, (ln) => ln.leafNodeSource === "commit" ? ln : void 0);
-  var decodeLeafNodeUpdate = mapDecoderOption(decodeLeafNode, (ln) => ln.leafNodeSource === "update" ? ln : void 0);
+  var leafNodeKeyPackageDecoder = mapDecoderOption(leafNodeDecoder, (ln) => ln.leafNodeSource === leafNodeSources.key_package ? ln : void 0);
+  var leafNodeCommitDecoder = mapDecoderOption(leafNodeDecoder, (ln) => ln.leafNodeSource === leafNodeSources.commit ? ln : void 0);
+  var leafNodeUpdateDecoder = mapDecoderOption(leafNodeDecoder, (ln) => ln.leafNodeSource === leafNodeSources.update ? ln : void 0);
   function toTbs(leafNode, groupId, leafIndex) {
     switch (leafNode.leafNodeSource) {
-      case "key_package":
+      case leafNodeSources.key_package:
         return { ...leafNode, leafNodeSource: leafNode.leafNodeSource };
-      case "update":
+      case leafNodeSources.update:
         return { ...leafNode, leafNodeSource: leafNode.leafNodeSource, groupId, leafIndex };
-      case "commit":
+      case leafNodeSources.commit:
         return { ...leafNode, leafNodeSource: leafNode.leafNodeSource, groupId, leafIndex };
     }
   }
   async function signLeafNodeCommit(tbs, signaturePrivateKey, sig) {
     return {
       ...tbs,
-      signature: await signWithLabel(signaturePrivateKey, "LeafNodeTBS", encode(leafNodeTBSEncoder)(tbs), sig)
+      signature: await signWithLabel(signaturePrivateKey, "LeafNodeTBS", encode(leafNodeTBSEncoder, tbs), sig)
     };
   }
   async function signLeafNodeKeyPackage(tbs, signaturePrivateKey, sig) {
     return {
       ...tbs,
-      signature: await signWithLabel(signaturePrivateKey, "LeafNodeTBS", encode(leafNodeTBSEncoder)(tbs), sig)
+      signature: await signWithLabel(signaturePrivateKey, "LeafNodeTBS", encode(leafNodeTBSEncoder, tbs), sig)
     };
   }
   function verifyLeafNodeSignature(leaf, groupId, leafIndex, sig) {
-    return verifyWithLabel(leaf.signaturePublicKey, "LeafNodeTBS", encode(leafNodeTBSEncoder)(toTbs(leaf, groupId, leafIndex)), leaf.signature, sig);
+    return verifyWithLabel(leaf.signaturePublicKey, "LeafNodeTBS", encode(leafNodeTBSEncoder, toTbs(leaf, groupId, leafIndex)), leaf.signature, sig);
   }
   function verifyLeafNodeSignatureKeyPackage(leaf, sig) {
-    return verifyWithLabel(leaf.signaturePublicKey, "LeafNodeTBS", encode(leafNodeTBSEncoder)(leaf), leaf.signature, sig);
+    return verifyWithLabel(leaf.signaturePublicKey, "LeafNodeTBS", encode(leafNodeTBSEncoder, leaf), leaf.signature, sig);
+  }
+
+  // node_modules/ts-mls/dist/src/grease.js
+  var greaseValues = [
+    2570,
+    6682,
+    10794,
+    14906,
+    19018,
+    23130,
+    27242,
+    31354,
+    35466,
+    39578,
+    43690,
+    47802,
+    51914,
+    56026,
+    60138
+  ];
+  var defaultGreaseConfig = {
+    probabilityPerGreaseValue: 0.1
+  };
+  function grease(greaseConfig) {
+    return greaseValues.filter(() => greaseConfig.probabilityPerGreaseValue > Math.random());
+  }
+  function greaseCiphersuites(greaseConfig) {
+    return grease(greaseConfig).map((n) => n);
+  }
+  function greaseCredentials(greaseConfig) {
+    return grease(greaseConfig);
+  }
+  function greaseCapabilities(config, capabilities) {
+    return {
+      ciphersuites: [...capabilities.ciphersuites, ...greaseCiphersuites(config)],
+      credentials: [...capabilities.credentials, ...greaseCredentials(config)],
+      extensions: [...capabilities.extensions, ...grease(config)],
+      proposals: [...capabilities.proposals, ...grease(config)],
+      versions: capabilities.versions
+    };
+  }
+
+  // node_modules/ts-mls/dist/src/defaultCapabilities.js
+  function defaultCapabilities() {
+    return greaseCapabilities(defaultGreaseConfig, {
+      versions: [protocolVersions.mls10],
+      ciphersuites: Object.values(ciphersuites),
+      extensions: [],
+      proposals: [],
+      credentials: Object.values(defaultCredentialTypes)
+    });
   }
 
   // node_modules/ts-mls/dist/src/keyPackage.js
@@ -8575,13 +8605,12 @@
     keyPackageTBS.leafNode,
     keyPackageTBS.extensions
   ]);
-  var encodeKeyPackageTBS = encode(keyPackageTBSEncoder);
-  var decodeKeyPackageTBS = mapDecoders([
-    decodeProtocolVersion,
-    decodeCiphersuite,
-    decodeVarLenData,
-    decodeLeafNodeKeyPackage,
-    decodeVarLenType(decodeExtension)
+  var keyPackageTBSDecoder = mapDecoders([
+    protocolVersionDecoder,
+    ciphersuiteDecoder,
+    varLenDataDecoder,
+    leafNodeKeyPackageDecoder,
+    varLenTypeDecoder(customExtensionDecoder)
   ], (version, cipherSuite, initKey, leafNode, extensions) => ({
     version,
     cipherSuite,
@@ -8590,21 +8619,25 @@
     extensions
   }));
   var keyPackageEncoder = contramapBufferEncoders([keyPackageTBSEncoder, varLenDataEncoder], (keyPackage) => [keyPackage, keyPackage.signature]);
-  var encodeKeyPackage = encode(keyPackageEncoder);
-  var decodeKeyPackage = mapDecoders([decodeKeyPackageTBS, decodeVarLenData], (keyPackageTBS, signature) => ({
+  var keyPackageDecoder = mapDecoders([keyPackageTBSDecoder, varLenDataDecoder], (keyPackageTBS, signature) => ({
     ...keyPackageTBS,
     signature
   }));
   async function signKeyPackage(tbs, signKey, s) {
-    return { ...tbs, signature: await signWithLabel(signKey, "KeyPackageTBS", encode(keyPackageTBSEncoder)(tbs), s) };
+    return { ...tbs, signature: await signWithLabel(signKey, "KeyPackageTBS", encode(keyPackageTBSEncoder, tbs), s) };
   }
   async function verifyKeyPackage(kp, s) {
-    return verifyWithLabel(kp.leafNode.signaturePublicKey, "KeyPackageTBS", encode(keyPackageTBSEncoder)(kp), kp.signature, s);
+    return verifyWithLabel(kp.leafNode.signaturePublicKey, "KeyPackageTBS", encode(keyPackageTBSEncoder, kp), kp.signature, s);
   }
   function makeKeyPackageRef(value, h) {
-    return refhash("MLS 1.0 KeyPackage Reference", encode(keyPackageEncoder)(value), h);
+    return refhash("MLS 1.0 KeyPackage Reference", encode(keyPackageEncoder, value), h);
   }
-  async function generateKeyPackageWithKey(credential, capabilities, lifetime, extensions, signatureKeyPair, cs, leafNodeExtensions) {
+  async function generateKeyPackageWithKey(params) {
+    const { credential, signatureKeyPair, cipherSuite, leafNodeExtensions } = params;
+    const capabilities = params.capabilities ?? defaultCapabilities();
+    const lifetime = params.lifetime ?? defaultLifetime();
+    const extensions = params.extensions ?? [];
+    const cs = cipherSuite;
     const initKeys = await cs.hpke.generateKeyPair();
     const hpkeKeys = await cs.hpke.generateKeyPair();
     const privatePackage = {
@@ -8613,7 +8646,7 @@
       signaturePrivateKey: signatureKeyPair.signKey
     };
     const leafNodeTbs = {
-      leafNodeSource: "key_package",
+      leafNodeSource: leafNodeSources.key_package,
       hpkePublicKey: await cs.hpke.exportPublicKey(hpkeKeys.publicKey),
       signaturePublicKey: signatureKeyPair.publicKey,
       extensions: leafNodeExtensions ?? [],
@@ -8622,32 +8655,44 @@
       lifetime
     };
     const tbs = {
-      version: "mls10",
+      version: protocolVersions.mls10,
       cipherSuite: cs.name,
       initKey: await cs.hpke.exportPublicKey(initKeys.publicKey),
       leafNode: await signLeafNodeKeyPackage(leafNodeTbs, signatureKeyPair.signKey, cs.signature),
-      extensions
+      extensions: extensions ?? []
     };
     return { publicPackage: await signKeyPackage(tbs, signatureKeyPair.signKey, cs.signature), privatePackage };
   }
-  async function generateKeyPackage(credential, capabilities, lifetime, extensions, cs, leafNodeExtensions) {
-    const sigKeys = await cs.signature.keygen();
-    return generateKeyPackageWithKey(credential, capabilities, lifetime, extensions, sigKeys, cs, leafNodeExtensions);
+  async function generateKeyPackage(params) {
+    const { credential, cipherSuite, leafNodeExtensions, capabilities, lifetime } = params;
+    const extensions = params.extensions ?? [];
+    const sigKeys = await cipherSuite.signature.keygen();
+    return generateKeyPackageWithKey({
+      credential,
+      capabilities,
+      lifetime,
+      extensions,
+      signatureKeyPair: sigKeys,
+      cipherSuite,
+      leafNodeExtensions
+    });
   }
 
   // node_modules/ts-mls/dist/src/crypto/kdf.js
   function expandWithLabel(secret, label, context, length, kdf) {
-    return kdf.expand(secret, encode(composeBufferEncoders([uint16Encoder, varLenDataEncoder, varLenDataEncoder]))([
-      length,
-      new TextEncoder().encode(`MLS 1.0 ${label}`),
-      context
-    ]), length);
+    const infoEncoder = composeBufferEncoders([uint16Encoder, varLenDataEncoder, varLenDataEncoder]);
+    return kdf.expand(secret, encode(infoEncoder, [length, new TextEncoder().encode(`MLS 1.0 ${label}`), context]), length);
   }
   async function deriveSecret(secret, label, kdf) {
     return expandWithLabel(secret, label, new Uint8Array(), kdf.size, kdf);
   }
   async function deriveTreeSecret(secret, label, generation, length, kdf) {
-    return expandWithLabel(secret, label, encode(uint32Encoder)(generation), length, kdf);
+    return expandWithLabel(secret, label, encode(uint32Encoder, generation), length, kdf);
+  }
+
+  // node_modules/ts-mls/dist/src/util/enumHelpers.js
+  function numberToEnum(t) {
+    return (n) => Object.values(t).includes(n) ? n : void 0;
   }
 
   // node_modules/ts-mls/dist/src/presharedkey.js
@@ -8655,189 +8700,194 @@
     external: 1,
     resumption: 2
   };
-  var pskTypeEncoder = contramapBufferEncoder(uint8Encoder, (t) => pskTypes[t]);
-  var encodePskType = encode(pskTypeEncoder);
-  var decodePskType = mapDecoderOption(decodeUint8, enumNumberToKey(pskTypes));
+  var pskTypeEncoder = uint8Encoder;
+  var pskTypeDecoder = mapDecoderOption(uint8Decoder, numberToEnum(pskTypes));
   var resumptionPSKUsages = {
     application: 1,
     reinit: 2,
     branch: 3
   };
-  var resumptionPSKUsageEncoder = contramapBufferEncoder(uint8Encoder, (u) => resumptionPSKUsages[u]);
-  var encodeResumptionPSKUsage = encode(resumptionPSKUsageEncoder);
-  var decodeResumptionPSKUsage = mapDecoderOption(decodeUint8, enumNumberToKey(resumptionPSKUsages));
+  var resumptionPSKUsageEncoder = uint8Encoder;
+  var resumptionPSKUsageDecoder = mapDecoderOption(uint8Decoder, numberToEnum(resumptionPSKUsages));
   var encodePskInfoExternal = contramapBufferEncoders([pskTypeEncoder, varLenDataEncoder], (i) => [i.psktype, i.pskId]);
   var encodePskInfoResumption = contramapBufferEncoders([pskTypeEncoder, resumptionPSKUsageEncoder, varLenDataEncoder, uint64Encoder], (info) => [info.psktype, info.usage, info.pskGroupId, info.pskEpoch]);
-  var decodePskInfoResumption = mapDecoders([decodeResumptionPSKUsage, decodeVarLenData, decodeUint64], (usage, pskGroupId, pskEpoch) => {
+  var pskInfoResumptionDecoder = mapDecoders([resumptionPSKUsageDecoder, varLenDataDecoder, uint64Decoder], (usage, pskGroupId, pskEpoch) => {
     return { usage, pskGroupId, pskEpoch };
   });
   var pskInfoEncoder = (info) => {
     switch (info.psktype) {
-      case "external":
+      case pskTypes.external:
         return encodePskInfoExternal(info);
-      case "resumption":
+      case pskTypes.resumption:
         return encodePskInfoResumption(info);
     }
   };
-  var encodePskInfo = encode(pskInfoEncoder);
-  var decodePskInfo = flatMapDecoder(decodePskType, (psktype) => {
+  var pskInfoDecoder = flatMapDecoder(pskTypeDecoder, (psktype) => {
     switch (psktype) {
-      case "external":
-        return mapDecoder(decodeVarLenData, (pskId) => ({
+      case pskTypes.external:
+        return mapDecoder(varLenDataDecoder, (pskId) => ({
           psktype,
           pskId
         }));
-      case "resumption":
-        return mapDecoder(decodePskInfoResumption, (resumption) => ({
+      case pskTypes.resumption:
+        return mapDecoder(pskInfoResumptionDecoder, (resumption) => ({
           psktype,
           ...resumption
         }));
     }
   });
   var pskIdEncoder = contramapBufferEncoders([pskInfoEncoder, varLenDataEncoder], (pskid) => [pskid, pskid.pskNonce]);
-  var encodePskId = encode(pskIdEncoder);
-  var decodePskId = mapDecoders([decodePskInfo, decodeVarLenData], (info, pskNonce) => ({ ...info, pskNonce }));
+  var pskIdDecoder = mapDecoders([pskInfoDecoder, varLenDataDecoder], (info, pskNonce) => ({
+    ...info,
+    pskNonce
+  }));
   var pskLabelEncoder = contramapBufferEncoders([pskIdEncoder, uint16Encoder, uint16Encoder], (label) => [label.id, label.index, label.count]);
-  var encodePskLabel = encode(pskLabelEncoder);
-  var decodePskLabel = mapDecoders([decodePskId, decodeUint16, decodeUint16], (id, index, count) => ({ id, index, count }));
+  var pskLabelDecoder = mapDecoders([pskIdDecoder, uint16Decoder, uint16Decoder], (id, index, count) => ({ id, index, count }));
   async function updatePskSecret(secret, pskId, psk, index, count, impl) {
     const zeroes = new Uint8Array(impl.kdf.size);
-    return impl.kdf.extract(await expandWithLabel(await impl.kdf.extract(zeroes, psk), "derived psk", encode(pskLabelEncoder)({ id: pskId, index, count }), impl.kdf.size, impl.kdf), secret);
+    return impl.kdf.extract(await expandWithLabel(await impl.kdf.extract(zeroes, psk), "derived psk", encode(pskLabelEncoder, { id: pskId, index, count }), impl.kdf.size, impl.kdf), secret);
   }
+
+  // node_modules/ts-mls/dist/src/defaultProposalType.js
+  var defaultProposalTypes = {
+    add: 1,
+    update: 2,
+    remove: 3,
+    psk: 4,
+    reinit: 5,
+    external_init: 6,
+    group_context_extensions: 7
+  };
+  var defaultProposalTypeValues = new Set(Object.values(defaultProposalTypes));
+  function isDefaultProposalTypeValue(v) {
+    return defaultProposalTypeValues.has(v);
+  }
+  var defaultProposalTypeValueEncoder = uint16Encoder;
+  var decodeDefaultProposalTypeValue = mapDecoderOption(uint16Decoder, (v) => defaultProposalTypeValues.has(v) ? v : void 0);
 
   // node_modules/ts-mls/dist/src/proposal.js
   var addEncoder = contramapBufferEncoder(keyPackageEncoder, (a) => a.keyPackage);
-  var encodeAdd = encode(addEncoder);
-  var decodeAdd = mapDecoder(decodeKeyPackage, (keyPackage) => ({ keyPackage }));
+  var addDecoder = mapDecoder(keyPackageDecoder, (keyPackage) => ({ keyPackage }));
   var updateEncoder = contramapBufferEncoder(leafNodeEncoder, (u) => u.leafNode);
-  var encodeUpdate = encode(updateEncoder);
-  var decodeUpdate = mapDecoder(decodeLeafNodeUpdate, (leafNode) => ({ leafNode }));
+  var updateDecoder = mapDecoder(leafNodeUpdateDecoder, (leafNode) => ({ leafNode }));
   var removeEncoder = contramapBufferEncoder(uint32Encoder, (r) => r.removed);
-  var encodeRemove = encode(removeEncoder);
-  var decodeRemove = mapDecoder(decodeUint32, (removed) => ({ removed }));
+  var removeDecoder = mapDecoder(uint32Decoder, (removed) => ({ removed }));
   var pskEncoder = contramapBufferEncoder(pskIdEncoder, (p) => p.preSharedKeyId);
-  var encodePSK = encode(pskEncoder);
-  var decodePSK = mapDecoder(decodePskId, (preSharedKeyId) => ({ preSharedKeyId }));
+  var pskDecoder = mapDecoder(pskIdDecoder, (preSharedKeyId) => ({ preSharedKeyId }));
   var reinitEncoder = contramapBufferEncoders([varLenDataEncoder, protocolVersionEncoder, ciphersuiteEncoder, varLenTypeEncoder(extensionEncoder)], (r) => [r.groupId, r.version, r.cipherSuite, r.extensions]);
-  var encodeReinit = encode(reinitEncoder);
-  var decodeReinit = mapDecoders([decodeVarLenData, decodeProtocolVersion, decodeCiphersuite, decodeVarLenType(decodeExtension)], (groupId, version, cipherSuite, extensions) => ({ groupId, version, cipherSuite, extensions }));
+  var reinitDecoder = mapDecoders([varLenDataDecoder, protocolVersionDecoder, ciphersuiteDecoder, varLenTypeDecoder(groupContextExtensionDecoder)], (groupId, version, cipherSuite, extensions) => ({ groupId, version, cipherSuite, extensions }));
   var externalInitEncoder = contramapBufferEncoder(varLenDataEncoder, (e) => e.kemOutput);
-  var encodeExternalInit = encode(externalInitEncoder);
-  var decodeExternalInit = mapDecoder(decodeVarLenData, (kemOutput) => ({ kemOutput }));
+  var externalInitDecoder = mapDecoder(varLenDataDecoder, (kemOutput) => ({ kemOutput }));
   var groupContextExtensionsEncoder = contramapBufferEncoder(varLenTypeEncoder(extensionEncoder), (g) => g.extensions);
-  var encodeGroupContextExtensions = encode(groupContextExtensionsEncoder);
-  var decodeGroupContextExtensions = mapDecoder(decodeVarLenType(decodeExtension), (extensions) => ({ extensions }));
-  var proposalAddEncoder = contramapBufferEncoders([defaultProposalTypeEncoder, addEncoder], (p) => [p.proposalType, p.add]);
-  var encodeProposalAdd = encode(proposalAddEncoder);
-  var proposalUpdateEncoder = contramapBufferEncoders([defaultProposalTypeEncoder, updateEncoder], (p) => [p.proposalType, p.update]);
-  var encodeProposalUpdate = encode(proposalUpdateEncoder);
-  var proposalRemoveEncoder = contramapBufferEncoders([defaultProposalTypeEncoder, removeEncoder], (p) => [p.proposalType, p.remove]);
-  var encodeProposalRemove = encode(proposalRemoveEncoder);
-  var proposalPSKEncoder = contramapBufferEncoders([defaultProposalTypeEncoder, pskEncoder], (p) => [p.proposalType, p.psk]);
-  var encodeProposalPSK = encode(proposalPSKEncoder);
-  var proposalReinitEncoder = contramapBufferEncoders([defaultProposalTypeEncoder, reinitEncoder], (p) => [p.proposalType, p.reinit]);
-  var encodeProposalReinit = encode(proposalReinitEncoder);
-  var proposalExternalInitEncoder = contramapBufferEncoders([defaultProposalTypeEncoder, externalInitEncoder], (p) => [p.proposalType, p.externalInit]);
-  var encodeProposalExternalInit = encode(proposalExternalInitEncoder);
-  var proposalGroupContextExtensionsEncoder = contramapBufferEncoders([defaultProposalTypeEncoder, groupContextExtensionsEncoder], (p) => [p.proposalType, p.groupContextExtensions]);
-  var encodeProposalGroupContextExtensions = encode(proposalGroupContextExtensionsEncoder);
+  var groupContextExtensionsDecoder = mapDecoder(varLenTypeDecoder(groupContextExtensionDecoder), (extensions) => ({ extensions }));
+  function isDefaultProposal(p) {
+    return isDefaultProposalTypeValue(p.proposalType);
+  }
+  var proposalAddEncoder = contramapBufferEncoders([defaultProposalTypeValueEncoder, addEncoder], (p) => [p.proposalType, p.add]);
+  var proposalUpdateEncoder = contramapBufferEncoders([defaultProposalTypeValueEncoder, updateEncoder], (p) => [p.proposalType, p.update]);
+  var proposalRemoveEncoder = contramapBufferEncoders([defaultProposalTypeValueEncoder, removeEncoder], (p) => [p.proposalType, p.remove]);
+  var proposalPSKEncoder = contramapBufferEncoders([defaultProposalTypeValueEncoder, pskEncoder], (p) => [p.proposalType, p.psk]);
+  var proposalReinitEncoder = contramapBufferEncoders([defaultProposalTypeValueEncoder, reinitEncoder], (p) => [p.proposalType, p.reinit]);
+  var proposalExternalInitEncoder = contramapBufferEncoders([defaultProposalTypeValueEncoder, externalInitEncoder], (p) => [p.proposalType, p.externalInit]);
+  var proposalGroupContextExtensionsEncoder = contramapBufferEncoders([defaultProposalTypeValueEncoder, groupContextExtensionsEncoder], (p) => [p.proposalType, p.groupContextExtensions]);
   var proposalCustomEncoder = contramapBufferEncoders([uint16Encoder, varLenDataEncoder], (p) => [p.proposalType, p.proposalData]);
-  var encodeProposalCustom = encode(proposalCustomEncoder);
   var proposalEncoder = (p) => {
+    if (!isDefaultProposal(p))
+      return proposalCustomEncoder(p);
     switch (p.proposalType) {
-      case "add":
+      case defaultProposalTypes.add:
         return proposalAddEncoder(p);
-      case "update":
+      case defaultProposalTypes.update:
         return proposalUpdateEncoder(p);
-      case "remove":
+      case defaultProposalTypes.remove:
         return proposalRemoveEncoder(p);
-      case "psk":
+      case defaultProposalTypes.psk:
         return proposalPSKEncoder(p);
-      case "reinit":
+      case defaultProposalTypes.reinit:
         return proposalReinitEncoder(p);
-      case "external_init":
+      case defaultProposalTypes.external_init:
         return proposalExternalInitEncoder(p);
-      case "group_context_extensions":
+      case defaultProposalTypes.group_context_extensions:
         return proposalGroupContextExtensionsEncoder(p);
-      default:
-        return proposalCustomEncoder(p);
     }
   };
-  var encodeProposal = encode(proposalEncoder);
-  var decodeProposalAdd = mapDecoder(decodeAdd, (add3) => ({ proposalType: "add", add: add3 }));
-  var decodeProposalUpdate = mapDecoder(decodeUpdate, (update) => ({
-    proposalType: "update",
+  var proposalAddDecoder = mapDecoder(addDecoder, (add3) => ({
+    proposalType: defaultProposalTypes.add,
+    add: add3
+  }));
+  var proposalUpdateDecoder = mapDecoder(updateDecoder, (update) => ({
+    proposalType: defaultProposalTypes.update,
     update
   }));
-  var decodeProposalRemove = mapDecoder(decodeRemove, (remove) => ({
-    proposalType: "remove",
+  var proposalRemoveDecoder = mapDecoder(removeDecoder, (remove) => ({
+    proposalType: defaultProposalTypes.remove,
     remove
   }));
-  var decodeProposalPSK = mapDecoder(decodePSK, (psk) => ({ proposalType: "psk", psk }));
-  var decodeProposalReinit = mapDecoder(decodeReinit, (reinit) => ({
-    proposalType: "reinit",
+  var proposalPSKDecoder = mapDecoder(pskDecoder, (psk) => ({
+    proposalType: defaultProposalTypes.psk,
+    psk
+  }));
+  var proposalReinitDecoder = mapDecoder(reinitDecoder, (reinit) => ({
+    proposalType: defaultProposalTypes.reinit,
     reinit
   }));
-  var decodeProposalExternalInit = mapDecoder(decodeExternalInit, (externalInit) => ({ proposalType: "external_init", externalInit }));
-  var decodeProposalGroupContextExtensions = mapDecoder(decodeGroupContextExtensions, (groupContextExtensions) => ({ proposalType: "group_context_extensions", groupContextExtensions }));
-  function decodeProposalCustom(proposalType) {
-    return mapDecoder(decodeVarLenData, (proposalData) => ({ proposalType, proposalData }));
+  var proposalExternalInitDecoder = mapDecoder(externalInitDecoder, (externalInit) => ({ proposalType: defaultProposalTypes.external_init, externalInit }));
+  var proposalGroupContextExtensionsDecoder = mapDecoder(groupContextExtensionsDecoder, (groupContextExtensions) => ({
+    proposalType: defaultProposalTypes.group_context_extensions,
+    groupContextExtensions
+  }));
+  function proposalCustomDecoder(proposalType) {
+    return mapDecoder(varLenDataDecoder, (proposalData) => ({ proposalType, proposalData }));
   }
-  var decodeProposal = orDecoder(flatMapDecoder(decodeDefaultProposalType, (proposalType) => {
+  var proposalDecoder = orDecoder(flatMapDecoder(decodeDefaultProposalTypeValue, (proposalType) => {
     switch (proposalType) {
-      case "add":
-        return decodeProposalAdd;
-      case "update":
-        return decodeProposalUpdate;
-      case "remove":
-        return decodeProposalRemove;
-      case "psk":
-        return decodeProposalPSK;
-      case "reinit":
-        return decodeProposalReinit;
-      case "external_init":
-        return decodeProposalExternalInit;
-      case "group_context_extensions":
-        return decodeProposalGroupContextExtensions;
+      case defaultProposalTypes.add:
+        return proposalAddDecoder;
+      case defaultProposalTypes.update:
+        return proposalUpdateDecoder;
+      case defaultProposalTypes.remove:
+        return proposalRemoveDecoder;
+      case defaultProposalTypes.psk:
+        return proposalPSKDecoder;
+      case defaultProposalTypes.reinit:
+        return proposalReinitDecoder;
+      case defaultProposalTypes.external_init:
+        return proposalExternalInitDecoder;
+      case defaultProposalTypes.group_context_extensions:
+        return proposalGroupContextExtensionsDecoder;
     }
-  }), flatMapDecoder(decodeUint16, (n) => decodeProposalCustom(n)));
+  }), flatMapDecoder(uint16Decoder, (n) => proposalCustomDecoder(n)));
 
   // node_modules/ts-mls/dist/src/proposalOrRefType.js
   var proposalOrRefTypes = {
     proposal: 1,
     reference: 2
   };
-  var proposalOrRefTypeEncoder = contramapBufferEncoder(uint8Encoder, (t) => proposalOrRefTypes[t]);
-  var encodeProposalOrRefType = encode(proposalOrRefTypeEncoder);
-  var decodeProposalOrRefType = mapDecoderOption(decodeUint8, enumNumberToKey(proposalOrRefTypes));
+  var proposalOrRefTypeEncoder = uint8Encoder;
+  var proposalOrRefTypeDecoder = mapDecoderOption(uint8Decoder, numberToEnum(proposalOrRefTypes));
   var proposalOrRefProposalEncoder = contramapBufferEncoders([proposalOrRefTypeEncoder, proposalEncoder], (p) => [p.proposalOrRefType, p.proposal]);
-  var encodeProposalOrRefProposal = encode(proposalOrRefProposalEncoder);
   var proposalOrRefProposalRefEncoder = contramapBufferEncoders([proposalOrRefTypeEncoder, varLenDataEncoder], (r) => [r.proposalOrRefType, r.reference]);
-  var encodeProposalOrRefProposalRef = encode(proposalOrRefProposalRefEncoder);
   var proposalOrRefEncoder = (input) => {
     switch (input.proposalOrRefType) {
-      case "proposal":
+      case proposalOrRefTypes.proposal:
         return proposalOrRefProposalEncoder(input);
-      case "reference":
+      case proposalOrRefTypes.reference:
         return proposalOrRefProposalRefEncoder(input);
     }
   };
-  var encodeProposalOrRef = encode(proposalOrRefEncoder);
-  var decodeProposalOrRef = flatMapDecoder(decodeProposalOrRefType, (proposalOrRefType) => {
+  var proposalOrRefDecoder = flatMapDecoder(proposalOrRefTypeDecoder, (proposalOrRefType) => {
     switch (proposalOrRefType) {
-      case "proposal":
-        return mapDecoder(decodeProposal, (proposal) => ({ proposalOrRefType, proposal }));
-      case "reference":
-        return mapDecoder(decodeVarLenData, (reference) => ({ proposalOrRefType, reference }));
+      case proposalOrRefTypes.proposal:
+        return mapDecoder(proposalDecoder, (proposal) => ({ proposalOrRefType, proposal }));
+      case proposalOrRefTypes.reference:
+        return mapDecoder(varLenDataDecoder, (reference) => ({ proposalOrRefType, reference }));
     }
   });
 
   // node_modules/ts-mls/dist/src/crypto/hpke.js
   function encryptWithLabel(publicKey, label, context, plaintext, hpke) {
-    return hpke.seal(publicKey, plaintext, encode(composeBufferEncoders([varLenDataEncoder, varLenDataEncoder]))([
-      new TextEncoder().encode(`MLS 1.0 ${label}`),
-      context
-    ]), new Uint8Array());
+    const infoEncoder = composeBufferEncoders([varLenDataEncoder, varLenDataEncoder]);
+    return hpke.seal(publicKey, plaintext, encode(infoEncoder, [new TextEncoder().encode(`MLS 1.0 ${label}`), context]), new Uint8Array());
   }
 
   // node_modules/ts-mls/dist/src/groupContext.js
@@ -8854,19 +8904,18 @@
     // confirmedTranscriptHash
     varLenTypeEncoder(extensionEncoder)
   ], (gc) => [gc.version, gc.cipherSuite, gc.groupId, gc.epoch, gc.treeHash, gc.confirmedTranscriptHash, gc.extensions]);
-  var encodeGroupContext = encode(groupContextEncoder);
-  var decodeGroupContext = mapDecoders([
-    decodeProtocolVersion,
-    decodeCiphersuite,
-    decodeVarLenData,
+  var groupContextDecoder = mapDecoders([
+    protocolVersionDecoder,
+    ciphersuiteDecoder,
+    varLenDataDecoder,
     // groupId
-    decodeUint64,
+    uint64Decoder,
     // epoch
-    decodeVarLenData,
+    varLenDataDecoder,
     // treeHash
-    decodeVarLenData,
+    varLenDataDecoder,
     // confirmedTranscriptHash
-    decodeVarLenType(decodeExtension)
+    varLenTypeDecoder(groupContextExtensionDecoder)
   ], (version, cipherSuite, groupId, epoch, treeHash2, confirmedTranscriptHash, extensions) => ({
     version,
     cipherSuite,
@@ -8879,11 +8928,11 @@
   async function extractEpochSecret(context, joinerSecret, kdf, pskSecret) {
     const psk = pskSecret === void 0 ? new Uint8Array(kdf.size) : pskSecret;
     const extracted = await kdf.extract(joinerSecret, psk);
-    return expandWithLabel(extracted, "epoch", encode(groupContextEncoder)(context), kdf.size, kdf);
+    return expandWithLabel(extracted, "epoch", encode(groupContextEncoder, context), kdf.size, kdf);
   }
   async function extractJoinerSecret(context, previousInitSecret, commitSecret, kdf) {
     const extracted = await kdf.extract(previousInitSecret, commitSecret);
-    return expandWithLabel(extracted, "joiner", encode(groupContextEncoder)(context), kdf.size, kdf);
+    return expandWithLabel(extracted, "joiner", encode(groupContextEncoder, context), kdf.size, kdf);
   }
 
   // node_modules/ts-mls/dist/src/nodeType.js
@@ -8891,14 +8940,12 @@
     leaf: 1,
     parent: 2
   };
-  var nodeTypeEncoder = contramapBufferEncoder(uint8Encoder, (t) => nodeTypes[t]);
-  var encodeNodeType = encode(nodeTypeEncoder);
-  var decodeNodeType = mapDecoderOption(decodeUint8, enumNumberToKey(nodeTypes));
+  var nodeTypeEncoder = uint8Encoder;
+  var nodeTypeDecoder = mapDecoderOption(uint8Decoder, numberToEnum(nodeTypes));
 
   // node_modules/ts-mls/dist/src/parentNode.js
   var parentNodeEncoder = contramapBufferEncoders([varLenDataEncoder, varLenDataEncoder, varLenTypeEncoder(uint32Encoder)], (node) => [node.hpkePublicKey, node.parentHash, node.unmergedLeaves]);
-  var encodeParentNode = encode(parentNodeEncoder);
-  var decodeParentNode = mapDecoders([decodeVarLenData, decodeVarLenData, decodeVarLenType(decodeUint32)], (hpkePublicKey, parentHash, unmergedLeaves) => ({
+  var parentNodeDecoder = mapDecoders([varLenDataDecoder, varLenDataDecoder, varLenTypeDecoder(uint32Decoder)], (hpkePublicKey, parentHash, unmergedLeaves) => ({
     hpkePublicKey,
     parentHash,
     unmergedLeaves
@@ -9000,22 +9047,21 @@
   // node_modules/ts-mls/dist/src/ratchetTree.js
   var nodeEncoder = (node) => {
     switch (node.nodeType) {
-      case "parent":
+      case nodeTypes.parent:
         return contramapBufferEncoders([nodeTypeEncoder, parentNodeEncoder], (n) => [n.nodeType, n.parent])(node);
-      case "leaf":
+      case nodeTypes.leaf:
         return contramapBufferEncoders([nodeTypeEncoder, leafNodeEncoder], (n) => [n.nodeType, n.leaf])(node);
     }
   };
-  var encodeNode = encode(nodeEncoder);
-  var decodeNode = flatMapDecoder(decodeNodeType, (nodeType) => {
+  var nodeDecoder = flatMapDecoder(nodeTypeDecoder, (nodeType) => {
     switch (nodeType) {
-      case "parent":
-        return mapDecoder(decodeParentNode, (parent2) => ({
+      case nodeTypes.parent:
+        return mapDecoder(parentNodeDecoder, (parent2) => ({
           nodeType,
           parent: parent2
         }));
-      case "leaf":
-        return mapDecoder(decodeLeafNode, (leaf) => ({
+      case nodeTypes.leaf:
+        return mapDecoder(leafNodeDecoder, (leaf) => ({
           nodeType,
           leaf
         }));
@@ -9023,9 +9069,9 @@
   });
   function getHpkePublicKey(n) {
     switch (n.nodeType) {
-      case "parent":
+      case nodeTypes.parent:
         return n.parent.hpkePublicKey;
-      case "leaf":
+      case nodeTypes.leaf:
         return n.leaf.hpkePublicKey;
     }
   }
@@ -9056,8 +9102,7 @@
     return tree.slice(0, lastNonBlank + 1);
   }
   var ratchetTreeEncoder = contramapBufferEncoder(varLenTypeEncoder(optionalEncoder(nodeEncoder)), stripBlankNodes);
-  var encodeRatchetTree = encode(ratchetTreeEncoder);
-  var decodeRatchetTree = mapDecoder(decodeVarLenType(decodeOptional(decodeNode)), extendRatchetTree);
+  var ratchetTreeDecoder = mapDecoder(varLenTypeDecoder(optionalDecoder(nodeDecoder)), extendRatchetTree);
   function findBlankLeafNodeIndex(tree) {
     const nodeIndex = tree.findIndex((node, nodeIndex2) => node === void 0 && isLeaf(toNodeIndex(nodeIndex2)));
     if (nodeIndex < 0)
@@ -9075,7 +9120,7 @@
     const newTree = [
       ...tree,
       newRoot,
-      { nodeType: "leaf", leaf: leafNode },
+      { nodeType: nodeTypes.leaf, leaf: leafNode },
       ...new Array(tree.length - 1)
     ];
     return [newTree, insertedNodeIndex];
@@ -9093,13 +9138,13 @@
       if (node !== void 0) {
         const parentNode = node;
         const updated = {
-          nodeType: "parent",
+          nodeType: nodeTypes.parent,
           parent: { ...parentNode.parent, unmergedLeaves: [...parentNode.parent.unmergedLeaves, insertedLeafIndex] }
         };
         copy[nodeIndex] = updated;
       }
     }
-    copy[blankLeaf] = { nodeType: "leaf", leaf: leafNode };
+    copy[blankLeaf] = { nodeType: nodeTypes.leaf, leaf: leafNode };
     return [copy, blankLeaf];
   }
   function updateLeafNode(tree, leafNode, leafIndex) {
@@ -9112,7 +9157,7 @@
         copy[nodeIndex] = void 0;
       }
     }
-    copy[leafNodeIndex] = { nodeType: "leaf", leaf: leafNode };
+    copy[leafNodeIndex] = { nodeType: nodeTypes.leaf, leaf: leafNode };
     return copy;
   }
   function removeLeafNode(tree, removedLeafIndex) {
@@ -9146,7 +9191,7 @@
     if (isLeaf(nodeIndex)) {
       return [nodeIndex];
     }
-    const unmerged = node.nodeType === "parent" ? node.parent.unmergedLeaves : [];
+    const unmerged = node.nodeType === nodeTypes.parent ? node.parent.unmergedLeaves : [];
     return [nodeIndex, ...unmerged.map((u) => leafToNodeIndex(toLeafIndex(u)))];
   }
   function filteredDirectPathAndCopathResolution(leafIndex, tree) {
@@ -9171,7 +9216,7 @@
         const nodeIndex = toNodeIndex(i);
         if (isLeaf(nodeIndex) && shouldBeRemoved(nodeToLeafIndex(nodeIndex))) {
           copy[i] = void 0;
-        } else if (n.nodeType === "parent") {
+        } else if (n.nodeType === nodeTypes.parent) {
           copy[i] = {
             ...n,
             parent: { ...n.parent, unmergedLeaves: n.parent.unmergedLeaves.filter((l) => !shouldBeRemoved(l)) }
@@ -9188,7 +9233,7 @@
       currentIndex = parent(currentIndex, leafWidth(tree.length));
       const currentNode = tree[currentIndex];
       if (currentNode !== void 0) {
-        if (currentNode.nodeType === "leaf") {
+        if (currentNode.nodeType === nodeTypes.leaf) {
           throw new InternalError("Expected parent node");
         }
         const result = f(currentIndex, currentNode.parent);
@@ -9204,35 +9249,24 @@
 
   // node_modules/ts-mls/dist/src/treeHash.js
   var leafNodeHashInputEncoder = contramapBufferEncoders([nodeTypeEncoder, uint32Encoder, optionalEncoder(leafNodeEncoder)], (input) => [input.nodeType, input.leafIndex, input.leafNode]);
-  var encodeLeafNodeHashInput = encode(leafNodeHashInputEncoder);
-  var decodeLeafNodeHashInput = mapDecoders([decodeUint32, decodeOptional(decodeLeafNode)], (leafIndex, leafNode) => ({
-    nodeType: "leaf",
+  var leafNodeHashInputDecoder = mapDecoders([uint32Decoder, optionalDecoder(leafNodeDecoder)], (leafIndex, leafNode) => ({
+    nodeType: nodeTypes.leaf,
     leafIndex,
     leafNode
   }));
   var parentNodeHashInputEncoder = contramapBufferEncoders([nodeTypeEncoder, optionalEncoder(parentNodeEncoder), varLenDataEncoder, varLenDataEncoder], (input) => [input.nodeType, input.parentNode, input.leftHash, input.rightHash]);
-  var encodeParentNodeHashInput = encode(parentNodeHashInputEncoder);
-  var decodeParentNodeHashInput = mapDecoders([decodeOptional(decodeParentNode), decodeVarLenData, decodeVarLenData], (parentNode, leftHash, rightHash) => ({
-    nodeType: "parent",
+  var parentNodeHashInputDecoder = mapDecoders([optionalDecoder(parentNodeDecoder), varLenDataDecoder, varLenDataDecoder], (parentNode, leftHash, rightHash) => ({
+    nodeType: nodeTypes.parent,
     parentNode,
     leftHash,
     rightHash
   }));
-  var treeHashInputEncoder = (input) => {
-    switch (input.nodeType) {
-      case "leaf":
-        return leafNodeHashInputEncoder(input);
-      case "parent":
-        return parentNodeHashInputEncoder(input);
-    }
-  };
-  var encodeTreeHashInput = encode(treeHashInputEncoder);
-  var decodeTreeHashInput = flatMapDecoder(decodeNodeType, (nodeType) => {
+  var treeHashInputDecoder = flatMapDecoder(nodeTypeDecoder, (nodeType) => {
     switch (nodeType) {
-      case "leaf":
-        return decodeLeafNodeHashInput;
-      case "parent":
-        return decodeParentNodeHashInput;
+      case nodeTypes.leaf:
+        return leafNodeHashInputDecoder;
+      case nodeTypes.parent:
+        return parentNodeHashInputDecoder;
     }
   });
   async function treeHashRoot(tree, h) {
@@ -9241,34 +9275,33 @@
   async function treeHash(tree, subtreeIndex, h) {
     if (isLeaf(subtreeIndex)) {
       const leafNode = tree[subtreeIndex];
-      if (leafNode?.nodeType === "parent")
+      if (leafNode?.nodeType === nodeTypes.parent)
         throw new InternalError("Somehow found parent node in leaf position");
-      const input = encode(leafNodeHashInputEncoder)({
-        nodeType: "leaf",
+      const input = encode(leafNodeHashInputEncoder, {
+        nodeType: nodeTypes.leaf,
         leafIndex: nodeToLeafIndex(subtreeIndex),
         leafNode: leafNode?.leaf
       });
       return await h.digest(input);
     } else {
       const parentNode = tree[subtreeIndex];
-      if (parentNode?.nodeType === "leaf")
+      if (parentNode?.nodeType === nodeTypes.leaf)
         throw new InternalError("Somehow found leaf node in parent position");
       const leftHash = await treeHash(tree, left(subtreeIndex), h);
       const rightHash = await treeHash(tree, right(subtreeIndex), h);
       const input = {
-        nodeType: "parent",
+        nodeType: nodeTypes.parent,
         parentNode: parentNode?.parent,
         leftHash,
         rightHash
       };
-      return await h.digest(encode(parentNodeHashInputEncoder)(input));
+      return await h.digest(encode(parentNodeHashInputEncoder, input));
     }
   }
 
   // node_modules/ts-mls/dist/src/parentHash.js
   var parentHashInputEncoder = contramapBufferEncoders([varLenDataEncoder, varLenDataEncoder, varLenDataEncoder], (i) => [i.encryptionKey, i.parentHash, i.originalSiblingTreeHash]);
-  var encodeParentHashInput = encode(parentHashInputEncoder);
-  var decodeParentHashInput = mapDecoders([decodeVarLenData, decodeVarLenData, decodeVarLenData], (encryptionKey, parentHash, originalSiblingTreeHash) => ({
+  var parentHashInputDecoder = mapDecoders([varLenDataDecoder, varLenDataDecoder, varLenDataDecoder], (encryptionKey, parentHash, originalSiblingTreeHash) => ({
     encryptionKey,
     parentHash,
     originalSiblingTreeHash
@@ -9284,7 +9317,7 @@
       return [new Uint8Array(), parentNodeIndex];
     }
     const siblingIndex = nodeIndex < parentNodeIndex ? right(parentNodeIndex) : left(parentNodeIndex);
-    if (parentNode === void 0 || parentNode.nodeType === "leaf")
+    if (parentNode === void 0 || parentNode.nodeType === nodeTypes.leaf)
       throw new InternalError("Expected non-blank parent Node");
     const removedUnmerged = removeLeaves(tree, parentNode.parent.unmergedLeaves);
     const originalSiblingTreeHash = await treeHash(removedUnmerged, siblingIndex, h);
@@ -9293,24 +9326,21 @@
       parentHash: parentNode.parent.parentHash,
       originalSiblingTreeHash
     };
-    return [await h.digest(encode(parentHashInputEncoder)(input)), parentNodeIndex];
+    return [await h.digest(encode(parentHashInputEncoder, input)), parentNodeIndex];
   }
 
   // node_modules/ts-mls/dist/src/hpkeCiphertext.js
   var hpkeCiphertextEncoder = contramapBufferEncoders([varLenDataEncoder, varLenDataEncoder], (egs) => [egs.kemOutput, egs.ciphertext]);
-  var encodeHpkeCiphertext = encode(hpkeCiphertextEncoder);
-  var decodeHpkeCiphertext = mapDecoders([decodeVarLenData, decodeVarLenData], (kemOutput, ciphertext) => ({ kemOutput, ciphertext }));
+  var hpkeCiphertextDecoder = mapDecoders([varLenDataDecoder, varLenDataDecoder], (kemOutput, ciphertext) => ({ kemOutput, ciphertext }));
 
   // node_modules/ts-mls/dist/src/updatePath.js
   var updatePathNodeEncoder = contramapBufferEncoders([varLenDataEncoder, varLenTypeEncoder(hpkeCiphertextEncoder)], (node) => [node.hpkePublicKey, node.encryptedPathSecret]);
-  var encodeUpdatePathNode = encode(updatePathNodeEncoder);
-  var decodeUpdatePathNode = mapDecoders([decodeVarLenData, decodeVarLenType(decodeHpkeCiphertext)], (hpkePublicKey, encryptedPathSecret) => ({ hpkePublicKey, encryptedPathSecret }));
+  var updatePathNodeDecoder = mapDecoders([varLenDataDecoder, varLenTypeDecoder(hpkeCiphertextDecoder)], (hpkePublicKey, encryptedPathSecret) => ({ hpkePublicKey, encryptedPathSecret }));
   var updatePathEncoder = contramapBufferEncoders([leafNodeEncoder, varLenTypeEncoder(updatePathNodeEncoder)], (path) => [path.leafNode, path.nodes]);
-  var encodeUpdatePath = encode(updatePathEncoder);
-  var decodeUpdatePath = mapDecoders([decodeLeafNodeCommit, decodeVarLenType(decodeUpdatePathNode)], (leafNode, nodes) => ({ leafNode, nodes }));
+  var updatePathDecoder = mapDecoders([leafNodeCommitDecoder, varLenTypeDecoder(updatePathNodeDecoder)], (leafNode, nodes) => ({ leafNode, nodes }));
   async function createUpdatePath(originalTree, senderLeafIndex, groupContext, signaturePrivateKey, cs) {
     const originalLeafNode = originalTree[leafToNodeIndex(senderLeafIndex)];
-    if (originalLeafNode === void 0 || originalLeafNode.nodeType === "parent")
+    if (originalLeafNode === void 0 || originalLeafNode.nodeType === nodeTypes.parent)
       throw new InternalError("Expected non-blank leaf node");
     const pathSecret = cs.rng.randomBytes(cs.kdf.size);
     const leafNodeSecret = await deriveSecret(pathSecret, "node", cs.kdf);
@@ -9321,7 +9351,7 @@
     const treeWithHashes = await insertParentHashes(fdp, updatedTree, cs);
     const leafParentHash = await calculateParentHash(treeWithHashes, leafToNodeIndex(senderLeafIndex), cs.hash);
     const updatedLeafNodeTbs = {
-      leafNodeSource: "commit",
+      leafNodeSource: leafNodeSources.commit,
       hpkePublicKey: await cs.hpke.exportPublicKey(leafKeypair.publicKey),
       extensions: originalLeafNode.leaf.extensions,
       capabilities: originalLeafNode.leaf.capabilities,
@@ -9333,7 +9363,7 @@
     };
     const updatedLeafNode = await signLeafNodeCommit(updatedLeafNodeTbs, signaturePrivateKey, cs.signature);
     treeWithHashes[leafToNodeIndex(senderLeafIndex)] = {
-      nodeType: "leaf",
+      nodeType: nodeTypes.leaf,
       leaf: updatedLeafNode
     };
     const updatedTreeHash = await treeHashRoot(treeWithHashes, cs.hash);
@@ -9353,7 +9383,7 @@
       const res = {
         hpkePublicKey: key,
         encryptedPathSecret: await Promise.all(pathSecret.sendTo.map(async (nodeIndex) => {
-          const { ct, enc } = await encryptWithLabel(await cs.hpke.importPublicKey(getHpkePublicKey(originalTree[nodeIndex])), "UpdatePathNode", encode(groupContextEncoder)(updatedGroupContext), pathSecret.secret, cs.hpke);
+          const { ct, enc } = await encryptWithLabel(await cs.hpke.importPublicKey(getHpkePublicKey(originalTree[nodeIndex])), "UpdatePathNode", encode(groupContextEncoder, updatedGroupContext), pathSecret.secret, cs.hpke);
           return { ciphertext: ct, kemOutput: enc };
         }))
       };
@@ -9365,9 +9395,12 @@
       const { nodeIndex } = fdp[x];
       const parentHash = await calculateParentHash(tree, nodeIndex, cs.hash);
       const currentNode = tree[nodeIndex];
-      if (currentNode === void 0 || currentNode.nodeType === "leaf")
+      if (currentNode === void 0 || currentNode.nodeType === nodeTypes.leaf)
         throw new InternalError("Expected non-blank parent node");
-      const updatedNode = { nodeType: "parent", parent: { ...currentNode.parent, parentHash: parentHash[0] } };
+      const updatedNode = {
+        nodeType: nodeTypes.parent,
+        parent: { ...currentNode.parent, parentHash: parentHash[0] }
+      };
       tree[nodeIndex] = updatedNode;
     }
     return tree;
@@ -9380,7 +9413,7 @@
       const nextNodeSecret = await deriveSecret(nextPathSecret, "node", cs.kdf);
       const { publicKey } = await cs.hpke.deriveKeyPair(nextNodeSecret);
       tree2[nodeIndex] = {
-        nodeType: "parent",
+        nodeType: nodeTypes.parent,
         parent: {
           hpkePublicKey: await cs.hpke.exportPublicKey(publicKey),
           parentHash: new Uint8Array(),
@@ -9402,8 +9435,7 @@
 
   // node_modules/ts-mls/dist/src/commit.js
   var commitEncoder = contramapBufferEncoders([varLenTypeEncoder(proposalOrRefEncoder), optionalEncoder(updatePathEncoder)], (commit) => [commit.proposals, commit.path]);
-  var encodeCommit = encode(commitEncoder);
-  var decodeCommit = mapDecoders([decodeVarLenType(decodeProposalOrRef), decodeOptional(decodeUpdatePath)], (proposals, path) => ({ proposals, path }));
+  var commitDecoder = mapDecoders([varLenTypeDecoder(proposalOrRefDecoder), optionalDecoder(updatePathDecoder)], (proposals, path) => ({ proposals, path }));
 
   // node_modules/ts-mls/dist/src/contentType.js
   var contentTypes = {
@@ -9411,9 +9443,8 @@
     proposal: 2,
     commit: 3
   };
-  var contentTypeEncoder = contramapBufferEncoder(uint8Encoder, (t) => contentTypes[t]);
-  var encodeContentType = encode(contentTypeEncoder);
-  var decodeContentType = mapDecoderOption(decodeUint8, enumNumberToKey(contentTypes));
+  var contentTypeEncoder = uint8Encoder;
+  var contentTypeDecoder = mapDecoderOption(uint8Decoder, numberToEnum(contentTypes));
 
   // node_modules/ts-mls/dist/src/wireformat.js
   var wireformats = {
@@ -9423,9 +9454,8 @@
     mls_group_info: 4,
     mls_key_package: 5
   };
-  var wireformatEncoder = (s) => contramapBufferEncoder(uint16Encoder, (t) => wireformats[t])(s);
-  var encodeWireformat = encode(wireformatEncoder);
-  var decodeWireformat = mapDecoderOption(decodeUint16, enumNumberToKey(wireformats));
+  var wireformatEncoder = uint16Encoder;
+  var wireformatDecoder = mapDecoderOption(uint16Decoder, numberToEnum(wireformats));
 
   // node_modules/ts-mls/dist/src/sender.js
   var senderTypes = {
@@ -9434,38 +9464,36 @@
     new_member_proposal: 3,
     new_member_commit: 4
   };
-  var senderTypeEncoder = contramapBufferEncoder(uint8Encoder, (t) => senderTypes[t]);
-  var encodeSenderType = encode(senderTypeEncoder);
-  var decodeSenderType = mapDecoderOption(decodeUint8, enumNumberToKey(senderTypes));
+  var senderTypeEncoder = uint8Encoder;
+  var senderTypeDecoder = mapDecoderOption(uint8Decoder, numberToEnum(senderTypes));
   var senderEncoder = (s) => {
     switch (s.senderType) {
-      case "member":
+      case senderTypes.member:
         return contramapBufferEncoders([senderTypeEncoder, uint32Encoder], (s2) => [s2.senderType, s2.leafIndex])(s);
-      case "external":
+      case senderTypes.external:
         return contramapBufferEncoders([senderTypeEncoder, uint32Encoder], (s2) => [s2.senderType, s2.senderIndex])(s);
-      case "new_member_proposal":
-      case "new_member_commit":
+      case senderTypes.new_member_proposal:
+      case senderTypes.new_member_commit:
         return senderTypeEncoder(s.senderType);
     }
   };
-  var encodeSender = encode(senderEncoder);
-  var decodeSender = flatMapDecoder(decodeSenderType, (senderType) => {
+  var senderDecoder = flatMapDecoder(senderTypeDecoder, (senderType) => {
     switch (senderType) {
-      case "member":
-        return mapDecoder(decodeUint32, (leafIndex) => ({
+      case senderTypes.member:
+        return mapDecoder(uint32Decoder, (leafIndex) => ({
           senderType,
           leafIndex
         }));
-      case "external":
-        return mapDecoder(decodeUint32, (senderIndex) => ({
+      case senderTypes.external:
+        return mapDecoder(uint32Decoder, (senderIndex) => ({
           senderType,
           senderIndex
         }));
-      case "new_member_proposal":
+      case senderTypes.new_member_proposal:
         return mapDecoder(() => [void 0, 0], () => ({
           senderType
         }));
-      case "new_member_commit":
+      case senderTypes.new_member_commit:
         return mapDecoder(() => [void 0, 0], () => ({
           senderType
         }));
@@ -9478,20 +9506,17 @@
       view.set(g, 0);
     }
   ];
-  var encodeReuseGuard = encode(reuseGuardEncoder);
-  var decodeReuseGuard = (b, offset) => {
+  var reuseGuardDecoder = (b, offset) => {
     return [b.subarray(offset, offset + 4), 4];
   };
   var senderDataEncoder = contramapBufferEncoders([uint32Encoder, uint32Encoder, reuseGuardEncoder], (s) => [s.leafIndex, s.generation, s.reuseGuard]);
-  var encodeSenderData = encode(senderDataEncoder);
-  var decodeSenderData = mapDecoders([decodeUint32, decodeUint32, decodeReuseGuard], (leafIndex, generation, reuseGuard) => ({
+  var senderDataDecoder = mapDecoders([uint32Decoder, uint32Decoder, reuseGuardDecoder], (leafIndex, generation, reuseGuard) => ({
     leafIndex,
     generation,
     reuseGuard
   }));
   var senderDataAADEncoder = contramapBufferEncoders([varLenDataEncoder, uint64Encoder, contentTypeEncoder], (aad) => [aad.groupId, aad.epoch, aad.contentType]);
-  var encodeSenderDataAAD = encode(senderDataAADEncoder);
-  var decodeSenderDataAAD = mapDecoders([decodeVarLenData, decodeUint64, decodeContentType], (groupId, epoch, contentType) => ({
+  var senderDataAADDecoder = mapDecoders([varLenDataDecoder, uint64Decoder, contentTypeDecoder], (groupId, epoch, contentType) => ({
     groupId,
     epoch,
     contentType
@@ -9512,44 +9537,39 @@
 
   // node_modules/ts-mls/dist/src/framedContent.js
   var framedContentApplicationDataEncoder = contramapBufferEncoders([contentTypeEncoder, varLenDataEncoder], (f) => [f.contentType, f.applicationData]);
-  var encodeFramedContentApplicationData = encode(framedContentApplicationDataEncoder);
   var framedContentProposalDataEncoder = contramapBufferEncoders([contentTypeEncoder, proposalEncoder], (f) => [f.contentType, f.proposal]);
-  var encodeFramedContentProposalData = encode(framedContentProposalDataEncoder);
   var framedContentCommitDataEncoder = contramapBufferEncoders([contentTypeEncoder, commitEncoder], (f) => [f.contentType, f.commit]);
-  var encodeFramedContentCommitData = encode(framedContentCommitDataEncoder);
   var framedContentInfoEncoder = (fc) => {
     switch (fc.contentType) {
-      case "application":
+      case contentTypes.application:
         return framedContentApplicationDataEncoder(fc);
-      case "proposal":
+      case contentTypes.proposal:
         return framedContentProposalDataEncoder(fc);
-      case "commit":
+      case contentTypes.commit:
         return framedContentCommitDataEncoder(fc);
     }
   };
-  var encodeFramedContentInfo = encode(framedContentInfoEncoder);
-  var decodeFramedContentApplicationData = mapDecoder(decodeVarLenData, (applicationData) => ({ contentType: "application", applicationData }));
-  var decodeFramedContentProposalData = mapDecoder(decodeProposal, (proposal) => ({ contentType: "proposal", proposal }));
-  var decodeFramedContentCommitData = mapDecoder(decodeCommit, (commit) => ({
-    contentType: "commit",
+  var framedContentApplicationDataDecoder = mapDecoder(varLenDataDecoder, (applicationData) => ({ contentType: contentTypes.application, applicationData }));
+  var framedContentProposalDataDecoder = mapDecoder(proposalDecoder, (proposal) => ({ contentType: contentTypes.proposal, proposal }));
+  var framedContentCommitDataDecoder = mapDecoder(commitDecoder, (commit) => ({
+    contentType: contentTypes.commit,
     commit
   }));
-  var decodeFramedContentInfo = flatMapDecoder(decodeContentType, (contentType) => {
+  var framedContentInfoDecoder = flatMapDecoder(contentTypeDecoder, (contentType) => {
     switch (contentType) {
-      case "application":
-        return decodeFramedContentApplicationData;
-      case "proposal":
-        return decodeFramedContentProposalData;
-      case "commit":
-        return decodeFramedContentCommitData;
+      case contentTypes.application:
+        return framedContentApplicationDataDecoder;
+      case contentTypes.proposal:
+        return framedContentProposalDataDecoder;
+      case contentTypes.commit:
+        return framedContentCommitDataDecoder;
     }
   });
   function toTbs2(content, wireformat, context) {
     return { protocolVersion: context.version, wireformat, content, senderType: content.sender.senderType, context };
   }
   var framedContentEncoder = contramapBufferEncoders([varLenDataEncoder, uint64Encoder, senderEncoder, varLenDataEncoder, framedContentInfoEncoder], (fc) => [fc.groupId, fc.epoch, fc.sender, fc.authenticatedData, fc]);
-  var encodeFramedContent = encode(framedContentEncoder);
-  var decodeFramedContent = mapDecoders([decodeVarLenData, decodeUint64, decodeSender, decodeVarLenData, decodeFramedContentInfo], (groupId, epoch, sender, authenticatedData, info) => ({
+  var framedContentDecoder = mapDecoders([varLenDataDecoder, uint64Decoder, senderDecoder, varLenDataDecoder, framedContentInfoDecoder], (groupId, epoch, sender, authenticatedData, info) => ({
     groupId,
     epoch,
     sender,
@@ -9558,50 +9578,54 @@
   }));
   var senderInfoEncoder = (info) => {
     switch (info.senderType) {
-      case "member":
-      case "new_member_commit":
+      case senderTypes.member:
+      case senderTypes.new_member_commit:
         return groupContextEncoder(info.context);
-      case "external":
-      case "new_member_proposal":
+      case senderTypes.external:
+      case senderTypes.new_member_proposal:
         return encVoid;
     }
   };
-  var encodeSenderInfo = encode(senderInfoEncoder);
   var framedContentTBSEncoder = contramapBufferEncoders([protocolVersionEncoder, wireformatEncoder, framedContentEncoder, senderInfoEncoder], (f) => [f.protocolVersion, f.wireformat, f.content, f]);
-  var encodeFramedContentTBS = encode(framedContentTBSEncoder);
   var encodeFramedContentAuthDataContent = (authData) => {
     switch (authData.contentType) {
-      case "commit":
+      case contentTypes.commit:
         return encodeFramedContentAuthDataCommit(authData);
-      case "application":
-      case "proposal":
+      case contentTypes.application:
+      case contentTypes.proposal:
         return encVoid;
     }
   };
   var encodeFramedContentAuthDataCommit = contramapBufferEncoder(varLenDataEncoder, (data) => data.confirmationTag);
   var framedContentAuthDataEncoder = contramapBufferEncoders([varLenDataEncoder, encodeFramedContentAuthDataContent], (d) => [d.signature, d]);
-  var encodeFramedContentAuthData = encode(framedContentAuthDataEncoder);
-  var decodeFramedContentAuthDataCommit = mapDecoder(decodeVarLenData, (confirmationTag) => ({
-    contentType: "commit",
+  var framedContentAuthDataCommitDecoder = mapDecoder(varLenDataDecoder, (confirmationTag) => ({
+    contentType: contentTypes.commit,
     confirmationTag
   }));
-  function decodeFramedContentAuthData(contentType) {
+  function framedContentAuthDataDecoder(contentType) {
     switch (contentType) {
-      case "commit":
-        return mapDecoders([decodeVarLenData, decodeFramedContentAuthDataCommit], (signature, commitData) => ({
+      case contentTypes.commit:
+        return mapDecoders([varLenDataDecoder, framedContentAuthDataCommitDecoder], (signature, commitData) => ({
           signature,
           ...commitData
         }));
-      case "application":
-      case "proposal":
-        return mapDecoder(decodeVarLenData, (signature) => ({
+      case contentTypes.application:
+      case contentTypes.proposal:
+        return mapDecoder(varLenDataDecoder, (signature) => ({
           signature,
           contentType
         }));
     }
   }
   function signFramedContentTBS(signKey, tbs, s) {
-    return signWithLabel(signKey, "FramedContentTBS", encode(framedContentTBSEncoder)(tbs), s);
+    return signWithLabel(signKey, "FramedContentTBS", encode(framedContentTBSEncoder, tbs), s);
+  }
+  async function signFramedContentApplicationOrProposal(signKey, tbs, cs) {
+    const signature = await signFramedContentTBS(signKey, tbs, cs.signature);
+    return {
+      contentType: tbs.content.contentType,
+      signature
+    };
   }
   function createConfirmationTag(confirmationKey, confirmedTranscriptHash, h) {
     return h.mac(confirmationKey, confirmedTranscriptHash);
@@ -9609,16 +9633,16 @@
   async function createContentCommitSignature(groupContext, wireformat, c, sender, authenticatedData, signKey, s) {
     const tbs = {
       protocolVersion: groupContext.version,
-      wireformat,
+      wireformat: wireformats[wireformat],
       content: {
-        contentType: "commit",
+        contentType: contentTypes.commit,
         commit: c,
         groupId: groupContext.groupId,
         epoch: groupContext.epoch,
         sender,
         authenticatedData
       },
-      senderType: "member",
+      senderType: sender.senderType,
       context: groupContext
     };
     const signature = await signFramedContentTBS(signKey, tbs, s);
@@ -9627,101 +9651,35 @@
 
   // node_modules/ts-mls/dist/src/authenticatedContent.js
   var authenticatedContentEncoder = contramapBufferEncoders([wireformatEncoder, framedContentEncoder, framedContentAuthDataEncoder], (a) => [a.wireformat, a.content, a.auth]);
-  var encodeAuthenticatedContent = encode(authenticatedContentEncoder);
-  var decodeAuthenticatedContent = mapDecoders([
-    decodeWireformat,
-    flatMapDecoder(decodeFramedContent, (content) => {
-      return mapDecoder(decodeFramedContentAuthData(content.contentType), (auth) => ({ content, auth }));
+  var authenticatedContentDecoder = mapDecoders([
+    wireformatDecoder,
+    flatMapDecoder(framedContentDecoder, (content) => {
+      return mapDecoder(framedContentAuthDataDecoder(content.contentType), (auth) => ({ content, auth }));
     })
   ], (wireformat, contentAuth) => ({
     wireformat,
     ...contentAuth
   }));
   var authenticatedContentTBMEncoder = contramapBufferEncoders([framedContentTBSEncoder, framedContentAuthDataEncoder], (t) => [t.contentTbs, t.auth]);
-  var encodeAuthenticatedContentTBM = encode(authenticatedContentTBMEncoder);
   function createMembershipTag(membershipKey, tbm, h) {
-    return h.mac(membershipKey, encode(authenticatedContentTBMEncoder)(tbm));
+    return h.mac(membershipKey, encode(authenticatedContentTBMEncoder, tbm));
   }
-
-  // node_modules/ts-mls/dist/src/publicMessage.js
-  var publicMessageInfoEncoder = (info) => {
-    switch (info.senderType) {
-      case "member":
-        return varLenDataEncoder(info.membershipTag);
-      case "external":
-      case "new_member_proposal":
-      case "new_member_commit":
-        return encVoid;
-    }
-  };
-  var encodePublicMessageInfo = encode(publicMessageInfoEncoder);
-  function decodePublicMessageInfo(senderType) {
-    switch (senderType) {
-      case "member":
-        return mapDecoder(decodeVarLenData, (membershipTag) => ({
-          senderType,
-          membershipTag
-        }));
-      case "external":
-      case "new_member_proposal":
-      case "new_member_commit":
-        return succeedDecoder({ senderType });
-    }
-  }
-  var publicMessageEncoder = contramapBufferEncoders([framedContentEncoder, framedContentAuthDataEncoder, publicMessageInfoEncoder], (msg) => [msg.content, msg.auth, msg]);
-  var encodePublicMessage = encode(publicMessageEncoder);
-  var decodePublicMessage = flatMapDecoder(decodeFramedContent, (content) => mapDecoders([decodeFramedContentAuthData(content.contentType), decodePublicMessageInfo(content.sender.senderType)], (auth, info) => ({
-    ...info,
-    content,
-    auth
-  })));
-
-  // node_modules/ts-mls/dist/src/messageProtectionPublic.js
-  async function protectPublicMessage(membershipKey, groupContext, content, cs) {
-    if (content.content.contentType === "application")
-      throw new UsageError("Can't make an application message public");
-    if (content.content.sender.senderType == "member") {
-      const authenticatedContent = {
-        contentTbs: toTbs2(content.content, "mls_public_message", groupContext),
-        auth: content.auth
-      };
-      const tag = await createMembershipTag(membershipKey, authenticatedContent, cs.hash);
-      return {
-        content: content.content,
-        auth: content.auth,
-        senderType: "member",
-        membershipTag: tag
-      };
-    }
-    return {
-      content: content.content,
-      auth: content.auth,
-      senderType: content.content.sender.senderType
-    };
-  }
-
-  // node_modules/ts-mls/dist/src/requiredCapabilities.js
-  var requiredCapabilitiesEncoder = contramapBufferEncoders([varLenTypeEncoder(uint16Encoder), varLenTypeEncoder(uint16Encoder), varLenTypeEncoder(credentialTypeEncoder)], (rc) => [rc.extensionTypes, rc.proposalTypes, rc.credentialTypes]);
-  var encodeRequiredCapabilities = encode(requiredCapabilitiesEncoder);
-  var decodeRequiredCapabilities = mapDecoders([decodeVarLenType(decodeUint16), decodeVarLenType(decodeUint16), decodeVarLenType(decodeCredentialType)], (extensionTypes, proposalTypes, credentialTypes2) => ({ extensionTypes, proposalTypes, credentialTypes: credentialTypes2 }));
 
   // node_modules/ts-mls/dist/src/groupInfo.js
   var groupInfoTBSEncoder = contramapBufferEncoders([groupContextEncoder, varLenTypeEncoder(extensionEncoder), varLenDataEncoder, uint32Encoder], (g) => [g.groupContext, g.extensions, g.confirmationTag, g.signer]);
-  var encodeGroupInfoTBS = encode(groupInfoTBSEncoder);
-  var decodeGroupInfoTBS = mapDecoders([decodeGroupContext, decodeVarLenType(decodeExtension), decodeVarLenData, decodeUint32], (groupContext, extensions, confirmationTag, signer) => ({
+  var groupInfoTBSDecoder = mapDecoders([groupContextDecoder, varLenTypeDecoder(groupInfoExtensionDecoder), varLenDataDecoder, uint32Decoder], (groupContext, extensions, confirmationTag, signer) => ({
     groupContext,
     extensions,
     confirmationTag,
     signer
   }));
   var groupInfoEncoder = contramapBufferEncoders([groupInfoTBSEncoder, varLenDataEncoder], (g) => [g, g.signature]);
-  var encodeGroupInfo = encode(groupInfoEncoder);
-  var decodeGroupInfo = mapDecoders([decodeGroupInfoTBS, decodeVarLenData], (tbs, signature) => ({
+  var groupInfoDecoder = mapDecoders([groupInfoTBSDecoder, varLenDataDecoder], (tbs, signature) => ({
     ...tbs,
     signature
   }));
   async function signGroupInfo(tbs, privateKey, s) {
-    const signature = await signWithLabel(privateKey, "GroupInfoTBS", encode(groupInfoTBSEncoder)(tbs), s);
+    const signature = await signWithLabel(privateKey, "GroupInfoTBS", encode(groupInfoTBSEncoder, tbs), s);
     return { ...tbs, signature };
   }
   async function extractWelcomeSecret(joinerSecret, pskSecret, kdf) {
@@ -9737,13 +9695,9 @@
     varLenDataEncoder,
     varLenDataEncoder,
     varLenDataEncoder,
-    varLenDataEncoder,
-    varLenDataEncoder,
     varLenDataEncoder
   ], (ks) => [
-    ks.epochSecret,
     ks.senderDataSecret,
-    ks.encryptionSecret,
     ks.exporterSecret,
     ks.externalSecret,
     ks.confirmationKey,
@@ -9752,22 +9706,17 @@
     ks.epochAuthenticator,
     ks.initSecret
   ]);
-  var encodeKeySchedule = encode(keyScheduleEncoder);
-  var decodeKeySchedule = mapDecoders([
-    decodeVarLenData,
-    decodeVarLenData,
-    decodeVarLenData,
-    decodeVarLenData,
-    decodeVarLenData,
-    decodeVarLenData,
-    decodeVarLenData,
-    decodeVarLenData,
-    decodeVarLenData,
-    decodeVarLenData
-  ], (epochSecret, senderDataSecret, encryptionSecret, exporterSecret, externalSecret, confirmationKey, membershipKey, resumptionPsk, epochAuthenticator, initSecret) => ({
-    epochSecret,
+  var keyScheduleDecoder = mapDecoders([
+    varLenDataDecoder,
+    varLenDataDecoder,
+    varLenDataDecoder,
+    varLenDataDecoder,
+    varLenDataDecoder,
+    varLenDataDecoder,
+    varLenDataDecoder,
+    varLenDataDecoder
+  ], (senderDataSecret, exporterSecret, externalSecret, confirmationKey, membershipKey, resumptionPsk, epochAuthenticator, initSecret) => ({
     senderDataSecret,
-    encryptionSecret,
     exporterSecret,
     externalSecret,
     confirmationKey,
@@ -9778,12 +9727,13 @@
   }));
   async function deriveKeySchedule(joinerSecret, pskSecret, groupContext, kdf) {
     const epochSecret = await extractEpochSecret(groupContext, joinerSecret, kdf, pskSecret);
-    return await initializeKeySchedule(epochSecret, kdf);
+    const encryptionSecret = await deriveSecret(epochSecret, "encryption", kdf);
+    const keySchedule = await initializeKeySchedule(epochSecret, kdf);
+    return [keySchedule, encryptionSecret];
   }
   async function initializeKeySchedule(epochSecret, kdf) {
     const newInitSecret = await deriveSecret(epochSecret, "init", kdf);
     const senderDataSecret = await deriveSecret(epochSecret, "sender data", kdf);
-    const encryptionSecret = await deriveSecret(epochSecret, "encryption", kdf);
     const exporterSecret = await deriveSecret(epochSecret, "exporter", kdf);
     const externalSecret = await deriveSecret(epochSecret, "external", kdf);
     const confirmationKey = await deriveSecret(epochSecret, "confirm", kdf);
@@ -9791,10 +9741,8 @@
     const resumptionPsk = await deriveSecret(epochSecret, "resumption", kdf);
     const epochAuthenticator = await deriveSecret(epochSecret, "authentication", kdf);
     const newKeySchedule = {
-      epochSecret,
       initSecret: newInitSecret,
       senderDataSecret,
-      encryptionSecret,
       exporterSecret,
       externalSecret,
       confirmationKey,
@@ -9807,51 +9755,93 @@
   async function initializeEpoch(initSecret, commitSecret, groupContext, pskSecret, kdf) {
     const joinerSecret = await extractJoinerSecret(groupContext, initSecret, commitSecret, kdf);
     const welcomeSecret = await extractWelcomeSecret(joinerSecret, pskSecret, kdf);
-    const newKeySchedule = await deriveKeySchedule(joinerSecret, pskSecret, groupContext, kdf);
-    return { welcomeSecret, joinerSecret, keySchedule: newKeySchedule };
+    const [newKeySchedule, encryptionSecret] = await deriveKeySchedule(joinerSecret, pskSecret, groupContext, kdf);
+    return { welcomeSecret, joinerSecret, encryptionSecret, keySchedule: newKeySchedule };
   }
 
   // node_modules/ts-mls/dist/src/secretTree.js
   var generationSecretEncoder = contramapBufferEncoders([varLenDataEncoder, uint32Encoder, numberRecordEncoder(uint32Encoder, varLenDataEncoder)], (gs) => [gs.secret, gs.generation, gs.unusedGenerations]);
-  var decodeGenerationSecret = mapDecoders([decodeVarLenData, decodeUint32, decodeNumberRecord(decodeUint32, decodeVarLenData)], (secret, generation, unusedGenerations) => ({
+  var generationSecretDecoder = mapDecoders([varLenDataDecoder, uint32Decoder, numberRecordDecoder(uint32Decoder, varLenDataDecoder)], (secret, generation, unusedGenerations) => ({
     secret,
     generation,
     unusedGenerations
   }));
   var secretTreeNodeEncoder = contramapBufferEncoders([generationSecretEncoder, generationSecretEncoder], (node) => [node.handshake, node.application]);
-  var decodeSecretTreeNode = mapDecoders([decodeGenerationSecret, decodeGenerationSecret], (handshake, application) => ({
+  var secretTreeNodeDecoder = mapDecoders([generationSecretDecoder, generationSecretDecoder], (handshake, application) => ({
     handshake,
     application
   }));
-  var secretTreeEncoder = varLenTypeEncoder(secretTreeNodeEncoder);
-  var decodeSecretTree = decodeVarLenType(decodeSecretTreeNode);
-  function scaffoldSecretTree(leafWidth2, encryptionSecret, kdf) {
-    const tree = new Array(nodeWidth(leafWidth2));
+  var secretTreeEncoder = contramapBufferEncoders([
+    uint32Encoder,
+    numberRecordEncoder(uint32Encoder, varLenDataEncoder),
+    numberRecordEncoder(uint32Encoder, secretTreeNodeEncoder)
+  ], (st) => [st.leafWidth, st.intermediateNodes, st.leafNodes]);
+  var secretTreeDecoder = mapDecoders([
+    uint32Decoder,
+    numberRecordDecoder(uint32Decoder, varLenDataDecoder),
+    numberRecordDecoder(uint32Decoder, secretTreeNodeDecoder)
+  ], (leafWidth2, intermediateNodes, leafNodes) => ({ leafWidth: leafWidth2, intermediateNodes, leafNodes }));
+  function allSecretTreeValues(tree) {
+    const arr = new Array(tree.leafWidth * 2);
+    for (const node of Object.values(tree.leafNodes)) {
+      arr.push(node.application.secret);
+      arr.push(node.handshake.secret);
+      for (const gen of Object.values(node.application.unusedGenerations)) {
+        arr.push(gen);
+      }
+      for (const gen of Object.values(node.handshake.unusedGenerations)) {
+        arr.push(gen);
+      }
+    }
+    for (const node of Object.values(tree.intermediateNodes)) {
+      arr.push(node);
+    }
+    return arr;
+  }
+  async function deriveLeafSecret(leafIndex, secretTree, kdf) {
+    const targetNodeIndex = leafToNodeIndex(leafIndex);
+    const rootIndex = root(secretTree.leafWidth);
+    const updatedIntermediateNodes = { ...secretTree.intermediateNodes };
+    const consumed = new Array();
+    const pathFromLeaf = [];
+    let current = targetNodeIndex;
+    while (current !== rootIndex) {
+      pathFromLeaf.push(current);
+      current = parent(current, secretTree.leafWidth);
+    }
+    pathFromLeaf.push(rootIndex);
+    let startIndex = pathFromLeaf.length - 1;
+    while (startIndex >= 0 && updatedIntermediateNodes[pathFromLeaf[startIndex]] === void 0) {
+      startIndex--;
+    }
+    if (startIndex < 0) {
+      throw new InternalError("No intermediate nodes found in path from leaf to root");
+    }
+    current = pathFromLeaf[startIndex];
+    while (current !== targetNodeIndex) {
+      const l = left(current);
+      const r = right(current);
+      const nextNodeIndex = targetNodeIndex < current ? l : r;
+      const currentSecret = updatedIntermediateNodes[current];
+      const leftSecret = await expandWithLabel(currentSecret, "tree", new TextEncoder().encode("left"), kdf.size, kdf);
+      const rightSecret = await expandWithLabel(currentSecret, "tree", new TextEncoder().encode("right"), kdf.size, kdf);
+      updatedIntermediateNodes[l] = leftSecret;
+      updatedIntermediateNodes[r] = rightSecret;
+      consumed.push(currentSecret);
+      delete updatedIntermediateNodes[current];
+      current = nextNodeIndex;
+    }
+    return { secret: updatedIntermediateNodes[targetNodeIndex], updatedIntermediateNodes, consumed };
+  }
+  function createSecretTree(leafWidth2, encryptionSecret) {
     const rootIndex = root(leafWidth2);
-    tree[rootIndex] = encryptionSecret;
-    return deriveChildren(tree, rootIndex, kdf);
-  }
-  async function createSecretTree(leafWidth2, encryptionSecret, kdf) {
-    const tree = await scaffoldSecretTree(leafWidth2, encryptionSecret, kdf);
-    return await Promise.all(tree.map(async (secret) => {
-      const application = await createRatchetRoot(secret, "application", kdf);
-      const handshake = await createRatchetRoot(secret, "handshake", kdf);
-      return { handshake, application };
-    }));
-  }
-  async function deriveChildren(tree, nodeIndex, kdf) {
-    if (isLeaf(nodeIndex))
-      return tree;
-    const l = left(nodeIndex);
-    const r = right(nodeIndex);
-    const parentSecret = tree[nodeIndex];
-    if (parentSecret === void 0)
-      throw new InternalError("Bad node index for secret tree");
-    const leftSecret = await expandWithLabel(parentSecret, "tree", new TextEncoder().encode("left"), kdf.size, kdf);
-    const rightSecret = await expandWithLabel(parentSecret, "tree", new TextEncoder().encode("right"), kdf.size, kdf);
-    tree[l] = leftSecret;
-    tree[r] = rightSecret;
-    return deriveChildren(await deriveChildren(tree, l, kdf), r, kdf);
+    return {
+      leafWidth: leafWidth2,
+      intermediateNodes: {
+        [rootIndex]: encryptionSecret
+      },
+      leafNodes: {}
+    };
   }
   async function deriveNonce(secret, generation, cs) {
     return await deriveTreeSecret(secret, "nonce", generation, cs.hpke.nonceLength, cs.kdf);
@@ -9870,29 +9860,51 @@
     return nonce;
   }
   async function consumeRatchet(tree, index, contentType, cs) {
-    const node = tree[index];
-    if (node === void 0)
-      throw new InternalError("Bad node index for secret tree");
+    const nodeIndex = leafToNodeIndex(index);
+    const [updatedTree, consumedSecrets] = await updateTreeWithLeafSecret(tree, index, nodeIndex, cs);
+    const node = updatedTree.leafNodes[nodeIndex];
     const currentSecret = ratchetForContentType(node, contentType);
     const reuseGuard = cs.rng.randomBytes(4);
-    return createRatchetResult(node, index, currentSecret, reuseGuard, tree, contentType, cs);
+    return createRatchetResult(node, index, currentSecret, reuseGuard, updatedTree, contentType, consumedSecrets, cs);
   }
-  async function createRatchetResult(node, index, currentSecret, reuseGuard, tree, contentType, cs) {
+  async function updateTreeWithLeafSecret(tree, index, nodeIndex, cs) {
+    const existingNode = tree.leafNodes[nodeIndex];
+    if (existingNode === void 0) {
+      const { secret: leafSecret, updatedIntermediateNodes, consumed } = await deriveLeafSecret(index, tree, cs.kdf);
+      const application = await createRatchetRoot(leafSecret, "application", cs.kdf);
+      const handshake = await createRatchetRoot(leafSecret, "handshake", cs.kdf);
+      const { [nodeIndex]: _, ...remainingIntermediateNodes } = updatedIntermediateNodes;
+      return [
+        {
+          ...tree,
+          intermediateNodes: remainingIntermediateNodes,
+          leafNodes: { ...tree.leafNodes, [nodeIndex]: { handshake, application } }
+        },
+        [...consumed, leafSecret]
+      ];
+    } else {
+      return [tree, []];
+    }
+  }
+  async function createRatchetResult(node, index, currentSecret, reuseGuard, tree, contentType, consumed, cs) {
     const nextSecret = await deriveTreeSecret(currentSecret.secret, "secret", currentSecret.generation, cs.kdf.size, cs.kdf);
     const ratchetState = { ...currentSecret, secret: nextSecret, generation: currentSecret.generation + 1 };
-    return await createRatchetResultWithSecret(node, index, currentSecret.secret, currentSecret.generation, reuseGuard, tree, contentType, cs, ratchetState);
+    return await createRatchetResultWithSecret(node, leafToNodeIndex(index), currentSecret.secret, currentSecret.generation, reuseGuard, tree, contentType, consumed, cs, ratchetState);
   }
-  async function createRatchetResultWithSecret(node, index, secret, generation, reuseGuard, tree, contentType, cs, ratchetState) {
+  async function createRatchetResultWithSecret(node, index, secret, generation, reuseGuard, tree, contentType, consumed, cs, ratchetState) {
     const { nonce, key } = await createKeyAndNonce(secret, generation, reuseGuard, cs);
-    const newNode = contentType === "application" ? { ...node, application: ratchetState } : { ...node, handshake: ratchetState };
-    const newTree = tree.slice();
-    newTree[index] = newNode;
+    const newNode = contentType === contentTypes.application ? { ...node, application: ratchetState } : { ...node, handshake: ratchetState };
+    const newTree = {
+      ...tree,
+      leafNodes: { ...tree.leafNodes, [index]: newNode }
+    };
     return {
       generation,
       reuseGuard,
       nonce,
       key,
-      newTree
+      newTree,
+      consumed: [...consumed, secret, key]
     };
   }
   async function createKeyAndNonce(secret, generation, reuseGuard, cs) {
@@ -9902,11 +9914,11 @@
   }
   function ratchetForContentType(node, contentType) {
     switch (contentType) {
-      case "application":
+      case contentTypes.application:
         return node.application;
-      case "proposal":
+      case contentTypes.proposal:
         return node.handshake;
-      case "commit":
+      case contentTypes.commit:
         return node.handshake;
     }
   }
@@ -9917,9 +9929,8 @@
 
   // node_modules/ts-mls/dist/src/transcriptHash.js
   var confirmedTranscriptHashInputEncoder = contramapBufferEncoders([wireformatEncoder, framedContentEncoder, varLenDataEncoder], (input) => [input.wireformat, input.content, input.signature]);
-  var encodeConfirmedTranscriptHashInput = encode(confirmedTranscriptHashInputEncoder);
-  var decodeConfirmedTranscriptHashInput = mapDecodersOption([decodeWireformat, decodeFramedContent, decodeVarLenData], (wireformat, content, signature) => {
-    if (content.contentType === "commit")
+  var confirmedTranscriptHashInputDecoder = mapDecodersOption([wireformatDecoder, framedContentDecoder, varLenDataDecoder], (wireformat, content, signature) => {
+    if (content.contentType === contentTypes.commit)
       return {
         wireformat,
         content,
@@ -9945,34 +9956,6 @@
     return hash.digest(arr);
   }
 
-  // node_modules/ts-mls/dist/src/groupSecrets.js
-  var groupSecretsEncoder = contramapBufferEncoders([varLenDataEncoder, optionalEncoder(varLenDataEncoder), varLenTypeEncoder(pskIdEncoder)], (gs) => [gs.joinerSecret, gs.pathSecret, gs.psks]);
-  var encodeGroupSecrets = encode(groupSecretsEncoder);
-  var decodeGroupSecrets = mapDecoders([decodeVarLenData, decodeOptional(decodeVarLenData), decodeVarLenType(decodePskId)], (joinerSecret, pathSecret, psks) => ({ joinerSecret, pathSecret, psks }));
-
-  // node_modules/ts-mls/dist/src/welcome.js
-  var encryptedGroupSecretsEncoder = contramapBufferEncoders([varLenDataEncoder, hpkeCiphertextEncoder], (egs) => [egs.newMember, egs.encryptedGroupSecrets]);
-  var encodeEncryptedGroupSecrets = encode(encryptedGroupSecretsEncoder);
-  var decodeEncryptedGroupSecrets = mapDecoders([decodeVarLenData, decodeHpkeCiphertext], (newMember, encryptedGroupSecrets) => ({ newMember, encryptedGroupSecrets }));
-  var welcomeEncoder = contramapBufferEncoders([ciphersuiteEncoder, varLenTypeEncoder(encryptedGroupSecretsEncoder), varLenDataEncoder], (welcome) => [welcome.cipherSuite, welcome.secrets, welcome.encryptedGroupInfo]);
-  var encodeWelcome = encode(welcomeEncoder);
-  var decodeWelcome = mapDecoders([decodeCiphersuite, decodeVarLenType(decodeEncryptedGroupSecrets), decodeVarLenData], (cipherSuite, secrets, encryptedGroupInfo) => ({ cipherSuite, secrets, encryptedGroupInfo }));
-  function welcomeNonce(welcomeSecret, cs) {
-    return expandWithLabel(welcomeSecret, "nonce", new Uint8Array(), cs.hpke.nonceLength, cs.kdf);
-  }
-  function welcomeKey(welcomeSecret, cs) {
-    return expandWithLabel(welcomeSecret, "key", new Uint8Array(), cs.hpke.keyLength, cs.kdf);
-  }
-  async function encryptGroupInfo(groupInfo, welcomeSecret, cs) {
-    const key = await welcomeKey(welcomeSecret, cs);
-    const nonce = await welcomeNonce(welcomeSecret, cs);
-    const encrypted = await cs.hpke.encryptAead(key, nonce, void 0, encode(groupInfoEncoder)(groupInfo));
-    return encrypted;
-  }
-  function encryptGroupSecrets(initKey, encryptedGroupInfo, groupSecrets, hpke) {
-    return encryptWithLabel(initKey, "Welcome", encryptedGroupInfo, encode(groupSecretsEncoder)(groupSecrets), hpke);
-  }
-
   // node_modules/ts-mls/dist/src/pathSecrets.js
   function pathToPathSecrets(pathSecrets) {
     return pathSecrets.reduce((acc, cur) => ({
@@ -9983,7 +9966,7 @@
 
   // node_modules/ts-mls/dist/src/privateKeyPath.js
   var privateKeyPathEncoder = contramapBufferEncoders([uint32Encoder, numberRecordEncoder(uint32Encoder, varLenDataEncoder)], (pkp) => [pkp.leafIndex, pkp.privateKeys]);
-  var decodePrivateKeyPath = mapDecoders([decodeUint32, decodeNumberRecord(decodeUint32, decodeVarLenData)], (leafIndex, privateKeys) => ({
+  var privateKeyPathDecoder = mapDecoders([uint32Decoder, numberRecordDecoder(uint32Decoder, varLenDataDecoder)], (leafIndex, privateKeys) => ({
     leafIndex,
     privateKeys
   }));
@@ -10005,12 +9988,12 @@
 
   // node_modules/ts-mls/dist/src/unappliedProposals.js
   var proposalWithSenderEncoder = contramapBufferEncoders([proposalEncoder, optionalEncoder(uint32Encoder)], (pws) => [pws.proposal, pws.senderLeafIndex]);
-  var decodeProposalWithSender = mapDecoders([decodeProposal, decodeOptional(decodeUint32)], (proposal, senderLeafIndex) => ({
+  var proposalWithSenderDecoder = mapDecoders([proposalDecoder, optionalDecoder(uint32Decoder)], (proposal, senderLeafIndex) => ({
     proposal,
     senderLeafIndex
   }));
   var unappliedProposalsEncoder = base64RecordEncoder(proposalWithSenderEncoder);
-  var decodeUnappliedProposals = decodeBase64Record(decodeProposalWithSender);
+  var unappliedProposalsDecoder = base64RecordDecoder(proposalWithSenderDecoder);
 
   // node_modules/ts-mls/dist/src/pskIndex.js
   async function accumulatePskSecret(groupedPsk, pskSearch, cs, zeroes) {
@@ -10031,10 +10014,34 @@
     return copy;
   }
 
+  // node_modules/ts-mls/dist/src/groupSecrets.js
+  var groupSecretsEncoder = contramapBufferEncoders([varLenDataEncoder, optionalEncoder(varLenDataEncoder), varLenTypeEncoder(pskIdEncoder)], (gs) => [gs.joinerSecret, gs.pathSecret, gs.psks]);
+  var groupSecretsDecoder = mapDecoders([varLenDataDecoder, optionalDecoder(varLenDataDecoder), varLenTypeDecoder(pskIdDecoder)], (joinerSecret, pathSecret, psks) => ({ joinerSecret, pathSecret, psks }));
+
+  // node_modules/ts-mls/dist/src/welcome.js
+  var encryptedGroupSecretsEncoder = contramapBufferEncoders([varLenDataEncoder, hpkeCiphertextEncoder], (egs) => [egs.newMember, egs.encryptedGroupSecrets]);
+  var encryptedGroupSecretsDecoder = mapDecoders([varLenDataDecoder, hpkeCiphertextDecoder], (newMember, encryptedGroupSecrets) => ({ newMember, encryptedGroupSecrets }));
+  var welcomeEncoder = contramapBufferEncoders([ciphersuiteEncoder, varLenTypeEncoder(encryptedGroupSecretsEncoder), varLenDataEncoder], (welcome) => [welcome.cipherSuite, welcome.secrets, welcome.encryptedGroupInfo]);
+  var welcomeDecoder = mapDecoders([ciphersuiteDecoder, varLenTypeDecoder(encryptedGroupSecretsDecoder), varLenDataDecoder], (cipherSuite, secrets, encryptedGroupInfo) => ({ cipherSuite, secrets, encryptedGroupInfo }));
+  function welcomeNonce(welcomeSecret, cs) {
+    return expandWithLabel(welcomeSecret, "nonce", new Uint8Array(), cs.hpke.nonceLength, cs.kdf);
+  }
+  function welcomeKey(welcomeSecret, cs) {
+    return expandWithLabel(welcomeSecret, "key", new Uint8Array(), cs.hpke.keyLength, cs.kdf);
+  }
+  async function encryptGroupInfo(groupInfo, welcomeSecret, cs) {
+    const key = await welcomeKey(welcomeSecret, cs);
+    const nonce = await welcomeNonce(welcomeSecret, cs);
+    const encrypted = await cs.hpke.encryptAead(key, nonce, void 0, encode(groupInfoEncoder, groupInfo));
+    return encrypted;
+  }
+  function encryptGroupSecrets(initKey, encryptedGroupInfo, groupSecrets, hpke) {
+    return encryptWithLabel(initKey, "Welcome", encryptedGroupInfo, encode(groupSecretsEncoder, groupSecrets), hpke);
+  }
+
   // node_modules/ts-mls/dist/src/codec/string.js
   var stringEncoder = contramapBufferEncoder(varLenDataEncoder, (s) => new TextEncoder().encode(s));
-  var encodeString = encode(stringEncoder);
-  var decodeString = mapDecoder(decodeVarLenData, (u) => new TextDecoder().decode(u));
+  var stringDecoder = mapDecoder(varLenDataDecoder, (u) => new TextDecoder().decode(u));
 
   // node_modules/ts-mls/dist/src/groupActiveState.js
   var activeEncoder = contramapBufferEncoder(stringEncoder, () => "active");
@@ -10050,12 +10057,12 @@
         return removedFromGroupEncoder(state);
     }
   };
-  var decodeGroupActiveState = flatMapDecoder(decodeString, (kind) => {
+  var groupActiveStateDecoder = flatMapDecoder(stringDecoder, (kind) => {
     switch (kind) {
       case "active":
         return succeedDecoder({ kind: "active" });
       case "suspendedPendingReinit":
-        return mapDecoder(decodeReinit, (reinit) => ({ kind: "suspendedPendingReinit", reinit }));
+        return mapDecoder(reinitDecoder, (reinit) => ({ kind: "suspendedPendingReinit", reinit }));
       case "removedFromGroup":
         return succeedDecoder({ kind: "removedFromGroup" });
       default:
@@ -10065,7 +10072,7 @@
 
   // node_modules/ts-mls/dist/src/epochReceiverData.js
   var epochReceiverDataEncoder = contramapBufferEncoders([varLenDataEncoder, secretTreeEncoder, ratchetTreeEncoder, varLenDataEncoder, groupContextEncoder], (erd) => [erd.resumptionPsk, erd.secretTree, erd.ratchetTree, erd.senderDataSecret, erd.groupContext]);
-  var decodeEpochReceiverData = mapDecoders([decodeVarLenData, decodeSecretTree, decodeRatchetTree, decodeVarLenData, decodeGroupContext], (resumptionPsk, secretTree, ratchetTree, senderDataSecret, groupContext) => ({
+  var epochReceiverDataDecoder = mapDecoders([varLenDataDecoder, secretTreeDecoder, ratchetTreeDecoder, varLenDataDecoder, groupContextDecoder], (resumptionPsk, secretTree, ratchetTree, senderDataSecret, groupContext) => ({
     resumptionPsk,
     secretTree,
     ratchetTree,
@@ -10074,11 +10081,10 @@
   }));
 
   // node_modules/ts-mls/dist/src/clientState.js
+  var publicGroupStateEncoder = contramapBufferEncoders([groupContextEncoder, ratchetTreeEncoder], (state) => [state.groupContext, state.ratchetTree]);
   var groupStateEncoder = contramapBufferEncoders([
-    groupContextEncoder,
     keyScheduleEncoder,
     secretTreeEncoder,
-    ratchetTreeEncoder,
     privateKeyPathEncoder,
     varLenDataEncoder,
     unappliedProposalsEncoder,
@@ -10086,10 +10092,8 @@
     bigintMapEncoder(epochReceiverDataEncoder),
     groupActiveStateEncoder
   ], (state) => [
-    state.groupContext,
     state.keySchedule,
     state.secretTree,
-    state.ratchetTree,
     state.privatePath,
     state.signaturePrivateKey,
     state.unappliedProposals,
@@ -10097,23 +10101,23 @@
     state.historicalReceiverData,
     state.groupActiveState
   ]);
-  var encodeGroupState = encode(groupStateEncoder);
-  var decodeGroupState = mapDecoders([
-    decodeGroupContext,
-    decodeKeySchedule,
-    decodeSecretTree,
-    decodeRatchetTree,
-    decodePrivateKeyPath,
-    decodeVarLenData,
-    decodeUnappliedProposals,
-    decodeVarLenData,
-    decodeBigintMap(decodeEpochReceiverData),
-    decodeGroupActiveState
-  ], (groupContext, keySchedule, secretTree, ratchetTree, privatePath, signaturePrivateKey, unappliedProposals, confirmationTag, historicalReceiverData, groupActiveState) => ({
+  var clientStateEncoder = contramapBufferEncoders([publicGroupStateEncoder, groupStateEncoder], (state) => [state, state]);
+  var publicGroupStateDecoder = mapDecoders([groupContextDecoder, ratchetTreeDecoder], (groupContext, ratchetTree) => ({
     groupContext,
+    ratchetTree
+  }));
+  var groupStateDecoder = mapDecoders([
+    keyScheduleDecoder,
+    secretTreeDecoder,
+    privateKeyPathDecoder,
+    varLenDataDecoder,
+    unappliedProposalsDecoder,
+    varLenDataDecoder,
+    bigintMapDecoder(epochReceiverDataDecoder),
+    groupActiveStateDecoder
+  ], (keySchedule, secretTree, privatePath, signaturePrivateKey, unappliedProposals, confirmationTag, historicalReceiverData, groupActiveState) => ({
     keySchedule,
     secretTree,
-    ratchetTree,
     privatePath,
     signaturePrivateKey,
     unappliedProposals,
@@ -10121,6 +10125,15 @@
     historicalReceiverData,
     groupActiveState
   }));
+  var clientStateDecoder = mapDecoders([publicGroupStateDecoder, groupStateDecoder], (publicState, state) => ({
+    ...publicState,
+    ...state
+  }));
+  function checkCanSendApplicationMessages(state) {
+    if (Object.keys(state.unappliedProposals).length !== 0)
+      throw new UsageError("Cannot send application message with unapplied proposals");
+    checkCanSendHandshakeMessages(state);
+  }
   function checkCanSendHandshakeMessages(state) {
     if (state.groupActiveState.kind === "suspendedPendingReinit")
       throw new UsageError("Cannot send messages while Group is suspended pending reinit");
@@ -10128,13 +10141,13 @@
       throw new UsageError("Cannot send messages after being removed from group");
   }
   var emptyProposals = {
-    add: [],
-    update: [],
-    remove: [],
-    psk: [],
-    reinit: [],
-    external_init: [],
-    group_context_extensions: []
+    [defaultProposalTypes.add]: [],
+    [defaultProposalTypes.update]: [],
+    [defaultProposalTypes.remove]: [],
+    [defaultProposalTypes.psk]: [],
+    [defaultProposalTypes.reinit]: [],
+    [defaultProposalTypes.external_init]: [],
+    [defaultProposalTypes.group_context_extensions]: []
   };
   function flattenExtensions(groupContextExtensions) {
     return groupContextExtensions.reduce((acc, { proposal }) => {
@@ -10142,52 +10155,47 @@
     }, []);
   }
   async function validateProposals(p, committerLeafIndex, groupContext, config, authService, tree) {
-    const containsUpdateByCommitter = p.update.some((o) => o.senderLeafIndex !== void 0 && o.senderLeafIndex === committerLeafIndex);
+    const containsUpdateByCommitter = p[defaultProposalTypes.update].some((o) => o.senderLeafIndex !== void 0 && o.senderLeafIndex === committerLeafIndex);
     if (containsUpdateByCommitter)
       return new ValidationError("Commit cannot contain an update proposal sent by committer");
-    const containsRemoveOfCommitter = p.remove.some((o) => o.proposal.remove.removed === committerLeafIndex);
+    const containsRemoveOfCommitter = p[defaultProposalTypes.remove].some((o) => o.proposal.remove.removed === committerLeafIndex);
     if (containsRemoveOfCommitter)
       return new ValidationError("Commit cannot contain a remove proposal removing committer");
-    const multipleUpdateRemoveForSameLeaf = p.update.some(({ senderLeafIndex: a }, indexA) => p.update.some(({ senderLeafIndex: b }, indexB) => a === b && indexA !== indexB) || p.remove.some((r) => r.proposal.remove.removed === a)) || p.remove.some((a, indexA) => p.remove.some((b, indexB) => b.proposal.remove.removed === a.proposal.remove.removed && indexA !== indexB) || p.update.some(({ senderLeafIndex }) => a.proposal.remove.removed === senderLeafIndex));
+    const multipleUpdateRemoveForSameLeaf = p[defaultProposalTypes.update].some(({ senderLeafIndex: a }, indexA) => p[defaultProposalTypes.update].some(({ senderLeafIndex: b }, indexB) => a === b && indexA !== indexB) || p[defaultProposalTypes.remove].some((r) => r.proposal.remove.removed === a)) || p[defaultProposalTypes.remove].some((a, indexA) => p[defaultProposalTypes.remove].some((b, indexB) => b.proposal.remove.removed === a.proposal.remove.removed && indexA !== indexB) || p[defaultProposalTypes.update].some(({ senderLeafIndex }) => a.proposal.remove.removed === senderLeafIndex));
     if (multipleUpdateRemoveForSameLeaf)
       return new ValidationError("Commit cannot contain multiple update and/or remove proposals that apply to the same leaf");
-    const multipleAddsContainSameKeypackage = p.add.some(({ proposal: a }, indexA) => p.add.some(({ proposal: b }, indexB) => config.compareKeyPackages(a.add.keyPackage, b.add.keyPackage) && indexA !== indexB));
+    const multipleAddsContainSameKeypackage = p[defaultProposalTypes.add].some(({ proposal: a }, indexA) => p[defaultProposalTypes.add].some(({ proposal: b }, indexB) => config.compareKeyPackages(a.add.keyPackage, b.add.keyPackage) && indexA !== indexB));
     if (multipleAddsContainSameKeypackage)
       return new ValidationError("Commit cannot contain multiple Add proposals that contain KeyPackages that represent the same client");
-    const addsContainExistingKeypackage = p.add.some(({ proposal }) => tree.some((node, nodeIndex) => node !== void 0 && node.nodeType === "leaf" && config.compareKeyPackageToLeafNode(proposal.add.keyPackage, node.leaf) && p.remove.every((r) => r.proposal.remove.removed !== nodeToLeafIndex(toNodeIndex(nodeIndex)))));
+    const addsContainExistingKeypackage = p[defaultProposalTypes.add].some(({ proposal }) => tree.some((node, nodeIndex) => node !== void 0 && node.nodeType === nodeTypes.leaf && config.compareKeyPackageToLeafNode(proposal.add.keyPackage, node.leaf) && p[defaultProposalTypes.remove].every((r) => r.proposal.remove.removed !== nodeToLeafIndex(toNodeIndex(nodeIndex)))));
     if (addsContainExistingKeypackage)
       return new ValidationError("Commit cannot contain an Add proposal for someone already in the group");
-    const everyLeafSupportsGroupExtensions = p.add.every(({ proposal }) => extensionsSupportedByCapabilities(groupContext.extensions, proposal.add.keyPackage.leafNode.capabilities));
+    const everyLeafSupportsGroupExtensions = p[defaultProposalTypes.add].every(({ proposal }) => extensionsSupportedByCapabilities(groupContext.extensions, proposal.add.keyPackage.leafNode.capabilities));
     if (!everyLeafSupportsGroupExtensions)
       return new ValidationError("Added leaf node that doesn't support extension in GroupContext");
-    const multiplePskWithSamePskId = p.psk.some((a, indexA) => p.psk.some((b, indexB) => constantTimeEqual(encode(pskIdEncoder)(a.proposal.psk.preSharedKeyId), encode(pskIdEncoder)(b.proposal.psk.preSharedKeyId)) && indexA !== indexB));
+    const multiplePskWithSamePskId = p[defaultProposalTypes.psk].some((a, indexA) => p[defaultProposalTypes.psk].some((b, indexB) => constantTimeEqual(encode(pskIdEncoder, a.proposal.psk.preSharedKeyId), encode(pskIdEncoder, b.proposal.psk.preSharedKeyId)) && indexA !== indexB));
     if (multiplePskWithSamePskId)
       return new ValidationError("Commit cannot contain PreSharedKey proposals that reference the same PreSharedKeyID");
-    const multipleGroupContextExtensions = p.group_context_extensions.length > 1;
+    const multipleGroupContextExtensions = p[defaultProposalTypes.group_context_extensions].length > 1;
     if (multipleGroupContextExtensions)
       return new ValidationError("Commit cannot contain multiple GroupContextExtensions proposals");
-    const allExtensions = flattenExtensions(p.group_context_extensions);
-    const requiredCapabilities = allExtensions.find((e) => e.extensionType === "required_capabilities");
+    const allExtensions = flattenExtensions(p[defaultProposalTypes.group_context_extensions]);
+    const requiredCapabilities = allExtensions.find((e) => e.extensionType === defaultExtensionTypes.required_capabilities);
     if (requiredCapabilities !== void 0) {
-      const caps = decodeRequiredCapabilities(requiredCapabilities.extensionData, 0);
-      if (caps === void 0)
-        return new CodecError("Could not decode required_capabilities");
-      const everyLeafSupportsCapabilities = tree.filter((n) => n !== void 0 && n.nodeType === "leaf").every((l) => capabiltiesAreSupported(caps[0], l.leaf.capabilities));
+      const caps = requiredCapabilities.extensionData;
+      const everyLeafSupportsCapabilities = tree.filter((n) => n !== void 0 && n.nodeType === nodeTypes.leaf).every((l) => capabiltiesAreSupported(caps, l.leaf.capabilities));
       if (!everyLeafSupportsCapabilities)
         return new ValidationError("Not all members support required capabilities");
-      const allAdditionsSupportCapabilities = p.add.every((a) => capabiltiesAreSupported(caps[0], a.proposal.add.keyPackage.leafNode.capabilities));
+      const allAdditionsSupportCapabilities = p[defaultProposalTypes.add].every((a) => capabiltiesAreSupported(caps, a.proposal.add.keyPackage.leafNode.capabilities));
       if (!allAdditionsSupportCapabilities)
         return new ValidationError("Commit contains add proposals of member without required capabilities");
     }
     return await validateExternalSenders(allExtensions, authService);
   }
   async function validateExternalSenders(extensions, authService) {
-    const externalSenders = extensions.filter((e) => e.extensionType === "external_senders");
+    const externalSenders = extensions.filter((e) => e.extensionType === defaultExtensionTypes.external_senders);
     for (const externalSender of externalSenders) {
-      const decoded = decodeExternalSender(externalSender.extensionData, 0);
-      if (decoded === void 0)
-        return new CodecError("Could not decode external_senders");
-      const validCredential = await authService.validateCredential(decoded[0].credential, decoded[0].signaturePublicKey);
+      const validCredential = await authService.validateCredential(externalSender.extensionData.credential, externalSender.extensionData.signaturePublicKey);
       if (!validCredential)
         return new ValidationError("Could not validate external credential");
     }
@@ -10211,12 +10219,10 @@
     const credentialValid = await authService.validateCredential(leafNode.credential, leafNode.signaturePublicKey);
     if (!credentialValid)
       return new ValidationError("Could not validate credential");
-    const requiredCapabilities = groupContext.extensions.find((e) => e.extensionType === "required_capabilities");
+    const requiredCapabilities = groupContext.extensions.find((e) => e.extensionType === defaultExtensionTypes.required_capabilities);
     if (requiredCapabilities !== void 0) {
-      const caps = decodeRequiredCapabilities(requiredCapabilities.extensionData, 0);
-      if (caps === void 0)
-        return new CodecError("Could not decode required_capabilities");
-      const leafSupportsCapabilities = capabiltiesAreSupported(caps[0], leafNode.capabilities);
+      const caps = requiredCapabilities.extensionData;
+      const leafSupportsCapabilities = capabiltiesAreSupported(caps, leafNode.capabilities);
       if (!leafSupportsCapabilities)
         return new ValidationError("LeafNode does not support required capabilities");
     }
@@ -10229,7 +10235,7 @@
     if (!signatureValid)
       return new CryptoVerificationError("Could not verify leaf node signature");
     if (sentByClient || config.validateLifetimeOnReceive) {
-      if (leafNode.leafNodeSource === "key_package") {
+      if (leafNode.leafNodeSource === leafNodeSources.key_package) {
         const currentTime = BigInt(Math.floor(Date.now() / 1e3));
         if (leafNode.lifetime.notBefore > currentTime || leafNode.lifetime.notAfter < currentTime)
           return new ValidationError("Current time not within Lifetime");
@@ -10243,8 +10249,9 @@
     const hpkeKeys = /* @__PURE__ */ new Set();
     const signatureKeys = /* @__PURE__ */ new Set();
     for (const [nodeIndex, node] of tree.entries()) {
-      if (node?.nodeType === "leaf") {
-        if (!node.leaf.capabilities.credentials.includes(leafNode.credential.credentialType)) {
+      if (node?.nodeType === nodeTypes.leaf) {
+        const credentialType = leafNode.credential.credentialType;
+        if (!node.leaf.capabilities.credentials.includes(credentialType)) {
           return new ValidationError("LeafNode has credential that is not supported by member of the group");
         }
         const hpkeKey = bytesToBase64(node.leaf.hpkePublicKey);
@@ -10257,7 +10264,7 @@
           return new ValidationError("signature keys not unique");
         else
           signatureKeys.add(signatureKey);
-      } else if (node?.nodeType === "parent") {
+      } else if (node?.nodeType === nodeTypes.parent) {
         const hpkeKey = bytesToBase64(node.parent.hpkePublicKey);
         if (hpkeKeys.has(hpkeKey))
           return new ValidationError("hpke keys not unique");
@@ -10286,24 +10293,24 @@
   function validateReinit(allProposals, reinit, gc) {
     if (allProposals.length !== 1)
       return new ValidationError("Reinit proposal needs to be commited by itself");
-    if (protocolVersions[reinit.version] < protocolVersions[gc.version])
+    if (reinit.version < gc.version)
       return new ValidationError("A ReInit proposal cannot use a version less than the version for the current group");
   }
   function validateExternalInit(grouped) {
-    if (grouped.external_init.length > 1)
+    if (grouped[defaultProposalTypes.external_init].length > 1)
       return new ValidationError("Cannot contain more than one external_init proposal");
-    if (grouped.remove.length > 1)
+    if (grouped[defaultProposalTypes.remove].length > 1)
       return new ValidationError("Cannot contain more than one remove proposal");
-    if (grouped.add.length > 0 || grouped.group_context_extensions.length > 0 || grouped.reinit.length > 0 || grouped.update.length > 0)
+    if (grouped[defaultProposalTypes.add].length > 0 || grouped[defaultProposalTypes.group_context_extensions].length > 0 || grouped[defaultProposalTypes.reinit].length > 0 || grouped[defaultProposalTypes.update].length > 0)
       return new ValidationError("Invalid proposals");
   }
   function validateRemove(remove, tree) {
     if (tree[leafToNodeIndex(toLeafIndex(remove.removed))] === void 0)
       return new ValidationError("Tried to remove empty leaf node");
   }
-  async function applyProposals(state, proposals, committerLeafIndex, pskSearch, sentByClient, cs) {
+  async function applyProposals(state, proposals, committerLeafIndex, pskSearch, sentByClient, clientConfig, authService, cs) {
     const allProposals = proposals.reduce((acc, cur) => {
-      if (cur.proposalOrRefType === "proposal")
+      if (cur.proposalOrRefType === proposalOrRefTypes.proposal)
         return [...acc, { proposal: cur.proposal, senderLeafIndex: committerLeafIndex }];
       const p = state.unappliedProposals[bytesToBase64(cur.reference)];
       if (p === void 0)
@@ -10311,16 +10318,19 @@
       return [...acc, p];
     }, []);
     const grouped = allProposals.reduce((acc, cur) => {
-      if (typeof cur.proposal.proposalType === "number")
+      if (isDefaultProposal(cur.proposal)) {
+        const proposalType = cur.proposal.proposalType;
+        const proposals2 = acc[proposalType] ?? [];
+        return { ...acc, [cur.proposal.proposalType]: [...proposals2, cur] };
+      } else {
         return acc;
-      const proposal = acc[cur.proposal.proposalType] ?? [];
-      return { ...acc, [cur.proposal.proposalType]: [...proposal, cur] };
+      }
     }, emptyProposals);
     const zeroes = new Uint8Array(cs.kdf.size);
-    const isExternalInit = grouped.external_init.length > 0;
+    const isExternalInit = grouped[defaultProposalTypes.external_init].length > 0;
     if (!isExternalInit) {
-      if (grouped.reinit.length > 0) {
-        const reinit = grouped.reinit.at(0).proposal.reinit;
+      if (grouped[defaultProposalTypes.reinit].length > 0) {
+        const reinit = grouped[defaultProposalTypes.reinit].at(0).proposal.reinit;
         throwIfDefined(validateReinit(allProposals, reinit, state.groupContext));
         return {
           tree: state.ratchetTree,
@@ -10335,12 +10345,12 @@
           allProposals
         };
       }
-      throwIfDefined(await validateProposals(grouped, committerLeafIndex, state.groupContext, state.clientConfig.keyPackageEqualityConfig, state.clientConfig.authService, state.ratchetTree));
-      const newExtensions = flattenExtensions(grouped.group_context_extensions);
-      const [mutatedTree, addedLeafNodes] = await applyTreeMutations(state.ratchetTree, grouped, state.groupContext, sentByClient, state.clientConfig.authService, state.clientConfig.lifetimeConfig, cs.signature);
-      const [updatedPskSecret, pskIds] = await accumulatePskSecret(grouped.psk.map((p) => p.proposal.psk.preSharedKeyId), pskSearch, cs, zeroes);
+      throwIfDefined(await validateProposals(grouped, committerLeafIndex, state.groupContext, clientConfig.keyPackageEqualityConfig, authService, state.ratchetTree));
+      const newExtensions = flattenExtensions(grouped[defaultProposalTypes.group_context_extensions]);
+      const [mutatedTree, addedLeafNodes] = await applyTreeMutations(state.ratchetTree, grouped, state.groupContext, sentByClient, authService, clientConfig.lifetimeConfig, cs.signature);
+      const [updatedPskSecret, pskIds] = await accumulatePskSecret(grouped[defaultProposalTypes.psk].map((p) => p.proposal.psk.preSharedKeyId), pskSearch, cs, zeroes);
       const selfRemoved = mutatedTree[leafToNodeIndex(toLeafIndex(state.privatePath.leafIndex))] === void 0;
-      const needsUpdatePath = allProposals.length === 0 || Object.values(grouped.update).length > 1 || Object.values(grouped.remove).length > 1;
+      const needsUpdatePath = allProposals.length === 0 || Object.values(grouped[defaultProposalTypes.update]).length > 1 || Object.values(grouped[defaultProposalTypes.remove]).length > 1;
       return {
         tree: mutatedTree,
         pskSecret: updatedPskSecret,
@@ -10356,12 +10366,12 @@
       };
     } else {
       throwIfDefined(validateExternalInit(grouped));
-      const treeAfterRemove = grouped.remove.reduce((acc, { proposal }) => {
+      const treeAfterRemove = grouped[defaultProposalTypes.remove].reduce((acc, { proposal }) => {
         return removeLeafNode(acc, toLeafIndex(proposal.remove.removed));
       }, state.ratchetTree);
       const zeroes2 = new Uint8Array(cs.kdf.size);
-      const [updatedPskSecret, pskIds] = await accumulatePskSecret(grouped.psk.map((p) => p.proposal.psk.preSharedKeyId), pskSearch, cs, zeroes2);
-      const initProposal = grouped.external_init.at(0);
+      const [updatedPskSecret, pskIds] = await accumulatePskSecret(grouped[defaultProposalTypes.psk].map((p) => p.proposal.psk.preSharedKeyId), pskSearch, cs, zeroes2);
+      const initProposal = grouped[defaultProposalTypes.external_init].at(0);
       const externalKeyPair = await cs.hpke.deriveKeyPair(state.keySchedule.externalSecret);
       const externalInitSecret = await importSecret(await cs.hpke.exportPrivateKey(externalKeyPair.privateKey), initProposal.proposal.externalInit.kemOutput, cs);
       return {
@@ -10382,7 +10392,7 @@
   function makePskIndex(state, externalPsks) {
     return {
       findPsk(preSharedKeyId) {
-        if (preSharedKeyId.psktype === "external") {
+        if (preSharedKeyId.psktype === pskTypes.external) {
           return externalPsks[bytesToBase64(preSharedKeyId.pskId)];
         }
         if (state !== void 0 && constantTimeEqual(preSharedKeyId.pskGroupId, state.groupContext.groupId)) {
@@ -10396,7 +10406,7 @@
   }
   async function nextEpochContext(groupContext, wireformat, content, signature, updatedTreeHash, confirmationTag, h) {
     const interimTranscriptHash = await createInterimHash(groupContext.confirmedTranscriptHash, confirmationTag, h);
-    const newConfirmedHash = await createConfirmedHash(interimTranscriptHash, { wireformat, content, signature }, h);
+    const newConfirmedHash = await createConfirmedHash(interimTranscriptHash, { wireformat: wireformats[wireformat], content, signature }, h);
     return {
       ...groupContext,
       epoch: groupContext.epoch + 1n,
@@ -10404,15 +10414,19 @@
       confirmedTranscriptHash: newConfirmedHash
     };
   }
-  async function createGroup(groupId, keyPackage, privateKeyPackage, extensions, cs, clientConfig = defaultClientConfig) {
-    const ratchetTree = [{ nodeType: "leaf", leaf: keyPackage.leafNode }];
+  async function createGroup(params) {
+    const { context, groupId, keyPackage, privateKeyPackage } = params;
+    const extensions = params.extensions ?? [];
+    const authService = context.authService;
+    const cs = context.cipherSuite;
+    const ratchetTree = [{ nodeType: nodeTypes.leaf, leaf: keyPackage.leafNode }];
     const privatePath = {
       leafIndex: 0,
       privateKeys: { [0]: privateKeyPackage.hpkePrivateKey }
     };
     const confirmedTranscriptHash = new Uint8Array();
     const groupContext = {
-      version: "mls10",
+      version: protocolVersions.mls10,
       cipherSuite: cs.name,
       epoch: 0n,
       treeHash: await treeHashRoot(ratchetTree, cs.hash),
@@ -10420,11 +10434,13 @@
       extensions,
       confirmedTranscriptHash
     };
-    throwIfDefined(await validateExternalSenders(extensions, clientConfig.authService));
+    throwIfDefined(await validateExternalSenders(extensions, authService));
     const epochSecret = cs.rng.randomBytes(cs.kdf.size);
     const keySchedule = await initializeKeySchedule(epochSecret, cs.kdf);
     const confirmationTag = await createConfirmationTag(keySchedule.confirmationKey, confirmedTranscriptHash, cs.hash);
-    const secretTree = await createSecretTree(1, keySchedule.encryptionSecret, cs.kdf);
+    const encryptionSecret = await deriveSecret(epochSecret, "encryption", cs.kdf);
+    const secretTree = createSecretTree(1, encryptionSecret);
+    zeroOutUint8Array(epochSecret);
     return {
       ratchetTree,
       keySchedule,
@@ -10435,26 +10451,25 @@
       historicalReceiverData: /* @__PURE__ */ new Map(),
       groupContext,
       confirmationTag,
-      groupActiveState: { kind: "active" },
-      clientConfig
+      groupActiveState: { kind: "active" }
     };
   }
   async function importSecret(privateKey, kemOutput, cs) {
     return cs.hpke.importSecret(await cs.hpke.importPrivateKey(privateKey), new TextEncoder().encode("MLS 1.0 external init secret"), kemOutput, cs.kdf.size, new Uint8Array());
   }
   async function applyTreeMutations(ratchetTree, grouped, gc, sentByClient, authService, lifetimeConfig, s) {
-    const treeAfterUpdate = await grouped.update.reduce(async (acc, { senderLeafIndex, proposal }) => {
+    const treeAfterUpdate = await grouped[defaultProposalTypes.update].reduce(async (acc, { senderLeafIndex, proposal }) => {
       if (senderLeafIndex === void 0)
         throw new InternalError("No sender index found for update proposal");
       throwIfDefined(await validateLeafNodeUpdateOrCommit(proposal.update.leafNode, senderLeafIndex, gc, authService, s));
       throwIfDefined(await validateLeafNodeCredentialAndKeyUniqueness(ratchetTree, proposal.update.leafNode, senderLeafIndex));
       return updateLeafNode(await acc, proposal.update.leafNode, toLeafIndex(senderLeafIndex));
     }, Promise.resolve(ratchetTree));
-    const treeAfterRemove = grouped.remove.reduce((acc, { proposal }) => {
+    const treeAfterRemove = grouped[defaultProposalTypes.remove].reduce((acc, { proposal }) => {
       throwIfDefined(validateRemove(proposal.remove, ratchetTree));
       return removeLeafNode(acc, toLeafIndex(proposal.remove.removed));
     }, treeAfterUpdate);
-    const [treeAfterAdd, addedLeafNodes] = await grouped.add.reduce(async (acc, { proposal }) => {
+    const [treeAfterAdd, addedLeafNodes] = await grouped[defaultProposalTypes.add].reduce(async (acc, { proposal }) => {
       throwIfDefined(await validateKeyPackage(proposal.add.keyPackage, gc, ratchetTree, sentByClient, lifetimeConfig, authService, s));
       const [tree, ws] = await acc;
       const [updatedTree, leafNodeIndex] = addLeafNode(tree, proposal.add.keyPackage.leafNode);
@@ -10465,7 +10480,7 @@
     }, Promise.resolve([treeAfterRemove, []]));
     return [treeAfterAdd, addedLeafNodes];
   }
-  function addHistoricalReceiverData(state) {
+  function addHistoricalReceiverData(state, clientConfig) {
     const withNew = addToMap(state.historicalReceiverData, state.groupContext.epoch, {
       secretTree: state.secretTree,
       ratchetTree: state.ratchetTree,
@@ -10474,18 +10489,28 @@
       resumptionPsk: state.keySchedule.resumptionPsk
     });
     const epochs = [...withNew.keys()];
-    const result = epochs.length >= state.clientConfig.keyRetentionConfig.retainKeysForEpochs ? removeOldHistoricalReceiverData(withNew, state.clientConfig.keyRetentionConfig.retainKeysForEpochs) : withNew;
+    const result = epochs.length >= clientConfig.keyRetentionConfig.retainKeysForEpochs ? removeOldHistoricalReceiverData(withNew, clientConfig.keyRetentionConfig.retainKeysForEpochs) : [withNew, []];
     return result;
   }
   function removeOldHistoricalReceiverData(historicalReceiverData, max) {
     const sortedEpochs = [...historicalReceiverData.keys()].sort((a, b) => a < b ? -1 : 1);
-    return new Map(sortedEpochs.slice(-max).map((epoch) => [epoch, historicalReceiverData.get(epoch)]));
+    const cutoff = sortedEpochs.length - max;
+    const toBeDeleted = new Array();
+    const map = /* @__PURE__ */ new Map();
+    for (const [n, epoch] of sortedEpochs.entries()) {
+      const data = historicalReceiverData.get(epoch);
+      if (n < cutoff) {
+        toBeDeleted.push(...allSecretTreeValues(data.secretTree));
+      } else {
+        map.set(epoch, data);
+      }
+    }
+    return [new Map(sortedEpochs.slice(-max).map((epoch) => [epoch, historicalReceiverData.get(epoch)])), []];
   }
 
   // node_modules/ts-mls/dist/src/privateMessage.js
   var privateMessageEncoder = contramapBufferEncoders([varLenDataEncoder, uint64Encoder, contentTypeEncoder, varLenDataEncoder, varLenDataEncoder, varLenDataEncoder], (msg) => [msg.groupId, msg.epoch, msg.contentType, msg.authenticatedData, msg.encryptedSenderData, msg.ciphertext]);
-  var encodePrivateMessage = encode(privateMessageEncoder);
-  var decodePrivateMessage = mapDecoders([decodeVarLenData, decodeUint64, decodeContentType, decodeVarLenData, decodeVarLenData, decodeVarLenData], (groupId, epoch, contentType, authenticatedData, encryptedSenderData, ciphertext) => ({
+  var privateMessageDecoder = mapDecoders([varLenDataDecoder, uint64Decoder, contentTypeDecoder, varLenDataDecoder, varLenDataDecoder, varLenDataDecoder], (groupId, epoch, contentType, authenticatedData, encryptedSenderData, ciphertext) => ({
     groupId,
     epoch,
     contentType,
@@ -10494,8 +10519,7 @@
     ciphertext
   }));
   var privateContentAADEncoder = contramapBufferEncoders([varLenDataEncoder, uint64Encoder, contentTypeEncoder, varLenDataEncoder], (aad) => [aad.groupId, aad.epoch, aad.contentType, aad.authenticatedData]);
-  var encodePrivateContentAAD = encode(privateContentAADEncoder);
-  var decodePrivateContentAAD = mapDecoders([decodeVarLenData, decodeUint64, decodeContentType, decodeVarLenData], (groupId, epoch, contentType, authenticatedData) => ({
+  var privateContentAADDecoder = mapDecoders([varLenDataDecoder, uint64Decoder, contentTypeDecoder, varLenDataDecoder], (groupId, epoch, contentType, authenticatedData) => ({
     groupId,
     epoch,
     contentType,
@@ -10504,22 +10528,19 @@
   function privateMessageContentEncoder(config) {
     return (msg) => {
       switch (msg.contentType) {
-        case "application":
-          return encoderWithPadding(contramapBufferEncoders([varLenDataEncoder, framedContentAuthDataEncoder], (m10) => [m10.applicationData, m10.auth]), config)(msg);
-        case "proposal":
-          return encoderWithPadding(contramapBufferEncoders([proposalEncoder, framedContentAuthDataEncoder], (m10) => [m10.proposal, m10.auth]), config)(msg);
-        case "commit":
-          return encoderWithPadding(contramapBufferEncoders([commitEncoder, framedContentAuthDataEncoder], (m10) => [m10.commit, m10.auth]), config)(msg);
+        case contentTypes.application:
+          return encoderWithPadding(contramapBufferEncoders([varLenDataEncoder, framedContentAuthDataEncoder], (m11) => [m11.applicationData, m11.auth]), config)(msg);
+        case contentTypes.proposal:
+          return encoderWithPadding(contramapBufferEncoders([proposalEncoder, framedContentAuthDataEncoder], (m11) => [m11.proposal, m11.auth]), config)(msg);
+        case contentTypes.commit:
+          return encoderWithPadding(contramapBufferEncoders([commitEncoder, framedContentAuthDataEncoder], (m11) => [m11.commit, m11.auth]), config)(msg);
       }
     };
-  }
-  function encodePrivateMessageContent(config) {
-    return encode(privateMessageContentEncoder(config));
   }
   async function encryptSenderData(senderDataSecret, senderData, aad, ciphertext, cs) {
     const key = await expandSenderDataKey(cs, senderDataSecret, ciphertext);
     const nonce = await expandSenderDataNonce(cs, senderDataSecret, ciphertext);
-    return await cs.hpke.encryptAead(key, nonce, encode(senderDataAADEncoder)(aad), encode(senderDataEncoder)(senderData));
+    return await cs.hpke.encryptAead(key, nonce, encode(senderDataAADEncoder, aad), encode(senderDataEncoder, senderData));
   }
   function encoderWithPadding(encoder, config) {
     return (t) => {
@@ -10535,18 +10556,41 @@
   }
 
   // node_modules/ts-mls/dist/src/messageProtection.js
+  async function protectApplicationData(signKey, senderDataSecret, applicationData, authenticatedData, groupContext, secretTree, leafIndex, paddingConfig, cs) {
+    const tbs = {
+      protocolVersion: groupContext.version,
+      wireformat: wireformats.mls_private_message,
+      content: {
+        contentType: contentTypes.application,
+        applicationData,
+        groupId: groupContext.groupId,
+        epoch: groupContext.epoch,
+        sender: {
+          senderType: senderTypes.member,
+          leafIndex
+        },
+        authenticatedData
+      },
+      senderType: senderTypes.member,
+      context: groupContext
+    };
+    const auth = await signFramedContentApplicationOrProposal(signKey, tbs, cs);
+    const content = {
+      ...tbs.content,
+      auth
+    };
+    const result = await protect(senderDataSecret, authenticatedData, groupContext, secretTree, content, leafIndex, paddingConfig, cs);
+    return { newSecretTree: result.tree, privateMessage: result.privateMessage, consumed: result.consumed };
+  }
   async function protect(senderDataSecret, authenticatedData, groupContext, secretTree, content, leafIndex, config, cs) {
-    const node = secretTree[leafToNodeIndex(toLeafIndex(leafIndex))];
-    if (node === void 0)
-      throw new InternalError("Bad node index for secret tree");
-    const { newTree, generation, reuseGuard, nonce, key } = await consumeRatchet(secretTree, leafToNodeIndex(toLeafIndex(leafIndex)), content.contentType, cs);
+    const { newTree, generation, reuseGuard, nonce, key, consumed } = await consumeRatchet(secretTree, toLeafIndex(leafIndex), content.contentType, cs);
     const aad = {
       groupId: groupContext.groupId,
       epoch: groupContext.epoch,
       contentType: content.contentType,
       authenticatedData
     };
-    const ciphertext = await cs.hpke.encryptAead(key, nonce, encode(privateContentAADEncoder)(aad), encodePrivateMessageContent(config)(content));
+    const ciphertext = await cs.hpke.encryptAead(key, nonce, encode(privateContentAADEncoder, aad), encode(privateMessageContentEncoder(config), content));
     const senderData = {
       leafIndex,
       generation,
@@ -10567,18 +10611,77 @@
         authenticatedData,
         ciphertext
       },
-      tree: newTree
+      tree: newTree,
+      consumed
+    };
+  }
+
+  // node_modules/ts-mls/dist/src/publicMessage.js
+  var publicMessageInfoEncoder = (info) => {
+    switch (info.senderType) {
+      case senderTypes.member:
+        return varLenDataEncoder(info.membershipTag);
+      case senderTypes.external:
+      case senderTypes.new_member_proposal:
+      case senderTypes.new_member_commit:
+        return encVoid;
+    }
+  };
+  function publicMessageInfoDecoder(senderType) {
+    switch (senderType) {
+      case senderTypes.member:
+        return mapDecoder(varLenDataDecoder, (membershipTag) => ({
+          senderType,
+          membershipTag
+        }));
+      case senderTypes.external:
+      case senderTypes.new_member_proposal:
+      case senderTypes.new_member_commit:
+        return succeedDecoder({ senderType });
+    }
+  }
+  var publicMessageEncoder = contramapBufferEncoders([framedContentEncoder, framedContentAuthDataEncoder, publicMessageInfoEncoder], (msg) => [msg.content, msg.auth, msg]);
+  var publicMessageDecoder = flatMapDecoder(framedContentDecoder, (content) => mapDecoders([framedContentAuthDataDecoder(content.contentType), publicMessageInfoDecoder(content.sender.senderType)], (auth, info) => ({
+    ...info,
+    content,
+    auth
+  })));
+
+  // node_modules/ts-mls/dist/src/messageProtectionPublic.js
+  async function protectPublicMessage(membershipKey, groupContext, content, cs) {
+    if (content.content.contentType === contentTypes.application)
+      throw new UsageError("Can't make an application message public");
+    if (content.content.sender.senderType === senderTypes.member) {
+      const authenticatedContent = {
+        contentTbs: toTbs2(content.content, wireformats.mls_public_message, groupContext),
+        auth: content.auth
+      };
+      const tag = await createMembershipTag(membershipKey, authenticatedContent, cs.hash);
+      return {
+        content: content.content,
+        auth: content.auth,
+        senderType: senderTypes.member,
+        membershipTag: tag
+      };
+    }
+    return {
+      content: content.content,
+      auth: content.auth,
+      senderType: content.content.sender.senderType
     };
   }
 
   // node_modules/ts-mls/dist/src/createCommit.js
-  async function createCommit(context, options) {
-    const { state, pskIndex = makePskIndex(state, {}), cipherSuite } = context;
-    const { wireAsPublicMessage = false, extraProposals = [], ratchetTreeExtension = false, authenticatedData = new Uint8Array(), groupInfoExtensions = [] } = options ?? {};
+  async function createCommitInternal(params) {
+    const { context, state, resumingFromState: pskState, ...options } = params;
+    const { cipherSuite } = context;
+    const pskIndex = makePskIndex(pskState, context.externalPsks ?? {});
+    const clientConfig = context.clientConfig ?? defaultClientConfig;
+    const { wireAsPublicMessage = false, extraProposals = [], ratchetTreeExtension = false, authenticatedData = new Uint8Array(), groupInfoExtensions = [] } = options;
     checkCanSendHandshakeMessages(state);
     const wireformat = wireAsPublicMessage ? "mls_public_message" : "mls_private_message";
     const allProposals = bundleAllProposals(state, extraProposals);
-    const res = await applyProposals(state, allProposals, toLeafIndex(state.privatePath.leafIndex), pskIndex, true, cipherSuite);
+    const res = await applyProposals(state, allProposals, toLeafIndex(state.privatePath.leafIndex), pskIndex, true, clientConfig, context.authService, cipherSuite);
     if (res.additionalResult.kind === "externalCommit")
       throw new UsageError("Cannot create externalCommit as a member");
     const suspendedPendingReinit = res.additionalResult.kind === "reinit" ? res.additionalResult.reinit : void 0;
@@ -10588,7 +10691,7 @@
     const privateKeys = mergePrivateKeyPaths(newPrivateKey !== void 0 ? updateLeafKey(state.privatePath, await cipherSuite.hpke.exportPrivateKey(newPrivateKey)) : state.privatePath, await toPrivateKeyPath(pathToPathSecrets(pathSecrets), state.privatePath.leafIndex, cipherSuite));
     const lastPathSecret = pathSecrets.at(-1);
     const commitSecret = lastPathSecret === void 0 ? new Uint8Array(cipherSuite.kdf.size) : await deriveSecret(lastPathSecret.secret, "path", cipherSuite.kdf);
-    const { signature, framedContent } = await createContentCommitSignature(state.groupContext, wireformat, { proposals: allProposals, path: updatePath }, { senderType: "member", leafIndex: state.privatePath.leafIndex }, authenticatedData, state.signaturePrivateKey, cipherSuite.signature);
+    const { signature, framedContent } = await createContentCommitSignature(state.groupContext, wireformat, { proposals: allProposals, path: updatePath }, { senderType: senderTypes.member, leafIndex: state.privatePath.leafIndex }, authenticatedData, state.signaturePrivateKey, cipherSuite.signature);
     const treeHash2 = await treeHashRoot(tree, cipherSuite.hash);
     const updatedGroupContext = await nextEpochContext(groupContextWithExtensions, wireformat, framedContent, signature, treeHash2, state.confirmationTag, cipherSuite.hash);
     const epochSecrets = await initializeEpoch(state.keySchedule.initSecret, commitSecret, updatedGroupContext, res.pskSecret, cipherSuite.kdf);
@@ -10598,30 +10701,40 @@
       signature,
       confirmationTag
     };
-    const [commit] = await protectCommit(wireAsPublicMessage, state, authenticatedData, framedContent, authData, cipherSuite);
+    const [commit, _newTree, consumedSecrets] = await protectCommit(wireAsPublicMessage, state, clientConfig, authenticatedData, framedContent, authData, cipherSuite);
     const welcome = await createWelcome(ratchetTreeExtension, updatedGroupContext, confirmationTag, state, tree, cipherSuite, epochSecrets, res, pathSecrets, groupInfoExtensions);
     const groupActiveState = res.selfRemoved ? { kind: "removedFromGroup" } : suspendedPendingReinit !== void 0 ? { kind: "suspendedPendingReinit", reinit: suspendedPendingReinit } : { kind: "active" };
+    const [historicalReceiverData, consumedEpochData] = addHistoricalReceiverData(state, clientConfig);
     const newState = {
       groupContext: updatedGroupContext,
       ratchetTree: tree,
-      secretTree: await createSecretTree(leafWidth(tree.length), epochSecrets.keySchedule.encryptionSecret, cipherSuite.kdf),
+      secretTree: createSecretTree(leafWidth(tree.length), epochSecrets.encryptionSecret),
       keySchedule: epochSecrets.keySchedule,
       privatePath: privateKeys,
       unappliedProposals: {},
-      historicalReceiverData: addHistoricalReceiverData(state),
+      historicalReceiverData,
       confirmationTag,
       signaturePrivateKey: state.signaturePrivateKey,
-      groupActiveState,
-      clientConfig: state.clientConfig
+      groupActiveState
     };
-    return { newState, welcome, commit };
+    zeroOutUint8Array(commitSecret);
+    zeroOutUint8Array(epochSecrets.joinerSecret);
+    const consumed = [...consumedSecrets, ...consumedEpochData, state.keySchedule.initSecret];
+    const mlsWelcome = welcome ? { welcome, wireformat: wireformats.mls_welcome, version: protocolVersions.mls10 } : void 0;
+    return { newState, welcome: mlsWelcome, commit, consumed };
+  }
+  async function createCommit(params) {
+    return createCommitInternal(params);
   }
   function bundleAllProposals(state, extraProposals) {
     const refs = Object.keys(state.unappliedProposals).map((p) => ({
-      proposalOrRefType: "reference",
+      proposalOrRefType: proposalOrRefTypes.reference,
       reference: base64ToBytes(p)
     }));
-    const proposals = extraProposals.map((p) => ({ proposalOrRefType: "proposal", proposal: p }));
+    const proposals = extraProposals.map((p) => ({
+      proposalOrRefType: proposalOrRefTypes.proposal,
+      proposal: p
+    }));
     return [...refs, ...proposals];
   }
   async function createWelcome(ratchetTreeExtension, groupContext, confirmationTag, state, tree, cs, epochSecrets, res, pathSecrets, extensions) {
@@ -10654,12 +10767,14 @@
     return signGroupInfo(groupInfoTbs, state.signaturePrivateKey, cs.signature);
   }
   async function createGroupInfoWithRatchetTree(groupContext, confirmationTag, state, tree, extensions, cs) {
-    const encodedTree = encode(ratchetTreeEncoder)(tree);
-    const gi = await createGroupInfo(groupContext, confirmationTag, state, [...extensions, { extensionType: "ratchet_tree", extensionData: encodedTree }], cs);
+    const gi = await createGroupInfo(groupContext, confirmationTag, state, [
+      ...extensions,
+      { extensionType: defaultExtensionTypes.ratchet_tree, extensionData: encode(ratchetTreeEncoder, tree) }
+    ], cs);
     return gi;
   }
-  async function protectCommit(publicMessage, state, authenticatedData, content, authData, cs) {
-    const wireformat = publicMessage ? "mls_public_message" : "mls_private_message";
+  async function protectCommit(publicMessage, state, clientConfig, authenticatedData, content, authData, cs) {
+    const wireformat = publicMessage ? wireformats.mls_public_message : wireformats.mls_private_message;
     const authenticatedContent = {
       wireformat,
       content,
@@ -10667,11 +10782,44 @@
     };
     if (publicMessage) {
       const msg = await protectPublicMessage(state.keySchedule.membershipKey, state.groupContext, authenticatedContent, cs);
-      return [{ version: "mls10", wireformat: "mls_public_message", publicMessage: msg }, state.secretTree];
+      return [
+        { version: protocolVersions.mls10, wireformat: wireformats.mls_public_message, publicMessage: msg },
+        state.secretTree,
+        []
+      ];
     } else {
-      const res = await protect(state.keySchedule.senderDataSecret, authenticatedData, state.groupContext, state.secretTree, { ...content, auth: authData }, state.privatePath.leafIndex, state.clientConfig.paddingConfig, cs);
-      return [{ version: "mls10", wireformat: "mls_private_message", privateMessage: res.privateMessage }, res.tree];
+      const res = await protect(state.keySchedule.senderDataSecret, authenticatedData, state.groupContext, state.secretTree, { ...content, auth: authData }, state.privatePath.leafIndex, clientConfig.paddingConfig, cs);
+      return [
+        {
+          version: protocolVersions.mls10,
+          wireformat: wireformats.mls_private_message,
+          privateMessage: res.privateMessage
+        },
+        res.tree,
+        res.consumed
+      ];
     }
+  }
+
+  // node_modules/ts-mls/dist/src/createMessage.js
+  async function createApplicationMessage(params) {
+    const context = params.context;
+    const state = params.state;
+    const cs = context.cipherSuite;
+    const ad = params.authenticatedData ?? new Uint8Array();
+    const clientConfig = context.clientConfig ?? defaultClientConfig;
+    const message = params.message;
+    checkCanSendApplicationMessages(state);
+    const result = await protectApplicationData(state.signaturePrivateKey, state.keySchedule.senderDataSecret, message, ad, state.groupContext, state.secretTree, state.privatePath.leafIndex, clientConfig.paddingConfig, cs);
+    return {
+      newState: { ...state, secretTree: result.newSecretTree },
+      message: {
+        version: protocolVersions.mls10,
+        wireformat: wireformats.mls_private_message,
+        privateMessage: result.privateMessage
+      },
+      consumed: result.consumed
+    };
   }
 
   // node_modules/@hpke/common/esm/src/errors.js
@@ -12957,7 +13105,6 @@
   };
 
   // node_modules/@hpke/core/esm/src/kems/dhkemPrimitives/x448.js
-  var ALG_NAME2 = "X448";
   var PKCS8_ALG_ID_X448 = new Uint8Array([
     48,
     70,
@@ -12976,224 +13123,6 @@
     4,
     56
   ]);
-  var X448 = class extends NativeAlgorithm {
-    constructor(hkdf) {
-      super();
-      Object.defineProperty(this, "_hkdf", {
-        enumerable: true,
-        configurable: true,
-        writable: true,
-        value: void 0
-      });
-      Object.defineProperty(this, "_alg", {
-        enumerable: true,
-        configurable: true,
-        writable: true,
-        value: void 0
-      });
-      Object.defineProperty(this, "_nPk", {
-        enumerable: true,
-        configurable: true,
-        writable: true,
-        value: void 0
-      });
-      Object.defineProperty(this, "_nSk", {
-        enumerable: true,
-        configurable: true,
-        writable: true,
-        value: void 0
-      });
-      Object.defineProperty(this, "_nDh", {
-        enumerable: true,
-        configurable: true,
-        writable: true,
-        value: void 0
-      });
-      Object.defineProperty(this, "_pkcs8AlgId", {
-        enumerable: true,
-        configurable: true,
-        writable: true,
-        value: void 0
-      });
-      this._alg = { name: ALG_NAME2 };
-      this._hkdf = hkdf;
-      this._nPk = 56;
-      this._nSk = 56;
-      this._nDh = 56;
-      this._pkcs8AlgId = PKCS8_ALG_ID_X448;
-    }
-    async serializePublicKey(key) {
-      await this._setup();
-      try {
-        return await this._api.exportKey("raw", key);
-      } catch (e) {
-        throw new SerializeError(e);
-      }
-    }
-    async deserializePublicKey(key) {
-      await this._setup();
-      try {
-        return await this._importRawKey(key, true);
-      } catch (e) {
-        throw new DeserializeError(e);
-      }
-    }
-    async serializePrivateKey(key) {
-      await this._setup();
-      try {
-        const jwk = await this._api.exportKey("jwk", key);
-        if (!("d" in jwk)) {
-          throw new Error("Not private key");
-        }
-        return base64UrlToBytes(jwk["d"]).buffer;
-      } catch (e) {
-        throw new SerializeError(e);
-      }
-    }
-    async deserializePrivateKey(key) {
-      await this._setup();
-      try {
-        return await this._importRawKey(key, false);
-      } catch (e) {
-        throw new DeserializeError(e);
-      }
-    }
-    async importKey(format, key, isPublic) {
-      await this._setup();
-      try {
-        if (format === "raw") {
-          return await this._importRawKey(key, isPublic);
-        }
-        if (key instanceof ArrayBuffer) {
-          throw new Error("Invalid jwk key format");
-        }
-        return await this._importJWK(key, isPublic);
-      } catch (e) {
-        throw new DeserializeError(e);
-      }
-    }
-    async generateKeyPair() {
-      await this._setup();
-      try {
-        return await this._api.generateKey(ALG_NAME2, true, KEM_USAGES);
-      } catch (e) {
-        throw new NotSupportedError(e);
-      }
-    }
-    async deriveKeyPair(ikm) {
-      await this._setup();
-      try {
-        const dkpPrk = await this._hkdf.labeledExtract(EMPTY.buffer, LABEL_DKP_PRK, new Uint8Array(ikm));
-        const rawSk = await this._hkdf.labeledExpand(dkpPrk, LABEL_SK, EMPTY, this._nSk);
-        const rawSkBytes = new Uint8Array(rawSk);
-        const sk = await this._deserializePkcs8Key(rawSkBytes);
-        rawSkBytes.fill(0);
-        return {
-          privateKey: sk,
-          publicKey: await this.derivePublicKey(sk)
-        };
-      } catch (e) {
-        throw new DeriveKeyPairError(e);
-      }
-    }
-    async derivePublicKey(key) {
-      await this._setup();
-      try {
-        const jwk = await this._api.exportKey("jwk", key);
-        delete jwk["d"];
-        delete jwk["key_ops"];
-        return await this._api.importKey("jwk", jwk, this._alg, true, []);
-      } catch (e) {
-        throw new DeserializeError(e);
-      }
-    }
-    async dh(sk, pk) {
-      await this._setup();
-      try {
-        const bits = await this._api.deriveBits({
-          name: ALG_NAME2,
-          public: pk
-        }, sk, this._nDh * 8);
-        return bits;
-      } catch (e) {
-        throw new SerializeError(e);
-      }
-    }
-    async _importRawKey(key, isPublic) {
-      if (isPublic && key.byteLength !== this._nPk) {
-        throw new Error("Invalid public key for the ciphersuite");
-      }
-      if (!isPublic && key.byteLength !== this._nSk) {
-        throw new Error("Invalid private key for the ciphersuite");
-      }
-      if (isPublic) {
-        return await this._api.importKey("raw", key, this._alg, true, []);
-      }
-      return await this._deserializePkcs8Key(new Uint8Array(key));
-    }
-    async _importJWK(key, isPublic) {
-      if (typeof key.kty === "undefined" || key.kty !== "OKP") {
-        throw new Error(`Invalid kty: ${key.crv}`);
-      }
-      if (typeof key.crv === "undefined" || key.crv !== ALG_NAME2) {
-        throw new Error(`Invalid crv: ${key.crv}`);
-      }
-      if (isPublic) {
-        if (typeof key.d !== "undefined") {
-          throw new Error("Invalid key: `d` should not be set");
-        }
-        return await this._api.importKey("jwk", key, this._alg, true, []);
-      }
-      if (typeof key.d === "undefined") {
-        throw new Error("Invalid key: `d` not found");
-      }
-      return await this._api.importKey("jwk", key, this._alg, true, KEM_USAGES);
-    }
-    async _deserializePkcs8Key(k) {
-      const pkcs8Key = new Uint8Array(this._pkcs8AlgId.length + k.length);
-      pkcs8Key.set(this._pkcs8AlgId, 0);
-      pkcs8Key.set(k, this._pkcs8AlgId.length);
-      return await this._api.importKey("pkcs8", pkcs8Key, this._alg, true, KEM_USAGES);
-    }
-  };
-
-  // node_modules/@hpke/core/esm/src/kems/dhkemX448.js
-  var DhkemX448HkdfSha512 = class extends Dhkem {
-    constructor() {
-      const kdf = new HkdfSha512Native();
-      super(KemId.DhkemX448HkdfSha512, new X448(kdf), kdf);
-      Object.defineProperty(this, "id", {
-        enumerable: true,
-        configurable: true,
-        writable: true,
-        value: KemId.DhkemX448HkdfSha512
-      });
-      Object.defineProperty(this, "secretSize", {
-        enumerable: true,
-        configurable: true,
-        writable: true,
-        value: 64
-      });
-      Object.defineProperty(this, "encSize", {
-        enumerable: true,
-        configurable: true,
-        writable: true,
-        value: 56
-      });
-      Object.defineProperty(this, "publicKeySize", {
-        enumerable: true,
-        configurable: true,
-        writable: true,
-        value: 56
-      });
-      Object.defineProperty(this, "privateKeySize", {
-        enumerable: true,
-        configurable: true,
-        writable: true,
-        value: 56
-      });
-    }
-  };
 
   // node_modules/ts-mls/dist/src/crypto/implementation/hpke.js
   async function makeGenericHpke(hpkealg, aead, cs) {
@@ -13312,8 +13241,14 @@
         return new DhkemP256HkdfSha256();
       case "DHKEM-X25519-HKDF-SHA256":
         return new DhkemX25519HkdfSha256();
-      case "DHKEM-X448-HKDF-SHA512":
-        return new DhkemX448HkdfSha512();
+      case "DHKEM-X448-HKDF-SHA512": {
+        try {
+          const { DhkemX448HkdfSha512: DhkemX448HkdfSha5122 } = await import("@hpke/dhkem-x448");
+          return new DhkemX448HkdfSha5122();
+        } catch (err) {
+          throw new DependencyError("Optional dependency '@hpke/dhkem-x448' is not installed. Please install it to use this feature.");
+        }
+      }
       case "DHKEM-P521-HKDF-SHA512":
         return new DhkemP521HkdfSha512();
       case "DHKEM-P384-HKDF-SHA384":
@@ -13503,10 +13438,54 @@
     }
   }
 
+  // node_modules/ts-mls/dist/src/authenticationService.js
+  var unsafeTestingAuthenticationService = {
+    async validateCredential(_credential, _signaturePublicKey) {
+      return true;
+    }
+  };
+
+  // node_modules/ts-mls/dist/src/message.js
+  var mlsPublicMessageEncoder = contramapBufferEncoders([wireformatEncoder, publicMessageEncoder], (msg) => [msg.wireformat, msg.publicMessage]);
+  var mlsWelcomeEncoder = contramapBufferEncoders([wireformatEncoder, welcomeEncoder], (wm) => [wm.wireformat, wm.welcome]);
+  var mlsPrivateMessageEncoder = contramapBufferEncoders([wireformatEncoder, privateMessageEncoder], (pm) => [pm.wireformat, pm.privateMessage]);
+  var mlsGroupInfoEncoder = contramapBufferEncoders([wireformatEncoder, groupInfoEncoder], (gi) => [gi.wireformat, gi.groupInfo]);
+  var mlsKeyPackageEncoder = contramapBufferEncoders([wireformatEncoder, keyPackageEncoder], (kp) => [kp.wireformat, kp.keyPackage]);
+  var mlsMessageContentEncoder = (mc) => {
+    switch (mc.wireformat) {
+      case wireformats.mls_public_message:
+        return mlsPublicMessageEncoder(mc);
+      case wireformats.mls_welcome:
+        return mlsWelcomeEncoder(mc);
+      case wireformats.mls_private_message:
+        return mlsPrivateMessageEncoder(mc);
+      case wireformats.mls_group_info:
+        return mlsGroupInfoEncoder(mc);
+      case wireformats.mls_key_package:
+        return mlsKeyPackageEncoder(mc);
+    }
+  };
+  var mlsMessageContentDecoder = flatMapDecoder(wireformatDecoder, (wireformat) => {
+    switch (wireformat) {
+      case wireformats.mls_public_message:
+        return mapDecoder(publicMessageDecoder, (publicMessage) => ({ wireformat, publicMessage }));
+      case wireformats.mls_welcome:
+        return mapDecoder(welcomeDecoder, (welcome) => ({ wireformat, welcome }));
+      case wireformats.mls_private_message:
+        return mapDecoder(privateMessageDecoder, (privateMessage) => ({ wireformat, privateMessage }));
+      case wireformats.mls_group_info:
+        return mapDecoder(groupInfoDecoder, (groupInfo) => ({ wireformat, groupInfo }));
+      case wireformats.mls_key_package:
+        return mapDecoder(keyPackageDecoder, (keyPackage) => ({ wireformat, keyPackage }));
+    }
+  });
+  var mlsMessageEncoder = contramapBufferEncoders([protocolVersionEncoder, mlsMessageContentEncoder], (w) => [w.version, w]);
+  var mlsMessageDecoder = mapDecoders([protocolVersionDecoder, mlsMessageContentDecoder], (version, mc) => ({ ...mc, version }));
+
   // node_modules/ts-mls/dist/src/crypto/implementation/noble/makeHashImpl.js
   init_sha2();
   init_hmac();
-  function makeHashImpl2(h) {
+  function makeHashImpl(h) {
     return {
       async digest(data) {
         switch (h) {
@@ -14058,7 +14037,7 @@
   cmac.create = (key) => new _CMAC(key);
 
   // node_modules/ts-mls/dist/src/crypto/implementation/noble/makeAead.js
-  async function makeAead2(aeadAlg) {
+  async function makeAead(aeadAlg) {
     switch (aeadAlg) {
       case "AES128GCM":
         return [
@@ -14114,8 +14093,8 @@
   }
 
   // node_modules/ts-mls/dist/src/crypto/implementation/noble/makeHpke.js
-  async function makeHpke2(hpkealg) {
-    const [aead, aeadInterface] = await makeAead2(hpkealg.aead);
+  async function makeHpke(hpkealg) {
+    const [aead, aeadInterface] = await makeAead(hpkealg.aead);
     const cs = new CipherSuite({
       kem: await makeDhKem(hpkealg.kem),
       kdf: makeKdf(hpkealg.kdf),
@@ -14129,109 +14108,14 @@
     async getCiphersuiteImpl(cs) {
       return {
         kdf: makeKdfImpl(makeKdf(cs.hpke.kdf)),
-        hash: makeHashImpl2(cs.hash),
+        hash: makeHashImpl(cs.hash),
         signature: await makeNobleSignatureImpl(cs.signature),
-        hpke: await makeHpke2(cs.hpke),
+        hpke: await makeHpke(cs.hpke),
         rng: defaultRng,
         name: cs.name
       };
     }
   };
-
-  // node_modules/ts-mls/dist/src/message.js
-  var mlsPublicMessageEncoder = contramapBufferEncoders([wireformatEncoder, publicMessageEncoder], (msg) => [msg.wireformat, msg.publicMessage]);
-  var encodeMlsPublicMessage = encode(mlsPublicMessageEncoder);
-  var mlsWelcomeEncoder = contramapBufferEncoders([wireformatEncoder, welcomeEncoder], (wm) => [wm.wireformat, wm.welcome]);
-  var encodeMlsWelcome = encode(mlsWelcomeEncoder);
-  var mlsPrivateMessageEncoder = contramapBufferEncoders([wireformatEncoder, privateMessageEncoder], (pm) => [pm.wireformat, pm.privateMessage]);
-  var encodeMlsPrivateMessage = encode(mlsPrivateMessageEncoder);
-  var mlsGroupInfoEncoder = contramapBufferEncoders([wireformatEncoder, groupInfoEncoder], (gi) => [gi.wireformat, gi.groupInfo]);
-  var encodeMlsGroupInfo = encode(mlsGroupInfoEncoder);
-  var mlsKeyPackageEncoder = contramapBufferEncoders([wireformatEncoder, keyPackageEncoder], (kp) => [kp.wireformat, kp.keyPackage]);
-  var encodeMlsKeyPackage = encode(mlsKeyPackageEncoder);
-  var mlsMessageContentEncoder = (mc) => {
-    switch (mc.wireformat) {
-      case "mls_public_message":
-        return mlsPublicMessageEncoder(mc);
-      case "mls_welcome":
-        return mlsWelcomeEncoder(mc);
-      case "mls_private_message":
-        return mlsPrivateMessageEncoder(mc);
-      case "mls_group_info":
-        return mlsGroupInfoEncoder(mc);
-      case "mls_key_package":
-        return mlsKeyPackageEncoder(mc);
-    }
-  };
-  var encodeMlsMessageContent = encode(mlsMessageContentEncoder);
-  var decodeMlsMessageContent = flatMapDecoder(decodeWireformat, (wireformat) => {
-    switch (wireformat) {
-      case "mls_public_message":
-        return mapDecoder(decodePublicMessage, (publicMessage) => ({ wireformat, publicMessage }));
-      case "mls_welcome":
-        return mapDecoder(decodeWelcome, (welcome) => ({ wireformat, welcome }));
-      case "mls_private_message":
-        return mapDecoder(decodePrivateMessage, (privateMessage) => ({ wireformat, privateMessage }));
-      case "mls_group_info":
-        return mapDecoder(decodeGroupInfo, (groupInfo) => ({ wireformat, groupInfo }));
-      case "mls_key_package":
-        return mapDecoder(decodeKeyPackage, (keyPackage) => ({ wireformat, keyPackage }));
-    }
-  });
-  var mlsMessageEncoder = contramapBufferEncoders([protocolVersionEncoder, mlsMessageContentEncoder], (w) => [w.version, w]);
-  var encodeMlsMessage = encode(mlsMessageEncoder);
-  var decodeMlsMessage = mapDecoders([decodeProtocolVersion, decodeMlsMessageContent], (version, mc) => ({ ...mc, version }));
-
-  // node_modules/ts-mls/dist/src/grease.js
-  var greaseValues = [
-    2570,
-    6682,
-    10794,
-    14906,
-    19018,
-    23130,
-    27242,
-    31354,
-    35466,
-    39578,
-    43690,
-    47802,
-    51914,
-    56026,
-    60138
-  ];
-  var defaultGreaseConfig = {
-    probabilityPerGreaseValue: 0.1
-  };
-  function grease(greaseConfig) {
-    return greaseValues.filter(() => greaseConfig.probabilityPerGreaseValue > Math.random());
-  }
-  function greaseCiphersuites(greaseConfig) {
-    return grease(greaseConfig).map((n) => n.toString());
-  }
-  function greaseCredentials(greaseConfig) {
-    return grease(greaseConfig).map((n) => n.toString());
-  }
-  function greaseCapabilities(config, capabilities) {
-    return {
-      ciphersuites: [...capabilities.ciphersuites, ...greaseCiphersuites(config)],
-      credentials: [...capabilities.credentials, ...greaseCredentials(config)],
-      extensions: [...capabilities.extensions, ...grease(config)],
-      proposals: [...capabilities.proposals, ...grease(config)],
-      versions: capabilities.versions
-    };
-  }
-
-  // node_modules/ts-mls/dist/src/defaultCapabilities.js
-  function defaultCapabilities() {
-    return greaseCapabilities(defaultGreaseConfig, {
-      versions: ["mls10"],
-      ciphersuites: Object.keys(ciphersuites),
-      extensions: [],
-      proposals: [],
-      credentials: ["basic", "x509"]
-    });
-  }
 
   // src/service/database.ts
   async function NewIndexedDB() {
@@ -14239,9 +14123,10 @@
       upgrade(db, oldVersion, newVersion) {
         console.log("Upgrading database from version", oldVersion, "to:", newVersion);
         db.createObjectStore("config", { keyPath: "id" });
-        db.createObjectStore("group", { keyPath: "groupID" });
+        db.createObjectStore("group", { keyPath: "id" });
         db.createObjectStore("keyPackage", { keyPath: "id" });
-        db.createObjectStore("message", { keyPath: "messageID" });
+        const messages = db.createObjectStore("message", { keyPath: "id" });
+        messages.createIndex("group", "group", { unique: false });
       }
     });
   }
@@ -14273,13 +14158,19 @@
     /////////////////////////////////////////////
     // Groups
     /////////////////////////////////////////////
+    // allGroups returns all groups from the database, sorted by updateDate descending
+    async allGroups() {
+      var groups = await this.#db.getAll("group");
+      groups.sort((a, b) => b.updateDate - a.updateDate);
+      return groups;
+    }
     // saveGroup saves a group to the database
     async saveGroup(group) {
       const dbGroup = {
-        groupID: group.groupID,
+        id: group.id,
         members: group.members,
         name: group.name,
-        clientState: encodeGroupState(group.clientState),
+        clientState: group.clientState,
         createDate: group.createDate,
         updateDate: group.updateDate,
         readDate: group.readDate
@@ -14293,15 +14184,23 @@
         throw new Error("Group not found: " + groupID);
       }
       const result = {
-        groupID: dbGroup.groupID,
+        id: dbGroup.id,
         members: dbGroup.members,
         name: dbGroup.name,
-        clientState: this.decodeClientState(dbGroup.clientState),
+        clientState: dbGroup.clientState,
         createDate: dbGroup.createDate,
         updateDate: dbGroup.updateDate,
         readDate: dbGroup.readDate
       };
       return result;
+    }
+    // deleteGroup removes a group from the database
+    async deleteGroup(group) {
+      const messages = await this.#db.getAllKeysFromIndex("message", "group", group);
+      for (const message of messages) {
+        await this.#db.delete("message", message);
+      }
+      await this.#db.delete("group", group);
     }
     /////////////////////////////////////////////
     // Private KeyPackage
@@ -14328,17 +14227,10 @@
       }
       return message;
     }
-    /////////////////////////////////////////////
-    // Utilities
-    /////////////////////////////////////////////
-    decodeClientState(serialized) {
-      const decodedGroupState = decodeGroupState(serialized, 0);
-      if (decodedGroupState == null) {
-        throw new Error("Unable to decode group state");
-      }
-      var clientState = decodedGroupState[0];
-      clientState.clientConfig = this.#clientConfig;
-      return clientState;
+    async listMessages(group) {
+      var messages = await this.#db.getAllFromIndex("message", "group", group);
+      messages.sort((a, b) => a.createDate - b.createDate);
+      return messages;
     }
   };
 
@@ -14379,6 +14271,7 @@
     }
     // sendCommit sends an MLS commit message to the specified recipients
     async sendCommit(recipients, commit) {
+      const content = encode(mlsMessageEncoder, commit);
       const activity = {
         "@context": this.#context,
         type: "Create",
@@ -14389,13 +14282,14 @@
           to: recipients,
           mediaType: "message/mls",
           encoding: "base64",
-          content: bytesToBase64(encodeMlsMessage(commit))
+          content: bytesToBase64(content)
         }
       };
       await this.send(this.#outboxUrl, activity);
     }
     // sendWelcome sends an MLS welcome message to the specified recipients
     async sendWelcome(recipients, welcome) {
+      const content = encode(mlsWelcomeEncoder, welcome);
       const activity = {
         "@context": this.#context,
         type: "Create",
@@ -14406,19 +14300,14 @@
           to: recipients,
           mediaType: "message/mls",
           encoding: "base64",
-          content: bytesToBase64(
-            encodeMlsMessage({
-              welcome,
-              wireformat: "mls_welcome",
-              version: "mls10"
-            })
-          )
+          content: bytesToBase64(content)
         }
       };
       await this.send(this.#outboxUrl, activity);
     }
     // sendPrivateMessage sends an MLS private message to the specified recipients
     async sendPrivateMessage(recipients, privateMessage) {
+      const content = encode(mlsPrivateMessageEncoder, privateMessage);
       const activity = {
         "@context": this.#context,
         type: "Create",
@@ -14429,13 +14318,7 @@
           to: recipients,
           mediaType: "message/mls",
           encoding: "base64",
-          content: bytesToBase64(
-            encodeMlsMessage({
-              wireformat: "mls_private_message",
-              privateMessage,
-              version: "mls10"
-            })
-          )
+          content: bytesToBase64(content)
         }
       };
       await this.send(this.#outboxUrl, activity);
@@ -14486,7 +14369,6 @@
       return;
     }
     const collection = await loadActivityStream(url);
-    console.log("rangeCollection: loaded collection", collection);
     if (collection.items || collection.orderedItems) {
       for await (const item of rangeCollectionPage(collection)) {
         yield item;
@@ -14537,20 +14419,24 @@
     async getKeyPackages(actorIDs) {
       var result = [];
       for (const actorID of actorIDs) {
-        console.log("getKeyPackages: Loading KeyPackages for: " + actorID);
         const actor = await loadActivityStream(actorID);
-        console.log("actor:", actor);
         const rangeKeyPackages = rangeCollection(actor.keyPackages);
         for await (const item of rangeKeyPackages) {
-          console.log("KeyPackage item", item);
           const contentBytes = base64ToUint8Array(item.content);
-          const mlsMessage = decodeMlsMessage(contentBytes, 0)[0];
-          if (mlsMessage.wireformat != "mls_key_package") {
-            throw new Error("Invalid KeyPackage message");
+          console.log("Getting KeyPackage:", item.content, contentBytes);
+          const decodedKeyPackage = decode(mlsMessageDecoder, contentBytes);
+          if (decodedKeyPackage == void 0) {
+            console.warn("Failed to decode KeyPackage for item:", item);
+            continue;
           }
-          result.push(mlsMessage.keyPackage);
+          if (decodedKeyPackage.wireformat !== wireformats.mls_key_package) {
+            console.warn("Unexpected wireformat for KeyPackage:", decodedKeyPackage.wireformat);
+            continue;
+          }
+          result.push(decodedKeyPackage.keyPackage);
         }
       }
+      console.log("Available KeyPackages:", result);
       return result;
     }
     // createKeyPackage publishes a new KeyPackage to the User's outbox.
@@ -14575,7 +14461,6 @@
         body: JSON.stringify(activity),
         credentials: "include"
       });
-      console.log("directory.send", response);
       if (!response.ok) {
         throw new Error(`Failed to fetch ${outbox}: ${response.status} ${response.statusText}`);
       }
@@ -14607,16 +14492,14 @@
     async createGroup() {
       const groupID = crypto.randomUUID();
       const groupIDBytes = new TextEncoder().encode(groupID);
-      const clientState = await createGroup(
-        groupIDBytes,
-        this.#publicKeyPackage,
-        this.#privateKeyPackage,
-        [],
-        this.#cipherSuite,
-        this.#clientConfig
-      );
+      const clientState = await createGroup({
+        context: this.#context(),
+        groupId: groupIDBytes,
+        keyPackage: this.#publicKeyPackage,
+        privateKeyPackage: this.#privateKeyPackage
+      });
       const result = {
-        groupID,
+        id: groupID,
         members: [this.#actor.id],
         name: "New Group",
         clientState,
@@ -14630,54 +14513,69 @@
     // addGroupMembers updates the group state.  It sends a Commit
     // message to existing members, and a Welcome message to new members,
     async addGroupMembers(groupID, newMembers) {
-      console.log("mls.addGroupMembers: Adding members", newMembers, "to group", groupID);
       const group = await this.#database.loadGroup(groupID);
       const currentMembers = group.members;
       const keyPackages = await this.#directory.getKeyPackages(newMembers);
-      console.log("mls.addGroupMembers: KeyPackages", keyPackages);
       const addProposals = keyPackages.map((keyPackage) => ({
-        proposalType: "add",
+        proposalType: defaultProposalTypes.add,
         add: {
           keyPackage
         }
       }));
-      console.log("mls.addGroupMembers: Add Proposals", addProposals);
-      const commitResult = await createCommit(
-        { state: group.clientState, cipherSuite: this.#cipherSuite },
-        { extraProposals: addProposals }
-      );
-      console.log("mls.addGroupMembers: Commit Result", commitResult);
+      const commitResult = await createCommit({
+        context: this.#context(),
+        state: group.clientState,
+        extraProposals: addProposals
+      });
       this.#delivery.sendCommit(currentMembers, commitResult.commit);
       this.#delivery.sendWelcome(newMembers, commitResult.welcome);
       group.clientState = commitResult.newState;
       group.members = currentMembers.concat(newMembers);
       await this.#database.saveGroup(group);
-      console.log(group);
     }
-    async sendGroupMessage(groupID, plaintext) {
-      const message = {
-        messageID: crypto.randomUUID(),
-        groupID,
-        senderID: this.#actor.id,
+    async sendGroupMessage(group, plaintext) {
+      const mlsGroup = await this.#database.loadGroup(group);
+      const messageObject = {
+        "@context": "https://www.w3.org/ns/activitystreams",
+        type: "Note",
+        content: plaintext
+      };
+      const messageText = JSON.stringify(messageObject);
+      const messageBytes = new TextEncoder().encode(messageText);
+      const result = await createApplicationMessage({
+        context: this.#context(),
+        state: mlsGroup.clientState,
+        message: messageBytes
+      });
+      this.#delivery.sendPrivateMessage(mlsGroup.members, result.message);
+      mlsGroup.clientState = result.newState;
+      mlsGroup.updateDate = Date.now();
+      await this.#database.saveGroup(mlsGroup);
+      const dbMessage = {
+        id: crypto.randomUUID(),
+        group,
+        sender: this.#actor.id,
         plaintext,
-        ciphertext: new Uint8Array(),
         createDate: Date.now()
       };
-      await this.#database.saveMessage(message);
+      await this.#database.saveMessage(dbMessage);
     }
     encryptMessage() {
       return "";
+    }
+    #context() {
+      return {
+        cipherSuite: this.#cipherSuite,
+        authService: unsafeTestingAuthenticationService
+      };
     }
   };
 
   // src/service/mls-factory.ts
   async function MLSFactory(database, delivery, directory, actor, clientConfig, clientName) {
-    console.log("MLSFactory: Starting MLS Factory");
     const cipherSuiteName = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519";
     const cipherSuite = await nobleCryptoProvider.getCiphersuiteImpl(getCiphersuiteFromName(cipherSuiteName));
-    console.log("MLSFactory: loaded cipher suite", cipherSuiteName);
     var dbKeyPackage = await database.loadKeyPackage();
-    console.log("MLSFactory: loaded dbKeyPackage", dbKeyPackage);
     if (dbKeyPackage == void 0) {
       try {
         const cipherSuiteName2 = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519";
@@ -14686,15 +14584,6 @@
           credentialType: "basic",
           identity: new TextEncoder().encode(actor.id)
         };
-        console.log("Generating Key package for actor:", actor);
-        console.log(
-          "Ima break??",
-          generateKeyPackage,
-          credential,
-          defaultCapabilities,
-          defaultLifetime,
-          cipherSuite2
-        );
         var keyPackageResult = await generateKeyPackage(
           credential,
           defaultCapabilities(),
@@ -14706,7 +14595,6 @@
         console.error("Error generating KeyPackage:", error);
         throw error;
       }
-      console.log("Generated Key package", keyPackageResult);
       const apKeyPackage = NewAPKeyPackage(clientName, actor.id, keyPackageResult.publicPackage);
       const apKeyPackageURL = await directory.createKeyPackage(apKeyPackage);
       if (apKeyPackageURL == "") {
@@ -14753,7 +14641,6 @@
       this.loadConfig();
     }
     async loadConfig() {
-      console.log("loadConfig");
       this.config = await this.#database.loadConfig();
       if (this.config.hasEncryptionKeys) {
         this.startMLS();
@@ -14787,7 +14674,8 @@
         throw new Error("MLS service is not initialized");
       }
       const group = await this.#mls.createGroup();
-      await this.#mls.addGroupMembers(group.groupID, recipients);
+      await this.#mls.addGroupMembers(group.id, recipients);
+      await this.#mls.sendGroupMessage(group.id, message);
     }
     // newConversation creates a new plaintext ActivityPub conversation
     // with the specified recipients
@@ -14808,9 +14696,22 @@
         body: JSON.stringify(activity)
       });
     }
+    // allGroups returns all groups from the database, sorted by updateDate descending
+    async allGroups() {
+      if (this.#database == void 0) {
+        throw new Error("Database service is not initialized");
+      }
+      return this.#database.allGroups();
+    }
+    // deleteGroup deletes the specified group from the database
+    async deleteGroup(group) {
+      if (this.#database == void 0) {
+        throw new Error("Database service is not initialized");
+      }
+      await this.#database.deleteGroup(group);
+    }
     // startMLS initializes the MLS service IF the configuration includes encryption keys
     async startMLS() {
-      console.log("loadConfig");
       if (this.config.hasEncryptionKeys == false) {
         throw new Error("Cannot start MLS without encryption keys");
       }
@@ -14826,8 +14727,8 @@
   };
 
   // src/view/main.tsx
-  var import_mithril12 = __toESM(require_mithril(), 1);
-  var import_mithril13 = __toESM(require_mithril(), 1);
+  var import_mithril14 = __toESM(require_mithril(), 1);
+  var import_mithril15 = __toESM(require_mithril(), 1);
 
   // src/view/modal-newConversation.tsx
   var import_mithril5 = __toESM(require_mithril(), 1);
@@ -14921,7 +14822,6 @@
       vnode.state.highlightedOption = -1;
     }
     view(vnode) {
-      console.log("view", vnode.state);
       return /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "autocomplete" }, /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "input" }, vnode.attrs.value.map((actor, index) => {
         const keyPackageCount = vnode.state.keyPackages[actor.id];
         const isSecure = keyPackageCount != void 0 && keyPackageCount > 0;
@@ -15024,7 +14924,6 @@
     // (async) Maintains a cache that counts the keyPackages for each actor
     loadKeyPackages(vnode) {
       for (const actor of vnode.state.actors) {
-        console.log("loadKeyPackages", actor.id, vnode.state.keyPackages[actor.id]);
         if (vnode.state.keyPackages[actor.id] == void 0) {
           if (actor.keyPackages == null) {
             continue;
@@ -15037,7 +14936,6 @@
           ).then((header) => {
             if (header != void 0) {
               if (header.totalItems != void 0) {
-                console.log("loadKeyPackages: totalItems", header.totalItems);
                 vnode.state.keyPackages[actor.id] = header.totalItems;
                 import_mithril3.default.redraw();
               }
@@ -15079,9 +14977,6 @@
       vnode.state.encrypted = false;
     }
     view(vnode) {
-      if (vnode.attrs.modal != "NEW-CONVERSATION") {
-        return null;
-      }
       return /* @__PURE__ */ (0, import_mithril5.default)(Modal, { close: vnode.attrs.close }, /* @__PURE__ */ (0, import_mithril5.default)("form", { onsubmit: (event) => this.onsubmit(event, vnode) }, /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "layout layout-vertical" }, this.header(vnode), /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "layout-elements" }, /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril5.default)("label", { for: "" }, "Participants"), /* @__PURE__ */ (0, import_mithril5.default)(
         ActorSearch,
         {
@@ -15294,62 +15189,139 @@
   };
 
   // src/view/index.tsx
+  var import_mithril12 = __toESM(require_mithril(), 1);
+  var import_mithril13 = __toESM(require_mithril(), 1);
+
+  // src/view/modal-editGroup.tsx
   var import_mithril10 = __toESM(require_mithril(), 1);
   var import_mithril11 = __toESM(require_mithril(), 1);
+  var EditGroup = class {
+    //
+    view(vnode) {
+      return /* @__PURE__ */ (0, import_mithril10.default)(Modal, { close: vnode.attrs.close }, /* @__PURE__ */ (0, import_mithril10.default)("form", { onsubmit: (event) => this.onsubmit(event, vnode) }, /* @__PURE__ */ (0, import_mithril10.default)("div", { class: "layout layout-vertical" }, /* @__PURE__ */ (0, import_mithril10.default)("div", { class: "layout-title" }, /* @__PURE__ */ (0, import_mithril10.default)("i", { class: "bi bi-lock-fill" }), " Edit Group"), /* @__PURE__ */ (0, import_mithril10.default)("div", { class: "layout-elements" }, /* @__PURE__ */ (0, import_mithril10.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril10.default)("label", { for: "idGroupName" }, "Group Name"), /* @__PURE__ */ (0, import_mithril10.default)(
+        "input",
+        {
+          id: "idGroupName",
+          type: "text",
+          name: "actorIds",
+          value: vnode.attrs.group.name,
+          onchange: (event) => this.setName(vnode, event)
+        }
+      )))), /* @__PURE__ */ (0, import_mithril10.default)("div", { class: "margin-top flex-row" }, /* @__PURE__ */ (0, import_mithril10.default)("div", { class: "flex-grow" }, /* @__PURE__ */ (0, import_mithril10.default)("button", { type: "submit", class: "primary", tabindex: "0" }, "Save Changes"), /* @__PURE__ */ (0, import_mithril10.default)("button", { onclick: vnode.attrs.close, tabIndex: "0" }, "Close")), /* @__PURE__ */ (0, import_mithril10.default)("div", null, /* @__PURE__ */ (0, import_mithril10.default)(
+        "span",
+        {
+          onclick: () => {
+            this.delete(vnode);
+          },
+          class: "clickable text-red"
+        },
+        "Leave Group"
+      )))));
+    }
+    setName(vnode, event) {
+      const target = event.target;
+      vnode.attrs.group.name = target.value;
+    }
+    async onsubmit(event, vnode) {
+      return this.close(vnode);
+    }
+    async delete(vnode) {
+      if (!confirm("Are you sure you want to leave this group? This action cannot be undone.")) {
+        return;
+      }
+      await vnode.attrs.controller.deleteGroup(vnode.attrs.group.id);
+      this.close(vnode);
+    }
+    close(vnode) {
+      vnode.attrs.close();
+      import_mithril10.default.redraw();
+    }
+  };
+
+  // src/view/index.tsx
   var Index = class {
     oninit(vnode) {
       vnode.state.modal = "";
+      vnode.state.groups = [];
+      this.loadGroups(vnode);
     }
     view(vnode) {
-      return /* @__PURE__ */ (0, import_mithril10.default)("div", { id: "conversations" }, /* @__PURE__ */ (0, import_mithril10.default)(
+      return /* @__PURE__ */ (0, import_mithril12.default)("div", { id: "conversations" }, /* @__PURE__ */ (0, import_mithril12.default)(
         "div",
         {
           id: "conversation-list",
           class: "table no-top-border width-50% md:width-40% lg:width-30% flex-shrink-0 scroll-vertical"
         },
-        /* @__PURE__ */ (0, import_mithril10.default)(
+        /* @__PURE__ */ (0, import_mithril12.default)(
           "div",
           {
             role: "button",
             class: "link conversation-selector padding flex-row flex-align-center",
             onclick: () => vnode.state.modal = "NEW-CONVERSATION"
           },
-          /* @__PURE__ */ (0, import_mithril10.default)(
+          /* @__PURE__ */ (0, import_mithril12.default)(
             "div",
             {
               class: "circle width-32 flex-shrink-0 flex-center margin-none",
               style: "font-size:24px;background-color:var(--blue50);color:var(--white);"
             },
-            /* @__PURE__ */ (0, import_mithril10.default)("i", { class: "bi bi-plus" })
+            /* @__PURE__ */ (0, import_mithril12.default)("i", { class: "bi bi-plus" })
           ),
-          /* @__PURE__ */ (0, import_mithril10.default)("div", { class: "ellipsis-block", style: "max-height:3em;" }, "New Conversation")
+          /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "ellipsis-block", style: "max-height:3em;" }, "New Conversation")
         ),
-        /* @__PURE__ */ (0, import_mithril10.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril10.default)("img", { class: "circle width-32" }), /* @__PURE__ */ (0, import_mithril10.default)("span", { class: "flex-grow nowrap ellipsis" }, "Direct Message 1"), /* @__PURE__ */ (0, import_mithril10.default)("button", { class: "hover-show" }, "\u22EF")),
-        this.mockEncryptedConversations(vnode)
-      ), /* @__PURE__ */ (0, import_mithril10.default)("div", { id: "conversation-details", class: "width-75%" }, "Here be details..."), /* @__PURE__ */ (0, import_mithril10.default)(
-        NewConversation,
-        {
-          controller: vnode.attrs.controller,
-          modal: vnode.state.modal,
-          close: () => this.closeModal(vnode)
-        }
-      ));
+        this.viewGroups(vnode)
+      ), /* @__PURE__ */ (0, import_mithril12.default)("div", { id: "conversation-details", class: "width-75%" }, "Here be details..."), this.viewModals(vnode));
     }
-    mockEncryptedConversations(vnode) {
-      if (vnode.attrs.controller.config.hasEncryptionKeys !== true) {
-        return [];
+    async loadGroups(vnode) {
+      vnode.state.groups = await vnode.attrs.controller.allGroups();
+      import_mithril12.default.redraw();
+    }
+    viewGroups(vnode) {
+      return vnode.state.groups.map((group) => /* @__PURE__ */ (0, import_mithril12.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril12.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril12.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril12.default)("span", { class: "flex-grow nowrap ellipsis" }, /* @__PURE__ */ (0, import_mithril12.default)("div", null, group.name), /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "text-xs text-light-gray" }, group.id)), /* @__PURE__ */ (0, import_mithril12.default)(
+        "button",
+        {
+          onclick: () => {
+            console.log(group);
+            this.editGroup(vnode, group);
+          },
+          class: "hover-show"
+        },
+        "\u22EF"
+      )));
+    }
+    editGroup(vnode, group) {
+      vnode.state.modal = "EDIT-GROUP";
+      vnode.state.modalGroup = group;
+      import_mithril12.default.redraw();
+    }
+    viewModals(vnode) {
+      switch (vnode.state.modal) {
+        case "NEW-CONVERSATION":
+          return /* @__PURE__ */ (0, import_mithril12.default)(
+            NewConversation,
+            {
+              controller: vnode.attrs.controller,
+              close: () => this.closeModal(vnode)
+            }
+          );
+        case "EDIT-GROUP":
+          return /* @__PURE__ */ (0, import_mithril12.default)(
+            EditGroup,
+            {
+              controller: vnode.attrs.controller,
+              group: vnode.state.modalGroup,
+              close: () => this.closeModal(vnode)
+            }
+          );
       }
-      return [
-        /* @__PURE__ */ (0, import_mithril10.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril10.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril10.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril10.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril10.default)("button", { class: "hover-show" }, "\u22EF")),
-        /* @__PURE__ */ (0, import_mithril10.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril10.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril10.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril10.default)("span", { class: "flex-grow nowrap ellipsis" }, "Encrypted Conversation"), /* @__PURE__ */ (0, import_mithril10.default)("button", { class: "hover-show" }, "\u22EF"))
-      ];
+      return void 0;
     }
     // Global Modal Snowball
     closeModal(vnode) {
       document.getElementById("modal")?.classList.remove("ready");
       window.setTimeout(() => {
         vnode.state.modal = "";
-        import_mithril10.default.redraw();
+        import_mithril12.default.redraw();
       }, 240);
     }
   };
@@ -15362,12 +15334,12 @@
     view(vnode) {
       const controller2 = vnode.attrs.controller;
       if (!controller2.config.ready) {
-        return /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "app-content" }, "Loading...");
+        return /* @__PURE__ */ (0, import_mithril14.default)("div", { class: "app-content" }, "Loading...");
       }
       if (!controller2.config.welcome) {
-        return /* @__PURE__ */ (0, import_mithril12.default)(Welcome, { controller: controller2 });
+        return /* @__PURE__ */ (0, import_mithril14.default)(Welcome, { controller: controller2 });
       }
-      return /* @__PURE__ */ (0, import_mithril12.default)(Index, { controller: controller2 });
+      return /* @__PURE__ */ (0, import_mithril14.default)(Index, { controller: controller2 });
     }
   };
 
@@ -15385,7 +15357,7 @@
     const delivery = new Delivery(actor.id, actor.outbox);
     const directory = new Directory(actor.id, actor.outbox);
     controller = new Controller(actor, database, delivery, directory, defaultClientConfig);
-    import_mithril14.default.mount(root2, { view: () => /* @__PURE__ */ (0, import_mithril14.default)(Main, { controller }) });
+    import_mithril16.default.mount(root2, { view: () => /* @__PURE__ */ (0, import_mithril16.default)(Main, { controller }) });
   }
   startup();
 })();

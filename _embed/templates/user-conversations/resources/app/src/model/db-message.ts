@@ -1,8 +1,7 @@
 export type DBMessage = {
-	messageID: string
-	groupID: string
-	senderID: string
-	ciphertext: Uint8Array
+	id: string
+	group: string
+	sender: string
 	plaintext: string
 	createDate: number
 }

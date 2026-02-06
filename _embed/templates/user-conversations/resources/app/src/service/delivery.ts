@@ -1,6 +1,12 @@
-import {type MLSMessage} from "ts-mls/message.js"
-import {bytesToBase64, encodeMlsMessage, type PrivateMessage, type Welcome} from "ts-mls"
-import type {APKeyPackage} from "../z-activitypub/keyPackage"
+// import {type MLSMessage} from "ts-mls/message.js"
+import {bytesToBase64} from "ts-mls"
+import {encode} from "ts-mls"
+import {type Commit} from "ts-mls"
+import {type MlsPrivateMessage} from "ts-mls"
+import {type MlsWelcome} from "ts-mls"
+import {mlsPrivateMessageEncoder, type MlsFramedMessage} from "ts-mls/message.js"
+import {mlsWelcomeEncoder} from "ts-mls/message.js"
+import {mlsMessageEncoder} from "ts-mls/message.js"
 
 // Delivery service sends messages via ActivityPub
 export class Delivery {
@@ -50,7 +56,12 @@ export class Delivery {
 	}
 
 	// sendCommit sends an MLS commit message to the specified recipients
-	async sendCommit(recipients: string[], commit: MLSMessage) {
+	async sendCommit(recipients: string[], commit: MlsFramedMessage) {
+		//
+		// Encode the commit message as JSON, then to bytes
+		const content = encode(mlsMessageEncoder, commit)
+
+		// Create an ActivityPub activity for the commit message
 		const activity = {
 			"@context": this.#context,
 			type: "Create",
@@ -61,15 +72,18 @@ export class Delivery {
 				to: recipients,
 				mediaType: "message/mls",
 				encoding: "base64",
-				content: bytesToBase64(encodeMlsMessage(commit)),
+				content: bytesToBase64(content),
 			},
 		}
 
+		// Send the activity
 		await this.send(this.#outboxUrl, activity)
 	}
 
 	// sendWelcome sends an MLS welcome message to the specified recipients
-	async sendWelcome(recipients: string[], welcome: Welcome) {
+	async sendWelcome(recipients: string[], welcome: MlsWelcome) {
+		const content = encode(mlsWelcomeEncoder, welcome)
+
 		const activity = {
 			"@context": this.#context,
 			type: "Create",
@@ -80,13 +94,7 @@ export class Delivery {
 				to: recipients,
 				mediaType: "message/mls",
 				encoding: "base64",
-				content: bytesToBase64(
-					encodeMlsMessage({
-						welcome: welcome,
-						wireformat: "mls_welcome",
-						version: "mls10",
-					})
-				),
+				content: bytesToBase64(content),
 			},
 		}
 
@@ -94,7 +102,9 @@ export class Delivery {
 	}
 
 	// sendPrivateMessage sends an MLS private message to the specified recipients
-	async sendPrivateMessage(recipients: string[], privateMessage: PrivateMessage) {
+	async sendPrivateMessage(recipients: string[], privateMessage: MlsPrivateMessage) {
+		const content = encode(mlsPrivateMessageEncoder, privateMessage)
+
 		const activity = {
 			"@context": this.#context,
 			type: "Create",
@@ -105,13 +115,7 @@ export class Delivery {
 				to: recipients,
 				mediaType: "message/mls",
 				encoding: "base64",
-				content: bytesToBase64(
-					encodeMlsMessage({
-						wireformat: "mls_private_message",
-						privateMessage: privateMessage,
-						version: "mls10",
-					})
-				),
+				content: bytesToBase64(content),
 			},
 		}
 

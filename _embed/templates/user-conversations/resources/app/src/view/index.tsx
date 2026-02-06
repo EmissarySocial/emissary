@@ -1,7 +1,9 @@
 import m from "mithril"
 import {type Vnode} from "mithril"
+import {type DBGroup} from "../model/db-group"
 import {Controller} from "../controller"
 import {NewConversation} from "./modal-newConversation"
+import {EditGroup} from "./modal-editGroup"
 
 type IndexVnode = Vnode<IndexAttrs, IndexState>
 
@@ -11,14 +13,18 @@ type IndexAttrs = {
 
 type IndexState = {
 	modal: string
+	modalGroup?: DBGroup
+	groups: DBGroup[]
 }
 
 export class Index {
 	oninit(vnode: IndexVnode) {
 		vnode.state.modal = ""
+		vnode.state.groups = []
+		this.loadGroups(vnode)
 	}
 
-	view(vnode: IndexVnode) {
+	public view(vnode: IndexVnode) {
 		return (
 			<div id="conversations">
 				<div
@@ -38,46 +44,69 @@ export class Index {
 						</div>
 					</div>
 
-					<div role="button" class="flex-row flex-align-center padding hover-trigger">
-						<img class="circle width-32" />
-						<span class="flex-grow nowrap ellipsis">Direct Message 1</span>
-						<button class="hover-show">&#8943;</button>
-					</div>
-
-					{this.mockEncryptedConversations(vnode)}
+					{this.viewGroups(vnode)}
 				</div>
 				<div id="conversation-details" class="width-75%">
 					Here be details...
 				</div>
 
-				<NewConversation
-					controller={vnode.attrs.controller}
-					modal={vnode.state.modal}
-					close={() => this.closeModal(vnode)}></NewConversation>
+				{this.viewModals(vnode)}
 			</div>
 		)
 	}
 
-	mockEncryptedConversations(vnode: IndexVnode): JSX.Element[] {
-		if (vnode.attrs.controller.config.hasEncryptionKeys !== true) {
-			return []
+	async loadGroups(vnode: IndexVnode) {
+		vnode.state.groups = await vnode.attrs.controller.allGroups()
+		m.redraw()
+	}
+
+	private viewGroups(vnode: IndexVnode): JSX.Element[] {
+		return vnode.state.groups.map((group) => (
+			<div role="button" class="flex-row flex-align-center padding hover-trigger">
+				<span class="width-32 circle flex-center">
+					<i class="bi bi-lock-fill"></i>
+				</span>
+				<span class="flex-grow nowrap ellipsis">
+					<div>{group.name}</div>
+					<div class="text-xs text-light-gray">{group.id}</div>
+				</span>
+				<button
+					onclick={() => {
+						console.log(group)
+						this.editGroup(vnode, group)
+					}}
+					class="hover-show">
+					&#8943;
+				</button>
+			</div>
+		))
+	}
+
+	private editGroup(vnode: IndexVnode, group: DBGroup) {
+		vnode.state.modal = "EDIT-GROUP"
+		vnode.state.modalGroup = group
+		m.redraw()
+	}
+
+	private viewModals(vnode: IndexVnode): JSX.Element | undefined {
+		switch (vnode.state.modal) {
+			case "NEW-CONVERSATION":
+				return (
+					<NewConversation
+						controller={vnode.attrs.controller}
+						close={() => this.closeModal(vnode)}></NewConversation>
+				)
+
+			case "EDIT-GROUP":
+				return (
+					<EditGroup
+						controller={vnode.attrs.controller}
+						group={vnode.state.modalGroup}
+						close={() => this.closeModal(vnode)}></EditGroup>
+				)
 		}
-		return [
-			<div role="button" class="flex-row flex-align-center padding hover-trigger">
-				<span class="width-32 circle flex-center">
-					<i class="bi bi-lock-fill"></i>
-				</span>
-				<span class="flex-grow nowrap ellipsis">Encrypted Conversation</span>
-				<button class="hover-show">&#8943;</button>
-			</div>,
-			<div role="button" class="flex-row flex-align-center padding hover-trigger">
-				<span class="width-32 circle flex-center">
-					<i class="bi bi-lock-fill"></i>
-				</span>
-				<span class="flex-grow nowrap ellipsis">Encrypted Conversation</span>
-				<button class="hover-show">&#8943;</button>
-			</div>,
-		]
+
+		return undefined
 	}
 
 	// Global Modal Snowball

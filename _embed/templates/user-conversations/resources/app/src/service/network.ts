@@ -27,7 +27,6 @@ export async function loadActivityStream(url: string): Promise<any> {
 // Automatically handles pagination by following 'first' and 'next' links.
 export async function* rangeCollection<T>(url: string): AsyncGenerator<T> {
 	//
-
 	// Exit if if the URL is empty
 	if (url == "") {
 		return
@@ -35,8 +34,6 @@ export async function* rangeCollection<T>(url: string): AsyncGenerator<T> {
 
 	// Fetch the collection object
 	const collection = (await loadActivityStream(url)) as APCollection<T>
-
-	console.log("rangeCollection: loaded collection", collection)
 
 	// If items are embedded directly in the page, then just return those
 	if (collection.items || collection.orderedItems) {

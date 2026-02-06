@@ -1,9 +1,8 @@
 // old imports
 import m from "mithril"
 import {type ClientConfig, type KeyPackage, type Welcome} from "ts-mls"
-import {type MLSMessage} from "ts-mls/message.js"
 import {type APActor} from "./model/ap-actor"
-import {type Group} from "./model/group"
+import {type DBGroup} from "./model/db-group"
 import {MLS} from "./service/mls"
 import type {Config} from "./model/config"
 import {NewConfig} from "./model/config"
@@ -27,7 +26,7 @@ export class Controller {
 		database: Database,
 		delivery: Delivery,
 		directory: Directory,
-		clientConfig: ClientConfig
+		clientConfig: ClientConfig,
 	) {
 		this.#actor = actor
 		this.#database = database
@@ -41,7 +40,6 @@ export class Controller {
 	}
 
 	async loadConfig() {
-		console.log("loadConfig")
 		this.config = await this.#database.loadConfig()
 
 		if (this.config.hasEncryptionKeys) {
@@ -53,16 +51,20 @@ export class Controller {
 	// skipEncryptionKeys is called when the user just wants to
 	// use "direct messages" and does not want to create encryption keys (yet)
 	async skipEncryptionKeys() {
+		//
+		// Initialize the config
 		this.config.welcome = true
 		await this.#database.saveConfig(this.config)
+
+		// Redraw the UX
 		m.redraw()
 	}
 
 	// createEncryptionKeys creates a new set of encryption keys
 	// for this user on this device
 	async createEncryptionKeys(clientName: string, password: string, passwordHint: string) {
-		// TODO: Create encryption keys here...
-
+		//
+		// Initialize the config
 		this.config.ready = true
 		this.config.welcome = true
 		this.config.hasEncryptionKeys = true
@@ -70,26 +72,37 @@ export class Controller {
 		this.config.password = password
 		this.config.passwordHint = passwordHint
 
+		// Save the config to IndexedDB
 		await this.#database.saveConfig(this.config)
+
+		// Start the MLS service
 		this.startMLS()
 
+		// Redraw the UX
 		m.redraw()
 	}
 
 	// newGroupAndMessage creates a new MLS-encrypted
 	// group message with the specified recipients
 	async newGroupAndMessage(recipients: string[], message: string) {
+		//
+		// Guarantee dependency
 		if (this.#mls == undefined) {
 			throw new Error("MLS service is not initialized")
 		}
 
+		// Create a new group
 		const group = await this.#mls.createGroup()
-		await this.#mls.addGroupMembers(group.groupID, recipients)
+		await this.#mls.addGroupMembers(group.id, recipients)
+
+		// Send the message to the group
+		await this.#mls.sendGroupMessage(group.id, message)
 	}
 
 	// newConversation creates a new plaintext ActivityPub conversation
 	// with the specified recipients
 	async newConversation(to: string[], message: string) {
+		//
 		// Create an ActivityPub activity
 		const activity = {
 			"@context": "https://www.w3.org/ns/activitystreams",
@@ -110,20 +123,46 @@ export class Controller {
 		})
 	}
 
+	// allGroups returns all groups from the database, sorted by updateDate descending
+	async allGroups(): Promise<DBGroup[]> {
+		//
+		// Guarantee dependency
+		if (this.#database == undefined) {
+			throw new Error("Database service is not initialized")
+		}
+
+		// Return all groups in the database
+		return this.#database.allGroups()
+	}
+
+	// deleteGroup deletes the specified group from the database
+	async deleteGroup(group: string) {
+		//
+		// Guarantee dependency
+		if (this.#database == undefined) {
+			throw new Error("Database service is not initialized")
+		}
+
+		// Delete the group
+		await this.#database.deleteGroup(group)
+	}
+
 	// startMLS initializes the MLS service IF the configuration includes encryption keys
 	private async startMLS() {
-		console.log("loadConfig")
+		//
+		// Guarantee dependency
 		if (this.config.hasEncryptionKeys == false) {
 			throw new Error("Cannot start MLS without encryption keys")
 		}
 
+		// Create the MLS instance
 		this.#mls = await MLSFactory(
 			this.#database,
 			this.#delivery,
 			this.#directory,
 			this.#actor,
 			this.clientConfig,
-			this.config.clientName
+			this.config.clientName,
 		)
 	}
 }

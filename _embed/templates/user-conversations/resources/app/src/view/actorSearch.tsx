@@ -1,6 +1,6 @@
 import m, {request} from "mithril"
 import {type Vnode, type VnodeDOM, type Component} from "mithril"
-import {type APActor} from "../z-activitypub/actor"
+import {type APActor} from "../model/ap-actor"
 import {keyCode} from "./utils"
 import {type APCollectionHeader} from "../model/ap-collection"
 
@@ -32,7 +32,6 @@ export class ActorSearch {
 	}
 
 	view(vnode: ActorSearchVnode) {
-		console.log("view", vnode.state)
 		return (
 			<div class="autocomplete">
 				<div class="input">
@@ -118,7 +117,7 @@ export class ActorSearch {
 			case "ArrowDown":
 				vnode.state.highlightedOption = Math.min(
 					vnode.state.highlightedOption + 1,
-					vnode.state.actors.length - 1
+					vnode.state.actors.length - 1,
 				)
 				return
 
@@ -175,8 +174,9 @@ export class ActorSearch {
 
 	// (async) Maintains a cache that counts the keyPackages for each actor
 	loadKeyPackages(vnode: ActorSearchVnode) {
+		//
+		//
 		for (const actor of vnode.state.actors) {
-			console.log("loadKeyPackages", actor.id, vnode.state.keyPackages[actor.id])
 			if (vnode.state.keyPackages[actor.id] == undefined) {
 				if (actor.keyPackages == null) {
 					continue
@@ -187,11 +187,10 @@ export class ActorSearch {
 				}
 
 				m.request<APCollectionHeader>(
-					"/.api/collectionHeader?url=" + encodeURIComponent(actor.keyPackages)
+					"/.api/collectionHeader?url=" + encodeURIComponent(actor.keyPackages),
 				).then((header: APCollectionHeader) => {
 					if (header != undefined) {
 						if (header.totalItems != undefined) {
-							console.log("loadKeyPackages: totalItems", header.totalItems)
 							vnode.state.keyPackages[actor.id] = header.totalItems
 							m.redraw()
 						}
