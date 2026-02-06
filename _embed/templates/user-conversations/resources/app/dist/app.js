@@ -7239,6 +7239,187 @@
     }
   });
 
+  // node_modules/mithril/stream/stream.js
+  var require_stream = __commonJS({
+    "node_modules/mithril/stream/stream.js"(exports, module) {
+      (function() {
+        "use strict";
+        Stream.SKIP = {};
+        Stream.lift = lift;
+        Stream.scan = scan;
+        Stream.merge = merge;
+        Stream.combine = combine;
+        Stream.scanMerge = scanMerge;
+        Stream["fantasy-land/of"] = Stream;
+        var warnedHalt = false;
+        Object.defineProperty(Stream, "HALT", {
+          get: function() {
+            warnedHalt || console.log("HALT is deprecated and has been renamed to SKIP");
+            warnedHalt = true;
+            return Stream.SKIP;
+          }
+        });
+        function Stream(value) {
+          var dependentStreams = [];
+          var dependentFns = [];
+          function stream3(v) {
+            if (arguments.length && v !== Stream.SKIP) {
+              value = v;
+              if (open(stream3)) {
+                stream3._changing();
+                stream3._state = "active";
+                dependentStreams.slice().forEach(function(s, i) {
+                  if (open(s)) s(this[i](value));
+                }, dependentFns.slice());
+              }
+            }
+            return value;
+          }
+          stream3.constructor = Stream;
+          stream3._state = arguments.length && value !== Stream.SKIP ? "active" : "pending";
+          stream3._parents = [];
+          stream3._changing = function() {
+            if (open(stream3)) stream3._state = "changing";
+            dependentStreams.forEach(function(s) {
+              s._changing();
+            });
+          };
+          stream3._map = function(fn, ignoreInitial) {
+            var target = ignoreInitial ? Stream() : Stream(fn(value));
+            target._parents.push(stream3);
+            dependentStreams.push(target);
+            dependentFns.push(fn);
+            return target;
+          };
+          stream3.map = function(fn) {
+            return stream3._map(fn, stream3._state !== "active");
+          };
+          var end;
+          function createEnd() {
+            end = Stream();
+            end.map(function(value2) {
+              if (value2 === true) {
+                stream3._parents.forEach(function(p) {
+                  p._unregisterChild(stream3);
+                });
+                stream3._state = "ended";
+                stream3._parents.length = dependentStreams.length = dependentFns.length = 0;
+              }
+              return value2;
+            });
+            return end;
+          }
+          stream3.toJSON = function() {
+            return value != null && typeof value.toJSON === "function" ? value.toJSON() : value;
+          };
+          stream3["fantasy-land/map"] = stream3.map;
+          stream3["fantasy-land/ap"] = function(x) {
+            return combine(function(s1, s2) {
+              return s1()(s2());
+            }, [x, stream3]);
+          };
+          stream3._unregisterChild = function(child) {
+            var childIndex = dependentStreams.indexOf(child);
+            if (childIndex !== -1) {
+              dependentStreams.splice(childIndex, 1);
+              dependentFns.splice(childIndex, 1);
+            }
+          };
+          Object.defineProperty(stream3, "end", {
+            get: function() {
+              return end || createEnd();
+            }
+          });
+          return stream3;
+        }
+        function combine(fn, streams) {
+          var ready = streams.every(function(s) {
+            if (s.constructor !== Stream)
+              throw new Error("Ensure that each item passed to stream.combine/stream.merge/lift is a stream.");
+            return s._state === "active";
+          });
+          var stream3 = ready ? Stream(fn.apply(null, streams.concat([streams]))) : Stream();
+          var changed = [];
+          var mappers = streams.map(function(s) {
+            return s._map(function(value) {
+              changed.push(s);
+              if (ready || streams.every(function(s2) {
+                return s2._state !== "pending";
+              })) {
+                ready = true;
+                stream3(fn.apply(null, streams.concat([changed])));
+                changed = [];
+              }
+              return value;
+            }, true);
+          });
+          var endStream = stream3.end.map(function(value) {
+            if (value === true) {
+              mappers.forEach(function(mapper) {
+                mapper.end(true);
+              });
+              endStream.end(true);
+            }
+            return void 0;
+          });
+          return stream3;
+        }
+        function merge(streams) {
+          return combine(function() {
+            return streams.map(function(s) {
+              return s();
+            });
+          }, streams);
+        }
+        function scan(fn, acc, origin) {
+          var stream3 = origin.map(function(v) {
+            var next = fn(acc, v);
+            if (next !== Stream.SKIP) acc = next;
+            return next;
+          });
+          stream3(acc);
+          return stream3;
+        }
+        function scanMerge(tuples, seed) {
+          var streams = tuples.map(function(tuple) {
+            return tuple[0];
+          });
+          var stream3 = combine(function() {
+            var changed = arguments[arguments.length - 1];
+            streams.forEach(function(stream4, i) {
+              if (changed.indexOf(stream4) > -1)
+                seed = tuples[i][1](seed, stream4());
+            });
+            return seed;
+          }, streams);
+          stream3(seed);
+          return stream3;
+        }
+        function lift() {
+          var fn = arguments[0];
+          var streams = Array.prototype.slice.call(arguments, 1);
+          return merge(streams).map(function(streams2) {
+            return fn.apply(void 0, streams2);
+          });
+        }
+        function open(s) {
+          return s._state === "pending" || s._state === "active" || s._state === "changing";
+        }
+        if (typeof module !== "undefined") module["exports"] = Stream;
+        else if (typeof window.m === "function" && !("stream" in window.m)) window.m.stream = Stream;
+        else window.m = { stream: Stream };
+      })();
+    }
+  });
+
+  // node_modules/mithril/stream.js
+  var require_stream2 = __commonJS({
+    "node_modules/mithril/stream.js"(exports, module) {
+      "use strict";
+      module.exports = require_stream();
+    }
+  });
+
   // src/app.tsx
   var import_mithril16 = __toESM(require_mithril(), 1);
 
@@ -7293,493 +7474,6 @@
     keyPackageEqualityConfig: defaultKeyPackageEqualityConfig,
     paddingConfig: defaultPaddingConfig
   };
-
-  // node_modules/ts-mls/dist/src/codec/number.js
-  var uint8Encoder = (n) => [
-    1,
-    (offset, buffer) => {
-      const view = new DataView(buffer);
-      view.setUint8(offset, n);
-    }
-  ];
-  var uint8Decoder = (b, offset) => {
-    const value = b.at(offset);
-    return value !== void 0 ? [value, 1] : void 0;
-  };
-  var uint16Encoder = (n) => [
-    2,
-    (offset, buffer) => {
-      const view = new DataView(buffer);
-      view.setUint16(offset, n);
-    }
-  ];
-  var uint16Decoder = (b, offset) => {
-    const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
-    try {
-      return [view.getUint16(offset), 2];
-    } catch (e) {
-      return void 0;
-    }
-  };
-  var uint32Encoder = (n) => [
-    4,
-    (offset, buffer) => {
-      const view = new DataView(buffer);
-      view.setUint32(offset, n);
-    }
-  ];
-  var uint32Decoder = (b, offset) => {
-    const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
-    try {
-      return [view.getUint32(offset), 4];
-    } catch (e) {
-      return void 0;
-    }
-  };
-  var uint64Encoder = (n) => [
-    8,
-    (offset, buffer) => {
-      const view = new DataView(buffer);
-      view.setBigUint64(offset, n);
-    }
-  ];
-  var uint64Decoder = (b, offset) => {
-    const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
-    try {
-      return [view.getBigUint64(offset), 8];
-    } catch (e) {
-      return void 0;
-    }
-  };
-
-  // node_modules/ts-mls/dist/src/codec/tlsDecoder.js
-  function decode(dec, t) {
-    return dec(t, 0)?.[0];
-  }
-  function mapDecoder(dec, f) {
-    return (b, offset) => {
-      const x = dec(b, offset);
-      if (x !== void 0) {
-        const [t, l] = x;
-        return [f(t), l];
-      }
-    };
-  }
-  function mapDecodersOption(rsDecoder, f) {
-    return (b, offset) => {
-      const initial = mapDecoders(rsDecoder, f)(b, offset);
-      if (initial === void 0)
-        return void 0;
-      else {
-        const [r, len] = initial;
-        return r !== void 0 ? [r, len] : void 0;
-      }
-    };
-  }
-  function mapDecoders(rsDecoder, f) {
-    return (b, offset) => {
-      const result = rsDecoder.reduce((acc, decoder) => {
-        if (!acc)
-          return void 0;
-        const decoded = decoder(b, acc.offset);
-        if (!decoded)
-          return void 0;
-        const [value, length] = decoded;
-        return {
-          values: [...acc.values, value],
-          offset: acc.offset + length,
-          totalLength: acc.totalLength + length
-        };
-      }, { values: [], offset, totalLength: 0 });
-      if (!result)
-        return;
-      return [f(...result.values), result.totalLength];
-    };
-  }
-  function mapDecoderOption(dec, f) {
-    return (b, offset) => {
-      const x = dec(b, offset);
-      if (x !== void 0) {
-        const [t, l] = x;
-        const u = f(t);
-        return u !== void 0 ? [u, l] : void 0;
-      }
-    };
-  }
-  function flatMapDecoder(dec, f) {
-    return flatMapDecoderAndMap(dec, f, (_t, u) => u);
-  }
-  function orDecoder(decT, decU) {
-    return (b, offset) => {
-      const t = decT(b, offset);
-      return t ? t : decU(b, offset);
-    };
-  }
-  function flatMapDecoderAndMap(dec, f, g) {
-    return (b, offset) => {
-      const decodedT = dec(b, offset);
-      if (decodedT !== void 0) {
-        const [t, len] = decodedT;
-        const rUDecoder = f(t);
-        const decodedU = rUDecoder(b, offset + len);
-        if (decodedU !== void 0) {
-          const [u, len2] = decodedU;
-          return [g(t, u), len + len2];
-        }
-      }
-    };
-  }
-  function succeedDecoder(t) {
-    return () => [t, 0];
-  }
-  function failDecoder() {
-    return () => void 0;
-  }
-
-  // node_modules/ts-mls/dist/src/codec/tlsEncoder.js
-  function encode(enc, t) {
-    const [len, write] = enc(t);
-    const buf = new ArrayBuffer(len);
-    write(0, buf);
-    return new Uint8Array(buf);
-  }
-  function contramapBufferEncoder(enc, f) {
-    return (u) => enc(f(u));
-  }
-  function contramapBufferEncoders(encoders, toTuple) {
-    return (value) => {
-      const values = toTuple(value);
-      let totalLength = 0;
-      let writeTotal = (_offset, _buffer) => {
-      };
-      for (let i = 0; i < encoders.length; i++) {
-        const [len, write] = encoders[i](values[i]);
-        const oldFunc = writeTotal;
-        const currentLen = totalLength;
-        writeTotal = (offset, buffer) => {
-          oldFunc(offset, buffer);
-          write(offset + currentLen, buffer);
-        };
-        totalLength += len;
-      }
-      return [totalLength, writeTotal];
-    };
-  }
-  function composeBufferEncoders(encoders) {
-    return (values) => contramapBufferEncoders(encoders, (t) => t)(values);
-  }
-  var encVoid = [0, () => {
-  }];
-
-  // node_modules/ts-mls/dist/src/mlsError.js
-  var MlsError = class extends Error {
-    constructor(message) {
-      super(message);
-      this.name = "MlsError";
-    }
-  };
-  var ValidationError = class extends MlsError {
-    constructor(message) {
-      super(message);
-      this.name = "ValidationError";
-    }
-  };
-  var CodecError = class extends MlsError {
-    constructor(message) {
-      super(message);
-      this.name = "CodecError";
-    }
-  };
-  var UsageError = class extends MlsError {
-    constructor(message) {
-      super(message);
-      this.name = "UsageError";
-    }
-  };
-  var DependencyError = class extends MlsError {
-    constructor(message) {
-      super(message);
-      this.name = "DependencyError";
-    }
-  };
-  var CryptoVerificationError = class extends MlsError {
-    constructor(message) {
-      super(message);
-      this.name = "CryptoVerificationError";
-    }
-  };
-  var CryptoError = class extends MlsError {
-    constructor(message) {
-      super(message);
-      this.name = "CryptoError";
-    }
-  };
-  var InternalError = class extends MlsError {
-    constructor(message) {
-      super(`This error should never occur, if you see this please submit a bug report. Message: ${message}`);
-      this.name = "InternalError";
-    }
-  };
-
-  // node_modules/ts-mls/dist/src/util/byteArray.js
-  function bytesToArrayBuffer(b) {
-    if (b.buffer instanceof ArrayBuffer) {
-      if (b.byteOffset === 0 && b.byteLength === b.buffer.byteLength) {
-        return b.buffer;
-      }
-      return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
-    } else {
-      const ab = new ArrayBuffer(b.byteLength);
-      const arr = new Uint8Array(ab);
-      arr.set(b, 0);
-      return ab;
-    }
-  }
-  function toBufferSource(b) {
-    if (b.buffer instanceof ArrayBuffer)
-      return b;
-    const ab = new ArrayBuffer(b.byteLength);
-    const arr = new Uint8Array(ab);
-    arr.set(b, 0);
-    return ab;
-  }
-  function bytesToBase64(bytes) {
-    if (typeof Buffer !== "undefined") {
-      return Buffer.from(bytes).toString("base64");
-    } else {
-      let binary = "";
-      bytes.forEach((b) => binary += String.fromCharCode(b));
-      return globalThis.btoa(binary);
-    }
-  }
-  function base64ToBytes(base64) {
-    if (typeof Buffer !== "undefined") {
-      return Uint8Array.from(Buffer.from(base64, "base64"));
-    } else {
-      const binary = globalThis.atob(base64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-      }
-      return bytes;
-    }
-  }
-  function concatUint8Arrays(a, b) {
-    const result = new Uint8Array(a.length + b.length);
-    result.set(a, 0);
-    result.set(b, a.length);
-    return result;
-  }
-  function zeroOutUint8Array(buf) {
-    crypto.getRandomValues(buf);
-    for (let i = 0; i < buf.length; i++) {
-      buf[i] ^= buf[i];
-    }
-  }
-
-  // node_modules/ts-mls/dist/src/codec/variableLength.js
-  var varLenDataEncoder = (data) => {
-    const [len, write] = lengthEncoder(data.length);
-    return [
-      len + data.length,
-      (offset, buffer) => {
-        write(offset, buffer);
-        const view = new Uint8Array(buffer);
-        view.set(data, offset + len);
-      }
-    ];
-  };
-  function lengthEncoder(len) {
-    if (len < 64) {
-      return [
-        1,
-        (offset, buffer) => {
-          const view = new DataView(buffer);
-          view.setUint8(offset, len & 63);
-        }
-      ];
-    } else if (len < 16384) {
-      return [
-        2,
-        (offset, buffer) => {
-          const view = new DataView(buffer);
-          view.setUint8(offset, len >> 8 & 63 | 64);
-          view.setUint8(offset + 1, len & 255);
-        }
-      ];
-    } else if (len < 1073741824) {
-      return [
-        4,
-        (offset, buffer) => {
-          const view = new DataView(buffer);
-          view.setUint8(offset, len >> 24 & 63 | 128);
-          view.setUint8(offset + 1, len >> 16 & 255);
-          view.setUint8(offset + 2, len >> 8 & 255);
-          view.setUint8(offset + 3, len & 255);
-        }
-      ];
-    } else {
-      throw new CodecError("Length too large to encode (max is 2^30 - 1)");
-    }
-  }
-  function determineLength(data, offset = 0) {
-    if (offset >= data.length) {
-      throw new CodecError("Offset beyond buffer");
-    }
-    const firstByte = data[offset];
-    const prefix = firstByte >> 6;
-    if (prefix === 0) {
-      return { length: firstByte & 63, lengthFieldSize: 1 };
-    } else if (prefix === 1) {
-      if (offset + 2 > data.length)
-        throw new CodecError("Incomplete 2-byte length");
-      return { length: (firstByte & 63) << 8 | data[offset + 1], lengthFieldSize: 2 };
-    } else if (prefix === 2) {
-      if (offset + 4 > data.length)
-        throw new CodecError("Incomplete 4-byte length");
-      return {
-        length: (firstByte & 63) << 24 | data[offset + 1] << 16 | data[offset + 2] << 8 | data[offset + 3],
-        lengthFieldSize: 4
-      };
-    } else {
-      throw new CodecError("8-byte length not supported in this implementation");
-    }
-  }
-  var varLenDataDecoder = (buf, offset) => {
-    if (offset >= buf.length) {
-      throw new CodecError("Offset beyond buffer");
-    }
-    const { length, lengthFieldSize } = determineLength(buf, offset);
-    const totalBytes = lengthFieldSize + length;
-    if (offset + totalBytes > buf.length) {
-      throw new CodecError("Data length exceeds buffer");
-    }
-    const data = buf.subarray(offset + lengthFieldSize, offset + totalBytes);
-    return [data, totalBytes];
-  };
-  function varLenTypeEncoder(enc) {
-    return (data) => {
-      let totalLength = 0;
-      let writeTotal = (_offset, _buffer) => {
-      };
-      for (let i = 0; i < data.length; i++) {
-        const [len, write] = enc(data[i]);
-        const oldFunc = writeTotal;
-        const currentLen = totalLength;
-        writeTotal = (offset, buffer) => {
-          oldFunc(offset, buffer);
-          write(offset + currentLen, buffer);
-        };
-        totalLength += len;
-      }
-      const [headerLength, writeLength] = lengthEncoder(totalLength);
-      return [
-        headerLength + totalLength,
-        (offset, buffer) => {
-          writeLength(offset, buffer);
-          writeTotal(offset + headerLength, buffer);
-        }
-      ];
-    };
-  }
-  function varLenTypeDecoder(dec) {
-    return (b, offset) => {
-      const d = varLenDataDecoder(b, offset);
-      if (d === void 0)
-        return;
-      const [totalBytes, totalLength] = d;
-      let cursor = 0;
-      const result = [];
-      while (cursor < totalBytes.length) {
-        const item = dec(totalBytes, cursor);
-        if (item === void 0)
-          return void 0;
-        const [value, len] = item;
-        result.push(value);
-        cursor += len;
-      }
-      return [result, totalLength];
-    };
-  }
-  function base64RecordEncoder(valueEncoder) {
-    const entryEncoder = contramapBufferEncoders([contramapBufferEncoder(varLenDataEncoder, base64ToBytes), valueEncoder], ([key, value]) => [key, value]);
-    return contramapBufferEncoders([varLenTypeEncoder(entryEncoder)], (record) => [Object.entries(record)]);
-  }
-  function base64RecordDecoder(valueDecoder) {
-    return mapDecoder(varLenTypeDecoder(mapDecoders([mapDecoder(varLenDataDecoder, bytesToBase64), valueDecoder], (key, value) => [key, value])), (entries) => {
-      const record = {};
-      for (const [key, value] of entries) {
-        record[key] = value;
-      }
-      return record;
-    });
-  }
-  function numberRecordEncoder(numberEncoder, valueEncoder) {
-    const entryEncoder = contramapBufferEncoders([numberEncoder, valueEncoder], ([key, value]) => [key, value]);
-    return contramapBufferEncoder(varLenTypeEncoder(entryEncoder), (record) => Object.entries(record).map(([key, value]) => [Number(key), value]));
-  }
-  function numberRecordDecoder(numberDecoder, valueDecoder) {
-    return mapDecoder(varLenTypeDecoder(mapDecoders([numberDecoder, valueDecoder], (key, value) => [key, value])), (entries) => {
-      const record = {};
-      for (const [key, value] of entries) {
-        record[key] = value;
-      }
-      return record;
-    });
-  }
-  function bigintMapEncoder(valueEncoder) {
-    const entryEncoder = contramapBufferEncoders([uint64Encoder, valueEncoder], ([key, value]) => [key, value]);
-    return contramapBufferEncoder(varLenTypeEncoder(entryEncoder), (map) => Array.from(map.entries()));
-  }
-  function bigintMapDecoder(valueDecoder) {
-    return mapDecoder(varLenTypeDecoder(mapDecoders([uint64Decoder, valueDecoder], (key, value) => [key, value])), (entries) => new Map(entries));
-  }
-
-  // node_modules/ts-mls/dist/src/defaultCredentialType.js
-  var defaultCredentialTypes = {
-    basic: 1,
-    x509: 2
-  };
-  var defaultCredentialTypeValues = new Set(Object.values(defaultCredentialTypes));
-  function isDefaultCredentialTypeValue(v) {
-    return defaultCredentialTypeValues.has(v);
-  }
-
-  // node_modules/ts-mls/dist/src/credential.js
-  function isDefaultCredential(c) {
-    return isDefaultCredentialTypeValue(c.credentialType);
-  }
-  var credentialBasicEncoder = contramapBufferEncoders([uint16Encoder, varLenDataEncoder], (c) => [c.credentialType, c.identity]);
-  var credentialX509Encoder = contramapBufferEncoders([uint16Encoder, varLenTypeEncoder(varLenDataEncoder)], (c) => [c.credentialType, c.certificates]);
-  var credentialCustomEncoder = contramapBufferEncoders([uint16Encoder, varLenDataEncoder], (c) => [c.credentialType, c.data]);
-  var credentialEncoder = (c) => {
-    if (!isDefaultCredential(c))
-      return credentialCustomEncoder(c);
-    switch (c.credentialType) {
-      case defaultCredentialTypes.basic:
-        return credentialBasicEncoder(c);
-      case defaultCredentialTypes.x509:
-        return credentialX509Encoder(c);
-    }
-  };
-  var credentialBasicDecoder = mapDecoder(varLenDataDecoder, (identity) => ({
-    credentialType: defaultCredentialTypes.basic,
-    identity
-  }));
-  var credentialX509Decoder = mapDecoder(varLenTypeDecoder(varLenDataDecoder), (certificates) => ({ credentialType: defaultCredentialTypes.x509, certificates }));
-  function credentialCustomDecoder(credentialType) {
-    return mapDecoder(varLenDataDecoder, (data) => ({ credentialType, data }));
-  }
-  var credentialDecoder = flatMapDecoder(uint16Decoder, (credentialType) => {
-    switch (credentialType) {
-      case defaultCredentialTypes.basic:
-        return credentialBasicDecoder;
-      case defaultCredentialTypes.x509:
-        return credentialX509Decoder;
-      default:
-        return credentialCustomDecoder(credentialType);
-    }
-  });
 
   // node_modules/idb/build/index.js
   var instanceOfAny = (object, constructors) => constructors.some((c) => object instanceof c);
@@ -8028,6 +7722,447 @@
       passwordHint: "",
       clientName: "Unknown Device"
     };
+  }
+
+  // node_modules/ts-mls/dist/src/codec/tlsDecoder.js
+  function decode(dec, t) {
+    return dec(t, 0)?.[0];
+  }
+  function mapDecoder(dec, f) {
+    return (b, offset) => {
+      const x = dec(b, offset);
+      if (x !== void 0) {
+        const [t, l] = x;
+        return [f(t), l];
+      }
+    };
+  }
+  function mapDecodersOption(rsDecoder, f) {
+    return (b, offset) => {
+      const initial = mapDecoders(rsDecoder, f)(b, offset);
+      if (initial === void 0)
+        return void 0;
+      else {
+        const [r, len] = initial;
+        return r !== void 0 ? [r, len] : void 0;
+      }
+    };
+  }
+  function mapDecoders(rsDecoder, f) {
+    return (b, offset) => {
+      const result = rsDecoder.reduce((acc, decoder) => {
+        if (!acc)
+          return void 0;
+        const decoded = decoder(b, acc.offset);
+        if (!decoded)
+          return void 0;
+        const [value, length] = decoded;
+        return {
+          values: [...acc.values, value],
+          offset: acc.offset + length,
+          totalLength: acc.totalLength + length
+        };
+      }, { values: [], offset, totalLength: 0 });
+      if (!result)
+        return;
+      return [f(...result.values), result.totalLength];
+    };
+  }
+  function mapDecoderOption(dec, f) {
+    return (b, offset) => {
+      const x = dec(b, offset);
+      if (x !== void 0) {
+        const [t, l] = x;
+        const u = f(t);
+        return u !== void 0 ? [u, l] : void 0;
+      }
+    };
+  }
+  function flatMapDecoder(dec, f) {
+    return flatMapDecoderAndMap(dec, f, (_t, u) => u);
+  }
+  function orDecoder(decT, decU) {
+    return (b, offset) => {
+      const t = decT(b, offset);
+      return t ? t : decU(b, offset);
+    };
+  }
+  function flatMapDecoderAndMap(dec, f, g) {
+    return (b, offset) => {
+      const decodedT = dec(b, offset);
+      if (decodedT !== void 0) {
+        const [t, len] = decodedT;
+        const rUDecoder = f(t);
+        const decodedU = rUDecoder(b, offset + len);
+        if (decodedU !== void 0) {
+          const [u, len2] = decodedU;
+          return [g(t, u), len + len2];
+        }
+      }
+    };
+  }
+  function succeedDecoder(t) {
+    return () => [t, 0];
+  }
+  function failDecoder() {
+    return () => void 0;
+  }
+
+  // node_modules/ts-mls/dist/src/codec/tlsEncoder.js
+  function encode(enc, t) {
+    const [len, write] = enc(t);
+    const buf = new ArrayBuffer(len);
+    write(0, buf);
+    return new Uint8Array(buf);
+  }
+  function contramapBufferEncoder(enc, f) {
+    return (u) => enc(f(u));
+  }
+  function contramapBufferEncoders(encoders, toTuple) {
+    return (value) => {
+      const values = toTuple(value);
+      let totalLength = 0;
+      let writeTotal = (_offset, _buffer) => {
+      };
+      for (let i = 0; i < encoders.length; i++) {
+        const [len, write] = encoders[i](values[i]);
+        const oldFunc = writeTotal;
+        const currentLen = totalLength;
+        writeTotal = (offset, buffer) => {
+          oldFunc(offset, buffer);
+          write(offset + currentLen, buffer);
+        };
+        totalLength += len;
+      }
+      return [totalLength, writeTotal];
+    };
+  }
+  function composeBufferEncoders(encoders) {
+    return (values) => contramapBufferEncoders(encoders, (t) => t)(values);
+  }
+  var encVoid = [0, () => {
+  }];
+
+  // node_modules/ts-mls/dist/src/mlsError.js
+  var MlsError = class extends Error {
+    constructor(message) {
+      super(message);
+      this.name = "MlsError";
+    }
+  };
+  var ValidationError = class extends MlsError {
+    constructor(message) {
+      super(message);
+      this.name = "ValidationError";
+    }
+  };
+  var CodecError = class extends MlsError {
+    constructor(message) {
+      super(message);
+      this.name = "CodecError";
+    }
+  };
+  var UsageError = class extends MlsError {
+    constructor(message) {
+      super(message);
+      this.name = "UsageError";
+    }
+  };
+  var DependencyError = class extends MlsError {
+    constructor(message) {
+      super(message);
+      this.name = "DependencyError";
+    }
+  };
+  var CryptoVerificationError = class extends MlsError {
+    constructor(message) {
+      super(message);
+      this.name = "CryptoVerificationError";
+    }
+  };
+  var CryptoError = class extends MlsError {
+    constructor(message) {
+      super(message);
+      this.name = "CryptoError";
+    }
+  };
+  var InternalError = class extends MlsError {
+    constructor(message) {
+      super(`This error should never occur, if you see this please submit a bug report. Message: ${message}`);
+      this.name = "InternalError";
+    }
+  };
+
+  // node_modules/ts-mls/dist/src/util/byteArray.js
+  function bytesToArrayBuffer(b) {
+    if (b.buffer instanceof ArrayBuffer) {
+      if (b.byteOffset === 0 && b.byteLength === b.buffer.byteLength) {
+        return b.buffer;
+      }
+      return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
+    } else {
+      const ab = new ArrayBuffer(b.byteLength);
+      const arr = new Uint8Array(ab);
+      arr.set(b, 0);
+      return ab;
+    }
+  }
+  function toBufferSource(b) {
+    if (b.buffer instanceof ArrayBuffer)
+      return b;
+    const ab = new ArrayBuffer(b.byteLength);
+    const arr = new Uint8Array(ab);
+    arr.set(b, 0);
+    return ab;
+  }
+  function bytesToBase64(bytes) {
+    if (typeof Buffer !== "undefined") {
+      return Buffer.from(bytes).toString("base64");
+    } else {
+      let binary = "";
+      bytes.forEach((b) => binary += String.fromCharCode(b));
+      return globalThis.btoa(binary);
+    }
+  }
+  function base64ToBytes(base64) {
+    if (typeof Buffer !== "undefined") {
+      return Uint8Array.from(Buffer.from(base64, "base64"));
+    } else {
+      const binary = globalThis.atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes;
+    }
+  }
+  function concatUint8Arrays(a, b) {
+    const result = new Uint8Array(a.length + b.length);
+    result.set(a, 0);
+    result.set(b, a.length);
+    return result;
+  }
+  function zeroOutUint8Array(buf) {
+    crypto.getRandomValues(buf);
+    for (let i = 0; i < buf.length; i++) {
+      buf[i] ^= buf[i];
+    }
+  }
+
+  // node_modules/ts-mls/dist/src/codec/number.js
+  var uint8Encoder = (n) => [
+    1,
+    (offset, buffer) => {
+      const view = new DataView(buffer);
+      view.setUint8(offset, n);
+    }
+  ];
+  var uint8Decoder = (b, offset) => {
+    const value = b.at(offset);
+    return value !== void 0 ? [value, 1] : void 0;
+  };
+  var uint16Encoder = (n) => [
+    2,
+    (offset, buffer) => {
+      const view = new DataView(buffer);
+      view.setUint16(offset, n);
+    }
+  ];
+  var uint16Decoder = (b, offset) => {
+    const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
+    try {
+      return [view.getUint16(offset), 2];
+    } catch (e) {
+      return void 0;
+    }
+  };
+  var uint32Encoder = (n) => [
+    4,
+    (offset, buffer) => {
+      const view = new DataView(buffer);
+      view.setUint32(offset, n);
+    }
+  ];
+  var uint32Decoder = (b, offset) => {
+    const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
+    try {
+      return [view.getUint32(offset), 4];
+    } catch (e) {
+      return void 0;
+    }
+  };
+  var uint64Encoder = (n) => [
+    8,
+    (offset, buffer) => {
+      const view = new DataView(buffer);
+      view.setBigUint64(offset, n);
+    }
+  ];
+  var uint64Decoder = (b, offset) => {
+    const view = new DataView(b.buffer, b.byteOffset, b.byteLength);
+    try {
+      return [view.getBigUint64(offset), 8];
+    } catch (e) {
+      return void 0;
+    }
+  };
+
+  // node_modules/ts-mls/dist/src/codec/variableLength.js
+  var varLenDataEncoder = (data) => {
+    const [len, write] = lengthEncoder(data.length);
+    return [
+      len + data.length,
+      (offset, buffer) => {
+        write(offset, buffer);
+        const view = new Uint8Array(buffer);
+        view.set(data, offset + len);
+      }
+    ];
+  };
+  function lengthEncoder(len) {
+    if (len < 64) {
+      return [
+        1,
+        (offset, buffer) => {
+          const view = new DataView(buffer);
+          view.setUint8(offset, len & 63);
+        }
+      ];
+    } else if (len < 16384) {
+      return [
+        2,
+        (offset, buffer) => {
+          const view = new DataView(buffer);
+          view.setUint8(offset, len >> 8 & 63 | 64);
+          view.setUint8(offset + 1, len & 255);
+        }
+      ];
+    } else if (len < 1073741824) {
+      return [
+        4,
+        (offset, buffer) => {
+          const view = new DataView(buffer);
+          view.setUint8(offset, len >> 24 & 63 | 128);
+          view.setUint8(offset + 1, len >> 16 & 255);
+          view.setUint8(offset + 2, len >> 8 & 255);
+          view.setUint8(offset + 3, len & 255);
+        }
+      ];
+    } else {
+      throw new CodecError("Length too large to encode (max is 2^30 - 1)");
+    }
+  }
+  function determineLength(data, offset = 0) {
+    if (offset >= data.length) {
+      throw new CodecError("Offset beyond buffer");
+    }
+    const firstByte = data[offset];
+    const prefix = firstByte >> 6;
+    if (prefix === 0) {
+      return { length: firstByte & 63, lengthFieldSize: 1 };
+    } else if (prefix === 1) {
+      if (offset + 2 > data.length)
+        throw new CodecError("Incomplete 2-byte length");
+      return { length: (firstByte & 63) << 8 | data[offset + 1], lengthFieldSize: 2 };
+    } else if (prefix === 2) {
+      if (offset + 4 > data.length)
+        throw new CodecError("Incomplete 4-byte length");
+      return {
+        length: (firstByte & 63) << 24 | data[offset + 1] << 16 | data[offset + 2] << 8 | data[offset + 3],
+        lengthFieldSize: 4
+      };
+    } else {
+      throw new CodecError("8-byte length not supported in this implementation");
+    }
+  }
+  var varLenDataDecoder = (buf, offset) => {
+    if (offset >= buf.length) {
+      throw new CodecError("Offset beyond buffer");
+    }
+    const { length, lengthFieldSize } = determineLength(buf, offset);
+    const totalBytes = lengthFieldSize + length;
+    if (offset + totalBytes > buf.length) {
+      throw new CodecError("Data length exceeds buffer");
+    }
+    const data = buf.subarray(offset + lengthFieldSize, offset + totalBytes);
+    return [data, totalBytes];
+  };
+  function varLenTypeEncoder(enc) {
+    return (data) => {
+      let totalLength = 0;
+      let writeTotal = (_offset, _buffer) => {
+      };
+      for (let i = 0; i < data.length; i++) {
+        const [len, write] = enc(data[i]);
+        const oldFunc = writeTotal;
+        const currentLen = totalLength;
+        writeTotal = (offset, buffer) => {
+          oldFunc(offset, buffer);
+          write(offset + currentLen, buffer);
+        };
+        totalLength += len;
+      }
+      const [headerLength, writeLength] = lengthEncoder(totalLength);
+      return [
+        headerLength + totalLength,
+        (offset, buffer) => {
+          writeLength(offset, buffer);
+          writeTotal(offset + headerLength, buffer);
+        }
+      ];
+    };
+  }
+  function varLenTypeDecoder(dec) {
+    return (b, offset) => {
+      const d = varLenDataDecoder(b, offset);
+      if (d === void 0)
+        return;
+      const [totalBytes, totalLength] = d;
+      let cursor = 0;
+      const result = [];
+      while (cursor < totalBytes.length) {
+        const item = dec(totalBytes, cursor);
+        if (item === void 0)
+          return void 0;
+        const [value, len] = item;
+        result.push(value);
+        cursor += len;
+      }
+      return [result, totalLength];
+    };
+  }
+  function base64RecordEncoder(valueEncoder) {
+    const entryEncoder = contramapBufferEncoders([contramapBufferEncoder(varLenDataEncoder, base64ToBytes), valueEncoder], ([key, value]) => [key, value]);
+    return contramapBufferEncoders([varLenTypeEncoder(entryEncoder)], (record) => [Object.entries(record)]);
+  }
+  function base64RecordDecoder(valueDecoder) {
+    return mapDecoder(varLenTypeDecoder(mapDecoders([mapDecoder(varLenDataDecoder, bytesToBase64), valueDecoder], (key, value) => [key, value])), (entries) => {
+      const record = {};
+      for (const [key, value] of entries) {
+        record[key] = value;
+      }
+      return record;
+    });
+  }
+  function numberRecordEncoder(numberEncoder, valueEncoder) {
+    const entryEncoder = contramapBufferEncoders([numberEncoder, valueEncoder], ([key, value]) => [key, value]);
+    return contramapBufferEncoder(varLenTypeEncoder(entryEncoder), (record) => Object.entries(record).map(([key, value]) => [Number(key), value]));
+  }
+  function numberRecordDecoder(numberDecoder, valueDecoder) {
+    return mapDecoder(varLenTypeDecoder(mapDecoders([numberDecoder, valueDecoder], (key, value) => [key, value])), (entries) => {
+      const record = {};
+      for (const [key, value] of entries) {
+        record[key] = value;
+      }
+      return record;
+    });
+  }
+  function bigintMapEncoder(valueEncoder) {
+    const entryEncoder = contramapBufferEncoders([uint64Encoder, valueEncoder], ([key, value]) => [key, value]);
+    return contramapBufferEncoder(varLenTypeEncoder(entryEncoder), (map) => Array.from(map.entries()));
+  }
+  function bigintMapDecoder(valueDecoder) {
+    return mapDecoder(varLenTypeDecoder(mapDecoders([uint64Decoder, valueDecoder], (key, value) => [key, value])), (entries) => new Map(entries));
   }
 
   // node_modules/ts-mls/dist/src/crypto/hash.js
@@ -8310,6 +8445,52 @@
   function isDefaultExtensionTypeValue(v) {
     return Object.values(defaultExtensionTypes).includes(v);
   }
+
+  // node_modules/ts-mls/dist/src/defaultCredentialType.js
+  var defaultCredentialTypes = {
+    basic: 1,
+    x509: 2
+  };
+  var defaultCredentialTypeValues = new Set(Object.values(defaultCredentialTypes));
+  function isDefaultCredentialTypeValue(v) {
+    return defaultCredentialTypeValues.has(v);
+  }
+
+  // node_modules/ts-mls/dist/src/credential.js
+  function isDefaultCredential(c) {
+    return isDefaultCredentialTypeValue(c.credentialType);
+  }
+  var credentialBasicEncoder = contramapBufferEncoders([uint16Encoder, varLenDataEncoder], (c) => [c.credentialType, c.identity]);
+  var credentialX509Encoder = contramapBufferEncoders([uint16Encoder, varLenTypeEncoder(varLenDataEncoder)], (c) => [c.credentialType, c.certificates]);
+  var credentialCustomEncoder = contramapBufferEncoders([uint16Encoder, varLenDataEncoder], (c) => [c.credentialType, c.data]);
+  var credentialEncoder = (c) => {
+    if (!isDefaultCredential(c))
+      return credentialCustomEncoder(c);
+    switch (c.credentialType) {
+      case defaultCredentialTypes.basic:
+        return credentialBasicEncoder(c);
+      case defaultCredentialTypes.x509:
+        return credentialX509Encoder(c);
+    }
+  };
+  var credentialBasicDecoder = mapDecoder(varLenDataDecoder, (identity) => ({
+    credentialType: defaultCredentialTypes.basic,
+    identity
+  }));
+  var credentialX509Decoder = mapDecoder(varLenTypeDecoder(varLenDataDecoder), (certificates) => ({ credentialType: defaultCredentialTypes.x509, certificates }));
+  function credentialCustomDecoder(credentialType) {
+    return mapDecoder(varLenDataDecoder, (data) => ({ credentialType, data }));
+  }
+  var credentialDecoder = flatMapDecoder(uint16Decoder, (credentialType) => {
+    switch (credentialType) {
+      case defaultCredentialTypes.basic:
+        return credentialBasicDecoder;
+      case defaultCredentialTypes.x509:
+        return credentialX509Decoder;
+      default:
+        return credentialCustomDecoder(credentialType);
+    }
+  });
 
   // node_modules/ts-mls/dist/src/externalSender.js
   var externalSenderEncoder = contramapBufferEncoders([varLenDataEncoder, credentialEncoder], (e) => [e.signaturePublicKey, e.credential]);
@@ -14215,6 +14396,13 @@
     /////////////////////////////////////////////
     // Messages
     /////////////////////////////////////////////
+    // allMessages returns all messages in the specified group, sorted by createDate ascending
+    // TODO: This will need to be limited or pagincated for long discussions.
+    async allMessages(group) {
+      var messages = await this.#db.getAllFromIndex("message", "group", group);
+      messages.sort((a, b) => a.createDate - b.createDate);
+      return messages;
+    }
     // saveMessage saves a message to the database
     async saveMessage(message) {
       await this.#db.put("message", message);
@@ -14226,11 +14414,6 @@
         throw new Error("Message not found: " + messageID);
       }
       return message;
-    }
-    async listMessages(group) {
-      var messages = await this.#db.getAllFromIndex("message", "group", group);
-      messages.sort((a, b) => a.createDate - b.createDate);
-      return messages;
     }
   };
 
@@ -14468,6 +14651,10 @@
     }
   };
 
+  // src/controller.ts
+  var import_mithril = __toESM(require_mithril(), 1);
+  var import_stream = __toESM(require_stream2(), 1);
+
   // src/service/mls.ts
   var MLS = class {
     #database;
@@ -14625,7 +14812,6 @@
   }
 
   // src/controller.ts
-  var import_mithril = __toESM(require_mithril(), 1);
   var Controller = class {
     #actor;
     #database;
@@ -14639,14 +14825,47 @@
       this.#delivery = delivery;
       this.#directory = directory;
       this.clientConfig = clientConfig;
+      this.selectedGroupId = "";
+      this.groups = (0, import_stream.default)([]);
+      this.messages = (0, import_stream.default)([]);
       this.config = NewConfig();
       this.loadConfig();
+      this.loadGroups();
     }
+    // loadConfig retrieves the configuration from the
+    // database and starts the MLS service (if encryption keys are present)
     async loadConfig() {
       this.config = await this.#database.loadConfig();
       if (this.config.hasEncryptionKeys) {
         this.startMLS();
       }
+      import_mithril.default.redraw();
+    }
+    // loadGroups retrieves all groups from the database and
+    // updates the "groups" and "messages" streams.
+    async loadGroups() {
+      const groups = await this.#database.allGroups();
+      if (groups.length == 0) {
+        this.groups([]);
+        this.messages([]);
+        this.selectedGroupId = "";
+        return;
+      }
+      if (this.selectedGroupId == "") {
+        this.selectedGroupId = groups[0].id;
+      }
+      this.groups(groups);
+      this.loadMessages();
+    }
+    // selectGroup updates the "selectedGroupId" and reloads messages for that group
+    selectGroup(groupId) {
+      this.selectedGroupId = groupId;
+      this.loadMessages();
+    }
+    // loadMessages retrieves all messages for the currently selected group and updates the "messages" stream
+    async loadMessages() {
+      const messages = await this.#database.allMessages(this.selectedGroupId);
+      this.messages(messages);
       import_mithril.default.redraw();
     }
     // skipEncryptionKeys is called when the user just wants to
@@ -14675,13 +14894,11 @@
       if (this.#mls == void 0) {
         throw new Error("MLS service is not initialized");
       }
-      console.log("Creating a new MLS group");
       const group = await this.#mls.createGroup();
-      console.log("Adding group members:", recipients);
       await this.#mls.addGroupMembers(group.id, recipients);
-      console.log("Sending message to MLS group:", message);
       await this.#mls.sendGroupMessage(group.id, message);
-      console.log("Done?");
+      this.selectedGroupId = group.id;
+      await this.loadGroups();
     }
     // newConversation creates a new plaintext ActivityPub conversation
     // with the specified recipients
@@ -14715,6 +14932,7 @@
         throw new Error("Database service is not initialized");
       }
       await this.#database.deleteGroup(group);
+      await this.loadGroups();
     }
     // startMLS initializes the MLS service IF the configuration includes encryption keys
     async startMLS() {
@@ -14734,11 +14952,15 @@
 
   // src/view/main.tsx
   var import_mithril14 = __toESM(require_mithril(), 1);
+  var import_stream2 = __toESM(require_stream2(), 1);
   var import_mithril15 = __toESM(require_mithril(), 1);
 
-  // src/view/modal-newConversation.tsx
+  // src/view/welcome.tsx
   var import_mithril5 = __toESM(require_mithril(), 1);
-  var import_mithril6 = __toESM(require_mithril(), 1);
+
+  // src/view/modal-createKeys.tsx
+  var import_mithril3 = __toESM(require_mithril(), 1);
+  var import_mithril4 = __toESM(require_mithril(), 1);
 
   // src/view/modal.tsx
   var import_mithril2 = __toESM(require_mithril(), 1);
@@ -14816,253 +15038,7 @@
     // TODO: Need handlers for TAB, SHIFT+TAB, ESCAPE
   };
 
-  // src/view/actorSearch.tsx
-  var import_mithril3 = __toESM(require_mithril(), 1);
-  var import_mithril4 = __toESM(require_mithril(), 1);
-  var ActorSearch = class {
-    oninit(vnode) {
-      vnode.state.search = "";
-      vnode.state.loading = false;
-      vnode.state.actors = [];
-      vnode.state.keyPackages = {};
-      vnode.state.highlightedOption = -1;
-    }
-    view(vnode) {
-      return /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "autocomplete" }, /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "input" }, vnode.attrs.value.map((actor, index) => {
-        const keyPackageCount = vnode.state.keyPackages[actor.id];
-        const isSecure = keyPackageCount != void 0 && keyPackageCount > 0;
-        return /* @__PURE__ */ (0, import_mithril3.default)("span", { class: isSecure ? "tag blue" : "tag gray" }, /* @__PURE__ */ (0, import_mithril3.default)("span", { style: "display:inline-flex; align-items:center; margin-right:8px;" }, /* @__PURE__ */ (0, import_mithril3.default)("img", { src: actor.icon, class: "circle", style: "height:1em; margin:0px 4px;" }), /* @__PURE__ */ (0, import_mithril3.default)("span", { class: "bold" }, actor.name), "\xA0", isSecure ? /* @__PURE__ */ (0, import_mithril3.default)("i", { class: "bi bi-lock-fill" }) : null), /* @__PURE__ */ (0, import_mithril3.default)("i", { class: "clickable bi bi-x-lg", onclick: () => this.removeActor(vnode, index) }));
-      }), /* @__PURE__ */ (0, import_mithril3.default)(
-        "input",
-        {
-          id: "idActorSearch",
-          name: vnode.attrs.name,
-          class: "padding-none",
-          style: "min-width:200px;",
-          value: vnode.state.search,
-          tabindex: "0",
-          onkeydown: async (event) => {
-            this.onkeydown(event, vnode);
-          },
-          onkeypress: async (event) => {
-            this.onkeypress(event, vnode);
-          },
-          oninput: async (event) => {
-            this.oninput(event, vnode);
-          },
-          onfocus: () => this.loadOptions(vnode),
-          onblur: () => this.onblur(vnode)
-        }
-      )), vnode.state.actors.length ? /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "options" }, /* @__PURE__ */ (0, import_mithril3.default)("div", { role: "menu", class: "menu" }, vnode.state.actors.map((actor, index) => {
-        const keyPackageCount = vnode.state.keyPackages[actor.id];
-        const isSecure = keyPackageCount != void 0 && keyPackageCount > 0;
-        return /* @__PURE__ */ (0, import_mithril3.default)(
-          "div",
-          {
-            role: "menuitem",
-            class: "flex-row padding-xs",
-            onmousedown: () => this.selectActor(vnode, index),
-            "aria-selected": index == vnode.state.highlightedOption ? "true" : null
-          },
-          /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "width-32" }, /* @__PURE__ */ (0, import_mithril3.default)("img", { src: actor.icon, class: "width-32 circle" })),
-          /* @__PURE__ */ (0, import_mithril3.default)("div", null, /* @__PURE__ */ (0, import_mithril3.default)("div", null, actor.name, " \xA0", isSecure ? /* @__PURE__ */ (0, import_mithril3.default)("i", { class: "text-xs text-light-gray bi bi-lock-fill" }) : null), /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "text-xs text-light-gray" }, actor.username))
-        );
-      }))) : null);
-    }
-    async onkeydown(event, vnode) {
-      switch (keyCode(event)) {
-        case "Backspace":
-          const target = event.target;
-          if (target?.selectionStart == 0) {
-            this.removeActor(vnode, vnode.attrs.value.length - 1);
-            event.stopPropagation();
-          }
-          return;
-        case "ArrowDown":
-          vnode.state.highlightedOption = Math.min(
-            vnode.state.highlightedOption + 1,
-            vnode.state.actors.length - 1
-          );
-          return;
-        case "ArrowUp":
-          vnode.state.highlightedOption = Math.max(vnode.state.highlightedOption - 1, 0);
-          return;
-        case "Enter":
-          this.selectActor(vnode, vnode.state.highlightedOption);
-          return;
-      }
-    }
-    // These event handlers prevent default behavior for certain control keys
-    async onkeypress(event, vnode) {
-      switch (keyCode(event)) {
-        case "ArrowDown":
-        case "ArrowUp":
-        case "Enter":
-          event.stopPropagation();
-          event.preventDefault();
-          return;
-        case "Escape":
-          if (vnode.state.actors.length > 0) {
-            vnode.state.actors = [];
-          }
-          event.stopPropagation();
-          event.preventDefault();
-          return;
-      }
-    }
-    async oninput(event, vnode) {
-      const target = event.target;
-      vnode.state.search = target.value;
-      this.loadOptions(vnode);
-    }
-    async loadOptions(vnode) {
-      if (vnode.state.search == "") {
-        vnode.state.actors = [];
-        vnode.state.highlightedOption = -1;
-        return;
-      }
-      vnode.state.loading = true;
-      vnode.state.actors = await import_mithril3.default.request(vnode.attrs.endpoint + "?q=" + vnode.state.search);
-      vnode.state.loading = false;
-      vnode.state.highlightedOption = -1;
-      this.loadKeyPackages(vnode);
-    }
-    // (async) Maintains a cache that counts the keyPackages for each actor
-    loadKeyPackages(vnode) {
-      for (const actor of vnode.state.actors) {
-        if (vnode.state.keyPackages[actor.id] == void 0) {
-          if (actor.keyPackages == null) {
-            continue;
-          }
-          if (actor.keyPackages == "") {
-            continue;
-          }
-          import_mithril3.default.request(
-            "/.api/collectionHeader?url=" + encodeURIComponent(actor.keyPackages)
-          ).then((header) => {
-            if (header != void 0) {
-              if (header.totalItems != void 0) {
-                vnode.state.keyPackages[actor.id] = header.totalItems;
-                import_mithril3.default.redraw();
-              }
-            }
-          });
-        }
-      }
-    }
-    onblur(vnode) {
-      requestAnimationFrame(() => {
-        vnode.state.actors = [];
-        vnode.state.highlightedOption = -1;
-        import_mithril3.default.redraw();
-      });
-    }
-    selectActor(vnode, index) {
-      const selected = vnode.state.actors[index];
-      if (selected == null) {
-        return;
-      }
-      vnode.attrs.value.push(selected);
-      vnode.state.actors = [];
-      vnode.state.search = "";
-      vnode.attrs.onselect(vnode.attrs.value);
-    }
-    removeActor(vnode, index) {
-      vnode.attrs.value.splice(index, 1);
-      vnode.attrs.onselect(vnode.attrs.value);
-      requestAnimationFrame(() => document.getElementById("idActorSearch")?.focus());
-    }
-  };
-
-  // src/view/modal-newConversation.tsx
-  var NewConversation = class {
-    //
-    oninit(vnode) {
-      vnode.state.actors = [];
-      vnode.state.message = "";
-      vnode.state.encrypted = false;
-    }
-    view(vnode) {
-      return /* @__PURE__ */ (0, import_mithril5.default)(Modal, { close: vnode.attrs.close }, /* @__PURE__ */ (0, import_mithril5.default)("form", { onsubmit: (event) => this.onsubmit(event, vnode) }, /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "layout layout-vertical" }, this.header(vnode), /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "layout-elements" }, /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril5.default)("label", { for: "" }, "Participants"), /* @__PURE__ */ (0, import_mithril5.default)(
-        ActorSearch,
-        {
-          name: "actorIds",
-          value: vnode.state.actors,
-          endpoint: "/.api/actors",
-          onselect: (actors) => this.selectActors(vnode, actors)
-        }
-      )), /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril5.default)("label", null, "Message"), /* @__PURE__ */ (0, import_mithril5.default)(
-        "textarea",
-        {
-          rows: "8",
-          onchange: (event) => this.setMessage(vnode, event)
-        }
-      ), /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "text-sm text-gray" }, this.description(vnode))))), /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "margin-top" }, this.submitButton(vnode), /* @__PURE__ */ (0, import_mithril5.default)("button", { onclick: vnode.attrs.close, tabIndex: "0" }, "Close"))));
-    }
-    header(vnode) {
-      if (vnode.state.actors.length == 0) {
-        return /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "layout-title" }, /* @__PURE__ */ (0, import_mithril5.default)("i", { class: "bi bi-plus" }), " Start a Conversation");
-      }
-      if (vnode.state.encrypted) {
-        return /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "layout-title" }, /* @__PURE__ */ (0, import_mithril5.default)("i", { class: "bi bi-shield-lock" }), " Encrypted Message");
-      }
-      return /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "layout-title" }, /* @__PURE__ */ (0, import_mithril5.default)("i", { class: "bi bi-envelope-open" }), " Direct Message");
-    }
-    description(vnode) {
-      if (vnode.state.actors.length == 0) {
-        return /* @__PURE__ */ (0, import_mithril5.default)("span", null);
-      }
-      if (vnode.state.encrypted) {
-        return /* @__PURE__ */ (0, import_mithril5.default)("div", null, "This will be encrypted before it leaves this device, and will not be readable by anyone other than the recipients.");
-      }
-      return /* @__PURE__ */ (0, import_mithril5.default)("div", null, /* @__PURE__ */ (0, import_mithril5.default)("i", { class: "bi bi-exclamation-triangle-fill" }), " One or more of your recipients cannot receive encrypted messages. Others on the Internet may be able to read this message.");
-    }
-    submitButton(vnode) {
-      if (vnode.state.actors.length == 0) {
-        return /* @__PURE__ */ (0, import_mithril5.default)("button", { class: "primary", disabled: true }, "Start a Conversation");
-      }
-      if (vnode.state.encrypted) {
-        return /* @__PURE__ */ (0, import_mithril5.default)("button", { class: "primary", tabindex: "0" }, /* @__PURE__ */ (0, import_mithril5.default)("i", { class: "bi bi-lock" }), " Send Encrypted");
-      }
-      return /* @__PURE__ */ (0, import_mithril5.default)("button", { class: "selected", disabled: true }, "Send Direct Message");
-    }
-    selectActors(vnode, actors) {
-      vnode.state.actors = actors;
-      if (actors.some((actor) => actor.keyPackages == "")) {
-        vnode.state.encrypted = false;
-      } else {
-        vnode.state.encrypted = true;
-      }
-    }
-    setMessage(vnode, event) {
-      const target = event.target;
-      vnode.state.message = target.value;
-    }
-    async onsubmit(event, vnode) {
-      const participants = vnode.state.actors.map((actor) => actor.id);
-      const controller2 = vnode.attrs.controller;
-      event.preventDefault();
-      event.stopPropagation();
-      if (vnode.state.encrypted) {
-        await controller2.newGroupAndMessage(participants, vnode.state.message);
-        return this.close(vnode);
-      }
-      await controller2.newConversation(participants, vnode.state.message);
-      return this.close(vnode);
-    }
-    close(vnode) {
-      vnode.state.actors = [];
-      vnode.state.message = "";
-      vnode.attrs.close();
-    }
-  };
-
-  // src/view/welcome.tsx
-  var import_mithril9 = __toESM(require_mithril(), 1);
-
   // src/view/modal-createKeys.tsx
-  var import_mithril7 = __toESM(require_mithril(), 1);
-  var import_mithril8 = __toESM(require_mithril(), 1);
   var CreateKeys = class {
     //
     oninit(vnode) {
@@ -15074,7 +15050,7 @@
       if (vnode.attrs.modal != "SETUP-KEYS") {
         return null;
       }
-      return /* @__PURE__ */ (0, import_mithril7.default)(Modal, { close: vnode.attrs.close }, /* @__PURE__ */ (0, import_mithril7.default)("form", { onsubmit: (event) => this.onSubmit(event, vnode) }, /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "layout layout-vertical" }, /* @__PURE__ */ (0, import_mithril7.default)("h1", null, /* @__PURE__ */ (0, import_mithril7.default)("i", { class: "bi bi-key" }), " Encryption Keys"), /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "margin-vertical" }, "Private Keys are stored only on this device and never shared with anyone. Choose a password to lock your private keys on this device."), /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "margin-vertical" }, /* @__PURE__ */ (0, import_mithril7.default)("b", null, "BE CAREFUL!"), " If you lose this password, you will not be able to recover your private message history, so please store your password in a safe place, such as a password manager."), /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "layout-elements" }, /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril7.default)("label", { for: "password" }, "Conversation Password"), /* @__PURE__ */ (0, import_mithril7.default)(
+      return /* @__PURE__ */ (0, import_mithril3.default)(Modal, { close: vnode.attrs.close }, /* @__PURE__ */ (0, import_mithril3.default)("form", { onsubmit: (event) => this.onSubmit(event, vnode) }, /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "layout layout-vertical" }, /* @__PURE__ */ (0, import_mithril3.default)("h1", null, /* @__PURE__ */ (0, import_mithril3.default)("i", { class: "bi bi-key" }), " Encryption Keys"), /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "margin-vertical" }, "Private Keys are stored only on this device and never shared with anyone. Choose a password to lock your private keys on this device."), /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "margin-vertical" }, /* @__PURE__ */ (0, import_mithril3.default)("b", null, "BE CAREFUL!"), " If you lose this password, you will not be able to recover your private message history, so please store your password in a safe place, such as a password manager."), /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "layout-elements" }, /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril3.default)("label", { for: "password" }, "Conversation Password"), /* @__PURE__ */ (0, import_mithril3.default)(
         "input",
         {
           type: "password",
@@ -15085,7 +15061,7 @@
           value: vnode.state.password,
           oninput: (event) => this.setPassword(vnode, event)
         }
-      ), /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "text-sm text-gray" }, "Should be different from your account password (which is stored on your server). If you lose this password, you will lose your encrypted message history.")), /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril7.default)("label", { for: "passwordHint" }, "Password Hint"), /* @__PURE__ */ (0, import_mithril7.default)(
+      ), /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "text-sm text-gray" }, "Should be different from your account password (which is stored on your server). If you lose this password, you will lose your encrypted message history.")), /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril3.default)("label", { for: "passwordHint" }, "Password Hint"), /* @__PURE__ */ (0, import_mithril3.default)(
         "input",
         {
           type: "text",
@@ -15094,7 +15070,7 @@
           value: vnode.state.passwordHint,
           oninput: (event) => this.setPasswordHint(vnode, event)
         }
-      ), /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "text-sm text-gray" }, "(Optional) Helps you remember your password in case your forget it.")), /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril7.default)("label", { for: "clientName" }, "Device Name"), /* @__PURE__ */ (0, import_mithril7.default)(
+      ), /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "text-sm text-gray" }, "(Optional) Helps you remember your password in case your forget it.")), /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril3.default)("label", { for: "clientName" }, "Device Name"), /* @__PURE__ */ (0, import_mithril3.default)(
         "input",
         {
           type: "text",
@@ -15107,7 +15083,7 @@
           required: "true",
           oninput: (event) => this.setClientName(vnode, event)
         }
-      ), /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "text-sm text-gray" }, "Helps identify this device in the", " ", /* @__PURE__ */ (0, import_mithril7.default)("a", { href: "/@me/settings/keyPackages", target: "_blank" }, "key manager ", /* @__PURE__ */ (0, import_mithril7.default)("i", { class: "bi bi-box-arrow-up-right" })))))), /* @__PURE__ */ (0, import_mithril7.default)("div", { class: "margin-top" }, /* @__PURE__ */ (0, import_mithril7.default)("button", { class: "primary" }, "Create Encryption Keys"), /* @__PURE__ */ (0, import_mithril7.default)("button", { onclick: vnode.attrs.close, tabIndex: "0" }, "Close"))));
+      ), /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "text-sm text-gray" }, "Helps identify this device in the", " ", /* @__PURE__ */ (0, import_mithril3.default)("a", { href: "/@me/settings/keyPackages", target: "_blank" }, "key manager ", /* @__PURE__ */ (0, import_mithril3.default)("i", { class: "bi bi-box-arrow-up-right" })))))), /* @__PURE__ */ (0, import_mithril3.default)("div", { class: "margin-top" }, /* @__PURE__ */ (0, import_mithril3.default)("button", { class: "primary" }, "Create Encryption Keys"), /* @__PURE__ */ (0, import_mithril3.default)("button", { onclick: vnode.attrs.close, tabIndex: "0" }, "Close"))));
     }
     setClientName(vnode, event) {
       const input = event.target;
@@ -15171,7 +15147,7 @@
   // src/view/welcome.tsx
   var Welcome = class {
     view(vnode) {
-      return /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "app-content" }, /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "flex-row flex-align-center width-100%" }, /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "text-xl bold flex-grow" }, /* @__PURE__ */ (0, import_mithril9.default)("i", { class: "bi bi-chat-fill" }), " Conversations"), /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "nowrap" })), /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "card padding max-width-640 margin-top" }, /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "margin-bottom-lg" }, "Conversations collect all of your personal messages into a single place, including", " ", /* @__PURE__ */ (0, import_mithril9.default)("b", { class: "nowrap" }, "direct messages"), " (which can be read by server admins) and", " ", /* @__PURE__ */ (0, import_mithril9.default)("b", { class: "nowrap" }, "private messages"), ". (which are encrypted and cannot be read by others).", " ", /* @__PURE__ */ (0, import_mithril9.default)("a", { href: "https://emissary.dev/conversations", target: "_blank", class: "nowrap" }, "Learn More About Conversations ", /* @__PURE__ */ (0, import_mithril9.default)("i", { class: "bi bi-box-arrow-up-right" }))), /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "flex-row flex-align-center margin-vertical" }, /* @__PURE__ */ (0, import_mithril9.default)("button", { class: "primary", onclick: () => vnode.state.modal = "SETUP-KEYS" }, "Create Encryption Keys"), /* @__PURE__ */ (0, import_mithril9.default)("div", null, "to participate in encrypted conversations.")), /* @__PURE__ */ (0, import_mithril9.default)("div", { class: "flex-row flex-align-center margin-vertical" }, /* @__PURE__ */ (0, import_mithril9.default)("button", { onclick: () => this.skipEncryptionKeys(vnode) }, "Continue Without Keys\xA0"), /* @__PURE__ */ (0, import_mithril9.default)("div", null, "to send/receive unencrypted messages only."))), /* @__PURE__ */ (0, import_mithril9.default)(
+      return /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "app-content" }, /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "flex-row flex-align-center width-100%" }, /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "text-xl bold flex-grow" }, /* @__PURE__ */ (0, import_mithril5.default)("i", { class: "bi bi-chat-fill" }), " Conversations"), /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "nowrap" })), /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "card padding max-width-640 margin-top" }, /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "margin-bottom-lg" }, "Conversations collect all of your personal messages into a single place, including", " ", /* @__PURE__ */ (0, import_mithril5.default)("b", { class: "nowrap" }, "direct messages"), " (which can be read by server admins) and", " ", /* @__PURE__ */ (0, import_mithril5.default)("b", { class: "nowrap" }, "private messages"), ". (which are encrypted and cannot be read by others).", " ", /* @__PURE__ */ (0, import_mithril5.default)("a", { href: "https://emissary.dev/conversations", target: "_blank", class: "nowrap" }, "Learn More About Conversations ", /* @__PURE__ */ (0, import_mithril5.default)("i", { class: "bi bi-box-arrow-up-right" }))), /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "flex-row flex-align-center margin-vertical" }, /* @__PURE__ */ (0, import_mithril5.default)("button", { class: "primary", onclick: () => vnode.state.modal = "SETUP-KEYS" }, "Create Encryption Keys"), /* @__PURE__ */ (0, import_mithril5.default)("div", null, "to participate in encrypted conversations.")), /* @__PURE__ */ (0, import_mithril5.default)("div", { class: "flex-row flex-align-center margin-vertical" }, /* @__PURE__ */ (0, import_mithril5.default)("button", { onclick: () => this.skipEncryptionKeys(vnode) }, "Continue Without Keys\xA0"), /* @__PURE__ */ (0, import_mithril5.default)("div", null, "to send/receive unencrypted messages only."))), /* @__PURE__ */ (0, import_mithril5.default)(
         CreateKeys,
         {
           controller: vnode.attrs.controller,
@@ -15189,7 +15165,7 @@
       document.getElementById("modal")?.classList.remove("ready");
       window.setTimeout(() => {
         vnode.state.modal = "";
-        import_mithril9.default.redraw();
+        import_mithril5.default.redraw();
       }, 240);
     }
   };
@@ -15197,6 +15173,251 @@
   // src/view/index.tsx
   var import_mithril12 = __toESM(require_mithril(), 1);
   var import_mithril13 = __toESM(require_mithril(), 1);
+
+  // src/view/modal-newConversation.tsx
+  var import_mithril8 = __toESM(require_mithril(), 1);
+  var import_mithril9 = __toESM(require_mithril(), 1);
+
+  // src/view/actorSearch.tsx
+  var import_mithril6 = __toESM(require_mithril(), 1);
+  var import_mithril7 = __toESM(require_mithril(), 1);
+  var ActorSearch = class {
+    oninit(vnode) {
+      vnode.state.search = "";
+      vnode.state.loading = false;
+      vnode.state.actors = [];
+      vnode.state.keyPackages = {};
+      vnode.state.highlightedOption = -1;
+    }
+    view(vnode) {
+      return /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "autocomplete" }, /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "input" }, vnode.attrs.value.map((actor, index) => {
+        const keyPackageCount = vnode.state.keyPackages[actor.id];
+        const isSecure = keyPackageCount != void 0 && keyPackageCount > 0;
+        return /* @__PURE__ */ (0, import_mithril6.default)("span", { class: isSecure ? "tag blue" : "tag gray" }, /* @__PURE__ */ (0, import_mithril6.default)("span", { style: "display:inline-flex; align-items:center; margin-right:8px;" }, /* @__PURE__ */ (0, import_mithril6.default)("img", { src: actor.icon, class: "circle", style: "height:1em; margin:0px 4px;" }), /* @__PURE__ */ (0, import_mithril6.default)("span", { class: "bold" }, actor.name), "\xA0", isSecure ? /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "bi bi-lock-fill" }) : null), /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "clickable bi bi-x-lg", onclick: () => this.removeActor(vnode, index) }));
+      }), /* @__PURE__ */ (0, import_mithril6.default)(
+        "input",
+        {
+          id: "idActorSearch",
+          name: vnode.attrs.name,
+          class: "padding-none",
+          style: "min-width:200px;",
+          value: vnode.state.search,
+          tabindex: "0",
+          onkeydown: async (event) => {
+            this.onkeydown(event, vnode);
+          },
+          onkeypress: async (event) => {
+            this.onkeypress(event, vnode);
+          },
+          oninput: async (event) => {
+            this.oninput(event, vnode);
+          },
+          onfocus: () => this.loadOptions(vnode),
+          onblur: () => this.onblur(vnode)
+        }
+      )), vnode.state.actors.length ? /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "options" }, /* @__PURE__ */ (0, import_mithril6.default)("div", { role: "menu", class: "menu" }, vnode.state.actors.map((actor, index) => {
+        const keyPackageCount = vnode.state.keyPackages[actor.id];
+        const isSecure = keyPackageCount != void 0 && keyPackageCount > 0;
+        return /* @__PURE__ */ (0, import_mithril6.default)(
+          "div",
+          {
+            role: "menuitem",
+            class: "flex-row padding-xs",
+            onmousedown: () => this.selectActor(vnode, index),
+            "aria-selected": index == vnode.state.highlightedOption ? "true" : null
+          },
+          /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "width-32" }, /* @__PURE__ */ (0, import_mithril6.default)("img", { src: actor.icon, class: "width-32 circle" })),
+          /* @__PURE__ */ (0, import_mithril6.default)("div", null, /* @__PURE__ */ (0, import_mithril6.default)("div", null, actor.name, " \xA0", isSecure ? /* @__PURE__ */ (0, import_mithril6.default)("i", { class: "text-xs text-light-gray bi bi-lock-fill" }) : null), /* @__PURE__ */ (0, import_mithril6.default)("div", { class: "text-xs text-light-gray" }, actor.username))
+        );
+      }))) : null);
+    }
+    async onkeydown(event, vnode) {
+      switch (keyCode(event)) {
+        case "Backspace":
+          const target = event.target;
+          if (target?.selectionStart == 0) {
+            this.removeActor(vnode, vnode.attrs.value.length - 1);
+            event.stopPropagation();
+          }
+          return;
+        case "ArrowDown":
+          vnode.state.highlightedOption = Math.min(
+            vnode.state.highlightedOption + 1,
+            vnode.state.actors.length - 1
+          );
+          return;
+        case "ArrowUp":
+          vnode.state.highlightedOption = Math.max(vnode.state.highlightedOption - 1, 0);
+          return;
+        case "Enter":
+          this.selectActor(vnode, vnode.state.highlightedOption);
+          return;
+      }
+    }
+    // These event handlers prevent default behavior for certain control keys
+    async onkeypress(event, vnode) {
+      switch (keyCode(event)) {
+        case "ArrowDown":
+        case "ArrowUp":
+        case "Enter":
+          event.stopPropagation();
+          event.preventDefault();
+          return;
+        case "Escape":
+          if (vnode.state.actors.length > 0) {
+            vnode.state.actors = [];
+          }
+          event.stopPropagation();
+          event.preventDefault();
+          return;
+      }
+    }
+    async oninput(event, vnode) {
+      const target = event.target;
+      vnode.state.search = target.value;
+      this.loadOptions(vnode);
+    }
+    async loadOptions(vnode) {
+      if (vnode.state.search == "") {
+        vnode.state.actors = [];
+        vnode.state.highlightedOption = -1;
+        return;
+      }
+      vnode.state.loading = true;
+      vnode.state.actors = await import_mithril6.default.request(vnode.attrs.endpoint + "?q=" + vnode.state.search);
+      vnode.state.loading = false;
+      vnode.state.highlightedOption = -1;
+      this.loadKeyPackages(vnode);
+    }
+    // (async) Maintains a cache that counts the keyPackages for each actor
+    loadKeyPackages(vnode) {
+      for (const actor of vnode.state.actors) {
+        if (vnode.state.keyPackages[actor.id] == void 0) {
+          if (actor.keyPackages == null) {
+            continue;
+          }
+          if (actor.keyPackages == "") {
+            continue;
+          }
+          import_mithril6.default.request(
+            "/.api/collectionHeader?url=" + encodeURIComponent(actor.keyPackages)
+          ).then((header) => {
+            if (header != void 0) {
+              if (header.totalItems != void 0) {
+                vnode.state.keyPackages[actor.id] = header.totalItems;
+                import_mithril6.default.redraw();
+              }
+            }
+          });
+        }
+      }
+    }
+    onblur(vnode) {
+      requestAnimationFrame(() => {
+        vnode.state.actors = [];
+        vnode.state.highlightedOption = -1;
+        import_mithril6.default.redraw();
+      });
+    }
+    selectActor(vnode, index) {
+      const selected = vnode.state.actors[index];
+      if (selected == null) {
+        return;
+      }
+      vnode.attrs.value.push(selected);
+      vnode.state.actors = [];
+      vnode.state.search = "";
+      vnode.attrs.onselect(vnode.attrs.value);
+    }
+    removeActor(vnode, index) {
+      vnode.attrs.value.splice(index, 1);
+      vnode.attrs.onselect(vnode.attrs.value);
+      requestAnimationFrame(() => document.getElementById("idActorSearch")?.focus());
+    }
+  };
+
+  // src/view/modal-newConversation.tsx
+  var NewConversation = class {
+    //
+    oninit(vnode) {
+      vnode.state.actors = [];
+      vnode.state.message = "";
+      vnode.state.encrypted = false;
+    }
+    view(vnode) {
+      return /* @__PURE__ */ (0, import_mithril8.default)(Modal, { close: vnode.attrs.close }, /* @__PURE__ */ (0, import_mithril8.default)("form", { onsubmit: (event) => this.onsubmit(event, vnode) }, /* @__PURE__ */ (0, import_mithril8.default)("div", { class: "layout layout-vertical" }, this.header(vnode), /* @__PURE__ */ (0, import_mithril8.default)("div", { class: "layout-elements" }, /* @__PURE__ */ (0, import_mithril8.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril8.default)("label", { for: "" }, "Participants"), /* @__PURE__ */ (0, import_mithril8.default)(
+        ActorSearch,
+        {
+          name: "actorIds",
+          value: vnode.state.actors,
+          endpoint: "/.api/actors",
+          onselect: (actors) => this.selectActors(vnode, actors)
+        }
+      )), /* @__PURE__ */ (0, import_mithril8.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril8.default)("label", null, "Message"), /* @__PURE__ */ (0, import_mithril8.default)(
+        "textarea",
+        {
+          rows: "8",
+          onchange: (event) => this.setMessage(vnode, event)
+        }
+      ), /* @__PURE__ */ (0, import_mithril8.default)("div", { class: "text-sm text-gray" }, this.description(vnode))))), /* @__PURE__ */ (0, import_mithril8.default)("div", { class: "margin-top" }, this.submitButton(vnode), /* @__PURE__ */ (0, import_mithril8.default)("button", { onclick: vnode.attrs.close, tabIndex: "0" }, "Close"))));
+    }
+    header(vnode) {
+      if (vnode.state.actors.length == 0) {
+        return /* @__PURE__ */ (0, import_mithril8.default)("div", { class: "layout-title" }, /* @__PURE__ */ (0, import_mithril8.default)("i", { class: "bi bi-plus" }), " Start a Conversation");
+      }
+      if (vnode.state.encrypted) {
+        return /* @__PURE__ */ (0, import_mithril8.default)("div", { class: "layout-title" }, /* @__PURE__ */ (0, import_mithril8.default)("i", { class: "bi bi-shield-lock" }), " Encrypted Message");
+      }
+      return /* @__PURE__ */ (0, import_mithril8.default)("div", { class: "layout-title" }, /* @__PURE__ */ (0, import_mithril8.default)("i", { class: "bi bi-envelope-open" }), " Direct Message");
+    }
+    description(vnode) {
+      if (vnode.state.actors.length == 0) {
+        return /* @__PURE__ */ (0, import_mithril8.default)("span", null);
+      }
+      if (vnode.state.encrypted) {
+        return /* @__PURE__ */ (0, import_mithril8.default)("div", null, "This will be encrypted before it leaves this device, and will not be readable by anyone other than the recipients.");
+      }
+      return /* @__PURE__ */ (0, import_mithril8.default)("div", null, /* @__PURE__ */ (0, import_mithril8.default)("i", { class: "bi bi-exclamation-triangle-fill" }), " One or more of your recipients cannot receive encrypted messages. Others on the Internet may be able to read this message.");
+    }
+    submitButton(vnode) {
+      if (vnode.state.actors.length == 0) {
+        return /* @__PURE__ */ (0, import_mithril8.default)("button", { class: "primary", disabled: true }, "Start a Conversation");
+      }
+      if (vnode.state.encrypted) {
+        return /* @__PURE__ */ (0, import_mithril8.default)("button", { class: "primary", tabindex: "0" }, /* @__PURE__ */ (0, import_mithril8.default)("i", { class: "bi bi-lock" }), " Send Encrypted");
+      }
+      return /* @__PURE__ */ (0, import_mithril8.default)("button", { class: "selected", disabled: true }, "Send Direct Message");
+    }
+    selectActors(vnode, actors) {
+      vnode.state.actors = actors;
+      if (actors.some((actor) => actor.keyPackages == "")) {
+        vnode.state.encrypted = false;
+      } else {
+        vnode.state.encrypted = true;
+      }
+    }
+    setMessage(vnode, event) {
+      const target = event.target;
+      vnode.state.message = target.value;
+    }
+    async onsubmit(event, vnode) {
+      const participants = vnode.state.actors.map((actor) => actor.id);
+      const controller2 = vnode.attrs.controller;
+      event.preventDefault();
+      event.stopPropagation();
+      if (vnode.state.encrypted) {
+        await controller2.newGroupAndMessage(participants, vnode.state.message);
+        return this.close(vnode);
+      }
+      await controller2.newConversation(participants, vnode.state.message);
+      return this.close(vnode);
+    }
+    close(vnode) {
+      vnode.state.actors = [];
+      vnode.state.message = "";
+      vnode.attrs.close();
+    }
+  };
 
   // src/view/modal-editGroup.tsx
   var import_mithril10 = __toESM(require_mithril(), 1);
@@ -15248,8 +15469,6 @@
   var Index = class {
     oninit(vnode) {
       vnode.state.modal = "";
-      vnode.state.groups = [];
-      this.loadGroups(vnode);
     }
     view(vnode) {
       return /* @__PURE__ */ (0, import_mithril12.default)("div", { id: "conversations" }, /* @__PURE__ */ (0, import_mithril12.default)(
@@ -15263,7 +15482,7 @@
           {
             role: "button",
             class: "link conversation-selector padding flex-row flex-align-center",
-            onclick: () => vnode.state.modal = "NEW-CONVERSATION"
+            onclick: () => this.newConversation(vnode)
           },
           /* @__PURE__ */ (0, import_mithril12.default)(
             "div",
@@ -15273,33 +15492,43 @@
             },
             /* @__PURE__ */ (0, import_mithril12.default)("i", { class: "bi bi-plus" })
           ),
-          /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "ellipsis-block", style: "max-height:3em;" }, "New Conversation")
+          /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "ellipsis-block", style: "max-height:3em;" }, "Start a Conversation")
         ),
         this.viewGroups(vnode)
-      ), /* @__PURE__ */ (0, import_mithril12.default)("div", { id: "conversation-details", class: "width-75%" }, "Here be details..."), this.viewModals(vnode));
-    }
-    async loadGroups(vnode) {
-      vnode.state.groups = await vnode.attrs.controller.allGroups();
-      import_mithril12.default.redraw();
+      ), /* @__PURE__ */ (0, import_mithril12.default)("div", { id: "conversation-details", class: "width-75%" }, this.viewMessages(vnode)), this.viewModals(vnode));
     }
     viewGroups(vnode) {
-      return vnode.state.groups.map((group) => /* @__PURE__ */ (0, import_mithril12.default)("div", { role: "button", class: "flex-row flex-align-center padding hover-trigger" }, /* @__PURE__ */ (0, import_mithril12.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril12.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril12.default)("span", { class: "flex-grow nowrap ellipsis" }, /* @__PURE__ */ (0, import_mithril12.default)("div", null, group.name), /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "text-xs text-light-gray" }, group.id)), /* @__PURE__ */ (0, import_mithril12.default)(
-        "button",
-        {
-          onclick: () => {
-            console.log(group);
-            this.editGroup(vnode, group);
-          },
-          class: "hover-show"
-        },
-        "\u22EF"
-      )));
+      const controller2 = vnode.attrs.controller;
+      const groups = controller2.groups();
+      const selectedGroupId = controller2.selectedGroupId;
+      return groups.map((group) => {
+        var cssClass = "flex-row flex-align-center padding hover-trigger";
+        if (group.id == selectedGroupId) {
+          cssClass += " selected";
+        }
+        return /* @__PURE__ */ (0, import_mithril12.default)("div", { role: "button", class: cssClass, onclick: () => controller2.selectGroup(group.id) }, /* @__PURE__ */ (0, import_mithril12.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril12.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril12.default)("span", { class: "flex-grow nowrap ellipsis" }, /* @__PURE__ */ (0, import_mithril12.default)("div", null, group.name), /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "text-xs text-light-gray" }, group.id)), /* @__PURE__ */ (0, import_mithril12.default)("button", { onclick: () => this.editGroup(vnode, group), class: "hover-show" }, "\u22EF"));
+      });
     }
+    // viewMessages returns the JSX for the messages within the selectedGroup.
+    // If there is no selected group, then a welcome message is shown instead.
+    viewMessages(vnode) {
+      if (vnode.attrs.controller.selectedGroupId == "") {
+        return /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "flex-center height-100% align-center" }, /* @__PURE__ */ (0, import_mithril12.default)("div", null, /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "margin-vertical bold" }, "Welcome to Conversations!"), /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "margin-vertical" }, "Messages will appear here once you get started."), /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "margin-vertical link", onclick: () => this.newConversation(vnode) }, "Start a conversation")));
+      }
+      const messages = vnode.attrs.controller.messages();
+      return /* @__PURE__ */ (0, import_mithril12.default)("div", null, messages.map((message) => {
+        return /* @__PURE__ */ (0, import_mithril12.default)("pre", null, JSON.stringify(message, null, 4), /* @__PURE__ */ (0, import_mithril12.default)("hr", null));
+      }));
+    }
+    newConversation(vnode) {
+      vnode.state.modal = "NEW-CONVERSATION";
+    }
+    // editGroup opens the "Edit Group" modal for the specified group
     editGroup(vnode, group) {
       vnode.state.modal = "EDIT-GROUP";
       vnode.state.modalGroup = group;
-      import_mithril12.default.redraw();
     }
+    // viewModals returns the JSX for the currently active modal dialog, or undefined if no modal is active
     viewModals(vnode) {
       switch (vnode.state.modal) {
         case "NEW-CONVERSATION":

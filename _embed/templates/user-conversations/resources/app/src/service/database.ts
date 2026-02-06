@@ -176,6 +176,14 @@ export class Database {
 	// Messages
 	/////////////////////////////////////////////
 
+	// allMessages returns all messages in the specified group, sorted by createDate ascending
+	// TODO: This will need to be limited or pagincated for long discussions.
+	async allMessages(group: string): Promise<DBMessage[]> {
+		var messages = await this.#db.getAllFromIndex("message", "group", group)
+		messages.sort((a, b) => a.createDate - b.createDate)
+		return messages
+	}
+
 	// saveMessage saves a message to the database
 	async saveMessage(message: DBMessage) {
 		await this.#db.put("message", message)
@@ -188,11 +196,5 @@ export class Database {
 			throw new Error("Message not found: " + messageID)
 		}
 		return message
-	}
-
-	async listMessages(group: string): Promise<DBMessage[]> {
-		var messages = await this.#db.getAllFromIndex("message", "group", group)
-		messages.sort((a, b) => a.createDate - b.createDate)
-		return messages
 	}
 }

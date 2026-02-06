@@ -1,5 +1,6 @@
 // old imports
 import m from "mithril"
+import stream from "mithril/stream"
 import {type ClientConfig, type KeyPackage, type Welcome} from "ts-mls"
 import {type APActor} from "./model/ap-actor"
 import {type DBGroup} from "./model/db-group"
@@ -10,6 +11,7 @@ import {MLSFactory} from "./service/mls-factory"
 import type {Delivery} from "./service/delivery"
 import type {Directory} from "./service/directory"
 import type {Database} from "./service/database"
+import type {DBMessage} from "./model/db-message"
 
 export class Controller {
 	#actor: APActor
@@ -19,6 +21,9 @@ export class Controller {
 	#mls?: MLS
 	config: Config
 	clientConfig: ClientConfig
+	selectedGroupId: string
+	groups: stream<DBGroup[]>
+	messages: stream<DBMessage[]>
 
 	// constructor initializes the Controller with its dependencies
 	constructor(
@@ -33,18 +38,63 @@ export class Controller {
 		this.#delivery = delivery
 		this.#directory = directory
 		this.clientConfig = clientConfig
+		this.selectedGroupId = ""
+		this.groups = stream([] as DBGroup[])
+		this.messages = stream([] as DBMessage[])
 
 		// Application Configuration
 		this.config = NewConfig() // Empty placeholder until loaded
 		this.loadConfig()
+		this.loadGroups()
 	}
 
+	// loadConfig retrieves the configuration from the
+	// database and starts the MLS service (if encryption keys are present)
 	async loadConfig() {
 		this.config = await this.#database.loadConfig()
 
 		if (this.config.hasEncryptionKeys) {
 			this.startMLS()
 		}
+		m.redraw()
+	}
+
+	// loadGroups retrieves all groups from the database and
+	// updates the "groups" and "messages" streams.
+	async loadGroups() {
+		//
+		// load groups from the database
+		const groups = await this.#database.allGroups()
+
+		// If there are no groups, then set all values to "empty" state
+		if (groups.length == 0) {
+			this.groups([])
+			this.messages([])
+			this.selectedGroupId = ""
+			return
+		}
+
+		// Fall through means we have 1+ groups
+		// If we don't have a group selected already, then "select" the first group
+		if (this.selectedGroupId == "") {
+			this.selectedGroupId = groups[0]!.id
+		}
+
+		// Set the groups and messages streams accordingly
+		this.groups(groups)
+		this.loadMessages()
+	}
+
+	// selectGroup updates the "selectedGroupId" and reloads messages for that group
+	selectGroup(groupId: string) {
+		this.selectedGroupId = groupId
+		this.loadMessages()
+	}
+
+	// loadMessages retrieves all messages for the currently selected group and updates the "messages" stream
+	async loadMessages() {
+		const messages = await this.#database.allMessages(this.selectedGroupId)
+		this.messages(messages)
 		m.redraw()
 	}
 
@@ -92,16 +142,19 @@ export class Controller {
 		}
 
 		// Create a new group
-		console.log("Creating a new MLS group")
 		const group = await this.#mls.createGroup()
 
-		console.log("Adding group members:", recipients)
+		// Add initial members to the group
 		await this.#mls.addGroupMembers(group.id, recipients)
 
 		// Send the message to the group
-		console.log("Sending message to MLS group:", message)
 		await this.#mls.sendGroupMessage(group.id, message)
-		console.log("Done?")
+
+		// Update the selected group
+		this.selectedGroupId = group.id
+
+		// Reload groups and messages to refresh the UX
+		await this.loadGroups()
 	}
 
 	// newConversation creates a new plaintext ActivityPub conversation
@@ -150,6 +203,7 @@ export class Controller {
 
 		// Delete the group
 		await this.#database.deleteGroup(group)
+		await this.loadGroups()
 	}
 
 	// startMLS initializes the MLS service IF the configuration includes encryption keys

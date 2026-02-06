@@ -1,7 +1,7 @@
 import m from "mithril"
+import stream from "mithril/stream"
 import {type Vnode} from "mithril"
 import {Controller} from "../controller"
-import {NewConversation} from "./modal-newConversation"
 import type {Config} from "../model/config"
 import {Welcome} from "./welcome"
 import {Index} from "."

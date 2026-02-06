@@ -2,19 +2,12 @@ import m from "mithril"
 
 import {defaultClientConfig} from "ts-mls/clientConfig.js"
 import {type APActor} from "./model/ap-actor"
-import {type Credential} from "ts-mls/credential.js"
 import {Database, NewIndexedDB} from "./service/database"
 import {Delivery} from "./service/delivery"
 import {Directory} from "./service/directory"
 import {loadActivityStream} from "./service/network"
-import {MLSFactory} from "./service/mls-factory"
 import {Controller} from "./controller"
 import {Main} from "./view/main"
-import {nobleCryptoProvider} from "ts-mls/crypto/implementation/noble/provider.js"
-import {getCiphersuiteFromName} from "ts-mls/crypto/ciphersuite.js"
-import {generateKeyPackage} from "ts-mls/keyPackage.js"
-import {defaultLifetime} from "ts-mls/lifetime.js"
-import {defaultCapabilities} from "ts-mls/defaultCapabilities.js"
 
 // Global controller instance
 var controller: Controller
