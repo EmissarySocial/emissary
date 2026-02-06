@@ -1,7 +1,6 @@
-import {getCiphersuiteFromName, getCiphersuiteImpl, type KeyPackage, type PrivateKeyPackage} from "ts-mls"
+import {defaultCredentialTypes} from "ts-mls"
+import {getCiphersuiteFromName} from "ts-mls"
 import {generateKeyPackage} from "ts-mls"
-import {defaultCapabilities} from "ts-mls"
-import {defaultLifetime} from "ts-mls"
 import {nobleCryptoProvider} from "ts-mls"
 import {type Credential} from "ts-mls"
 import {type CiphersuiteImpl} from "ts-mls"
@@ -43,18 +42,15 @@ export async function MLSFactory(
 
 			// Create a credential for this User
 			const credential: Credential = {
-				credentialType: "basic",
+				credentialType: defaultCredentialTypes.basic,
 				identity: new TextEncoder().encode(actor.id),
 			}
 
 			// Generate initial key package for this user
-			var keyPackageResult = await generateKeyPackage(
-				credential,
-				defaultCapabilities(),
-				defaultLifetime,
-				[],
-				cipherSuite,
-			)
+			var keyPackageResult = await generateKeyPackage({
+				credential: credential,
+				cipherSuite: cipherSuite,
+			})
 		} catch (error) {
 			console.error("Error generating KeyPackage:", error)
 			throw error

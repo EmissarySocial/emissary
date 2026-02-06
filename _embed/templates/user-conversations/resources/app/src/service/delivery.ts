@@ -82,7 +82,7 @@ export class Delivery {
 
 	// sendWelcome sends an MLS welcome message to the specified recipients
 	async sendWelcome(recipients: string[], welcome: MlsWelcome) {
-		const content = encode(mlsWelcomeEncoder, welcome)
+		const content = bytesToBase64(encode(mlsWelcomeEncoder, welcome))
 
 		const activity = {
 			"@context": this.#context,
@@ -94,16 +94,16 @@ export class Delivery {
 				to: recipients,
 				mediaType: "message/mls",
 				encoding: "base64",
-				content: bytesToBase64(content),
+				content: content,
 			},
 		}
 
 		await this.send(this.#outboxUrl, activity)
 	}
 
-	// sendPrivateMessage sends an MLS private message to the specified recipients
-	async sendPrivateMessage(recipients: string[], privateMessage: MlsPrivateMessage) {
-		const content = encode(mlsPrivateMessageEncoder, privateMessage)
+	// sendMessage sends an MLS private message to the specified recipients
+	async sendMessage(recipients: string[], message: MlsFramedMessage) {
+		const content = bytesToBase64(encode(mlsMessageEncoder, message))
 
 		const activity = {
 			"@context": this.#context,
@@ -115,7 +115,7 @@ export class Delivery {
 				to: recipients,
 				mediaType: "message/mls",
 				encoding: "base64",
-				content: bytesToBase64(content),
+				content: content,
 			},
 		}
 

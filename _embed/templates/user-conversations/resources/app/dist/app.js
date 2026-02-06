@@ -14289,7 +14289,7 @@
     }
     // sendWelcome sends an MLS welcome message to the specified recipients
     async sendWelcome(recipients, welcome) {
-      const content = encode(mlsWelcomeEncoder, welcome);
+      const content = bytesToBase64(encode(mlsWelcomeEncoder, welcome));
       const activity = {
         "@context": this.#context,
         type: "Create",
@@ -14300,14 +14300,14 @@
           to: recipients,
           mediaType: "message/mls",
           encoding: "base64",
-          content: bytesToBase64(content)
+          content
         }
       };
       await this.send(this.#outboxUrl, activity);
     }
-    // sendPrivateMessage sends an MLS private message to the specified recipients
-    async sendPrivateMessage(recipients, privateMessage) {
-      const content = encode(mlsPrivateMessageEncoder, privateMessage);
+    // sendMessage sends an MLS private message to the specified recipients
+    async sendMessage(recipients, message) {
+      const content = bytesToBase64(encode(mlsMessageEncoder, message));
       const activity = {
         "@context": this.#context,
         type: "Create",
@@ -14318,7 +14318,7 @@
           to: recipients,
           mediaType: "message/mls",
           encoding: "base64",
-          content: bytesToBase64(content)
+          content
         }
       };
       await this.send(this.#outboxUrl, activity);
@@ -14492,6 +14492,10 @@
     async createGroup() {
       const groupID = crypto.randomUUID();
       const groupIDBytes = new TextEncoder().encode(groupID);
+      console.log("Creating group with ID:", groupID, groupIDBytes);
+      console.log("context", this.#context());
+      console.log("publicKeyPackage", this.#publicKeyPackage);
+      console.log("privateKeyPackage", this.#privateKeyPackage);
       const clientState = await createGroup({
         context: this.#context(),
         groupId: groupIDBytes,
@@ -14507,6 +14511,7 @@
         updateDate: Date.now(),
         readDate: Date.now()
       };
+      console.log("Saving group to database:", result);
       await this.#database.saveGroup(result);
       return result;
     }
@@ -14547,7 +14552,7 @@
         state: mlsGroup.clientState,
         message: messageBytes
       });
-      this.#delivery.sendPrivateMessage(mlsGroup.members, result.message);
+      this.#delivery.sendMessage(mlsGroup.members, result.message);
       mlsGroup.clientState = result.newState;
       mlsGroup.updateDate = Date.now();
       await this.#database.saveGroup(mlsGroup);
@@ -14581,16 +14586,13 @@
         const cipherSuiteName2 = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519";
         const cipherSuite2 = await nobleCryptoProvider.getCiphersuiteImpl(getCiphersuiteFromName(cipherSuiteName2));
         const credential = {
-          credentialType: "basic",
+          credentialType: defaultCredentialTypes.basic,
           identity: new TextEncoder().encode(actor.id)
         };
-        var keyPackageResult = await generateKeyPackage(
+        var keyPackageResult = await generateKeyPackage({
           credential,
-          defaultCapabilities(),
-          defaultLifetime,
-          [],
-          cipherSuite2
-        );
+          cipherSuite: cipherSuite2
+        });
       } catch (error) {
         console.error("Error generating KeyPackage:", error);
         throw error;
@@ -14673,9 +14675,13 @@
       if (this.#mls == void 0) {
         throw new Error("MLS service is not initialized");
       }
+      console.log("Creating a new MLS group");
       const group = await this.#mls.createGroup();
+      console.log("Adding group members:", recipients);
       await this.#mls.addGroupMembers(group.id, recipients);
+      console.log("Sending message to MLS group:", message);
       await this.#mls.sendGroupMessage(group.id, message);
+      console.log("Done?");
     }
     // newConversation creates a new plaintext ActivityPub conversation
     // with the specified recipients

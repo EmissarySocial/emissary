@@ -92,11 +92,16 @@ export class Controller {
 		}
 
 		// Create a new group
+		console.log("Creating a new MLS group")
 		const group = await this.#mls.createGroup()
+
+		console.log("Adding group members:", recipients)
 		await this.#mls.addGroupMembers(group.id, recipients)
 
 		// Send the message to the group
+		console.log("Sending message to MLS group:", message)
 		await this.#mls.sendGroupMessage(group.id, message)
+		console.log("Done?")
 	}
 
 	// newConversation creates a new plaintext ActivityPub conversation

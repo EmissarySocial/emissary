@@ -1,5 +1,5 @@
 // MLS functions
-import {createCommit, type MlsFramedMessage} from "ts-mls"
+import {createCommit, type MlsFramedMessage, type MlsPrivateMessage} from "ts-mls"
 import {createGroup} from "ts-mls"
 import {createApplicationMessage} from "ts-mls"
 import {defaultProposalTypes} from "ts-mls"
@@ -11,7 +11,6 @@ import {type PrivateKeyPackage} from "ts-mls"
 import {type KeyPackage} from "ts-mls"
 import {type MlsContext} from "ts-mls"
 import {type MlsWelcomeMessage} from "ts-mls"
-import {type PrivateMessage} from "ts-mls"
 import {type CiphersuiteImpl} from "ts-mls"
 import {type ClientConfig} from "ts-mls"
 
@@ -42,7 +41,7 @@ interface IDatabase {
 interface IDelivery {
 	sendWelcome(recipients: string[], welcome: MlsWelcomeMessage): Promise<void>
 	sendCommit(recipients: string[], commit: MlsFramedMessage): Promise<void>
-	sendPrivateMessage(recipients: string[], privateMessage: MlsFramedMessage): Promise<void>
+	sendMessage(recipients: string[], message: MlsFramedMessage): Promise<void>
 }
 
 // IDirectory wraps all of the methods that the MLS service
@@ -93,6 +92,10 @@ export class MLS {
 	async createGroup(): Promise<Group> {
 		const groupID = crypto.randomUUID()
 		const groupIDBytes = new TextEncoder().encode(groupID)
+		console.log("Creating group with ID:", groupID, groupIDBytes)
+		console.log("context", this.#context())
+		console.log("publicKeyPackage", this.#publicKeyPackage)
+		console.log("privateKeyPackage", this.#privateKeyPackage)
 
 		// Create group using ts-mls
 		const clientState = await createGroup({
@@ -114,6 +117,7 @@ export class MLS {
 		}
 
 		// Save the Group
+		console.log("Saving group to database:", result)
 		await this.#database.saveGroup(result)
 
 		// Success
@@ -188,7 +192,7 @@ export class MLS {
 		})
 
 		// Send the message via the Delivery service
-		this.#delivery.sendPrivateMessage(mlsGroup.members, result.message)
+		this.#delivery.sendMessage(mlsGroup.members, result.message)
 
 		// update the Group with the new group state
 		mlsGroup.clientState = result.newState
