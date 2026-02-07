@@ -159,7 +159,8 @@ export class NewConversation {
 
 		// Create a new group and send an encrypted message
 		if (vnode.state.encrypted) {
-			await controller.newGroupAndMessage(participants, vnode.state.message)
+			const group = await controller.createGroup(participants)
+			await controller.sendMessage(vnode.state.message)
 			return this.close(vnode)
 		}
 

@@ -12,6 +12,7 @@ import type {Delivery} from "./service/delivery"
 import type {Directory} from "./service/directory"
 import type {Database} from "./service/database"
 import type {DBMessage} from "./model/db-message"
+import type {Group} from "./model/group"
 
 export class Controller {
 	#actor: APActor
@@ -48,6 +49,10 @@ export class Controller {
 		this.loadGroups()
 	}
 
+	//////////////////////////////////////////
+	// Startup
+	//////////////////////////////////////////
+
 	// loadConfig retrieves the configuration from the
 	// database and starts the MLS service (if encryption keys are present)
 	async loadConfig() {
@@ -57,6 +62,115 @@ export class Controller {
 			this.startMLS()
 		}
 		m.redraw()
+	}
+
+	// startMLS initializes the MLS service IF the configuration includes encryption keys
+	private async startMLS() {
+		//
+		// Guarantee dependency
+		if (this.config.hasEncryptionKeys == false) {
+			throw new Error("Cannot start MLS without encryption keys")
+		}
+
+		// Create the MLS instance
+		this.#mls = await MLSFactory(
+			this.#database,
+			this.#delivery,
+			this.#directory,
+			this.#actor,
+			this.clientConfig,
+			this.config.clientName,
+		)
+	}
+
+	// createEncryptionKeys creates a new set of encryption keys
+	// for this user on this device
+	async createEncryptionKeys(clientName: string, password: string, passwordHint: string) {
+		//
+		// Initialize the config
+		this.config.ready = true
+		this.config.welcome = true
+		this.config.hasEncryptionKeys = true
+		this.config.clientName = clientName
+		this.config.password = password
+		this.config.passwordHint = passwordHint
+
+		// Save the config to IndexedDB
+		await this.#database.saveConfig(this.config)
+
+		// Start the MLS service
+		this.startMLS()
+
+		// Redraw the UX
+		m.redraw()
+	}
+
+	// skipEncryptionKeys is called when the user just wants to
+	// use "direct messages" and does not want to create encryption keys (yet)
+	async skipEncryptionKeys() {
+		//
+		// Initialize the config
+		this.config.welcome = true
+		await this.#database.saveConfig(this.config)
+
+		// Redraw the UX
+		m.redraw()
+	}
+
+	//////////////////////////////////////////
+	// Conversations (Plaintext)
+	//////////////////////////////////////////
+
+	// newConversation creates a new plaintext ActivityPub conversation
+	// with the specified recipients
+	async newConversation(to: string[], message: string) {
+		//
+		// Create an ActivityPub activity
+		const activity = {
+			"@context": "https://www.w3.org/ns/activitystreams",
+			type: "Create",
+			actor: this.#actor.id,
+			to: to,
+			object: {
+				type: "Note",
+				content: message,
+			},
+		}
+
+		// POST to the actor's outbox
+		const response = await fetch(this.#actor.outbox, {
+			method: "POST",
+			headers: {"Content-Type": "application/activity+json"},
+			body: JSON.stringify(activity),
+		})
+	}
+
+	//////////////////////////////////////////
+	// Groups (Encrypted)
+	//////////////////////////////////////////
+
+	// createGroup creates a new MLS-encrypted
+	// group message with the specified recipients
+	async createGroup(recipients: string[]): Promise<Group> {
+		//
+		// Guarantee dependency
+		if (this.#mls == undefined) {
+			throw new Error("MLS service is not initialized")
+		}
+
+		// Create a new group
+		const group = await this.#mls.createGroup()
+
+		// Add initial members to the group
+		await this.#mls.addGroupMembers(group.id, recipients)
+
+		// Update the selected group
+		this.selectedGroupId = group.id
+
+		// Reload groups and messages to refresh the UX
+		await this.loadGroups()
+
+		return group
 	}
 
 	// loadGroups retrieves all groups from the database and
@@ -87,6 +201,13 @@ export class Controller {
 
 	// selectGroup updates the "selectedGroupId" and reloads messages for that group
 	selectGroup(groupId: string) {
+		//
+		// If this group is already selected, then do nothing
+		if (groupId == this.selectedGroupId) {
+			return
+		}
+
+		// Update the selected group and reload messages
 		this.selectedGroupId = groupId
 		this.loadMessages()
 	}
@@ -95,108 +216,6 @@ export class Controller {
 	async saveGroup(group: DBGroup) {
 		await this.#database.saveGroup(group)
 		await this.loadGroups()
-	}
-
-	// loadMessages retrieves all messages for the currently selected group and updates the "messages" stream
-	async loadMessages() {
-		const messages = await this.#database.allMessages(this.selectedGroupId)
-		this.messages(messages)
-		m.redraw()
-	}
-
-	// skipEncryptionKeys is called when the user just wants to
-	// use "direct messages" and does not want to create encryption keys (yet)
-	async skipEncryptionKeys() {
-		//
-		// Initialize the config
-		this.config.welcome = true
-		await this.#database.saveConfig(this.config)
-
-		// Redraw the UX
-		m.redraw()
-	}
-
-	// createEncryptionKeys creates a new set of encryption keys
-	// for this user on this device
-	async createEncryptionKeys(clientName: string, password: string, passwordHint: string) {
-		//
-		// Initialize the config
-		this.config.ready = true
-		this.config.welcome = true
-		this.config.hasEncryptionKeys = true
-		this.config.clientName = clientName
-		this.config.password = password
-		this.config.passwordHint = passwordHint
-
-		// Save the config to IndexedDB
-		await this.#database.saveConfig(this.config)
-
-		// Start the MLS service
-		this.startMLS()
-
-		// Redraw the UX
-		m.redraw()
-	}
-
-	// newGroupAndMessage creates a new MLS-encrypted
-	// group message with the specified recipients
-	async newGroupAndMessage(recipients: string[], message: string) {
-		//
-		// Guarantee dependency
-		if (this.#mls == undefined) {
-			throw new Error("MLS service is not initialized")
-		}
-
-		// Create a new group
-		const group = await this.#mls.createGroup()
-
-		// Add initial members to the group
-		await this.#mls.addGroupMembers(group.id, recipients)
-
-		// Send the message to the group
-		await this.#mls.sendGroupMessage(group.id, message)
-
-		// Update the selected group
-		this.selectedGroupId = group.id
-
-		// Reload groups and messages to refresh the UX
-		await this.loadGroups()
-	}
-
-	// newConversation creates a new plaintext ActivityPub conversation
-	// with the specified recipients
-	async newConversation(to: string[], message: string) {
-		//
-		// Create an ActivityPub activity
-		const activity = {
-			"@context": "https://www.w3.org/ns/activitystreams",
-			type: "Create",
-			actor: this.#actor.id,
-			to: to,
-			object: {
-				type: "Note",
-				content: message,
-			},
-		}
-
-		// POST to the actor's outbox
-		const response = await fetch(this.#actor.outbox, {
-			method: "POST",
-			headers: {"Content-Type": "application/activity+json"},
-			body: JSON.stringify(activity),
-		})
-	}
-
-	// allGroups returns all groups from the database, sorted by updateDate descending
-	async allGroups(): Promise<DBGroup[]> {
-		//
-		// Guarantee dependency
-		if (this.#database == undefined) {
-			throw new Error("Database service is not initialized")
-		}
-
-		// Return all groups in the database
-		return this.#database.allGroups()
 	}
 
 	// deleteGroup deletes the specified group from the database
@@ -212,22 +231,33 @@ export class Controller {
 		await this.loadGroups()
 	}
 
-	// startMLS initializes the MLS service IF the configuration includes encryption keys
-	private async startMLS() {
+	//////////////////////////////////////////
+	// Messages
+	//////////////////////////////////////////
+
+	// loadMessages retrieves all messages for the currently selected group and updates the "messages" stream
+	async loadMessages() {
+		const messages = await this.#database.allMessages(this.selectedGroupId)
+		this.messages(messages)
+		m.redraw()
+	}
+
+	// sendMessage sends a message to the specified group
+	async sendMessage(message: string) {
 		//
-		// Guarantee dependency
-		if (this.config.hasEncryptionKeys == false) {
-			throw new Error("Cannot start MLS without encryption keys")
+		// Guarantee dependencies
+		if (this.#mls == undefined) {
+			throw new Error("MLS service is not initialized")
 		}
 
-		// Create the MLS instance
-		this.#mls = await MLSFactory(
-			this.#database,
-			this.#delivery,
-			this.#directory,
-			this.#actor,
-			this.clientConfig,
-			this.config.clientName,
-		)
+		if (this.selectedGroupId == "") {
+			throw new Error("No group selected")
+		}
+
+		// Send the message to the group
+		await this.#mls.sendGroupMessage(this.selectedGroupId, message)
+
+		// Reload messages to refresh the UX
+		this.loadMessages()
 	}
 }

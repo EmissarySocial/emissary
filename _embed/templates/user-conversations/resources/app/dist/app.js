@@ -1064,9 +1064,9 @@
         var path = template.slice(0, pathEnd);
         var query = {};
         Object.assign(query, params);
-        var resolved = path.replace(/:([^\/\.-]+)(\.{3})?/g, function(m11, key, variadic) {
+        var resolved = path.replace(/:([^\/\.-]+)(\.{3})?/g, function(m12, key, variadic) {
           delete query[key];
-          if (params[key] == null) return m11;
+          if (params[key] == null) return m12;
           return variadic ? params[key] : encodeURIComponent(String(params[key]));
         });
         var newQueryIndex = resolved.indexOf("?");
@@ -1343,8 +1343,8 @@
           // don't also accidentally escape `-` and make it harder to detect it to
           // ban it from template parameters.
           /:([^\/.-]+)(\.{3}|\.(?!\.)|-)?|[\\^$*+.()|\[\]{}]/g,
-          function(m11, key, extra) {
-            if (key == null) return "\\" + m11;
+          function(m12, key, extra) {
+            if (key == null) return "\\" + m12;
             keys.push({ k: key, r: extra === "..." });
             if (extra === "...") return "(.*)";
             if (extra === ".") return "([^/]+)\\.";
@@ -1597,26 +1597,26 @@
       var mountRedraw = require_mount_redraw2();
       var request2 = require_request2();
       var router = require_route();
-      var m11 = function m12() {
+      var m12 = function m13() {
         return hyperscript.apply(this, arguments);
       };
-      m11.m = hyperscript;
-      m11.trust = hyperscript.trust;
-      m11.fragment = hyperscript.fragment;
-      m11.Fragment = "[";
-      m11.mount = mountRedraw.mount;
-      m11.route = router;
-      m11.render = require_render2();
-      m11.redraw = mountRedraw.redraw;
-      m11.request = request2.request;
-      m11.parseQueryString = require_parse();
-      m11.buildQueryString = require_build();
-      m11.parsePathname = require_parse2();
-      m11.buildPathname = require_build2();
-      m11.vnode = require_vnode();
-      m11.censor = require_censor();
-      m11.domFor = require_domFor();
-      module.exports = m11;
+      m12.m = hyperscript;
+      m12.trust = hyperscript.trust;
+      m12.fragment = hyperscript.fragment;
+      m12.Fragment = "[";
+      m12.mount = mountRedraw.mount;
+      m12.route = router;
+      m12.render = require_render2();
+      m12.redraw = mountRedraw.redraw;
+      m12.request = request2.request;
+      m12.parseQueryString = require_parse();
+      m12.buildQueryString = require_build();
+      m12.parsePathname = require_parse2();
+      m12.buildPathname = require_build2();
+      m12.vnode = require_vnode();
+      m12.censor = require_censor();
+      m12.domFor = require_domFor();
+      module.exports = m12;
     }
   });
 
@@ -2556,9 +2556,9 @@
     while (a !== _0n3) {
       const q = b / a;
       const r = b % a;
-      const m11 = x - u * q;
+      const m12 = x - u * q;
       const n = y - v * q;
-      b = a, a = r, x = u, y = v, u = m11, v = n;
+      b = a, a = r, x = u, y = v, u = m12, v = n;
     }
     const gcd = b;
     if (gcd !== _1n3)
@@ -3789,13 +3789,13 @@
       k: "number",
       hash: "function"
     });
-    const { p, k, m: m11, hash, expand, DST } = options;
+    const { p, k, m: m12, hash, expand, DST } = options;
     asafenumber(hash.outputLen, "valid hash");
     abytes2(msg);
     asafenumber(count);
     const log2p = p.toString(2).length;
     const L = Math.ceil((log2p + k) / 8);
-    const len_in_bytes = count * m11 * L;
+    const len_in_bytes = count * m12 * L;
     let prb;
     if (expand === "xmd") {
       prb = expand_message_xmd(msg, DST, len_in_bytes, hash);
@@ -3808,9 +3808,9 @@
     }
     const u = new Array(count);
     for (let i = 0; i < count; i++) {
-      const e = new Array(m11);
-      for (let j = 0; j < m11; j++) {
-        const elm_offset = L * (j + i * m11);
+      const e = new Array(m12);
+      for (let j = 0; j < m12; j++) {
+        const elm_offset = L * (j + i * m12);
         const tv = prb.subarray(elm_offset, elm_offset + L);
         e[j] = mod2(os2ip(tv), p);
       }
@@ -4172,8 +4172,8 @@
       evaluate: (secretKey, input) => evaluate(ctxVOPRF, secretKey, input)
     };
     const poprf = (info) => {
-      const m11 = hashToScalarPrefixed(encode2("Info", info), ctxPOPRF);
-      const T = Point.BASE.multiply(m11);
+      const m12 = hashToScalarPrefixed(encode2("Info", info), ctxPOPRF);
+      const T = Point.BASE.multiply(m12);
       return {
         generateKeyPair,
         deriveKeyPair: (seed, keyInfo) => deriveKeyPair(ctxPOPRF, seed, keyInfo),
@@ -4197,7 +4197,7 @@
           if (!Array.isArray(blinded))
             throw new Error("expected array");
           const skS = Fn3.fromBytes(secretKey);
-          const t = Fn3.add(skS, m11);
+          const t = Fn3.add(skS, m12);
           const invT = Fn3.inv(t);
           const blindedPoints = blinded.map(Point.fromBytes);
           const evalPoints = blindedPoints.map((i) => i.multiply(invT));
@@ -4228,7 +4228,7 @@
           const inputPoint = hashToGroup(input, ctxPOPRF);
           if (inputPoint.equals(Point.ZERO))
             throw new Error("Input point at infinity");
-          const t = Fn3.add(skS, m11);
+          const t = Fn3.add(skS, m12);
           const invT = Fn3.inv(t);
           const unblinded = inputPoint.multiply(invT).toBytes();
           return hashInput(input, info, unblinded);
@@ -6039,7 +6039,7 @@
         seedArgs.push(abytes2(e, void 0, "extraEntropy"));
       }
       const seed = concatBytes(...seedArgs);
-      const m11 = h1int;
+      const m12 = h1int;
       function k2sig(kBytes) {
         const k = bits2int(kBytes);
         if (!Fn3.isValidNot0(k))
@@ -6049,7 +6049,7 @@
         const r = Fn3.create(q.x);
         if (r === _0n9)
           return;
-        const s = Fn3.create(ik * Fn3.create(m11 + r * d));
+        const s = Fn3.create(ik * Fn3.create(m12 + r * d));
         if (s === _0n9)
           return;
         let recovery = (q.x === r ? 0 : 2) | Number(q.y & _1n10);
@@ -6125,8 +6125,8 @@
       init_modular();
       divNearest = (num, den) => (num + (num >= 0 ? den : -den) / _2n8) / den;
       DERErr = class extends Error {
-        constructor(m11 = "") {
-          super(m11);
+        constructor(m12 = "") {
+          super(m12);
         }
       };
       DER = {
@@ -7421,7 +7421,7 @@
   });
 
   // src/app.tsx
-  var import_mithril16 = __toESM(require_mithril(), 1);
+  var import_mithril17 = __toESM(require_mithril(), 1);
 
   // node_modules/ts-mls/dist/src/util/constantTimeCompare.js
   function constantTimeEqual(a, b) {
@@ -10710,11 +10710,11 @@
     return (msg) => {
       switch (msg.contentType) {
         case contentTypes.application:
-          return encoderWithPadding(contramapBufferEncoders([varLenDataEncoder, framedContentAuthDataEncoder], (m11) => [m11.applicationData, m11.auth]), config)(msg);
+          return encoderWithPadding(contramapBufferEncoders([varLenDataEncoder, framedContentAuthDataEncoder], (m12) => [m12.applicationData, m12.auth]), config)(msg);
         case contentTypes.proposal:
-          return encoderWithPadding(contramapBufferEncoders([proposalEncoder, framedContentAuthDataEncoder], (m11) => [m11.proposal, m11.auth]), config)(msg);
+          return encoderWithPadding(contramapBufferEncoders([proposalEncoder, framedContentAuthDataEncoder], (m12) => [m12.proposal, m12.auth]), config)(msg);
         case contentTypes.commit:
-          return encoderWithPadding(contramapBufferEncoders([commitEncoder, framedContentAuthDataEncoder], (m11) => [m11.commit, m11.auth]), config)(msg);
+          return encoderWithPadding(contramapBufferEncoders([commitEncoder, framedContentAuthDataEncoder], (m12) => [m12.commit, m12.auth]), config)(msg);
       }
     };
   }
@@ -14832,6 +14832,9 @@
       this.loadConfig();
       this.loadGroups();
     }
+    //////////////////////////////////////////
+    // Startup
+    //////////////////////////////////////////
     // loadConfig retrieves the configuration from the
     // database and starts the MLS service (if encryption keys are present)
     async loadConfig() {
@@ -14841,44 +14844,19 @@
       }
       import_mithril.default.redraw();
     }
-    // loadGroups retrieves all groups from the database and
-    // updates the "groups" and "messages" streams.
-    async loadGroups() {
-      const groups = await this.#database.allGroups();
-      if (groups.length == 0) {
-        this.groups([]);
-        this.messages([]);
-        this.selectedGroupId = "";
-        return;
+    // startMLS initializes the MLS service IF the configuration includes encryption keys
+    async startMLS() {
+      if (this.config.hasEncryptionKeys == false) {
+        throw new Error("Cannot start MLS without encryption keys");
       }
-      if (this.selectedGroupId == "") {
-        this.selectedGroupId = groups[0].id;
-      }
-      this.groups(groups);
-      this.loadMessages();
-    }
-    // selectGroup updates the "selectedGroupId" and reloads messages for that group
-    selectGroup(groupId) {
-      this.selectedGroupId = groupId;
-      this.loadMessages();
-    }
-    // saveGroup saves the specified group to the database and reloads groups
-    async saveGroup(group) {
-      await this.#database.saveGroup(group);
-      await this.loadGroups();
-    }
-    // loadMessages retrieves all messages for the currently selected group and updates the "messages" stream
-    async loadMessages() {
-      const messages = await this.#database.allMessages(this.selectedGroupId);
-      this.messages(messages);
-      import_mithril.default.redraw();
-    }
-    // skipEncryptionKeys is called when the user just wants to
-    // use "direct messages" and does not want to create encryption keys (yet)
-    async skipEncryptionKeys() {
-      this.config.welcome = true;
-      await this.#database.saveConfig(this.config);
-      import_mithril.default.redraw();
+      this.#mls = await MLSFactory(
+        this.#database,
+        this.#delivery,
+        this.#directory,
+        this.#actor,
+        this.clientConfig,
+        this.config.clientName
+      );
     }
     // createEncryptionKeys creates a new set of encryption keys
     // for this user on this device
@@ -14893,18 +14871,16 @@
       this.startMLS();
       import_mithril.default.redraw();
     }
-    // newGroupAndMessage creates a new MLS-encrypted
-    // group message with the specified recipients
-    async newGroupAndMessage(recipients, message) {
-      if (this.#mls == void 0) {
-        throw new Error("MLS service is not initialized");
-      }
-      const group = await this.#mls.createGroup();
-      await this.#mls.addGroupMembers(group.id, recipients);
-      await this.#mls.sendGroupMessage(group.id, message);
-      this.selectedGroupId = group.id;
-      await this.loadGroups();
+    // skipEncryptionKeys is called when the user just wants to
+    // use "direct messages" and does not want to create encryption keys (yet)
+    async skipEncryptionKeys() {
+      this.config.welcome = true;
+      await this.#database.saveConfig(this.config);
+      import_mithril.default.redraw();
     }
+    //////////////////////////////////////////
+    // Conversations (Plaintext)
+    //////////////////////////////////////////
     // newConversation creates a new plaintext ActivityPub conversation
     // with the specified recipients
     async newConversation(to, message) {
@@ -14924,12 +14900,49 @@
         body: JSON.stringify(activity)
       });
     }
-    // allGroups returns all groups from the database, sorted by updateDate descending
-    async allGroups() {
-      if (this.#database == void 0) {
-        throw new Error("Database service is not initialized");
+    //////////////////////////////////////////
+    // Groups (Encrypted)
+    //////////////////////////////////////////
+    // createGroup creates a new MLS-encrypted
+    // group message with the specified recipients
+    async createGroup(recipients) {
+      if (this.#mls == void 0) {
+        throw new Error("MLS service is not initialized");
       }
-      return this.#database.allGroups();
+      const group = await this.#mls.createGroup();
+      await this.#mls.addGroupMembers(group.id, recipients);
+      this.selectedGroupId = group.id;
+      await this.loadGroups();
+      return group;
+    }
+    // loadGroups retrieves all groups from the database and
+    // updates the "groups" and "messages" streams.
+    async loadGroups() {
+      const groups = await this.#database.allGroups();
+      if (groups.length == 0) {
+        this.groups([]);
+        this.messages([]);
+        this.selectedGroupId = "";
+        return;
+      }
+      if (this.selectedGroupId == "") {
+        this.selectedGroupId = groups[0].id;
+      }
+      this.groups(groups);
+      this.loadMessages();
+    }
+    // selectGroup updates the "selectedGroupId" and reloads messages for that group
+    selectGroup(groupId) {
+      if (groupId == this.selectedGroupId) {
+        return;
+      }
+      this.selectedGroupId = groupId;
+      this.loadMessages();
+    }
+    // saveGroup saves the specified group to the database and reloads groups
+    async saveGroup(group) {
+      await this.#database.saveGroup(group);
+      await this.loadGroups();
     }
     // deleteGroup deletes the specified group from the database
     async deleteGroup(group) {
@@ -14939,26 +14952,32 @@
       await this.#database.deleteGroup(group);
       await this.loadGroups();
     }
-    // startMLS initializes the MLS service IF the configuration includes encryption keys
-    async startMLS() {
-      if (this.config.hasEncryptionKeys == false) {
-        throw new Error("Cannot start MLS without encryption keys");
+    //////////////////////////////////////////
+    // Messages
+    //////////////////////////////////////////
+    // loadMessages retrieves all messages for the currently selected group and updates the "messages" stream
+    async loadMessages() {
+      const messages = await this.#database.allMessages(this.selectedGroupId);
+      this.messages(messages);
+      import_mithril.default.redraw();
+    }
+    // sendMessage sends a message to the specified group
+    async sendMessage(message) {
+      if (this.#mls == void 0) {
+        throw new Error("MLS service is not initialized");
       }
-      this.#mls = await MLSFactory(
-        this.#database,
-        this.#delivery,
-        this.#directory,
-        this.#actor,
-        this.clientConfig,
-        this.config.clientName
-      );
+      if (this.selectedGroupId == "") {
+        throw new Error("No group selected");
+      }
+      await this.#mls.sendGroupMessage(this.selectedGroupId, message);
+      this.loadMessages();
     }
   };
 
   // src/view/main.tsx
-  var import_mithril14 = __toESM(require_mithril(), 1);
-  var import_stream2 = __toESM(require_stream2(), 1);
   var import_mithril15 = __toESM(require_mithril(), 1);
+  var import_stream2 = __toESM(require_stream2(), 1);
+  var import_mithril16 = __toESM(require_mithril(), 1);
 
   // src/view/welcome.tsx
   var import_mithril5 = __toESM(require_mithril(), 1);
@@ -15176,8 +15195,8 @@
   };
 
   // src/view/index.tsx
-  var import_mithril12 = __toESM(require_mithril(), 1);
   var import_mithril13 = __toESM(require_mithril(), 1);
+  var import_mithril14 = __toESM(require_mithril(), 1);
 
   // src/view/modal-newConversation.tsx
   var import_mithril8 = __toESM(require_mithril(), 1);
@@ -15411,7 +15430,8 @@
       event.preventDefault();
       event.stopPropagation();
       if (vnode.state.encrypted) {
-        await controller2.newGroupAndMessage(participants, vnode.state.message);
+        const group = await controller2.createGroup(participants);
+        await controller2.sendMessage(vnode.state.message);
         return this.close(vnode);
       }
       await controller2.newConversation(participants, vnode.state.message);
@@ -15477,37 +15497,63 @@
     }
   };
 
+  // src/view/widget-message-create.tsx
+  var import_mithril12 = __toESM(require_mithril(), 1);
+  var WidgetMessageCreate = class {
+    oninit(vnode) {
+      vnode.state.message = "";
+    }
+    view(vnode) {
+      return /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "input flex-row", style: "height:200px;" }, /* @__PURE__ */ (0, import_mithril12.default)(
+        "textarea",
+        {
+          value: vnode.state.message,
+          style: "border:none; height:100%; resize:none;",
+          oninput: (e) => this.oninput(vnode, e)
+        }
+      ), /* @__PURE__ */ (0, import_mithril12.default)("button", { onclick: () => this.sendMessage(vnode) }, "Send"));
+    }
+    oninput(vnode, event) {
+      const target = event.target;
+      vnode.state.message = target.value;
+    }
+    sendMessage(vnode) {
+      vnode.attrs.controller.sendMessage(vnode.state.message);
+      vnode.state.message = "";
+    }
+  };
+
   // src/view/index.tsx
   var Index = class {
     oninit(vnode) {
       vnode.state.modal = "";
     }
     view(vnode) {
-      return /* @__PURE__ */ (0, import_mithril12.default)("div", { id: "conversations" }, /* @__PURE__ */ (0, import_mithril12.default)(
+      return /* @__PURE__ */ (0, import_mithril13.default)("div", { id: "conversations" }, /* @__PURE__ */ (0, import_mithril13.default)(
         "div",
         {
           id: "conversation-list",
           class: "table no-top-border width-50% md:width-40% lg:width-30% flex-shrink-0 scroll-vertical"
         },
-        /* @__PURE__ */ (0, import_mithril12.default)(
+        /* @__PURE__ */ (0, import_mithril13.default)(
           "div",
           {
             role: "button",
             class: "link conversation-selector padding flex-row flex-align-center",
             onclick: () => this.newConversation(vnode)
           },
-          /* @__PURE__ */ (0, import_mithril12.default)(
+          /* @__PURE__ */ (0, import_mithril13.default)(
             "div",
             {
               class: "circle width-32 flex-shrink-0 flex-center margin-none",
               style: "font-size:24px;background-color:var(--blue50);color:var(--white);"
             },
-            /* @__PURE__ */ (0, import_mithril12.default)("i", { class: "bi bi-plus" })
+            /* @__PURE__ */ (0, import_mithril13.default)("i", { class: "bi bi-plus" })
           ),
-          /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "ellipsis-block", style: "max-height:3em;" }, "Start a Conversation")
+          /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "ellipsis-block", style: "max-height:3em;" }, "Start a Conversation")
         ),
         this.viewGroups(vnode)
-      ), /* @__PURE__ */ (0, import_mithril12.default)("div", { id: "conversation-details", class: "width-75%" }, this.viewMessages(vnode)), this.viewModals(vnode));
+      ), /* @__PURE__ */ (0, import_mithril13.default)("div", { id: "conversation-details", class: "width-75%" }, this.viewMessages(vnode)), this.viewModals(vnode));
     }
     viewGroups(vnode) {
       const controller2 = vnode.attrs.controller;
@@ -15518,19 +15564,24 @@
         if (group.id == selectedGroupId) {
           cssClass += " selected";
         }
-        return /* @__PURE__ */ (0, import_mithril12.default)("div", { role: "button", class: cssClass, onclick: () => controller2.selectGroup(group.id) }, /* @__PURE__ */ (0, import_mithril12.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril12.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril12.default)("span", { class: "flex-grow nowrap ellipsis" }, /* @__PURE__ */ (0, import_mithril12.default)("div", null, group.name), /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "text-xs text-light-gray" }, group.id)), /* @__PURE__ */ (0, import_mithril12.default)("button", { onclick: () => this.editGroup(vnode, group), class: "hover-show" }, "\u22EF"));
+        return /* @__PURE__ */ (0, import_mithril13.default)("div", { role: "button", class: cssClass, onclick: () => controller2.selectGroup(group.id) }, /* @__PURE__ */ (0, import_mithril13.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril13.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril13.default)("span", { class: "flex-grow nowrap ellipsis" }, /* @__PURE__ */ (0, import_mithril13.default)("div", null, group.name), /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "text-xs text-light-gray" }, group.id)), /* @__PURE__ */ (0, import_mithril13.default)("button", { onclick: () => this.editGroup(vnode, group), class: "hover-show" }, "\u22EF"));
       });
     }
     // viewMessages returns the JSX for the messages within the selectedGroup.
     // If there is no selected group, then a welcome message is shown instead.
     viewMessages(vnode) {
       if (vnode.attrs.controller.selectedGroupId == "") {
-        return /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "flex-center height-100% align-center" }, /* @__PURE__ */ (0, import_mithril12.default)("div", null, /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "margin-vertical bold" }, "Welcome to Conversations!"), /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "margin-vertical" }, "Messages will appear here once you get started."), /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "margin-vertical link", onclick: () => this.newConversation(vnode) }, "Start a conversation")));
+        return [
+          /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "flex-center height-100% align-center" }, /* @__PURE__ */ (0, import_mithril13.default)("div", null, /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "margin-vertical bold" }, "Welcome to Conversations!"), /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "margin-vertical" }, "Messages will appear here once you get started."), /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "margin-vertical link", onclick: () => this.newConversation(vnode) }, "Start a conversation")))
+        ];
       }
       const messages = vnode.attrs.controller.messages();
-      return /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "padding-lg" }, messages.map((message) => {
-        return /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "card padding margin-bottom" }, /* @__PURE__ */ (0, import_mithril12.default)("pre", { class: "text-sm" }, JSON.stringify(message, null, 4)));
-      }));
+      return [
+        /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "flex-grow padding-lg" }, messages.map((message) => {
+          return /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "card padding margin-bottom" }, /* @__PURE__ */ (0, import_mithril13.default)("pre", { class: "text-sm" }, JSON.stringify(message, null, 4)));
+        })),
+        /* @__PURE__ */ (0, import_mithril13.default)(WidgetMessageCreate, { controller: vnode.attrs.controller })
+      ];
     }
     newConversation(vnode) {
       vnode.state.modal = "NEW-CONVERSATION";
@@ -15544,7 +15595,7 @@
     viewModals(vnode) {
       switch (vnode.state.modal) {
         case "NEW-CONVERSATION":
-          return /* @__PURE__ */ (0, import_mithril12.default)(
+          return /* @__PURE__ */ (0, import_mithril13.default)(
             NewConversation,
             {
               controller: vnode.attrs.controller,
@@ -15552,7 +15603,7 @@
             }
           );
         case "EDIT-GROUP":
-          return /* @__PURE__ */ (0, import_mithril12.default)(
+          return /* @__PURE__ */ (0, import_mithril13.default)(
             EditGroup,
             {
               controller: vnode.attrs.controller,
@@ -15568,7 +15619,7 @@
       document.getElementById("modal")?.classList.remove("ready");
       window.setTimeout(() => {
         vnode.state.modal = "";
-        import_mithril12.default.redraw();
+        import_mithril13.default.redraw();
       }, 240);
     }
   };
@@ -15581,12 +15632,12 @@
     view(vnode) {
       const controller2 = vnode.attrs.controller;
       if (!controller2.config.ready) {
-        return /* @__PURE__ */ (0, import_mithril14.default)("div", { class: "app-content" }, "Loading...");
+        return /* @__PURE__ */ (0, import_mithril15.default)("div", { class: "app-content" }, "Loading...");
       }
       if (!controller2.config.welcome) {
-        return /* @__PURE__ */ (0, import_mithril14.default)(Welcome, { controller: controller2 });
+        return /* @__PURE__ */ (0, import_mithril15.default)(Welcome, { controller: controller2 });
       }
-      return /* @__PURE__ */ (0, import_mithril14.default)(Index, { controller: controller2 });
+      return /* @__PURE__ */ (0, import_mithril15.default)(Index, { controller: controller2 });
     }
   };
 
@@ -15604,7 +15655,7 @@
     const delivery = new Delivery(actor.id, actor.outbox);
     const directory = new Directory(actor.id, actor.outbox);
     controller = new Controller(actor, database, delivery, directory, defaultClientConfig);
-    import_mithril16.default.mount(root2, { view: () => /* @__PURE__ */ (0, import_mithril16.default)(Main, { controller }) });
+    import_mithril17.default.mount(root2, { view: () => /* @__PURE__ */ (0, import_mithril17.default)(Main, { controller }) });
   }
   startup();
 })();

@@ -4,6 +4,7 @@ import {type DBGroup} from "../model/db-group"
 import {Controller} from "../controller"
 import {NewConversation} from "./modal-newConversation"
 import {EditGroup} from "./modal-editGroup"
+import {WidgetMessageCreate} from "./widget-message-create"
 
 type IndexVnode = Vnode<IndexAttrs, IndexState>
 
@@ -83,11 +84,11 @@ export class Index {
 
 	// viewMessages returns the JSX for the messages within the selectedGroup.
 	// If there is no selected group, then a welcome message is shown instead.
-	private viewMessages(vnode: IndexVnode): JSX.Element {
+	private viewMessages(vnode: IndexVnode): JSX.Element[] {
 		//
 		// If there's no selected group, then show a welcome message
 		if (vnode.attrs.controller.selectedGroupId == "") {
-			return (
+			return [
 				<div class="flex-center height-100% align-center">
 					<div>
 						<div class="margin-vertical bold">Welcome to Conversations!</div>
@@ -96,16 +97,16 @@ export class Index {
 							Start a conversation
 						</div>
 					</div>
-				</div>
-			)
+				</div>,
+			]
 		}
 
 		// Otherwise, list messages for the selected group
 		const messages = vnode.attrs.controller.messages()
 
 		// Display messages
-		return (
-			<div class="padding-lg">
+		return [
+			<div class="flex-grow padding-lg">
 				{messages.map((message) => {
 					return (
 						<div class="card padding margin-bottom">
@@ -113,8 +114,9 @@ export class Index {
 						</div>
 					)
 				})}
-			</div>
-		)
+			</div>,
+			<WidgetMessageCreate controller={vnode.attrs.controller}></WidgetMessageCreate>,
+		]
 	}
 
 	private newConversation(vnode: IndexVnode) {
