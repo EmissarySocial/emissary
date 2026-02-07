@@ -91,6 +91,12 @@ export class Controller {
 		this.loadMessages()
 	}
 
+	// saveGroup saves the specified group to the database and reloads groups
+	async saveGroup(group: DBGroup) {
+		await this.#database.saveGroup(group)
+		await this.loadGroups()
+	}
+
 	// loadMessages retrieves all messages for the currently selected group and updates the "messages" stream
 	async loadMessages() {
 		const messages = await this.#database.allMessages(this.selectedGroupId)

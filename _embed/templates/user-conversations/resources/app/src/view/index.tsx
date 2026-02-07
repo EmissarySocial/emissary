@@ -105,13 +105,12 @@ export class Index {
 
 		// Display messages
 		return (
-			<div>
+			<div class="padding-lg">
 				{messages.map((message) => {
 					return (
-						<pre>
-							{JSON.stringify(message, null, 4)}
-							<hr />
-						</pre>
+						<div class="card padding margin-bottom">
+							<pre class="text-sm">{JSON.stringify(message, null, 4)}</pre>
+						</div>
 					)
 				})}
 			</div>

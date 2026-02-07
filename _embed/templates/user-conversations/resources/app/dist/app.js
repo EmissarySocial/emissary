@@ -14862,6 +14862,11 @@
       this.selectedGroupId = groupId;
       this.loadMessages();
     }
+    // saveGroup saves the specified group to the database and reloads groups
+    async saveGroup(group) {
+      await this.#database.saveGroup(group);
+      await this.loadGroups();
+    }
     // loadMessages retrieves all messages for the currently selected group and updates the "messages" stream
     async loadMessages() {
       const messages = await this.#database.allMessages(this.selectedGroupId);
@@ -15424,6 +15429,9 @@
   var import_mithril11 = __toESM(require_mithril(), 1);
   var EditGroup = class {
     //
+    oninit(vnode) {
+      vnode.state.name = vnode.attrs.group.name;
+    }
     view(vnode) {
       return /* @__PURE__ */ (0, import_mithril10.default)(Modal, { close: vnode.attrs.close }, /* @__PURE__ */ (0, import_mithril10.default)("form", { onsubmit: (event) => this.onsubmit(event, vnode) }, /* @__PURE__ */ (0, import_mithril10.default)("div", { class: "layout layout-vertical" }, /* @__PURE__ */ (0, import_mithril10.default)("div", { class: "layout-title" }, /* @__PURE__ */ (0, import_mithril10.default)("i", { class: "bi bi-lock-fill" }), " Edit Group"), /* @__PURE__ */ (0, import_mithril10.default)("div", { class: "layout-elements" }, /* @__PURE__ */ (0, import_mithril10.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril10.default)("label", { for: "idGroupName" }, "Group Name"), /* @__PURE__ */ (0, import_mithril10.default)(
         "input",
@@ -15431,8 +15439,8 @@
           id: "idGroupName",
           type: "text",
           name: "actorIds",
-          value: vnode.attrs.group.name,
-          onchange: (event) => this.setName(vnode, event)
+          value: vnode.state.name,
+          oninput: (event) => this.setName(vnode, event)
         }
       )))), /* @__PURE__ */ (0, import_mithril10.default)("div", { class: "margin-top flex-row" }, /* @__PURE__ */ (0, import_mithril10.default)("div", { class: "flex-grow" }, /* @__PURE__ */ (0, import_mithril10.default)("button", { type: "submit", class: "primary", tabindex: "0" }, "Save Changes"), /* @__PURE__ */ (0, import_mithril10.default)("button", { onclick: vnode.attrs.close, tabIndex: "0" }, "Close")), /* @__PURE__ */ (0, import_mithril10.default)("div", null, /* @__PURE__ */ (0, import_mithril10.default)(
         "span",
@@ -15447,9 +15455,13 @@
     }
     setName(vnode, event) {
       const target = event.target;
-      vnode.attrs.group.name = target.value;
+      vnode.state.name = target.value;
     }
     async onsubmit(event, vnode) {
+      event.preventDefault();
+      event.stopPropagation();
+      vnode.attrs.group.name = vnode.state.name;
+      await vnode.attrs.controller.saveGroup(vnode.attrs.group);
       return this.close(vnode);
     }
     async delete(vnode) {
@@ -15516,8 +15528,8 @@
         return /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "flex-center height-100% align-center" }, /* @__PURE__ */ (0, import_mithril12.default)("div", null, /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "margin-vertical bold" }, "Welcome to Conversations!"), /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "margin-vertical" }, "Messages will appear here once you get started."), /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "margin-vertical link", onclick: () => this.newConversation(vnode) }, "Start a conversation")));
       }
       const messages = vnode.attrs.controller.messages();
-      return /* @__PURE__ */ (0, import_mithril12.default)("div", null, messages.map((message) => {
-        return /* @__PURE__ */ (0, import_mithril12.default)("pre", null, JSON.stringify(message, null, 4), /* @__PURE__ */ (0, import_mithril12.default)("hr", null));
+      return /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "padding-lg" }, messages.map((message) => {
+        return /* @__PURE__ */ (0, import_mithril12.default)("div", { class: "card padding margin-bottom" }, /* @__PURE__ */ (0, import_mithril12.default)("pre", { class: "text-sm" }, JSON.stringify(message, null, 4)));
       }));
     }
     newConversation(vnode) {

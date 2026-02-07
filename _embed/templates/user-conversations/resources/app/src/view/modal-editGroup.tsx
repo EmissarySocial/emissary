@@ -14,10 +14,16 @@ interface EditGroupArgs {
 	close: () => void
 }
 
-interface EditGroupState {}
+interface EditGroupState {
+	name: string
+}
 
 export class EditGroup {
 	//
+
+	oninit(vnode: EditGroupVnode) {
+		vnode.state.name = vnode.attrs.group.name
+	}
 
 	view(vnode: EditGroupVnode) {
 		return (
@@ -35,8 +41,8 @@ export class EditGroup {
 									id="idGroupName"
 									type="text"
 									name="actorIds"
-									value={vnode.attrs.group.name}
-									onchange={(event: Event) => this.setName(vnode, event)}
+									value={vnode.state.name}
+									oninput={(event: Event) => this.setName(vnode, event)}
 								/>
 							</div>
 						</div>
@@ -67,14 +73,22 @@ export class EditGroup {
 
 	setName(vnode: EditGroupVnode, event: Event) {
 		const target = event.target as HTMLTextAreaElement
-		vnode.attrs.group.name = target.value
+		vnode.state.name = target.value
 	}
 
 	async onsubmit(event: SubmitEvent, vnode: EditGroupVnode) {
 		//
+		// Halt the form submission to prevent a page reload
+		event.preventDefault()
+		event.stopPropagation()
+
+		// Copy values from the form into the Group object
+		vnode.attrs.group.name = vnode.state.name
 
 		// Save the Group to the database
-		// await vnode.attrs.controller.saveGroup(vnode.attrs.group)
+		await vnode.attrs.controller.saveGroup(vnode.attrs.group)
+
+		// Success. Close the modal dialog and redraw the screen
 		return this.close(vnode)
 	}
 
