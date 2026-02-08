@@ -178,16 +178,16 @@ export class ActorSearch {
 		//
 		for (const actor of vnode.state.actors) {
 			if (vnode.state.keyPackages[actor.id] == undefined) {
-				if (actor.keyPackages == null) {
+				if (actor["mls:keyPackages"] == null) {
 					continue
 				}
 
-				if (actor.keyPackages == "") {
+				if (actor["mls:keyPackages"] == "") {
 					continue
 				}
 
 				m.request<APCollectionHeader>(
-					"/.api/collectionHeader?url=" + encodeURIComponent(actor.keyPackages),
+					"/.api/collectionHeader?url=" + encodeURIComponent(actor["mls:keyPackages"]),
 				).then((header: APCollectionHeader) => {
 					if (header != undefined) {
 						if (header.totalItems != undefined) {

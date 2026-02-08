@@ -1,7 +1,5 @@
 import {type KeyPackage} from "ts-mls"
-import {encode} from "ts-mls"
 import {decode} from "ts-mls"
-import {mlsMessageEncoder} from "ts-mls"
 import {mlsMessageDecoder} from "ts-mls"
 import {wireformats} from "ts-mls"
 import {type APActor} from "../model/ap-actor"
@@ -25,7 +23,7 @@ export class Directory {
 
 		for (const actorID of actorIDs) {
 			const actor = (await loadActivityStream(actorID)) as APActor
-			const rangeKeyPackages = rangeCollection<APKeyPackage>(actor.keyPackages)
+			const rangeKeyPackages = rangeCollection<APKeyPackage>(actor["mls:keyPackages"])
 
 			for await (const item of rangeKeyPackages) {
 				const contentBytes = base64ToUint8Array(item.content)

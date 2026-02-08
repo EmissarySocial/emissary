@@ -135,7 +135,7 @@ export class NewConversation {
 	selectActors(vnode: NewConversationVnode, actors: APActor[]) {
 		vnode.state.actors = actors
 
-		if (actors.some((actor) => actor.keyPackages == "")) {
+		if (actors.some((actor) => actor["mls:keyPackages"] == "")) {
 			vnode.state.encrypted = false
 		} else {
 			vnode.state.encrypted = true

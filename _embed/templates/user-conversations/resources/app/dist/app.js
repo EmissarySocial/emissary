@@ -14603,7 +14603,7 @@
       var result = [];
       for (const actorID of actorIDs) {
         const actor = await loadActivityStream(actorID);
-        const rangeKeyPackages = rangeCollection(actor.keyPackages);
+        const rangeKeyPackages = rangeCollection(actor["mls:keyPackages"]);
         for await (const item of rangeKeyPackages) {
           const contentBytes = base64ToUint8Array(item.content);
           console.log("Getting KeyPackage:", item.content, contentBytes);
@@ -15317,14 +15317,14 @@
     loadKeyPackages(vnode) {
       for (const actor of vnode.state.actors) {
         if (vnode.state.keyPackages[actor.id] == void 0) {
-          if (actor.keyPackages == null) {
+          if (actor["mls:keyPackages"] == null) {
             continue;
           }
-          if (actor.keyPackages == "") {
+          if (actor["mls:keyPackages"] == "") {
             continue;
           }
           import_mithril6.default.request(
-            "/.api/collectionHeader?url=" + encodeURIComponent(actor.keyPackages)
+            "/.api/collectionHeader?url=" + encodeURIComponent(actor["mls:keyPackages"])
           ).then((header) => {
             if (header != void 0) {
               if (header.totalItems != void 0) {
@@ -15414,7 +15414,7 @@
     }
     selectActors(vnode, actors) {
       vnode.state.actors = actors;
-      if (actors.some((actor) => actor.keyPackages == "")) {
+      if (actors.some((actor) => actor["mls:keyPackages"] == "")) {
         vnode.state.encrypted = false;
       } else {
         vnode.state.encrypted = true;
