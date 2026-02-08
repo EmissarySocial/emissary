@@ -45,7 +45,7 @@ func (service *KeyPackage) Close() {
  ******************************************/
 
 func (service *KeyPackage) collection(session data.Session) data.Collection {
-	return session.Collection("KeyPackage")
+	return session.Collection("MLSKeyPackage")
 }
 
 // Count returns the number of records that match the provided criteria
@@ -268,7 +268,7 @@ func (service *KeyPackage) ActivityPubAttributedToURL(userID primitive.ObjectID)
 
 // ActivityPubCollectionURL returns the ActivityPub ID for the collection of keyPackages
 func (service *KeyPackage) ActivityPubCollectionURL(userID primitive.ObjectID) string {
-	return service.ActivityPubAttributedToURL(userID) + "/pub/keyPackages"
+	return service.ActivityPubAttributedToURL(userID) + "/pub/mls/keyPackages"
 }
 
 // ActivityPubURL returns the ActivityPub "ObjectID" for this KeyPackage
@@ -297,12 +297,12 @@ func (service *KeyPackage) ParseKeyPackageURL(url string) (primitive.ObjectID, p
 		return primitive.NilObjectID, primitive.NilObjectID, derp.BadRequest(location, "KeyPackage URL must have path length of 4", url)
 	}
 
-	if splitURL[1] != "pub" || splitURL[2] != "keyPackages" {
-		return primitive.NilObjectID, primitive.NilObjectID, derp.BadRequest(location, "KeyPackage URL must contain /pub/keyPackages", url)
+	if splitURL[1] != "pub" || splitURL[2] != "mls" || splitURL[3] != "keyPackages" {
+		return primitive.NilObjectID, primitive.NilObjectID, derp.BadRequest(location, "KeyPackage URL must contain /pub/mls/keyPackages", url)
 	}
 
 	userString := splitURL[0]
-	keyPackageString := splitURL[3]
+	keyPackageString := splitURL[4]
 
 	// Parse the UserID
 	userID, err := primitive.ObjectIDFromHex(userString)

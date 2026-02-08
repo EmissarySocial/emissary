@@ -48,8 +48,8 @@ func inbox_MLS(context Context, activity streams.Document) error {
 	// i.e. the original object type, actor, attributedTo, or generator
 
 	// Save the MLSMessage to the database
-	mlsInboxService := context.factory.MLSInbox()
-	if err := mlsInboxService.Save(context.session, &mlsMessage, "Created via ActivityPub API"); err != nil {
+	mlsMessageService := context.factory.MLSMessage()
+	if err := mlsMessageService.Save(context.session, &mlsMessage, "Created via ActivityPub API"); err != nil {
 		return derp.Wrap(err, location, "Unable to store MLS Message")
 	}
 

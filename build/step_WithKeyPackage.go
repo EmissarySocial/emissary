@@ -49,7 +49,7 @@ func (step StepWithKeyPackage) execute(builder Builder, buffer io.Writer, action
 
 	// Load the KeyPackage from the database
 	factory := builder.factory()
-	keyPackageService := factory.KeyPackage()
+	keyPackageService := factory.MLSKeyPackage()
 	keyPackage := model.NewKeyPackage()
 	if err := keyPackageService.LoadByID(builder.session(), builder.AuthenticatedID(), keyPackageID, &keyPackage); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to load KeyPackage", keyPackageID))

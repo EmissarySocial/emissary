@@ -22,14 +22,14 @@ func GetKeyPackageCollection(ctx *steranko.Context, factory *service.Factory, se
 	}
 
 	// Fallthrough means this is a request for a specific page
-	keyPackageService := factory.KeyPackage()
+	keyPackageService := factory.MLSKeyPackage()
 	keyPackages, err := keyPackageService.QueryIDOnlyByUser(session, user.UserID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to load rules")
 	}
 
-	collection := streams.NewCollection(user.ActivityPubKeyPackagesURL())
+	collection := streams.NewCollection(user.ActivityPubMLSKeyPackagesURL())
 	collection.TotalItems = keyPackages.Length()
 	collection.Items = slice.Map(keyPackages, func(item model.IDOnly) any {
 		return keyPackageService.ActivityPubURL(user.UserID, item.ID)
@@ -50,7 +50,7 @@ func GetKeyPackageRecord(ctx *steranko.Context, factory *service.Factory, sessio
 	}
 
 	// Load the keyPackage from the database
-	keyPackageService := factory.KeyPackage()
+	keyPackageService := factory.MLSKeyPackage()
 	keyPackage := model.NewKeyPackage()
 
 	if err := keyPackageService.LoadByToken(session, user.UserID, ctx.Param("keyPackageId"), &keyPackage); err != nil {

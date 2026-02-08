@@ -306,7 +306,7 @@ func (w Settings) OAuthUserTokens() (sliceof.MapOfAny, error) {
 // KeyPackages returns all KeyPackages for the current user
 func (w Settings) KeyPackages() (sliceof.Object[model.KeyPackage], error) {
 	userID := w.AuthenticatedID()
-	return w._factory.KeyPackage().QueryByUser(w._session, userID)
+	return w._factory.MLSKeyPackage().QueryByUser(w._session, userID)
 }
 
 // OAuthUserTokensForExports returns all OAuthUserTokens for the current user that have the ActivityPubPortability scope

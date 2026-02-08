@@ -48,8 +48,8 @@ func Actor(document streams.Document) map[string]any {
 	}
 
 	// MLS KeyPackages
-	if keyPackages := document.KeyPackages(); keyPackages.NotNil() {
-		result[vocab.PropertyKeyPackages] = keyPackages.ID()
+	if keyPackages := document.MLSKeyPackages(); keyPackages.NotNil() {
+		result[vocab.PropertyMLSKeyPackages] = keyPackages.ID()
 	}
 
 	return result

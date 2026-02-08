@@ -237,6 +237,7 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.PropertyFollowing:         user.ActivityPubFollowingURL(),
 		vocab.PropertyFollowers:         user.ActivityPubFollowersURL(),
 		vocab.PropertyLiked:             user.ActivityPubLikedURL(),
+		vocab.PropertyMLSMessages:       user.ActivityPubMLSMessagesURL(),
 
 		// Removing "Featured" until I can sort out how to use it for Bandwagon "featured" posts
 		// WITHOUT making all of the posts "pinned" --> https://mastodon.me.uk/@delanthear/114873976765234644
@@ -249,7 +250,7 @@ func (user User) GetJSONLD() mapof.Any {
 			vocab.EndpointFinishMigration:    serverURL + "/@me/settings/export",
 		},
 
-		vocab.PropertyKeyPackages: user.ActivityPubKeyPackagesURL(),
+		vocab.PropertyMLSKeyPackages: user.ActivityPubMLSKeyPackagesURL(),
 
 		vocab.PropertyMigration: mapof.String{
 			"outbox":                   exportURL + "/outbox",
@@ -385,12 +386,20 @@ func (user *User) ActivityPubFeaturedURL() string {
 	return user.ProfileURL + "/pub/featured"
 }
 
-func (user *User) ActivityPubKeyPackagesURL() string {
+func (user *User) ActivityPubMLSMessagesURL() string {
 	if user.ProfileURL == "" {
 		return ""
 	}
 
-	return user.ProfileURL + "/pub/keyPackages"
+	return user.ProfileURL + "/pub/mls/messages"
+}
+
+func (user *User) ActivityPubMLSKeyPackagesURL() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
+	return user.ProfileURL + "/pub/mls/keyPackages"
 }
 
 func (user *User) ActivityPubOutboxURL() string {

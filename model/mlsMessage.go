@@ -11,10 +11,11 @@ import (
 // These messages are opaque to the server and are simply stored and forwarded
 // to MLS clients as requested.
 type MLSMessage struct {
-	MLSMessageID primitive.ObjectID `bson:"_id"`     // Unique identifier for this MLSMessage
-	UserID       primitive.ObjectID `bson:"userID"`  // The user that this message belongs to
-	Type         string             `bson:"type"`    // The type of MLS message (GroupInfo, PublicMessage, PrivateMessage, Welcome)
-	Content      string             `bson:"content"` // The base64-encoded content of the MLS message
+	MLSMessageID   primitive.ObjectID `bson:"_id"`            // Unique identifier for this MLSMessage
+	UserID         primitive.ObjectID `bson:"userId"`         // The user that this message belongs to
+	ActivityPubURL string             `bson:"activityPubUrl"` // The ActivityPub URL for this message (used for deduplication)
+	Type           string             `bson:"type"`           // The type of MLS message (GroupInfo, PublicMessage, PrivateMessage, Welcome)
+	Content        string             `bson:"content"`        // The base64-encoded content of the MLS message
 
 	journal.Journal `bson:",inline"`
 }
@@ -27,18 +28,20 @@ func NewMLSMessage() MLSMessage {
 }
 
 // ID returns the string version of the MLSMessage's unique identifier
-func (m MLSMessage) ID() string {
-	return m.MLSMessageID.Hex()
+func (message MLSMessage) ID() string {
+	return message.MLSMessageID.Hex()
 }
 
-func (m MLSMessage) GetJSONLD() mapof.Any {
+func (message MLSMessage) GetJSONLD() mapof.Any {
 	return mapof.Any{
 		vocab.AtContext: []string{
 			vocab.ContextTypeActivityStreams,
 			vocab.ContextTypeSocialWebMLS,
 		},
-		vocab.PropertyType:     m.Type,
-		vocab.PropertyEncoding: vocab.EncodingTypeBase64,
-		vocab.PropertyContent:  m.Content,
+		vocab.PropertyID:        message.ActivityPubURL,
+		vocab.PropertyType:      message.Type,
+		vocab.PropertyEncoding:  vocab.EncodingTypeBase64,
+		vocab.PropertyContent:   message.Content,
+		vocab.PropertyPublished: message.CreateDate,
 	}
 }

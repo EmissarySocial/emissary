@@ -33,6 +33,8 @@ import (
 	"github.com/benpate/digital-dome/dome4echo"
 	dt "github.com/benpate/domain"
 	"github.com/benpate/form/widget"
+	"github.com/benpate/hannibal"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
@@ -404,11 +406,12 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/followers", handler.WithUser(factory, ap_user.GetFollowersCollection))
 	e.GET("/@:userId/pub/following", handler.WithUser(factory, ap_user.GetFollowingCollection))
 	e.GET("/@:userId/pub/following/:followingId", handler.WithUser(factory, ap_user.GetFollowingRecord))
-	e.GET("/@:userId/pub/mlsInbox", handler.WithAuthenticatedUser(factory, ap_user.GetMLSInbox))
 	e.GET("/@:userId/pub/inbox", handler.WithAuthenticatedUser(factory, handler.GetInbox))
 	e.POST("/@:userId/pub/inbox", handler.WithUser(factory, ap_user.PostInbox))
-	e.GET("/@:userId/pub/keyPackages", handler.WithUser(factory, ap_user.GetKeyPackageCollection))
-	e.GET("/@:userId/pub/keyPackages/:keyPackageId", handler.WithUser(factory, ap_user.GetKeyPackageRecord))
+	e.GET("/@:userId/pub/mls/keyPackages", handler.WithUser(factory, ap_user.GetKeyPackageCollection))
+	e.GET("/@:userId/pub/mls/keyPackages/:keyPackageId", handler.WithUser(factory, ap_user.GetKeyPackageRecord))
+	e.GET("/@:userId/pub/mls/messages", handler.WithAuthenticatedUser(factory, ap_user.GetMLSMessageCollection))
+	e.GET("/@:userId/pub/mls/messages/:messageId", handler.WithAuthenticatedUser(factory, ap_user.GetMLSMessageRecord))
 	e.GET("/@:userId/pub/objects", handler.WithUser(factory, ap_user.GetObjectsCollection))
 	e.GET("/@:userId/pub/objects/:objectId", handler.WithUser(factory, ap_user.GetObject))
 	e.GET("/@:userId/pub/outbox", handler.WithUser(factory, ap_user.GetOutboxCollection))
@@ -575,8 +578,10 @@ func errorHandler(err error, ctx echo.Context) {
 	// Special handling of permisssion errors
 	request := ctx.Request()
 
+	isActivityPubContentType := hannibal.IsActivityPubContentType(request.Header.Get("Accept"))
+
 	// Forward "Unauthorized" requests to the signin page
-	if derp.IsUnauthorized((err)) {
+	if derp.IsUnauthorized((err)) && !isActivityPubContentType {
 
 		uri := request.URL
 
@@ -605,6 +610,18 @@ func errorHandler(err error, ctx echo.Context) {
 	// If this is a local request, then show developers a full error dump
 	if hostname := dt.TrueHostname(request); dt.IsLocalhost(hostname) {
 		_ = ctx.JSONPretty(derp.ErrorCode(err), err, "  ")
+		return
+	}
+
+	// Special case for ActivityPub requests: Just display the status code and JSON-LD error
+	if isActivityPubContentType {
+
+		result := mapof.Any{
+			"statusCode": derp.ErrorCode(err),
+			"message":    derp.Message(err),
+		}
+
+		_ = ctx.JSON(derp.ErrorCode(err), result)
 		return
 	}
 

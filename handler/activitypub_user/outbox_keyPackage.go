@@ -30,7 +30,7 @@ func outbox_CreateKeyPackage(context Context, activity streams.Document) error {
 	}
 
 	// Populate the new KeyPackage
-	keyPackageService := context.factory.KeyPackage()
+	keyPackageService := context.factory.MLSKeyPackage()
 	keyPackage := model.NewKeyPackage()
 
 	keyPackage.UserID = context.user.UserID
@@ -63,7 +63,7 @@ func outbox_DeleteKeyPackage(context Context, activity streams.Document) error {
 	}
 
 	// Load the KeyPackage
-	keyPackageService := context.factory.KeyPackage()
+	keyPackageService := context.factory.MLSKeyPackage()
 	keyPackage := model.NewKeyPackage()
 
 	if err := keyPackageService.LoadByURL(context.session, object.ID(), &keyPackage); err != nil {

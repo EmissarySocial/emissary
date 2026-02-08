@@ -75,6 +75,7 @@ type Factory struct {
 	locatorService         Locator
 	mentionService         Mention
 	merchantAccountService MerchantAccount
+	mlsMessageService      MLSMessage
 	oauthClient            OAuthClient
 	oauthUserToken         OAuthUserToken
 	objectService          Object
@@ -158,6 +159,7 @@ func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, doma
 	factory.locatorService = NewLocator()
 	factory.mentionService = NewMention()
 	factory.merchantAccountService = NewMerchantAccount()
+	factory.mlsMessageService = NewMLSMessage()
 	factory.oauthClient = NewOAuthClient()
 	factory.oauthUserToken = NewOAuthUserToken()
 	factory.objectService = NewObject()
@@ -224,6 +226,7 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	factory.locatorService.Refresh(factory)
 	factory.mentionService.Refresh(factory)
 	factory.merchantAccountService.Refresh(factory)
+	factory.mlsMessageService.Refresh(factory)
 	factory.oauthClient.Refresh(factory)
 	factory.oauthUserToken.Refresh(factory)
 	factory.objectService.Refresh(factory)
@@ -460,8 +463,8 @@ func (factory *Factory) Inbox() *Inbox {
 	return &factory.inboxService
 }
 
-// KeyPackage returns a fully populated KeyPackage service
-func (factory *Factory) KeyPackage() *KeyPackage {
+// MLSKeyPackage returns a fully populated KeyPackage service
+func (factory *Factory) MLSKeyPackage() *KeyPackage {
 	return &factory.keyPackageService
 }
 
@@ -475,9 +478,9 @@ func (factory *Factory) Mention() *Mention {
 	return &factory.mentionService
 }
 
-// MLSInbox returns a fully populated MLSInbox service
-func (factory *Factory) MLSInbox() MLSInbox {
-	return NewMLSInbox()
+// MLSMessage returns a fully populated MLSMessage service
+func (factory *Factory) MLSMessage() *MLSMessage {
+	return &factory.mlsMessageService
 }
 
 // OAuthClient returns a fully populated OAuthClient service
@@ -862,7 +865,7 @@ func (factory *Factory) Model(name string) (ModelService, error) {
 		return factory.Identity(), nil
 
 	case "keyPackage":
-		return factory.KeyPackage(), nil
+		return factory.MLSKeyPackage(), nil
 
 	case "merchantAccount":
 		return factory.MerchantAccount(), nil
@@ -917,7 +920,7 @@ func (factory *Factory) ModelService(object data.Object) ModelService {
 		return factory.ImportItem()
 
 	case *model.KeyPackage:
-		return factory.KeyPackage()
+		return factory.MLSKeyPackage()
 
 	case *model.MerchantAccount:
 		return factory.MerchantAccount()
