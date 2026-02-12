@@ -14769,21 +14769,14 @@
     const cipherSuite = await nobleCryptoProvider.getCiphersuiteImpl(getCiphersuiteFromName(cipherSuiteName));
     var dbKeyPackage = await database.loadKeyPackage();
     if (dbKeyPackage == void 0) {
-      try {
-        const cipherSuiteName2 = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519";
-        const cipherSuite2 = await nobleCryptoProvider.getCiphersuiteImpl(getCiphersuiteFromName(cipherSuiteName2));
-        const credential = {
-          credentialType: defaultCredentialTypes.basic,
-          identity: new TextEncoder().encode(actor.id)
-        };
-        var keyPackageResult = await generateKeyPackage({
-          credential,
-          cipherSuite: cipherSuite2
-        });
-      } catch (error) {
-        console.error("Error generating KeyPackage:", error);
-        throw error;
-      }
+      const credential = {
+        credentialType: defaultCredentialTypes.basic,
+        identity: new TextEncoder().encode(actor.id)
+      };
+      var keyPackageResult = await generateKeyPackage({
+        credential,
+        cipherSuite
+      });
       const apKeyPackage = NewAPKeyPackage(clientName, actor.id, keyPackageResult.publicPackage);
       const apKeyPackageURL = await directory.createKeyPackage(apKeyPackage);
       if (apKeyPackageURL == "") {

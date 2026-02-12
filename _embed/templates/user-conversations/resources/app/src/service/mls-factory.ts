@@ -35,26 +35,17 @@ export async function MLSFactory(
 	// Create a new KeyPackage if none exists
 	if (dbKeyPackage == undefined) {
 		//
-
-		try {
-			const cipherSuiteName = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519"
-			const cipherSuite = await nobleCryptoProvider.getCiphersuiteImpl(getCiphersuiteFromName(cipherSuiteName))
-
-			// Create a credential for this User
-			const credential: Credential = {
-				credentialType: defaultCredentialTypes.basic,
-				identity: new TextEncoder().encode(actor.id),
-			}
-
-			// Generate initial key package for this user
-			var keyPackageResult = await generateKeyPackage({
-				credential: credential,
-				cipherSuite: cipherSuite,
-			})
-		} catch (error) {
-			console.error("Error generating KeyPackage:", error)
-			throw error
+		// Create a credential for this User
+		const credential: Credential = {
+			credentialType: defaultCredentialTypes.basic,
+			identity: new TextEncoder().encode(actor.id),
 		}
+
+		// Generate initial key package for this user
+		var keyPackageResult = await generateKeyPackage({
+			credential: credential,
+			cipherSuite: cipherSuite,
+		})
 
 		// Publish the KeyPackage to the server
 		const apKeyPackage = NewAPKeyPackage(clientName, actor.id, keyPackageResult.publicPackage)
@@ -88,14 +79,4 @@ export async function MLSFactory(
 		dbKeyPackage.privateKeyPackage,
 		actor,
 	)
-}
-
-// Use MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519 (ID: 1)
-// Using nobleCryptoProvider for compatibility (pure JS implementation)
-// Other implementations can be added in the future.
-async function makeCipherSuite(
-	cipherSuiteName: "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519",
-): Promise<CiphersuiteImpl> {
-	const cs = getCiphersuiteFromName(cipherSuiteName)
-	return await nobleCryptoProvider.getCiphersuiteImpl(cs)
 }

@@ -5,6 +5,7 @@ import {Controller} from "../controller"
 import {NewConversation} from "./modal-newConversation"
 import {EditGroup} from "./modal-editGroup"
 import {WidgetMessageCreate} from "./widget-message-create"
+import {Debug} from "./modal-debug"
 
 type IndexVnode = Vnode<IndexAttrs, IndexState>
 
@@ -146,6 +147,9 @@ export class Index {
 						group={vnode.state.modalGroup}
 						close={() => this.closeModal(vnode)}></EditGroup>
 				)
+
+			case "DEBUG":
+				return <Debug controller={vnode.attrs.controller} close={() => this.closeModal(vnode)}></Debug>
 		}
 
 		return undefined
