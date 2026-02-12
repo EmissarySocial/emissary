@@ -11,6 +11,7 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
@@ -45,7 +46,7 @@ func HeadStream(ctx *steranko.Context, factory *service.Factory, session data.Se
 func GetStream(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
 
 	// Special case for JSON-LD requests.
-	if isJSONLDRequest(ctx) {
+	if hannibal.IsActivityPubRequest(ctx.Request()) {
 		return getStreamJSONLD(ctx, factory, session, template, stream)
 	}
 

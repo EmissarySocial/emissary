@@ -10,6 +10,7 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/sigs"
 	"github.com/benpate/steranko"
 	"github.com/golang-jwt/jwt/v5"
@@ -630,7 +631,7 @@ func WithUserForwarding(serverFactory *server.Factory, fn WithFunc1[model.User])
 		}
 
 		// If this is a JSON-LD request, then skip the forwarding and just return the User
-		if isJSONLDRequest(ctx) {
+		if hannibal.IsActivityPubRequest(ctx.Request()) {
 			return activitypub.RenderProfileJSONLD(ctx, factory, session, user)
 		}
 

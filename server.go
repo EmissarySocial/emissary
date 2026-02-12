@@ -578,11 +578,15 @@ func errorHandler(err error, ctx echo.Context) {
 	// Special handling of permisssion errors
 	request := ctx.Request()
 
-	isActivityPubContentType := hannibal.IsActivityPubContentType(request.Header.Get("Accept"))
-
 	// Forward "Unauthorized" requests to the signin page
-	if derp.IsUnauthorized((err)) && !isActivityPubContentType {
+	if derp.IsUnauthorized((err)) {
 
+		// Special case for ActivityPub requests: Just display the status code and JSON-LD error
+		if handleActivityPubError(ctx, err) {
+			return
+		}
+
+		// Otherwise, forward the user to the signin page
 		uri := request.URL
 
 		if currentPath := uri.Path; currentPath != "/signin" {
@@ -614,17 +618,28 @@ func errorHandler(err error, ctx echo.Context) {
 	}
 
 	// Special case for ActivityPub requests: Just display the status code and JSON-LD error
-	if isActivityPubContentType {
-
-		result := mapof.Any{
-			"statusCode": derp.ErrorCode(err),
-			"message":    derp.Message(err),
-		}
-
-		_ = ctx.JSON(derp.ErrorCode(err), result)
+	if handleActivityPubError(ctx, err) {
 		return
 	}
 
 	// Fall through to general error handler that only returns the error code and message
 	_ = ctx.String(derp.ErrorCode(err), derp.Message(err))
+}
+
+// handleActivityPubError displays a simple JSON error message for ActivityPub requests
+// (instead of an HTML result)
+func handleActivityPubError(ctx echo.Context, err error) bool {
+
+	// If this is not an ActivityPub request, then don't handle it here.
+	if !hannibal.IsActivityPubContentType(ctx.Request().Header.Get("Accept")) {
+		return false
+	}
+
+	result := mapof.Any{
+		"statusCode": derp.ErrorCode(err),
+		"message":    derp.Message(err),
+	}
+
+	_ = ctx.JSON(derp.ErrorCode(err), result)
+	return true
 }
