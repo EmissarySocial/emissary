@@ -1064,9 +1064,9 @@
         var path = template.slice(0, pathEnd);
         var query = {};
         Object.assign(query, params);
-        var resolved = path.replace(/:([^\/\.-]+)(\.{3})?/g, function(m12, key, variadic) {
+        var resolved = path.replace(/:([^\/\.-]+)(\.{3})?/g, function(m13, key, variadic) {
           delete query[key];
-          if (params[key] == null) return m12;
+          if (params[key] == null) return m13;
           return variadic ? params[key] : encodeURIComponent(String(params[key]));
         });
         var newQueryIndex = resolved.indexOf("?");
@@ -1268,10 +1268,10 @@
     "node_modules/mithril/querystring/parse.js"(exports, module) {
       "use strict";
       var decodeURIComponentSafe = require_decodeURIComponentSafe();
-      module.exports = function(string) {
-        if (string === "" || string == null) return {};
-        if (string.charAt(0) === "?") string = string.slice(1);
-        var entries = string.split("&"), counters = {}, data = {};
+      module.exports = function(string2) {
+        if (string2 === "" || string2 == null) return {};
+        if (string2.charAt(0) === "?") string2 = string2.slice(1);
+        var entries = string2.split("&"), counters = {}, data = {};
         for (var i = 0; i < entries.length; i++) {
           var entry = entries[i].split("=");
           var key = decodeURIComponentSafe(entry[0]);
@@ -1343,8 +1343,8 @@
           // don't also accidentally escape `-` and make it harder to detect it to
           // ban it from template parameters.
           /:([^\/.-]+)(\.{3}|\.(?!\.)|-)?|[\\^$*+.()|\[\]{}]/g,
-          function(m12, key, extra) {
-            if (key == null) return "\\" + m12;
+          function(m13, key, extra) {
+            if (key == null) return "\\" + m13;
             keys.push({ k: key, r: extra === "..." });
             if (extra === "...") return "(.*)";
             if (extra === ".") return "([^/]+)\\.";
@@ -1597,26 +1597,26 @@
       var mountRedraw = require_mount_redraw2();
       var request2 = require_request2();
       var router = require_route();
-      var m12 = function m13() {
+      var m13 = function m14() {
         return hyperscript.apply(this, arguments);
       };
-      m12.m = hyperscript;
-      m12.trust = hyperscript.trust;
-      m12.fragment = hyperscript.fragment;
-      m12.Fragment = "[";
-      m12.mount = mountRedraw.mount;
-      m12.route = router;
-      m12.render = require_render2();
-      m12.redraw = mountRedraw.redraw;
-      m12.request = request2.request;
-      m12.parseQueryString = require_parse();
-      m12.buildQueryString = require_build();
-      m12.parsePathname = require_parse2();
-      m12.buildPathname = require_build2();
-      m12.vnode = require_vnode();
-      m12.censor = require_censor();
-      m12.domFor = require_domFor();
-      module.exports = m12;
+      m13.m = hyperscript;
+      m13.trust = hyperscript.trust;
+      m13.fragment = hyperscript.fragment;
+      m13.Fragment = "[";
+      m13.mount = mountRedraw.mount;
+      m13.route = router;
+      m13.render = require_render2();
+      m13.redraw = mountRedraw.redraw;
+      m13.request = request2.request;
+      m13.parseQueryString = require_parse();
+      m13.buildQueryString = require_build();
+      m13.parsePathname = require_parse2();
+      m13.buildPathname = require_build2();
+      m13.vnode = require_vnode();
+      m13.censor = require_censor();
+      m13.domFor = require_domFor();
+      module.exports = m13;
     }
   });
 
@@ -2556,9 +2556,9 @@
     while (a !== _0n3) {
       const q = b / a;
       const r = b % a;
-      const m12 = x - u * q;
+      const m13 = x - u * q;
       const n = y - v * q;
-      b = a, a = r, x = u, y = v, u = m12, v = n;
+      b = a, a = r, x = u, y = v, u = m13, v = n;
     }
     const gcd = b;
     if (gcd !== _1n3)
@@ -3789,13 +3789,13 @@
       k: "number",
       hash: "function"
     });
-    const { p, k, m: m12, hash, expand, DST } = options;
+    const { p, k, m: m13, hash, expand, DST } = options;
     asafenumber(hash.outputLen, "valid hash");
     abytes2(msg);
     asafenumber(count);
     const log2p = p.toString(2).length;
     const L = Math.ceil((log2p + k) / 8);
-    const len_in_bytes = count * m12 * L;
+    const len_in_bytes = count * m13 * L;
     let prb;
     if (expand === "xmd") {
       prb = expand_message_xmd(msg, DST, len_in_bytes, hash);
@@ -3808,9 +3808,9 @@
     }
     const u = new Array(count);
     for (let i = 0; i < count; i++) {
-      const e = new Array(m12);
-      for (let j = 0; j < m12; j++) {
-        const elm_offset = L * (j + i * m12);
+      const e = new Array(m13);
+      for (let j = 0; j < m13; j++) {
+        const elm_offset = L * (j + i * m13);
         const tv = prb.subarray(elm_offset, elm_offset + L);
         e[j] = mod2(os2ip(tv), p);
       }
@@ -4172,8 +4172,8 @@
       evaluate: (secretKey, input) => evaluate(ctxVOPRF, secretKey, input)
     };
     const poprf = (info) => {
-      const m12 = hashToScalarPrefixed(encode2("Info", info), ctxPOPRF);
-      const T = Point.BASE.multiply(m12);
+      const m13 = hashToScalarPrefixed(encode2("Info", info), ctxPOPRF);
+      const T = Point.BASE.multiply(m13);
       return {
         generateKeyPair,
         deriveKeyPair: (seed, keyInfo) => deriveKeyPair(ctxPOPRF, seed, keyInfo),
@@ -4197,7 +4197,7 @@
           if (!Array.isArray(blinded))
             throw new Error("expected array");
           const skS = Fn3.fromBytes(secretKey);
-          const t = Fn3.add(skS, m12);
+          const t = Fn3.add(skS, m13);
           const invT = Fn3.inv(t);
           const blindedPoints = blinded.map(Point.fromBytes);
           const evalPoints = blindedPoints.map((i) => i.multiply(invT));
@@ -4228,7 +4228,7 @@
           const inputPoint = hashToGroup(input, ctxPOPRF);
           if (inputPoint.equals(Point.ZERO))
             throw new Error("Input point at infinity");
-          const t = Fn3.add(skS, m12);
+          const t = Fn3.add(skS, m13);
           const invT = Fn3.inv(t);
           const unblinded = inputPoint.multiply(invT).toBytes();
           return hashInput(input, info, unblinded);
@@ -6039,7 +6039,7 @@
         seedArgs.push(abytes2(e, void 0, "extraEntropy"));
       }
       const seed = concatBytes(...seedArgs);
-      const m12 = h1int;
+      const m13 = h1int;
       function k2sig(kBytes) {
         const k = bits2int(kBytes);
         if (!Fn3.isValidNot0(k))
@@ -6049,7 +6049,7 @@
         const r = Fn3.create(q.x);
         if (r === _0n9)
           return;
-        const s = Fn3.create(ik * Fn3.create(m12 + r * d));
+        const s = Fn3.create(ik * Fn3.create(m13 + r * d));
         if (s === _0n9)
           return;
         let recovery = (q.x === r ? 0 : 2) | Number(q.y & _1n10);
@@ -6125,8 +6125,8 @@
       init_modular();
       divNearest = (num, den) => (num + (num >= 0 ? den : -den) / _2n8) / den;
       DERErr = class extends Error {
-        constructor(m12 = "") {
-          super(m12);
+        constructor(m13 = "") {
+          super(m13);
         }
       };
       DER = {
@@ -7421,7 +7421,7 @@
   });
 
   // src/app.tsx
-  var import_mithril17 = __toESM(require_mithril(), 1);
+  var import_mithril19 = __toESM(require_mithril(), 1);
 
   // node_modules/ts-mls/dist/src/util/constantTimeCompare.js
   function constantTimeEqual(a, b) {
@@ -8552,6 +8552,23 @@
     } else
       return mapDecoder(varLenDataDecoder, (extensionData) => ({ extensionType, extensionData }));
   });
+  function extensionEqual(a, b) {
+    if (a.extensionType !== b.extensionType)
+      return false;
+    if (isDefaultExtension(a) && isDefaultExtension(b)) {
+      if (a.extensionType === defaultExtensionTypes.required_capabilities) {
+        return a.extensionData === b.extensionData;
+      } else if (a.extensionType === defaultExtensionTypes.external_senders && b.extensionType === defaultExtensionTypes.external_senders) {
+        return constantTimeEqual(encode(externalSenderEncoder, a.extensionData), encode(externalSenderEncoder, b.extensionData));
+      }
+    }
+    return constantTimeEqual(a.extensionData, b.extensionData);
+  }
+  function extensionsEqual(a, b) {
+    if (a.length !== b.length)
+      return false;
+    return a.every((val, i) => extensionEqual(val, b[i]));
+  }
   function extensionsSupportedByCapabilities(requiredExtensions, capabilities) {
     return requiredExtensions.filter((ex) => !isDefaultExtensionTypeValue(ex.extensionType)).every((ex) => capabilities.extensions.includes(ex.extensionType));
   }
@@ -9070,6 +9087,10 @@
     const infoEncoder = composeBufferEncoders([varLenDataEncoder, varLenDataEncoder]);
     return hpke.seal(publicKey, plaintext, encode(infoEncoder, [new TextEncoder().encode(`MLS 1.0 ${label}`), context]), new Uint8Array());
   }
+  function decryptWithLabel(privateKey, label, context, kemOutput, ciphertext, hpke) {
+    const infoEncoder = composeBufferEncoders([varLenDataEncoder, varLenDataEncoder]);
+    return hpke.open(privateKey, kemOutput, ciphertext, encode(infoEncoder, [new TextEncoder().encode(`MLS 1.0 ${label}`), context]));
+  }
 
   // node_modules/ts-mls/dist/src/groupContext.js
   var groupContextEncoder = contramapBufferEncoders([
@@ -9375,6 +9396,12 @@
     const unmerged = node.nodeType === nodeTypes.parent ? node.parent.unmergedLeaves : [];
     return [nodeIndex, ...unmerged.map((u) => leafToNodeIndex(toLeafIndex(u)))];
   }
+  function filteredDirectPath(leafIndex, tree) {
+    const leafNodeIndex = leafToNodeIndex(leafIndex);
+    const leafWidth2 = nodeToLeafIndex(toNodeIndex(tree.length));
+    const cp = copath(leafNodeIndex, leafWidth2);
+    return directPath(leafNodeIndex, leafWidth2).filter((_nodeIndex, n) => resolution(tree, cp[n]).length !== 0);
+  }
   function filteredDirectPathAndCopathResolution(leafIndex, tree) {
     const leafNodeIndex = leafToNodeIndex(leafIndex);
     const lWidth = leafWidth(tree.length);
@@ -9426,6 +9453,23 @@
   }
   function findFirstNonBlankAncestor(tree, nodeIndex) {
     return traverseToRoot(tree, nodeToLeafIndex(nodeIndex), (nodeIndex2, _node) => nodeIndex2)?.[0] ?? root(leafWidth(tree.length));
+  }
+  function findLeafIndex(tree, leaf) {
+    const foundIndex = tree.findIndex((node, nodeIndex) => {
+      if (isLeaf(toNodeIndex(nodeIndex)) && node !== void 0) {
+        if (node.nodeType === nodeTypes.parent)
+          throw new InternalError("Found parent node in leaf node position");
+        return constantTimeEqual(encode(leafNodeEncoder, node.leaf), encode(leafNodeEncoder, leaf));
+      }
+      return false;
+    });
+    return foundIndex === -1 ? void 0 : nodeToLeafIndex(toNodeIndex(foundIndex));
+  }
+  function getSignaturePublicKeyFromLeafIndex(ratchetTree, leafIndex) {
+    const leafNode = ratchetTree[leafToNodeIndex(leafIndex)];
+    if (leafNode === void 0 || leafNode.nodeType === nodeTypes.parent)
+      throw new ValidationError("Unable to find leafnode for leafIndex");
+    return leafNode.leaf.signaturePublicKey;
   }
 
   // node_modules/ts-mls/dist/src/treeHash.js
@@ -9487,6 +9531,60 @@
     parentHash,
     originalSiblingTreeHash
   }));
+  function validateParentHashCoverage(parentIndices, coverage) {
+    for (const index of parentIndices) {
+      if ((coverage[index] ?? 0) !== 1) {
+        return false;
+      }
+    }
+    return true;
+  }
+  async function verifyParentHashes(tree, h) {
+    const parentNodes = tree.reduce((acc, cur, index) => {
+      if (cur !== void 0 && cur.nodeType === nodeTypes.parent) {
+        return [...acc, index];
+      } else
+        return acc;
+    }, []);
+    if (parentNodes.length === 0)
+      return true;
+    const coverage = await parentHashCoverage(tree, h);
+    return validateParentHashCoverage(parentNodes, coverage);
+  }
+  function parentHashCoverage(tree, h) {
+    return tree.reduce(async (acc, node, nodeIndex) => {
+      let currentIndex = toNodeIndex(nodeIndex);
+      if (!isLeaf(currentIndex) || node === void 0)
+        return acc;
+      let updated = { ...await acc };
+      const rootIndex = root(leafWidth(tree.length));
+      while (currentIndex !== rootIndex) {
+        const currentNode = tree[currentIndex];
+        if (currentNode === void 0) {
+          continue;
+        }
+        const [parentHash, parentHashNodeIndex] = await calculateParentHash(tree, currentIndex, h);
+        if (parentHashNodeIndex === void 0) {
+          throw new InternalError("Reached root before completing parent hash coeverage");
+        }
+        const expectedParentHash = getParentHash(currentNode);
+        if (expectedParentHash !== void 0 && constantTimeEqual(parentHash, expectedParentHash)) {
+          const newCount = (updated[parentHashNodeIndex] ?? 0) + 1;
+          updated = { ...updated, [parentHashNodeIndex]: newCount };
+        } else {
+          break;
+        }
+        currentIndex = parentHashNodeIndex;
+      }
+      return updated;
+    }, Promise.resolve({}));
+  }
+  function getParentHash(node) {
+    if (node.nodeType === nodeTypes.parent)
+      return node.parent.parentHash;
+    else if (node.leaf.leafNodeSource === leafNodeSources.commit)
+      return node.leaf.parentHash;
+  }
   async function calculateParentHash(tree, nodeIndex, h) {
     const rootIndex = root(leafWidth(tree.length));
     if (nodeIndex === rootIndex) {
@@ -9604,11 +9702,53 @@
       return [[{ nodeIndex, secret: nextPathSecret, sendTo: resolution2 }, ...pathSecrets], tree2];
     }, Promise.resolve([[{ secret: pathSecret, nodeIndex: leafToNodeIndex(senderLeafIndex), sendTo: [] }], tree]));
   }
+  async function applyUpdatePath(tree, senderLeafIndex, path, h, isExternal = false) {
+    if (!isExternal) {
+      const leafToUpdate = tree[leafToNodeIndex(senderLeafIndex)];
+      if (leafToUpdate === void 0 || leafToUpdate.nodeType === nodeTypes.parent)
+        throw new InternalError("Leaf node not defined or is parent");
+      const leafNodePublicKeyNotNew = constantTimeEqual(leafToUpdate.leaf.hpkePublicKey, path.leafNode.hpkePublicKey);
+      if (leafNodePublicKeyNotNew)
+        throw new ValidationError("Public key in the LeafNode is the same as the committer's current leaf node");
+    }
+    const pathNodePublicKeysExistInTree = path.nodes.some((node) => tree.some((treeNode) => {
+      return treeNode?.nodeType === nodeTypes.parent ? constantTimeEqual(treeNode.parent.hpkePublicKey, node.hpkePublicKey) : false;
+    }));
+    if (pathNodePublicKeysExistInTree)
+      throw new ValidationError("Public keys in the UpdatePath may not appear in a node of the new ratchet tree");
+    const copy = tree.slice();
+    copy[leafToNodeIndex(senderLeafIndex)] = { nodeType: nodeTypes.leaf, leaf: path.leafNode };
+    const reverseFilteredDirectPath = filteredDirectPath(senderLeafIndex, tree).reverse();
+    const reverseUpdatePath = path.nodes.slice().reverse();
+    if (reverseUpdatePath.length !== reverseFilteredDirectPath.length) {
+      throw new ValidationError("Invalid length of UpdatePath");
+    }
+    for (const [level2, nodeIndex] of reverseFilteredDirectPath.entries()) {
+      const parentHash = await calculateParentHash(copy, nodeIndex, h);
+      copy[nodeIndex] = {
+        nodeType: nodeTypes.parent,
+        parent: { hpkePublicKey: reverseUpdatePath[level2].hpkePublicKey, unmergedLeaves: [], parentHash: parentHash[0] }
+      };
+    }
+    const leafParentHash = await calculateParentHash(copy, leafToNodeIndex(senderLeafIndex), h);
+    if (!constantTimeEqual(leafParentHash[0], path.leafNode.parentHash))
+      throw new ValidationError("Parent hash did not match the UpdatePath");
+    return copy;
+  }
   function firstCommonAncestor(tree, leafIndex, senderLeafIndex) {
     const fdp = filteredDirectPathAndCopathResolution(senderLeafIndex, tree);
     for (const { nodeIndex } of fdp) {
       if (isAncestor(leafToNodeIndex(leafIndex), nodeIndex, tree.length)) {
         return nodeIndex;
+      }
+    }
+    throw new ValidationError("Could not find common ancestor");
+  }
+  function firstMatchAncestor(tree, leafIndex, senderLeafIndex, path) {
+    const fdp = filteredDirectPathAndCopathResolution(senderLeafIndex, tree);
+    for (const [n, { nodeIndex, resolution: resolution2 }] of fdp.entries()) {
+      if (isAncestor(leafToNodeIndex(leafIndex), nodeIndex, tree.length)) {
+        return { nodeIndex, resolution: resolution2, updateNode: path.nodes[n] };
       }
     }
     throw new ValidationError("Could not find common ancestor");
@@ -9680,6 +9820,9 @@
         }));
     }
   });
+  function getSenderLeafNodeIndex(sender) {
+    return sender.senderType === senderTypes.member ? sender.leafIndex : void 0;
+  }
   var reuseGuardEncoder = (g) => [
     4,
     (offset, buffer) => {
@@ -9798,6 +9941,9 @@
         }));
     }
   }
+  async function verifyFramedContentSignature(signKey, wireformat, content, auth, context, s) {
+    return verifyWithLabel(signKey, "FramedContentTBS", encode(framedContentTBSEncoder, toTbs2(content, wireformat, context)), auth.signature, s);
+  }
   function signFramedContentTBS(signKey, tbs, s) {
     return signWithLabel(signKey, "FramedContentTBS", encode(framedContentTBSEncoder, tbs), s);
   }
@@ -9810,6 +9956,9 @@
   }
   function createConfirmationTag(confirmationKey, confirmedTranscriptHash, h) {
     return h.mac(confirmationKey, confirmedTranscriptHash);
+  }
+  function verifyConfirmationTag(confirmationKey, tag, confirmedTranscriptHash, h) {
+    return h.verifyMac(confirmationKey, tag, confirmedTranscriptHash);
   }
   async function createContentCommitSignature(groupContext, wireformat, c, sender, authenticatedData, signKey, s) {
     const tbs = {
@@ -9845,6 +9994,12 @@
   function createMembershipTag(membershipKey, tbm, h) {
     return h.mac(membershipKey, encode(authenticatedContentTBMEncoder, tbm));
   }
+  function verifyMembershipTag(membershipKey, tbm, tag, h) {
+    return h.verifyMac(membershipKey, tag, encode(authenticatedContentTBMEncoder, tbm));
+  }
+  function makeProposalRef(proposal, h) {
+    return refhash("MLS 1.0 Proposal Reference", encode(authenticatedContentEncoder, proposal), h);
+  }
 
   // node_modules/ts-mls/dist/src/groupInfo.js
   var groupInfoTBSEncoder = contramapBufferEncoders([groupContextEncoder, varLenTypeEncoder(extensionEncoder), varLenDataEncoder, uint32Encoder], (g) => [g.groupContext, g.extensions, g.confirmationTag, g.signer]);
@@ -9859,9 +10014,26 @@
     ...tbs,
     signature
   }));
+  function ratchetTreeFromExtension(info) {
+    const treeExtension = info.extensions.find((ex) => ex.extensionType === defaultExtensionTypes.ratchet_tree);
+    if (treeExtension !== void 0) {
+      const tree = ratchetTreeDecoder(treeExtension.extensionData, 0);
+      if (tree === void 0)
+        throw new CodecError("Could not decode RatchetTree");
+      return tree[0];
+    }
+  }
   async function signGroupInfo(tbs, privateKey, s) {
     const signature = await signWithLabel(privateKey, "GroupInfoTBS", encode(groupInfoTBSEncoder, tbs), s);
     return { ...tbs, signature };
+  }
+  function verifyGroupInfoSignature(gi, publicKey, s) {
+    return verifyWithLabel(publicKey, "GroupInfoTBS", encode(groupInfoTBSEncoder, gi), gi.signature, s);
+  }
+  async function verifyGroupInfoConfirmationTag(gi, joinerSecret, pskSecret, cs) {
+    const epochSecret = await extractEpochSecret(gi.groupContext, joinerSecret, cs.kdf, pskSecret);
+    const key = await deriveSecret(epochSecret, "confirm", cs.kdf);
+    return cs.hash.verifyMac(key, gi.confirmationTag, gi.groupContext.confirmedTranscriptHash);
   }
   async function extractWelcomeSecret(joinerSecret, pskSecret, kdf) {
     return deriveSecret(await kdf.extract(joinerSecret, pskSecret), "welcome", kdf);
@@ -10030,6 +10202,45 @@
   async function deriveKey(secret, generation, cs) {
     return await deriveTreeSecret(secret, "key", generation, cs.hpke.keyLength, cs.kdf);
   }
+  async function ratchetUntil(current, desiredGen, config, kdf) {
+    const generationDifference = desiredGen - current.generation;
+    if (generationDifference > config.maximumForwardRatchetSteps)
+      throw new ValidationError("Desired generation too far in the future");
+    const consumed = [];
+    let result = { ...current };
+    for (let i = 0; i < generationDifference; i++) {
+      const nextSecret = await deriveTreeSecret(result.secret, "secret", result.generation, kdf.size, kdf);
+      const [updated, old] = updateUnusedGenerations(result, config.retainKeysForGenerations);
+      consumed.push(...old);
+      result = {
+        secret: nextSecret,
+        generation: result.generation + 1,
+        unusedGenerations: updated
+      };
+    }
+    return [result, consumed];
+  }
+  function updateUnusedGenerations(s, retainGenerationsMax) {
+    const withNew = { ...s.unusedGenerations, [s.generation]: s.secret };
+    const generations = Object.keys(withNew);
+    const result = generations.length >= retainGenerationsMax ? removeOldGenerations(withNew, retainGenerationsMax) : [withNew, []];
+    return result;
+  }
+  function removeOldGenerations(unusedGenerations, max) {
+    const generations = Object.keys(unusedGenerations).map(Number).sort((a, b) => a - b);
+    const cutoff = generations.length - max;
+    const consumed = new Array();
+    const record = {};
+    for (const [n, gen] of generations.entries()) {
+      const value = unusedGenerations[gen];
+      if (n < cutoff) {
+        consumed.push(value);
+      } else {
+        record[gen] = value;
+      }
+    }
+    return [record, consumed];
+  }
   async function derivePrivateMessageNonce(secret, generation, reuseGuard, cs) {
     const nonce = await deriveNonce(secret, generation, cs);
     if (nonce.length >= 4 && reuseGuard.length >= 4) {
@@ -10039,6 +10250,25 @@
     } else
       throw new ValidationError("Reuse guard or nonce incorrect length");
     return nonce;
+  }
+  async function ratchetToGeneration(tree, senderData, contentType, config, cs) {
+    const index = toLeafIndex(senderData.leafIndex);
+    const nodeIndex = leafToNodeIndex(index);
+    const [updatedTree, consumedSecrets] = await updateTreeWithLeafSecret(tree, index, nodeIndex, cs);
+    const node = updatedTree.leafNodes[nodeIndex];
+    const ratchet = ratchetForContentType(node, contentType);
+    if (ratchet.generation > senderData.generation) {
+      const desired = ratchet.unusedGenerations[senderData.generation];
+      if (desired !== void 0) {
+        const { [senderData.generation]: consumedValue, ...removedDesiredGen } = ratchet.unusedGenerations;
+        const ratchetState = { ...ratchet, unusedGenerations: removedDesiredGen };
+        const consumed2 = consumedValue ? [...consumedSecrets, consumedValue] : consumedSecrets;
+        return await createRatchetResultWithSecret(node, nodeIndex, desired, senderData.generation, senderData.reuseGuard, updatedTree, contentType, consumed2, cs, ratchetState);
+      }
+      throw new ValidationError("Desired gen in the past");
+    }
+    const [currentSecret, consumed] = await ratchetUntil(ratchetForContentType(node, contentType), senderData.generation, config, cs.kdf);
+    return createRatchetResult(node, index, currentSecret, senderData.reuseGuard, updatedTree, contentType, [...consumed, ...consumedSecrets], cs);
   }
   async function consumeRatchet(tree, index, contentType, cs) {
     const nodeIndex = leafToNodeIndex(index);
@@ -10144,6 +10374,18 @@
       [cur.nodeIndex]: cur.secret
     }), {});
   }
+  async function pathToRoot(tree, nodeIndex, pathSecret, kdf) {
+    const rootIndex = root(leafWidth(tree.length));
+    let currentIndex = nodeIndex;
+    const pathSecrets = { [nodeIndex]: pathSecret };
+    while (currentIndex != rootIndex) {
+      const nextIndex = findFirstNonBlankAncestor(tree, currentIndex);
+      const nextSecret = await deriveSecret(pathSecrets[currentIndex], "path", kdf);
+      pathSecrets[nextIndex] = nextSecret;
+      currentIndex = nextIndex;
+    }
+    return pathSecrets;
+  }
 
   // node_modules/ts-mls/dist/src/privateKeyPath.js
   var privateKeyPathEncoder = contramapBufferEncoders([uint32Encoder, numberRecordEncoder(uint32Encoder, varLenDataEncoder)], (pkp) => [pkp.leafIndex, pkp.privateKeys]);
@@ -10175,6 +10417,13 @@
   }));
   var unappliedProposalsEncoder = base64RecordEncoder(proposalWithSenderEncoder);
   var unappliedProposalsDecoder = base64RecordDecoder(proposalWithSenderDecoder);
+  function addUnappliedProposal(ref, proposals, proposal, senderLeafIndex) {
+    const r = bytesToBase64(ref);
+    return {
+      ...proposals,
+      [r]: { proposal, senderLeafIndex }
+    };
+  }
 
   // node_modules/ts-mls/dist/src/pskIndex.js
   async function accumulatePskSecret(groupedPsk, pskSearch, cs, zeroes) {
@@ -10216,8 +10465,30 @@
     const encrypted = await cs.hpke.encryptAead(key, nonce, void 0, encode(groupInfoEncoder, groupInfo));
     return encrypted;
   }
+  async function decryptGroupInfo(w, joinerSecret, pskSecret, cs) {
+    const welcomeSecret = await extractWelcomeSecret(joinerSecret, pskSecret, cs.kdf);
+    const key = await welcomeKey(welcomeSecret, cs);
+    const nonce = await welcomeNonce(welcomeSecret, cs);
+    const decrypted = await cs.hpke.decryptAead(key, nonce, void 0, w.encryptedGroupInfo);
+    const decoded = groupInfoDecoder(decrypted, 0);
+    return decoded?.[0];
+  }
   function encryptGroupSecrets(initKey, encryptedGroupInfo, groupSecrets, hpke) {
     return encryptWithLabel(initKey, "Welcome", encryptedGroupInfo, encode(groupSecretsEncoder, groupSecrets), hpke);
+  }
+  async function decryptGroupSecrets(initPrivateKey, keyPackageRef, welcome, hpke) {
+    const secret = welcome.secrets.find((s) => constantTimeEqual(s.newMember, keyPackageRef));
+    if (secret === void 0)
+      throw new ValidationError("No matching secret found");
+    const decrypted = await decryptWithLabel(initPrivateKey, "Welcome", welcome.encryptedGroupInfo, secret.encryptedGroupSecrets.kemOutput, secret.encryptedGroupSecrets.ciphertext, hpke);
+    return groupSecretsDecoder(decrypted, 0)?.[0];
+  }
+
+  // node_modules/ts-mls/dist/src/util/array.js
+  function arraysEqual(a, b) {
+    if (a.length !== b.length)
+      return false;
+    return a.every((val, index) => val === b[index]);
   }
 
   // node_modules/ts-mls/dist/src/codec/string.js
@@ -10383,6 +10654,71 @@
   }
   function capabiltiesAreSupported(caps, cs) {
     return caps.credentialTypes.every((c) => cs.credentials.includes(c)) && caps.extensionTypes.every((e) => cs.extensions.includes(e)) && caps.proposalTypes.every((p) => cs.proposals.includes(p));
+  }
+  async function validateRatchetTree(tree, groupContext, config, authService, treeHash2, cs) {
+    const hpkeKeys = /* @__PURE__ */ new Set();
+    const signatureKeys = /* @__PURE__ */ new Set();
+    const credentialTypes = /* @__PURE__ */ new Set();
+    for (const [i, n] of tree.entries()) {
+      const nodeIndex = toNodeIndex(i);
+      if (n?.nodeType === nodeTypes.leaf) {
+        if (!isLeaf(nodeIndex))
+          return new ValidationError("Received Ratchet Tree is not structurally sound");
+        const hpkeKey = bytesToBase64(n.leaf.hpkePublicKey);
+        if (hpkeKeys.has(hpkeKey))
+          return new ValidationError("hpke keys not unique");
+        else
+          hpkeKeys.add(hpkeKey);
+        const signatureKey = bytesToBase64(n.leaf.signaturePublicKey);
+        if (signatureKeys.has(signatureKey))
+          return new ValidationError("signature keys not unique");
+        else
+          signatureKeys.add(signatureKey);
+        {
+          credentialTypes.add(n.leaf.credential.credentialType);
+        }
+        const err = n.leaf.leafNodeSource === leafNodeSources.key_package ? await validateLeafNodeKeyPackage(n.leaf, groupContext, false, config, authService, cs.signature) : await validateLeafNodeUpdateOrCommit(n.leaf, nodeToLeafIndex(nodeIndex), groupContext, authService, cs.signature);
+        if (err !== void 0)
+          return err;
+      } else if (n?.nodeType === nodeTypes.parent) {
+        if (isLeaf(nodeIndex))
+          return new ValidationError("Received Ratchet Tree is not structurally sound");
+        const hpkeKey = bytesToBase64(n.parent.hpkePublicKey);
+        if (hpkeKeys.has(hpkeKey))
+          return new ValidationError("hpke keys not unique");
+        else
+          hpkeKeys.add(hpkeKey);
+        for (const unmergedLeaf of n.parent.unmergedLeaves) {
+          const leafIndex = toLeafIndex(unmergedLeaf);
+          const dp = directPath(leafToNodeIndex(leafIndex), leafWidth(tree.length));
+          const nodeIndex2 = leafToNodeIndex(leafIndex);
+          if (tree[nodeIndex2]?.nodeType !== nodeTypes.leaf && !dp.includes(toNodeIndex(i)))
+            return new ValidationError("Unmerged leaf did not represent a non-blank descendant leaf node");
+          for (const parentIdx of dp) {
+            const dpNode = tree[parentIdx];
+            if (dpNode !== void 0) {
+              if (dpNode.nodeType !== nodeTypes.parent)
+                return new InternalError("Expected parent node");
+              if (!arraysEqual(dpNode.parent.unmergedLeaves, n.parent.unmergedLeaves))
+                return new ValidationError("non-blank intermediate node must list leaf node in its unmerged_leaves");
+            }
+          }
+        }
+      }
+    }
+    for (const n of tree) {
+      if (n?.nodeType === nodeTypes.leaf) {
+        for (const credentialType of credentialTypes) {
+          if (!n.leaf.capabilities.credentials.includes(credentialType))
+            return new ValidationError("LeafNode has credential that is not supported by member of the group");
+        }
+      }
+    }
+    const parentHashesVerified = await verifyParentHashes(tree, cs.hash);
+    if (!parentHashesVerified)
+      return new CryptoVerificationError("Unable to verify parent hash");
+    if (!constantTimeEqual(treeHash2, await treeHashRoot(tree, cs.hash)))
+      return new ValidationError("Unable to verify tree hash");
   }
   async function validateLeafNodeUpdateOrCommit(leafNode, leafIndex, groupContext, authService, s) {
     const signatureValid = await verifyLeafNodeSignature(leafNode, groupContext.groupId, leafIndex, s);
@@ -10595,6 +10931,106 @@
       confirmedTranscriptHash: newConfirmedHash
     };
   }
+  async function joinGroup(params) {
+    const res = await joinGroupInternal(params);
+    return res.state;
+  }
+  async function joinGroupInternal(params) {
+    const context = params.context;
+    const welcome = params.welcome;
+    const keyPackage = params.keyPackage;
+    const privateKeys = params.privateKeys;
+    const pskSearch = makePskIndex(params.resumingFromState, context.externalPsks ?? {});
+    const authService = context.authService;
+    const cs = context.cipherSuite;
+    const clientConfig = context.clientConfig ?? defaultClientConfig;
+    const ratchetTree = params.ratchetTree;
+    const resumingFromState = params.resumingFromState;
+    const keyPackageRef = await makeKeyPackageRef(keyPackage, cs.hash);
+    const privKey = await cs.hpke.importPrivateKey(privateKeys.initPrivateKey);
+    const groupSecrets = await decryptGroupSecrets(privKey, keyPackageRef, welcome, cs.hpke);
+    if (groupSecrets === void 0)
+      throw new CodecError("Could not decode group secrets");
+    const zeroes = new Uint8Array(cs.kdf.size);
+    const [pskSecret, pskIds] = await accumulatePskSecret(groupSecrets.psks, pskSearch, cs, zeroes);
+    const gi = await decryptGroupInfo(welcome, groupSecrets.joinerSecret, pskSecret, cs);
+    if (gi === void 0)
+      throw new CodecError("Could not decode group info");
+    const resumptionPsk = pskIds.find((id) => id.psktype === pskTypes.resumption);
+    if (resumptionPsk !== void 0) {
+      if (resumingFromState === void 0)
+        throw new ValidationError("No prior state passed for resumption");
+      if (resumptionPsk.pskEpoch !== resumingFromState.groupContext.epoch)
+        throw new ValidationError("Epoch mismatch");
+      if (!constantTimeEqual(resumptionPsk.pskGroupId, resumingFromState.groupContext.groupId))
+        throw new ValidationError("old groupId mismatch");
+      if (gi.groupContext.epoch !== 1n)
+        throw new ValidationError("Resumption must be started at epoch 1");
+      if (resumptionPsk.usage === resumptionPSKUsages.reinit) {
+        if (resumingFromState.groupActiveState.kind !== "suspendedPendingReinit")
+          throw new ValidationError("Found reinit psk but no old suspended clientState");
+        if (!constantTimeEqual(resumingFromState.groupActiveState.reinit.groupId, gi.groupContext.groupId))
+          throw new ValidationError("new groupId mismatch");
+        if (resumingFromState.groupActiveState.reinit.version !== gi.groupContext.version)
+          throw new ValidationError("Version mismatch");
+        if (resumingFromState.groupActiveState.reinit.cipherSuite !== gi.groupContext.cipherSuite)
+          throw new ValidationError("Ciphersuite mismatch");
+        if (!extensionsEqual(resumingFromState.groupActiveState.reinit.extensions, gi.groupContext.extensions))
+          throw new ValidationError("Extensions mismatch");
+      }
+    }
+    const allExtensionsSupported = extensionsSupportedByCapabilities(gi.groupContext.extensions, keyPackage.leafNode.capabilities);
+    if (!allExtensionsSupported)
+      throw new UsageError("client does not support every extension in the GroupContext");
+    const tree = ratchetTreeFromExtension(gi) ?? ratchetTree;
+    if (tree === void 0)
+      throw new UsageError("No RatchetTree passed and no ratchet_tree extension");
+    const signerNode = tree[leafToNodeIndex(toLeafIndex(gi.signer))];
+    if (signerNode === void 0) {
+      throw new ValidationError("Could not find signer leafNode");
+    }
+    if (signerNode.nodeType === nodeTypes.parent)
+      throw new ValidationError("Expected non blank leaf node");
+    const credentialVerified = await authService.validateCredential(signerNode.leaf.credential, signerNode.leaf.signaturePublicKey);
+    if (!credentialVerified)
+      throw new ValidationError("Could not validate credential");
+    const groupInfoSignatureVerified = await verifyGroupInfoSignature(gi, signerNode.leaf.signaturePublicKey, cs.signature);
+    if (!groupInfoSignatureVerified)
+      throw new CryptoVerificationError("Could not verify groupInfo signature");
+    if (gi.groupContext.cipherSuite !== keyPackage.cipherSuite)
+      throw new ValidationError("cipher suite in the GroupInfo does not match the cipher_suite in the KeyPackage");
+    throwIfDefined(await validateRatchetTree(tree, gi.groupContext, clientConfig.lifetimeConfig, authService, gi.groupContext.treeHash, cs));
+    const newLeaf = findLeafIndex(tree, keyPackage.leafNode);
+    if (newLeaf === void 0)
+      throw new ValidationError("Could not find own leaf when processing welcome");
+    const privateKeyPath = {
+      leafIndex: newLeaf,
+      privateKeys: { [leafToNodeIndex(newLeaf)]: privateKeys.hpkePrivateKey }
+    };
+    const ancestorNodeIndex = firstCommonAncestor(tree, newLeaf, toLeafIndex(gi.signer));
+    const updatedPkp = groupSecrets.pathSecret === void 0 ? privateKeyPath : mergePrivateKeyPaths(await toPrivateKeyPath(await pathToRoot(tree, ancestorNodeIndex, groupSecrets.pathSecret, cs.kdf), newLeaf, cs), privateKeyPath);
+    const [keySchedule, encryptionSecret] = await deriveKeySchedule(groupSecrets.joinerSecret, pskSecret, gi.groupContext, cs.kdf);
+    const confirmationTagVerified = await verifyGroupInfoConfirmationTag(gi, groupSecrets.joinerSecret, pskSecret, cs);
+    if (!confirmationTagVerified)
+      throw new CryptoVerificationError("Could not verify confirmation tag");
+    const secretTree = createSecretTree(leafWidth(tree.length), encryptionSecret);
+    zeroOutUint8Array(groupSecrets.joinerSecret);
+    return {
+      state: {
+        groupContext: gi.groupContext,
+        ratchetTree: tree,
+        privatePath: updatedPkp,
+        signaturePrivateKey: privateKeys.signaturePrivateKey,
+        confirmationTag: gi.confirmationTag,
+        unappliedProposals: {},
+        keySchedule,
+        secretTree,
+        historicalReceiverData: /* @__PURE__ */ new Map(),
+        groupActiveState: { kind: "active" }
+      },
+      groupInfoExtensions: gi.extensions
+    };
+  }
   async function createGroup(params) {
     const { context, groupId, keyPackage, privateKeyPackage } = params;
     const extensions = params.extensions ?? [];
@@ -10661,6 +11097,13 @@
     }, Promise.resolve([treeAfterRemove, []]));
     return [treeAfterAdd, addedLeafNodes];
   }
+  async function processProposal(state, content, proposal, h) {
+    const ref = await makeProposalRef(content, h);
+    return {
+      ...state,
+      unappliedProposals: addUnappliedProposal(ref, state.unappliedProposals, proposal, getSenderLeafNodeIndex(content.content.sender))
+    };
+  }
   function addHistoricalReceiverData(state, clientConfig) {
     const withNew = addToMap(state.historicalReceiverData, state.groupContext.epoch, {
       secretTree: state.secretTree,
@@ -10706,22 +11149,71 @@
     contentType,
     authenticatedData
   }));
+  function privateMessageContentDecoder(contentType) {
+    switch (contentType) {
+      case contentTypes.application:
+        return rWithPaddingDecoder(mapDecoders([varLenDataDecoder, varLenDataDecoder], (applicationData, signature) => ({
+          contentType,
+          applicationData,
+          auth: { contentType, signature }
+        })));
+      case contentTypes.proposal:
+        return rWithPaddingDecoder(mapDecoders([proposalDecoder, varLenDataDecoder], (proposal, signature) => ({
+          contentType,
+          proposal,
+          auth: { contentType, signature }
+        })));
+      case contentTypes.commit:
+        return rWithPaddingDecoder(mapDecoders([commitDecoder, varLenDataDecoder, framedContentAuthDataCommitDecoder], (commit, signature, auth) => ({
+          contentType,
+          commit,
+          auth: { ...auth, signature, contentType }
+        })));
+    }
+  }
   function privateMessageContentEncoder(config) {
     return (msg) => {
       switch (msg.contentType) {
         case contentTypes.application:
-          return encoderWithPadding(contramapBufferEncoders([varLenDataEncoder, framedContentAuthDataEncoder], (m12) => [m12.applicationData, m12.auth]), config)(msg);
+          return encoderWithPadding(contramapBufferEncoders([varLenDataEncoder, framedContentAuthDataEncoder], (m13) => [m13.applicationData, m13.auth]), config)(msg);
         case contentTypes.proposal:
-          return encoderWithPadding(contramapBufferEncoders([proposalEncoder, framedContentAuthDataEncoder], (m12) => [m12.proposal, m12.auth]), config)(msg);
+          return encoderWithPadding(contramapBufferEncoders([proposalEncoder, framedContentAuthDataEncoder], (m13) => [m13.proposal, m13.auth]), config)(msg);
         case contentTypes.commit:
-          return encoderWithPadding(contramapBufferEncoders([commitEncoder, framedContentAuthDataEncoder], (m12) => [m12.commit, m12.auth]), config)(msg);
+          return encoderWithPadding(contramapBufferEncoders([commitEncoder, framedContentAuthDataEncoder], (m13) => [m13.commit, m13.auth]), config)(msg);
       }
     };
+  }
+  async function decryptSenderData(msg, senderDataSecret, cs) {
+    const key = await expandSenderDataKey(cs, senderDataSecret, msg.ciphertext);
+    const nonce = await expandSenderDataNonce(cs, senderDataSecret, msg.ciphertext);
+    const aad = {
+      groupId: msg.groupId,
+      epoch: msg.epoch,
+      contentType: msg.contentType
+    };
+    const decrypted = await cs.hpke.decryptAead(key, nonce, encode(senderDataAADEncoder, aad), msg.encryptedSenderData);
+    return senderDataDecoder(decrypted, 0)?.[0];
   }
   async function encryptSenderData(senderDataSecret, senderData, aad, ciphertext, cs) {
     const key = await expandSenderDataKey(cs, senderDataSecret, ciphertext);
     const nonce = await expandSenderDataNonce(cs, senderDataSecret, ciphertext);
     return await cs.hpke.encryptAead(key, nonce, encode(senderDataAADEncoder, aad), encode(senderDataEncoder, senderData));
+  }
+  function toAuthenticatedContent(content, msg, senderLeafIndex) {
+    return {
+      wireformat: wireformats.mls_private_message,
+      content: {
+        groupId: msg.groupId,
+        epoch: msg.epoch,
+        sender: {
+          senderType: senderTypes.member,
+          leafIndex: senderLeafIndex
+        },
+        authenticatedData: msg.authenticatedData,
+        ...content
+      },
+      auth: content.auth
+    };
   }
   function encoderWithPadding(encoder, config) {
     return (t) => {
@@ -10733,6 +11225,19 @@
           write(offset, buffer);
         }
       ];
+    };
+  }
+  function rWithPaddingDecoder(decoder) {
+    return (bytes, offset) => {
+      const result = decoder(bytes, offset);
+      if (result === void 0)
+        return void 0;
+      const [decoded, innerOffset] = result;
+      const paddingBytes = bytes.subarray(offset + innerOffset, bytes.length);
+      const allZeroes = paddingBytes.every((byte) => byte === 0);
+      if (!allZeroes)
+        return void 0;
+      return [decoded, bytes.length];
     };
   }
 
@@ -10796,6 +11301,33 @@
       consumed
     };
   }
+  async function unprotectPrivateMessage(senderDataSecret, msg, secretTree, ratchetTree, groupContext, config, cs, overrideSignatureKey) {
+    const senderData = await decryptSenderData(msg, senderDataSecret, cs);
+    if (senderData === void 0)
+      throw new CodecError("Could not decode senderdata");
+    validateSenderData(senderData, ratchetTree);
+    const { key, nonce, newTree, consumed } = await ratchetToGeneration(secretTree, senderData, msg.contentType, config, cs);
+    const aad = {
+      groupId: msg.groupId,
+      epoch: msg.epoch,
+      contentType: msg.contentType,
+      authenticatedData: msg.authenticatedData
+    };
+    const decrypted = await cs.hpke.decryptAead(key, nonce, encode(privateContentAADEncoder, aad), msg.ciphertext);
+    const pmc = privateMessageContentDecoder(msg.contentType)(decrypted, 0)?.[0];
+    if (pmc === void 0)
+      throw new CodecError("Could not decode PrivateMessageContent");
+    const content = toAuthenticatedContent(pmc, msg, senderData.leafIndex);
+    const signaturePublicKey = overrideSignatureKey !== void 0 ? overrideSignatureKey : getSignaturePublicKeyFromLeafIndex(ratchetTree, toLeafIndex(senderData.leafIndex));
+    const signatureValid = await verifyFramedContentSignature(signaturePublicKey, wireformats.mls_private_message, content.content, content.auth, groupContext, cs.signature);
+    if (!signatureValid)
+      throw new CryptoVerificationError("Signature invalid");
+    return { tree: newTree, content, consumed };
+  }
+  function validateSenderData(senderData, tree) {
+    if (tree[leafToNodeIndex(toLeafIndex(senderData.leafIndex))]?.nodeType !== nodeTypes.leaf)
+      return new ValidationError("SenderData did not point to a non-blank leaf node");
+  }
 
   // node_modules/ts-mls/dist/src/publicMessage.js
   var publicMessageInfoEncoder = (info) => {
@@ -10827,6 +11359,38 @@
     content,
     auth
   })));
+  function findSignaturePublicKey(ratchetTree, groupContext, framedContent) {
+    switch (framedContent.sender.senderType) {
+      case senderTypes.member:
+        return getSignaturePublicKeyFromLeafIndex(ratchetTree, toLeafIndex(framedContent.sender.leafIndex));
+      case senderTypes.external: {
+        const sender = senderFromExtension(groupContext.extensions, framedContent.sender.senderIndex);
+        if (sender === void 0)
+          throw new ValidationError("Received external but no external_sender extension");
+        return sender.signaturePublicKey;
+      }
+      case senderTypes.new_member_proposal:
+        if (framedContent.contentType !== contentTypes.proposal)
+          throw new ValidationError("Received new_member_proposal but contentType is not proposal");
+        if (!isDefaultProposal(framedContent.proposal) || framedContent.proposal.proposalType !== defaultProposalTypes.add)
+          throw new ValidationError("Received new_member_proposal but proposalType was not add");
+        return framedContent.proposal.add.keyPackage.leafNode.signaturePublicKey;
+      case senderTypes.new_member_commit: {
+        if (framedContent.contentType !== contentTypes.commit)
+          throw new ValidationError("Received new_member_commit but contentType is not commit");
+        if (framedContent.commit.path === void 0)
+          throw new ValidationError("Commit contains no update path");
+        return framedContent.commit.path.leafNode.signaturePublicKey;
+      }
+    }
+  }
+  function senderFromExtension(extensions, senderIndex) {
+    const externalSenderExtensions = extensions.filter((ex) => ex.extensionType === defaultExtensionTypes.external_senders);
+    const externalSenderExtension = externalSenderExtensions[senderIndex];
+    if (externalSenderExtension !== void 0) {
+      return externalSenderExtension.extensionData;
+    }
+  }
 
   // node_modules/ts-mls/dist/src/messageProtectionPublic.js
   async function protectPublicMessage(membershipKey, groupContext, content, cs) {
@@ -10849,6 +11413,27 @@
       content: content.content,
       auth: content.auth,
       senderType: content.content.sender.senderType
+    };
+  }
+  async function unprotectPublicMessage(membershipKey, groupContext, ratchetTree, msg, cs, overrideSignatureKey) {
+    if (msg.content.contentType === contentTypes.application)
+      throw new UsageError("Can't make an application message public");
+    if (msg.senderType === senderTypes.member) {
+      const authenticatedContent = {
+        contentTbs: toTbs2(msg.content, wireformats.mls_public_message, groupContext),
+        auth: msg.auth
+      };
+      if (!await verifyMembershipTag(membershipKey, authenticatedContent, msg.membershipTag, cs.hash))
+        throw new CryptoVerificationError("Could not verify membership");
+    }
+    const signaturePublicKey = overrideSignatureKey !== void 0 ? overrideSignatureKey : findSignaturePublicKey(ratchetTree, groupContext, msg.content);
+    const signatureValid = await verifyFramedContentSignature(signaturePublicKey, wireformats.mls_public_message, msg.content, msg.auth, groupContext, cs.signature);
+    if (!signatureValid)
+      throw new CryptoVerificationError("Signature invalid");
+    return {
+      wireformat: wireformats.mls_public_message,
+      content: msg.content,
+      auth: msg.auth
     };
   }
 
@@ -10981,6 +11566,22 @@
       ];
     }
   }
+  async function applyUpdatePathSecret(tree, privatePath, senderLeafIndex, gc, path, excludeNodes, cs) {
+    const { nodeIndex: ancestorNodeIndex, resolution: resolution2, updateNode } = firstMatchAncestor(tree, toLeafIndex(privatePath.leafIndex), senderLeafIndex, path);
+    for (const [i, nodeIndex] of filterNewLeaves(resolution2, excludeNodes).entries()) {
+      if (privatePath.privateKeys[nodeIndex] !== void 0) {
+        const key = await cs.hpke.importPrivateKey(privatePath.privateKeys[nodeIndex]);
+        const ct = updateNode.encryptedPathSecret[i];
+        const pathSecret = await decryptWithLabel(key, "UpdatePathNode", encode(groupContextEncoder, gc), ct.kemOutput, ct.ciphertext, cs.hpke);
+        return { nodeIndex: ancestorNodeIndex, pathSecret };
+      }
+    }
+    throw new InternalError("No overlap between provided private keys and update path");
+  }
+  function filterNewLeaves(resolution2, excludeNodes) {
+    const set = new Set(excludeNodes);
+    return resolution2.filter((i) => !set.has(i));
+  }
 
   // node_modules/ts-mls/dist/src/createMessage.js
   async function createApplicationMessage(params) {
@@ -11001,6 +11602,221 @@
       },
       consumed: result.consumed
     };
+  }
+
+  // node_modules/ts-mls/dist/src/incomingMessageAction.js
+  var acceptAll = () => "accept";
+
+  // node_modules/ts-mls/dist/src/processMessages.js
+  async function processPrivateMessage(params) {
+    const context = params.context;
+    const state = params.state;
+    const cipherSuite = context.cipherSuite;
+    const pskSearch = makePskIndex(state, context.externalPsks ?? {});
+    const auth = context.authService;
+    const cb = params.callback ?? acceptAll;
+    const clientConfig = context.clientConfig ?? defaultClientConfig;
+    const pm = params.privateMessage;
+    if (pm.epoch < state.groupContext.epoch) {
+      const receiverData = state.historicalReceiverData.get(pm.epoch);
+      if (receiverData !== void 0) {
+        const result2 = await unprotectPrivateMessage(receiverData.senderDataSecret, pm, receiverData.secretTree, receiverData.ratchetTree, receiverData.groupContext, clientConfig.keyRetentionConfig, cipherSuite);
+        const newHistoricalReceiverData = addToMap(state.historicalReceiverData, pm.epoch, {
+          ...receiverData,
+          secretTree: result2.tree
+        });
+        const newState = { ...state, historicalReceiverData: newHistoricalReceiverData };
+        if (result2.content.content.contentType === contentTypes.application) {
+          return {
+            kind: "applicationMessage",
+            message: result2.content.content.applicationData,
+            newState,
+            consumed: result2.consumed
+          };
+        } else {
+          throw new ValidationError("Cannot process commit or proposal from former epoch");
+        }
+      } else {
+        throw new ValidationError("Cannot process message, epoch too old");
+      }
+    }
+    const result = await unprotectPrivateMessage(state.keySchedule.senderDataSecret, pm, state.secretTree, state.ratchetTree, state.groupContext, clientConfig.keyRetentionConfig, cipherSuite);
+    const updatedState = { ...state, secretTree: result.tree };
+    if (result.content.content.contentType === contentTypes.application) {
+      return {
+        kind: "applicationMessage",
+        message: result.content.content.applicationData,
+        newState: updatedState,
+        consumed: result.consumed
+      };
+    } else if (result.content.content.contentType === contentTypes.commit) {
+      const { newState, actionTaken, consumed } = await processCommit(updatedState, result.content, "mls_private_message", pskSearch, cb, auth, clientConfig, cipherSuite);
+      return {
+        kind: "newState",
+        newState,
+        actionTaken,
+        consumed: [...result.consumed, ...consumed]
+      };
+    } else {
+      const action = cb({
+        kind: "proposal",
+        proposal: {
+          proposal: result.content.content.proposal,
+          senderLeafIndex: getSenderLeafNodeIndex(result.content.content.sender)
+        }
+      });
+      if (action === "reject")
+        return {
+          kind: "newState",
+          newState: updatedState,
+          actionTaken: action,
+          consumed: result.consumed
+        };
+      else
+        return {
+          kind: "newState",
+          newState: await processProposal(updatedState, result.content, result.content.content.proposal, cipherSuite.hash),
+          actionTaken: action,
+          consumed: result.consumed
+        };
+    }
+  }
+  async function processPublicMessage(params) {
+    const context = params.context;
+    const state = params.state;
+    const cipherSuite = context.cipherSuite;
+    const pskSearch = makePskIndex(state, context.externalPsks ?? {});
+    const auth = context.authService;
+    const clientConfig = context.clientConfig ?? defaultClientConfig;
+    const pm = params.publicMessage;
+    const callback = params.callback ?? acceptAll;
+    if (pm.content.epoch < state.groupContext.epoch)
+      throw new ValidationError("Cannot process message, epoch too old");
+    const content = await unprotectPublicMessage(state.keySchedule.membershipKey, state.groupContext, state.ratchetTree, pm, cipherSuite);
+    if (content.content.contentType === contentTypes.proposal) {
+      const action = callback({
+        kind: "proposal",
+        proposal: { proposal: content.content.proposal, senderLeafIndex: getSenderLeafNodeIndex(content.content.sender) }
+      });
+      if (action === "reject")
+        return {
+          newState: state,
+          actionTaken: action,
+          consumed: []
+        };
+      else
+        return {
+          newState: await processProposal(state, content, content.content.proposal, cipherSuite.hash),
+          actionTaken: action,
+          consumed: []
+        };
+    } else {
+      return processCommit(state, content, "mls_public_message", pskSearch, callback, auth, clientConfig, cipherSuite);
+    }
+  }
+  async function processCommit(state, content, wireformat, pskSearch, callback, authService, clientConfig, cs) {
+    if (content.content.epoch !== state.groupContext.epoch)
+      throw new ValidationError("Could not validate epoch");
+    const senderLeafIndex = content.content.sender.senderType === senderTypes.member ? toLeafIndex(content.content.sender.leafIndex) : void 0;
+    const result = await applyProposals(state, content.content.commit.proposals, senderLeafIndex, pskSearch, false, clientConfig, authService, cs);
+    const action = callback({ kind: "commit", senderLeafIndex, proposals: result.allProposals });
+    if (action === "reject") {
+      return { newState: state, actionTaken: action, consumed: [] };
+    }
+    if (content.content.commit.path !== void 0) {
+      const committerLeafIndex = senderLeafIndex ?? (result.additionalResult.kind === "externalCommit" ? result.additionalResult.newMemberLeafIndex : void 0);
+      if (committerLeafIndex === void 0)
+        throw new ValidationError("Cannot verify commit leaf node because no commiter leaf index found");
+      throwIfDefined(await validateLeafNodeUpdateOrCommit(content.content.commit.path.leafNode, committerLeafIndex, state.groupContext, authService, cs.signature));
+      throwIfDefined(await validateLeafNodeCredentialAndKeyUniqueness(result.tree, content.content.commit.path.leafNode, committerLeafIndex));
+    }
+    if (result.needsUpdatePath && content.content.commit.path === void 0)
+      throw new ValidationError("Update path is required");
+    const groupContextWithExtensions = result.additionalResult.kind === "memberCommit" && result.additionalResult.extensions.length > 0 ? { ...state.groupContext, extensions: result.additionalResult.extensions } : state.groupContext;
+    const [pkp, commitSecret, tree] = await applyTreeUpdate(content.content.commit.path, content.content.sender, result.tree, cs, state, groupContextWithExtensions, result.additionalResult.kind === "memberCommit" ? result.additionalResult.addedLeafNodes.map((l) => leafToNodeIndex(toLeafIndex(l[0]))) : [findBlankLeafNodeIndex(result.tree) ?? toNodeIndex(result.tree.length + 1)], cs.kdf);
+    const newTreeHash = await treeHashRoot(tree, cs.hash);
+    if (content.auth.contentType !== contentTypes.commit)
+      throw new ValidationError("Received content as commit, but not auth");
+    const updatedGroupContext = await nextEpochContext(groupContextWithExtensions, wireformat, content.content, content.auth.signature, newTreeHash, state.confirmationTag, cs.hash);
+    const initSecret = result.additionalResult.kind === "externalCommit" ? result.additionalResult.externalInitSecret : state.keySchedule.initSecret;
+    const epochSecrets = await initializeEpoch(initSecret, commitSecret, updatedGroupContext, result.pskSecret, cs.kdf);
+    const confirmationTagValid = await verifyConfirmationTag(epochSecrets.keySchedule.confirmationKey, content.auth.confirmationTag, updatedGroupContext.confirmedTranscriptHash, cs.hash);
+    if (!confirmationTagValid)
+      throw new CryptoVerificationError("Could not verify confirmation tag");
+    const secretTree = createSecretTree(leafWidth(tree.length), epochSecrets.encryptionSecret);
+    const suspendedPendingReinit = result.additionalResult.kind === "reinit" ? result.additionalResult.reinit : void 0;
+    const groupActiveState = result.selfRemoved ? { kind: "removedFromGroup" } : suspendedPendingReinit !== void 0 ? { kind: "suspendedPendingReinit", reinit: suspendedPendingReinit } : { kind: "active" };
+    const [historicalReceiverData, consumedEpochData] = addHistoricalReceiverData(state, clientConfig);
+    zeroOutUint8Array(commitSecret);
+    zeroOutUint8Array(epochSecrets.joinerSecret);
+    const consumed = [...consumedEpochData, initSecret];
+    return {
+      newState: {
+        ...state,
+        secretTree,
+        ratchetTree: tree,
+        privatePath: pkp,
+        groupContext: updatedGroupContext,
+        keySchedule: epochSecrets.keySchedule,
+        confirmationTag: content.auth.confirmationTag,
+        historicalReceiverData,
+        unappliedProposals: {},
+        groupActiveState
+      },
+      actionTaken: action,
+      consumed
+    };
+  }
+  async function applyTreeUpdate(path, sender, tree, cs, state, groupContext, excludeNodes, kdf) {
+    if (path === void 0)
+      return [state.privatePath, new Uint8Array(kdf.size), tree];
+    if (sender.senderType === senderTypes.member) {
+      const updatedTree = await applyUpdatePath(tree, toLeafIndex(sender.leafIndex), path, cs.hash);
+      const [pkp, commitSecret] = await updatePrivateKeyPath(updatedTree, state, toLeafIndex(sender.leafIndex), { ...groupContext, treeHash: await treeHashRoot(updatedTree, cs.hash), epoch: groupContext.epoch + 1n }, path, excludeNodes, cs);
+      return [pkp, commitSecret, updatedTree];
+    } else {
+      const [treeWithLeafNode, leafNodeIndex] = addLeafNode(tree, path.leafNode);
+      const senderLeafIndex = nodeToLeafIndex(leafNodeIndex);
+      const updatedTree = await applyUpdatePath(treeWithLeafNode, senderLeafIndex, path, cs.hash, true);
+      const [pkp, commitSecret] = await updatePrivateKeyPath(updatedTree, state, senderLeafIndex, { ...groupContext, treeHash: await treeHashRoot(updatedTree, cs.hash), epoch: groupContext.epoch + 1n }, path, excludeNodes, cs);
+      return [pkp, commitSecret, updatedTree];
+    }
+  }
+  async function updatePrivateKeyPath(tree, state, leafNodeIndex, groupContext, path, excludeNodes, cs) {
+    const secret = await applyUpdatePathSecret(tree, state.privatePath, leafNodeIndex, groupContext, path, excludeNodes, cs);
+    const pathSecrets = await pathToRoot(tree, toNodeIndex(secret.nodeIndex), secret.pathSecret, cs.kdf);
+    const newPkp = mergePrivateKeyPaths(state.privatePath, await toPrivateKeyPath(pathSecrets, state.privatePath.leafIndex, cs));
+    const rootIndex = root(leafWidth(tree.length));
+    const rootSecret = pathSecrets[rootIndex];
+    if (rootSecret === void 0)
+      throw new InternalError("Could not find secret for root");
+    const commitSecret = await deriveSecret(rootSecret, "path", cs.kdf);
+    return [newPkp, commitSecret];
+  }
+  async function processMessage(params) {
+    const context = params.context;
+    const state = params.state;
+    const authService = context.authService;
+    const cs = context.cipherSuite;
+    const externalPsks = context.externalPsks ?? {};
+    const clientConfig = context.clientConfig ?? defaultClientConfig;
+    const message = params.message;
+    const action = params.callback ?? acceptAll;
+    if (message.wireformat === wireformats.mls_public_message) {
+      const result = await processPublicMessage({
+        context: { cipherSuite: cs, authService, externalPsks, clientConfig },
+        state,
+        publicMessage: message.publicMessage,
+        callback: action
+      });
+      return { ...result, kind: "newState" };
+    } else
+      return processPrivateMessage({
+        context: { cipherSuite: cs, authService, externalPsks: {}, clientConfig },
+        state,
+        privateMessage: message.privateMessage,
+        callback: action
+      });
   }
 
   // node_modules/@hpke/common/esm/src/errors.js
@@ -14419,6 +15235,7 @@
 
   // src/service/delivery.ts
   var Delivery = class {
+    //
     // context is the default JSON-LD context for MLS messages
     #context = ["https://www.w3.org/ns/activitystreams", "https://purl.archive.org/socialweb/mls"];
     // actorId is the ID of the user sending messages
@@ -14452,77 +15269,67 @@
       }
       return response.json();
     }
-    // sendCommit sends an MLS commit message to the specified recipients
-    async sendCommit(recipients, commit) {
-      const content = encode(mlsMessageEncoder, commit);
+    // sendFramedMessage sends an MLS FramedMessage to the specified recipients
+    sendFramedMessage(recipients, message) {
+      this.#send("mls:PrivateMessage", recipients, message, mlsMessageEncoder);
+    }
+    // sendGroupInfo sends an MLS GroupInfo message to the specified recipients
+    sendGroupInfo(recipients, message) {
+      this.#send("mls:GroupInfo", recipients, message, mlsMessageEncoder);
+    }
+    // sendPrivateMessage sends an MLS PrivateMessage to the specified recipients
+    sendPrivateMessage(recipients, message) {
+      this.#send("mls:PrivateMessage", recipients, message, mlsMessageEncoder);
+    }
+    // sendWelcome sends an MLS Welcome message to the specified recipients
+    sendWelcome(recipients, message) {
+      this.#send("mls:Welcome", recipients, message, mlsMessageEncoder);
+    }
+    // #send is a private method that sends an MLS message via the user's ActivityPub outbox
+    async #send(type, recipients, message, encoder) {
+      const otherRecipients = recipients.filter((recipient) => recipient !== this.#actorId);
+      if (otherRecipients.length === 0) {
+        return;
+      }
+      const contentBytes = encode(encoder, message);
+      const contentBase64 = bytesToBase64(contentBytes);
+      const decodedMessage = decode(mlsMessageDecoder, contentBytes);
+      console.log("Decoded message:", decodedMessage);
       const activity = {
         "@context": this.#context,
         type: "Create",
         actor: this.#actorId,
-        to: recipients,
+        to: otherRecipients,
         object: {
-          type: "mls:PrivateMessage",
-          to: recipients,
+          type,
+          to: otherRecipients,
           mediaType: "message/mls",
           encoding: "base64",
-          content: bytesToBase64(content)
+          content: contentBase64
         }
       };
-      await this.send(this.#outboxUrl, activity);
-    }
-    // sendWelcome sends an MLS welcome message to the specified recipients
-    async sendWelcome(recipients, welcome) {
-      const content = bytesToBase64(encode(mlsWelcomeEncoder, welcome));
-      const activity = {
-        "@context": this.#context,
-        type: "Create",
-        actor: this.#actorId,
-        to: recipients,
-        object: {
-          type: "mls:Welcome",
-          to: recipients,
-          mediaType: "message/mls",
-          encoding: "base64",
-          content
-        }
-      };
-      await this.send(this.#outboxUrl, activity);
-    }
-    // sendMessage sends an MLS private message to the specified recipients
-    async sendMessage(recipients, message) {
-      const content = bytesToBase64(encode(mlsMessageEncoder, message));
-      const activity = {
-        "@context": this.#context,
-        type: "Create",
-        actor: this.#actorId,
-        to: recipients,
-        object: {
-          type: "mls:PrivateMessage",
-          to: recipients,
-          mediaType: "message/mls",
-          encoding: "base64",
-          content
-        }
-      };
-      await this.send(this.#outboxUrl, activity);
-    }
-    // send POSTs an ActivityPub activity to the specified outbox
-    // and returns the Location header from the response
-    async send(outbox, activity) {
-      const response = await fetch(outbox, {
+      const response = await fetch(this.#outboxUrl, {
         method: "POST",
         body: JSON.stringify(activity),
         credentials: "include"
       });
       if (!response.ok) {
-        throw new Error(`Failed to POST ${outbox}: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to POST ${this.#outboxUrl}: ${response.status} ${response.statusText}`);
       }
-      return response.headers.get("Location") || "";
     }
   };
 
   // src/model/ap-keypackage.ts
   function NewAPKeyPackage(generator, actorID, publicPackage) {
+    const keyPackageMessage = encode(mlsMessageEncoder, {
+      keyPackage: publicPackage,
+      wireformat: wireformats.mls_key_package,
+      version: protocolVersions.mls10
+    });
+    const keyPackageAsBase64 = bytesToBase64(keyPackageMessage);
+    console.log("Created KeyPackage message as base64:", keyPackageAsBase64);
+    const decodedMessage = decode(mlsMessageDecoder, base64ToBytes(keyPackageAsBase64));
+    console.log("Decoded KeyPackage message:", decodedMessage);
     return {
       id: "",
       // This will be appened by the server
@@ -14532,7 +15339,7 @@
       mediaType: "message/mls",
       encoding: "base64",
       generator,
-      content: btoa(publicPackage.signature.toString())
+      content: keyPackageAsBase64
     };
   }
 
@@ -14548,6 +15355,7 @@
     return await response.json();
   }
   async function* rangeCollection(url) {
+    console.log("rangeCollection: fetching collection from URL:", url);
     if (url == "") {
       return;
     }
@@ -14604,32 +15412,33 @@
       for (const actorID of actorIDs) {
         const actor = await loadActivityStream(actorID);
         const rangeKeyPackages = rangeCollection(actor["mls:keyPackages"]);
+        console.log(`getKeyPackages: Loading KeyPackages for actor: ${actorID}`);
         for await (const item of rangeKeyPackages) {
           const contentBytes = base64ToUint8Array(item.content);
-          console.log("Getting KeyPackage:", item.content, contentBytes);
+          console.log("getKeyPackages: Parsed KeyPackage:", item.content, contentBytes);
           const decodedKeyPackage = decode(mlsMessageDecoder, contentBytes);
           if (decodedKeyPackage == void 0) {
-            console.warn("Failed to decode KeyPackage for item:", item);
+            console.warn("getKeyPackages: Failed to decode KeyPackage for item:", item);
             continue;
           }
           if (decodedKeyPackage.wireformat !== wireformats.mls_key_package) {
-            console.warn("Unexpected wireformat for KeyPackage:", decodedKeyPackage.wireformat);
+            console.warn("getKeyPackages: Unexpected wireformat for KeyPackage:", decodedKeyPackage.wireformat);
             continue;
           }
           result.push(decodedKeyPackage.keyPackage);
         }
       }
-      console.log("Available KeyPackages:", result);
+      console.log("getKeyPackages: Available KeyPackages:", result);
       return result;
     }
     // createKeyPackage publishes a new KeyPackage to the User's outbox.
     async createKeyPackage(keyPackage) {
-      return await this.createObject(keyPackage);
+      return await this.#createObject(keyPackage);
     }
     // createObject POSTs an ActivityPub object to the user's outbox
     // and returns the Location header from the response
-    async createObject(object) {
-      return await this.send(this.#outboxURL, {
+    async #createObject(object) {
+      return await this.#send(this.#outboxURL, {
         "@context": "https://www.w3.org/ns/activitystreams",
         type: "Create",
         actor: this.#actorID,
@@ -14638,7 +15447,7 @@
     }
     // send POSTs an ActivityPub activity to the specified outbox
     // and returns the Location header from the response
-    async send(outbox, activity) {
+    async #send(outbox, activity) {
       const response = await fetch(outbox, {
         method: "POST",
         body: JSON.stringify(activity),
@@ -14651,60 +15460,164 @@
     }
   };
 
+  // src/ap/properties.ts
+  function Outbox(value) {
+    return string(value, "outbox", "ap:outbox", "https://www.w3.org/ns/activitystreams#outbox");
+  }
+  function Content(value) {
+    return string(value, "content", "ap:content", "https://www.w3.org/ns/activitystreams#content");
+  }
+  function MlsMessage(value) {
+    return string(value, "messages", "mls:messages", "https://purl.archive.org/socialweb/mls#messages");
+  }
+  function string(value, ...names) {
+    for (const name of names) {
+      if (value[name] != void 0) {
+        const result = value[name];
+        if (typeof result === "string") {
+          return result;
+        }
+      }
+    }
+    return "";
+  }
+
+  // src/service/receiver.ts
+  var Receiver = class {
+    //
+    #actorId;
+    // ID of the user receiving messages
+    #messagesUrl;
+    // list of registered message handlers
+    constructor(actorId, messagesUrl) {
+      this.#actorId = actorId;
+      this.#messagesUrl = messagesUrl;
+      this.handler = async function(message) {
+        console.log("Received message:", message);
+      };
+    }
+    // registerHandler adds a new MessageHandler to the list of handlers that will be called
+    registerHandler(handler) {
+      this.handler = handler;
+    }
+    // start begins polling for new messages and processing them with the registered handlers
+    // TODO: If the collection contains an SSE channel, then also start an SSE listener
+    start() {
+      console.log("starting receiver for actor:", this.#actorId);
+      this.poll();
+    }
+    // poll retrieves new messages from the mls:messages collection and calls the
+    // onMessage callback for each new message
+    async poll() {
+      const generator = rangeCollection(this.#messagesUrl);
+      for await (const message of generator) {
+        console.log("Receiver: Received message:", message);
+        const content = Content(message);
+        await this.handler(content);
+      }
+    }
+  };
+
   // src/controller.ts
   var import_mithril = __toESM(require_mithril(), 1);
   var import_stream = __toESM(require_stream2(), 1);
 
   // src/service/mls.ts
   var MLS = class {
-    #database;
-    #delivery;
-    #directory;
-    #clientConfig;
-    #cipherSuite;
-    #publicKeyPackage;
-    #privateKeyPackage;
-    #actor;
-    constructor(database, delivery, directory, clientConfig, cipherSuite, publicKeyPackage, privateKeyPackage, actor) {
+    constructor(database, delivery, directory, receiver, clientConfig, cipherSuite, publicKeyPackage, privateKeyPackage, actor) {
+      /// Receiving Messages
+      // use arrow function to preserve "this" context when passing as a callback
+      this.onMessage = async (message) => {
+        const context = this.#context();
+        console.log("MLS service: received message: ", message);
+        const uintArray = base64ToUint8Array(message);
+        const content = decode(mlsMessageDecoder, uintArray);
+        if (content == void 0) {
+          console.error("Unable to decode MLS message", message);
+          return;
+        }
+        console.log("Decoded message content:", content);
+        switch (content.wireformat) {
+          case wireformats.mls_group_info:
+            console.log("Received GroupInfo message");
+            return;
+          case wireformats.mls_key_package:
+            console.log("Received KeyPackage message");
+            return;
+          case wireformats.mls_private_message:
+            this.onMessage_PrivateMessage(content);
+            return;
+          case wireformats.mls_public_message:
+            console.log("Received PublicMessage");
+            return;
+          case wireformats.mls_welcome:
+            this.onMessage_Welcome(content);
+            return;
+          default:
+            console.error("Unknown MLS message type:");
+            return;
+        }
+      };
+      /// Helper methods
+      // Use arrow function to preserve "this" context when passing as a callback
+      this.#context = () => {
+        return {
+          cipherSuite: this.#cipherSuite,
+          authService: unsafeTestingAuthenticationService
+        };
+      };
       this.#database = database;
       this.#delivery = delivery;
       this.#directory = directory;
+      this.#receiver = receiver;
       this.#clientConfig = clientConfig;
       this.#actor = actor;
       this.#cipherSuite = cipherSuite;
       this.#publicKeyPackage = publicKeyPackage;
       this.#privateKeyPackage = privateKeyPackage;
     }
+    #database;
+    #delivery;
+    #directory;
+    #receiver;
+    #clientConfig;
+    #cipherSuite;
+    #publicKeyPackage;
+    #privateKeyPackage;
+    #actor;
+    /// Sending Messages
     // createGroup creates a new MLS group and saves it to the database
     async createGroup() {
-      const groupID = crypto.randomUUID();
+      const context = this.#context();
+      const groupID = "uri:uuid:" + crypto.randomUUID();
       const groupIDBytes = new TextEncoder().encode(groupID);
       console.log("Creating group with ID:", groupID, groupIDBytes);
-      console.log("context", this.#context());
+      console.log("context", context);
       console.log("publicKeyPackage", this.#publicKeyPackage);
       console.log("privateKeyPackage", this.#privateKeyPackage);
       const clientState = await createGroup({
-        context: this.#context(),
+        context,
         groupId: groupIDBytes,
         keyPackage: this.#publicKeyPackage,
         privateKeyPackage: this.#privateKeyPackage
       });
-      const result = {
+      const group = {
         id: groupID,
-        members: [this.#actor.id],
+        members: [],
         name: "New Group",
         clientState,
         createDate: Date.now(),
         updateDate: Date.now(),
         readDate: Date.now()
       };
-      console.log("Saving group to database:", result);
-      await this.#database.saveGroup(result);
-      return result;
+      console.log("Saving group to database:", group);
+      await this.#database.saveGroup(group);
+      return group;
     }
     // addGroupMembers updates the group state.  It sends a Commit
     // message to existing members, and a Welcome message to new members,
     async addGroupMembers(groupID, newMembers) {
+      const context = this.#context();
       const group = await this.#database.loadGroup(groupID);
       const currentMembers = group.members;
       const keyPackages = await this.#directory.getKeyPackages(newMembers);
@@ -14715,36 +15628,47 @@
         }
       }));
       const commitResult = await createCommit({
-        context: this.#context(),
+        context,
         state: group.clientState,
-        extraProposals: addProposals
+        extraProposals: addProposals,
+        ratchetTreeExtension: true
       });
-      this.#delivery.sendCommit(currentMembers, commitResult.commit);
-      this.#delivery.sendWelcome(newMembers, commitResult.welcome);
+      commitResult.consumed.forEach(zeroOutUint8Array);
       group.clientState = commitResult.newState;
       group.members = currentMembers.concat(newMembers);
       await this.#database.saveGroup(group);
+      if (commitResult.welcome != void 0) {
+        this.#delivery.sendWelcome(newMembers, commitResult.welcome);
+      }
+      if (currentMembers.length > 0) {
+        this.#delivery.sendFramedMessage(currentMembers, commitResult.commit);
+      }
     }
     async sendGroupMessage(group, plaintext) {
+      const context = this.#context();
       const mlsGroup = await this.#database.loadGroup(group);
+      const messageId = "uri:uuid:" + crypto.randomUUID();
       const messageObject = {
         "@context": "https://www.w3.org/ns/activitystreams",
+        id: messageId,
         type: "Note",
         content: plaintext
       };
       const messageText = JSON.stringify(messageObject);
       const messageBytes = new TextEncoder().encode(messageText);
-      const result = await createApplicationMessage({
-        context: this.#context(),
+      const applicationMessage = await createApplicationMessage({
+        context,
         state: mlsGroup.clientState,
         message: messageBytes
       });
-      this.#delivery.sendMessage(mlsGroup.members, result.message);
-      mlsGroup.clientState = result.newState;
+      applicationMessage.consumed.forEach(zeroOutUint8Array);
+      const recipients = mlsGroup.members.filter((member) => member !== this.#actor.id);
+      this.#delivery.sendFramedMessage(recipients, applicationMessage.message);
+      mlsGroup.clientState = applicationMessage.newState;
       mlsGroup.updateDate = Date.now();
       await this.#database.saveGroup(mlsGroup);
       const dbMessage = {
-        id: crypto.randomUUID(),
+        id: messageId,
         group,
         sender: this.#actor.id,
         plaintext,
@@ -14752,19 +15676,64 @@
       };
       await this.#database.saveMessage(dbMessage);
     }
-    encryptMessage() {
-      return "";
-    }
-    #context() {
-      return {
-        cipherSuite: this.#cipherSuite,
-        authService: unsafeTestingAuthenticationService
+    async onMessage_Welcome(message) {
+      console.log("Received Welcome message");
+      const clientState = await joinGroup({
+        context: this.#context(),
+        welcome: message.welcome,
+        keyPackage: this.#publicKeyPackage,
+        privateKeys: this.#privateKeyPackage
+      });
+      console.log("Joined new group with state:", clientState);
+      const groupId = new TextDecoder().decode(clientState.groupContext.groupId);
+      const group = {
+        id: groupId,
+        members: [],
+        name: "Received Group..",
+        clientState,
+        createDate: Date.now(),
+        updateDate: Date.now(),
+        readDate: Date.now()
       };
+      await this.#database.saveGroup(group);
     }
+    async onMessage_PrivateMessage(message) {
+      console.log("Received PrivateMessage:", message);
+      const groupId = new TextDecoder().decode(message.privateMessage.groupId);
+      const group = await this.#database.loadGroup(groupId);
+      const decodedMessage = await processMessage({
+        context: this.#context(),
+        state: group.clientState,
+        message
+      });
+      console.log("Processed result: ", decodedMessage);
+      decodedMessage.consumed.forEach(zeroOutUint8Array);
+      group.clientState = decodedMessage.newState;
+      group.updateDate = Date.now();
+      await this.#database.saveGroup(group);
+      if (decodedMessage.kind != "applicationMessage") {
+        console.log("Received non-application message.  Not sure what to do with these yet.");
+        return;
+      }
+      const plaintext = new TextDecoder().decode(decodedMessage.message);
+      console.log("Decrypted message plaintext:", plaintext);
+      const activity = JSON.parse(plaintext);
+      console.log("Parsed activity:", activity);
+      const dbm = {
+        id: activity.id,
+        group: groupId,
+        sender: activity.actor,
+        plaintext: activity.content,
+        createDate: Date.now()
+      };
+      console.log("Saving message to database: ", dbm);
+      await this.#database.saveMessage(dbm);
+    }
+    #context;
   };
 
   // src/service/mls-factory.ts
-  async function MLSFactory(database, delivery, directory, actor, clientConfig, clientName) {
+  async function MLSFactory(database, delivery, directory, receiver, actor, clientConfig, clientName) {
     const cipherSuiteName = "MLS_128_DHKEMX25519_AES128GCM_SHA256_Ed25519";
     const cipherSuite = await nobleCryptoProvider.getCiphersuiteImpl(getCiphersuiteFromName(cipherSuiteName));
     var dbKeyPackage = await database.loadKeyPackage();
@@ -14792,16 +15761,20 @@
       };
       await database.saveKeyPackage(dbKeyPackage);
     }
-    return new MLS(
+    var result = new MLS(
       database,
       delivery,
       directory,
+      receiver,
       clientConfig,
       cipherSuite,
       dbKeyPackage.publicKeyPackage,
       dbKeyPackage.privateKeyPackage,
       actor
     );
+    receiver.registerHandler(result.onMessage);
+    receiver.start();
+    return result;
   }
 
   // src/controller.ts
@@ -14810,13 +15783,15 @@
     #database;
     #delivery;
     #directory;
+    #receiver;
     #mls;
     // constructor initializes the Controller with its dependencies
-    constructor(actor, database, delivery, directory, clientConfig) {
+    constructor(actor, database, delivery, directory, receiver, clientConfig) {
       this.#actor = actor;
       this.#database = database;
       this.#delivery = delivery;
       this.#directory = directory;
+      this.#receiver = receiver;
       this.clientConfig = clientConfig;
       this.selectedGroupId = "";
       this.groups = (0, import_stream.default)([]);
@@ -14846,6 +15821,7 @@
         this.#database,
         this.#delivery,
         this.#directory,
+        this.#receiver,
         this.#actor,
         this.clientConfig,
         this.config.clientName
@@ -14968,9 +15944,9 @@
   };
 
   // src/view/main.tsx
-  var import_mithril15 = __toESM(require_mithril(), 1);
+  var import_mithril17 = __toESM(require_mithril(), 1);
   var import_stream2 = __toESM(require_stream2(), 1);
-  var import_mithril16 = __toESM(require_mithril(), 1);
+  var import_mithril18 = __toESM(require_mithril(), 1);
 
   // src/view/welcome.tsx
   var import_mithril5 = __toESM(require_mithril(), 1);
@@ -15188,8 +16164,8 @@
   };
 
   // src/view/index.tsx
-  var import_mithril13 = __toESM(require_mithril(), 1);
-  var import_mithril14 = __toESM(require_mithril(), 1);
+  var import_mithril15 = __toESM(require_mithril(), 1);
+  var import_mithril16 = __toESM(require_mithril(), 1);
 
   // src/view/modal-newConversation.tsx
   var import_mithril8 = __toESM(require_mithril(), 1);
@@ -15516,37 +16492,90 @@
     }
   };
 
+  // src/view/modal-debug.tsx
+  var import_mithril13 = __toESM(require_mithril(), 1);
+  var import_mithril14 = __toESM(require_mithril(), 1);
+  var Debug = class {
+    //
+    oninit(vnode) {
+      vnode.state.name = vnode.attrs.group.name;
+    }
+    view(vnode) {
+      return /* @__PURE__ */ (0, import_mithril13.default)(Modal, { close: vnode.attrs.close }, /* @__PURE__ */ (0, import_mithril13.default)("form", { onsubmit: (event) => this.onsubmit(event, vnode) }, /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "layout layout-vertical" }, /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "layout-title" }, /* @__PURE__ */ (0, import_mithril13.default)("i", { class: "bi bi-lock-fill" }), " Edit Group"), /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "layout-elements" }, /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "layout-element" }, /* @__PURE__ */ (0, import_mithril13.default)("label", { for: "idGroupName" }, "Group Name"), /* @__PURE__ */ (0, import_mithril13.default)(
+        "input",
+        {
+          id: "idGroupName",
+          type: "text",
+          name: "actorIds",
+          value: vnode.state.name,
+          oninput: (event) => this.setName(vnode, event)
+        }
+      )))), /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "margin-top flex-row" }, /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "flex-grow" }, /* @__PURE__ */ (0, import_mithril13.default)("button", { type: "submit", class: "primary", tabindex: "0" }, "Save Changes"), /* @__PURE__ */ (0, import_mithril13.default)("button", { onclick: vnode.attrs.close, tabIndex: "0" }, "Close")), /* @__PURE__ */ (0, import_mithril13.default)("div", null, /* @__PURE__ */ (0, import_mithril13.default)(
+        "span",
+        {
+          onclick: () => {
+            this.delete(vnode);
+          },
+          class: "clickable text-red"
+        },
+        "Leave Group"
+      )))));
+    }
+    setName(vnode, event) {
+      const target = event.target;
+      vnode.state.name = target.value;
+    }
+    async onsubmit(event, vnode) {
+      event.preventDefault();
+      event.stopPropagation();
+      vnode.attrs.group.name = vnode.state.name;
+      await vnode.attrs.controller.saveGroup(vnode.attrs.group);
+      return this.close(vnode);
+    }
+    async delete(vnode) {
+      if (!confirm("Are you sure you want to leave this group? This action cannot be undone.")) {
+        return;
+      }
+      await vnode.attrs.controller.deleteGroup(vnode.attrs.group.id);
+      this.close(vnode);
+    }
+    close(vnode) {
+      vnode.attrs.close();
+      import_mithril13.default.redraw();
+    }
+  };
+
   // src/view/index.tsx
   var Index = class {
     oninit(vnode) {
       vnode.state.modal = "";
     }
     view(vnode) {
-      return /* @__PURE__ */ (0, import_mithril13.default)("div", { id: "conversations" }, /* @__PURE__ */ (0, import_mithril13.default)(
+      return /* @__PURE__ */ (0, import_mithril15.default)("div", { id: "conversations" }, /* @__PURE__ */ (0, import_mithril15.default)(
         "div",
         {
           id: "conversation-list",
           class: "table no-top-border width-50% md:width-40% lg:width-30% flex-shrink-0 scroll-vertical"
         },
-        /* @__PURE__ */ (0, import_mithril13.default)(
+        /* @__PURE__ */ (0, import_mithril15.default)(
           "div",
           {
             role: "button",
             class: "link conversation-selector padding flex-row flex-align-center",
             onclick: () => this.newConversation(vnode)
           },
-          /* @__PURE__ */ (0, import_mithril13.default)(
+          /* @__PURE__ */ (0, import_mithril15.default)(
             "div",
             {
               class: "circle width-32 flex-shrink-0 flex-center margin-none",
               style: "font-size:24px;background-color:var(--blue50);color:var(--white);"
             },
-            /* @__PURE__ */ (0, import_mithril13.default)("i", { class: "bi bi-plus" })
+            /* @__PURE__ */ (0, import_mithril15.default)("i", { class: "bi bi-plus" })
           ),
-          /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "ellipsis-block", style: "max-height:3em;" }, "Start a Conversation")
+          /* @__PURE__ */ (0, import_mithril15.default)("div", { class: "ellipsis-block", style: "max-height:3em;" }, "Start a Conversation")
         ),
         this.viewGroups(vnode)
-      ), /* @__PURE__ */ (0, import_mithril13.default)("div", { id: "conversation-details", class: "width-75%" }, this.viewMessages(vnode)), this.viewModals(vnode));
+      ), /* @__PURE__ */ (0, import_mithril15.default)("div", { id: "conversation-details", class: "width-75%" }, this.viewMessages(vnode)), this.viewModals(vnode));
     }
     viewGroups(vnode) {
       const controller2 = vnode.attrs.controller;
@@ -15557,7 +16586,7 @@
         if (group.id == selectedGroupId) {
           cssClass += " selected";
         }
-        return /* @__PURE__ */ (0, import_mithril13.default)("div", { role: "button", class: cssClass, onclick: () => controller2.selectGroup(group.id) }, /* @__PURE__ */ (0, import_mithril13.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril13.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril13.default)("span", { class: "flex-grow nowrap ellipsis" }, /* @__PURE__ */ (0, import_mithril13.default)("div", null, group.name), /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "text-xs text-light-gray" }, group.id)), /* @__PURE__ */ (0, import_mithril13.default)("button", { onclick: () => this.editGroup(vnode, group), class: "hover-show" }, "\u22EF"));
+        return /* @__PURE__ */ (0, import_mithril15.default)("div", { role: "button", class: cssClass, onclick: () => controller2.selectGroup(group.id) }, /* @__PURE__ */ (0, import_mithril15.default)("span", { class: "width-32 circle flex-center" }, /* @__PURE__ */ (0, import_mithril15.default)("i", { class: "bi bi-lock-fill" })), /* @__PURE__ */ (0, import_mithril15.default)("span", { class: "flex-grow nowrap ellipsis" }, /* @__PURE__ */ (0, import_mithril15.default)("div", null, group.name), /* @__PURE__ */ (0, import_mithril15.default)("div", { class: "text-xs text-light-gray" }, group.id)), /* @__PURE__ */ (0, import_mithril15.default)("button", { onclick: () => this.editGroup(vnode, group), class: "hover-show" }, "\u22EF"));
       });
     }
     // viewMessages returns the JSX for the messages within the selectedGroup.
@@ -15565,15 +16594,15 @@
     viewMessages(vnode) {
       if (vnode.attrs.controller.selectedGroupId == "") {
         return [
-          /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "flex-center height-100% align-center" }, /* @__PURE__ */ (0, import_mithril13.default)("div", null, /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "margin-vertical bold" }, "Welcome to Conversations!"), /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "margin-vertical" }, "Messages will appear here once you get started."), /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "margin-vertical link", onclick: () => this.newConversation(vnode) }, "Start a conversation")))
+          /* @__PURE__ */ (0, import_mithril15.default)("div", { class: "flex-center height-100% align-center" }, /* @__PURE__ */ (0, import_mithril15.default)("div", null, /* @__PURE__ */ (0, import_mithril15.default)("div", { class: "margin-vertical bold" }, "Welcome to Conversations!"), /* @__PURE__ */ (0, import_mithril15.default)("div", { class: "margin-vertical" }, "Messages will appear here once you get started."), /* @__PURE__ */ (0, import_mithril15.default)("div", { class: "margin-vertical link", onclick: () => this.newConversation(vnode) }, "Start a conversation")))
         ];
       }
       const messages = vnode.attrs.controller.messages();
       return [
-        /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "flex-grow padding-lg" }, messages.map((message) => {
-          return /* @__PURE__ */ (0, import_mithril13.default)("div", { class: "card padding margin-bottom" }, /* @__PURE__ */ (0, import_mithril13.default)("pre", { class: "text-sm" }, JSON.stringify(message, null, 4)));
+        /* @__PURE__ */ (0, import_mithril15.default)("div", { class: "flex-grow padding-lg" }, messages.map((message) => {
+          return /* @__PURE__ */ (0, import_mithril15.default)("div", { class: "card padding margin-bottom" }, /* @__PURE__ */ (0, import_mithril15.default)("pre", { class: "text-sm" }, JSON.stringify(message, null, 4)));
         })),
-        /* @__PURE__ */ (0, import_mithril13.default)(WidgetMessageCreate, { controller: vnode.attrs.controller })
+        /* @__PURE__ */ (0, import_mithril15.default)(WidgetMessageCreate, { controller: vnode.attrs.controller })
       ];
     }
     newConversation(vnode) {
@@ -15588,7 +16617,7 @@
     viewModals(vnode) {
       switch (vnode.state.modal) {
         case "NEW-CONVERSATION":
-          return /* @__PURE__ */ (0, import_mithril13.default)(
+          return /* @__PURE__ */ (0, import_mithril15.default)(
             NewConversation,
             {
               controller: vnode.attrs.controller,
@@ -15596,7 +16625,7 @@
             }
           );
         case "EDIT-GROUP":
-          return /* @__PURE__ */ (0, import_mithril13.default)(
+          return /* @__PURE__ */ (0, import_mithril15.default)(
             EditGroup,
             {
               controller: vnode.attrs.controller,
@@ -15604,6 +16633,8 @@
               close: () => this.closeModal(vnode)
             }
           );
+        case "DEBUG":
+          return /* @__PURE__ */ (0, import_mithril15.default)(Debug, { controller: vnode.attrs.controller, close: () => this.closeModal(vnode) });
       }
       return void 0;
     }
@@ -15612,7 +16643,7 @@
       document.getElementById("modal")?.classList.remove("ready");
       window.setTimeout(() => {
         vnode.state.modal = "";
-        import_mithril13.default.redraw();
+        import_mithril15.default.redraw();
       }, 240);
     }
   };
@@ -15625,12 +16656,12 @@
     view(vnode) {
       const controller2 = vnode.attrs.controller;
       if (!controller2.config.ready) {
-        return /* @__PURE__ */ (0, import_mithril15.default)("div", { class: "app-content" }, "Loading...");
+        return /* @__PURE__ */ (0, import_mithril17.default)("div", { class: "app-content" }, "Loading...");
       }
       if (!controller2.config.welcome) {
-        return /* @__PURE__ */ (0, import_mithril15.default)(Welcome, { controller: controller2 });
+        return /* @__PURE__ */ (0, import_mithril17.default)(Welcome, { controller: controller2 });
       }
-      return /* @__PURE__ */ (0, import_mithril15.default)(Index, { controller: controller2 });
+      return /* @__PURE__ */ (0, import_mithril17.default)(Index, { controller: controller2 });
     }
   };
 
@@ -15645,10 +16676,11 @@
     const actor = await loadActivityStream(actorID);
     const indexedDB2 = await NewIndexedDB();
     const database = new Database(indexedDB2, defaultClientConfig);
-    const delivery = new Delivery(actor.id, actor.outbox);
-    const directory = new Directory(actor.id, actor.outbox);
-    controller = new Controller(actor, database, delivery, directory, defaultClientConfig);
-    import_mithril17.default.mount(root2, { view: () => /* @__PURE__ */ (0, import_mithril17.default)(Main, { controller }) });
+    const delivery = new Delivery(actor.id, Outbox(actor));
+    const directory = new Directory(actor.id, Outbox(actor));
+    const receiver = new Receiver(actor.id, MlsMessage(actor));
+    controller = new Controller(actor, database, delivery, directory, receiver, defaultClientConfig);
+    import_mithril19.default.mount(root2, { view: () => /* @__PURE__ */ (0, import_mithril19.default)(Main, { controller }) });
   }
   startup();
 })();

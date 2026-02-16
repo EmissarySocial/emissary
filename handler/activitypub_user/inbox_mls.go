@@ -41,6 +41,7 @@ func inbox_MLS(context Context, activity streams.Document) error {
 
 	// Populate a new MLSMessage
 	mlsMessage := model.NewMLSMessage()
+	mlsMessage.Type = object.Type()
 	mlsMessage.UserID = context.user.UserID
 	mlsMessage.Content = object.Content()
 

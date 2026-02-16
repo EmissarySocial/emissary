@@ -5,9 +5,11 @@ import {type APActor} from "./model/ap-actor"
 import {Database, NewIndexedDB} from "./service/database"
 import {Delivery} from "./service/delivery"
 import {Directory} from "./service/directory"
+import {Receiver} from "./service/receiver"
 import {loadActivityStream} from "./service/network"
 import {Controller} from "./controller"
 import {Main} from "./view/main"
+import * as ap from "./ap/properties"
 
 // Global controller instance
 var controller: Controller
@@ -28,11 +30,12 @@ async function startup() {
 	// Build dependencies
 	const indexedDB = await NewIndexedDB()
 	const database = new Database(indexedDB, defaultClientConfig)
-	const delivery = new Delivery(actor.id, actor.outbox)
-	const directory = new Directory(actor.id, actor.outbox)
+	const delivery = new Delivery(actor.id, ap.Outbox(actor))
+	const directory = new Directory(actor.id, ap.Outbox(actor))
+	const receiver = new Receiver(actor.id, ap.MlsMessage(actor))
 
 	// Build the controller
-	controller = new Controller(actor, database, delivery, directory, defaultClientConfig)
+	controller = new Controller(actor, database, delivery, directory, receiver, defaultClientConfig)
 
 	// Pass the controller to the Main component and mount the main application
 	m.mount(root, {view: () => <Main controller={controller} />})

@@ -25,19 +25,21 @@ export class Directory {
 			const actor = (await loadActivityStream(actorID)) as APActor
 			const rangeKeyPackages = rangeCollection<APKeyPackage>(actor["mls:keyPackages"])
 
+			console.log(`getKeyPackages: Loading KeyPackages for actor: ${actorID}`)
+
 			for await (const item of rangeKeyPackages) {
 				const contentBytes = base64ToUint8Array(item.content)
-				console.log("Getting KeyPackage:", item.content, contentBytes)
+				console.log("getKeyPackages: Parsed KeyPackage:", item.content, contentBytes)
 
 				const decodedKeyPackage = decode(mlsMessageDecoder, contentBytes)
 
 				if (decodedKeyPackage == undefined) {
-					console.warn("Failed to decode KeyPackage for item:", item)
+					console.warn("getKeyPackages: Failed to decode KeyPackage for item:", item)
 					continue
 				}
 
 				if (decodedKeyPackage.wireformat !== wireformats.mls_key_package) {
-					console.warn("Unexpected wireformat for KeyPackage:", decodedKeyPackage.wireformat)
+					console.warn("getKeyPackages: Unexpected wireformat for KeyPackage:", decodedKeyPackage.wireformat)
 					continue
 				}
 
@@ -45,19 +47,19 @@ export class Directory {
 			}
 		}
 
-		console.log("Available KeyPackages:", result)
+		console.log("getKeyPackages: Available KeyPackages:", result)
 		return result
 	}
 
 	// createKeyPackage publishes a new KeyPackage to the User's outbox.
 	async createKeyPackage(keyPackage: APKeyPackage): Promise<string> {
-		return await this.createObject<APKeyPackage>(keyPackage)
+		return await this.#createObject<APKeyPackage>(keyPackage)
 	}
 
 	// createObject POSTs an ActivityPub object to the user's outbox
 	// and returns the Location header from the response
-	private async createObject<T>(object: T): Promise<string> {
-		return await this.send(this.#outboxURL, {
+	async #createObject<T>(object: T): Promise<string> {
+		return await this.#send(this.#outboxURL, {
 			"@context": "https://www.w3.org/ns/activitystreams",
 			type: "Create",
 			actor: this.#actorID,
@@ -67,7 +69,7 @@ export class Directory {
 
 	// send POSTs an ActivityPub activity to the specified outbox
 	// and returns the Location header from the response
-	private async send<T>(outbox: string, activity: T): Promise<string> {
+	async #send<T>(outbox: string, activity: T): Promise<string> {
 		// Send the Activity to the server
 		const response = await fetch(outbox, {
 			method: "POST",

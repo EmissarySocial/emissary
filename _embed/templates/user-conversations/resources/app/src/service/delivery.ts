@@ -1,15 +1,18 @@
-// import {type MLSMessage} from "ts-mls/message.js"
-import {bytesToBase64} from "ts-mls"
-import {encode} from "ts-mls"
-import {type Commit} from "ts-mls"
+import {type MlsGroupInfo, type MlsMessageProtocol} from "ts-mls"
+import {type MlsFramedMessage} from "ts-mls"
 import {type MlsPrivateMessage} from "ts-mls"
-import {type MlsWelcome} from "ts-mls"
-import {mlsPrivateMessageEncoder, type MlsFramedMessage} from "ts-mls/message.js"
-import {mlsWelcomeEncoder} from "ts-mls/message.js"
-import {mlsMessageEncoder} from "ts-mls/message.js"
+import {type MlsWelcomeMessage} from "ts-mls"
+
+import {bytesToBase64, type Encoder} from "ts-mls"
+import {encode} from "ts-mls"
+import {decode} from "ts-mls"
+import {mlsMessageEncoder} from "ts-mls"
+import {mlsMessageDecoder} from "ts-mls"
 
 // Delivery service sends messages via ActivityPub
 export class Delivery {
+	//
+
 	// context is the default JSON-LD context for MLS messages
 	#context = ["https://www.w3.org/ns/activitystreams", "https://purl.archive.org/socialweb/mls"]
 
@@ -55,89 +58,68 @@ export class Delivery {
 		return response.json() as Promise<T>
 	}
 
-	// sendCommit sends an MLS commit message to the specified recipients
-	async sendCommit(recipients: string[], commit: MlsFramedMessage) {
+	// sendFramedMessage sends an MLS FramedMessage to the specified recipients
+	sendFramedMessage(recipients: string[], message: MlsFramedMessage) {
+		this.#send("mls:PrivateMessage", recipients, message, mlsMessageEncoder)
+	}
+
+	// sendGroupInfo sends an MLS GroupInfo message to the specified recipients
+	sendGroupInfo(recipients: string[], message: MlsGroupInfo & MlsMessageProtocol) {
+		this.#send("mls:GroupInfo", recipients, message, mlsMessageEncoder)
+	}
+
+	// sendPrivateMessage sends an MLS PrivateMessage to the specified recipients
+	sendPrivateMessage(recipients: string[], message: MlsFramedMessage) {
+		this.#send("mls:PrivateMessage", recipients, message, mlsMessageEncoder)
+	}
+
+	// sendWelcome sends an MLS Welcome message to the specified recipients
+	sendWelcome(recipients: string[], message: MlsWelcomeMessage) {
+		this.#send("mls:Welcome", recipients, message, mlsMessageEncoder)
+	}
+
+	// #send is a private method that sends an MLS message via the user's ActivityPub outbox
+	async #send<T>(type: string, recipients: string[], message: T, encoder: Encoder<T>) {
 		//
-		// Encode the commit message as JSON, then to bytes
-		const content = encode(mlsMessageEncoder, commit)
+		// Filter out "me" from the recipients list (we don't need to send the message to ourselves)
+		const otherRecipients = recipients.filter((recipient) => recipient !== this.#actorId)
 
-		// Create an ActivityPub activity for the commit message
+		// If there are no recipients to send to, just return early
+		if (otherRecipients.length === 0) {
+			return
+		}
+
+		// Encode the private message as bytes, then to base64
+		const contentBytes = encode(encoder, message)
+		const contentBase64 = bytesToBase64(contentBytes)
+
+		const decodedMessage = decode(mlsMessageDecoder, contentBytes)
+		console.log("Decoded message:", decodedMessage)
+
+		// Create an ActivityPub activity for the private message
 		const activity = {
 			"@context": this.#context,
 			type: "Create",
 			actor: this.#actorId,
-			to: recipients,
+			to: otherRecipients,
 			object: {
-				type: "mls:PrivateMessage",
-				to: recipients,
+				type: type,
+				to: otherRecipients,
 				mediaType: "message/mls",
 				encoding: "base64",
-				content: bytesToBase64(content),
+				content: contentBase64,
 			},
 		}
-
-		// Send the activity
-		await this.send(this.#outboxUrl, activity)
-	}
-
-	// sendWelcome sends an MLS welcome message to the specified recipients
-	async sendWelcome(recipients: string[], welcome: MlsWelcome) {
-		const content = bytesToBase64(encode(mlsWelcomeEncoder, welcome))
-
-		const activity = {
-			"@context": this.#context,
-			type: "Create",
-			actor: this.#actorId,
-			to: recipients,
-			object: {
-				type: "mls:Welcome",
-				to: recipients,
-				mediaType: "message/mls",
-				encoding: "base64",
-				content: content,
-			},
-		}
-
-		await this.send(this.#outboxUrl, activity)
-	}
-
-	// sendMessage sends an MLS private message to the specified recipients
-	async sendMessage(recipients: string[], message: MlsFramedMessage) {
-		const content = bytesToBase64(encode(mlsMessageEncoder, message))
-
-		const activity = {
-			"@context": this.#context,
-			type: "Create",
-			actor: this.#actorId,
-			to: recipients,
-			object: {
-				type: "mls:PrivateMessage",
-				to: recipients,
-				mediaType: "message/mls",
-				encoding: "base64",
-				content: content,
-			},
-		}
-
-		await this.send(this.#outboxUrl, activity)
-	}
-
-	// send POSTs an ActivityPub activity to the specified outbox
-	// and returns the Location header from the response
-	async send<T>(outbox: string, activity: T): Promise<string> {
-		//
 
 		// Send the Activity to the server
-		const response = await fetch(outbox, {
+		const response = await fetch(this.#outboxUrl, {
 			method: "POST",
 			body: JSON.stringify(activity),
 			credentials: "include",
 		})
 
 		if (!response.ok) {
-			throw new Error(`Failed to POST ${outbox}: ${response.status} ${response.statusText}`)
+			throw new Error(`Failed to POST ${this.#outboxUrl}: ${response.status} ${response.statusText}`)
 		}
-
-		return response.headers.get("Location") || ""
 	}
 }

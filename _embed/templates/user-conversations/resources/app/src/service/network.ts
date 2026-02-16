@@ -27,6 +27,7 @@ export async function loadActivityStream(url: string): Promise<any> {
 // Automatically handles pagination by following 'first' and 'next' links.
 export async function* rangeCollection<T>(url: string): AsyncGenerator<T> {
 	//
+	console.log("rangeCollection: fetching collection from URL:", url)
 	// Exit if if the URL is empty
 	if (url == "") {
 		return

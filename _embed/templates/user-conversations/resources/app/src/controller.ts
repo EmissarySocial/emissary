@@ -11,6 +11,7 @@ import {MLSFactory} from "./service/mls-factory"
 import type {Delivery} from "./service/delivery"
 import type {Directory} from "./service/directory"
 import type {Database} from "./service/database"
+import type {Receiver} from "./service/receiver"
 import type {DBMessage} from "./model/db-message"
 import type {Group} from "./model/group"
 
@@ -19,6 +20,7 @@ export class Controller {
 	#database: Database
 	#delivery: Delivery
 	#directory: Directory
+	#receiver: Receiver
 	#mls?: MLS
 	config: Config
 	clientConfig: ClientConfig
@@ -32,12 +34,14 @@ export class Controller {
 		database: Database,
 		delivery: Delivery,
 		directory: Directory,
+		receiver: Receiver,
 		clientConfig: ClientConfig,
 	) {
 		this.#actor = actor
 		this.#database = database
 		this.#delivery = delivery
 		this.#directory = directory
+		this.#receiver = receiver
 		this.clientConfig = clientConfig
 		this.selectedGroupId = ""
 		this.groups = stream([] as DBGroup[])
@@ -77,6 +81,7 @@ export class Controller {
 			this.#database,
 			this.#delivery,
 			this.#directory,
+			this.#receiver,
 			this.#actor,
 			this.clientConfig,
 			this.config.clientName,

@@ -10,6 +10,7 @@ import type {APActor} from "../model/ap-actor"
 import type {Database} from "./database"
 import type {Delivery} from "./delivery"
 import type {Directory} from "./directory"
+import type {Receiver} from "./receiver"
 import {MLS} from "./mls"
 import {NewAPKeyPackage} from "../model/ap-keypackage"
 
@@ -19,6 +20,7 @@ export async function MLSFactory(
 	database: Database,
 	delivery: Delivery,
 	directory: Directory,
+	receiver: Receiver,
 	actor: APActor,
 	clientConfig: ClientConfig,
 	clientName: string,
@@ -69,14 +71,23 @@ export async function MLSFactory(
 	}
 
 	// Create and return the MLS service
-	return new MLS(
+	var result = new MLS(
 		database,
 		delivery,
 		directory,
+		receiver,
 		clientConfig,
 		cipherSuite,
 		dbKeyPackage.publicKeyPackage,
 		dbKeyPackage.privateKeyPackage,
 		actor,
 	)
+
+	// Wire the receiver into the MLS service so that incoming messages are processed
+	receiver.registerHandler(result.onMessage)
+
+	// Start the receiver
+	receiver.start()
+
+	return result
 }

@@ -3,8 +3,11 @@ module github.com/EmissarySocial/emissary
 go 1.25.4
 
 replace github.com/benpate/hannibal => ../../benpate/hannibal
+
 replace github.com/benpate/rosetta => ../../benpate/rosetta
+
 replace github.com/benpate/turbine => ../../benpate/turbine
+
 replace github.com/benpate/domain => ../../benpate/domain
 
 require (
@@ -29,7 +32,7 @@ require (
 	github.com/benpate/mediaserver v0.15.13
 	github.com/benpate/re v0.3.5
 	github.com/benpate/remote v0.18.0
-	github.com/benpate/rosetta v0.25.28
+	github.com/benpate/rosetta v0.25.29
 	github.com/benpate/sherlock v0.8.18
 	github.com/benpate/sniff v0.1.0
 	github.com/benpate/steranko v0.22.8
@@ -69,11 +72,11 @@ require (
 	github.com/xhit/go-simple-mail/v2 v2.16.0
 	github.com/yeqown/go-qrcode/v2 v2.2.5
 	github.com/yeqown/go-qrcode/writer/standard v1.3.0
-	github.com/yuin/goldmark v1.7.13
+	github.com/yuin/goldmark v1.7.16
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.abhg.dev/goldmark/anchor v0.2.0
 	go.mongodb.org/mongo-driver v1.17.6
-	golang.org/x/crypto v0.46.0
+	golang.org/x/crypto v0.48.0
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93
 	golang.org/x/oauth2 v0.34.0
 	willnorris.com/go/microformats v1.2.0
@@ -133,10 +136,10 @@ require (
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	golang.org/x/image v0.34.0 // indirect
-	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/net v0.50.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.39.0 // indirect
-	golang.org/x/text v0.32.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/text v0.34.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
