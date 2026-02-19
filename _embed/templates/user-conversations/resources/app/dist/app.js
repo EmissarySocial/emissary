@@ -15163,33 +15163,15 @@
     }
     // saveGroup saves a group to the database
     async saveGroup(group) {
-      const dbGroup = {
-        id: group.id,
-        members: group.members,
-        name: group.name,
-        clientState: group.clientState,
-        createDate: group.createDate,
-        updateDate: group.updateDate,
-        readDate: group.readDate
-      };
-      await this.#db.put("group", dbGroup);
+      await this.#db.put("group", group);
     }
     // loadGroup retrieves a group from the database
     async loadGroup(groupID) {
-      const dbGroup = await this.#db.get("group", groupID);
-      if (dbGroup == void 0) {
+      const group = await this.#db.get("group", groupID);
+      if (group == void 0) {
         throw new Error("Group not found: " + groupID);
       }
-      const result = {
-        id: dbGroup.id,
-        members: dbGroup.members,
-        name: dbGroup.name,
-        clientState: dbGroup.clientState,
-        createDate: dbGroup.createDate,
-        updateDate: dbGroup.updateDate,
-        readDate: dbGroup.readDate
-      };
-      return result;
+      return group;
     }
     // deleteGroup removes a group from the database
     async deleteGroup(group) {

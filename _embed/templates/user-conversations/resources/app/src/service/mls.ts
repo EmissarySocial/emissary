@@ -25,7 +25,7 @@ import {type MlsFramedMessage} from "ts-mls"
 import {type APActor} from "../model/ap-actor"
 import {type Group} from "../model/group"
 import {type APKeyPackage} from "../model/ap-keypackage"
-import {type DBMessage} from "../model/db-message"
+import {type Message} from "../model/message"
 import {type DBKeyPackage} from "../model/db-keypackage"
 import {base64ToUint8Array} from "./utils"
 
@@ -34,11 +34,11 @@ import {base64ToUint8Array} from "./utils"
 interface IDatabase {
 	// load methods
 	loadGroup(groupID: string): Promise<Group>
-	loadMessage(messageID: string): Promise<DBMessage>
+	loadMessage(messageID: string): Promise<Message>
 
 	// save methods
 	saveGroup(group: Group): Promise<void>
-	saveMessage(message: DBMessage): Promise<void>
+	saveMessage(message: Message): Promise<void>
 
 	loadKeyPackage(): Promise<DBKeyPackage | undefined>
 	saveKeyPackage(keyPackage: DBKeyPackage): Promise<void>
@@ -235,7 +235,7 @@ export class MLS {
 		await this.#database.saveGroup(mlsGroup)
 
 		// Create a new Message object
-		const dbMessage: DBMessage = {
+		const dbMessage: Message = {
 			id: messageId,
 			group: group,
 			sender: this.#actor.id,

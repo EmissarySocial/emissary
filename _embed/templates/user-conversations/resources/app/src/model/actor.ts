@@ -1,4 +1,4 @@
-export type DBActor = {
+export type Actor = {
 	id: string
 	name: string
 	username: string

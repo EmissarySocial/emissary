@@ -1,4 +1,4 @@
-export type DBMessage = {
+export type Message = {
 	id: string
 	group: string
 	sender: string

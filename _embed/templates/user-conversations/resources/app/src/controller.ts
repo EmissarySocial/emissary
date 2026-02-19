@@ -2,18 +2,17 @@
 import m from "mithril"
 import stream from "mithril/stream"
 import {type ClientConfig, type KeyPackage, type Welcome} from "ts-mls"
-import {type APActor} from "./model/ap-actor"
-import {type DBGroup} from "./model/db-group"
 import {MLS} from "./service/mls"
 import type {Config} from "./model/config"
-import {NewConfig} from "./model/config"
 import {MLSFactory} from "./service/mls-factory"
+import {type APActor} from "./model/ap-actor"
+import {NewConfig} from "./model/config"
 import type {Delivery} from "./service/delivery"
 import type {Directory} from "./service/directory"
 import type {Database} from "./service/database"
 import type {Receiver} from "./service/receiver"
-import type {DBMessage} from "./model/db-message"
-import type {Group} from "./model/group"
+import type {Message} from "./model/message"
+import {type Group} from "./model/group"
 
 export class Controller {
 	#actor: APActor
@@ -25,8 +24,8 @@ export class Controller {
 	config: Config
 	clientConfig: ClientConfig
 	selectedGroupId: string
-	groups: stream<DBGroup[]>
-	messages: stream<DBMessage[]>
+	groups: stream<Group[]>
+	messages: stream<Message[]>
 
 	// constructor initializes the Controller with its dependencies
 	constructor(
@@ -44,8 +43,8 @@ export class Controller {
 		this.#receiver = receiver
 		this.clientConfig = clientConfig
 		this.selectedGroupId = ""
-		this.groups = stream([] as DBGroup[])
-		this.messages = stream([] as DBMessage[])
+		this.groups = stream([] as Group[])
+		this.messages = stream([] as Message[])
 
 		// Application Configuration
 		this.config = NewConfig() // Empty placeholder until loaded
@@ -218,7 +217,7 @@ export class Controller {
 	}
 
 	// saveGroup saves the specified group to the database and reloads groups
-	async saveGroup(group: DBGroup) {
+	async saveGroup(group: Group) {
 		await this.#database.saveGroup(group)
 		await this.loadGroups()
 	}

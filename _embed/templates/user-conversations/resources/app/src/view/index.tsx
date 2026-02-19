@@ -1,6 +1,6 @@
 import m from "mithril"
 import {type Vnode} from "mithril"
-import {type DBGroup} from "../model/db-group"
+import {type Group} from "../model/group"
 import {Controller} from "../controller"
 import {NewConversation} from "./modal-newConversation"
 import {EditGroup} from "./modal-editGroup"
@@ -15,7 +15,7 @@ type IndexAttrs = {
 
 type IndexState = {
 	modal: string
-	modalGroup?: DBGroup
+	modalGroup?: Group
 }
 
 export class Index {
@@ -125,7 +125,7 @@ export class Index {
 	}
 
 	// editGroup opens the "Edit Group" modal for the specified group
-	private editGroup(vnode: IndexVnode, group: DBGroup) {
+	private editGroup(vnode: IndexVnode, group: Group) {
 		vnode.state.modal = "EDIT-GROUP"
 		vnode.state.modalGroup = group
 	}

@@ -2,8 +2,7 @@ import type {DBSchema, IDBPDatabase} from "idb/build/entry.js"
 import {openDB} from "idb"
 import {ConfigID, NewConfig, type Config} from "../model/config"
 import {type Group} from "../model/group"
-import {type DBGroup} from "../model/db-group"
-import {type DBMessage} from "../model/db-message"
+import {type Message} from "../model/message"
 import type {DBKeyPackage} from "../model/db-keypackage"
 import {type ClientConfig} from "ts-mls/clientConfig.js"
 import {type ClientState} from "ts-mls"
@@ -19,7 +18,7 @@ interface Schema extends DBSchema {
 	}
 	group: {
 		key: string
-		value: DBGroup
+		value: Group
 		indexes: {
 			id: string
 		}
@@ -35,7 +34,7 @@ interface Schema extends DBSchema {
 
 	message: {
 		key: string
-		value: DBMessage
+		value: Message
 		indexes: {
 			id: string
 			group: string
@@ -94,7 +93,7 @@ export class Database {
 	/////////////////////////////////////////////
 
 	// allGroups returns all groups from the database, sorted by updateDate descending
-	async allGroups(): Promise<DBGroup[]> {
+	async allGroups(): Promise<Group[]> {
 		//
 		// List all groups, sorted by updateDate descending
 		var groups = await this.#db.getAll("group")
@@ -104,19 +103,7 @@ export class Database {
 
 	// saveGroup saves a group to the database
 	async saveGroup(group: Group) {
-		//
-		// Encode the group (with serialized clientState)
-		const dbGroup: DBGroup = {
-			id: group.id,
-			members: group.members,
-			name: group.name,
-			clientState: group.clientState,
-			createDate: group.createDate,
-			updateDate: group.updateDate,
-			readDate: group.readDate,
-		}
-
-		await this.#db.put("group", dbGroup)
+		await this.#db.put("group", group)
 	}
 
 	// loadGroup retrieves a group from the database
@@ -124,24 +111,13 @@ export class Database {
 		//
 
 		// Load the group record
-		const dbGroup = await this.#db.get("group", groupID)
-		if (dbGroup == undefined) {
+		const group = await this.#db.get("group", groupID)
+		if (group == undefined) {
 			throw new Error("Group not found: " + groupID)
 		}
 
-		// Create an in-memory group record
-		const result: Group = {
-			id: dbGroup.id,
-			members: dbGroup.members,
-			name: dbGroup.name,
-			clientState: dbGroup.clientState,
-			createDate: dbGroup.createDate,
-			updateDate: dbGroup.updateDate,
-			readDate: dbGroup.readDate,
-		}
-
 		// Success?
-		return result
+		return group
 	}
 
 	// deleteGroup removes a group from the database
@@ -178,19 +154,19 @@ export class Database {
 
 	// allMessages returns all messages in the specified group, sorted by createDate ascending
 	// TODO: This will need to be limited or pagincated for long discussions.
-	async allMessages(group: string): Promise<DBMessage[]> {
+	async allMessages(group: string): Promise<Message[]> {
 		var messages = await this.#db.getAllFromIndex("message", "group", group)
 		messages.sort((a, b) => a.createDate - b.createDate)
 		return messages
 	}
 
 	// saveMessage saves a message to the database
-	async saveMessage(message: DBMessage) {
+	async saveMessage(message: Message) {
 		await this.#db.put("message", message)
 	}
 
 	// loadMessage retrieves a message from the database
-	async loadMessage(messageID: string): Promise<DBMessage> {
+	async loadMessage(messageID: string): Promise<Message> {
 		const message = await this.#db.get("message", messageID)
 		if (message == undefined) {
 			throw new Error("Message not found: " + messageID)

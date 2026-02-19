@@ -13,7 +13,7 @@ export function rangeFirst<T>(generator: Generator<T>): T {
 	for (const value of generator) {
 		return value
 	}
-	throw new Error("Generator is empty")
+	throw new Error("Generator is empty.")
 }
 
 // Helper to strip trailing null nodes per RFC 9420
