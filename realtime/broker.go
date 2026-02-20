@@ -99,11 +99,6 @@ func (b *Broker) listen() {
 
 		case message := <-b.updateChannel:
 
-			// Do not work on empty messages
-			if message.ObjectID.IsZero() {
-				break
-			}
-
 			// Otherwise, notify listeners
 			go b.notifySSE(message)
 
@@ -117,7 +112,7 @@ func (b *Broker) listen() {
 func (b *Broker) notifySSE(message Message) {
 
 	// RULE: Delay before sending updates on "New Replies"
-	// (wait for new items to settle in the database)
+	// (hack to wait for new items to settle in the database)
 	if message.Topic == TopicNewReplies {
 		time.Sleep(2 * time.Second)
 	}
@@ -125,7 +120,7 @@ func (b *Broker) notifySSE(message Message) {
 	// Send realtime messages to SSE clients
 	for _, client := range b.objects[message.ObjectID] {
 		if (client.Topic == TopicAll) || (client.Topic == message.Topic) {
-			client.WriteChannel <- message.ObjectID
+			client.WriteChannel <- message
 		}
 	}
 }

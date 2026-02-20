@@ -303,6 +303,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
 	e.GET("/@:objectId/sse/updated", handler.WithFactory(factory, handler.ServerSentEvent_Updated))
 	e.GET("/@:objectId/sse/following-updated", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_FollowingUpdated))
+	e.GET("/@:objectId/sse/mls-message", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_MLSMessage))
 
 	// ActivityPub pages for the application actor
 	e.GET("/@application", handler.WithFactory(factory, handler.GetApplicationActor))
@@ -415,7 +416,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/objects", handler.WithUser(factory, ap_user.GetObjectsCollection))
 	e.GET("/@:userId/pub/objects/:objectId", handler.WithUser(factory, ap_user.GetObject))
 	e.GET("/@:userId/pub/outbox", handler.WithUser(factory, ap_user.GetOutboxCollection))
-	// e.GET("/@:userId/pub/outbox2", handler.WithAuthenticatedActor(factory, ap_user.GetOutbox2Collection))
 	e.POST("/@:userId/pub/outbox", handler.WithAuthenticatedUser(factory, ap_user.PostOutbox))
 	e.GET("/@:userId/pub/outbox/:messageId", handler.WithUser(factory, ap_user.GetOutboxActivity))
 	e.GET("/@:userId/pub/shared", handler.WithUser(factory, ap_user.GetResponseCollection))

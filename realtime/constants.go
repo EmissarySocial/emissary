@@ -17,3 +17,6 @@ const TopicImportProgress = 4
 
 // TopicFollowingUpdated is triggered when a Following record has a new status
 const TopicFollowingUpdated = 4
+
+// TopicMLSMessage is triggered when a new MLS-encoded message is received
+const TopicMLSMessage = 5

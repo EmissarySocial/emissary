@@ -418,6 +418,14 @@ func (user *User) ActivityPubPublicKeyURL() string {
 	return user.ProfileURL + "#main-key"
 }
 
+func (user *User) ActivityPubSSEEndpointMLS() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
+	return user.ProfileURL + "/sse/mls-message"
+}
+
 func (user *User) JSONFeedURL() string {
 	if user.ProfileURL == "" {
 		return ""

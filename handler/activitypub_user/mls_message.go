@@ -19,6 +19,7 @@ func GetMLSMessageCollection(ctx *steranko.Context, factory *service.Factory, se
 		mlsMessageService.CollectionID(user.UserID),
 		mlsMessageService.CollectionCount(session, user.UserID),
 		mlsMessageService.CollectionIterator(session, user.UserID),
+		collection.WithSSEEndpoint(user.ActivityPubSSEEndpointMLS()),
 	)
 }
 

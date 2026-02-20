@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -18,7 +19,8 @@ import (
 
 // MLSMessage manages all interactions with the MLSMessage collection
 type MLSMessage struct {
-	host string
+	sseUpdateChannel chan<- realtime.Message
+	host             string
 }
 
 // NewMLSMessage returns a fully populated MLSMessage service
@@ -32,6 +34,7 @@ func NewMLSMessage() MLSMessage {
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *MLSMessage) Refresh(factory *Factory) {
+	service.sseUpdateChannel = factory.SSEUpdateChannel()
 	service.host = factory.Host()
 }
 
@@ -106,6 +109,9 @@ func (service *MLSMessage) Save(session data.Session, message *model.MLSMessage,
 	if err := service.collection(session).Save(message, note); err != nil {
 		return derp.Wrap(err, location, "Unable to save MLSMessage", message, note)
 	}
+
+	// Notify SSE clients that a new MLSMessage is available
+	service.sseUpdateChannel <- realtime.NewMessage_MLSMessage(message.UserID, `"`+message.ActivityPubURL+`"`)
 
 	return nil
 }
