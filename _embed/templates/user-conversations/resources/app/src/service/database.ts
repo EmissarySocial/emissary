@@ -59,10 +59,17 @@ export async function NewIndexedDB(): Promise<IDBPDatabase<Schema>> {
 export class Database {
 	#db: IDBPDatabase<Schema>
 	#clientConfig: ClientConfig
+	#onchange: () => void
 
 	constructor(db: IDBPDatabase<Schema>, clientConfig: ClientConfig) {
 		this.#db = db
 		this.#clientConfig = clientConfig
+		this.#onchange = () => {}
+	}
+
+	// setChange allows the caller to provide a redraw function that will be called after database operations
+	onchange(callback: () => void) {
+		this.#onchange = callback
 	}
 
 	/////////////////////////////////////////////
@@ -104,6 +111,7 @@ export class Database {
 	// saveGroup saves a group to the database
 	async saveGroup(group: Group) {
 		await this.#db.put("group", group)
+		this.#onchange()
 	}
 
 	// loadGroup retrieves a group from the database
@@ -133,6 +141,7 @@ export class Database {
 
 		// Delete the group itself
 		await this.#db.delete("group", group)
+		this.#onchange()
 	}
 
 	/////////////////////////////////////////////
@@ -163,6 +172,7 @@ export class Database {
 	// saveMessage saves a message to the database
 	async saveMessage(message: Message) {
 		await this.#db.put("message", message)
+		this.#onchange()
 	}
 
 	// loadMessage retrieves a message from the database

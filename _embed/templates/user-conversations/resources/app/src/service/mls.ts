@@ -1,8 +1,16 @@
 // MLS functions
-import {createCommit, joinGroup, zeroOutUint8Array, type MlsMessageProtocol} from "ts-mls"
+import {
+	createCommit,
+	defaultCredentialTypes,
+	joinGroup,
+	zeroOutUint8Array,
+	type CredentialBasic,
+	type MlsMessageProtocol,
+} from "ts-mls"
 import {wireformats} from "ts-mls"
 import {createGroup} from "ts-mls"
 import {createApplicationMessage} from "ts-mls"
+import {getGroupMembers} from "ts-mls"
 import {defaultProposalTypes} from "ts-mls"
 import {processMessage} from "ts-mls"
 import {unsafeTestingAuthenticationService} from "ts-mls"
@@ -113,11 +121,6 @@ export class MLS {
 		const groupID = "uri:uuid:" + crypto.randomUUID()
 		const groupIDBytes = new TextEncoder().encode(groupID)
 
-		console.log("Creating group with ID:", groupID, groupIDBytes)
-		console.log("context", context)
-		console.log("publicKeyPackage", this.#publicKeyPackage)
-		console.log("privateKeyPackage", this.#privateKeyPackage)
-
 		// Create group using ts-mls
 		const clientState = await createGroup({
 			context: context,
@@ -191,6 +194,24 @@ export class MLS {
 		if (currentMembers.length > 0) {
 			this.#delivery.sendFramedMessage(currentMembers, commitResult.commit)
 		}
+	}
+
+	// getGroupMembers returns the list of member IDs for a given group
+	async getGroupMembers(group: Group): Promise<string[]> {
+		//
+		// Find all current members of this group
+		const leafNodes = await getGroupMembers(group.clientState)
+		const members = leafNodes
+			.map((leaf) => {
+				const credential = leaf.credential as CredentialBasic
+				if (credential.identity != undefined) {
+					return new TextDecoder().decode(credential.identity)
+				}
+				return ""
+			})
+			.filter((identity) => identity != "")
+
+		return members
 	}
 
 	async sendGroupMessage(group: string, plaintext: string): Promise<void> {
@@ -274,7 +295,7 @@ export class MLS {
 				return
 
 			case wireformats.mls_private_message:
-				this.onMessage_PrivateMessage(content)
+				this.#onMessage_PrivateMessage(content)
 				return
 
 			case wireformats.mls_public_message:
@@ -282,7 +303,7 @@ export class MLS {
 				return
 
 			case wireformats.mls_welcome:
-				this.onMessage_Welcome(content)
+				this.#onMessage_Welcome(content)
 				return
 
 			default:
@@ -291,11 +312,12 @@ export class MLS {
 		}
 	}
 
-	async onMessage_Welcome(message: MlsWelcomeMessage) {
+	// onMessage_Welcome processes MLS "Welcome" messages that add this user to a new group.
+	async #onMessage_Welcome(message: MlsWelcomeMessage) {
 		console.log("Received Welcome message")
 		//
-		// Join the new group
 
+		// Join the new group
 		const clientState = await joinGroup({
 			context: this.#context(),
 			welcome: message.welcome,
@@ -303,34 +325,39 @@ export class MLS {
 			privateKeys: this.#privateKeyPackage,
 		})
 
-		// Save the new group to the database
-		console.log("Joined new group with state:", clientState)
+		// Create a new group record
 		const groupId = new TextDecoder().decode(clientState.groupContext.groupId)
 
 		const group: Group = {
 			id: groupId,
 			members: [],
-			name: "Received Group..",
+			name: "Received Group.",
 			clientState: clientState,
 			createDate: Date.now(),
 			updateDate: Date.now(),
 			readDate: Date.now(),
 		}
 
+		// Compute members from the clientState
+		group.members = await this.getGroupMembers(group)
+
 		// Save the group to the database
 		await this.#database.saveGroup(group)
 	}
 
-	async onMessage_PrivateMessage(message: MlsPrivateMessage & MlsMessageProtocol) {
-		console.log("Received PrivateMessage:", message)
+	// onMessage_PrivateMessage processes incoming MLS "Private Messages" that contain encrypted
+	// application messages for this user.  These messages are decrypted and then processes as
+	// ActivityStreams messages.
+	async #onMessage_PrivateMessage(mlsMessage: MlsPrivateMessage & MlsMessageProtocol) {
+		console.log("Received PrivateMessage:", mlsMessage)
 
-		const groupId = new TextDecoder().decode(message.privateMessage.groupId)
+		const groupId = new TextDecoder().decode(mlsMessage.privateMessage.groupId)
 		const group = await this.#database.loadGroup(groupId)
 
 		const decodedMessage = await processMessage({
 			context: this.#context(),
 			state: group.clientState,
-			message: message,
+			message: mlsMessage,
 		})
 
 		console.log("Processed result: ", decodedMessage)
@@ -353,17 +380,17 @@ export class MLS {
 		const activity = JSON.parse(plaintext)
 		console.log("Parsed activity:", activity)
 
-		const dbm = {
+		const message = {
 			id: activity.id,
 			group: groupId,
 			sender: activity.actor,
 			plaintext: activity.content,
 			createDate: Date.now(),
 		}
-		console.log("Saving message to database: ", dbm)
+		console.log("Saving message to database: ", message)
 
 		// Save the message to the database
-		await this.#database.saveMessage(dbm)
+		await this.#database.saveMessage(message)
 	}
 
 	/// Helper methods

@@ -85,6 +85,13 @@ export class Controller {
 			this.clientConfig,
 			this.config.clientName,
 		)
+
+		// Wire UX redraws into database updates
+		this.#database.onchange(() => {
+			console.log("got onchange callback")
+			this.loadGroups()
+			this.loadMessages()
+		})
 	}
 
 	// createEncryptionKeys creates a new set of encryption keys
@@ -201,6 +208,8 @@ export class Controller {
 		// Set the groups and messages streams accordingly
 		this.groups(groups)
 		this.loadMessages()
+
+		console.log(groups)
 	}
 
 	// selectGroup updates the "selectedGroupId" and reloads messages for that group

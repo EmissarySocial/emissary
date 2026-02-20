@@ -111,7 +111,9 @@ export class Index {
 				{messages.map((message) => {
 					return (
 						<div class="card padding margin-bottom">
-							<pre class="text-sm">{JSON.stringify(message, null, 4)}</pre>
+							{message.plaintext}
+							<br />
+							<div class="text-xs text-light-gray">{message.sender}</div>
 						</div>
 					)
 				})}

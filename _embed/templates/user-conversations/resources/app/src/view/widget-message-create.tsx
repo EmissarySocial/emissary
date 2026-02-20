@@ -23,7 +23,9 @@ export class WidgetMessageCreate {
 					value={vnode.state.message}
 					style="border:none; height:100%; resize:none;"
 					oninput={(e: Event) => this.oninput(vnode, e)}></textarea>
-				<button onclick={() => this.sendMessage(vnode)}>Send</button>
+				<button onclick={() => this.sendMessage(vnode)} disabled={vnode.state.message.trim() === ""}>
+					Send
+				</button>
 			</div>
 		)
 	}
@@ -34,6 +36,10 @@ export class WidgetMessageCreate {
 	}
 
 	sendMessage(vnode: WidgetMessageCreateVnode) {
+		if (vnode.state.message.trim() === "") {
+			return
+		}
+
 		vnode.attrs.controller.sendMessage(vnode.state.message)
 		vnode.state.message = ""
 	}

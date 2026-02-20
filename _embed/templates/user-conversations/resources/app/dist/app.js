@@ -10581,6 +10581,18 @@
     ...publicState,
     ...state
   }));
+  function getGroupMembers(state) {
+    return extractFromGroupMembers(state, () => false, (l) => l);
+  }
+  function extractFromGroupMembers(state, exclude, map) {
+    const recipients = [];
+    for (const node of state.ratchetTree) {
+      if (node?.nodeType === nodeTypes.leaf && !exclude(node.leaf)) {
+        recipients.push(map(node.leaf));
+      }
+    }
+    return recipients;
+  }
   function checkCanSendApplicationMessages(state) {
     if (Object.keys(state.unappliedProposals).length !== 0)
       throw new UsageError("Cannot send application message with unapplied proposals");
@@ -15130,9 +15142,16 @@
   var Database = class {
     #db;
     #clientConfig;
+    #onchange;
     constructor(db, clientConfig) {
       this.#db = db;
       this.#clientConfig = clientConfig;
+      this.#onchange = () => {
+      };
+    }
+    // setChange allows the caller to provide a redraw function that will be called after database operations
+    onchange(callback) {
+      this.#onchange = callback;
     }
     /////////////////////////////////////////////
     // Config
@@ -15164,6 +15183,7 @@
     // saveGroup saves a group to the database
     async saveGroup(group) {
       await this.#db.put("group", group);
+      this.#onchange();
     }
     // loadGroup retrieves a group from the database
     async loadGroup(groupID) {
@@ -15180,6 +15200,7 @@
         await this.#db.delete("message", message);
       }
       await this.#db.delete("group", group);
+      this.#onchange();
     }
     /////////////////////////////////////////////
     // Private KeyPackage
@@ -15204,6 +15225,7 @@
     // saveMessage saves a message to the database
     async saveMessage(message) {
       await this.#db.put("message", message);
+      this.#onchange();
     }
     // loadMessage retrieves a message from the database
     async loadMessage(messageID) {
@@ -15443,14 +15465,35 @@
   };
 
   // src/ap/properties.ts
+  function Id(value) {
+    return string(value, "id", "ap:id", "https://www.w3.org/ns/activitystreams#id");
+  }
+  function Actor(value) {
+    return string(value, "actor", "ap:actor", "https://www.w3.org/ns/activitystreams#actor");
+  }
   function Outbox(value) {
     return string(value, "outbox", "ap:outbox", "https://www.w3.org/ns/activitystreams#outbox");
+  }
+  function Type(value) {
+    return string(value, "type", "ap:type", "https://www.w3.org/ns/activitystreams#type");
+  }
+  function Name(value) {
+    return string(value, "name", "ap:name", "https://www.w3.org/ns/activitystreams#name");
+  }
+  function Summary(value) {
+    return string(value, "summary", "ap:summary", "https://www.w3.org/ns/activitystreams#summary");
   }
   function Content(value) {
     return string(value, "content", "ap:content", "https://www.w3.org/ns/activitystreams#content");
   }
   function MlsMessage(value) {
     return string(value, "messages", "mls:messages", "https://purl.archive.org/socialweb/mls#messages");
+  }
+  function MlsKeyPackages(value) {
+    return string(value, "keyPackages", "mls:keyPackages", "https://purl.archive.org/socialweb/mls#keyPackages");
+  }
+  function EventStream(value) {
+    return string(value, "eventStream", "sse:eventStream", "https://purl.archive.org/socialweb/sse#eventStream");
   }
   function string(value, ...names) {
     for (const name of names) {
@@ -15464,38 +15507,111 @@
     return "";
   }
 
+  // src/ap/document.ts
+  var Document = class {
+    #value;
+    constructor(value) {
+      this.#value = {};
+      if (value != void 0) {
+        this.#value = value;
+      }
+    }
+    //// Conversion methods
+    // fromURL retrieves a JSON document from the specified URL and parses it into the Document struct
+    async fromURL(url) {
+      const response = await fetch(url);
+      this.fromJSON(await response.text());
+      return this;
+    }
+    // fromJSON parses a JSON string into the Document struct
+    fromJSON(json) {
+      this.#value = JSON.parse(json);
+      return this;
+    }
+    toObject() {
+      return this.#value;
+    }
+    //// Property accessors
+    id() {
+      return Id(this.#value);
+    }
+    actor() {
+      return Actor(this.#value);
+    }
+    outbox() {
+      return Outbox(this.#value);
+    }
+    type() {
+      return Type(this.#value);
+    }
+    name() {
+      return Name(this.#value);
+    }
+    summary() {
+      return Summary(this.#value);
+    }
+    content() {
+      return Content(this.#value);
+    }
+    eventStream() {
+      return EventStream(this.#value);
+    }
+    mlsMessage() {
+      return MlsMessage(this.#value);
+    }
+    mlsKeyPackages() {
+      return MlsKeyPackages(this.#value);
+    }
+  };
+
   // src/service/receiver.ts
   var Receiver = class {
     //
     #actorId;
     // ID of the user receiving messages
     #messagesUrl;
+    // endpoint for the actor's mls:messages collection
+    #eventSource;
+    // EventSource for listening to server-sent events (SSE)
+    #handler;
     // list of registered message handlers
     constructor(actorId, messagesUrl) {
       this.#actorId = actorId;
       this.#messagesUrl = messagesUrl;
-      this.handler = async function(message) {
+      this.#handler = async function(message) {
         console.log("Received message:", message);
       };
     }
     // registerHandler adds a new MessageHandler to the list of handlers that will be called
     registerHandler(handler) {
-      this.handler = handler;
+      this.#handler = handler;
     }
     // start begins polling for new messages and processing them with the registered handlers
     // TODO: If the collection contains an SSE channel, then also start an SSE listener
-    start() {
+    async start() {
       console.log("starting receiver for actor:", this.#actorId);
+      const document2 = await new Document().fromURL(this.#messagesUrl);
+      const sseEndpoint = document2.eventStream();
+      if (sseEndpoint != "") {
+        this.#eventSource = new EventSource(sseEndpoint, { withCredentials: true });
+        this.#eventSource.onmessage = (event) => {
+          console.log("GOT IT!!", event);
+          this.poll();
+        };
+        return;
+      }
       this.poll();
     }
     // poll retrieves new messages from the mls:messages collection and calls the
     // onMessage callback for each new message
     async poll() {
+      var lastUrl = "";
       const generator = rangeCollection(this.#messagesUrl);
       for await (const message of generator) {
+        const document2 = new Document(message);
         console.log("Receiver: Received message:", message);
         const content = Content(message);
-        await this.handler(content);
+        await this.#handler(content);
       }
     }
   };
@@ -15527,13 +15643,13 @@
             console.log("Received KeyPackage message");
             return;
           case wireformats.mls_private_message:
-            this.onMessage_PrivateMessage(content);
+            this.#onMessage_PrivateMessage(content);
             return;
           case wireformats.mls_public_message:
             console.log("Received PublicMessage");
             return;
           case wireformats.mls_welcome:
-            this.onMessage_Welcome(content);
+            this.#onMessage_Welcome(content);
             return;
           default:
             console.error("Unknown MLS message type:");
@@ -15573,10 +15689,6 @@
       const context = this.#context();
       const groupID = "uri:uuid:" + crypto.randomUUID();
       const groupIDBytes = new TextEncoder().encode(groupID);
-      console.log("Creating group with ID:", groupID, groupIDBytes);
-      console.log("context", context);
-      console.log("publicKeyPackage", this.#publicKeyPackage);
-      console.log("privateKeyPackage", this.#privateKeyPackage);
       const clientState = await createGroup({
         context,
         groupId: groupIDBytes,
@@ -15626,6 +15738,18 @@
         this.#delivery.sendFramedMessage(currentMembers, commitResult.commit);
       }
     }
+    // getGroupMembers returns the list of member IDs for a given group
+    async getGroupMembers(group) {
+      const leafNodes = await getGroupMembers(group.clientState);
+      const members = leafNodes.map((leaf) => {
+        const credential = leaf.credential;
+        if (credential.identity != void 0) {
+          return new TextDecoder().decode(credential.identity);
+        }
+        return "";
+      }).filter((identity) => identity != "");
+      return members;
+    }
     async sendGroupMessage(group, plaintext) {
       const context = this.#context();
       const mlsGroup = await this.#database.loadGroup(group);
@@ -15658,7 +15782,8 @@
       };
       await this.#database.saveMessage(dbMessage);
     }
-    async onMessage_Welcome(message) {
+    // onMessage_Welcome processes MLS "Welcome" messages that add this user to a new group.
+    async #onMessage_Welcome(message) {
       console.log("Received Welcome message");
       const clientState = await joinGroup({
         context: this.#context(),
@@ -15666,27 +15791,30 @@
         keyPackage: this.#publicKeyPackage,
         privateKeys: this.#privateKeyPackage
       });
-      console.log("Joined new group with state:", clientState);
       const groupId = new TextDecoder().decode(clientState.groupContext.groupId);
       const group = {
         id: groupId,
         members: [],
-        name: "Received Group..",
+        name: "Received Group.",
         clientState,
         createDate: Date.now(),
         updateDate: Date.now(),
         readDate: Date.now()
       };
+      group.members = await this.getGroupMembers(group);
       await this.#database.saveGroup(group);
     }
-    async onMessage_PrivateMessage(message) {
-      console.log("Received PrivateMessage:", message);
-      const groupId = new TextDecoder().decode(message.privateMessage.groupId);
+    // onMessage_PrivateMessage processes incoming MLS "Private Messages" that contain encrypted
+    // application messages for this user.  These messages are decrypted and then processes as
+    // ActivityStreams messages.
+    async #onMessage_PrivateMessage(mlsMessage) {
+      console.log("Received PrivateMessage:", mlsMessage);
+      const groupId = new TextDecoder().decode(mlsMessage.privateMessage.groupId);
       const group = await this.#database.loadGroup(groupId);
       const decodedMessage = await processMessage({
         context: this.#context(),
         state: group.clientState,
-        message
+        message: mlsMessage
       });
       console.log("Processed result: ", decodedMessage);
       decodedMessage.consumed.forEach(zeroOutUint8Array);
@@ -15701,15 +15829,15 @@
       console.log("Decrypted message plaintext:", plaintext);
       const activity = JSON.parse(plaintext);
       console.log("Parsed activity:", activity);
-      const dbm = {
+      const message = {
         id: activity.id,
         group: groupId,
         sender: activity.actor,
         plaintext: activity.content,
         createDate: Date.now()
       };
-      console.log("Saving message to database: ", dbm);
-      await this.#database.saveMessage(dbm);
+      console.log("Saving message to database: ", message);
+      await this.#database.saveMessage(message);
     }
     #context;
   };
@@ -15808,6 +15936,11 @@
         this.clientConfig,
         this.config.clientName
       );
+      this.#database.onchange(() => {
+        console.log("got onchange callback");
+        this.loadGroups();
+        this.loadMessages();
+      });
     }
     // createEncryptionKeys creates a new set of encryption keys
     // for this user on this device
@@ -15881,6 +16014,7 @@
       }
       this.groups(groups);
       this.loadMessages();
+      console.log(groups);
     }
     // selectGroup updates the "selectedGroupId" and reloads messages for that group
     selectGroup(groupId) {
@@ -16462,13 +16596,16 @@
           style: "border:none; height:100%; resize:none;",
           oninput: (e) => this.oninput(vnode, e)
         }
-      ), /* @__PURE__ */ (0, import_mithril12.default)("button", { onclick: () => this.sendMessage(vnode) }, "Send"));
+      ), /* @__PURE__ */ (0, import_mithril12.default)("button", { onclick: () => this.sendMessage(vnode), disabled: vnode.state.message.trim() === "" }, "Send"));
     }
     oninput(vnode, event) {
       const target = event.target;
       vnode.state.message = target.value;
     }
     sendMessage(vnode) {
+      if (vnode.state.message.trim() === "") {
+        return;
+      }
       vnode.attrs.controller.sendMessage(vnode.state.message);
       vnode.state.message = "";
     }
@@ -16582,7 +16719,7 @@
       const messages = vnode.attrs.controller.messages();
       return [
         /* @__PURE__ */ (0, import_mithril15.default)("div", { class: "flex-grow padding-lg" }, messages.map((message) => {
-          return /* @__PURE__ */ (0, import_mithril15.default)("div", { class: "card padding margin-bottom" }, /* @__PURE__ */ (0, import_mithril15.default)("pre", { class: "text-sm" }, JSON.stringify(message, null, 4)));
+          return /* @__PURE__ */ (0, import_mithril15.default)("div", { class: "card padding margin-bottom" }, message.plaintext, /* @__PURE__ */ (0, import_mithril15.default)("br", null), /* @__PURE__ */ (0, import_mithril15.default)("div", { class: "text-xs text-light-gray" }, message.sender));
         })),
         /* @__PURE__ */ (0, import_mithril15.default)(WidgetMessageCreate, { controller: vnode.attrs.controller })
       ];
