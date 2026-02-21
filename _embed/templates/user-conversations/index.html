@@ -1,12 +1,4 @@
-{{- $folders := .FoldersWithSelection "CONVERSATIONS"}}
-{{- $conversations := .Conversations.Top12.ByUpdateDate.Reverse.Slice -}}
-{{- .DefaultQueryParam "conversationId" $conversations.First.ConversationID.Hex -}}
-{{- $conversationID := .QueryParam "conversationId" -}}
-
-<div class="app" script="init send SelectNav(id:'inbox')">
-
-	<!-- Sidebar Content -->
-	{{- template "sidebar" $folders -}}
+<div class="app" script="init send SelectNav(id:'conversations')">
 
 	<div id="mls" class="width-100% flex-row" data-actor-id="{{.ActorURL}}"></div>
 

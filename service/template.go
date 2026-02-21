@@ -294,6 +294,7 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 
 	allowedModels := sliceof.String{ // nolint:scopeguard (readability)
 		"None",
+		"Conversations",
 		"Domain",
 		"Followers",
 		"Following",
