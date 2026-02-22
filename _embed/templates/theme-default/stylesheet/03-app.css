@@ -21,11 +21,10 @@
 	background-color: var(--gray04);
 	border-right: solid 1px var(--gray15);
 	color: var(--gray80);
-	view-transition-name: app-sidebar;
-	width: 20%;
 	padding: 12px 8px;
 	min-width: 200px;
 	max-width: 320px;
+	view-transition-name: app-sidebar;
 }
 
 #app-sidebar .menu-item {
@@ -58,7 +57,7 @@
 }
 
 .app-content {
-	flex-grow: 1;
+	flex-grow: 4;
 	flex-shrink: 1;
 	padding: 0px 12px 24px 12px;
 	position: relative;
