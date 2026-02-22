@@ -15,7 +15,7 @@
 }
 
 #app-sidebar {
-	flex-grow: 0;
+	flex-grow: 1;
 	flex-shrink: 0;
 	box-sizing: border-box;
 	background-color: var(--gray04);
@@ -24,8 +24,8 @@
 	view-transition-name: app-sidebar;
 	width: 20%;
 	padding: 12px 8px;
-	min-width: 160px;
-	max-width: 200px;
+	min-width: 200px;
+	max-width: 320px;
 }
 
 #app-sidebar .menu-item {
