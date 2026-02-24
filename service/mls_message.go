@@ -185,7 +185,7 @@ func (service *MLSMessage) RangeByUser(session data.Session, userID primitive.Ob
 // CollectionID returns the identifier function for this collection
 func (service *MLSMessage) CollectionID(userID primitive.ObjectID) collection.IdentifierFunc {
 	return func() string {
-		return "https://emissary.social/@" + userID.Hex() + "/pub/mls/messages"
+		return service.host + "/@" + userID.Hex() + "/pub/mls/messages"
 	}
 }
 
