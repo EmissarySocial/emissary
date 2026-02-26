@@ -10,6 +10,7 @@ func ConnectionSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"connectionId": schema.String{Format: "objectId"},
 			"type": schema.String{Enum: []string{
+				ConnectionTypeNetwork,
 				ConnectionTypeGeocodeAddress,
 				ConnectionTypeGeocodeAutocomplete,
 				ConnectionTypeGeocodeNetwork,
@@ -19,6 +20,7 @@ func ConnectionSchema() schema.Element {
 				ConnectionTypeUserPayment,
 			}},
 			"providerId": schema.String{Enum: []string{
+				ConnectionProviderBluesky,
 				ConnectionProviderGeocodeAddress,
 				ConnectionProviderGeocodeAutocomplete,
 				ConnectionProviderGeocodeNetwork,
