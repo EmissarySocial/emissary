@@ -34,6 +34,7 @@ func TestUserSchema(t *testing.T) {
 		{"followingCount", "2", 2},
 		{"ruleCount", "3", 3},
 		{"isPublic", "true", true},
+		{"isBridgeBluesky", "true", true},
 		{"isOwner", "true", true},
 		{"isIndexable", "true", true},
 		{"inboxTemplate", "INBOX", nil},

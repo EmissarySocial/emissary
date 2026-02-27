@@ -66,11 +66,18 @@ func Providers() sliceof.Object[form.LookupCode] {
 		//	Group:       "User Payments",
 		// },
 		{
+			Value:       model.ConnectionProviderBluesky,
+			Label:       "Bluesky",
+			Icon:        "bluesky",
+			Description: "Use Bridgy Fed to publish user accounts and posts to Bluesky.",
+			Group:       "Network",
+		},
+		{
 			Value:       model.ConnectionProviderStripeConnect,
 			Label:       "Stripe Connect",
 			Icon:        "stripe",
 			Description: "Users sign in via OAuth. Requires additional setup from admins.",
-			Group:       "User Payments",
+			Group:       "Payments",
 		},
 	}
 }

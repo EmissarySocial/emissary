@@ -32,6 +32,9 @@ func (service *Provider) GetProvider(providerID string) (providers.Provider, boo
 	// Create an adapter for known providers
 	switch providerID {
 
+	case model.ConnectionProviderBluesky:
+		return providers.NewBluesky(), true
+
 	case model.ConnectionProviderGeocodeAddress:
 		return providers.NewGeocodeAddress(), true
 

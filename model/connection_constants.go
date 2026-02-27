@@ -21,6 +21,9 @@ const ConnectionTypeGeocodeTiles = "GEOCODE-TILES"
 // ConnectionTypeGeocodeTimezone represents an API connection to a timezone provider
 const ConnectionTypeGeocodeTimezone = "GEOCODE-TIMEZONE"
 
+// ConnectionTypeNetwork represents a connection that can be used to bridge to other networks
+const ConnectionTypeNetwork = "NETWORK"
+
 // ConnectionTypeImage represents a connection that can be used to generate images
 const ConnectionTypeImage = "IMAGE"
 
@@ -32,6 +35,10 @@ const ConnectionTypeUserPayment = "USER-PAYMENT"
  * definitions of the services that have
  * been implemented in the system.
  ******************************************/
+
+// ConnectionProviderBluesky represents a bridge to the Bluesky service (https://blueskyweb.xyz)
+// via Bridgy Fed (https://fed.brid.gy/)
+const ConnectionProviderBluesky = "BLUE-SKY"
 
 // ConnectionProviderGeocodeAddress represents an API connection to a physical address geocoder
 const ConnectionProviderGeocodeAddress = "GEOCODE-ADDRESS"

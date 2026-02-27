@@ -256,6 +256,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.widgets/:widgetId/resources/:filename", handler.GetWidgetResource(factory))
 
 	// Well-Known Routes https://en.wikipedia.org/wiki/List_of_/.well-known/_services_offered_by_webservers
+	e.GET("/.well-known/atproto-did", handler.GetBlueskyDID(factory))
 	e.GET("/.well-known/change-password", handler.GetChangePassword(factory))
 	e.GET("/.well-known/host-meta", handler.GetHostMeta(factory))
 	e.GET("/.well-known/host-meta.json", handler.GetHostMetaJSON(factory))
