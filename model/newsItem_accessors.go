@@ -6,11 +6,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// MessageSchema returns a JSON Schema that describes this object
-func MessageSchema() schema.Element {
+// NewsItemSchema returns a JSON Schema that describes this object
+func NewsItemSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"messageId":   schema.String{Format: "objectId"},
+			"newsItemId":  schema.String{Format: "objectId"},
 			"userId":      schema.String{Format: "objectId"},
 			"followingId": schema.String{Format: "objectId"},
 			"folderId":    schema.String{Format: "objectId"},
@@ -26,7 +26,7 @@ func MessageSchema() schema.Element {
 					vocab.ActivityTypeDislike:  schema.String{Format: "objectId"},
 				},
 			},
-			"stateId":     schema.String{Enum: []string{MessageStateUnread, MessageStateRead, MessageStateMuted, MessageStateNewReplies}},
+			"stateId":     schema.String{Enum: []string{NewsItemStateUnread, NewsItemStateRead, NewsItemStateMuted, NewsItemStateNewReplies}},
 			"publishDate": schema.Integer{BitSize: 64},
 			"readDate":    schema.Integer{BitSize: 64},
 			"rank":        schema.Integer{BitSize: 64},
@@ -38,59 +38,59 @@ func MessageSchema() schema.Element {
  * Getter/Setter Methods
  ******************************************/
 
-func (message *Message) GetPointer(name string) (any, bool) {
+func (newsItem *NewsItem) GetPointer(name string) (any, bool) {
 	switch name {
 
 	case "socialRole":
-		return &message.SocialRole, true
+		return &newsItem.SocialRole, true
 
 	case "origin":
-		return &message.Origin, true
+		return &newsItem.Origin, true
 
 	case "references":
-		return &message.References, true
+		return &newsItem.References, true
 
 	case "url":
-		return &message.URL, true
+		return &newsItem.URL, true
 
 	case "inReplyTo":
-		return &message.InReplyTo, true
+		return &newsItem.InReplyTo, true
 
 	case "response":
-		return &message.Response, true
+		return &newsItem.Response, true
 
 	case "stateId":
-		return &message.StateID, true
+		return &newsItem.StateID, true
 
 	case "publishDate":
-		return &message.PublishDate, true
+		return &newsItem.PublishDate, true
 
 	case "readDate":
-		return &message.ReadDate, true
+		return &newsItem.ReadDate, true
 
 	case "rank":
-		return &message.Rank, true
+		return &newsItem.Rank, true
 
 	default:
 		return nil, false
 	}
 }
 
-func (message *Message) GetStringOK(name string) (string, bool) {
+func (newsItem *NewsItem) GetStringOK(name string) (string, bool) {
 
 	switch name {
 
-	case "messageId":
-		return message.MessageID.Hex(), true
+	case "newsItemId":
+		return newsItem.NewsItemID.Hex(), true
 
 	case "userId":
-		return message.UserID.Hex(), true
+		return newsItem.UserID.Hex(), true
 
 	case "followingId":
-		return message.FollowingID.Hex(), true
+		return newsItem.FollowingID.Hex(), true
 
 	case "folderId":
-		return message.FolderID.Hex(), true
+		return newsItem.FolderID.Hex(), true
 
 	}
 
@@ -101,31 +101,31 @@ func (message *Message) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  ******************************************/
 
-func (message *Message) SetString(name string, value string) bool {
+func (newsItem *NewsItem) SetString(name string, value string) bool {
 
 	switch name {
 
-	case "messageId":
+	case "newsItemId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			message.MessageID = objectID
+			newsItem.NewsItemID = objectID
 			return true
 		}
 
 	case "userId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			message.UserID = objectID
+			newsItem.UserID = objectID
 			return true
 		}
 
 	case "followingId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			message.FollowingID = objectID
+			newsItem.FollowingID = objectID
 			return true
 		}
 
 	case "folderId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			message.FolderID = objectID
+			newsItem.FolderID = objectID
 			return true
 		}
 	}

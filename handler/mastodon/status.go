@@ -236,11 +236,11 @@ func PostStatus_Favourite(serverFactory *server.Factory) func(model.Authorizatio
 			return object.Status{}, derp.Wrap(err, location, "Unable to load user")
 		}
 
-		// Load the inbox idem being favorited
-		inboxService := factory.Inbox()
-		message := model.NewMessage()
+		// Load the news feed item being favorited
+		newsFeedService := factory.NewsFeed()
+		message := model.NewNewsItem()
 
-		if err := inboxService.LoadByURL(session, auth.UserID, t.ID, &message); err != nil {
+		if err := newsFeedService.LoadByURL(session, auth.UserID, t.ID, &message); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Unable to load message")
 		}
 
@@ -363,15 +363,15 @@ func PostStatus_Mute(serverFactory *server.Factory) func(model.Authorization, tx
 		defer cancel()
 
 		// Load the message from the database
-		inboxService := factory.Inbox()
-		message := model.NewMessage()
+		newsFeedService := factory.NewsFeed()
+		message := model.NewNewsItem()
 
-		if err := inboxService.LoadByURL(session, auth.UserID, t.ID, &message); err != nil {
+		if err := newsFeedService.LoadByURL(session, auth.UserID, t.ID, &message); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Error retrieving message")
 		}
 
 		// Mark the message as Muted
-		if err := inboxService.MarkMuted(session, &message); err != nil {
+		if err := newsFeedService.MarkMuted(session, &message); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Error muting message")
 		}
 
@@ -403,15 +403,15 @@ func PostStatus_Unmute(serverFactory *server.Factory) func(model.Authorization, 
 		defer cancel()
 
 		// Load the message from the database
-		inboxService := factory.Inbox()
-		message := model.NewMessage()
+		newsFeedService := factory.NewsFeed()
+		message := model.NewNewsItem()
 
-		if err := inboxService.LoadByURL(session, auth.UserID, t.ID, &message); err != nil {
+		if err := newsFeedService.LoadByURL(session, auth.UserID, t.ID, &message); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Error retrieving message")
 		}
 
 		// Mark the message as Muted
-		if err := inboxService.MarkUnmuted(session, &message); err != nil {
+		if err := newsFeedService.MarkUnmuted(session, &message); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Error muting message")
 		}
 

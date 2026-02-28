@@ -10,13 +10,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func Inbox(ctx context.Context, database *mongo.Database) error {
+func NewsFeed(ctx context.Context, database *mongo.Database) error {
 
-	log.Trace().Str("database", database.Name()).Str("collection", "Inbox").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "NewsFeed").Msg("COLLECTION:")
 
-	return indexer.Sync(ctx, database.Collection("Inbox"), indexer.IndexSet{
+	return indexer.Sync(ctx, database.Collection("NewsFeed"), indexer.IndexSet{
 
-		"idx_Inbox_User_Folder": mongo.IndexModel{
+		"idx_NewsFeed_User_Folder": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "userId", Value: 1},
 				{Key: "folderId", Value: 1},
@@ -26,7 +26,7 @@ func Inbox(ctx context.Context, database *mongo.Database) error {
 				SetPartialFilterExpression(bson.M{"deleteDate": 0}),
 		},
 
-		"idx_Inbox_User_CreateDate": mongo.IndexModel{
+		"idx_NewsFeed_User_CreateDate": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "userId", Value: 1},
 				{Key: "folderId", Value: 1},
@@ -36,7 +36,7 @@ func Inbox(ctx context.Context, database *mongo.Database) error {
 				SetPartialFilterExpression(bson.M{"deleteDate": 0}),
 		},
 
-		"idx_Inbox_URL": mongo.IndexModel{
+		"idx_NewsFeed_URL": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "url", Value: 1},
 			},
@@ -44,7 +44,7 @@ func Inbox(ctx context.Context, database *mongo.Database) error {
 				SetPartialFilterExpression(bson.M{"deleteDate": 0}),
 		},
 
-		"idx_Inbox_User_Following": mongo.IndexModel{
+		"idx_NewsFeed_User_Following": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "userId", Value: 1},
 				{Key: "origin.followingId", Value: 1},

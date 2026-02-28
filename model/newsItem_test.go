@@ -6,13 +6,13 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
-func TestMessageSchema(t *testing.T) {
+func TestNewsItemSchema(t *testing.T) {
 
-	activity := NewMessage()
-	s := schema.New(MessageSchema())
+	activity := NewNewsItem()
+	s := schema.New(NewsItemSchema())
 
 	table := []tableTestItem{
-		{"messageId", "123456781234567812345678", nil},
+		{"newsItemId", "123456781234567812345678", nil},
 		{"userId", "876543218765432187654321", nil},
 		{"followingId", "abcdef218765432187654321", nil},
 		{"folderId", "fedcba218765432187654321", nil},

@@ -11,26 +11,26 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func (service *Inbox) ExportCollection(session data.Session, userID primitive.ObjectID) ([]model.IDOnly, error) {
+func (service *NewsFeed) ExportCollection(session data.Session, userID primitive.ObjectID) ([]model.IDOnly, error) {
 	criteria := exp.Equal("userId", userID)
 	return service.QueryIDOnly(session, criteria, option.SortAsc("createDate"))
 }
 
-func (service *Inbox) ExportDocument(session data.Session, userID primitive.ObjectID, messageID primitive.ObjectID) (string, error) {
+func (service *NewsFeed) ExportDocument(session data.Session, userID primitive.ObjectID, newsItemID primitive.ObjectID) (string, error) {
 
-	const location = "service.Inbox.ExportDocument"
+	const location = "service.NewsFeed.ExportDocument"
 
-	// Load the Inbox
-	message := model.NewMessage()
-	if err := service.LoadByID(session, userID, messageID, &message); err != nil {
-		return "", derp.Wrap(err, location, "Unable to load Inbox")
+	// Load the NewsFeed
+	newsItem := model.NewNewsItem()
+	if err := service.LoadByID(session, userID, newsItemID, &newsItem); err != nil {
+		return "", derp.Wrap(err, location, "Unable to load NewsFeed")
 	}
 
-	// Marshal the message as JSON
-	result, err := json.Marshal(message)
+	// Marshal the newsItem as JSON
+	result, err := json.Marshal(newsItem)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to marshal Inbox", message)
+		return "", derp.Wrap(err, location, "Unable to marshal NewsFeed", newsItem)
 	}
 
 	// Success

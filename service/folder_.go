@@ -19,8 +19,8 @@ import (
 type Folder struct {
 	domainService     *Domain
 	followingService  *Following
-	inboxService      *Inbox
 	importItemService *ImportItem
+	newsFeedService   *NewsFeed
 	themeService      *Theme
 }
 
@@ -38,7 +38,7 @@ func (service *Folder) Refresh(factory *Factory) {
 	service.domainService = factory.Domain()
 	service.followingService = factory.Following()
 	service.importItemService = factory.ImportItem()
-	service.inboxService = factory.Inbox()
+	service.newsFeedService = factory.NewsFeed()
 	service.themeService = factory.Theme()
 }
 
@@ -132,8 +132,8 @@ func (service *Folder) Delete(session data.Session, folder *model.Folder, commen
 	}
 
 	// Delete inbox items
-	if err := service.inboxService.DeleteByFolder(session, folder.UserID, folder.FolderID); err != nil {
-		return derp.Wrap(err, location, "Unable to delete related `Inbox Message` records.", folder, comment)
+	if err := service.newsFeedService.DeleteByFolder(session, folder.UserID, folder.FolderID); err != nil {
+		return derp.Wrap(err, location, "Unable to delete related `NewsFeed Message` records.", folder, comment)
 	}
 
 	// Delete any followings
@@ -311,7 +311,7 @@ func (service *Folder) CalculateUnreadCount(session data.Session, userID primiti
 		return derp.BadRequest(location, "FolderID cannot be empty", folderID)
 	}
 
-	unreadCount, err := service.inboxService.CountUnreadMessages(session, userID, folderID)
+	unreadCount, err := service.newsFeedService.CountUnreadNewsItems(session, userID, folderID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to count unread messages", userID, folderID)

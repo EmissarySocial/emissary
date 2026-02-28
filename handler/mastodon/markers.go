@@ -36,18 +36,18 @@ func GetMarkers(serverFactory *server.Factory) func(model.Authorization, txn.Get
 
 		defer cancel()
 
-		// Get the last message in the Inbox
-		inboxService := factory.Inbox()
-		message := model.NewMessage()
+		// Get the last message in the NewsFeed
+		newsFeedService := factory.NewsFeed()
+		message := model.NewNewsItem()
 
-		if err := inboxService.LoadOldestUnread(session, auth.UserID, &message); err != nil {
+		if err := newsFeedService.LoadOldestUnread(session, auth.UserID, &message); err != nil {
 			return nil, derp.Wrap(err, location, "Unable to load oldest unread message")
 		}
 
 		result := map[string]object.Marker{
 			"notifications": {},
 			"home": {
-				LastReadID: message.MessageID.Hex(),
+				LastReadID: message.NewsItemID.Hex(),
 				Version:    int(message.Revision),
 				UpdatedAt:  time.Unix(message.UpdateDate, 0).UTC().Format(time.RFC3339),
 			},
@@ -88,8 +88,8 @@ func PostMarker(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		defer cancel()
 
 		// Mark messages read by date
-		inboxService := factory.Inbox()
-		if err := inboxService.MarkReadByDate(session, auth.UserID, lastReadDate); err != nil {
+		newsFeedService := factory.NewsFeed()
+		if err := newsFeedService.MarkReadByDate(session, auth.UserID, lastReadDate); err != nil {
 			return nil, derp.Wrap(err, location, "Error marking messages read")
 		}
 

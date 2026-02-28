@@ -78,7 +78,7 @@ func (w Inbox) Render() (template.HTML, error) {
 	status := Pipeline(w._action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
-		return "", derp.Wrap(status.Error, "build.Inbox.Render", "Unable to generate HTML", w._request.URL.String())
+		return "", derp.Wrap(status.Error, "build.NewsFeed.Render", "Unable to generate HTML", w._request.URL.String())
 	}
 
 	// Success!
@@ -92,7 +92,7 @@ func (w Inbox) View(actionID string) (template.HTML, error) {
 	builder, err := NewInbox(w._factory, w._session, w._request, w._response, w._user, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, "build.Inbox.View", "Unable to create Inbox builder")
+		return template.HTML(""), derp.Wrap(err, "build.NewsFeed.View", "Unable to create Inbox builder")
 	}
 
 	return builder.Render()
@@ -113,8 +113,8 @@ func (w Inbox) BasePath() string {
 
 func (w Inbox) Permalink() string {
 
-	if message := w.Message(); !message.IsNew() {
-		return message.URL
+	if newsItem := w.Message(); !newsItem.IsNew() {
+		return newsItem.URL
 	}
 
 	if url := w._request.URL.Query().Get("url"); url != "" {
@@ -242,14 +242,14 @@ func (w Inbox) FollowingByFolder(token string) ([]model.FollowingSummary, error)
 	userID := w.AuthenticatedID()
 
 	if userID.IsZero() {
-		return nil, derp.Unauthorized("build.Inbox.FollowingByFolder", "Must be signed in to view following")
+		return nil, derp.Unauthorized("build.NewsFeed.FollowingByFolder", "Must be signed in to view following")
 	}
 
 	// Get the followingID from the token
 	followingID, err := primitive.ObjectIDFromHex(token)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "build.Inbox.FollowingByFolder", "Invalid following ID", token)
+		return nil, derp.Wrap(err, "build.NewsFeed.FollowingByFolder", "Invalid following ID", token)
 	}
 
 	// Try to load the matching records
@@ -266,7 +266,7 @@ func (w Inbox) FollowingByToken(followingToken string) (model.Following, error) 
 	following := model.NewFollowing()
 
 	if err := followingService.LoadByToken(w._session, userID, followingToken, &following); err != nil {
-		return model.Following{}, derp.Wrap(err, "build.Inbox.FollowingByID", "Unable to load following")
+		return model.Following{}, derp.Wrap(err, "build.NewsFeed.FollowingByID", "Unable to load following")
 	}
 
 	return following, nil
@@ -293,20 +293,20 @@ func (w Inbox) RuleByToken(token string) model.Rule {
 	rule := model.NewRule()
 
 	if err := ruleService.LoadByToken(w._session, w.AuthenticatedID(), token, &rule); err != nil {
-		derp.Report(derp.Wrap(err, "build.Inbox.RuleByToken", "Unable to load rule", token))
+		derp.Report(derp.Wrap(err, "build.NewsFeed.RuleByToken", "Unable to load rule", token))
 	}
 
 	return rule
 }
 
 // Inbox returns a QueryBuilder for current User's inbox
-func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
+func (w Inbox) Inbox() (QueryBuilder[model.NewsItem], error) {
 
-	const location = "build.Inbox.Inbox"
+	const location = "build.NewsFeed.Inbox"
 
 	// Must be signed in to view inbox
 	if w.AuthenticatedID().IsZero() {
-		return QueryBuilder[model.Message]{}, derp.Unauthorized(location, "Must be signed in to view inbox")
+		return QueryBuilder[model.NewsItem]{}, derp.Unauthorized(location, "Must be signed in to view inbox")
 	}
 
 	queryString := w._request.URL.Query()
@@ -332,12 +332,12 @@ func (w Inbox) Inbox() (QueryBuilder[model.Message], error) {
 		}
 	}
 
-	return NewQueryBuilder[model.Message](w._factory.Inbox(), w._session, criteria), nil
+	return NewQueryBuilder[model.NewsItem](w._factory.NewsFeed(), w._session, criteria), nil
 }
 
 // IsInboxEmpty returns TRUE if the inbox has no results and there are no filters applied
 // This corresponds to there being NOTHING in the inbox, instead of just being filtered out.
-func (w Inbox) IsInboxEmpty(inbox []model.Message) bool {
+func (w Inbox) IsInboxEmpty(inbox []model.NewsItem) bool {
 
 	if len(inbox) > 0 {
 		return false
@@ -355,7 +355,7 @@ func (w Inbox) Conversations() (QueryBuilder[model.Conversation], error) {
 
 	// Required that the user is signed in
 	if w.AuthenticatedID().IsZero() {
-		return QueryBuilder[model.Conversation]{}, derp.Unauthorized("build.Inbox.Conversations", "Must be signed in to view conversations")
+		return QueryBuilder[model.Conversation]{}, derp.Unauthorized("build.NewsFeed.Conversations", "Must be signed in to view conversations")
 	}
 
 	queryString := w._request.URL.Query()
@@ -374,7 +374,7 @@ func (w Inbox) Conversations() (QueryBuilder[model.Conversation], error) {
 	return NewQueryBuilder[model.Conversation](conversationService, w._session, criteria), nil
 }
 
-// FIlteredByFollowing returns the Following record that is being used to filter the Inbox
+// FilteredByFollowing returns the Following record that is being used to filter the Inbox
 func (w Inbox) FilteredByFollowing() model.Following {
 
 	result := model.NewFollowing()
@@ -403,14 +403,14 @@ func (w Inbox) Folders() (model.FolderList, error) {
 
 	// User must be authenticated to view any folders
 	if !w.IsAuthenticated() {
-		return result, derp.Forbidden("build.Inbox.Folders", "Not authenticated")
+		return result, derp.Forbidden("build.NewsFeed.Folders", "Not authenticated")
 	}
 
 	folderService := w._factory.Folder()
 	folders, err := folderService.QueryByUserID(w._session, w.AuthenticatedID())
 
 	if err != nil {
-		return result, derp.Wrap(err, "build.Inbox.Folders", "Unable to load folders")
+		return result, derp.Wrap(err, "build.NewsFeed.Folders", "Unable to load folders")
 	}
 
 	result.Folders = folders
@@ -419,7 +419,7 @@ func (w Inbox) Folders() (model.FolderList, error) {
 
 func (w Inbox) FoldersWithSelection(section string) (model.FolderList, error) {
 
-	const location = "build.Inbox.FoldersWithSelection"
+	const location = "build.NewsFeed.FoldersWithSelection"
 
 	// Get Folder List
 	result, err := w.Folders()
@@ -501,43 +501,43 @@ func (w Inbox) SubBuilder(object any) (Builder, error) {
  * Message Methods
  ******************************************/
 
-// Message uses the queryString ?messageId= parameter to load a Message from the database
-// If the messageId parameter does not exist, is malformed, or if the message does not exist, then
+// Message uses the queryString ?newsItemId= parameter to load a Message from the database
+// If the newsItemId parameter does not exist, is malformed, or if the newsItem does not exist, then
 // a new, empty Message is returned.
 // In addition, if there is a "sibling" URL parameter (either "next" or "prev") then the next/previous
-// message is loaded instead.
-func (w Inbox) Message() model.Message {
+// newsItem is loaded instead.
+func (w Inbox) Message() model.NewsItem {
 
-	const location = "build.Inbox.Message"
+	const location = "build.NewsFeed.Message"
 
-	// Get the messageID from the query string
-	messageID, err := primitive.ObjectIDFromHex(w._request.URL.Query().Get("messageId"))
+	// Get the newsItemID from the query string
+	newsItemID, err := primitive.ObjectIDFromHex(w._request.URL.Query().Get("newsItemId"))
 
 	if err != nil {
-		return model.NewMessage()
+		return model.NewNewsItem()
 	}
 
-	// Load the message from the database
-	inboxService := w._factory.Inbox()
-	message := model.NewMessage()
+	// Load the newsItem from the database
+	inboxService := w._factory.NewsFeed()
+	newsItem := model.NewNewsItem()
 
-	if err := inboxService.LoadByID(w._session, w.AuthenticatedID(), messageID, &message); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to load message", messageID))
-		return model.NewMessage()
+	if err := inboxService.LoadByID(w._session, w.AuthenticatedID(), newsItemID, &newsItem); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to load newsItem", newsItemID))
+		return model.NewNewsItem()
 	}
 
 	// If sibling (prev/next) is specified, then try to look that up before returning.
 	if sibling := w._request.URL.Query().Get("sibling"); sibling != "" {
 
-		// Otherwise, look up the next/previous message
-		criteria := exp.Equal("userId", w.AuthenticatedID()).AndEqual("folderId", message.FolderID)
+		// Otherwise, look up the next/previous newsItem
+		criteria := exp.Equal("userId", w.AuthenticatedID()).AndEqual("folderId", newsItem.FolderID)
 		options := []option.Option{option.MaxRows(1)}
 
 		if sibling == "next" {
-			criteria = criteria.And(exp.GreaterThan("rank", message.Rank))
+			criteria = criteria.And(exp.GreaterThan("rank", newsItem.Rank))
 			options = append(options, option.SortAsc("rank"))
 		} else {
-			criteria = criteria.And(exp.LessThan("rank", message.Rank))
+			criteria = criteria.And(exp.LessThan("rank", newsItem.Rank))
 			options = append(options, option.SortDesc("rank"))
 		}
 
@@ -550,33 +550,33 @@ func (w Inbox) Message() model.Message {
 		result, err := inboxService.Query(w._session, criteria, options...)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to query sibling message", sibling, message.MessageID))
-			return model.NewMessage()
+			derp.Report(derp.Wrap(err, location, "Unable to query sibling newsItem", sibling, newsItem.MessageID))
+			return model.NewNewsItem()
 		}
 
 		// If we have (a) result, then return it.
 		if len(result) > 0 {
-			message = result[0]
+			newsItem = result[0]
 		}
 
-		// Update the QueryString to reflect the "correct" message
-		w.SetQueryParam("messageId", message.ID())
+		// Update the QueryString to reflect the "correct" newsItem
+		w.SetQueryParam("newsItemId", newsItem.ID())
 		w.SetQueryParam("sibling", "")
 	}
 
 	// Icky side effect to update the URI parameter to use the new Message
-	w.SetQueryParam("messageId", message.MessageID.Hex())
+	w.SetQueryParam("newsItemId", newsItem.ID())
 
 	if url := w.QueryParam("url"); url == "" {
-		w.SetQueryParam("url", message.URL)
+		w.SetQueryParam("url", newsItem.URL)
 	}
 
 	if folderID := w.QueryParam("folderId"); folderID == "" {
-		w.SetQueryParam("folderId", message.FolderID.Hex())
+		w.SetQueryParam("folderId", newsItem.FolderID.Hex())
 	}
 
-	// Otherwise, there was some error (likely 404 Not Found) so return the original message instead.
-	return message
+	// Otherwise, there was some error (likely 404 Not Found) so return the original newsItem instead.
+	return newsItem
 }
 
 func (w Inbox) QueryByContext(contextID string, afterDate int64, maxRows int) (sliceof.Object[streams.Document], error) {
@@ -654,7 +654,7 @@ func (w Inbox) HasRule(ruleType string, trigger string) model.Rule {
 	// In either case, do not halt the request
 	if err := ruleService.LoadByTrigger(w._session, w._user.UserID, ruleType, trigger, &rule); err != nil {
 		if !derp.IsNotFound(err) {
-			derp.Report(derp.Wrap(err, "build.Inbox.HasRule", "Unable to load rule", ruleType, trigger))
+			derp.Report(derp.Wrap(err, "build.NewsFeed.HasRule", "Unable to load rule", ruleType, trigger))
 		}
 	}
 

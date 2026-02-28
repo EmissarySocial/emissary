@@ -49,12 +49,12 @@ func (step StepWithMessage) execute(builder Builder, buffer io.Writer, actionMet
 
 	// Collect required services and values
 	factory := builder.factory()
-	inboxService := factory.Inbox()
-	message := model.NewMessage()
+	newsFeedService := factory.NewsFeed()
+	message := model.NewNewsItem()
 	userID := builder.AuthenticatedID()
 
 	// If we have a real ID, then try to load the message from the database
-	if err := inboxService.LoadByID(builder.session(), userID, messageID, &message); err != nil {
+	if err := newsFeedService.LoadByID(builder.session(), userID, messageID, &message); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to load Message", messageID))
 	}
 

@@ -16,8 +16,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Inbox manages all Inbox records for a User.  This includes Inbox and Outbox
-type Inbox struct {
+// NewsFeed manages the NewsItem records for a User.
+type NewsFeed struct {
 	importItemService *ImportItem
 	folderService     *Folder
 	ruleService       *Rule
@@ -26,9 +26,9 @@ type Inbox struct {
 	mutex             *sync.Mutex
 }
 
-// NewInbox returns a fully populated Inbox service
-func NewInbox() Inbox {
-	return Inbox{
+// NewNewsFeed returns a fully populated NewsFeed service
+func NewNewsFeed() NewsFeed {
+	return NewsFeed{
 		mutex: &sync.Mutex{},
 	}
 }
@@ -38,7 +38,7 @@ func NewInbox() Inbox {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Inbox) Refresh(factory *Factory) {
+func (service *NewsFeed) Refresh(factory *Factory) {
 	service.importItemService = factory.ImportItem()
 	service.folderService = factory.Folder()
 	service.ruleService = factory.Rule()
@@ -46,7 +46,7 @@ func (service *Inbox) Refresh(factory *Factory) {
 }
 
 // Close stops any background processes controlled by this service
-func (service *Inbox) Close() {
+func (service *NewsFeed) Close() {
 
 }
 
@@ -54,65 +54,65 @@ func (service *Inbox) Close() {
  * Common Data Methods
  ******************************************/
 
-func (service *Inbox) collection(session data.Session) data.Collection {
-	return session.Collection("Inbox")
+func (service *NewsFeed) collection(session data.Session) data.Collection {
+	return session.Collection("NewsFeed")
 }
 
-// New creates a newly initialized Inbox that is ready to use
-func (service *Inbox) New() model.Message {
-	return model.NewMessage()
+// New creates a newly initialized NewsFeed that is ready to use
+func (service *NewsFeed) New() model.NewsItem {
+	return model.NewNewsItem()
 }
 
 // Count returns the number of records that match the provided criteria
-func (service *Inbox) Count(session data.Session, criteria exp.Expression) (int64, error) {
+func (service *NewsFeed) Count(session data.Session, criteria exp.Expression) (int64, error) {
 	return service.collection(session).Count(notDeleted(criteria))
 }
 
 // Query returns a slice containing all of the Activities that match the provided criteria
-func (service *Inbox) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Message, error) {
-	result := []model.Message{}
+func (service *NewsFeed) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.NewsItem, error) {
+	result := make([]model.NewsItem, 0)
 	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 
 	return result, err
 }
 
 // List returns an iterator containing all of the Activities that match the provided criteria
-func (service *Inbox) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
+func (service *NewsFeed) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return service.collection(session).Iterator(notDeleted(criteria), options...)
 }
 
-// Range returns a Go 1.23 RangeFunc that iterates over the Messages that match the provided criteria
-func (service *Inbox) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.Message], error) {
+// Range returns a Go 1.23 RangeFunc that iterates over the NewsItems that match the provided criteria
+func (service *NewsFeed) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.NewsItem], error) {
 
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Inbox.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.NewsFeed.Range", "Unable to create iterator", criteria)
 	}
 
-	return RangeFunc(iter, model.NewMessage), nil
+	return RangeFunc(iter, model.NewNewsItem), nil
 }
 
-// Load retrieves an Inbox from the database
-func (service *Inbox) Load(session data.Session, criteria exp.Expression, result *model.Message) error {
+// Load retrieves an NewsFeed from the database
+func (service *NewsFeed) Load(session data.Session, criteria exp.Expression, result *model.NewsItem) error {
 
-	const location = "service.Inbox.Load"
+	const location = "service.NewsFeed.Load"
 
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, location, "Unable to load Inbox message", criteria)
+		return derp.Wrap(err, location, "Unable to load NewsFeed message", criteria)
 	}
 
 	return nil
 }
 
-// Save adds/updates an Inbox in the database
-func (service *Inbox) Save(session data.Session, message *model.Message, note string) error {
+// Save adds/updates an NewsFeed in the database
+func (service *NewsFeed) Save(session data.Session, message *model.NewsItem, note string) error {
 
-	const location = "service.Inbox.Save"
+	const location = "service.NewsFeed.Save"
 
 	// Validate the value before saving
 	if err := service.Schema().Validate(message); err != nil {
-		return derp.Wrap(err, location, "Unable to validate Inbox", message)
+		return derp.Wrap(err, location, "Unable to validate NewsFeed", message)
 	}
 
 	// Calculate a (hopefully unique) rank for this message
@@ -120,7 +120,7 @@ func (service *Inbox) Save(session data.Session, message *model.Message, note st
 
 	// Save the value to the database
 	if err := service.collection(session).Save(message, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Inbox", message, note)
+		return derp.Wrap(err, location, "Unable to save NewsFeed", message, note)
 	}
 
 	// Recalculate the unread count for the folder that owns this message.
@@ -134,29 +134,29 @@ func (service *Inbox) Save(session data.Session, message *model.Message, note st
 	return nil
 }
 
-// Delete removes an Inbox from the database (virtual delete)
-func (service *Inbox) Delete(session data.Session, message *model.Message, note string) error {
+// Delete removes an NewsFeed from the database (virtual delete)
+func (service *NewsFeed) Delete(session data.Session, message *model.NewsItem, note string) error {
 
-	// Delete Inbox record last.
+	// Delete NewsFeed record last.
 	if err := service.collection(session).Delete(message, note); err != nil {
-		return derp.Wrap(err, "service.Inbox.Delete", "Unable to delete Inbox", message, note)
+		return derp.Wrap(err, "service.NewsFeed.Delete", "Unable to delete NewsFeed", message, note)
 	}
 
 	return nil
 }
 
 // DeleteMany removes all child streams from the provided stream (virtual delete)
-func (service *Inbox) DeleteMany(session data.Session, criteria exp.Expression, note string) error {
+func (service *NewsFeed) DeleteMany(session data.Session, criteria exp.Expression, note string) error {
 
 	rangeFunc, err := service.Range(session, criteria)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Inbox.DeleteMany", "Unable to list streams to delete", criteria)
+		return derp.Wrap(err, "service.NewsFeed.DeleteMany", "Unable to list streams to delete", criteria)
 	}
 
 	for message := range rangeFunc {
 		if err := service.Delete(session, &message, note); err != nil {
-			return derp.Wrap(err, "service.Inbox.DeleteMany", "Unable to delete message", message)
+			return derp.Wrap(err, "service.NewsFeed.DeleteMany", "Unable to delete message", message)
 		}
 	}
 
@@ -168,22 +168,22 @@ func (service *Inbox) DeleteMany(session data.Session, criteria exp.Expression, 
  ******************************************/
 
 // QueryIDOnly returns a slice of IDOnly records that match the provided criteria
-func (service *Inbox) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.IDOnly], error) {
+func (service *NewsFeed) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.IDOnly], error) {
 	result := make([]model.IDOnly, 0)
 	options = append(options, option.Fields("_id"))
 	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
 	return result, err
 }
 
-// HardDeleteByID removes a specific Inbox record, without applying any additional business rules
-func (service *Inbox) HardDeleteByID(session data.Session, userID primitive.ObjectID, messageID primitive.ObjectID) error {
+// HardDeleteByID removes a specific NewsFeed record, without applying any additional business rules
+func (service *NewsFeed) HardDeleteByID(session data.Session, userID primitive.ObjectID, messageID primitive.ObjectID) error {
 
-	const location = "service.Inbox.HardDeleteByID"
+	const location = "service.NewsFeed.HardDeleteByID"
 
 	criteria := exp.Equal("userId", userID).AndEqual("_id", messageID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Inbox", "userID: "+userID.Hex(), "messageID: "+messageID.Hex())
+		return derp.Wrap(err, location, "Unable to delete NewsFeed", "userID: "+userID.Hex(), "messageID: "+messageID.Hex())
 	}
 
 	return nil
@@ -194,85 +194,85 @@ func (service *Inbox) HardDeleteByID(session data.Session, userID primitive.Obje
  ******************************************/
 
 // ObjectType returns the type of object that this service manages
-func (service *Inbox) ObjectType() string {
-	return "Inbox"
+func (service *NewsFeed) ObjectType() string {
+	return "NewsFeed"
 }
 
-// New returns a fully initialized model.Inbox record as a data.Object.
-func (service *Inbox) ObjectNew() data.Object {
-	result := model.NewMessage()
+// New returns a fully initialized model.NewsFeed record as a data.Object.
+func (service *NewsFeed) ObjectNew() data.Object {
+	result := model.NewNewsItem()
 	return &result
 }
 
-func (service *Inbox) ObjectID(object data.Object) primitive.ObjectID {
+func (service *NewsFeed) ObjectID(object data.Object) primitive.ObjectID {
 
-	if message, ok := object.(*model.Message); ok {
-		return message.MessageID
+	if message, ok := object.(*model.NewsItem); ok {
+		return message.NewsItemID
 	}
 
 	return primitive.NilObjectID
 }
 
-func (service *Inbox) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
+func (service *NewsFeed) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
-func (service *Inbox) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
-	result := model.NewMessage()
+func (service *NewsFeed) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
+	result := model.NewNewsItem()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
-func (service *Inbox) ObjectSave(session data.Session, object data.Object, note string) error {
-	if message, ok := object.(*model.Message); ok {
+func (service *NewsFeed) ObjectSave(session data.Session, object data.Object, note string) error {
+	if message, ok := object.(*model.NewsItem); ok {
 		return service.Save(session, message, note)
 	}
-	return derp.Internal("service.Inbox.ObjectSave", "Invalid Object Type", object)
+	return derp.Internal("service.NewsFeed.ObjectSave", "Invalid Object Type", object)
 }
 
-func (service *Inbox) ObjectDelete(session data.Session, object data.Object, note string) error {
-	if message, ok := object.(*model.Message); ok {
+func (service *NewsFeed) ObjectDelete(session data.Session, object data.Object, note string) error {
+	if message, ok := object.(*model.NewsItem); ok {
 		return service.Delete(session, message, note)
 	}
-	return derp.Internal("service.Inbox.ObjectDelete", "Invalid Object Type", object)
+	return derp.Internal("service.NewsFeed.ObjectDelete", "Invalid Object Type", object)
 }
 
-func (service *Inbox) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
-	return derp.Unauthorized("service.Inbox.ObjectUserCan", "Not Authorized")
+func (service *NewsFeed) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
+	return derp.Unauthorized("service.NewsFeed.ObjectUserCan", "Not Authorized")
 }
 
-func (service *Inbox) Schema() schema.Schema {
-	return schema.New(model.MessageSchema())
+func (service *NewsFeed) Schema() schema.Schema {
+	return schema.New(model.NewsItemSchema())
 }
 
 /******************************************
  * Custom Query Methods
  ******************************************/
 
-func (service *Inbox) QueryByUserID(session data.Session, userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.Message, error) {
+func (service *NewsFeed) QueryByUserID(session data.Session, userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.NewsItem, error) {
 	criteria = criteria.AndEqual("userId", userID)
 	return service.Query(session, criteria, options...)
 }
 
-func (service *Inbox) RangeByFolder(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID) (iter.Seq[model.Message], error) {
+func (service *NewsFeed) RangeByFolder(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID) (iter.Seq[model.NewsItem], error) {
 	criteria := exp.Equal("userId", userID).
 		AndEqual("folderId", folderID)
 
 	return service.Range(session, criteria)
 }
 
-func (service *Inbox) RangeByFollowingID(session data.Session, userID primitive.ObjectID, followingID primitive.ObjectID) (iter.Seq[model.Message], error) {
+func (service *NewsFeed) RangeByFollowingID(session data.Session, userID primitive.ObjectID, followingID primitive.ObjectID) (iter.Seq[model.NewsItem], error) {
 	criteria := exp.Equal("userId", userID).
 		AndEqual("origin.followingId", followingID)
 
 	return service.Range(session, criteria)
 }
 
-func (service *Inbox) RangeByUserID(session data.Session, userID primitive.ObjectID) (iter.Seq[model.Message], error) {
+func (service *NewsFeed) RangeByUserID(session data.Session, userID primitive.ObjectID) (iter.Seq[model.NewsItem], error) {
 	return service.Range(session, exp.Equal("userId", userID))
 }
 
-func (service *Inbox) LoadByID(session data.Session, userID primitive.ObjectID, messageID primitive.ObjectID, result *model.Message) error {
+func (service *NewsFeed) LoadByID(session data.Session, userID primitive.ObjectID, messageID primitive.ObjectID, result *model.NewsItem) error {
 	criteria := exp.Equal("userId", userID).
 		AndEqual("_id", messageID)
 
@@ -280,7 +280,7 @@ func (service *Inbox) LoadByID(session data.Session, userID primitive.ObjectID, 
 }
 
 // LoadByURL returns the first message that matches the provided UserID and URL
-func (service *Inbox) LoadByURL(session data.Session, userID primitive.ObjectID, url string, result *model.Message) error {
+func (service *NewsFeed) LoadByURL(session data.Session, userID primitive.ObjectID, url string, result *model.NewsItem) error {
 	criteria := exp.Equal("userId", userID).
 		AndEqual("url", url)
 
@@ -288,7 +288,7 @@ func (service *Inbox) LoadByURL(session data.Session, userID primitive.ObjectID,
 }
 
 // LoadUnreadByURL returns the first UNREAD message that matches the provided UserID and URL
-func (service *Inbox) LoadUnreadByURL(session data.Session, userID primitive.ObjectID, url string, result *model.Message) error {
+func (service *NewsFeed) LoadUnreadByURL(session data.Session, userID primitive.ObjectID, url string, result *model.NewsItem) error {
 	criteria := exp.Equal("userId", userID).
 		AndEqual("url", url).
 		AndEqual("readDate", math.MaxInt64)
@@ -297,9 +297,9 @@ func (service *Inbox) LoadUnreadByURL(session data.Session, userID primitive.Obj
 }
 
 // LoadSibling searches for the previous/next sibling to the provided message criteria.
-func (service *Inbox) LoadSibling(session data.Session, folderID primitive.ObjectID, rank int64, following string, direction string) (model.Message, error) {
+func (service *NewsFeed) LoadSibling(session data.Session, folderID primitive.ObjectID, rank int64, following string, direction string) (model.NewsItem, error) {
 
-	const location = "service.Inbox.LoadSibling"
+	const location = "service.NewsFeed.LoadSibling"
 
 	// Initialize query parameters
 	var criteria exp.Expression = exp.Equal("folderId", folderID)
@@ -323,21 +323,21 @@ func (service *Inbox) LoadSibling(session data.Session, folderID primitive.Objec
 	it, err := service.List(session, criteria, option.FirstRow(), sort)
 
 	if err != nil {
-		return model.Message{}, derp.Wrap(err, location, "Unable to retrieve siblings")
+		return model.NewsItem{}, derp.Wrap(err, location, "Unable to retrieve siblings")
 	}
 
 	// This *should* read the prev/next message into the pointer and be done.
-	if result := model.NewMessage(); it.Next(&result) {
+	if result := model.NewNewsItem(); it.Next(&result) {
 		return result, nil
 	}
 
 	// No results.  Shame! Shame!
-	return model.Message{}, derp.NotFound(location, "Sibling record not found")
+	return model.NewsItem{}, derp.NotFound(location, "Sibling record not found")
 }
 
-func (service *Inbox) LoadOldestUnread(session data.Session, userID primitive.ObjectID, message *model.Message) error {
+func (service *NewsFeed) LoadOldestUnread(session data.Session, userID primitive.ObjectID, message *model.NewsItem) error {
 
-	const location = "service.Inbox.LoadOldestUnread"
+	const location = "service.NewsFeed.LoadOldestUnread"
 
 	criteria := exp.Equal("userId", userID)
 	sort := option.SortAsc("createDate")
@@ -355,9 +355,9 @@ func (service *Inbox) LoadOldestUnread(session data.Session, userID primitive.Ob
 	return derp.NotFound(location, "No unread messages")
 }
 
-func (service *Inbox) MarkReadByDate(session data.Session, userID primitive.ObjectID, rank int64) error {
+func (service *NewsFeed) MarkReadByDate(session data.Session, userID primitive.ObjectID, rank int64) error {
 
-	const location = "service.Inbox.MarkReadByDate"
+	const location = "service.NewsFeed.MarkReadByDate"
 
 	criteria := exp.Equal("userId", userID).AndLessThan("rank", rank)
 	sort := option.SortAsc("rank")
@@ -369,7 +369,7 @@ func (service *Inbox) MarkReadByDate(session data.Session, userID primitive.Obje
 	}
 
 	// Loop through every message and mark it as read
-	for message := model.NewMessage(); it.Next(&message); message = model.NewMessage() {
+	for message := model.NewNewsItem(); it.Next(&message); message = model.NewNewsItem() {
 		if err := service.MarkRead(session, &message); err != nil {
 			return derp.Wrap(err, location, "Unable to mark message as read")
 		}
@@ -383,9 +383,9 @@ func (service *Inbox) MarkReadByDate(session data.Session, userID primitive.Obje
  ******************************************/
 
 // MarkRead updates a message to "READ" status and recalculates statistics
-func (service *Inbox) MarkRead(session data.Session, message *model.Message) error {
+func (service *NewsFeed) MarkRead(session data.Session, message *model.NewsItem) error {
 
-	const location = "service.Inbox.MarkRead"
+	const location = "service.NewsFeed.MarkRead"
 
 	// Set status to READ.  If the message was not changed, then exit
 	if isUpdated := message.MarkRead(); !isUpdated {
@@ -407,9 +407,9 @@ func (service *Inbox) MarkRead(session data.Session, message *model.Message) err
 }
 
 // MarkRead updates a message to "UNREAD" status and recalculates statistics
-func (service *Inbox) MarkUnread(session data.Session, message *model.Message) error {
+func (service *NewsFeed) MarkUnread(session data.Session, message *model.NewsItem) error {
 
-	const location = "service.Inbox.MarkUnread"
+	const location = "service.NewsFeed.MarkUnread"
 
 	// Set status to UNREAD.  If the message was not changed, then exit
 	if isUpdated := message.MarkUnread(); !isUpdated {
@@ -430,9 +430,9 @@ func (service *Inbox) MarkUnread(session data.Session, message *model.Message) e
 	return nil
 }
 
-func (service *Inbox) MarkMuted(session data.Session, message *model.Message) error {
+func (service *NewsFeed) MarkMuted(session data.Session, message *model.NewsItem) error {
 
-	const location = "service.Inbox.MarkMuted"
+	const location = "service.NewsFeed.MarkMuted"
 
 	// Set status to MUTED.  If the message is unchanged, then exit
 	if isUpdated := message.MarkMuted(); !isUpdated {
@@ -447,9 +447,9 @@ func (service *Inbox) MarkMuted(session data.Session, message *model.Message) er
 	return nil
 }
 
-func (service *Inbox) MarkUnmuted(session data.Session, message *model.Message) error {
+func (service *NewsFeed) MarkUnmuted(session data.Session, message *model.NewsItem) error {
 
-	const location = "service.Inbox.MarkUnmuted"
+	const location = "service.NewsFeed.MarkUnmuted"
 
 	// Set status to READ (unmuted).  If the message is unchanged, then exit
 	if isUpdated := message.MarkRead(); !isUpdated {
@@ -465,13 +465,13 @@ func (service *Inbox) MarkUnmuted(session data.Session, message *model.Message) 
 	return nil
 }
 
-// SetResponse sets/clears a Response type from a Message
-func (service *Inbox) setResponse(session data.Session, userID primitive.ObjectID, url string, responseType string, responseID primitive.ObjectID) error {
+// SetResponse sets/clears a Response type from a NewsItem
+func (service *NewsFeed) setResponse(session data.Session, userID primitive.ObjectID, url string, responseType string, responseID primitive.ObjectID) error {
 
-	const location = "service.Inbox.setResponse"
+	const location = "service.NewsFeed.setResponse"
 
 	// Load the message that is being responded to
-	message := model.NewMessage()
+	message := model.NewNewsItem()
 	if err := service.LoadByURL(session, userID, url, &message); err != nil {
 
 		// Exceptional case: If there is no message to respond to, then do not return an error.
@@ -499,7 +499,7 @@ func (service *Inbox) setResponse(session data.Session, userID primitive.ObjectI
 
 // CalculateRank generates a unique rank for the message based on the PublishDate and the number of messages
 // that already exist in the database with this PublishDate.
-func (service *Inbox) CalculateRank(message *model.Message) {
+func (service *NewsFeed) CalculateRank(message *model.NewsItem) {
 
 	// RULE: Do not reset the rank for items that already have one. This prevents
 	// older messages from being re-queued to the top of the list
@@ -518,8 +518,8 @@ func (service *Inbox) CalculateRank(message *model.Message) {
 	message.Rank = (message.PublishDate * 1000) + int64(service.counter)
 }
 
-// CountUnreadMessages counts the number of messages for a user/folder that are marked "unread".
-func (service *Inbox) CountUnreadMessages(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID) (int, error) {
+// CountUnreadNewsItems counts the number of messages for a user/folder that are marked "unread".
+func (service *NewsFeed) CountUnreadNewsItems(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID) (int, error) {
 
 	criteria := exp.Equal("userId", userID).
 		AndEqual("folderId", folderID).
@@ -530,56 +530,56 @@ func (service *Inbox) CountUnreadMessages(session data.Session, userID primitive
 	return int(count), err
 }
 
-func (service *Inbox) UpdateInboxFolders(session data.Session, userID primitive.ObjectID, followingID primitive.ObjectID, folderID primitive.ObjectID) error {
+func (service *NewsFeed) UpdateNewsFeedFolders(session data.Session, userID primitive.ObjectID, followingID primitive.ObjectID, folderID primitive.ObjectID) error {
 
 	rangeFunc, err := service.RangeByFollowingID(session, userID, followingID)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Inbox", "Unable to list Activities by following", userID, followingID)
+		return derp.Wrap(err, "service.NewsFeed", "Unable to list Activities by following", userID, followingID)
 	}
 
 	for message := range rangeFunc {
 		message.FolderID = folderID
-		if err := service.Save(session, &message, "UpdateInboxFolders"); err != nil {
-			return derp.Wrap(err, "service.Inbox", "Unable to save Inbox Message", message)
+		if err := service.Save(session, &message, "UpdateNewsFeedFolders"); err != nil {
+			return derp.Wrap(err, "service.NewsFeed", "Unable to save NewsFeed NewsItem", message)
 		}
 	}
 
 	// Recalculate the "unread" count on the new folder
 	if err := service.folderService.CalculateUnreadCount(session, userID, folderID); err != nil {
-		return derp.Wrap(err, "service.Inbox", "Unable to calculate unread count for new folder", userID, folderID)
+		return derp.Wrap(err, "service.NewsFeed", "Unable to calculate unread count for new folder", userID, folderID)
 	}
 
 	return nil
 }
 
-func (service *Inbox) DeleteByUserID(session data.Session, userID primitive.ObjectID, note string) error {
+func (service *NewsFeed) DeleteByUserID(session data.Session, userID primitive.ObjectID, note string) error {
 	return service.DeleteMany(session, exp.Equal("userId", userID), note)
 }
 
-func (service *Inbox) DeleteByOrigin(session data.Session, internalID primitive.ObjectID, note string) error {
+func (service *NewsFeed) DeleteByOrigin(session data.Session, internalID primitive.ObjectID, note string) error {
 	return service.DeleteMany(session, exp.Equal("origin.followingId", internalID), note)
 }
 
-func (service *Inbox) DeleteByFolder(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID) error {
+func (service *NewsFeed) DeleteByFolder(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID) error {
 
 	rangeFunc, err := service.RangeByFolder(session, userID, folderID)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Inbox", "Unable to list Activities by folder", userID, folderID)
+		return derp.Wrap(err, "service.NewsFeed", "Unable to list Activities by folder", userID, folderID)
 	}
 
 	for message := range rangeFunc {
 		if err := service.Delete(session, &message, "DeleteByFolder"); err != nil {
-			return derp.Wrap(err, "service.Inbox", "Unable to delete Inbox", message)
+			return derp.Wrap(err, "service.NewsFeed", "Unable to delete NewsFeed", message)
 		}
 	}
 
 	return nil
 }
 
-// QueryPurgeable returns a list of Inboxs that are older than the purge date for this following
-func (service *Inbox) RangePurgeable(session data.Session, following *model.Following) (iter.Seq[model.Message], error) {
+// QueryPurgeable returns a list of NewsFeeds that are older than the purge date for this following
+func (service *NewsFeed) RangePurgeable(session data.Session, following *model.Following) (iter.Seq[model.NewsItem], error) {
 
 	// Purge date is X days before the current date
 	purgeDuration := time.Duration(following.PurgeDuration) * 24 * time.Hour

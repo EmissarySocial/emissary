@@ -44,11 +44,11 @@ func (service *Export) FindService(collectionName string) (Exportable, error) {
 	case "emissary-following":
 		return service.factory.Following(), nil
 
-	case "emissary-inboxMessage":
-		return service.factory.Inbox(), nil
-
 	case "emissary-merchantAccount":
 		return service.factory.MerchantAccount(), nil
+
+	case "emissary-newsFeed":
+		return service.factory.NewsFeed(), nil
 
 	case "emissary-outboxMessage":
 		return service.factory.Outbox(), nil

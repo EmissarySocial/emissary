@@ -263,7 +263,7 @@ func (user User) GetJSONLD() mapof.Any {
 			"emissary:folder":          exportURL + "/emissary-folder",
 			"emissary:follower":        exportURL + "/emissary-follower",
 			"emissary:following":       exportURL + "/emissary-following",
-			"emissary:inboxMessage":    exportURL + "/emissary-inboxMessage",
+			"emissary:newsItem":        exportURL + "/emissary-newsItem",
 			"emissary:merchantAccount": exportURL + "/emissary-merchantAccount",
 			"emissary:outboxMessage":   exportURL + "/emissary-outboxMessage",
 			"emissary:privilege":       exportURL + "/emissary-privilege",

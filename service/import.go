@@ -585,13 +585,13 @@ func (service *Import) CalcImportPlan(actor streams.Document) sliceof.Object[for
 			})
 
 			// Import Emissary Inbox Messsages IF we have Inbox Folders
-			if collection := migration.Get("emissary:inboxMessage"); collection.NotNil() {
+			if collection := migration.Get("emissary:newsItem"); collection.NotNil() {
 				result.Append(form.LookupCode{
 					Group:       "Native",
 					Icon:        "patch-check-fill",
 					Label:       "Inbox Messages",
 					Description: "High-fidelity import of your Emissary Inbox",
-					Value:       "emissary:inboxMessage",
+					Value:       "emissary:newsItem",
 					Href:        collection.String(),
 				})
 			}

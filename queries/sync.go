@@ -115,10 +115,6 @@ func SyncDomainIndexes(connectionString string, databaseName string) error {
 		derp.Report(err)
 	}
 
-	if err := sync.Inbox(ctx, session); err != nil {
-		derp.Report(err)
-	}
-
 	if err := sync.JWT(ctx, session); err != nil {
 		derp.Report(err)
 	}
@@ -128,6 +124,10 @@ func SyncDomainIndexes(connectionString string, databaseName string) error {
 	}
 
 	if err := sync.MerchantAccount(ctx, session); err != nil {
+		derp.Report(err)
+	}
+
+	if err := sync.NewsFeed(ctx, session); err != nil {
 		derp.Report(err)
 	}
 

@@ -57,8 +57,8 @@ func inbox_LikeOrAnnounce(context Context, activity streams.Document) error {
 	originType := getOriginType(activity.Type())
 
 	// Add the Announced/Liked message into the User's inbox
-	if err := followingService.SaveMessage(context.session, &following, document, originType); err != nil {
-		return derp.Wrap(err, location, "Unable to save message", context.user.UserID, activity.Value())
+	if err := followingService.SaveNewsItem(context.session, &following, document, originType); err != nil {
+		return derp.Wrap(err, location, "Unable to save news item", context.user.UserID, activity.Value())
 	}
 
 	// Success.
