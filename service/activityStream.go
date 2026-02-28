@@ -354,20 +354,35 @@ func (service *ActivityStream) queryByRelation(ctx context.Context, relationType
 	return result
 }
 
+// GetActor retrieves an actor from their handle or URL
+func (service *ActivityStream) GetActor(actor string) (streams.Document, error) {
+
+	const location = "service.ActivityStream.GetActor"
+
+	// Try to load the actor as a JSON-LD document
+	document, err := service.AppClient().Load(actor, sherlock.AsActor())
+
+	if err != nil {
+		return streams.NilDocument(), derp.Wrap(err, location, "Unable to load ActivityPub Actor", actor)
+	}
+
+	// RULE: Verify that this document is an Actor (not a document or activity)
+	if !document.IsActor() {
+		return streams.NilDocument(), derp.NotFound(location, "Recipient is not an ActivityPub Actor", actor)
+	}
+
+	return document, nil
+}
+
 // GetRecipient retrieves the recipient's ID and inbox URL
 func (service *ActivityStream) GetRecipient(recipient string) (string, string, error) {
 
 	const location = "service.ActivityStream.GetRecipient"
 
-	// Try to load the recipient as a JSON-LD document
-	document, err := service.AppClient().Load(recipient, sherlock.AsActor())
+	document, err := service.GetActor(recipient)
 
 	if err != nil {
 		return "", "", derp.Wrap(err, location, "Unable to load ActivityPub Actor", recipient)
-	}
-
-	if !document.IsActor() {
-		return "", "", derp.NotFound(location, "Recipient is not an ActivityPub Actor", recipient)
 	}
 
 	// Successssssssss.

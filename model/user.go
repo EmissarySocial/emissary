@@ -6,6 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
+	"github.com/benpate/delta"
 	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
@@ -45,7 +46,7 @@ type User struct {
 	RuleCount       int                        `bson:"ruleCount"`            // Number of rules (blocks) that this user has implemented
 	IsOwner         bool                       `bson:"isOwner"`              // If TRUE, then this user is a website owner with FULL privileges.
 	IsPublic        bool                       `bson:"isPublic"`             // If TRUE, then this user's profile is publicly visible
-	IsBridgeBluesky bool                       `bson:"isBridgeBluesky"`      // If TRUE, then allow this user to be bridged to Bluesky
+	IsBridgeBluesky delta.Bool                 `bson:"isBridgeBluesky"`      // If TRUE, then allow this user to be bridged to Bluesky
 	IsIndexable     bool                       `bson:"isIndexable"`          // If TRUE, then this user's profile can be indexed by search engines.
 
 	journal.Journal `json:"-" bson:",inline"`

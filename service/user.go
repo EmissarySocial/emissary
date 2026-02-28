@@ -35,6 +35,7 @@ import (
 type User struct {
 	activityService   *ActivityStream
 	attachmentService *Attachment
+	connectionService *Connection
 	emailService      *DomainEmail
 	domainService     *Domain
 	folderService     *Folder
@@ -68,6 +69,7 @@ func (service *User) Refresh(factory *Factory) {
 
 	service.activityService = factory.ActivityStream()
 	service.attachmentService = factory.Attachment()
+	service.connectionService = factory.Connection()
 	service.domainService = factory.Domain()
 	service.emailService = factory.Email()
 	service.folderService = factory.Folder()
@@ -236,12 +238,20 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 		}
 	}
 
+	// Handle Bluesky bridging opt-in/out
+	if err := service.connectBluesky(session, user); err != nil {
+		return derp.Wrap(err, location, "Unable to update bridge settings", user, note)
+	}
+
+	// Set AttributedTo value
 	service.streamService.SetAttributedTo(user)
-	service.sseUpdateChannel <- realtime.NewMessage_Updated(user.UserID)
 
 	// Send Webhooks (if configured)
 	eventName := iif(isNew, model.WebhookEventUserCreate, model.WebhookEventUserUpdate)
 	service.webhookService.Send(user, eventName)
+
+	// Notify SSE clients that this User has been updated
+	service.sseUpdateChannel <- realtime.NewMessage_Updated(user.UserID)
 
 	// Success!
 	return nil

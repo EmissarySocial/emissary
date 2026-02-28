@@ -202,6 +202,10 @@ func (service *Following) Delete(session data.Session, following *model.Followin
 
 	const location = "service.Following.Delete"
 
+	// Disconnect from the external service (if necessary)
+	go service.Disconnect(session, following)
+
+	// Remove the Following record from the database
 	if err := service.deleteNoStats(session, following, note); err != nil {
 		return derp.Wrap(err, location, "Unable to delete Following", following, note)
 	}

@@ -1,8 +1,9 @@
 package service
 
 import (
+	"net/url"
+
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
@@ -13,7 +14,52 @@ import (
 	"github.com/benpate/turbine/queue"
 	"github.com/labstack/gommon/random"
 	"github.com/rs/zerolog/log"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+// Follow guarantees that the user is following the specified URL.  If the user is already following this actor,
+// then the Following record is returned. If not, a new Following record is created.
+func (service *Following) Follow(session data.Session, userID primitive.ObjectID, actorID string) (model.Following, error) {
+
+	const location = "service.Following.Follow"
+
+	// If the actor ID is not already a valid URL, it's probably a username/handle,
+	// so try to resolve it into a URL using Sherlock/WebFinger.
+	if _, err := url.Parse(actorID); err != nil {
+
+		// Look up the Actor from the Activity service
+		actor, err := service.activityService.GetActor(actorID)
+
+		if err != nil {
+			return model.NewFollowing(), derp.Wrap(err, location, "Unable to find Actor for URL", actorID)
+		}
+
+		actorID = actor.ID()
+	}
+
+	// Try to load the existing Following record for this user and URL
+	following := model.NewFollowing()
+	err := service.LoadByURL(session, userID, actorID, &following)
+
+	if err == nil {
+		return following, nil
+	}
+
+	if !derp.IsNotFound(err) {
+		return model.NewFollowing(), derp.Wrap(err, location, "Unable to load following for user and URL", userID, actorID)
+	}
+
+	// If the record is not found, then create a new one
+	following.UserID = userID
+	following.URL = actorID
+
+	if err := service.Connect(session, &following); err != nil {
+		return model.NewFollowing(), derp.Wrap(err, location, "Unable to connect to ActivityPub actor", following)
+	}
+
+	// Success!
+	return following, nil
+}
 
 // Connect attempts to connect to a new URL and determines how to follow it.
 func (service *Following) Connect(session data.Session, following *model.Following) error {
@@ -25,9 +71,9 @@ func (service *Following) Connect(session data.Session, following *model.Followi
 		return nil
 	}
 
-	// Try to load the Actor in the cache (allow cached values)
+	// Try to load the Actor in the cache
 	client := service.activityService.UserClient(following.UserID)
-	actor, err := client.Load(following.URL, sherlock.AsActor(), ascache.WithWriteOnly())
+	actor, err := client.Load(following.URL, sherlock.AsActor())
 
 	if err != nil {
 		if inner := service.SetStatusFailure(session, following, "Unable to connect to ActivityPub Actor"); inner != nil {

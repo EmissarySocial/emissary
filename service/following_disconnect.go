@@ -1,12 +1,52 @@
 package service
 
 import (
+	"net/url"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/remote"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+// Unfollow guarantees that the user is no longer following the specified URL.  If the user is already following this actor,
+// then the Following record is disconnected. Otherwise, no action is taken.
+func (service *Following) Unfollow(session data.Session, userID primitive.ObjectID, actorID string) error {
+
+	const location = "service.Following.Follow"
+
+	// If the actor ID is not already a valid URL, it's probably a username/handle,
+	// so try to resolve it into a URL using Sherlock/WebFinger.
+	if _, err := url.Parse(actorID); err != nil {
+
+		// Look up the Actor from the Activity service
+		actor, err := service.activityService.GetActor(actorID)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Unable to find Actor for URL", actorID)
+		}
+
+		actorID = actor.ID()
+	}
+
+	// Try to load the existing Following record for this user and URL
+	following := model.NewFollowing()
+	err := service.LoadByURL(session, userID, actorID, &following)
+
+	if err != nil {
+
+		if derp.IsNotFound(err) {
+			return nil
+		}
+
+		return derp.Wrap(err, location, "Unable to load following for user and URL", userID, actorID)
+	}
+
+	// Disconnect the Following record
+	return service.Delete(session, &following, "")
+}
 
 func (service *Following) Disconnect(session data.Session, following *model.Following) {
 

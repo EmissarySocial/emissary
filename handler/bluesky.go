@@ -62,7 +62,7 @@ func GetBlueskyDID(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// RULE: Requre that the user has opted in to Bluesky bridging
-		if !user.IsBridgeBluesky {
+		if user.IsBridgeBluesky.IsFalse() {
 			return derp.Wrap(err, location, "User has not opted in to Bluesky bridging", username)
 		}
 

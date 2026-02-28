@@ -40,9 +40,6 @@
 										{type: "text", label: "Full Name", path: "displayName"}
 										{type: "text", label: "Username", path: "username"}
 										{type: "text", label: "Email Address", path: "emailAddress"}
-										{type: "toggle", path: "isPublic", options: {true-text: "Show Profile Publicly", false-text: "Show Profile Publicly"}}
-										{type: "toggle", path: "isBridgeBluesky", options: {true-text: "Bridge Bluesky Account", false-text: "Bridge Bluesky Account"}}
-										{type: "toggle", path: "isIndexable", options: {true-text: "Include in Search Engines", false-text: "Include in Search Engines"}}
 									]
 								},
 								{
@@ -59,6 +56,15 @@
 									children: [
 										{type: "multiselect", label: "Group(s)", path: "groupIds", options:{provider:"groups", sort:false}}
 									]
+								},
+								{
+									type: layout-vertical
+									label: Visibility
+									children: [
+										{type: "toggle", path: "isPublic", options: {true-text: "Show Profile Publicly", false-text: "Show Profile Publicly"}}
+										{type: "toggle", path: "isBridgeBluesky", options: {true-text: "Bridge Bluesky Account", false-text: "Bridge Bluesky Account"}}
+										{type: "toggle", path: "isIndexable", options: {true-text: "Include in Search Engines", false-text: "Include in Search Engines"}}
+									]	
 								},
 								{
 									type: layout-vertical
@@ -95,8 +101,6 @@
 											{type: "text", label: "Full Name", path: "displayName"}
 											{type: "text", label: "Username", path: "username"}
 											{type: "text", label: "Email Address", path: "emailAddress"}
-											{type: "toggle", path: "isPublic", options: {true-text: "Show Profile Publicly", false-text: "Show Profile Publicly"}}
-											{type: "toggle", path: "isIndexable", options: {true-text: "Include in Search Engines", false-text: "Include in Search Engines"}}
 										]
 									},
 									{
@@ -113,6 +117,15 @@
 										children: [
 											{type: "multiselect", path: "groupIds", description:"Select one or more groups to grant privileges to this user", options:{provider: "groups", sort:false}}
 										]
+									},
+									{
+										type: layout-vertical
+										label: Visibility
+										children: [
+											{type: "toggle", path: "isPublic", options: {true-text: "Show Profile Publicly", false-text: "Show Profile Publicly"}}
+											{type: "toggle", path: "isBridgeBluesky", options: {true-text: "Bridge Bluesky Account", false-text: "Bridge Bluesky Account"}}
+											{type: "toggle", path: "isIndexable", options: {true-text: "Include in Search Engines", false-text: "Include in Search Engines"}}
+										]	
 									},
 									{
 										type: layout-vertical

@@ -9,7 +9,7 @@ require (
 	github.com/benpate/data v0.31.2
 	github.com/benpate/data-mock v0.31.4
 	github.com/benpate/data-mongo v0.30.9
-	github.com/benpate/delta v0.0.1
+	github.com/benpate/delta v0.1.0
 	github.com/benpate/derp v0.35.0
 	github.com/benpate/digit v0.13.12
 	github.com/benpate/digital-dome v0.2.11
@@ -24,7 +24,7 @@ require (
 	github.com/benpate/mediaserver v0.15.13
 	github.com/benpate/re v0.3.5
 	github.com/benpate/remote v0.18.0
-	github.com/benpate/rosetta v0.25.30
+	github.com/benpate/rosetta v0.25.31
 	github.com/benpate/sherlock v0.8.18
 	github.com/benpate/sniff v0.1.0
 	github.com/benpate/steranko v0.22.8
