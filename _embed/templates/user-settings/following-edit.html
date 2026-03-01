@@ -15,8 +15,8 @@
 			</span>
 		{{- end -}}
 
-		<button hx-get="/@me/inbox/browse-actor?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}" role="tab">{{icon "person"}} Profile</button>
-		<button role="tab" hx-get="/@me/inbox/annotation?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "note"}} Notes</button>
+		<button hx-get="/@me/newsfeed/browse-actor?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}" role="tab">{{icon "person"}} Profile</button>
+		<button role="tab" hx-get="/@me/newsfeed/annotation?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "note"}} Notes</button>
 
 		{{ if $following.IsNew -}}
 			<button aria-selected="true" role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "add"}} Follow</button>

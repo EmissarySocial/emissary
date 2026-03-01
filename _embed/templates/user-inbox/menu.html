@@ -4,7 +4,7 @@
 
 <div class="margin-vertical"></div>
 
-	<a href="/@me/inbox/inbox?folderId={{nilObjectID.Hex}}" class="turboclick menu-item ellipsis hover-trigger folder {{if $allFolders}}selected{{end}}">
+	<a href="/@me/newsfeed/inbox?folderId={{nilObjectID.Hex}}" class="turboclick menu-item ellipsis hover-trigger folder {{if $allFolders}}selected{{end}}">
 		<span>
 			{{- if $allFolders -}}
 				{{- iconFilled "folder" -}}
@@ -15,11 +15,11 @@
 		<span>All Folders</span>
 	</a>
 
-	<form class="sortable" hx-post="/@me/inbox/folder-sort" hx-push-url="false" hx-trigger="end">
+	<form class="sortable" hx-post="/@me/newsfeed/folder-sort" hx-push-url="false" hx-trigger="end">
 
 	{{- range .Folders -}}
 		{{- $folderID := .FolderID.Hex -}}
-		<a href="/@me/inbox/inbox?folderId={{$folderID}}" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
+		<a href="/@me/newsfeed/inbox?folderId={{$folderID}}" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
 			<span>
 				{{- if eq $selectedID .FolderID -}}
 					{{- iconFilled .Icon -}}
@@ -47,7 +47,7 @@
 
 <div class="margin-vertical"></div>
 
-<div role="button" hx-get="/@me/inbox/folder-add" class="menu-item link turboclick" style="border:none;">
+<div role="button" hx-get="/@me/newsfeed/folder-add" class="menu-item link turboclick" style="border:none;">
 	<span style="view-transition-name:app-sidebar-add-folder-icon;">{{icon "add"}}</span>
 	<span style="view-transition-name:app-sidebar-add-folder-label">Add a Folder</span>
 </div>

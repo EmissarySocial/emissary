@@ -11,7 +11,7 @@
 	{{- $repliesURL := $document.Replies.ID -}}
 	{{- if ne "" $repliesURL -}}
 		<div 
-			hx-get="/@me/inbox/browse-tree-replies?url={{$repliesURL}}" 
+			hx-get="/@me/newsfeed/browse-tree-replies?url={{$repliesURL}}" 
 			hx-trigger="intersect once" 
 			hx-target="this" 
 			hx-swap="outerHTML" 

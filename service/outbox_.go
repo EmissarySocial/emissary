@@ -16,7 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Outbox manages all Outbox records for a User.  This includes Outbox and Outbox
+// Outbox manages all Outbox records for a User.
 type Outbox struct {
 	activityService   *ActivityStream
 	followerService   *Follower

@@ -409,7 +409,7 @@
 			]
 		}
 		
-		inbox: {
+		index: {
 			roles: ["self"]
 			steps:[
 				{do: "view-html"}

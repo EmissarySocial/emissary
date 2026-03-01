@@ -18,7 +18,7 @@
 		<br>
 		{{- if .IsAuthenticated -}}
 			<a href="/@me" class="turboclick {{ if eq $topID `profile` -}}selected{{- end -}}">Profile</a>
-			<a href="/@me/inbox" class="turboclick {{ if eq $topID `inbox` -}}selected{{- end -}}">Inbox</a>
+			<a href="/@me/newsfeed" class="turboclick {{ if eq $topID `inbox` -}}selected{{- end -}}">Inbox</a>
 			{{- if .IsOwner -}}<a href="/admin/domain" class="turboclick {{ if eq $topID `admin` -}}selected{{- end -}}">Settings</a>{{- end -}}
 		{{- else -}}
 			<a href="/signin" class="turboclick">Sign In</a>

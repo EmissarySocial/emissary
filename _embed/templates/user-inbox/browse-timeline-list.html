@@ -9,7 +9,7 @@
 
 	{{- if $timeline.IsLength $maxRows -}}
 		<div 
-			hx-get="/@me/inbox/browse-timeline-list?url={{$url}}&context={{$context}}&after={{$timeline.Last.Published.Unix}}" 
+			hx-get="/@me/newsfeed/browse-timeline-list?url={{$url}}&context={{$context}}&after={{$timeline.Last.Published.Unix}}" 
 			hx-trigger="intersect once"
 			hx-target="#timeline_ShowMore" 
 			hx-swap="outerHTML" 

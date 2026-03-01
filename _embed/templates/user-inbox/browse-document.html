@@ -8,7 +8,7 @@
 		{{- $attributedTo := $document.AttributedTo -}}
 		{{- if $attributedTo.NotEmpty -}}
 			<div class="margin-bottom-lg flex-row">
-				<div hx-get="/@me/inbox/browse-actor?url={{$attributedTo.ID}}" class="flex-shrink-0 flex-row flex-align-center clickable">
+				<div hx-get="/@me/newsfeed/browse-actor?url={{$attributedTo.ID}}" class="flex-shrink-0 flex-row flex-align-center clickable">
 					{{- if $attributedTo.Icon.NotNil -}}
 						<img src="{{$attributedTo.Icon.Href}}" class="circle width-48">
 					{{- end -}}
@@ -40,7 +40,7 @@
 		<div class="margin-top-lg text-xs">
 			{{template "reply-button" $document.ID }}
 			<span 
-				hx-get="/@me/inbox/like-button?url={{$document.ID}}" 
+				hx-get="/@me/newsfeed/like-button?url={{$document.ID}}" 
 				hx-trigger="intersect once"
 				hx-target="this" 
 				hx-swap="innerHTML" 
@@ -51,11 +51,11 @@
 		<div class="pos-absolute-top-right text-sm" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML">
 			<span class="margin-right text-light-gray">{{ $document.Published | tinyDate }} ago</span>
 			{{ if eq $document.ID ($builder.QueryParam "url") }}
-				<button hx-get="/@me/inbox/browse-tree?url={{$document.ID}}" aria-label="Use Nested Layout" class="selected">{{icon "focus"}}</button>
+				<button hx-get="/@me/newsfeed/browse-tree?url={{$document.ID}}" aria-label="Use Nested Layout" class="selected">{{icon "focus"}}</button>
 			{{else}}
-				<button hx-get="/@me/inbox/browse-tree?url={{$document.ID}}" aria-label="Use Nested Layout">{{icon "focus"}}</button>
+				<button hx-get="/@me/newsfeed/browse-tree?url={{$document.ID}}" aria-label="Use Nested Layout">{{icon "focus"}}</button>
 			{{end}}
-			<button hx-get="/@me/inbox/browse-index?url={{$document.ID}}" aria-label="Use Index Layout">{{icon "list"}}</button>
+			<button hx-get="/@me/newsfeed/browse-index?url={{$document.ID}}" aria-label="Use Index Layout">{{icon "list"}}</button>
 			<span class="margin-horizontal-sm"></span>
 			<a href="{{$attributedTo.ID}}" target="_blank" class="button" aria-label="Visit Actor Profile">{{icon "person"}}</a>
 			<a href="{{$document.URL}}" target="_blank" class="button" aria-label="Visit Original Website">{{icon "globe"}}</a>

@@ -6,7 +6,7 @@
 
 	{{- if $inbox.IsLength 6 -}}
 		<div 
-			hx-get="/@me/inbox/list?folderId={{$folderID}}&origin.followingId={{$internalID}}&rank=LT:{{$inbox.Last.Rank}}&read=false&remote=true"
+			hx-get="/@me/newsfeed/list?folderId={{$folderID}}&origin.followingId={{$internalID}}&rank=LT:{{$inbox.Last.Rank}}&read=false&remote=true"
 			hx-push-url="false" 
 			hx-trigger="intersect once" 
 			hx-target="#social-load-more" 
@@ -33,7 +33,7 @@
 				
 				<div script="install listItem(messageId:'{{$message.ID}}')">
 
-					<span hx-get="/@me/inbox/browse?url={{$document.ID}}" hidden></span>
+					<span hx-get="/@me/newsfeed/browse?url={{$document.ID}}" hidden></span>
 
 					{{- if eq "NEW-REPLIES" $message.StateID -}}
 						<div class="flex-row">

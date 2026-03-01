@@ -9,7 +9,7 @@
 <div class="margin-top text-sm noselect" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 
 	{{template "reply-button" $message.URL }}
-	<span hx-get="/@me/inbox/like-button?url={{$message.URL}}" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML" hx-push-url="false"></span>
+	<span hx-get="/@me/newsfeed/like-button?url={{$message.URL}}" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML" hx-push-url="false"></span>
 
 <!--
 	{{- if $message.IsAnnounced -}}
@@ -18,7 +18,7 @@
 			role="button" 
 			class="button link" 
 			aria-label="Shared. Click to undo"
-			hx-post="/@me/inbox/message-set-response?messageId={{$message.ID}}" 
+			hx-post="/@me/newsfeed/message-set-response?messageId={{$message.ID}}" 
 			hx-vals='{"type":"Announce", "url":"{{$url}}", "exists":false}'
 		>{{icon "announce-fill"}} Shared</span>
 	{{- else -}}
@@ -27,7 +27,7 @@
 			role="button" 
 			class="button" 
 			aria-label="Share this item"
-			hx-post="/@me/inbox/message-set-response?messageId={{$message.ID}}" 
+			hx-post="/@me/newsfeed/message-set-response?messageId={{$message.ID}}" 
 			hx-vals='{"type":"Announce", "url":"{{$url}}", "exists":true}'
 		>{{icon "announce"}} Share</span>
 	{{- end -}}
@@ -38,7 +38,7 @@
 			role="button" 
 			class="button link" 
 			aria-label="Liked. Click to undo."
-			hx-post="/@me/inbox/message-set-response?messageId={{$message.ID}}" 
+			hx-post="/@me/newsfeed/message-set-response?messageId={{$message.ID}}" 
 			hx-vals='{"type":"Like", "url":"{{$url}}", "exists":false}'
 		>{{icon "like-fill"}} Liked</span>
 	{{- else -}}
@@ -47,7 +47,7 @@
 			role="button" 
 			class="button" 
 			aria-label="Like' this item"
-			hx-post="/@me/inbox/message-set-response?messageId={{$message.ID}}" 
+			hx-post="/@me/newsfeed/message-set-response?messageId={{$message.ID}}" 
 			hx-vals='{"type":"Like", "url":"{{$url}}", "exists":true}'
 		>{{icon "like"}} Like</span>
 	{{- end -}}
@@ -56,7 +56,7 @@
 	{{ if gt $metadata.Replies 0 }}
 		<span
 			role="button"
-			hx-get="/@me/inbox/message?messageId={{$message.ID}}&url={{$message.URL}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
+			hx-get="/@me/newsfeed/message?messageId={{$message.ID}}&url={{$message.URL}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
 			hx-push-url="false"
 			tabIndex="0"
 			class="text-gray margin-left">{{$metadata.Replies}} {{pluralize $metadata.Replies "Reply" "Replies"}}</span>

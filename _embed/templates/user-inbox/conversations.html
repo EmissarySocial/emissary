@@ -14,7 +14,7 @@
 
 		<div
 			role="button"
-			hx-get="/@me/inbox/conversation-new"
+			hx-get="/@me/newsfeed/conversation-new"
 			class="link conversation-selector pos-relative padding-horizontal-sm flex-row flex-align-center">
 
 			<div class="width-32 flex-shrink-0 flex-center">
@@ -29,7 +29,7 @@
 				class="conversation-selector hover-trigger pos-relative padding-horizontal-sm flex-row flex-align-center {{if eq $conversation.ConversationID.Hex $conversationID}}selected{{end}}"
 				script="on click take .selected from .conversation-selector"
 
-				hx-get="/@me/inbox/conversation?conversationId={{$conversation.ConversationID.Hex}}"
+				hx-get="/@me/newsfeed/conversation?conversationId={{$conversation.ConversationID.Hex}}"
 				hx-target="#app-content"
 				hx-swap="innerHTML"
 				hx-push-url="false">
@@ -43,7 +43,7 @@
 				</div>
 				<div class="ellipsis-block" style="max-height:3em;">{{$conversation.Name}}</div>
 				<div class="pos-absolute-top-right hover-show text-xs">
-					<button hx-get="/@me/inbox/conversation-edit?conversationId={{$conversation.ConversationID.Hex}}">&hellip;</button>
+					<button hx-get="/@me/newsfeed/conversation-edit?conversationId={{$conversation.ConversationID.Hex}}">&hellip;</button>
 				</div>
 			</div>
 		{{- end -}}
@@ -53,7 +53,7 @@
 	<div 
 		id="app-content" 
 		class="app-content flex-column"
-		hx-get="/@me/inbox/conversation?conversationId={{$conversationID}}"
+		hx-get="/@me/newsfeed/conversation?conversationId={{$conversationID}}"
 		hx-trigger="load"
 		hx-target="this"
 		hx-swap="innerHTML"

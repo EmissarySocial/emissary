@@ -10,7 +10,7 @@
 				<div>{{$item.Content | htmlMinimal}}</div>
 				<div class="flex-row text-sm">
 					<span class="flex-grow text-light-gray margin-right">{{- $item.Published | shortDate -}}</span>
-					<span id="featured-{{$index}}" hx-get="/@me/inbox/browse?url={{$item.ID}}" class="link">View Full Post &rarr;</span>
+					<span id="featured-{{$index}}" hx-get="/@me/newsfeed/browse?url={{$item.ID}}" class="link">View Full Post &rarr;</span>
 				</div>
 			</div>
 		{{- end -}}

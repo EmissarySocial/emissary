@@ -52,7 +52,7 @@
 					<div class="margin-top-lg text-xs">
 						{{template "reply-button" $documentID }}
 						<span 
-							hx-get="/@me/inbox/like-button?url={{$documentID}}" 
+							hx-get="/@me/newsfeed/like-button?url={{$documentID}}" 
 							hx-trigger="intersect once"
 							hx-target="this" 
 							hx-swap="innerHTML" 
@@ -61,10 +61,10 @@
 					</div>
 
 					<div class="pos-absolute-top-right text-sm" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML">
-						<button hx-get="/@me/inbox/browse-tree?url={{$documentID}}" title="Focus on this post" aria-label="Focus on this post">{{icon "focus"}}</button>
-						<button hx-get="/@me/inbox/browse-index?url={{$documentID}}" title="Use Index Layout" aria-label="Use Index Layout">{{icon "list"}}</button>
+						<button hx-get="/@me/newsfeed/browse-tree?url={{$documentID}}" title="Focus on this post" aria-label="Focus on this post">{{icon "focus"}}</button>
+						<button hx-get="/@me/newsfeed/browse-index?url={{$documentID}}" title="Use Index Layout" aria-label="Use Index Layout">{{icon "list"}}</button>
 						<span class="margin-horizontal-sm"></span>
-						<button hx-get="/@me/inbox/browse-actor?url={{$attributedTo.ID}}" title="View Profile" aria-label="View Profile">{{icon "person"}}</button>
+						<button hx-get="/@me/newsfeed/browse-actor?url={{$attributedTo.ID}}" title="View Profile" aria-label="View Profile">{{icon "person"}}</button>
 						<a href="{{$documentID}}" target="_blank" class="button" title="View Original Website" aria-label="Visit Original Website">{{icon "globe"}}</a>
 					</div>
 
@@ -98,7 +98,7 @@
 							<div class="ToggleContent" style="display:none;">
 								{{- range $index, $replyURL := $replies -}}
 									<div 
-										hx-get="/@me/inbox/browse-tree-reply?url={{$replyURL}}"
+										hx-get="/@me/newsfeed/browse-tree-reply?url={{$replyURL}}"
 										hx-trigger="intersect once"
 										hx-target="this"
 										hx-swap="outerHTML"

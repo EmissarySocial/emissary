@@ -10,23 +10,23 @@ import (
 	"github.com/benpate/steranko"
 )
 
-// GetInbox handles GET requests
-func GetInbox(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
-	return buildInbox(ctx, factory, session, user, build.ActionMethodGet)
+// GetNewsfeed handles GET requests
+func GetNewsfeed(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
+	return buildNewsfeed(ctx, factory, session, user, build.ActionMethodGet)
 }
 
-// PostInbox handles POST/DELETE requests
-func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
-	return buildInbox(ctx, factory, session, user, build.ActionMethodPost)
+// PostNewsfeed handles POST/DELETE requests
+func PostNewsfeed(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
+	return buildNewsfeed(ctx, factory, session, user, build.ActionMethodPost)
 }
 
-// buildInbox is the common Inbox handler for both GET and POST requests
-func buildInbox(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User, actionMethod build.ActionMethod) error {
+// buildNewsfeed is the common Newsfeed handler for both GET and POST requests
+func buildNewsfeed(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User, actionMethod build.ActionMethod) error {
 
-	const location = "handler.buildInbox"
+	const location = "handler.buildNewsfeed"
 
 	// Try to load the User's Inbox
-	actionID := first.String(ctx.Param("action"), "inbox")
+	actionID := first.String(ctx.Param("action"), "index")
 
 	if ok, err := handleJSONLD(ctx, user); ok {
 		return derp.WrapIF(err, location, "Unable to build JSON-LD")

@@ -70,11 +70,11 @@ type Factory struct {
 	identityService        Identity
 	importService          Import
 	importItemService      ImportItem
+	inboxService           Inbox
 	keyPackageService      KeyPackage
 	locatorService         Locator
 	mentionService         Mention
 	merchantAccountService MerchantAccount
-	mlsMessageService      MLSMessage
 	newsFeedService        NewsFeed
 	oauthClient            OAuthClient
 	oauthUserToken         OAuthUserToken
@@ -154,12 +154,12 @@ func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, doma
 	factory.identityService = NewIdentity()
 	factory.importService = NewImport()
 	factory.importItemService = NewImportItem()
+	factory.inboxService = NewInbox()
 	factory.newsFeedService = NewNewsFeed()
 	factory.keyPackageService = NewKeyPackage()
 	factory.locatorService = NewLocator()
 	factory.mentionService = NewMention()
 	factory.merchantAccountService = NewMerchantAccount()
-	factory.mlsMessageService = NewMLSMessage()
 	factory.oauthClient = NewOAuthClient()
 	factory.oauthUserToken = NewOAuthUserToken()
 	factory.objectService = NewObject()
@@ -221,11 +221,11 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	factory.identityService.Refresh(factory)
 	factory.importService.Refresh(factory)
 	factory.importItemService.Refresh(factory)
+	factory.inboxService.Refresh(factory)
 	factory.keyPackageService.Refresh(factory)
 	factory.locatorService.Refresh(factory)
 	factory.mentionService.Refresh(factory)
 	factory.merchantAccountService.Refresh(factory)
-	factory.mlsMessageService.Refresh(factory)
 	factory.newsFeedService.Refresh(factory)
 	factory.oauthClient.Refresh(factory)
 	factory.oauthUserToken.Refresh(factory)
@@ -458,6 +458,11 @@ func (factory *Factory) ImportItem() *ImportItem {
 	return &factory.importItemService
 }
 
+// Inbox returns a fully populated Inbox service
+func (factory *Factory) Inbox() *Inbox {
+	return &factory.inboxService
+}
+
 // MLSKeyPackage returns a fully populated KeyPackage service
 func (factory *Factory) MLSKeyPackage() *KeyPackage {
 	return &factory.keyPackageService
@@ -471,11 +476,6 @@ func (factory *Factory) MerchantAccount() *MerchantAccount {
 // Mention returns a fully populated Mention service
 func (factory *Factory) Mention() *Mention {
 	return &factory.mentionService
-}
-
-// MLSMessage returns a fully populated MLSMessage service
-func (factory *Factory) MLSMessage() *MLSMessage {
-	return &factory.mlsMessageService
 }
 
 // NewsFeed returns a fully populated NewsFeed service
