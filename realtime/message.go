@@ -40,11 +40,31 @@ func NewMessage_ImportProgress(objectID primitive.ObjectID) Message {
 	}
 }
 
-// NewMessage_MLSMessage creates a new SSE message sent when a User receives an MLS-encoded message
-func NewMessage_MLSMessage(objectID primitive.ObjectID, data string) Message {
+// NewMessage_InboxActivity creates a new SSE message sent when there is new activity in a User's Inbox
+func NewMessage_InboxActivity(objectID primitive.ObjectID, data string) Message {
 	return Message{
 		ObjectID: objectID,
-		Topic:    TopicMLSMessage,
+		Topic:    TopicInboxActivity,
+		Event:    "", // Default "message" -type event
+		Data:     data,
+	}
+}
+
+// NewMessage_InboxActivity_DirectMessage creates a new SSE message sent when a User receives a direct message
+func NewMessage_InboxActivity_DirectMessage(objectID primitive.ObjectID, data string) Message {
+	return Message{
+		ObjectID: objectID,
+		Topic:    TopicInboxActivity_DirectMessage,
+		Event:    "", // Default "message" -type event
+		Data:     data,
+	}
+}
+
+// NewMessage_InboxActivity_DirectMessage_MLS creates a new SSE message sent when a User receives an MLS-encoded direct message
+func NewMessage_InboxActivity_DirectMessage_MLS(objectID primitive.ObjectID, data string) Message {
+	return Message{
+		ObjectID: objectID,
+		Topic:    TopicInboxActivity_DirectMessage_MLS,
 		Event:    "", // Default "message" -type event
 		Data:     data,
 	}

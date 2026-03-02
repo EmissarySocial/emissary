@@ -237,7 +237,9 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.PropertyFollowing:         user.ActivityPubFollowingURL(),
 		vocab.PropertyFollowers:         user.ActivityPubFollowersURL(),
 		vocab.PropertyLiked:             user.ActivityPubLikedURL(),
-		vocab.PropertyMLSMessages:       user.ActivityPubMLSMessagesURL(),
+		"emissary:messages":             user.ActivityPubInboxURL_DirectMessages(),
+		vocab.PropertyMLSMessages:       user.ActivityPubInboxURL_DirectMessages_MLS(),
+		vocab.PropertyMLSKeyPackages:    user.ActivityPubMLSKeyPackagesURL(),
 
 		// Removing "Featured" until I can sort out how to use it for Bandwagon "featured" posts
 		// WITHOUT making all of the posts "pinned" --> https://mastodon.me.uk/@delanthear/114873976765234644
@@ -249,8 +251,6 @@ func (user User) GetJSONLD() mapof.Any {
 			vocab.EndpointStartMigration:     serverURL + "/@" + user.UserID.Hex() + "/export/start",
 			vocab.EndpointFinishMigration:    serverURL + "/@me/settings/export",
 		},
-
-		vocab.PropertyMLSKeyPackages: user.ActivityPubMLSKeyPackagesURL(),
 
 		vocab.PropertyMigration: mapof.String{
 			"outbox":                   exportURL + "/outbox",
@@ -346,12 +346,12 @@ func (user *User) ActivityPubBlockedURL() string {
 	return user.ProfileURL + "/pub/blocked"
 }
 
-func (user *User) ActivityPubInboxURL() string {
+func (user *User) ActivityPubFeaturedURL() string {
 	if user.ProfileURL == "" {
 		return ""
 	}
 
-	return user.ProfileURL + "/pub/inbox"
+	return user.ProfileURL + "/pub/featured"
 }
 
 func (user *User) ActivityPubFollowersURL() string {
@@ -370,28 +370,28 @@ func (user *User) ActivityPubFollowingURL() string {
 	return user.ProfileURL + "/pub/following"
 }
 
-func (user *User) ActivityPubLikedURL() string {
+func (user *User) ActivityPubInboxURL() string {
 	if user.ProfileURL == "" {
 		return ""
 	}
 
-	return user.ProfileURL + "/pub/liked"
+	return user.ProfileURL + "/pub/inbox"
 }
 
-func (user *User) ActivityPubFeaturedURL() string {
+func (user *User) ActivityPubInboxURL_DirectMessages() string {
 	if user.ProfileURL == "" {
 		return ""
 	}
 
-	return user.ProfileURL + "/pub/featured"
+	return user.ProfileURL + "/pub/inbox/direct-messages"
 }
 
-func (user *User) ActivityPubMLSMessagesURL() string {
+func (user *User) ActivityPubInboxURL_DirectMessages_MLS() string {
 	if user.ProfileURL == "" {
 		return ""
 	}
 
-	return user.ProfileURL + "/pub/mls/messages"
+	return user.ProfileURL + "/pub/inbox/direct-messages/mls"
 }
 
 func (user *User) ActivityPubMLSKeyPackagesURL() string {
@@ -399,7 +399,15 @@ func (user *User) ActivityPubMLSKeyPackagesURL() string {
 		return ""
 	}
 
-	return user.ProfileURL + "/pub/mls/keyPackages"
+	return user.ProfileURL + "/pub/keyPackages"
+}
+
+func (user *User) ActivityPubLikedURL() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
+	return user.ProfileURL + "/pub/liked"
 }
 
 func (user *User) ActivityPubOutboxURL() string {
@@ -418,12 +426,28 @@ func (user *User) ActivityPubPublicKeyURL() string {
 	return user.ProfileURL + "#main-key"
 }
 
-func (user *User) ActivityPubSSEEndpointMLS() string {
+func (user *User) ActivityPubSSEEndpoint_Inbox() string {
 	if user.ProfileURL == "" {
 		return ""
 	}
 
-	return user.ProfileURL + "/sse/mls-message"
+	return user.ProfileURL + "/sse/inbox"
+}
+
+func (user *User) ActivityPubSSEEndpoint_Inbox_DirectMessages() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
+	return user.ProfileURL + "/sse/inbox/direct-message"
+}
+
+func (user *User) ActivityPubSSEEndpoint_Inbox_DirectMessages_MLS() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
+	return user.ProfileURL + "/sse/inbox/direct-messages/mls"
 }
 
 func (user *User) JSONFeedURL() string {

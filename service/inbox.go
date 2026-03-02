@@ -5,12 +5,14 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/collection"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/ranges"
 	"github.com/benpate/rosetta/schema"
@@ -20,8 +22,9 @@ import (
 
 // Inbox manages all Inbox records for a User.
 type Inbox struct {
-	activityService *ActivityStream
-	host            string
+	activityService  *ActivityStream
+	host             string
+	sseUpdateChannel chan<- realtime.Message
 }
 
 // NewInbox returns a fully populated Inbox service
@@ -37,6 +40,7 @@ func NewInbox() Inbox {
 func (service *Inbox) Refresh(factory *Factory) {
 	service.activityService = factory.ActivityStream()
 	service.host = factory.Host()
+	service.sseUpdateChannel = factory.SSEUpdateChannel()
 }
 
 // Close stops any background processes controlled by this service
@@ -108,6 +112,8 @@ func (service *Inbox) Save(session data.Session, inboxActivity *model.InboxActiv
 
 	// (async) guarantee the activity.Object is loaded into the ActivityStream cache
 	go service.cacheObject(inboxActivity)
+
+	go service.sendSSEUpdate(inboxActivity)
 
 	return nil
 }
@@ -254,51 +260,69 @@ func (service *Inbox) LoadByID(session data.Session, userID primitive.ObjectID, 
 }
 
 // CountByUser returns the number of InboxActivities that belong to a user
-func (service *Inbox) CountByUser(session data.Session, userID primitive.ObjectID) (int64, error) {
-	return service.Count(session, exp.Equal("userId", userID))
+func (service *Inbox) CountByUser(session data.Session, userID primitive.ObjectID, criteria exp.Expression) (int64, error) {
+	criteria = criteria.AndEqual("userId", userID)
+	return service.Count(session, criteria)
 }
 
 // RangeByUser returns a Go 1.23 RangeFunc that iterates over the InboxActivities that belong to a user (in natural chronological order)
-func (service *Inbox) RangeByUser(session data.Session, userID primitive.ObjectID, startAfter string) (iter.Seq[model.InboxActivity], error) {
+func (service *Inbox) RangeByUser(session data.Session, userID primitive.ObjectID, criteria exp.Expression) (iter.Seq[model.InboxActivity], error) {
 
 	// Build the base criteria
-	var criteria exp.Expression = exp.Equal("userId", userID)
-
-	// Add the "startAfter" criteria (if applicable)
-	if startAfterID := service.parseMessageID(startAfter, userID); !startAfterID.IsZero() {
-		criteria = criteria.AndGreaterThan("_id", startAfterID)
-	}
+	criteria = criteria.AndEqual("userId", userID)
 
 	// Return the filtered range
 	return service.Range(session, criteria, option.SortAsc("_id"))
 }
 
 /******************************************
- * Collection Interface
+ * Realtime Updates
  ******************************************/
 
-// CollectionID returns the identifier function for this collection
-func (service *Inbox) CollectionID(userID primitive.ObjectID) collection.IdentifierFunc {
-	return func() string {
-		return service.host + "/@" + userID.Hex() + "/pub/inbox"
+func (service *Inbox) sendSSEUpdate(activity *model.InboxActivity) {
+
+	// Send an update on the "Inbox" topic for this User
+	service.sseUpdateChannel <- realtime.NewMessage_InboxActivity_DirectMessage(activity.UserID, activity.String())
+
+	// Additional rules for Direct Messages
+	if !activity.IsPublic {
+
+		// Send an update on the "DirectMessage" topic for this User
+		service.sseUpdateChannel <- realtime.NewMessage_InboxActivity_DirectMessage(activity.UserID, activity.String())
+
+		// Additional rules for MLS-encrypted messages
+		if activity.MediaType == vocab.MediaTypeMLS {
+
+			// Send an update on the "DirectMessage_MLS" topic for this User
+			service.sseUpdateChannel <- realtime.NewMessage_InboxActivity_DirectMessage_MLS(activity.UserID, activity.String())
+		}
 	}
 }
 
+/******************************************
+ * Collection Interface
+ ******************************************/
+
 // CollectionCount returns the counter function for this collection
-func (service *Inbox) CollectionCount(session data.Session, userID primitive.ObjectID) collection.CounterFunc {
+func (service *Inbox) CollectionCount(session data.Session, userID primitive.ObjectID, criteria exp.Expression) collection.CounterFunc {
 	return func() (int64, error) {
-		return service.CountByUser(session, userID)
+		return service.CountByUser(session, userID, criteria)
 	}
 }
 
 // CollectionIterator returns the iterator function for this collection
-func (service *Inbox) CollectionIterator(session data.Session, userID primitive.ObjectID) collection.IteratorFunc {
+func (service *Inbox) CollectionIterator(session data.Session, userID primitive.ObjectID, criteria exp.Expression) collection.IteratorFunc {
 
 	const location = "service.Inbox.CollectionIterator"
 
 	return func(startAfter string) (iter.Seq[mapof.Any], error) {
 
-		result, err := service.RangeByUser(session, userID, startAfter)
+		// Add the "startAfter" criteria (if applicable)
+		if startAfterID := service.parseMessageID(startAfter, userID); !startAfterID.IsZero() {
+			criteria = criteria.AndGreaterThan("_id", startAfterID)
+		}
+
+		result, err := service.RangeByUser(session, userID, criteria)
 
 		if err != nil {
 			return nil, derp.Wrap(err, location, "Unable to create iterator", "userID", userID.Hex())

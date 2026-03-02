@@ -27,18 +27,13 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.inbox_CreateOrUpdate"
 
-	// Collect the actorID from the Activity
-	actorID := activity.Actor().ID()
-
-	if actorID == "" {
-		return derp.BadRequest(location, "Activity must have an ActorID", activity.Value())
+	// RULE: No further processing required for non-public activities
+	if activity.NotPublic() {
+		return nil
 	}
 
-	// Load the actual document into the ActivityStream cache
-	embeddedObject := activity.UnwrapActivity()
-
 	// Load the original document directly from the Interwebs.
-	document, err := embeddedObject.Load()
+	document, err := activity.UnwrapActivity().Load()
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to load enbedded object")
@@ -49,8 +44,8 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 	following := model.NewFollowing()
 
 	// If the "Following" record cannot be found, then do not add a message
-	if err := followingService.LoadByURL(context.session, context.user.UserID, actorID, &following); err != nil {
-		return derp.Wrap(err, location, "Unable to locate `Following` record", context.user.UserID, actorID)
+	if err := followingService.LoadByURL(context.session, context.user.UserID, activity.Actor().ID(), &following); err != nil {
+		return derp.Wrap(err, location, "Unable to locate `Following` record", context.user.UserID)
 	}
 
 	// Try to save the message to a folder (with de-duplication)
@@ -60,22 +55,3 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 
 	return nil
 }
-
-/*
-// userIsMentioned returns TRUE if this user is tagged in the document
-func userIsMentioned(user *model.User, document streams.Document) bool {
-
-	actorID := user.ActivityPubURL()
-
-	for mention := range document.Tag().Range() {
-
-		if mention.Type() == vocab.LinkTypeMention {
-			if mention.ID() == actorID {
-				return true
-			}
-		}
-	}
-
-	return false
-}
-*/
