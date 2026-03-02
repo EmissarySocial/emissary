@@ -38,11 +38,11 @@ func SendActivityPubMessage(factory *service.Factory, session data.Session, args
 		if httpError := derp.UnwrapHTTPError(err); httpError != nil {
 
 			// Retry HTTP 429 (Too Many Requests) errors
-			if derp.IsTooManyRequests(err) {
+			if isTooManyRequests, retryAfter := derp.IsTooManyRequests(err); isTooManyRequests {
 
 				// See how long we should wait before retrying
 				// +2 minutes because everyone needs two extra minutes. UwU
-				if retryAfter := httpError.RetryAfter(); retryAfter > 0 {
+				if retryAfter > 0 {
 					retryDuration := time.Duration(retryAfter+120) * time.Second
 					return queue.Requeue(retryDuration)
 				}
