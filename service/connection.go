@@ -16,9 +16,9 @@ import (
 
 // Connection manages all interactions with the Connection collection
 type Connection struct {
-	providerService  *Provider
-	keyEncryptingKey string
-	host             string
+	providerService *Provider
+	masterKey       string
+	host            string
 }
 
 // NewConnection returns a fully populated Connection service
@@ -31,10 +31,10 @@ func NewConnection() Connection {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Connection) Refresh(providerService *Provider, keyEncryptingKey string, host string) {
-	service.providerService = providerService
-	service.keyEncryptingKey = keyEncryptingKey
-	service.host = host
+func (service *Connection) Refresh(factory *Factory) {
+	service.providerService = factory.Provider()
+	service.masterKey = factory.MasterKey()
+	service.host = factory.Host()
 }
 
 // Close stops any background processes controlled by this service
@@ -87,7 +87,7 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 	}
 
 	// Decode the EncryptionKey
-	encryptionKey, err := hex.DecodeString(service.keyEncryptingKey)
+	encryptionKey, err := hex.DecodeString(service.masterKey)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to decode encryption key")
@@ -339,7 +339,7 @@ func (service *Connection) DecryptVault(connection *model.Connection, values ...
 	}
 
 	// Decode the EncryptionKey
-	encryptionKey, err := hex.DecodeString(service.keyEncryptingKey)
+	encryptionKey, err := hex.DecodeString(service.masterKey)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Unable to decode encryption key")

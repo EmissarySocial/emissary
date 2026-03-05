@@ -32,11 +32,11 @@ func NewPrivilege() Privilege {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Privilege) Refresh(circleService *Circle, identityService *Identity, importItemService *ImportItem, merchantAccountService *MerchantAccount) {
-	service.circleService = circleService
-	service.identityService = identityService
-	service.importItemService = importItemService
-	service.merchantAccountService = merchantAccountService
+func (service *Privilege) Refresh(factory *Factory) {
+	service.circleService = factory.Circle()
+	service.identityService = factory.Identity()
+	service.importItemService = factory.ImportItem()
+	service.merchantAccountService = factory.MerchantAccount()
 }
 
 // Close stops any background processes controlled by this service

@@ -34,8 +34,8 @@ func NewEncryptionKey() EncryptionKey {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *EncryptionKey) Refresh(host string) {
-	service.host = host
+func (service *EncryptionKey) Refresh(factory *Factory) {
+	service.host = factory.Host()
 }
 
 // Close stops any background processes controlled by this service

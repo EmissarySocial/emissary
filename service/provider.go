@@ -19,7 +19,7 @@ func NewProvider() Provider {
  ******************************************/
 
 // Refresh updates the list of clients
-func (service *Provider) Refresh() {
+func (service *Provider) Refresh(_ *Factory) {
 }
 
 /******************************************

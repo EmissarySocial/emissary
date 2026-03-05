@@ -27,15 +27,14 @@ func NewLocator() Locator {
 	return Locator{}
 }
 
-func (service *Locator) Refresh(domainService *Domain, searchDomainService *SearchDomain, searchQueryService *SearchQuery, streamService *Stream, userService *User, host string) {
+func (service *Locator) Refresh(factory *Factory) {
 
-	service.domainService = domainService
-	service.searchDomainService = searchDomainService
-	service.streamService = streamService
-	service.searchQueryService = searchQueryService
-	service.userService = userService
-
-	service.host = host
+	service.domainService = factory.Domain()
+	service.searchDomainService = factory.SearchDomain()
+	service.streamService = factory.Stream()
+	service.searchQueryService = factory.SearchQuery()
+	service.userService = factory.User()
+	service.host = factory.Host()
 }
 
 // GetWebFingerResult returns a digit.Resource object based on the provided resource string.

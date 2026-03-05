@@ -10,22 +10,22 @@ import (
 func init() {
 
 	// Wildcard to handle Create/Update of (nearlly) any type
-	inboxRouter.Add(vocab.ActivityTypeCreate, vocab.Any, receive_CreateOrUpdate)
-	inboxRouter.Add(vocab.ActivityTypeUpdate, vocab.Any, receive_CreateOrUpdate)
+	inboxRouter.Add(vocab.ActivityTypeCreate, vocab.Any, inbox_CreateOrUpdate)
+	inboxRouter.Add(vocab.ActivityTypeUpdate, vocab.Any, inbox_CreateOrUpdate)
 
 	// These values are skipped
-	inboxRouter.Add(vocab.ActivityTypeCreate, vocab.ObjectTypeRelationship, receive_Unknown)
-	inboxRouter.Add(vocab.ActivityTypeCreate, vocab.ObjectTypeProfile, receive_Unknown)
-	inboxRouter.Add(vocab.ActivityTypeCreate, vocab.ObjectTypeTombstone, receive_Unknown)
+	inboxRouter.Add(vocab.ActivityTypeCreate, vocab.ObjectTypeRelationship, inbox_Unknown)
+	inboxRouter.Add(vocab.ActivityTypeCreate, vocab.ObjectTypeProfile, inbox_Unknown)
+	inboxRouter.Add(vocab.ActivityTypeCreate, vocab.ObjectTypeTombstone, inbox_Unknown)
 
-	inboxRouter.Add(vocab.ActivityTypeUpdate, vocab.ObjectTypeRelationship, receive_Unknown)
-	inboxRouter.Add(vocab.ActivityTypeUpdate, vocab.ObjectTypeProfile, receive_Unknown)
-	inboxRouter.Add(vocab.ActivityTypeUpdate, vocab.ObjectTypeTombstone, receive_Unknown)
+	inboxRouter.Add(vocab.ActivityTypeUpdate, vocab.ObjectTypeRelationship, inbox_Unknown)
+	inboxRouter.Add(vocab.ActivityTypeUpdate, vocab.ObjectTypeProfile, inbox_Unknown)
+	inboxRouter.Add(vocab.ActivityTypeUpdate, vocab.ObjectTypeTombstone, inbox_Unknown)
 }
 
-func receive_CreateOrUpdate(context Context, activity streams.Document) error {
+func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 
-	const location = "handler.activitypub_user.receive_CreateOrUpdate"
+	const location = "handler.activitypub_user.inbox_CreateOrUpdate"
 
 	// Collect the actorID from the Activity
 	actorID := activity.Actor().ID()

@@ -29,9 +29,9 @@ func NewProduct() Product {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Product) Refresh(importItemService *ImportItem, merchantAccountService *MerchantAccount) {
-	service.importItemService = importItemService
-	service.merchantAccountService = merchantAccountService
+func (service *Product) Refresh(factory *Factory) {
+	service.importItemService = factory.ImportItem()
+	service.merchantAccountService = factory.MerchantAccount()
 }
 
 // Close stops any background processes controlled by this service

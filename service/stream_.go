@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"iter"
 	"math"
 	"net/url"
@@ -36,7 +37,7 @@ import (
 
 // Stream manages all interactions with the Stream collection
 type Stream struct {
-	factory           *Factory
+	activityService   *ActivityStream
 	attachmentService *Attachment
 	circleService     *Circle
 	contentService    *Content
@@ -58,13 +59,12 @@ type Stream struct {
 	mediaserver       mediaserver.MediaServer
 	queue             *queue.Queue
 	sseUpdateChannel  chan<- realtime.Message
+	newSession        func(timeout time.Duration) (data.Session, context.CancelFunc, error)
 }
 
 // NewStream returns a fully populated Stream service.
-func NewStream(factory *Factory) Stream {
-	return Stream{
-		factory: factory,
-	}
+func NewStream() Stream {
+	return Stream{}
 }
 
 /******************************************
@@ -72,29 +72,31 @@ func NewStream(factory *Factory) Stream {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Stream) Refresh(attachmentService *Attachment, circleService *Circle, contentService *Content, domainService *Domain, draftService *StreamDraft, followerService *Follower, geocodeService GeocodeAddress, importService *Import, importItemService *ImportItem, keyService *EncryptionKey, mentionService *Mention, outboxService *Outbox, ruleService *Rule, searchTagService *SearchTag, templateService *Template, userService *User, webhookService *Webhook, mediaserver mediaserver.MediaServer, queue *queue.Queue, sseUpdateChannel chan<- realtime.Message, host string) {
-	service.attachmentService = attachmentService
-	service.circleService = circleService
-	service.contentService = contentService
-	service.domainService = domainService
-	service.draftService = draftService
-	service.followerService = followerService
-	service.geocodeService = geocodeService
-	service.importService = importService
-	service.importItemService = importItemService
-	service.keyService = keyService
-	service.mentionService = mentionService
-	service.outboxService = outboxService
-	service.ruleService = ruleService
-	service.searchTagService = searchTagService
-	service.templateService = templateService
-	service.userService = userService
-	service.webhookService = webhookService
-	service.mediaserver = mediaserver
-	service.queue = queue
+func (service *Stream) Refresh(factory *Factory) {
+	service.activityService = factory.ActivityStream()
+	service.attachmentService = factory.Attachment()
+	service.circleService = factory.Circle()
+	service.contentService = factory.Content()
+	service.domainService = factory.Domain()
+	service.draftService = factory.StreamDraft()
+	service.followerService = factory.Follower()
+	service.geocodeService = factory.GeocodeAddress()
+	service.importService = factory.Import()
+	service.importItemService = factory.ImportItem()
+	service.keyService = factory.EncryptionKey()
+	service.mentionService = factory.Mention()
+	service.outboxService = factory.Outbox()
+	service.ruleService = factory.Rule()
+	service.searchTagService = factory.SearchTag()
+	service.templateService = factory.Template()
+	service.userService = factory.User()
+	service.webhookService = factory.Webhook()
+	service.mediaserver = factory.MediaServer()
+	service.queue = factory.Queue()
+	service.newSession = factory.Session
 
-	service.host = host
-	service.sseUpdateChannel = sseUpdateChannel
+	service.host = factory.Host()
+	service.sseUpdateChannel = factory.SSEUpdateChannel()
 }
 
 func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
@@ -161,11 +163,6 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 	return nil
 }
 
-// Close stops any background processes controlled by this service
-func (service *Stream) Close() {
-
-}
-
 /******************************************
  * Common Methods
  ******************************************/
@@ -178,8 +175,6 @@ func (service *Stream) collection(session data.Session) data.Collection {
 func (service *Stream) New() model.Stream {
 	result := model.NewStream()
 	result.URL = service.host + "/" + result.Token
-	// TODO: HIGH: Use stream Template schema to set default values in the new stream.
-
 	return result
 }
 
@@ -931,7 +926,7 @@ func (service *Stream) SetAttributedTo(user *model.User) {
 	const location = "service.Stream.SetAttributedTo"
 
 	// This is called asynchronously, so create a new database session
-	session, cancel, err := service.factory.Session(time.Minute)
+	session, cancel, err := service.newSession(time.Minute)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to create database session"))
@@ -1134,8 +1129,12 @@ func (service *Stream) calcContext(stream *model.Stream) {
 	// Load the "InReplyTo" document from the ActivityStream and use its
 	// context.  Note: this should have been calculated already via th
 	// ascontextmaker client.
-	activityService := service.factory.ActivityStream(model.ActorTypeStream, stream.StreamID)
-	document, _ := activityService.Client().Load(stream.InReplyTo)
+	client := service.activityService.StreamClient(stream.StreamID)
+	document, err := client.Load(stream.InReplyTo)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "service.Stream.calcContext", "Unable to load InReplyTo document", stream.InReplyTo))
+	}
 
 	if context := document.Context(); context != "" {
 		stream.Context = document.Context()

@@ -1,0 +1,86 @@
+{{- $isDesktop := .IsDesktop -}}
+{{- $keyPackages := .KeyPackages -}}
+
+<div class="app" script="init send SelectNav(id:'settings')">
+	<title>Security | Public Keys</title>
+
+	{{- if $isDesktop -}}
+		<div id="app-sidebar" class="expanded">
+			{{- template "menu" "security" -}}
+		</div>
+	{{- end -}}
+	
+	<div class="app-content padding">
+
+		<div id="menu-bar">
+			<div class="left">
+				{{ if not $isDesktop }}
+					<a href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
+				{{ end }}
+				<a href="/@me/settings/visibility" hx-boost="true">Visibility</a>
+				<a href="/@me/settings/password" hx-boost="true">Change Password</a>
+				<a href="/@me/settings/oauth" hx-boost="true">Connected Clients</a>
+				<a href="/@me/settings/keyPackages" class="selected" hx-boost="true">Public Keys</a>
+			</div>
+			<div class="right">
+				<a href="https://emissary.dev/user-profile" target="_blank" class="link">
+					{{icon "help"}}
+					{{ if $isDesktop }} Help with My Profile {{ end }}
+				</a>
+			</div>
+		</div>
+
+		<div class="card padding max-width-640 transition-main-card">
+
+			<div class="text-lg margin-bottom">
+				{{- if $keyPackages.IsEmpty -}}
+					You have <b>no public keys</b> on this server
+				{{- else if $keyPackages.IsLength 1 -}}
+					You have <b>1 public key</b> on this server
+				{{- else -}}
+					You have <b>{{$keyPackages.Length}} public keys</b> on this server
+				{{- end -}}
+			</div>
+
+			<div class="margin-vertical">
+				Encryption keys are created when you start using private messages on a new device (like a web browser or mobile phone).
+				Each client generates its own encryption keys, and publishes the <i>public</i> portions here.
+				The <i>private keys</i> are stored only on that device, and are never shared with anyone.
+			</div>
+
+			{{- if $keyPackages.IsEmpty -}}
+
+				<div class="margin-vertical">
+					You can create new encryption keys by going to the "Conversations" section of your inbox.
+				</div>
+
+				<div class="margin-vertical">
+					<a href="/@me/conversations">Go to &quot;Conversations&quot; to create encryption keys &rarr;</a>
+				</div>
+
+			{{- else -}}
+				
+				<table class="table">
+					{{- range $index, $keyPackage := $keyPackages -}}
+						<tr>
+							<td><i class="bi bi-key"></i> {{$keyPackage.Generator}}</td>
+							<td>{{$keyPackage.CreateDate | longDate }}</td>
+							<td><button hx-get="/@me/settings/keyPackage-delete?keyPackageId={{$keyPackage.ID}}" class="text-xs text-red">Delete</button>
+						</tr>
+					{{- end -}}
+				</table>
+				
+			{{- end -}}
+		</div>
+	</div>
+
+	<!-- Reload page on "refreshPage" -->
+	<div 
+		hx-get="/@me/settings/keyPackages" 
+		hx-trigger="refreshPage from:window" 
+		hx-target="main"
+		hx-swap="innerHTML"
+		hx-push-url="false">
+	</div>
+
+</div>

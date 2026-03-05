@@ -26,15 +26,22 @@ func LoadActivityStream(factory *service.Factory, _ data.Session, args mapof.Any
 	}
 
 	log.Debug().Str("loc", location).Str("url", url).Msg("Loading ActivityStream")
-	activityService := factory.ActivityStream(actorType, actorID)
+	client := factory.ActivityStream().Client(actorType, actorID)
 
 	// Configure crawler options to persist depth and history
-	if _, err := activityService.Client().Load(url, ascache.WithWriteOnly(), ascrawler.WithoutCrawler()); err != nil {
+	if _, err := client.Load(url, ascache.WithWriteOnly(), ascrawler.WithoutCrawler()); err != nil {
 
-		if derp.IsClientError(err) {
-			return queue.Failure(derp.Wrap(err, location, "Client error when loading ActivityStream"))
+		// Be nice and wait if we're being rate-limited
+		if tooManyRequests, retryDuration := derp.IsTooManyRequests(err); tooManyRequests {
+			return queue.Requeue(retryDuration)
 		}
 
+		// If it's "our fault" then don't retry
+		if derp.IsClientError(err) {
+			return queue.Failure(derp.Wrap(err, location, "Unable to load ActivityStream (Client error)"))
+		}
+
+		// But we can retry "their fault" errors
 		return queue.Error(derp.Wrap(err, location, "Unable to load ActivityStream"))
 	}
 

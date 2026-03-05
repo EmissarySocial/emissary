@@ -20,8 +20,8 @@ func PollFollowing_Record(factory *service.Factory, session data.Session, user *
 	const location = "consumer.PollFollowing_Record"
 
 	// Load the Actor that we're following
-	activityService := factory.ActivityStream(model.ActorTypeUser, user.UserID)
-	actor, err := activityService.Client().Load(following.URL, sherlock.AsActor())
+	client := factory.ActivityStream().UserClient(user.UserID)
+	actor, err := client.Load(following.URL, sherlock.AsActor())
 
 	if err != nil {
 		return queue.Error(derp.Wrap(err, location, "Unable to load ActivityPub Actor", "url: "+following.URL))

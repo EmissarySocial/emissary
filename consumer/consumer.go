@@ -1,6 +1,7 @@
 package consumer
 
 import (
+	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/turbine/queue"
 )
 
@@ -59,6 +60,12 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "MoveUser":
 		return WithUser(consumer.serverFactory, args, MoveUser)
 
+	case sender.OutboxSendToAllRecipients:
+		return WithSender(consumer.serverFactory, args, SendToAllRecipients)
+
+	case sender.OutboxSendToSingleRecipient:
+		return WithSender(consumer.serverFactory, args, SendToSingleRecipient)
+
 	case "PollFollowing-Index":
 		return WithSession(consumer.serverFactory, args, PollFollowing_Index)
 
@@ -108,6 +115,7 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "ScheduleHourly":
 		return ScheduleHourly(consumer.serverFactory)
 
+	// TODO: This should be merged into Outbox:SendToAllRecipients
 	case "SendActivityPubMessage":
 		return WithSession(consumer.serverFactory, args, SendActivityPubMessage)
 

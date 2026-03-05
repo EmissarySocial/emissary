@@ -259,6 +259,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "with-import":
 		return NewWithImport(stepInfo)
 
+	case "with-keypackage":
+		return NewWithKeyPackage(stepInfo)
+
 	case "with-merchant-account":
 		return NewWithMerchantAccount(stepInfo)
 

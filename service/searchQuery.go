@@ -22,7 +22,7 @@ import (
 
 // SearchQuery defines a service that manages all searchable tags in a domain.
 type SearchQuery struct {
-	factory          *Factory
+	activityService  *ActivityStream
 	domainService    *Domain
 	followerService  *Follower
 	ruleService      *Rule
@@ -32,10 +32,8 @@ type SearchQuery struct {
 }
 
 // NewSearchQuery returns a fully initialized SearchQuery service
-func NewSearchQuery(factory *Factory) SearchQuery {
-	return SearchQuery{
-		factory: factory,
-	}
+func NewSearchQuery() SearchQuery {
+	return SearchQuery{}
 }
 
 /******************************************
@@ -43,13 +41,14 @@ func NewSearchQuery(factory *Factory) SearchQuery {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *SearchQuery) Refresh(domainService *Domain, followerService *Follower, ruleService *Rule, searchTagService *SearchTag, queue *queue.Queue, host string) {
-	service.domainService = domainService
-	service.followerService = followerService
-	service.ruleService = ruleService
-	service.searchTagService = searchTagService
-	service.queue = queue
-	service.host = host
+func (service *SearchQuery) Refresh(factory *Factory) {
+	service.activityService = factory.ActivityStream()
+	service.domainService = factory.Domain()
+	service.followerService = factory.Follower()
+	service.ruleService = factory.Rule()
+	service.searchTagService = factory.SearchTag()
+	service.queue = factory.Queue()
+	service.host = factory.Host()
 }
 
 // Close stops any background processes controlled by this service
@@ -350,14 +349,12 @@ func (service *SearchQuery) ActivityPubActor(session data.Session, searchQueryID
 		return outbox.Actor{}, derp.Wrap(err, location, "Error getting private key")
 	}
 
-	activityService := service.factory.ActivityStream(model.ActorTypeSearchQuery, searchQueryID)
-
 	// Return the ActivityPub Actor
 	actor := outbox.NewActor(
 		service.ActivityPubURL(searchQueryID),
 		privateKey,
 		outbox.WithFollowers(service.rangeActivityPubFollowers(session, searchQueryID)),
-		outbox.WithClient(activityService.Client()),
+		outbox.WithClient(service.activityService.SearchQueryClient(searchQueryID)),
 		// TODO: Restore Queue:: , outbox.WithQueue(service.queue))
 	)
 

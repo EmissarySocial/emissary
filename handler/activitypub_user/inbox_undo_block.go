@@ -10,7 +10,7 @@ import (
 func init() {
 	inboxRouter.Add(vocab.ActivityTypeUndo, vocab.ActivityTypeBlock, func(context Context, activity streams.Document) error {
 
-		const location = "handler.activitypub_user.receiveUndoBlock"
+		const location = "handler.activitypub_user.inbox_UndoBlock"
 
 		// Verify that this message comes from a valid "Following" object.
 		followingService := context.factory.Following()

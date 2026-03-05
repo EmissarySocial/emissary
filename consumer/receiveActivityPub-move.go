@@ -1,14 +1,12 @@
 package consumer
 
 import (
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ReceiveActivityPubMove processes an incoming ActivityPub Move activity
@@ -19,7 +17,7 @@ func ReceiveActivityPubMove(factory *service.Factory, session data.Session, args
 
 	// Collect arguments
 	actorURL := args.GetString("actor")
-	objectURL := args.GetString("object")
+	objectURL := args.GetString("object") // nolint:scopeguard
 	targetURL := args.GetString("target")
 
 	// RULE: The Actor and Object must be the same URL
@@ -28,8 +26,8 @@ func ReceiveActivityPubMove(factory *service.Factory, session data.Session, args
 	}
 
 	// Load and validate the Target actor
-	activityService := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
-	target, err := activityService.Client().Load(targetURL, ascache.WithWriteOnly())
+	client := factory.ActivityStream().AppClient()
+	target, err := client.Load(targetURL, ascache.WithWriteOnly())
 
 	if err != nil {
 		return queue.Error(derp.Wrap(err, location, "Unable to load Target document", "target: "+targetURL))
@@ -57,7 +55,7 @@ func ReceiveActivityPubMove(factory *service.Factory, session data.Session, args
 	}
 
 	// Try to remove the original Actor from the cache
-	if err := activityService.CacheClient().Delete(actorURL); err != nil {
+	if err := factory.ActivityStream().Delete(actorURL); err != nil {
 		if !derp.IsNotFound(err) {
 			return queue.Error(derp.Wrap(err, location, "Unable to remove Actor from cache", "actor: "+actorURL))
 		}

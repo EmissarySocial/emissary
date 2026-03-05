@@ -1,0 +1,47 @@
+package model
+
+import (
+	"github.com/benpate/data/journal"
+	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+// MLSMessage represents a message that was received via the MLS protocol.
+// These messages are opaque to the server and are simply stored and forwarded
+// to MLS clients as requested.
+type MLSMessage struct {
+	MLSMessageID   primitive.ObjectID `bson:"_id"`            // Unique identifier for this MLSMessage
+	UserID         primitive.ObjectID `bson:"userId"`         // The user that this message belongs to
+	ActivityPubURL string             `bson:"activityPubUrl"` // The ActivityPub URL for this message (used for deduplication)
+	Type           string             `bson:"type"`           // The type of MLS message (GroupInfo, PublicMessage, PrivateMessage, Welcome)
+	Content        string             `bson:"content"`        // The base64-encoded content of the MLS message
+
+	journal.Journal `bson:",inline"`
+}
+
+// NewMLSMessage returns a fully initialized MLSMessage with a unique ID
+func NewMLSMessage() MLSMessage {
+	return MLSMessage{
+		MLSMessageID: primitive.NewObjectID(),
+	}
+}
+
+// ID returns the string version of the MLSMessage's unique identifier
+func (message MLSMessage) ID() string {
+	return message.MLSMessageID.Hex()
+}
+
+func (message MLSMessage) GetJSONLD() mapof.Any {
+	return mapof.Any{
+		vocab.AtContext: []string{
+			vocab.ContextTypeActivityStreams,
+			vocab.ContextTypeSocialWebMLS,
+		},
+		vocab.PropertyID:        message.ActivityPubURL,
+		vocab.PropertyType:      message.Type,
+		vocab.PropertyEncoding:  vocab.EncodingTypeBase64,
+		vocab.PropertyContent:   message.Content,
+		vocab.PropertyPublished: message.CreateDate,
+	}
+}

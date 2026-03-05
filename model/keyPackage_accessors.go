@@ -14,7 +14,7 @@ func KeyPackageSchema() schema.Element {
 			"mediaType":    schema.String{Enum: []string{vocab.MediaTypeMLS}, Required: true},
 			"encoding":     schema.String{Enum: []string{vocab.EncodingTypeBase64}, Required: true},
 			"content":      schema.String{Required: true},
-			"generator":    schema.String{Required: true, Format: "url"},
+			"generator":    schema.String{Required: true},
 		},
 	}
 }

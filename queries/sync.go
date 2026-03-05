@@ -12,12 +12,14 @@ import (
 
 func SyncSharedIndexes(connectionString string, databaseName string) error {
 
+	const location = "queries.SyncSharedIndexes"
+
 	// Connect to the database
 	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(connectionString))
 
 	if err != nil {
-		return derp.Wrap(err, "data.mongodb.New", "Unable to create mongodb client")
+		return derp.Wrap(err, location, "Unable to create mongodb client")
 	}
 
 	session := client.Database(databaseName)
@@ -51,12 +53,14 @@ func SyncSharedIndexes(connectionString string, databaseName string) error {
 
 func SyncDomainIndexes(connectionString string, databaseName string) error {
 
+	const location = "queries.SyncDomainIndexes"
+
 	// Connect to the database
 	ctx := context.Background()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(connectionString))
 
 	if err != nil {
-		return derp.Wrap(err, "data.mongodb.New", "Unable to create mongodb client")
+		return derp.Wrap(err, location, "Unable to create mongodb client")
 	}
 
 	session := client.Database(databaseName)
@@ -119,15 +123,19 @@ func SyncDomainIndexes(connectionString string, databaseName string) error {
 		derp.Report(err)
 	}
 
-	if err := sync.KeyPackage(ctx, session); err != nil {
-		derp.Report(err)
-	}
-
 	if err := sync.Mention(ctx, session); err != nil {
 		derp.Report(err)
 	}
 
 	if err := sync.MerchantAccount(ctx, session); err != nil {
+		derp.Report(err)
+	}
+
+	if err := sync.MLSKeyPackage(ctx, session); err != nil {
+		derp.Report(err)
+	}
+
+	if err := sync.MLSMessage(ctx, session); err != nil {
 		derp.Report(err)
 	}
 

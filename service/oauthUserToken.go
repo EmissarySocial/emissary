@@ -28,10 +28,10 @@ func NewOAuthUserToken() OAuthUserToken {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *OAuthUserToken) Refresh(oauthClientService *OAuthClient, jwtService *JWT, host string) {
-	service.oauthClientService = oauthClientService
-	service.jwtService = jwtService
-	service.host = host
+func (service *OAuthUserToken) Refresh(factory *Factory) {
+	service.oauthClientService = factory.OAuthClient()
+	service.jwtService = factory.JWT()
+	service.host = factory.Host()
 }
 
 // Close stops any background processes controlled by this service

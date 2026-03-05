@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (service *Identity) sendGuestCode_ActivityPub(session data.Session, identifier string, code string) error {
@@ -19,8 +18,7 @@ func (service *Identity) sendGuestCode_ActivityPub(session data.Session, identif
 
 	// Find Recipient
 
-	activityService := service.factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
-	recipientID, _, err := activityService.GetRecipient(identifier)
+	recipientID, _, err := service.activityService.GetRecipient(identifier)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to find recipient inbox", identifier)
@@ -76,7 +74,7 @@ func (service *Identity) sendGuestCode_ActivityPub(session data.Session, identif
 	}
 
 	// Because we want a real-time response, we're going to run this queue task inline
-	if err := activityService.SendMessage(session, message); err != nil {
+	if err := service.activityService.SendMessage(session, message); err != nil {
 		return derp.Wrap(err, location, "Unable to send guest code to WebFinger identifier", identifier)
 	}
 

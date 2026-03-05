@@ -10,6 +10,8 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal"
+	"github.com/benpate/hannibal/sigs"
 	"github.com/benpate/steranko"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
@@ -27,6 +29,44 @@ type WithFunc2[T any, U any] func(ctx *steranko.Context, factory *service.Factor
 
 // WithFunc3 is a function signature for a continuation function that requires the domain Factory and three values
 type WithFunc3[T any, U any, V any] func(ctx *steranko.Context, factory *service.Factory, session data.Session, value *T, value2 *U, value3 *V) error
+
+// WithAuthenticatedActor handles boilerplate code for requests that are made by one of:
+// 1) a signed-in user, 2) a valid OAuth token, or 3) a valid HTTP signature.  It calls the
+// continuation function with the actorID (as a string) that represents the authenticated actor.
+func WithAuthenticatedActor(serverFactory *server.Factory, fn WithFunc2[model.User, string]) echo.HandlerFunc {
+	const location = "handler.WithAuthenticatedActor"
+
+	return WithUser(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
+
+		// Use Authorization cookie, if available
+		if authorization := getAuthorization(ctx); authorization.IsAuthenticated() {
+
+			// Signed-In User
+			if userID := authorization.UserID; !userID.IsZero() {
+				actorID := factory.Host() + "/@" + authorization.UserID.Hex()
+				return fn(ctx, factory, session, user, &actorID)
+			}
+
+			// Signed-In Identity
+			if identityID := authorization.IdentityID; !identityID.IsZero() {
+				identity := model.NewIdentity()
+				if err := factory.Identity().LoadByID(session, identityID, &identity); err == nil {
+					return fn(ctx, factory, session, user, &identity.ActivityPubActor)
+				}
+			}
+		}
+
+		// Use HTTP Signature, if possible
+		if signature, err := sigs.Verify(ctx.Request(), nil); err == nil {
+			actorID := signature.ActorID()
+			return fn(ctx, factory, session, user, &actorID)
+		}
+
+		// Fall through: Unauthenticated
+		actorID := ""
+		return fn(ctx, factory, session, user, &actorID)
+	})
+}
 
 // WithAuthenticatedAPI handles boilerplate code for requests that require a signed-in user (but does not load the User from the database)
 func WithAuthenticatedAPI(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
@@ -145,10 +185,14 @@ func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 			sterankoContext := factory.Steranko(session).Context(ctx)
 
 			// Execute the *actual* handler (success alleged)
-			return fn(sterankoContext, factory, session)
+			return fn(
+				sterankoContext,
+				factory,
+				session,
+			)
 		}
 
-		/////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////
 		// POST requests are wrapped in a MongoDB transaction
 
 		// WCreate a database transaction and wrap the callback function in it.
@@ -587,7 +631,7 @@ func WithUserForwarding(serverFactory *server.Factory, fn WithFunc1[model.User])
 		}
 
 		// If this is a JSON-LD request, then skip the forwarding and just return the User
-		if isJSONLDRequest(ctx) {
+		if hannibal.IsActivityPubRequest(ctx.Request()) {
 			return activitypub.RenderProfileJSONLD(ctx, factory, session, user)
 		}
 

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -18,6 +19,7 @@ type RuleFilter struct {
 	ruleService *Rule
 	userID      primitive.ObjectID
 	cache       map[string][]model.RuleSummary
+	newSession  func(timeout time.Duration) (data.Session, context.CancelFunc, error)
 
 	allowLabels bool
 	allowMutes  bool
@@ -30,6 +32,7 @@ func NewRuleFilter(ruleService *Rule, userID primitive.ObjectID, options ...Rule
 		ruleService: ruleService,
 		userID:      userID,
 		cache:       make(map[string][]model.RuleSummary),
+		newSession:  ruleService.newSession,
 
 		allowLabels: true,
 		allowMutes:  true,
@@ -96,7 +99,7 @@ func (filter *RuleFilter) Channel(ch <-chan streams.Document) <-chan streams.Doc
 
 		defer close(result)
 
-		session, cancel, err := filter.ruleService.factory.Session(time.Minute)
+		session, cancel, err := filter.newSession(time.Minute)
 
 		if err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to connect to database"))

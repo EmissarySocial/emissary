@@ -3,6 +3,8 @@ package consumer
 import (
 	"time"
 
+	dt "github.com/benpate/domain"
+	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -17,6 +19,22 @@ func objectID(original string) primitive.ObjectID {
 func isHour(modulo int, startHour int) bool {
 	currentHour := time.Now().Hour()
 	return startHour == (currentHour % modulo)
+}
+
+// getHostnameFromArgs attempts to extract a hostname from the provided args map.
+func getHostnameFromArgs(args mapof.Any) string {
+
+	// If the args include a "host" argument, then use that first
+	if host := args.GetString("host"); host != "" {
+		return dt.Hostname(host)
+	}
+
+	// If an "actor" argument is provided, then use that to determine the hostname
+	if actorURL := args.GetString("actor"); actorURL != "" {
+		return dt.Hostname(actorURL)
+	}
+
+	return ""
 }
 
 /* Unused function

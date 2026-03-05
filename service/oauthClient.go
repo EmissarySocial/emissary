@@ -17,7 +17,7 @@ import (
 // OAuthClient manages all interactions with the OAuthClient collection
 type OAuthClient struct {
 	oauthUserTokenService *OAuthUserToken
-	activityService       ActivityStream
+	activityService       *ActivityStream
 	host                  string
 }
 
@@ -31,10 +31,10 @@ func NewOAuthClient() OAuthClient {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *OAuthClient) Refresh(oauthUserTokenService *OAuthUserToken, activityService ActivityStream, host string) {
-	service.oauthUserTokenService = oauthUserTokenService
-	service.activityService = activityService
-	service.host = host
+func (service *OAuthClient) Refresh(factory *Factory) {
+	service.oauthUserTokenService = factory.OAuthUserToken()
+	service.activityService = factory.ActivityStream()
+	service.host = factory.Hostname()
 }
 
 // Close stops any background processes controlled by this service

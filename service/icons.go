@@ -6,6 +6,10 @@ import (
 
 type Icons struct{}
 
+func NewIcons() Icons {
+	return Icons{}
+}
+
 func (service Icons) Get(name string) string {
 	switch name {
 

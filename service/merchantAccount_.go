@@ -45,17 +45,17 @@ func NewMerchantAccount() MerchantAccount {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *MerchantAccount) Refresh(circleService *Circle, connectionService *Connection, identityService *Identity, importItemService *ImportItem, jwtService *JWT, privilegeService *Privilege, productService *Product, userService *User, masterKey string, host string) {
-	service.circleService = circleService
-	service.connectionService = connectionService
-	service.identityService = identityService
-	service.importItemService = importItemService
-	service.jwtService = jwtService
-	service.privilegeService = privilegeService
-	service.productService = productService
-	service.userService = userService
-	service.encryptionKey = masterKey
-	service.host = host
+func (service *MerchantAccount) Refresh(factory *Factory) {
+	service.circleService = factory.Circle()
+	service.connectionService = factory.Connection()
+	service.identityService = factory.Identity()
+	service.importItemService = factory.ImportItem()
+	service.jwtService = factory.JWT()
+	service.privilegeService = factory.Privilege()
+	service.productService = factory.Product()
+	service.userService = factory.User()
+	service.encryptionKey = factory.MasterKey()
+	service.host = factory.Host()
 }
 
 // Close stops any background processes controlled by this service

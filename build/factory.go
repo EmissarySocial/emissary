@@ -24,7 +24,7 @@ type ServerFactory interface {
 type Factory interface {
 	// Model Services
 	Model(string) (service.ModelService, error)
-	ActivityStream(actorType string, actorID primitive.ObjectID) service.ActivityStream
+	ActivityStream() *service.ActivityStream
 	Annotation() *service.Annotation
 	Attachment() *service.Attachment
 	Circle() *service.Circle
@@ -46,6 +46,7 @@ type Factory interface {
 	Inbox() *service.Inbox
 	Mention() *service.Mention
 	MerchantAccount() *service.MerchantAccount
+	MLSKeyPackage() *service.KeyPackage
 	Outbox() *service.Outbox
 	Permission() *service.Permission
 	Product() *service.Product

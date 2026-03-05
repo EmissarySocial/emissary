@@ -33,6 +33,8 @@ import (
 	"github.com/benpate/digital-dome/dome4echo"
 	dt "github.com/benpate/domain"
 	"github.com/benpate/form/widget"
+	"github.com/benpate/hannibal"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
@@ -217,6 +219,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// Built-In Service Routes
 	e.GET("/.api/actors", handler.WithAuthenticatedAPI(factory, handler.GetAPIActors))
+	e.GET("/.api/collectionHeader", handler.WithAuthenticatedAPI(factory, handler.GetAPICollectionHeader))
 	e.GET("/.checkout", handler.WithProduct(factory, handler.GetCheckout))
 	e.GET("/.checkout/response", handler.WithMerchantAccountJWT(factory, handler.GetCheckoutResponse))
 	e.POST("/.follower/new", handler.WithFactory(factory, handler.PostEmailFollower))
@@ -300,6 +303,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
 	e.GET("/@:objectId/sse/updated", handler.WithFactory(factory, handler.ServerSentEvent_Updated))
 	e.GET("/@:objectId/sse/following-updated", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_FollowingUpdated))
+	e.GET("/@:objectId/sse/mls-message", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_MLSMessage))
 
 	// ActivityPub pages for the application actor
 	e.GET("/@application", handler.WithFactory(factory, handler.GetApplicationActor))
@@ -323,16 +327,20 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@me", handler.WithAuthenticatedUser(factory, handler.ForwardMeURLs))
 	e.POST("/@me/delete", handler.WithAuthenticatedUser(factory, handler.PostProfileDelete))
 
+	e.GET("/@me/conversations", handler.WithAuthenticatedUser(factory, handler.GetConversations))
+	e.POST("/@me/conversations", handler.WithAuthenticatedUser(factory, handler.PostConversations))
+	e.GET("/@me/conversations/:action", handler.WithAuthenticatedUser(factory, handler.GetConversations))
+	e.POST("/@me/conversations/:action", handler.WithAuthenticatedUser(factory, handler.PostConversations))
 	e.GET("/@me/inbox", handler.WithAuthenticatedUser(factory, handler.GetInbox))
 	e.POST("/@me/inbox", handler.WithAuthenticatedUser(factory, handler.PostInbox))
 	e.GET("/@me/inbox/:action", handler.WithAuthenticatedUser(factory, handler.GetInbox))
 	e.POST("/@me/inbox/:action", handler.WithAuthenticatedUser(factory, handler.PostInbox))
+	e.GET("/@me/outbox", handler.WithAuthenticatedUser(factory, ap_user.GetOutboxCollection))
+	e.POST("/@me/outbox", handler.WithAuthenticatedUser(factory, ap_user.PostOutbox))
 	e.GET("/@me/settings", handler.WithAuthenticatedUser(factory, handler.GetSettings))
 	e.POST("/@me/settings", handler.WithAuthenticatedUser(factory, handler.PostSettings))
 	e.GET("/@me/settings/:action", handler.WithAuthenticatedUser(factory, handler.GetSettings))
 	e.POST("/@me/settings/:action", handler.WithAuthenticatedUser(factory, handler.PostSettings))
-	e.GET("/@me/outbox", handler.WithAuthenticatedUser(factory, ap_user.GetOutboxCollection))
-	e.POST("/@me/outbox", handler.WithAuthenticatedUser(factory, ap_user.PostOutbox))
 
 	e.GET("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.GetIntent_Create))
 	e.POST("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.PostIntent_Create))
@@ -395,23 +403,29 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// ActivityPub Routes for Users
 	e.GET("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))
-	e.POST("/@:userId/pub/inbox", handler.WithUser(factory, ap_user.PostInbox))
-	e.GET("/@:userId/pub/outbox", handler.WithUser(factory, ap_user.GetOutboxCollection))
-	e.GET("/@:userId/pub/outbox/:messageId", handler.WithUser(factory, ap_user.GetOutboxActivity))
+	e.GET("/@:userId/pub/blocked", handler.WithUser(factory, ap_user.GetBlockedCollection))
+	e.GET("/@:userId/pub/blocked/:ruleId", handler.WithUser(factory, ap_user.GetBlock))
+	e.GET("/@:userId/pub/disliked", handler.WithUser(factory, ap_user.GetResponseCollection))
+	e.GET("/@:userId/pub/disliked/:response", handler.WithUser(factory, ap_user.GetResponse))
 	e.GET("/@:userId/pub/featured", handler.WithUser(factory, ap_user.GetFeaturedCollection))
 	e.GET("/@:userId/pub/followers", handler.WithUser(factory, ap_user.GetFollowersCollection))
 	e.GET("/@:userId/pub/following", handler.WithUser(factory, ap_user.GetFollowingCollection))
 	e.GET("/@:userId/pub/following/:followingId", handler.WithUser(factory, ap_user.GetFollowingRecord))
-	e.GET("/@:userId/pub/keyPackages", handler.WithUser(factory, ap_user.GetKeyPackageCollection))
-	e.GET("/@:userId/pub/keyPackages/:keyPackageId", handler.WithUser(factory, ap_user.GetKeyPackageRecord))
+	e.GET("/@:userId/pub/inbox", handler.WithAuthenticatedUser(factory, handler.GetInbox))
+	e.POST("/@:userId/pub/inbox", handler.WithUser(factory, ap_user.PostInbox))
+	e.GET("/@:userId/pub/mls/keyPackages", handler.WithUser(factory, ap_user.GetKeyPackageCollection))
+	e.GET("/@:userId/pub/mls/keyPackages/:keyPackageId", handler.WithUser(factory, ap_user.GetKeyPackageRecord))
+	e.GET("/@:userId/pub/mls/messages", handler.WithAuthenticatedUser(factory, ap_user.GetMLSMessageCollection))
+	e.GET("/@:userId/pub/mls/messages/:messageId", handler.WithAuthenticatedUser(factory, ap_user.GetMLSMessageRecord))
+	e.GET("/@:userId/pub/objects", handler.WithUser(factory, ap_user.GetObjectsCollection))
+	e.GET("/@:userId/pub/objects/:objectId", handler.WithUser(factory, ap_user.GetObject))
+	e.GET("/@:userId/pub/outbox", handler.WithUser(factory, ap_user.GetOutboxCollection))
+	e.POST("/@:userId/pub/outbox", handler.WithAuthenticatedUser(factory, ap_user.PostOutbox))
+	e.GET("/@:userId/pub/outbox/:messageId", handler.WithUser(factory, ap_user.GetOutboxActivity))
 	e.GET("/@:userId/pub/shared", handler.WithUser(factory, ap_user.GetResponseCollection))
 	e.GET("/@:userId/pub/shared/:response", handler.WithUser(factory, ap_user.GetResponse))
 	e.GET("/@:userId/pub/liked", handler.WithUser(factory, ap_user.GetResponseCollection))
 	e.GET("/@:userId/pub/liked/:response", handler.WithUser(factory, ap_user.GetResponse))
-	e.GET("/@:userId/pub/disliked", handler.WithUser(factory, ap_user.GetResponseCollection))
-	e.GET("/@:userId/pub/disliked/:response", handler.WithUser(factory, ap_user.GetResponse))
-	e.GET("/@:userId/pub/blocked", handler.WithUser(factory, ap_user.GetBlockedCollection))
-	e.GET("/@:userId/pub/blocked/:ruleId", handler.WithUser(factory, ap_user.GetBlock))
 
 	// ActivityPub Routes for Streams
 	e.GET("/:stream/pub", handler.WithTemplate(factory, ap_stream.GetJSONLD))
@@ -571,6 +585,12 @@ func errorHandler(err error, ctx echo.Context) {
 	// Forward "Unauthorized" requests to the signin page
 	if derp.IsUnauthorized((err)) {
 
+		// Special case for ActivityPub requests: Just display the status code and JSON-LD error
+		if handleActivityPubError(ctx, err) {
+			return
+		}
+
+		// Otherwise, forward the user to the signin page
 		uri := request.URL
 
 		if currentPath := uri.Path; currentPath != "/signin" {
@@ -601,6 +621,29 @@ func errorHandler(err error, ctx echo.Context) {
 		return
 	}
 
+	// Special case for ActivityPub requests: Just display the status code and JSON-LD error
+	if handleActivityPubError(ctx, err) {
+		return
+	}
+
 	// Fall through to general error handler that only returns the error code and message
 	_ = ctx.String(derp.ErrorCode(err), derp.Message(err))
+}
+
+// handleActivityPubError displays a simple JSON error message for ActivityPub requests
+// (instead of an HTML result)
+func handleActivityPubError(ctx echo.Context, err error) bool {
+
+	// If this is not an ActivityPub request, then don't handle it here.
+	if !hannibal.IsActivityPubContentType(ctx.Request().Header.Get("Accept")) {
+		return false
+	}
+
+	result := mapof.Any{
+		"statusCode": derp.ErrorCode(err),
+		"message":    derp.Message(err),
+	}
+
+	_ = ctx.JSON(derp.ErrorCode(err), result)
+	return true
 }

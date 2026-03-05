@@ -12,12 +12,12 @@ import (
 )
 
 func init() {
-	inboxRouter.Add(vocab.ActivityTypeMove, vocab.Any, MoveAny)
+	inboxRouter.Add(vocab.ActivityTypeMove, vocab.Any, inbox_MoveAny)
 }
 
-func MoveAny(context Context, document streams.Document) error {
+func inbox_MoveAny(context Context, document streams.Document) error {
 
-	const location = "activitypub_user.Inbox.MoveAny"
+	const location = "activitypub_user.inbox_MoveAny"
 
 	// Locate/Move local actors
 	locator := context.factory.Locator()

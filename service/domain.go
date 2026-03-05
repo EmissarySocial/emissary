@@ -26,24 +26,22 @@ import (
 
 // Domain service manages all access to the singleton model.Domain in the database
 type Domain struct {
-	factory             *Factory
+	activityService     *ActivityStream
 	configuration       config.Domain
 	connectionService   *Connection
+	domain              model.Domain
+	funcMap             template.FuncMap
+	newSession          func(time.Duration) (data.Session, context.CancelFunc, error)
+	hostname            string
 	providerService     *Provider
 	registrationService *Registration
 	themeService        *Theme
 	userService         *User
-	funcMap             template.FuncMap
-	domain              model.Domain
-	hostname            string // domain-only name (no protocol)
-	ready               bool
 }
 
 // NewDomain returns a fully initialized Domain service
-func NewDomain(factory *Factory) Domain {
-	return Domain{
-		factory: factory,
-	}
+func NewDomain() Domain {
+	return Domain{}
 }
 
 /******************************************
@@ -55,26 +53,28 @@ func (service *Domain) collection(session data.Session) data.Collection {
 }
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Domain) Refresh(configuration config.Domain, connectionService *Connection, providerService *Provider, registrationService *Registration, themeService *Theme, userService *User, funcMap template.FuncMap, hostname string) {
+func (service *Domain) Refresh(factory *Factory) {
 
-	service.configuration = configuration
-	service.connectionService = connectionService
-	service.providerService = providerService
-	service.registrationService = registrationService
-	service.themeService = themeService
-	service.userService = userService
-	service.funcMap = funcMap
-	service.hostname = hostname
-
-	service.ready = true
+	service.activityService = factory.ActivityStream()
+	service.configuration = factory.config
+	service.connectionService = factory.Connection()
+	service.funcMap = factory.FuncMap()
+	service.hostname = factory.Hostname()
+	service.newSession = factory.Session
+	service.providerService = factory.Provider()
+	service.registrationService = factory.Registration()
+	service.themeService = factory.Theme()
+	service.userService = factory.User()
 }
 
-// Init domain guarantees that a domain record exists in the database.
+// Start initializes the database, by:
+// 1. Guaranteeing that a domain record exists in the db
+// 2. synchronizing indexes
 func (service *Domain) Start() error {
 
 	const location = "service.Domain.Start"
 
-	session, cancel, err := service.factory.Session(10 * time.Minute)
+	session, cancel, err := service.newSession(10 * time.Minute)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to connect to database")
@@ -127,18 +127,13 @@ func (service *Domain) Start() error {
 	}
 
 	// Update indexes asynchronously
-	go derp.Report(queries.SyncDomainIndexes(service.configuration.ConnectString, service.configuration.DatabaseName))
+	go func() {
+		if err := queries.SyncDomainIndexes(service.configuration.ConnectString, service.configuration.DatabaseName); err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to sync domain indexes", service.configuration, service.domain))
+		}
+	}()
 
 	return nil
-}
-
-// Close stops the following service watcher
-func (service *Domain) Close() {
-}
-
-// Ready returns TRUE if the service is ready to use
-func (service *Domain) Ready() bool {
-	return service.ready
 }
 
 /******************************************

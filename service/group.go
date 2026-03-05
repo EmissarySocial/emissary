@@ -27,7 +27,7 @@ func NewGroup() Group {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Group) Refresh() {
+func (service *Group) Refresh(_ *Factory) {
 }
 
 // Close stops any background processes controlled by this service

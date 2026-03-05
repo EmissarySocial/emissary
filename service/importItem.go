@@ -27,7 +27,7 @@ func NewImportItem() ImportItem {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *ImportItem) Refresh() {
+func (service *ImportItem) Refresh(_ *Factory) {
 }
 
 // Close stops any background processes controlled by this service
@@ -84,14 +84,16 @@ func (service *ImportItem) Load(session data.Session, criteria exp.Expression, r
 // Save adds/updates an ImportItem in the database
 func (service *ImportItem) Save(session data.Session, item *model.ImportItem, note string) error {
 
+	const location = "service.ImportItem.Save"
+
 	// Validate the value before saving
 	if err := service.Schema().Validate(item); err != nil {
-		return derp.Wrap(err, "service.ImportItem.Save", "Unable to validate ImportItem", item)
+		return derp.Wrap(err, location, "Unable to validate ImportItem", item)
 	}
 
 	// Save the value to the database
 	if err := service.collection(session).Save(item, note); err != nil {
-		return derp.Wrap(err, "service.ImportItem.Save", "Unable to save ImportItem", item, note)
+		return derp.Wrap(err, location, "Unable to save ImportItem", item, note)
 	}
 
 	return nil

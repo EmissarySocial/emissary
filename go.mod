@@ -13,24 +13,24 @@ require (
 	github.com/benpate/derp v0.35.0
 	github.com/benpate/digit v0.14.0
 	github.com/benpate/digital-dome v0.2.11
-	github.com/benpate/domain v0.2.11
+	github.com/benpate/domain v0.2.12
 	github.com/benpate/exp v0.9.0
 	github.com/benpate/exp-builder v0.10.7
 	github.com/benpate/form v0.25.10
 	github.com/benpate/geo v0.0.3
-	github.com/benpate/hannibal v0.14.10
+	github.com/benpate/hannibal v0.15.2
 	github.com/benpate/html v0.16.15
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.15.13
 	github.com/benpate/re v0.3.5
 	github.com/benpate/remote v0.18.0
-	github.com/benpate/rosetta v0.25.27
+	github.com/benpate/rosetta v0.25.30
 	github.com/benpate/sherlock v0.8.18
 	github.com/benpate/sniff v0.1.0
 	github.com/benpate/steranko v0.22.8
 	github.com/benpate/table v0.7.10
 	github.com/benpate/toot v0.3.0
-	github.com/benpate/turbine v0.4.5
+	github.com/benpate/turbine v0.4.6
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/codingsince1985/geo-golang v1.8.5
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -45,7 +45,7 @@ require (
 	github.com/hairyhenderson/go-fsimpl v0.3.1
 	github.com/hjson/hjson-go/v4 v4.5.0
 	github.com/kr/jsonfeed v0.1.1
-	github.com/labstack/echo/v4 v4.14.0
+	github.com/labstack/echo/v4 v4.15.0
 	github.com/labstack/gommon v0.4.2
 	github.com/maypok86/otter v1.2.4
 	github.com/microcosm-cc/bluemonday v1.0.27
@@ -64,11 +64,11 @@ require (
 	github.com/xhit/go-simple-mail/v2 v2.16.0
 	github.com/yeqown/go-qrcode/v2 v2.2.5
 	github.com/yeqown/go-qrcode/writer/standard v1.3.0
-	github.com/yuin/goldmark v1.7.13
+	github.com/yuin/goldmark v1.7.16
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.abhg.dev/goldmark/anchor v0.2.0
-	go.mongodb.org/mongo-driver v1.17.6
-	golang.org/x/crypto v0.46.0
+	go.mongodb.org/mongo-driver v1.17.9
+	golang.org/x/crypto v0.48.0
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93
 	golang.org/x/oauth2 v0.34.0
 	willnorris.com/go/microformats v1.2.0
@@ -103,7 +103,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kevinburke/ssh_config v1.4.0 // indirect
-	github.com/klauspost/compress v1.18.2 // indirect
+	github.com/klauspost/compress v1.18.4 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -128,10 +128,10 @@ require (
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	golang.org/x/image v0.34.0 // indirect
-	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/net v0.50.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
-	golang.org/x/sys v0.39.0 // indirect
-	golang.org/x/text v0.32.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/text v0.34.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

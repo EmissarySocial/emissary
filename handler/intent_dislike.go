@@ -12,7 +12,6 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GetIntent_Dislike(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
@@ -28,8 +27,8 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *service.Factory, session 
 	// Default values here
 	onCancel := firstOf(transaction.OnCancel, "/@me") // nolint:scopeguard
 
-	activityStream := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
-	object, err := activityStream.Client().Load(transaction.Object)
+	client := factory.ActivityStream().AppClient()
+	object, err := client.Load(transaction.Object)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to load object", ctx.Request().URL.String(), ctx.Request().URL, transaction)

@@ -16,7 +16,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/steranko"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
@@ -33,8 +32,8 @@ func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session d
 	onCancel := firstOf(transaction.OnCancel, "/@me") // nolint:scopeguard
 
 	// Try to load the remote Actor to be followed
-	activityService := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
-	actor, err := activityService.Client().Load(transaction.Object, sherlock.AsActor())
+	client := factory.ActivityStream().AppClient()
+	actor, err := client.Load(transaction.Object, sherlock.AsActor())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to load object", transaction)

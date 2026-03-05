@@ -34,7 +34,7 @@ func BoostAny(context Context, activity streams.Document) error {
 		}
 	}
 
-	activityService := context.factory.ActivityStream(model.ActorTypeStream, context.stream.StreamID) // nolint:scopeguard (readability)
+	activityService := context.factory.ActivityStream() // nolint:scopeguard (readability)
 
 	switch activity.Type() {
 

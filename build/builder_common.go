@@ -350,8 +350,8 @@ func (w Common) ActivityStream(url string) streams.Document {
 	const location = "build.Common.ActivityStream"
 
 	// Load the document from the Interwebs
-	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
-	result, err := activityService.Client().Load(url)
+	activityService := w._factory.ActivityStream()
+	result, err := activityService.UserClient(w.AuthenticatedID()).Load(url)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to load ActivityStream. Returning empty document to template."))
@@ -371,8 +371,8 @@ func (w Common) ActivityStreamCollection(url string) sliceof.String {
 	const location = "build.Common.ActivityStreamCollection"
 
 	// Load the collection from the Interwebs
-	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
-	object, err := activityService.Client().Load(url)
+	activityService := w._factory.ActivityStream()
+	object, err := activityService.UserClient(w.AuthenticatedID()).Load(url)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to load ActivityStream Collection. Returning empty collection to template."))
@@ -392,8 +392,8 @@ func (w Common) ActivityStreamCollection(url string) sliceof.String {
 // returned document uses Emissary's custom ActivityStream service, which uses
 // document values and rules from the server's shared cache.
 func (w Common) ActivityStreamActor(url string) streams.Document {
-	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
-	result, err := activityService.Client().Load(url, sherlock.AsActor())
+	activityService := w._factory.ActivityStream()
+	result, err := activityService.UserClient(w.AuthenticatedID()).Load(url, sherlock.AsActor())
 
 	if err != nil {
 		derp.Report(err)
@@ -403,7 +403,7 @@ func (w Common) ActivityStreamActor(url string) streams.Document {
 }
 
 func (w Common) ActivityStreamActors(search string) (sliceof.Object[model.ActorSummary], error) {
-	activityService := w._factory.ActivityStream(model.ActorTypeUser, w.AuthenticatedID())
+	activityService := w._factory.ActivityStream()
 	return activityService.QueryActors(search)
 }
 

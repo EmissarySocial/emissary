@@ -7,35 +7,35 @@ import (
 	"github.com/benpate/derp"
 	dt "github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/steranko"
 )
 
 type DomainEmail struct {
-	factory       *Factory
 	serverEmail   *ServerEmail
 	domainService *Domain
 	smtp          config.SMTPConnection
 	owner         config.Owner
 	label         string
 	hostname      string
+	newSteranko   func(session data.Session) *steranko.Steranko
 }
 
-func NewDomainEmail(factory *Factory, serverEmail *ServerEmail) DomainEmail {
-	return DomainEmail{
-		factory:     factory,
-		serverEmail: serverEmail,
-	}
+func NewDomainEmail() DomainEmail {
+	return DomainEmail{}
 }
 
 /******************************************
  * Lifecycle Methods
  ******************************************/
 
-func (service *DomainEmail) Refresh(configuration config.Domain, domainService *Domain) {
-	service.domainService = domainService
-	service.smtp = configuration.SMTPConnection
-	service.owner = configuration.Owner
-	service.label = configuration.Label
-	service.hostname = configuration.Hostname
+func (service *DomainEmail) Refresh(factory *Factory) {
+	service.serverEmail = factory.ServerEmail()
+	service.domainService = factory.Domain()
+	service.smtp = factory.config.SMTPConnection
+	service.owner = factory.config.Owner
+	service.label = factory.config.Label
+	service.hostname = factory.config.Hostname
+	service.newSteranko = factory.Steranko
 }
 
 /******************************************
@@ -49,7 +49,7 @@ func (service *DomainEmail) SendWelcome(session data.Session, txn model.Registra
 	const location = "service.DomainEmail.SendWelcome"
 
 	// Create a JWT with the registration information, and populate it into the Token
-	sterankoService := service.factory.Steranko(session)
+	sterankoService := service.newSteranko(session)
 	token, err := sterankoService.CreateJWT(txn.Claims())
 
 	if err != nil {

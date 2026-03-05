@@ -12,7 +12,7 @@ type Client struct {
 	Request      *http.Request      // HTTP Request that initiated the client
 	StreamID     primitive.ObjectID // Stream.Token of current stream being watched.
 	Topic        int
-	WriteChannel chan primitive.ObjectID // Channel for writing responses to this client.
+	WriteChannel chan Message // Channel for writing responses to this client.
 }
 
 // NewClient initializes a new realtime client.
@@ -23,6 +23,6 @@ func NewClient(request *http.Request, streamID primitive.ObjectID, topic int) *C
 		Request:      request,
 		StreamID:     streamID,
 		Topic:        topic,
-		WriteChannel: make(chan primitive.ObjectID),
+		WriteChannel: make(chan Message),
 	}
 }

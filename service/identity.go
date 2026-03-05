@@ -26,7 +26,7 @@ import (
 
 // Identity defines a service that manages all content identitys created and imported by Users.
 type Identity struct {
-	factory          *Factory
+	activityService  *ActivityStream
 	emailService     *DomainEmail
 	jwtService       *JWT
 	privilegeService *Privilege
@@ -35,10 +35,8 @@ type Identity struct {
 }
 
 // NewIdentity returns a fully initialized Identity service
-func NewIdentity(factory *Factory) Identity {
-	return Identity{
-		factory: factory,
-	}
+func NewIdentity() Identity {
+	return Identity{}
 }
 
 /******************************************
@@ -46,12 +44,13 @@ func NewIdentity(factory *Factory) Identity {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Identity) Refresh(emailService *DomainEmail, jwtService *JWT, privilegeService *Privilege, queue *queue.Queue, host string) {
-	service.emailService = emailService
-	service.jwtService = jwtService
-	service.privilegeService = privilegeService
-	service.queue = queue
-	service.host = host
+func (service *Identity) Refresh(factory *Factory) {
+	service.activityService = factory.ActivityStream()
+	service.emailService = factory.Email()
+	service.jwtService = factory.JWT()
+	service.privilegeService = factory.Privilege()
+	service.queue = factory.Queue()
+	service.host = factory.Host()
 }
 
 // Close stops any background processes controlled by this service
@@ -600,10 +599,7 @@ func (service *Identity) calcName(identity *model.Identity) error {
 
 	// If we have an ActivityPub Actor, then look up the name from their profile
 	if identity.HasActivityPubActor() {
-
-		activityService := service.factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
-
-		actor, err := activityService.Client().Load(identity.ActivityPubActor, sherlock.AsActor())
+		actor, err := service.activityService.AppClient().Load(identity.ActivityPubActor, sherlock.AsActor())
 
 		if err != nil {
 			return derp.Wrap(err, "service.Identity.calcName", "Unable to load ActivityPub Actor", identity.ActivityPubActor)

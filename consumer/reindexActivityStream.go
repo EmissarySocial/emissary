@@ -1,7 +1,6 @@
 package consumer
 
 import (
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/EmissarySocial/emissary/tools/ascrawler"
@@ -9,7 +8,6 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
 	"github.com/rs/zerolog/log"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func ReindexActivityStream(factory *service.Factory, args mapof.Any) queue.Result {
@@ -19,10 +17,10 @@ func ReindexActivityStream(factory *service.Factory, args mapof.Any) queue.Resul
 	url := args.GetString("url")
 
 	log.Debug().Str("loc", location).Str("url", url).Msg("Reindexing ActivityStream")
-	activityService := factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
+	activityService := factory.ActivityStream()
 
 	// Try to load the ActivityStream. Skip the cache, and to not re-trigger the crawler.
-	if _, err := activityService.Client().Load(url, ascache.WithWriteOnly(), ascrawler.WithoutCrawler()); err != nil {
+	if _, err := activityService.AppClient().Load(url, ascache.WithWriteOnly(), ascrawler.WithoutCrawler()); err != nil {
 
 		// If the ActivityStream no longer exists, then remove it from the cache
 		if derp.IsNotFoundOrGone(err) {
@@ -30,6 +28,11 @@ func ReindexActivityStream(factory *service.Factory, args mapof.Any) queue.Resul
 				return queue.Error(derp.Wrap(inner, location, "Unable to delete ActivityStream", url))
 			}
 			return queue.Success()
+		}
+
+		// Retry HTTP 429 (Too Many Requests) errors
+		if tooManyRequests, retryDuration := derp.IsTooManyRequests(err); tooManyRequests {
+			return queue.Requeue(retryDuration)
 		}
 
 		// If it's "our fault" then we can't retry

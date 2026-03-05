@@ -2,20 +2,6 @@
 {{- $selectedID := .SelectedID -}}
 {{- $allFolders := and ($selectedID.IsZero) (eq "FOLDER" $section) -}}
 
-<!-- Encrypted Messages
-{{- if eq "CONVERSATIONS" $section -}}
-	<a href="/@me/inbox/mls" class="turboclick menu-item ellipsis hover-trigger folder selected">
-		<span>{{- icon "chat-fill" }}</span>
-		<span>Conversations</span>
-	</a>
-{{- else -}}
-	<a href="/@me/inbox/mls" class="turboclick menu-item ellipsis hover-trigger folder">
-		<span>{{- icon "chat" }}</span>
-		<span>Conversations</span>
-	</a>
-{{- end -}}
---->
-
 <div class="margin-vertical"></div>
 
 	<a href="/@me/inbox/inbox?folderId={{nilObjectID.Hex}}" class="turboclick menu-item ellipsis hover-trigger folder {{if $allFolders}}selected{{end}}">

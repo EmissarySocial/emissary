@@ -204,14 +204,12 @@ func (service *Stream) ActivityPubActor(session data.Session, streamID primitive
 		return outbox.Actor{}, derp.Wrap(err, location, "Error extracting private key", encryptionKey)
 	}
 
-	activityService := service.factory.ActivityStream(model.ActorTypeStream, streamID)
-
 	// Return the ActivityPub Actor
 	actor := outbox.NewActor(
 		service.ActivityPubURL(streamID),
 		privateKey,
 		outbox.WithFollowers(service.RangeActivityPubFollowers(session, streamID)),
-		outbox.WithClient(activityService.Client()),
+		outbox.WithClient(service.activityService.StreamClient(streamID)),
 		// TODO: Restore Queue:: , outbox.WithQueue(service.queue))
 	)
 

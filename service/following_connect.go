@@ -26,8 +26,8 @@ func (service *Following) Connect(session data.Session, following *model.Followi
 	}
 
 	// Try to load the Actor in the cache (allow cached values)
-	activityService := service.factory.ActivityStream(model.ActorTypeUser, following.UserID)
-	actor, err := activityService.Client().Load(following.URL, sherlock.AsActor(), ascache.WithWriteOnly())
+	client := service.activityService.UserClient(following.UserID)
+	actor, err := client.Load(following.URL, sherlock.AsActor(), ascache.WithWriteOnly())
 
 	if err != nil {
 		if inner := service.SetStatusFailure(session, following, "Unable to connect to ActivityPub Actor"); inner != nil {

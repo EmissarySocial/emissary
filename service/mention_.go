@@ -36,16 +36,14 @@ import (
 
 // Mention defines a service that can send and receive mention data
 type Mention struct {
-	factory     *Factory
-	ruleService *Rule
-	host        string
+	activityService *ActivityStream
+	ruleService     *Rule
+	host            string
 }
 
 // NewMention returns a fully initialized Mention service
-func NewMention(factory *Factory) Mention {
-	return Mention{
-		factory: factory,
-	}
+func NewMention() Mention {
+	return Mention{}
 }
 
 /******************************************
@@ -53,9 +51,10 @@ func NewMention(factory *Factory) Mention {
  ******************************************/
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Mention) Refresh(ruleService *Rule, host string) {
-	service.ruleService = ruleService
-	service.host = host
+func (service *Mention) Refresh(factory *Factory) {
+	service.activityService = factory.ActivityStream()
+	service.ruleService = factory.Rule()
+	service.host = factory.Host()
 }
 
 // Close stops any background processes controlled by this service
@@ -443,10 +442,8 @@ func (service *Mention) GetPageInfo(body *bytes.Buffer, originURL string, mentio
 
 	const location = "service.Mention.GetPageInfo"
 
-	activityService := service.factory.ActivityStream(model.ActorTypeApplication, primitive.NilObjectID)
-
 	// Inspect the source document for metadata (microformats, opengraph, etc.)
-	document, err := activityService.Client().Load(originURL, sherlock.AsDocument())
+	document, err := service.activityService.AppClient().Load(originURL, sherlock.AsDocument())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error retrieving page", originURL)

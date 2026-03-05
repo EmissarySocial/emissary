@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -17,23 +18,22 @@ import (
 
 // Webhook service sends outbound webhooks
 type Webhook struct {
-	factory *Factory
-	queue   *queue.Queue
+	queue      *queue.Queue
+	newSession func(time.Duration) (data.Session, context.CancelFunc, error)
 }
 
 // NewWebhook returns a new instance of the Webhook service
-func NewWebhook(factory *Factory) Webhook {
-	return Webhook{
-		factory: factory,
-	}
+func NewWebhook() Webhook {
+	return Webhook{}
 }
 
 /******************************************
  * Lifecycle Methods
  ******************************************/
 
-func (service *Webhook) Refresh(queue *queue.Queue) {
-	service.queue = queue
+func (service *Webhook) Refresh(factory *Factory) {
+	service.queue = factory.Queue()
+	service.newSession = factory.Session
 }
 
 /******************************************
@@ -215,7 +215,7 @@ func (service *Webhook) Send(getter model.WebhookDataGetter, events ...string) {
 	go func() {
 
 		// Create a new (thread-safe) database session
-		session, cancel, err := service.factory.Session(time.Minute)
+		session, cancel, err := service.newSession(time.Minute)
 
 		if err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to connect to database"))

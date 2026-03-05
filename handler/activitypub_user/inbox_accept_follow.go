@@ -10,14 +10,14 @@ import (
 )
 
 func init() {
-	inboxRouter.Add(vocab.ActivityTypeAccept, vocab.ActivityTypeFollow, receive_AcceptFollow)
+	inboxRouter.Add(vocab.ActivityTypeAccept, vocab.ActivityTypeFollow, inbox_AcceptFollow)
 }
 
 // This funciton handles ActivityPub "Accept/Follow" activities, meaning that
 // it is called with a remote server accepts our follow request.
-func receive_AcceptFollow(context Context, activity streams.Document) error {
+func inbox_AcceptFollow(context Context, activity streams.Document) error {
 
-	const location = "handler.activitypub_user.receive_AcceptFollow"
+	const location = "handler.activitypub_user.inbox_AcceptFollow"
 
 	followingService := context.factory.Following()
 

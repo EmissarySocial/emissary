@@ -239,6 +239,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.WithImport:
 		return StepWithImport(s)
 
+	case step.WithKeyPackage:
+		return StepWithKeyPackage(s)
+
 	case step.WithMerchantAccount:
 		return StepWithMerchantAccount(s)
 

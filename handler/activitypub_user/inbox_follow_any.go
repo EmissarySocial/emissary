@@ -11,7 +11,7 @@ import (
 func init() {
 	inboxRouter.Add(vocab.ActivityTypeFollow, vocab.Any, func(context Context, activity streams.Document) error {
 
-		const location = "handler.activityPub_user.receiveFollowAny"
+		const location = "handler.activitypub_user.inbox_FollowAny"
 
 		// Look up the requested user account
 		userService := context.factory.User()
