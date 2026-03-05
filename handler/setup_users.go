@@ -83,22 +83,18 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 		userService := factory.User()
 		user := model.NewUser()
 
-		// Special rules for local domains
-		if factory.IsLocalhost() {
+		// Allow admins to UPDATE domain owners (if "userId" is provided)
+		if userID, err := primitive.ObjectIDFromHex(ctx.QueryParam("userId")); err == nil {
 
-			// Allow admins to UPDATE domain owners (if "userId" is provided)
-			if userID, err := primitive.ObjectIDFromHex(ctx.QueryParam("userId")); err == nil {
-
-				if err := userService.LoadByID(session, userID, &user); err != nil {
-					return derp.Wrap(err, location, "Unable to load user")
-				}
+			if err := userService.LoadByID(session, userID, &user); err != nil {
+				return derp.Wrap(err, location, "Unable to load user")
 			}
+		}
 
-			// Allow admins to set passwords
-			if password := data.Password; password != "" {
-				if err := factory.Steranko(session).SetPassword(&user, password); err != nil {
-					return derp.Wrap(err, location, "Unable to set password")
-				}
+		// Allow admins to set passwords
+		if password := data.Password; password != "" {
+			if err := factory.Steranko(session).SetPassword(&user, password); err != nil {
+				return derp.Wrap(err, location, "Unable to set password")
 			}
 		}
 
@@ -221,9 +217,11 @@ func displayDomainUsersModal(ctx echo.Context, factory *service.Factory, session
 	// Pick the template based on the current Domain
 	filename := "users.html"
 
-	if factory.IsLocalhost() {
-		filename = "users-local.html"
-	}
+	/*
+		if factory.IsLocalhost() {
+			filename = "users-local.html"
+		}
+	*/
 
 	// Build the modal dialog body
 	var buffer bytes.Buffer
