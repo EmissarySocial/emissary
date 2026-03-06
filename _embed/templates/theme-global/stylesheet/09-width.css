@@ -171,6 +171,9 @@
 .width-128 {
 	width: 128px;
 }
+.width-192 {
+	width: 192px;
+}
 .width-240 {
 	width: 240px;
 }
@@ -214,6 +217,9 @@
 .max-width-128 {
 	max-width: 128px;
 }
+.max-width-192 {
+	max-width: 192px;
+}
 .max-width-240 {
 	max-width: 240px;
 }
@@ -231,6 +237,9 @@
 }
 .max-width-640 {
 	max-width: 640px;
+}
+.max-width-800 {
+	max-width: 800px;
 }
 
 /* Small Screens (phones) */
@@ -258,6 +267,9 @@
 	}
 	.sm\:width-128 {
 		width: 128px;
+	}
+	.sm\:width-192 {
+		width: 192px;
 	}
 	.sm\:width-240 {
 		width: 240px;
@@ -301,6 +313,9 @@
 	}
 	.sm\:max-width-128 {
 		max-width: 128px;
+	}
+	.sm\:max-width-192 {
+		max-width: 192px;
 	}
 	.sm\:max-width-240 {
 		max-width: 240px;
@@ -567,6 +582,9 @@
 	.md\:width-128 {
 		width: 128px;
 	}
+	.md\:width-192 {
+		width: 192px;
+	}
 	.md\:width-240 {
 		width: 240px;
 	}
@@ -609,6 +627,9 @@
 	}
 	.md\:max-width-128 {
 		max-width: 128px;
+	}
+	.md\:max-width-192 {
+		max-width: 192px;
 	}
 	.md\:max-width-240 {
 		max-width: 240px;
@@ -868,6 +889,9 @@
 	.lg\:width-128 {
 		width: 128px;
 	}
+	.lg\:width-192 {
+		width: 192px;
+	}
 	.lg\:width-240 {
 		width: 240px;
 	}
@@ -910,6 +934,9 @@
 	}
 	.lg\:max-width-128 {
 		max-width: 128px;
+	}
+	.lg\:max-width-192 {
+		max-width: 192px;
 	}
 	.lg\:max-width-240 {
 		max-width: 240px;
