@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/datetime"
 	"github.com/benpate/geo"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -23,6 +24,7 @@ type StreamSummary struct {
 	Icon           string             `bson:"icon,omitempty"`         // Icon name for this document
 	IconURL        string             `bson:"iconUrl,omitempty"`      // URL of the icon image for this document
 	AttributedTo   PersonLink         `bson:"attributedTo,omitempty"` // List of people who are attributed to this document
+	Hashtags       sliceof.String     `bson:"hashtags,omitempty"`     // List of hashtags associated with this document
 	InReplyTo      string             `bson:"inReplyTo,omitempty"`    // If this stream is a reply to another stream or web page, then this links to the original document.
 	StartDate      datetime.DateTime  `bson:"startDate,omitempty"`    // Date when this stream was published
 	PublishDate    int64              `bson:"publishDate"`            // Date when this stream was published
@@ -47,7 +49,7 @@ func NewStreamSummary() StreamSummary {
 }
 
 func StreamSummaryFields() []string {
-	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "icon", "iconUrl", "attributedTo", "inReplyTo", "publishDate", "unpublishDate", "rank", "shuffle", "isFeatured", "startDate", "createDate", "places"}
+	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "icon", "iconUrl", "hashtags", "attributedTo", "inReplyTo", "publishDate", "unpublishDate", "rank", "shuffle", "isFeatured", "startDate", "createDate", "places"}
 }
 
 func (summary StreamSummary) Fields() []string {
@@ -64,6 +66,10 @@ func (summary StreamSummary) ID() string {
 
 func (summary StreamSummary) Name() string {
 	return summary.Label
+}
+
+func (summary StreamSummary) Description() string {
+	return summary.Summary
 }
 
 func (summary StreamSummary) Author() PersonLink {

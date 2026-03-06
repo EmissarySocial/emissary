@@ -13,6 +13,7 @@ import (
 	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/remote"
+	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/list"
 	"github.com/rs/zerolog/log"
 )
@@ -131,7 +132,7 @@ func (camper *Camper) getTemplateFromWebfinger(intentType string, accountID stri
 
 	for _, link := range resource.Links {
 		if link.RelationType == intentRelation {
-			return link.Href
+			return first.String(link.Template, link.Href)
 		}
 	}
 
@@ -142,7 +143,8 @@ func (camper *Camper) getTemplateFromWebfinger(intentType string, accountID stri
 		// Look for a "follow" intent
 		for _, link := range resource.Links {
 			if link.RelationType == digit.RelationTypeSubscribeRequest {
-				href := strings.ReplaceAll(link.Template, "{uri}", "{object}")
+				template := first.String(link.Template, link.Href)
+				href := strings.ReplaceAll(template, "{uri}", "{object}")
 				return href
 			}
 		}

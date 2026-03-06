@@ -39,7 +39,7 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *service.Factory, session 
 
 	b.HTML()
 	b.Head()
-	b.Link("stylesheet", "/.themes/global/resources/bootstrap-icons-1.11.3/font/bootstrap-icons.css").Close()
+	b.Link("stylesheet", "/.themes/global/resources/bootstrap-icons-1.13.1/bootstrap-icons.css").Close()
 	b.Link("stylesheet", "/.themes/global/stylesheet").Close()
 	b.Link("stylesheet", "/.themes/default/stylesheet").Close()
 	b.Script().Src("/.themes/global/resources/htmx/htmx.min.js").Close()

@@ -4,29 +4,29 @@
  * geometric shapes and sizes.
  ******************************************/
 
- /******************************************
+/******************************************
  * Aspect Ratios
  ******************************************/
 
 .aspect-square,
 .aspect-1-1 {
-	aspect-ratio:1;
-    overflow-y:hidden;
+	aspect-ratio: 1;
+	overflow-y: hidden;
 }
 
 .aspect-2-3 {
-	aspect-ratio:2/3;
-	overflow-y:hidden;
+	aspect-ratio: 2/3;
+	overflow-y: hidden;
 }
 
 .aspect-4-3 {
-	aspect-ratio:4/3;
-    overflow-y:hidden;
+	aspect-ratio: 4/3;
+	overflow-y: hidden;
 }
 
 .aspect-16-9 {
-	aspect-ratio:16/9;
-    overflow-y:hidden;
+	aspect-ratio: 16/9;
+	overflow-y: hidden;
 }
 
 /******************************************
@@ -34,21 +34,29 @@
  ******************************************/
 
 .square {
-    aspect-ratio:1;
-	border-radius:0px;
-    object-fit:cover;
-	background-color:var(--gray30);
-	flex-shrink:0;
-	flex-grow:0;
+	aspect-ratio: 1;
+	border-radius: 0px;
+	object-fit: cover;
+	background-color: var(--gray20);
+	flex-shrink: 0;
+	flex-grow: 0;
+}
+
+.rectangle {
+	border-radius: 0px;
+	object-fit: cover;
+	background-color: var(--gray20);
+	flex-shrink: 0;
+	flex-grow: 0;
 }
 
 .circle {
-	border-radius:50%;
+	border-radius: 50%;
 	aspect-ratio: 1;
-    object-fit:cover;
-	background-color:var(--gray30);
-	flex-shrink:0;
-	flex-grow:0;
+	object-fit: cover;
+	background-color: var(--gray20);
+	flex-shrink: 0;
+	flex-grow: 0;
 }
 
 .rounded {
@@ -68,57 +76,83 @@
  * Lines
  ******************************************/
 
- hr {
-    border-top:1px solid var(--gray20);
-    border-bottom:none;
-    border-left:none;
-    border-right:none;
-    height:0px;
-    margin-top:calc(var(--rhythm) * 3);
-    margin-bottom:calc(var(--rhythm) * 3);
+hr {
+	border-top: 1px solid var(--gray20);
+	border-bottom: none;
+	border-left: none;
+	border-right: none;
+	height: 0px;
+	margin-top: calc(var(--rhythm) * 3);
+	margin-bottom: calc(var(--rhythm) * 3);
 }
 
 /* Small Screens */
 @container (min-width: 640px) {
-	.sm\:aspect-square, .sm\:aspect-1-1 {aspect-ratio:1; overflow-y:hidden;}
-	.sm\:aspect-2-3 {aspect-ratio:2/3; overflow-y:hidden;}
-	.sm\:aspect-4-3 {aspect-ratio:4/3; overflow-y:hidden;}
-	.sm\:aspect-16-9 {aspect-ratio:16/9; overflow-y:hidden;}
+	.sm\:aspect-square,
+	.sm\:aspect-1-1 {
+		aspect-ratio: 1;
+		overflow-y: hidden;
+	}
+	.sm\:aspect-2-3 {
+		aspect-ratio: 2/3;
+		overflow-y: hidden;
+	}
+	.sm\:aspect-4-3 {
+		aspect-ratio: 4/3;
+		overflow-y: hidden;
+	}
+	.sm\:aspect-16-9 {
+		aspect-ratio: 16/9;
+		overflow-y: hidden;
+	}
 
 	.sm\:square {
-		aspect-ratio:1;
-		border-radius:0px;
+		aspect-ratio: 1;
+		border-radius: 0px;
 	}
 
 	.sm\:circle {
-		border-radius:50%;
+		border-radius: 50%;
 		aspect-ratio: 1;
-		object-fit:cover;
-		background-color:var(--gray30);
+		object-fit: cover;
+		background-color: var(--gray30);
 	}
 
 	.sm\:rounded {
 		border-radius: calc(var(--rhythm) * 2);
 	}
-	}
+}
 
 /* Medium Screens */
 @container (min-width: 768px) {
-	.md\:aspect-square, .md\:aspect-1-1 {aspect-ratio:1; overflow-y:hidden;}
-	.md\:aspect-2-3 {aspect-ratio:2/3; overflow-y:hidden;}
-	.md\:aspect-4-3 {aspect-ratio:4/3; overflow-y:hidden;}
-	.md\:aspect-16-9 {aspect-ratio:16/9; overflow-y:hidden;}
+	.md\:aspect-square,
+	.md\:aspect-1-1 {
+		aspect-ratio: 1;
+		overflow-y: hidden;
+	}
+	.md\:aspect-2-3 {
+		aspect-ratio: 2/3;
+		overflow-y: hidden;
+	}
+	.md\:aspect-4-3 {
+		aspect-ratio: 4/3;
+		overflow-y: hidden;
+	}
+	.md\:aspect-16-9 {
+		aspect-ratio: 16/9;
+		overflow-y: hidden;
+	}
 
 	.md\:square {
-		aspect-ratio:1;
-		border-radius:0px;
+		aspect-ratio: 1;
+		border-radius: 0px;
 	}
 
 	.md\:circle {
-		border-radius:50%;
+		border-radius: 50%;
 		aspect-ratio: 1;
-		object-fit:cover;
-		background-color:var(--gray30);
+		object-fit: cover;
+		background-color: var(--gray30);
 	}
 
 	.md\:rounded {
@@ -128,21 +162,34 @@
 
 /* Large Screens */
 @container (min-width: 1024px) {
-	.lg\:aspect-square, .lg\:aspect-1-1 {aspect-ratio:1; overflow-y:hidden;}
-	.lg\:aspect-2-3 {aspect-ratio:2/3; overflow-y:hidden;}
-	.lg\:aspect-4-3 {aspect-ratio:4/3; overflow-y:hidden;}
-	.lg\:aspect-16-9 {aspect-ratio:16/9; overflow-y:hidden;}
+	.lg\:aspect-square,
+	.lg\:aspect-1-1 {
+		aspect-ratio: 1;
+		overflow-y: hidden;
+	}
+	.lg\:aspect-2-3 {
+		aspect-ratio: 2/3;
+		overflow-y: hidden;
+	}
+	.lg\:aspect-4-3 {
+		aspect-ratio: 4/3;
+		overflow-y: hidden;
+	}
+	.lg\:aspect-16-9 {
+		aspect-ratio: 16/9;
+		overflow-y: hidden;
+	}
 
 	.lg\:square {
-		aspect-ratio:1;
-		border-radius:0px;
+		aspect-ratio: 1;
+		border-radius: 0px;
 	}
 
 	.lg\:circle {
-		border-radius:50%;
+		border-radius: 50%;
 		aspect-ratio: 1;
-		object-fit:cover;
-		background-color:var(--gray30);
+		object-fit: cover;
+		background-color: var(--gray30);
 	}
 
 	.lg\:rounded {
