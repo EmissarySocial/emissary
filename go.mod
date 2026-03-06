@@ -2,9 +2,6 @@ module github.com/EmissarySocial/emissary
 
 go 1.25.4
 
-replace github.com/benpate/digital-dome => ../../benpate/digital-dome
-replace github.com/benpate/hannibal => ../../benpate/hannibal
-
 require (
 	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/aws/aws-sdk-go v1.55.8
@@ -15,13 +12,13 @@ require (
 	github.com/benpate/delta v0.0.1
 	github.com/benpate/derp v0.35.0
 	github.com/benpate/digit v0.14.0
-	github.com/benpate/digital-dome v0.2.11
+	github.com/benpate/digital-dome v0.2.12
 	github.com/benpate/domain v0.2.12
 	github.com/benpate/exp v0.9.0
 	github.com/benpate/exp-builder v0.10.7
 	github.com/benpate/form v0.25.11
 	github.com/benpate/geo v0.0.3
-	github.com/benpate/hannibal v0.15.2
+	github.com/benpate/hannibal v0.16.0
 	github.com/benpate/html v0.16.15
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.15.13
@@ -48,7 +45,7 @@ require (
 	github.com/hairyhenderson/go-fsimpl v0.3.1
 	github.com/hjson/hjson-go/v4 v4.5.0
 	github.com/kr/jsonfeed v0.1.1
-	github.com/labstack/echo/v4 v4.15.0
+	github.com/labstack/echo/v4 v4.15.1
 	github.com/labstack/gommon v0.4.2
 	github.com/maypok86/otter v1.2.4
 	github.com/microcosm-cc/bluemonday v1.0.27
@@ -93,7 +90,7 @@ require (
 	github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fogleman/gg v1.3.0 // indirect
-	github.com/gammazero/deque v1.2.0 // indirect
+	github.com/gammazero/deque v1.2.1 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.7.0 // indirect
 	github.com/go-git/go-git/v5 v5.16.4 // indirect
