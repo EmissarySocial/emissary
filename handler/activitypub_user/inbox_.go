@@ -14,6 +14,7 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/steranko"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func GetInboxCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
@@ -130,17 +131,24 @@ func inbox_SaveActivity(context Context, activity streams.Document) error {
 		return derp.BadRequest(location, "Direct messages must be addressed to this Actor")
 	}
 
+	// RULE: Create a default id for the activity if none is provided
+	if activity.ID() == "" {
+		activity.SetID("uri:uuid:" + primitive.NewObjectID().Hex())
+	}
+
 	// Create a new InboxActivity and save it to the Inbox
 	inboxService := context.factory.Inbox()
 	inboxActivity := model.NewInboxActivity()
 	inboxActivity.UserID = context.user.UserID
-	inboxActivity.Type = activity.Type()
 	inboxActivity.ActorID = activity.Actor().ID()
+	inboxActivity.ActivityID = activity.ID()
+	inboxActivity.ActivityType = activity.Type()
+	inboxActivity.ObjectType = activity.Object().Type()
 	inboxActivity.ObjectID = activity.Object().ID()
 	inboxActivity.MediaType = activity.Object().MediaType()
 	inboxActivity.ReceivedDate = time.Now().UnixMilli()
-	inboxActivity.IsPublic = activity.IsPublic()
 	inboxActivity.RawActivity = activity.Map()
+	inboxActivity.IsPublic = activity.IsPublic()
 
 	if publishedDate := activity.Published(); !publishedDate.IsZero() {
 		inboxActivity.PublishedDate = publishedDate.Unix()

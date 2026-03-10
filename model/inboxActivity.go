@@ -15,15 +15,16 @@ import (
 type InboxActivity struct {
 	InboxActivityID primitive.ObjectID `bson:"_id"`           // Unique identifier for this InboxActivity
 	UserID          primitive.ObjectID `bson:"userId"`        // The user that received this InboxActivity
-	Type            string             `bson:"type"`          // The type of InboxActivity (Create, Update, Like, Follow, etc.)
-	ActivityID      string             `bson:"activityId"`    // The ID/URL of this InboxActivity
 	ActorID         string             `bson:"actorId"`       // The ID/URL of the actor that sent this InboxActivity (e.g. "https://example.com/users/alice")
-	ObjectID        string             `bson:"objectId"`      // The ID/URL of the object that this InboxActivity is about (e.g. "https://example.com/posts/12345")
+	ActivityID      string             `bson:"activityId"`    // The ID/URL of this InboxActivity
+	ActivityType    string             `bson:"activityType"`  // The type of Activity received (Create, Update, Like, Follow, etc.)
+	ObjectID        string             `bson:"objectId"`      // The ID/URL of the Object of this Activity
+	ObjectType      string             `bson:"objectType"`    // The type of Object of this Activity is about (Note, Person, etc.)
 	MediaType       string             `bson:"mediaType"`     // The media type of the content (e.g. "message/mls")
 	RawActivity     mapof.Any          `bson:"rawActivity"`   // The original, unprocessed activity received by the server
-	IsPublic        bool               `bson:"isPublic"`      // Whether this activity was addressed to the public (i.e. "as:Public")
 	PublishedDate   int64              `bson:"publishedDate"` // Unix epoch (in milliseconds) when this InboxActivity was published
 	ReceivedDate    int64              `bson:"receivedDate"`  // Unix epoch (in milliseconds) when this InboxActivity was received by the server
+	IsPublic        bool               `bson:"isPublic"`      // Whether this activity was addressed to the public (i.e. "as:Public")
 
 	journal.Journal `bson:",inline"`
 }

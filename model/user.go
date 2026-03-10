@@ -439,7 +439,7 @@ func (user *User) ActivityPubSSEEndpoint_Inbox_DirectMessages() string {
 		return ""
 	}
 
-	return user.ProfileURL + "/sse/inbox/direct-message"
+	return user.ProfileURL + "/sse/inbox/direct-messages"
 }
 
 func (user *User) ActivityPubSSEEndpoint_Inbox_DirectMessages_MLS() string {

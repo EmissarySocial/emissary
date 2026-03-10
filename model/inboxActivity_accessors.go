@@ -10,15 +10,17 @@ func InboxActivitySchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"inboxActivityId": schema.String{Format: "objectId", Required: true},
-			"userId":          schema.String{Format: "objectId", Required: true},
-			"type":            schema.String{Required: true},
-			"activityId":      schema.String{Required: true},
 			"actorId":         schema.String{Format: "url", Required: true},
-			"objectId":        schema.String{Format: "url"},
+			"userId":          schema.String{Format: "objectId", Required: true},
+			"activityId":      schema.String{Required: true},
+			"activityType":    schema.String{Required: true},
+			"objectType":      schema.String{},
+			"objectId":        schema.String{},
 			"mediaType":       schema.String{},
 			"rawActivity":     schema.Object{Wildcard: schema.Any{}},
 			"publishedDate":   schema.Integer{BitSize: 64, Required: true},
 			"receivedDate":    schema.Integer{BitSize: 64, Required: true},
+			"isPublic":        schema.Boolean{},
 		},
 	}
 }
@@ -30,14 +32,17 @@ func InboxActivitySchema() schema.Element {
 func (inboxActivity *InboxActivity) GetPointer(name string) (any, bool) {
 	switch name {
 
+	case "actorId":
+		return &inboxActivity.ActorID, true
+
 	case "activityId":
 		return &inboxActivity.ActivityID, true
 
-	case "type":
-		return &inboxActivity.Type, true
+	case "activityType":
+		return &inboxActivity.ActivityType, true
 
-	case "actorId":
-		return &inboxActivity.ActorID, true
+	case "objectType":
+		return &inboxActivity.ObjectType, true
 
 	case "objectId":
 		return &inboxActivity.ObjectID, true
@@ -53,6 +58,9 @@ func (inboxActivity *InboxActivity) GetPointer(name string) (any, bool) {
 
 	case "receivedDate":
 		return &inboxActivity.ReceivedDate, true
+
+	case "isPublic":
+		return &inboxActivity.IsPublic, true
 
 	default:
 		return nil, false
