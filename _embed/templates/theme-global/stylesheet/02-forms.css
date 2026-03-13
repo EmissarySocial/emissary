@@ -20,6 +20,7 @@ select,
 
 textarea {
 	line-height: 150%;
+	resize: vertical;
 }
 
 textarea.code {
@@ -99,6 +100,7 @@ label.checkbutton:has(input[type="checkbox"]) {
 	background-color: var(--gray05);
 	border-radius: var(--rhythm);
 	padding: calc(var(--rhythm) * 2) var(--rhythm);
+	margin: calc(var(--rhythm) / 2) 0;
 }
 
 label.checkbutton:has(input[type="checkbox"]:checked) {
@@ -124,6 +126,7 @@ label.radiobutton:has(input[type="radio"]) {
 	background-color: var(--gray05);
 	border-radius: var(--rhythm);
 	padding: calc(var(--rhythm) * 2) var(--rhythm);
+	margin: calc(var(--rhythm) / 2) 0;
 }
 
 label.radiobutton:has(input[type="radio"]:checked) {
@@ -560,12 +563,12 @@ button.button-invisible {
 }
 
 .layout-vertical > .layout-elements > .layout-element > label {
-	margin-bottom: 8px;
 	display: block;
 }
 
 .layout-vertical > .layout-elements > .layout-element > input {
 	display: block;
+	margin-top: 4px;
 }
 
 .layout-vertical > .layout-element > input[type="checkbox"] {
@@ -588,7 +591,6 @@ button.button-invisible {
 }
 
 .layout-horizontal > .layout-elements > .layout-element > label {
-	margin-bottom: 8px;
 	display: block;
 }
 
