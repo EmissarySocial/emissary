@@ -27,7 +27,7 @@ require (
 	github.com/benpate/rosetta v0.25.33
 	github.com/benpate/sherlock v0.8.18
 	github.com/benpate/sniff v0.1.0
-	github.com/benpate/steranko v0.22.8
+	github.com/benpate/steranko v0.23.0
 	github.com/benpate/table v0.7.10
 	github.com/benpate/toot v0.3.0
 	github.com/benpate/turbine v0.4.6
@@ -40,7 +40,7 @@ require (
 	github.com/fatih/color v1.18.0
 	github.com/fclairamb/afero-s3 v0.3.1
 	github.com/fsnotify/fsnotify v1.9.0
-	github.com/golang-jwt/jwt/v5 v5.3.0
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/gorilla/feeds v1.2.0
 	github.com/hairyhenderson/go-fsimpl v0.3.1
 	github.com/hjson/hjson-go/v4 v4.5.0
