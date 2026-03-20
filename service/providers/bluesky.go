@@ -36,26 +36,8 @@ func (adapter Bluesky) ManualConfig() form.Form {
 		Element: form.Element{
 			Type:        "layout-vertical",
 			Label:       "<i class='bi bi-bluesky'></i> Bluesky Bridge",
-			Description: "Use Bridgy Fed to connect to Bluesky.",
+			Description: "Use Bridgy.Fed to connect this server to Bluesky.",
 			Children: []form.Element{
-				{
-					Type:        "text",
-					Path:        "data.serverUrl",
-					Label:       "Bridgy Fed Server URL",
-					Description: "(https://fed.brid.gy) The URL of your Bridgy Fed server.",
-					Options: mapof.Any{
-						"placeholder": "https://fed.brid.gy",
-					},
-				},
-				{
-					Type:        "text",
-					Path:        "data.bridgeActor",
-					Label:       "Bridgy Fed Actor",
-					Description: "(@ap.brid.gy) The actor ID to follow or block to join the bridge.",
-					Options: mapof.Any{
-						"placeholder": "@ap.brid.gy",
-					},
-				},
 				{
 					Type:  "toggle",
 					Path:  "active",

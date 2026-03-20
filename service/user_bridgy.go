@@ -43,13 +43,11 @@ func (service *User) connectBluesky_follow(session data.Session, userID primitiv
 
 	const location = "service.User.connectBluesky_follow"
 
-	bridgeActor := connection.Data.GetString("bridgeActor")
-
-	if _, err := service.followingService.Follow(session, userID, bridgeActor); err != nil {
+	if _, err := service.followingService.Follow(session, userID, "@ap.brid.gy"); err != nil {
 		return derp.Wrap(err, location, "Unable to follow Bridgy Fed Actor", userID, connection)
 	}
 
-	if err := service.ruleService.BlockActor(session, userID, bridgeActor, ""); err != nil {
+	if err := service.ruleService.BlockActor(session, userID, "@ap.brid.gy", ""); err != nil {
 		return derp.Wrap(err, location, "Unable to unblock Bridgy Fed Actor", userID, connection)
 	}
 
@@ -61,13 +59,11 @@ func (service *User) connectBluesky_unfollow(session data.Session, userID primit
 
 	const location = "service.User.connectBluesky_unfollow"
 
-	bridgeActor := connection.Data.GetString("bridgeActor")
-
-	if err := service.followingService.Unfollow(session, userID, bridgeActor); err != nil {
+	if err := service.followingService.Unfollow(session, userID, "@ap.brid.gy"); err != nil {
 		return derp.Wrap(err, location, "Unable to unfollow Bridgy Fed Actor", userID, connection)
 	}
 
-	if err := service.ruleService.UnblockActor(session, userID, bridgeActor); err != nil {
+	if err := service.ruleService.UnblockActor(session, userID, "@ap.brid.gy"); err != nil {
 		return derp.Wrap(err, location, "Unable to unblock Bridgy Fed Actor", userID, connection)
 	}
 

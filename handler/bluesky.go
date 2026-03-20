@@ -67,7 +67,7 @@ func GetBlueskyDID(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Generate the correct Bridgy URL for this user, and forward the request there
-		forwardTo := connection.Data.GetString("serverUrl") + "/.well-known/atproto-did?protocol=ap&id=" + user.ProfileURL
+		forwardTo := "https://fed.brid.gy/.well-known/atproto-did?protocol=ap&id=" + user.ProfileURL
 		return ctx.Redirect(http.StatusSeeOther, forwardTo)
 	}
 }
