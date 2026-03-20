@@ -23,7 +23,5 @@ jobs:
    
     - name: Nil panic checks
       uses: qbaware/nilaway-action@v0
-      env:
-        GOTOOLCHAIN: go1.25.5
       with:
         package-to-scan: ./...
