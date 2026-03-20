@@ -451,6 +451,11 @@ func (w Common) IsDesktop() bool {
 	return !sniff.IsMobile(w.request().UserAgent())
 }
 
+// IsLocalhost returns TRUE if the request was made to a local domain (localhost, 127.0.0.1, etc.)
+func (w Common) IsLocalhost() bool {
+	return dt.IsLocalhost(w.Hostname())
+}
+
 // IsMe returns TRUE if the provided URI is the profileURL of the current user
 func (w Common) IsMe(url string) bool {
 	if user, err := w.getUser(); err == nil {
