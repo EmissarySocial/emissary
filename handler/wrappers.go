@@ -34,7 +34,6 @@ type WithFunc3[T any, U any, V any] func(ctx *steranko.Context, factory *service
 // 1) a signed-in user, 2) a valid OAuth token, or 3) a valid HTTP signature.  It calls the
 // continuation function with the actorID (as a string) that represents the authenticated actor.
 func WithAuthenticatedActor(serverFactory *server.Factory, fn WithFunc2[model.User, string]) echo.HandlerFunc {
-	const location = "handler.WithAuthenticatedActor"
 
 	return WithUser(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 

@@ -15,9 +15,9 @@ import (
 // AttachmentRules defines the rules for downloading an attachment
 type AttachmentRules struct {
 	Extensions sliceof.String // Allowed extensions.  The first value is used as the default.
-	Width      int            // Fixed width for all downloads
-	Height     int            // Fixed height for all downloads
-	Bitrate    int
+	Width      int            // Fixed width for all (image, video) downloads
+	Height     int            // Fixed height for all (image, video) downloads
+	Bitrate    int            // Fixed bitrate for all (audio, vido) downloads
 }
 
 // NewAttachmentRules returns a fully initialized AttachmentRules object
@@ -84,11 +84,12 @@ func (rules AttachmentRules) FileSpec(address *url.URL, originalExtension string
 		case "image":
 			rules.Extensions = []string{"webp", "png", "jpeg", "gif"}
 
-		case "video":
-			rules.Extensions = []string{"mp4", "webm", "ogv"}
-
 		case "audio":
 			rules.Extensions = []string{"mp3", "opus", "aac", "ogg", "flac"}
+
+		case "video":
+			rules.Extensions = []string{"mp4", "webm", "ogv", "webp"}
+
 		}
 	}
 

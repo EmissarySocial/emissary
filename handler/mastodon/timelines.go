@@ -53,15 +53,15 @@ func GetTimeline_Home(serverFactory *server.Factory) func(model.Authorization, t
 
 		defer cancel()
 
-		// Get Inbox items from the database
-		inboxService := factory.Inbox()
-		messages, err := inboxService.QueryByUserID(session, auth.UserID, queryExpression(t))
+		// Get NewsItems from the database
+		newsFeedService := factory.NewsFeed()
+		newsItems, err := newsFeedService.QueryByUserID(session, auth.UserID, queryExpression(t))
 
 		if err != nil {
-			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Error retrieving messages")
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Error retrieving newsItems")
 		}
 
-		return getSliceOfToots(messages), getPageInfo(messages), nil
+		return getSliceOfToots(newsItems), getPageInfo(newsItems), nil
 	}
 }
 
@@ -95,16 +95,16 @@ func GetTimeline_List(serverFactory *server.Factory) func(model.Authorization, t
 
 		defer cancel()
 
-		// Get Inbox items from the database
-		inboxService := factory.Inbox()
+		// Get NewsFeed items from the database
+		newsFeedService := factory.NewsFeed()
 		criteria := queryExpression(t).AndEqual("folderId", folderID)
 
-		messages, err := inboxService.QueryByUserID(session, auth.UserID, criteria)
+		newsItems, err := newsFeedService.QueryByUserID(session, auth.UserID, criteria)
 
 		if err != nil {
-			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Error retrieving messages")
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Error retrieving newsItems")
 		}
 
-		return getSliceOfToots(messages), getPageInfo(messages), nil
+		return getSliceOfToots(newsItems), getPageInfo(newsItems), nil
 	}
 }

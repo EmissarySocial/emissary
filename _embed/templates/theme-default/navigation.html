@@ -13,17 +13,19 @@
 	<span class="spacer"></span>
 
 	{{- if .IsAuthenticated -}}
-		<a href="/@me/inbox" id="nav-inbox" class="nav-item turboclick" aria-label="Inbox">
+		<a href="/@me/newsfeed" id="nav-inbox" class="nav-item turboclick" aria-label="Inbox">
 			<span class="icon selected-hide">{{icon "inbox"}}</span>
 			<span class="icon selected-show">{{icon "inbox-fill"}}</span>
 			<span class="mobile-show label">Inbox</span>
 		</a>
 
-		<a href="/@me/conversations" id="nav-conversations" class="nav-item turboclick" aria-label="Conversations">
-			<span class="icon selected-hide">{{- icon "chat" }}</span>
-			<span class="icon selected-show">{{- icon "chat-fill" }}</span>
-			<span class="mobile-show label">Conversations</span>
-		</a>
+		{{- if .IsLocalhost -}}
+			<a href="/@me/conversations" id="nav-conversations" class="nav-item turboclick" aria-label="Conversations">
+				<span class="icon selected-hide">{{- icon "chat" }}</span>
+				<span class="icon selected-show">{{- icon "chat-fill" }}</span>
+				<span class="mobile-show label">Conversations</span>
+			</a>
+		{{- end -}}
 
 		<a href="/@me" id="nav-outbox" class="nav-item turboclick" aria-label="Profile">
 			<span class="icon selected-hide">{{icon "user"}}</span>

@@ -14,27 +14,27 @@
 							{{icon "list-nested-fill"}} Nested
 						</button>
 					{{- else -}}
-						<button hx-get="/@me/inbox/browse-tree?url={{$url}}">
+						<button hx-get="/@me/newsfeed/browse-tree?url={{$url}}">
 							{{icon "list-nested"}} Nested
 						</button>
 					{{- end -}}
 
 					{{- if eq "index" $selected -}}
-						<button hx-get="/@me/inbox/browse-index?url={{$url}}" class="selected">
+						<button hx-get="/@me/newsfeed/browse-index?url={{$url}}" class="selected">
 							{{icon "list-fill"}} Index
 						</button>
 					{{- else -}}
-						<button hx-get="/@me/inbox/browse-index?url={{$url}}">
+						<button hx-get="/@me/newsfeed/browse-index?url={{$url}}">
 							{{icon "list"}} Index
 						</button>
 					{{- end -}}
 
 					{{- if eq "code" $selected -}}
-						<button hx-get="/@me/inbox/browse-code?url={{$url}}" class="selected">
+						<button hx-get="/@me/newsfeed/browse-code?url={{$url}}" class="selected">
 							{{icon "code-fill"}} Code
 						</button>
 					{{- else -}}
-						<button hx-get="/@me/inbox/browse-code?url={{$url}}">
+						<button hx-get="/@me/newsfeed/browse-code?url={{$url}}">
 							{{icon "code"}} Code
 						</button>
 					{{- end -}}

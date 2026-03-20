@@ -131,6 +131,10 @@ func SyncDomainIndexes(connectionString string, databaseName string) error {
 		derp.Report(err)
 	}
 
+	if err := sync.NewsFeed(ctx, session); err != nil {
+		derp.Report(err)
+	}
+
 	if err := sync.MLSKeyPackage(ctx, session); err != nil {
 		derp.Report(err)
 	}

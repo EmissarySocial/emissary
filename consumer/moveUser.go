@@ -99,9 +99,9 @@ func MoveUser(factory *service.Factory, session data.Session, user *model.User, 
 		return queue.Error(derp.Wrap(err, location, "Unable to delete related Outbox messages"))
 	}
 
-	// Delete related Inbox Messages
-	if err := factory.Inbox().DeleteByUserID(session, user.UserID, "moved"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to delete related Inbox messages"))
+	// Delete related NewsFeed/NewsItem
+	if err := factory.NewsFeed().DeleteByUserID(session, user.UserID, "moved"); err != nil {
+		return queue.Error(derp.Wrap(err, location, "Unable to delete related NewsFeed/NewsItems"))
 	}
 
 	// Delete related Conversations

@@ -142,6 +142,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "remove-event":
 		return NewRemoveEvent(stepInfo)
 
+	case "require-password":
+		return NewRequirePassword(stepInfo)
+
 	case "save":
 		return NewSave(stepInfo)
 

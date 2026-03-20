@@ -15,14 +15,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// ServerSentEvent generates an echo.HandlerFunc that generates an SSE eventStream for all topics
 func ServerSentEvent(ctx *steranko.Context, factory *service.Factory, _ data.Session) error {
 	return serverSentEvent(ctx, factory, realtime.TopicAll)
 }
 
+// ServerSentEvent_ChildUpdated generates an echo.HandlerFunc that listens for requests for the `ChildUpdated` topic
 func ServerSentEvent_ChildUpdated(ctx *steranko.Context, factory *service.Factory, _ data.Session) error {
 	return serverSentEvent(ctx, factory, realtime.TopicChildUpdated)
 }
 
+// ServerSentEvent_FollowingUpdated generates an echo.HandlerFunc that listens for requests for the `FollowingUpdated` topic
 func ServerSentEvent_FollowingUpdated(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
 
 	if user.UserID.Hex() != ctx.Param("objectId") {
@@ -32,23 +35,47 @@ func ServerSentEvent_FollowingUpdated(ctx *steranko.Context, factory *service.Fa
 	return serverSentEvent(ctx, factory, realtime.TopicFollowingUpdated)
 }
 
+// ServerSentEvent_ImportProgress generates an echo.HandlerFunc that listens for requests for the `ImportProgress` topic
 func ServerSentEvent_ImportProgress(ctx *steranko.Context, factory *service.Factory, _ data.Session, _ *model.User) error {
 	return serverSentEvent(ctx, factory, realtime.TopicImportProgress)
 }
 
-func ServerSentEvent_MLSMessage(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
+// ServerSentEvent_Inbox generates an echo.HandlerFunc that listens for requests for the `Inbox` topic
+func ServerSentEvent_Inbox(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
 
 	if user.UserID.Hex() != ctx.Param("objectId") {
-		return derp.Forbidden("handler.ServerSentEvent_MLSMessage", "You do not have permission to access this resource")
+		return derp.Forbidden("handler.ServerSentEvent_Inbox", "You do not have permission to access this resource")
 	}
 
-	return serverSentEvent(ctx, factory, realtime.TopicMLSMessage)
+	return serverSentEvent(ctx, factory, realtime.TopicInboxActivity)
 }
 
+// ServerSentEvent_DirectMessage generates an echo.HandlerFunc that listens for requests for the `DirectMessage` topic
+func ServerSentEvent_Inbox_DirectMessage(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
+
+	if user.UserID.Hex() != ctx.Param("objectId") {
+		return derp.Forbidden("handler.ServerSentEvent_Inbox_DirectMessage", "You do not have permission to access this resource")
+	}
+
+	return serverSentEvent(ctx, factory, realtime.TopicInboxActivity_DirectMessage)
+}
+
+// ServerSentEvent_DirectMessage_MLS generates an echo.HandlerFunc that listens for requests for the `DirectMessage_MLS` topic
+func ServerSentEvent_Inbox_DirectMessage_MLS(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
+
+	if user.UserID.Hex() != ctx.Param("objectId") {
+		return derp.Forbidden("handler.ServerSentEvent_Inbox_DirectMessage_MLS", "You do not have permission to access this resource")
+	}
+
+	return serverSentEvent(ctx, factory, realtime.TopicInboxActivity_DirectMessage_MLS)
+}
+
+// ServerSentEvent_NewReplies generates an echo.HandlerFunc that listens for requests for the `NewReplies` topic
 func ServerSentEvent_NewReplies(ctx *steranko.Context, factory *service.Factory, _ data.Session) error {
 	return serverSentEvent(ctx, factory, realtime.TopicNewReplies)
 }
 
+// ServerSentEvent_Updated generates an echo.HandlerFunc that listens for requests for the `Updated` topic
 func ServerSentEvent_Updated(ctx *steranko.Context, factory *service.Factory, _ data.Session) error {
 	return serverSentEvent(ctx, factory, realtime.TopicUpdated)
 }

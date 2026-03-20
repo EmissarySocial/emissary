@@ -23,7 +23,6 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -210,8 +209,6 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 
 		// Try to load the actor directly from the Interwebs
 		if newActor, err := service.AppClient().Load(queryString, sherlock.AsActor()); err == nil {
-
-			spew.Dump(location, "Specific Actor", newActor.Value())
 
 			// If this is a valid, but (previously) unknown actor, then add it to the results
 			// This will also automatically get cached/crawled for next time.

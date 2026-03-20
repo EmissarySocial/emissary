@@ -7,9 +7,9 @@ import (
 	"willnorris.com/go/microformats"
 )
 
-func MicroformatToMessage(feed *microformats.Microformat, entry *microformats.Microformat) model.Message {
+func MicroformatToNewsItem(feed *microformats.Microformat, entry *microformats.Microformat) model.NewsItem {
 
-	message := model.NewMessage()
+	message := model.NewNewsItem()
 
 	// Get properties from entry
 	message.URL = MicroformatPropertyToString(entry, "url")

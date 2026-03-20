@@ -28,8 +28,8 @@ type Following struct {
 	folderService     *Folder
 	host              string
 	importItemService *ImportItem
-	inboxService      *Inbox
 	keyService        *EncryptionKey
+	newsFeedService   *NewsFeed
 	sseUpdateChannel  chan<- realtime.Message
 	streamService     *Stream
 	userService       *User
@@ -52,7 +52,7 @@ func (service *Following) Refresh(factory *Factory) {
 	service.host = factory.Host()
 	service.importItemService = factory.ImportItem()
 	service.keyService = factory.EncryptionKey()
-	service.inboxService = factory.Inbox()
+	service.newsFeedService = factory.NewsFeed()
 	service.queue = factory.Queue()
 	service.sseUpdateChannel = factory.SSEUpdateChannel()
 	service.streamService = factory.Stream()
@@ -160,8 +160,8 @@ func (service *Following) Save(session data.Session, following *model.Following,
 		}
 
 		// Move related inbox items to the new folder
-		if err := service.inboxService.UpdateInboxFolders(session, following.UserID, following.FollowingID, following.FolderID.Value()); err != nil {
-			return derp.Wrap(err, location, "Unable to update Inbox Folders")
+		if err := service.newsFeedService.UpdateNewsFeedFolders(session, following.UserID, following.FollowingID, following.FolderID.Value()); err != nil {
+			return derp.Wrap(err, location, "Unable to update NewsFeed Folders")
 		}
 	}
 
@@ -237,7 +237,7 @@ func (service *Following) deleteNoStats(session data.Session, following *model.F
 	}
 
 	// Remove any messages received from this Following
-	if err := service.inboxService.DeleteByOrigin(session, following.FollowingID, "Parent record deleted"); err != nil {
+	if err := service.newsFeedService.DeleteByOrigin(session, following.FollowingID, "Parent record deleted"); err != nil {
 		return derp.Wrap(err, location, "Unable to delete streams for Following", following)
 	}
 
@@ -512,14 +512,14 @@ func (service *Following) DeleteByFolder(session data.Session, userID primitive.
 	return nil
 }
 
-// PurgeInbox removes all inbox items that are past their expiration date.
+// PurgeNewsFeed removes all inbox items that are past their expiration date.
 // TODO: HIGH: This should be rescheduled to run less frequently
-func (service *Following) PurgeInbox(session data.Session, following model.Following) error {
+func (service *Following) PurgeNewsFeed(session data.Session, following model.Following) error {
 
 	const location = "service.Following.PurgeFollowing"
 
 	// Check each following for expired items.
-	messages, err := service.inboxService.RangePurgeable(session, &following)
+	messages, err := service.newsFeedService.RangePurgeable(session, &following)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to query purgeable items", following)
@@ -527,7 +527,7 @@ func (service *Following) PurgeInbox(session data.Session, following model.Follo
 
 	// Purge each item that has expired
 	for message := range messages {
-		if err := service.inboxService.Delete(session, &message, "Purged"); err != nil {
+		if err := service.newsFeedService.Delete(session, &message, "Purged"); err != nil {
 			return derp.Wrap(err, location, "Error purging message", message)
 		}
 	}

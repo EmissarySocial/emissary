@@ -75,7 +75,7 @@
 			{{- if $builder.NotMe $object.Actor.ID -}}
 				<div class="text-xs margin-left-md nowrap">
 					<span
-						hx-get="/@me/inbox/actor-button?url={{$object.Actor.ID}}"
+						hx-get="/@me/newsfeed/actor-button?url={{$object.Actor.ID}}"
 						hx-swap="innerHTML"
 						hx-target="this"
 						hx-push-url="false"

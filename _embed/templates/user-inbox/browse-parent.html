@@ -4,7 +4,7 @@
 
 {{- if eq "" $inReplyTo -}}
 	<div 
-		hx-get="/@me/inbox/browse-tree?url={{$document.ID}}"
+		hx-get="/@me/newsfeed/browse-tree?url={{$document.ID}}"
 		hx-trigger="click from:#nestedButton"
 		hx-target="#modal-window" 
 		hx-swap="innerHTML transition:true" 

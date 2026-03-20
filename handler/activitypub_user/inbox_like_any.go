@@ -22,6 +22,11 @@ func inbox_LikeOrAnnounce(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.inbox_LikeOrAnnounce"
 
+	// RULE: No further processing required for non-public activities
+	if activity.NotPublic() {
+		return nil
+	}
+
 	// RULE: If the Activity does not have an ID, then make a new "fake" one.
 	if activity.ID() == "" {
 		activity.SetProperty(vocab.PropertyID, activitypub.FakeActivityID(activity))
@@ -57,8 +62,8 @@ func inbox_LikeOrAnnounce(context Context, activity streams.Document) error {
 	originType := getOriginType(activity.Type())
 
 	// Add the Announced/Liked message into the User's inbox
-	if err := followingService.SaveMessage(context.session, &following, document, originType); err != nil {
-		return derp.Wrap(err, location, "Unable to save message", context.user.UserID, activity.Value())
+	if err := followingService.SaveNewsItem(context.session, &following, document, originType); err != nil {
+		return derp.Wrap(err, location, "Unable to save news item", context.user.UserID, activity.Value())
 	}
 
 	// Success.

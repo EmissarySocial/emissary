@@ -17,7 +17,7 @@
 	{{- if eq "" (.QueryParam "remote") -}}
 
 		<div 
-			hx-get="/@me/inbox/list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&readDate=LT:{{.Now}}000"
+			hx-get="/@me/newsfeed/list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&readDate=LT:{{.Now}}000"
 			hx-target="this"
 			hx-trigger="click once"
 			hx-swap="beforebegin"
@@ -45,7 +45,7 @@
 				role="button"
 				class="message turboclick"
 				style="max-width:640px;"
-				hx-get="/@me/inbox/message?messageId={{$message.MessageID.Hex}}&url={{$message.URL}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
+				hx-get="/@me/newsfeed/message?messageId={{$message.MessageID.Hex}}&url={{$message.URL}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
 				hx-push-url="false"
 				tabIndex="0"
 				script="install listItem(messageId:'{{.MessageID.Hex}}')">
@@ -67,7 +67,7 @@
 		<!-- Target zone to load additional pages once we scroll down this far -->
 		{{- $lastMessage := $inbox.Last -}}
 		<div 
-			hx-get="/@me/inbox/list?folderId={{$folderID}}&origin.followingId={{$internalID}}&rank=GT:{{$lastMessage.Rank}}&read=false&remote=true"
+			hx-get="/@me/newsfeed/list?folderId={{$folderID}}&origin.followingId={{$internalID}}&rank=GT:{{$lastMessage.Rank}}&read=false&remote=true"
 			hx-push-url="false" 
 			hx-trigger="intersect once" 
 			hx-target="this" 

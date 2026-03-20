@@ -7,7 +7,7 @@
 	{{- range $index, $documentID := $replies -}}
 
 		<div
-			hx-get="/@me/inbox/browse-tree-reply?url={{$documentID}}"
+			hx-get="/@me/newsfeed/browse-tree-reply?url={{$documentID}}"
 			hx-trigger="intersect once"
 			hx-target="this"
 			hx-swap="outerHTML"

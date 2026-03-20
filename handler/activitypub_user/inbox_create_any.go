@@ -27,18 +27,13 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.inbox_CreateOrUpdate"
 
-	// Collect the actorID from the Activity
-	actorID := activity.Actor().ID()
-
-	if actorID == "" {
-		return derp.BadRequest(location, "Activity must have an ActorID", activity.Value())
+	// RULE: No further processing required for non-public activities
+	if activity.NotPublic() {
+		return nil
 	}
 
-	// Load the actual document into the ActivityStream cache
-	embeddedObject := activity.UnwrapActivity()
-
 	// Load the original document directly from the Interwebs.
-	document, err := embeddedObject.Load()
+	document, err := activity.UnwrapActivity().Load()
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to load enbedded object")
@@ -46,49 +41,17 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 
 	// Gonna need the followingService in a hot sec..
 	followingService := context.factory.Following()
-
-	/* TEMPORARILY REMOVING "DIRECT MESSAGES" BECUASE THE UX IS NOT READY.
-	// If the user is "mentioned" then save the message to their direct messages
-	if userIsMentioned(context.user, document) {
-
-		if err := followingService.SaveDirectMessage(context.session, context.user, activity); err != nil {
-			return derp.Wrap(err, location, "Unable to save direct message", context.user.UserID, activity.Value())
-		}
-		return nil
-	}
-	*/
-
-	// Verify that this message comes from a valid "Following" object.
 	following := model.NewFollowing()
 
 	// If the "Following" record cannot be found, then do not add a message
-	if err := followingService.LoadByURL(context.session, context.user.UserID, actorID, &following); err != nil {
-		return derp.Wrap(err, location, "Unable to locate `Following` record", context.user.UserID, actorID)
+	if err := followingService.LoadByURL(context.session, context.user.UserID, activity.Actor().ID(), &following); err != nil {
+		return derp.Wrap(err, location, "Unable to locate `Following` record", context.user.UserID)
 	}
 
 	// Try to save the message to a folder (with de-duplication)
-	if err := followingService.SaveMessage(context.session, &following, document, model.OriginTypePrimary); err != nil {
-		return derp.Wrap(err, location, "Unable to save message", context.user.UserID, activity.Value())
+	if err := followingService.SaveNewsItem(context.session, &following, document, model.OriginTypePrimary); err != nil {
+		return derp.Wrap(err, location, "Unable to save news item", context.user.UserID, activity.Value())
 	}
 
 	return nil
 }
-
-/*
-// userIsMentioned returns TRUE if this user is tagged in the document
-func userIsMentioned(user *model.User, document streams.Document) bool {
-
-	actorID := user.ActivityPubURL()
-
-	for mention := range document.Tag().Range() {
-
-		if mention.Type() == vocab.LinkTypeMention {
-			if mention.ID() == actorID {
-				return true
-			}
-		}
-	}
-
-	return false
-}
-*/

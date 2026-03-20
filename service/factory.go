@@ -75,7 +75,7 @@ type Factory struct {
 	locatorService         Locator
 	mentionService         Mention
 	merchantAccountService MerchantAccount
-	mlsMessageService      MLSMessage
+	newsFeedService        NewsFeed
 	oauthClient            OAuthClient
 	oauthUserToken         OAuthUserToken
 	objectService          Object
@@ -155,11 +155,11 @@ func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, doma
 	factory.importService = NewImport()
 	factory.importItemService = NewImportItem()
 	factory.inboxService = NewInbox()
+	factory.newsFeedService = NewNewsFeed()
 	factory.keyPackageService = NewKeyPackage()
 	factory.locatorService = NewLocator()
 	factory.mentionService = NewMention()
 	factory.merchantAccountService = NewMerchantAccount()
-	factory.mlsMessageService = NewMLSMessage()
 	factory.oauthClient = NewOAuthClient()
 	factory.oauthUserToken = NewOAuthUserToken()
 	factory.objectService = NewObject()
@@ -226,7 +226,7 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	factory.locatorService.Refresh(factory)
 	factory.mentionService.Refresh(factory)
 	factory.merchantAccountService.Refresh(factory)
-	factory.mlsMessageService.Refresh(factory)
+	factory.newsFeedService.Refresh(factory)
 	factory.oauthClient.Refresh(factory)
 	factory.oauthUserToken.Refresh(factory)
 	factory.objectService.Refresh(factory)
@@ -478,9 +478,9 @@ func (factory *Factory) Mention() *Mention {
 	return &factory.mentionService
 }
 
-// MLSMessage returns a fully populated MLSMessage service
-func (factory *Factory) MLSMessage() *MLSMessage {
-	return &factory.mlsMessageService
+// NewsFeed returns a fully populated NewsFeed service
+func (factory *Factory) NewsFeed() *NewsFeed {
+	return &factory.newsFeedService
 }
 
 // OAuthClient returns a fully populated OAuthClient service
@@ -800,8 +800,8 @@ func (factory *Factory) ImportableLocator() ImportableLocator {
 		case "emissary:following":
 			return factory.Following(), nil
 
-		case "emissary:inboxMessage":
-			return factory.Inbox(), nil
+		case "emissary:newsItem":
+			return factory.NewsFeed(), nil
 
 		case "emissary:merchantAccount":
 			return factory.MerchantAccount(), nil
@@ -841,7 +841,7 @@ func (factory *Factory) Model(name string) (ModelService, error) {
 	switch strings.ToLower(name) {
 
 	case "activity":
-		return factory.Inbox(), nil
+		return factory.NewsFeed(), nil
 
 	case "annotation":
 		return factory.Annotation(), nil
@@ -925,8 +925,8 @@ func (factory *Factory) ModelService(object data.Object) ModelService {
 	case *model.MerchantAccount:
 		return factory.MerchantAccount()
 
-	case *model.Message:
-		return factory.Inbox()
+	case *model.NewsItem:
+		return factory.NewsFeed()
 
 	case *model.OAuthUserToken:
 		return factory.OAuthUserToken()
@@ -965,7 +965,7 @@ func (factory *Factory) Collections() []string {
 		"Following",
 		"Group",
 		"Identity",
-		"Inbox",
+		"NewsFeed",
 		"JWT",
 		// "KeyPackage",
 		"Mention",

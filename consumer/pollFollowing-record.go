@@ -46,8 +46,8 @@ func PollFollowing_Record(factory *service.Factory, session data.Session, user *
 		}
 
 		// Save message to the Inbox
-		if err := factory.Following().SaveMessage(session, following, result, model.OriginTypePrimary); err != nil {
-			return queue.Error(derp.Wrap(err, location, "Unable to save Message to Inbox", result.Value()))
+		if err := factory.Following().SaveNewsItem(session, following, result, model.OriginTypePrimary); err != nil {
+			return queue.Error(derp.Wrap(err, location, "Unable to save NewsItem to NewsFeed", result.Value()))
 		}
 	}
 

@@ -12,17 +12,17 @@
 	<hr class="margin-bottom-sm"/>
 
 	<div role="tablist" class="pills">
-		<span role="tab" hx-get="/@me/inbox/responses-replies?url={{$url}}">
+		<span role="tab" hx-get="/@me/newsfeed/responses-replies?url={{$url}}">
 			Replies 
 			<span class="pill">{{- $metadata.Replies }}</span>
 		</span>
 		
-		<span role="tab" hx-get="/@me/inbox/responses-announces?url={{$url}}">
+		<span role="tab" hx-get="/@me/newsfeed/responses-announces?url={{$url}}">
 			Shares 
 			<span class="pill">{{- $metadata.Announces }}</span>
 		</span>
 
-		<span role="tab" aria-selected="true" hx-get="/@me/inbox/responses-likes?url={{$url}}">
+		<span role="tab" aria-selected="true" hx-get="/@me/newsfeed/responses-likes?url={{$url}}">
 			Likes 
 			<span class="pill pill-blue">{{- $metadata.Likes }}</span>
 		</span>

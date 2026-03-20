@@ -42,7 +42,7 @@ type User struct {
 	followerService   *Follower
 	followingService  *Following
 	keyService        *EncryptionKey
-	inboxService      *Inbox
+	newsFeedService   *NewsFeed
 	outboxService     *Outbox
 	responseService   *Response
 	ruleService       *Rule
@@ -75,7 +75,7 @@ func (service *User) Refresh(factory *Factory) {
 	service.folderService = factory.Folder()
 	service.followerService = factory.Follower()
 	service.followingService = factory.Following()
-	service.inboxService = factory.Inbox()
+	service.newsFeedService = factory.NewsFeed()
 	service.keyService = factory.EncryptionKey()
 	service.outboxService = factory.Outbox()
 	service.responseService = factory.Response()
@@ -284,8 +284,8 @@ func (service *User) Delete(session data.Session, user *model.User, note string)
 		return derp.Wrap(err, location, "Unable to delete User's encryption keys", user, note)
 	}
 
-	// Delete related Inbox messages
-	if err := service.inboxService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
+	// Delete related NewsFeed messages
+	if err := service.newsFeedService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
 		return derp.Wrap(err, location, "Unable to delete User's inbox messages", user, note)
 	}
 

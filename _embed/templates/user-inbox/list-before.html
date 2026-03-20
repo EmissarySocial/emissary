@@ -13,7 +13,7 @@
 
 	{{- if eq 12 (len $inbox) -}}
 		<div 
-			hx-get="/@me/inbox/list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&readDate=LT:{{$firstMessage.ReadDate}}"
+			hx-get="/@me/newsfeed/list-before?folderId={{$folderID}}&origin.followingId={{$internalID}}&readDate=LT:{{$firstMessage.ReadDate}}"
 			hx-target="this"
 			hx-swap="outerHTML"
 			hx-push-url="false"
@@ -31,7 +31,7 @@
 			role="button"
 			class="message turboclick" 
 			style="max-width:640px;"
-			hx-get="/@me/inbox/message?messageId={{.MessageID.Hex}}&url={{$message.URL}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
+			hx-get="/@me/newsfeed/message?messageId={{.MessageID.Hex}}&url={{$message.URL}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
 			hx-push-url="false"
 			tabIndex="0">
 

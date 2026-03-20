@@ -19,7 +19,7 @@ import (
 // Response defines a service that can send and receive response data
 type Response struct {
 	importItemService *ImportItem
-	inboxService      *Inbox
+	newsFeedService   *NewsFeed
 	outboxService     *Outbox
 	userService       *User
 	host              string
@@ -37,7 +37,7 @@ func NewResponse() Response {
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Response) Refresh(factory *Factory) {
 	service.importItemService = factory.ImportItem()
-	service.inboxService = factory.Inbox()
+	service.newsFeedService = factory.NewsFeed()
 	service.outboxService = factory.Outbox()
 	service.userService = factory.User()
 	service.host = factory.Host()
@@ -111,7 +111,7 @@ func (service *Response) Save(session data.Session, response *model.Response, no
 	}
 
 	// Try to update the inbox message being responded to
-	if err := service.inboxService.setResponse(session, response.UserID, response.Object, response.Type, response.ResponseID); err != nil {
+	if err := service.newsFeedService.setResponse(session, response.UserID, response.Object, response.Type, response.ResponseID); err != nil {
 		return derp.Wrap(err, location, "Unable to set Response to inbox message", response.UserID)
 	}
 
@@ -129,7 +129,7 @@ func (service *Response) Delete(session data.Session, response *model.Response, 
 	}
 
 	// Try to update the inbox message being responded to
-	if err := service.inboxService.setResponse(session, response.UserID, response.Object, response.Type, primitive.NilObjectID); err != nil {
+	if err := service.newsFeedService.setResponse(session, response.UserID, response.Object, response.Type, primitive.NilObjectID); err != nil {
 		return derp.Wrap(err, location, "Unable to remove Response from inbox message", response.UserID)
 	}
 

@@ -16,8 +16,8 @@
 
 			<div class="flex-grow-1">
 				<span class="button-group" script="install message(messageId:'{{$message.ID}}')">
-					<button id="previous" hx-get="/@me/inbox/message?messageId={{$message.ID}}&sibling=prev&followingId={{$followingID}}&folderId={{$folderID}}" script="install hotkey" aria-key-shortcuts="ArrowLeft">&laquo; Prev</button>
-					<button id="next" hx-get="/@me/inbox/message?messageId={{$message.ID}}&sibling=next&followingId={{$followingID}}&folderId={{$folderID}}" script="install hotkey" aria-key-shortcuts="ArrowLeft">Next &raquo;</button>
+					<button id="previous" hx-get="/@me/newsfeed/message?messageId={{$message.ID}}&sibling=prev&followingId={{$followingID}}&folderId={{$folderID}}" script="install hotkey" aria-key-shortcuts="ArrowLeft">&laquo; Prev</button>
+					<button id="next" hx-get="/@me/newsfeed/message?messageId={{$message.ID}}&sibling=next&followingId={{$followingID}}&folderId={{$folderID}}" script="install hotkey" aria-key-shortcuts="ArrowLeft">Next &raquo;</button>
 				</span>
 
 				<span class="button-group">
@@ -26,7 +26,7 @@
 
 				<span class="button-group">
 					<a href="{{$message.URL}}" target="_blank" class="button">{{icon "globe"}} Website</a>
-					<a hx-get="/@me/inbox/message-code?messageId={{$message.ID}}&followingId={{$followingID}}" class="button">{{icon "braces"}} Code</a>
+					<a hx-get="/@me/newsfeed/message-code?messageId={{$message.ID}}&followingId={{$followingID}}" class="button">{{icon "braces"}} Code</a>
 				</span>
 			</div>
 
@@ -48,7 +48,7 @@
 
 		<div class="margin-bottom">
 			{{- if $inReplyTo.NotNil -}}
-				<div role="link" class="italics text-sm link" hx-get="/@me/inbox/message?messageId={{$message.ID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$inReplyTo.ID}}">
+				<div role="link" class="italics text-sm link" hx-get="/@me/newsfeed/message?messageId={{$message.ID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$inReplyTo.ID}}">
 					{{icon "reply-fill"}} Replying to {{$inReplyToAttributedTo.Name}}...
 				</div>
 			{{- else -}}
@@ -62,7 +62,7 @@
 
 		{{- if $attributedTo.NotEmpty -}}
 
-			<div hx-get="/@me/inbox/browse-actor?url={{$attributedTo.ID}}" class="flex-row flex-align-center margin-bottom clickable">
+			<div hx-get="/@me/newsfeed/browse-actor?url={{$attributedTo.ID}}" class="flex-row flex-align-center margin-bottom clickable">
 				{{- if $attributedTo.Icon.NotNil -}}
 					<img src="{{$attributedTo.Icon.Href}}" class="circle width-48">
 				{{- end -}}
@@ -108,7 +108,7 @@
 
 	</div>
 
-	<div hx-get="/@me/inbox/responses-replies?messageId={{$message.ID}}&url={{$url}}" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+	<div hx-get="/@me/newsfeed/responses-replies?messageId={{$message.ID}}&url={{$url}}" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 		<span class="spin">{{icon "loading"}}</span> Loading Replies
 	</div>
 

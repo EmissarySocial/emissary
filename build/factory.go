@@ -43,10 +43,10 @@ type Factory interface {
 	Identity() *service.Identity
 	Import() *service.Import
 	ImportItem() *service.ImportItem
-	Inbox() *service.Inbox
 	Mention() *service.Mention
 	MerchantAccount() *service.MerchantAccount
 	MLSKeyPackage() *service.KeyPackage
+	NewsFeed() *service.NewsFeed
 	Outbox() *service.Outbox
 	Permission() *service.Permission
 	Product() *service.Product

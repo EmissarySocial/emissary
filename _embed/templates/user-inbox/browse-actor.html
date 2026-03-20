@@ -16,8 +16,8 @@
 			</span>
 		{{- end -}}
 
-		<button role="tab" hx-get="/@me/inbox/browse-actor?url={{$url}}&search={{$search}}&folderId={{$folderID}}" aria-selected="true">{{icon "person"}} Profile</button>
-		<button role="tab" hx-get="/@me/inbox/annotation?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "note"}} Notes</button>
+		<button role="tab" hx-get="/@me/newsfeed/browse-actor?url={{$url}}&search={{$search}}&folderId={{$folderID}}" aria-selected="true">{{icon "person"}} Profile</button>
+		<button role="tab" hx-get="/@me/newsfeed/annotation?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "note"}} Notes</button>
 
 		{{ if $following.IsNew -}}
 			<button role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "add"}} Follow</button>
@@ -59,7 +59,7 @@
 		<div class="width-64 flex-shrink-0"></div>
 		<div class="text-sm">
 			<!--
-			<button hx-get="/@me/inbox/conversation-new?actorId={{$actor.ID}}" class="primary">{{icon "chat"}} Direct Message</button>
+			<button hx-get="/@me/newsfeed/conversation-new?actorId={{$actor.ID}}" class="primary">{{icon "chat"}} Direct Message</button>
 			-->
 			<a class="button outline" href="{{$actor.ID}}" target="_blank">{{icon "globe"}} Website</a>
 		</div>
@@ -94,7 +94,7 @@
 	{{- $featured := $actor.Featured.String -}}
 	{{- if ne "" $featured -}}
 		<div
-			hx-get="/@me/inbox/browse-actor-featured?collection={{$featured}}"
+			hx-get="/@me/newsfeed/browse-actor-featured?collection={{$featured}}"
 			hx-trigger="load"
 			hx-target="this"
 			hx-swap="outerHTML"
