@@ -32,11 +32,12 @@ type Domain struct {
 	domain              model.Domain
 	funcMap             template.FuncMap
 	newSession          func(time.Duration) (data.Session, context.CancelFunc, error)
-	hostname            string
 	providerService     *Provider
 	registrationService *Registration
 	themeService        *Theme
 	userService         *User
+	hostname            string
+	host                string
 }
 
 // NewDomain returns a fully initialized Domain service
@@ -59,12 +60,13 @@ func (service *Domain) Refresh(factory *Factory) {
 	service.configuration = factory.config
 	service.connectionService = factory.Connection()
 	service.funcMap = factory.FuncMap()
-	service.hostname = factory.Hostname()
 	service.newSession = factory.Session
 	service.providerService = factory.Provider()
 	service.registrationService = factory.Registration()
 	service.themeService = factory.Theme()
 	service.userService = factory.User()
+	service.hostname = factory.Hostname()
+	service.host = factory.Host()
 }
 
 // Start initializes the database, by:
