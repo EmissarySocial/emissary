@@ -195,6 +195,7 @@ func locateObjectFromURL(host string, value string) (string, string) {
 	// Identify Username-type values
 	if value, found := strings.CutSuffix(value, "@"+hostname); found {
 
+		// Remove leading "@" if present
 		value = strings.TrimPrefix(value, "@")
 
 		// Special case for "Application" account
@@ -233,7 +234,7 @@ func locateObjectFromURL(host string, value string) (string, string) {
 			return model.ActorTypeApplication, ""
 		}
 
-		// Identify Gloabl Search actor
+		// Identify Global Search actor
 		if value == "@search" {
 			return model.ActorTypeSearchDomain, ""
 		}
@@ -253,5 +254,7 @@ func locateObjectFromURL(host string, value string) (string, string) {
 		return model.ActorTypeStream, value
 	}
 
-	return "", ""
+	// Last chance, assume we have a "naked" username. Try to
+	// find the user by looking up "value@hostname".
+	return locateObjectFromURL(host, value+"@"+hostname)
 }

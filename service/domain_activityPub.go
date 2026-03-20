@@ -5,10 +5,10 @@ import (
 	"crypto/rsa"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/camper"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/sigs"
 	"github.com/benpate/hannibal/vocab"
@@ -26,7 +26,7 @@ func (service *Domain) Hostname() string {
 
 // Host returns the host (with protocol)
 func (service *Domain) Host() string {
-	return dt.AddProtocol(service.hostname)
+	return service.host
 }
 
 func (service *Domain) GetJSONLD(session data.Session) (mapof.Any, error) {
@@ -73,7 +73,7 @@ func (service *Domain) GetJSONLD(session data.Session) (mapof.Any, error) {
 
 // ActorID returns the URL for this domain/actor
 func (service *Domain) ActorID() string {
-	return dt.AddProtocol(service.hostname) + "/@application"
+	return service.host + "/@application"
 }
 
 // PublicKeyID returns the URL for the public key for this domain/actor
@@ -167,7 +167,27 @@ func (service *Domain) WebFinger() digit.Resource {
 	result := digit.NewResource("acct:application@"+service.Hostname()).
 		Alias(service.ActorID()).
 		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, service.ActorID()).
-		Link(digit.RelationTypeProfile, model.MimeTypeHTML, service.ActorID())
+		Link(digit.RelationTypeProfile, model.MimeTypeHTML, service.ActorID()).
+		Link(camper.IntentTypeCreate, "", service.CreateIntentURL()).
+		Link(camper.IntentTypeDislike, "", service.DislikeIntentURL()).
+		Link(camper.IntentTypeFollow, "", service.FollowIntentURL()).
+		Link(camper.IntentTypeLike, "", service.LikeIntentURL())
 
 	return result
+}
+
+func (service *Domain) CreateIntentURL() string {
+	return service.host + "/@me/intent/create?type={type}&name={name}&summary={summary}&content={content}&inReplyTo={inReplyTo}&on-success={on-success}&on-cancel={on-cancel}"
+}
+
+func (service *Domain) DislikeIntentURL() string {
+	return service.host + "/@me/intent/dislike?object={object}&on-success={on-success}&on-cancel={on-cancel}"
+}
+
+func (service *Domain) FollowIntentURL() string {
+	return service.host + "/@me/intent/follow?object={object}&on-success={on-success}&on-cancel={on-cancel}"
+}
+
+func (service *Domain) LikeIntentURL() string {
+	return service.host + "/@me/intent/like?object={object}&on-success={on-success}&on-cancel={on-cancel}"
 }
