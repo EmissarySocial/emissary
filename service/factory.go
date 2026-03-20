@@ -244,6 +244,7 @@ func (factory *Factory) Refresh(domain config.Domain, attachmentOriginals afero.
 			factory.Theme(),
 			factory.User(),
 			FuncMap(factory.Icons()),
+			factory.Host(),
 			factory.Hostname(),
 		)
 

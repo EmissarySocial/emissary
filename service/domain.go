@@ -35,6 +35,7 @@ type Domain struct {
 	userService         *User
 	funcMap             template.FuncMap
 	domain              model.Domain
+	host                string // host with protocol (https://example.com)
 	hostname            string // domain-only name (no protocol)
 	ready               bool
 }
@@ -55,7 +56,7 @@ func (service *Domain) collection(session data.Session) data.Collection {
 }
 
 // Refresh updates any stateful data that is cached inside this service.
-func (service *Domain) Refresh(configuration config.Domain, connectionService *Connection, providerService *Provider, registrationService *Registration, themeService *Theme, userService *User, funcMap template.FuncMap, hostname string) {
+func (service *Domain) Refresh(configuration config.Domain, connectionService *Connection, providerService *Provider, registrationService *Registration, themeService *Theme, userService *User, funcMap template.FuncMap, host string, hostname string) {
 
 	service.configuration = configuration
 	service.connectionService = connectionService
@@ -64,6 +65,7 @@ func (service *Domain) Refresh(configuration config.Domain, connectionService *C
 	service.themeService = themeService
 	service.userService = userService
 	service.funcMap = funcMap
+	service.host = host
 	service.hostname = hostname
 
 	service.ready = true
