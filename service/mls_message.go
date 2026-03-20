@@ -183,10 +183,8 @@ func (service *MLSMessage) RangeByUser(session data.Session, userID primitive.Ob
  ******************************************/
 
 // CollectionID returns the identifier function for this collection
-func (service *MLSMessage) CollectionID(userID primitive.ObjectID) collection.IdentifierFunc {
-	return func() string {
-		return service.host + "/@" + userID.Hex() + "/pub/mls/messages"
-	}
+func (service *MLSMessage) CollectionID(userID primitive.ObjectID) string {
+	return service.host + "/@" + userID.Hex() + "/pub/mls/messages"
 }
 
 // CollectionCount returns the counter function for this collection
