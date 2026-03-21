@@ -66,9 +66,6 @@ func (user *User) GetPointer(name string) (any, bool) {
 	case "isPublic":
 		return &user.IsPublic, true
 
-	case "isBridgeBluesky":
-		return &user.IsBridgeBluesky, true
-
 	case "isIndexable":
 		return &user.IsIndexable, true
 
@@ -151,6 +148,18 @@ func (user *User) GetStringOK(name string) (string, bool) {
 	}
 }
 
+func (user *User) GetBoolOK(name string) (bool, bool) {
+
+	switch name {
+
+	case "isBridgeBluesky":
+		return user.IsBridgeBluesky.Value(), true
+
+	default:
+		return false, false
+	}
+}
+
 func (user *User) SetString(name string, value string) bool {
 
 	switch name {
@@ -191,6 +200,18 @@ func (user *User) SetString(name string, value string) bool {
 	case "imageUrl":
 		return true // Fail silently, but do not set imageUrl from this string
 
+	}
+
+	return false
+}
+
+func (user *User) SetBool(name string, value bool) bool {
+
+	switch name {
+
+	case "isBridgeBluesky":
+		user.IsBridgeBluesky.Set(value)
+		return true
 	}
 
 	return false
