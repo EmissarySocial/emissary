@@ -35,6 +35,16 @@ behavior MediaPlayer
 		if the :image is not null then
 			set the :image's @data-original to the :image's @src
 		end
+
+		-- MediaSession API
+		if navigator.mediaSession is not null then
+			navigator.mediaSession.setActionHandler("play", doEvent(me, "Play"))
+			navigator.mediaSession.setActionHandler("pause", doEvent(me, "Pause"))
+			navigator.mediaSession.setActionHandler("stop", doEvent(me, "Pause"))
+			navigator.mediaSession.setActionHandler("previoustrack", doEvent(me, "Prev"))
+			navigator.mediaSession.setActionHandler("nexttrack", doEvent(me, "Next"))
+			set navigator.mediaSession.playbackState to "paused"
+		end
 	end
 
 	on click from <.media-Play /> in me
@@ -158,6 +168,18 @@ behavior MediaPlayer
 			set the :image's @src to (the trackElement's @data-track-image or the :image's @data-original)
 		end
 
+		if navigator.mediaSession is not undefined then
+			make a MediaMetadata called metadata
+			set metadata.title to (the trackElement's @data-track-name or "")
+			set metadata.artist to (the trackElement's @data-track-artist or "")
+			set metadata.album to (the trackElement's @data-track-album or "")
+			set artworkItem to {type:"image/webp", sizes:"512x512", src: ((the trackElement's @data-track-image + ".webp?width=512&height=512") or "")}
+			set metadata.artwork to [artworkItem]
+
+			set navigator.mediaSession.metadata to metadata
+			set navigator.mediaSession.playbackState to "playing"
+		end
+
 	end
 
 	on Seek(percent)
@@ -195,6 +217,10 @@ behavior MediaPlayer
 		if the :image is not null then
 			set the :image's @src to the :image's @data-original
 		end
+
+		if navigator.mediaSession is not undefined then
+			set navigator.mediaSession.playbackState to "paused"
+		end
 	end
 
 	on Prev
@@ -214,4 +240,13 @@ behavior MediaPlayer
 		end
 	end
 
+end
+
+js
+	function doEvent(node, eventName) {
+		return function() {
+			var event = new CustomEvent(eventName, {detail: {}});
+			node.dispatchEvent(event);
+		}
+	}
 end
