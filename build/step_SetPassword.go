@@ -21,11 +21,21 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 
 	const location = "build.StepSetPassword.Post"
 
+	response := builder.response()
+
 	// Collect form POST information
 	transaction, err := formdata.Parse(builder.request())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error parsing form data"))
+	}
+
+	// RULE: Verify that the current password is correct before allowing the user to set a new password
+	currentPassword := transaction.Get("current_password")
+
+	if currentPassword == "" {
+		err := WrapInlineError(response, derp.Validation("Current password is required"))
+		return Halt().WithError(err)
 	}
 
 	// RULE: Verify that the user is trying to set a new password
@@ -38,7 +48,8 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	// RULE (Optional): If a confirmation password is provided, verify that it matches the new password
 	if confirmPassword := transaction.Get("confirm_password"); confirmPassword != "" {
 		if newPassword != confirmPassword {
-			return Halt().WithError(derp.Validation("New password must match the confirmation password"))
+			err := WrapInlineError(response, derp.Validation("New password must match the confirmation password"))
+			return Halt().WithError(err)
 		}
 	}
 
@@ -48,7 +59,8 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	authorization := builder.authorization()
 
 	if !authorization.IsAuthenticated() {
-		return Halt().WithError(derp.Unauthorized(location, "You must be signed in to change your password"))
+		err := WrapInlineError(response, derp.Unauthorized(location, "You must be signed in to change your password"))
+		return Halt().WithError(err)
 	}
 
 	// Load the User from the database
@@ -56,17 +68,26 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	user := model.NewUser()
 
 	if err := userService.LoadByID(builder.session(), authorization.UserID, &user); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to load user"))
+		err := WrapInlineError(response, derp.Wrap(err, location, "Unable to load user"))
+		return Halt().WithError(err)
+	}
+
+	// Verify that the current password is correct before allowing the user to set a new password
+	if matches, _ := steranko.ComparePassword(currentPassword, user.Password); !matches {
+		err := WrapInlineError(response, derp.Validation("Current password is incorrect"))
+		return Halt().WithError(err)
 	}
 
 	// Update the User's password using Steranko's default password hashing algorithm
 	if err := steranko.SetPassword(&user, newPassword); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to set password"))
+		err := WrapInlineError(response, derp.Wrap(err, location, "Unable to set password"))
+		return Halt().WithError(err)
 	}
 
 	// Save the User back to the database
 	if err := userService.Save(builder.session(), &user, "Password changed"); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to save user"))
+		err := WrapInlineError(response, derp.Wrap(err, location, "Unable to save user"))
+		return Halt().WithError(err)
 	}
 
 	// Silence is AU-some

@@ -797,12 +797,13 @@
 					type:layout-vertical
 					children:[
 						{type:"html", description:"<div class='text-lg bold'>Change Password</div>"}
-						{type:"password", path:"new_password", label:"Your New Password", description:"At least 8 characters. Please use a Password Manager. (PRIVATE)"}
-						{type:"password", path:"confirm_password", label:"Confirm New Password", description:"Re-enter to make sure you haven't mis-typed your password."}
+						{type:"password", path:"current_password", label:"Current Password", description:"Enter your current password. (PRIVATE)", options:{required:true}}
+						{type:"password", path:"new_password", label:"Your New Password", description:"At least 8 characters. Please use a Password Manager. (PRIVATE)", options:{required:true}}
+						{type:"password", path:"confirm_password", label:"Confirm New Password", description:"Re-enter to make sure you haven't mis-typed your password.", options:{required:true}}
 					]	
 				}}
 				{do:"set-password"}
-				{do: "inline-save-button"}
+				{do:"inline-save-button"}
 			]
 		}
 
