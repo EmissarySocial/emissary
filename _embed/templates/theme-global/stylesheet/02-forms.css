@@ -299,7 +299,7 @@ button,
 	margin-top: 0px;
 	margin-left: 0px;
 	margin-bottom: 0px;
-	margin-right: calc(var(--rhythm) / 2);
+	margin-right: calc(var(--rhythm) * 0.5);
 	box-sizing: border-box;
 	width: auto;
 	display: inline-block;
@@ -309,7 +309,7 @@ button,
 	padding-left: calc(var(--rhythm) * 2);
 	padding-right: calc(var(--rhythm) * 2);
 	background-color: var(--gray10);
-	border-radius: calc(var(--rhythm) / 2);
+	border-radius: calc(var(--rhythm));
 	border: none;
 	color: var(--gray90);
 	text-align: left;
@@ -326,6 +326,7 @@ button.text-sm,
 .button.text-sm {
 	font-size: calc(var(--rhythm) * 1.6);
 	padding: calc(var(--rhythm) * 0.75) calc(var(--rhythm) * 1.25);
+	border-radius: calc(var(--rhythm) * 0.75);
 }
 
 .text-xs button,
@@ -334,6 +335,7 @@ button.text-xs,
 .button.text-xs {
 	font-size: calc(var(--rhythm) * 1.5);
 	padding: calc(var(--rhythm) * 0.5) calc(var(--rhythm) * 0.75);
+	border-radius: calc(var(--rhythm) * 0.5);
 }
 
 button:hover,
