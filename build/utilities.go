@@ -155,6 +155,13 @@ func WrapForm(endpoint string, content string, encoding string, options ...strin
 		b.Close()
 	}
 
+	if nextURL := optionMap.GetString("next"); nextURL != "" {
+		nextLabel := first.String(optionMap.GetString("next-label"), "Next")
+		b.Div()
+		b.A(nextURL).InnerHTML(nextLabel).Close()
+		b.Close()
+	}
+
 	// Done
 	b.CloseAll()
 

@@ -39,7 +39,7 @@ func (step StepSetCircleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 	// Calculate the value object for this step
 	value := step.calculateValue(streamBuilder._stream)
 	schema := step.schema()
-	element, err := step.form()
+	element, err := step.form(builder.lookupProvider())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to build form for StepSetCircleSharing"))
@@ -51,11 +51,8 @@ func (step StepSetCircleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 	b := html.New()
 
 	// Heading
-	b.Div().Class("flex-row", "flex-align-center")
 	b.H2().Class("margin-none", "flex-grow").InnerText(step.Title).Close()
-	b.A("/@me/settings/circles").InnerHTML("Manage Circles &rarr;").Close()
-	b.Close()
-	b.H3().InnerText(step.Message).Close()
+	b.Div().Class("margin-top-sm text-lg margin-bottom-lg").InnerText(step.Message).Close()
 
 	formHTML, err := f.Editor(value, builder.lookupProvider())
 
@@ -66,7 +63,14 @@ func (step StepSetCircleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 	b.WriteString(formHTML)
 	b.CloseAll()
 
-	result := WrapForm(builder.URL(), b.String(), "application/x-www-form-urlencoded", "submit-label:"+step.Button)
+	result := WrapForm(
+		builder.URL(),
+		b.String(),
+		"application/x-www-form-urlencoded",
+		"submit-label:"+step.Button,
+		"next:"+"/@me/settings/circles",
+		"next-label:Manage Circles &rarr;",
+	)
 
 	// Write the result to the buffer
 	if _, err := io.WriteString(buffer, result); err != nil {
@@ -143,10 +147,10 @@ func (step StepSetCircleSharing) schema() schema.Schema {
 }
 
 // form returns the form to be displayed
-func (step StepSetCircleSharing) form() (form.Element, error) {
+func (step StepSetCircleSharing) form(lookupProvider form.LookupProvider) (form.Element, error) {
 
 	// Build the form element
-	return form.Element{
+	result := form.Element{
 		Type: "layout-vertical",
 		Children: []form.Element{
 			{
@@ -161,18 +165,37 @@ func (step StepSetCircleSharing) form() (form.Element, error) {
 					"script": "on change if my.checked tell .checkbutton-circle set your.checked to false end else set my.checked to true",
 				},
 			},
-			{
-				Type:  "check-button-group",
-				Path:  "circles",
-				Label: "These Circles Only",
-				Options: mapof.Any{
-					"class":    "checkbutton-circle",
-					"provider": "circles",
-					"script":   "on change if my.checked then set .checkbutton-public.checked to false",
-				},
-			},
 		},
-	}, nil
+	}
+
+	// If circles are defined, then include this option here.
+	if circles := lookupProvider.Group("circles").Get(); len(circles) > 0 {
+		result.Children = append(result.Children, form.Element{
+			Type:  "check-button-group",
+			Path:  "circles",
+			Label: "These Circles Only",
+			Options: mapof.Any{
+				"class":    "checkbutton-circle",
+				"provider": "circles",
+				"script":   "on change if my.checked then set .checkbutton-public.checked to false",
+			},
+		})
+
+		return result, nil
+	}
+
+	// Otherwise, add a message about no circles being available
+	result.Children = append(result.Children, form.Element{
+		Type:        "check-button",
+		Label:       "No Circles Defined",
+		Description: "Create circles to share this content with specific groups of people.",
+		Options: mapof.Any{
+			"icon":     "circle",
+			"disabled": true,
+		},
+	})
+
+	return result, nil
 }
 
 func (step StepSetCircleSharing) calculateValue(stream *model.Stream) mapof.Object[id.Slice] {
