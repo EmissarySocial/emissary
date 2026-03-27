@@ -30,14 +30,6 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		return Halt().WithError(derp.Wrap(err, location, "Error parsing form data"))
 	}
 
-	// RULE: Verify that the current password is correct before allowing the user to set a new password
-	currentPassword := transaction.Get("current_password")
-
-	if currentPassword == "" {
-		err := WrapInlineError(response, derp.Validation("Current password is required"))
-		return Halt().WithError(err)
-	}
-
 	// RULE: Verify that the user is trying to set a new password
 	newPassword := transaction.Get("new_password")
 
@@ -72,10 +64,22 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		return Halt().WithError(err)
 	}
 
-	// Verify that the current password is correct before allowing the user to set a new password
-	if matches, _ := steranko.ComparePassword(currentPassword, user.Password); !matches {
-		err := WrapInlineError(response, derp.Validation("Current password is incorrect"))
-		return Halt().WithError(err)
+	// RULE: IF the user already has a password, then they must verify it before creating a new one
+	if user.Password != "" {
+
+		currentPassword := transaction.Get("current_password")
+
+		// RULE: Current password cannot be blank
+		if currentPassword == "" {
+			err := WrapInlineError(response, derp.Validation("Current password is required"))
+			return Halt().WithError(err)
+		}
+
+		// RULE: Verify that the current password matches the database before allowing the user to continue.
+		if matches, _ := steranko.ComparePassword(currentPassword, user.Password); !matches {
+			err := WrapInlineError(response, derp.Validation("Current password is incorrect"))
+			return Halt().WithError(err)
+		}
 	}
 
 	// Update the User's password using Steranko's default password hashing algorithm
