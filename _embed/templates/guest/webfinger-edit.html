@@ -1,0 +1,41 @@
+<h1>⁂ Fediverse Username</h1>
+
+<div class="alert-gray margin-bottom-lg">
+	Enter a new Fediverse Username to replace your current one.  We'll send you a verification email to complete the change.<br>
+	<br>
+	This will replace your current username and all purchases made with it.  To access any purchases you've made so far, you'll need to sign in 
+	again with your old username.
+</div>
+
+<form hx-post="/@guest/identifier" hx-push-url="false">
+
+	<div class="layout-vertical">
+		<div class="layout-elements">
+			<div class="layout-element">
+				<label for="email">New Fediverse Username</label>
+				<input type="hidden" name="identifierType" value="WEBFINGER">
+				<input type="text" id="email" name="identifier" value="{{.WebfingerUsername}}" pattern="^@[^@]+@[^@]+\.[^@]+$" aria-labelledby="identifier-label" aria-describedby="identifier-label" required="true" autocomplete="none" data-1p-ignore="true" autofocus="true" tabindex="0">
+				<div id="identifier-label" class="text-sm gray40">Enter username AND server, e.g. @username@server.social</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="margin-top-lg flex-row flex-align-center">
+		<button type="submit" class="primary htmx-request-hide">Set My Username</button>
+		<button type="submit" class="primary htmx-request-show" disabled>
+			<span class="spin">{{icon "loading"}}</span>
+			Sending Code
+		</button>
+		<button type="button" script="on click trigger closeModal">Cancel</button>
+		<span id="htmx-response-message" class="flex-grow"></span>
+
+		<span class="align-right">
+			<span 
+				class="text-red clickable" 
+				hx-post="/@guest/identifier"
+				hx-vals='{"identifierType": "WEBFINGER","identifier": ""}'
+				hx-confirm="This will remove your Fediverse Username from this guest identity. Are you sure you want to continue?"
+			>Remove Username</span>
+		</span>
+	</div>
+</form>

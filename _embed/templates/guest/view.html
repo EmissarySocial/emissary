@@ -18,21 +18,30 @@
 	{{- end -}}
 
 	<div class="app-content padding">
-		<h1 class="flex-row text-xl margin-none margin-bottom-lg">
+		<h1 class="flex-row text-xl margin-top margin-bottom-sm">
 			{{- if not $isDesktop -}}
 				<a href="/@me/settings/mobile">{{icon "back"}}</a>
 			{{- end -}}
 			<span class="flex-grow bold">Guest Profile</span>
 		</h1>
 
-		<div class="margin-top rounded card padding flex-row flex-align-start max-width-640" style="overflow-x:hidden;">
-			<div class="margin-horizontal">
-				<span style="font-size:64px;">{{icon "person-circle"}}</span>
+		{{- if not $hasWebfingerUsername -}}
+			<div class="card padding max-width-640 margin-bottom-lg">
+				<div class="text-blue text-lg bold margin-top-none">One More Step To Go ⁂</div>
+				<div class="margin-vertical-sm margin-bottom">
+					You must connect a Fediverse username in order to access your purchases
+					and receive updates from the people you follow.
+				</div>
+
+				<button hx-get="/@guest/webfinger" class="primary">Add Your Fediverse Username</button>
 			</div>
+		{{- end -}}
+
+		<div class="rounded card padding flex-row flex-align-start max-width-640" style="overflow-x:hidden;">
 
 			<div class="flex-column flex-align-stretch flex-grow table">
 				<div hx-get="/@guest/edit" class="clickable flex-row flex-align-center">
-					<div class="flex-grow text-lg bold margin-none margin-right-sm">{{.Name}}</div>
+					<div class="flex-grow bold margin-none margin-right-sm">{{.Name}}</div>
 					{{- if $isDesktop -}}
 						<span class="button text-xs">change</span>
 					{{- end -}}
@@ -40,11 +49,11 @@
 
 				<div hx-get="/@guest/webfinger" class="clickable flex-row flex-align-center">
 					<div class="flex-grow margin-right-sm ellipsis">
-						{{icon "fediverse"}} 
+						⁂
 						{{ if $hasWebfingerUsername -}}
 							{{.WebfingerUsername}}
 						{{- else -}}
-							<span class="text-green">Add Your Fediverse Handle</span>
+							<span class="text-light-gray">Fediverse username</span>
 						{{- end -}}
 					</div>
 					{{- if $isDesktop -}}
@@ -64,7 +73,7 @@
 						{{ if .HasEmailAddress -}}
 							{{.EmailAddress}}
 						{{- else -}}
-							<span class="text-green">Add Your Email Address</span>
+							<span class="text-light-gray">Email Address</span>
 						{{- end -}}
 					</div>
 
@@ -89,36 +98,32 @@
 		</div>
 
 		{{- if $privileges.IsEmpty -}}
-			<h1 class="text-xl bold margin-top-xl">No Purchases</h1>
-			You haven't made any purchases on this server yet.
+			<h1 class="text-xl bold margin-top-lg">No Purchases</h1>
+			You haven't made any purchases on this server.
 		{{- else -}}
 
 			{{- $privilegedStreams := .PrivilegedStreams $privileges -}}
-			<h1 class="text-xl bold margin-top-xl">My Purchases</h1>
+			<h1 class="text-xl bold margin-top-lg">My Purchases</h1>
 
-			<table class="table">
-				{{- range $index, $privilege := $privileges -}}
-					<tr>
-						<td class="padding-vertical width-33%">
-							<div class="bold text-lg margin-none">{{ $privilege.Name }}</div>
-							<div class="text-sm text-light-gray">{{ $privilege.PriceDescription }}</div>
-							<div class="text-sm text-light-gray margin-bottom">{{ $privilege.CreateDate | shortDate }}</div>
+			<div class="card max-width-640 padding">
 
-							{{- if $privilege.IsRecurring -}}
-								<span class="link" hx-get="/@guest/delete/{{$privilege.ID}}">Cancel Subscription</span>
-							{{- else -}}
-								<span class="link" hx-get="/@guest/delete/{{$privilege.ID}}">Refund Info</span>
-							{{- end -}}
-						</td>
-						<td class="padding width-66%">
+				<table class="table margin-bottom-none">
+					{{- range $index, $privilege := $privileges -}}
+						<tr>
+							<td class="padding-vertical width-50%">
+								<div class="bold text-lg margin-none">{{ $privilege.Name }}</div>
+								<div class="text-sm text-light-gray">{{ $privilege.PriceDescription }}</div>
+								<div class="text-sm text-light-gray margin-bottom">{{ $privilege.CreateDate | shortDate }}</div>
 
-							{{- if $privilege.IsCircle -}}
-								<div class="md:flex-row">
+								{{- if $privilege.IsRecurring -}}
+									<span class="link" hx-get="/@guest/delete/{{$privilege.ID}}">Cancel Subscription</span>
+								{{- else -}}
+									<span class="link" hx-get="/@guest/delete/{{$privilege.ID}}">Refund Info</span>
+								{{- end -}}
+							</td>
+							<td class="padding-vertical width-50%">								
 
-									<div class="margin-right margin-bottom">
-										<div class="rounded square width-96"></div>
-									</div>
-
+								{{- if $privilege.IsCircle -}}
 									<div class="margin-bottom">
 										{{- if $hasWebfingerUsername -}}
 											<div>
@@ -126,25 +131,25 @@
 												<div class="text-gray">You'll receive new posts in your inbox: {{$webfingerUsername}}</div>
 											</div>
 										{{- else -}}
-											<button class="primary padding-vertical-sm margin-bottom-sm" hx-get="/@guest/webfinger">Add Your Fediverse Handle &rarr;</button>
 											<div class="text-sm text-light-gray">
-												Get fast updates in your inbox when you connect this subscription to your Fediverse Handle.
+												{{icon "alert-fill"}} Receive updates in your inbox when you connect this subscription to your <span role="link" class="link primary padding-vertical-sm margin-bottom-sm" hx-get="/@guest/webfinger">Fediverse Username</span>.
 											</div>
 										{{- end -}}
 									</div>
-								</div>
-							{{- end -}}
-							
-							{{- range $index, $compoundID := $privilege.CompoundIDs -}}
-								{{- $streamIDs := index $privilegedStreams $compoundID -}}
-								{{- range $index, $streamID := $streamIDs -}}
-									<div hx-get="/{{$streamID.Hex}}/paid-content" hx-trigger="revealed" hx-target="this" hx-swap="innerHTML" hx-push-url="false"></div>
 								{{- end -}}
-							{{- end -}}
-						</td>
-					</tr>
-				{{- end -}}
-			</table>
+
+								{{- range $index, $compoundID := $privilege.CompoundIDs -}}
+									{{- $streamIDs := index $privilegedStreams $compoundID -}}
+									{{- range $index, $streamID := $streamIDs -}}
+										<div hx-get="/{{$streamID.Hex}}/paid-content" hx-trigger="revealed" hx-target="this" hx-swap="innerHTML" hx-push-url="false"></div>
+									{{- end -}}
+								{{- end -}}
+							</td>
+						</tr>
+					{{- end -}}
+				</table>
+
+			</div>
 			
 		{{- end -}}
 

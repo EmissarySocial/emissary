@@ -1,0 +1,90 @@
+<h1>⁂ Fediverse Username</h1>
+
+<div class="card margin-bottom-sm accordion">
+	<label for="accordion-fediverse" class="padding clickable bold block">
+		<input id="accordion-fediverse" type="radio" name="accordion" checked script="on click focus() the #join-button">
+		Join the Fediverse
+	</label>
+	<div class="details">
+		<div class="padding padding-top-none">
+
+			<div class="margin-bottom-lg">
+				Join the free, global community without ads, tracking, or algorithms.
+				You'll need a Fediverse account to receive updates from the people you follow.
+				<a href="https://fediverse.info" target="_blank">Learn More &rarr;</a>
+			</div>
+
+			<div class="margin-top-lg flex-column flex-align-center">
+
+				<div class="align-center margin-vertical-sm text-sm text-gray">
+					Recommended Server
+				</div>
+
+				<a id="join-button" href="https://joinmastodon.org" class="button primary margin-none" target="_blank" style="font-size:24px;">
+					Join Mastodon.social &rarr;
+				</a>
+				<div class="align-center margin-top text-sm text-gray">
+					<a href="https://joinmastodon.org/servers" target="_blank">or choose from many others</a>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="card margin-bottom-sm accordion">
+	<label for="accordion-join" class="clickable block bold padding">
+		<input id="accordion-join" type="radio" name="accordion" script="on click wait 100ms then focus() the #identifier-webfinger">
+		I'm already on the Fediverse
+	</label>
+	<div class="details">
+		<form hx-post="/@guest/identifier" hx-push-url="false" class="height-100%">
+			<div class="padding padding-top-none flex-column flex-justify-between flex-align-stretch height-100%">
+
+				<div>
+					Enter your Fediverse username below. We'll send a direct message to your account with a code to make sure it's really you.
+				</div>
+
+				<div class="layout-vertical">
+					<div class="layout-elements">
+						<div class="layout-element">
+							<input type="hidden" name="identifierType" value="WEBFINGER">
+							<input type="text" id="identifier-webfinger" name="identifier" value="{{.WebfingerUsername}}" pattern="^@[^@]+@[^@]+\.[^@]+$" aria-labelledby="identifier-label" aria-describedby="identifier-label" required="true" autocomplete="none" data-1p-ignore="true" autofocus="true" tabindex="0">
+							<div id="identifier-label" class="text-sm gray40">Username AND server, e.g. @username@server.social</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="flex-row flex-align-center">
+					<button type="submit" class="primary htmx-request-hide">Set My Username</button>
+					<button type="submit" class="primary htmx-request-show" disabled>
+						<span class="spin">{{icon "loading"}}</span>
+						Sending Code
+					</button>
+					<button type="button" script="on click trigger closeModal">Cancel</button>
+					<span id="htmx-response-message" class="flex-grow"></span>
+				</div>		
+			</div>
+		</form>
+	</div>
+</div>
+
+<style>
+
+	.accordion {
+
+		& > .details {
+			height:0px;
+			overflow:hidden;
+			opacity:0;
+			transition: height 300ms, opacity 300ms, overflow 1ms 300ms;
+		}
+
+		&:has(input:checked) > .details {
+			height: 280px;
+			overflow:visible;
+			opacity: 1;
+			transition: height 300ms, opacity 300ms, overflow 1ms 300ms;
+		}
+	}
+
+</style>
