@@ -23,9 +23,10 @@ func Version22(ctx context.Context, session *mongo.Database) error {
 	err := ForEachRecord(inbox, func(record mapof.Any) bool {
 		const location = "upgrade.Version22"
 
+		// Save the record to the NewsFeed
 		if _, err := newsFeed.InsertOne(ctx, record); err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to copy Inbox record to NewsFeed", record["_id"]))
-			return false
+			// DO NOT FAIL THE ENTIRE UPGRADE IF ONE RECORD FAILS TO COPY. Just skip it and move on to the next one.
 		}
 
 		return true
