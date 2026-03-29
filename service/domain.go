@@ -123,13 +123,16 @@ func (service *Domain) Start() error {
 		}
 	}
 
-	// Once we have the domain loaded, try to upgrade the database
-	if err := queries.UpgradeMongoDB(service.configuration.ConnectString, service.configuration.DatabaseName, &service.domain); err != nil {
-		return derp.Wrap(err, location, "Domain Not Ready: Error upgrading domain record")
-	}
-
-	// Update indexes asynchronously
+	// ASYNC: Update database tables and indexes
 	go func() {
+
+		// Once we have the domain loaded, try to upgrade the database
+		if err := queries.UpgradeMongoDB(service.configuration.ConnectString, service.configuration.DatabaseName, &service.domain); err != nil {
+			derp.Report(derp.Wrap(err, location, "Domain Not Ready: Error upgrading domain record"))
+			return
+		}
+
+		// After any necessary upgrades, sync the indexes for the domain collection
 		if err := queries.SyncDomainIndexes(service.configuration.ConnectString, service.configuration.DatabaseName); err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to sync domain indexes", service.configuration, service.domain))
 		}
