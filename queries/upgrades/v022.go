@@ -25,8 +25,10 @@ func Version22(ctx context.Context, session *mongo.Database) error {
 
 		// Save the record to the NewsFeed
 		if _, err := newsFeed.InsertOne(ctx, record); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to copy Inbox record to NewsFeed", record["_id"]))
+			fmt.Printf(location+": Unable to copy Inbox record to NewsFeed: %v\n", err)
 			// DO NOT FAIL THE ENTIRE UPGRADE IF ONE RECORD FAILS TO COPY. Just skip it and move on to the next one.
+			// derp.Report(derp.Wrap(err, location, "Unable to copy Inbox record to NewsFeed", record["_id"]))
+			// return false
 		}
 
 		return true
