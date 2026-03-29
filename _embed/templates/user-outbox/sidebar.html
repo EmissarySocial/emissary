@@ -1,10 +1,10 @@
-<div id="app-sidebar" class="expanded">
+<div id="app-sidebar" style="min-width:300px; width:20%; max-width:400px; view-transition-name:unset">
 	
 	<link rel="canonical" class="u-url" href="{{.ProfileURL}}">
 
-	<div class="margin-bottom" style="position:relative;">
+	<div class="margin-bottom pos-relative hover-trigger">
 		{{- if .IsMyself -}}
-			<button type="button" hx-get="/@me/icon-edit" class="text-xs margin-vertical-none pos-absolute" style="top:0px; right:0px;">Edit</button>
+			<button type="button" hx-get="/@me/icon-edit" class="text-xs margin-vertical-none pos-absolute-top-right-0 hover-show">Edit</button>
 		{{- end -}}
 	
 		<div style="width:90%; max-width:200px; margin:0px auto;">
@@ -17,19 +17,23 @@
 	</div>
 
 	<div class="margin-bottom">
-		{{- if .IsMyself -}}
-			<button hx-get="/@me/edit" class="text-xs float-right">Edit</button>
-		{{- end -}}
-		
-		<h1 class="p-name margin-none">{{.DisplayName}}</h1>
-		<div script="install SelectText" class="text-sm gray50 ellipsis">@{{.Username}}@{{.Hostname}}</div>
+
+		<div class="pos-relative align-center hover-trigger">
+			{{- if .IsMyself -}}
+				<button hx-get="/@me/edit" class="hover-show text-xs pos-absolute-top-right-0">Edit</button>
+			{{- end -}}
+			
+			<h1 class="text-xl bold p-name margin-none align-center">{{.DisplayName}}</h1>
+		</div>
+
+		<div script="install SelectText" class="text-sm gray50 align-center ellipsis">@{{.Username}}@{{.Hostname}}</div>
 		{{- if not .Myself -}}
 			<div class="margin-top">
 				<button type="button" class="primary width-100% ellipsis" hx-get="/@{{.UserID}}/intent?intent=follow&object={{.Permalink}}">{{icon "add-circle"}} Follow {{.DisplayName}}</button>
 			</div>
 		{{- end -}}
 
-		<div class="margin-top">
+		<div class="margin-top-lg">
 			<span class="p-note">{{.StatusMessage}}</span>
 		</div>
 

@@ -1,5 +1,5 @@
 <!-- Page content -->
-<div class="app framed page h-card" script="init send SelectNav(id:'outbox')">
+<div class="app framed page h-card scroll-vertical" script="init send SelectNav(id:'outbox')">
 
 	<title>{{.DisplayName}}</title>
 
@@ -19,7 +19,7 @@
 
 	{{ .View "sidebar" }}
 
-	<div class="app-content">
+	<div class="app-content" style="view-transition-name:unset;">
 
 		<div role="tablist" class="underlined">
 			<span role="tab" aria-selected="true">Posts</span>
