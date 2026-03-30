@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../camperjs/src/utils.ts"],
+  "sourcesContent": ["// guessProtocol is a helper function to guess the correct protocol \n// to use (http or https) based on the server name\nexport function guessProtocol(server: string) {\n\n\tswitch (server) {\n\t\tcase \"localhost\":\n\t\tcase \"127.0.0.1\":\n\t\t\treturn \"http://\"\n\t}\n\n\treturn \"https://\"\n}\n\nexport function getPlaceholders(template: string) {\n\tconst matches = template.match(/\\{([^}]+)\\}/g) || []\n\treturn matches.map(placeholder => placeholder.slice(1, -1))\n}\n"],
+  "mappings": "AAEO,SAASA,EAAcC,EAAgB,CAE7C,OAAQA,EAAQ,CACf,IAAK,YACL,IAAK,YACJ,MAAO,SACT,CAEA,MAAO,UACR,CAEO,SAASC,EAAgBC,EAAkB,CAEjD,OADgBA,EAAS,MAAM,cAAc,GAAK,CAAC,GACpC,IAAIC,GAAeA,EAAY,MAAM,EAAG,EAAE,CAAC,CAC3D",
+  "names": ["guessProtocol", "server", "getPlaceholders", "template", "placeholder"]
+}
