@@ -505,6 +505,7 @@
 				form:{
 					type:layout-vertical
 					children:[
+						{type:"text", path:"userId", label:"Permanent ID", readOnly:true}
 						{type:"text", path:"displayName", label:"Name", description:"Displayed wherever someone sees your profile. (PUBLIC)"}
 						{type:"text", path:"username", label:"Username", description:"How others will identify you online. (PUBLIC)", options:{autocomplete:"off", validator:"/.validate/username"}}
 						{type:"text", path:"emailAddress", label:"Email Address", description:"Used to sign in and support your account. Not shared. (PRIVATE)"}
