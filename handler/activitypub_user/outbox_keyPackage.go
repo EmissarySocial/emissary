@@ -87,50 +87,9 @@ func outbox_DeleteKeyPackage(context Context, activity streams.Document) error {
 // Add a KeyPackage to the user's collection (make it public)
 func outbox_AddKeyPackage(context Context, activity streams.Document) error {
 	return nil
-	// return outbox_SetKeyPackageVisibility(context, activity)
 }
 
 // Remove a KeyPackage from the user's collection (make it private)
 func outbox_RemoveKeyPackage(context Context, activity streams.Document) error {
 	return nil
-	// return outbox_SetKeyPackageVisibility(context, activity)
 }
-
-/*
-// Set the visibility of a KeyPackage in the user's collection
-func outbox_SetKeyPackageVisibility(context Context, activity streams.Document) error {
-
-	const location = "handler.activitypub_user.outbox_AddKeyPackage"
-
-	// Collect values from the activity
-	actor := activity.Actor()
-	object := activity.Object() // nolint:scopeguard
-	target := activity.Target() // nolint:scopeguard
-
-	// RULE: The actor must own the target (keyPackage collection)
-	if !strings.HasPrefix(target.ID(), actor.ID()) {
-		return derp.Forbidden(location, "Target collection must be owned by this actor")
-	}
-
-	// RULE: The actor must own the keyPackage
-	if !strings.HasPrefix(object.ID(), actor.ID()) {
-		return derp.Forbidden(location, "KeyPackage must be owned by this actor")
-	}
-
-	// Load the KeyPackage
-	keyPackageService := context.factory.KeyPackage()
-	keyPackage := model.NewKeyPackage()
-
-	if err := keyPackageService.LoadByURL(context.session, object.ID(), &keyPackage); err != nil {
-		return derp.Wrap(err, location, "Unable to load KeyPackage", "url", object.ID())
-	}
-
-	// Save the KeyPackage to the database
-	if err := keyPackageService.Save(context.session, &keyPackage, "Published via ActivityPub API"); err != nil {
-		return derp.Wrap(err, location, "Unable to save KeyPackage")
-	}
-
-	// Yup.
-	return nil
-}
-*/
