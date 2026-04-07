@@ -101,21 +101,54 @@ func (service SterankoUserService) NewClaims() jwt.Claims {
 	return &result
 }
 
-func (service SterankoUserService) Claims(sterankoUser steranko.User) (jwt.Claims, error) {
+// MasqueradeAs creates a new JWT claim object for the provided User, and sets the "Masquerade" flag to TRUE
+func (service SterankoUserService) MasqueradeAs(user *model.User) (jwt.Claims, error) {
+
+	const location = "service.SterankoUserService.MasqueradeAs"
+
+	// If the User has moved to a new server, then they cannot be masqueraded
+	if user.MovedTo != "" {
+		return nil, derp.Forbidden(location, "User moved to new server", user.MovedTo)
+	}
+
+	claims, err := service.claims(user)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Unable to create JWT claims for masquerade")
+	}
+	claims.Masquerade = true
+
+	return &claims, nil
+}
+
+// Claims creates a new JWT claim object for the provided User. This implements the Steranko UserService interface.
+func (service SterankoUserService) Claims(user steranko.User) (jwt.Claims, error) {
+
+	const location = "service.SterankoUserService.Claims"
+
+	claims, err := service.claims(user)
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Unable to create JWT claims")
+	}
+	return &claims, nil
+}
+
+// claims is a common method used to create claims for users and administrators
+func (service SterankoUserService) claims(sterankoUser steranko.User) (model.Authorization, error) {
 
 	const location = "service.SterankoUserService.Claims"
 
 	user, isCorrectType := sterankoUser.(*model.User)
 
 	if !isCorrectType {
-		return nil, derp.Internal(location, "Steranko User is not a valid object.  This should never happen", user)
+		return model.Authorization{}, derp.Internal(location, "Steranko User is not a valid object.  This should never happen", user)
 	}
 
 	// Look up the Identity for this User.  If missing, NBD..
 	identity := model.NewIdentity()
 	if err := service.identityService.LoadByEmailAddress(service.session, user.EmailAddress, &identity); err != nil {
 		if !derp.IsNotFound(err) {
-			return nil, derp.Wrap(err, location, "Unable to load Identity for User")
+			return model.Authorization{}, derp.Wrap(err, location, "Unable to load Identity for User")
 		}
 	}
 

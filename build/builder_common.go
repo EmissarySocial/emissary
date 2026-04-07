@@ -298,6 +298,12 @@ func (w Common) IsOwner() bool {
 	return authorization.DomainOwner
 }
 
+// IsMasquerading returns TRUE if the user is a Domain Owner currently masquerading as another user
+func (w Common) IsMasquerading() bool {
+	authorization := w.authorization()
+	return authorization.Masquerade
+}
+
 // IsAdminBuilder returns TRUE if the current builder is an Admin
 // route.  By default, all other builders return FALSE.
 func (w Common) IsAdminBuilder() bool {
