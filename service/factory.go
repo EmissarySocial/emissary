@@ -730,10 +730,15 @@ func (factory *Factory) Registration() *Registration {
 func (factory *Factory) Steranko(session data.Session) *steranko.Steranko {
 
 	return steranko.New(
-		NewSterankoUserService(factory.Identity(), factory.User(), factory.Email(), session),
+		factory.SterankoUserService(session),
 		factory.JWT(),
 		steranko.WithPasswordHasher(hash.BCrypt(15), hash.Plaintext{}),
 	)
+}
+
+// SterankoUserService returns a SterankoUserService adapter for the provided database session
+func (factory *Factory) SterankoUserService(session data.Session) SterankoUserService {
+	return NewSterankoUserService(factory.Identity(), factory.User(), factory.Email(), session)
 }
 
 // LookupProvider returns the LookupProvider service for this UserID
