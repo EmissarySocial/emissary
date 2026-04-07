@@ -15,11 +15,11 @@ func (service *Locator) UserURL(host string, userID primitive.ObjectID) string {
 // ParseUser parses the userID from the specified URL
 func (service *Locator) ParseUser(url string) (primitive.ObjectID, error) {
 
-	const location = "canonical.ParseUser"
+	const location = "locator.ParseUser"
 
 	// Verify that the URL looks correct
 	if !strings.HasPrefix(url, service.host+"/@") {
-		return primitive.NilObjectID, derp.BadRequest(location, "URL must match host")
+		return primitive.NilObjectID, derp.BadRequest(location, "URL must match host", "url: "+url)
 	}
 
 	// Isolate the user token and convert to ObjectID
@@ -27,7 +27,7 @@ func (service *Locator) ParseUser(url string) (primitive.ObjectID, error) {
 	userID, err := primitive.ObjectIDFromHex(userToken)
 
 	if err != nil {
-		return primitive.NilObjectID, derp.Wrap(err, location, "Invalid user ID in URL", "userToken", userToken)
+		return primitive.NilObjectID, derp.Wrap(err, location, "Invalid user ID in URL", "userToken: "+userToken)
 	}
 
 	// Success
