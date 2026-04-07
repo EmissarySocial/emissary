@@ -34,11 +34,11 @@
 
 			<div class="text-lg margin-bottom">
 				{{- if $keyPackages.IsEmpty -}}
-					You have <b>no public keys</b> on this server
+					You have <b>not set up</b> any devices for encrypted messaging
 				{{- else if $keyPackages.IsLength 1 -}}
-					You have <b>1 public key</b> on this server
+					You have set up <b>1 device</b> for encrypted messaging
 				{{- else -}}
-					You have <b>{{$keyPackages.Length}} public keys</b> on this server
+					You have set up <b>{{$keyPackages.Length}} devices</b> for encrypted messaging
 				{{- end -}}
 			</div>
 
@@ -60,15 +60,30 @@
 
 			{{- else -}}
 				
-				<table class="table">
+				<div class="table">
 					{{- range $index, $keyPackage := $keyPackages -}}
-						<tr>
-							<td><i class="bi bi-key"></i> {{$keyPackage.Generator}}</td>
-							<td>{{$keyPackage.CreateDate | longDate }}</td>
-							<td><button hx-get="/@me/settings/keyPackage-delete?keyPackageId={{$keyPackage.ID}}" class="text-xs text-red">Delete</button>
-						</tr>
+						<div class="flex-row">
+							<div><i class="bi bi-shield-lock" style="font-size:2em;"></i></div>
+							<div class="flex-grow nowrap">
+								<div class="bold margin-none">{{$keyPackage.Generator}}</div>
+								<div class="text-sm text-gray margin-bottom">{{$keyPackage.CreateDate | longDate }}</div>
+							</div>
+							<div class="flex-grow nowrap">
+								<a hx-get="/@me/settings/keyPackage-verify?keyPackageId={{$keyPackage.ID}}" class="block text-nocolor align-center">
+									<div class="margin-none">
+										{{- range $index, $emoji :=$keyPackage.EmojiKey -}}
+											{{- $emoji.Character -}}
+										{{- end -}}
+									</div>
+									<div class="text-xs text-gray">What's this?</div>
+								</a>
+							</div>
+							<div class="align-right nowrap">
+								<button hx-get="/@me/settings/keyPackage-delete?keyPackageId={{$keyPackage.ID}}" class="text-xs text-red">Delete</button>
+							</div>
+						</div>
 					{{- end -}}
-				</table>
+				</div>
 				
 			{{- end -}}
 		</div>
@@ -77,7 +92,7 @@
 	<!-- Reload page on "refreshPage" -->
 	<div 
 		hx-get="/@me/settings/keyPackages" 
-		hx-trigger="refreshPage from:window" 
+		hx-trigger="refreshPage from:window, focus from:window" 
 		hx-target="main"
 		hx-swap="innerHTML"
 		hx-push-url="false">

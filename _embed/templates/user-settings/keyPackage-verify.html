@@ -1,0 +1,35 @@
+{{- $keyPackage := .Object -}}
+
+<h1>Verify Signatures with EmojiKeys</h1>
+
+<div class="margin-vertical">
+	EmojiKeys confirm that your private keys haven't been altered by 
+	showing them as a group of emojis that's easy to remember or read aloud.<br>
+	<a href="https://emissary.dev/emoji-keys" target="_blank">Learn more about EmojiKeys &rarr;</a>
+</div>
+
+<div class="card padding margin-bottom">
+	<div class="bold">EmojiKey for "{{- $keyPackage.Generator -}}"</div>
+	<div class="text-sm italics margin-bottom">Keys change frequently, so always compare with current keys.</div>
+	<div class="padding-vertical flex-row flex-space-between flex-align-center width-100%" style="cursor:default;">
+		{{- range $index, $emoji := $keyPackage.EmojiKey -}}	
+			<div class="flex-grow align-center">
+				<div style="font-size:64px; line-height:1em;">{{- $emoji.Character }}</div>
+				<div class="text-xs text-gray">{{- $emoji.Description -}}</div>
+			</div>
+		{{- end -}}
+	</div>
+</div>
+
+<div class="card padding margin-bottom" script="install Clipboard">
+	<div class="bold">Original Key Signature</div>
+	<div class="text-sm flex-row flex-align-center">
+		<code class="clipboard-text">{{- $keyPackage.ContentSignature -}}</code>
+		<button class="clipboard-copy-button text-xs margin-none">Copy</button>
+		<span class="nowrap clipboard-copy-feedback text-green" style="display:none;"><i class="bi bi-check"></i> Copied</span>
+	</div>
+</div>
+
+<div class="margin-top-lg">
+	<button script="on click send closeModal">Close Window</button>
+</div>

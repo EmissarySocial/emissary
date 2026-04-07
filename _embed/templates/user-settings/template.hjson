@@ -628,6 +628,17 @@
 			]
 		}
 
+		keyPackage-verify: {
+			roles:["self"]
+			steps:[
+				{do:"with-keypackage", steps:[
+					{do:"as-modal", steps:[
+						{do:"view-html"}
+					]}
+				]}
+			]
+		}
+
 		keyPackage-delete: {
 			roles:["self"]
 			steps:[
