@@ -42,7 +42,7 @@ input.invalid,
 select:invalid,
 [role="input"].invalid {
 	border: solid 1px var(--input-border-invalid);
-	background-color: var(--input-background-invalid);
+	/*background-color: var(--input-background-invalid);*/
 }
 
 input:invalid:focus,
@@ -50,8 +50,8 @@ input.invalid:focus,
 .input.invalid:focus,
 select:invalid:focus,
 [role="input"].invalid:focus {
-	outline: unset;
-	--outline-color: var(--red70);
+	outline:unset;
+	box-shadow: 0px 0px 5px var(--input-border-invalid);
 }
 
 input:last-child,
