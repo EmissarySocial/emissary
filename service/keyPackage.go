@@ -1,10 +1,12 @@
 package service
 
 import (
+	"encoding/base64"
 	"iter"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/emojikey"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -90,6 +92,12 @@ func (service *KeyPackage) Load(session data.Session, criteria exp.Expression, k
 // Save adds/updates an KeyPackage in the database
 func (service *KeyPackage) Save(session data.Session, keyPackage *model.KeyPackage, note string) error {
 
+	// Calculate the signature and emojikey based on the content of this KeyPackage
+	signature, emojiKey := emojikey.EmojiKey([]byte(keyPackage.Content))
+	keyPackage.ContentSignature = base64.StdEncoding.EncodeToString([]byte(signature))
+	keyPackage.EmojiKey = emojiKey
+
+	// Save the KeyPackage to the database
 	if err := service.collection(session).Save(keyPackage, note); err != nil {
 		return derp.Wrap(err, "service.KeyPackage.Save", "Unable to save KeyPackage", keyPackage, note)
 	}

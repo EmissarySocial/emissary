@@ -1,17 +1,20 @@
 package model
 
 import (
+	"github.com/EmissarySocial/emissary/tools/emojikey"
 	"github.com/benpate/data/journal"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type KeyPackage struct {
-	KeyPackageID primitive.ObjectID `bson:"_id"`
-	UserID       primitive.ObjectID `bson:"userId"`
-	MediaType    string             `bson:"mediaType"`
-	Encoding     string             `bson:"encoding"`
-	Content      string             `bson:"content"`
-	Generator    string             `bson:"generator"`
+	KeyPackageID     primitive.ObjectID `bson:"_id"`
+	UserID           primitive.ObjectID `bson:"userId"`
+	MediaType        string             `bson:"mediaType"`
+	Encoding         string             `bson:"encoding"`
+	Content          string             `bson:"content"`
+	Generator        string             `bson:"generator"`
+	ContentSignature string             `bson:"contentSignature"`
+	EmojiKey         [5]emojikey.Emoji  `bson:"emojiKey"`
 
 	journal.Journal `bson:",inline"`
 }
