@@ -11,6 +11,7 @@ import (
 type Object struct {
 	ObjectID    primitive.ObjectID `bson:"_id"`         // Unique ID of this Object (assigned by the server)
 	UserID      primitive.ObjectID `bson:"userId"`      // UserID who created this Object
+	Context     string             `bson:"context"`     // ActivityPubURL of the context that this object belongs to.
 	Permissions sliceof.String     `bson:"permissions"` // Permissions associated with this Object
 	Value       mapof.Any          `bson:"value"`       // Value of the object
 

@@ -23,6 +23,7 @@ type NewsItem struct {
 	Origin      OriginLink                 `bson:"origin,omitempty"`      // Link to the original source of this NewsItem (the following and website that originally published it)
 	References  sliceof.Object[OriginLink] `bson:"references,omitempty"`  // Links to other references to this NewsItem - likes, reposts, or comments that informed us of its existence
 	URL         string                     `bson:"url"`                   // URL of this NewsItem
+	Context     string                     `bson:"context,omitempty"`     // The context of this NewsItem (e.g. the conversation thread)
 	InReplyTo   string                     `bson:"inReplyTo,omitempty"`   // URL this message is in reply to
 	Response    id.Map                     `bson:"response,omitempty"`    // Map of responses: Like, Dislike, Announce, etc.
 	StateID     string                     `bson:"stateId"`               // StateID of this message (UNREAD,READ,MUTED,NEW-REPLIES)

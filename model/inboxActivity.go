@@ -18,6 +18,7 @@ type InboxActivity struct {
 	ActorID         string             `bson:"actorId"`       // The ID/URL of the actor that sent this InboxActivity (e.g. "https://example.com/users/alice")
 	ActivityID      string             `bson:"activityId"`    // The ID/URL of this InboxActivity
 	ActivityType    string             `bson:"activityType"`  // The type of Activity received (Create, Update, Like, Follow, etc.)
+	Context         string             `bson:"context"`       // The ID/URL of the context of this activity (e.g. the conversation thread)
 	ObjectID        string             `bson:"objectId"`      // The ID/URL of the Object of this Activity
 	ObjectType      string             `bson:"objectType"`    // The type of Object of this Activity is about (Note, Person, etc.)
 	MediaType       string             `bson:"mediaType"`     // The media type of the content (e.g. "message/mls")
