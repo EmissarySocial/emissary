@@ -444,7 +444,7 @@ func (service *Following) GetFollowingID(session data.Session, userID primitive.
 	document, err := service.activityService.UserClient(userID).Load(uri)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to loadActivityStream document", uri)
+		return "", derp.Wrap(err, location, "Unable to load ActivityStream document", uri)
 	}
 
 	// If this document is not an Actor, then get the Actor of the document

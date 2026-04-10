@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Reponse defines a single Actor's response to an Object.  The actor may be a local or remote user, and the
+// Response defines a single Actor's response to an Object.  The actor may be a local or remote user, and the
 // Object may be a local stream or an inbox message.
 type Response struct {
 	ResponseID primitive.ObjectID `bson:"_id"`               // Unique identifier for this Response
@@ -25,7 +25,7 @@ type Response struct {
 	journal.Journal `json:"-" bson:",inline"`
 }
 
-// NewReponse returns a fully initialized Response object
+// NewResponse returns a fully initialized Response object
 func NewResponse() Response {
 	return Response{
 		ResponseID: primitive.NewObjectID(),

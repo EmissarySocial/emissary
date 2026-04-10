@@ -8,7 +8,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// ActivityURL generates a URL for an Activity based on the ActorType and ActorID
 func (service *Locator) ActivityURL(actorType string, actorID primitive.ObjectID, activityID primitive.ObjectID) string {
+
 	switch actorType {
 
 	case model.ActorTypeApplication:
@@ -33,7 +35,7 @@ func (service *Locator) ActivityURL(actorType string, actorID primitive.ObjectID
 
 // This only works for Users at the moment
 func (service *Locator) ParseActivity(url string) (string, primitive.ObjectID, primitive.ObjectID, error) {
-	const location = "canonical.ParseActivity"
+	const location = "service.locator.ParseActivity"
 
 	if strings.HasPrefix(url, service.host+"/@") {
 

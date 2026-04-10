@@ -1192,9 +1192,10 @@ func (service *Stream) CalculateTags(session data.Session, stream *model.Stream)
 	stream.Hashtags = hashtagNames
 }
 
+// NotifyInReplyTo sends an SSE notification to any stream that is referenced in the "inReplyTo" field of a Stream
 func (service *Stream) NotifyInReplyTo(session data.Session, inReplyTo string) {
 
-	const location = "service.Following.notifyInReplyTo"
+	const location = "service.Stream.notifyInReplyTo"
 
 	// If this is not a reply, then skip
 	if inReplyTo == "" {

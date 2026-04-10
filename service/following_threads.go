@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -13,6 +14,9 @@ import (
 func (service *Following) SaveNewsItem(session data.Session, following *model.Following, document streams.Document, originType string) error {
 
 	const location = "service.Following.SaveNewsItem"
+
+	// Send SSE notifications to any stream that is referenced in the "inReplyTo" field of the document
+	service.streamService.NotifyInReplyTo(session, document.InReplyTo().ID())
 
 	// Traverse `Create` and `Update` activities, as well as `inReplyTo`` values back to the primary document
 	original, originType := getPrimaryPost(document, originType)
@@ -22,18 +26,23 @@ func (service *Following) SaveNewsItem(session data.Session, following *model.Fo
 		return nil
 	}
 
-	// Convert the document into a message (and traverse responses if necessary)
-	message := getNewsItem(following.UserID, original)
-	message.FollowingID = following.FollowingID
-	message.FolderID = following.FolderID.Value()
-	message.AddReference(following.Origin(originType))
+	// Convert the document into a newsItem (and traverse responses if necessary)
+	newsItem := getNewsItem(following.UserID, original)
+	newsItem.Context = original.Context()
+	newsItem.FollowingID = following.FollowingID
+	newsItem.FolderID = following.FolderID.Value()
+	newsItem.AddReference(following.Origin(originType))
 
-	// Try to save a unique version of this message to the database (always collapse duplicates)
-	if err := service.saveUniqueNewsItem(session, message); err != nil {
-		return derp.Wrap(err, location, "Unable to save message", message)
+	// Try to save a unique version of this newsItem to the database (always collapse duplicates)
+	if err := service.saveUniqueNewsItem(session, newsItem); err != nil {
+		return derp.Wrap(err, location, "Unable to save newsItem", newsItem)
 	}
 
-	service.streamService.NotifyInReplyTo(session, document.InReplyTo().ID())
+	// Crawl the document's context/reply chain in the background
+	service.queue.NewTask(
+		"CrawlContext",
+		mapof.Any{"url": document.ID()},
+	)
 
 	// Yee. Haw.
 	return nil
@@ -129,6 +138,9 @@ func getPrimaryPost(document streams.Document, originType string) (streams.Docum
 	// Special cases for Activities we receive
 	switch document.Type() {
 
+	case vocab.ActivityTypeAdd:
+		return getPrimaryPost(document.Object().LoadLink(), originType)
+
 	case vocab.ActivityTypeAnnounce:
 		return getPrimaryPost(document.Object().LoadLink(), model.OriginTypeAnnounce)
 
@@ -143,6 +155,9 @@ func getPrimaryPost(document streams.Document, originType string) (streams.Docum
 
 	case vocab.ActivityTypeLike:
 		return getPrimaryPost(document.Object().LoadLink(), model.OriginTypeLike)
+
+	case vocab.ActivityTypeRemove:
+		return streams.NilDocument(), ""
 
 	case vocab.ActivityTypeUndo:
 		return streams.NilDocument(), ""
@@ -178,6 +193,7 @@ func getNewsItem(userID primitive.ObjectID, document streams.Document) model.New
 
 	result := model.NewNewsItem()
 	result.UserID = userID
+	result.Context = document.Context()
 	result.SocialRole = document.Type()
 	result.URL = document.ID()
 	result.InReplyTo = document.InReplyTo().ID()
