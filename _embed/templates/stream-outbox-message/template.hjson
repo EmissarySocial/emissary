@@ -1,16 +1,16 @@
 {
-	templateId:"outbox-message"
-	templateRole:"outbox-message"
-	socialRole:"Note"
+	templateId:outbox-message
+	templateRole:outbox-message
+	socialRole:Note
 	extends:["base-social", "base-intent"]
 	model: Stream
-	icon:"message"
-	label:"Post"
-	description:"Single comment in the comments section of a page."
+	icon:message
+	label:Post
+	description:Single comment in the comments section of a page.
 	sort: 0
 	containedBy: ["outbox"]
 	schema: {
-		type:"object"
+		type:object
 		properties: {
 			summary: {type:"string", format:"html"}
 			iconUrl: {type:"string", format:"url"}
@@ -18,8 +18,13 @@
 	}
 	states: {
 		default: {
-			label:"Default"
-			description:"This item only has one state"
+			label:Default
+			description:This item only has one state
+		}
+
+		published: {
+			label:Published
+			description:This item has been published and is visible to the public.
 		}
 	}
 	roles: {}
