@@ -9,12 +9,7 @@ import (
 )
 
 func init() {
-	inboxRouter.Add(vocab.ActivityTypeAnnounce, vocab.Any, inbox_LikeOrAnnounce)
 	inboxRouter.Add(vocab.ActivityTypeLike, vocab.Any, inbox_LikeOrAnnounce)
-
-	// Removing Dislikes for now... Semantics on this are unclear, but Dislikes
-	// probably SHOULD NOT end up in a user's inbox.
-	// inboxRouter.Add(vocab.ActivityTypeDislike, vocab.Any, inbox_LikeOrAnnounce)
 }
 
 // inbox_LikeOrAnnounce handles all Like Dislike activities
