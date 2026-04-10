@@ -8,6 +8,11 @@ import (
 	"github.com/benpate/hannibal/streams"
 )
 
+// FromCache returns TRUE if this document was retrieved from the cache database
+func FromCache(document streams.Document) bool {
+	return document.HTTPHeader().Get(HeaderHannibalCache) != ""
+}
+
 func timeoutContext(seconds int) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), time.Duration(seconds)*time.Second)
 }
