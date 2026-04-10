@@ -84,6 +84,7 @@ type Factory struct {
 	permissionService      Permission
 	productService         Product
 	providerService        Provider
+	contextService         Context
 	responseService        Response
 	ruleService            Rule
 	searchDomainService    SearchDomain
@@ -168,6 +169,7 @@ func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, doma
 	factory.permissionService = NewPermission()
 	factory.productService = NewProduct()
 	factory.providerService = NewProvider()
+	factory.contextService = NewContext()
 	factory.responseService = NewResponse()
 	factory.realtimeBroker = realtime.NewBroker(factory.SSEUpdateChannel())
 	factory.ruleService = NewRule()
@@ -235,7 +237,8 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	factory.permissionService.Refresh(factory)
 	factory.productService.Refresh(factory)
 	factory.providerService.Refresh(factory)
-	factory.realtimeBroker.Refresh() ///
+	factory.contextService.Refresh(factory)
+	factory.realtimeBroker.Refresh()
 	factory.responseService.Refresh(factory)
 	factory.ruleService.Refresh(factory)
 	factory.searchDomainService.Refresh(factory)
@@ -505,9 +508,34 @@ func (factory *Factory) Outbox() *Outbox {
 
 // Outbox2 returns a fully populated Outbox2 service
 // This is a temporary name that will be merged into Outbox
-// one I know WTH I'm doing.
+// once I know WTF I'm doing.
 func (factory *Factory) Outbox2() *Outbox2 {
 	return &factory.outbox2Service
+}
+
+// Permission returns a fully populated Permission service
+func (factory *Factory) Permission() *Permission {
+	return &factory.permissionService
+}
+
+// Privilege returns a fully populated Privilege service
+func (factory *Factory) Privilege() *Privilege {
+	return &factory.privilegeService
+}
+
+// Product returns a fully populated Product service
+func (factory *Factory) Product() *Product {
+	return &factory.productService
+}
+
+// Context returns a fully populated Context service
+func (factory *Factory) Context() *Context {
+	return &factory.contextService
+}
+
+// Response returns a fully populated Response service
+func (factory *Factory) Response() *Response {
+	return &factory.responseService
 }
 
 // Rule returns a fully populated Rule service
@@ -556,26 +584,6 @@ func (factory *Factory) StreamArchive() *StreamArchive {
 // StreamDraft returns a fully populated StreamDraft service
 func (factory *Factory) StreamDraft() *StreamDraft {
 	return &factory.streamDraftService
-}
-
-// Permission returns a fully populated Permission service
-func (factory *Factory) Permission() *Permission {
-	return &factory.permissionService
-}
-
-// Privilege returns a fully populated Privilege service
-func (factory *Factory) Privilege() *Privilege {
-	return &factory.privilegeService
-}
-
-// Product returns a fully populated Product service
-func (factory *Factory) Product() *Product {
-	return &factory.productService
-}
-
-// Response returns a fully populated Response service
-func (factory *Factory) Response() *Response {
-	return &factory.responseService
 }
 
 // User returns a fully populated User service
