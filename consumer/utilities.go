@@ -3,8 +3,10 @@ package consumer
 import (
 	"time"
 
+	"github.com/benpate/derp"
 	dt "github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -35,6 +37,28 @@ func getHostnameFromArgs(args mapof.Any) string {
 	}
 
 	return ""
+}
+
+// requeue wraps errors with intelligent retry logic
+func requeue(err error) queue.Result {
+
+	// If there is no error, then return success
+	if err == nil {
+		return queue.Success()
+	}
+
+	// Retry HTTP 429 (Too Many Requests) errors
+	if isTooMany, delay := derp.IsTooManyRequests(err); isTooMany {
+		return queue.Requeue(delay)
+	}
+
+	// Client Errors (400) can't be retried. Fail the whole task
+	if derp.IsClientError(err) {
+		return queue.Failure(err)
+	}
+
+	// Server Errors (500) can be retried. Report a retryable error.
+	return queue.Error(err)
 }
 
 /* Unused function

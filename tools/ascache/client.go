@@ -394,13 +394,9 @@ func (client *Client) revalidate(value *Value) {
 		documentID := value.DocumentID()
 
 		client.queue.NewTask(
-			"LoadActivityStream",
+			"ReindexActivityStream",
 			mapof.Any{
-				"host":         client.hostname,
-				"actorType":    client.actorType,
-				"actorID":      client.actorID,
-				"url":          documentID,
-				"revalidating": true,
+				"url": documentID,
 			},
 			queue.WithSignature(documentID),
 		)
