@@ -1,10 +1,13 @@
 package activitypub_user
 
 import (
+	"strings"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
 )
 
 func init() {
@@ -27,7 +30,9 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.inbox_CreateOrUpdate"
 
-	// RULE: No further processing required for non-public activities
+	// RULE: No additional processing for non-public activites. These have already
+	// been added to the User's inbox (in inbox_SaveActivity) so they'll be picked
+	// up by the chat client without any further action.
 	if activity.NotPublic() {
 		return nil
 	}
@@ -53,5 +58,30 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 		return derp.Wrap(err, location, "Unable to save news item", context.user.UserID, activity.Value())
 	}
 
+	// Add this document to a context (if necessary)
+	if hasLocalReplyOrContext(document, context.factory.Host()) {
+
+		context.factory.Queue().NewTask(
+			"AddToContext",
+			mapof.Any{"url": document.ID()},
+		)
+	}
+
+	// Success!
 	return nil
+}
+
+// hasLocalReplyOrContext returns TRUE if the document belongs to a context that
+// is owned by this server, or replies to a document that is owned by this server.
+func hasLocalReplyOrContext(document streams.Document, host string) bool {
+
+	if documentContext := document.Context(); strings.HasPrefix(documentContext, host) {
+		return true
+	}
+
+	if inReplyTo := document.InReplyTo().ID(); strings.HasPrefix(inReplyTo, host) {
+		return true
+	}
+
+	return false
 }
