@@ -374,7 +374,7 @@
 			steps: [
 				{do: "with-folder", steps: [
 					{do: "as-modal", steps: [
-						{do:"edit", options:["delete:/@me/inbox/folder-delete?folderId={{.ObjectID}}"], form:{
+						{do:"edit", options:["delete:/@me/newsfeed/folder-delete?folderId={{.ObjectID}}"], form:{
 							type: layout-vertical
 							label: Folder Settings
 							children:[
@@ -395,7 +395,7 @@
 			steps:[
 				{do:"with-folder", steps: [
 					{do:"delete", title:"Delete Folder: {{.Label}}?", message:"Deleting this folder will also remove all inbox items inside it."}
-					{do:"forward-to", url:"/@me/inbox"}
+					{do:"forward-to", url:"/@me/newsfeed"}
 				]}
 			]
 		}
@@ -558,7 +558,7 @@
 		reply:{
 			roles:["self"]
 			steps:[
-				{do:"set-args", postTo:"/@me/inbox/reply?url={{.Permalink}}"}
+				{do:"set-args", postTo:"/@me/newsfeed/reply?url={{.Permalink}}"}
 				{do:"add-stream", 
 					style:"inline", 
 					roles:"outbox-reply", 
@@ -566,7 +566,7 @@
 					with-data:{
 						inReplyTo:"{{.Permalink}}"
 					},
-					redirect-to:"/@me/inbox/browse-tree?url={{.Permalink}}"
+					redirect-to:"/@me/newsfeed/browse-tree?url={{.Permalink}}"
 				}
 			]
 		}
