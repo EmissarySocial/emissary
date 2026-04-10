@@ -82,10 +82,6 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 		return derp.Wrap(err, location, "Unable to validate ActivityPub request", activity.Value())
 	}
 
-	//
-	// ADDITIONAL VALIDATION LOGIC GOES HERE...
-	// Rules/Blocks
-
 	// Save the activity to the actor's Inbox
 	if err := inbox_SaveActivity(context, activity); err != nil {
 		return derp.Wrap(err, location, "Unable to save activity to inbox", activity.Value())
@@ -116,6 +112,9 @@ func inbox_ValidateActivity(activity streams.Document) error {
 		return derp.BadRequest(location, "Activity must have a Type", activity.Value())
 	}
 
+	// ADDITIONAL VALIDATION LOGIC GOES HERE...
+	// Rules/Blocks
+
 	// All good so far...
 	return nil
 }
@@ -142,6 +141,7 @@ func inbox_SaveActivity(context Context, activity streams.Document) error {
 	inboxActivity.UserID = context.user.UserID
 	inboxActivity.ActorID = activity.Actor().ID()
 	inboxActivity.ActivityID = activity.ID()
+	inboxActivity.Context = activity.Context()
 	inboxActivity.ActivityType = activity.Type()
 	inboxActivity.ObjectType = activity.Object().Type()
 	inboxActivity.ObjectID = activity.Object().ID()
