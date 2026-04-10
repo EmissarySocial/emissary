@@ -27,8 +27,7 @@ func ReIndexActivityStreamCache(ctx *steranko.Context, factory *service.Factory,
 		factory.Queue().NewTask(
 			"ReindexActivityStream",
 			mapof.Any{
-				"host": factory.Hostname(),
-				"url":  url,
+				"url": url,
 			},
 		)
 	}
