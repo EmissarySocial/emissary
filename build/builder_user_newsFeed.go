@@ -108,7 +108,7 @@ func (w Inbox) PageTitle() string {
 }
 
 func (w Inbox) BasePath() string {
-	return "/@me/inbox"
+	return "/@me/newsfeed"
 }
 
 func (w Inbox) Permalink() string {
@@ -121,7 +121,7 @@ func (w Inbox) Permalink() string {
 		return url
 	}
 
-	return w.Host() + "/@me/inbox"
+	return w.Host() + "/@me/newsfeed"
 }
 
 func (w Inbox) Token() string {

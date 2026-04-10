@@ -30,6 +30,7 @@ type Factory interface {
 	Circle() *service.Circle
 	Connection() *service.Connection
 	Conversation() *service.Conversation
+	Context() *service.Context
 	Export() *service.Export
 	Folder() *service.Folder
 	Following() *service.Following

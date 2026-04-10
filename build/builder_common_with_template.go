@@ -61,6 +61,14 @@ func (builder CommonWithTemplate) actionID() string {
 	return builder._actionID
 }
 
+func (builder CommonWithTemplate) Action() string {
+	return builder._actionID
+}
+
+func (builder CommonWithTemplate) IsAction(actionID string) bool {
+	return builder._actionID == actionID
+}
+
 // template returns the model.Template associated with this Builder
 func (builder CommonWithTemplate) template() model.Template {
 	return builder._template
