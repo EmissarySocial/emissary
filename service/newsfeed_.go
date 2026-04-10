@@ -261,6 +261,7 @@ func (service *NewsFeed) RangeByFolder(session data.Session, userID primitive.Ob
 	return service.Range(session, criteria)
 }
 
+// RangeByFollowingID returns a RangeFunc that iterates over all NewsItems that match the provided UserID and FollowingID.
 func (service *NewsFeed) RangeByFollowingID(session data.Session, userID primitive.ObjectID, followingID primitive.ObjectID) (iter.Seq[model.NewsItem], error) {
 	criteria := exp.Equal("userId", userID).
 		AndEqual("origin.followingId", followingID)
@@ -268,18 +269,27 @@ func (service *NewsFeed) RangeByFollowingID(session data.Session, userID primiti
 	return service.Range(session, criteria)
 }
 
+// RangeByUserID returns a RangeFunc that iterates over all NewsItems that match the provided UserID.
 func (service *NewsFeed) RangeByUserID(session data.Session, userID primitive.ObjectID) (iter.Seq[model.NewsItem], error) {
 	return service.Range(session, exp.Equal("userId", userID))
 }
 
-func (service *NewsFeed) LoadByID(session data.Session, userID primitive.ObjectID, messageID primitive.ObjectID, result *model.NewsItem) error {
+// RangeByContext returns a RangeFunc that iterates over all NewsItems that match the provided context.
+// This is used to backfill the context of an activity when we receive an Add or Remove activity with an unknown context.
+func (service *NewsFeed) RangeByContext(session data.Session, context string) (iter.Seq[model.NewsItem], error) {
+	criteria := exp.Equal("context", context)
+	return service.Range(session, criteria)
+}
+
+// LoadByID returns the NewsItem that matches the provided UserID and NewsItemID
+func (service *NewsFeed) LoadByID(session data.Session, userID primitive.ObjectID, newsItemID primitive.ObjectID, result *model.NewsItem) error {
 	criteria := exp.Equal("userId", userID).
-		AndEqual("_id", messageID)
+		AndEqual("_id", newsItemID)
 
 	return service.Load(session, criteria, result)
 }
 
-// LoadByURL returns the first message that matches the provided UserID and URL
+// LoadByURL returns the first NewsItem that matches the provided UserID and URL
 func (service *NewsFeed) LoadByURL(session data.Session, userID primitive.ObjectID, url string, result *model.NewsItem) error {
 	criteria := exp.Equal("userId", userID).
 		AndEqual("url", url)
@@ -287,7 +297,7 @@ func (service *NewsFeed) LoadByURL(session data.Session, userID primitive.Object
 	return service.Load(session, criteria, result)
 }
 
-// LoadUnreadByURL returns the first UNREAD message that matches the provided UserID and URL
+// LoadUnreadByURL returns the first UNREAD NewsItem that matches the provided UserID and URL
 func (service *NewsFeed) LoadUnreadByURL(session data.Session, userID primitive.ObjectID, url string, result *model.NewsItem) error {
 	criteria := exp.Equal("userId", userID).
 		AndEqual("url", url).
@@ -296,7 +306,7 @@ func (service *NewsFeed) LoadUnreadByURL(session data.Session, userID primitive.
 	return service.Load(session, criteria, result)
 }
 
-// LoadSibling searches for the previous/next sibling to the provided message criteria.
+// LoadSibling searches for the previous/next sibling to the provided NewsItem criteria.
 func (service *NewsFeed) LoadSibling(session data.Session, folderID primitive.ObjectID, rank int64, following string, direction string) (model.NewsItem, error) {
 
 	const location = "service.NewsFeed.LoadSibling"
