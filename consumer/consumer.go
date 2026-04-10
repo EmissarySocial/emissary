@@ -23,18 +23,20 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 
 	switch name {
 
+	case "AddToContext":
+		return WithSession(consumer.serverFactory, args, AddToContext)
+
 	case "ConnectPushService":
 		return WithFollowing(consumer.serverFactory, args, ConnectPushService)
 
-	case "CrawlActivityStreams":
-		return WithSession(consumer.serverFactory, args, CrawlActivityStreams)
+	case "CrawlContext":
+		return WithFactory(consumer.serverFactory, args, CrawlContext)
+
+	case "CrawlUpReplyTree":
+		return WithFactory(consumer.serverFactory, args, CrawlUpReplyTree)
 
 	case "CreateWebSubFollower":
 		return WithSession(consumer.serverFactory, args, CreateWebSubFollower)
-
-	// Blocked
-	// case "CountRelatedDocuments":
-	//	return WithFactory(consumer.serverFactory, args, CountRelatedDocuments)
 
 	case "DeleteEmptySearchQuery":
 		return WithSession(consumer.serverFactory, args, DeleteEmptySearchQuery)
@@ -50,9 +52,6 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 
 	case "ImportItems":
 		return WithImport(consumer.serverFactory, args, ImportItems)
-
-	case "LoadActivityStream":
-		return WithSession(consumer.serverFactory, args, LoadActivityStream)
 
 	case "MakeStreamArchive":
 		return WithStream(consumer.serverFactory, args, MakeStreamArchive)
@@ -72,10 +71,6 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "PollFollowing-Record":
 		return WithFollowing(consumer.serverFactory, args, PollFollowing_Record)
 
-	// Blocked
-	// case "ProcessMedia":
-	//	return WithSession(consumer.serverFactory, args, ProcessMedia)
-
 	case "PurgeActivityStreamCache":
 		return PurgeActivityStreamCache(consumer.serverFactory)
 
@@ -87,6 +82,9 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 
 	case "PurgeImports":
 		return WithSession(consumer.serverFactory, args, PurgeImports)
+
+	case "ReceiveActivityPub-Add":
+		return WithSession(consumer.serverFactory, args, ReceiveActivityPubAdd)
 
 	case "ReceiveActivityPub-Delete":
 		return WithSession(consumer.serverFactory, args, ReceiveActivityPubDelete)
