@@ -22,19 +22,7 @@ func SendActivityPubMessage(factory *service.Factory, session data.Session, args
 
 	// Send the ActivityPub message on the actor's behalf
 	if err := activityStreamService.SendMessage(session, args); err != nil {
-
-		// Retry HTTP 429 (Too Many Requests) errors
-		if tooManyRequests, retryDuration := derp.IsTooManyRequests(err); tooManyRequests {
-			return queue.Requeue(retryDuration)
-		}
-
-		// If this is our fault then it can't be retried. Fail accordingly.
-		if derp.IsClientError(err) {
-			return queue.Failure(derp.Wrap(err, location, "Unable to deliver ActivityPub message (Client Error cannot be retried)"))
-		}
-
-		// Otherwise, it's the Server's fault, and we can retry
-		return queue.Error(derp.Wrap(err, location, "Unable to deliver ActivityPub message (Server Error can be retried)"))
+		return requeue(derp.Wrap(err, location, "Unable to send ActivityPub message"))
 	}
 
 	// There is only Woot.

@@ -47,14 +47,14 @@ func PreProcessor(task *queue.Task) error {
 	// Tasks below this line are ALWAYS written to the
 	// database, and are NOT executed immediately
 
-	// (64) User Facine but Low Priority Tasks
-	case "CrawlActivityStreams":
-		task.Priority = 64
-
+	// (64) User Facing but Low Priority Tasks
 	case "Geocode":
 		task.Priority = 64
 
 	case "ImportItem":
+		task.Priority = 64
+
+	case "ReceiveActivityPub-Add":
 		task.Priority = 64
 
 	// (256) Background Notifications
@@ -75,9 +75,6 @@ func PreProcessor(task *queue.Task) error {
 
 	// (512) System Tasks that should happen mostly on time
 	case "DeleteStream":
-		task.Priority = 512
-
-	case "LoadActivityStream":
 		task.Priority = 512
 
 	case "PollFollowing-Index":
