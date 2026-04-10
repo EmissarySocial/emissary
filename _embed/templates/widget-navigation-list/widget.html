@@ -1,5 +1,9 @@
 <div class="widget widget-navigation" hx-target="main" hx-swap="innerHTML" hx-push-url="true">
 
+	{{- if ne "" (.Widget.Data.GetString "title") -}}
+		<div class="bold">{{- .Widget.Data.GetString "title" -}}</div>
+	{{- end -}}
+
 	{{- if not (.Widget.Data.IsZeroValue "grandparents") -}}
 
 		{{- template "grandparents" . -}}
