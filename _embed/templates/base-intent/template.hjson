@@ -9,7 +9,7 @@
 
 	states: {
 		default: {
-			label: Default State,
+			label: Default State
 			description: Initial state for this template
 		}
 	}
