@@ -213,12 +213,12 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 			// If this is a valid, but (previously) unknown actor, then add it to the results
 			// This will also automatically get cached/crawled for next time.
 			result := []model.ActorSummary{{
-				ID:             newActor.ID(),
-				Type:           newActor.Type(),
-				Name:           newActor.Name(),
-				Icon:           newActor.Icon().Href(),
-				Username:       newActor.UsernameOrID(),
-				MLSKeyPackages: newActor.MLSKeyPackages().ID(),
+				ID:                newActor.ID(),
+				Type:              newActor.Type(),
+				Name:              newActor.Name(),
+				Icon:              newActor.Icon().Href(),
+				PreferredUsername: newActor.PreferredUsername(),
+				MLSKeyPackages:    newActor.MLSKeyPackages().ID(),
 			}}
 
 			return result, nil
@@ -240,11 +240,6 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Unable to query database")
-	}
-
-	// Calculate fully qualified usernames (ugly, but necessary)
-	for i := range result {
-		result[i].Username = result[i].UsernameOrID()
 	}
 
 	// Done? Done.
