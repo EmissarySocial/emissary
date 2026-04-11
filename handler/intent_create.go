@@ -83,11 +83,12 @@ func PostIntent_Create(ctx *steranko.Context, factory *service.Factory, session 
 	stream.ParentIDs = []primitive.ObjectID{user.UserID}
 	stream.Label = transaction.Name
 	stream.Summary = transaction.Summary
+	stream.InReplyTo = transaction.InReplyTo
 	stream.Content = model.NewHTMLContent(transaction.Content)
 
 	// Save the new Stream to the database
-	if err := streamService.Save(session, &stream, "Saved via Activity Intent"); err != nil {
-		return derp.Wrap(err, location, "Unable to save stream")
+	if err := streamService.Publish(session, user, &stream, "published", true, false); err != nil {
+		return derp.Wrap(err, location, "Unable to publish stream")
 	}
 
 	// Return the "on-success" response
