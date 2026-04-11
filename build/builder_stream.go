@@ -25,6 +25,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -645,6 +646,24 @@ func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[asca
 	activityStreamsService := w._factory.ActivityStream()
 	minDate := convert.Int64(dateString)
 	return activityStreamsService.QueryRepliesAfterDate(w._request.Context(), w._stream.URL, minDate, int64(maxRows))
+}
+
+func (w Stream) ReplyLinksAfter(dateString string, maxRows int) (sliceof.Object[model.ObjectLink], error) {
+	contextService := w._factory.Context()
+	minDate := convert.Int64(dateString)
+	criteria := exp.GreaterThan("createDate", minDate)
+
+	result, err := contextService.QueryByInReplyTo(w._session, w._stream.URL, criteria, option.MaxRows(int64(maxRows)), option.SortAsc("createDate"))
+	spew.Dump(result, err)
+	return result, err
+}
+
+func (w Stream) ReplyCount() int {
+	return 0
+}
+
+func (w Stream) ResponseCount() int {
+	return 0
 }
 
 // Outbox returns a QueryBuilder for the current Stream's outbox
