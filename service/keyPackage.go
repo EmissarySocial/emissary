@@ -265,7 +265,11 @@ func (service *KeyPackage) GetJSONLD(keyPackage *model.KeyPackage) mapof.Any {
 		vocab.PropertyMediaType:    keyPackage.MediaType,
 		vocab.PropertyEncoding:     keyPackage.Encoding,
 		vocab.PropertyContent:      keyPackage.Content,
-		vocab.PropertyGenerator:    keyPackage.Generator,
+		vocab.PropertyGenerator: mapof.Any{
+			vocab.PropertyID:   keyPackage.GeneratorID,
+			vocab.PropertyType: vocab.ActorTypeApplication,
+			vocab.PropertyName: keyPackage.GeneratorName,
+		},
 	}
 }
 

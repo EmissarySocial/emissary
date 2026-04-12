@@ -12,7 +12,8 @@ type KeyPackage struct {
 	MediaType        string             `bson:"mediaType"`
 	Encoding         string             `bson:"encoding"`
 	Content          string             `bson:"content"`
-	Generator        string             `bson:"generator"`
+	GeneratorID      string             `bson:"generatorId"`
+	GeneratorName    string             `bson:"generatorName"`
 	ContentSignature string             `bson:"contentSignature"`
 	EmojiKey         [5]emojikey.Emoji  `bson:"emojiKey"`
 
