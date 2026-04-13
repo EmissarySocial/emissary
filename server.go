@@ -186,6 +186,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	log.Info().Msg("Starting Emissary Server.")
 
 	// WAF Middleware
+	e.Pre(middleware.Recover())
 	e.Pre(dome4echo.New(factory.DigitalDome()))
 
 	e.Pre(mw.HttpsRedirect)
@@ -193,7 +194,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// Middleware for standard pages
 	// e.Use(steranko.Middleware(factory))
-	e.Use(middleware.CORS())
+	// e.Use(middleware.CORS())
 
 	// TODO: Commonly accessed routest that we should serve
 	e.GET("/robots.txt", handler.RobotsTxt)                 // https://developers.google.com/search/docs/advanced/robots/create-robots-txt
