@@ -27,7 +27,7 @@
 	font-size:calc(var(--rhythm) * 1.5);
 	line-height:calc(var(--rhythm) * 2);
 	margin-top:0;
-	margin-bottom:0;
+	margin-bottom:calc(var(--rhythm) / 2);
 	margin-right: calc(var(--rhythm) / 2);
 	padding:calc(var(--rhythm) / 2) var(--rhythm);
 	text-decoration:none;
