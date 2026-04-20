@@ -37,11 +37,11 @@ func outbox_Wildcard(context Context, document streams.Document) error {
 	userID, err := locatorService.ParseUser(document.Actor().ID())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to parse userID from actorID", "actorID: "+document.Actor().ID())
+		return derp.Wrap(err, location, "Unable to parse userID from actorID", "actorID: "+document.Actor().ID(), document.Map())
 	}
 
 	if userID != context.user.UserID {
-		return derp.Forbidden(location, "Actor does not match authenticated user", "actorID: "+document.Actor().ID())
+		return derp.Forbidden(location, "Actor does not match authenticated user", "actorID: "+document.Actor().ID(), document.Map())
 	}
 
 	// Add an activity record to the Outbox2
