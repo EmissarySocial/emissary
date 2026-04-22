@@ -23,6 +23,13 @@ func outbox_CreateKeyPackage(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.outbox_CreateKeyPackage"
 
+	// RULE: Verify that the Domain allows MLS messages for this User
+	domain := context.factory.Domain().Get()
+	if !domain.UserCanMLS(context.user) {
+		return derp.Forbidden(location, "MLS messages not allowed for this User")
+	}
+
+	// Extract the KeyPackage object from the Activity
 	object := activity.Object()
 
 	// RULE: The object must be attributed to the actor
@@ -56,6 +63,13 @@ func outbox_UpdateKeyPackage(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.outbox_UpdateKeyPackage"
 
+	// RULE: Verify that the Domain allows MLS messages for this User
+	domain := context.factory.Domain().Get()
+	if !domain.UserCanMLS(context.user) {
+		return derp.Forbidden(location, "MLS messages not allowed for this User")
+	}
+
+	// Extract the KeyPackage object from the Activity
 	object := activity.Object()
 
 	// RULE: The object must be attributed to the actor
@@ -101,6 +115,12 @@ func outbox_UpdateKeyPackage(context Context, activity streams.Document) error {
 func outbox_DeleteKeyPackage(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.outbox_DeleteKeyPackage"
+
+	// RULE: Verify that the Domain allows MLS messages for this User
+	domain := context.factory.Domain().Get()
+	if !domain.UserCanMLS(context.user) {
+		return derp.Forbidden(location, "MLS messages not allowed for this User")
+	}
 
 	actor := activity.Actor()   // nolint:scopeguard
 	object := activity.Object() // nolint:scopeguard

@@ -1,6 +1,8 @@
 package model
 
 import (
+	"strings"
+
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -23,6 +25,8 @@ func DomainSchema() schema.Element {
 			"forward":          schema.String{Format: "url", Required: false},
 			"data":             schema.Object{Wildcard: schema.String{}},
 			"colorMode":        schema.String{Enum: []string{DomainColorModeAuto, DomainColorModeLight, DomainColorModeDark}},
+			"mlsMode":          schema.String{Enum: []string{DomainMLSModeAll, DomainMLSModeGroups, DomainMLSModeNone}},
+			"mlsGroupIds":      schema.String{},
 			"syndication":      schema.Array{Items: form.LookupCodeSchema()},
 			"registrationData": schema.Object{Wildcard: schema.String{}},
 		},
@@ -64,6 +68,9 @@ func (domain *Domain) GetPointer(name string) (any, bool) {
 	case "colorMode":
 		return &domain.ColorMode, true
 
+	case "mlsMode":
+		return &domain.MLSMode, true
+
 	case "data":
 		return &domain.Data, true
 
@@ -92,6 +99,9 @@ func (domain Domain) GetStringOK(name string) (string, bool) {
 
 	case "imageUrl":
 		return domain.ImageURL(), true
+
+	case "mlsGroupIds":
+		return domain.MLSGroupIDs.Join(","), true
 	}
 
 	return "", false
@@ -132,6 +142,10 @@ func (domain *Domain) SetString(name string, value string) bool {
 			domain.ImageID = objectID
 			return true
 		}
+
+	case "mlsGroupIds":
+		domain.MLSGroupIDs = strings.Split(value, ",")
+		return true
 
 	case "iconUrl":
 		return true // Virtual fields can't be set, but don't return an error if someone tries

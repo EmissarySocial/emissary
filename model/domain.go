@@ -25,6 +25,8 @@ type Domain struct {
 	ThemeData        mapof.Any                       `bson:"themeData"`        // Custom data stored in this domain
 	RegistrationData mapof.String                    `bson:"registrationData"` // Custom data for signup template stored in this domain
 	ColorMode        string                          `bson:"colorMode"`        // Color mode for this domain (e.g. "LIGHT", "DARK", or "AUTO")
+	MLSMode          string                          `bson:"mlsMode"`          // MLS mode for this domain (e.g. "ALL", "GROUPS", or "NONE")
+	MLSGroupIDs      sliceof.String                  `bson:"mlsGroupIds"`      // List of GroupIDs that are allowed to use MLS features (only used if MLSMode is "GROUPS")
 	Data             mapof.String                    `bson:"data"`             // Custom data stored in this domain
 	DatabaseVersion  uint                            `bson:"databaseVersion"`  // Version of the database schema
 	Syndication      sliceof.Object[form.LookupCode] `bson:"syndication"`      // List of external services that this domain can syndicate to
@@ -35,9 +37,11 @@ type Domain struct {
 // NewDomain returns a fully initialized Domain object
 func NewDomain() Domain {
 	return Domain{
-		ThemeData: mapof.NewAny(),
-		ColorMode: DomainColorModeAuto,
-		Data:      mapof.NewString(),
+		ThemeData:   mapof.NewAny(),
+		ColorMode:   DomainColorModeAuto,
+		MLSGroupIDs: sliceof.NewString(),
+		Data:        mapof.NewString(),
+		Syndication: sliceof.NewObject[form.LookupCode](),
 	}
 }
 
@@ -134,4 +138,26 @@ func (domain *Domain) Summary() DomainSummary {
 		IconURL:  domain.IconURL(),
 		ImageURL: domain.ImageURL(),
 	}
+}
+
+func (domain *Domain) UserCanMLS(user *User) bool {
+
+	switch domain.MLSMode {
+
+	case DomainMLSModeAll:
+		return true
+
+	case DomainMLSModeGroups:
+
+		for _, groupID := range domain.MLSGroupIDs {
+			if objectID, err := primitive.ObjectIDFromHex(groupID); err == nil {
+				if user.GroupIDs.Contains(objectID) {
+					return true
+				}
+			}
+		}
+	}
+
+	// Fallthrough includes DomainMLSModeNone and any unrecognized values
+	return false
 }

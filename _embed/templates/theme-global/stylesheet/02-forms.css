@@ -91,7 +91,7 @@ input[type="radio"] {
  * Checkbutton - Fancy Checkboxes
  ******************************************/
 
-label.checkbutton:has(input[type="checkbox"]) {
+.checkbutton:has(input[type="checkbox"]) {
 	display: flex !important;
 	flex-direction: row;
 	align-items: center;
@@ -103,13 +103,13 @@ label.checkbutton:has(input[type="checkbox"]) {
 	margin: calc(var(--rhythm) / 2) 0;
 }
 
-label.checkbutton:has(input[type="checkbox"]:checked) {
+.checkbutton:has(input[type="checkbox"]:checked) {
 	border: solid 2px var(--blue50);
 	color: var(--blue50);
 	background-color: var(--blue10);
 }
 
-label.checkbutton input[type="checkbox"] {
+.checkbutton input[type="checkbox"] {
 	display: none;
 }
 
@@ -117,7 +117,7 @@ label.checkbutton input[type="checkbox"] {
  * Radiobutton - Fancy Radio Buttons
  ******************************************/
 
-label.radiobutton:has(input[type="radio"]) {
+.radiobutton:has(input[type="radio"]) {
 	display: flex !important;
 	flex-direction: row;
 	align-items: center;
@@ -129,13 +129,13 @@ label.radiobutton:has(input[type="radio"]) {
 	margin: calc(var(--rhythm) / 2) 0;
 }
 
-label.radiobutton:has(input[type="radio"]:checked) {
+.radiobutton:has(input[type="radio"]:checked) {
 	border: solid 2px var(--blue50);
 	color: var(--blue50);
 	background-color: var(--blue10);
 }
 
-label.radiobutton input[type="radio"] {
+.radiobutton input[type="radio"] {
 	display: none;
 }
 

@@ -248,6 +248,8 @@ func (service Icons) Get(name string) string {
 		return service.get("at")
 	case "menu":
 		return service.get("list")
+	case "mls":
+		return service.get("chat-text")
 	case "more-horizontal":
 		return service.get("three-dots")
 	case "more-vertical":

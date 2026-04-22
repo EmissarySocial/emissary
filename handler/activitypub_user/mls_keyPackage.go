@@ -21,6 +21,12 @@ func GetKeyPackageCollection(ctx *steranko.Context, factory *service.Factory, se
 		return derp.NotFound(location, "User not found")
 	}
 
+	// RULE: Verify that the Domain allows MLS messages for this User
+	domain := factory.Domain().Get()
+	if !domain.UserCanMLS(user) {
+		return derp.Forbidden(location, "MLS messages not allowed for this User")
+	}
+
 	// Fallthrough means this is a request for a specific page
 	keyPackageService := factory.MLSKeyPackage()
 	keyPackages, err := keyPackageService.QueryIDOnlyByUser(session, user.UserID)
@@ -49,6 +55,11 @@ func GetKeyPackageRecord(ctx *steranko.Context, factory *service.Factory, sessio
 		return ctx.NoContent(http.StatusNotFound)
 	}
 
+	// RULE: Verify that the Domain allows MLS messages for this User
+	domain := factory.Domain().Get()
+	if !domain.UserCanMLS(user) {
+		return derp.Forbidden(location, "MLS messages not allowed for this User")
+	}
 	// Load the keyPackage from the database
 	keyPackageService := factory.MLSKeyPackage()
 	keyPackage := model.NewKeyPackage()

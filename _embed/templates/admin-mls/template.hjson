@@ -1,0 +1,29 @@
+{
+	templateId:"admin-mls"
+	templateRole:"admin"
+	model: Domain
+	extends: ["admin-common"]
+	containedBy:["admin"]
+	label: "Encrypted Messaging"
+	description: "Domain Owners only.  Site Admin"
+	schema: {
+		type: "object", 
+		properties: {
+			mlsMode: {type:"string", enum:["ALL","GROUPS", "NONE"]},
+			mlsGroupIds: {type:"string"}
+		}
+	}
+	actions: {
+		index: {
+			roles:["owner"]
+			steps: [
+				{do: "set-data", defaults:{"data.mls-active":"NONE"}}
+				{do: "view-html"}
+				{do: "set-data", from-form:["mlsMode","mlsGroupIds"]}
+				{do: "save"}
+				{do: "inline-save-button"}
+				{do: "reload-page"}
+			]
+		}
+	}
+}
