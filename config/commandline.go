@@ -1,6 +1,7 @@
 package config
 
 import (
+	"net/url"
 	"os"
 	"strings"
 
@@ -87,6 +88,22 @@ func (args CommandLineArgs) Protocol() string {
 	os.Exit(1)
 
 	return ""
+}
+
+func (args CommandLineArgs) ConfigDatabase() string {
+
+	if strings.HasPrefix(args.Location, "file://") {
+		return ""
+	}
+
+	if location, err := url.Parse(args.Location); err == nil {
+		location.Path = strings.TrimPrefix(location.Path, "/")
+		if location.Path != "" {
+			return location.Path
+		}
+	}
+
+	return "emissary"
 }
 
 // ConfigOptions returns any config modifiers specified in the command line (like --port)
