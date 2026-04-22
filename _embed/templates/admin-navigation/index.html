@@ -1,3 +1,5 @@
+{{- $theme := .Theme .ThemeID -}}
+
 <div class="page">
 
     <script src="/.themes/global/resources/sortable-1.15.0/Sortable.min.js"></script>
@@ -5,29 +7,53 @@
 	{{template "menubar" .}}
 
     {{ $navigation := .Navigation}}
-    {{- if not $navigation.IsEmpty -}}
+    {{- if $navigation.NotEmpty -}}
 
-        <div class="margin-vertical">
-            <span class="link" hx-get="/admin/navigation/add">{{icon "add"}}&nbsp;Add an Item</span>
-        </div>
+		<div class="flex-row width-100%">
+			<div class="width-33% card padding-sm padding-horizontal clickable" hx-get="/admin/domain/themes">
 
-        <form class="sortable margin-bottom" hx-post="/admin/navigation/sort" hx-swap="none" hx-push-url="false" hx-trigger="end">
-            {{- range $navigation -}}
-                <div class="draggable">
-                    <input type="hidden" name="keys" value="{{.StreamID}}">
-                    <div class="float-right">
-                        <a href="/{{.Token}}/edit" class="text-sm button">Edit</a>
-                    </div>
-                    {{icon "grip-vertical"}}
-                    &nbsp;
-                    <span>{{.Label}}</span>
-                </div>
-            {{- end -}}
-        </form>
+				<div class="text-sm text-gray">Theme</div>
+				<div class="text-lg bold">{{$theme.Label}}</div>
+				<div class="text-sm margin-bottom">{{$theme.Description}}</div>
 
-        <div class="text text-sm margin-bottom">
-            <i>Drag and Drop Items to Sort.</i>
-        </div>
+				<div class="pos-absolute-top-right">
+					<button class="text-xs">Edit</button>
+				</div>
+
+			</div>
+			<div class="width-33% card padding-sm padding-horizontal clickable" role="button" hx-get="/admin/domain/defaults">
+				<div class="text-sm text-gray">Visitors</div>
+				<div class="bold margin-none">{{.DefaultPage_Anonymous}}</div>
+				<div class="text-sm text-gray margin-top">Signed-In Users</div>
+				<div class="bold margin-none">{{.DefaultPage_Authenticated}}</div>
+				<div class="pos-absolute-top-right">
+					<button class="text-xs">Edit</button>
+				</div>
+			</div>
+			<div class="width-33% card padding flex-center">
+				<button class="primary" hx-get="/admin/navigation/add">{{icon "add"}} Add a Page</button>
+			</div>
+		</div>
+
+		<div class="card padding margin-top">
+
+			<form class="sortable margin-bottom" hx-post="/admin/navigation/sort" hx-swap="none" hx-push-url="false" hx-trigger="end">
+				{{- range $navigation -}}
+					<div class="draggable flex-row flex-align-center">
+						<div class="flex-grow">
+							<input type="hidden" name="keys" value="{{.StreamID}}">
+							{{icon "grip-vertical"}}
+							&nbsp;
+							<span>{{.Label}}</span>
+						</div>
+						<div>
+							<a href="/{{.Token}}/edit" class="text-xs button">Edit</a>
+						</div>
+					</div>
+				{{- end -}}
+			</form>
+
+		</div>
 
     {{- else -}}
 

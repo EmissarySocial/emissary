@@ -41,6 +41,24 @@
 			}]
 		}
 
+		defaults: {
+			roles:["owner"]
+			steps: [
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+					{do:"edit", form:{
+						type:"layout-vertical",
+						children: [
+							{type:"text", path:"defaultAnonymous", label:"Visitors", options:{placeholder:"/home"}},
+							{type:"text", path:"defaultAuthenticated", label:"Signed-In Users", options:{placeholder:"/@me/newsfeed"}}
+						]
+					}}
+					{do:"save"}
+					{do:"refresh-page"}
+				]}
+			]
+		}
+
 		signup: {
 			roles:["owner"]
 			steps: [

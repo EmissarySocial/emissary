@@ -1,15 +1,8 @@
-{{- $theme := .Theme .ThemeID -}}
-
 <div class="page">
 	
 	<script src="/.themes/global/resources/sortable-1.15.0/Sortable.min.js"></script>
 	
 	{{template "menubar" .}}
-
-	<div class="margin-bottom">
-		<span class="bold">Theme: {{$theme.Label}}</span> 
-		<span class="button text-xs" hx-get="/admin/domain/themes">Select a Theme</span>
-	</div>
 
  	<div 
 		hx-get="/admin/domain/index" 

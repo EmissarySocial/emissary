@@ -11,24 +11,26 @@ import (
 func DomainSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"domainId":         schema.String{Format: "objectId"},
-			"iconId":           schema.String{Format: "objectId"},
-			"imageId":          schema.String{Format: "objectId"},
-			"iconUrl":          schema.String{Format: "url"}, // virtual field
-			"imageUrl":         schema.String{Format: "url"}, // virtual field
-			"themeId":          schema.String{MaxLength: 128},
-			"registrationId":   schema.String{MaxLength: 128},
-			"inboxId":          schema.String{MaxLength: 128},
-			"outboxId":         schema.String{MaxLength: 128},
-			"label":            schema.String{MaxLength: 128},
-			"description":      schema.String{MaxLength: 1024},
-			"forward":          schema.String{Format: "url", Required: false},
-			"data":             schema.Object{Wildcard: schema.String{}},
-			"colorMode":        schema.String{Enum: []string{DomainColorModeAuto, DomainColorModeLight, DomainColorModeDark}},
-			"mlsMode":          schema.String{Enum: []string{DomainMLSModeAll, DomainMLSModeGroups, DomainMLSModeNone}},
-			"mlsGroupIds":      schema.String{},
-			"syndication":      schema.Array{Items: form.LookupCodeSchema()},
-			"registrationData": schema.Object{Wildcard: schema.String{}},
+			"domainId":             schema.String{Format: "objectId"},
+			"iconId":               schema.String{Format: "objectId"},
+			"imageId":              schema.String{Format: "objectId"},
+			"iconUrl":              schema.String{Format: "url"}, // virtual field
+			"imageUrl":             schema.String{Format: "url"}, // virtual field
+			"themeId":              schema.String{MaxLength: 128},
+			"registrationId":       schema.String{MaxLength: 128},
+			"inboxId":              schema.String{MaxLength: 128},
+			"outboxId":             schema.String{MaxLength: 128},
+			"label":                schema.String{MaxLength: 128},
+			"description":          schema.String{MaxLength: 1024},
+			"forward":              schema.String{Format: "url", Required: false},
+			"data":                 schema.Object{Wildcard: schema.String{}},
+			"colorMode":            schema.String{Enum: []string{DomainColorModeAuto, DomainColorModeLight, DomainColorModeDark}},
+			"mlsMode":              schema.String{Enum: []string{DomainMLSModeAll, DomainMLSModeGroups, DomainMLSModeNone}},
+			"defaultAnonymous":     schema.String{MaxLength: 128},
+			"defaultAuthenticated": schema.String{MaxLength: 128},
+			"mlsGroupIds":          schema.String{},
+			"syndication":          schema.Array{Items: form.LookupCodeSchema()},
+			"registrationData":     schema.Object{Wildcard: schema.String{}},
 		},
 	}
 }
@@ -76,6 +78,12 @@ func (domain *Domain) GetPointer(name string) (any, bool) {
 
 	case "syndication":
 		return &domain.Syndication, true
+
+	case "defaultAnonymous":
+		return &domain.DefaultAnonymous, true
+
+	case "defaultAuthenticated":
+		return &domain.DefaultAuthenticated, true
 	}
 
 	return nil, false
