@@ -10,6 +10,34 @@ import (
 	"github.com/benpate/steranko"
 )
 
+// GetValidateSignupCode validates a User.Username for uniqueness/availability
+func GetValidateSignupCode(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+
+	// This service can only validate the "secret" field
+	if field := ctx.QueryParam("field"); field != "secret" {
+		return ctx.JSON(http.StatusBadRequest, mapof.Any{
+			"valid":   false,
+			"message": "Invalid field",
+		})
+	}
+
+	// Validate the secret code against the registration template
+	domain := factory.Domain().Get()
+
+	if ctx.QueryParam("value") != domain.RegistrationData.GetString("secret") {
+		return ctx.JSON(http.StatusOK, mapof.Any{
+			"valid":   false,
+			"message": "",
+		})
+	}
+
+	// If the username is allowed, then return a success
+	return ctx.JSON(http.StatusOK, mapof.Any{
+		"valid":   true,
+		"message": "",
+	})
+}
+
 // GetValidateUsername validates a User.Username for uniqueness/availability
 func GetValidateUsername(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
