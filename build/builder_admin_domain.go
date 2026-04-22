@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"html/template"
 	"net/http"
+	"slices"
 	"sort"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -191,8 +192,10 @@ func (w Domain) PropertyForm() form.Element {
  ******************************************/
 
 // RegistrationTemplates returns all available signup templates
-func (w Domain) RegistrationTemplates() []form.LookupCode {
-	return w._factory.Registration().List()
+func (w Domain) RegistrationTemplates() sliceof.Object[form.LookupCode] {
+	result := w._factory.Registration().List()
+	slices.SortFunc(result, form.SortLookupCodeByLabel)
+	return result
 }
 
 // RegistrationTemplate returns the signup template selected for this domain
