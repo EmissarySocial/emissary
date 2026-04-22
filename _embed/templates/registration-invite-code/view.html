@@ -83,7 +83,9 @@
 					<div class="layout-elements">
 						<div class="layout-element">
 							<label for="username">Username</label>
-							<input type="text" name="username" id="username" pattern="^[A-Za-z0-9_]+$" required="true" minlength="5" maxlength="50" autocomplete="off" data-1p-ignore >
+							<div class="badge-container">
+								<input type="text" name="username" id="username" pattern="^[A-Za-z0-9_]+$" required="true" minlength="5" maxlength="50" autocomplete="off" data-1p-ignore  data-script="install validator(url:'/.validate/username')">
+							</div>
 							<div role="note" class="text-sm gray40">How others will identify you. Letters and numbers only. (PUBLIC)</div>
 						</div>
 					</div>
