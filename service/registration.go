@@ -126,7 +126,7 @@ func (service *Registration) Validate(session data.Session, userService *User, d
 
 	// Validate basic transaction values (name, email, username, userID, secret)
 	if secret := domain.RegistrationData.GetString("secret"); txn.IsInvalid(secret) {
-		return derp.BadRequest(location, "Invalid Registration. Please sign up again.", txn)
+		return derp.BadRequest(location, "Invalid Registration. Please try again", txn)
 	}
 
 	user := model.NewUser()
@@ -136,7 +136,7 @@ func (service *Registration) Validate(session data.Session, userService *User, d
 		return derp.BadRequest(location, "Invalid UserID", txn.UserID)
 
 	} else if err := userService.LoadByID(session, userID, &user); !derp.IsNotFound(err) {
-		return derp.BadRequest(location, "UserID already exists. Please sign up again.")
+		return derp.BadRequest(location, "UserID already exists. Please try again.")
 	}
 
 	// Username must not already exist in the database
