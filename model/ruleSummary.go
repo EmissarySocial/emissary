@@ -80,7 +80,7 @@ func (rule RuleSummary) IsDisallowed(document *streams.Document) bool {
 
 	// Label actions add a label to the document, but do not disallow it.
 	document.Append(vocab.PropertyTag, map[string]any{
-		vocab.PropertyHref:    "/@me/inbox/rule-edit?ruleId=" + rule.RuleID.Hex(),
+		vocab.PropertyHref:    "/@me/newsfeed/rule-edit?ruleId=" + rule.RuleID.Hex(),
 		vocab.PropertyRel:     TagRelationRule,
 		vocab.PropertyName:    rule.FollowingLabel,
 		vocab.PropertyContent: rule.Label,

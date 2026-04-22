@@ -863,8 +863,8 @@
 					{
 						do:"edit", 
 						options:[
-							endpoin:/@me/inbox/rule-edit-actor?ruleId={{.ObjectID}}"
-							delet:/@me/inbox/rule-delete?ruleId={{.ObjectID}}", 
+							endpoin:/@me/newsfeed/rule-edit-actor?ruleId={{.ObjectID}}"
+							delet:/@me/newsfeed/rule-delete?ruleId={{.ObjectID}}", 
 							"deletelabe:Delete Rule"
 						]
 						form:{
@@ -894,8 +894,8 @@
 					{
 						do:"edit", 
 						options:[
-							"endpoint:/@me/inbox/rule-edit-actor?ruleId={{.ObjectID}}"
-							"delete:/@me/inbox/rule-delete?ruleId={{.ObjectID}}"
+							"endpoint:/@me/newsfeed/rule-edit-actor?ruleId={{.ObjectID}}"
+							"delete:/@me/newsfeed/rule-delete?ruleId={{.ObjectID}}"
 							"delete-label:Delete Rule"
 						]
 						form:{
@@ -925,8 +925,8 @@
 					{
 						do:"edit", 
 						options:[
-							"endpoint:/@me/inbox/rule-edit-actor?ruleId={{.ObjectID}}"
-							"delete:/@me/inbox/rule-delete?ruleId={{.ObjectID}}", 
+							"endpoint:/@me/newsfeed/rule-edit-actor?ruleId={{.ObjectID}}"
+							"delete:/@me/newsfeed/rule-delete?ruleId={{.ObjectID}}", 
 							"delete-label:Delete Rule"
 						]
 						form:{
