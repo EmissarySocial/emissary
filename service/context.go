@@ -14,7 +14,6 @@ import (
 	"github.com/benpate/rosetta/ranges"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -219,7 +218,6 @@ func (service *Context) RangeByContext(session data.Session, context string, cri
 
 func (service *Context) QueryByInReplyTo(session data.Session, inReplyTo string, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.ObjectLink], error) {
 	criteria = criteria.AndEqual("inReplyTo", inReplyTo)
-	spew.Dump(criteria)
 	return service.Query(session, criteria, options...)
 }
 

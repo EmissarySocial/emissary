@@ -21,7 +21,6 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -42,7 +41,6 @@ func NewDomain(factory Factory, session data.Session, request *http.Request, res
 
 	// Find/Create new database record for the domain.
 	domain := factory.Domain().Get()
-	spew.Dump(domain)
 
 	// Create the common Builder
 	common, err := NewCommonWithTemplate(factory, session, request, response, template, domain, actionID)

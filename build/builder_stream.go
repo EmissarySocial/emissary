@@ -25,7 +25,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -654,7 +653,6 @@ func (w Stream) ReplyLinksAfter(dateString string, maxRows int) (sliceof.Object[
 	criteria := exp.GreaterThan("createDate", minDate)
 
 	result, err := contextService.QueryByInReplyTo(w._session, w._stream.URL, criteria, option.MaxRows(int64(maxRows)), option.SortAsc("createDate"))
-	spew.Dump(result, err)
 	return result, err
 }
 
