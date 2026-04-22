@@ -1,6 +1,7 @@
 package config
 
 import (
+	"net/url"
 	"os"
 	"strings"
 
@@ -10,11 +11,12 @@ import (
 
 // CommandLineArgs represents the command line arguments passed to the server
 type CommandLineArgs struct {
-	Source   string // Type of configuration file (Command Line | Enviornment Variable | Default)
-	Protocol string // Protocol to use when loading the configuration (MONGODB | FILE)
-	Location string // URI of the configuration file
-	Setup    bool   // If TRUE, then the server will run in SETUP mode
-	HTTPPort int    // Port to use in setup mode (only)
+	Source     string // Type of configuration file (Command Line | Enviornment Variable | Default)
+	Location   string // URI of the configuration file
+	Database   string // Name of the MongoDB config database
+	Collection string // Name of the MongoDB config collection
+	Setup      bool   // If TRUE, then the server will run in SETUP mode
+	HTTPPort   int    // Port to use in setup mode (only)
 }
 
 // GetCommandLineArgs returns the location of the configuration file
@@ -22,11 +24,15 @@ func GetCommandLineArgs() CommandLineArgs {
 
 	var source string
 	var location string
+	var db string
+	var collection string
 	var setup bool
 	var httpPort int
 
 	// Look for the configuration location in the command line arguments
 	pflag.StringVar(&location, "config", "", "Path to configuration file")
+	pflag.StringVar(&db, "db", "emissary", "Name of the MongoDB config database")
+	pflag.StringVar(&collection, "collection", "config", "Name of the MongoDB config collection")
 	pflag.BoolVar(&setup, "setup", false, "Run setup server")
 	pflag.IntVar(&httpPort, "port", 0, "HTTP Port to use for setup mode.")
 	pflag.Parse()
@@ -53,26 +59,27 @@ func GetCommandLineArgs() CommandLineArgs {
 	}
 
 	return CommandLineArgs{
-		Source:   source,
-		Location: location,
-		Protocol: getConfigProtocol(location),
-		Setup:    setup,
-		HTTPPort: httpPort,
+		Source:     source,
+		Location:   location,
+		Database:   db,
+		Collection: collection,
+		Setup:      setup,
+		HTTPPort:   httpPort,
 	}
 }
 
-// getConfigProtocol returns the protocol used to load the configuration
-func getConfigProtocol(location string) string {
+// Protocol returns the protocol used to load the configuration
+func (args CommandLineArgs) Protocol() string {
 
 	switch {
 
-	case strings.HasPrefix(location, "mongodb://"):
+	case strings.HasPrefix(args.Location, "mongodb://"):
 		return StorageTypeMongo
 
-	case strings.HasPrefix(location, "mongodb+srv://"):
+	case strings.HasPrefix(args.Location, "mongodb+srv://"):
 		return StorageTypeMongo
 
-	case strings.HasPrefix(location, "file://"):
+	case strings.HasPrefix(args.Location, "file://"):
 		return StorageTypeFile
 	}
 
@@ -81,6 +88,22 @@ func getConfigProtocol(location string) string {
 	os.Exit(1)
 
 	return ""
+}
+
+func (args CommandLineArgs) ConfigDatabase() string {
+
+	if strings.HasPrefix(args.Location, "file://") {
+		return ""
+	}
+
+	if location, err := url.Parse(args.Location); err == nil {
+		location.Path = strings.TrimPrefix(location.Path, "/")
+		if location.Path != "" {
+			return location.Path
+		}
+	}
+
+	return "emissary"
 }
 
 // ConfigOptions returns any config modifiers specified in the command line (like --port)
