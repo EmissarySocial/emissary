@@ -217,7 +217,7 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 				Type:           newActor.Type(),
 				Name:           newActor.Name(),
 				Icon:           newActor.Icon().Href(),
-				Username:       newActor.UsernameOrID(),
+				Username:       newActor.Username(),
 				MLSKeyPackages: newActor.MLSKeyPackages().ID(),
 			}}
 
