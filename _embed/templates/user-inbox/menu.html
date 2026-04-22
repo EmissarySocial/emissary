@@ -4,7 +4,7 @@
 
 <div class="margin-vertical"></div>
 
-	<a href="/@me/newsfeed/inbox?folderId={{nilObjectID.Hex}}" class="turboclick menu-item ellipsis hover-trigger folder {{if $allFolders}}selected{{end}}">
+	<a href="/@me/newsfeed?folderId={{nilObjectID.Hex}}" class="turboclick menu-item ellipsis hover-trigger folder {{if $allFolders}}selected{{end}}">
 		<span>
 			{{- if $allFolders -}}
 				{{- iconFilled "folder" -}}
@@ -19,7 +19,7 @@
 
 	{{- range .Folders -}}
 		{{- $folderID := .FolderID.Hex -}}
-		<a href="/@me/newsfeed/inbox?folderId={{$folderID}}" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
+		<a href="/@me/newsfeed?folderId={{$folderID}}" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
 			<span>
 				{{- if eq $selectedID .FolderID -}}
 					{{- iconFilled .Icon -}}
