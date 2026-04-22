@@ -1,0 +1,149 @@
+{{- $builder := . }}
+{{- $message := .QueryParam "message" -}}
+{{- $iconURL := .IconURL -}}
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>{{first (.RegistrationData "title") "Register"}}</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="generator" content="https://emissary.social">
+	<link rel="stylesheet" href="/.themes/global/resources/bootstrap-icons-1.13.1/bootstrap-icons.min.css" rel="preload">
+	<link rel="stylesheet" href="/.themes/global/stylesheet" rel="preload">
+	<link rel="stylesheet" href="/.themes/default/stylesheet" rel="preload">
+</head>
+
+<body hx-target="#card" hx-swap="innerHTML" hx-push-url="false" style="height:100vh">
+
+	<main class="flex-center" style="height:100vh;">
+
+		<div id="card" class="card" style="width:clamp(540px, 50%, 720px); margin:auto; padding:16px 32px; line-height:150%;">
+			
+			<form hx-post="/register" action="/register" method="post">
+
+				{{- if ne "" $iconURL -}}
+					<img src="{{$iconURL}}" class="block margin-auto" style="width:clamp(100px, 50%, 400px)">
+				{{- end -}}
+
+				<h1>{{.RegistrationData "title"}}</h1>
+
+				<div class="margin-bottom-xl">{{.RegistrationData "description" | markdown }}</div>
+
+				{{- if ne "" $message -}}
+					<div class="margin-bottom">{{$message}}</div>
+				{{- end -}}
+
+				<div id="layout" class="layout-vertical margin-bottom-lg" style="display:none;" script="on load show me">
+
+					<!-- Honeypot field -->
+					<div class="layout-elements" script="on load hide me">
+						<div class="layout-element">
+							<label for="displayName">Full Name</label>
+							<input type="text" name="fullName" id="fullName" minlength="3" maxlength="50" autocomplete="off" data-1p-ignore>
+							<div role="note" class="text-sm gray40">Your full name. (PUBLIC)</div>
+						</div>
+					</div>
+
+					<div class="layout-elements">
+						<div class="layout-element">
+							<label for="secret">Invite Code</label>
+							<div class="badge-container">
+								<input type="text" name="secret" id="secret" required="true" maxlength="50" autocomplete="off" data-1p-ignore data-script="install validator(url:'/.validate/signupCode')">
+							</div>
+							<div role="note" class="text-sm gray40">Enter your invite code to sign up.</div>
+						</div>
+					</div>
+
+					<div class="layout-elements">
+						<div class="layout-element">
+							<label for="displayName">Your Name</label>
+							<input type="text" name="displayName" id="displayName" required="true" minlength="3" maxlength="50" autocomplete="off" data-1p-ignore>
+							<div role="note" class="text-sm gray40">Displayed on your profile page. (PUBLIC)</div>
+						</div>
+					</div>
+
+					<!-- Honeypot field -->
+					<div class="layout-elements" data-script="on load hide me">
+						<div class="layout-element">
+							<label for="phoneNumber">Phone Number</label>
+							<input type="text" name="phoneNumber" id="phoneNumber" minlength="7" maxlength="50" autocomplete="off" data-1p-ignore>
+							<div role="note" class="text-sm gray40">A phone number where we can reach you. (PRIVATE)</div>
+						</div>
+					</div>
+
+					<div class="layout-elements">
+						<div class="layout-element">
+							<label for="emailAddress">Email Address</label>
+							<input type="email" name="emailAddress" id="emailAddress" required="true" minlength="6" maxlength="50">
+							<div role="note" class="text-sm gray40">Your email is never shared with anyone. (PRIVATE)</div>
+						</div>
+					</div>
+
+					<div class="layout-elements">
+						<div class="layout-element">
+							<label for="username">Username</label>
+							<input type="text" name="username" id="username" pattern="^[A-Za-z0-9_]+$" required="true" minlength="5" maxlength="50" autocomplete="off" data-1p-ignore >
+							<div role="note" class="text-sm gray40">How others will identify you. Letters and numbers only. (PUBLIC)</div>
+						</div>
+					</div>
+
+					<!-- Honeypot field -->
+					<div class="layout-elements" script="on load hide me">
+						<div class="layout-element">
+							<label for="country">Country</label>
+							<input type="text" name="country" id="country" minlength="2" maxlength="50" autocomplete="off" data-1p-ignore>
+							<div role="note" class="text-sm gray40">Displayed on your profile page.</div>
+						</div>
+					</div>
+
+					{{ range $index := seq 4 }}
+						{{$termID := concat "terms" (add 1 $index)}}
+						{{$term := $builder.RegistrationData $termID}}
+						{{if ne ""  $term }}
+							<div class="layout-element">
+								<label for="{{$termID}}">
+									<input type="checkbox" id="{{$termID}}" name="{{$termID}}" required="true">
+									{{$term}}
+								</label>
+							</div>
+						{{ end }}
+					{{ end }}
+
+				</div>
+
+				<div>
+
+					<button class="htmx-request-show primary" disabled>
+						<span class="spin">{{icon "loading"}}</span> Registering
+					</button>
+
+					<button type="submit" id="submitButton" class="primary htmx-request-hide" tabindex="0">
+						Register Now
+					</button>
+
+					<a href="/" class="button">Cancel</a>
+
+					<span id="htmx-response-message" class="text-red"></span>
+
+					<div class="margin-top-xl">
+						Already have a profile?
+						<a href="/signin">Sign In &rarr;</a>
+					</div>
+
+				</div>
+
+			</form>
+
+		</div>
+
+	</main>
+	
+	<script type="text/hyperscript" src="/.themes/global/hyperscript"></script>
+	<script type="text/javascript" src="/.themes/global/resources/htmx/htmx.min.js" rel="preload"></script>
+	<script type="text/javascript" src="/.themes/global/resources/hyperscript/_hyperscript.min.js" rel="preload"></script>
+	<script type="text/javascript" src="/.themes/global/javascript"></script>
+
+	<div script="on RegistrationSuccess from window go to url /@me"></div>
+</body>
+</html>
