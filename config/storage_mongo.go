@@ -37,7 +37,7 @@ func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 	}
 
 	// Get the configuration collection
-	collection := client.Database("emissary").Collection("config")
+	collection := client.Database(args.Database).Collection(args.Collection)
 
 	context, cancelFunc := context.WithCancel(context.Background())
 
