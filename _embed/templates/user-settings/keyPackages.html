@@ -1,5 +1,6 @@
 {{- $isDesktop := .IsDesktop -}}
 {{- $keyPackages := .KeyPackages -}}
+{{- $isMasquerading := .IsMasquerading -}}
 
 <div class="app" script="init send SelectNav(id:'settings')">
 	<title>Security | Public Keys</title>
@@ -18,9 +19,9 @@
 					<a href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
 				{{ end }}
 				<a href="/@me/settings/visibility" hx-boost="true">Visibility</a>
-				<a href="/@me/settings/password" hx-boost="true">Change Password</a>
-				<a href="/@me/settings/oauth" hx-boost="true">Connected Clients</a>
-				<a href="/@me/settings/keyPackages" class="selected" hx-boost="true">Public Keys</a>
+				<a href="/@me/settings/password" hx-boost="true">Password</a>
+				<a href="/@me/settings/oauth" hx-boost="true">OAuth Clients</a>
+				<a href="/@me/settings/keyPackages" class="selected" hx-boost="true">Encrypted Messages</a>
 			</div>
 			<div class="right">
 				<a href="https://emissary.dev/user-profile" target="_blank" class="link">
@@ -79,7 +80,9 @@
 								</a>
 							</div>
 							<div class="align-right nowrap">
-								<button hx-get="/@me/settings/keyPackage-delete?keyPackageId={{$keyPackage.ID}}" class="text-xs text-red">Delete</button>
+								{{- if not $isMasquerading -}}
+									<button hx-get="/@me/settings/keyPackage-delete?keyPackageId={{$keyPackage.ID}}" class="text-xs text-red">Delete</button>
+								{{- end -}}
 							</div>
 						</div>
 					{{- end -}}

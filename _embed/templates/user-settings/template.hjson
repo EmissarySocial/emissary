@@ -642,10 +642,13 @@
 		keyPackage-delete: {
 			roles:["self"]
 			steps:[
-				{do:"with-keypackage", steps:[
-					{do:"require-password", title:"Delete Public Key?", message:"Removing the public key <b>{{.Object.Generator}}</b> from this server will <i>erase all encrypted messages</i> from the device that created it.", submit:"Delete Public Key"}
-					{do:"delete", method:"post"}
-					{do:"refresh-page"}
+				{do:"if", condition:"{{.IsMasquerading}}", then:[
+				], else:[
+					{do:"with-keypackage", steps:[
+						{do:"require-password", title:"Delete Public Key?", message:"Removing the public key <b>{{.Object.Generator}}</b> from this server will <i>erase all encrypted messages</i> from the device that created it.", submit:"Delete Public Key"}
+						{do:"delete", method:"post"}
+						{do:"refresh-page"}
+					]}
 				]}
 			]
 		}
