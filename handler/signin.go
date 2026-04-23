@@ -73,7 +73,7 @@ func calcNextURL(next string) string {
 
 	// If "next" is empty, then redirect to the user's profile
 	if next == "" {
-		return "/@me"
+		return "/"
 	}
 
 	// Otherwise, trim the hostname so we don't have open redirects to other servers
@@ -81,12 +81,12 @@ func calcNextURL(next string) string {
 
 	// Do not allow redirect loops
 	if strings.HasPrefix(next, "/signin") {
-		return "/@me"
+		return "/"
 	}
 
 	// Do not allow redirect loops
 	if strings.HasPrefix(next, "/signout") {
-		return "/@me"
+		return "/"
 	}
 
 	// Allow this "next" URL redirect

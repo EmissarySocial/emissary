@@ -28,6 +28,7 @@ func DomainSchema() schema.Element {
 			"mlsMode":              schema.String{Enum: []string{DomainMLSModeAll, DomainMLSModeGroups, DomainMLSModeNone}},
 			"defaultAnonymous":     schema.String{MaxLength: 128},
 			"defaultAuthenticated": schema.String{MaxLength: 128},
+			"defaultOwner":         schema.String{MaxLength: 128},
 			"mlsGroupIds":          schema.String{},
 			"syndication":          schema.Array{Items: form.LookupCodeSchema()},
 			"registrationData":     schema.Object{Wildcard: schema.String{}},
@@ -84,6 +85,9 @@ func (domain *Domain) GetPointer(name string) (any, bool) {
 
 	case "defaultAuthenticated":
 		return &domain.DefaultAuthenticated, true
+
+	case "defaultOwner":
+		return &domain.DefaultOwner, true
 	}
 
 	return nil, false

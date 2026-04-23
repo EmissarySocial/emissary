@@ -2,12 +2,14 @@
       
 	{{template "menubar" .}}
 
-    <div class="table">
-        <div role="button" hx-get="/admin/rules/add" class="link">
-            {{icon "add"}} &nbsp;<span>Add a Rule</span>
-        </div>
-        {{.View "list"}}
-    </div>
+	<div class="card padding">
+		<div class="table">
+			<div role="button" hx-get="/admin/rules/add" class="link">
+				{{icon "add"}} &nbsp;<span>Add a Rule</span>
+			</div>
+			{{.View "list"}}
+		</div>
+	</div>
 
 	<div 
 		hx-get="/admin/rules/index" 

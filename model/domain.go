@@ -29,6 +29,7 @@ type Domain struct {
 	MLSGroupIDs          sliceof.String                  `bson:"mlsGroupIds"`          // List of GroupIDs that are allowed to use MLS features (only used if MLSMode is "GROUPS")
 	DefaultAnonymous     string                          `bson:"defaultAnonymous"`     // Default page for anonymous users (defaults to "/home")
 	DefaultAuthenticated string                          `bson:"defaultAuthenticated"` // Default page for authenticated users (defaults to "/@me")
+	DefaultOwner         string                          `bson:"defaultOwner"`         // Default page for owners (defaults to "/admin")
 	Data                 mapof.String                    `bson:"data"`                 // Custom data stored in this domain
 	DatabaseVersion      uint                            `bson:"databaseVersion"`      // Version of the database schema
 	Syndication          sliceof.Object[form.LookupCode] `bson:"syndication"`          // List of external services that this domain can syndicate to
@@ -166,11 +167,15 @@ func (domain *Domain) UserCanMLS(user *User) bool {
 
 func (domain Domain) DefaultPage(authorization Authorization) string {
 
-	if authorization.IsAuthenticated() {
-		return domain.DefaultPage_Authenticated()
+	if authorization.NotAuthenticated() {
+		return domain.DefaultPage_Anonymous()
 	}
 
-	return domain.DefaultPage_Anonymous()
+	if authorization.DomainOwner {
+		return domain.DefaultPage_Owner()
+	}
+
+	return domain.DefaultPage_Authenticated()
 }
 
 func (domain Domain) DefaultPage_Anonymous() string {
@@ -187,4 +192,12 @@ func (domain Domain) DefaultPage_Authenticated() string {
 	}
 
 	return "/@me/newsfeed"
+}
+
+func (domain Domain) DefaultPage_Owner() string {
+	if domain.DefaultOwner != "" {
+		return domain.DefaultOwner
+	}
+
+	return "/admin"
 }

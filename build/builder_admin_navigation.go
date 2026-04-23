@@ -135,7 +135,37 @@ func (w Navigation) debug() {
  * Other Data Accessors
  ******************************************/
 
+func (w Navigation) ThemeID() string {
+	domain := w._factory.Domain().Get()
+	return domain.ThemeID
+}
+
+func (w Navigation) Theme(themeID string) model.Theme {
+	themeService := w._factory.Theme()
+	return themeService.GetTheme(themeID)
+}
+
 // IsAdminBuilder returns TRUE because Navigation is an admin route.
 func (w Navigation) IsAdminBuilder() bool {
 	return true
+}
+
+func (w Navigation) DefaultPage() string {
+	domain := w.factory().Domain().Get()
+	return domain.DefaultPage(w._authorization)
+}
+
+func (w Navigation) DefaultPage_Anonymous() string {
+	domain := w.factory().Domain().Get()
+	return domain.DefaultPage_Anonymous()
+}
+
+func (w Navigation) DefaultPage_Authenticated() string {
+	domain := w.factory().Domain().Get()
+	return domain.DefaultPage_Authenticated()
+}
+
+func (w Navigation) DefaultPage_Owner() string {
+	domain := w.factory().Domain().Get()
+	return domain.DefaultPage_Owner()
 }

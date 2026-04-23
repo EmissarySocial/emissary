@@ -32,7 +32,7 @@ func (step StepEditRegistration) Get(builder Builder, buffer io.Writer) Pipeline
 
 	b := html.New()
 
-	b.H1().ID("modal-title").InnerText("User Registration Options").Close()
+	b.H1().ID("modal-title").InnerText("New User Signups").Close()
 	b.Form("", "").Attr("hx-get", "/admin/domain/signup").Attr("hx-trigger", "change").Attr("hx-push-url", "false")
 	b.Div().Class("layout layout-vertical")
 	b.Div().Class("layout-elements")

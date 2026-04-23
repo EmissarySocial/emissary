@@ -49,8 +49,9 @@
 					{do:"edit", form:{
 						type:"layout-vertical",
 						children: [
-							{type:"text", path:"defaultAnonymous", label:"Visitors", options:{placeholder:"/home"}},
+							{type:"text", path:"defaultAnonymous", label:"Anonymous Visitors", options:{placeholder:"/home"}},
 							{type:"text", path:"defaultAuthenticated", label:"Signed-In Users", options:{placeholder:"/@me/newsfeed"}}
+							{type:"text", path:"defaultOwner", label:"Domain Owners", options:{placeholder:"/admin"}}
 						]
 					}}
 					{do:"save"}

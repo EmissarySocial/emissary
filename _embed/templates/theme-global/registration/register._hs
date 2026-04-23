@@ -16,7 +16,7 @@ on RegistrationSuccess
 	set lastPage to sessionStorage.getItem("signin-return")
 	call sessionStorage.removeItem("signin-return")
 	if lastPage is empty then
-		set lastPage to "/home"
+		set lastPage to "/"
 	end
 	set window.location to lastPage
 end

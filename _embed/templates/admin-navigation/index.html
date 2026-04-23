@@ -22,10 +22,10 @@
 
 			</div>
 			<div class="width-33% card padding-sm padding-horizontal clickable" role="button" hx-get="/admin/domain/defaults">
-				<div class="text-sm text-gray">Visitors</div>
-				<div class="bold margin-none">{{.DefaultPage_Anonymous}}</div>
-				<div class="text-sm text-gray margin-top">Signed-In Users</div>
-				<div class="bold margin-none">{{.DefaultPage_Authenticated}}</div>
+				<div class="text-sm text-gray margin-bottom">Home Pages</div>
+				<div class="bold margin-bottom-xs"><i class="bi bi-question-circle text-gray"></i> {{.DefaultPage_Anonymous}}</div>
+				<div class="bold margin-bottom-xs"><i class="bi bi-person-circle text-gray"></i> {{.DefaultPage_Authenticated}}</div>
+				<div class="bold margin-bottom-xs"><i class="bi bi-person-fill-gear text-gray"></i> {{.DefaultPage_Owner}}</div>
 				<div class="pos-absolute-top-right">
 					<button class="text-xs">Edit</button>
 				</div>

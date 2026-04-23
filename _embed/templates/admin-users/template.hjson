@@ -30,7 +30,7 @@
 						do: edit
 						type: user
 						form: {
-							label: Add a Person
+							label: + Invite a Person
 							type: layout-tabs
 							children: [
 								{

@@ -11,7 +11,7 @@
 	<div class="flex-column-reverse md:flex-column">
 
 		<div class="md:flex-row">
-			<div class="card padding margin-bottom md:width-33%" script="install blockselect()">
+			<div class="clickable card padding-sm padding-horizontal margin-bottom md:width-33%"  hx-get="/admin/domain/signup?registrationId={{$registration.RegistrationID}}">
 				<div class="text-sm text-gray">New User Signups</div>
 				<div class="text-lg bold">
 				{{ if $registration.IsZero -}}
@@ -20,10 +20,10 @@
 					{{- icon $registration.Icon}} {{ $registration.Label -}}
 				{{- end}}
 				</div>
-				<button class="text-xs" hx-get="/admin/domain/signup?registrationId={{$registration.RegistrationID}}">Edit</button>
+				<button class="pos-absolute-top-right text-xs">Edit</button>
 			</div>
 
-			<div class="card padding margin-bottom md:width-33% flex-row">
+			<div class="card padding-sm padding-horizontal margin-bottom md:width-33% flex-row">
 				<div class="flex-grow align-center">
 					<div class="text-sm text-gray">Total</div>
 					<div class="text-lg bold">{{.CountUsers}}</div>
