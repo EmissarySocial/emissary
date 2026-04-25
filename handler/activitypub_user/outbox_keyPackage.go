@@ -53,6 +53,14 @@ func outbox_CreateKeyPackage(context Context, activity streams.Document) error {
 		return derp.Wrap(err, location, "Unable to save KeyPackage")
 	}
 
+	// Update values in the activity object
+	activity.SetProperty(vocab.PropertyObject, keyPackageService.ActivityPubURL(keyPackage.UserID, keyPackage.KeyPackageID))
+
+	// Put the activity into the User's outbox (which triggers delivery to all recipients)
+	if err := putActivityIntoOutbox(context, activity); err != nil {
+		return derp.Wrap(err, location, "Unable to process activity")
+	}
+
 	// Write the response to the context
 	context.context.Response().Header().Set("Location", keyPackageService.ActivityPubURL(keyPackage.UserID, keyPackage.KeyPackageID))
 	return context.context.NoContent(http.StatusCreated)
@@ -105,6 +113,13 @@ func outbox_UpdateKeyPackage(context Context, activity streams.Document) error {
 	if err := keyPackageService.Save(context.session, &keyPackage, "Created via ActivityPub API"); err != nil {
 		return derp.Wrap(err, location, "Unable to save KeyPackage")
 	}
+	// Update values in the activity object
+	activity.SetProperty(vocab.PropertyObject, keyPackageService.ActivityPubURL(keyPackage.UserID, keyPackage.KeyPackageID))
+
+	// Put the activity into the User's outbox (which triggers delivery to all recipients)
+	if err := putActivityIntoOutbox(context, activity); err != nil {
+		return derp.Wrap(err, location, "Unable to process activity")
+	}
 
 	// Write the response to the context
 	context.context.Response().Header().Set("Location", keyPackageService.ActivityPubURL(keyPackage.UserID, keyPackage.KeyPackageID))
@@ -153,6 +168,11 @@ func outbox_DeleteKeyPackage(context Context, activity streams.Document) error {
 	// Delete the KeyPackage
 	if err := keyPackageService.Delete(context.session, &keyPackage, "Deleted via ActivityPub API"); err != nil {
 		return derp.Wrap(err, location, "Unable to delete KeyPackage")
+	}
+
+	// Put the activity into the User's outbox (which triggers delivery to all recipients)
+	if err := putActivityIntoOutbox(context, activity); err != nil {
+		return derp.Wrap(err, location, "Unable to process activity")
 	}
 
 	// Win.

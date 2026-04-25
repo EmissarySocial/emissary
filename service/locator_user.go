@@ -8,7 +8,7 @@ import (
 )
 
 // UserURL returns the canonical URL for the specified user
-func (service *Locator) UserURL(host string, userID primitive.ObjectID) string {
+func (service *Locator) UserURL(userID primitive.ObjectID) string {
 	return service.host + "/@" + userID.Hex()
 }
 

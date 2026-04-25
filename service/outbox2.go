@@ -2,6 +2,7 @@ package service
 
 import (
 	"iter"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
@@ -9,6 +10,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/sender"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -18,6 +20,7 @@ import (
 // It is being built alongside the existing Outbox service, which will be
 // removed once this new service is fully functional.
 type Outbox2 struct {
+	inboxService   *Inbox
 	locator        *Locator
 	getSendLocator func(data.Session) SendLocator
 	queue          *queue.Queue
@@ -35,6 +38,7 @@ func NewOutbox2() Outbox2 {
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Outbox2) Refresh(factory *Factory) {
+	service.inboxService = factory.Inbox()
 	service.locator = factory.Locator()
 	service.queue = factory.Queue()
 	service.host = factory.Host()
@@ -100,11 +104,35 @@ func (service *Outbox2) Save(session data.Session, activity *model.Activity, not
 
 	if activity.IsNew() {
 
-		// Calculate the ActivityURL for this message
+		// Calculate the ActivityURL for this message and the user who sent it.
 		activity.URL = service.locator.ActivityURL(activity.ActorType, activity.ActorID, activity.ActivityID)
 
 		// Calculate the list of unique recipients
 		activity.CalcRecipients()
+
+		// If the actor is also a recipient, then we can put it straight into their inbox
+		if actorURL := service.locator.UserURL(activity.ActorID); activity.Recipients.Contains(actorURL) {
+
+			asActivity := streams.NewDocument(activity.Object)
+
+			inboxActivity := model.NewInboxActivity()
+			inboxActivity.ActivityID = asActivity.ID()
+			inboxActivity.UserID = activity.ActorID
+			inboxActivity.ActorID = asActivity.Actor().ID()
+			inboxActivity.Context = asActivity.Context()
+			inboxActivity.ActivityType = asActivity.Type()
+			inboxActivity.ObjectType = asActivity.Object().Type()
+			inboxActivity.ObjectID = asActivity.Object().ID()
+			inboxActivity.MediaType = asActivity.Object().MediaType()
+			inboxActivity.ReceivedDate = time.Now().UnixMilli()
+			inboxActivity.RawActivity = activity.Object
+			inboxActivity.IsPublic = asActivity.IsPublic()
+			inboxActivity.PublishedDate = asActivity.Published().UnixMilli()
+
+			if err := service.inboxService.Save(session, &inboxActivity, "Saved directly from outbox"); err != nil {
+				return derp.Wrap(err, location, "Unable to save activity to inbox", inboxActivity)
+			}
+		}
 
 		// Get services to send message to recipient(s)
 		sendLocator := service.getSendLocator(session)

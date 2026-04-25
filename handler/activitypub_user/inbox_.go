@@ -135,6 +135,9 @@ func inbox_SaveActivity(context Context, activity streams.Document) error {
 		activity.SetID("uri:uuid:" + primitive.NewObjectID().Hex())
 	}
 
+	// If not already a "map" then load the link to the object
+	object := activity.Object().LoadLink()
+
 	// Create a new InboxActivity and save it to the Inbox
 	inboxService := context.factory.Inbox()
 	inboxActivity := model.NewInboxActivity()
@@ -143,9 +146,9 @@ func inbox_SaveActivity(context Context, activity streams.Document) error {
 	inboxActivity.ActivityID = activity.ID()
 	inboxActivity.Context = activity.Context()
 	inboxActivity.ActivityType = activity.Type()
-	inboxActivity.ObjectType = activity.Object().Type()
-	inboxActivity.ObjectID = activity.Object().ID()
-	inboxActivity.MediaType = activity.Object().MediaType()
+	inboxActivity.ObjectType = object.Type()
+	inboxActivity.ObjectID = object.ID()
+	inboxActivity.MediaType = object.MediaType()
 	inboxActivity.ReceivedDate = time.Now().UnixMilli()
 	inboxActivity.RawActivity = activity.Map()
 	inboxActivity.IsPublic = activity.IsPublic()

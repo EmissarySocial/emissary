@@ -104,18 +104,28 @@ func (service *Inbox) Save(session data.Session, inboxActivity *model.InboxActiv
 
 	const location = "service.Inbox.Save"
 
+	// RULE: InboxActivity must have an ActivityID
+	if inboxActivity.ActivityID == "" {
+		inboxActivity.ActivityID = "uri:uuid:" + primitive.NewObjectID().Hex()
+	}
+
+	// RULE: InboxActivity must have a UserID
+	if inboxActivity.InboxActivityID.IsZero() {
+		return derp.BadRequest(location, "InboxActivity.InboxActivityID must not be zero")
+	}
+
 	// RULE: InboxActivity must have a UserID
 	if inboxActivity.UserID.IsZero() {
-		return derp.BadRequest(location, "InboxActivity must not be zero")
+		return derp.BadRequest(location, "InboxActivity.UserID must not be zero")
 	}
 
 	// Validate the record using the schema
 	if err := service.Schema().Validate(inboxActivity); err != nil {
-		return derp.Wrap(err, location, "Unable to validate InboxActivity", inboxActivity)
+		return derp.Wrap(err, location, "InboxActivity is invalid", inboxActivity)
 	}
 
-	// Save the value to the database
-	if err := service.collection(session).Save(inboxActivity, note); err != nil {
+	// Check to see if this is a new record
+	if err := service.createOrUpdate(session, inboxActivity, note); err != nil {
 		return derp.Wrap(err, location, "Unable to save Inbox activity", inboxActivity, note)
 	}
 
@@ -124,6 +134,29 @@ func (service *Inbox) Save(session data.Session, inboxActivity *model.InboxActiv
 
 	// Send realtime SSE messages to any listeners
 	go service.sendSSEUpdate(inboxActivity)
+
+	return nil
+}
+
+func (service *Inbox) createOrUpdate(session data.Session, inboxActivity *model.InboxActivity, note string) error {
+
+	const location = "service.Inbox.createOrUpdate"
+
+	// Check to see if this is a new record
+	previousValue := model.NewInboxActivity()
+	if err := service.LoadByActivityID(session, inboxActivity.UserID, inboxActivity.ActivityID, &previousValue); err != nil {
+		if !derp.IsNotFound(err) {
+			return derp.Wrap(err, location, "Unable to load previous InboxActivity", inboxActivity)
+		}
+
+		inboxActivity.InboxActivityID = previousValue.InboxActivityID
+		inboxActivity.CreateDate = previousValue.CreateDate
+	}
+
+	// Save the value to the database
+	if err := service.collection(session).Save(inboxActivity, note); err != nil {
+		return derp.Wrap(err, location, "Unable to save Inbox activity", inboxActivity, note)
+	}
 
 	return nil
 }
