@@ -50,6 +50,15 @@ func GetCommandLineArgs() CommandLineArgs {
 		source = ConfigSourceEnvironment
 		location = env
 
+		if envDb := os.Getenv("EMISSARY_CONFIG_DB"); envDb != "" {
+			db = envDb
+
+		}
+
+		if envCollection := os.Getenv("EMISSARY_CONFIG_COLLECTION"); envCollection != "" {
+			collection = envCollection
+		}
+
 	} else {
 
 		// Fall through to using default location (file in local directory)
