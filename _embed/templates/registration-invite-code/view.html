@@ -104,7 +104,7 @@
 						{{$term := $builder.RegistrationData $termID}}
 						{{if ne ""  $term }}
 							<div class="layout-element">
-								<label for="{{$termID}}">
+								<label for="{{$termID}}" tabIndex="0">
 									<input type="checkbox" id="{{$termID}}" name="{{$termID}}" required="true">
 									{{$term}}
 								</label>
