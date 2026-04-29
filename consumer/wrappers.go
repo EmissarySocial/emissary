@@ -50,6 +50,9 @@ func WithFollowing(serverFactory ServerFactory, args mapof.Any, handler func(*se
 
 		// Load the Following record
 		if err := followingService.LoadByToken(session, user.UserID, followingToken, &following); err != nil {
+			if derp.IsNotFound(err) {
+				return queue.Failure(derp.Wrap(err, location, "Following record does not exist", args))
+			}
 			return queue.Error(derp.Wrap(err, location, "Cannot load following", args))
 		}
 
