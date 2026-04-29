@@ -84,7 +84,10 @@ func backfillContext_Context(factory *service.Factory, context streams.Document)
 			// Retry (using queue this time) in one hour
 			factory.Queue().NewTask(
 				"ReindexActivityStream",
-				mapof.Any{"url": document.ID()},
+				mapof.Any{
+					"host": factory.Hostname(),
+					"url":  document.ID(),
+				},
 				queue.WithDelayHours(1),
 			)
 
