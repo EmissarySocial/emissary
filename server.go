@@ -441,7 +441,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:stream/pub/context", handler.WithStream(factory, ap_stream.GetContextCollection))
 
 	// Domain Admin Pages
-	e.GET("/admin", handler.WithOwner(factory, handler.GetAdmin))
+	e.GET("/admin", handler.RedirectTo("/admin/domain/index"))
 	e.GET("/admin/:param1", handler.WithOwner(factory, handler.GetAdmin))
 	e.POST("/admin/:param1", handler.WithOwner(factory, handler.PostAdmin))
 	e.GET("/admin/:param1/:param2", handler.WithOwner(factory, handler.GetAdmin))
