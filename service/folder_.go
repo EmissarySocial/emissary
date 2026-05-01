@@ -304,11 +304,11 @@ func (service *Folder) CalculateUnreadCount(session data.Session, userID primiti
 	const location = "service.Folder.CalculateUnreadCount"
 
 	if userID.IsZero() {
-		return derp.BadRequest(location, "UserID cannot be empty", userID)
+		return nil
 	}
 
 	if folderID.IsZero() {
-		return derp.BadRequest(location, "FolderID cannot be empty", folderID)
+		return nil
 	}
 
 	unreadCount, err := service.newsFeedService.CountUnreadNewsItems(session, userID, folderID)
