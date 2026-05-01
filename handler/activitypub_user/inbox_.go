@@ -123,7 +123,7 @@ func inbox_ValidateActivity(activity streams.Document) error {
 // saves them into their inbox
 func inbox_SaveActivity(context Context, activity streams.Document) error {
 
-	const location = "handler.activitypub_user.inbox_DirectMessage"
+	const location = "handler.activitypub_user.inbox_SaveActivity"
 
 	/* Require that the activity is addressed to this Actor
 	if activity.Recipients().NotContains(context.user.ActivityPubURL()) {
