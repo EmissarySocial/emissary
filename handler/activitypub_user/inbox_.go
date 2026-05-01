@@ -125,10 +125,10 @@ func inbox_SaveActivity(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.inbox_DirectMessage"
 
-	// Require that the activity is addressed to this Actor
+	/* Require that the activity is addressed to this Actor
 	if activity.Recipients().NotContains(context.user.ActivityPubURL()) {
 		return derp.BadRequest(location, "Direct messages must be addressed to this Actor")
-	}
+	} */
 
 	// RULE: Create a default id for the activity if none is provided
 	if activity.ID() == "" {
