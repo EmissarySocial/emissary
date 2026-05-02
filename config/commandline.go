@@ -51,11 +51,12 @@ func GetCommandLineArgs() CommandLineArgs {
 		location = env
 
 		if envDb := os.Getenv("EMISSARY_CONFIG_DB"); envDb != "" {
+			log.Info().Msg("ENV: Using configuration database: " + envDb)
 			db = envDb
-
 		}
 
 		if envCollection := os.Getenv("EMISSARY_CONFIG_COLLECTION"); envCollection != "" {
+			log.Info().Msg("ENV: Using configuration collection: " + envCollection)
 			collection = envCollection
 		}
 
