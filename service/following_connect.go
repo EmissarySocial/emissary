@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/gommon/random"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -22,6 +23,7 @@ import (
 func (service *Following) Follow(session data.Session, userID primitive.ObjectID, actorID string) (model.Following, error) {
 
 	const location = "service.Following.Follow"
+	spew.Dump(location, "Attempting to follow URL", actorID)
 
 	// If the actor ID is not already a valid URL, it's probably a username/handle,
 	// so try to resolve it into a URL using Sherlock/WebFinger.
