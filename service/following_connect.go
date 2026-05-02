@@ -11,7 +11,6 @@ import (
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/sherlock"
-	"github.com/benpate/turbine/queue"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/gommon/random"
 	"github.com/rs/zerolog/log"
@@ -102,15 +101,10 @@ func (service *Following) Connect(session data.Session, following *model.Followi
 		"followingId": following.FollowingID.Hex(),
 	}
 
-	// Try to load an initial list of messages from the actor's outbox
-	// This runs in faster than usual because it affects the UX, but must
-	// still write to the DB or else it may get skipped
-	service.queue.NewTask("PollFollowing-Record", queueArgs, queue.WithPriority(32))
-
 	// Try to connect to push services (WebSub, ActivityPub, etc)
 	// This runs in faster than usual because it affects the UX, but must
 	// still write to the DB or else it may get skipped
-	service.queue.NewTask("ConnectPushService", queueArgs, queue.WithPriority(32))
+	service.queue.NewTask("ConnectPushService", queueArgs)
 
 	// Kool-Aid man says "ooooohhh yeah!"
 	return nil

@@ -16,6 +16,13 @@ func ConnectPushService(factory *service.Factory, session data.Session, user *mo
 
 	const location = "consumer.ConnectPushService"
 
+	// success is a quick mix-in to trigger the first "poll"
+	// of the new Following record after we connect.
+	success := func() queue.Result {
+		factory.Queue().NewTask("PollFollowing-Record", args)
+		return queue.Success()
+	}
+
 	// RULE: Only connect if both the host and following URL are on the same network.
 	// Only local servers can connect to local actors, and only public-facing servers can
 	// connect to public-facing actors.
@@ -33,7 +40,7 @@ func ConnectPushService(factory *service.Factory, session data.Session, user *mo
 			if err := factory.Following().ConnectActivityPub(session, following, &actor); err != nil {
 				return queue.Error(derp.Wrap(err, location, "Unable to connect to ActivityPub"))
 			}
-			return queue.Success()
+			return success()
 		}
 
 		// Try to connect to a WebSub hub (if present)
@@ -41,7 +48,7 @@ func ConnectPushService(factory *service.Factory, session data.Session, user *mo
 			if err := factory.Following().ConnectWebSub(following, hub); err != nil {
 				return queue.Error(derp.Wrap(err, location, "Unable to connect to WebSub"))
 			}
-			return queue.Success()
+			return success()
 		}
 	}
 
@@ -52,5 +59,5 @@ func ConnectPushService(factory *service.Factory, session data.Session, user *mo
 	}
 
 	// Done
-	return queue.Success()
+	return success()
 }
