@@ -3,8 +3,8 @@
 	category: Content
 	extends: ["article-base"]
 	containedBy: ["top", "home", "folder", "article"]
-	label:"WYSIWYG"
-	description:"Visual, block-based editor. Best for beginners."
+	label:"Visual Editor"
+	description:"Block-based WYSIWYG editor. Best for beginners."
 	icon:"article"
 
 	actions: {

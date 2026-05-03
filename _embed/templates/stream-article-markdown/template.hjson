@@ -3,7 +3,7 @@
 	category: Content
 	extends:["article-base"]
 	containedBy: ["top", "home", "folder", "article"]
-	label:"Markdown"
+	label:"Markdown Editor"
 	description:"Simple text-based format."
 	icon:"markdown"
 	sort:50
