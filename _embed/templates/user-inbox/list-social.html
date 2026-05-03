@@ -24,12 +24,12 @@
 			{{- $image := $document.ImageOrIcon -}}
 			{{- $attributedTo := $document.AttributedTo -}}
 
-			<hr class="noselect">
 			<div 
 				id="item_{{$message.ID}}" 
-				class="message"
-				style="max-width:640px"
+				class="message max-width-640"
 				script="install blockselect()">
+				
+				<hr class="noselect">
 				
 				<div script="install listItem(messageId:'{{$message.ID}}')">
 
