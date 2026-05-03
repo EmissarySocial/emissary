@@ -1,5 +1,6 @@
 {
 	templateId: base-social
+	category: Base
 	model: None
 
 	states: {

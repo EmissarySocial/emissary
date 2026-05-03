@@ -12,6 +12,7 @@ body {
 	background-color: var(--body-background);
 	color: var(--text-color);
 	margin:0px;
+	min-height:100dvh;
 }
 
 nav {
@@ -111,9 +112,8 @@ nav {
 
 }
 
-
-
 main {
+	flex-grow:1;
 	display: flex;
 	flex-direction:row;
 	justify-content: center;

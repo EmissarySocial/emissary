@@ -1,6 +1,7 @@
 {
 	templateId: guest
 	templateRole: guest
+	category: Special
 	model: Identity
 	label: Guest Profile Page
 	description: Default profile page for Guests

@@ -1,12 +1,13 @@
 {
-	templateId:"outbox-direct"
-	templateRole:"outbox-direct"
-	socialRole:"Note"
-	extends:["outbox-message"]
+	templateId: outbox-direct
+	templateRole: outbox-direct
+	category: Special
+	socialRole: Note
+	extends: ["outbox-message"]
 	model: Stream
-	icon:"message"
-	label:"Direct Message"
-	description:"Send a direct message"
+	icon: message
+	label: Direct Message
+	description: Send a direct message
 	sort: 0
 	containedBy: ["outbox"]
 	schema: {

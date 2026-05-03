@@ -1,7 +1,8 @@
 {
-	templateId:"admin-rules"
-	templateRole:"admin"
-	model:"Rule"
+	templateId: admin-rules
+	templateRole: admin
+	category: Admin
+	model: Rule
 	extends: ["admin-common"]
 	containedBy:["admin"]
 	label: "Rules"

@@ -1,6 +1,7 @@
 {
 	templateId: admin-navigation
 	templateRole: admin
+	category: Admin
 	model: Stream
 	extends: ["admin-common"]
 	containedBy:["admin"]

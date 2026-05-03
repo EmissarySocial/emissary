@@ -1,11 +1,12 @@
 {
-	templateId:"admin-domain"
-	templateRole:"admin"
+	templateId: admin-domain
+	templateRole: admin
+	category: Admin
 	model: Domain
 	extends: ["admin-common"]
 	containedBy:["admin"]
-	label: "Domain"
-	description: "Domain Owners only.  Site Admin"
+	label: Domain
+	description: Domain Owners only.  Site Admin
 	schema: {type: "object", properties: {
 		label:   {type:"string", maxLength:100}
 		themeId: {type:"string", maxLength: 100}

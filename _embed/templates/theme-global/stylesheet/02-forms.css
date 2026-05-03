@@ -91,7 +91,7 @@ input[type="radio"] {
  * Checkbutton - Fancy Checkboxes
  ******************************************/
 
-.checkbutton:has(input[type="checkbox"]) {
+.checkbutton {
 	display: flex !important;
 	flex-direction: row;
 	align-items: center;
@@ -99,8 +99,13 @@ input[type="radio"] {
 	border: solid 2px var(--gray20);
 	background-color: var(--gray05);
 	border-radius: var(--rhythm);
-	padding: calc(var(--rhythm) * 2) var(--rhythm);
+	padding: calc(var(--rhythm) * 1.5) calc(var(--rhythm) * 1.5);
 	margin: calc(var(--rhythm) / 2) 0;
+}
+
+.checkbutton:hover {
+	border-color:var(--gray30);
+	background-color:var(--gray10);
 }
 
 .checkbutton:has(input[type="checkbox"]:checked) {

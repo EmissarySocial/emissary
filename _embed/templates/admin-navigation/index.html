@@ -12,7 +12,7 @@
 		<div class="flex-row width-100%">
 			<div class="width-33% card padding-sm padding-horizontal clickable" hx-get="/admin/domain/themes">
 
-				<div class="text-sm text-gray">Theme</div>
+				<div class="text-sm text-gray">Website Theme</div>
 				<div class="text-lg bold">{{$theme.Label}}</div>
 				<div class="text-sm margin-bottom">{{$theme.Description}}</div>
 
@@ -22,7 +22,7 @@
 
 			</div>
 			<div class="width-33% card padding-sm padding-horizontal clickable" role="button" hx-get="/admin/domain/defaults">
-				<div class="text-sm text-gray margin-bottom">Home Pages</div>
+				<div class="text-sm text-gray margin-bottom">Start Pages</div>
 				<div class="bold margin-bottom-xs"><i class="bi bi-question-circle text-gray"></i> {{.DefaultPage_Anonymous}}</div>
 				<div class="bold margin-bottom-xs"><i class="bi bi-person-circle text-gray"></i> {{.DefaultPage_Authenticated}}</div>
 				<div class="bold margin-bottom-xs"><i class="bi bi-person-fill-gear text-gray"></i> {{.DefaultPage_Owner}}</div>
@@ -30,8 +30,8 @@
 					<button class="text-xs">Edit</button>
 				</div>
 			</div>
-			<div class="width-33% card padding flex-center">
-				<button class="primary" hx-get="/admin/navigation/add">{{icon "add"}} Add a Page</button>
+			<div class="width-33% card padding flex-center clickable" hx-get="/admin/navigation/add">
+				<button class="primary">{{icon "add"}} Add a Page</button>
 			</div>
 		</div>
 
@@ -47,7 +47,8 @@
 							<span>{{.Label}}</span>
 						</div>
 						<div>
-							<a href="/{{.Token}}/edit" class="text-xs button">Edit</a>
+							<a href="/{{.Token}}" class="text-sm button">View</a>
+							<a href="/{{.Token}}/edit" class="text-sm button">Edit</a>
 						</div>
 					</div>
 				{{- end -}}

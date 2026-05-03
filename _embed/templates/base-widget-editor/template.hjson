@@ -1,5 +1,6 @@
 {
 	templateId:base-widget-editor
+	category: Base
 	model: Stream
 	label:Widget Editor (BASE TEMPLATE)
 	description:Base Template to be used by other templates to edit widget locations

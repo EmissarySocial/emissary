@@ -1,6 +1,7 @@
 {
 	templateId:outbox-message
 	templateRole:outbox-message
+	category: Special
 	socialRole:Note
 	extends:["base-social", "base-intent"]
 	model: Stream

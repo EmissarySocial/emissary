@@ -1,5 +1,6 @@
 {
 	templateId: base-checkout
+	category: Base
 	model: Stream
 	
 	states: {

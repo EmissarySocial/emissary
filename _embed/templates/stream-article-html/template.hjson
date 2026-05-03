@@ -1,10 +1,12 @@
 {
 	templateId:"article-html"
+	category: Content
 	extends:["article-base"]
 	containedBy: ["top", "home", "folder", "article"]
-	label:"Article (HTML Code)"
-	description:"HTML Code editor"
+	label:"HTML Code"
+	description:"HTML code editor. Experts only."
 	icon:"html"
+	sort:100
 	actions: {
 		create: {
 			roles:["author", "editor"]

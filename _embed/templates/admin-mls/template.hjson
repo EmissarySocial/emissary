@@ -1,11 +1,12 @@
 {
-	templateId:"admin-mls"
-	templateRole:"admin"
+	templateId: admin-mls
+	templateRole: admin
+	category: Admin
 	model: Domain
 	extends: ["admin-common"]
-	containedBy:["admin"]
-	label: "Encrypted Messaging"
-	description: "Domain Owners only.  Site Admin"
+	containedBy: ["admin"]
+	label: Encrypted Messaging
+	description: Domain Owners only.  Site Admin
 	schema: {
 		type: "object", 
 		properties: {

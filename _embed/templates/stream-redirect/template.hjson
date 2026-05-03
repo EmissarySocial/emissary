@@ -1,9 +1,10 @@
 {
 	templateId: redirect
+	category: Special
 	model: Stream
 	containedBy: ["top", "folder"]
 	label: Redirect
-	description: Forward your visitors to an external website
+	description: Forwards requests to another web address
 	icon: forward
 	schema: {
 		type: object

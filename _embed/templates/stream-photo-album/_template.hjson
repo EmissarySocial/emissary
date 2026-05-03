@@ -1,6 +1,7 @@
 {
 	templateId:"photo-album"
 	templateRole:"photo-album"
+	category: Media
 	socialRole:"Page"
 	model: Stream
 	containedBy: ["top", "folder"]

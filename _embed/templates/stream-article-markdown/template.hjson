@@ -1,10 +1,12 @@
 {
 	templateId:"article-markdown"
+	category: Content
 	extends:["article-base"]
 	containedBy: ["top", "home", "folder", "article"]
-	label:"Article (Markdown)"
-	description:"Simple Markdown editor"
+	label:"Markdown"
+	description:"Simple text-based format."
 	icon:"markdown"
+	sort:50
 	actions: {
 		create: {
 			roles:["author", "editor"]

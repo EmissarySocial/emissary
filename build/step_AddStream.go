@@ -48,9 +48,8 @@ func (step StepAddStream) Get(builder Builder, buffer io.Writer) PipelineBehavio
 }
 
 // modalAddStream builds an HTML dialog that lists all of the templates that the user can create
-// tempalteIDs is a limiter on the list of valid templates.  If it is empty, then all valid templates are displayed.
+// templateIDs is a limiter on the list of valid templates.  If it is empty, then all valid templates are displayed.
 func (step StepAddStream) getChooser(builder Builder, buffer io.Writer) error {
-	// response *echo.Response, templateService *service.Template, iconProvider icon.Provider, title string, buffer io.Writer, url string, parentRole string, allowedTemplateIDs []string) {
 
 	factory := builder.factory()
 	response := builder.response()
@@ -59,25 +58,39 @@ func (step StepAddStream) getChooser(builder Builder, buffer io.Writer) error {
 	parentRole := step.parentRole(builder)
 
 	templates := templateService.ListByContainerLimited(parentRole, step.TemplateRoles)
+	groupedTemplates := groupLookupCodes(templates)
 
 	b := html.New()
 
-	b.H2().InnerText(step.Title).Close()
+	b.H2().ID("modal-title").InnerText(step.Title).Close()
 
-	b.Table().Class("table margin-bottom")
+	b.Div().Script("install TabContainer").Class("margin-bottom")
+	b.Div().Role("tablist").Class("underlined")
+	for _, group := range groupedTemplates {
+		name := group.First().Group
+		b.Span().Role("tab").Aria("controls", "tabpanel-"+name).InnerText(name).Close()
+	}
+	b.Close()
 
-	for _, template := range templates {
-		b.TR().Role("link").Data("hx-post", builder.URL()+"?templateId="+template.Value)
+	for _, group := range groupedTemplates {
+		name := group.First().Group
+		b.Div().ID("tabpanel-" + name).Role("tabpanel")
 		{
-			b.TD().Class("text-3xl").Style("vertical-align:top").EndBracket()
-			iconProvider.Write(template.Icon, b)
-			// b.I(template.Icon, "text-3xl", "gray80").Close()
-			b.Close()
+			for _, template := range group {
+				buttonURL := builder.URL() + "?templateId=" + template.Value
+				b.Div().Role("button").Class("checkbutton", "flex-row", "flex-align-center").HxPost(buttonURL)
+				{
+					b.Div().Class("text-3xl", "margin-vertical-none", "margin-right-sm", "text-gray").EndBracket()
+					iconProvider.Write(template.Icon, b)
+					b.Close()
 
-			b.TD().Style("width:100%")
-			b.Div().Class("bold").InnerText(template.Label).Close()
-			b.Div().Class("gray60").InnerText(template.Description).Close()
-			b.Close()
+					b.Div().Class("flex-grow")
+					b.Div().Class("bold").InnerText(template.Label).Close()
+					b.Div().Class("gray60").InnerText(template.Description).Close()
+					b.Close()
+				}
+				b.Close()
+			}
 		}
 		b.Close()
 	}

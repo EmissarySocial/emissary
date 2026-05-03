@@ -337,3 +337,12 @@ func (template Template) HasOEmbed() bool {
 func (template Template) GetOEmbed() *template.Template {
 	return template.HTMLTemplate.Lookup("oembed")
 }
+
+func CompareTemplate(a, b Template) int {
+
+	if compareSort := compare.Int(a.Sort, b.Sort); compareSort != 0 {
+		return compareSort
+	}
+
+	return compare.String(a.TemplateID, b.TemplateID)
+}

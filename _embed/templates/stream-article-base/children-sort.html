@@ -39,22 +39,24 @@
 	</form>
 
 	<div>
-		<a hx-get="/{{.StreamID}}/add-child" class="button primary">{{icon "add"}} Add Another</a>
+		<a hx-get="/{{.StreamID}}/add-child" class="button primary">{{icon "add"}} Add Another Child Page</a>
 	</div>
 
 {{- else if .UserCan "add-child" -}}
 
-	<div class="align-center">
+	<div class="align-center margin-top-xl">
 		<div class="margin-auto max-width-640">
-			<h1 class="text-gray">Add a Child Stream</h1>
-			<h2 class="text-gray">Place additional pages under this one in the site map, then organize them with the sort tool.</h2>
+			<div class="text-lg text-gray">
+				&quot;Child&quot; pages are organized beneath this one in the site map.
+			</div>
 			<br>
-			<a hx-get="/{{.StreamID}}/add-child" class="button primary">{{icon "add"}} Add a Stream</a>
+			<a hx-get="/{{.StreamID}}/add-child" class="button primary">{{icon "add"}} Add a Child Page</a>
 		</div>
 	</div>
 
 {{- else -}}
 
-There are no child streams underneath this one.<br>
-Ask the owner of this stream to add a child stream.<br>
+There are no child pages underneath this one.<br>
+Ask the owner of this page to add a child page.<br>
+
 {{- end -}}

@@ -1,6 +1,7 @@
 {
-	templateId:"admin-sso"
-	templateRole:"admin"
+	templateId: admin-sso
+	templateRole: admin
+	category: Admin
 	model: Domain
 	extends: ["admin-common"]
 	containedBy:["admin"]
