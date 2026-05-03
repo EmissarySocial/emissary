@@ -112,6 +112,12 @@ input[type="radio"] {
 	border: solid 2px var(--blue50);
 	color: var(--blue50);
 	background-color: var(--blue10);
+
+	@media (prefers-color-scheme: dark) {
+		border-color: var(--blue70);
+		color: var(--blue70);
+		background-color: var(--blue10);
+	}
 }
 
 .checkbutton input[type="checkbox"] {
@@ -138,6 +144,12 @@ input[type="radio"] {
 	border: solid 2px var(--blue50);
 	color: var(--blue50);
 	background-color: var(--blue10);
+
+	@media (prefers-color-scheme: dark) {
+		border-color: var(--blue70);
+		color: var(--blue70);
+		background-color: var(--blue10);
+	}
 }
 
 .radiobutton input[type="radio"] {
