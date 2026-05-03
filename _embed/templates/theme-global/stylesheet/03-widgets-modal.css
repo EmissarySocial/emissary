@@ -34,7 +34,7 @@
 	bottom: 0px;
 	left: 0px;
 	right: 0px;
-	background-color: #000;
+	background-color: var(--black);
 	opacity: 0;
 	transition:opacity, backdrop-filter;
 	transition-duration:240ms;
@@ -139,6 +139,11 @@
 	transition:opacity;
 	transition-duration:240ms;
 	transition-timing-function: ease;
+
+	@media (prefers-color-scheme: dark) {
+		background-color:var(--white);
+		opacity:0.7;
+	}
 }
 
 #modal .layout-title,

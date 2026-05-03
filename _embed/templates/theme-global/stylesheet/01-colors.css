@@ -99,16 +99,52 @@
 		--gray40: #726e6e;
 		--gray30: #565151;
 		--gray20: #3c3838;
-		--gray15: #312e2e;
-		--gray10: #272525;
+		--gray15: #31312e;
+		--gray10: #272725;
 		--gray05: #1f1c1c;
 		--gray04: #1e1e1b;
 		--gray03: #1c1c19;
 		--gray02: #1a1a17;
 		--gray01: #181815;
 		--gray00: #171714;
-		--white: #000000;
+		--white: #171714;
 
+		--blue100: #edf5ff;
+		--blue90: #d0e2ff;
+		--blue80: #a6c8ff;
+		--blue70: #78a9ff;
+		--blue60: #4589ff;
+		--blue50: #0f62fe;
+		--blue40: #0043ce;
+		--blue30: #002d9c;
+		--blue20: #001d6c;
+		--blue10: #001141;
+
+		--red100: #fff1f1;
+		--red90: #ffd7d9;
+		--red80: #ffb3b8;
+		--red70: #ff8389;
+		--red60: #fa4d56;
+		--red50: #da1e28;
+		--red40: #a2191f;
+		--red30: #750e13;
+		--red20: #520408;
+		--red10: #2d0709;
+
+		--green100: #f1fff1;
+		--green90: #d7ffd9;
+		--green80: #b3ffb8;
+		--green70: #83ff89;
+		--green60: #4dfa56;
+		--green50: #1eda28;
+		--green40: #19a21f;
+		--green30: #0e7513;
+		--green20: #045208;
+		--green10: #072d09;
+
+		--input-border: var(--input-background);
+
+		/*
 		--body-background: var(--gray05);
 		--page-background: var(--gray15);
 		--input-border: var(--gray20);
@@ -125,6 +161,7 @@
 		--button-primary-color-hover: var(--blue10);
 		--button-primary-background: var(--blue70), var(--blue80);
 		--button-primary-background-hover: var(--blue50), var(--blue60);
+		*/
 	}
 
 	.dark-mode-show,

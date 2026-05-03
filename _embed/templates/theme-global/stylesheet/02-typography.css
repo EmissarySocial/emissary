@@ -14,7 +14,7 @@
 
 @media (prefers-color-scheme: dark) {
 	:root {
-		--weight: 400;
+		--weight: 300;
 	}
 }
 
@@ -31,12 +31,12 @@
 }
 @media screen and (min-width: 1024px) {
 	:root {
-		--rhythm: 8px;
+		--rhythm: 10px;
 	}
 }
 @media screen and (min-width: 1280px) {
 	:root {
-		--rhythm: 9px;
+		--rhythm: 10px;
 	}
 }
 

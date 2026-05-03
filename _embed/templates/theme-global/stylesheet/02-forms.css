@@ -167,8 +167,8 @@ input[type="radio"] {
 	height: 1em;
 	border-style: solid;
 	border-width: 1px;
-	background-color: #e0e0e0;
-	border-color: #c6c6c6;
+	background-color: var(--gray20);
+	border-color: var(--gray30);
 }
 
 .toggle-container[value="true"] .toggle {
@@ -186,7 +186,7 @@ input[type="radio"] {
 .toggle-container .marker {
 	display: block;
 	border-radius: 0.5em;
-	background-color: white;
+	background-color: var(--white);
 	height: 1em;
 	width: 1em;
 	transition: transform 0.1s ease-in-out;
@@ -280,7 +280,7 @@ input[type="radio"] {
 	padding: 5px 10px;
 }
 
-/* Alternate colors for dark mode */
+/* Alternate colors for dark mode
 @media (prefers-color-scheme: dark) {
 	input:not([type="checkbox"], [type="radio"]),
 	textarea {
@@ -289,6 +289,7 @@ input[type="radio"] {
 		color: var(--gray90);
 	}
 }
+*/
 
 /******************************************
  * Submit Buttons
@@ -415,7 +416,7 @@ button.selected:focus,
 button.warning,
 .button.warning {
 	background-color: var(--red70);
-	color: white;
+	color: var(--white);
 }
 
 button.warning:hover,
@@ -423,15 +424,15 @@ button.warning:focus,
 .button.warning:hover,
 .button.warning:focus {
 	background-color: var(--red60);
-	color: white;
+	color: var(--white);
 }
 
 button.success,
 button.primary.success,
 .button.success,
 .button.primary.succes {
-	background-color: var(--green70);
-	color: white;
+	background-color: var(--green60);
+	color: var(--white);
 }
 
 button.success:hover,
@@ -443,7 +444,7 @@ button.primary.success:focus,
 .button.primary.success:hover,
 .button.primary.success:focus {
 	background-color: var(--green60);
-	color: white;
+	color: var(--white);
 }
 
 input[disabled],
@@ -657,7 +658,7 @@ button.button-invisible {
 	top: calc(var(--rhythm) * 1);
 	right: var(--rhythm);
 	display: inline-block;
-	color: white;
+	color: var(--white);
 	font-size: calc(var(--rhythm) * 1.5);
 	line-height: calc(var(--rhythm) * 2);
 	height: calc(var(--rhythm) * 3);

@@ -1,7 +1,7 @@
 div.input {
 	&:has(input:focus) {
 		@media all and (-ms-high-contrast: none), (-ms-high-contrast: active) {
-			outline-color: #666;
+			outline-color: var(--gray60);
 			outline-style: dotted;
 			outline-width: 1px;
 		}
