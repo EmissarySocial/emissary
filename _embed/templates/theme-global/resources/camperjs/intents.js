@@ -60,7 +60,8 @@ var Intents = class {
       create: "",
       follow: "",
       like: "",
-      object: ""
+      object: "",
+      reply: ""
     };
     const links = webfingerResult.links || [];
     for (const link of links) {
@@ -104,6 +105,11 @@ var Intents = class {
       }
       if (result.announce == "") {
         result.announce = result.object;
+      }
+      if (result.create.includes("{inReplyTo}")) {
+        result.reply = result.create;
+      } else {
+        result.reply = result.object;
       }
       return result;
     }

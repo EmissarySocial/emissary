@@ -122,7 +122,8 @@ var Intents = class {
       create: "",
       follow: "",
       like: "",
-      object: ""
+      object: "",
+      reply: ""
     };
     const links = webfingerResult.links || [];
     for (const link of links) {
@@ -166,6 +167,11 @@ var Intents = class {
       }
       if (result.announce == "") {
         result.announce = result.object;
+      }
+      if (result.create.includes("{inReplyTo}")) {
+        result.reply = result.create;
+      } else {
+        result.reply = result.object;
       }
       return result;
     }
@@ -429,16 +435,22 @@ var Camper = {
   render: () => {
     const accounts = Camper.getSavedAccounts();
     const loadingIndicators = Array.from(document.getElementsByClassName("camper-loading"));
-    loadingIndicators.forEach((element) => element.hidden = true);
+    loadingIndicators.forEach((element) => hideElement(element, true));
     const addAccountButtons = Array.from(document.getElementsByClassName("camper-add-account"));
     addAccountButtons.forEach((element) => {
-      const maxAccounts = parseInt(element.getAttribute("max-accounts") || element.getAttribute("data-max-accounts") || "3");
+      const maxAccounts = Camper.maxAccounts(element);
       hideElement(element, accounts.length >= maxAccounts);
       element.blur();
     });
     const addFirstAccountButtons = Array.from(document.getElementsByClassName("camper-add-first-account"));
     addFirstAccountButtons.forEach((element) => {
       hideElement(element, accounts.length != 0);
+      element.blur();
+    });
+    const addAnotherAccountButtons = Array.from(document.getElementsByClassName("camper-add-another-account"));
+    addAnotherAccountButtons.forEach((element) => {
+      const maxAccounts = Camper.maxAccounts(element);
+      hideElement(element, accounts.length >= maxAccounts || accounts.length == 0);
       element.blur();
     });
     const hasAccountsShow = Array.from(document.getElementsByClassName("camper-show-if-has-accounts"));
@@ -451,26 +463,23 @@ var Camper = {
       hideElement(element, accounts.length != 0);
       element.blur();
     });
-    const addAnotherAccountButtons = Array.from(document.getElementsByClassName("camper-add-another-account"));
-    addAnotherAccountButtons.forEach((element) => {
-      hideElement(element, accounts.length == 0);
-      element.blur();
-    });
-    const removeAccountButtons = Array.from(document.getElementsByClassName("camper-remove-accounts"));
-    removeAccountButtons.forEach((element) => {
-      hideElement(element, accounts.length == 0);
-    });
-    const likeButtons = Array.from(document.getElementsByClassName("camper-btn-like"));
-    likeButtons.forEach((element) => {
-      element.disabled = !accounts.some((account) => account.intents.like != "");
-    });
-    const shareButtons = Array.from(document.getElementsByClassName("camper-btn-share"));
-    shareButtons.forEach((element) => {
-      element.disabled = !accounts.some((account) => account.intents.create != "");
-    });
-    const announceButtons = Array.from(document.getElementsByClassName("camper-btn-announce"));
-    announceButtons.forEach((element) => {
-      element.disabled = !accounts.some((account) => account.intents.announce != "");
+    const intentButtons = Array.from(document.getElementsByClassName("camper-intent-button"));
+    intentButtons.forEach((element) => {
+      const intentName = element.getAttribute("data-intent");
+      if (intentName == void 0) {
+        console.log("Unable to wire element because [data-intent] property is not set.", element);
+        return;
+      }
+      element.onclick = () => {
+        Camper.doIntent(element);
+      };
+      console.log("Checking intent support for", intentName);
+      const hasIntentTemplate = accounts.some((account) => {
+        console.log("Checking account", account.username, "for intent template", account.intents);
+        return account.intents[intentName] != void 0;
+      });
+      console.log(hasIntentTemplate);
+      element.disabled = !hasIntentTemplate;
     });
     const replyButtons = Array.from(document.getElementsByClassName("camper-btn-reply"));
     replyButtons.forEach((element) => {
@@ -498,7 +507,7 @@ var Camper = {
     accountForms.forEach((form) => {
       form.onsubmit = (event) => {
         event.preventDefault();
-        event.cancelBubble = true;
+        event.stopPropagation();
         const fediverseHandle = form.elements.namedItem("username");
         Camper.addAccount(fediverseHandle.value);
       };
@@ -510,8 +519,7 @@ var Camper = {
         element.hidden = true;
         return;
       }
-      const maxAccountsString = element.getAttribute("max-accounts") || element.getAttribute("data-max-accounts") || "3";
-      const maxAccounts = parseInt(maxAccountsString);
+      const maxAccounts = Camper.maxAccounts(element);
       const accountListHTML = accounts.slice(0, maxAccounts).map((account) => `
 				<div id="camper-account-${account.id}" class="camper-account" onclick="Camper.doIntent(this, '${account.username}')">
 					<img src="${account.iconUrl}" class="camper-account-icon">
@@ -593,38 +601,27 @@ var Camper = {
   },
   // doIntent executes the Activity Intent for a selected account (using the data elements in that node)
   doIntent: (element, username = "") => {
-    const parent = element.parentElement;
-    if (parent.getAttribute("data-intent") == null) {
-      parent.setAttribute("data-intent", "follow");
-    }
-    if (parent.getAttribute("data-on-success") == null) {
-      parent.setAttribute("data-on-success", "(close)");
-    }
-    if (parent.getAttribute("data-on-cancel") == null) {
-      parent.setAttribute("data-on-cancel", "(close)");
-    }
-    const intentName = parent.getAttribute("data-intent");
-    if (intentName == null) {
-      console.error("Unable to determine intent for clicked element. Please ensure the element has a 'data-camper-intent' attribute.");
-      return;
-    }
     const accounts = Camper.getSavedAccounts();
     if (accounts.length == 0) {
-      alert("No accounts configured. Please add an account to continue.");
+      alert("Please add an account to continue.");
       return;
     }
     let account = accounts.find((account2) => account2.username.toLowerCase() == username.toLowerCase());
     if (account == void 0) {
       account = accounts[0];
     }
+    const parent = element.parentElement;
+    const intentName = element.getAttribute("data-intent") || parent.getAttribute("data-intent") || "follow";
     var intentTemplate = account.intents[intentName];
     const matches = intentTemplate.match(/\{[^}]+\}/g) || [];
     const placeholders = matches.map((placeholder) => placeholder.slice(1, -1));
-    console.log("Found intent template: " + intentTemplate);
-    console.log("Placeholders:", placeholders);
-    console.log("Dataset", parent.dataset);
     for (const placeholder of placeholders) {
-      var value = parent.getAttribute("data-" + placeholder) || "";
+      var value = element.getAttribute("data-" + placeholder) || parent.getAttribute("data-" + placeholder) || "";
+      if (value == "") {
+        if (placeholder == "on-success" || placeholder == "on-cancel") {
+          value = "(close)";
+        }
+      }
       value = encodeURIComponent(value);
       intentTemplate = intentTemplate.replaceAll("{" + placeholder + "}", value);
     }
@@ -632,9 +629,11 @@ var Camper = {
       alert("The account you selected does not support this action.");
       return;
     }
-    console.log("Opening intent URL: " + intentTemplate);
     parent.dispatchEvent(new CustomEvent("camper-hide"));
     window.open(intentTemplate, "_blank", "height=750,width=600");
+  },
+  maxAccounts: (element) => {
+    return parseInt(element.getAttribute("max-accounts") || element.getAttribute("data-max-accounts") || "1");
   }
 };
 Camper.render();
