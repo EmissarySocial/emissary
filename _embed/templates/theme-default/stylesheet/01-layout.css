@@ -13,6 +13,8 @@ body {
 	color: var(--text-color);
 	margin:0px;
 	min-height:100dvh;
+	overflow-x:hidden;
+	overscroll-behavior: none;
 }
 
 nav {
