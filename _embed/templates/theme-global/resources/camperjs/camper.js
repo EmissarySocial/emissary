@@ -1,11 +1,641 @@
-function g(n){switch(n){case"localhost":case"127.0.0.1":return"http://"}return"https://"}var f=class{static getMetadata=async t=>{let r=this.getUrl(t);if(r==null)return null;let e=await fetch(r);return e.ok?await e.json():(console.error("WebFinger request failed with status "+e.status),null)};static getActivityPubId=t=>{let r=t.links||[];for(let e of r)if((e.rel||"").toLowerCase()=="self"&&(e.type||"").toLowerCase()=="application/activity+json")return e.href||"";return""};static getUrl=t=>{let[r,e]=this.splitUsername(t);return r==""||e==""?(console.error("Invalid username: "+t),null):g(e)+e+"/.well-known/webfinger?resource=acct:"+r+"@"+e};static splitUsername=t=>{t.startsWith("@")&&(t=t.substring(1));var r=t.split("@");return r.length!=2?(console.error(t+" is not a valid username"),["",""]):[r[0],r[1]]}};var d=class{static getSoftwareName=async t=>{let r=await this.getNodeInfo(t);return r==null?"":r?.software?.name||""};static getNodeInfo=async t=>{let r=await this.#t(t);if(r==null)return null;try{let e=await fetch(r);if(e.ok)return await e.json();console.error("NodeInfo request failed with status "+e.status)}catch(e){console.error("NodeInfo request failed with error: "+e)}return null};static#t=async t=>{try{let r=g(t)+t+"/.well-known/nodeinfo",e=await fetch(r);return e.ok?(await e.json())?.links.at(0)?.href||null:(console.error("NodeInfo request failed with status "+e.status),null)}catch(r){return console.error("NodeInfo request failed with error: "+r),null}}};var h=class{static getIntentsMap=async(t,r)=>{var e=!1,s={announce:"",create:"",follow:"",like:"",object:""};let u=r.links||[];for(let m of u){var l=m.rel||"",a=m.template||m.href||"";switch(l.toLowerCase()){case"https://w3id.org/fep/3b86/announce":s.announce=a,e=!0;continue;case"https://w3id.org/fep/3b86/create":s.create=a,e=!0;continue;case"https://w3id.org/fep/3b86/follow":s.follow=a,e=!0;continue;case"https://w3id.org/fep/3b86/like":s.like=a,e=!0;continue;case"https://w3id.org/fep/3b86/object":s.object=a,e=!0;continue;case"http://ostatus.org/schema/1.0/subscribe":case"https://ostatus.org/schema/1.0/subscribe":s.follow==""&&(s.follow=a.replaceAll("{uri}","{object}"));continue}}if(e)return s.follow==""&&(s.follow=s.object),s.like==""&&(s.like=s.object),s.announce==""&&(s.announce=s.object),s;switch((await d.getSoftwareName(t)).toLowerCase()){case"diaspora":s.create=t+"/bookmarklet?title={name}&notes={content}&url={inReplyTo}";break;case"friendica":s.create=t+"/compose?title={name}&body={content}";break;case"glitchcafe":s.create=t+"/share?text={content}";break;case"gnusocial":s.create=t+"/notice/new?status_textarea={content}";break;case"hubzilla":s.create=t+"/rpost?title={name}&body={content}";break;case"mastodon":case"hometown":s.create=t+"/share?text={content}",s.object=t+"/authorize_interaction?uri={object}";break;case"misskey":case"calckey":case"fedibird":case"firefish":case"foundkey":case"meisskey":s.create=t+"/share?text={content}";break;case"microdotblog":s.create=t+"/post?text=[{name}]({inReplyTo})%0A%0A{content}";break}return s}};function w(n){if(n==null)return"";switch(typeof n){case"bigint":return n.toString();case"boolean":return n?"true":"false";case"number":return n.toString();case"object":if(Array.isArray(n))return n.length==0?"":w(n[0]);if(n instanceof Object)return typeof n.id=="string"?n.id:typeof n.href=="string"?n.href:typeof n.url=="string"?n.url:"";case"string":return n;case"symbol":return n.toString()}return""}var x="https://www.w3.org/ns/activitystreams";var y=class{#t;constructor(t){t!=null?this.#t=t:this.#t={},this.#t["@context"]==null&&(this.#t["@context"]=x)}fromURL=async(t,r={})=>{r.headers={Accept:"application/activity+json"};let e=await fetch(t,r);if(!e.ok)throw new Error(`Unable to fetch ${t}: ${e.status} ${e.statusText}`);let s=await e.text();return this.fromJSON(s),this};fromJSON=t=>(this.#t=JSON.parse(t),this);toObject=()=>this.#t;toJSON=()=>JSON.stringify(this.#t);set=(t,r)=>{this.#t[t]=r};get(t,r){var e=this.#t[r];if(e!=null||(e=this.#t[t+":"+r],e!=null))return e;switch(t){case"as":return this.#t["https://www.w3.org/ns/activitystreams#"+r];case"emissary":return this.#t["https://emissary.dev/ns#"+r];case"mls":return this.#t["https://purl.archive.org/socialweb/mls#"+r];case"sse":return this.#t["https://purl.archive.org/socialweb/sse#"+r]}}getString=(t,r)=>w(this.get(t,r));getInteger=(t,r)=>{let e=this.get(t,r);if(e==null)return 0;switch(typeof e){case"number":return Math.floor(e);case"string":let s=parseInt(e);if(!isNaN(s))return s}return 0};getArray=(t,r)=>{let e=this.get(t,r);return e==null?[]:Array.isArray(e)?e:[e]};type=()=>this.getString("as","type");id=()=>this.getString("as","id")};var b=class extends y{icon=()=>this.getString("as","icon");id=()=>this.getString("as","id");name=()=>this.getString("as","name");outbox=()=>this.getString("as","outbox");preferredUsername=()=>this.getString("as","preferredUsername");summary=()=>this.getString("as","summary");type=()=>this.getString("as","type");mlsMessages=()=>this.getString("mls","messages");mlsKeyPackages=()=>this.getString("mls","keyPackages");emissaryMessages=()=>this.getString("emissary","messages");messages=()=>{let t=this.emissaryMessages();if(t!="")return{url:t,plaintext:!0};let r=this.mlsMessages();return r!=""?{url:r,plaintext:!1}:{url:"",plaintext:!1}}};var i={render:()=>{let n=i.getSavedAccounts();Array.from(document.getElementsByClassName("camper-loading")).forEach(o=>o.hidden=!0),Array.from(document.getElementsByClassName("camper-add-account")).forEach(o=>{o.hidden=n.length>=3,o.blur()}),Array.from(document.getElementsByClassName("camper-add-first-account")).forEach(o=>{o.hidden=n.length!=0,o.blur()}),Array.from(document.getElementsByClassName("camper-add-another-account")).forEach(o=>{o.hidden=n.length==0,o.blur()}),Array.from(document.getElementsByClassName("camper-remove-accounts")).forEach(o=>{o.hidden=n.length==0}),Array.from(document.getElementsByClassName("camper-btn-like")).forEach(o=>{o.disabled=!n.some(c=>c.intents.like!="")}),Array.from(document.getElementsByClassName("camper-btn-share")).forEach(o=>{o.disabled=!n.some(c=>c.intents.create!="")}),Array.from(document.getElementsByClassName("camper-btn-announce")).forEach(o=>{o.disabled=!n.some(c=>c.intents.announce!="")}),Array.from(document.getElementsByClassName("camper-accounts")).forEach(o=>{if(n.length==0){o.innerHTML="",o.hidden=!0;return}let c=n.map(p=>`
-				<div class="camper-account" onclick="Camper.doIntent(this, '${p.username}')">
-					<img src="${p.iconUrl}" class="camper-account-icon">
+// src/utils.ts
+function guessProtocol(server) {
+  switch (server) {
+    case "localhost":
+    case "127.0.0.1":
+      return "http://";
+  }
+  return "https://";
+}
+function hideElement(element, hide) {
+  if (hide) {
+    element.hidden = true;
+    element.style.display = "none";
+  } else {
+    element.hidden = false;
+    element.style.display = "";
+  }
+}
+
+// src/webfinger.ts
+var WebFinger = class {
+  static getMetadata = async (username) => {
+    const url = this.getUrl(username);
+    if (url == null) {
+      return null;
+    }
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error("WebFinger request failed with status " + response.status);
+      return null;
+    }
+    const result = await response.json();
+    return result;
+  };
+  // getActivityPubId retrieves user's ActivityPub Actor ID from WebFinger metadata
+  static getActivityPubId = (webfingerResult) => {
+    const links = webfingerResult.links || [];
+    for (const link of links) {
+      const relation = link.rel || "";
+      if (relation.toLowerCase() == "self") {
+        const linkType = link.type || "";
+        if (linkType.toLowerCase() == "application/activity+json") {
+          return link.href || "";
+        }
+      }
+    }
+    return "";
+  };
+  // getUrl constructs the well-known WebFinger URL to look up the provided username
+  static getUrl = (username) => {
+    const [user, server] = this.splitUsername(username);
+    if (user == "" || server == "") {
+      console.error("Invalid username: " + username);
+      return null;
+    }
+    const result = guessProtocol(server) + server + "/.well-known/webfinger?resource=acct:" + user + "@" + server;
+    return result;
+  };
+  // splitUsername splits a WebFinger username into its "user" and "server" parts
+  static splitUsername = (username) => {
+    if (username.startsWith("@")) {
+      username = username.substring(1);
+    }
+    var parts = username.split("@");
+    if (parts.length != 2) {
+      console.error(username + " is not a valid username");
+      return ["", ""];
+    }
+    return [parts[0], parts[1]];
+  };
+};
+
+// src/nodeinfo.ts
+var NodeInfo = class {
+  static getSoftwareName = async (server) => {
+    const nodeInfo = await this.getNodeInfo(server);
+    if (nodeInfo == null) {
+      return "";
+    }
+    return nodeInfo?.software?.name || "";
+  };
+  static getNodeInfo = async (server) => {
+    const url = await this.#getNodeInfoUrl(server);
+    if (url == null) {
+      return null;
+    }
+    try {
+      const response = await fetch(url);
+      if (response.ok) {
+        return await response.json();
+      }
+      console.error("NodeInfo request failed with status " + response.status);
+    } catch (error) {
+      console.error("NodeInfo request failed with error: " + error);
+    }
+    return null;
+  };
+  static #getNodeInfoUrl = async (server) => {
+    try {
+      const url = guessProtocol(server) + server + "/.well-known/nodeinfo";
+      const response = await fetch(url);
+      if (response.ok) {
+        const result = await response.json();
+        return result?.links.at(0)?.href || null;
+      }
+      console.error("NodeInfo request failed with status " + response.status);
+      return null;
+    } catch (error) {
+      console.error("NodeInfo request failed with error: " + error);
+      return null;
+    }
+  };
+};
+
+// src/intents.ts
+var Intents = class {
+  // getIntentsMap retrieves the available Activity Intents templates for the provided data
+  static getIntentsMap = async (server, webfingerResult) => {
+    var found = false;
+    var result = {
+      announce: "",
+      create: "",
+      follow: "",
+      like: "",
+      object: ""
+    };
+    const links = webfingerResult.links || [];
+    for (const link of links) {
+      var relation = link.rel || "";
+      var template = link.template || link.href || "";
+      switch (relation.toLowerCase()) {
+        case "https://w3id.org/fep/3b86/announce":
+          result.announce = template;
+          found = true;
+          continue;
+        case "https://w3id.org/fep/3b86/create":
+          result.create = template;
+          found = true;
+          continue;
+        case "https://w3id.org/fep/3b86/follow":
+          result.follow = template;
+          found = true;
+          continue;
+        case "https://w3id.org/fep/3b86/like":
+          result.like = template;
+          found = true;
+          continue;
+        case "https://w3id.org/fep/3b86/object":
+          result.object = template;
+          found = true;
+          continue;
+        case "http://ostatus.org/schema/1.0/subscribe":
+        case "https://ostatus.org/schema/1.0/subscribe":
+          if (result.follow == "") {
+            result.follow = template.replaceAll("{uri}", "{object}");
+          }
+          continue;
+      }
+    }
+    if (found) {
+      if (result.follow == "") {
+        result.follow = result.object;
+      }
+      if (result.like == "") {
+        result.like = result.object;
+      }
+      if (result.announce == "") {
+        result.announce = result.object;
+      }
+      return result;
+    }
+    const softwareName = await NodeInfo.getSoftwareName(server);
+    switch (softwareName.toLowerCase()) {
+      case "diaspora":
+        result.create = server + "/bookmarklet?title={name}&notes={content}&url={inReplyTo}";
+        break;
+      case "friendica":
+        result.create = server + "/compose?title={name}&body={content}";
+        break;
+      case "glitchcafe":
+        result.create = server + "/share?text={content}";
+        break;
+      case "gnusocial":
+        result.create = server + "/notice/new?status_textarea={content}";
+        break;
+        result.create = server + "/share?text={content}";
+        break;
+      case "hubzilla":
+        result.create = server + "/rpost?title={name}&body={content}";
+        break;
+      case "mastodon":
+      case "hometown":
+        result.create = server + "/share?text={content}";
+        result.object = server + "/authorize_interaction?uri={object}";
+        break;
+      case "misskey":
+      case "calckey":
+      case "fedibird":
+      case "firefish":
+      case "foundkey":
+      case "meisskey":
+        result.create = server + "/share?text={content}";
+        break;
+      case "microdotblog":
+        result.create = server + "/post?text=[{name}]({inReplyTo})%0A%0A{content}";
+        break;
+    }
+    return result;
+  };
+};
+
+// src/as/utils.ts
+function toString(value) {
+  if (value == void 0) {
+    return "";
+  }
+  switch (typeof value) {
+    //
+    case "bigint":
+      return value.toString();
+    case "boolean":
+      return value ? "true" : "false";
+    case "number":
+      return value.toString();
+    case "object":
+      if (Array.isArray(value)) {
+        if (value.length == 0) {
+          return "";
+        }
+        return toString(value[0]);
+      }
+      if (value instanceof Object) {
+        if (typeof value.id === "string") {
+          return value.id;
+        }
+        if (typeof value.href === "string") {
+          return value.href;
+        }
+        if (typeof value.url === "string") {
+          return value.url;
+        }
+        return "";
+      }
+    case "string":
+      return value;
+    case "symbol":
+      return value.toString();
+  }
+  return "";
+}
+
+// src/as/vocab.ts
+var ContextActivityStreams = "https://www.w3.org/ns/activitystreams";
+
+// src/as/object.ts
+var Object2 = class {
+  #value;
+  constructor(value) {
+    if (value != void 0) {
+      this.#value = value;
+    } else {
+      this.#value = {};
+    }
+    if (this.#value["@context"] == void 0) {
+      this.#value["@context"] = ContextActivityStreams;
+    }
+  }
+  ///////////////////////////////////
+  // Conversion methods
+  // fromURL retrieves a JSON document from the specified URL and parses it into the JSONLD struct
+  fromURL = async (url, options = {}) => {
+    options["headers"] = {
+      Accept: "application/activity+json"
+    };
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      throw new Error(`Unable to fetch ${url}: ${response.status} ${response.statusText}`);
+    }
+    const body = await response.text();
+    this.fromJSON(body);
+    return this;
+  };
+  // fromJSON parses a JSON string into the JSONLD struct
+  fromJSON = (json) => {
+    this.#value = JSON.parse(json);
+    return this;
+  };
+  // toObject returns the raw JSON object represented by this JSONLD struct
+  toObject = () => {
+    return this.#value;
+  };
+  // toJSON returns a JSON string representation of the JSONLD struct
+  toJSON = () => {
+    return JSON.stringify(this.#value);
+  };
+  ///////////////////////////////////
+  // Setters
+  // set sets a property on the JSONLD struct with the given name and value
+  set = (name, value) => {
+    this.#value[name] = value;
+  };
+  ///////////////////////////////////
+  // Property conversion methods
+  get(namespace, property) {
+    var result = this.#value[property];
+    if (result != void 0) {
+      return result;
+    }
+    result = this.#value[namespace + ":" + property];
+    if (result != void 0) {
+      return result;
+    }
+    switch (namespace) {
+      case "as":
+        return this.#value["https://www.w3.org/ns/activitystreams#" + property];
+      case "emissary":
+        return this.#value["https://emissary.dev/ns#" + property];
+      case "mls":
+        return this.#value["https://purl.archive.org/socialweb/mls#" + property];
+      case "sse":
+        return this.#value["https://purl.archive.org/socialweb/sse#" + property];
+    }
+    return void 0;
+  }
+  getString = (namespace, property) => {
+    return toString(this.get(namespace, property));
+  };
+  getInteger = (namespace, property) => {
+    const result = this.get(namespace, property);
+    if (result == void 0) {
+      return 0;
+    }
+    switch (typeof result) {
+      case "number":
+        return Math.floor(result);
+      case "string":
+        const parsed = parseInt(result);
+        if (!isNaN(parsed)) {
+          return parsed;
+        }
+    }
+    return 0;
+  };
+  getArray = (namespace, property) => {
+    const result = this.get(namespace, property);
+    if (result == void 0) {
+      return [];
+    }
+    if (Array.isArray(result)) {
+      return result;
+    }
+    return [result];
+  };
+  ///////////////////////////////////
+  // Properties
+  type = () => {
+    return this.getString("as", "type");
+  };
+  id = () => {
+    return this.getString("as", "id");
+  };
+};
+
+// src/as/actor.ts
+var Actor = class extends Object2 {
+  //
+  ///////////////////////////////////
+  // Property accessors
+  // icon returns the value of the "icon" property
+  icon = () => {
+    return this.getString("as", "icon");
+  };
+  // id returns the value of the "id" property
+  id = () => {
+    return this.getString("as", "id");
+  };
+  // name returns the value of the "name" property
+  name = () => {
+    return this.getString("as", "name");
+  };
+  outbox = () => {
+    return this.getString("as", "outbox");
+  };
+  preferredUsername = () => {
+    return this.getString("as", "preferredUsername");
+  };
+  summary = () => {
+    return this.getString("as", "summary");
+  };
+  type = () => {
+    return this.getString("as", "type");
+  };
+  ///////////////////////////////////
+  // MLS-specific properties
+  mlsMessages = () => {
+    return this.getString("mls", "messages");
+  };
+  mlsKeyPackages = () => {
+    return this.getString("mls", "keyPackages");
+  };
+  ///////////////////////////////////
+  // Emissary-specific properties
+  // emissaryMessages returns the URL for the Emissary-specific messages collection
+  // that returns BOTH encrypted and unencrypted messages. This is preferred over mls:messages because it allows the client to receive direct messages that are not encrypted with MLS.
+  emissaryMessages = () => {
+    return this.getString("emissary", "messages");
+  };
+  // messages returns the URL for the preferred messages collection,
+  // which may be either the Emissary-specific collection (if supported) or
+  // the standard mls:messages collection (if Emissary-specific collection is not supported).
+  // The boolean return value indicates whether the returned URL is for the
+  // Emissary-specific collection (true) or the standard mls:messages collection (false).
+  messages = () => {
+    const emissaryMessages = this.emissaryMessages();
+    if (emissaryMessages != "") {
+      return { url: emissaryMessages, plaintext: true };
+    }
+    const mlsMessages = this.mlsMessages();
+    if (mlsMessages != "") {
+      return { url: mlsMessages, plaintext: false };
+    }
+    return { url: "", plaintext: false };
+  };
+};
+
+// src/camper.ts
+var Camper = {
+  // render redraws the UX based on the current account list in localStorage
+  render: () => {
+    const accounts = Camper.getSavedAccounts();
+    const loadingIndicators = Array.from(document.getElementsByClassName("camper-loading"));
+    loadingIndicators.forEach((element) => element.hidden = true);
+    const addAccountButtons = Array.from(document.getElementsByClassName("camper-add-account"));
+    addAccountButtons.forEach((element) => {
+      const maxAccounts = parseInt(element.getAttribute("max-accounts") || element.getAttribute("data-max-accounts") || "3");
+      hideElement(element, accounts.length >= maxAccounts);
+      element.blur();
+    });
+    const addFirstAccountButtons = Array.from(document.getElementsByClassName("camper-add-first-account"));
+    addFirstAccountButtons.forEach((element) => {
+      hideElement(element, accounts.length != 0);
+      element.blur();
+    });
+    const hasAccountsShow = Array.from(document.getElementsByClassName("camper-show-if-has-accounts"));
+    hasAccountsShow.forEach((element) => {
+      hideElement(element, accounts.length == 0);
+      element.blur();
+    });
+    const hasAccountsHide = Array.from(document.getElementsByClassName("camper-hide-if-has-accounts"));
+    hasAccountsHide.forEach((element) => {
+      hideElement(element, accounts.length != 0);
+      element.blur();
+    });
+    const addAnotherAccountButtons = Array.from(document.getElementsByClassName("camper-add-another-account"));
+    addAnotherAccountButtons.forEach((element) => {
+      hideElement(element, accounts.length == 0);
+      element.blur();
+    });
+    const removeAccountButtons = Array.from(document.getElementsByClassName("camper-remove-accounts"));
+    removeAccountButtons.forEach((element) => {
+      hideElement(element, accounts.length == 0);
+    });
+    const likeButtons = Array.from(document.getElementsByClassName("camper-btn-like"));
+    likeButtons.forEach((element) => {
+      element.disabled = !accounts.some((account) => account.intents.like != "");
+    });
+    const shareButtons = Array.from(document.getElementsByClassName("camper-btn-share"));
+    shareButtons.forEach((element) => {
+      element.disabled = !accounts.some((account) => account.intents.create != "");
+    });
+    const announceButtons = Array.from(document.getElementsByClassName("camper-btn-announce"));
+    announceButtons.forEach((element) => {
+      element.disabled = !accounts.some((account) => account.intents.announce != "");
+    });
+    const replyButtons = Array.from(document.getElementsByClassName("camper-btn-reply"));
+    replyButtons.forEach((element) => {
+      element.disabled = !accounts.some((account) => account.intents.create != "");
+    });
+    const accountNameElements = Array.from(document.getElementsByClassName("camper-account-name"));
+    accountNameElements.forEach((element) => {
+      const account = accounts[0];
+      if (account != void 0) {
+        element.innerText = account.name;
+      }
+    });
+    const accountImageElements = Array.from(document.getElementsByClassName("camper-account-image"));
+    accountImageElements.forEach((element) => {
+      const account = accounts[0];
+      if (account != void 0) {
+        element.src = account.iconUrl;
+        element.hidden = false;
+      } else {
+        element.src = "";
+        element.hidden = true;
+      }
+    });
+    const accountForms = Array.from(document.querySelectorAll("form.camper-form"));
+    accountForms.forEach((form) => {
+      form.onsubmit = (event) => {
+        event.preventDefault();
+        event.cancelBubble = true;
+        const fediverseHandle = form.elements.namedItem("username");
+        Camper.addAccount(fediverseHandle.value);
+      };
+    });
+    const accountLists = Array.from(document.getElementsByClassName("camper-accounts"));
+    accountLists.forEach((element) => {
+      if (accounts.length == 0) {
+        element.innerHTML = "";
+        element.hidden = true;
+        return;
+      }
+      const maxAccountsString = element.getAttribute("max-accounts") || element.getAttribute("data-max-accounts") || "3";
+      const maxAccounts = parseInt(maxAccountsString);
+      const accountListHTML = accounts.slice(0, maxAccounts).map((account) => `
+				<div id="camper-account-${account.id}" class="camper-account" onclick="Camper.doIntent(this, '${account.username}')">
+					<img src="${account.iconUrl}" class="camper-account-icon">
 					<div class="camper-account-info">
-						<div class="camper-account-name">${p.name}</div>
-						<div class="camper-account-username">${p.username}</div>
+						<div class="camper-account-name">${account.name}</div>
+						<div class="camper-account-username">${account.username}</div>
 					</div>
-					<button class="camper-account-remove-button" onclick="Camper.removeAccount('${p.username}')">Remove</button>
+					<button class="camper-account-remove-button" onclick="Camper.removeAccount('${account.username}')">Remove</button>
 				</div>
-			`).join("");o.innerHTML=c,o.hidden=!1})},doIntent:(n,t)=>{let r=n.parentElement,e=r.dataset,s=r.getAttribute("data-intent");if(s==null){console.error("Unable to determine intent for clicked element. Please ensure the element has a 'data-camper-intent' attribute.");return}let l=i.getSavedAccounts().find(c=>c.username.toLowerCase()==t.toLowerCase());if(l==null)return;var a=l.intents[s];let m=(a.match(/\{[^}]+\}/g)||[]).map(c=>c.slice(1,-1));for(let c of m){var o=r.getAttribute("data-"+c)||"";o=encodeURIComponent(o),a=a.replaceAll("{"+c+"}",o)}if(a=""){alert("The account you selected does not support this action.");return}window.open(a,"_blank","height=750,width=600")},addAccount:async n=>{Array.from(document.getElementsByClassName("camper-loading")).forEach(a=>a.hidden=!1);let r=await f.getMetadata(n);if(r==null){i.render(),alert("Unable to look up the account you entered.");return}var e=i.getSavedAccounts();if(e.some(a=>a.username.toLowerCase()==n.toLowerCase())){i.render();return}let s=f.getActivityPubId(r);if(s==""){i.render(),alert("Unable to retrieve the profile for the account you entered.");return}let u=await new b().fromURL(s);e.push({id:s,username:n,name:u.name(),iconUrl:u.icon(),intents:await h.getIntentsMap(s,r)}),localStorage.setItem("camper",JSON.stringify(e)),Array.from(document.getElementsByClassName("camper-input")).forEach(a=>{a.value=""}),i.render()},removeAccount:n=>{if(window.event.stopPropagation(),window.event.preventDefault(),!!confirm("Remove this account from this device?")){var t=i.getSavedAccounts();t=t.filter(r=>r.username.toLowerCase()!=n.toLowerCase()),localStorage.setItem("camper",JSON.stringify(t)),i.render()}},hasSavedAccounts:()=>i.getSavedAccounts().length>0,getSavedAccounts:()=>{let n=localStorage.getItem("camper");return n==null?[]:JSON.parse(n)||[]}};i.render();
-//# sourceMappingURL=camper.js.map
+			`).join("");
+      element.innerHTML = accountListHTML;
+      element.hidden = false;
+    });
+  },
+  // addAccount adds a new account to the list and redraws the UX
+  addAccount: async (username) => {
+    const loadingIndicators = Array.from(document.getElementsByClassName("camper-loading"));
+    loadingIndicators.forEach((element) => element.hidden = false);
+    const webfingerResult = await WebFinger.getMetadata(username);
+    if (webfingerResult == null) {
+      Camper.render();
+      alert("Unable to look up the account you entered.");
+      return;
+    }
+    var accounts = Camper.getSavedAccounts();
+    if (accounts.some((account) => account.username.toLowerCase() == username.toLowerCase())) {
+      Camper.render();
+      return;
+    }
+    const actorId = WebFinger.getActivityPubId(webfingerResult);
+    if (actorId == "") {
+      Camper.render();
+      alert("Unable to retrieve the profile for the account you entered.");
+      return;
+    }
+    const activityPubActor = await new Actor().fromURL(actorId);
+    accounts.push({
+      id: actorId,
+      username,
+      name: activityPubActor.name(),
+      iconUrl: activityPubActor.icon(),
+      intents: await Intents.getIntentsMap(actorId, webfingerResult)
+    });
+    localStorage.setItem("camper", JSON.stringify(accounts));
+    const shareButtons = Array.from(document.getElementsByClassName("camper-input"));
+    shareButtons.forEach((element) => {
+      element.value = "";
+    });
+    Camper.render();
+    const newElement = document.getElementById("camper-account-" + actorId);
+    if (newElement != null) {
+      newElement.click();
+    }
+  },
+  // removeAccount removes an account from the list and redraws the UX
+  removeAccount: (username) => {
+    window.event.stopPropagation();
+    window.event.preventDefault();
+    if (!confirm("Remove this account from this device?")) {
+      return;
+    }
+    var accounts = Camper.getSavedAccounts();
+    accounts = accounts.filter((account) => account.username.toLowerCase() != username.toLowerCase());
+    localStorage.setItem("camper", JSON.stringify(accounts));
+    Camper.render();
+  },
+  // hasSavedAccounts returns TRUE if there is one or more accounts saved in localStorage
+  hasSavedAccounts: () => {
+    const accounts = Camper.getSavedAccounts();
+    return accounts.length > 0;
+  },
+  // getSavedAccounts retrieves the list of accounts from localStorage
+  getSavedAccounts: () => {
+    const accountsString = localStorage.getItem("camper");
+    if (accountsString == null) {
+      return [];
+    }
+    return JSON.parse(accountsString) || [];
+  },
+  // doIntent executes the Activity Intent for a selected account (using the data elements in that node)
+  doIntent: (element, username = "") => {
+    const parent = element.parentElement;
+    if (parent.getAttribute("data-intent") == null) {
+      parent.setAttribute("data-intent", "follow");
+    }
+    if (parent.getAttribute("data-on-success") == null) {
+      parent.setAttribute("data-on-success", "(close)");
+    }
+    if (parent.getAttribute("data-on-cancel") == null) {
+      parent.setAttribute("data-on-cancel", "(close)");
+    }
+    const intentName = parent.getAttribute("data-intent");
+    if (intentName == null) {
+      console.error("Unable to determine intent for clicked element. Please ensure the element has a 'data-camper-intent' attribute.");
+      return;
+    }
+    const accounts = Camper.getSavedAccounts();
+    if (accounts.length == 0) {
+      alert("No accounts configured. Please add an account to continue.");
+      return;
+    }
+    let account = accounts.find((account2) => account2.username.toLowerCase() == username.toLowerCase());
+    if (account == void 0) {
+      account = accounts[0];
+    }
+    var intentTemplate = account.intents[intentName];
+    const matches = intentTemplate.match(/\{[^}]+\}/g) || [];
+    const placeholders = matches.map((placeholder) => placeholder.slice(1, -1));
+    console.log("Found intent template: " + intentTemplate);
+    console.log("Placeholders:", placeholders);
+    console.log("Dataset", parent.dataset);
+    for (const placeholder of placeholders) {
+      var value = parent.getAttribute("data-" + placeholder) || "";
+      value = encodeURIComponent(value);
+      intentTemplate = intentTemplate.replaceAll("{" + placeholder + "}", value);
+    }
+    if (intentTemplate == "") {
+      alert("The account you selected does not support this action.");
+      return;
+    }
+    console.log("Opening intent URL: " + intentTemplate);
+    parent.dispatchEvent(new CustomEvent("camper-hide"));
+    window.open(intentTemplate, "_blank", "height=750,width=600");
+  }
+};
+Camper.render();
+console.log("CamperJS loaded", Camper);

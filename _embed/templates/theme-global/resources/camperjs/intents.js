@@ -1,2 +1,151 @@
-function i(a){switch(a){case"localhost":case"127.0.0.1":return"http://"}return"https://"}var s=class{static getSoftwareName=async t=>{let n=await this.getNodeInfo(t);return n==null?"":n?.software?.name||""};static getNodeInfo=async t=>{let n=await this.#e(t);if(n==null)return null;try{let o=await fetch(n);if(o.ok)return await o.json();console.error("NodeInfo request failed with status "+o.status)}catch(o){console.error("NodeInfo request failed with error: "+o)}return null};static#e=async t=>{try{let n=i(t)+t+"/.well-known/nodeinfo",o=await fetch(n);return o.ok?(await o.json())?.links.at(0)?.href||null:(console.error("NodeInfo request failed with status "+o.status),null)}catch(n){return console.error("NodeInfo request failed with error: "+n),null}}};var l=class{static getIntentsMap=async(t,n)=>{var o=!1,e={announce:"",create:"",follow:"",like:"",object:""};let u=n.links||[];for(let c of u){var f=c.rel||"",r=c.template||c.href||"";switch(f.toLowerCase()){case"https://w3id.org/fep/3b86/announce":e.announce=r,o=!0;continue;case"https://w3id.org/fep/3b86/create":e.create=r,o=!0;continue;case"https://w3id.org/fep/3b86/follow":e.follow=r,o=!0;continue;case"https://w3id.org/fep/3b86/like":e.like=r,o=!0;continue;case"https://w3id.org/fep/3b86/object":e.object=r,o=!0;continue;case"http://ostatus.org/schema/1.0/subscribe":case"https://ostatus.org/schema/1.0/subscribe":e.follow==""&&(e.follow=r.replaceAll("{uri}","{object}"));continue}}if(o)return e.follow==""&&(e.follow=e.object),e.like==""&&(e.like=e.object),e.announce==""&&(e.announce=e.object),e;switch((await s.getSoftwareName(t)).toLowerCase()){case"diaspora":e.create=t+"/bookmarklet?title={name}&notes={content}&url={inReplyTo}";break;case"friendica":e.create=t+"/compose?title={name}&body={content}";break;case"glitchcafe":e.create=t+"/share?text={content}";break;case"gnusocial":e.create=t+"/notice/new?status_textarea={content}";break;case"hubzilla":e.create=t+"/rpost?title={name}&body={content}";break;case"mastodon":case"hometown":e.create=t+"/share?text={content}",e.object=t+"/authorize_interaction?uri={object}";break;case"misskey":case"calckey":case"fedibird":case"firefish":case"foundkey":case"meisskey":e.create=t+"/share?text={content}";break;case"microdotblog":e.create=t+"/post?text=[{name}]({inReplyTo})%0A%0A{content}";break}return e}};export{l as Intents};
-//# sourceMappingURL=intents.js.map
+// src/utils.ts
+function guessProtocol(server) {
+  switch (server) {
+    case "localhost":
+    case "127.0.0.1":
+      return "http://";
+  }
+  return "https://";
+}
+
+// src/nodeinfo.ts
+var NodeInfo = class {
+  static getSoftwareName = async (server) => {
+    const nodeInfo = await this.getNodeInfo(server);
+    if (nodeInfo == null) {
+      return "";
+    }
+    return nodeInfo?.software?.name || "";
+  };
+  static getNodeInfo = async (server) => {
+    const url = await this.#getNodeInfoUrl(server);
+    if (url == null) {
+      return null;
+    }
+    try {
+      const response = await fetch(url);
+      if (response.ok) {
+        return await response.json();
+      }
+      console.error("NodeInfo request failed with status " + response.status);
+    } catch (error) {
+      console.error("NodeInfo request failed with error: " + error);
+    }
+    return null;
+  };
+  static #getNodeInfoUrl = async (server) => {
+    try {
+      const url = guessProtocol(server) + server + "/.well-known/nodeinfo";
+      const response = await fetch(url);
+      if (response.ok) {
+        const result = await response.json();
+        return result?.links.at(0)?.href || null;
+      }
+      console.error("NodeInfo request failed with status " + response.status);
+      return null;
+    } catch (error) {
+      console.error("NodeInfo request failed with error: " + error);
+      return null;
+    }
+  };
+};
+
+// src/intents.ts
+var Intents = class {
+  // getIntentsMap retrieves the available Activity Intents templates for the provided data
+  static getIntentsMap = async (server, webfingerResult) => {
+    var found = false;
+    var result = {
+      announce: "",
+      create: "",
+      follow: "",
+      like: "",
+      object: ""
+    };
+    const links = webfingerResult.links || [];
+    for (const link of links) {
+      var relation = link.rel || "";
+      var template = link.template || link.href || "";
+      switch (relation.toLowerCase()) {
+        case "https://w3id.org/fep/3b86/announce":
+          result.announce = template;
+          found = true;
+          continue;
+        case "https://w3id.org/fep/3b86/create":
+          result.create = template;
+          found = true;
+          continue;
+        case "https://w3id.org/fep/3b86/follow":
+          result.follow = template;
+          found = true;
+          continue;
+        case "https://w3id.org/fep/3b86/like":
+          result.like = template;
+          found = true;
+          continue;
+        case "https://w3id.org/fep/3b86/object":
+          result.object = template;
+          found = true;
+          continue;
+        case "http://ostatus.org/schema/1.0/subscribe":
+        case "https://ostatus.org/schema/1.0/subscribe":
+          if (result.follow == "") {
+            result.follow = template.replaceAll("{uri}", "{object}");
+          }
+          continue;
+      }
+    }
+    if (found) {
+      if (result.follow == "") {
+        result.follow = result.object;
+      }
+      if (result.like == "") {
+        result.like = result.object;
+      }
+      if (result.announce == "") {
+        result.announce = result.object;
+      }
+      return result;
+    }
+    const softwareName = await NodeInfo.getSoftwareName(server);
+    switch (softwareName.toLowerCase()) {
+      case "diaspora":
+        result.create = server + "/bookmarklet?title={name}&notes={content}&url={inReplyTo}";
+        break;
+      case "friendica":
+        result.create = server + "/compose?title={name}&body={content}";
+        break;
+      case "glitchcafe":
+        result.create = server + "/share?text={content}";
+        break;
+      case "gnusocial":
+        result.create = server + "/notice/new?status_textarea={content}";
+        break;
+        result.create = server + "/share?text={content}";
+        break;
+      case "hubzilla":
+        result.create = server + "/rpost?title={name}&body={content}";
+        break;
+      case "mastodon":
+      case "hometown":
+        result.create = server + "/share?text={content}";
+        result.object = server + "/authorize_interaction?uri={object}";
+        break;
+      case "misskey":
+      case "calckey":
+      case "fedibird":
+      case "firefish":
+      case "foundkey":
+      case "meisskey":
+        result.create = server + "/share?text={content}";
+        break;
+      case "microdotblog":
+        result.create = server + "/post?text=[{name}]({inReplyTo})%0A%0A{content}";
+        break;
+    }
+    return result;
+  };
+};
+export {
+  Intents
+};
