@@ -1,29 +1,38 @@
-{{- $themeID := .ThemeID -}}
+{{- $selected := .ThemeID -}}
 {{- $themes := .Themes -}}
 
 <h1><i class="bi bi-palette"></i> Website Theme</h1>
 
-<div class="flex-row" script="install TabContainer">
-	<div role="tablist" class="vertical width-1-4">
+<div class="margin-vertical">
+	Themes determine how your website looks. They may also change setup checklist items and other website defaults.
+</div>
+
+<form hx-post="/admin/domain/themes">
+
+	<div>
 		{{- range $themes -}}
-			{{- if eq .ThemeID $themeID -}}
-				<div role="tab" aria-controls="theme-{{.ThemeID}}" aria-selected="true">{{.Label}}</div>
-			{{- else -}}
-				<div role="tab" aria-controls="theme-{{.ThemeID}}">{{.Label}}</div>
-			{{- end -}}
+			{{- $id := .ThemeID -}}
+			{{- $selected := eq $id $.ThemeID -}}
+			{{- $selected := iif $selected "checked" "" -}}
+
+			<label for="theme-{{$id}}">
+				<div class="radiobutton padding">
+					<div class="margin-right">
+						<img src="/.themes/{{.ThemeID}}/resources/startup/icon.png" class="width-64">
+					</div>
+					<div>
+						<input type="radio" id="theme-{{$id}}" name="themeId" value="{{$id}}" {{- $selected -}} />
+						<div class="bold margin-none">{{.Label}}</div>
+						<div class="text-sm text-gray margin-none">{{.Description}}</div>
+					</div>
+				</div>
+			</label>
 		{{- end -}}
 	</div>
 
-	{{- range $themes -}}
-		<div id="theme-{{.ThemeID}}" role="tabpanel" class="width-4-5">
-			<div class="text-lg bold margin-none">{{.Label}}</div>
-			<div class="text-gray margin-bottom">{{.Description}}</div>
-			<img src="/.themes/{{.ThemeID}}/resources/startup/splash.png" class="width-100% margin-bottom">
+	<div class="margin-top-lg">
+		<button type="submit" class="primary">Select Theme</button>
+		<button script="on click trigger closeModal">Cancel</button>
+	</div>
 
-			<div>
-				<button class="primary" hx-post="/admin/domain/themes" hx-vals='{"themeId":"{{.ThemeID}}"}'>Select Theme</button>
-				<button script="on click trigger closeModal">Cancel</button> 
-			</div>
-		</div>
-	{{- end -}}
-</div>
+</form>
