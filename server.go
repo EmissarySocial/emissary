@@ -194,7 +194,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// Middleware for standard pages
 	// e.Use(steranko.Middleware(factory))
-	// e.Use(middleware.CORS())
+	e.Use(middleware.CORS())
 
 	// TODO: Commonly accessed routest that we should serve
 	e.GET("/robots.txt", handler.RobotsTxt)                 // https://developers.google.com/search/docs/advanced/robots/create-robots-txt
