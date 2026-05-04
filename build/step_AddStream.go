@@ -64,7 +64,7 @@ func (step StepAddStream) getChooser(builder Builder, buffer io.Writer) error {
 
 	b.H2().ID("modal-title").InnerText(step.Title).Close()
 
-	b.Div().Script("install TabContainer").Class("margin-bottom")
+	b.Div().Script("install TabContainer").Class("margin-bottom-lg")
 	b.Div().Role("tablist").Class("underlined")
 	for _, group := range groupedTemplates {
 		name := group.First().Group
