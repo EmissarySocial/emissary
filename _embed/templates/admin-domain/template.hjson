@@ -33,6 +33,7 @@
 			roles:["owner"]
 			steps: [{
 				do: as-modal
+				options: {size: "large"}
 				steps: [
 					{do: "view-html"}
 					{do: "set-data", from-form:["themeId"]}
