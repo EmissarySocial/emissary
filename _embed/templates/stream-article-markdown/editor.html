@@ -39,10 +39,9 @@
 
 
 <script type="text/javascript">
-
-	const darkModeMql = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)');
-
+console.log("Initializing EasyMDE Editor");
 	var easyMDE = new EasyMDE({
+		toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "guide"],
 		element:document.getElementById('markdownContent'),
 		uploadImage:true,
 		imageUploadEndpoint:"/{{.StreamID}}/upload-image",
