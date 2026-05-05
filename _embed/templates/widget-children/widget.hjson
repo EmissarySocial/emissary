@@ -1,0 +1,23 @@
+{
+	widgetId:"children"
+	label:"Children"
+	description:"Displays a table of child streams organized beneath this one in the site map."
+	schema:{
+		type:"object"
+		properties:{
+			title: {type:"string", default:""}
+			showIcon: {type:"boolean", default:true}
+			showDescription: {type:"boolean", default:true}
+		}
+	}
+	form:{
+		type:"layout-vertical"
+		label:"Edit Children Widget"
+		description:"Choose how this widget displays on your page."
+		children:[
+			{type:"text", path:"title", label:"Title", options:{placeholder:"Table of Contents"}}
+			{type:"toggle", path:"showIcon", options:{true-text:"Show Icon", false-text:"Show Icon"}}
+			{type:"toggle", path:"showDescription", options:{true-text:"Show Description", false-text:"Show Description"}}
+		]
+	}
+}
