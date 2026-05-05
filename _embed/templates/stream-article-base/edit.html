@@ -1,8 +1,15 @@
 <div class="page">
 
+	{{- $breadcrumbs := .Breadcrumbs -}}
+	<div id="menu-bar" class="margin-bottom">
+		{{- range $index, $stream := $breadcrumbs -}}
+			<a href="/{{$stream.ID}}/edit" class="text-gray margin-none padding-horizontal-xs">{{$stream.Name}} &rarr;</a>
+		{{- end -}}
+		<a href="/{{.StreamID}}" class="bold margin-none padding-horizontal-xs">{{.Name}}</a>
+	</div>
+
 	<div id="menu-bar">
 		<div class="left">
-			<a href="/{{.StreamID}}">&larr; View</a>
 
 			{{- if .UserCan "edit" -}}
 				<a href="/{{.StreamID}}/edit" class="bold">Edit</a>
