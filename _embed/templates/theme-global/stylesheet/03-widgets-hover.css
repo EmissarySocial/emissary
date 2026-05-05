@@ -21,6 +21,19 @@
     .hover-trigger:hover .hover-invisible {opacity:0}
 
     .hover-underline:hover {text-decoration:underline}
+
+	.header-hover-show {
+		display:none;
+
+		h1:hover &,
+		h2:hover &,
+		h3:hover &,
+		h4:hover &,
+		h5:hover &,
+		h6:hover & {
+			display:initial;
+		}
+	}
 }
 
 @media (prefers-reduced-motion:no-preference) {

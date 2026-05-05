@@ -74,7 +74,7 @@ func (service *Content) Format(content *model.Content) {
 		anchorExtension := &anchor.Extender{
 			Texter: anchor.Text(` `),
 			Attributer: anchor.Attributes{
-				"class": "bi bi-link",
+				"class": "bi bi-link header-hover-show",
 			},
 		}
 
