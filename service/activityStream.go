@@ -22,6 +22,10 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
+	"github.com/benpate/sherlock/activitypub"
+	"github.com/benpate/sherlock/bridgyfed"
+	"github.com/benpate/sherlock/tagspub"
+	"github.com/benpate/sherlock/webfinger"
 	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -83,36 +87,36 @@ func (service *ActivityStream) StreamClient(streamID primitive.ObjectID) streams
 // Client creates a new streams.Client that is configured for the specified actor type and ID.
 func (service *ActivityStream) Client(actorType string, actorID primitive.ObjectID) streams.Client {
 
+	userAgent := service.hostname + " /Emissary@v" + service.version + " (https://emissary.social)"
+
 	// Build a new client stack
 	sherlockClient := sherlock.NewClient(
-		sherlock.WithUserAgent(service.hostname+" /Emissary@v"+service.version+" (https://emissary.social)"),
 		sherlock.WithKeyPairFunc(service.KeyPairFunc(actorType, actorID)),
+		sherlock.WithUserAgent(userAgent),
 	)
 
-	// enforce opinionated data formats
-	normalizerClient := asnormalizer.New(sherlockClient)
+	// Try ActivityPub documents directly
+	activityPubClient := activitypub.New(sherlockClient,
+		activitypub.WithKeyPairFunc(service.KeyPairFunc(actorType, actorID)),
+		activitypub.WithUserAgent(userAgent),
+	)
 
-	// Emergency remove context maker. Will re-implement later.
-	// compute document context (if missing)
-	// contextMakerClient := ascontextmaker.New(normalizerClient, service.commonDatabase)
+	// Look up WebFinger URIs
+	webfingerClient := webfinger.New(activityPubClient)
 
-	// Emergency remove crawler. Will re-implement later.
-	// crawler client will load related documents in the background
-	/*
-		crawlerClient := ascrawler.New(
-			service.factory.Queue(),
-			contextMakerClient,
-			service.actorType,
-			service.actorID,
-			service.hostname,
-		)
-	*/
+	// Look up BlueSky names
+	bridgyfedClient := bridgyfed.New(webfingerClient)
 
-	// apply custom caching rules to documents
-	// cacheRulesClient := ascacherules.New(crawlerClient)
+	// Look up #Hashtags
+	tagspubClient := tagspub.New(bridgyfedClient)
+
+	// Enforce opinionated data formats
+	normalizerClient := asnormalizer.New(tagspubClient)
+
+	// Apply custom caching rules to documents
 	cacheRulesClient := ascacherules.New(normalizerClient)
 
-	// cache data in MongoDB
+	// Cache data in UWU DB
 	cacheClient := ascache.New(
 		cacheRulesClient,
 		service.queue,
@@ -123,6 +127,7 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 		ascache.WithIgnoreHeaders(),
 	)
 
+	// Find inter-page IDs (like https://yo.mama.social/@sofat#main-key)
 	hashClient := ashash.New(cacheClient)
 
 	return hashClient
@@ -203,9 +208,8 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 
 	const location = "service.ActivityStream.QueryActors"
 
-	// If we think this is an address we can work with (because sherlock says so)
-	// the try to retrieve it directly.
-	if sherlock.IsValidAddress(queryString) {
+	// If we think this is a URI  we can use then try to retrieve it directly.
+	if service.looksLikeValidURI(queryString) {
 
 		// Try to load the actor directly from the Interwebs
 		if newActor, err := service.AppClient().Load(queryString, sherlock.AsActor()); err == nil {
@@ -244,6 +248,23 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 
 	// Done? Done.
 	return result, nil
+}
+
+func (service *ActivityStream) looksLikeValidURI(uri string) bool {
+
+	if sherlock.IsValidAddress(uri) {
+		return true
+	}
+
+	if bridgyfed.LooksLikeBluesky(uri) {
+		return true
+	}
+
+	if tagspub.IsHashtag(uri) {
+		return true
+	}
+
+	return false
 }
 
 // QueryReplies returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
@@ -456,7 +477,7 @@ func (service *ActivityStream) PublicKeyFinder(keyID string) (string, error) {
 
 // KeyPairFunc returns a function that will locate the public/private key pair
 // for the specidied URL.  This can only be used for local URLs
-func (service *ActivityStream) KeyPairFunc(actorType string, actorID primitive.ObjectID) sherlock.KeyPairFunc {
+func (service *ActivityStream) KeyPairFunc(actorType string, actorID primitive.ObjectID) func() (string, crypto.PrivateKey) {
 
 	const location = "service.ActivityStream.KeyPairFunc"
 
