@@ -288,8 +288,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.domain/attachments/:attachmentId", handler.WithFactory(factory, handler.GetDomainAttachment))
 
 	// Stream Pages
-	e.HEAD("/", handler.WithFactory(factory, handler.GetHome))
-	e.GET("/", handler.WithFactory(factory, handler.GetHome))
+	e.HEAD("/", handler.GetHome(factory))
+	e.GET("/", handler.GetHome(factory))
 	e.HEAD("/:stream", handler.WithStream(factory, handler.HeadStream))
 	e.GET("/:stream", handler.WithTemplate(factory, handler.GetStream))
 	e.GET("/:stream/:action", handler.WithTemplate(factory, handler.GetStreamWithAction))
