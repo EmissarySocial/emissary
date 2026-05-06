@@ -1,8 +1,6 @@
 package service
 
 import (
-	"net/url"
-
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -11,6 +9,7 @@ import (
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/sherlock"
+	"github.com/benpate/uri"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/gommon/random"
 	"github.com/rs/zerolog/log"
@@ -24,9 +23,9 @@ func (service *Following) Follow(session data.Session, userID primitive.ObjectID
 	const location = "service.Following.Follow"
 	spew.Dump(location, "Attempting to follow URL", actorID)
 
-	// If the actor ID is not already a valid URL, it's probably a username/handle,
+	// If the actor ID is not a valid URL, it's probably a username/handle,
 	// so try to resolve it into a URL using Sherlock/WebFinger.
-	if _, err := url.Parse(actorID); err != nil {
+	if uri.NotValidURL(actorID) {
 
 		// Look up the Actor from the Activity service
 		actor, err := service.activityService.GetActor(actorID)

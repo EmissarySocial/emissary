@@ -1,8 +1,6 @@
 package consumer
 
 import (
-	"net/url"
-
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
@@ -10,6 +8,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 )
 
 // MoveUser is a background task that finalizes moving a user to a new server.
@@ -26,12 +25,13 @@ func MoveUser(factory *service.Factory, session data.Session, user *model.User, 
 	// Collect target Actor
 	newActorURL := args.GetString("actor")
 
-	// Validate that Actor URL is valid
+	// RULE: new actor url is required
 	if newActorURL == "" {
 		return queue.Failure(derp.BadRequest(location, "Actor URL is required"))
 	}
 
-	if _, err := url.Parse(newActorURL); err != nil {
+	// RULE: new actor url must be a valid URL
+	if uri.NotValidURL(newActorURL) {
 		return queue.Failure(derp.BadRequest(location, "Actor URL is not a valid URL", newActorURL))
 	}
 

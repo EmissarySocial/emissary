@@ -1,13 +1,12 @@
 package service
 
 import (
-	"net/url"
-
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/remote"
+	"github.com/benpate/uri"
 	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -19,9 +18,9 @@ func (service *Following) Unfollow(session data.Session, userID primitive.Object
 	const location = "service.Following.Unfollow"
 	spew.Dump(location, "Attempting to unfollow URL", actorID)
 
-	// If the actor ID is not already a valid URL, it's probably a username/handle,
+	// If the actor ID is not a valid URL, it's probably a username/handle,
 	// so try to resolve it into a URL using Sherlock/WebFinger.
-	if _, err := url.Parse(actorID); err != nil {
+	if uri.NotValidURL(actorID) {
 
 		// Look up the Actor from the Activity service
 		actor, err := service.activityService.GetActor(actorID)

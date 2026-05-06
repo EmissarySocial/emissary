@@ -1,8 +1,6 @@
 package consumer
 
 import (
-	"net/url"
-
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/derp"
@@ -10,6 +8,7 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 )
 
 // CrawlContext attempts to backfill the cache for a given document by crawling all of the links
@@ -36,7 +35,7 @@ func CrawlContext(factory *service.Factory, args mapof.Any) queue.Result {
 	if contextID := document.Context(); contextID != "" {
 
 		// Guarantee that we have a valid URL
-		if _, err := url.Parse(contextID); err != nil {
+		if uri.IsValidURL(contextID) {
 
 			// Load the context collection (probably from the Interweb)
 			context, err := client.Load(contextID)

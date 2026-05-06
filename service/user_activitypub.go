@@ -26,19 +26,19 @@ func (service *User) ParseProfileURL(session data.Session, value string) (primit
 	const location = "service.User.ParseProfileURL"
 
 	// Parse the URL to get the path
-	urlValue, err := url.Parse(value)
+	parsedURL, err := url.Parse(value)
 
 	if err != nil {
 		return primitive.NilObjectID, derp.Wrap(err, location, "Error parsing profile URL", value)
 	}
 
 	// RULE: server must be the same as the server we're running on
-	if urlValue.Scheme+"://"+urlValue.Host != service.host {
-		return primitive.NilObjectID, derp.BadRequest(location, "Profile URL must exist on this server", urlValue, value, service.host)
+	if parsedURL.Scheme+"://"+parsedURL.Host != service.host {
+		return primitive.NilObjectID, derp.BadRequest(location, "Profile URL must exist on this server", parsedURL, value, service.host)
 	}
 
 	// Extract the username from the URL
-	path := list.BySlash(urlValue.Path).Tail()
+	path := list.BySlash(parsedURL.Path).Tail()
 	username := path.Head()
 
 	if !strings.HasPrefix(username, "@") {
