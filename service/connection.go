@@ -98,16 +98,21 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 		return derp.Wrap(err, location, "Error encrypting vault values")
 	}
 
-	// Validate the value before saving
-	if err := service.Schema().Validate(connection); err != nil {
-		return derp.Wrap(err, location, "Unable to validate Connection", connection)
-	}
-
 	// Decrypt the vault data
 	vault, err := service.DecryptVault(connection)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Error getting vault")
+	}
+
+	// Trigger the `BeforeSave` lifecycle hook.
+	if err := provider.BeforeSave(connection, vault); err != nil {
+		return derp.Wrap(err, location, "Error in provider BeforeSave", connection.ProviderID)
+	}
+
+	// Validate the value before saving
+	if err := service.Schema().Validate(connection); err != nil {
+		return derp.Wrap(err, location, "Unable to validate Connection", connection)
 	}
 
 	switch connection.Active {

@@ -57,6 +57,10 @@ func (adapter Stripe) ManualConfig() form.Form {
  * Lifecycle Methods
  ******************************************/
 
+func (adapter Stripe) BeforeSave(connection *model.Connection, vault mapof.String) error {
+	return nil
+}
+
 // Connect applies any extra changes to the database after this Adapter is activated.
 func (adapter Stripe) Connect(connection *model.Connection, vault mapof.String, host string) error {
 	return nil

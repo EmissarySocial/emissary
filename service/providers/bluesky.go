@@ -52,6 +52,10 @@ func (adapter Bluesky) ManualConfig() form.Form {
  * Lifecycle Methods
  ******************************************/
 
+func (adapter Bluesky) BeforeSave(connection *model.Connection, vault mapof.String) error {
+	return nil
+}
+
 // Connect applies any extra changes to the database after this Adapter is activated.
 func (adapter Bluesky) Connect(connection *model.Connection, vault mapof.String, host string) error {
 	return nil

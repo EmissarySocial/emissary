@@ -11,6 +11,10 @@ type Null struct{}
  * Lifecycle Methods
  ******************************************/
 
+func (adapter Null) BeforeSave(connection *model.Connection, vault mapof.String) error {
+	return nil
+}
+
 func (adapter Null) Connect(connection *model.Connection, vault mapof.String, host string) error {
 	return nil
 }

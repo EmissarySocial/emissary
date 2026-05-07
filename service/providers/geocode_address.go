@@ -95,6 +95,10 @@ func (adapter GeocodeAddress) ManualConfig() form.Form {
  * Lifecycle Methods
  ******************************************/
 
+func (adapter GeocodeAddress) BeforeSave(connection *model.Connection, vault mapof.String) error {
+	return nil
+}
+
 // Connect applies any extra changes to the database after this Adapter is activated.
 func (adapter GeocodeAddress) Connect(connection *model.Connection, vault mapof.String, host string) error {
 	return nil

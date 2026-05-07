@@ -10,6 +10,7 @@ import (
 type Provider interface {
 
 	// Lifecycle Methods
+	BeforeSave(connection *model.Connection, vault mapof.String) error
 	Connect(connection *model.Connection, vault mapof.String, host string) error
 	Refresh(connection *model.Connection, vault mapof.String) error
 	Disconnect(connection *model.Connection, vault mapof.String) error
