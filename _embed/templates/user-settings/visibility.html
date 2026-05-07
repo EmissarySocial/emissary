@@ -39,6 +39,16 @@
 				hx-swap="innerHTML"
 				hx-push-url="false">
 			</div>
+
+			{{- if not .UserCanBridgeToBluesky -}}
+				<div class="padding bg-stripes margin-top-lg">
+					<div class="text-lg bold">Bluesky is Disabled</div>
+					<div class="bold">Bridging to BlueSky is not enabled for you on this server. Talk to your domain owner to activate this feature.</div>
+				</div>
+			{{- end -}}
+
 		</div>
+
+
 	</div>
 </div>

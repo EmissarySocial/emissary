@@ -69,6 +69,13 @@ func (adapter Bluesky) ManualConfig() form.Form {
  ******************************************/
 
 func (adapter Bluesky) BeforeSave(connection *model.Connection, vault mapof.String) error {
+
+	if connection.Data.GetString("allowType") == "NONE" {
+		connection.Active = false
+	} else {
+		connection.Active = true
+	}
+
 	return nil
 }
 

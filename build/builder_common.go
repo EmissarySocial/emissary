@@ -201,6 +201,16 @@ func (w Common) UserCanMLS() bool {
 	return false
 }
 
+// UserCanBridgeToBluesky returns TRUE if the current user has permission to bridge to Bluesky
+func (w Common) UserCanBridgeToBluesky() bool {
+	if user, err := w.getUser(); err == nil {
+		result := w._factory.Domain().Get().UserCanBridgeToBluesky(user)
+		return result
+	}
+
+	return false
+}
+
 // HasConnectionProvider returns TRUE if this domain has an active connection for the named provider
 func (w Common) HasConnectionProvider(provider string) bool {
 	return w.factory().Domain().Get().HasConnectionProvider(provider)
