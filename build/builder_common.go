@@ -35,9 +35,6 @@ type Common struct {
 	_identity      *model.Identity     // Identity information for the current website visitor (if any)
 
 	arguments mapof.String // Temporary data scope for this request
-
-	// Cached values, do not populate unless needed
-	domain model.Domain // This is a value because we expect to use it in every request.
 }
 
 func NewCommon(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter) Common {
@@ -54,7 +51,6 @@ func NewCommon(factory Factory, session data.Session, request *http.Request, res
 		_response:      response,
 		_authorization: authorization,
 		arguments:      make(mapof.String),
-		domain:         model.NewDomain(),
 	}
 }
 
@@ -193,6 +189,21 @@ func (w Common) templateRole() string {
 // Default implementation returns FALSE for all requests.
 func (w Common) UserCan(_ string) bool {
 	return false
+}
+
+// UserCanMLS returns TRUE if the current user has permission to use MLS E2EE messaging
+func (w Common) UserCanMLS() bool {
+	if user, err := w.getUser(); err == nil {
+		result := w._factory.Domain().Get().UserCanMLS(user)
+		return result
+	}
+
+	return false
+}
+
+// HasConnectionProvider returns TRUE if this domain has an active connection for the named provider
+func (w Common) HasConnectionProvider(provider string) bool {
+	return w.factory().Domain().Get().HasConnectionProvider(provider)
 }
 
 // Now returns the current time in milliseconds since the Unix epoch
