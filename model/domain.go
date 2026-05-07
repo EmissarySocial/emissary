@@ -97,10 +97,12 @@ func (domain *Domain) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
  * Other Data Accessors
  ******************************************/
 
+// IsEmpty returns TRUE if this Domain DOES NOT HAVE a Theme selected
 func (domain Domain) IsEmpty() bool {
 	return (domain.ThemeID == "")
 }
 
+// NotEmpty returns TRUE if this Domain HAS a Theme selected
 func (domain Domain) NotEmpty() bool {
 	return !domain.IsEmpty()
 }
@@ -135,6 +137,7 @@ func (domain *Domain) ImageURL() string {
 	return domain.Host() + "/.domain/attachments/" + domain.ImageID.Hex()
 }
 
+// Summary returns a DomainSummary object with the most commonly used fields for display purposes.
 func (domain *Domain) Summary() DomainSummary {
 
 	return DomainSummary{
@@ -145,6 +148,7 @@ func (domain *Domain) Summary() DomainSummary {
 	}
 }
 
+// UserCanMLS returns TRUE if the provided user is allowed to use MLS features.
 func (domain *Domain) UserCanMLS(user *User) bool {
 
 	if user == nil {
@@ -167,6 +171,38 @@ func (domain *Domain) UserCanMLS(user *User) bool {
 	}
 
 	// Fallthrough includes DomainMLSModeNone and any unrecognized values
+	return false
+}
+
+// UserCanBridgeToBluesky returns TRUE if the provided user is allowed to bridge to Bluesky.
+func (domain *Domain) UserCanBridgeToBluesky(user *User) bool {
+
+	// Get the BlueSky conneciton config
+	connection, exists := domain.Connections["BLUE-SKY"]
+
+	if !exists {
+		return false
+	}
+
+	// Permissions depend on the "allowType"
+	switch connection.Data.GetString("allowType") {
+
+	case "ALL":
+		return true
+
+	case "GROUPS":
+
+		// Find all groups that are allowed to bridge to Bluesky
+		var shareGroups sliceof.String = connection.Data.GetSliceOfString("shareGroups")
+
+		// Compare with groups that the User belongs to
+		allowed := shareGroups.ContainsAny(user.GroupIDs.SliceOfString()...)
+
+		// Allowed? Maybe...
+		return allowed
+	}
+
+	// All other cases, such as missing or inactive config are NOT ALLOWED.
 	return false
 }
 
