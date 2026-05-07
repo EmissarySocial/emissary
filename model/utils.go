@@ -131,3 +131,8 @@ func oneOf[T comparable](value T, options ...T) bool {
 func notOneOf[T comparable](value T, options ...T) bool {
 	return !oneOf(value, options...)
 }
+
+// must strips out an error result from a wrapped function.
+func must[T any](value T, err error) T {
+	return value
+}
