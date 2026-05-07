@@ -3,7 +3,6 @@ package service
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/benpate/data"
@@ -14,7 +13,6 @@ import (
 func (service *Rule) BlockActor(session data.Session, userID primitive.ObjectID, actorID string, note string) error {
 
 	const location = "service.Rule.BlockActor"
-	spew.Dump(location, "Attempting to block actor", actorID)
 
 	// Try to load the existing Rule record for this user and URL
 	rule := model.NewRule()
@@ -50,7 +48,6 @@ func (service *Rule) BlockActor(session data.Session, userID primitive.ObjectID,
 func (service *Rule) UnblockActor(session data.Session, userID primitive.ObjectID, actorID string) error {
 
 	const location = "service.Rule.UnblockActor"
-	spew.Dump(location, "Attempting to unblock actor", actorID)
 
 	// Try to load the existing Rule record for this user and URL
 	rule := model.NewRule()

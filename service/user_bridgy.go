@@ -4,7 +4,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -16,8 +15,6 @@ func (service *User) connectBluesky(session data.Session, user *model.User) erro
 	if user.IsBridgeBluesky.NotChanged() {
 		return nil
 	}
-
-	spew.Dump("service.User.connectBluesky: setting changed.", user)
 
 	// Load the Bluesky connector for this domain.
 	connection := model.NewConnection()
@@ -45,7 +42,6 @@ func (service *User) connectBluesky(session data.Session, user *model.User) erro
 func (service *User) connectBluesky_follow(session data.Session, userID primitive.ObjectID, connection *model.Connection) error {
 
 	const location = "service.User.connectBluesky_follow"
-	spew.Dump(location)
 
 	if _, err := service.followingService.Follow(session, userID, "@bsky.brid.gy@bsky.brid.gy"); err != nil {
 		return derp.Wrap(err, location, "Unable to follow Bridgy Fed Actor", userID, connection)
@@ -62,7 +58,6 @@ func (service *User) connectBluesky_follow(session data.Session, userID primitiv
 func (service *User) connectBluesky_unfollow(session data.Session, userID primitive.ObjectID, connection *model.Connection) error {
 
 	const location = "service.User.connectBluesky_unfollow"
-	spew.Dump(location)
 
 	if err := service.followingService.Unfollow(session, userID, "@bsky.brid.gy@bsky.brid.gy"); err != nil {
 		return derp.Wrap(err, location, "Unable to unfollow Bridgy Fed Actor", userID, connection)
