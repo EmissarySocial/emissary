@@ -33,6 +33,7 @@ type Domain struct {
 	Data                 mapof.String                    `bson:"data"`                 // Custom data stored in this domain
 	DatabaseVersion      uint                            `bson:"databaseVersion"`      // Version of the database schema
 	Syndication          sliceof.Object[form.LookupCode] `bson:"syndication"`          // List of external services that this domain can syndicate to
+	Connections          mapof.Matchable[Connection]     `bson:"connections"`          // Map of external connections for this domain
 	PrivateKey           string                          `bson:"privateKey"`           // Private key for this domain
 	journal.Journal      `json:"-" bson:",inline"`
 }
@@ -45,6 +46,7 @@ func NewDomain() Domain {
 		MLSGroupIDs: sliceof.NewString(),
 		Data:        mapof.NewString(),
 		Syndication: sliceof.NewObject[form.LookupCode](),
+		Connections: mapof.NewMatchable[Connection](),
 	}
 }
 
@@ -145,13 +147,16 @@ func (domain *Domain) Summary() DomainSummary {
 
 func (domain *Domain) UserCanMLS(user *User) bool {
 
+	if user == nil {
+		return false
+	}
+
 	switch domain.MLSMode {
 
 	case DomainMLSModeAll:
 		return true
 
 	case DomainMLSModeGroups:
-
 		for _, groupID := range domain.MLSGroupIDs {
 			if objectID, err := primitive.ObjectIDFromHex(groupID); err == nil {
 				if user.GroupIDs.Contains(objectID) {
@@ -163,6 +168,26 @@ func (domain *Domain) UserCanMLS(user *User) bool {
 
 	// Fallthrough includes DomainMLSModeNone and any unrecognized values
 	return false
+}
+
+// HasConnectionProvider returns TRUE if this domain has an active connection for the given provider
+func (domain *Domain) HasConnectionProvider(provider string) bool {
+
+	// Find the connection
+	connection, exists := domain.Connections[provider]
+
+	// If no record exists in the map, then FALSE
+	if !exists {
+		return false
+	}
+
+	// TRUE only if the connection is active
+	return connection.Active
+}
+
+func (domain *Domain) GetConnectionForProvider(provider string) (Connection, bool) {
+	connection, exists := domain.Connections[provider]
+	return connection, exists
 }
 
 func (domain Domain) DefaultPage(authorization Authorization) string {

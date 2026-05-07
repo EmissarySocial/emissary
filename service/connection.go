@@ -5,6 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
+	dataslice "github.com/benpate/data-slice"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
@@ -16,9 +17,11 @@ import (
 
 // Connection manages all interactions with the Connection collection
 type Connection struct {
+	domainService   *Domain
 	providerService *Provider
 	masterKey       string
 	host            string
+	domain          *model.Domain
 }
 
 // NewConnection returns a fully populated Connection service
@@ -32,9 +35,11 @@ func NewConnection() Connection {
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Connection) Refresh(factory *Factory) {
+	service.domainService = factory.Domain()
 	service.providerService = factory.Provider()
 	service.masterKey = factory.MasterKey()
 	service.host = factory.Host()
+	service.domain = factory.Domain().Get()
 }
 
 // Close stops any background processes controlled by this service
@@ -46,33 +51,30 @@ func (service *Connection) Close() {
  * Common Data Methods
  ******************************************/
 
-func (service *Connection) collection(session data.Session) data.Collection {
-	return session.Collection("Connection")
-}
-
 // Count returns the number of records that match the provided criteria
 func (service *Connection) Count(session data.Session, criteria exp.Expression) (int64, error) {
-	return service.collection(session).Count(notDeleted(criteria))
+	return int64(len(service.domain.Connections)), nil
+}
+
+func (service *Connection) Load(session data.Session, criteria exp.Expression, result *model.Connection) error {
+	const location = "service.Connection.Load"
+
+	// Find the first Connection that matches the criteria
+	connection, found := service.domain.Connections.MatchOne(criteria)
+
+	if !found {
+		return derp.NotFound(location, "No Connection found matching criteria", criteria)
+	}
+
+	*result = connection
+	return nil
 }
 
 func (service *Connection) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Connection, error) {
-	result := make([]model.Connection, 0)
-	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
-	return result, err
-}
+	connections := service.domain.Connections.Match(criteria).Values()
 
-// List returns an iterator containing all of the Connections who match the provided criteria
-func (service *Connection) List(session data.Session, criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
-	return service.collection(session).Iterator(notDeleted(criteria), options...)
-}
-
-// Load retrieves an Connection from the database
-func (service *Connection) Load(session data.Session, criteria exp.Expression, result *model.Connection) error {
-	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Connection.Load", "Unable to load Connection", criteria)
-	}
-
-	return nil
+	result := dataslice.ApplyOptions(connections, options...)
+	return result, nil
 }
 
 // Save adds/updates an Connection in the database
@@ -80,6 +82,7 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 
 	const location = "service.Connection.Save"
 
+	// Get the provider for this Connection
 	provider, isValidProvider := service.providerService.GetProvider(connection.ProviderID)
 
 	if !isValidProvider {
@@ -132,8 +135,10 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 		}
 	}
 
-	// Save the value to the database
-	if err := service.collection(session).Save(connection, note); err != nil {
+	// Save the connection to the database
+	service.domain.Connections[connection.ProviderID] = *connection
+
+	if err := service.domainService.Save(session, *service.domain, "Updated connection: "+connection.ProviderID); err != nil {
 		return derp.Wrap(err, location, "Unable to save Connection", connection, note)
 	}
 
@@ -143,7 +148,31 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 // Delete removes an Connection from the database (virtual delete)
 func (service *Connection) Delete(session data.Session, connection *model.Connection, note string) error {
 
-	if err := service.collection(session).Delete(connection, note); err != nil {
+	const location = "service.Connection.Delete"
+
+	// Get the Provider for this Connection
+	provider, isValidProvider := service.providerService.GetProvider(connection.ProviderID)
+
+	if !isValidProvider {
+		return derp.Internal(location, "Invalid Provider", connection.ProviderID)
+	}
+
+	// Decrypt the vault data
+	vault, err := service.DecryptVault(connection)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error getting vault")
+	}
+
+	// Disconnect from the Provider
+	if err := provider.Disconnect(connection, vault); err != nil {
+		return derp.Wrap(err, location, "Error installing connection")
+	}
+
+	// Delete the Connection from the domain (and save)
+	delete(service.domain.Connections, connection.ProviderID)
+
+	if err := service.domainService.Save(session, *service.domain, "Deleted connection: "+connection.ProviderID); err != nil {
 		return derp.Wrap(err, "service.Connection.Delete", "Unable to delete Connection", connection, note)
 	}
 
@@ -175,7 +204,7 @@ func (service *Connection) ObjectID(object data.Object) primitive.ObjectID {
 }
 
 func (service *Connection) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
-	return service.collection(session).Query(result, notDeleted(criteria), options...)
+	return derp.NotImplemented("service.Connection.ObjectQuery", "Not Implemented")
 }
 
 func (service *Connection) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
@@ -211,31 +240,17 @@ func (service *Connection) Schema() schema.Schema {
  ******************************************/
 
 func (service *Connection) QueryAll(session data.Session, options ...option.Option) ([]model.Connection, error) {
-	return service.Query(session, exp.All(), options...)
+	result := service.domain.Connections.Values()
+	result = dataslice.ApplyOptions(result, options...)
+	return result, nil
 }
 
-func (service *Connection) QueryActiveByType(session data.Session, typeID string, options ...option.Option) ([]model.Connection, error) {
-
-	const location = "service.Connection.QueryByType"
-
-	// RULE: typeID must not be empty
-	if typeID == "" {
-		return nil, derp.Internal(location, "Invalid Type ID", typeID)
-	}
-
-	return service.Query(session, exp.Equal("type", typeID).AndEqual("active", true), options...)
+func (service *Connection) ActiveByType(typeID string) mapof.Matchable[model.Connection] {
+	return service.domain.Connections.Match(exp.Equal("type", typeID).AndEqual("active", true))
 }
 
 func (service *Connection) AllAsMap(session data.Session) mapof.Object[model.Connection] {
-	result := make(mapof.Object[model.Connection])
-
-	if query, err := service.QueryAll(session); err == nil {
-		for _, connection := range query {
-			result[connection.ProviderID] = connection
-		}
-	}
-
-	return result
+	return mapof.Object[model.Connection](service.domain.Connections)
 }
 
 func (service *Connection) LoadByID(session data.Session, connectionID primitive.ObjectID, connection *model.Connection) error {
