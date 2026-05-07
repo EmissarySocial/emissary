@@ -60,6 +60,7 @@ func (service *Domain) Refresh(factory *Factory) {
 	service.activityService = factory.ActivityStream()
 	service.configuration = factory.config
 	service.connectionService = factory.Connection()
+	service.domain = model.NewDomain()
 	service.funcMap = factory.FuncMap()
 	service.newSession = factory.Session
 	service.providerService = factory.Provider()
@@ -376,7 +377,7 @@ func (service *Domain) OAuthExchange(session data.Session, providerID string, st
 
 	// Try to update the connection with the new token
 	connection.Token = token
-	connection.Data = mapof.NewString()
+	connection.Data = mapof.NewAny()
 	connection.Active = true
 
 	if service.connectionService.Save(session, &connection, "OAuth Exchange") != nil {

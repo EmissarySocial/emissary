@@ -992,7 +992,7 @@
 			roles:["self"]
 			steps:[
 				{do:"edit", 
-				options:["cancel-button:hide"]
+				options:["cancel-button:hide", "show-bluesky:{{.HasConnectionProvider `BLUE-SKY`}}"]
 				form:{
 					type:layout-vertical
 					children:[
@@ -1000,6 +1000,13 @@
 						{type:"toggle", path:"isPublic", options:{true-text:"YES. Profile is visible to everyone", false-text:"NO. Profile is only visible to me."}}
 						{type:"html", description:"<div class='text-lg bold'>Index on Search Engines</div>When you enable this option, you are requesting that your profile be included in search results. If you disable this option, you are requesting that search engines do not index your profile. NOTE: Not all search engines will obey this request, so your profile may still show up on some search engines."}
 						{type:"toggle", path:"isIndexable", options:{true-text:"YES. Please index my profile", false-text:"NO. Please DO NOT index my profile."}}
+						{type:"container", options:{"show-if-option":"show-bluesky"}, children:[
+							{type:"html", description:"<div class='text-lg bold'>Bridge to Bluesky</div>When you enable this option, your profile and posts will be connected to BlueSky via <a href='https://fed.brid.gy'>Bridgy Fed</a>."}
+							{type:"toggle", path:"isBridgeBluesky", options:{true-text:"YES. Show my posts on BlueSky", false-text:"NO. DO NOT show my posts on BlueSky."}}
+						]}
+						{type:"container", options:{"hide-if-option":"show-bluesky"}, children:[
+							{type:"html", description:"<div class='text-lg bold'>Bluesky is Disabled</div>Bridging to BlueSky is not enabled for you on this server. Talk to your domain owner to activate this feature."}
+						]}
 					]	
 				}}
 				{do:"save"}
