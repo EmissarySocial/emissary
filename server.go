@@ -124,6 +124,9 @@ func main() {
 		// Prepare HTTP and HTTPS servers using the new configuration
 		go startHTTP(serverFactory, e)
 		go startHTTPS(serverFactory, e)
+
+		// Start the task queue after the HTTP server is running
+		go serverFactory.Queue().Start()
 	}
 
 	// Listen to the OS SIGINT channel for an interrupt signal
