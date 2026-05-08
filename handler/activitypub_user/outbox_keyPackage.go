@@ -53,9 +53,6 @@ func outbox_CreateKeyPackage(context Context, activity streams.Document) error {
 		return derp.Wrap(err, location, "Unable to save KeyPackage")
 	}
 
-	// Update values in the activity object
-	activity.SetProperty(vocab.PropertyObject, keyPackageService.ActivityPubURL(keyPackage.UserID, keyPackage.KeyPackageID))
-
 	// Put the activity into the User's outbox (which triggers delivery to all recipients)
 	if err := putActivityIntoOutbox(context, activity); err != nil {
 		return derp.Wrap(err, location, "Unable to process activity")
