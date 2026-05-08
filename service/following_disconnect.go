@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/remote"
 	"github.com/benpate/uri"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -16,7 +15,6 @@ import (
 func (service *Following) Unfollow(session data.Session, userID primitive.ObjectID, actorID string) error {
 
 	const location = "service.Following.Unfollow"
-	spew.Dump(location, "Attempting to unfollow URL", actorID)
 
 	// If the actor ID is not a valid URL, it's probably a username/handle,
 	// so try to resolve it into a URL using Sherlock/WebFinger.
