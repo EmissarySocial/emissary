@@ -325,6 +325,27 @@ func (service *Inbox) RangeByUser(session data.Session, userID primitive.ObjectI
 	return service.Range(session, criteria, options...)
 }
 
+// IsDuplicateActivity returns TRUE if the provided activityID has already been processed for this user (e.g. due to retries or multiple deliveries)
+func (service *Inbox) IsDuplicateActivity(session data.Session, userID primitive.ObjectID, activityID string) bool {
+
+	const location = "service.Inbox.IsDuplicateActivity"
+
+	// If there is no activityID, then it cannot be a duplicate
+	if activityID == "" {
+		return false
+	}
+
+	criteria := exp.Equal("userId", userID).AndEqual("activityId", activityID)
+	count, err := service.Count(session, criteria)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to check for duplicate activity", "userID", userID, "activityID", activityID))
+		return false
+	}
+
+	return count > 0
+}
+
 /******************************************
  * Realtime Updates
  ******************************************/

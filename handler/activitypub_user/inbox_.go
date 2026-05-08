@@ -77,6 +77,11 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 		return derp.Wrap(err, location, "Unable to receive ActivityPub request")
 	}
 
+	// Prevent duplicate actiities from being processes multiple times (e.g. due to retries or multiple deliveries)
+	if inbox_IsDuplicatActivity(context, activity) {
+		return nil
+	}
+
 	// Validate the Activity meets basic criteria to be processed.
 	if err := inbox_ValidateActivity(activity); err != nil {
 		return derp.Wrap(err, location, "Unable to validate ActivityPub request", activity.Value())
@@ -94,6 +99,11 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 
 	// Send the response to the client
 	return ctx.String(http.StatusOK, "")
+}
+
+// inbox_IsDuplicateActivity checks if this activity has already been received and processed in the inbox
+func inbox_IsDuplicatActivity(context Context, activity streams.Document) bool {
+	return context.factory.Inbox().IsDuplicateActivity(context.session, context.user.UserID, activity.ID())
 }
 
 // inbox_ValidateActivity performs additional validate on activities received in the inbox.
