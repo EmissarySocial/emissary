@@ -74,13 +74,13 @@ func (config *Config) GetPointer(name string) (any, bool) {
 		return &config.ActivityPubCache, true
 
 	case "clientIPStrategy":
-		return &config.RealIPStrategy, true
+		return &config.ClientIPStrategy, true
 
 	case "clientIPTrustedCount":
-		return &config.RealIPTrustedCount, true
+		return &config.ClientIPTrustedCount, true
 
 	case "clientIPHeader":
-		return &config.RealIPHeader, true
+		return &config.ClientIPHeader, true
 
 	}
 

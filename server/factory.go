@@ -818,24 +818,24 @@ func (factory *Factory) calcClientIPStrategy(config config.Config) realclientip.
 	var strategy realclientip.Strategy
 	var err error
 
-	switch config.RealIPStrategy {
+	switch config.ClientIPStrategy {
 
 	case "REMOTE-ADDR":
 		return realclientip.RemoteAddrStrategy{}
 
 	case "RIGHTMOST-TRUSTED-COUNT":
-		strategy, err = realclientip.NewRightmostTrustedCountStrategy("X-Forwarded-For", config.RealIPTrustedCount)
+		strategy, err = realclientip.NewRightmostTrustedCountStrategy("X-Forwarded-For", config.ClientIPTrustedCount)
 
 	case "SINGLE-IP-HEADER":
-		strategy, err = realclientip.NewSingleIPHeaderStrategy(config.RealIPHeader)
+		strategy, err = realclientip.NewSingleIPHeaderStrategy(config.ClientIPHeader)
 
 	default:
-		err = derp.Internal(location, "Unknown Real IP strategy", config.RealIPStrategy)
+		err = derp.Internal(location, "Unknown Client IP strategy", config.ClientIPStrategy)
 	}
 
 	// If there is no error, then
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to create Real IP strategy", config.RealIPStrategy))
+		derp.Report(derp.Wrap(err, location, "Unable to create Client IP strategy", config.ClientIPStrategy))
 		return realclientip.RemoteAddrStrategy{}
 	}
 
