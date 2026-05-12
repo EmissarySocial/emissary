@@ -26,8 +26,8 @@ func (adapter Bluesky) ManualConfig() form.Form {
 					"active": schema.Boolean{},
 					"data": schema.Object{
 						Properties: schema.ElementMap{
-							"serverUrl":   schema.String{Required: true, Format: "url"},
-							"bridgeActor": schema.String{Required: true},
+							"allowType":   schema.String{Required: true, Enum: []string{"ALL", "GROUPS", "NONE"}},
+							"shareGroups": schema.Array{Items: schema.String{Format: "objectId"}},
 						},
 					},
 				},
@@ -36,12 +36,28 @@ func (adapter Bluesky) ManualConfig() form.Form {
 		Element: form.Element{
 			Type:        "layout-vertical",
 			Label:       "<i class='bi bi-bluesky'></i> Bluesky Bridge",
-			Description: "Use Bridgy.Fed to connect this server to Bluesky.",
+			Description: "Allow users on this server to post and follow on the ATProto network (including BlueSky, BlackSky, EuroSky, and others) using Bridgy Fed. Individual users will have the choice to join the bridge or not.",
 			Children: []form.Element{
 				{
-					Type:  "toggle",
-					Path:  "active",
-					Label: "Enable?",
+					Type:  "select",
+					Path:  "data.allowType",
+					Label: "Who can bridge to Bluesky?",
+					Options: mapof.Any{
+						"enum": []form.LookupCode{
+							{Value: "NONE", Label: "Nobody(Disabled)"},
+							{Value: "GROUPS", Label: "Selected Groups Only"},
+							{Value: "ALL", Label: "All Users"},
+						},
+					},
+				},
+				{
+					Type:  "multiselect",
+					Path:  "data.shareGroups",
+					Label: "Members of these groups only...",
+					Options: mapof.Any{
+						"show-if":  "data.allowType is GROUPS",
+						"provider": "groups",
+					},
 				},
 			},
 		},
@@ -51,6 +67,17 @@ func (adapter Bluesky) ManualConfig() form.Form {
 /******************************************
  * Lifecycle Methods
  ******************************************/
+
+func (adapter Bluesky) BeforeSave(connection *model.Connection, vault mapof.String) error {
+
+	if connection.Data.GetString("allowType") == "NONE" {
+		connection.Active = false
+	} else {
+		connection.Active = true
+	}
+
+	return nil
+}
 
 // Connect applies any extra changes to the database after this Adapter is activated.
 func (adapter Bluesky) Connect(connection *model.Connection, vault mapof.String, host string) error {

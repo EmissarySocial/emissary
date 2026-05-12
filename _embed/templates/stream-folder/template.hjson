@@ -1,10 +1,11 @@
 {
 	templateId: folder
 	templateRole: folder
+	category: Special
 	model: Stream
 	containedBy: ["top", "folder"]
 	label: Folder
-	description: Folders can contain all other streams
+	description: Contains other web pages
 	icon: folder
 	childSortType: label
 	childSortOrder: ASC

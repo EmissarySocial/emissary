@@ -391,3 +391,36 @@ func mapCirclesToLookupCodes(circles ...model.Circle) sliceof.Object[form.Lookup
 	slices.SortFunc(lookupCodes, form.SortLookupCodeByGroupThenLabel)
 	return lookupCodes
 }
+
+func groupLookupCodes(lookupCodes []form.LookupCode) sliceof.Object[sliceof.Object[form.LookupCode]] {
+
+	// First, sort all LookupCodes into groups
+	grouped := mapof.NewObject[sliceof.Object[form.LookupCode]]()
+
+	for _, code := range lookupCodes {
+		grouped[code.Group] = append(grouped[code.Group], code)
+	}
+
+	// Then put the groups into the result (with special groups first)
+	result := sliceof.NewObject[sliceof.Object[form.LookupCode]]()
+
+	// Special case for groups we want to appear first
+	for _, group := range []string{"Content", "Media", "Search", "Special", "Custom"} {
+		if codes, ok := grouped[group]; ok {
+			result = append(result, codes)
+			delete(grouped, group)
+		}
+	}
+
+	// Sort the remaining groups in alphabetical order
+	keys := grouped.Keys()
+	slices.Sort(keys)
+
+	for _, group := range keys {
+		if codes, ok := grouped[group]; ok {
+			result = append(result, codes)
+		}
+	}
+
+	return result
+}

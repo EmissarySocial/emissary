@@ -4,14 +4,44 @@
 <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
 
 <article>
-	<form id="markdownForm" hx-post="/{{.StreamID}}/editor" hx-trigger="save" hx-swap="none">
+	<form id="markdownForm" hx-post="/{{.StreamID}}/editor" hx-trigger="save" hx-swap="none" hx-push-url="false">
 		<textarea id="markdownContent" name="content">{{.ContentRaw}}</textarea>
 	</form>
 </article>
 
-<script type="text/javascript">
+<style>
+	.EasyMDEContainer {
 
+		.CodeMirror {
+			color: var(--black);
+			background-color: var(--gray10);
+			caret-color: var(--black);
+
+			.CodeMirror-cursor {
+				border-left: 1px solid var(--black)!important;
+			}
+		}
+
+		.editor-toolbar {
+			button {
+				&.active {
+					color:var(--white);
+					background-color:var(--gray50);
+					border-color:var(--gray60);
+				}
+				&:hover {
+					background-color: var(--gray20);
+				}
+			}
+		}
+	}
+</style>
+
+
+<script type="text/javascript">
+console.log("Initializing EasyMDE Editor");
 	var easyMDE = new EasyMDE({
+		toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "guide"],
 		element:document.getElementById('markdownContent'),
 		uploadImage:true,
 		imageUploadEndpoint:"/{{.StreamID}}/upload-image",

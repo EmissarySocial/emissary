@@ -89,6 +89,6 @@ func PostStartup(ctx *steranko.Context, factory *service.Factory, session data.S
 	}
 
 	// Success!!!!!
-	ctx.Response().Header().Set("HX-Redirect", "/home")
+	ctx.Response().Header().Set("HX-Redirect", "/")
 	return ctx.NoContent(http.StatusOK)
 }

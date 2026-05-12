@@ -44,13 +44,13 @@
 						Sign In
 					</button>
 
-					<button class="htmx-request-show primary" disabled>
+					<button class="htmx-request-show primary nowrap" disabled>
 						<span class="spin">{{icon "loading"}}</span> Signing In
 					</button>
 
 					<span id="message" class="text-red" hidden></span>
 
-					<a href="/signin/reset" class="margin-left">Forgot Password?</a>
+					<a href="/signin/reset" class="margin-left nowrap">Forgot Password?</a>
 
 					{{- if .HasRegistrationForm -}}
 						<div class="margin-top-xl">
@@ -86,13 +86,14 @@
 			set lastPage to sessionStorage.getItem("signin-return")
 			call sessionStorage.removeItem("signin-return")
 			if lastPage is empty then
-				set lastPage to "/home"
+				set lastPage to "/"
 			end
 			set window.location to lastPage
 		end
 
 		on SigninError
-			set #message.innerHTML to "Invalid Login.  Please Try Again."
+		log the event
+			set #message.innerHTML to event.detail.value
 			remove [@hidden] from #message
 			remove [@disabled] from #submitButton
 	</script>

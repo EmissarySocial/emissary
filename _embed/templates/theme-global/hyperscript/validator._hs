@@ -1,5 +1,9 @@
 behavior validator(url)
 
+	on load
+		trigger validate
+	end
+
 	on keyup queue last
 		trigger validate
 	end
@@ -13,7 +17,14 @@ behavior validator(url)
 			exit
 		end
 
-		set targetUrl to url + "?field=" + encodeURIComponent(my.name) + "&value=" + encodeURIComponent(my.value)
+		set targetUrl to url
+		log targetUrl
+
+		if targetUrl.indexOf("?") == -1 then
+			set targetUrl to targetUrl + "?"
+		end
+
+		set targetUrl to targetUrl + "&field=" + encodeURIComponent(my.name) + "&value=" + encodeURIComponent(my.value)
 
 		fetch `${targetUrl}` as json
 

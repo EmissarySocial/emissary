@@ -1,10 +1,11 @@
 {
-	templateId:"article-base"
-	templateRole:"article"
-	socialRole:"Article"
+	templateId: article-base
+	templateRole: article
+	category: Content
+	socialRole: Article
 	model: Stream
-	extends:["base-widget-editor"]
-	label:"Article (BASE TEMPLATE)"
+	extends: ["base-widget-editor"]
+	label: Article (BASE TEMPLATE)
 	description:"Base Template, extended by article-editorjs and article-markdown"
 	widgetlocations: ["LEFT", "TOP", "RIGHT", "BOTTOM"]
 	bundles: {
@@ -201,7 +202,7 @@
 						{do:"edit"
 							form: {
 								type:"layout-vertical"
-								label:"Article Properties"
+								label:"Article Info"
 								children: [
 									{type:"text", path:"token", label:"Token/Slug"}
 									{type:"select", path:"icon", label:"Icon", options:{provider:"folder-icons"}}
@@ -220,7 +221,7 @@
 		add-child:{
 			roles: ["author", "editor"]
 			steps: [
-				{do:"add-stream", location:"child", title:"+ Add a Stream"}
+				{do:"add-stream", location:"child", title:"+ Add a Child Page"}
 			]
 		}
 	}

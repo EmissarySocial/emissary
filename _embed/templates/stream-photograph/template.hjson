@@ -1,6 +1,7 @@
 {
 	templateId: "photograph"
 	model: Stream
+	category: Media
 	containedBy: ["photo-album"]
 	label: "Photograph"
 	description: "Individual photograph or slideshow to include in your photo album."

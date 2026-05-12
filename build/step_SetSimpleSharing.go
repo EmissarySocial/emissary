@@ -44,10 +44,6 @@ func (step StepSetSimpleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 	// Write the rest of the HTML that contains the form
 	b := html.New()
 
-	if authorization := builder.authorization(); authorization.DomainOwner {
-		b.A("/admin/groups/").InnerHTML("Edit Groups &rarr;").Close()
-	}
-
 	// Heading
 	b.H2().InnerText(step.Title).Close()
 
@@ -64,7 +60,12 @@ func (step StepSetSimpleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 	b.WriteString(formHTML)
 	b.CloseAll()
 
-	result := WrapForm(builder.URL(), b.String(), "application/x-www-form-urlencoded")
+	options := []string{}
+	if authorization := builder.authorization(); authorization.DomainOwner {
+		options = append(options, "next:/admin/groups", "next-label:Edit Groups &rarr;")
+	}
+
+	result := WrapForm(builder.URL(), b.String(), "application/x-www-form-urlencoded", options...)
 
 	// Write the result to the buffer
 	if _, err := io.WriteString(buffer, result); err != nil {

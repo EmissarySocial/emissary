@@ -1,6 +1,7 @@
 {
 	templateId:"outbox-reply"
 	templateRole:"outbox-reply"
+	category: Special
 	socialRole:"Note"
 	extends:["outbox-message"]
 	model: Stream

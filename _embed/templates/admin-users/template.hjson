@@ -1,6 +1,7 @@
 {
 	templateId:"admin-users"
 	templateRole:"admin"
+	category: Admin
 	model:"User"
 	extends: ["admin-common"]
 	containedBy:["admin"]
@@ -30,7 +31,7 @@
 						do: edit
 						type: user
 						form: {
-							label: Add a Person
+							label: + Invite a Person
 							type: layout-tabs
 							children: [
 								{

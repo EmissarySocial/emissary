@@ -9,12 +9,13 @@ import (
 func KeyPackageSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"keyPackageId": schema.String{Format: "objectId", Required: true},
-			"userId":       schema.String{Format: "objectId", Required: true},
-			"mediaType":    schema.String{Enum: []string{vocab.MediaTypeMLS}, Required: true},
-			"encoding":     schema.String{Enum: []string{vocab.EncodingTypeBase64}, Required: true},
-			"content":      schema.String{Required: true},
-			"generator":    schema.String{Required: true},
+			"keyPackageId":  schema.String{Format: "objectId", Required: true},
+			"userId":        schema.String{Format: "objectId", Required: true},
+			"mediaType":     schema.String{Enum: []string{vocab.MediaTypeMLS}, Required: true},
+			"encoding":      schema.String{Enum: []string{vocab.EncodingTypeBase64}, Required: true},
+			"content":       schema.String{Required: true},
+			"generatorId":   schema.String{Required: true},
+			"generatorName": schema.String{Required: true},
 		},
 	}
 }
@@ -38,8 +39,11 @@ func (keyPackage *KeyPackage) GetStringOK(name string) (string, bool) {
 	case "encoding":
 		return keyPackage.Encoding, true
 
-	case "generator":
-		return keyPackage.Generator, true
+	case "generatorId":
+		return keyPackage.GeneratorID, true
+
+	case "generatorName":
+		return keyPackage.GeneratorName, true
 	}
 
 	return "", false
@@ -76,8 +80,12 @@ func (keyPackage *KeyPackage) SetString(name string, value string) bool {
 		keyPackage.Content = value
 		return true
 
-	case "generator":
-		keyPackage.Generator = value
+	case "generatorId":
+		keyPackage.GeneratorID = value
+		return true
+
+	case "generatorName":
+		keyPackage.GeneratorName = value
 		return true
 	}
 

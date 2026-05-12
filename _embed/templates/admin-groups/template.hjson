@@ -1,11 +1,12 @@
 {
-	templateId:"admin-groups"
-	templateRole:"admin"
-	model:"Group"
+	templateId: admin-groups
+	templateRole: admin
+	category: Admin
+	model: Group
 	extends: ["admin-common"]
 	containedBy:["admin"]
-	label: "Group"
-	description: "Domain Owners only.  Site Admin"
+	label: Group
+	description: Domain Owners only.  Site Admin
 	actions: {
 		index: {
 			roles:["owner"]

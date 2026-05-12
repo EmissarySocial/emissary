@@ -5,7 +5,6 @@ import (
 	"io/fs"
 	"maps"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -17,7 +16,9 @@ import (
 	"github.com/benpate/rosetta/channel"
 	"github.com/benpate/rosetta/mapof"
 	rosettamaps "github.com/benpate/rosetta/maps"
+	"github.com/benpate/rosetta/ranges"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/hjson/hjson-go/v4"
 	"github.com/rs/zerolog/log"
@@ -315,6 +316,13 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 	// Scan all Templates in the prep area
 	for templateID, template := range service.templatePrep {
 
+		if template.Category == "" {
+			errors.Append(derp.Validation(
+				"Template is missing required 'category' field.",
+				"template: "+templateID,
+			))
+		}
+
 		if !allowedModels.Contains(template.Model) {
 			errors.Append(derp.Validation(
 				"Invalid 'model' used in Template definition",
@@ -541,32 +549,30 @@ func (service *Template) Names() []string {
 }
 
 // List returns all templates that match the provided criteria
-func (service *Template) List(filter func(*model.Template) bool) []form.LookupCode {
+func (service *Template) List(filter func(*model.Template) bool) sliceof.Object[form.LookupCode] {
 
-	result := []form.LookupCode{}
-
+	// Default filter is "allow all"
 	if filter == nil {
 		filter = func(_ *model.Template) bool { return true }
 	}
 
-	for _, template := range service.templates {
-		if filter(&template) {
-			result = append(result, form.LookupCode{
-				Value:       template.TemplateID,
-				Label:       template.Label,
-				Description: template.Description,
-				Icon:        template.Icon,
-				Group:       template.Category,
-			})
-		}
-	}
+	// Retrieve and filter all templates, then cast into a slice
+	iterator := maps.Values(service.templates)
+	iterator = ranges.FilterPointer(iterator, filter)
+	templates := ranges.Slice(iterator)
 
-	// Sort templates by Group, then Label
-	sort.Slice(result, func(a int, b int) bool {
-		if result[a].Group == result[b].Group {
-			return result[a].Label < result[b].Label
+	// Sort templates (by "sort", then "name")
+	slices.SortFunc(templates, model.CompareTemplate)
+
+	// Map templates into LookupCodes
+	result := slice.Map(templates, func(template model.Template) form.LookupCode {
+		return form.LookupCode{
+			Value:       template.TemplateID,
+			Label:       template.Label,
+			Description: template.Description,
+			Icon:        template.Icon,
+			Group:       template.Category,
 		}
-		return result[a].Group < result[b].Group
 	})
 
 	return result
@@ -614,14 +620,23 @@ func (service *Template) ListByContainer(containedByRole string) []form.LookupCo
 // ListByContainerLimited returns all model.Templates that match the provided "containedByRole" value AND
 // whose TemplateRoles are present in the "limitRoles" list.  If the "limited" list is empty, then all
 // otherwise-valid templates are returned.
-func (service *Template) ListByContainerLimited(containedByRole string, limitRoles sliceof.String) []form.LookupCode {
-
-	if limitRoles.IsEmpty() {
-		return service.ListByContainer(containedByRole)
-	}
+func (service *Template) ListByContainerLimited(containedByRole string, limitRoles sliceof.String) sliceof.Object[form.LookupCode] {
 
 	filter := func(t *model.Template) bool {
-		return t.ContainedBy.Contains(containedByRole) && limitRoles.Contains(t.TemplateRole)
+
+		// RULE: If the template is not contained by the specified role, then do not include it in the results
+		if t.ContainedBy.NotContains(containedByRole) {
+			return false
+		}
+
+		// RULE: If the role does not appear in "limitRoles", then do not include it in the results.
+		if limitRoles.NotEmpty() {
+			if limitRoles.NotContains(t.TemplateRole) {
+				return false
+			}
+		}
+
+		return true
 	}
 
 	return service.List(filter)

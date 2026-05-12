@@ -722,14 +722,14 @@ func (service *Stream) LoadByURL(session data.Session, streamURL string, result 
 	}
 
 	// Verify we have a valid URL
-	uri, err := url.Parse(streamURL)
+	parsedURL, err := url.Parse(streamURL)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Invalid URL", streamURL)
 	}
 
 	// Retrieve the Token from the request path
-	token, _, err := service.ParsePath(uri)
+	token, _, err := service.ParsePath(parsedURL)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Invalid URL", streamURL)

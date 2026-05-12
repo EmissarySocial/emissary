@@ -61,6 +61,12 @@ func PreProcessor(task *queue.Task) error {
 	case "MakeStreamArchive":
 		task.Priority = 256
 
+	case "Outbox:SendToAllRecipients":
+		task.Priority = 256
+
+	case "Outbox:SendToSingleRecipient":
+		task.Priority = 256
+
 	case "ReceiveWebMention":
 		task.Priority = 256
 

@@ -2,6 +2,7 @@ package build
 
 import (
 	"io"
+	"strings"
 	"text/template"
 
 	"github.com/EmissarySocial/emissary/tools/formdata"
@@ -75,7 +76,8 @@ func (step StepSetData) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 		// Put approved form data into the stream
 		for _, p := range step.FromForm {
-			if err := schema.Set(object, p, transaction[p]); err != nil {
+			value := strings.Join(transaction[p], ",")
+			if err := schema.Set(object, p, value); err != nil {
 				result := derp.Wrap(err, location, "Error seting value from user input", transaction, p, derp.WithBadRequest())
 				return Halt().WithError(result)
 			}

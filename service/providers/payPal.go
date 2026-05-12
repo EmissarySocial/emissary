@@ -95,6 +95,10 @@ func (provider PayPal) ManualConfig() form.Form {
 	}
 }
 
+func (adapter PayPal) BeforeSave(connection *model.Connection, vault mapof.String) error {
+	return nil
+}
+
 func (provider PayPal) Connect(connection *model.Connection, vault mapof.String, host string) error {
 
 	if err := provider.Refresh(connection, vault); err != nil {

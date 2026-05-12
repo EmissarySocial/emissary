@@ -91,7 +91,7 @@ input[type="radio"] {
  * Checkbutton - Fancy Checkboxes
  ******************************************/
 
-label.checkbutton:has(input[type="checkbox"]) {
+.checkbutton {
 	display: flex !important;
 	flex-direction: row;
 	align-items: center;
@@ -99,17 +99,28 @@ label.checkbutton:has(input[type="checkbox"]) {
 	border: solid 2px var(--gray20);
 	background-color: var(--gray05);
 	border-radius: var(--rhythm);
-	padding: calc(var(--rhythm) * 2) var(--rhythm);
+	padding: calc(var(--rhythm) * 1.5) calc(var(--rhythm) * 1.5);
 	margin: calc(var(--rhythm) / 2) 0;
 }
 
-label.checkbutton:has(input[type="checkbox"]:checked) {
+.checkbutton:hover {
+	border-color:var(--gray30);
+	background-color:var(--gray10);
+}
+
+.checkbutton:has(input[type="checkbox"]:checked) {
 	border: solid 2px var(--blue50);
 	color: var(--blue50);
 	background-color: var(--blue10);
+
+	@media (prefers-color-scheme: dark) {
+		border-color: var(--blue70);
+		color: var(--blue70);
+		background-color: var(--blue10);
+	}
 }
 
-label.checkbutton input[type="checkbox"] {
+.checkbutton input[type="checkbox"] {
 	display: none;
 }
 
@@ -117,7 +128,7 @@ label.checkbutton input[type="checkbox"] {
  * Radiobutton - Fancy Radio Buttons
  ******************************************/
 
-label.radiobutton:has(input[type="radio"]) {
+.radiobutton:has(input[type="radio"]) {
 	display: flex !important;
 	flex-direction: row;
 	align-items: center;
@@ -129,13 +140,19 @@ label.radiobutton:has(input[type="radio"]) {
 	margin: calc(var(--rhythm) / 2) 0;
 }
 
-label.radiobutton:has(input[type="radio"]:checked) {
+.radiobutton:has(input[type="radio"]:checked) {
 	border: solid 2px var(--blue50);
 	color: var(--blue50);
 	background-color: var(--blue10);
+
+	@media (prefers-color-scheme: dark) {
+		border-color: var(--blue70);
+		color: var(--blue70);
+		background-color: var(--blue10);
+	}
 }
 
-label.radiobutton input[type="radio"] {
+.radiobutton input[type="radio"] {
 	display: none;
 }
 
@@ -162,8 +179,8 @@ label.radiobutton input[type="radio"] {
 	height: 1em;
 	border-style: solid;
 	border-width: 1px;
-	background-color: #e0e0e0;
-	border-color: #c6c6c6;
+	background-color: var(--gray20);
+	border-color: var(--gray30);
 }
 
 .toggle-container[value="true"] .toggle {
@@ -181,7 +198,7 @@ label.radiobutton input[type="radio"] {
 .toggle-container .marker {
 	display: block;
 	border-radius: 0.5em;
-	background-color: white;
+	background-color: var(--white);
 	height: 1em;
 	width: 1em;
 	transition: transform 0.1s ease-in-out;
@@ -275,7 +292,7 @@ label.radiobutton input[type="radio"] {
 	padding: 5px 10px;
 }
 
-/* Alternate colors for dark mode */
+/* Alternate colors for dark mode
 @media (prefers-color-scheme: dark) {
 	input:not([type="checkbox"], [type="radio"]),
 	textarea {
@@ -284,6 +301,7 @@ label.radiobutton input[type="radio"] {
 		color: var(--gray90);
 	}
 }
+*/
 
 /******************************************
  * Submit Buttons
@@ -410,7 +428,7 @@ button.selected:focus,
 button.warning,
 .button.warning {
 	background-color: var(--red70);
-	color: white;
+	color: var(--white);
 }
 
 button.warning:hover,
@@ -418,15 +436,15 @@ button.warning:focus,
 .button.warning:hover,
 .button.warning:focus {
 	background-color: var(--red60);
-	color: white;
+	color: var(--white);
 }
 
 button.success,
 button.primary.success,
 .button.success,
 .button.primary.succes {
-	background-color: var(--green70);
-	color: white;
+	background-color: var(--green60);
+	color: var(--white);
 }
 
 button.success:hover,
@@ -438,7 +456,7 @@ button.primary.success:focus,
 .button.primary.success:hover,
 .button.primary.success:focus {
 	background-color: var(--green60);
-	color: white;
+	color: var(--white);
 }
 
 input[disabled],
@@ -652,7 +670,7 @@ button.button-invisible {
 	top: calc(var(--rhythm) * 1);
 	right: var(--rhythm);
 	display: inline-block;
-	color: white;
+	color: var(--white);
 	font-size: calc(var(--rhythm) * 1.5);
 	line-height: calc(var(--rhythm) * 2);
 	height: calc(var(--rhythm) * 3);
@@ -678,7 +696,7 @@ button.button-invisible {
 .spin {
 	display: inline-block;
 	animation-name: spin;
-	animation-duration: 700ms;
+	animation-duration: 600ms;
 	animation-iteration-count: infinite;
 	animation-timing-function: linear;
 }

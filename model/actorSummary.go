@@ -23,3 +23,8 @@ func (actor ActorSummary) UsernameOrID() string {
 
 	return actor.ID
 }
+
+// Username is a shorter alias for PreferredUsername
+func (actor ActorSummary) Username() string {
+	return actor.PreferredUsername
+}

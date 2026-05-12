@@ -1,0 +1,77 @@
+{
+	registrationId:register-invite-code
+	label:Invite Code
+	icon:user
+	description:Invite-only registration requires the user to enter a secret invitation code to register.
+	allowedFields: ["displayName", "emailAddress", "username", "password"]
+	schema: {
+		type:object
+		properties: {
+			secret: {type:"string"}
+			title: {type:"string"}
+			description: {type:"string"}
+			confirmation: {type:"string"}
+			inboxTemplate: {type:"string"}
+			outboxTemplate: {type:"string"}
+			groupId: {type:"string"}
+			terms1: {type:"string"}
+			terms2: {type:"string"}
+			terms3: {type:"string"}
+			terms4: {type:"string"}
+		}
+	}
+	form: {
+			type: "layout-tabs",
+			children: [
+				{
+					type:"layout-vertical",
+					label:"Content",
+					children:[
+						{type:"text", path:"title", label:"Heading", description:"Displayed at the top of the registration form"}
+						{type:"textarea", path:"description", label:"Page Content", description:"Longer text above the registration form. Markdown is allowed.", options:{rows:4}}
+						{type:"text", path:"secret", label:"Invite Code", description:"Website visitors must enter this code in order to register.", options:{maxlength:50}}
+					]
+				},
+				{
+					type:"layout-vertical",
+					label:"Confirmation",
+					children:[
+						{type:"textarea", path:"confirmation", label:"Confirmation Message", description:"Confirmation message displayed when new users register.  Markdown is allowed.", options:{rows:10}}
+					]
+				},
+				{
+					type:"layout-vertical",
+					label:"Rules"
+					children:[
+						{type:"select", path:"inboxTemplate", label:"Inbox", options:{provider:"inbox-templates"}},
+						{type:"select", path:"outboxTemplate", label:"Outbox", options:{provider:"outbox-templates"}},
+						{type:"select", path:"groupId", label:"Add to Group...", description:"New users will be added to this group", format:"objectId", options:{provider:"groups"}},
+					]
+				},
+				{
+					type:"layout-vertical",
+					label:"Terms",
+					children:[
+						{type:"text", path:"terms1", label:"Terms of Service will show as required checkboxes in the registration form."}
+						{type:"text", path:"terms2"}
+						{type:"text", path:"terms3"}
+						{type:"text", path:"terms4"}
+					]
+				}
+			]
+		}
+	actions: {
+		view: {
+			roles:["anonymous"]
+			steps:[
+				{do:"view-html", as-full-page:true}
+			]
+		}
+		confirm: {
+			roles:["anonymous"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+	}
+}	

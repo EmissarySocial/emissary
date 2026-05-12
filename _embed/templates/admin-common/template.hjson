@@ -1,5 +1,6 @@
 {
 	templateId: admin-common
+	category: Admin
 	model: None
 	templateRole: admin
 	states: {

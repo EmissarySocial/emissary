@@ -47,7 +47,7 @@ func (service *User) connectBluesky_follow(session data.Session, userID primitiv
 		return derp.Wrap(err, location, "Unable to follow Bridgy Fed Actor", userID, connection)
 	}
 
-	if err := service.ruleService.BlockActor(session, userID, "@bsky.brid.gy@bsky.brid.gy", "Blocking to stop bridge to Bluesky"); err != nil {
+	if err := service.ruleService.UnblockActor(session, userID, "@bsky.brid.gy@bsky.brid.gy"); err != nil {
 		return derp.Wrap(err, location, "Unable to unblock Bridgy Fed Actor", userID, connection)
 	}
 
@@ -63,8 +63,8 @@ func (service *User) connectBluesky_unfollow(session data.Session, userID primit
 		return derp.Wrap(err, location, "Unable to unfollow Bridgy Fed Actor", userID, connection)
 	}
 
-	if err := service.ruleService.UnblockActor(session, userID, "@bsky.brid.gy@bsky.brid.gy"); err != nil {
-		return derp.Wrap(err, location, "Unable to unblock Bridgy Fed Actor", userID, connection)
+	if err := service.ruleService.BlockActor(session, userID, "@bsky.brid.gy@bsky.brid.gy", "Blocking to stop bridge to Bluesky"); err != nil {
+		return derp.Wrap(err, location, "Unable to block Bridgy Fed Actor", userID, connection)
 	}
 
 	return nil

@@ -5,6 +5,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/uri"
 )
 
 // Client is a streams.Client wrapper that searches for hash values in a document.
@@ -29,35 +30,36 @@ func (client Client) SetRootClient(rootClient streams.Client) {
 
 // Load retrieves a document from the underlying innerClient, then searches for hash values
 // inside it (if required)
-func (client Client) Load(url string, options ...any) (streams.Document, error) {
+func (client Client) Load(id string, options ...any) (streams.Document, error) {
 
-	// Try to find a hash in the URL
-	baseURL, hash, found := strings.Cut(url, "#")
+	if uri.IsValidURL(id) {
 
-	// If there is no hash, then proceed as is.
-	if !found {
-		return client.innerClient.Load(url, options...)
-	}
+		// If we can find a "hash" in the URL, then run this middleware
+		if baseURL, hash, found := strings.Cut(id, "#"); found {
 
-	// Otherwise, try to load the baseURL and find the hash inside that document
-	result, err := client.innerClient.Load(baseURL, options)
+			// Otherwise, try to load the baseURL and find the hash inside that document
+			result, err := client.innerClient.Load(baseURL, options)
 
-	if err != nil {
-		return result, err
-	}
-
-	// Search all properties at the top level of the document (not recursive)
-	// and scan through arrays (if present) looking for an ID that matches the original URL (base + hash)
-	for _, key := range result.MapKeys() {
-		for property := result.Get(key); property.NotNil(); property = property.Tail() {
-			if property.ID() == url {
-				return property, nil
+			if err != nil {
+				return result, err
 			}
+
+			// Search all properties at the top level of the document (not recursive)
+			// and scan through arrays (if present) looking for an ID that matches the original URL (base + hash)
+			for _, key := range result.MapKeys() {
+				for property := result.Get(key); property.NotNil(); property = property.Tail() {
+					if property.ID() == id {
+						return property, nil
+					}
+				}
+			}
+
+			// Inner hashed ID not found.
+			return streams.NilDocument(), derp.NotFound("ashash.Client.Load", "Hash value not found in document", baseURL, hash, result.Value())
 		}
 	}
 
-	// Not found.
-	return streams.NilDocument(), derp.NotFound("ashash.Client.Load", "Hash value not found in document", baseURL, hash, result.Value())
+	return client.innerClient.Load(id, options...)
 }
 
 func (client *Client) Save(document streams.Document) error {

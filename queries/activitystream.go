@@ -39,6 +39,7 @@ func SearchActivityStreamActors(collection data.Collection, text string) ([]mode
 			"preferredUsername": true,
 			"mls:keyPackages":   true,
 		}},
+		{"$sort": bson.M{"name": 1}},
 	}
 
 	// Execute the query and return

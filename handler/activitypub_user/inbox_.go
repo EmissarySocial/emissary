@@ -77,6 +77,11 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 		return derp.Wrap(err, location, "Unable to receive ActivityPub request")
 	}
 
+	// Prevent duplicate actiities from being processes multiple times (e.g. due to retries or multiple deliveries)
+	if inbox_IsDuplicatActivity(context, activity) {
+		return nil
+	}
+
 	// Validate the Activity meets basic criteria to be processed.
 	if err := inbox_ValidateActivity(activity); err != nil {
 		return derp.Wrap(err, location, "Unable to validate ActivityPub request", activity.Value())
@@ -94,6 +99,11 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 
 	// Send the response to the client
 	return ctx.String(http.StatusOK, "")
+}
+
+// inbox_IsDuplicateActivity checks if this activity has already been received and processed in the inbox
+func inbox_IsDuplicatActivity(context Context, activity streams.Document) bool {
+	return context.factory.Inbox().IsDuplicateActivity(context.session, context.user.UserID, activity.ID())
 }
 
 // inbox_ValidateActivity performs additional validate on activities received in the inbox.
@@ -123,17 +133,15 @@ func inbox_ValidateActivity(activity streams.Document) error {
 // saves them into their inbox
 func inbox_SaveActivity(context Context, activity streams.Document) error {
 
-	const location = "handler.activitypub_user.inbox_DirectMessage"
-
-	// Require that the activity is addressed to this Actor
-	if activity.Recipients().NotContains(context.user.ActivityPubURL()) {
-		return derp.BadRequest(location, "Direct messages must be addressed to this Actor")
-	}
+	const location = "handler.activitypub_user.inbox_SaveActivity"
 
 	// RULE: Create a default id for the activity if none is provided
 	if activity.ID() == "" {
 		activity.SetID("uri:uuid:" + primitive.NewObjectID().Hex())
 	}
+
+	// If not already a "map" then load the link to the object
+	object := activity.Object().LoadLink()
 
 	// Create a new InboxActivity and save it to the Inbox
 	inboxService := context.factory.Inbox()
@@ -143,9 +151,9 @@ func inbox_SaveActivity(context Context, activity streams.Document) error {
 	inboxActivity.ActivityID = activity.ID()
 	inboxActivity.Context = activity.Context()
 	inboxActivity.ActivityType = activity.Type()
-	inboxActivity.ObjectType = activity.Object().Type()
-	inboxActivity.ObjectID = activity.Object().ID()
-	inboxActivity.MediaType = activity.Object().MediaType()
+	inboxActivity.ObjectType = object.Type()
+	inboxActivity.ObjectID = object.ID()
+	inboxActivity.MediaType = object.MediaType()
 	inboxActivity.ReceivedDate = time.Now().UnixMilli()
 	inboxActivity.RawActivity = activity.Map()
 	inboxActivity.IsPublic = activity.IsPublic()
@@ -156,9 +164,11 @@ func inbox_SaveActivity(context Context, activity streams.Document) error {
 		inboxActivity.PublishedDate = time.Now().Unix()
 	}
 
+	// Save the Activity to the User's Inbox
 	if err := inboxService.Save(context.session, &inboxActivity, ""); err != nil {
 		return derp.Wrap(err, location, "Unable to save direct message", context.user.UserID, activity.Value())
 	}
 
+	// Suxxess
 	return nil
 }

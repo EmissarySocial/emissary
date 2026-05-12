@@ -1,8 +1,6 @@
 package service
 
 import (
-	"net/url"
-
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -11,7 +9,7 @@ import (
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/sherlock"
-	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"github.com/labstack/gommon/random"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -23,9 +21,9 @@ func (service *Following) Follow(session data.Session, userID primitive.ObjectID
 
 	const location = "service.Following.Follow"
 
-	// If the actor ID is not already a valid URL, it's probably a username/handle,
+	// If the actor ID is not a valid URL, it's probably a username/handle,
 	// so try to resolve it into a URL using Sherlock/WebFinger.
-	if _, err := url.Parse(actorID); err != nil {
+	if uri.NotValidURL(actorID) {
 
 		// Look up the Actor from the Activity service
 		actor, err := service.activityService.GetActor(actorID)
@@ -100,15 +98,10 @@ func (service *Following) Connect(session data.Session, following *model.Followi
 		"followingId": following.FollowingID.Hex(),
 	}
 
-	// Try to load an initial list of messages from the actor's outbox
-	// This runs in faster than usual because it affects the UX, but must
-	// still write to the DB or else it may get skipped
-	service.queue.NewTask("PollFollowing-Record", queueArgs, queue.WithPriority(32))
-
 	// Try to connect to push services (WebSub, ActivityPub, etc)
 	// This runs in faster than usual because it affects the UX, but must
 	// still write to the DB or else it may get skipped
-	service.queue.NewTask("ConnectPushService", queueArgs, queue.WithPriority(32))
+	service.queue.NewTask("ConnectPushService", queueArgs)
 
 	// Kool-Aid man says "ooooohhh yeah!"
 	return nil

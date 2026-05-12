@@ -1,0 +1,7 @@
+{
+    emailId: user-lockout
+    emailRole: user-lockout
+    model: User
+    to: "{{.Email}}"
+    subject: Your Account on {{.Domain_Name}} Has Been Locked
+}

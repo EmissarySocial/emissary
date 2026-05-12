@@ -46,7 +46,7 @@ func NewAddStream(stepInfo mapof.Any) (AddStream, error) {
 	// Create the step
 	result := AddStream{
 		Style:         first(stepInfo.GetString("style"), "chooser"),
-		Title:         first(stepInfo.GetString("title"), "Add a Stream"),
+		Title:         first(stepInfo.GetString("title"), "+ Add a Page"),
 		Location:      val.Enum(stepInfo.GetString("location"), "top", "child", "outbox"),
 		StateID:       first(stepInfo.GetString("state"), "default"),
 		TemplateID:    stepInfo.GetString("template"),

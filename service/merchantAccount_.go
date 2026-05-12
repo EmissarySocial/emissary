@@ -229,19 +229,11 @@ func (service *MerchantAccount) Schema() schema.Schema {
 
 func (service *MerchantAccount) AvailableMerchantAccounts(session data.Session) (sliceof.Object[form.LookupCode], error) {
 
-	const location = "service.MerchantAccount.AvailableMerchantAccounts"
-
 	// Query configured Connections
-	connections, err := service.connectionService.QueryActiveByType(session, model.ConnectionTypeUserPayment)
-
-	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to load connections")
-	}
+	connections := service.connectionService.ActiveByType(model.ConnectionTypeUserPayment).Values()
 
 	// Map the connections to LookupCodes
-	result := slice.Map(connections, func(connection model.Connection) form.LookupCode {
-		return connection.LookupCode()
-	})
+	result := slice.Map(connections, model.ConnectionAsLookupCode)
 
 	// Done.
 	return result, nil
@@ -552,7 +544,7 @@ func (service *MerchantAccount) CancelPrivilege(session data.Session, privilege 
 	}
 
 	switch merchantAccount.Type {
-	
+
 	// case model.ConnectionProviderStripe:
 	//	return service.stripe_CancelPrivilege(&merchantAccount, privilege)
 

@@ -1,11 +1,6 @@
 {{- $search := .QueryParam "search" -}}
 {{- $folderID := .QueryParam "folderId" -}}
-<h2 class="margin-bottom-lg">{{icon "add"}} Add a Source</h2>
-
-<div class="text-gray margin-vertical">
-	Follow a <b>Person</b> or <b>Website</b>
-	by entering their name, @username or URL in the box below
-</div>
+<h2 class="margin-bottom-lg">{{icon "person-add"}} Follow Someone</h2>
 
 <div script="install Menu(input:#following-search-input)" id="following-search">
 
@@ -18,6 +13,7 @@
 			class="flex-grow-1" 
 			tabIndex="0"
 			value="{{attr $search}}"
+			placeholder="@someone@somewhere.social"
 			style="border:none; padding:0;" 
 			
 			script="on load call my focus() if my value is not empty then send initial"
@@ -35,6 +31,11 @@
 
 	</div>
 
-
-	<div id="following-search-results"></div>
+	<div id="following-search-results">
+		<div class="margin-vertical">
+			Follow <b>People</b> by entering their name, @username, or URL.<br>
+			<!-- Follow <b>Hashtags</b> by entering the #hashtag.<br-->
+			Follow <b>Websites</b> (using RSS) by entering a URL.<br>
+		</div>
+	</div>
 </div>

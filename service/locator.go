@@ -222,13 +222,19 @@ func locateObjectFromURL(host string, value string) (string, string) {
 
 		// Remove leading slash and query params (if present)
 		value = strings.TrimPrefix(value, "/")
-		value, _, _ = strings.Cut(value, "?")
-		value, _, _ = strings.Cut(value, "/")
 
 		// Special case for "Application" account
 		if value == "" {
 			return model.ActorTypeApplication, ""
 		}
+
+		// If there's anything after the username, then this is not a valid URL for WebFinger.
+		value, _, hasSuffix := strings.Cut(value, "/")
+
+		if hasSuffix {
+			return "", ""
+		}
+
 		// Special case for "Application" account
 		if value == "@application" {
 			return model.ActorTypeApplication, ""
@@ -246,7 +252,6 @@ func locateObjectFromURL(host string, value string) (string, string) {
 
 		// Identify User URLs
 		if userID, found := strings.CutPrefix(value, "@"); found {
-			userID, _, _ = strings.Cut(userID, "/")
 			return model.ActorTypeUser, userID
 		}
 

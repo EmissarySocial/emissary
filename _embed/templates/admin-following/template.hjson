@@ -1,11 +1,12 @@
 {
-	templateId:admin-following
-	templateRole:admin
-	model:Domain
+	templateId: admin-following
+	templateRole: admin
+	category: Admin
+	model: Domain
 	extends: ["admin-common"]
-	containedBy:["admin"]
-	label:Search
-	description: Manage Search Engine Settings
+	containedBy: ["admin"]
+	label: Following
+	description: Manage Search Engine 'Following' Settings
 
 	actions: {
 		index: {

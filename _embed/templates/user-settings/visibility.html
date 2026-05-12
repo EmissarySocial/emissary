@@ -17,9 +17,9 @@
 					<a href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
 				{{ end }}
 				<a href="/@me/settings/visibility" class="selected" hx-boost="true">Visibility</a>
-				<a href="/@me/settings/password" hx-boost="true">Change Password</a>
-				<a href="/@me/settings/oauth" hx-boost="true">Connected Clients</a>
-				<a href="/@me/settings/keyPackages" hx-boost="true">Public Keys</a>
+				<a href="/@me/settings/password" hx-boost="true">Password</a>
+				<a href="/@me/settings/oauth" hx-boost="true">OAuth Clients</a>
+				<a href="/@me/settings/keyPackages" hx-boost="true">Encrypted Messages</a>
 			</div>
 			<div class="right">
 				<a href="https://emissary.dev/user-profile" target="_blank" class="link">
@@ -39,6 +39,16 @@
 				hx-swap="innerHTML"
 				hx-push-url="false">
 			</div>
+
+			{{- if not .UserCanBridgeToBluesky -}}
+				<div class="padding bg-stripes margin-top-lg">
+					<div class="text-lg bold">Bluesky is Disabled</div>
+					<div class="bold">Bridging to BlueSky is not enabled for you on this server. Talk to your domain owner to activate this feature.</div>
+				</div>
+			{{- end -}}
+
 		</div>
+
+
 	</div>
 </div>

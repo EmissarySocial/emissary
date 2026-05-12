@@ -58,6 +58,10 @@ func (adapter Giphy) ManualConfig() form.Form {
  * Lifecycle Methods
  ******************************************/
 
+func (adapter Giphy) BeforeSave(connection *model.Connection, vault mapof.String) error {
+	return nil
+}
+
 // Connect applies any extra changes to the database after this Adapter is activated.
 func (adapter Giphy) Connect(connection *model.Connection, vault mapof.String, host string) error {
 	return nil

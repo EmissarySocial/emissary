@@ -126,6 +126,82 @@ func (service *DomainEmail) SendPasswordReset(user *model.User) error {
 	return nil
 }
 
+// SendPasswordResetConfirmation sends a password reset confirmation email to the user.  This method
+// swallows errors so that it can be run asynchronously.
+func (service *DomainEmail) SendPasswordResetConfirmation(session data.Session, user *model.User) error {
+
+	const location = "service.DomainEmail.SendPasswordResetConfirmation"
+
+	domain := service.domainService.Get()
+
+	// Send the password reset confirmation email
+	err := service.serverEmail.Send( // nolint:scopeguard
+		service.smtp,
+		service.owner,
+		"user-password-reset-confirmation",
+		"User",
+		mapof.Any{
+			// User info available to the template
+			"UserID":     user.UserID.Hex(),
+			"Username":   user.Username,
+			"Name":       user.DisplayName,
+			"Email":      user.EmailAddress,
+			"ResetCode":  user.PasswordReset.AuthCode,
+			"ExpireDate": user.PasswordReset.ExpireDate,
+
+			// Domain info available to the template
+			"Domain_Owner": service.owner,
+			"Domain_URL":   service.host(),
+			"Domain_Name":  domain.Label,
+			"Domain_Icon":  domain.IconURL(),
+		},
+	)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to send password reset confirmation email to user", user.Username)
+	}
+
+	return nil
+}
+
+// SendUserLockout sends a lockout notification email to the user.  This method
+// swallows errors so that it can be run asynchronously.
+func (service *DomainEmail) SendUserLockout(session data.Session, user *model.User) error {
+
+	const location = "service.DomainEmail.SendUserLockout"
+
+	domain := service.domainService.Get()
+
+	// Send the lockout email
+	err := service.serverEmail.Send( // nolint:scopeguard
+		service.smtp,
+		service.owner,
+		"user-lockout",
+		"User",
+		mapof.Any{
+			// User info available to the template
+			"UserID":     user.UserID.Hex(),
+			"Username":   user.Username,
+			"Name":       user.DisplayName,
+			"Email":      user.EmailAddress,
+			"ResetCode":  user.PasswordReset.AuthCode,
+			"ExpireDate": user.PasswordReset.ExpireDate,
+
+			// Domain info available to the template
+			"Domain_Owner": service.owner,
+			"Domain_URL":   service.host(),
+			"Domain_Name":  domain.Label,
+			"Domain_Icon":  domain.IconURL(),
+		},
+	)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to send user lockout email to user", user.Username)
+	}
+
+	return nil
+}
+
 // SendGuestCode sends JWT signin code to the provided email address, which will
 // sign their "Identity" into the system
 func (service *DomainEmail) SendGuestCode(identifier string, token string) error {

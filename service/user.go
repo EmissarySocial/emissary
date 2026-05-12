@@ -579,6 +579,11 @@ func (service *User) ValidateUsername(session data.Session, userID primitive.Obj
 		return derp.BadRequest(location, "Username is not allowed", username)
 	}
 
+	// RULE: Username must be at least 5 characters
+	if len(username) < 5 {
+		return derp.BadRequest(location, "Username must be at least 5 characters", username)
+	}
+
 	// RULE: Username can only contain letters, numbers, and underscores
 	if _, err := format.Username("")(username); err != nil {
 		return derp.Wrap(err, location, "Username must contain only: letters, numbers, and underscores.", username)
@@ -753,6 +758,37 @@ func (service *User) SendPasswordResetEmail(session data.Session, user *model.Us
 	if err := service.emailService.SendPasswordReset(user); err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to send password reset", user))
 		return
+	}
+}
+
+// Lockout sends a lockout notification email to the user.  This method
+// swallows errors so that it can be run asynchronously.
+func (service *User) Lockout(session data.Session, username string) {
+
+	const location = "service.User.Lockout"
+
+	user := model.NewUser()
+	if err := service.LoadByUsername(session, username, &user); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to load user by username", username))
+		return
+	}
+
+	// Reset the password to a random value
+	if newPassword, err := random.GenerateString(256); err == nil {
+		user.Password = newPassword
+	} else {
+		derp.Report(derp.Wrap(err, location, "Unable to generate random password", user))
+	}
+
+	// Make a ResetCode
+	if err := service.MakeNewPasswordResetCode(session, &user); err != nil {
+		derp.Report(derp.Wrap(err, location, "Error making password reset", user))
+		return
+	}
+
+	// Try to send the lockout email.  If it fails, then don't save the new password reset code.
+	if err := service.emailService.SendUserLockout(session, &user); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to send user lockout email", user))
 	}
 }
 

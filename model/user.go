@@ -239,9 +239,9 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.PropertyFollowing:         user.ActivityPubFollowingURL(),
 		vocab.PropertyFollowers:         user.ActivityPubFollowersURL(),
 		vocab.PropertyLiked:             user.ActivityPubLikedURL(),
-		"emissary:messages":             user.ActivityPubInboxURL_DirectMessages(),
-		vocab.PropertyMLSMessages:       user.ActivityPubInboxURL_DirectMessages_MLS(),
-		vocab.PropertyMLSKeyPackages:    user.ActivityPubMLSKeyPackagesURL(),
+
+		// Always allow general direct messages, but MLS messages require additional approval.
+		"emissary:messages": user.ActivityPubInboxURL_DirectMessages(),
 
 		// Removing "Featured" until I can sort out how to use it for Bandwagon "featured" posts
 		// WITHOUT making all of the posts "pinned" --> https://mastodon.me.uk/@delanthear/114873976765234644

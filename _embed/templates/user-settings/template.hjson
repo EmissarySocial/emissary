@@ -1,6 +1,7 @@
 {
 	templateId: user-settings
 	templateRole: user-settings
+	category: Special
 	model: Settings
 	label: Default User Settings
 	description: A simple settings admin with a sidebar for folders and several feed layouts
@@ -642,10 +643,13 @@
 		keyPackage-delete: {
 			roles:["self"]
 			steps:[
-				{do:"with-keypackage", steps:[
-					{do:"require-password", title:"Delete Public Key?", message:"Removing the public key <b>{{.Object.Generator}}</b> from this server will <i>erase all encrypted messages</i> from the device that created it.", submit:"Delete Public Key"}
-					{do:"delete", method:"post"}
-					{do:"refresh-page"}
+				{do:"if", condition:"{{.IsMasquerading}}", then:[
+				], else:[
+					{do:"with-keypackage", steps:[
+						{do:"require-password", title:"Delete Public Key?", message:"Removing the public key <b>{{.Object.GeneratorName}}</b> from this server will <i>erase all encrypted messages</i> from the device that created it.", submit:"Delete Public Key"}
+						{do:"delete", method:"post"}
+						{do:"refresh-page"}
+					]}
 				]}
 			]
 		}
@@ -987,17 +991,21 @@
 		visibility-form: {
 			roles:["self"]
 			steps:[
-				{do:"edit", 
-				options:["cancel-button:hide"]
-				form:{
-					type:layout-vertical
-					children:[
-						{type:"html", description:"<div class='text-lg bold'>Public Profile</div>When you enable this option, your profile will be visible to everyone on the Internet.  If you disable this option, others will not be able to see or interact with you here."}
-						{type:"toggle", path:"isPublic", options:{true-text:"YES. Profile is visible to everyone", false-text:"NO. Profile is only visible to me."}}
-						{type:"html", description:"<div class='text-lg bold'>Index on Search Engines</div>When you enable this option, you are requesting that your profile be included in search results. If you disable this option, you are requesting that search engines do not index your profile. NOTE: Not all search engines will obey this request, so your profile may still show up on some search engines."}
-						{type:"toggle", path:"isIndexable", options:{true-text:"YES. Please index my profile", false-text:"NO. Please DO NOT index my profile."}}
-					]	
-				}}
+				{
+					do:"edit", 
+					options:["cancel-button:hide", "show-bluesky:{{.UserCanBridgeToBluesky}}"]
+					form:{
+						type:layout-vertical
+						children:[
+							{type:"html", description:"<div class='text-lg bold'>Public Profile</div>When you enable this option, your profile will be visible to everyone on the Internet.  If you disable this option, others will not be able to see or interact with you here."}
+							{type:"toggle", path:"isPublic", options:{true-text:"YES. Profile is visible to everyone", false-text:"NO. Profile is only visible to me."}}
+							{type:"html", description:"<div class='text-lg bold'>Index on Search Engines</div>When you enable this option, you are requesting that your profile be included in search results. Not all search engines will obey this request, so your profile may still show up on search engines that do not honor this request."}
+							{type:"toggle", path:"isIndexable", options:{true-text:"YES. Please index my profile", false-text:"NO. Please DO NOT index my profile."}}
+							{type:"html", description:"<div class='text-lg bold'>Bridge to Bluesky</div>When you enable this option, your profile and posts will be connected to ATProto networks (like BlueSky, BlackSky, EuroSky, and others) via <a href='https://fed.brid.gy'>Bridgy Fed</a>.",  options:{"show-if-option":"show-bluesky"}}
+							{type:"toggle", path:"isBridgeBluesky", options:{true-text:"YES. Show my posts on BlueSky", false-text:"NO. DO NOT show my posts on BlueSky.", "show-if-option":"show-bluesky"}}
+						]	
+					}
+				}
 				{do:"save"}
 				{do: "inline-save-button"}
 			]

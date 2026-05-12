@@ -1,5 +1,33 @@
 <article id="content-editor" data-content="{{.ContentRaw}}" style="max-width:752px"></article>	
 
+<style>
+	.codex-editor {
+
+		::selection {
+			background-color: var(--blue40);
+			color:white;
+		}
+
+		.ce-toolbar__actions {
+			color:var(--black);
+
+			.ce-toolbar__plus {
+				background-color:var(--gray30);
+			}
+
+			.ce-toolbar__settings-btn {
+				background-color: var(--gray30);
+			}
+		}
+	}
+
+	.ctx-notifies {
+		.ctx-notify {
+			background-color:var(--white);
+		}
+	}
+</style>
+
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/paragraph@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/header@latest"></script>

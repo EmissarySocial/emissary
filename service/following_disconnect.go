@@ -1,13 +1,12 @@
 package service
 
 import (
-	"net/url"
-
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/remote"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -15,11 +14,11 @@ import (
 // then the Following record is disconnected. Otherwise, no action is taken.
 func (service *Following) Unfollow(session data.Session, userID primitive.ObjectID, actorID string) error {
 
-	const location = "service.Following.Follow"
+	const location = "service.Following.Unfollow"
 
-	// If the actor ID is not already a valid URL, it's probably a username/handle,
+	// If the actor ID is not a valid URL, it's probably a username/handle,
 	// so try to resolve it into a URL using Sherlock/WebFinger.
-	if _, err := url.Parse(actorID); err != nil {
+	if uri.NotValidURL(actorID) {
 
 		// Look up the Actor from the Activity service
 		actor, err := service.activityService.GetActor(actorID)

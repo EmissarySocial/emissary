@@ -1,11 +1,12 @@
 {
-	templateId:"admin-webhooks"
-	templateRole:"admin"
-	model:"Webhook"
+	templateId: admin-webhooks
+	templateRole: admin
+	category: Admin
+	model: Webhook
 	extends: ["admin-common"]
 	containedBy:["admin"]
-	label: "Webhooks"
-	description: "Manage all webhooks on this website"
+	label: Webhooks
+	description: Manage all webhooks on this website
 	actions: {
 		index: {
 			roles:["owner"]

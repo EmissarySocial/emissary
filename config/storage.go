@@ -15,7 +15,7 @@ type Storage interface {
 // Load retrieves a Storage object from the location designated in the config file
 func Load(args *CommandLineArgs) Storage {
 
-	switch args.Protocol {
+	switch args.Protocol() {
 
 	case StorageTypeMongo:
 		log.Info().Msg("Loading server config from MongoDB ")

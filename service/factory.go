@@ -740,6 +740,7 @@ func (factory *Factory) Steranko(session data.Session) *steranko.Steranko {
 	return steranko.New(
 		factory.SterankoUserService(session),
 		factory.JWT(),
+		steranko.WithSigninService(factory.SterankoSigninService(session)),
 		steranko.WithPasswordHasher(hash.BCrypt(15), hash.Plaintext{}),
 	)
 }
@@ -747,6 +748,11 @@ func (factory *Factory) Steranko(session data.Session) *steranko.Steranko {
 // SterankoUserService returns a SterankoUserService adapter for the provided database session
 func (factory *Factory) SterankoUserService(session data.Session) SterankoUserService {
 	return NewSterankoUserService(factory.Identity(), factory.User(), factory.Email(), session)
+}
+
+// SterankoSigninService returns a SterankoSigninService adapter for the provided database session
+func (factory *Factory) SterankoSigninService(session data.Session) SterankoSigninService {
+	return NewSterankoSigninService(factory, session)
 }
 
 // LookupProvider returns the LookupProvider service for this UserID

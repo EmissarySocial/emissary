@@ -32,6 +32,15 @@ func RenderProfileJSONLD(context echo.Context, factory *service.Factory, session
 		vocab.PropertyPublicKeyPEM: key.PublicPEM,
 	}
 
+	// If the domain allows it, append MLS messaging values as well.
+	domainService := factory.Domain()
+	domain := domainService.Get()
+
+	if domain.UserCanMLS(user) {
+		userJSON[vocab.PropertyMLSMessages] = user.ActivityPubInboxURL_DirectMessages_MLS()
+		userJSON[vocab.PropertyMLSKeyPackages] = user.ActivityPubMLSKeyPackagesURL()
+	}
+
 	// Return the user's profile in JSON-LD format
 	context.Response().Header().Set(vocab.ContentType, vocab.ContentTypeActivityPub)
 	return context.JSON(http.StatusOK, userJSON)

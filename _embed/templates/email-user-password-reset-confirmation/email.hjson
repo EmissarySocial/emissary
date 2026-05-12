@@ -1,0 +1,7 @@
+{
+    emailId: user-password-reset-confirmation
+    emailRole: user-password-reset-confirmation
+    model: User
+    to: "{{.Email}}"
+    subject: Your Password on {{.Domain_Name}} Has Been Reset
+}

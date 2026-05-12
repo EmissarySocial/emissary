@@ -1,0 +1,86 @@
+{{- $mode := .MLSMode -}}
+{{- $groups := .MLSGroupIDs -}}
+
+<div class="page">
+	
+	{{template "menubar" .}}
+
+	<div class="text-lg bold">Encrypted Messaging Setup</div>
+	<div class="margin-bottom-lg">
+		Encrypted Messaging is a powerful feature that allows groups of people
+		to send and receive "end-to-end" encrypted messages over the Fediverse.
+		Encrypted messages are sent through this server and stored in its database, 
+		but cannot be read by domain owners or administrators.
+		<a href="https://emissary.dev/e2ee-for-domain-owners" class="nowrap" target="_blank">Learn more about encrypted messaging &rarr;</a>
+	</div>
+
+	<form id="mls-form" hx-post="/admin/mls/index">
+
+		<div class="flex-row width-100% margin-bottom-lg">
+
+			<div class="width-33% radiobutton" tabIndex="0" style="align-items:stretch;">
+				<label class="flex-grow align-center">
+					<div class="text-light-gray margin-vertical" style="font-size:48px;"><i class="bi bi-slash-circle-fill"></i></div>
+					<div class="text-lg bold">Nobody</div>
+					<div class="text-gray">Encrypted messaging is completely disabled on this domain.</div>
+					{{- $checked := iif (eq `NONE` $mode) "checked" "" -}}
+					<input id="mlsMode_NONE" type="radio" name="mlsMode" value="NONE" {{$checked}}>
+				</label>
+			</div>
+
+			<div class="width-33% radiobutton" tabIndex="0" style="align-items:stretch;">
+				<div class="flex-grow">
+					<label class="align-center">
+						<div class="text-light-gray margin-vertical" style="font-size:48px;"><i class="bi bi-people-fill"></i></div>
+						<div class="text-lg bold">Select Groups</div>
+						<div class="text-gray">
+							Choose specific groups that can use encrypted messaging.
+							<a href="/admin/groups" hx-boost="true" class="nowrap">Manage groups &rarr;</a>
+						</div>
+						{{- $checked := iif (eq `GROUPS` $mode) "checked" "" -}}
+						<input id="mlsMode_GROUPS" type="radio" name="mlsMode" value="GROUPS" {{$checked}}>
+					</label>
+					<hr>
+					{{range .Groups}}
+						{{- $checked := iif ($groups.Contains .ID) "checked" "" -}}
+						<label for="group-{{.ID}}" class="block" tabIndex="0">
+							<input 
+								id="group-{{.ID}}" 
+								type="checkbox" 
+								name="mlsGroupIds" 
+								value="{{.ID}}"
+								{{$checked}}
+								onclick="document.getElementById('mlsMode_GROUPS').checked = true;">
+							{{.Name}}
+						</label>
+					{{end}}
+				</div>
+			</div>
+
+			<div class="width-33% radiobutton" tabIndex="0" style="align-items:stretch;">
+				<label class="flex-grow align-center">
+					<div class="text-light-gray margin-vertical" style="font-size:48px;"><i class="bi bi-globe"></i></div>
+					<div class="text-lg bold">Everyone</div>
+					<div class="text-gray">Encrypted messages are open to all users on this domain.</div>
+					{{- $checked := iif (eq `ALL` $mode) "checked" "" -}}
+					<input id="mlsMode_ALL" type="radio" name="mlsMode" value="ALL" {{$checked}}>
+				</label>
+			</div>
+		</div>
+
+		<button id="inline-save-button" type="submit" class="primary">Save Changes</button>
+
+	</form>
+
+</div>
+
+<style>
+	#group-select {
+		display: none;
+
+		#mls-form:has(#active-GROUPS:checked) & {
+			display: block;
+		}
+	}
+
+</style>

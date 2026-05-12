@@ -124,6 +124,9 @@ func main() {
 		// Prepare HTTP and HTTPS servers using the new configuration
 		go startHTTP(serverFactory, e)
 		go startHTTPS(serverFactory, e)
+
+		// Start the task queue after the HTTP server is running
+		go serverFactory.Queue().Start()
 	}
 
 	// Listen to the OS SIGINT channel for an interrupt signal
@@ -186,6 +189,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	log.Info().Msg("Starting Emissary Server.")
 
 	// WAF Middleware
+	e.Pre(middleware.Recover())
 	e.Pre(dome4echo.New(factory.DigitalDome()))
 
 	e.Pre(mw.HttpsRedirect)
@@ -222,6 +226,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.api/collectionHeader", handler.WithAuthenticatedAPI(factory, handler.GetAPICollectionHeader))
 	e.GET("/.checkout", handler.WithProduct(factory, handler.GetCheckout))
 	e.GET("/.checkout/response", handler.WithMerchantAccountJWT(factory, handler.GetCheckoutResponse))
+	e.GET("/.echo", handler.GetEcho)
 	e.POST("/.follower/new", handler.WithFactory(factory, handler.PostEmailFollower))
 	e.GET("/.geocode/network", handler.WithFactory(factory, handler.GetGeocodeNetwork))
 	e.GET("/.geocode/autocomplete", handler.WithFactory(factory, handler.GetGeocodeAutocomplete))
@@ -247,6 +252,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.templates/:templateId/resources/:filename", handler.GetTemplateResource(factory))
 	e.GET("/.unsplash/photos/:photo", handler.WithFactory(factory, unsplash.GetPhoto))
 	e.GET("/.unsplash/collections/:collection/random", handler.WithFactory(factory, unsplash.GetCollectionRandom))
+	e.GET("/.validate/signupCode", handler.WithFactory(factory, handler.GetValidateSignupCode))
+	e.GET("/.validate/streamToken", handler.WithFactory(factory, handler.GetValidateStreamToken))
 	e.GET("/.validate/username", handler.WithFactory(factory, handler.GetValidateUsername))
 	e.GET("/.webmention", handler.TBD)
 	e.POST("/.webmention", handler.WithFactory(factory, handler.PostWebMention))
@@ -285,9 +292,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.domain/attachments/:attachmentId", handler.WithFactory(factory, handler.GetDomainAttachment))
 
 	// Stream Pages
-	e.HEAD("/", handler.WithStream(factory, handler.HeadStream))
+	e.HEAD("/", handler.GetHome(factory))
+	e.GET("/", handler.GetHome(factory))
 	e.HEAD("/:stream", handler.WithStream(factory, handler.HeadStream))
-	e.GET("/", handler.WithTemplate(factory, handler.GetStream))
 	e.GET("/:stream", handler.WithTemplate(factory, handler.GetStream))
 	e.GET("/:stream/:action", handler.WithTemplate(factory, handler.GetStreamWithAction))
 	e.POST("/:stream/:action", handler.WithTemplate(factory, handler.PostStreamWithAction))
@@ -439,7 +446,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:stream/pub/context", handler.WithStream(factory, ap_stream.GetContextCollection))
 
 	// Domain Admin Pages
-	e.GET("/admin", handler.WithOwner(factory, handler.GetAdmin))
+	e.GET("/admin", handler.RedirectTo("/admin/domain/index"))
 	e.GET("/admin/:param1", handler.WithOwner(factory, handler.GetAdmin))
 	e.POST("/admin/:param1", handler.WithOwner(factory, handler.PostAdmin))
 	e.GET("/admin/:param1/:param2", handler.WithOwner(factory, handler.GetAdmin))

@@ -19,6 +19,7 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/oauth2"
@@ -59,6 +60,7 @@ func (service *Domain) Refresh(factory *Factory) {
 	service.activityService = factory.ActivityStream()
 	service.configuration = factory.config
 	service.connectionService = factory.Connection()
+	service.domain = model.NewDomain()
 	service.funcMap = factory.FuncMap()
 	service.newSession = factory.Session
 	service.providerService = factory.Provider()
@@ -163,6 +165,11 @@ func (service *Domain) Save(session data.Session, domain model.Domain, note stri
 	// Validate the value using the custom schema for this domain
 	if err := service.Schema().Validate(&domain); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Domain with custom schema from Theme")
+	}
+
+	// If the MLS mode is not "Groups", then clear all group IDs
+	if domain.MLSMode != model.DomainMLSModeGroups {
+		domain.MLSGroupIDs = sliceof.NewString()
 	}
 
 	// Try to save the value to the database
@@ -370,7 +377,7 @@ func (service *Domain) OAuthExchange(session data.Session, providerID string, st
 
 	// Try to update the connection with the new token
 	connection.Token = token
-	connection.Data = mapof.NewString()
+	connection.Data = mapof.NewAny()
 	connection.Active = true
 
 	if service.connectionService.Save(session, &connection, "OAuth Exchange") != nil {

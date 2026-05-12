@@ -1,10 +1,11 @@
 {
-	templateId:admin-search
-	templateRole:admin
-	model:Search
+	templateId: admin-search
+	templateRole: admin
+	category: Admin
+	model: Search
 	extends: ["admin-common"]
-	containedBy:["admin"]
-	label:Search
+	containedBy: ["admin"]
+	label: Search
 	description: Manage Search Engine Settings
 
 	actions: {

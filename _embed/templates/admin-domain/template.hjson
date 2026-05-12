@@ -1,11 +1,12 @@
 {
-	templateId:"admin-domain"
-	templateRole:"admin"
+	templateId: admin-domain
+	templateRole: admin
+	category: Admin
 	model: Domain
 	extends: ["admin-common"]
 	containedBy:["admin"]
-	label: "Domain"
-	description: "Domain Owners only.  Site Admin"
+	label: Domain
+	description: Domain Owners only.  Site Admin
 	schema: {type: "object", properties: {
 		label:   {type:"string", maxLength:100}
 		themeId: {type:"string", maxLength: 100}
@@ -32,6 +33,7 @@
 			roles:["owner"]
 			steps: [{
 				do: as-modal
+				options: {size: "large"}
 				steps: [
 					{do: "view-html"}
 					{do: "set-data", from-form:["themeId"]}
@@ -39,6 +41,25 @@
 					{do: "reload-page"}
 				]
 			}]
+		}
+
+		defaults: {
+			roles:["owner"]
+			steps: [
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+					{do:"edit", form:{
+						type:"layout-vertical",
+						children: [
+							{type:"text", path:"defaultAnonymous", label:"Anonymous Visitors", options:{placeholder:"/home"}},
+							{type:"text", path:"defaultAuthenticated", label:"Signed-In Users", options:{placeholder:"/@me/newsfeed"}}
+							{type:"text", path:"defaultOwner", label:"Domain Owners", options:{placeholder:"/admin"}}
+						]
+					}}
+					{do:"save"}
+					{do:"refresh-page"}
+				]}
+			]
 		}
 
 		signup: {

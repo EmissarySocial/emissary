@@ -1,5 +1,6 @@
 <div class="page">
 
+	{{- $breadcrumbs := .Breadcrumbs -}}
 	<script type="text/hyperscript">
 		def saveDraft(promote)
 			if promote then
@@ -10,10 +11,16 @@
 		end
 	</script>
 
+	<div id="menu-bar" class="margin-bottom">
+		{{- range $index, $stream := $breadcrumbs -}}
+			<a href="/{{$stream.ID}}/edit" class="text-gray margin-none padding-horizontal-xs">{{$stream.Name}} &rarr;</a>
+		{{- end -}}
+		<button script="on click saveDraft(false)" class="bold margin-none padding-horizontal-xs">{{.Name}}</button>
+	</div>
+
 	<div id="menu-bar">
 
 		<div class="left">
-			<button script="on click saveDraft(false)">&larr; View</button>
 			{{- if .UserCan "edit" -}}
 				<a href="/{{.StreamID}}/edit">Edit</a>
 			{{- end -}}

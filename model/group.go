@@ -39,6 +39,18 @@ func (group *Group) ID() string {
 }
 
 /******************************************
+ * Mock Activity Vocabulary
+ ******************************************/
+
+func (group Group) Name() string {
+	return group.Label
+}
+
+func (group Group) Summary() string {
+	return group.Description
+}
+
+/******************************************
  * AccessLister Interface
  ******************************************/
 

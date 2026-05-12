@@ -35,6 +35,9 @@ func TestDomainSchema(t *testing.T) {
 		{"syndication.0.label", "LABEL", nil},
 		{"syndication.1.description", "DESCRIPTION", nil},
 		{"syndication.1.href", "https://syndication.site", nil},
+		{"defaultAnonymous", "/home", nil},
+		{"defaultAuthenticated", "/@me", nil},
+		{"defaultOwner", "/admin", nil},
 	}
 
 	tableTest_Schema(t, &s, &domain, table)

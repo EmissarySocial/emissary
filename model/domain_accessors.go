@@ -1,6 +1,8 @@
 package model
 
 import (
+	"strings"
+
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -9,22 +11,27 @@ import (
 func DomainSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"domainId":         schema.String{Format: "objectId"},
-			"iconId":           schema.String{Format: "objectId"},
-			"imageId":          schema.String{Format: "objectId"},
-			"iconUrl":          schema.String{Format: "url"}, // virtual field
-			"imageUrl":         schema.String{Format: "url"}, // virtual field
-			"themeId":          schema.String{MaxLength: 128},
-			"registrationId":   schema.String{MaxLength: 128},
-			"inboxId":          schema.String{MaxLength: 128},
-			"outboxId":         schema.String{MaxLength: 128},
-			"label":            schema.String{MaxLength: 128},
-			"description":      schema.String{MaxLength: 1024},
-			"forward":          schema.String{Format: "url", Required: false},
-			"data":             schema.Object{Wildcard: schema.String{}},
-			"colorMode":        schema.String{Enum: []string{DomainColorModeAuto, DomainColorModeLight, DomainColorModeDark}},
-			"syndication":      schema.Array{Items: form.LookupCodeSchema()},
-			"registrationData": schema.Object{Wildcard: schema.String{}},
+			"domainId":             schema.String{Format: "objectId"},
+			"iconId":               schema.String{Format: "objectId"},
+			"imageId":              schema.String{Format: "objectId"},
+			"iconUrl":              schema.String{Format: "url"}, // virtual field
+			"imageUrl":             schema.String{Format: "url"}, // virtual field
+			"themeId":              schema.String{MaxLength: 128},
+			"registrationId":       schema.String{MaxLength: 128},
+			"inboxId":              schema.String{MaxLength: 128},
+			"outboxId":             schema.String{MaxLength: 128},
+			"label":                schema.String{MaxLength: 128},
+			"description":          schema.String{MaxLength: 1024},
+			"forward":              schema.String{Format: "url", Required: false},
+			"data":                 schema.Object{Wildcard: schema.String{}},
+			"colorMode":            schema.String{Enum: []string{DomainColorModeAuto, DomainColorModeLight, DomainColorModeDark}},
+			"mlsMode":              schema.String{Enum: []string{DomainMLSModeAll, DomainMLSModeGroups, DomainMLSModeNone}},
+			"defaultAnonymous":     schema.String{MaxLength: 128},
+			"defaultAuthenticated": schema.String{MaxLength: 128},
+			"defaultOwner":         schema.String{MaxLength: 128},
+			"mlsGroupIds":          schema.String{},
+			"syndication":          schema.Array{Items: form.LookupCodeSchema()},
+			"registrationData":     schema.Object{Wildcard: schema.String{}},
 		},
 	}
 }
@@ -64,11 +71,23 @@ func (domain *Domain) GetPointer(name string) (any, bool) {
 	case "colorMode":
 		return &domain.ColorMode, true
 
+	case "mlsMode":
+		return &domain.MLSMode, true
+
 	case "data":
 		return &domain.Data, true
 
 	case "syndication":
 		return &domain.Syndication, true
+
+	case "defaultAnonymous":
+		return &domain.DefaultAnonymous, true
+
+	case "defaultAuthenticated":
+		return &domain.DefaultAuthenticated, true
+
+	case "defaultOwner":
+		return &domain.DefaultOwner, true
 	}
 
 	return nil, false
@@ -92,6 +111,9 @@ func (domain Domain) GetStringOK(name string) (string, bool) {
 
 	case "imageUrl":
 		return domain.ImageURL(), true
+
+	case "mlsGroupIds":
+		return domain.MLSGroupIDs.Join(","), true
 	}
 
 	return "", false
@@ -132,6 +154,10 @@ func (domain *Domain) SetString(name string, value string) bool {
 			domain.ImageID = objectID
 			return true
 		}
+
+	case "mlsGroupIds":
+		domain.MLSGroupIDs = strings.Split(value, ",")
+		return true
 
 	case "iconUrl":
 		return true // Virtual fields can't be set, but don't return an error if someone tries

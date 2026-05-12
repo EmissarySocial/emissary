@@ -1,0 +1,28 @@
+{{- $title := .Widget.Data.GetString "title" -}}
+{{- $showIcon := .Widget.Data.GetBool "showIcon" -}}
+{{- $showDescription := .Widget.Data.GetBool "showDescription" -}}
+
+<div class="widget widget-children" hx-target="main" hx-swap="innerHTML" hx-push-url="true">
+
+	{{- if ne "" $title -}}
+		<div class="text-lg bold title">{{- $title -}}</div>
+	{{- end -}}
+
+	<div class="table">
+		{{- $children := .Children.Slice -}}
+		{{- range $index, $child := $children -}}
+			<a href="/{{$child.Token}}" hx-boost="true" class="flex-row text-nocolor" role="link">
+				{{- if $showIcon -}}
+					<div class="text-2xl margin-none margin-right-sm">{{ icon $child.Icon}}</div>
+				{{- end -}}
+				<div class="ellipsis">
+					<div class="bold">{{$child.Label}}</div>
+					{{- if $showDescription -}}
+						<div class="text-gray">{{ $child.Description }}</div>
+					{{- end -}}
+				</div>
+			</a>
+		{{- end -}}
+	</div>
+
+</div>

@@ -104,18 +104,28 @@ func (service *Inbox) Save(session data.Session, inboxActivity *model.InboxActiv
 
 	const location = "service.Inbox.Save"
 
+	// RULE: InboxActivity must have an ActivityID
+	if inboxActivity.ActivityID == "" {
+		inboxActivity.ActivityID = "uri:uuid:" + primitive.NewObjectID().Hex()
+	}
+
+	// RULE: InboxActivity must have a UserID
+	if inboxActivity.InboxActivityID.IsZero() {
+		return derp.BadRequest(location, "InboxActivity.InboxActivityID must not be zero")
+	}
+
 	// RULE: InboxActivity must have a UserID
 	if inboxActivity.UserID.IsZero() {
-		return derp.BadRequest(location, "InboxActivity must not be zero")
+		return derp.BadRequest(location, "InboxActivity.UserID must not be zero")
 	}
 
 	// Validate the record using the schema
 	if err := service.Schema().Validate(inboxActivity); err != nil {
-		return derp.Wrap(err, location, "Unable to validate InboxActivity", inboxActivity)
+		return derp.Wrap(err, location, "InboxActivity is invalid", inboxActivity)
 	}
 
-	// Save the value to the database
-	if err := service.collection(session).Save(inboxActivity, note); err != nil {
+	// Check to see if this is a new record
+	if err := service.createOrUpdate(session, inboxActivity, note); err != nil {
 		return derp.Wrap(err, location, "Unable to save Inbox activity", inboxActivity, note)
 	}
 
@@ -124,6 +134,29 @@ func (service *Inbox) Save(session data.Session, inboxActivity *model.InboxActiv
 
 	// Send realtime SSE messages to any listeners
 	go service.sendSSEUpdate(inboxActivity)
+
+	return nil
+}
+
+func (service *Inbox) createOrUpdate(session data.Session, inboxActivity *model.InboxActivity, note string) error {
+
+	const location = "service.Inbox.createOrUpdate"
+
+	// Check to see if this is a new record
+	previousValue := model.NewInboxActivity()
+	if err := service.LoadByActivityID(session, inboxActivity.UserID, inboxActivity.ActivityID, &previousValue); err != nil {
+		if !derp.IsNotFound(err) {
+			return derp.Wrap(err, location, "Unable to load previous InboxActivity", inboxActivity)
+		}
+
+		inboxActivity.InboxActivityID = previousValue.InboxActivityID
+		inboxActivity.CreateDate = previousValue.CreateDate
+	}
+
+	// Save the value to the database
+	if err := service.collection(session).Save(inboxActivity, note); err != nil {
+		return derp.Wrap(err, location, "Unable to save Inbox activity", inboxActivity, note)
+	}
 
 	return nil
 }
@@ -290,6 +323,27 @@ func (service *Inbox) RangeByUser(session data.Session, userID primitive.ObjectI
 
 	// Return the filtered range
 	return service.Range(session, criteria, options...)
+}
+
+// IsDuplicateActivity returns TRUE if the provided activityID has already been processed for this user (e.g. due to retries or multiple deliveries)
+func (service *Inbox) IsDuplicateActivity(session data.Session, userID primitive.ObjectID, activityID string) bool {
+
+	const location = "service.Inbox.IsDuplicateActivity"
+
+	// If there is no activityID, then it cannot be a duplicate
+	if activityID == "" {
+		return false
+	}
+
+	criteria := exp.Equal("userId", userID).AndEqual("activityId", activityID)
+	count, err := service.Count(session, criteria)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to check for duplicate activity", "userID", userID, "activityID", activityID))
+		return false
+	}
+
+	return count > 0
 }
 
 /******************************************

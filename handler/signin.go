@@ -47,7 +47,8 @@ func PostSignIn(ctx *steranko.Context, factory *service.Factory, session data.Se
 	user, err := factory.Steranko(session).SigninFormPost(ctx)
 
 	if err != nil {
-		ctx.Response().Header().Add("HX-Trigger", "SigninError")
+		messageJSON, _ := json.Marshal(map[string]string{"SigninError": derp.Message(err)})
+		ctx.Response().Header().Add("HX-Trigger", string(messageJSON))
 		return ctx.HTML(derp.ErrorCode(err), derp.Message(err))
 	}
 
@@ -73,7 +74,7 @@ func calcNextURL(next string) string {
 
 	// If "next" is empty, then redirect to the user's profile
 	if next == "" {
-		return "/@me"
+		return "/"
 	}
 
 	// Otherwise, trim the hostname so we don't have open redirects to other servers
@@ -81,12 +82,12 @@ func calcNextURL(next string) string {
 
 	// Do not allow redirect loops
 	if strings.HasPrefix(next, "/signin") {
-		return "/@me"
+		return "/"
 	}
 
 	// Do not allow redirect loops
 	if strings.HasPrefix(next, "/signout") {
-		return "/@me"
+		return "/"
 	}
 
 	// Allow this "next" URL redirect
@@ -290,6 +291,19 @@ func PostResetCode(ctx *steranko.Context, factory *service.Factory, session data
 
 	if err := userService.Save(session, &user, "Updated Password"); err != nil {
 		return derp.Wrap(err, location, "Unable to save user")
+	}
+
+	// Reset the failed signin attempts for this user so that they can sign in with their new password right away.
+	signinService := factory.SterankoSigninService(session)
+
+	if err := signinService.ClearSigninAttempts(user.Username); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to clear signin attempts for user", user.Username))
+	}
+
+	// Try to send the password reset confirmation email.  If it fails, then log the error and move on.
+	emailService := factory.Email()
+	if err := emailService.SendPasswordResetConfirmation(session, &user); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to send password reset confirmation email to user", user.Username))
 	}
 
 	// Forward to the sign-in page with a success message

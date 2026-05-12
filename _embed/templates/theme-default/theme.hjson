@@ -1,10 +1,10 @@
 {
-	themeId: "default"
+	themeId: default
 	extends:["global"]
 	isVisible:true
-	category:"General"
-	label: "Minimus"
-	description: "Clean, top nav theme for general purpose websites."
+	category: General
+	label: Minimus
+	description: Clean, general purpose theme for content-focused websites. (Emissary Default)
 	rank: 0
 	schema: {
 		type: "object",
