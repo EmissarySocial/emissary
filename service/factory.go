@@ -677,6 +677,10 @@ func (factory *Factory) Camper() camper.Camper {
 	return camper.New(camper.WithClient(client))
 }
 
+func (factory *Factory) ClientIP(request *http.Request) string {
+	return factory.serverFactory.ClientIP(request)
+}
+
 // Content returns the Content transformation service
 func (factory *Factory) Content() *Content {
 	return factory.contentService

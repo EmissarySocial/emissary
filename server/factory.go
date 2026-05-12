@@ -34,6 +34,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/maypok86/otter"
 	"github.com/puzpuzpuz/xsync/v4"
+	"github.com/realclientip/realclientip-go"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -65,6 +66,7 @@ type Factory struct {
 	workingDirectory    mediaserver.WorkingDirectory
 	queue               *queue.Queue
 	digitalDome         dome.Dome
+	clientIPStrategy    realclientip.Strategy
 
 	funcMap   template.FuncMap
 	domains   *xsync.Map[string, *service.Factory]
@@ -144,6 +146,7 @@ func NewFactory(commandLineArgs *config.CommandLineArgs, embeddedFiles embed.FS)
 	factory.queue = queue.New()
 	factory.workingDirectory = mediaserver.NewWorkingDirectory(os.TempDir(), 4*time.Minute, 10000)
 	factory.setup = commandLineArgs.Setup
+	factory.clientIPStrategy = realclientip.RemoteAddrStrategy{}
 
 	// Subscribe to configuration changes
 	subscription := factory.storage.Subscribe()
@@ -321,6 +324,9 @@ func (factory *Factory) readConfig(config config.Config) {
 	if err := factory.queue.Publish(queue.NewTask("Scheduler", mapof.NewAny())); err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to start scheduler"))
 	}
+
+	// Derive the strategry for calculating the client's real ip address
+	factory.clientIPStrategy = factory.calcClientIPStrategy(config)
 }
 
 // refreshDomain attempts to refresh an existing domain, or creates a new one if it doesn't exist
@@ -803,6 +809,48 @@ func (factory *Factory) IsSetupMode() bool {
 // and is ready for domains to be added to the server.
 func (factory *Factory) IsReadyForDomains() bool {
 	return factory.config.IsReadyForDomains()
+}
+
+func (factory *Factory) calcClientIPStrategy(config config.Config) realclientip.Strategy {
+
+	const location = "server.Factory.ClientIPStrategy"
+
+	var strategy realclientip.Strategy
+	var err error
+
+	switch config.RealIPStrategy {
+
+	case "REMOTE-ADDR":
+		return realclientip.RemoteAddrStrategy{}
+
+	case "RIGHTMOST-TRUSTED-COUNT":
+		strategy, err = realclientip.NewRightmostTrustedCountStrategy("X-Forwarded-For", config.RealIPTrustedCount)
+
+	case "SINGLE-IP-HEADER":
+		strategy, err = realclientip.NewSingleIPHeaderStrategy(config.RealIPHeader)
+
+	default:
+		err = derp.Internal(location, "Unknown Real IP strategy", config.RealIPStrategy)
+	}
+
+	// If there is no error, then
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to create Real IP strategy", config.RealIPStrategy))
+		return realclientip.RemoteAddrStrategy{}
+	}
+
+	return strategy
+}
+
+// ClientIP returns the client's real IP address using the strategy defined in the configuration file
+func (factory *Factory) ClientIP(request *http.Request) string {
+
+	if factory.clientIPStrategy == nil {
+		derp.Report(derp.Internal("server.Factory.ClientIPStrategy", "Client IP strategy is nil"))
+		return ""
+	}
+
+	return factory.clientIPStrategy.ClientIP(request.Header, request.RemoteAddr)
 }
 
 /******************************************

@@ -13,17 +13,20 @@ func Schema() schema.Schema {
 		Comment: "Validating schema for a server configuration",
 		Element: schema.Object{
 			Properties: schema.ElementMap{
-				"domains":             schema.Array{Items: DomainSchema()},
-				"templates":           schema.Array{Items: ReadableFolderSchema("templates"), MinLength: 1},
-				"attachmentOriginals": WritableFolderSchema("attachmentOriginals"),
-				"attachmentCache":     WritableFolderSchema("attachmentCache"),
-				"exportCache":         WritableFolderSchema("exportCache"),
-				"certificates":        WritableFolderSchema("certificates"),
-				"debugLevel":          schema.String{Enum: []string{"None", "Trace", "Debug", "Info", "Error"}, Default: "None"},
-				"adminEmail":          schema.String{Format: "email"},
-				"httpPort":            schema.Integer{Maximum: null.NewInt64(65535), Default: null.NewInt64(80)},
-				"httpsPort":           schema.Integer{Maximum: null.NewInt64(65535), Default: null.NewInt64(443)},
-				"activityPubCache":    DatabaseConnectInfo(),
+				"domains":              schema.Array{Items: DomainSchema()},
+				"templates":            schema.Array{Items: ReadableFolderSchema("templates"), MinLength: 1},
+				"attachmentOriginals":  WritableFolderSchema("attachmentOriginals"),
+				"attachmentCache":      WritableFolderSchema("attachmentCache"),
+				"exportCache":          WritableFolderSchema("exportCache"),
+				"certificates":         WritableFolderSchema("certificates"),
+				"debugLevel":           schema.String{Enum: []string{"None", "Trace", "Debug", "Info", "Error"}, Default: "None"},
+				"adminEmail":           schema.String{Format: "email"},
+				"httpPort":             schema.Integer{Maximum: null.NewInt64(65535), Default: null.NewInt64(80)},
+				"httpsPort":            schema.Integer{Maximum: null.NewInt64(65535), Default: null.NewInt64(443)},
+				"activityPubCache":     DatabaseConnectInfo(),
+				"clientIPStrategy":     schema.String{Enum: []string{"SINGLE-IP-HEADER", "RIGHTMOST-TRUSTED-COUNT", "REMOTE-ADDR"}, Default: "REMOTE-ADDR"},
+				"clientIPTrustedCount": schema.Integer{Minimum: null.NewInt64(0), Default: null.NewInt64(0)},
+				"clientIPHeader":       schema.String{Default: "X-Real-IP"},
 			},
 		},
 	}
@@ -69,6 +72,15 @@ func (config *Config) GetPointer(name string) (any, bool) {
 
 	case "activityPubCache":
 		return &config.ActivityPubCache, true
+
+	case "clientIPStrategy":
+		return &config.RealIPStrategy, true
+
+	case "clientIPTrustedCount":
+		return &config.RealIPTrustedCount, true
+
+	case "clientIPHeader":
+		return &config.RealIPHeader, true
 
 	}
 

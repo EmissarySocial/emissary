@@ -36,6 +36,9 @@ type Config struct {
 	Loggers             sliceof.Object[mapof.Any]    `json:"loggers"`             // Logging configuration for this server
 	LogSlowQueries      int                          `json:"logSlowQueries"`      // Log queries that take longer than this many milliseconds (0 = do not log)
 	MasterKey           string                       `json:"masterKey"`
+	RealIPStrategy      string                       `json:"realIpStrategy"`     // Method used to determine the client's IP address.  Important for rate-limiting and abuse prevention.
+	RealIPTrustedCount  int                          `json:"realIpTrustedCount"` // When using "RIGHTMOST-TRUSTED-COUNT" strategy, number of trusted IP addresses to look back when determining the client's IP address.
+	RealIPHeader        string                       `json:"realIpHeader"`       // When using the "SINGLE-IP-HEADER" strategy, header to inspect to determine the client's IP address.
 }
 
 // NewConfig returns a fully initialized (but empty) Config data structure.
