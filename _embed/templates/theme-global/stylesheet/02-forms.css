@@ -442,8 +442,8 @@ button.warning:focus,
 button.success,
 button.primary.success,
 .button.success,
-.button.primary.succes {
-	background-color: var(--green60);
+.button.primary.success {
+	background-color: var(--green70);
 	color: var(--white);
 }
 
