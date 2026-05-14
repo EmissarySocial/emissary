@@ -811,7 +811,7 @@ func (factory *Factory) ImportableLocator() ImportableLocator {
 		case "emissary:circle":
 			return factory.Circle(), nil
 
-		case "emissary:conversaion":
+		case "emissary:conversation":
 			return factory.Conversation(), nil
 
 		case "emissary:folder":
