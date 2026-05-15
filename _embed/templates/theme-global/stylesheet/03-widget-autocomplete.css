@@ -16,15 +16,6 @@ div.input {
 		width:50%;
 
 	}
-
-	& > span.tag.gray {
-		background-color:var(--gray30);
-		color:black!important;
-
-		&:hover {
-			background-color:var(--gray40);
-		}
-	}
 }
 
 div.autocomplete {
