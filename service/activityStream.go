@@ -25,6 +25,7 @@ import (
 	"github.com/benpate/sherlock/activitypub"
 	"github.com/benpate/sherlock/bridgyfed"
 	"github.com/benpate/sherlock/tagspub"
+	"github.com/benpate/sherlock/tombstone"
 	"github.com/benpate/sherlock/webfinger"
 	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -90,19 +91,24 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 	userAgent := service.hostname + " /Emissary@v" + service.version + " (https://emissary.social)"
 
 	// Build a new client stack
+	/* Removing legacy Sherlock lookups (RSS, oEmbed, OGP, etc) since these are not being used.
 	sherlockClient := sherlock.NewClient(
 		sherlock.WithKeyPairFunc(service.KeyPairFunc(actorType, actorID)),
 		sherlock.WithUserAgent(userAgent),
-	)
+	) */
 
 	// Try ActivityPub documents directly
-	activityPubClient := activitypub.New(sherlockClient,
+	activityPubClient := activitypub.New(
+		// activitypub.WithInnerClient(sherlockClient), // Restore this to restore legacy Sherlock lookups.
 		activitypub.WithKeyPairFunc(service.KeyPairFunc(actorType, actorID)),
 		activitypub.WithUserAgent(userAgent),
 	)
 
+	// Replace 410 Gone errors with "Tombstone" documents
+	tombstoneClient := tombstone.New(activityPubClient)
+
 	// Look up WebFinger URIs
-	webfingerClient := webfinger.New(activityPubClient)
+	webfingerClient := webfinger.New(tombstoneClient)
 
 	// Look up BlueSky names
 	bridgyfedClient := bridgyfed.New(webfingerClient)
@@ -212,20 +218,23 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 	if service.looksLikeValidURI(queryString) {
 
 		// Try to load the actor directly from the Interwebs
-		if newActor, err := service.AppClient().Load(queryString, sherlock.AsActor()); err == nil {
+		if object, err := service.AppClient().Load(queryString, sherlock.AsActor()); err == nil {
 
-			// If this is a valid, but (previously) unknown actor, then add it to the results
-			// This will also automatically get cached/crawled for next time.
-			result := []model.ActorSummary{{
-				ID:                newActor.ID(),
-				Type:              newActor.Type(),
-				Name:              newActor.Name(),
-				Icon:              newActor.Icon().Href(),
-				PreferredUsername: newActor.PreferredUsername(),
-				MLSKeyPackages:    newActor.MLSKeyPackages().ID(),
-			}}
+			if object.IsActor() {
 
-			return result, nil
+				// If this is a valid, but (previously) unknown actor, then add it to the results
+				// This will also automatically get cached/crawled for next time.
+				result := []model.ActorSummary{{
+					ID:                object.ID(),
+					Type:              object.Type(),
+					Name:              object.Name(),
+					Icon:              object.Icon().Href(),
+					PreferredUsername: object.PreferredUsername(),
+					MLSKeyPackages:    object.MLSKeyPackages().ID(),
+				}}
+
+				return result, nil
+			}
 		}
 	}
 

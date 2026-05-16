@@ -3,6 +3,7 @@ package ascacherules
 import (
 	"github.com/EmissarySocial/emissary/tools/cacheheader"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
 )
 
 type Client struct {
@@ -64,9 +65,14 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 			cacheControl.MaxAge = clamp(day, cacheControl.MaxAge, month)
 		}
 
-	// All other items (Articles, Notes, etc) are cached for up to a year
+	// Tombstone documents are cached for at least one month, and up to one year.
+	case result.Type() == vocab.ObjectTypeTombstone:
+		cacheControl.MaxAge = clamp(month, cacheControl.MaxAge, year)
+
+	// All other items (Articles, Notes, etc) are cached for at least one day
+	// and up to one month
 	default:
-		cacheControl.MaxAge = clamp(day, cacheControl.MaxAge, year)
+		cacheControl.MaxAge = clamp(day, cacheControl.MaxAge, month)
 	}
 
 	// Write the cacheControl value back into the document header

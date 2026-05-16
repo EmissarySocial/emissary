@@ -25,6 +25,11 @@ func Object(rootClient streams.Client, document streams.Document) map[string]any
 
 	actual = unwrapEmptyPages(actual)
 
+	// Special case for Tombstone documents
+	if actual.Type() == vocab.ObjectTypeTombstone {
+		return Tombstone(rootClient, actual)
+	}
+
 	actorID := first(actual.Actor().ID(), document.Actor().ID())
 
 	result := map[string]any{

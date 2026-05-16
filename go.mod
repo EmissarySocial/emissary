@@ -19,14 +19,14 @@ require (
 	github.com/benpate/exp-builder v0.10.7
 	github.com/benpate/form v0.25.16
 	github.com/benpate/geo v0.0.3
-	github.com/benpate/hannibal v0.17.2
+	github.com/benpate/hannibal v0.17.3
 	github.com/benpate/html v0.16.16
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.15.14
 	github.com/benpate/re v0.3.5
 	github.com/benpate/remote v0.18.1
 	github.com/benpate/rosetta v0.25.35
-	github.com/benpate/sherlock v0.9.2
+	github.com/benpate/sherlock v0.10.2
 	github.com/benpate/sniff v0.1.0
 	github.com/benpate/steranko v0.24.1
 	github.com/benpate/table v0.7.10
@@ -71,8 +71,8 @@ require (
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.abhg.dev/goldmark/anchor v0.2.0
 	go.mongodb.org/mongo-driver v1.17.9
-	golang.org/x/crypto v0.50.0
-	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f
+	golang.org/x/crypto v0.51.0
+	golang.org/x/exp v0.0.0-20260508232706-74f9aab9d74a
 	golang.org/x/oauth2 v0.36.0
 	willnorris.com/go/microformats v1.2.0
 	willnorris.com/go/webmention v0.0.0-20250531043116-33a44c5fb605
@@ -130,8 +130,8 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	golang.org/x/image v0.39.0 // indirect
-	golang.org/x/net v0.53.0 // indirect
+	golang.org/x/image v0.40.0 // indirect
+	golang.org/x/net v0.54.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.44.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
