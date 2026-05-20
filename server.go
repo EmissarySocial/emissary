@@ -271,7 +271,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.well-known/nodeinfo", handler.WithFactory(factory, handler.GetNodeInfo))
 	e.GET("/.well-known/nodeinfo/2.0", handler.WithFactory(factory, handler.GetNodeInfo20))
 	e.GET("/.well-known/nodeinfo/2.1", handler.WithFactory(factory, handler.GetNodeInfo21))
-	e.GET("/.well-known/oauth-authorization-server", handler.TBD)
+	e.GET("/.well-known/oauth-authorization-server", handler.WithFactory(factory, handler.GetOAuthWellKnown))
 
 	// Authentication Pages
 	e.GET("/signin", handler.WithFactory(factory, handler.GetSignIn))
@@ -463,7 +463,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/startup", handler.WithOwner(factory, handler.PostStartup))
 
 	// OAuth Client Connections
-	e.GET("/oauth/metadata", handler.WithFactory(factory, handler.GetOAuthMetadata))
+	e.GET("/oauth/metadata", handler.WithFactory(factory, handler.GetOAuthClientMetadata))
 	e.GET("/oauth/clients/:provider", handler.WithOwner(factory, handler.GetOAuth))
 	e.GET("/oauth/clients/:provider/callback", handler.WithOwner(factory, handler.GetOAuthCallback), mw.AllowCSR)
 	e.GET("/oauth/clients/import/callback", handler.WithAuthenticatedUser(factory, handler.GetOAuthImportCallback))

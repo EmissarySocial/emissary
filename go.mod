@@ -12,14 +12,14 @@ require (
 	github.com/benpate/data-slice v0.1.0
 	github.com/benpate/delta v0.1.0
 	github.com/benpate/derp v0.35.0
-	github.com/benpate/digit v0.14.0
+	github.com/benpate/digit v0.14.1
 	github.com/benpate/digital-dome v0.2.13
 	github.com/benpate/domain v0.2.12
 	github.com/benpate/exp v0.9.0
 	github.com/benpate/exp-builder v0.10.7
 	github.com/benpate/form v0.25.16
 	github.com/benpate/geo v0.0.3
-	github.com/benpate/hannibal v0.17.4
+	github.com/benpate/hannibal v0.17.5
 	github.com/benpate/html v0.16.16
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.15.14

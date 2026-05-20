@@ -15,6 +15,27 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+func GetOAuthWellKnown(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+
+	// Get the server's host (scheme + host)
+	host := factory.Host()
+
+	// Build the response
+	response := map[string]any{
+		"issuer":                                host,
+		"authorization_endpoint":                host + "/oauth/authorize",
+		"token_endpoint":                        host + "/oauth/token",
+		"revocation_endpoint":                   host + "/oauth/revoke",
+		"response_types_supported":              []string{"code", "token"},
+		"response_modes_supported":              []string{"query", "fragment"},
+		"grant_types_supported":                 []string{"authorization_code"},
+		"token_endpoint_auth_methods_supported": []string{"client_secret_basic"},
+		// "scopes_supported":       []string{"read", "write"},
+	}
+
+	return ctx.JSON(http.StatusOK, response)
+}
+
 func GetOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetOAuthAuthorization"

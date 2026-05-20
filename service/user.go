@@ -836,6 +836,7 @@ func (service *User) WebFinger(session data.Session, token string) (digit.Resour
 		Link(digit.RelationTypeProfile, model.MimeTypeHTML, user.ActivityPubURL()).
 		Link(digit.RelationTypeAvatar, model.MimeTypeImage, user.ActivityPubIconURL()).
 		Link(digit.RelationTypeSubscribeRequest, "", service.RemoteFollowURL()).
+		Link(digit.RelationTypeOpenIDIssuer, "", service.host).
 		Link(camper.IntentTypeCreate, "", service.CreateIntentURL()).
 		Link(camper.IntentTypeDislike, "", service.DislikeIntentURL()).
 		Link(camper.IntentTypeFollow, "", service.FollowIntentURL()).
