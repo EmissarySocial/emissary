@@ -87,7 +87,8 @@ func serverSentEvent(ctx *steranko.Context, factory *service.Factory, topic int)
 	const location = "handler.ServerSentEvent"
 
 	// Close SSE connections that remain open after 10 minutes
-	timeoutContext, cancel := context.WithTimeout(ctx.Request().Context(), 10*time.Minute)
+	// timeoutContext, cancel := context.WithTimeout(ctx.Request().Context(), 10*time.Minute)
+	timeoutContext, cancel := context.WithTimeout(ctx.Request().Context(), 30*24*time.Hour)
 	defer cancel()
 
 	b := factory.RealtimeBroker()
