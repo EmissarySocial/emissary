@@ -215,6 +215,7 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.ContextTypeActivityStreams,
 		vocab.ContextTypeSecurity,
 		vocab.ContextTypeToot,
+		vocab.ContextTypeSocialWebMLS,
 		mapof.Any{
 			"schema":        "http://schema.org#",
 			"PropertyValue": "schema:PropertyValue",
@@ -261,7 +262,7 @@ func (user User) GetJSONLD() mapof.Any {
 			"blocked":                  exportURL + "/blocked",
 			"emissary:annotation":      exportURL + "/emissary-annotation",
 			"emissary:circle":          exportURL + "/emissary-circle",
-			"emissary:conversation":     exportURL + "/emissary-conversation",
+			"emissary:conversation":    exportURL + "/emissary-conversation",
 			"emissary:folder":          exportURL + "/emissary-folder",
 			"emissary:follower":        exportURL + "/emissary-follower",
 			"emissary:following":       exportURL + "/emissary-following",
