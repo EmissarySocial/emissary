@@ -216,11 +216,6 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.ContextTypeSecurity,
 		vocab.ContextTypeToot,
 		vocab.ContextTypeSocialWebMLS,
-		mapof.Any{
-			"schema":        "http://schema.org#",
-			"PropertyValue": "schema:PropertyValue",
-			"value":         "schema:value",
-		},
 	}
 
 	exportURL := user.ActivityPubURL() + "/export"
@@ -311,7 +306,7 @@ func (user User) GetJSONLD() mapof.Any {
 	if user.Links.NotEmpty() {
 		result[vocab.PropertyAttachment] = slice.Map(user.Links, func(link PersonLink) mapof.Any {
 			return mapof.Any{
-				vocab.PropertyType: "schema:PropertyValue",
+				vocab.PropertyType: "PropertyValue",
 				vocab.PropertyName: link.Name,
 				"value":            fmt.Sprintf(`<a href="%s" rel="me nofollow noopener" translate="no">%s</a>`, link.ProfileURL, link.ProfileURL),
 			}
