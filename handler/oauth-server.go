@@ -28,7 +28,7 @@ func GetOAuthWellKnown(ctx *steranko.Context, factory *service.Factory, session 
 		"revocation_endpoint":                   host + "/oauth/revoke",
 		"response_types_supported":              []string{"code", "token"},
 		"response_modes_supported":              []string{"query", "fragment"},
-		"grant_types_supported":                 []string{"authorization_code"},
+		"grant_types_supported":                 []string{"authorization_code", "client_credentials", "refresh_token"},
 		"token_endpoint_auth_methods_supported": []string{"client_secret_basic"},
 		// "scopes_supported":       []string{"read", "write"},
 	}

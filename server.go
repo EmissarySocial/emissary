@@ -272,6 +272,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.well-known/nodeinfo/2.0", handler.WithFactory(factory, handler.GetNodeInfo20))
 	e.GET("/.well-known/nodeinfo/2.1", handler.WithFactory(factory, handler.GetNodeInfo21))
 	e.GET("/.well-known/oauth-authorization-server", handler.WithFactory(factory, handler.GetOAuthWellKnown))
+	e.GET("/.well-known/openid-configuration", handler.WithFactory(factory, handler.GetOAuthWellKnown))
 
 	// Authentication Pages
 	e.GET("/signin", handler.WithFactory(factory, handler.GetSignIn))
