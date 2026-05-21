@@ -218,7 +218,7 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.ContextTypeSocialWebMLS,
 	}
 
-	//exportURL := user.ActivityPubURL() + "/export"
+	exportURL := user.ActivityPubURL() + "/export"
 	serverURL := dt.Host(user.ProfileURL)
 
 	result := mapof.Any{
@@ -248,11 +248,10 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.PropertyEndpoints: mapof.String{
 			vocab.EndpointOAuthAuthorization: serverURL + "/oauth/authorize",
 			vocab.EndpointOAuthToken:         serverURL + "/oauth/token",
-			//vocab.EndpointStartMigration:     serverURL + "/@" + user.UserID.Hex() + "/export/start",
-			//vocab.EndpointFinishMigration:    serverURL + "/@me/settings/export",
+			vocab.EndpointStartMigration:     serverURL + "/@" + user.UserID.Hex() + "/export/start",
+			vocab.EndpointFinishMigration:    serverURL + "/@me/settings/export",
 		},
 
-		/* HIDING THIS FOR NOW (TESTING JSON-LD VALIDATION)
 		vocab.PropertyMigration: mapof.String{
 			"outbox":                   exportURL + "/outbox",
 			"content":                  exportURL + "/content",
@@ -273,7 +272,7 @@ func (user User) GetJSONLD() mapof.Any {
 			"emissary:rule":            exportURL + "/emissary-rule",
 			"emissary:stream":          exportURL + "/emissary-stream",
 			"emissary:user":            exportURL + "/emissary-user",
-		},*/
+		},
 	}
 
 	if user.StatusMessage != "" {
