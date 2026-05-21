@@ -30,6 +30,7 @@ func GetOAuthWellKnown(ctx *steranko.Context, factory *service.Factory, session 
 		"response_modes_supported":              []string{"query", "fragment"},
 		"grant_types_supported":                 []string{"authorization_code", "client_credentials", "refresh_token"},
 		"token_endpoint_auth_methods_supported": []string{"client_secret_basic"},
+		"client_id_metadata_document_supported": true,
 		// "scopes_supported":       []string{"read", "write"},
 	}
 
