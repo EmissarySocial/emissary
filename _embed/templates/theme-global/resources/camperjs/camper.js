@@ -394,37 +394,6 @@ var Actor = class extends Object2 {
   type = () => {
     return this.getString("as", "type");
   };
-  ///////////////////////////////////
-  // MLS-specific properties
-  mlsMessages = () => {
-    return this.getString("mls", "messages");
-  };
-  mlsKeyPackages = () => {
-    return this.getString("mls", "keyPackages");
-  };
-  ///////////////////////////////////
-  // Emissary-specific properties
-  // emissaryMessages returns the URL for the Emissary-specific messages collection
-  // that returns BOTH encrypted and unencrypted messages. This is preferred over mls:messages because it allows the client to receive direct messages that are not encrypted with MLS.
-  emissaryMessages = () => {
-    return this.getString("emissary", "messages");
-  };
-  // messages returns the URL for the preferred messages collection,
-  // which may be either the Emissary-specific collection (if supported) or
-  // the standard mls:messages collection (if Emissary-specific collection is not supported).
-  // The boolean return value indicates whether the returned URL is for the
-  // Emissary-specific collection (true) or the standard mls:messages collection (false).
-  messages = () => {
-    const emissaryMessages = this.emissaryMessages();
-    if (emissaryMessages != "") {
-      return { url: emissaryMessages, plaintext: true };
-    }
-    const mlsMessages = this.mlsMessages();
-    if (mlsMessages != "") {
-      return { url: mlsMessages, plaintext: false };
-    }
-    return { url: "", plaintext: false };
-  };
 };
 
 // src/camper.ts
