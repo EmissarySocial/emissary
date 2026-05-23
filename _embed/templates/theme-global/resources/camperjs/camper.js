@@ -189,8 +189,6 @@ var Intents = class {
       case "gnusocial":
         result.create = server + "/notice/new?status_textarea={content}";
         break;
-        result.create = server + "/share?text={content}";
-        break;
       case "hubzilla":
         result.create = server + "/rpost?title={name}&body={content}";
         break;
