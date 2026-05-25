@@ -433,6 +433,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/outbox", handler.WithUser(factory, ap_user.GetOutboxCollection))
 	e.POST("/@:userId/pub/outbox", handler.WithAuthenticatedUser(factory, ap_user.PostOutbox))
 	e.GET("/@:userId/pub/outbox/:messageId", handler.WithUser(factory, ap_user.GetOutboxActivity))
+	e.POST("/@:userId/pub/proxy", handler.WithAuthenticatedUser(factory, handler.PostProxyURL))
 	e.GET("/@:userId/pub/shared", handler.WithUser(factory, ap_user.GetResponseCollection))
 	e.GET("/@:userId/pub/shared/:response", handler.WithUser(factory, ap_user.GetResponse))
 	e.GET("/@:userId/pub/liked", handler.WithUser(factory, ap_user.GetResponseCollection))
