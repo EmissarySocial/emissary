@@ -37,7 +37,7 @@ func SearchActivityStreamActors(collection data.Collection, text string) ([]mode
 			"name":              true,
 			"icon":              "$icon.href",
 			"preferredUsername": true,
-			"mls:keyPackages":   true,
+			"keyPackages":       true,
 		}},
 		{"$sort": bson.M{"name": 1}},
 	}

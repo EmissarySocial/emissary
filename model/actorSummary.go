@@ -11,7 +11,7 @@ type ActorSummary struct {
 	Name              string `json:"name"              bson:"name"`
 	PreferredUsername string `json:"preferredUsername" bson:"preferredUsername"`
 	Icon              string `json:"icon"              bson:"icon"`
-	MLSKeyPackages    string `json:"mls:keyPackages"   bson:"mls:keyPackages"`
+	MLSKeyPackages    string `json:"keyPackages"       bson:"keyPackages"`
 }
 
 // UsernameOrID returns the best identifier we can find for an Actor:

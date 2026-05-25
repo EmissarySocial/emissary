@@ -17,7 +17,7 @@ type Activity struct {
 	ActorType  string             `bson:"actorType"`  // The type of outbox (e.g. User, Search, etc)
 	URL        string             `bson:"url"`        // The URL for this activity, if applicable
 	Object     mapof.Any          `bson:"object"`     // The original ActivityPub activity object
-	Recipients sliceof.String     `bson:"recipients"` // All IDs who should receive this activity (to, cc, bto, bcc) including indirect recipients such as as:Public, circles, etc.
+	Recipients sliceof.String     `bson:"recipients"` // All IDs who should receive this activity (to, cc, bto, bcc) including indirect recipients such as Public, circles, etc.
 
 	journal.Journal `bson:",inline"`
 }
