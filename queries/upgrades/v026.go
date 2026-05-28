@@ -43,7 +43,7 @@ func Version26(ctx context.Context, session *mongo.Database) error {
 
 		record["privatePEM"] = sigs.EncodePrivatePEM(privateKey)
 		record["publicPEM"] = sigs.EncodePublicPEM(privateKey)
-		record["updateDate"] = time.Now().Unix()
+		record["updateDate"] = time.Now().UnixMilli()
 
 		// Save record with new public key
 		filter := bson.M{"_id": record["_id"]}
