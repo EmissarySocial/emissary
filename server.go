@@ -238,6 +238,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.oembed", handler.WithFactory(factory, handler.GetOEmbed))
 	e.POST("/.ostatus/discover", handler.WithFactory(factory, handler.PostOStatusDiscover))
 	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
+	e.POST("/.proxy", handler.WithAuthenticatedUser(factory, handler.PostProxyURL))
 	e.GET("/.searchTag/:searchTagId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetSearchTagAttachment))
 	e.GET("/.sso", handler.WithDomain(factory, handler.GetSingleSignOn))
 	// e.GET("/.stripe/connect", handler.WithAuthenticatedUser(factory, handler.GetStripe)) // Replaced with Stripe Connect
