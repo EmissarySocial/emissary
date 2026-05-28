@@ -47,6 +47,7 @@ func outbox_CreateKeyPackage(context Context, activity streams.Document) error {
 	keyPackage.Content = object.Content()
 	keyPackage.GeneratorID = object.Generator().ID()
 	keyPackage.GeneratorName = object.Generator().Name()
+	keyPackage.Ciphersuite = object.MLSCiphersuite()
 
 	// Save the KeyPackage to the database
 	if err := keyPackageService.Save(context.session, &keyPackage, "Created via ActivityPub API"); err != nil {

@@ -271,7 +271,8 @@ func (service *KeyPackage) GetJSONLD(keyPackage *model.KeyPackage) mapof.Any {
 			vocab.PropertyType: vocab.ActorTypeApplication,
 			vocab.PropertyName: keyPackage.GeneratorName,
 		},
-		vocab.PropertyPublished: time.UnixMilli(keyPackage.CreateDate).Format(time.RFC3339),
+		vocab.PropertyPublished:      time.UnixMilli(keyPackage.CreateDate).Format(time.RFC3339),
+		vocab.PropertyMLSCiphersuite: keyPackage.Ciphersuite,
 	}
 }
 

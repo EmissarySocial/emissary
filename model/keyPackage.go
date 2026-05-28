@@ -13,6 +13,7 @@ type KeyPackage struct {
 	Encoding         string             `bson:"encoding"`
 	Content          string             `bson:"content"`
 	GeneratorID      string             `bson:"generatorId"`
+	Ciphersuite      string             `bson:"ciphersuite"`
 	GeneratorName    string             `bson:"generatorName"`
 	ContentSignature string             `bson:"contentSignature"`
 	EmojiKey         [5]emojikey.Emoji  `bson:"emojiKey"`
