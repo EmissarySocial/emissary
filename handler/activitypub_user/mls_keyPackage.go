@@ -70,6 +70,13 @@ func GetKeyPackageRecord(ctx *steranko.Context, factory *service.Factory, sessio
 
 	result := keyPackageService.GetJSONLD(&keyPackage)
 
+	// Rewrite the generator for non-owners to only include the ID, not the name
+	authorization := getAuthorization(ctx)
+	if authorization.UserID != user.UserID {
+		result["generator"] = result.GetMap("generator").GetString("id")
+	}
+
+	// Success
 	ctx.Response().Header().Set("Content-Type", "application/activity+json")
 	return ctx.JSON(http.StatusOK, result)
 }
