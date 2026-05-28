@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"fmt"
+	"time"
 
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/sigs"
@@ -17,20 +18,20 @@ import (
 func Version26(ctx context.Context, session *mongo.Database) error {
 
 	const location = "queries.upgrades.Version26"
-	streamCollection := session.Collection("EncryptionKey")
+	keyCollection := session.Collection("EncryptionKey")
 
 	fmt.Println("... Version 26")
 
-	cursor, err := streamCollection.Find(ctx, map[string]any{})
+	cursor, err := keyCollection.Find(ctx, map[string]any{})
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error retrieving streams iterator")
+		return derp.Wrap(err, location, "Error retrieving keys iterator")
 	}
 
 	for record := mapof.NewAny(); cursor.Next(ctx); record = mapof.NewAny() {
 
 		if err := cursor.Decode(&record); err != nil {
-			return derp.Wrap(err, location, "Unable to decode stream record")
+			return derp.Wrap(err, location, "Unable to decode key record")
 		}
 
 		// Create an actual encryption key
@@ -42,12 +43,13 @@ func Version26(ctx context.Context, session *mongo.Database) error {
 
 		record["privatePEM"] = sigs.EncodePrivatePEM(privateKey)
 		record["publicPEM"] = sigs.EncodePublicPEM(privateKey)
+		record["updateDate"] = time.Now().Unix()
 
 		// Save record with new public key
 		filter := bson.M{"_id": record["_id"]}
 
-		if _, err := streamCollection.ReplaceOne(ctx, filter, record); err != nil {
-			return derp.Wrap(err, location, "Unable to update stream record")
+		if _, err := keyCollection.ReplaceOne(ctx, filter, record); err != nil {
+			return derp.Wrap(err, location, "Unable to update key record")
 		}
 
 		fmt.Print(".")
