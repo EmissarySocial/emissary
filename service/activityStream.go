@@ -230,7 +230,6 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 					Name:              object.Name(),
 					Icon:              object.Icon().Href(),
 					PreferredUsername: object.PreferredUsername(),
-					MLSKeyPackages:    object.MLSKeyPackages().ID(),
 				}}
 
 				return result, nil
