@@ -30,6 +30,9 @@ type WithFunc2[T any, U any] func(ctx *steranko.Context, factory *service.Factor
 // WithFunc3 is a function signature for a continuation function that requires the domain Factory and three values
 type WithFunc3[T any, U any, V any] func(ctx *steranko.Context, factory *service.Factory, session data.Session, value *T, value2 *U, value3 *V) error
 
+// Header used by HTMX to force a client-side redirect
+const HxRedirectHeader = "Hx-Redirect"
+
 // WithAuthenticatedActor handles boilerplate code for requests that are made by one of:
 // 1) a signed-in user, 2) a valid OAuth token, or 3) a valid HTTP signature.  It calls the
 // continuation function with the actorID (as a string) that represents the authenticated actor.
@@ -110,7 +113,7 @@ func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.Use
 		// Send them to their new server instead.
 		if user.MovedTo != "" {
 			factory.Steranko(session).SignOut(ctx)
-			ctx.Response().Header().Set("HX-Redirect", "/signout")
+			ctx.Response().Header().Set(HxRedirectHeader, "/signout")
 			return ctx.Redirect(http.StatusTemporaryRedirect, "/signout")
 		}
 
@@ -539,7 +542,7 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 
 				// If the user has moved, then forward to the Oracle
 				if user.MovedTo != "" {
-					ctx.Response().Header().Set("HX-Redirect", user.MovedTo)
+					ctx.Response().Header().Set(HxRedirectHeader, user.MovedTo)
 					return ctx.Redirect(http.StatusSeeOther, user.MovedTo)
 				}
 
@@ -554,7 +557,7 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 		// If this Stream has been moved, then redirect to the Oracle
 		if stream.MovedTo != "" {
 			newURL := stream.MovedTo + "?url=" + stream.ActivityPubURL()
-			ctx.Response().Header().Set("HX-Redirect", newURL)
+			ctx.Response().Header().Set(HxRedirectHeader, newURL)
 			return ctx.Redirect(http.StatusPermanentRedirect, newURL)
 		}
 
@@ -605,7 +608,7 @@ func WithUser(serverFactory *server.Factory, fn WithFunc1[model.User]) echo.Hand
 
 		// Handle redirects for Users who have moved away.
 		if user.MovedTo != "" {
-			ctx.Response().Header().Set("HX-Redirect", user.MovedTo)
+			ctx.Response().Header().Set(HxRedirectHeader, user.MovedTo)
 			return ctx.Redirect(http.StatusPermanentRedirect, user.MovedTo)
 		}
 

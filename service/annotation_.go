@@ -36,6 +36,7 @@ func (service *Annotation) Refresh(factory *Factory) {
 
 // Close stops any background processes controlled by this service
 func (service *Annotation) Close() {
+	// No background processes to stop
 }
 
 /******************************************

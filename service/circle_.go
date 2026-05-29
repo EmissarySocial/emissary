@@ -39,7 +39,7 @@ func (service *Circle) Refresh(factory *Factory) {
 
 // Close stops any background processes controlled by this service
 func (service *Circle) Close() {
-
+	// No background processes to stop
 }
 
 /******************************************
