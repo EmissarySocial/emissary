@@ -4,7 +4,7 @@ input:not([type="submit"], [type="checkbox"], [type="radio"], [type="color"]),
 textarea,
 select,
 .input,
-[role="input"] {
+[role="textbox"] {
 	border: solid 1px var(--input-border);
 	background-color: var(--input-background);
 	color: var(--input-color);
@@ -40,7 +40,7 @@ input:invalid,
 input.invalid,
 .input.invalid,
 select:invalid,
-[role="input"].invalid {
+[role="textbox"].invalid {
 	border: solid 1px var(--input-border-invalid);
 	/*background-color: var(--input-background-invalid);*/
 }
@@ -49,13 +49,13 @@ input:invalid:focus,
 input.invalid:focus,
 .input.invalid:focus,
 select:invalid:focus,
-[role="input"].invalid:focus {
+[role="textbox"].invalid:focus {
 	outline:unset;
 	box-shadow: 0px 0px 5px var(--input-border-invalid);
 }
 
 input:last-child,
-[role="input"]:last-child {
+[role="textbox"]:last-child {
 	margin-right: auto;
 }
 
@@ -64,15 +64,15 @@ input[type="radio"] {
 	margin-right: 4px;
 }
 
-[role="input"]:focus-visible,
-[role="input"]:focus,
-[role="input"]:has(*:focus, *:focus-visible) {
+[role="textbox"]:focus-visible,
+[role="textbox"]:focus,
+[role="textbox"]:has(*:focus, *:focus-visible) {
 	outline-color: -webkit-focus-ring-color;
 	outline-style: auto;
 }
 
-[role="input"] :focus,
-[role="input"] :focus-visible {
+[role="textbox"] :focus,
+[role="textbox"] :focus-visible {
 	outline: unset;
 }
 
