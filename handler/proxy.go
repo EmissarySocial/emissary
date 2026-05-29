@@ -20,7 +20,7 @@ func PostProxyURL(context *steranko.Context, factory *service.Factory, session d
 
 	// Define the transaction we expect to receive.
 	transaction := struct {
-		URL string `form:"id"`
+		URL string `form:"id" json:"id"`
 	}{}
 
 	// Bind the form data to the transaction object.
@@ -30,18 +30,18 @@ func PostProxyURL(context *steranko.Context, factory *service.Factory, session d
 
 	// RULE: Don't allow empty IDs
 	if transaction.URL == "" {
-		return derp.Validation("Parameter 'id' is required")
+		return derp.Validation("Parameter 'id' is required", transaction.URL)
 	}
 
 	// RULE: Remote value MUST be a valid URL
 	if uri.NotValidURL(transaction.URL) {
-		return derp.Validation("Parameter 'id' must be a valid URL")
+		return derp.Validation("Parameter 'id' must be a valid URL", transaction.URL)
 	}
 
 	// RULE: Disallow local addresses on production servers. No funny business.
 	if uri.IsLocalURL(transaction.URL) {
 		if uri.NotLocalHostname(factory.Hostname()) {
-			return derp.Validation("Parameter 'id' must not be a local address")
+			return derp.Validation("Parameter 'id' must not be a local address", transaction.URL)
 		}
 	}
 
@@ -53,7 +53,7 @@ func PostProxyURL(context *steranko.Context, factory *service.Factory, session d
 	result, err := client.Load(transaction.URL, ascache.WithWriteOnly())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load URL")
+		return derp.Wrap(err, location, "Unable to load URL", transaction.URL)
 	}
 
 	// Success
