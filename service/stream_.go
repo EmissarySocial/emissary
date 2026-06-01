@@ -1120,29 +1120,35 @@ func (service *Stream) calcDefaultAllow(template *model.Template, stream *model.
 // IF it can be determined.
 func (service *Stream) calcContext(stream *model.Stream) {
 
-	// If this is an original stream (not a reply) then its context is itself.
-	if stream.InReplyTo == "" {
-		stream.Context = stream.ActivityPubURL()
-		return
+	const location = "service.Stream.calcContext"
+
+	inReplyTo := stream.InReplyTo
+
+	// Scan upwards up to 5 replies
+	for range 5 {
+
+		// If this is not a reply, then there is not context to inherit. Exit.
+		if inReplyTo == "" {
+			return
+		}
+
+		// Get an ActivityStreams client for this content, and load the document that is being replied to
+		client := service.activityService.StreamClient(stream.StreamID)
+		document, err := client.Load(inReplyTo)
+
+		if err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to load InReplyTo document", inReplyTo))
+		}
+
+		// If this document has a context then use it and exit
+		if context := document.Context(); context != "" {
+			stream.Context = document.Context()
+			return
+		}
+
+		// If this document is a reply, then keep looking UP the reply chain
+		inReplyTo = document.InReplyTo().String()
 	}
-
-	// Load the "InReplyTo" document from the ActivityStream and use its
-	// context.  Note: this should have been calculated already via th
-	// ascontextmaker client.
-	client := service.activityService.StreamClient(stream.StreamID)
-	document, err := client.Load(stream.InReplyTo)
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, "service.Stream.calcContext", "Unable to load InReplyTo document", stream.InReplyTo))
-	}
-
-	if context := document.Context(); context != "" {
-		stream.Context = document.Context()
-		return
-	}
-
-	// If a context could not be assigned, then use the InReplyTo value instead.
-	stream.Context = stream.InReplyTo
 }
 
 // CalcPrivileges denormalizes all privileges (CircleIDs and ProductIDs)
