@@ -51,8 +51,7 @@ func SyncSharedIndexes(connectionString string, databaseName string) error {
 	return nil
 }
 
-func SyncDomainIndexes(connectionString string, databaseName string) error {
-
+func SyncDomainIndexes(connectionString string, databaseName string) error { // NOSONAR
 	const location = "queries.SyncDomainIndexes"
 
 	// Connect to the database
@@ -127,6 +126,10 @@ func SyncDomainIndexes(connectionString string, databaseName string) error {
 		derp.Report(err)
 	}
 
+	if err := sync.KeyPackage(ctx, session); err != nil {
+		derp.Report(err)
+	}
+
 	if err := sync.Mention(ctx, session); err != nil {
 		derp.Report(err)
 	}
@@ -136,14 +139,6 @@ func SyncDomainIndexes(connectionString string, databaseName string) error {
 	}
 
 	if err := sync.NewsFeed(ctx, session); err != nil {
-		derp.Report(err)
-	}
-
-	if err := sync.MLSKeyPackage(ctx, session); err != nil {
-		derp.Report(err)
-	}
-
-	if err := sync.MLSMessage(ctx, session); err != nil {
 		derp.Report(err)
 	}
 

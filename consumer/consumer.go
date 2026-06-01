@@ -23,8 +23,8 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 
 	switch name {
 
-	case "AddToContext":
-		return WithSession(consumer.serverFactory, args, AddToContext)
+	case "AddToCollection":
+		return WithSession(consumer.serverFactory, args, AddToCollection)
 
 	case "ConnectPushService":
 		return WithFollowing(consumer.serverFactory, args, ConnectPushService)

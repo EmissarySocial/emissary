@@ -393,7 +393,7 @@ func (user *User) ActivityPubInboxURL_DirectMessages_MLS() string {
 	return user.ProfileURL + "/pub/inbox/direct-messages/mls"
 }
 
-func (user *User) ActivityPubMLSKeyPackagesURL() string {
+func (user *User) ActivityPubKeyPackagesURL() string {
 	if user.ProfileURL == "" {
 		return ""
 	}

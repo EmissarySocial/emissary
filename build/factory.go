@@ -29,8 +29,8 @@ type Factory interface {
 	Attachment() *service.Attachment
 	Circle() *service.Circle
 	Connection() *service.Connection
-	Conversation() *service.Conversation
-	Context() *service.Context
+	Collection() *service.Collection
+	CollectionItem() *service.CollectionItem
 	Export() *service.Export
 	Folder() *service.Folder
 	Following() *service.Following
@@ -46,7 +46,7 @@ type Factory interface {
 	ImportItem() *service.ImportItem
 	Mention() *service.Mention
 	MerchantAccount() *service.MerchantAccount
-	MLSKeyPackage() *service.KeyPackage
+	KeyPackage() *service.KeyPackage
 	NewsFeed() *service.NewsFeed
 	Outbox() *service.Outbox
 	Permission() *service.Permission

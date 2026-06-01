@@ -36,7 +36,7 @@ type ModelRequirer interface {
 func New(stepInfo mapof.Any) (Step, error) {
 
 	// Populate the action with the data from
-	switch stepInfo["do"] {
+	switch stepInfo["do"] { // NOSONAR - there is no clean way to handle this without a big switch statement.
 
 	// STEPS THAT WORK ON ALL MODEL OBJECTS
 
@@ -243,9 +243,6 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	case "with-circle":
 		return NewWithCircle(stepInfo)
-
-	case "with-conversation":
-		return NewWithConversation(stepInfo)
 
 	case "with-draft":
 		return NewWithDraft(stepInfo)

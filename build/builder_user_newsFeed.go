@@ -350,30 +350,6 @@ func (w Inbox) IsInboxEmpty(inbox []model.NewsItem) bool {
 	return true
 }
 
-// Conversations returns a QueryBuilder for current User's conversations
-func (w Inbox) Conversations() (QueryBuilder[model.Conversation], error) {
-
-	// Required that the user is signed in
-	if w.AuthenticatedID().IsZero() {
-		return QueryBuilder[model.Conversation]{}, derp.Unauthorized("build.NewsFeed.Conversations", "Must be signed in to view conversations")
-	}
-
-	queryString := w._request.URL.Query()
-
-	expBuilder := builder.NewBuilder().
-		Int("updateDate")
-
-	criteria := exp.And(
-		exp.Equal("userId", w.AuthenticatedID()),
-		exp.Equal("deleteDate", 0),
-		expBuilder.Evaluate(queryString),
-	)
-
-	conversationService := w._factory.Conversation()
-
-	return NewQueryBuilder[model.Conversation](conversationService, w._session, criteria), nil
-}
-
 // FilteredByFollowing returns the Following record that is being used to filter the Inbox
 func (w Inbox) FilteredByFollowing() model.Following {
 

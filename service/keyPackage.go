@@ -48,7 +48,7 @@ func (service *KeyPackage) Close() {
  ******************************************/
 
 func (service *KeyPackage) collection(session data.Session) data.Collection {
-	return session.Collection("MLSKeyPackage")
+	return session.Collection("KeyPackage")
 }
 
 // Count returns the number of records that match the provided criteria

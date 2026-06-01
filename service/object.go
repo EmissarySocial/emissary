@@ -35,6 +35,7 @@ func (service *Object) Refresh(factory *Factory) {
 
 // Close stops any background processes controlled by this service
 func (service *Object) Close() {
+	// Nothing to close
 }
 
 /******************************************
@@ -129,5 +130,9 @@ func (service *Object) RangeByUser(session data.Session, userID primitive.Object
 }
 
 /******************************************
- * Custom Actions
+ * Other Getters
  ******************************************/
+
+func (service *Object) ActivityPubURL(userID primitive.ObjectID, objectID primitive.ObjectID) string {
+	return service.host + "/@" + userID.Hex() + "/pub/objects/" + objectID.Hex()
+}

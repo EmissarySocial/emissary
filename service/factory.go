@@ -59,6 +59,8 @@ type Factory struct {
 	annotationService      Annotation
 	attachmentService      Attachment
 	circleService          Circle
+	collectionService      Collection
+	collectionItemService  CollectionItem
 	connectionService      Connection
 	domainService          Domain
 	emailService           DomainEmail
@@ -84,7 +86,6 @@ type Factory struct {
 	permissionService      Permission
 	productService         Product
 	providerService        Provider
-	contextService         Context
 	responseService        Response
 	ruleService            Rule
 	searchDomainService    SearchDomain
@@ -107,7 +108,7 @@ type Factory struct {
 }
 
 // NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, domain config.Domain, port string, contentService *Content, emailService *ServerEmail, jwtService *JWT, queue *queue.Queue, registrationService *Registration, templateService *Template, themeService *Theme, widgetService *Widget, attachmentOriginals afero.Fs, attachmentCache afero.Fs, exportCache afero.Fs, httpCache *httpcache.HTTPCache, workingDirectory *mediaserver.WorkingDirectory) (*Factory, error) {
+func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, domain config.Domain, port string, contentService *Content, emailService *ServerEmail, jwtService *JWT, queue *queue.Queue, registrationService *Registration, templateService *Template, themeService *Theme, widgetService *Widget, attachmentOriginals afero.Fs, attachmentCache afero.Fs, exportCache afero.Fs, httpCache *httpcache.HTTPCache, workingDirectory *mediaserver.WorkingDirectory) (*Factory, error) { // NOSONAR: this constructor really needs this many arguments.
 
 	const location = "domain.factory.NewFactory"
 	log.Info().Msg("Starting domain: " + domain.Hostname)
@@ -144,6 +145,8 @@ func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, doma
 	factory.annotationService = NewAnnotation()
 	factory.attachmentService = NewAttachment()
 	factory.circleService = NewCircle()
+	factory.collectionService = NewCollection()
+	factory.collectionItemService = NewCollectionItem()
 	factory.connectionService = NewConnection()
 	factory.domainService = NewDomain()
 	factory.emailService = NewDomainEmail()
@@ -169,7 +172,7 @@ func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, doma
 	factory.permissionService = NewPermission()
 	factory.productService = NewProduct()
 	factory.providerService = NewProvider()
-	factory.contextService = NewContext()
+	factory.collectionItemService = NewCollectionItem()
 	factory.responseService = NewResponse()
 	factory.realtimeBroker = realtime.NewBroker(factory.SSEUpdateChannel())
 	factory.ruleService = NewRule()
@@ -212,6 +215,8 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	factory.annotationService.Refresh(factory)
 	factory.attachmentService.Refresh(factory)
 	factory.circleService.Refresh(factory)
+	factory.collectionService.Refresh(factory)
+	factory.collectionItemService.Refresh(factory)
 	factory.connectionService.Refresh(factory)
 	factory.domainService.Refresh(factory)
 	factory.emailService.Refresh(factory)
@@ -237,7 +242,7 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	factory.permissionService.Refresh(factory)
 	factory.productService.Refresh(factory)
 	factory.providerService.Refresh(factory)
-	factory.contextService.Refresh(factory)
+	factory.collectionItemService.Refresh(factory)
 	factory.realtimeBroker.Refresh()
 	factory.responseService.Refresh(factory)
 	factory.ruleService.Refresh(factory)
@@ -380,15 +385,19 @@ func (factory *Factory) Circle() *Circle {
 	return &factory.circleService
 }
 
+// Collection returns a fully populated Collection service
+func (factory *Factory) Collection() *Collection {
+	return &factory.collectionService
+}
+
+// CollectionItem returns a fully populated CollectionItem service
+func (factory *Factory) CollectionItem() *CollectionItem {
+	return &factory.collectionItemService
+}
+
 // Connection returns a fully populated Connection service
 func (factory *Factory) Connection() *Connection {
 	return &factory.connectionService
-}
-
-// Conversation returns a fully populated Conversation service
-func (factory *Factory) Conversation() *Conversation {
-	result := NewConversation()
-	return &result
 }
 
 // Domain returns a fully populated Domain service
@@ -466,8 +475,8 @@ func (factory *Factory) Inbox() *Inbox {
 	return &factory.inboxService
 }
 
-// MLSKeyPackage returns a fully populated KeyPackage service
-func (factory *Factory) MLSKeyPackage() *KeyPackage {
+// KeyPackage returns a fully populated KeyPackage service
+func (factory *Factory) KeyPackage() *KeyPackage {
 	return &factory.keyPackageService
 }
 
@@ -526,11 +535,6 @@ func (factory *Factory) Privilege() *Privilege {
 // Product returns a fully populated Product service
 func (factory *Factory) Product() *Product {
 	return &factory.productService
-}
-
-// Context returns a fully populated Context service
-func (factory *Factory) Context() *Context {
-	return &factory.contextService
 }
 
 // Response returns a fully populated Response service
@@ -811,8 +815,11 @@ func (factory *Factory) ImportableLocator() ImportableLocator {
 		case "emissary:circle":
 			return factory.Circle(), nil
 
-		case "emissary:conversation":
-			return factory.Conversation(), nil
+		case "emissary:collection":
+			return factory.Collection(), nil
+
+		case "emissary:collectionItem":
+			return factory.CollectionItem(), nil
 
 		case "emissary:folder":
 			return factory.Folder(), nil
@@ -872,8 +879,8 @@ func (factory *Factory) Model(name string) (ModelService, error) {
 	case "circle":
 		return factory.Circle(), nil
 
-	case "conversation":
-		return factory.Conversation(), nil
+	case "collection":
+		return factory.Collection(), nil
 
 	case "folder":
 		return factory.Folder(), nil
@@ -888,7 +895,7 @@ func (factory *Factory) Model(name string) (ModelService, error) {
 		return factory.Identity(), nil
 
 	case "keyPackage":
-		return factory.MLSKeyPackage(), nil
+		return factory.KeyPackage(), nil
 
 	case "merchantAccount":
 		return factory.MerchantAccount(), nil
@@ -921,9 +928,6 @@ func (factory *Factory) ModelService(object data.Object) ModelService {
 	case *model.Circle:
 		return factory.Circle()
 
-	case *model.Conversation:
-		return factory.Conversation()
-
 	case *model.Folder:
 		return factory.Folder()
 
@@ -943,7 +947,7 @@ func (factory *Factory) ModelService(object data.Object) ModelService {
 		return factory.ImportItem()
 
 	case *model.KeyPackage:
-		return factory.MLSKeyPackage()
+		return factory.KeyPackage()
 
 	case *model.MerchantAccount:
 		return factory.MerchantAccount()
@@ -980,7 +984,7 @@ func (factory *Factory) Collections() []string {
 		"Attachment",
 		"Circle",
 		"Connection",
-		"Conversation",
+		"Collection",
 		"Domain",
 		"EncryptionKey",
 		"Folder",

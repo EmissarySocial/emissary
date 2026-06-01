@@ -18,7 +18,7 @@ func ExecutableStep(stepInfo step.Step) Step {
 	// Model objects are only concerned with the data that they contain, and not with the actual building of that data.
 	// So, we convert the model object into a "build step" that CAN access the building context.
 
-	switch s := stepInfo.(type) {
+	switch s := stepInfo.(type) { // NOSONAR - there is no clean way to handle this without a big switch statement.
 
 	case step.AddEvent:
 		return StepAddEvent(s)
@@ -223,9 +223,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.WithCircle:
 		return StepWithCircle(s)
-
-	case step.WithConversation:
-		return StepWithConversation(s)
 
 	case step.WithDraft:
 		return StepWithDraft(s)

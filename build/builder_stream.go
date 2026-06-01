@@ -647,12 +647,12 @@ func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[asca
 	return activityStreamsService.QueryRepliesAfterDate(w._request.Context(), w._stream.URL, minDate, int64(maxRows))
 }
 
-func (w Stream) ReplyLinksAfter(dateString string, maxRows int) (sliceof.Object[model.ObjectLink], error) {
-	contextService := w._factory.Context()
+func (w Stream) ReplyLinksAfter(dateString string, maxRows int) (sliceof.Object[model.CollectionItem], error) {
+	collectionItemService := w._factory.CollectionItem()
 	minDate := convert.Int64(dateString)
 	criteria := exp.GreaterThan("createDate", minDate)
 
-	result, err := contextService.QueryByInReplyTo(w._session, w._stream.URL, criteria, option.MaxRows(int64(maxRows)), option.SortAsc("createDate"))
+	result, err := collectionItemService.QueryByInReplyTo(w._session, w._stream.URL, criteria, option.MaxRows(int64(maxRows)), option.SortAsc("createDate"))
 	return result, err
 }
 

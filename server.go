@@ -417,6 +417,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))
 	e.GET("/@:userId/pub/blocked", handler.WithUser(factory, ap_user.GetBlockedCollection))
 	e.GET("/@:userId/pub/blocked/:ruleId", handler.WithUser(factory, ap_user.GetBlock))
+	e.GET("/@:userId/pub/collection/:collectionId", handler.WithUser(factory, ap_user.GetCollection))
 	e.GET("/@:userId/pub/disliked", handler.WithUser(factory, ap_user.GetResponseCollection))
 	e.GET("/@:userId/pub/disliked/:response", handler.WithUser(factory, ap_user.GetResponse))
 	e.GET("/@:userId/pub/featured", handler.WithUser(factory, ap_user.GetFeaturedCollection))
@@ -446,7 +447,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:stream/pub/outbox", handler.WithTemplate(factory, ap_stream.GetOutboxCollection))
 	e.GET("/:stream/pub/followers", handler.WithTemplate(factory, ap_stream.GetFollowersCollection))
 	e.GET("/:stream/pub/children", handler.WithStream(factory, ap_stream.GetChildrenCollection))
-	e.GET("/:stream/pub/context", handler.WithStream(factory, ap_stream.GetContextCollection))
 
 	// Domain Admin Pages
 	e.GET("/admin", handler.RedirectTo("/admin/domain/index"))

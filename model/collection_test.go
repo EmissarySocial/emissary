@@ -6,13 +6,13 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
-func TestConversationSchema(t *testing.T) {
+func TestCollectionSchema(t *testing.T) {
 
-	conversation := NewConversation()
-	s := schema.New(ConversationSchema())
+	collection := NewCollection()
+	s := schema.New(CollectionSchema())
 
 	table := []tableTestItem{
-		{"conversationId", "123456781234567812345678", nil},
+		{"collectionId", "123456781234567812345678", nil},
 		{"userId", "aaa4bbb8ddd4ddd812345678", nil},
 		{"name", "THIS-IS-MY-CONVERSATION", nil},
 		{"comment", "SOME KINDA COMMENT HERE", nil},
@@ -24,5 +24,5 @@ func TestConversationSchema(t *testing.T) {
 		{"participants.1.name", "Sarah Connor", nil},
 	}
 
-	tableTest_Schema(t, &s, &conversation, table)
+	tableTest_Schema(t, &s, &collection, table)
 }

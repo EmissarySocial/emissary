@@ -25,7 +25,6 @@ func GetDomainAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 	domain := factory.Domain().Get()
 
 	// Load the attachment in order to verify that it is valid for this stream
-	// TODO: LOW: This might be more efficient as a single query...
 	attachmentService := factory.Attachment()
 	attachmentIDString := list.Dot(ctx.Param("attachmentId")).First()
 	attachmentID, err := primitive.ObjectIDFromHex(attachmentIDString)
@@ -112,7 +111,6 @@ func GetStreamAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 	}
 
 	// Load the attachment in order to verify that it is valid for this stream
-	// TODO: LOW: This might be more efficient as a single query...
 	attachmentService := factory.Attachment()
 	attachmentToken := list.Dot(ctx.Param("attachmentId")).First()
 	attachment := model.NewEmptyAttachment()

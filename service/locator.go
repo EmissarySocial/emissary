@@ -150,17 +150,10 @@ func (service *Locator) GetPrivateKey(session data.Session, actorType string, ac
 
 	switch actorType {
 
-	case model.ActorTypeApplication:
-		publicKeyID := service.domainService.PublicKeyID()
-		privateKey, err := service.domainService.PrivateKey(session)
-		return publicKeyID, privateKey, err
+	case model.ActorTypeApplication,
+		model.ActorTypeSearchDomain,
+		model.ActorTypeSearchQuery:
 
-	case model.ActorTypeSearchDomain:
-		publicKeyID := service.domainService.PublicKeyID()
-		privateKey, err := service.domainService.PrivateKey(session)
-		return publicKeyID, privateKey, err
-
-	case model.ActorTypeSearchQuery:
 		publicKeyID := service.domainService.PublicKeyID()
 		privateKey, err := service.domainService.PrivateKey(session)
 		return publicKeyID, privateKey, err

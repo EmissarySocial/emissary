@@ -62,7 +62,7 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 	if hasLocalReplyOrContext(document, context.factory.Host()) {
 
 		context.factory.Queue().NewTask(
-			"AddToContext",
+			"AddToCollection",
 			mapof.Any{"url": document.ID()},
 		)
 	}
