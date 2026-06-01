@@ -23,7 +23,7 @@
 			<form hx-post="/register" action="/register" method="post">
 
 				{{- if ne "" $iconURL -}}
-					<img src="{{$iconURL}}" class="block margin-auto" style="width:clamp(100px, 50%, 400px)">
+					<img src="{{$iconURL}}" alt="" class="block margin-auto" style="width:clamp(100px, 50%, 400px)">
 				{{- end -}}
 
 				<h1>{{.RegistrationData "title"}}</h1>
