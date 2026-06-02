@@ -5,8 +5,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ActivitySchema returns a validating schema for Activity objects.
-func ActivitySchema() schema.Element {
+// OutboxItemSchema returns a validating schema for OutboxItem objects.
+func OutboxItemSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"activityId": schema.String{Format: "objectId"},
@@ -14,7 +14,7 @@ func ActivitySchema() schema.Element {
 			"actorType":  schema.String{Enum: []string{ActorTypeUser, ActorTypeStream, ActorTypeSearchQuery, ActorTypeSearchDomain, ActorTypeApplication}},
 			"recipients": schema.Array{Items: schema.String{}},
 			"url":        schema.String{Format: "url"},
-			"object":     schema.Object{Wildcard: schema.Any{}},
+			"activity":   schema.Object{Wildcard: schema.Any{}},
 		},
 	}
 }
@@ -24,38 +24,38 @@ func ActivitySchema() schema.Element {
  ******************************************/
 
 // GetPointer implements the schema.PointerGetter interface, and
-// allows read/write access to (most) fields of the Activity object.
-func (activity *Activity) GetPointer(name string) (any, bool) {
+// allows read/write access to (most) fields of the OutboxItem object.
+func (item *OutboxItem) GetPointer(name string) (any, bool) {
 
 	switch name {
 
 	case "url":
-		return &activity.URL, true
+		return &item.URL, true
 
 	case "actorType":
-		return &activity.ActorType, true
+		return &item.ActorType, true
 
 	case "recipients":
-		return &activity.Recipients, true
+		return &item.Recipients, true
 
-	case "object":
-		return &activity.Object, true
+	case "activity":
+		return &item.Activity, true
 	}
 
 	return "", false
 }
 
 // GetStringOK implements the schema.StringGetter interface, and
-// returns string values for several fields of the Activity object.
-func (activity *Activity) GetStringOK(name string) (string, bool) {
+// returns string values for several fields of the OutboxItem object.
+func (item *OutboxItem) GetStringOK(name string) (string, bool) {
 
 	switch name {
 
 	case "activityId":
-		return activity.ActivityID.Hex(), true
+		return item.ActivityID.Hex(), true
 
 	case "actorId":
-		return activity.ActorID.Hex(), true
+		return item.ActorID.Hex(), true
 	}
 
 	return "", false
@@ -66,20 +66,20 @@ func (activity *Activity) GetStringOK(name string) (string, bool) {
  ******************************************/
 
 // SetString implemments the schema.StringSetter interface, and
-// allows setting string values for several fields of the Activity object.
-func (activity *Activity) SetString(name string, value string) bool {
+// allows setting string values for several fields of the OutboxItem object.
+func (item *OutboxItem) SetString(name string, value string) bool {
 
 	switch name {
 
 	case "activityId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			activity.ActivityID = objectID
+			item.ActivityID = objectID
 			return true
 		}
 
 	case "actorId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			activity.ActorID = objectID
+			item.ActorID = objectID
 			return true
 		}
 	}

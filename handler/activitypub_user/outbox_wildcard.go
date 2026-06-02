@@ -58,15 +58,15 @@ func putActivityIntoOutbox(context Context, activity streams.Document) error {
 	}
 
 	// Add an activity record to the Outbox2
-	dbActivity := model.NewActivity()
-	dbActivity.URL = locatorService.ActivityURL(model.ActorTypeUser, context.user.UserID, dbActivity.ActivityID)
-	dbActivity.ActorType = model.ActorTypeUser
-	dbActivity.ActorID = context.user.UserID
-	dbActivity.Object = activity.Map()
-	dbActivity.Recipients = recipients
+	outboxItem := model.NewOutboxItem()
+	outboxItem.URL = locatorService.ActivityURL(model.ActorTypeUser, context.user.UserID, outboxItem.ActivityID)
+	outboxItem.ActorType = model.ActorTypeUser
+	outboxItem.ActorID = context.user.UserID
+	outboxItem.Activity = activity.Map()
+	outboxItem.Recipients = recipients
 
 	// Save the activity in the user's outbox
-	if err := outbox2Service.Save(context.session, &dbActivity, "Created via ActivityPub Outbox2"); err != nil {
+	if err := outbox2Service.Save(context.session, &outboxItem, "Created via ActivityPub Outbox2"); err != nil {
 		return derp.Wrap(err, location, "Unable to save Outbox2 activity")
 	}
 
