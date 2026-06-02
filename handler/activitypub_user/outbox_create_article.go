@@ -33,6 +33,11 @@ func outbox_CreateArticle(context Context, activity streams.Document) error {
 		return derp.Wrap(err, location, "Unable to save object", object)
 	}
 
+	// Put the activity into the User's outbox (which triggers delivery to all recipients)
+	if err := putActivityIntoOutbox(context, activity); err != nil {
+		return derp.Wrap(err, location, "Unable to process activity")
+	}
+
 	// Write the response to the client
 	context.context.Response().Header().Set("Location", objectService.ActivityPubURL(object.UserID, object.ObjectID))
 	return context.context.NoContent(http.StatusCreated)

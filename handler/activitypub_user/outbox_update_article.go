@@ -1,6 +1,8 @@
 package activitypub_user
 
 import (
+	"net/http"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
@@ -47,6 +49,11 @@ func outbox_UpdateArticle(context Context, activity streams.Document) error {
 		return derp.Wrap(err, location, "Unable to save object", object)
 	}
 
-	// Success
-	return nil
+	// Put the activity into the User's outbox (which triggers delivery to all recipients)
+	if err := putActivityIntoOutbox(context, activity); err != nil {
+		return derp.Wrap(err, location, "Unable to process activity")
+	}
+
+	// Send response to caller
+	return context.context.NoContent(http.StatusAccepted)
 }
