@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/ascache"
@@ -57,5 +59,5 @@ func PostProxyURL(context *steranko.Context, factory *service.Factory, session d
 	}
 
 	// Success
-	return context.JSON(200, result.Value())
+	return context.JSON(http.StatusOK, result.Value())
 }
