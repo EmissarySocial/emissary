@@ -37,12 +37,9 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 		return nil
 	}
 
-	// Load the original document directly from the Interwebs.
-	document, err := activity.UnwrapActivity().Load()
-
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to load enbedded object")
-	}
+	// Locate the original "object" value as an actual object
+	// If necessary, load it from the Interwebs.
+	document := activity.UnwrapActivity().LoadLink()
 
 	// Gonna need the followingService in a hot sec..
 	followingService := context.factory.Following()
