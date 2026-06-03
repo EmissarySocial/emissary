@@ -78,7 +78,7 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	}
 
 	// Prevent duplicate actiities from being processes multiple times (e.g. due to retries or multiple deliveries)
-	if inbox_IsDuplicatActivity(context, activity) {
+	if inbox_IsDuplicateActivity(context, activity) {
 		return nil
 	}
 
@@ -102,7 +102,7 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 }
 
 // inbox_IsDuplicateActivity checks if this activity has already been received and processed in the inbox
-func inbox_IsDuplicatActivity(context Context, activity streams.Document) bool {
+func inbox_IsDuplicateActivity(context Context, activity streams.Document) bool {
 	return context.factory.Inbox().IsDuplicateActivity(context.session, context.user.UserID, activity.ID())
 }
 
