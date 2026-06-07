@@ -188,16 +188,28 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	log.Info().Msg("Starting Emissary Server.")
 
-	// WAF Middleware
+	// Recovery Middleware to catch panics
 	e.Pre(middleware.Recover())
+
+	// Web Application Firewall Middleware
 	e.Pre(dome4echo.New(factory.DigitalDome()))
 
+	// Redirect HTTP to HTTPS
 	e.Pre(mw.HttpsRedirect)
+
+	// Remove trailing slashes
 	e.Pre(middleware.RemoveTrailingSlash())
 
-	// Middleware for standard pages
+	// CORS Middleware
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		Skipper:          middleware.DefaultSkipper, // Default skipper DOES NOT skip this middleware
+		AllowOrigins:     []string{"*"},             // Allow all origins
+		AllowMethods:     []string{http.MethodGet},  // But only allow GET requests
+		AllowCredentials: false,                     // And DO NOT allow credentials to be sent to remote servers. (this is a default, but it's here to be explicit)
+	}))
+
+	// Restore Steranko in the future
 	// e.Use(steranko.Middleware(factory))
-	e.Use(middleware.CORS())
 
 	// Common routes (but not .well-known)
 	e.GET("/robots.txt", handler.RobotsTxt)                 // https://developers.google.com/search/docs/advanced/robots/create-robots-txt
