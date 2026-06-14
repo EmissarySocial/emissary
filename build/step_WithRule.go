@@ -40,16 +40,10 @@ func (step StepWithRule) execute(builder Builder, buffer io.Writer, actionMethod
 
 	// Collect required services and values
 	factory := builder.factory()
-	rule := model.NewRule()
-	rule.UserID = builder.AuthenticatedID()
 
-	if token := builder.QueryParam("ruleId"); notNewOrEmpty(token) {
-		if err := factory.Rule().LoadByToken(builder.session(), builder.AuthenticatedID(), token, &rule); err != nil {
-			if actionMethod == ActionMethodGet {
-				return Halt().WithError(derp.Wrap(err, location, "Unable to load Rule", token))
-			}
-			// Fall through for POSTS..  we're just creating a new rule.
-		}
+	rule, err := step.getRule(builder)
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Unable to load Rule"))
 	}
 
 	// Create a new builder tied to the Rule record
@@ -64,4 +58,32 @@ func (step StepWithRule) execute(builder Builder, buffer io.Writer, actionMethod
 	result.Error = derp.WrapIF(result.Error, location, "Error executing steps for child")
 
 	return UseResult(result)
+}
+
+func (step StepWithRule) getRule(builder Builder) (model.Rule, error) {
+
+	rule := model.NewRule()
+	rule.UserID = builder.AuthenticatedID()
+	rule.Action = ""
+
+	if token := builder.QueryParam("ruleId"); notNewOrEmpty(token) {
+		if err := builder.factory().Rule().LoadByToken(builder.session(), builder.AuthenticatedID(), token, &rule); err != nil {
+			if !derp.IsNotFound(err) {
+				return rule, derp.Wrap(err, "build.StepWithRule.getRule", "Unable to load Rule with token "+token)
+			}
+		}
+		return rule, nil
+	}
+
+	if token := builder.QueryParam("actor"); token != "" {
+
+		if err := builder.factory().Rule().LoadByTrigger(builder.session(), builder.AuthenticatedID(), model.RuleTypeActor, token, &rule); err != nil {
+			if !derp.IsNotFound(err) {
+				return rule, derp.Wrap(err, "build.StepWithRule.getRule", "Unable to load Rule with actor "+token)
+			}
+		}
+		return rule, nil
+	}
+
+	return rule, nil
 }

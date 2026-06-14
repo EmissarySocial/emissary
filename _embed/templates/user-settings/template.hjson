@@ -144,6 +144,27 @@
 			]
 		}
 
+		actor-rule:{
+			roles:["self"]
+			steps:[
+				{do:"with-rule", steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+					{do:"edit", form:{
+						type:layout-vertical
+						children:[
+							{type:"radio-button-group-horizontal", path:"action", options:{provider:"actor-rule-buttons"} }
+							{type:"text", label:"Label", path:"label", description:"This content warning will be added to all posts from this person", options:{show-if:"action == LABEL"} }
+							{type:"select", label:"Reason", path:"reasonCode", xdescription:"This list comes from <a href='https://dtspartnership.org/glossary/'>DTSP definitions</a>", options:{show-if:"action != (null)", provider:"rule-reasons"} }
+							{type:"textarea", path:"summary", description:"(Optional) Describe why you made this rule.", options:{show-if:"action != (null)", rows:6}}
+							{type:"toggle", path:"isPublic", options:{show-if:"action != (null)", true-text:"PUBLIC: Share this rule with followers", false-text:"PRIVATE: Do not share this rule"}}
+						]
+					}}
+				]}
+				]}
+			]
+		}
+
 		circles: {
 			roles:["self"]
 			steps:[

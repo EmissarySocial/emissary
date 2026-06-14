@@ -17,6 +17,7 @@ func RuleSchema() schema.Element {
 			"label":          schema.String{},
 			"trigger":        schema.String{Required: true},
 			"summary":        schema.String{},
+			"reasonCode":     schema.String{},
 			"isPublic":       schema.Boolean{},
 			"publishDate":    schema.Integer{BitSize: 64},
 		},
@@ -54,6 +55,9 @@ func (rule *Rule) GetPointer(name string) (any, bool) {
 
 	case "summary":
 		return &rule.Summary, true
+
+	case "reasonCode":
+		return &rule.ReasonCode, true
 	}
 
 	return nil, false
