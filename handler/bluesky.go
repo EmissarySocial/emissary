@@ -50,7 +50,7 @@ func GetBlueskyDID(serverFactory *server.Factory) echo.HandlerFunc {
 		connection := model.NewConnection()
 
 		if err := connectionService.LoadByProvider(session, model.ConnectionProviderBluesky, &connection); err != nil {
-			return derp.Wrap(err, location, "Unable to load Bluesky configuration")
+			return derp.Wrap(err, location, "Loading Bluesky configuration")
 		}
 
 		// Try to find the requested user
@@ -58,7 +58,7 @@ func GetBlueskyDID(serverFactory *server.Factory) echo.HandlerFunc {
 		user := model.NewUser()
 
 		if err := userService.LoadByUsername(session, username, &user); err != nil {
-			return derp.Wrap(err, location, "Unable to load User", username)
+			return derp.Wrap(err, location, "Loading User", username)
 		}
 
 		// RULE: Requre that the user has opted in to Bluesky bridging
