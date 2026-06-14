@@ -19,6 +19,7 @@ FEW DEPENDENTS
 - toot
 - hannibal
 - domain
+- uri
 - form
 - html
 - re
