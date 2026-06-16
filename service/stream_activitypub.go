@@ -210,7 +210,6 @@ func (service *Stream) ActivityPubActor(session data.Session, streamID primitive
 		privateKey,
 		outbox.WithFollowers(service.RangeActivityPubFollowers(session, streamID)),
 		outbox.WithClient(service.activityService.StreamClient(streamID)),
-		// TODO: Restore Queue:: , outbox.WithQueue(service.queue))
 	)
 
 	return actor, nil
