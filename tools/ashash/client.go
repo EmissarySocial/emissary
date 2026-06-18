@@ -32,16 +32,18 @@ func (client Client) SetRootClient(rootClient streams.Client) {
 // inside it (if required)
 func (client Client) Load(id string, options ...any) (streams.Document, error) {
 
+	const location = "ashash.Client.Load"
+
 	if uri.IsValidURL(id) {
 
 		// If we can find a "hash" in the URL, then run this middleware
 		if baseURL, hash, found := strings.Cut(id, "#"); found {
 
 			// Otherwise, try to load the baseURL and find the hash inside that document
-			result, err := client.innerClient.Load(baseURL, options)
+			result, err := client.innerClient.Load(baseURL, options...)
 
 			if err != nil {
-				return result, err
+				return result, derp.Wrap(err, location, "Loading base URL", baseURL)
 			}
 
 			// Search all properties at the top level of the document (not recursive)
@@ -55,7 +57,7 @@ func (client Client) Load(id string, options ...any) (streams.Document, error) {
 			}
 
 			// Inner hashed ID not found.
-			return streams.NilDocument(), derp.NotFound("ashash.Client.Load", "Hash value not found in document", baseURL, hash, result.Value())
+			return streams.NilDocument(), derp.NotFound(location, "Hash value not found in document", baseURL, hash, result.Value())
 		}
 	}
 
