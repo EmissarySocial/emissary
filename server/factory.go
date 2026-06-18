@@ -65,7 +65,7 @@ type Factory struct {
 	commonDatabase      *mongo.Database
 	workingDirectory    mediaserver.WorkingDirectory
 	queue               *queue.Queue
-	digitalDome         dome.Dome
+	digitalDome         *dome.Dome
 	clientIPStrategy    realclientip.Strategy
 
 	funcMap   template.FuncMap
@@ -135,6 +135,7 @@ func NewFactory(commandLineArgs *config.CommandLineArgs, embeddedFiles embed.FS)
 	)
 
 	factory.digitalDome = dome.New(
+		factory.ClientIP, // resolve client IPs using the configured trusted-proxy strategy
 		dome.LogStatusCodes(
 			http.StatusBadRequest,
 			http.StatusNotFound,
@@ -743,7 +744,7 @@ func (factory *Factory) EditorJS() *goeditorjs.HTMLEngine {
 }
 
 func (factory *Factory) DigitalDome() *dome.Dome {
-	return &factory.digitalDome
+	return factory.digitalDome
 }
 
 func (factory *Factory) HTTPCache() *httpcache.HTTPCache {
