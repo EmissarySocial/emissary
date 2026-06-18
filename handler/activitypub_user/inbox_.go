@@ -68,10 +68,19 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	}
 
 	// Get ActivityStream service for this User
-	client := factory.ActivityStream().UserClient(user.UserID)
+	activityService := factory.ActivityStream()
+	client := activityService.UserClient(user.UserID)
 
-	// Receive the activity from the request (with optional options)
-	activity, err := router.ReceiveRequest(ctx.Request(), client)
+	// Receive the activity from the request, verifying HTTP signatures using our
+	// own PublicKeyFinder (which looks up the key by the signature's keyID and
+	// bypasses the cache, to avoid verifying against a stale signing key).
+	activity, err := router.ReceiveRequest(
+		ctx.Request(),
+		client,
+
+		// Injecting our own key finder that is aware of the ascache middleware.
+		router.WithPublicKeyFinder(activityService.PublicKeyFinder),
+	)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to receive ActivityPub request")
