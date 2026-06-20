@@ -15,23 +15,23 @@ func GetCollection(ctx *steranko.Context, factory *service.Factory, session data
 
 	const location = "handler.activitypub_user.GetCollection"
 
-	// Parse the CllectionID from the URL
-	cllectionID, err := primitive.ObjectIDFromHex(ctx.Param("cllectionId"))
+	// Parse the CollectionID from the URL
+	collectionID, err := primitive.ObjectIDFromHex(ctx.Param("collectionId"))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Invalid cllection ID in URL", "cllectionId: "+ctx.Param("cllectionId"))
+		return derp.Wrap(err, location, "Invalid collection ID in URL", "collectionId: "+ctx.Param("collectionId"))
 	}
 
-	// Compute what a local cllection URL *should* be
-	cllectionURL := user.ActivityPubURL() + "/pub/cllection/" + cllectionID.Hex()
+	// Compute what a local collection URL *should* be
+	collectionURL := user.ActivityPubURL() + "/pub/collection/" + collectionID.Hex()
 
-	// Serve "the cllection", which is the full reply chain that matches this cllection url
+	// Serve "the collection", which is the full reply chain that matches this collection url
 	collectionItemService := factory.CollectionItem()
 
 	return collection.Serve(ctx,
-		cllectionURL,
-		collectionItemService.CollectionCount(session, user.UserID, cllectionID, exp.All()),
-		collectionItemService.CollectionIterator(session, user.UserID, cllectionID, exp.All()),
+		collectionURL,
+		collectionItemService.CollectionCount(session, user.UserID, collectionID, exp.All()),
+		collectionItemService.CollectionIterator(session, user.UserID, collectionID, exp.All()),
 		collection.WithAttributedTo(user.ActivityPubURL()),
 	)
 }

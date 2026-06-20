@@ -40,7 +40,7 @@ func PostProxyURL(context *steranko.Context, factory *service.Factory, session d
 		return derp.Validation("Parameter 'id' must be a valid URL", transaction.URL)
 	}
 
-	// RULE: Disallow local addresses on production servers. No funny business.
+	// RULE: SSRF Mitigation. Prevent proxy from accessing the local network from on production servers.
 	if uri.IsLocalURL(transaction.URL) {
 		if uri.NotLocalHostname(factory.Hostname()) {
 			return derp.Validation("Parameter 'id' must not be a local address", transaction.URL)
