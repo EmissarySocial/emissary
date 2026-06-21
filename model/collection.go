@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -24,6 +25,40 @@ func NewCollection() Collection {
 		To:           sliceof.NewString(),
 		Cc:           sliceof.NewString(),
 	}
+}
+
+// HasParticipant returns TRUE if the provided actor is allowed to read this Collection
+func (collection *Collection) HasParticipant(actorID string) bool {
+
+	// RULE: A Collection addressed to the public is readable by anyone (incl. an empty/unauthenticated actor)
+	if collection.isPublic() {
+		return true
+	}
+
+	// Otherwise, the actor must be named in the "to" or "cc" participant lists
+	if actorID == "" {
+		return false
+	}
+
+	return collection.To.Contains(actorID) || collection.Cc.Contains(actorID)
+}
+
+// isPublic returns TRUE if this Collection is addressed to the public in its "to" or "cc" lists
+func (collection *Collection) isPublic() bool {
+	return isPublicRecipient(collection.To) || isPublicRecipient(collection.Cc)
+}
+
+// isPublicRecipient returns TRUE if any entry in the list is an ActivityPub public-addressing token
+func isPublicRecipient(recipients sliceof.String) bool {
+
+	for _, recipient := range recipients {
+		switch recipient {
+		case vocab.NamespaceActivityStreamsPublic, vocab.NamespaceASPublic, vocab.NamespacePublic:
+			return true
+		}
+	}
+
+	return false
 }
 
 /******************************************

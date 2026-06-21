@@ -33,40 +33,34 @@ type WithFunc3[T any, U any, V any] func(ctx *steranko.Context, factory *service
 // Header used by HTMX to force a client-side redirect
 const HxRedirectHeader = "Hx-Redirect"
 
-// WithAuthenticatedActor handles boilerplate code for requests that are made by one of:
-// 1) a signed-in user, 2) a valid OAuth token, or 3) a valid HTTP signature.  It calls the
-// continuation function with the actorID (as a string) that represents the authenticated actor.
-func WithAuthenticatedActor(serverFactory *server.Factory, fn WithFunc2[model.User, string]) echo.HandlerFunc {
+// WithActor resolves the actor making the request from its credentials and passes the actor's
+// ID (as a string) to the continuation function. Unlike WithUser, it is not tied to a :userId
+// URL parameter, so any route can use it. The actor is resolved from, in order: 1) a signed-in
+// User's cookie, 2) a valid HTTP signature, or 3) neither (an empty string for anonymous).
+func WithActor(serverFactory *server.Factory, fn WithFunc1[string]) echo.HandlerFunc {
 
-	return WithUser(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
-		// Use Authorization cookie, if available
+		// A signed-in User's cookie identifies them by their own ActivityPub URL
 		if authorization := getAuthorization(ctx); authorization.IsAuthenticated() {
-
-			// Signed-In User
 			if userID := authorization.UserID; !userID.IsZero() {
-				actorID := factory.Host() + "/@" + authorization.UserID.Hex()
-				return fn(ctx, factory, session, user, &actorID)
-			}
-
-			// Signed-In Identity
-			if identityID := authorization.IdentityID; !identityID.IsZero() {
-				identity := model.NewIdentity()
-				if err := factory.Identity().LoadByID(session, identityID, &identity); err == nil {
-					return fn(ctx, factory, session, user, &identity.ActivityPubActor)
+				user := model.NewUser()
+				if err := factory.User().LoadByID(session, userID, &user); err == nil {
+					actorID := user.ActivityPubURL()
+					return fn(ctx, factory, session, &actorID)
 				}
 			}
 		}
 
-		// Use HTTP Signature, if possible
+		// A valid HTTP signature identifies a (possibly remote) actor
 		if signature, err := sigs.Verify(ctx.Request(), nil); err == nil {
 			actorID := signature.ActorID()
-			return fn(ctx, factory, session, user, &actorID)
+			return fn(ctx, factory, session, &actorID)
 		}
 
-		// Fall through: Unauthenticated
+		// Neither: the request is anonymous
 		actorID := ""
-		return fn(ctx, factory, session, user, &actorID)
+		return fn(ctx, factory, session, &actorID)
 	})
 }
 

@@ -11,9 +11,8 @@ func CollectionSchema() schema.Element {
 			"collectionId": schema.String{Format: "objectId"},
 			"userId":       schema.String{Format: "objectId"},
 			"to":           schema.Array{Items: schema.String{}},
+			"cc":           schema.Array{Items: schema.String{}},
 			"name":         schema.String{MaxLength: 128},
-			"comment":      schema.String{MaxLength: 2048},
-			"icon":         schema.String{MaxLength: 16},
 		},
 	}
 }
@@ -28,6 +27,9 @@ func (collection *Collection) GetPointer(name string) (any, bool) {
 
 	case "to":
 		return &collection.To, true
+
+	case "cc":
+		return &collection.Cc, true
 
 	case "name":
 		return &collection.Name, true

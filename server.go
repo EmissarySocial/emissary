@@ -406,7 +406,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@search_:searchId/pub/outbox/:searchResultId", handler.WithSearchQuery(factory, ap_search.GetOutboxMessage))
 
 	// Routes for Users
-	e.HEAD("/@:userId", handler.WithUser(factory, handler.HeadOutbox))
+	e.HEAD("/@:userId", handler.WithUser(factory, handler.HeadOutbox)) // NOSONAR (don't need constants for server routes.)
 	e.GET("/@:userId", handler.WithUserForwarding(factory, handler.GetOutbox))
 	e.POST("/@:userId", handler.WithUser(factory, handler.PostOutbox))
 	e.GET("/@:userId/:action", handler.WithUser(factory, handler.GetOutbox))
@@ -429,7 +429,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))
 	e.GET("/@:userId/pub/blocked", handler.WithUser(factory, ap_user.GetBlockedCollection))
 	e.GET("/@:userId/pub/blocked/:ruleId", handler.WithUser(factory, ap_user.GetBlock))
-	e.GET("/@:userId/pub/collection/:collectionId", handler.WithUser(factory, ap_user.GetCollection))
+	e.GET("/@:userId/pub/collection/:collectionId", handler.WithActor(factory, ap_user.GetCollection))
 	e.GET("/@:userId/pub/disliked", handler.WithUser(factory, ap_user.GetResponseCollection))
 	e.GET("/@:userId/pub/disliked/:response", handler.WithUser(factory, ap_user.GetResponse))
 	e.GET("/@:userId/pub/featured", handler.WithUser(factory, ap_user.GetFeaturedCollection))
