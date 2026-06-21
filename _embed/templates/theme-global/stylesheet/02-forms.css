@@ -42,7 +42,6 @@ input.invalid,
 select:invalid,
 [role="textbox"].invalid {
 	border: solid 1px var(--input-border-invalid);
-	/*background-color: var(--input-background-invalid);*/
 }
 
 input:invalid:focus,
@@ -64,16 +63,38 @@ input[type="radio"] {
 	margin-right: 4px;
 }
 
+input:not([type="submit"], [type="checkbox"], [type="radio"], [type="color"]):focus-visible,
+input:not([type="submit"], [type="checkbox"], [type="radio"], [type="color"]):focus,
+textarea:focus-visible,
+textarea:focus,
+select:focus-visible,
+select:focus,
 [role="textbox"]:focus-visible,
 [role="textbox"]:focus,
 [role="textbox"]:has(*:focus, *:focus-visible) {
-	outline-color: -webkit-focus-ring-color;
-	outline-style: auto;
+	/* --focus-color (set on an ancestor) themes the focus outline to a contextual
+	   accent color; it defaults to the link color when not overridden. */
+	outline: solid 2px var(--focus-color);
+	outline-offset: 1px;
 }
 
+/* A `.input` / `[role="textbox"]` is a wrapper that fakes a text box: the focus
+   outline belongs on the wrapper, so suppress it on the REAL control nested
+   inside (otherwise both the wrapper and the inner input each draw an outline). */
 [role="textbox"] :focus,
-[role="textbox"] :focus-visible {
+[role="textbox"] :focus-visible,
+.input input:focus,
+.input input:focus-visible,
+.input textarea:focus,
+.input textarea:focus-visible {
 	outline: unset;
+}
+
+/* The `.input` wrapper itself shows the focus outline when anything inside it
+   has focus (it has no :focus of its own, being a div). */
+.input:focus-within {
+	outline: solid 2px var(--focus-color);
+	outline-offset: 1px;
 }
 
 [role="table"] input {
@@ -375,7 +396,11 @@ button.text-red:focus,
 
 button.primary,
 .button.primary {
-	background-color: var(--button-primary-background);
+	/* Read --focus-color directly (not via an intermediate token) so it resolves at
+	   the button's use-site: a page that scopes --focus-color to a contextual color
+	   themes its primary buttons too. (Indirecting through --button-primary-background
+	   would bake in the :root value and ignore the override.) */
+	background-color: var(--focus-color);
 	color: var(--button-primary-color);
 }
 
@@ -383,7 +408,7 @@ button.primary:hover,
 button.primary:focus,
 .button.primary:hover,
 .button.primary:focus {
-	background-color: var(--button-primary-background-hover);
+	background-color: color-mix(in srgb, var(--focus-color), black 12%);
 	color: var(--button-primary-color-hover);
 }
 
@@ -398,8 +423,8 @@ button.highlight:hover,
 button.outline,
 .button.outline {
 	background-color: rgba(0, 0, 0, 0);
-	color: var(--button-primary-background);
-	border: solid 1px var(--button-primary-background);
+	color: var(--focus-color);
+	border: solid 1px var(--focus-color);
 }
 
 button.outline,
@@ -407,8 +432,8 @@ button.outline:hover,
 .button.outline,
 .button.outline:hover {
 	background-color: rgba(0, 0, 0, 0);
-	color: var(--button-primary-background-hover);
-	border: solid 1px var(--button-primary-background-hover);
+	color: color-mix(in srgb, var(--focus-color), black 12%);
+	border: solid 1px color-mix(in srgb, var(--focus-color), black 12%);
 }
 
 button.selected,
