@@ -40,7 +40,7 @@ func GetCollection(ctx *steranko.Context, factory *service.Factory, session data
 	// Compute URLs for the collection and collection owner
 	userService := factory.User()
 	userActivityPubURL := userService.ActivityPubURL(userID)
-	collectionURL := userActivityPubURL + "/pub/collection/" + collectionID.Hex()
+	collectionURL := userActivityPubURL + "/pub/collections/" + collectionID.Hex()
 
 	// RULE: Only the owner, a domain owner, or a named participant may view this collection
 	if !canViewCollection(ctx, &record, *actorID, userActivityPubURL) {
