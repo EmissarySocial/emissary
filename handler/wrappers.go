@@ -34,8 +34,7 @@ type WithFunc3[T any, U any, V any] func(ctx *steranko.Context, factory *service
 const HxRedirectHeader = "Hx-Redirect"
 
 // WithActor resolves the actor making the request from its credentials and passes the actor's
-// ID (as a string) to the continuation function. Unlike WithUser, it is not tied to a :userId
-// URL parameter, so any route can use it. The actor is resolved from, in order: 1) a signed-in
+// ID (as a string) to the continuation function. The actor identified using 1) a signed-in
 // User's cookie, 2) a valid HTTP signature, or 3) neither (an empty string for anonymous).
 func WithActor(serverFactory *server.Factory, fn WithFunc1[string]) echo.HandlerFunc {
 
@@ -52,13 +51,14 @@ func WithActor(serverFactory *server.Factory, fn WithFunc1[string]) echo.Handler
 			}
 		}
 
-		// A valid HTTP signature identifies a (possibly remote) actor
-		if signature, err := sigs.Verify(ctx.Request(), nil); err == nil {
+		// A valid HTTP signature identifies a (possibly remote) actor.
+		publicKeyFinder := factory.ActivityStream().PublicKeyFinder
+		if signature, err := sigs.Verify(ctx.Request(), publicKeyFinder); err == nil {
 			actorID := signature.ActorID()
 			return fn(ctx, factory, session, &actorID)
 		}
 
-		// Neither: the request is anonymous
+		// Fall through means the request is Anonymous
 		actorID := ""
 		return fn(ctx, factory, session, &actorID)
 	})
