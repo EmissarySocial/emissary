@@ -15,7 +15,7 @@ type StreamActor struct {
 	PublishFollowers   bool   `json:"publish-followers"    bson:"publishFollowers"`   // If TRUE, Follower list is published via ActivityPub
 }
 
-// IsNull returns TRUE if this actor is nil (or undefined)
+// IsNil returns TRUE if this actor is nil (or undefined)
 func (actor StreamActor) IsNil() bool {
 	return actor.SocialRole == ""
 }
