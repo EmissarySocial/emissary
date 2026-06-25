@@ -113,7 +113,7 @@ func (service *Mention) Load(session data.Session, criteria exp.Expression, ment
 func (service *Mention) Save(session data.Session, mention *model.Mention, note string) error {
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(mention); err != nil {
+	if _, err := service.Schema().Validate(mention); err != nil {
 		return derp.Wrap(err, "service.Mention.Save", "Unable to validate Mention", mention)
 	}
 

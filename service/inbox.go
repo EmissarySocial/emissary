@@ -122,7 +122,7 @@ func (service *Inbox) Save(session data.Session, inboxActivity *model.InboxActiv
 	}
 
 	// Validate the record using the schema
-	if err := service.Schema().Validate(inboxActivity); err != nil {
+	if _, err := service.Schema().Validate(inboxActivity); err != nil {
 		return derp.Wrap(err, location, "InboxActivity is invalid", inboxActivity)
 	}
 

@@ -118,7 +118,7 @@ func (service *Follower) Save(session data.Session, follower *model.Follower, no
 	const location = "service.Follower.Save"
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(follower); err != nil {
+	if _, err := service.Schema().Validate(follower); err != nil {
 		return derp.Wrap(err, location, "Invalid Follower record", follower)
 	}
 

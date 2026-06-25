@@ -83,7 +83,7 @@ func (service *OAuthClient) Save(session data.Session, client *model.OAuthClient
 	const location = "service.OAuthClient.Save"
 
 	// Validate the value (using the global OAuthClient schema) before saving
-	if err := service.Schema().Validate(client); err != nil {
+	if _, err := service.Schema().Validate(client); err != nil {
 		return derp.Wrap(err, location, "Unable to validate OAuthClient using OAuthClientSchema", client)
 	}
 

@@ -128,7 +128,7 @@ func (service *MerchantAccount) Save(session data.Session, merchantAccount *mode
 	}
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(merchantAccount); err != nil {
+	if _, err := service.Schema().Validate(merchantAccount); err != nil {
 		return derp.Wrap(err, location, "Unable to validate MerchantAccount")
 	}
 

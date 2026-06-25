@@ -109,7 +109,7 @@ func (service *Folder) Save(session data.Session, folder *model.Folder, comment 
 	const location = "service.Folder.Save"
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(folder); err != nil {
+	if _, err := service.Schema().Validate(folder); err != nil {
 		return derp.Wrap(err, location, "Invalid Folder data", folder)
 	}
 

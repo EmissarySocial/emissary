@@ -114,7 +114,7 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 	}
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(connection); err != nil {
+	if _, err := service.Schema().Validate(connection); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Connection", connection)
 	}
 

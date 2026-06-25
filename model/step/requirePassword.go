@@ -23,7 +23,7 @@ func NewRequirePassword(stepInfo mapof.Any) (RequirePassword, error) {
 	const location = "model.step.NewRequirePassword"
 
 	// Validate the step configuration
-	if err := StepRequirePasswordSchema().Validate(stepInfo); err != nil {
+	if _, err := schema.New(StepRequirePasswordSchema()).Validate(stepInfo); err != nil {
 		return RequirePassword{}, derp.Wrap(err, location, "Invalid step configuration", stepInfo)
 	}
 

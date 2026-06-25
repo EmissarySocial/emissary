@@ -83,7 +83,7 @@ func (service *Webhook) Save(session data.Session, webhook *model.Webhook, note 
 	const location = "service.Webhook.Save"
 
 	// Validate the value (using the global webhook schema) before saving
-	if err := service.Schema().Validate(webhook); err != nil {
+	if _, err := service.Schema().Validate(webhook); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Webhook using WebhookSchema", webhook)
 	}
 

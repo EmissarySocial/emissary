@@ -133,7 +133,7 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 		}
 
 		// Validate with the general-purpose Stream schema
-		if err := streamSchema.Validate(&stream); err != nil {
+		if _, err := streamSchema.Validate(&stream); err != nil {
 			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Invalid stream data"))
 			continue
 		}
@@ -148,7 +148,7 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 		}
 
 		// Validate with the specific Template schema
-		if err := template.Schema.Validate(&stream); err != nil {
+		if _, err := template.Schema.Validate(&stream); err != nil {
 			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Invalid stream data"))
 			continue
 		}
@@ -352,13 +352,13 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 		service.calcDefaultAllow(&template, stream)
 
 		// Validate the value (using the template-specific schema) before saving
-		if err := template.Schema.Validate(stream); err != nil {
+		if _, err := template.Schema.Validate(stream); err != nil {
 			return derp.Wrap(err, location, "Invalid Stream: using TemplateSchema", stream)
 		}
 	}
 
 	// Validate the value (using the global stream schema) before saving
-	if err := service.Schema().Validate(stream); err != nil {
+	if _, err := service.Schema().Validate(stream); err != nil {
 		return derp.Wrap(err, location, "Invalid Stream: using StreamSchema", stream)
 	}
 

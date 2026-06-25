@@ -111,7 +111,7 @@ func (service *NewsFeed) Save(session data.Session, message *model.NewsItem, not
 	const location = "service.NewsFeed.Save"
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(message); err != nil {
+	if _, err := service.Schema().Validate(message); err != nil {
 		return derp.Wrap(err, location, "Unable to validate NewsFeed", message)
 	}
 

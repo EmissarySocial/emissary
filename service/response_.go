@@ -101,7 +101,7 @@ func (service *Response) Save(session data.Session, response *model.Response, no
 	const location = "service.Response.Save"
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(response); err != nil {
+	if _, err := service.Schema().Validate(response); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Response", response)
 	}
 

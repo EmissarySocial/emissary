@@ -125,7 +125,7 @@ func (service *Identity) Save(session data.Session, identity *model.Identity, no
 	}
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(identity); err != nil {
+	if _, err := service.Schema().Validate(identity); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Identity", identity)
 	}
 

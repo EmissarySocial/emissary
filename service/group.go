@@ -71,7 +71,7 @@ func (service *Group) Load(session data.Session, criteria exp.Expression, result
 func (service *Group) Save(session data.Session, group *model.Group, note string) error {
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(group); err != nil {
+	if _, err := service.Schema().Validate(group); err != nil {
 		return derp.Wrap(err, "service.Group.Save", "Unable to validate Group", group)
 	}
 

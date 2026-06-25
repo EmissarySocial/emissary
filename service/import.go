@@ -116,7 +116,7 @@ func (service *Import) Save(session data.Session, record *model.Import, note str
 	const location = "service.Import.Save"
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(record); err != nil {
+	if _, err := service.Schema().Validate(record); err != nil {
 		return derp.Wrap(err, location, "Invalid Import record", record)
 	}
 

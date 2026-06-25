@@ -99,12 +99,12 @@ func (service *StreamDraft) Save(session data.Session, draft *model.Stream, note
 	}
 
 	// Validate the value (using the global stream schema) before saving
-	if err := service.Schema().Validate(draft); err != nil {
+	if _, err := service.Schema().Validate(draft); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Stream using StreamSchema", draft)
 	}
 
 	// Validate the value (using the template-specific schema) before saving
-	if err := template.Schema.Validate(draft); err != nil {
+	if _, err := template.Schema.Validate(draft); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Stream using TemplateSchema", draft)
 	}
 

@@ -91,7 +91,7 @@ func (service *Product) Save(session data.Session, product *model.Product, note 
 	const location = "service.Product.Save"
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(product); err != nil {
+	if _, err := service.Schema().Validate(product); err != nil {
 		return derp.Wrap(err, location, "Invalid Product", product)
 	}
 

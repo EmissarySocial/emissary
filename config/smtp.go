@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/benpate/rosetta/schema"
 	mail "github.com/xhit/go-simple-mail/v2"
 )
 
@@ -23,8 +24,8 @@ func (smtp SMTPConnection) IsNil() bool {
 
 // Validate confirms that the SMTPConnection matches ths SMTPConnectionSchema
 func (smtp SMTPConnection) Validate() error {
-	schema := SMTPConnectionSchema()
-	return schema.Validate(smtp)
+	_, err := schema.New(SMTPConnectionSchema()).Validate(smtp)
+	return err
 }
 
 // Server generates a fully initialized SMTP server object.

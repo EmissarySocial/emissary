@@ -141,7 +141,7 @@ func (service *Following) Save(session data.Session, following *model.Following,
 	}
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(following); err != nil {
+	if _, err := service.Schema().Validate(following); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Following record", following)
 	}
 

@@ -104,7 +104,7 @@ func (service *Privilege) Save(session data.Session, privilege *model.Privilege,
 	const location = "service.Privilege.Save"
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(privilege); err != nil {
+	if _, err := service.Schema().Validate(privilege); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Privilege", privilege)
 	}
 

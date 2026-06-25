@@ -108,7 +108,7 @@ func (service *SearchTag) Save(session data.Session, searchTag *model.SearchTag,
 	searchTag.Value = model.ToToken(searchTag.Name)
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(searchTag); err != nil {
+	if _, err := service.Schema().Validate(searchTag); err != nil {
 		return derp.Wrap(err, location, "Unable to validate SearchTag", searchTag)
 	}
 

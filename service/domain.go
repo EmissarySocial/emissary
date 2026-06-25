@@ -158,12 +158,12 @@ func (service *Domain) Save(session data.Session, domain model.Domain, note stri
 	const location = "service.Domain.Save"
 
 	// Validate the value using the default domain schema
-	if err := model.DomainSchema().Validate(&domain); err != nil {
+	if _, err := schema.New(model.DomainSchema()).Validate(&domain); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Domain with standard Domain schema")
 	}
 
 	// Validate the value using the custom schema for this domain
-	if err := service.Schema().Validate(&domain); err != nil {
+	if _, err := service.Schema().Validate(&domain); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Domain with custom schema from Theme")
 	}
 

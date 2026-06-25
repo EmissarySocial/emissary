@@ -94,7 +94,7 @@ func (service *Collection) Save(session data.Session, collection *model.Collecti
 	const location = "service.Collection.Save"
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(collection); err != nil {
+	if _, err := service.Schema().Validate(collection); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Collection", collection)
 	}
 
