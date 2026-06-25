@@ -12,6 +12,8 @@ import (
 // `.With()` method
 type Option func(*Camper)
 
+type RoundTripperMiddleware func(next http.RoundTripper) http.RoundTripper
+
 // WithRemoteOption adds a remote.Option that will be used for all HTTP calls
 func WithRemoteOption(option remote.Option) Option {
 	return func(camper *Camper) {
@@ -19,7 +21,7 @@ func WithRemoteOption(option remote.Option) Option {
 	}
 }
 
-// WithClient specifies a custom HTTP client to use for all remote requests
-func WithClient(client *http.Client) Option {
-	return WithRemoteOption(options.WithClient(client))
+// WithRoundTripper specifies a custom HTTP client to use for all remote requests
+func WithRoundTripper(roundTripper RoundTripperMiddleware) Option {
+	return WithRemoteOption(options.WithRoundTripper(roundTripper))
 }
