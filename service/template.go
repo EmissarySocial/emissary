@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/EmissarySocial/emissary/model"
+	modelStep "github.com/EmissarySocial/emissary/model/step"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
@@ -454,6 +455,24 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 							"role required: "+role,
 							"roles defined: "+strings.Join(template.AccessRoles.Keys(), ", "),
 						))
+					}
+				}
+
+				// RULE: Forms rendered by a step must only reference fields in the schema.
+				// TableEditor is excluded because its form fields are relative to a sub-path,
+				// not to the schema root.
+				if formGetter, ok := step.(modelStep.FormGetter); ok {
+					if _, isTable := step.(modelStep.TableEditor); !isTable {
+						stepForm := form.New(template.Schema, formGetter.GetForm())
+						if err := stepForm.Validate(); err != nil {
+							errors.Append(derp.Validation(
+								"Form references a field that is not in the schema",
+								"template: "+templateID,
+								"action: "+actionID,
+								"step: "+step.Name(),
+								"error: "+err.Error(),
+							))
+						}
 					}
 				}
 			}
