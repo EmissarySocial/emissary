@@ -56,6 +56,11 @@ func (step EditModelObject) Name() string {
 	return "edit"
 }
 
+// GetForm returns the form rendered by this step.
+func (step EditModelObject) GetForm() form.Element {
+	return step.Form
+}
+
 // RequiredModel returns the name of the model object that MUST be present in the Template.
 // If this value is not empty, then the Template MUST use this model object.
 func (step EditModelObject) RequiredModel() string {

@@ -6,6 +6,7 @@ package step
 
 import (
 	"github.com/benpate/derp"
+	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -30,6 +31,12 @@ type Step interface {
 // be used with a specific type of model object. (like: "stream", "follower", "following", etc.)
 type ModelRequirer interface {
 	RequireModel() string
+}
+
+// FormGetter interface is implemented by steps that render a form, so that the
+// form can be validated against the Template schema when the Template is loaded.
+type FormGetter interface {
+	GetForm() form.Element
 }
 
 // New uses an Step object to create a new action

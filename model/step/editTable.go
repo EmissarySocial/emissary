@@ -32,6 +32,12 @@ func (step TableEditor) Name() string {
 	return "edit-table"
 }
 
+// GetForm returns the form rendered by this step. The form fields are relative
+// to step.Path within the schema, not to the schema root.
+func (step TableEditor) GetForm() form.Element {
+	return step.Form
+}
+
 // RequiredModel returns the name of the model object that MUST be present in the Template.
 // If this value is not empty, then the Template MUST use this model object.
 func (step TableEditor) RequiredModel() string {
