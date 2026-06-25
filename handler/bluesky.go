@@ -8,7 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
-	"github.com/benpate/domain"
+	"github.com/benpate/uri"
 	"github.com/labstack/echo/v4"
 )
 
@@ -21,7 +21,7 @@ func GetBlueskyDID(serverFactory *server.Factory) echo.HandlerFunc {
 		hostname := ctx.Request().Host
 
 		// For development, mock a user
-		if domain.IsLocalhost(hostname) {
+		if uri.IsLocalHostname(hostname) {
 			hostname = "example.localhost"
 		}
 

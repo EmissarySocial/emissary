@@ -4,10 +4,11 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/httputil"
 	"github.com/benpate/data"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/steranko"
+	"github.com/benpate/uri"
 )
 
 // GetNodeInfo returns the discovery links for nodeInfo endpoints
@@ -15,8 +16,8 @@ import (
 // http://nodeinfo.diaspora.software/schema.html
 func GetNodeInfo(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
-	host := dt.TrueHostname(ctx.Request())
-	server := dt.AddProtocol(host)
+	host := httputil.TrueHostname(ctx.Request())
+	server := uri.PrependProtocol(host)
 
 	result := map[string]any{
 		"links": []map[string]any{

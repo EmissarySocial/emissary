@@ -6,9 +6,9 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
+	"github.com/benpate/uri"
 )
 
 // IndexAllStreams is a handler function that triggers the IndexAllStreams queue task.
@@ -93,7 +93,7 @@ func PostSearchLookup(ctx *steranko.Context, factory *service.Factory, session d
 		return derp.Forbidden(location, "No referer", referer)
 	}
 
-	if dt.NameOnly(referer) != factory.Hostname() {
+	if uri.Hostname(referer) != factory.Hostname() {
 		return derp.Forbidden(location, "Invalid referer", referer)
 	}
 

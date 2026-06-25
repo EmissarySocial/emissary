@@ -11,9 +11,9 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
+	"github.com/benpate/uri"
 )
 
 // GetSignIn generates an echo.HandlerFunc that handles GET /signin requests
@@ -78,7 +78,7 @@ func calcNextURL(next string) string {
 	}
 
 	// Otherwise, trim the hostname so we don't have open redirects to other servers
-	next = dt.TrimHostname(next)
+	next = uri.PathAndQuery(next)
 
 	// Do not allow redirect loops
 	if strings.HasPrefix(next, "/signin") {

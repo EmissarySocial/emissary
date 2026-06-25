@@ -7,9 +7,9 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/httputil"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/form"
@@ -21,6 +21,7 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/sniff"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -116,12 +117,12 @@ func (w Common) URL() string {
 
 // Protocol returns http:// or https:// used for this request
 func (w Common) Protocol() string {
-	return dt.Protocol(w.Hostname())
+	return uri.GuessProtocolForHostname(w.Hostname())
 }
 
 // Hostname returns the configured hostname for this request
 func (w Common) Hostname() string {
-	return dt.TrueHostname(w._request)
+	return httputil.TrueHostname(w._request)
 }
 
 // Path returns the HTTP Request path
@@ -480,7 +481,7 @@ func (w Common) IsDesktop() bool {
 
 // IsLocalhost returns TRUE if the request was made to a local domain (localhost, 127.0.0.1, etc.)
 func (w Common) IsLocalhost() bool {
-	return dt.IsLocalhost(w.Hostname())
+	return uri.IsLocalHostname(w.Hostname())
 }
 
 // IsMe returns TRUE if the provided URI is the profileURL of the current user

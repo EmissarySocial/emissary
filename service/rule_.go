@@ -9,11 +9,11 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -405,7 +405,7 @@ func (service *Rule) QueryByActorAndActions(session data.Session, userID primiti
 		service.byUserID(userID),
 		exp.Or(
 			exp.Equal("type", model.RuleTypeActor).AndEqual("trigger", actorID),
-			exp.Equal("type", model.RuleTypeDomain).AndEqual("trigger", dt.NameOnly(actorID)),
+			exp.Equal("type", model.RuleTypeDomain).AndEqual("trigger", uri.Hostname(actorID)),
 			exp.Equal("type", model.RuleTypeContent),
 		),
 		exp.In("action", actions),

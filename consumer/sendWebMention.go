@@ -2,9 +2,9 @@ package consumer
 
 import (
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"willnorris.com/go/webmention"
 )
 
@@ -19,7 +19,7 @@ func SendWebMention(args mapof.Any) queue.Result {
 	client := webmention.New(nil)
 
 	// RULE: No need to send web mentions to local domains
-	if dt.IsLocalhost(target) {
+	if uri.IsLocalHostname(target) {
 		return queue.Success()
 	}
 
@@ -27,7 +27,7 @@ func SendWebMention(args mapof.Any) queue.Result {
 	if endpoint, err := client.DiscoverEndpoint(target); err == nil {
 
 		// RULE: Do not allow remote servers to send webmentions to local domain either
-		if dt.IsLocalhost(endpoint) {
+		if uri.IsLocalHostname(endpoint) {
 			return queue.Success()
 		}
 

@@ -19,7 +19,6 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/geo"
 	"github.com/benpate/mediaserver"
@@ -32,6 +31,7 @@ import (
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -1016,15 +1016,15 @@ func (service *Stream) MapByPrivileges(session data.Session, privileges ...model
 }
 
 // ParsePathextracts the Stream token and actionID from a URL
-func (service *Stream) ParsePath(uri *url.URL) (string, string, error) {
+func (service *Stream) ParsePath(parsedURL *url.URL) (string, string, error) {
 
 	// Verify the URL matches this service
-	if dt.AddProtocol(uri.Host) != service.host {
-		return "", "", derp.BadRequest("service.Stream.LoadByURL", "Hostname must match this server", uri.String())
+	if uri.PrependProtocol(parsedURL.Host) != service.host {
+		return "", "", derp.BadRequest("service.Stream.LoadByURL", "Hostname must match this server", parsedURL.String())
 	}
 
 	// Load the Stream using the token
-	path := list.BySlash(strings.TrimPrefix(uri.Path, "/"))
+	path := list.BySlash(strings.TrimPrefix(parsedURL.Path, "/"))
 	token, path := path.Split()
 
 	if token == "" {
@@ -1379,5 +1379,5 @@ func (service *Stream) SearchResult(stream *model.Stream) model.SearchResult {
 
 // Hostname returns the hostname (domain only) for this service
 func (service *Stream) Hostname() string {
-	return dt.NameOnly(service.host)
+	return uri.Hostname(service.host)
 }

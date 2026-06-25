@@ -9,10 +9,10 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/ascache"
+	"github.com/EmissarySocial/emissary/tools/httputil"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/form"
@@ -100,7 +100,7 @@ func NewStreamFromURI(serverFactory ServerFactory, session data.Session, request
 
 	const location = "build.NewStreamFromURI"
 
-	hostname := dt.TrueHostname(request)
+	hostname := httputil.TrueHostname(request)
 
 	// Locate the requested domain name
 	factory, err := serverFactory.ByDomainName(hostname)

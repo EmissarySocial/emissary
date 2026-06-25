@@ -5,10 +5,10 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 )
 
 // ConnectPushService polls an individual Following record for new post from its outbox (or RSS feed)
@@ -26,7 +26,7 @@ func ConnectPushService(factory *service.Factory, session data.Session, user *mo
 	// RULE: Only connect if both the host and following URL are on the same network.
 	// Only local servers can connect to local actors, and only public-facing servers can
 	// connect to public-facing actors.
-	if dt.IsLocalhost(factory.Host()) == dt.IsLocalhost(following.ProfileURL) {
+	if uri.IsLocalHostname(factory.Host()) == uri.IsLocalHostname(following.ProfileURL) {
 
 		// Load the Actor that we're trying to Follow
 		actor, err := factory.ActivityStream().UserClient(user.UserID).Load(following.URL, sherlock.AsActor())
