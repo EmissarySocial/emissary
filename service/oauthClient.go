@@ -7,10 +7,10 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -191,7 +191,7 @@ func (service *OAuthClient) LoadOrCreateByClientToken(session data.Session, toke
 	client.RedirectURIs = metadata.RedirectURIs
 	client.IconURL = metadata.LogoURI
 	client.RedirectURIs = metadata.RedirectURIs
-	client.Website = dt.NameOnly(metadata.ClientURI)
+	client.Website = uri.Hostname(metadata.ClientURI)
 
 	// Save the new Client
 	if err := service.Save(session, client, "Created via Client ID Metadata Document"); err != nil {

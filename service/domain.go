@@ -15,11 +15,11 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/uri"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/oauth2"
@@ -298,7 +298,7 @@ func (service *Domain) OAuthProvider(providerID string) (providers.OAuthProvider
 // IsLocalhost returns TRUE if the current domain is a local domain
 // (localhost, 127.0.0.1, *.local, etc.)
 func (service *Domain) IsLocalhost() bool {
-	return dt.IsLocalhost(service.hostname)
+	return uri.IsLocalHostname(service.hostname)
 }
 
 /******************************************
@@ -390,7 +390,7 @@ func (service *Domain) OAuthExchange(session data.Session, providerID string, st
 
 // OAuthClientCallbackURL returns the specific callback URL to use for this host and provider.
 func (service *Domain) OAuthClientCallbackURL(providerID string) string {
-	return dt.Protocol(service.configuration.Hostname) + service.configuration.Hostname + "/oauth/connections/" + providerID + "/callback"
+	return uri.GuessProtocolForHostname(service.configuration.Hostname) + service.configuration.Hostname + "/oauth/connections/" + providerID + "/callback"
 }
 
 // NewOAuthClient generates and returns a new OAuth state for the specified provider
@@ -484,7 +484,7 @@ func (service *Domain) LoadWebFinger(username string) (digit.Resource, error) {
 		return digit.Resource{}, derp.BadRequest(location, "Invalid username", username)
 	}
 
-	profileURL := dt.AddProtocol(service.hostname) + "/@application"
+	profileURL := uri.PrependProtocol(service.hostname) + "/@application"
 
 	// Make a WebFinger resource for this user.
 	result := digit.NewResource("acct:service@"+service.hostname).

@@ -7,12 +7,12 @@ import (
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/delta"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/toot/object"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -219,7 +219,7 @@ func (user User) GetJSONLD() mapof.Any {
 	}
 
 	exportURL := user.ActivityPubURL() + "/export"
-	serverURL := dt.Host(user.ProfileURL)
+	serverURL := uri.Host(user.ProfileURL)
 
 	result := mapof.Any{
 		vocab.AtContext:                 contextList,
@@ -518,10 +518,10 @@ func (user User) Host() string {
 
 	hostname := user.Hostname()
 
-	return dt.Protocol(hostname) + hostname
+	return uri.GuessProtocolForHostname(hostname) + hostname
 }
 
 func (user User) Hostname() string {
 
-	return dt.NameOnly(user.ProfileURL)
+	return uri.Hostname(user.ProfileURL)
 }

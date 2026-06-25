@@ -18,18 +18,19 @@ import (
 	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
 	derpmongo "github.com/EmissarySocial/emissary/tools/derp-mongo"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
+	"github.com/EmissarySocial/emissary/tools/httputil"
 	"github.com/EmissarySocial/emissary/tools/templates"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/digital-dome/dome"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
 	"github.com/benpate/turbine/queue_mongo"
+	"github.com/benpate/uri"
 	"github.com/davidscottmills/goeditorjs"
 	"github.com/labstack/echo/v4"
 	"github.com/maypok86/otter"
@@ -635,7 +636,7 @@ func (factory *Factory) ByRequest(req *http.Request) (*service.Factory, error) {
 
 	const location = "server.Factory.ByRequest"
 
-	hostname := dt.TrueHostname(req)
+	hostname := httputil.TrueHostname(req)
 	result, err := factory.ByHostname(hostname)
 
 	if err != nil {
@@ -862,7 +863,7 @@ func (factory *Factory) port(domainConfig config.Domain) string {
 
 	// If not localhost, then use standard ports and assume the
 	// hosting environment will handle the port forwarding
-	if !dt.IsLocalhost(domainConfig.Hostname) {
+	if !uri.IsLocalHostname(domainConfig.Hostname) {
 		return ""
 	}
 

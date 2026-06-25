@@ -17,7 +17,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/first"
@@ -28,6 +27,7 @@ import (
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -91,7 +91,7 @@ func (service *User) Refresh(factory *Factory) {
 
 // Hostname returns the domain-only name (no protocol)
 func (service *User) Hostname() string {
-	return dt.NameOnly(service.host)
+	return uri.Hostname(service.host)
 }
 
 // Host returns the host (with protocol)
@@ -215,7 +215,7 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 	}
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(user); err != nil {
+	if _, err := service.Schema().Validate(user); err != nil {
 		return derp.Wrap(err, location, "Invalid User Data", user)
 	}
 
@@ -828,7 +828,7 @@ func (service *User) WebFinger(session data.Session, token string) (digit.Resour
 	}
 
 	// Make a WebFinger resource for this user.
-	result := digit.NewResource("acct:"+user.Username+"@"+dt.NameOnly(service.host)).
+	result := digit.NewResource("acct:"+user.Username+"@"+uri.Hostname(service.host)).
 		Alias(service.host+"/@"+user.Username).
 		Alias(service.host+"/@"+user.UserID.Hex()).
 		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, user.ActivityPubURL()).

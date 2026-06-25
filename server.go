@@ -29,13 +29,14 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
+	"github.com/EmissarySocial/emissary/tools/httputil"
 	"github.com/benpate/derp"
 	"github.com/benpate/digital-dome/dome4echo"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/form/widget"
 	"github.com/benpate/hannibal"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/uri"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -510,7 +511,7 @@ func startHTTPS(factory *server.Factory, e *echo.Echo, options ...config.Option)
 	if portString, ok := config.HTTPSPortString(); ok {
 
 		// Find all NON-LOCAL domain names.  We need AT LEAST ONE to get an SSL Certificate
-		domains := slice.Filter(config.DomainNames(), dt.NotLocalhost)
+		domains := slice.Filter(config.DomainNames(), uri.NotLocalHostname)
 
 		if len(domains) == 0 {
 			log.Info().Msg("Skipping HTTPS server because there are no non-local domains.")
@@ -617,10 +618,10 @@ func errorHandler(err error, ctx echo.Context) {
 		}
 
 		// Otherwise, forward the user to the signin page
-		uri := request.URL
+		requestURL := request.URL
 
-		if currentPath := uri.Path; currentPath != "/signin" {
-			nextPage := uri.String()
+		if currentPath := requestURL.Path; currentPath != "/signin" {
+			nextPage := requestURL.String()
 			_ = ctx.Redirect(http.StatusSeeOther, "/signin?next="+url.QueryEscape(nextPage))
 			return
 		}
@@ -635,14 +636,14 @@ func errorHandler(err error, ctx echo.Context) {
 			err,
 			location,
 			"Unable to generate web page",
-			"url: "+dt.AddProtocol(request.Host)+request.URL.String(),
+			"url: "+uri.PrependProtocol(request.Host)+request.URL.String(),
 			"method: "+request.Method,
 			ctx.Request().Header,
 		),
 	)
 
 	// If this is a local request, then show developers a full error dump
-	if hostname := dt.TrueHostname(request); dt.IsLocalhost(hostname) {
+	if hostname := httputil.TrueHostname(request); uri.IsLocalHostname(hostname) {
 		_ = ctx.JSONPretty(derp.ErrorCode(err), err, "  ")
 		return
 	}

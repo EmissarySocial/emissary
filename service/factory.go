@@ -17,13 +17,13 @@ import (
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/form"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/steranko"
 	"github.com/benpate/steranko/plugin/hash"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -316,7 +316,7 @@ func (factory *Factory) ID() string {
 
 // Host returns the domain name AND protocol (probably HTTPS) => e.g. "https://example.com"
 func (factory *Factory) Host() string {
-	return dt.Protocol(factory.config.Hostname) + factory.config.Hostname + factory.port
+	return uri.GuessProtocolForHostname(factory.config.Hostname) + factory.config.Hostname + factory.port
 }
 
 // Hostname returns the domain name only (without a protocol) => e.g. "example.com
@@ -326,7 +326,7 @@ func (factory *Factory) Hostname() string {
 
 // IsLocalhost returns TRUE if this is a local domain (localhost, *.local, etc)
 func (factory *Factory) IsLocalhost() bool {
-	return dt.IsLocalhost(factory.Hostname())
+	return uri.IsLocalHostname(factory.Hostname())
 }
 
 func (factory *Factory) Config() config.Domain {
@@ -677,8 +677,8 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
 
 // Camper returns a fully initialized Camper client (for Activity Intents)
 func (factory *Factory) Camper() camper.Camper {
-	client := httpcache.NewHTTPClient(factory.HTTPCache())
-	return camper.New(camper.WithClient(client))
+	middleware := httpcache.NewHTTPMiddleware(factory.HTTPCache())
+	return camper.New(camper.WithRoundTripper(middleware))
 }
 
 func (factory *Factory) ClientIP(request *http.Request) string {

@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/benpate/hannibal/collections"
@@ -22,6 +21,7 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/oauth2"
 )
@@ -384,7 +384,7 @@ func (service *Import) doImport(record *model.Import) error {
 	service.queue.NewTask(
 		"ImportStartup",
 		mapof.Any{
-			"host":     dt.NameOnly(service.host),
+			"host":     uri.Hostname(service.host),
 			"userId":   record.UserID,
 			"importId": record.ImportID,
 		},

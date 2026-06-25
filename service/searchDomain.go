@@ -7,11 +7,11 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -184,7 +184,7 @@ func (service *SearchDomain) WebFinger() digit.Resource {
 }
 
 func (service *SearchDomain) Hostname() string {
-	return dt.NameOnly(service.host)
+	return uri.Hostname(service.host)
 }
 
 /******************************************

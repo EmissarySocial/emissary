@@ -8,8 +8,8 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	"github.com/benpate/domain"
 	"github.com/benpate/hannibal/outbox"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -179,7 +179,7 @@ func (service *Locator) GetPrivateKey(session data.Session, actorType string, ac
 // is not found, then both the type and token will be empty strings.
 func locateObjectFromURL(host string, value string) (string, string) {
 
-	hostname := domain.NameOnly(host)
+	hostname := uri.Hostname(host)
 
 	// It's all good, bro. We're gonna deviate from the spec,
 	// and just NOT CARE if you include `acct:` or not.

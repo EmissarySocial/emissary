@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	dt "github.com/benpate/domain"
+	"github.com/benpate/uri"
 	"github.com/labstack/echo/v4"
 )
 
@@ -23,7 +23,7 @@ func HttpsRedirect(handler echo.HandlerFunc) echo.HandlerFunc {
 		// Do not require HTTPS for localhost
 		// This is okay for local domains (even behind a proxy) because
 		// unencrypted traffic will only be on the private network.
-		if dt.IsLocalhost(request.Host) {
+		if uri.IsLocalHostname(request.Host) {
 			return handler(context)
 		}
 

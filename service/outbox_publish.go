@@ -8,12 +8,12 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/uri"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"willnorris.com/go/webmention"
@@ -64,13 +64,13 @@ func (service *Outbox) Publish(session data.Session, actorType string, actorID p
 	activityMap[vocab.PropertyID] = outboxMessage.ActivityPubURL()
 	ruleFilter := service.ruleService.Filter(actorID, WithBlocksOnly())
 
-	isLocalhost := dt.IsLocalhost(service.host)
+	isLocalhost := uri.IsLocalHostname(service.host)
 
 	for follower := range recipients {
 
 		// RULE: Only deliver to Followers on the same network as the Actor
 		// (local can send to local, public can send to public, but local cannot send to public)
-		if dt.IsLocalhost(follower.Actor.InboxURL) != isLocalhost {
+		if uri.IsLocalHostname(follower.Actor.InboxURL) != isLocalhost {
 			continue
 		}
 
