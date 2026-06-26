@@ -47,9 +47,6 @@ func TestStreamSchema(t *testing.T) {
 		{"products.B.0", "000000000000000000000009", nil},
 		{"products.B.1", "00000000000000000000000a", nil},
 
-		// {"defaultAllow.0", "00000000000000000000000b", nil},
-		// {"defaultAllow.1", "00000000000000000000000c", nil},
-
 		{"url", "https://example/document", nil},
 		{"label", "DOC-LABEL", nil},
 		{"summary", "DOC-SUMMARY", nil},
@@ -78,12 +75,6 @@ func TestStreamSchema(t *testing.T) {
 		{"endDate.timezone", "UTC", nil},
 		{"endDate.unix", int64(1609542240), nil},
 
-		// TODO: LOW: Restore Widget test cases
-		// {"widgets.ABC.0", "FIRST VALUE", nil},
-		// {"widgets.ABC.1", "SECOND VALUE", nil},
-		// {"widgets.XYZ.0", "THIRD VALUE", nil},
-		// {"widgets.XYZ.1", "FOURTH VALUE", nil},
-
 		{"data.ABC", "FIRST VALUE", nil},
 		{"data.XYZ", "SECOND VALUE", nil},
 
@@ -101,10 +92,10 @@ func TestPermissionSchema(t *testing.T) {
 	s := schema.New(permissionSchema())
 
 	table := []tableTestItem{
-		{"ABC.0", "FIRST VALUE", nil},
-		{"ABC.1", "SECOND VALUE", nil},
-		{"XYZ.0", "THIRD VALUE", nil},
-		{"XYZ.1", "FOURTH VALUE", nil},
+		{"ABC.0", "12345678901234567890ABCD", nil},
+		{"ABC.1", "12345678901234567890ABCD", nil},
+		{"XYZ.0", "12345678901234567890ABCD", nil},
+		{"XYZ.1", "12345678901234567890ABCD", nil},
 	}
 
 	tableTest_Schema(t, &s, &m, table)
