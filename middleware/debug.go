@@ -11,7 +11,7 @@ func Debug() echo.MiddlewareFunc {
 
 			// Try to read the body from the request
 			request := ctx.Request()
-			body, err := re.ReadRequestBody(request)
+			body, err := re.ReadRequestBody(request, re.DefaultMaximum)
 
 			if err != nil {
 				return derp.Wrap(err, "middleware.Debug", "Unable to read body from request")
