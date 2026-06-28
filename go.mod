@@ -6,33 +6,32 @@ require (
 	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/aws/aws-sdk-go v1.55.8
 	github.com/benpate/color v0.1.0
-	github.com/benpate/data v0.31.2
-	github.com/benpate/data-mock v0.31.4
+	github.com/benpate/data v0.32.0
+	github.com/benpate/data-mock v0.32.1
 	github.com/benpate/data-mongo v0.30.9
 	github.com/benpate/data-slice v0.1.0
 	github.com/benpate/delta v0.1.0
-	github.com/benpate/derp v0.35.0
+	github.com/benpate/derp v0.36.0
 	github.com/benpate/digit v0.14.1
-	github.com/benpate/digital-dome v0.2.14
-	github.com/benpate/domain v0.2.12
-	github.com/benpate/exp v0.9.0
-	github.com/benpate/exp-builder v0.10.7
-	github.com/benpate/form v0.25.17
-	github.com/benpate/geo v0.0.3
-	github.com/benpate/hannibal v0.17.7
-	github.com/benpate/html v0.16.16
+	github.com/benpate/digital-dome v0.4.0
+	github.com/benpate/exp v0.10.0
+	github.com/benpate/exp-builder v0.11.0
+	github.com/benpate/form v0.26.0
+	github.com/benpate/geo v0.1.1
+	github.com/benpate/hannibal v0.20.0
+	github.com/benpate/html v0.17.0
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.15.14
-	github.com/benpate/re v0.3.5
-	github.com/benpate/remote v0.18.1
-	github.com/benpate/rosetta v0.25.36
+	github.com/benpate/mediaserver v0.16.0
+	github.com/benpate/re v0.5.0
+	github.com/benpate/remote v0.21.2
+	github.com/benpate/rosetta v0.27.0
 	github.com/benpate/sherlock v0.10.2
-	github.com/benpate/sniff v0.1.0
-	github.com/benpate/steranko v0.24.1
-	github.com/benpate/table v0.7.10
+	github.com/benpate/sniff v0.2.0
+	github.com/benpate/steranko v0.26.0
+	github.com/benpate/table v0.8.0
 	github.com/benpate/toot v0.3.0
-	github.com/benpate/turbine v0.4.8
-	github.com/benpate/uri v0.0.6
+	github.com/benpate/turbine v0.5.1
+	github.com/benpate/uri v0.1.2
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/codingsince1985/geo-golang v1.9.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -47,7 +46,7 @@ require (
 	github.com/hairyhenderson/go-fsimpl v0.4.2
 	github.com/hjson/hjson-go/v4 v4.6.0
 	github.com/kr/jsonfeed v0.1.1
-	github.com/labstack/echo/v4 v4.15.2
+	github.com/labstack/echo/v4 v4.15.4
 	github.com/labstack/gommon v0.5.0
 	github.com/maypok86/otter v1.2.4
 	github.com/microcosm-cc/bluemonday v1.0.27
@@ -71,8 +70,8 @@ require (
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.abhg.dev/goldmark/anchor v0.2.0
 	go.mongodb.org/mongo-driver v1.17.9
-	golang.org/x/crypto v0.51.0
-	golang.org/x/exp v0.0.0-20260508232706-74f9aab9d74a
+	golang.org/x/crypto v0.53.0
+	golang.org/x/exp v0.0.0-20260611194520-c48552f49976
 	golang.org/x/oauth2 v0.36.0
 	willnorris.com/go/microformats v1.2.0
 	willnorris.com/go/webmention v0.0.0-20250531043116-33a44c5fb605
@@ -85,6 +84,7 @@ require (
 	github.com/alecthomas/chroma/v2 v2.24.1 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
+	github.com/benpate/domain v0.2.12 // indirect
 	github.com/cloudflare/ahocorasick v0.0.0-20240916140611-054963ec9396 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/cyphar/filepath-securejoin v0.6.1 // indirect
@@ -108,7 +108,7 @@ require (
 	github.com/kevinburke/ssh_config v1.6.0 // indirect
 	github.com/klauspost/compress v1.18.6 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
-	github.com/mattn/go-colorable v0.1.14 // indirect
+	github.com/mattn/go-colorable v0.1.15 // indirect
 	github.com/mattn/go-isatty v0.0.22 // indirect
 	github.com/mmcdole/goxpp v1.1.1 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -131,11 +131,13 @@ require (
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	golang.org/x/image v0.40.0 // indirect
-	golang.org/x/net v0.54.0 // indirect
-	golang.org/x/sync v0.20.0 // indirect
-	golang.org/x/sys v0.44.0 // indirect
-	golang.org/x/text v0.37.0 // indirect
+	golang.org/x/net v0.56.0 // indirect
+	golang.org/x/sync v0.21.0 // indirect
+	golang.org/x/sys v0.46.0 // indirect
+	golang.org/x/text v0.38.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/benpate/re => ../../../github.com/benpate/re
