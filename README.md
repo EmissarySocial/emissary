@@ -1,6 +1,7 @@
 <img src="https://emissary.dev/.templates/emissary_dev_homepage/resources/Emissary-Wordmark-Black-600.png" width="40%">
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/EmissarySocial/emissary.svg)](https://pkg.go.dev/github.com/EmissarySocial/emissary)
+[![Version](https://img.shields.io/github/v/release/EmissarySocial/emissary?include_prereleases&style=flat-square&color=brightgreen)](https://github.com/EmissarySocial/emissary/releases)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/EmissarySocial/emissary/go.yml?branch=main)](https://github.com/EmissarySocial/emissary/actions/workflows/go.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/EmissarySocial/emissary?style=flat-square)](https://goreportcard.com/report/github.com/EmissarySocial/emissary)
 [![Codecov](https://img.shields.io/codecov/c/github/EmissarySocial/emissary.svg?style=flat-square)](https://codecov.io/gh/EmissarySocial/emissary)
