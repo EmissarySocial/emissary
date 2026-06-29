@@ -172,7 +172,7 @@ func (service *Group) ListByIDs(session data.Session, groupIDs ...primitive.Obje
 	}
 
 	// Build the criteria from the list of GroupIDs
-	criteria := exp.Empty()
+	var criteria exp.Expression = exp.Empty()
 
 	for _, groupID := range groupIDs {
 		criteria = criteria.Or(exp.Equal("_id", groupID))

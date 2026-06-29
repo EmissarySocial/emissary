@@ -55,7 +55,7 @@ func getPageInfo[In rankGetter](slice []In) toot.PageInfo {
 // that can be used to filter database queries.
 func queryExpression(queryPager txn.QueryPager) exp.Expression {
 
-	result := exp.All()
+	var result exp.Expression = exp.All()
 
 	params := queryPager.QueryPage()
 
