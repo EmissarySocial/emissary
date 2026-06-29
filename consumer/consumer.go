@@ -123,9 +123,6 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "SendSearchResult-SearchQuery":
 		return WithSession(consumer.serverFactory, args, SendSearchResult_SearchQuery)
 
-	case "SendWebMention":
-		return SendWebMention(args)
-
 	case "SendWebSubMessage":
 		return SendWebSubMessage(args)
 
