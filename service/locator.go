@@ -221,12 +221,9 @@ func locateObjectFromURL(host string, value string) (string, string) {
 			return model.ActorTypeApplication, ""
 		}
 
-		// If there's anything after the username, then this is not a valid URL for WebFinger.
-		value, _, hasSuffix := strings.Cut(value, "/")
-
-		if hasSuffix {
-			return "", ""
-		}
+		// Keep only the first path segment; any trailing route data is discarded
+		// (e.g. "token/route" and "token/" both resolve on "token").
+		value, _, _ = strings.Cut(value, "/")
 
 		// Special case for "Application" account
 		if value == "@application" {
