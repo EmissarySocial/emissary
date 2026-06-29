@@ -127,7 +127,9 @@ func PostWebSubClient(ctx *steranko.Context, factory *service.Factory, session d
 		header := ctx.Request().Header.Get("X-Hub-Signature")
 		method, signature := list.Equal(header).Split()
 
-		hmac.Validate(method, following.Secret, body.Bytes(), signature.Bytes())
+		if !hmac.Validate(method, following.Secret, body.Bytes(), signature.Bytes()) {
+			return derp.BadRequest(location, "Invalid HMAC signature", following, header)
+		}
 	}
 
 	// TODO: MEDIUM: WebSub - Handle FatPings.
