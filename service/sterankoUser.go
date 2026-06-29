@@ -195,6 +195,7 @@ func (service SterankoUserService) claims(sterankoUser steranko.User) (model.Aut
 		IdentityID:  identityID,
 		GroupIDs:    user.GroupIDs,
 		DomainOwner: user.IsOwner,
+		Revalidate:  time.Now().Unix(), // Marks this as a full User session that Steranko re-verifies once it ages past the revalidation window (see GetRevalidationTime)
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   user.UserID.Hex(),                               // Stable identifier Steranko uses to re-load the User during revalidation (see LoadBySubject)
 			IssuedAt:  jwt.NewNumericDate(time.Now()),                   // Current create date.  (Used by Steranko to refresh tokens)
