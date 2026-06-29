@@ -185,8 +185,8 @@ func (service *Group) ListByIDs(session data.Session, groupIDs ...primitive.Obje
 		return nil, derp.Wrap(err, "service.Group.ListbyIDs", "Error executing query", criteria)
 	}
 
-	// Read the iterator into a result array
 	for index := 0; it.Next(&(result[index])); index++ {
+		// Read the iterator into a result array
 	}
 
 	return result, nil
