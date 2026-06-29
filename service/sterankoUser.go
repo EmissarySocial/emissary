@@ -59,6 +59,41 @@ func (service SterankoUserService) Load(username string, result steranko.User) e
 	return derp.Internal(location, "Invalid result provided.  This should never happen")
 }
 
+// LoadBySubject retrieves a single User by the "sub" claim in their session
+// token, which Emissary populates with the User's hex-encoded UserID (see
+// claims). Keying on the immutable UserID means revalidation keeps working even
+// after a User changes their username or email.
+func (service SterankoUserService) LoadBySubject(subject string, result steranko.User) error {
+
+	const location = "service.SterankoUserService.LoadBySubject"
+
+	// Confirm that we have been sent a User pointer
+	user, isUser := result.(*model.User)
+
+	if !isUser {
+		return derp.Internal(location, "Invalid result provided.  This should never happen")
+	}
+
+	// The subject is the User's hex-encoded ObjectID
+	userID, err := primitive.ObjectIDFromHex(subject)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid subject (expected hex ObjectID)", subject)
+	}
+
+	// Load the user from the database
+	if err := service.userService.LoadByID(service.session, userID, user); err != nil {
+		return derp.Wrap(err, location, "Unable to load user")
+	}
+
+	// RULE: If the User has moved to a new server, then their session is no longer valid
+	if user.MovedTo != "" {
+		return derp.Forbidden(location, "User moved to new server", user.MovedTo)
+	}
+
+	return nil
+}
+
 // Save inserts/updates a single User in the database
 func (service SterankoUserService) Save(user steranko.User, comment string) error {
 
@@ -161,6 +196,7 @@ func (service SterankoUserService) claims(sterankoUser steranko.User) (model.Aut
 		GroupIDs:    user.GroupIDs,
 		DomainOwner: user.IsOwner,
 		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   user.UserID.Hex(),                               // Stable identifier Steranko uses to re-load the User during revalidation (see LoadBySubject)
 			IssuedAt:  jwt.NewNumericDate(time.Now()),                   // Current create date.  (Used by Steranko to refresh tokens)
 			ExpiresAt: jwt.NewNumericDate(time.Now().AddDate(10, 0, 0)), // Expires ten years from now (but re-validated sooner by Steranko)
 		},
