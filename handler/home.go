@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/server"
-	"github.com/EmissarySocial/emissary/tools/httputil"
 	"github.com/benpate/derp"
 	"github.com/benpate/uri"
 	"github.com/labstack/echo/v4"
@@ -30,7 +29,7 @@ func GetHome(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Otherwise, look up the hostname to see if this is a personalized domain (Like: yomama.serer.social)
-		hostname := httputil.TrueHostname(ctx.Request())
+		hostname := serverFactory.Hostname(ctx.Request())
 		username, hostname, exists := strings.Cut(hostname, ".")
 
 		if !exists {

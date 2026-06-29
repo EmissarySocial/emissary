@@ -29,7 +29,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
-	"github.com/EmissarySocial/emissary/tools/httputil"
 	"github.com/benpate/derp"
 	"github.com/benpate/digital-dome/dome4echo"
 	"github.com/benpate/form/widget"
@@ -643,7 +642,8 @@ func errorHandler(err error, ctx echo.Context) {
 	)
 
 	// If this is a local request, then show developers a full error dump
-	if hostname := httputil.TrueHostname(request); uri.IsLocalHostname(hostname) {
+	// X-Forwarded-Host is not needed here because this is for development only.
+	if uri.IsLocalHostname(request.Host) {
 		_ = ctx.JSONPretty(derp.ErrorCode(err), err, "  ")
 		return
 	}

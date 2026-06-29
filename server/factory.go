@@ -18,7 +18,6 @@ import (
 	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
 	derpmongo "github.com/EmissarySocial/emissary/tools/derp-mongo"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
-	"github.com/EmissarySocial/emissary/tools/httputil"
 	"github.com/EmissarySocial/emissary/tools/templates"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
@@ -632,11 +631,12 @@ func (factory *Factory) ByContext(ctx echo.Context) (*service.Factory, error) {
 	return factory.ByRequest(ctx.Request())
 }
 
+// ByRequest retrieves a Domain factory using an http.Request
 func (factory *Factory) ByRequest(req *http.Request) (*service.Factory, error) {
 
 	const location = "server.Factory.ByRequest"
 
-	hostname := httputil.TrueHostname(req)
+	hostname := factory.Hostname(req)
 	result, err := factory.ByHostname(hostname)
 
 	if err != nil {
@@ -848,11 +848,25 @@ func (factory *Factory) calcClientIPStrategy(config config.Config) realclientip.
 func (factory *Factory) ClientIP(request *http.Request) string {
 
 	if factory.clientIPStrategy == nil {
-		derp.Report(derp.Internal("server.Factory.ClientIPStrategy", "Client IP strategy is nil"))
+		derp.Report(derp.Internal("server.Factory.ClientIPStrategy", "Client IP strategy cannot be nil"))
 		return ""
 	}
 
 	return factory.clientIPStrategy.ClientIP(request.Header, request.RemoteAddr)
+}
+
+// Hostname returns the hostname for the request.
+func (factory *Factory) Hostname(request *http.Request) string {
+
+	// If the server config includes TrustForwardedHost, then the X-Forwarded-Host header is used.
+	if factory.config.TrustForwardedHost {
+		if forwardedHost := request.Header.Get("X-Forwarded-Host"); forwardedHost != "" {
+			return forwardedHost
+		}
+	}
+
+	// Default is to use the standard Host header
+	return request.Host
 }
 
 /******************************************

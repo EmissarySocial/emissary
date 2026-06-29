@@ -7,7 +7,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
-	"github.com/EmissarySocial/emissary/tools/httputil"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
@@ -122,7 +121,7 @@ func (w Common) Protocol() string {
 
 // Hostname returns the configured hostname for this request
 func (w Common) Hostname() string {
-	return httputil.TrueHostname(w._request)
+	return w._factory.Hostname()
 }
 
 // Path returns the HTTP Request path

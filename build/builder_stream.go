@@ -9,7 +9,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/ascache"
-	"github.com/EmissarySocial/emissary/tools/httputil"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -92,43 +91,6 @@ func NewStreamWithoutTemplate(factory Factory, session data.Session, request *ht
 	}
 
 	return result, nil
-}
-
-// NewStreamFromURI creates a new Stream builder for the provided request context.
-// IMPORTANT: The stream parameter is expected to be an empty stream in the caller's scope that will be populated by this function.
-func NewStreamFromURI(serverFactory ServerFactory, session data.Session, request *http.Request, response http.ResponseWriter, stream *model.Stream, actionID string) (Stream, error) {
-
-	const location = "build.NewStreamFromURI"
-
-	hostname := httputil.TrueHostname(request)
-
-	// Locate the requested domain name
-	factory, err := serverFactory.ByDomainName(hostname)
-
-	if err != nil {
-		return Stream{}, derp.Wrap(err, location, "Invalid domain")
-	}
-
-	// If Load the stream (using a stream in the caller's namespace)
-	streamService := factory.Stream()
-	token, defaultAction, err := streamService.ParsePath(request.URL)
-
-	if err != nil {
-		return Stream{}, derp.Wrap(err, location, "Invalid path")
-	}
-
-	// Try to load the Stream from the database
-	if err := streamService.LoadByToken(session, token, stream); err != nil {
-		return Stream{}, derp.Wrap(err, location, "Unable to load stream")
-	}
-
-	// If the calling function didn't specify an action, then use the default action from the URL
-	if actionID == "" {
-		actionID = defaultAction
-	}
-
-	// Create and return a new builder
-	return NewStreamWithoutTemplate(factory, session, request, response, stream, actionID)
 }
 
 /******************************************

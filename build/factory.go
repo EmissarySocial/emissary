@@ -16,10 +16,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type ServerFactory interface {
-	ByDomainName(string) (Factory, error)
-}
-
 // Factory is used to locate all necessary services
 type Factory interface {
 	// Model Services

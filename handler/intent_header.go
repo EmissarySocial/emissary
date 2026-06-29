@@ -4,7 +4,6 @@ import (
 	"net/url"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/httputil"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
 	"github.com/benpate/uri"
@@ -12,9 +11,8 @@ import (
 
 func write_intent_header(ctx *steranko.Context, b *html.Builder, user *model.User) {
 
-	currentURL := ctx.Request().URL.String() // nolint:scopeguard
-	hostname := httputil.TrueHostname(ctx.Request())
-	hostname = uri.Hostname(hostname)
+	currentURL := ctx.Request().URL.String()
+	hostname := uri.Hostname(user.ProfileURL)
 
 	b.Div().Class("flex-shrink-0", "flex-row", "flex-align-stretch", "margin-bottom")
 	{
@@ -35,5 +33,4 @@ func write_intent_header(ctx *steranko.Context, b *html.Builder, user *model.Use
 			Close()
 	}
 	b.Close()
-
 }
