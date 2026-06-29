@@ -64,6 +64,39 @@ func (slice Slice) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
+// GetIndex returns the ObjectID at the provided index (as a hex string) and TRUE,
+// or ("", false) if the index is out of range. Implements schema.ArrayGetter.
+func (slice Slice) GetIndex(index int) (any, bool) {
+
+	if (index < 0) || (index >= slice.Length()) {
+		return nil, false
+	}
+
+	return slice[index].Hex(), true
+}
+
+// SetIndex stores an ObjectID at the provided index, growing the slice to fit if
+// necessary, and returns TRUE if the value was set. Implements schema.ArraySetter.
+func (slice *Slice) SetIndex(index int, value any) bool {
+
+	objectID, err := Convert(value)
+
+	if err != nil {
+		return false
+	}
+
+	if index < 0 {
+		return false
+	}
+
+	for index >= slice.Length() {
+		*slice = append(*slice, primitive.NilObjectID)
+	}
+
+	(*slice)[index] = objectID
+	return true
+}
+
 func (slice *Slice) SetString(name string, value string) bool {
 
 	if objectID, err := primitive.ObjectIDFromHex(value); err == nil {

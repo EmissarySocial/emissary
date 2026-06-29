@@ -121,6 +121,40 @@ func (set Slice[V]) Length() int {
 	return len(set)
 }
 
+// GetIndex returns the value at the provided index and TRUE, or (nil, false) if the
+// index is out of range. Implements schema.ArrayGetter.
+func (set Slice[V]) GetIndex(index int) (any, bool) {
+
+	if (index < 0) || (index >= len(set)) {
+		return nil, false
+	}
+
+	return set[index], true
+}
+
+// SetIndex stores a value at the provided index, growing the slice to fit if necessary,
+// and returns TRUE if the value was set. Implements schema.ArraySetter.
+func (set *Slice[V]) SetIndex(index int, value any) bool {
+
+	typed, ok := value.(V)
+
+	if !ok {
+		return false
+	}
+
+	if index < 0 {
+		return false
+	}
+
+	for index >= len(*set) {
+		var newItem V
+		*set = append(*set, newItem)
+	}
+
+	(*set)[index] = typed
+	return true
+}
+
 func (set *Slice[V]) Remove(name string) {
 	set.Delete(name)
 }
