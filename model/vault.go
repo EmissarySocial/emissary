@@ -181,7 +181,7 @@ func (vault Vault) Decrypt(encryptionKey []byte, values ...string) (mapof.String
 
 		plaintext, err := aesgcm.Open(nil, nonce, ciphertext, nil)
 		if err != nil {
-			panic(err.Error())
+			return nil, derp.Wrap(err, location, "Unable to decrypt value in vault", property)
 		}
 
 		result[property] = string(plaintext)
