@@ -27,6 +27,7 @@ func Schema() schema.Schema {
 				"clientIPStrategy":     schema.String{Enum: []string{"SINGLE-IP-HEADER", "RIGHTMOST-TRUSTED-COUNT", "REMOTE-ADDR"}, Default: "REMOTE-ADDR"},
 				"clientIPTrustedCount": schema.Integer{Minimum: null.NewInt64(0), Default: null.NewInt64(0)},
 				"clientIPHeader":       schema.String{Default: "X-Real-IP"},
+				"trustForwardedHost":   schema.Boolean{},
 			},
 		},
 	}
@@ -82,6 +83,8 @@ func (config *Config) GetPointer(name string) (any, bool) {
 	case "clientIPHeader":
 		return &config.ClientIPHeader, true
 
+	case "trustForwardedHost":
+		return &config.TrustForwardedHost, true
 	}
 
 	return nil, false
