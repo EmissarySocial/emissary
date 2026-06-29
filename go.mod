@@ -24,7 +24,7 @@ require (
 	github.com/benpate/mediaserver v0.16.0
 	github.com/benpate/re v0.5.0
 	github.com/benpate/remote v0.21.2
-	github.com/benpate/rosetta v0.27.0
+	github.com/benpate/rosetta v0.28.0
 	github.com/benpate/sherlock v0.10.2
 	github.com/benpate/sniff v0.2.0
 	github.com/benpate/steranko v0.26.0
