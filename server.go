@@ -443,7 +443,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/keyPackages", handler.WithUser(factory, ap_user.GetKeyPackageCollection))
 	e.GET("/@:userId/pub/keyPackages/:keyPackageId", handler.WithUser(factory, ap_user.GetKeyPackageRecord))
 	e.GET("/@:userId/pub/objects", handler.WithUser(factory, ap_user.GetObjectsCollection))
-	e.GET("/@:userId/pub/objects/:objectId", handler.WithUser(factory, ap_user.GetObject))
+	e.GET("/@:userId/pub/objects/:objectId", handler.WithActor(factory, ap_user.GetObject))
 	e.GET("/@:userId/pub/outbox", handler.WithUser(factory, ap_user.GetOutboxCollection))
 	e.POST("/@:userId/pub/outbox", handler.WithAuthenticatedUser(factory, ap_user.PostOutbox))
 	e.GET("/@:userId/pub/outbox/:messageId", handler.WithUser(factory, ap_user.GetOutboxActivity))

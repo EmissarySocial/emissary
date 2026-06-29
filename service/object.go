@@ -136,3 +136,28 @@ func (service *Object) RangeByUser(session data.Session, userID primitive.Object
 func (service *Object) ActivityPubURL(userID primitive.ObjectID, objectID primitive.ObjectID) string {
 	return service.host + "/@" + userID.Hex() + "/pub/objects/" + objectID.Hex()
 }
+
+/******************************************
+ * Permissions
+ ******************************************/
+
+func (service *Object) IsAllowed(object *model.Object, actorID string) bool {
+
+	// RULE: All requests match "Public"/anonymous role
+	credentials := []string{
+		vocab.NamespacePublic,
+		vocab.NamespaceASPublic,
+		vocab.NamespaceActivityStreamsPublic,
+	}
+
+	// RULE: If we have a valid actorID, also try to match it in the permissions.
+	if actorID != "" {
+		credentials = append(credentials, actorID)
+	}
+
+	return object.Permissions.ContainsAny(credentials...)
+}
+
+func (service *Object) NotAllowed(object *model.Object, actorID string) bool {
+	return !service.IsAllowed(object, actorID)
+}
