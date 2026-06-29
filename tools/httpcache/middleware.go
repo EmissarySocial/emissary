@@ -63,7 +63,11 @@ func (middleware HTTPMiddleware) RoundTrip(request *http.Request) (*http.Respons
 	responseCopy, err := re.CloneResponse(response, re.DefaultMaximum)
 
 	if err != nil {
-		return response, derp.Wrap(err, location, "Error cloning HTTP response", derp.WithCode(response.StatusCode))
+		statusCode := 0
+		if response != nil {
+			statusCode = response.StatusCode
+		}
+		return response, derp.Wrap(err, location, "Error cloning HTTP response", derp.WithCode(statusCode))
 	}
 
 	middleware.cache.setResponse(request, &responseCopy)
