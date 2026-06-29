@@ -2,6 +2,7 @@ package model
 
 import (
 	"strings"
+	"time"
 
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/rosetta/mapof"
@@ -20,6 +21,7 @@ type Authorization struct {
 	DomainOwner bool               `json:"O,omitzero"`  // If TRUE, then this user is an owner of this domain
 	APIUser     bool               `json:"A,omitzero"`  // If TRUE, then this user is an API user
 	Masquerade  bool               `json:"M,omitzero"`  // If TRUE, then this user is an administrator of this domain who is masquerading as another user.
+	Revalidate  int64              `json:"R,omitzero"`  // Unix epoch (seconds) when this session was last verified. Steranko re-checks the session against the database once this is older than its revalidation window.
 
 	jwt.RegisteredClaims // By embedding the "RegisteredClaims" object, this record can support standard behaviors, like token expiration, etc.
 }
@@ -36,10 +38,24 @@ func NewAuthorization() Authorization {
 		DomainOwner:      false,
 		APIUser:          false,
 		Masquerade:       false,
+		Revalidate:       0,
 		RegisteredClaims: jwt.RegisteredClaims{},
 	}
 
 	return result
+}
+
+// GetRevalidationTime implements the steranko.Revalidatable interface. It reports
+// when this session was last verified, and whether that timestamp is set. A zero
+// value means the session has not opted in to revalidation (e.g. guest/Identity
+// sessions), so Steranko leaves it alone.
+func (authorization Authorization) GetRevalidationTime() (time.Time, bool) {
+
+	if authorization.Revalidate == 0 {
+		return time.Time{}, false
+	}
+
+	return time.Unix(authorization.Revalidate, 0), true
 }
 
 // IsAuthenticated returns TRUE if this authorization is valid and has a non-zero UserID
