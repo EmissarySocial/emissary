@@ -31,7 +31,10 @@ func GetObject(ctx *steranko.Context, factory *service.Factory, session data.Ses
 		return derp.Wrap(err, location, "Unable to load object", "token", token)
 	}
 
-	// TODO: Verify permissions
+	// RULE: The requester must be allowed to view this Object (public, or a named recipient)
+	if !canViewObjectPermissions(ctx, factory, object.Permissions) {
+		return derp.Forbidden(location, "Access denied")
+	}
 
 	// Return the object value as JSON
 	ctx.Response().Header().Set("Content-Type", "application/activity+json")

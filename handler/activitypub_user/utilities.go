@@ -3,8 +3,10 @@ package activitypub_user
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/hannibal/sigs"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/list"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 )
@@ -56,6 +58,36 @@ func isUserVisible(context *steranko.Context, user *model.User) bool {
 
 	// Otherwise, access depends on the user's profile being public
 	return user.IsPublic
+}
+
+// isRecipientPublic returns TRUE if the provided recipients list addresses the
+// public audience (in any of the forms that a remote sender might use).
+func isRecipientPublic(recipients sliceof.String) bool {
+	return recipients.Contains(vocab.NamespaceActivityStreamsPublic) ||
+		recipients.Contains(vocab.NamespaceASPublic) ||
+		recipients.Contains(vocab.NamespacePublic)
+}
+
+// canViewObjectPermissions returns TRUE if the request is allowed to view an Object
+// whose recipient list is `permissions`. Public objects are visible to everyone;
+// otherwise the requester must prove (via a valid HTTP signature) that they are one
+// of the named recipients.
+func canViewObjectPermissions(ctx *steranko.Context, factory *service.Factory, permissions sliceof.String) bool {
+
+	// RULE: Public objects are visible to everyone
+	if isRecipientPublic(permissions) {
+		return true
+	}
+
+	// Otherwise, identify the requester via their HTTP signature
+	signature, err := sigs.Verify(ctx.Request(), factory.ActivityStream().PublicKeyFinder)
+
+	if err != nil {
+		return false
+	}
+
+	// RULE: The signed-in actor must be a named recipient of this Object
+	return permissions.Contains(signature.ActorID())
 }
 
 // fullURL returns the URL for a request that include the protocol, hostname, and path
