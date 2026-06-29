@@ -70,9 +70,6 @@ func PreProcessor(task *queue.Task) error {
 	case "ReceiveWebMention":
 		task.Priority = 256
 
-	case "SendWebMention":
-		task.Priority = 256
-
 	case "SendWebSubMessage":
 		task.Priority = 256
 

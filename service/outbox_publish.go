@@ -268,13 +268,4 @@ func (service *Outbox) sendNotifications_WebMention(activity mapof.Any) {
 	if len(links) == 0 {
 		return
 	}
-
-	// Add background tasks to TRY sending webmentions to every link we found
-	for _, link := range links {
-
-		service.queue.NewTask("SendWebMention", mapof.Any{
-			"source": id,
-			"target": link,
-		})
-	}
 }
