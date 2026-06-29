@@ -40,6 +40,9 @@ func (keyPackage *KeyPackage) GetStringOK(name string) (string, bool) {
 	case "encoding":
 		return keyPackage.Encoding, true
 
+	case "content":
+		return keyPackage.Content, true
+
 	case "generatorId":
 		return keyPackage.GeneratorID, true
 
