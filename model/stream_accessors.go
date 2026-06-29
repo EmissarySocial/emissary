@@ -50,8 +50,6 @@ func StreamSchema() schema.Element {
 			"isPublished":      schema.Boolean{},
 			"isFeatured":       schema.Boolean{},
 			"syndication":      schema.Array{Items: schema.String{}},
-			"startTime":        schema.Integer{BitSize: 64},
-			"endTime":          schema.Integer{BitSize: 64},
 		},
 	}
 }
