@@ -135,6 +135,9 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 	case "inReplyTo":
 		return &stream.InReplyTo, true
 
+	case "context":
+		return &stream.Context, true
+
 	case "rank":
 		return &stream.Rank, true
 
