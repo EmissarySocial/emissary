@@ -32,6 +32,11 @@ func (set Map[V]) Keys() []string {
 	return result
 }
 
+// IsMap returns TRUE, declaring this type a map for schema traversal. Implements schema.MapTyper.
+func (set Map[V]) IsMap() bool {
+	return true
+}
+
 // Get returns the object with the given ID.  If no object with the given ID is found, Get returns an empty object.
 func (set Map[V]) Get(key string) (V, bool) {
 

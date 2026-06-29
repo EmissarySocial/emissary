@@ -44,6 +44,11 @@ func (m Map) Keys() []string {
 	return keys
 }
 
+// IsMap returns TRUE, declaring this type a map for schema traversal. Implements schema.MapTyper.
+func (m Map) IsMap() bool {
+	return true
+}
+
 func (m Map) Exists(key string) bool {
 	_, exists := m[key]
 	return exists
