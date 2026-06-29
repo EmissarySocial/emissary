@@ -2,6 +2,7 @@ package service
 
 import (
 	"archive/zip"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -325,7 +326,7 @@ func (service *StreamArchive) writeToZip(session data.Session, zipWriter *zip.Wr
 
 			// Send the output from the MediaServer through FFmpeg one more time
 			// to add metadata to the file *before* it's written to the ZIP archive
-			if err := service.mediaserver.Process(filespec, fileWriter); err != nil {
+			if err := service.mediaserver.Process(context.Background(), filespec, fileWriter); err != nil {
 				return derp.Wrap(err, location, "Error processing attachment", filespec)
 			}
 		}
