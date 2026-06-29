@@ -24,6 +24,7 @@ func TestRuleSchema(t *testing.T) {
 		{"summary", "COMMENT", nil},
 		{"isPublic", "true", true},
 		{"publishDate", int64(1234567890), nil},
+		{"reasonCode", "SPAM", nil},
 	}
 
 	tableTest_Schema(t, &s, &block, table)

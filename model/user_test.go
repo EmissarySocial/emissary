@@ -42,6 +42,10 @@ func TestUserSchema(t *testing.T) {
 		{"hashtags.0", "HEy", nil},
 		{"hashtags.1", "ThErE", nil},
 		{"hashtags.2", "bItChEs", nil},
+		{"movedTo", "https://moved.example/newhome", nil},
+		{"data.ABC", "DATA-ABC", nil},
+		{"data.XYZ", "DATA-XYZ", nil},
+		{"mapIds.federated", "fed-id-123", nil},
 	}
 
 	tableTest_Schema(t, &s, &user, tests)

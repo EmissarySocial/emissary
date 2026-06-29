@@ -38,6 +38,9 @@ func TestDomainSchema(t *testing.T) {
 		{"defaultAnonymous", "/home", nil},
 		{"defaultAuthenticated", "/@me", nil},
 		{"defaultOwner", "/admin", nil},
+		{"imageId", "aaa4bbb8ddd4ddd812345679", nil},
+		{"mlsGroupIds", "GROUP-IDS", nil},
+		{"mlsMode", DomainMLSModeGroups, nil},
 	}
 
 	tableTest_Schema(t, &s, &domain, table)

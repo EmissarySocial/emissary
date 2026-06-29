@@ -17,6 +17,7 @@ func TestFolderSchema(t *testing.T) {
 		{"label", "LABEL", nil},
 		{"rank", 1.0, 1},
 		{"layout", "MAGAZINE", nil},
+		{"icon", "folder-icon", nil},
 	}
 
 	tableTest_Schema(t, &s, &folder, table)

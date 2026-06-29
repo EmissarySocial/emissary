@@ -50,8 +50,15 @@ func TestStreamSchema(t *testing.T) {
 		{"url", "https://example/document", nil},
 		{"label", "DOC-LABEL", nil},
 		{"summary", "DOC-SUMMARY", nil},
+		{"parentTemplateId", "PARENT-TMPL", nil},
+		{"context", "https://example/context", nil},
 		{"icon", "https://example/icon.png", nil},
 		{"iconUrl", "https://DOC.ICONURL.COM", nil},
+		{"hashtags.0", "first-tag", nil},
+		{"hashtags.1", "second-tag", nil},
+		// note: "isPublished" is a read-only virtual field (computed from publishDate/unpublishDate),
+		// "syndication" is a delta.Slice not settable by element path, and "widgets" is a nested
+		// object — none round-trip through this table helper, so they are intentionally omitted.
 		{"attributedTo.name", "DOC-AUTHOR-NAME", nil},
 		{"attributedTo.profileUrl", "https://example/author", nil},
 
@@ -84,6 +91,34 @@ func TestStreamSchema(t *testing.T) {
 	}
 
 	tableTest_Schema(t, &s, &stream, tests)
+}
+
+// TestStreamSchema_Aliases covers the alias properties that map onto shared fields: "name" is an
+// alias for Label and "description" is an alias for Summary. They share storage, so they must be
+// tested in isolation (a single table would have them clobber label/summary).
+func TestStreamSchema_Aliases(t *testing.T) {
+
+	s := schema.New(StreamSchema())
+
+	{
+		stream := NewStream()
+		require.Nil(t, s.Set(&stream, "name", "VIA-NAME"))
+		require.Equal(t, "VIA-NAME", stream.Label) // "name" writes through to Label
+
+		got, err := s.Get(&stream, "name")
+		require.Nil(t, err)
+		require.Equal(t, "VIA-NAME", got)
+	}
+
+	{
+		stream := NewStream()
+		require.Nil(t, s.Set(&stream, "description", "VIA-DESCRIPTION"))
+		require.Equal(t, "VIA-DESCRIPTION", stream.Summary) // "description" writes through to Summary
+
+		got, err := s.Get(&stream, "description")
+		require.Nil(t, err)
+		require.Equal(t, "VIA-DESCRIPTION", got)
+	}
 }
 
 func TestPermissionSchema(t *testing.T) {

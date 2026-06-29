@@ -22,6 +22,7 @@ func TestOutboxItemSchema(t *testing.T) {
 		{"activity.published", "2024-01-01T12:00:00Z", nil},
 		{"activity.attributedTo", "http://example.com/users/alice", nil},
 		{"activity.content", "<p>Hello, world!</p>", nil},
+		{"url", "https://example.com/outbox/1", nil},
 	}
 
 	tableTest_Schema(t, &s, &annotation, table)

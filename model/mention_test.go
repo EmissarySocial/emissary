@@ -24,6 +24,7 @@ func TestMention(t *testing.T) {
 		{"author.emailAddress", "AUTHOR@EMAIL.COM", nil},
 		{"author.profileUrl", "AUTHOR WEBSITE", nil},
 		{"author.iconUrl", "AUTHOR PHOTO", nil},
+		{"stateId", MentionStatusValidated, nil},
 	}
 
 	tableTest_Schema(t, &s, &mention, table)

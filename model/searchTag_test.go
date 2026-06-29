@@ -21,6 +21,7 @@ func TestSearchTag(t *testing.T) {
 		{"related", "YOURTAG", nil},
 		{"notes", "NOTES", nil},
 		{"rank", 1234, nil},
+		{"imageId", "086753090867530908675309", nil},
 	}
 
 	tableTest_Schema(t, &s, &searchTag, tests)
