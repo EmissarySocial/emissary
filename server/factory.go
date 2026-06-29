@@ -64,7 +64,7 @@ type Factory struct {
 	attachmentCache     afero.Fs
 	exportCache         afero.Fs
 	commonDatabase      *mongo.Database
-	workingDirectory    mediaserver.WorkingDirectory
+	workingDirectory    *mediaserver.WorkingDirectory
 	queue               *queue.Queue
 	digitalDome         *dome.Dome
 	clientIPStrategy    realclientip.Strategy
@@ -368,7 +368,7 @@ func (factory *Factory) refreshDomain(domainConfig config.Domain) error {
 		factory.attachmentCache,
 		factory.exportCache,
 		&factory.httpCache,
-		&factory.workingDirectory,
+		factory.workingDirectory,
 	)
 
 	if err != nil {
