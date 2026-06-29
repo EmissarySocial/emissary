@@ -224,7 +224,7 @@ func (stream *Stream) GetStringOK(name string) (string, bool) {
 		return stream.StartDate.String(), true
 
 	case "endDate":
-		return stream.StartDate.String(), true
+		return stream.EndDate.String(), true
 
 	default:
 		return "", false
