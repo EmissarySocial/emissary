@@ -74,7 +74,7 @@
 		delete: {
 			roles: ["author", "editor"]
 			steps: [
-				{do:"delete", title: "Delete this Photograph?", message: "All content and comments will be lost.  There is NO UNDO."}
+				{do:"delete", title: "Delete this Photograph?", message: "All content and comments will be lost. There is NO UNDO."}
 				{do: "forward-to", url:"/{{.ParentID}}"}
 			]
 		}
