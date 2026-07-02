@@ -76,7 +76,7 @@ func StepRequirePasswordSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"title":   schema.String{MaxLength: 128, Format: "text"},
-			"message": schema.String{MaxLength: 256, Format: "text"},
+			"message": schema.String{MaxLength: 256, Format: "html"},
 			"submit":  schema.String{MaxLength: 32, Format: "text"},
 			"cancel":  schema.String{MaxLength: 32, Format: "text"},
 		},
