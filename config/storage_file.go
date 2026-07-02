@@ -164,8 +164,10 @@ func (storage FileStorage) Write(config Config) error {
 		return derp.Wrap(err, "config.FileStorage.Write", "Error marshaling configuration")
 	}
 
-	// Try to write the configuration to disk
-	if err := os.WriteFile(storage.location, data, 0777); err != nil {
+	// Try to write the configuration to disk.
+	// RULE: Mode 0600 (owner read/write only) because this file contains secrets
+	// (SMTP password, database credentials, certificate locations).
+	if err := os.WriteFile(storage.location, data, 0600); err != nil {
 		return derp.Wrap(err, "config.FileStorage.Write", "Error writing configuration")
 	}
 
