@@ -119,7 +119,7 @@ func (service *Outbox2) Save(session data.Session, item *model.OutboxItem, note 
 			inboxActivity := model.NewInboxActivity()
 			inboxActivity.ActivityID = asActivity.ID()
 			inboxActivity.UserID = item.ActorID
-			inboxActivity.ActorID = asActivity.Actor().ID()
+			inboxActivity.ActorID = asActivity.ActorID()
 			inboxActivity.Context = asActivity.Context()
 			inboxActivity.ActivityType = asActivity.Type()
 			inboxActivity.ObjectType = asActivity.Object().Type()
