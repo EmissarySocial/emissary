@@ -608,6 +608,14 @@ func errorHandler(err error, ctx echo.Context) {
 	// Special handling of permisssion errors
 	request := ctx.Request()
 
+	// RULE: If the client disconnected, then there is nobody to respond to, and the
+	// error is just noise (HTMX aborts in-flight requests when the user navigates).
+	// Log quietly and move on.
+	if request.Context().Err() != nil {
+		log.Debug().Str("url", request.URL.String()).Msg("Request canceled by client")
+		return
+	}
+
 	// Forward "Unauthorized" requests to the signin page
 	if derp.IsUnauthorized((err)) {
 
