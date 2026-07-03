@@ -144,7 +144,7 @@ func WrapForm(endpoint string, content string, encoding string, options ...strin
 			b.Space()
 		}
 
-		b.Span().ID("htmx-response-message").Close()
+		b.Span().ID("htmx-response-message").Script("on submit from closest <form/> set my innerHTML to ''").Close()
 	}
 	b.Close()
 
