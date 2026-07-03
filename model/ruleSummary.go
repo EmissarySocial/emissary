@@ -54,12 +54,12 @@ func (rule RuleSummary) IsDisallowed(document *streams.Document) bool {
 
 	case RuleTypeActor:
 
-		if document.Actor().ID() != rule.Trigger {
+		if document.ActorID() != rule.Trigger {
 			return false
 		}
 
 	case RuleTypeDomain:
-		if domain, err := url.Parse(document.Actor().ID()); err == nil {
+		if domain, err := url.Parse(document.ActorID()); err == nil {
 			if !strings.HasSuffix(domain.Hostname(), rule.Trigger) {
 				return false
 			}

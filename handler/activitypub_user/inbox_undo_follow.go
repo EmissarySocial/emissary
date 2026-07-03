@@ -23,7 +23,7 @@ func inbox_UndoFollow(context Context, activity streams.Document) error {
 	follower := model.NewFollower()
 
 	// Collect data from the original follow
-	actorURL := activity.Actor().ID() // The "actor" is our follower.actor.ProfileURL
+	actorURL := activity.ActorID() // The "actor" is our follower.actor.ProfileURL
 
 	if err := followerService.LoadByActivityPubFollower(context.session, model.FollowerTypeUser, context.user.UserID, actorURL, &follower); err != nil {
 

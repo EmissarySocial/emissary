@@ -30,7 +30,7 @@ func Object(rootClient streams.Client, document streams.Document) map[string]any
 		return Tombstone(rootClient, actual)
 	}
 
-	actorID := first(actual.Actor().ID(), document.Actor().ID())
+	actorID := first(actual.ActorID(), document.ActorID())
 
 	result := map[string]any{
 		vocab.PropertyType:         actual.Type(),

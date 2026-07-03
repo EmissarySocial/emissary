@@ -28,7 +28,7 @@ func inbox_LikeOrAnnounce(context Context, activity streams.Document) error {
 	}
 
 	// Collect the ActorID for this Activity
-	actorID := activity.Actor().ID()
+	actorID := activity.ActorID()
 
 	if actorID == "" {
 		return derp.BadRequest(location, "Activity must have an ActorID", activity.Value())

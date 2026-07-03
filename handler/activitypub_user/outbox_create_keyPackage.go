@@ -30,7 +30,7 @@ func outbox_CreateKeyPackage(context Context, activity streams.Document) error {
 	object := activity.Object()
 
 	// RULE: The object must be attributed to the actor
-	if object.AttributedTo().ID() != activity.Actor().ID() {
+	if object.AttributedTo().ID() != activity.ActorID() {
 		return derp.Forbidden(location, "KeyPackage must be attributed to the actor", activity.Value())
 	}
 

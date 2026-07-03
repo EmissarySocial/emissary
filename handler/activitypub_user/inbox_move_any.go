@@ -35,7 +35,7 @@ func inbox_MoveAny(context Context, document streams.Document) error {
 	// For all other remote objects, schedule a background task
 	context.factory.Queue().NewTask("ReceiveActivityPub-Move", mapof.Any{
 		"host":   context.factory.Host(),
-		"actor":  document.Actor().ID(),
+		"actor":  document.ActorID(),
 		"object": document.Object().ID(),
 		"target": document.Target().ID(),
 	})
@@ -62,9 +62,9 @@ func moveLocalUser(context Context, document streams.Document, userID primitive.
 	importService := context.factory.Import()
 	record := model.NewImport()
 
-	if err := importService.LoadBySourceURL(context.session, user.UserID, document.Actor().ID(), &record); err != nil {
+	if err := importService.LoadBySourceURL(context.session, user.UserID, document.ActorID(), &record); err != nil {
 
-		return derp.Wrap(err, location, "Unable to load Import record", "userID", user.UserID, "sourceID", document.Actor().ID())
+		return derp.Wrap(err, location, "Unable to load Import record", "userID", user.UserID, "sourceID", document.ActorID())
 	}
 
 	// RULE: Do not allow `Move` if the record is not in REVIEWING state

@@ -21,7 +21,7 @@ func inbox_BlockAny(context Context, activity streams.Document) error {
 	following := model.NewFollowing()
 
 	// If the "Following" record cannot be found, then halt
-	if err := followingService.LoadByURL(context.session, context.user.UserID, activity.Actor().ID(), &following); err != nil {
+	if err := followingService.LoadByURL(context.session, context.user.UserID, activity.ActorID(), &following); err != nil {
 		return nil
 	}
 

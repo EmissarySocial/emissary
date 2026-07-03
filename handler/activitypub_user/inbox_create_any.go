@@ -46,7 +46,7 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 	following := model.NewFollowing()
 
 	// If the "Following" record cannot be found, then do not add a message
-	if err := followingService.LoadByURL(context.session, context.user.UserID, activity.Actor().ID(), &following); err != nil {
+	if err := followingService.LoadByURL(context.session, context.user.UserID, activity.ActorID(), &following); err != nil {
 		return derp.Wrap(err, location, "Unable to locate `Following` record", context.user.UserID)
 	}
 

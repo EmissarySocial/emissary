@@ -47,14 +47,14 @@ func putActivityIntoOutbox(context Context, activity streams.Document) error {
 	outbox2Service := factory.Outbox2()
 
 	// Confirm that the actor matches the authenticated user
-	userID, err := locatorService.ParseUser(activity.Actor().ID())
+	userID, err := locatorService.ParseUser(activity.ActorID())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to parse userID from actorID", "actorID: "+activity.Actor().ID(), activity.Map())
+		return derp.Wrap(err, location, "Unable to parse userID from actorID", "actorID: "+activity.ActorID(), activity.Map())
 	}
 
 	if userID != context.user.UserID {
-		return derp.Forbidden(location, "Actor does not match authenticated user", "actorID: "+activity.Actor().ID(), activity.Map())
+		return derp.Forbidden(location, "Actor does not match authenticated user", "actorID: "+activity.ActorID(), activity.Map())
 	}
 
 	// Add an activity record to the Outbox2

@@ -52,7 +52,7 @@ func NewRuleFilter(ruleService *Rule, userID primitive.ObjectID, options ...Rule
 func (filter *RuleFilter) Allow(session data.Session, document *streams.Document) bool {
 
 	// Get the actor ID from the document.
-	actorID := document.Actor().ID()
+	actorID := document.ActorID()
 
 	// If we don't have a cached value for this actor, then load it from the database.
 	if filter.cache[actorID] == nil {

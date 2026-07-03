@@ -22,7 +22,7 @@ func FakeActivityID(activity streams.Document) string {
 	}
 
 	// Otherwise, hash the type, actor, and object
-	return sha256base64(activity.Actor().ID() + ":" + activity.Type() + ":" + activity.Object().ID())
+	return sha256base64(activity.ActorID() + ":" + activity.Type() + ":" + activity.Object().ID())
 }
 
 // sha256base64 returns the SHA256 hash of the input string, encoded as a base64 string

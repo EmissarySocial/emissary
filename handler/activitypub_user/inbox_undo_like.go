@@ -31,7 +31,7 @@ func inboxUndoLike(context Context, activity streams.Document) error {
 	}
 
 	// RULE: ActivityPub type must match the received activity
-	if activity.Actor().ID() != originalActivity.Actor().ID() {
+	if activity.ActorID() != originalActivity.ActorID() {
 		return derp.Unauthorized(location, "Actor undoing this activity must be the same as the original activity")
 	}
 

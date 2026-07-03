@@ -122,7 +122,7 @@ func inbox_ValidateActivity(activity streams.Document) error {
 	const location = "handler.activitypub_user.inbox_ValidateActivity"
 
 	// Require that the Activity has a valid ActorID
-	if actorID := activity.Actor().ID(); actorID == "" {
+	if actorID := activity.ActorID(); actorID == "" {
 		return derp.BadRequest(location, "Activity must have an ActorID", activity.Value())
 	}
 
@@ -156,7 +156,7 @@ func inbox_SaveActivity(context Context, activity streams.Document) error {
 	inboxService := context.factory.Inbox()
 	inboxActivity := model.NewInboxActivity()
 	inboxActivity.UserID = context.user.UserID
-	inboxActivity.ActorID = activity.Actor().ID()
+	inboxActivity.ActorID = activity.ActorID()
 	inboxActivity.ActivityID = activity.ID()
 	inboxActivity.Context = activity.Context()
 	inboxActivity.ActivityType = activity.Type()

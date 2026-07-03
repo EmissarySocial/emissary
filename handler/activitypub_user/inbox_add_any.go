@@ -28,14 +28,14 @@ func inbox_AddAny(context Context, activity streams.Document) error {
 	following := model.NewFollowing()
 
 	// RULE: Only process Add activities from Actors that we Follow.
-	if err := followingService.LoadByURL(context.session, context.user.UserID, activity.Actor().ID(), &following); err != nil {
+	if err := followingService.LoadByURL(context.session, context.user.UserID, activity.ActorID(), &following); err != nil {
 		return derp.Wrap(err, location, "Unable to locate `Following` record", context.user.UserID)
 	}
 
 	// Add a task to the queue to backfill the context of this activity
 	queue := context.factory.Queue()
 	queue.NewTask("ReceiveActivityPub-Add", mapof.Any{
-		"actor":  activity.Actor().ID(),
+		"actor":  activity.ActorID(),
 		"object": activity.Object().ID(),
 		"target": activity.Target().ID(),
 	})
