@@ -12,6 +12,7 @@
 		title:User Profile
 		type:object
 		properties: {
+			new_password: {type:"string"}
 			feeds: {
 				description:Array of additional links to render on the profile page
 				type:array
