@@ -293,7 +293,7 @@ func (factory *Factory) readConfig(config config.Config) {
 
 		log.Trace().Str("loc", location).Str("domain", domainConfig.Hostname).Msg("Refreshing domain...")
 		if err := factory.refreshDomain(domainConfig); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to refresh domain", domainConfig.ID))
+			derp.Report(derp.Wrap(err, location, "Refreshing domain", domainConfig.ID))
 			continue
 		}
 	}
