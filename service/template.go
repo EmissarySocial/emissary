@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"io/fs"
 	"maps"
+	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -133,6 +134,7 @@ func (service *Template) loadTemplates() error {
 	const location = "service.template.loadTemplates"
 
 	service.templatePrep = make(set.Map[model.Template])
+	shouldHalt := len(service.templates) == 0
 
 	// For each configured file location...
 	for _, fileLocation := range service.locations {
@@ -141,14 +143,14 @@ func (service *Template) loadTemplates() error {
 		filesystem, err := service.filesystemService.GetFS(fileLocation)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Error getting filesystem adapter", fileLocation))
+			maybeHalt(derp.Wrap(err, location, "Error getting filesystem adapter", fileLocation), shouldHalt)
 			continue
 		}
 
 		directories, err := fs.ReadDir(filesystem, ".")
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to read directory", fileLocation))
+			maybeHalt(derp.Wrap(err, location, "Unable to read directory", fileLocation), shouldHalt)
 			continue
 		}
 
@@ -168,7 +170,7 @@ func (service *Template) loadTemplates() error {
 			subdirectory, err := fs.Sub(filesystem, directoryName)
 
 			if err != nil {
-				derp.Report(derp.Wrap(err, location, "Error getting filesystem adapter for sub-directory", fileLocation))
+				maybeHalt(derp.Wrap(err, location, "Error getting filesystem adapter for sub-directory", fileLocation), shouldHalt)
 				continue
 			}
 
@@ -178,27 +180,27 @@ func (service *Template) loadTemplates() error {
 
 			case DefinitionEmail:
 				if err := service.emailService.Add(subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, location, "Error adding theme"))
+					maybeHalt(derp.Wrap(err, location, "Error adding theme"), shouldHalt)
 				}
 
 			case DefinitionTheme:
 				if err := service.themeService.Add(directoryName, subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, location, "Error adding theme"))
+					maybeHalt(derp.Wrap(err, location, "Error adding theme"), shouldHalt)
 				}
 
 			case DefinitionTemplate:
 				if err := service.Add(directoryName, subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, location, "Error adding template"))
+					maybeHalt(derp.Wrap(err, location, "Error adding template"), shouldHalt)
 				}
 
 			case DefinitionRegistration:
 				if err := service.registrationService.Add(directoryName, subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, location, "Error adding registration"))
+					maybeHalt(derp.Wrap(err, location, "Error adding registration"), shouldHalt)
 				}
 
 			case DefinitionWidget:
 				if err := service.widgetService.Add(directoryName, subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, location, "Error adding widget"))
+					maybeHalt(derp.Wrap(err, location, "Error adding widget"), shouldHalt)
 				}
 
 			default:
@@ -209,7 +211,7 @@ func (service *Template) loadTemplates() error {
 
 	// Calculate inheritance for Templates
 	if err := service.calculateAllInheritance(); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error calculating Template inheritance"))
+		maybeHalt(derp.Wrap(err, location, "Error calculating Template inheritance"), shouldHalt)
 	}
 
 	// Calculate inheritance for Themes
@@ -222,7 +224,7 @@ func (service *Template) loadTemplates() error {
 
 		log.Error().Msg(errorLength + " errors validating templates.")
 		for _, error := range errs {
-			derp.Report(error)
+			maybeHalt(error, shouldHalt)
 		}
 		log.Error().Msg("Finished reporting " + errorLength + " template errors.  Some templates may not function properly.")
 
@@ -237,6 +239,7 @@ func (service *Template) loadTemplates() error {
 	// Assign the prep area to live
 	service.mutex.Lock()
 	defer service.mutex.Unlock()
+
 	maps.Copy(service.templates, service.templatePrep)
 
 	// Clear out the existing prep area
@@ -244,6 +247,14 @@ func (service *Template) loadTemplates() error {
 	log.Debug().Msg("Template Service: Added/Updated " + strconv.Itoa(len(service.templates)) + " templates")
 
 	return nil
+}
+
+func maybeHalt(err error, halt bool) {
+	derp.Report(err)
+
+	if halt {
+		os.Exit(1)
+	}
 }
 
 func (service *Template) Add(templateID string, filesystem fs.FS, definition []byte) error {
@@ -470,7 +481,7 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 								"template: "+templateID,
 								"action: "+actionID,
 								"step: "+step.Name(),
-								"error: "+err.Error(),
+								derp.WithWrappedValue(err),
 							))
 						}
 					}
