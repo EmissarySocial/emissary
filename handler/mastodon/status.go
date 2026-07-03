@@ -45,7 +45,9 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 
 		// Create the stream for the new mastodon "Status"
 		stream := model.NewStream()
-		stream.TemplateID = "outbox-message" // TODO: This should not be hard-coded. Is there some way to look this up?
+		// Hard-coded default Template, matching service.Stream.Import (service/stream_import.go).
+		// This will be updated when we make a registry of default templates in profiles.
+		stream.TemplateID = "outbox-message"
 		stream.ParentID = authorization.UserID
 		stream.AttributedTo = user.PersonLink()
 		stream.SocialRole = vocab.ObjectTypeNote

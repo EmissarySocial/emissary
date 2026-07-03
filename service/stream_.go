@@ -333,33 +333,31 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 		}
 	}
 
-	// If this stream has anything but a NIL templateID
-	if stream.TemplateID != "" {
-
-		// Load the template used by this Stream
-		template, err := service.templateService.Load(stream.TemplateID)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Unable to load template", stream.TemplateID)
-		}
-
-		// Copy default values from the Template
-		stream.SocialRole = template.SocialRole
-		stream.IsSubscribable = template.IsSubscribable()
-		stream.URL = service.host + "/" + stream.StreamID.Hex()
-
-		// RULE: Calculate "defaultAllow" groups for this stream.
-		service.calcDefaultAllow(&template, stream)
-
-		// Validate the value (using the template-specific schema) before saving
-		if _, err := template.Schema.Validate(stream); err != nil {
-			return derp.Wrap(err, location, "Invalid Stream: using TemplateSchema", stream)
-		}
+	// RULE: Every Stream must be associated with a Template
+	if stream.TemplateID == "" {
+		return derp.BadRequest(location, "Stream cannot be saved without a TemplateID", stream)
 	}
 
-	// Validate the value (using the global stream schema) before saving
-	if _, err := service.Schema().Validate(stream); err != nil {
-		return derp.Wrap(err, location, "Invalid Stream: using StreamSchema", stream)
+	// Load the template used by this Stream
+	template, err := service.templateService.Load(stream.TemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to load template", stream.TemplateID)
+	}
+
+	// Copy default values from the Template
+	stream.SocialRole = template.SocialRole
+	stream.IsSubscribable = template.IsSubscribable()
+	stream.URL = service.host + "/" + stream.StreamID.Hex()
+
+	// RULE: Calculate "defaultAllow" groups for this stream.
+	service.calcDefaultAllow(&template, stream)
+
+	// Validate the value (using the template-specific schema) before saving.
+	// The template schema inherits the full Stream schema as its baseline, so this
+	// covers every Stream property while honoring the template's format overrides.
+	if _, err := template.Schema.Validate(stream); err != nil {
+		return derp.Wrap(err, location, "Invalid Stream: using TemplateSchema", stream)
 	}
 
 	// RULE: calculate Parent IDs

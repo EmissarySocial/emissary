@@ -14,14 +14,14 @@ import (
 func StreamSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"streamId":         schema.String{Format: "objectId"},
+			"streamId":         schema.String{Format: "objectId", Required: true},
 			"parentId":         schema.String{Format: "objectId"},
 			"parentIds":        schema.Array{Items: schema.String{Format: "objectId"}},
 			"rank":             schema.Integer{Minimum: null.NewInt64(0)},
 			"rankAlt":          schema.Integer{Minimum: null.NewInt64(0)},
 			"token":            schema.String{Format: "token", MaxLength: 128},
 			"navigationId":     schema.String{},
-			"templateId":       schema.String{MaxLength: 128},
+			"templateId":       schema.String{MaxLength: 128, Required: true},
 			"parentTemplateId": schema.String{MaxLength: 128},
 			"socialRole":       schema.String{MaxLength: 128},
 			"stateId":          schema.String{MaxLength: 128},
@@ -31,8 +31,7 @@ func StreamSchema() schema.Element {
 			"url":              schema.String{Format: "url"},
 			"name":             schema.String{MaxLength: 128},
 			"label":            schema.String{MaxLength: 128},
-			"description":      schema.String{MaxLength: 2048},
-			"summary":          schema.String{MaxLength: 2048},
+			"summary":          schema.String{MaxLength: 2048, Format: "html"},
 			"icon":             schema.String{},
 			"iconUrl":          schema.String{Format: "url"},
 			"attributedTo":     PersonLinkSchema(),
@@ -49,7 +48,7 @@ func StreamSchema() schema.Element {
 			"unpublishDate":    schema.Integer{BitSize: 64},
 			"isPublished":      schema.Boolean{},
 			"isFeatured":       schema.Boolean{},
-			"syndication":      schema.Array{Items: schema.String{}},
+			"syndication":      schema.Array{Items: schema.String{Required: true, Format: "token"}},
 		},
 	}
 }
@@ -79,7 +78,7 @@ func permissionSchema() schema.Element {
 
 func (stream *Stream) GetPointer(name string) (any, bool) {
 
-	switch name {
+	switch name { // NOSONAR: There really are this many properties to check..
 
 	case "parentIds":
 		return &stream.ParentIDs, true
@@ -101,9 +100,6 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 
 	case "label":
 		return &stream.Label, true
-
-	case "description":
-		return &stream.Summary, true
 
 	case "summary":
 		return &stream.Summary, true
