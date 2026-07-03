@@ -656,9 +656,9 @@ func (service *User) CalcRuleCount(session data.Session, userID primitive.Object
 
 	const location = "service.User.CalcRuleCount"
 
-	// RULE: UserID cannot be zero
+	// RULE: We only need to count rules owned by a specific user.
 	if userID.IsZero() {
-		return derp.BadRequest(location, "UserID cannot be zero", userID)
+		return nil
 	}
 
 	userCollection := service.collection(session)

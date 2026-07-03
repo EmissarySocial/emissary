@@ -162,6 +162,7 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 	}
 
 	// Recalculate the rule count for this user
+	// (skipped for domain-level Rules with no owning User)
 	if err := service.userService.CalcRuleCount(session, rule.UserID); err != nil {
 		return derp.Wrap(err, location, "Unable to calculate rule count")
 	}
@@ -175,6 +176,12 @@ func (service *Rule) Delete(session data.Session, rule *model.Rule, note string)
 	// Delete this Rule
 	if err := service.collection(session).Delete(rule, note); err != nil {
 		return derp.Wrap(err, "service.Rule.Delete", "Unable to delete Rule", rule, note)
+	}
+
+	// Recalculate the rule count for this user
+	// (skipped for domain-level Rules with no owning User)
+	if err := service.userService.CalcRuleCount(session, rule.UserID); err != nil {
+		return derp.Wrap(err, "service.Rule.Delete", "Unable to calculate rule count")
 	}
 
 	if rule.IsPublic {
