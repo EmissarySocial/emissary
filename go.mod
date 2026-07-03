@@ -12,22 +12,22 @@ require (
 	github.com/benpate/data-slice v0.1.0
 	github.com/benpate/delta v0.1.0
 	github.com/benpate/derp v0.36.0
-	github.com/benpate/digit v0.14.1
+	github.com/benpate/digit v0.15.0
 	github.com/benpate/digital-dome v0.4.0
 	github.com/benpate/exp v0.10.0
 	github.com/benpate/exp-builder v0.11.0
 	github.com/benpate/form v0.26.0
 	github.com/benpate/geo v0.1.1
-	github.com/benpate/hannibal v0.20.0
+	github.com/benpate/hannibal v0.21.0
 	github.com/benpate/html v0.17.0
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.16.0
 	github.com/benpate/re v0.5.0
 	github.com/benpate/remote v0.21.2
-	github.com/benpate/rosetta v0.28.0
-	github.com/benpate/sherlock v0.10.2
+	github.com/benpate/rosetta v0.30.0
+	github.com/benpate/sherlock v0.11.0
 	github.com/benpate/sniff v0.2.0
-	github.com/benpate/steranko v0.26.0
+	github.com/benpate/steranko v0.27.0
 	github.com/benpate/table v0.8.0
 	github.com/benpate/toot v0.3.0
 	github.com/benpate/turbine v0.5.1
@@ -82,9 +82,8 @@ require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.4.1 // indirect
 	github.com/alecthomas/chroma/v2 v2.24.1 // indirect
-	github.com/andybalholm/cascadia v1.3.3 // indirect
+	github.com/andybalholm/cascadia v1.3.4 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/benpate/domain v0.2.12 // indirect
 	github.com/cloudflare/ahocorasick v0.0.0-20240916140611-054963ec9396 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/cyphar/filepath-securejoin v0.6.1 // indirect
