@@ -28,6 +28,7 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
 	"github.com/benpate/uri"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -214,9 +215,17 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 		user.PasswordReset.AuthCode = ""
 	}
 
-	// Validate the value before saving
-	if _, err := service.Schema().Validate(user); err != nil {
+	// Normalize the value before saving.  Values are rewritten in place (formatted,
+	// clamped, truncated) to conform to the schema, so that legacy data written under
+	// older rules is repaired progressively as records are saved.
+	rewrites, err := service.Schema().Normalize(user)
+
+	if err != nil {
 		return derp.Wrap(err, location, "Invalid User Data", user)
+	}
+
+	if len(rewrites) > 0 {
+		log.Debug().Strs("rewrites", rewrites).Str("userId", user.UserID.Hex()).Msg("User values normalized during save")
 	}
 
 	// Try to save the User record to the database

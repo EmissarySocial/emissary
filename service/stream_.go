@@ -32,6 +32,7 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
 	"github.com/benpate/uri"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -353,11 +354,19 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	// RULE: Calculate "defaultAllow" groups for this stream.
 	service.calcDefaultAllow(&template, stream)
 
-	// Validate the value (using the template-specific schema) before saving.
-	// The template schema inherits the full Stream schema as its baseline, so this
-	// covers every Stream property while honoring the template's format overrides.
-	if _, err := template.Schema.Validate(stream); err != nil {
+	// Normalize the value (using the template-specific schema) before saving.  Values are
+	// rewritten in place to conform to the schema, so that legacy data written under older
+	// rules is repaired progressively as records are saved.  The template schema inherits
+	// the full Stream schema as its baseline, so this covers every Stream property while
+	// honoring the template's format overrides.
+	rewrites, err := template.Schema.Normalize(stream)
+
+	if err != nil {
 		return derp.Wrap(err, location, "Invalid Stream: using TemplateSchema", stream)
+	}
+
+	if len(rewrites) > 0 {
+		log.Debug().Strs("rewrites", rewrites).Str("streamId", stream.StreamID.Hex()).Msg("Stream values normalized during save")
 	}
 
 	// RULE: calculate Parent IDs
