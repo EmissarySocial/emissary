@@ -44,15 +44,6 @@ select:invalid,
 	border: solid 1px var(--input-border-invalid);
 }
 
-input:invalid:focus,
-input.invalid:focus,
-.input.invalid:focus,
-select:invalid:focus,
-[role="textbox"].invalid:focus {
-	outline:unset;
-	box-shadow: 0px 0px 5px var(--input-border-invalid);
-}
-
 input:last-child,
 [role="textbox"]:last-child {
 	margin-right: auto;
@@ -78,11 +69,41 @@ select:focus,
 	outline-offset: 1px;
 }
 
+/* A REQUIRED (or otherwise invalid) control shows a RED focus ring instead of the
+   accent color.  This rule MUST come after the accent-color rule above: an invalid
+   input matches both `input:invalid:focus` and `input:not(...):focus` at the same
+   specificity, so source order is the tie-breaker -- placing red last makes it win.
+   Covers both a bare control and one inside a `[role="textbox"]` / `.input` wrapper
+   (via :has), so the single ring is red wherever it is drawn. */
+input:invalid:focus,
+input:invalid:focus-visible,
+select:invalid:focus,
+select:invalid:focus-visible,
+textarea:invalid:focus,
+textarea:invalid:focus-visible,
+[role="textbox"]:has(:invalid):focus-within,
+.input:has(:invalid):focus-within {
+	outline: solid 2px var(--input-border-invalid);
+	outline-offset: 1px;
+}
+
 /* A `.input` / `[role="textbox"]` is a wrapper that fakes a text box: the focus
    outline belongs on the wrapper, so suppress it on the REAL control nested
-   inside (otherwise both the wrapper and the inner input each draw an outline). */
-[role="textbox"] :focus,
-[role="textbox"] :focus-visible,
+   inside (otherwise both the wrapper and the inner input each draw an outline).
+
+   The inner control is named by type (input/textarea/select), not by the bare
+   descendant `[role="textbox"] :focus`.  The rule that DRAWS the outline above is
+   `input:not(...):focus`, whose specificity (0,2,1) outranks a bare
+   `[role="textbox"] :focus` (0,2,0) -- so the un-set would lose the cascade and the
+   inner outline would still show.  Naming the element type raises this selector to
+   (0,2,1), matching the drawing rule; the tie is then broken by source order (this
+   rule comes later), so the un-set reliably wins. */
+[role="textbox"] input:focus,
+[role="textbox"] input:focus-visible,
+[role="textbox"] textarea:focus,
+[role="textbox"] textarea:focus-visible,
+[role="textbox"] select:focus,
+[role="textbox"] select:focus-visible,
 .input input:focus,
 .input input:focus-visible,
 .input textarea:focus,
