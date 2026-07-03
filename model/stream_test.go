@@ -94,7 +94,7 @@ func TestStreamSchema(t *testing.T) {
 }
 
 // TestStreamSchema_Aliases covers the alias properties that map onto shared fields: "name" is an
-// alias for Label and "description" is an alias for Summary. They share storage, so they must be
+// alias for Label and "summary" maps to Summary. They share storage, so they must be
 // tested in isolation (a single table would have them clobber label/summary).
 func TestStreamSchema_Aliases(t *testing.T) {
 
@@ -112,12 +112,12 @@ func TestStreamSchema_Aliases(t *testing.T) {
 
 	{
 		stream := NewStream()
-		require.Nil(t, s.Set(&stream, "description", "VIA-DESCRIPTION"))
-		require.Equal(t, "VIA-DESCRIPTION", stream.Summary) // "description" writes through to Summary
+		require.Nil(t, s.Set(&stream, "summary", "VIA-SUMMARY"))
+		require.Equal(t, "VIA-SUMMARY", stream.Summary) // "summary" writes through to Summary
 
-		got, err := s.Get(&stream, "description")
+		got, err := s.Get(&stream, "summary")
 		require.Nil(t, err)
-		require.Equal(t, "VIA-DESCRIPTION", got)
+		require.Equal(t, "VIA-SUMMARY", got)
 	}
 }
 
