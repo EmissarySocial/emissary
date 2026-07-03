@@ -27,6 +27,7 @@ import (
 	"github.com/benpate/sherlock/tombstone"
 	"github.com/benpate/sherlock/webfinger"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -96,11 +97,16 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 		sherlock.WithUserAgent(userAgent),
 	) */
 
+	// If the service is on a local/private network then allow
+	// the ActivityPub client to load documents from private IP addresses.
+	allowPrivateIPs := uri.IsLocalHostname(service.hostname)
+
 	// Try ActivityPub documents directly
 	activityPubClient := activitypub.New(
 		// activitypub.WithInnerClient(sherlockClient), // Restore this to restore legacy Sherlock lookups.
 		activitypub.WithKeyPairFunc(service.KeyPairFunc(actorType, actorID)),
 		activitypub.WithUserAgent(userAgent),
+		activitypub.WithAllowPrivateIPs(allowPrivateIPs),
 	)
 
 	// Replace 410 Gone errors with "Tombstone" documents
