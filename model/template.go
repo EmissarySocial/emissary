@@ -338,6 +338,43 @@ func (template Template) GetOEmbed() *template.Template {
 	return template.HTMLTemplate.Lookup("oembed")
 }
 
+// BaseSchema returns the schema of the model object that this Template builds,
+// as identified by this Template's "Model" property.
+func (template Template) BaseSchema() schema.Element {
+
+	// This mapping mirrors the builder dispatch in handler/admin.go and each builder's
+	// schema() method, so that load-time validation of a Template's forms uses the same
+	// schema that the forms will see at runtime.
+	switch template.Model {
+
+	// The Outbox, Inbox, Settings, User, and Conversations builders all build User objects
+	case "User", "Outbox", "Inbox", "Settings", "Conversations":
+		return UserSchema()
+
+	// The Domain and Syndication builders both build Domain objects
+	case "Domain", "Search", "SSO", "Followers", "Following", "Syndication":
+		return DomainSchema()
+
+	case "Group":
+		return GroupSchema()
+
+	case "Identity":
+		return IdentitySchema()
+
+	case "Rule":
+		return RuleSchema()
+
+	case "Tag":
+		return SearchTagSchema()
+
+	case "Webhook":
+		return WebhookSchema()
+	}
+
+	// All other Templates ("Stream", "None", and unset values) build Stream objects
+	return StreamSchema()
+}
+
 func CompareTemplate(a, b Template) int {
 
 	if compareSort := compare.Int(a.Sort, b.Sort); compareSort != 0 {

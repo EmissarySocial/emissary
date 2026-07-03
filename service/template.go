@@ -270,9 +270,9 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 		return derp.Wrap(err, location, "Unable to load Schema", templateID)
 	}
 
-	// All template schemas (except kludged registrations) also inherit from the main stream schema
+	// All template schemas (except kludged registrations) also inherit the base schema of the model object they build
 	if result.TemplateRole != "registration" {
-		result.Schema.Inherit(schema.New(model.StreamSchema()))
+		result.Schema.Inherit(schema.New(result.BaseSchema()))
 	}
 
 	// Load all HTML templates from the filesystem
