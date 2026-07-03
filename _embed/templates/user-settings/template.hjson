@@ -899,14 +899,14 @@
 				{do:"with-rule", steps:[
 					{do:"view-html"}
 					{
-						do:"edit", 
+						do:"edit",
 						options:[
-							endpoin:/@me/newsfeed/rule-edit-actor?ruleId={{.ObjectID}}"
-							delet:/@me/newsfeed/rule-delete?ruleId={{.ObjectID}}", 
-							"deletelabe:Delete Rule"
+							"endpoint:/@me/settings/rule-edit-actor?ruleId={{.ObjectID}}"
+							"delete:/@me/settings/rule-delete?ruleId={{.ObjectID}}"
+							"delete-label:Delete Rule"
 						]
 						form:{
-							type:"layout-vertical", 
+							type:"layout-vertical",
 							children:[
 								{type:"hidden", path:"type", options:{value:"ACTOR"}}
 								{type:"text", path:"trigger", label:"Fediverse Address", description:"Something like @blocked-user@domain.com orhttp://domain.com/@blocked-user", options:{focus:true}}
@@ -932,12 +932,12 @@
 					{
 						do:"edit", 
 						options:[
-							"endpoint:/@me/newsfeed/rule-edit-actor?ruleId={{.ObjectID}}"
-							"delete:/@me/newsfeed/rule-delete?ruleId={{.ObjectID}}"
+							"endpoint:/@me/settings/rule-edit-domain?ruleId={{.ObjectID}}"
+							"delete:/@me/settings/rule-delete?ruleId={{.ObjectID}}"
 							"delete-label:Delete Rule"
 						]
 						form:{
-							type:"layout-vertical", 
+							type:"layout-vertical",
 							children:[
 								{type:"hidden", path:"type", options:{value:"DOMAIN"}}
 								{type:"text", path:"trigger", label:"Domain Name", description:"Something like blocked-domain.com", options:{focus:true}}
@@ -963,12 +963,12 @@
 					{
 						do:"edit", 
 						options:[
-							"endpoint:/@me/newsfeed/rule-edit-actor?ruleId={{.ObjectID}}"
-							"delete:/@me/newsfeed/rule-delete?ruleId={{.ObjectID}}", 
+							"endpoint:/@me/settings/rule-edit-content?ruleId={{.ObjectID}}"
+							"delete:/@me/settings/rule-delete?ruleId={{.ObjectID}}"
 							"delete-label:Delete Rule"
 						]
 						form:{
-							type:"layout-vertical", 
+							type:"layout-vertical",
 							children:[
 								{type:"hidden", path:"type", options:{value:"CONTENT"}}
 								{type:"text", path:"trigger", label:"Tags or Keywords", description:"Individual words or hashtags, separated by spaces", options:{focus:true}}
