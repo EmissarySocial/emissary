@@ -342,6 +342,20 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 				"models allowed: "+strings.Join(allowedModels, ", "),
 				"model used: "+template.Model,
 			))
+		} else {
+
+			// RULE: Every property declared in the Template's schema must resolve to a
+			// real accessor on the model object it builds.  An "orphaned" property looks
+			// valid at load time but blows up at runtime the first time the object is
+			// saved (Normalize walks every property).  Catch it here, at load time.
+			for _, path := range template.UnsupportedSchemaProperties() {
+				errors.Append(derp.Validation(
+					"Template schema declares a property that the model object does not support",
+					"template: "+templateID,
+					"model: "+template.Model,
+					"property: "+path,
+				))
+			}
 		}
 
 		// RULE: Templates MUST have at least one Action, or else permissions won't work

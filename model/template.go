@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"io/fs"
 	"slices"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/tools/templatemap"
 	"github.com/benpate/data/option"
@@ -373,6 +374,114 @@ func (template Template) BaseSchema() schema.Element {
 
 	// All other Templates ("Stream", "None", and unset values) build Stream objects
 	return StreamSchema()
+}
+
+// NewObject returns a fresh, zero-value instance of the model object that this
+// Template builds, as identified by this Template's "Model" property.  The mapping
+// MUST stay in lockstep with BaseSchema() above: NewObject() returns the object and
+// BaseSchema() returns the schema that validates it, so load-time validation can
+// confirm every schema property resolves to a real accessor on the object.
+func (template Template) NewObject() any {
+
+	switch template.Model {
+
+	case "User", "Outbox", "Inbox", "Settings", "Conversations":
+		user := NewUser()
+		return &user
+
+	case "Domain", "Search", "SSO", "Followers", "Following", "Syndication":
+		domain := NewDomain()
+		return &domain
+
+	case "Group":
+		group := NewGroup()
+		return &group
+
+	case "Identity":
+		identity := NewIdentity()
+		return &identity
+
+	case "Rule":
+		rule := NewRule()
+		return &rule
+
+	case "Tag":
+		tag := NewSearchTag()
+		return &tag
+
+	case "Webhook":
+		webhook := NewWebhook()
+		return &webhook
+	}
+
+	// All other Templates ("Stream", "None", and unset values) build Stream objects
+	stream := NewStream()
+	return &stream
+}
+
+// UnsupportedSchemaProperties returns the list of property paths declared in this
+// Template's schema that do NOT resolve to a real accessor on the model object the
+// Template builds.  An empty result means every schema property is backed by the model.
+//
+// These "orphaned" properties look valid at load time but blow up at runtime the first
+// time the object is saved.  We detect them using the SAME operation Stream.Save runs --
+// schema.Normalize against a fresh model object -- so the check exactly matches runtime
+// behavior.  (Notably, "data.*" properties that write into the Stream.Data map are NOT
+// orphans: Normalize writes them successfully even though a naive Get would fail on an
+// empty map.)
+//
+// This ONLY applies to Stream templates.  Stream.Save normalizes against the Template's
+// own schema, so an orphan there is a genuine runtime bug.  Every other model (User,
+// Domain, widgets, etc.) is saved against a FIXED model schema -- its builder ignores
+// the Template schema -- so extra properties there (e.g. the virtual "new_password"
+// form field, or widget-config properties) are harmless by construction.
+func (template Template) UnsupportedSchemaProperties() []string {
+
+	// Only Stream templates normalize against their own Template schema at save time.
+	if template.Model != "Stream" {
+		return nil
+	}
+
+	// Fast path: Normalize the whole object exactly as Stream.Save does.  If it succeeds,
+	// there are no orphaned properties and we can return immediately.
+	if _, err := template.Schema.Normalize(template.NewObject()); err == nil {
+		return nil
+	}
+
+	// Something failed to normalize.  Localize the offender(s) by normalizing each leaf
+	// property in isolation against a fresh object, and collect the ones whose failure is
+	// the getter's "unsupported property" signature (as opposed to a value/validation
+	// error, which is not an orphan-schema problem).
+	result := make([]string, 0)
+
+	for path, element := range template.Schema.AllProperties() {
+
+		propertySchema := schema.New(pathToSchema(path, element))
+
+		if _, err := propertySchema.Normalize(template.NewObject()); err != nil {
+			if strings.Contains(derp.Message(derp.RootCause(err)), "does not support this") {
+				result = append(result, path)
+			}
+		}
+	}
+
+	slices.Sort(result)
+	return result
+}
+
+// pathToSchema wraps a single leaf element in the nested Object structure implied by its
+// dotted path, so it can be normalized in isolation.  e.g. ("content.type", String{})
+// becomes Object{content: Object{type: String{}}}.
+func pathToSchema(path string, element schema.Element) schema.Element {
+
+	segments := strings.Split(path, ".")
+
+	// Build from the leaf outward.
+	for i := len(segments) - 1; i >= 0; i-- {
+		element = schema.Object{Properties: schema.ElementMap{segments[i]: element}}
+	}
+
+	return element
 }
 
 func CompareTemplate(a, b Template) int {
