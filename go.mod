@@ -22,7 +22,7 @@ require (
 	github.com/benpate/html v0.17.0
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.16.0
-	github.com/benpate/re v0.5.0
+	github.com/benpate/re v0.5.1
 	github.com/benpate/remote v0.21.2
 	github.com/benpate/rosetta v0.30.0
 	github.com/benpate/sherlock v0.11.0
