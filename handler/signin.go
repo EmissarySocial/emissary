@@ -94,16 +94,9 @@ func calcNextURL(next string) string {
 	return next
 }
 
-// GetSignOut displays an HTML response page when a user has been signed out of the system.
+// GetSignOut displays an HTML confirmation page after a user has been signed out of the system.
+// The actual sign-out only happens in PostSignOut, so that state never changes on a GET request.
 func GetSignOut(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
-
-	s := factory.Steranko(session)
-
-	// "sign all the way out" -- if we have an admin "backup profile"
-	// then sign out again.
-	if hasBackupProfile := s.SignOut(ctx); hasBackupProfile {
-		s.SignOut(ctx)
-	}
 
 	// Get the standard Signin page
 	template := factory.Domain().Theme().HTMLTemplate

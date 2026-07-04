@@ -95,7 +95,6 @@ func main() {
 
 	// Global middleware
 	// TODO: HIGH: Implement echo.Secure - https://echo.labstack.com/docs/middleware/secure
-	// TODO: HIGH: Implement CSRF protection - https://echo.labstack.com/docs/middleware/csrf
 	// TODO: MEDIUM: Implement Rate Limiter - https://echo.labstack.com/docs/middleware/rate-limiter
 	// TODO: LOW: Implement Timeout - https://echo.labstack.com/docs/middleware/timeout
 	// TODO: LOW: Implement GZip - https://echo.labstack.com/docs/middleware/gzip
@@ -163,6 +162,10 @@ func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 	// Middleware for setup pages
 	e.Use(mw.Localhost())
 
+	// CSRF protection: the setup console has no authentication, so this is the only
+	// thing preventing a malicious web page from posting configuration changes to localhost
+	e.Use(mw.CrossOriginProtection())
+
 	// Setup Routes
 	e.GET("/", handler.SetupPageGet(factory, setupTemplates, "index.html"))
 	e.GET("/config", handler.SetupGetConfig(factory))
@@ -207,6 +210,10 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 		AllowMethods:     []string{http.MethodGet},  // But only allow GET requests
 		AllowCredentials: false,                     // And DO NOT allow credentials to be sent to remote servers. (this is a default, but it's here to be explicit)
 	}))
+
+	// CSRF protection: reject state-changing requests from other web origins.
+	// This backstops the SameSite=Lax cookie policy, which is enforced only by the browser.
+	e.Use(mw.CrossOriginProtection())
 
 	// Restore Steranko in the future
 	// e.Use(steranko.Middleware(factory))
