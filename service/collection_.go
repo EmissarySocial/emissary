@@ -72,7 +72,7 @@ func (service *Collection) Range(session data.Session, criteria exp.Expression, 
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.User.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.Collection.Range", "Unable to create iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewCollection), nil

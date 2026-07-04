@@ -238,7 +238,7 @@ func (service *CollectionItem) HardDeleteByURI(session data.Session, URI string)
 
 	// Delete this CollectionItem from the database
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, "service.CollectionItem.DeleteByURI", "Unable to delete CollectionItem", "uri: "+URI)
+		return derp.Wrap(err, "service.CollectionItem.HardDeleteByURI", "Unable to delete CollectionItem", "uri: "+URI)
 	}
 	return nil
 }

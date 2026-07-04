@@ -116,7 +116,7 @@ func GetStatus(serverFactory *server.Factory) func(model.Authorization, txn.GetS
 		}
 
 		if !allowed {
-			return object.Status{}, derp.Forbidden(location, "User is not authorized to delete this stream")
+			return object.Status{}, derp.Forbidden(location, "User is not authorized to view this stream")
 		}
 
 		// Return the value
@@ -176,10 +176,38 @@ func PostStatus_Translate(serverFactory *server.Factory) func(model.Authorizatio
 	return func(auth model.Authorization, t txn.PostStatus_Translate) (object.Translation, error) {
 
 		// Get the Stream from the URL
-		_, _, stream, err := getStreamFromURL(serverFactory, t.ID)
+		factory, _, stream, err := getStreamFromURL(serverFactory, t.ID)
 
 		if err != nil {
 			return object.Translation{}, derp.Wrap(err, location, "Unable to load stream")
+		}
+
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Translation{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
+		// Load the template for this stream
+		templateService := factory.Template()
+		template, err := templateService.Load(stream.TemplateID)
+
+		if err != nil {
+			return object.Translation{}, derp.Wrap(err, location, "Unable to load template")
+		}
+
+		// Validate permissions on this Stream/Template
+		allowed, err := factory.Permission().UserCan(session, &auth, &template, &stream, "view")
+
+		if err != nil {
+			return object.Translation{}, derp.Wrap(err, location, "Error checking permissions")
+		}
+
+		if !allowed {
+			return object.Translation{}, derp.Forbidden(location, "User is not authorized to view this stream")
 		}
 
 		result := object.Translation{
@@ -527,7 +555,26 @@ func GetStatus_Source(serverFactory *server.Factory) func(model.Authorization, t
 		stream := model.NewStream()
 
 		if err := streamService.LoadByURL(session, t.ID, &stream); err != nil {
-			return object.StatusSource{}, derp.Wrap(err, location, "Error muting stream")
+			return object.StatusSource{}, derp.Wrap(err, location, "Error loading stream")
+		}
+
+		// Load the template for this stream
+		templateService := factory.Template()
+		template, err := templateService.Load(stream.TemplateID)
+
+		if err != nil {
+			return object.StatusSource{}, derp.Wrap(err, location, "Unable to load template")
+		}
+
+		// Validate permissions on this Stream/Template
+		allowed, err := factory.Permission().UserCan(session, &auth, &template, &stream, "view")
+
+		if err != nil {
+			return object.StatusSource{}, derp.Wrap(err, location, "Error checking permissions")
+		}
+
+		if !allowed {
+			return object.StatusSource{}, derp.Forbidden(location, "User is not authorized to view this stream")
 		}
 
 		result := object.StatusSource{
