@@ -202,7 +202,26 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 		}
 	}
 
-	// Guarantee that the username is unique, and fits formatting rules.
+	// Normalize the value before saving.  Values are rewritten in place (formatted,
+	// clamped, truncated) to conform to the schema, so that legacy data written under
+	// older rules is repaired progressively as records are saved.
+	//
+	// This runs BEFORE ValidateUsername so that uniqueness and formatting rules are
+	// checked against the username as it will actually be stored (e.g. after truncation
+	// to the schema's max length), not the raw client-supplied value.  Otherwise an
+	// over-length username could pass uniqueness against its full form, then be truncated
+	// into a collision with an existing account.
+	rewrites, err := service.Schema().Normalize(user)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid User Data", user)
+	}
+
+	if len(rewrites) > 0 {
+		log.Debug().Strs("rewrites", rewrites).Str("userId", user.UserID.Hex()).Msg("User values normalized during save")
+	}
+
+	// Guarantee that the (normalized) username is unique, and fits formatting rules.
 	if err := service.ValidateUsername(session, user.UserID, user.Username); err != nil {
 		return derp.Wrap(err, location, "Username is invalid", user)
 	}
@@ -213,19 +232,6 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 	// RULE: If password reset has already expired, then clear the reset code
 	if (user.PasswordReset.ExpireDate > 0) && (user.PasswordReset.ExpireDate < time.Now().Unix()) {
 		user.PasswordReset.AuthCode = ""
-	}
-
-	// Normalize the value before saving.  Values are rewritten in place (formatted,
-	// clamped, truncated) to conform to the schema, so that legacy data written under
-	// older rules is repaired progressively as records are saved.
-	rewrites, err := service.Schema().Normalize(user)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Invalid User Data", user)
-	}
-
-	if len(rewrites) > 0 {
-		log.Debug().Strs("rewrites", rewrites).Str("userId", user.UserID.Hex()).Msg("User values normalized during save")
 	}
 
 	// Try to save the User record to the database
