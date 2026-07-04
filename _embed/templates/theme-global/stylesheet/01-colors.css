@@ -75,8 +75,12 @@
 	   color (such as a conversation's group color). */
 	--focus-color:var(--link-color);
 
-	--button-primary-color:var(--white);
-	--button-primary-color-hover:var(--white);
+	/* Literal white, NOT var(--white): the primary button background (--focus-color)
+	   stays a dark accent in dark mode, but --white flips to near-black there, which
+	   would make the label vanish.  Unlike warning/success buttons, whose flipped
+	   color ramps keep contrast with a flipped --white, this text must never flip. */
+	--button-primary-color:#ffffff;
+	--button-primary-color-hover:#ffffff;
 	/* NOTE: primary buttons read --focus-color directly (see 02-forms.css) so they
 	   pick up page-scoped accent overrides. These tokens remain for any code that
 	   references them explicitly; keep them as literals (do NOT point them at
