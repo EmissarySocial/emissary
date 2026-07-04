@@ -31,7 +31,7 @@ func AddToCollection(factory *service.Factory, session data.Session, args mapof.
 	document, err := client.Load(objectID)
 
 	if err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to load document", "url: "+objectID))
+		return requeue(derp.Wrap(err, location, "Unable to load document", "url: "+objectID))
 	}
 
 	// Create a new CollectionItem record
