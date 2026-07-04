@@ -138,8 +138,3 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-// TEMPORARY: use the local uri checkout, which hardens PathAndQuery/Path against
-// open-redirect (protocol-relative //, /\, \\ forms).  Remove this once uri is tagged
-// past v0.1.2 and the require above is bumped.
-replace github.com/benpate/uri => ../../benpate/uri
