@@ -855,7 +855,7 @@ func (service *User) WebFinger(session data.Session, token string) (digit.Resour
 }
 
 func (service *User) RemoteFollowURL() string {
-	return service.host + "/.ostatus/tunnel?uri={uri}"
+	return service.host + "/@me/settings/following-edit?url={uri}"
 }
 
 func (service *User) CreateIntentURL() string {
