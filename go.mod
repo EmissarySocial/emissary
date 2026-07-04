@@ -31,7 +31,7 @@ require (
 	github.com/benpate/table v0.8.0
 	github.com/benpate/toot v0.3.0
 	github.com/benpate/turbine v0.5.1
-	github.com/benpate/uri v0.1.2
+	github.com/benpate/uri v0.2.0
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/codingsince1985/geo-golang v1.9.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -138,3 +138,8 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+// TEMPORARY: use the local uri checkout, which hardens PathAndQuery/Path against
+// open-redirect (protocol-relative //, /\, \\ forms).  Remove this once uri is tagged
+// past v0.1.2 and the require above is bumped.
+replace github.com/benpate/uri => ../../benpate/uri

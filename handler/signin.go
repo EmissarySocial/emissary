@@ -77,7 +77,9 @@ func calcNextURL(next string) string {
 		return "/"
 	}
 
-	// Otherwise, trim the hostname so we don't have open redirects to other servers
+	// Reduce "next" to a safe, same-origin path.  uri.PathAndQuery strips any scheme/host
+	// and neutralizes protocol-relative forms, so the result can never be an open redirect
+	// to another server.
 	next = uri.PathAndQuery(next)
 
 	// Do not allow redirect loops
