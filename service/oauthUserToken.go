@@ -292,9 +292,13 @@ func (service *OAuthUserToken) Create(session data.Session, client model.OAuthCl
 	}
 
 	// If we already have a token for this user/client, then just return that.
+	// EXCEPTION: a PKCE authorization (code_challenge present) must mint a fresh
+	// token bound to THIS challenge, so it bypasses the reuse shortcut.
 	result := model.NewOAuthUserToken()
-	if err := service.LoadByUserAndClient(session, authorization.UserID, client.ClientID, &result); err == nil {
-		return result, nil
+	if transaction.CodeChallenge == "" {
+		if err := service.LoadByUserAndClient(session, authorization.UserID, client.ClientID, &result); err == nil {
+			return result, nil
+		}
 	}
 
 	// Fall through means we're going to create a new token
@@ -310,6 +314,10 @@ func (service *OAuthUserToken) Create(session data.Session, client model.OAuthCl
 	result.Scopes = transaction.Scopes()
 	result.Token = token
 	result.APIUser = true
+
+	// Bind the PKCE challenge (if any) so the code can only be redeemed with the
+	// matching verifier. No-op when the client did not use PKCE.
+	result.SetPKCEChallenge(transaction.CodeChallenge, transaction.CodeChallengeMethod)
 
 	// Save the result to the database
 	if err := service.Save(session, &result, "Create"); err != nil {

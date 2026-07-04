@@ -29,6 +29,7 @@ func GetOAuthWellKnown(ctx *steranko.Context, factory *service.Factory, session 
 		"response_types_supported":              []string{"code", "token"},
 		"response_modes_supported":              []string{"query", "fragment"},
 		"grant_types_supported":                 []string{"authorization_code", "client_credentials", "refresh_token"},
+		"code_challenge_methods_supported":      []string{"plain", "S256"}, // PKCE (RFC 7636)
 		"token_endpoint_auth_methods_supported": []string{"client_secret_basic"},
 		"client_id_metadata_document_supported": true, // https://datatracker.ietf.org/doc/draft-ietf-oauth-client-id-metadata-document/
 		"activitypub_object_id_as_client_id":    true, // https://w3id.org/fep/d8c2
@@ -215,6 +216,12 @@ func PostOAuthToken(ctx *steranko.Context, factory *service.Factory, session dat
 
 	if err := userTokenService.LoadByClientAndCode(session, userTokenID, oauthClient.ClientID, transaction.ClientSecret, &userToken); err != nil {
 		return derp.Wrap(err, location, "Unable to load OAuthUserToken", transaction)
+	}
+
+	// RULE: PKCE (RFC 7636). If the code was issued with a code_challenge, a
+	// matching code_verifier is required to redeem it.
+	if err := userToken.VerifyPKCE(transaction.CodeVerifier); err != nil {
+		return derp.Wrap(err, location, "Invalid PKCE code_verifier")
 	}
 
 	// Return the Token as JSON

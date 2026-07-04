@@ -78,6 +78,31 @@ func (req *OAuthAuthorizationRequest) Validate(client OAuthClient) error {
 		req.ResponseType = "code"
 	}
 
+	// RULE: PKCE (RFC 7636). Normalize and validate the challenge method.
+	if err := req.validatePKCE(); err != nil {
+		return err
+	}
+
 	// Success
+	return nil
+}
+
+// validatePKCE normalizes and validates the PKCE parameters (RFC 7636). If a
+// code_challenge is present, the method defaults to "plain" when omitted (§4.3)
+// and must be one this server supports.
+func (req *OAuthAuthorizationRequest) validatePKCE() error {
+
+	if req.CodeChallenge == "" {
+		return nil
+	}
+
+	if req.CodeChallengeMethod == "" {
+		req.CodeChallengeMethod = PKCEMethodPlain
+	}
+
+	if !IsValidPKCEMethod(req.CodeChallengeMethod) {
+		return derp.BadRequest("model.OAuthAuthorizationRequest.validatePKCE", "Unsupported code_challenge_method (expected 'plain' or 'S256')", req.CodeChallengeMethod)
+	}
+
 	return nil
 }
