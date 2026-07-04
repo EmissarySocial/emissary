@@ -9,12 +9,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ImportSave is a part of the "Importable" interface, and saves an imported Collection to the new profile.
+// ImportSave is a part of the "Importable" interface, and saves an imported CollectionItem to the new profile.
 func (service *CollectionItem) Import(session data.Session, _ *model.Import, importItem *model.ImportItem, user *model.User, document []byte) error {
 
-	const location = "service.Collection.Import"
+	const location = "service.CollectionItem.Import"
 
-	// Unmarshal the JSON document into a new Collection
+	// Unmarshal the JSON document into a new CollectionItem
 	collectionItem := model.NewCollectionItem()
 	if err := json.Unmarshal(document, &collectionItem); err != nil {
 		return derp.Wrap(err, location, "Unable to parse remote document", document)
@@ -24,12 +24,17 @@ func (service *CollectionItem) Import(session data.Session, _ *model.Import, imp
 	importItem.RemoteID = collectionItem.CollectionItemID
 	importItem.LocalID = primitive.NewObjectID()
 
-	// Map values from the original Collection into the new, local Collection
-	collectionItem.CollectionID = importItem.LocalID // Use the new localID for this record
+	// Assign the new localID to this record's own primary key
+	collectionItem.CollectionItemID = importItem.LocalID
 
-	// Map the UserID
+	// Map the UserID from the remote value to its new local value
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &collectionItem.UserID); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map UserID", "UserID: "+user.UserID.Hex()+", CollectionID: "+collectionItem.CollectionID.Hex()))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map UserID", "UserID: "+user.UserID.Hex()+", CollectionItemID: "+collectionItem.CollectionItemID.Hex()))
+	}
+
+	// Map the parent CollectionID from the remote value to its new local value
+	if err := service.importItemService.mapRemoteID(session, user.UserID, &collectionItem.CollectionID); err != nil {
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map CollectionID", "UserID: "+user.UserID.Hex()+", CollectionID: "+collectionItem.CollectionID.Hex()))
 	}
 
 	// Save the CollectionItem to the database
