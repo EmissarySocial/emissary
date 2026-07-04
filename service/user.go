@@ -752,13 +752,13 @@ func (service *User) DeleteAvatar(session data.Session, user *model.User, note s
  * Email Methods
  ******************************************/
 
-// SendPasswordResetEmail generates a new password reset code and sends a welcome email to a new user.
-// If there is a problem sending the email, then the new code is not saved.
-func (service *User) SendPasswordResetEmail(session data.Session, user *model.User) {
+// SendPasswordResetEmail generates a new password reset code (valid for the provided duration)
+// and sends a welcome email to a new user. If there is a problem sending the email, then the new code is not saved.
+func (service *User) SendPasswordResetEmail(session data.Session, user *model.User, duration time.Duration) {
 
 	const location = "service.User.SendPasswordResetEmail"
 
-	if err := service.MakeNewPasswordResetCode(session, user); err != nil {
+	if err := service.MakeNewPasswordResetCode(session, user, duration); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error making password reset", user))
 		return
 	}
@@ -790,7 +790,7 @@ func (service *User) Lockout(session data.Session, username string) {
 	}
 
 	// Make a ResetCode
-	if err := service.MakeNewPasswordResetCode(session, &user); err != nil {
+	if err := service.MakeNewPasswordResetCode(session, &user, model.PasswordResetDurationReset); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error making password reset", user))
 		return
 	}
@@ -801,18 +801,18 @@ func (service *User) Lockout(session data.Session, username string) {
 	}
 }
 
-// MakeNewPasswordResetCode generates a new password reset code for the provided user.
-func (service *User) MakeNewPasswordResetCode(session data.Session, user *model.User) error {
+// MakeNewPasswordResetCode generates a new password reset code (valid for the provided duration) for the provided user.
+func (service *User) MakeNewPasswordResetCode(session data.Session, user *model.User, duration time.Duration) error {
 
 	// If the PasswordReset IS NOT active then
 	// create a new password reset code for this user
 	if user.PasswordReset.NotActive() {
-		user.PasswordReset = model.NewPasswordReset()
+		user.PasswordReset = model.NewPasswordReset(duration)
 	}
 
 	// In all cases, refresh the expiration date of the password reset code
-	// so that it can be used for another 24 hours.
-	user.PasswordReset.RefreshExpireDate()
+	// so that overlapping requests all share the most recent deadline.
+	user.PasswordReset.RefreshExpireDate(duration)
 
 	// Try to save the user with the new password reset code.
 	if err := service.Save(session, user, "Create Password Reset Code"); err != nil {

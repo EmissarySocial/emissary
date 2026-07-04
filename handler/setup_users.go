@@ -149,10 +149,15 @@ func SetupDomainUserInvite(serverFactory *server.Factory, templates *template.Te
 			return derp.Wrap(err, location, "Unable to load user")
 		}
 
+		// RULE: Reset codes are single-use, so mint a new code in case a previous one was used or expired
+		if err := userService.MakeNewPasswordResetCode(session, &user, model.PasswordResetDurationWelcome); err != nil {
+			return derp.Wrap(err, location, "Unable to make password reset code")
+		}
+
 		// Try to (re?)send the email invitation
 		domainEmailService := factory.Email()
 		if err := domainEmailService.SendPasswordReset(&user); err != nil {
-			return derp.Wrap(err, "handler.SetupDomainUserInvite", "Unable to send email")
+			return derp.Wrap(err, location, "Unable to send email")
 		}
 
 		return nil

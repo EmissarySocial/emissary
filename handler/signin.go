@@ -179,7 +179,7 @@ func PostResetPassword(ctx *steranko.Context, factory *service.Factory, session 
 	user := model.NewUser()
 
 	if err := userService.LoadByUsernameOrEmail(session, transaction.EmailAddress, &user); err == nil {
-		userService.SendPasswordResetEmail(session, &user)
+		userService.SendPasswordResetEmail(session, &user, model.PasswordResetDurationReset)
 	}
 
 	// Return a success message regardless of whether or not the user was found.
@@ -288,6 +288,9 @@ func PostResetCode(ctx *steranko.Context, factory *service.Factory, session data
 
 	// Update the user with the new password
 	user.SetPassword(txn.Password)
+
+	// RULE: Reset codes are single-use.  Clear the code so this link cannot be replayed.
+	user.PasswordReset = model.PasswordReset{}
 
 	if err := userService.Save(session, &user, "Updated Password"); err != nil {
 		return derp.Wrap(err, location, "Unable to save user")

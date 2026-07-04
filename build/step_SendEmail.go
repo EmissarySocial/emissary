@@ -3,6 +3,7 @@ package build
 import (
 	"io"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 )
 
@@ -30,8 +31,11 @@ func (step StepSendEmail) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	// Send the designated email
 	switch step.Email {
 
-	case "welcome", "password-reset":
-		builder.factory().User().SendPasswordResetEmail(builder.session(), userBuilder._user)
+	case "welcome":
+		builder.factory().User().SendPasswordResetEmail(builder.session(), userBuilder._user, model.PasswordResetDurationWelcome)
+
+	case "password-reset":
+		builder.factory().User().SendPasswordResetEmail(builder.session(), userBuilder._user, model.PasswordResetDurationReset)
 
 	default:
 		return Halt().WithError(derp.Internal(location, "Invalid email name", "Name must be 'welcome' or 'password-reset'"))

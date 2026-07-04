@@ -17,9 +17,9 @@ func TestIsAuthor_Stream(t *testing.T) {
 	stream := NewStream()
 	stream.AttributedTo.UserID = author
 
-	require.True(t, stream.IsAuthor(author))                       // the real author matches
-	require.False(t, stream.IsAuthor(primitive.NewObjectID()))     // a different user does not
-	require.False(t, stream.IsAuthor(primitive.NilObjectID))       // RULE: a zero (anonymous) ID never matches
+	require.True(t, stream.IsAuthor(author))                   // the real author matches
+	require.False(t, stream.IsAuthor(primitive.NewObjectID())) // a different user does not
+	require.False(t, stream.IsAuthor(primitive.NilObjectID))   // RULE: a zero (anonymous) ID never matches
 
 	// RULE: even when the stream has no author set, a zero query ID must not match a zero author.
 	empty := NewStream()

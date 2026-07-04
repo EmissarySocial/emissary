@@ -7,6 +7,12 @@ import (
 	"github.com/labstack/gommon/random"
 )
 
+// PasswordResetDurationReset is how long a user-requested password reset code remains valid.
+const PasswordResetDurationReset = 1 * time.Hour
+
+// PasswordResetDurationWelcome is how long a welcome/invitation code remains valid.
+const PasswordResetDurationWelcome = 24 * time.Hour
+
 // PasswordReset represents a single password reset request.
 // Only one password reset request is allowed per user.
 type PasswordReset struct {
@@ -15,14 +21,14 @@ type PasswordReset struct {
 	ExpireDate int64 `json:"expireDate"`
 }
 
-// NewPasswordReset returns a fully initialized PasswordReset object.
-func NewPasswordReset() PasswordReset {
+// NewPasswordReset returns a fully initialized PasswordReset object that expires after the provided duration.
+func NewPasswordReset(duration time.Duration) PasswordReset {
 
 	result := PasswordReset{
 		AuthCode: random.String(64),
 	}
 
-	result.RefreshExpireDate()
+	result.RefreshExpireDate(duration)
 
 	return result
 }
@@ -38,10 +44,10 @@ func PasswordResetSchema() schema.Element {
 	}
 }
 
-// RefreshExpireDate extends the expiration date of the password reset code by 24 hours.
-func (reset *PasswordReset) RefreshExpireDate() {
+// RefreshExpireDate extends the expiration date of the password reset code by the provided duration.
+func (reset *PasswordReset) RefreshExpireDate(duration time.Duration) {
 	reset.CreateDate = time.Now().Unix()
-	reset.ExpireDate = time.Now().Add(time.Hour * 24).Unix()
+	reset.ExpireDate = time.Now().Add(duration).Unix()
 }
 
 // IsActive returns TRUE if this code exists and has not expired (i.e. people can still use it to reset their password)
