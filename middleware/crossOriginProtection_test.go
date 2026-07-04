@@ -25,7 +25,7 @@ func invokeCrossOriginProtection(t *testing.T, method string, headers map[string
 	e := echo.New()
 	ctx := e.NewContext(request, httptest.NewRecorder())
 
-	passed := func(ctx echo.Context) error {
+	passed := func(_ echo.Context) error {
 		return nil
 	}
 
