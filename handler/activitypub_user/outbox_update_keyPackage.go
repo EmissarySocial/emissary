@@ -57,7 +57,7 @@ func outbox_UpdateKeyPackage(context Context, activity streams.Document) error {
 	keyPackage.GeneratorName = object.Generator().Name()
 
 	// Save the KeyPackage to the database
-	if err := keyPackageService.Save(context.session, &keyPackage, "Created via ActivityPub API"); err != nil {
+	if err := keyPackageService.Save(context.session, &keyPackage, "Updated via ActivityPub API"); err != nil {
 		return derp.Wrap(err, location, "Unable to save KeyPackage")
 	}
 	// Update values in the activity object
@@ -70,5 +70,5 @@ func outbox_UpdateKeyPackage(context Context, activity streams.Document) error {
 
 	// Write the response to the context
 	context.context.Response().Header().Set("Location", keyPackageService.ActivityPubURL(keyPackage.UserID, keyPackage.KeyPackageID))
-	return context.context.NoContent(http.StatusCreated)
+	return context.context.NoContent(http.StatusAccepted)
 }
