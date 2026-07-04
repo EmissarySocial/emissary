@@ -85,8 +85,12 @@ func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
 	// Add configuration to the service
 	service.locations = locations
 
-	// Load all templates from the filesystem
-	if err := service.loadTemplates(); err != nil {
+	// Load all templates from the filesystem.  On genuine first boot (no templates loaded
+	// yet) a load failure is fatal, because the server cannot serve anything without
+	// templates.  A later Refresh with templates already live must NOT halt.
+	haltOnError := len(service.templates) == 0
+
+	if err := service.loadTemplates(haltOnError); err != nil {
 		derp.Report(derp.Wrap(err, "service.Template.Refresh", "Unable to load templates from filesystem"))
 		return
 	}
@@ -118,7 +122,9 @@ func (service *Template) watch() {
 		select {
 
 		case <-changes:
-			if err := service.loadTemplates(); err != nil {
+			// A watch-triggered reload must never halt the process: the previously-loaded
+			// templates are still serving, so on error we report and keep running.
+			if err := service.loadTemplates(false); err != nil {
 				derp.Report(derp.Wrap(err, "service.template.Watch", "Unable to load templates from filesystem"))
 			}
 
@@ -128,13 +134,17 @@ func (service *Template) watch() {
 	}
 }
 
-// loadTemplates retrieves the template from the filesystem and parses it into
-func (service *Template) loadTemplates() error {
+// loadTemplates (re)loads every template from the configured filesystem locations.
+// haltOnError controls what happens when a location fails to load: on the very first
+// load (initial boot) there are no live templates to fall back on, so an error is fatal
+// and the process exits.  On a subsequent watch-triggered reload the previously-loaded
+// templates are still serving, so an error is reported and the reload is abandoned --
+// never killing the running server.
+func (service *Template) loadTemplates(haltOnError bool) error {
 
 	const location = "service.template.loadTemplates"
 
 	service.templatePrep = make(set.Map[model.Template])
-	shouldHalt := len(service.templates) == 0
 
 	// For each configured file location...
 	for _, fileLocation := range service.locations {
@@ -143,14 +153,14 @@ func (service *Template) loadTemplates() error {
 		filesystem, err := service.filesystemService.GetFS(fileLocation)
 
 		if err != nil {
-			maybeHalt(derp.Wrap(err, location, "Error getting filesystem adapter", fileLocation), shouldHalt)
+			maybeHalt(derp.Wrap(err, location, "Error getting filesystem adapter", fileLocation), haltOnError)
 			continue
 		}
 
 		directories, err := fs.ReadDir(filesystem, ".")
 
 		if err != nil {
-			maybeHalt(derp.Wrap(err, location, "Unable to read directory", fileLocation), shouldHalt)
+			maybeHalt(derp.Wrap(err, location, "Unable to read directory", fileLocation), haltOnError)
 			continue
 		}
 
@@ -170,7 +180,7 @@ func (service *Template) loadTemplates() error {
 			subdirectory, err := fs.Sub(filesystem, directoryName)
 
 			if err != nil {
-				maybeHalt(derp.Wrap(err, location, "Error getting filesystem adapter for sub-directory", fileLocation), shouldHalt)
+				maybeHalt(derp.Wrap(err, location, "Error getting filesystem adapter for sub-directory", fileLocation), haltOnError)
 				continue
 			}
 
@@ -180,27 +190,27 @@ func (service *Template) loadTemplates() error {
 
 			case DefinitionEmail:
 				if err := service.emailService.Add(subdirectory, file); err != nil {
-					maybeHalt(derp.Wrap(err, location, "Error adding theme"), shouldHalt)
+					maybeHalt(derp.Wrap(err, location, "Error adding theme"), haltOnError)
 				}
 
 			case DefinitionTheme:
 				if err := service.themeService.Add(directoryName, subdirectory, file); err != nil {
-					maybeHalt(derp.Wrap(err, location, "Error adding theme"), shouldHalt)
+					maybeHalt(derp.Wrap(err, location, "Error adding theme"), haltOnError)
 				}
 
 			case DefinitionTemplate:
 				if err := service.Add(directoryName, subdirectory, file); err != nil {
-					maybeHalt(derp.Wrap(err, location, "Error adding template"), shouldHalt)
+					maybeHalt(derp.Wrap(err, location, "Error adding template"), haltOnError)
 				}
 
 			case DefinitionRegistration:
 				if err := service.registrationService.Add(directoryName, subdirectory, file); err != nil {
-					maybeHalt(derp.Wrap(err, location, "Error adding registration"), shouldHalt)
+					maybeHalt(derp.Wrap(err, location, "Error adding registration"), haltOnError)
 				}
 
 			case DefinitionWidget:
 				if err := service.widgetService.Add(directoryName, subdirectory, file); err != nil {
-					maybeHalt(derp.Wrap(err, location, "Error adding widget"), shouldHalt)
+					maybeHalt(derp.Wrap(err, location, "Error adding widget"), haltOnError)
 				}
 
 			default:
@@ -211,7 +221,7 @@ func (service *Template) loadTemplates() error {
 
 	// Calculate inheritance for Templates
 	if err := service.calculateAllInheritance(); err != nil {
-		maybeHalt(derp.Wrap(err, location, "Error calculating Template inheritance"), shouldHalt)
+		maybeHalt(derp.Wrap(err, location, "Error calculating Template inheritance"), haltOnError)
 	}
 
 	// Calculate inheritance for Themes
@@ -224,7 +234,7 @@ func (service *Template) loadTemplates() error {
 
 		log.Error().Msg(errorLength + " errors validating templates.")
 		for _, error := range errs {
-			maybeHalt(error, shouldHalt)
+			maybeHalt(error, haltOnError)
 		}
 		log.Error().Msg("Finished reporting " + errorLength + " template errors.  Some templates may not function properly.")
 
