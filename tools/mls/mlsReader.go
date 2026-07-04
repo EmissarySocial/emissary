@@ -117,6 +117,12 @@ func (r *mlsReader) readUint16Vec() ([]uint16, error) {
 	if byteLen%2 != 0 {
 		return nil, derp.Internal("mls.readUint16Vec", "uint16 vector has odd byte length", byteLen)
 	}
+	// Bound the allocation by the bytes actually present, so a large length
+	// prefix cannot force an oversized allocation before the elements are read.
+	// (Mirrors the guard in readOpaqueVec.)
+	if r.remaining() < int(byteLen) {
+		return nil, io.ErrUnexpectedEOF
+	}
 	out := make([]uint16, byteLen/2)
 	for i := range out {
 		v, err := r.readUint16()

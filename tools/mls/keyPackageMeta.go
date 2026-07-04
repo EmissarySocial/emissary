@@ -9,7 +9,7 @@ type KeyPackageMeta struct {
 	InitKey         keyBytes
 	LeafNode        leafNodeMeta
 	Signature       keyBytes
-	SignatureStatus string
+	SignatureStatus SignatureResult
 }
 
 type leafNodeMeta struct {
@@ -19,7 +19,7 @@ type leafNodeMeta struct {
 	Credential      credentialMeta
 	Capabilities    capabilitiesMeta
 	Signature       keyBytes
-	SignatureStatus string
+	SignatureStatus SignatureResult
 }
 
 type lifetimeMeta struct {
