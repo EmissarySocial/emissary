@@ -15,7 +15,7 @@ type Collection struct {
 	To           sliceof.String     `bson:"to"`     // List of people who are participating in this collection
 	Cc           sliceof.String     `bson:"cc"`     // List of people who are participating in this collection
 
-	journal.Journal `json:"-" bson:"journal"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 // NewCollection returns a fully initialized Collection object
