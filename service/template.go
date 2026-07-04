@@ -305,24 +305,17 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 
 	errors := make(sliceof.Object[derp.Error], 0)
 
-	allowedModels := sliceof.String{ // nolint:scopeguard (readability)
-		"None",
-		"Conversations",
-		"Domain",
-		"Followers",
-		"Following",
-		"Group",
-		"Identity",
-		"Inbox",
-		"Outbox",
-		"Rule",
-		"Search",
-		"Settings",
-		"Stream",
-		"Syndication",
-		"Tag",
-		"User",
-		"Webhook",
+	// The canonical list of model names is derived from model.TemplateModelNames() so it
+	// can never drift from the BaseSchema()/NewObject() registry that actually builds them.
+	allowedModels := sliceof.String(model.TemplateModelNames())
+
+	// displayModelNames is the same list with the empty-string entry (a valid "unset"
+	// value) removed, for use in human-readable error messages.
+	displayModelNames := make(sliceof.String, 0, len(allowedModels))
+	for _, name := range allowedModels {
+		if name != "" {
+			displayModelNames = append(displayModelNames, name)
+		}
 	}
 
 	// Scan all Templates in the prep area
@@ -339,7 +332,7 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 			errors.Append(derp.Validation(
 				"Invalid 'model' used in Template definition",
 				"template: "+templateID,
-				"models allowed: "+strings.Join(allowedModels, ", "),
+				"models allowed: "+strings.Join(displayModelNames, ", "),
 				"model used: "+template.Model,
 			))
 		} else {

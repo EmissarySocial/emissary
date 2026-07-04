@@ -77,12 +77,9 @@ func TestTemplate_UnsupportedSchemaProperties_OrphanNestedType(t *testing.T) {
 // through silently.
 func TestTemplate_NewObject_MatchesBaseSchema(t *testing.T) {
 
-	models := []string{
-		"Stream", "None", "",
-		"User", "Outbox", "Inbox", "Settings", "Conversations",
-		"Domain", "Search", "SSO", "Followers", "Following", "Syndication",
-		"Group", "Identity", "Rule", "Tag", "Webhook",
-	}
+	// Derive the model list from the single source of truth so a newly-registered model
+	// is exercised automatically and cannot slip through by being forgotten here.
+	models := TemplateModelNames()
 
 	for _, model := range models {
 		t.Run(model, func(t *testing.T) {

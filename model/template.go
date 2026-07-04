@@ -339,84 +339,97 @@ func (template Template) GetOEmbed() *template.Template {
 	return template.HTMLTemplate.Lookup("oembed")
 }
 
+// templateModel pairs the schema and the object constructor for a single model type.
+// Keeping them together in ONE registry entry guarantees BaseSchema() and NewObject()
+// can never disagree about which schema validates which object.
+type templateModel struct {
+	schema    func() schema.Element // baseline schema for this model's builder
+	newObject func() any            // fresh, zero-value instance of this model's object
+}
+
+// templateModelRegistry is the single source of truth mapping a Template's "Model"
+// property to the schema + object its builder uses.  This mapping mirrors the builder
+// dispatch in handler/admin.go and each builder's schema() method, so that load-time
+// validation of a Template's forms uses the same schema the forms will see at runtime.
+//
+// Model names NOT listed here (including "Stream", "None", and the empty string) fall
+// back to the Stream model via templateModelForName().  Every list that used to
+// enumerate model names by hand -- BaseSchema, NewObject, the load-time allowedModels
+// whitelist, and the drift test -- now derives from this one map.
+var templateModelRegistry = map[string]templateModel{
+	// The Outbox, Inbox, Settings, User, and Conversations builders all build User objects
+	"User":          {schema: UserSchema, newObject: newObjectPointer(NewUser)},
+	"Outbox":        {schema: UserSchema, newObject: newObjectPointer(NewUser)},
+	"Inbox":         {schema: UserSchema, newObject: newObjectPointer(NewUser)},
+	"Settings":      {schema: UserSchema, newObject: newObjectPointer(NewUser)},
+	"Conversations": {schema: UserSchema, newObject: newObjectPointer(NewUser)},
+
+	// The Domain, Search, SSO, Followers, Following, and Syndication builders all build Domain objects
+	"Domain":      {schema: DomainSchema, newObject: newObjectPointer(NewDomain)},
+	"Search":      {schema: DomainSchema, newObject: newObjectPointer(NewDomain)},
+	"SSO":         {schema: DomainSchema, newObject: newObjectPointer(NewDomain)},
+	"Followers":   {schema: DomainSchema, newObject: newObjectPointer(NewDomain)},
+	"Following":   {schema: DomainSchema, newObject: newObjectPointer(NewDomain)},
+	"Syndication": {schema: DomainSchema, newObject: newObjectPointer(NewDomain)},
+
+	"Group":    {schema: GroupSchema, newObject: newObjectPointer(NewGroup)},
+	"Identity": {schema: IdentitySchema, newObject: newObjectPointer(NewIdentity)},
+	"Rule":     {schema: RuleSchema, newObject: newObjectPointer(NewRule)},
+	"Tag":      {schema: SearchTagSchema, newObject: newObjectPointer(NewSearchTag)},
+	"Webhook":  {schema: WebhookSchema, newObject: newObjectPointer(NewWebhook)},
+}
+
+// templateModelStreamDefault is the entry used for "Stream", "None", the empty string,
+// and any model name not present in templateModelRegistry.
+var templateModelStreamDefault = templateModel{schema: StreamSchema, newObject: newObjectPointer(NewStream)}
+
+// newObjectPointer adapts a value constructor (e.g. NewUser) into a func that returns
+// a pointer to a fresh instance, as required by the schema getter/setter interfaces.
+func newObjectPointer[T any](constructor func() T) func() any {
+	return func() any {
+		value := constructor()
+		return &value
+	}
+}
+
+// templateModelForName resolves a model name to its registry entry, falling back to the
+// Stream default for "Stream", "None", "", and any unrecognized name.
+func templateModelForName(model string) templateModel {
+	if entry, found := templateModelRegistry[model]; found {
+		return entry
+	}
+	return templateModelStreamDefault
+}
+
+// TemplateModelNames returns every model name the system recognizes: the explicit
+// registry keys plus the names that implicitly resolve to the Stream model.  This is the
+// canonical whitelist -- callers (e.g. load-time Template validation) should use it
+// instead of maintaining their own list.
+func TemplateModelNames() []string {
+	result := make([]string, 0, len(templateModelRegistry)+3)
+
+	for name := range templateModelRegistry {
+		result = append(result, name)
+	}
+
+	// Names that implicitly resolve to the Stream model (the registry's default).
+	result = append(result, "Stream", "None", "")
+
+	return result
+}
+
 // BaseSchema returns the schema of the model object that this Template builds,
 // as identified by this Template's "Model" property.
 func (template Template) BaseSchema() schema.Element {
-
-	// This mapping mirrors the builder dispatch in handler/admin.go and each builder's
-	// schema() method, so that load-time validation of a Template's forms uses the same
-	// schema that the forms will see at runtime.
-	switch template.Model {
-
-	// The Outbox, Inbox, Settings, User, and Conversations builders all build User objects
-	case "User", "Outbox", "Inbox", "Settings", "Conversations":
-		return UserSchema()
-
-	// The Domain and Syndication builders both build Domain objects
-	case "Domain", "Search", "SSO", "Followers", "Following", "Syndication":
-		return DomainSchema()
-
-	case "Group":
-		return GroupSchema()
-
-	case "Identity":
-		return IdentitySchema()
-
-	case "Rule":
-		return RuleSchema()
-
-	case "Tag":
-		return SearchTagSchema()
-
-	case "Webhook":
-		return WebhookSchema()
-	}
-
-	// All other Templates ("Stream", "None", and unset values) build Stream objects
-	return StreamSchema()
+	return templateModelForName(template.Model).schema()
 }
 
 // NewObject returns a fresh, zero-value instance of the model object that this
-// Template builds, as identified by this Template's "Model" property.  The mapping
-// MUST stay in lockstep with BaseSchema() above: NewObject() returns the object and
-// BaseSchema() returns the schema that validates it, so load-time validation can
-// confirm every schema property resolves to a real accessor on the object.
+// Template builds, as identified by this Template's "Model" property.  Because both
+// BaseSchema() and NewObject() read the SAME registry entry, the schema and the object
+// it validates are guaranteed to stay in lockstep.
 func (template Template) NewObject() any {
-
-	switch template.Model {
-
-	case "User", "Outbox", "Inbox", "Settings", "Conversations":
-		user := NewUser()
-		return &user
-
-	case "Domain", "Search", "SSO", "Followers", "Following", "Syndication":
-		domain := NewDomain()
-		return &domain
-
-	case "Group":
-		group := NewGroup()
-		return &group
-
-	case "Identity":
-		identity := NewIdentity()
-		return &identity
-
-	case "Rule":
-		rule := NewRule()
-		return &rule
-
-	case "Tag":
-		tag := NewSearchTag()
-		return &tag
-
-	case "Webhook":
-		webhook := NewWebhook()
-		return &webhook
-	}
-
-	// All other Templates ("Stream", "None", and unset values) build Stream objects
-	stream := NewStream()
-	return &stream
+	return templateModelForName(template.Model).newObject()
 }
 
 // UnsupportedSchemaProperties returns the list of property paths declared in this
