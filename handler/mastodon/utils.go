@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/toot"
@@ -122,4 +123,60 @@ func getStreamFromURL(serverFactory *server.Factory, streamURL string) (*service
 	// Return values to the caller.
 	return factory, streamService, stream, nil
 
+}
+
+// userCanStream loads the Template for the provided Stream and verifies that the
+// authorization is allowed to perform the named READ action (e.g. "view") on it.
+// It returns nil when the action is permitted, and a Forbidden error (or a wrapped
+// internal error) otherwise. Reads follow the Stream's template/state visibility
+// policy, so a published post is world-readable while a restricted one is not.
+//
+// Write operations (edit, delete) do NOT use this gate: the Mastodon API's contract
+// is that a status belongs to one account, so writes are author-only via
+// userOwnsStream, independent of whatever roles the template happens to grant.
+func userCanStream(factory *service.Factory, session data.Session, authorization *model.Authorization, stream *model.Stream, actionID string) error {
+
+	const location = "handler.mastodon.userCanStream"
+
+	// Load the Template for this Stream
+	template, err := factory.Template().Load(stream.TemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to load template")
+	}
+
+	// Check permissions for the requested action
+	allowed, err := factory.Permission().UserCan(session, authorization, &template, stream, actionID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Error checking permissions")
+	}
+
+	if !allowed {
+		return derp.Forbidden(location, "User is not authorized to perform this action", "ActionID: "+actionID)
+	}
+
+	return nil
+}
+
+// userOwnsStream verifies that the authorization is allowed to modify (edit or
+// delete) the provided Stream via the Mastodon API. This mirrors Mastodon's model,
+// where a status belongs to a single account: only the author may modify it. Domain
+// owners are also permitted, so server moderation can take a post down. Unlike
+// userCanStream, this deliberately ignores the template's access list — a Mastodon
+// write must never be granted to a non-author just because a template shares an
+// "edit" or "delete" role with a group.
+func userOwnsStream(authorization *model.Authorization, stream *model.Stream) error {
+
+	const location = "handler.mastodon.userOwnsStream"
+
+	if stream.IsAuthor(authorization.UserID) {
+		return nil
+	}
+
+	if authorization.DomainOwner {
+		return nil
+	}
+
+	return derp.Forbidden(location, "User is not authorized to modify this stream")
 }
