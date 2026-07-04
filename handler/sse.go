@@ -86,8 +86,9 @@ func serverSentEvent(ctx *steranko.Context, factory *service.Factory, topic int)
 
 	const location = "handler.ServerSentEvent"
 
-	// Close SSE connections that remain open after 10 minutes
-	// timeoutContext, cancel := context.WithTimeout(ctx.Request().Context(), 10*time.Minute)
+	// Cap the lifetime of an SSE connection at 30 days.  This is effectively "never time
+	// out" for a normal session; it exists only as a backstop so a permanently-abandoned
+	// connection is eventually reclaimed.
 	timeoutContext, cancel := context.WithTimeout(ctx.Request().Context(), 30*24*time.Hour)
 	defer cancel()
 
