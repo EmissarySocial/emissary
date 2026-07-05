@@ -10,9 +10,11 @@ func CollectionSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"collectionId": schema.String{Format: "objectId"},
 			"userId":       schema.String{Format: "objectId"},
-			"to":           schema.Array{Items: schema.String{}},
-			"cc":           schema.Array{Items: schema.String{}},
-			"name":         schema.String{MaxLength: 128},
+			// to/cc hold ActivityPub recipient URIs (including special values like the Public
+			// collection); bound the length but impose no url format that could reject them.
+			"to":           schema.Array{Items: schema.String{MaxLength: 1024}},
+			"cc":           schema.Array{Items: schema.String{MaxLength: 1024}},
+			"name":         schema.String{Format: "text", MaxLength: 128},
 		},
 	}
 }

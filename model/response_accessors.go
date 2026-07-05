@@ -15,7 +15,7 @@ func ResponseSchema() schema.Element {
 			"actor":      schema.String{Format: "url"},
 			"object":     schema.String{Format: "url"},
 			"type":       schema.String{MaxLength: 128, Enum: []string{vocab.ActivityTypeAnnounce, vocab.ActivityTypeLike, vocab.ActivityTypeDislike}},
-			"content":    schema.String{MaxLength: 256},
+			"content":    schema.String{Format: "text", MaxLength: 256},
 		},
 	}
 }

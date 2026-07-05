@@ -10,12 +10,13 @@ func OAuthClientSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"clientId":     schema.String{Format: "objectId", Required: true},
 			"clientUrl":    schema.String{Format: "url"},
-			"name":         schema.String{MaxLength: 64, Required: true},
-			"summary":      schema.String{MaxLength: 256},
+			"name":         schema.String{Format: "text", MaxLength: 64, Required: true},
+			"summary":      schema.String{Format: "text", MaxLength: 256},
 			"iconUrl":      schema.String{Format: "url"},
 			"website":      schema.String{Format: "url"},
 			"redirectUris": schema.Array{Items: schema.String{Format: "url"}},
-			"scopes":       schema.Array{Items: schema.String{}},
+			// OAuth scopes are colon-delimited; unsafe-any bounds length without the token format's rejection.
+			"scopes":       schema.Array{Items: schema.String{Format: "unsafe-any", MaxLength: 128}},
 		},
 	}
 }
