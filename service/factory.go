@@ -742,14 +742,21 @@ func (factory *Factory) Registration() *Registration {
 	return factory.registrationService
 }
 
-// Steranko returns a Steranko adapter for the provided database session
+// Steranko returns a Steranko adapter for the provided database session.
 func (factory *Factory) Steranko(session data.Session) *steranko.Steranko {
+
+	// This is the ONLY place that password hashing policy is defined: BCrypt cost 12
+	// creates all new password hashes (~200ms per hash: slow enough to resist offline
+	// cracking, fast enough that signin latency and the CPU cost of a failed-signin
+	// flood stay reasonable). The Plaintext fallback exists so that passwords
+	// stored before hashing was enforced can still sign in -- steranko re-hashes
+	// them on first use.
 
 	return steranko.New(
 		factory.SterankoUserService(session),
 		factory.JWT(),
 		steranko.WithSigninService(factory.SterankoSigninService(session)),
-		steranko.WithPasswordHasher(hash.BCrypt(15), hash.Plaintext{}),
+		steranko.WithPasswordHasher(hash.BCrypt(12), hash.Plaintext{}),
 	)
 }
 

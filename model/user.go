@@ -29,7 +29,7 @@ type User struct {
 	ProfileURL      string                     `bson:"profileUrl"`           // Fully Qualified profile URL for this user (including domain name)
 	EmailAddress    string                     `bson:"emailAddress"`         // Email address for this user
 	Username        string                     `bson:"username"`             // This is the primary public identifier for the user.
-	Password        string                     `bson:"password"`             // This password should be encrypted with BCrypt.
+	Password        string                     `bson:"password"`             // Hashed password. Only ever written via a PasswordHasher (see steranko.SetPassword); never contains plaintext.
 	Locale          string                     `bson:"locale"`               // Language code for this user's preferred language.
 	SignupNote      string                     `bson:"signupNote,omitempty"` // Note that was included when this user signed up.
 	StateID         string                     `bson:"stateId"`              // State ID for this user
@@ -147,8 +147,8 @@ func (user *User) GetUsername() string {
 	return user.Username
 }
 
-// GetPassword returns the (encrypted) passsword for this User.  A part of the "steranko.User" interface.
-func (user *User) GetPassword() string {
+// GetHashedPassword returns the hashed password for this User.  A part of the "steranko.User" interface.
+func (user *User) GetHashedPassword() string {
 	return user.Password
 }
 
@@ -157,9 +157,11 @@ func (user *User) SetUsername(username string) {
 	user.Username = username
 }
 
-// SetPassword updates the password for this User.  A part of the "steranko.User" interface.
-func (user *User) SetPassword(password string) {
-	user.Password = password
+// SetHashedPassword updates the password for this User.  A part of the "steranko.User" interface.
+// The value must already be hashed; to set a password from plaintext, use steranko's SetPassword,
+// which hashes with the configured PasswordHasher first.
+func (user *User) SetHashedPassword(hashedValue string) {
+	user.Password = hashedValue
 }
 
 /******************************************

@@ -19,6 +19,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/steranko"
 	"github.com/benpate/uri"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -35,6 +36,7 @@ type Domain struct {
 	newSession          func(time.Duration) (data.Session, context.CancelFunc, error)
 	providerService     *Provider
 	registrationService *Registration
+	steranko            func(data.Session) *steranko.Steranko
 	themeService        *Theme
 	userService         *User
 	hostname            string
@@ -65,6 +67,7 @@ func (service *Domain) Refresh(factory *Factory) {
 	service.newSession = factory.Session
 	service.providerService = factory.Provider()
 	service.registrationService = factory.Registration()
+	service.steranko = factory.Steranko
 	service.themeService = factory.Theme()
 	service.userService = factory.User()
 	service.hostname = factory.Hostname()
@@ -113,9 +116,12 @@ func (service *Domain) Start() error {
 			admin.DisplayName = "Admin"
 			admin.Username = "admin"
 			admin.EmailAddress = "admin@localhost"
-			admin.SetPassword("admin")
 			admin.IsOwner = true
 			admin.IsPublic = true
+
+			if err := service.steranko(session).SetPassword(&admin, "admin"); err != nil {
+				return derp.Wrap(err, location, "Unable to set admin password")
+			}
 
 			if err := service.userService.Save(session, &admin, "Create admin user for local host"); err != nil {
 				return derp.Wrap(err, "service.Domain.Save", "Unable to create admin user for local host")

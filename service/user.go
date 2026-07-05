@@ -26,6 +26,7 @@ import (
 	"github.com/benpate/rosetta/schema/format"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/steranko"
 	"github.com/benpate/turbine/queue"
 	"github.com/benpate/uri"
 	"github.com/rs/zerolog/log"
@@ -48,6 +49,7 @@ type User struct {
 	responseService   *Response
 	ruleService       *Rule
 	searchTagService  *SearchTag
+	steranko          func(data.Session) *steranko.Steranko
 	streamService     *Stream
 	templateService   *Template
 	webhookService    *Webhook
@@ -81,6 +83,7 @@ func (service *User) Refresh(factory *Factory) {
 	service.outboxService = factory.Outbox()
 	service.responseService = factory.Response()
 	service.ruleService = factory.Rule()
+	service.steranko = factory.Steranko
 	service.streamService = factory.Stream()
 	service.templateService = factory.Template()
 	service.webhookService = factory.Webhook()
@@ -788,11 +791,12 @@ func (service *User) Lockout(session data.Session, username string) {
 		return
 	}
 
-	// Reset the password to a random value
-	if newPassword, err := random.GenerateString(256); err == nil {
-		user.Password = newPassword
-	} else {
+	// Reset the password to a random value so the old credential stops working.
+	// 48 random bytes base64-encode to 64 characters, under bcrypt's 72-byte input limit.
+	if newPassword, err := random.GenerateString(48); err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to generate random password", user))
+	} else if err := service.steranko(session).SetPassword(&user, newPassword); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to set random password", user))
 	}
 
 	// Make a ResetCode

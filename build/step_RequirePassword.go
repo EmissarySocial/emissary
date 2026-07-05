@@ -97,7 +97,7 @@ func (step StepRequirePassword) Post(builder Builder, writer io.Writer) Pipeline
 
 	// Validate the password. If no match, then halt
 	steranko := factory.Steranko(builder.session())
-	if matches, _ := steranko.ComparePassword(password, user.GetPassword()); !matches {
+	if matches, _ := steranko.ComparePassword(password, user.GetHashedPassword()); !matches {
 		return step.error(builder, "Invalid password.")
 	}
 

@@ -55,7 +55,10 @@ func PostAccount(serverFactory *server.Factory) func(model.Authorization, txn.Po
 		user.EmailAddress = t.Email
 		user.Locale = t.Locale
 		user.SignupNote = t.Reason
-		user.SetPassword(t.Password)
+
+		if err := factory.Steranko(session).SetPassword(&user, t.Password); err != nil {
+			return object.Token{}, derp.Wrap(err, location, "Unable to set password")
+		}
 
 		if err := userService.Save(session, &user, "Created via Mastodon API"); err != nil {
 			return object.Token{}, derp.Wrap(err, location, "Unable to save user")

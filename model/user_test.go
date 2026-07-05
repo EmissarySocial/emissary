@@ -59,3 +59,15 @@ func TestUserJSONLD(t *testing.T) {
 	getter := any(user).(JSONLDGetter)
 	require.NotNil(t, getter.GetJSONLD())
 }
+
+// TestUser_HashedPasswordAccessors pins the steranko.User contract: these are dumb
+// accessors that store and return the value EXACTLY as given.  They must only ever
+// receive already-hashed values (see service.SetPassword); if they gained any
+// transformation logic, steranko's own hash writes would double-process.
+func TestUser_HashedPasswordAccessors(t *testing.T) {
+	user := NewUser()
+
+	user.SetHashedPassword("$2a$12$not-really-a-hash-but-stored-verbatim")
+	require.Equal(t, "$2a$12$not-really-a-hash-but-stored-verbatim", user.Password)
+	require.Equal(t, "$2a$12$not-really-a-hash-but-stored-verbatim", user.GetHashedPassword())
+}

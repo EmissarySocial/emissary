@@ -281,8 +281,10 @@ func PostResetCode(ctx *steranko.Context, factory *service.Factory, session data
 		return derp.Wrap(err, location, "Unable to load user")
 	}
 
-	// Update the user with the new password
-	user.SetPassword(txn.Password)
+	// Update the user with the new password (hashed; never stored as plaintext)
+	if err := factory.Steranko(session).SetPassword(&user, txn.Password); err != nil {
+		return derp.Wrap(err, location, "Unable to set password")
+	}
 
 	// RULE: Reset codes are single-use.  Clear the code so this link cannot be replayed.
 	user.PasswordReset = model.PasswordReset{}
