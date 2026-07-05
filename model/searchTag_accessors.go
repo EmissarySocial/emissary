@@ -10,15 +10,15 @@ func SearchTagSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"searchTagId": schema.String{Format: "objectId"},
-			"group":       schema.String{},
-			"name":        schema.String{Required: true},
+			"group":       schema.String{MaxLength: 64},
+			"name":        schema.String{MaxLength: 64, Required: true},
 			"stateId":     schema.Integer{Enum: []int{SearchTagStateFeatured, SearchTagStateAllowed, SearchTagStateWaiting, SearchTagStateBlocked}},
-			"related":     schema.String{},
+			"related":     schema.String{MaxLength: 256},
 			"rank":        schema.Integer{},
 			"colors":      schema.Array{Items: schema.String{Format: "color"}},
-			"notes":       schema.String{},
-			"imageId":     schema.String{Format: "objectId"},
-			"imageUrl":    schema.String{Format: "url"},
+			"notes":       schema.String{MaxLength: 2048},
+			"imageId":     schema.String{MaxLength: 1024, Format: "objectId"},
+			"imageUrl":    schema.String{MaxLength: 1024}, // virtual field; ImageURL() returns a relative path, so the absolute-only "url" format cannot apply
 		},
 	}
 }

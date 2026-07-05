@@ -20,7 +20,7 @@ func TestImportItemSchema(t *testing.T) {
 		{"importUrl", "http://test.com/", nil},
 		{"remoteUrl", "http://test.com/", nil},
 		{"localUrl", "http://test.com/", nil},
-		{"stateId", "AUTHORIZING", nil},
+		{"stateId", ImportItemStateDone, nil},
 		{"message", "does eat oats", nil},
 	}
 

@@ -17,7 +17,7 @@ func UserSchema() schema.Element {
 			"imageId":         schema.String{Format: "objectId"},
 			"iconUrl":         schema.String{Format: "url"}, // This is my first attempt at a "virtual field"
 			"imageUrl":        schema.String{Format: "url"}, // This is my first attempt at a "virtual field"
-			"displayName":     schema.String{MaxLength: 64, Required: true},
+			"displayName":     schema.String{MaxLength: 64, Format: "no-html", Required: true},
 			"statusMessage":   schema.String{MaxLength: 2048},
 			"location":        schema.String{MaxLength: 64},
 			"links":           schema.Array{Items: PersonLinkSchema(), MaxLength: 6},

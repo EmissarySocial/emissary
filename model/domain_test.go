@@ -9,6 +9,11 @@ import (
 func TestDomainSchema(t *testing.T) {
 
 	domain := NewDomain()
+
+	// The virtual iconUrl/imageUrl fields derive from Host() + attachment path, so a
+	// hostname is required for them to pass the (absolute-only) "url" format.
+	domain.Hostname = "example.com"
+
 	s := schema.New(DomainSchema())
 
 	table := []tableTestItem{

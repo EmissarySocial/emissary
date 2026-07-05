@@ -52,7 +52,7 @@ func TestStreamSchema(t *testing.T) {
 		{"summary", "DOC-SUMMARY", nil},
 		{"parentTemplateId", "PARENT-TMPL", nil},
 		{"context", "https://example/context", nil},
-		{"icon", "https://example/icon.png", nil},
+		{"icon", "doc-icon", nil}, // icon is a CSS/token name, not a URL
 		{"iconUrl", "https://DOC.ICONURL.COM", nil},
 		{"hashtags.0", "first-tag", nil},
 		{"hashtags.1", "second-tag", nil},

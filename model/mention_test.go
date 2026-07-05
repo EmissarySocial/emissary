@@ -22,8 +22,8 @@ func TestMention(t *testing.T) {
 		{"origin.iconUrl", "http://entry.photo.url/", nil},
 		{"author.name", "AUTHOR NAME", nil},
 		{"author.emailAddress", "AUTHOR@EMAIL.COM", nil},
-		{"author.profileUrl", "AUTHOR WEBSITE", nil},
-		{"author.iconUrl", "AUTHOR PHOTO", nil},
+		{"author.profileUrl", "https://author.example/website", nil},
+		{"author.iconUrl", "https://author.example/photo.jpg", nil},
 		{"stateId", MentionStatusValidated, nil},
 	}
 

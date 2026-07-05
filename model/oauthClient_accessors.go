@@ -9,9 +9,9 @@ func OAuthClientSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"clientId":     schema.String{Format: "objectId", Required: true},
-			"clientUrl":    schema.String{Format: "url", Required: false},
-			"name":         schema.String{Required: true},
-			"summary":      schema.String{},
+			"clientUrl":    schema.String{Format: "url"},
+			"name":         schema.String{MaxLength: 64, Required: true},
+			"summary":      schema.String{MaxLength: 256},
 			"iconUrl":      schema.String{Format: "url"},
 			"website":      schema.String{Format: "url"},
 			"redirectUris": schema.Array{Items: schema.String{Format: "url"}},

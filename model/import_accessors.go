@@ -10,7 +10,7 @@ func ImportSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"importId":  schema.String{Format: "objectId", Required: true},
 			"userId":    schema.String{Format: "objectId", Required: true},
-			"sourceId":  schema.String{},
+			"sourceId":  schema.String{Format: "text", MaxLength: 256},
 			"sourceUrl": schema.String{Format: "uri"},
 			"stateId": schema.String{
 				Enum: []string{
@@ -27,7 +27,7 @@ func ImportSchema() schema.Element {
 					ImportStateDone,
 				},
 				Required: true},
-			"message":       schema.String{},
+			"message":       schema.String{Format: "text", MaxLength: 1024},
 			"totalItems":    schema.Integer{},
 			"completeItems": schema.Integer{},
 		},

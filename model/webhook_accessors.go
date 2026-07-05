@@ -8,8 +8,8 @@ import (
 func WebhookSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"webhookId": schema.String{Format: "objectID"},
-			"label":     schema.String{},
+			"webhookId": schema.String{Format: "objectId"},
+			"label":     schema.String{Format: "text", MaxLength: 64},
 			"targetUrl": schema.String{Format: "url"},
 			"events": schema.Array{Items: schema.String{Enum: []string{
 				WebhookEventStreamCreate,
