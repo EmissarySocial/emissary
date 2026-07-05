@@ -27,7 +27,7 @@ require (
 	github.com/benpate/rosetta v0.30.0
 	github.com/benpate/sherlock v0.11.0
 	github.com/benpate/sniff v0.2.0
-	github.com/benpate/steranko v0.27.0
+	github.com/benpate/steranko v0.28.0
 	github.com/benpate/table v0.8.0
 	github.com/benpate/toot v0.3.0
 	github.com/benpate/turbine v0.5.1
@@ -138,3 +138,4 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
