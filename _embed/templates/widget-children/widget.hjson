@@ -5,7 +5,7 @@
 	schema:{
 		type:"object"
 		properties:{
-			title: {type:"string", default:""}
+			title: {type:"string", format:"text", maxLength:256, default:""}
 			showIcon: {type:"boolean", default:true}
 			showDescription: {type:"boolean", default:true}
 		}

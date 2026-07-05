@@ -13,8 +13,8 @@
 	schema: {
 		type:"object"
 		properties: {
-			label: {type:"string", description:"The human-readable heading for this photo album"}
-			summary: {type:"string",description:"Text description at top of page"}
+			label: {type:"string", format:"text", maxLength:256, description:"The human-readable heading for this photo album"}
+			summary: {type:"string", format:"html", maxLength:2048, description:"Text description at top of page"}
 		}
 		required: []
 	}

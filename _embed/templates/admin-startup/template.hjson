@@ -10,7 +10,7 @@
 	schema: {
 		type: "object"
 		properties: {
-			themeId: {type:"string"}
+			themeId: {type:"string", maxLength:128}
 		}
 	}
 	actions: {

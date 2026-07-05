@@ -9,9 +9,9 @@
 	schema: {
 		type: "object"
 		properties: {
-			label: {type: "string"}
-			summary: {type: "string"}
-			iconUrl: {type: "string"}
+			label: {type: "string", format:"text", maxLength:256}
+			summary: {type: "string", format:"html", maxLength:2048}
+			iconUrl: {type: "string", maxLength:1024}
 		}
 		required: []
 	}

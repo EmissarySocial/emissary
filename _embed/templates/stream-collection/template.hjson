@@ -17,9 +17,9 @@
 	schema: {
 		type:object
 		properties: {
-			token: {type:"string", required:true}
-			label: {type:"string"}
-			summary: {type:"string"}
+			token: {type:"string", format:"token", maxLength:64, required:true}
+			label: {type:"string", format:"text", maxLength:256}
+			summary: {type:"string", format:"html", maxLength:2048}
 			data: {
 				type:object
 				properties: {

@@ -5,7 +5,7 @@
 	schema:{
 		type:"object"
 		properties:{
-			title: {type:"string", default:""}
+			title: {type:"string", format:"text", maxLength:256, default:""}
 			grandparents:{type:"string", enum:["All", "Grandparent Only"], default:"Grandparent Only"}
 			parents:{type:"string", enum:["All", "Parent Only"], default:"Parent Only"}
 			siblings:{type:"string", enum:["All", "Self Only"], default:"All"}

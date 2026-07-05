@@ -19,8 +19,8 @@
 				items: {
 					type:object
 					properties: {
-						url: {type:"string"}
-						name: {type:"string"}
+						url: {type:"string", maxLength:1024}
+						name: {type:"string", format:"text", maxLength:256}
 					}
 				}
 			}
