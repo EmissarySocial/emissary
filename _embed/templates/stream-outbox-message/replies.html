@@ -44,7 +44,7 @@
 					<div class="margin-vertical"><img src="{{$object.Image.Href}}" class="width-100%"></div>
 				{{- end -}}
 			
-				<div class="margin-bottom">{{$object.Content | html}}</div>
+				<div class="margin-bottom">{{$object.Content | htmlMinimal}}</div>
 				<div class="text-sm">
 					<span class="text-light-gray">
 						{{- if gt $metadata.Replies 0 -}}
