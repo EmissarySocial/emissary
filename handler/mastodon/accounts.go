@@ -220,9 +220,9 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized User")
 		}
 
-		// Query all posts by this user
+		// Query all posts by this user that are visible to the caller
 		streamService := factory.Stream()
-		streams, err := streamService.QueryByUser(session, user.UserID, queryExpression(t), option.MaxRows(t.Limit))
+		streams, err := streamService.QueryByUser(session, auth, user.UserID, queryExpression(t), option.MaxRows(t.Limit))
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unable to query streams")

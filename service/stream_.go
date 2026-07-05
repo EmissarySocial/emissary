@@ -51,6 +51,7 @@ type Stream struct {
 	keyService        *EncryptionKey
 	mentionService    *Mention
 	outboxService     *Outbox
+	permissionService *Permission
 	searchTagService  *SearchTag
 	templateService   *Template
 	followerService   *Follower
@@ -89,6 +90,7 @@ func (service *Stream) Refresh(factory *Factory) {
 	service.keyService = factory.EncryptionKey()
 	service.mentionService = factory.Mention()
 	service.outboxService = factory.Outbox()
+	service.permissionService = factory.Permission()
 	service.ruleService = factory.Rule()
 	service.searchTagService = factory.SearchTag()
 	service.templateService = factory.Template()
