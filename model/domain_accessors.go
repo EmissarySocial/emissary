@@ -23,15 +23,15 @@ func DomainSchema() schema.Element {
 			"label":                schema.String{MaxLength: 128},
 			"description":          schema.String{MaxLength: 1024},
 			"forward":              schema.String{Format: "url", Required: false},
-			"data":                 schema.Object{Wildcard: schema.String{}},
+			"data":                 schema.Object{Wildcard: schema.String{MaxLength: 4096}},
 			"colorMode":            schema.String{Enum: []string{DomainColorModeAuto, DomainColorModeLight, DomainColorModeDark}},
 			"mlsMode":              schema.String{Enum: []string{DomainMLSModeAll, DomainMLSModeGroups, DomainMLSModeNone}},
 			"defaultAnonymous":     schema.String{MaxLength: 128},
 			"defaultAuthenticated": schema.String{MaxLength: 128},
 			"defaultOwner":         schema.String{MaxLength: 128},
-			"mlsGroupIds":          schema.String{},
+			"mlsGroupIds":          schema.String{MaxLength: 2048},
 			"syndication":          schema.Array{Items: form.LookupCodeSchema()},
-			"registrationData":     schema.Object{Wildcard: schema.String{}},
+			"registrationData":     schema.Object{Wildcard: schema.String{MaxLength: 8192}},
 		},
 	}
 }

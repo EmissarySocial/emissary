@@ -10,7 +10,7 @@
 	schema: {type: "object", properties: {
 		data: {type:"object", properties: {
 			sso_active:  {type:"boolean"}
-			sso_secret:   {type:"string", format:"no-html"}
+			sso_secret:   {type:"string", format:"unsafe-any", maxLength:255}
 		}}
 	}}
 	actions: {

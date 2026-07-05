@@ -11,9 +11,13 @@ func OAuthUserTokenSchema() schema.Element {
 			"oauthUserTokenId": schema.String{Format: "objectId", Required: true},
 			"userId":           schema.String{Format: "objectId", Required: true},
 			"clientId":         schema.String{Format: "objectId", Required: true},
-			"token":            schema.String{},
-			"clientSecret":     schema.String{},
-			"scopes":           schema.Array{Items: schema.String{}},
+			// token and clientSecret are opaque secrets; unsafe-any preserves them verbatim
+			// (the no-html default would strip characters and collapse whitespace).
+			"token":            schema.String{Format: "unsafe-any", MaxLength: 512},
+			"clientSecret":     schema.String{Format: "unsafe-any", MaxLength: 512},
+			// OAuth scopes are colon-delimited (e.g. "reading:expand:media"), which the token
+			// format rejects; unsafe-any preserves them verbatim with only a length bound.
+			"scopes":           schema.Array{Items: schema.String{Format: "unsafe-any", MaxLength: 128}},
 			"data":             schema.Object{Wildcard: schema.Any{}},
 			"apiUser":          schema.Boolean{},
 		},

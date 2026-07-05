@@ -37,7 +37,7 @@ func NewPasswordReset(duration time.Duration) PasswordReset {
 func PasswordResetSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"authCode":   schema.String{},
+			"authCode":   schema.String{Format: "unsafe-any", MaxLength: 128},
 			"createDate": schema.Integer{},
 			"expireDate": schema.Integer{},
 		},

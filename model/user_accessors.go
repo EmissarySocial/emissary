@@ -11,7 +11,7 @@ func UserSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"userId":          schema.String{Format: "objectId"},
-			"mapIds":          schema.Object{Wildcard: schema.String{}},
+			"mapIds":          schema.Object{Wildcard: schema.String{MaxLength: 256}},
 			"groupIds":        id.SliceSchema(),
 			"iconId":          schema.String{Format: "objectId"},
 			"imageId":         schema.String{Format: "objectId"},
@@ -30,7 +30,7 @@ func UserSchema() schema.Element {
 			"inboxTemplate":   schema.String{MaxLength: 128},
 			"outboxTemplate":  schema.String{MaxLength: 128},
 			"hashtags":        schema.Array{Items: schema.String{Format: "token"}},
-			"data":            schema.Object{Wildcard: schema.String{}},
+			"data":            schema.Object{Wildcard: schema.String{MaxLength: 4096}},
 			"movedTo":         schema.String{Format: "url"},
 			"followerCount":   schema.Integer{},
 			"followingCount":  schema.Integer{},

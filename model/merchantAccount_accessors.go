@@ -14,7 +14,8 @@ func MerchantAccountSchema() schema.Element {
 			"type":              schema.String{Enum: []string{ConnectionProviderStripeConnect}}, // ConnectionProviderStripe, ConnectionProviderPayPal,
 			"name":              schema.String{MaxLength: 128},
 			"description":       schema.String{MaxLength: 1024},
-			"vault":             schema.Object{Wildcard: schema.String{}},
+			// vault holds secrets; unsafe-any avoids the no-html default corrupting stored values.
+			"vault":             schema.Object{Wildcard: schema.String{Format: "unsafe-any", MaxLength: 8192}},
 			"liveMode":          schema.Boolean{},
 		},
 	}
