@@ -361,6 +361,18 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 			}
 		}
 
+		// RULE: Every format name declared in the Template's schema must resolve in the
+		// format registry.  String validation silently skips unrecognized format names
+		// (degrading to the no-html default), so a typo'd format would otherwise ship
+		// with no validation at all.  Catch it here, at load time.
+		if err := template.Schema.ValidateFormats(); err != nil {
+			errors.Append(derp.Validation(
+				"Template schema uses an unrecognized format name",
+				"template: "+templateID,
+				err.Error(),
+			))
+		}
+
 		// RULE: Templates MUST have at least one Action, or else permissions won't work
 		if template.States.IsEmpty() {
 			errors.Append(derp.Validation(

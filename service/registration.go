@@ -50,6 +50,12 @@ func (service *Registration) Add(registrationID string, filesystem fs.FS, defini
 		return derp.Wrap(err, location, "Unable to load Schema", registrationID)
 	}
 
+	// Every format name in the schema must resolve in the format registry; unrecognized
+	// names are silently skipped at validation time, so reject them at load time instead.
+	if err := registration.Schema.ValidateFormats(); err != nil {
+		return derp.Wrap(err, location, "Registration schema uses an unrecognized format name", registrationID)
+	}
+
 	// Load all HTML templates from the filesystem
 	if err := loadHTMLTemplateFromFilesystem(filesystem, registration.HTMLTemplate, service.funcMap); err != nil {
 		return derp.Wrap(err, location, "Unable to load Registration", registrationID)
