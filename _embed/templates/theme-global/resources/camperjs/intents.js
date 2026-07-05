@@ -54,8 +54,8 @@ var NodeInfo = class {
 var Intents = class {
   // getIntentsMap retrieves the available Activity Intents templates for the provided data
   static getIntentsMap = async (server, webfingerResult) => {
-    var found = false;
-    var result = {
+    let found = false;
+    let result = {
       announce: "",
       create: "",
       follow: "",
@@ -65,8 +65,8 @@ var Intents = class {
     };
     const links = webfingerResult.links || [];
     for (const link of links) {
-      var relation = link.rel || "";
-      var template = link.template || link.href || "";
+      let relation = link.rel || "";
+      let template = link.template || link.href || "";
       switch (relation.toLowerCase()) {
         case "https://w3id.org/fep/3b86/announce":
           result.announce = template;

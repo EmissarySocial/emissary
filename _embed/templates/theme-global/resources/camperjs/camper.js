@@ -7,6 +7,31 @@ function guessProtocol(server) {
   }
   return "https://";
 }
+function safeText(value) {
+  const parser = new DOMParser();
+  const parsed = parser.parseFromString(value, "text/html");
+  return parsed.body.textContent || "";
+}
+function safeURL(value) {
+  if (value == "") {
+    return "";
+  }
+  let parsed;
+  try {
+    parsed = new URL(value, document.baseURI);
+  } catch {
+    return "";
+  }
+  switch (parsed.protocol) {
+    case "http:":
+    case "https:":
+      return parsed.href;
+  }
+  return "";
+}
+function safeAttr(value) {
+  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+}
 function hideElement(element, hide) {
   if (hide) {
     element.hidden = true;
@@ -116,8 +141,8 @@ var NodeInfo = class {
 var Intents = class {
   // getIntentsMap retrieves the available Activity Intents templates for the provided data
   static getIntentsMap = async (server, webfingerResult) => {
-    var found = false;
-    var result = {
+    let found = false;
+    let result = {
       announce: "",
       create: "",
       follow: "",
@@ -127,8 +152,8 @@ var Intents = class {
     };
     const links = webfingerResult.links || [];
     for (const link of links) {
-      var relation = link.rel || "";
-      var template = link.template || link.href || "";
+      let relation = link.rel || "";
+      let template = link.template || link.href || "";
       switch (relation.toLowerCase()) {
         case "https://w3id.org/fep/3b86/announce":
           result.announce = template;
@@ -488,13 +513,13 @@ var Camper = {
       }
       const maxAccounts = Camper.maxAccounts(element);
       const accountListHTML = accounts.slice(0, maxAccounts).map((account) => `
-				<div id="camper-account-${account.id}" class="camper-account" onclick="Camper.doIntent(this, '${account.username}')">
-					<img src="${account.iconUrl}" class="camper-account-icon">
+				<div id="camper-account-${safeAttr(account.id)}" class="camper-account" data-username="${safeAttr(account.username)}" onclick="Camper.doIntent(this, this.dataset.username || '')">
+					<img src="${safeURL(account.iconUrl)}" class="camper-account-icon">
 					<div class="camper-account-info">
-						<div class="camper-account-name">${account.name}</div>
-						<div class="camper-account-username">${account.username}</div>
+						<div class="camper-account-name">${safeText(account.name)}</div>
+						<div class="camper-account-username">${safeText(account.username)}</div>
 					</div>
-					<button class="camper-account-remove-button" onclick="Camper.removeAccount('${account.username}')">Remove</button>
+					<button class="camper-account-remove-button" onclick="Camper.removeAccount(this.closest('.camper-account').dataset.username || '')">Remove</button>
 				</div>
 			`).join("");
       element.innerHTML = accountListHTML;
