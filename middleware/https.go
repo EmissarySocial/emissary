@@ -7,27 +7,35 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// HttpsRedirect is a middleware that redirects all HTTP requests to HTTPS
-// when the request comes from a public network.
+// HttpsRedirect enforces HTTPS for public traffic: insecure requests are redirected
+// to their HTTPS URL, and secure requests are stamped with an HSTS header so the
+// browser upgrades every future request itself. Local and private-network hosts are
+// exempt from both, because Emissary serves them over plain HTTP.
 func HttpsRedirect(handler echo.HandlerFunc) echo.HandlerFunc {
 
 	return func(context echo.Context) error {
 
-		// If this is already an HTTPS request, then continue
-		if context.Scheme() == "https" {
-			return handler(context)
-		}
+		// Two-year max-age, without includeSubDomains or preload: Emissary is
+		// multi-domain and often proxied, so those (hard-to-reverse) options are
+		// left as a deliberate operator choice rather than a default.
+		const hstsHeaderValue = "max-age=63072000"
 
 		request := context.Request()
 
-		// Do not require HTTPS for localhost
-		// This is okay for local domains (even behind a proxy) because
-		// unencrypted traffic will only be on the private network.
+		// Local domains are served over plain HTTP by design, so neither the
+		// redirect nor the HSTS policy applies. IsLocalHostname also covers any
+		// non-public IP, so private-network deployments are exempt too.
 		if uri.IsLocalHostname(request.Host) {
 			return handler(context)
 		}
 
-		// Otherwise, permanently redirect all other requests to HTTPS
+		// A secure public request: assert the HSTS policy, then continue.
+		if context.Scheme() == "https" {
+			context.Response().Header().Set("Strict-Transport-Security", hstsHeaderValue)
+			return handler(context)
+		}
+
+		// An insecure public request: permanently redirect to the HTTPS URL.
 		request.URL.Scheme = "https"
 
 		return context.Redirect(http.StatusPermanentRedirect, request.URL.String())

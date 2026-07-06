@@ -197,7 +197,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// Web Application Firewall Middleware
 	e.Pre(dome4echo.New(factory.DigitalDome()))
 
-	// Redirect HTTP to HTTPS
+	// Enforce HTTPS for public traffic: redirect insecure requests, and assert HSTS
+	// on secure ones so browsers upgrade every future request themselves
 	e.Pre(mw.HttpsRedirect)
 
 	// Remove trailing slashes
