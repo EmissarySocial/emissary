@@ -44,5 +44,12 @@ func (step StepForwardTo) do(builder Builder) PipelineBehavior {
 		return Halt().WithError(derp.Wrap(err, location, "Error evaluating 'url'"))
 	}
 
+	// Reject dangerous or off-site-schemed targets. The value can be built from
+	// remote-influenced data, so a `javascript:`/`data:` scheme (or a protocol-
+	// relative host) must not become the forward target.
+	if !isSafeRedirectURL(nextPage.String()) {
+		return Halt().WithError(derp.BadRequest(location, "Unsafe forward target", nextPage.String()))
+	}
+
 	return Continue().WithEvent("closeModal", "true").WithHeader("Hx-Redirect", nextPage.String())
 }

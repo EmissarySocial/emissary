@@ -5,6 +5,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"slices"
 	"strings"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/steranko"
+	"github.com/benpate/uri"
 	"github.com/labstack/echo/v4"
 )
 
@@ -333,6 +335,39 @@ func redirect(response http.ResponseWriter, statusCode int, location string) err
 	response.Header().Add("Location", location)
 	response.WriteHeader(statusCode)
 	return nil
+}
+
+// isSafeRedirectURL reports whether a value is safe to use as a redirect/forward
+// target. Redirect targets are frequently built from remote-influenced data (a
+// federated actor's ProfileURL, a stream's IconURL), so a dangerous scheme like
+// `javascript:` or `data:` would turn an open redirect into DOM-XSS. Only two
+// shapes are permitted:
+//
+//   - A same-site relative path (empty scheme AND empty host), e.g. "/stream/123".
+//     A protocol-relative "//host/path" is rejected: it has an empty scheme but a
+//     non-empty host, so the browser would treat it as an off-site absolute URL.
+//   - An absolute http:// or https:// URL. Off-site http(s) targets are allowed by
+//     design (e.g. "visit this remote author's profile"); only the scheme is bounded.
+//
+// A value that cannot be parsed fails closed (unsafe), which also rejects the
+// leading-whitespace "\tjavascript:" trick that url.Parse errors on but a browser
+// would strip and execute.
+func isSafeRedirectURL(target string) bool {
+
+	parsed, err := url.Parse(target)
+
+	if err != nil {
+		return false
+	}
+
+	// Absolute URLs are allowed only with an http(s) scheme.
+	if parsed.Scheme != "" {
+		return uri.IsSchemeValid(parsed.Scheme)
+	}
+
+	// A schemeless value is safe only if it is a true relative path, i.e. it has
+	// no host either (this rejects protocol-relative "//host/path").
+	return parsed.Host == ""
 }
 
 // getTemplate returns the model.Template from a Builder, if it exists
