@@ -465,6 +465,13 @@ func (factory *Factory) Config() config.Config {
 	return result
 }
 
+// AllowPrivateIPs reports whether outbound ActivityPub delivery may connect to
+// non-public (private/loopback) addresses. FALSE in production; enabled only for
+// local/dev federation between machines on a private network.
+func (factory *Factory) AllowPrivateIPs() bool {
+	return factory.config.AllowPrivateIPs
+}
+
 // UpdateConfig updates the configuration for the Factory
 func (factory *Factory) UpdateConfig(value config.Config) error {
 

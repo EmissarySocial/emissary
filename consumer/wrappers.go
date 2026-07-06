@@ -83,10 +83,13 @@ func WithSender(serverFactory ServerFactory, args mapof.Any, handler func(sender
 
 	return WithSession(serverFactory, args, func(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
-		// Create a new Sender
+		// Create a new Sender. AllowPrivateIPs is normally FALSE (remote's SSRF guard
+		// stays active); it is enabled only for local/dev federation between machines
+		// on a private network.
 		sender := sender.New(
 			factory.SendLocator(session),
 			factory.Queue(),
+			sender.AllowPrivateIPs(serverFactory.AllowPrivateIPs()),
 		)
 
 		// Pass to the handler

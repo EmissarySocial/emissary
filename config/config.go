@@ -40,6 +40,7 @@ type Config struct {
 	ClientIPTrustedCount int                          `json:"clientIpTrustedCount"` // When using "RIGHTMOST-TRUSTED-COUNT" strategy, number of trusted IP addresses to look back when determining the client's IP address.
 	ClientIPHeader       string                       `json:"clientIpHeader"`       // When using the "SINGLE-IP-HEADER" strategy, header to inspect to determine the client's IP address.
 	TrustForwardedHost   bool                         `json:"trustForwardedHost"`   // If true, then the server will trust the hostname provided by the client.  This is useful when running behind a reverse proxy that does not provide the original hostname.
+	AllowPrivateIPs      bool                         `json:"allowPrivateIPs"`      // If true, then outbound ActivityPub delivery may connect to non-public (private/loopback) addresses. Leave FALSE in production; enable only for local/dev federation between machines on a private network.
 }
 
 // NewConfig returns a fully initialized (but empty) Config data structure.

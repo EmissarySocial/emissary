@@ -28,6 +28,7 @@ func Schema() schema.Schema {
 				"clientIPTrustedCount": schema.Integer{Minimum: null.NewInt64(0), Default: null.NewInt64(0)},
 				"clientIPHeader":       schema.String{Default: "X-Real-IP"},
 				"trustForwardedHost":   schema.Boolean{},
+				"allowPrivateIPs":      schema.Boolean{},
 			},
 		},
 	}
@@ -85,6 +86,9 @@ func (config *Config) GetPointer(name string) (any, bool) {
 
 	case "trustForwardedHost":
 		return &config.TrustForwardedHost, true
+
+	case "allowPrivateIPs":
+		return &config.AllowPrivateIPs, true
 	}
 
 	return nil, false
