@@ -31,22 +31,22 @@
 
 			{{- range $index, $announce := $announces -}}
 				{{- $icon := $announce.Actor.Icon -}}
-				<div script="on click go to url '{{$announce.Actor.ID}}' in new window" class="flex-row clickable" role="link">
+				<a href="{{$announce.Actor.ID}}" target="_blank" rel="noopener noreferrer nofollow" class="flex-row text-nocolor">
 
 					<div class="margin-right">
 						{{- if $icon.NotNil -}}
-							<img src="{{$icon.Href}}" class="circle width-48">
+							<img src="{{$icon.Href}}" alt="" class="circle width-48">
 						{{- else -}}
 							<div class="circle width-48"></div>
 						{{- end -}}
 					</div>
 
 					<div>
-						<div class="bold">Liked by {{$announce.Actor.Name}}</div>
+						<div class="bold">Announced by {{$announce.Actor.Name}}</div>
 						<div class="text-gray">on {{$announce.Published | shortDate}}</div>
 					</div>
 
-				</div>
+				</a>
 			{{- end -}}
 		</div>
 
@@ -58,21 +58,21 @@
 
 			{{- range $index, $announce := $announces -}}
 				{{- $icon := $announce.Actor.Icon -}}
-				<div script="on click go to url '{{$announce.Actor.ID}}' in new window" class="clickable tooltip-container" role="link">
+				<a href="{{$announce.Actor.ID}}" target="_blank" rel="noopener noreferrer nofollow" class="clickable tooltip-container text-nocolor">
 
 					<div class="tooltip align-left">
-						<div class="bold margin-vertical-xs">Liked by {{$announce.Actor.Name}}</div>
+						<div class="bold margin-vertical-xs">Announced by {{$announce.Actor.Name}}</div>
 						<div class="text-gray margin-vertical-xs">on {{$announce.Published | shortDate}}</div>
 					</div>
 
 					<div class="margin-right">
 						{{- if $icon.NotNil -}}
-							<img src="{{$icon.Href}}" class="circle-{{$size}}">
+							<img src="{{$icon.Href}}" alt="" class="circle width-{{$size}}">
 						{{- else -}}
-							<div class="circle-{{$size}}"></div>
+							<div class="circle width-{{$size}}"></div>
 						{{- end -}}
 					</div>
-				</div>
+				</a>
 			{{- end -}}
 	
 		</div>

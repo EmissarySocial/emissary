@@ -4,12 +4,12 @@
 	<div class="widget mentions margin-top">
 		<div class="text-lg bold margin-bottom">Mentions</div>
 		{{- range .Mentions -}}
-			<div class="flex-row" script="on click go to url '{{.Origin.URL}}' in new window" role="link">
-				<div style="width:24px;">
+			<a class="flex-row text-nocolor" href="{{.Origin.URL}}" target="_blank" rel="noopener noreferrer nofollow">
+				<div class="width-24">
 					{{- if ne "" .Author.IconURL -}}
-						<img src="{{.Author.IconURL}}" class="circle" style="height:24px; width:24px;">
+						<img src="{{.Author.IconURL}}" alt="" class="circle width-24">
 					{{- else if ne "" .Origin.IconURL -}}
-						<img src="{{.Origin.IconURL}}" class="circle" style="height:24px; width:24px;">
+						<img src="{{.Origin.IconURL}}" alt="" class="circle width-24">
 					{{- end -}}
 				</div>
 				<div class="ellipsis">
@@ -19,7 +19,7 @@
 						{{.Origin.Label}}
 					{{- end -}}
 				</div>
-			</div>
+			</a>
 		{{- end -}}
 	</div>
 {{- end -}}
