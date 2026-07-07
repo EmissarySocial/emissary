@@ -84,9 +84,13 @@
 			{{range $attachment := $actor.Attachment.Range}}
 				{{- $attachmentValue := $attachment.Get "value" -}}
 				{{- $attachmentValue := $attachmentValue.String -}}
-				<tr role="link" script="on click go to url {{$attachmentValue}} in new window">
+				{{- /* $attachmentValue is remote actor metadata. Rendering it as an
+				       href lets html/template's URL-context autoescaping neutralize
+				       dangerous schemes (javascript:, data:), instead of templating
+				       an attacker-influenced value into hyperscript navigation. */ -}}
+				<tr>
 					<td nowrap>{{$attachment.Name}}</td>
-					<td style="width:100%">{{$attachmentValue}}</td>
+					<td style="width:100%"><a href="{{$attachmentValue}}" target="_blank" rel="noopener noreferrer nofollow">{{$attachmentValue}}</a></td>
 				</tr>
 			{{end}}
 		</table>
