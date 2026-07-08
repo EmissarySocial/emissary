@@ -156,6 +156,7 @@ func (service *Domain) ActivityPubActor(session data.Session) (outbox.Actor, err
 		service.ActorID(),
 		privateKey,
 		outbox.WithClient(service.activityService.AppClient()),
+		outbox.WithAllowPrivateIPs(service.activityService.AllowPrivateIPs()),
 	)
 
 	return actor, nil

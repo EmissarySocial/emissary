@@ -210,6 +210,7 @@ func (service *Stream) ActivityPubActor(session data.Session, streamID primitive
 		privateKey,
 		outbox.WithFollowers(service.RangeActivityPubFollowers(session, streamID)),
 		outbox.WithClient(service.activityService.StreamClient(streamID)),
+		outbox.WithAllowPrivateIPs(service.activityService.AllowPrivateIPs()),
 	)
 
 	return actor, nil

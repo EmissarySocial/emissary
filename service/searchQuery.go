@@ -355,6 +355,7 @@ func (service *SearchQuery) ActivityPubActor(session data.Session, searchQueryID
 		privateKey,
 		outbox.WithFollowers(service.rangeActivityPubFollowers(session, searchQueryID)),
 		outbox.WithClient(service.activityService.SearchQueryClient(searchQueryID)),
+		outbox.WithAllowPrivateIPs(service.activityService.AllowPrivateIPs()),
 		// TODO: Restore Queue:: , outbox.WithQueue(service.queue))
 	)
 

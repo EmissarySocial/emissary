@@ -85,6 +85,15 @@ func (service *ActivityStream) StreamClient(streamID primitive.ObjectID) streams
 	return service.Client(model.ActorTypeStream, streamID)
 }
 
+// AllowPrivateIPs reports whether this instance may connect to non-public
+// (private/loopback) addresses. It is TRUE when the instance is served from a
+// local/private hostname, so that a dev instance can federate with itself. Both
+// the document-loading client stack and outbound delivery consult this single
+// predicate, so loading and delivery always agree.
+func (service *ActivityStream) AllowPrivateIPs() bool {
+	return uri.IsLocalHostname(service.hostname)
+}
+
 // Client creates a new streams.Client that is configured for the specified actor type and ID.
 func (service *ActivityStream) Client(actorType string, actorID primitive.ObjectID) streams.Client {
 
@@ -99,7 +108,7 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 
 	// If the service is on a local/private network then allow
 	// the ActivityPub client to load documents from private IP addresses.
-	allowPrivateIPs := uri.IsLocalHostname(service.hostname)
+	allowPrivateIPs := service.AllowPrivateIPs()
 
 	// Try ActivityPub documents directly
 	activityPubClient := activitypub.New(

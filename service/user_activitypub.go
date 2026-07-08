@@ -109,6 +109,7 @@ func (service *User) ActivityPubActor(session data.Session, userID primitive.Obj
 		privateKey,
 		outbox.WithFollowers(service.rangeActivityPubFollowers(session, userID)),
 		outbox.WithClient(service.activityService.UserClient(userID)),
+		outbox.WithAllowPrivateIPs(service.activityService.AllowPrivateIPs()),
 		// TODO: Restore Queue:: , outbox.WithQueue(service.queue))
 	)
 

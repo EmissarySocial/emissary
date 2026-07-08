@@ -109,6 +109,7 @@ func (service *SearchDomain) ActivityPubActor(session data.Session) (outbox.Acto
 		privateKey,
 		outbox.WithFollowers(service.rangeActivityPubFollowers(session)),
 		outbox.WithClient(service.activityService.SearchDomainClient()),
+		outbox.WithAllowPrivateIPs(service.activityService.AllowPrivateIPs()),
 	)
 
 	return actor, nil
