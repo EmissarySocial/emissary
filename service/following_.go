@@ -27,6 +27,7 @@ type Following struct {
 	activityService   *ActivityStream
 	folderService     *Folder
 	host              string
+	hostname          string
 	importItemService *ImportItem
 	keyService        *EncryptionKey
 	newsFeedService   *NewsFeed
@@ -50,6 +51,7 @@ func (service *Following) Refresh(factory *Factory) {
 	service.activityService = factory.ActivityStream()
 	service.folderService = factory.Folder()
 	service.host = factory.Host()
+	service.hostname = factory.Hostname()
 	service.importItemService = factory.ImportItem()
 	service.keyService = factory.EncryptionKey()
 	service.newsFeedService = factory.NewsFeed()

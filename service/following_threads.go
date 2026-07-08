@@ -41,7 +41,7 @@ func (service *Following) SaveNewsItem(session data.Session, following *model.Fo
 	// Crawl the document's context/reply chain in the background
 	service.queue.NewTask(
 		"CrawlContext",
-		mapof.Any{"url": document.ID()},
+		mapof.Any{"url": document.ID(), "host": service.hostname},
 	)
 
 	// Yee. Haw.

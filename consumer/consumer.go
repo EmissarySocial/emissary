@@ -35,6 +35,9 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "CrawlUpReplyTree":
 		return WithFactory(consumer.serverFactory, args, CrawlUpReplyTree)
 
+	case "CrawlDownReplyTree":
+		return WithFactory(consumer.serverFactory, args, CrawlDownReplyTree)
+
 	case "CreateWebSubFollower":
 		return WithSession(consumer.serverFactory, args, CreateWebSubFollower)
 
