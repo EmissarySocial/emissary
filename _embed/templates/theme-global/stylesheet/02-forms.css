@@ -97,17 +97,25 @@ textarea:invalid:focus-visible,
    `[role="textbox"] :focus` (0,2,0) -- so the un-set would lose the cascade and the
    inner outline would still show.  Naming the element type raises this selector to
    (0,2,1), matching the drawing rule; the tie is then broken by source order (this
-   rule comes later), so the un-set reliably wins. */
+   rule comes later), so the un-set reliably wins.
+
+   A `[contenteditable]` div is a fourth kind of inner control (the reply composer
+   uses one); the browser draws its own focus outline, so it needs suppressing here
+   too or the wrapper outline and the editable's outline stack into a double border. */
 [role="textbox"] input:focus,
 [role="textbox"] input:focus-visible,
 [role="textbox"] textarea:focus,
 [role="textbox"] textarea:focus-visible,
 [role="textbox"] select:focus,
 [role="textbox"] select:focus-visible,
+[role="textbox"] [contenteditable]:focus,
+[role="textbox"] [contenteditable]:focus-visible,
 .input input:focus,
 .input input:focus-visible,
 .input textarea:focus,
-.input textarea:focus-visible {
+.input textarea:focus-visible,
+.input [contenteditable]:focus,
+.input [contenteditable]:focus-visible {
 	outline: unset;
 }
 
