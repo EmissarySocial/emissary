@@ -25,7 +25,15 @@ func AddToCollection(factory *service.Factory, session data.Session, args mapof.
 		return queue.Failure(derp.Wrap(err, location, "Unable to parse collection", "url: "+objectID))
 	}
 
-	// Load the document being added to the collection
+	// Load the Collection from the database
+	collectionService := factory.Collection()
+	collection := model.NewCollection()
+
+	if err := collectionService.LoadByID(session, userID, collectionID, &collection); err != nil {
+		return queue.Failure(derp.Wrap(err, location, "Unable to load collection", "collectionID: "+collectionID.Hex(), "userID: "+userID.Hex()))
+	}
+
+	// Load/cache the document being added to the collection
 	activityService := factory.ActivityStream()
 	client := activityService.UserClient(userID)
 	document, err := client.Load(objectID)
@@ -35,14 +43,8 @@ func AddToCollection(factory *service.Factory, session data.Session, args mapof.
 	}
 
 	// Create a new CollectionItem record
-	collectionItem := model.NewCollectionItem()
-	collectionItem.CollectionID = collectionID
-	collectionItem.UserID = userID
-	collectionItem.InReplyTo = document.InReplyTo().ID()
-
-	// Save the unique ObjectLink record to the database
-	if err := factory.CollectionItem().SaveUnique(session, &collectionItem, "Created"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to save collection item", "collectionID: "+collectionID.Hex(), "userID: "+userID.Hex(), "objectID: "+objectID))
+	if err := collectionService.AddItem(session, &collection, document.ID()); err != nil {
+		return queue.Error(derp.Wrap(err, location, "Unable to add item to collection", "collectionID: "+collectionID.Hex(), "userID: "+userID.Hex(), "objectID: "+objectID))
 	}
 
 	// Woot.
