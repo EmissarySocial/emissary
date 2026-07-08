@@ -51,6 +51,7 @@ func (step StepWebSub) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	// Create a new background task to handle the WebSub follower
 	task := queue.NewTask("CreateWebSubFollower", mapof.Any{
+		"host":         builder.Hostname(),
 		"objectType":   builder.objectType(),
 		"objectId":     builder.objectID(),
 		"format":       format,

@@ -73,7 +73,10 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 
 		context.factory.Queue().NewTask(
 			"AddToCollection",
-			mapof.Any{"url": document.ID()},
+			mapof.Any{
+				"host": context.factory.Hostname(),
+				"url":  document.ID(),
+			},
 		)
 	}
 

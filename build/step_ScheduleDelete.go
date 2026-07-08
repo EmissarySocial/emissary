@@ -59,6 +59,7 @@ func (step StepScheduleDelete) Post(builder Builder, _ io.Writer) PipelineBehavi
 	q.NewTask(
 		"DeleteStream",
 		mapof.Any{
+			"host":     builder.Hostname(),
 			"streamId": streamBuilder.StreamID(),
 		},
 		queue.WithSignature(signature),
