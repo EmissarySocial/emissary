@@ -376,11 +376,6 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	// RULE: calculate Parent IDs
 	service.calcParentIDs(session, stream)
 
-	// RULE: Calculate the stream context
-	if err := service.calcContext(session, stream); err != nil {
-		return derp.Wrap(err, location, "Unable to calculate stream context", stream)
-	}
-
 	// RULE: Calculate privileges for this stream
 	service.calcPrivilegeIDs(stream)
 
@@ -1127,67 +1122,6 @@ func (service *Stream) calcDefaultAllow(template *model.Template, stream *model.
 	result := append(groupIDs, privilegeIDs...)
 	result = result.Compact()
 	stream.DefaultAllow = result
-}
-
-// calcContext calculates the conversational context for a given stream.
-// A reply inherits its context from an ancestor in the reply chain; an original
-// post starts a new conversation, which is represented by its own Context collection.
-func (service *Stream) calcContext(session data.Session, stream *model.Stream) error {
-
-	const location = "service.Stream.calcContext"
-
-	// RULE: If a context is already defined for this Stream, then keep it. Don't recalculate.
-	if stream.Context != "" {
-		return nil
-	}
-
-	// RULE: An original post (not a reply) starts a new conversation.  Create a new
-	// Context collection owned by the author and use its URL as the Stream's context.
-	if stream.InReplyTo == "" {
-
-		collection := model.NewCollection()
-		collection.UserID = stream.AttributedTo.UserID
-
-		if err := service.collectionService.Save(session, &collection, "Created for new Stream context"); err != nil {
-			return derp.Wrap(err, location, "Unable to create context collection", stream)
-		}
-
-		stream.Context = service.collectionService.ActivityPubURL(collection.UserID, collection.CollectionID)
-		return nil
-	}
-
-	// Otherwise, this is a reply.  Scan up to 5 documents UP the reply chain to inherit
-	// a context from an ancestor that already has one.
-	inReplyTo := stream.InReplyTo
-
-	for range 5 {
-
-		// If we have reached the top of the reply chain, then stop scanning.
-		if inReplyTo == "" {
-			break
-		}
-
-		// Get an ActivityStreams client for this content, and load the document that is being replied to
-		client := service.activityService.StreamClient(stream.StreamID)
-		document, err := client.Load(inReplyTo)
-
-		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to load InReplyTo document", inReplyTo))
-		}
-
-		// If this document has a context then use it and exit
-		if context := document.Context(); context != "" {
-			stream.Context = context
-			return nil
-		}
-
-		// If this document is a reply, then keep looking UP the reply chain
-		inReplyTo = document.InReplyTo().String()
-	}
-
-	// No ancestor supplied a context, so fall back to the immediate parent's URL.
-	stream.Context = stream.InReplyTo
-	return nil
 }
 
 // CalcPrivileges denormalizes all privileges (CircleIDs and ProductIDs)

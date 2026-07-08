@@ -260,3 +260,27 @@ func (service *Collection) DeleteByUserID(session data.Session, userID primitive
 func (service *Collection) ActivityPubURL(userID primitive.ObjectID, collectionID primitive.ObjectID) string {
 	return service.host + "/@" + userID.Hex() + "/pub/collections/" + collectionID.Hex()
 }
+
+/******************************************
+ * Other Methods
+ ******************************************/
+
+// AddItem adds a URI to the provided Collection as a new CollectionItem
+func (service *Collection) AddItem(session data.Session, collection *model.Collection, itemURI string) error {
+
+	const location = "service.Collection.AddItem"
+
+	// Create a new CollectionItem record
+	collectionItem := model.NewCollectionItem()
+	collectionItem.UserID = collection.UserID
+	collectionItem.CollectionID = collection.CollectionID
+	collectionItem.URI = itemURI
+
+	// Save the CollectionItem to the database
+	if err := service.collectionItemService.SaveUnique(session, &collectionItem, "Adding item to collection"); err != nil {
+		return derp.Wrap(err, location, "Error saving collection item", collectionItem)
+	}
+
+	// Success
+	return nil
+}

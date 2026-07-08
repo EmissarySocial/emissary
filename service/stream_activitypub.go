@@ -244,3 +244,76 @@ func (service *Stream) activityStreamSchema() schema.Schema {
 		},
 	)
 }
+
+// Post updates the stream with a new Context Collection (if none already exists)
+func (service *Stream) CalcContext(session data.Session, stream *model.Stream) error {
+
+	const location = "build.StepSaveAndPublish.setContext"
+
+	// RULE: If the stream is not public, then don't create a context collection.
+	// For the time being, these are only for public-facing posts.
+	if !stream.DefaultAllow.IsAnonymous() {
+		return nil
+	}
+
+	// RULE: If a context is already defined for this Stream, then keep it. Don't recalculate.
+	if stream.Context != "" {
+		return nil
+	}
+
+	// If this is a reply, then try to inherit a context from our ancestors
+	if inReplyTo := stream.InReplyTo; inReplyTo != "" {
+
+		// Create an ActivityStreams client based on the Stream author's permissions
+		client := service.activityService.UserClient(stream.AttributedTo.UserID)
+
+		// Scan no more than 5 documents UP the reply chain to inherit
+		for range 5 {
+
+			// Get an ActivityStreams client for this content, and load the document that is being replied to
+			document, err := client.Load(inReplyTo)
+
+			if err != nil {
+				derp.Report(derp.Wrap(err, location, "Unable to load InReplyTo document", inReplyTo))
+			}
+
+			// If this document has a context then use it and exit
+			if context := document.Context(); context != "" {
+				stream.Context = context
+				return nil
+			}
+
+			// If this document is a reply, then keep looking UP the reply chain
+			inReplyTo = document.InReplyTo().String()
+
+			// If we have reached the top of the reply chain, then stop scanning.
+			if inReplyTo == "" {
+				break
+			}
+		}
+	}
+
+	// Fall through means: a) This is an original post (not a reply), or b) No ancestor supplied a context.
+	// Let's create a new Context Collection for this Stream (and descendants)
+
+	// Create a new Context Collection
+	collection := model.NewCollection()
+	collection.UserID = stream.AttributedTo.UserID
+	collection.To = sliceof.String{vocab.NamespacePublic} // <- this will need to be updated when we add support for non-public streams.
+
+	// Set the Stream to use the Context Collection
+	stream.Context = service.collectionService.ActivityPubURL(collection.UserID, collection.CollectionID)
+
+	// Save the Context Collection
+	if err := service.collectionService.Save(session, &collection, "Created for new Stream context"); err != nil {
+		return derp.Wrap(err, location, "Saving context collection", stream)
+	}
+
+	// Add this Stream to the Context Collection
+	if err := service.collectionService.AddItem(session, &collection, stream.ActivityPubURL()); err != nil {
+		return derp.Wrap(err, location, "Adding Stream to context collection", stream)
+	}
+
+	// Success!
+	return nil
+}

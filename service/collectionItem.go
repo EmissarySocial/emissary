@@ -276,12 +276,18 @@ func (service *CollectionItem) SaveUnique(session data.Session, collectionItem *
 
 	const location = "service.CollectionItem.SaveUnique"
 
-	// Remove previous URI (if possible)
-	if err := service.HardDeleteByURI(session, collectionItem.URI); err != nil {
-		return derp.Wrap(err, location, "Unable to delete existing CollectionItem", "uri: "+collectionItem.URI)
+	// Look for an existing CollecitonItem with the same URI
+	duplicate := model.NewCollectionItem()
+
+	if err := service.LoadByURI(session, collectionItem.CollectionID, collectionItem.URI, &duplicate); err == nil {
+		collectionItem.CollectionItemID = duplicate.CollectionItemID
+		collectionItem.CreateDate = duplicate.CreateDate
+		collectionItem.UpdateDate = duplicate.UpdateDate
+	} else if !derp.IsNotFound(err) {
+		return derp.Wrap(err, location, "Unable to check for existing CollectionItem", collectionItem)
 	}
 
-	// Insert new CollectionItem
+	// Insert/Update new CollectionItem
 	if err := service.Save(session, collectionItem, note); err != nil {
 		return derp.Wrap(err, location, "Unable to save CollectionItem", collectionItem, note)
 	}
