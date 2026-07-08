@@ -16,9 +16,12 @@
 	{{- $object := .UnwrapActivity -}}
 	{{- $actor := $object.AttributedTo.Load -}}
 
-	<div role="link" class="flex-row margin-bottom-lg hover-trigger">
+	<div class="flex-row margin-bottom-lg hover-trigger">
 
-		<div class="flex-row flex-grow-1 clickable" script="on click go to url '{{$object.ID}}'">
+		{{- /* The reply's URL is carried in a data attribute (safeURL rejects any
+		       non-http(s) scheme; html/template escapes it) and read back by
+		       hyperscript, instead of being templated into hyperscript source. */ -}}
+		<div class="flex-row flex-grow-1 clickable" role="link" data-href="{{$object.ID | safeURL}}" script="on click go to url @data-href">
 			<div class="flex-shrink-0 margin-right">
 				{{- if $actor.Icon.IsNil -}}
 					<div class="circle width-48"></div>
