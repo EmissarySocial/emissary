@@ -27,7 +27,9 @@ func New(innerClient streams.Client) *Client {
 
 func (client *Client) SetRootClient(rootClient streams.Client) {
 	client.rootClient = rootClient
-	client.innerClient.SetRootClient(rootClient)
+	if client.innerClient != nil {
+		client.innerClient.SetRootClient(rootClient)
+	}
 }
 
 func (client *Client) Load(uri string, options ...any) (streams.Document, error) {

@@ -25,7 +25,9 @@ func New(innerClient streams.Client) *Client {
 }
 
 func (client Client) SetRootClient(rootClient streams.Client) {
-	client.innerClient.SetRootClient(rootClient)
+	if client.innerClient != nil {
+		client.innerClient.SetRootClient(rootClient)
+	}
 }
 
 // Load retrieves a document from the underlying innerClient, then searches for hash values

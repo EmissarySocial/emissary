@@ -18,6 +18,7 @@ type Client struct {
 	commonDatabase data.Server
 	queue          *queue.Queue
 	innerClient    streams.Client
+	rootClient     streams.Client
 	hostname       string
 	actorType      string
 	actorID        primitive.ObjectID
@@ -62,7 +63,10 @@ func (client *Client) WithOptions(options ...ClientOptionFunc) {
 
 // SetRootClient applies a "top level" client (which is needed by some hannibal client implementations)
 func (client *Client) SetRootClient(rootClient streams.Client) {
-	client.innerClient.SetRootClient(rootClient)
+	client.rootClient = rootClient
+	if client.innerClient != nil {
+		client.innerClient.SetRootClient(rootClient)
+	}
 }
 
 // Load retrieves a URL from the cache/interweb, returning it as a streams.Document
@@ -353,7 +357,7 @@ func (client *Client) asDocument(value Value) streams.Document {
 
 	return streams.NewDocument(
 		value.Object,
-		streams.WithClient(client),
+		streams.WithClient(client.rootClient),
 		streams.WithMetadata(value.Metadata),
 		streams.WithHTTPHeader(value.HTTPHeader),
 	)
