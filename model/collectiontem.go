@@ -27,3 +27,9 @@ func NewCollectionItem() CollectionItem {
 func (collectionItem CollectionItem) ID() string {
 	return collectionItem.CollectionItemID.Hex()
 }
+
+// ActivityPubURL returns the public URI of this CollectionItem. It satisfies
+// ActivityPubURLGetter so items can be served in an ActivityPub collection.
+func (collectionItem CollectionItem) ActivityPubURL() string {
+	return collectionItem.URI
+}

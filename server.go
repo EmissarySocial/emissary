@@ -467,6 +467,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:stream/pub/outbox", handler.WithTemplate(factory, ap_stream.GetOutboxCollection))
 	e.GET("/:stream/pub/followers", handler.WithTemplate(factory, ap_stream.GetFollowersCollection))
 	e.GET("/:stream/pub/children", handler.WithStream(factory, ap_stream.GetChildrenCollection))
+	e.GET("/:stream/pub/replies", handler.WithStream(factory, ap_stream.GetRepliesCollection))
 
 	// Domain Admin Pages
 	e.GET("/admin", handler.RedirectTo("/admin/domain/index"))

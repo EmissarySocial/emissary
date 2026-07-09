@@ -234,6 +234,13 @@ func (service *CollectionItem) CountByInReplyTo(session data.Session, inReplyTo 
 	return service.Count(session, exp.Equal("inReplyTo", inReplyTo))
 }
 
+// QueryByCollectionAndDate returns one page of CollectionItems in the given collection,
+// ordered by createDate ascending, starting after the provided date.
+func (service *CollectionItem) QueryByCollectionAndDate(session data.Session, collectionID primitive.ObjectID, afterDate int64, pageSize int) (sliceof.Object[model.CollectionItem], error) {
+	criteria := exp.Equal("collectionId", collectionID).AndGreaterThan("createDate", afterDate)
+	return service.Query(session, criteria, option.SortAsc("createDate"), option.MaxRows(int64(pageSize)))
+}
+
 func (service *CollectionItem) LoadByURI(session data.Session, collectionID primitive.ObjectID, URI string, collectionItem *model.CollectionItem) error {
 	criteria := exp.Equal("collectionId", collectionID).AndEqual("uri", URI)
 	return service.Load(session, criteria, collectionItem)

@@ -36,6 +36,13 @@ func AddToCollection(factory *service.Factory, session data.Session, args mapof.
 		return requeue(derp.Wrap(err, location, "Unable to load document", "url: "+objectID))
 	}
 
+	// Record this reply in the LOCAL parent's Replies collection, if the parent
+	// is a Stream we own. This is independent of context ownership: we track
+	// replies to our own Streams even when the thread's context is remote.
+	if err := factory.Stream().AddReply(session, document.InReplyTo().String(), document.ID()); err != nil {
+		return requeue(derp.Wrap(err, location, "Unable to add reply to parent collection", "url: "+objectID))
+	}
+
 	// Try to use the document's `context` to add it to a Collection.
 	if result := addToCollection_Context(factory, session, actorID, document); result.NotNil() {
 		return result

@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -17,7 +18,7 @@ import (
 // These tests use hand-built data.Collection fakes, not benpate/data-mock: the
 // mock matches on the raw bson tag string, so it can't match `parentId,omitempty`
 // / `type,omitempty` (it never strips the ",omitempty"). The real concurrency
-// guarantee lives in the unique index (queries/sync/context.go); the fakes pin
+// guarantee lives in the unique index (queries/sync/collection.go); the fakes pin
 // the service's reaction to it — the load/create decision and duplicate-key retry.
 
 // memoryCollection is an in-memory data.Collection for testing.
@@ -133,8 +134,11 @@ func TestCollection_LoadOrCreateByParent_Creates(t *testing.T) {
 	ownerID := primitive.NewObjectID()
 	parentID := primitive.NewObjectID()
 
+	read := sliceof.String{"https://reader.test/@r"}
+	write := sliceof.String{"https://writer.test/@w"}
+
 	collection := model.NewCollection()
-	err := service.LoadOrCreateByParent(session, ownerID, parentID, model.CollectionTypeReplies, &collection)
+	err := service.LoadOrCreateByParent(session, ownerID, parentID, model.CollectionTypeReplies, read, write, &collection)
 
 	require.Nil(t, err)
 	require.False(t, collection.CollectionID.IsZero())
@@ -142,10 +146,35 @@ func TestCollection_LoadOrCreateByParent_Creates(t *testing.T) {
 	require.Equal(t, parentID, collection.ParentID)
 	require.Equal(t, model.CollectionTypeReplies, collection.Type)
 
+	// The read/write permissions passed in are applied on create.
+	require.Equal(t, read, collection.Read)
+	require.Equal(t, write, collection.Write)
+
 	// The record must actually be persisted (a subsequent load finds it).
 	loaded := model.NewCollection()
 	require.Nil(t, service.LoadByParentAndType(session, parentID, model.CollectionTypeReplies, &loaded))
 	require.Equal(t, collection.CollectionID, loaded.CollectionID)
+}
+
+// The read/write permissions are applied ONLY on create; an existing collection keeps its own.
+func TestCollection_LoadOrCreateByParent_KeepsExistingPermissions(t *testing.T) {
+
+	service, session := newMemoryService()
+
+	ownerID := primitive.NewObjectID()
+	parentID := primitive.NewObjectID()
+
+	original := sliceof.String{"https://original.test/@o"}
+	first := model.NewCollection()
+	require.Nil(t, service.LoadOrCreateByParent(session, ownerID, parentID, model.CollectionTypeReplies, original, original, &first))
+
+	// A second call with DIFFERENT permissions must not overwrite the existing ones.
+	different := sliceof.String{"https://different.test/@d"}
+	second := model.NewCollection()
+	require.Nil(t, service.LoadOrCreateByParent(session, ownerID, parentID, model.CollectionTypeReplies, different, different, &second))
+
+	require.Equal(t, original, second.Read)
+	require.Equal(t, original, second.Write)
 }
 
 // When a Collection already exists, LoadOrCreateByParent returns it and creates no duplicate.
@@ -158,11 +187,11 @@ func TestCollection_LoadOrCreateByParent_LoadsExisting(t *testing.T) {
 
 	// First call creates the collection.
 	first := model.NewCollection()
-	require.Nil(t, service.LoadOrCreateByParent(session, ownerID, parentID, model.CollectionTypeContext, &first))
+	require.Nil(t, service.LoadOrCreateByParent(session, ownerID, parentID, model.CollectionTypeContext, nil, nil, &first))
 
 	// Second call, same (parentID, type), must return the SAME collection.
 	second := model.NewCollection()
-	require.Nil(t, service.LoadOrCreateByParent(session, ownerID, parentID, model.CollectionTypeContext, &second))
+	require.Nil(t, service.LoadOrCreateByParent(session, ownerID, parentID, model.CollectionTypeContext, nil, nil, &second))
 
 	require.Equal(t, first.CollectionID, second.CollectionID)
 
@@ -181,10 +210,10 @@ func TestCollection_LoadOrCreateByParent_DistinctByType(t *testing.T) {
 	parentID := primitive.NewObjectID()
 
 	replies := model.NewCollection()
-	require.Nil(t, service.LoadOrCreateByParent(session, ownerID, parentID, model.CollectionTypeReplies, &replies))
+	require.Nil(t, service.LoadOrCreateByParent(session, ownerID, parentID, model.CollectionTypeReplies, nil, nil, &replies))
 
 	context := model.NewCollection()
-	require.Nil(t, service.LoadOrCreateByParent(session, ownerID, parentID, model.CollectionTypeContext, &context))
+	require.Nil(t, service.LoadOrCreateByParent(session, ownerID, parentID, model.CollectionTypeContext, nil, nil, &context))
 
 	require.NotEqual(t, replies.CollectionID, context.CollectionID)
 }
@@ -308,7 +337,7 @@ func TestCollection_LoadOrCreateByParent_DuplicateKeyReloadsWinner(t *testing.T)
 	service.collectionItemService = &CollectionItem{}
 
 	collection := model.NewCollection()
-	err := service.LoadOrCreateByParent(session, ownerID, parentID, model.CollectionTypeReplies, &collection)
+	err := service.LoadOrCreateByParent(session, ownerID, parentID, model.CollectionTypeReplies, nil, nil, &collection)
 
 	require.Nil(t, err)
 	require.Equal(t, winner.CollectionID, collection.CollectionID) // returned the winner
@@ -331,7 +360,7 @@ func TestCollection_LoadOrCreateByParent_DuplicateKeyReloadFails(t *testing.T) {
 	service.collectionItemService = &CollectionItem{}
 
 	collection := model.NewCollection()
-	err := service.LoadOrCreateByParent(session, primitive.NewObjectID(), primitive.NewObjectID(), model.CollectionTypeReplies, &collection)
+	err := service.LoadOrCreateByParent(session, primitive.NewObjectID(), primitive.NewObjectID(), model.CollectionTypeReplies, nil, nil, &collection)
 
 	require.NotNil(t, err)
 	require.True(t, derp.IsNotFound(err)) // the re-load's NotFound propagates
@@ -349,7 +378,7 @@ func TestCollection_LoadOrCreateByParent_SaveErrorPropagates(t *testing.T) {
 	service.collectionItemService = &CollectionItem{}
 
 	collection := model.NewCollection()
-	err := service.LoadOrCreateByParent(session, primitive.NewObjectID(), primitive.NewObjectID(), model.CollectionTypeReplies, &collection)
+	err := service.LoadOrCreateByParent(session, primitive.NewObjectID(), primitive.NewObjectID(), model.CollectionTypeReplies, nil, nil, &collection)
 
 	require.NotNil(t, err)
 	require.False(t, mongo.IsDuplicateKeyError(err))
@@ -365,7 +394,7 @@ func TestCollection_LoadOrCreateByParent_LoadErrorPropagates(t *testing.T) {
 	service.collectionItemService = &CollectionItem{}
 
 	collection := model.NewCollection()
-	err := service.LoadOrCreateByParent(session, primitive.NewObjectID(), primitive.NewObjectID(), model.CollectionTypeReplies, &collection)
+	err := service.LoadOrCreateByParent(session, primitive.NewObjectID(), primitive.NewObjectID(), model.CollectionTypeReplies, nil, nil, &collection)
 
 	require.NotNil(t, err)
 	require.Equal(t, 0, hardLoad.saveCalls) // never attempted to create

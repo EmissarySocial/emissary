@@ -55,6 +55,11 @@ func (step StepSaveAndPublish) Post(builder Builder, _ io.Writer) PipelineBehavi
 		if err := streamService.CalcContext(session, stream); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Unable to calculate context for stream", stream))
 		}
+
+		// If this Stream is a reply, record it in the local parent's Replies collection.
+		if err := streamService.AddReply(session, stream.InReplyTo, stream.ActivityPubURL()); err != nil {
+			return Halt().WithError(derp.Wrap(err, location, "Unable to add reply to parent's collection", stream))
+		}
 	}
 
 	// Try to Publish the Stream to ActivityPub

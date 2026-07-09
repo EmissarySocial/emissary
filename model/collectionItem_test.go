@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/benpate/rosetta/schema"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCollectionItemSchema(t *testing.T) {
@@ -20,4 +21,14 @@ func TestCollectionItemSchema(t *testing.T) {
 	}
 
 	tableTest_Schema(t, &s, &collectionItem, table)
+}
+
+// ActivityPubURL returns the item's public URI (used when serving reply collections).
+func TestCollectionItem_ActivityPubURL(t *testing.T) {
+
+	collectionItem := NewCollectionItem()
+	require.Equal(t, "", collectionItem.ActivityPubURL())
+
+	collectionItem.URI = "https://example.test/reply/1"
+	require.Equal(t, "https://example.test/reply/1", collectionItem.ActivityPubURL())
 }

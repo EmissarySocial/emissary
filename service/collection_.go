@@ -301,14 +301,15 @@ func (service *Collection) LoadByParentAndType(session data.Session, parentID pr
 }
 
 // LoadOrCreateByParent returns the Collection for the given (parentID, type), creating it just-in-time on first use.
-func (service *Collection) LoadOrCreateByParent(session data.Session, ownerID primitive.ObjectID, parentID primitive.ObjectID, collectionType string, collection *model.Collection) error {
+// The read/write permission lists are applied ONLY when the collection is created; an existing collection keeps its own.
+func (service *Collection) LoadOrCreateByParent(session data.Session, ownerID primitive.ObjectID, parentID primitive.ObjectID, collectionType string, read sliceof.String, write sliceof.String, collection *model.Collection) error {
 
 	const location = "service.Collection.LoadOrCreateByParent"
 
 	// This is concurrency-safe: when two callers race to create the same collection,
 	// the unique index on (parentId, type) rejects the loser's insert with a
 	// duplicate-key error, and that caller re-loads the winner instead of duplicating.
-	// See queries/sync/context.go for the index, and COLLECTIONS-REDESIGN.md (D2) for
+	// See queries/sync/collection.go for the index, and COLLECTIONS-REDESIGN.md (D2) for
 	// why this replaces the racy load-then-save idiom used elsewhere.
 	parentDetail := "parentID: " + parentID.Hex()
 	typeDetail := "type: " + collectionType
@@ -330,6 +331,8 @@ func (service *Collection) LoadOrCreateByParent(session data.Session, ownerID pr
 	collection.UserID = ownerID
 	collection.ParentID = parentID
 	collection.Type = collectionType
+	collection.Read = read
+	collection.Write = write
 
 	saveErr := service.Save(session, collection, "Created just-in-time")
 

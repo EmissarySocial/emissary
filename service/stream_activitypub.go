@@ -321,3 +321,52 @@ func (service *Stream) CalcContext(session data.Session, stream *model.Stream) e
 	// Success!
 	return nil
 }
+
+// AddReply records `replyURL` in the Replies collection of the LOCAL Stream that
+// `inReplyToURL` points to, creating that collection just-in-time on first reply.
+//
+// This is intentionally independent of context ownership (COLLECTIONS-REDESIGN.md,
+// Phase 4): a local Stream gets its own Replies collection whenever it is replied
+// to, even when the surrounding thread's context lives on a remote server. When
+// `inReplyToURL` is empty or does not resolve to a local Stream, this is a no-op.
+func (service *Stream) AddReply(session data.Session, inReplyToURL string, replyURL string) error {
+
+	const location = "service.Stream.AddReply"
+
+	// RULE: A non-reply (empty inReplyTo) has no parent to attach to.
+	if inReplyToURL == "" {
+		return nil
+	}
+
+	// Resolve the parent. A parent that isn't a local Stream (remote URL, or not
+	// found) is not ours to track replies for, so we quietly skip it.
+	parent := model.NewStream()
+
+	if err := service.LoadByURL(session, inReplyToURL, &parent); err != nil {
+		if derp.IsNotFound(err) {
+			return nil
+		}
+		return derp.Wrap(err, location, "Unable to load parent Stream", "inReplyTo: "+inReplyToURL)
+	}
+
+	// RULE: Only public streams expose reply collections (mirrors CalcContext).
+	if !parent.DefaultAllow.IsAnonymous() {
+		return nil
+	}
+
+	// JIT the parent's Replies collection (concurrency-safe via the unique index).
+	collection := model.NewCollection()
+	public := sliceof.String{vocab.NamespacePublic}
+
+	if err := service.collectionService.LoadOrCreateByParent(session, parent.AttributedTo.UserID, parent.StreamID, model.CollectionTypeReplies, public, public, &collection); err != nil {
+		return derp.Wrap(err, location, "Unable to load-or-create Replies collection", "parentID: "+parent.StreamID.Hex())
+	}
+
+	// Add the reply to the collection.
+	if err := service.collectionService.AddItem(session, &collection, replyURL, inReplyToURL); err != nil {
+		return derp.Wrap(err, location, "Unable to add reply to collection", "replyURL: "+replyURL)
+	}
+
+	// Station.
+	return nil
+}
