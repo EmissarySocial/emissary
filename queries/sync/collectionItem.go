@@ -33,8 +33,8 @@ func CollectionItem(ctx context.Context, database *mongo.Database) error {
 			}),
 		},
 
-		// Serves the reply reader/counter: items are looked up by inReplyTo and
-		// ordered/filtered by createDate (QueryByInReplyTo, CountByInReplyTo).
+		// Serves the reply list reader: items looked up by inReplyTo, ordered by
+		// createDate (QueryByInReplyTo / ReplyLinksAfter).
 		"idx_CollectionItem_InReplyTo": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "inReplyTo", Value: 1},

@@ -95,6 +95,19 @@ func ReindexResponses(ctx *steranko.Context, factory *service.Factory, session d
 	return ctx.NoContent(http.StatusOK)
 }
 
+// ReindexReplies re-projects all reply Streams into their parents' Replies collections
+// and refreshes reply counts. Admin-only; safe to re-run.
+func ReindexReplies(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+
+	const location = "handler.ReindexReplies"
+
+	if err := factory.Stream().ReindexReplies(session); err != nil {
+		return derp.Wrap(err, location, "Unable to reindex replies")
+	}
+
+	return ctx.NoContent(http.StatusOK)
+}
+
 func PostSearchLookup(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostSearchLookup"

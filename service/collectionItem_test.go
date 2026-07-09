@@ -133,6 +133,9 @@ func matchesItem(criteria exp.Expression, record *model.CollectionItem) bool {
 		case "collectionId":
 			value, ok := predicate.Value.(primitive.ObjectID)
 			return ok && record.CollectionID == value
+		case "userId":
+			value, ok := predicate.Value.(primitive.ObjectID)
+			return ok && record.UserID == value
 		case "uri":
 			value, ok := predicate.Value.(string)
 			return ok && record.URI == value
@@ -568,4 +571,29 @@ func TestCollection_RemoveItem_LoadError(t *testing.T) {
 	err := collectionService.RemoveItem(session, &collection, "https://example.test/x")
 	require.NotNil(t, err)
 	require.False(t, derp.IsNotFound(err))
+}
+
+// CountItems returns the number of items in a collection.
+func TestCollection_CountItems(t *testing.T) {
+
+	collectionID := primitive.NewObjectID()
+	userID := primitive.NewObjectID()
+
+	a := newItem(collectionID, "https://example.test/a")
+	a.CollectionItemID = primitive.NewObjectID()
+	a.UserID = userID
+	b := newItem(collectionID, "https://example.test/b")
+	b.CollectionItemID = primitive.NewObjectID()
+	b.UserID = userID
+
+	store := &itemStore{records: []*model.CollectionItem{a, b}}
+	service, session := newCollectionServiceWith(store)
+
+	collection := model.NewCollection()
+	collection.CollectionID = collectionID
+	collection.UserID = userID
+
+	count, err := service.CountItems(session, &collection)
+	require.Nil(t, err)
+	require.Equal(t, int64(2), count)
 }

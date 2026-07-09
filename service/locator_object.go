@@ -14,7 +14,7 @@ func (service *Locator) ObjectURL(userID primitive.ObjectID, objectID primitive.
 
 // ParseObject parses the userID and objectID from the specified URL
 func (service *Locator) ParseObject(url string) (primitive.ObjectID, primitive.ObjectID, error) {
-	const location = "canonical.ParseObject"
+	const location = "service.Locator.ParseObject"
 
 	// Verify that the URL looks correct (starts with https://host.social/@)
 	if !strings.HasPrefix(url, service.host+"/@") {

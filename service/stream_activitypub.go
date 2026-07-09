@@ -337,15 +337,20 @@ func (service *Stream) AddReply(session data.Session, inReplyToURL string, reply
 		return nil
 	}
 
-	// Resolve the parent. A parent that isn't a local Stream (remote URL, or not
-	// found) is not ours to track replies for, so we quietly skip it.
+	// Resolve the parent. A parent that isn't a local Stream (remote host, or not
+	// found) resolves to NotFound, and is not ours to track replies for, so we
+	// quietly skip it.
 	parent := model.NewStream()
 
 	if err := service.LoadByURL(session, inReplyToURL, &parent); err != nil {
+
+		// If the parent doesn't exist, then there's nothing to link
 		if derp.IsNotFound(err) {
 			return nil
 		}
-		return derp.Wrap(err, location, "Unable to load parent Stream", "inReplyTo: "+inReplyToURL)
+
+		// Otherwise it's a legitimate error to return to the caller.
+		return derp.Wrap(err, location, "Loading parent Stream", "inReplyTo: "+inReplyToURL)
 	}
 
 	// RULE: Only public streams expose reply collections (mirrors CalcContext).
@@ -358,17 +363,17 @@ func (service *Stream) AddReply(session data.Session, inReplyToURL string, reply
 	public := sliceof.String{vocab.NamespacePublic}
 
 	if err := service.collectionService.LoadOrCreateByParent(session, parent.AttributedTo.UserID, parent.StreamID, model.CollectionTypeReplies, public, public, &collection); err != nil {
-		return derp.Wrap(err, location, "Unable to load-or-create Replies collection", "parentID: "+parent.StreamID.Hex())
+		return derp.Wrap(err, location, "Loading/Creating replies collection", "parentID: "+parent.StreamID.Hex())
 	}
 
 	// Add the reply to the collection.
 	if err := service.collectionService.AddItem(session, &collection, replyURL, inReplyToURL); err != nil {
-		return derp.Wrap(err, location, "Unable to add reply to collection", "replyURL: "+replyURL)
+		return derp.Wrap(err, location, "Adding reply to collection", "replyURL: "+replyURL)
 	}
 
 	// Refresh the parent's denormalized ReplyCount from the collection.
 	if err := service.refreshReplyCount(session, &parent, &collection); err != nil {
-		return derp.Wrap(err, location, "Unable to refresh reply count", parent.StreamID.Hex())
+		return derp.Wrap(err, location, "Refreshing reply count", parent.StreamID.Hex())
 	}
 
 	// Station.
@@ -409,6 +414,9 @@ func (service *Stream) RemoveReply(session data.Session, inReplyToURL string, re
 		return nil
 	}
 
+	// Resolve the parent. A parent that isn't a local Stream (remote host, or not
+	// found) resolves to NotFound, and is not ours to track replies for, so we
+	// quietly skip it.
 	parent := model.NewStream()
 
 	if err := service.LoadByURL(session, inReplyToURL, &parent); err != nil {

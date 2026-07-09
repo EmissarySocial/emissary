@@ -182,6 +182,38 @@ func (service *Response) ReindexResponses(session data.Session) error {
 	return nil
 }
 
+// refreshResponseCount recomputes the Stream's denormalized Like/Dislike/Share count from
+// the live collection size and Saves it.
+func (service *Response) refreshResponseCount(session data.Session, stream *model.Stream, collection *model.Collection, collectionType string) error {
+
+	const location = "service.Response.refreshResponseCount"
+
+	// Recompute-and-Save (not increment) because data.Collection exposes no atomic $inc;
+	// a stale overwrite simply re-derives correctly next time (cf. COLLECTIONS-REDESIGN D4).
+	count, err := service.collectionItemService.CountByCollection(session, collection.UserID, collection.CollectionID, exp.All())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to count collection items", collection.CollectionID.Hex())
+	}
+
+	switch collectionType {
+	case model.CollectionTypeLikes:
+		stream.LikeCount = int(count)
+	case model.CollectionTypeDislikes:
+		stream.DislikeCount = int(count)
+	case model.CollectionTypeShares:
+		stream.ShareCount = int(count)
+	default:
+		return derp.Internal(location, "Unexpected collection type", collectionType)
+	}
+
+	if err := service.streamService.Save(session, stream, "Refreshed response count"); err != nil {
+		return derp.Wrap(err, location, "Unable to save Stream with refreshed count", stream.StreamID.Hex())
+	}
+
+	return nil
+}
+
 // projectResponse adds (add=true) or removes (add=false) the response in its target
 // Stream's Like/Dislike collection and refreshes the count. It is a no-op for non-projected types and remote targets.
 func (service *Response) projectResponse(session data.Session, response *model.Response, add bool) error {
@@ -192,7 +224,7 @@ func (service *Response) projectResponse(session data.Session, response *model.R
 	// API, ActivityPub intent) keep the projection and counts in sync — they all route
 	// through Save/Delete. See COLLECTIONS-REDESIGN.md (Phase 5 / D5).
 
-	// RULE: Only Like/Dislike responses project into a per-Stream collection.
+	// RULE: Only Like/Dislike/Share responses project into a per-Stream collection.
 	collectionType := model.CollectionTypeForResponse(response.Type)
 
 	if collectionType == "" {
@@ -228,42 +260,9 @@ func (service *Response) projectResponse(session data.Session, response *model.R
 		}
 	}
 
-	// Recompute-and-Save the denormalized count on the parent Stream (never increment;
-	// there is no atomic $inc — cf. COLLECTIONS-REDESIGN.md D4).
+	// Recompute-and-Save the denormalized count on the parent Stream.
 	if err := service.refreshResponseCount(session, &stream, &collection, collectionType); err != nil {
 		return derp.Wrap(err, location, "Unable to refresh response count", stream.StreamID.Hex())
-	}
-
-	return nil
-}
-
-// refreshResponseCount recomputes the Stream's denormalized Like/Dislike/Share count from
-// the live collection size and Saves it.
-func (service *Response) refreshResponseCount(session data.Session, stream *model.Stream, collection *model.Collection, collectionType string) error {
-
-	const location = "service.Response.refreshResponseCount"
-
-	// Recompute-and-Save (not increment) because data.Collection exposes no atomic $inc;
-	// a stale overwrite simply re-derives correctly next time (cf. COLLECTIONS-REDESIGN D4).
-	count, err := service.collectionItemService.CountByCollection(session, collection.UserID, collection.CollectionID, exp.All())
-
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to count collection items", collection.CollectionID.Hex())
-	}
-
-	switch collectionType {
-	case model.CollectionTypeLikes:
-		stream.LikeCount = int(count)
-	case model.CollectionTypeDislikes:
-		stream.DislikeCount = int(count)
-	case model.CollectionTypeShares:
-		stream.ShareCount = int(count)
-	default:
-		return derp.Internal(location, "Unexpected collection type", collectionType)
-	}
-
-	if err := service.streamService.Save(session, stream, "Refreshed response count"); err != nil {
-		return derp.Wrap(err, location, "Unable to save Stream with refreshed count", stream.StreamID.Hex())
 	}
 
 	return nil

@@ -15,7 +15,7 @@ func (service *Locator) CollectionURL(userID primitive.ObjectID, collectionID pr
 // ParseCollection parses the userID and collectionID from the specified URL
 func (service *Locator) ParseCollection(url string) (primitive.ObjectID, primitive.ObjectID, error) {
 
-	const location = "locator.ParseCollection"
+	const location = "service.Locator.ParseCollection"
 
 	// Verify that the URL looks correct
 	if !strings.HasPrefix(url, service.host+"/@") {

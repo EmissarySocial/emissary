@@ -155,7 +155,7 @@ func TestCollection_Readable_Public(t *testing.T) {
 	// The public namespace token in the Read list makes the collection readable by
 	// any actor, including one not named in the list and an empty actor.
 	collection := NewCollection()
-	collection.Read = sliceof.String{vocab.NamespaceActivityStreamsPublic}
+	collection.Read = sliceof.String{vocab.NamespacePublic}
 
 	require.True(t, collection.IsReadable(stranger))
 	require.True(t, collection.IsReadable(""))
@@ -196,7 +196,7 @@ func TestCollection_Writable_Public(t *testing.T) {
 	// The public namespace token in the Write list makes the collection writable by
 	// any actor, including one not named in the list and an empty actor.
 	collection := NewCollection()
-	collection.Write = sliceof.String{vocab.NamespaceActivityStreamsPublic}
+	collection.Write = sliceof.String{vocab.NamespacePublic}
 
 	require.True(t, collection.IsWritable(stranger))
 	require.True(t, collection.IsWritable(""))

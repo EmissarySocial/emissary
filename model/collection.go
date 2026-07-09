@@ -90,7 +90,7 @@ func (collection *Collection) RolesToPrivilegeIDs(roleIDs ...string) Permissions
 
 // IsReadable returns TRUE if the provided actor is allowed to read this Collection
 func (collection Collection) IsReadable(actorID string) bool {
-	return collection.Read.ContainsAny(actorID, vocab.NamespaceActivityStreamsPublic)
+	return collection.Read.ContainsAny(actorID, vocab.NamespacePublic)
 }
 
 // NotReadable returns TRUE if the provided actor is NOT allowed to read this Collection
@@ -100,7 +100,7 @@ func (collection Collection) NotReadable(actorID string) bool {
 
 // IsWritable returns TRUE if the provided actor is allowed to write to this Collection
 func (collection Collection) IsWritable(actorID string) bool {
-	return collection.Write.ContainsAny(actorID, vocab.NamespaceActivityStreamsPublic)
+	return collection.Write.ContainsAny(actorID, vocab.NamespacePublic)
 }
 
 // NotWritable returns TRUE if the provided actor is NOT allowed to write to this Collection

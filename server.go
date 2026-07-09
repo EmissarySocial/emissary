@@ -225,8 +225,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/humans.txt", handler.TBD)                       // http://humanstxt.org/
 	e.GET("/ads.txt", handler.TBD)                          // https://iabtechlab.com/standards/ads-txt/
 	e.GET("/security.txt", handler.TBD)                     // https://securitytxt.org/
-	e.GET("/.well-known/security.txt", handler.TBD)         // https://securitytxt.org/
-	e.GET("/.well-known/x-nodeinfo2", handler.TBD)          // Friendica polls this route
 	e.GET("/poco", handler.TBD)                             // Friendica polls this route
 	e.GET("/api/**", handler.TBD)                           // Mastodon API?
 	e.GET("/favicon.ico", handler.TBD)                      // https://developer.mozilla.org/en-US/docs/Glossary/Favicon
@@ -294,10 +292,16 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.well-known/nodeinfo/2.1", handler.WithFactory(factory, handler.GetNodeInfo21))
 	e.GET("/.well-known/oauth-authorization-server", handler.WithFactory(factory, handler.GetOAuthWellKnown))
 	e.GET("/.well-known/openid-configuration", handler.WithFactory(factory, handler.GetOAuthWellKnown))
+	e.GET("/.well-known/security.txt", handler.TBD) // https://securitytxt.org/
+	e.GET("/.well-known/x-nodeinfo2", handler.TBD)  // Friendica polls this route
 
 	// Authentication Pages
 	e.GET("/signin", handler.WithFactory(factory, handler.GetSignIn))
 	e.POST("/signin", handler.WithFactory(factory, handler.PostSignIn))
+	e.GET("/signin/reset", handler.WithFactory(factory, handler.GetResetPassword))
+	e.POST("/signin/reset", handler.WithFactory(factory, handler.PostResetPassword))
+	e.GET("/signin/reset-code", handler.WithFactory(factory, handler.GetResetCode))
+	e.POST("/signin/reset-code", handler.WithFactory(factory, handler.PostResetCode))
 	e.GET("/signout", handler.WithFactory(factory, handler.GetSignOut))
 	e.POST("/signout", handler.WithFactory(factory, handler.PostSignOut))
 	e.GET("/register", handler.WithRegistration(factory, handler.GetRegister))
@@ -305,10 +309,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/register", handler.WithRegistration(factory, handler.PostRegister))
 	e.GET("/register/complete", handler.WithRegistration(factory, handler.GetCompleteRegistration))
 	e.POST("/register/update", handler.WithRegistration(factory, handler.PostRegister))
-	e.GET("/signin/reset", handler.WithFactory(factory, handler.GetResetPassword))
-	e.POST("/signin/reset", handler.WithFactory(factory, handler.PostResetPassword))
-	e.GET("/signin/reset-code", handler.WithFactory(factory, handler.GetResetCode))
-	e.POST("/signin/reset-code", handler.WithFactory(factory, handler.PostResetCode))
 
 	// Domain Pages
 	e.GET("/.domain/attachments/:attachmentId", handler.WithFactory(factory, handler.GetDomainAttachment))
@@ -484,6 +484,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/admin/index-all-streams", handler.WithOwner(factory, handler.IndexAllStreams))
 	e.POST("/admin/index-all-users", handler.WithOwner(factory, handler.IndexAllUsers))
 	e.POST("/admin/reindex-responses", handler.WithOwner(factory, handler.ReindexResponses))
+	e.POST("/admin/reindex-replies", handler.WithOwner(factory, handler.ReindexReplies))
 
 	// Startup Wizard
 	e.GET("/startup", handler.WithOwner(factory, handler.GetStartup))

@@ -49,6 +49,7 @@ type Stream struct {
 	importService     *Import
 	importItemService *ImportItem
 	keyService        *EncryptionKey
+	locatorService    *Locator
 	mentionService    *Mention
 	outboxService     *Outbox
 	permissionService *Permission
@@ -88,6 +89,7 @@ func (service *Stream) Refresh(factory *Factory) {
 	service.importService = factory.Import()
 	service.importItemService = factory.ImportItem()
 	service.keyService = factory.EncryptionKey()
+	service.locatorService = factory.Locator()
 	service.mentionService = factory.Mention()
 	service.outboxService = factory.Outbox()
 	service.permissionService = factory.Permission()
@@ -739,15 +741,8 @@ func (service *Stream) LoadByURL(session data.Session, streamURL string, result 
 		return derp.BadRequest(location, "StreamURL is required")
 	}
 
-	// Verify we have a valid URL
-	parsedURL, err := url.Parse(streamURL)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Invalid URL", streamURL)
-	}
-
-	// Retrieve the Token from the request path
-	token, _, err := service.ParsePath(parsedURL)
+	// Retrieve the Stream token from the request URL
+	token, _, err := service.locatorService.ParseStream(streamURL)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Invalid URL", streamURL)
@@ -1033,12 +1028,14 @@ func (service *Stream) MapByPrivileges(session data.Session, privileges ...model
 	return result, nil
 }
 
-// ParsePathextracts the Stream token and actionID from a URL
+// ParsePath extracts the Stream token and actionID from a URL
 func (service *Stream) ParsePath(parsedURL *url.URL) (string, string, error) {
+
+	const location = "service.Stream.ParsePath"
 
 	// Verify the URL matches this service
 	if uri.PrependProtocol(parsedURL.Host) != service.host {
-		return "", "", derp.BadRequest("service.Stream.LoadByURL", "Hostname must match this server", parsedURL.String())
+		return "", "", derp.BadRequest(location, "Hostname must match this server", parsedURL.String())
 	}
 
 	// Load the Stream using the token
