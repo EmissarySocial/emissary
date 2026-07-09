@@ -24,8 +24,8 @@ func outbox_CreateOrderedCollection(context Context, activity streams.Document) 
 	collectionService := context.factory.Collection()
 	collection := model.NewCollection()
 	collection.UserID = context.user.UserID
-	collection.To = document.To().SliceOfString()
-	collection.Cc = document.CC().SliceOfString()
+	collection.Read = document.Recipients()
+	collection.Write = document.Recipients()
 
 	// Save the new Object to the database
 	if err := collectionService.Save(context.session, &collection, "Created via ActivityPub Outbox"); err != nil {

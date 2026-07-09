@@ -19,7 +19,7 @@ func (service *Locator) ParseCollection(url string) (primitive.ObjectID, primiti
 
 	// Verify that the URL looks correct
 	if !strings.HasPrefix(url, service.host+"/@") {
-		return primitive.NilObjectID, primitive.NilObjectID, derp.BadRequest(location, "URL must match host", "url: "+url)
+		return primitive.NilObjectID, primitive.NilObjectID, derp.BadRequest(location, "URL must match host", "url: "+url, "host: "+service.host)
 	}
 
 	// Remove query string (if present)

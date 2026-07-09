@@ -9,11 +9,12 @@ import (
 
 // Collection represents a group of messages sent among several participants
 type Collection struct {
-	CollectionID primitive.ObjectID `bson:"_id"`    // Unique ID for this folder
-	UserID       primitive.ObjectID `bson:"userId"` // ID of the User who owns this folder
-	Name         string             `bson:"name"`   // Name of the collection
-	To           sliceof.String     `bson:"to"`     // List of people who are participating in this collection
-	Cc           sliceof.String     `bson:"cc"`     // List of people who are participating in this collection
+	CollectionID primitive.ObjectID `bson:"_id"`                // Unique ID for this folder
+	UserID       primitive.ObjectID `bson:"userId"`             // ID of the User who owns this folder
+	ParentID     primitive.ObjectID `bson:"parentId,omitempty"` // ID of the object that owns this collection
+	Type         string             `bson:"type,omitempty"`     // Type of collection (Context, Replies, etc.)
+	Read         sliceof.String     `bson:"read"`               // List of people who are participating in this collection
+	Write        sliceof.String     `bson:"write"`              // List of people who are participating in this collection
 
 	journal.Journal `json:"-" bson:",inline"`
 }
@@ -22,43 +23,9 @@ type Collection struct {
 func NewCollection() Collection {
 	return Collection{
 		CollectionID: primitive.NewObjectID(),
-		To:           sliceof.NewString(),
-		Cc:           sliceof.NewString(),
+		Read:         sliceof.NewString(),
+		Write:        sliceof.NewString(),
 	}
-}
-
-// HasParticipant returns TRUE if the provided actor is allowed to read this Collection
-func (collection *Collection) HasParticipant(actorID string) bool {
-
-	// RULE: A Collection addressed to the public is readable by anyone (incl. an empty/unauthenticated actor)
-	if collection.isPublic() {
-		return true
-	}
-
-	// Otherwise, the actor must be named in the "to" or "cc" participant lists
-	if actorID == "" {
-		return false
-	}
-
-	return collection.To.Contains(actorID) || collection.Cc.Contains(actorID)
-}
-
-// isPublic returns TRUE if this Collection is addressed to the public in its "to" or "cc" lists
-func (collection *Collection) isPublic() bool {
-	return isPublicRecipient(collection.To) || isPublicRecipient(collection.Cc)
-}
-
-// isPublicRecipient returns TRUE if any entry in the list is an ActivityPub public-addressing token
-func isPublicRecipient(recipients sliceof.String) bool {
-
-	for _, recipient := range recipients {
-		switch recipient {
-		case vocab.NamespaceActivityStreamsPublic, vocab.NamespaceASPublic, vocab.NamespacePublic:
-			return true
-		}
-	}
-
-	return false
 }
 
 /******************************************
@@ -114,4 +81,28 @@ func (collection *Collection) RolesToGroupIDs(roleIDs ...string) Permissions {
 // It is part of the AccessLister interface
 func (collection *Collection) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
 	return NewPermissions()
+}
+
+/******************************************
+ * Other Permissions
+ ******************************************/
+
+// IsReadable returns TRUE if the provided actor is allowed to read this Collection
+func (collection Collection) IsReadable(actorID string) bool {
+	return collection.Read.ContainsAny(actorID, vocab.NamespaceActivityStreamsPublic)
+}
+
+// NotReadable returns TRUE if the provided actor is NOT allowed to read this Collection
+func (collection Collection) NotReadable(actorID string) bool {
+	return !collection.IsReadable(actorID)
+}
+
+// IsWritable returns TRUE if the provided actor is allowed to write to this Collection
+func (collection Collection) IsWritable(actorID string) bool {
+	return collection.Write.ContainsAny(actorID, vocab.NamespaceActivityStreamsPublic)
+}
+
+// NotWritable returns TRUE if the provided actor is NOT allowed to write to this Collection
+func (collection Collection) NotWritable(actorID string) bool {
+	return !collection.IsWritable(actorID)
 }

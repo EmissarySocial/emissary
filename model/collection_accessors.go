@@ -10,11 +10,10 @@ func CollectionSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"collectionId": schema.String{Format: "objectId"},
 			"userId":       schema.String{Format: "objectId"},
-			// to/cc hold ActivityPub recipient URIs (including special values like the Public
-			// collection); bound the length but impose no url format that could reject them.
-			"to":           schema.Array{Items: schema.String{MaxLength: 1024}},
-			"cc":           schema.Array{Items: schema.String{MaxLength: 1024}},
-			"name":         schema.String{Format: "text", MaxLength: 128},
+			"parentId":     schema.String{Format: "objectId"},
+			"type":         schema.String{Format: "text", MaxLength: 128},
+			"read":         schema.Array{Items: schema.String{MaxLength: 256}},
+			"write":        schema.Array{Items: schema.String{MaxLength: 256}},
 		},
 	}
 }
@@ -27,14 +26,15 @@ func (collection *Collection) GetPointer(name string) (any, bool) {
 
 	switch name {
 
-	case "to":
-		return &collection.To, true
+	case "type":
+		return &collection.Type, true
 
-	case "cc":
-		return &collection.Cc, true
+	case "read":
+		return &collection.Read, true
 
-	case "name":
-		return &collection.Name, true
+	case "write":
+		return &collection.Write, true
+
 	}
 
 	return nil, false
@@ -49,6 +49,9 @@ func (collection Collection) GetStringOK(name string) (string, bool) {
 
 	case "userId":
 		return collection.UserID.Hex(), true
+
+	case "parentId":
+		return collection.ParentID.Hex(), true
 	}
 
 	return "", false
@@ -71,6 +74,12 @@ func (collection *Collection) SetString(name string, value string) bool {
 	case "userId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
 			collection.UserID = objectID
+			return true
+		}
+
+	case "parentId":
+		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
+			collection.ParentID = objectID
 			return true
 		}
 	}

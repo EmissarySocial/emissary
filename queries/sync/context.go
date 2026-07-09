@@ -9,19 +9,19 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func Context(ctx context.Context, database *mongo.Database) error {
+func Collection(ctx context.Context, database *mongo.Database) error {
 
-	log.Trace().Str("database", database.Name()).Str("collection", "Context").Msg("COLLECTION:")
+	log.Trace().Str("database", database.Name()).Str("collection", "Collection").Msg("COLLECTION:")
 
-	return indexer.Sync(ctx, database.Collection("Context"), indexer.IndexSet{
+	return indexer.Sync(ctx, database.Collection("Collection"), indexer.IndexSet{
 
-		"idx_Context_Context": mongo.IndexModel{
+		"idx_Collection_Context": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "context", Value: 1},
 			},
 		},
 
-		"idx_Context_InReplyTo": mongo.IndexModel{
+		"idx_Collection_InReplyTo": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "inReplyTo", Value: 1},
 			},

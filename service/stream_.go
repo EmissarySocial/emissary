@@ -444,6 +444,11 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 		derp.Report(derp.Wrap(err, location, "Unable to delete drafts", stream, note))
 	}
 
+	// RULE: Delete related Context Collection (if exists)
+	if err := service.collectionService.DeleteByURL(session, stream.Context); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to delete context collection", stream, note))
+	}
+
 	// RULE: Delete Outbox Messages
 	if err := service.outboxService.DeleteByParentID(session, model.FollowerTypeStream, stream.StreamID); err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to delete outbox messages", stream, note))

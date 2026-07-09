@@ -17,6 +17,7 @@ import (
 type Collection struct {
 	collectionItemService *CollectionItem
 	importItemService     *ImportItem
+	locatorService        *Locator
 	host                  string
 }
 
@@ -33,6 +34,7 @@ func NewCollection() Collection {
 func (service *Collection) Refresh(factory *Factory) {
 	service.collectionItemService = factory.CollectionItem()
 	service.importItemService = factory.ImportItem()
+	service.locatorService = factory.Locator()
 	service.host = factory.Host()
 }
 
@@ -72,7 +74,7 @@ func (service *Collection) Range(session data.Session, criteria exp.Expression, 
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Collection.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.Collection.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewCollection), nil
@@ -82,7 +84,7 @@ func (service *Collection) Range(session data.Session, criteria exp.Expression, 
 func (service *Collection) Load(session data.Session, criteria exp.Expression, collection *model.Collection) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), collection); err != nil {
-		return derp.Wrap(err, "service.Collection.Load", "Unable to load Collection", criteria)
+		return derp.Wrap(err, "service.Collection.Load", "Loading Collection", criteria)
 	}
 
 	return nil
@@ -95,12 +97,12 @@ func (service *Collection) Save(session data.Session, collection *model.Collecti
 
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(collection); err != nil {
-		return derp.Wrap(err, location, "Unable to validate Collection", collection)
+		return derp.Wrap(err, location, "Validating Collection", collection)
 	}
 
 	// Save the value to the database
 	if err := service.collection(session).Save(collection, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Collection", collection, note)
+		return derp.Wrap(err, location, "Saving Collection", collection, note)
 	}
 
 	return nil
@@ -113,12 +115,12 @@ func (service *Collection) Delete(session data.Session, collection *model.Collec
 
 	// Delete CollectionItems that are part of this Collection
 	if err := service.collectionItemService.DeleteByCollection(session, collection.UserID, collection.CollectionID, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete CollectionItems for Collection", collection)
+		return derp.Wrap(err, location, "Deleting CollectionItems for Collection", collection.CollectionID.Hex())
 	}
 
 	// Delete this Collection
 	if err := service.collection(session).HardDelete(exp.Equal("_id", collection.CollectionID)); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Collection", collection)
+		return derp.Wrap(err, location, "Deleting Collection", collection)
 	}
 
 	return nil
@@ -230,6 +232,32 @@ func (service *Collection) RangeByCollectionID(session data.Session, collectionI
 	return service.Range(session, criteria)
 }
 
+func (service *Collection) DeleteByURL(session data.Session, url string) error {
+
+	// Try to parse the Collection URL as a local collection
+	userID, collectionID, err := service.locatorService.ParseCollection(url)
+
+	// If it doesn't parse, then it's not a local collection
+	if err != nil {
+		return nil
+	}
+
+	// Try to load the Collection from the database
+	collection := model.NewCollection()
+
+	if err := service.LoadByID(session, userID, collectionID, &collection); err != nil {
+		return derp.Wrap(err, "service.Collection.DeleteByURL", "Loading collection", "url: "+url)
+	}
+
+	// Delete the Collection
+	if err := service.Delete(session, &collection, "Deleted by URL"); err != nil {
+		return derp.Wrap(err, "service.Collection.DeleteByURL", "Deleting collection", "url: "+url)
+	}
+
+	// Success.
+	return nil
+}
+
 // DeleteByUserID deletes all CollectionItems owned by the provided UserID
 func (service *Collection) DeleteByUserID(session data.Session, userID primitive.ObjectID, note string) error {
 
@@ -245,7 +273,7 @@ func (service *Collection) DeleteByUserID(session data.Session, userID primitive
 	// Delete each collection
 	for collection := range collections {
 		if err := service.Delete(session, &collection, note); err != nil {
-			return derp.Wrap(err, location, "Unable to delete Collection", collection)
+			return derp.Wrap(err, location, "Deleting Collection", collection)
 		}
 	}
 
@@ -266,7 +294,7 @@ func (service *Collection) ActivityPubURL(userID primitive.ObjectID, collectionI
  ******************************************/
 
 // AddItem adds a URI to the provided Collection as a new CollectionItem
-func (service *Collection) AddItem(session data.Session, collection *model.Collection, itemURI string) error {
+func (service *Collection) AddItem(session data.Session, collection *model.Collection, itemURI string, inReplyTo string) error {
 
 	const location = "service.Collection.AddItem"
 
@@ -275,10 +303,11 @@ func (service *Collection) AddItem(session data.Session, collection *model.Colle
 	collectionItem.UserID = collection.UserID
 	collectionItem.CollectionID = collection.CollectionID
 	collectionItem.URI = itemURI
+	collectionItem.InReplyTo = inReplyTo
 
 	// Save the CollectionItem to the database
-	if err := service.collectionItemService.SaveUnique(session, &collectionItem, "Adding item to collection"); err != nil {
-		return derp.Wrap(err, location, "Error saving collection item", collectionItem)
+	if err := service.collectionItemService.SaveUnique(session, &collectionItem, ""); err != nil {
+		return derp.Wrap(err, location, "Saving collection item", collectionItem)
 	}
 
 	// Success

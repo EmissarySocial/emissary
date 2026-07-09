@@ -74,5 +74,5 @@ func canViewCollection(ctx *steranko.Context, collection *model.Collection, acto
 	}
 
 	// Otherwise, the actor must be a participant (or the Collection must be public)
-	return collection.HasParticipant(actorID)
+	return collection.IsReadable(actorID)
 }
