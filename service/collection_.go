@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // Collection defines a service that can send and receive collection data
@@ -292,6 +293,64 @@ func (service *Collection) ActivityPubURL(userID primitive.ObjectID, collectionI
 /******************************************
  * Other Methods
  ******************************************/
+
+// LoadByParentAndType loads the single Collection identified by the (parentID, type) pair.
+func (service *Collection) LoadByParentAndType(session data.Session, parentID primitive.ObjectID, collectionType string, collection *model.Collection) error {
+	criteria := exp.Equal("parentId", parentID).AndEqual("type", collectionType)
+	return service.Load(session, criteria, collection)
+}
+
+// LoadOrCreateByParent returns the Collection for the given (parentID, type), creating it just-in-time on first use.
+func (service *Collection) LoadOrCreateByParent(session data.Session, ownerID primitive.ObjectID, parentID primitive.ObjectID, collectionType string, collection *model.Collection) error {
+
+	const location = "service.Collection.LoadOrCreateByParent"
+
+	// This is concurrency-safe: when two callers race to create the same collection,
+	// the unique index on (parentId, type) rejects the loser's insert with a
+	// duplicate-key error, and that caller re-loads the winner instead of duplicating.
+	// See queries/sync/context.go for the index, and COLLECTIONS-REDESIGN.md (D2) for
+	// why this replaces the racy load-then-save idiom used elsewhere.
+	parentDetail := "parentID: " + parentID.Hex()
+	typeDetail := "type: " + collectionType
+
+	// Fast path: the collection almost always already exists.
+	err := service.LoadByParentAndType(session, parentID, collectionType, collection)
+
+	if err == nil {
+		return nil
+	}
+
+	// Any error other than "not found" is a real failure.
+	if !derp.IsNotFound(err) {
+		return derp.Wrap(err, location, "Unable to load Collection", parentDetail, typeDetail)
+	}
+
+	// Slow path: no collection yet, so try to create one.
+	*collection = model.NewCollection()
+	collection.UserID = ownerID
+	collection.ParentID = parentID
+	collection.Type = collectionType
+
+	saveErr := service.Save(session, collection, "Created just-in-time")
+
+	if saveErr == nil {
+		return nil
+	}
+
+	// If we lost a creation race, the unique index rejects our insert. Re-load
+	// the winner's record (which is now guaranteed to exist) and return it.
+	if mongo.IsDuplicateKeyError(saveErr) {
+
+		if reloadErr := service.LoadByParentAndType(session, parentID, collectionType, collection); reloadErr != nil {
+			return derp.Wrap(reloadErr, location, "Unable to re-load Collection after duplicate-key conflict", parentDetail, typeDetail)
+		}
+
+		return nil
+	}
+
+	// Any other save error is a real failure.
+	return derp.Wrap(saveErr, location, "Unable to create Collection", parentDetail, typeDetail)
+}
 
 // AddItem adds a URI to the provided Collection as a new CollectionItem
 func (service *Collection) AddItem(session data.Session, collection *model.Collection, itemURI string, inReplyTo string) error {
