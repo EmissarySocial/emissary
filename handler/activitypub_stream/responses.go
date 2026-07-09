@@ -50,7 +50,7 @@ func getResponseCollection(ctx *steranko.Context, factory *service.Factory, sess
 	collectionService := factory.Collection()
 	collection := model.NewCollection()
 
-	if err := collectionService.LoadByParentAndType(session, stream.StreamID, collectionType, &collection); err != nil {
+	if err := collectionService.LoadByType(session, stream.StreamID, collectionType, &collection); err != nil {
 
 		// No collection yet just means no responses of this type. Serve an empty page.
 		if derp.IsNotFound(err) {

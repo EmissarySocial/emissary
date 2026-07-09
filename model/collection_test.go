@@ -19,7 +19,8 @@ func TestCollectionSchema(t *testing.T) {
 		{"collectionId", "123456781234567812345678", nil},
 		{"userId", "aaa4bbb8ddd4ddd812345678", nil},
 		{"parentId", "bbb4ccc8eee4eee912345678", nil},
-		{"type", "Context", nil},
+		{"parentType", "Stream", nil},
+		{"collectionType", "Context", nil},
 		{"read.0", "https://johnconnor.mil/@john", nil},
 		{"read.1", "https://sarah.sky.net/@sarah", nil},
 		{"write.0", "https://kyle.mil/@reese", nil},
@@ -44,6 +45,10 @@ func TestNewCollection(t *testing.T) {
 	// The remaining ObjectIDs default to zero
 	require.True(t, collection.UserID.IsZero())
 	require.True(t, collection.ParentID.IsZero())
+
+	// The string "type" fields default to empty
+	require.Empty(t, collection.ParentType)
+	require.Empty(t, collection.CollectionType)
 }
 
 func TestCollection_ID(t *testing.T) {
@@ -237,17 +242,27 @@ func TestCollection_ReadWrite_Independent(t *testing.T) {
 func TestCollection_GetPointer(t *testing.T) {
 
 	collection := NewCollection()
-	collection.Type = "Context"
+	collection.ParentType = "Stream"
+	collection.CollectionType = "Context"
 	collection.Read = sliceof.String{"https://alice.test/@alice"}
 	collection.Write = sliceof.String{"https://bob.test/@bob"}
 
-	// "type" returns a pointer to the Type field
+	// "parentType" returns a pointer to the ParentType field
 	{
-		pointer, ok := collection.GetPointer("type")
+		pointer, ok := collection.GetPointer("parentType")
 		require.True(t, ok)
-		typePointer, ok := pointer.(*string)
+		parentTypePointer, ok := pointer.(*string)
 		require.True(t, ok)
-		require.Equal(t, "Context", *typePointer)
+		require.Equal(t, "Stream", *parentTypePointer)
+	}
+
+	// "collectionType" returns a pointer to the CollectionType field
+	{
+		pointer, ok := collection.GetPointer("collectionType")
+		require.True(t, ok)
+		collectionTypePointer, ok := pointer.(*string)
+		require.True(t, ok)
+		require.Equal(t, "Context", *collectionTypePointer)
 	}
 
 	// "read" returns a pointer to the Read slice
@@ -284,6 +299,8 @@ func TestCollection_GetStringOK(t *testing.T) {
 	collection.CollectionID = collectionID
 	collection.UserID = userID
 	collection.ParentID = parentID
+	collection.ParentType = "Stream"
+	collection.CollectionType = "Context"
 
 	// Each of the three ObjectID fields returns its hex encoding with ok == true.
 	{
@@ -300,6 +317,18 @@ func TestCollection_GetStringOK(t *testing.T) {
 		value, ok := collection.GetStringOK("parentId")
 		require.True(t, ok)
 		require.Equal(t, parentID.Hex(), value)
+	}
+
+	// The two string "type" fields return their raw values with ok == true.
+	{
+		value, ok := collection.GetStringOK("parentType")
+		require.True(t, ok)
+		require.Equal(t, "Stream", value)
+	}
+	{
+		value, ok := collection.GetStringOK("collectionType")
+		require.True(t, ok)
+		require.Equal(t, "Context", value)
 	}
 
 	// An unknown property returns ("", false)

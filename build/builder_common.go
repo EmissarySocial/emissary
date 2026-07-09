@@ -7,6 +7,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
@@ -399,7 +400,7 @@ func (w Common) ActivityStreamCollection(url string) sliceof.String {
 
 	// Load the collection from the Interwebs
 	activityService := w._factory.ActivityStream()
-	object, err := activityService.UserClient(w.AuthenticatedID()).Load(url)
+	object, err := activityService.UserClient(w.AuthenticatedID()).Load(url, ascache.WithWriteOnly())
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to load ActivityStream Collection. Returning empty collection to template."))

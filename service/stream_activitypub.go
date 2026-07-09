@@ -46,6 +46,7 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 		vocab.PropertyType:      stream.SocialRole,
 		vocab.PropertyURL:       stream.URL,
 		vocab.PropertyPublished: time.Unix(stream.PublishDate, 0).UTC().Format(time.RFC3339),
+		vocab.PropertyReplies:   stream.ActivityPubRepliesURL(),
 	}
 
 	if stream.Label != "" {
@@ -297,12 +298,13 @@ func (service *Stream) CalcContext(session data.Session, stream *model.Stream) e
 	// Fall through means: a) This is an original post (not a reply), or b) No ancestor supplied a context.
 	// Let's create a new Context Collection for this Stream (and descendants)
 
-	// Create a new Context Collection. ParentID + Type are set so it participates
-	// in the unique (parentId, type) index and is addressable by later lookups.
+	// Create a new Context Collection. ParentID + CollectionType are set so it participates
+	// in the unique (parentId, collectionType) index and is addressable by later lookups.
 	collection := model.NewCollection()
 	collection.UserID = stream.AttributedTo.UserID
 	collection.ParentID = stream.StreamID
-	collection.Type = model.CollectionTypeContext
+	collection.ParentType = model.CollectionParentTypeStream
+	collection.CollectionType = model.CollectionTypeContext
 	collection.Read = sliceof.String{vocab.NamespacePublic}  // <- this will need to be updated when we add support for non-public streams.
 	collection.Write = sliceof.String{vocab.NamespacePublic} // <- this will need to be updated when we add support for non-public streams.
 
@@ -359,10 +361,9 @@ func (service *Stream) AddReply(session data.Session, inReplyToURL string, reply
 	}
 
 	// JIT the parent's Replies collection (concurrency-safe via the unique index).
-	collection := model.NewCollection()
-	public := sliceof.String{vocab.NamespacePublic}
+	collection, err := service.collectionService.LoadOrCreateByStream(session, &parent, model.CollectionTypeReplies)
 
-	if err := service.collectionService.LoadOrCreateByParent(session, parent.AttributedTo.UserID, parent.StreamID, model.CollectionTypeReplies, public, public, &collection); err != nil {
+	if err != nil {
 		return derp.Wrap(err, location, "Loading/Creating replies collection", "parentID: "+parent.StreamID.Hex())
 	}
 
@@ -429,7 +430,7 @@ func (service *Stream) RemoveReply(session data.Session, inReplyToURL string, re
 	// Locate the parent's Replies collection. If none exists, there is nothing to remove.
 	collection := model.NewCollection()
 
-	if err := service.collectionService.LoadByParentAndType(session, parent.StreamID, model.CollectionTypeReplies, &collection); err != nil {
+	if err := service.collectionService.LoadByType(session, parent.StreamID, model.CollectionTypeReplies, &collection); err != nil {
 		if derp.IsNotFound(err) {
 			return nil
 		}

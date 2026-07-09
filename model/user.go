@@ -427,6 +427,14 @@ func (user *User) ActivityPubPublicKeyURL() string {
 	return user.ProfileURL + "#main-key"
 }
 
+func (user *User) ActivityPubRepliesURL() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
+	return user.ProfileURL + "/pub/replies"
+}
+
 func (user *User) ActivityPubSSEEndpoint_Inbox() string {
 	if user.ProfileURL == "" {
 		return ""

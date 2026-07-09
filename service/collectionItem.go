@@ -209,29 +209,40 @@ func (service *CollectionItem) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
-func (service *CollectionItem) LoadByID(session data.Session, userID primitive.ObjectID, collectionItemID primitive.ObjectID, collectionItem *model.CollectionItem) error {
-	criteria := exp.Equal("userId", userID).AndEqual("_id", collectionItemID)
+// LoadByID loads a single CollectionItem by its parent ID and CollectionItem ID. Returns an error if not found.
+func (service *CollectionItem) LoadByID(session data.Session, parentID primitive.ObjectID, collectionItemID primitive.ObjectID, collectionItem *model.CollectionItem) error {
+	criteria := exp.Equal("parentId", parentID).AndEqual("_id", collectionItemID)
 	return service.Load(session, criteria, collectionItem)
 }
 
-func (service *CollectionItem) CountByCollection(session data.Session, userID primitive.ObjectID, collectionID primitive.ObjectID, criteria exp.Expression) (int64, error) {
-	criteria = criteria.AndEqual("userId", userID).AndEqual("collectionId", collectionID)
+// CountByCollection returns the number of CollectionItems in the given collection.
+func (service *CollectionItem) CountByCollection(session data.Session, parentID primitive.ObjectID, collectionID primitive.ObjectID, criteria exp.Expression) (int64, error) {
+	criteria = criteria.AndEqual("parentId", parentID).AndEqual("collectionId", collectionID)
 	return service.Count(session, criteria)
 }
 
-func (service *CollectionItem) RangeByCollection(session data.Session, userID primitive.ObjectID, collectionID primitive.ObjectID, criteria exp.Expression, options ...option.Option) (iter.Seq[model.CollectionItem], error) {
-	criteria = criteria.AndEqual("userId", userID).AndEqual("collectionId", collectionID)
+// RangeByCollection returns an iterator over the CollectionItems in the given collection, matching the given criteria and options.
+func (service *CollectionItem) RangeByCollection(session data.Session, parentID primitive.ObjectID, collectionID primitive.ObjectID, criteria exp.Expression, options ...option.Option) (iter.Seq[model.CollectionItem], error) {
+	criteria = criteria.AndEqual("parentId", parentID).AndEqual("collectionId", collectionID)
 	return service.Range(session, criteria, options...)
 }
 
-func (service *CollectionItem) QueryByInReplyTo(session data.Session, inReplyTo string, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.CollectionItem], error) {
-	criteria = criteria.AndEqual("inReplyTo", inReplyTo)
-	return service.Query(session, criteria, options...)
+// CountByCollectionType returns the number of CollectionItems of the given collection type.
+func (service *CollectionItem) CountByCollectionType(session data.Session, parentID primitive.ObjectID, collectionType string, criteria exp.Expression) (int64, error) {
+	criteria = criteria.AndEqual("parentId", parentID).AndEqual("collectionType", collectionType)
+	return service.Count(session, criteria)
 }
 
-// CountByInReplyTo returns the number of (live) CollectionItems that reply to the given URI.
-func (service *CollectionItem) CountByInReplyTo(session data.Session, inReplyTo string) (int64, error) {
-	return service.Count(session, exp.Equal("inReplyTo", inReplyTo))
+// RangeByCollectionType returns an iterator over the CollectionItems of the given collection type, matching the given criteria and options.
+func (service *CollectionItem) RangeByCollectionType(session data.Session, parentID primitive.ObjectID, collectionType string, criteria exp.Expression, options ...option.Option) (iter.Seq[model.CollectionItem], error) {
+	criteria = criteria.AndEqual("parentId", parentID).AndEqual("collectionType", collectionType)
+	return service.Range(session, criteria, options...)
+}
+
+// QueryByCollectionType returns a slice of results from the CollectionItems of the given collection type, matching the given criteria and options.
+func (service *CollectionItem) QueryByCollectionType(session data.Session, parentID primitive.ObjectID, collectionType string, criteria exp.Expression, options ...option.Option) ([]model.CollectionItem, error) {
+	criteria = criteria.AndEqual("parentId", parentID).AndEqual("collectionType", collectionType)
+	return service.Query(session, criteria, options...)
 }
 
 // QueryByCollectionAndDate returns one page of CollectionItems in the given collection,
@@ -241,11 +252,13 @@ func (service *CollectionItem) QueryByCollectionAndDate(session data.Session, co
 	return service.Query(session, criteria, option.SortAsc("createDate"), option.MaxRows(int64(pageSize)))
 }
 
+// LoadByURI loads a single CollectionItem by its collection ID and URI. Returns an error if not found.
 func (service *CollectionItem) LoadByURI(session data.Session, collectionID primitive.ObjectID, URI string, collectionItem *model.CollectionItem) error {
 	criteria := exp.Equal("collectionId", collectionID).AndEqual("uri", URI)
 	return service.Load(session, criteria, collectionItem)
 }
 
+// HardDeleteByURI permanently deletes a CollectionItem by its URI.
 func (service *CollectionItem) HardDeleteByURI(session data.Session, URI string) error {
 	criteria := exp.Equal("uri", URI)
 
@@ -349,14 +362,14 @@ func (service *CollectionItem) mergeOntoExistingURI(session data.Session, collec
  * Collection Interface
  ******************************************/
 
-func (service *CollectionItem) CollectionCount(session data.Session, userID primitive.ObjectID, collectionID primitive.ObjectID, criteria exp.Expression) collection.CounterFunc {
+func (service *CollectionItem) CollectionCount(session data.Session, parentID primitive.ObjectID, collectionID primitive.ObjectID, criteria exp.Expression) collection.CounterFunc {
 	return func() (int64, error) {
-		return service.CountByCollection(session, userID, collectionID, criteria)
+		return service.CountByCollection(session, parentID, collectionID, criteria)
 	}
 }
 
 // CollectionIterator returns the iterator function for this collection
-func (service *CollectionItem) CollectionIterator(session data.Session, userID primitive.ObjectID, collectionID primitive.ObjectID, criteria exp.Expression) collection.IteratorFunc {
+func (service *CollectionItem) CollectionIterator(session data.Session, parentID primitive.ObjectID, collectionID primitive.ObjectID, criteria exp.Expression) collection.IteratorFunc {
 
 	const location = "service.CollectionItem.CollectionIterator"
 
@@ -370,13 +383,14 @@ func (service *CollectionItem) CollectionIterator(session data.Session, userID p
 			}
 		}
 
-		// Get Replies for this CollectionItem (sorted by insertion date)
+		// Get Replies for this CollectionItem (sorted by insertion date). The projection
+		// must include "uri" because the mapper below reads it; "_id" drives the sort/paging.
 		result, err := service.RangeByCollection(
 			session,
-			userID,
+			parentID,
 			collectionID,
 			criteria,
-			option.Fields("_id"),
+			option.Fields("_id", "uri"),
 			option.SortDesc("_id"),
 		)
 
@@ -387,7 +401,7 @@ func (service *CollectionItem) CollectionIterator(session data.Session, userID p
 		// Map into a range of JSON-LD objects
 		return ranges.Map(result, func(item model.CollectionItem) mapof.Any {
 			return mapof.Any{
-				vocab.PropertyID: item.CollectionItemID.Hex(),
+				vocab.PropertyID: item.URI,
 			}
 		}), nil
 	}

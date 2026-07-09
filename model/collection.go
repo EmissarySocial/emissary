@@ -9,13 +9,14 @@ import (
 
 // Collection represents a group of messages sent among several participants
 type Collection struct {
-	CollectionID primitive.ObjectID `bson:"_id"`                // Unique ID for this folder
-	UserID       primitive.ObjectID `bson:"userId"`             // ID of the User who owns this folder
-	ParentID     primitive.ObjectID `bson:"parentId,omitempty"` // ID of the object that owns this collection
-	Type         string             `bson:"type,omitempty"`     // Type of collection (Context, Replies, etc.)
-	Read         sliceof.String     `bson:"read"`               // List of people who are participating in this collection
-	Write        sliceof.String     `bson:"write"`              // List of people who are participating in this collection
-	TotalItems   int                `bson:"totalItems"`         // Total number of items in this collection
+	CollectionID   primitive.ObjectID `bson:"_id"`                      // Unique ID for this folder
+	UserID         primitive.ObjectID `bson:"userId"`                   // ID of the User who owns this folder
+	ParentID       primitive.ObjectID `bson:"parentId,omitempty"`       // ID of the object that owns this collection
+	ParentType     string             `bson:"parentType,omitempty"`     // Type of the object that owns this collection
+	CollectionType string             `bson:"collectionType,omitempty"` // Type of collection (Context, Replies, etc.)
+	Read           sliceof.String     `bson:"read"`                     // List of people who are participating in this collection
+	Write          sliceof.String     `bson:"write"`                    // List of people who are participating in this collection
+	TotalItems     int                `bson:"totalItems"`               // Total number of items in this collection
 
 	journal.Journal `json:"-" bson:",inline"`
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -221,15 +222,15 @@ func (service *Collection) LoadByID(session data.Session, userID primitive.Objec
 	return service.Load(session, criteria, collection)
 }
 
+// LoadByType returns the single Collection that matches the provided ParentID and Type
+func (service *Collection) LoadByType(session data.Session, parentID primitive.ObjectID, collectionType string, collection *model.Collection) error {
+	criteria := exp.Equal("parentId", parentID).AndEqual("collectionType", collectionType)
+	return service.Load(session, criteria, collection)
+}
+
 // RangeByUserID returns a RangeFunc that yields all Collections owned by the provided UserID
 func (service *Collection) RangeByUserID(session data.Session, userID primitive.ObjectID) (iter.Seq[model.Collection], error) {
 	criteria := exp.Equal("userId", userID)
-	return service.Range(session, criteria)
-}
-
-// RangeByCollectionID returns a RangeFunc that yields all Collections owned by the provided CollectionID
-func (service *Collection) RangeByCollectionID(session data.Session, collectionID primitive.ObjectID) (iter.Seq[model.Collection], error) {
-	criteria := exp.Equal("_id", collectionID)
 	return service.Range(session, criteria)
 }
 
@@ -294,65 +295,87 @@ func (service *Collection) ActivityPubURL(userID primitive.ObjectID, collectionI
  * Other Methods
  ******************************************/
 
-// LoadByParentAndType loads the single Collection identified by the (parentID, type) pair.
-func (service *Collection) LoadByParentAndType(session data.Session, parentID primitive.ObjectID, collectionType string, collection *model.Collection) error {
-	criteria := exp.Equal("parentId", parentID).AndEqual("type", collectionType)
-	return service.Load(session, criteria, collection)
+func (service *Collection) LoadOrCreateByStream(session data.Session, stream *model.Stream, collectionType string) (model.Collection, error) {
+
+	return service.loadOrCreateByParent(
+		session,
+		stream.AttributedTo.UserID,
+		model.CollectionParentTypeStream,
+		stream.StreamID,
+		collectionType,
+		sliceof.String{vocab.NamespacePublic},
+		sliceof.String{vocab.NamespacePublic},
+	)
 }
 
-// LoadOrCreateByParent returns the Collection for the given (parentID, type), creating it just-in-time on first use.
-// The read/write permission lists are applied ONLY when the collection is created; an existing collection keeps its own.
-func (service *Collection) LoadOrCreateByParent(session data.Session, ownerID primitive.ObjectID, parentID primitive.ObjectID, collectionType string, read sliceof.String, write sliceof.String, collection *model.Collection) error {
+func (service *Collection) LoadOrCreateByUser(session data.Session, user *model.User, collectionType string) (model.Collection, error) {
 
-	const location = "service.Collection.LoadOrCreateByParent"
+	return service.loadOrCreateByParent(
+		session,
+		user.UserID,
+		model.CollectionParentTypeUser,
+		user.UserID,
+		collectionType,
+		sliceof.String{vocab.NamespacePublic},
+		sliceof.String{vocab.NamespacePublic},
+	)
+}
+
+// loadOrCreateByParent returns the Collection for the given (parentID, collectionType), creating it
+// just-in-time on first use. The read/write permission lists are applied ONLY when the collection is
+// created; an existing collection keeps its own. Callers should use the LoadOrCreateByUser /
+// LoadOrCreateByStream wrappers rather than calling this directly.
+func (service *Collection) loadOrCreateByParent(session data.Session, userID primitive.ObjectID, parentType string, parentID primitive.ObjectID, collectionType string, read sliceof.String, write sliceof.String) (model.Collection, error) {
+
+	const location = "service.Collection.loadOrCreateByParent"
 
 	// This is concurrency-safe: when two callers race to create the same collection,
-	// the unique index on (parentId, type) rejects the loser's insert with a
+	// the unique index on (parentId, collectionType) rejects the loser's insert with a
 	// duplicate-key error, and that caller re-loads the winner instead of duplicating.
 	// See queries/sync/collection.go for the index, and COLLECTIONS-REDESIGN.md (D2) for
 	// why this replaces the racy load-then-save idiom used elsewhere.
-	parentDetail := "parentID: " + parentID.Hex()
-	typeDetail := "type: " + collectionType
+
+	collection := model.NewCollection()
 
 	// Fast path: the collection almost always already exists.
-	err := service.LoadByParentAndType(session, parentID, collectionType, collection)
+	err := service.LoadByType(session, parentID, collectionType, &collection)
 
 	if err == nil {
-		return nil
+		return collection, nil
 	}
 
 	// Any error other than "not found" is a real failure.
 	if !derp.IsNotFound(err) {
-		return derp.Wrap(err, location, "Unable to load Collection", parentDetail, typeDetail)
+		return collection, derp.Wrap(err, location, "Loading Collection", parentType, parentID, collectionType)
 	}
 
 	// Slow path: no collection yet, so try to create one.
-	*collection = model.NewCollection()
-	collection.UserID = ownerID
+	collection.UserID = userID
+	collection.ParentType = parentType
 	collection.ParentID = parentID
-	collection.Type = collectionType
+	collection.CollectionType = collectionType
 	collection.Read = read
 	collection.Write = write
 
-	saveErr := service.Save(session, collection, "Created just-in-time")
+	if saveErr := service.Save(session, &collection, ""); saveErr != nil {
 
-	if saveErr == nil {
-		return nil
-	}
+		// If we lost a creation race, the unique index rejects our insert. Re-load
+		// the winner's record (which is now guaranteed to exist) and return it.
+		if mongo.IsDuplicateKeyError(saveErr) {
 
-	// If we lost a creation race, the unique index rejects our insert. Re-load
-	// the winner's record (which is now guaranteed to exist) and return it.
-	if mongo.IsDuplicateKeyError(saveErr) {
+			if reloadErr := service.LoadByType(session, parentID, collectionType, &collection); reloadErr != nil {
+				return collection, derp.Wrap(reloadErr, location, "Unable to re-load Collection after duplicate-key conflict", parentType, parentID, collectionType)
+			}
 
-		if reloadErr := service.LoadByParentAndType(session, parentID, collectionType, collection); reloadErr != nil {
-			return derp.Wrap(reloadErr, location, "Unable to re-load Collection after duplicate-key conflict", parentDetail, typeDetail)
+			return collection, nil
 		}
 
-		return nil
+		// Any other save error is a real failure.
+		return collection, derp.Wrap(saveErr, location, "Unable to create Collection", parentType, parentID, collectionType)
+
 	}
 
-	// Any other save error is a real failure.
-	return derp.Wrap(saveErr, location, "Unable to create Collection", parentDetail, typeDetail)
+	return collection, nil
 }
 
 // AddItem adds a URI to the provided Collection as a new CollectionItem
@@ -362,10 +385,11 @@ func (service *Collection) AddItem(session data.Session, collection *model.Colle
 
 	// Create a new CollectionItem record
 	collectionItem := model.NewCollectionItem()
-	collectionItem.UserID = collection.UserID
 	collectionItem.CollectionID = collection.CollectionID
+	collectionItem.UserID = collection.UserID
+	collectionItem.ParentID = collection.ParentID
+	collectionItem.CollectionType = collection.CollectionType
 	collectionItem.URI = itemURI
-	collectionItem.InReplyTo = inReplyTo
 
 	// Save the CollectionItem to the database
 	if err := service.collectionItemService.SaveUnique(session, &collectionItem, ""); err != nil {

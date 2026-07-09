@@ -106,6 +106,14 @@
 			]
 		}
 
+		reply: {
+			roles:["anonymous"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		/*
 		reply:{
 			roles:["authenticated"]
 			steps:[
@@ -116,5 +124,6 @@
 				{do:"view-html", method:"post", file:"responses-replies"}
 			]
 		}
+		*/
 	}
 }

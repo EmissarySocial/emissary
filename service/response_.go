@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
-	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
@@ -242,10 +241,9 @@ func (service *Response) projectResponse(session data.Session, response *model.R
 	}
 
 	// JIT the Stream's Likes/Dislikes collection (concurrency-safe via the unique index).
-	collection := model.NewCollection()
-	public := sliceof.String{vocab.NamespacePublic}
+	collection, err := service.collectionService.LoadOrCreateByStream(session, &stream, collectionType)
 
-	if err := service.collectionService.LoadOrCreateByParent(session, stream.AttributedTo.UserID, stream.StreamID, collectionType, public, public, &collection); err != nil {
+	if err != nil {
 		return derp.Wrap(err, location, "Unable to load-or-create response collection", "type: "+collectionType)
 	}
 

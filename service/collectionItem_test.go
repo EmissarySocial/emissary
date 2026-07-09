@@ -139,9 +139,6 @@ func matchesItem(criteria exp.Expression, record *model.CollectionItem) bool {
 		case "uri":
 			value, ok := predicate.Value.(string)
 			return ok && record.URI == value
-		case "inReplyTo":
-			value, ok := predicate.Value.(string)
-			return ok && record.InReplyTo == value
 		case "deleteDate":
 			value, ok := predicate.Value.(int)
 			return ok && record.DeleteDate == int64(value)
@@ -177,43 +174,7 @@ func itemReplyingTo(inReplyTo string) *model.CollectionItem {
 	item := model.NewCollectionItem()
 	item.CollectionItemID = primitive.NewObjectID()
 	item.URI = "https://example.test/reply/" + primitive.NewObjectID().Hex()
-	item.InReplyTo = inReplyTo
 	return &item
-}
-
-/******************************************
- * CountByInReplyTo
- ******************************************/
-
-// CountByInReplyTo counts only the items that reply to the given URI.
-func TestCollectionItem_CountByInReplyTo(t *testing.T) {
-
-	const target = "https://example.test/parent"
-	const other = "https://example.test/somewhere-else"
-
-	store := &itemStore{
-		records: []*model.CollectionItem{
-			itemReplyingTo(target),
-			itemReplyingTo(target),
-			itemReplyingTo(other), // must not be counted
-		},
-	}
-	service, session := newItemService(store)
-
-	count, err := service.CountByInReplyTo(session, target)
-	require.Nil(t, err)
-	require.Equal(t, int64(2), count)
-}
-
-// CountByInReplyTo returns zero when nothing replies to the URI.
-func TestCollectionItem_CountByInReplyTo_None(t *testing.T) {
-
-	store := &itemStore{}
-	service, session := newItemService(store)
-
-	count, err := service.CountByInReplyTo(session, "https://example.test/lonely")
-	require.Nil(t, err)
-	require.Zero(t, count)
 }
 
 /******************************************

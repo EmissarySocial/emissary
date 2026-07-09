@@ -8,13 +8,14 @@ import (
 func CollectionSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"collectionId": schema.String{Format: "objectId"},
-			"userId":       schema.String{Format: "objectId"},
-			"parentId":     schema.String{Format: "objectId"},
-			"type":         schema.String{Format: "text", MaxLength: 128},
-			"read":         schema.Array{Items: schema.String{MaxLength: 256}},
-			"write":        schema.Array{Items: schema.String{MaxLength: 256}},
-			"totalItems":   schema.Integer{},
+			"collectionId":   schema.String{Format: "objectId"},
+			"userId":         schema.String{Format: "objectId"},
+			"parentId":       schema.String{Format: "objectId"},
+			"parentType":     schema.String{Enum: []string{CollectionParentTypeStream, CollectionParentTypeUser}},
+			"collectionType": schema.String{Enum: []string{CollectionTypeContext, CollectionTypeReplies, CollectionTypeLikes, CollectionTypeDislikes, CollectionTypeShares}},
+			"read":           schema.Array{Items: schema.String{MaxLength: 256}},
+			"write":          schema.Array{Items: schema.String{MaxLength: 256}},
+			"totalItems":     schema.Integer{},
 		},
 	}
 }
@@ -27,8 +28,11 @@ func (collection *Collection) GetPointer(name string) (any, bool) {
 
 	switch name {
 
-	case "type":
-		return &collection.Type, true
+	case "parentType":
+		return &collection.ParentType, true
+
+	case "collectionType":
+		return &collection.CollectionType, true
 
 	case "read":
 		return &collection.Read, true
@@ -56,6 +60,12 @@ func (collection Collection) GetStringOK(name string) (string, bool) {
 
 	case "parentId":
 		return collection.ParentID.Hex(), true
+
+	case "parentType":
+		return collection.ParentType, true
+
+	case "collectionType":
+		return collection.CollectionType, true
 	}
 
 	return "", false

@@ -2,6 +2,10 @@ package model
 
 import "github.com/benpate/hannibal/vocab"
 
+const CollectionParentTypeUser = "User"
+
+const CollectionParentTypeStream = "Stream"
+
 // CollectionTypeContext is the type of collection that is used to group messages that are part of the same conversation thread.
 // https://www.w3.org/TR/activitystreams-vocabulary/#dfn-context
 const CollectionTypeContext = "Context"

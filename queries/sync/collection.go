@@ -16,17 +16,17 @@ func Collection(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Collection"), indexer.IndexSet{
 
-		// Enforces one Collection per (parent, type). This is what makes JIT
+		// Enforces one Collection per (parentId, collectionType). This is what makes JIT
 		// creation concurrency-safe: LoadOrCreateByParent inserts optimistically
 		// and relies on this index to reject the loser of a create race.
 		//
 		// The partial filter scopes uniqueness to live rows (deleteDate == 0),
 		// mirroring service.notDeleted(), so that a soft-deleted collection does
-		// not block re-creation of a fresh one with the same (parentId, type).
+		// not block re-creation of a fresh one with the same (parentId, collectionType).
 		"idx_Collection_Parent_Type": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "parentId", Value: 1},
-				{Key: "type", Value: 1},
+				{Key: "collectionType", Value: 1},
 			},
 			Options: options.Index().SetUnique(true).SetPartialFilterExpression(bson.D{
 				{Key: "deleteDate", Value: 0},

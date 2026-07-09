@@ -614,8 +614,7 @@ func (w Stream) ReplyLinksAfter(dateString string, maxRows int) (sliceof.Object[
 	minDate := convert.Int64(dateString)
 	criteria := exp.GreaterThan("createDate", minDate)
 
-	result, err := collectionItemService.QueryByInReplyTo(w._session, w._stream.URL, criteria, option.MaxRows(int64(maxRows)), option.SortAsc("createDate"))
-	return result, err
+	return collectionItemService.QueryByCollectionType(w._session, w._stream.StreamID, model.CollectionTypeReplies, criteria, option.MaxRows(int64(maxRows)), option.SortAsc("createDate"))
 }
 
 // ReplyCount returns the denormalized count of replies to this Stream.

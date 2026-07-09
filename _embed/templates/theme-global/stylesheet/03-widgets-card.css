@@ -19,7 +19,7 @@
 	}
 
 	&.clickable:hover {
-		border:solid 1px var(--link-color);
+		border-color:var(--link-color);
 	}
 
 	&.selected {

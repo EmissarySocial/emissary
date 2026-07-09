@@ -1,3 +1,14 @@
+{{- $root := . -}}
+{{- $afterDate := .QueryParam "after" -}}
+{{- $replies := .ReplyLinksAfter $afterDate 12 -}}
+
+<div class="table">
+	{{- range $index, $reply := $replies -}}
+		<div hx-get="/{{$root.StreamID}}/reply?id={{$reply.URI}}" hx-trigger="load" hx-target="this" hx-swap="outerHTML" style="height:100px;"></div>
+	{{- end -}}
+</div>
+
+<!--
 {{- $publishedDate := .QueryParam "published" -}}
 {{- $pageSize := 12 -}}
 
@@ -90,3 +101,4 @@
 	</div>
 
 {{- end -}}
+-->
