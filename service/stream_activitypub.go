@@ -16,7 +16,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -251,25 +250,20 @@ func (service *Stream) CalcContext(session data.Session, stream *model.Stream) e
 
 	const location = "service.Stream.CalcContext"
 
-	spew.Dump(location, stream, stream.DefaultAllow)
-
 	// RULE: If the stream is not public, then don't create a context collection.
 	// For the time being, these are only for public-facing posts.
 	if !stream.DefaultAllow.IsAnonymous() {
 		return nil
 	}
 
-	spew.Dump("A")
 	// RULE: If a context is already defined for this Stream, then keep it. Don't recalculate.
 	if stream.Context != "" {
 		return nil
 	}
 
-	spew.Dump("B")
-
 	// If this is a reply, then try to inherit a context from our ancestors
 	if inReplyTo := stream.InReplyTo; inReplyTo != "" {
-		spew.Dump("C")
+
 		// Create an ActivityStreams client based on the Stream author's permissions
 		client := service.activityService.UserClient(stream.AttributedTo.UserID)
 
@@ -280,7 +274,7 @@ func (service *Stream) CalcContext(session data.Session, stream *model.Stream) e
 			document, err := client.Load(inReplyTo)
 
 			if err != nil {
-				derp.Report(derp.Wrap(err, location, "Unable to load InReplyTo document", inReplyTo))
+				return derp.Wrap(err, location, "Unable to load InReplyTo document", inReplyTo)
 			}
 
 			// If this document has a context then use it and exit
@@ -299,15 +293,14 @@ func (service *Stream) CalcContext(session data.Session, stream *model.Stream) e
 		}
 	}
 
-	spew.Dump("D")
-
 	// Fall through means: a) This is an original post (not a reply), or b) No ancestor supplied a context.
 	// Let's create a new Context Collection for this Stream (and descendants)
 
 	// Create a new Context Collection
 	collection := model.NewCollection()
 	collection.UserID = stream.AttributedTo.UserID
-	collection.To = sliceof.String{vocab.NamespacePublic} // <- this will need to be updated when we add support for non-public streams.
+	collection.Read = sliceof.String{vocab.NamespacePublic}  // <- this will need to be updated when we add support for non-public streams.
+	collection.Write = sliceof.String{vocab.NamespacePublic} // <- this will need to be updated when we add support for non-public streams.
 
 	// Set the Stream to use the Context Collection
 	stream.Context = service.collectionService.ActivityPubURL(collection.UserID, collection.CollectionID)
@@ -321,8 +314,6 @@ func (service *Stream) CalcContext(session data.Session, stream *model.Stream) e
 	if err := service.collectionService.AddItem(session, &collection, stream.ActivityPubURL(), stream.InReplyTo); err != nil {
 		return derp.Wrap(err, location, "Adding Stream to context collection", stream)
 	}
-
-	spew.Dump(stream, collection)
 
 	// Success!
 	return nil

@@ -51,7 +51,6 @@ func (step StepSaveAndPublish) Post(builder Builder, _ io.Writer) PipelineBehavi
 
 	// Additional rules if this Stream is headed for the user's outbox...
 	if step.Outbox {
-
 		// Guarantee this Stream has a context collection.
 		if err := streamService.CalcContext(session, stream); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Unable to calculate context for stream", stream))
