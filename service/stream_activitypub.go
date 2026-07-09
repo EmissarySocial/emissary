@@ -296,9 +296,12 @@ func (service *Stream) CalcContext(session data.Session, stream *model.Stream) e
 	// Fall through means: a) This is an original post (not a reply), or b) No ancestor supplied a context.
 	// Let's create a new Context Collection for this Stream (and descendants)
 
-	// Create a new Context Collection
+	// Create a new Context Collection. ParentID + Type are set so it participates
+	// in the unique (parentId, type) index and is addressable by later lookups.
 	collection := model.NewCollection()
 	collection.UserID = stream.AttributedTo.UserID
+	collection.ParentID = stream.StreamID
+	collection.Type = model.CollectionTypeContext
 	collection.Read = sliceof.String{vocab.NamespacePublic}  // <- this will need to be updated when we add support for non-public streams.
 	collection.Write = sliceof.String{vocab.NamespacePublic} // <- this will need to be updated when we add support for non-public streams.
 

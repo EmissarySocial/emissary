@@ -618,8 +618,18 @@ func (w Stream) ReplyLinksAfter(dateString string, maxRows int) (sliceof.Object[
 	return result, err
 }
 
+// ReplyCount returns the number of direct replies to this Stream. It is a live
+// indexed count (not a denormalized field) over the same inReplyTo == stream.URL
+// criterion that ReplyLinksAfter uses to list replies, so the two can never disagree.
 func (w Stream) ReplyCount() int {
-	return 0
+	count, err := w._factory.CollectionItem().CountByInReplyTo(w._session, w._stream.URL)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "build.Stream.ReplyCount", "Unable to count replies", "url: "+w._stream.URL))
+		return 0
+	}
+
+	return int(count)
 }
 
 func (w Stream) ResponseCount() int {

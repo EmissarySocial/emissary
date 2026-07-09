@@ -15,6 +15,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // CollectionItem defines a service that can send and receive collectionItem data
@@ -228,6 +229,11 @@ func (service *CollectionItem) QueryByInReplyTo(session data.Session, inReplyTo 
 	return service.Query(session, criteria, options...)
 }
 
+// CountByInReplyTo returns the number of (live) CollectionItems that reply to the given URI.
+func (service *CollectionItem) CountByInReplyTo(session data.Session, inReplyTo string) (int64, error) {
+	return service.Count(session, exp.Equal("inReplyTo", inReplyTo))
+}
+
 func (service *CollectionItem) LoadByURI(session data.Session, collectionID primitive.ObjectID, URI string, collectionItem *model.CollectionItem) error {
 	criteria := exp.Equal("collectionId", collectionID).AndEqual("uri", URI)
 	return service.Load(session, criteria, collectionItem)
@@ -270,30 +276,66 @@ func (service *CollectionItem) DeleteByCollection(session data.Session, userID p
  * Custom Behaviors
  ******************************************/
 
-// SaveUnique guarantees that there is only one CollectionItem for a given URI.  It does this
-// by removing any existing CollectionItem that matches this URI before saving the new one.
+// SaveUnique guarantees that there is only one CollectionItem for a given (collection, URI).
 func (service *CollectionItem) SaveUnique(session data.Session, collectionItem *model.CollectionItem, note string) error {
 
 	const location = "service.CollectionItem.SaveUnique"
 
-	// Look for an existing CollecitonItem with the same URI
-	duplicate := model.NewCollectionItem()
-
-	if err := service.LoadByURI(session, collectionItem.CollectionID, collectionItem.URI, &duplicate); err == nil {
-		collectionItem.CollectionItemID = duplicate.CollectionItemID
-		collectionItem.CreateDate = duplicate.CreateDate
-		collectionItem.UpdateDate = duplicate.UpdateDate
-	} else if !derp.IsNotFound(err) {
+	// Fold onto any existing CollectionItem with the same URI (Save becomes an update).
+	if err := service.mergeOntoExistingURI(session, collectionItem); err != nil {
 		return derp.Wrap(err, location, "Unable to check for existing CollectionItem", collectionItem)
 	}
 
-	// Insert/Update new CollectionItem
-	if err := service.Save(session, collectionItem, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save CollectionItem", collectionItem, note)
+	saveErr := service.Save(session, collectionItem, note)
+
+	if saveErr == nil {
+		return nil
 	}
 
-	// Woot.
-	return nil
+	// If we lost a creation race, the unique (collectionId, uri) index rejects our
+	// insert. Re-merge onto the winner's record and Save again as an update. This
+	// replaces the old load-then-save idiom, which let two concurrent adds of the
+	// same URI both insert. See queries/sync/collectionItem.go for the index.
+	if mongo.IsDuplicateKeyError(saveErr) {
+
+		if err := service.mergeOntoExistingURI(session, collectionItem); err != nil {
+			return derp.Wrap(err, location, "Unable to re-load CollectionItem after duplicate-key conflict", collectionItem)
+		}
+
+		if err := service.Save(session, collectionItem, note); err != nil {
+			return derp.Wrap(err, location, "Unable to save CollectionItem after duplicate-key conflict", collectionItem, note)
+		}
+
+		return nil
+	}
+
+	// Any other save error is a real failure.
+	return derp.Wrap(saveErr, location, "Unable to save CollectionItem", collectionItem, note)
+}
+
+// mergeOntoExistingURI copies the identity of any existing CollectionItem that shares
+// this (collection, URI) onto the target, so that a subsequent Save updates it in place
+// rather than inserting a duplicate. It is a no-op when no such item exists.
+func (service *CollectionItem) mergeOntoExistingURI(session data.Session, collectionItem *model.CollectionItem) error {
+
+	existing := model.NewCollectionItem()
+
+	err := service.LoadByURI(session, collectionItem.CollectionID, collectionItem.URI, &existing)
+
+	switch {
+
+	case err == nil:
+		collectionItem.CollectionItemID = existing.CollectionItemID
+		collectionItem.CreateDate = existing.CreateDate
+		collectionItem.UpdateDate = existing.UpdateDate
+		return nil
+
+	case derp.IsNotFound(err):
+		return nil
+
+	default:
+		return err
+	}
 }
 
 /******************************************
