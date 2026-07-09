@@ -16,6 +16,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -86,7 +87,7 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 	// and leaving as:public out entirely means that this message is "private" -- for whatever that's worth...
 
 	if stream.DefaultAllowAnonymous() {
-		result[vocab.PropertyTo] = []string{vocab.NamespaceASPublic}
+		result[vocab.PropertyTo] = []string{vocab.NamespacePublic}
 	}
 
 	// Custom behaviors for different stream types
@@ -248,7 +249,9 @@ func (service *Stream) activityStreamSchema() schema.Schema {
 // Post updates the stream with a new Context Collection (if none already exists)
 func (service *Stream) CalcContext(session data.Session, stream *model.Stream) error {
 
-	const location = "build.StepSaveAndPublish.setContext"
+	const location = "service.Stream.CalcContext"
+
+	spew.Dump(location, stream, stream.DefaultAllow)
 
 	// RULE: If the stream is not public, then don't create a context collection.
 	// For the time being, these are only for public-facing posts.
@@ -256,14 +259,17 @@ func (service *Stream) CalcContext(session data.Session, stream *model.Stream) e
 		return nil
 	}
 
+	spew.Dump("A")
 	// RULE: If a context is already defined for this Stream, then keep it. Don't recalculate.
 	if stream.Context != "" {
 		return nil
 	}
 
+	spew.Dump("B")
+
 	// If this is a reply, then try to inherit a context from our ancestors
 	if inReplyTo := stream.InReplyTo; inReplyTo != "" {
-
+		spew.Dump("C")
 		// Create an ActivityStreams client based on the Stream author's permissions
 		client := service.activityService.UserClient(stream.AttributedTo.UserID)
 
@@ -293,6 +299,8 @@ func (service *Stream) CalcContext(session data.Session, stream *model.Stream) e
 		}
 	}
 
+	spew.Dump("D")
+
 	// Fall through means: a) This is an original post (not a reply), or b) No ancestor supplied a context.
 	// Let's create a new Context Collection for this Stream (and descendants)
 
@@ -310,9 +318,11 @@ func (service *Stream) CalcContext(session data.Session, stream *model.Stream) e
 	}
 
 	// Add this Stream to the Context Collection
-	if err := service.collectionService.AddItem(session, &collection, stream.ActivityPubURL()); err != nil {
+	if err := service.collectionService.AddItem(session, &collection, stream.ActivityPubURL(), stream.InReplyTo); err != nil {
 		return derp.Wrap(err, location, "Adding Stream to context collection", stream)
 	}
+
+	spew.Dump(stream, collection)
 
 	// Success!
 	return nil

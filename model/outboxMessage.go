@@ -63,7 +63,7 @@ func (message OutboxMessage) GetJSONLD() mapof.Any {
 	}
 
 	if message.Permissions.IsAnonymous() {
-		result[vocab.PropertyTo] = []string{vocab.NamespaceASPublic}
+		result[vocab.PropertyTo] = []string{vocab.NamespacePublic}
 	} else {
 		result[vocab.PropertyTo] = []string{}
 	}

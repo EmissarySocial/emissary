@@ -37,7 +37,7 @@ func putActivityIntoOutbox(context Context, activity streams.Document) error {
 
 	// For now, we don't support public notes, so return an error
 	// In the future, we'll add more rules that map public-facing posts to Streams.
-	if recipients.Contains(vocab.NamespaceASPublic) {
+	if activity.IsPublic() {
 		return derp.NotImplemented(location, "Public notes are not supported at this time.")
 	}
 

@@ -258,7 +258,7 @@ func (service *KeyPackage) GetJSONLD(keyPackage *model.KeyPackage) mapof.Any {
 		vocab.PropertyType:         []string{vocab.CoreTypeObject, vocab.ObjectTypeKeyPackage},
 		vocab.PropertyID:           service.ActivityPubURL(keyPackage.UserID, keyPackage.KeyPackageID),
 		vocab.PropertyAttributedTo: service.ActivityPubAttributedToURL(keyPackage.UserID),
-		vocab.PropertyTo:           vocab.NamespaceASPublic,
+		vocab.PropertyTo:           vocab.NamespacePublic,
 		vocab.PropertySummary:      "A binary-encoded cryptographic key",
 		vocab.PropertyMediaType:    keyPackage.MediaType,
 		vocab.PropertyEncoding:     keyPackage.Encoding,
