@@ -15,6 +15,7 @@ type Collection struct {
 	Type         string             `bson:"type,omitempty"`     // Type of collection (Context, Replies, etc.)
 	Read         sliceof.String     `bson:"read"`               // List of people who are participating in this collection
 	Write        sliceof.String     `bson:"write"`              // List of people who are participating in this collection
+	TotalItems   int                `bson:"totalItems"`         // Total number of items in this collection
 
 	journal.Journal `json:"-" bson:",inline"`
 }

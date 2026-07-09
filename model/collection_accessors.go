@@ -14,6 +14,7 @@ func CollectionSchema() schema.Element {
 			"type":         schema.String{Format: "text", MaxLength: 128},
 			"read":         schema.Array{Items: schema.String{MaxLength: 256}},
 			"write":        schema.Array{Items: schema.String{MaxLength: 256}},
+			"totalItems":   schema.Integer{},
 		},
 	}
 }
@@ -34,6 +35,9 @@ func (collection *Collection) GetPointer(name string) (any, bool) {
 
 	case "write":
 		return &collection.Write, true
+
+	case "totalItems":
+		return &collection.TotalItems, true
 
 	}
 
