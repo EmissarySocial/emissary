@@ -86,6 +86,10 @@ func SyncDomainIndexes(connectionString string, databaseName string) error { // 
 		derp.Report(err)
 	}
 
+	if err := sync.CollectionItem(ctx, session); err != nil {
+		derp.Report(err)
+	}
+
 	if err := sync.Conversation(ctx, session); err != nil {
 		derp.Report(err)
 	}
