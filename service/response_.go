@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
@@ -18,11 +19,14 @@ import (
 
 // Response defines a service that can send and receive response data
 type Response struct {
-	importItemService *ImportItem
-	newsFeedService   *NewsFeed
-	outboxService     *Outbox
-	userService       *User
-	host              string
+	collectionService     *Collection
+	collectionItemService *CollectionItem
+	importItemService     *ImportItem
+	newsFeedService       *NewsFeed
+	outboxService         *Outbox
+	streamService         *Stream
+	userService           *User
+	host                  string
 }
 
 // NewResponse returns a fully initialized Response service
@@ -36,9 +40,12 @@ func NewResponse() Response {
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Response) Refresh(factory *Factory) {
+	service.collectionService = factory.Collection()
+	service.collectionItemService = factory.CollectionItem()
 	service.importItemService = factory.ImportItem()
 	service.newsFeedService = factory.NewsFeed()
 	service.outboxService = factory.Outbox()
+	service.streamService = factory.Stream()
 	service.userService = factory.User()
 	service.host = factory.Host()
 }
@@ -115,6 +122,11 @@ func (service *Response) Save(session data.Session, response *model.Response, no
 		return derp.Wrap(err, location, "Unable to set Response to inbox message", response.UserID)
 	}
 
+	// Project this Response into the target Stream's Likes/Dislikes collection (if local).
+	if err := service.projectResponse(session, response, true); err != nil {
+		return derp.Wrap(err, location, "Unable to project Response into collection", response)
+	}
+
 	return nil
 }
 
@@ -133,9 +145,125 @@ func (service *Response) Delete(session data.Session, response *model.Response, 
 		return derp.Wrap(err, location, "Unable to remove Response from inbox message", response.UserID)
 	}
 
+	// Remove this Response from the target Stream's Likes/Dislikes collection (if local).
+	if err := service.projectResponse(session, response, false); err != nil {
+		return derp.Wrap(err, location, "Unable to remove Response from collection", response)
+	}
+
 	// Unpublish from the Outbox, and send the "Undo" activity to followers
 	if err := service.outboxService.UndoActivity(session, model.FollowerTypeUser, response.UserID, response.ActivityPubURL(), model.NewAnonymousPermissions()); err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to send Undo activity"))
+	}
+
+	return nil
+}
+
+// ReindexResponses re-projects every existing Response into its target Stream's
+// Like/Dislike collection and refreshes counts. It is safe to re-run (idempotent).
+func (service *Response) ReindexResponses(session data.Session) error {
+
+	const location = "service.Response.ReindexResponses"
+
+	// projectResponse is idempotent: AddItem de-dupes by URI (SaveUnique) and counts
+	// are recomputed (not incremented), so a repeated run converges to the same state.
+	responses, err := service.Range(session, exp.All())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to range Responses")
+	}
+
+	for response := range responses {
+		if err := service.projectResponse(session, &response, true); err != nil {
+			// Report and continue: one bad row must not abort the whole backfill.
+			derp.Report(derp.Wrap(err, location, "Unable to project Response", response.ResponseID.Hex()))
+		}
+	}
+
+	return nil
+}
+
+// projectResponse adds (add=true) or removes (add=false) the response in its target
+// Stream's Like/Dislike collection and refreshes the count. It is a no-op for non-projected types and remote targets.
+func (service *Response) projectResponse(session data.Session, response *model.Response, add bool) error {
+
+	const location = "service.Response.projectResponse"
+
+	// This is the single funnel through which all Response mutations (in-app, Mastodon
+	// API, ActivityPub intent) keep the projection and counts in sync — they all route
+	// through Save/Delete. See COLLECTIONS-REDESIGN.md (Phase 5 / D5).
+
+	// RULE: Only Like/Dislike responses project into a per-Stream collection.
+	collectionType := model.CollectionTypeForResponse(response.Type)
+
+	if collectionType == "" {
+		return nil
+	}
+
+	// Resolve the target Object to a local Stream. A remote or missing target is not ours.
+	stream := model.NewStream()
+
+	if err := service.streamService.LoadByURL(session, response.Object, &stream); err != nil {
+		if derp.IsNotFound(err) {
+			return nil
+		}
+		return derp.Wrap(err, location, "Unable to load target Stream", "object: "+response.Object)
+	}
+
+	// JIT the Stream's Likes/Dislikes collection (concurrency-safe via the unique index).
+	collection := model.NewCollection()
+	public := sliceof.String{vocab.NamespacePublic}
+
+	if err := service.collectionService.LoadOrCreateByParent(session, stream.AttributedTo.UserID, stream.StreamID, collectionType, public, public, &collection); err != nil {
+		return derp.Wrap(err, location, "Unable to load-or-create response collection", "type: "+collectionType)
+	}
+
+	// Add or remove the response in the collection.
+	if add {
+		if err := service.collectionService.AddItem(session, &collection, response.ActivityPubURL(), response.Object); err != nil {
+			return derp.Wrap(err, location, "Unable to add response to collection", response)
+		}
+	} else {
+		if err := service.collectionService.RemoveItem(session, &collection, response.ActivityPubURL()); err != nil {
+			return derp.Wrap(err, location, "Unable to remove response from collection", response)
+		}
+	}
+
+	// Recompute-and-Save the denormalized count on the parent Stream (never increment;
+	// there is no atomic $inc — cf. COLLECTIONS-REDESIGN.md D4).
+	if err := service.refreshResponseCount(session, &stream, &collection, collectionType); err != nil {
+		return derp.Wrap(err, location, "Unable to refresh response count", stream.StreamID.Hex())
+	}
+
+	return nil
+}
+
+// refreshResponseCount recomputes the Stream's denormalized Like/Dislike/Share count from
+// the live collection size and Saves it.
+func (service *Response) refreshResponseCount(session data.Session, stream *model.Stream, collection *model.Collection, collectionType string) error {
+
+	const location = "service.Response.refreshResponseCount"
+
+	// Recompute-and-Save (not increment) because data.Collection exposes no atomic $inc;
+	// a stale overwrite simply re-derives correctly next time (cf. COLLECTIONS-REDESIGN D4).
+	count, err := service.collectionItemService.CountByCollection(session, collection.UserID, collection.CollectionID, exp.All())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to count collection items", collection.CollectionID.Hex())
+	}
+
+	switch collectionType {
+	case model.CollectionTypeLikes:
+		stream.LikeCount = int(count)
+	case model.CollectionTypeDislikes:
+		stream.DislikeCount = int(count)
+	case model.CollectionTypeShares:
+		stream.ShareCount = int(count)
+	default:
+		return derp.Internal(location, "Unexpected collection type", collectionType)
+	}
+
+	if err := service.streamService.Save(session, stream, "Refreshed response count"); err != nil {
+		return derp.Wrap(err, location, "Unable to save Stream with refreshed count", stream.StreamID.Hex())
 	}
 
 	return nil
@@ -238,7 +366,7 @@ func (service *Response) QueryByUserAndDate(session data.Session, userID primiti
 
 func (service *Response) QueryByObjectAndDate(session data.Session, objectID string, responseType string, maxDate int64, pageSize int) ([]model.Response, error) {
 
-	criteria := exp.Equal("objectId", objectID).AndEqual("type", responseType).And(exp.LessThan("createDate", maxDate))
+	criteria := exp.Equal("object", objectID).AndEqual("type", responseType).And(exp.LessThan("createDate", maxDate))
 	options := []option.Option{option.SortDesc("createDate"), option.MaxRows(int64(pageSize))}
 
 	return service.Query(session, criteria, options...)
@@ -317,8 +445,8 @@ func (service *Response) SetResponse(session data.Session, user *model.User, url
 	const location = "service.Response.SetResponse"
 
 	// Remove previous Response (if it exists)
-	if service.UnsetResponse(session, user, url, responseType) != nil {
-		return derp.Wrap(nil, location, "Unable to remove previous response", user.UserID, url, responseType)
+	if err := service.UnsetResponse(session, user, url, responseType); err != nil {
+		return derp.Wrap(err, location, "Unable to remove previous response", user.UserID, url, responseType)
 	}
 
 	// Create a new Response object

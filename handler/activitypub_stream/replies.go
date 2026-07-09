@@ -12,9 +12,8 @@ import (
 	"github.com/benpate/steranko"
 )
 
-// GetRepliesCollection serves the ActivityPub "replies" collection for a Stream,
-// reading from the Stream's JIT Replies collection (Type "Replies", parent =
-// this Stream). An empty collection is served when the Stream has no replies yet.
+// GetRepliesCollection serves the ActivityPub "replies" collection for a Stream.
+// It reads from the Stream's JIT Replies collection, serving empty when there are none.
 func GetRepliesCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, stream *model.Stream) error {
 
 	const location = "handler.activitypub_stream.GetRepliesCollection"

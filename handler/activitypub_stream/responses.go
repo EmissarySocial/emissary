@@ -12,53 +12,66 @@ import (
 	"github.com/benpate/steranko"
 )
 
-func GetResponseCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, stream *model.Stream) error {
+// GetLikesCollection serves the ActivityPub "likes" collection for a Stream.
+func GetLikesCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, stream *model.Stream) error {
+	return getResponseCollection(ctx, factory, session, stream, model.CollectionTypeLikes, stream.ActivityPubLikesURL())
+}
 
-	const location = "handler.activitypub_stream.GetResponseCollection"
+// GetDislikesCollection serves the ActivityPub "dislikes" collection for a Stream.
+func GetDislikesCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, stream *model.Stream) error {
+	return getResponseCollection(ctx, factory, session, stream, model.CollectionTypeDislikes, stream.ActivityPubDislikesURL())
+}
 
-	// RULE: Only PUBLIC streams have /likes /dislikes and /mentions
+// GetSharesCollection serves the ActivityPub "shares" collection for a Stream.
+func GetSharesCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, stream *model.Stream) error {
+	return getResponseCollection(ctx, factory, session, stream, model.CollectionTypeShares, stream.ActivityPubSharesURL())
+}
+
+// getResponseCollection serves a Stream's Like/Dislike collection from its JIT
+// CollectionItem projection. It serves an empty collection when there are none yet.
+func getResponseCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, stream *model.Stream, collectionType string, baseRequestURL string) error {
+
+	const location = "handler.activitypub_stream.getResponseCollection"
+
+	// RULE: Only PUBLIC streams expose their response collections.
 	if !stream.DefaultAllowAnonymous() {
 		return derp.Unauthorized(location, "Anonymous access not allowed")
 	}
 
-	// Parse the Response Type from the URL
-	responseType := getResponseType(ctx)
-
-	// If the request is for the collection itself, then return a summary and the URL of the first page
+	// If no "publishDate" query param, return the collection header pointing at the first page.
 	publishDateString := ctx.QueryParam("publishDate")
-	baseRequestURL := stream.ActivityPubResponses(responseType)
 
-	// If no "publishedDate" then return the collection header.
 	if publishDateString == "" {
-		if publishDateString == "" {
-			ctx.Response().Header().Set("Content-Type", "application/activity+json")
-			result := activitypub.Collection(baseRequestURL)
-			return ctx.JSON(http.StatusOK, result)
-		}
+		ctx.Response().Header().Set("Content-Type", model.MimeTypeActivityPub)
+		return ctx.JSON(http.StatusOK, activitypub.Collection(baseRequestURL))
 	}
 
-	// Fall through means that we're looking for a specific page of the collection
+	// Fall through means a specific page was requested. Locate the response collection.
+	collectionService := factory.Collection()
+	collection := model.NewCollection()
+
+	if err := collectionService.LoadByParentAndType(session, stream.StreamID, collectionType, &collection); err != nil {
+
+		// No collection yet just means no responses of this type. Serve an empty page.
+		if derp.IsNotFound(err) {
+			ctx.Response().Header().Set("Content-Type", model.MimeTypeActivityPub)
+			return ctx.JSON(http.StatusOK, activitypub.CollectionPage_Links(fullURL(factory, ctx), baseRequestURL, 0, []model.CollectionItem{}))
+		}
+
+		return derp.Wrap(err, location, "Unable to load response collection", collectionType)
+	}
+
+	// Retrieve a page of response items, ordered by createDate.
 	publishedDate := convert.Int64(publishDateString)
-	responseService := factory.Response()
-	pageID := fullURL(factory, ctx)
 	pageSize := 60
 
-	// Retrieve a page of responses from the database
-	responses, err := responseService.QueryByObjectAndDate(session, stream.Permalink(), responseType, publishedDate, pageSize)
+	items, err := factory.CollectionItem().QueryByCollectionAndDate(session, collection.CollectionID, publishedDate, pageSize)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load responses")
+		return derp.Wrap(err, location, "Unable to load response items")
 	}
 
-	// Return a JSON-LD document
+	// Serve the page as a collection of links (each item is a response activity URI).
 	ctx.Response().Header().Set("Content-Type", model.MimeTypeActivityPub)
-
-	result := activitypub.CollectionPage(
-		pageID,
-		baseRequestURL,
-		pageSize,
-		responses,
-	)
-
-	return ctx.JSON(http.StatusOK, result)
+	return ctx.JSON(http.StatusOK, activitypub.CollectionPage_Links(fullURL(factory, ctx), baseRequestURL, pageSize, items))
 }

@@ -618,22 +618,24 @@ func (w Stream) ReplyLinksAfter(dateString string, maxRows int) (sliceof.Object[
 	return result, err
 }
 
-// ReplyCount returns the number of direct replies to this Stream. It is a live
-// indexed count (not a denormalized field) over the same inReplyTo == stream.URL
-// criterion that ReplyLinksAfter uses to list replies, so the two can never disagree.
+// ReplyCount returns the denormalized count of replies to this Stream.
 func (w Stream) ReplyCount() int {
-	count, err := w._factory.CollectionItem().CountByInReplyTo(w._session, w._stream.URL)
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, "build.Stream.ReplyCount", "Unable to count replies", "url: "+w._stream.URL))
-		return 0
-	}
-
-	return int(count)
+	return w._stream.ReplyCount
 }
 
-func (w Stream) ResponseCount() int {
-	return 0
+// LikeCount returns the denormalized count of "Like" responses to this Stream.
+func (w Stream) LikeCount() int {
+	return w._stream.LikeCount
+}
+
+// DislikeCount returns the denormalized count of "Dislike" responses to this Stream.
+func (w Stream) DislikeCount() int {
+	return w._stream.DislikeCount
+}
+
+// ShareCount returns the denormalized count of "Announce" (share) responses to this Stream.
+func (w Stream) ShareCount() int {
+	return w._stream.ShareCount
 }
 
 // Outbox returns a QueryBuilder for the current Stream's outbox

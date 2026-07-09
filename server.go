@@ -468,6 +468,9 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:stream/pub/followers", handler.WithTemplate(factory, ap_stream.GetFollowersCollection))
 	e.GET("/:stream/pub/children", handler.WithStream(factory, ap_stream.GetChildrenCollection))
 	e.GET("/:stream/pub/replies", handler.WithStream(factory, ap_stream.GetRepliesCollection))
+	e.GET("/:stream/pub/likes", handler.WithStream(factory, ap_stream.GetLikesCollection))
+	e.GET("/:stream/pub/dislikes", handler.WithStream(factory, ap_stream.GetDislikesCollection))
+	e.GET("/:stream/pub/shares", handler.WithStream(factory, ap_stream.GetSharesCollection))
 
 	// Domain Admin Pages
 	e.GET("/admin", handler.RedirectTo("/admin/domain/index"))
@@ -480,6 +483,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/admin/reindex-activitystream-cache", handler.WithOwner(factory, handler.ReIndexActivityStreamCache))
 	e.POST("/admin/index-all-streams", handler.WithOwner(factory, handler.IndexAllStreams))
 	e.POST("/admin/index-all-users", handler.WithOwner(factory, handler.IndexAllUsers))
+	e.POST("/admin/reindex-responses", handler.WithOwner(factory, handler.ReindexResponses))
 
 	// Startup Wizard
 	e.GET("/startup", handler.WithOwner(factory, handler.GetStartup))

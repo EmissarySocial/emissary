@@ -60,6 +60,10 @@ type Stream struct {
 	UnPublishDate    int64                   `bson:"unpublishDate"`          // Unix timestamp of the date/time when this document will no longer be available on the domain.
 	IsFeatured       bool                    `bson:"isFeatured"`             // TRUE if this Stream is featured by its parent container.
 	IsSubscribable   bool                    `bson:"isSubscribable"`         // TRUE if this Stream uses the Products service to determine access rights.
+	ReplyCount       int                     `bson:"replyCount"`             // Denormalized count of replies to this Stream (maintained by the Stream service's reply funnel).
+	LikeCount        int                     `bson:"likeCount"`              // Denormalized count of "Like" responses to this Stream (maintained by the Response service).
+	DislikeCount     int                     `bson:"dislikeCount"`           // Denormalized count of "Dislike" responses to this Stream (maintained by the Response service).
+	ShareCount       int                     `bson:"shareCount"`             // Denormalized count of "Announce" (share) responses to this Stream (maintained by the Response service).
 
 	// Deprecated: Permissions maps UserIDs/GroupIDs into Roles for this Stream.
 	// Permissions mapof.Object[sliceof.String] `json:"" bson:"permissions,omitempty"`

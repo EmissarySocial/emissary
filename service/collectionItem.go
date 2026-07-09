@@ -320,11 +320,11 @@ func (service *CollectionItem) SaveUnique(session data.Session, collectionItem *
 	return derp.Wrap(saveErr, location, "Unable to save CollectionItem", collectionItem, note)
 }
 
-// mergeOntoExistingURI copies the identity of any existing CollectionItem that shares
-// this (collection, URI) onto the target, so that a subsequent Save updates it in place
-// rather than inserting a duplicate. It is a no-op when no such item exists.
+// mergeOntoExistingURI copies the identity of any existing CollectionItem sharing this
+// (collection, URI) onto the target. No-op when no such item exists.
 func (service *CollectionItem) mergeOntoExistingURI(session data.Session, collectionItem *model.CollectionItem) error {
 
+	// Copying the identity makes a subsequent Save update in place rather than insert a duplicate.
 	existing := model.NewCollectionItem()
 
 	err := service.LoadByURI(session, collectionItem.CollectionID, collectionItem.URI, &existing)

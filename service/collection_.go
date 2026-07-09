@@ -375,3 +375,33 @@ func (service *Collection) AddItem(session data.Session, collection *model.Colle
 	// Success
 	return nil
 }
+
+// RemoveItem removes the CollectionItem identified by itemURI from the provided Collection.
+// It is a no-op when no such item exists.
+func (service *Collection) RemoveItem(session data.Session, collection *model.Collection, itemURI string) error {
+
+	const location = "service.Collection.RemoveItem"
+
+	collectionItem := model.NewCollectionItem()
+
+	err := service.collectionItemService.LoadByURI(session, collection.CollectionID, itemURI, &collectionItem)
+
+	if derp.IsNotFound(err) {
+		return nil
+	}
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to load collection item", "uri: "+itemURI)
+	}
+
+	if err := service.collectionItemService.Delete(session, &collectionItem, ""); err != nil {
+		return derp.Wrap(err, location, "Unable to delete collection item", collectionItem)
+	}
+
+	return nil
+}
+
+// CountItems returns the number of (live) CollectionItems in the provided Collection.
+func (service *Collection) CountItems(session data.Session, collection *model.Collection) (int64, error) {
+	return service.collectionItemService.CountByCollection(session, collection.UserID, collection.CollectionID, exp.All())
+}

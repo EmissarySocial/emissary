@@ -90,8 +90,36 @@ func (c *itemStore) Save(object data.Object, _ string) error {
 	return nil
 }
 
-func (c *itemStore) Delete(data.Object, string) error { return nil }
-func (c *itemStore) HardDelete(exp.Expression) error  { return nil }
+func (c *itemStore) Delete(object data.Object, _ string) error {
+	item, ok := object.(*model.CollectionItem)
+	if !ok {
+		return derp.Internal("test", "unexpected object type")
+	}
+	return c.removeByID(item.CollectionItemID)
+}
+
+// HardDelete supports the (_id == X) criteria that CollectionItem.Delete builds.
+func (c *itemStore) HardDelete(criteria exp.Expression) error {
+	criteria.Match(func(predicate exp.Predicate) bool {
+		if predicate.Field == "_id" {
+			if id, ok := predicate.Value.(primitive.ObjectID); ok {
+				_ = c.removeByID(id)
+			}
+		}
+		return false
+	})
+	return nil
+}
+
+func (c *itemStore) removeByID(id primitive.ObjectID) error {
+	for index, record := range c.records {
+		if record.CollectionItemID == id {
+			c.records = append(c.records[:index], c.records[index+1:]...)
+			return nil
+		}
+	}
+	return nil
+}
 
 // matchesItem reports whether a record satisfies an equality criteria on collectionId/uri/deleteDate.
 func matchesItem(criteria exp.Expression, record *model.CollectionItem) bool {
@@ -472,3 +500,72 @@ func (c *itemRemergeStore) Save(data.Object, string) error {
 }
 func (c *itemRemergeStore) Delete(data.Object, string) error { return nil }
 func (c *itemRemergeStore) HardDelete(exp.Expression) error  { return nil }
+
+/******************************************
+ * Collection.RemoveItem (uses the CollectionItem store)
+ ******************************************/
+
+// newCollectionServiceWith wires a Collection service whose CollectionItem service
+// is backed by the given item store.
+func newCollectionServiceWith(store *itemStore) (*Collection, itemSession) {
+	itemService := NewCollectionItem()
+	collectionService := NewCollection()
+	collectionService.collectionItemService = &itemService
+	return &collectionService, itemSession{store: store}
+}
+
+// RemoveItem deletes the matching (collection, uri) item and leaves others intact.
+func TestCollection_RemoveItem(t *testing.T) {
+
+	collectionID := primitive.NewObjectID()
+
+	keep := newItem(collectionID, "https://example.test/keep")
+	keep.CollectionItemID = primitive.NewObjectID()
+	remove := newItem(collectionID, "https://example.test/remove")
+	remove.CollectionItemID = primitive.NewObjectID()
+
+	store := &itemStore{records: []*model.CollectionItem{keep, remove}}
+	service, session := newCollectionServiceWith(store)
+
+	collection := model.NewCollection()
+	collection.CollectionID = collectionID
+
+	require.Nil(t, service.RemoveItem(session, &collection, "https://example.test/remove"))
+
+	require.Len(t, store.records, 1)
+	require.Equal(t, "https://example.test/keep", store.records[0].URI)
+}
+
+// RemoveItem is a no-op when the URI is not present in the collection.
+func TestCollection_RemoveItem_NotFound(t *testing.T) {
+
+	collectionID := primitive.NewObjectID()
+	existing := newItem(collectionID, "https://example.test/here")
+	existing.CollectionItemID = primitive.NewObjectID()
+
+	store := &itemStore{records: []*model.CollectionItem{existing}}
+	service, session := newCollectionServiceWith(store)
+
+	collection := model.NewCollection()
+	collection.CollectionID = collectionID
+
+	require.Nil(t, service.RemoveItem(session, &collection, "https://example.test/absent"))
+	require.Len(t, store.records, 1)
+}
+
+// RemoveItem propagates a non-NotFound load error.
+func TestCollection_RemoveItem_LoadError(t *testing.T) {
+
+	hardLoad := &hardLoadCollection{loadErr: derp.Internal("test", "index corrupt")}
+	itemService := NewCollectionItem()
+	collectionService := NewCollection()
+	collectionService.collectionItemService = &itemService
+	session := fakeSession{collection: hardLoad}
+
+	collection := model.NewCollection()
+	collection.CollectionID = primitive.NewObjectID()
+
+	err := collectionService.RemoveItem(session, &collection, "https://example.test/x")
+	require.NotNil(t, err)
+	require.False(t, derp.IsNotFound(err))
+}

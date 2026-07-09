@@ -48,6 +48,10 @@ func StreamSchema() schema.Element {
 			"unpublishDate":    schema.Integer{BitSize: 64},
 			"isPublished":      schema.Boolean{},
 			"isFeatured":       schema.Boolean{},
+			"replyCount":       schema.Integer{Minimum: null.NewInt64(0)},
+			"likeCount":        schema.Integer{Minimum: null.NewInt64(0)},
+			"dislikeCount":     schema.Integer{Minimum: null.NewInt64(0)},
+			"shareCount":       schema.Integer{Minimum: null.NewInt64(0)},
 			"syndication":      schema.Array{Items: schema.String{Required: true, Format: "token", MaxLength: 64}},
 		},
 	}
@@ -166,6 +170,18 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 
 	case "isFeatured":
 		return &stream.IsFeatured, true
+
+	case "replyCount":
+		return &stream.ReplyCount, true
+
+	case "likeCount":
+		return &stream.LikeCount, true
+
+	case "dislikeCount":
+		return &stream.DislikeCount, true
+
+	case "shareCount":
+		return &stream.ShareCount, true
 
 	case "startDate":
 		return &stream.StartDate, true

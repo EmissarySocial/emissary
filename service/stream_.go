@@ -449,6 +449,11 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 		derp.Report(derp.Wrap(err, location, "Unable to delete context collection", stream, note))
 	}
 
+	// RULE: If this Stream is a reply, remove it from its parent's Replies collection (and refresh the count).
+	if err := service.RemoveReply(session, stream.InReplyTo, stream.ActivityPubURL()); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to remove reply from parent collection", stream, note))
+	}
+
 	// RULE: Delete Outbox Messages
 	if err := service.outboxService.DeleteByParentID(session, model.FollowerTypeStream, stream.StreamID); err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to delete outbox messages", stream, note))

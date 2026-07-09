@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -322,16 +323,14 @@ func (service *Stream) CalcContext(session data.Session, stream *model.Stream) e
 	return nil
 }
 
-// AddReply records `replyURL` in the Replies collection of the LOCAL Stream that
-// `inReplyToURL` points to, creating that collection just-in-time on first reply.
-//
-// This is intentionally independent of context ownership (COLLECTIONS-REDESIGN.md,
-// Phase 4): a local Stream gets its own Replies collection whenever it is replied
-// to, even when the surrounding thread's context lives on a remote server. When
-// `inReplyToURL` is empty or does not resolve to a local Stream, this is a no-op.
+// AddReply records replyURL in the JIT Replies collection of the local Stream that
+// inReplyToURL points to. No-op when inReplyToURL is empty or not a local Stream.
 func (service *Stream) AddReply(session data.Session, inReplyToURL string, replyURL string) error {
 
 	const location = "service.Stream.AddReply"
+
+	// Independent of context ownership (COLLECTIONS-REDESIGN.md Phase 4): a local Stream
+	// gets its own Replies collection when replied to, even if the thread's context is remote.
 
 	// RULE: A non-reply (empty inReplyTo) has no parent to attach to.
 	if inReplyToURL == "" {
@@ -367,6 +366,98 @@ func (service *Stream) AddReply(session data.Session, inReplyToURL string, reply
 		return derp.Wrap(err, location, "Unable to add reply to collection", "replyURL: "+replyURL)
 	}
 
+	// Refresh the parent's denormalized ReplyCount from the collection.
+	if err := service.refreshReplyCount(session, &parent, &collection); err != nil {
+		return derp.Wrap(err, location, "Unable to refresh reply count", parent.StreamID.Hex())
+	}
+
 	// Station.
+	return nil
+}
+
+// ReindexReplies re-projects every reply Stream into its parent's Replies collection
+// and refreshes counts. It is safe to re-run (idempotent).
+func (service *Stream) ReindexReplies(session data.Session) error {
+
+	const location = "service.Stream.ReindexReplies"
+
+	// AddReply is idempotent: AddItem de-dupes by URI and counts are recomputed, so a
+	// repeated run converges to the same state.
+	replies, err := service.Range(session, exp.NotEqual("inReplyTo", ""))
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to range reply Streams")
+	}
+
+	for reply := range replies {
+		if err := service.AddReply(session, reply.InReplyTo, reply.ActivityPubURL()); err != nil {
+			// Report and continue: one bad row must not abort the whole backfill.
+			derp.Report(derp.Wrap(err, location, "Unable to project reply", reply.StreamID.Hex()))
+		}
+	}
+
+	return nil
+}
+
+// RemoveReply removes replyURL from the Replies collection of the local Stream that
+// inReplyToURL points to, and refreshes the count. No-op when the parent is not a local Stream.
+func (service *Stream) RemoveReply(session data.Session, inReplyToURL string, replyURL string) error {
+
+	const location = "service.Stream.RemoveReply"
+
+	if inReplyToURL == "" {
+		return nil
+	}
+
+	parent := model.NewStream()
+
+	if err := service.LoadByURL(session, inReplyToURL, &parent); err != nil {
+		if derp.IsNotFound(err) {
+			return nil
+		}
+		return derp.Wrap(err, location, "Unable to load parent Stream", "inReplyTo: "+inReplyToURL)
+	}
+
+	// Locate the parent's Replies collection. If none exists, there is nothing to remove.
+	collection := model.NewCollection()
+
+	if err := service.collectionService.LoadByParentAndType(session, parent.StreamID, model.CollectionTypeReplies, &collection); err != nil {
+		if derp.IsNotFound(err) {
+			return nil
+		}
+		return derp.Wrap(err, location, "Unable to load Replies collection", "parentID: "+parent.StreamID.Hex())
+	}
+
+	if err := service.collectionService.RemoveItem(session, &collection, replyURL); err != nil {
+		return derp.Wrap(err, location, "Unable to remove reply from collection", "replyURL: "+replyURL)
+	}
+
+	if err := service.refreshReplyCount(session, &parent, &collection); err != nil {
+		return derp.Wrap(err, location, "Unable to refresh reply count", parent.StreamID.Hex())
+	}
+
+	return nil
+}
+
+// refreshReplyCount recomputes the parent Stream's denormalized ReplyCount from the live
+// Replies collection size and Saves it.
+func (service *Stream) refreshReplyCount(session data.Session, parent *model.Stream, collection *model.Collection) error {
+
+	const location = "service.Stream.refreshReplyCount"
+
+	// Recompute-and-Save (not increment) because data.Collection exposes no atomic $inc;
+	// a stale overwrite re-derives correctly next time (cf. COLLECTIONS-REDESIGN D4).
+	count, err := service.collectionService.CountItems(session, collection)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to count Replies collection", collection.CollectionID.Hex())
+	}
+
+	parent.ReplyCount = int(count)
+
+	if err := service.Save(session, parent, "Refreshed reply count"); err != nil {
+		return derp.Wrap(err, location, "Unable to save Stream with refreshed reply count", parent.StreamID.Hex())
+	}
+
 	return nil
 }
