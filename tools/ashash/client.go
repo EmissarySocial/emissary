@@ -63,7 +63,13 @@ func (client Client) Load(id string, options ...any) (streams.Document, error) {
 		}
 	}
 
-	return client.innerClient.Load(id, options...)
+	result, err := client.innerClient.Load(id, options...)
+
+	if err != nil {
+		return result, derp.Wrap(err, location, "Loading document", id)
+	}
+
+	return result, nil
 }
 
 func (client *Client) Save(document streams.Document) error {
