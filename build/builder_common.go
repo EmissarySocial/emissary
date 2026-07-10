@@ -105,9 +105,12 @@ func (w Common) Method() string {
 	return w._request.Method
 }
 
-// Host returns the protocol + the Hostname
+// Host returns the protocol + hostname + port for this domain. It delegates to
+// the factory's Host() (rather than rebuilding from Protocol()+Hostname()) so
+// the configured port is included -- absolute URLs built from this, such as form
+// hx-post actions, must target the real origin on non-standard ports (e.g. :8080).
 func (w Common) Host() string {
-	return w.Protocol() + w.Hostname()
+	return w._factory.Host()
 }
 
 // URL returns the originally requested URL
