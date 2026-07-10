@@ -96,17 +96,26 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 		// Search the cache for the document
 		value := NewValue()
 
+		// Look for the document in the cache
 		if err := client.loadByURL(session, url, &value); err == nil {
-			if value.ShouldRevalidate() {
-				client.revalidate(&value)
+
+			// Expired values are treated as if they are not found in the cache
+			// at all.  But if this value is NOT expired, then it can be used.
+			if value.NotExpired() {
+
+				// If this value is stale-but-not-expired, then
+				// trigger a background revalidation.
+				if value.ShouldRevalidate() {
+					client.revalidate(&value)
+				}
+
+				// Mark this values as "cached"
+				value.HTTPHeader.Set(HeaderHannibalCache, "true")
+				value.HTTPHeader.Set(HeaderHannibalCacheDate, time.Now().Format(time.RFC3339))
+
+				// Return cached document to the caller (no HTTP call required)
+				return client.asDocument(value), nil
 			}
-
-			// Mark this values as "cached"
-			value.HTTPHeader.Set(HeaderHannibalCache, "true")
-			value.HTTPHeader.Set(HeaderHannibalCacheDate, time.Now().Format(time.RFC3339))
-
-			// Return cached document to the caller (no HTTP call required)
-			return client.asDocument(value), nil
 		}
 	}
 

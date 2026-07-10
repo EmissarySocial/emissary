@@ -81,6 +81,18 @@ func (value Value) ShouldRevalidate() bool {
 	return (value.Revalidates > 0) && (value.Revalidates < time.Now().Unix())
 }
 
+// IsExpired returns TRUE if the "Expires" date is in the past.
+func (value Value) IsExpired() bool {
+
+	// An expired value must not be served; the caller re-fetches it from the origin.
+	return (value.Expires > 0) && (value.Expires < time.Now().Unix())
+}
+
+// NotExpired returns TRUE when the "Expires" date is NOT in the past.
+func (value Value) NotExpired() bool {
+	return !value.IsExpired()
+}
+
 // calcPublished calculates the date that a document was sent/refreshed by the origin.
 // This IS NOT the original create or publish date.
 func (value *Value) calcPublished() {
@@ -120,6 +132,7 @@ func (value *Value) calcExpires(cacheControl cacheheader.Header) {
 	if expiresString := value.HTTPHeader.Get(HeaderExpires); expiresString != "" {
 		if expires, err := http.ParseTime(expiresString); err == nil {
 			value.Expires = expires.Unix()
+			return
 		}
 	}
 

@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-// PurgeActivityStreamCache removes errors from the database that are older than 1 week.
+// PurgeActivityStreamCache deletes cached ActivityStream documents that expired more than two days ago.
 func PurgeActivityStreamCache(factory ServerFactory) queue.Result {
 
 	log.Trace().Msg("Task: PurgeActivityStreamCache")
