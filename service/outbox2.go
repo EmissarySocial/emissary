@@ -20,11 +20,12 @@ import (
 // It is being built alongside the existing Outbox service, which will be
 // removed once this new service is fully functional.
 type Outbox2 struct {
-	inboxService   *Inbox
-	locator        *Locator
-	getSendLocator func(data.Session) SendLocator
-	queue          *queue.Queue
-	host           string
+	inboxService    *Inbox
+	activityService *ActivityStream
+	locator         *Locator
+	getSendLocator  func(data.Session) SendLocator
+	queue           *queue.Queue
+	host            string
 }
 
 // NewOutbox2 returns a fully populated Outbox2 service
@@ -39,6 +40,7 @@ func NewOutbox2() Outbox2 {
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Outbox2) Refresh(factory *Factory) {
 	service.inboxService = factory.Inbox()
+	service.activityService = factory.ActivityStream()
 	service.locator = factory.Locator()
 	service.queue = factory.Queue()
 	service.host = factory.Host()
@@ -135,9 +137,11 @@ func (service *Outbox2) Save(session data.Session, item *model.OutboxItem, note 
 			}
 		}
 
-		// Get services to send message to recipient(s)
+		// Get services to send message to recipient(s). AllowPrivateIPs mirrors the
+		// other send paths (consumer/wrappers.go, actor outboxes): normally FALSE so
+		// remote's SSRF guard stays active, enabled only for local/private federation.
 		sendLocator := service.getSendLocator(session)
-		sender := sender.New(sendLocator, service.queue)
+		sender := sender.New(sendLocator, service.queue, sender.AllowPrivateIPs(service.activityService.AllowPrivateIPs()))
 
 		// Send ActivityPub notifications to recipient(s)
 		if err := sender.Send(item.Activity); err != nil {
