@@ -584,6 +584,28 @@ func (w Inbox) RepliesBefore(url string, dateString string, maxRows int) sliceof
 	return slice.Reverse(result)
 }
 
+// LikesBefore returns the actors who "Liked" the specified URL, before the specified date.
+// Unlike the Stream builder's LikeLinksAfter (which reads a LOCAL Likes collection), the inbox
+// object may be remote, so likes are drawn from the federated ActivityStream cache instead.
+func (w Inbox) LikesBefore(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
+
+	done := make(channel.Done)
+
+	// Get all "Like" activities that target the provided URL
+	activityService := w._factory.ActivityStream()
+	maxDate := convert.Int64Default(dateString, math.MaxInt)
+	likes := activityService.QueryLikesBeforeDate(w._request.Context(), url, maxDate, done)
+
+	// Filter likes based on rules
+	ruleService := w._factory.Rule()
+	ruleFilter := ruleService.Filter(w.AuthenticatedID())
+	filteredLikes := ruleFilter.Channel(likes)
+
+	// Collect into a slice, newest-first
+	result := channel.Slice(filteredLikes)
+	return slice.Reverse(result)
+}
+
 // RepliesAfter returns replies to the specified URL after the specified date
 func (w Inbox) RepliesAfter(url string, dateString string, maxRows int) sliceof.Object[ascache.Value] {
 	activityService := w._factory.ActivityStream()
