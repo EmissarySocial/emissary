@@ -97,11 +97,13 @@ func (value Value) NotExpired() bool {
 // This IS NOT the original create or publish date.
 func (value *Value) calcPublished() {
 
+	// If the value already has a "published" date, just use that.
 	if published := value.Object.GetTime(vocab.PropertyPublished); !published.IsZero() {
 		value.Published = published.Unix()
 		return
 	}
 
+	// If the object itself does not have a published date, default to the current time.
 	value.Published = time.Now().Unix()
 
 	// Use the "Date" header, if it exists
