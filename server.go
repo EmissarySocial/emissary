@@ -450,16 +450,18 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@:userId/pub/inbox", handler.WithUser(factory, ap_user.PostInbox))
 	e.GET("/@:userId/pub/keyPackages", handler.WithUser(factory, ap_user.GetKeyPackageCollection))
 	e.GET("/@:userId/pub/keyPackages/:keyPackageId", handler.WithUser(factory, ap_user.GetKeyPackageRecord))
-	e.GET("/@:userId/pub/liked", handler.WithUser(factory, ap_user.GetResponseCollection))
-	e.GET("/@:userId/pub/liked/:response", handler.WithUser(factory, ap_user.GetResponse))
 	e.GET("/@:userId/pub/objects", handler.WithUser(factory, ap_user.GetObjectsCollection))
 	e.GET("/@:userId/pub/objects/:objectId", handler.WithActor(factory, ap_user.GetObject))
 	e.GET("/@:userId/pub/outbox", handler.WithUser(factory, ap_user.GetOutboxCollection))
 	e.POST("/@:userId/pub/outbox", handler.WithAuthenticatedUser(factory, ap_user.PostOutbox))
 	e.GET("/@:userId/pub/outbox/:messageId", handler.WithUser(factory, ap_user.GetOutboxActivity))
 	e.POST("/@:userId/pub/proxy", handler.WithAuthenticatedUser(factory, handler.PostProxyURL))
-	e.GET("/@:userId/pub/shared", handler.WithUser(factory, ap_user.GetResponseCollection))
-	e.GET("/@:userId/pub/shared/:response", handler.WithUser(factory, ap_user.GetResponse))
+
+	// Removing these paths for now. They're not in the standard ActivityPub specification.
+	// e.GET("/@:userId/pub/liked", handler.WithUser(factory, ap_user.GetResponseCollection))
+	// e.GET("/@:userId/pub/liked/:response", handler.WithUser(factory, ap_user.GetResponse))
+	// e.GET("/@:userId/pub/shared", handler.WithUser(factory, ap_user.GetResponseCollection))
+	// e.GET("/@:userId/pub/shared/:response", handler.WithUser(factory, ap_user.GetResponse))
 
 	// ActivityPub Routes for Streams
 	e.GET("/:stream/pub", handler.WithTemplate(factory, ap_stream.GetJSONLD))
