@@ -48,7 +48,7 @@ func GetDomainAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 	header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
 
 	if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
-		return derp.Wrap(err, location, "Error accessing attachment file", derp.WithInternalError())
+		return serveAttachmentError(err, location, attachment)
 	}
 
 	return nil
@@ -90,7 +90,7 @@ func GetSearchTagAttachment(ctx *steranko.Context, factory *service.Factory, ses
 	filespec := attachment.FileSpec(ctx.Request().URL)
 
 	if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
-		return derp.Wrap(err, location, "Unable to access attachment file", derp.WithInternalError())
+		return serveAttachmentError(err, location, attachment)
 	}
 
 	return nil
@@ -128,7 +128,7 @@ func GetStreamAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 	}
 
 	if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
-		return derp.Wrap(err, location, "Error accessing attachment file")
+		return serveAttachmentError(err, location, attachment)
 	}
 
 	return nil
@@ -162,9 +162,18 @@ func GetUserAttachment(ctx *steranko.Context, factory *service.Factory, session 
 	filespec := attachment.FileSpec(ctx.Request().URL)
 
 	if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
-		return derp.Wrap(err, location, "Error accessing attachment file")
+		return serveAttachmentError(err, location, attachment)
 	}
 
 	// Successfully delivered the Attachments
 	return nil
+}
+
+// serveAttachmentError translates a mediaserver.Serve failure into an HTTP response.
+// A file that cannot be processed (for instance an attachment whose stored bytes are
+// not a decodable image) would otherwise surface as an HTTP 500 on every request.
+// We downgrade it to a 404 so a single broken attachment does not read as a server
+// fault -- the browser simply renders its normal broken-image state instead.
+func serveAttachmentError(err error, location string, attachment model.Attachment) error {
+	return derp.Wrap(err, location, "Unable to serve attachment file", attachment.AttachmentID.Hex(), derp.WithNotFound())
 }
