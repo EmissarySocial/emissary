@@ -327,14 +327,17 @@ func (w Stream) CreateDate() int64 {
 	return w._stream.CreateDate
 }
 
-// PublishDate returns the PublishDate of the stream being built
+// PublishDate returns the PublishDate of the stream being built, in SECONDS.
+// When the stream has no explicit PublishDate, it falls back to the creation time. CreateDate is a
+// journal field stored in MILLISECONDS, so it is divided down to seconds to match this method's unit
+// (returning it raw would yield a value ~1000x too large — a year-58000 date once formatted).
 func (w Stream) PublishDate() int64 {
 
 	if w._stream.PublishDate > 0 {
 		return w._stream.PublishDate
 	}
 
-	return w._stream.CreateDate
+	return w._stream.CreateDate / 1000
 }
 
 // UpdateDate returns the UpdateDate of the stream being built
@@ -615,6 +618,26 @@ func (w Stream) ReplyLinksAfter(dateString string, maxRows int) (sliceof.Object[
 	criteria := exp.GreaterThan("createDate", minDate)
 
 	return collectionItemService.QueryByCollectionType(w._session, w._stream.StreamID, model.CollectionTypeReplies, criteria, option.MaxRows(int64(maxRows)), option.SortAsc("createDate"))
+}
+
+// LikeLinksAfter returns one page of "Like" CollectionItems for this Stream. Each carries
+// the URI of a Like activity that the template resolves via .ActivityStream.
+func (w Stream) LikeLinksAfter(dateString string, maxRows int) (sliceof.Object[model.CollectionItem], error) {
+	collectionItemService := w._factory.CollectionItem()
+	minDate := convert.Int64(dateString)
+	criteria := exp.GreaterThan("createDate", minDate)
+
+	return collectionItemService.QueryByCollectionType(w._session, w._stream.StreamID, model.CollectionTypeLikes, criteria, option.MaxRows(int64(maxRows)), option.SortAsc("createDate"))
+}
+
+// ShareLinksAfter returns one page of "Announce" (share) CollectionItems for this Stream. Each
+// carries the URI of an Announce activity that the template resolves via .ActivityStream.
+func (w Stream) ShareLinksAfter(dateString string, maxRows int) (sliceof.Object[model.CollectionItem], error) {
+	collectionItemService := w._factory.CollectionItem()
+	minDate := convert.Int64(dateString)
+	criteria := exp.GreaterThan("createDate", minDate)
+
+	return collectionItemService.QueryByCollectionType(w._session, w._stream.StreamID, model.CollectionTypeShares, criteria, option.MaxRows(int64(maxRows)), option.SortAsc("createDate"))
 }
 
 // ReplyCount returns the denormalized count of replies to this Stream.
