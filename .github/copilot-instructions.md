@@ -140,7 +140,6 @@ See [FEDERATION.md](FEDERATION.md) for supported ActivityPub activities and prot
 Key federation services:
 - `service/activityStream.go` - ActivityPub client
 - `service/streamArchive.go` - ActivityPub inbox/outbox
-- `protocols/` - WebMention, WebFinger implementations
 
 ## Integration Points
 

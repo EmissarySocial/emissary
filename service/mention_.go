@@ -1,32 +1,20 @@
 package service
 
 import (
-	"bytes"
-	"io"
 	"iter"
-	"net/url"
-	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/PuerkitoBio/goquery"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/benpate/remote"
-	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/rosetta/slice"
-	"github.com/benpate/sherlock"
-	"github.com/tomnomnom/linkheader"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 /******************************************
- * Mentions are a W3C standard for connecting conversations across the web.
- *
- * https://indieweb.org/Webmention
- * https://www.w3.org/TR/mention/
+ * Mention records track hyperlinks from external sources to internal objects.
+ * They are created from ActivityPub "Mention" tags.
  *
  * Golang RegExp syntax:
  * - https://pkg.go.dev/regexp/syntax
@@ -34,11 +22,8 @@ import (
  *
  ******************************************/
 
-// Mention defines a service that can send and receive mention data
+// Mention defines a service that manages Mention records
 type Mention struct {
-	activityService *ActivityStream
-	ruleService     *Rule
-	host            string
 }
 
 // NewMention returns a fully initialized Mention service
@@ -52,9 +37,7 @@ func NewMention() Mention {
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Mention) Refresh(factory *Factory) {
-	service.activityService = factory.ActivityStream()
-	service.ruleService = factory.Rule()
-	service.host = factory.Host()
+	// Nothing to refresh.
 }
 
 // Close stops any background processes controlled by this service
@@ -268,208 +251,4 @@ func (service *Mention) DeleteByObjectID(session data.Session, objectType string
 
 	// Success
 	return nil
-}
-
-/******************************************
- * Web-Mention Helpers
- ******************************************/
-
-// TODO: LOW: This should just use the Locator service.
-// ParseURL inspects a target URL and determines what kind of object it is and what the token is.
-func (service *Mention) ParseURL(target string) (objectType string, token string, err error) {
-
-	const location = "service.Mention.ParseURL"
-
-	// RULE: If the target URL doesn't start with the service's host, then it
-	// doesn't belong on this server
-	if !strings.HasPrefix(target, service.host) {
-		return "", "", derp.NotFound(location, "Target URL is not on this server", target)
-	}
-
-	// Parse the URL to ensure that it's valid
-	targetURL, err := url.Parse(target)
-
-	if err != nil {
-		return "", "", derp.Wrap(err, location, "Error parsing target URL", target)
-	}
-
-	// Get the first item in the path.  That's the token we want
-	path := list.BySlash(targetURL.Path).Tail()
-	token = path.Head()
-
-	// Tokens that begin with "@" are User URLs
-	if strings.HasPrefix(token, "@") {
-		return model.MentionTypeUser, token[1:], nil
-	}
-
-	// Empty tokens reference the Home stream.
-	if token == "" {
-		return model.MentionTypeStream, "home", nil
-	}
-
-	// All other tokens are Stream URLs
-	return model.MentionTypeStream, token, nil
-}
-
-func (service *Mention) FindLinks(body string) []string {
-
-	// Try to read the body as HTML
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(body))
-
-	if err != nil {
-		return make([]string, 0)
-	}
-
-	// Find all links in the body
-	links := doc.Find("a[href]").Map(getHrefFromNode)
-
-	// Filter links for external hrefs only
-	links = slice.Filter(links, isExternalHref)
-
-	// Success
-	return links
-}
-
-// Send will send a mention to the target's endpoint
-func (service *Mention) Send(source string, target string) error {
-
-	const location = "service.Mention.Sent"
-
-	// Try to look up the target's endpoint
-	endpoint, err := service.DiscoverEndpoint(target)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error discovering endpoint", source, target)
-	}
-
-	// Try to send the mention data to the endpoint
-	txn := remote.Post(endpoint).
-		Form("source", source).
-		Form("target", target)
-
-	if err := txn.Send(); err != nil {
-		return derp.Wrap(err, location, "Unable to send mention", source, target)
-	}
-
-	// Silence means success
-	return nil
-}
-
-// DiscoverEndpoint tries to find the Mention endpoint for the provided URL
-func (service *Mention) DiscoverEndpoint(url string) (string, error) {
-
-	const location = "service.Mention.Discover"
-
-	var body string
-	txn := remote.Get(url).Result(&body)
-
-	if err := txn.Send(); err != nil {
-		return "", derp.Wrap(err, location, "Error retrieving remote document", url)
-	}
-
-	// Look for Mention link in the response headers
-	if value := txn.ResponseHeader().Get("Link"); value != "" {
-		links := linkheader.Parse(value)
-
-		for _, link := range links {
-			if strings.ToLower(link.Rel) == "mention" {
-				return link.URL, nil
-			}
-		}
-	}
-
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(body))
-
-	if err != nil {
-		return "", derp.Wrap(err, location, "Error parsing remote document", url)
-	}
-
-	linkTag := doc.Find("link[rel=webmention]").First()
-	result := linkTag.AttrOr("href", "")
-
-	if result == "" {
-		return "", derp.BadRequest(location, "No Mention endpoint found", url)
-	}
-
-	return result, nil
-}
-
-// Verify confirms that the source document includes a link to the target document
-func (service *Mention) Verify(source string, target string, buffer io.Writer) error {
-
-	const location = "service.Mention.Verify"
-
-	var content string
-
-	// Try to load the source document
-	txn := remote.Get(source).Result(&content)
-
-	if err := txn.Send(); err != nil {
-		return derp.Wrap(err, location, "Error retreiving source", source)
-	}
-
-	// Try to parse the source document as HTML
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(content))
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error parsing source", source)
-	}
-
-	// Find all anchor tags with an href attribute
-	hrefs := doc.Find("a[href]").Map(getHrefFromNode)
-
-	for _, href := range hrefs {
-
-		if href != target {
-			continue
-		}
-
-		// If buffer exists, write the source document to the buffer, then return without error.
-		if buffer != nil {
-			// nolint:errcheck
-			buffer.Write([]byte(content))
-		}
-
-		return nil
-	}
-
-	// Fall through means the link was not found.  Return an error.
-	return derp.NotFound(location, "Target link not found", source, target)
-}
-
-// TODO: HIGH: This should use a common service to get URL data from Microformats, OpenGraph, JSON-LD, etc.
-func (service *Mention) GetPageInfo(body *bytes.Buffer, originURL string, mention *model.Mention) error {
-
-	const location = "service.Mention.GetPageInfo"
-
-	// Inspect the source document for metadata (microformats, opengraph, etc.)
-	document, err := service.activityService.AppClient().Load(originURL, sherlock.AsDocument())
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error retrieving page", originURL)
-	}
-
-	// Copy the page data into the mention
-	mention.Origin.Label = document.Name()
-	mention.Origin.URL = document.ID()
-
-	if attributedTo := document.AttributedTo(); attributedTo.NotNil() {
-		mention.Author.Name = attributedTo.Name()
-		mention.Author.ProfileURL = attributedTo.URL()
-		mention.Author.EmailAddress = ""
-		mention.Author.IconURL = attributedTo.Icon().URL()
-	}
-
-	// No errors
-	return nil
-}
-
-// getHrefFromNode returns the [href] value for a given goquery selection
-func getHrefFromNode(index int, node *goquery.Selection) string {
-	return node.AttrOr("href", "")
-}
-
-// isExternalHref returns TRUE if this URL points to an external domain
-func isExternalHref(href string) bool {
-	return strings.HasPrefix(href, "http://") || strings.HasPrefix(href, "https://")
 }

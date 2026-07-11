@@ -3,7 +3,6 @@ package service
 import (
 	"iter"
 	"slices"
-	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -17,7 +16,6 @@ import (
 	"github.com/benpate/uri"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"willnorris.com/go/webmention"
 )
 
 /******************************************
@@ -125,9 +123,6 @@ func (service *Outbox) Publish(session data.Session, actorType string, actorID p
 			derp.Report(derp.Internal(location, "Unknown Follower Method.  This should never happen", follower))
 		}
 	}
-
-	// Send notifications to all Followers
-	go service.sendNotifications_WebMention(activityMap)
 
 	// Success!!
 	return nil
@@ -306,7 +301,6 @@ func (service *Outbox) publishRecipients(session data.Session, actorType string,
 	addressees := joinIterators(
 		service.addresseesAsFollowers(activity.RangeAddressees()),
 		service.addresseesAsFollowers(activity.RangeInReplyTo()),
-		// TODO: service.webMentionsAsFollowers(activity),
 	)
 
 	if config.hasRecipients {
@@ -356,32 +350,5 @@ func (service *Outbox) sendNotification_Email(follower *model.Follower, activity
 
 	if err := service.domainEmail.SendFollowerActivity(follower, activity); err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to send email", follower))
-	}
-}
-
-// sendNotifications_WebMention sends WebMention updates to external websites that are
-// mentioned in this stream.  This is here (and not in the outbox service)
-// because we need to build the content in order to discover outbound links.
-func (service *Outbox) sendNotifications_WebMention(activity mapof.Any) {
-
-	const location = "service.Outbox.sendNotifications_WebMention"
-
-	// Locate the object ID for this acticity
-	object := activity.GetMap(vocab.PropertyObject)
-	id := object.GetString(vocab.PropertyID)
-	content := activity.GetString(vocab.PropertyContent)
-
-	// Discover all webmention links in the content
-	reader := strings.NewReader(content)
-	links, err := webmention.DiscoverLinksFromReader(reader, id, "")
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Error discovering webmention links", activity))
-		return
-	}
-
-	// If no links, peace out, homie.
-	if len(links) == 0 {
-		return
 	}
 }

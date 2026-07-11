@@ -3,7 +3,6 @@ module github.com/EmissarySocial/emissary
 go 1.26.3
 
 require (
-	github.com/PuerkitoBio/goquery v1.12.0
 	github.com/aws/aws-sdk-go v1.55.8
 	github.com/benpate/color v0.1.0
 	github.com/benpate/data v0.32.0
@@ -62,7 +61,6 @@ require (
 	github.com/stripe/stripe-go/v78 v78.12.0
 	github.com/tdewolff/minify/v2 v2.24.13
 	github.com/timewasted/go-accept-headers v0.0.0-20130320203746-c78f304b1b09
-	github.com/tomnomnom/linkheader v0.0.0-20250811210735-e5fe3b51442e
 	github.com/xhit/go-simple-mail/v2 v2.16.0
 	github.com/yeqown/go-qrcode/v2 v2.2.5
 	github.com/yeqown/go-qrcode/writer/standard v1.3.0
@@ -74,13 +72,13 @@ require (
 	golang.org/x/exp v0.0.0-20260611194520-c48552f49976
 	golang.org/x/oauth2 v0.36.0
 	willnorris.com/go/microformats v1.2.0
-	willnorris.com/go/webmention v0.0.0-20250531043116-33a44c5fb605
 )
 
 require (
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.4.1 // indirect
+	github.com/PuerkitoBio/goquery v1.12.0 // indirect
 	github.com/alecthomas/chroma/v2 v2.24.1 // indirect
 	github.com/andybalholm/cascadia v1.3.4 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
@@ -120,6 +118,7 @@ require (
 	github.com/skeema/knownhosts v1.3.2 // indirect
 	github.com/tdewolff/parse/v2 v2.8.12 // indirect
 	github.com/tiendc/go-deepcopy v1.7.2 // indirect
+	github.com/tomnomnom/linkheader v0.0.0-20250811210735-e5fe3b51442e // indirect
 	github.com/toorop/go-dkim v0.0.0-20250226130143-9025cce95817 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect

@@ -92,9 +92,6 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "ReceiveActivityPub-Move":
 		return WithSession(consumer.serverFactory, args, ReceiveActivityPubMove)
 
-	case "ReceiveWebMention":
-		return WithSession(consumer.serverFactory, args, ReceiveWebMention)
-
 	case "RecycleDomain":
 		return WithSession(consumer.serverFactory, args, RecycleDomain)
 

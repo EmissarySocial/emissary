@@ -64,9 +64,6 @@ func PreProcessor(task *queue.Task) error {
 	case "Outbox:SendToSingleRecipient":
 		task.Priority = 256
 
-	case "ReceiveWebMention":
-		task.Priority = 256
-
 	case "syndication.create", "syndication.update", "syndication.delete":
 		task.Priority = 256
 

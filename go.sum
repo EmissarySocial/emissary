@@ -370,5 +370,3 @@ gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 willnorris.com/go/microformats v1.2.0 h1:73pzJCLJM69kYE5qsLI9OOC/7sImNVOzya9EQ0+1wmM=
 willnorris.com/go/microformats v1.2.0/go.mod h1:RrlwCSvib4qz+JICKiN7rON4phzQ3HAT7j6s4O2cZj4=
-willnorris.com/go/webmention v0.0.0-20250531043116-33a44c5fb605 h1:emBiWPMoSWXbAwOBbDd/2RSKdIyAw38S4UlFB91OzoY=
-willnorris.com/go/webmention v0.0.0-20250531043116-33a44c5fb605/go.mod h1:HizkYGdDsLSSolZorYKuV/l7Y2BXEfiOSjShTrCMNsM=

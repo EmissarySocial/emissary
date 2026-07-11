@@ -6,7 +6,7 @@ import (
 )
 
 // Mention represents a single hyperlink from an external source to an internal object.
-// Mentions are created by WebMentions or by ActivityPub "Mention" records
+// Mentions are created by ActivityPub "Mention" records
 type Mention struct {
 	MentionID primitive.ObjectID `bson:"_id"`      // Unique ID for this record
 	ObjectID  primitive.ObjectID `bson:"objectId"` // Unique ID of the internal object that was mentioned
