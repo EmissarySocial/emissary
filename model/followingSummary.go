@@ -37,9 +37,6 @@ func (summary FollowingSummary) Icon() string {
 
 	case FollowingMethodPoll:
 		icon = "rss"
-
-	case FollowingMethodWebSub:
-		icon = "websub"
 	}
 
 	switch summary.Status {

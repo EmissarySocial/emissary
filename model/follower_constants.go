@@ -39,11 +39,6 @@ const FollowerMethodActivityPub = "ACTIVITYPUB"
 // received real-time updates via email
 const FollowerMethodEmail = "EMAIL"
 
-// FollowerMethodWebSub represents a Follower subscription that
-// receives real-time updates via WebSub
-// https://websub.rocks
-const FollowerMethodWebSub = "WEBSUB"
-
 // FollowerStateActive represents an active Follower who is currently
 // receiving updates from the Stream
 const FollowerStateActive = "ACTIVE"

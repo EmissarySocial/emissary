@@ -7,10 +7,6 @@ const FollowingMethodActivityPub = "ACTIVITYPUB"
 // FollowingMethodPoll represents a subscription that must be polled for updates
 const FollowingMethodPoll = "POLL"
 
-// FollowingMethodWebSub represents a WebSub subscription
-// https://websub.rocks
-const FollowingMethodWebSub = "WEBSUB"
-
 // FollowingStatusNew represents a new following that has not yet been polled
 const FollowingStatusNew = "NEW"
 

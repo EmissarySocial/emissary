@@ -22,7 +22,7 @@ func FollowingSchema() schema.Element {
 			"behavior":      schema.String{Enum: []string{FollowingBehaviorPosts, FollowingBehaviorPostsAndReplies}, Default: FollowingBehaviorPostsAndReplies, Required: true},
 			"ruleAction":    schema.String{Enum: []string{FollowingRuleActionIgnore, RuleActionMute, RuleActionLabel, RuleActionBlock}, Default: RuleActionLabel, Required: true},
 			"isPublic":      schema.Boolean{Default: null.NewBool(false)},
-			"method":        schema.String{Enum: []string{FollowingMethodPoll, FollowingMethodWebSub, FollowingMethodActivityPub}},
+			"method":        schema.String{Enum: []string{FollowingMethodPoll, FollowingMethodActivityPub}},
 			"status":        schema.String{Enum: []string{FollowingStatusNew, FollowingStatusLoading, FollowingStatusSuccess, FollowingStatusFailure}},
 			"statusMessage": schema.String{Format: "text", MaxLength: 1024},
 			"lastPolled":    schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},

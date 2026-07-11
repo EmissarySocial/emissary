@@ -29,8 +29,6 @@ func (summary FollowerSummary) Icon() string {
 
 	case FollowerMethodEmail:
 		return "email"
-	case FollowerMethodWebSub:
-		return "websub"
 	case FollowerMethodActivityPub:
 		return "activitypub"
 	}
