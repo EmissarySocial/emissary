@@ -68,12 +68,18 @@ func DeleteAny(context Context, activity streams.Document) error {
 // any other wrapped type (the service method filters by type), so it is safe to call on every Undo/Delete.
 func removeResponseCollectionItem(context Context, activity streams.Document) error {
 
-	// The wrapped object is the original Like/Dislike/Announce activity being undone.
-	originalActivity, err := activity.Object().Load()
+	// Read the wrapped original activity with LoadLink, NOT Load. LoadLink returns an INLINE object
+	// as-is (no fetch) but dereferences a bare-URL reference:
+	//   - OUR Undos embed the original activity inline (D7). Load() would still HTTP-fetch object.id,
+	//     but that Like/Dislike/Announce was usually hard-deleted by the sender, so the fetch 404s.
+	//     LoadLink sees the inline map and skips the fetch.
+	//   - OTHER servers may send Undo with object as a bare URL reference; LoadLink fetches those.
+	originalActivity := activity.Object().LoadLink()
 
-	if err != nil {
-		// A wrapped object we can't resolve is not one we can un-project; leave the rest of the
-		// Undo/Delete flow (outbox cleanup) to proceed.
+	// A wrapped object we still can't resolve (bare reference that no longer exists, or a fetch
+	// failure) has no type — nothing to un-project. No-op and let the rest of the Undo/Delete flow
+	// (outbox cleanup) proceed.
+	if originalActivity.Type() == "" {
 		return nil
 	}
 

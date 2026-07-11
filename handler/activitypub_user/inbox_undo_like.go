@@ -23,12 +23,18 @@ func inboxUndoLike(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.inboxUndoLike"
 
-	// Parse the original Like/Dislike/Announce being undone. Our outgoing Undos EMBED the original
-	// activity inline (D7), so this resolves WITHOUT a network fetch; a reference-only Undo from
-	// another server may require a fetch, and if that fails we silently no-op (nothing to un-project).
-	originalActivity, err := activity.Object().Load()
+	// Read the original Like/Dislike/Announce being undone. Use LoadLink, NOT Load: LoadLink returns
+	// an INLINE object as-is (no fetch) but dereferences a bare-URL reference. This matters both ways:
+	//   - OUR Undos embed the original activity inline (D7). Load() would still HTTP-fetch object.id,
+	//     but that /pub/liked/<id> Response was already hard-deleted by the time the Undo loops back,
+	//     so the fetch 404s. LoadLink sees the inline map and skips the fetch entirely.
+	//   - OTHER servers (e.g. Mastodon) send Undo with object as a bare URL reference. LoadLink
+	//     fetches those so we can still resolve and un-project them.
+	originalActivity := activity.Object().LoadLink()
 
-	if err != nil {
+	// If we still can't resolve the original activity (bare reference that no longer exists, or a
+	// fetch failure), there's nothing to un-project. A missing type is the tell. No-op.
+	if originalActivity.Type() == "" {
 		return nil
 	}
 
