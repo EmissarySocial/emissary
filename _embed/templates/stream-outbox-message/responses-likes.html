@@ -1,9 +1,7 @@
-{{- $document := .ActivityStream .Permalink -}}
-{{- $metadata := $document.Metadata -}}
-
+{{- $root := . -}}
 {{- $publishedDate := .QueryParam "published" -}}
 {{- $pageSize := 1000 -}}
-{{- $likes := .LikesBefore $publishedDate $pageSize -}}
+{{- $likeLinks := .LikeLinksAfter $publishedDate $pageSize -}}
 
 <div id="responses" class="margin-top" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 
@@ -11,73 +9,42 @@
 
 	<div>
 		<span hx-get="{{.BasePath}}/responses-replies?url={{.Permalink}}" role="button" class="margin-right-xs clickable">
-			{{- $metadata.Replies }} {{pluralize $metadata.Replies "Reply" "Replies" -}}
+			{{- .ReplyCount }} {{pluralize .ReplyCount "Reply" "Replies" -}}
 		</span>
 		&middot;
 		<span hx-get="{{.BasePath}}/responses-likes?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable bold">
-			{{- $metadata.Likes }} {{pluralize $metadata.Likes "Like" "Likes" -}}
+			{{- .LikeCount }} {{pluralize .LikeCount "Like" "Likes" -}}
 		</span>
 		&middot;
 		<span hx-get="{{.BasePath}}/responses-announces?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable">
-			{{- $metadata.Announces }} {{pluralize $metadata.Announces "Share" "Shares" -}}
+			{{- .ShareCount }} {{pluralize .ShareCount "Share" "Shares" -}}
 		</span>
 	</div>
 
 	<hr class="margin-top-sm"/>
 
-	{{- if lt $likes.Length 6 -}}
+	<div class="margin-top">
 
-		<div class="margin-top">
+		{{- range $index, $link := $likeLinks -}}
+			{{- $like := $root.ActivityStream $link.URI -}}
+			{{- $icon := $like.Actor.Icon -}}
+			<a href="{{$like.Actor.ID}}" target="_blank" rel="noopener noreferrer nofollow" class="flex-row margin-bottom-sm text-nocolor">
 
-			{{- range $index, $like := $likes -}}
-				{{- $icon := $like.Actor.Icon -}}
-				<a href="{{$like.Actor.ID}}" target="_blank" rel="noopener noreferrer nofollow" class="flex-row text-nocolor">
+				{{- if $icon.NotNil -}}
+					<img src="{{$icon.Href}}" alt="" class="circle width-24">
+				{{- else -}}
+					<div class="circle width-24"></div>
+				{{- end -}}
 
-					<div class="margin-right">
-						{{- if $icon.NotNil -}}
-							<img src="{{$icon.Href}}" alt="" class="circle width-48">
-						{{- else -}}
-							<div class="circle width-48"></div>
-						{{- end -}}
-					</div>
+				<span>
+					<span class="bold">{{$like.Actor.Name}}</span>
+					&middot;
+					<span class="text-gray">{{$like.Published | shortDate}}</span>
+				</span>
 
-					<div>
-						<div class="bold">Liked by {{$like.Actor.Name}}</div>
-						<div class="text-gray">on {{$like.Published | shortDate}}</div>
-					</div>
+			</a>
+		{{- end -}}
 
-				</a>
-			{{- end -}}
-		
-		</div>
-
-	{{- else -}}
-
-		<div class="margin-top flex-row flex-wrap">
-			{{- $size := iif (lt $likes.Length 18) "32" "48" -}}	
-			
-			{{- range $index, $like := $likes -}}
-				{{- $icon := $like.Actor.Icon -}}
-				<a href="{{$like.Actor.ID}}" target="_blank" rel="noopener noreferrer nofollow" class="clickable tooltip-container text-nocolor">
-
-					<div class="tooltip align-left">
-						<div class="bold margin-vertical-xs">Liked by {{$like.Actor.Name}}</div>
-						<div class="text-gray margin-vertical-xs">on {{$like.Published | shortDate}}</div>
-					</div>
-
-					<div class="margin-right">
-						{{- if $icon.NotNil -}}
-							<img src="{{$icon.Href}}" alt="" class="circle width-{{$size}}">
-						{{- else -}}
-							<div class="circle width-{{$size}}"></div>
-						{{- end -}}
-					</div>
-				</a>
-
-			{{- end -}}
-
-		</div>
-
-	{{- end -}}
+	</div>
 
 </div>
