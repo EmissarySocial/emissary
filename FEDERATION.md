@@ -34,12 +34,6 @@ Emissary can read and write feeds in [RSS 2.0](https://en.wikipedia.org/wiki/RSS
 
 **Reading Feeds:** Users can follow any feed on the Internet by entering the site's URL into the "Follow" dialog.  
 
-## WebMentions
-
-Emissary's publisher service sends WebMentions whenever a Stream is published or re-published.
-
-Default templates also include meta-data that points to Emissary's WebMention receiver, which receives WebMentions from external servers, which are stored a "Mentions" in Emissary's database and are accessible to all Stream Templates.
-
 ## MicroFormats
 
 Emissary's default templates all include standard [MicroFormats](https://indieweb.org/microformats) for all available data points.
