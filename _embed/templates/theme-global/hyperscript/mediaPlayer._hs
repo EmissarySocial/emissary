@@ -110,7 +110,7 @@ behavior MediaPlayer
 				exit
 			end
 
-			if not :loopButton.classlist.contains("selected") then
+			if not :loopButton.classList.contains("selected") then
 				trigger Pause
 				exit
 			end
@@ -124,7 +124,7 @@ behavior MediaPlayer
 				exit
 			end
 
-			if not :loopButton.classlist.contains("selected") then
+			if not :loopButton.classList.contains("selected") then
 				trigger Pause
 				exit
 			end

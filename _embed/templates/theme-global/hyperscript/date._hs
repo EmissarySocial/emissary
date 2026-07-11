@@ -23,7 +23,7 @@ behavior PrettyDate(date)
 
 			if minuteCount < 60 then 
 				set my innerHTML to minuteCount + "min ago"
-				set delay to (60000 - Math.floor(milisecondCount / 60000))
+				set delay to (60000 - (milisecondCount mod 60000))
 				wait delay ms
 				continue
 			end
