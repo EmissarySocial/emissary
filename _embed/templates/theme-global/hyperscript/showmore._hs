@@ -7,8 +7,10 @@ behavior ShowMore
 
 		add .blockselect-ignore to :button
 
-		measure the :content's height
-		if the height is less than maxHeight
+		set contentHeight to the :content's scrollHeight
+		set maxHeight to parseInt(the :content's *computed-max-height)
+
+		if contentHeight is less than maxHeight
 			trigger showMore
 			exit
 		end

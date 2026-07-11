@@ -20,8 +20,8 @@ behavior Modal
 		wait a tick then
 		add .ready to #modal
 
-		if the first <input,select,radio,checkbox /> in me is not null then
-			set firstElement to the first <input,select,radio,checkbox /> in me
+		if the first <input,select /> in me is not null then
+			set firstElement to the first <input,select /> in me
 		else if #modal-body is not null then
 			set firstElement to the first <[tabindex]/> in the #modal-body
 		else
@@ -29,7 +29,7 @@ behavior Modal
 		end
 
 		if firstElement is not null then 
-			focus() the firstElement
+			focus the firstElement
 		end
 
 		send modalReady
@@ -72,12 +72,12 @@ behavior Modal
 		if event.shiftKey then
 
 			if focusedElement is the first <[tabindex]/> in me then
-				focus() the last <[tabindex]/> in me
+				focus the last <[tabindex]/> in me
 				halt the event
 			end
 			
 		else if focusedElement is the last <[tabindex]/> in me then
-			focus() the first <[tabindex]/> in me
+			focus the first <[tabindex]/> in me
 			halt the event
 		end
 		

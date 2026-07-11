@@ -40,7 +40,7 @@ behavior Menu(input)
 		end
 
 		if input is null then
-			focus() the selectNext
+			focus the selectNext
 		end
 
 		set items to <[role=menuitem]/> in me
@@ -59,7 +59,7 @@ behavior Menu(input)
 		end
 
 		if input is null then
-			focus() the selectNext
+			focus the selectNext
 		end
 		
 		set items to <[role=menuitem]/> in me

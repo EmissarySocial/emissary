@@ -22,7 +22,7 @@ behavior hotkey
 
 		set button to first <[aria-keyshortcuts="${shortcut}"] />
 
-		if button is undefined then
+		if button is null then
 			exit
 		end
 

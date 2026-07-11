@@ -2,9 +2,7 @@ behavior SelectGroup(children, options, value)
 
 	on load
 		wait a tick
-		log children
 		set :linkedSelect to the first <select[name="${children}"] />
-		log linkedSelect
 
 		set :options to JSON.parse(options)
 		if :options is null then
