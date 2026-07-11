@@ -203,13 +203,27 @@ func (service *Outbox) UndoActivity(session data.Session, actorType string, acto
 
 	// Build the outgoing "Undo" activity with the original activity embedded inline. No top-level
 	// `id` (the Outbox mints one — an Undo has no record of its own).
-	document := streams.NewDocument(mapof.Any{
+	undo := mapof.Any{
 		vocab.AtContext:         vocab.ContextTypeActivityStreams,
 		vocab.PropertyActor:     actor.ActorID(),
 		vocab.PropertyType:      vocab.ActivityTypeUndo,
 		vocab.PropertyObject:    originalActivity,
 		vocab.PropertyPublished: hannibal.TimeFormat(time.Now()),
-	})
+	}
+
+	// Mirror the original activity's top-level audience (`to`/`cc`) onto the Undo. Publish derives
+	// its default recipients from the DOCUMENT's own addressees (RangeAddressees does not recurse
+	// into the embedded object), so without this the Undo of a broadcast Announce — whose addressing
+	// lives on the embedded object — would reach only followers and never loop back to the author to
+	// un-project. (Author-only Like/Dislike Undos carry no to/cc and rely on WithRecipients instead.)
+	if to, exists := originalActivity[vocab.PropertyTo]; exists {
+		undo[vocab.PropertyTo] = to
+	}
+	if cc, exists := originalActivity[vocab.PropertyCC]; exists {
+		undo[vocab.PropertyCC] = cc
+	}
+
+	document := streams.NewDocument(undo)
 
 	// Forward the caller's PublishOptions (spread!) so an Undo can honor the same author-only
 	// delivery as the original activity. A dropped spread here would fan the Undo out to all

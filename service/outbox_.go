@@ -117,8 +117,14 @@ func (service *Outbox) Save(session data.Session, outboxMessage *model.OutboxMes
 
 	const location = "service.Outbox.Save"
 
-	// Calculate the ActivityURL for this message
-	outboxMessage.ActivityURL = service.calcActivityURL(outboxMessage)
+	// Mint an ActivityURL ONLY when the message does not already carry a canonical one. A first-class
+	// activity (e.g. a Like/Dislike/Announce or a Block) arrives with its own ID already stored in
+	// ActivityURL by Outbox.Publish; overwriting it here with the minted /pub/outbox/<id> form breaks
+	// D7 — the CollectionItem then gets keyed by the minted URL while the Undo references the canonical
+	// /pub/liked/<id> URL, so unreacts never match. See COLLECTIONS-REDESIGN.md D7.
+	if outboxMessage.ActivityURL == "" {
+		outboxMessage.ActivityURL = service.calcActivityURL(outboxMessage)
+	}
 
 	// Save the value to the database
 	if err := service.collection(session).Save(outboxMessage, note); err != nil {
