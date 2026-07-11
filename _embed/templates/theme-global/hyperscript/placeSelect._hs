@@ -16,9 +16,6 @@ behavior PlaceSelect
 	on click from <.PlaceSelectIcon /> in me
 		set position to getCurrentPositionPromise()
 		set coords to the position's coords
-		log coords
-		log coords.longitude
-		log coords.latitude
 		set the :search's value to "My Current Location"
 		set the :latitude's value to coords.latitude
 		set the :longitude's value to coords.longitude
@@ -53,7 +50,6 @@ behavior PlaceSelect
 	end
 
 	on keypress[keyCode==Enter] in me
-		log "got it??"		
 		halt the event
 	end
 
