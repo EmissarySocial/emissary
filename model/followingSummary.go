@@ -12,9 +12,9 @@ type FollowingSummary struct {
 	IconURL     string             `bson:"iconUrl"`
 	Method      string             `bson:"method"`
 	Status      string             `bson:"status"`
-	LastPolled  int64              `bson:"lastPolled"`
-	NextPoll    int64              `bson:"nextPoll"`
-	CreateDate  int64              `bson:"createDate"`
+	LastPolled  int64              `bson:"lastPolled"` // Unix epoch SECONDS when this Following was last polled (mirrors Following.LastPolled)
+	NextPoll    int64              `bson:"nextPoll"`   // Unix epoch SECONDS when this Following is next due to be polled (mirrors Following.NextPoll)
+	CreateDate  int64              `bson:"createDate"` // Unix epoch MILLISECONDS (journal projection; used only for sort rank)
 }
 
 // FollowingSummaryFields returns a slice of all BSON field names for a FollowingSummary

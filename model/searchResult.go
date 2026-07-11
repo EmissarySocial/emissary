@@ -24,7 +24,7 @@ type SearchResult struct {
 	Tags            sliceof.String     `json:"tags,omitempty"         bson:"tags,omitempty"`         // Tags is a machine-readable list of tag values that are associated with this SearchResult.
 	Text            string             `json:"text,omitempty"         bson:"text,omitempty"`         // Text is the searchable text of this SearchResult.  It is used to build the index value.
 	Index           sliceof.String     `json:"index,omitempty"        bson:"index,omitempty"`        // Index is a list of words (encoded via metaphone) that are used to index this SearchResult.
-	ReIndexDate     int64              `json:"reindexDate"            bson:"reindexDate"`            // ReIndexDate is the date that this SearchResult should be reindexed.
+	ReIndexDate     int64              `json:"reindexDate"            bson:"reindexDate"`            // Unix epoch SECONDS when this SearchResult should be reindexed (written via time.Now().Add(...).Unix()).
 	Rank            int64              `json:"rank"                   bson:"rank"`                   // Rank is the rank of this SearchResult in the search index.
 	Shuffle         int64              `json:"shuffle"                bson:"shuffle"`                // Shuffle is a random number used to shuffle the search results.
 	Local           bool               `json:"local"                  bson:"local"`                  // Local is true if this SearchResult originates on the local server.  Only local SearchResults will be syndicated to external servers.

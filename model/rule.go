@@ -19,7 +19,7 @@ type Rule struct {
 	ReasonCode     string             `bson:"reasonCode"`     // Optional code to identify the reason for this rule (e.g. "SPAM", "NSFW", "SENSITIVE")
 	Summary        string             `bson:"summary"`        // Optional comment describing why this rule exists
 	IsPublic       bool               `bson:"isPublic"`       // If TRUE, this record is visible publicly
-	PublishDate    int64              `bson:"publishDate"`    // Unix timestamp when this rule was published to followers
+	PublishDate    int64              `bson:"publishDate"`    // Unix epoch SECONDS when this rule was published to followers (0 = unpublished)
 
 	journal.Journal `json:"-" bson:",inline"`
 }

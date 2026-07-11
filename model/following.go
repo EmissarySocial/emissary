@@ -29,9 +29,9 @@ type Following struct {
 	Secret        string             `bson:"secret"`        // Secret used to authenticate this feed (if required)
 	Status        string             `bson:"status"`        // Status of the last poll of Following (NEW, CONNECTING, POLLING, SUCCESS, FAILURE)
 	StatusMessage string             `bson:"statusMessage"` // Optional message describing the status of the last poll
-	LastPolled    int64              `bson:"lastPolled"`    // Unix Timestamp of the last date that this resource was retrieved.
+	LastPolled    int64              `bson:"lastPolled"`    // Unix epoch SECONDS when this resource was last retrieved.
 	PollDuration  int                `bson:"pollDuration"`  // Time (in hours) to wait between polling this resource.
-	NextPoll      int64              `bson:"nextPoll"`      // Unix Timestamp of the next time that this resource should be polled.
+	NextPoll      int64              `bson:"nextPoll"`      // Unix epoch SECONDS when this resource should next be polled (compared against time.Now().Unix()).
 	PurgeDuration int                `bson:"purgeDuration"` // Time (in days) to wait before purging old messages
 	ErrorCount    int                `bson:"errorCount"`    // Number of times that this "following" has failed to load (for exponential backoff)
 

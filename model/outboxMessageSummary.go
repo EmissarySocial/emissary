@@ -9,7 +9,7 @@ import (
 type OutboxMessageSummary struct {
 	OutboxMessageID primitive.ObjectID `bson:"_id"`
 	ObjectID        string             `bson:"objectId"`
-	CreateDate      int64              `bson:"createDate"`
+	CreateDate      int64              `bson:"createDate"` // Unix epoch MILLISECONDS (journal projection; used as an opaque paging cursor)
 }
 
 func NewOutboxMessageSummary() OutboxMessageSummary {

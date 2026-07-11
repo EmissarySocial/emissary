@@ -16,9 +16,11 @@ const PasswordResetDurationWelcome = 24 * time.Hour
 // PasswordReset represents a single password reset request.
 // Only one password reset request is allowed per user.
 type PasswordReset struct {
-	AuthCode   string
-	CreateDate int64 `json:"createDate"`
-	ExpireDate int64 `json:"expireDate"`
+	AuthCode string
+	// NOTE: these are plain fields (NOT the journal), written with time.Now().Unix(), so unlike the
+	// journal's millisecond CreateDate/UpdateDate these are SECONDS.
+	CreateDate int64 `json:"createDate"` // Unix epoch SECONDS when this reset code was created
+	ExpireDate int64 `json:"expireDate"` // Unix epoch SECONDS when this reset code expires (checked via ExpireDate < now)
 }
 
 // NewPasswordReset returns a fully initialized PasswordReset object that expires after the provided duration.

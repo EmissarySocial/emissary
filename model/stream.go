@@ -56,8 +56,8 @@ type Stream struct {
 	Syndication      delta.Slice[string]     `bson:"syndication,omitempty"`  // List of external services that this Stream has been syndicated to.
 	MovedTo          string                  `bson:"movedTo,omitempty"`      // If present, then this stream has been moved to a new location.
 	Shuffle          int64                   `bson:"shuffle"`                // Random number used to shuffle the order of Streams in a list.
-	PublishDate      int64                   `bson:"publishDate"`            // Unix timestamp of the date/time when this document is/was/will be first available on the domain.
-	UnPublishDate    int64                   `bson:"unpublishDate"`          // Unix timestamp of the date/time when this document will no longer be available on the domain.
+	PublishDate      int64                   `bson:"publishDate"`            // Unix epoch SECONDS when this document is/was/will be first available on the domain (0 = unpublished; math.MaxInt64 = not yet scheduled).
+	UnPublishDate    int64                   `bson:"unpublishDate"`          // Unix epoch SECONDS when this document will no longer be available on the domain (math.MaxInt64 = never).
 	IsFeatured       bool                    `bson:"isFeatured"`             // TRUE if this Stream is featured by its parent container.
 	IsSubscribable   bool                    `bson:"isSubscribable"`         // TRUE if this Stream uses the Products service to determine access rights.
 	ReplyCount       int                     `bson:"replyCount"`             // Denormalized count of replies to this Stream (maintained by the Stream service's reply funnel).

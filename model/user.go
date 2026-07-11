@@ -481,7 +481,7 @@ func (user User) Toot() object.Account {
 		Avatar:       user.ActivityPubIconURL(),
 		Header:       user.ActivityPubImageURL(),
 		Discoverable: user.IsPublic,
-		CreatedAt:    time.Unix(user.CreateDate, 0).Format(time.RFC3339),
+		CreatedAt:    time.UnixMilli(user.CreateDate).UTC().Format(time.RFC3339), // CreateDate is milliseconds (journal UnixMilli)
 	}
 }
 

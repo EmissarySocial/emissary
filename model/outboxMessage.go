@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/benpate/data/journal"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
@@ -54,12 +56,14 @@ func (message OutboxMessage) ActivityPubURL() string {
 func (message OutboxMessage) GetJSONLD() mapof.Any {
 
 	result := mapof.Any{
-		vocab.AtContext:         vocab.ContextTypeActivityStreams,
-		vocab.PropertyID:        message.ActivityPubURL(),
-		vocab.PropertyActor:     message.ActorURL,
-		vocab.PropertyType:      message.ActivityType,
-		vocab.PropertyObject:    message.ObjectID,
-		vocab.PropertyPublished: message.Created(),
+		vocab.AtContext:      vocab.ContextTypeActivityStreams,
+		vocab.PropertyID:     message.ActivityPubURL(),
+		vocab.PropertyActor:  message.ActorURL,
+		vocab.PropertyType:   message.ActivityType,
+		vocab.PropertyObject: message.ObjectID,
+		// CreateDate is journal MILLISECONDS; ActivityStreams `published` must be an RFC3339 string,
+		// not a raw epoch integer. (message.Created() stays millis for internal paging cursors.)
+		vocab.PropertyPublished: time.UnixMilli(message.Created()).UTC().Format(time.RFC3339),
 	}
 
 	if message.Permissions.IsAnonymous() {

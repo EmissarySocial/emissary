@@ -167,10 +167,12 @@ func inbox_SaveActivity(context Context, activity streams.Document) error {
 	inboxActivity.RawActivity = activity.Map()
 	inboxActivity.IsPublic = activity.IsPublic()
 
+	// PublishedDate is stored in MILLISECONDS (see model.InboxActivity and the outbox2 write path),
+	// so use UnixMilli — .Unix() here would store seconds and sort this activity ~1000x too early.
 	if publishedDate := activity.Published(); !publishedDate.IsZero() {
-		inboxActivity.PublishedDate = publishedDate.Unix()
+		inboxActivity.PublishedDate = publishedDate.UnixMilli()
 	} else {
-		inboxActivity.PublishedDate = time.Now().Unix()
+		inboxActivity.PublishedDate = time.Now().UnixMilli()
 	}
 
 	// Save the Activity to the User's Inbox
