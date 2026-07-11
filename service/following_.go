@@ -135,9 +135,6 @@ func (service *Following) Save(session data.Session, following *model.Following,
 	case model.FollowingMethodActivityPub:
 		following.PollDuration = 24 * 7 * 30 // retry ActivityPub connections every 30 days
 
-	case model.FollowingMethodWebSub:
-		following.PollDuration = 24 * 7 // retry WebSub connections every 7 days
-
 	default:
 		following.PollDuration = 24
 	}

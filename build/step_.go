@@ -209,9 +209,6 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.ViewJSON:
 		return StepViewJSON(s)
 
-	case step.WebSub:
-		return StepWebSub(s)
-
 	case step.WithAnnotation:
 		return StepWithAnnotation(s)
 

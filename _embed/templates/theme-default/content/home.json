@@ -66,7 +66,7 @@
 			"id": "vUB8-LarGN",
 			"type": "paragraph",
 			"data": {
-				"text": "Emissary includes a built-in RSS reader that lets you follow just about every website on the planet. &nbsp;Plus, sites that support fast, real-time connections like WebSub and ActivityPub are automatically upgraded so you get instant notifications."
+				"text": "Emissary includes a built-in RSS reader that lets you follow just about every website on the planet. &nbsp;Plus, sites that support fast, real-time connections via ActivityPub are automatically upgraded so you get instant notifications."
 			}
 		},
 		{

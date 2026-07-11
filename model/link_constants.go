@@ -12,10 +12,6 @@ const LinkRelationAuthor = "author"
 // https://html.spec.whatwg.org/multipage/links.html#link-type-bookmark
 const LinkRelationBookmark = "bookmark"
 
-// LinkRelationHub is a link to a WebSub hub
-// https://www.w3.org/TR/websub/#discovery
-const LinkRelationHub = "hub"
-
 // LinkRelationIcon indicates an icon for the current document
 // https://html.spec.whatwg.org/multipage/links.html#rel-icon
 const LinkRelationIcon = "icon"

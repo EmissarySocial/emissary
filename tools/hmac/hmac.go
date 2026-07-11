@@ -9,9 +9,6 @@ import (
 	"hash"
 )
 
-// TODO: LOW: This package is used primarily for the WebSub implementation,
-// and should probably be rolled into a separate WebSub package.
-
 // Sign returns the HMAC signature of the message using the specified hash
 func Sign(method string, secret string, message []byte) ([]byte, bool) {
 

@@ -21,7 +21,7 @@ Distribute your applications via Git and .zip files. Each template is isolated f
 
 ### Multi-Network
 
-Emissary uses the [sherlock library](https://github.com/benpate/sherlock) to bridge across different federated protocols. This includes ActivityPub, RSS+WebSub, and IndieWeb. More are coming, to be added into the core system. This means that applications you build on Emissary interact with the entire social web, and will grow as Emissary grows.
+Emissary uses the [sherlock library](https://github.com/benpate/sherlock) to bridge across different federated protocols. This includes ActivityPub, RSS, and IndieWeb. More are coming, to be added into the core system. This means that applications you build on Emissary interact with the entire social web, and will grow as Emissary grows.
 
 ### Baked-In DevOps
 

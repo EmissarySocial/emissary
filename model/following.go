@@ -25,7 +25,7 @@ type Following struct {
 	RuleAction    string             `bson:"ruleAction"`    // RuleAction determines the types of records to rule from this Actor [IGNORE, LABEL, MUTE, BLOCK ]
 	IsPublic      bool               `bson:"isPublic"`      // If TRUE, this following is visible to the public
 	Links         digit.LinkSet      `bson:"links"`         // List of links can be used to update this following.
-	Method        string             `bson:"method"`        // Method used to update this feed (POLL, WEBSUB, RSS-CLOUD, ACTIVITYPUB)
+	Method        string             `bson:"method"`        // Method used to update this feed (POLL, ACTIVITYPUB)
 	Secret        string             `bson:"secret"`        // Secret used to authenticate this feed (if required)
 	Status        string             `bson:"status"`        // Status of the last poll of Following (NEW, CONNECTING, POLLING, SUCCESS, FAILURE)
 	StatusMessage string             `bson:"statusMessage"` // Optional message describing the status of the last poll

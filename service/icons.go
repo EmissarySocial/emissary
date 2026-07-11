@@ -454,14 +454,6 @@ func (service Icons) Get(name string) string {
 		return service.get("rss")
 	case "rss-fill":
 		return service.get("rss-fill")
-	case "rss-cloud":
-		return service.get("cloud-arrow-down")
-	case "rss-cloud-fill":
-		return service.get("cloud-arrow-down-fill")
-	case "websub":
-		return service.get("cloud-arrow-down")
-	case "websub-fill":
-		return service.get("cloud-arrow-down-fill")
 
 	// Content Types
 	case "article":

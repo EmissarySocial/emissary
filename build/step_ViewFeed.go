@@ -142,12 +142,6 @@ func (step StepViewFeed) asJSONFeed(builder Builder, buffer io.Writer, children 
 		HomePageURL: builder.Permalink(),
 		FeedURL:     builder.Permalink() + "/feed?format=json",
 		Description: builder.Summary(),
-		Hubs: []jsonfeed.Hub{
-			{
-				Type: "WebSub",
-				URL:  builder.Permalink() + "/websub",
-			},
-		},
 	}
 
 	feed.Items = slice.Map(iterator.Slice(children, model.NewStream), convert.StreamToJsonFeed)

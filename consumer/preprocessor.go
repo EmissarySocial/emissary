@@ -22,9 +22,6 @@ func PreProcessor(task *queue.Task) error {
 	case "ConnectPushService":
 		task.Priority = 8
 
-	case "CreateWebSubFollower":
-		task.Priority = 8
-
 	// (16) Realtime User Notifications
 	case "ImportStartup":
 		task.Priority = 16
@@ -68,9 +65,6 @@ func PreProcessor(task *queue.Task) error {
 		task.Priority = 256
 
 	case "ReceiveWebMention":
-		task.Priority = 256
-
-	case "SendWebSubMessage":
 		task.Priority = 256
 
 	case "syndication.create", "syndication.update", "syndication.delete":

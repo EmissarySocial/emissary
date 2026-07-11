@@ -128,11 +128,5 @@
 				{do:"view-feed"}
 			]
 		}
-		websub: {
-			roles: ["viewer", "author", "editor"], 
-			steps:[
-				{do:"websub"}
-			]
-		}
 	}
 }

@@ -46,7 +46,6 @@
 		view: {
 			roles:["anonymous"]
 			steps:[
-				{do:"set-header", name:"Link", value:"<{{.Host}}/@{{.UserID}}>; rel=\"self\", <{{.Host}}/@{{.UserID}}/websub>; rel=\"hub\""}
 				{do:"view-html", file:"outbox"}
 			]
 		}
@@ -239,13 +238,6 @@
 			roles:["anonymous"]
 			steps:[
 				{do:"view-feed"}
-			]
-		}
-
-		websub: {
-			roles:["anonymous"]
-			steps:[
-				{do:"websub"}
 			]
 		}
 		

@@ -43,7 +43,7 @@ func (service *Outbox) Publish(session data.Session, actorType string, actorID p
 	actor, err := service.getActor(session, actorType, actorID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to get Actor", actorType, actorID)
+		return derp.Wrap(err, location, "Loading Actor", actorType, actorID)
 	}
 
 	// Write a new OutboxMessage to the database
@@ -118,13 +118,8 @@ func (service *Outbox) Publish(session data.Session, actorType string, actorID p
 		case model.FollowerMethodActivityPub:
 			service.sendNotification_ActivityPub(&actor, &follower, activityMap)
 
-		case model.FollowerMethodWebSub:
-			service.sendNotification_WebSub(&follower)
-
 		case model.FollowerMethodEmail:
 			service.sendNotification_Email(&follower, activityMap)
-
-		// TODO: Can we move WebMentions into this too?
 
 		default:
 			derp.Report(derp.Internal(location, "Unknown Follower Method.  This should never happen", follower))
@@ -347,21 +342,11 @@ func (service *Outbox) addresseesAsFollowers(addressees iter.Seq[string]) iter.S
 }
 
 // sendNotifications_ActivityPub sends ActivityPub updates to all Followers
-// TODO: HIGH: This should be a background task with retries, just like sendNotification_WebSub
-func (service Outbox) sendNotification_ActivityPub(actor *outbox.Actor, follower *model.Follower, activity mapof.Any) {
+// TODO: HIGH: This should be a background task with retries
+func (service *Outbox) sendNotification_ActivityPub(actor *outbox.Actor, follower *model.Follower, activity mapof.Any) {
 	if err := actor.SendOne(follower.Actor.ProfileURL, activity); err != nil {
 		derp.Report(derp.Wrap(err, "service.Outbox.sendNotifications_ActivityPub", "Unable to send ActivityPub notification", follower.Actor.ProfileURL))
 	}
-}
-
-// TODO: HIGH: Thoroughly re-test WebSub notifications.  They've been rebuilt from scratch.
-func (service Outbox) sendNotification_WebSub(follower *model.Follower) {
-
-	service.queue.NewTask("SendWebSubMessage", mapof.Any{
-		"inboxUrl": follower.Actor.InboxURL,
-		"format":   follower.Format,
-		"secret":   follower.Data.GetString("secret"),
-	})
 }
 
 // sendNotifications_Email sends email notifications to all "email" Followers

@@ -42,14 +42,6 @@ func ConnectPushService(factory *service.Factory, session data.Session, user *mo
 			}
 			return success()
 		}
-
-		// Try to connect to a WebSub hub (if present)
-		if hub := actor.Endpoints().Get("websub").String(); hub != "" {
-			if err := factory.Following().ConnectWebSub(following, hub); err != nil {
-				return queue.Error(derp.Wrap(err, location, "Unable to connect to WebSub"))
-			}
-			return success()
-		}
 	}
 
 	// Fall through means that we can't connect to a push service.

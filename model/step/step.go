@@ -236,9 +236,6 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "view-json":
 		return NewViewJSON(stepInfo)
 
-	case "websub":
-		return NewWebSub(stepInfo)
-
 	case "with-annotation":
 		return NewWithAnnotation(stepInfo)
 

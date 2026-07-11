@@ -34,11 +34,6 @@ Emissary can read and write feeds in [RSS 2.0](https://en.wikipedia.org/wiki/RSS
 
 **Reading Feeds:** Users can follow any feed on the Internet by entering the site's URL into the "Follow" dialog.  
 
-## WebSub
-
-Emissary sends and receives real-time feed updates via [WebSub protocol](https://www.w3.org/TR/websub/).  The publisher service works as its own WebSub hub, sending updates whenever a Stream us published or republished.
-
-
 ## WebMentions
 
 Emissary's publisher service sends WebMentions whenever a Stream is published or re-published.

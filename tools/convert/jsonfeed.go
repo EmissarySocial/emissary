@@ -19,11 +19,7 @@ func IteratorToJSonFeed(url string, title string, description string, it data.It
 		Description: description,
 		HomePageURL: url,
 		FeedURL:     url + "/feed?format=json",
-		Hubs: []jsonfeed.Hub{{
-			Type: "WebSub",
-			URL:  url + "/websub",
-		}},
-		Items: slice.Map(iterator.Slice(it, model.NewStream), StreamToJsonFeed),
+		Items:       slice.Map(iterator.Slice(it, model.NewStream), StreamToJsonFeed),
 	}
 }
 

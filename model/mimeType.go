@@ -1,7 +1,5 @@
 package model
 
-const MagicMimeTypeWebSub = "MAGIC-MIME-TYPE-WEBSUB"
-
 const MimeTypeActivityPub = "application/activity+json"
 
 const MimeTypeAtom = "application/atom+xml"

@@ -38,9 +38,6 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "CrawlDownReplyTree":
 		return WithFactory(consumer.serverFactory, args, CrawlDownReplyTree)
 
-	case "CreateWebSubFollower":
-		return WithSession(consumer.serverFactory, args, CreateWebSubFollower)
-
 	case "DeleteEmptySearchQuery":
 		return WithSession(consumer.serverFactory, args, DeleteEmptySearchQuery)
 
@@ -125,9 +122,6 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 
 	case "SendSearchResult-SearchQuery":
 		return WithSession(consumer.serverFactory, args, SendSearchResult_SearchQuery)
-
-	case "SendWebSubMessage":
-		return SendWebSubMessage(args)
 
 	case "Shuffle":
 		return WithSession(consumer.serverFactory, args, Shuffle)

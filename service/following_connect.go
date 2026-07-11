@@ -5,12 +5,9 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
-	"github.com/benpate/remote"
-	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/uri"
-	"github.com/labstack/gommon/random"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -98,7 +95,7 @@ func (service *Following) Connect(session data.Session, following *model.Followi
 		"followingId": following.FollowingID.Hex(),
 	}
 
-	// Try to connect to push services (WebSub, ActivityPub, etc)
+	// Try to connect to push services (now, only ActivityPub)
 	// This runs in faster than usual because it affects the UX, but must
 	// still write to the DB or else it may get skipped
 	service.queue.NewTask("ConnectPushService", queueArgs)
@@ -127,43 +124,6 @@ func (service *Following) ConnectActivityPub(session data.Session, following *mo
 	followingURL := service.ActivityPubID(following)
 	log.Debug().Str("loc", location).Msg("Sending ActivityPub Follow request to: " + remoteActor.ID())
 	localActor.SendFollow(followingURL, remoteActor.ID())
-
-	// Success!
-	return nil
-}
-
-// ConnectWebSub attempts to connect to a remote user using WebSub (formerly PubSubHubbub).
-func (service *Following) ConnectWebSub(following *model.Following, hub string) error {
-
-	const location = "service.Following.connect_WebSub"
-
-	var success string
-	var failure string
-
-	// Autocompute the topic.  Use "self" link first, or just the following URL
-	self := following.GetLink("rel", model.LinkRelationSelf)
-
-	// Update values in the following object
-	following.Method = model.FollowingMethodWebSub
-	following.Status = model.FollowingStatusSuccess
-	following.URL = first.String(self.Href, following.URL)
-	following.Secret = random.String(32)
-	following.PollDuration = 30
-
-	// Send request to the hub
-	transaction := remote.Post(hub).
-		Header("Accept", followingMimeStack).
-		Form("hub.mode", "subscribe").
-		Form("hub.topic", following.URL).
-		Form("hub.callback", service.websubCallbackURL(following)).
-		Form("hub.secret", following.Secret).
-		Form("hub.lease_seconds", "2582000"). // 30 days
-		Result(&success).
-		Error(&failure)
-
-	if err := transaction.Send(); err != nil {
-		return derp.Wrap(err, location, "Unable to connect via WebSub subscription", hub, failure)
-	}
 
 	// Success!
 	return nil

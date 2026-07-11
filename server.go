@@ -276,8 +276,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.validate/username", handler.WithFactory(factory, handler.GetValidateUsername))
 	e.GET("/.webmention", handler.TBD)
 	e.POST("/.webmention", handler.WithFactory(factory, handler.PostWebMention))
-	e.GET("/.websub/:userId/:followingId", handler.WithFactory(factory, handler.GetWebSubClient))
-	e.POST("/.websub/:userId/:followingId", handler.WithFactory(factory, handler.PostWebSubClient))
 	e.GET("/.widgets/:widgetId/:bundleId", handler.GetWidgetBundle(factory))
 	e.GET("/.widgets/:widgetId/resources/:filename", handler.GetWidgetResource(factory))
 

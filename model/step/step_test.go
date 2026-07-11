@@ -13,8 +13,8 @@ import (
 // case is the minimum required for that constructor to succeed.
 //
 // Note: a step's Name() is not always equal to its "do" key (e.g. do "set-args" -> Name "set-args",
-// do "sleep" -> Name "set-sleep", do "websub" -> Name "web-sub", do "require-password" ->
-// Name "requirePassword"), so expectedName is asserted explicitly per case.
+// do "sleep" -> Name "set-sleep", do "require-password" -> Name "requirePassword"),
+// so expectedName is asserted explicitly per case.
 func TestNew_Dispatch(t *testing.T) {
 
 	cases := []struct {
@@ -85,7 +85,6 @@ func TestNew_Dispatch(t *testing.T) {
 		{"view-feed", mapof.Any{}, "view-feed"},
 		{"view-html", mapof.Any{}, "view-html"},
 		{"view-json", mapof.Any{"value": ".Object"}, "view-json"},
-		{"websub", mapof.Any{}, "web-sub"},
 		{"with-annotation", mapof.Any{}, "with-annotation"},
 		{"with-attachment", mapof.Any{}, "with-attachment"},
 		{"with-children", mapof.Any{}, "with-children"},
