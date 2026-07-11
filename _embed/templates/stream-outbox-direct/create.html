@@ -7,7 +7,7 @@
 	on htmx:configRequest(parameters)
 		set contentHtml to the first <[contenteditable=true]/> in me
 		set parameters['content'] to contentHtml.innerHTML
-		focus() the contentHtml
+		focus the contentHtml
 
 	on htmx:afterRequest
 		set contentHtml to the first <[contenteditable=true]/> in me
@@ -19,7 +19,7 @@
 
 			<div class="layout-element">
 				<label for="to">Recipient(s)</label>
-				<input id="to" type="text" name="to" value="{{.Data `to`}}" script="on load focus() me" />
+				<input id="to" type="text" name="to" value="{{.Data `to`}}" script="on load focus me" />
 			</div>
 
 			<div class="layout-element">

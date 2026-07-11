@@ -1,36 +1,4 @@
-/*
-on mousedown
-
-	exit
-
-	-- if the event is not a left click, then nvm
-	if event.button > 0 then 
-		exit
-	end
-
-	-- ALTERNATE: if the event is not a left click, then nvm,
-	if event.buttons > 1 then
-		exit
-	end
-
-	-- If CTRL modifier key is pressed (to open a new tab) then nvm
-	if event.ctrlKey is true then
-		exit
-	end
-
-	-- If META modifier key is pressed (to open a "right click" menu) then nvm
-	if event.metaKey is true then
-		exit
-	end
-
-	-- See if we're in a child of a .turboclick element
-	set node to the closest <.turboclick /> to the event.target
-
-	-- if so, then just get on with it, without waiting for the mouseup.
-	if node is not null then
-		halt the event
-		click() the node
-	end
-
-end
-*/
+-- turboclick behavior intentionally disabled.
+-- The previous implementation was kept here inside a block comment, but
+-- block comments were removed in hyperscript 0.9.90 and now fail to parse.
+-- The prior source remains available in git history if it is ever revived.
