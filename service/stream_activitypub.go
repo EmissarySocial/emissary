@@ -470,3 +470,135 @@ func (service *Stream) refreshReplyCount(session data.Session, parent *model.Str
 
 	return nil
 }
+
+// AddResponseCollectionItem records an inbound remote Like/Dislike/Announce (activityURL) in the
+// JIT Likes/Dislikes/Shares collection of the local Stream that targetURL points to, and refreshes
+// the matching count. This is the inbound-federation counterpart to the Response service's funnel,
+// which only handles LOCAL responses (in-app, Mastodon, intent). No-op when activityType is not a
+// projected response type, or targetURL is empty / not a local public Stream.
+func (service *Stream) AddResponseCollectionItem(session data.Session, targetURL string, activityType string, activityURL string) error {
+
+	const location = "service.Stream.AddResponseCollectionItem"
+
+	// RULE: Without a target or an activity URL there is nothing to project.
+	if targetURL == "" || activityURL == "" {
+		return nil
+	}
+
+	// Resolve the target. A target that isn't a local Stream (remote host, or not found)
+	// resolves to NotFound, and is not ours to track responses for, so we quietly skip it.
+	target := model.NewStream()
+
+	if err := service.LoadByURL(session, targetURL, &target); err != nil {
+
+		if derp.IsNotFound(err) {
+			return nil
+		}
+
+		return derp.Wrap(err, location, "Loading target Stream", "target: "+targetURL)
+	}
+
+	// RULE: Only public streams expose response collections (mirrors AddReply). This object-side
+	// policy is the reason inbound projection resolves the Stream here rather than in the primitive.
+	if !target.DefaultAllow.IsAnonymous() {
+		return nil
+	}
+
+	// Project via the shared primitive, keyed by the activity's own (resolvable) URL.
+	collection, collectionType, err := service.collectionService.ProjectResponse(session, &target, activityType, activityURL, true)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Projecting response into collection", "activityURL: "+activityURL)
+	}
+
+	if collectionType == "" {
+		return nil
+	}
+
+	// Refresh the target's denormalized count for this response type.
+	if err := service.refreshResponseCount(session, &target, &collection, collectionType); err != nil {
+		return derp.Wrap(err, location, "Refreshing response count", target.StreamID.Hex())
+	}
+
+	return nil
+}
+
+// RemoveResponseCollectionItem removes an inbound remote Like/Dislike/Announce (activityURL) from the
+// Likes/Dislikes/Shares collection of the local Stream that targetURL points to, and refreshes the
+// matching count. It is the symmetric counterpart to AddResponseCollectionItem, called when an Undo
+// (or Delete) of the original activity arrives. No-op when the target is not a local Stream, or no
+// such collection/item exists.
+func (service *Stream) RemoveResponseCollectionItem(session data.Session, targetURL string, activityType string, activityURL string) error {
+
+	const location = "service.Stream.RemoveResponseCollectionItem"
+
+	// RULE: Without a target or an activity URL there is nothing to remove.
+	if targetURL == "" || activityURL == "" {
+		return nil
+	}
+
+	// Resolve the target. A target that isn't a local Stream (remote host, or not found)
+	// resolves to NotFound, and is not ours to track responses for, so we quietly skip it.
+	target := model.NewStream()
+
+	if err := service.LoadByURL(session, targetURL, &target); err != nil {
+		if derp.IsNotFound(err) {
+			return nil
+		}
+		return derp.Wrap(err, location, "Unable to load target Stream", "target: "+targetURL)
+	}
+
+	// Project (removal) via the shared primitive. A zero collectionType means there was nothing
+	// to remove (non-projected type, or the Stream has no such collection yet).
+	collection, collectionType, err := service.collectionService.ProjectResponse(session, &target, activityType, activityURL, false)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Removing response from collection", "activityURL: "+activityURL)
+	}
+
+	if collectionType == "" {
+		return nil
+	}
+
+	if err := service.refreshResponseCount(session, &target, &collection, collectionType); err != nil {
+		return derp.Wrap(err, location, "Unable to refresh response count", target.StreamID.Hex())
+	}
+
+	return nil
+}
+
+// refreshResponseCount recomputes the target Stream's denormalized Like/Dislike/Share count from the
+// live collection size and Saves it. Mirrors refreshReplyCount, but selects the count field by type.
+func (service *Stream) refreshResponseCount(session data.Session, target *model.Stream, collection *model.Collection, collectionType string) error {
+
+	const location = "service.Stream.refreshResponseCount"
+
+	// Recompute-and-Save (not increment) because data.Collection exposes no atomic $inc;
+	// a stale overwrite re-derives correctly next time (cf. COLLECTIONS-REDESIGN D4).
+	count, err := service.collectionService.CountItems(session, collection)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to count response collection", collection.CollectionID.Hex())
+	}
+
+	switch collectionType {
+
+	case model.CollectionTypeLikes:
+		target.LikeCount = int(count)
+
+	case model.CollectionTypeDislikes:
+		target.DislikeCount = int(count)
+
+	case model.CollectionTypeShares:
+		target.ShareCount = int(count)
+
+	default:
+		return derp.Internal(location, "Unexpected collection type", collectionType)
+	}
+
+	if err := service.Save(session, target, "Refreshed response count"); err != nil {
+		return derp.Wrap(err, location, "Unable to save Stream with refreshed response count", target.StreamID.Hex())
+	}
+
+	return nil
+}

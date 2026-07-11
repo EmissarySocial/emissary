@@ -483,7 +483,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/admin/reindex-activitystream-cache", handler.WithOwner(factory, handler.ReIndexActivityStreamCache))
 	e.POST("/admin/index-all-streams", handler.WithOwner(factory, handler.IndexAllStreams))
 	e.POST("/admin/index-all-users", handler.WithOwner(factory, handler.IndexAllUsers))
-	e.POST("/admin/reindex-responses", handler.WithOwner(factory, handler.ReindexResponses))
 	e.POST("/admin/reindex-replies", handler.WithOwner(factory, handler.ReindexReplies))
 
 	// Startup Wizard

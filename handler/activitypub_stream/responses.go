@@ -38,27 +38,36 @@ func getResponseCollection(ctx *steranko.Context, factory *service.Factory, sess
 		return derp.Unauthorized(location, "Anonymous access not allowed")
 	}
 
-	// If no "publishDate" query param, return the collection header pointing at the first page.
-	publishDateString := ctx.QueryParam("publishDate")
-
-	if publishDateString == "" {
-		ctx.Response().Header().Set("Content-Type", model.MimeTypeActivityPub)
-		return ctx.JSON(http.StatusOK, activitypub.Collection(baseRequestURL))
-	}
-
-	// Fall through means a specific page was requested. Locate the response collection.
+	// Locate the response collection (needed for both the header's totalItems and the page items).
 	collectionService := factory.Collection()
 	collection := model.NewCollection()
+	collectionExists := true
 
 	if err := collectionService.LoadByType(session, stream.StreamID, collectionType, &collection); err != nil {
 
-		// No collection yet just means no responses of this type. Serve an empty page.
+		// No collection yet just means no responses of this type (totalItems = 0).
 		if derp.IsNotFound(err) {
-			ctx.Response().Header().Set("Content-Type", model.MimeTypeActivityPub)
-			return ctx.JSON(http.StatusOK, activitypub.CollectionPage_Links(fullURL(factory, ctx), baseRequestURL, 0, []model.CollectionItem{}))
+			collectionExists = false
+		} else {
+			return derp.Wrap(err, location, "Unable to load response collection", collectionType)
 		}
+	}
 
-		return derp.Wrap(err, location, "Unable to load response collection", collectionType)
+	// If no "publishDate" query param, return the collection header (with totalItems) pointing at
+	// the first page. totalItems is part of the W3C collection definition (D9).
+	publishDateString := ctx.QueryParam("publishDate")
+
+	if publishDateString == "" {
+		result := activitypub.Collection(baseRequestURL)
+		result.TotalItems = collection.TotalItems
+		ctx.Response().Header().Set("Content-Type", model.MimeTypeActivityPub)
+		return ctx.JSON(http.StatusOK, result)
+	}
+
+	// A specific page was requested but no collection exists yet: serve an empty page.
+	if !collectionExists {
+		ctx.Response().Header().Set("Content-Type", model.MimeTypeActivityPub)
+		return ctx.JSON(http.StatusOK, activitypub.CollectionPage_Links(fullURL(factory, ctx), baseRequestURL, 0, []model.CollectionItem{}))
 	}
 
 	// Retrieve a page of response items, ordered by createDate.

@@ -252,6 +252,7 @@ func PostStatus_Favourite(serverFactory *server.Factory) func(model.Authorizatio
 		responseService := factory.Response()
 		response := model.NewResponse()
 		response.UserID = auth.UserID
+		response.Actor = user.ActivityPubURL()
 		response.Content = "👍"
 		response.Object = message.URL
 		response.Type = vocab.ActivityTypeLike

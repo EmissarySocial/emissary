@@ -82,19 +82,6 @@ func IndexAllUsers(ctx *steranko.Context, factory *service.Factory, session data
 	return ctx.NoContent(http.StatusOK)
 }
 
-// ReindexResponses re-projects all existing Response records into their Streams'
-// Like/Dislike collections and refreshes counts. Admin-only; safe to re-run.
-func ReindexResponses(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
-
-	const location = "handler.ReindexResponses"
-
-	if err := factory.Response().ReindexResponses(session); err != nil {
-		return derp.Wrap(err, location, "Unable to reindex responses")
-	}
-
-	return ctx.NoContent(http.StatusOK)
-}
-
 // ReindexReplies re-projects all reply Streams into their parents' Replies collections
 // and refreshes reply counts. Admin-only; safe to re-run.
 func ReindexReplies(ctx *steranko.Context, factory *service.Factory, session data.Session) error {

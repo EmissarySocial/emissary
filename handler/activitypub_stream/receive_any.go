@@ -18,6 +18,9 @@ func init() {
 	streamRouter.Add(vocab.ActivityTypeDislike, vocab.Any, BoostAny)
 }
 
+// BoostAny handles inbound Create/Update/Announce/Like/Dislike activities on a Stream: it caches
+// the activity (or its object), projects a Like/Dislike/Announce into the Stream's response
+// collection, and re-announces the activity to the Stream's followers.
 func BoostAny(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_stream.BoostAny"

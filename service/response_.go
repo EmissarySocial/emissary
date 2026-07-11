@@ -10,20 +10,20 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Response defines a service that can send and receive response data
 type Response struct {
-	collectionService     *Collection
-	collectionItemService *CollectionItem
+	activityStreamService *ActivityStream
 	importItemService     *ImportItem
 	newsFeedService       *NewsFeed
 	outboxService         *Outbox
-	streamService         *Stream
 	userService           *User
 	host                  string
 }
@@ -39,12 +39,10 @@ func NewResponse() Response {
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Response) Refresh(factory *Factory) {
-	service.collectionService = factory.Collection()
-	service.collectionItemService = factory.CollectionItem()
+	service.activityStreamService = factory.ActivityStream()
 	service.importItemService = factory.ImportItem()
 	service.newsFeedService = factory.NewsFeed()
 	service.outboxService = factory.Outbox()
-	service.streamService = factory.Stream()
 	service.userService = factory.User()
 	service.host = factory.Host()
 }
@@ -121,10 +119,9 @@ func (service *Response) Save(session data.Session, response *model.Response, no
 		return derp.Wrap(err, location, "Unable to set Response to inbox message", response.UserID)
 	}
 
-	// Project this Response into the target Stream's Likes/Dislikes collection (if local).
-	if err := service.projectResponse(session, response, true); err != nil {
-		return derp.Wrap(err, location, "Unable to project Response into collection", response)
-	}
+	// NOTE: a Response does NOT write its own CollectionItem. The object-side projection is owned
+	// solely by the inbound funnel: SetResponse publishes the reaction to the author, and the
+	// resulting inbox delivery (including the self-loopback) projects it. See COLLECTIONS-REDESIGN.md D6.
 
 	return nil
 }
@@ -144,123 +141,27 @@ func (service *Response) Delete(session data.Session, response *model.Response, 
 		return derp.Wrap(err, location, "Unable to remove Response from inbox message", response.UserID)
 	}
 
-	// Remove this Response from the target Stream's Likes/Dislikes collection (if local).
-	if err := service.projectResponse(session, response, false); err != nil {
-		return derp.Wrap(err, location, "Unable to remove Response from collection", response)
+	// NOTE: no direct CollectionItem removal here. The Undo published below loops back through the
+	// inbound funnel, which is the sole owner of the object-side projection (D6).
+
+	// Load the reacting User (needed for the followers-collection URL when computing the Announce
+	// audience). If the user is gone, fall back to a zero User — reactionAudience still resolves the
+	// author and degrades safely.
+	user := model.NewUser()
+	if err := service.userService.LoadByID(session, response.UserID, &user); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to load User for Undo audience", response.UserID))
 	}
 
-	// Unpublish from the Outbox, and send the "Undo" activity to followers
-	if err := service.outboxService.UndoActivity(session, model.FollowerTypeUser, response.UserID, response.ActivityPubURL(), model.NewAnonymousPermissions()); err != nil {
+	// Build the ORIGINAL activity's JSON-LD (embedded inline in the Undo) and apply the same
+	// per-type audience the original reaction used, so the Undo reaches exactly the same actors.
+	// Embedding it (rather than referencing by URL) matters because the Response row was just
+	// hard-deleted, so its /pub/liked/<id> URL would 404 if dereferenced (D7). The options spread
+	// MUST be preserved so an author-only reaction's Undo stays author-only (D7b).
+	originalActivity := response.GetJSONLD()
+	options := service.reactionAudience(&user, response, originalActivity)
+
+	if err := service.outboxService.UndoActivity(session, model.FollowerTypeUser, response.UserID, originalActivity, model.NewAnonymousPermissions(), options...); err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to send Undo activity"))
-	}
-
-	return nil
-}
-
-// ReindexResponses re-projects every existing Response into its target Stream's
-// Like/Dislike collection and refreshes counts. It is safe to re-run (idempotent).
-func (service *Response) ReindexResponses(session data.Session) error {
-
-	const location = "service.Response.ReindexResponses"
-
-	// projectResponse is idempotent: AddItem de-dupes by URI (SaveUnique) and counts
-	// are recomputed (not incremented), so a repeated run converges to the same state.
-	responses, err := service.Range(session, exp.All())
-
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to range Responses")
-	}
-
-	for response := range responses {
-		if err := service.projectResponse(session, &response, true); err != nil {
-			// Report and continue: one bad row must not abort the whole backfill.
-			derp.Report(derp.Wrap(err, location, "Unable to project Response", response.ResponseID.Hex()))
-		}
-	}
-
-	return nil
-}
-
-// refreshResponseCount recomputes the Stream's denormalized Like/Dislike/Share count from
-// the live collection size and Saves it.
-func (service *Response) refreshResponseCount(session data.Session, stream *model.Stream, collection *model.Collection, collectionType string) error {
-
-	const location = "service.Response.refreshResponseCount"
-
-	// Recompute-and-Save (not increment) because data.Collection exposes no atomic $inc;
-	// a stale overwrite simply re-derives correctly next time (cf. COLLECTIONS-REDESIGN D4).
-	count, err := service.collectionItemService.CountByCollection(session, collection.UserID, collection.CollectionID, exp.All())
-
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to count collection items", collection.CollectionID.Hex())
-	}
-
-	switch collectionType {
-	case model.CollectionTypeLikes:
-		stream.LikeCount = int(count)
-	case model.CollectionTypeDislikes:
-		stream.DislikeCount = int(count)
-	case model.CollectionTypeShares:
-		stream.ShareCount = int(count)
-	default:
-		return derp.Internal(location, "Unexpected collection type", collectionType)
-	}
-
-	if err := service.streamService.Save(session, stream, "Refreshed response count"); err != nil {
-		return derp.Wrap(err, location, "Unable to save Stream with refreshed count", stream.StreamID.Hex())
-	}
-
-	return nil
-}
-
-// projectResponse adds (add=true) or removes (add=false) the response in its target
-// Stream's Like/Dislike collection and refreshes the count. It is a no-op for non-projected types and remote targets.
-func (service *Response) projectResponse(session data.Session, response *model.Response, add bool) error {
-
-	const location = "service.Response.projectResponse"
-
-	// This is the single funnel through which all Response mutations (in-app, Mastodon
-	// API, ActivityPub intent) keep the projection and counts in sync — they all route
-	// through Save/Delete. See COLLECTIONS-REDESIGN.md (Phase 5 / D5).
-
-	// RULE: Only Like/Dislike/Share responses project into a per-Stream collection.
-	collectionType := model.CollectionTypeForResponse(response.Type)
-
-	if collectionType == "" {
-		return nil
-	}
-
-	// Resolve the target Object to a local Stream. A remote or missing target is not ours.
-	stream := model.NewStream()
-
-	if err := service.streamService.LoadByURL(session, response.Object, &stream); err != nil {
-		if derp.IsNotFound(err) {
-			return nil
-		}
-		return derp.Wrap(err, location, "Unable to load target Stream", "object: "+response.Object)
-	}
-
-	// JIT the Stream's Likes/Dislikes collection (concurrency-safe via the unique index).
-	collection, err := service.collectionService.LoadOrCreateByStream(session, &stream, collectionType)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to load-or-create response collection", "type: "+collectionType)
-	}
-
-	// Add or remove the response in the collection.
-	if add {
-		if err := service.collectionService.AddItem(session, &collection, response.ActivityPubURL(), response.Object); err != nil {
-			return derp.Wrap(err, location, "Unable to add response to collection", response)
-		}
-	} else {
-		if err := service.collectionService.RemoveItem(session, &collection, response.ActivityPubURL()); err != nil {
-			return derp.Wrap(err, location, "Unable to remove response from collection", response)
-		}
-	}
-
-	// Recompute-and-Save the denormalized count on the parent Stream.
-	if err := service.refreshResponseCount(session, &stream, &collection, collectionType); err != nil {
-		return derp.Wrap(err, location, "Unable to refresh response count", stream.StreamID.Hex())
 	}
 
 	return nil
@@ -459,10 +360,14 @@ func (service *Response) SetResponse(session data.Session, user *model.User, url
 		return derp.Wrap(err, location, "Unable to save response", response)
 	}
 
-	activity := service.Activity(response)
+	// Build the outgoing activity map, then apply the per-type audience: Like/Dislike deliver
+	// author-only (via the returned WithRecipients option); Announce is stamped Public + cc and
+	// keeps the default follower fan-out (D7b / resolved Q3).
+	activityMap := response.GetJSONLD()
+	options := service.reactionAudience(user, &response, activityMap)
 
-	// Publish the new Response to the Outbox, sending "Like" notifications to all followers.
-	if err := service.outboxService.Publish(session, model.FollowerTypeUser, user.UserID, activity, model.NewAnonymousPermissions()); err != nil {
+	// Publish the new Response to the Outbox.
+	if err := service.outboxService.Publish(session, model.FollowerTypeUser, user.UserID, streams.NewDocument(activityMap), model.NewAnonymousPermissions(), options...); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error publishing Response", response))
 	}
 
@@ -496,6 +401,57 @@ func (service *Response) UnsetResponse(session data.Session, user *model.User, u
 	return nil
 }
 
-func (service *Response) Activity(response model.Response) streams.Document {
-	return streams.NewDocument(response.GetJSONLD())
+// objectAuthorURL resolves the AUTHOR ACTOR (attributedTo) of the object this Response reacted to.
+// Only actors have inboxes (D7a), so the author — not the object URL — is the deliverable target of
+// a reaction. Returns "" if the object cannot be loaded or has no attributedTo.
+func (service *Response) objectAuthorURL(response *model.Response) string {
+
+	object, err := service.activityStreamService.AppClient().Load(response.Object)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "service.Response.objectAuthorURL", "Unable to load reacted-to object to resolve its author", response.Object))
+		return ""
+	}
+
+	return object.AttributedTo().ID()
+}
+
+// reactionAudience computes the delivery audience for a reaction and applies it to the outgoing
+// activity, following Mastodon (see COLLECTIONS-REDESIGN.md resolved Q3 / D7a / D7b):
+//
+//   - Like / Dislike: delivered ONLY to the liked object's AUTHOR. No `to`/`cc` on the wire (matching
+//     Mastodon's minimal Like). Returns WithRecipients(<author>) so the follower fan-out is replaced.
+//   - Announce (share): a broadcast. Stamps `to: [Public]` and `cc: [followers, author]` on the wire
+//     and returns no override, so the default follower fan-out runs; the author is added as an
+//     addressee (via `cc`) so they are delivered to as well.
+//
+// The `activity` map is mutated in place (Announce addressing). `user` is the reacting actor, needed
+// for its followers-collection URL. When the author cannot be resolved, Like/Dislike fall back to an
+// empty recipient set (suppressing fan-out) rather than accidentally broadcasting.
+func (service *Response) reactionAudience(user *model.User, response *model.Response, activity mapof.Any) []PublishOption {
+
+	authorURL := service.objectAuthorURL(response)
+
+	// Announce is a public broadcast: Public in `to`, followers + author in `cc`.
+	if response.Type == vocab.ActivityTypeAnnounce {
+
+		activity[vocab.PropertyTo] = []string{vocab.NamespacePublic}
+
+		cc := []string{user.ActivityPubFollowersURL()}
+		if authorURL != "" {
+			cc = append(cc, authorURL)
+		}
+		activity[vocab.PropertyCC] = cc
+
+		// Default follower fan-out; the author reached via the `cc` addressee.
+		return nil
+	}
+
+	// Like / Dislike are author-only, with no `to`/`cc` on the wire.
+	if authorURL == "" {
+		log.Warn().Str("object", response.Object).Str("type", response.Type).Msg("Response: reacted-to object has no resolvable author; reaction will not be delivered")
+		return []PublishOption{WithRecipients()}
+	}
+
+	return []PublishOption{WithRecipients(authorURL)}
 }

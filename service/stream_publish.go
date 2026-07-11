@@ -94,10 +94,14 @@ func (service *Stream) publish_outbox(session data.Session, user *model.User, st
 		vocab.ActivityTypeCreate,
 	)
 
-	// Create the Activity to send to Followers
+	// Create the Activity to send to Followers.
+	//
+	// NOTE: a Create/Update is an ACTIVITY wrapping an OBJECT (the Stream). The activity has
+	// no record of its own, so it carries NO `id` — the Outbox mints one on publish. The
+	// wrapped `object` keeps its own object-id (stream.ActivityPubURL()); the activity must
+	// not borrow it, or the two share an identity. See COLLECTIONS-REDESIGN.md D7.
 	activity := mapof.Any{
 		vocab.AtContext:         vocab.ContextTypeActivityStreams,
-		vocab.PropertyID:        stream.ActivityPubURL(),
 		vocab.PropertyType:      activityType,
 		vocab.PropertyActor:     user.ActivityPubURL(),
 		vocab.PropertyObject:    object,

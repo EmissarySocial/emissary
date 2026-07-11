@@ -11,6 +11,37 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+/*
+ARCHITECTURE NOTE — Response vs. CollectionItem (read alongside model/collectiontem.go)
+
+A "Response" is an OUTBOUND reaction: a record that a LOCAL actor Liked / Disliked /
+Announced some piece of content. The content may belong to the actor themselves, to
+another actor on this server, or to a remote actor on another server. A Response exists
+so that we can PUBLISH the activity to the actor's outbox and federate it outward. It is
+the actor-side store-of-record (it also drives Mastodon-API compatibility).
+
+A "CollectionItem" is the INBOUND mirror image: it records a Like / Dislike / Announce
+that WE RECEIVED for OUR OWN content. The Likes/Dislikes/Shares collections on a Stream
+are "everyone who reacted to this post," and are what the /pub/likes (etc.) endpoints
+serve and what the denormalized Stream counts read.
+
+The two are independent and both may exist for a single reaction:
+
+  - When a LOCAL user reacts to REMOTE content: only a Response (nothing of ours was liked).
+  - When a REMOTE user reacts to OUR content: only a CollectionItem (they own the Response).
+  - When a LOCAL user reacts to their OWN (or another local user's) content: BOTH — a
+    Response (to publish the activity) AND a CollectionItem (to link the reaction to the
+    liked item). These are two different rows describing the same reaction from two sides.
+
+KNOWN ROUGH EDGES (2026-07-11, being redesigned — do not treat the current code as the
+intended shape): the OUTBOUND path (Response.Save -> projectResponse) writes the inbound
+CollectionItem directly as a shortcut, keyed by the Response's own /pub/liked/<id> URL,
+while the genuine INBOUND path keys the same item by the arriving activity's ID — so a
+single reaction can be identified two different ways. The goal architecture is for a
+Response to only persist+publish, and for a SINGLE inbound projection funnel to own every
+CollectionItem (self-reactions included, via loopback), under one canonical key.
+*/
+
 // Response defines a single Actor's response to an Object.  The actor may be a local or remote user, and the
 // Object may be a local stream or an inbox message.
 type Response struct {
@@ -97,7 +128,10 @@ func (response Response) IsEqual(other Response) bool {
 }
 
 func (response Response) ActivityPubCreateDate() string {
-	return hannibal.TimeFormat(time.Unix(response.CreateDate, 0))
+	// CreateDate is stored in milliseconds (journal uses UnixMilli), so convert to seconds before
+	// building a time.Time. Passing the raw millis to time.Unix(_, 0) yielded a 5-digit year that
+	// then failed to re-parse (RFC1123 wants a 4-digit year), leaving `published` blank downstream.
+	return hannibal.TimeFormat(time.Unix(response.CreateDateSeconds(), 0))
 }
 
 // CreateDateSeconds returns the CreateDate in Unix Epoch seconds (instead of milliseconds)

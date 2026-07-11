@@ -10,11 +10,11 @@ func ResponseSchema() schema.Element {
 
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"responseId": schema.String{Format: "objectId"},
-			"userId":     schema.String{Format: "objectId"},
-			"actor":      schema.String{Format: "url"},
-			"object":     schema.String{Format: "url"},
-			"type":       schema.String{MaxLength: 128, Enum: []string{vocab.ActivityTypeAnnounce, vocab.ActivityTypeLike, vocab.ActivityTypeDislike}},
+			"responseId": schema.String{Required: true, Format: "objectId"},
+			"userId":     schema.String{Required: true, Format: "objectId"},
+			"actor":      schema.String{Required: true, Format: "url"},
+			"object":     schema.String{Required: true, Format: "url"},
+			"type":       schema.String{Required: true, MaxLength: 128, Enum: []string{vocab.ActivityTypeAnnounce, vocab.ActivityTypeLike, vocab.ActivityTypeDislike}},
 			"content":    schema.String{Format: "text", MaxLength: 256},
 		},
 	}

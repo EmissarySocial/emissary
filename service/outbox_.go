@@ -295,6 +295,19 @@ func (service *Outbox) RangeByObjectID(session data.Session, actorType string, a
 	return service.Range(session, criteria)
 }
 
+// RangeByActivityURL returns every OutboxMessage in this Actor's outbox whose canonical
+// activity URL matches. Used to find-and-remove a first-class activity (e.g. the original
+// Like) when it is undone — the counterpart to RangeByObjectID, which matches by the URL of
+// the OBJECT an activity acted upon. See COLLECTIONS-REDESIGN.md D7.
+func (service *Outbox) RangeByActivityURL(session data.Session, actorType string, actorID primitive.ObjectID, activityURL string) (iter.Seq[model.OutboxMessage], error) {
+
+	criteria := exp.Equal("actorType", actorType).
+		AndEqual("actorId", actorID).
+		AndEqual("activityUrl", activityURL)
+
+	return service.Range(session, criteria)
+}
+
 func (service *Outbox) LoadByID(session data.Session, userID primitive.ObjectID, outboxMessageID primitive.ObjectID, outboxMessage *model.OutboxMessage) error {
 	criteria := exp.Equal("actorId", userID).AndEqual("_id", outboxMessageID)
 	return service.Load(session, criteria, outboxMessage)

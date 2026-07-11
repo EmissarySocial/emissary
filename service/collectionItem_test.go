@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -64,6 +65,13 @@ func (c *itemStore) Load(criteria exp.Expression, target data.Object, _ ...optio
 }
 
 func (c *itemStore) Save(object data.Object, _ string) error {
+
+	// AddItem/RemoveItem refresh the parent Collection's totalItems by Saving the Collection
+	// (D9). This fake only tracks CollectionItems, so a Collection Save is an accepted no-op.
+	if _, ok := object.(*model.Collection); ok {
+		return nil
+	}
+
 	item, ok := object.(*model.CollectionItem)
 	if !ok {
 		return derp.Internal("test", "unexpected object type")
@@ -133,6 +141,9 @@ func matchesItem(criteria exp.Expression, record *model.CollectionItem) bool {
 		case "collectionId":
 			value, ok := predicate.Value.(primitive.ObjectID)
 			return ok && record.CollectionID == value
+		case "parentId":
+			value, ok := predicate.Value.(primitive.ObjectID)
+			return ok && record.ParentID == value
 		case "userId":
 			value, ok := predicate.Value.(primitive.ObjectID)
 			return ok && record.UserID == value
@@ -165,15 +176,9 @@ func newItem(collectionID primitive.ObjectID, uri string) *model.CollectionItem 
 	item := model.NewCollectionItem()
 	item.UserID = primitive.NewObjectID()
 	item.CollectionID = collectionID
+	item.ParentID = primitive.NewObjectID()
+	item.CollectionType = model.CollectionTypeLikes
 	item.URI = uri
-	return &item
-}
-
-// itemReplyingTo returns a CollectionItem stored under a given inReplyTo target.
-func itemReplyingTo(inReplyTo string) *model.CollectionItem {
-	item := model.NewCollectionItem()
-	item.CollectionItemID = primitive.NewObjectID()
-	item.URI = "https://example.test/reply/" + primitive.NewObjectID().Hex()
 	return &item
 }
 
@@ -534,18 +539,23 @@ func TestCollection_RemoveItem_LoadError(t *testing.T) {
 	require.False(t, derp.IsNotFound(err))
 }
 
-// CountItems returns the number of items in a collection.
+// CountItems returns the number of items in a collection. ParentID is kept distinct from
+// UserID here because CountItems keys on collection.ParentID (the Stream, for a Likes/Replies
+// collection), not UserID — a regression to UserID would count zero and fail this test.
 func TestCollection_CountItems(t *testing.T) {
 
 	collectionID := primitive.NewObjectID()
 	userID := primitive.NewObjectID()
+	parentID := primitive.NewObjectID()
 
 	a := newItem(collectionID, "https://example.test/a")
 	a.CollectionItemID = primitive.NewObjectID()
 	a.UserID = userID
+	a.ParentID = parentID
 	b := newItem(collectionID, "https://example.test/b")
 	b.CollectionItemID = primitive.NewObjectID()
 	b.UserID = userID
+	b.ParentID = parentID
 
 	store := &itemStore{records: []*model.CollectionItem{a, b}}
 	service, session := newCollectionServiceWith(store)
@@ -553,8 +563,38 @@ func TestCollection_CountItems(t *testing.T) {
 	collection := model.NewCollection()
 	collection.CollectionID = collectionID
 	collection.UserID = userID
+	collection.ParentID = parentID
 
 	count, err := service.CountItems(session, &collection)
 	require.Nil(t, err)
 	require.Equal(t, int64(2), count)
+}
+
+// ProjectResponse short-circuits (no DB access) when the response type is not a projected
+// type — returning a zero collection, an empty collectionType, and no error.
+func TestCollection_ProjectResponse_NonProjectedType(t *testing.T) {
+
+	service, session := newCollectionServiceWith(&itemStore{})
+	stream := model.NewStream()
+
+	// "Follow" is not Like/Dislike/Announce, so CollectionTypeForResponse returns "".
+	collection, collectionType, err := service.ProjectResponse(session, &stream, "Follow", "https://example.test/x", true)
+
+	require.Nil(t, err)
+	require.Equal(t, "", collectionType)
+	require.True(t, collection.CollectionID.IsZero())
+}
+
+// ProjectResponse short-circuits (no DB access) when itemURI is empty, even for a projected
+// response type — there is nothing to add or remove.
+func TestCollection_ProjectResponse_EmptyURI(t *testing.T) {
+
+	service, session := newCollectionServiceWith(&itemStore{})
+	stream := model.NewStream()
+
+	collection, collectionType, err := service.ProjectResponse(session, &stream, vocab.ActivityTypeLike, "", true)
+
+	require.Nil(t, err)
+	require.Equal(t, "", collectionType)
+	require.True(t, collection.CollectionID.IsZero())
 }

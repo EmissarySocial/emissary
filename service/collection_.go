@@ -115,8 +115,9 @@ func (service *Collection) Delete(session data.Session, collection *model.Collec
 
 	const location = "service.Collection.Delete"
 
-	// Delete CollectionItems that are part of this Collection
-	if err := service.collectionItemService.DeleteByCollection(session, collection.UserID, collection.CollectionID, note); err != nil {
+	// Delete CollectionItems that are part of this Collection. DeleteByCollection filters on
+	// parentId, which items inherit from collection.ParentID (NOT UserID) via AddItem.
+	if err := service.collectionItemService.DeleteByCollection(session, collection.ParentID, collection.CollectionID, note); err != nil {
 		return derp.Wrap(err, location, "Deleting CollectionItems for Collection", collection.CollectionID.Hex())
 	}
 
@@ -396,8 +397,77 @@ func (service *Collection) AddItem(session data.Session, collection *model.Colle
 		return derp.Wrap(err, location, "Saving collection item", collectionItem)
 	}
 
+	// Keep the W3C-required `totalItems` accurate (D9).
+	if err := service.refreshTotalItems(session, collection); err != nil {
+		return derp.Wrap(err, location, "Refreshing collection totalItems", collection.CollectionID.Hex())
+	}
+
 	// Success
 	return nil
+}
+
+// ProjectResponse adds (add=true) or removes (add=false) itemURI in the given Stream's
+// Like/Dislike/Share collection and returns the affected collection plus its collection type.
+//
+// This is the single, side-agnostic projection primitive shared by BOTH the actor-side funnel
+// (service.Response, for LOCAL reactions) and the object-side handlers (inbound remote reactions).
+// The two sides differ in everything around this call — whether a Response record exists, outbox
+// federation, newsfeed state — but the projection itself is identical, so it lives here once.
+//
+// itemURI is the caller's choice of stable key (local: response.ActivityPubURL(); remote: the
+// inbound activity's own ID). Because the count field lives on the Stream, the caller refreshes it
+// using the returned collection (see Stream.refreshResponseCount). Returns a zero collection and an
+// empty collectionType (no error) when responseType is not a projected type; on remove, the returned
+// collection is likewise zero when the Stream has no such collection yet (nothing to remove).
+func (service *Collection) ProjectResponse(session data.Session, stream *model.Stream, responseType string, itemURI string, add bool) (model.Collection, string, error) {
+
+	const location = "service.Collection.ProjectResponse"
+
+	// RULE: Only Like/Dislike/Announce project into a per-Stream collection.
+	collectionType := model.CollectionTypeForResponse(responseType)
+
+	if collectionType == "" {
+		return model.Collection{}, "", nil
+	}
+
+	// RULE: Without an item URL there is nothing to project.
+	if itemURI == "" {
+		return model.Collection{}, "", nil
+	}
+
+	// On ADD, JIT the collection (concurrency-safe via the unique index) and add the item.
+	if add {
+
+		collection, err := service.LoadOrCreateByStream(session, stream, collectionType)
+
+		if err != nil {
+			return collection, collectionType, derp.Wrap(err, location, "Loading/Creating response collection", "type: "+collectionType, "streamID: "+stream.StreamID.Hex())
+		}
+
+		if err := service.AddItem(session, &collection, itemURI, stream.URL); err != nil {
+			return collection, collectionType, derp.Wrap(err, location, "Adding response to collection", "itemURI: "+itemURI)
+		}
+
+		return collection, collectionType, nil
+	}
+
+	// On REMOVE, load the existing collection. If none exists, there is nothing to remove.
+	collection := model.NewCollection()
+
+	if err := service.LoadByType(session, stream.StreamID, collectionType, &collection); err != nil {
+
+		if derp.IsNotFound(err) {
+			return model.Collection{}, "", nil
+		}
+
+		return collection, collectionType, derp.Wrap(err, location, "Loading response collection", "type: "+collectionType, "streamID: "+stream.StreamID.Hex())
+	}
+
+	if err := service.RemoveItem(session, &collection, itemURI); err != nil {
+		return collection, collectionType, derp.Wrap(err, location, "Removing response from collection", "itemURI: "+itemURI)
+	}
+
+	return collection, collectionType, nil
 }
 
 // RemoveItem removes the CollectionItem identified by itemURI from the provided Collection.
@@ -422,10 +492,40 @@ func (service *Collection) RemoveItem(session data.Session, collection *model.Co
 		return derp.Wrap(err, location, "Unable to delete collection item", collectionItem)
 	}
 
+	// Keep the W3C-required `totalItems` accurate (D9).
+	if err := service.refreshTotalItems(session, collection); err != nil {
+		return derp.Wrap(err, location, "Refreshing collection totalItems", collection.CollectionID.Hex())
+	}
+
 	return nil
 }
 
 // CountItems returns the number of (live) CollectionItems in the provided Collection.
 func (service *Collection) CountItems(session data.Session, collection *model.Collection) (int64, error) {
-	return service.collectionItemService.CountByCollection(session, collection.UserID, collection.CollectionID, exp.All())
+	// CountByCollection filters on parentId, which items inherit from collection.ParentID (NOT UserID) via AddItem.
+	return service.collectionItemService.CountByCollection(session, collection.ParentID, collection.CollectionID, exp.All())
+}
+
+// refreshTotalItems recomputes the Collection's `totalItems` from the live CollectionItem rows and
+// Saves it (D9). Uses recompute-and-Save (never increment) because there is no atomic $inc — a stale
+// overwrite self-heals on the next add/remove (D4). The in-memory `collection.TotalItems` is updated
+// too, so callers holding the pointer see the fresh value. `totalItems` is part of the W3C collection
+// definition and MUST stay accurate for every add/remove on every collection type.
+func (service *Collection) refreshTotalItems(session data.Session, collection *model.Collection) error {
+
+	const location = "service.Collection.refreshTotalItems"
+
+	count, err := service.CountItems(session, collection)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to count collection items", collection.CollectionID.Hex())
+	}
+
+	collection.TotalItems = int(count)
+
+	if err := service.Save(session, collection, "Refresh totalItems"); err != nil {
+		return derp.Wrap(err, location, "Unable to save collection", collection.CollectionID.Hex())
+	}
+
+	return nil
 }

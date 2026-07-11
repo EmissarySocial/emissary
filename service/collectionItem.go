@@ -269,16 +269,16 @@ func (service *CollectionItem) HardDeleteByURI(session data.Session, URI string)
 	return nil
 }
 
-// DeleteByCollectionID deletes all CollectionItems owned by the provided CollectionID
-func (service *CollectionItem) DeleteByCollection(session data.Session, userID primitive.ObjectID, collectionID primitive.ObjectID, note string) error {
+// DeleteByCollection deletes all CollectionItems in the (parentID, collectionID) collection.
+func (service *CollectionItem) DeleteByCollection(session data.Session, parentID primitive.ObjectID, collectionID primitive.ObjectID, note string) error {
 
 	const location = "service.CollectionItem.DeleteByCollection"
 
 	// Retrieve all CollectionItems
-	collectionItems, err := service.RangeByCollection(session, userID, collectionID, exp.All())
+	collectionItems, err := service.RangeByCollection(session, parentID, collectionID, exp.All())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to query collection items by CollectionID", "userID: "+userID.Hex(), "collectionID: "+collectionID.Hex())
+		return derp.Wrap(err, location, "Unable to query collection items by CollectionID", "parentID: "+parentID.Hex(), "collectionID: "+collectionID.Hex())
 	}
 
 	// Delete each collection item
