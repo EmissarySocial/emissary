@@ -562,8 +562,8 @@
 						{type:"upload", path:"imageUrl", label:"Banner Image", description:"Displays at the top of your profile page. (PUBLIC)", options:{accept:"image/*", delete:"/@me/delete-image"}}
 					]	
 				}}
-				{do:"upload-attachments", category:"icon", fieldname:"iconUrl", attachment-path:"iconId", rules:{width:400, height:400, types:["webp"]}}
-				{do:"upload-attachments", category:"image", fieldname:"imageUrl", attachment-path:"imageId", rules:{types:["webp"]}}
+				{do:"upload-attachments", category:"icon", fieldname:"iconUrl", attachment-path:"iconId", accept-type:"image/*", rules:{width:400, height:400, types:["webp"]}}
+				{do:"upload-attachments", category:"image", fieldname:"imageUrl", attachment-path:"imageId", accept-type:"image/*", rules:{types:["webp"]}}
 				{do:"save"}
 				{do: "refresh-page"}
 			]
