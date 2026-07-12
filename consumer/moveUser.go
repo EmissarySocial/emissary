@@ -149,9 +149,9 @@ func MoveUser(factory *service.Factory, session data.Session, user *model.User, 
 		return queue.Error(derp.Wrap(err, location, "Unable to delete related Circles"))
 	}
 
-	// Delete related Mentions
-	if err := factory.Mention().DeleteByObjectID(session, model.MentionTypeUser, user.UserID, "moved"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to delete related Mentions"))
+	// Delete related Notifications (owned by this User as recipient)
+	if err := factory.Notification().DeleteByUserID(session, user.UserID, "moved"); err != nil {
+		return queue.Error(derp.Wrap(err, location, "Unable to delete related Notifications"))
 	}
 
 	// Delete related Responses

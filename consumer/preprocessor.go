@@ -38,6 +38,9 @@ func PreProcessor(task *queue.Task) error {
 	case "ReceiveActivityPub-Move":
 		task.Priority = 16
 
+	case "SendWebPushNotification":
+		task.Priority = 16
+
 	// (32) User-Affecting Tasks That Should Complete Very Quickly
 
 	///////////////////////////////////////////////////
@@ -109,6 +112,9 @@ func PreProcessor(task *queue.Task) error {
 		task.Priority = 1024
 
 	case "PurgeDomeLog":
+		task.Priority = 1024
+
+	case "PurgeNotifications":
 		task.Priority = 1024
 
 	case "RecycleDomain":

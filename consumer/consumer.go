@@ -83,6 +83,9 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "PurgeImports":
 		return WithSession(consumer.serverFactory, args, PurgeImports)
 
+	case "PurgeNotifications":
+		return WithSession(consumer.serverFactory, args, PurgeNotifications)
+
 	case "ReceiveActivityPub-Add":
 		return WithSession(consumer.serverFactory, args, ReceiveActivityPubAdd)
 
@@ -119,6 +122,9 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 
 	case "SendSearchResult-SearchQuery":
 		return WithSession(consumer.serverFactory, args, SendSearchResult_SearchQuery)
+
+	case "SendWebPushNotification":
+		return WithSession(consumer.serverFactory, args, SendWebPushNotification)
 
 	case "Shuffle":
 		return WithSession(consumer.serverFactory, args, Shuffle)
