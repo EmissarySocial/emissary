@@ -48,35 +48,6 @@ func (service *Following) SaveNewsItem(session data.Session, following *model.Fo
 	return nil
 }
 
-// saveToInbox adds/updates an individual NewsItem based on an RSS item.  It returns TRUE if a new record was created
-func (service *Following) SaveDirectNewsItem(session data.Session, user *model.User, document streams.Document) error {
-
-	const location = "service.Following.SaveDirectNewsItem"
-
-	// Unwrap activities like `Create` and `Update`
-	document = document.UnwrapActivity()
-	attributedTo := document.AttributedTo()
-
-	// Convert the document into a message (and traverse responses if necessary)
-	message := getNewsItem(user.UserID, document)
-	message.Origin = model.OriginLink{
-		Type:    model.OriginTypeMention,
-		Label:   attributedTo.Name(),
-		URL:     attributedTo.ID(),
-		IconURL: attributedTo.Icon().Href(),
-	}
-
-	// Try to save a unique version of this message to the database (always collapse duplicates)
-	if err := service.saveUniqueNewsItem(session, message); err != nil {
-		return derp.Wrap(err, location, "Unable to save message")
-	}
-
-	service.streamService.NotifyInReplyTo(session, document.InReplyTo().ID())
-
-	// Yee. Haw. Deux.
-	return nil
-}
-
 // saveUnique adds/updates a message in the database.  If the message.URL does not already
 // exist, then a new message is added to the Inbox.  Otherwise, the "references" data will
 // of the existing record be updated and the unique value will be re-saved.

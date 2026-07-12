@@ -38,32 +38,32 @@ import (
 
 // Stream manages all interactions with the Stream collection
 type Stream struct {
-	activityService   *ActivityStream
-	attachmentService *Attachment
-	circleService     *Circle
-	collectionService *Collection
-	contentService    *Content
-	domainService     *Domain
-	draftService      *StreamDraft
-	geocodeService    GeocodeAddress
-	importService     *Import
-	importItemService *ImportItem
-	keyService        *EncryptionKey
-	locatorService    *Locator
-	mentionService    *Mention
-	outboxService     *Outbox
-	permissionService *Permission
-	searchTagService  *SearchTag
-	templateService   *Template
-	followerService   *Follower
-	ruleService       *Rule
-	userService       *User
-	webhookService    *Webhook
-	host              string
-	mediaserver       mediaserver.MediaServer
-	queue             *queue.Queue
-	sseUpdateChannel  chan<- realtime.Message
-	newSession        func(timeout time.Duration) (data.Session, context.CancelFunc, error)
+	activityService     *ActivityStream
+	attachmentService   *Attachment
+	circleService       *Circle
+	collectionService   *Collection
+	contentService      *Content
+	domainService       *Domain
+	draftService        *StreamDraft
+	geocodeService      GeocodeAddress
+	importService       *Import
+	importItemService   *ImportItem
+	keyService          *EncryptionKey
+	locatorService      *Locator
+	notificationService *Notification
+	outboxService       *Outbox
+	permissionService   *Permission
+	searchTagService    *SearchTag
+	templateService     *Template
+	followerService     *Follower
+	ruleService         *Rule
+	userService         *User
+	webhookService      *Webhook
+	host                string
+	mediaserver         mediaserver.MediaServer
+	queue               *queue.Queue
+	sseUpdateChannel    chan<- realtime.Message
+	newSession          func(timeout time.Duration) (data.Session, context.CancelFunc, error)
 }
 
 // NewStream returns a fully populated Stream service.
@@ -90,7 +90,7 @@ func (service *Stream) Refresh(factory *Factory) {
 	service.importItemService = factory.ImportItem()
 	service.keyService = factory.EncryptionKey()
 	service.locatorService = factory.Locator()
-	service.mentionService = factory.Mention()
+	service.notificationService = factory.Notification()
 	service.outboxService = factory.Outbox()
 	service.permissionService = factory.Permission()
 	service.ruleService = factory.Rule()
@@ -1296,9 +1296,9 @@ func (service *Stream) Move(session data.Session, stream *model.Stream, movedTo 
 		return derp.Wrap(err, location, "Unable to delete Attachments")
 	}
 
-	// Delete any related Mentions
-	if err := service.mentionService.DeleteByObjectID(session, model.MentionTypeStream, stream.StreamID, "moved"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Mentions")
+	// Delete any related Notifications (mentions/replies/reactions that referenced this Stream)
+	if err := service.notificationService.DeleteByStreamID(session, stream.StreamID, "moved"); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Notifications")
 	}
 
 	return nil

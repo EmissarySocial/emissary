@@ -55,50 +55,52 @@ type Factory struct {
 	exportCache         afero.Fs
 
 	// services (within this domain/factory)
-	activityStream         ActivityStream
-	annotationService      Annotation
-	attachmentService      Attachment
-	circleService          Circle
-	collectionService      Collection
-	collectionItemService  CollectionItem
-	connectionService      Connection
-	domainService          Domain
-	emailService           DomainEmail
-	encryptionKeyService   EncryptionKey
-	folderService          Folder
-	followerService        Follower
-	followingService       Following
-	groupService           Group
-	identityService        Identity
-	importService          Import
-	importItemService      ImportItem
-	inboxService           Inbox
-	keyPackageService      KeyPackage
-	locatorService         Locator
-	mentionService         Mention
-	merchantAccountService MerchantAccount
-	newsFeedService        NewsFeed
-	oauthClient            OAuthClient
-	oauthUserToken         OAuthUserToken
-	objectService          Object
-	outboxService          Outbox
-	outbox2Service         Outbox2
-	permissionService      Permission
-	productService         Product
-	providerService        Provider
-	responseService        Response
-	ruleService            Rule
-	searchDomainService    SearchDomain
-	searchQueryService     SearchQuery
-	searchTagService       SearchTag
-	searchResultService    SearchResult
-	streamService          Stream
-	streamArchiveService   StreamArchive
-	streamDraftService     StreamDraft
-	privilegeService       Privilege
-	realtimeBroker         realtime.Broker
-	userService            User
-	webhookService         Webhook
+	activityStream          ActivityStream
+	annotationService       Annotation
+	attachmentService       Attachment
+	circleService           Circle
+	collectionService       Collection
+	collectionItemService   CollectionItem
+	connectionService       Connection
+	domainService           Domain
+	emailService            DomainEmail
+	encryptionKeyService    EncryptionKey
+	folderService           Folder
+	followerService         Follower
+	followingService        Following
+	groupService            Group
+	identityService         Identity
+	importService           Import
+	importItemService       ImportItem
+	inboxService            Inbox
+	keyPackageService       KeyPackage
+	locatorService          Locator
+	merchantAccountService  MerchantAccount
+	newsFeedService         NewsFeed
+	notificationService     Notification
+	oauthClient             OAuthClient
+	oauthUserToken          OAuthUserToken
+	objectService           Object
+	outboxService           Outbox
+	outbox2Service          Outbox2
+	permissionService       Permission
+	productService          Product
+	providerService         Provider
+	pushSubscriptionService PushSubscription
+	responseService         Response
+	webPushService          WebPush
+	ruleService             Rule
+	searchDomainService     SearchDomain
+	searchQueryService      SearchQuery
+	searchTagService        SearchTag
+	searchResultService     SearchResult
+	streamService           Stream
+	streamArchiveService    StreamArchive
+	streamDraftService      StreamDraft
+	privilegeService        Privilege
+	realtimeBroker          realtime.Broker
+	userService             User
+	webhookService          Webhook
 
 	// real-time watchers
 	refreshContext   context.CancelFunc
@@ -162,8 +164,8 @@ func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, doma
 	factory.newsFeedService = NewNewsFeed()
 	factory.keyPackageService = NewKeyPackage()
 	factory.locatorService = NewLocator()
-	factory.mentionService = NewMention()
 	factory.merchantAccountService = NewMerchantAccount()
+	factory.notificationService = NewNotification()
 	factory.oauthClient = NewOAuthClient()
 	factory.oauthUserToken = NewOAuthUserToken()
 	factory.objectService = NewObject()
@@ -172,6 +174,8 @@ func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, doma
 	factory.permissionService = NewPermission()
 	factory.productService = NewProduct()
 	factory.providerService = NewProvider()
+	factory.pushSubscriptionService = NewPushSubscription()
+	factory.webPushService = NewWebPush()
 	factory.collectionItemService = NewCollectionItem()
 	factory.responseService = NewResponse()
 	factory.realtimeBroker = realtime.NewBroker(factory.SSEUpdateChannel())
@@ -231,9 +235,9 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	factory.inboxService.Refresh(factory)
 	factory.keyPackageService.Refresh(factory)
 	factory.locatorService.Refresh(factory)
-	factory.mentionService.Refresh(factory)
 	factory.merchantAccountService.Refresh(factory)
 	factory.newsFeedService.Refresh(factory)
+	factory.notificationService.Refresh(factory)
 	factory.oauthClient.Refresh(factory)
 	factory.oauthUserToken.Refresh(factory)
 	factory.objectService.Refresh(factory)
@@ -242,6 +246,8 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	factory.permissionService.Refresh(factory)
 	factory.productService.Refresh(factory)
 	factory.providerService.Refresh(factory)
+	factory.pushSubscriptionService.Refresh(factory)
+	factory.webPushService.Refresh(factory)
 	factory.collectionItemService.Refresh(factory)
 	factory.realtimeBroker.Refresh()
 	factory.responseService.Refresh(factory)
@@ -485,9 +491,9 @@ func (factory *Factory) MerchantAccount() *MerchantAccount {
 	return &factory.merchantAccountService
 }
 
-// Mention returns a fully populated Mention service
-func (factory *Factory) Mention() *Mention {
-	return &factory.mentionService
+// Notification returns a fully populated Notification service
+func (factory *Factory) Notification() *Notification {
+	return &factory.notificationService
 }
 
 // NewsFeed returns a fully populated NewsFeed service
@@ -784,6 +790,16 @@ func (factory *Factory) Provider() *Provider {
 	return &factory.providerService
 }
 
+// PushSubscription returns a fully populated PushSubscription service
+func (factory *Factory) PushSubscription() *PushSubscription {
+	return &factory.pushSubscriptionService
+}
+
+// WebPush returns a fully populated WebPush service
+func (factory *Factory) WebPush() *WebPush {
+	return &factory.webPushService
+}
+
 // RSS returns a fully populated RSS service
 func (factory *Factory) RSS() *RSS {
 	return NewRSS(factory.Stream(), factory.Host())
@@ -1002,7 +1018,7 @@ func (factory *Factory) Collections() []string {
 		"NewsFeed",
 		"JWT",
 		// "KeyPackage",
-		"Mention",
+		"Notification",
 		"MerchantAccount",
 		"Rule",
 		"OAuthClient",
@@ -1010,6 +1026,7 @@ func (factory *Factory) Collections() []string {
 		"Outbox",
 		"Privilege",
 		"Product",
+		"PushSubscription",
 		"Response",
 		"Rule",
 		"SearchQuery",
