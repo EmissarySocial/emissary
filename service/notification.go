@@ -215,13 +215,6 @@ func (service *Notification) QueryByStreamID(session data.Session, streamID prim
 	return service.Query(session, exp.Equal("streamId", streamID), options...)
 }
 
-// QueryByStreamAndType returns Notifications for a specific local Stream, filtered to the
-// provided notification types (newest first).  Used by the stream-page mentions display.
-func (service *Notification) QueryByStreamAndType(session data.Session, streamID primitive.ObjectID, notificationTypes ...string) ([]model.Notification, error) {
-	criteria := exp.Equal("streamId", streamID).And(exp.In("type", notificationTypes))
-	return service.Query(session, criteria, option.SortDesc("createDate"))
-}
-
 // CountUnread returns the number of unread Notifications for the provided User.
 func (service *Notification) CountUnread(session data.Session, userID primitive.ObjectID) (int64, error) {
 	criteria := exp.Equal("userId", userID).AndEqual("readDate", int64(math.MaxInt64))
