@@ -128,6 +128,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "make-archive":
 		return NewMakeArchive(stepInfo)
 
+	case "mark-notifications-read":
+		return NewMarkNotificationsRead(stepInfo)
+
 	case "process-content":
 		return NewProcessContent(stepInfo)
 
@@ -274,6 +277,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	case "with-next-sibling":
 		return NewWithNextSibling(stepInfo)
+
+	case "with-notification":
+		return NewWithNotification(stepInfo)
 
 	case "with-oauth-token":
 		return NewWithOAuthToken(stepInfo)

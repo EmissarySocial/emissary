@@ -98,6 +98,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.MakeArchive:
 		return StepMakeArchive(s)
 
+	case step.MarkNotificationsRead:
+		return StepMarkNotificationsRead(s)
+
 	case step.ProcessContent:
 		return StepProcessContent(s)
 
@@ -247,6 +250,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.WithNextSibling:
 		return StepWithNextSibling(s)
+
+	case step.WithNotification:
+		return StepWithNotification(s)
 
 	case step.WithOAuthToken:
 		return StepWithOAuthToken(s)
