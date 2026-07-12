@@ -600,12 +600,6 @@ func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option
 	return Stream{}
 }
 
-// Mentions returns a slice of all Mentions for this Stream
-func (w Stream) Mentions() ([]model.Mention, error) {
-	mentionService := w._factory.Mention()
-	return mentionService.QueryByObjectID(w._session, model.MentionTypeStream, w._stream.StreamID)
-}
-
 func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[ascache.Value] {
 	activityStreamsService := w._factory.ActivityStream()
 	minDate := convert.Int64(dateString)
