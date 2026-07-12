@@ -17,7 +17,21 @@
 			<span class="icon selected-hide">{{icon "inbox"}}</span>
 			<span class="icon selected-show">{{icon "inbox-fill"}}</span>
 			<span class="mobile-show label">Inbox</span>
+			<span id="nav-notifications-badge" class="nav-badge text-red text-sm{{if eq 0 .NotificationsUnreadCount}} hide{{end}}">&#9679;</span>
 		</a>
+
+		<!-- Live-refresh the notification badge on any page when a notification arrives (SSE).
+		     The payload is minimal (topic + user ID); the client just refetches the badge fragment. -->
+		<div
+			hx-ext="sse"
+			sse-connect="/@{{.AuthenticatedID.Hex}}/sse/notifications"
+			hx-get="/@me/newsfeed/notifications-badge"
+			hx-trigger="sse:message"
+			hx-target="#nav-notifications-badge"
+			hx-swap="outerHTML"
+			hx-push-url="false"
+			style="display:none;">
+		</div>
 
 		{{- if .UserCanMLS -}}
 			<a href="/@me/conversations" id="nav-conversations" class="nav-item turboclick" aria-label="Conversations">

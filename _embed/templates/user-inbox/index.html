@@ -13,7 +13,7 @@
 
 	<!-- Sidebar Content -->
 	{{- if $isDesktop -}}
-		{{- template "sidebar" $folders -}}
+		{{- template "sidebar" (array . "FOLDER") -}}
 	{{- end -}}
 
 	<!-- Main App Content -->

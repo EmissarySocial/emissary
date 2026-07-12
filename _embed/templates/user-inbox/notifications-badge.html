@@ -1,0 +1,3 @@
+{{- /* The global nav notification badge fragment.  Refetched over SSE when a notification arrives.
+       Hidden when there are no unread notifications. */ -}}
+<span id="nav-notifications-badge" class="nav-badge text-red text-sm{{if eq 0 .NotificationsUnreadCount}} hide{{end}}">&#9679;</span>

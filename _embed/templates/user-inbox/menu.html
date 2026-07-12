@@ -1,8 +1,28 @@
 {{- $section := .Section -}}
 {{- $selectedID := .SelectedID -}}
 {{- $allFolders := and ($selectedID.IsZero) (eq "FOLDER" $section) -}}
+{{- $notificationsSelected := eq "NOTIFICATIONS" $section -}}
 
 <div class="margin-vertical"></div>
+
+	<!-- Pinned Notifications section (not sortable) -->
+	<a href="/@me/newsfeed/notifications" class="turboclick menu-item ellipsis hover-trigger folder {{if $notificationsSelected}}selected{{end}}">
+		<span>
+			{{- if $notificationsSelected -}}
+				{{- iconFilled "inbox" -}}
+			{{- else -}}
+				{{- icon "inbox" -}}
+			{{- end }}
+		</span>
+		<span>Notifications</span>
+		{{- if gt .UnreadNotifications 0 -}}
+			<span class="folder-handle">
+				<span id="notifications-unread-badge" class="text-sm text-red">{{.UnreadNotifications}}</span>
+			</span>
+		{{- end -}}
+	</a>
+
+	<div class="margin-vertical"></div>
 
 	<a href="/@me/newsfeed?folderId={{nilObjectID.Hex}}" class="turboclick menu-item ellipsis hover-trigger folder {{if $allFolders}}selected{{end}}">
 		<span>
@@ -29,12 +49,12 @@
 			</span>
 			<span>{{.Label}}</span>
 			<span class="folder-handle">
-				<!--span id="folder-unread-{{$folderID}}"
+				<span id="folder-unread-{{$folderID}}"
 				class="text-sm
 					{{- if ne $selectedID .FolderID}} text-light-gray{{- end -}}
 					{{- if eq .UnreadCount 0 }} hide{{- end -}}
 				"
-				>&#9679;</span-->
+				>&#9679;</span>
 				<span class="hover-visible">
 					{{icon "drag-handle"}}
 				</span>

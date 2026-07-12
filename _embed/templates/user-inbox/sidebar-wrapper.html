@@ -1,0 +1,8 @@
+{{- /*
+	sidebar-wrapper.html is the standalone entry point for the "sidebar" action (used by the
+	refreshSidebar re-fetch).  The dot (".") is the Inbox builder; we read the section from the query
+	param and delegate to the shared "sidebar" template, which expects [builder, section].
+*/ -}}
+{{- $section := .QueryParam "sidebarSection" -}}
+{{- if eq "" $section -}}{{- $section = "FOLDER" -}}{{- end -}}
+{{- template "sidebar" (array . $section) -}}

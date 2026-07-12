@@ -448,6 +448,37 @@
 			]
 		}
 
+		notifications: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		notifications-badge: {
+			roles:["self"]
+			steps:[
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
+				{do:"view-html"}
+			]
+		}
+
+		notifications-list: {
+			roles:["self"]
+			steps:[
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
+				{do:"view-html"}
+			]
+		}
+
+		notifications-read: {
+			roles:["self"]
+			steps:[
+				{do:"mark-notifications-read"}
+				{do:"trigger-event", event:"refreshSidebar"}
+			]
+		}
+
 		responses-announces:{
 			roles:["self"]
 			steps: [
@@ -502,7 +533,7 @@
 		sidebar: {
 			roles: ["self"]
 			steps:[
-				{do: "view-html", file: "sidebar"}
+				{do: "view-html", file: "sidebar-wrapper"}
 			]
 		}
 	}
