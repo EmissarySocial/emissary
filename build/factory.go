@@ -40,14 +40,15 @@ type Factory interface {
 	Identity() *service.Identity
 	Import() *service.Import
 	ImportItem() *service.ImportItem
-	Mention() *service.Mention
 	MerchantAccount() *service.MerchantAccount
 	KeyPackage() *service.KeyPackage
 	NewsFeed() *service.NewsFeed
+	Notification() *service.Notification
 	Outbox() *service.Outbox
 	Permission() *service.Permission
 	Product() *service.Product
 	Provider() *service.Provider
+	PushSubscription() *service.PushSubscription
 	Registration() *service.Registration
 	Response() *service.Response
 	Rule() *service.Rule
@@ -61,6 +62,7 @@ type Factory interface {
 	Theme() *service.Theme
 	User() *service.User
 	Webhook() *service.Webhook
+	WebPush() *service.WebPush
 	Widget() *service.Widget
 
 	// Other data services

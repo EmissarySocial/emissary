@@ -335,6 +335,62 @@ func (w Inbox) Inbox() (QueryBuilder[model.NewsItem], error) {
 	return NewQueryBuilder[model.NewsItem](w._factory.NewsFeed(), w._session, criteria), nil
 }
 
+// Notifications returns a QueryBuilder for the current User's notifications (mentions, replies,
+// likes, follows).  Results are always scoped to the authenticated User.  The optional `type`
+// query param filters by notification type (the filter tabs); `createDate` drives paging.
+func (w Inbox) Notifications() (QueryBuilder[model.Notification], error) {
+
+	const location = "build.Inbox.Notifications"
+
+	// Must be signed in to view notifications
+	if w.AuthenticatedID().IsZero() {
+		return QueryBuilder[model.Notification]{}, derp.Unauthorized(location, "Must be signed in to view notifications")
+	}
+
+	queryString := w._request.URL.Query()
+
+	expBuilder := builder.NewBuilder().
+		String("type").
+		Int("readDate").
+		Int("createDate")
+
+	criteria := exp.And(
+		exp.Equal("userId", w.AuthenticatedID()),
+		exp.Equal("deleteDate", 0),
+		expBuilder.Evaluate(queryString),
+	)
+
+	return NewQueryBuilder[model.Notification](w._factory.Notification(), w._session, criteria), nil
+}
+
+// Notification loads a single Notification by its "notificationId" query param, enforcing that the
+// record is owned by the authenticated User.
+func (w Inbox) Notification() (model.Notification, error) {
+
+	const location = "build.Inbox.Notification"
+
+	result := model.NewNotification()
+
+	if w.AuthenticatedID().IsZero() {
+		return result, derp.Unauthorized(location, "Must be signed in to view a notification")
+	}
+
+	token := w._request.URL.Query().Get("notificationId")
+
+	notificationID, err := primitive.ObjectIDFromHex(token)
+
+	if err != nil {
+		return result, derp.BadRequest(location, "Invalid notificationId", token)
+	}
+
+	// LoadByID is scoped to the authenticated User, so it cannot leak another user's notification.
+	if err := w._factory.Notification().LoadByID(w._session, w.AuthenticatedID(), notificationID, &result); err != nil {
+		return result, derp.Wrap(err, location, "Unable to load Notification", notificationID)
+	}
+
+	return result, nil
+}
+
 // IsInboxEmpty returns TRUE if the inbox has no results and there are no filters applied
 // This corresponds to there being NOTHING in the inbox, instead of just being filtered out.
 func (w Inbox) IsInboxEmpty(inbox []model.NewsItem) bool {
@@ -390,6 +446,7 @@ func (w Inbox) Folders() (model.FolderList, error) {
 	}
 
 	result.Folders = folders
+	result.UnreadNotifications = w.NotificationsUnreadCount()
 	return result, nil
 }
 
@@ -406,6 +463,12 @@ func (w Inbox) FoldersWithSelection(section string) (model.FolderList, error) {
 
 	// If the "Conversations" section is selected, then we are done.
 	if section == model.FolderListSectionConversations {
+		result.Section = section
+		return result, nil
+	}
+
+	// If the "Notifications" section is selected, then we are done.
+	if section == model.FolderListSectionNotifications {
 		result.Section = section
 		return result, nil
 	}

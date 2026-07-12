@@ -205,6 +205,43 @@ func (w Common) UserCanMLS() bool {
 	return false
 }
 
+// NotificationsUnreadCount returns the number of unread notifications for the authenticated User.
+// It is available on every builder (via Common) so the global nav badge can render on any page.
+func (w Common) NotificationsUnreadCount() int {
+
+	if w.AuthenticatedID().IsZero() {
+		return 0
+	}
+
+	count, err := w._factory.Notification().CountUnread(w._session, w.AuthenticatedID())
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "build.Common.NotificationsUnreadCount", "Unable to count unread notifications", w.AuthenticatedID()))
+		return 0
+	}
+
+	return int(count)
+}
+
+// WebPushPublicKey returns this domain's VAPID public key (generating it on first use), so the
+// browser can subscribe to Web Push.  Returns "" if the user is not authenticated or key generation
+// fails (the UI degrades to no push).
+func (w Common) WebPushPublicKey() string {
+
+	if w.AuthenticatedID().IsZero() {
+		return ""
+	}
+
+	publicKey, err := w._factory.WebPush().PublicKey(w._session)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "build.Common.WebPushPublicKey", "Unable to load VAPID public key"))
+		return ""
+	}
+
+	return publicKey
+}
+
 // UserCanBridgeToBluesky returns TRUE if the current user has permission to bridge to Bluesky
 func (w Common) UserCanBridgeToBluesky() bool {
 	if user, err := w.getUser(); err == nil {
