@@ -274,6 +274,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.validate/signupCode", handler.WithFactory(factory, handler.GetValidateSignupCode))
 	e.GET("/.validate/streamToken", handler.WithFactory(factory, handler.GetValidateStreamToken))
 	e.GET("/.validate/username", handler.WithFactory(factory, handler.GetValidateUsername))
+	e.GET("/.web-push-worker.js", handler.GetWebPushWorker) // Web Push service worker (must be served from site root for full scope)
 	e.GET("/.widgets/:widgetId/:bundleId", handler.GetWidgetBundle(factory))
 	e.GET("/.widgets/:widgetId/resources/:filename", handler.GetWidgetResource(factory))
 
@@ -332,6 +333,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:objectId/sse/inbox", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Inbox))
 	e.GET("/@:objectId/sse/inbox/direct-messages", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Inbox_DirectMessage))
 	e.GET("/@:objectId/sse/inbox/direct-messages/mls", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Inbox_DirectMessage_MLS))
+	e.GET("/@:objectId/sse/notifications", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Notifications))
 
 	// ActivityPub pages for the application actor
 	e.GET("/@application", handler.WithFactory(factory, handler.GetApplicationActor))
@@ -365,6 +367,8 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@me/newsfeed/:action", handler.WithAuthenticatedUser(factory, handler.PostNewsfeed))
 	e.GET("/@me/outbox", handler.WithAuthenticatedUser(factory, ap_user.GetOutboxCollection))
 	e.POST("/@me/outbox", handler.WithAuthenticatedUser(factory, ap_user.PostOutbox))
+	e.POST("/@me/push-subscriptions", handler.WithAuthenticatedUser(factory, handler.PostPushSubscription))
+	e.DELETE("/@me/push-subscriptions", handler.WithAuthenticatedUser(factory, handler.DeletePushSubscription))
 	e.GET("/@me/settings", handler.WithAuthenticatedUser(factory, handler.GetSettings))
 	e.POST("/@me/settings", handler.WithAuthenticatedUser(factory, handler.PostSettings))
 	e.GET("/@me/settings/:action", handler.WithAuthenticatedUser(factory, handler.GetSettings))

@@ -101,6 +101,15 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 		return derp.Wrap(err, location, "Unable to save activity to inbox", activity.Value())
 	}
 
+	// Create Notifications for this activity (mentions, replies, reactions).  This runs centrally,
+	// regardless of Following state, because the per-type router handlers below intentionally drop
+	// exactly the cases notifications care about.  A notification failure must NOT fail the inbox
+	// request, so we report-and-continue.  FOLLOW notifications are the exception — see
+	// inbox_follow_any.go (they fire after the Accept is sent).
+	if err := context.factory.Notification().NotifyFromActivity(context.session, context.user, activity); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to create notifications for activity", activity.ID()))
+	}
+
 	// Route the activity to additional handlers to process side effects
 	if err := inboxRouter.Handle(context, activity); err != nil {
 		return derp.Wrap(err, location, "Unable to handle ActivityPub request")

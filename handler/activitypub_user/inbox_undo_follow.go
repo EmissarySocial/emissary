@@ -44,6 +44,12 @@ func inbox_UndoFollow(context Context, activity streams.Document) error {
 		return derp.Wrap(err, location, "Unable to delete follower", follower)
 	}
 
+	// Remove the corresponding FOLLOW notification (if any).  This mirrors where FOLLOW notifications
+	// are created (inbox_follow_any.go).  A cleanup failure must not fail the unfollow.
+	if err := context.factory.Notification().DeleteByActorAndType(context.session, context.user.UserID, model.NotificationTypeFollow, actorURL, context.user.ActivityPubURL(), "unfollow"); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to delete follow notification", context.user.UserID, actorURL))
+	}
+
 	// Voila!
 	return nil
 }

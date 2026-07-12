@@ -58,6 +58,13 @@ func init() {
 		acceptID := followerService.ActivityPubID(&follower)
 		actor.SendAccept(acceptID, activity)
 
+		// Create a FOLLOW notification for the recipient.  This lives here (rather than in the
+		// central NotifyFromActivity hook) because it must fire only AFTER the Follow is validated
+		// and accepted.  A notification failure must not fail the follow, so report-and-continue.
+		if err := context.factory.Notification().NotifyFollow(context.session, context.user, activity); err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to create follow notification", context.user.UserID))
+		}
+
 		// Voila!
 		return nil
 	})

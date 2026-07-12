@@ -50,6 +50,16 @@ func ServerSentEvent_Inbox(ctx *steranko.Context, factory *service.Factory, _ da
 	return serverSentEvent(ctx, factory, realtime.TopicInboxActivity)
 }
 
+// ServerSentEvent_Notifications generates an echo.HandlerFunc that listens for requests for the `Notification` topic
+func ServerSentEvent_Notifications(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
+
+	if user.UserID.Hex() != ctx.Param("objectId") {
+		return derp.Forbidden("handler.ServerSentEvent_Notifications", "You do not have permission to access this resource")
+	}
+
+	return serverSentEvent(ctx, factory, realtime.TopicNotification)
+}
+
 // ServerSentEvent_DirectMessage generates an echo.HandlerFunc that listens for requests for the `DirectMessage` topic
 func ServerSentEvent_Inbox_DirectMessage(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
 
