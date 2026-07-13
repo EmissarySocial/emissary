@@ -205,22 +205,23 @@ func (w Common) UserCanMLS() bool {
 	return false
 }
 
-// NotificationsUnreadCount returns the number of unread notifications for the authenticated User.
-// It is available on every builder (via Common) so the global nav badge can render on any page.
-func (w Common) NotificationsUnreadCount() int {
+// HasUnreadNotifications returns TRUE if the authenticated User has at least one unread
+// notification.  It is available on every builder (via Common) so the global nav dot can
+// render on any page.  No counts — the dot is a simple yes/no.
+func (w Common) HasUnreadNotifications() bool {
 
 	if w.AuthenticatedID().IsZero() {
-		return 0
+		return false
 	}
 
-	count, err := w._factory.Notification().CountUnread(w._session, w.AuthenticatedID())
+	hasUnread, err := w._factory.Notification().HasUnread(w._session, w.AuthenticatedID())
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "build.Common.NotificationsUnreadCount", "Unable to count unread notifications", w.AuthenticatedID()))
-		return 0
+		derp.Report(derp.Wrap(err, "build.Common.HasUnreadNotifications", "Unable to check unread notifications", w.AuthenticatedID()))
+		return false
 	}
 
-	return int(count)
+	return hasUnread
 }
 
 // WebPushPublicKey returns this domain's VAPID public key (generating it on first use), so the
