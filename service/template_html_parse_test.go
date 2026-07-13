@@ -63,7 +63,7 @@ func TestEmbeddedTemplates_HTMLParses(t *testing.T) {
 	// Scope to the template directories touched by the notifications feature.  (A full sweep trips
 	// over pre-existing email/layout templates that legitimately rely on cross-file variables like
 	// $title and therefore do not parse standalone.)
-	dirs := []string{"user-inbox", "theme-default"}
+	dirs := []string{"user-inbox", "user-settings", "theme-default"}
 
 	for _, name := range dirs {
 		dir := filepath.Join(root, name)
