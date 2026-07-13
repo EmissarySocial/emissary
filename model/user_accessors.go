@@ -10,26 +10,33 @@ func UserSchema() schema.Element {
 
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"userId":          schema.String{Format: "objectId"},
-			"mapIds":          schema.Object{Wildcard: schema.String{MaxLength: 256}},
-			"groupIds":        id.SliceSchema(),
-			"iconId":          schema.String{Format: "objectId"},
-			"imageId":         schema.String{Format: "objectId"},
-			"iconUrl":         schema.String{Format: "url"}, // This is my first attempt at a "virtual field"
-			"imageUrl":        schema.String{Format: "url"}, // This is my first attempt at a "virtual field"
-			"displayName":     schema.String{MaxLength: 64, Format: "no-html", Required: true},
-			"statusMessage":   schema.String{Format: "text", MaxLength: 2048},
-			"location":        schema.String{Format: "text", MaxLength: 64},
-			"links":           schema.Array{Items: PersonLinkSchema(), MaxLength: 6},
-			"profileUrl":      schema.String{Format: "url"},
-			"emailAddress":    schema.String{Format: "email", Required: true},
-			"username":        schema.String{MaxLength: 32, Format: "username", Required: true},
-			"locale":          schema.String{},
-			"signupNote":      schema.String{MaxLength: 256},
-			"stateId":         schema.String{},
-			"inboxTemplate":   schema.String{MaxLength: 128},
-			"outboxTemplate":  schema.String{MaxLength: 128},
-			"hashtags":        schema.Array{Items: schema.String{Format: "token"}},
+			"userId":         schema.String{Format: "objectId"},
+			"mapIds":         schema.Object{Wildcard: schema.String{MaxLength: 256}},
+			"groupIds":       id.SliceSchema(),
+			"iconId":         schema.String{Format: "objectId"},
+			"imageId":        schema.String{Format: "objectId"},
+			"iconUrl":        schema.String{Format: "url"}, // This is my first attempt at a "virtual field"
+			"imageUrl":       schema.String{Format: "url"}, // This is my first attempt at a "virtual field"
+			"displayName":    schema.String{MaxLength: 64, Format: "no-html", Required: true},
+			"statusMessage":  schema.String{Format: "text", MaxLength: 2048},
+			"location":       schema.String{Format: "text", MaxLength: 64},
+			"links":          schema.Array{Items: PersonLinkSchema(), MaxLength: 6},
+			"profileUrl":     schema.String{Format: "url"},
+			"emailAddress":   schema.String{Format: "email", Required: true},
+			"username":       schema.String{MaxLength: 32, Format: "username", Required: true},
+			"locale":         schema.String{},
+			"signupNote":     schema.String{MaxLength: 256},
+			"stateId":        schema.String{},
+			"inboxTemplate":  schema.String{MaxLength: 128},
+			"outboxTemplate": schema.String{MaxLength: 128},
+			"hashtags":       schema.Array{Items: schema.String{Format: "token"}},
+			"notificationChannels": schema.Array{Items: schema.String{Enum: []string{
+				NotificationChannelMentionFollowing,
+				NotificationChannelMentionNotFollowing,
+				NotificationChannelReply,
+				NotificationChannelFollow,
+				NotificationChannelReaction,
+			}}},
 			"data":            schema.Object{Wildcard: schema.String{MaxLength: 4096}},
 			"movedTo":         schema.String{Format: "url"},
 			"followerCount":   schema.Integer{},
@@ -119,6 +126,9 @@ func (user *User) GetPointer(name string) (any, bool) {
 
 	case "hashtags":
 		return &user.Hashtags, true
+
+	case "notificationChannels":
+		return &user.NotificationChannels, true
 
 	default:
 		return nil, false
