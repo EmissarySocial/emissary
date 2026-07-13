@@ -3,6 +3,7 @@ package service
 import (
 	"html"
 	"strings"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/realtime"
@@ -34,8 +35,6 @@ const objectSummaryMaxLength = 200
 // and continue.
 func (service *Notification) NotifyFromActivity(session data.Session, user *model.User, activity streams.Document) error {
 
-	const location = "service.Notification.NotifyFromActivity"
-
 	// RULE: Never notify a user about their own actions.
 	if activity.ActorID() == user.ActivityPubURL() {
 		return nil
@@ -60,29 +59,31 @@ func (service *Notification) NotifyFromActivity(session data.Session, user *mode
 	return nil
 }
 
-// notifyFromCreateOrUpdate handles the Create/Update branch of NotifyFromActivity: a MENTION when
-// the object tags this user, otherwise a REPLY when the object replies to a local Stream they own.
+// notifyFromCreateOrUpdate handles the Create/Update branch of NotifyFromActivity: a REPLY when
+// the object replies to a local Stream this user owns, otherwise a MENTION when it tags them.
 func (service *Notification) notifyFromCreateOrUpdate(session data.Session, user *model.User, activity streams.Document) error {
 
 	object := activity.Object()
 
-	// MENTION: a tag[] entry names this user.  This takes precedence over REPLY —
-	// Mastodon-compatible senders auto-tag the parent author, so most replies carry a
-	// Mention tag.  We never create both a MENTION and a REPLY for the same activity.
-	for href := range object.RangeMentions() {
-		if service.isThisUser(href, user) {
-			return service.NotifyMention(session, user, activity, object)
-		}
-	}
-
 	// REPLY: the object's inReplyTo resolves to a local Stream owned by this user.
-	// Only for Create — an Update to an existing reply should not re-notify.
+	// Replies are classified FIRST — a MENTION specifically means a mention that is NOT
+	// a reply.  We never create both a MENTION and a REPLY for the same activity.
+	// Only for Create — an Update to an existing reply should not create a new record;
+	// it falls through to the mention branch, where dedup (by activityID) refreshes the
+	// existing record in place, preserving its Type.
 	if activity.Type() == vocab.ActivityTypeCreate {
 		if inReplyTo := object.InReplyTo().ID(); inReplyTo != "" {
 			stream := model.NewStream()
 			if service.loadLocalStreamOwnedBy(session, inReplyTo, user, &stream) {
 				return service.NotifyReply(session, user, activity, object, &stream)
 			}
+		}
+	}
+
+	// MENTION: a tag[] entry names this user (and the object is not a reply to them).
+	for href := range object.RangeMentions() {
+		if service.isThisUser(href, user) {
+			return service.NotifyMention(session, user, activity, object)
 		}
 	}
 
@@ -143,7 +144,8 @@ func (service *Notification) NotifyFollow(session data.Session, user *model.User
  ******************************************/
 
 // notify applies the Rule filter, dedups against any existing notification for the same activity,
-// saves the record, publishes an in-app SSE nudge, and enqueues a Web Push delivery task.
+// stamps the actor's follow-state subtype, applies the recipient's channel settings, saves the
+// record, and (if the notification surfaces) publishes an SSE nudge and enqueues a Web Push task.
 func (service *Notification) notify(session data.Session, user *model.User, activity streams.Document, notification *model.Notification) error {
 
 	const location = "service.Notification.notify"
@@ -162,9 +164,14 @@ func (service *Notification) notify(session data.Session, user *model.User, acti
 		return derp.Wrap(err, location, "Unable to load/create notification", user.UserID, notification.ActivityID)
 	}
 
-	if existing.CreateDate > 0 {
+	isNew := existing.CreateDate == 0
+
+	if isNew {
+		// Follow-state is a fact about receipt time; stamp it once, on new records only.
+		notification.Subtype = service.subtypeFor(session, user.UserID, notification.Actor.ProfileURL)
+	} else {
 		// An already-persisted record was found (it has a journal createDate) — refresh its display
-		// snapshot in place and keep its existing ID and ReadDate.
+		// snapshot in place and keep its existing ID, Type, Subtype, and ReadDate.
 		existing.Actor = notification.Actor
 		existing.ObjectURL = notification.ObjectURL
 		existing.ObjectSummary = notification.ObjectSummary
@@ -172,15 +179,29 @@ func (service *Notification) notify(session data.Session, user *model.User, acti
 		notification = &existing
 	}
 
+	// SETTINGS: the recipient's enabled channels decide whether this notification surfaces
+	// (SSE nudge, Web Push, unread dot).  Policy lives in model.Notification.Channels().
+	surfaced := user.NotificationEnabled(notification.Channels())
+
+	// Suppressed notifications are born read: they never light the dot, and they age out
+	// through the normal purge of read rows.  They remain in the list as passive history.
+	if isNew && !surfaced {
+		notification.ReadDate = time.Now().Unix()
+	}
+
 	// Save the notification
 	if err := service.Save(session, notification, "NotifyFromActivity"); err != nil {
 		return derp.Wrap(err, location, "Unable to save notification", notification)
 	}
 
-	// Publish an in-app SSE nudge (best-effort; a full realtime badge is wired in Phase 4).
+	if !surfaced {
+		return nil
+	}
+
+	// Publish an in-app SSE nudge (best-effort).
 	service.publishSSE(notification.UserID)
 
-	// Enqueue a Web Push delivery task (best-effort; the task itself is registered in Phase 5).
+	// Enqueue a Web Push delivery task (best-effort).
 	service.enqueueWebPush(notification)
 
 	return nil
@@ -233,6 +254,29 @@ func (service *Notification) newNotification(user *model.User, notificationType 
 	notification.Actor = actorPersonLink(activity.Actor())
 
 	return notification
+}
+
+// subtypeFor returns the recipient's follow-state for the actor at receipt time:
+// FOLLOWING if a Following record exists for (userID, actorProfileURL), otherwise
+// NOT_FOLLOWING.  An unexpected lookup error is reported and fails open to FOLLOWING
+// (matching the empty-subtype rule in model.Notification.Channels).
+func (service *Notification) subtypeFor(session data.Session, userID primitive.ObjectID, actorProfileURL string) string {
+
+	const location = "service.Notification.subtypeFor"
+
+	following := model.NewFollowing()
+	err := service.followingService.LoadByURL(session, userID, actorProfileURL, &following)
+
+	if err == nil {
+		return model.NotificationSubtypeFollowing
+	}
+
+	if derp.IsNotFound(err) {
+		return model.NotificationSubtypeNotFollowing
+	}
+
+	derp.Report(derp.Wrap(err, location, "Unable to load Following record", userID, actorProfileURL))
+	return model.NotificationSubtypeFollowing
 }
 
 // isThisUser returns TRUE if the provided href refers to the recipient User (by ActivityPub URL).

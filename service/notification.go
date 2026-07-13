@@ -21,6 +21,7 @@ import (
 // Notifications are created on the inbound ActivityPub path (NotifyFromActivity) whenever
 // another actor mentions, replies to, reacts to, or follows a local User.
 type Notification struct {
+	followingService *Following
 	ruleService      *Rule
 	streamService    *Stream
 	userService      *User
@@ -40,6 +41,7 @@ func NewNotification() Notification {
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Notification) Refresh(factory *Factory) {
+	service.followingService = factory.Following()
 	service.ruleService = factory.Rule()
 	service.streamService = factory.Stream()
 	service.userService = factory.User()
@@ -215,10 +217,27 @@ func (service *Notification) QueryByStreamID(session data.Session, streamID prim
 	return service.Query(session, exp.Equal("streamId", streamID), options...)
 }
 
-// CountUnread returns the number of unread Notifications for the provided User.
-func (service *Notification) CountUnread(session data.Session, userID primitive.ObjectID) (int64, error) {
+// HasUnread returns TRUE if the User has at least one unread Notification.  Suppressed
+// notifications are saved already-read (see notify), so no channel filter is needed here —
+// unread rows are surfaced rows by construction.
+func (service *Notification) HasUnread(session data.Session, userID primitive.ObjectID) (bool, error) {
+
+	const location = "service.Notification.HasUnread"
+
 	criteria := exp.Equal("userId", userID).AndEqual("readDate", int64(math.MaxInt64))
-	return service.Count(session, criteria)
+
+	notification := model.NewNotification()
+	err := service.Load(session, criteria, &notification)
+
+	if err == nil {
+		return true, nil
+	}
+
+	if derp.IsNotFound(err) {
+		return false, nil
+	}
+
+	return false, derp.Wrap(err, location, "Unable to load unread Notification", userID)
 }
 
 // LoadByActivityID loads a single Notification for a User by the AP id of its triggering activity.
