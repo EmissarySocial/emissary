@@ -3,43 +3,41 @@
 {{- $allFolders := and ($selectedID.IsZero) (eq "FOLDER" $section) -}}
 {{- $notificationsSelected := eq "NOTIFICATIONS" $section -}}
 
+<!-- Pinned Notifications section (not sortable) -->
+<a href="/@me/newsfeed/notifications" class="turboclick menu-item ellipsis hover-trigger folder {{if $notificationsSelected}}selected{{end}}">
+	<span>
+		{{- if $notificationsSelected -}}
+			{{- iconFilled "bell" -}}
+		{{- else -}}
+			{{- icon "bell" -}}
+		{{- end }}
+	</span>
+	<span>Notifications</span>
+	{{- if .HasUnreadNotifications -}}
+		<span class="folder-handle">
+			<span id="notifications-unread-badge" class="text-sm text-light-gray">&#9679;</span>
+		</span>
+	{{- end -}}
+</a>
+
 <div class="margin-vertical"></div>
 
-	<!-- Pinned Notifications section (not sortable) -->
-	<a href="/@me/newsfeed/notifications" class="turboclick menu-item ellipsis hover-trigger folder {{if $notificationsSelected}}selected{{end}}">
-		<span>
-			{{- if $notificationsSelected -}}
-				{{- iconFilled "bell" -}}
-			{{- else -}}
-				{{- icon "bell" -}}
-			{{- end }}
-		</span>
-		<span>Notifications</span>
-		{{- if .HasUnreadNotifications -}}
-			<span class="folder-handle">
-				<span id="notifications-unread-badge" class="text-sm text-red">&#9679;</span>
-			</span>
-		{{- end -}}
-	</a>
+<a href="/@me/newsfeed/feed" class="turboclick menu-item ellipsis hover-trigger folder {{if $allFolders}}selected{{end}}">
+	<span>
+		{{- if $allFolders -}}
+			{{- iconFilled "folder" -}}
+		{{- else -}}
+			{{- icon "folder" -}}
+		{{- end }}
+	</span>
+	<span>News Feed</span>
+</a>
 
-	<div class="margin-vertical"></div>
-
-	<a href="/@me/newsfeed/feed" class="turboclick menu-item ellipsis hover-trigger folder {{if $allFolders}}selected{{end}}">
-		<span>
-			{{- if $allFolders -}}
-				{{- iconFilled "folder" -}}
-			{{- else -}}
-				{{- icon "folder" -}}
-			{{- end }}
-		</span>
-		<span>News Feed</span>
-	</a>
-
-	<form class="sortable" hx-post="/@me/newsfeed/folder-sort" hx-push-url="false" hx-trigger="end" hx-swap="none">
+<form class="sortable" hx-post="/@me/newsfeed/folder-sort" hx-push-url="false" hx-trigger="end" hx-swap="none">
 
 	{{- range .Folders -}}
 		{{- $folderID := .FolderID.Hex -}}
-		<a href="/@me/newsfeed/folder?folderId={{$folderID}}" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
+		<a href="/@me/newsfeed/folder?folderId={{$folderID}}" hx-boost="true" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
 			<span>
 				{{- if eq $selectedID .FolderID -}}
 					{{- iconFilled .Icon -}}
@@ -49,13 +47,11 @@
 			</span>
 			<span>{{.Label}}</span>
 			<span class="folder-handle">
-				<span id="folder-unread-{{$folderID}}"
-				class="text-sm
-					{{- if ne $selectedID .FolderID}} text-light-gray{{- end -}}
-					{{- if eq .UnreadCount 0 }} hide{{- end -}}
-				"
-				>&#9679;</span>
-				<span class="hover-visible">
+				{{- if ne 0 .UnreadCount -}}
+					<span id="folder-unread-{{$folderID}}"
+					class="text-sm text-light-gray hover-hide">&#9679;</span>
+				{{- end -}}
+				<span class="hover-show">
 					{{icon "drag-handle"}}
 				</span>
 			</span>

@@ -21,7 +21,7 @@
 	background-color: var(--gray04);
 	border-right: solid 1px var(--gray15);
 	color: var(--gray80);
-	padding: 12px 8px;
+	padding: calc(var(--rhythm) * 2) var(--rhythm);
 	min-width: 200px;
 	max-width: 320px;
 	width: 15%;

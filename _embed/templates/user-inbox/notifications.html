@@ -20,13 +20,16 @@
 					<a href="/@me/newsfeed/mobile">{{icon "back"}}</a>
 				</div>
 			{{- end }}
-			<!-- Filter Tabs -->
-			<div role="tablist" class="flex-row flex-grow underlined margin-bottom" hx-target="main" hx-push-url="true">
-				<a href="/@me/newsfeed/notifications?type=MENTION" role="tab" class="tab {{if eq $type `MENTION`}}selected{{end}}">Replies &amp; Mentions</a>
-				<a href="/@me/newsfeed/notifications?type=LIKE" role="tab" class="tab {{if eq $type `LIKE`}}selected{{end}}">Boosts &amp; Likes</a>
-				<a href="/@me/newsfeed/notifications?type=FOLLOW" role="tab" class="tab {{if eq $type `FOLLOW`}}selected{{end}}">New Followers</a>
-				<div class="flex-grow"></div>
-				<button type="button" class="text-sm" hx-get="/@me/settings/notifications-modal" hx-push-url="false" aria-label="Notification Options">{{icon "settings"}}</button>
+			<!-- Filter tabs with unread counts + "Mark All Read" (notifications-tabs.html).
+			     Re-fetched on refreshSidebar (fired by SSE arrivals and by mark-all-read)
+			     so the counts stay live. -->
+			<div class="flex-grow"
+				hx-get="/@me/newsfeed/notifications-tabs?type={{$type}}"
+				hx-trigger="refreshSidebar from:window"
+				hx-target="this"
+				hx-swap="innerHTML"
+				hx-push-url="false">
+				{{- template "notifications-tabs" . -}}
 			</div>
 
 		</div>
@@ -57,14 +60,9 @@
 
 	</div>
 
-	<!-- Mark all notifications as read once the section is opened (Mastodon-style). This clears the
-	     unread badge via refreshSidebar; rows keep their unread dot for this render. -->
-	<div
-		hx-post="/@me/newsfeed/notifications-read"
-		hx-trigger="load delay:1s"
-		hx-swap="none"
-		hx-push-url="false">
-	</div>
+	<!-- Notifications are no longer auto-marked read on view: the "Mark All Read" button in
+	     notifications-tabs.html clears the current tab explicitly, and the nav badge stays
+	     lit while ANY notification (on any tab) remains unread. -->
 
 	<!-- Live-refresh the list + sidebar badge when a new notification arrives over SSE. -->
 	<div

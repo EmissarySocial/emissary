@@ -506,11 +506,25 @@
 			]
 		}
 
+		// Marks notifications as read, scoped to one tab via ?type= (no type = all types).
+		// Posted by the "Mark All Read" button.  refreshSidebar updates the nav badge, the
+		// sidebar dot, and the tab counts; refreshPage re-renders the list so the per-row
+		// unread dots clear too.
 		notifications-read: {
 			roles:["self"]
 			steps:[
 				{do:"mark-notifications-read"}
 				{do:"trigger-event", event:"refreshSidebar"}
+				{do:"trigger-event", event:"refreshPage"}
+			]
+		}
+
+		// Filter-tabs fragment (with unread counts), re-fetched on refreshSidebar.
+		notifications-tabs: {
+			roles:["self"]
+			steps:[
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
+				{do:"view-html"}
 			]
 		}
 

@@ -12,17 +12,6 @@
 		{{- if $notification.NotRead -}}&#9679;{{- end -}}
 	</span>
 
-	<!-- Type icon -->
-	<span class="notification-icon text-gray" style="width:20px;">
-		{{- if eq $notification.Type "MENTION" -}}{{icon "person"}}
-		{{- else if eq $notification.Type "REPLY" -}}{{icon "reply"}}
-		{{- else if eq $notification.Type "LIKE" -}}{{icon "heart"}}
-		{{- else if eq $notification.Type "DISLIKE" -}}{{icon "thumbs-down"}}
-		{{- else if eq $notification.Type "ANNOUNCE" -}}{{icon "share"}}
-		{{- else if eq $notification.Type "FOLLOW" -}}{{icon "user"}}
-		{{- end -}}
-	</span>
-
 	<!-- Actor avatar (opens the actor card) -->
 	<div class="width-32">
 		{{- if $actor.HasIconURL -}}
@@ -36,30 +25,13 @@
 	<div class="flex-grow ellipsis-block">
 		<div>
 			<span class="bold">
-				{{- if ne "" $actor.Name -}}{{$actor.Name}}{{- else -}}{{$actor.UsernameOrID}}{{- end -}}
+				{{- if ne "" $actor.Name -}}{{$actor.Name}}{{- else -}}{{$actor.UsernameOrID}}{{- end}}
 			</span>
-			{{- if eq $notification.Type "MENTION" }} mentioned you
-			{{- else if eq $notification.Type "REPLY" }} replied to you
-			{{- else if eq $notification.Type "LIKE" }} liked your post
-			{{- else if eq $notification.Type "DISLIKE" }} disliked your post
-			{{- else if eq $notification.Type "ANNOUNCE" }} boosted your post
-			{{- else if eq $notification.Type "FOLLOW" }} followed you
-			{{- end -}}
+			<span>followed you</span>
 		</div>
-		{{- if ne "" $notification.ObjectSummary -}}
-			<div class="text-sm text-gray ellipsis">{{$notification.ObjectSummary}}</div>
-		{{- end -}}
 	</div>
 
 	<!-- Relative time -->
 	<div class="text-sm text-gray nowrap">{{$notification.CreateDate | tinyDate}}</div>
-
-	<!-- Click target: mentions/replies open the browse thread; reactions link to the local
-			stream; follows open the actor card -->
-	{{- if or (eq $notification.Type "MENTION") (eq $notification.Type "REPLY") -}}
-		<a class="notification-link" href="/@me/newsfeed/browse?url={{$notification.ObjectURL}}" hx-target="main" hx-push-url="true" aria-label="View"></a>
-	{{- else if ne "" $notification.ObjectURL -}}
-		<a class="notification-link" href="{{$notification.ObjectURL}}" aria-label="View"></a>
-	{{- end -}}
 
 </div>
