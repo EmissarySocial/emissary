@@ -350,17 +350,38 @@ func (w Inbox) Notifications() (QueryBuilder[model.Notification], error) {
 	queryString := w._request.URL.Query()
 
 	expBuilder := builder.NewBuilder().
-		String("type").
 		Int("readDate").
 		Int("createDate")
 
 	criteria := exp.And(
 		exp.Equal("userId", w.AuthenticatedID()),
 		exp.Equal("deleteDate", 0),
+		notificationTypeFilter(queryString.Get("type")),
 		expBuilder.Evaluate(queryString),
 	)
 
 	return NewQueryBuilder[model.Notification](w._factory.Notification(), w._session, criteria), nil
+}
+
+// notificationTypeFilter expands the notifications-page "type" query param into criteria.
+// Grouped tabs cast wide nets: MENTION includes replies (reply-first classification would
+// otherwise hide them — there is no Replies tab), and LIKE includes all reactions (one
+// settings toggle governs likes, dislikes, and boosts).
+func notificationTypeFilter(notificationType string) exp.Expression {
+
+	switch notificationType {
+
+	case "":
+		return exp.All()
+
+	case model.NotificationTypeMention:
+		return exp.In("type", []string{model.NotificationTypeMention, model.NotificationTypeReply})
+
+	case model.NotificationTypeLike:
+		return exp.In("type", []string{model.NotificationTypeLike, model.NotificationTypeDislike, model.NotificationTypeAnnounce})
+	}
+
+	return exp.Equal("type", notificationType)
 }
 
 // Notification loads a single Notification by its "notificationId" query param, enforcing that the
@@ -446,7 +467,7 @@ func (w Inbox) Folders() (model.FolderList, error) {
 	}
 
 	result.Folders = folders
-	result.UnreadNotifications = w.NotificationsUnreadCount()
+	result.HasUnreadNotifications = w.HasUnreadNotifications()
 	return result, nil
 }
 
@@ -483,13 +504,16 @@ func (w Inbox) FoldersWithSelection(section string) (model.FolderList, error) {
 		return result, nil
 	}
 
-	// Find/Mark the Selected FolderID
+	// Find/Mark the Selected FolderID.  A missing or invalid folderId EXPLICITLY
+	// selects the synthetic "News Feed" (all folders) view — never an arbitrary
+	// folder.  (Requests that lose the query string, like sidebar refetches, must
+	// not silently jump the selection to the first folder.)
 	token := w._request.URL.Query().Get("folderId")
 
 	if folderID, err := primitive.ObjectIDFromHex(token); err == nil {
 		result.SelectedID = folderID
 	} else {
-		result.SelectedID = result.Folders[0].FolderID
+		result.SelectedID = primitive.NilObjectID
 	}
 
 	// Update the query string to reflect the selected folder
