@@ -54,6 +54,13 @@ func SendWebPushNotification(factory *service.Factory, session data.Session, arg
 		return queue.Error(derp.Wrap(err, location, "Unable to load notification", notificationID))
 	}
 
+	// Defense in depth: never push a read notification.  This covers suppressed records
+	// (born read — see service.Notification.notify) and items the user already read
+	// between enqueue and delivery.
+	if notification.IsRead() {
+		return queue.Success()
+	}
+
 	// Build the push payload once (server-side, so the service worker stays dumb).
 	payload, err := json.Marshal(webPushPayload{
 		Title: notificationTitle(&notification),
@@ -73,27 +80,33 @@ func SendWebPushNotification(factory *service.Factory, session data.Session, arg
 		return queue.Error(derp.Wrap(err, location, "Unable to load push subscriptions", userID))
 	}
 
-	webPushService := factory.WebPush()
-
 	for subscription := range subscriptions {
-
-		statusCode, err := webPushService.Send(session, subscription.Endpoint, subscription.P256DH, subscription.Auth, payload)
-
-		if err != nil {
-			// A transport error to one endpoint should not abort the others; log and continue.
-			derp.Report(derp.Wrap(err, location, "Unable to send Web Push", subscription.Endpoint))
-			continue
-		}
-
-		// 404/410 means the subscription is gone — prune it.
-		if statusCode == http.StatusNotFound || statusCode == http.StatusGone {
-			if err := factory.PushSubscription().DeleteByEndpoint(session, subscription.Endpoint, "expired"); err != nil {
-				derp.Report(derp.Wrap(err, location, "Unable to delete expired push subscription", subscription.Endpoint))
-			}
-		}
+		sendWebPushToSubscription(factory, session, &subscription, payload)
 	}
 
 	return queue.Success()
+}
+
+// sendWebPushToSubscription delivers one payload to one subscription, pruning subscriptions
+// that the push service reports as gone (404/410).  Errors are reported, never returned — a
+// failure on one endpoint must not abort delivery to the others.
+func sendWebPushToSubscription(factory *service.Factory, session data.Session, subscription *model.PushSubscription, payload []byte) {
+
+	const location = "consumer.sendWebPushToSubscription"
+
+	statusCode, err := factory.WebPush().Send(session, subscription.Endpoint, subscription.P256DH, subscription.Auth, payload)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to send Web Push", subscription.Endpoint))
+		return
+	}
+
+	// 404/410 means the subscription is gone — prune it.
+	if statusCode == http.StatusNotFound || statusCode == http.StatusGone {
+		if err := factory.PushSubscription().DeleteByEndpoint(session, subscription.Endpoint, "expired"); err != nil {
+			derp.Report(derp.Wrap(err, location, "Unable to delete expired push subscription", subscription.Endpoint))
+		}
+	}
 }
 
 // notificationTitle builds the push notification title (actor + verb).
