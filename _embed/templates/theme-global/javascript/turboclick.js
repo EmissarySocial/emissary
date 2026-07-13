@@ -41,8 +41,10 @@
 
 	document.addEventListener("mousedown", function(down) {
 
-		// Left button only, no modifier keys (preserve open-in-new-tab, etc.)
+		// RULE: Don't trigger on Right button
 		if (down.button !== 0) { return; }
+
+		// RULE: Don't trigger if any modifier keys are pressed
 		if (down.ctrlKey || down.metaKey || down.shiftKey || down.altKey) { return; }
 
 		var target = (down.target instanceof Element) ? down.target : down.target.parentElement;
@@ -52,26 +54,28 @@
 		var node = target.closest(".turboclick");
 		if (!node) { return; }
 
-		// Don't hijack drag handles (SortableJS starts folder drags from .folder-handle)
-		if (target.closest(".folder-handle")) { return; }
-
-		// 1) Fire the synthetic click NOW.  Dispatch is synchronous and finishes
-		//    before the suppressor below exists, so it is never suppressed itself.
+		// Trigger a synthetic click NOW (synchronous)
 		node.click();
 
-		// 2) Arm a one-shot suppressor for the natural click that follows mouseup.
-		var suppress = function(click) {
-			window.removeEventListener("click", suppress, true);
+		// One-time "suppressor" intercepts the natural click that follows mouseup.
+		var suppressor = function(click) {
+
+			// auto-remove ourself after first use.
+			window.removeEventListener("click", suppressor, true);
+
+			// Suppress the natural click if it matches the node we clicked on
 			if (click.isTrusted && node.contains(click.target)) {
 				click.preventDefault();
 				click.stopImmediatePropagation();
 			}
 		};
-		window.addEventListener("click", suppress, true);
 
-		// 3) Disarm once the gesture is over, in case the natural click never fires.
+		// Attach the suppressor to the window to catch the natural click.
+		window.addEventListener("click", suppressor, true);
+
+		// Failsafe remove the "suppressor" on mouseup (in case the natural click never fires.
 		window.addEventListener("mouseup", function() {
-			setTimeout(function() { window.removeEventListener("click", suppress, true); }, 0);
+			setTimeout(function() { window.removeEventListener("click", suppressor, true); }, 0);
 		}, { capture: true, once: true });
 
 	}, true);
