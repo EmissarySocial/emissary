@@ -20,6 +20,7 @@ type Notification struct {
 	NotificationID primitive.ObjectID `bson:"_id"`                     // Unique ID for this Notification
 	UserID         primitive.ObjectID `bson:"userId"`                  // Recipient (local User) who owns this Notification
 	Type           string             `bson:"type"`                    // MENTION/REPLY/LIKE/DISLIKE/ANNOUNCE/FOLLOW
+	Subtype        string             `bson:"subtype,omitempty"`       // FOLLOWING/NOT_FOLLOWING - recipient's follow-state for the actor at receipt time
 	Actor          PersonLink         `bson:"actor"`                   // Who did the thing
 	ActivityID     string             `bson:"activityId,omitempty"`    // AP id of the triggering activity (dedup + undo)
 	ObjectURL      string             `bson:"objectUrl,omitempty"`     // The thing acted on / the mentioning object
@@ -42,7 +43,7 @@ func NewNotification() Notification {
 
 // NotificationFields returns the standard list of fields loaded for a Notification
 func NotificationFields() []string {
-	return []string{"_id", "userId", "type", "actor", "activityId", "objectUrl", "objectSummary", "streamId", "inReplyTo", "readDate", "createDate"}
+	return []string{"_id", "userId", "type", "subtype", "actor", "activityId", "objectUrl", "objectSummary", "streamId", "inReplyTo", "readDate", "createDate"}
 }
 
 func (notification Notification) Fields() []string {
@@ -105,6 +106,38 @@ func (notification Notification) IsRead() bool {
 // NotRead returns TRUE if this notification does not have a valid ReadDate
 func (notification Notification) NotRead() bool {
 	return notification.ReadDate == math.MaxInt64
+}
+
+// Channels returns the settings channels that can surface this Notification.  A Notification
+// surfaces (unread dot, SSE nudge, Web Push) if ANY of its channels is enabled in the
+// recipient's User.NotificationChannels.  This is the SINGLE source of policy mapping
+// notification facts (Type, Subtype) to user settings — no other code may derive channels.
+func (notification Notification) Channels() []string {
+
+	// An empty Subtype is treated as FOLLOWING (fail-open for the friendlier channel).
+	mentionChannel := NotificationChannelMentionFollowing
+	if notification.Subtype == NotificationSubtypeNotFollowing {
+		mentionChannel = NotificationChannelMentionNotFollowing
+	}
+
+	switch notification.Type {
+
+	case NotificationTypeMention:
+		return []string{mentionChannel}
+
+	case NotificationTypeReply:
+		// "Either enables it": replies surface via the Replies toggle OR the applicable
+		// mention toggle (Mastodon-compatible senders auto-tag the parent author).
+		return []string{NotificationChannelReply, mentionChannel}
+
+	case NotificationTypeLike, NotificationTypeDislike, NotificationTypeAnnounce:
+		return []string{NotificationChannelReaction}
+
+	case NotificationTypeFollow:
+		return []string{NotificationChannelFollow}
+	}
+
+	return []string{}
 }
 
 /******************************************
