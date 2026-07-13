@@ -11,7 +11,7 @@
 {{- $folders := $builder.FoldersWithSelection $section -}}
 
 <div id="app-sidebar" class="expanded"
-	hx-get="/@me/newsfeed/sidebar?sidebarSection={{$section}}"
+	hx-get="/@me/newsfeed/sidebar?sidebarSection={{$section}}&folderId={{$folders.SelectedID.Hex}}"
 	hx-trigger="refreshSidebar from:window"
 	hx-target="#app-sidebar"
 	hx-swap="outerHTML"

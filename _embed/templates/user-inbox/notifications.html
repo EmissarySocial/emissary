@@ -1,6 +1,6 @@
 {{- $isMobile := .IsMobile -}}
 {{- $isDesktop := not $isMobile -}}
-{{- $type := .QueryParam "type" -}}
+{{- $type := first (.QueryParam "type") "MENTION" -}}
 
 <div class="app width-100%" script="init send SelectNav(id:'inbox')">
 
@@ -15,27 +15,25 @@
 	<div class="app-content padding-top">
 
 		<div class="flex-row margin-bottom-lg">
-			<h1 class="text-xl bold margin-none flex-grow">
-				{{- if $isMobile -}}
+			{{- if $isMobile -}}
+				<div class="text-xl bold margin-none flex-grow">
 					<a href="/@me/newsfeed/mobile">{{icon "back"}}</a>
-				{{- else -}}
-					{{iconFilled "inbox"}}
-				{{- end }}
-				Notifications
-			</h1>
-			<button type="button" id="push-toggle" class="text-sm hide" data-vapid="{{.WebPushPublicKey}}">Enable push notifications</button>
+				</div>
+			{{- end }}
+			<!-- Filter Tabs -->
+			<div role="tablist" class="flex-row flex-grow underlined margin-bottom" hx-target="main" hx-push-url="true">
+				<a href="/@me/newsfeed/notifications?type=MENTION" role="tab" class="tab {{if eq $type `MENTION`}}selected{{end}}">Replies &amp; Mentions</a>
+				<a href="/@me/newsfeed/notifications?type=LIKE" role="tab" class="tab {{if eq $type `LIKE`}}selected{{end}}">Boosts &amp; Likes</a>
+				<a href="/@me/newsfeed/notifications?type=FOLLOW" role="tab" class="tab {{if eq $type `FOLLOW`}}selected{{end}}">New Followers</a>
+				<div class="flex-grow"></div>
+				<button type="button" class="text-sm" hx-get="/@me/settings/notifications-modal" hx-push-url="false" aria-label="Notification Options">{{icon "settings"}}</button>
+			</div>
+
 		</div>
 
-		<!-- Filter Tabs -->
-		<div role="tablist" class="tabs margin-bottom" hx-target="main" hx-push-url="true">
-			<a href="/@me/newsfeed/notifications" role="tab" class="tab {{if not $type}}selected{{end}}">All</a>
-			<a href="/@me/newsfeed/notifications?type=MENTION" role="tab" class="tab {{if eq $type `MENTION`}}selected{{end}}">Mentions</a>
-			<a href="/@me/newsfeed/notifications?type=LIKE" role="tab" class="tab {{if eq $type `LIKE`}}selected{{end}}">Likes</a>
-			<a href="/@me/newsfeed/notifications?type=FOLLOW" role="tab" class="tab {{if eq $type `FOLLOW`}}selected{{end}}">Follows</a>
-		</div>
 
 		<!-- Lazy-loaded notification list.  The stable wrapper is the target for SSE live refreshes. -->
-		<div class="notification-list-target">
+		<div class="table notification-list-target">
 			<div
 				hx-get="/@me/newsfeed/notifications-list?type={{$type}}"
 				hx-trigger="revealed"
@@ -63,7 +61,7 @@
 	     unread badge via refreshSidebar; rows keep their unread dot for this render. -->
 	<div
 		hx-post="/@me/newsfeed/notifications-read"
-		xhx-trigger="load delay:1s"
+		hx-trigger="load delay:1s"
 		hx-swap="none"
 		hx-push-url="false">
 	</div>
@@ -89,79 +87,7 @@
 		hx-push-url="false">
 	</div>
 
-	<!-- Web Push subscribe / unsubscribe UX.  Requires HTTPS (or localhost) and a user gesture. -->
-	<script>
-	(function() {
-		var btn = document.getElementById("push-toggle");
-		if (!btn) { return; }
-
-		// Feature-detect: only offer push where the browser and a VAPID key are available.
-		var vapid = btn.getAttribute("data-vapid");
-		if (!vapid || !("serviceWorker" in navigator) || !("PushManager" in window)) { return; }
-		btn.classList.remove("hide");
-
-		function urlBase64ToUint8Array(base64String) {
-			var padding = "=".repeat((4 - base64String.length % 4) % 4);
-			var base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-			var raw = window.atob(base64);
-			var output = new Uint8Array(raw.length);
-			for (var i = 0; i < raw.length; ++i) { output[i] = raw.charCodeAt(i); }
-			return output;
-		}
-
-		function render(subscribed) {
-			btn.textContent = subscribed ? "Disable push notifications" : "Enable push notifications";
-			btn.setAttribute("data-subscribed", subscribed ? "true" : "false");
-		}
-
-		var swReady = navigator.serviceWorker.register("/.web-push-worker.js").then(function() {
-			return navigator.serviceWorker.ready;
-		});
-
-		swReady.then(function(reg) {
-			return reg.pushManager.getSubscription();
-		}).then(function(sub) {
-			render(!!sub);
-		}).catch(function() {});
-
-		async function subscribe() {
-			var reg = await swReady;
-			var permission = await Notification.requestPermission();
-			if (permission !== "granted") { return; }
-			var sub = await reg.pushManager.subscribe({
-				userVisibleOnly: true,
-				applicationServerKey: urlBase64ToUint8Array(vapid)
-			});
-			await fetch("/@me/push-subscriptions", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(sub)
-			});
-			render(true);
-		}
-
-		async function unsubscribe() {
-			var reg = await swReady;
-			var sub = await reg.pushManager.getSubscription();
-			if (sub) {
-				await fetch("/@me/push-subscriptions", {
-					method: "DELETE",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ endpoint: sub.endpoint })
-				});
-				await sub.unsubscribe();
-			}
-			render(false);
-		}
-
-		btn.addEventListener("click", function() {
-			if (btn.getAttribute("data-subscribed") === "true") {
-				unsubscribe().catch(function() {});
-			} else {
-				subscribe().catch(function() {});
-			}
-		});
-	})();
-	</script>
+	<!-- Web Push subscribe/unsubscribe now lives in the Notification Options modal
+	     (user-settings/notifications-modal.html), opened via the gear button above. -->
 
 </div>

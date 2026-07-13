@@ -9,22 +9,22 @@
 	<a href="/@me/newsfeed/notifications" class="turboclick menu-item ellipsis hover-trigger folder {{if $notificationsSelected}}selected{{end}}">
 		<span>
 			{{- if $notificationsSelected -}}
-				{{- iconFilled "inbox" -}}
+				{{- iconFilled "bell" -}}
 			{{- else -}}
-				{{- icon "inbox" -}}
+				{{- icon "bell" -}}
 			{{- end }}
 		</span>
 		<span>Notifications</span>
-		{{- if gt .UnreadNotifications 0 -}}
+		{{- if .HasUnreadNotifications -}}
 			<span class="folder-handle">
-				<span id="notifications-unread-badge" class="text-sm text-red">{{.UnreadNotifications}}</span>
+				<span id="notifications-unread-badge" class="text-sm text-red">&#9679;</span>
 			</span>
 		{{- end -}}
 	</a>
 
 	<div class="margin-vertical"></div>
 
-	<a href="/@me/newsfeed?folderId={{nilObjectID.Hex}}" class="turboclick menu-item ellipsis hover-trigger folder {{if $allFolders}}selected{{end}}">
+	<a href="/@me/newsfeed/feed" class="turboclick menu-item ellipsis hover-trigger folder {{if $allFolders}}selected{{end}}">
 		<span>
 			{{- if $allFolders -}}
 				{{- iconFilled "folder" -}}
@@ -32,14 +32,14 @@
 				{{- icon "folder" -}}
 			{{- end }}
 		</span>
-		<span>All Folders</span>
+		<span>News Feed</span>
 	</a>
 
-	<form class="sortable" hx-post="/@me/newsfeed/folder-sort" hx-push-url="false" hx-trigger="end">
+	<form class="sortable" hx-post="/@me/newsfeed/folder-sort" hx-push-url="false" hx-trigger="end" hx-swap="none">
 
 	{{- range .Folders -}}
 		{{- $folderID := .FolderID.Hex -}}
-		<a href="/@me/newsfeed?folderId={{$folderID}}" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
+		<a href="/@me/newsfeed/folder?folderId={{$folderID}}" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
 			<span>
 				{{- if eq $selectedID .FolderID -}}
 					{{- iconFilled .Icon -}}
@@ -72,15 +72,22 @@
 	<span style="view-transition-name:app-sidebar-add-folder-label">Add a Folder</span>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-
 <script>
-	var sortables = document.querySelectorAll(".sortable");
-	for (var node of sortables) {
-		new Sortable(node, {
-			animation: 150,
-			handle: '.folder-handle',
-			whisperClass: 'folder-whisper'
-		});
+	// Sortable init must survive sidebar re-renders: this fragment is re-swapped by htmx on
+	// every refreshSidebar event, and htmx loads external scripts ASYNCHRONOUSLY -- so the
+	// library may not be defined yet when the inline script runs.  Init is idempotent
+	// (guarded per-node) and runs both immediately and from the script tag's onload.
+	function emissaryInitSortables() {
+		if (!window.Sortable) { return; }
+		var sortables = document.querySelectorAll(".sortable");
+		for (var node of sortables) {
+			if (node._emissarySortable) { continue; }
+			node._emissarySortable = new Sortable(node, {
+				animation: 150,
+				handle: '.folder-handle'
+			});
+		}
 	}
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js" onload="emissaryInitSortables()"></script>
+<script>emissaryInitSortables();</script>

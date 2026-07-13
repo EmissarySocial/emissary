@@ -1,0 +1,180 @@
+{{- /*
+	notifications-push.html wires the browser's Web Push subscription to the "Device Settings"
+	TOGGLE widget rendered by the notifications-modal form (id="push-device-toggle").
+
+	The toggle is browser-owned state (pushManager), not a schema field, so:
+	  - JS hydrates it from the actual subscription when the modal opens, and
+	  - it is APPLIED ON SAVE — the Save click is the user gesture that
+	    Notification.requestPermission() requires.  Cancel applies nothing.
+	If the permission prompt is denied, nothing changes and the toggle re-hydrates
+	honestly the next time the modal is opened.
+
+	IMPORTANT: this fragment is rendered by `view-html file:"notifications-push"` which runs
+	BEFORE the `edit` form (see the notifications-modal action in template.hjson).  So the
+	toggle <span> does not exist yet when this script first runs — we poll for it.
+
+	The toggle widget (theme-global/hyperscript/toggle._hs) is NOT a checkbox: its state lives
+	in the element's @value attribute ("true"/"false") and it responds to `setTrue` / `setFalse`
+	events to change state programmatically (which also update its visual marker and nested hidden
+	input via `recalculate`).  We drive it through that contract.
+
+	NOTE: the toggle's id ("push-device-toggle") comes from the `id:` field on the form element.
+	If that field is ever changed to a `path:`, the widget derives a DIFFERENT id
+	("toggle-<path>-<value>") and this wiring silently stops finding it — keep it as `id:`.
+*/ -}}
+
+<script>
+(function() {
+	var vapid = "{{.WebPushPublicKey}}";
+
+	// Feature-detect once.  If push is impossible in this browser, there is nothing to wire —
+	// the toggle stays at its rendered default and any flip is simply ignored on save.
+	var supported = !!vapid
+		&& ("serviceWorker" in navigator)
+		&& ("PushManager" in window)
+		&& ("Notification" in window);
+
+	if (!supported) { return; }
+
+	function urlBase64ToUint8Array(base64String) {
+		var padding = "=".repeat((4 - base64String.length % 4) % 4);
+		var base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+		var raw = window.atob(base64);
+		var output = new Uint8Array(raw.length);
+		for (var i = 0; i < raw.length; ++i) { output[i] = raw.charCodeAt(i); }
+		return output;
+	}
+
+	var swReady = navigator.serviceWorker.register("/.web-push-worker.js").then(function() {
+		return navigator.serviceWorker.ready;
+	});
+
+	// --- Toggle helpers (drive the toggle widget through its event contract) -----------------
+
+	function toggleIsOn(el) {
+		return el.getAttribute("value") === "true";
+	}
+
+	// Set the toggle's state without user interaction.  The toggle behavior (toggle._hs) listens
+	// for `setTrue` / `setFalse` and updates @value, the visual marker, and the nested hidden input
+	// via `recalculate`.  We fire the event through hyperscript's own runtime.triggerEvent() so it
+	// is delivered exactly the way an internal `trigger`/`send` would be — a plain
+	// el.dispatchEvent(new CustomEvent(...)) is not reliably caught by hyperscript `on` handlers.
+	function setToggle(el, on) {
+		if (toggleIsOn(el) === on) { return; }
+		var eventName = on ? "setTrue" : "setFalse";
+		if (window._hyperscript && _hyperscript.internals && _hyperscript.internals.runtime) {
+			_hyperscript.internals.runtime.triggerEvent(el, eventName);
+		} else {
+			el.dispatchEvent(new CustomEvent(eventName, { bubbles: true, cancelable: true, composed: true }));
+		}
+	}
+
+	// --- Subscribe / unsubscribe -------------------------------------------------------------
+
+	async function subscribe() {
+		var reg = await swReady;
+		var permission = await Notification.requestPermission();
+		if (permission !== "granted") { return false; }
+		var sub = await reg.pushManager.subscribe({
+			userVisibleOnly: true,
+			applicationServerKey: urlBase64ToUint8Array(vapid)
+		});
+		await fetch("/@me/push-subscriptions", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(sub)
+		});
+		return true;
+	}
+
+	async function unsubscribe() {
+		var reg = await swReady;
+		var sub = await reg.pushManager.getSubscription();
+		if (sub) {
+			await fetch("/@me/push-subscriptions", {
+				method: "DELETE",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ endpoint: sub.endpoint })
+			});
+			await sub.unsubscribe();
+		}
+		return true;
+	}
+
+	// --- Wire the toggle once it exists in the DOM -------------------------------------------
+
+	// The edit form renders AFTER this script, and the toggle behavior installs on a tick, so poll
+	// for the fully-initialized toggle span before hydrating.  The behavior's init() stamps
+	// role="switch" AND appends the nested hidden <input> that `recalculate` writes to; wait for
+	// BOTH so a setTrue/setFalse fired now actually lands.
+	var attempts = 0;
+	function whenToggleReady(callback) {
+		var el = document.getElementById("push-device-toggle");
+		if (el && el.getAttribute("role") === "switch" && el.querySelector("input[type=hidden]")) {
+			callback(el);
+			return;
+		}
+		if (attempts++ > 100) { return; } // ~5s ceiling; give up quietly
+		setTimeout(function() { whenToggleReady(callback); }, 50);
+	}
+
+	whenToggleReady(function(toggle) {
+
+		// Hard-blocked at the browser level: the toggle can't do anything useful.  Force it OFF
+		// and explain, rather than showing a control that silently fails.
+		if (Notification.permission === "denied") {
+			setToggle(toggle, false);
+			toggle.dataset.original = "false";
+			if (!document.getElementById("push-device-blocked")) {
+				var note = document.createElement("div");
+				note.id = "push-device-blocked";
+				note.className = "text-sm text-gray margin-top-xs";
+				note.textContent = "Push notifications are blocked. To enable them, allow notifications for this site in your browser settings.";
+				toggle.parentNode.appendChild(note);
+			}
+			return;
+		}
+
+		// Hydrate the toggle from the browser's ACTUAL subscription state.
+		swReady.then(function(reg) {
+			return reg.pushManager.getSubscription();
+		}).then(function(sub) {
+			var on = !!sub;
+			setToggle(toggle, on);
+			toggle.dataset.original = on ? "true" : "false";
+		}).catch(function() {
+			// Registration failed — leave the toggle as-is; a save simply won't apply.
+		});
+
+		// Apply the device toggle when the channel form is saved.  The modal Save is an htmx
+		// request (hx-post), NOT a native form submit — so we listen for `htmx:beforeRequest`,
+		// which htmx bubbles to document.body just before the POST goes out.  The listener is
+		// delegated on body; re-opening the modal replaces the previous listener, and a request
+		// fired while the toggle is unchanged from its baseline is a no-op.
+		if (window._emissaryPushDeviceSubmit) {
+			document.body.removeEventListener("htmx:beforeRequest", window._emissaryPushDeviceSubmit);
+		}
+		window._emissaryPushDeviceSubmit = function() {
+			var el = document.getElementById("push-device-toggle");
+			if (!el || el !== toggle) { return; }
+			var wanted = toggleIsOn(toggle);
+			var original = toggle.dataset.original === "true";
+			if (wanted === original) { return; }
+
+			// Fire-and-forget: runs alongside the form POST.  Update the baseline immediately so a
+			// second Save in the same session doesn't re-fire.  On failure, revert the toggle so it
+			// stays honest for the next open.
+			toggle.dataset.original = wanted ? "true" : "false";
+			if (wanted) {
+				subscribe().then(function(ok) {
+					if (!ok) { setToggle(toggle, false); toggle.dataset.original = "false"; }
+				}).catch(function() { setToggle(toggle, false); toggle.dataset.original = "false"; });
+			} else {
+				unsubscribe().catch(function() {});
+			}
+		};
+		document.body.addEventListener("htmx:beforeRequest", window._emissaryPushDeviceSubmit);
+	});
+})();
+</script>

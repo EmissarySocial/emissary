@@ -1,3 +1,5 @@
-{{- /* The global nav notification badge fragment.  Refetched over SSE when a notification arrives.
+{{- /* The global nav notification dot fragment.  Refetched over SSE when a notification arrives,
+       and on refreshSidebar when notifications are marked read.  MUST stay markup-identical to
+       the span in theme-default/navigation.html (it replaces it via hx-swap="outerHTML").
        Hidden when there are no unread notifications. */ -}}
-<span id="nav-notifications-badge" class="nav-badge text-red text-sm{{if eq 0 .NotificationsUnreadCount}} hide{{end}}">&#9679;</span>
+<span id="nav-notifications-badge" class="nav-badge text-red text-sm{{if not .HasUnreadNotifications}} hide{{end}}">&#9679;</span>

@@ -1,5 +1,6 @@
 {{- $type := .QueryParam "type" -}}
 {{- $notifications := .Notifications.Top60.ByCreateDate.Reverse.Slice -}}
+{{- $createDate := .QueryParam "createDate" -}}
 
 {{- if $notifications.NotEmpty -}}
 
@@ -32,7 +33,7 @@
 		<div class="text-sm text-gray"><span class="spin">{{icon "loading"}}</span> Loading...</div>
 	</div>
 
-{{- else -}}
+{{- else if eq "" $createDate -}}
 
 	<h2 class="text-gray">No notifications yet. When someone mentions, replies to, likes, or follows you, it will show up here.</h2>
 

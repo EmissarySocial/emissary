@@ -2,8 +2,10 @@
 {{- $actor := $notification.Actor -}}
 
 <div
-	hx-get="/@me/newsfeed/browse?url={{$notification.ObjectURL}}" hx-push-url="true"
-	class="notification flex-row flex-align-center padding-vertical hover-trigger {{if $notification.NotRead}}unread{{end}}" style="gap:8px;">
+	role="button"
+	hx-get="/@me/newsfeed/browse?url={{$notification.ObjectURL}}"
+	hx-push-url="true"
+	class="notification flex-row flex-align-center padding-vertical hover-trigger {{if $notification.NotRead}}unread{{end}}">
 
 	<!-- Unread dot -->
 	<span class="notification-dot text-red" style="width:12px;">

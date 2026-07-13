@@ -801,6 +801,54 @@
 			]
 		}
 
+		notifications: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		notifications-form: {
+			roles:["self"]
+			steps:[
+				{
+					do:"edit",
+					options:["cancel-button:hide"]
+					form:{
+						type:layout-vertical
+						children:[
+							{type:"check-button-group", path:"notificationChannels", options:{provider:"notification-channels"}}
+						]
+					}
+					options:["cancel-button:hide", "next-label:My Notifications &rarr;", "next:/@me/newsfeed/notifications"]
+				}
+				{do:"save"}
+				{do:"inline-save-button"}
+			]
+		}
+
+		notifications-modal: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+					{do:"view-html", file:"notifications-push"}
+					{do:"edit",
+						form:{
+							type:layout-vertical
+							children:[
+								{type:"check-button-group", path:"notificationChannels", options:{provider:"notification-channels"}}
+								{type:"heading", label:"Device Settings", description:"These settings are not synchronized with your server."}
+								{type:"toggle", id:"push-device-toggle", options:{true-text:"Push Notifications (ENABLED)", false-text:"Push Notifications (DISABLED)"}}
+							]
+						}
+						options:["next-label:Edit in Settings &rarr;", "next:/@me/settings/notifications"]
+					}
+					{do:"save"}
+				]}
+			]
+		}
+
 		oauth: {
 			roles:["self"]
 			steps:[

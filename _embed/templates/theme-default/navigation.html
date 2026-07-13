@@ -17,16 +17,17 @@
 			<span class="icon selected-hide">{{icon "inbox"}}</span>
 			<span class="icon selected-show">{{icon "inbox-fill"}}</span>
 			<span class="mobile-show label">Inbox</span>
-			<span id="nav-notifications-badge" class="nav-badge text-red text-sm{{if eq 0 .NotificationsUnreadCount}} hide{{end}}">&#9679;</span>
+			<span id="nav-notifications-badge" class="nav-badge text-red text-sm{{if not .HasUnreadNotifications}} hide{{end}}">&#9679;</span>
 		</a>
 
-		<!-- Live-refresh the notification badge on any page when a notification arrives (SSE).
-		     The payload is minimal (topic + user ID); the client just refetches the badge fragment. -->
+		<!-- Live-refresh the notification dot on any page when a notification arrives (SSE), or
+		     when notifications are marked read (refreshSidebar).  The payload is minimal (topic +
+		     user ID); the client just refetches the badge fragment. -->
 		<div
 			hx-ext="sse"
 			sse-connect="/@{{.AuthenticatedID.Hex}}/sse/notifications"
 			hx-get="/@me/newsfeed/notifications-badge"
-			hx-trigger="sse:message"
+			hx-trigger="sse:message, refreshSidebar from:window"
 			hx-target="#nav-notifications-badge"
 			hx-swap="outerHTML"
 			hx-push-url="false"
