@@ -98,6 +98,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.MakeArchive:
 		return StepMakeArchive(s)
 
+	case step.MarkFolderRead:
+		return StepMarkFolderRead(s)
+
 	case step.MarkNotificationsRead:
 		return StepMarkNotificationsRead(s)
 

@@ -128,6 +128,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "make-archive":
 		return NewMakeArchive(stepInfo)
 
+	case "mark-folder-read":
+		return NewMarkFolderRead(stepInfo)
+
 	case "mark-notifications-read":
 		return NewMarkNotificationsRead(stepInfo)
 
