@@ -240,6 +240,19 @@ func (service *Notification) HasUnread(session data.Session, userID primitive.Ob
 	return false, derp.Wrap(err, location, "Unable to load unread Notification", userID)
 }
 
+// CountUnread returns the number of unread Notifications owned by the provided User,
+// optionally filtered to specific notification types (the notifications-page tabs).
+func (service *Notification) CountUnread(session data.Session, userID primitive.ObjectID, types ...string) (int64, error) {
+
+	var criteria exp.Expression = exp.Equal("userId", userID).AndEqual("readDate", int64(math.MaxInt64))
+
+	if len(types) > 0 {
+		criteria = criteria.And(exp.In("type", types))
+	}
+
+	return service.Count(session, criteria)
+}
+
 // LoadByActivityID loads a single Notification for a User by the AP id of its triggering activity.
 func (service *Notification) LoadByActivityID(session data.Session, userID primitive.ObjectID, activityID string, notification *model.Notification) error {
 	criteria := exp.Equal("userId", userID).AndEqual("activityId", activityID)
@@ -276,11 +289,18 @@ func (service *Notification) LoadOrCreate(session data.Session, userID primitive
  ******************************************/
 
 // MarkAllRead sets the readDate on every unread Notification owned by the provided User.
-func (service *Notification) MarkAllRead(session data.Session, userID primitive.ObjectID, readDate int64) error {
+// If one or more types are provided, only Notifications of those types are marked read;
+// with no types, every unread Notification is marked read.
+func (service *Notification) MarkAllRead(session data.Session, userID primitive.ObjectID, readDate int64, types ...string) error {
 
 	const location = "service.Notification.MarkAllRead"
 
-	criteria := exp.Equal("userId", userID).AndEqual("readDate", int64(math.MaxInt64)).AndEqual("deleteDate", 0)
+	var criteria exp.Expression = exp.Equal("userId", userID).AndEqual("readDate", int64(math.MaxInt64)).AndEqual("deleteDate", 0)
+
+	if len(types) > 0 {
+		criteria = criteria.And(exp.In("type", types))
+	}
+
 	update := bson.M{"$set": bson.M{"readDate": readDate}}
 
 	if err := queries.RawUpdate(session.Context(), service.collection(session), criteria, update); err != nil {
@@ -384,30 +404,35 @@ func (service *Notification) DeleteByActivityID(session data.Session, userID pri
 	return nil
 }
 
-// DeleteByActorAndType soft-deletes the Notification (if any) matching a User, notification type,
-// actor profile URL, and object URL.  This is the fallback path for id-less Undo activities.
-func (service *Notification) DeleteByActorAndType(session data.Session, userID primitive.ObjectID, notificationType string, actorURL string, objectURL string, note string) error {
+// DeleteFollowByActor soft-deletes any FOLLOW notification that the given actor created for the
+// provided User.  An unfollow is identified by WHO unfollowed (the actor) — NOT by the Follow
+// activity's id, which is frequently absent or synthetic (see inbox_SaveActivity) and so cannot
+// be matched reliably against the id referenced by a later Undo.  The actor, by contrast, is
+// always present as a top-level property on the Undo, so it needs no dereferencing.
+func (service *Notification) DeleteFollowByActor(session data.Session, userID primitive.ObjectID, actorURL string, note string) error {
 
-	const location = "service.Notification.DeleteByActorAndType"
+	const location = "service.Notification.DeleteFollowByActor"
 
-	criteria := exp.Equal("userId", userID).
-		AndEqual("type", notificationType).
-		AndEqual("actor.profileUrl", actorURL).
-		AndEqual("objectUrl", objectURL)
-
-	notification := model.NewNotification()
-	err := service.Load(session, criteria, &notification)
-
-	if derp.IsNotFound(err) {
+	if actorURL == "" {
 		return nil
 	}
 
+	criteria := exp.Equal("userId", userID).
+		AndEqual("type", model.NotificationTypeFollow).
+		AndEqual("actor.profileUrl", actorURL)
+
+	rangeFunc, err := service.Range(session, criteria)
+
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load Notification", userID, notificationType, actorURL)
+		return derp.Wrap(err, location, "Unable to query FOLLOW notifications by actor", userID, actorURL)
 	}
 
-	if err := service.Delete(session, &notification, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Notification", notification)
+	// Delete every matching FOLLOW notification (normally one, but loop in case dedup let
+	// duplicates through under a varying/synthetic activityId).
+	for notification := range rangeFunc {
+		if err := service.Delete(session, &notification, note); err != nil {
+			return derp.Wrap(err, location, "Unable to delete FOLLOW notification", notification)
+		}
 	}
 
 	return nil

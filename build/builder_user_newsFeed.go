@@ -363,25 +363,57 @@ func (w Inbox) Notifications() (QueryBuilder[model.Notification], error) {
 	return NewQueryBuilder[model.Notification](w._factory.Notification(), w._session, criteria), nil
 }
 
-// notificationTypeFilter expands the notifications-page "type" query param into criteria.
-// Grouped tabs cast wide nets: MENTION includes replies (reply-first classification would
-// otherwise hide them — there is no Replies tab), and LIKE includes all reactions (one
-// settings toggle governs likes, dislikes, and boosts).
-func notificationTypeFilter(notificationType string) exp.Expression {
+// notificationTabTypes expands the notifications-page "type" query param into the list of
+// notification types that tab displays.  Grouped tabs cast wide nets: MENTION includes
+// replies (reply-first classification would otherwise hide them — there is no Replies tab),
+// and LIKE includes all reactions (one settings toggle governs likes, dislikes, and boosts).
+// An empty tab name returns nil, meaning "all types".
+func notificationTabTypes(notificationType string) []string {
 
 	switch notificationType {
 
 	case "":
-		return exp.All()
+		return nil
 
 	case model.NotificationTypeMention:
-		return exp.In("type", []string{model.NotificationTypeMention, model.NotificationTypeReply})
+		return []string{model.NotificationTypeMention, model.NotificationTypeReply}
 
 	case model.NotificationTypeLike:
-		return exp.In("type", []string{model.NotificationTypeLike, model.NotificationTypeDislike, model.NotificationTypeAnnounce})
+		return []string{model.NotificationTypeLike, model.NotificationTypeDislike, model.NotificationTypeAnnounce}
 	}
 
-	return exp.Equal("type", notificationType)
+	return []string{notificationType}
+}
+
+// notificationTypeFilter expands the notifications-page "type" query param into criteria.
+func notificationTypeFilter(notificationType string) exp.Expression {
+
+	types := notificationTabTypes(notificationType)
+
+	if types == nil {
+		return exp.All()
+	}
+
+	return exp.In("type", types)
+}
+
+// UnreadNotificationCount returns the number of unread Notifications in the provided
+// notifications-page tab (using the same type expansion as the tab filter).  Errors are
+// reported and render as zero — a count badge must never fail the page.
+func (w Inbox) UnreadNotificationCount(notificationType string) int64 {
+
+	if w.AuthenticatedID().IsZero() {
+		return 0
+	}
+
+	count, err := w._factory.Notification().CountUnread(w._session, w.AuthenticatedID(), notificationTabTypes(notificationType)...)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "build.Inbox.UnreadNotificationCount", "Unable to count unread notifications", notificationType))
+		return 0
+	}
+
+	return count
 }
 
 // Notification loads a single Notification by its "notificationId" query param, enforcing that the

@@ -220,6 +220,16 @@ func (service *Notification) removeForActivity(session data.Session, user *model
 	// The inner object of an Undo/Delete is the thing being reversed.
 	object := activity.Object()
 
+	// UNFOLLOW: an Undo/Follow (or Delete/Follow) is matched by the ACTOR, not the Follow
+	// activity's id.  The id is often absent or synthetic, but the unfollowing actor is always
+	// present on the Undo — and object.Type() reads the embedded type without a network fetch.
+	if object.Type() == vocab.ActivityTypeFollow {
+		if err := service.DeleteFollowByActor(session, user.UserID, activity.ActorID(), "unfollow"); err != nil {
+			return derp.Wrap(err, location, "Unable to delete FOLLOW notification by actor", user.UserID, activity.ActorID())
+		}
+		return nil
+	}
+
 	// Primary match: delete by the reversed activity's ID.
 	if activityID := object.ID(); activityID != "" {
 		if err := service.DeleteByActivityID(session, user.UserID, activityID, "undo"); err != nil {

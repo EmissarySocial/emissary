@@ -7,14 +7,16 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepMarkNotificationsRead is a Step that marks all of the authenticated User's notifications as read.
+// StepMarkNotificationsRead is a Step that marks the authenticated User's notifications as read.
+// The optional "type" query parameter scopes the update to one notifications-page tab (using
+// the same type expansion as the tab filter); without it, ALL notifications are marked read.
 type StepMarkNotificationsRead struct{}
 
 func (step StepMarkNotificationsRead) Get(builder Builder, _ io.Writer) PipelineBehavior {
 	return nil
 }
 
-// Post marks all of the authenticated User's notifications as read.
+// Post marks the authenticated User's notifications (per the "type" query parameter) as read.
 func (step StepMarkNotificationsRead) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepMarkNotificationsRead.Post"
@@ -25,8 +27,9 @@ func (step StepMarkNotificationsRead) Post(builder Builder, _ io.Writer) Pipelin
 	}
 
 	notificationService := builder.factory().Notification()
+	types := notificationTabTypes(builder.QueryParam("type"))
 
-	if err := notificationService.MarkAllRead(builder.session(), builder.AuthenticatedID(), time.Now().Unix()); err != nil {
+	if err := notificationService.MarkAllRead(builder.session(), builder.AuthenticatedID(), time.Now().Unix(), types...); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Unable to mark notifications read"))
 	}
 
