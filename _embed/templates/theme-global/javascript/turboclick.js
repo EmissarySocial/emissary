@@ -4,9 +4,14 @@
  *
  * How it works:
  *
- *   1. A delegated, capture-phase MOUSEDOWN listener on document finds the
- *      nearest .turboclick ancestor and dispatches a synthetic click() on it
- *      immediately.  Delegation means htmx swaps never need re-initialization.
+ *   1. A delegated, capture-phase MOUSEDOWN listener on document checks whether
+ *      the press landed inside a .turboclick region, and if so dispatches a
+ *      synthetic click() on the ELEMENT ACTUALLY PRESSED -- not on the region.
+ *      A real click on the pressed element bubbles through exactly the handlers
+ *      a natural click would reach, so a nested link / button / [hx-get] / and
+ *      Hyperscript `on click` all fire correctly even when the .turboclick
+ *      marker sits on a container that wraps several clickable children.
+ *      Delegation means htmx swaps never need re-initialization.
  *
  *   2. The natural click (fired by the browser after mouseup) must then be
  *      suppressed, or every press sends TWO requests.  The discriminator is
@@ -54,8 +59,17 @@
 		var node = target.closest(".turboclick");
 		if (!node) { return; }
 
-		// Trigger a synthetic click NOW (synchronous)
-		node.click();
+		// RULE: Don't hijack drag handles.  SortableJS starts folder drags from
+		// .folder-handle (see user-inbox/menu.html); a synthetic click here would
+		// navigate instead of letting the drag begin.
+		if (target.closest(".folder-handle")) { return; }
+
+		// Fire a synthetic click on the ELEMENT ACTUALLY PRESSED (not the
+		// .turboclick region).  A real click on `target` bubbles through the same
+		// handlers a natural click would, so the correct nested action fires even
+		// when .turboclick is on a container.  Dispatch is synchronous and
+		// finishes before the suppressor below exists, so it is never suppressed.
+		target.click();
 
 		// One-time "suppressor" intercepts the natural click that follows mouseup.
 		var suppressor = function(click) {
@@ -63,7 +77,7 @@
 			// auto-remove ourself after first use.
 			window.removeEventListener("click", suppressor, true);
 
-			// Suppress the natural click if it matches the node we clicked on
+			// Suppress the natural click if it lands inside the region we fired.
 			if (click.isTrusted && node.contains(click.target)) {
 				click.preventDefault();
 				click.stopImmediatePropagation();
