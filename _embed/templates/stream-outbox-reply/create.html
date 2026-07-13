@@ -5,7 +5,7 @@
 	on htmx:configRequest(parameters)
 		set contentHtml to the first <[contenteditable=true]/> in me
 		set parameters['content'] to contentHtml.innerHTML
-		focus() the contentHtml
+		focus the contentHtml
 
 	on htmx:afterRequest
 		set contentHtml to the first <[contenteditable=true]/> in me
@@ -20,7 +20,7 @@
 
 		<div contenteditable="true" tabIndex="0" class="flex-grow-1" style="min-height:4em;" data-script="
 			on load
-				focus() me
+				focus me
 				
 			on keydown[key=='ArrowLeft']
 				halt the event's bubbling

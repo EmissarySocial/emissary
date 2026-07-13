@@ -67,7 +67,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session d
 	b.Empty("meta").Name("generator").Attr("content", "https://emissary.social")
 	b.Link("stylesheet", "/.themes/global/stylesheet").Close()
 	b.Link("stylesheet", "/.themes/default/stylesheet").Close()
-	b.Script().Src("/.themes/global/resources/htmx/htmx.min.js").Close()
+	b.Script().Src("/.themes/global/resources/htmx-1.9.12/htmx.min.js").Close()
 	b.Close()
 
 	b.Body()

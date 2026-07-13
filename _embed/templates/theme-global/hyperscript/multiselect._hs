@@ -43,7 +43,7 @@ behavior multiselect(sort)
 		end
 		
 		container.insertBefore(currentLabel, previousLabel)
-		focus() the target
+		focus the target
 	end
 
 	on click from <button[data-sort=down]/> in me
@@ -61,7 +61,7 @@ behavior multiselect(sort)
 		end
 		
 		container.insertBefore(nextLabel, currentLabel)
-		focus() the target
+		focus the target
 	end
 
 	on focus from <label/> in me
@@ -69,7 +69,7 @@ behavior multiselect(sort)
 	end
 
 	on focus from <input/> in me
-		focus() the closest <label/> to the target
+		focus the closest <label/> to the target
 	end
 
 	on keydown[code=="ArrowUp"]
@@ -79,7 +79,7 @@ behavior multiselect(sort)
 		if previousLabel is not null then
 			take .selected for previousLabel		
 			if currentLabel is document.activeElement then
-				focus() the previousLabel
+				focus the previousLabel
 			end
 		end
 	end
@@ -91,7 +91,7 @@ behavior multiselect(sort)
 		if nextLabel is not null then
 			take .selected for nextLabel
 			if currentLabel is document.activeElement then
-				focus() the nextLabel
+				focus the nextLabel
 			end
 		end
 	end
@@ -108,7 +108,7 @@ behavior multiselect(sort)
 		if selection is not null then
 			set input to first <input/> in selection
 			set input.checked to (input.checked == false)
-			focus() the selection
+			focus the selection
 			halt the event
 		end
 	end
