@@ -124,7 +124,7 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 
 	// Form
 	b.Form("", "").
-		Data("hx-post", builder.URL()).
+		Data("hx-post", builder.RelativeURL()).
 		Data("hx-swap", "none").
 		Data("hx-push-url", "false").
 		Script("init send checkFormRules(changed:me as Values)").

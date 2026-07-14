@@ -6,10 +6,10 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
+	"github.com/benpate/uri"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 )
@@ -19,7 +19,7 @@ func ActorUsername(actor streams.Document) string {
 
 	// If we have a preferred username, then return it as @username@hostname
 	if username := actor.PreferredUsername(); username != "" {
-		return "@" + username + "@" + dt.NameOnly(actor.ID())
+		return "@" + username + "@" + uri.Hostname(actor.ID())
 	}
 
 	// Otherwise, try to "URL"

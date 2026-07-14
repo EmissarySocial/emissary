@@ -9,8 +9,8 @@
 	schema: {
 		type: object
 		properties: {
-			label: {type:"string"}
-			summary: {type:"string"}
+			label: {type:"string", format:"text", maxLength:256}
+			summary: {type:"string", format:"html", maxLength:2048}
 			data: {type: "object", properties: {
 				url: {type: "string", format:"url"}
 			}}

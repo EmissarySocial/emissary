@@ -2,8 +2,8 @@ package cimd
 
 import (
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/remote"
+	"github.com/benpate/uri"
 )
 
 // GetMetadata retrieves the CIMD metadata from the provided URL
@@ -12,7 +12,7 @@ func GetMetadata(host string, url string, options ...remote.Option) (Metadata, e
 	const location = "cimd.GetMetadata"
 
 	// RULE: If we're running on a production host, then do not allow local clients
-	if !dt.IsLocalhost(host) && dt.IsLocalhost(url) {
+	if !uri.IsLocalHostname(host) && uri.IsLocalHostname(url) {
 		return Metadata{}, derp.BadRequest(location, "Invalid Client ID. Local clients can only be accessed on development instances", host, url)
 	}
 

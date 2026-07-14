@@ -265,77 +265,14 @@
 			]
 		}
 
-		conversations: {
-			roles: ["self"]
-			steps: [
-				{do:"view-html"}
-			]
-		}
 
-		conversations-list: {
-			roles: ["self"]
-			steps: [
-				{do:"view-html"}
-			]
-		}
-
-		conversation: {
-			roles: ["self"]
-			steps: [
-				{do:"view-html"}
-			]
-		}
-
-		conversation-list: {
-			roles: ["self"]
-			steps: [
-				{do:"view-html"}
-			]
-		}
-
-		conversation-new: {
-			roles:["self"]
-			steps: [
-				{do:"as-modal", background:"conversations", steps:[
-					{
-						do:"add-stream", 
-						style:"inline", 
-						location:"outbox", 
-						template:"outbox-direct",
-					}
-				]}
-			]
-		}
-
-		conversation-edit: {
+		// Explicit News Feed (all folders) view.  The zero folderId selects the synthetic
+		// "all folders" entry; without it, the folder view defaults to the first folder.
+		feed: {
 			roles: ["self"]
 			steps:[
-				{do:"with-conversation", steps:[
-					{do:"as-modal", steps:[
-						{do:"edit", form:{
-							type:"layout-tabs",
-							label:"Edit Conversation"
-							children:[
-								{
-									type:"layout-vertical",
-									label:"Edit Conversation"
-									children:[
-										{type:"text", path:"name", label:"Conversation Name", description:"(PRIVATE) Not shared with anyone"}
-										{type:"select", path:"icon", label:"Icon", options:{provider:"folder-icons"}}
-									]
-								}
-								{
-									type:"layout-vertical",
-									label:"Notes"
-									children:[
-										{type:"textarea", path:"notes", description:"(PRIVATE) Not shared with anyone", options:{rows:12}}
-									]
-								}
-							]
-						}}
-						{do:"save"}
-					]}
-				]}
+				{do:"set-query-param", folderId:"000000000000000000000000"}
+				{do:"view-html", file:"index"}
 			]
 		}
 
@@ -396,11 +333,21 @@
 			steps:[
 				{do:"with-folder", steps: [
 					{do:"delete", title:"Delete Folder: {{.Label}}?", message:"Deleting this folder will also remove all inbox items inside it."}
-					{do:"forward-to", url:"/@me/newsfeed"}
+					{do:"forward-to", url:"/@me/newsfeed/feed"}
 				]}
 			]
 		}
 		
+		// Marks every unread message in the folder (from ?folderId=) as read.  Posted by
+		// the folder view on load (Mastodon-style), clearing the folder's unread dot.
+		folder-read:{
+			roles:["self"]
+			steps:[
+				{do:"mark-folder-read"}
+				{do:"trigger-event", event:"refreshSidebar"}
+			]
+		}
+
 		folder-sort:{
 			roles:["self"]
 			steps:[
@@ -410,10 +357,26 @@
 			]
 		}
 		
+		// Explicit folder view: /@me/newsfeed/folder shows the News Feed (all folders);
+		// /@me/newsfeed/folder?folderId=xxx shows one folder.  Renders index.html.
+		folder: {
+			roles: ["self"]
+			steps:[
+				{do: "view-html", file: "index"}
+			]
+		}
+
 		index: {
 			roles: ["self"]
 			steps:[
-				{do: "view-html"}
+				// Bare /@me/newsfeed lands on the News Feed (all folders); Notifications is
+				// its own top-level nav section now.  Legacy ?folderId= URLs redirect to the
+				// explicit /folder route.
+				{do:"if", condition:"{{eq `` (.QueryParam `folderId`)}}", then:[
+					{do:"redirect-to", url:"/@me/newsfeed/feed"}
+				], otherwise:[
+					{do:"redirect-to", url:"/@me/newsfeed/folder?folderId={{.QueryParam `folderId`}}"}
+				]}
 			]
 		}
 
@@ -521,6 +484,28 @@
 			]
 		}
 
+		// LEGACY entry point.  Notifications live in their own template/route now
+		// (/@me/notifications — see the user-notifications template); redirect old
+		// /@me/newsfeed/notifications(?type=xxx) URLs to the matching section page.
+		notifications: {
+			roles:["self"]
+			steps:[
+				{do:"if", condition:"{{eq `ANNOUNCE` (.QueryParam `type`)}}", then:[
+					{do:"redirect-to", url:"/@me/notifications/shares"}
+				], otherwise:[
+					{do:"if", condition:"{{eq `LIKE` (.QueryParam `type`)}}", then:[
+						{do:"redirect-to", url:"/@me/notifications/likes"}
+					], otherwise:[
+						{do:"if", condition:"{{eq `FOLLOW` (.QueryParam `type`)}}", then:[
+							{do:"redirect-to", url:"/@me/notifications/followers"}
+						], otherwise:[
+							{do:"redirect-to", url:"/@me/notifications/replies"}
+						]}
+					]}
+				]}
+			]
+		}
+
 		responses-announces:{
 			roles:["self"]
 			steps: [
@@ -572,10 +557,13 @@
 			]
 		}
 
-		sidebar: {
+		// Standalone News Feed sidebar fragment, re-fetched on refreshSidebar
+		// (?folderId= keeps the selected folder).
+		newsfeed-sidebar: {
 			roles: ["self"]
 			steps:[
-				{do: "view-html", file: "sidebar"}
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
+				{do:"view-html"}
 			]
 		}
 	}

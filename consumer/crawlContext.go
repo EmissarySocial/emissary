@@ -60,7 +60,7 @@ func CrawlContext(factory *service.Factory, args mapof.Any) queue.Result {
 
 		factory.Queue().NewTask(
 			"CrawlUpReplyTree",
-			mapof.Any{"url": inReplyTo},
+			mapof.Any{"host": factory.Hostname(), "url": inReplyTo},
 		)
 	}
 

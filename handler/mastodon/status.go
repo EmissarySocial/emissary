@@ -45,7 +45,9 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 
 		// Create the stream for the new mastodon "Status"
 		stream := model.NewStream()
-		stream.TemplateID = "outbox-message" // TODO: This should not be hard-coded. Is there some way to look this up?
+		// Hard-coded default Template, matching service.Stream.Import (service/stream_import.go).
+		// This will be updated when we make a registry of default templates in profiles.
+		stream.TemplateID = "outbox-message"
 		stream.ParentID = authorization.UserID
 		stream.AttributedTo = user.PersonLink()
 		stream.SocialRole = vocab.ObjectTypeNote
@@ -98,23 +100,9 @@ func GetStatus(serverFactory *server.Factory) func(model.Authorization, txn.GetS
 
 		defer cancel()
 
-		// Load the template for this stream
-		templateService := factory.Template()
-		template, err := templateService.Load(stream.TemplateID)
-
-		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unable to load template")
-		}
-
-		// Validate permissions on this Stream/Template
-		allowed, err := factory.Permission().UserCan(session, &authorization, &template, &stream, "view")
-
-		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Error checking permissions")
-		}
-
-		if !allowed {
-			return object.Status{}, derp.Forbidden(location, "User is not authorized to delete this stream")
+		// Validate that this user is allowed to view this Stream
+		if err := userCanStream(factory, session, &authorization, &stream, "view"); err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Unable to view stream")
 		}
 
 		// Return the value
@@ -135,8 +123,10 @@ func DeleteStatus(serverFactory *server.Factory) func(model.Authorization, txn.D
 			return struct{}{}, derp.Wrap(err, location, "Unable to load stream")
 		}
 
-		if !stream.IsMyself(authorization.UserID) {
-			return struct{}{}, derp.Forbidden(location, "User is not authorized to delete this stream")
+		// Validate that this user is allowed to delete this Stream.  Deleting is an
+		// author-only operation, matching the Mastodon API contract.
+		if err := userOwnsStream(&authorization, &stream); err != nil {
+			return struct{}{}, derp.Wrap(err, location, "Unable to delete stream")
 		}
 
 		// Get a database session for this request
@@ -174,10 +164,24 @@ func PostStatus_Translate(serverFactory *server.Factory) func(model.Authorizatio
 	return func(auth model.Authorization, t txn.PostStatus_Translate) (object.Translation, error) {
 
 		// Get the Stream from the URL
-		_, _, stream, err := getStreamFromURL(serverFactory, t.ID)
+		factory, _, stream, err := getStreamFromURL(serverFactory, t.ID)
 
 		if err != nil {
 			return object.Translation{}, derp.Wrap(err, location, "Unable to load stream")
+		}
+
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Translation{}, derp.Wrap(err, location, "Unable to create session")
+		}
+
+		defer cancel()
+
+		// Validate that this user is allowed to view this Stream
+		if err := userCanStream(factory, session, &auth, &stream, "view"); err != nil {
+			return object.Translation{}, derp.Wrap(err, location, "Unable to view stream")
 		}
 
 		result := object.Translation{
@@ -248,6 +252,7 @@ func PostStatus_Favourite(serverFactory *server.Factory) func(model.Authorizatio
 		responseService := factory.Response()
 		response := model.NewResponse()
 		response.UserID = auth.UserID
+		response.Actor = user.ActivityPubURL()
 		response.Content = "👍"
 		response.Object = message.URL
 		response.Type = vocab.ActivityTypeLike
@@ -463,12 +468,13 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 		stream := model.NewStream()
 
 		if err := streamService.LoadByURL(session, t.ID, &stream); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Error muting stream")
+			return object.Status{}, derp.Wrap(err, location, "Error loading stream")
 		}
 
-		// Validate authorization
-		if !stream.IsMyself(auth.UserID) {
-			return object.Status{}, derp.Unauthorized(location, "User is not authorized to edit this stream", derp.WithForbidden())
+		// Validate that this user is allowed to edit this Stream.  Editing is an
+		// author-only operation, matching the Mastodon API contract.
+		if err := userOwnsStream(&auth, &stream); err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Unable to edit stream")
 		}
 
 		// Edit stream values
@@ -525,7 +531,12 @@ func GetStatus_Source(serverFactory *server.Factory) func(model.Authorization, t
 		stream := model.NewStream()
 
 		if err := streamService.LoadByURL(session, t.ID, &stream); err != nil {
-			return object.StatusSource{}, derp.Wrap(err, location, "Error muting stream")
+			return object.StatusSource{}, derp.Wrap(err, location, "Error loading stream")
+		}
+
+		// Validate that this user is allowed to view this Stream
+		if err := userCanStream(factory, session, &auth, &stream, "view"); err != nil {
+			return object.StatusSource{}, derp.Wrap(err, location, "Unable to view stream")
 		}
 
 		result := object.StatusSource{

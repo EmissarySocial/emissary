@@ -6,21 +6,17 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/rs/zerolog/log"
 )
 
 func init() {
 	inboxRouter.Add(vocab.ActivityTypeLike, vocab.Any, inbox_LikeOrAnnounce)
 }
 
-// inbox_LikeOrAnnounce handles all Like Dislike activities
+// inbox_LikeOrAnnounce handles all Like/Dislike/Announce activities delivered to a User's inbox.
 func inbox_LikeOrAnnounce(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.inbox_LikeOrAnnounce"
-
-	// RULE: No further processing required for non-public activities
-	if activity.NotPublic() {
-		return nil
-	}
 
 	// RULE: If the Activity does not have an ID, then make a new "fake" one.
 	if activity.ID() == "" {
@@ -28,21 +24,25 @@ func inbox_LikeOrAnnounce(context Context, activity streams.Document) error {
 	}
 
 	// Collect the ActorID for this Activity
-	actorID := activity.Actor().ID()
+	actorID := activity.ActorID()
 
 	if actorID == "" {
 		return derp.BadRequest(location, "Activity must have an ActorID", activity.Value())
 	}
 
-	// Verify that this message comes from an actor that we're "Following"
-	followingService := context.factory.Following()
-	following := model.NewFollowing()
+	// ACCEPTANCE: A User's inbox is a curated newsfeed, so it does not accept arbitrary traffic.
+	// Accept only when the activity is a private message to us, a self-message, or comes from an
+	// actor we Follow (see COLLECTIONS-REDESIGN.md D8). `following` is nil for the first two cases.
+	following, accepted := isMessageAllowed(context, activity, actorID)
 
-	if err := followingService.LoadByURL(context.session, context.user.UserID, actorID, &following); err != nil {
-		return derp.Wrap(err, location, "Unable to locate Following record", activity.Value())
+	if !accepted {
+		// SILENT DROP: return success (not an error — a 5xx makes the sender retry a delivery we
+		// will never accept), plus a console line for dev visibility (resolved Q2).
+		log.Debug().Str("location", location).Str("actor", actorID).Str("activity", activity.ID()).Msg("Dropping inbox activity from a non-followed, non-self actor")
+		return nil
 	}
 
-	// Load the original ActivityStream document being Announced/Liked (which also adds it to the cache)
+	// Load the original ActivityStream document being Liked/Announced (which also adds it to the cache)
 	document, err := activity.Object().Load()
 
 	if err != nil {
@@ -54,13 +54,56 @@ func inbox_LikeOrAnnounce(context Context, activity streams.Document) error {
 		return derp.Wrap(err, location, "Unable to save activity", activity.ID())
 	}
 
-	originType := getOriginType(activity.Type())
+	// Project this Like/Dislike/Announce into the reacted-to object's response collection (if the
+	// object is a local Stream). This inbound funnel is the SOLE writer of response CollectionItems
+	// (D6); it is a no-op for remote/non-Stream objects.
+	if err := context.factory.Stream().AddResponseCollectionItem(context.session, document.ID(), activity.Type(), activity.ID()); err != nil {
+		return derp.Wrap(err, location, "Unable to project response into collection", activity.ID())
+	}
 
-	// Add the Announced/Liked message into the User's inbox
-	if err := followingService.SaveNewsItem(context.session, &following, document, originType); err != nil {
-		return derp.Wrap(err, location, "Unable to save news item", context.user.UserID, activity.Value())
+	// Add the reacted-to message into the User's newsfeed — ONLY when it arrived from an actor we
+	// Follow (self-messages and private-messages without a Following record have no newsfeed side).
+	if following != nil {
+		originType := getOriginType(activity.Type())
+
+		if err := context.factory.Following().SaveNewsItem(context.session, following, document, originType); err != nil {
+			return derp.Wrap(err, location, "Unable to save news item", context.user.UserID, activity.Value())
+		}
 	}
 
 	// Success.
 	return nil
+}
+
+// isMessageAllowed decides whether an inbound activity is allowed into this User's inbox, per D8.
+// It returns the matching Following record (non-nil ONLY when acceptance was granted BY a Following
+// relationship — used to drive the newsfeed side-effect) and a boolean acceptance verdict.
+func isMessageAllowed(context Context, activity streams.Document, actorID string) (*model.Following, bool) {
+
+	const location = "handler.activitypub_user.isMessageAllowed"
+
+	// RULE: Allow messages if the Sender and Receiver are identical (self-message).
+	if actorID == context.user.ActivityPubURL() {
+		return nil, true
+	}
+
+	// RULE: Allow Private message addressed specifically to this user.
+	if activity.NotPublic() {
+		return nil, true
+	}
+
+	// RULE: Allow if the sender is in our Following collection.
+	followingService := context.factory.Following()
+	following := model.NewFollowing()
+
+	if err := followingService.LoadByURL(context.session, context.user.UserID, actorID, &following); err == nil {
+		return &following, true
+
+	} else if !derp.IsNotFound(err) {
+		// A real load error (not merely "no record") — report but do not accept.
+		derp.Report(derp.Wrap(err, location, "Querying Following record", actorID))
+	}
+
+	// Otherwise: not accepted.
+	return nil, false
 }

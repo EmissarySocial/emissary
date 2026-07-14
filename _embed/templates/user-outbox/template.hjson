@@ -12,14 +12,15 @@
 		title:User Profile
 		type:object
 		properties: {
+			new_password: {type:"string"}
 			feeds: {
 				description:Array of additional links to render on the profile page
 				type:array
 				items: {
 					type:object
 					properties: {
-						url: {type:"string"}
-						name: {type:"string"}
+						url: {type:"string", maxLength:1024}
+						name: {type:"string", format:"text", maxLength:256}
 					}
 				}
 			}
@@ -45,7 +46,6 @@
 		view: {
 			roles:["anonymous"]
 			steps:[
-				{do:"set-header", name:"Link", value:"<{{.Host}}/@{{.UserID}}>; rel=\"self\", <{{.Host}}/@{{.UserID}}/websub>; rel=\"hub\""}
 				{do:"view-html", file:"outbox"}
 			]
 		}
@@ -238,13 +238,6 @@
 			roles:["anonymous"]
 			steps:[
 				{do:"view-feed"}
-			]
-		}
-
-		websub: {
-			roles:["anonymous"]
-			steps:[
-				{do:"websub"}
 			]
 		}
 		

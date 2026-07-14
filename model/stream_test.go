@@ -47,14 +47,18 @@ func TestStreamSchema(t *testing.T) {
 		{"products.B.0", "000000000000000000000009", nil},
 		{"products.B.1", "00000000000000000000000a", nil},
 
-		// {"defaultAllow.0", "00000000000000000000000b", nil},
-		// {"defaultAllow.1", "00000000000000000000000c", nil},
-
 		{"url", "https://example/document", nil},
 		{"label", "DOC-LABEL", nil},
 		{"summary", "DOC-SUMMARY", nil},
-		{"icon", "https://example/icon.png", nil},
+		{"parentTemplateId", "PARENT-TMPL", nil},
+		{"context", "https://example/context", nil},
+		{"icon", "doc-icon", nil}, // icon is a CSS/token name, not a URL
 		{"iconUrl", "https://DOC.ICONURL.COM", nil},
+		{"hashtags.0", "first-tag", nil},
+		{"hashtags.1", "second-tag", nil},
+		// note: "isPublished" is a read-only virtual field (computed from publishDate/unpublishDate),
+		// "syndication" is a delta.Slice not settable by element path, and "widgets" is a nested
+		// object — none round-trip through this table helper, so they are intentionally omitted.
 		{"attributedTo.name", "DOC-AUTHOR-NAME", nil},
 		{"attributedTo.profileUrl", "https://example/author", nil},
 
@@ -78,12 +82,6 @@ func TestStreamSchema(t *testing.T) {
 		{"endDate.timezone", "UTC", nil},
 		{"endDate.unix", int64(1609542240), nil},
 
-		// TODO: LOW: Restore Widget test cases
-		// {"widgets.ABC.0", "FIRST VALUE", nil},
-		// {"widgets.ABC.1", "SECOND VALUE", nil},
-		// {"widgets.XYZ.0", "THIRD VALUE", nil},
-		// {"widgets.XYZ.1", "FOURTH VALUE", nil},
-
 		{"data.ABC", "FIRST VALUE", nil},
 		{"data.XYZ", "SECOND VALUE", nil},
 
@@ -95,16 +93,44 @@ func TestStreamSchema(t *testing.T) {
 	tableTest_Schema(t, &s, &stream, tests)
 }
 
+// TestStreamSchema_Aliases covers the alias properties that map onto shared fields: "name" is an
+// alias for Label and "summary" maps to Summary. They share storage, so they must be
+// tested in isolation (a single table would have them clobber label/summary).
+func TestStreamSchema_Aliases(t *testing.T) {
+
+	s := schema.New(StreamSchema())
+
+	{
+		stream := NewStream()
+		require.Nil(t, s.Set(&stream, "name", "VIA-NAME"))
+		require.Equal(t, "VIA-NAME", stream.Label) // "name" writes through to Label
+
+		got, err := s.Get(&stream, "name")
+		require.Nil(t, err)
+		require.Equal(t, "VIA-NAME", got)
+	}
+
+	{
+		stream := NewStream()
+		require.Nil(t, s.Set(&stream, "summary", "VIA-SUMMARY"))
+		require.Equal(t, "VIA-SUMMARY", stream.Summary) // "summary" writes through to Summary
+
+		got, err := s.Get(&stream, "summary")
+		require.Nil(t, err)
+		require.Equal(t, "VIA-SUMMARY", got)
+	}
+}
+
 func TestPermissionSchema(t *testing.T) {
 
 	m := mapof.NewObject[sliceof.String]()
 	s := schema.New(permissionSchema())
 
 	table := []tableTestItem{
-		{"ABC.0", "FIRST VALUE", nil},
-		{"ABC.1", "SECOND VALUE", nil},
-		{"XYZ.0", "THIRD VALUE", nil},
-		{"XYZ.1", "FOURTH VALUE", nil},
+		{"ABC.0", "12345678901234567890ABCD", nil},
+		{"ABC.1", "12345678901234567890ABCD", nil},
+		{"XYZ.0", "12345678901234567890ABCD", nil},
+		{"XYZ.1", "12345678901234567890ABCD", nil},
 	}
 
 	tableTest_Schema(t, &s, &m, table)

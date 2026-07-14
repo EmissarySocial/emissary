@@ -1,0 +1,33 @@
+/******************************************
+ * NOTIFICATIONS: Unread counts
+ *
+ * .tab-count sits inline in the mobile filter tabs (notifications-header.html);
+ * .menu-count is the same pill pinned to the right edge of a sidebar menu item
+ * (notifications-menu.html).
+ ******************************************/
+
+.tab .tab-count,
+.menu-item .menu-count {
+	display: inline-block;
+	min-width: 20px;
+	padding: 2px 6px;
+	border-radius: 10px;
+	background-color: var(--gray20);
+	color: var(--gray80);
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 16px;
+	text-align: center;
+	vertical-align: 1px;
+}
+
+.menu-item {
+	position: relative;
+}
+
+.menu-item .menu-count {
+	position: absolute;
+	right: 6px;
+	top: 50%;
+	transform: translateY(-50%);
+}

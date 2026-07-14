@@ -7,7 +7,7 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
+	"github.com/benpate/uri"
 )
 
 // OAuthAuthorization is a lightweight builder that
@@ -72,11 +72,11 @@ func (builder OAuthAuthorization) IconURL() string {
 
 func (builder OAuthAuthorization) Website() string {
 	if website := builder._client.Website; website != "" {
-		return dt.AddProtocol(website)
+		return uri.PrependProtocol(website)
 	}
 
-	if clientURL := dt.NameOnly(builder._client.ClientURL); clientURL != "" {
-		return dt.AddProtocol(clientURL)
+	if clientURL := uri.Hostname(builder._client.ClientURL); clientURL != "" {
+		return uri.PrependProtocol(clientURL)
 	}
 
 	return ""

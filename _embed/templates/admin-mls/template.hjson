@@ -11,7 +11,7 @@
 		type: "object", 
 		properties: {
 			mlsMode: {type:"string", enum:["ALL","GROUPS", "NONE"]},
-			mlsGroupIds: {type:"string"}
+			mlsGroupIds: {type:"string", maxLength:2048}
 		}
 	}
 	actions: {

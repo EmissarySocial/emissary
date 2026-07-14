@@ -22,14 +22,14 @@ func PreProcessor(task *queue.Task) error {
 	case "ConnectPushService":
 		task.Priority = 8
 
-	case "CreateWebSubFollower":
-		task.Priority = 8
-
 	// (16) Realtime User Notifications
 	case "ImportStartup":
 		task.Priority = 16
 
-	case "SendActivityPubMessage":
+	// Outbox-Publish is the follower fan-out (F2). It is cheap (DB reads + enqueue, no HTTP),
+	// so it runs promptly post-commit — preserving the old synchronous fan-out timing — while the
+	// per-recipient Outbox:SendToSingleRecipient deliveries it enqueues stay background (256 below).
+	case "Outbox-Publish":
 		task.Priority = 16
 
 	case "SendSearchResult":
@@ -39,6 +39,9 @@ func PreProcessor(task *queue.Task) error {
 		task.Priority = 16
 
 	case "ReceiveActivityPub-Move":
+		task.Priority = 16
+
+	case "SendWebPushNotification":
 		task.Priority = 16
 
 	// (32) User-Affecting Tasks That Should Complete Very Quickly
@@ -65,15 +68,6 @@ func PreProcessor(task *queue.Task) error {
 		task.Priority = 256
 
 	case "Outbox:SendToSingleRecipient":
-		task.Priority = 256
-
-	case "ReceiveWebMention":
-		task.Priority = 256
-
-	case "SendWebMention":
-		task.Priority = 256
-
-	case "SendWebSubMessage":
 		task.Priority = 256
 
 	case "syndication.create", "syndication.update", "syndication.delete":
@@ -121,6 +115,9 @@ func PreProcessor(task *queue.Task) error {
 		task.Priority = 1024
 
 	case "PurgeDomeLog":
+		task.Priority = 1024
+
+	case "PurgeNotifications":
 		task.Priority = 1024
 
 	case "RecycleDomain":

@@ -4,10 +4,10 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/stripeapi"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/uri"
 )
 
 // stripe_Connect ensures that the Stripe webhook is configured for this MerchantAccount
@@ -16,7 +16,7 @@ func (service *MerchantAccount) stripe_Connect(merchantAccount *model.MerchantAc
 	const location = "service.MerchantAccount.stripe_Connect"
 
 	// RULE: Cannot set webhooks for local domains
-	if dt.IsLocalhost(service.host) {
+	if uri.IsLocalHostname(service.host) {
 		return nil
 	}
 
@@ -41,7 +41,7 @@ func (service *MerchantAccount) stripe_Connect(merchantAccount *model.MerchantAc
 		With(options.BearerAuth(restrictedKey)).
 		With(stripeapi.ConnectedAccount(connectedAccountID)).
 		Query("url", endpoint).
-		Query("description", dt.NameOnly(service.host)+" supscription updates").
+		Query("description", uri.Hostname(service.host)+" supscription updates").
 		Query("enabled_events[]", "checkout.session.completed").
 		Query("enabled_events[]", "customer.product.created").
 		Query("enabled_events[]", "customer.product.deleted").

@@ -14,6 +14,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/html"
 	"github.com/benpate/remote"
+	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
@@ -146,7 +147,7 @@ func GetCollectionRandom(ctx *steranko.Context, factory *service.Factory, sessio
 func newTransaction(cache *httpcache.HTTPCache, accessKey string) *remote.Transaction {
 
 	return remote.New().
-		Client(httpcache.NewHTTPClient(cache)).
+		With(options.WithRoundTripper(httpcache.NewHTTPMiddleware(cache))).
 		Accept("application/json").
 		Header("Authorization", "Client-ID "+accessKey).
 		Header("Accept-Version", "v1")

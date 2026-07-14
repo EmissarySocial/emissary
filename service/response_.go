@@ -10,19 +10,22 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Response defines a service that can send and receive response data
 type Response struct {
-	importItemService *ImportItem
-	newsFeedService   *NewsFeed
-	outboxService     *Outbox
-	userService       *User
-	host              string
+	activityStreamService *ActivityStream
+	importItemService     *ImportItem
+	newsFeedService       *NewsFeed
+	outboxService         *Outbox
+	userService           *User
+	host                  string
 }
 
 // NewResponse returns a fully initialized Response service
@@ -36,6 +39,7 @@ func NewResponse() Response {
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Response) Refresh(factory *Factory) {
+	service.activityStreamService = factory.ActivityStream()
 	service.importItemService = factory.ImportItem()
 	service.newsFeedService = factory.NewsFeed()
 	service.outboxService = factory.Outbox()
@@ -101,7 +105,7 @@ func (service *Response) Save(session data.Session, response *model.Response, no
 	const location = "service.Response.Save"
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(response); err != nil {
+	if _, err := service.Schema().Validate(response); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Response", response)
 	}
 
@@ -114,6 +118,10 @@ func (service *Response) Save(session data.Session, response *model.Response, no
 	if err := service.newsFeedService.setResponse(session, response.UserID, response.Object, response.Type, response.ResponseID); err != nil {
 		return derp.Wrap(err, location, "Unable to set Response to inbox message", response.UserID)
 	}
+
+	// NOTE: a Response does NOT write its own CollectionItem. The object-side projection is owned
+	// solely by the inbound funnel: SetResponse publishes the reaction to the author, and the
+	// resulting inbox delivery (including the self-loopback) projects it. See COLLECTIONS-REDESIGN.md D6.
 
 	return nil
 }
@@ -133,8 +141,26 @@ func (service *Response) Delete(session data.Session, response *model.Response, 
 		return derp.Wrap(err, location, "Unable to remove Response from inbox message", response.UserID)
 	}
 
-	// Unpublish from the Outbox, and send the "Undo" activity to followers
-	if err := service.outboxService.UndoActivity(session, model.FollowerTypeUser, response.UserID, response.ActivityPubURL(), model.NewAnonymousPermissions()); err != nil {
+	// NOTE: no direct CollectionItem removal here. The Undo published below loops back through the
+	// inbound funnel, which is the sole owner of the object-side projection (D6).
+
+	// Load the reacting User (needed for the followers-collection URL when computing the Announce
+	// audience). If the user is gone, fall back to a zero User — reactionAudience still resolves the
+	// author and degrades safely.
+	user := model.NewUser()
+	if err := service.userService.LoadByID(session, response.UserID, &user); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to load User for Undo audience", response.UserID))
+	}
+
+	// Build the ORIGINAL activity's JSON-LD (embedded inline in the Undo) and apply the same
+	// per-type audience the original reaction used, so the Undo reaches exactly the same actors.
+	// Embedding it (rather than referencing by URL) matters because the Response row was just
+	// hard-deleted, so its /pub/liked/<id> URL would 404 if dereferenced (D7). The options spread
+	// MUST be preserved so an author-only reaction's Undo stays author-only (D7b).
+	originalActivity := response.GetJSONLD()
+	options := service.reactionAudience(&user, response, originalActivity)
+
+	if err := service.outboxService.UndoActivity(session, model.FollowerTypeUser, response.UserID, originalActivity, model.NewAnonymousPermissions(), options...); err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to send Undo activity"))
 	}
 
@@ -238,7 +264,7 @@ func (service *Response) QueryByUserAndDate(session data.Session, userID primiti
 
 func (service *Response) QueryByObjectAndDate(session data.Session, objectID string, responseType string, maxDate int64, pageSize int) ([]model.Response, error) {
 
-	criteria := exp.Equal("objectId", objectID).AndEqual("type", responseType).And(exp.LessThan("createDate", maxDate))
+	criteria := exp.Equal("object", objectID).AndEqual("type", responseType).And(exp.LessThan("createDate", maxDate))
 	options := []option.Option{option.SortDesc("createDate"), option.MaxRows(int64(pageSize))}
 
 	return service.Query(session, criteria, options...)
@@ -317,8 +343,8 @@ func (service *Response) SetResponse(session data.Session, user *model.User, url
 	const location = "service.Response.SetResponse"
 
 	// Remove previous Response (if it exists)
-	if service.UnsetResponse(session, user, url, responseType) != nil {
-		return derp.Wrap(nil, location, "Unable to remove previous response", user.UserID, url, responseType)
+	if err := service.UnsetResponse(session, user, url, responseType); err != nil {
+		return derp.Wrap(err, location, "Unable to remove previous response", user.UserID, url, responseType)
 	}
 
 	// Create a new Response object
@@ -334,10 +360,14 @@ func (service *Response) SetResponse(session data.Session, user *model.User, url
 		return derp.Wrap(err, location, "Unable to save response", response)
 	}
 
-	activity := service.Activity(response)
+	// Build the outgoing activity map, then apply the per-type audience: Like/Dislike deliver
+	// author-only (via the returned WithRecipients option); Announce is stamped Public + cc and
+	// keeps the default follower fan-out (D7b / resolved Q3).
+	activityMap := response.GetJSONLD()
+	options := service.reactionAudience(user, &response, activityMap)
 
-	// Publish the new Response to the Outbox, sending "Like" notifications to all followers.
-	if err := service.outboxService.Publish(session, model.FollowerTypeUser, user.UserID, activity, model.NewAnonymousPermissions()); err != nil {
+	// Publish the new Response to the Outbox.
+	if err := service.outboxService.Publish(session, model.FollowerTypeUser, user.UserID, streams.NewDocument(activityMap), model.NewAnonymousPermissions(), options...); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error publishing Response", response))
 	}
 
@@ -371,6 +401,57 @@ func (service *Response) UnsetResponse(session data.Session, user *model.User, u
 	return nil
 }
 
-func (service *Response) Activity(response model.Response) streams.Document {
-	return streams.NewDocument(response.GetJSONLD())
+// objectAuthorURL resolves the AUTHOR ACTOR (attributedTo) of the object this Response reacted to.
+// Only actors have inboxes (D7a), so the author — not the object URL — is the deliverable target of
+// a reaction. Returns "" if the object cannot be loaded or has no attributedTo.
+func (service *Response) objectAuthorURL(response *model.Response) string {
+
+	object, err := service.activityStreamService.AppClient().Load(response.Object)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "service.Response.objectAuthorURL", "Unable to load reacted-to object to resolve its author", response.Object))
+		return ""
+	}
+
+	return object.AttributedTo().ID()
+}
+
+// reactionAudience computes the delivery audience for a reaction and applies it to the outgoing
+// activity, following Mastodon (see COLLECTIONS-REDESIGN.md resolved Q3 / D7a / D7b):
+//
+//   - Like / Dislike: delivered ONLY to the liked object's AUTHOR. No `to`/`cc` on the wire (matching
+//     Mastodon's minimal Like). Returns WithRecipients(<author>) so the follower fan-out is replaced.
+//   - Announce (share): a broadcast. Stamps `to: [Public]` and `cc: [followers, author]` on the wire
+//     and returns no override, so the default follower fan-out runs; the author is added as an
+//     addressee (via `cc`) so they are delivered to as well.
+//
+// The `activity` map is mutated in place (Announce addressing). `user` is the reacting actor, needed
+// for its followers-collection URL. When the author cannot be resolved, Like/Dislike fall back to an
+// empty recipient set (suppressing fan-out) rather than accidentally broadcasting.
+func (service *Response) reactionAudience(user *model.User, response *model.Response, activity mapof.Any) []PublishOption {
+
+	authorURL := service.objectAuthorURL(response)
+
+	// Announce is a public broadcast: Public in `to`, followers + author in `cc`.
+	if response.Type == vocab.ActivityTypeAnnounce {
+
+		activity[vocab.PropertyTo] = []string{vocab.NamespacePublic}
+
+		cc := []string{user.ActivityPubFollowersURL()}
+		if authorURL != "" {
+			cc = append(cc, authorURL)
+		}
+		activity[vocab.PropertyCC] = cc
+
+		// Default follower fan-out; the author reached via the `cc` addressee.
+		return nil
+	}
+
+	// Like / Dislike are author-only, with no `to`/`cc` on the wire.
+	if authorURL == "" {
+		log.Warn().Str("object", response.Object).Str("type", response.Type).Msg("Response: reacted-to object has no resolvable author; reaction will not be delivered")
+		return []PublishOption{WithRecipients()}
+	}
+
+	return []PublishOption{WithRecipients(authorURL)}
 }

@@ -68,17 +68,26 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	}
 
 	// Get ActivityStream service for this User
-	client := factory.ActivityStream().UserClient(user.UserID)
+	activityService := factory.ActivityStream()
+	client := activityService.UserClient(user.UserID)
 
-	// Receive the activity from the request (with optional options)
-	activity, err := router.ReceiveRequest(ctx.Request(), client)
+	// Receive the activity from the request, verifying HTTP signatures using our
+	// own PublicKeyFinder (which looks up the key by the signature's keyID and
+	// bypasses the cache, to avoid verifying against a stale signing key).
+	activity, err := router.ReceiveRequest(
+		ctx.Request(),
+		client,
+
+		// Injecting our own key finder that is aware of the ascache middleware.
+		router.WithPublicKeyFinder(activityService.PublicKeyFinder),
+	)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to receive ActivityPub request")
 	}
 
 	// Prevent duplicate actiities from being processes multiple times (e.g. due to retries or multiple deliveries)
-	if inbox_IsDuplicatActivity(context, activity) {
+	if inbox_IsDuplicateActivity(context, activity) {
 		return nil
 	}
 
@@ -92,6 +101,15 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 		return derp.Wrap(err, location, "Unable to save activity to inbox", activity.Value())
 	}
 
+	// Create Notifications for this activity (mentions, replies, reactions).  This runs centrally,
+	// regardless of Following state, because the per-type router handlers below intentionally drop
+	// exactly the cases notifications care about.  A notification failure must NOT fail the inbox
+	// request, so we report-and-continue.  FOLLOW notifications are the exception — see
+	// inbox_follow_any.go (they fire after the Accept is sent).
+	if err := context.factory.Notification().NotifyFromActivity(context.session, context.user, activity); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to create notifications for activity", activity.ID()))
+	}
+
 	// Route the activity to additional handlers to process side effects
 	if err := inboxRouter.Handle(context, activity); err != nil {
 		return derp.Wrap(err, location, "Unable to handle ActivityPub request")
@@ -102,7 +120,7 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 }
 
 // inbox_IsDuplicateActivity checks if this activity has already been received and processed in the inbox
-func inbox_IsDuplicatActivity(context Context, activity streams.Document) bool {
+func inbox_IsDuplicateActivity(context Context, activity streams.Document) bool {
 	return context.factory.Inbox().IsDuplicateActivity(context.session, context.user.UserID, activity.ID())
 }
 
@@ -113,7 +131,7 @@ func inbox_ValidateActivity(activity streams.Document) error {
 	const location = "handler.activitypub_user.inbox_ValidateActivity"
 
 	// Require that the Activity has a valid ActorID
-	if actorID := activity.Actor().ID(); actorID == "" {
+	if actorID := activity.ActorID(); actorID == "" {
 		return derp.BadRequest(location, "Activity must have an ActorID", activity.Value())
 	}
 
@@ -147,7 +165,7 @@ func inbox_SaveActivity(context Context, activity streams.Document) error {
 	inboxService := context.factory.Inbox()
 	inboxActivity := model.NewInboxActivity()
 	inboxActivity.UserID = context.user.UserID
-	inboxActivity.ActorID = activity.Actor().ID()
+	inboxActivity.ActorID = activity.ActorID()
 	inboxActivity.ActivityID = activity.ID()
 	inboxActivity.Context = activity.Context()
 	inboxActivity.ActivityType = activity.Type()
@@ -158,10 +176,12 @@ func inbox_SaveActivity(context Context, activity streams.Document) error {
 	inboxActivity.RawActivity = activity.Map()
 	inboxActivity.IsPublic = activity.IsPublic()
 
+	// PublishedDate is stored in MILLISECONDS (see model.InboxActivity and the outbox2 write path),
+	// so use UnixMilli — .Unix() here would store seconds and sort this activity ~1000x too early.
 	if publishedDate := activity.Published(); !publishedDate.IsZero() {
-		inboxActivity.PublishedDate = publishedDate.Unix()
+		inboxActivity.PublishedDate = publishedDate.UnixMilli()
 	} else {
-		inboxActivity.PublishedDate = time.Now().Unix()
+		inboxActivity.PublishedDate = time.Now().UnixMilli()
 	}
 
 	// Save the Activity to the User's Inbox

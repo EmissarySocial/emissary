@@ -13,31 +13,35 @@
 
 	<!-- Sidebar Content -->
 	{{- if $isDesktop -}}
-		{{- template "sidebar" $folders -}}
+		{{- template "newsfeed-sidebar" . -}}
 	{{- end -}}
 
 	<!-- Main App Content -->
 	<div class="app-content padding-top">
 
-		<!-- Floating Menu Bar -->
-		 {{- if ne $folderID nilObjectID.Hex -}}
-			<div class="{{if $isDesktop}}text-sm{{end}} margin-none nowrap pos-sticky float-right" style="top:0px; padding:0px 0px 8px 16px; border-radius:4px; background-color:var(--page-background); view-transition-name:sticky-buttons; z-index:1000">
-				<button hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="primary turboclick">{{icon "add"}}{{if $isDesktop}} Follow Someone{{end}}</button>
+		<!-- Floating Menu Bar.  "Follow Someone" shows on every folder view, including the All Folders
+		     (News Feed) view where no single folder is selected; there it omits the folderId so the
+		     follow modal's "Inbox Folder" dropdown defaults to the user's first folder.  Filter and
+		     Folder Settings are folder-specific, so they only appear when a folder is selected. -->
+		{{- $selectedFolder := ne $folderID nilObjectID.Hex -}}
+		<div class="{{if $isDesktop}}text-sm{{end}} margin-none nowrap pos-sticky float-right" style="top:0px; padding:0px 0px 8px 16px; border-radius:4px; background-color:var(--page-background); view-transition-name:sticky-buttons; z-index:1000">
+			<button hx-get="/@me/settings/following-search{{if $selectedFolder}}?folderId={{$folderID}}{{end}}" class="primary turboclick">{{icon "add"}}{{if $isDesktop}} Follow Someone{{end}}</button>
+			{{- if $selectedFolder -}}
 				{{- if $filter.IsZero -}}
 					<button hx-get="/@me/newsfeed/filter?folderId={{$folderID}}" class="turboclick">{{icon "filter"}}{{if $isDesktop}} Filter{{end}}</button>
 				{{- else -}}
 					<button hx-get="/@me/newsfeed/filter?folderId={{$folderID}}&followingId={{$followingID}}" class="selected ellipsis turboclick" style="max-width:160px;">{{icon "filter-fill"}}{{- if $isDesktop }} {{$filter.Label}}{{end}}</button>
 				{{- end -}}
 				<button hx-get="/@me/newsfeed/folder-edit?folderId={{$folderID}}" class="turboclick">{{icon "settings"}}{{ if $isDesktop }} Folder Settings{{end}}</button>
-			</div>
-		{{- end -}}
+			{{- end -}}
+		</div>
 
 		<div class="flex-row margin-bottom-lg">
 
 			{{- if $filter.NotZero -}}
 				{{- $following := .FollowingByToken $followingID -}}
 				<div class="flex-grow-1 margin-top-sm">
-					<div class="bold"><a href="/@me/newsfeed?folderId={{$folderID}}" hx-get="/@me/newsfeed?folderId={{$folderID}}">{{iconFilled $folder.Icon}} {{$folder.Label}}</a></div>
+					<div class="bold"><a href="/@me/newsfeed/folder?folderId={{$folderID}}" hx-get="/@me/newsfeed/folder?folderId={{$folderID}}">{{iconFilled $folder.Icon}} {{$folder.Label}}</a></div>
 					<div class="flex-row margin-vertical">
 						{{- if ne "" $following.IconURL -}}
 							<div class="margin-top-xs">
@@ -95,11 +99,23 @@
 	<script src="/.templates/user-inbox/hyperscript" type="text/hyperscript"></script>
 
 	<div
-		hx-get="{{.URL}}" 
+		hx-get="{{.RelativeURL}}"
 		hx-trigger="refreshPage from:window"
 		hx-target="main"
 		hx-swap="innerHTML"
 		hx-push-url="false">
 	</div>
-	
+
+	<!-- Mark this folder's messages read once it is opened (Mastodon-style).  This clears the
+	     folder's unread dot via refreshSidebar; rows keep their unread styling for this render.
+	     Skipped on the News Feed (all-folders) view, where no single folder is selected. -->
+	{{- if ne $folderID nilObjectID.Hex -}}
+	<div
+		hx-post="/@me/newsfeed/folder-read?folderId={{$folderID}}"
+		hx-trigger="load delay:1s"
+		hx-swap="none"
+		hx-push-url="false">
+	</div>
+	{{- end -}}
+
 </div>

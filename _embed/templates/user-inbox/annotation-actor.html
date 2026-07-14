@@ -17,6 +17,7 @@
 
 		<button role="tab" hx-get="/@me/newsfeed/browse-actor?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "person"}} Profile</button>
 		<button role="tab" aria-selected="true" hx-get="/@me/newsfeed/notes?followingId={{$following.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "note"}} Notes</button>
+		<button role="tab" hx-get="/@me/settings/actor-rule?actor={{$actor.ID}}">{{icon "rule"}} Rule</button>
 
 		{{ if $following.IsNew -}}
 			<button role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "add"}} Follow</button>
@@ -34,9 +35,9 @@
 
 <div id="modal-body" class="pos-relative">
 
-	<div class="flex-grow flex-row flex-align-center margin-bottom text-plain">
+	<div class="flex-grow flex-row flex-align-center margin-bottom-lg text-plain">
 		{{- if $actor.Icon.NotNil -}}
-			<img src="{{$actor.Icon.Href}}" class="circle width-64">
+			<img src="{{$actor.Icon.Href}}" class="circle width-64" alt="">
 		{{- else -}}
 			<div class="circle width-64"></div>
 		{{- end -}}

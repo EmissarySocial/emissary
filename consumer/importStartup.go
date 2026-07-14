@@ -4,6 +4,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/ascache"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/collections"
@@ -102,8 +103,8 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 		return queue.Error(derp.Wrap(err, location, "Unable to update import record", record))
 	}
 
-	// Start a task to import all of the items for this source
-	factory.Queue().NewTask("ImportItems", args)
+	// Start a task (post-commit) to import all of the items for this source
+	postcommit.Publish(session, factory.Queue(), "ImportItems", args)
 
 	// Let's get this party started.
 	return queue.Success()

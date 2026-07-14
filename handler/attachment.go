@@ -25,13 +25,12 @@ func GetDomainAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 	domain := factory.Domain().Get()
 
 	// Load the attachment in order to verify that it is valid for this stream
-	// TODO: LOW: This might be more efficient as a single query...
 	attachmentService := factory.Attachment()
 	attachmentIDString := list.Dot(ctx.Param("attachmentId")).First()
 	attachmentID, err := primitive.ObjectIDFromHex(attachmentIDString)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Invalid attachmentID", attachmentIDString)
+		return derp.Wrap(err, location, "Invalid attachmentID", attachmentIDString, derp.WithNotFound())
 	}
 
 	attachment := model.NewAttachment(model.AttachmentObjectTypeDomain, domain.DomainID)
@@ -49,7 +48,7 @@ func GetDomainAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 	header.Set("Cache-Control", "public, max-age=86400") // Store in public caches for 1 day
 
 	if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
-		return derp.Wrap(err, location, "Error accessing attachment file", derp.WithInternalError())
+		return serveAttachmentError(err, location, attachment)
 	}
 
 	return nil
@@ -68,14 +67,14 @@ func GetSearchTagAttachment(ctx *steranko.Context, factory *service.Factory, ses
 	searchTagID, err := primitive.ObjectIDFromHex(ctx.Param("searchTagId"))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Invalid SearchTagID")
+		return derp.Wrap(err, location, "Invalid SearchTagID", derp.WithNotFound())
 	}
 
 	// Locate the AttachmentID
 	attachmentID, err := primitive.ObjectIDFromHex(ctx.Param("attachmentId"))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Invalid AttachmentID")
+		return derp.Wrap(err, location, "Invalid AttachmentID", derp.WithNotFound())
 	}
 
 	// Load the Attachment record from the database
@@ -91,7 +90,7 @@ func GetSearchTagAttachment(ctx *steranko.Context, factory *service.Factory, ses
 	filespec := attachment.FileSpec(ctx.Request().URL)
 
 	if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
-		return derp.Wrap(err, location, "Unable to access attachment file", derp.WithInternalError())
+		return serveAttachmentError(err, location, attachment)
 	}
 
 	return nil
@@ -112,7 +111,6 @@ func GetStreamAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 	}
 
 	// Load the attachment in order to verify that it is valid for this stream
-	// TODO: LOW: This might be more efficient as a single query...
 	attachmentService := factory.Attachment()
 	attachmentToken := list.Dot(ctx.Param("attachmentId")).First()
 	attachment := model.NewEmptyAttachment()
@@ -130,7 +128,7 @@ func GetStreamAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 	}
 
 	if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
-		return derp.Wrap(err, location, "Error accessing attachment file")
+		return serveAttachmentError(err, location, attachment)
 	}
 
 	return nil
@@ -164,9 +162,18 @@ func GetUserAttachment(ctx *steranko.Context, factory *service.Factory, session 
 	filespec := attachment.FileSpec(ctx.Request().URL)
 
 	if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
-		return derp.Wrap(err, location, "Error accessing attachment file")
+		return serveAttachmentError(err, location, attachment)
 	}
 
 	// Successfully delivered the Attachments
 	return nil
+}
+
+// serveAttachmentError translates a mediaserver.Serve failure into an HTTP response.
+// A file that cannot be processed (for instance an attachment whose stored bytes are
+// not a decodable image) would otherwise surface as an HTTP 500 on every request.
+// We downgrade it to a 404 so a single broken attachment does not read as a server
+// fault -- the browser simply renders its normal broken-image state instead.
+func serveAttachmentError(err error, location string, attachment model.Attachment) error {
+	return derp.Wrap(err, location, "Unable to serve attachment file", attachment.AttachmentID.Hex(), derp.WithNotFound())
 }

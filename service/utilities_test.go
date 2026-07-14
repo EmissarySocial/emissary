@@ -3,6 +3,7 @@ package service
 import (
 	"testing"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -89,31 +90,31 @@ func TestParsePathErrors(t *testing.T) {
 func TestParseFollowersURI(t *testing.T) {
 
 	host := "https://example.com"
+	hexID := "123456789012345678901234"
+	id, err := primitive.ObjectIDFromHex(hexID)
+	require.Nil(t, err)
 
-	{
-		userID := parseFollowersURI(host, "https://example.com/@123456789012345678901234/pub/followers")
-		expectedID, _ := primitive.ObjectIDFromHex("123456789012345678901234")
-		require.Equal(t, expectedID, userID)
+	do := func(uri string, wantType string, wantID primitive.ObjectID) {
+		t.Helper()
+		gotType, gotID := parseFollowersURI(host, uri)
+		require.Equal(t, wantType, gotType, "actorType for %q", uri)
+		require.Equal(t, wantID, gotID, "actorID for %q", uri)
 	}
 
-	{
-		userID := parseFollowersURI(host, "https://example.com/@123456789012345678901234/pub/followers/")
-		require.Zero(t, userID)
-	}
+	// User followers collections
+	do("https://example.com/@"+hexID+"/pub/followers", model.ActorTypeUser, id) // long form
+	do("followers:"+hexID, model.ActorTypeUser, id)                             // shortcut scheme
 
-	{
-		userID := parseFollowersURI(host, "https://example.com/@123456789012345678901234/invalid-other-path/")
-		require.Zero(t, userID)
-	}
+	// Stream (bare hex, no "@") and SearchQuery ("@search_") followers collections — W6
+	do("https://example.com/"+hexID+"/pub/followers", model.ActorTypeStream, id)
+	do("https://example.com/@search_"+hexID+"/pub/followers", model.ActorTypeSearchQuery, id)
 
-	{
-		userID := parseFollowersURI(host, "https://example.com/@not-a-valid-userid/pub/followers/")
-		require.Zero(t, userID)
-	}
-
-	{
-		userID := parseFollowersURI(host, "https://not-even-your-domain.bro")
-		require.Zero(t, userID)
-	}
-
+	// NOT a local followers collection → ("", NilObjectID)
+	do("https://example.com/@"+hexID+"/pub/followers/", "", primitive.NilObjectID)            // trailing slash
+	do("https://example.com/@"+hexID+"/invalid-other-path/", "", primitive.NilObjectID)       // wrong suffix
+	do("https://example.com/@not-a-valid-userid/pub/followers", "", primitive.NilObjectID)    // non-hex user
+	do("https://example.com/not-a-valid-id/pub/followers", "", primitive.NilObjectID)         // non-hex stream
+	do("https://example.com/@search_not-hex/pub/followers", "", primitive.NilObjectID)        // non-hex search
+	do("https://not-even-your-domain.bro/"+hexID+"/pub/followers", "", primitive.NilObjectID) // foreign host
+	do("followers:not-hex", "", primitive.NilObjectID)                                        // bad shortcut token
 }

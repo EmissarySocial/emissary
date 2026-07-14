@@ -1,0 +1,80 @@
+{{- $builder := . -}}
+{{- $url := .QueryParam "id" -}}
+{{- $stream := .ActivityStream $url -}}
+{{- $actor := $stream.AttributedTo.Load -}}
+
+<div class="flex-row hover-trigger">
+
+	<div class="flex-row flex-grow-1">
+		<div class="flex-shrink-0 margin-right-sm" style="margin-left:12px;">
+			{{- if $actor.Icon.IsNil -}}
+				<div class="circle width-48"></div>
+			{{- else -}}
+				<div class="clickable width-48" script="on click goToUrl(me, {{.IsAuthenticated}})" data-url="{{$actor.ID | safeURL}}">
+					<img class="circle width-48" src="{{$actor.Icon.Href}}" alt="Profile for {{$actor.Name}}">
+				</div>
+			{{- end -}}
+		</div>
+
+		<a script="on click goToUrl(me, {{.IsAuthenticated}})" data-url="{{$stream.ID | safeURL}}" class="flex-grow-1 text-nocolor">
+
+			<div class="margin-bottom-xs">
+				{{- if $actor.NotNil -}}
+					<span class="bold margin-right-xs">{{$actor.Name}}</span>
+					<span class="flex-grow-1 text-light-gray">{{ $stream.Published | tinyDate}} ago</span>
+				{{- end -}}
+			</div>
+
+			{{- if ne "" $stream.Name -}}
+				<div class="bold">{{$stream.Name}}</div>
+			{{- end -}}
+
+			{{- if $stream.Image.NotNil -}}
+				<div class="margin-vertical"><img src="{{$stream.Image.Href}}" class="width-100%"></div>
+			{{- end -}}
+		
+			<div class="margin-bottom">{{$stream.Content | htmlMinimal}}</div>
+			<!--div class="text-sm">
+				<span class="text-light-gray">
+					{{- if gt $metadata.Replies 0 -}}
+						<span class="margin-right-sm">
+							{{$metadata.Replies}} {{pluralize $metadata.Replies "Reply" "Replies"}}
+						</span>
+					{{- end -}}
+
+					{{- if gt $metadata.Likes 0 -}}
+						<span class="margin-right-sm">
+							{{$metadata.Likes}} {{pluralize $metadata.Likes "Like" "Likes"}}
+						</span>
+					{{- end -}}
+
+					{{- if gt $metadata.Announces 0 -}}
+						<span class="margin-right-sm">
+							{{$metadata.Announces}} {{pluralize $metadata.Announces "Boost" "Boosts"}}
+						</span>
+					{{- end -}}
+				</span>
+
+				{{ template "tags" $stream }}
+			</div-->
+		</a>
+	</div>
+
+</div>
+
+<!--pre>{{$stream | jsonIndent}}</pre-->
+
+
+<script>
+	function goToUrl(element, isAuthenticated) {
+
+		const url = element.dataset.url
+
+		if (isAuthenticated) {
+			htmx.ajax("GET", "/@me/newsfeed/browse?url=" + encodeURIComponent(url))
+			return
+		}
+
+		window.open(url, "_blank")
+	}
+</script>

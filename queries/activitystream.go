@@ -26,9 +26,14 @@ func SearchActivityStreamActors(collection data.Collection, text string) ([]mode
 
 	// Build the query pipeline
 	pipeline := []bson.M{
+		// Find all Actors that match the search text
 		{"$match": bson.M{"metadata.documentCategory": "Actor", "$text": bson.M{"$search": text}}},
+
+		// Get the top 6 most relevant results
 		{"$sort": bson.M{"score": bson.M{"$meta": "textScore"}}},
 		{"$limit": 6},
+
+		// Project and simplify the results
 		{"$replaceWith": "$object"},
 		{"$project": bson.M{
 			"_id":               false,
@@ -37,8 +42,10 @@ func SearchActivityStreamActors(collection data.Collection, text string) ([]mode
 			"name":              true,
 			"icon":              "$icon.href",
 			"preferredUsername": true,
-			"mls:keyPackages":   true,
+			"keyPackages":       true,
 		}},
+
+		// Sort results by name
 		{"$sort": bson.M{"name": 1}},
 	}
 
@@ -51,6 +58,10 @@ func UpdateContext(collection data.Collection, oldContext string, newContext str
 	const location = "queries.UpdateContext"
 
 	mongoCollection := mongoCollection(collection)
+
+	if mongoCollection == nil {
+		return derp.Internal(location, "Collection is not a MongoDB collection")
+	}
 
 	// Update all documents with the old context
 	_, err := mongoCollection.UpdateMany( // nolint:scopeguard

@@ -27,13 +27,13 @@ type StreamSummary struct {
 	Hashtags       sliceof.String     `bson:"hashtags,omitempty"`     // List of hashtags associated with this document
 	InReplyTo      string             `bson:"inReplyTo,omitempty"`    // If this stream is a reply to another stream or web page, then this links to the original document.
 	StartDate      datetime.DateTime  `bson:"startDate,omitempty"`    // Date when this stream was published
-	PublishDate    int64              `bson:"publishDate"`            // Date when this stream was published
-	UnPublishDate  int64              `bson:"unpublishDate"`          // Date when this stream should be removed from public view
+	PublishDate    int64              `bson:"publishDate"`            // Unix epoch SECONDS when this stream was published (mirrors Stream.PublishDate)
+	UnPublishDate  int64              `bson:"unpublishDate"`          // Unix epoch SECONDS when this stream should be removed from public view (mirrors Stream.UnPublishDate)
 	Rank           int                `bson:"rank"`                   // If Template uses a custom sort order, then this is the value used to determine the position of this Stream.
 	Shuffle        int64              `bson:"shuffle"`                // Random value used to shuffle the order of Streams in a list
 	Location       geo.Address        `bson:"location"`               // Physical location associated with this document
 	IsFeatured     bool               `bson:"isFeatured"`             // If this Stream is "featured" then it will be displayed in a special location on the page.
-	CreateDate     int64              `bson:"createDate"`             // Date when this stream was created
+	CreateDate     int64              `bson:"createDate"`             // Unix epoch MILLISECONDS when this stream was created (journal field; mirrors Stream.CreateDate)
 }
 
 // NewStream returns a fully initialized Stream object.

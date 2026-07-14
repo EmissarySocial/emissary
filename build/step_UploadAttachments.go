@@ -1,11 +1,15 @@
 package build
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
+	"net/http"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
 	"github.com/rs/zerolog/log"
@@ -94,6 +98,16 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		//nolint:errcheck
 		defer source.Close()
 
+		// If this step restricts the accepted content-types, then sniff the actual
+		// file contents (NOT the attacker-controlled filename or Content-Type header)
+		// and reject anything that does not match.  `reader` re-assembles the bytes
+		// we peeked so the full stream is still available for MediaServer.Put.
+		reader, err := verifyContentType(source, step.AcceptType)
+
+		if err != nil {
+			return Halt().WithError(derp.Wrap(err, location, "Uploaded file is not an allowed type", fileHeader.Filename, step.AcceptType))
+		}
+
 		// Create a new Attachment object
 		attachment := model.NewAttachment(objectType, objectID)
 		attachment.Original = fileHeader.Filename
@@ -115,7 +129,7 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 
 		// Add the document into the media server.
 		// If it's an image or video, then save the dimensions as well.
-		if err := factory.MediaServer().Put(attachment.AttachmentID.Hex(), source); err != nil {
+		if err := factory.MediaServer().Put(attachment.AttachmentID.Hex(), reader); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Unable to save attachment to mediaserver", attachment))
 		}
 
@@ -181,4 +195,75 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 
 	// After all files are uploaded, tell the client that we're done.
 	return Continue().WithEvent("attachments-updated", "true")
+}
+
+// verifyContentType sniffs the leading bytes of an uploaded file to determine its
+// actual content-type, and confirms that it matches the provided accept pattern
+// (for instance "image/*" or "image/png,image/webp").  It returns a reader that
+// replays the sniffed bytes followed by the rest of the file, so callers can still
+// consume the entire stream.  When acceptType is empty, no restriction is applied.
+func verifyContentType(source io.Reader, acceptType string) (io.Reader, error) {
+
+	const location = "build.verifyContentType"
+
+	// Peek at the first 512 bytes -- the amount http.DetectContentType inspects.
+	header := make([]byte, 512)
+	headerLength, err := io.ReadFull(source, header)
+
+	// io.EOF / io.ErrUnexpectedEOF simply mean the file is shorter than 512 bytes,
+	// which is fine.  Any other error is a genuine read failure.
+	if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
+		return nil, derp.Wrap(err, location, "Unable to read uploaded file")
+	}
+
+	header = header[:headerLength]
+
+	// Reassemble the full stream: the bytes we peeked, followed by whatever remains.
+	reader := io.MultiReader(bytes.NewReader(header), source)
+
+	// An empty accept pattern means "allow anything" -- preserve legacy behavior.
+	if acceptType == "" {
+		return reader, nil
+	}
+
+	// Sniff the actual content-type from the file's bytes, then confirm it is allowed.
+	detected := http.DetectContentType(header)
+
+	if !contentTypeMatches(detected, acceptType) {
+		return nil, derp.BadRequest(location, "Uploaded file type is not allowed", detected, acceptType)
+	}
+
+	return reader, nil
+}
+
+// contentTypeMatches reports whether a detected content-type (e.g. "image/png")
+// satisfies an accept pattern.  The pattern may be a comma-separated list of media
+// ranges, each either an exact type ("image/png") or a wildcard ("image/*", "*/*").
+func contentTypeMatches(detected string, acceptType string) bool {
+
+	// DetectContentType may return "type/subtype; charset=..." -- keep only the type.
+	detected = strings.TrimSpace(list.Semicolon(detected).First())
+
+	for _, pattern := range strings.Split(acceptType, ",") {
+
+		pattern = strings.TrimSpace(pattern)
+
+		switch {
+
+		case pattern == "" || pattern == "*/*":
+			return true
+
+		// "image/*" matches any subtype within the "image" category.
+		case strings.HasSuffix(pattern, "/*"):
+			if list.Slash(detected).First() == list.Slash(pattern).First() {
+				return true
+			}
+
+		// Otherwise require an exact media-type match.
+		case detected == pattern:
+			return true
+		}
+	}
+
+	return false
 }

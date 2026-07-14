@@ -1,21 +1,18 @@
-{{- $document := .ActivityStream .Permalink -}}
-{{- $metadata := $document.Metadata -}}
-
 <div id="responses" class="margin-top" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 
 	<hr class="margin-bottom-sm"/>
 
 	<div>
 		<span hx-get="{{.BasePath}}/responses-replies?url={{.Permalink}}" role="button" class="margin-right-xs clickable bold">
-			{{- $metadata.Replies }} {{pluralize $metadata.Replies "Reply" "Replies" -}}
+			{{- .ReplyCount }} {{pluralize .ReplyCount "Reply" "Replies" -}}
 		</span>
 		&middot;
 		<span hx-get="{{.BasePath}}/responses-likes?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable">
-			{{- $metadata.Likes }} {{pluralize $metadata.Likes "Like" "Likes" -}}
+			{{- .LikeCount }} {{pluralize .LikeCount "Like" "Likes" -}}
 		</span>
 		&middot;
 		<span hx-get="{{.BasePath}}/responses-announces?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable">
-			{{- $metadata.Announces }} {{pluralize $metadata.Announces "Share" "Shares" -}}
+			{{- .ShareCount }} {{pluralize .ShareCount "Share" "Shares" -}}
 		</span>
 	</div>
 
@@ -24,6 +21,10 @@
 	<div id="replies" class="margin-vertical">
 		{{.View "replies"}}
 	</div>
+
+	<!--
+
+	
 
 	{{- if .UserCan "reply" -}}
 		<div class="flex-row">
@@ -40,4 +41,5 @@
 			</div>
 		</div>
 	{{- end -}}
+	-->
 </div>

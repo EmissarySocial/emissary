@@ -65,7 +65,7 @@ func (step StepSetSimpleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 		options = append(options, "next:/admin/groups", "next-label:Edit Groups &rarr;")
 	}
 
-	result := WrapForm(builder.URL(), b.String(), "application/x-www-form-urlencoded", options...)
+	result := WrapForm(builder.RelativeURL(), b.String(), "application/x-www-form-urlencoded", options...)
 
 	// Write the result to the buffer
 	if _, err := io.WriteString(buffer, result); err != nil {

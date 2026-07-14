@@ -35,7 +35,7 @@ func GetIntent_Create(ctx *steranko.Context, factory *service.Factory, session d
 	b.Head()
 	b.Link("stylesheet", "/.themes/global/stylesheet").Close()
 	b.Link("stylesheet", "/.themes/default/stylesheet").Close()
-	b.Script().Src("/.themes/global/resources/htmx/htmx.min.js").Close()
+	b.Script().Src("/.themes/global/resources/htmx-1.9.12/htmx.min.js").Close()
 	b.Close()
 
 	b.Body()

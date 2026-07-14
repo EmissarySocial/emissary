@@ -14,44 +14,45 @@ import (
 func StreamSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"streamId":         schema.String{Format: "objectId"},
+			"streamId":         schema.String{Format: "objectId", Required: true},
 			"parentId":         schema.String{Format: "objectId"},
 			"parentIds":        schema.Array{Items: schema.String{Format: "objectId"}},
 			"rank":             schema.Integer{Minimum: null.NewInt64(0)},
 			"rankAlt":          schema.Integer{Minimum: null.NewInt64(0)},
-			"token":            schema.String{Format: "token", MaxLength: 128},
-			"navigationId":     schema.String{},
-			"templateId":       schema.String{MaxLength: 128},
-			"parentTemplateId": schema.String{MaxLength: 128},
-			"socialRole":       schema.String{MaxLength: 128},
-			"stateId":          schema.String{MaxLength: 128},
+			"token":            schema.String{Format: "token", MaxLength: 64},
+			"navigationId":     schema.String{MaxLength: 256},
+			"templateId":       schema.String{Format: "token", MaxLength: 128, Required: true},
+			"parentTemplateId": schema.String{Format: "token", MaxLength: 128},
+			"socialRole":       schema.String{Format: "token", MaxLength: 128},
+			"stateId":          schema.String{Format: "token", MaxLength: 128},
 			"groups":           permissionSchema(),
 			"circles":          permissionSchema(),
 			"products":         permissionSchema(),
 			"url":              schema.String{Format: "url"},
-			"name":             schema.String{MaxLength: 128},
-			"label":            schema.String{MaxLength: 128},
-			"description":      schema.String{MaxLength: 2048},
-			"summary":          schema.String{MaxLength: 2048},
-			"icon":             schema.String{},
+			"name":             schema.String{Format: "text", MaxLength: 256},
+			"label":            schema.String{Format: "text", MaxLength: 256},
+			"summary":          schema.String{Format: "html", MaxLength: 2048},
+			"icon":             schema.String{Format: "token", MaxLength: 64},
 			"iconUrl":          schema.String{Format: "url"},
 			"attributedTo":     PersonLinkSchema(),
-			"context":          schema.String{Format: "url"},
-			"inReplyTo":        schema.String{Format: "url"},
+			"context":          schema.String{MaxLength: 2048},
+			"inReplyTo":        schema.String{Format: "uri"},
 			"content":          ContentSchema(),
 			"widgets":          WidgetSchema(),
 			"startDate":        datetime.Schema(),
 			"endDate":          datetime.Schema(),
-			"hashtags":         schema.Array{Items: schema.String{Format: "token"}},
+			"hashtags":         schema.Array{Items: schema.String{Format: "token", MaxLength: 32}},
 			"location":         geo.AddressSchema(),
 			"data":             schema.Object{Wildcard: schema.Any{}},
 			"publishDate":      schema.Integer{BitSize: 64},
 			"unpublishDate":    schema.Integer{BitSize: 64},
 			"isPublished":      schema.Boolean{},
 			"isFeatured":       schema.Boolean{},
-			"syndication":      schema.Array{Items: schema.String{}},
-			"startTime":        schema.Integer{BitSize: 64},
-			"endTime":          schema.Integer{BitSize: 64},
+			"replyCount":       schema.Integer{Minimum: null.NewInt64(0)},
+			"likeCount":        schema.Integer{Minimum: null.NewInt64(0)},
+			"dislikeCount":     schema.Integer{Minimum: null.NewInt64(0)},
+			"shareCount":       schema.Integer{Minimum: null.NewInt64(0)},
+			"syndication":      schema.Array{Items: schema.String{Required: true, Format: "token", MaxLength: 64}},
 		},
 	}
 }
@@ -81,7 +82,7 @@ func permissionSchema() schema.Element {
 
 func (stream *Stream) GetPointer(name string) (any, bool) {
 
-	switch name {
+	switch name { // NOSONAR: There really are this many properties to check..
 
 	case "parentIds":
 		return &stream.ParentIDs, true
@@ -103,9 +104,6 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 
 	case "label":
 		return &stream.Label, true
-
-	case "description":
-		return &stream.Summary, true
 
 	case "summary":
 		return &stream.Summary, true
@@ -136,6 +134,9 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 
 	case "inReplyTo":
 		return &stream.InReplyTo, true
+
+	case "context":
+		return &stream.Context, true
 
 	case "rank":
 		return &stream.Rank, true
@@ -169,6 +170,18 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 
 	case "isFeatured":
 		return &stream.IsFeatured, true
+
+	case "replyCount":
+		return &stream.ReplyCount, true
+
+	case "likeCount":
+		return &stream.LikeCount, true
+
+	case "dislikeCount":
+		return &stream.DislikeCount, true
+
+	case "shareCount":
+		return &stream.ShareCount, true
 
 	case "startDate":
 		return &stream.StartDate, true
@@ -223,7 +236,7 @@ func (stream *Stream) GetStringOK(name string) (string, bool) {
 		return stream.StartDate.String(), true
 
 	case "endDate":
-		return stream.StartDate.String(), true
+		return stream.EndDate.String(), true
 
 	default:
 		return "", false

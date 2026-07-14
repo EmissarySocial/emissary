@@ -35,7 +35,7 @@ func undoFollow(context Context, activity streams.Document) error {
 	}
 
 	// Collect data from the original follow
-	actorURL := originalFollow.Actor().ID()   // The "actor" of the original follow is our follower.actor.ProfileURL
+	actorURL := originalFollow.ActorID()      // The "actor" of the original follow is our follower.actor.ProfileURL
 	streamURL := originalFollow.Object().ID() // The "object" of the original follow is our local StreamURL
 	streamID, err := context.factory.Stream().ParseURL(context.session, streamURL)
 

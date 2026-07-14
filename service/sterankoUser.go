@@ -59,6 +59,41 @@ func (service SterankoUserService) Load(username string, result steranko.User) e
 	return derp.Internal(location, "Invalid result provided.  This should never happen")
 }
 
+// LoadBySubject retrieves a single User by the "sub" claim in their session
+// token, which Emissary populates with the User's hex-encoded UserID (see
+// claims). Keying on the immutable UserID means revalidation keeps working even
+// after a User changes their username or email.
+func (service SterankoUserService) LoadBySubject(subject string, result steranko.User) error {
+
+	const location = "service.SterankoUserService.LoadBySubject"
+
+	// Confirm that we have been sent a User pointer
+	user, isUser := result.(*model.User)
+
+	if !isUser {
+		return derp.Internal(location, "Invalid result provided.  This should never happen")
+	}
+
+	// The subject is the User's hex-encoded ObjectID
+	userID, err := primitive.ObjectIDFromHex(subject)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid subject (expected hex ObjectID)", subject)
+	}
+
+	// Load the user from the database
+	if err := service.userService.LoadByID(service.session, userID, user); err != nil {
+		return derp.Wrap(err, location, "Unable to load user")
+	}
+
+	// RULE: If the User has moved to a new server, then their session is no longer valid
+	if user.MovedTo != "" {
+		return derp.Forbidden(location, "User moved to new server", user.MovedTo)
+	}
+
+	return nil
+}
+
 // Save inserts/updates a single User in the database
 func (service SterankoUserService) Save(user steranko.User, comment string) error {
 
@@ -83,16 +118,25 @@ func (service SterankoUserService) Delete(user steranko.User, comment string) er
 	return derp.Internal(location, "Steranko User is not a valid object.  This should never happen", user)
 }
 
-// RequestPasswordReset is not currently implemented in this service. (TODO)
+// RequestPasswordReset generates a new password reset code and emails it to the User.
 func (service SterankoUserService) RequestPasswordReset(user steranko.User) error {
 
 	const location = "service.SterankoUserService.RequestPasswordReset"
 
-	if user, ok := user.(*model.User); ok {
-		return service.domainEmail.SendPasswordReset(user)
+	// RULE: Steranko Users must be model.User objects
+	modelUser, ok := user.(*model.User)
+
+	if !ok {
+		return derp.Internal(location, "Steranko User is not a valid object.  This should never happen", user)
 	}
 
-	return derp.Internal(location, "Steranko User is not a valid object.  This should never happen", user)
+	// RULE: Reset codes are single-use, so mint a new code in case a previous one was used or expired
+	if err := service.userService.MakeNewPasswordResetCode(service.session, modelUser, model.PasswordResetDurationReset); err != nil {
+		return derp.Wrap(err, location, "Unable to make password reset code")
+	}
+
+	// Send the password reset email
+	return service.domainEmail.SendPasswordReset(modelUser)
 }
 
 // NewClaims creates a new JWT claim object
@@ -160,7 +204,9 @@ func (service SterankoUserService) claims(sterankoUser steranko.User) (model.Aut
 		IdentityID:  identityID,
 		GroupIDs:    user.GroupIDs,
 		DomainOwner: user.IsOwner,
+		Revalidate:  time.Now().Unix(), // Marks this as a full User session that Steranko re-verifies once it ages past the revalidation window (see GetRevalidationTime)
 		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   user.UserID.Hex(),                                // Stable identifier Steranko uses to re-load the User during revalidation (see LoadBySubject)
 			IssuedAt:  jwt.NewNumericDate(time.Now()),                   // Current create date.  (Used by Steranko to refresh tokens)
 			ExpiresAt: jwt.NewNumericDate(time.Now().AddDate(10, 0, 0)), // Expires ten years from now (but re-validated sooner by Steranko)
 		},

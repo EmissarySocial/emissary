@@ -8,8 +8,8 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/sigs"
+	"github.com/benpate/uri"
 )
 
 // Permission service manages user permissions and privileges
@@ -342,7 +342,7 @@ func (service *Permission) getSignature(request *http.Request) (sigs.Signature, 
 	}
 
 	// If there's an error on production servers, then fail
-	if !dt.IsLocalhost(request.Host) {
+	if !uri.IsLocalHostname(request.Host) {
 		return sigs.Signature{}, derp.Wrap(err, location, "Unable to verify signature for request")
 	}
 

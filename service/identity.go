@@ -12,13 +12,13 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"github.com/golang-jwt/jwt/v5"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -125,7 +125,7 @@ func (service *Identity) Save(session data.Session, identity *model.Identity, no
 	}
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(identity); err != nil {
+	if _, err := service.Schema().Validate(identity); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Identity", identity)
 	}
 
@@ -669,5 +669,5 @@ func (service *Identity) uniquify(session data.Session, identity *model.Identity
 }
 
 func (service *Identity) hostname() string {
-	return dt.NameOnly(service.host)
+	return uri.Hostname(service.host)
 }

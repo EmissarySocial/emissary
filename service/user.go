@@ -17,7 +17,6 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/first"
@@ -27,7 +26,10 @@ import (
 	"github.com/benpate/rosetta/schema/format"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/steranko"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -47,6 +49,7 @@ type User struct {
 	responseService   *Response
 	ruleService       *Rule
 	searchTagService  *SearchTag
+	steranko          func(data.Session) *steranko.Steranko
 	streamService     *Stream
 	templateService   *Template
 	webhookService    *Webhook
@@ -80,6 +83,7 @@ func (service *User) Refresh(factory *Factory) {
 	service.outboxService = factory.Outbox()
 	service.responseService = factory.Response()
 	service.ruleService = factory.Rule()
+	service.steranko = factory.Steranko
 	service.streamService = factory.Stream()
 	service.templateService = factory.Template()
 	service.webhookService = factory.Webhook()
@@ -91,7 +95,7 @@ func (service *User) Refresh(factory *Factory) {
 
 // Hostname returns the domain-only name (no protocol)
 func (service *User) Hostname() string {
-	return dt.NameOnly(service.host)
+	return uri.Hostname(service.host)
 }
 
 // Host returns the host (with protocol)
@@ -201,7 +205,26 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 		}
 	}
 
-	// Guarantee that the username is unique, and fits formatting rules.
+	// Normalize the value before saving.  Values are rewritten in place (formatted,
+	// clamped, truncated) to conform to the schema, so that legacy data written under
+	// older rules is repaired progressively as records are saved.
+	//
+	// This runs BEFORE ValidateUsername so that uniqueness and formatting rules are
+	// checked against the username as it will actually be stored (e.g. after truncation
+	// to the schema's max length), not the raw client-supplied value.  Otherwise an
+	// over-length username could pass uniqueness against its full form, then be truncated
+	// into a collision with an existing account.
+	rewrites, err := service.Schema().Normalize(user)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid User Data", user)
+	}
+
+	if len(rewrites) > 0 {
+		log.Debug().Strs("rewrites", rewrites).Str("userId", user.UserID.Hex()).Msg("User values normalized during save")
+	}
+
+	// Guarantee that the (normalized) username is unique, and fits formatting rules.
 	if err := service.ValidateUsername(session, user.UserID, user.Username); err != nil {
 		return derp.Wrap(err, location, "Username is invalid", user)
 	}
@@ -212,11 +235,6 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 	// RULE: If password reset has already expired, then clear the reset code
 	if (user.PasswordReset.ExpireDate > 0) && (user.PasswordReset.ExpireDate < time.Now().Unix()) {
 		user.PasswordReset.AuthCode = ""
-	}
-
-	// Validate the value before saving
-	if err := service.Schema().Validate(user); err != nil {
-		return derp.Wrap(err, location, "Invalid User Data", user)
 	}
 
 	// Try to save the User record to the database
@@ -647,9 +665,9 @@ func (service *User) CalcRuleCount(session data.Session, userID primitive.Object
 
 	const location = "service.User.CalcRuleCount"
 
-	// RULE: UserID cannot be zero
+	// RULE: We only need to count rules owned by a specific user.
 	if userID.IsZero() {
-		return derp.BadRequest(location, "UserID cannot be zero", userID)
+		return nil
 	}
 
 	userCollection := service.collection(session)
@@ -743,13 +761,13 @@ func (service *User) DeleteAvatar(session data.Session, user *model.User, note s
  * Email Methods
  ******************************************/
 
-// SendPasswordResetEmail generates a new password reset code and sends a welcome email to a new user.
-// If there is a problem sending the email, then the new code is not saved.
-func (service *User) SendPasswordResetEmail(session data.Session, user *model.User) {
+// SendPasswordResetEmail generates a new password reset code (valid for the provided duration)
+// and sends a welcome email to a new user. If there is a problem sending the email, then the new code is not saved.
+func (service *User) SendPasswordResetEmail(session data.Session, user *model.User, duration time.Duration) {
 
 	const location = "service.User.SendPasswordResetEmail"
 
-	if err := service.MakeNewPasswordResetCode(session, user); err != nil {
+	if err := service.MakeNewPasswordResetCode(session, user, duration); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error making password reset", user))
 		return
 	}
@@ -773,15 +791,16 @@ func (service *User) Lockout(session data.Session, username string) {
 		return
 	}
 
-	// Reset the password to a random value
-	if newPassword, err := random.GenerateString(256); err == nil {
-		user.Password = newPassword
-	} else {
+	// Reset the password to a random value so the old credential stops working.
+	// 48 random bytes base64-encode to 64 characters, under bcrypt's 72-byte input limit.
+	if newPassword, err := random.GenerateString(48); err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to generate random password", user))
+	} else if err := service.steranko(session).SetPassword(&user, newPassword); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to set random password", user))
 	}
 
 	// Make a ResetCode
-	if err := service.MakeNewPasswordResetCode(session, &user); err != nil {
+	if err := service.MakeNewPasswordResetCode(session, &user, model.PasswordResetDurationReset); err != nil {
 		derp.Report(derp.Wrap(err, location, "Error making password reset", user))
 		return
 	}
@@ -792,18 +811,18 @@ func (service *User) Lockout(session data.Session, username string) {
 	}
 }
 
-// MakeNewPasswordResetCode generates a new password reset code for the provided user.
-func (service *User) MakeNewPasswordResetCode(session data.Session, user *model.User) error {
+// MakeNewPasswordResetCode generates a new password reset code (valid for the provided duration) for the provided user.
+func (service *User) MakeNewPasswordResetCode(session data.Session, user *model.User, duration time.Duration) error {
 
 	// If the PasswordReset IS NOT active then
 	// create a new password reset code for this user
 	if user.PasswordReset.NotActive() {
-		user.PasswordReset = model.NewPasswordReset()
+		user.PasswordReset = model.NewPasswordReset(duration)
 	}
 
 	// In all cases, refresh the expiration date of the password reset code
-	// so that it can be used for another 24 hours.
-	user.PasswordReset.RefreshExpireDate()
+	// so that overlapping requests all share the most recent deadline.
+	user.PasswordReset.RefreshExpireDate(duration)
 
 	// Try to save the user with the new password reset code.
 	if err := service.Save(session, user, "Create Password Reset Code"); err != nil {
@@ -828,7 +847,7 @@ func (service *User) WebFinger(session data.Session, token string) (digit.Resour
 	}
 
 	// Make a WebFinger resource for this user.
-	result := digit.NewResource("acct:"+user.Username+"@"+dt.NameOnly(service.host)).
+	result := digit.NewResource("acct:"+user.Username+"@"+uri.Hostname(service.host)).
 		Alias(service.host+"/@"+user.Username).
 		Alias(service.host+"/@"+user.UserID.Hex()).
 		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, user.ActivityPubURL()).
@@ -836,6 +855,7 @@ func (service *User) WebFinger(session data.Session, token string) (digit.Resour
 		Link(digit.RelationTypeProfile, model.MimeTypeHTML, user.ActivityPubURL()).
 		Link(digit.RelationTypeAvatar, model.MimeTypeImage, user.ActivityPubIconURL()).
 		Link(digit.RelationTypeSubscribeRequest, "", service.RemoteFollowURL()).
+		Link(digit.RelationTypeOpenIDIssuer, "", service.host).
 		Link(camper.IntentTypeCreate, "", service.CreateIntentURL()).
 		Link(camper.IntentTypeDislike, "", service.DislikeIntentURL()).
 		Link(camper.IntentTypeFollow, "", service.FollowIntentURL()).
@@ -845,7 +865,7 @@ func (service *User) WebFinger(session data.Session, token string) (digit.Resour
 }
 
 func (service *User) RemoteFollowURL() string {
-	return service.host + "/.ostatus/tunnel?uri={uri}"
+	return service.host + "/@me/settings/following-edit?url={uri}"
 }
 
 func (service *User) CreateIntentURL() string {

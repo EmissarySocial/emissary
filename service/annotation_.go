@@ -36,6 +36,7 @@ func (service *Annotation) Refresh(factory *Factory) {
 
 // Close stops any background processes controlled by this service
 func (service *Annotation) Close() {
+	// No background processes to stop
 }
 
 /******************************************
@@ -102,7 +103,7 @@ func (service *Annotation) Save(session data.Session, annotation *model.Annotati
 	annotation.Icon = document.Icon().Href()
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(annotation); err != nil {
+	if _, err := service.Schema().Validate(annotation); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Annotation", annotation)
 	}
 

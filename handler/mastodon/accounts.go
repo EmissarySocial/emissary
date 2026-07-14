@@ -55,7 +55,10 @@ func PostAccount(serverFactory *server.Factory) func(model.Authorization, txn.Po
 		user.EmailAddress = t.Email
 		user.Locale = t.Locale
 		user.SignupNote = t.Reason
-		user.SetPassword(t.Password)
+
+		if err := factory.Steranko(session).SetPassword(&user, t.Password); err != nil {
+			return object.Token{}, derp.Wrap(err, location, "Unable to set password")
+		}
 
 		if err := userService.Save(session, &user, "Created via Mastodon API"); err != nil {
 			return object.Token{}, derp.Wrap(err, location, "Unable to save user")
@@ -217,9 +220,9 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized User")
 		}
 
-		// Query all posts by this user
+		// Query all posts by this user that are visible to the caller
 		streamService := factory.Stream()
-		streams, err := streamService.QueryByUser(session, user.UserID, queryExpression(t), option.MaxRows(t.Limit))
+		streams, err := streamService.QueryByUser(session, auth, user.UserID, queryExpression(t), option.MaxRows(t.Limit))
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unable to query streams")

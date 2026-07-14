@@ -9,11 +9,11 @@ func OutboxMessageSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"outboxMessageId": schema.String{Format: "objectId", Required: true},
-			"actorId":         schema.String{Format: "object", Required: true},
+			"actorId":         schema.String{Format: "objectId", Required: true},
 			"actorType":       schema.String{Required: true, Enum: []string{FollowerTypeStream, FollowerTypeUser}},
-			"activityType":    schema.String{Format: "string", Required: true},
+			"activityType":    schema.String{Required: true},
 			"objectId":        schema.String{Format: "url", Required: true},
-			"permissions":     schema.Array{Items: schema.String{Format: "permission"}, Required: true},
+			"permissions":     schema.Array{Items: schema.String{Format: "objectId"}, Required: true},
 		},
 	}
 }

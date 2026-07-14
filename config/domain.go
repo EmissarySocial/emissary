@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 
-	dt "github.com/benpate/domain"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -42,5 +42,5 @@ func (d Domain) ID() string {
 
 // IsLocalhost returns TRUE if this domain is a localhost domain.
 func (d Domain) IsLocalhost() bool {
-	return dt.IsLocalhost(d.Hostname)
+	return uri.IsLocalHostname(d.Hostname)
 }

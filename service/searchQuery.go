@@ -6,17 +6,18 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/geo"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -134,7 +135,9 @@ func (service *SearchQuery) Save(session data.Session, searchQuery *model.Search
 
 	// Add a queue task to delete this SearchQuery if it has no followers after 12 hour.
 	if wasNew {
-		service.queue.NewTask(
+		postcommit.Publish(
+			session,
+			service.queue,
 			"DeleteEmptySearchQuery",
 			mapof.Any{
 				"host":          service.host,
@@ -355,7 +358,7 @@ func (service *SearchQuery) ActivityPubActor(session data.Session, searchQueryID
 		privateKey,
 		outbox.WithFollowers(service.rangeActivityPubFollowers(session, searchQueryID)),
 		outbox.WithClient(service.activityService.SearchQueryClient(searchQueryID)),
-		// TODO: Restore Queue:: , outbox.WithQueue(service.queue))
+		outbox.WithAllowPrivateIPs(service.activityService.AllowPrivateIPs()),
 	)
 
 	return actor, nil
@@ -507,5 +510,5 @@ func (service *SearchQuery) WebFinger(session data.Session, token string) (digit
 }
 
 func (service *SearchQuery) Hostname() string {
-	return dt.NameOnly(service.host)
+	return uri.Hostname(service.host)
 }

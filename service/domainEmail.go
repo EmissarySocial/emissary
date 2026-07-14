@@ -5,9 +5,9 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
+	"github.com/benpate/uri"
 )
 
 type DomainEmail struct {
@@ -317,5 +317,5 @@ func (service *DomainEmail) SendFollowerActivity(follower *model.Follower, activ
 }
 
 func (service *DomainEmail) host() string {
-	return dt.AddProtocol(service.hostname)
+	return uri.PrependProtocol(service.hostname)
 }

@@ -34,12 +34,12 @@
 		create:{
 			roles:["author"]
 			steps: [
-				{do:"edit-content", file:"create", format:"HTML"}
+				{do:"edit-content", file:"create", format:"HTML", require-content:true}
 				{do:"process-content", remove-html:true, add-links:true, add-tags:true}
 				{do:"save"}
 				{do:"upload-attachments", maximum:10}
 				{do:"set-thumbnail", path:"iconUrl"}
-				{do:"save-and-publish", state:"default", outbox:"true"}
+				{do:"save-and-publish", state:"default", outbox:true}
 				{do:"search-index"}
 			]
 		}
@@ -57,10 +57,9 @@
 			steps: [
 				{do:"as-modal", steps:[
 					{do:"set-args", postTo:"/{{.StreamID}}/edit"}
-					{do:"edit-content", file:"edit", format:"HTML"}
+					{do:"edit-content", file:"edit", format:"HTML", require-content:true}
 					{do:"process-content", remove-html:true, add-links:true, add-tags:true}
-					{do:"save"}
-					{do:"save-and-publish", state:"default", outbox:"true"}
+					{do:"save-and-publish", state:"default", outbox:true}
 					{do:"refresh-page"}
 				]}
 			]
@@ -69,7 +68,7 @@
 		delete: {
 			roles:["author"]
 			steps: [
-				{do:"unpublish", state:"default", outbox:"true"}
+				{do:"unpublish", state:"default", outbox:true}
 				{do:"delete", title:"Delete this Post?", message:"If you continue, this post will be permanently removed from your profile.  There is NO UNDO."}
 				{do:"refresh-page"}
 			]
@@ -107,6 +106,14 @@
 			]
 		}
 
+		reply: {
+			roles:["anonymous"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		/*
 		reply:{
 			roles:["authenticated"]
 			steps:[
@@ -117,5 +124,6 @@
 				{do:"view-html", method:"post", file:"responses-replies"}
 			]
 		}
+		*/
 	}
 }

@@ -9,10 +9,10 @@ func GroupSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"groupId":     schema.String{Format: "objectId"},
-			"token":       schema.String{MaxLength: 64},
-			"label":       schema.String{MaxLength: 64, Required: true},
-			"description": schema.String{MaxLength: 500, Required: false},
-			"icon":        schema.String{MaxLength: 64, Required: false},
+			"token":       schema.String{Format: "token", MaxLength: 64},
+			"label":       schema.String{Format: "text", MaxLength: 64, Required: true},
+			"description": schema.String{Format: "text", MaxLength: 1024, Required: false},
+			"icon":        schema.String{Format: "token", MaxLength: 64, Required: false},
 		},
 	}
 }

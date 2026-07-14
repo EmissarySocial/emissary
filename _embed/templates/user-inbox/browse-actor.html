@@ -18,6 +18,7 @@
 
 		<button role="tab" hx-get="/@me/newsfeed/browse-actor?url={{$url}}&search={{$search}}&folderId={{$folderID}}" aria-selected="true">{{icon "person"}} Profile</button>
 		<button role="tab" hx-get="/@me/newsfeed/annotation?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "note"}} Notes</button>
+		<button role="tab" hx-get="/@me/settings/actor-rule?actor={{$actor.ID}}">{{icon "rule"}} Rule</button>
 
 		{{ if $following.IsNew -}}
 			<button role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "add"}} Follow</button>
@@ -37,14 +38,14 @@
 
 	{{- if $actor.HasImage -}}
 		<div class="margin-bottom">
-			<img src="{{$actor.Image.Href}}" class="width-100% object-fit-cover" style="max-height:240px">
+			<img src="{{$actor.Image.Href}}" class="width-100% object-fit-cover" alt="" style="max-height:240px">
 		</div>
 	{{- end -}}
 
 	<div class="flex-row margin-bottom">
 		<div class="flex-grow flex-row flex-align-center text-plain">
 			{{- if $actor.Icon.NotNil -}}
-				<img src="{{$actor.Icon.Href}}" class="circle width-64">
+				<img src="{{$actor.Icon.Href}}" class="circle width-64" alt="">
 			{{- else -}}
 				<div class="circle width-64"></div>
 			{{- end -}}
@@ -83,9 +84,13 @@
 			{{range $attachment := $actor.Attachment.Range}}
 				{{- $attachmentValue := $attachment.Get "value" -}}
 				{{- $attachmentValue := $attachmentValue.String -}}
-				<tr role="link" script="on click go to url {{$attachmentValue}} in new window">
+				{{- /* $attachmentValue is remote actor metadata. Rendering it as an
+				       href lets html/template's URL-context autoescaping neutralize
+				       dangerous schemes (javascript:, data:), instead of templating
+				       an attacker-influenced value into hyperscript navigation. */ -}}
+				<tr>
 					<td nowrap>{{$attachment.Name}}</td>
-					<td style="width:100%">{{$attachmentValue}}</td>
+					<td style="width:100%"><a href="{{$attachmentValue}}" target="_blank" rel="noopener noreferrer nofollow">{{$attachmentValue}}</a></td>
 				</tr>
 			{{end}}
 		</table>

@@ -103,6 +103,10 @@ func PostProfileDelete(ctx *steranko.Context, factory *service.Factory, session 
 		return derp.Wrap(err, "handler.PostProfileDelete", "Unable to delete user")
 	}
 
+	// Clear the (now deleted) user's authentication cookie.  GET /signout only displays
+	// a confirmation page, so the sign-out must happen here.
+	factory.Steranko(session).SignOut(ctx)
+
 	return ctx.Redirect(http.StatusTemporaryRedirect, "/signout")
 }
 

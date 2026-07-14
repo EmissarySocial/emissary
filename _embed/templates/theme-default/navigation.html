@@ -19,6 +19,27 @@
 			<span class="mobile-show label">Inbox</span>
 		</a>
 
+		<a href="/@me/notifications/replies" id="nav-notifications" class="nav-item turboclick" aria-label="Notifications">
+			<span class="icon selected-hide">{{icon "bell"}}</span>
+			<span class="icon selected-show">{{icon "bell-fill"}}</span>
+			<span class="mobile-show label">Notifications</span>
+			<span id="nav-notifications-badge" class="nav-badge text-red text-sm {{if not .HasUnreadNotifications}}hide{{end}}">&#9679;</span>
+		</a>
+
+		<!-- Live-refresh the notification dot on any page when a notification arrives (SSE), or
+		     when notifications are marked read (refreshSidebar).  The payload is minimal (topic +
+		     user ID); the client just refetches the badge fragment. -->
+		<div
+			hx-ext="sse"
+			sse-connect="/@me/sse/notifications"
+			hx-get="/@me/notifications/badge"
+			hx-trigger="sse:message, refreshSidebar from:window"
+			hx-target="#nav-notifications-badge"
+			hx-swap="outerHTML"
+			hx-push-url="false"
+			style="display:none;">
+		</div>
+
 		{{- if .UserCanMLS -}}
 			<a href="/@me/conversations" id="nav-conversations" class="nav-item turboclick" aria-label="Conversations">
 				<span class="icon selected-hide">{{- icon "chat" }}</span>

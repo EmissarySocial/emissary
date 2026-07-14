@@ -46,7 +46,7 @@ func (step StepEditTemplate) Get(builder Builder, buffer io.Writer) PipelineBeha
 		return Halt().WithError(derp.Wrap(err, "build.StepEditTemplate.Get", "Unable to build form"))
 	}
 
-	result := WrapForm(builder.URL(), h.String(), form.Encoding())
+	result := WrapForm(builder.RelativeURL(), h.String(), form.Encoding())
 
 	// Write the HTML to the buffer
 	if _, err := buffer.Write([]byte(result)); err != nil {

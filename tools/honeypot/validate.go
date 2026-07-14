@@ -13,8 +13,8 @@ func Validate(request *http.Request, bannedFields ...string) error {
 
 	const location = "honeypot.Prevent"
 
-	// Read the request body
-	body, err := re.ReadRequestBody(request)
+	// Read the request body (capped to guard against an oversized body)
+	body, err := re.ReadRequestBody(request, re.DefaultMaximum)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to read request body")

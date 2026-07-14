@@ -11,7 +11,9 @@
 		title: User Settings
 		type: object
 		properties:{
-
+			current_password: {type:"string"}
+			new_password: {type:"string"}
+			confirm_password: {type:"string"}
 		}
 	}
 
@@ -141,6 +143,27 @@
 				{do:"trigger-event", event:"refreshPeers"}
 				{do:"remove-event", event:"closeModal"}
 				{do:"view-html", method:"post", file:"actor-button-none"}
+			]
+		}
+
+		actor-rule:{
+			roles:["self"]
+			steps:[
+				{do:"with-rule", steps:[
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+					{do:"edit", form:{
+						type:layout-vertical
+						children:[
+							{type:"radio-button-group-horizontal", path:"action", options:{provider:"actor-rule-buttons"} }
+							{type:"text", label:"Label", path:"label", description:"(Shared if Public) 'Content Warning' will be added to all posts from this person", options:{show-if:"action == LABEL"} }
+							{type:"select", label:"Reason", path:"reasonCode", description:"(Shared if Public) Reason codes defined by <a href='https://dtspartnership.org/glossary/'>Digital Trust & Safety Partnership</a>", options:{show-if:"action != (null)", provider:"rule-reasons"} }
+							{type:"textarea", label:"Description", path:"summary", description:"(Shared if Public) Describe why you made this rule.", options:{show-if:"action != (null)", rows:6}}
+							{type:"toggle", path:"isPublic", options:{show-if:"action != (null)", true-text:"PUBLIC: Share this rule with followers", false-text:"PRIVATE: Do not share this rule"}}
+						]
+					}}
+				]}
+				]}
 			]
 		}
 
@@ -539,8 +562,8 @@
 						{type:"upload", path:"imageUrl", label:"Banner Image", description:"Displays at the top of your profile page. (PUBLIC)", options:{accept:"image/*", delete:"/@me/delete-image"}}
 					]	
 				}}
-				{do:"upload-attachments", category:"icon", fieldname:"iconUrl", attachment-path:"iconId", rules:{width:400, height:400, types:["webp"]}}
-				{do:"upload-attachments", category:"image", fieldname:"imageUrl", attachment-path:"imageId", rules:{types:["webp"]}}
+				{do:"upload-attachments", category:"icon", fieldname:"iconUrl", attachment-path:"iconId", accept-type:"image/*", rules:{width:400, height:400, types:["webp"]}}
+				{do:"upload-attachments", category:"image", fieldname:"imageUrl", attachment-path:"imageId", accept-type:"image/*", rules:{types:["webp"]}}
 				{do:"save"}
 				{do: "refresh-page"}
 			]
@@ -778,6 +801,38 @@
 			]
 		}
 
+		notifications: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		// The ONE place to manage notification options: channel toggles + Device Options.
+		// The notifications-push fragment wires the push-device-toggle to the browser's
+		// Web Push subscription.
+		notifications-form: {
+			roles:["self"]
+			steps:[
+				{do:"view-html", file:"notifications-push"}
+				{
+					do:"edit",
+					options:["cancel-button:hide"]
+					form:{
+						type:layout-vertical
+						children:[
+							{type:"check-button-group", path:"notificationChannels", options:{provider:"notification-channels"}}
+							{type:"heading", label:"Device Options", description:"These settings are not synchronized with your server."}
+							{type:"toggle", id:"push-device-toggle", options:{true-text:"Push Notifications (ENABLED)", false-text:"Push Notifications (DISABLED)"}}
+						]
+					}
+					options:["cancel-button:hide", "next-label:My Notifications &rarr;", "next:/@me/notifications/replies"]
+				}
+				{do:"save"}
+				{do:"inline-save-button"}
+			]
+		}
+
 		oauth: {
 			roles:["self"]
 			steps:[
@@ -876,14 +931,14 @@
 				{do:"with-rule", steps:[
 					{do:"view-html"}
 					{
-						do:"edit", 
+						do:"edit",
 						options:[
-							endpoin:/@me/newsfeed/rule-edit-actor?ruleId={{.ObjectID}}"
-							delet:/@me/newsfeed/rule-delete?ruleId={{.ObjectID}}", 
-							"deletelabe:Delete Rule"
+							"endpoint:/@me/settings/rule-edit-actor?ruleId={{.ObjectID}}"
+							"delete:/@me/settings/rule-delete?ruleId={{.ObjectID}}"
+							"delete-label:Delete Rule"
 						]
 						form:{
-							type:"layout-vertical", 
+							type:"layout-vertical",
 							children:[
 								{type:"hidden", path:"type", options:{value:"ACTOR"}}
 								{type:"text", path:"trigger", label:"Fediverse Address", description:"Something like @blocked-user@domain.com orhttp://domain.com/@blocked-user", options:{focus:true}}
@@ -909,12 +964,12 @@
 					{
 						do:"edit", 
 						options:[
-							"endpoint:/@me/newsfeed/rule-edit-actor?ruleId={{.ObjectID}}"
-							"delete:/@me/newsfeed/rule-delete?ruleId={{.ObjectID}}"
+							"endpoint:/@me/settings/rule-edit-domain?ruleId={{.ObjectID}}"
+							"delete:/@me/settings/rule-delete?ruleId={{.ObjectID}}"
 							"delete-label:Delete Rule"
 						]
 						form:{
-							type:"layout-vertical", 
+							type:"layout-vertical",
 							children:[
 								{type:"hidden", path:"type", options:{value:"DOMAIN"}}
 								{type:"text", path:"trigger", label:"Domain Name", description:"Something like blocked-domain.com", options:{focus:true}}
@@ -940,12 +995,12 @@
 					{
 						do:"edit", 
 						options:[
-							"endpoint:/@me/newsfeed/rule-edit-actor?ruleId={{.ObjectID}}"
-							"delete:/@me/newsfeed/rule-delete?ruleId={{.ObjectID}}", 
+							"endpoint:/@me/settings/rule-edit-content?ruleId={{.ObjectID}}"
+							"delete:/@me/settings/rule-delete?ruleId={{.ObjectID}}"
 							"delete-label:Delete Rule"
 						]
 						form:{
-							type:"layout-vertical", 
+							type:"layout-vertical",
 							children:[
 								{type:"hidden", path:"type", options:{value:"CONTENT"}}
 								{type:"text", path:"trigger", label:"Tags or Keywords", description:"Individual words or hashtags, separated by spaces", options:{focus:true}}

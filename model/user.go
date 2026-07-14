@@ -7,47 +7,48 @@ import (
 	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/delta"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/toot/object"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // User represents a person or machine account that can own pages and sections.
 type User struct {
-	UserID          primitive.ObjectID         `bson:"_id"`                  // Unique identifier for this user.
-	MapIDs          mapof.String               `bson:"mapIds"`               // Map of IDs for this user on other web services.
-	GroupIDs        id.Slice                   `bson:"groupIds"`             // Slice of IDs for the groups that this user belongs to.
-	IconID          primitive.ObjectID         `bson:"iconId"`               // AttachmentID of this user's avatar/icon image.
-	ImageID         primitive.ObjectID         `bson:"imageId"`              // AttachmentID of this user's banner image.
-	DisplayName     string                     `bson:"displayName"`          // Name to be displayed for this user
-	StatusMessage   string                     `bson:"statusMessage"`        // Status summary for this user
-	Location        string                     `bson:"location"`             // Human-friendly description of this user's physical location.
-	ProfileURL      string                     `bson:"profileUrl"`           // Fully Qualified profile URL for this user (including domain name)
-	EmailAddress    string                     `bson:"emailAddress"`         // Email address for this user
-	Username        string                     `bson:"username"`             // This is the primary public identifier for the user.
-	Password        string                     `bson:"password"`             // This password should be encrypted with BCrypt.
-	Locale          string                     `bson:"locale"`               // Language code for this user's preferred language.
-	SignupNote      string                     `bson:"signupNote,omitempty"` // Note that was included when this user signed up.
-	StateID         string                     `bson:"stateId"`              // State ID for this user
-	InboxTemplate   string                     `bson:"inboxTemplate"`        // Template for the user's inbox
-	OutboxTemplate  string                     `bson:"outboxTemplate"`       // Template for the user's outbox
-	NoteTemplate    string                     `bson:"noteTemplate"`         // Template for generically created notes
-	Hashtags        sliceof.String             `bson:"hashtags"`             // Slice of tags that can be used to categorize this user.
-	Links           sliceof.Object[PersonLink] `bson:"links"`                // Slice of links to profiles on other web services.
-	PasswordReset   PasswordReset              `bson:"passwordReset"`        // Most recent password reset information.
-	Data            mapof.String               `bson:"data"`                 // Custom profile data that can be stored with this User.
-	MovedTo         string                     `bson:"movedTo,omitempty"`    // If present, this user has been moved to a new URL, and cannot sign in to this profile anymore.
-	FollowerCount   int                        `bson:"followerCount"`        // Number of followers for this user
-	FollowingCount  int                        `bson:"followingCount"`       // Number of actors that this user is following
-	RuleCount       int                        `bson:"ruleCount"`            // Number of rules (blocks) that this user has implemented
-	IsOwner         bool                       `bson:"isOwner"`              // If TRUE, then this user is a website owner with FULL privileges.
-	IsPublic        bool                       `bson:"isPublic"`             // If TRUE, then this user's profile is publicly visible
-	IsBridgeBluesky delta.Bool                 `bson:"isBridgeBluesky"`      // If TRUE, then allow this user to be bridged to Bluesky
-	IsIndexable     bool                       `bson:"isIndexable"`          // If TRUE, then this user's profile can be indexed by search engines.
+	UserID               primitive.ObjectID         `bson:"_id"`                  // Unique identifier for this user.
+	MapIDs               mapof.String               `bson:"mapIds"`               // Map of IDs for this user on other web services.
+	GroupIDs             id.Slice                   `bson:"groupIds"`             // Slice of IDs for the groups that this user belongs to.
+	IconID               primitive.ObjectID         `bson:"iconId"`               // AttachmentID of this user's avatar/icon image.
+	ImageID              primitive.ObjectID         `bson:"imageId"`              // AttachmentID of this user's banner image.
+	DisplayName          string                     `bson:"displayName"`          // Name to be displayed for this user
+	StatusMessage        string                     `bson:"statusMessage"`        // Status summary for this user
+	Location             string                     `bson:"location"`             // Human-friendly description of this user's physical location.
+	ProfileURL           string                     `bson:"profileUrl"`           // Fully Qualified profile URL for this user (including domain name)
+	EmailAddress         string                     `bson:"emailAddress"`         // Email address for this user
+	Username             string                     `bson:"username"`             // This is the primary public identifier for the user.
+	Password             string                     `bson:"password"`             // Hashed password. Only ever written via a PasswordHasher (see steranko.SetPassword); never contains plaintext.
+	Locale               string                     `bson:"locale"`               // Language code for this user's preferred language.
+	SignupNote           string                     `bson:"signupNote,omitempty"` // Note that was included when this user signed up.
+	StateID              string                     `bson:"stateId"`              // State ID for this user
+	InboxTemplate        string                     `bson:"inboxTemplate"`        // Template for the user's inbox
+	OutboxTemplate       string                     `bson:"outboxTemplate"`       // Template for the user's outbox
+	NoteTemplate         string                     `bson:"noteTemplate"`         // Template for generically created notes
+	Hashtags             sliceof.String             `bson:"hashtags"`             // Slice of tags that can be used to categorize this user.
+	Links                sliceof.Object[PersonLink] `bson:"links"`                // Slice of links to profiles on other web services.
+	NotificationChannels sliceof.String             `bson:"notificationChannels"` // Slice of ENABLED notification channel keys (see model.NotificationChannel* constants). Empty = all notifications off.
+	PasswordReset        PasswordReset              `bson:"passwordReset"`        // Most recent password reset information.
+	Data                 mapof.String               `bson:"data"`                 // Custom profile data that can be stored with this User.
+	MovedTo              string                     `bson:"movedTo,omitempty"`    // If present, this user has been moved to a new URL, and cannot sign in to this profile anymore.
+	FollowerCount        int                        `bson:"followerCount"`        // Number of followers for this user
+	FollowingCount       int                        `bson:"followingCount"`       // Number of actors that this user is following
+	RuleCount            int                        `bson:"ruleCount"`            // Number of rules (blocks) that this user has implemented
+	IsOwner              bool                       `bson:"isOwner"`              // If TRUE, then this user is a website owner with FULL privileges.
+	IsPublic             bool                       `bson:"isPublic"`             // If TRUE, then this user's profile is publicly visible
+	IsBridgeBluesky      delta.Bool                 `bson:"isBridgeBluesky"`      // If TRUE, then allow this user to be bridged to Bluesky
+	IsIndexable          bool                       `bson:"isIndexable"`          // If TRUE, then this user's profile can be indexed by search engines.
 
 	journal.Journal `json:"-" bson:",inline"`
 }
@@ -55,11 +56,12 @@ type User struct {
 // NewUser returns a fully initialized User object.
 func NewUser() User {
 	return User{
-		UserID:   primitive.NewObjectID(),
-		MapIDs:   mapof.NewString(),
-		GroupIDs: id.NewSlice(),
-		Links:    sliceof.NewObject[PersonLink](),
-		Data:     mapof.NewString(),
+		UserID:               primitive.NewObjectID(),
+		MapIDs:               mapof.NewString(),
+		GroupIDs:             id.NewSlice(),
+		Links:                sliceof.NewObject[PersonLink](),
+		Data:                 mapof.NewString(),
+		NotificationChannels: DefaultNotificationChannels(),
 	}
 }
 
@@ -70,6 +72,21 @@ func NewUser() User {
 // ID returns the primary key for this record
 func (user *User) ID() string {
 	return user.UserID.Hex()
+}
+
+// NotificationEnabled returns TRUE if any of the provided channels is enabled in this
+// User's notification settings.  Both slices are tiny (≤5 items), so a nested scan is fine.
+func (user User) NotificationEnabled(channels []string) bool {
+
+	for _, channel := range channels {
+		for _, enabled := range user.NotificationChannels {
+			if channel == enabled {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 /******************************************
@@ -147,8 +164,8 @@ func (user *User) GetUsername() string {
 	return user.Username
 }
 
-// GetPassword returns the (encrypted) passsword for this User.  A part of the "steranko.User" interface.
-func (user *User) GetPassword() string {
+// GetHashedPassword returns the hashed password for this User.  A part of the "steranko.User" interface.
+func (user *User) GetHashedPassword() string {
 	return user.Password
 }
 
@@ -157,9 +174,11 @@ func (user *User) SetUsername(username string) {
 	user.Username = username
 }
 
-// SetPassword updates the password for this User.  A part of the "steranko.User" interface.
-func (user *User) SetPassword(password string) {
-	user.Password = password
+// SetHashedPassword updates the password for this User.  A part of the "steranko.User" interface.
+// The value must already be hashed; to set a password from plaintext, use steranko's SetPassword,
+// which hashes with the configured PasswordHasher first.
+func (user *User) SetHashedPassword(hashedValue string) {
+	user.Password = hashedValue
 }
 
 /******************************************
@@ -215,15 +234,11 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.ContextTypeActivityStreams,
 		vocab.ContextTypeSecurity,
 		vocab.ContextTypeToot,
-		mapof.Any{
-			"schema":        "http://schema.org#",
-			"PropertyValue": "schema:PropertyValue",
-			"value":         "schema:value",
-		},
+		vocab.ContextTypeSocialWebMLS,
 	}
 
 	exportURL := user.ActivityPubURL() + "/export"
-	serverURL := dt.Host(user.ProfileURL)
+	serverURL := uri.Host(user.ProfileURL)
 
 	result := mapof.Any{
 		vocab.AtContext:                 contextList,
@@ -252,6 +267,7 @@ func (user User) GetJSONLD() mapof.Any {
 			vocab.EndpointOAuthToken:         serverURL + "/oauth/token",
 			vocab.EndpointStartMigration:     serverURL + "/@" + user.UserID.Hex() + "/export/start",
 			vocab.EndpointFinishMigration:    serverURL + "/@me/settings/export",
+			vocab.EndpointProxyURL:           serverURL + "/.proxy",
 		},
 
 		vocab.PropertyMigration: mapof.String{
@@ -261,7 +277,7 @@ func (user User) GetJSONLD() mapof.Any {
 			"blocked":                  exportURL + "/blocked",
 			"emissary:annotation":      exportURL + "/emissary-annotation",
 			"emissary:circle":          exportURL + "/emissary-circle",
-			"emissary:conversaion":     exportURL + "/emissary-conversation",
+			"emissary:conversation":    exportURL + "/emissary-conversation",
 			"emissary:folder":          exportURL + "/emissary-folder",
 			"emissary:follower":        exportURL + "/emissary-follower",
 			"emissary:following":       exportURL + "/emissary-following",
@@ -310,7 +326,7 @@ func (user User) GetJSONLD() mapof.Any {
 	if user.Links.NotEmpty() {
 		result[vocab.PropertyAttachment] = slice.Map(user.Links, func(link PersonLink) mapof.Any {
 			return mapof.Any{
-				vocab.PropertyType: "schema:PropertyValue",
+				vocab.PropertyType: "PropertyValue",
 				vocab.PropertyName: link.Name,
 				"value":            fmt.Sprintf(`<a href="%s" rel="me nofollow noopener" translate="no">%s</a>`, link.ProfileURL, link.ProfileURL),
 			}
@@ -396,7 +412,7 @@ func (user *User) ActivityPubInboxURL_DirectMessages_MLS() string {
 	return user.ProfileURL + "/pub/inbox/direct-messages/mls"
 }
 
-func (user *User) ActivityPubMLSKeyPackagesURL() string {
+func (user *User) ActivityPubKeyPackagesURL() string {
 	if user.ProfileURL == "" {
 		return ""
 	}
@@ -428,28 +444,42 @@ func (user *User) ActivityPubPublicKeyURL() string {
 	return user.ProfileURL + "#main-key"
 }
 
+func (user *User) ActivityPubRepliesURL() string {
+	if user.ProfileURL == "" {
+		return ""
+	}
+
+	return user.ProfileURL + "/pub/replies"
+}
+
+// ActivityPubSSEEndpoint_Inbox returns the Server-Sent Event endpoint that streams this User's inbox activity
 func (user *User) ActivityPubSSEEndpoint_Inbox() string {
 	if user.ProfileURL == "" {
 		return ""
 	}
 
-	return user.ProfileURL + "/sse/inbox"
+	// The "@me" alias resolves to the signed-in User, who is the only party permitted to read this inbox.
+	return user.Host() + "/@me/sse/inbox"
 }
 
+// ActivityPubSSEEndpoint_Inbox_DirectMessages returns the Server-Sent Event endpoint that streams this User's direct messages
 func (user *User) ActivityPubSSEEndpoint_Inbox_DirectMessages() string {
 	if user.ProfileURL == "" {
 		return ""
 	}
 
-	return user.ProfileURL + "/sse/inbox/direct-messages"
+	// The "@me" alias resolves to the signed-in User, who is the only party permitted to read this inbox.
+	return user.Host() + "/@me/sse/inbox/direct-messages"
 }
 
+// ActivityPubSSEEndpoint_Inbox_DirectMessages_MLS returns the Server-Sent Event endpoint that streams this User's MLS-encrypted direct messages
 func (user *User) ActivityPubSSEEndpoint_Inbox_DirectMessages_MLS() string {
 	if user.ProfileURL == "" {
 		return ""
 	}
 
-	return user.ProfileURL + "/sse/inbox/direct-messages/mls"
+	// The "@me" alias resolves to the signed-in User, who is the only party permitted to read this inbox.
+	return user.Host() + "/@me/sse/inbox/direct-messages/mls"
 }
 
 func (user *User) JSONFeedURL() string {
@@ -474,7 +504,7 @@ func (user User) Toot() object.Account {
 		Avatar:       user.ActivityPubIconURL(),
 		Header:       user.ActivityPubImageURL(),
 		Discoverable: user.IsPublic,
-		CreatedAt:    time.Unix(user.CreateDate, 0).Format(time.RFC3339),
+		CreatedAt:    time.UnixMilli(user.CreateDate).UTC().Format(time.RFC3339), // CreateDate is milliseconds (journal UnixMilli)
 	}
 }
 
@@ -521,10 +551,10 @@ func (user User) Host() string {
 
 	hostname := user.Hostname()
 
-	return dt.Protocol(hostname) + hostname
+	return uri.GuessProtocolForHostname(hostname) + hostname
 }
 
 func (user User) Hostname() string {
 
-	return dt.NameOnly(user.ProfileURL)
+	return uri.Hostname(user.ProfileURL)
 }

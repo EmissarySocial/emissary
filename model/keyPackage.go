@@ -13,6 +13,7 @@ type KeyPackage struct {
 	Encoding         string             `bson:"encoding"`
 	Content          string             `bson:"content"`
 	GeneratorID      string             `bson:"generatorId"`
+	Ciphersuite      string             `bson:"ciphersuite"`
 	GeneratorName    string             `bson:"generatorName"`
 	ContentSignature string             `bson:"contentSignature"`
 	EmojiKey         [5]emojikey.Emoji  `bson:"emojiKey"`
@@ -44,10 +45,10 @@ func (keyPackage KeyPackage) State() string {
 	return "default"
 }
 
-// IsAuthor returns TRUE if the provided UserID the author of this Stream
+// IsAuthor returns TRUE if the provided UserID is the author of this KeyPackage
 // It is part of the AccessLister interface
 func (keyPackage KeyPackage) IsAuthor(userID primitive.ObjectID) bool {
-	return userID == keyPackage.UserID
+	return !userID.IsZero() && userID == keyPackage.UserID
 }
 
 // IsMyself returns TRUE if this object directly represents the provided UserID

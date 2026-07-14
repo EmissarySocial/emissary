@@ -4,9 +4,9 @@ import (
 	"time"
 
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -28,12 +28,12 @@ func getHostnameFromArgs(args mapof.Any) string {
 
 	// If the args include a "host" argument, then use that first
 	if host := args.GetString("host"); host != "" {
-		return dt.Hostname(host)
+		return uri.Hostname(host)
 	}
 
 	// If an "actor" argument is provided, then use that to determine the hostname
 	if actorURL := args.GetString("actor"); actorURL != "" {
-		return dt.Hostname(actorURL)
+		return uri.Hostname(actorURL)
 	}
 
 	return ""

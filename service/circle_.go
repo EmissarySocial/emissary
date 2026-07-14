@@ -39,7 +39,7 @@ func (service *Circle) Refresh(factory *Factory) {
 
 // Close stops any background processes controlled by this service
 func (service *Circle) Close() {
-
+	// No background processes to stop
 }
 
 /******************************************
@@ -97,7 +97,7 @@ func (service *Circle) Save(session data.Session, circle *model.Circle, note str
 	const location = "service.Circle.Save"
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(circle); err != nil {
+	if _, err := service.Schema().Validate(circle); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Circle", circle)
 	}
 

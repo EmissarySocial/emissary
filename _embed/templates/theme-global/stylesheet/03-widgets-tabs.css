@@ -96,7 +96,7 @@
 [role="tablist"].underlined > [role="tab"][aria-selected="true"]:not([disabled]),
 [role="tablist"].underlined > [role="tab"].selected:not([disabled]) {
     border-color:var(--gray40);
-    border-bottom:solid 3px var(--blue60);
+    border-bottom:solid 3px var(--focus-color);
     border-radius:0px;
     background-color:rgba(0,0,0,0);
     color:var(--gray100);

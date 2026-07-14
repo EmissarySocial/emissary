@@ -70,6 +70,16 @@ func NewMessage_InboxActivity_DirectMessage_MLS(objectID primitive.ObjectID, dat
 	}
 }
 
+// NewMessage_Notification creates a new SSE message sent when a User receives a new Notification
+func NewMessage_Notification(objectID primitive.ObjectID) Message {
+	return Message{
+		ObjectID: objectID,
+		Topic:    TopicNotification,
+		Event:    "", // Default "message" -type event
+		Data:     "notification",
+	}
+}
+
 // NewMessage_NewReplies creates a new SSE message sent when a Stream receives a new reply
 func NewMessage_NewReplies(objectID primitive.ObjectID) Message {
 	return Message{

@@ -14,6 +14,12 @@ func init() {
 	streamRouter.Add(vocab.ActivityTypeUndo, vocab.Any, DeleteAny)
 }
 
+// DeleteAny handles inbound Delete and Undo activities on a Stream: it removes any matching
+// outbox messages and re-announces the removal to followers.
+//
+// NOTE: reaction (Like/Dislike/Announce) projection is owned SOLELY by the User inbox — reactions
+// are delivered to the reacted-to object's author, never to a Stream's inbox (see
+// COLLECTIONS-REDESIGN.md D8). This handler therefore does NOT touch response collections.
 func DeleteAny(context Context, activity streams.Document) error {
 
 	const location = "handler.activityPub_stream.DeleteAny"
@@ -45,9 +51,10 @@ func DeleteAny(context Context, activity streams.Document) error {
 		return derp.Wrap(err, "handler.activityPub_stream.DeleteAny", "Unable to load actor", context.stream)
 	}
 
-	// Announce the deleted object
+	// Announce the deletion to the stream's followers as a post-commit send (F3, W6 option B).
 	announceID := activitypub.FakeActivityID(activity)
-	actor.SendAnnounce(announceID, activity)
+	followersURL := actor.ActorID() + "/pub/followers"
+	outboxService.SendAnnounce(context.session, actor.ActorID(), announceID, activity, followersURL)
 
 	// Voila!
 	return nil

@@ -24,6 +24,10 @@ func ReIndexActivityStreamCache(ctx *steranko.Context, factory *service.Factory,
 
 		log.Debug().Str("url", url).Msg("Re-indexing ActivityStream")
 
+		// EXEMPT from postcommit.Publish (see POST-COMMIT-TASKS-DESIGN.md): this is a bulk
+		// admin sweep over the entire shared cache — tasks carry only cache URLs (no rows
+		// from the enclosing transaction), and streaming them into the queue is deliberate;
+		// spooling the whole sweep in memory until commit would be worse than the race.
 		factory.Queue().NewTask(
 			"ReindexActivityStream",
 			mapof.Any{

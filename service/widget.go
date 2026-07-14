@@ -44,6 +44,12 @@ func (service *Widget) Add(widgetID string, filesystem fs.FS, definition []byte)
 		return derp.Wrap(err, location, "Unable to load Schema", widgetID)
 	}
 
+	// Every format name in the schema must resolve in the format registry; unrecognized
+	// names are silently skipped at validation time, so reject them at load time instead.
+	if err := widget.Schema.ValidateFormats(); err != nil {
+		return derp.Wrap(err, location, "Widget schema uses an unrecognized format name", widgetID)
+	}
+
 	// Load all HTML widgets from the filesystem
 	if err := loadHTMLTemplateFromFilesystem(filesystem, widget.HTMLTemplate, service.funcMap); err != nil {
 		return derp.Wrap(err, location, "Unable to load Widget", widgetID)

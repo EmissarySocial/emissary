@@ -32,8 +32,11 @@ func (service *Export) FindService(collectionName string) (Exportable, error) {
 	case "emissary-circle":
 		return service.factory.Circle(), nil
 
-	case "emissary-conversation":
-		return service.factory.Conversation(), nil
+	case "emissary-collection":
+		return service.factory.Collection(), nil
+
+	case "emissary-collection-item":
+		return service.factory.CollectionItem(), nil
 
 	case "emissary-folder":
 		return service.factory.Folder(), nil

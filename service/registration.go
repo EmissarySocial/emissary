@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
+	"github.com/benpate/steranko"
 	"github.com/hjson/hjson-go/v4"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -47,6 +48,12 @@ func (service *Registration) Add(registrationID string, filesystem fs.FS, defini
 	// Unmarshal the file into the schema.
 	if err := hjson.Unmarshal(definition, &registration); err != nil {
 		return derp.Wrap(err, location, "Unable to load Schema", registrationID)
+	}
+
+	// Every format name in the schema must resolve in the format registry; unrecognized
+	// names are silently skipped at validation time, so reject them at load time instead.
+	if err := registration.Schema.ValidateFormats(); err != nil {
+		return derp.Wrap(err, location, "Registration schema uses an unrecognized format name", registrationID)
 	}
 
 	// Load all HTML templates from the filesystem
@@ -148,7 +155,7 @@ func (service *Registration) Validate(session data.Session, userService *User, d
 	return nil
 }
 
-func (service *Registration) Register(session data.Session, groupService *Group, userService *User, domain *model.Domain, txn model.RegistrationTxn) (model.User, error) {
+func (service *Registration) Register(session data.Session, groupService *Group, userService *User, steranko *steranko.Steranko, domain *model.Domain, txn model.RegistrationTxn) (model.User, error) {
 
 	const location = "service.Registration.Register"
 
@@ -170,7 +177,7 @@ func (service *Registration) Register(session data.Session, groupService *Group,
 
 	// Copy Transaction data into a new User object
 	user := model.NewUser()
-	if err := service.setUserData(session, groupService, domain, &user, txn, registration.AllowedFields); err != nil {
+	if err := service.setUserData(session, groupService, steranko, domain, &user, txn, registration.AllowedFields); err != nil {
 		return model.User{}, derp.Wrap(err, location, "Unable to set user data")
 	}
 
@@ -194,7 +201,7 @@ func (service *Registration) Register(session data.Session, groupService *Group,
 }
 
 // UpdateRegistration updates an existing User with new data from a Registration Transaction
-func (service *Registration) UpdateRegistration(session data.Session, groupService *Group, userService *User, domain *model.Domain, source string, sourceID string, txn model.RegistrationTxn) error {
+func (service *Registration) UpdateRegistration(session data.Session, groupService *Group, userService *User, steranko *steranko.Steranko, domain *model.Domain, source string, sourceID string, txn model.RegistrationTxn) error {
 
 	const location = "service.Registration.UpdateRegistration"
 
@@ -222,7 +229,7 @@ func (service *Registration) UpdateRegistration(session data.Session, groupServi
 
 	// If not found, then create a new User
 	if derp.IsNotFound(err) {
-		if _, inner := service.Register(session, groupService, userService, domain, txn); inner != nil {
+		if _, inner := service.Register(session, groupService, userService, steranko, domain, txn); inner != nil {
 			return derp.Wrap(inner, location, "Unable to create new User from registration transaction")
 		}
 		return nil
@@ -234,7 +241,7 @@ func (service *Registration) UpdateRegistration(session data.Session, groupServi
 	}
 
 	// Update user data from the transaction
-	if err := service.setUserData(session, groupService, domain, &user, txn, registration.AllowedFields); err != nil {
+	if err := service.setUserData(session, groupService, steranko, domain, &user, txn, registration.AllowedFields); err != nil {
 		return derp.Wrap(err, location, "Unable to set user data")
 	}
 
@@ -248,7 +255,7 @@ func (service *Registration) UpdateRegistration(session data.Session, groupServi
 }
 
 // setUserData copies all allowed fields from the Transaction into the User, and silently warns if any field names are not recognized
-func (service *Registration) setUserData(session data.Session, groupService *Group, domain *model.Domain, user *model.User, txn model.RegistrationTxn, allowedFields []string) error {
+func (service *Registration) setUserData(session data.Session, groupService *Group, steranko *steranko.Steranko, domain *model.Domain, user *model.User, txn model.RegistrationTxn, allowedFields []string) error {
 
 	const location = "service.Registration.setUserData"
 
@@ -277,7 +284,9 @@ func (service *Registration) setUserData(session data.Session, groupService *Gro
 		case "password":
 
 			if user.IsNew() && txn.Password != "" {
-				user.Password = txn.Password
+				if err := steranko.SetPassword(user, txn.Password); err != nil {
+					return derp.Wrap(err, location, "Unable to set password")
+				}
 			}
 
 		case "stateId":

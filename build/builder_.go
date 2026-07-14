@@ -21,16 +21,17 @@ type Builder interface {
 	View(string) (template.HTML, error) // Render function outputs an HTML template
 
 	// COMMON API METHODS
-	Protocol() string                        // String representation of the HTTP protocol to use when addressing this record (http:// or https://)
-	Host() string                            // String representation of the protocol + hostname
-	Hostname() string                        // Hostname for this server
+	Protocol() string                        // Scheme + "://", e.g. "http://"
+	Host() string                            // Absolute origin: protocol + hostname + port, e.g. "http://localhost:8080"
+	Hostname() string                        // Bare domain only (no protocol/port), e.g. "localhost"
 	Token() string                           // URL Token of the record being built
 	NavigationID() string                    // ID of the Top-Level item to highlight in the navigation.
 	PageTitle() string                       // Human-friendly title to put at the top of the page.
 	Summary() string                         // Human-friendly summary to put at the top of the page (maybe)
 	Permalink() string                       // Permanent link to the record being built
 	BasePath() string                        // URL Path of the root of this object, without any additional actions.
-	URL() string                             // Complete URL of the requested page
+	URL() string                             // Absolute URL of the page (Host+path+query), e.g. "http://localhost:8080/@me/settings" -- canonical/og/email, NOT form actions
+	RelativeURL() string                     // Root-relative path+query, e.g. "/@me/settings" -- form actions & htmx targets (browser supplies the origin)
 	QueryParam(string) string                // Query parameter of the requested page
 	SetQueryParam(string, string) string     // Sets a queryString parameter
 	DefaultQueryParam(string, string) string // Sets a queryString parameter if it does not already exist

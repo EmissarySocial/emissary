@@ -22,7 +22,7 @@ func NewSave(stepInfo mapof.Any) (Save, error) {
 	const location = "model.step.NewSave"
 
 	// Validate the step configuration
-	if err := StepSaveSchema().Validate(stepInfo); err != nil {
+	if _, err := schema.New(StepSaveSchema()).Validate(stepInfo); err != nil {
 		return Save{}, derp.Wrap(err, location, "Invalid step configuration", stepInfo)
 	}
 

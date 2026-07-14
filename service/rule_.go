@@ -9,11 +9,11 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -115,7 +115,7 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 	const location = "service.Rule.Save"
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(rule); err != nil {
+	if _, err := service.Schema().Validate(rule); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Rule", rule)
 	}
 
@@ -162,6 +162,7 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 	}
 
 	// Recalculate the rule count for this user
+	// (skipped for domain-level Rules with no owning User)
 	if err := service.userService.CalcRuleCount(session, rule.UserID); err != nil {
 		return derp.Wrap(err, location, "Unable to calculate rule count")
 	}
@@ -175,6 +176,12 @@ func (service *Rule) Delete(session data.Session, rule *model.Rule, note string)
 	// Delete this Rule
 	if err := service.collection(session).Delete(rule, note); err != nil {
 		return derp.Wrap(err, "service.Rule.Delete", "Unable to delete Rule", rule, note)
+	}
+
+	// Recalculate the rule count for this user
+	// (skipped for domain-level Rules with no owning User)
+	if err := service.userService.CalcRuleCount(session, rule.UserID); err != nil {
+		return derp.Wrap(err, "service.Rule.Delete", "Unable to calculate rule count")
 	}
 
 	if rule.IsPublic {
@@ -405,7 +412,7 @@ func (service *Rule) QueryByActorAndActions(session data.Session, userID primiti
 		service.byUserID(userID),
 		exp.Or(
 			exp.Equal("type", model.RuleTypeActor).AndEqual("trigger", actorID),
-			exp.Equal("type", model.RuleTypeDomain).AndEqual("trigger", dt.NameOnly(actorID)),
+			exp.Equal("type", model.RuleTypeDomain).AndEqual("trigger", uri.Hostname(actorID)),
 			exp.Equal("type", model.RuleTypeContent),
 		),
 		exp.In("action", actions),

@@ -30,40 +30,66 @@ type WithFunc2[T any, U any] func(ctx *steranko.Context, factory *service.Factor
 // WithFunc3 is a function signature for a continuation function that requires the domain Factory and three values
 type WithFunc3[T any, U any, V any] func(ctx *steranko.Context, factory *service.Factory, session data.Session, value *T, value2 *U, value3 *V) error
 
-// WithAuthenticatedActor handles boilerplate code for requests that are made by one of:
-// 1) a signed-in user, 2) a valid OAuth token, or 3) a valid HTTP signature.  It calls the
-// continuation function with the actorID (as a string) that represents the authenticated actor.
-func WithAuthenticatedActor(serverFactory *server.Factory, fn WithFunc2[model.User, string]) echo.HandlerFunc {
+// Header used by HTMX to force a client-side redirect
+const HxRedirectHeader = "Hx-Redirect"
 
-	return WithUser(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
+// WithActor resolves the actor making the request from its credentials and passes the actor's
+// ID (as a string) to the continuation function. The actor identified using 1) a signed-in
+// User's cookie, 2) a valid HTTP signature, or 3) neither (an empty string for anonymous).
+func WithActor(serverFactory *server.Factory, fn WithFunc1[string]) echo.HandlerFunc {
 
-		// Use Authorization cookie, if available
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+
+		// A signed-in User's cookie identifies them by their own ActivityPub URL
 		if authorization := getAuthorization(ctx); authorization.IsAuthenticated() {
-
-			// Signed-In User
 			if userID := authorization.UserID; !userID.IsZero() {
-				actorID := factory.Host() + "/@" + authorization.UserID.Hex()
-				return fn(ctx, factory, session, user, &actorID)
-			}
-
-			// Signed-In Identity
-			if identityID := authorization.IdentityID; !identityID.IsZero() {
-				identity := model.NewIdentity()
-				if err := factory.Identity().LoadByID(session, identityID, &identity); err == nil {
-					return fn(ctx, factory, session, user, &identity.ActivityPubActor)
+				user := model.NewUser()
+				if err := factory.User().LoadByID(session, userID, &user); err == nil {
+					actorID := user.ActivityPubURL()
+					return fn(ctx, factory, session, &actorID)
 				}
 			}
 		}
 
-		// Use HTTP Signature, if possible
-		if signature, err := sigs.Verify(ctx.Request(), nil); err == nil {
+		// A valid HTTP signature identifies a (possibly remote) actor.
+		publicKeyFinder := factory.ActivityStream().PublicKeyFinder
+		if signature, err := sigs.Verify(ctx.Request(), publicKeyFinder); err == nil {
 			actorID := signature.ActorID()
-			return fn(ctx, factory, session, user, &actorID)
+			return fn(ctx, factory, session, &actorID)
 		}
 
-		// Fall through: Unauthenticated
+		// Fall through means the request is Anonymous
 		actorID := ""
-		return fn(ctx, factory, session, user, &actorID)
+		return fn(ctx, factory, session, &actorID)
+	})
+}
+
+// WithActorAndUser resolves both the requesting Actor (authenticated by HTTP signatures) and the
+//
+//	requested (but un-authenticated) User from the URL path
+func WithActorAndUser(serverFactory *server.Factory, fn WithFunc2[string, model.User]) echo.HandlerFunc {
+	const location = "handler.WithActorAndUser"
+
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+		return WithActor(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, actorID *string) error {
+			return WithUser(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
+				return fn(ctx, factory, session, actorID, user)
+			})(ctx)
+		})(ctx)
+	})
+}
+
+// WithActorAndStream resolves both the requesting Actor (authenticated by HTTP signatures) and the
+// Stream they have requested
+func WithActorAndStream(serverFactory *server.Factory, fn WithFunc2[string, model.Stream]) echo.HandlerFunc {
+	const location = "handler.WithActorAndStream"
+
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+		return WithActor(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, actorID *string) error {
+			return WithStream(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, stream *model.Stream) error {
+				return fn(ctx, factory, session, actorID, stream)
+			})(ctx)
+		})(ctx)
 	})
 }
 
@@ -110,7 +136,7 @@ func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.Use
 		// Send them to their new server instead.
 		if user.MovedTo != "" {
 			factory.Steranko(session).SignOut(ctx)
-			ctx.Response().Header().Set("HX-Redirect", "/signout")
+			ctx.Response().Header().Set(HxRedirectHeader, "/signout")
 			return ctx.Redirect(http.StatusTemporaryRedirect, "/signout")
 		}
 
@@ -194,8 +220,10 @@ func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 		/////////////////////////////////////////////////////////
 		// POST requests are wrapped in a MongoDB transaction
 
-		// WCreate a database transaction and wrap the callback function in it.
-		_, err = factory.Server().WithTransaction(ctx.Request().Context(), func(session data.Session) (any, error) {
+		// Create a database transaction and wrap the callback function in it.
+		// factory.WithTransaction (not factory.Server().WithTransaction) attaches the
+		// post-commit task spool, so queue tasks publish only after the commit.
+		_, err = factory.WithTransaction(ctx.Request().Context(), func(session data.Session) (any, error) {
 			sterankoContext := factory.Steranko(session).Context(ctx)
 			return nil, fn(sterankoContext, factory, session)
 		})
@@ -539,7 +567,7 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 
 				// If the user has moved, then forward to the Oracle
 				if user.MovedTo != "" {
-					ctx.Response().Header().Set("HX-Redirect", user.MovedTo)
+					ctx.Response().Header().Set(HxRedirectHeader, user.MovedTo)
 					return ctx.Redirect(http.StatusSeeOther, user.MovedTo)
 				}
 
@@ -554,7 +582,7 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 		// If this Stream has been moved, then redirect to the Oracle
 		if stream.MovedTo != "" {
 			newURL := stream.MovedTo + "?url=" + stream.ActivityPubURL()
-			ctx.Response().Header().Set("HX-Redirect", newURL)
+			ctx.Response().Header().Set(HxRedirectHeader, newURL)
 			return ctx.Redirect(http.StatusPermanentRedirect, newURL)
 		}
 
@@ -605,7 +633,7 @@ func WithUser(serverFactory *server.Factory, fn WithFunc1[model.User]) echo.Hand
 
 		// Handle redirects for Users who have moved away.
 		if user.MovedTo != "" {
-			ctx.Response().Header().Set("HX-Redirect", user.MovedTo)
+			ctx.Response().Header().Set(HxRedirectHeader, user.MovedTo)
 			return ctx.Redirect(http.StatusPermanentRedirect, user.MovedTo)
 		}
 

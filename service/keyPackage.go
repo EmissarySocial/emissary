@@ -1,12 +1,11 @@
 package service
 
 import (
-	"encoding/base64"
 	"iter"
 	"strings"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/tools/emojikey"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -47,7 +46,7 @@ func (service *KeyPackage) Close() {
  ******************************************/
 
 func (service *KeyPackage) collection(session data.Session) data.Collection {
-	return session.Collection("MLSKeyPackage")
+	return session.Collection("KeyPackage")
 }
 
 // Count returns the number of records that match the provided criteria
@@ -66,7 +65,7 @@ func (service *KeyPackage) Range(session data.Session, criteria exp.Expression, 
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.KeyPackage.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.KeyPackage.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewKeyPackage), nil
@@ -83,7 +82,7 @@ func (service *KeyPackage) Query(session data.Session, criteria exp.Expression, 
 func (service *KeyPackage) Load(session data.Session, criteria exp.Expression, keyPackage *model.KeyPackage) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), keyPackage); err != nil {
-		return derp.Wrap(err, "service.KeyPackage.Load", "Unable to load KeyPackage", criteria)
+		return derp.Wrap(err, "service.KeyPackage.Load", "Loading KeyPackage", criteria)
 	}
 
 	return nil
@@ -92,14 +91,11 @@ func (service *KeyPackage) Load(session data.Session, criteria exp.Expression, k
 // Save adds/updates an KeyPackage in the database
 func (service *KeyPackage) Save(session data.Session, keyPackage *model.KeyPackage, note string) error {
 
-	// Calculate the signature and emojikey based on the content of this KeyPackage
-	signature, emojiKey := emojikey.EmojiKey([]byte(keyPackage.Content))
-	keyPackage.ContentSignature = base64.StdEncoding.EncodeToString([]byte(signature))
-	keyPackage.EmojiKey = emojiKey
+	const location = "service.KeyPackage.Save"
 
 	// Save the KeyPackage to the database
 	if err := service.collection(session).Save(keyPackage, note); err != nil {
-		return derp.Wrap(err, "service.KeyPackage.Save", "Unable to save KeyPackage", keyPackage, note)
+		return derp.Wrap(err, location, "Saving KeyPackage", keyPackage, note)
 	}
 
 	return nil
@@ -108,9 +104,11 @@ func (service *KeyPackage) Save(session data.Session, keyPackage *model.KeyPacka
 // Delete removes an KeyPackage from the database (virtual delete)
 func (service *KeyPackage) Delete(session data.Session, keyPackage *model.KeyPackage, note string) error {
 
+	const location = "service.KeyPackage.Delete"
+
 	// Delete this KeyPackage
 	if err := service.collection(session).Delete(keyPackage, note); err != nil {
-		return derp.Wrap(err, "service.KeyPackage.Delete", "Unable to delete KeyPackage", keyPackage, note)
+		return derp.Wrap(err, location, "Deleting KeyPackage", keyPackage, note)
 	}
 
 	return nil
@@ -234,12 +232,12 @@ func (service *KeyPackage) LoadByURL(session data.Session, url string, keyPackag
 	// Parse the URL to extract the UserID and KeyPackageID
 	userID, keyPackageID, err := service.ParseKeyPackageURL(url)
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to parse KeyPackage URL", url, derp.WithNotFound())
+		return derp.Wrap(err, location, "Parsing KeyPackage URL", url, derp.WithNotFound())
 	}
 
 	// Load the KeyPackage from the database
 	if err := service.LoadByID(session, userID, keyPackageID, keyPackage); err != nil {
-		return derp.Wrap(err, location, "Unable to load KeyPackage by URL", url)
+		return derp.Wrap(err, location, "Loading KeyPackage by URL", url)
 	}
 
 	return nil
@@ -260,7 +258,7 @@ func (service *KeyPackage) GetJSONLD(keyPackage *model.KeyPackage) mapof.Any {
 		vocab.PropertyType:         []string{vocab.CoreTypeObject, vocab.ObjectTypeKeyPackage},
 		vocab.PropertyID:           service.ActivityPubURL(keyPackage.UserID, keyPackage.KeyPackageID),
 		vocab.PropertyAttributedTo: service.ActivityPubAttributedToURL(keyPackage.UserID),
-		vocab.PropertyTo:           vocab.NamespaceASPublic,
+		vocab.PropertyTo:           vocab.NamespacePublic,
 		vocab.PropertySummary:      "A binary-encoded cryptographic key",
 		vocab.PropertyMediaType:    keyPackage.MediaType,
 		vocab.PropertyEncoding:     keyPackage.Encoding,
@@ -270,6 +268,8 @@ func (service *KeyPackage) GetJSONLD(keyPackage *model.KeyPackage) mapof.Any {
 			vocab.PropertyType: vocab.ActorTypeApplication,
 			vocab.PropertyName: keyPackage.GeneratorName,
 		},
+		vocab.PropertyPublished:      time.UnixMilli(keyPackage.CreateDate).Format(time.RFC3339),
+		vocab.PropertyMLSCiphersuite: keyPackage.Ciphersuite,
 	}
 }
 
@@ -325,14 +325,14 @@ func (service *KeyPackage) ParseKeyPackageURL(url string) (primitive.ObjectID, p
 	userID, err := primitive.ObjectIDFromHex(userString)
 
 	if err != nil {
-		return primitive.NilObjectID, primitive.NilObjectID, derp.Wrap(err, location, "Unable to parse UserID from KeyPackage URL", url)
+		return primitive.NilObjectID, primitive.NilObjectID, derp.Wrap(err, location, "Parsing UserID from KeyPackage URL", url)
 	}
 
 	// Parse the KeyPackageID
 	keyPackageID, err := primitive.ObjectIDFromHex(keyPackageString)
 
 	if err != nil {
-		return primitive.NilObjectID, primitive.NilObjectID, derp.Wrap(err, location, "Unable to parse KeyPackageID from KeyPackage URL", url)
+		return primitive.NilObjectID, primitive.NilObjectID, derp.Wrap(err, location, "Parsing KeyPackageID from KeyPackage URL", url)
 	}
 
 	// Win.

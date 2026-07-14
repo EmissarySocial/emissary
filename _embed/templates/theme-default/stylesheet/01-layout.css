@@ -159,3 +159,31 @@ main:has(> .app) {
 		flex-grow:1;
 	}
 }
+
+/******************************************
+ * Notification Badge (overlaid on the Notifications bell icon)
+ ******************************************/
+
+/* The anchor becomes the positioning context so the badge can overlay the
+   icon without occupying layout space -- the button never changes size. */
+#nav-notifications {
+	position: relative;
+}
+
+/* A small red dot pinned to the top-right of the icon.  It is positioned from
+   the anchor's horizontal CENTER (left:50%), which lines up with the icon's
+   center in both layouts -- the label always sits below the icon (mobile
+   tab-bar) or is hidden (desktop), never beside it, so label width never
+   shifts the dot.  position:absolute takes it out of normal flow, so text-sm's
+   font-size and margins no longer affect the button's size.
+   Tweak `top` / `margin-left` / `font-size` to fine-tune placement + size. */
+#nav-notifications .nav-badge {
+	position: absolute;
+	top: 4px;
+	left: 50%;
+	margin: 0 0 0 4px;
+	font-size: 8px;
+	line-height: 1;
+	color: var(--red60);
+	pointer-events: none;
+}

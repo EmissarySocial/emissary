@@ -137,6 +137,11 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 // getSetupForm generates the different form layouts to use on the setup/server page.
 func getSetupForm(name string) (form.Element, bool, error) {
 
+	trustForwardedHostOptions := []form.LookupCode{
+		{Value: "false", Label: "'Host' header. (use when NOT behind a proxy)"},
+		{Value: "true", Label: "'X-Forwarded-Host' (use when your proxy sets this value)"},
+	}
+
 	switch name {
 
 	case "general":
@@ -147,9 +152,25 @@ func getSetupForm(name string) (form.Element, bool, error) {
 					{Type: "text", Label: "Database Connection String", Path: "activityPubCache.connectString", Description: "MongoDB connection string only"},
 					{Type: "text", Label: "Database Name", Path: "activityPubCache.database"},
 				}},
-				{Type: "layout-vertical", Label: "Ports", Children: []form.Element{
-					{Type: "text", Label: "HTTP", Description: "Port to use for HTTP connections (standard: 80, disabled: 0)", Path: "httpPort", Options: mapof.Any{"format": "number", "min": 0, "max:": 65535}},
-					{Type: "text", Label: "HTTPS", Description: "Port to use for HTTPS connections (standard: 443, disabled: 0)", Path: "httpsPort", Options: mapof.Any{"format": "number", "min": 0, "max:": 65535}},
+				{Type: "layout-vertical", Label: "Networking", Children: []form.Element{
+					{Type: "select", Label: "Determining Hostname", Path: "trustForwardedHost", Description: "Enables your server to identify the domain/hostname being requested.", Options: mapof.Any{"enum": trustForwardedHostOptions}},
+					{Type: "select", Label: "Client IP Lookup", Path: "clientIPStrategy", Description: "Method used to determine the client's IP address.  Important for rate-limiting and abuse prevention.", Options: mapof.Any{"enum": []form.LookupCode{
+						{Value: "REMOTE-ADDR", Label: "Remote Address (use when NOT behind a proxy)"},
+						{Value: "RIGHTMOST-TRUSTED-COUNT", Label: "Rightmost Trusted Count (use when behind a known number of proxies)"},
+						{Value: "SINGLE-IP-HEADER", Label: "Single IP Header (use when proxy sets a known header value)"},
+					}}},
+					{Type: "text", Label: "Header Value", Path: "clientIPHeader", Description: "Header field used to determine the client's IP address.  Important for rate-limiting and abuse prevention.", Options: mapof.Any{"show-if": "clientIPStrategy is SINGLE-IP-HEADER", "enum": []form.LookupCode{
+						{Value: "Cf-Connecting-IP"},
+						{Value: "Do-Connecting-IP"},
+						{Value: "Fastly-Client-IP"},
+						{Value: "True-Client-IP"},
+						{Value: "X-Azure-ClientIP"},
+						{Value: "X-Azure-SocketIP"},
+						{Value: "X-Real-IP"},
+					}}},
+					{Type: "text", Label: "Trusted Proxy Count", Path: "clientIPTrustedCount", Description: "Number of trusted proxies to consider when determining the client's IP address.", Options: mapof.Any{"show-if": "clientIPStrategy is RIGHTMOST-TRUSTED-COUNT"}},
+					{Type: "text", Label: "HTTP Port", Description: "Port to use for HTTP connections (standard: 80, disabled: 0)", Path: "httpPort", Options: mapof.Any{"format": "number", "min": 0, "max:": 65535}},
+					{Type: "text", Label: "HTTPS Port", Description: "Port to use for HTTPS connections (standard: 443, disabled: 0)", Path: "httpsPort", Options: mapof.Any{"format": "number", "min": 0, "max:": 65535}},
 				}},
 				{Type: "layout-vertical", Label: "Testing and Development", Children: []form.Element{
 					{Type: "select", Label: "Debug Output", Path: "debugLevel"},

@@ -1,3 +1,14 @@
+{{- $root := . -}}
+{{- $afterDate := .QueryParam "after" -}}
+{{- $replies := .ReplyLinksAfter $afterDate 12 -}}
+
+<div class="table">
+	{{- range $index, $reply := $replies -}}
+		<div hx-get="/{{$root.StreamID}}/reply?id={{$reply.URI}}" hx-trigger="load" hx-target="this" hx-swap="outerHTML" style="height:100px;"></div>
+	{{- end -}}
+</div>
+
+<!--
 {{- $publishedDate := .QueryParam "published" -}}
 {{- $pageSize := 12 -}}
 
@@ -16,9 +27,12 @@
 	{{- $object := .UnwrapActivity -}}
 	{{- $actor := $object.AttributedTo.Load -}}
 
-	<div role="link" class="flex-row margin-bottom-lg hover-trigger">
+	<div class="flex-row margin-bottom-lg hover-trigger">
 
-		<div class="flex-row flex-grow-1 clickable" script="on click go to url '{{$object.ID}}'">
+		{{- /* The reply's URL is carried in a data attribute (safeURL rejects any
+		       non-http(s) scheme; html/template escapes it) and read back by
+		       hyperscript, instead of being templated into hyperscript source. */ -}}
+		<div class="flex-row flex-grow-1 clickable" role="link" data-href="{{$object.ID | safeURL}}" script="on click go to url @data-href">
 			<div class="flex-shrink-0 margin-right">
 				{{- if $actor.Icon.IsNil -}}
 					<div class="circle width-48"></div>
@@ -44,7 +58,7 @@
 					<div class="margin-vertical"><img src="{{$object.Image.Href}}" class="width-100%"></div>
 				{{- end -}}
 			
-				<div class="margin-bottom">{{$object.Content | html}}</div>
+				<div class="margin-bottom">{{$object.Content | htmlMinimal}}</div>
 				<div class="text-sm">
 					<span class="text-light-gray">
 						{{- if gt $metadata.Replies 0 -}}
@@ -87,3 +101,4 @@
 	</div>
 
 {{- end -}}
+-->

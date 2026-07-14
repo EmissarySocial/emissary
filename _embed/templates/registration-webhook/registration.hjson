@@ -9,7 +9,7 @@
 		properties: {
 			signup_url: {type:"string", format:"url", required:true}
 			portal_url: {type:"string", format:"url"}
-			secret: {type:"string", required:true}
+			secret: {type:"string", format:"unsafe-any", maxLength:255, required:true}
 		}
 	}
 	form: {

@@ -23,8 +23,8 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 
 	switch name {
 
-	case "AddToContext":
-		return WithSession(consumer.serverFactory, args, AddToContext)
+	case "AddToCollection":
+		return WithSession(consumer.serverFactory, args, AddToCollection)
 
 	case "ConnectPushService":
 		return WithFollowing(consumer.serverFactory, args, ConnectPushService)
@@ -35,8 +35,8 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "CrawlUpReplyTree":
 		return WithFactory(consumer.serverFactory, args, CrawlUpReplyTree)
 
-	case "CreateWebSubFollower":
-		return WithSession(consumer.serverFactory, args, CreateWebSubFollower)
+	case "CrawlDownReplyTree":
+		return WithFactory(consumer.serverFactory, args, CrawlDownReplyTree)
 
 	case "DeleteEmptySearchQuery":
 		return WithSession(consumer.serverFactory, args, DeleteEmptySearchQuery)
@@ -65,6 +65,9 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case sender.OutboxSendToSingleRecipient:
 		return WithSender(consumer.serverFactory, args, SendToSingleRecipient)
 
+	case "Outbox-Publish":
+		return WithSession(consumer.serverFactory, args, OutboxPublish)
+
 	case "PollFollowing-Index":
 		return WithSession(consumer.serverFactory, args, PollFollowing_Index)
 
@@ -83,6 +86,9 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "PurgeImports":
 		return WithSession(consumer.serverFactory, args, PurgeImports)
 
+	case "PurgeNotifications":
+		return WithSession(consumer.serverFactory, args, PurgeNotifications)
+
 	case "ReceiveActivityPub-Add":
 		return WithSession(consumer.serverFactory, args, ReceiveActivityPubAdd)
 
@@ -91,9 +97,6 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 
 	case "ReceiveActivityPub-Move":
 		return WithSession(consumer.serverFactory, args, ReceiveActivityPubMove)
-
-	case "ReceiveWebMention":
-		return WithSession(consumer.serverFactory, args, ReceiveWebMention)
 
 	case "RecycleDomain":
 		return WithSession(consumer.serverFactory, args, RecycleDomain)
@@ -113,21 +116,14 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "ScheduleHourly":
 		return ScheduleHourly(consumer.serverFactory)
 
-	// TODO: This should be merged into Outbox:SendToAllRecipients
-	case "SendActivityPubMessage":
-		return WithSession(consumer.serverFactory, args, SendActivityPubMessage)
-
 	case "SendSearchResult":
 		return WithSession(consumer.serverFactory, args, SendSearchResult)
 
 	case "SendSearchResult-SearchQuery":
 		return WithSession(consumer.serverFactory, args, SendSearchResult_SearchQuery)
 
-	case "SendWebMention":
-		return SendWebMention(args)
-
-	case "SendWebSubMessage":
-		return SendWebSubMessage(args)
+	case "SendWebPushNotification":
+		return WithSession(consumer.serverFactory, args, SendWebPushNotification)
 
 	case "Shuffle":
 		return WithSession(consumer.serverFactory, args, Shuffle)

@@ -21,6 +21,7 @@ func TestCircleSchema(t *testing.T) {
 		{"productIds.1", "086753090867530908675309", nil},
 		{"description", "Description", nil},
 		{"isFeatured", true, nil},
+		{"isVisible", true, nil},
 	}
 
 	tableTest_Schema(t, &s, &group, table)

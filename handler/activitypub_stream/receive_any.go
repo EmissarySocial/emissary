@@ -18,6 +18,9 @@ func init() {
 	streamRouter.Add(vocab.ActivityTypeDislike, vocab.Any, BoostAny)
 }
 
+// BoostAny handles inbound Create/Update/Announce/Like/Dislike activities on a Stream: it caches
+// the activity (or its object), projects a Like/Dislike/Announce into the Stream's response
+// collection, and re-announces the activity to the Stream's followers.
 func BoostAny(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_stream.BoostAny"
@@ -29,8 +32,8 @@ func BoostAny(context Context, activity streams.Document) error {
 
 	// RULE: If "followers-only" is set, then only accept activities from followers
 	if context.actor.BoostFollowersOnly {
-		if !context.factory.Follower().IsActivityPubFollower(context.session, model.FollowerTypeStream, context.stream.StreamID, activity.Actor().ID()) {
-			return derp.Forbidden(location, "Must be a follower to post to this Actor", activity.Actor().ID())
+		if !context.factory.Follower().IsActivityPubFollower(context.session, model.FollowerTypeStream, context.stream.StreamID, activity.ActorID()) {
+			return derp.Forbidden(location, "Must be a follower to post to this Actor", activity.ActorID())
 		}
 	}
 
@@ -94,10 +97,13 @@ func announce(context Context, activity streams.Document) error {
 		return derp.Wrap(err, location, "Unable to save message", context.stream.StreamID, activity.ID())
 	}
 
-	// Send the Announce to all of our followers
+	// Publish the Announce to the stream's followers as a post-commit send (F3, W6 option B). The
+	// activity is addressed to the stream's followers collection, which SendLocator.Recipient
+	// resolves; the signed delivery happens after commit and is per-recipient retryable.
 	log.Debug().Msg("Announcing document to followers")
 	announceID := context.stream.ActivityPubAnnouncedURL() + "/" + message.OutboxMessageID.Hex()
-	actor.SendAnnounce(announceID, activity)
+	followersURL := actor.ActorID() + "/pub/followers"
+	outboxService.SendAnnounce(context.session, actor.ActorID(), announceID, activity, followersURL)
 
 	return nil
 }

@@ -119,6 +119,12 @@ func (service *Theme) Add(themeID string, filesystem fs.FS, definition []byte) e
 		return derp.Wrap(err, location, "Unable to parse theme.json file", filesystem)
 	}
 
+	// Every format name in the schema must resolve in the format registry; unrecognized
+	// names are silently skipped at validation time, so reject them at load time instead.
+	if err := theme.Schema.ValidateFormats(); err != nil {
+		return derp.Wrap(err, location, "Theme schema uses an unrecognized format name", themeID)
+	}
+
 	// Load HTML templates into the theme
 	if err := loadHTMLTemplateFromFilesystem(filesystem, theme.HTMLTemplate, service.funcMap); err != nil {
 		return derp.Wrap(err, "service.theme.loadFromFilesystem", "Unable to load Template", themeID)

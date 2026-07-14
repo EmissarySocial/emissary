@@ -24,6 +24,9 @@ func (step StepTableEditor) Get(builder Builder, buffer io.Writer) PipelineBehav
 	factory := builder.factory()
 
 	targetURL := step.getTargetURL(builder)
+	// TODO (ben): table builders now use value receivers and return a modified copy, so
+	// these two calls silently discard their result. Chain them off New (or reassign t):
+	// t := table.New(...).UseLookupProvider(builder.lookupProvider()).AllowAll()
 	t := table.New(&s, &step.Form, builder.object(), step.Path, factory.Icons(), targetURL)
 	t.UseLookupProvider(builder.lookupProvider())
 	t.AllowAll()
@@ -103,6 +106,9 @@ func (step StepTableEditor) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	targetURL := step.getTargetURL(builder)
 
 	factory := builder.factory()
+	// TODO (ben): table builders now use value receivers and return a modified copy, so
+	// these two calls silently discard their result. Chain them off New (or reassign t):
+	// t := table.New(...).UseLookupProvider(builder.lookupProvider()).AllowAll()
 	t := table.New(&s, &step.Form, builder.object(), step.Path, factory.Icons(), targetURL)
 	t.UseLookupProvider(builder.lookupProvider())
 	t.AllowAll()

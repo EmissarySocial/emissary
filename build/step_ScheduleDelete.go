@@ -4,6 +4,7 @@ import (
 	"io"
 	"text/template"
 
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -55,10 +56,13 @@ func (step StepScheduleDelete) Post(builder Builder, _ io.Writer) PipelineBehavi
 		return Continue()
 	}
 
-	// Schedule the task to delete this stream after [delaySeconds]
-	q.NewTask(
+	// Schedule the task (post-commit) to delete this stream after [delaySeconds]
+	postcommit.Publish(
+		builder.session(),
+		q,
 		"DeleteStream",
 		mapof.Any{
+			"host":     builder.Hostname(),
 			"streamId": streamBuilder.StreamID(),
 		},
 		queue.WithSignature(signature),

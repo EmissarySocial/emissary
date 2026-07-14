@@ -89,7 +89,7 @@ func (w Rule) NavigationID() string {
 }
 
 func (w Rule) Permalink() string {
-	return w.Hostname() + "/admin/rules/" + w.RuleID()
+	return w.Host() + "/admin/rules/" + w.RuleID()
 }
 
 func (w Rule) BasePath() string {

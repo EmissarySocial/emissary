@@ -31,11 +31,11 @@ import (
 	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
 	"github.com/benpate/derp"
 	"github.com/benpate/digital-dome/dome4echo"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/form/widget"
 	"github.com/benpate/hannibal"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
+	"github.com/benpate/uri"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -95,7 +95,6 @@ func main() {
 
 	// Global middleware
 	// TODO: HIGH: Implement echo.Secure - https://echo.labstack.com/docs/middleware/secure
-	// TODO: HIGH: Implement CSRF protection - https://echo.labstack.com/docs/middleware/csrf
 	// TODO: MEDIUM: Implement Rate Limiter - https://echo.labstack.com/docs/middleware/rate-limiter
 	// TODO: LOW: Implement Timeout - https://echo.labstack.com/docs/middleware/timeout
 	// TODO: LOW: Implement GZip - https://echo.labstack.com/docs/middleware/gzip
@@ -163,6 +162,10 @@ func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 	// Middleware for setup pages
 	e.Use(mw.Localhost())
 
+	// CSRF protection: the setup console has no authentication, so this is the only
+	// thing preventing a malicious web page from posting configuration changes to localhost
+	e.Use(mw.CrossOriginProtection())
+
 	// Setup Routes
 	e.GET("/", handler.SetupPageGet(factory, setupTemplates, "index.html"))
 	e.GET("/config", handler.SetupGetConfig(factory))
@@ -188,25 +191,40 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	log.Info().Msg("Starting Emissary Server.")
 
-	// WAF Middleware
+	// Recovery Middleware to catch panics
 	e.Pre(middleware.Recover())
+
+	// Web Application Firewall Middleware
 	e.Pre(dome4echo.New(factory.DigitalDome()))
 
+	// Enforce HTTPS for public traffic: redirect insecure requests, and assert HSTS
+	// on secure ones so browsers upgrade every future request themselves
 	e.Pre(mw.HttpsRedirect)
+
+	// Remove trailing slashes
 	e.Pre(middleware.RemoveTrailingSlash())
 
-	// Middleware for standard pages
-	// e.Use(steranko.Middleware(factory))
-	e.Use(middleware.CORS())
+	// CORS Middleware
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		Skipper:          middleware.DefaultSkipper, // Default skipper DOES NOT skip this middleware
+		AllowOrigins:     []string{"*"},             // Allow all origins
+		AllowMethods:     []string{http.MethodGet},  // But only allow GET requests
+		AllowCredentials: false,                     // And DO NOT allow credentials to be sent to remote servers. (this is a default, but it's here to be explicit)
+	}))
 
-	// TODO: Commonly accessed routest that we should serve
+	// CSRF protection: reject state-changing requests from other web origins.
+	// This backstops the SameSite=Lax cookie policy, which is enforced only by the browser.
+	e.Use(mw.CrossOriginProtection())
+
+	// Restore Steranko in the future
+	// e.Use(steranko.Middleware(factory))
+
+	// Common routes (but not .well-known)
 	e.GET("/robots.txt", handler.RobotsTxt)                 // https://developers.google.com/search/docs/advanced/robots/create-robots-txt
 	e.GET("/sitemap.xml", handler.TBD)                      // https://developers.google.com/search/docs/advanced/sitemaps/build-sitemap
 	e.GET("/humans.txt", handler.TBD)                       // http://humanstxt.org/
 	e.GET("/ads.txt", handler.TBD)                          // https://iabtechlab.com/standards/ads-txt/
 	e.GET("/security.txt", handler.TBD)                     // https://securitytxt.org/
-	e.GET("/.well-known/security.txt", handler.TBD)         // https://securitytxt.org/
-	e.GET("/.well-known/x-nodeinfo2", handler.TBD)          // Friendica polls this route
 	e.GET("/poco", handler.TBD)                             // Friendica polls this route
 	e.GET("/api/**", handler.TBD)                           // Mastodon API?
 	e.GET("/favicon.ico", handler.TBD)                      // https://developer.mozilla.org/en-US/docs/Glossary/Favicon
@@ -226,7 +244,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.api/collectionHeader", handler.WithAuthenticatedAPI(factory, handler.GetAPICollectionHeader))
 	e.GET("/.checkout", handler.WithProduct(factory, handler.GetCheckout))
 	e.GET("/.checkout/response", handler.WithMerchantAccountJWT(factory, handler.GetCheckoutResponse))
-	e.GET("/.echo", handler.GetEcho)
+	e.GET("/.echo", handler.GetEcho(factory))
 	e.POST("/.follower/new", handler.WithFactory(factory, handler.PostEmailFollower))
 	e.GET("/.geocode/network", handler.WithFactory(factory, handler.GetGeocodeNetwork))
 	e.GET("/.geocode/autocomplete", handler.WithFactory(factory, handler.GetGeocodeAutocomplete))
@@ -238,6 +256,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.oembed", handler.WithFactory(factory, handler.GetOEmbed))
 	e.POST("/.ostatus/discover", handler.WithFactory(factory, handler.PostOStatusDiscover))
 	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
+	e.POST("/.proxy", handler.WithAuthenticatedUser(factory, handler.PostProxyURL))
 	e.GET("/.searchTag/:searchTagId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetSearchTagAttachment))
 	e.GET("/.sso", handler.WithDomain(factory, handler.GetSingleSignOn))
 	// e.GET("/.stripe/connect", handler.WithAuthenticatedUser(factory, handler.GetStripe)) // Replaced with Stripe Connect
@@ -255,10 +274,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.validate/signupCode", handler.WithFactory(factory, handler.GetValidateSignupCode))
 	e.GET("/.validate/streamToken", handler.WithFactory(factory, handler.GetValidateStreamToken))
 	e.GET("/.validate/username", handler.WithFactory(factory, handler.GetValidateUsername))
-	e.GET("/.webmention", handler.TBD)
-	e.POST("/.webmention", handler.WithFactory(factory, handler.PostWebMention))
-	e.GET("/.websub/:userId/:followingId", handler.WithFactory(factory, handler.GetWebSubClient))
-	e.POST("/.websub/:userId/:followingId", handler.WithFactory(factory, handler.PostWebSubClient))
+	e.GET("/.web-push-worker.js", handler.GetWebPushWorker) // Web Push service worker (must be served from site root for full scope)
 	e.GET("/.widgets/:widgetId/:bundleId", handler.GetWidgetBundle(factory))
 	e.GET("/.widgets/:widgetId/resources/:filename", handler.GetWidgetResource(factory))
 
@@ -271,11 +287,18 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.well-known/nodeinfo", handler.WithFactory(factory, handler.GetNodeInfo))
 	e.GET("/.well-known/nodeinfo/2.0", handler.WithFactory(factory, handler.GetNodeInfo20))
 	e.GET("/.well-known/nodeinfo/2.1", handler.WithFactory(factory, handler.GetNodeInfo21))
-	e.GET("/.well-known/oauth-authorization-server", handler.TBD)
+	e.GET("/.well-known/oauth-authorization-server", handler.WithFactory(factory, handler.GetOAuthWellKnown))
+	e.GET("/.well-known/openid-configuration", handler.WithFactory(factory, handler.GetOAuthWellKnown))
+	e.GET("/.well-known/security.txt", handler.TBD) // https://securitytxt.org/
+	e.GET("/.well-known/x-nodeinfo2", handler.TBD)  // Friendica polls this route
 
 	// Authentication Pages
 	e.GET("/signin", handler.WithFactory(factory, handler.GetSignIn))
 	e.POST("/signin", handler.WithFactory(factory, handler.PostSignIn))
+	e.GET("/signin/reset", handler.WithFactory(factory, handler.GetResetPassword))
+	e.POST("/signin/reset", handler.WithFactory(factory, handler.PostResetPassword))
+	e.GET("/signin/reset-code", handler.WithFactory(factory, handler.GetResetCode))
+	e.POST("/signin/reset-code", handler.WithFactory(factory, handler.PostResetCode))
 	e.GET("/signout", handler.WithFactory(factory, handler.GetSignOut))
 	e.POST("/signout", handler.WithFactory(factory, handler.PostSignOut))
 	e.GET("/register", handler.WithRegistration(factory, handler.GetRegister))
@@ -283,10 +306,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/register", handler.WithRegistration(factory, handler.PostRegister))
 	e.GET("/register/complete", handler.WithRegistration(factory, handler.GetCompleteRegistration))
 	e.POST("/register/update", handler.WithRegistration(factory, handler.PostRegister))
-	e.GET("/signin/reset", handler.WithFactory(factory, handler.GetResetPassword))
-	e.POST("/signin/reset", handler.WithFactory(factory, handler.PostResetPassword))
-	e.GET("/signin/reset-code", handler.WithFactory(factory, handler.GetResetCode))
-	e.POST("/signin/reset-code", handler.WithFactory(factory, handler.PostResetCode))
 
 	// Domain Pages
 	e.GET("/.domain/attachments/:attachmentId", handler.WithFactory(factory, handler.GetDomainAttachment))
@@ -303,17 +322,12 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// Hard-coded routes for additional stream services
 	e.GET("/:stream/attachments/:attachmentId", handler.WithStream(factory, handler.GetStreamAttachment))
 	e.GET("/:stream/qrcode", handler.WithStream(factory, handler.GetQRCode_Stream))
-	e.GET("/:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
-	e.GET("/:objectId/sse/updated", handler.WithFactory(factory, handler.ServerSentEvent_Updated))
-	e.GET("/:objectId/sse/child-updated", handler.WithFactory(factory, handler.ServerSentEvent_ChildUpdated))
-	e.GET("/:objectId/sse/new-replies", handler.WithFactory(factory, handler.ServerSentEvent_NewReplies))
-	e.GET("/:objectId/sse/import-progress", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_ImportProgress))
-	e.GET("/@:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
-	e.GET("/@:objectId/sse/updated", handler.WithFactory(factory, handler.ServerSentEvent_Updated))
-	e.GET("/@:objectId/sse/following-updated", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_FollowingUpdated))
-	e.GET("/@:objectId/sse/inbox", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Inbox))
-	e.GET("/@:objectId/sse/inbox/direct-messages", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Inbox_DirectMessage))
-	e.GET("/@:objectId/sse/inbox/direct-messages/mls", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Inbox_DirectMessage_MLS))
+	e.GET("/:stream/sse", handler.WithStream(factory, handler.ServerSentEvent_Stream))
+	e.GET("/:stream/sse/updated", handler.WithStream(factory, handler.ServerSentEvent_Stream_Updated))
+	e.GET("/:stream/sse/child-updated", handler.WithStream(factory, handler.ServerSentEvent_Stream_ChildUpdated))
+	e.GET("/:stream/sse/new-replies", handler.WithStream(factory, handler.ServerSentEvent_Stream_NewReplies))
+
+	e.GET("/:objectId/sse/import-progress", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Object_ImportProgress))
 
 	// ActivityPub pages for the application actor
 	e.GET("/@application", handler.WithFactory(factory, handler.GetApplicationActor))
@@ -345,8 +359,16 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@me/newsfeed", handler.WithAuthenticatedUser(factory, handler.PostNewsfeed))
 	e.GET("/@me/newsfeed/:action", handler.WithAuthenticatedUser(factory, handler.GetNewsfeed))
 	e.POST("/@me/newsfeed/:action", handler.WithAuthenticatedUser(factory, handler.PostNewsfeed))
+
+	e.GET("/@me/notifications", handler.WithAuthenticatedUser(factory, handler.GetNotifications))
+	e.POST("/@me/notifications", handler.WithAuthenticatedUser(factory, handler.PostNotifications))
+	e.GET("/@me/notifications/:action", handler.WithAuthenticatedUser(factory, handler.GetNotifications))
+	e.POST("/@me/notifications/:action", handler.WithAuthenticatedUser(factory, handler.PostNotifications))
+
 	e.GET("/@me/outbox", handler.WithAuthenticatedUser(factory, ap_user.GetOutboxCollection))
 	e.POST("/@me/outbox", handler.WithAuthenticatedUser(factory, ap_user.PostOutbox))
+	e.POST("/@me/push-subscriptions", handler.WithAuthenticatedUser(factory, handler.PostPushSubscription))
+	e.DELETE("/@me/push-subscriptions", handler.WithAuthenticatedUser(factory, handler.DeletePushSubscription))
 	e.GET("/@me/settings", handler.WithAuthenticatedUser(factory, handler.GetSettings))
 	e.POST("/@me/settings", handler.WithAuthenticatedUser(factory, handler.PostSettings))
 	e.GET("/@me/settings/:action", handler.WithAuthenticatedUser(factory, handler.GetSettings))
@@ -361,6 +383,14 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@me/intent/like", handler.WithAuthenticatedUser(factory, handler.GetIntent_Like))
 	e.POST("/@me/intent/like", handler.WithAuthenticatedUser(factory, handler.PostIntent_Like))
 	e.GET("/@me/intent/continue", handler.WithAuthenticatedUser(factory, handler.GetIntent_Continue))
+
+	e.GET("/@me/sse", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me))
+	e.GET("/@me/sse/updated", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Updated))
+	e.GET("/@me/sse/following-updated", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_FollowingUpdated))
+	e.GET("/@me/sse/inbox", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Inbox))
+	e.GET("/@me/sse/inbox/direct-messages", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Inbox_DirectMessage))
+	e.GET("/@me/sse/inbox/direct-messages/mls", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Inbox_DirectMessage_MLS))
+	e.GET("/@me/sse/notifications", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Notifications))
 
 	e.GET("/@guest", handler.WithIdentity(factory, handler.GetIdentity))
 	e.POST("/@guest", handler.WithIdentity(factory, handler.PostIdentity))
@@ -392,7 +422,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@search_:searchId/pub/outbox/:searchResultId", handler.WithSearchQuery(factory, ap_search.GetOutboxMessage))
 
 	// Routes for Users
-	e.HEAD("/@:userId", handler.WithUser(factory, handler.HeadOutbox))
+	e.HEAD("/@:userId", handler.WithUser(factory, handler.HeadOutbox)) // NOSONAR (don't need constants for server routes.)
 	e.GET("/@:userId", handler.WithUserForwarding(factory, handler.GetOutbox))
 	e.POST("/@:userId", handler.WithUser(factory, handler.PostOutbox))
 	e.GET("/@:userId/:action", handler.WithUser(factory, handler.GetOutbox))
@@ -415,6 +445,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))
 	e.GET("/@:userId/pub/blocked", handler.WithUser(factory, ap_user.GetBlockedCollection))
 	e.GET("/@:userId/pub/blocked/:ruleId", handler.WithUser(factory, ap_user.GetBlock))
+	e.GET("/@:userId/pub/collections/:collectionId", handler.WithActorAndUser(factory, ap_user.GetCollection))
 	e.GET("/@:userId/pub/disliked", handler.WithUser(factory, ap_user.GetResponseCollection))
 	e.GET("/@:userId/pub/disliked/:response", handler.WithUser(factory, ap_user.GetResponse))
 	e.GET("/@:userId/pub/featured", handler.WithUser(factory, ap_user.GetFeaturedCollection))
@@ -428,22 +459,28 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/keyPackages", handler.WithUser(factory, ap_user.GetKeyPackageCollection))
 	e.GET("/@:userId/pub/keyPackages/:keyPackageId", handler.WithUser(factory, ap_user.GetKeyPackageRecord))
 	e.GET("/@:userId/pub/objects", handler.WithUser(factory, ap_user.GetObjectsCollection))
-	e.GET("/@:userId/pub/objects/:objectId", handler.WithUser(factory, ap_user.GetObject))
+	e.GET("/@:userId/pub/objects/:objectId", handler.WithActor(factory, ap_user.GetObject))
 	e.GET("/@:userId/pub/outbox", handler.WithUser(factory, ap_user.GetOutboxCollection))
 	e.POST("/@:userId/pub/outbox", handler.WithAuthenticatedUser(factory, ap_user.PostOutbox))
 	e.GET("/@:userId/pub/outbox/:messageId", handler.WithUser(factory, ap_user.GetOutboxActivity))
-	e.GET("/@:userId/pub/shared", handler.WithUser(factory, ap_user.GetResponseCollection))
-	e.GET("/@:userId/pub/shared/:response", handler.WithUser(factory, ap_user.GetResponse))
-	e.GET("/@:userId/pub/liked", handler.WithUser(factory, ap_user.GetResponseCollection))
-	e.GET("/@:userId/pub/liked/:response", handler.WithUser(factory, ap_user.GetResponse))
+	e.POST("/@:userId/pub/proxy", handler.WithAuthenticatedUser(factory, handler.PostProxyURL))
+
+	// Removing these paths for now. They're not in the standard ActivityPub specification.
+	// e.GET("/@:userId/pub/liked", handler.WithUser(factory, ap_user.GetResponseCollection))
+	// e.GET("/@:userId/pub/liked/:response", handler.WithUser(factory, ap_user.GetResponse))
+	// e.GET("/@:userId/pub/shared", handler.WithUser(factory, ap_user.GetResponseCollection))
+	// e.GET("/@:userId/pub/shared/:response", handler.WithUser(factory, ap_user.GetResponse))
 
 	// ActivityPub Routes for Streams
 	e.GET("/:stream/pub", handler.WithTemplate(factory, ap_stream.GetJSONLD))
-	e.POST("/:stream/pub/inbox", handler.WithTemplate(factory, ap_stream.PostInbox))
-	e.GET("/:stream/pub/outbox", handler.WithTemplate(factory, ap_stream.GetOutboxCollection))
-	e.GET("/:stream/pub/followers", handler.WithTemplate(factory, ap_stream.GetFollowersCollection))
 	e.GET("/:stream/pub/children", handler.WithStream(factory, ap_stream.GetChildrenCollection))
-	e.GET("/:stream/pub/context", handler.WithStream(factory, ap_stream.GetContextCollection))
+	e.GET("/:stream/pub/dislikes", handler.WithStream(factory, ap_stream.GetDislikesCollection))
+	e.GET("/:stream/pub/followers", handler.WithTemplate(factory, ap_stream.GetFollowersCollection))
+	e.POST("/:stream/pub/inbox", handler.WithTemplate(factory, ap_stream.PostInbox))
+	e.GET("/:stream/pub/likes", handler.WithStream(factory, ap_stream.GetLikesCollection))
+	e.GET("/:stream/pub/outbox", handler.WithTemplate(factory, ap_stream.GetOutboxCollection))
+	e.GET("/:stream/pub/replies", handler.WithActorAndStream(factory, ap_stream.GetRepliesCollection))
+	e.GET("/:stream/pub/shares", handler.WithStream(factory, ap_stream.GetSharesCollection))
 
 	// Domain Admin Pages
 	e.GET("/admin", handler.RedirectTo("/admin/domain/index"))
@@ -456,6 +493,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/admin/reindex-activitystream-cache", handler.WithOwner(factory, handler.ReIndexActivityStreamCache))
 	e.POST("/admin/index-all-streams", handler.WithOwner(factory, handler.IndexAllStreams))
 	e.POST("/admin/index-all-users", handler.WithOwner(factory, handler.IndexAllUsers))
+	e.POST("/admin/reindex-replies", handler.WithOwner(factory, handler.ReindexReplies))
 
 	// Startup Wizard
 	e.GET("/startup", handler.WithOwner(factory, handler.GetStartup))
@@ -463,7 +501,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/startup", handler.WithOwner(factory, handler.PostStartup))
 
 	// OAuth Client Connections
-	e.GET("/oauth/metadata", handler.WithFactory(factory, handler.GetOAuthMetadata))
+	e.GET("/oauth/metadata", handler.WithFactory(factory, handler.GetOAuthClientMetadata))
 	e.GET("/oauth/clients/:provider", handler.WithOwner(factory, handler.GetOAuth))
 	e.GET("/oauth/clients/:provider/callback", handler.WithOwner(factory, handler.GetOAuthCallback), mw.AllowCSR)
 	e.GET("/oauth/clients/import/callback", handler.WithAuthenticatedUser(factory, handler.GetOAuthImportCallback))
@@ -495,7 +533,7 @@ func startHTTPS(factory *server.Factory, e *echo.Echo, options ...config.Option)
 	if portString, ok := config.HTTPSPortString(); ok {
 
 		// Find all NON-LOCAL domain names.  We need AT LEAST ONE to get an SSL Certificate
-		domains := slice.Filter(config.DomainNames(), dt.NotLocalhost)
+		domains := slice.Filter(config.DomainNames(), uri.NotLocalHostname)
 
 		if len(domains) == 0 {
 			log.Info().Msg("Skipping HTTPS server because there are no non-local domains.")
@@ -593,6 +631,14 @@ func errorHandler(err error, ctx echo.Context) {
 	// Special handling of permisssion errors
 	request := ctx.Request()
 
+	// RULE: If the client disconnected, then there is nobody to respond to, and the
+	// error is just noise (HTMX aborts in-flight requests when the user navigates).
+	// Log quietly and move on.
+	if request.Context().Err() != nil {
+		log.Debug().Str("url", request.URL.String()).Msg("Request canceled by client")
+		return
+	}
+
 	// Forward "Unauthorized" requests to the signin page
 	if derp.IsUnauthorized((err)) {
 
@@ -602,10 +648,10 @@ func errorHandler(err error, ctx echo.Context) {
 		}
 
 		// Otherwise, forward the user to the signin page
-		uri := request.URL
+		requestURL := request.URL
 
-		if currentPath := uri.Path; currentPath != "/signin" {
-			nextPage := uri.String()
+		if currentPath := requestURL.Path; currentPath != "/signin" {
+			nextPage := requestURL.String()
 			_ = ctx.Redirect(http.StatusSeeOther, "/signin?next="+url.QueryEscape(nextPage))
 			return
 		}
@@ -620,14 +666,15 @@ func errorHandler(err error, ctx echo.Context) {
 			err,
 			location,
 			"Unable to generate web page",
-			"url: "+dt.AddProtocol(request.Host)+request.URL.String(),
+			"url: "+uri.PrependProtocol(request.Host)+request.URL.String(),
 			"method: "+request.Method,
 			ctx.Request().Header,
 		),
 	)
 
 	// If this is a local request, then show developers a full error dump
-	if hostname := dt.TrueHostname(request); dt.IsLocalhost(hostname) {
+	// X-Forwarded-Host is not needed here because this is for development only.
+	if uri.IsLocalHostname(request.Host) {
 		_ = ctx.JSONPretty(derp.ErrorCode(err), err, "  ")
 		return
 	}

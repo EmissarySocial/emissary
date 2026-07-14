@@ -9,14 +9,14 @@ func ProductSchema() schema.Element {
 
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"productId":         schema.String{},
-			"userId":            schema.String{},
-			"merchantAccountId": schema.String{},
-			"remoteId":          schema.String{},
-			"name":              schema.String{},
-			"price":             schema.String{},
-			"icon":              schema.String{},
-			"adminHref":         schema.String{},
+			"productId":         schema.String{Format: "objectId"},
+			"userId":            schema.String{Format: "objectId"},
+			"merchantAccountId": schema.String{Format: "objectId"},
+			"remoteId":          schema.String{Format: "text", MaxLength: 256},
+			"name":              schema.String{Format: "text", MaxLength: 256},
+			"price":             schema.String{Format: "text", MaxLength: 64},
+			"icon":              schema.String{Format: "text", MaxLength: 64},
+			"adminHref":         schema.String{Format: "url"},
 		},
 	}
 }

@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/benpate/hannibal/collections"
@@ -22,6 +22,7 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/oauth2"
 )
@@ -116,7 +117,7 @@ func (service *Import) Save(session data.Session, record *model.Import, note str
 	const location = "service.Import.Save"
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(record); err != nil {
+	if _, err := service.Schema().Validate(record); err != nil {
 		return derp.Wrap(err, location, "Invalid Import record", record)
 	}
 
@@ -300,7 +301,7 @@ func (service *Import) calcStateChange(session data.Session, record *model.Impor
 		return service.doAuthorize(record)
 
 	case model.ImportStateDoImport:
-		return service.doImport(record)
+		return service.doImport(session, record)
 
 	case model.ImportStateDoMove:
 		return service.doMove(record)
@@ -378,13 +379,15 @@ func (service *Import) doAuthorize(record *model.Import) error {
 
 // doImport manages the transient state change from "DO-IMPORT"
 // to "IMPORTING"
-func (service *Import) doImport(record *model.Import) error {
+func (service *Import) doImport(session data.Session, record *model.Import) error {
 
-	// Start a background task to count all
-	service.queue.NewTask(
+	// Start a background task (post-commit) to count all
+	postcommit.Publish(
+		session,
+		service.queue,
 		"ImportStartup",
 		mapof.Any{
-			"host":     dt.NameOnly(service.host),
+			"host":     uri.Hostname(service.host),
 			"userId":   record.UserID,
 			"importId": record.ImportID,
 		},

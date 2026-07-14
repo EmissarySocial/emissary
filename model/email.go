@@ -1,27 +1,32 @@
 package model
 
 import (
+	htmltemplate "html/template"
 	"io/fs"
-	"text/template"
+	texttemplate "text/template"
 )
 
 type Email struct {
-	EmailID   string             // Unique identifier for this email.
-	EmailRole string             // Role of the email - for system emails that may have multiple options
-	Model     string             // Object type that this email is associated with
-	Headers   *template.Template // Additional email header values
-	To        *template.Template // Template for the email address to send this email to
-	Subject   *template.Template // Template for the email subject
-	Body      *template.Template // Template for the email body
-	Resources fs.FS              // File system containing additional files (like images) required by this email
+	EmailID   string                 // Unique identifier for this email.
+	EmailRole string                 // Role of the email - for system emails that may have multiple options
+	Model     string                 // Object type that this email is associated with
+	Headers   *texttemplate.Template // Additional email header values (plain-text context)
+	To        *texttemplate.Template // Template for the email address to send this email to (plain-text context)
+	Subject   *texttemplate.Template // Template for the email subject (plain-text context)
+	Body      *htmltemplate.Template // Template for the HTML email body. This uses html/template so that
+	// interpolated values are contextually auto-escaped, exactly like web pages. Using text/template here
+	// would let user- or remote-controlled data inject arbitrary HTML into outgoing emails (CWE-79/CWE-116).
+	Resources fs.FS // File system containing additional files (like images) required by this email
 }
 
-func NewEmail(emailID string, funcMap template.FuncMap) Email {
+// NewEmail creates an empty Email. funcMap is an html/template.FuncMap (the same map the web
+// templates use); text/template accepts the same map type, so it is shared across all four templates.
+func NewEmail(emailID string, funcMap htmltemplate.FuncMap) Email {
 	return Email{
 		EmailID: emailID,
-		Headers: template.New("").Funcs(funcMap),
-		To:      template.New("").Funcs(funcMap),
-		Subject: template.New("").Funcs(funcMap),
-		Body:    template.New("").Funcs(funcMap),
+		Headers: texttemplate.New("").Funcs(texttemplate.FuncMap(funcMap)),
+		To:      texttemplate.New("").Funcs(texttemplate.FuncMap(funcMap)),
+		Subject: texttemplate.New("").Funcs(texttemplate.FuncMap(funcMap)),
+		Body:    htmltemplate.New("").Funcs(funcMap),
 	}
 }

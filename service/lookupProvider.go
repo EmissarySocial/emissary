@@ -79,6 +79,15 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 	case "merchantAccounts-all-products":
 		return service.getMerchantAccountsAllProducts()
 
+	case "notification-channels":
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Value: model.NotificationChannelReply, Label: "Replies to my posts", Description: "Someone replies to one of your posts.", Icon: "reply"},
+			form.LookupCode{Value: model.NotificationChannelMentionFollowing, Label: "Mentions from people I follow", Description: "Someone you follow tags you in a public post.", Icon: "chat"},
+			form.LookupCode{Value: model.NotificationChannelMentionNotFollowing, Label: "Mentions from people I don't follow", Description: "Someone you don't follow tags you in a public post.", Icon: "chat"},
+			form.LookupCode{Value: model.NotificationChannelFollow, Label: "New Followers", Description: "Someone starts following you.", Icon: "person"},
+			form.LookupCode{Value: model.NotificationChannelReaction, Label: "Boosts and Likes", Description: "Someone boosts or likes one of your posts.", Icon: "heart"},
+		)
+
 	case "outbox-templates":
 		return form.ReadOnlyLookupGroup(service.factory.Template().ListByTemplateRole("user-outbox"))
 
@@ -97,6 +106,14 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 			form.LookupCode{Label: "Fire", Group: "Like", Value: "🔥"},
 		)
 
+	case "actor-rule-buttons":
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Value: "", Icon: "check-circle", Label: "Allow", Description: "All interactions are allowed: You can see posts from this person, and they can see your posts."},
+			form.LookupCode{Value: "LABEL", Icon: "tag", Label: "Label", Description: "All interactions are allowed, but a content warning is added to this person's posts."},
+			form.LookupCode{Value: "MUTE", Icon: "mic-mute", Label: "Mute", Description: "This person's posts are hidden, but your posts will still appear in their newsfeed. (one-way block)"},
+			form.LookupCode{Value: "BLOCK", Icon: "ban", Label: "Block", Description: "This person's posts are hidden, and your posts will not appear in their newsfeed. (two-way block)"},
+		)
+
 	case "rule-actions":
 		return form.NewReadOnlyLookupGroup(
 			form.LookupCode{Value: "LABEL", Label: "LABEL posts that match this rule"},
@@ -109,6 +126,45 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 			form.LookupCode{Label: "Filter by Person", Value: model.RuleTypeActor},
 			form.LookupCode{Label: "Filter by Domain", Value: model.RuleTypeDomain},
 			form.LookupCode{Label: "Filter by Tags & Keywords", Value: model.RuleTypeContent},
+		)
+
+	case "rule-reasons":
+
+		return form.NewReadOnlyLookupGroup(
+			form.LookupCode{Value: "account-takeover", Label: "Account Takeover"},
+			form.LookupCode{Value: "apt", Label: "Advanced Persistent Threat"},
+			form.LookupCode{Value: "astroturfing", Label: "Astroturfing"},
+			form.LookupCode{Value: "brigading", Label: "Brigading"},
+			form.LookupCode{Value: "catfishing", Label: "Catfishing"},
+			form.LookupCode{Value: "cib", Label: "Coordinated Inauthentic Behaviour"},
+			form.LookupCode{Value: "content-and-conduct-related-risk", Label: "Content- and Conduct-Related Risk"},
+			form.LookupCode{Value: "copyright-infringement", Label: "Copyright Infringement"},
+			form.LookupCode{Value: "counterfeit", Label: "Counterfeit"},
+			form.LookupCode{Value: "cross-platform-abuse", Label: "Cross-Platform Abuse"},
+			form.LookupCode{Value: "csam", Label: "Child Sexual Abuse Material"},
+			form.LookupCode{Value: "csea", Label: "Child Sexual Exploitation and Abuse"},
+			form.LookupCode{Value: "defamation", Label: "Defamation"},
+			form.LookupCode{Value: "dehumanisation", Label: "Dehumanisation"},
+			form.LookupCode{Value: "disinformation", Label: "Disinformation"},
+			form.LookupCode{Value: "doxxing", Label: "Doxxing"},
+			form.LookupCode{Value: "explicit-content", Label: "Explicit Content"},
+			form.LookupCode{Value: "farming", Label: "Farming"},
+			form.LookupCode{Value: "glorification-of-violence", Label: "Glorification of Violence"},
+			form.LookupCode{Value: "hate-speech", Label: "Hate Speech"},
+			form.LookupCode{Value: "impersonation", Label: "Impersonation"},
+			form.LookupCode{Value: "incitement", Label: "Incitement"},
+			form.LookupCode{Value: "misinformation", Label: "Misinformation"},
+			form.LookupCode{Value: "ncii", Label: "Non-Consensual Intimate Imagery"},
+			form.LookupCode{Value: "online-harassment", Label: "Online Harassment"},
+			form.LookupCode{Value: "phishing", Label: "Phishing"},
+			form.LookupCode{Value: "service-abuse", Label: "Service Abuse"},
+			form.LookupCode{Value: "sock-puppet", Label: "Sock Puppet"},
+			form.LookupCode{Value: "sextortion", Label: "Sextortion"},
+			form.LookupCode{Value: "spam", Label: "Spam"},
+			form.LookupCode{Value: "synthetic-media", Label: "Synthetic Media"},
+			form.LookupCode{Value: "troll", Label: "Troll"},
+			form.LookupCode{Value: "tvec", Label: "Terrorist and Violent Extremist Content"},
+			form.LookupCode{Value: "violent-threat", Label: "Violent Threat"},
 		)
 
 	case "searchTag-states":

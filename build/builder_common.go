@@ -7,9 +7,9 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/form"
@@ -21,6 +21,7 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/sniff"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -104,27 +105,39 @@ func (w Common) Method() string {
 	return w._request.Method
 }
 
-// Host returns the protocol + the Hostname
+// Host is the absolute origin of this domain: protocol + hostname + port.
+// e.g. "http://localhost:8080" (dev) or "https://example.com" (prod).
 func (w Common) Host() string {
-	return w.Protocol() + w.Hostname()
+	return w._factory.Host()
 }
 
-// URL returns the originally requested URL
+// Hostname is the bare domain only -- no protocol, no port. Use for federation
+// identity (@user@hostname) and comparisons. e.g. "localhost".
+func (w Common) Hostname() string {
+	return w._factory.Hostname()
+}
+
+// Protocol is the scheme for this domain, including "://". e.g. "http://".
+func (w Common) Protocol() string {
+	return uri.GuessProtocolForHostname(w.Hostname())
+}
+
+// URL is the current page as an ABSOLUTE url (Host + path + query). Use for
+// canonical links, og:url, and email -- anywhere a full URL is required.
+// e.g. "http://localhost:8080/@me/settings".
 func (w Common) URL() string {
 	return w.Host() + w._request.URL.RequestURI()
 }
 
-// Protocol returns http:// or https:// used for this request
-func (w Common) Protocol() string {
-	return dt.Protocol(w.Hostname())
+// RelativeURL is the current page as a ROOT-RELATIVE ref -- path + query, no origin.
+// Use for form actions and htmx targets: the browser supplies the origin, so it is
+// correct on any port or proxy (unlike URL, which hard-codes the server's own port).
+// e.g. "/@me/settings".
+func (w Common) RelativeURL() string {
+	return w._request.URL.RequestURI()
 }
 
-// Hostname returns the configured hostname for this request
-func (w Common) Hostname() string {
-	return dt.TrueHostname(w._request)
-}
-
-// Path returns the HTTP Request path
+// Path is the request path only -- no origin, no query. e.g. "/@me/settings".
 func (w Common) Path() string {
 	return w._request.URL.Path
 }
@@ -199,6 +212,44 @@ func (w Common) UserCanMLS() bool {
 	}
 
 	return false
+}
+
+// HasUnreadNotifications returns TRUE if the authenticated User has at least one unread
+// notification.  It is available on every builder (via Common) so the global nav dot can
+// render on any page.  No counts — the dot is a simple yes/no.
+func (w Common) HasUnreadNotifications() bool {
+
+	if w.AuthenticatedID().IsZero() {
+		return false
+	}
+
+	hasUnread, err := w._factory.Notification().HasUnread(w._session, w.AuthenticatedID())
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "build.Common.HasUnreadNotifications", "Unable to check unread notifications", w.AuthenticatedID()))
+		return false
+	}
+
+	return hasUnread
+}
+
+// WebPushPublicKey returns this domain's VAPID public key (generating it on first use), so the
+// browser can subscribe to Web Push.  Returns "" if the user is not authenticated or key generation
+// fails (the UI degrades to no push).
+func (w Common) WebPushPublicKey() string {
+
+	if w.AuthenticatedID().IsZero() {
+		return ""
+	}
+
+	publicKey, err := w._factory.WebPush().PublicKey(w._session)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "build.Common.WebPushPublicKey", "Unable to load VAPID public key"))
+		return ""
+	}
+
+	return publicKey
 }
 
 // UserCanBridgeToBluesky returns TRUE if the current user has permission to bridge to Bluesky
@@ -399,7 +450,7 @@ func (w Common) ActivityStreamCollection(url string) sliceof.String {
 
 	// Load the collection from the Interwebs
 	activityService := w._factory.ActivityStream()
-	object, err := activityService.UserClient(w.AuthenticatedID()).Load(url)
+	object, err := activityService.UserClient(w.AuthenticatedID()).Load(url, ascache.WithWriteOnly())
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to load ActivityStream Collection. Returning empty collection to template."))
@@ -480,7 +531,7 @@ func (w Common) IsDesktop() bool {
 
 // IsLocalhost returns TRUE if the request was made to a local domain (localhost, 127.0.0.1, etc.)
 func (w Common) IsLocalhost() bool {
-	return dt.IsLocalhost(w.Hostname())
+	return uri.IsLocalHostname(w.Hostname())
 }
 
 // IsMe returns TRUE if the provided URI is the profileURL of the current user

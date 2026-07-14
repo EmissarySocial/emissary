@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"github.com/benpate/derp"
+	"github.com/benpate/uri"
 )
 
 // StepRedirectTo is a Step that sends an HTTP redirect to another page.
@@ -38,6 +39,13 @@ func (step StepRedirectTo) execute(builder Builder) PipelineBehavior {
 
 	if err := step.URL.Execute(&nextPage, builder); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error evaluating 'url'"))
+	}
+
+	// Reject dangerous or off-site-schemed targets. The value can be built from
+	// remote-influenced data, so a `javascript:`/`data:` scheme (or a protocol-
+	// relative host) must not become the redirect target.
+	if !uri.IsSafeRedirectURL(nextPage.String()) {
+		return Halt().WithError(derp.BadRequest(location, "Unsafe redirect target", nextPage.String()))
 	}
 
 	if err := redirect(builder.response(), step.StatusCode, nextPage.String()); err != nil {

@@ -1,0 +1,73 @@
+{{- /* newsfeed-menu.html renders the News Feed folder list: the "all folders" entry, the
+       sortable per-folder links, and "Add a Folder".  The dot (".") is a FolderList (via
+       .FoldersWithSelection "FOLDER").  Rendered inside newsfeed-sidebar.html on desktop,
+       and full-page by mobile.html.  Notifications live in their own template now (see
+       the user-notifications template and the global nav item in theme-default/navigation.html). */ -}}
+{{- $selectedID := .SelectedID -}}
+{{- $allFolders := $selectedID.IsZero -}}
+
+<a href="/@me/newsfeed/feed" class="turboclick menu-item ellipsis hover-trigger folder {{if $allFolders}}selected{{end}}">
+	<span>
+		{{- if $allFolders -}}
+			{{- iconFilled "folder" -}}
+		{{- else -}}
+			{{- icon "folder" -}}
+		{{- end }}
+	</span>
+	<span>All Folders</span>
+</a>
+
+<form class="sortable" hx-post="/@me/newsfeed/folder-sort" hx-push-url="false" hx-trigger="end" hx-swap="none">
+
+	{{- range .Folders -}}
+		{{- $folderID := .FolderID.Hex -}}
+		<a href="/@me/newsfeed/folder?folderId={{$folderID}}" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
+			<span>
+				{{- if eq $selectedID .FolderID -}}
+					{{- iconFilled .Icon -}}
+				{{- else -}}
+					{{- icon .Icon -}}
+				{{- end }}
+			</span>
+			<span>{{.Label}}</span>
+			<span class="folder-handle">
+				{{- if ne 0 .UnreadCount -}}
+					<span id="folder-unread-{{$folderID}}"
+					class="text-sm text-light-gray hover-hide">&#9679;</span>
+				{{- end -}}
+				<span class="hover-show">
+					{{icon "drag-handle"}}
+				</span>
+			</span>
+			<input type="hidden" name="keys" value="{{$folderID}}">
+		</a>
+	{{- end -}}
+
+</form>
+
+<div class="margin-vertical"></div>
+
+<div role="button" hx-get="/@me/newsfeed/folder-add" class="menu-item link turboclick" style="border:none;">
+	<span style="view-transition-name:app-sidebar-add-folder-icon;">{{icon "add"}}</span>
+	<span style="view-transition-name:app-sidebar-add-folder-label">Add a Folder</span>
+</div>
+
+<script>
+	// Sortable init must survive sidebar re-renders: this fragment is re-swapped by htmx on
+	// every refreshSidebar event, and htmx loads external scripts ASYNCHRONOUSLY -- so the
+	// library may not be defined yet when the inline script runs.  Init is idempotent
+	// (guarded per-node) and runs both immediately and from the script tag's onload.
+	function emissaryInitSortables() {
+		if (!window.Sortable) { return; }
+		var sortables = document.querySelectorAll(".sortable");
+		for (var node of sortables) {
+			if (node._emissarySortable) { continue; }
+			node._emissarySortable = new Sortable(node, {
+				animation: 150,
+				handle: '.folder-handle'
+			});
+		}
+	}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js" onload="emissaryInitSortables()"></script>
+<script>emissaryInitSortables();</script>

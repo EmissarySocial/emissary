@@ -38,7 +38,7 @@ func RenderProfileJSONLD(context echo.Context, factory *service.Factory, session
 
 	if domain.UserCanMLS(user) {
 		userJSON[vocab.PropertyMLSMessages] = user.ActivityPubInboxURL_DirectMessages_MLS()
-		userJSON[vocab.PropertyMLSKeyPackages] = user.ActivityPubMLSKeyPackagesURL()
+		userJSON[vocab.PropertyMLSKeyPackages] = user.ActivityPubKeyPackagesURL()
 	}
 
 	// Return the user's profile in JSON-LD format

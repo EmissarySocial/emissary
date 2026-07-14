@@ -16,7 +16,7 @@ const TopicNewReplies = 3
 const TopicImportProgress = 4
 
 // TopicFollowingUpdated is triggered when a Following record has a new status
-const TopicFollowingUpdated = 4
+const TopicFollowingUpdated = 8
 
 // TopicInboxActivity is triggered when there is new activity in a User's Inbox
 const TopicInboxActivity = 5
@@ -26,3 +26,6 @@ const TopicInboxActivity_DirectMessage = 6
 
 // TopicInboxActivity_DirectMessage_MLS is triggered when a new Direct Message with mediaType "message/mls" is received
 const TopicInboxActivity_DirectMessage_MLS = 7
+
+// TopicNotification is triggered when a User receives a new Notification (mention, reply, like, follow, etc.)
+const TopicNotification = 9

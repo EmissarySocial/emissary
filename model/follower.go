@@ -12,7 +12,7 @@ type Follower struct {
 	ParentType string             `bson:"type"`       // Type of record being followed (e.g. "User", "Stream", or "Search")
 	ParentID   primitive.ObjectID `bson:"parentId"`   // Unique identifier for the Stream that is being followed (including user's outboxes)
 	StateID    string             `bson:"stateId"`    // Unique identifier for the State of this Follower ("ACTIVE", "PENDING")
-	Method     string             `bson:"method"`     // Method of follower (e.g. "POLL", "WEBSUB", "RSS-CLOUD", "ACTIVITYPUB", "EMAIL")
+	Method     string             `bson:"method"`     // Method of follower (e.g. "POLL", "ACTIVITYPUB", "EMAIL")
 	Format     string             `bson:"format"`     // Format of the data being followed (e.g. "ATOM", "HTML", "JSON", "RSS", "XML")
 	Actor      PersonLink         `bson:"actor"`      // Person who is follower the User
 	Data       mapof.Any          `bson:"data"`       // Additional data about this Follower that depends on the follow method
@@ -90,7 +90,7 @@ func (follower Follower) ParentURL(host string) string {
 }
 
 // UnsubscribeLink returns a URL where an Email Follower can unsubscribe.
-// It returns an empty string for all other follower types (ActivityPub, WebSub, etc.)
+// It returns an empty string for all other follower types (ActivityPub, etc.)
 func (follower Follower) UnsubscribeLink(host string) string {
 
 	if follower.Method == FollowerMethodEmail {

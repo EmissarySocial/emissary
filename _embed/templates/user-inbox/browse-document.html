@@ -27,7 +27,7 @@
 		<div id="id_{{$document.Metadata.HashedID}}_content" class="content">
 
 			{{- if $document.HasContent -}}
-				{{- $document.Content | html -}}
+				{{- $document.Content | htmlMinimal -}}
 			{{- else if $document.HasSummary -}}
 				{{- $document.Summary -}}
 			{{- end -}}

@@ -12,7 +12,6 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/form"
@@ -92,43 +91,6 @@ func NewStreamWithoutTemplate(factory Factory, session data.Session, request *ht
 	}
 
 	return result, nil
-}
-
-// NewStreamFromURI creates a new Stream builder for the provided request context.
-// IMPORTANT: The stream parameter is expected to be an empty stream in the caller's scope that will be populated by this function.
-func NewStreamFromURI(serverFactory ServerFactory, session data.Session, request *http.Request, response http.ResponseWriter, stream *model.Stream, actionID string) (Stream, error) {
-
-	const location = "build.NewStreamFromURI"
-
-	hostname := dt.TrueHostname(request)
-
-	// Locate the requested domain name
-	factory, err := serverFactory.ByDomainName(hostname)
-
-	if err != nil {
-		return Stream{}, derp.Wrap(err, location, "Invalid domain")
-	}
-
-	// If Load the stream (using a stream in the caller's namespace)
-	streamService := factory.Stream()
-	token, defaultAction, err := streamService.ParsePath(request.URL)
-
-	if err != nil {
-		return Stream{}, derp.Wrap(err, location, "Invalid path")
-	}
-
-	// Try to load the Stream from the database
-	if err := streamService.LoadByToken(session, token, stream); err != nil {
-		return Stream{}, derp.Wrap(err, location, "Unable to load stream")
-	}
-
-	// If the calling function didn't specify an action, then use the default action from the URL
-	if actionID == "" {
-		actionID = defaultAction
-	}
-
-	// Create and return a new builder
-	return NewStreamWithoutTemplate(factory, session, request, response, stream, actionID)
 }
 
 /******************************************
@@ -365,14 +327,17 @@ func (w Stream) CreateDate() int64 {
 	return w._stream.CreateDate
 }
 
-// PublishDate returns the PublishDate of the stream being built
+// PublishDate returns the PublishDate of the stream being built, in SECONDS.
+// When the stream has no explicit PublishDate, it falls back to the creation time. CreateDate is a
+// journal field stored in MILLISECONDS, so it is divided down to seconds to match this method's unit
+// (returning it raw would yield a value ~1000x too large — a year-58000 date once formatted).
 func (w Stream) PublishDate() int64 {
 
 	if w._stream.PublishDate > 0 {
 		return w._stream.PublishDate
 	}
 
-	return w._stream.CreateDate
+	return w._stream.CreateDate / 1000
 }
 
 // UpdateDate returns the UpdateDate of the stream being built
@@ -635,33 +600,58 @@ func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option
 	return Stream{}
 }
 
-// Mentions returns a slice of all Mentions for this Stream
-func (w Stream) Mentions() ([]model.Mention, error) {
-	mentionService := w._factory.Mention()
-	return mentionService.QueryByObjectID(w._session, model.MentionTypeStream, w._stream.StreamID)
-}
-
 func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[ascache.Value] {
 	activityStreamsService := w._factory.ActivityStream()
 	minDate := convert.Int64(dateString)
 	return activityStreamsService.QueryRepliesAfterDate(w._request.Context(), w._stream.URL, minDate, int64(maxRows))
 }
 
-func (w Stream) ReplyLinksAfter(dateString string, maxRows int) (sliceof.Object[model.ObjectLink], error) {
-	contextService := w._factory.Context()
+func (w Stream) ReplyLinksAfter(dateString string, maxRows int) (sliceof.Object[model.CollectionItem], error) {
+	collectionItemService := w._factory.CollectionItem()
 	minDate := convert.Int64(dateString)
 	criteria := exp.GreaterThan("createDate", minDate)
 
-	result, err := contextService.QueryByInReplyTo(w._session, w._stream.URL, criteria, option.MaxRows(int64(maxRows)), option.SortAsc("createDate"))
-	return result, err
+	return collectionItemService.QueryByCollectionType(w._session, w._stream.StreamID, model.CollectionTypeReplies, criteria, option.MaxRows(int64(maxRows)), option.SortAsc("createDate"))
 }
 
+// LikeLinksAfter returns one page of "Like" CollectionItems for this Stream. Each carries
+// the URI of a Like activity that the template resolves via .ActivityStream.
+func (w Stream) LikeLinksAfter(dateString string, maxRows int) (sliceof.Object[model.CollectionItem], error) {
+	collectionItemService := w._factory.CollectionItem()
+	minDate := convert.Int64(dateString)
+	criteria := exp.GreaterThan("createDate", minDate)
+
+	return collectionItemService.QueryByCollectionType(w._session, w._stream.StreamID, model.CollectionTypeLikes, criteria, option.MaxRows(int64(maxRows)), option.SortAsc("createDate"))
+}
+
+// ShareLinksAfter returns one page of "Announce" (share) CollectionItems for this Stream. Each
+// carries the URI of an Announce activity that the template resolves via .ActivityStream.
+func (w Stream) ShareLinksAfter(dateString string, maxRows int) (sliceof.Object[model.CollectionItem], error) {
+	collectionItemService := w._factory.CollectionItem()
+	minDate := convert.Int64(dateString)
+	criteria := exp.GreaterThan("createDate", minDate)
+
+	return collectionItemService.QueryByCollectionType(w._session, w._stream.StreamID, model.CollectionTypeShares, criteria, option.MaxRows(int64(maxRows)), option.SortAsc("createDate"))
+}
+
+// ReplyCount returns the denormalized count of replies to this Stream.
 func (w Stream) ReplyCount() int {
-	return 0
+	return w._stream.ReplyCount
 }
 
-func (w Stream) ResponseCount() int {
-	return 0
+// LikeCount returns the denormalized count of "Like" responses to this Stream.
+func (w Stream) LikeCount() int {
+	return w._stream.LikeCount
+}
+
+// DislikeCount returns the denormalized count of "Dislike" responses to this Stream.
+func (w Stream) DislikeCount() int {
+	return w._stream.DislikeCount
+}
+
+// ShareCount returns the denormalized count of "Announce" (share) responses to this Stream.
+func (w Stream) ShareCount() int {
+	return w._stream.ShareCount
 }
 
 // Outbox returns a QueryBuilder for the current Stream's outbox

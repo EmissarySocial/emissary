@@ -4,10 +4,10 @@ import (
 	"iter"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -16,6 +16,7 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -106,7 +107,7 @@ func (service *Follower) Range(session data.Session, criteria exp.Expression, op
 func (service *Follower) Load(session data.Session, criteria exp.Expression, follower *model.Follower) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), follower); err != nil {
-		return derp.Wrap(err, "service.Follower.Load", "Unable to load Follower", criteria)
+		return derp.Wrap(err, "service.Follower.Load", "Loading Follower", criteria)
 	}
 
 	return nil
@@ -118,13 +119,13 @@ func (service *Follower) Save(session data.Session, follower *model.Follower, no
 	const location = "service.Follower.Save"
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(follower); err != nil {
+	if _, err := service.Schema().Validate(follower); err != nil {
 		return derp.Wrap(err, location, "Invalid Follower record", follower)
 	}
 
 	// Save the follower to the database
 	if err := service.collection(session).Save(follower, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Follower", follower, note)
+		return derp.Wrap(err, location, "Saving Follower", follower, note)
 	}
 
 	// Recalculate the follower count for this user
@@ -151,10 +152,12 @@ func (service *Follower) Delete(session data.Session, follower *model.Follower, 
 	// Maybe delete the SearchQuery if it's no longer needed
 	if follower.ParentType == model.FollowerTypeSearch {
 
-		service.queue.NewTask(
+		postcommit.Publish(
+			session,
+			service.queue,
 			"DeleteEmptySearchQuery",
 			mapof.Any{
-				"host":          dt.NameOnly(service.host),
+				"host":          uri.Hostname(service.host),
 				"searchQueryID": follower.ParentID,
 			},
 		)
@@ -273,7 +276,7 @@ func (service *Follower) LoadOrCreate(session data.Session, parentID primitive.O
 	}
 
 	// Other error is bad.  Return the error
-	return result, derp.Wrap(err, "service.Follower.LoadOrCreate", "Unable to load Follower", parentID, actorID)
+	return result, derp.Wrap(err, "service.Follower.LoadOrCreate", "Loading Follower", parentID, actorID)
 }
 
 // LoadByID loads a follower using the FollowerID
@@ -310,7 +313,7 @@ func (service *Follower) LoadBySecret(session data.Session, followerID primitive
 	// Load the Follower using the FollowerID
 	criteria := exp.Equal("_id", followerID)
 	if err := service.Load(session, criteria, follower); err != nil {
-		return derp.Wrap(err, location, "Unable to load follower", followerID)
+		return derp.Wrap(err, location, "Loading follower", followerID)
 	}
 
 	// Verify that the secret matches
@@ -419,48 +422,9 @@ func (service *Follower) QueryByParentAndDate(session data.Session, parentType s
 	return service.Query(session, criteria, option.SortDesc("createDate"), option.MaxRows(int64(pageSize)))
 }
 
-/******************************************
- * WebSub Queries
- ******************************************/
-
-// LoadByWebSub retrieves a follower based on the parentID and callback
-func (service *Follower) LoadByWebSub(session data.Session, objectType string, parentID primitive.ObjectID, callback string, result *model.Follower) error {
-
-	criteria := exp.
-		Equal("type", objectType).
-		AndEqual("parentId", parentID).
-		AndEqual("method", model.FollowerMethodWebSub).
-		AndEqual("actor.inboxUrl", callback)
-
-	return service.Load(session, criteria, result)
-}
-
-// LoadOrCreateByWebSub finds a follower based on the parentID and callback.  If no follower is found, a new record is created.
-func (service *Follower) LoadOrCreateByWebSub(session data.Session, objectType string, parentID primitive.ObjectID, callback string) (model.Follower, error) {
-
-	// Try to load the Follower from the database
-	result := model.NewFollower()
-	err := service.LoadByWebSub(session, objectType, parentID, callback, &result)
-
-	// If EXISTS, then we've found it.
-	if err == nil {
-		return result, nil
-	}
-
-	// If NOT EXISTS, then create a new one
-	if derp.IsNotFound(err) {
-		result.ParentID = parentID
-		result.ParentType = objectType
-		result.Method = model.FollowerMethodWebSub
-		result.Actor.InboxURL = callback
-		return result, nil
-	}
-
-	// If REAL ERROR, then derp
-	return result, derp.Wrap(err, "service.Follower.LoadByWebSub", "Unable to load follower", parentID, callback)
-}
-
 func (service *Follower) LoadParentActor(session data.Session, follower *model.Follower) (model.PersonLink, error) {
+
+	const location = "service.Follower.LoadParentActor"
 
 	switch follower.ParentType {
 
@@ -468,7 +432,7 @@ func (service *Follower) LoadParentActor(session data.Session, follower *model.F
 
 		user := model.NewUser()
 		if err := service.userService.LoadByID(session, follower.ParentID, &user); err != nil {
-			return model.PersonLink{}, derp.Wrap(err, "service.Follower.LoadParentActor", "Unable to load parent user", follower)
+			return model.PersonLink{}, derp.Wrap(err, location, "Loading parent user", follower)
 		}
 
 		return user.PersonLink(), nil
@@ -477,14 +441,14 @@ func (service *Follower) LoadParentActor(session data.Session, follower *model.F
 
 		stream := model.NewStream()
 		if err := service.streamService.LoadByID(session, follower.ParentID, &stream); err != nil {
-			return model.PersonLink{}, derp.Wrap(err, "service.Follower.LoadParentActor", "Unable to load parent stream", follower)
+			return model.PersonLink{}, derp.Wrap(err, location, "Loading parent stream", follower)
 		}
 
 		return stream.ActorLink(), nil
 
 	}
 
-	return model.PersonLink{}, derp.Internal("service.Follower.LoadParentActor", "Invalid parentType", follower)
+	return model.PersonLink{}, derp.Internal(location, "Invalid parentType", follower)
 }
 
 /******************************************
@@ -515,7 +479,7 @@ func (service *Follower) NewActivityPubFollower(session data.Session, parentType
 	// Try to find an existing follower record
 	if err := service.LoadByActor(session, parentID, actor.ID(), follower); err != nil {
 		if !derp.IsNotFound(err) {
-			return derp.Wrap(err, location, "Unable to load existing follower", actor)
+			return derp.Wrap(err, location, "Loading existing follower", actor)
 		}
 	}
 
@@ -535,8 +499,8 @@ func (service *Follower) NewActivityPubFollower(session data.Session, parentType
 	}
 
 	// Try to save the new follower to the database
-	if err := service.Save(session, follower, "New Follower via ActivityPub"); err != nil {
-		return derp.Wrap(err, location, "Unable to save new follower", follower)
+	if err := service.Save(session, follower, "via ActivityPub"); err != nil {
+		return derp.Wrap(err, location, "Saving new follower", follower)
 	}
 
 	// Salút!
@@ -620,7 +584,7 @@ func (service *Follower) SendFollowConfirmation(session data.Session, follower *
 	actor, err := service.LoadParentActor(session, follower)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Follower.SendFollowConfirmation", "Unable to load parent actor", follower)
+		return derp.Wrap(err, "service.Follower.SendFollowConfirmation", "Loading parent actor", follower)
 	}
 
 	if err := service.domainEmail.SendFollowerConfirmation(actor, follower); err != nil {

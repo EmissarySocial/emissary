@@ -90,7 +90,7 @@
 					{{- end -}}
 
 					{{- if $document.HasContent -}}
-						<div>{{- $document.Content | html -}}</div>
+						<div>{{- $document.Content | htmlMinimal -}}</div>
 					{{- else if $document.HasSummary -}}
 						<div>{{- $document.Summary -}}</div>
 					{{- end -}}

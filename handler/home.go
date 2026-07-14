@@ -6,7 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
+	"github.com/benpate/uri"
 	"github.com/labstack/echo/v4"
 )
 
@@ -29,7 +29,7 @@ func GetHome(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		// Otherwise, look up the hostname to see if this is a personalized domain (Like: yomama.serer.social)
-		hostname := dt.TrueHostname(ctx.Request())
+		hostname := serverFactory.Hostname(ctx.Request())
 		username, hostname, exists := strings.Cut(hostname, ".")
 
 		if !exists {
@@ -37,7 +37,7 @@ func GetHome(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		if _, err := serverFactory.ByHostname(hostname); err == nil {
-			redirectTo := dt.AddProtocol(hostname) + "/@" + username
+			redirectTo := uri.PrependProtocol(hostname) + "/@" + username
 			return ctx.Redirect(http.StatusTemporaryRedirect, redirectTo)
 		}
 

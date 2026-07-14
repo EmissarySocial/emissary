@@ -18,6 +18,8 @@ func TestConnection(t *testing.T) {
 		{"type", "USER-PAYMENT", nil},
 		{"data.random", "Any Value", nil},
 		{"data.liveMode", "true", nil},
+		// vault values are obscured on read-back by design, so a set secret reads as the mask.
+		{"vault.apiKey", "secret-value", VaultObscuredValue},
 		{"active", "true", true},
 	}
 

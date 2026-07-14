@@ -45,5 +45,6 @@ func tableTest_Schema(t *testing.T, s *schema.Schema, object any, table []tableT
 	}
 
 	// Test Validation
-	require.Nil(t, s.Validate(object))
+	_, err := s.Validate(object)
+	require.Nil(t, err)
 }

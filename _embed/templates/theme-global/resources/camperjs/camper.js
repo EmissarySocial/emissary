@@ -7,6 +7,31 @@ function guessProtocol(server) {
   }
   return "https://";
 }
+function safeText(value) {
+  const parser = new DOMParser();
+  const parsed = parser.parseFromString(value, "text/html");
+  return parsed.body.textContent || "";
+}
+function safeURL(value) {
+  if (value == "") {
+    return "";
+  }
+  let parsed;
+  try {
+    parsed = new URL(value, document.baseURI);
+  } catch {
+    return "";
+  }
+  switch (parsed.protocol) {
+    case "http:":
+    case "https:":
+      return parsed.href;
+  }
+  return "";
+}
+function safeAttr(value) {
+  return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+}
 function hideElement(element, hide) {
   if (hide) {
     element.hidden = true;
@@ -116,8 +141,8 @@ var NodeInfo = class {
 var Intents = class {
   // getIntentsMap retrieves the available Activity Intents templates for the provided data
   static getIntentsMap = async (server, webfingerResult) => {
-    var found = false;
-    var result = {
+    let found = false;
+    let result = {
       announce: "",
       create: "",
       follow: "",
@@ -127,8 +152,8 @@ var Intents = class {
     };
     const links = webfingerResult.links || [];
     for (const link of links) {
-      var relation = link.rel || "";
-      var template = link.template || link.href || "";
+      let relation = link.rel || "";
+      let template = link.template || link.href || "";
       switch (relation.toLowerCase()) {
         case "https://w3id.org/fep/3b86/announce":
           result.announce = template;
@@ -188,8 +213,6 @@ var Intents = class {
         break;
       case "gnusocial":
         result.create = server + "/notice/new?status_textarea={content}";
-        break;
-        result.create = server + "/share?text={content}";
         break;
       case "hubzilla":
         result.create = server + "/rpost?title={name}&body={content}";
@@ -396,37 +419,6 @@ var Actor = class extends Object2 {
   type = () => {
     return this.getString("as", "type");
   };
-  ///////////////////////////////////
-  // MLS-specific properties
-  mlsMessages = () => {
-    return this.getString("mls", "messages");
-  };
-  mlsKeyPackages = () => {
-    return this.getString("mls", "keyPackages");
-  };
-  ///////////////////////////////////
-  // Emissary-specific properties
-  // emissaryMessages returns the URL for the Emissary-specific messages collection
-  // that returns BOTH encrypted and unencrypted messages. This is preferred over mls:messages because it allows the client to receive direct messages that are not encrypted with MLS.
-  emissaryMessages = () => {
-    return this.getString("emissary", "messages");
-  };
-  // messages returns the URL for the preferred messages collection,
-  // which may be either the Emissary-specific collection (if supported) or
-  // the standard mls:messages collection (if Emissary-specific collection is not supported).
-  // The boolean return value indicates whether the returned URL is for the
-  // Emissary-specific collection (true) or the standard mls:messages collection (false).
-  messages = () => {
-    const emissaryMessages = this.emissaryMessages();
-    if (emissaryMessages != "") {
-      return { url: emissaryMessages, plaintext: true };
-    }
-    const mlsMessages = this.mlsMessages();
-    if (mlsMessages != "") {
-      return { url: mlsMessages, plaintext: false };
-    }
-    return { url: "", plaintext: false };
-  };
 };
 
 // src/camper.ts
@@ -521,13 +513,13 @@ var Camper = {
       }
       const maxAccounts = Camper.maxAccounts(element);
       const accountListHTML = accounts.slice(0, maxAccounts).map((account) => `
-				<div id="camper-account-${account.id}" class="camper-account" onclick="Camper.doIntent(this, '${account.username}')">
-					<img src="${account.iconUrl}" class="camper-account-icon">
+				<div id="camper-account-${safeAttr(account.id)}" class="camper-account" data-username="${safeAttr(account.username)}" onclick="Camper.doIntent(this, this.dataset.username || '')">
+					<img src="${safeURL(account.iconUrl)}" class="camper-account-icon">
 					<div class="camper-account-info">
-						<div class="camper-account-name">${account.name}</div>
-						<div class="camper-account-username">${account.username}</div>
+						<div class="camper-account-name">${safeText(account.name)}</div>
+						<div class="camper-account-username">${safeText(account.username)}</div>
 					</div>
-					<button class="camper-account-remove-button" onclick="Camper.removeAccount('${account.username}')">Remove</button>
+					<button class="camper-account-remove-button" onclick="Camper.removeAccount(this.closest('.camper-account').dataset.username || '')">Remove</button>
 				</div>
 			`).join("");
       element.innerHTML = accountListHTML;

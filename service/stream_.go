@@ -19,7 +19,6 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/exp"
 	"github.com/benpate/geo"
 	"github.com/benpate/mediaserver"
@@ -32,34 +31,39 @@ import (
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Stream manages all interactions with the Stream collection
 type Stream struct {
-	activityService   *ActivityStream
-	attachmentService *Attachment
-	circleService     *Circle
-	contentService    *Content
-	domainService     *Domain
-	draftService      *StreamDraft
-	geocodeService    GeocodeAddress
-	importService     *Import
-	importItemService *ImportItem
-	keyService        *EncryptionKey
-	mentionService    *Mention
-	outboxService     *Outbox
-	searchTagService  *SearchTag
-	templateService   *Template
-	followerService   *Follower
-	ruleService       *Rule
-	userService       *User
-	webhookService    *Webhook
-	host              string
-	mediaserver       mediaserver.MediaServer
-	queue             *queue.Queue
-	sseUpdateChannel  chan<- realtime.Message
-	newSession        func(timeout time.Duration) (data.Session, context.CancelFunc, error)
+	activityService     *ActivityStream
+	attachmentService   *Attachment
+	circleService       *Circle
+	collectionService   *Collection
+	contentService      *Content
+	domainService       *Domain
+	draftService        *StreamDraft
+	geocodeService      GeocodeAddress
+	importService       *Import
+	importItemService   *ImportItem
+	keyService          *EncryptionKey
+	locatorService      *Locator
+	notificationService *Notification
+	outboxService       *Outbox
+	permissionService   *Permission
+	searchTagService    *SearchTag
+	templateService     *Template
+	followerService     *Follower
+	ruleService         *Rule
+	userService         *User
+	webhookService      *Webhook
+	host                string
+	mediaserver         mediaserver.MediaServer
+	queue               *queue.Queue
+	sseUpdateChannel    chan<- realtime.Message
+	newSession          func(timeout time.Duration) (data.Session, context.CancelFunc, error)
 }
 
 // NewStream returns a fully populated Stream service.
@@ -76,6 +80,7 @@ func (service *Stream) Refresh(factory *Factory) {
 	service.activityService = factory.ActivityStream()
 	service.attachmentService = factory.Attachment()
 	service.circleService = factory.Circle()
+	service.collectionService = factory.Collection()
 	service.contentService = factory.Content()
 	service.domainService = factory.Domain()
 	service.draftService = factory.StreamDraft()
@@ -84,8 +89,10 @@ func (service *Stream) Refresh(factory *Factory) {
 	service.importService = factory.Import()
 	service.importItemService = factory.ImportItem()
 	service.keyService = factory.EncryptionKey()
-	service.mentionService = factory.Mention()
+	service.locatorService = factory.Locator()
+	service.notificationService = factory.Notification()
 	service.outboxService = factory.Outbox()
+	service.permissionService = factory.Permission()
 	service.ruleService = factory.Rule()
 	service.searchTagService = factory.SearchTag()
 	service.templateService = factory.Template()
@@ -133,7 +140,7 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 		}
 
 		// Validate with the general-purpose Stream schema
-		if err := streamSchema.Validate(&stream); err != nil {
+		if _, err := streamSchema.Validate(&stream); err != nil {
 			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Invalid stream data"))
 			continue
 		}
@@ -148,7 +155,7 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 		}
 
 		// Validate with the specific Template schema
-		if err := template.Schema.Validate(&stream); err != nil {
+		if _, err := template.Schema.Validate(&stream); err != nil {
 			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Invalid stream data"))
 			continue
 		}
@@ -333,40 +340,43 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 		}
 	}
 
-	// If this stream has anything but a NIL templateID
-	if stream.TemplateID != "" {
-
-		// Load the template used by this Stream
-		template, err := service.templateService.Load(stream.TemplateID)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Unable to load template", stream.TemplateID)
-		}
-
-		// Copy default values from the Template
-		stream.SocialRole = template.SocialRole
-		stream.IsSubscribable = template.IsSubscribable()
-		stream.URL = service.host + "/" + stream.StreamID.Hex()
-
-		// RULE: Calculate "defaultAllow" groups for this stream.
-		service.calcDefaultAllow(&template, stream)
-
-		// Validate the value (using the template-specific schema) before saving
-		if err := template.Schema.Validate(stream); err != nil {
-			return derp.Wrap(err, location, "Invalid Stream: using TemplateSchema", stream)
-		}
+	// RULE: Every Stream must be associated with a Template
+	if stream.TemplateID == "" {
+		return derp.BadRequest(location, "Stream cannot be saved without a TemplateID", stream)
 	}
 
-	// Validate the value (using the global stream schema) before saving
-	if err := service.Schema().Validate(stream); err != nil {
-		return derp.Wrap(err, location, "Invalid Stream: using StreamSchema", stream)
+	// Load the template used by this Stream
+	template, err := service.templateService.Load(stream.TemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to load template", stream.TemplateID)
+	}
+
+	// Copy default values from the Template
+	stream.SocialRole = template.SocialRole
+	stream.IsSubscribable = template.IsSubscribable()
+	stream.URL = service.host + "/" + stream.StreamID.Hex()
+
+	// RULE: Calculate "defaultAllow" groups for this stream.
+	service.calcDefaultAllow(&template, stream)
+
+	// Normalize the value (using the template-specific schema) before saving.  Values are
+	// rewritten in place to conform to the schema, so that legacy data written under older
+	// rules is repaired progressively as records are saved.  The template schema inherits
+	// the full Stream schema as its baseline, so this covers every Stream property while
+	// honoring the template's format overrides.
+	rewrites, err := template.Schema.Normalize(stream)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid Stream: using TemplateSchema", stream)
+	}
+
+	if len(rewrites) > 0 {
+		log.Debug().Strs("rewrites", rewrites).Str("streamId", stream.StreamID.Hex()).Msg("Stream values normalized during save")
 	}
 
 	// RULE: calculate Parent IDs
 	service.calcParentIDs(session, stream)
-
-	// RULE: Calculate the stream context
-	service.calcContext(stream)
 
 	// RULE: Calculate privileges for this stream
 	service.calcPrivilegeIDs(stream)
@@ -416,7 +426,7 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 	if stream.IsPublished() {
 		service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
 
-		if err := service.sendSyndicationMessages(stream, nil, nil, stream.Syndication.Values); err != nil {
+		if err := service.sendSyndicationMessages(session, stream, nil, nil, stream.Syndication.Values); err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to send syndication messages", stream))
 		}
 	}
@@ -434,6 +444,16 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 	// RULE: Delete all related Drafts
 	if err := service.draftService.Delete(session, stream, note); err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to delete drafts", stream, note))
+	}
+
+	// RULE: Delete related Context Collection (if exists)
+	if err := service.collectionService.DeleteByURL(session, stream.Context); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to delete context collection", stream, note))
+	}
+
+	// RULE: If this Stream is a reply, remove it from its parent's Replies collection (and refresh the count).
+	if err := service.RemoveReply(session, stream.InReplyTo, stream.ActivityPubURL()); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to remove reply from parent collection", stream, note))
 	}
 
 	// RULE: Delete Outbox Messages
@@ -721,15 +741,8 @@ func (service *Stream) LoadByURL(session data.Session, streamURL string, result 
 		return derp.BadRequest(location, "StreamURL is required")
 	}
 
-	// Verify we have a valid URL
-	parsedURL, err := url.Parse(streamURL)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Invalid URL", streamURL)
-	}
-
-	// Retrieve the Token from the request path
-	token, _, err := service.ParsePath(parsedURL)
+	// Retrieve the Stream token from the request URL
+	token, _, err := service.locatorService.ParseStream(streamURL)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Invalid URL", streamURL)
@@ -1015,16 +1028,18 @@ func (service *Stream) MapByPrivileges(session data.Session, privileges ...model
 	return result, nil
 }
 
-// ParsePathextracts the Stream token and actionID from a URL
-func (service *Stream) ParsePath(uri *url.URL) (string, string, error) {
+// ParsePath extracts the Stream token and actionID from a URL
+func (service *Stream) ParsePath(parsedURL *url.URL) (string, string, error) {
+
+	const location = "service.Stream.ParsePath"
 
 	// Verify the URL matches this service
-	if dt.AddProtocol(uri.Host) != service.host {
-		return "", "", derp.BadRequest("service.Stream.LoadByURL", "Hostname must match this server", uri.String())
+	if uri.PrependProtocol(parsedURL.Host) != service.host {
+		return "", "", derp.BadRequest(location, "Hostname must match this server", parsedURL.String())
 	}
 
 	// Load the Stream using the token
-	path := list.BySlash(strings.TrimPrefix(uri.Path, "/"))
+	path := list.BySlash(strings.TrimPrefix(parsedURL.Path, "/"))
 	token, path := path.Split()
 
 	if token == "" {
@@ -1114,35 +1129,6 @@ func (service *Stream) calcDefaultAllow(template *model.Template, stream *model.
 	result := append(groupIDs, privilegeIDs...)
 	result = result.Compact()
 	stream.DefaultAllow = result
-}
-
-// CalcContext calculates the conversational context for a given stream,
-// IF it can be determined.
-func (service *Stream) calcContext(stream *model.Stream) {
-
-	// If this is an original stream (not a reply) then its context is itself.
-	if stream.InReplyTo == "" {
-		stream.Context = stream.ActivityPubURL()
-		return
-	}
-
-	// Load the "InReplyTo" document from the ActivityStream and use its
-	// context.  Note: this should have been calculated already via th
-	// ascontextmaker client.
-	client := service.activityService.StreamClient(stream.StreamID)
-	document, err := client.Load(stream.InReplyTo)
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, "service.Stream.calcContext", "Unable to load InReplyTo document", stream.InReplyTo))
-	}
-
-	if context := document.Context(); context != "" {
-		stream.Context = document.Context()
-		return
-	}
-
-	// If a context could not be assigned, then use the InReplyTo value instead.
-	stream.Context = stream.InReplyTo
 }
 
 // CalcPrivileges denormalizes all privileges (CircleIDs and ProductIDs)
@@ -1310,9 +1296,9 @@ func (service *Stream) Move(session data.Session, stream *model.Stream, movedTo 
 		return derp.Wrap(err, location, "Unable to delete Attachments")
 	}
 
-	// Delete any related Mentions
-	if err := service.mentionService.DeleteByObjectID(session, model.MentionTypeStream, stream.StreamID, "moved"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Mentions")
+	// Delete any related Notifications (mentions/replies/reactions that referenced this Stream)
+	if err := service.notificationService.DeleteByStreamID(session, stream.StreamID, "moved"); err != nil {
+		return derp.Wrap(err, location, "Unable to delete Notifications")
 	}
 
 	return nil
@@ -1373,5 +1359,5 @@ func (service *Stream) SearchResult(stream *model.Stream) model.SearchResult {
 
 // Hostname returns the hostname (domain only) for this service
 func (service *Stream) Hostname() string {
-	return dt.NameOnly(service.host)
+	return uri.Hostname(service.host)
 }

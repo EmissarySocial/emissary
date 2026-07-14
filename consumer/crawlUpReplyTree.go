@@ -37,7 +37,7 @@ func CrawlUpReplyTree(factory *service.Factory, args mapof.Any) queue.Result {
 			// Then queue up another task to crawl higher up the tree
 			factory.Queue().NewTask(
 				"CrawlUpReplyTree",
-				mapof.Any{"url": inReplyTo},
+				mapof.Any{"host": factory.Hostname(), "url": inReplyTo},
 			)
 
 			return queue.Success()
@@ -48,7 +48,7 @@ func CrawlUpReplyTree(factory *service.Factory, args mapof.Any) queue.Result {
 	// so try to crawl DOWN through its replies
 	factory.Queue().NewTask(
 		"CrawlDownReplyTree",
-		mapof.Any{"url": url},
+		mapof.Any{"host": factory.Hostname(), "url": url},
 	)
 
 	// Success!

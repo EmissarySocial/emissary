@@ -16,6 +16,7 @@ func KeyPackageSchema() schema.Element {
 			"content":       schema.String{Required: true},
 			"generatorId":   schema.String{Required: true},
 			"generatorName": schema.String{Required: true},
+			"ciphersuite":   schema.String{Required: true},
 		},
 	}
 }
@@ -39,11 +40,17 @@ func (keyPackage *KeyPackage) GetStringOK(name string) (string, bool) {
 	case "encoding":
 		return keyPackage.Encoding, true
 
+	case "content":
+		return keyPackage.Content, true
+
 	case "generatorId":
 		return keyPackage.GeneratorID, true
 
 	case "generatorName":
 		return keyPackage.GeneratorName, true
+
+	case "ciphersuite":
+		return keyPackage.Ciphersuite, true
 	}
 
 	return "", false
@@ -86,6 +93,10 @@ func (keyPackage *KeyPackage) SetString(name string, value string) bool {
 
 	case "generatorName":
 		keyPackage.GeneratorName = value
+		return true
+
+	case "ciphersuite":
+		keyPackage.Ciphersuite = value
 		return true
 	}
 

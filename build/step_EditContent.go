@@ -3,17 +3,21 @@ package build
 import (
 	"bytes"
 	"io"
+	"net/http"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/formdata"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/html"
 )
 
 // StepEditContent is a Step that can edit/update Container in a streamDraft.
 type StepEditContent struct {
-	Filename  string
-	Fieldname string
-	Format    string
+	Filename       string
+	Fieldname      string
+	Format         string
+	RequireContent bool
 }
 
 func (step StepEditContent) Get(builder Builder, buffer io.Writer) PipelineBehavior {
@@ -67,6 +71,15 @@ func (step StepEditContent) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		rawContent = value.Get(step.Fieldname)
 	}
 
+	// RULE: If content is required, then reject empty submissions before saving.
+	// ToText strips markup so that visually-empty content (e.g. "<br>" from a
+	// contenteditable field) is also treated as empty.
+	if step.RequireContent {
+		if strings.TrimSpace(html.ToText(rawContent)) == "" {
+			return step.errorEmptyContent(builder)
+		}
+	}
+
 	// Set the new Content value in the Stream
 	contentService := builder.factory().Content()
 	stream.Content = contentService.New(step.Format, rawContent)
@@ -78,4 +91,23 @@ func (step StepEditContent) Post(builder Builder, _ io.Writer) PipelineBehavior 
 
 	// Success!
 	return nil
+}
+
+// errorEmptyContent writes an inline error message back to the compose form when
+// content is required but the submission is empty. It halts the pipeline so that
+// nothing is saved or published.
+func (step StepEditContent) errorEmptyContent(builder Builder) PipelineBehavior {
+
+	const location = "build.StepEditContent.errorEmptyContent"
+
+	response := builder.response()
+	response.Header().Set("HX-Reswap", "innerHTML")
+	response.Header().Set("HX-Retarget", "#outbox-message-error")
+	response.WriteHeader(http.StatusOK)
+
+	if _, err := response.Write([]byte(`<span class="text-red">Please write something before posting.</span>`)); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to write error message to response"))
+	}
+
+	return Halt().AsFullPage()
 }

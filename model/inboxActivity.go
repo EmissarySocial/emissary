@@ -25,7 +25,7 @@ type InboxActivity struct {
 	RawActivity     mapof.Any          `bson:"rawActivity"`   // The original, unprocessed activity received by the server
 	PublishedDate   int64              `bson:"publishedDate"` // Unix epoch (in milliseconds) when this InboxActivity was published
 	ReceivedDate    int64              `bson:"receivedDate"`  // Unix epoch (in milliseconds) when this InboxActivity was received by the server
-	IsPublic        bool               `bson:"isPublic"`      // Whether this activity was addressed to the public (i.e. "as:Public")
+	IsPublic        bool               `bson:"isPublic"`      // Whether this activity was addressed to the public (i.e. "Public")
 
 	journal.Journal `bson:",inline"`
 }
@@ -47,7 +47,7 @@ func (inboxActivity InboxActivity) GetJSONLD() mapof.Any {
 	return inboxActivity.RawActivity
 }
 
-// NotPublic returns true if this activity is not addressed to the public (i.e. "as:Public")
+// NotPublic returns true if this activity is not addressed to the public (i.e. "Public")
 func (inboxActivity InboxActivity) NotPublic() bool {
 	return !inboxActivity.IsPublic
 }

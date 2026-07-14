@@ -1,10 +1,10 @@
 {{- $search := .QueryParam "search" -}}
 {{- $folderID := .QueryParam "folderId" -}}
-<h2 class="margin-bottom-lg">{{icon "person-add"}} Follow Someone</h2>
+<h2 class="margin-bottom-lg">{{icon "plus"}} Follow Someone</h2>
 
 <div script="install Menu(input:#following-search-input)" id="following-search">
 
-	<div role="input" class="flex-row pos-relative">
+	<div role="textbox" class="flex-row pos-relative">
 		
 		<input 
 			id="following-search-input"
@@ -12,7 +12,7 @@
 			name="search" 
 			class="flex-grow-1" 
 			tabIndex="0"
-			value="{{attr $search}}"
+			value="{{$search}}"
 			placeholder="@someone@somewhere.social"
 			style="border:none; padding:0;" 
 			
@@ -34,8 +34,7 @@
 	<div id="following-search-results">
 		<div class="margin-vertical">
 			Follow <b>People</b> by entering their name, @username, or URL.<br>
-			<!-- Follow <b>Hashtags</b> by entering the #hashtag.<br-->
-			Follow <b>Websites</b> (using RSS) by entering a URL.<br>
+			Follow <b>Hashtags</b> by entering the #hashtag.
 		</div>
 	</div>
 </div>

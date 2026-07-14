@@ -26,7 +26,7 @@
 		{{- else -}}
 			Redirecting to {{.Data "url"}}...
 			<script type="text/javascript">
-				window.location = "{{- .Data `url` -}}";
+				globalThis.location = "{{- .Data `url` -}}";
 			</script>
 		{{- end -}}
 

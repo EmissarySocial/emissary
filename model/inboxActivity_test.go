@@ -17,10 +17,14 @@ func TestInboxActivitySchema(t *testing.T) {
 		{"activityId", "https://example.com/activities/12345", nil},
 		{"actorId", "https://example.com/users/alice", nil},
 		{"objectId", "https://example.com/posts/12345", nil},
-		{"type", "Create", nil},
+		{"activityType", "Create", nil},
+		{"objectType", "Note", nil},
 		{"mediaType", "message/mls", nil},
 		{"publishedDate", int64(1625097600000), nil},
 		{"receivedDate", int64(1625097600000), nil},
+		{"isPublic", true, nil},
+		{"rawActivity.type", "Create", nil},
+		{"rawActivity.id", "https://example.com/activities/12345", nil},
 	}
 
 	tableTest_Schema(t, &s, &activity, table)

@@ -18,6 +18,7 @@ type OAuthUserTokenRequest struct {
 	ClientSecret string `form:"client_secret"`
 	RedirectURI  string `form:"redirect_uri"`
 	Scope        string `form:"scope"`
+	CodeVerifier string `form:"code_verifier"` // PKCE (RFC 7636) verifier, presented to redeem a code bound to a code_challenge
 }
 
 func NewOAuthUserTokenRequest() OAuthUserTokenRequest {

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
@@ -53,8 +54,8 @@ func (service *User) Move(session data.Session, user *model.User, actor string, 
 		return derp.Wrap(err, location, "Unable to save user")
 	}
 
-	// Background task to delete records and send `Move` notifications to followers.
-	service.queue.NewTask("MoveUser", mapof.Any{
+	// Background task (post-commit) to delete records and send `Move` notifications to followers.
+	postcommit.Publish(session, service.queue, "MoveUser", mapof.Any{
 		"host":   service.Hostname(),
 		"userId": user.UserID.Hex(),
 		"actor":  actor,

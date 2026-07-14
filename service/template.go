@@ -4,12 +4,14 @@ import (
 	"html/template"
 	"io/fs"
 	"maps"
+	"os"
 	"slices"
 	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/EmissarySocial/emissary/model"
+	modelStep "github.com/EmissarySocial/emissary/model/step"
 	"github.com/EmissarySocial/emissary/tools/set"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
@@ -83,8 +85,12 @@ func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
 	// Add configuration to the service
 	service.locations = locations
 
-	// Load all templates from the filesystem
-	if err := service.loadTemplates(); err != nil {
+	// Load all templates from the filesystem.  On genuine first boot (no templates loaded
+	// yet) a load failure is fatal, because the server cannot serve anything without
+	// templates.  A later Refresh with templates already live must NOT halt.
+	haltOnError := len(service.templates) == 0
+
+	if err := service.loadTemplates(haltOnError); err != nil {
 		derp.Report(derp.Wrap(err, "service.Template.Refresh", "Unable to load templates from filesystem"))
 		return
 	}
@@ -116,7 +122,9 @@ func (service *Template) watch() {
 		select {
 
 		case <-changes:
-			if err := service.loadTemplates(); err != nil {
+			// A watch-triggered reload must never halt the process: the previously-loaded
+			// templates are still serving, so on error we report and keep running.
+			if err := service.loadTemplates(false); err != nil {
 				derp.Report(derp.Wrap(err, "service.template.Watch", "Unable to load templates from filesystem"))
 			}
 
@@ -126,8 +134,13 @@ func (service *Template) watch() {
 	}
 }
 
-// loadTemplates retrieves the template from the filesystem and parses it into
-func (service *Template) loadTemplates() error {
+// loadTemplates (re)loads every template from the configured filesystem locations.
+// haltOnError controls what happens when a location fails to load: on the very first
+// load (initial boot) there are no live templates to fall back on, so an error is fatal
+// and the process exits.  On a subsequent watch-triggered reload the previously-loaded
+// templates are still serving, so an error is reported and the reload is abandoned --
+// never killing the running server.
+func (service *Template) loadTemplates(haltOnError bool) error {
 
 	const location = "service.template.loadTemplates"
 
@@ -140,14 +153,14 @@ func (service *Template) loadTemplates() error {
 		filesystem, err := service.filesystemService.GetFS(fileLocation)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Error getting filesystem adapter", fileLocation))
+			maybeHalt(derp.Wrap(err, location, "Error getting filesystem adapter", fileLocation), haltOnError)
 			continue
 		}
 
 		directories, err := fs.ReadDir(filesystem, ".")
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to read directory", fileLocation))
+			maybeHalt(derp.Wrap(err, location, "Unable to read directory", fileLocation), haltOnError)
 			continue
 		}
 
@@ -167,7 +180,7 @@ func (service *Template) loadTemplates() error {
 			subdirectory, err := fs.Sub(filesystem, directoryName)
 
 			if err != nil {
-				derp.Report(derp.Wrap(err, location, "Error getting filesystem adapter for sub-directory", fileLocation))
+				maybeHalt(derp.Wrap(err, location, "Error getting filesystem adapter for sub-directory", fileLocation), haltOnError)
 				continue
 			}
 
@@ -177,27 +190,27 @@ func (service *Template) loadTemplates() error {
 
 			case DefinitionEmail:
 				if err := service.emailService.Add(subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, location, "Error adding theme"))
+					maybeHalt(derp.Wrap(err, location, "Error adding theme"), haltOnError)
 				}
 
 			case DefinitionTheme:
 				if err := service.themeService.Add(directoryName, subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, location, "Error adding theme"))
+					maybeHalt(derp.Wrap(err, location, "Error adding theme"), haltOnError)
 				}
 
 			case DefinitionTemplate:
 				if err := service.Add(directoryName, subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, location, "Error adding template"))
+					maybeHalt(derp.Wrap(err, location, "Error adding template"), haltOnError)
 				}
 
 			case DefinitionRegistration:
 				if err := service.registrationService.Add(directoryName, subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, location, "Error adding registration"))
+					maybeHalt(derp.Wrap(err, location, "Error adding registration"), haltOnError)
 				}
 
 			case DefinitionWidget:
 				if err := service.widgetService.Add(directoryName, subdirectory, file); err != nil {
-					derp.Report(derp.Wrap(err, location, "Error adding widget"))
+					maybeHalt(derp.Wrap(err, location, "Error adding widget"), haltOnError)
 				}
 
 			default:
@@ -208,7 +221,7 @@ func (service *Template) loadTemplates() error {
 
 	// Calculate inheritance for Templates
 	if err := service.calculateAllInheritance(); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error calculating Template inheritance"))
+		maybeHalt(derp.Wrap(err, location, "Error calculating Template inheritance"), haltOnError)
 	}
 
 	// Calculate inheritance for Themes
@@ -221,7 +234,7 @@ func (service *Template) loadTemplates() error {
 
 		log.Error().Msg(errorLength + " errors validating templates.")
 		for _, error := range errs {
-			derp.Report(error)
+			maybeHalt(error, haltOnError)
 		}
 		log.Error().Msg("Finished reporting " + errorLength + " template errors.  Some templates may not function properly.")
 
@@ -236,6 +249,7 @@ func (service *Template) loadTemplates() error {
 	// Assign the prep area to live
 	service.mutex.Lock()
 	defer service.mutex.Unlock()
+
 	maps.Copy(service.templates, service.templatePrep)
 
 	// Clear out the existing prep area
@@ -243,6 +257,14 @@ func (service *Template) loadTemplates() error {
 	log.Debug().Msg("Template Service: Added/Updated " + strconv.Itoa(len(service.templates)) + " templates")
 
 	return nil
+}
+
+func maybeHalt(err error, halt bool) {
+	derp.Report(err)
+
+	if halt {
+		os.Exit(1)
+	}
 }
 
 func (service *Template) Add(templateID string, filesystem fs.FS, definition []byte) error {
@@ -258,9 +280,9 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 		return derp.Wrap(err, location, "Unable to load Schema", templateID)
 	}
 
-	// All template schemas (except kludged registrations) also inherit from the main stream schema
+	// All template schemas (except kludged registrations) also inherit the base schema of the model object they build
 	if result.TemplateRole != "registration" {
-		result.Schema.Inherit(schema.New(model.StreamSchema()))
+		result.Schema.Inherit(schema.New(result.BaseSchema()))
 	}
 
 	// Load all HTML templates from the filesystem
@@ -293,24 +315,17 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 
 	errors := make(sliceof.Object[derp.Error], 0)
 
-	allowedModels := sliceof.String{ // nolint:scopeguard (readability)
-		"None",
-		"Conversations",
-		"Domain",
-		"Followers",
-		"Following",
-		"Group",
-		"Identity",
-		"Inbox",
-		"Outbox",
-		"Rule",
-		"Search",
-		"Settings",
-		"Stream",
-		"Syndication",
-		"Tag",
-		"User",
-		"Webhook",
+	// The canonical list of model names is derived from model.TemplateModelNames() so it
+	// can never drift from the BaseSchema()/NewObject() registry that actually builds them.
+	allowedModels := sliceof.String(model.TemplateModelNames())
+
+	// displayModelNames is the same list with the empty-string entry (a valid "unset"
+	// value) removed, for use in human-readable error messages.
+	displayModelNames := make(sliceof.String, 0, len(allowedModels))
+	for _, name := range allowedModels {
+		if name != "" {
+			displayModelNames = append(displayModelNames, name)
+		}
 	}
 
 	// Scan all Templates in the prep area
@@ -327,8 +342,34 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 			errors.Append(derp.Validation(
 				"Invalid 'model' used in Template definition",
 				"template: "+templateID,
-				"models allowed: "+strings.Join(allowedModels, ", "),
+				"models allowed: "+strings.Join(displayModelNames, ", "),
 				"model used: "+template.Model,
+			))
+		} else {
+
+			// RULE: Every property declared in the Template's schema must resolve to a
+			// real accessor on the model object it builds.  An "orphaned" property looks
+			// valid at load time but blows up at runtime the first time the object is
+			// saved (Normalize walks every property).  Catch it here, at load time.
+			for _, path := range template.UnsupportedSchemaProperties() {
+				errors.Append(derp.Validation(
+					"Template schema declares a property that the model object does not support",
+					"template: "+templateID,
+					"model: "+template.Model,
+					"property: "+path,
+				))
+			}
+		}
+
+		// RULE: Every format name declared in the Template's schema must resolve in the
+		// format registry.  String validation silently skips unrecognized format names
+		// (degrading to the no-html default), so a typo'd format would otherwise ship
+		// with no validation at all.  Catch it here, at load time.
+		if err := template.Schema.ValidateFormats(); err != nil {
+			errors.Append(derp.Validation(
+				"Template schema uses an unrecognized format name",
+				"template: "+templateID,
+				err.Error(),
 			))
 		}
 
@@ -454,6 +495,24 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 							"role required: "+role,
 							"roles defined: "+strings.Join(template.AccessRoles.Keys(), ", "),
 						))
+					}
+				}
+
+				// RULE: Forms rendered by a step must only reference fields in the schema.
+				// TableEditor is excluded because its form fields are relative to a sub-path,
+				// not to the schema root.
+				if formGetter, ok := step.(modelStep.FormGetter); ok {
+					if _, isTable := step.(modelStep.TableEditor); !isTable {
+						stepForm := form.New(template.Schema, formGetter.GetForm())
+						if err := stepForm.Validate(); err != nil {
+							errors.Append(derp.Validation(
+								"Form references a field that is not in the schema",
+								"template: "+templateID,
+								"action: "+actionID,
+								"step: "+step.Name(),
+								derp.WithWrappedValue(err),
+							))
+						}
 					}
 				}
 			}

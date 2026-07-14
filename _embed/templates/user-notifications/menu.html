@@ -1,0 +1,78 @@
+{{- /*
+	menu.html renders the notification section links (Replies & Mentions, Shares,
+	Likes, Followers) as sidebar menu items, each with a live unread count, plus a "Settings"
+	link to the notification options page (Settings > Social > Notifications — the ONE place
+	those options are managed).  Each section is its own page; the selected item comes from
+	the ?type= query param, which every section's page action bakes into the request via
+	set-query-param (default MENTION).  The dot (".") is the Notifications builder.  Rendered inside
+	sidebar.html; on mobile the same sections render as tabs in
+	header.html instead.
+*/ -}}
+{{- $type := first (.QueryParam "type") "MENTION" -}}
+{{- $mentionCount := .UnreadNotificationCount "MENTION" -}}
+{{- $announceCount := .UnreadNotificationCount "ANNOUNCE" -}}
+{{- $likeCount := .UnreadNotificationCount "LIKE" -}}
+{{- $followCount := .UnreadNotificationCount "FOLLOW" -}}
+
+<a href="/@me/notifications/replies" class="turboclick menu-item ellipsis {{if eq $type `MENTION`}}selected{{end}}">
+	<span>
+		{{- if eq $type "MENTION" -}}
+			{{- iconFilled "chat" -}}
+		{{- else -}}
+			{{- icon "chat" -}}
+		{{- end }}
+	</span>
+	<span>Replies &amp; Mentions</span>
+	{{- if gt $mentionCount 0 -}}
+		<span class="menu-count">{{if gt $mentionCount 99}}99+{{else}}{{$mentionCount}}{{end}}</span>
+	{{- end -}}
+</a>
+
+<a href="/@me/notifications/shares" class="turboclick menu-item ellipsis {{if eq $type `ANNOUNCE`}}selected{{end}}">
+	<span>
+		{{- if eq $type "ANNOUNCE" -}}
+			{{- iconFilled "announce" -}}
+		{{- else -}}
+			{{- icon "announce" -}}
+		{{- end }}
+	</span>
+	<span>Shares</span>
+	{{- if gt $announceCount 0 -}}
+		<span class="menu-count">{{if gt $announceCount 99}}99+{{else}}{{$announceCount}}{{end}}</span>
+	{{- end -}}
+</a>
+
+<a href="/@me/notifications/likes" class="turboclick menu-item ellipsis {{if eq $type `LIKE`}}selected{{end}}">
+	<span>
+		{{- if eq $type "LIKE" -}}
+			{{- iconFilled "heart" -}}
+		{{- else -}}
+			{{- icon "heart" -}}
+		{{- end }}
+	</span>
+	<span>Likes</span>
+	{{- if gt $likeCount 0 -}}
+		<span class="menu-count">{{if gt $likeCount 99}}99+{{else}}{{$likeCount}}{{end}}</span>
+	{{- end -}}
+</a>
+
+<a href="/@me/notifications/followers" class="turboclick menu-item ellipsis {{if eq $type `FOLLOW`}}selected{{end}}">
+	<span>
+		{{- if eq $type "FOLLOW" -}}
+			{{- iconFilled "person" -}}
+		{{- else -}}
+			{{- icon "person" -}}
+		{{- end }}
+	</span>
+	<span>Followers</span>
+	{{- if gt $followCount 0 -}}
+		<span class="menu-count">{{if gt $followCount 99}}99+{{else}}{{$followCount}}{{end}}</span>
+	{{- end -}}
+</a>
+
+<div class="margin-vertical"></div>
+
+<a href="/@me/settings/notifications" class="turboclick menu-item ellipsis">
+	<span>{{icon "settings"}}</span>
+	<span>Notification Settings</span>
+</a>

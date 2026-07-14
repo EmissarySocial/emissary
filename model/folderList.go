@@ -8,9 +8,10 @@ import (
 // FolderList contains a group of folders and the currently selected folder.
 // This is used by the Inbox templates to display all folders for a User.
 type FolderList struct {
-	Folders    sliceof.Object[Folder] `json:"folders"`
-	Section    string                 `json:"section"`
-	SelectedID primitive.ObjectID     `json:"selectedId"`
+	Folders                sliceof.Object[Folder] `json:"folders"`
+	Section                string                 `json:"section"`
+	SelectedID             primitive.ObjectID     `json:"selectedId"`
+	HasUnreadNotifications bool                   `json:"hasUnreadNotifications"` // TRUE if any unread notifications exist (for the pinned sidebar dot)
 }
 
 // NewFolderList returns a fully initialized FolderList object

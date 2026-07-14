@@ -4,7 +4,7 @@ input:not([type="submit"], [type="checkbox"], [type="radio"], [type="color"]),
 textarea,
 select,
 .input,
-[role="input"] {
+[role="textbox"] {
 	border: solid 1px var(--input-border);
 	background-color: var(--input-background);
 	color: var(--input-color);
@@ -40,22 +40,12 @@ input:invalid,
 input.invalid,
 .input.invalid,
 select:invalid,
-[role="input"].invalid {
+[role="textbox"].invalid {
 	border: solid 1px var(--input-border-invalid);
-	/*background-color: var(--input-background-invalid);*/
-}
-
-input:invalid:focus,
-input.invalid:focus,
-.input.invalid:focus,
-select:invalid:focus,
-[role="input"].invalid:focus {
-	outline:unset;
-	box-shadow: 0px 0px 5px var(--input-border-invalid);
 }
 
 input:last-child,
-[role="input"]:last-child {
+[role="textbox"]:last-child {
 	margin-right: auto;
 }
 
@@ -64,16 +54,76 @@ input[type="radio"] {
 	margin-right: 4px;
 }
 
-[role="input"]:focus-visible,
-[role="input"]:focus,
-[role="input"]:has(*:focus, *:focus-visible) {
-	outline-color: -webkit-focus-ring-color;
-	outline-style: auto;
+input:not([type="submit"], [type="checkbox"], [type="radio"], [type="color"]):focus-visible,
+input:not([type="submit"], [type="checkbox"], [type="radio"], [type="color"]):focus,
+textarea:focus-visible,
+textarea:focus,
+select:focus-visible,
+select:focus,
+[role="textbox"]:focus-visible,
+[role="textbox"]:focus,
+[role="textbox"]:has(*:focus, *:focus-visible) {
+	/* --focus-color (set on an ancestor) themes the focus outline to a contextual
+	   accent color; it defaults to the link color when not overridden. */
+	outline: solid 2px var(--focus-color);
+	outline-offset: 1px;
 }
 
-[role="input"] :focus,
-[role="input"] :focus-visible {
+/* A REQUIRED (or otherwise invalid) control shows a RED focus ring instead of the
+   accent color.  This rule MUST come after the accent-color rule above: an invalid
+   input matches both `input:invalid:focus` and `input:not(...):focus` at the same
+   specificity, so source order is the tie-breaker -- placing red last makes it win.
+   Covers both a bare control and one inside a `[role="textbox"]` / `.input` wrapper
+   (via :has), so the single ring is red wherever it is drawn. */
+input:invalid:focus,
+input:invalid:focus-visible,
+select:invalid:focus,
+select:invalid:focus-visible,
+textarea:invalid:focus,
+textarea:invalid:focus-visible,
+[role="textbox"]:has(:invalid):focus-within,
+.input:has(:invalid):focus-within {
+	outline: solid 2px var(--input-border-invalid);
+	outline-offset: 1px;
+}
+
+/* A `.input` / `[role="textbox"]` is a wrapper that fakes a text box: the focus
+   outline belongs on the wrapper, so suppress it on the REAL control nested
+   inside (otherwise both the wrapper and the inner input each draw an outline).
+
+   The inner control is named by type (input/textarea/select), not by the bare
+   descendant `[role="textbox"] :focus`.  The rule that DRAWS the outline above is
+   `input:not(...):focus`, whose specificity (0,2,1) outranks a bare
+   `[role="textbox"] :focus` (0,2,0) -- so the un-set would lose the cascade and the
+   inner outline would still show.  Naming the element type raises this selector to
+   (0,2,1), matching the drawing rule; the tie is then broken by source order (this
+   rule comes later), so the un-set reliably wins.
+
+   A `[contenteditable]` div is a fourth kind of inner control (the reply composer
+   uses one); the browser draws its own focus outline, so it needs suppressing here
+   too or the wrapper outline and the editable's outline stack into a double border. */
+[role="textbox"] input:focus,
+[role="textbox"] input:focus-visible,
+[role="textbox"] textarea:focus,
+[role="textbox"] textarea:focus-visible,
+[role="textbox"] select:focus,
+[role="textbox"] select:focus-visible,
+[role="textbox"] [contenteditable]:focus,
+[role="textbox"] [contenteditable]:focus-visible,
+.input input:focus,
+.input input:focus-visible,
+.input textarea:focus,
+.input textarea:focus-visible,
+.input [contenteditable]:focus,
+.input [contenteditable]:focus-visible {
 	outline: unset;
+}
+
+/* The `.input` wrapper itself shows the focus outline when anything inside it
+   has focus (it has no :focus of its own, being a div). */
+.input:focus-within {
+	outline: solid 2px var(--focus-color);
+	outline-offset: 1px;
 }
 
 [role="table"] input {
@@ -375,7 +425,11 @@ button.text-red:focus,
 
 button.primary,
 .button.primary {
-	background-color: var(--button-primary-background);
+	/* Read --focus-color directly (not via an intermediate token) so it resolves at
+	   the button's use-site: a page that scopes --focus-color to a contextual color
+	   themes its primary buttons too. (Indirecting through --button-primary-background
+	   would bake in the :root value and ignore the override.) */
+	background-color: var(--focus-color);
 	color: var(--button-primary-color);
 }
 
@@ -383,7 +437,7 @@ button.primary:hover,
 button.primary:focus,
 .button.primary:hover,
 .button.primary:focus {
-	background-color: var(--button-primary-background-hover);
+	background-color: color-mix(in srgb, var(--focus-color), black 12%);
 	color: var(--button-primary-color-hover);
 }
 
@@ -398,8 +452,8 @@ button.highlight:hover,
 button.outline,
 .button.outline {
 	background-color: rgba(0, 0, 0, 0);
-	color: var(--button-primary-background);
-	border: solid 1px var(--button-primary-background);
+	color: var(--focus-color);
+	border: solid 1px var(--focus-color);
 }
 
 button.outline,
@@ -407,8 +461,8 @@ button.outline:hover,
 .button.outline,
 .button.outline:hover {
 	background-color: rgba(0, 0, 0, 0);
-	color: var(--button-primary-background-hover);
-	border: solid 1px var(--button-primary-background-hover);
+	color: color-mix(in srgb, var(--focus-color), black 12%);
+	border: solid 1px color-mix(in srgb, var(--focus-color), black 12%);
 }
 
 button.selected,
@@ -442,8 +496,8 @@ button.warning:focus,
 button.success,
 button.primary.success,
 .button.success,
-.button.primary.succes {
-	background-color: var(--green60);
+.button.primary.success {
+	background-color: var(--green70);
 	color: var(--white);
 }
 

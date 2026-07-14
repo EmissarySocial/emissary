@@ -49,7 +49,7 @@ func GetMarkers(serverFactory *server.Factory) func(model.Authorization, txn.Get
 			"home": {
 				LastReadID: message.NewsItemID.Hex(),
 				Version:    int(message.Revision),
-				UpdatedAt:  time.Unix(message.UpdateDate, 0).UTC().Format(time.RFC3339),
+				UpdatedAt:  time.UnixMilli(message.UpdateDate).UTC().Format(time.RFC3339), // UpdateDate is milliseconds (journal UnixMilli)
 			},
 		}
 

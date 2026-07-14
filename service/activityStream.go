@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto"
 	"iter"
-	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -19,7 +18,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/sherlock/activitypub"
@@ -28,6 +26,7 @@ import (
 	"github.com/benpate/sherlock/tombstone"
 	"github.com/benpate/sherlock/webfinger"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -85,6 +84,15 @@ func (service *ActivityStream) StreamClient(streamID primitive.ObjectID) streams
 	return service.Client(model.ActorTypeStream, streamID)
 }
 
+// AllowPrivateIPs reports whether this instance may connect to non-public
+// (private/loopback) addresses. It is TRUE when the instance is served from a
+// local/private hostname, so that a dev instance can federate with itself. Both
+// the document-loading client stack and outbound delivery consult this single
+// predicate, so loading and delivery always agree.
+func (service *ActivityStream) AllowPrivateIPs() bool {
+	return uri.IsLocalHostname(service.hostname)
+}
+
 // Client creates a new streams.Client that is configured for the specified actor type and ID.
 func (service *ActivityStream) Client(actorType string, actorID primitive.ObjectID) streams.Client {
 
@@ -97,11 +105,16 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 		sherlock.WithUserAgent(userAgent),
 	) */
 
+	// If the service is on a local/private network then allow
+	// the ActivityPub client to load documents from private IP addresses.
+	allowPrivateIPs := service.AllowPrivateIPs()
+
 	// Try ActivityPub documents directly
 	activityPubClient := activitypub.New(
 		// activitypub.WithInnerClient(sherlockClient), // Restore this to restore legacy Sherlock lookups.
 		activitypub.WithKeyPairFunc(service.KeyPairFunc(actorType, actorID)),
 		activitypub.WithUserAgent(userAgent),
+		activitypub.WithAllowPrivateIPs(allowPrivateIPs),
 	)
 
 	// Replace 410 Gone errors with "Tombstone" documents
@@ -167,7 +180,7 @@ func (service *ActivityStream) Range(ctx context.Context, criteria exp.Expressio
 		collection, err := service.collection(ctx)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to connect to database"))
+			derp.Report(derp.Wrap(err, location, "Connecting to database"))
 			return
 		}
 
@@ -175,7 +188,7 @@ func (service *ActivityStream) Range(ctx context.Context, criteria exp.Expressio
 		iterator, err := collection.Iterator(criteria, options...)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to query database", criteria))
+			derp.Report(derp.Wrap(err, location, "Querying database", criteria))
 			return
 		}
 
@@ -230,7 +243,6 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 					Name:              object.Name(),
 					Icon:              object.Icon().Href(),
 					PreferredUsername: object.PreferredUsername(),
-					MLSKeyPackages:    object.MLSKeyPackages().ID(),
 				}}
 
 				return result, nil
@@ -245,14 +257,14 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 	collection, err := service.collection(ctx)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to connect to database")
+		return nil, derp.Wrap(err, location, "Connecting to database")
 	}
 
 	// Get [top 6] matching actors from the database
 	result, err := queries.SearchActivityStreamActors(collection, queryString)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to query database")
+		return nil, derp.Wrap(err, location, "Querying database")
 	}
 
 	// Done? Done.
@@ -321,6 +333,7 @@ func (service *ActivityStream) QueryLikesBeforeDate(ctx context.Context, relatio
 func (service *ActivityStream) queryByRelation(ctx context.Context, relationType string, relationHref string, cutType string, cutDate int64, done <-chan struct{}) <-chan streams.Document {
 
 	const location = "service.ActivityStream.QueryRelated"
+	const publishedField = "object.published"
 
 	result := make(chan streams.Document)
 
@@ -336,18 +349,18 @@ func (service *ActivityStream) queryByRelation(ctx context.Context, relationType
 		var sortOption option.Option
 
 		if cutType == "before" {
-			criteria = criteria.AndLessThan("object.published", time.Unix(cutDate, 0))
-			sortOption = option.SortDesc("object.published")
+			criteria = criteria.AndLessThan(publishedField, time.Unix(cutDate, 0))
+			sortOption = option.SortDesc(publishedField)
 		} else {
-			criteria = criteria.AndGreaterThan("object.published", time.Unix(cutDate, 0))
-			sortOption = option.SortAsc("object.published")
+			criteria = criteria.AndGreaterThan(publishedField, time.Unix(cutDate, 0))
+			sortOption = option.SortAsc(publishedField)
 		}
 
 		// Try to query the database
 		documents, err := service.documentIterator(ctx, criteria, sortOption)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to query database"))
+			derp.Report(derp.Wrap(err, location, "Querying database"))
 			return
 		}
 
@@ -411,77 +424,20 @@ func (service *ActivityStream) GetRecipient(recipient string) (string, string, e
 	return document.ID(), document.Inbox().String(), nil
 }
 
-/******************************************
- * Custom Actions
- ******************************************/
-
-// SendMessage sends an ActivityPub message to a single recipient/inboxURL
-// `inboxURL` the URL to deliver the message to
-// `actorType` the type of actor that is sending the message (User, Stream, Search)
-// `actorID` unique ID of the actor (zero value for Search Actor)
-// `message` the ActivityPub message to send
-// TODO: This should be merged into Outbox:SendToSingleRecipient
-// deprecated: use Sender.SendToSingleRecipient instead
-func (service *ActivityStream) SendMessage(session data.Session, args mapof.Any) error {
-
-	const location = "service.ActivityStream.SendMessage"
-
-	// Collect the Actor to receive the message
-	recipientID := args.GetString("to")
-
-	if recipientID == "" {
-		return derp.NotFound(location, "Recipient ID is required", recipientID)
-	}
-
-	// Collect the message to be sent
-	message := args.GetMap("message")
-
-	if message.IsEmpty() {
-		return derp.NotFound(location, "Message is required", message)
-	}
-
-	// Find ActivityPub Actor
-	actor, err := service.locatorService.GetActor(session, args.GetString("actorType"), args.GetString("actorID"))
-
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to find ActivityPub Actor")
-	}
-
-	// Send the message to the recipientID
-	if err := actor.SendOne(recipientID, message); err != nil {
-		return derp.Wrap(err, location, "Unable to send message", message, derp.WithInternalError())
-	}
-
-	// Success!!
-	return nil
-}
-
 func (service *ActivityStream) PublicKeyFinder(keyID string) (string, error) {
 
 	const location = "service.ActivityStream.PublicKeyFinder"
 
-	actorID, _, _ := strings.Cut(keyID, "#")
-
-	actor := streams.NewDocument(mapof.Any{
-		vocab.PropertyID: actorID,
-	})
-
-	// Load the Actor from the document
-	actor, err := actor.Load(sherlock.AsActor())
+	// Load the public key from it's URL
+	// This works because the ashash client will resolve the keyID from the Actor's JSON-LD
+	// WithWriteOnly forces a cache revalidation, which we need to ensure that we get the latest key (in case of rotation)
+	publicKey, err := service.AppClient().Load(keyID, ascache.WithWriteOnly())
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Error retrieving Actor from ActivityPub document", actor.Value())
+		return "", derp.Wrap(err, location, "Loading public key", keyID)
 	}
 
-	// Search the Actor's public keys for the one that matches the provided keyID
-	for key := range actor.PublicKey().Range() {
-
-		if key.ID() == keyID {
-			return key.PublicKeyPEM(), nil
-		}
-	}
-
-	return "", derp.NotFound(location, "Public Key not found", keyID)
+	return publicKey.PublicKeyPEM(), nil
 }
 
 // KeyPairFunc returns a function that will locate the public/private key pair
@@ -525,7 +481,7 @@ func (service *ActivityStream) documentIterator(ctx context.Context, criteria ex
 	collection, err := service.collection(ctx)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to query database", criteria)
+		return nil, derp.Wrap(err, location, "Querying database", criteria, derp.WithInternalError())
 	}
 
 	if collection == nil {
@@ -549,7 +505,7 @@ func (service *ActivityStream) collection(ctx context.Context) (data.Collection,
 	session, err := service.commonDatabase.Session(ctx)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to connect to database")
+		return nil, derp.Wrap(err, location, "Connecting to database", derp.WithInternalError())
 	}
 
 	// NILCHECK: session cannot be nil.

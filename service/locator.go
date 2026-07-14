@@ -8,8 +8,8 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	"github.com/benpate/domain"
 	"github.com/benpate/hannibal/outbox"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -150,17 +150,10 @@ func (service *Locator) GetPrivateKey(session data.Session, actorType string, ac
 
 	switch actorType {
 
-	case model.ActorTypeApplication:
-		publicKeyID := service.domainService.PublicKeyID()
-		privateKey, err := service.domainService.PrivateKey(session)
-		return publicKeyID, privateKey, err
+	case model.ActorTypeApplication,
+		model.ActorTypeSearchDomain,
+		model.ActorTypeSearchQuery:
 
-	case model.ActorTypeSearchDomain:
-		publicKeyID := service.domainService.PublicKeyID()
-		privateKey, err := service.domainService.PrivateKey(session)
-		return publicKeyID, privateKey, err
-
-	case model.ActorTypeSearchQuery:
 		publicKeyID := service.domainService.PublicKeyID()
 		privateKey, err := service.domainService.PrivateKey(session)
 		return publicKeyID, privateKey, err
@@ -186,7 +179,7 @@ func (service *Locator) GetPrivateKey(session data.Session, actorType string, ac
 // is not found, then both the type and token will be empty strings.
 func locateObjectFromURL(host string, value string) (string, string) {
 
-	hostname := domain.NameOnly(host)
+	hostname := uri.Hostname(host)
 
 	// It's all good, bro. We're gonna deviate from the spec,
 	// and just NOT CARE if you include `acct:` or not.
@@ -228,12 +221,9 @@ func locateObjectFromURL(host string, value string) (string, string) {
 			return model.ActorTypeApplication, ""
 		}
 
-		// If there's anything after the username, then this is not a valid URL for WebFinger.
-		value, _, hasSuffix := strings.Cut(value, "/")
-
-		if hasSuffix {
-			return "", ""
-		}
+		// Keep only the first path segment; any trailing route data is discarded
+		// (e.g. "token/route" and "token/" both resolve on "token").
+		value, _, _ = strings.Cut(value, "/")
 
 		// Special case for "Application" account
 		if value == "@application" {

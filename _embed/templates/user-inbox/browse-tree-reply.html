@@ -36,7 +36,7 @@
 
 				<div script="install ShowMore">
 					<div class="ShowMore-content" style="max-height:320px; overflow-y:hidden;">
-						{{ $document.Content | html }}
+						{{ $document.Content | htmlMinimal }}
 
 						{{- if ne "" $document.Image.Href -}}
 							<div class="margin-top-large">

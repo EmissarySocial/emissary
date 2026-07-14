@@ -18,7 +18,7 @@ type MerchantAccount struct {
 	Description          string             `bson:"description"`          // Human-friendly Description of the payment processor account
 	Vault                Vault              `bson:"vault"`                // Vault data that is stored in the database (encrypted)
 	Plaintext            mapof.String       `bson:"plaintext"`            // Plaintext data that is stored in the database (not encrypted)
-	APIKeyExpirationDate int64              `bson:"apiKeyExpirationDate"` // Expiration date of the API key
+	APIKeyExpirationDate int64              `bson:"apiKeyExpirationDate"` // Unix epoch SECONDS when the API key expires (written as time.Now().Unix() + expires_in)
 	LiveMode             bool               `bson:"liveMode"`             // True if this is a live account, false if it is a test/sandbox account
 
 	// Embed journal to track changes

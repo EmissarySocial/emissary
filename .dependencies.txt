@@ -18,7 +18,6 @@ FEW DEPENDENTS
 - geo
 - toot
 - hannibal
-- domain
 - form
 - html
 - re
@@ -26,6 +25,7 @@ FEW DEPENDENTS
 SOME DEPENDENTS
 
 - remote
+- uri
 - turbine
 - data-mock
 - rosetta

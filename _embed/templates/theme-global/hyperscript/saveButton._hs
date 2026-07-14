@@ -14,7 +14,7 @@ behavior SaveButton
 			remove .success
 			wait 1.5s
 	
-			async transition my *backgroundColor to "" over 1s
+			transition my *backgroundColor to "" over 1s
 			transition my *color to "" over 1s
 		end
 

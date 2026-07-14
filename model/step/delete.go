@@ -23,7 +23,7 @@ func NewDelete(stepInfo mapof.Any) (Delete, error) {
 	const location = "model.step.NewDelete"
 
 	// Validate the step configuration
-	if err := StepDeleteSchema().Validate(stepInfo); err != nil {
+	if _, err := schema.New(StepDeleteSchema()).Validate(stepInfo); err != nil {
 		return Delete{}, derp.Wrap(err, location, "Invalid step configuration", stepInfo)
 	}
 

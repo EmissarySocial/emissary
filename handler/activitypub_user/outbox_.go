@@ -72,7 +72,7 @@ func GetOutboxActivity(ctx *steranko.Context, factory *service.Factory, session 
 	outboxMessageID, err := primitive.ObjectIDFromHex(outboxMessageToken)
 
 	if err != nil {
-		return derp.Wrap(err, location, "OutboxMessageID must be a valid ObjectID", outboxMessageToken)
+		return derp.Wrap(err, location, "OutboxMessageID must be a valid ObjectID", outboxMessageToken, derp.WithNotFound())
 	}
 
 	// Load the Outbox Message

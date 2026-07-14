@@ -1,10 +1,11 @@
 package consumer
 
 import (
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
@@ -40,22 +41,21 @@ func SendSearchResult_SearchQuery(factory *service.Factory, session data.Session
 	// Get all Followers from the database
 	followers := followerService.RangeBySearch(session, searchQueryID)
 
-	// Send ActivityPub messages to each follower
+	// Send ActivityPub messages to each follower. The activity carries its recipient in `to`;
+	// hannibal/sender resolves the inbox and SendLocator.Actor signs as the SearchQuery actor
+	// (F1). Tenant routing uses the activity's `actor` host. See F5.
 	for follower := range followers {
 
-		// Create a new queue message for each follower
-		queueService.NewTask(
-			"SendActivityPubMessage",
+		postcommit.Publish(
+			session,
+			queueService,
+			sender.OutboxSendToAllRecipients,
 			mapof.Any{
-				"host":      factory.Hostname(),
-				"actorType": model.FollowerTypeSearch,
-				"actorID":   searchQueryID.Hex(),
-				"to":        follower.Actor.ProfileURL,
-				"message": mapof.Any{
-					vocab.PropertyActor:  actorURL,
-					vocab.PropertyType:   vocab.ActivityTypeAnnounce,
-					vocab.PropertyObject: url,
-				},
+				vocab.AtContext:      vocab.ContextTypeActivityStreams,
+				vocab.PropertyTo:     []string{follower.Actor.ProfileURL},
+				vocab.PropertyActor:  actorURL,
+				vocab.PropertyType:   vocab.ActivityTypeAnnounce,
+				vocab.PropertyObject: url,
 			},
 		)
 	}

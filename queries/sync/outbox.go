@@ -34,5 +34,11 @@ func Outbox(ctx context.Context, database *mongo.Database) error {
 				{Key: "objectId", Value: 1},
 			},
 		},
+
+		"idx_Outbox_Activity": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "activityUrl", Value: 1},
+			},
+		},
 	})
 }

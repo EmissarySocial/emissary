@@ -31,7 +31,7 @@ func (step StepDeleteAttachments) Post(builder Builder, _ io.Writer) PipelineBeh
 	objectType := builder.service().ObjectType()
 	objectID := builder.objectID()
 
-	criteria := exp.All()
+	var criteria exp.Expression = exp.All()
 
 	// If "field" is specified, then all other arguments are ignored.
 	if step.Field != "" {

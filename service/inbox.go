@@ -16,6 +16,7 @@ import (
 	"github.com/benpate/rosetta/ranges"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -44,6 +45,7 @@ func (service *Inbox) Refresh(factory *Factory) {
 
 // Close stops any background processes controlled by this service
 func (service *Inbox) Close() {
+	// No background processes to stop
 }
 
 /******************************************
@@ -120,7 +122,7 @@ func (service *Inbox) Save(session data.Session, inboxActivity *model.InboxActiv
 	}
 
 	// Validate the record using the schema
-	if err := service.Schema().Validate(inboxActivity); err != nil {
+	if _, err := service.Schema().Validate(inboxActivity); err != nil {
 		return derp.Wrap(err, location, "InboxActivity is invalid", inboxActivity)
 	}
 
@@ -129,8 +131,9 @@ func (service *Inbox) Save(session data.Session, inboxActivity *model.InboxActiv
 		return derp.Wrap(err, location, "Unable to save Inbox activity", inboxActivity, note)
 	}
 
+	// Removing this because it breaks with messages coming from Bonfire
 	// (async) guarantee the activity.Object is loaded into the ActivityStream cache
-	go service.cacheObject(inboxActivity)
+	// go service.cacheObject(inboxActivity)
 
 	// Send realtime SSE messages to any listeners
 	go service.sendSSEUpdate(inboxActivity)
@@ -169,11 +172,16 @@ func (service *Inbox) cacheObject(inboxActivity *model.InboxActivity) {
 		return
 	}
 
+	// If the ObjectID is not a valid URL, then don't even try to load it into the cache.
+	if uri.NotValidURL(inboxActivity.ObjectID) {
+		return
+	}
+
 	// Get an ActivityStream client and rewrite the object into the cache
 	client := service.activityService.UserClient(inboxActivity.UserID)
 
 	if _, err := client.Load(inboxActivity.ObjectID, ascache.WithWriteOnly()); err != nil {
-		derp.Report(err)
+		derp.Report(derp.Wrap(err, "service.Inbox.cacheObject", "Unable to load object into cache", inboxActivity.ObjectID))
 	}
 }
 

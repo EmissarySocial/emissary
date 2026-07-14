@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -119,4 +120,37 @@ func (permissions *Permissions) SetString(name string, value string) bool {
 	}
 
 	return false
+}
+
+// GetIndex returns the ObjectID at the provided index (as a hex string) and TRUE,
+// or ("", false) if the index is out of range. Implements schema.ArrayGetter.
+func (permissions Permissions) GetIndex(index int) (any, bool) {
+
+	if (index < 0) || (index >= permissions.Length()) {
+		return nil, false
+	}
+
+	return permissions[index].Hex(), true
+}
+
+// SetIndex stores an ObjectID at the provided index, growing the slice to fit if
+// necessary, and returns TRUE if the value was set. Implements schema.ArraySetter.
+func (permissions *Permissions) SetIndex(index int, value any) bool {
+
+	objectID, err := primitive.ObjectIDFromHex(convert.String(value))
+
+	if err != nil {
+		return false
+	}
+
+	if index < 0 {
+		return false
+	}
+
+	for index >= permissions.Length() {
+		(*permissions) = append(*permissions, primitive.NilObjectID)
+	}
+
+	(*permissions)[index] = objectID
+	return true
 }

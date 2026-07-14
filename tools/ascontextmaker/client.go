@@ -38,8 +38,10 @@ func New(innerClient streams.Client, commonDatabase data.Server, options ...Clie
 }
 
 func (client *Client) SetRootClient(rootClient streams.Client) {
-	client.innerClient.SetRootClient(rootClient)
 	client.rootClient = rootClient
+	if client.innerClient != nil {
+		client.innerClient.SetRootClient(rootClient)
+	}
 }
 
 // Load implements the streams.Client interface, and loads a document from the Interwebs.

@@ -46,9 +46,9 @@ func GetOAuthCallback(ctx *steranko.Context, factory *service.Factory, session d
 	return ctx.Redirect(http.StatusTemporaryRedirect, "/admin/connections")
 }
 
-// GetOAuthMetadata returns OAuth metadata for this domain
+// GetOAuthClientMetadata returns OAuth client metadata for this domain
 // https://client.dev
-func GetOAuthMetadata(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+func GetOAuthClientMetadata(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	domain := factory.Domain().Get()
 

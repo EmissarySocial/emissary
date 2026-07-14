@@ -27,8 +27,8 @@ type NewsItem struct {
 	InReplyTo   string                     `bson:"inReplyTo,omitempty"`   // URL this message is in reply to
 	Response    id.Map                     `bson:"response,omitempty"`    // Map of responses: Like, Dislike, Announce, etc.
 	StateID     string                     `bson:"stateId"`               // StateID of this message (UNREAD,READ,MUTED,NEW-REPLIES)
-	PublishDate int64                      `bson:"publishDate,omitempty"` // Unix timestamp of the date/time when this NewsItem was published
-	ReadDate    int64                      `bson:"readDate"`              // Unix timestamp of the date/time when this NewsItem was read.  If unread, this is MaxInt64.
+	PublishDate int64                      `bson:"publishDate,omitempty"` // Unix epoch SECONDS when this NewsItem was published
+	ReadDate    int64                      `bson:"readDate"`              // Unix epoch SECONDS when this NewsItem was read (math.MaxInt64 = unread).
 	Rank        int64                      `bson:"rank"`                  // Sort rank for this message (publishDate * 1000 + sequence number)
 
 	journal.Journal `json:"-" bson:",inline"`
@@ -316,9 +316,9 @@ func (newsItem NewsItem) Toot() object.Status {
 	return object.Status{
 		ID:          newsItem.NewsItemID.Hex(),
 		URI:         newsItem.Origin.URL,
-		CreatedAt:   time.Unix(newsItem.CreateDate, 0).Format(time.RFC3339),
-		SpoilerText: "", // newsItem.Label,
-		Content:     "", // newsItem.ContentHTML,
+		CreatedAt:   time.UnixMilli(newsItem.CreateDate).UTC().Format(time.RFC3339), // CreateDate is milliseconds (journal UnixMilli)
+		SpoilerText: "",                                                             // newsItem.Label,
+		Content:     "",                                                             // newsItem.ContentHTML,
 	}
 }
 

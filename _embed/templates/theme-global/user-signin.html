@@ -17,9 +17,9 @@
 
 					{{- if eq .message "password-reset" -}}
 						<div class="text-green margin-bottom-lg">{{icon "thumbs-up-fill"}} <b>Your password has been updated.</b> To continue, please sign in with your new password below.</div>
-						<div script="on load focus() the #password"></div>
+						<div script="on load focus the #password"></div>
 					{{- else -}}
-						<div script="on load focus() the #username"></div>
+						<div script="on load focus the #username"></div>
 					{{- end -}}
 
 					<!-- Customizable Header for Signin Page -->

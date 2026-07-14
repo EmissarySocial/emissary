@@ -11,8 +11,6 @@
 			<div class="bold ellipsis">Following {{$following.Label}}</div>
 			{{- if eq "ACTIVITYPUB" $following.Method -}}
 				<div class="text-sm text-light-gray">{{icon "activitypub"}} ActivityPub. Real-time updates.</div>
-			{{- else if eq "WEBSUB" $following.Method -}}
-				<div class="text-sm text-light-gray">{{icon "websub"}} WebSub. Real-time updates.</div>
 			{{- else if eq "POLL" $following.Method -}}
 				<div class="text-sm text-light-gray">{{icon "rss"}} RSS/Atom. Daily Updates.</div>
 			{{- end -}}

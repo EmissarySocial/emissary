@@ -6,6 +6,7 @@ package step
 
 import (
 	"github.com/benpate/derp"
+	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -32,11 +33,17 @@ type ModelRequirer interface {
 	RequireModel() string
 }
 
+// FormGetter interface is implemented by steps that render a form, so that the
+// form can be validated against the Template schema when the Template is loaded.
+type FormGetter interface {
+	GetForm() form.Element
+}
+
 // New uses an Step object to create a new action
 func New(stepInfo mapof.Any) (Step, error) {
 
 	// Populate the action with the data from
-	switch stepInfo["do"] {
+	switch stepInfo["do"] { // NOSONAR - there is no clean way to handle this without a big switch statement.
 
 	// STEPS THAT WORK ON ALL MODEL OBJECTS
 
@@ -120,6 +127,12 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	case "make-archive":
 		return NewMakeArchive(stepInfo)
+
+	case "mark-folder-read":
+		return NewMarkFolderRead(stepInfo)
+
+	case "mark-notifications-read":
+		return NewMarkNotificationsRead(stepInfo)
 
 	case "process-content":
 		return NewProcessContent(stepInfo)
@@ -229,9 +242,6 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "view-json":
 		return NewViewJSON(stepInfo)
 
-	case "websub":
-		return NewWebSub(stepInfo)
-
 	case "with-annotation":
 		return NewWithAnnotation(stepInfo)
 
@@ -243,9 +253,6 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	case "with-circle":
 		return NewWithCircle(stepInfo)
-
-	case "with-conversation":
-		return NewWithConversation(stepInfo)
 
 	case "with-draft":
 		return NewWithDraft(stepInfo)
@@ -273,6 +280,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	case "with-next-sibling":
 		return NewWithNextSibling(stepInfo)
+
+	case "with-notification":
+		return NewWithNotification(stepInfo)
 
 	case "with-oauth-token":
 		return NewWithOAuthToken(stepInfo)

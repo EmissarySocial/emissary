@@ -9,6 +9,11 @@ import (
 func TestDomainSchema(t *testing.T) {
 
 	domain := NewDomain()
+
+	// The virtual iconUrl/imageUrl fields derive from Host() + attachment path, so a
+	// hostname is required for them to pass the (absolute-only) "url" format.
+	domain.Hostname = "example.com"
+
 	s := schema.New(DomainSchema())
 
 	table := []tableTestItem{
@@ -38,6 +43,9 @@ func TestDomainSchema(t *testing.T) {
 		{"defaultAnonymous", "/home", nil},
 		{"defaultAuthenticated", "/@me", nil},
 		{"defaultOwner", "/admin", nil},
+		{"imageId", "aaa4bbb8ddd4ddd812345679", nil},
+		{"mlsGroupIds", "GROUP-IDS", nil},
+		{"mlsMode", DomainMLSModeGroups, nil},
 	}
 
 	tableTest_Schema(t, &s, &domain, table)

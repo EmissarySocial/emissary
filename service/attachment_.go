@@ -40,7 +40,7 @@ func (service *Attachment) Refresh(factory *Factory) {
 
 // Close stops any background processes controlled by this service
 func (service *Attachment) Close() {
-
+	// No background processes to stop
 }
 
 /******************************************
@@ -111,7 +111,7 @@ func (service *Attachment) Save(session data.Session, attachment *model.Attachme
 	const location = "service.Attachment.Save"
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(attachment); err != nil {
+	if _, err := service.Schema().Validate(attachment); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Attachment", attachment)
 	}
 

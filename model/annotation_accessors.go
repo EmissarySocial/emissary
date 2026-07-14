@@ -12,9 +12,9 @@ func AnnotationSchema() schema.Element {
 			"annotationId": schema.String{Format: "objectId"},
 			"userId":       schema.String{Format: "objectId"},
 			"url":          schema.String{Format: "url"},
-			"name":         schema.String{MaxLength: 255},
-			"icon":         schema.String{MaxLength: 255},
-			"content":      schema.String{MaxLength: 10000},
+			"name":         schema.String{Format: "text", MaxLength: 256},
+			"icon":         schema.String{Format: "text", MaxLength: 256},
+			"content":      schema.String{Format: "text", MaxLength: 10000},
 		},
 	}
 }

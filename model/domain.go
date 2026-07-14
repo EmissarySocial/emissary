@@ -2,10 +2,10 @@ package model
 
 import (
 	"github.com/benpate/data/journal"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -114,7 +114,7 @@ func (domain *Domain) HasRegistrationForm() bool {
 
 // Host returns a usable URL for this domain, including the HTTP(S) protocol and hostname
 func (domain *Domain) Host() string {
-	return dt.Protocol(domain.Hostname) + domain.Hostname
+	return uri.GuessProtocolForHostname(domain.Hostname) + domain.Hostname
 }
 
 // IconURL returns the full URL for this domain's icon attachment

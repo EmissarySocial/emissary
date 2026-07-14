@@ -6,11 +6,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func CountResponsesByContent(collection data.Collection, objectID string) (mapof.Int, error) {
+func CountResponsesByContent(collection data.Collection, object string) (mapof.Int, error) {
 
 	// Query pipeline to count all responses by type
 	pipeline := []bson.M{
-		{"$match": bson.M{"objectId": objectID}},
+		{"$match": bson.M{"object": object}},
 		{"$group": bson.M{
 			"_id":   "$content",
 			"count": bson.M{"$sum": 1},

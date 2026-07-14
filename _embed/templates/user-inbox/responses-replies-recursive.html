@@ -68,7 +68,7 @@
 				{{- end -}}
 			
 				<div>{{ template "tags" $document }}</div>
-				<div class="margin-top">{{$object.Content | html}}</div>
+				<div class="margin-top">{{$object.Content | htmlMinimal}}</div>
 			</div>
 
 			<div class="text-sm text-light-gray">

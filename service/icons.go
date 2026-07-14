@@ -11,6 +11,7 @@ func NewIcons() Icons {
 }
 
 func (service Icons) Get(name string) string {
+
 	switch name {
 
 	// App Actions and Behaviors
@@ -208,6 +209,10 @@ func (service Icons) Get(name string) string {
 		return service.get("key")
 	case "key-fill":
 		return service.get("key-fill")
+	case "label":
+		return service.get("tag")
+	case "label-fill":
+		return service.get("tag-fill")
 	case "like":
 		return service.get("heart")
 	case "like-fill":
@@ -449,14 +454,6 @@ func (service Icons) Get(name string) string {
 		return service.get("rss")
 	case "rss-fill":
 		return service.get("rss-fill")
-	case "rss-cloud":
-		return service.get("cloud-arrow-down")
-	case "rss-cloud-fill":
-		return service.get("cloud-arrow-down-fill")
-	case "websub":
-		return service.get("cloud-arrow-down")
-	case "websub-fill":
-		return service.get("cloud-arrow-down-fill")
 
 	// Content Types
 	case "article":
@@ -464,9 +461,9 @@ func (service Icons) Get(name string) string {
 	case "article-fill":
 		return service.get("file-text-fill")
 	case "block":
-		return service.get("slash-circle")
+		return service.get("ban")
 	case "block-fill":
-		return service.get("slash-circle-fill")
+		return service.get("ban-fill")
 	case "code":
 		return service.get("code-slash")
 	case "code-fill":

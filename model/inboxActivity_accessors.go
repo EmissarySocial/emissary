@@ -12,11 +12,16 @@ func InboxActivitySchema() schema.Element {
 			"inboxActivityId": schema.String{Format: "objectId", Required: true},
 			"actorId":         schema.String{Format: "url", Required: true},
 			"userId":          schema.String{Format: "objectId", Required: true},
-			"activityId":      schema.String{Required: true},
-			"activityType":    schema.String{Required: true},
-			"objectType":      schema.String{},
-			"objectId":        schema.String{},
-			"mediaType":       schema.String{},
+			// These fields are populated directly from federated ActivityPub payloads, so they
+			// bypass the form-validation path. They keep the default no-html format (tag-stripping)
+			// and add length bounds; no stricter format (token/uri) is used because valid AP values
+			// legitimately contain characters those formats reject (e.g. "application/ld+json",
+			// full-URI activity types, or tag: scheme IDs) and rejecting them would drop the activity.
+			"activityId":      schema.String{MaxLength: 1024, Required: true},
+			"activityType":    schema.String{MaxLength: 256, Required: true},
+			"objectType":      schema.String{MaxLength: 256},
+			"objectId":        schema.String{MaxLength: 1024},
+			"mediaType":       schema.String{MaxLength: 128},
 			"rawActivity":     schema.Object{Wildcard: schema.Any{}},
 			"publishedDate":   schema.Integer{BitSize: 64, Required: true},
 			"receivedDate":    schema.Integer{BitSize: 64, Required: true},

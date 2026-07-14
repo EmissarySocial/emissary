@@ -16,10 +16,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type ServerFactory interface {
-	ByDomainName(string) (Factory, error)
-}
-
 // Factory is used to locate all necessary services
 type Factory interface {
 	// Model Services
@@ -29,8 +25,8 @@ type Factory interface {
 	Attachment() *service.Attachment
 	Circle() *service.Circle
 	Connection() *service.Connection
-	Conversation() *service.Conversation
-	Context() *service.Context
+	Collection() *service.Collection
+	CollectionItem() *service.CollectionItem
 	Export() *service.Export
 	Folder() *service.Folder
 	Following() *service.Following
@@ -44,14 +40,15 @@ type Factory interface {
 	Identity() *service.Identity
 	Import() *service.Import
 	ImportItem() *service.ImportItem
-	Mention() *service.Mention
 	MerchantAccount() *service.MerchantAccount
-	MLSKeyPackage() *service.KeyPackage
+	KeyPackage() *service.KeyPackage
 	NewsFeed() *service.NewsFeed
+	Notification() *service.Notification
 	Outbox() *service.Outbox
 	Permission() *service.Permission
 	Product() *service.Product
 	Provider() *service.Provider
+	PushSubscription() *service.PushSubscription
 	Registration() *service.Registration
 	Response() *service.Response
 	Rule() *service.Rule
@@ -65,6 +62,7 @@ type Factory interface {
 	Theme() *service.Theme
 	User() *service.User
 	Webhook() *service.Webhook
+	WebPush() *service.WebPush
 	Widget() *service.Widget
 
 	// Other data services

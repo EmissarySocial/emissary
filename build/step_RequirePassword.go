@@ -28,7 +28,7 @@ func (step StepRequirePassword) Get(builder Builder, _ io.Writer) PipelineBehavi
 	b.Div().Class("margin-bottom").InnerHTML(executeTemplate(step.Message, builder)).Close()
 
 	b.Form("", "").
-		Attr("hx-post", builder.URL()).
+		Attr("hx-post", builder.RelativeURL()).
 		Attr("hx-swap", "none").
 		Attr("hx-push-url", "false").
 		Script("on submit set #htmx-response-message.innerHTML to ''")
@@ -97,7 +97,7 @@ func (step StepRequirePassword) Post(builder Builder, writer io.Writer) Pipeline
 
 	// Validate the password. If no match, then halt
 	steranko := factory.Steranko(builder.session())
-	if matches, _ := steranko.ComparePassword(password, user.GetPassword()); !matches {
+	if matches, _ := steranko.ComparePassword(password, user.GetHashedPassword()); !matches {
 		return step.error(builder, "Invalid password.")
 	}
 

@@ -12,7 +12,7 @@ func GetGeocodeNetwork(ctx *steranko.Context, factory *service.Factory, session 
 
 	const location = "handler.GetGeocode"
 
-	ipAddress := ctx.RealIP()
+	ipAddress := factory.ClientIP(ctx.Request())
 	geocodeService := factory.GeocodeNetwork()
 
 	point, err := geocodeService.Geocode(session, ipAddress)

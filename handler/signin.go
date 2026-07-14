@@ -11,9 +11,9 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
+	"github.com/benpate/uri"
 )
 
 // GetSignIn generates an echo.HandlerFunc that handles GET /signin requests
@@ -77,8 +77,10 @@ func calcNextURL(next string) string {
 		return "/"
 	}
 
-	// Otherwise, trim the hostname so we don't have open redirects to other servers
-	next = dt.TrimHostname(next)
+	// Reduce "next" to a safe, same-origin path.  uri.PathAndQuery strips any scheme/host
+	// and neutralizes protocol-relative forms, so the result can never be an open redirect
+	// to another server.
+	next = uri.PathAndQuery(next)
 
 	// Do not allow redirect loops
 	if strings.HasPrefix(next, "/signin") {
@@ -94,16 +96,9 @@ func calcNextURL(next string) string {
 	return next
 }
 
-// GetSignOut displays an HTML response page when a user has been signed out of the system.
+// GetSignOut displays an HTML confirmation page after a user has been signed out of the system.
+// The actual sign-out only happens in PostSignOut, so that state never changes on a GET request.
 func GetSignOut(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
-
-	s := factory.Steranko(session)
-
-	// "sign all the way out" -- if we have an admin "backup profile"
-	// then sign out again.
-	if hasBackupProfile := s.SignOut(ctx); hasBackupProfile {
-		s.SignOut(ctx)
-	}
 
 	// Get the standard Signin page
 	template := factory.Domain().Theme().HTMLTemplate
@@ -179,7 +174,7 @@ func PostResetPassword(ctx *steranko.Context, factory *service.Factory, session 
 	user := model.NewUser()
 
 	if err := userService.LoadByUsernameOrEmail(session, transaction.EmailAddress, &user); err == nil {
-		userService.SendPasswordResetEmail(session, &user)
+		userService.SendPasswordResetEmail(session, &user, model.PasswordResetDurationReset)
 	}
 
 	// Return a success message regardless of whether or not the user was found.
@@ -286,8 +281,13 @@ func PostResetCode(ctx *steranko.Context, factory *service.Factory, session data
 		return derp.Wrap(err, location, "Unable to load user")
 	}
 
-	// Update the user with the new password
-	user.SetPassword(txn.Password)
+	// Update the user with the new password (hashed; never stored as plaintext)
+	if err := factory.Steranko(session).SetPassword(&user, txn.Password); err != nil {
+		return derp.Wrap(err, location, "Unable to set password")
+	}
+
+	// RULE: Reset codes are single-use.  Clear the code so this link cannot be replayed.
+	user.PasswordReset = model.PasswordReset{}
 
 	if err := userService.Save(session, &user, "Updated Password"); err != nil {
 		return derp.Wrap(err, location, "Unable to save user")

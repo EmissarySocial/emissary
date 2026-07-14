@@ -5,9 +5,11 @@ div.input {
 			outline-style: dotted;
 			outline-width: 1px;
 		}
-		outline: medium auto currentColor;
-		outline: medium auto invert;
-		outline: 5px auto -webkit-focus-ring-color;
+		/* Use the themed focus outline (--focus-color) to match other text inputs,
+		   instead of the browser's native `auto` focus ring (which ignores our color
+		   and draws a system-blue ring). */
+		outline: solid 2px var(--focus-color);
+		outline-offset: 1px;
 	}
 
 	& > input {
@@ -15,15 +17,6 @@ div.input {
 		outline:none;
 		width:50%;
 
-	}
-
-	& > span.tag.gray {
-		background-color:var(--gray30);
-		color:black!important;
-
-		&:hover {
-			background-color:var(--gray40);
-		}
 	}
 }
 

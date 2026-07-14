@@ -1,0 +1,38 @@
+package service
+
+import (
+	"encoding/json"
+
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
+	"github.com/benpate/data/option"
+	"github.com/benpate/derp"
+	"github.com/benpate/exp"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+func (service *Collection) ExportCollection(session data.Session, userID primitive.ObjectID) ([]model.IDOnly, error) {
+	criteria := exp.Equal("userId", userID)
+	return service.QueryIDOnly(session, criteria, option.SortAsc("createDate"))
+}
+
+func (service *Collection) ExportDocument(session data.Session, userID primitive.ObjectID, collectionID primitive.ObjectID) (string, error) {
+
+	const location = "service.Collection.ExportDocument"
+
+	// Load the Collection
+	collection := model.NewCollection()
+	if err := service.LoadByID(session, userID, collectionID, &collection); err != nil {
+		return "", derp.Wrap(err, location, "Unable to load Collection")
+	}
+
+	// Marshal the collection as JSON
+	result, err := json.Marshal(collection)
+
+	if err != nil {
+		return "", derp.Wrap(err, location, "Unable to marshal Collection", collection)
+	}
+
+	// Success
+	return string(result), nil
+}

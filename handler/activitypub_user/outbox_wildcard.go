@@ -37,7 +37,7 @@ func putActivityIntoOutbox(context Context, activity streams.Document) error {
 
 	// For now, we don't support public notes, so return an error
 	// In the future, we'll add more rules that map public-facing posts to Streams.
-	if recipients.Contains(vocab.NamespaceASPublic) {
+	if activity.IsPublic() {
 		return derp.NotImplemented(location, "Public notes are not supported at this time.")
 	}
 
@@ -47,26 +47,26 @@ func putActivityIntoOutbox(context Context, activity streams.Document) error {
 	outbox2Service := factory.Outbox2()
 
 	// Confirm that the actor matches the authenticated user
-	userID, err := locatorService.ParseUser(activity.Actor().ID())
+	userID, err := locatorService.ParseUser(activity.ActorID())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to parse userID from actorID", "actorID: "+activity.Actor().ID(), activity.Map())
+		return derp.Wrap(err, location, "Unable to parse userID from actorID", "actorID: "+activity.ActorID(), activity.Map())
 	}
 
 	if userID != context.user.UserID {
-		return derp.Forbidden(location, "Actor does not match authenticated user", "actorID: "+activity.Actor().ID(), activity.Map())
+		return derp.Forbidden(location, "Actor does not match authenticated user", "actorID: "+activity.ActorID(), activity.Map())
 	}
 
 	// Add an activity record to the Outbox2
-	dbActivity := model.NewActivity()
-	dbActivity.URL = locatorService.ActivityURL(model.ActorTypeUser, context.user.UserID, dbActivity.ActivityID)
-	dbActivity.ActorType = model.ActorTypeUser
-	dbActivity.ActorID = context.user.UserID
-	dbActivity.Object = activity.Map()
-	dbActivity.Recipients = recipients
+	outboxItem := model.NewOutboxItem()
+	outboxItem.URL = locatorService.ActivityURL(model.ActorTypeUser, context.user.UserID, outboxItem.ActivityID)
+	outboxItem.ActorType = model.ActorTypeUser
+	outboxItem.ActorID = context.user.UserID
+	outboxItem.Activity = activity.Map()
+	outboxItem.Recipients = recipients
 
 	// Save the activity in the user's outbox
-	if err := outbox2Service.Save(context.session, &dbActivity, "Created via ActivityPub Outbox2"); err != nil {
+	if err := outbox2Service.Save(context.session, &outboxItem, "Created via ActivityPub Outbox2"); err != nil {
 		return derp.Wrap(err, location, "Unable to save Outbox2 activity")
 	}
 

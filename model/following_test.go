@@ -31,6 +31,7 @@ func TestFollowingSchema(t *testing.T) {
 		{"nextPoll", 424242, int64(424242)},
 		{"purgeDuration", "1", 1},
 		{"errorCount", int64(7), 7},
+		{"notes", "FOLLOWING-NOTES", nil},
 	}
 
 	tableTest_Schema(t, &s, &following, table)

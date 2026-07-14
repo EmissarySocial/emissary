@@ -2,29 +2,15 @@ package handler
 
 import (
 	"net/http"
-	"strings"
+	"net/url"
 
 	"github.com/labstack/echo/v4"
 )
 
-// GetFollowingTunnel is a hack to work around the restrictions from SameSite
-// cookies.  If the user is coming from another site, their Authentication
-// cookies won't be sent because we use SameSite=Strict.  But they WILL be
-// sent from this redirect.  So, it's another hop, but it's still better for
-// users.
-func GetFollowingTunnel(context echo.Context) error {
-
-	message := `<html>
-<head>
-<meta http-equiv="refresh" content="0;URL='/@me/settings/following-edit?url={uri}'"/>
-</head>
-<body>
-<p><a href="/@me/settings/following-edit?url={uri}">Redirecting...</p>
-</body>
-</html>`
-
-	forwardURL := context.QueryParam("uri")
-	message = strings.ReplaceAll(message, "{uri}", forwardURL)
-
-	return context.HTML(http.StatusOK, message)
+// GetFollowingTunnel redirects legacy remote-follow links to the "following-edit" settings page.
+// Published URLs (WebFinger, outbox templates) now point directly at /@me/settings/following-edit,
+// but remote servers cache WebFinger responses, so old tunnel links must keep working.
+func GetFollowingTunnel(ctx echo.Context) error {
+	target := "/@me/settings/following-edit?url=" + url.QueryEscape(ctx.QueryParam("uri"))
+	return ctx.Redirect(http.StatusFound, target)
 }

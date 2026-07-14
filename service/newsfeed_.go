@@ -111,7 +111,7 @@ func (service *NewsFeed) Save(session data.Session, message *model.NewsItem, not
 	const location = "service.NewsFeed.Save"
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(message); err != nil {
+	if _, err := service.Schema().Validate(message); err != nil {
 		return derp.Wrap(err, location, "Unable to validate NewsFeed", message)
 	}
 
@@ -363,6 +363,34 @@ func (service *NewsFeed) LoadOldestUnread(session data.Session, userID primitive
 	}
 
 	return derp.NotFound(location, "No unread messages")
+}
+
+// MarkAllReadByFolder marks every unread NewsItem in a folder as read.  Used when the
+// folder is opened (Mastodon-style), so the folder's unread indicator clears on view.
+// MarkRead recalculates the folder's unread count as each item is saved.
+func (service *NewsFeed) MarkAllReadByFolder(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID) error {
+
+	const location = "service.NewsFeed.MarkAllReadByFolder"
+
+	criteria := exp.Equal("userId", userID).
+		AndEqual("folderId", folderID).
+		AndEqual("readDate", math.MaxInt64).
+		AndEqual("deleteDate", 0)
+
+	it, err := service.List(session, criteria)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to list unread messages", userID, folderID)
+	}
+
+	// Loop through every unread message and mark it as read
+	for message := model.NewNewsItem(); it.Next(&message); message = model.NewNewsItem() {
+		if err := service.MarkRead(session, &message); err != nil {
+			return derp.Wrap(err, location, "Unable to mark message as read", message)
+		}
+	}
+
+	return nil
 }
 
 func (service *NewsFeed) MarkReadByDate(session data.Session, userID primitive.ObjectID, rank int64) error {

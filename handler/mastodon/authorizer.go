@@ -6,7 +6,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/toot"
 )
 
@@ -21,7 +20,7 @@ func Authorizer(serverFactory *server.Factory) toot.Authorizer[model.Authorizati
 	return func(request *http.Request) (model.Authorization, error) {
 
 		// Get the factory for this domain
-		hostname := dt.TrueHostname(request)
+		hostname := serverFactory.Hostname(request)
 		factory, err := serverFactory.ByHostname(hostname)
 
 		if err != nil {

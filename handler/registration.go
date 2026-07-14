@@ -114,7 +114,7 @@ func GetCompleteRegistration(ctx *steranko.Context, factory *service.Factory, se
 
 	// Register the new User
 	registrationService := factory.Registration()
-	user, err := registrationService.Register(session, factory.Group(), factory.User(), domain, txn)
+	user, err := registrationService.Register(session, factory.Group(), factory.User(), factory.Steranko(session), domain, txn)
 
 	if err != nil {
 		event := map[string]any{"eventValidatorError": "Could not register this account. Please try again."}
@@ -167,7 +167,7 @@ func PostUpdateRegistration(ctx *steranko.Context, factory *service.Factory, ses
 	// Update the User' registration
 	registrationService := factory.Registration()
 
-	if err := registrationService.UpdateRegistration(session, factory.Group(), factory.User(), domain, userInfo.Source, userInfo.SourceID, txn); err != nil {
+	if err := registrationService.UpdateRegistration(session, factory.Group(), factory.User(), factory.Steranko(session), domain, userInfo.Source, userInfo.SourceID, txn); err != nil {
 		return derp.Wrap(err, location, "Unable to update user registration")
 	}
 

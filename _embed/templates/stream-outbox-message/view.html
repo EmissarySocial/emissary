@@ -28,7 +28,7 @@
 						{{- if eq .Author.IconURL "" -}}
 							<div class="circle width-64"></div>
 						{{- else -}}
-							<img src="{{.Author.IconURL}}" class="circle width-64">
+							<img src="{{.Author.IconURL}}" alt="" class="circle width-64">
 						{{- end -}}
 					</div>
 
@@ -75,9 +75,7 @@
 		{{.ContentHTML}}
 	</div>
 
-	<!--
 	{{- .View "responses-replies" -}}
-	-->
 
 	<div 
 		hx-get="/{{.StreamID}}" 

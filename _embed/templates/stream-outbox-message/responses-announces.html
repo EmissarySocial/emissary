@@ -1,9 +1,7 @@
-{{- $document := .ActivityStream .Permalink -}}
-{{- $metadata := $document.Metadata -}}
-
+{{- $root := . -}}
 {{- $publishedDate := .QueryParam "published" -}}
 {{- $pageSize := 1000 -}}
-{{- $announces := .AnnouncesBefore $publishedDate $pageSize -}}
+{{- $shareLinks := .ShareLinksAfter $publishedDate $pageSize -}}
 
 <div id="responses" class="margin-top" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 
@@ -11,42 +9,42 @@
 
 	<div>
 		<span hx-get="{{.BasePath}}/responses-replies?url={{.Permalink}}" role="button" class="margin-right-xs clickable">
-			{{- $metadata.Replies }} {{pluralize $metadata.Replies "Reply" "Replies" -}}
+			{{- .ReplyCount }} {{pluralize .ReplyCount "Reply" "Replies" -}}
 		</span>
 		&middot;
 		<span hx-get="{{.BasePath}}/responses-likes?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable">
-			{{- $metadata.Likes }} {{pluralize $metadata.Likes "Like" "Likes" -}}
+			{{- .LikeCount }} {{pluralize .LikeCount "Like" "Likes" -}}
 		</span>
 		&middot;
 		<span hx-get="{{.BasePath}}/responses-announces?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable bold">
-			{{- $metadata.Announces }} {{pluralize $metadata.Announces "Share" "Shares" -}}
+			{{- .ShareCount }} {{pluralize .ShareCount "Share" "Shares" -}}
 		</span>
 	</div>
 
 	<hr class="margin-top-sm"/>
 
-	{{- if lt $announces.Length 6 -}}
+	{{- if lt $shareLinks.Length 6 -}}
 
 		<div class="margin-top">
 
-			{{- range $index, $announce := $announces -}}
+			{{- range $index, $link := $shareLinks -}}
+				{{- $announce := $root.ActivityStream $link.URI -}}
 				{{- $icon := $announce.Actor.Icon -}}
-				<div script="on click go to url '{{$announce.Actor.ID}}' in new window" class="flex-row clickable" role="link">
+				<a href="{{$announce.Actor.ID}}" target="_blank" rel="noopener noreferrer nofollow" class="flex-row margin-bottom text-nocolor">
 
-					<div class="margin-right">
-						{{- if $icon.NotNil -}}
-							<img src="{{$icon.Href}}" class="circle width-48">
-						{{- else -}}
-							<div class="circle width-48"></div>
-						{{- end -}}
-					</div>
+					{{- if $icon.NotNil -}}
+						<img src="{{$icon.Href}}" alt="" class="circle width-24">
+					{{- else -}}
+						<div class="circle width-24"></div>
+					{{- end -}}
 
-					<div>
-						<div class="bold">Liked by {{$announce.Actor.Name}}</div>
-						<div class="text-gray">on {{$announce.Published | shortDate}}</div>
-					</div>
+					<span>
+						<span class="bold">{{$announce.Actor.Name}}</span>
+						&middot;
+						<span class="text-gray">{{$announce.Published | shortDate}}</span>
+					</span>
 
-				</div>
+				</a>
 			{{- end -}}
 		</div>
 
@@ -54,27 +52,28 @@
 
 		<div class="margin-top flex-row flex-wrap">
 
-			{{- $size := iif (lt $announces.Length 18) "32" "48" -}}	
+			{{- $size := iif (lt $shareLinks.Length 18) "32" "48" -}}
 
-			{{- range $index, $announce := $announces -}}
+			{{- range $index, $link := $shareLinks -}}
+				{{- $announce := $root.ActivityStream $link.URI -}}
 				{{- $icon := $announce.Actor.Icon -}}
-				<div script="on click go to url '{{$announce.Actor.ID}}' in new window" class="clickable tooltip-container" role="link">
+				<a href="{{$announce.Actor.ID}}" target="_blank" rel="noopener noreferrer nofollow" class="clickable tooltip-container text-nocolor">
 
 					<div class="tooltip align-left">
-						<div class="bold margin-vertical-xs">Liked by {{$announce.Actor.Name}}</div>
+						<div class="bold margin-vertical-xs">Shared by {{$announce.Actor.Name}}</div>
 						<div class="text-gray margin-vertical-xs">on {{$announce.Published | shortDate}}</div>
 					</div>
 
 					<div class="margin-right">
 						{{- if $icon.NotNil -}}
-							<img src="{{$icon.Href}}" class="circle-{{$size}}">
+							<img src="{{$icon.Href}}" alt="" class="circle width-{{$size}}">
 						{{- else -}}
-							<div class="circle-{{$size}}"></div>
+							<div class="circle width-{{$size}}"></div>
 						{{- end -}}
 					</div>
-				</div>
+				</a>
 			{{- end -}}
-	
+
 		</div>
 
 	{{- end -}}

@@ -23,17 +23,18 @@ import (
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/digital-dome/dome"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
 	"github.com/benpate/turbine/queue_mongo"
+	"github.com/benpate/uri"
 	"github.com/davidscottmills/goeditorjs"
 	"github.com/labstack/echo/v4"
 	"github.com/maypok86/otter"
 	"github.com/puzpuzpuz/xsync/v4"
+	"github.com/realclientip/realclientip-go"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
@@ -62,9 +63,10 @@ type Factory struct {
 	attachmentCache     afero.Fs
 	exportCache         afero.Fs
 	commonDatabase      *mongo.Database
-	workingDirectory    mediaserver.WorkingDirectory
+	workingDirectory    *mediaserver.WorkingDirectory
 	queue               *queue.Queue
-	digitalDome         dome.Dome
+	digitalDome         *dome.Dome
+	clientIPStrategy    realclientip.Strategy
 
 	funcMap   template.FuncMap
 	domains   *xsync.Map[string, *service.Factory]
@@ -133,6 +135,7 @@ func NewFactory(commandLineArgs *config.CommandLineArgs, embeddedFiles embed.FS)
 	)
 
 	factory.digitalDome = dome.New(
+		factory.ClientIP, // resolve client IPs using the configured trusted-proxy strategy
 		dome.LogStatusCodes(
 			http.StatusBadRequest,
 			http.StatusNotFound,
@@ -144,6 +147,7 @@ func NewFactory(commandLineArgs *config.CommandLineArgs, embeddedFiles embed.FS)
 	factory.queue = queue.New()
 	factory.workingDirectory = mediaserver.NewWorkingDirectory(os.TempDir(), 4*time.Minute, 10000)
 	factory.setup = commandLineArgs.Setup
+	factory.clientIPStrategy = realclientip.RemoteAddrStrategy{}
 
 	// Subscribe to configuration changes
 	subscription := factory.storage.Subscribe()
@@ -289,7 +293,7 @@ func (factory *Factory) readConfig(config config.Config) {
 
 		log.Trace().Str("loc", location).Str("domain", domainConfig.Hostname).Msg("Refreshing domain...")
 		if err := factory.refreshDomain(domainConfig); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to refresh domain", domainConfig.ID))
+			derp.Report(derp.Wrap(err, location, "Refreshing domain", domainConfig.ID))
 			continue
 		}
 	}
@@ -321,6 +325,9 @@ func (factory *Factory) readConfig(config config.Config) {
 	if err := factory.queue.Publish(queue.NewTask("Scheduler", mapof.NewAny())); err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to start scheduler"))
 	}
+
+	// Derive the strategry for calculating the client's real ip address
+	factory.clientIPStrategy = factory.calcClientIPStrategy(config)
 }
 
 // refreshDomain attempts to refresh an existing domain, or creates a new one if it doesn't exist
@@ -360,7 +367,7 @@ func (factory *Factory) refreshDomain(domainConfig config.Domain) error {
 		factory.attachmentCache,
 		factory.exportCache,
 		&factory.httpCache,
-		&factory.workingDirectory,
+		factory.workingDirectory,
 	)
 
 	if err != nil {
@@ -458,6 +465,13 @@ func (factory *Factory) Config() config.Config {
 	return result
 }
 
+// AllowPrivateIPs reports whether outbound ActivityPub delivery may connect to
+// non-public (private/loopback) addresses. FALSE in production; enabled only for
+// local/dev federation between machines on a private network.
+func (factory *Factory) AllowPrivateIPs() bool {
+	return factory.config.AllowPrivateIPs
+}
+
 // UpdateConfig updates the configuration for the Factory
 func (factory *Factory) UpdateConfig(value config.Config) error {
 
@@ -516,7 +530,7 @@ func (factory *Factory) PutDomain(configuration config.Domain) error {
 		ctx, cancel := timeoutContext(30)
 		defer cancel()
 
-		_, err = domainFactory.Server().WithTransaction(ctx, func(session data.Session) (any, error) {
+		_, err = domainFactory.WithTransaction(ctx, func(session data.Session) (any, error) {
 			userService := domainFactory.User()
 			if err := userService.SetOwner(session, configuration.Owner); err != nil {
 				return nil, derp.Wrap(err, location, "Unable to set owner", configuration.Owner)
@@ -624,11 +638,12 @@ func (factory *Factory) ByContext(ctx echo.Context) (*service.Factory, error) {
 	return factory.ByRequest(ctx.Request())
 }
 
+// ByRequest retrieves a Domain factory using an http.Request
 func (factory *Factory) ByRequest(req *http.Request) (*service.Factory, error) {
 
 	const location = "server.Factory.ByRequest"
 
-	hostname := dt.TrueHostname(req)
+	hostname := factory.Hostname(req)
 	result, err := factory.ByHostname(hostname)
 
 	if err != nil {
@@ -737,7 +752,7 @@ func (factory *Factory) EditorJS() *goeditorjs.HTMLEngine {
 }
 
 func (factory *Factory) DigitalDome() *dome.Dome {
-	return &factory.digitalDome
+	return factory.digitalDome
 }
 
 func (factory *Factory) HTTPCache() *httpcache.HTTPCache {
@@ -805,6 +820,62 @@ func (factory *Factory) IsReadyForDomains() bool {
 	return factory.config.IsReadyForDomains()
 }
 
+func (factory *Factory) calcClientIPStrategy(config config.Config) realclientip.Strategy {
+
+	const location = "server.Factory.ClientIPStrategy"
+
+	var strategy realclientip.Strategy
+	var err error
+
+	switch config.ClientIPStrategy {
+
+	case "REMOTE-ADDR":
+		return realclientip.RemoteAddrStrategy{}
+
+	case "RIGHTMOST-TRUSTED-COUNT":
+		strategy, err = realclientip.NewRightmostTrustedCountStrategy("X-Forwarded-For", config.ClientIPTrustedCount)
+
+	case "SINGLE-IP-HEADER":
+		strategy, err = realclientip.NewSingleIPHeaderStrategy(config.ClientIPHeader)
+
+	default:
+		err = derp.Internal(location, "Unknown Client IP strategy", config.ClientIPStrategy)
+	}
+
+	// If there is no error, then
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to create Client IP strategy", config.ClientIPStrategy))
+		return realclientip.RemoteAddrStrategy{}
+	}
+
+	return strategy
+}
+
+// ClientIP returns the client's real IP address using the strategy defined in the configuration file
+func (factory *Factory) ClientIP(request *http.Request) string {
+
+	if factory.clientIPStrategy == nil {
+		derp.Report(derp.Internal("server.Factory.ClientIPStrategy", "Client IP strategy cannot be nil"))
+		return ""
+	}
+
+	return factory.clientIPStrategy.ClientIP(request.Header, request.RemoteAddr)
+}
+
+// Hostname returns the hostname for the request.
+func (factory *Factory) Hostname(request *http.Request) string {
+
+	// If the server config includes TrustForwardedHost, then the X-Forwarded-Host header is used.
+	if factory.config.TrustForwardedHost {
+		if forwardedHost := request.Header.Get("X-Forwarded-Host"); forwardedHost != "" {
+			return forwardedHost
+		}
+	}
+
+	// Default is to use the standard Host header
+	return request.Host
+}
+
 /******************************************
  * Helper Methods
  ******************************************/
@@ -813,7 +884,7 @@ func (factory *Factory) port(domainConfig config.Domain) string {
 
 	// If not localhost, then use standard ports and assume the
 	// hosting environment will handle the port forwarding
-	if !dt.IsLocalhost(domainConfig.Hostname) {
+	if !uri.IsLocalHostname(domainConfig.Hostname) {
 		return ""
 	}
 

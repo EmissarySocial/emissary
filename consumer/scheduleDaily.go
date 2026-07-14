@@ -41,6 +41,9 @@ func ScheduleDaily(serverFactory ServerFactory) queue.Result {
 		// Add "PurgeImports" tasks to the queue
 		q.NewTask("PurgeImports", mapof.Any{"host": factory.Hostname()})
 
+		// Add "PurgeNotifications" tasks to the queue
+		q.NewTask("PurgeNotifications", mapof.Any{"host": factory.Hostname()})
+
 	}
 
 	// Stupendous.

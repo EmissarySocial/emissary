@@ -40,6 +40,7 @@ func getOriginType(activityType string) string {
 	return model.OriginTypePrimary
 }
 
+// isUserVisible returns TRUE if the user is visible to the requester (domain owner, public, or the same user)
 func isUserVisible(context *steranko.Context, user *model.User) bool {
 
 	authorization := getAuthorization(context)

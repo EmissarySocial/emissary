@@ -10,11 +10,11 @@ import (
 	"github.com/EmissarySocial/emissary/tools/nodeinfo"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/list"
+	"github.com/benpate/uri"
 	"github.com/rs/zerolog/log"
 )
 
@@ -159,7 +159,7 @@ func (camper *Camper) getTemplateFromWebfinger(intentType string, accountID stri
 // a list of known server software types
 func (camper *Camper) getTemplateFromNodeInfo(intentType string, server string) string {
 
-	server = dt.AddProtocol(server)
+	server = uri.PrependProtocol(server)
 
 	// This only works with https://w3id.org/fep/3b86/Create activities
 	if intentType != vocab.ActivityTypeCreate {
@@ -178,7 +178,7 @@ func (camper *Camper) getTemplateFromNodeInfo(intentType string, server string) 
 	// If we think we know what software they're using, we should be able
 	// to determine the correct intent URL
 	if path := camper.getTemplateFromKnownSoftware(intentType, info.Software.Name); path != "" {
-		return dt.AddProtocol(server) + path
+		return uri.PrependProtocol(server) + path
 	}
 
 	// Nope. Just nope.
@@ -258,7 +258,7 @@ func (camper *Camper) getTemplateFromAssumeSharePath(intentType string, server s
 	}
 
 	// Assume the common share path name
-	result := dt.AddProtocol(server) + "/share"
+	result := uri.PrependProtocol(server) + "/share"
 
 	// Try to request this URL from the server
 	txn := remote.Get(result).With(camper.options...)

@@ -2,6 +2,7 @@ package activitypub_user
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -28,14 +29,13 @@ func inbox_AddAny(context Context, activity streams.Document) error {
 	following := model.NewFollowing()
 
 	// RULE: Only process Add activities from Actors that we Follow.
-	if err := followingService.LoadByURL(context.session, context.user.UserID, activity.Actor().ID(), &following); err != nil {
+	if err := followingService.LoadByURL(context.session, context.user.UserID, activity.ActorID(), &following); err != nil {
 		return derp.Wrap(err, location, "Unable to locate `Following` record", context.user.UserID)
 	}
 
-	// Add a task to the queue to backfill the context of this activity
-	queue := context.factory.Queue()
-	queue.NewTask("ReceiveActivityPub-Add", mapof.Any{
-		"actor":  activity.Actor().ID(),
+	// Add a task to the queue (post-commit) to backfill the context of this activity
+	postcommit.Publish(context.session, context.factory.Queue(), "ReceiveActivityPub-Add", mapof.Any{
+		"actor":  activity.ActorID(),
 		"object": activity.Object().ID(),
 		"target": activity.Target().ID(),
 	})

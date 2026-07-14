@@ -50,9 +50,10 @@ func init() {
 			return derp.Wrap(err, location, "Unable to load actor", context.searchQuery)
 		}
 
-		// Sen the "Accept" message to the Requester
+		// Send the "Accept" message to the Requester as a post-commit queue task (F3): the signed
+		// delivery happens after this transaction commits and is independently retryable.
 		acceptID := followerService.ActivityPubID(&follower)
-		actor.SendAccept(acceptID, activity)
+		context.factory.Outbox().SendAccept(context.session, actor.ActorID(), acceptID, activity)
 
 		// Voila!
 		return nil

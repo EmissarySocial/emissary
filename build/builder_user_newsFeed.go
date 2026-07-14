@@ -350,30 +350,6 @@ func (w Inbox) IsInboxEmpty(inbox []model.NewsItem) bool {
 	return true
 }
 
-// Conversations returns a QueryBuilder for current User's conversations
-func (w Inbox) Conversations() (QueryBuilder[model.Conversation], error) {
-
-	// Required that the user is signed in
-	if w.AuthenticatedID().IsZero() {
-		return QueryBuilder[model.Conversation]{}, derp.Unauthorized("build.NewsFeed.Conversations", "Must be signed in to view conversations")
-	}
-
-	queryString := w._request.URL.Query()
-
-	expBuilder := builder.NewBuilder().
-		Int("updateDate")
-
-	criteria := exp.And(
-		exp.Equal("userId", w.AuthenticatedID()),
-		exp.Equal("deleteDate", 0),
-		expBuilder.Evaluate(queryString),
-	)
-
-	conversationService := w._factory.Conversation()
-
-	return NewQueryBuilder[model.Conversation](conversationService, w._session, criteria), nil
-}
-
 // FilteredByFollowing returns the Following record that is being used to filter the Inbox
 func (w Inbox) FilteredByFollowing() model.Following {
 
@@ -414,6 +390,7 @@ func (w Inbox) Folders() (model.FolderList, error) {
 	}
 
 	result.Folders = folders
+	result.HasUnreadNotifications = w.HasUnreadNotifications()
 	return result, nil
 }
 
@@ -434,6 +411,12 @@ func (w Inbox) FoldersWithSelection(section string) (model.FolderList, error) {
 		return result, nil
 	}
 
+	// If the "Notifications" section is selected, then we are done.
+	if section == model.FolderListSectionNotifications {
+		result.Section = section
+		return result, nil
+	}
+
 	// Otherwise, we are in the "Folder" section
 	result.Section = model.FolderListSectionFolder
 
@@ -444,13 +427,16 @@ func (w Inbox) FoldersWithSelection(section string) (model.FolderList, error) {
 		return result, nil
 	}
 
-	// Find/Mark the Selected FolderID
+	// Find/Mark the Selected FolderID.  A missing or invalid folderId EXPLICITLY
+	// selects the synthetic "News Feed" (all folders) view — never an arbitrary
+	// folder.  (Requests that lose the query string, like sidebar refetches, must
+	// not silently jump the selection to the first folder.)
 	token := w._request.URL.Query().Get("folderId")
 
 	if folderID, err := primitive.ObjectIDFromHex(token); err == nil {
 		result.SelectedID = folderID
 	} else {
-		result.SelectedID = result.Folders[0].FolderID
+		result.SelectedID = primitive.NilObjectID
 	}
 
 	// Update the query string to reflect the selected folder
@@ -605,6 +591,28 @@ func (w Inbox) RepliesBefore(url string, dateString string, maxRows int) sliceof
 	result := channel.Slice(filteredReplies)
 
 	// For glory and honor!
+	return slice.Reverse(result)
+}
+
+// LikesBefore returns the actors who "Liked" the specified URL, before the specified date.
+// Unlike the Stream builder's LikeLinksAfter (which reads a LOCAL Likes collection), the inbox
+// object may be remote, so likes are drawn from the federated ActivityStream cache instead.
+func (w Inbox) LikesBefore(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
+
+	done := make(channel.Done)
+
+	// Get all "Like" activities that target the provided URL
+	activityService := w._factory.ActivityStream()
+	maxDate := convert.Int64Default(dateString, math.MaxInt)
+	likes := activityService.QueryLikesBeforeDate(w._request.Context(), url, maxDate, done)
+
+	// Filter likes based on rules
+	ruleService := w._factory.Rule()
+	ruleFilter := ruleService.Filter(w.AuthenticatedID())
+	filteredLikes := ruleFilter.Channel(likes)
+
+	// Collect into a slice, newest-first
+	result := channel.Slice(filteredLikes)
 	return slice.Reverse(result)
 }
 

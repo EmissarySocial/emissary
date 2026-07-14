@@ -64,14 +64,31 @@
 	--input-border-invalid: var(--red40);
 	--input-background-invalid: var(--red20);
 	--input-color-invalid: var(--red50);
-	--button-primary-color:var(--white);
-	--button-primary-color-hover:var(--white);
-	--button-primary-background:var(--blue60);
-	--button-primary-background-hover:var(--blue50);
+	--link-color:var(--blue50);
+	/* Hover = the link color mixed ~12% toward black, so links darken consistently
+	   on hover relative to whatever --link-color is. */
+	--link-color-hover:color-mix(in srgb, var(--link-color), black 12%);
+
+	/* Accent color for focus outlines, primary buttons, and other interactive
+	   accents. Defaults to the link color; individual pages may override it in a
+	   scope (e.g. inline on a container) to theme these accents to a contextual
+	   color (such as a conversation's group color). */
+	--focus-color:var(--link-color);
+
+	/* Literal white, NOT var(--white): the primary button background (--focus-color)
+	   stays a dark accent in dark mode, but --white flips to near-black there, which
+	   would make the label vanish.  Unlike warning/success buttons, whose flipped
+	   color ramps keep contrast with a flipped --white, this text must never flip. */
+	--button-primary-color:#ffffff;
+	--button-primary-color-hover:#ffffff;
+	/* NOTE: primary buttons read --focus-color directly (see 02-forms.css) so they
+	   pick up page-scoped accent overrides. These tokens remain for any code that
+	   references them explicitly; keep them as literals (do NOT point them at
+	   --focus-color, which would resolve eagerly here in :root and ignore overrides). */
+	--button-primary-background:var(--blue50);
+	--button-primary-background-hover:color-mix(in srgb, var(--blue50), black 12%);
 	--heading-color:var(--black);
 	--text-color:var(--gray80);
-	--link-color:var(--blue60);
-	--link-color-hover:var(--blue50);
 	--grid-highlight-background:var(--blue20);
 
 	--border-radius: var(--rhythm);

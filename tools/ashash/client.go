@@ -25,12 +25,16 @@ func New(innerClient streams.Client) *Client {
 }
 
 func (client Client) SetRootClient(rootClient streams.Client) {
-	client.innerClient.SetRootClient(rootClient)
+	if client.innerClient != nil {
+		client.innerClient.SetRootClient(rootClient)
+	}
 }
 
 // Load retrieves a document from the underlying innerClient, then searches for hash values
 // inside it (if required)
 func (client Client) Load(id string, options ...any) (streams.Document, error) {
+
+	const location = "ashash.Client.Load"
 
 	if uri.IsValidURL(id) {
 
@@ -38,10 +42,10 @@ func (client Client) Load(id string, options ...any) (streams.Document, error) {
 		if baseURL, hash, found := strings.Cut(id, "#"); found {
 
 			// Otherwise, try to load the baseURL and find the hash inside that document
-			result, err := client.innerClient.Load(baseURL, options)
+			result, err := client.innerClient.Load(baseURL, options...)
 
 			if err != nil {
-				return result, err
+				return result, derp.Wrap(err, location, "Loading base URL", baseURL)
 			}
 
 			// Search all properties at the top level of the document (not recursive)
@@ -55,11 +59,17 @@ func (client Client) Load(id string, options ...any) (streams.Document, error) {
 			}
 
 			// Inner hashed ID not found.
-			return streams.NilDocument(), derp.NotFound("ashash.Client.Load", "Hash value not found in document", baseURL, hash, result.Value())
+			return streams.NilDocument(), derp.NotFound(location, "Hash value not found in document", baseURL, hash, result.Value())
 		}
 	}
 
-	return client.innerClient.Load(id, options...)
+	result, err := client.innerClient.Load(id, options...)
+
+	if err != nil {
+		return result, derp.Wrap(err, location, "Loading document", id)
+	}
+
+	return result, nil
 }
 
 func (client *Client) Save(document streams.Document) error {

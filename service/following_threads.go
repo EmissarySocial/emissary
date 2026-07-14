@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
@@ -38,42 +39,15 @@ func (service *Following) SaveNewsItem(session data.Session, following *model.Fo
 		return derp.Wrap(err, location, "Unable to save newsItem", newsItem)
 	}
 
-	// Crawl the document's context/reply chain in the background
-	service.queue.NewTask(
+	// Crawl the document's context/reply chain in the background (post-commit)
+	postcommit.Publish(
+		session,
+		service.queue,
 		"CrawlContext",
-		mapof.Any{"url": document.ID()},
+		mapof.Any{"url": document.ID(), "host": service.hostname},
 	)
 
 	// Yee. Haw.
-	return nil
-}
-
-// saveToInbox adds/updates an individual NewsItem based on an RSS item.  It returns TRUE if a new record was created
-func (service *Following) SaveDirectNewsItem(session data.Session, user *model.User, document streams.Document) error {
-
-	const location = "service.Following.SaveDirectNewsItem"
-
-	// Unwrap activities like `Create` and `Update`
-	document = document.UnwrapActivity()
-	attributedTo := document.AttributedTo()
-
-	// Convert the document into a message (and traverse responses if necessary)
-	message := getNewsItem(user.UserID, document)
-	message.Origin = model.OriginLink{
-		Type:    model.OriginTypeMention,
-		Label:   attributedTo.Name(),
-		URL:     attributedTo.ID(),
-		IconURL: attributedTo.Icon().Href(),
-	}
-
-	// Try to save a unique version of this message to the database (always collapse duplicates)
-	if err := service.saveUniqueNewsItem(session, message); err != nil {
-		return derp.Wrap(err, location, "Unable to save message")
-	}
-
-	service.streamService.NotifyInReplyTo(session, document.InReplyTo().ID())
-
-	// Yee. Haw. Deux.
 	return nil
 }
 

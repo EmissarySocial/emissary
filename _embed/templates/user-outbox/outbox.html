@@ -10,11 +10,10 @@
 
 	<!-- ActivityPub links -->
 	<link rel="http://webfinger.net/rel/profile-page" href="{{.ProfileURL}}"/>
-	<link rel="http://ostatus.org/schema/1.0/subscribe" href="{{.Host}}/.ostatus/tunnel?uri={uri}">
+	<link rel="http://ostatus.org/schema/1.0/subscribe" href="{{.Host}}/@me/settings/following-edit?url={uri}">
 	<link rel="self" type="application/activity+json" href="{{.ActivityPubURL}}"/>
 
-	<!-- RSS and WebSub Links -->
-	<link rel="hub" href="{{.Host}}/@{{.UserID}}/websub"/>
+	<!-- RSS Links -->
 	<link rel="alternate" type="application/rss+xml" href="{{.Host}}/@{{.UserID}}/feed?format=rss"/>
 	<link rel="alternate" type="application/atom+xml" href="{{.Host}}/@{{.UserID}}/feed?format=atom"/>
 	<link rel="alternate" type="application/feed+json" href="{{.Host}}/@{{.UserID}}/feed?format=json"/>

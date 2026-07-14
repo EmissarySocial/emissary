@@ -1,9 +1,8 @@
 package activitypub_stream
 
 import (
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
-	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/rosetta/list"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
 )
@@ -13,19 +12,15 @@ func fullURL(factory *service.Factory, ctx echo.Context) string {
 	return factory.Host() + ctx.Request().URL.String()
 }
 
-func getResponseType(ctx *steranko.Context) string {
+// getAuthorization extracts a model.Authorization record from the steranko.Context
+func getAuthorization(ctx *steranko.Context) model.Authorization {
 
-	switch list.Last(ctx.Request().URL.Path, '/') {
+	if claims, err := ctx.Authorization(); err == nil {
 
-	case "shared":
-		return vocab.ActivityTypeAnnounce
-
-	case "liked":
-		return vocab.ActivityTypeLike
-
-	case "disliked":
-		return vocab.ActivityTypeDislike
+		if auth, ok := claims.(*model.Authorization); ok {
+			return *auth
+		}
 	}
 
-	return ""
+	return model.NewAuthorization()
 }

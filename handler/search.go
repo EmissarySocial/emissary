@@ -6,9 +6,9 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	dt "github.com/benpate/domain"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
+	"github.com/benpate/uri"
 )
 
 // IndexAllStreams is a handler function that triggers the IndexAllStreams queue task.
@@ -82,6 +82,19 @@ func IndexAllUsers(ctx *steranko.Context, factory *service.Factory, session data
 	return ctx.NoContent(http.StatusOK)
 }
 
+// ReindexReplies re-projects all reply Streams into their parents' Replies collections
+// and refreshes reply counts. Admin-only; safe to re-run.
+func ReindexReplies(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+
+	const location = "handler.ReindexReplies"
+
+	if err := factory.Stream().ReindexReplies(session); err != nil {
+		return derp.Wrap(err, location, "Unable to reindex replies")
+	}
+
+	return ctx.NoContent(http.StatusOK)
+}
+
 func PostSearchLookup(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostSearchLookup"
@@ -93,7 +106,7 @@ func PostSearchLookup(ctx *steranko.Context, factory *service.Factory, session d
 		return derp.Forbidden(location, "No referer", referer)
 	}
 
-	if dt.NameOnly(referer) != factory.Hostname() {
+	if uri.Hostname(referer) != factory.Hostname() {
 		return derp.Forbidden(location, "Invalid referer", referer)
 	}
 

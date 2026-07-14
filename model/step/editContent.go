@@ -7,23 +7,25 @@ import (
 
 // EditContent is a Step that can edit/update Container in a streamDraft.
 type EditContent struct {
-	Filename  string
-	Fieldname string
-	Format    string
+	Filename       string
+	Fieldname      string
+	Format         string
+	RequireContent bool // If TRUE, then the submitted content must not be empty. Otherwise, the step halts with an error.
 }
 
 func NewEditContent(stepInfo mapof.Any) (EditContent, error) {
 
 	// Validate the step configuration
-	if err := StepEditContentSchema().Validate(stepInfo); err != nil {
+	if _, err := schema.New(StepEditContentSchema()).Validate(stepInfo); err != nil {
 		return EditContent{}, err
 	}
 
 	// Create the new "edit-content" step
 	return EditContent{
-		Filename:  first(stepInfo.GetString("file"), stepInfo.GetString("actionId")),
-		Fieldname: first(stepInfo.GetString("field"), "content"),
-		Format:    first(stepInfo.GetString("format"), "editorjs"),
+		Filename:       first(stepInfo.GetString("file"), stepInfo.GetString("actionId")),
+		Fieldname:      first(stepInfo.GetString("field"), "content"),
+		Format:         first(stepInfo.GetString("format"), "editorjs"),
+		RequireContent: stepInfo.GetBool("require-content"),
 	}, nil
 }
 
@@ -41,6 +43,7 @@ func StepEditContentSchema() schema.Element {
 					"TEXT",
 				},
 			},
+			"require-content": schema.Boolean{},
 		},
 	}
 }

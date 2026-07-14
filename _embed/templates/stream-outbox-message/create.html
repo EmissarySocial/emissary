@@ -24,6 +24,7 @@
 
 	<div class="margin-bottom">
 		<div
+			id="outbox-message-content"
 			tabIndex="0"
 			class="input"
 			contenteditable="true"
@@ -33,9 +34,22 @@
 
 				on keydown[key=='ArrowRight']
 					halt the event's bubbling
-					
+
+				on input or load
+					set #outbox-message-error.innerHTML to ''
+					if my innerText.trim() is not ''
+						remove @disabled from #outbox-message-submit
+						show #outbox-message-image
+						hide #outbox-message-image-disabled
+					else
+						add @disabled to #outbox-message-submit
+						show #outbox-message-image-disabled
+						hide #outbox-message-image
+					end
 				">{{.ContentHTML}}</div>
 	</div>
+
+	<div id="outbox-message-error" class="margin-bottom"></div>
 
 	<div id="file-preview"></div>
 	<input 
@@ -49,13 +63,12 @@
 	<div>
 		{{- if .IsNew -}}
 			{{- $label := first (.QueryParam "new-stream-label") "New Post" -}}
-			<button type="submit" class="primary htmx-request-hide text-sm">{{- $label -}}</button>
+			<button id="outbox-message-submit" type="submit" class="primary htmx-request-hide text-sm" disabled>{{- $label -}}</button>
 			<button type="button" class="primary htmx-request-show text-sm" disabled>Posting...</button>
 			<span class="text-lg">
 				&nbsp;
-				<label for="file-upload" class="link" role="button" tabIndex="0">{{icon "image"}}</label>
-				&nbsp;
-				<label class="link" role="button" tabIndex="0" script="on click alert('Video Uploads Not Yet Available')">{{icon "video"}}</label>
+				<span id="outbox-message-image-disabled" class="text-gray disabled">{{icon "image"}}</span>
+				<label id="outbox-message-image" for="file-upload" class="link" style="display:none;" role="button" tabIndex="0">{{icon "image"}}</label>
 			</span>
 		{{- else -}}
 			<span hx-get="/{{.StreamID}}/delete" class="clickable float-right text-red">Delete</span>
@@ -87,6 +100,11 @@
 		width: 100%;
 		height:100%;
 		object-fit: cover;
+	}
+
+	#outbox-message-image[disabled] {
+		opacity:0.4;
+		cursor:default;
 	}
 
 </style>

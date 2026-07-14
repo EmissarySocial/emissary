@@ -1,0 +1,47 @@
+{{- /* Header row shared by the four notification section pages: the section's title and a
+       per-type "Mark All Read" button.  On desktop the section links live in the sidebar
+       (menu.html); on mobile — where the sidebar is hidden — this header
+       renders them as tabs instead.  Rendered inline by each section page (which bakes its
+       ?type= into the request), and re-fetched (via the header action, with
+       an explicit ?type=) on refreshSidebar so the counts stay current when notifications
+       arrive over SSE or are marked read. */ -}}
+{{- $isMobile := .IsMobile -}}
+{{- $type := first (.QueryParam "type") "MENTION" -}}
+{{- $mentionCount := .UnreadNotificationCount "MENTION" -}}
+{{- $announceCount := .UnreadNotificationCount "ANNOUNCE" -}}
+{{- $likeCount := .UnreadNotificationCount "LIKE" -}}
+{{- $followCount := .UnreadNotificationCount "FOLLOW" -}}
+
+{{- $currentCount := $mentionCount -}}
+{{- $currentLabel := "Replies & Mentions" -}}
+{{- if eq $type "ANNOUNCE" -}}
+	{{- $currentCount = $announceCount -}}
+	{{- $currentLabel = "Shares" -}}
+{{- end -}}
+{{- if eq $type "LIKE" -}}
+	{{- $currentCount = $likeCount -}}
+	{{- $currentLabel = "Likes" -}}
+{{- end -}}
+{{- if eq $type "FOLLOW" -}}
+	{{- $currentCount = $followCount -}}
+	{{- $currentLabel = "Followers" -}}
+{{- end -}}
+
+<div class="flex-row">
+	{{- if $isMobile -}}
+		<div role="tablist" class="underlined margin-bottom" hx-boost="true" hx-target="main" hx-push-url="true">
+			<a href="/@me/notifications/replies" role="tab" class="tab {{if eq $type `MENTION`}}selected{{end}}">Replies &amp; Mentions{{if gt $mentionCount 0}} <span class="tab-count">{{if gt $mentionCount 99}}99+{{else}}{{$mentionCount}}{{end}}</span>{{end}}</a>
+			<a href="/@me/notifications/shares" role="tab" class="tab {{if eq $type `ANNOUNCE`}}selected{{end}}">Shares{{if gt $announceCount 0}} <span class="tab-count">{{if gt $announceCount 99}}99+{{else}}{{$announceCount}}{{end}}</span>{{end}}</a>
+			<a href="/@me/notifications/likes" role="tab" class="tab {{if eq $type `LIKE`}}selected{{end}}">Likes{{if gt $likeCount 0}} <span class="tab-count">{{if gt $likeCount 99}}99+{{else}}{{$likeCount}}{{end}}</span>{{end}}</a>
+			<a href="/@me/notifications/followers" role="tab" class="tab {{if eq $type `FOLLOW`}}selected{{end}}">Followers{{if gt $followCount 0}} <span class="tab-count">{{if gt $followCount 99}}99+{{else}}{{$followCount}}{{end}}</span>{{end}}</a>
+		</div>
+	{{- else -}}
+		<h1 class="text-xl bold margin-none">{{$currentLabel}}</h1>
+	{{- end -}}
+	<div class="flex-grow"></div>
+	<div>
+		{{- if gt $currentCount 0 }}
+			<button type="button" class="text-sm" hx-post="/@me/notifications/read?type={{$type}}" hx-swap="none" hx-push-url="false">{{icon "check-circle"}} Mark All Read</button>
+		{{- end }}
+	</div>
+</div>

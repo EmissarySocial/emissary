@@ -28,14 +28,14 @@ func GetKeyPackageCollection(ctx *steranko.Context, factory *service.Factory, se
 	}
 
 	// Fallthrough means this is a request for a specific page
-	keyPackageService := factory.MLSKeyPackage()
+	keyPackageService := factory.KeyPackage()
 	keyPackages, err := keyPackageService.QueryIDOnlyByUser(session, user.UserID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Unable to load rules")
 	}
 
-	collection := streams.NewCollection(user.ActivityPubMLSKeyPackagesURL())
+	collection := streams.NewCollection(user.ActivityPubKeyPackagesURL())
 	collection.TotalItems = keyPackages.Length()
 	collection.Items = slice.Map(keyPackages, func(item model.IDOnly) any {
 		return keyPackageService.ActivityPubURL(user.UserID, item.ID)
@@ -61,7 +61,7 @@ func GetKeyPackageRecord(ctx *steranko.Context, factory *service.Factory, sessio
 		return derp.Forbidden(location, "MLS messages not allowed for this User")
 	}
 	// Load the keyPackage from the database
-	keyPackageService := factory.MLSKeyPackage()
+	keyPackageService := factory.KeyPackage()
 	keyPackage := model.NewKeyPackage()
 
 	if err := keyPackageService.LoadByToken(session, user.UserID, ctx.Param("keyPackageId"), &keyPackage); err != nil {
@@ -70,6 +70,13 @@ func GetKeyPackageRecord(ctx *steranko.Context, factory *service.Factory, sessio
 
 	result := keyPackageService.GetJSONLD(&keyPackage)
 
+	// Rewrite the generator for non-owners to only include the ID, not the name
+	authorization := getAuthorization(ctx)
+	if authorization.UserID != user.UserID {
+		result["generator"] = result.GetMap("generator").GetString("id")
+	}
+
+	// Success
 	ctx.Response().Header().Set("Content-Type", "application/activity+json")
 	return ctx.JSON(http.StatusOK, result)
 }

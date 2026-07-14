@@ -7,17 +7,17 @@
 	schema: {
 		type:object
 		properties: {
-			secret: {type:"string"}
-			title: {type:"string"}
-			description: {type:"string"}
-			confirmation: {type:"string"}
-			inboxTemplate: {type:"string"}
-			outboxTemplate: {type:"string"}
-			groupId: {type:"string"}
-			terms1: {type:"string"}
-			terms2: {type:"string"}
-			terms3: {type:"string"}
-			terms4: {type:"string"}
+			secret: {type:"string", format:"unsafe-any", maxLength:255}
+			title: {type:"string", maxLength:255}
+			description: {type:"string", maxLength:8192}
+			confirmation: {type:"string", maxLength:8192}
+			inboxTemplate: {type:"string", maxLength:128}
+			outboxTemplate: {type:"string", maxLength:128}
+			groupId: {type:"string", maxLength:255}
+			terms1: {type:"string", maxLength:2048}
+			terms2: {type:"string", maxLength:2048}
+			terms3: {type:"string", maxLength:2048}
+			terms4: {type:"string", maxLength:2048}
 		}
 	}
 	form: {

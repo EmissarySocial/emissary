@@ -15,9 +15,9 @@ func ImportItemSchema() schema.Element {
 			"importUrl":    schema.String{Format: "url", Required: true},
 			"remoteUrl":    schema.String{Format: "url", Required: false},
 			"localUrl":     schema.String{Format: "url", Required: false},
-			"type":         schema.String{Required: true},
-			"stateId":      schema.String{Required: true},
-			"message":      schema.String{},
+			"type":         schema.String{Format: "text", MaxLength: 64, Required: true},
+			"stateId":      schema.String{Enum: []string{ImportItemStateNew, ImportItemStateDone, ImportItemStateError}, Required: true},
+			"message":      schema.String{Format: "text", MaxLength: 1024},
 		},
 	}
 }

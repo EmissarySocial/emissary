@@ -3,8 +3,10 @@ package consumer
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
@@ -50,8 +52,10 @@ func SendSearchResult(factory *service.Factory, session data.Session, args mapof
 		// if this SearchQuery ACTUALLY matches...
 		if searchQuery.Match(&searchResult) {
 
-			// Queue up a task to notify its followers
-			queueService.NewTask(
+			// Queue up a task (post-commit) to notify its followers
+			postcommit.Publish(
+				session,
+				queueService,
 				"SendSearchResult-SearchQuery",
 				mapof.Any{
 					"host":          factory.Hostname(),
@@ -71,22 +75,21 @@ func SendSearchResult(factory *service.Factory, session data.Session, args mapof
 	followerService := factory.Follower()
 	followers := followerService.RangeByGlobalSearch(session)
 
-	// Send ActivityPub messages to each follower
+	// Send ActivityPub messages to each follower. The activity carries its recipient in `to`;
+	// hannibal/sender resolves the inbox and SendLocator.Actor signs as the global @search actor
+	// (F1). Tenant routing uses the activity's `actor` host. See F5.
 	for follower := range followers {
 
-		// Create a new queue message for each follower
-		queueService.NewTask(
-			"SendActivityPubMessage",
+		postcommit.Publish(
+			session,
+			queueService,
+			sender.OutboxSendToAllRecipients,
 			mapof.Any{
-				"host":      factory.Hostname(),
-				"actorType": model.FollowerTypeSearchDomain,
-				"actorID":   primitive.NilObjectID.Hex(),
-				"to":        follower.Actor.ProfileURL,
-				"message": mapof.Any{
-					vocab.PropertyActor:  searchDomainService.ActivityPubURL(),
-					vocab.PropertyType:   vocab.ActivityTypeAnnounce,
-					vocab.PropertyObject: searchResult.URL,
-				},
+				vocab.AtContext:      vocab.ContextTypeActivityStreams,
+				vocab.PropertyTo:     []string{follower.Actor.ProfileURL},
+				vocab.PropertyActor:  searchDomainService.ActivityPubURL(),
+				vocab.PropertyType:   vocab.ActivityTypeAnnounce,
+				vocab.PropertyObject: searchResult.URL,
 			},
 		)
 	}

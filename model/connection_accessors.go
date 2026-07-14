@@ -31,8 +31,10 @@ func ConnectionSchema() schema.Element {
 				ConnectionProviderStripeConnect,
 				ConnectionProviderUnsplash,
 			}},
-			"vault":  schema.Object{Wildcard: schema.String{}},
-			"data":   schema.Object{Wildcard: schema.String{}},
+			// vault holds secrets (API keys, tokens); it uses unsafe-any so the no-html default
+			// does not strip characters or collapse whitespace and silently corrupt a secret.
+			"vault":  schema.Object{Wildcard: schema.String{Format: "unsafe-any", MaxLength: 8192}},
+			"data":   schema.Object{Wildcard: schema.String{MaxLength: 4096}},
 			"active": schema.Boolean{},
 		},
 	}

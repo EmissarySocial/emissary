@@ -12,18 +12,24 @@ env:
   GOFLAGS: "-buildvcs=false"
 
 jobs:
- 
+
   nilaway:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v5
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       with:
         fetch-depth: 0
-   
-    - name: Nil panic checks
-      uses: qbaware/nilaway-action@v0
-      env:
-        GOTOOLCHAIN: go1.26.0
+
+    - name: Set up Go
+      uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
       with:
-        package-to-scan: ./...
+        go-version: '1.26'
+
+    # Pin nilaway to an explicit version (it publishes only pseudo-versions,
+    # no semver tags) so the installed tool is predictable, not @latest.
+    - name: Install NilAway
+      run: go install go.uber.org/nilaway/cmd/nilaway@v0.0.0-20260617211854-01ab7e30fbe0
+
+    - name: Nil panic checks
+      run: nilaway ./...

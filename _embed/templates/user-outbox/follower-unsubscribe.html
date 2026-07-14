@@ -18,7 +18,7 @@
 	<div class="margin-bottom-xl">Do you want to keep receiving updates, or cancel your email subscription?</div>
 
 	<div id="htmx-response-message">
-		<button hx-post="{{.URL}}" class="primary">Cancel Email Subscription</button>
+		<button hx-post="{{.RelativeURL}}" class="primary">Cancel Email Subscription</button>
 		<a class="button" href="/@{{.Object.ParentID.Hex}}">Keep Receiving Updates</a>
 	</div>
 

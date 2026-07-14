@@ -71,7 +71,7 @@ func (service *Group) Load(session data.Session, criteria exp.Expression, result
 func (service *Group) Save(session data.Session, group *model.Group, note string) error {
 
 	// Validate the value before saving
-	if err := service.Schema().Validate(group); err != nil {
+	if _, err := service.Schema().Validate(group); err != nil {
 		return derp.Wrap(err, "service.Group.Save", "Unable to validate Group", group)
 	}
 
@@ -172,7 +172,7 @@ func (service *Group) ListByIDs(session data.Session, groupIDs ...primitive.Obje
 	}
 
 	// Build the criteria from the list of GroupIDs
-	criteria := exp.Empty()
+	var criteria exp.Expression = exp.Empty()
 
 	for _, groupID := range groupIDs {
 		criteria = criteria.Or(exp.Equal("_id", groupID))
@@ -185,8 +185,8 @@ func (service *Group) ListByIDs(session data.Session, groupIDs ...primitive.Obje
 		return nil, derp.Wrap(err, "service.Group.ListbyIDs", "Error executing query", criteria)
 	}
 
-	// Read the iterator into a result array
 	for index := 0; it.Next(&(result[index])); index++ {
+		// Read the iterator into a result array
 	}
 
 	return result, nil

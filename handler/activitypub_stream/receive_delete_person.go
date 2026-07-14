@@ -12,8 +12,8 @@ func init() {
 		const location = "handler.activityPub_stream.DeletePerson"
 
 		// RULE: Actors can only delete themselves, not other actors
-		if activity.Actor().ID() != activity.Object().ID() {
-			return derp.Forbidden(location, "Actor and Object must be the same", activity.Actor().ID(), activity.Object().ID())
+		if activity.ActorID() != activity.Object().ID() {
+			return derp.Forbidden(location, "Actor and Object must be the same", activity.ActorID(), activity.Object().ID())
 		}
 
 		// Delete from the cache

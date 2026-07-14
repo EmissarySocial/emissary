@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -98,14 +99,19 @@ func (service *StreamDraft) Save(session data.Session, draft *model.Stream, note
 		return derp.Wrap(err, location, "Invalid Template", draft.TemplateID)
 	}
 
-	// Validate the value (using the global stream schema) before saving
-	if err := service.Schema().Validate(draft); err != nil {
-		return derp.Wrap(err, location, "Unable to validate Stream using StreamSchema", draft)
+	// Normalize the value (using the template-specific schema) before saving.  Values are
+	// rewritten in place to conform to the schema, so that legacy data written under older
+	// rules is repaired progressively as records are saved.  The template schema inherits
+	// the full Stream schema as its baseline, so this covers every Stream property while
+	// honoring the template's format overrides.
+	rewrites, err := template.Schema.Normalize(draft)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid StreamDraft: using TemplateSchema", draft)
 	}
 
-	// Validate the value (using the template-specific schema) before saving
-	if err := template.Schema.Validate(draft); err != nil {
-		return derp.Wrap(err, location, "Unable to validate Stream using TemplateSchema", draft)
+	if len(rewrites) > 0 {
+		log.Debug().Strs("rewrites", rewrites).Str("streamId", draft.StreamID.Hex()).Msg("StreamDraft values normalized during save")
 	}
 
 	if err := service.collection(session).Save(draft, note); err != nil {

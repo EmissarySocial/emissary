@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Emissary is a Social Web Toolkit - a Fediverse server built in Go that enables developers to build custom social applications using declarative, low-code HTML templates and JSON configs. It bridges multiple federated protocols (ActivityPub, RSS+WebSub, IndieWeb) through the [sherlock library](https://github.com/benpate/sherlock).
+Emissary is a Social Web Toolkit - a Fediverse server built in Go that enables developers to build custom social applications using declarative, low-code HTML templates and JSON configs. It bridges multiple federated protocols (ActivityPub, RSS, IndieWeb) through the [sherlock library](https://github.com/benpate/sherlock).
 
 ## Architecture & Data Flow
 
@@ -140,7 +140,6 @@ See [FEDERATION.md](FEDERATION.md) for supported ActivityPub activities and prot
 Key federation services:
 - `service/activityStream.go` - ActivityPub client
 - `service/streamArchive.go` - ActivityPub inbox/outbox
-- `protocols/` - WebSub, WebMention, WebFinger implementations
 
 ## Integration Points
 

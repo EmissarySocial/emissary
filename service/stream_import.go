@@ -32,6 +32,13 @@ func (service *Stream) Import(session data.Session, importRecord *model.Import, 
 	stream.URL = ""                         // This will be recalculated by the StreamService.Save
 	stream.CreateDate = 0                   // Reset the createDate so that we will INSERT the record
 
+	// RULE: Every Stream must have a Template, but imported documents may not name one.
+	// Default to "outbox-message", matching the Mastodon API (handler/mastodon/status.go).
+	// This will be updated when we make a registry of default templates in profiles.
+	if stream.TemplateID == "" {
+		stream.TemplateID = "outbox-message"
+	}
+
 	// Map the ParentID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &stream.ParentID); err != nil {
 		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map ParentID. UserID: "+user.UserID.Hex()+", ParentID: "+stream.ParentID.Hex()))

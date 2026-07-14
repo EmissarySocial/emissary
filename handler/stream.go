@@ -102,12 +102,6 @@ func getStreamPipeline(ctx *steranko.Context, factory *service.Factory, session 
 		return derp.Wrap(err, location, "Unable to create Builder.")
 	}
 
-	// Add webmention link header per:
-	// https://www.w3.org/TR/webmention/#sender-discovers-receiver-webmention-endpoint
-	if actionMethod == build.ActionMethodGet {
-		ctx.Response().Header().Set("Link", "/.webmention; rel=\"webmention\"")
-	}
-
 	// Build the HTML page (execute the pipeline)
 	if err := build.AsHTML(ctx, factory, streamBuilder, actionMethod); err != nil {
 		return derp.Wrap(err, location, "Unable to build page", stream.Token)
