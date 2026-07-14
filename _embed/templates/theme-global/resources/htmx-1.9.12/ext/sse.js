@@ -123,6 +123,34 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
 		var internalData = api.getInternalData(sourceElement);
 		var source = internalData.sseEventSource;
 
+		// LOCAL PATCH (Emissary): registerSSE can visit the same child more than once
+		// (its own htmx:afterProcessNode pass plus its sse-connect ancestor's pass, and
+		// again after every EventSource reconnect).  Without cleanup, each visit stacks
+		// another live listener and every SSE message fires multiple requests.  Each
+		// child remembers its registrations; the first time a pass touches a child, its
+		// previous registrations are removed.
+		var clearedChildren = [];
+
+		function clearOnce(child) {
+			if (clearedChildren.indexOf(child) !== -1) {
+				return;
+			}
+			clearedChildren.push(child);
+			var childData = api.getInternalData(child);
+			(childData.sseRegistrations || []).forEach(function(reg) {
+				reg.source.removeEventListener(reg.eventName, reg.listener);
+			});
+			childData.sseRegistrations = [];
+		}
+
+		function remember(child, eventName, listener) {
+			var childData = api.getInternalData(child);
+			if (childData.sseRegistrations == null) {
+				childData.sseRegistrations = [];
+			}
+			childData.sseRegistrations.push({ source: source, eventName: eventName, listener: listener });
+		}
+
 		// Add message handlers for every `sse-swap` attribute
 		queryAttributeOnThisOrChildren(elt, "sse-swap").forEach(function(child) {
 
@@ -132,6 +160,8 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
 			} else {
 				var sseEventNames = getLegacySSESwaps(child);
 			}
+
+			clearOnce(child); // LOCAL PATCH: drop registrations from any previous pass
 
 			for (var i = 0; i < sseEventNames.length; i++) {
 				var sseEventName = sseEventNames[i].trim();
@@ -154,35 +184,65 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
 
 				// Register the new listener
 				api.getInternalData(child).sseEventListener = listener;
+				remember(child, sseEventName, listener); // LOCAL PATCH: track for cleanup
 				source.addEventListener(sseEventName, listener);
 			}
 		});
 
-		// Add message handlers for every `hx-trigger="sse:*"` attribute
+		// Add message handlers for every `hx-trigger="sse:*"` attribute.
+		//
+		// LOCAL PATCH (Emissary): the stock 1.9.12 extension (upstream included) declares
+		// this listener but never registers it with the EventSource, so hx-trigger="sse:..."
+		// silently does nothing.  This implementation completes the wiring the way the
+		// htmx 2.x extension does: each EventSource message is re-published as a DOM event
+		// ("sse:<name>") on the element, where htmx core's own hx-trigger listener -- and
+		// any hyperscript "on sse:..." handler -- picks it up.  Unlike both stock versions,
+		// the attribute is split on commas so mixed triggers work, e.g.
+		//   hx-trigger="sse:message, refreshSidebar from:window"
+		//   hx-trigger="load, sse:1234abcd"
 		queryAttributeOnThisOrChildren(elt, "hx-trigger").forEach(function(child) {
 
-			var sseEventName = api.getAttributeValue(child, "hx-trigger");
-			if (sseEventName == null) {
+			var triggerAttr = api.getAttributeValue(child, "hx-trigger");
+			if (triggerAttr == null) {
 				return;
 			}
 
-			// Only process hx-triggers for events with the "sse:" prefix
-			if (sseEventName.slice(0, 4) != "sse:") {
-				return;
-			}
-			
-			// remove the sse: prefix from here on out
-			sseEventName = sseEventName.substr(4);
+			clearOnce(child); // drop registrations from any previous pass
 
-			var listener = function() {
-				if (maybeCloseSSESource(sourceElement)) {
-					return
+			triggerAttr.split(",").forEach(function(triggerSpec) {
+
+				triggerSpec = triggerSpec.trim();
+
+				// Only process triggers with the "sse:" prefix
+				if (triggerSpec.slice(0, 4) != "sse:") {
+					return;
 				}
 
-				if (!api.bodyContains(child)) {
-					source.removeEventListener(sseEventName, listener);
+				// The SSE event name is the text after the prefix, up to any modifier
+				var sseEventName = triggerSpec.substr(4).split(/\s/)[0];
+				if (sseEventName === "") {
+					return;
 				}
-			}
+
+				var listener = function(event) {
+					if (maybeCloseSSESource(sourceElement)) {
+						return;
+					}
+
+					if (!api.bodyContains(child)) {
+						source.removeEventListener(sseEventName, listener);
+						return;
+					}
+
+					// Re-publish as a DOM event so htmx core (hx-trigger="sse:...") and
+					// hyperscript ("on sse:...") handlers can hear it.
+					htmx.trigger(child, "sse:" + sseEventName, event);
+					htmx.trigger(child, "htmx:sseMessage", event);
+				};
+
+				remember(child, sseEventName, listener);
+				source.addEventListener(sseEventName, listener);
+			});
 		});
 	}
 
@@ -250,6 +310,12 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
 		}
 
 		api.getInternalData(elt).sseEventSource = source;
+
+		// LOCAL PATCH (Emissary): re-attach listeners whenever a source is (re)created.
+		// The stock snapshot never re-registered after a reconnect (source.onerror makes
+		// a NEW EventSource), so SSE went permanently deaf after any server restart or
+		// proxy idle-timeout.  Registration is idempotent (see clearOnce/remember above).
+		registerSSE(elt);
 	}
 
 	/**

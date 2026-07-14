@@ -369,10 +369,11 @@
 		index: {
 			roles: ["self"]
 			steps:[
-				// Bare /@me/newsfeed lands on the Notifications section.  Legacy
-				// ?folderId= URLs redirect to the explicit /folder route.
+				// Bare /@me/newsfeed lands on the News Feed (all folders); Notifications is
+				// its own top-level nav section now.  Legacy ?folderId= URLs redirect to the
+				// explicit /folder route.
 				{do:"if", condition:"{{eq `` (.QueryParam `folderId`)}}", then:[
-					{do:"redirect-to", url:"/@me/newsfeed/notifications"}
+					{do:"redirect-to", url:"/@me/newsfeed/feed"}
 				], otherwise:[
 					{do:"redirect-to", url:"/@me/newsfeed/folder?folderId={{.QueryParam `folderId`}}"}
 				]}
@@ -483,48 +484,25 @@
 			]
 		}
 
+		// LEGACY entry point.  Notifications live in their own template/route now
+		// (/@me/notifications — see the user-notifications template); redirect old
+		// /@me/newsfeed/notifications(?type=xxx) URLs to the matching section page.
 		notifications: {
 			roles:["self"]
 			steps:[
-				{do:"view-html"}
-			]
-		}
-
-		notifications-badge: {
-			roles:["self"]
-			steps:[
-				{do:"set-header", name:"Cache-Control", value:"no-store"}
-				{do:"view-html"}
-			]
-		}
-
-		notifications-list: {
-			roles:["self"]
-			steps:[
-				{do:"set-header", name:"Cache-Control", value:"no-store"}
-				{do:"view-html"}
-			]
-		}
-
-		// Marks notifications as read, scoped to one tab via ?type= (no type = all types).
-		// Posted by the "Mark All Read" button.  refreshSidebar updates the nav badge, the
-		// sidebar dot, and the tab counts; refreshPage re-renders the list so the per-row
-		// unread dots clear too.
-		notifications-read: {
-			roles:["self"]
-			steps:[
-				{do:"mark-notifications-read"}
-				{do:"trigger-event", event:"refreshSidebar"}
-				{do:"trigger-event", event:"refreshPage"}
-			]
-		}
-
-		// Filter-tabs fragment (with unread counts), re-fetched on refreshSidebar.
-		notifications-tabs: {
-			roles:["self"]
-			steps:[
-				{do:"set-header", name:"Cache-Control", value:"no-store"}
-				{do:"view-html"}
+				{do:"if", condition:"{{eq `ANNOUNCE` (.QueryParam `type`)}}", then:[
+					{do:"redirect-to", url:"/@me/notifications/shares"}
+				], otherwise:[
+					{do:"if", condition:"{{eq `LIKE` (.QueryParam `type`)}}", then:[
+						{do:"redirect-to", url:"/@me/notifications/likes"}
+					], otherwise:[
+						{do:"if", condition:"{{eq `FOLLOW` (.QueryParam `type`)}}", then:[
+							{do:"redirect-to", url:"/@me/notifications/followers"}
+						], otherwise:[
+							{do:"redirect-to", url:"/@me/notifications/replies"}
+						]}
+					]}
+				]}
 			]
 		}
 
@@ -579,10 +557,13 @@
 			]
 		}
 
-		sidebar: {
+		// Standalone News Feed sidebar fragment, re-fetched on refreshSidebar
+		// (?folderId= keeps the selected folder).
+		newsfeed-sidebar: {
 			roles: ["self"]
 			steps:[
-				{do: "view-html", file: "sidebar-wrapper"}
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
+				{do:"view-html"}
 			]
 		}
 	}

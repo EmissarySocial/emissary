@@ -808,9 +808,13 @@
 			]
 		}
 
+		// The ONE place to manage notification options: channel toggles + Device Options.
+		// The notifications-push fragment wires the push-device-toggle to the browser's
+		// Web Push subscription.
 		notifications-form: {
 			roles:["self"]
 			steps:[
+				{do:"view-html", file:"notifications-push"}
 				{
 					do:"edit",
 					options:["cancel-button:hide"]
@@ -818,34 +822,14 @@
 						type:layout-vertical
 						children:[
 							{type:"check-button-group", path:"notificationChannels", options:{provider:"notification-channels"}}
+							{type:"heading", label:"Device Options", description:"These settings are not synchronized with your server."}
+							{type:"toggle", id:"push-device-toggle", options:{true-text:"Push Notifications (ENABLED)", false-text:"Push Notifications (DISABLED)"}}
 						]
 					}
-					options:["cancel-button:hide", "next-label:My Notifications &rarr;", "next:/@me/newsfeed/notifications"]
+					options:["cancel-button:hide", "next-label:My Notifications &rarr;", "next:/@me/notifications/replies"]
 				}
 				{do:"save"}
 				{do:"inline-save-button"}
-			]
-		}
-
-		notifications-modal: {
-			roles:["self"]
-			steps:[
-				{do:"as-modal", steps:[
-					{do:"view-html"}
-					{do:"view-html", file:"notifications-push"}
-					{do:"edit",
-						form:{
-							type:layout-vertical
-							children:[
-								{type:"check-button-group", path:"notificationChannels", options:{provider:"notification-channels"}}
-								{type:"heading", label:"Device Settings", description:"These settings are not synchronized with your server."}
-								{type:"toggle", id:"push-device-toggle", options:{true-text:"Push Notifications (ENABLED)", false-text:"Push Notifications (DISABLED)"}}
-							]
-						}
-						options:["next-label:Edit in Settings &rarr;", "next:/@me/settings/notifications"]
-					}
-					{do:"save"}
-				]}
 			]
 		}
 

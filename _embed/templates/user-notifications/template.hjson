@@ -1,0 +1,154 @@
+{
+	templateId: user-notifications
+	templateRole: user-notifications
+	category: Special
+	model: Notifications
+	label: Default Notifications
+	description: A simple notifications section that informs users when they have new social activity
+	icon: bell
+	extends: ["base-social"]
+	containedBy: []
+	schema: {
+		title: User Notifications
+		type: object
+		properties: {}
+	}
+	states: {
+		default: {
+			label: Notifications only has default state
+		}
+	}
+	roles: {}
+	bundles: {
+		stylesheet: {
+			content-type: text/css
+		}
+	}
+	actions: {
+
+		// Bare /@me/notifications lands on the "Replies & Mentions" section.  Render the
+		// replies page directly (same steps as the `replies` action) rather than redirecting,
+		// so the bare URL serves content in one request.
+		index: {
+			roles: ["self"]
+			steps:[
+				{do:"set-query-param", type:"MENTION"}
+				{do:"view-html", file:"replies"}
+			]
+		}
+
+		// The four notification section pages.  Each bakes its section's ?type= into the
+		// request (set-query-param) so the shared sidebar/header fragments and the
+		// .Notifications query all read the right section, then renders its own page
+		// template.  Each section also has its own -list action for lazy-load + infinite
+		// scroll, so every page can format its content independently.
+		replies: {
+			roles:["self"]
+			steps:[
+				{do:"set-query-param", type:"MENTION"}
+				{do:"view-html"}
+			]
+		}
+
+		replies-list: {
+			roles:["self"]
+			steps:[
+				{do:"set-query-param", type:"MENTION"}
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
+				{do:"view-html"}
+			]
+		}
+
+		shares: {
+			roles:["self"]
+			steps:[
+				{do:"set-query-param", type:"ANNOUNCE"}
+				{do:"view-html"}
+			]
+		}
+
+		shares-list: {
+			roles:["self"]
+			steps:[
+				{do:"set-query-param", type:"ANNOUNCE"}
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
+				{do:"view-html"}
+			]
+		}
+
+		likes: {
+			roles:["self"]
+			steps:[
+				{do:"set-query-param", type:"LIKE"}
+				{do:"view-html"}
+			]
+		}
+
+		likes-list: {
+			roles:["self"]
+			steps:[
+				{do:"set-query-param", type:"LIKE"}
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
+				{do:"view-html"}
+			]
+		}
+
+		followers: {
+			roles:["self"]
+			steps:[
+				{do:"set-query-param", type:"FOLLOW"}
+				{do:"view-html"}
+			]
+		}
+
+		followers-list: {
+			roles:["self"]
+			steps:[
+				{do:"set-query-param", type:"FOLLOW"}
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
+				{do:"view-html"}
+			]
+		}
+
+		badge: {
+			roles:["self"]
+			steps:[
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
+				{do:"view-html"}
+			]
+		}
+
+		// Marks notifications as read, scoped to one tab via ?type= (no type = all types).
+		// Posted by the "Mark All Read" button.  refreshSidebar updates the nav badge, the
+		// sidebar dot, and the tab counts; refreshPage re-renders the list so the per-row
+		// unread dots clear too.
+		read: {
+			roles:["self"]
+			steps:[
+				{do:"mark-notifications-read"}
+				{do:"trigger-event", event:"refreshSidebar"}
+				{do:"trigger-event", event:"refreshPage"}
+			]
+		}
+
+		// Header fragment (title / mobile tabs, "Mark All Read", with unread counts),
+		// re-fetched on refreshSidebar.
+		header: {
+			roles:["self"]
+			steps:[
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
+				{do:"view-html"}
+			]
+		}
+
+		// Standalone Notifications sidebar fragment, re-fetched on refreshSidebar
+		// (?type= keeps the selected filter and its counts current).
+		sidebar: {
+			roles:["self"]
+			steps:[
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
+				{do:"view-html"}
+			]
+		}
+	}
+}	

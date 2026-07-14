@@ -23,8 +23,8 @@
 	color: var(--gray80);
 	padding: calc(var(--rhythm) * 2) var(--rhythm);
 	min-width: 200px;
-	max-width: 320px;
-	width: 15%;
+	max-width: 300px;
+	width:25%;
 	view-transition-name: app-sidebar;
 }
 

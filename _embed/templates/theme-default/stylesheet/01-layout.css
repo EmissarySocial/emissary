@@ -161,12 +161,12 @@ main:has(> .app) {
 }
 
 /******************************************
- * Notification Badge (overlaid on the Inbox icon)
+ * Notification Badge (overlaid on the Notifications bell icon)
  ******************************************/
 
 /* The anchor becomes the positioning context so the badge can overlay the
    icon without occupying layout space -- the button never changes size. */
-#nav-inbox {
+#nav-notifications {
 	position: relative;
 }
 
@@ -177,7 +177,7 @@ main:has(> .app) {
    shifts the dot.  position:absolute takes it out of normal flow, so text-sm's
    font-size and margins no longer affect the button's size.
    Tweak `top` / `margin-left` / `font-size` to fine-tune placement + size. */
-#nav-inbox .nav-badge {
+#nav-notifications .nav-badge {
 	position: absolute;
 	top: 4px;
 	left: 50%;

@@ -1,16 +1,17 @@
 {{- /*
-	notifications-push.html wires the browser's Web Push subscription to the "Device Settings"
-	TOGGLE widget rendered by the notifications-modal form (id="push-device-toggle").
+	notifications-push.html wires the browser's Web Push subscription to the "Device Options"
+	TOGGLE widget (id="push-device-toggle") on the notification-settings form
+	(Settings > Social > Notifications — the notifications-form action).
 
 	The toggle is browser-owned state (pushManager), not a schema field, so:
-	  - JS hydrates it from the actual subscription when the modal opens, and
+	  - JS hydrates it from the actual subscription when the form renders, and
 	  - it is APPLIED ON SAVE — the Save click is the user gesture that
-	    Notification.requestPermission() requires.  Cancel applies nothing.
+	    Notification.requestPermission() requires.
 	If the permission prompt is denied, nothing changes and the toggle re-hydrates
-	honestly the next time the modal is opened.
+	honestly the next time the form is opened.
 
 	IMPORTANT: this fragment is rendered by `view-html file:"notifications-push"` which runs
-	BEFORE the `edit` form (see the notifications-modal action in template.hjson).  So the
+	BEFORE the `edit` form (see the notifications-form action in template.hjson).  So the
 	toggle <span> does not exist yet when this script first runs — we poll for it.
 
 	The toggle widget (theme-global/hyperscript/toggle._hs) is NOT a checkbox: its state lives
@@ -147,17 +148,25 @@
 			// Registration failed — leave the toggle as-is; a save simply won't apply.
 		});
 
-		// Apply the device toggle when the channel form is saved.  The modal Save is an htmx
-		// request (hx-post), NOT a native form submit — so we listen for `htmx:beforeRequest`,
-		// which htmx bubbles to document.body just before the POST goes out.  The listener is
-		// delegated on body; re-opening the modal replaces the previous listener, and a request
-		// fired while the toggle is unchanged from its baseline is a no-op.
+		// Apply the device toggle when the notification-settings form is saved.  The Save is
+		// an htmx request (hx-post lives on the <form> element — see WrapForm), NOT a native
+		// form submit — so we listen for `htmx:beforeRequest`, which htmx bubbles to
+		// document.body just before the POST goes out.  The listener is delegated on body;
+		// re-rendering the form replaces the previous listener, and a save with the toggle
+		// unchanged from its baseline is a no-op.
 		if (window._emissaryPushDeviceSubmit) {
 			document.body.removeEventListener("htmx:beforeRequest", window._emissaryPushDeviceSubmit);
 		}
-		window._emissaryPushDeviceSubmit = function() {
+		window._emissaryPushDeviceSubmit = function(event) {
 			var el = document.getElementById("push-device-toggle");
 			if (!el || el !== toggle) { return; }
+
+			// ONLY the settings form's own save applies the toggle: the requesting element
+			// (event.detail.elt) must be the <form> that contains it.  Unrelated htmx traffic
+			// on the page (boosted nav links, sidebar refreshes, lazy loads) never does.
+			var source = event.detail && event.detail.elt;
+			if (!source || !source.contains(el)) { return; }
+
 			var wanted = toggleIsOn(toggle);
 			var original = toggle.dataset.original === "true";
 			if (wanted === original) { return; }

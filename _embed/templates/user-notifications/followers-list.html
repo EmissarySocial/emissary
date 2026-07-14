@@ -1,0 +1,65 @@
+<!--
+followers-list.html renders the "Followers" notification list (FOLLOW).  The followers-list
+action bakes ?type=FOLLOW into the request, so the .Notifications query is already filtered
+to that type; ?createDate= drives the infinite scroll.  The row markup is inlined here
+(rather than a shared row partial) so this page can format its own content.
+-->
+{{- $notifications := .Notifications.Top60.ByCreateDate.Reverse.Slice -}}
+{{- $createDate := .QueryParam "createDate" -}}
+
+{{- if $notifications.NotEmpty -}}
+
+	{{- range $notification := $notifications -}}
+		{{- $actor := $notification.Actor -}}
+		<div
+			role="button"
+			hx-get="/@me/newsfeed/browse?url={{$notification.ObjectURL}}"
+			hx-push-url="true"
+			class="notification flex-row flex-align-center padding-vertical hover-trigger {{if $notification.NotRead}}unread{{end}}">
+
+			<!-- Unread dot -->
+			<span class="notification-dot text-red" style="width:12px;">
+				{{- if $notification.NotRead -}}&#9679;{{- end -}}
+			</span>
+
+			<!-- Actor avatar (opens the actor card) -->
+			<div class="width-32">
+				{{- if $actor.HasIconURL -}}
+					<img src="{{$actor.IconURL}}" alt="" class="circle width-32">
+				{{- else -}}
+					<div class="circle width-32 flex-center bg-gray-90">{{icon "person"}}</div>
+				{{- end -}}
+			</div>
+
+			<!-- Verb + summary -->
+			<div class="flex-grow ellipsis-block">
+				<div>
+					<span class="bold">
+						{{- if ne "" $actor.Name -}}{{$actor.Name}}{{- else -}}{{$actor.UsernameOrID}}{{- end}}
+					</span>
+					<span>followed you</span>
+				</div>
+			</div>
+
+			<!-- Relative time -->
+			<div class="text-sm text-gray nowrap">{{$notification.CreateDate | tinyDate}}</div>
+
+		</div>
+	{{- end -}}
+
+	<!-- Infinite scroll: load older notifications when the sentinel is revealed -->
+	{{- $last := $notifications.Last -}}
+	<div
+		hx-get="/@me/notifications/followers-list?createDate=LT:{{$last.CreateDate}}"
+		hx-trigger="intersect once"
+		hx-target="this"
+		hx-swap="outerHTML"
+		hx-push-url="false">
+		<div class="text-sm text-gray"><span class="spin">{{icon "loading"}}</span> Loading...</div>
+	</div>
+
+{{- else if eq "" $createDate -}}
+
+	<h2 class="text-gray">No followers yet. When someone follows you, it will show up here.</h2>
+
+{{- end -}}

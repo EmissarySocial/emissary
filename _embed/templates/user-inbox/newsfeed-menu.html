@@ -1,26 +1,10 @@
-{{- $section := .Section -}}
+{{- /* newsfeed-menu.html renders the News Feed folder list: the "all folders" entry, the
+       sortable per-folder links, and "Add a Folder".  The dot (".") is a FolderList (via
+       .FoldersWithSelection "FOLDER").  Rendered inside newsfeed-sidebar.html on desktop,
+       and full-page by mobile.html.  Notifications live in their own template now (see
+       the user-notifications template and the global nav item in theme-default/navigation.html). */ -}}
 {{- $selectedID := .SelectedID -}}
-{{- $allFolders := and ($selectedID.IsZero) (eq "FOLDER" $section) -}}
-{{- $notificationsSelected := eq "NOTIFICATIONS" $section -}}
-
-<!-- Pinned Notifications section (not sortable) -->
-<a href="/@me/newsfeed/notifications" class="turboclick menu-item ellipsis hover-trigger folder {{if $notificationsSelected}}selected{{end}}">
-	<span>
-		{{- if $notificationsSelected -}}
-			{{- iconFilled "bell" -}}
-		{{- else -}}
-			{{- icon "bell" -}}
-		{{- end }}
-	</span>
-	<span>Notifications</span>
-	{{- if .HasUnreadNotifications -}}
-		<span class="folder-handle">
-			<span id="notifications-unread-badge" class="text-sm text-light-gray">&#9679;</span>
-		</span>
-	{{- end -}}
-</a>
-
-<div class="margin-vertical"></div>
+{{- $allFolders := $selectedID.IsZero -}}
 
 <a href="/@me/newsfeed/feed" class="turboclick menu-item ellipsis hover-trigger folder {{if $allFolders}}selected{{end}}">
 	<span>
@@ -30,7 +14,7 @@
 			{{- icon "folder" -}}
 		{{- end }}
 	</span>
-	<span>News Feed</span>
+	<span>All Folders</span>
 </a>
 
 <form class="sortable" hx-post="/@me/newsfeed/folder-sort" hx-push-url="false" hx-trigger="end" hx-swap="none">

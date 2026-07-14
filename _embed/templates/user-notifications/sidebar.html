@@ -1,0 +1,19 @@
+{{- /*
+	sidebar.html is the desktop sidebar for the Notifications section.  The dot
+	(".") is the Notifications builder, passed straight through to the menu (which reads the ?type=
+	query param and unread counts itself).  Re-fetched standalone via the
+	"sidebar" action.
+
+	The "refreshSidebar" event — fired by SSE arrivals and by mark-all-read — re-fetches this
+	fragment so the per-type unread counts stay current without a reload.
+*/ -}}
+{{- $type := first (.QueryParam "type") "MENTION" -}}
+
+<div id="app-sidebar" class="expanded"
+	hx-get="/@me/notifications/sidebar?type={{$type}}"
+	hx-trigger="refreshSidebar from:window"
+	hx-target="#app-sidebar"
+	hx-swap="outerHTML"
+	hx-push-url="false">
+	{{- template "menu" . -}}
+</div>
