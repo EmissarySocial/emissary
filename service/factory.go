@@ -99,7 +99,7 @@ type Factory struct {
 	streamArchiveService    StreamArchive
 	streamDraftService      StreamDraft
 	privilegeService        Privilege
-	realtimeBroker          realtime.Broker
+	realtimeBroker          *realtime.Broker
 	userService             User
 	webhookService          Webhook
 
@@ -637,7 +637,7 @@ func (factory *Factory) Template() *Template {
 
 // RealtimeBroker returns a new RealtimeBroker that can push stream updates to connected clients.
 func (factory *Factory) RealtimeBroker() *realtime.Broker {
-	return &factory.realtimeBroker
+	return factory.realtimeBroker
 }
 
 // SSEUpdateChannel initializes a background watcher and returns a channel containing any streams that have changed.

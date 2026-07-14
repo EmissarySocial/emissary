@@ -1,6 +1,7 @@
 package realtime
 
 import (
+	"sync"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -13,6 +14,11 @@ import (
 // TODO: MEDIUM: Should the realtime broker be a service?
 // Is there a reason to have multiple instances of the realtime broker, or should it be a GLOBAL service?
 type Broker struct {
+
+	// mutex guards the clients and objects maps.  notifySSE reads them from its own
+	// goroutine (one per message) while listen() mutates them on connect/disconnect;
+	// without this lock that concurrent map access is a data race.
+	mutex sync.RWMutex
 
 	// map of realtime clients
 	clients map[primitive.ObjectID]*Client
@@ -33,10 +39,11 @@ type Broker struct {
 	close chan bool
 }
 
-// NewBroker generates a new stream broker
-func NewBroker(updateChannel chan Message) Broker {
+// NewBroker generates a new stream broker.  It returns a pointer: the Broker owns a
+// mutex and a background goroutine, so it must never be copied.
+func NewBroker(updateChannel chan Message) *Broker {
 
-	result := Broker{
+	result := &Broker{
 		clients:       make(map[primitive.ObjectID]*Client),
 		objects:       make(map[primitive.ObjectID]map[primitive.ObjectID]*Client),
 		updateChannel: updateChannel,
@@ -79,6 +86,8 @@ func (b *Broker) listen() {
 
 		case client := <-b.AddClient:
 
+			b.mutex.Lock()
+
 			if _, ok := b.objects[client.StreamID]; !ok {
 				b.objects[client.StreamID] = make(map[primitive.ObjectID]*Client)
 			}
@@ -86,7 +95,11 @@ func (b *Broker) listen() {
 			b.objects[client.StreamID][client.ClientID] = client
 			b.clients[client.ClientID] = client
 
+			b.mutex.Unlock()
+
 		case client := <-b.RemoveClient:
+
+			b.mutex.Lock()
 
 			delete(b.clients, client.ClientID)
 			delete(b.objects[client.StreamID], client.ClientID)
@@ -95,11 +108,18 @@ func (b *Broker) listen() {
 				delete(b.objects, client.StreamID)
 			}
 
-			close(client.WriteChannel)
+			b.mutex.Unlock()
+
+			// RULE: Do NOT close(client.WriteChannel) here.  notifySSE runs in its own
+			// goroutine and may still hold this client in a delivery snapshot; closing
+			// while it sends would panic ("send on closed channel").  The client's handler
+			// exits on its own request context (see handler.serverSentEvent), and the
+			// channel is garbage-collected once the client is no longer referenced.
 
 		case message := <-b.updateChannel:
 
-			// Otherwise, notify listeners
+			// Deliver in a separate goroutine so a slow client (or the NewReplies delay
+			// inside notifySSE) never blocks this connect/disconnect loop.
 			go b.notifySSE(message)
 
 		case <-b.close:
@@ -108,7 +128,7 @@ func (b *Broker) listen() {
 	}
 }
 
-// notifySSE sends updates for every SEE client that is watching a given stream
+// notifySSE sends a message to every SSE client watching the message's object on a matching topic.
 func (b *Broker) notifySSE(message Message) {
 
 	// RULE: Delay before sending updates on "New Replies"
@@ -117,10 +137,28 @@ func (b *Broker) notifySSE(message Message) {
 		time.Sleep(2 * time.Second)
 	}
 
-	// Send realtime messages to SSE clients
+	// Snapshot the matching clients under a read lock, then release it BEFORE sending.
+	// Holding the lock across a channel send would serialize delivery against every
+	// connect/disconnect and let one wedged client stall the rest.
+	b.mutex.RLock()
+
+	recipients := make([]*Client, 0, len(b.objects[message.ObjectID]))
+
 	for _, client := range b.objects[message.ObjectID] {
 		if (client.Topic == TopicAll) || (client.Topic == message.Topic) {
-			client.WriteChannel <- message
+			recipients = append(recipients, client)
+		}
+	}
+
+	b.mutex.RUnlock()
+
+	// Deliver outside the lock with a non-blocking send.  A client whose buffer is full
+	// simply misses this nudge — it's a "something changed, refetch" signal, so the next
+	// event (or a page load) brings it current — rather than blocking everyone else.
+	for _, client := range recipients {
+		select {
+		case client.WriteChannel <- message:
+		default:
 		}
 	}
 }
