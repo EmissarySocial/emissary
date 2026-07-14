@@ -56,10 +56,10 @@ func (service *User) Move(session data.Session, user *model.User, actor string, 
 
 	// Background task (post-commit) to delete records and send `Move` notifications to followers.
 	postcommit.Publish(session, service.queue, "MoveUser", mapof.Any{
-		"host":   service.Hostname(),
-		"userId": user.UserID.Hex(),
-		"actor":  actor,
-		"oracle": oracle,
+		"hostname": service.Hostname(),
+		"userId":   user.UserID.Hex(),
+		"actor":    actor,
+		"oracle":   oracle,
 	})
 
 	return nil

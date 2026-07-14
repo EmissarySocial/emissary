@@ -154,7 +154,7 @@ func (service *SearchResult) Save(session data.Session, searchResult *model.Sear
 		service.queue,
 		"SendSearchResult",
 		mapof.Any{
-			"host":           service.hostname,
+			"hostname":       service.hostname,
 			"searchResultId": searchResult.SearchResultID,
 		},
 		queue.WithAsyncDelay(1000),

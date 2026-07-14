@@ -44,7 +44,7 @@ func (service *Following) SaveNewsItem(session data.Session, following *model.Fo
 		session,
 		service.queue,
 		"CrawlContext",
-		mapof.Any{"url": document.ID(), "host": service.hostname},
+		mapof.Any{"url": document.ID(), "hostname": service.hostname},
 	)
 
 	// Yee. Haw.

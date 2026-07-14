@@ -31,7 +31,7 @@ func (client *Client) CalcParentRelationships(session data.Session, relationType
 				client.queue.NewTask(
 					"CrawlActivityStreams",
 					mapof.Any{
-						"host":      client.hostname,
+						"hostname":      client.hostname,
 						"actorType": client.actorType,
 						"actorID":   client.actorID,
 						"url":       relationHref,

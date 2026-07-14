@@ -92,7 +92,7 @@ func (service *Outbox) Publish(session data.Session, actorType string, actorID p
 	// permissions are serialized as hex strings because ObjectIDs do not survive task storage
 	// round-trips reliably; recipients+hasRecipients carry the WithRecipients override (§5).
 	postcommit.Publish(session, service.queue, taskOutboxPublish, mapof.Any{
-		"host":          service.host,
+		"hostname":      uri.Hostname(service.host),
 		"actorType":     actorType,
 		"actorId":       actorID.Hex(),
 		"activity":      activityMap,

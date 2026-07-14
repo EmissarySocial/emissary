@@ -91,7 +91,7 @@ func (service *Following) Connect(session data.Session, following *model.Followi
 
 	// Prep arguments to send to queue consumers
 	queueArgs := mapof.Any{
-		"host":        service.host,
+		"hostname":    service.hostname,
 		"userId":      following.UserID.Hex(),
 		"followingId": following.FollowingID.Hex(),
 	}

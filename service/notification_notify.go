@@ -14,6 +14,7 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -328,7 +329,7 @@ func (service *Notification) publishSSE(userID primitive.ObjectID) {
 // until the enclosing transaction has committed.
 func (service *Notification) enqueueWebPush(session data.Session, notification *model.Notification) {
 	postcommit.Publish(session, service.queue, "SendWebPushNotification", mapof.Any{
-		"host":           service.host,
+		"hostname":       uri.Hostname(service.host),
 		"userId":         notification.UserID.Hex(),
 		"notificationId": notification.NotificationID.Hex(),
 	})

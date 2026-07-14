@@ -140,7 +140,7 @@ func (service *SearchQuery) Save(session data.Session, searchQuery *model.Search
 			service.queue,
 			"DeleteEmptySearchQuery",
 			mapof.Any{
-				"host":          service.host,
+				"hostname":      service.Hostname(),
 				"searchQueryID": searchQuery.SearchQueryID.Hex(),
 			},
 			queue.WithDelayHours(1),

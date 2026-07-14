@@ -39,7 +39,7 @@ func (service GeocodeAddress) GeocodeAndQueue(session data.Session, stream *mode
 			service.queue,
 			"GeocodeAddress",
 			mapof.Any{
-				"host":     service.hostname,
+				"hostname": service.hostname,
 				"streamId": stream.StreamID,
 			},
 			queue.WithDelaySeconds(30),

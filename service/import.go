@@ -387,7 +387,7 @@ func (service *Import) doImport(session data.Session, record *model.Import) erro
 		service.queue,
 		"ImportStartup",
 		mapof.Any{
-			"host":     uri.Hostname(service.host),
+			"hostname": uri.Hostname(service.host),
 			"userId":   record.UserID,
 			"importId": record.ImportID,
 		},

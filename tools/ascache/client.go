@@ -351,7 +351,7 @@ func (client *Client) countRelatedDocuments(document streams.Document) {
 			"CountRelatedDocuments",
 			mapof.Any{
 				"url":       url,
-				"host":      client.hostname,
+				"hostname":      client.hostname,
 				"actorType": client.actorType,
 				"actorID":   client.actorID,
 			},
@@ -409,8 +409,8 @@ func (client *Client) revalidate(value *Value) {
 		client.queue.NewTask(
 			"ReindexActivityStream",
 			mapof.Any{
-				"host": client.hostname,
-				"url":  documentID,
+				"hostname": client.hostname,
+				"url":      documentID,
 			},
 			queue.WithSignature(documentID),
 		)

@@ -157,7 +157,7 @@ func (service *Follower) Delete(session data.Session, follower *model.Follower, 
 			service.queue,
 			"DeleteEmptySearchQuery",
 			mapof.Any{
-				"host":          uri.Hostname(service.host),
+				"hostname":      uri.Hostname(service.host),
 				"searchQueryID": follower.ParentID,
 			},
 		)
