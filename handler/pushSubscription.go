@@ -36,6 +36,12 @@ func PostPushSubscription(ctx *steranko.Context, factory *service.Factory, sessi
 		return derp.BadRequest(location, "endpoint, keys.p256dh, and keys.auth are all required")
 	}
 
+	// RULE: Refuse endpoints that point at an internal address, so the server cannot be used to
+	// probe or reach hosts behind its firewall (SSRF).  Delivery applies the same guard at dial time.
+	if !factory.WebPush().EndpointIsAllowed(body.Endpoint) {
+		return derp.Forbidden(location, "Push endpoint is not allowed")
+	}
+
 	userAgent := ctx.Request().UserAgent()
 
 	if err := factory.PushSubscription().Upsert(session, user.UserID, body.Endpoint, body.Keys.P256DH, body.Keys.Auth, userAgent); err != nil {
