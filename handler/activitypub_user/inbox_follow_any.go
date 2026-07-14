@@ -54,9 +54,10 @@ func init() {
 			return derp.Wrap(err, location, "Unable to load actor", context.user)
 		}
 
-		// Sen the "Accept" message to the Requester
+		// Send the "Accept" message to the Requester as a post-commit queue task (F3): the signed
+		// delivery happens after this transaction commits and is independently retryable.
 		acceptID := followerService.ActivityPubID(&follower)
-		actor.SendAccept(acceptID, activity)
+		context.factory.Outbox().SendAccept(context.session, actor.ActorID(), acceptID, activity)
 
 		// Create a FOLLOW notification for the recipient.  This lives here (rather than in the
 		// central NotifyFromActivity hook) because it must fire only AFTER the Follow is validated

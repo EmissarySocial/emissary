@@ -97,10 +97,13 @@ func announce(context Context, activity streams.Document) error {
 		return derp.Wrap(err, location, "Unable to save message", context.stream.StreamID, activity.ID())
 	}
 
-	// Send the Announce to all of our followers
+	// Publish the Announce to the stream's followers as a post-commit send (F3, W6 option B). The
+	// activity is addressed to the stream's followers collection, which SendLocator.Recipient
+	// resolves; the signed delivery happens after commit and is per-recipient retryable.
 	log.Debug().Msg("Announcing document to followers")
 	announceID := context.stream.ActivityPubAnnouncedURL() + "/" + message.OutboxMessageID.Hex()
-	actor.SendAnnounce(announceID, activity)
+	followersURL := actor.ActorID() + "/pub/followers"
+	outboxService.SendAnnounce(context.session, actor.ActorID(), announceID, activity, followersURL)
 
 	return nil
 }

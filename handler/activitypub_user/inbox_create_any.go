@@ -55,18 +55,29 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 		document = loaded
 	}
 
-	// Gonna need the followingService in a hot sec..
+	// Place the post into the User's newsfeed IF it came from a source they Follow. A post from a
+	// non-followed actor is legitimate — most replies to this User's posts arrive from actors the
+	// User does not follow — so a missing Following record is NOT an error: we skip the newsfeed
+	// placement and fall through to the context/reply bookkeeping below. Returning an error here
+	// would fail the whole inbox POST (which runs in a transaction — see handler.WithFactory),
+	// rolling back the Reply/Mention notification created centrally in PostInbox and triggering
+	// endless sender retries. (Mirrors the accept-or-silently-drop pattern in inbox_LikeOrAnnounce.)
 	followingService := context.factory.Following()
 	following := model.NewFollowing()
 
-	// If the "Following" record cannot be found, then do not add a message
-	if err := followingService.LoadByURL(context.session, context.user.UserID, activity.ActorID(), &following); err != nil {
-		return derp.Wrap(err, location, "Unable to locate `Following` record", context.user.UserID)
-	}
+	if err := followingService.LoadByURL(context.session, context.user.UserID, activity.ActorID(), &following); err == nil {
 
-	// Try to save the message to a folder (with de-duplication)
-	if err := followingService.SaveNewsItem(context.session, &following, document, model.OriginTypePrimary); err != nil {
-		return derp.Wrap(err, location, "Unable to save news item", context.user.UserID, activity.Value())
+		// Followed source: save the post into the User's newsfeed (with de-duplication).
+		if err := followingService.SaveNewsItem(context.session, &following, document, model.OriginTypePrimary); err != nil {
+			return derp.Wrap(err, location, "Unable to save news item", context.user.UserID, activity.Value())
+		}
+
+	} else if derp.IsNotFound(err) {
+		// Not a followed source: no newsfeed placement. Continue to the context bookkeeping below.
+
+	} else {
+		// A real load error (not merely "no record") — surface it.
+		return derp.Wrap(err, location, "Unable to load `Following` record", context.user.UserID)
 	}
 
 	// Add this document to a context (if necessary)

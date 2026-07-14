@@ -2,6 +2,7 @@ package service
 
 import (
 	"math"
+	"slices"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -81,6 +82,18 @@ func (service *Stream) publish_outbox(session data.Session, user *model.User, st
 
 	// Create the Activity to send to the User's Outbox
 	object := service.JSONLD(session, stream)
+
+	// RULE: A reply must reach the AUTHOR of the post it replies to, so they receive it (and a Reply
+	// notification) even when they do not follow the replier — the common case for replies. We add
+	// that author to the reply's `cc`, which the to/cc copy below carries onto the Create/Update
+	// wrapper; Outbox.Publish then delivers to every addressee on top of the follower fan-out. This
+	// mirrors how an Announce cc's the reacted-to author (see service.Response.reactionAudience).
+	if authorURL := service.inReplyToAuthorURL(stream); authorURL != "" {
+		cc, _ := object[vocab.PropertyCC].([]string)
+		if !slices.Contains(cc, authorURL) {
+			object[vocab.PropertyCC] = append(cc, authorURL)
+		}
+	}
 
 	// Save the object to the ActivityStream cache
 	if err := service.activityService.Save(streams.NewDocument(object)); err != nil {
@@ -199,4 +212,30 @@ func (service *Stream) publish_outbox_stream(session data.Session, stream *model
 
 	// Done.
 	return nil
+}
+
+// inReplyToAuthorURL resolves the AUTHOR (attributedTo) of the post this Stream replies to, so a
+// reply can be delivered to that author's inbox. Only actors have inboxes, so the author — not the
+// parent object's URL — is the deliverable target of a reply. Returns "" when the Stream is not a
+// reply, or the parent cannot be loaded, or it has no attributedTo. Mirrors the author resolution
+// that service.Response.objectAuthorURL performs for reactions.
+func (service *Stream) inReplyToAuthorURL(stream *model.Stream) string {
+
+	const location = "service.Stream.inReplyToAuthorURL"
+
+	// RULE: A non-reply (empty inReplyTo) has no parent author to address.
+	if stream.InReplyTo == "" {
+		return ""
+	}
+
+	// Load the parent using a client scoped to the reply's author (the same client CalcContext uses).
+	client := service.activityService.UserClient(stream.AttributedTo.UserID)
+	parent, err := client.Load(stream.InReplyTo)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to load in-reply-to document to resolve its author", stream.InReplyTo))
+		return ""
+	}
+
+	return parent.AttributedTo().ID()
 }

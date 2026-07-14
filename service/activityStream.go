@@ -18,7 +18,6 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/sherlock/activitypub"
@@ -423,51 +422,6 @@ func (service *ActivityStream) GetRecipient(recipient string) (string, string, e
 
 	// Successssssssss.
 	return document.ID(), document.Inbox().String(), nil
-}
-
-/******************************************
- * Custom Actions
- ******************************************/
-
-// SendMessage sends an ActivityPub message to a single recipient/inboxURL
-// `inboxURL` the URL to deliver the message to
-// `actorType` the type of actor that is sending the message (User, Stream, Search)
-// `actorID` unique ID of the actor (zero value for Search Actor)
-// `message` the ActivityPub message to send
-// TODO: This should be merged into Outbox:SendToSingleRecipient
-// deprecated: use Sender.SendToSingleRecipient instead
-func (service *ActivityStream) SendMessage(session data.Session, args mapof.Any) error {
-
-	const location = "service.ActivityStream.SendMessage"
-
-	// Collect the Actor to receive the message
-	recipientID := args.GetString("to")
-
-	if recipientID == "" {
-		return derp.NotFound(location, "Recipient ID is required", recipientID)
-	}
-
-	// Collect the message to be sent
-	message := args.GetMap("message")
-
-	if message.IsEmpty() {
-		return derp.NotFound(location, "Message is required", message)
-	}
-
-	// Find ActivityPub Actor
-	actor, err := service.locatorService.GetActor(session, args.GetString("actorType"), args.GetString("actorID"))
-
-	if err != nil {
-		return derp.Wrap(err, location, "Locating ActivityPub Actor")
-	}
-
-	// Send the message to the recipientID
-	if err := actor.SendOne(recipientID, message); err != nil {
-		return derp.Wrap(err, location, "Sending ActivityPub message", message, derp.WithInternalError())
-	}
-
-	// Success!!
-	return nil
 }
 
 func (service *ActivityStream) PublicKeyFinder(keyID string) (string, error) {

@@ -4,7 +4,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -46,37 +45,24 @@ func (service *Following) Unfollow(session data.Session, userID primitive.Object
 	return service.Delete(session, &following, "")
 }
 
+// Disconnect notifies the external service that a Following has ended (e.g. an ActivityPub
+// Undo/Follow). It only ENQUEUES the notification (no blocking HTTP), so it is safe to call
+// synchronously inside the deleting transaction; the actual send happens post-commit.
 func (service *Following) Disconnect(session data.Session, following *model.Following) {
 
 	switch following.Method {
 
 	case model.FollowingMethodActivityPub:
-
-		if err := service.disconnect_ActivityPub(session, following); err != nil {
-			derp.Report(derp.Wrap(err, "emissary.service.Following.Disconnect", "Error disconnecting from ActivityPub service"))
-		}
+		service.disconnect_ActivityPub(session, following)
 	}
 }
 
-// disconnect_ActivityPub disconnects from an ActivityPub source by sending an "Undo" request
-// that references the original "Follow" request per spec.
-// https://www.w3.org/TR/activitypub/#undo-activity-outbox
-func (service *Following) disconnect_ActivityPub(session data.Session, following *model.Following) error {
-
-	const location = "service.Following.disconnect_ActivityPub"
-
-	// Try to get the local Actor (don't need Following channel)
-	actor, err := service.userService.ActivityPubActor(session, following.UserID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Error getting ActivityPub actor", following.UserID)
-	}
-
-	// Try to send the ActivityPub Undo request
+// disconnect_ActivityPub queues an ActivityPub "Undo" of the original "Follow" request, delivered
+// post-commit to the followed actor per spec (https://www.w3.org/TR/activitypub/#undo-activity-outbox).
+// It carries the Follow as payload (Outbox.SendUndoFollow), NOT a row reference, because the caller
+// (Following.deleteNoStats) has already deleted the Following row. See POST-COMMIT-FEDERATION.md F4.
+func (service *Following) disconnect_ActivityPub(session data.Session, following *model.Following) {
 	followMap := service.AsJSONLD(following)
-	client := service.activityService.UserClient(following.UserID)
-	followDocument := streams.NewDocument(followMap, streams.WithClient(client))
-	actor.SendUndo(followDocument)
-
-	return nil
+	actorURL := service.ActivityPubActorID(following)
+	service.outboxService.SendUndoFollow(session, actorURL, followMap)
 }

@@ -121,10 +121,12 @@ func (service *Following) ConnectActivityPub(session data.Session, following *mo
 		return derp.Wrap(err, location, "Error getting ActivityPub actor", following.UserID)
 	}
 
-	// Try to send the ActivityPub follow request
+	// Send the ActivityPub Follow request as a post-commit queue task (F3): the signed HTTP
+	// delivery happens after this transaction commits and is independently retryable. The signing
+	// key is resolved in the sender consumer via SendLocator.Actor(localActor.ActorID()).
 	followingURL := service.ActivityPubID(following)
 	log.Debug().Str("loc", location).Msg("Sending ActivityPub Follow request to: " + remoteActor.ID())
-	localActor.SendFollow(followingURL, remoteActor.ID())
+	service.outboxService.SendFollow(session, localActor.ActorID(), followingURL, remoteActor.ID())
 
 	// Success!
 	return nil

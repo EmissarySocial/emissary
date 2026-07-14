@@ -2,33 +2,45 @@ package service
 
 import (
 	"iter"
+	"maps"
 	"slices"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/outbox"
+	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/sherlock"
 	"github.com/benpate/uri"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// taskOutboxPublish is the queue-task name for the post-commit follower fan-out. Emissary
+// owns this task (unlike hannibal/sender's Outbox:* tasks) because the fan-out applies
+// Emissary-specific per-follower filters. See POST-COMMIT-FEDERATION.md F2.
+const taskOutboxPublish = "Outbox-Publish"
+
 /******************************************
  * Publish/Unpublish Methods
  ******************************************/
 
-// Publish adds an OutboxMessage to the Actor's Outbox and sends notifications to all Followers.
-// By default the activity fans out to every one of the Actor's followers plus the activity's own
-// addressees; pass WithRecipients(...) to replace the follower fan-out with an explicit recipient
-// list (e.g. author-only reaction delivery — see COLLECTIONS-REDESIGN.md D7b).
+// Publish adds an OutboxMessage to the Actor's Outbox, then enqueues a post-commit
+// "Outbox-Publish" task that fans the activity out to the Actor's followers plus the
+// activity's own addressees. Pass WithRecipients(...) to replace the follower fan-out with
+// an explicit recipient list (e.g. author-only reaction delivery — see COLLECTIONS-REDESIGN.md D7b).
+//
+// The database work (saving the OutboxMessage, minting the activity ID) happens here, inside
+// the caller's transaction. The network delivery happens later, in the Outbox-Publish consumer,
+// AFTER that transaction commits — so no signed HTTP send ever runs inside an open transaction,
+// and each per-recipient delivery becomes an independently retryable task. See POST-COMMIT-FEDERATION.md F2.
 func (service *Outbox) Publish(session data.Session, actorType string, actorID primitive.ObjectID, activity streams.Document, permissions model.Permissions, options ...PublishOption) error {
-
-	// TODO: This should become a background process.
 
 	const location = "service.Outbox.Publish"
 	if canTrace() {
@@ -66,20 +78,74 @@ func (service *Outbox) Publish(session data.Session, actorType string, actorID p
 		return derp.Wrap(err, location, "Unable to save outbox message", outboxMessage)
 	}
 
-	// Build the recipient set (followers + addressees by default; an explicit recipient list
-	// replaces the follower fan-out when WithRecipients was passed — see D7b).
-	recipients := service.publishRecipients(session, actorType, actorID, activity, config)
-
-	// Only mint an ID for activities that arrived without one; never overwrite a
-	// canonical activity ID (D7). outboxMessage.ActivityPubURL() returns the stored
-	// ActivityURL when present, else the minted <actor>/pub/outbox/<id> URL.
+	// Build the outgoing activity payload. Stamp the canonical `id` (minted only for
+	// activities that arrived without one — outboxMessage.ActivityPubURL() returns the stored
+	// ActivityURL when present, else the minted <actor>/pub/outbox/<id> URL; never overwrites a
+	// canonical activity ID, D7) and the authoritative `actor` URL, so the delivery tasks can
+	// resolve the signing key by URL via SendLocator.Actor.
 	activityMap := activity.Map()
 	activityMap[vocab.PropertyID] = outboxMessage.ActivityPubURL()
-	ruleFilter := service.ruleService.Filter(actorID, WithBlocksOnly())
+	activityMap[vocab.PropertyActor] = actor.ActorID()
 
+	// Hand the fan-out to a post-commit task. The consumer (Outbox.Deliver) rebuilds the same
+	// recipient set and re-applies the same per-follower filters, then dispatches deliveries.
+	// permissions are serialized as hex strings because ObjectIDs do not survive task storage
+	// round-trips reliably; recipients+hasRecipients carry the WithRecipients override (§5).
+	postcommit.Publish(session, service.queue, taskOutboxPublish, mapof.Any{
+		"host":          service.host,
+		"actorType":     actorType,
+		"actorId":       actorID.Hex(),
+		"activity":      activityMap,
+		"permissions":   permissionsToHex(permissions),
+		"recipients":    config.recipients,
+		"hasRecipients": config.hasRecipients,
+	})
+
+	// Success!!
+	return nil
+}
+
+// Deliver runs the per-recipient fan-out for an already-published activity. It is the body of
+// the post-commit "Outbox-Publish" task (invoked from consumer.OutboxPublish), so it runs on a
+// separate session AFTER the publishing transaction has committed. It rebuilds the same recipient
+// set as Publish and applies the same three filters — same-network boundary, block rules, and view
+// permissions — then dispatches ActivityPub deliveries as independently retryable
+// OutboxSendToSingleRecipient tasks and email deliveries inline. See POST-COMMIT-FEDERATION.md F2.
+//
+// recipients+hasRecipients reconstitute the WithRecipients override: hasRecipients==true replaces
+// the follower fan-out with `recipients` (author-only delivery), matching config.hasRecipients in Publish.
+func (service *Outbox) Deliver(session data.Session, actorType string, actorID primitive.ObjectID, activity mapof.Any, permissions model.Permissions, recipients []string, hasRecipients bool) error {
+
+	const location = "service.Outbox.Deliver"
+
+	// Rebuild the PublishConfig exactly as Publish had it. An explicit (even empty) recipient
+	// list suppresses the follower fan-out — WithRecipients sets both fields (D7b).
+	config := PublishConfig{}
+	if hasRecipients {
+		config = newPublishConfig(WithRecipients(recipients...))
+	}
+
+	// Rebuild the recipient set (followers + addressees by default; the override list otherwise),
+	// iterating lazily from the activity's FULL addressing. publishRecipients reads to/cc AND
+	// bto/bcc (RangeAddressees), so enumeration must see the blind fields before they are stripped.
+	document := streams.NewDocument(activity)
+	recipientSeq := service.publishRecipients(session, actorType, actorID, document, config)
+
+	// The OUTGOING payload strips bto/bcc, matching hannibal/sender.SendToAllRecipients: blind
+	// recipients still RECEIVE the activity (they were enumerated above) but must not SEE the
+	// blind-address list. We strip a CLONE so the enumeration above still reads the full addressing.
+	// (The former synchronous loop leaked these blind-address fields to every recipient; W3.)
+	payload := maps.Clone(activity)
+	delete(payload, vocab.PropertyBTo)
+	delete(payload, vocab.PropertyBCC)
+
+	// The authoritative signer URL (stamped by Publish) — the delivery tasks resolve the key from it.
+	actorURL := payload.GetString(vocab.PropertyActor)
+
+	ruleFilter := service.ruleService.Filter(actorID, WithBlocksOnly())
 	isLocalhost := uri.IsLocalHostname(service.host)
 
-	for follower := range recipients {
+	for follower := range recipientSeq {
 
 		// Resolve the recipient's host from InboxURL, falling back to ProfileURL. Addressees
 		// (e.g. a reaction's target author, added via addresseesAsFollowers) are constructed with
@@ -114,10 +180,10 @@ func (service *Outbox) Publish(session data.Session, actorType string, actorID p
 		switch follower.Method {
 
 		case model.FollowerMethodActivityPub:
-			service.sendNotification_ActivityPub(&actor, &follower, activityMap)
+			service.deliverActivityPub(session, actorURL, &follower, activity)
 
 		case model.FollowerMethodEmail:
-			service.sendNotification_Email(&follower, activityMap)
+			service.sendNotification_Email(&follower, activity)
 
 		default:
 			derp.Report(derp.Internal(location, "Unknown Follower Method.  This should never happen", follower))
@@ -335,12 +401,72 @@ func (service *Outbox) addresseesAsFollowers(addressees iter.Seq[string]) iter.S
 	}
 }
 
-// sendNotifications_ActivityPub sends ActivityPub updates to all Followers
-// TODO: HIGH: This should be a background task with retries
-func (service *Outbox) sendNotification_ActivityPub(actor *outbox.Actor, follower *model.Follower, activity mapof.Any) {
-	if err := actor.SendOne(follower.Actor.ProfileURL, activity); err != nil {
-		derp.Report(derp.Wrap(err, "service.Outbox.sendNotifications_ActivityPub", "Unable to send ActivityPub notification", follower.Actor.ProfileURL))
+// deliverActivityPub enqueues one independently retryable OutboxSendToSingleRecipient task
+// (hannibal/sender) to deliver the activity to a single ActivityPub follower. The inbox URL is
+// taken from the stored Follower when present, else resolved from the actor's profile. The
+// signing key is resolved later, in the sender consumer, via SendLocator.Actor(actorURL) — which
+// is why F1 taught that resolver every actor type. Published post-commit, so it is spooled until
+// the consumer's own transaction commits.
+func (service *Outbox) deliverActivityPub(session data.Session, actorURL string, follower *model.Follower, activity mapof.Any) {
+
+	const location = "service.Outbox.deliverActivityPub"
+
+	inboxURL := follower.Actor.InboxURL
+
+	if inboxURL == "" {
+		inboxURL = service.resolveInboxURL(follower.Actor.ProfileURL)
 	}
+
+	// A follower with no resolvable inbox cannot be delivered to. This matches the former
+	// behavior (actor.SendOne failed and reported) — the delivery is dropped, not retried.
+	if inboxURL == "" {
+		derp.Report(derp.Internal(location, "Unable to resolve inbox URL for follower", follower.Actor.ProfileURL))
+		return
+	}
+
+	postcommit.Publish(session, service.queue, sender.OutboxSendToSingleRecipient, mapof.Any{
+		"actor":    actorURL,
+		"inbox":    inboxURL,
+		"activity": activity,
+	})
+}
+
+// resolveInboxURL loads an Actor from its profile URL and returns its preferred inbox URL, or ""
+// on failure. Mirrors SendLocator.resolveInboxURL; used for addressees (author-only recipients)
+// that carry only a ProfileURL, not a stored InboxURL.
+func (service *Outbox) resolveInboxURL(profileURL string) string {
+
+	const location = "service.Outbox.resolveInboxURL"
+
+	if profileURL == "" {
+		return ""
+	}
+
+	actor, err := service.activityService.AppClient().Load(profileURL, sherlock.AsActor())
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to load actor for inbox URL", profileURL))
+		return ""
+	}
+
+	if actor.NotActor() {
+		return ""
+	}
+
+	return actor.PreferredInbox()
+}
+
+// permissionsToHex serializes a Permissions set (ObjectIDs) to hex strings for queue-task
+// storage; ObjectIDs do not survive task serialization round-trips reliably. See POST-COMMIT-FEDERATION.md §5.
+func permissionsToHex(permissions model.Permissions) []string {
+
+	result := make([]string, 0, len(permissions))
+
+	for _, permissionID := range permissions {
+		result = append(result, permissionID.Hex())
+	}
+
+	return result
 }
 
 // sendNotifications_Email sends email notifications to all "email" Followers

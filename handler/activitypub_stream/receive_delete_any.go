@@ -51,9 +51,10 @@ func DeleteAny(context Context, activity streams.Document) error {
 		return derp.Wrap(err, "handler.activityPub_stream.DeleteAny", "Unable to load actor", context.stream)
 	}
 
-	// Announce the deleted object
+	// Announce the deletion to the stream's followers as a post-commit send (F3, W6 option B).
 	announceID := activitypub.FakeActivityID(activity)
-	actor.SendAnnounce(announceID, activity)
+	followersURL := actor.ActorID() + "/pub/followers"
+	outboxService.SendAnnounce(context.session, actor.ActorID(), announceID, activity, followersURL)
 
 	// Voila!
 	return nil

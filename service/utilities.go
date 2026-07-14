@@ -90,35 +90,59 @@ func textIndex(tokens ...string) sliceof.String {
 	return result
 }
 
-// parseFollowersURI parses followers URIs in two formats:
-// 1) followers:<userID>
-// 2) https://<host>/@<userID>/pub/followers
-// It returns the userID if successful, or primitive.NilObjectID if not.
-func parseFollowersURI(host string, uri string) primitive.ObjectID {
+// parseFollowersURI parses a LOCAL followers-collection URI into the (actorType, actorID) of the
+// actor whose followers it names. Recognized forms (actorID is always the hex ObjectID):
+//
+//	followers:<hex>                             → User (shortcut scheme)
+//	https://<host>/@<hex>/pub/followers          → User
+//	https://<host>/@search_<hex>/pub/followers   → SearchQuery
+//	https://<host>/<hex>/pub/followers           → Stream
+//
+// It returns ("", NilObjectID) when the URI is not a local followers collection. The disambiguation
+// mirrors locateObjectFromURL: "@search_" ⇒ SearchQuery, "@" ⇒ User, bare hex ⇒ Stream.
+func parseFollowersURI(host string, uri string) (string, primitive.ObjectID) {
 
-	// Shortcut followers: URI
-	if strings.HasPrefix(uri, "followers:") {
-
-		token := strings.TrimPrefix(uri, "followers:")
+	// Shortcut followers:<hex> scheme (User only)
+	if token, found := strings.CutPrefix(uri, "followers:"); found {
 		if userID, err := primitive.ObjectIDFromHex(token); err == nil {
-			return userID
+			return model.ActorTypeUser, userID
 		}
-		return primitive.NilObjectID
+		return "", primitive.NilObjectID
 	}
 
-	// Long-form public URL
-	if prefix := host + "/@"; strings.HasPrefix(uri, prefix) {
-		uri = strings.TrimPrefix(uri, prefix)
-		if strings.HasSuffix(uri, "/pub/followers") {
-			uri = strings.TrimSuffix(uri, "/pub/followers")
-			if userID, err := primitive.ObjectIDFromHex(uri); err == nil {
-				return userID
-			}
-		}
+	// Long-form public URL: <host>/<token>/pub/followers
+	path, found := strings.CutPrefix(uri, host+"/")
+	if !found {
+		return "", primitive.NilObjectID
 	}
 
-	// Nope
-	return primitive.NilObjectID
+	token, found := strings.CutSuffix(path, "/pub/followers")
+	if !found {
+		return "", primitive.NilObjectID
+	}
+
+	// SearchQuery: @search_<hex>
+	if hex, found := strings.CutPrefix(token, "@search_"); found {
+		if searchQueryID, err := primitive.ObjectIDFromHex(hex); err == nil {
+			return model.ActorTypeSearchQuery, searchQueryID
+		}
+		return "", primitive.NilObjectID
+	}
+
+	// User: @<hex>
+	if hex, found := strings.CutPrefix(token, "@"); found {
+		if userID, err := primitive.ObjectIDFromHex(hex); err == nil {
+			return model.ActorTypeUser, userID
+		}
+		return "", primitive.NilObjectID
+	}
+
+	// Stream: bare <hex>
+	if streamID, err := primitive.ObjectIDFromHex(token); err == nil {
+		return model.ActorTypeStream, streamID
+	}
+
+	return "", primitive.NilObjectID
 }
 
 func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID, objectType string, objectID primitive.ObjectID, err error) {

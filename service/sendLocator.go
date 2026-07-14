@@ -160,9 +160,9 @@ func (service SendLocator) Recipient(uri string) (iter.Seq[string], error) {
 	//	return service.resolveCircle(uri)
 	// }
 
-	// Special uri scheme for followers
-	if userID := parseFollowersURI(service.host, uri); !userID.IsZero() {
-		return service.resolveFollowers(userID)
+	// Special uri scheme for followers (User, Stream, or SearchQuery follower collections)
+	if actorType, actorID := parseFollowersURI(service.host, uri); actorType != "" {
+		return service.resolveFollowers(actorType, actorID)
 	}
 
 	// Special uri scheme for group members
@@ -192,12 +192,15 @@ func (service SendLocator) Recipient(uri string) (iter.Seq[string], error) {
 	return ranges.Empty[string](), nil
 }
 
-// Followers returns a RangeFunc with all inbox URLs for a followers uri
-// This custom URI is used because followers may not be published in an ActivityPub collection
-func (service SendLocator) resolveFollowers(userID primitive.ObjectID) (iter.Seq[string], error) {
+// resolveFollowers returns a RangeFunc with the inbox URLs for an actor's followers collection.
+// This custom URI is used because followers may not be published in an ActivityPub collection.
+// It resolves the followers of ANY local actor type (User, Stream, SearchQuery) and considers
+// ONLY ActivityPub-method followers — email/poll followers have no inbox, so they are not
+// deliverable through the sender pipeline (they receive via the Outbox consumer's method dispatch).
+func (service SendLocator) resolveFollowers(actorType string, actorID primitive.ObjectID) (iter.Seq[string], error) {
 
-	// Get all Followers for this User
-	followers := service.followerService.RangeByUserID(service.session, userID)
+	// Get all ActivityPub Followers for this actor
+	followers := service.followerService.RangeActivityPubByType(service.session, actorType, actorID)
 
 	// Locate each Follower's inbox URL
 	inboxURLs := ranges.Map(followers, func(follower model.Follower) string {

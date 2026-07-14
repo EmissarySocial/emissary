@@ -26,7 +26,10 @@ func PreProcessor(task *queue.Task) error {
 	case "ImportStartup":
 		task.Priority = 16
 
-	case "SendActivityPubMessage":
+	// Outbox-Publish is the follower fan-out (F2). It is cheap (DB reads + enqueue, no HTTP),
+	// so it runs promptly post-commit — preserving the old synchronous fan-out timing — while the
+	// per-recipient Outbox:SendToSingleRecipient deliveries it enqueues stay background (256 below).
+	case "Outbox-Publish":
 		task.Priority = 16
 
 	case "SendSearchResult":

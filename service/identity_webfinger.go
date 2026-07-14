@@ -4,10 +4,11 @@ import (
 	"crypto/sha256"
 	"time"
 
-	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal"
+	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 )
@@ -66,17 +67,15 @@ func (service *Identity) sendGuestCode_ActivityPub(session data.Session, identif
 		},
 	}
 
-	message := mapof.Any{
-		"host":      hostname,
-		"actorType": model.FollowerTypeApplication,
-		"to":        recipientID,
-		"message":   activity,
-	}
-
-	// Because we want a real-time response, we're going to run this queue task inline
-	if err := service.activityService.SendMessage(session, message); err != nil {
-		return derp.Wrap(err, location, "Unable to send guest code to WebFinger identifier", identifier)
-	}
+	// Deliver the guest code as a post-commit ActivityPub send. GetRecipient above already
+	// validated the identifier and resolved its inbox SYNCHRONOUSLY, so a bad/unreachable
+	// address is still reported to the caller in real time (driving the "double-check your
+	// address" UX); only the signed HTTP POST is deferred to the queue — where a transient
+	// failure is now retried instead of lost. The activity is addressed to:[recipient] and
+	// signed as @application (SendLocator.Actor resolves the Application actor). This also
+	// removes the last signed HTTP send from inside the request transaction, and was the final
+	// caller of ActivityStream.SendMessage. See POST-COMMIT-FEDERATION.md F5.
+	postcommit.Publish(session, service.queue, sender.OutboxSendToAllRecipients, activity)
 
 	return nil
 }

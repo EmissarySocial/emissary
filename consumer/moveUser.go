@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
@@ -43,20 +44,16 @@ func MoveUser(factory *service.Factory, session data.Session, user *model.User, 
 	 * 2: Send a `Move` to the Target Actor
 	 ******************************************/
 
-	// Send a `Move` message to the target server (published post-commit)
-	postcommit.Publish(session, factory.Queue(), "SendActivityPubMessage", mapof.Any{
-		"host":      factory.Hostname(),
-		"actorType": model.ActorTypeUser,
-		"actorID":   user.UserID,
-		"to":        newActorURL,
-		"message": mapof.Any{
-			vocab.AtContext:      vocab.ContextTypeActivityStreams,
-			vocab.PropertyTo:     newActorURL,
-			vocab.PropertyActor:  user.ActivityPubURL(),
-			vocab.PropertyType:   vocab.ActivityTypeMove,
-			vocab.PropertyObject: user.ActivityPubURL(),
-			vocab.PropertyTarget: newActorURL,
-		},
+	// Send a `Move` message to the target server (published post-commit). The activity carries its
+	// own recipient in `to`; hannibal/sender resolves the inbox, and the signing key is resolved via
+	// SendLocator.Actor(user URL). Tenant routing uses the activity's `actor` host. See F5.
+	postcommit.Publish(session, factory.Queue(), sender.OutboxSendToAllRecipients, mapof.Any{
+		vocab.AtContext:      vocab.ContextTypeActivityStreams,
+		vocab.PropertyTo:     []string{newActorURL},
+		vocab.PropertyActor:  user.ActivityPubURL(),
+		vocab.PropertyType:   vocab.ActivityTypeMove,
+		vocab.PropertyObject: user.ActivityPubURL(),
+		vocab.PropertyTarget: newActorURL,
 	})
 
 	/******************************************
@@ -70,17 +67,13 @@ func MoveUser(factory *service.Factory, session data.Session, user *model.User, 
 	// the result, so follower `Move` messages were never actually published.  Fixed as
 	// part of the post-commit conversion.
 	for follower := range followers {
-		postcommit.Publish(session, factory.Queue(), "SendActivityPubMessage", mapof.Any{
-			"host":      factory.Hostname(),
-			"actorType": "User",
-			"actorID":   user.UserID,
-			"to":        follower.Actor.ProfileURL,
-			"message": mapof.Any{
-				vocab.PropertyActor:  user.ActivityPubURL(),
-				vocab.PropertyType:   vocab.ActivityTypeMove,
-				vocab.PropertyObject: user.ActivityPubURL(),
-				vocab.PropertyTarget: newActorURL,
-			},
+		postcommit.Publish(session, factory.Queue(), sender.OutboxSendToAllRecipients, mapof.Any{
+			vocab.AtContext:      vocab.ContextTypeActivityStreams,
+			vocab.PropertyTo:     []string{follower.Actor.ProfileURL},
+			vocab.PropertyActor:  user.ActivityPubURL(),
+			vocab.PropertyType:   vocab.ActivityTypeMove,
+			vocab.PropertyObject: user.ActivityPubURL(),
+			vocab.PropertyTarget: newActorURL,
 		})
 	}
 

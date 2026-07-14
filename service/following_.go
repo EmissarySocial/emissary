@@ -31,6 +31,7 @@ type Following struct {
 	importItemService *ImportItem
 	keyService        *EncryptionKey
 	newsFeedService   *NewsFeed
+	outboxService     *Outbox
 	sseUpdateChannel  chan<- realtime.Message
 	streamService     *Stream
 	userService       *User
@@ -55,6 +56,7 @@ func (service *Following) Refresh(factory *Factory) {
 	service.importItemService = factory.ImportItem()
 	service.keyService = factory.EncryptionKey()
 	service.newsFeedService = factory.NewsFeed()
+	service.outboxService = factory.Outbox()
 	service.queue = factory.Queue()
 	service.sseUpdateChannel = factory.SSEUpdateChannel()
 	service.streamService = factory.Stream()
@@ -201,10 +203,10 @@ func (service *Following) Delete(session data.Session, following *model.Followin
 
 	const location = "service.Following.Delete"
 
-	// Disconnect from the external service (if necessary)
-	go service.Disconnect(session, following)
-
-	// Remove the Following record from the database
+	// Remove the Following record from the database. deleteNoStats handles the external
+	// disconnect (e.g. Undo/Follow), so we do NOT disconnect here — doing both double-sent
+	// the Undo. (Previously this line spawned `go service.Disconnect(...)`, a goroutine that
+	// used the request's session after the transaction returned — a use-after-free hazard. F4.)
 	if err := service.deleteNoStats(session, following, note); err != nil {
 		return derp.Wrap(err, location, "Unable to delete Following", following, note)
 	}
@@ -240,8 +242,11 @@ func (service *Following) deleteNoStats(session data.Session, following *model.F
 		return derp.Wrap(err, location, "Unable to delete streams for Following", following)
 	}
 
-	// Disconnect from external services (if necessary)
-	go service.Disconnect(session, following)
+	// Disconnect from external services (e.g. Undo/Follow) if necessary. This only ENQUEUES a
+	// post-commit task now (no blocking HTTP), so it runs synchronously on the caller's session
+	// — no goroutine, no session escape. The task carries the Follow as payload, so it is safe
+	// that the row above is already deleted. See POST-COMMIT-FEDERATION.md F4.
+	service.Disconnect(session, following)
 
 	return nil
 }
@@ -416,7 +421,7 @@ func (service *Following) LoadByToken(session data.Session, userID primitive.Obj
 	followingID, err := primitive.ObjectIDFromHex(token)
 
 	if err != nil {
-		return derp.Wrap(err, location, "FollowingId must be a valid ObjectID", token)
+		return derp.Wrap(err, location, "FollowingId must be a valid ObjectID", token, derp.WithNotFound())
 	}
 
 	return service.LoadByID(session, userID, followingID, result)
