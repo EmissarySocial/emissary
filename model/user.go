@@ -452,28 +452,34 @@ func (user *User) ActivityPubRepliesURL() string {
 	return user.ProfileURL + "/pub/replies"
 }
 
+// ActivityPubSSEEndpoint_Inbox returns the Server-Sent Event endpoint that streams this User's inbox activity
 func (user *User) ActivityPubSSEEndpoint_Inbox() string {
 	if user.ProfileURL == "" {
 		return ""
 	}
 
-	return user.ProfileURL + "/sse/inbox"
+	// The "@me" alias resolves to the signed-in User, who is the only party permitted to read this inbox.
+	return user.Host() + "/@me/sse/inbox"
 }
 
+// ActivityPubSSEEndpoint_Inbox_DirectMessages returns the Server-Sent Event endpoint that streams this User's direct messages
 func (user *User) ActivityPubSSEEndpoint_Inbox_DirectMessages() string {
 	if user.ProfileURL == "" {
 		return ""
 	}
 
-	return user.ProfileURL + "/sse/inbox/direct-messages"
+	// The "@me" alias resolves to the signed-in User, who is the only party permitted to read this inbox.
+	return user.Host() + "/@me/sse/inbox/direct-messages"
 }
 
+// ActivityPubSSEEndpoint_Inbox_DirectMessages_MLS returns the Server-Sent Event endpoint that streams this User's MLS-encrypted direct messages
 func (user *User) ActivityPubSSEEndpoint_Inbox_DirectMessages_MLS() string {
 	if user.ProfileURL == "" {
 		return ""
 	}
 
-	return user.ProfileURL + "/sse/inbox/direct-messages/mls"
+	// The "@me" alias resolves to the signed-in User, who is the only party permitted to read this inbox.
+	return user.Host() + "/@me/sse/inbox/direct-messages/mls"
 }
 
 func (user *User) JSONFeedURL() string {

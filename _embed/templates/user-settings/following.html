@@ -69,7 +69,7 @@
 	<!-- Reload when SSE message is received -->
 	<div 
 		hx-ext="sse" 
-		sse-connect="/@{{.AuthenticatedID.Hex}}/sse/following-updated"
+		sse-connect="/@me/sse/following-updated"
 
 		hx-get="{{.URL}}" 
 		hx-trigger="sse:{{.AuthenticatedID.Hex}}" 

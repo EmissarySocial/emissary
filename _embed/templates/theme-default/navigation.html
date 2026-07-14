@@ -31,7 +31,7 @@
 		     user ID); the client just refetches the badge fragment. -->
 		<div
 			hx-ext="sse"
-			sse-connect="/@{{.AuthenticatedID.Hex}}/sse/notifications"
+			sse-connect="/@me/sse/notifications"
 			hx-get="/@me/notifications/badge"
 			hx-trigger="sse:message, refreshSidebar from:window"
 			hx-target="#nav-notifications-badge"

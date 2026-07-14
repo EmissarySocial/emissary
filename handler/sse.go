@@ -15,86 +15,98 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ServerSentEvent generates an echo.HandlerFunc that generates an SSE eventStream for all topics
-func ServerSentEvent(ctx *steranko.Context, factory *service.Factory, _ data.Session) error {
-	return serverSentEvent(ctx, factory, realtime.TopicAll)
-}
+//////////////////////////////////////////
+// Object SSE Handlers
+//////////////////////////////////////////
 
-// ServerSentEvent_ChildUpdated generates an echo.HandlerFunc that listens for requests for the `ChildUpdated` topic
-func ServerSentEvent_ChildUpdated(ctx *steranko.Context, factory *service.Factory, _ data.Session) error {
-	return serverSentEvent(ctx, factory, realtime.TopicChildUpdated)
-}
+// ServerSentEvent_Object_ImportProgress streams "import progress" events for a single Import owned by the signed-in User
+func ServerSentEvent_Object_ImportProgress(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
-// ServerSentEvent_FollowingUpdated generates an echo.HandlerFunc that listens for requests for the `FollowingUpdated` topic
-func ServerSentEvent_FollowingUpdated(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
+	const location = "handler.ServerSentEvent_Object_ImportProgress"
 
-	if user.UserID.Hex() != ctx.Param("objectId") {
-		return derp.Forbidden("handler.ServerSentEvent_FollowingUpdated", "You do not have permission to access this resource")
+	// Parse the ImportID from the URL
+	importID, err := primitive.ObjectIDFromHex(ctx.Param("objectId"))
+	if err != nil {
+		return derp.NotFound(location, "Invalid ObjectID", "ObjectID must be a valid ObjectID")
 	}
 
-	return serverSentEvent(ctx, factory, realtime.TopicFollowingUpdated)
-}
-
-// ServerSentEvent_ImportProgress generates an echo.HandlerFunc that listens for requests for the `ImportProgress` topic
-func ServerSentEvent_ImportProgress(ctx *steranko.Context, factory *service.Factory, _ data.Session, _ *model.User) error {
-	return serverSentEvent(ctx, factory, realtime.TopicImportProgress)
-}
-
-// ServerSentEvent_Inbox generates an echo.HandlerFunc that listens for requests for the `Inbox` topic
-func ServerSentEvent_Inbox(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
-
-	if user.UserID.Hex() != ctx.Param("objectId") {
-		return derp.Forbidden("handler.ServerSentEvent_Inbox", "You do not have permission to access this resource")
+	// RULE: The Import must belong to the signed-in User (LoadByID scopes the query to the owner)
+	importRecord := model.NewImport()
+	if err := factory.Import().LoadByID(session, user.UserID, importID, &importRecord); err != nil {
+		return derp.Wrap(err, location, "Import not found", derp.WithNotFound())
 	}
 
-	return serverSentEvent(ctx, factory, realtime.TopicInboxActivity)
+	// Stream progress events for this Import
+	return serverSentEvent(ctx, factory, importRecord.ImportID, realtime.TopicImportProgress)
 }
 
-// ServerSentEvent_Notifications generates an echo.HandlerFunc that listens for requests for the `Notification` topic
-func ServerSentEvent_Notifications(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
+//////////////////////////////////////////
+// Stream SSE Handlers
+//////////////////////////////////////////
 
-	if user.UserID.Hex() != ctx.Param("objectId") {
-		return derp.Forbidden("handler.ServerSentEvent_Notifications", "You do not have permission to access this resource")
-	}
-
-	return serverSentEvent(ctx, factory, realtime.TopicNotification)
+// ServerSentEvent_Stream streams every realtime topic for a Stream
+func ServerSentEvent_Stream(ctx *steranko.Context, factory *service.Factory, _ data.Session, stream *model.Stream) error {
+	return serverSentEvent(ctx, factory, stream.StreamID, realtime.TopicAll)
 }
 
-// ServerSentEvent_DirectMessage generates an echo.HandlerFunc that listens for requests for the `DirectMessage` topic
-func ServerSentEvent_Inbox_DirectMessage(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
-
-	if user.UserID.Hex() != ctx.Param("objectId") {
-		return derp.Forbidden("handler.ServerSentEvent_Inbox_DirectMessage", "You do not have permission to access this resource")
-	}
-
-	return serverSentEvent(ctx, factory, realtime.TopicInboxActivity_DirectMessage)
+// ServerSentEvent_Stream_ChildUpdated streams "child updated" events for a Stream
+func ServerSentEvent_Stream_ChildUpdated(ctx *steranko.Context, factory *service.Factory, _ data.Session, stream *model.Stream) error {
+	return serverSentEvent(ctx, factory, stream.StreamID, realtime.TopicChildUpdated)
 }
 
-// ServerSentEvent_DirectMessage_MLS generates an echo.HandlerFunc that listens for requests for the `DirectMessage_MLS` topic
-func ServerSentEvent_Inbox_DirectMessage_MLS(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
-
-	if user.UserID.Hex() != ctx.Param("objectId") {
-		return derp.Forbidden("handler.ServerSentEvent_Inbox_DirectMessage_MLS", "You do not have permission to access this resource")
-	}
-
-	return serverSentEvent(ctx, factory, realtime.TopicInboxActivity_DirectMessage_MLS)
+// ServerSentEvent_Stream_NewReplies streams "new replies" events for a Stream
+func ServerSentEvent_Stream_NewReplies(ctx *steranko.Context, factory *service.Factory, _ data.Session, stream *model.Stream) error {
+	return serverSentEvent(ctx, factory, stream.StreamID, realtime.TopicNewReplies)
 }
 
-// ServerSentEvent_NewReplies generates an echo.HandlerFunc that listens for requests for the `NewReplies` topic
-func ServerSentEvent_NewReplies(ctx *steranko.Context, factory *service.Factory, _ data.Session) error {
-	return serverSentEvent(ctx, factory, realtime.TopicNewReplies)
+// ServerSentEvent_Stream_Updated streams "updated" events for a Stream
+func ServerSentEvent_Stream_Updated(ctx *steranko.Context, factory *service.Factory, _ data.Session, stream *model.Stream) error {
+	return serverSentEvent(ctx, factory, stream.StreamID, realtime.TopicUpdated)
 }
 
-// ServerSentEvent_Updated generates an echo.HandlerFunc that listens for requests for the `Updated` topic
-func ServerSentEvent_Updated(ctx *steranko.Context, factory *service.Factory, _ data.Session) error {
-	return serverSentEvent(ctx, factory, realtime.TopicUpdated)
+//////////////////////////////////////////
+// "Me" SSE Handlers
+//////////////////////////////////////////
+
+// ServerSentEvent_Me streams every realtime topic for the signed-in User
+func ServerSentEvent_Me(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
+	return serverSentEvent(ctx, factory, user.UserID, realtime.TopicAll)
 }
 
-// ServerSentEvent generates an echo.HandlerFunc that listens for requests for
-// SSE following.
-func serverSentEvent(ctx *steranko.Context, factory *service.Factory, topic int) error {
+// ServerSentEvent_Me_FollowingUpdated streams "following updated" events for the signed-in User
+func ServerSentEvent_Me_FollowingUpdated(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
+	return serverSentEvent(ctx, factory, user.UserID, realtime.TopicFollowingUpdated)
+}
 
-	const location = "handler.ServerSentEvent"
+// ServerSentEvent_Me_Inbox streams inbox-activity events for the signed-in User
+func ServerSentEvent_Me_Inbox(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
+	return serverSentEvent(ctx, factory, user.UserID, realtime.TopicInboxActivity)
+}
+
+// ServerSentEvent_Me_Notifications streams notification events for the signed-in User
+func ServerSentEvent_Me_Notifications(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
+	return serverSentEvent(ctx, factory, user.UserID, realtime.TopicNotification)
+}
+
+// ServerSentEvent_Me_Inbox_DirectMessage streams direct-message events for the signed-in User
+func ServerSentEvent_Me_Inbox_DirectMessage(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
+	return serverSentEvent(ctx, factory, user.UserID, realtime.TopicInboxActivity_DirectMessage)
+}
+
+// ServerSentEvent_Me_Inbox_DirectMessage_MLS streams MLS-encrypted direct-message events for the signed-in User
+func ServerSentEvent_Me_Inbox_DirectMessage_MLS(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
+	return serverSentEvent(ctx, factory, user.UserID, realtime.TopicInboxActivity_DirectMessage_MLS)
+}
+
+// ServerSentEvent_Me_Updated streams "updated" events for the signed-in User
+func ServerSentEvent_Me_Updated(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
+	return serverSentEvent(ctx, factory, user.UserID, realtime.TopicUpdated)
+}
+
+// serverSentEvent opens a Server-Sent Event stream that relays realtime messages for a single object and topic
+func serverSentEvent(ctx *steranko.Context, factory *service.Factory, objectID primitive.ObjectID, topic int) error {
+
+	const location = "handler.serverSentEvent"
 
 	// Cap the lifetime of an SSE connection at 30 days.  This is effectively "never time
 	// out" for a normal session; it exists only as a backstop so a permanently-abandoned
@@ -111,14 +123,6 @@ func serverSentEvent(ctx *steranko.Context, factory *service.Factory, topic int)
 
 	if !ok {
 		return derp.Internal(location, "Streaming Not Supported")
-	}
-
-	token := ctx.Param("objectId")
-
-	objectID, err := primitive.ObjectIDFromHex(token)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Invalid StreamID", token)
 	}
 
 	client := realtime.NewClient(ctx.Request(), objectID, topic)

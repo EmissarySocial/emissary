@@ -322,18 +322,12 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// Hard-coded routes for additional stream services
 	e.GET("/:stream/attachments/:attachmentId", handler.WithStream(factory, handler.GetStreamAttachment))
 	e.GET("/:stream/qrcode", handler.WithStream(factory, handler.GetQRCode_Stream))
-	e.GET("/:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
-	e.GET("/:objectId/sse/updated", handler.WithFactory(factory, handler.ServerSentEvent_Updated))
-	e.GET("/:objectId/sse/child-updated", handler.WithFactory(factory, handler.ServerSentEvent_ChildUpdated))
-	e.GET("/:objectId/sse/new-replies", handler.WithFactory(factory, handler.ServerSentEvent_NewReplies))
-	e.GET("/:objectId/sse/import-progress", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_ImportProgress))
-	e.GET("/@:objectId/sse", handler.WithFactory(factory, handler.ServerSentEvent))
-	e.GET("/@:objectId/sse/updated", handler.WithFactory(factory, handler.ServerSentEvent_Updated))
-	e.GET("/@:objectId/sse/following-updated", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_FollowingUpdated))
-	e.GET("/@:objectId/sse/inbox", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Inbox))
-	e.GET("/@:objectId/sse/inbox/direct-messages", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Inbox_DirectMessage))
-	e.GET("/@:objectId/sse/inbox/direct-messages/mls", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Inbox_DirectMessage_MLS))
-	e.GET("/@:objectId/sse/notifications", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Notifications))
+	e.GET("/:stream/sse", handler.WithStream(factory, handler.ServerSentEvent_Stream))
+	e.GET("/:stream/sse/updated", handler.WithStream(factory, handler.ServerSentEvent_Stream_Updated))
+	e.GET("/:stream/sse/child-updated", handler.WithStream(factory, handler.ServerSentEvent_Stream_ChildUpdated))
+	e.GET("/:stream/sse/new-replies", handler.WithStream(factory, handler.ServerSentEvent_Stream_NewReplies))
+
+	e.GET("/:objectId/sse/import-progress", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Object_ImportProgress))
 
 	// ActivityPub pages for the application actor
 	e.GET("/@application", handler.WithFactory(factory, handler.GetApplicationActor))
@@ -389,6 +383,14 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@me/intent/like", handler.WithAuthenticatedUser(factory, handler.GetIntent_Like))
 	e.POST("/@me/intent/like", handler.WithAuthenticatedUser(factory, handler.PostIntent_Like))
 	e.GET("/@me/intent/continue", handler.WithAuthenticatedUser(factory, handler.GetIntent_Continue))
+
+	e.GET("/@me/sse", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me))
+	e.GET("/@me/sse/updated", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Updated))
+	e.GET("/@me/sse/following-updated", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_FollowingUpdated))
+	e.GET("/@me/sse/inbox", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Inbox))
+	e.GET("/@me/sse/inbox/direct-messages", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Inbox_DirectMessage))
+	e.GET("/@me/sse/inbox/direct-messages/mls", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Inbox_DirectMessage_MLS))
+	e.GET("/@me/sse/notifications", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Notifications))
 
 	e.GET("/@guest", handler.WithIdentity(factory, handler.GetIdentity))
 	e.POST("/@guest", handler.WithIdentity(factory, handler.PostIdentity))

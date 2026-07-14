@@ -64,7 +64,7 @@ followers-list.html renders FOLLOW rows.
 	<!-- Live-refresh the list + sidebar badge when a new notification arrives over SSE. -->
 	<div
 		hx-ext="sse"
-		sse-connect="/@{{.AuthenticatedID.Hex}}/sse/notifications"
+		sse-connect="/@me/sse/notifications"
 		hx-get="/@me/notifications/followers-list"
 		hx-trigger="sse:message"
 		hx-target=".notification-list-target"
