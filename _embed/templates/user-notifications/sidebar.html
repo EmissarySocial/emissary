@@ -11,7 +11,7 @@
 
 <div id="app-sidebar" class="expanded"
 	hx-get="/@me/notifications/sidebar?type={{$type}}"
-	hx-trigger="refreshSidebar from:window"
+	hx-trigger="sse:message, refreshSidebar from:window"
 	hx-target="#app-sidebar"
 	hx-swap="outerHTML"
 	hx-push-url="false">

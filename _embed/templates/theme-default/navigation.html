@@ -27,17 +27,19 @@
 		</a>
 
 		<!-- Live-refresh the notification dot on any page when a notification arrives (SSE), or
-		     when notifications are marked read (refreshSidebar).  The payload is minimal (topic +
-		     user ID); the client just refetches the badge fragment. -->
-		<div
-			hx-ext="sse"
-			sse-connect="/@me/sse/notifications"
-			hx-get="/@me/notifications/badge"
-			hx-trigger="sse:message, refreshSidebar from:window"
-			hx-target="#nav-notifications-badge"
-			hx-swap="outerHTML"
-			hx-push-url="false"
-			style="display:none;">
+		     when notifications are marked read (refreshSidebar).  The client just refetches the
+		     badge fragment.
+		     RULE: on htmx 1.9.12 an sse: trigger only binds to an EventSource found on an
+		     ANCESTOR element, so sse-connect MUST live on an outer wrapper and hx-trigger="sse:..."
+		     on an inner child.  A single element that both connects and triggers never fires. -->
+		<div hx-ext="sse" sse-connect="/@me/sse/notifications" style="display:none;">
+			<div
+				hx-get="/@me/notifications/badge"
+				hx-trigger="sse:message, refreshSidebar from:window"
+				hx-target="#nav-notifications-badge"
+				hx-swap="outerHTML"
+				hx-push-url="false">
+			</div>
 		</div>
 
 		{{- if .UserCanMLS -}}

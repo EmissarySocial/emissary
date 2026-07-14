@@ -8,7 +8,7 @@
 {{- $isMobile := .IsMobile -}}
 {{- $isDesktop := not $isMobile -}}
 
-<div class="app width-100%" script="init send SelectNav(id:'notifications')">
+<div class="app width-100%" hx-ext="sse" sse-connect="/@me/sse/notifications" script="init send SelectNav(id:'notifications')">
 
 	<link rel="stylesheet" href="/.templates/user-notifications/stylesheet">
 
@@ -21,11 +21,11 @@
 	<div class="app-content padding-top">
 
 		<!-- Header: title + "Mark All Read" (header.html); on mobile it renders
-		     the section tabs, since the sidebar is hidden.  Re-fetched on refreshSidebar
-		     (fired by SSE arrivals and by mark-all-read) so the counts stay live. -->
+		     the section tabs, since the sidebar is hidden.  Re-fetched on sse:message (a
+		     new notification) and on refreshSidebar (mark-all-read) so counts stay live. -->
 		<div class="margin-bottom-lg"
 			hx-get="/@me/notifications/header?type=MENTION"
-			hx-trigger="refreshSidebar from:window"
+			hx-trigger="sse:message, refreshSidebar from:window"
 			hx-target="this"
 			hx-swap="innerHTML"
 			hx-push-url="false">
@@ -60,21 +60,19 @@
 	<!-- Notifications are marked read explicitly via "Mark All Read" in the header; the nav
 	     badge stays lit while ANY notification (of any type) remains unread. -->
 
-	<!-- Live-refresh the list + sidebar badge when a new notification arrives over SSE. -->
+	<!-- Live-refresh the list when a new notification arrives over SSE.  The sse-connect
+	     lives on the .app wrapper above; the header and sidebar subscribe to sse:message too. -->
 	<div
-		hx-ext="sse"
-		sse-connect="/@me/sse/notifications"
 		hx-get="/@me/notifications/replies-list"
 		hx-trigger="sse:message"
 		hx-target=".notification-list-target"
 		hx-swap="innerHTML"
 		hx-push-url="false"
-		script="on sse:message trigger refreshSidebar on window"
 		style="display:none;">
 	</div>
 
 	<div
-		hx-get="{{.URL}}"
+		hx-get="{{.RelativeURL}}"
 		hx-trigger="refreshPage from:window"
 		hx-target="main"
 		hx-swap="innerHTML"
