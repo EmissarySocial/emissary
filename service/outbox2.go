@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -137,16 +138,15 @@ func (service *Outbox2) Save(session data.Session, item *model.OutboxItem, note 
 			}
 		}
 
-		// Get services to send message to recipient(s). AllowPrivateIPs mirrors the
-		// other send paths (consumer/wrappers.go, actor outboxes): normally FALSE so
-		// remote's SSRF guard stays active, enabled only for local/private federation.
-		sendLocator := service.getSendLocator(session)
-		sender := sender.New(sendLocator, service.queue, sender.AllowPrivateIPs(service.activityService.AllowPrivateIPs()))
-
-		// Send ActivityPub notifications to recipient(s)
-		if err := sender.Send(item.Activity); err != nil {
-			return derp.Wrap(err, location, "Unable to send activity")
-		}
+		// Send ActivityPub notifications to recipient(s) POST-COMMIT. Enqueuing the
+		// fan-out as a task (released only after this transaction commits) keeps the
+		// signed HTTP sends off the request's open transaction. The old synchronous
+		// sender.Send delivered to local inboxes before this txn committed, so a
+		// receiver's own (gated) task could 404 on rows not yet visible on its
+		// separate majority-read session. The Outbox:SendToAllRecipients consumer
+		// rebuilds the Sender with AllowPrivateIPs threaded via WithSender
+		// (consumer/wrappers.go). See POST-COMMIT-TASKS-DESIGN.md / POST-COMMIT-FEDERATION.md F0.
+		postcommit.Publish(session, service.queue, sender.OutboxSendToAllRecipients, item.Activity)
 	}
 
 	// Save the value to the database
