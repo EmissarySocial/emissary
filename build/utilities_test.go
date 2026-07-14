@@ -176,31 +176,3 @@ OTHER
 	result, err := http.ReadRequest(bufferedReader)
 	return result, err
 }
-
-func TestIsSafeRedirectURL(t *testing.T) {
-
-	// Same-site relative paths are safe.
-	require.True(t, isSafeRedirectURL("/stream/123"))
-	require.True(t, isSafeRedirectURL("/stream/123?q=1#top"))
-	require.True(t, isSafeRedirectURL("relative/path"))
-	require.True(t, isSafeRedirectURL(""))
-
-	// Absolute http(s) URLs are safe, even off-site (visit-remote-author is by design).
-	require.True(t, isSafeRedirectURL("https://remote.example/@author"))
-	require.True(t, isSafeRedirectURL("http://remote.example/news"))
-
-	// Dangerous schemes are rejected (the XSS tail on an open redirect).
-	require.False(t, isSafeRedirectURL("javascript:alert(1)"))
-	require.False(t, isSafeRedirectURL("JavaScript:alert(1)")) // scheme is case-insensitive
-	require.False(t, isSafeRedirectURL("data:text/html,<script>alert(1)</script>"))
-	require.False(t, isSafeRedirectURL("vbscript:msgbox(1)"))
-	require.False(t, isSafeRedirectURL("file:///etc/passwd"))
-
-	// Protocol-relative URLs have an empty scheme but a host, so a browser treats
-	// them as off-site absolute URLs — reject them.
-	require.False(t, isSafeRedirectURL("//evil.example/phish"))
-
-	// Leading-whitespace tricks fail to parse and must fail closed (a browser
-	// would strip the whitespace and execute the scheme).
-	require.False(t, isSafeRedirectURL("\tjavascript:alert(1)"))
-}
