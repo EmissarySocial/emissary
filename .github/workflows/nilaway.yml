@@ -33,3 +33,5 @@ jobs:
 
     - name: Nil panic checks
       run: nilaway ./...
+      env:
+        GOMEMLIMIT: 5GiB
