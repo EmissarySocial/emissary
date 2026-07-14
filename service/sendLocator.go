@@ -20,6 +20,7 @@ type SendLocator struct {
 	activityService      *ActivityStream
 	encryptionKeyService *EncryptionKey
 	followerService      *Follower
+	locatorService       *Locator
 	userService          *User
 	host                 string
 	session              data.Session
@@ -31,24 +32,87 @@ func NewSendLocator(factory *Factory, session data.Session) SendLocator {
 		activityService:      factory.ActivityStream(),
 		encryptionKeyService: factory.EncryptionKey(),
 		followerService:      factory.Follower(),
+		locatorService:       factory.Locator(),
 		userService:          factory.User(),
 		host:                 factory.Host(),
 		session:              session,
 	}
 }
 
-// Actor is a part of the sender.Locator interface
-// It returns an Actor interface for the provided Actor URL
+// Actor is a part of the sender.Locator interface. It returns a sender.Actor
+// (signing key + public-key ID) for the provided LOCAL actor URL. It resolves
+// every local actor type -- User, Stream, SearchQuery, the global @search actor,
+// and the @application actor -- because Accepts, Announces, and Follows are sent
+// by all of them, not just Users. See POST-COMMIT-FEDERATION.md F1.
 func (service SendLocator) Actor(url string) (sender.Actor, error) {
 
 	const location = "sender.SendLocator.Actor"
 
-	// Parse the userID from the provided URL
-	userID := service.ParseUserURI(url)
-
-	if userID.IsZero() {
-		return nil, derp.NotFound(location, "User not found", url)
+	// Fast path: local User actor. This branch is intentionally left byte-for-byte
+	// identical to the original User-only implementation -- Users are the only actor
+	// type exercised today, and this is signing code, so its behavior must not drift.
+	if userID := service.ParseUserURI(url); !userID.IsZero() {
+		return service.userActor(userID)
 	}
+
+	// Every other local actor type (Stream, SearchQuery, the global @search actor, and
+	// @application) resolves its signing key through the shared Locator, which already
+	// knows each type's key storage. actorTarget classifies the URL; GetPrivateKey loads
+	// the key (Streams sign with a per-Stream key; the rest sign with the Domain key).
+	actorType, actorID, ok := service.actorTarget(url)
+
+	if !ok {
+		return nil, derp.NotFound(location, "Actor not found", url)
+	}
+
+	publicKeyID, privateKey, err := service.locatorService.GetPrivateKey(service.session, actorType, actorID)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Unable to load signing key", "url", url, "actorType", actorType)
+	}
+
+	// The activity's `actor` URL IS this actor's canonical ID, so reuse it directly.
+	return sender.NewActor(url, publicKeyID, privateKey), nil
+}
+
+// actorTarget classifies a LOCAL actor URL into the (actorType, actorID) pair that
+// Locator.GetPrivateKey consumes. ok is false when the URL is not a signable non-User
+// local actor -- a User URL (Users take the fast path in Actor), an unrecognized
+// objectType, or a path token that is not a valid ObjectID. It is a pure function of
+// service.host and the URL (no database access) so the routing and ID-parsing decisions
+// can be unit-tested independently of key storage. Stream actors are matched by their
+// canonical hex-ID URL (host/<streamID>), which is the form the Outbox emits.
+func (service SendLocator) actorTarget(url string) (actorType string, actorID primitive.ObjectID, ok bool) {
+
+	resolvedType, token := locateObjectFromURL(service.host, url)
+
+	switch resolvedType {
+	case model.ActorTypeStream, model.ActorTypeSearchQuery,
+		model.ActorTypeSearchDomain, model.ActorTypeApplication:
+		// Signable non-User local actor.
+	default:
+		return "", primitive.NilObjectID, false
+	}
+
+	// Domain-level actors (@search, @application) carry no ID; GetPrivateKey ignores it.
+	if token == "" {
+		return resolvedType, primitive.NilObjectID, true
+	}
+
+	parsed, err := primitive.ObjectIDFromHex(token)
+
+	if err != nil {
+		return "", primitive.NilObjectID, false
+	}
+
+	return resolvedType, parsed, true
+}
+
+// userActor builds a sender.Actor for a local User. Extracted verbatim from the
+// original Actor() implementation so the User signing path is unchanged.
+func (service SendLocator) userActor(userID primitive.ObjectID) (sender.Actor, error) {
+
+	const location = "sender.SendLocator.userActor"
 
 	// Load the User from the database
 	user := model.NewUser()
