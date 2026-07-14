@@ -45,7 +45,7 @@ func (step StepGetArchive) Get(builder Builder, writer io.Writer) PipelineBehavi
 			// If we don't already have a file, try to create one using the task queue.
 			// (This is a GET request — no transaction — so postcommit publishes immediately.)
 			postcommit.Publish(builder.session(), streamBuilder.factory().Queue(), "MakeStreamArchive", mapof.Any{
-				"host":        streamBuilder.Hostname(),
+				"hostname":    streamBuilder.Hostname(),
 				"streamId":    streamBuilder.StreamID(),
 				"token":       step.Token,
 				"depth":       step.Depth,

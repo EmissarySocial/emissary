@@ -88,10 +88,10 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 			context.factory.Queue(),
 			"AddToCollection",
 			mapof.Any{
-				"host":    context.factory.Hostname(), // The host that received the activity
-				"userId":  context.user.UserID.Hex(),  // The user who received the activity
-				"actorId": activity.ActorID(),         // The actor adding the item to the context
-				"url":     document.ID(),              // The URL to add to a context collection
+				"hostname": context.factory.Hostname(), // The host that received the activity
+				"userId":   context.user.UserID.Hex(),  // The user who received the activity
+				"actorId":  activity.ActorID(),         // The actor adding the item to the context
+				"url":      document.ID(),              // The URL to add to a context collection
 			},
 		)
 	}

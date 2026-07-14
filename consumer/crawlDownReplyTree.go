@@ -49,7 +49,7 @@ func CrawlDownReplyTree(factory *service.Factory, args mapof.Any) queue.Result {
 
 		factory.Queue().NewTask(
 			"CrawlDownReplyTree",
-			mapof.Any{"host": factory.Hostname(), "url": reply.ID()},
+			mapof.Any{"hostname": factory.Hostname(), "url": reply.ID()},
 		)
 	}
 

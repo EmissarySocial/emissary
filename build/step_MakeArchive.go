@@ -37,7 +37,7 @@ func (step StepMakeArchive) Post(builder Builder, _ io.Writer) PipelineBehavior 
 
 	// Add a Task to the Queue (published post-commit)
 	postcommit.Publish(builder.session(), streamBuilder.factory().Queue(), "MakeStreamArchive", mapof.Any{
-		"host":        streamBuilder.Hostname(),
+		"hostname":    streamBuilder.Hostname(),
 		"streamId":    streamBuilder.StreamID(),
 		"token":       step.Token,
 		"depth":       step.Depth,

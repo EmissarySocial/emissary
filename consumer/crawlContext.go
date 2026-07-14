@@ -60,7 +60,7 @@ func CrawlContext(factory *service.Factory, args mapof.Any) queue.Result {
 
 		factory.Queue().NewTask(
 			"CrawlUpReplyTree",
-			mapof.Any{"host": factory.Hostname(), "url": inReplyTo},
+			mapof.Any{"hostname": factory.Hostname(), "url": inReplyTo},
 		)
 	}
 
@@ -84,8 +84,8 @@ func backfillContext_Context(factory *service.Factory, context streams.Document)
 			factory.Queue().NewTask(
 				"ReindexActivityStream",
 				mapof.Any{
-					"host": factory.Hostname(),
-					"url":  document.ID(),
+					"hostname": factory.Hostname(),
+					"url":      document.ID(),
 				},
 				queue.WithDelayHours(1),
 			)

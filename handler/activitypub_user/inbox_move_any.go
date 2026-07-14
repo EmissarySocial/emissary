@@ -35,10 +35,10 @@ func inbox_MoveAny(context Context, document streams.Document) error {
 
 	// For all other remote objects, schedule a background task (post-commit)
 	postcommit.Publish(context.session, context.factory.Queue(), "ReceiveActivityPub-Move", mapof.Any{
-		"host":   context.factory.Host(),
-		"actor":  document.ActorID(),
-		"object": document.Object().ID(),
-		"target": document.Target().ID(),
+		"hostname": context.factory.Hostname(),
+		"actor":    document.ActorID(),
+		"object":   document.Object().ID(),
+		"target":   document.Target().ID(),
 	})
 
 	// We have "Accepted" your request. That's the best you'll get for now.

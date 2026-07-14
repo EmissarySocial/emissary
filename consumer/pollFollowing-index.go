@@ -26,7 +26,7 @@ func PollFollowing_Index(factory *service.Factory, session data.Session, args ma
 	for following := range followings {
 
 		postcommit.Publish(session, factory.Queue(), "PollFollowing-Record", mapof.Any{
-			"host":        args.GetString("host"),
+			"hostname":    factory.Hostname(),
 			"userId":      following.UserID.Hex(),
 			"followingId": following.FollowingID.Hex(),
 		})

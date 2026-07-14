@@ -12,17 +12,17 @@ import (
 	"github.com/benpate/turbine/queue"
 )
 
-// WithFactory wraps a consumer function, and uses the "host" argument to inject a Factory object into the function signature.
+// WithFactory wraps a consumer function, and uses the "hostname" argument to inject a Factory object into the function signature.
 func WithFactory(serverFactory ServerFactory, args mapof.Any, handler func(factory *service.Factory, args mapof.Any) queue.Result) queue.Result {
 
 	const location = "consumer.WithFactory"
 
-	// Get the host argument from the map (tries "host" first, then "actor")
+	// Get the hostname argument from the map (tries "hostname" first, then legacy "host", then "actor")
 	hostname := getHostnameFromArgs(args)
 
 	if hostname == "" {
-		// If we don't have a host, we'll never be able to run this task, so hard fail
-		return queue.Failure(derp.Internal(location, "Missing 'host' argument", args))
+		// If we don't have a hostname, we'll never be able to run this task, so hard fail
+		return queue.Failure(derp.Internal(location, "Missing 'hostname' argument", args))
 	}
 
 	// Load the factory
@@ -30,7 +30,7 @@ func WithFactory(serverFactory ServerFactory, args mapof.Any, handler func(facto
 
 	if err != nil {
 		// If we can't load the factory, maybe we can in the future, so try again.
-		return queue.Error(derp.Wrap(err, location, "Invalid 'host' argument.", args))
+		return queue.Error(derp.Wrap(err, location, "Invalid 'hostname' argument.", args))
 	}
 
 	return handler(factory, args)

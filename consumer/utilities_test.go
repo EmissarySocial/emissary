@@ -14,21 +14,25 @@ import (
 // yields no hostname and can never run.
 func TestGetHostnameFromArgs(t *testing.T) {
 
-	// A "host" argument is used directly (reduced to its hostname).
+	// A "hostname" argument is used directly (reduced to its hostname).
+	require.Equal(t, "example.com", getHostnameFromArgs(mapof.Any{"hostname": "https://example.com/@alice"}))
+	require.Equal(t, "example.com", getHostnameFromArgs(mapof.Any{"hostname": "example.com"}))
+
+	// LEGACY: the old "host" argument still resolves, so tasks queued before the
+	// host->hostname migration continue to drain.
 	require.Equal(t, "example.com", getHostnameFromArgs(mapof.Any{"host": "https://example.com/@alice"}))
-	require.Equal(t, "example.com", getHostnameFromArgs(mapof.Any{"host": "example.com"}))
 
 	// An "actor" argument is used as a fallback source of the hostname.
 	require.Equal(t, "example.com", getHostnameFromArgs(mapof.Any{"actor": "https://example.com/@alice"}))
 
-	// "host" takes precedence over "actor".
+	// "hostname" takes precedence over "actor".
 	require.Equal(t, "host.example", getHostnameFromArgs(mapof.Any{
-		"host":  "https://host.example/@alice",
-		"actor": "https://actor.example/@bob",
+		"hostname": "https://host.example/@alice",
+		"actor":    "https://actor.example/@bob",
 	}))
 
 	// A "url"-only map (the reply-tree crawler bug) yields NO hostname, which is
-	// what caused those tasks to hard-fail with "Missing 'host' argument".
+	// what caused those tasks to hard-fail with "Missing 'hostname' argument".
 	require.Equal(t, "", getHostnameFromArgs(mapof.Any{"url": "http://localhost/6a4daccdc20bb1b4d44b8f94"}))
 
 	// An empty map yields no hostname.

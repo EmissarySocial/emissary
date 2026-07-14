@@ -24,9 +24,17 @@ func isHour(modulo int, startHour int) bool {
 }
 
 // getHostnameFromArgs attempts to extract a hostname from the provided args map.
+// The value may be a bare hostname or a full URL; it is reduced to its hostname.
 func getHostnameFromArgs(args mapof.Any) string {
 
-	// If the args include a "host" argument, then use that first
+	// If the args include a "hostname" argument, then use that first
+	if hostname := args.GetString("hostname"); hostname != "" {
+		return uri.Hostname(hostname)
+	}
+
+	// LEGACY: fall back to the old "host" argument name so that any tasks queued
+	// before the host->hostname migration still drain. Safe to remove once the
+	// queue has fully cycled.
 	if host := args.GetString("host"); host != "" {
 		return uri.Hostname(host)
 	}

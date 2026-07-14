@@ -36,13 +36,13 @@ func ScheduleDaily(serverFactory ServerFactory) queue.Result {
 	for factory := range serverFactory.RangeDomains() {
 
 		// Add "Recylce" tasks to the queue
-		q.NewTask("RecycleDomain", mapof.Any{"host": factory.Hostname()})
+		q.NewTask("RecycleDomain", mapof.Any{"hostname": factory.Hostname()})
 
 		// Add "PurgeImports" tasks to the queue
-		q.NewTask("PurgeImports", mapof.Any{"host": factory.Hostname()})
+		q.NewTask("PurgeImports", mapof.Any{"hostname": factory.Hostname()})
 
 		// Add "PurgeNotifications" tasks to the queue
-		q.NewTask("PurgeNotifications", mapof.Any{"host": factory.Hostname()})
+		q.NewTask("PurgeNotifications", mapof.Any{"hostname": factory.Hostname()})
 
 	}
 

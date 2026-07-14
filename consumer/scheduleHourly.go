@@ -19,7 +19,7 @@ func ScheduleHourly(serverFactory ServerFactory) queue.Result {
 		// Schedule "Shuffle" tasks
 		q.NewTask(
 			"Shuffle",
-			mapof.Any{"host": factory.Hostname()},
+			mapof.Any{"hostname": factory.Hostname()},
 		)
 
 		// Schedule "PollFollowing-Index" tasks every four hours, starting at 1am.
@@ -27,7 +27,7 @@ func ScheduleHourly(serverFactory ServerFactory) queue.Result {
 
 			q.NewTask(
 				"PollFollowing-Index",
-				mapof.Any{"host": factory.Hostname()},
+				mapof.Any{"hostname": factory.Hostname()},
 			)
 		}
 	}

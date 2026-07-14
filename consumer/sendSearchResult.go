@@ -58,7 +58,7 @@ func SendSearchResult(factory *service.Factory, session data.Session, args mapof
 				queueService,
 				"SendSearchResult-SearchQuery",
 				mapof.Any{
-					"host":          factory.Hostname(),
+					"hostname":      factory.Hostname(),
 					"searchQueryId": searchQuery.SearchQueryID,
 					"url":           searchResult.URL,
 				},
