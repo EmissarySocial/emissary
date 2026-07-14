@@ -16,7 +16,7 @@ require (
 	github.com/benpate/digital-dome v0.4.0
 	github.com/benpate/exp v0.10.0
 	github.com/benpate/exp-builder v0.11.0
-	github.com/benpate/form v0.26.0
+	github.com/benpate/form v0.27.0
 	github.com/benpate/geo v0.1.1
 	github.com/benpate/hannibal v0.27.0
 	github.com/benpate/html v0.17.0
