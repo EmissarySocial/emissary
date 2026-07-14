@@ -6,6 +6,7 @@ import (
 	"text/template"
 
 	"github.com/benpate/derp"
+	"github.com/benpate/uri"
 )
 
 // StepForwardTo is a Step that sends an HTMX 'forward' to a new page.
@@ -47,7 +48,7 @@ func (step StepForwardTo) do(builder Builder) PipelineBehavior {
 	// Reject dangerous or off-site-schemed targets. The value can be built from
 	// remote-influenced data, so a `javascript:`/`data:` scheme (or a protocol-
 	// relative host) must not become the forward target.
-	if !isSafeRedirectURL(nextPage.String()) {
+	if !uri.IsSafeRedirectURL(nextPage.String()) {
 		return Halt().WithError(derp.BadRequest(location, "Unsafe forward target", nextPage.String()))
 	}
 

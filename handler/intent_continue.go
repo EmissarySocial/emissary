@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/steranko"
+	"github.com/benpate/uri"
 )
 
 func GetIntent_Continue(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
@@ -21,6 +22,14 @@ func getIntent_Continue(url string) string {
 	// (close) directive can be handled without a confirmation page
 	if url == "(close)" {
 		return "<script>window.close();</script>"
+	}
+
+	// Neutralize dangerous targets before they reach the link href. The "url"
+	// value ultimately comes from a caller-supplied Activity Intent (`on-success`
+	// / `on-cancel`), so a scheme like "javascript:" would execute on click.
+	// Unsafe values fall back to the user's home page. See uri.IsSafeRedirectURL.
+	if !uri.IsSafeRedirectURL(url) {
+		url = "/@me"
 	}
 
 	// Otherwise, prevent open redirect attacks by
