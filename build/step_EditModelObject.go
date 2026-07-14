@@ -46,7 +46,7 @@ func (step StepEditModelObject) Get(builder Builder, buffer io.Writer) PipelineB
 	}
 
 	// Wrap the form layout in a <form> element
-	result = WrapForm(builder.URL(), result, element.Encoding(), optionStrings...)
+	result = WrapForm(builder.RelativeURL(), result, element.Encoding(), optionStrings...)
 
 	// Write to the result buffer
 	if _, err := io.WriteString(buffer, result); err != nil {

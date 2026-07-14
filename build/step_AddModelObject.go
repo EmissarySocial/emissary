@@ -37,7 +37,7 @@ func (step StepAddModelObject) Get(builder Builder, buffer io.Writer) PipelineBe
 		return Halt().WithError(derp.Wrap(err, location, "Unable to generate form"))
 	}
 
-	formHTML = WrapForm(builder.URL(), formHTML, step.Form.Encoding())
+	formHTML = WrapForm(builder.RelativeURL(), formHTML, step.Form.Encoding())
 
 	// Wrap formHTML as a modal dialog
 	if _, err := io.WriteString(buffer, formHTML); err != nil {

@@ -105,30 +105,39 @@ func (w Common) Method() string {
 	return w._request.Method
 }
 
-// Host returns the protocol + hostname + port for this domain. It delegates to
-// the factory's Host() (rather than rebuilding from Protocol()+Hostname()) so
-// the configured port is included -- absolute URLs built from this, such as form
-// hx-post actions, must target the real origin on non-standard ports (e.g. :8080).
+// Host is the absolute origin of this domain: protocol + hostname + port.
+// e.g. "http://localhost:8080" (dev) or "https://example.com" (prod).
 func (w Common) Host() string {
 	return w._factory.Host()
 }
 
-// URL returns the originally requested URL
-func (w Common) URL() string {
-	return w.Host() + w._request.URL.RequestURI()
-}
-
-// Protocol returns http:// or https:// used for this request
-func (w Common) Protocol() string {
-	return uri.GuessProtocolForHostname(w.Hostname())
-}
-
-// Hostname returns the configured hostname for this request
+// Hostname is the bare domain only -- no protocol, no port. Use for federation
+// identity (@user@hostname) and comparisons. e.g. "localhost".
 func (w Common) Hostname() string {
 	return w._factory.Hostname()
 }
 
-// Path returns the HTTP Request path
+// Protocol is the scheme for this domain, including "://". e.g. "http://".
+func (w Common) Protocol() string {
+	return uri.GuessProtocolForHostname(w.Hostname())
+}
+
+// URL is the current page as an ABSOLUTE url (Host + path + query). Use for
+// canonical links, og:url, and email -- anywhere a full URL is required.
+// e.g. "http://localhost:8080/@me/settings".
+func (w Common) URL() string {
+	return w.Host() + w._request.URL.RequestURI()
+}
+
+// RelativeURL is the current page as a ROOT-RELATIVE ref -- path + query, no origin.
+// Use for form actions and htmx targets: the browser supplies the origin, so it is
+// correct on any port or proxy (unlike URL, which hard-codes the server's own port).
+// e.g. "/@me/settings".
+func (w Common) RelativeURL() string {
+	return w._request.URL.RequestURI()
+}
+
+// Path is the request path only -- no origin, no query. e.g. "/@me/settings".
 func (w Common) Path() string {
 	return w._request.URL.Path
 }

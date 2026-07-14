@@ -77,7 +77,7 @@ func (step StepAddStream) getChooser(builder Builder, buffer io.Writer) error {
 		b.Div().ID("tabpanel-" + name).Role("tabpanel")
 		{
 			for _, template := range group {
-				buttonURL := builder.URL() + "?templateId=" + template.Value
+				buttonURL := builder.RelativeURL() + "?templateId=" + template.Value
 				b.Div().Role("button").Class("checkbutton", "flex-row", "flex-align-center").HxPost(buttonURL)
 				{
 					b.Div().Class("text-3xl", "margin-vertical-none", "margin-right-sm", "text-gray").EndBracket()

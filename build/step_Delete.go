@@ -30,7 +30,7 @@ func (step StepDelete) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	b.Div().Class("margin-bottom").InnerText(executeTemplate(step.Message, builder)).Close()
 
 	b.Button().Class("warning").
-		Attr("hx-post", builder.URL()).
+		Attr("hx-post", builder.RelativeURL()).
 		Attr("hx-swap", "none").
 		Attr("hx-push-url", "false").
 		InnerText(step.Submit).

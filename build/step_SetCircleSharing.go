@@ -64,7 +64,7 @@ func (step StepSetCircleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 	b.CloseAll()
 
 	result := WrapForm(
-		builder.URL(),
+		builder.RelativeURL(),
 		b.String(),
 		"application/x-www-form-urlencoded",
 		"submit-label:"+step.Button,

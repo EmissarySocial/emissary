@@ -53,7 +53,7 @@ func (step StepEditConnection) Get(builder Builder, buffer io.Writer) PipelineBe
 	}
 
 	// Wrap the form as a ModalForm and return
-	formHTML = WrapModalForm(builder.response(), builder.URL(), formHTML, form.Encoding())
+	formHTML = WrapModalForm(builder.response(), builder.RelativeURL(), formHTML, form.Encoding())
 
 	if _, err := buffer.Write([]byte(formHTML)); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error writing form HTML to buffer"))
