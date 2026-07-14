@@ -36,9 +36,9 @@
 				<div class="text-gray text-sm">
 					<span class="bold">{{$actor.Name}}</span>
 					{{- if eq $notification.Type "REPLY" -}}
-						<span>replied to you</span>
+						<span> replied to you</span>
 					{{- else -}}
-						<span>mentioned you</span>
+						<span> mentioned you</span>
 					{{- end -}}
 				</div>
 				<div class="ellipsis">{{$notification.ObjectSummary}}</div>
