@@ -2,6 +2,7 @@ package build
 
 import (
 	"html/template"
+	"net"
 	"net/http"
 	"time"
 
@@ -107,8 +108,42 @@ func (w Common) Method() string {
 
 // Host is the absolute origin of this domain: protocol + hostname + port.
 // e.g. "http://localhost:8080" (dev) or "https://example.com" (prod).
+//
+// The port comes from the browser's request -- NOT server config -- so absolute
+// URLs stay correct behind a proxy or port-map, where the public port differs
+// from the internal HTTP port (e.g. Docker 8080:80). The hostname always comes
+// from the validated domain config, never the request, so a spoofed Host header
+// cannot inject a foreign domain into generated links.
 func (w Common) Host() string {
-	return w._factory.Host()
+	return w.Protocol() + w.Hostname() + w.requestPort()
+}
+
+// requestPort returns the ":port" the browser used for this request (from the
+// Host header), or "" for the standard port (80/443) or when no port is present.
+// Reading the port from the request -- rather than server config -- is what keeps
+// Host() correct when the public and internal ports differ.
+//
+// NOTE: behind a reverse proxy that rewrites the Host header, the proxy must
+// preserve the original Host (standard practice) for this to be correct.
+// Honoring X-Forwarded-Host / X-Forwarded-Port is a follow-up.
+func (w Common) requestPort() string {
+
+	if w._request == nil {
+		return ""
+	}
+
+	_, port, err := net.SplitHostPort(w._request.Host)
+
+	if err != nil {
+		return "" // No explicit port in the Host header -> standard port
+	}
+
+	switch port {
+	case "", "80", "443":
+		return ""
+	default:
+		return ":" + port
+	}
 }
 
 // Hostname is the bare domain only -- no protocol, no port. Use for federation
