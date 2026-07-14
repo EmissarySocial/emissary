@@ -70,7 +70,7 @@ func GetOutboxMessage(ctx *steranko.Context, factory *service.Factory, session d
 	searchResultID, err := primitive.ObjectIDFromHex(searchResultToken)
 
 	if err != nil {
-		return derp.Wrap(err, location, "SearchResultID must be a valid ObjectID", searchResultToken)
+		return derp.Wrap(err, location, "SearchResultID must be a valid ObjectID", searchResultToken, derp.WithNotFound())
 	}
 
 	// Load the SearchResult from the database

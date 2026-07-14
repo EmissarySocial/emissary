@@ -30,7 +30,7 @@ func GetDomainAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 	attachmentID, err := primitive.ObjectIDFromHex(attachmentIDString)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Invalid attachmentID", attachmentIDString)
+		return derp.Wrap(err, location, "Invalid attachmentID", attachmentIDString, derp.WithNotFound())
 	}
 
 	attachment := model.NewAttachment(model.AttachmentObjectTypeDomain, domain.DomainID)
@@ -67,14 +67,14 @@ func GetSearchTagAttachment(ctx *steranko.Context, factory *service.Factory, ses
 	searchTagID, err := primitive.ObjectIDFromHex(ctx.Param("searchTagId"))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Invalid SearchTagID")
+		return derp.Wrap(err, location, "Invalid SearchTagID", derp.WithNotFound())
 	}
 
 	// Locate the AttachmentID
 	attachmentID, err := primitive.ObjectIDFromHex(ctx.Param("attachmentId"))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Invalid AttachmentID")
+		return derp.Wrap(err, location, "Invalid AttachmentID", derp.WithNotFound())
 	}
 
 	// Load the Attachment record from the database

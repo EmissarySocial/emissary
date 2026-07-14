@@ -19,7 +19,7 @@ func GetCollection(ctx *steranko.Context, factory *service.Factory, session data
 	collectionID, err := primitive.ObjectIDFromHex(ctx.Param("collectionId"))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Invalid collection ID in URL", "collectionId: "+ctx.Param("collectionId"))
+		return derp.Wrap(err, location, "Invalid collection ID in URL", "collectionId: "+ctx.Param("collectionId"), derp.WithNotFound())
 	}
 
 	// Load the collection

@@ -117,7 +117,7 @@ func (service *Object) LoadByToken(session data.Session, userID primitive.Object
 	objectID, err := primitive.ObjectIDFromHex(token)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Object.LoadByToken", "Invalid ObjectID", "token", token)
+		return derp.Wrap(err, "service.Object.LoadByToken", "Invalid ObjectID", "token", token, derp.WithNotFound())
 	}
 
 	return service.LoadByID(session, userID, objectID, object)
