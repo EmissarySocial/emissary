@@ -357,12 +357,13 @@ type templateModel struct {
 // enumerate model names by hand -- BaseSchema, NewObject, the load-time allowedModels
 // whitelist, and the drift test -- now derives from this one map.
 var templateModelRegistry = map[string]templateModel{
-	// The Outbox, Inbox, Settings, User, and Conversations builders all build User objects
+	// The Outbox, Inbox, Settings, User, Conversations, and Notifications builders all build User objects
 	"User":          {schema: UserSchema, newObject: newObjectPointer(NewUser)},
 	"Outbox":        {schema: UserSchema, newObject: newObjectPointer(NewUser)},
 	"Inbox":         {schema: UserSchema, newObject: newObjectPointer(NewUser)},
 	"Settings":      {schema: UserSchema, newObject: newObjectPointer(NewUser)},
 	"Conversations": {schema: UserSchema, newObject: newObjectPointer(NewUser)},
+	"Notifications": {schema: UserSchema, newObject: newObjectPointer(NewUser)},
 
 	// The Domain, Search, SSO, Followers, Following, and Syndication builders all build Domain objects
 	"Domain":      {schema: DomainSchema, newObject: newObjectPointer(NewDomain)},

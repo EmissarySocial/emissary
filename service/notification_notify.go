@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/EmissarySocial/emissary/tools/convert"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
@@ -201,8 +202,8 @@ func (service *Notification) notify(session data.Session, user *model.User, acti
 	// Publish an in-app SSE nudge (best-effort).
 	service.publishSSE(notification.UserID)
 
-	// Enqueue a Web Push delivery task (best-effort).
-	service.enqueueWebPush(notification)
+	// Enqueue a Web Push delivery task (best-effort, published post-commit).
+	service.enqueueWebPush(session, notification)
 
 	return nil
 }
@@ -323,11 +324,10 @@ func (service *Notification) publishSSE(userID primitive.ObjectID) {
 }
 
 // enqueueWebPush enqueues a best-effort Web Push delivery task for a new notification.
-func (service *Notification) enqueueWebPush(notification *model.Notification) {
-	if service.queue == nil {
-		return
-	}
-	service.queue.NewTask("SendWebPushNotification", mapof.Any{
+// Published post-commit: the task references this Notification record, so it must not run
+// until the enclosing transaction has committed.
+func (service *Notification) enqueueWebPush(session data.Session, notification *model.Notification) {
+	postcommit.Publish(session, service.queue, "SendWebPushNotification", mapof.Any{
 		"host":           service.host,
 		"userId":         notification.UserID.Hex(),
 		"notificationId": notification.NotificationID.Hex(),

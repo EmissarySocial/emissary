@@ -426,7 +426,7 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 	if stream.IsPublished() {
 		service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
 
-		if err := service.sendSyndicationMessages(stream, nil, nil, stream.Syndication.Values); err != nil {
+		if err := service.sendSyndicationMessages(session, stream, nil, nil, stream.Syndication.Values); err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to send syndication messages", stream))
 		}
 	}

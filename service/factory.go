@@ -13,6 +13,7 @@ import (
 	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/EmissarySocial/emissary/tools/camper"
 	"github.com/EmissarySocial/emissary/tools/httpcache"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/EmissarySocial/emissary/tools/templates"
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
@@ -363,8 +364,13 @@ func (factory *Factory) Session(timeout time.Duration) (data.Session, context.Ca
 	return session, cancel, err
 }
 
+// WithTransaction executes the callback inside a database transaction, with the post-commit
+// task spool attached: tasks emitted via postcommit.Publish during the transaction are held
+// and released to the queue only after the transaction commits — a rolled-back transaction
+// publishes nothing.  This is the ONLY way transactions should be opened; do not call
+// factory.Server().WithTransaction directly.  (See emissary-specs/POST-COMMIT-TASKS-DESIGN.md)
 func (factory *Factory) WithTransaction(ctx context.Context, callback data.TransactionCallbackFunc) (any, error) {
-	return factory.server.WithTransaction(ctx, callback)
+	return postcommit.WithTransaction(ctx, factory.server, factory.queue, callback)
 }
 
 /******************************************

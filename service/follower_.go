@@ -4,6 +4,7 @@ import (
 	"iter"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -151,7 +152,9 @@ func (service *Follower) Delete(session data.Session, follower *model.Follower, 
 	// Maybe delete the SearchQuery if it's no longer needed
 	if follower.ParentType == model.FollowerTypeSearch {
 
-		service.queue.NewTask(
+		postcommit.Publish(
+			session,
+			service.queue,
 			"DeleteEmptySearchQuery",
 			mapof.Any{
 				"host":          uri.Hostname(service.host),

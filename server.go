@@ -365,6 +365,12 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@me/newsfeed", handler.WithAuthenticatedUser(factory, handler.PostNewsfeed))
 	e.GET("/@me/newsfeed/:action", handler.WithAuthenticatedUser(factory, handler.GetNewsfeed))
 	e.POST("/@me/newsfeed/:action", handler.WithAuthenticatedUser(factory, handler.PostNewsfeed))
+
+	e.GET("/@me/notifications", handler.WithAuthenticatedUser(factory, handler.GetNotifications))
+	e.POST("/@me/notifications", handler.WithAuthenticatedUser(factory, handler.PostNotifications))
+	e.GET("/@me/notifications/:action", handler.WithAuthenticatedUser(factory, handler.GetNotifications))
+	e.POST("/@me/notifications/:action", handler.WithAuthenticatedUser(factory, handler.PostNotifications))
+
 	e.GET("/@me/outbox", handler.WithAuthenticatedUser(factory, ap_user.GetOutboxCollection))
 	e.POST("/@me/outbox", handler.WithAuthenticatedUser(factory, ap_user.PostOutbox))
 	e.POST("/@me/push-subscriptions", handler.WithAuthenticatedUser(factory, handler.PostPushSubscription))

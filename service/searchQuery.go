@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -134,7 +135,9 @@ func (service *SearchQuery) Save(session data.Session, searchQuery *model.Search
 
 	// Add a queue task to delete this SearchQuery if it has no followers after 12 hour.
 	if wasNew {
-		service.queue.NewTask(
+		postcommit.Publish(
+			session,
+			service.queue,
 			"DeleteEmptySearchQuery",
 			mapof.Any{
 				"host":          service.host,

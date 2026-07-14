@@ -2,12 +2,14 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
+	"github.com/benpate/data"
 	"github.com/benpate/rosetta/mapof"
 )
 
 // sendSyndicationMessages sends messages to syndication targets
 // whenever a stream is added or removed from syndication
-func (service *Stream) sendSyndicationMessages(stream *model.Stream, added []string, changed []string, removed []string) error {
+func (service *Stream) sendSyndicationMessages(session data.Session, stream *model.Stream, added []string, changed []string, removed []string) error {
 
 	domain := service.domainService.Get()
 	object := stream.GetWebhookData()
@@ -21,7 +23,9 @@ func (service *Stream) sendSyndicationMessages(stream *model.Stream, added []str
 				continue
 			}
 
-			service.queue.NewTask(
+			postcommit.Publish(
+				session,
+				service.queue,
 				"syndication.create",
 				mapof.Any{
 					"endpoint": target.Href,
@@ -40,7 +44,9 @@ func (service *Stream) sendSyndicationMessages(stream *model.Stream, added []str
 				continue
 			}
 
-			service.queue.NewTask(
+			postcommit.Publish(
+				session,
+				service.queue,
 				"syndication.update",
 				mapof.Any{
 					"endpoint": target.Href,
@@ -59,7 +65,9 @@ func (service *Stream) sendSyndicationMessages(stream *model.Stream, added []str
 				continue
 			}
 
-			service.queue.NewTask(
+			postcommit.Publish(
+				session,
+				service.queue,
 				"syndication.delete",
 				mapof.Any{
 					"endpoint": target.Href,

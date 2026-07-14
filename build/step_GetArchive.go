@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/turbine/queue"
 	"github.com/rs/zerolog/log"
 )
 
@@ -43,8 +43,8 @@ func (step StepGetArchive) Get(builder Builder, writer io.Writer) PipelineBehavi
 			log.Trace().Str("location", location).Msg("Archive does not exist.  Creating now.")
 
 			// If we don't already have a file, try to create one using the task queue.
-			q := streamBuilder.factory().Queue()
-			task := queue.NewTask("MakeStreamArchive", mapof.Any{
+			// (This is a GET request — no transaction — so postcommit publishes immediately.)
+			postcommit.Publish(builder.session(), streamBuilder.factory().Queue(), "MakeStreamArchive", mapof.Any{
 				"host":        streamBuilder.Hostname(),
 				"streamId":    streamBuilder.StreamID(),
 				"token":       step.Token,
@@ -53,10 +53,6 @@ func (step StepGetArchive) Get(builder Builder, writer io.Writer) PipelineBehavi
 				"attachments": step.Attachments,
 				"metadata":    step.Metadata,
 			})
-
-			if err := q.Publish(task); err != nil {
-				return Halt().WithError(derp.Wrap(err, location, "Error publishing task", task))
-			}
 		}
 
 		log.Trace().Str("location", location).Msg("Archive is not ready.  Please wait.")

@@ -108,12 +108,17 @@ func addToCollection_Continue(factory *service.Factory, session data.Session, ac
 		return queue.Result{}
 	}
 
-	// Load the Collection from the database
+	// Load the Collection from the database.  NotFound here is usually TRANSIENT: until
+	// outbound sends are queued (POST-COMMIT-TASKS-DESIGN.md Phase 3), the sender fans out
+	// synchronously while its own transaction is still open, so a context Collection minted
+	// for a brand-new thread may not be committed yet when this task runs.  Return a
+	// retryable Error — not Failure — so the add survives the race; a genuinely missing
+	// Collection still dies after the queue's bounded retries.
 	collectionService := factory.Collection()
 	collection := model.NewCollection()
 
 	if err := collectionService.LoadByID(session, userID, collectionID, &collection); err != nil {
-		return queue.Failure(derp.Wrap(err, location, "Loading collection", collectionID.Hex()))
+		return queue.Error(derp.Wrap(err, location, "Loading collection", collectionID.Hex()))
 	}
 
 	// Check permissions to see if the actor is allowed to add to this collection

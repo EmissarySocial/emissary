@@ -3,6 +3,7 @@ package consumer
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
@@ -42,8 +43,8 @@ func MoveUser(factory *service.Factory, session data.Session, user *model.User, 
 	 * 2: Send a `Move` to the Target Actor
 	 ******************************************/
 
-	// Send a `Move` message to the target server
-	factory.Queue().NewTask("SendActivityPubMessage", mapof.Any{
+	// Send a `Move` message to the target server (published post-commit)
+	postcommit.Publish(session, factory.Queue(), "SendActivityPubMessage", mapof.Any{
 		"host":      factory.Hostname(),
 		"actorType": model.ActorTypeUser,
 		"actorID":   user.UserID,
@@ -65,8 +66,11 @@ func MoveUser(factory *service.Factory, session data.Session, user *model.User, 
 	// Send `Move` message to all followers
 	followers := factory.Follower().RangeByUserID(session, user.UserID)
 
+	// NOTE: this previously called queue.NewTask (the turbine CONSTRUCTOR) and discarded
+	// the result, so follower `Move` messages were never actually published.  Fixed as
+	// part of the post-commit conversion.
 	for follower := range followers {
-		queue.NewTask("SendActivityPubMessage", mapof.Any{
+		postcommit.Publish(session, factory.Queue(), "SendActivityPubMessage", mapof.Any{
 			"host":      factory.Hostname(),
 			"actorType": "User",
 			"actorID":   user.UserID,

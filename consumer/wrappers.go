@@ -104,8 +104,10 @@ func WithSession(serverFactory ServerFactory, args mapof.Any, handler func(facto
 
 	return WithFactory(serverFactory, args, func(factory *service.Factory, args mapof.Any) queue.Result {
 
-		// Execute the handler as a transaction
-		result, err := factory.Server().WithTransaction(context.Background(), func(session data.Session) (any, error) {
+		// Execute the handler as a transaction.  factory.WithTransaction attaches the
+		// post-commit task spool: tasks that consumers publish (e.g. chained follow-up
+		// tasks) are released to the queue only after this transaction commits.
+		result, err := factory.WithTransaction(context.Background(), func(session data.Session) (any, error) {
 			result := handler(factory, session, args)
 			return result, result.Error
 		})

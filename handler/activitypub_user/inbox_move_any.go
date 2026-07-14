@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -32,8 +33,8 @@ func inbox_MoveAny(context Context, document streams.Document) error {
 		}
 	}
 
-	// For all other remote objects, schedule a background task
-	context.factory.Queue().NewTask("ReceiveActivityPub-Move", mapof.Any{
+	// For all other remote objects, schedule a background task (post-commit)
+	postcommit.Publish(context.session, context.factory.Queue(), "ReceiveActivityPub-Move", mapof.Any{
 		"host":   context.factory.Host(),
 		"actor":  document.ActorID(),
 		"object": document.Object().ID(),

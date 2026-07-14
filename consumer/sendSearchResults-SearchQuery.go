@@ -3,6 +3,7 @@ package consumer
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
@@ -43,8 +44,10 @@ func SendSearchResult_SearchQuery(factory *service.Factory, session data.Session
 	// Send ActivityPub messages to each follower
 	for follower := range followers {
 
-		// Create a new queue message for each follower
-		queueService.NewTask(
+		// Create a new queue message (post-commit) for each follower
+		postcommit.Publish(
+			session,
+			queueService,
 			"SendActivityPubMessage",
 			mapof.Any{
 				"host":      factory.Hostname(),

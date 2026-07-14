@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -71,7 +72,9 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 	// Add this document to a context (if necessary)
 	if hasLocalReplyOrContext(document, context.factory.Host()) {
 
-		context.factory.Queue().NewTask(
+		postcommit.Publish(
+			context.session,
+			context.factory.Queue(),
 			"AddToCollection",
 			mapof.Any{
 				"host":    context.factory.Hostname(), // The host that received the activity

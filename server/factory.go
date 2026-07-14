@@ -530,7 +530,7 @@ func (factory *Factory) PutDomain(configuration config.Domain) error {
 		ctx, cancel := timeoutContext(30)
 		defer cancel()
 
-		_, err = domainFactory.Server().WithTransaction(ctx, func(session data.Session) (any, error) {
+		_, err = domainFactory.WithTransaction(ctx, func(session data.Session) (any, error) {
 			userService := domainFactory.User()
 			if err := userService.SetOwner(session, configuration.Owner); err != nil {
 				return nil, derp.Wrap(err, location, "Unable to set owner", configuration.Owner)

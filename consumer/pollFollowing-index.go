@@ -2,6 +2,7 @@ package consumer
 
 import (
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
@@ -24,7 +25,7 @@ func PollFollowing_Index(factory *service.Factory, session data.Session, args ma
 
 	for following := range followings {
 
-		factory.Queue().NewTask("PollFollowing-Record", mapof.Any{
+		postcommit.Publish(session, factory.Queue(), "PollFollowing-Record", mapof.Any{
 			"host":        args.GetString("host"),
 			"userId":      following.UserID.Hex(),
 			"followingId": following.FollowingID.Hex(),

@@ -220,8 +220,10 @@ func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 		/////////////////////////////////////////////////////////
 		// POST requests are wrapped in a MongoDB transaction
 
-		// WCreate a database transaction and wrap the callback function in it.
-		_, err = factory.Server().WithTransaction(ctx.Request().Context(), func(session data.Session) (any, error) {
+		// Create a database transaction and wrap the callback function in it.
+		// factory.WithTransaction (not factory.Server().WithTransaction) attaches the
+		// post-commit task spool, so queue tasks publish only after the commit.
+		_, err = factory.WithTransaction(ctx.Request().Context(), func(session data.Session) (any, error) {
 			sterankoContext := factory.Steranko(session).Context(ctx)
 			return nil, fn(sterankoContext, factory, session)
 		})

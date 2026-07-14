@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service/geocoder"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
@@ -32,8 +33,10 @@ func (service GeocodeAddress) GeocodeAndQueue(session data.Session, stream *mode
 	// Try to GeocodeAddress all Places in this Stream
 	if err := service.Geocode(session, stream); err != nil {
 
-		// If there is an error, then enqueue a Task to retru in 30 seconds
-		service.queue.NewTask(
+		// If there is an error, then enqueue a Task to retry in 30 seconds
+		postcommit.Publish(
+			session,
+			service.queue,
 			"GeocodeAddress",
 			mapof.Any{
 				"host":     service.hostname,

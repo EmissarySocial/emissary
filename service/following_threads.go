@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
@@ -38,8 +39,10 @@ func (service *Following) SaveNewsItem(session data.Session, following *model.Fo
 		return derp.Wrap(err, location, "Unable to save newsItem", newsItem)
 	}
 
-	// Crawl the document's context/reply chain in the background
-	service.queue.NewTask(
+	// Crawl the document's context/reply chain in the background (post-commit)
+	postcommit.Publish(
+		session,
+		service.queue,
 		"CrawlContext",
 		mapof.Any{"url": document.ID(), "host": service.hostname},
 	)

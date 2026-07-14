@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/tools/parse"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/EmissarySocial/emissary/tools/sorted"
 	"github.com/benpate/data"
@@ -148,7 +149,9 @@ func (service *SearchResult) Save(session data.Session, searchResult *model.Sear
 	}
 
 	// Async wait 1s, then send this SearchResult to all listeners
-	service.queue.NewTask(
+	postcommit.Publish(
+		session,
+		service.queue,
 		"SendSearchResult",
 		mapof.Any{
 			"host":           service.hostname,

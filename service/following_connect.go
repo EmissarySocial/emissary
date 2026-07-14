@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
@@ -95,10 +96,10 @@ func (service *Following) Connect(session data.Session, following *model.Followi
 		"followingId": following.FollowingID.Hex(),
 	}
 
-	// Try to connect to push services (now, only ActivityPub)
-	// This runs in faster than usual because it affects the UX, but must
-	// still write to the DB or else it may get skipped
-	service.queue.NewTask("ConnectPushService", queueArgs)
+	// Try to connect to push services (now, only ActivityPub).  Published post-commit:
+	// the task references this Following record, so it must not run until the enclosing
+	// transaction has committed (otherwise the worker's session cannot see the row).
+	postcommit.Publish(session, service.queue, "ConnectPushService", queueArgs)
 
 	// Kool-Aid man says "ooooohhh yeah!"
 	return nil

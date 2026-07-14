@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -300,7 +301,7 @@ func (service *Import) calcStateChange(session data.Session, record *model.Impor
 		return service.doAuthorize(record)
 
 	case model.ImportStateDoImport:
-		return service.doImport(record)
+		return service.doImport(session, record)
 
 	case model.ImportStateDoMove:
 		return service.doMove(record)
@@ -378,10 +379,12 @@ func (service *Import) doAuthorize(record *model.Import) error {
 
 // doImport manages the transient state change from "DO-IMPORT"
 // to "IMPORTING"
-func (service *Import) doImport(record *model.Import) error {
+func (service *Import) doImport(session data.Session, record *model.Import) error {
 
-	// Start a background task to count all
-	service.queue.NewTask(
+	// Start a background task (post-commit) to count all
+	postcommit.Publish(
+		session,
+		service.queue,
 		"ImportStartup",
 		mapof.Any{
 			"host":     uri.Hostname(service.host),

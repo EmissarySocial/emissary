@@ -3,6 +3,7 @@ package consumer
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
@@ -17,9 +18,10 @@ func ConnectPushService(factory *service.Factory, session data.Session, user *mo
 	const location = "consumer.ConnectPushService"
 
 	// success is a quick mix-in to trigger the first "poll"
-	// of the new Following record after we connect.
+	// of the new Following record after we connect.  Published post-commit so the
+	// poll cannot run before this consumer's own transaction has committed.
 	success := func() queue.Result {
-		factory.Queue().NewTask("PollFollowing-Record", args)
+		postcommit.Publish(session, factory.Queue(), "PollFollowing-Record", args)
 		return queue.Success()
 	}
 
