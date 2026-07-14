@@ -90,7 +90,7 @@ func (w SearchTag) NavigationID() string {
 }
 
 func (w SearchTag) Permalink() string {
-	return w.Hostname() + "/admin/searchTags/" + w.SearchTagID()
+	return w.Host() + "/admin/searchTags/" + w.SearchTagID()
 }
 
 func (w SearchTag) BasePath() string {

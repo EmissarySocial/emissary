@@ -89,7 +89,7 @@ func (w Group) NavigationID() string {
 }
 
 func (w Group) Permalink() string {
-	return w.Hostname() + "/groups/" + w.GroupID()
+	return w.Host() + "/groups/" + w.GroupID()
 }
 
 func (w Group) BasePath() string {
