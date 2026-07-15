@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // GetValidateSignupCode validates a User.Username for uniqueness/availability
@@ -65,6 +66,36 @@ func GetValidateUsername(ctx *steranko.Context, factory *service.Factory, sessio
 	}
 
 	// If the username is allowed, then return a success
+	return ctx.JSON(http.StatusOK, mapof.Any{
+		"valid":   true,
+		"message": "",
+	})
+}
+
+// GetValidateFoldername validates a Folder.Label for uniqueness within the User's own Folders
+func GetValidateFoldername(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
+
+	// This service can only validate the "label" field
+	if field := ctx.QueryParam("field"); field != "label" {
+		return ctx.JSON(http.StatusBadRequest, mapof.Any{
+			"valid":   false,
+			"message": "Invalid field",
+		})
+	}
+
+	// The Folder being edited is excluded from the search.  A missing or malformed
+	// folderId leaves it zero, which excludes nothing -- correct for new Folders.
+	folderID, _ := primitive.ObjectIDFromHex(ctx.QueryParam("folderId"))
+
+	// If the label is not allowed, then return an error
+	if err := factory.Folder().ValidateLabel(session, user.UserID, folderID, ctx.QueryParam("value")); err != nil {
+		return ctx.JSON(http.StatusOK, mapof.Any{
+			"valid":   false,
+			"message": derp.Message(err),
+		})
+	}
+
+	// If the label is allowed, then return a success
 	return ctx.JSON(http.StatusOK, mapof.Any{
 		"valid":   true,
 		"message": "",

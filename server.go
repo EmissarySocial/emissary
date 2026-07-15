@@ -274,7 +274,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.validate/signupCode", handler.WithFactory(factory, handler.GetValidateSignupCode))
 	e.GET("/.validate/streamToken", handler.WithFactory(factory, handler.GetValidateStreamToken))
 	e.GET("/.validate/user/username", handler.WithFactory(factory, handler.GetValidateUsername))
-//	e.GET("/.validate/folder/name", handler.WithAuthenticatedUser(factory, handler.GetValidateFoldername))
+	e.GET("/.validate/folder/name", handler.WithAuthenticatedUser(factory, handler.GetValidateFoldername))
 	e.GET("/.web-push-worker.js", handler.GetWebPushWorker) // Web Push service worker (must be served from site root for full scope)
 	e.GET("/.widgets/:widgetId/:bundleId", handler.GetWidgetBundle(factory))
 	e.GET("/.widgets/:widgetId/resources/:filename", handler.GetWidgetResource(factory))

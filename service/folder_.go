@@ -113,6 +113,11 @@ func (service *Folder) Save(session data.Session, folder *model.Folder, comment 
 		return derp.Wrap(err, location, "Invalid Folder data", folder)
 	}
 
+	// RULE: The Label MUST NOT collide with this User's other Folders
+	if err := service.ValidateLabel(session, folder.UserID, folder.FolderID, folder.Label); err != nil {
+		return derp.Wrap(err, location, "Invalid Folder name", folder)
+	}
+
 	// Save the value to the database
 	if err := service.collection(session).Save(folder, comment); err != nil {
 		return derp.Wrap(err, location, "Unable to save Folder", folder, comment)
@@ -296,6 +301,36 @@ func (service *Folder) LoadByLabel(session data.Session, userID primitive.Object
 /******************************************
  * Other Behaviors
  ******************************************/
+
+// ValidateLabel returns an error if a Label cannot be used by the provided Folder
+func (service *Folder) ValidateLabel(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID, label string) error {
+
+	const location = "service.Folder.ValidateLabel"
+
+	// RULE: Label is required
+	if label == "" {
+		return derp.BadRequest(location, "Name is required", label)
+	}
+
+	// RULE: Label must be unique within this User's Folders
+	if service.LabelExists(session, userID, folderID, label) {
+		return derp.BadRequest(location, "You already have a folder with this name", label)
+	}
+
+	return nil
+}
+
+// LabelExists returns TRUE if a Label is already in use by another one of this User's Folders
+func (service *Folder) LabelExists(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID, label string) bool {
+
+	criteria := exp.Equal("userId", userID).
+		AndEqual("label", label).
+		AndNotEqual("_id", folderID)
+
+	// Any error (including "not found") means that the Label is available
+	folder := model.NewFolder()
+	return service.Load(session, criteria, &folder) == nil
+}
 
 // CalculateUnreadCount counts the number of items in a folder that were created AFTER the provided minRank,
 // then updates the folder's "unreadCount" and "readDate" fields
