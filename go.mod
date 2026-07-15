@@ -1,6 +1,6 @@
 module github.com/EmissarySocial/emissary
 
-go 1.26.3
+go 1.26.5
 
 require (
 	github.com/SherClockHolmes/webpush-go v1.4.0
