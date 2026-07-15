@@ -74,6 +74,9 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "PollFollowing-Record":
 		return WithFollowing(consumer.serverFactory, args, PollFollowing_Record)
 
+	case "PublishRealtimeMessage":
+		return WithFactory(consumer.serverFactory, args, PublishRealtimeMessage)
+
 	case "PurgeActivityStreamCache":
 		return PurgeActivityStreamCache(consumer.serverFactory)
 

@@ -80,6 +80,32 @@ func TestBroker_Delivery(t *testing.T) {
 	}
 }
 
+// TestBroker_Send confirms the direct-delivery entry point: Send delivers
+// synchronously on the caller's goroutine, so a registered client's buffered
+// WriteChannel holds the message as soon as Send returns.
+func TestBroker_Send(t *testing.T) {
+
+	broker := NewBroker(make(chan Message))
+	defer broker.Close()
+
+	userID := primitive.NewObjectID()
+	client := NewClient(nil, userID, TopicNotification)
+
+	// AddClient is unbuffered: once this send returns, listen() has registered the client.
+	broker.AddClient <- client
+
+	broker.Send(NewMessage_Notification(userID))
+
+	select {
+	case message := <-client.WriteChannel:
+		if message.Topic != TopicNotification {
+			t.Fatalf("expected TopicNotification (%d), got %d", TopicNotification, message.Topic)
+		}
+	default:
+		t.Fatal("Send returned without delivering to the client's buffer")
+	}
+}
+
 // TestBroker_TopicFilter confirms a client only receives messages for its own
 // topic (or TopicAll), never an unrelated one.
 func TestBroker_TopicFilter(t *testing.T) {

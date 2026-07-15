@@ -6,7 +6,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
-	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -26,7 +25,6 @@ type Notification struct {
 	streamService    *Stream
 	userService      *User
 	queue            *queue.Queue
-	sseUpdateChannel chan<- realtime.Message
 	host             string
 }
 
@@ -46,7 +44,6 @@ func (service *Notification) Refresh(factory *Factory) {
 	service.streamService = factory.Stream()
 	service.userService = factory.User()
 	service.queue = factory.Queue()
-	service.sseUpdateChannel = factory.SSEUpdateChannel()
 	service.host = factory.Host()
 }
 

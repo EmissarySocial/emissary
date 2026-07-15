@@ -14,6 +14,7 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
 	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -200,8 +201,8 @@ func (service *Notification) notify(session data.Session, user *model.User, acti
 		return nil
 	}
 
-	// Publish an in-app SSE nudge (best-effort).
-	service.publishSSE(notification.UserID)
+	// Publish an in-app SSE nudge (best-effort, published post-commit).
+	service.publishSSE(session, notification.UserID)
 
 	// Enqueue a Web Push delivery task (best-effort, published post-commit).
 	service.enqueueWebPush(session, notification)
@@ -315,13 +316,17 @@ func (service *Notification) loadLocalStreamOwnedBy(session data.Session, url st
 	return stream.AttributedTo.UserID == user.UserID
 }
 
-// publishSSE sends a best-effort in-app realtime nudge for a new notification.  The full realtime
-// wiring (topic + client) lands in Phase 4; until then this is a no-op-safe channel send.
-func (service *Notification) publishSSE(userID primitive.ObjectID) {
-	if service.sseUpdateChannel == nil {
-		return
-	}
-	service.sseUpdateChannel <- realtime.NewMessage_Notification(userID)
+// publishSSE sends a best-effort in-app realtime nudge for a new notification.  It rides the
+// post-commit spool (like enqueueWebPush) so the nudge cannot fire before the Notification row
+// is committed and visible to the badge/list queries it triggers.  queue.WithInline() keeps the
+// task in-process — the realtime broker holds live sockets, so a stored or cross-process run
+// would nudge nobody.
+func (service *Notification) publishSSE(session data.Session, userID primitive.ObjectID) {
+	postcommit.Publish(session, service.queue, "PublishRealtimeMessage", mapof.Any{
+		"hostname": uri.Hostname(service.host),
+		"objectId": userID.Hex(),
+		"topic":    realtime.TopicNotification,
+	}, queue.WithInline())
 }
 
 // enqueueWebPush enqueues a best-effort Web Push delivery task for a new notification.

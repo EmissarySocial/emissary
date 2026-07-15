@@ -128,6 +128,14 @@ func (b *Broker) listen() {
 	}
 }
 
+// Send delivers a message to every matching SSE client immediately, on the
+// caller's goroutine.  It is the direct entry point for post-commit publishers
+// (the "PublishRealtimeMessage" inline task); the updateChannel path remains
+// for services that still send mid-transaction.
+func (b *Broker) Send(message Message) {
+	b.notifySSE(message)
+}
+
 // notifySSE sends a message to every SSE client watching the message's object on a matching topic.
 func (b *Broker) notifySSE(message Message) {
 
