@@ -151,16 +151,13 @@ func (service *Following) Save(session data.Session, following *model.Following,
 		return derp.Wrap(err, location, "Unable to prevent duplicate", following)
 	}
 
-	// RULE: IF changed, retrieve the Folder Name
+	// RULE: The Folder MUST belong to this User
+	if err := service.setFolder(session, following); err != nil {
+		return derp.Wrap(err, location, "Unable to set Folder", following)
+	}
+
+	// RULE: IF the Folder changed, then move related inbox items into it
 	if following.FolderID.IsChanged() {
-
-		// Get the new Folder label
-		folder := model.NewFolder()
-		if err := service.folderService.LoadByID(session, following.UserID, following.FolderID.Value(), &folder); err == nil {
-			following.Folder = folder.Label
-		}
-
-		// Move related inbox items to the new folder
 		if err := service.newsFeedService.UpdateNewsFeedFolders(session, following.UserID, following.FollowingID, following.FolderID.Value()); err != nil {
 			return derp.Wrap(err, location, "Unable to update NewsFeed Folders")
 		}
@@ -690,6 +687,53 @@ func (service *Following) AsJSONLD(following *model.Following) mapof.Any {
 /******************************************
  * Helper Methods
  ******************************************/
+
+// setFolder guarantees that a Following points to an inbox Folder that the User owns,
+// and syncs the cached Folder label.
+func (service *Following) setFolder(session data.Session, following *model.Following) error {
+
+	const location = "service.Following.setFolder"
+
+	// RULE: An empty FolderID falls back to the User's first Folder.  Follows started from the
+	// synthetic "all folders" News Feed view, and follows created via the Mastodon API, both
+	// arrive without a Folder of their own.
+	if following.FolderID.Value().IsZero() {
+
+		folders, err := service.folderService.QueryByUserID(session, following.UserID)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Unable to load Folders", following.UserID)
+		}
+
+		if len(folders) == 0 {
+			return derp.BadRequest(location, "User must have at least one inbox Folder", following.UserID)
+		}
+
+		// QueryByUserID sorts by rank, so the first Folder is this User's default
+		following.FolderID.Set(folders[0].FolderID)
+		following.Folder = folders[0].Label
+
+		return nil
+	}
+
+	// Search for the named Folder, scoped to this User
+	folder := model.NewFolder()
+	if err := service.folderService.LoadByID(session, following.UserID, following.FolderID.Value(), &folder); err != nil {
+
+		// RULE: A missing Folder means that this User does not own it
+		if derp.IsNotFound(err) {
+			return derp.BadRequest(location, "Folder does not exist, or does not belong to this User", following.UserID, following.FolderID.Value())
+		}
+
+		// Any other error is a genuine failure to reach the database
+		return derp.Wrap(err, location, "Unable to load Folder", following.UserID, following.FolderID.Value())
+	}
+
+	following.Folder = folder.Label
+
+	// There is no Folder #2.  There is only Zuul.
+	return nil
+}
 
 func (service *Following) preventDuplicates(session data.Session, current *model.Following) error {
 
