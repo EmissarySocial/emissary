@@ -131,7 +131,7 @@
 			roles:["self"]
 			steps:[
 				{do:"with-rule", steps:[
-					{do:"set-data", from-form:["comment", "isPublic"]}
+					{do:"set-data", from-form:["comment"]}
 					{do:"save"}
 					{do:"trigger-event", event:"refreshPeers"}
 					{do:"inline-success", message:"Saved"}

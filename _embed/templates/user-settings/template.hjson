@@ -125,7 +125,7 @@
 			roles:["self"]
 			steps:[
 				{do:"with-rule", steps:[
-					{do:"set-data", from-form:["comment", "isPublic"]}
+					{do:"set-data", from-form:["comment"]}
 					{do:"set-header", name:"Cache-Control", value:"no-store"}
 					{do:"save"}
 					{do:"trigger-event", event:"refreshPeers"}
@@ -156,10 +156,9 @@
 						type:layout-vertical
 						children:[
 							{type:"radio-button-group-horizontal", path:"action", options:{provider:"actor-rule-buttons"} }
-							{type:"text", label:"Label", path:"label", description:"(Shared if Public) 'Content Warning' will be added to all posts from this person", options:{show-if:"action == LABEL"} }
-							{type:"select", label:"Reason", path:"reasonCode", description:"(Shared if Public) Reason codes defined by <a href='https://dtspartnership.org/glossary/'>Digital Trust & Safety Partnership</a>", options:{show-if:"action != (null)", provider:"rule-reasons"} }
-							{type:"textarea", label:"Description", path:"summary", description:"(Shared if Public) Describe why you made this rule.", options:{show-if:"action != (null)", rows:6}}
-							{type:"toggle", path:"isPublic", options:{show-if:"action != (null)", true-text:"PUBLIC: Share this rule with followers", false-text:"PRIVATE: Do not share this rule"}}
+							{type:"text", label:"Label", path:"label", description:"'Content Warning' will be added to all posts from this person", options:{show-if:"action == LABEL"} }
+							{type:"select", label:"Reason", path:"reasonCode", description:"Reason codes defined by <a href='https://dtspartnership.org/glossary/'>Digital Trust & Safety Partnership</a>", options:{show-if:"action != (null)", provider:"rule-reasons"} }
+							{type:"textarea", label:"Description", path:"summary", description:"Describe why you made this rule.", options:{show-if:"action != (null)", rows:6}}
 						]
 					}}
 				]}
@@ -945,7 +944,6 @@
 								{type:"select", path:"action", label:"Action", options:{provider:"rule-actions"}}
 								{type:"text", path:"label", label:"Label", options:{show-if:"action is LABEL"}}
 								{type:"textarea", path:"summary", label:"Reason", description:"Notes about why this rule was made.", required:true}
-								{type:"toggle", path:"isPublic", options:{true-text:"PUBLISHED: Share this rule with followers", false-text:"PRIVATE: This rule is not visible to others."}}
 							]
 						}
 					}
@@ -976,7 +974,6 @@
 								{type:"select", path:"action", label:"Action", options:{provider:"rule-actions"}}
 								{type:"text", path:"label", label:"Label", options:{show-if:"action is LABEL"}}
 								{type:"textarea", path:"summary", label:"Reason", description:"Notes about why this rule was made.", required:true}
-								{type:"toggle", path:"isPublic", options:{true-text:"PUBLISHED: Share this rule with followers", false-text:"PRIVATE: This rule is not visible to others."}}
 							]
 						}
 					}
@@ -1007,7 +1004,6 @@
 								{type:"select", path:"action", label:"Action", options:{provider:"rule-actions"}}
 								{type:"text", path:"label", label:"Label", options:{show-if:"action is LABEL"}}
 								{type:"textarea", path:"summary", label:"Reason", description:"Notes about why this rule was made.", required:true}
-								{type:"toggle", path:"isPublic", options:{true-text:"PUBLISHED: Share this rule with followers", false-text:"PRIVATE: This rule is not visible to others."}}
 							]
 						}
 					}
