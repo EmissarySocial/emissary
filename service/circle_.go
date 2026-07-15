@@ -101,6 +101,11 @@ func (service *Circle) Save(session data.Session, circle *model.Circle, note str
 		return derp.Wrap(err, location, "Unable to validate Circle", circle)
 	}
 
+	// RULE: The Name MUST NOT collide with this User's other Circles
+	if err := service.ValidateName(session, circle.UserID, circle.CircleID, circle.Name); err != nil {
+		return derp.Wrap(err, location, "Invalid Circle name", circle)
+	}
+
 	// Save the value to the database
 	if err := service.collection(session).Save(circle, note); err != nil {
 		return derp.Wrap(err, location, "Unable to save Circle", circle, note)
@@ -396,6 +401,36 @@ func (service *Circle) AssignedProductIDs(session data.Session, userID primitive
 /******************************************
  * Custom Behaviors
  ******************************************/
+
+// ValidateName returns an error if a Name cannot be used by the provided Circle
+func (service *Circle) ValidateName(session data.Session, userID primitive.ObjectID, circleID primitive.ObjectID, name string) error {
+
+	const location = "service.Circle.ValidateName"
+
+	// RULE: Name is required
+	if name == "" {
+		return derp.BadRequest(location, "Name is required", name)
+	}
+
+	// RULE: Name must be unique within this User's Circles
+	if service.NameExists(session, userID, circleID, name) {
+		return derp.BadRequest(location, "You already have a circle with this name", name)
+	}
+
+	return nil
+}
+
+// NameExists returns TRUE if a Name is already in use by another one of this User's Circles
+func (service *Circle) NameExists(session data.Session, userID primitive.ObjectID, circleID primitive.ObjectID, name string) bool {
+
+	criteria := exp.Equal("userId", userID).
+		AndEqual("name", name).
+		AndNotEqual("_id", circleID)
+
+	// Any error (including "not found") means that the Name is available
+	circle := model.NewCircle()
+	return service.Load(session, criteria, &circle) == nil
+}
 
 // QueryByUserAsLookupCode returns all Circles owned by the provided userID as a slice of form.LookupCode
 func (service *Circle) QueryByUserAsLookupCode(session data.Session, userID primitive.ObjectID, options ...option.Option) ([]form.LookupCode, error) {

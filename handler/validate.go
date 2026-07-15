@@ -102,6 +102,36 @@ func GetValidateFoldername(ctx *steranko.Context, factory *service.Factory, sess
 	})
 }
 
+// GetValidateCirclename validates a Circle.Name for uniqueness within the User's own Circles
+func GetValidateCirclename(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
+
+	// This service can only validate the "name" field
+	if field := ctx.QueryParam("field"); field != "name" {
+		return ctx.JSON(http.StatusBadRequest, mapof.Any{
+			"valid":   false,
+			"message": "Invalid field",
+		})
+	}
+
+	// The Circle being edited is excluded from the search.  A missing or malformed
+	// circleId leaves it zero, which excludes nothing -- correct for new Circles.
+	circleID, _ := primitive.ObjectIDFromHex(ctx.QueryParam("circleId"))
+
+	// If the name is not allowed, then return an error
+	if err := factory.Circle().ValidateName(session, user.UserID, circleID, ctx.QueryParam("value")); err != nil {
+		return ctx.JSON(http.StatusOK, mapof.Any{
+			"valid":   false,
+			"message": derp.Message(err),
+		})
+	}
+
+	// If the name is allowed, then return a success
+	return ctx.JSON(http.StatusOK, mapof.Any{
+		"valid":   true,
+		"message": "",
+	})
+}
+
 // GetValidateStreamToken validates a Stream.Token for uniqueness/availability
 func GetValidateStreamToken(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
