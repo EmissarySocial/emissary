@@ -115,29 +115,44 @@ func (c *folderCollection) Save(data.Object, string) error   { return derp.Inter
 func (c *folderCollection) Delete(data.Object, string) error { return derp.Internal("test", "unused") }
 func (c *folderCollection) HardDelete(exp.Expression) error  { return derp.Internal("test", "unused") }
 
-// matchesFolder reports whether a Folder satisfies an equality criteria on _id/userId/deleteDate
+// matchesFolder reports whether a Folder satisfies a criteria on _id/userId/label/deleteDate.
+// "_id" also honors "!=", which Folder.LabelExists uses to exclude the Folder being edited.
 func matchesFolder(criteria exp.Expression, record model.Folder) bool {
 
 	// Any unsupported field or operator conservatively counts as "no match".
 	return criteria.Match(func(predicate exp.Predicate) bool {
 
-		if predicate.Operator != exp.OperatorEqual {
-			return false
-		}
-
 		switch predicate.Field {
 
 		case "_id":
 			value, ok := predicate.Value.(primitive.ObjectID)
-			return ok && record.FolderID == value
+
+			if !ok {
+				return false
+			}
+
+			switch predicate.Operator {
+
+			case exp.OperatorEqual:
+				return record.FolderID == value
+
+			case exp.OperatorNotEqual:
+				return record.FolderID != value
+			}
+
+			return false
 
 		case "userId":
 			value, ok := predicate.Value.(primitive.ObjectID)
-			return ok && record.UserID == value
+			return ok && predicate.Operator == exp.OperatorEqual && record.UserID == value
+
+		case "label":
+			value, ok := predicate.Value.(string)
+			return ok && predicate.Operator == exp.OperatorEqual && record.Label == value
 
 		case "deleteDate":
 			value, ok := predicate.Value.(int)
-			return ok && record.DeleteDate == int64(value)
+			return ok && predicate.Operator == exp.OperatorEqual && record.DeleteDate == int64(value)
 
 		default:
 			return false
