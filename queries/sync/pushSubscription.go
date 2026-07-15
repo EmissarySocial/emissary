@@ -24,11 +24,17 @@ func PushSubscription(ctx context.Context, database *mongo.Database) error {
 				SetPartialFilterExpression(bson.M{"deleteDate": 0}),
 		},
 
+		// RULE: Uniqueness binds LIVE subscriptions only.  PushSubscriptions are hard-deleted, so
+		// `deleteDate` is always zero today -- but the service still reads through notDeleted(), and
+		// matching that filter here keeps the index honest if a virtual delete is ever reintroduced:
+		// a dead row must never block a browser from re-registering its own endpoint.
 		"idx_PushSubscription_Endpoint": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "endpoint", Value: 1},
 			},
-			Options: options.Index().SetUnique(true),
+			Options: options.Index().
+				SetUnique(true).
+				SetPartialFilterExpression(bson.M{"deleteDate": 0}),
 		},
 	})
 }
