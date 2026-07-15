@@ -1,9 +1,11 @@
 package service
 
 import (
+	"cmp"
 	"context"
 	"crypto/sha256"
 	"html/template"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/config"
@@ -34,6 +36,7 @@ type Domain struct {
 	domain              model.Domain
 	funcMap             template.FuncMap
 	newSession          func(time.Duration) (data.Session, context.CancelFunc, error)
+	withTransaction     func(context.Context, data.TransactionCallbackFunc) (any, error)
 	providerService     *Provider
 	registrationService *Registration
 	steranko            func(data.Session) *steranko.Steranko
@@ -65,6 +68,7 @@ func (service *Domain) Refresh(factory *Factory) {
 	service.domain = model.NewDomain()
 	service.funcMap = factory.FuncMap()
 	service.newSession = factory.Session
+	service.withTransaction = factory.WithTransaction
 	service.providerService = factory.Provider()
 	service.registrationService = factory.Registration()
 	service.steranko = factory.Steranko
@@ -90,45 +94,22 @@ func (service *Domain) Start() error {
 	defer cancel()
 
 	// Try to load the domain model into memory
-	if err := service.collection(session).Load(exp.All(), &service.domain); err != nil {
+	err = service.collection(session).Load(exp.All(), &service.domain)
 
-		// In this process, some errors (like 404's) are okay,
-		// so let's look at THIS error a little more closely.
+	switch {
 
-		// If it's a "real" error, then we can't continue.
-		if !derp.IsNotFound(err) {
-			return derp.Wrap(err, location, "Unable to load domain record")
+	// If the domain record already exists, then there is nothing to bootstrap.
+	case err == nil:
+
+	// If "Not Found", then this is the first run, so bootstrap the domain and owner.
+	case derp.IsNotFound(err):
+		if err := service.bootstrap(session); err != nil {
+			return derp.Wrap(err, location, "Unable to bootstrap new domain")
 		}
 
-		// If "Not Found", then this is the first run.  Create a new domain record.
-		service.domain.Label = service.configuration.Label
-
-		if err := service.Save(session, service.domain, "Created Domain Record"); err != nil {
-			return derp.Wrap(err, location, "Unable to create new domain record")
-		}
-
-		// If this is a localhost server with "createOwner" set, then create a new owner
-		if service.configuration.CreateOwner && service.IsLocalhost() {
-
-			log.Trace().Msg("Creating admin user for local host")
-
-			admin := model.NewUser()
-			admin.DisplayName = "Admin"
-			admin.Username = "admin"
-			admin.EmailAddress = "admin@localhost"
-			admin.IsOwner = true
-			admin.IsPublic = true
-
-			if err := service.steranko(session).SetPassword(&admin, "admin"); err != nil {
-				return derp.Wrap(err, location, "Unable to set admin password")
-			}
-
-			if err := service.userService.Save(session, &admin, "Create admin user for local host"); err != nil {
-				return derp.Wrap(err, "service.Domain.Save", "Unable to create admin user for local host")
-			}
-
-			log.Trace().Msg("Added admin user for local host")
-		}
+	// Any other error is fatal.
+	default:
+		return derp.Wrap(err, location, "Unable to load domain record")
 	}
 
 	// ASYNC: Update database tables and indexes
@@ -149,6 +130,158 @@ func (service *Domain) Start() error {
 	return nil
 }
 
+// bootstrap creates the initial domain record and, when configured, the owner account.
+// Both writes happen inside a SINGLE transaction so the operation is atomic: if the owner
+// cannot be created, the domain record is rolled back too.  The next server start then
+// finds no domain record and cleanly retries the whole bootstrap, instead of stranding a
+// domain record with no owner (which would leave the operator permanently locked out).
+func (service *Domain) bootstrap(session data.Session) error {
+
+	const location = "service.Domain.bootstrap"
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+
+	// Build the new domain record locally.  We publish it to the in-memory cache only
+	// after the transaction commits, so a rollback never leaves the cache out of sync.
+	domain := service.domain
+	domain.Label = service.configuration.Label
+
+	var owner *model.User
+
+	if _, err := service.withTransaction(ctx, func(txn data.Session) (any, error) {
+
+		// Create the singleton domain record
+		if err := service.persist(txn, &domain, "Created Domain Record"); err != nil {
+			return nil, derp.Wrap(err, location, "Unable to create domain record")
+		}
+
+		// When configured, create the owner account in the SAME transaction
+		newOwner, err := service.createOwner(txn)
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Unable to create owner account")
+		}
+
+		owner = newOwner
+		return nil, nil
+	}); err != nil {
+		return derp.Wrap(err, location, "Unable to initialize domain")
+	}
+
+	// The transaction committed, so the in-memory cache can now reflect durable state.
+	service.domain = domain
+
+	// POST-COMMIT: invite a non-localhost owner to set their password (see inviteOwner).
+	// This runs outside the transaction because sending email is an external side effect
+	// that cannot be rolled back.
+	if owner != nil {
+		service.inviteOwner(session, owner)
+	}
+
+	return nil
+}
+
+// createOwner creates the domain owner account when the configuration requests one,
+// returning the created User (or nil when owner creation is not configured).  It must be
+// called inside the bootstrap transaction so the owner and domain record commit together.
+func (service *Domain) createOwner(session data.Session) (*model.User, error) {
+
+	const location = "service.Domain.createOwner"
+
+	// Nothing to do unless the operator asked us to create an owner
+	if !service.configuration.CreateOwner {
+		return nil, nil
+	}
+
+	log.Trace().Str("hostname", service.hostname).Msg("Creating owner account")
+
+	// Build the owner from the configured details, falling back to sensible defaults.
+	owner := newOwnerFromConfig(service.configuration.Owner, service.hostname)
+
+	// RULE: On localhost (e.g. the demo image) set a convenience password so the operator
+	// can sign in immediately.  We NEVER ship a known default credential on a public host;
+	// those owners set their own password via the emailed reset link (see inviteOwner).
+	if service.IsLocalhost() {
+		if err := service.steranko(session).SetPassword(&owner, "admin"); err != nil {
+			return nil, derp.Wrap(err, location, "Unable to set owner password")
+		}
+	}
+
+	// Save the owner account
+	if err := service.userService.Save(session, &owner, "Created owner account"); err != nil {
+		return nil, derp.Wrap(err, location, "Unable to save owner account")
+	}
+
+	log.Trace().Str("username", owner.Username).Msg("Created owner account")
+	return &owner, nil
+}
+
+// newOwnerFromConfig builds a domain owner User from the configured owner details,
+// filling in default values for any field the operator left blank.  A blank email falls
+// back to "admin@<hostname>" because User.Save requires a non-empty address.  Kept as a
+// pure function (no database, no receiver) so the fallback rules are unit-testable.
+func newOwnerFromConfig(configured config.Owner, hostname string) model.User {
+
+	owner := model.NewUser()
+	owner.DisplayName = cmp.Or(strings.TrimSpace(configured.DisplayName), "Admin")
+	owner.Username = cmp.Or(strings.TrimSpace(configured.Username), "admin")
+	owner.EmailAddress = cmp.Or(strings.TrimSpace(configured.EmailAddress), "admin@"+hostname)
+	owner.IsOwner = true
+	owner.IsPublic = true
+
+	return owner
+}
+
+// ownerInviteMethod decides how a newly-bootstrapped owner receives their first password.
+// Kept pure (no receiver, no database) so the policy is unit-testable.
+type ownerInviteMethod int
+
+const (
+	ownerInviteLocalhost ownerInviteMethod = iota // convenience password already set; nothing to send
+	ownerInviteEmail                              // public host + configured email: send a reset link
+	ownerInviteManual                             // public host + no email: operator must set one manually
+)
+
+func calcOwnerInviteMethod(isLocalhost bool, ownerEmail string) ownerInviteMethod {
+
+	switch {
+
+	case isLocalhost:
+		return ownerInviteLocalhost
+
+	case strings.TrimSpace(ownerEmail) != "":
+		return ownerInviteEmail
+
+	default:
+		return ownerInviteManual
+	}
+}
+
+// inviteOwner delivers a first-time password to a newly-bootstrapped owner.  Localhost
+// owners already have the convenience password set in createOwner; public-host owners
+// either receive a password-reset link (when an email was configured) or a clear, loud
+// message pointing the operator at the setup console to set a password manually.
+func (service *Domain) inviteOwner(session data.Session, owner *model.User) {
+
+	switch calcOwnerInviteMethod(service.IsLocalhost(), service.configuration.Owner.EmailAddress) {
+
+	case ownerInviteEmail:
+		service.userService.SendPasswordResetEmail(session, owner, model.PasswordResetDurationWelcome)
+
+	case ownerInviteManual:
+		// There is no password and no way to deliver one.  Surface a clear, loud message
+		// so the operator is not silently locked out of their own server.
+		log.Warn().
+			Str("hostname", service.hostname).
+			Str("username", owner.Username).
+			Msg("Owner account created without a password. Configure an owner email address, or set a password from the server setup console (Domains > Users).")
+
+	case ownerInviteLocalhost:
+		// Nothing to do -- the convenience password is already set (see createOwner).
+	}
+}
+
 /******************************************
  * Common Data Methods
  ******************************************/
@@ -158,18 +291,35 @@ func (service *Domain) Get() *model.Domain {
 	return &service.domain
 }
 
-// Save updates the value of this domain in the database (and in-memory cache)
+// Save updates the value of this domain in the database and refreshes the in-memory cache.
 func (service *Domain) Save(session data.Session, domain model.Domain, note string) error {
 
-	const location = "service.Domain.Save"
+	// Write the (validated) value to the database
+	if err := service.persist(session, &domain, note); err != nil {
+		return derp.Wrap(err, "service.Domain.Save", "Unable to save Domain")
+	}
+
+	// Update the in-memory cache to match what was just written
+	service.domain = domain
+
+	return nil
+}
+
+// persist validates a Domain and writes it to the database WITHOUT touching the
+// in-memory cache.  Callers that write inside a transaction use this directly and
+// publish to the cache themselves only after the transaction commits, so a rolled-back
+// write never leaves the cache holding a record that isn't in the database.
+func (service *Domain) persist(session data.Session, domain *model.Domain, note string) error {
+
+	const location = "service.Domain.persist"
 
 	// Validate the value using the default domain schema
-	if _, err := schema.New(model.DomainSchema()).Validate(&domain); err != nil {
+	if _, err := schema.New(model.DomainSchema()).Validate(domain); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Domain with standard Domain schema")
 	}
 
 	// Validate the value using the custom schema for this domain
-	if _, err := service.Schema().Validate(&domain); err != nil {
+	if _, err := service.Schema().Validate(domain); err != nil {
 		return derp.Wrap(err, location, "Unable to validate Domain with custom schema from Theme")
 	}
 
@@ -179,12 +329,9 @@ func (service *Domain) Save(session data.Session, domain model.Domain, note stri
 	}
 
 	// Try to save the value to the database
-	if err := service.collection(session).Save(&domain, note); err != nil {
+	if err := service.collection(session).Save(domain, note); err != nil {
 		return derp.Wrap(err, location, "Unable to save Domain")
 	}
-
-	// Update the in-memory cache
-	service.domain = domain
 
 	return nil
 }

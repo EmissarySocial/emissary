@@ -82,6 +82,13 @@ func SetupDomainPost(serverFactory *server.Factory) echo.HandlerFunc {
 			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Unable to validate config values"))
 		}
 
+		// Fail fast if the database is unreachable, so we don't hang on the driver's default
+		// timeout or leave a broken domain persisted in the configuration file.  The error is
+		// surfaced directly (not re-wrapped) so its specific, actionable message reaches the user.
+		if err := serverFactory.TestConnection(domain); err != nil {
+			return build.WrapInlineError(ctx.Response(), err)
+		}
+
 		if err := serverFactory.PutDomain(domain); err != nil {
 			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Unable to save domain"))
 		}
@@ -176,7 +183,7 @@ func setupDomainForm(header string) form.Element {
 				Type:        "text",
 				Path:        "connectString",
 				Label:       "MongoDB Connection String",
-				Description: "Should look like mongodb://hostname:port. Default port is 27017",
+				Description: "Should look like: mongodb://127.0.0.1:27017/?directConnection=true&replicaSet=rs0",
 			}, {
 				Type:        "text",
 				Path:        "databaseName",

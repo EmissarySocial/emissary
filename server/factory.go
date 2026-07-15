@@ -40,6 +40,7 @@ import (
 	"github.com/spf13/afero"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 // Factory manages all server-level services, and generates individual
@@ -503,6 +504,49 @@ func (factory *Factory) RangeDomains() iter.Seq[*service.Factory] {
 // ListDomains returns a list of all domains in the Factory
 func (factory *Factory) ListDomains() []config.Domain {
 	return factory.config.Domains
+}
+
+// TestConnection verifies that a domain's database is actually reachable.  It is used to
+// validate a domain BEFORE it is persisted, so a bad connect string fails fast with a clear
+// message instead of hanging on the driver's default (~30s) server-selection timeout and
+// leaving a broken domain in the configuration file.  mongo.Connect is lazy -- it never
+// contacts the server -- so we must Ping to actually exercise the connection.
+func (factory *Factory) TestConnection(configuration config.Domain) error {
+	return testDatabaseConnection(configuration, 5*time.Second)
+}
+
+// testDatabaseConnection pings the domain's database, bounding server selection and the
+// ping itself to `timeout` so an unreachable host fails in seconds.  The timeout is a
+// parameter so tests can drive the fail-fast path quickly.
+func testDatabaseConnection(configuration config.Domain, timeout time.Duration) error {
+
+	const location = "server.Factory.TestConnection"
+
+	// Bound server selection so an unreachable host fails in seconds, not the ~30s default.
+	opts := options.Client().SetServerSelectionTimeout(timeout)
+
+	server, err := mongodb.New(configuration.ConnectString, configuration.DatabaseName, opts)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to connect to the database. Please check the connect string.")
+	}
+
+	client := server.Client()
+
+	// Always release the throwaway client created for this check.
+	defer func() {
+		_ = client.Disconnect(context.Background())
+	}()
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	// Ping forces real server selection, surfacing an unreachable host or replica set now.
+	if err := client.Ping(ctx, readpref.Primary()); err != nil {
+		return derp.Wrap(err, location, `Unable to reach the database. Check the connect string — a single-member replica set needs "?directConnection=true".`)
+	}
+
+	return nil
 }
 
 // PutDomain adds a domain to the Factory
