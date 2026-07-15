@@ -45,6 +45,10 @@
         "adapter": "FILE",
         "location": "/data/uploads/cache"
     },
+    "exportCache": {
+        "adapter": "FILE",
+        "location": "/data/uploads/exports"
+    },
     "certificates": {
         "adapter": "FILE",
         "location": "/data/uploads/certificates"
