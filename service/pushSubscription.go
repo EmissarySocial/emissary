@@ -97,11 +97,18 @@ func (service *PushSubscription) Save(session data.Session, sub *model.PushSubsc
 	return nil
 }
 
-// Delete removes a PushSubscription from the database (soft delete)
+// Delete removes a PushSubscription from the database (hard delete)
+//
+// RULE: PushSubscriptions are hard-deleted, never virtual-deleted.  Every value in the record is
+// minted by the browser (the endpoint and its crypto keys), so a tombstone could never be
+// resurrected -- re-enabling push always mints a fresh subscription.  It would only retain a device
+// identifier and its secrets after the User asked us to stop pushing to them.
 func (service *PushSubscription) Delete(session data.Session, sub *model.PushSubscription, note string) error {
 
-	if err := service.collection(session).Delete(sub, note); err != nil {
-		return derp.Wrap(err, "service.PushSubscription.Delete", "Unable to delete PushSubscription", sub)
+	const location = "service.PushSubscription.Delete"
+
+	if err := service.collection(session).HardDelete(exp.Equal("_id", sub.PushSubscriptionID)); err != nil {
+		return derp.Wrap(err, location, "Unable to delete PushSubscription", sub, note)
 	}
 
 	return nil
@@ -154,24 +161,14 @@ func (service *PushSubscription) Upsert(session data.Session, userID primitive.O
 }
 
 // DeleteByEndpoint removes the PushSubscription with the provided endpoint (e.g. after a 404/410
-// from the push service, or on explicit unsubscribe).
+// from the push service, or on explicit unsubscribe).  Deleting an endpoint that is already gone
+// is not an error.
 func (service *PushSubscription) DeleteByEndpoint(session data.Session, endpoint string, note string) error {
 
 	const location = "service.PushSubscription.DeleteByEndpoint"
 
-	sub := model.NewPushSubscription()
-	err := service.LoadByEndpoint(session, endpoint, &sub)
-
-	if derp.IsNotFound(err) {
-		return nil
-	}
-
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to load PushSubscription", endpoint)
-	}
-
-	if err := service.Delete(session, &sub, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete PushSubscription", endpoint)
+	if err := service.collection(session).HardDelete(exp.Equal("endpoint", endpoint)); err != nil {
+		return derp.Wrap(err, location, "Unable to delete PushSubscription", endpoint, note)
 	}
 
 	return nil
@@ -182,16 +179,8 @@ func (service *PushSubscription) DeleteByUserID(session data.Session, userID pri
 
 	const location = "service.PushSubscription.DeleteByUserID"
 
-	rangeFunc, err := service.RangeByUserID(session, userID)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to query PushSubscriptions by UserID", userID)
-	}
-
-	for sub := range rangeFunc {
-		if err := service.Delete(session, &sub, note); err != nil {
-			return derp.Wrap(err, location, "Unable to delete PushSubscription", sub)
-		}
+	if err := service.collection(session).HardDelete(exp.Equal("userId", userID)); err != nil {
+		return derp.Wrap(err, location, "Unable to delete PushSubscriptions", userID, note)
 	}
 
 	return nil
