@@ -244,11 +244,13 @@ func (service *Group) ListAsOptions(session data.Session) []form.LookupCode {
 
 func (service *Group) Startup(session data.Session, theme *model.Theme) error {
 
+	const location = "service.Group.Startup"
+
 	// Try to count the number of existing groups in the database
 	count, err := service.Count(session, exp.All())
 
 	if err != nil {
-		return derp.Wrap(err, "service.Theme.Startup", "Error counting groups")
+		return derp.Wrap(err, location, "Error counting groups")
 	}
 
 	// If there are already groups in the database, then don't make any changes.
@@ -263,13 +265,11 @@ func (service *Group) Startup(session data.Session, theme *model.Theme) error {
 		group := model.NewGroup()
 
 		if err := groupSchema.SetAll(&group, data); err != nil {
-			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Unable to set group data", data))
-			continue
+			return derp.Wrap(err, location, "Unable to set group data", data)
 		}
 
 		if err := service.Save(session, &group, "Created by Startup"); err != nil {
-			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Unable to save group", group))
-			continue
+			return derp.Wrap(err, location, "Unable to save group", group)
 		}
 	}
 

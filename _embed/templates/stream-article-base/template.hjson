@@ -20,14 +20,14 @@
 			token: {type:"string", format:"token", maxLength:64, required:true}
 			label: {type:"string", maxLength:128}
 			summary: {type:"string", maxLength:2048}
-			content:{type:"object", properties: {
+			content: {type:"object", properties: {
 				format: {type:"string"}
 				raw: {type:"string"}
 				html: {type:"string", format:"html", maxLength:200000}
-			},
+			}}
 			data: {type:"object", properties: {
 				tags: {type:"string", maxLength:2048}
-			}}}
+			}}
 		}
 	}
 	states: {

@@ -108,11 +108,13 @@ func (service *Stream) Refresh(factory *Factory) {
 
 func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 
+	const location = "service.Stream.Startup"
+
 	// Try to count the number of streams currently in the database
 	count, err := service.Count(session, exp.All())
 
 	if err != nil {
-		return derp.Wrap(err, "service.Theme.Startup", "Unable to count streams")
+		return derp.Wrap(err, location, "Unable to count streams")
 	}
 
 	// If the database is not empty, then do not add more...
@@ -120,54 +122,65 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 		return nil
 	}
 
-	streamSchema := service.Schema()
-
 	for _, data := range theme.StartupStreams {
 
-		// Create a new Stream
-		stream := model.NewStream()
-		if err := streamSchema.SetAll(&stream, data); err != nil {
-			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Unable to set stream data", data))
-			continue
-		}
-
-		// Set this Stream as "Published"
-		stream.PublishDate = 0
-
-		// If we have default content, then add that too.
-		if content, ok := data["content"].(model.Content); ok {
-			stream.Content = content
-		}
-
-		// Validate with the general-purpose Stream schema
-		if _, err := streamSchema.Validate(&stream); err != nil {
-			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Invalid stream data"))
-			continue
-		}
-
-		// Get/Validate the template for the new stream
-		templateID := data.GetString("templateId")
-		template, err := service.templateService.Load(templateID)
+		// Build a Stream from the theme's startup data
+		stream, err := service.newStartupStream(data)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Unable to load template", templateID))
-			continue
+			return derp.Wrap(err, location, "Unable to build startup stream", data)
 		}
 
-		// Validate with the specific Template schema
-		if _, err := template.Schema.Validate(&stream); err != nil {
-			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Invalid stream data"))
-			continue
-		}
-
-		// Save the new Stream to the database
+		// Save the new Stream to the database.  Save is the single validation gate: it
+		// loads the template, normalizes the value against the template schema (which
+		// sanitizes content, clamps lengths, etc.), and only then persists.  Startup must
+		// NOT pre-validate, because Validate rejects any value that would be rewritten --
+		// and freshly-rendered article HTML is always rewritten by the "html" sanitizer.
 		if err := service.Save(session, &stream, "Created by Startup"); err != nil {
-			derp.Report(derp.Wrap(err, "service.Theme.Startup", "Unable to save stream", stream))
-			continue
+			return derp.Wrap(err, location, "Unable to save startup stream", stream)
 		}
 	}
 
 	return nil
+}
+
+// newStartupStream builds a single published Stream from one theme.StartupStreams
+// entry.  It is separated from Startup so the schema-application step -- the part that
+// silently failed for every startup stream -- can be exercised directly by tests without
+// a database, template registry, or webhook service.  The returned Stream is NOT yet
+// normalized or persisted; Startup passes it to Save, which is the single validation gate.
+func (service *Stream) newStartupStream(data mapof.Any) (model.Stream, error) {
+
+	const location = "service.Stream.newStartupStream"
+
+	stream := model.NewStream()
+
+	// Apply the theme's scalar values.  The "content" key holds a whole model.Content
+	// object, which rosetta's object-Set cannot assign in a single call (it only accepts
+	// dotted paths, e.g. "content.html"), so it is excluded here and applied directly
+	// below.  Copy the map instead of deleting the key, because themes are cached and
+	// shared across requests.
+	values := make(mapof.Any, len(data))
+	for key, value := range data {
+		if key == "content" {
+			continue
+		}
+		values[key] = value
+	}
+
+	if err := service.Schema().SetAll(&stream, values); err != nil {
+		return stream, derp.Wrap(err, location, "Unable to set stream data", values)
+	}
+
+	// Set this Stream as "Published"
+	stream.PublishDate = 0
+
+	// If we have default content, then add that too.
+	if content, ok := data["content"].(model.Content); ok {
+		stream.Content = content
+	}
+
+	return stream, nil
 }
 
 /******************************************
