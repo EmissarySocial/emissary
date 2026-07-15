@@ -14,26 +14,33 @@ import (
  * ActivityPub Methods
  ******************************************/
 
+// ActivityPubActorURL returns the URL of the Actor that owns the provided Rule
 func (service *Rule) ActivityPubActorURL(rule model.Rule) string {
 	return service.host + "/@" + rule.UserID.Hex()
 }
 
+// ActivityPubURL returns the canonical URL of the provided Rule's published activity.
+//
+// NOTE: nothing serves this URL. Users stopped publishing a "/pub/blocked" collection when Rule
+// federation became a Domain-only capability (D9), and the Domain has no publishing path yet, so the
+// whole publish path is dormant. Whatever serves a Domain's published policy will own this URL space
+// and must redefine this. See RULES.md D9.
 func (service *Rule) ActivityPubURL(rule model.Rule) string {
 	return service.ActivityPubActorURL(rule) + "/pub/blocked/" + rule.RuleID.Hex()
-}
-
-// JSONLDGetter returns a new JSONLDGetter for the provided stream
-func (service *Rule) JSONLDGetter(rule model.Rule) RuleJSONLDGetter {
-	return NewRuleJSONLDGetter(service, rule)
 }
 
 func (service *Rule) Activity(rule model.Rule) streams.Document {
 	return streams.NewDocument(service.JSONLD(rule))
 }
 
+// ActivityType returns the ActivityPub type that a Rule federates as, or an empty string if it does
+// not federate.
 func (service *Rule) ActivityType(rule model.Rule) string {
 
-	// Determine the ActivityPub type for this Rule
+	// LABEL is absent on purpose. Everywhere else in the Fediverse a `Flag` is a PRIVATE moderation
+	// report to a server's moderators, so a personal label broadcast as a Flag reads to a conformant
+	// receiver as an abuse report against the labelled Actor. Labels stay local until the Notice
+	// store ships. See RULES.md R15.
 	switch rule.Action {
 
 	case model.RuleActionBlock:
@@ -41,9 +48,6 @@ func (service *Rule) ActivityType(rule model.Rule) string {
 
 	case model.RuleActionMute:
 		return vocab.ActivityTypeIgnore
-
-	case model.RuleActionLabel:
-		return vocab.ActivityTypeFlag
 	}
 
 	// If we don't know the type, then return an empty string

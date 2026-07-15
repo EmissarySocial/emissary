@@ -140,13 +140,6 @@ func getForm_FollowingIntent() form.Form {
 					Options:     mapof.Any{"provider": "following-behaviors"},
 				},
 				{
-					Type:        "select",
-					Label:       "Shared Blocks",
-					Path:        "ruleAction",
-					Description: "How should blocks from this source be handled?",
-					Options:     mapof.Any{"provider": "following-rule-actions"},
-				},
-				{
 					Type: "toggle",
 					Path: "isPublic",
 					Options: mapof.Any{

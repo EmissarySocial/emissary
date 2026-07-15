@@ -477,13 +477,6 @@
 										options:{provider:"following-behaviors"}
 									}
 									{
-										type:"select", 
-										label:"Shared Blocks", 
-										path:"ruleAction", 
-										description:"How should blocks from this source be handled?"
-										options:{provider:"following-rule-actions"}
-									}
-									{
 										type:"toggle"
 										path:"isPublic"
 										default:false

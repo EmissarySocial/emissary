@@ -356,13 +356,6 @@ func (user *User) ActivityPubImageURL() string {
 	return user.ProfileURL + "/attachments/" + user.ImageID.Hex()
 }
 
-func (user *User) ActivityPubBlockedURL() string {
-	if user.ProfileURL == "" {
-		return ""
-	}
-
-	return user.ProfileURL + "/pub/blocked"
-}
 
 func (user *User) ActivityPubFeaturedURL() string {
 	if user.ProfileURL == "" {

@@ -21,7 +21,6 @@ func TestFollowingSchema(t *testing.T) {
 		{"profileUrl", "https://other.url", nil},
 		{"iconUrl", "https://other.url/image.png", nil},
 		{"behavior", "POSTS+REPLIES", nil},
-		{"ruleAction", RuleActionMute, nil},
 		{"isPublic", "true", true},
 		{"method", FollowingMethodActivityPub, nil},
 		{"status", FollowingStatusSuccess, nil},

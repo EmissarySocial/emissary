@@ -129,7 +129,7 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 		rule.IsPublic = false
 	}
 
-	switch rule.IsPublic {
+	switch service.shouldPublish(*rule) {
 
 	case true:
 
@@ -138,20 +138,35 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 		// "Publish" Rule when it is first shared publicly
 		case 0:
 
+			// Stamped BEFORE publishing because JSONLD reads PublishDate for the activity's
+			// `published` property; publishing first would date every new activity to 1970.
 			rule.PublishDate = time.Now().Unix()
-			go derp.Report(service.publish(session, *rule))
+
+			if err := service.publish(session, *rule); err != nil {
+				return derp.Wrap(err, location, "Unable to publish Rule", rule)
+			}
 
 		// "Republish" changes when a public Rule is updated
 		default:
-			go derp.Report(service.republish(session, *rule))
+			if err := service.republish(session, *rule); err != nil {
+				return derp.Wrap(err, location, "Unable to republish Rule", rule)
+			}
 		}
 
 	case false:
 
-		// RULE: Unpublish Rules when they are no longer shared publicly
+		// RULE: Retract Rules that still have a live published activity.
+		// Keyed on PublishDate (the FACT that an activity is live) rather than IsPublic (the User's
+		// INTENT): the two diverge for any Rule whose Action changed after it was published.
 		if rule.PublishDate > 0 {
 
-			go derp.Report(service.unpublish(session, *rule))
+			// Retract BEFORE zeroing: the Undo embeds the original activity, whose `published` is
+			// read from PublishDate. Zeroing first still finds the right OutboxMessage (that lookup
+			// keys on the Rule's URL, not its date) while silently sending 1970 on the wire.
+			if err := service.unpublish(session, *rule); err != nil {
+				return derp.Wrap(err, location, "Unable to unpublish Rule", rule)
+			}
+
 			rule.PublishDate = 0
 		}
 	}
@@ -173,21 +188,32 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 // Delete removes an Rule from the database (virtual delete)
 func (service *Rule) Delete(session data.Session, rule *model.Rule, note string) error {
 
+	const location = "service.Rule.Delete"
+
+	// RULE: Retract the published activity for any Rule that has one.
+	// Keyed on PublishDate (the FACT that an activity is live) rather than IsPublic (the User's
+	// INTENT): the two diverge for any Rule whose Action changed after it was published. This runs
+	// BEFORE the delete because callers on the Mastodon API hold no transaction, so retracting
+	// afterwards would commit the delete and THEN report an error about a Rule that is already gone
+	// -- which no retry could ever find again.
+	if rule.PublishDate > 0 {
+		if err := service.unpublish(session, *rule); err != nil {
+			return derp.Wrap(err, location, "Unable to unpublish Rule", rule)
+		}
+	}
+
 	// Delete this Rule
 	if err := service.collection(session).Delete(rule, note); err != nil {
-		return derp.Wrap(err, "service.Rule.Delete", "Unable to delete Rule", rule, note)
+		return derp.Wrap(err, location, "Unable to delete Rule", rule, note)
 	}
 
 	// Recalculate the rule count for this user
 	// (skipped for domain-level Rules with no owning User)
 	if err := service.userService.CalcRuleCount(session, rule.UserID); err != nil {
-		return derp.Wrap(err, "service.Rule.Delete", "Unable to calculate rule count")
+		return derp.Wrap(err, location, "Unable to calculate rule count")
 	}
 
-	if rule.IsPublic {
-		go derp.Report(service.unpublish(session, *rule))
-	}
-
+	// The Rule is gone, and so is its shadow on the wire.
 	return nil
 }
 
@@ -385,24 +411,6 @@ func (service *Rule) LoadByFollowing(session data.Session, userID primitive.Obje
 	return service.Load(session, criteria, rule)
 }
 
-// QueryPublic returns a collection of Rules that are marked Public, in reverse chronological order.
-func (service *Rule) QueryPublic(session data.Session, userID primitive.ObjectID, maxDate int64, options ...option.Option) ([]model.Rule, error) {
-
-	// RULE: UserID cannot be zero
-	if userID.IsZero() {
-		return nil, derp.Validation("UserID cannot be zero")
-	}
-
-	criteria := service.byUserID(userID).
-		AndEqual("isPublic", true).
-		AndLessThan("publishDate", maxDate)
-
-	options = append(options, option.SortDesc("publishDate"))
-	result, err := service.Query(session, criteria, options...)
-
-	return result, err
-}
-
 func (service *Rule) QueryByType(session data.Session, userID primitive.ObjectID, ruleType string, criteria exp.Expression, options ...option.Option) ([]model.Rule, error) {
 
 	criteria = service.byUserID(userID).
@@ -491,6 +499,31 @@ func (service *Rule) Filter(userID primitive.ObjectID, options ...RuleFilterOpti
 /******************************************
  * Misc Helpers
  ******************************************/
+
+// shouldPublish returns TRUE if this Rule federates to its Actor's followers.
+func (service *Rule) shouldPublish(rule model.Rule) bool {
+
+	// RULE: Users do not publish Rules. Federating moderation policy is a Domain act, so only
+	// Domain-owned Rules are ever eligible (D9). A User's Rules are private, always.
+	if !rule.OriginAdmin() {
+		return false
+	}
+
+	// RULE: Only Rules that have been marked for sharing are published.
+	if !rule.IsPublic {
+		return false
+	}
+
+	// RULE: LABEL Rules do not federate.
+	// Their only mapping was "Flag", which is a private moderation report everywhere else in the
+	// Fediverse (R15), so labels stay local until the Notice store ships. This gate READS the Rule
+	// and never writes it: deciding what a Rule means belongs to the caller.
+	if rule.Action == model.RuleActionLabel {
+		return false
+	}
+
+	return true
+}
 
 // hasDuplicate returns TRUE if the provided Rule is a duplicate of an existing Rule.
 // IMPORTANT: This method MAY update the provided Rule

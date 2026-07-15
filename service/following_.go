@@ -126,11 +126,6 @@ func (service *Following) Save(session data.Session, following *model.Following,
 		following.Behavior = model.FollowingBehaviorPostsAndReplies
 	}
 
-	// Default rule behavior
-	if following.RuleAction == "" {
-		following.RuleAction = model.RuleActionLabel
-	}
-
 	// RULE: Update Polling duration based on the transmission method
 	switch following.Method {
 

@@ -52,14 +52,6 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 			form.LookupCode{Value: "POSTS", Label: "Posts Only (ignore replies)"},
 		)
 
-	case "following-rule-actions":
-		return form.NewReadOnlyLookupGroup(
-			form.LookupCode{Value: "IGNORE", Label: "Do not import rules from this source (display messages normally)"},
-			form.LookupCode{Value: "LABEL", Label: "LABEL posts that are blocked by this source"},
-			form.LookupCode{Value: "MUTE", Label: "MUTE senders who are blocked by this source (one-way block)"},
-			form.LookupCode{Value: "BLOCK", Label: "BLOCK senders and prevent followers who are blocked by this source (two-way block)"},
-		)
-
 	case "geocode-tiles":
 		result := form.NewReadOnlyLookupGroup(dataset.GeocodeTiles()...)
 		return result

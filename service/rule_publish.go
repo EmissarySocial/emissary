@@ -13,11 +13,11 @@ import (
 // publish marks the Rule as published, and sends "Create" activities to all ActivityPub followers
 func (service *Rule) publish(session data.Session, rule model.Rule) error {
 
-	const location = "service.Rule.Save"
+	const location = "service.Rule.publish"
 
 	// Publish this Rule to the User's outbox
 	if err := service.outboxService.Publish(session, model.FollowerTypeUser, rule.UserID, service.Activity(rule), model.NewAnonymousPermissions()); err != nil {
-		return derp.Wrap(err, location, "Error publishing Rule", rule)
+		return derp.Wrap(err, location, "Unable to publish Rule", rule)
 	}
 
 	return nil
@@ -32,24 +32,25 @@ func (service *Rule) unpublish(session data.Session, rule model.Rule) error {
 	// UNDONE (embedding the original Block inline, looked up by its own URL) — not deleted as an
 	// object. See COLLECTIONS-REDESIGN.md D7.
 	if err := service.outboxService.UndoActivity(session, model.FollowerTypeUser, rule.UserID, service.JSONLD(rule), model.NewAnonymousPermissions()); err != nil {
-		return derp.Wrap(err, location, "Error publishing Rule", rule)
+		return derp.Wrap(err, location, "Unable to retract Rule", rule)
 	}
 
 	return nil
 }
 
+// republish retracts a Rule's previous activity and publishes its updated one
 func (service *Rule) republish(session data.Session, rule model.Rule) error {
 
 	const location = "service.Rule.republish"
 
 	// UnPublish the original Rule from the User's outbox (Undo the Block activity — see D7).
 	if err := service.outboxService.UndoActivity(session, model.FollowerTypeUser, rule.UserID, service.JSONLD(rule), model.NewAnonymousPermissions()); err != nil {
-		return derp.Wrap(err, location, "Error publishing Rule", rule)
+		return derp.Wrap(err, location, "Unable to retract previous Rule", rule)
 	}
 
 	// Publish the updated Rule to the User's outbox
 	if err := service.outboxService.Publish(session, model.FollowerTypeUser, rule.UserID, service.Activity(rule), model.NewAnonymousPermissions()); err != nil {
-		return derp.Wrap(err, location, "Error publishing Rule", rule)
+		return derp.Wrap(err, location, "Unable to publish Rule", rule)
 	}
 
 	return nil

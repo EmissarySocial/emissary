@@ -20,7 +20,6 @@ func FollowingSchema() schema.Element {
 			"profileUrl":    schema.String{Format: "url"},
 			"iconUrl":       schema.String{Format: "url"},
 			"behavior":      schema.String{Enum: []string{FollowingBehaviorPosts, FollowingBehaviorPostsAndReplies}, Default: FollowingBehaviorPostsAndReplies, Required: true},
-			"ruleAction":    schema.String{Enum: []string{FollowingRuleActionIgnore, RuleActionMute, RuleActionLabel, RuleActionBlock}, Default: RuleActionLabel, Required: true},
 			"isPublic":      schema.Boolean{Default: null.NewBool(false)},
 			"method":        schema.String{Enum: []string{FollowingMethodPoll, FollowingMethodActivityPub}},
 			"status":        schema.String{Enum: []string{FollowingStatusNew, FollowingStatusLoading, FollowingStatusSuccess, FollowingStatusFailure}},
@@ -61,9 +60,6 @@ func (following *Following) GetPointer(name string) (any, bool) {
 
 	case "behavior":
 		return &following.Behavior, true
-
-	case "ruleAction":
-		return &following.RuleAction, true
 
 	case "isPublic":
 		return &following.IsPublic, true

@@ -22,7 +22,6 @@ type Following struct {
 	ProfileURL    string             `bson:"profileUrl"`    // Updated, computer-facing URL that is being followed.
 	IconURL       string             `bson:"iconUrl"`       // URL of an the avatar/icon image that represents this "following"
 	Behavior      string             `bson:"behavior"`      // Behavior determines the types of records to import from this Actor [POSTS+REPLIES]
-	RuleAction    string             `bson:"ruleAction"`    // RuleAction determines the types of records to rule from this Actor [IGNORE, LABEL, MUTE, BLOCK ]
 	IsPublic      bool               `bson:"isPublic"`      // If TRUE, this following is visible to the public
 	Links         digit.LinkSet      `bson:"links"`         // List of links can be used to update this following.
 	Method        string             `bson:"method"`        // Method used to update this feed (POLL, ACTIVITYPUB)
@@ -45,7 +44,6 @@ func NewFollowing() Following {
 		Status:        FollowingStatusNew,
 		Method:        "",
 		Behavior:      FollowingBehaviorPostsAndReplies,
-		RuleAction:    RuleActionLabel,
 		Links:         make(digit.LinkSet, 0),
 		PollDuration:  24, // default poll interval is 24 hours
 		PurgeDuration: 14, // default purge interval is 14 days

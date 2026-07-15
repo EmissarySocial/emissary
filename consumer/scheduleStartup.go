@@ -4,23 +4,11 @@ import (
 	"github.com/benpate/turbine/queue"
 )
 
+// ScheduleStartup queues the one-time tasks that run when the server starts.
 func ScheduleStartup(serverFactory ServerFactory) queue.Result {
 
-	/*
-		const location = "consumer.ScheduleStartup"
-		log.Trace().Str("location", location).Msg("Running Startup Tasks...")
-
-		time.Sleep(5 * time.Second) // Give the server a few seconds to finish starting up
-
-		// Throughput test. Do not check in.
-		{
-			for i := range 6000 {
-				sererFactory.Queue().NewTask(
-					"TestThroughput",
-					mapof.Any{"value": i},
-				)
-			}
-		}*/
+	// There are no startup tasks right now. The hook stays wired up (consumer/schedule.go publishes
+	// it on every boot) because it is where a one-time migration goes when one is next needed.
 
 	// Stupendous.
 	return queue.Success()

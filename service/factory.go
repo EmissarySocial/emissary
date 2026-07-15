@@ -1026,7 +1026,6 @@ func (factory *Factory) Collections() []string {
 		// "KeyPackage",
 		"Notification",
 		"MerchantAccount",
-		"Rule",
 		"OAuthClient",
 		"OAuthUserToken",
 		"Outbox",
