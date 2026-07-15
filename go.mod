@@ -30,7 +30,7 @@ require (
 	github.com/benpate/steranko v0.28.0
 	github.com/benpate/table v0.8.0
 	github.com/benpate/toot v0.3.0
-	github.com/benpate/turbine v0.6.0
+	github.com/benpate/turbine v0.7.0
 	github.com/benpate/uri v0.3.0
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/codingsince1985/geo-golang v1.9.0
