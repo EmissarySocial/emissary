@@ -204,7 +204,10 @@ func (w Outbox) IsPublic() bool {
 	return w._user.IsPublic
 }
 
-// IsIndexable returns TRUE if the stream is indexable by search engines
+// IsIndexable returns TRUE if this user's profile may be indexed by search
+// engines. It reflects the profile owner's "Index on Search Engines" setting
+// and overrides Common.IsIndexable so shared page templates can emit a
+// "noindex" robots directive when the owner has opted out.
 func (w Outbox) IsIndexable() bool {
 	return w._user.IsIndexable
 }

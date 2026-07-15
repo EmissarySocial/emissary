@@ -364,6 +364,14 @@ func (w Common) GetContent() template.HTML {
 	return w.GetHTML("content")
 }
 
+// IsIndexable returns TRUE if this page may be indexed by search engines.
+// The default is TRUE; builders whose content can opt out of indexing (such as
+// public user profiles) override this method. Shared page templates use it to
+// decide whether to emit a "noindex" robots directive in the document <head>.
+func (w Common) IsIndexable() bool {
+	return true
+}
+
 /******************************************
  * Domain Data
  ******************************************/
