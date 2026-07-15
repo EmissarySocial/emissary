@@ -33,9 +33,14 @@
 
 		<div class="margin-bottom-xl">
 
+			{{- $iconURL := .IconURL -}}
 			<div class="flex-row flex-align-center margin-bottom">
 				<div class="width-32">
-					<img src="{{.IconURL}}" class="circle width-100%">
+					{{- if ne "" $iconURL -}}
+						<img src="{{$iconURL}}" alt="" class="circle width-100%">
+					{{- else -}}
+						<div class="circle width-100% flex-center">{{icon "person"}}</div>
+					{{- end -}}
 				</div>
 				<div class="flex-grow">
 					<div class="text-xs text-gray">You're signed in to <b>{{.Hostname}}</b> as:</div>

@@ -6,8 +6,13 @@
 
 	<h1>{{icon "email"}} Unsubscribe from {{$actor.Name}}?</h1>
 
+	{{- $iconURL := $actor.Icon.Href -}}
 	<div class="flex-row flex-align-center margin-vertical-lg">
-		<img src="{{$actor.Icon.Href}}" class="circle width-64">
+		{{- if ne "" $iconURL -}}
+			<img src="{{$iconURL}}" alt="" class="circle width-64">
+		{{- else -}}
+			<div class="circle width-64 flex-center">{{icon "person"}}</div>
+		{{- end -}}
 		<div>
 			<div class="margin-none text-lg bold">{{$actor.Name}}</div>
 			<div class="margin-none text-gray">Receiving updates via email</div>

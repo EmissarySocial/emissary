@@ -10,7 +10,12 @@
 		<div class="flex-row clickable card text-sm padding-xs margin-bottom-sm {{ if eq $url $document.ID}}selected{{end}}">
 
 			<div hx-get="/@me/newsfeed/browse-tree?url={{$document.ID}}" class="flex-row flex-grow flex-align-center">
-				<img src="{{$document.AttributedTo.Icon.Href}}" alt="" class="circle width-32">
+				{{- $iconURL := $document.AttributedTo.Icon.Href -}}
+				{{- if ne "" $iconURL -}}
+					<img src="{{$iconURL}}" alt="" class="circle width-32">
+				{{- else -}}
+					<div class="circle width-32 flex-center">{{icon "person"}}</div>
+				{{- end -}}
 				<div class="padding-horizontal-xs nowrap">{{$document.Published | tinyDate }}</div>
 				<div class="flex-grow ellipsis-block" style="height:1.5em;">
 					{{$document.Content | summary | html }}

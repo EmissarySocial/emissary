@@ -6,12 +6,16 @@
 	{{- $isMyself := .IsMyself -}}
 
 	{{- range $index, $stream := $outbox -}}
-		{{- $document := $outboxBuilder.ActivityStream $stream.URL -}}
+		{{- $iconURL := $stream.AttributedTo.IconURL -}}
 		<hr>
 		<div class="hover-trigger flex-row">
 			<div script="on click go to url '/{{$stream.ID}}'" role="link" class="flex-grow-1 flex-row h-entry margin-bottom turboclick">
 				<div class="flex-shrink-0" style="width:80px;">
-					<img src="{{$stream.AttributedTo.IconURL}}" class="circle width-64" loading="lazy">
+					{{- if ne "" $iconURL -}}
+						<img src="{{$iconURL}}" alt="" class="circle width-64" loading="lazy">
+					{{- else -}}
+						<div class="circle width-64 flex-center">{{icon "person"}}</div>
+					{{- end -}}
 				</div>
 				<div class="flex-grow-1" style="max-width:600px;">
 					{{- if ne "" $stream.Label -}}

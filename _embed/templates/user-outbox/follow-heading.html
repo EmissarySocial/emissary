@@ -1,6 +1,11 @@
+{{- $iconURL := .IconURL -}}
 <div class="flex-row flex-align-center">
 	<div class="width-48">
-		<img src="{{.IconURL}}" class="circle width-64">
+		{{- if ne "" $iconURL -}}
+			<img src="{{$iconURL}}" alt="" class="circle width-64">
+		{{- else -}}
+			<div class="circle width-64 flex-center">{{icon "person"}}</div>
+		{{- end -}}
 	</div>
 	<div>
 		<h1 class="text-xl margin-none">Follow {{.DisplayName}}</h1>

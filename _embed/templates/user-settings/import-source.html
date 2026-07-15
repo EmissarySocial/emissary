@@ -5,9 +5,14 @@
 		<!--i class="bi bi-cloud-download"></i-->
 		Importing From {{domainOnly .URL}}
 	</div>
+	{{- $iconURL := .Icon.Href -}}
 	<div class="margin-bottom-lg flex-row">
 		<div>
-			<img src="{{.Icon.Href}}" class="width-64 circle">
+			{{- if ne "" $iconURL -}}
+				<img src="{{$iconURL}}" alt="" class="width-64 circle">
+			{{- else -}}
+				<div class="width-64 circle flex-center">{{icon "person"}}</div>
+			{{- end -}}
 		</div>
 		<div>
 			<div class="bold">{{.Name}}</div>

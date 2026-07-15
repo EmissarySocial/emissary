@@ -19,9 +19,14 @@
 				<img src="{{$domain.ImageURL}}" style="max-width:50%; max-height:64px;">
 			</div>
 
+			{{- $userIconURL := $user.IconURL -}}
 			<div class="flex-row flex-align-center margin-bottom">
 				<div class="width-32">
-					<img src="{{$user.IconURL}}" class="circle width-100%">
+					{{- if ne "" $userIconURL -}}
+						<img src="{{$userIconURL}}" alt="" class="circle width-100%">
+					{{- else -}}
+						<div class="circle width-100% flex-center">{{icon "person"}}</div>
+					{{- end -}}
 				</div>
 				<div class="flex-grow">
 					<div class="text-xs text-gray">Signed In As:</div>
