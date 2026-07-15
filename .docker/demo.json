@@ -16,7 +16,7 @@
             "createOwner": true,
             "owner": {
                 "displayName": "Demo Admin",
-                "username": "admin ",
+                "username": "admin",
                 "emailAddress": "",
                 "phoneNumber": "",
                 "mailingAddress": ""
