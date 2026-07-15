@@ -15,15 +15,23 @@ import (
 // onboarding loop: completing the /startup wizard saved the theme but created zero
 // streams, so /home had no "home" stream and 307-redirected back to /startup forever.
 //
-// The root cause was that Stream.Startup fed each theme.StartupStreams entry -- which
-// carries the article body under a whole "content" model.Content object -- straight
-// through streamSchema.SetAll, and rosetta's object-Set cannot assign a whole object in
-// one call.  Every startup stream failed at that first step and was silently skipped.
+// Two stacked defects had to be fixed for a fresh domain to be initializable:
+//
+//  1. Stream.Startup fed each theme.StartupStreams entry -- which carries the article
+//     body under a whole "content" model.Content object -- straight through
+//     streamSchema.SetAll, and rosetta's object-Set cannot assign a whole object in one
+//     call.  Every startup stream failed at that first step and was silently skipped.
+//
+//  2. Once SetAll was fixed, the pre-Save streamSchema.Validate call rejected the streams,
+//     because Validate treats ANY rewrite as failure and the "html" format sanitizer
+//     always rewrites freshly-rendered article HTML.  Save (which Normalizes rather than
+//     Validates) is the correct gate.
 //
 // This test loads the REAL shipping default theme (theme.hjson + its content/*.{json,md}
 // files, injected exactly as the Theme service does) so it can't drift from what a fresh
-// install actually feeds Startup, then drives the extracted newStartupStream seam and
-// asserts every startup stream -- most importantly "home" -- builds without error.
+// install actually feeds Startup.  It drives the extracted newStartupStream builder and
+// then Normalizes -- the same operation Save performs before persisting -- proving each
+// startup stream, most importantly "home", is both buildable and persistable.
 func TestStream_Startup_DefaultThemeStreams(t *testing.T) {
 
 	const themeDir = "../_embed/templates/theme-default"
@@ -37,15 +45,22 @@ func TestStream_Startup_DefaultThemeStreams(t *testing.T) {
 	require.NotEmpty(t, theme.StartupStreams, "default theme must define startup streams")
 
 	// Inject default content the same way service.Theme does on load, using the real
-	// Content service so the "content" key holds a genuine model.Content object.
+	// Content service (with the same editorJS block handlers as production) so the
+	// "content" key holds a genuine, fully-rendered model.Content object.
 	engine := goeditorjs.NewHTMLEngine()
-	engine.RegisterBlockHandlers(&goeditorjs.HeaderHandler{}, &goeditorjs.ParagraphHandler{})
+	engine.RegisterBlockHandlers(
+		&goeditorjs.HeaderHandler{},
+		&goeditorjs.ParagraphHandler{},
+		&goeditorjs.ListHandler{},
+		&goeditorjs.ImageHandler{},
+		&goeditorjs.RawHTMLHandler{},
+	)
 	contentService := NewContent(engine)
 
 	themeService := NewTheme(nil, &contentService, nil)
 	themeService.setStartupContent(&theme, os.DirFS(themeDir+"/content"))
 
-	// newStartupStream needs only the (dependency-free) Stream schema
+	// newStartupStream + Schema().Normalize are both dependency-free
 	streamService := &Stream{}
 
 	foundHome := false
@@ -70,6 +85,13 @@ func TestStream_Startup_DefaultThemeStreams(t *testing.T) {
 			require.Equal(t, content.Format, stream.Content.Format, "content must survive for %q", token)
 			require.Equal(t, content.Raw, stream.Content.Raw, "content must survive for %q", token)
 		}
+
+		// End-to-end proof: the built Stream must survive the same normalization that Save
+		// applies before persisting.  This is the step that failed once SetAll was fixed --
+		// Normalize rewrites the sanitized HTML in place rather than rejecting it, so a
+		// fresh domain can actually be initialized.
+		_, err = streamService.Schema().Normalize(&stream)
+		require.NoError(t, err, "startup stream %q must normalize for Save", token)
 
 		if token == "home" {
 			foundHome = true
@@ -116,4 +138,8 @@ func TestStream_newStartupStream_ExcludesContentObject(t *testing.T) {
 	require.Equal(t, model.ContentFormatEditorJS, stream.Content.Format)
 	require.Equal(t, `<p>hi</p>`, stream.Content.HTML)
 	require.Zero(t, stream.PublishDate)
+
+	// The built Stream must also survive Save's normalization gate.
+	_, err = streamService.Schema().Normalize(&stream)
+	require.NoError(t, err)
 }
