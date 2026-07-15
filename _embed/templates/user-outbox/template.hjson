@@ -258,7 +258,7 @@
 						type:layout-vertical
 						children: [
 							{type:"text", path:"displayName", label:"Full Name", description:"Displayed publicly. The name you want to be known by.", options:{autocomplete:"name", required:true}}
-							{type:"text", path:"username", label:"Username", description:"Displayed publicly. How others will find you online.", options:{autocomplete:"off", required:true, validator:"/.validate/username"}}
+							{type:"text", path:"username", label:"Username", description:"Displayed publicly. How others will find you online.", options:{autocomplete:"off", required:true, validator:"/.validate/user/username"}}
 							{type:"text", path:"emailAddress", label:"Email Address", description:"Used to sign in, and support your account. Not shared. Not displayed publicly.", options:{autocomplete:"email", required:true}}
 							{type:"password", path:"new_password", label:"Choose Your Password", description:"At least 8 characters. Please use a Password Manager.", options:{autocomplete:"new-password", minLength:8, required:true}}
 						]
