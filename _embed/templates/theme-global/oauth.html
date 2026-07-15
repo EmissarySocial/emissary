@@ -16,7 +16,7 @@
 		<div class="margin-horizontal-auto" style="width:clamp(540px, 50%, 720px);">
 
 			<div class="margin-vertical-lg">
-				<img src="{{$domain.ImageURL}}" style="max-width:50%; max-height:64px;">
+				<img src="{{$domain.ImageURL}}" alt="{{$domain.Name}}" style="max-width:50%; max-height:64px;">
 			</div>
 
 			{{- $userIconURL := $user.IconURL -}}
@@ -52,7 +52,7 @@
 
 					<div class="flex-row flex-align-center margin-top margin-bottom-lg">
 						{{- if ne "" .IconURL -}}
-							<img src="{{.IconURL}}" class="circle width-64">
+							<img src="{{.IconURL}}" alt="" class="circle width-64">
 						{{- end -}}
 						<div class="flex-grow">
 							<div class="margin-none"><span class="text-lg bold">{{$name}}</span> is requesting permission to:</div>
