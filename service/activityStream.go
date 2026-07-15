@@ -293,11 +293,6 @@ func (service *ActivityStream) QueryReplies(ctx context.Context, inReplyTo strin
 	return service.queryByRelation(ctx, "Reply", inReplyTo, "after", 0, done)
 }
 
-// QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
-func (service *ActivityStream) QueryRepliesBeforeDate(ctx context.Context, inReplyTo string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
-	return service.queryByRelation(ctx, "Reply", inReplyTo, "before", maxDate, done)
-}
-
 // QueryRepliesAfterDate returns a slice of streams.Document values that are replies to the specified document, and were published after the specified date.
 func (service *ActivityStream) QueryRepliesAfterDate(ctx context.Context, inReplyTo string, minDate int64, maxRows int64) sliceof.Object[ascache.Value] {
 
@@ -321,15 +316,13 @@ func (service *ActivityStream) QueryRepliesAfterDate(ctx context.Context, inRepl
 	return result
 }
 
-func (service *ActivityStream) QueryAnnouncesBeforeDate(ctx context.Context, relationHref string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
-	return service.queryByRelation(ctx, vocab.ActivityTypeAnnounce, relationHref, "before", maxDate, done)
-}
-
+// QueryLikesBeforeDate returns a channel of "Like" documents that target the specified URL, published before the specified date.
 func (service *ActivityStream) QueryLikesBeforeDate(ctx context.Context, relationHref string, maxDate int64, done <-chan struct{}) <-chan streams.Document {
 	return service.queryByRelation(ctx, vocab.ActivityTypeLike, relationHref, "before", maxDate, done)
 }
 
-// QueryRepliesBeforeDate returns a slice of streams.Document values that are replies to the specified document, and were published before the specified date.
+// queryByRelation returns a channel of streams.Document values related to the specified URL,
+// cut off "before" or "after" the specified date.
 func (service *ActivityStream) queryByRelation(ctx context.Context, relationType string, relationHref string, cutType string, cutDate int64, done <-chan struct{}) <-chan streams.Document {
 
 	const location = "service.ActivityStream.QueryRelated"

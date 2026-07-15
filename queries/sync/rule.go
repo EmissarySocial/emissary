@@ -33,7 +33,7 @@ func Rule(ctx context.Context, database *mongo.Database) error {
 				{Key: "publishDate", Value: -1},
 			},
 			Options: options.Index().SetUnique(true).SetPartialFilterExpression(bson.D{
-				{Key: "public", Value: true},
+				{Key: "isPublic", Value: true},
 			}),
 		},
 	})

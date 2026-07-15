@@ -73,10 +73,13 @@ func PostDomainBlock(serverFactory *server.Factory) func(model.Authorization, tx
 		}
 
 		defer cancel()
+
 		// Create the new "Domain Rule"
+		// RULE: A Mastodon "domain block" is a BLOCK, not NewRule()'s MUTE default
 		rule := model.NewRule()
 		rule.UserID = auth.UserID
 		rule.Type = model.RuleTypeDomain
+		rule.Action = model.RuleActionBlock
 		rule.Trigger = t.Domain
 
 		// Save it to the database

@@ -98,9 +98,9 @@ func buildAdmin_GetBuilder(ctx *steranko.Context, factory *service.Factory, sess
 
 		rule := model.NewRule()
 
+		// RULE: The admin console manages server-wide Rules only, never a User's personal Rules
 		if !objectID.IsZero() {
-			authorization := getAuthorization(ctx)
-			if err := factory.Rule().LoadByID(session, authorization.UserID, objectID, &rule); err != nil {
+			if err := factory.Rule().LoadServerWideByID(session, objectID, &rule); err != nil {
 				return nil, derp.Wrap(err, location, "Unable to load Rule", objectID)
 			}
 		}

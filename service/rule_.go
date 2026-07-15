@@ -295,6 +295,21 @@ func (service *Rule) LoadByID(session data.Session, userID primitive.ObjectID, r
 	return service.Load(session, criteria, rule)
 }
 
+// LoadServerWideByID retrieves a single server-wide Rule — one owned by no User —
+// for the admin console.  User-owned Rules are never returned.
+func (service *Rule) LoadServerWideByID(session data.Session, ruleID primitive.ObjectID, rule *model.Rule) error {
+
+	// RULE: RuleID cannot be zero
+	if ruleID.IsZero() {
+		return derp.Validation("RuleID cannot be zero")
+	}
+
+	criteria := exp.Equal("_id", ruleID).
+		AndEqual("userId", primitive.NilObjectID)
+
+	return service.Load(session, criteria, rule)
+}
+
 func (service *Rule) LoadByToken(session data.Session, userID primitive.ObjectID, token string, rule *model.Rule) error {
 
 	// RULE: UserID cannot be zero
@@ -426,7 +441,7 @@ func (service *Rule) QueryDomainBlocks(session data.Session) ([]model.Rule, erro
 
 	criteria := exp.Equal("userId", primitive.NilObjectID).
 		AndEqual("type", model.RuleTypeDomain).
-		AndEqual("behavior", model.RuleActionBlock)
+		AndEqual("action", model.RuleActionBlock)
 
 	return service.Query(session, criteria, option.SortAsc("trigger"))
 }
@@ -436,7 +451,7 @@ func (service *Rule) QueryBlockedActors(session data.Session, userID primitive.O
 
 	criteria := service.byUserID(userID).
 		AndEqual("type", model.RuleTypeActor).
-		AndEqual("behavior", model.RuleActionBlock)
+		AndEqual("action", model.RuleActionBlock)
 
 	return service.Query(session, criteria, option.SortAsc("trigger"))
 }

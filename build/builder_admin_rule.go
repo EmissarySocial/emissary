@@ -155,29 +155,12 @@ func (w Rule) Label() string {
  * Query Builders
  ******************************************/
 
-func (w Rule) Rules() *QueryBuilder[model.Rule] {
-
-	query := builder.NewBuilder().
-		String("type").
-		String("behavior").
-		String("trigger")
-
-	criteria := exp.And(
-		query.Evaluate(w._request.URL.Query()),
-		exp.Equal("userId", w._authorization.UserID),
-		exp.Equal("deleteDate", 0),
-	)
-
-	result := NewQueryBuilder[model.Rule](w._factory.Rule(), w._session, criteria)
-
-	return &result
-}
-
+// ServerWideRules returns a QueryBuilder for the domain-level Rules (owned by no User) that apply to every account on this server
 func (w Rule) ServerWideRules() *QueryBuilder[model.Rule] {
 
 	query := builder.NewBuilder().
 		String("type").
-		String("behavior").
+		String("action").
 		String("trigger")
 
 	criteria := exp.And(

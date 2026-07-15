@@ -362,10 +362,12 @@ func PostAccount_Block(serverFactory *server.Factory) func(model.Authorization, 
 		defer cancel()
 
 		// Create a new Rule record
+		// RULE: A Mastodon "block" is a BLOCK, not NewRule()'s MUTE default
 		ruleService := factory.Rule()
 		rule := model.NewRule()
 		rule.UserID = auth.UserID
 		rule.Type = model.RuleTypeActor
+		rule.Action = model.RuleActionBlock
 		rule.Trigger = t.ID
 
 		if err := ruleService.Save(session, &rule, "Created via Mastodon API"); err != nil {

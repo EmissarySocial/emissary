@@ -16,7 +16,6 @@ type RuleSummary struct {
 	RuleID         primitive.ObjectID `bson:"_id"`
 	Type           string             `bson:"type"`
 	Action         string             `bson:"action"`
-	Behavior       string             `bson:"behavior"`
 	Trigger        string             `bson:"trigger"`
 	Label          string             `bson:"label"`
 	FollowingLabel string             `bson:"followingLabel"`
@@ -29,7 +28,6 @@ func RuleSummaryFields() []string {
 		"_id",
 		"type",
 		"action",
-		"behavior",
 		"trigger",
 		"label",
 		"followingLabel",
@@ -38,12 +36,6 @@ func RuleSummaryFields() []string {
 
 func (rule RuleSummary) Fields() []string {
 	return RuleSummaryFields()
-}
-
-// IsAllowed returns TRUE if the document should be allowed based on
-// this rule.  (i.e. the document DOES NOT match the rule)
-func (rule RuleSummary) IsAllowed(document *streams.Document) bool {
-	return !rule.IsDisallowed(document)
 }
 
 // IsDisallowed returns TRUE if the document SHOULD NOT BE allowed based on

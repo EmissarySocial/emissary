@@ -571,29 +571,6 @@ func (w Inbox) QueryByContext(contextID string, afterDate int64, maxRows int) (s
 	return result, err
 }
 
-func (w Inbox) RepliesBefore(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
-
-	done := make(channel.Done)
-
-	// Get all ActivityStreams that reply to the provided URL
-	activityService := w._factory.ActivityStream()
-	maxDate := convert.Int64Default(dateString, math.MaxInt)
-	replies := activityService.QueryRepliesBeforeDate(w._request.Context(), url, maxDate, done)
-
-	// Filter replies based on rules
-	ruleService := w._factory.Rule()
-	ruleFilter := ruleService.Filter(w.AuthenticatedID())
-	filteredReplies := ruleFilter.Channel(replies)
-
-	// Limit to maximum number of replies
-	// limitedReplies := channel.Limit(maxRows, filteredReplies, done)
-	// result := channel.Slice(limitedReplies)
-	result := channel.Slice(filteredReplies)
-
-	// For glory and honor!
-	return slice.Reverse(result)
-}
-
 // LikesBefore returns the actors who "Liked" the specified URL, before the specified date.
 // Unlike the Stream builder's LikeLinksAfter (which reads a LOCAL Likes collection), the inbox
 // object may be remote, so likes are drawn from the federated ActivityStream cache instead.
