@@ -102,7 +102,7 @@
 
 									{{- if $image.NotNil -}}
 										<div class="margin-vertical">
-											<img src="{{$image.Href}}" loading="lazy" class="rounded width-100% max-width-512" style="{{if $image.HasDimensions}}aspect-ratio:{{$image.AspectRatio}}{{end}}"/>
+											<img src="{{$image.Href}}" alt="{{$image.Summary}}" loading="lazy" class="rounded width-100% max-width-512" style="{{if $image.HasDimensions}}aspect-ratio:{{$image.AspectRatio}}{{end}}"/>
 										</div>
 									{{- end -}}
 

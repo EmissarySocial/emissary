@@ -63,8 +63,9 @@
 					<div class="bold margin-top">{{$object.Name}}</div>
 				{{- end -}}
 
-				{{- if $object.Image.NotNil -}}
-					<div class="margin-vertical"><img src="{{$object.Image.Href}}" class="width-100%"></div>
+				{{- $objectImage := $object.Image -}}
+				{{- if $objectImage.NotNil -}}
+					<div class="margin-vertical"><img src="{{$objectImage.Href}}" alt="{{$objectImage.Summary}}" class="width-100%"></div>
 				{{- end -}}
 			
 				<div>{{ template "tags" $document }}</div>

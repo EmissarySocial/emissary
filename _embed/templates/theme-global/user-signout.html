@@ -12,10 +12,11 @@
 		<div class="card align-center" style="width:clamp(540px, 50%, 720px); margin:auto; padding:16px 32px; line-height:150%;">
 			
 			<div class="margin-vertical-xl">
-				{{- if ne "" .domainImage -}}
-					<img src="{{.DomainImage}}" style="width:60%; margin:0px auto; display:block;">
+				{{- $domainImage := .DomainImage -}}
+				{{- if ne "" $domainImage -}}
+					<img src="{{$domainImage}}" alt="{{.DomainName}}" style="width:60%; margin:0px auto; display:block;">
 				{{- else -}}
-					<div class="bold text-gray text-lg margin-none">{{.domainName}}</div>
+					<div class="bold text-gray text-lg margin-none">{{.DomainName}}</div>
 				{{- end -}}
 			</div>
 	

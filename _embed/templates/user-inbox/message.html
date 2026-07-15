@@ -84,7 +84,7 @@
 						{{- $image := $document.ImageOrIcon -}}
 						{{- if $image.NotNil -}}
 							<div class="margin-bottom">
-								<a href="{{$document.URLOrID}}" target="_blank"><img src="{{$image.URL}}" class="width-100%" style="{{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
+								<a href="{{$document.URLOrID}}" target="_blank"><img src="{{$image.URL}}" alt="{{$image.Summary}}" class="width-100%" style="{{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
 							</div>
 						{{- end -}}
 					{{- end -}}

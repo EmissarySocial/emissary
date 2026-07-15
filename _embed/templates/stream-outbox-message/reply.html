@@ -29,8 +29,9 @@
 				<div class="bold">{{$stream.Name}}</div>
 			{{- end -}}
 
-			{{- if $stream.Image.NotNil -}}
-				<div class="margin-vertical"><img src="{{$stream.Image.Href}}" class="width-100%"></div>
+			{{- $streamImage := $stream.Image -}}
+			{{- if $streamImage.NotNil -}}
+				<div class="margin-vertical"><img src="{{$streamImage.Href}}" alt="{{$streamImage.Summary}}" class="width-100%"></div>
 			{{- end -}}
 		
 			<div class="margin-bottom">{{$stream.Content | htmlMinimal}}</div>

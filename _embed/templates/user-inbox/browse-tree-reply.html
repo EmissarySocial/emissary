@@ -47,9 +47,10 @@
 					<div class="ShowMore-content" style="max-height:320px; overflow-y:hidden;">
 						{{ $document.Content | htmlMinimal }}
 
-						{{- if ne "" $document.Image.Href -}}
+						{{- $documentImage := $document.Image -}}
+						{{- if ne "" $documentImage.Href -}}
 							<div class="margin-top-large">
-								<img src="{{$document.Image.Href}}" class="block width-100%">
+								<img src="{{$documentImage.Href}}" alt="{{$documentImage.Summary}}" class="block width-100%">
 							</div>
 						{{- end -}}
 					</div>

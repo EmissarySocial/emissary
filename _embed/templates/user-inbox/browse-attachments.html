@@ -24,7 +24,8 @@
 	<div class="margin-top-lg cols-6">
 		{{- range $attachment := $document.Attachment.Range -}}
 			{{- if hasPrefix $attachment.MediaType "image/" -}}
-				<img src="{{$attachment.URL}}" 
+				<img src="{{$attachment.URL}}"
+					alt="{{$attachment.Summary}}"
 					class="clickable"
 					style="min-height:60px; max-height:240px; aspect-ratio:{{$attachment.AspectRatio}};"
 					script="on click send showImageDetail(url:my src) to #id_{{$document.Metadata.HashedID}}_preview"/>
@@ -37,7 +38,7 @@
 	{{- $image := $document.ImageOrIcon -}}
 	{{- if $image.NotNil -}}
 		<div class="margin-top-lg">
-			<img src="{{$image.URL}}" style="min-height:60px; max-height:240px; {{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/>
+			<img src="{{$image.URL}}" alt="{{$image.Summary}}" style="min-height:60px; max-height:240px; {{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/>
 		</div>
 	{{- end -}}
 

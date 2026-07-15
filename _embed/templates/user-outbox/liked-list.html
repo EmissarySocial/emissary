@@ -34,8 +34,9 @@
 							{{- end -}}
 						</div>
 						<div>
-							{{- if ne "" $document.Image.Href -}}
-								<div><img src="{{$document.Image.Href}}" loading="lazy" style="max-width:100%"></div>
+							{{- $image := $document.Image -}}
+							{{- if ne "" $image.Href -}}
+								<div><img src="{{$image.Href}}" alt="{{$image.Summary}}" loading="lazy" style="max-width:100%"></div>
 							{{- end -}}
 							{{- if ne "" $document.Content -}}
 								<div>
