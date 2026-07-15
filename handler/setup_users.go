@@ -219,18 +219,10 @@ func displayDomainUsersModal(ctx echo.Context, factory *service.Factory, session
 		"UpdatedID": ctx.QueryParam("userId"),
 	}
 
-	// Pick the template based on the current Domain
-	filename := "users.html"
-
-	/*
-		if factory.IsLocalhost() {
-			filename = "users-local.html"
-		}
-	*/
-
-	// Build the modal dialog body
+	// Build the modal dialog body.  Server admins can set owner passwords on ANY domain
+	// (not just localhost), so there is a single template for every domain.
 	var buffer bytes.Buffer
-	if err := templates.ExecuteTemplate(&buffer, filename, data); err != nil {
+	if err := templates.ExecuteTemplate(&buffer, "users.html", data); err != nil {
 		return derp.Wrap(err, location, "Error executing template")
 	}
 
