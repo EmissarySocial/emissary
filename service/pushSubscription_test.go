@@ -193,7 +193,7 @@ func TestPushSubscription_Upsert_RefusesAnotherUsersEndpoint(t *testing.T) {
 	err := service.Upsert(session, attacker, endpoint, "attacker-p256dh", "attacker-auth", "attacker-agent")
 
 	require.NotNil(t, err, "claiming another User's endpoint must be refused")
-	require.Equal(t, http.StatusConflict, derp.ErrorCode(err), "must be a 409 -- the browser retries on 409, but must NOT retry the 403 that EndpointIsAllowed returns")
+	require.Equal(t, http.StatusConflict, derp.ErrorCode(err), "must be Conflict: the browser re-registers on Conflict, but must leave a Forbidden endpoint alone")
 
 	// The victim's row must be untouched: same owner, same keys.
 	require.Len(t, store.records, 1)

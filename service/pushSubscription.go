@@ -65,7 +65,7 @@ func (service *PushSubscription) Range(session data.Session, criteria exp.Expres
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.PushSubscription.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.PushSubscription.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewPushSubscription), nil
@@ -75,7 +75,7 @@ func (service *PushSubscription) Range(session data.Session, criteria exp.Expres
 func (service *PushSubscription) Load(session data.Session, criteria exp.Expression, sub *model.PushSubscription) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), sub); err != nil {
-		return derp.Wrap(err, "service.PushSubscription.Load", "Unable to load PushSubscription", criteria)
+		return derp.Wrap(err, "service.PushSubscription.Load", "Loading PushSubscription", criteria)
 	}
 
 	return nil
@@ -87,30 +87,29 @@ func (service *PushSubscription) Save(session data.Session, sub *model.PushSubsc
 	const location = "service.PushSubscription.Save"
 
 	if _, err := service.Schema().Validate(sub); err != nil {
-		return derp.Wrap(err, location, "Unable to validate PushSubscription", sub)
+		return derp.Wrap(err, location, "Validating PushSubscription", sub)
 	}
 
 	if err := service.collection(session).Save(sub, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save PushSubscription", sub, note)
+		return derp.Wrap(err, location, "Saving PushSubscription", sub, note)
 	}
 
 	return nil
 }
 
 // Delete removes a PushSubscription from the database (hard delete)
-//
-// RULE: PushSubscriptions are hard-deleted, never virtual-deleted.  Every value in the record is
-// minted by the browser (the endpoint and its crypto keys), so a tombstone could never be
-// resurrected -- re-enabling push always mints a fresh subscription.  It would only retain a device
-// identifier and its secrets after the User asked us to stop pushing to them.
 func (service *PushSubscription) Delete(session data.Session, sub *model.PushSubscription, note string) error {
 
 	const location = "service.PushSubscription.Delete"
 
+	// Hard delete, never virtual: every value here is minted by the browser, so a tombstone could
+	// never be resurrected -- it would only retain a device identifier and its secrets after the
+	// User asked us to stop pushing to them.
 	if err := service.collection(session).HardDelete(exp.Equal("_id", sub.PushSubscriptionID)); err != nil {
-		return derp.Wrap(err, location, "Unable to delete PushSubscription", sub, note)
+		return derp.Wrap(err, location, "Deleting PushSubscription", sub, note)
 	}
 
+	// This subscription has left the building.
 	return nil
 }
 
@@ -132,43 +131,96 @@ func (service *PushSubscription) LoadByEndpoint(session data.Session, endpoint s
 	return service.Load(session, exp.Equal("endpoint", endpoint), sub)
 }
 
-// Upsert creates or updates a PushSubscription for a User, keyed by endpoint.  The userID is taken
-// from the authenticated session (never the request body), so one User cannot overwrite another's
-// subscription.
+// Upsert creates or updates a PushSubscription for a User, keyed by endpoint
 func (service *PushSubscription) Upsert(session data.Session, userID primitive.ObjectID, endpoint string, p256dh string, auth string, userAgent string) error {
 
 	const location = "service.PushSubscription.Upsert"
 
+	// Load any subscription that already claims this endpoint
 	sub := model.NewPushSubscription()
 	err := service.LoadByEndpoint(session, endpoint, &sub)
 
 	if err != nil && !derp.IsNotFound(err) {
-		return derp.Wrap(err, location, "Unable to load PushSubscription", endpoint)
+		return derp.Wrap(err, location, "Loading PushSubscription", endpoint)
 	}
 
-	// Whether new or existing, (re)bind it to THIS user and refresh the keys.
+	// RULE: An endpoint identifies a BROWSER, so only its current owner may re-bind it.  The row is
+	// globally unique, so rebinding would transfer it, silently ending the previous owner's push.
+	if !sub.IsNew() && (sub.UserID != userID) {
+		return errEndpointConflict(location, endpoint)
+	}
+
+	// Bind the subscription to this User, refreshing the keys that the browser minted
 	sub.UserID = userID
 	sub.Endpoint = endpoint
 	sub.P256DH = p256dh
 	sub.Auth = auth
 	sub.UserAgent = userAgent
 
-	if err := service.Save(session, &sub, "Upsert push subscription"); err != nil {
-		return derp.Wrap(err, location, "Unable to save PushSubscription", endpoint)
+	saveErr := service.Save(session, &sub, "Upsert push subscription")
+
+	if saveErr == nil {
+		return nil
 	}
 
+	// A lost creation race trips the unique endpoint index: a concurrent request inserted this
+	// endpoint between our Load and our Save.  Re-apply the ownership rule against the winner rather
+	// than retrying blindly, which would hand the loser the winner's subscription.
+	if derp.IsConflict(saveErr) {
+		return service.upsertOntoRaceWinner(session, &sub, userID, endpoint)
+	}
+
+	return derp.Wrap(saveErr, location, "Saving PushSubscription", endpoint)
+}
+
+// upsertOntoRaceWinner completes an Upsert that lost a creation race, folding onto the winner's record
+func (service *PushSubscription) upsertOntoRaceWinner(session data.Session, sub *model.PushSubscription, userID primitive.ObjectID, endpoint string) error {
+
+	const location = "service.PushSubscription.upsertOntoRaceWinner"
+
+	// Load the record that won the race
+	existing := model.NewPushSubscription()
+
+	if err := service.LoadByEndpoint(session, endpoint, &existing); err != nil {
+		return derp.Wrap(err, location, "Re-loading PushSubscription after duplicate-key conflict", endpoint)
+	}
+
+	// RULE: the winner may belong to a different User, so the ownership rule applies here too
+	if existing.UserID != userID {
+		return errEndpointConflict(location, endpoint)
+	}
+
+	// Adopt the winner's identity, which makes the Save below update in place instead of inserting
+	// a second row.  Reaching here means the same User registered twice at once.
+	sub.PushSubscriptionID = existing.PushSubscriptionID
+	sub.Journal = existing.Journal
+
+	if err := service.Save(session, sub, "Upsert push subscription"); err != nil {
+		return derp.Wrap(err, location, "Saving PushSubscription after duplicate-key conflict", endpoint)
+	}
+
+	// Second place is still a winner.
 	return nil
 }
 
+// errEndpointConflict returns the (409) Conflict for an endpoint that belongs to a different User
+func errEndpointConflict(location string, endpoint string) error {
+
+	// RULE: Conflict means "someone else owns this endpoint", and the browser answers it by retiring
+	// its subscription and registering a fresh one.  Never widen this to the Forbidden that
+	// PostPushSubscription returns for a disallowed endpoint, which the browser must not retry.
+	return derp.Conflict(location, "This push endpoint is already registered to a different User", endpoint)
+}
+
 // DeleteByEndpoint removes the PushSubscription with the provided endpoint (e.g. after a 404/410
-// from the push service, or on explicit unsubscribe).  Deleting an endpoint that is already gone
-// is not an error.
+// from the push service, or on explicit unsubscribe)
 func (service *PushSubscription) DeleteByEndpoint(session data.Session, endpoint string, note string) error {
 
 	const location = "service.PushSubscription.DeleteByEndpoint"
 
+	// HardDelete matches nothing when the endpoint is already gone, which makes this idempotent.
 	if err := service.collection(session).HardDelete(exp.Equal("endpoint", endpoint)); err != nil {
-		return derp.Wrap(err, location, "Unable to delete PushSubscription", endpoint, note)
+		return derp.Wrap(err, location, "Deleting PushSubscription", endpoint, note)
 	}
 
 	return nil
@@ -180,7 +232,7 @@ func (service *PushSubscription) DeleteByUserID(session data.Session, userID pri
 	const location = "service.PushSubscription.DeleteByUserID"
 
 	if err := service.collection(session).HardDelete(exp.Equal("userId", userID)); err != nil {
-		return derp.Wrap(err, location, "Unable to delete PushSubscriptions", userID, note)
+		return derp.Wrap(err, location, "Deleting PushSubscriptions", userID, note)
 	}
 
 	return nil

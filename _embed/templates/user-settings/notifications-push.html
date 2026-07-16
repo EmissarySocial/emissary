@@ -73,20 +73,45 @@
 
 	// --- Subscribe / unsubscribe -------------------------------------------------------------
 
-	async function subscribe() {
-		var reg = await swReady;
-		var permission = await Notification.requestPermission();
-		if (permission !== "granted") { return false; }
-		var sub = await reg.pushManager.subscribe({
+	function subscribeOptions() {
+		return {
 			userVisibleOnly: true,
 			applicationServerKey: urlBase64ToUint8Array(vapid)
-		});
-		await fetch("/@me/push-subscriptions", {
+		};
+	}
+
+	function postSubscription(sub) {
+		return fetch("/@me/push-subscriptions", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify(sub)
 		});
-		return true;
+	}
+
+	async function subscribe() {
+		var reg = await swReady;
+		var permission = await Notification.requestPermission();
+		if (permission !== "granted") { return false; }
+
+		var sub = await reg.pushManager.subscribe(subscribeOptions());
+		var response = await postSubscription(sub);
+
+		// 409 CONFLICT: this browser is holding an endpoint that belongs to a DIFFERENT user --
+		// a shared device whose previous user never signed out cleanly.  The server refuses to
+		// transfer it (that check is what stops a leaked endpoint being claimed remotely), but we
+		// are inside the browser that owns this subscription, so we may retire it and mint a fresh
+		// endpoint for THIS user.  Once only: a newly minted endpoint cannot collide.
+		//
+		// NOTE: a 403 is NOT retried here — that is the server rejecting the endpoint itself
+		// (see WebPush.EndpointIsAllowed), and re-subscribing would destroy a good subscription
+		// to no purpose.
+		if (response.status === 409) {
+			await sub.unsubscribe();
+			sub = await reg.pushManager.subscribe(subscribeOptions());
+			response = await postSubscription(sub);
+		}
+
+		return response.ok;
 	}
 
 	async function unsubscribe() {

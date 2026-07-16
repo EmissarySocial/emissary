@@ -20,18 +20,19 @@ type pushSubscriptionRequest struct {
 	} `json:"keys"`
 }
 
-// PostPushSubscription upserts a Web Push subscription for the authenticated User.  The userID comes
-// from the session (never the request body), so one User cannot register a subscription for another.
+// PostPushSubscription upserts a Web Push subscription for the authenticated User
 func PostPushSubscription(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.PostPushSubscription"
 
+	// Parse the browser's subscription from the request body
 	var body pushSubscriptionRequest
 
 	if err := ctx.Bind(&body); err != nil {
 		return derp.Wrap(err, location, "Unable to parse request body", derp.WithBadRequest())
 	}
 
+	// RULE: A subscription is useless without its endpoint and both crypto keys
 	if body.Endpoint == "" || body.Keys.P256DH == "" || body.Keys.Auth == "" {
 		return derp.BadRequest(location, "endpoint, keys.p256dh, and keys.auth are all required")
 	}
@@ -42,6 +43,8 @@ func PostPushSubscription(ctx *steranko.Context, factory *service.Factory, sessi
 		return derp.Forbidden(location, "Push endpoint is not allowed")
 	}
 
+	// Bind the subscription to this User.  The userID comes from the session, never the body, so a
+	// caller cannot name a different owner; Upsert separately refuses another User's endpoint.
 	userAgent := ctx.Request().UserAgent()
 
 	if err := factory.PushSubscription().Upsert(session, user.UserID, body.Endpoint, body.Keys.P256DH, body.Keys.Auth, userAgent); err != nil {
