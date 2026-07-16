@@ -63,6 +63,22 @@ func NewResponse() Response {
 	}
 }
 
+// ConflictingResponseTypes returns every Response type that cannot coexist with the provided
+// type on a single (User, Object).  The provided type is always included in the result, so that
+// re-reacting replaces the previous Response instead of duplicating it.
+func ConflictingResponseTypes(responseType string) []string {
+
+	// RULE: A Like and a Dislike contradict each other, so setting either one clears the other.
+	switch responseType {
+	case vocab.ActivityTypeLike, vocab.ActivityTypeDislike:
+		return []string{vocab.ActivityTypeLike, vocab.ActivityTypeDislike}
+	}
+
+	// Every other reaction (Announce, and anything added later) is independent of the rest,
+	// so it conflicts with itself alone.  Sharing a post you also liked is not a contradiction.
+	return []string{responseType}
+}
+
 /******************************************
  * data.Object Interface
  ******************************************/

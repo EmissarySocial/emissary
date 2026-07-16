@@ -2,6 +2,7 @@ package service
 
 import (
 	"iter"
+	"slices"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
@@ -336,15 +337,33 @@ func (service *Response) DeleteByUserID(session data.Session, userID primitive.O
 	return nil
 }
 
-// SetResponse is the preferred way of creating/updating a Response.  It includes the business
-// logic to search for an existing response, and delete it if one exists already (publishing UNDO actions in the process).
+// SetResponse is the preferred way of creating/updating a Response.  It guarantees one active
+// reaction per (User, Object) within a group of contradictory types -- removing any reaction that
+// the new one displaces, and publishing an UNDO for each -- and it is idempotent, so repeating an
+// identical reaction changes nothing and publishes nothing.
 func (service *Response) SetResponse(session data.Session, user *model.User, url string, responseType string, content string) error {
 
 	const location = "service.Response.SetResponse"
 
-	// Remove previous Response (if it exists)
-	if err := service.UnsetResponse(session, user, url, responseType); err != nil {
-		return derp.Wrap(err, location, "Removing previous response", user.UserID, url, responseType)
+	// Find every existing reaction that this new one displaces
+	displaced, err := service.conflictingResponses(session, user.UserID, url, responseType)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Loading conflicting Responses", user.UserID, url, responseType)
+	}
+
+	// RULE: Repeating an identical reaction is a no-op.  Callers are stateless setters (a
+	// double-click, a resubmitted form, or a retried API call all arrive as "make this true"),
+	// so re-Saving would duplicate the Response and spray pointless Undo/redo churn at the author.
+	if responseIsUnchanged(displaced, responseType, content) {
+		return nil
+	}
+
+	// Remove the displaced reactions.  Each Delete publishes its own Undo activity.
+	for _, displacedResponse := range displaced {
+		if err := service.Delete(session, &displacedResponse, "Displaced by a new Response"); err != nil {
+			return derp.Wrap(err, location, "Deleting displaced Response", displacedResponse)
+		}
 	}
 
 	// Create a new Response object
@@ -357,6 +376,15 @@ func (service *Response) SetResponse(session data.Session, user *model.User, url
 
 	// Save the Response to the database (response service will automatically publish to ActivityPub and beyond)
 	if err := service.Save(session, &response, "Set Response"); err != nil {
+
+		// A lost creation race trips the unique (userId, object, type) index, which data-mongo
+		// reports as a Conflict.  The winner recorded the very reaction we were asked to set, so
+		// the caller's desired end state already holds and re-inserting would duplicate it.
+		// See queries/sync/response.go for the index.
+		if derp.IsConflict(err) {
+			return nil
+		}
+
 		return derp.Wrap(err, location, "Saving response", response)
 	}
 
@@ -399,6 +427,50 @@ func (service *Response) UnsetResponse(session data.Session, user *model.User, u
 
 	// Success!!
 	return nil
+}
+
+// conflictingResponses returns every existing Response by this User on this Object whose type
+// cannot coexist with the provided type.  The result includes any Response of the provided type,
+// so a repeated reaction is displaced by the new one instead of duplicating it.
+func (service *Response) conflictingResponses(session data.Session, userID primitive.ObjectID, url string, responseType string) ([]model.Response, error) {
+
+	const location = "service.Response.conflictingResponses"
+
+	responses, err := service.QueryByUserAndObject(session, userID, url)
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Querying Responses", userID, url)
+	}
+
+	conflictingTypes := model.ConflictingResponseTypes(responseType)
+	result := make([]model.Response, 0, len(responses))
+
+	for _, response := range responses {
+		if slices.Contains(conflictingTypes, response.Type) {
+			result = append(result, response)
+		}
+	}
+
+	return result, nil
+}
+
+// responseIsUnchanged returns TRUE if the existing Responses are exactly the reaction being
+// requested, meaning there is nothing to add, remove, or publish.
+func responseIsUnchanged(existing []model.Response, responseType string, content string) bool {
+
+	// Nothing to repeat (zero), or a contradiction to resolve (two or more, which only
+	// pre-fix data can produce).  Either way the caller's reaction still has work to do.
+	if len(existing) != 1 {
+		return false
+	}
+
+	// A different type is a reaction being switched, not repeated (e.g. Dislike -> Like)
+	if existing[0].Type != responseType {
+		return false
+	}
+
+	// Same type, so only the content can still differ (e.g. changing an emoji)
+	return existing[0].Content == content
 }
 
 // objectAuthorURL resolves the AUTHOR ACTOR (attributedTo) of the object this Response reacted to.
