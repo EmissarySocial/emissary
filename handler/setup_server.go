@@ -153,7 +153,7 @@ func getSetupForm(name string) (form.Element, bool, error) {
 					{Type: "text", Label: "Database Name", Path: "activityPubCache.database"},
 				}},
 				{Type: "layout-vertical", Label: "Networking", Children: []form.Element{
-					{Type: "select", Label: "Determining Hostname", Path: "trustForwardedHost", Description: "Enables your server to identify the domain/hostname being requested.", Options: mapof.Any{"enum": trustForwardedHostOptions}},
+					{Type: "select", Label: "Host Header", Path: "trustForwardedHost", Description: "Enables your server to identify the domain/hostname being requested.", Options: mapof.Any{"enum": trustForwardedHostOptions}},
 					{Type: "select", Label: "Client IP Lookup", Path: "clientIPStrategy", Description: "Method used to determine the client's IP address.  Important for rate-limiting and abuse prevention.", Options: mapof.Any{"enum": []form.LookupCode{
 						{Value: "REMOTE-ADDR", Label: "Remote Address (use when NOT behind a proxy)"},
 						{Value: "RIGHTMOST-TRUSTED-COUNT", Label: "Rightmost Trusted Count (use when behind a known number of proxies)"},
@@ -169,8 +169,14 @@ func getSetupForm(name string) (form.Element, bool, error) {
 						{Value: "X-Real-IP"},
 					}}},
 					{Type: "text", Label: "Trusted Proxy Count", Path: "clientIPTrustedCount", Description: "Number of trusted proxies to consider when determining the client's IP address.", Options: mapof.Any{"show-if": "clientIPStrategy is RIGHTMOST-TRUSTED-COUNT"}},
-					{Type: "text", Label: "HTTP Port", Description: "Port to use for HTTP connections (standard: 80, disabled: 0)", Path: "httpPort", Options: mapof.Any{"format": "number", "min": 0, "max:": 65535}},
-					{Type: "text", Label: "HTTPS Port", Description: "Port to use for HTTPS connections (standard: 443, disabled: 0)", Path: "httpsPort", Options: mapof.Any{"format": "number", "min": 0, "max:": 65535}},
+					{Type: "select", Label:"Private Network Connections?", Path: "allowPrivateIPs", Description:"Controls whether the server can connect to private IP addresses.", Options: mapof.Any{"enum": []form.LookupCode{
+						{Value: "false", Label: "DISALLOWED (Required for production systems)"},
+						{Value: "true", Label: "ALLOWED (Development systems only)"},
+					}}},
+				}},
+				{Type: "layout-vertical", Label: "Server Ports", Children: []form.Element{
+					{Type: "text", Label: "HTTP", Description: "Port to use for HTTP connections (standard: 80, disabled: 0)", Path: "httpPort", Options: mapof.Any{"format": "number", "min": 0, "max:": 65535}},
+					{Type: "text", Label: "HTTPS", Description: "Port to use for HTTPS connections (standard: 443, disabled: 0)", Path: "httpsPort", Options: mapof.Any{"format": "number", "min": 0, "max:": 65535}},
 				}},
 				{Type: "layout-vertical", Label: "Testing and Development", Children: []form.Element{
 					{Type: "select", Label: "Debug Output", Path: "debugLevel"},
