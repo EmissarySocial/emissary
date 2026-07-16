@@ -35,7 +35,7 @@ func GetDomainAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 
 	attachment := model.NewAttachment(model.AttachmentObjectTypeDomain, domain.DomainID)
 	if err := attachmentService.LoadByID(session, model.AttachmentObjectTypeDomain, domain.DomainID, attachmentID, &attachment); err != nil {
-		return derp.Wrap(err, location, "Unable to load attachment")
+		return derp.Wrap(err, location, "Loading attachment")
 	}
 
 	// Retrieve the file from the mediaserver
@@ -82,7 +82,7 @@ func GetSearchTagAttachment(ctx *steranko.Context, factory *service.Factory, ses
 	attachment := model.NewAttachment(model.AttachmentObjectTypeSearchTag, searchTagID)
 
 	if err := attachmentService.LoadByID(session, model.AttachmentObjectTypeSearchTag, searchTagID, attachmentID, &attachment); err != nil {
-		return derp.Wrap(err, location, "Unable to load attachment")
+		return derp.Wrap(err, location, "Loading attachment")
 	}
 
 	// Retrieve the file from the mediaserver
@@ -115,7 +115,7 @@ func GetStreamAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 	attachmentToken := list.Dot(ctx.Param("attachmentId")).First()
 	attachment := model.NewEmptyAttachment()
 	if err := attachmentService.LoadByToken(session, model.AttachmentObjectTypeStream, stream.StreamID, attachmentToken, &attachment); err != nil {
-		return derp.Wrap(err, location, "Unable to load attachment")
+		return derp.Wrap(err, location, "Loading attachment")
 	}
 
 	// Retrieve the file from the mediaserver
@@ -154,7 +154,7 @@ func GetUserAttachment(ctx *steranko.Context, factory *service.Factory, session 
 	attachment := model.NewEmptyAttachment()
 
 	if err := attachmentService.LoadByToken(session, model.AttachmentObjectTypeUser, user.UserID, token, &attachment); err != nil {
-		return derp.Wrap(err, location, "Unable to load attachment")
+		return derp.Wrap(err, location, "Loading attachment")
 	}
 
 	// Retrieve the file from the mediaserver
@@ -175,5 +175,5 @@ func GetUserAttachment(ctx *steranko.Context, factory *service.Factory, session 
 // We downgrade it to a 404 so a single broken attachment does not read as a server
 // fault -- the browser simply renders its normal broken-image state instead.
 func serveAttachmentError(err error, location string, attachment model.Attachment) error {
-	return derp.Wrap(err, location, "Unable to serve attachment file", attachment.AttachmentID.Hex(), derp.WithNotFound())
+	return derp.Wrap(err, location, "Serving attachment file", attachment.AttachmentID.Hex(), derp.WithNotFound())
 }

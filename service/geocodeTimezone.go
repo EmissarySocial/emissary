@@ -36,7 +36,7 @@ func (service GeocodeTimezone) Geocode(session data.Session, address *geo.Addres
 
 	// Try to get the coordinates for this place
 	if err := geocoder.GeocodeTimezone(address); err != nil {
-		return derp.Wrap(err, location, "Unable to retrieve timezone for address", address)
+		return derp.Wrap(err, location, "Retrieving timezone for address", address)
 	}
 
 	return nil
@@ -52,7 +52,7 @@ func (service GeocodeTimezone) getGeocoder(session data.Session) geocoder.Timezo
 	connection := model.NewConnection()
 
 	if err := service.connectionService.LoadActiveByType(session, model.ConnectionTypeGeocodeTimezone, &connection); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to load geocoder"))
+		derp.Report(derp.Wrap(err, location, "Loading geocoder"))
 	}
 
 	switch connection.Data.GetString("provider") {

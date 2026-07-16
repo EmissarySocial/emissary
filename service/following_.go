@@ -100,7 +100,7 @@ func (service *Following) Range(session data.Session, criteria exp.Expression, o
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Following.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.Following.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewFollowing), nil
@@ -110,7 +110,7 @@ func (service *Following) Range(session data.Session, criteria exp.Expression, o
 func (service *Following) Load(session data.Session, criteria exp.Expression, result *model.Following) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Following.Load", "Unable to load Following", criteria)
+		return derp.Wrap(err, "service.Following.Load", "Loading Following", criteria)
 	}
 
 	return nil
@@ -138,29 +138,29 @@ func (service *Following) Save(session data.Session, following *model.Following,
 
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(following); err != nil {
-		return derp.Wrap(err, location, "Unable to validate Following record", following)
+		return derp.Wrap(err, location, "Validating Following record", following)
 	}
 
 	// Prevent duplicate following records
 	if err := service.preventDuplicates(session, following); err != nil {
-		return derp.Wrap(err, location, "Unable to prevent duplicate", following)
+		return derp.Wrap(err, location, "Preventing duplicate", following)
 	}
 
 	// RULE: The Folder MUST belong to this User
 	if err := service.setFolder(session, following); err != nil {
-		return derp.Wrap(err, location, "Unable to set Folder", following)
+		return derp.Wrap(err, location, "Setting Folder", following)
 	}
 
 	// RULE: IF the Folder changed, then move related inbox items into it
 	if following.FolderID.IsChanged() {
 		if err := service.newsFeedService.UpdateNewsFeedFolders(session, following.UserID, following.FollowingID, following.FolderID.Value()); err != nil {
-			return derp.Wrap(err, location, "Unable to update NewsFeed Folders")
+			return derp.Wrap(err, location, "Updating NewsFeed Folders")
 		}
 	}
 
 	// Save the following to the database
 	if err := service.collection(session).Save(following, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Following", following, note)
+		return derp.Wrap(err, location, "Saving Following", following, note)
 	}
 
 	// Notify the user that their Following list has been changed
@@ -178,12 +178,12 @@ func (service *Following) Save(session data.Session, following *model.Following,
 
 	// Recalculate the follower count for this user
 	if err := service.userService.CalcFollowingCount(session, following.UserID); err != nil {
-		return derp.Wrap(err, location, "Unable to count `Following` records")
+		return derp.Wrap(err, location, "Counting `Following` records")
 	}
 
 	// Run follow-on tasks asynchronously
 	if err := service.Connect(session, following); err != nil {
-		return derp.Wrap(err, location, "Unable to initiate external service connection")
+		return derp.Wrap(err, location, "Initiating external service connection")
 	}
 
 	// Win!
@@ -200,17 +200,17 @@ func (service *Following) Delete(session data.Session, following *model.Followin
 	// the Undo. (Previously this line spawned `go service.Disconnect(...)`, a goroutine that
 	// used the request's session after the transaction returned — a use-after-free hazard. F4.)
 	if err := service.deleteNoStats(session, following, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Following", following, note)
+		return derp.Wrap(err, location, "Deleting Following", following, note)
 	}
 
 	// Recalculate the follower count for this user
 	if err := service.userService.CalcFollowingCount(session, following.UserID); err != nil {
-		return derp.Wrap(err, location, "Unable to calculate Following count")
+		return derp.Wrap(err, location, "Calculating Following count")
 	}
 
 	// Recalculate the unread count for this folder
 	if err := service.folderService.CalculateUnreadCount(session, following.UserID, following.FolderID.Value()); err != nil {
-		return derp.Wrap(err, location, "Unable to calculate Unread count")
+		return derp.Wrap(err, location, "Calculating Unread count")
 	}
 
 	return nil
@@ -226,12 +226,12 @@ func (service *Following) deleteNoStats(session data.Session, following *model.F
 
 	// Remove the Following record
 	if err := service.collection(session).Delete(following, comment); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Following", following, comment)
+		return derp.Wrap(err, location, "Deleting Following", following, comment)
 	}
 
 	// Remove any messages received from this Following
 	if err := service.newsFeedService.DeleteByOrigin(session, following.FollowingID, "Parent record deleted"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete streams for Following", following)
+		return derp.Wrap(err, location, "Deleting streams for Following", following)
 	}
 
 	// Disconnect from external services (e.g. Undo/Follow) if necessary. This only ENQUEUES a
@@ -263,7 +263,7 @@ func (service *Following) HardDeleteByID(session data.Session, userID primitive.
 	criteria := exp.Equal("userId", userID).AndEqual("_id", followingID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Following", "userID: "+userID.Hex(), "followingID: "+followingID.Hex())
+		return derp.Wrap(err, location, "Deleting Following", "userID: "+userID.Hex(), "followingID: "+followingID.Hex())
 	}
 
 	return nil
@@ -393,7 +393,7 @@ func (service *Following) LoadByID(session data.Session, userID primitive.Object
 		AndEqual("userId", userID)
 
 	if err := service.Load(session, criteria, result); err != nil {
-		return derp.Wrap(err, location, "Unable to load Following", criteria)
+		return derp.Wrap(err, location, "Loading Following", criteria)
 	}
 
 	return nil
@@ -440,7 +440,7 @@ func (service *Following) GetFollowingID(session data.Session, userID primitive.
 	document, err := service.activityService.UserClient(userID).Load(uri)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to load ActivityStream document", uri)
+		return "", derp.Wrap(err, location, "Loading ActivityStream document", uri)
 	}
 
 	// If this document is not an Actor, then get the Actor of the document
@@ -460,7 +460,7 @@ func (service *Following) GetFollowingID(session data.Session, userID primitive.
 		if derp.IsNotFound(err) {
 			return "", nil
 		}
-		return "", derp.Wrap(err, location, "Unable to load Following record", uri)
+		return "", derp.Wrap(err, location, "Loading Following record", uri)
 	}
 
 	return following.ID(), nil
@@ -475,13 +475,13 @@ func (service *Following) DeleteByUserID(session data.Session, userID primitive.
 	rangeFunc, err := service.RangeByUserID(session, userID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to loadfollowing", userID)
+		return derp.Wrap(err, location, "Loading Following", userID)
 	}
 
 	// Delete each Following record
 	for following := range rangeFunc {
 		if err := service.deleteNoStats(session, &following, comment); err != nil {
-			return derp.Wrap(err, location, "Unable to delete following", following)
+			return derp.Wrap(err, location, "Deleting following", following)
 		}
 	}
 
@@ -495,12 +495,12 @@ func (service *Following) DeleteByFolder(session data.Session, userID primitive.
 	rangeFunc, err := service.RangeByFolderID(session, userID, folderID)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Folder.DeleteByFolder", "Unable to list folders", userID, folderID)
+		return derp.Wrap(err, "service.Folder.DeleteByFolder", "Listing folders", userID, folderID)
 	}
 
 	for folder := range rangeFunc {
 		if err := service.Delete(session, &folder, comment); err != nil {
-			return derp.Wrap(err, "service.Folder.DeleteByFolder", "Unable to delete folder", folder)
+			return derp.Wrap(err, "service.Folder.DeleteByFolder", "Deleting folder", folder)
 		}
 	}
 
@@ -518,13 +518,13 @@ func (service *Following) PurgeNewsFeed(session data.Session, following model.Fo
 	messages, err := service.newsFeedService.RangePurgeable(session, &following)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to query purgeable items", following)
+		return derp.Wrap(err, location, "Querying purgeable items", following)
 	}
 
 	// Purge each item that has expired
 	for message := range messages {
 		if err := service.newsFeedService.Delete(session, &message, "Purged"); err != nil {
-			return derp.Wrap(err, location, "Error purging message", message)
+			return derp.Wrap(err, location, "Purging message", message)
 		}
 	}
 
@@ -551,7 +551,7 @@ func (service *Following) Move(session data.Session, following *model.Following,
 
 	// Save the updated Following record
 	if err := service.Save(session, following, "Moving to new URL"); err != nil {
-		return derp.Wrap(err, location, "Unable to save moved Following", following)
+		return derp.Wrap(err, location, "Saving moved Following", following)
 	}
 
 	// Win!
@@ -572,7 +572,7 @@ func (service *Following) SetStatusLoading(session data.Session, following *mode
 
 	// Save the Following to the database (no other busines rules)
 	if err := service.collection(session).Save(following, "Updating status"); err != nil {
-		return derp.Wrap(err, "service.Following.SetStatusLoading", "Unable to save Following", following)
+		return derp.Wrap(err, "service.Following.SetStatusLoading", "Saving Following", following)
 	}
 
 	// Notify the user that their Following list has been changed
@@ -590,7 +590,7 @@ func (service *Following) SetStatusPolling(session data.Session, following *mode
 
 	// Save the Following to the database (no other busines rules)
 	if err := service.collection(session).Save(following, "Updating status"); err != nil {
-		return derp.Wrap(err, "service.Following.SetStatusPolling", "Unable to save Following", following)
+		return derp.Wrap(err, "service.Following.SetStatusPolling", "Saving Following", following)
 	}
 
 	// Notify the user that their Following list has been changed
@@ -612,7 +612,7 @@ func (service *Following) SetStatusSuccess(session data.Session, following *mode
 
 	// Save the Following to the database (no other busines rules)
 	if err := service.collection(session).Save(following, "Updating status"); err != nil {
-		return derp.Wrap(err, "service.Following.SetStatusSuccess", "Unable to save Following", following)
+		return derp.Wrap(err, "service.Following.SetStatusSuccess", "Saving Following", following)
 	}
 
 	// Notify the user that their Following list has been changed
@@ -644,7 +644,7 @@ func (service *Following) SetStatusFailure(session data.Session, following *mode
 
 	// Save the Following to the database (no other busines rules)
 	if err := service.collection(session).Save(following, "Updating status"); err != nil {
-		return derp.Wrap(err, "service.Following.SetStatusFailure", "Unable to save Following", following)
+		return derp.Wrap(err, "service.Following.SetStatusFailure", "Saving Following", following)
 	}
 
 	// Notify the user that their Following list has been changed
@@ -697,7 +697,7 @@ func (service *Following) setFolder(session data.Session, following *model.Follo
 		folders, err := service.folderService.QueryByUserID(session, following.UserID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to load Folders", following.UserID)
+			return derp.Wrap(err, location, "Loading Folders", following.UserID)
 		}
 
 		if len(folders) == 0 {
@@ -721,7 +721,7 @@ func (service *Following) setFolder(session data.Session, following *model.Follo
 		}
 
 		// Any other error is a genuine failure to reach the database
-		return derp.Wrap(err, location, "Unable to load Folder", following.UserID, following.FolderID.Value())
+		return derp.Wrap(err, location, "Loading Folder", following.UserID, following.FolderID.Value())
 	}
 
 	following.Folder = folder.Label
@@ -740,7 +740,7 @@ func (service *Following) preventDuplicates(session data.Session, current *model
 		if derp.IsNotFound(err) {
 			return nil
 		}
-		return derp.Wrap(err, location, "Unable to load Following", current)
+		return derp.Wrap(err, location, "Loading Following", current)
 	}
 
 	// If the original and current are the same, then do nothing
@@ -750,7 +750,7 @@ func (service *Following) preventDuplicates(session data.Session, current *model
 
 	// Otherwise, DELETE the original record
 	if err := service.Delete(session, &original, "removing duplicate"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete original", original)
+		return derp.Wrap(err, location, "Deleting original", original)
 	}
 
 	return nil

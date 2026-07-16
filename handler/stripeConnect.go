@@ -23,13 +23,13 @@ func GetStripeConnect(ctx *steranko.Context, factory *service.Factory, session d
 	connection := model.NewConnection()
 
 	if err := connectionService.LoadByProvider(session, model.ConnectionProviderStripeConnect, &connection); err != nil {
-		return derp.Wrap(err, location, "Unable to load Stripe-Connect Connection")
+		return derp.Wrap(err, location, "Loading Stripe-Connect Connection")
 	}
 
 	vault, err := connectionService.DecryptVault(&connection)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to decrypt Vault data")
+		return derp.Wrap(err, location, "Decrypting Vault data")
 	}
 
 	// Create a MerchantAccount for this User
@@ -53,14 +53,14 @@ func GetStripeConnect(ctx *steranko.Context, factory *service.Factory, session d
 		Result(&stripeAccount)
 
 	if err := accountTransaction.Send(); err != nil {
-		return derp.Wrap(err, location, "Unable to create account on Stripe", derp.WithInternalError())
+		return derp.Wrap(err, location, "Creating account on Stripe", derp.WithInternalError())
 	}
 
 	// Save the new MerchantAccount (including Stripe Account ID)
 	merchantAccount.Plaintext.SetString("accountId", stripeAccount.ID)
 
 	if err := merchantAccountService.Save(session, &merchantAccount, "Linked by User"); err != nil {
-		return derp.Wrap(err, location, "Unable to create MerchantAccount", derp.WithInternalError())
+		return derp.Wrap(err, location, "Creating MerchantAccount", derp.WithInternalError())
 	}
 
 	// Create a new ACCOUNT LINK on Stripe
@@ -77,7 +77,7 @@ func GetStripeConnect(ctx *steranko.Context, factory *service.Factory, session d
 		Result(&accountLink)
 
 	if err := accountLinkTransaction.Send(); err != nil {
-		return derp.Wrap(err, location, "Unable to create account link on Stripe", derp.WithInternalError())
+		return derp.Wrap(err, location, "Creating account link on Stripe", derp.WithInternalError())
 	}
 
 	return ctx.Redirect(http.StatusFound, accountLink.URL)
@@ -97,7 +97,7 @@ func PostStripeConnectWebhook_Checkout(ctx *steranko.Context, factory *service.F
 	vault, err := factory.Connection().DecryptVault(connection, "webhookSecret")
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to decrypt webhook secret")
+		return derp.Wrap(err, location, "Decrypting webhook secret")
 	}
 
 	liveMode := connection.Data.GetString("liveMode") == "LIVE"
@@ -111,7 +111,7 @@ func PostStripeConnectWebhook_Checkout(ctx *steranko.Context, factory *service.F
 		}
 
 		// All other errors are reported to the caller
-		return derp.Wrap(err, location, "Unable to process webhook data")
+		return derp.Wrap(err, location, "Processing webhook data")
 	}
 
 	// Success. WebHook complete.

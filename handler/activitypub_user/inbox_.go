@@ -83,7 +83,7 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to receive ActivityPub request")
+		return derp.Wrap(err, location, "Receiving ActivityPub request")
 	}
 
 	// Prevent duplicate actiities from being processes multiple times (e.g. due to retries or multiple deliveries)
@@ -93,12 +93,12 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 
 	// Validate the Activity meets basic criteria to be processed.
 	if err := inbox_ValidateActivity(activity); err != nil {
-		return derp.Wrap(err, location, "Unable to validate ActivityPub request", activity.Value())
+		return derp.Wrap(err, location, "Validating ActivityPub request", activity.Value())
 	}
 
 	// Save the activity to the actor's Inbox
 	if err := inbox_SaveActivity(context, activity); err != nil {
-		return derp.Wrap(err, location, "Unable to save activity to inbox", activity.Value())
+		return derp.Wrap(err, location, "Saving activity to inbox", activity.Value())
 	}
 
 	// Create Notifications for this activity (mentions, replies, reactions).  This runs centrally,
@@ -107,12 +107,12 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	// request, so we report-and-continue.  FOLLOW notifications are the exception — see
 	// inbox_follow_any.go (they fire after the Accept is sent).
 	if err := context.factory.Notification().NotifyFromActivity(context.session, context.user, activity); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to create notifications for activity", activity.ID()))
+		derp.Report(derp.Wrap(err, location, "Creating notifications for activity", activity.ID()))
 	}
 
 	// Route the activity to additional handlers to process side effects
 	if err := inboxRouter.Handle(context, activity); err != nil {
-		return derp.Wrap(err, location, "Unable to handle ActivityPub request")
+		return derp.Wrap(err, location, "Handling ActivityPub request")
 	}
 
 	// Send the response to the client
@@ -186,7 +186,7 @@ func inbox_SaveActivity(context Context, activity streams.Document) error {
 
 	// Save the Activity to the User's Inbox
 	if err := inboxService.Save(context.session, &inboxActivity, ""); err != nil {
-		return derp.Wrap(err, location, "Unable to save direct message", context.user.UserID, activity.Value())
+		return derp.Wrap(err, location, "Saving direct message", context.user.UserID, activity.Value())
 	}
 
 	// Suxxess

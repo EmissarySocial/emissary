@@ -49,7 +49,7 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 		loaded, err := document.Load()
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to load embedded object", document.Value())
+			return derp.Wrap(err, location, "Loading embedded object", document.Value())
 		}
 
 		document = loaded
@@ -69,7 +69,7 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 
 		// Followed source: save the post into the User's newsfeed (with de-duplication).
 		if err := followingService.SaveNewsItem(context.session, &following, document, model.OriginTypePrimary); err != nil {
-			return derp.Wrap(err, location, "Unable to save news item", context.user.UserID, activity.Value())
+			return derp.Wrap(err, location, "Saving news item", context.user.UserID, activity.Value())
 		}
 
 	} else if derp.IsNotFound(err) {
@@ -77,7 +77,7 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 
 	} else {
 		// A real load error (not merely "no record") — surface it.
-		return derp.Wrap(err, location, "Unable to load `Following` record", context.user.UserID)
+		return derp.Wrap(err, location, "Loading `Following` record", context.user.UserID)
 	}
 
 	// Add this document to a context (if necessary)

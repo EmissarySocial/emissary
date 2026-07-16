@@ -37,18 +37,18 @@ func (step StepIfCondition) execute(builder Builder, buffer io.Writer, method Ac
 	condition, err := step.evaluateCondition(builder)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error evaluating condition"))
+		return Halt().WithError(derp.Wrap(err, location, "Evaluating condition"))
 	}
 
 	if condition {
 		result := Pipeline(step.Then).Execute(factory, builder, buffer, method)
-		result.Error = derp.WrapIF(result.Error, location, "Error executing 'then' sub-steps")
+		result.Error = derp.WrapIF(result.Error, location, "Executing 'then' sub-steps")
 
 		return UseResult(result)
 	}
 
 	result := Pipeline(step.Otherwise).Execute(factory, builder, buffer, method)
-	result.Error = derp.WrapIF(result.Error, location, "Error executing 'otherwise' sub-steps")
+	result.Error = derp.WrapIF(result.Error, location, "Executing 'otherwise' sub-steps")
 	return UseResult(result)
 }
 
@@ -58,7 +58,7 @@ func (step StepIfCondition) evaluateCondition(builder Builder) (bool, error) {
 	var buffer bytes.Buffer
 
 	if err := step.Condition.Execute(&buffer, builder); err != nil {
-		return false, derp.Wrap(err, "build.execute", "Error executing template")
+		return false, derp.Wrap(err, "build.execute", "Executing template")
 	}
 
 	return convert.Bool(buffer.String()), nil

@@ -53,7 +53,7 @@ func scheduler_MakeDailyTasks(serverFactory ServerFactory) error {
 
 		// Publish the task to the queue
 		if err := serverFactory.Queue().Publish(task); err != nil {
-			return derp.Wrap(err, location, "Unable to publish tomorrow's daily task")
+			return derp.Wrap(err, location, "Publishing tomorrow's daily task")
 		}
 	}
 
@@ -83,7 +83,7 @@ func scheduler_MakeHourlyTasks(serverFactory ServerFactory) error {
 
 		// Publish the task to the queue
 		if err := serverFactory.Queue().Publish(task); err != nil {
-			return derp.Wrap(err, location, "Unable to publish hourly task")
+			return derp.Wrap(err, location, "Publishing hourly task")
 		}
 	}
 

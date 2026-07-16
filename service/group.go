@@ -61,7 +61,7 @@ func (service *Group) List(session data.Session, criteria exp.Expression, option
 // Load retrieves an Group from the database
 func (service *Group) Load(session data.Session, criteria exp.Expression, result *model.Group) error {
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Group.Load", "Unable to load Group", criteria)
+		return derp.Wrap(err, "service.Group.Load", "Loading Group", criteria)
 	}
 
 	return nil
@@ -72,12 +72,12 @@ func (service *Group) Save(session data.Session, group *model.Group, note string
 
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(group); err != nil {
-		return derp.Wrap(err, "service.Group.Save", "Unable to validate Group", group)
+		return derp.Wrap(err, "service.Group.Save", "Validating Group", group)
 	}
 
 	// Save the value to the database
 	if err := service.collection(session).Save(group, note); err != nil {
-		return derp.Wrap(err, "service.Group.Save", "Unable to save Group", group, note)
+		return derp.Wrap(err, "service.Group.Save", "Saving Group", group, note)
 	}
 
 	return nil
@@ -87,7 +87,7 @@ func (service *Group) Save(session data.Session, group *model.Group, note string
 func (service *Group) Delete(session data.Session, group *model.Group, note string) error {
 
 	if err := service.collection(session).Delete(group, note); err != nil {
-		return derp.Wrap(err, "service.Group.Delete", "Unable to delete Group", group, note)
+		return derp.Wrap(err, "service.Group.Delete", "Deleting Group", group, note)
 	}
 
 	// TODO: HIGH: Also remove connections to Users that still use this Group
@@ -182,7 +182,7 @@ func (service *Group) ListByIDs(session data.Session, groupIDs ...primitive.Obje
 	it, err := service.List(session, criteria, option.SortAsc("label"))
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Group.ListbyIDs", "Error executing query", criteria)
+		return nil, derp.Wrap(err, "service.Group.ListbyIDs", "Executing query", criteria)
 	}
 
 	for index := 0; it.Next(&(result[index])); index++ {
@@ -222,7 +222,7 @@ func (service *Group) ListAsOptions(session data.Session) []form.LookupCode {
 	it, err := service.List(session, exp.All(), option.SortAsc("label"))
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "service.Group.ListAsOptions", "Unable to list Groups"))
+		derp.Report(derp.Wrap(err, "service.Group.ListAsOptions", "Listing Groups"))
 		return result
 	}
 
@@ -250,7 +250,7 @@ func (service *Group) Startup(session data.Session, theme *model.Theme) error {
 	count, err := service.Count(session, exp.All())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error counting groups")
+		return derp.Wrap(err, location, "Counting groups")
 	}
 
 	// If there are already groups in the database, then don't make any changes.
@@ -265,11 +265,11 @@ func (service *Group) Startup(session data.Session, theme *model.Theme) error {
 		group := model.NewGroup()
 
 		if err := groupSchema.SetAll(&group, data); err != nil {
-			return derp.Wrap(err, location, "Unable to set group data", data)
+			return derp.Wrap(err, location, "Setting group data", data)
 		}
 
 		if err := service.Save(session, &group, "Created by Startup"); err != nil {
-			return derp.Wrap(err, location, "Unable to save group", group)
+			return derp.Wrap(err, location, "Saving group", group)
 		}
 	}
 

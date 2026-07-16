@@ -261,7 +261,7 @@ func (w Common) HasUnreadNotifications() bool {
 	hasUnread, err := w._factory.Notification().HasUnread(w._session, w.AuthenticatedID())
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "build.Common.HasUnreadNotifications", "Unable to check unread notifications", w.AuthenticatedID()))
+		derp.Report(derp.Wrap(err, "build.Common.HasUnreadNotifications", "Checking unread notifications", w.AuthenticatedID()))
 		return false
 	}
 
@@ -280,7 +280,7 @@ func (w Common) WebPushPublicKey() string {
 	publicKey, err := w._factory.WebPush().PublicKey(w._session)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "build.Common.WebPushPublicKey", "Unable to load VAPID public key"))
+		derp.Report(derp.Wrap(err, "build.Common.WebPushPublicKey", "Loading VAPID public key"))
 		return ""
 	}
 
@@ -439,7 +439,7 @@ func (w Common) UserName() (string, error) {
 	user, err := w.getUser()
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to load User")
+		return "", derp.Wrap(err, location, "Loading User")
 	}
 
 	return user.DisplayName, nil
@@ -453,7 +453,7 @@ func (w Common) UserImage() (string, error) {
 	user, err := w.getUser()
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to load User")
+		return "", derp.Wrap(err, location, "Loading User")
 	}
 
 	return user.ActivityPubIconURL(), nil
@@ -475,7 +475,7 @@ func (w Common) ActivityStream(url string) streams.Document {
 	result, err := activityService.UserClient(w.AuthenticatedID()).Load(url)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to load ActivityStream. Returning empty document to template."))
+		derp.Report(derp.Wrap(err, location, "Loading ActivityStream. Returning empty document to template."))
 	}
 
 	// Search for rules that might add a LABEL to this document.
@@ -496,7 +496,7 @@ func (w Common) ActivityStreamCollection(url string) sliceof.String {
 	object, err := activityService.UserClient(w.AuthenticatedID()).Load(url, ascache.WithWriteOnly())
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to load ActivityStream Collection. Returning empty collection to template."))
+		derp.Report(derp.Wrap(err, location, "Loading ActivityStream Collection. Returning empty collection to template."))
 		return sliceof.NewString()
 	}
 
@@ -600,7 +600,7 @@ func (w Common) GetFollowingID(url string) string {
 	result, err := followingService.GetFollowingID(w._session, w.AuthenticatedID(), url)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Error getting following status", url))
+		derp.Report(derp.Wrap(err, location, "Getting following status", url))
 		return ""
 	}
 
@@ -660,7 +660,7 @@ func (w Common) defaultAllowed() exp.Expression {
 	identity, err := w.getIdentity()
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to load Identity"))
+		derp.Report(derp.Wrap(err, location, "Loading Identity"))
 	}
 
 	// Get the access list for this user
@@ -690,7 +690,7 @@ func (w Common) getUser() (*model.User, error) {
 
 	user := model.NewUser()
 	if err := userService.LoadByID(w._session, authorization.UserID, &user); err != nil {
-		return nil, derp.Wrap(err, location, "Unable to load user from database", authorization.UserID)
+		return nil, derp.Wrap(err, location, "Loading user from database", authorization.UserID)
 	}
 
 	// Save the User in the builder to use it later
@@ -717,7 +717,7 @@ func (w Common) getIdentity() (*model.Identity, error) {
 	// Otherwise, try to load the Identity from the database
 	identity := model.NewIdentity()
 	if err := w._factory.Identity().LoadByID(w._session, w._authorization.IdentityID, &identity); err != nil {
-		return nil, derp.Wrap(err, location, "Unable to load Identity from database", w._authorization.IdentityID)
+		return nil, derp.Wrap(err, location, "Loading Identity from database", w._authorization.IdentityID)
 	}
 
 	// Save the Identity in the builder to use it later
@@ -825,7 +825,7 @@ func (w Common) SearchTag(tagName string) model.SearchTag {
 	result := model.NewSearchTag()
 
 	if err := w._factory.SearchTag().LoadByValue(w._session, tagName, &result); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to load SearchTag", tagName))
+		derp.Report(derp.Wrap(err, location, "Loading SearchTag", tagName))
 	}
 
 	return result

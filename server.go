@@ -665,7 +665,7 @@ func errorHandler(err error, ctx echo.Context) {
 		derp.Wrap(
 			err,
 			location,
-			"Unable to generate web page",
+			"Generating web page",
 			"url: "+uri.PrependProtocol(request.Host)+request.URL.String(),
 			"method: "+request.Method,
 			ctx.Request().Header,

@@ -27,12 +27,12 @@ func (step StepWithDraft) Get(builder Builder, buffer io.Writer) PipelineBehavio
 	draftBuilder, err := streamBuilder.draftBuilder()
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error getting draft builder"))
+		return Halt().WithError(derp.Wrap(err, location, "Getting draft builder"))
 	}
 
 	// Execute the POST build pipeline on the parent
 	status := Pipeline(step.SubSteps).Get(factory, draftBuilder, buffer)
-	status.Error = derp.WrapIF(status.Error, location, "Error executing steps on draft")
+	status.Error = derp.WrapIF(status.Error, location, "Executing steps on draft")
 
 	return UseResult(status)
 }
@@ -52,12 +52,12 @@ func (step StepWithDraft) Post(builder Builder, buffer io.Writer) PipelineBehavi
 	draftBuilder, err := streamBuilder.draftBuilder()
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error getting draft builder"))
+		return Halt().WithError(derp.Wrap(err, location, "Getting draft builder"))
 	}
 
 	// Execute the POST build pipeline on the parent
 	result := Pipeline(step.SubSteps).Post(factory, draftBuilder, buffer)
-	result.Error = derp.WrapIF(result.Error, location, "Error executing steps on draft")
+	result.Error = derp.WrapIF(result.Error, location, "Executing steps on draft")
 
 	return UseResult(result)
 }

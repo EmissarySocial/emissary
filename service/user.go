@@ -139,7 +139,7 @@ func (service *User) Range(session data.Session, criteria exp.Expression, option
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.User.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.User.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewUser), nil
@@ -155,7 +155,7 @@ func (service *User) Query(session data.Session, criteria exp.Expression, option
 // Load retrieves an User from the database
 func (service *User) Load(session data.Session, criteria exp.Expression, result *model.User, options ...option.Option) error {
 	if err := service.collection(session).Load(notDeleted(criteria), result, options...); err != nil {
-		return derp.Wrap(err, "service.User.Load", "Unable to load User", criteria)
+		return derp.Wrap(err, "service.User.Load", "Loading User", criteria)
 	}
 
 	return nil
@@ -201,7 +201,7 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 
 		// RULE: If the username is empty, then try to automatically generate one
 		if err := service.CalcNewUsername(session, user); err != nil {
-			return derp.Wrap(err, location, "Error calculating username", user)
+			return derp.Wrap(err, location, "Calculating username", user)
 		}
 	}
 
@@ -239,7 +239,7 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 
 	// Try to save the User record to the database
 	if err := service.collection(session).Save(user, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save User", user, note)
+		return derp.Wrap(err, location, "Saving User", user, note)
 	}
 
 	// RULE: Take these actions when setting up a new user
@@ -247,18 +247,18 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 
 		// RULE: Create a new encryption key for this user
 		if _, err := service.keyService.Create(session, model.EncryptionKeyTypeUser, user.UserID); err != nil {
-			return derp.Wrap(err, location, "Unable to create encryption key for User", user, note)
+			return derp.Wrap(err, location, "Creating encryption key for User", user, note)
 		}
 
 		// RULE: Create default folders for this user
 		if err := service.folderService.CreateDefaultFolders(session, user.UserID); err != nil {
-			return derp.Wrap(err, location, "Unable to create default folders for User", user, note)
+			return derp.Wrap(err, location, "Creating default folders for User", user, note)
 		}
 	}
 
 	// Handle Bluesky bridging opt-in/out
 	if err := service.connectBluesky(session, user); err != nil {
-		return derp.Wrap(err, location, "Unable to update bridge settings", user, note)
+		return derp.Wrap(err, location, "Updating bridge settings", user, note)
 	}
 
 	// Set AttributedTo value
@@ -282,54 +282,54 @@ func (service *User) Delete(session data.Session, user *model.User, note string)
 
 	// Delete related Folders
 	if err := service.folderService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete User's folders", user, note)
+		return derp.Wrap(err, location, "Deleting User's folders", user, note)
 	}
 
 	// Delete related Followers
 	if err := service.followerService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete User's followers", user, note)
+		return derp.Wrap(err, location, "Deleting User's followers", user, note)
 	}
 
 	// Delete related Following
 	if err := service.followingService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete User's followers", user, note)
+		return derp.Wrap(err, location, "Deleting User's followers", user, note)
 	}
 
 	// TODO: Delete related mentions
 
 	// Delete related Encryption Keys messages
 	if err := service.keyService.DeleteByParentID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete User's encryption keys", user, note)
+		return derp.Wrap(err, location, "Deleting User's encryption keys", user, note)
 	}
 
 	// Delete related NewsFeed messages
 	if err := service.newsFeedService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete User's inbox messages", user, note)
+		return derp.Wrap(err, location, "Deleting User's inbox messages", user, note)
 	}
 
 	// Delete related Outbox messages
 	if err := service.outboxService.DeleteByParentID(session, model.FollowerTypeUser, user.UserID); err != nil {
-		return derp.Wrap(err, location, "Unable to delete User's outbox messages", user, note)
+		return derp.Wrap(err, location, "Deleting User's outbox messages", user, note)
 	}
 
 	// Delete related Responses
 	if err := service.responseService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete User's responses", user, note)
+		return derp.Wrap(err, location, "Deleting User's responses", user, note)
 	}
 
 	// TODO: Delete related Rules
 	if err := service.ruleService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete User's rules", user, note)
+		return derp.Wrap(err, location, "Deleting User's rules", user, note)
 	}
 
 	// Delete related Streams
 	if err := service.streamService.DeleteByParent(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete User's streams", user, note)
+		return derp.Wrap(err, location, "Deleting User's streams", user, note)
 	}
 
 	// Delete the User from the database
 	if err := service.collection(session).Delete(user, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete User", user, note)
+		return derp.Wrap(err, location, "Deleting User", user, note)
 	}
 
 	// Send user:delete webhooks
@@ -485,7 +485,7 @@ func (service *User) LoadByResetCode(session data.Session, userID string, code s
 
 	// Try to find the user by ID
 	if err := service.LoadByToken(session, userID, user); err != nil {
-		return derp.Wrap(err, location, "Unable to load User by ID", userID)
+		return derp.Wrap(err, location, "Loading User by ID", userID)
 	}
 
 	// If the password reset is not valid, then return an "Unauthorized" error
@@ -507,7 +507,7 @@ func (service *User) QueryBlockedActors(session data.Session, userID primitive.O
 	rules, err := service.ruleService.QueryBlockedActors(session, userID)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to query rules")
+		return nil, derp.Wrap(err, location, "Querying rules")
 	}
 
 	// Extract the blocked userIDs
@@ -528,7 +528,7 @@ func (service *User) Shuffle(session data.Session) error {
 
 	collection := service.collection(session)
 	if err := queries.Shuffle(session.Context(), collection); err != nil {
-		return derp.Wrap(err, "service.User.Shuffle", "Unable to shuffle users")
+		return derp.Wrap(err, "service.User.Shuffle", "Shuffling users")
 	}
 
 	return nil
@@ -641,7 +641,7 @@ func (service *User) CalcFollowerCount(session data.Session, userID primitive.Ob
 	userCollection := service.collection(session)
 	followersCollection := service.followerCollection(session)
 	if err := queries.SetFollowersCount(userCollection, followersCollection, userID); err != nil {
-		return derp.Wrap(err, location, "Unable to count `Follower` records", userID)
+		return derp.Wrap(err, location, "Counting `Follower` records", userID)
 	}
 
 	return nil
@@ -655,7 +655,7 @@ func (service *User) CalcFollowingCount(session data.Session, userID primitive.O
 	followingCollection := service.followingCollection(session)
 
 	if err := queries.SetFollowingCount(userCollection, followingCollection, userID); err != nil {
-		return derp.Wrap(err, location, "Unable to count `Following` records", userID)
+		return derp.Wrap(err, location, "Counting `Following` records", userID)
 	}
 
 	return nil
@@ -674,7 +674,7 @@ func (service *User) CalcRuleCount(session data.Session, userID primitive.Object
 	rulesCollection := service.ruleCollection(session)
 
 	if err := queries.SetRuleCount(userCollection, rulesCollection, userID); err != nil {
-		return derp.Wrap(err, location, "Unable to count rules", userID)
+		return derp.Wrap(err, location, "Counting rules", userID)
 	}
 
 	return nil
@@ -693,7 +693,7 @@ func (service *User) SetOwner(session data.Session, owner config.Owner) error {
 	users, err := service.ListUsernameOrOwner(session, owner.Username)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load owners")
+		return derp.Wrap(err, location, "Loading owners")
 	}
 
 	found := false
@@ -713,7 +713,7 @@ func (service *User) SetOwner(session data.Session, owner config.Owner) error {
 			user.IsOwner = isOwner
 
 			if err := service.Save(session, &user, "Set Owner"); err != nil {
-				return derp.Wrap(err, location, "Unable to save user", user)
+				return derp.Wrap(err, location, "Saving user", user)
 			}
 		}
 	}
@@ -727,7 +727,7 @@ func (service *User) SetOwner(session data.Session, owner config.Owner) error {
 		user.IsOwner = true
 
 		if err := service.Save(session, &user, "CreateOwner"); err != nil {
-			return derp.Wrap(err, location, "Unable to save user", user)
+			return derp.Wrap(err, location, "Saving user", user)
 		}
 	}
 
@@ -745,13 +745,13 @@ func (service *User) DeleteAvatar(session data.Session, user *model.User, note s
 
 	// Delete the existing Avatar file
 	if err := service.attachmentService.DeleteByID(session, model.AttachmentObjectTypeUser, user.UserID, user.IconID, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete avatar attachment", user)
+		return derp.Wrap(err, location, "Deleting avatar attachment", user)
 	}
 
 	// Clear the reference in the User object
 	user.IconID = primitive.NilObjectID
 	if err := service.Save(session, user, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save User", user)
+		return derp.Wrap(err, location, "Saving User", user)
 	}
 
 	return nil
@@ -768,13 +768,13 @@ func (service *User) SendPasswordResetEmail(session data.Session, user *model.Us
 	const location = "service.User.SendPasswordResetEmail"
 
 	if err := service.MakeNewPasswordResetCode(session, user, duration); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error making password reset", user))
+		derp.Report(derp.Wrap(err, location, "Making password reset", user))
 		return
 	}
 
 	// Try to send the welcome email.  If it fails, then don't save the new password reset code.
 	if err := service.emailService.SendPasswordReset(user); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to send password reset", user))
+		derp.Report(derp.Wrap(err, location, "Sending password reset", user))
 		return
 	}
 }
@@ -787,27 +787,27 @@ func (service *User) Lockout(session data.Session, username string) {
 
 	user := model.NewUser()
 	if err := service.LoadByUsername(session, username, &user); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to load user by username", username))
+		derp.Report(derp.Wrap(err, location, "Loading user by username", username))
 		return
 	}
 
 	// Reset the password to a random value so the old credential stops working.
 	// 48 random bytes base64-encode to 64 characters, under bcrypt's 72-byte input limit.
 	if newPassword, err := random.GenerateString(48); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to generate random password", user))
+		derp.Report(derp.Wrap(err, location, "Generating random password", user))
 	} else if err := service.steranko(session).SetPassword(&user, newPassword); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to set random password", user))
+		derp.Report(derp.Wrap(err, location, "Setting random password", user))
 	}
 
 	// Make a ResetCode
 	if err := service.MakeNewPasswordResetCode(session, &user, model.PasswordResetDurationReset); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error making password reset", user))
+		derp.Report(derp.Wrap(err, location, "Making password reset", user))
 		return
 	}
 
 	// Try to send the lockout email.  If it fails, then don't save the new password reset code.
 	if err := service.emailService.SendUserLockout(session, &user); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to send user lockout email", user))
+		derp.Report(derp.Wrap(err, location, "Sending user lockout email", user))
 	}
 }
 
@@ -826,7 +826,7 @@ func (service *User) MakeNewPasswordResetCode(session data.Session, user *model.
 
 	// Try to save the user with the new password reset code.
 	if err := service.Save(session, user, "Create Password Reset Code"); err != nil {
-		return derp.Wrap(err, "service.User.MakeNewPasswordResetCode", "Unable to save user", user)
+		return derp.Wrap(err, "service.User.MakeNewPasswordResetCode", "Saving user", user)
 	}
 
 	return nil
@@ -843,7 +843,7 @@ func (service *User) WebFinger(session data.Session, token string) (digit.Resour
 	// Try to load the user from the database
 	user := model.NewUser()
 	if err := service.LoadByToken(session, token, &user); err != nil {
-		return digit.Resource{}, derp.Wrap(err, location, "Unable to load user", token)
+		return digit.Resource{}, derp.Wrap(err, location, "Loading user", token)
 	}
 
 	// Make a WebFinger resource for this user.
@@ -892,7 +892,7 @@ func (service *User) CalculateTags(session data.Session, user *model.User) {
 	template, err := service.templateService.Load(user.OutboxTemplate)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to load template", user.OutboxTemplate))
+		derp.Report(derp.Wrap(err, location, "Loading template", user.OutboxTemplate))
 		return
 	}
 
@@ -915,7 +915,7 @@ func (service *User) CalculateTags(session data.Session, user *model.User) {
 	hashtagNames, _, err := service.searchTagService.NormalizeTags(session, hashtags...)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Error normalizing tags", hashtags))
+		derp.Report(derp.Wrap(err, location, "Normalizing tags", hashtags))
 	}
 
 	// Apply the normalized hashtag names to the user object

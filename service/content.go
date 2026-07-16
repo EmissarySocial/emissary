@@ -60,7 +60,7 @@ func (service *Content) Format(content *model.Content) {
 		resultHTML, err := service.editorJS.GenerateHTML(content.Raw)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Error converting EditorJS to HTML"))
+			derp.Report(derp.Wrap(err, location, "Converting EditorJS to HTML"))
 		}
 		content.HTML = resultHTML
 
@@ -98,7 +98,7 @@ func (service *Content) Format(content *model.Content) {
 		)
 
 		if err := md.Convert([]byte(content.Raw), &buffer); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error converting Markdown to HTML"))
+			derp.Report(derp.Wrap(err, location, "Converting Markdown to HTML"))
 		}
 
 		content.HTML = buffer.String()

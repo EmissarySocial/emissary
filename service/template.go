@@ -91,7 +91,7 @@ func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
 	haltOnError := len(service.templates) == 0
 
 	if err := service.loadTemplates(haltOnError); err != nil {
-		derp.Report(derp.Wrap(err, "service.Template.Refresh", "Unable to load templates from filesystem"))
+		derp.Report(derp.Wrap(err, "service.Template.Refresh", "Loading templates from filesystem"))
 		return
 	}
 
@@ -113,7 +113,7 @@ func (service *Template) watch() {
 	// Start new watchers.
 	for _, folder := range service.locations {
 		if err := service.filesystemService.Watch(folder, changes, service.refresh); err != nil {
-			derp.Report(derp.Wrap(err, "service.template.Watch", "Error watching filesystem", folder))
+			derp.Report(derp.Wrap(err, "service.template.Watch", "Watching filesystem", folder))
 		}
 	}
 
@@ -125,7 +125,7 @@ func (service *Template) watch() {
 			// A watch-triggered reload must never halt the process: the previously-loaded
 			// templates are still serving, so on error we report and keep running.
 			if err := service.loadTemplates(false); err != nil {
-				derp.Report(derp.Wrap(err, "service.template.Watch", "Unable to load templates from filesystem"))
+				derp.Report(derp.Wrap(err, "service.template.Watch", "Loading templates from filesystem"))
 			}
 
 		case <-service.refresh:
@@ -153,14 +153,14 @@ func (service *Template) loadTemplates(haltOnError bool) error {
 		filesystem, err := service.filesystemService.GetFS(fileLocation)
 
 		if err != nil {
-			maybeHalt(derp.Wrap(err, location, "Error getting filesystem adapter", fileLocation), haltOnError)
+			maybeHalt(derp.Wrap(err, location, "Getting filesystem adapter", fileLocation), haltOnError)
 			continue
 		}
 
 		directories, err := fs.ReadDir(filesystem, ".")
 
 		if err != nil {
-			maybeHalt(derp.Wrap(err, location, "Unable to read directory", fileLocation), haltOnError)
+			maybeHalt(derp.Wrap(err, location, "Reading directory", fileLocation), haltOnError)
 			continue
 		}
 
@@ -180,7 +180,7 @@ func (service *Template) loadTemplates(haltOnError bool) error {
 			subdirectory, err := fs.Sub(filesystem, directoryName)
 
 			if err != nil {
-				maybeHalt(derp.Wrap(err, location, "Error getting filesystem adapter for sub-directory", fileLocation), haltOnError)
+				maybeHalt(derp.Wrap(err, location, "Getting filesystem adapter for sub-directory", fileLocation), haltOnError)
 				continue
 			}
 
@@ -190,27 +190,27 @@ func (service *Template) loadTemplates(haltOnError bool) error {
 
 			case DefinitionEmail:
 				if err := service.emailService.Add(subdirectory, file); err != nil {
-					maybeHalt(derp.Wrap(err, location, "Error adding theme"), haltOnError)
+					maybeHalt(derp.Wrap(err, location, "Adding theme"), haltOnError)
 				}
 
 			case DefinitionTheme:
 				if err := service.themeService.Add(directoryName, subdirectory, file); err != nil {
-					maybeHalt(derp.Wrap(err, location, "Error adding theme"), haltOnError)
+					maybeHalt(derp.Wrap(err, location, "Adding theme"), haltOnError)
 				}
 
 			case DefinitionTemplate:
 				if err := service.Add(directoryName, subdirectory, file); err != nil {
-					maybeHalt(derp.Wrap(err, location, "Error adding template"), haltOnError)
+					maybeHalt(derp.Wrap(err, location, "Adding template"), haltOnError)
 				}
 
 			case DefinitionRegistration:
 				if err := service.registrationService.Add(directoryName, subdirectory, file); err != nil {
-					maybeHalt(derp.Wrap(err, location, "Error adding registration"), haltOnError)
+					maybeHalt(derp.Wrap(err, location, "Adding registration"), haltOnError)
 				}
 
 			case DefinitionWidget:
 				if err := service.widgetService.Add(directoryName, subdirectory, file); err != nil {
-					maybeHalt(derp.Wrap(err, location, "Error adding widget"), haltOnError)
+					maybeHalt(derp.Wrap(err, location, "Adding widget"), haltOnError)
 				}
 
 			default:
@@ -221,7 +221,7 @@ func (service *Template) loadTemplates(haltOnError bool) error {
 
 	// Calculate inheritance for Templates
 	if err := service.calculateAllInheritance(); err != nil {
-		maybeHalt(derp.Wrap(err, location, "Error calculating Template inheritance"), haltOnError)
+		maybeHalt(derp.Wrap(err, location, "Calculating Template inheritance"), haltOnError)
 	}
 
 	// Calculate inheritance for Themes
@@ -243,7 +243,7 @@ func (service *Template) loadTemplates(haltOnError bool) error {
 
 	// Calculate access lists for all Templates
 	if err := service.calculateAccessLists(); err != nil {
-		return derp.Wrap(err, location, "Error calculating access lists")
+		return derp.Wrap(err, location, "Calculating access lists")
 	}
 
 	// Assign the prep area to live
@@ -277,7 +277,7 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 
 	// Unmarshal the file into the schema.
 	if err := hjson.Unmarshal(definition, &result); err != nil {
-		return derp.Wrap(err, location, "Unable to load Schema", templateID)
+		return derp.Wrap(err, location, "Loading Schema", templateID)
 	}
 
 	// All template schemas (except kludged registrations) also inherit the base schema of the model object they build
@@ -287,12 +287,12 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 
 	// Load all HTML templates from the filesystem
 	if err := loadHTMLTemplateFromFilesystem(filesystem, result.HTMLTemplate, service.funcMap); err != nil {
-		return derp.Wrap(err, location, "Unable to load Template", templateID)
+		return derp.Wrap(err, location, "Loading Template", templateID)
 	}
 
 	// Load all Bundles from the filesystem
 	if err := populateBundles(result.Bundles, filesystem); err != nil {
-		return derp.Wrap(err, location, "Unable to load Bundles", templateID)
+		return derp.Wrap(err, location, "Loading Bundles", templateID)
 	}
 
 	// Keep a pointer to the filesystem resources (if present)
@@ -527,7 +527,7 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 func (service *Template) calculateAllInheritance() error {
 	for _, template := range service.templatePrep {
 		if _, err := service.calculateInheritance(template); err != nil {
-			return derp.Wrap(err, "service.template.calculateAllInheritance", "Error calculating inheritance", template.TemplateID)
+			return derp.Wrap(err, "service.template.calculateAllInheritance", "Calculating inheritance", template.TemplateID)
 		}
 	}
 
@@ -558,7 +558,7 @@ func (service *Template) calculateInheritance(template model.Template) (model.Te
 		parent, err := service.calculateInheritance(parent)
 
 		if err != nil {
-			return model.Template{}, derp.Wrap(err, location, "Error calculating inheritance", template.TemplateID, parentID)
+			return model.Template{}, derp.Wrap(err, location, "Calculating inheritance", template.TemplateID, parentID)
 		}
 
 		template.Inherit(&parent)
@@ -715,7 +715,7 @@ func (service *Template) LoadAdmin(templateID string) (model.Template, error) {
 	template, err := service.Load(templateID)
 
 	if err != nil {
-		return template, derp.Wrap(err, location, "Unable to load admin template", templateID)
+		return template, derp.Wrap(err, location, "Loading admin template", templateID)
 	}
 
 	// RULE: Validate Template ContainedBy

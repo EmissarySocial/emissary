@@ -93,29 +93,29 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 	encryptionKey, err := hex.DecodeString(service.masterKey)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to decode encryption key")
+		return derp.Wrap(err, location, "Decoding encryption key")
 	}
 
 	// Encrypt plaintext values in vault
 	if err := connection.Vault.Encrypt(encryptionKey); err != nil {
-		return derp.Wrap(err, location, "Error encrypting vault values")
+		return derp.Wrap(err, location, "Encrypting vault values")
 	}
 
 	// Decrypt the vault data
 	vault, err := service.DecryptVault(connection)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error getting vault")
+		return derp.Wrap(err, location, "Getting vault")
 	}
 
 	// Trigger the `BeforeSave` lifecycle hook.
 	if err := provider.BeforeSave(connection, vault); err != nil {
-		return derp.Wrap(err, location, "Error in provider BeforeSave", connection.ProviderID)
+		return derp.Wrap(err, location, "Calling provider BeforeSave", connection.ProviderID)
 	}
 
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(connection); err != nil {
-		return derp.Wrap(err, location, "Unable to validate Connection", connection)
+		return derp.Wrap(err, location, "Validating Connection", connection)
 	}
 
 	switch connection.Active {
@@ -124,14 +124,14 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 	case true:
 
 		if err := provider.Connect(connection, vault, service.host); err != nil {
-			return derp.Wrap(err, location, "Error installing connection")
+			return derp.Wrap(err, location, "Installing connection")
 		}
 
 	// Disconnect the connection
 	case false:
 
 		if err := provider.Disconnect(connection, vault); err != nil {
-			return derp.Wrap(err, location, "Error installing connection")
+			return derp.Wrap(err, location, "Installing connection")
 		}
 	}
 
@@ -139,7 +139,7 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 	service.domain.Connections[connection.ProviderID] = *connection
 
 	if err := service.domainService.Save(session, *service.domain, "Updated connection: "+connection.ProviderID); err != nil {
-		return derp.Wrap(err, location, "Unable to save Connection", connection, note)
+		return derp.Wrap(err, location, "Saving Connection", connection, note)
 	}
 
 	return nil
@@ -161,19 +161,19 @@ func (service *Connection) Delete(session data.Session, connection *model.Connec
 	vault, err := service.DecryptVault(connection)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error getting vault")
+		return derp.Wrap(err, location, "Getting vault")
 	}
 
 	// Disconnect from the Provider
 	if err := provider.Disconnect(connection, vault); err != nil {
-		return derp.Wrap(err, location, "Error installing connection")
+		return derp.Wrap(err, location, "Installing connection")
 	}
 
 	// Delete the Connection from the domain (and save)
 	delete(service.domain.Connections, connection.ProviderID)
 
 	if err := service.domainService.Save(session, *service.domain, "Deleted connection: "+connection.ProviderID); err != nil {
-		return derp.Wrap(err, "service.Connection.Delete", "Unable to delete Connection", connection, note)
+		return derp.Wrap(err, "service.Connection.Delete", "Deleting Connection", connection, note)
 	}
 
 	return nil
@@ -265,7 +265,7 @@ func (service *Connection) LoadByID(session data.Session, connectionID primitive
 	criteria := exp.Equal("_id", connectionID)
 
 	if err := service.Load(session, criteria, connection); err != nil {
-		return derp.Wrap(err, location, "Unable to load Connection", connectionID)
+		return derp.Wrap(err, location, "Loading Connection", connectionID)
 	}
 
 	return nil
@@ -298,7 +298,7 @@ func (service *Connection) LoadActiveByType(session data.Session, typeID string,
 	criteria := exp.Equal("type", typeID).AndEqual("active", true)
 
 	if err := service.Load(session, criteria, connection); err != nil {
-		return derp.Wrap(err, location, "Unable to load Connection", typeID)
+		return derp.Wrap(err, location, "Loading Connection", typeID)
 	}
 
 	return nil
@@ -317,7 +317,7 @@ func (service *Connection) LoadByProvider(session data.Session, providerID strin
 	criteria := exp.Equal("providerId", providerID)
 
 	if err := service.Load(session, criteria, connection); err != nil {
-		return derp.Wrap(err, location, "Unable to load Connection", providerID)
+		return derp.Wrap(err, location, "Loading Connection", providerID)
 	}
 
 	return nil
@@ -344,7 +344,7 @@ func (service *Connection) LoadOrCreateByProvider(session data.Session, provider
 			return result, nil
 		}
 
-		return result, derp.Wrap(err, location, "Unable to load Connection", providerID)
+		return result, derp.Wrap(err, location, "Loading Connection", providerID)
 	}
 
 	return result, nil
@@ -362,14 +362,14 @@ func (service *Connection) DecryptVault(connection *model.Connection, values ...
 	encryptionKey, err := hex.DecodeString(service.masterKey)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to decode encryption key")
+		return nil, derp.Wrap(err, location, "Decoding encryption key")
 	}
 
 	// Decrypt the vault
 	result, err := connection.Vault.Decrypt(encryptionKey, values...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error decrypting vault")
+		return nil, derp.Wrap(err, location, "Decrypting vault")
 	}
 
 	return result, nil
@@ -412,12 +412,12 @@ func (service *Connection) GetAccessToken(connection *model.Connection) (oauth2.
 	vault, err := service.DecryptVault(connection)
 
 	if err != nil {
-		return oauth2.Token{}, derp.Wrap(err, location, "Error decrypting vault", connection.ProviderID)
+		return oauth2.Token{}, derp.Wrap(err, location, "Decrypting vault", connection.ProviderID)
 	}
 
 	// Refresh the Access Token according to the provider's rules
 	if err := provider.Refresh(connection, vault); err != nil {
-		return oauth2.Token{}, derp.Wrap(err, location, "Unable to refresh access token", connection.ProviderID)
+		return oauth2.Token{}, derp.Wrap(err, location, "Refreshing access token", connection.ProviderID)
 	}
 
 	// Triumphantly return the access token

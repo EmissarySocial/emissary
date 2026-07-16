@@ -71,7 +71,7 @@ func (service *OAuthClient) Iterator(session data.Session, criteria exp.Expressi
 func (service *OAuthClient) Load(session data.Session, criteria exp.Expression, client *model.OAuthClient) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), client); err != nil {
-		return derp.Wrap(err, "service.OAuthClient.Load", "Unable to load OAuthClient", criteria)
+		return derp.Wrap(err, "service.OAuthClient.Load", "Loading OAuthClient", criteria)
 	}
 
 	return nil
@@ -84,7 +84,7 @@ func (service *OAuthClient) Save(session data.Session, client *model.OAuthClient
 
 	// Validate the value (using the global OAuthClient schema) before saving
 	if _, err := service.Schema().Validate(client); err != nil {
-		return derp.Wrap(err, location, "Unable to validate OAuthClient using OAuthClientSchema", client)
+		return derp.Wrap(err, location, "Validating OAuthClient using OAuthClientSchema", client)
 	}
 
 	// Generate secrets for new clients that weren't created via "Client ID Metadata Documents"
@@ -94,7 +94,7 @@ func (service *OAuthClient) Save(session data.Session, client *model.OAuthClient
 		secret, err := random.GenerateString(64)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to generate client secret")
+			return derp.Wrap(err, location, "Generating client secret")
 		}
 
 		client.ClientSecret = secret
@@ -102,7 +102,7 @@ func (service *OAuthClient) Save(session data.Session, client *model.OAuthClient
 
 	// Try to save the OAuthClient to the database
 	if err := service.collection(session).Save(client, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save OAuthClient", client, note)
+		return derp.Wrap(err, location, "Saving OAuthClient", client, note)
 	}
 
 	return nil
@@ -115,12 +115,12 @@ func (service *OAuthClient) Delete(session data.Session, client *model.OAuthClie
 
 	// Delete this OAuthClient
 	if err := service.collection(session).Delete(client, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete OAuthClient", client, note)
+		return derp.Wrap(err, location, "Deleting OAuthClient", client, note)
 	}
 
 	// Delete related records -- this can happen in the background
 	if err := service.oauthUserTokenService.DeleteByClient(session, client.ClientID, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete attachments", client, note)
+		return derp.Wrap(err, location, "Deleting attachments", client, note)
 	}
 
 	// Bueno!!
@@ -168,21 +168,21 @@ func (service *OAuthClient) LoadOrCreateByClientToken(session data.Session, toke
 	const location = "service.OAuthClient.LoadOrCreateByClientToken"
 
 	// First, try to load the client using the token
-	err := service.LoadByToken(session, token, client)
+	if err := service.LoadByToken(session, token, client); err != nil {
 
-	if err == nil {
+		// Anything other than NotFound is a real failure; a NotFound falls through to create one
+		if !derp.IsNotFound(err) {
+			return derp.Wrap(err, location, "Loading OAuthClient", token)
+		}
+	} else {
 		return nil
-	}
-
-	if !derp.IsNotFound(err) {
-		return derp.Wrap(err, location, "Unable to load OAuthClient", token)
 	}
 
 	// Otherwise, create a new Client by looking up the "Client ID Metadata Document"
 	metadata, err := cimd.GetMetadata(service.host, token)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load Client ID Metadata Document", token)
+		return derp.Wrap(err, location, "Loading Client ID Metadata Document", token)
 	}
 
 	// Populate the new Client from the Actor's data
@@ -195,7 +195,7 @@ func (service *OAuthClient) LoadOrCreateByClientToken(session data.Session, toke
 
 	// Save the new Client
 	if err := service.Save(session, client, "Created via Client ID Metadata Document"); err != nil {
-		return derp.Wrap(err, location, "Unable to save client")
+		return derp.Wrap(err, location, "Saving client")
 	}
 
 	// Success.
@@ -213,7 +213,7 @@ func (service *OAuthClient) ValidateClientSecret(session data.Session, clientID 
 	// Try to load the client to confirm its secret
 	client := model.NewOAuthClient()
 	if err := service.LoadByClientID(session, clientID, &client); err != nil {
-		return derp.Wrap(err, location, "Unable to load client", clientID)
+		return derp.Wrap(err, location, "Loading client", clientID)
 	}
 
 	// Confirm the client.Secret

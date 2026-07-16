@@ -17,7 +17,7 @@ func (geocoder OpenStreetMap) GeocodeAddress(address string) (point geo.Address,
 	result, err := openstreetmap.Geocoder().Geocode(address)
 
 	if err != nil {
-		return geo.Address{}, derp.Wrap(err, "service.geocoder.OpenStreetMap.GeocodeAddress", "Unable to geocode address", address)
+		return geo.Address{}, derp.Wrap(err, "service.geocoder.OpenStreetMap.GeocodeAddress", "Geocoding address", address)
 	}
 
 	return geo.Address{

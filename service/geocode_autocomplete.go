@@ -30,7 +30,7 @@ func (service GeocodeAutocomplete) Search(session data.Session, query string, bi
 	result, err := geocoder.AutocompleteAddress(query, bias)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to retrieve search results")
+		return nil, derp.Wrap(err, location, "Retrieving search results")
 	}
 
 	return result, nil
@@ -46,7 +46,7 @@ func (service GeocodeAutocomplete) getGeocoder(session data.Session) geocoder.Ad
 	connection := model.NewConnection()
 
 	if err := service.connectionService.LoadActiveByType(session, model.ConnectionTypeGeocodeAutocomplete, &connection); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to load Autocomplete connection"))
+		derp.Report(derp.Wrap(err, location, "Loading Autocomplete connection"))
 	}
 
 	switch connection.Data.GetString("provider") {

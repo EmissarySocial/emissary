@@ -85,7 +85,7 @@ func (service *Outbox2) Range(session data.Session, criteria exp.Expression, opt
 	iter, err := service.collection(session).Iterator(notDeleted(criteria), options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Outbox2.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.Outbox2.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewOutboxItem), nil
@@ -95,7 +95,7 @@ func (service *Outbox2) Range(session data.Session, criteria exp.Expression, opt
 func (service *Outbox2) Load(session data.Session, criteria exp.Expression, result *model.OutboxItem) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Outbox2.Load", "Unable to load Outbox activity", criteria)
+		return derp.Wrap(err, "service.Outbox2.Load", "Loading Outbox activity", criteria)
 	}
 
 	return nil
@@ -134,7 +134,7 @@ func (service *Outbox2) Save(session data.Session, item *model.OutboxItem, note 
 			inboxActivity.PublishedDate = asActivity.Published().UnixMilli()
 
 			if err := service.inboxService.Save(session, &inboxActivity, "Saved directly from outbox"); err != nil {
-				return derp.Wrap(err, location, "Unable to save item to inbox", inboxActivity)
+				return derp.Wrap(err, location, "Saving item to inbox", inboxActivity)
 			}
 		}
 
@@ -151,7 +151,7 @@ func (service *Outbox2) Save(session data.Session, item *model.OutboxItem, note 
 
 	// Save the value to the database
 	if err := service.collection(session).Save(item, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Outbox activity", item, note)
+		return derp.Wrap(err, location, "Saving Outbox activity", item, note)
 	}
 
 	return nil
@@ -166,7 +166,7 @@ func (service *Outbox2) Delete(session data.Session, item *model.OutboxItem, not
 	criteria := exp.Equal("_id", item.ActivityID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Outbox activity", item, note)
+		return derp.Wrap(err, location, "Deleting Outbox activity", item, note)
 	}
 
 	return nil
@@ -233,12 +233,12 @@ func (service *Outbox2) DeleteByActor(session data.Session, actorType string, ac
 	rangeFunc, err := service.RangeByActor(session, actorType, actorID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to query Outbox activities", actorType, actorID)
+		return derp.Wrap(err, location, "Querying Outbox activities", actorType, actorID)
 	}
 
 	for message := range rangeFunc {
 		if err := service.Delete(session, &message, "Deleted"); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to delete Outbox activity", message))
+			derp.Report(derp.Wrap(err, location, "Deleting Outbox activity", message))
 		}
 	}
 

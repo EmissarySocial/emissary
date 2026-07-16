@@ -59,7 +59,7 @@ func (filesystem *Filesystem) GetFS(folder mapof.String) (fs.FS, error) {
 		result, err := fs.Sub(filesystem.embedded, "_embed/"+folder["location"])
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Error getting embedded filesystem", folder)
+			return nil, derp.Wrap(err, location, "Getting embedded filesystem", folder)
 		}
 
 		return result, nil
@@ -72,7 +72,7 @@ func (filesystem *Filesystem) GetFS(folder mapof.String) (fs.FS, error) {
 		locationURL, err := url.Parse(folder["location"])
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Error parsing Git URL", folder)
+			return nil, derp.Wrap(err, location, "Parsing Git URL", folder)
 		}
 
 		return gitfs.New(locationURL)
@@ -139,7 +139,7 @@ func (filesystem *Filesystem) GetAfero(folder mapof.String) (afero.Fs, error) {
 		session, err := session.NewSession(&config)
 
 		if err != nil {
-			return nil, derp.Wrap(err, "service.Filesystem.GetAfero", "Unable to create AWS session", folder)
+			return nil, derp.Wrap(err, "service.Filesystem.GetAfero", "Creating AWS session", folder)
 		}
 
 		// Create an S3 filesystem
@@ -189,7 +189,7 @@ func (filesystem *Filesystem) Watch(folder mapof.String, changes chan<- bool, do
 	// If we CAN watch this adapter, then do it.
 	if folder["adapter"] == config.FolderAdapterFile {
 		if err := filesystem.watchOS(folder["location"], changes, done); err != nil {
-			return derp.Wrap(err, "service.Filesystem.Watch", "Error watching filesystem", folder)
+			return derp.Wrap(err, "service.Filesystem.Watch", "Watching filesystem", folder)
 		}
 		return nil
 	}
@@ -208,21 +208,21 @@ func (filesystem *Filesystem) watchOS(uri string, changes chan<- bool, done <-ch
 	entries, err := os.ReadDir(uri)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to read directory", uri)
+		return derp.Wrap(err, location, "Reading directory", uri)
 	}
 
 	// Create a new directory watcher
 	watcher, err := fsnotify.NewWatcher()
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to create watcher", uri)
+		return derp.Wrap(err, location, "Creating watcher", uri)
 	}
 
 	// Watch the top-level directory
 	// log.Debug().Str("loc", location).Msg("*** Watching for changes to directory: " + uri)
 
 	if err := watcher.Add(uri); err != nil {
-		return derp.Wrap(err, location, "Error watching directory", uri)
+		return derp.Wrap(err, location, "Watching directory", uri)
 	}
 
 	// Do not watch these directories
@@ -240,7 +240,7 @@ func (filesystem *Filesystem) watchOS(uri string, changes chan<- bool, done <-ch
 		}
 
 		if err := filesystem.watchOS(uri+"/"+entry.Name(), changes, done); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error watching sub-directory", uri+"/"+entry.Name()))
+			derp.Report(derp.Wrap(err, location, "Watching sub-directory", uri+"/"+entry.Name()))
 		}
 	}
 
@@ -254,11 +254,11 @@ func (filesystem *Filesystem) watchOS(uri string, changes chan<- bool, done <-ch
 				changes <- true
 
 			case err := <-watcher.Errors:
-				derp.Report(derp.Wrap(err, location, "Error watching directory", uri))
+				derp.Report(derp.Wrap(err, location, "Watching directory", uri))
 
 			case <-done:
 				if err := watcher.Close(); err != nil {
-					derp.Report(derp.Wrap(err, location, "Error closing watcher"))
+					derp.Report(derp.Wrap(err, location, "Closing watcher"))
 				}
 				return
 			}

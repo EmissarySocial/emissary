@@ -36,7 +36,7 @@ func (s SterankoSigninService) SigninFailure(request *http.Request, username str
 	signinAttempt := model.NewSigninAttempt(username)
 
 	if err := s.collection().Save(&signinAttempt, ""); err != nil {
-		derp.Report(derp.Wrap(err, "SterankoSigninService.SigninFailure", "Unable to save signin attempt", signinAttempt))
+		derp.Report(derp.Wrap(err, "SterankoSigninService.SigninFailure", "Saving signin attempt", signinAttempt))
 	}
 }
 
@@ -46,7 +46,7 @@ func (s SterankoSigninService) IsSigninLocked(request *http.Request, username st
 	failureCount, err := s.collection().Count(exp.Equal("username", username))
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "SterankoSigninService.IsSigninLocked", "Unable to count signin attempts for user", username))
+		derp.Report(derp.Wrap(err, "SterankoSigninService.IsSigninLocked", "Counting signin attempts for user", username))
 		return true
 	}
 
@@ -66,7 +66,7 @@ func (s SterankoSigninService) IsSigninLocked(request *http.Request, username st
 func (s SterankoSigninService) ClearSigninAttempts(username string) error {
 
 	if err := s.collection().HardDelete(exp.Equal("username", username)); err != nil {
-		return derp.Wrap(err, "SterankoSigninService.ClearSigninAttempts", "Unable to clear signin attempts for user", username)
+		return derp.Wrap(err, "SterankoSigninService.ClearSigninAttempts", "Clearing signin attempts for user", username)
 	}
 
 	return nil

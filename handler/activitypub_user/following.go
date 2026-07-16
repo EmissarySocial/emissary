@@ -32,7 +32,7 @@ func GetFollowingRecord(ctx *steranko.Context, factory *service.Factory, session
 	following := model.NewFollowing()
 
 	if err := followingService.LoadByToken(session, user.UserID, ctx.Param("followingId"), &following); err != nil {
-		return derp.Wrap(err, location, "Unable to load following")
+		return derp.Wrap(err, location, "Loading following")
 	}
 
 	result := followingService.AsJSONLD(&following)

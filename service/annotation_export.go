@@ -23,14 +23,14 @@ func (service *Annotation) ExportDocument(session data.Session, userID primitive
 	// Load the Annotation
 	annotation := model.NewAnnotation()
 	if err := service.LoadByID(session, userID, annotationID, &annotation); err != nil {
-		return "", derp.Wrap(err, location, "Unable to load Annotation")
+		return "", derp.Wrap(err, location, "Loading Annotation")
 	}
 
 	// Marshal the annotation as JSON
 	result, err := json.Marshal(annotation)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to marshal Annotation", annotation)
+		return "", derp.Wrap(err, location, "Marshaling Annotation", annotation)
 	}
 
 	// Success

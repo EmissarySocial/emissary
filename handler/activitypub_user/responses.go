@@ -48,7 +48,7 @@ func GetResponseCollection(ctx *steranko.Context, factory *service.Factory, sess
 	responses, err := responseService.QueryByUserAndDate(session, user.UserID, responseType, publishedDate, pageSize)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load responses")
+		return derp.Wrap(err, location, "Loading responses")
 	}
 
 	// Return results as an OrderedCollectionPage
@@ -78,7 +78,7 @@ func GetResponse(ctx *steranko.Context, factory *service.Factory, session data.S
 	response := model.NewResponse()
 
 	if err := responseService.LoadByID(session, user.UserID, responseID, &response); err != nil {
-		return derp.Wrap(err, location, "Unable to load response")
+		return derp.Wrap(err, location, "Loading response")
 	}
 
 	if response.Actor != user.ProfileURL {

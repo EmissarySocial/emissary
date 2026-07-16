@@ -17,7 +17,7 @@ func (service *Outbox) Import(session data.Session, _ *model.Import, importItem 
 	// Unmarshal the JSON document into a new OutboxMessage
 	outboxMessage := model.NewOutboxMessage()
 	if err := json.Unmarshal(document, &outboxMessage); err != nil {
-		return derp.Wrap(err, location, "Unable to parse remote document", document)
+		return derp.Wrap(err, location, "Parsing remote document", document)
 	}
 
 	// Update mapping values in the importItem
@@ -29,12 +29,12 @@ func (service *Outbox) Import(session data.Session, _ *model.Import, importItem 
 
 	// Map the UserID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &outboxMessage.ActorID); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map ActorID", "ActorID: "+user.UserID.Hex()+", OutboxMessageID: "+outboxMessage.OutboxMessageID.Hex()))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Mapping ActorID", "ActorID: "+user.UserID.Hex()+", OutboxMessageID: "+outboxMessage.OutboxMessageID.Hex()))
 	}
 
 	// Save the OutboxMessage to the database
 	if err := service.Save(session, &outboxMessage, "Imported"); err != nil {
-		return derp.Wrap(err, location, "Unable to save imported OutboxMessage")
+		return derp.Wrap(err, location, "Saving imported OutboxMessage")
 	}
 
 	// A Man, A Plan, A Canal. Panama.
@@ -47,7 +47,7 @@ func (service *Outbox) UndoImport(session data.Session, importItem *model.Import
 	const location = "service.OutboxMessage.UndoImport"
 
 	if err := service.HardDeleteByID(session, importItem.UserID, importItem.LocalID); err != nil {
-		return derp.Wrap(err, location, "Unable to delete record", importItem.LocalID)
+		return derp.Wrap(err, location, "Deleting record", importItem.LocalID)
 	}
 
 	return nil

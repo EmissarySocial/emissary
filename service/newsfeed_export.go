@@ -23,14 +23,14 @@ func (service *NewsFeed) ExportDocument(session data.Session, userID primitive.O
 	// Load the NewsFeed
 	newsItem := model.NewNewsItem()
 	if err := service.LoadByID(session, userID, newsItemID, &newsItem); err != nil {
-		return "", derp.Wrap(err, location, "Unable to load NewsFeed")
+		return "", derp.Wrap(err, location, "Loading NewsFeed")
 	}
 
 	// Marshal the newsItem as JSON
 	result, err := json.Marshal(newsItem)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to marshal NewsFeed", newsItem)
+		return "", derp.Wrap(err, location, "Marshaling NewsFeed", newsItem)
 	}
 
 	// Success

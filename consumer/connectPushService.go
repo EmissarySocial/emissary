@@ -34,13 +34,13 @@ func ConnectPushService(factory *service.Factory, session data.Session, user *mo
 		actor, err := factory.ActivityStream().UserClient(user.UserID).Load(following.URL, sherlock.AsActor())
 
 		if err != nil {
-			return queue.Error(derp.Wrap(err, location, "Unable to load ActivityPub Actor", "url: "+following.URL))
+			return queue.Error(derp.Wrap(err, location, "Loading ActivityPub Actor", "url: "+following.URL))
 		}
 
 		// Try to connect to ActivityPub actor (if present)
 		if inbox := actor.Inbox(); inbox.NotNil() {
 			if err := factory.Following().ConnectActivityPub(session, following, &actor); err != nil {
-				return queue.Error(derp.Wrap(err, location, "Unable to connect to ActivityPub"))
+				return queue.Error(derp.Wrap(err, location, "Connecting to ActivityPub"))
 			}
 			return success()
 		}
@@ -49,7 +49,7 @@ func ConnectPushService(factory *service.Factory, session data.Session, user *mo
 	// Fall through means that we can't connect to a push service.
 	// Update the status to "POLLING" and report a success because there's nothing more to do.
 	if err := factory.Following().SetStatusPolling(session, following); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to update Following status", following))
+		return queue.Error(derp.Wrap(err, location, "Updating Following status", following))
 	}
 
 	// Done

@@ -33,14 +33,14 @@ func DeleteAny(context Context, activity streams.Document) error {
 	activities, err := outboxService.RangeByObjectID(context.session, model.FollowerTypeStream, context.stream.StreamID, objectID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to locate matching activities", objectID)
+		return derp.Wrap(err, location, "Locating matching activities", objectID)
 	}
 
 	// Delete all outbox activities that match the deleted object
 	for activity := range activities {
 
 		if err := outboxService.Delete(context.session, &activity, "Removed via ActivityPub"); err != nil {
-			return derp.Wrap(err, location, "Unable to delete message", activity)
+			return derp.Wrap(err, location, "Deleting message", activity)
 		}
 	}
 
@@ -48,7 +48,7 @@ func DeleteAny(context Context, activity streams.Document) error {
 	actor, err := context.ActivityPubActor()
 
 	if err != nil {
-		return derp.Wrap(err, "handler.activityPub_stream.DeleteAny", "Unable to load actor", context.stream)
+		return derp.Wrap(err, "handler.activityPub_stream.DeleteAny", "Loading actor", context.stream)
 	}
 
 	// Announce the deletion to the stream's followers as a post-commit send (F3, W6 option B).

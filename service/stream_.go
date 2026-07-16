@@ -114,7 +114,7 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 	count, err := service.Count(session, exp.All())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to count streams")
+		return derp.Wrap(err, location, "Counting streams")
 	}
 
 	// If the database is not empty, then do not add more...
@@ -128,7 +128,7 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 		stream, err := service.newStartupStream(data)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to build startup stream", data)
+			return derp.Wrap(err, location, "Building startup stream", data)
 		}
 
 		// Save the new Stream to the database.  Save is the single validation gate: it
@@ -137,7 +137,7 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 		// NOT pre-validate, because Validate rejects any value that would be rewritten --
 		// and freshly-rendered article HTML is always rewritten by the "html" sanitizer.
 		if err := service.Save(session, &stream, "Created by Startup"); err != nil {
-			return derp.Wrap(err, location, "Unable to save startup stream", stream)
+			return derp.Wrap(err, location, "Saving startup stream", stream)
 		}
 	}
 
@@ -169,7 +169,7 @@ func (service *Stream) newStartupStream(data mapof.Any) (model.Stream, error) {
 	}
 
 	if err := service.Schema().SetAll(&stream, values); err != nil {
-		return stream, derp.Wrap(err, location, "Unable to set stream data", values)
+		return stream, derp.Wrap(err, location, "Setting stream data", values)
 	}
 
 	// Set this Stream as "Published"
@@ -230,7 +230,7 @@ func (service *Stream) Range(session data.Session, criteria exp.Expression, opti
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Stream.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.Stream.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewStream), nil
@@ -255,7 +255,7 @@ func (service *Stream) RangeSummary(session data.Session, criteria exp.Expressio
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, location, "Creating iterator", criteria)
 	}
 
 	// Convert it into a RangeFunc
@@ -297,7 +297,7 @@ func (service *Stream) Load(session data.Session, criteria exp.Expression, strea
 
 	// Load the Stream from the database
 	if err := service.collection(session).Load(notDeleted(criteria), stream); err != nil {
-		return derp.Wrap(err, location, "Unable to load Stream", criteria)
+		return derp.Wrap(err, location, "Loading Stream", criteria)
 	}
 
 	return nil
@@ -331,7 +331,7 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 		maxRank, err := service.MaxRank(session, stream.ParentID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to calculate max rank")
+			return derp.Wrap(err, location, "Calculating max rank")
 		}
 		stream.Rank = maxRank
 	}
@@ -349,7 +349,7 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	// Geocode the Location (if needed)
 	if stream.Location.NotZero() {
 		if err := service.geocodeService.GeocodeAndQueue(session, stream); err != nil {
-			return derp.Wrap(err, location, "Unable to geocode stream", stream.Location)
+			return derp.Wrap(err, location, "Geocoding stream", stream.Location)
 		}
 	}
 
@@ -362,7 +362,7 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	template, err := service.templateService.Load(stream.TemplateID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load template", stream.TemplateID)
+		return derp.Wrap(err, location, "Loading template", stream.TemplateID)
 	}
 
 	// Copy default values from the Template
@@ -396,7 +396,7 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 
 	// Try to save the Stream to the database
 	if err := service.collection(session).Save(stream, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Stream", stream, note)
+		return derp.Wrap(err, location, "Saving Stream", stream, note)
 	}
 
 	// Send SSE notifications to `InReplyTo` streams (if possible)
@@ -417,7 +417,7 @@ func (service *Stream) HardDeleteByID(session data.Session, streamID primitive.O
 	criteria := exp.Equal("_id", streamID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Stream")
+		return derp.Wrap(err, location, "Deleting Stream")
 	}
 
 	return nil
@@ -430,7 +430,7 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 
 	// Delete this Stream
 	if err := service.collection(session).Delete(stream, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Stream from database", stream, note)
+		return derp.Wrap(err, location, "Deleting Stream from database", stream, note)
 	}
 
 	// Send Webhooks (if configured)
@@ -440,38 +440,38 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 		service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
 
 		if err := service.sendSyndicationMessages(session, stream, nil, nil, stream.Syndication.Values); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to send syndication messages", stream))
+			derp.Report(derp.Wrap(err, location, "Sending syndication messages", stream))
 		}
 	}
 
 	// RULE: Delete all related Children
 	if err := service.DeleteByParent(session, stream.StreamID, note); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to delete child streams", stream, note))
+		derp.Report(derp.Wrap(err, location, "Deleting child streams", stream, note))
 	}
 
 	// RULE: Delete all related Attachments
 	if err := service.attachmentService.DeleteAll(session, model.AttachmentObjectTypeStream, stream.StreamID, note); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to delete attachments", stream, note))
+		derp.Report(derp.Wrap(err, location, "Deleting attachments", stream, note))
 	}
 
 	// RULE: Delete all related Drafts
 	if err := service.draftService.Delete(session, stream, note); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to delete drafts", stream, note))
+		derp.Report(derp.Wrap(err, location, "Deleting drafts", stream, note))
 	}
 
 	// RULE: Delete related Context Collection (if exists)
 	if err := service.collectionService.DeleteByURL(session, stream.Context); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to delete context collection", stream, note))
+		derp.Report(derp.Wrap(err, location, "Deleting context collection", stream, note))
 	}
 
 	// RULE: If this Stream is a reply, remove it from its parent's Replies collection (and refresh the count).
 	if err := service.RemoveReply(session, stream.InReplyTo, stream.ActivityPubURL()); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to remove reply from parent collection", stream, note))
+		derp.Report(derp.Wrap(err, location, "Removing reply from parent collection", stream, note))
 	}
 
 	// RULE: Delete Outbox Messages
 	if err := service.outboxService.DeleteByParentID(session, model.FollowerTypeStream, stream.StreamID); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to delete outbox messages", stream, note))
+		derp.Report(derp.Wrap(err, location, "Deleting outbox messages", stream, note))
 	}
 
 	// NON-BLOCKING: Notify other processes on this server that the stream has been updated
@@ -491,12 +491,12 @@ func (service *Stream) DeleteMany(session data.Session, criteria exp.Expression,
 	it, err := service.List(session, criteria)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to list streams to delete", criteria)
+		return derp.Wrap(err, location, "Listing streams to delete", criteria)
 	}
 
 	for stream := model.NewStream(); it.Next(&stream); stream = model.NewStream() {
 		if err := service.Delete(session, &stream, note); err != nil {
-			return derp.Wrap(err, location, "Unable to delete stream", stream)
+			return derp.Wrap(err, location, "Deleting stream", stream)
 		}
 	}
 
@@ -788,7 +788,7 @@ func (service *Stream) LoadWithOptions(session data.Session, criteria exp.Expres
 	it, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error getting iterator")
+		return derp.Wrap(err, location, "Getting iterator")
 	}
 
 	for it.Next(result) {
@@ -822,7 +822,7 @@ func (service *Stream) LoadPrevSibling(session data.Session, parentID primitive.
 		return service.LoadLastSibling(session, parentID, result)
 	}
 
-	return derp.Wrap(err, location, "Unable to load Previous Sibling")
+	return derp.Wrap(err, location, "Loading Previous Sibling")
 }
 
 func (service *Stream) LoadNextSibling(session data.Session, parentID primitive.ObjectID, rank int, result *model.Stream) error {
@@ -841,7 +841,7 @@ func (service *Stream) LoadNextSibling(session data.Session, parentID primitive.
 		return service.LoadFirstSibling(session, parentID, result)
 	}
 
-	return derp.Wrap(err, location, "Unable to load Next Sibling")
+	return derp.Wrap(err, location, "Loading Next Sibling")
 }
 
 func (service *Stream) LoadLastSibling(session data.Session, parentID primitive.ObjectID, result *model.Stream) error {
@@ -940,7 +940,7 @@ func (service *Stream) Shuffle(session data.Session) error {
 
 	collection := service.collection(session)
 	if err := queries.Shuffle(session.Context(), collection); err != nil {
-		return derp.Wrap(err, "service.Stream.Shuffle", "Unable to shuffle users")
+		return derp.Wrap(err, "service.Stream.Shuffle", "Shuffling users")
 	}
 
 	return nil
@@ -955,7 +955,7 @@ func (service *Stream) SetAttributedTo(user *model.User) {
 	session, cancel, err := service.newSession(time.Minute)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to create database session"))
+		derp.Report(derp.Wrap(err, location, "Creating database session"))
 		return
 	}
 
@@ -964,7 +964,7 @@ func (service *Stream) SetAttributedTo(user *model.User) {
 	collection := service.collection(session)
 
 	if err := queries.SetAttributedTo(session.Context(), collection, user.PersonLink()); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to set attributedTo"))
+		derp.Report(derp.Wrap(err, location, "Setting attributedTo"))
 	}
 }
 
@@ -985,7 +985,7 @@ func (service *Stream) DeleteRelatedDuplicate(session data.Session, parentID pri
 	criteria := exp.Equal("parentId", parentID).AndEqual("data.originalStreamId", originalStreamID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, "service.Stream.DeleteRelatedDuplicate", "Unable to delete related duplicate")
+		return derp.Wrap(err, "service.Stream.DeleteRelatedDuplicate", "Deleting related duplicate")
 	}
 
 	return nil
@@ -1025,7 +1025,7 @@ func (service *Stream) MapByPrivileges(session data.Session, privileges ...model
 	streams, err := service.RangeByPrivileges(session, privilegeIDs...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to load streams", privilegeIDs)
+		return nil, derp.Wrap(err, location, "Loading streams", privilegeIDs)
 	}
 
 	// Translate the range of Streams into a map of privilegeID => streamIDs
@@ -1161,7 +1161,7 @@ func (service *Stream) CalculateTags(session data.Session, stream *model.Stream)
 	template, err := service.templateService.Load(stream.TemplateID)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to load Template", stream.TemplateID))
+		derp.Report(derp.Wrap(err, location, "Loading Template", stream.TemplateID))
 		return
 	}
 
@@ -1184,7 +1184,7 @@ func (service *Stream) CalculateTags(session data.Session, stream *model.Stream)
 	hashtagNames, _, err := service.searchTagService.NormalizeTags(session, hashtags...)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Error normalizing tags"))
+		derp.Report(derp.Wrap(err, location, "Normalizing tags"))
 	}
 
 	// Apply the #hashtags back to the Stream
@@ -1214,7 +1214,7 @@ func (service *Stream) NotifyInReplyTo(session data.Session, inReplyTo string) {
 	stream := model.NewStream()
 	if err := service.LoadByToken(session, token, &stream); err != nil {
 
-		derp.Report(derp.Wrap(err, location, "Unable to locate 'InReplyTo' stream", inReplyTo))
+		derp.Report(derp.Wrap(err, location, "Locating 'InReplyTo' stream", inReplyTo))
 		// If the "inReplyTo" stream cannot be loaded, then log
 		// the error but do not fail the rest of the transaction
 		return
@@ -1240,14 +1240,14 @@ func (service *Stream) MoveByUserID(session data.Session, userID primitive.Objec
 	streams, err := service.RangeByParentIDs(session, userID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to query streams", userID)
+		return derp.Wrap(err, location, "Querying streams", userID)
 	}
 
 	// Move each stream one-by-one
 	for stream := range streams {
 
 		if err := service.Move(session, &stream, movedTo); err != nil {
-			return derp.Wrap(err, location, "Unable to move Stream", stream)
+			return derp.Wrap(err, location, "Moving Stream", stream)
 		}
 	}
 
@@ -1301,17 +1301,17 @@ func (service *Stream) Move(session data.Session, stream *model.Stream, movedTo 
 
 	// Update the Stream with the new "movedTo" value but skip all other business rules.
 	if err := service.collection(session).Save(stream, "moved"); err != nil {
-		return derp.Wrap(err, location, "Unable to save Stream")
+		return derp.Wrap(err, location, "Saving Stream")
 	}
 
 	// Delete any related Attachments
 	if err := service.attachmentService.DeleteByCriteria(session, "Stream", stream.StreamID, exp.All(), "moved"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Attachments")
+		return derp.Wrap(err, location, "Deleting Attachments")
 	}
 
 	// Delete any related Notifications (mentions/replies/reactions that referenced this Stream)
 	if err := service.notificationService.DeleteByStreamID(session, stream.StreamID, "moved"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Notifications")
+		return derp.Wrap(err, location, "Deleting Notifications")
 	}
 
 	return nil

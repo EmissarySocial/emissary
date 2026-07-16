@@ -39,7 +39,7 @@ func (geocoder Here) GeocodeAddress(q string) (geo.Address, error) {
 		Result(&response)
 
 	if err := txn.Send(); err != nil {
-		return geo.Address{}, derp.Wrap(err, location, "Error returned by Here.com API")
+		return geo.Address{}, derp.Wrap(err, location, "Calling Here.com API")
 	}
 
 	var items sliceof.MapOfAny = response.GetSliceOfMap("items")
@@ -66,7 +66,7 @@ func (geocoder Here) GeocodeTimezone(address *geo.Address) error {
 
 	if err := txn.Send(); err != nil {
 		derp.Report(err)
-		return derp.Wrap(err, location, "Error returned by Here.com API")
+		return derp.Wrap(err, location, "Calling Here.com API")
 	}
 
 	var items sliceof.MapOfAny = response.GetSliceOfMap("items")
@@ -99,7 +99,7 @@ func (geocoder Here) AutocompleteAddress(query string, bias geo.Point) (sliceof.
 	}
 
 	if err := txn.Send(); err != nil {
-		return nil, derp.Wrap(err, location, "Unable to retrieve search results")
+		return nil, derp.Wrap(err, location, "Retrieving search results")
 	}
 
 	// Map "features" from the result into geo.Address

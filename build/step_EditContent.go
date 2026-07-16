@@ -26,7 +26,7 @@ func (step StepEditContent) Get(builder Builder, buffer io.Writer) PipelineBehav
 
 	if step.Filename != "" {
 		if err := builder.execute(buffer, step.Filename, builder); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error executing template"))
+			return Halt().WithError(derp.Wrap(err, location, "Executing template"))
 		}
 	}
 
@@ -54,7 +54,7 @@ func (step StepEditContent) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		var buffer bytes.Buffer
 
 		if _, err := io.Copy(&buffer, builder.request().Body); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Unable to read request data"))
+			return Halt().WithError(derp.Wrap(err, location, "Reading request data"))
 		}
 
 		rawContent = buffer.String()
@@ -65,7 +65,7 @@ func (step StepEditContent) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		value, err := formdata.Parse(builder.request())
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error parsing request data"))
+			return Halt().WithError(derp.Wrap(err, location, "Parsing request data"))
 		}
 
 		rawContent = value.Get(step.Fieldname)
@@ -86,7 +86,7 @@ func (step StepEditContent) Post(builder Builder, _ io.Writer) PipelineBehavior 
 
 	// Try to save the object back to the database
 	if err := builder.service().ObjectSave(builder.session(), stream, "Content edited"); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to save stream"))
+		return Halt().WithError(derp.Wrap(err, location, "Saving stream"))
 	}
 
 	// Success!
@@ -106,7 +106,7 @@ func (step StepEditContent) errorEmptyContent(builder Builder) PipelineBehavior 
 	response.WriteHeader(http.StatusOK)
 
 	if _, err := response.Write([]byte(`<span class="text-red">Please write something before posting.</span>`)); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to write error message to response"))
+		derp.Report(derp.Wrap(err, location, "Writing error message to response"))
 	}
 
 	return Halt().AsFullPage()

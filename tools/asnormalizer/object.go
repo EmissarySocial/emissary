@@ -54,7 +54,7 @@ func Object(rootClient streams.Client, document streams.Document) map[string]any
 		attributedTo, err := rootClient.Load(attributedToID)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to load attributedTo actor", attributedToID))
+			derp.Report(derp.Wrap(err, location, "Loading attributedTo actor", attributedToID))
 		}
 
 		result[vocab.PropertyAttributedTo] = ActorSummary(attributedTo)

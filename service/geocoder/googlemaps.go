@@ -35,7 +35,7 @@ func (geocoder GoogleMaps) GeocodeAddress(query string) (geo.Address, error) {
 		Result(&response)
 
 	if err := txn.Send(); err != nil {
-		return geo.Address{}, derp.Wrap(err, location, "Unable to load results from Google Places API", query)
+		return geo.Address{}, derp.Wrap(err, location, "Loading results from Google Places API", query)
 	}
 
 	// Parse the Results
@@ -68,7 +68,7 @@ func (geocoder GoogleMaps) GeocodeTimezone(address *geo.Address) error {
 		Result(&response)
 
 	if err := txn.Send(); err != nil {
-		return derp.Wrap(err, location, "Unable to load results from Google Timezone API", address)
+		return derp.Wrap(err, location, "Loading results from Google Timezone API", address)
 	}
 
 	address.Timezone = response.GetString("timeZoneId")
@@ -106,7 +106,7 @@ func (geocoder GoogleMaps) AutocompleteAddress(query string, bias geo.Point) (sl
 		Result(&response)
 
 	if err := txn.Send(); err != nil {
-		return nil, derp.Wrap(err, location, "Unable to load results from Google Places API", query)
+		return nil, derp.Wrap(err, location, "Loading results from Google Places API", query)
 	}
 
 	suggestions := response.GetSliceOfMap("suggestions")

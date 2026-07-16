@@ -37,7 +37,7 @@ func NewAddStream(stepInfo mapof.Any) (AddStream, error) {
 		value, err := template.New("value").Parse(valueTemplate)
 
 		if err != nil {
-			return AddStream{}, derp.Wrap(err, "model.step.NewAddStream", "Error parsing template", key, valueTemplate)
+			return AddStream{}, derp.Wrap(err, "model.step.NewAddStream", "Parsing template", key, valueTemplate)
 		}
 
 		withDataMap[key] = value
@@ -59,7 +59,7 @@ func NewAddStream(stepInfo mapof.Any) (AddStream, error) {
 		result.RedirectTo = redirectTemplate
 
 		if err != nil {
-			return AddStream{}, derp.Wrap(err, "model.step.NewAddStream", "Error parsing redirect-to template", redirectTo)
+			return AddStream{}, derp.Wrap(err, "model.step.NewAddStream", "Parsing redirect-to template", redirectTo)
 		}
 	}
 	return result, nil

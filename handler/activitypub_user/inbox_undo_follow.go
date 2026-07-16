@@ -31,7 +31,7 @@ func inbox_UndoFollow(context Context, activity streams.Document) error {
 			return nil
 		}
 
-		return derp.Wrap(err, location, "Error locating follower", activity.Value(), context.user.UserID, actorURL)
+		return derp.Wrap(err, location, "Locating follower", activity.Value(), context.user.UserID, actorURL)
 	}
 
 	// Try to delete the existing follower record
@@ -41,7 +41,7 @@ func inbox_UndoFollow(context Context, activity streams.Document) error {
 			return nil
 		}
 
-		return derp.Wrap(err, location, "Unable to delete follower", follower)
+		return derp.Wrap(err, location, "Deleting follower", follower)
 	}
 
 	// Remove the corresponding FOLLOW notification (if any), matched by the unfollowing actor.
@@ -49,7 +49,7 @@ func inbox_UndoFollow(context Context, activity streams.Document) error {
 	// this repeats it (idempotently) to also cover any Undo whose object had to be dereferenced to
 	// route here.  A cleanup failure must not fail the unfollow.
 	if err := context.factory.Notification().DeleteFollowByActor(context.session, context.user.UserID, actorURL, "unfollow"); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to delete follow notification", context.user.UserID, actorURL))
+		derp.Report(derp.Wrap(err, location, "Deleting follow notification", context.user.UserID, actorURL))
 	}
 
 	// Voila!

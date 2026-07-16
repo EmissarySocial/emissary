@@ -30,14 +30,14 @@ func NewConversations(factory Factory, session data.Session, request *http.Reque
 	template, err := templateService.Load("user-conversations")
 
 	if err != nil {
-		return Conversations{}, derp.Wrap(err, location, "Unable to load template")
+		return Conversations{}, derp.Wrap(err, location, "Loading template")
 	}
 
 	// Create the underlying Common builder
 	common, err := NewCommonWithTemplate(factory, session, request, response, template, user, actionID)
 
 	if err != nil {
-		return Conversations{}, derp.Wrap(err, location, "Unable to create common builder")
+		return Conversations{}, derp.Wrap(err, location, "Creating common builder")
 	}
 
 	// Enforce user permissions on the requested action
@@ -68,7 +68,7 @@ func (w Conversations) Render() (template.HTML, error) {
 	status := Pipeline(w._action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
-		return "", derp.Wrap(status.Error, "build.Conversations.Render", "Unable to generate HTML", w._request.URL.String())
+		return "", derp.Wrap(status.Error, "build.Conversations.Render", "Generating HTML", w._request.URL.String())
 	}
 
 	// Success!
@@ -82,7 +82,7 @@ func (w Conversations) View(actionID string) (template.HTML, error) {
 	builder, err := NewConversations(w._factory, w._session, w._request, w._response, w._user, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, "build.Conversations.View", "Unable to create Conversations builder")
+		return template.HTML(""), derp.Wrap(err, "build.Conversations.View", "Creating Conversations builder")
 	}
 
 	return builder.Render()

@@ -27,7 +27,7 @@ func CheckoutSession(restrictedKey string, connectedAccountID string, sessionID 
 
 	// Send the transaction
 	if err := txn.Send(); err != nil {
-		return stripe.CheckoutSession{}, derp.Wrap(err, location, "Error connecting to Stripe API", derp.WithInternalError())
+		return stripe.CheckoutSession{}, derp.Wrap(err, location, "Connecting to Stripe API", derp.WithInternalError())
 	}
 
 	// Success

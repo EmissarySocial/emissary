@@ -18,7 +18,7 @@ func init() {
 
 		// Delete from the cache
 		if err := context.factory.ActivityStream().Delete(activity.Object().ID()); err != nil {
-			return derp.Wrap(err, location, "Unable to delete stream", activity.Object().ID())
+			return derp.Wrap(err, location, "Deleting stream", activity.Object().ID())
 		}
 
 		// Voila!

@@ -18,7 +18,7 @@ func Parse(request *http.Request) (url.Values, error) {
 	// Try to parse URL encoded Values
 	if contentType == "application/x-www-form-urlencoded" {
 		if err := request.ParseForm(); err != nil {
-			return url.Values{}, derp.Wrap(err, location, "Error parsing form body")
+			return url.Values{}, derp.Wrap(err, location, "Parsing form body")
 		}
 
 		return request.Form, nil
@@ -28,7 +28,7 @@ func Parse(request *http.Request) (url.Values, error) {
 	if strings.HasPrefix(contentType, "multipart/form-data") {
 
 		if err := request.ParseMultipartForm(8 << 20); err != nil {
-			return url.Values{}, derp.Wrap(err, location, "Error parsing multipart form")
+			return url.Values{}, derp.Wrap(err, location, "Parsing multipart form")
 		}
 
 		return request.Form, nil

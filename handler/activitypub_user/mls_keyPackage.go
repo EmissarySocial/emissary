@@ -32,7 +32,7 @@ func GetKeyPackageCollection(ctx *steranko.Context, factory *service.Factory, se
 	keyPackages, err := keyPackageService.QueryIDOnlyByUser(session, user.UserID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load rules")
+		return derp.Wrap(err, location, "Loading rules")
 	}
 
 	collection := streams.NewCollection(user.ActivityPubKeyPackagesURL())
@@ -65,7 +65,7 @@ func GetKeyPackageRecord(ctx *steranko.Context, factory *service.Factory, sessio
 	keyPackage := model.NewKeyPackage()
 
 	if err := keyPackageService.LoadByToken(session, user.UserID, ctx.Param("keyPackageId"), &keyPackage); err != nil {
-		return derp.Wrap(err, location, "Unable to load keyPackage")
+		return derp.Wrap(err, location, "Loading keyPackage")
 	}
 
 	result := keyPackageService.GetJSONLD(&keyPackage)

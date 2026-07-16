@@ -36,7 +36,7 @@ func (step StepWithParent) Post(builder Builder, buffer io.Writer) PipelineBehav
 
 	// Try to load the parent Stream
 	if err := factory.Stream().LoadByID(builder.session(), streamBuilder._stream.ParentID, &parent); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to list parent"))
+		return Halt().WithError(derp.Wrap(err, location, "Listing parent"))
 	}
 
 	// Make a builder with the new parent stream
@@ -44,12 +44,12 @@ func (step StepWithParent) Post(builder Builder, buffer io.Writer) PipelineBehav
 	parentStream, err := NewStreamWithoutTemplate(streamBuilder.factory(), streamBuilder.session(), streamBuilder.request(), streamBuilder.response(), &parent, "")
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to create builder for parent"))
+		return Halt().WithError(derp.Wrap(err, location, "Creating builder for parent"))
 	}
 
 	// Execute the POST build pipeline on the parent
 	result := Pipeline(step.SubSteps).Post(factory, &parentStream, buffer)
-	result.Error = derp.WrapIF(result.Error, location, "Error executing steps for parent")
+	result.Error = derp.WrapIF(result.Error, location, "Executing steps for parent")
 
 	return UseResult(result)
 }
@@ -66,7 +66,7 @@ func (step StepWithParent) postUser(streamBuilder Stream, buffer io.Writer) Pipe
 
 	// Try to load the parent Stream
 	if err := factory.User().LoadByID(streamBuilder.session(), streamBuilder._stream.ParentID, &user); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to list parent"))
+		return Halt().WithError(derp.Wrap(err, location, "Listing parent"))
 	}
 
 	// Make a builder with the new parent stream
@@ -74,12 +74,12 @@ func (step StepWithParent) postUser(streamBuilder Stream, buffer io.Writer) Pipe
 	outbox, err := NewOutbox(streamBuilder.factory(), streamBuilder.session(), streamBuilder.request(), streamBuilder.response(), &user, "view")
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to create builder for parent"))
+		return Halt().WithError(derp.Wrap(err, location, "Creating builder for parent"))
 	}
 
 	// Execute the POST build pipeline on the parent
 	result := Pipeline(step.SubSteps).Post(factory, &outbox, buffer)
-	result.Error = derp.WrapIF(result.Error, location, "Error executing steps for parent")
+	result.Error = derp.WrapIF(result.Error, location, "Executing steps for parent")
 
 	return UseResult(result)
 }

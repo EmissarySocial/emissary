@@ -60,7 +60,7 @@ func (inboxActivity InboxActivity) String() string {
 
 	// Report errors (this should never happen)
 	if err != nil {
-		derp.Report(derp.Wrap(err, "model.InboxActivity.String", "Unable to marshal RawActivity (this should never happen)", inboxActivity.RawActivity))
+		derp.Report(derp.Wrap(err, "model.InboxActivity.String", "Marshaling RawActivity (this should never happen)", inboxActivity.RawActivity))
 	}
 
 	// Success. Always success.

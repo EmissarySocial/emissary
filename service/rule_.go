@@ -93,7 +93,7 @@ func (service *Rule) Range(session data.Session, criteria exp.Expression, option
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Rule.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.Rule.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewRule), nil
@@ -103,7 +103,7 @@ func (service *Rule) Range(session data.Session, criteria exp.Expression, option
 func (service *Rule) Load(session data.Session, criteria exp.Expression, rule *model.Rule) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), rule); err != nil {
-		return derp.Wrap(err, "service.Rule.Load", "Unable to load Rule", criteria)
+		return derp.Wrap(err, "service.Rule.Load", "Loading Rule", criteria)
 	}
 
 	return nil
@@ -116,7 +116,7 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(rule); err != nil {
-		return derp.Wrap(err, location, "Unable to validate Rule", rule)
+		return derp.Wrap(err, location, "Validating Rule", rule)
 	}
 
 	// If this is a duplicate rule, then halt
@@ -143,13 +143,13 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 			rule.PublishDate = time.Now().Unix()
 
 			if err := service.publish(session, *rule); err != nil {
-				return derp.Wrap(err, location, "Unable to publish Rule", rule)
+				return derp.Wrap(err, location, "Publishing Rule", rule)
 			}
 
 		// "Republish" changes when a public Rule is updated
 		default:
 			if err := service.republish(session, *rule); err != nil {
-				return derp.Wrap(err, location, "Unable to republish Rule", rule)
+				return derp.Wrap(err, location, "Republishing Rule", rule)
 			}
 		}
 
@@ -164,7 +164,7 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 			// read from PublishDate. Zeroing first still finds the right OutboxMessage (that lookup
 			// keys on the Rule's URL, not its date) while silently sending 1970 on the wire.
 			if err := service.unpublish(session, *rule); err != nil {
-				return derp.Wrap(err, location, "Unable to unpublish Rule", rule)
+				return derp.Wrap(err, location, "Unpublishing Rule", rule)
 			}
 
 			rule.PublishDate = 0
@@ -173,13 +173,13 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 
 	// Save the rule to the database
 	if err := service.collection(session).Save(rule, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Rule", rule, note)
+		return derp.Wrap(err, location, "Saving Rule", rule, note)
 	}
 
 	// Recalculate the rule count for this user
 	// (skipped for domain-level Rules with no owning User)
 	if err := service.userService.CalcRuleCount(session, rule.UserID); err != nil {
-		return derp.Wrap(err, location, "Unable to calculate rule count")
+		return derp.Wrap(err, location, "Calculating rule count")
 	}
 
 	return nil
@@ -198,19 +198,19 @@ func (service *Rule) Delete(session data.Session, rule *model.Rule, note string)
 	// -- which no retry could ever find again.
 	if rule.PublishDate > 0 {
 		if err := service.unpublish(session, *rule); err != nil {
-			return derp.Wrap(err, location, "Unable to unpublish Rule", rule)
+			return derp.Wrap(err, location, "Unpublishing Rule", rule)
 		}
 	}
 
 	// Delete this Rule
 	if err := service.collection(session).Delete(rule, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Rule", rule, note)
+		return derp.Wrap(err, location, "Deleting Rule", rule, note)
 	}
 
 	// Recalculate the rule count for this user
 	// (skipped for domain-level Rules with no owning User)
 	if err := service.userService.CalcRuleCount(session, rule.UserID); err != nil {
-		return derp.Wrap(err, location, "Unable to calculate rule count")
+		return derp.Wrap(err, location, "Calculating rule count")
 	}
 
 	// The Rule is gone, and so is its shadow on the wire.
@@ -237,7 +237,7 @@ func (service *Rule) HardDeleteByID(session data.Session, userID primitive.Objec
 	criteria := exp.Equal("userId", userID).AndEqual("_id", ruleID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Rule", "userID: "+userID.Hex(), "ruleID: "+ruleID.Hex())
+		return derp.Wrap(err, location, "Deleting Rule", "userID: "+userID.Hex(), "ruleID: "+ruleID.Hex())
 	}
 
 	return nil
@@ -347,7 +347,7 @@ func (service *Rule) LoadByToken(session data.Session, userID primitive.ObjectID
 	ruleID, err := primitive.ObjectIDFromHex(token)
 
 	if err != nil {
-		return derp.Wrap(err, "service.Rule.LoadByToken", "Error converting token to ObjectID", token)
+		return derp.Wrap(err, "service.Rule.LoadByToken", "Converting token to ObjectID", token)
 	}
 
 	criteria := exp.Equal("_id", ruleID).AndEqual("userId", userID)
@@ -476,12 +476,12 @@ func (service *Rule) DeleteByUserID(session data.Session, userID primitive.Objec
 	rangeFunc, err := service.RangeByUserID(session, userID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error getting range function")
+		return derp.Wrap(err, location, "Getting range function")
 	}
 
 	for rule := range rangeFunc {
 		if err := service.Delete(session, &rule, comment); err != nil {
-			return derp.Wrap(err, location, "Unable to delete rule", rule)
+			return derp.Wrap(err, location, "Deleting rule", rule)
 		}
 	}
 

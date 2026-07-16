@@ -29,21 +29,21 @@ func init() {
 		document, err := activity.Actor().Load()
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error parsing actor", activity)
+			return derp.Wrap(err, location, "Parsing actor", activity)
 		}
 
 		// Try to create a new follower record
 		followerService := context.factory.Follower()
 		follower := model.NewFollower()
 		if err := followerService.NewActivityPubFollower(context.session, model.FollowerTypeStream, context.stream.StreamID, document, &follower); err != nil {
-			return derp.Wrap(err, location, "Unable to create new follower", context.stream)
+			return derp.Wrap(err, location, "Creating new follower", context.stream)
 		}
 
 		// Send an "Accept" message to the Requester
 		actor, err := context.ActivityPubActor()
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to load actor", context.stream)
+			return derp.Wrap(err, location, "Loading actor", context.stream)
 		}
 
 		// Send the "Accept" as a post-commit queue task (F3): the signed delivery happens after this

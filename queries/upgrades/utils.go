@@ -25,7 +25,7 @@ func ForEachRecord(collection *mongo.Collection, fn ForEachFunc) error {
 	cursor, err := collection.Find(ctx, bson.M{})
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to list records")
+		return derp.Wrap(err, location, "Listing records")
 	}
 
 	for cursor.Next(ctx) {
@@ -33,7 +33,7 @@ func ForEachRecord(collection *mongo.Collection, fn ForEachFunc) error {
 
 		// Try to read the next record from the cursor
 		if err := cursor.Decode(&value); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to decode record"))
+			derp.Report(derp.Wrap(err, location, "Decoding record"))
 			continue
 		}
 
@@ -44,7 +44,7 @@ func ForEachRecord(collection *mongo.Collection, fn ForEachFunc) error {
 
 		// If the record has been changed, then update the database
 		if _, err = collection.ReplaceOne(ctx, bson.M{"_id": value["_id"]}, value); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to save record", value))
+			derp.Report(derp.Wrap(err, location, "Saving record", value))
 			continue
 		}
 

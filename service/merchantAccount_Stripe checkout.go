@@ -22,7 +22,7 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 	restrictedKey, err := service.stripe_getRestrictedKey(merchantAccount)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Error retrieving restricted key")
+		return "", derp.Wrap(err, location, "Retrieving restricted key")
 	}
 
 	connectedAccountID := service.stripe_getConnectedAccountID(merchantAccount)
@@ -31,7 +31,7 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 	price, err := stripeapi.Price(restrictedKey, connectedAccountID, product.RemoteID)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Error retrieving price from Stripe")
+		return "", derp.Wrap(err, location, "Retrieving price from Stripe")
 	}
 
 	// Send checkout session to the Stripe API
@@ -39,7 +39,7 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 	transactionID, err := random.GenerateString(32)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to generate transaction ID")
+		return "", derp.Wrap(err, location, "Generating transaction ID")
 	}
 
 	// Wrap the parameters in a JWT token
@@ -58,7 +58,7 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 	token, err := service.jwtService.NewToken(claims)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to generate JWT token")
+		return "", derp.Wrap(err, location, "Generating JWT token")
 	}
 
 	// Create a new Stripe Checkout Session
@@ -85,7 +85,7 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 
 	// Send the transaction to Stripe
 	if err := txn.Send(); err != nil {
-		return "", derp.Wrap(err, location, "Error connecting to Stripe API")
+		return "", derp.Wrap(err, location, "Connecting to Stripe API")
 	}
 
 	// Return the URL to the caller
@@ -105,7 +105,7 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(session 
 	restrictedKey, err := service.stripe_getRestrictedKey(merchantAccount)
 
 	if err != nil {
-		return model.Privilege{}, derp.Wrap(err, location, "Error retrieving API keys")
+		return model.Privilege{}, derp.Wrap(err, location, "Retrieving API keys")
 	}
 
 	connectedAccountID := service.stripe_getConnectedAccountID(merchantAccount)
@@ -113,7 +113,7 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(session 
 	// Load the Checkout session from the Stripe API so that we can validate it and retrieve the customer details
 	checkoutSession, err := stripeapi.CheckoutSession(restrictedKey, connectedAccountID, checkoutSessionID)
 	if err != nil {
-		return model.Privilege{}, derp.Wrap(err, location, "Unable to load checkout session from Stripe")
+		return model.Privilege{}, derp.Wrap(err, location, "Loading checkout session from Stripe")
 	}
 
 	// RULE: transaction id must match the checkout session
@@ -130,7 +130,7 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(session 
 	price, err := stripeapi.Price(restrictedKey, connectedAccountID, product.RemoteID)
 
 	if err != nil {
-		return model.Privilege{}, derp.Wrap(err, location, "Error retrieving price from Stripe", product.RemoteID)
+		return model.Privilege{}, derp.Wrap(err, location, "Retrieving price from Stripe", product.RemoteID)
 	}
 
 	// Create a new Identity record for the guest
@@ -142,7 +142,7 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(session 
 	)
 
 	if err != nil {
-		return model.Privilege{}, derp.Wrap(err, location, "Unable to save Identity", identity)
+		return model.Privilege{}, derp.Wrap(err, location, "Saving Identity", identity)
 	}
 
 	// Create a privilege for this Identity
@@ -169,7 +169,7 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(session 
 	privilege.IsVisible = true
 
 	if err := service.privilegeService.Save(session, &privilege, "Created via Stripe Checkout"); err != nil {
-		return model.Privilege{}, derp.Wrap(err, location, "Unable to save Privilege", privilege)
+		return model.Privilege{}, derp.Wrap(err, location, "Saving Privilege", privilege)
 	}
 
 	// Success.
@@ -184,14 +184,14 @@ func (service *MerchantAccount) stripe_CancelPrivilege(merchantAccount *model.Me
 	restrictedKey, err := service.stripe_getRestrictedKey(merchantAccount)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error retrieving API keys")
+		return derp.Wrap(err, location, "Retrieving API keys")
 	}
 
 	connectedAccountID := service.stripe_getConnectedAccountID(merchantAccount)
 
 	// Call the Stripe API to cancel the subscription
 	if err := stripeapi.SubscriptionCancel(restrictedKey, connectedAccountID, privilege.RemotePurchaseID); err != nil {
-		return derp.Wrap(err, location, "Error canceling subscription")
+		return derp.Wrap(err, location, "Canceling subscription")
 	}
 
 	// Success.

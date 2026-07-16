@@ -20,7 +20,7 @@ func (code Code) GenerateHTML(block goeditorjs.EditorJSBlock) (string, error) {
 	data := mapof.NewAny()
 
 	if err := json.Unmarshal(block.Data, &data); err != nil {
-		return "", derp.Wrap(err, "Unable to read block data", string(block.Data))
+		return "", derp.Wrap(err, "Reading block data", string(block.Data))
 	}
 
 	b := html.New()

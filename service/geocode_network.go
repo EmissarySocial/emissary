@@ -35,7 +35,7 @@ func (service GeocodeNetwork) Geocode(session data.Session, ipAddress string) (g
 	point, err := geocoder.GeocodeNetwork(ipAddress)
 
 	if err != nil {
-		return geo.Point{}, derp.Wrap(err, location, "Error geocoding IP address", ipAddress)
+		return geo.Point{}, derp.Wrap(err, location, "Geocoding IP address", ipAddress)
 	}
 
 	// Success
@@ -52,7 +52,7 @@ func (service GeocodeNetwork) getGeocoder(session data.Session) geocoder.Network
 	connection := model.NewConnection()
 
 	if err := service.connectionService.LoadActiveByType(session, model.ConnectionTypeGeocodeNetwork, &connection); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to load geocoder"))
+		derp.Report(derp.Wrap(err, location, "Loading geocoder"))
 	}
 
 	latitude := connection.Data.GetString("latitude")   // nolint:scopeguard (readability)

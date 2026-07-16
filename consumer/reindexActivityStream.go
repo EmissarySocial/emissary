@@ -24,13 +24,13 @@ func ReindexActivityStream(factory *service.Factory, args mapof.Any) queue.Resul
 		// If the ActivityStream no longer exists, then remove it from the cache
 		if derp.IsNotFoundOrGone(err) {
 			if inner := activityService.Delete(url); inner != nil {
-				return queue.Error(derp.Wrap(inner, location, "Unable to delete ActivityStream", url))
+				return queue.Error(derp.Wrap(inner, location, "Deleting ActivityStream", url))
 			}
 			return queue.Success()
 		}
 
 		// Use default requeue behavior
-		return requeue(derp.Wrap(err, location, "Unable to load ActivityStream", url))
+		return requeue(derp.Wrap(err, location, "Loading ActivityStream", url))
 	}
 
 	// No error => success!

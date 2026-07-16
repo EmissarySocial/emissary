@@ -83,77 +83,77 @@ func MoveUser(factory *service.Factory, session data.Session, user *model.User, 
 
 	// Mark related Streams as `MovedTo`
 	if err := factory.Stream().MoveByUserID(session, user.UserID, movedTo); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to delete related Streams"))
+		return queue.Error(derp.Wrap(err, location, "Deleting related Streams"))
 	}
 
 	// Delete related Annotations
 	if err := factory.Annotation().DeleteByUserID(session, user.UserID, "moved"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to delete related Annotations"))
+		return queue.Error(derp.Wrap(err, location, "Deleting related Annotations"))
 	}
 
 	// Delete related Outbox Messages
 	if err := factory.Outbox().DeleteByParentID(session, model.ActorTypeUser, user.UserID); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to delete related Outbox messages"))
+		return queue.Error(derp.Wrap(err, location, "Deleting related Outbox messages"))
 	}
 
 	// Delete related NewsFeed/NewsItem
 	if err := factory.NewsFeed().DeleteByUserID(session, user.UserID, "moved"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to delete related NewsFeed/NewsItems"))
+		return queue.Error(derp.Wrap(err, location, "Deleting related NewsFeed/NewsItems"))
 	}
 
 	// Delete related Collections
 	if err := factory.Collection().DeleteByUserID(session, user.UserID, "moved"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to delete related Collections"))
+		return queue.Error(derp.Wrap(err, location, "Deleting related Collections"))
 	}
 
 	// Delete related Folders
 	if err := factory.Folder().DeleteByUserID(session, user.UserID, "moved"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to delete related Folders"))
+		return queue.Error(derp.Wrap(err, location, "Deleting related Folders"))
 	}
 
 	// Delete related Rules
 	if err := factory.Rule().DeleteByUserID(session, user.UserID, "moved"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to delete related Rules"))
+		return queue.Error(derp.Wrap(err, location, "Deleting related Rules"))
 	}
 
 	// Delete related Following
 	if err := factory.Following().DeleteByUserID(session, user.UserID, "moved"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to delete related Following records"))
+		return queue.Error(derp.Wrap(err, location, "Deleting related Following records"))
 	}
 
 	// Delete related Followers
 	if err := factory.Follower().DeleteByUserID(session, user.UserID, "moved"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to delete related Followers"))
+		return queue.Error(derp.Wrap(err, location, "Deleting related Followers"))
 	}
 
 	// Delete related Privileges
 	if err := factory.Privilege().DeleteByUserID(session, user.UserID, "moved"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to delete related Privileges"))
+		return queue.Error(derp.Wrap(err, location, "Deleting related Privileges"))
 	}
 
 	// Delete related Products
 	if err := factory.Product().DeleteByUserID(session, user.UserID, "moved"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to delete related Products"))
+		return queue.Error(derp.Wrap(err, location, "Deleting related Products"))
 	}
 
 	// Delete related Merchant Accounts
 	if err := factory.MerchantAccount().DeleteByUserID(session, user.UserID, "moved"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to delete related MerchantAccounts"))
+		return queue.Error(derp.Wrap(err, location, "Deleting related MerchantAccounts"))
 	}
 
 	// Delete related Circles
 	if err := factory.Circle().DeleteByUserID(session, user.UserID, "moved"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to delete related Circles"))
+		return queue.Error(derp.Wrap(err, location, "Deleting related Circles"))
 	}
 
 	// Delete related Notifications (owned by this User as recipient)
 	if err := factory.Notification().DeleteByUserID(session, user.UserID, "moved"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to delete related Notifications"))
+		return queue.Error(derp.Wrap(err, location, "Deleting related Notifications"))
 	}
 
 	// Delete related Responses
 	if err := factory.Response().DeleteByUserID(session, user.UserID, "moved"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to delete related Responses"))
+		return queue.Error(derp.Wrap(err, location, "Deleting related Responses"))
 	}
 
 	// Woot.

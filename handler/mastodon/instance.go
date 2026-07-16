@@ -84,7 +84,7 @@ func GetInstance_DomainBlocks(serverFactory *server.Factory) func(model.Authoriz
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Unable to create session")
+			return nil, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -93,7 +93,7 @@ func GetInstance_DomainBlocks(serverFactory *server.Factory) func(model.Authoriz
 		rules, err := ruleService.QueryDomainBlocks(session)
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Unable to query database")
+			return nil, derp.Wrap(err, location, "Querying database")
 		}
 
 		// Map the results into a slice of DomainBlocks

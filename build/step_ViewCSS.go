@@ -50,7 +50,7 @@ func (step StepViewCSS) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 	}
 
 	if err := builder.execute(buffer, filename, builder); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepViewCSS.Get", "Error executing template"))
+		return Halt().WithError(derp.Wrap(err, "build.StepViewCSS.Get", "Executing template"))
 	}
 
 	// TODO: MEDIUM: Re-implement caching.  Will need to automatically compute the "Vary" header.

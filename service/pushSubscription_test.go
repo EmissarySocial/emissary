@@ -202,7 +202,7 @@ func TestPushSubscription_Upsert_RefusesAnotherUsersEndpoint(t *testing.T) {
 
 	// The handler wraps this error and errorHandler uses derp.ErrorCode as the literal HTTP status,
 	// so a 409 lost in the wrap would show the browser a 500 and never fire its recovery path.
-	wrapped := derp.Wrap(err, "handler.PostPushSubscription", "Unable to save push subscription")
+	wrapped := derp.Wrap(err, "handler.PostPushSubscription", "Saving push subscription")
 	require.Equal(t, http.StatusConflict, derp.ErrorCode(wrapped), "the 409 must survive derp.Wrap")
 }
 

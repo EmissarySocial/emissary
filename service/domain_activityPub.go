@@ -37,7 +37,7 @@ func (service *Domain) GetJSONLD(session data.Session) (mapof.Any, error) {
 	publicKeyPEM, err := service.PublicKeyPEM(session)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to load public key PEM")
+		return nil, derp.Wrap(err, location, "Loading public key PEM")
 	}
 
 	actorID := service.ActorID()
@@ -88,7 +88,7 @@ func (service *Domain) PublicKeyPEM(session data.Session) (string, error) {
 	privateKey, err := service.PrivateKey(session)
 
 	if err != nil {
-		return "", derp.Wrap(err, "service.Domain.PublicKeyPEM", "Error getting public key")
+		return "", derp.Wrap(err, "service.Domain.PublicKeyPEM", "Getting public key")
 	}
 
 	// Encode the public key portion
@@ -117,21 +117,21 @@ func (service *Domain) PrivateKey(session data.Session) (*rsa.PrivateKey, error)
 
 		// Fall through means that we have a value for "domain.PrivateKey" but it's not
 		// valid.  So, let's log the error and try to make a new one.
-		derp.Report(derp.Wrap(err, location, "Unable to decode private key. Creating a new key"))
+		derp.Report(derp.Wrap(err, location, "Decoding private key. Creating a new key"))
 	}
 
 	// Otherwise, create a new private key, save it, and return it to the caller.
 	privateKey, err := rsa.GenerateKey(rand.Reader, encryptionKeyBits)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to generate RSA key")
+		return nil, derp.Wrap(err, location, "Generating RSA key")
 	}
 
 	// Save the new private key into the Domain record
 	domain.PrivateKey = sigs.EncodePrivatePEM(privateKey)
 
 	if err := service.Save(session, domain, "Generated Private Key"); err != nil {
-		return nil, derp.Wrap(err, location, "Unable to save new EncryptionKey")
+		return nil, derp.Wrap(err, location, "Saving new EncryptionKey")
 	}
 
 	// Success??
@@ -148,7 +148,7 @@ func (service *Domain) ActivityPubActor(session data.Session) (outbox.Actor, err
 	privateKey, err := service.PrivateKey(session)
 
 	if err != nil {
-		return outbox.Actor{}, derp.Wrap(err, location, "Error extracting private key")
+		return outbox.Actor{}, derp.Wrap(err, location, "Extracting private key")
 	}
 
 	// Return the ActivityPub Actor

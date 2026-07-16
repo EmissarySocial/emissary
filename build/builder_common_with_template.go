@@ -93,7 +93,7 @@ func (builder CommonWithTemplate) AuthorInGroup(accessLister model.AccessLister,
 	inGroup, err := permissionService.AuthorInGroup(accessLister, groupToken)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to check user roles"))
+		derp.Report(derp.Wrap(err, location, "Checking user roles"))
 		return false
 	}
 
@@ -110,7 +110,7 @@ func (builder CommonWithTemplate) UserInGroup(groupToken string) bool {
 	inGroup, err := permissionService.UserInGroup(&builder._authorization, groupToken)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to check user roles"))
+		derp.Report(derp.Wrap(err, location, "Checking user roles"))
 		return false
 	}
 
@@ -127,7 +127,7 @@ func (builder CommonWithTemplate) UserHasRole(role string) bool {
 	hasRole, err := permissionService.UserHasRole(builder._session, &builder._authorization, builder._accessLister, role)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to check user roles"))
+		derp.Report(derp.Wrap(err, location, "Checking user roles"))
 		return false
 	}
 
@@ -143,7 +143,7 @@ func (builder CommonWithTemplate) UserCan(actionID string) bool {
 	result, err := permissionService.UserCan(builder._session, &builder._authorization, &builder._template, builder._accessLister, actionID)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to check permissions"))
+		derp.Report(derp.Wrap(err, location, "Checking permissions"))
 		return false
 	}
 

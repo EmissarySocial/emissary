@@ -191,7 +191,7 @@ func (dt *DateTime) SetTimezone(timezone string) error {
 		newLocation, err = time.LoadLocation(timezone)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to set timezone", timezone)
+			return derp.Wrap(err, location, "Setting timezone", timezone)
 		}
 	}
 

@@ -37,7 +37,7 @@ func FolderSetUnreadCount(collection data.Collection, userID primitive.ObjectID,
 	result := mongo.FindOneAndUpdate(context.Background(), filter, update)
 
 	if err := result.Err(); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to update folder `unreadCount`", userID, folderID, unreadCount))
+		derp.Report(derp.Wrap(err, location, "Updating folder `unreadCount`", userID, folderID, unreadCount))
 	}
 
 	// Woot.

@@ -48,7 +48,7 @@ func (step StepWithFolder) execute(builder Builder, buffer io.Writer, actionMeth
 	if token := builder.QueryParam("folderId"); notNewOrEmpty(token) {
 		if err := factory.Folder().LoadByToken(builder.session(), builder.AuthenticatedID(), token, &folder); err != nil {
 			if actionMethod == ActionMethodGet {
-				return Halt().WithError(derp.Wrap(err, location, "Unable to load Folder", token))
+				return Halt().WithError(derp.Wrap(err, location, "Loading Folder", token))
 			}
 			// Fall through for POSTS..  we're just creating a new folder.
 		}
@@ -58,12 +58,12 @@ func (step StepWithFolder) execute(builder Builder, buffer io.Writer, actionMeth
 	subBuilder, err := NewModel(factory, builder.session(), builder.request(), builder.response(), template, &folder, builder.actionID())
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))
+		return Halt().WithError(derp.Wrap(err, location, "Creating sub-builder"))
 	}
 
 	// Execute the POST build pipeline on the child
 	result := Pipeline(step.SubSteps).Execute(factory, subBuilder, buffer, actionMethod)
-	result.Error = derp.WrapIF(result.Error, location, "Error executing steps for child")
+	result.Error = derp.WrapIF(result.Error, location, "Executing steps for child")
 
 	return UseResult(result)
 }

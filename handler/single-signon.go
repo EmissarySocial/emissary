@@ -47,12 +47,12 @@ func GetSingleSignOn(ctx *steranko.Context, factory *service.Factory, session da
 	user := model.NewUser()
 
 	if err := userService.LoadByUsername(session, username, &user); err != nil {
-		return derp.Wrap(err, location, "Unable to load user")
+		return derp.Wrap(err, location, "Loading user")
 	}
 
 	// Create a sign-in session for the user
 	if err := factory.Steranko(session).SigninUser(ctx, &user); err != nil {
-		return derp.Wrap(err, location, "Unable to create certificate")
+		return derp.Wrap(err, location, "Creating certificate")
 	}
 
 	// Forward to the user's profile page

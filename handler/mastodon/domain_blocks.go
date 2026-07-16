@@ -30,7 +30,7 @@ func GetDomainBlocks(serverFactory *server.Factory) func(model.Authorization, tx
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return []string{}, toot.PageInfo{}, derp.Wrap(err, location, "Unable to create session")
+			return []string{}, toot.PageInfo{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -40,7 +40,7 @@ func GetDomainBlocks(serverFactory *server.Factory) func(model.Authorization, tx
 		rules, err := ruleService.QueryByTypeDomain(session, auth.UserID, criteria, option.Fields("trigger"))
 
 		if err != nil {
-			return []string{}, toot.PageInfo{}, derp.Wrap(err, location, "Unable to query database")
+			return []string{}, toot.PageInfo{}, derp.Wrap(err, location, "Querying database")
 		}
 
 		// Extract *just* the domain trigger...
@@ -69,7 +69,7 @@ func PostDomainBlock(serverFactory *server.Factory) func(model.Authorization, tx
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Unable to create session")
+			return struct{}{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -85,7 +85,7 @@ func PostDomainBlock(serverFactory *server.Factory) func(model.Authorization, tx
 		// Save it to the database
 		ruleService := factory.Rule()
 		if err := ruleService.Save(session, &rule, "Created via Mastodon API"); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Unable to save rule")
+			return struct{}{}, derp.Wrap(err, location, "Saving rule")
 		}
 
 		return struct{}{}, nil
@@ -109,7 +109,7 @@ func DeleteDomainBlock(serverFactory *server.Factory) func(model.Authorization, 
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Unable to create session")
+			return struct{}{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -118,12 +118,12 @@ func DeleteDomainBlock(serverFactory *server.Factory) func(model.Authorization, 
 		rule := model.NewRule()
 
 		if err := ruleService.LoadByTrigger(session, auth.UserID, model.RuleTypeDomain, t.Domain, &rule); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Unable to load rule")
+			return struct{}{}, derp.Wrap(err, location, "Loading rule")
 		}
 
 		// Delete the Rule from the database
 		if err := ruleService.Delete(session, &rule, "Deleted via Mastodon API"); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Unable to delete rule")
+			return struct{}{}, derp.Wrap(err, location, "Deleting rule")
 		}
 
 		return struct{}{}, nil

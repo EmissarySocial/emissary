@@ -26,7 +26,7 @@ func (geocoder FREEIPAPICOM) GeocodeNetwork(ipAddress string) (point geo.Point, 
 	txn := remote.Get("https://free.freeipapi.com/api/json/" + ipAddress).Result(&result)
 
 	if err := txn.Send(); err != nil {
-		return geo.NewPoint(0, 0), derp.Wrap(err, location, "Error calling FREEIPAPICOM")
+		return geo.NewPoint(0, 0), derp.Wrap(err, location, "Calling FREEIPAPICOM")
 	}
 
 	longitude := result.GetFloat("longitude")

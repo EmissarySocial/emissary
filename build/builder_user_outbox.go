@@ -36,14 +36,14 @@ func NewOutbox(factory Factory, session data.Session, request *http.Request, res
 	template, err := templateService.Load(user.OutboxTemplate) // Users should get to choose their own outbox template
 
 	if err != nil {
-		return Outbox{}, derp.Wrap(err, location, "Unable to load template")
+		return Outbox{}, derp.Wrap(err, location, "Loading template")
 	}
 
 	// Create the underlying Common builder
 	common, err := NewCommonWithTemplate(factory, session, request, response, template, user, actionID)
 
 	if err != nil {
-		return Outbox{}, derp.Wrap(err, location, "Unable to create common builder")
+		return Outbox{}, derp.Wrap(err, location, "Creating common builder")
 	}
 
 	// Verify that the User's profile is visible
@@ -82,7 +82,7 @@ func (w Outbox) Render() (template.HTML, error) {
 	status := Pipeline(w._action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
-		err := derp.Wrap(status.Error, "build.Outbox.Render", "Unable to generate HTML", w._request.URL.String())
+		err := derp.Wrap(status.Error, "build.Outbox.Render", "Generating HTML", w._request.URL.String())
 		derp.Report(err)
 		return "", err
 	}
@@ -98,7 +98,7 @@ func (w Outbox) View(actionID string) (template.HTML, error) {
 	builder, err := NewOutbox(w._factory, w._session, w._request, w._response, w._user, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, "build.Outbox.View", "Unable to create Outbox builder")
+		return template.HTML(""), derp.Wrap(err, "build.Outbox.View", "Creating Outbox builder")
 	}
 
 	return builder.Render()
@@ -345,7 +345,7 @@ func (w Outbox) Products() (sliceof.Object[model.Product], error) {
 	productIDs, err := w._factory.Circle().AssignedProductIDs(w._session, w._user.UserID)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error retrieving remote products for user", w._user.UserID.Hex())
+		return nil, derp.Wrap(err, location, "Retrieving remote products for user", w._user.UserID.Hex())
 	}
 
 	// If there are no remote products, return an empty slice
@@ -357,7 +357,7 @@ func (w Outbox) Products() (sliceof.Object[model.Product], error) {
 	products, err := w._factory.Product().QueryByIDs(w._session, w._user.UserID, productIDs...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error retrieving remote products for user", w._user.UserID.Hex())
+		return nil, derp.Wrap(err, location, "Retrieving remote products for user", w._user.UserID.Hex())
 	}
 
 	return products, nil

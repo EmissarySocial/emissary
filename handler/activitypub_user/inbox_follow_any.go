@@ -37,21 +37,21 @@ func init() {
 		document, err := activity.Actor().Load()
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error parsing actor", activity)
+			return derp.Wrap(err, location, "Parsing actor", activity)
 		}
 
 		// Try to create a new follower record
 		followerService := context.factory.Follower()
 		follower := model.NewFollower()
 		if err := followerService.NewActivityPubFollower(context.session, model.FollowerTypeUser, context.user.UserID, document, &follower); err != nil {
-			return derp.Wrap(err, location, "Unable to create new follower", context.user)
+			return derp.Wrap(err, location, "Creating new follower", context.user)
 		}
 
 		// Try to load the Actor for this user
 		actor, err := userService.ActivityPubActor(context.session, context.user.UserID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to load actor", context.user)
+			return derp.Wrap(err, location, "Loading actor", context.user)
 		}
 
 		// Send the "Accept" message to the Requester as a post-commit queue task (F3): the signed
@@ -63,7 +63,7 @@ func init() {
 		// central NotifyFromActivity hook) because it must fire only AFTER the Follow is validated
 		// and accepted.  A notification failure must not fail the follow, so report-and-continue.
 		if err := context.factory.Notification().NotifyFollow(context.session, context.user, activity); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to create follow notification", context.user.UserID))
+			derp.Report(derp.Wrap(err, location, "Creating follow notification", context.user.UserID))
 		}
 
 		// Voila!

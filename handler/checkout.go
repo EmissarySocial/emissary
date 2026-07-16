@@ -21,7 +21,7 @@ func GetCheckout(ctx *steranko.Context, factory *service.Factory, session data.S
 	checkoutURL, err := merchantAccountService.GetCheckoutURL(merchantAccount, product, returnURL)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error retrieving checkout URL")
+		return derp.Wrap(err, location, "Retrieving checkout URL")
 	}
 
 	// Forward the client to the checkout URL
@@ -38,7 +38,7 @@ func GetCheckoutResponse(ctx *steranko.Context, factory *service.Factory, sessio
 	privilege, err := merchantAccountService.ParseCheckoutResponse(session, merchantAccount, product, ctx.QueryParam("transactionId"), ctx.QueryParams())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error retrieving checkout URL")
+		return derp.Wrap(err, location, "Retrieving checkout URL")
 	}
 
 	// If the guest is not already logged in, then lets log them in now
@@ -48,7 +48,7 @@ func GetCheckoutResponse(ctx *steranko.Context, factory *service.Factory, sessio
 		authorization.IdentityID = privilege.IdentityID
 
 		if err := factory.Steranko(session).SetCookie(ctx, authorization); err != nil {
-			return derp.Wrap(err, location, "Unable to set guest authorization")
+			return derp.Wrap(err, location, "Setting guest authorization")
 		}
 	}
 

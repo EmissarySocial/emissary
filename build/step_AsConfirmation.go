@@ -37,7 +37,7 @@ func (step StepAsConfirmation) Get(builder Builder, buffer io.Writer) PipelineBe
 
 	modalHTML := WrapModal(builder.response(), b.String())
 	if _, err := io.WriteString(buffer, modalHTML); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepAsConfirmation.Get", "Error writing modal HTML to buffer"))
+		return Halt().WithError(derp.Wrap(err, "build.StepAsConfirmation.Get", "Writing modal HTML to buffer"))
 	}
 
 	return Halt().AsFullPage()

@@ -26,7 +26,7 @@ func (step StepStreamPromoteDraft) Post(builder Builder, _ io.Writer) PipelineBe
 	stream, err := factory.StreamDraft().Promote(builder.session(), builder.objectID(), step.StateID)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, "builder.StepStreamPromoteDraft.Post", "Error publishing draft"))
+		return Halt().WithError(derp.Wrap(err, "builder.StepStreamPromoteDraft.Post", "Publishing draft"))
 	}
 
 	// Push the newly updated stream back to the builder so that subsequent

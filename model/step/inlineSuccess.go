@@ -17,7 +17,7 @@ func NewInlineSuccess(stepInfo mapof.Any) (InlineSuccess, error) {
 	message, err := template.New("").Funcs(FuncMap()).Parse(stepInfo.GetString("message"))
 
 	if err != nil {
-		return InlineSuccess{}, derp.Wrap(err, "model.step.NewInlineSuccess", "Error parsing template")
+		return InlineSuccess{}, derp.Wrap(err, "model.step.NewInlineSuccess", "Parsing template")
 	}
 
 	return InlineSuccess{

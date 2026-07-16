@@ -74,7 +74,7 @@ func (service *Attachment) Range(session data.Session, criteria exp.Expression, 
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, location, "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewEmptyAttachment), nil
@@ -87,7 +87,7 @@ func (service *Attachment) Query(session data.Session, criteria exp.Expression, 
 	result := make([]model.Attachment, 0)
 
 	if err := service.collection(session).Query(&result, notDeleted(criteria), options...); err != nil {
-		return result, derp.Wrap(err, location, "Unable to query Attachments", criteria, options)
+		return result, derp.Wrap(err, location, "Querying Attachments", criteria, options)
 	}
 
 	return result, nil
@@ -99,7 +99,7 @@ func (service *Attachment) Load(session data.Session, criteria exp.Expression, r
 	const location = "service.Attachment.Load"
 
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, location, "Unable to load Attachment", criteria)
+		return derp.Wrap(err, location, "Loading Attachment", criteria)
 	}
 
 	return nil
@@ -112,7 +112,7 @@ func (service *Attachment) Save(session data.Session, attachment *model.Attachme
 
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(attachment); err != nil {
-		return derp.Wrap(err, location, "Unable to validate Attachment", attachment)
+		return derp.Wrap(err, location, "Validating Attachment", attachment)
 	}
 
 	// Calculate the URL
@@ -120,7 +120,7 @@ func (service *Attachment) Save(session data.Session, attachment *model.Attachme
 
 	// Save the record to the database
 	if err := service.collection(session).Save(attachment, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Attachment", attachment, note)
+		return derp.Wrap(err, location, "Saving Attachment", attachment, note)
 	}
 
 	return nil
@@ -133,13 +133,13 @@ func (service *Attachment) Delete(session data.Session, attachment *model.Attach
 
 	// Delete uploaded files from MediaServer
 	if err := service.mediaServer.Delete(attachment.AttachmentID.Hex()); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to delete attached files", attachment))
+		derp.Report(derp.Wrap(err, location, "Deleting attached files", attachment))
 		// Fail loudly, but do not stop.
 	}
 
 	// Delete Attachment record last.
 	if err := service.collection(session).Delete(attachment, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Attachment", attachment, note)
+		return derp.Wrap(err, location, "Deleting Attachment", attachment, note)
 	}
 
 	return nil
@@ -165,7 +165,7 @@ func (service *Attachment) HardDeleteByID(session data.Session, userID primitive
 	criteria := exp.Equal("userId", userID).AndEqual("_id", attachmentID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Attachment", "userID: "+userID.Hex(), "attachmentID: "+attachmentID.Hex())
+		return derp.Wrap(err, location, "Deleting Attachment", "userID: "+userID.Hex(), "attachmentID: "+attachmentID.Hex())
 	}
 
 	return nil
@@ -274,7 +274,7 @@ func (service *Attachment) LoadFirstByCategory(session data.Session, objectType 
 		option.SortAsc("rank"), option.FirstRow())
 
 	if err != nil {
-		return model.Attachment{}, derp.Wrap(err, location, "Unable to load first attachment", objectType, objectID)
+		return model.Attachment{}, derp.Wrap(err, location, "Loading first attachment", objectType, objectID)
 	}
 
 	for _, attachment := range attachments {
@@ -295,7 +295,7 @@ func (service *Attachment) LoadFirstByObjectID(session data.Session, objectType 
 		option.SortAsc("rank"), option.FirstRow())
 
 	if err != nil {
-		return model.Attachment{}, derp.Wrap(err, location, "Unable to load first attachment", objectType, objectID)
+		return model.Attachment{}, derp.Wrap(err, location, "Loading first attachment", objectType, objectID)
 	}
 
 	for _, attachment := range attachments {
@@ -312,7 +312,7 @@ func (service *Attachment) LoadByID(session data.Session, objectType string, obj
 		AndEqual("objectId", objectID)
 
 	if err := service.Load(session, criteria, result); err != nil {
-		return derp.Wrap(err, "service.Attachment.LoadByID", "Unable to load attachment", "objectType: "+objectType, "objectID: "+objectID.Hex(), "attachmentID: "+attachmentID.Hex())
+		return derp.Wrap(err, "service.Attachment.LoadByID", "Loading attachment", "objectType: "+objectType, "objectID: "+objectID.Hex(), "attachmentID: "+attachmentID.Hex())
 	}
 
 	return nil
@@ -338,12 +338,12 @@ func (service *Attachment) DeleteByID(session data.Session, objectType string, o
 	// Load the Attachment from the database
 	attachment := model.NewAttachment(objectType, objectID)
 	if err := service.LoadByID(session, objectType, objectID, attachmentID, &attachment); err != nil {
-		return derp.Wrap(err, location, "Unable to load attachment")
+		return derp.Wrap(err, location, "Loading attachment")
 	}
 
 	// Delete the attachment
 	if err := service.Delete(session, &attachment, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete attachment")
+		return derp.Wrap(err, location, "Deleting attachment")
 	}
 
 	// Success.
@@ -364,13 +364,13 @@ func (service *Attachment) DeleteByCriteria(session data.Session, objectType str
 	attachments, err := service.Query(session, criteria)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to list attachments", objectID)
+		return derp.Wrap(err, location, "Listing attachments", objectID)
 	}
 
 	// Delete each attachment individually
 	for _, attachment := range attachments {
 		if err := service.Delete(session, &attachment, note); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to delete child stream", attachment))
+			derp.Report(derp.Wrap(err, location, "Deleting child stream", attachment))
 		}
 	}
 
@@ -403,7 +403,7 @@ func (service *Attachment) MakeRoom(session data.Session, objectType string, obj
 	attachments, err := service.QueryByCategory(session, objectType, objectID, category)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to find existing attachments", objectType, objectID)
+		return derp.Wrap(err, location, "Finding existing attachments", objectType, objectID)
 	}
 
 	currentCount := len(attachments)
@@ -438,7 +438,7 @@ func (service *Attachment) MakeRoom(session data.Session, objectType string, obj
 
 		log.Trace().Str("attachmentID", attachment.AttachmentID.Hex()).Msg("Removing attachment")
 		if err := service.Delete(session, &attachment, "Deleted"); err != nil {
-			return derp.Wrap(err, location, "Unable to remove attachment")
+			return derp.Wrap(err, location, "Removing attachment")
 		}
 	}
 

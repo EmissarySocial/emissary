@@ -26,14 +26,14 @@ func (service *Attachment) ExportDocument(session data.Session, objectType strin
 	// Load the Attachment
 	attachment := model.NewAttachment(objectType, objectID)
 	if err := service.LoadByID(session, objectType, objectID, attachmentID, &attachment); err != nil {
-		return "", derp.Wrap(err, location, "Unable to load Attachment")
+		return "", derp.Wrap(err, location, "Loading Attachment")
 	}
 
 	// Marshal the attachment as JSON
 	result, err := json.Marshal(attachment)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to marshal Attachment", attachment)
+		return "", derp.Wrap(err, location, "Marshaling Attachment", attachment)
 	}
 
 	// Success
@@ -48,12 +48,12 @@ func (service *Attachment) ExportOriginal(session data.Session, objectType strin
 	// Load the Attachment
 	attachment := model.NewAttachment(objectType, objectID)
 	if err := service.LoadByID(session, objectType, objectID, attachmentID, &attachment); err != nil {
-		return derp.Wrap(err, location, "Unable to load Attachment", attachmentID)
+		return derp.Wrap(err, location, "Loading Attachment", attachmentID)
 	}
 
 	// Serve the original file via HTTP
 	if err := service.mediaServer.ServeOriginal(writer, request, attachment.AttachmentID.Hex()); err != nil {
-		return derp.Wrap(err, location, "Unable to serve original file", attachment.AttachmentID)
+		return derp.Wrap(err, location, "Serving original file", attachment.AttachmentID)
 	}
 
 	// This was harder than it looks.

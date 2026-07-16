@@ -46,7 +46,7 @@ func (geocoder Nominatim) GeocodeAddress(query string) (point geo.Address, err e
 		Result(&response)
 
 	if err := txn.Send(); err != nil {
-		return geo.Address{}, derp.Wrap(err, location, "Unable to retrieve search results")
+		return geo.Address{}, derp.Wrap(err, location, "Retrieving search results")
 	}
 
 	if response.IsZero() {
@@ -73,7 +73,7 @@ func (geocoder Nominatim) AutocompleteAddress(query string, bias geo.Point) (sli
 		Result(&response)
 
 	if err := txn.Send(); err != nil {
-		return nil, derp.Wrap(err, location, "Unable to retrieve search results")
+		return nil, derp.Wrap(err, location, "Retrieving search results")
 	}
 
 	// Map addresses into interface format and return

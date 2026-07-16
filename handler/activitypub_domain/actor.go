@@ -18,7 +18,7 @@ func GetJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	result, err := searchDomainService.GetJSONLD(session)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to generate JSON-LD for search domain actor")
+		return derp.Wrap(err, location, "Generating JSON-LD for search domain actor")
 	}
 
 	// Return success

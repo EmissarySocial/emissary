@@ -23,14 +23,14 @@ func (service *Folder) ExportDocument(session data.Session, userID primitive.Obj
 	// Load the Folder
 	folder := model.NewFolder()
 	if err := service.LoadByID(session, userID, folderID, &folder); err != nil {
-		return "", derp.Wrap(err, location, "Unable to load Folder")
+		return "", derp.Wrap(err, location, "Loading Folder")
 	}
 
 	// Marshal the folder as JSON
 	result, err := json.Marshal(folder)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to marshal Folder", folder)
+		return "", derp.Wrap(err, location, "Marshaling Folder", folder)
 	}
 
 	// Success

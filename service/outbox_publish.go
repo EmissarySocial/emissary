@@ -75,7 +75,7 @@ func (service *Outbox) Publish(session data.Session, actorType string, actorID p
 	}
 
 	if err := service.Save(session, &outboxMessage, "Publishing"); err != nil {
-		return derp.Wrap(err, location, "Unable to save outbox message", outboxMessage)
+		return derp.Wrap(err, location, "Saving outbox message", outboxMessage)
 	}
 
 	// Build the outgoing activity payload. Stamp the canonical `id` (minted only for
@@ -205,12 +205,12 @@ func (service *Outbox) DeleteActivity(session data.Session, actorType string, ac
 	actor, err := service.getActor(session, actorType, actorID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to get Actor", actorType, actorID)
+		return derp.Wrap(err, location, "Getting Actor", actorType, actorID)
 	}
 
 	// Remove the outbox messages that published this OBJECT (matched by objectId).
 	if err := service.removeOutboxMessagesByObjectID(session, actorType, actorID, objectID); err != nil {
-		return derp.Wrap(err, location, "Unable to remove outbox messages", objectID)
+		return derp.Wrap(err, location, "Removing outbox messages", objectID)
 	}
 
 	// Build the outgoing "Delete" activity. No top-level `id` (the Outbox mints one — a Delete has
@@ -228,7 +228,7 @@ func (service *Outbox) DeleteActivity(session data.Session, actorType string, ac
 	})
 
 	if err := service.Publish(session, actorType, actorID, document, permissions); err != nil {
-		return derp.Wrap(err, location, "Unable to publish DELETE activity", objectID)
+		return derp.Wrap(err, location, "Publishing DELETE activity", objectID)
 	}
 
 	return nil
@@ -246,7 +246,7 @@ func (service *Outbox) UndoActivity(session data.Session, actorType string, acto
 	actor, err := service.getActor(session, actorType, actorID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to get Actor", actorType, actorID)
+		return derp.Wrap(err, location, "Getting Actor", actorType, actorID)
 	}
 
 	// The activity being undone is identified by its own canonical URL.
@@ -254,7 +254,7 @@ func (service *Outbox) UndoActivity(session data.Session, actorType string, acto
 
 	// Remove the outbox message(s) that published the original ACTIVITY (matched by activityUrl).
 	if err := service.removeOutboxMessagesByActivityURL(session, actorType, actorID, activityURL); err != nil {
-		return derp.Wrap(err, location, "Unable to remove outbox messages", activityURL)
+		return derp.Wrap(err, location, "Removing outbox messages", activityURL)
 	}
 
 	// Build the outgoing "Undo" activity with the original activity embedded inline. No top-level
@@ -285,7 +285,7 @@ func (service *Outbox) UndoActivity(session data.Session, actorType string, acto
 	// delivery as the original activity. A dropped spread here would fan the Undo out to all
 	// followers even though the original reaction was author-only. See COLLECTIONS-REDESIGN.md D7b.
 	if err := service.Publish(session, actorType, actorID, document, permissions, options...); err != nil {
-		return derp.Wrap(err, location, "Unable to publish UNDO activity", activityURL)
+		return derp.Wrap(err, location, "Publishing UNDO activity", activityURL)
 	}
 
 	return nil
@@ -300,12 +300,12 @@ func (service *Outbox) removeOutboxMessagesByObjectID(session data.Session, acto
 	messages, err := service.RangeByObjectID(session, actorType, actorID, objectID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load outbox messages", objectID)
+		return derp.Wrap(err, location, "Loading outbox messages", objectID)
 	}
 
 	for message := range messages {
 		if err := service.Delete(session, &message, "Un-Publishing"); err != nil {
-			return derp.Wrap(err, location, "Unable to delete outbox message", message)
+			return derp.Wrap(err, location, "Deleting outbox message", message)
 		}
 	}
 
@@ -321,12 +321,12 @@ func (service *Outbox) removeOutboxMessagesByActivityURL(session data.Session, a
 	messages, err := service.RangeByActivityURL(session, actorType, actorID, activityURL)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load outbox messages", activityURL)
+		return derp.Wrap(err, location, "Loading outbox messages", activityURL)
 	}
 
 	for message := range messages {
 		if err := service.Delete(session, &message, "Un-Publishing"); err != nil {
-			return derp.Wrap(err, location, "Unable to delete outbox message", message)
+			return derp.Wrap(err, location, "Deleting outbox message", message)
 		}
 	}
 
@@ -445,7 +445,7 @@ func (service *Outbox) resolveInboxURL(profileURL string) string {
 	actor, err := service.activityService.AppClient().Load(profileURL, sherlock.AsActor())
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to load actor for inbox URL", profileURL))
+		derp.Report(derp.Wrap(err, location, "Loading actor for inbox URL", profileURL))
 		return ""
 	}
 
@@ -475,6 +475,6 @@ func (service *Outbox) sendNotification_Email(follower *model.Follower, activity
 	const location = "service.Outbox.sendNotifications_Email"
 
 	if err := service.domainEmail.SendFollowerActivity(follower, activity); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to send email", follower))
+		derp.Report(derp.Wrap(err, location, "Sending email", follower))
 	}
 }

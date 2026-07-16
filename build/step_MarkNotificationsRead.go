@@ -30,7 +30,7 @@ func (step StepMarkNotificationsRead) Post(builder Builder, _ io.Writer) Pipelin
 	types := notificationTabTypes(builder.QueryParam("type"))
 
 	if err := notificationService.MarkAllRead(builder.session(), builder.AuthenticatedID(), time.Now().Unix(), types...); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to mark notifications read"))
+		return Halt().WithError(derp.Wrap(err, location, "Marking notifications read"))
 	}
 
 	return Continue()

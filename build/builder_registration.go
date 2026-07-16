@@ -73,7 +73,7 @@ func (w Registration) Render() (template.HTML, error) {
 	status := Pipeline(w._action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
-		err := derp.Wrap(status.Error, "build.Registration.Render", "Unable to generate HTML")
+		err := derp.Wrap(status.Error, "build.Registration.Render", "Generating HTML")
 		derp.Report(err)
 		return "", err
 	}
@@ -91,7 +91,7 @@ func (w Registration) View(actionID string) (template.HTML, error) {
 	builder, err := NewRegistration(w._factory, w._session, w._request, w._response, w._registration, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, location, "Unable to create Group builder")
+		return template.HTML(""), derp.Wrap(err, location, "Creating Group builder")
 	}
 
 	return builder.Render()

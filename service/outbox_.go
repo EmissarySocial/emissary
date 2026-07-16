@@ -96,7 +96,7 @@ func (service *Outbox) Range(session data.Session, criteria exp.Expression, opti
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Outbox.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.Outbox.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewOutboxMessage), nil
@@ -106,7 +106,7 @@ func (service *Outbox) Range(session data.Session, criteria exp.Expression, opti
 func (service *Outbox) Load(session data.Session, criteria exp.Expression, result *model.OutboxMessage) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Outbox.Load", "Unable to load Outbox message", criteria)
+		return derp.Wrap(err, "service.Outbox.Load", "Loading Outbox message", criteria)
 	}
 
 	return nil
@@ -128,7 +128,7 @@ func (service *Outbox) Save(session data.Session, outboxMessage *model.OutboxMes
 
 	// Save the value to the database
 	if err := service.collection(session).Save(outboxMessage, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Outbox message", outboxMessage, note)
+		return derp.Wrap(err, location, "Saving Outbox message", outboxMessage, note)
 	}
 
 	// (async) guarantee the message.Object is loaded into the ActivityStream cache
@@ -169,7 +169,7 @@ func (service *Outbox) HardDeleteByID(session data.Session, userID primitive.Obj
 	criteria := exp.Equal("actorId", userID).AndEqual("_id", outboxMessageID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Outbox Message", "userID: "+userID.Hex(), "outboxMessageID: "+outboxMessageID.Hex())
+		return derp.Wrap(err, location, "Deleting Outbox Message", "userID: "+userID.Hex(), "outboxMessageID: "+outboxMessageID.Hex())
 	}
 
 	return nil
@@ -184,12 +184,12 @@ func (service *Outbox) Delete(session data.Session, outboxMessage *model.OutboxM
 	criteria := exp.Equal("_id", outboxMessage.OutboxMessageID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Outbox message", outboxMessage, note)
+		return derp.Wrap(err, location, "Deleting Outbox message", outboxMessage, note)
 	}
 
 	// Delete the document from the cache
 	if err := service.activityService.Delete(outboxMessage.ObjectID); err != nil {
-		return derp.Wrap(err, location, "Unable to delete ActivityStream", outboxMessage, note)
+		return derp.Wrap(err, location, "Deleting ActivityStream", outboxMessage, note)
 	}
 
 	return nil
@@ -286,7 +286,7 @@ func (service *Outbox) QueryByParentAndDate(session data.Session, actorType stri
 	result := make([]model.OutboxMessage, 0, maxRows)
 
 	if err := service.collection(session).Query(&result, criteria, options...); err != nil {
-		return nil, derp.Wrap(err, location, "Unable to query outbox", actorID, maxDate)
+		return nil, derp.Wrap(err, location, "Querying outbox", actorID, maxDate)
 	}
 
 	return result, nil
@@ -327,12 +327,12 @@ func (service *Outbox) DeleteByParentID(session data.Session, actorType string, 
 	rangeFunc, err := service.RangeByParentID(session, actorType, actorID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to query Outbox messages", actorType, actorID)
+		return derp.Wrap(err, location, "Querying Outbox messages", actorType, actorID)
 	}
 
 	for message := range rangeFunc {
 		if err := service.Delete(session, &message, "Deleted"); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to delete Outbox message", message))
+			derp.Report(derp.Wrap(err, location, "Deleting Outbox message", message))
 		}
 	}
 

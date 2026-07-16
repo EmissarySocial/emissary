@@ -123,7 +123,7 @@ func (camper *Camper) getTemplateFromWebfinger(intentType string, accountID stri
 	resource, err := digit.Lookup(accountID, camper.options...)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Error locating WebFinger resource"))
+		derp.Report(derp.Wrap(err, location, "Locating WebFinger resource"))
 		return ""
 	}
 

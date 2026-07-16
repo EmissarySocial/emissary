@@ -21,7 +21,7 @@ func GetIntent_Like(ctx *steranko.Context, factory *service.Factory, session dat
 	// Collect values from the QueryString
 	var transaction camper.LikeIntent
 	if err := ctx.Bind(&transaction); err != nil {
-		return derp.Wrap(err, location, "Unable to read form data")
+		return derp.Wrap(err, location, "Reading form data")
 	}
 
 	// Default values here
@@ -31,7 +31,7 @@ func GetIntent_Like(ctx *steranko.Context, factory *service.Factory, session dat
 	object, err := client.Load(transaction.Object)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load object", ctx.Request().URL.String(), ctx.Request().URL, transaction)
+		return derp.Wrap(err, location, "Loading object", ctx.Request().URL.String(), ctx.Request().URL, transaction)
 	}
 
 	// Buiild HTML response
@@ -107,7 +107,7 @@ func postIntent_Response(ctx *steranko.Context, factory *service.Factory, sessio
 	// Collect values from the Form post
 	var transaction camper.LikeIntent
 	if err := ctx.Bind(&transaction); err != nil {
-		return derp.Wrap(err, location, "Unable to read form data")
+		return derp.Wrap(err, location, "Reading form data")
 	}
 
 	// Default values here
@@ -124,7 +124,7 @@ func postIntent_Response(ctx *steranko.Context, factory *service.Factory, sessio
 
 	// Save the Response to the database
 	if err := responseService.Save(session, &response, "Created via Activity Intent"); err != nil {
-		return derp.Wrap(err, location, "Unable to save response", transaction)
+		return derp.Wrap(err, location, "Saving response", transaction)
 	}
 
 	// Return the "on-success" response

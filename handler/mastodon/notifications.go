@@ -30,7 +30,7 @@ func GetNotifications(serverFactory *server.Factory) func(model.Authorization, t
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return []object.Notification{}, toot.PageInfo{}, derp.Wrap(err, location, "Unable to create session")
+			return []object.Notification{}, toot.PageInfo{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -42,7 +42,7 @@ func GetNotifications(serverFactory *server.Factory) func(model.Authorization, t
 		notifications, err := factory.Notification().QueryByUserID(session, auth.UserID, criteria)
 
 		if err != nil {
-			return []object.Notification{}, toot.PageInfo{}, derp.Wrap(err, location, "Unable to query notifications")
+			return []object.Notification{}, toot.PageInfo{}, derp.Wrap(err, location, "Querying notifications")
 		}
 
 		return getSliceOfToots(notifications), getPageInfo(notifications), nil
@@ -64,7 +64,7 @@ func GetNotification(serverFactory *server.Factory) func(model.Authorization, tx
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return object.Notification{}, derp.Wrap(err, location, "Unable to create session")
+			return object.Notification{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -79,7 +79,7 @@ func GetNotification(serverFactory *server.Factory) func(model.Authorization, tx
 		notification := model.NewNotification()
 
 		if err := factory.Notification().LoadByID(session, auth.UserID, notificationID, &notification); err != nil {
-			return object.Notification{}, derp.Wrap(err, location, "Unable to load notification", t.ID)
+			return object.Notification{}, derp.Wrap(err, location, "Loading notification", t.ID)
 		}
 
 		return notification.Toot(), nil
@@ -101,13 +101,13 @@ func PostNotifications_Clear(serverFactory *server.Factory) func(model.Authoriza
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return object.Notification{}, derp.Wrap(err, location, "Unable to create session")
+			return object.Notification{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
 
 		if err := factory.Notification().DeleteByUserID(session, auth.UserID, "Cleared via Mastodon API"); err != nil {
-			return object.Notification{}, derp.Wrap(err, location, "Unable to clear notifications")
+			return object.Notification{}, derp.Wrap(err, location, "Clearing notifications")
 		}
 
 		return object.Notification{}, nil
@@ -129,7 +129,7 @@ func PostNotification_Dismiss(serverFactory *server.Factory) func(model.Authoriz
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return object.Notification{}, derp.Wrap(err, location, "Unable to create session")
+			return object.Notification{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -149,11 +149,11 @@ func PostNotification_Dismiss(serverFactory *server.Factory) func(model.Authoriz
 				return object.Notification{}, nil // Idempotent: already gone.
 			}
 
-			return object.Notification{}, derp.Wrap(err, location, "Unable to load notification", t.ID)
+			return object.Notification{}, derp.Wrap(err, location, "Loading notification", t.ID)
 		}
 
 		if err := factory.Notification().Delete(session, &notification, "Dismissed via Mastodon API"); err != nil {
-			return object.Notification{}, derp.Wrap(err, location, "Unable to dismiss notification", t.ID)
+			return object.Notification{}, derp.Wrap(err, location, "Dismissing notification", t.ID)
 		}
 
 		return object.Notification{}, nil

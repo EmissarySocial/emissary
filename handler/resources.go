@@ -91,7 +91,7 @@ func getResource(filesystem fs.FS, filename string, response *echo.Response) err
 
 	// Write the file to the client
 	if _, err := io.Copy(response, file); err != nil {
-		return derp.Wrap(err, location, "Unable to write resource content to client", filename)
+		return derp.Wrap(err, location, "Writing resource content to client", filename)
 	}
 
 	// [Station](https://billandted.fandom.com/wiki/Station)

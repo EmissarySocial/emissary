@@ -13,7 +13,7 @@ func (client *Client) Revalidate(url string, options ...any) error {
 	result, err := client.innerClient.Load(url, options...)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load document from inner client", url)
+		return derp.Wrap(err, location, "Loading document from inner client", url)
 	}
 
 	// Connect to the database
@@ -23,7 +23,7 @@ func (client *Client) Revalidate(url string, options ...any) error {
 	// Save the updated document to the database
 	value := asValue(result)
 	if err := client.save(ctx, url, &value); err != nil {
-		return derp.Wrap(err, location, "Unable to save revalidated document", url)
+		return derp.Wrap(err, location, "Saving revalidated document", url)
 	}
 
 	return nil

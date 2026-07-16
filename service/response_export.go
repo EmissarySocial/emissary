@@ -23,14 +23,14 @@ func (service *Response) ExportDocument(session data.Session, userID primitive.O
 	// Load the Response
 	response := model.NewResponse()
 	if err := service.LoadByID(session, userID, responseID, &response); err != nil {
-		return "", derp.Wrap(err, location, "Unable to load Response")
+		return "", derp.Wrap(err, location, "Loading Response")
 	}
 
 	// Marshal the response as JSON
 	result, err := json.Marshal(response)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to marshal Response", response)
+		return "", derp.Wrap(err, location, "Marshaling Response", response)
 	}
 
 	// Success

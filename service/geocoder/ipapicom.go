@@ -26,7 +26,7 @@ func (geocoder IPAPICOM) GeocodeNetwork(ipAddress string) (point geo.Point, err 
 	txn := remote.Get("http://ip-api.com/json/" + ipAddress).Result(&result)
 
 	if err := txn.Send(); err != nil {
-		return geo.Point{}, derp.Wrap(err, location, "Error calling IPAPICOM")
+		return geo.Point{}, derp.Wrap(err, location, "Calling IPAPICOM")
 	}
 
 	latitude := result.GetFloat("lat")

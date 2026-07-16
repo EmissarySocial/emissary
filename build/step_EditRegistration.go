@@ -60,7 +60,7 @@ func (step StepEditRegistration) Get(builder Builder, buffer io.Writer) Pipeline
 	registration, err := registrationService.Load(registrationID)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to load registration template", registrationID))
+		return Halt().WithError(derp.Wrap(err, location, "Loading registration template", registrationID))
 	}
 
 	if registration.IsZero() {
@@ -76,7 +76,7 @@ func (step StepEditRegistration) Get(builder Builder, buffer io.Writer) Pipeline
 		formHTML, err := f.Editor(domainBuilder._domain.RegistrationData, lookupProvider)
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, "builder.StepEditRegistration", "Unable to build registration form"))
+			return Halt().WithError(derp.Wrap(err, "builder.StepEditRegistration", "Building registration form"))
 		}
 
 		result += WrapForm("/admin/domain/signup?registrationId="+registrationID, formHTML, "")
@@ -85,7 +85,7 @@ func (step StepEditRegistration) Get(builder Builder, buffer io.Writer) Pipeline
 	result = WrapModal(builder.response(), result)
 
 	if _, err := buffer.Write([]byte(result)); err != nil {
-		return Halt().WithError(derp.Wrap(err, "builder.StepEditRegistration", "Error writing response buffer"))
+		return Halt().WithError(derp.Wrap(err, "builder.StepEditRegistration", "Writing response buffer"))
 	}
 
 	return Halt()
@@ -119,19 +119,19 @@ func (step StepEditRegistration) Post(builder Builder, _ io.Writer) PipelineBeha
 	registration, err := factory.Registration().Load(registrationID)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to load template", registrationID))
+		return Halt().WithError(derp.Wrap(err, location, "Loading template", registrationID))
 	}
 
 	// Bind to the form POST data
 	inputs, err := formdata.Parse(builder.request())
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error binding form data"))
+		return Halt().WithError(derp.Wrap(err, location, "Binding form data"))
 	}
 
 	// Use the schema to set the form inputs into a new map
 	data := mapof.NewString()
 	if err := registration.Schema.SetURLValues(&data, inputs); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to update domain object form"))
+		return Halt().WithError(derp.Wrap(err, location, "Updating domain object form"))
 	}
 
 	if data.GetString("secret") == "" {

@@ -82,7 +82,7 @@ func (service *SearchQuery) Range(session data.Session, criteria exp.Expression,
 	it, err := service.collection(session).Iterator(notDeleted(criteria), options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.SearchQuery.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.SearchQuery.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(it, model.NewSearchQuery), nil
@@ -94,7 +94,7 @@ func (service *SearchQuery) LoadWithSoftDeletes(session data.Session, criteria e
 	const location = "service.SearchQuery.LoadWithSoftDeletes"
 
 	if err := service.collection(session).Load(criteria, searchQuery); err != nil {
-		return derp.Wrap(err, location, "Unable to load SearchQuery", criteria)
+		return derp.Wrap(err, location, "Loading SearchQuery", criteria)
 	}
 
 	// If the SearchQuery has been deleted, then restore it before returning
@@ -103,7 +103,7 @@ func (service *SearchQuery) LoadWithSoftDeletes(session data.Session, criteria e
 		searchQuery.DeleteDate = 0
 
 		if err := service.Save(session, searchQuery, "Restored"); err != nil {
-			return derp.Wrap(err, location, "Error restoring SearchQuery", searchQuery)
+			return derp.Wrap(err, location, "Restoring SearchQuery", searchQuery)
 		}
 	}
 
@@ -130,7 +130,7 @@ func (service *SearchQuery) Save(session data.Session, searchQuery *model.Search
 
 	// Save the searchQuery to the database
 	if err := service.collection(session).Save(searchQuery, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save SearchQuery", searchQuery, note)
+		return derp.Wrap(err, location, "Saving SearchQuery", searchQuery, note)
 	}
 
 	// Add a queue task to delete this SearchQuery if it has no followers after 12 hour.
@@ -155,7 +155,7 @@ func (service *SearchQuery) Delete(session data.Session, searchQuery *model.Sear
 
 	// Delete this SearchQuery
 	if err := service.collection(session).Delete(searchQuery, note); err != nil {
-		return derp.Wrap(err, "service.SearchQuery.Delete", "Unable to delete SearchQuery", searchQuery, note)
+		return derp.Wrap(err, "service.SearchQuery.Delete", "Deleting SearchQuery", searchQuery, note)
 	}
 
 	return nil
@@ -227,7 +227,7 @@ func (service *SearchQuery) LoadByID(session data.Session, searchQueryID primiti
 	criteria := exp.Equal("_id", searchQueryID)
 
 	if err := service.LoadWithSoftDeletes(session, criteria, searchQuery); err != nil {
-		return derp.Wrap(err, location, "Unable to load SearchQuery", searchQueryID)
+		return derp.Wrap(err, location, "Loading SearchQuery", searchQueryID)
 	}
 
 	return nil
@@ -240,7 +240,7 @@ func (service *SearchQuery) LoadByToken(session data.Session, token string, sear
 	searchQueryID, err := primitive.ObjectIDFromHex(token)
 
 	if err != nil {
-		return derp.Wrap(err, "service.SearchQuery.LoadByToken", "Error converting token to ObjectID", token)
+		return derp.Wrap(err, "service.SearchQuery.LoadByToken", "Converting token to ObjectID", token)
 	}
 
 	return service.LoadByID(session, searchQueryID, searchQuery)
@@ -277,14 +277,14 @@ func (service *SearchQuery) LoadOrCreate(session data.Session, queryValues url.V
 	if derp.IsNotFound(err) {
 
 		if inner := service.Save(session, &newSearchQuery, "LoadOrCreate"); inner != nil {
-			return model.NewSearchQuery(), derp.Wrap(inner, location, "Unable to save SearchQuery", newSearchQuery)
+			return model.NewSearchQuery(), derp.Wrap(inner, location, "Saving SearchQuery", newSearchQuery)
 		}
 
 		return newSearchQuery, nil
 	}
 
 	// Fall through to a real error querying the database
-	return model.NewSearchQuery(), derp.Wrap(err, location, "Error locating SearchQuery")
+	return model.NewSearchQuery(), derp.Wrap(err, location, "Locating SearchQuery")
 }
 
 func (service *SearchQuery) parseQueryValues(queryValues url.Values) (model.SearchQuery, bool) {
@@ -349,7 +349,7 @@ func (service *SearchQuery) ActivityPubActor(session data.Session, searchQueryID
 	privateKey, err := service.domainService.PrivateKey(session)
 
 	if err != nil {
-		return outbox.Actor{}, derp.Wrap(err, location, "Error getting private key")
+		return outbox.Actor{}, derp.Wrap(err, location, "Getting private key")
 	}
 
 	// Return the ActivityPub Actor
@@ -387,7 +387,7 @@ func (service *SearchQuery) GetJSONLD(session data.Session, searchQuery *model.S
 	publicKeyPEM, err := service.domainService.PublicKeyPEM(session)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error getting public key PEM")
+		return nil, derp.Wrap(err, location, "Getting public key PEM")
 	}
 
 	searchQueryID := searchQuery.SearchQueryID
@@ -488,7 +488,7 @@ func (service *SearchQuery) WebFinger(session data.Session, token string) (digit
 		searchQuery, err = service.LoadOrCreate(session, queryValues)
 
 		if err != nil {
-			return digit.Resource{}, derp.Wrap(err, location, "Unable to load SearchQuery", queryValues)
+			return digit.Resource{}, derp.Wrap(err, location, "Loading SearchQuery", queryValues)
 		}
 
 	} else {

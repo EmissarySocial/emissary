@@ -22,7 +22,7 @@ func (service *Following) Unfollow(session data.Session, userID primitive.Object
 		actor, err := service.activityService.GetActor(actorID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to find Actor for URL", actorID)
+			return derp.Wrap(err, location, "Finding Actor for URL", actorID)
 		}
 
 		actorID = actor.ID()
@@ -38,7 +38,7 @@ func (service *Following) Unfollow(session data.Session, userID primitive.Object
 			return nil
 		}
 
-		return derp.Wrap(err, location, "Unable to load following for user and URL", userID, actorID)
+		return derp.Wrap(err, location, "Loading following for user and URL", userID, actorID)
 	}
 
 	// Disconnect the Following record

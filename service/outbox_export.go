@@ -23,14 +23,14 @@ func (service *Outbox) ExportDocument(session data.Session, userID primitive.Obj
 	// Load the Outbox
 	outboxMessage := model.NewOutboxMessage()
 	if err := service.LoadByID(session, userID, outboxMessageID, &outboxMessage); err != nil {
-		return "", derp.Wrap(err, location, "Unable to load Outbox")
+		return "", derp.Wrap(err, location, "Loading Outbox")
 	}
 
 	// Marshal the outboxMessage as JSON
 	result, err := json.Marshal(outboxMessage)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to marshal Outbox", outboxMessage)
+		return "", derp.Wrap(err, location, "Marshaling Outbox", outboxMessage)
 	}
 
 	// Success

@@ -42,20 +42,20 @@ func (client *Client) CalcParentRelationships(session data.Session, relationType
 			}
 
 			// All other errors break the request.
-			return derp.Wrap(err, location, "Unable to load cached ActivityStream document", relationHref)
+			return derp.Wrap(err, location, "Loading cached ActivityStream document", relationHref)
 		}
 
 		// Count the current number of related relationships
 		count, err := client.CountRelatedValues(session, relationType, relationHref)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error counting related values", relationHref, relationType)
+			return derp.Wrap(err, location, "Counting related values", relationHref, relationType)
 		}
 
 		// If the count has changed, then update the parent with the new count
 		if changed := parentValue.Metadata.SetRelationCount(relationType, count); changed {
 			if err := client.save(session.Context(), parentValue.DocumentID(), &parentValue); err != nil {
-				return derp.Wrap(err, location, "Unable to save updated ActivityStream document", relationHref)
+				return derp.Wrap(err, location, "Saving updated ActivityStream document", relationHref)
 			}
 		}
 
@@ -88,7 +88,7 @@ func (client *Client) CountRelatedValues(session data.Session, relationType stri
 	)
 
 	if err != nil {
-		return 0, derp.Wrap(err, location, "Unable to count related documents", relationHref, relationType)
+		return 0, derp.Wrap(err, location, "Counting related documents", relationHref, relationType)
 	}
 
 	return count, nil

@@ -283,7 +283,7 @@ func (template *Template) Inherit(parent *Template) {
 	for _, templateName := range parent.HTMLTemplate.Templates() {
 		if template.HTMLTemplate.Lookup(templateName.Name()) == nil {
 			if _, err := template.HTMLTemplate.AddParseTree(templateName.Name(), templateName.Tree); err != nil {
-				derp.Report(derp.Wrap(err, "model.Template.Inherit", "Error adding template", templateName.Name()))
+				derp.Report(derp.Wrap(err, "model.Template.Inherit", "Adding template", templateName.Name()))
 			}
 		}
 	}
@@ -433,25 +433,18 @@ func (template Template) NewObject() any {
 	return templateModelForName(template.Model).newObject()
 }
 
-// UnsupportedSchemaProperties returns the list of property paths declared in this
-// Template's schema that do NOT resolve to a real accessor on the model object the
-// Template builds.  An empty result means every schema property is backed by the model.
-//
-// These "orphaned" properties look valid at load time but blow up at runtime the first
-// time the object is saved.  We detect them using the SAME operation Stream.Save runs --
-// schema.Normalize against a fresh model object -- so the check exactly matches runtime
-// behavior.  (Notably, "data.*" properties that write into the Stream.Data map are NOT
-// orphans: Normalize writes them successfully even though a naive Get would fail on an
-// empty map.)
-//
-// This ONLY applies to Stream templates.  Stream.Save normalizes against the Template's
-// own schema, so an orphan there is a genuine runtime bug.  Every other model (User,
-// Domain, widgets, etc.) is saved against a FIXED model schema -- its builder ignores
-// the Template schema -- so extra properties there (e.g. the virtual "new_password"
-// form field, or widget-config properties) are harmless by construction.
+// UnsupportedSchemaProperties returns the property paths in this Template's schema that do NOT
+// resolve to a real accessor on the model object the Template builds
 func (template Template) UnsupportedSchemaProperties() []string {
 
-	// Only Stream templates normalize against their own Template schema at save time.
+	// These "orphans" look valid at load time but blow up the first time the object is saved.  They
+	// are detected with the SAME operation Stream.Save runs -- schema.Normalize against a fresh
+	// model object -- so the check matches runtime exactly.  ("data.*" properties are NOT orphans:
+	// Normalize writes them even though a naive Get would fail on the empty map.)
+
+	// Only Stream templates normalize against their own Template schema at save time.  Every other
+	// model saves against a FIXED model schema whose builder ignores the Template schema, so extra
+	// properties there (the virtual "new_password" field, widget config) are harmless.
 	if template.Model != "Stream" {
 		return nil
 	}

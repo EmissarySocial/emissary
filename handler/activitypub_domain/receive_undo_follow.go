@@ -32,7 +32,7 @@ func undoFollow(context Context, activity streams.Document) error {
 			return nil
 		}
 
-		return derp.Wrap(err, location, "Error locating follower", activity.Value(), actorURL)
+		return derp.Wrap(err, location, "Locating follower", activity.Value(), actorURL)
 	}
 
 	// Try to delete the existing follower record
@@ -42,7 +42,7 @@ func undoFollow(context Context, activity streams.Document) error {
 			return nil
 		}
 
-		return derp.Wrap(err, location, "Unable to delete follower", follower)
+		return derp.Wrap(err, location, "Deleting follower", follower)
 	}
 
 	// Voila!

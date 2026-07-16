@@ -47,7 +47,7 @@ func (service *Registration) Add(registrationID string, filesystem fs.FS, defini
 
 	// Unmarshal the file into the schema.
 	if err := hjson.Unmarshal(definition, &registration); err != nil {
-		return derp.Wrap(err, location, "Unable to load Schema", registrationID)
+		return derp.Wrap(err, location, "Loading Schema", registrationID)
 	}
 
 	// Every format name in the schema must resolve in the format registry; unrecognized
@@ -58,12 +58,12 @@ func (service *Registration) Add(registrationID string, filesystem fs.FS, defini
 
 	// Load all HTML templates from the filesystem
 	if err := loadHTMLTemplateFromFilesystem(filesystem, registration.HTMLTemplate, service.funcMap); err != nil {
-		return derp.Wrap(err, location, "Unable to load Registration", registrationID)
+		return derp.Wrap(err, location, "Loading Registration", registrationID)
 	}
 
 	// Load all Bundles from the filesystem
 	if err := populateBundles(registration.Bundles, filesystem); err != nil {
-		return derp.Wrap(err, location, "Unable to load Bundles", registrationID)
+		return derp.Wrap(err, location, "Loading Bundles", registrationID)
 	}
 
 	// Keep a pointer to the filesystem resources (if present)
@@ -163,7 +163,7 @@ func (service *Registration) Register(session data.Session, groupService *Group,
 	registration, err := service.Load(domain.RegistrationID)
 
 	if err != nil {
-		return model.User{}, derp.Wrap(err, location, "Unable to load registration")
+		return model.User{}, derp.Wrap(err, location, "Loading registration")
 	}
 
 	if registration.IsZero() {
@@ -178,7 +178,7 @@ func (service *Registration) Register(session data.Session, groupService *Group,
 	// Copy Transaction data into a new User object
 	user := model.NewUser()
 	if err := service.setUserData(session, groupService, steranko, domain, &user, txn, registration.AllowedFields); err != nil {
-		return model.User{}, derp.Wrap(err, location, "Unable to set user data")
+		return model.User{}, derp.Wrap(err, location, "Setting user data")
 	}
 
 	// If defined in the registration data, set the User's Inbox Template
@@ -193,7 +193,7 @@ func (service *Registration) Register(session data.Session, groupService *Group,
 
 	// Try to save the User to the database
 	if err := userService.Save(session, &user, "Created by Online Registration"); err != nil {
-		return model.User{}, derp.Wrap(err, location, "Unable to create new User")
+		return model.User{}, derp.Wrap(err, location, "Creating new User")
 	}
 
 	// Word to your mother.
@@ -209,7 +209,7 @@ func (service *Registration) UpdateRegistration(session data.Session, groupServi
 	registration, err := service.Load(domain.RegistrationID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load registration")
+		return derp.Wrap(err, location, "Loading registration")
 	}
 
 	if registration.IsZero() {
@@ -230,24 +230,24 @@ func (service *Registration) UpdateRegistration(session data.Session, groupServi
 	// If not found, then create a new User
 	if derp.IsNotFound(err) {
 		if _, inner := service.Register(session, groupService, userService, steranko, domain, txn); inner != nil {
-			return derp.Wrap(inner, location, "Unable to create new User from registration transaction")
+			return derp.Wrap(inner, location, "Creating new User from registration transaction")
 		}
 		return nil
 	}
 
 	// Squalk all other errors
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load user", source, sourceID)
+		return derp.Wrap(err, location, "Loading user", source, sourceID)
 	}
 
 	// Update user data from the transaction
 	if err := service.setUserData(session, groupService, steranko, domain, &user, txn, registration.AllowedFields); err != nil {
-		return derp.Wrap(err, location, "Unable to set user data")
+		return derp.Wrap(err, location, "Setting user data")
 	}
 
 	// Try to save the User to the database
 	if err := userService.Save(session, &user, "Created by Online Registration"); err != nil {
-		return derp.Wrap(err, location, "Unable to create new User")
+		return derp.Wrap(err, location, "Creating new User")
 	}
 
 	// Word to your mother.
@@ -285,7 +285,7 @@ func (service *Registration) setUserData(session data.Session, groupService *Gro
 
 			if user.IsNew() && txn.Password != "" {
 				if err := steranko.SetPassword(user, txn.Password); err != nil {
-					return derp.Wrap(err, location, "Unable to set password")
+					return derp.Wrap(err, location, "Setting password")
 				}
 			}
 
@@ -309,12 +309,12 @@ func (service *Registration) setUserData(session data.Session, groupService *Gro
 
 		case "addGroups":
 			if err := service.addGroups(session, groupService, user, txn.AddGroups); err != nil {
-				return derp.Wrap(err, location, "Error adding user to group", txn.AddGroups)
+				return derp.Wrap(err, location, "Adding user to group", txn.AddGroups)
 			}
 
 		case "removeGroups":
 			if err := service.removeGroups(session, groupService, user, txn.RemoveGroups); err != nil {
-				return derp.Wrap(err, location, "Error adding user to group", txn.RemoveGroups)
+				return derp.Wrap(err, location, "Adding user to group", txn.RemoveGroups)
 			}
 
 		default:
@@ -338,13 +338,13 @@ func (service *Registration) setUserData(session data.Session, groupService *Gro
 
 	if addGroups := domain.RegistrationData.GetString("addGroups"); addGroups != "" {
 		if err := service.addGroups(session, groupService, user, addGroups); err != nil {
-			return derp.Wrap(err, location, "Error adding user to group", addGroups)
+			return derp.Wrap(err, location, "Adding user to group", addGroups)
 		}
 	}
 
 	if removeGroups := domain.RegistrationData.GetString("removeGroups"); removeGroups != "" {
 		if err := service.removeGroups(session, groupService, user, removeGroups); err != nil {
-			return derp.Wrap(err, location, "Error adding user to group", removeGroups)
+			return derp.Wrap(err, location, "Adding user to group", removeGroups)
 		}
 	}
 
@@ -366,7 +366,7 @@ func (service *Registration) addGroups(session data.Session, groupService *Group
 		token = strings.TrimSpace(token)
 		group := model.NewGroup()
 		if err := groupService.LoadByToken(session, token, &group); err != nil {
-			return derp.Wrap(err, location, "Unable to load group", token)
+			return derp.Wrap(err, location, "Loading group", token)
 		}
 
 		// Add the User to the Group
@@ -391,7 +391,7 @@ func (service *Registration) removeGroups(session data.Session, groupService *Gr
 		token = strings.TrimSpace(token)
 		group := model.NewGroup()
 		if err := groupService.LoadByToken(session, token, &group); err != nil {
-			return derp.Wrap(err, location, "Unable to load group", token)
+			return derp.Wrap(err, location, "Loading group", token)
 		}
 
 		// Remove the User from the Group

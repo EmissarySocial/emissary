@@ -32,7 +32,7 @@ func NewMakeArchive(stepInfo mapof.Any) (MakeArchive, error) {
 
 	// Convert [][]map[string]any to []Pipeline
 	if _, err := translate.NewSliceOfPipelines(metadata); err != nil {
-		return MakeArchive{}, derp.Wrap(err, location, "Error parsing metadata", stepInfo.GetAny("metadata"), metadata)
+		return MakeArchive{}, derp.Wrap(err, location, "Parsing metadata", stepInfo.GetAny("metadata"), metadata)
 	}
 
 	// Return a valid MakeArchive object

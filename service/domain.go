@@ -88,7 +88,7 @@ func (service *Domain) Start() error {
 	session, cancel, err := service.newSession(10 * time.Minute)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to connect to database")
+		return derp.Wrap(err, location, "Connecting to database")
 	}
 
 	defer cancel()
@@ -104,12 +104,12 @@ func (service *Domain) Start() error {
 	// If "Not Found", then this is the first run, so bootstrap the domain and owner.
 	case derp.IsNotFound(err):
 		if err := service.bootstrap(session); err != nil {
-			return derp.Wrap(err, location, "Unable to bootstrap new domain")
+			return derp.Wrap(err, location, "Bootstrapping new domain")
 		}
 
 	// Any other error is fatal.
 	default:
-		return derp.Wrap(err, location, "Unable to load domain record")
+		return derp.Wrap(err, location, "Loading domain record")
 	}
 
 	// ASYNC: Update database tables and indexes
@@ -123,7 +123,7 @@ func (service *Domain) Start() error {
 
 		// After any necessary upgrades, sync the indexes for the domain collection
 		if err := queries.SyncDomainIndexes(service.configuration.ConnectString, service.configuration.DatabaseName); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to sync domain indexes", service.configuration, service.domain))
+			derp.Report(derp.Wrap(err, location, "Syncing domain indexes", service.configuration, service.domain))
 		}
 	}()
 
@@ -153,20 +153,20 @@ func (service *Domain) bootstrap(session data.Session) error {
 
 		// Create the singleton domain record
 		if err := service.persist(txn, &domain, "Created Domain Record"); err != nil {
-			return nil, derp.Wrap(err, location, "Unable to create domain record")
+			return nil, derp.Wrap(err, location, "Creating domain record")
 		}
 
 		// When configured, create the owner account in the SAME transaction
 		newOwner, err := service.createOwner(txn)
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Unable to create owner account")
+			return nil, derp.Wrap(err, location, "Creating owner account")
 		}
 
 		owner = newOwner
 		return nil, nil
 	}); err != nil {
-		return derp.Wrap(err, location, "Unable to initialize domain")
+		return derp.Wrap(err, location, "Initializing domain")
 	}
 
 	// The transaction committed, so the in-memory cache can now reflect durable state.
@@ -204,13 +204,13 @@ func (service *Domain) createOwner(session data.Session) (*model.User, error) {
 	// those owners set their own password via the emailed reset link (see inviteOwner).
 	if service.IsLocalhost() {
 		if err := service.steranko(session).SetPassword(&owner, "admin"); err != nil {
-			return nil, derp.Wrap(err, location, "Unable to set owner password")
+			return nil, derp.Wrap(err, location, "Setting owner password")
 		}
 	}
 
 	// Save the owner account
 	if err := service.userService.Save(session, &owner, "Created owner account"); err != nil {
-		return nil, derp.Wrap(err, location, "Unable to save owner account")
+		return nil, derp.Wrap(err, location, "Saving owner account")
 	}
 
 	log.Trace().Str("username", owner.Username).Msg("Created owner account")
@@ -296,7 +296,7 @@ func (service *Domain) Save(session data.Session, domain model.Domain, note stri
 
 	// Write the (validated) value to the database
 	if err := service.persist(session, &domain, note); err != nil {
-		return derp.Wrap(err, "service.Domain.Save", "Unable to save Domain")
+		return derp.Wrap(err, "service.Domain.Save", "Saving Domain")
 	}
 
 	// Update the in-memory cache to match what was just written
@@ -315,12 +315,12 @@ func (service *Domain) persist(session data.Session, domain *model.Domain, note 
 
 	// Validate the value using the default domain schema
 	if _, err := schema.New(model.DomainSchema()).Validate(domain); err != nil {
-		return derp.Wrap(err, location, "Unable to validate Domain with standard Domain schema")
+		return derp.Wrap(err, location, "Validating Domain with standard Domain schema")
 	}
 
 	// Validate the value using the custom schema for this domain
 	if _, err := service.Schema().Validate(domain); err != nil {
-		return derp.Wrap(err, location, "Unable to validate Domain with custom schema from Theme")
+		return derp.Wrap(err, location, "Validating Domain with custom schema from Theme")
 	}
 
 	// If the MLS mode is not "Groups", then clear all group IDs
@@ -330,7 +330,7 @@ func (service *Domain) persist(session data.Session, domain *model.Domain, note 
 
 	// Try to save the value to the database
 	if err := service.collection(session).Save(domain, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Domain")
+		return derp.Wrap(err, location, "Saving Domain")
 	}
 
 	return nil
@@ -474,7 +474,7 @@ func (service *Domain) OAuthCodeURL(session data.Session, providerID string) (st
 	connection, err := service.NewOAuthClient(session, providerID)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to generate new OAuth connection")
+		return "", derp.Wrap(err, location, "Generating new OAuth connection")
 	}
 
 	// Generate and return the AuthCodeURL
@@ -558,13 +558,13 @@ func (service *Domain) NewOAuthClient(session data.Session, providerID string) (
 	newState, err := random.GenerateString(32)
 
 	if err != nil {
-		return model.Connection{}, derp.Wrap(err, location, "Unable to generate random string")
+		return model.Connection{}, derp.Wrap(err, location, "Generating random string")
 	}
 
 	codeChallenge, err := random.GenerateString(64)
 
 	if err != nil {
-		return model.Connection{}, derp.Wrap(err, location, "Unable to generate random string")
+		return model.Connection{}, derp.Wrap(err, location, "Generating random string")
 	}
 
 	// Assign the state to the connection and put into the domain
@@ -573,7 +573,7 @@ func (service *Domain) NewOAuthClient(session data.Session, providerID string) (
 
 	// Save the domain
 	if err := service.connectionService.Save(session, &connection, "New OAuth State"); err != nil {
-		return model.Connection{}, derp.Wrap(err, location, "Unable to save domain")
+		return model.Connection{}, derp.Wrap(err, location, "Saving domain")
 	}
 
 	return connection, nil
@@ -610,14 +610,14 @@ func (service *Domain) GetOAuthToken(session data.Session, providerID string) (m
 	newToken, err := source.Token()
 
 	if err != nil {
-		return model.Connection{}, token, derp.Wrap(err, "service.Domain.GetOAuthToken", "Unable to refresh OAuth token")
+		return model.Connection{}, token, derp.Wrap(err, "service.Domain.GetOAuthToken", "Refreshing OAuth token")
 	}
 
 	// If the token has changed, save it
 	if token.AccessToken != newToken.AccessToken {
 		connection.Token = newToken
 		if err := service.connectionService.Save(session, &connection, "Refresh OAuth Token"); err != nil {
-			return model.Connection{}, token, derp.Wrap(err, "service.Domain.GetOAuthToken", "Unable to save refreshed Token")
+			return model.Connection{}, token, derp.Wrap(err, "service.Domain.GetOAuthToken", "Saving refreshed Token")
 		}
 	}
 

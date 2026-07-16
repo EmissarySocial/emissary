@@ -38,7 +38,7 @@ func (step StepRedirectTo) execute(builder Builder) PipelineBehavior {
 	var nextPage bytes.Buffer
 
 	if err := step.URL.Execute(&nextPage, builder); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error evaluating 'url'"))
+		return Halt().WithError(derp.Wrap(err, location, "Evaluating 'url'"))
 	}
 
 	// Reject dangerous or off-site-schemed targets. The value can be built from
@@ -49,7 +49,7 @@ func (step StepRedirectTo) execute(builder Builder) PipelineBehavior {
 	}
 
 	if err := redirect(builder.response(), step.StatusCode, nextPage.String()); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error redirecting to new page"))
+		return Halt().WithError(derp.Wrap(err, location, "Redirecting to new page"))
 	}
 
 	return Halt().AsFullPage()

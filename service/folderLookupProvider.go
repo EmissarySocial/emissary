@@ -66,11 +66,11 @@ func (service FolderLookupProvider) Add(name string) (string, error) {
 		folder.UserID = service.userID
 
 		if inner := service.folderService.Save(service.session, &folder, "created"); inner != nil {
-			return "", derp.Wrap(inner, location, "Unable to save folder", name)
+			return "", derp.Wrap(inner, location, "Saving folder", name)
 		}
 
 		return folder.ID(), nil
 	}
 
-	return "", derp.Wrap(err, location, "Error searching for existing folder", name)
+	return "", derp.Wrap(err, location, "Searching for existing folder", name)
 }

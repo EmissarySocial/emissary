@@ -37,7 +37,7 @@ func (geocoder Maptiler) GeocodeAddress(address string) (point geo.Address, err 
 		Result(&response)
 
 	if err := txn.Send(); err != nil {
-		return geo.Address{}, derp.Wrap(err, location, "Error returned by Maptiler")
+		return geo.Address{}, derp.Wrap(err, location, "Calling Maptiler")
 	}
 
 	// Parse response
@@ -68,7 +68,7 @@ func (geocoder Maptiler) AutocompleteAddress(query string, bias geo.Point) (slic
 	}
 
 	if err := txn.Send(); err != nil {
-		return nil, derp.Wrap(err, location, "Error returned by Maptiler")
+		return nil, derp.Wrap(err, location, "Calling Maptiler")
 	}
 
 	// Map "features" from the result into geo.Address

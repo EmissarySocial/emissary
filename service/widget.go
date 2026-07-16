@@ -41,7 +41,7 @@ func (service *Widget) Add(widgetID string, filesystem fs.FS, definition []byte)
 
 	// Unmarshal the file into the schema.
 	if err := hjson.Unmarshal(definition, &widget); err != nil {
-		return derp.Wrap(err, location, "Unable to load Schema", widgetID)
+		return derp.Wrap(err, location, "Loading Schema", widgetID)
 	}
 
 	// Every format name in the schema must resolve in the format registry; unrecognized
@@ -52,12 +52,12 @@ func (service *Widget) Add(widgetID string, filesystem fs.FS, definition []byte)
 
 	// Load all HTML widgets from the filesystem
 	if err := loadHTMLTemplateFromFilesystem(filesystem, widget.HTMLTemplate, service.funcMap); err != nil {
-		return derp.Wrap(err, location, "Unable to load Widget", widgetID)
+		return derp.Wrap(err, location, "Loading Widget", widgetID)
 	}
 
 	// Load all Bundles from the filesystem
 	if err := populateBundles(widget.Bundles, filesystem); err != nil {
-		return derp.Wrap(err, location, "Unable to load Bundles", widgetID)
+		return derp.Wrap(err, location, "Loading Bundles", widgetID)
 	}
 
 	// Keep a pointer to the filesystem resources (if present)

@@ -23,7 +23,7 @@ func (service *Stream) ExportDocument(session data.Session, userID primitive.Obj
 	// Load the Stream
 	stream := model.NewStream()
 	if err := service.LoadByID(session, streamID, &stream); err != nil {
-		return "", derp.Wrap(err, location, "Unable to load Stream")
+		return "", derp.Wrap(err, location, "Loading Stream")
 	}
 
 	// RULE: Verify that the Stream is owned by the provided User
@@ -35,7 +35,7 @@ func (service *Stream) ExportDocument(session data.Session, userID primitive.Obj
 	result, err := json.Marshal(stream)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to marshal Stream", stream)
+		return "", derp.Wrap(err, location, "Marshaling Stream", stream)
 	}
 
 	// Success

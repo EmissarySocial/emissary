@@ -43,13 +43,13 @@ func (service *Stream) Publish(session data.Session, user *model.User, stream *m
 
 	// Re-save the Stream with the updated values.
 	if err := service.Save(session, stream, "Publishing"); err != nil {
-		return derp.Wrap(err, location, "Unable to save stream", stream)
+		return derp.Wrap(err, location, "Saving stream", stream)
 	}
 
 	// Publish to user/stream outboxes
 	if outbox {
 		if err := service.publish_outbox(session, user, stream, wasPublished); err != nil {
-			return derp.Wrap(err, location, "Unable to publish to outbox", stream)
+			return derp.Wrap(err, location, "Publishing to outbox", stream)
 		}
 	}
 
@@ -62,14 +62,14 @@ func (service *Stream) Publish(session data.Session, user *model.User, stream *m
 	// If the stream is being published for the first time, then only send "Create" activities
 	case !wasPublished:
 		if err := service.sendSyndicationMessages(session, stream, stream.Syndication.Values, nil, nil); err != nil {
-			return derp.Wrap(err, location, "Unable to send syndication messages", stream)
+			return derp.Wrap(err, location, "Sending syndication messages", stream)
 		}
 
 	// If the syndication settings have been changed (or is being republished) then send "Update" activities
 	case stream.Syndication.IsChanged() || republish:
 
 		if err := service.sendSyndicationMessages(session, stream, stream.Syndication.Added, stream.Syndication.Unchanged(), stream.Syndication.Deleted); err != nil {
-			return derp.Wrap(err, location, "Unable to send syndication messages", stream)
+			return derp.Wrap(err, location, "Sending syndication messages", stream)
 		}
 	}
 
@@ -97,7 +97,7 @@ func (service *Stream) publish_outbox(session data.Session, user *model.User, st
 
 	// Save the object to the ActivityStream cache
 	if err := service.activityService.Save(streams.NewDocument(object)); err != nil {
-		return derp.Wrap(err, location, "Unable to save object to ActivityStream cache", object)
+		return derp.Wrap(err, location, "Saving object to ActivityStream cache", object)
 	}
 
 	// If this has not been published yet, then `Create` activity. Otherwise, `Update`
@@ -131,12 +131,12 @@ func (service *Stream) publish_outbox(session data.Session, user *model.User, st
 
 	// Publish to the User's outbox
 	if err := service.publish_outbox_user(session, user, stream, activity); err != nil {
-		return derp.Wrap(err, location, "Unable to publish to User's outbox")
+		return derp.Wrap(err, location, "Publishing to User's outbox")
 	}
 
 	// Publish to the parent Stream's outbox
 	if err := service.publish_outbox_stream(session, stream, activity); err != nil {
-		return derp.Wrap(err, location, "Unable to publish to parent Stream's outbox")
+		return derp.Wrap(err, location, "Publishing to parent Stream's outbox")
 	}
 
 	return nil
@@ -165,7 +165,7 @@ func (service *Stream) publish_outbox_user(session data.Session, user *model.Use
 	document := streams.NewDocument(activity)
 
 	if err := service.outboxService.Publish(session, model.FollowerTypeUser, user.UserID, document, stream.DefaultAllow); err != nil {
-		return derp.Wrap(err, location, "Unable to publish activity to user's outbox", activity)
+		return derp.Wrap(err, location, "Publishing activity to user's outbox", activity)
 	}
 
 	// Done.
@@ -186,7 +186,7 @@ func (service *Stream) publish_outbox_stream(session data.Session, stream *model
 	parentTemplate, err := service.templateService.Load(stream.ParentTemplateID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load parent template", stream.ParentTemplateID)
+		return derp.Wrap(err, location, "Loading parent template", stream.ParentTemplateID)
 	}
 
 	// RULE: If the parent Actor is not set to boost children, then NOOP
@@ -207,7 +207,7 @@ func (service *Stream) publish_outbox_stream(session data.Session, stream *model
 	// Try to publish via sendNotifications
 	log.Trace().Str("id", stream.URL).Msg("Publishing to parent Stream's outbox")
 	if err := service.outboxService.Publish(session, model.FollowerTypeStream, stream.ParentID, document, stream.DefaultAllow); err != nil {
-		return derp.Wrap(err, location, "Unable to publish activity to parent Stream outbox", activity)
+		return derp.Wrap(err, location, "Publishing activity to parent Stream outbox", activity)
 	}
 
 	// Done.
@@ -233,7 +233,7 @@ func (service *Stream) inReplyToAuthorURL(stream *model.Stream) string {
 	parent, err := client.Load(stream.InReplyTo)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to load in-reply-to document to resolve its author", stream.InReplyTo))
+		derp.Report(derp.Wrap(err, location, "Loading in-reply-to document to resolve its author", stream.InReplyTo))
 		return ""
 	}
 

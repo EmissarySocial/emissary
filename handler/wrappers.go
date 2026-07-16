@@ -129,7 +129,7 @@ func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.Use
 		user := model.NewUser()
 
 		if err := userService.LoadByID(session, authorization.UserID, &user); err != nil {
-			return derp.Wrap(err, location, "Unable to load User", derp.WithUnauthorized())
+			return derp.Wrap(err, location, "Loading User", derp.WithUnauthorized())
 		}
 
 		// If this user has moved, then they cannot access to this server anymore.
@@ -160,7 +160,7 @@ func WithConnection(provider string, serverFactory *server.Factory, fn WithFunc1
 		}
 
 		if err := connectionService.LoadByProvider(session, provider, &connection); err != nil {
-			return derp.Wrap(err, location, "Unable to load Connection")
+			return derp.Wrap(err, location, "Loading Connection")
 		}
 
 		// Call the continuation function
@@ -201,7 +201,7 @@ func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 			session, err := factory.Server().Session(ctx.Request().Context())
 
 			if err != nil {
-				return derp.Wrap(err, location, "Unable to open database session")
+				return derp.Wrap(err, location, "Opening database session")
 			}
 
 			defer session.Close()
@@ -229,7 +229,7 @@ func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 		})
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to execute inner handler function")
+			return derp.Wrap(err, location, "Executing inner handler function")
 		}
 
 		// Success alleged.
@@ -262,7 +262,7 @@ func WithFollowing(serverFactory *server.Factory, fn WithFunc1[model.Following])
 		following := model.NewFollowing()
 
 		if err := followingService.LoadByID(session, userID, followingID, &following); err != nil {
-			return derp.Wrap(err, location, "Unable to load following record", userID, followingID)
+			return derp.Wrap(err, location, "Loading following record", userID, followingID)
 		}
 
 		return fn(ctx, factory, session, &following)
@@ -288,7 +288,7 @@ func WithIdentity(serverFactory *server.Factory, fn WithFunc1[model.Identity]) e
 				user := model.NewUser()
 
 				if err := userService.LoadByID(session, authorization.UserID, &user); err != nil {
-					return derp.Wrap(err, location, "Unable to load signed-in user")
+					return derp.Wrap(err, location, "Loading signed-in user")
 				}
 
 				// Load/Create an Identity for the signed-in User
@@ -296,7 +296,7 @@ func WithIdentity(serverFactory *server.Factory, fn WithFunc1[model.Identity]) e
 				identity, err := identityService.LoadOrCreate(session, user.DisplayName, model.IdentifierTypeEmail, user.EmailAddress)
 
 				if err != nil {
-					return derp.Wrap(err, location, "Unable to load/creating Identity")
+					return derp.Wrap(err, location, "Loading/creating Identity")
 				}
 
 				// TODO: update the signed-in authorization so we don't
@@ -313,7 +313,7 @@ func WithIdentity(serverFactory *server.Factory, fn WithFunc1[model.Identity]) e
 		identity := model.NewIdentity()
 
 		if err := identityService.LoadByID(session, authorization.IdentityID, &identity); err != nil {
-			return derp.Wrap(err, location, "Unable to load Identity")
+			return derp.Wrap(err, location, "Loading Identity")
 		}
 
 		// Call the continuation function
@@ -333,7 +333,7 @@ func WithMerchantAccount(serverFactory *server.Factory, fn WithFunc1[model.Merch
 		merchantAccountToken := ctx.QueryParam("merchantAccountId")
 
 		if err := merchantAccountService.LoadByToken(session, merchantAccountToken, &merchantAccount); err != nil {
-			return derp.Wrap(err, location, "Unable to load MerchantAccount")
+			return derp.Wrap(err, location, "Loading MerchantAccount")
 		}
 
 		// Call the continuation function
@@ -352,7 +352,7 @@ func WithMerchantAccountJWT(serverFactory *server.Factory, fn WithFunc2[model.Me
 		claims := jwt.MapClaims{}
 
 		if err := jwtService.ParseToken(ctx.QueryParam("jwt"), &claims); err != nil {
-			return derp.Wrap(err, location, "Error parsing JWT token")
+			return derp.Wrap(err, location, "Parsing JWT token")
 		}
 
 		// Retrive the ProductID
@@ -397,7 +397,7 @@ func WithOAuthUser(serverFactory *server.Factory, fn WithFunc2[model.OAuthUserTo
 		oauthUserToken := model.NewOAuthUserToken()
 
 		if err := oauthUserTokenService.LoadByUserAndToken(session, user.UserID, bearerToken, &oauthUserToken); err != nil {
-			return derp.Wrap(err, location, "Unable to load OAuthUserToken")
+			return derp.Wrap(err, location, "Loading OAuthUserToken")
 		}
 
 		// Call the continuation function
@@ -438,7 +438,7 @@ func WithPrivilege(serverFactory *server.Factory, fn WithFunc2[model.Identity, m
 		}
 
 		if err := privilegeService.LoadByIdentity(session, identity.IdentityID, privilegeID, &privilege); err != nil {
-			return derp.Wrap(err, location, "Unable to load Privilege")
+			return derp.Wrap(err, location, "Loading Privilege")
 		}
 
 		// Call the continuation function
@@ -458,7 +458,7 @@ func WithProduct(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccou
 		product := model.NewProduct()
 
 		if err := productService.LoadByToken(session, ctx.QueryParam("productId"), &product); err != nil {
-			return derp.Wrap(err, location, "Unable to load Product")
+			return derp.Wrap(err, location, "Loading Product")
 		}
 
 		// Load the MerchantAccount used for the Product
@@ -466,7 +466,7 @@ func WithProduct(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccou
 		merchantAccount := model.NewMerchantAccount()
 
 		if err := merchantAccountService.LoadByID(session, product.MerchantAccountID, &merchantAccount); err != nil {
-			return derp.Wrap(err, location, "Unable to load MerchantAccount")
+			return derp.Wrap(err, location, "Loading MerchantAccount")
 		}
 
 		// Call the continuation function
@@ -491,7 +491,7 @@ func WithRegistration(serverFactory *server.Factory, fn WithFunc2[model.Domain, 
 		registration, err := registrationService.Load(domain.RegistrationID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to load Registration")
+			return derp.Wrap(err, location, "Loading Registration")
 		}
 
 		if registration.IsZero() {
@@ -517,7 +517,7 @@ func WithSearchQuery(serverFactory *server.Factory, fn WithFunc3[model.Template,
 		if token := ctx.Param("searchId"); token != "" {
 			searchQuery := model.NewSearchQuery()
 			if err := searchQueryService.LoadByToken(session, token, &searchQuery); err != nil {
-				return derp.Wrap(err, location, "Unable to load search query from database")
+				return derp.Wrap(err, location, "Loading search query from database")
 			}
 
 			// Call the continuation function
@@ -528,7 +528,7 @@ func WithSearchQuery(serverFactory *server.Factory, fn WithFunc3[model.Template,
 		searchQuery, err := searchQueryService.LoadOrCreate(session, ctx.QueryParams())
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to create search query token")
+			return derp.Wrap(err, location, "Creating search query token")
 		}
 
 		// Call the continuation function
@@ -553,7 +553,7 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 
 			// Anything but a "Not Found" error is a problem
 			if !derp.IsNotFound(err) {
-				return derp.Wrap(err, location, "Unable to load stream from database")
+				return derp.Wrap(err, location, "Loading stream from database")
 			}
 
 			// If the "home" page is requested but not found, then we're in "startup" mode
@@ -628,7 +628,7 @@ func WithUser(serverFactory *server.Factory, fn WithFunc1[model.User]) echo.Hand
 		userService := factory.User()
 		user := model.NewUser()
 		if err := userService.LoadByToken(session, userID, &user); err != nil {
-			return derp.Wrap(err, location, "Unable to load User")
+			return derp.Wrap(err, location, "Loading User")
 		}
 
 		// Handle redirects for Users who have moved away.
@@ -711,7 +711,7 @@ func WithOAuthUserStream(serverFactory *server.Factory, fn WithFunc3[model.OAuth
 		}
 
 		if err := streamService.LoadByID(session, streamID, &stream); err != nil {
-			return derp.Wrap(err, location, "Unable to load Stream", streamID)
+			return derp.Wrap(err, location, "Loading Stream", streamID)
 		}
 
 		// RULE: Require that this Stream is a part of this User's profile

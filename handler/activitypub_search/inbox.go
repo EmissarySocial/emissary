@@ -27,7 +27,7 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 
 	// Retrieve the activity from the request body
 	if err := inboxRouter.ReceiveAndHandle(context, ctx.Request(), client); err != nil {
-		return derp.Wrap(err, location, "Unable to receive ActivityPub request")
+		return derp.Wrap(err, location, "Receiving ActivityPub request")
 	}
 
 	// Send the response to the client

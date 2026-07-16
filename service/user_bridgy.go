@@ -26,7 +26,7 @@ func (service *User) connectBluesky(session data.Session, user *model.User) erro
 		}
 
 		// This is a legitimate error.
-		return derp.Wrap(err, location, "Unable to load Bluesky configuration", user)
+		return derp.Wrap(err, location, "Loading Bluesky configuration", user)
 	}
 
 	// If the user has chosen to bridge, then Follow/Unblock the Bridgy Fed Actor
@@ -44,11 +44,11 @@ func (service *User) connectBluesky_follow(session data.Session, userID primitiv
 	const location = "service.User.connectBluesky_follow"
 
 	if _, err := service.followingService.Follow(session, userID, "@bsky.brid.gy@bsky.brid.gy"); err != nil {
-		return derp.Wrap(err, location, "Unable to follow Bridgy Fed Actor", userID, connection)
+		return derp.Wrap(err, location, "Following Bridgy Fed Actor", userID, connection)
 	}
 
 	if err := service.ruleService.UnblockActor(session, userID, "@bsky.brid.gy@bsky.brid.gy"); err != nil {
-		return derp.Wrap(err, location, "Unable to unblock Bridgy Fed Actor", userID, connection)
+		return derp.Wrap(err, location, "Unblocking Bridgy Fed Actor", userID, connection)
 	}
 
 	return nil
@@ -60,11 +60,11 @@ func (service *User) connectBluesky_unfollow(session data.Session, userID primit
 	const location = "service.User.connectBluesky_unfollow"
 
 	if err := service.followingService.Unfollow(session, userID, "@bsky.brid.gy@bsky.brid.gy"); err != nil {
-		return derp.Wrap(err, location, "Unable to unfollow Bridgy Fed Actor", userID, connection)
+		return derp.Wrap(err, location, "Unfollowing Bridgy Fed Actor", userID, connection)
 	}
 
 	if err := service.ruleService.BlockActor(session, userID, "@bsky.brid.gy@bsky.brid.gy", "Blocking to stop bridge to Bluesky"); err != nil {
-		return derp.Wrap(err, location, "Unable to block Bridgy Fed Actor", userID, connection)
+		return derp.Wrap(err, location, "Blocking Bridgy Fed Actor", userID, connection)
 	}
 
 	return nil

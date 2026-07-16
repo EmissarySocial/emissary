@@ -47,21 +47,21 @@ func GetOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, sess
 	transaction := model.NewOAuthAuthorizationRequest()
 
 	if err := ctx.Bind(&transaction); err != nil {
-		return derp.Wrap(err, location, "Error binding query parameters")
+		return derp.Wrap(err, location, "Binding query parameters")
 	}
 
 	// Load the OAuth Builder
 	builder, err := build.NewOAuthAuthorization(factory, session, transaction, user)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to generate Builder")
+		return derp.Wrap(err, location, "Generating Builder")
 	}
 
 	// Render the template
 	template := factory.Domain().Theme().HTMLTemplate
 
 	if err := template.ExecuteTemplate(ctx.Response(), "oauth", builder); err != nil {
-		return derp.Wrap(err, location, "Error executing template")
+		return derp.Wrap(err, location, "Executing template")
 	}
 
 	return nil
@@ -93,7 +93,7 @@ func PostOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, ses
 	application := model.NewOAuthClient()
 
 	if err := clientService.LoadByClientID(session, clientID, &application); err != nil {
-		return derp.Wrap(err, location, "Unable to load OAuth Application")
+		return derp.Wrap(err, location, "Loading OAuth Application")
 	}
 
 	// Validate the transaction
@@ -106,7 +106,7 @@ func PostOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, ses
 	userToken, err := userTokenService.Create(session, application, authorization, transaction)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to create OAuthUserToken")
+		return derp.Wrap(err, location, "Creating OAuthUserToken")
 	}
 
 	// Complete the transaction based on the grant type
@@ -172,7 +172,7 @@ func postOAuthAuthorization_token(ctx echo.Context, userToken model.OAuthUserTok
 	redirectURI, err := url.Parse(transaction.RedirectURI)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error parsing redirect_uri")
+		return derp.Wrap(err, location, "Parsing redirect_uri")
 	}
 
 	redirectURI.Fragment = "access_token=" + userToken.Token +
@@ -215,7 +215,7 @@ func PostOAuthToken(ctx *steranko.Context, factory *service.Factory, session dat
 	userToken := model.NewOAuthUserToken()
 
 	if err := userTokenService.LoadByClientAndCode(session, userTokenID, oauthClient.ClientID, transaction.ClientSecret, &userToken); err != nil {
-		return derp.Wrap(err, location, "Unable to load OAuthUserToken", transaction)
+		return derp.Wrap(err, location, "Loading OAuthUserToken", transaction)
 	}
 
 	// RULE: PKCE (RFC 7636). If the code was issued with a code_challenge, a
@@ -250,18 +250,18 @@ func PostOAuthRevoke(ctx *steranko.Context, factory *service.Factory, session da
 	userTokenService := factory.OAuthUserToken()
 	userToken := model.NewOAuthUserToken()
 
-	err = userTokenService.LoadByClientAndToken(session, clientID, transaction.ClientSecret, transaction.Token, &userToken)
+	if err := userTokenService.LoadByClientAndToken(session, clientID, transaction.ClientSecret, transaction.Token, &userToken); err != nil {
 
-	if derp.IsNotFound(err) {
-		return nil
-	}
+		// A token that is already gone needs no revoking
+		if derp.IsNotFound(err) {
+			return nil
+		}
 
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to load OAuthUserToken")
+		return derp.Wrap(err, location, "Loading OAuthUserToken")
 	}
 
 	if err := userTokenService.Delete(session, &userToken, "Revoked by Client"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete OAuthUserToken")
+		return derp.Wrap(err, location, "Deleting OAuthUserToken")
 	}
 
 	return ctx.JSON(http.StatusOK, map[string]any{})

@@ -83,7 +83,7 @@ func (registration *Registration) Inherit(parent *Registration) {
 	for _, templateName := range parent.HTMLTemplate.Templates() {
 		if registration.HTMLTemplate.Lookup(templateName.Name()) == nil {
 			if _, err := registration.HTMLTemplate.AddParseTree(templateName.Name(), templateName.Tree); err != nil {
-				derp.Report(derp.Wrap(err, "model.Template.Inherit", "Error adding template", templateName.Name()))
+				derp.Report(derp.Wrap(err, "model.Template.Inherit", "Adding template", templateName.Name()))
 			}
 		}
 	}

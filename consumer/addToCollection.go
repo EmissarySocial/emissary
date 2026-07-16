@@ -20,7 +20,7 @@ func AddToCollection(factory *service.Factory, session data.Session, args mapof.
 	userID, err := primitive.ObjectIDFromHex(args.GetString("userId"))
 
 	if err != nil {
-		return queue.Failure(derp.Wrap(err, location, "Unable to parse userID", args))
+		return queue.Failure(derp.Wrap(err, location, "Parsing userID", args))
 	}
 
 	// Parse the target URL to MAYBE add to a collection
@@ -33,14 +33,14 @@ func AddToCollection(factory *service.Factory, session data.Session, args mapof.
 	document, err := client.Load(objectID)
 
 	if err != nil {
-		return requeue(derp.Wrap(err, location, "Unable to load document", "url: "+objectID))
+		return requeue(derp.Wrap(err, location, "Loading document", "url: "+objectID))
 	}
 
 	// Record this reply in the LOCAL parent's Replies collection, if the parent
 	// is a Stream we own. This is independent of context ownership: we track
 	// replies to our own Streams even when the thread's context is remote.
 	if err := factory.Stream().AddReply(session, document.InReplyTo().String(), document.ID()); err != nil {
-		return requeue(derp.Wrap(err, location, "Unable to add reply to parent collection", "url: "+objectID))
+		return requeue(derp.Wrap(err, location, "Adding reply to parent collection", "url: "+objectID))
 	}
 
 	// Try to use the document's `context` to add it to a Collection.
@@ -164,7 +164,7 @@ func findRootContext(document streams.Document, count int) (string, error) {
 		parent, err := inReplyTo.Load()
 
 		if err != nil {
-			return "", derp.Wrap(err, location, "Unable to load parent document", "inReplyTo: "+inReplyTo.ID())
+			return "", derp.Wrap(err, location, "Loading parent document", "inReplyTo: "+inReplyTo.ID())
 		}
 
 		return findRootContext(parent, count-1)

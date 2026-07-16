@@ -23,14 +23,14 @@ func (service *Product) ExportDocument(session data.Session, userID primitive.Ob
 	// Load the Product
 	product := model.NewProduct()
 	if err := service.LoadByUserAndID(session, userID, productID, &product); err != nil {
-		return "", derp.Wrap(err, location, "Unable to load Product")
+		return "", derp.Wrap(err, location, "Loading Product")
 	}
 
 	// Marshal the product as JSON
 	result, err := json.Marshal(product)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to marshal Product", product)
+		return "", derp.Wrap(err, location, "Marshaling Product", product)
 	}
 
 	// Success

@@ -17,14 +17,14 @@ func Validate(request *http.Request, bannedFields ...string) error {
 	body, err := re.ReadRequestBody(request, re.DefaultMaximum)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to read request body")
+		return derp.Wrap(err, location, "Reading request body")
 	}
 
 	// Parse the form data
 	values, err := url.ParseQuery(string(body))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error unmarshalling request body")
+		return derp.Wrap(err, location, "Unmarshalling request body")
 	}
 
 	// Verify that banned fields are present, but NOT populated

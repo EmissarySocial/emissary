@@ -45,7 +45,7 @@ func (service SterankoUserService) Load(username string, result steranko.User) e
 
 		// Load the user from the database
 		if err := service.userService.LoadByUsernameOrEmail(service.session, username, user); err != nil {
-			return derp.Wrap(err, location, "Unable to load user")
+			return derp.Wrap(err, location, "Loading user")
 		}
 
 		// If the User has moved to a new server, then they cannot sign in
@@ -83,7 +83,7 @@ func (service SterankoUserService) LoadBySubject(subject string, result steranko
 
 	// Load the user from the database
 	if err := service.userService.LoadByID(service.session, userID, user); err != nil {
-		return derp.Wrap(err, location, "Unable to load user")
+		return derp.Wrap(err, location, "Loading user")
 	}
 
 	// RULE: If the User has moved to a new server, then their session is no longer valid
@@ -132,7 +132,7 @@ func (service SterankoUserService) RequestPasswordReset(user steranko.User) erro
 
 	// RULE: Reset codes are single-use, so mint a new code in case a previous one was used or expired
 	if err := service.userService.MakeNewPasswordResetCode(service.session, modelUser, model.PasswordResetDurationReset); err != nil {
-		return derp.Wrap(err, location, "Unable to make password reset code")
+		return derp.Wrap(err, location, "Making password reset code")
 	}
 
 	// Send the password reset email
@@ -158,7 +158,7 @@ func (service SterankoUserService) MasqueradeAs(user *model.User) (jwt.Claims, e
 	claims, err := service.claims(user)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to create JWT claims for masquerade")
+		return nil, derp.Wrap(err, location, "Creating JWT claims for masquerade")
 	}
 	claims.Masquerade = true
 
@@ -172,7 +172,7 @@ func (service SterankoUserService) Claims(user steranko.User) (jwt.Claims, error
 
 	claims, err := service.claims(user)
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to create JWT claims")
+		return nil, derp.Wrap(err, location, "Creating JWT claims")
 	}
 	return &claims, nil
 }
@@ -192,7 +192,7 @@ func (service SterankoUserService) claims(sterankoUser steranko.User) (model.Aut
 	identity := model.NewIdentity()
 	if err := service.identityService.LoadByEmailAddress(service.session, user.EmailAddress, &identity); err != nil {
 		if !derp.IsNotFound(err) {
-			return model.Authorization{}, derp.Wrap(err, location, "Unable to load Identity for User")
+			return model.Authorization{}, derp.Wrap(err, location, "Loading Identity for User")
 		}
 	}
 

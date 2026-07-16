@@ -60,7 +60,7 @@ func (step StepRequirePassword) Get(builder Builder, _ io.Writer) PipelineBehavi
 	modalHTML := WrapModal(builder.response(), b.String())
 
 	if _, err := io.WriteString(builder.response(), modalHTML); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepRequirePassword.Get", "Unable to write modal HTML to response"))
+		return Halt().WithError(derp.Wrap(err, "build.StepRequirePassword.Get", "Writing modal HTML to response"))
 	}
 
 	return Halt().AsFullPage()
@@ -114,7 +114,7 @@ func (step StepRequirePassword) error(builder Builder, message string) PipelineB
 	response.WriteHeader(http.StatusOK)
 
 	if _, writeError := response.Write([]byte(`<span class="text-red">` + message + `</span>`)); writeError != nil {
-		derp.Report(derp.Wrap(writeError, location, "Unable to write error message to response"))
+		derp.Report(derp.Wrap(writeError, location, "Writing error message to response"))
 	}
 
 	return Halt().AsFullPage()

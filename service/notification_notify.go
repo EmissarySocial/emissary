@@ -26,17 +26,15 @@ const objectSummaryMaxLength = 200
  * Central Detection Hook
  ******************************************/
 
-// NotifyFromActivity inspects a single inbound ActivityPub activity and creates a Notification
-// for the recipient User whenever the activity mentions, replies to, or reacts to their content.
-// It is called centrally on the inbound path (handler.activitypub_user.PostInbox) for EVERY
-// activity, regardless of Following state — this is the Mastodon "NotifyService" pattern.
-//
-// FOLLOW notifications are the exception: they are created from inbox_follow_any.go after the
-// Follower record is saved and the Accept is sent (see NotifyFollow).
-//
-// A notification failure must never fail the inbox request; callers should derp.Report the error
-// and continue.
+// NotifyFromActivity creates a Notification whenever an inbound activity mentions, replies to, or
+// reacts to the recipient User's content
 func (service *Notification) NotifyFromActivity(session data.Session, user *model.User, activity streams.Document) error {
+
+	// Called centrally on the inbound path (handler.activitypub_user.PostInbox) for EVERY activity,
+	// regardless of Following state -- the Mastodon "NotifyService" pattern.  FOLLOW is the
+	// exception, created in inbox_follow_any.go once the Accept is sent (see NotifyFollow).
+
+	// A notification failure must never fail the inbox request, so callers derp.Report and continue.
 
 	// RULE: Never notify a user about their own actions.
 	if activity.ActorID() == user.ActivityPubURL() {
@@ -164,7 +162,7 @@ func (service *Notification) notify(session data.Session, user *model.User, acti
 	existing, err := service.LoadOrCreate(session, user.UserID, notification.ActivityID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load/create notification", user.UserID, notification.ActivityID)
+		return derp.Wrap(err, location, "Loading/create notification", user.UserID, notification.ActivityID)
 	}
 
 	isNew := existing.CreateDate == 0
@@ -194,7 +192,7 @@ func (service *Notification) notify(session data.Session, user *model.User, acti
 
 	// Save the notification
 	if err := service.Save(session, notification, "NotifyFromActivity"); err != nil {
-		return derp.Wrap(err, location, "Unable to save notification", notification)
+		return derp.Wrap(err, location, "Saving notification", notification)
 	}
 
 	if !surfaced {
@@ -228,7 +226,7 @@ func (service *Notification) removeForActivity(session data.Session, user *model
 	// present on the Undo — and object.Type() reads the embedded type without a network fetch.
 	if object.Type() == vocab.ActivityTypeFollow {
 		if err := service.DeleteFollowByActor(session, user.UserID, activity.ActorID(), "unfollow"); err != nil {
-			return derp.Wrap(err, location, "Unable to delete FOLLOW notification by actor", user.UserID, activity.ActorID())
+			return derp.Wrap(err, location, "Deleting FOLLOW notification by actor", user.UserID, activity.ActorID())
 		}
 		return nil
 	}
@@ -236,7 +234,7 @@ func (service *Notification) removeForActivity(session data.Session, user *model
 	// Primary match: delete by the reversed activity's ID.
 	if activityID := object.ID(); activityID != "" {
 		if err := service.DeleteByActivityID(session, user.UserID, activityID, "undo"); err != nil {
-			return derp.Wrap(err, location, "Unable to delete notification by activityId", user.UserID, activityID)
+			return derp.Wrap(err, location, "Deleting notification by activityId", user.UserID, activityID)
 		}
 	}
 
@@ -244,7 +242,7 @@ func (service *Notification) removeForActivity(session data.Session, user *model
 	if activity.Type() == vocab.ActivityTypeDelete {
 		if objectURL := object.ID(); objectURL != "" {
 			if err := service.DeleteByObjectURL(session, user.UserID, objectURL, "delete"); err != nil {
-				return derp.Wrap(err, location, "Unable to delete notification by objectUrl", user.UserID, objectURL)
+				return derp.Wrap(err, location, "Deleting notification by objectUrl", user.UserID, objectURL)
 			}
 		}
 	}
@@ -288,7 +286,7 @@ func (service *Notification) subtypeFor(session data.Session, userID primitive.O
 		return model.NotificationSubtypeNotFollowing
 	}
 
-	derp.Report(derp.Wrap(err, location, "Unable to load Following record", userID, actorProfileURL))
+	derp.Report(derp.Wrap(err, location, "Loading Following record", userID, actorProfileURL))
 	return model.NotificationSubtypeFollowing
 }
 

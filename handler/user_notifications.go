@@ -29,13 +29,13 @@ func buildNotifications(ctx *steranko.Context, factory *service.Factory, session
 	actionID := first.String(ctx.Param("action"), "index")
 
 	if ok, err := handleJSONLD(ctx, user); ok {
-		return derp.WrapIF(err, location, "Unable to build JSON-LD")
+		return derp.WrapIF(err, location, "Building JSON-LD")
 	}
 
 	builder, err := build.NewNotifications(factory, session, ctx.Request(), ctx.Response(), user, actionID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to create builder")
+		return derp.Wrap(err, location, "Creating builder")
 	}
 
 	// Forward to the standard page builder to complete the job

@@ -50,7 +50,7 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 	form, err := multipartForm(builder.request())
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to read multipart form."))
+		return Halt().WithError(derp.Wrap(err, location, "Reading multipart form."))
 	}
 
 	// Retrieve upload files from the POST
@@ -80,7 +80,7 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 
 	// Make room for new attachments
 	if err := attachmentService.MakeRoom(builder.session(), objectType, objectID, step.Category, step.Action, step.Maximum, len(files)); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error making room for new Attachments"))
+		return Halt().WithError(derp.Wrap(err, location, "Making room for new Attachments"))
 	}
 
 	// Make attachments for each uploaded file
@@ -92,7 +92,7 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		source, err := fileHeader.Open()
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Unable to read file from multi-part header", fileHeader))
+			return Halt().WithError(derp.Wrap(err, location, "Reading file from multi-part header", fileHeader))
 		}
 
 		//nolint:errcheck
@@ -130,7 +130,7 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		// Add the document into the media server.
 		// If it's an image or video, then save the dimensions as well.
 		if err := factory.MediaServer().Put(attachment.AttachmentID.Hex(), reader); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Unable to save attachment to mediaserver", attachment))
+			return Halt().WithError(derp.Wrap(err, location, "Saving attachment to mediaserver", attachment))
 		}
 
 		// Apply rules to Attachment
@@ -138,27 +138,27 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 
 		// Try to save the Attachment
 		if err := attachmentService.Save(builder.session(), &attachment, "Uploaded file: "+fileHeader.Filename); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Unable to save attachment", attachment))
+			return Halt().WithError(derp.Wrap(err, location, "Saving attachment", attachment))
 		}
 
 		// Try to put the the attachmentId into the object
 		if step.AttachmentPath != "" {
 			if err := builder.schema().Set(object, step.AttachmentPath, attachment.AttachmentID.Hex()); err != nil {
-				return Halt().WithError(derp.Wrap(err, location, "Unable to set attachment path", attachment))
+				return Halt().WithError(derp.Wrap(err, location, "Setting attachment path", attachment))
 			}
 		}
 
 		// Try to put the the downloadUrl into the object
 		if step.DownloadPath != "" {
 			if err := builder.schema().Set(object, step.DownloadPath, attachment.URL); err != nil {
-				return Halt().WithError(derp.Wrap(err, location, "Unable to set download path", attachment))
+				return Halt().WithError(derp.Wrap(err, location, "Setting download path", attachment))
 			}
 		}
 
 		// Try to put the original filename into the object
 		if step.FilenamePath != "" {
 			if err := builder.schema().Set(object, step.FilenamePath, attachment.Original); err != nil {
-				return Halt().WithError(derp.Wrap(err, location, "Unable to set filename path", attachment))
+				return Halt().WithError(derp.Wrap(err, location, "Setting filename path", attachment))
 			}
 		}
 
@@ -180,12 +180,12 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 			bytes, err := json.Marshal(response)
 
 			if err != nil {
-				return Halt().WithError(derp.Wrap(err, location, "Error marshalling response", response))
+				return Halt().WithError(derp.Wrap(err, location, "Marshalling response", response))
 			}
 
 			// Write the response to the buffer
 			if _, err := buffer.Write(bytes); err != nil {
-				return Halt().WithError(derp.Wrap(err, location, "Error writing response to buffer", response))
+				return Halt().WithError(derp.Wrap(err, location, "Writing response to buffer", response))
 			}
 
 			// Tell the client that we're done.
@@ -210,10 +210,13 @@ func verifyContentType(source io.Reader, acceptType string) (io.Reader, error) {
 	header := make([]byte, 512)
 	headerLength, err := io.ReadFull(source, header)
 
-	// io.EOF / io.ErrUnexpectedEOF simply mean the file is shorter than 512 bytes,
-	// which is fine.  Any other error is a genuine read failure.
-	if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
-		return nil, derp.Wrap(err, location, "Unable to read uploaded file")
+	if err != nil {
+
+		// io.EOF / io.ErrUnexpectedEOF simply mean the file is shorter than 512 bytes, which is
+		// fine.  Any other error is a genuine read failure.
+		if err != io.EOF && err != io.ErrUnexpectedEOF {
+			return nil, derp.Wrap(err, location, "Reading uploaded file")
+		}
 	}
 
 	header = header[:headerLength]

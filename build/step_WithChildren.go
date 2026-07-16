@@ -31,7 +31,7 @@ func (step StepWithChildren) Post(builder Builder, buffer io.Writer) PipelineBeh
 	children, err := factory.Stream().RangeByParent(builder.session(), streamBuilder._stream.ParentID)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to list children"))
+		return Halt().WithError(derp.Wrap(err, location, "Listing children"))
 	}
 
 	result := NewPipelineResult()
@@ -43,12 +43,12 @@ func (step StepWithChildren) Post(builder Builder, buffer io.Writer) PipelineBeh
 		childStream, err := NewStreamWithoutTemplate(streamBuilder.factory(), streamBuilder.session(), streamBuilder.request(), streamBuilder.response(), &child, "view")
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Unable to create builder for child"))
+			return Halt().WithError(derp.Wrap(err, location, "Creating builder for child"))
 		}
 
 		// Execute the POST build pipeline on the child
 		childResult := Pipeline(step.SubSteps).Post(factory, &childStream, buffer)
-		childResult.Error = derp.WrapIF(result.Error, location, "Error executing steps for child")
+		childResult.Error = derp.WrapIF(result.Error, location, "Executing steps for child")
 
 		if result.Halt {
 			return UseResult(result)

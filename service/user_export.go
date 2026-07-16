@@ -24,14 +24,14 @@ func (service *User) ExportDocument(session data.Session, userID primitive.Objec
 	// Load the User
 	user := model.NewUser()
 	if err := service.LoadByID(session, userID, &user); err != nil {
-		return "", derp.Wrap(err, location, "Unable to load User")
+		return "", derp.Wrap(err, location, "Loading User")
 	}
 
 	// Marshal the user as JSON
 	result, err := json.Marshal(user)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to marshal User", user)
+		return "", derp.Wrap(err, location, "Marshaling User", user)
 	}
 
 	// Success
@@ -51,7 +51,7 @@ func (service *User) Move(session data.Session, user *model.User, actor string, 
 	user.MovedTo = actor
 
 	if err := service.Save(session, user, "Moved"); err != nil {
-		return derp.Wrap(err, location, "Unable to save user")
+		return derp.Wrap(err, location, "Saving user")
 	}
 
 	// Background task (post-commit) to delete records and send `Move` notifications to followers.

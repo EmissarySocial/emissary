@@ -17,7 +17,7 @@ func (service *Follower) Import(session data.Session, _ *model.Import, importIte
 	// Unmarshal the JSON document into a new Follower
 	follower := model.NewFollower()
 	if err := json.Unmarshal(document, &follower); err != nil {
-		return derp.Wrap(err, location, "Unable to parse remote document", document)
+		return derp.Wrap(err, location, "Parsing remote document", document)
 	}
 
 	// Update mapping values in the importItem
@@ -30,12 +30,12 @@ func (service *Follower) Import(session data.Session, _ *model.Import, importIte
 
 	// Map the UserID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &follower.ParentID); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map ParentID", "ParentID: "+user.UserID.Hex()+", FollowerID: "+follower.FollowerID.Hex()))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Mapping ParentID", "ParentID: "+user.UserID.Hex()+", FollowerID: "+follower.FollowerID.Hex()))
 	}
 
 	// Save the Follower to the database
 	if err := service.Save(session, &follower, "Imported"); err != nil {
-		return derp.Wrap(err, location, "Unable to save imported Follower")
+		return derp.Wrap(err, location, "Saving imported Follower")
 	}
 
 	// A Man, A Plan, A Canal. Panama.
@@ -48,7 +48,7 @@ func (service *Follower) UndoImport(session data.Session, importItem *model.Impo
 	const location = "service.Follower.UndoImport"
 
 	if err := service.HardDeleteByID(session, importItem.UserID, importItem.LocalID); err != nil {
-		return derp.Wrap(err, location, "Unable to delete record", importItem.LocalID)
+		return derp.Wrap(err, location, "Deleting record", importItem.LocalID)
 	}
 
 	return nil

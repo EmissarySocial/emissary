@@ -81,7 +81,7 @@ func (service *Permission) UserCan(session data.Session, authorization *model.Au
 		hasRole, err := service.hasPrivilege(session, authorization, accessLister, accessList...)
 
 		if err != nil {
-			return false, derp.Wrap(err, location, "Unable to check user roles")
+			return false, derp.Wrap(err, location, "Checking user roles")
 		}
 
 		if hasRole {
@@ -216,7 +216,7 @@ func (service *Permission) UserHasRole(session data.Session, authorization *mode
 		hasPrivilege, err := service.hasPrivilege(session, authorization, accessLister, role)
 
 		if err != nil {
-			return false, derp.Wrap(err, location, "Unable to check user roles")
+			return false, derp.Wrap(err, location, "Checking user roles")
 		}
 
 		if hasPrivilege {
@@ -247,7 +247,7 @@ func (service *Permission) hasPrivilege(session data.Session, authorization *mod
 	// Locate the authorized Identity
 	identity := model.NewIdentity()
 	if err := service.identityService.LoadByID(session, authorization.IdentityID, &identity); err != nil {
-		return false, derp.Wrap(err, location, "Unable to load Identity for user")
+		return false, derp.Wrap(err, location, "Loading Identity for user")
 	}
 
 	// Return TRUE if the identity includes one or more of the required privileges
@@ -343,7 +343,7 @@ func (service *Permission) getSignature(request *http.Request) (sigs.Signature, 
 
 	// If there's an error on production servers, then fail
 	if !uri.IsLocalHostname(request.Host) {
-		return sigs.Signature{}, derp.Wrap(err, location, "Unable to verify signature for request")
+		return sigs.Signature{}, derp.Wrap(err, location, "Verifying signature for request")
 	}
 
 	// Fall through means we're on localhost; try the "mock" verifier

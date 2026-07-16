@@ -48,7 +48,7 @@ func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, sessio
 	messages, err := outboxService.QueryByParentAndDate(session, model.FollowerTypeUser, user.UserID, permissions, publishedDate, pageSize)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load outbox messages")
+		return derp.Wrap(err, location, "Loading outbox messages")
 	}
 
 	// Return results as an OrderedCollectionPage
@@ -79,7 +79,7 @@ func GetOutboxActivity(ctx *steranko.Context, factory *service.Factory, session 
 	outboxService := factory.Outbox()
 	outboxMessage := model.NewOutboxMessage()
 	if err := outboxService.LoadByID(session, user.UserID, outboxMessageID, &outboxMessage); err != nil {
-		return derp.Wrap(err, location, "Unable to load outbox message", outboxMessageID)
+		return derp.Wrap(err, location, "Loading outbox message", outboxMessageID)
 	}
 
 	// Return results as an OrderedCollectionPage
@@ -113,7 +113,7 @@ func PostOutbox(ctx *steranko.Context, factory *service.Factory, session data.Se
 
 	// Retrieve the activity from the request body and route it to the correct handler
 	if err := outboxRouter.ReceiveAndHandle(context, ctx.Request(), client, matchActor); err != nil {
-		return derp.Wrap(err, location, "Unable to handle ActivityPub request")
+		return derp.Wrap(err, location, "Handling ActivityPub request")
 	}
 
 	// Handler writes its response directly to the context

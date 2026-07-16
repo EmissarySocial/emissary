@@ -28,7 +28,7 @@ func GetImportedURL(ctx *steranko.Context, factory *service.Factory, session dat
 	importItem := model.NewImportItem()
 
 	if err := importItemService.LoadByRemoteURL(session, originalURL, &importItem); err != nil {
-		return derp.Wrap(err, location, "Unable to load ImportItem by URL", "url: "+originalURL)
+		return derp.Wrap(err, location, "Loading ImportItem by URL", "url: "+originalURL)
 	}
 
 	// 404 if there's no local mapping

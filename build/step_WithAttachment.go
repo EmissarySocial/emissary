@@ -53,7 +53,7 @@ func (step StepWithAttachment) execute(builder Builder, buffer io.Writer, action
 	} else if attachmentID, err := primitive.ObjectIDFromHex(token); err == nil {
 
 		if err := factory.Attachment().LoadByID(builder.session(), objectType, objectID, attachmentID, &attachment); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Unable to load Attachment via ID", token))
+			return Halt().WithError(derp.Wrap(err, location, "Loading Attachment via ID", token))
 		}
 	}
 
@@ -61,12 +61,12 @@ func (step StepWithAttachment) execute(builder Builder, buffer io.Writer, action
 	subBuilder, err := NewAttachment(factory, builder.session(), builder.request(), builder.response(), template, &attachment, builder.actionID())
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))
+		return Halt().WithError(derp.Wrap(err, location, "Creating sub-builder"))
 	}
 
 	// Execute the build pipeline on the Attachment record
 	result := Pipeline(step.SubSteps).Execute(factory, subBuilder, buffer, actionMethod)
-	result.Error = derp.WrapIF(result.Error, location, "Error executing steps for child")
+	result.Error = derp.WrapIF(result.Error, location, "Executing steps for child")
 
 	return UseResult(result)
 }

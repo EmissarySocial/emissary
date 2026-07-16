@@ -98,7 +98,7 @@ func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 		cs, err := storage.collection.Watch(context, mongo.Pipeline{})
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to open Mongodb Change Stream"))
+			derp.Report(derp.Wrap(err, location, "Opening Mongodb Change Stream"))
 			return
 		}
 
@@ -107,12 +107,12 @@ func NewMongoStorage(args *CommandLineArgs) MongoStorage {
 			if config, err := storage.load(); err == nil {
 				storage.updateChannel <- config
 			} else {
-				derp.Report(derp.Wrap(err, location, "Unable to load updated config from MongoDB"))
+				derp.Report(derp.Wrap(err, location, "Loading updated config from MongoDB"))
 			}
 		}
 
 		if err := cs.Err(); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error watching Mongodb Change Stream"))
+			derp.Report(derp.Wrap(err, location, "Watching Mongodb Change Stream"))
 		}
 	}()
 
@@ -139,7 +139,7 @@ func (storage MongoStorage) load() (Config, error) {
 			return Config{}, derp.NotFound("config.MongoStorage", "Unable to load config from MongoDB", err.Error())
 		}
 
-		return Config{}, derp.Wrap(err, "config.MongoStorage", "Unable to decode config from MongoDB")
+		return Config{}, derp.Wrap(err, "config.MongoStorage", "Decoding config from MongoDB")
 	}
 
 	result.Source = storage.source
@@ -158,7 +158,7 @@ func (storage MongoStorage) Write(config Config) error {
 	}
 
 	if _, err := storage.collection.ReplaceOne(context.Background(), criteria, config, &options); err != nil {
-		return derp.Wrap(err, "config.MongoStorage", "Error writing config to MongoDB")
+		return derp.Wrap(err, "config.MongoStorage", "Writing config to MongoDB")
 	}
 
 	return nil

@@ -27,7 +27,7 @@ func PostEmailConfirmation(serverFactory *server.Factory) func(model.Authorizati
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Unable to create session")
+			return struct{}{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -37,18 +37,18 @@ func PostEmailConfirmation(serverFactory *server.Factory) func(model.Authorizati
 		user := model.NewUser()
 
 		if err := userService.LoadByID(session, auth.UserID, &user); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Unable to load user")
+			return struct{}{}, derp.Wrap(err, location, "Loading user")
 		}
 
 		// RULE: Reset codes are single-use, so mint a new code in case a previous one was used or expired
 		if err := userService.MakeNewPasswordResetCode(session, &user, model.PasswordResetDurationWelcome); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Unable to make password reset code")
+			return struct{}{}, derp.Wrap(err, location, "Making password reset code")
 		}
 
 		// (Re-)send a welcome email to the User
 		emailService := factory.Email()
 		if err := emailService.SendPasswordReset(&user); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Unable to send welcome email")
+			return struct{}{}, derp.Wrap(err, location, "Sending welcome email")
 		}
 
 		// Success!

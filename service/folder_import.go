@@ -17,7 +17,7 @@ func (service *Folder) Import(session data.Session, _ *model.Import, importItem 
 	// Unmarshal the JSON document into a new Folder
 	folder := model.NewFolder()
 	if err := json.Unmarshal(document, &folder); err != nil {
-		return derp.Wrap(err, location, "Unable to parse remote document", document)
+		return derp.Wrap(err, location, "Parsing remote document", document)
 	}
 
 	// Update the ImportItem with the RemoteID
@@ -38,12 +38,12 @@ func (service *Folder) Import(session data.Session, _ *model.Import, importItem 
 
 	// Map the UserID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &folder.UserID); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map UserID", "UserID: "+user.UserID.Hex()+", FolderID: "+folder.FolderID.Hex()))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Mapping UserID", "UserID: "+user.UserID.Hex()+", FolderID: "+folder.FolderID.Hex()))
 	}
 
 	// Save the Folder to the database
 	if err := service.Save(session, &folder, "Imported"); err != nil {
-		return derp.Wrap(err, location, "Unable to save imported Folder")
+		return derp.Wrap(err, location, "Saving imported Folder")
 	}
 
 	// A Man, A Plan, A Canal. Paama.
@@ -56,7 +56,7 @@ func (service *Folder) UndoImport(session data.Session, importItem *model.Import
 	const location = "service.Folder.UndoImport"
 
 	if err := service.HardDeleteByID(session, importItem.UserID, importItem.LocalID); err != nil {
-		return derp.Wrap(err, location, "Unable to delete record", importItem.LocalID)
+		return derp.Wrap(err, location, "Deleting record", importItem.LocalID)
 	}
 
 	return nil

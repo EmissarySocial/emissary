@@ -82,7 +82,7 @@ func (service *Privilege) Range(session data.Session, criteria exp.Expression, o
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Privilege.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.Privilege.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewPrivilege), nil
@@ -92,7 +92,7 @@ func (service *Privilege) Range(session data.Session, criteria exp.Expression, o
 func (service *Privilege) Load(session data.Session, criteria exp.Expression, privilege *model.Privilege) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), privilege); err != nil {
-		return derp.Wrap(err, "service.Privilege.Load", "Unable to load Privilege", criteria)
+		return derp.Wrap(err, "service.Privilege.Load", "Loading Privilege", criteria)
 	}
 
 	return nil
@@ -105,22 +105,22 @@ func (service *Privilege) Save(session data.Session, privilege *model.Privilege,
 
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(privilege); err != nil {
-		return derp.Wrap(err, location, "Unable to validate Privilege", privilege)
+		return derp.Wrap(err, location, "Validating Privilege", privilege)
 	}
 
 	// If the Identity does not exists, then creat a new Identity for this Privilege
 	if err := service.maybeCreateIdentity(session, privilege); err != nil {
-		return derp.Wrap(err, location, "Unable to create related Identity")
+		return derp.Wrap(err, location, "Creating related Identity")
 	}
 
 	// RULE: Validate the CircleID for this Privilege
 	if err := service.validateCircle(session, privilege); err != nil {
-		return derp.Wrap(err, location, "Unable to validate Circle for Privilege", privilege)
+		return derp.Wrap(err, location, "Validating Circle for Privilege", privilege)
 	}
 
 	// Save the privilege to the database
 	if err := service.collection(session).Save(privilege, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Privilege", privilege, note)
+		return derp.Wrap(err, location, "Saving Privilege", privilege, note)
 	}
 
 	// Recalculate the privileges for the identityID
@@ -129,14 +129,14 @@ func (service *Privilege) Save(session data.Session, privilege *model.Privilege,
 		if derp.IsNotFound(err) {
 			privilege.IdentityID = primitive.NilObjectID
 		} else {
-			return derp.Wrap(err, location, "Unable to refresh privileges", privilege.IdentityID)
+			return derp.Wrap(err, location, "Refreshing privileges", privilege.IdentityID)
 		}
 	}
 
 	// Recalculate member counts for the Circle, if applicable
 	if !privilege.CircleID.IsZero() {
 		if err := service.circleService.RefreshMemberCounts(session, privilege.UserID, privilege.CircleID); err != nil {
-			return derp.Wrap(err, location, "Unable to refresh Circle member counts", privilege.CircleID)
+			return derp.Wrap(err, location, "Refreshing Circle member counts", privilege.CircleID)
 		}
 	}
 
@@ -150,18 +150,18 @@ func (service *Privilege) Delete(session data.Session, privilege *model.Privileg
 
 	// Delete this Privilege
 	if err := service.collection(session).Delete(privilege, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Privilege", privilege, note)
+		return derp.Wrap(err, location, "Deleting Privilege", privilege, note)
 	}
 
 	// Recalculate the privileges for the identityID
 	if err := service.identityService.RefreshPrivileges(session, privilege.IdentityID); err != nil {
-		return derp.Wrap(err, location, "Unable to refresh privileges", privilege.IdentityID)
+		return derp.Wrap(err, location, "Refreshing privileges", privilege.IdentityID)
 	}
 
 	// Recalculate member counts for the Circle, if applicable
 	if !privilege.CircleID.IsZero() {
 		if err := service.circleService.RefreshMemberCounts(session, privilege.UserID, privilege.CircleID); err != nil {
-			return derp.Wrap(err, location, "Unable to refresh Circle member counts", privilege.CircleID)
+			return derp.Wrap(err, location, "Refreshing Circle member counts", privilege.CircleID)
 		}
 	}
 
@@ -176,7 +176,7 @@ func (service *Privilege) HardDeleteByID(session data.Session, userID primitive.
 	criteria := exp.Equal("userId", userID).AndEqual("_id", privilegeID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Privilege", "userID: "+userID.Hex(), "privilegeID: "+privilegeID.Hex())
+		return derp.Wrap(err, location, "Deleting Privilege", "userID: "+userID.Hex(), "privilegeID: "+privilegeID.Hex())
 	}
 
 	return nil
@@ -372,13 +372,13 @@ func (service *Privilege) DeleteByUserID(session data.Session, userID primitive.
 	privileges, err := service.RangeByUserID(session, userID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to query Privileges by UserID", userID)
+		return derp.Wrap(err, location, "Querying Privileges by UserID", userID)
 	}
 
 	// Delete each privilege
 	for privilege := range privileges {
 		if err := service.Delete(session, &privilege, note); err != nil {
-			return derp.Wrap(err, location, "Unable to delete Privilege", privilege)
+			return derp.Wrap(err, location, "Deleting Privilege", privilege)
 		}
 	}
 
@@ -425,7 +425,7 @@ func (service *Privilege) DeleteByCircle(session data.Session, circleID primitiv
 	privileges, err := service.RangeByCircle(session, circleID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load Privileges for Circle", circleID)
+		return derp.Wrap(err, location, "Loading Privileges for Circle", circleID)
 	}
 
 	// Delete them (thank you RangeFuncs!)
@@ -435,14 +435,14 @@ func (service *Privilege) DeleteByCircle(session data.Session, circleID primitiv
 		if privilege.RemotePurchaseID != "" {
 			privilege.CircleID = primitive.NilObjectID // Remove the CircleID so that it is not counted in the future
 			if err := service.collection(session).Save(&privilege, note); err != nil {
-				return derp.Wrap(err, location, "Unable to remove CircleID from Privilege", privilege.ID(), note)
+				return derp.Wrap(err, location, "Removing CircleID from Privilege", privilege.ID(), note)
 			}
 			continue
 		}
 
 		// Otherwise, it's OK to delete an empty Privilege directly (no additional business logic)
 		if err := service.collection(session).Delete(&privilege, note); err != nil {
-			return derp.Wrap(err, location, "Unable to delete Privilege", privilege.ID(), note)
+			return derp.Wrap(err, location, "Deleting Privilege", privilege.ID(), note)
 		}
 	}
 
@@ -479,7 +479,7 @@ func (service *Privilege) maybeCreateIdentity(session data.Session, privilege *m
 	identity, err := service.identityService.LoadOrCreate(session, "", privilege.IdentifierType, privilege.IdentifierValue)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load/creating Identifier", privilege.IdentifierType, privilege.IdentifierValue)
+		return derp.Wrap(err, location, "Loading/creating Identifier", privilege.IdentifierType, privilege.IdentifierValue)
 	}
 
 	// Update the Privilege with the correct IdentityID
@@ -505,7 +505,7 @@ func (service *Privilege) validateCircle(session data.Session, privilege *model.
 
 			circle := model.NewCircle()
 			if err := service.circleService.LoadByID(session, privilege.UserID, privilege.CircleID, &circle); err != nil {
-				return derp.Wrap(err, location, "Unable to load Circle by ID", privilege.CircleID)
+				return derp.Wrap(err, location, "Loading Circle by ID", privilege.CircleID)
 			}
 
 			privilege.SetCircleInfo(&circle)
@@ -527,7 +527,7 @@ func (service *Privilege) validateCircle(session data.Session, privilege *model.
 		if derp.IsNotFound(err) {
 			return nil
 		}
-		return derp.Wrap(err, location, "Unable to load Circle by RemoteProductID", privilege.RemoteProductID)
+		return derp.Wrap(err, location, "Loading Circle by RemoteProductID", privilege.RemoteProductID)
 	}
 
 	// Apply the CircleID to the Privilege
@@ -559,13 +559,13 @@ func (service *Privilege) refreshIdentity(session data.Session, identity *model.
 	privilegesToRemove, err := service.RangeByIdentity(session, identity.IdentityID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load Privileges by IdentityID", identity.IdentityID)
+		return derp.Wrap(err, location, "Loading Privileges by IdentityID", identity.IdentityID)
 	}
 
 	// Remove this Identity from all privileges that no longer have matching identifiers
 	for privilege := range privilegesToRemove {
 		if err := service.maybeRemoveIdentity(session, &privilege, identity); err != nil {
-			return derp.Wrap(err, location, "Unable to remove IdentityID from Privilege", privilege.PrivilegeID)
+			return derp.Wrap(err, location, "Removing IdentityID from Privilege", privilege.PrivilegeID)
 		}
 	}
 
@@ -577,13 +577,13 @@ func (service *Privilege) refreshIdentity(session data.Session, identity *model.
 	privilegesToAssign, err := service.RangeByIdentifiers(session, identity.EmailAddress, identity.WebfingerUsername, identity.ActivityPubActor)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load Privileges by identifiers", identity)
+		return derp.Wrap(err, location, "Loading Privileges by identifiers", identity)
 	}
 
 	for privilege := range privilegesToAssign {
 
 		if err := service.maybeSetIdentity(session, &privilege, identity); err != nil {
-			return derp.Wrap(err, location, "Unable to set IdentityID on Privilege", privilege.PrivilegeID)
+			return derp.Wrap(err, location, "Setting IdentityID on Privilege", privilege.PrivilegeID)
 		}
 	}
 
@@ -601,7 +601,7 @@ func (service *Privilege) RefreshCircleInfo(session data.Session, circle *model.
 		privileges, err := service.RangeByProducts(session, circle.ProductIDs...)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to load Privileges by RemoteTokens", circle.CircleID)
+			return derp.Wrap(err, location, "Loading Privileges by RemoteTokens", circle.CircleID)
 		}
 
 		for privilege := range privileges {
@@ -610,7 +610,7 @@ func (service *Privilege) RefreshCircleInfo(session data.Session, circle *model.
 			if privilege.SetCircleInfo(circle) {
 
 				if err := service.Save(session, &privilege, "Updating Circle settings"); err != nil {
-					return derp.Wrap(err, location, "Unable to refresh Privilege", circle.CircleID)
+					return derp.Wrap(err, location, "Refreshing Privilege", circle.CircleID)
 				}
 			}
 		}
@@ -620,7 +620,7 @@ func (service *Privilege) RefreshCircleInfo(session data.Session, circle *model.
 	privileges, err := service.RangeByCircle(session, circle.CircleID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load Privileges by CircleID", circle)
+		return derp.Wrap(err, location, "Loading Privileges by CircleID", circle)
 	}
 
 	for privilege := range privileges {
@@ -630,7 +630,7 @@ func (service *Privilege) RefreshCircleInfo(session data.Session, circle *model.
 			privilege.CircleID = primitive.NilObjectID
 
 			if err := service.Save(session, &privilege, "Updating Circle settings"); err != nil {
-				return derp.Wrap(err, location, "Unable to refresh Privilege", circle)
+				return derp.Wrap(err, location, "Refreshing Privilege", circle)
 			}
 
 			continue
@@ -639,7 +639,7 @@ func (service *Privilege) RefreshCircleInfo(session data.Session, circle *model.
 		// If the Circle info has changed, then update the Privilege
 		if privilege.SetCircleInfo(circle) {
 			if err := service.Save(session, &privilege, "Updating Circle settings"); err != nil {
-				return derp.Wrap(err, location, "Unable to refresh Privilege", circle)
+				return derp.Wrap(err, location, "Refreshing Privilege", circle)
 			}
 		}
 	}
@@ -680,7 +680,7 @@ func (service *Privilege) maybeSetIdentity(session data.Session, privilege *mode
 
 	// Update the Privilege without triggering any additional business logic.
 	if err := service.collection(session).Save(privilege, "Setting IdentityID"); err != nil {
-		return derp.Wrap(err, location, "Unable to set IdentityID on Privilege", privilege.PrivilegeID)
+		return derp.Wrap(err, location, "Setting IdentityID on Privilege", privilege.PrivilegeID)
 	}
 
 	// Return in success.
@@ -718,7 +718,7 @@ func (service *Privilege) maybeRemoveIdentity(session data.Session, privilege *m
 	privilege.IdentityID = primitive.NilObjectID
 
 	if err := service.collection(session).Save(privilege, "Removing IdentityID"); err != nil {
-		return derp.Wrap(err, location, "Unable to remove IdentityID from Privilege", privilege.PrivilegeID)
+		return derp.Wrap(err, location, "Removing IdentityID from Privilege", privilege.PrivilegeID)
 	}
 
 	return nil
@@ -738,11 +738,11 @@ func (service *Privilege) Cancel(session data.Session, privilege *model.Privileg
 	}
 
 	if err := service.merchantAccountService.CancelPrivilege(session, privilege); err != nil {
-		return derp.Wrap(err, location, "Error canceling subscription for Privilege", privilege.PrivilegeID)
+		return derp.Wrap(err, location, "Canceling subscription for Privilege", privilege.PrivilegeID)
 	}
 
 	if err := service.Delete(session, privilege, "Canceled by User"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Privilege after canceling subscription", privilege.PrivilegeID)
+		return derp.Wrap(err, location, "Deleting Privilege after canceling subscription", privilege.PrivilegeID)
 	}
 
 	return nil

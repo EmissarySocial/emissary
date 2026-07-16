@@ -31,7 +31,7 @@ func GetMarkers(serverFactory *server.Factory) func(model.Authorization, txn.Get
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Unable to create session")
+			return nil, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -41,7 +41,7 @@ func GetMarkers(serverFactory *server.Factory) func(model.Authorization, txn.Get
 		message := model.NewNewsItem()
 
 		if err := newsFeedService.LoadOldestUnread(session, auth.UserID, &message); err != nil {
-			return nil, derp.Wrap(err, location, "Unable to load oldest unread message")
+			return nil, derp.Wrap(err, location, "Loading oldest unread message")
 		}
 
 		result := map[string]object.Marker{
@@ -82,7 +82,7 @@ func PostMarker(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Unable to create session")
+			return nil, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -90,7 +90,7 @@ func PostMarker(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		// Mark messages read by date
 		newsFeedService := factory.NewsFeed()
 		if err := newsFeedService.MarkReadByDate(session, auth.UserID, lastReadDate); err != nil {
-			return nil, derp.Wrap(err, location, "Error marking messages read")
+			return nil, derp.Wrap(err, location, "Marking messages read")
 		}
 
 		now := time.Now().UTC().Format(time.RFC3339)

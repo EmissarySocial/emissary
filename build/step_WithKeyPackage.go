@@ -52,19 +52,19 @@ func (step StepWithKeyPackage) execute(builder Builder, buffer io.Writer, action
 	keyPackageService := factory.KeyPackage()
 	keyPackage := model.NewKeyPackage()
 	if err := keyPackageService.LoadByID(builder.session(), builder.AuthenticatedID(), keyPackageID, &keyPackage); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to load KeyPackage", keyPackageID))
+		return Halt().WithError(derp.Wrap(err, location, "Loading KeyPackage", keyPackageID))
 	}
 
 	// Create a new builder tied to the KeyPackage record
 	subBuilder, err := NewModel(factory, builder.session(), builder.request(), builder.response(), template, &keyPackage, builder.actionID())
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))
+		return Halt().WithError(derp.Wrap(err, location, "Creating sub-builder"))
 	}
 
 	// Execute the POST build pipeline on the child
 	result := Pipeline(step.SubSteps).Execute(factory, subBuilder, buffer, actionMethod)
-	result.Error = derp.WrapIF(result.Error, location, "Error executing steps for child")
+	result.Error = derp.WrapIF(result.Error, location, "Executing steps for child")
 
 	return UseResult(result)
 }

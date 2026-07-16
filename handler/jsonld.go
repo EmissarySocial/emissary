@@ -26,7 +26,7 @@ func handleJSONLD(context echo.Context, object model.JSONLDGetter) (bool, error)
 	context.Response().Header().Set(vocab.ContentType, vocab.ContentTypeActivityPub)
 
 	if err := context.JSON(http.StatusOK, object.GetJSONLD()); err != nil {
-		return true, derp.Wrap(err, location, "Unable to generate JSON-LD", object)
+		return true, derp.Wrap(err, location, "Generating JSON-LD", object)
 	}
 
 	return true, nil

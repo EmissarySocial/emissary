@@ -57,7 +57,7 @@ func (service *Object) Range(session data.Session, criteria exp.Expression, opti
 	iterator, err := service.collection(session).Iterator(notDeleted(criteria), options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Object.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.Object.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iterator, model.NewObject), nil
@@ -66,7 +66,7 @@ func (service *Object) Range(session data.Session, criteria exp.Expression, opti
 // Load retrieves an Object from the database
 func (service *Object) Load(session data.Session, criteria exp.Expression, result *model.Object) error {
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Object.Load", "Unable to load Object", criteria)
+		return derp.Wrap(err, "service.Object.Load", "Loading Object", criteria)
 	}
 
 	return nil
@@ -85,7 +85,7 @@ func (service *Object) Save(session data.Session, object *model.Object, note str
 
 	// Save the value to the database
 	if err := service.collection(session).Save(object, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Object", object, note)
+		return derp.Wrap(err, location, "Saving Object", object, note)
 	}
 
 	return nil
@@ -95,7 +95,7 @@ func (service *Object) Save(session data.Session, object *model.Object, note str
 func (service *Object) Delete(session data.Session, object *model.Object, note string) error {
 
 	if err := service.collection(session).Delete(object, note); err != nil {
-		return derp.Wrap(err, "service.Object.Delete", "Unable to delete Object", object, note)
+		return derp.Wrap(err, "service.Object.Delete", "Deleting Object", object, note)
 	}
 
 	return nil

@@ -67,7 +67,7 @@ func (service *EncryptionKey) Range(session data.Session, criteria exp.Expressio
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.EncryptionKey.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.EncryptionKey.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewEncryptionKey), nil
@@ -77,7 +77,7 @@ func (service *EncryptionKey) Range(session data.Session, criteria exp.Expressio
 func (service *EncryptionKey) Load(session data.Session, criteria exp.Expression, encryptionKey *model.EncryptionKey) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), encryptionKey); err != nil {
-		return derp.Wrap(err, "service.EncryptionKey.Load", "Unable to load EncryptionKey", criteria)
+		return derp.Wrap(err, "service.EncryptionKey.Load", "Loading EncryptionKey", criteria)
 	}
 
 	return nil
@@ -87,7 +87,7 @@ func (service *EncryptionKey) Load(session data.Session, criteria exp.Expression
 func (service *EncryptionKey) Save(session data.Session, encryptionKey *model.EncryptionKey, note string) error {
 
 	if err := service.collection(session).Save(encryptionKey, note); err != nil {
-		return derp.Wrap(err, "service.EncryptionKey.Save", "Unable to save EncryptionKey", encryptionKey, note)
+		return derp.Wrap(err, "service.EncryptionKey.Save", "Saving EncryptionKey", encryptionKey, note)
 	}
 
 	return nil
@@ -98,7 +98,7 @@ func (service *EncryptionKey) Delete(session data.Session, encryptionKey *model.
 
 	// Delete this EncryptionKey
 	if err := service.collection(session).Delete(encryptionKey, note); err != nil {
-		return derp.Wrap(err, "service.EncryptionKey.Delete", "Unable to delete EncryptionKey", encryptionKey, note)
+		return derp.Wrap(err, "service.EncryptionKey.Delete", "Deleting EncryptionKey", encryptionKey, note)
 	}
 
 	return nil
@@ -116,24 +116,24 @@ func (service *EncryptionKey) RangeByParentID(session data.Session, parentID pri
 // exists for the designated user, then a new one is generated.
 func (service *EncryptionKey) LoadByParentID(session data.Session, parentType string, parentID primitive.ObjectID, encryptionKey *model.EncryptionKey) error {
 
-	// Try to load the encryption key from the database
-	err := service.Load(session, exp.Equal("parentType", parentType).AndEqual("parentId", parentID), encryptionKey)
+	const location = "service.EncryptionKey.LoadByParentID"
 
-	// If there is no error, then return in success
-	if err == nil {
+	// Try to load the encryption key from the database
+	if err := service.Load(session, exp.Equal("parentType", parentType).AndEqual("parentId", parentID), encryptionKey); err != nil {
+
+		// Anything other than NotFound is a real failure; a NotFound falls through to make a key
+		if !derp.IsNotFound(err) {
+			return derp.Wrap(err, location, "Loading EncryptionKey", parentID)
+		}
+	} else {
 		return nil
 	}
 
-	// If this is a legitimate error, then return it
-	if !derp.IsNotFound(err) {
-		return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Unable to load EncryptionKey", parentID)
-	}
-
-	// Fall through means it's a "Not Found" error, so create a new key
+	// Fall through means "Not Found", so create a new key
 	newKey, err := service.Create(session, parentType, parentID)
 
 	if err != nil {
-		return derp.Wrap(err, "service.EncryptionKey.LoadByID", "Unable to create new EncryptionKey", parentID)
+		return derp.Wrap(err, location, "Creating new EncryptionKey", parentID)
 	}
 
 	// Return the key if successful
@@ -157,14 +157,14 @@ func (service *EncryptionKey) Create(session data.Session, parentType string, pa
 	privateKey, err := rsa.GenerateKey(rand.Reader, encryptionKeyBits)
 
 	if err != nil {
-		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Unable to generate RSA key", parentType, parentID)
+		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Generating RSA key", parentType, parentID)
 	}
 
 	encryptionKey.PrivatePEM = sigs.EncodePrivatePEM(privateKey)
 	encryptionKey.PublicPEM = sigs.EncodePublicPEM(privateKey)
 
 	if err := service.Save(session, &encryptionKey, "Created"); err != nil {
-		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Unable to save new EncryptionKey", parentType, parentID)
+		return model.EncryptionKey{}, derp.Wrap(err, "model.CreateEncryptionKey", "Saving new EncryptionKey", parentType, parentID)
 	}
 
 	return encryptionKey, nil
@@ -177,12 +177,12 @@ func (service *EncryptionKey) DeleteByParentID(session data.Session, parentID pr
 	rangeFunc, err := service.RangeByParentID(session, parentID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load keys", parentID)
+		return derp.Wrap(err, location, "Loading keys", parentID)
 	}
 
 	for encryptionKey := range rangeFunc {
 		if err := service.Delete(session, &encryptionKey, note); err != nil {
-			return derp.Wrap(err, location, "Unable to delete key", encryptionKey)
+			return derp.Wrap(err, location, "Deleting key", encryptionKey)
 		}
 	}
 
@@ -200,7 +200,7 @@ func (service *EncryptionKey) GetPublicKey(encryptionKey *model.EncryptionKey) (
 	privateKey, err := service.GetPrivateKey(encryptionKey)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to get private key", encryptionKey.EncryptionKeyID)
+		return nil, derp.Wrap(err, location, "Getting private key", encryptionKey.EncryptionKeyID)
 	}
 
 	if privateKey == nil {
@@ -225,7 +225,7 @@ func (service *EncryptionKey) GetPrivateKey(encryptionKey *model.EncryptionKey) 
 	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to parse private key", encryptionKey.EncryptionKeyID)
+		return nil, derp.Wrap(err, location, "Parsing private key", encryptionKey.EncryptionKeyID)
 	}
 
 	if privateKey == nil {
@@ -240,7 +240,7 @@ func (service *EncryptionKey) Sign(message []byte, encryptionKey *model.Encrypti
 	privateKey, err := service.GetPrivateKey(encryptionKey)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "model.EncryptionKey.Sign", "Unable to get private key", encryptionKey.EncryptionKeyID)
+		return nil, derp.Wrap(err, "model.EncryptionKey.Sign", "Getting private key", encryptionKey.EncryptionKeyID)
 	}
 
 	return rsa.SignPKCS1v15(rand.Reader, privateKey, 0, message)
@@ -251,7 +251,7 @@ func (service *EncryptionKey) Verify(message []byte, signature []byte, encryptio
 	publicKey, err := service.GetPublicKey(encryptionKey)
 
 	if err != nil {
-		return derp.Wrap(err, "model.EncryptionKey.Validate", "Unable to get public key", encryptionKey.EncryptionKeyID)
+		return derp.Wrap(err, "model.EncryptionKey.Validate", "Getting public key", encryptionKey.EncryptionKeyID)
 	}
 
 	return rsa.VerifyPKCS1v15(publicKey, 0, message, signature)

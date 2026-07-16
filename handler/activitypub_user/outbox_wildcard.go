@@ -21,7 +21,7 @@ func outbox_Wildcard(context Context, activity streams.Document) error {
 
 	// Put the activity into the User's outbox (which triggers delivery to all recipients)
 	if err := putActivityIntoOutbox(context, activity); err != nil {
-		return derp.Wrap(err, location, "Unable to process activity")
+		return derp.Wrap(err, location, "Processing activity")
 	}
 
 	// Send response to caller
@@ -50,7 +50,7 @@ func putActivityIntoOutbox(context Context, activity streams.Document) error {
 	userID, err := locatorService.ParseUser(activity.ActorID())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to parse userID from actorID", "actorID: "+activity.ActorID(), activity.Map())
+		return derp.Wrap(err, location, "Parsing userID from actorID", "actorID: "+activity.ActorID(), activity.Map())
 	}
 
 	if userID != context.user.UserID {
@@ -67,7 +67,7 @@ func putActivityIntoOutbox(context Context, activity streams.Document) error {
 
 	// Save the activity in the user's outbox
 	if err := outbox2Service.Save(context.session, &outboxItem, "Created via ActivityPub Outbox2"); err != nil {
-		return derp.Wrap(err, location, "Unable to save Outbox2 activity")
+		return derp.Wrap(err, location, "Saving Outbox2 activity")
 	}
 
 	return nil

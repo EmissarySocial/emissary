@@ -29,7 +29,7 @@ func SendSearchResult(factory *service.Factory, session data.Session, args mapof
 	searchResult := model.NewSearchResult()
 
 	if err := searchResultService.LoadByID(session, searchResultID, &searchResult); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to retrieve SearchResult", args))
+		return queue.Error(derp.Wrap(err, location, "Retrieving SearchResult", args))
 	}
 
 	// PART 1:
@@ -41,7 +41,7 @@ func SendSearchResult(factory *service.Factory, session data.Session, args mapof
 	searchQueries, err := searchQueryService.RangeNearMatches(session, &searchResult)
 
 	if err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to retrieve SearchQueries from database"))
+		return queue.Error(derp.Wrap(err, location, "Retrieving SearchQueries from database"))
 	}
 
 	// Let's get ready to rumble...

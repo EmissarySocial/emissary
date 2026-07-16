@@ -25,14 +25,14 @@ func inbox_AcceptFollow(context Context, activity streams.Document) error {
 	userID, followingID, err := service.ParseProfileURL_AsFollowing(activity.Object().ID())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to parse followingID", activity.Object().ID())
+		return derp.Wrap(err, location, "Parsing followingID", activity.Object().ID())
 	}
 
 	// Try to load the original `Following` record.
 	// If it doesn't already exist, then this message is invalid.
 	following := model.NewFollowing()
 	if err := followingService.LoadByID(context.session, userID, followingID, &following); err != nil {
-		return derp.Wrap(err, location, "Unable to load `Following` record", userID, followingID)
+		return derp.Wrap(err, location, "Loading `Following` record", userID, followingID)
 	}
 
 	// RULE: Validate that the `Following` actor matches the `Accept` actor
@@ -44,7 +44,7 @@ func inbox_AcceptFollow(context Context, activity streams.Document) error {
 	remoteActor, err := activity.Actor().Load()
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load remote actor", activity.Actor())
+		return derp.Wrap(err, location, "Loading remote actor", activity.Actor())
 	}
 
 	// Upgrade the `Following` record to ActivityPub
@@ -56,7 +56,7 @@ func inbox_AcceptFollow(context Context, activity streams.Document) error {
 
 	// Save the `Following` record to the database
 	if err := followingService.SetStatusSuccess(context.session, &following); err != nil {
-		return derp.Wrap(err, location, "Unable to save `Following` document.", following)
+		return derp.Wrap(err, location, "Saving `Following` document.", following)
 	}
 
 	return nil

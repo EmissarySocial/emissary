@@ -226,7 +226,7 @@ func (factory *Factory) readConfig(config config.Config) {
 	session, err := server.Session(context.Background())
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to connect to common database."))
+		derp.Report(derp.Wrap(err, location, "Connecting to common database."))
 		os.Exit(1)
 	}
 
@@ -238,19 +238,19 @@ func (factory *Factory) readConfig(config config.Config) {
 	if attachmentOriginals, err := filesystemService.GetAfero(config.AttachmentOriginals); err == nil {
 		factory.attachmentOriginals = attachmentOriginals
 	} else {
-		derp.Report(derp.Wrap(err, location, "Unable to get `attachment original` directory", config))
+		derp.Report(derp.Wrap(err, location, "Getting `attachment original` directory", config))
 	}
 
 	if attachmentCache, err := filesystemService.GetAfero(config.AttachmentCache); err == nil {
 		factory.attachmentCache = attachmentCache
 	} else {
-		derp.Report(derp.Wrap(err, location, "Unable to get `attachment cache` directory", config))
+		derp.Report(derp.Wrap(err, location, "Getting `attachment cache` directory", config))
 	}
 
 	if exportCache, err := filesystemService.GetAfero(config.ExportCache); err == nil {
 		factory.exportCache = exportCache
 	} else {
-		derp.Report(derp.Wrap(err, location, "Unable to get `export cache` directory", config))
+		derp.Report(derp.Wrap(err, location, "Getting `export cache` directory", config))
 	}
 
 	// Use new Queue configuration
@@ -324,7 +324,7 @@ func (factory *Factory) readConfig(config config.Config) {
 	// This task will be used to schedule all other daily/hourly tasks
 	log.Trace().Str("loc", location).Msg("Starting Task Scheduler")
 	if err := factory.queue.Publish(queue.NewTask("Scheduler", mapof.NewAny())); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to start scheduler"))
+		derp.Report(derp.Wrap(err, location, "Starting scheduler"))
 	}
 
 	// Derive the strategry for calculating the client's real ip address
@@ -344,7 +344,7 @@ func (factory *Factory) refreshDomain(domainConfig config.Domain) error {
 
 		// Try to refresh the domain
 		if err := domain.Refresh(domainConfig, factory.attachmentOriginals, factory.attachmentCache); err != nil {
-			return derp.Wrap(err, location, "Unable to refresh domain", domainConfig.Hostname)
+			return derp.Wrap(err, location, "Refreshing domain", domainConfig.Hostname)
 		}
 
 		return nil
@@ -372,7 +372,7 @@ func (factory *Factory) refreshDomain(domainConfig config.Domain) error {
 	)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to refresh configuration", domainConfig)
+		return derp.Wrap(err, location, "Refreshing configuration", domainConfig)
 	}
 
 	// If there are no errors, then add the domain to the list.
@@ -407,7 +407,7 @@ func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to connect to common database", uri)
+		return derp.Wrap(err, location, "Connecting to common database", uri)
 	}
 
 	log.Trace().Msg("Connected to common database")
@@ -416,7 +416,7 @@ func (factory *Factory) refreshCommonDatabase(connection mapof.String) error {
 	// If there is already a cache connection in place, then close it before we open a new one
 	if commonDatabaseCopy != nil {
 		if err := commonDatabaseCopy.Client().Disconnect(context.Background()); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to disconnect from database"))
+			derp.Report(derp.Wrap(err, location, "Disconnecting from database"))
 		}
 	}
 
@@ -481,7 +481,7 @@ func (factory *Factory) UpdateConfig(value config.Config) error {
 	factory.config = value
 
 	if err := factory.storage.Write(value); err != nil {
-		return derp.Wrap(err, location, "Unable to write configuration", value)
+		return derp.Wrap(err, location, "Writing configuration", value)
 	}
 
 	return nil
@@ -528,7 +528,7 @@ func testDatabaseConnection(configuration config.Domain, timeout time.Duration) 
 	server, err := mongodb.New(configuration.ConnectString, configuration.DatabaseName, opts)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to connect to the database. Please check the connect string.")
+		return derp.Wrap(err, location, "Connecting to the database. Please check the connect string.")
 	}
 
 	client := server.Client()
@@ -556,7 +556,7 @@ func (factory *Factory) PutDomain(configuration config.Domain) error {
 
 	// Save the domain info ant write a new configuration to the storage service
 	if err := factory.putDomain(configuration); err != nil {
-		return derp.Wrap(err, location, "Unable to add domain", configuration)
+		return derp.Wrap(err, location, "Adding domain", configuration)
 	}
 
 	// The storage service will trigger a new configuration via the Subscrbe() channel,
@@ -565,7 +565,7 @@ func (factory *Factory) PutDomain(configuration config.Domain) error {
 	domainFactory, err := factory.ByHostname(configuration.Hostname)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to get domain factory", configuration.Hostname)
+		return derp.Wrap(err, location, "Getting domain factory", configuration.Hostname)
 	}
 
 	// If the config includes a database owner, then guarantee they're written into the database
@@ -577,13 +577,13 @@ func (factory *Factory) PutDomain(configuration config.Domain) error {
 		_, err = domainFactory.WithTransaction(ctx, func(session data.Session) (any, error) {
 			userService := domainFactory.User()
 			if err := userService.SetOwner(session, configuration.Owner); err != nil {
-				return nil, derp.Wrap(err, location, "Unable to set owner", configuration.Owner)
+				return nil, derp.Wrap(err, location, "Setting owner", configuration.Owner)
 			}
 			return nil, nil
 		})
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to write database owner")
+			return derp.Wrap(err, location, "Writing database owner")
 		}
 
 		return nil
@@ -602,12 +602,12 @@ func (factory *Factory) putDomain(configuration config.Domain) error {
 
 	// Try to write the configuration to the storage service
 	if err := factory.storage.Write(factory.config); err != nil {
-		return derp.Wrap(err, location, "Unable to write configuration")
+		return derp.Wrap(err, location, "Writing configuration")
 	}
 
 	// Try to update the domain in the in-memory cache
 	if err := factory.refreshDomain(configuration); err != nil {
-		return derp.Wrap(err, location, "Unable to refresh domain", configuration)
+		return derp.Wrap(err, location, "Refreshing domain", configuration)
 	}
 
 	return nil
@@ -645,7 +645,7 @@ func (factory *Factory) DeleteDomain(domainID string) error {
 
 	// Write changes to the storage engine.
 	if err := factory.storage.Write(factory.config); err != nil {
-		return derp.Wrap(err, location, "Unable to save configuration")
+		return derp.Wrap(err, location, "Saving configuration")
 	}
 
 	return nil
@@ -834,14 +834,14 @@ func (factory *Factory) Session(ctx context.Context, hostname string) (data.Sess
 	server, err := factory.Server(hostname)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to retrieve database connection.", hostname)
+		return nil, derp.Wrap(err, location, "Retrieving database connection.", hostname)
 	}
 
 	// Create a database session with the server
 	session, err := server.Session(ctx)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to create database session for server", hostname)
+		return nil, derp.Wrap(err, location, "Creating database session for server", hostname)
 	}
 
 	// Return the session to the caller
@@ -888,7 +888,7 @@ func (factory *Factory) calcClientIPStrategy(config config.Config) realclientip.
 
 	// If there is no error, then
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to create Client IP strategy", config.ClientIPStrategy))
+		derp.Report(derp.Wrap(err, location, "Creating Client IP strategy", config.ClientIPStrategy))
 		return realclientip.RemoteAddrStrategy{}
 	}
 

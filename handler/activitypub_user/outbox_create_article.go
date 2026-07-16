@@ -30,12 +30,12 @@ func outbox_CreateArticle(context Context, activity streams.Document) error {
 
 	// Save the new Object to the database
 	if err := objectService.Save(context.session, &object, "Created via ActivityPub Outbox"); err != nil {
-		return derp.Wrap(err, location, "Unable to save object", object)
+		return derp.Wrap(err, location, "Saving object", object)
 	}
 
 	// Put the activity into the User's outbox (which triggers delivery to all recipients)
 	if err := putActivityIntoOutbox(context, activity); err != nil {
-		return derp.Wrap(err, location, "Unable to process activity")
+		return derp.Wrap(err, location, "Processing activity")
 	}
 
 	// Write the response to the client

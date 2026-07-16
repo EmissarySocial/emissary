@@ -48,7 +48,7 @@ func (step StepScheduleDelete) Post(builder Builder, _ io.Writer) PipelineBehavi
 
 	// Remove existing scheduled delete for this stream (if present)
 	if err := q.Delete(signature); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to delete existing task", signature))
+		return Halt().WithError(derp.Wrap(err, location, "Deleting existing task", signature))
 	}
 
 	// If the offset time is zero then we don't need to schedule anything else. Exit

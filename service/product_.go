@@ -70,7 +70,7 @@ func (service *Product) Range(session data.Session, criteria exp.Expression, opt
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Product.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.Product.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewProduct), nil
@@ -79,7 +79,7 @@ func (service *Product) Range(session data.Session, criteria exp.Expression, opt
 // Load retrieves an Product from the database
 func (service *Product) Load(session data.Session, criteria exp.Expression, result *model.Product) error {
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Product.Load", "Unable to load Product", criteria)
+		return derp.Wrap(err, "service.Product.Load", "Loading Product", criteria)
 	}
 
 	return nil
@@ -97,7 +97,7 @@ func (service *Product) Save(session data.Session, product *model.Product, note 
 
 	// Save the value to the database
 	if err := service.collection(session).Save(product, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Product", product, note)
+		return derp.Wrap(err, location, "Saving Product", product, note)
 	}
 
 	return nil
@@ -107,7 +107,7 @@ func (service *Product) Save(session data.Session, product *model.Product, note 
 func (service *Product) Delete(session data.Session, product *model.Product, note string) error {
 
 	if err := service.collection(session).Delete(product, note); err != nil {
-		return derp.Wrap(err, "service.Product.Delete", "Unable to delete Product", product, note)
+		return derp.Wrap(err, "service.Product.Delete", "Deleting Product", product, note)
 	}
 
 	return nil
@@ -133,7 +133,7 @@ func (service *Product) HardDeleteByID(session data.Session, userID primitive.Ob
 	criteria := exp.Equal("userId", userID).AndEqual("_id", productID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Product", "userID: "+userID.Hex(), "productID: "+productID.Hex())
+		return derp.Wrap(err, location, "Deleting Product", "userID: "+userID.Hex(), "productID: "+productID.Hex())
 	}
 
 	return nil
@@ -261,13 +261,13 @@ func (service *Product) DeleteByUserID(session data.Session, userID primitive.Ob
 	products, err := service.RangeByUserID(session, userID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to query products by UserID", userID)
+		return derp.Wrap(err, location, "Querying products by UserID", userID)
 	}
 
 	// Delete each product
 	for product := range products {
 		if err := service.Delete(session, &product, note); err != nil {
-			return derp.Wrap(err, location, "Unable to delete Product", product)
+			return derp.Wrap(err, location, "Deleting Product", product)
 		}
 	}
 
@@ -287,7 +287,7 @@ func (service *Product) SyncRemoteProducts(session data.Session, userID primitiv
 	merchantAccounts, remoteProducts, err := service.merchantAccountService.RemoteProductsByUser(session, userID)
 
 	if err != nil {
-		return nil, nil, derp.Wrap(err, location, "Error retrieving remote products for user", userID)
+		return nil, nil, derp.Wrap(err, location, "Retrieving remote products for user", userID)
 	}
 
 	// If there are no Merchant Accounts, then there are no Remote Products
@@ -299,7 +299,7 @@ func (service *Product) SyncRemoteProducts(session data.Session, userID primitiv
 	products, err := service.QueryByUser(session, userID)
 
 	if err != nil {
-		return nil, nil, derp.Wrap(err, location, "Error retrieving local products for user", userID)
+		return nil, nil, derp.Wrap(err, location, "Retrieving local products for user", userID)
 	}
 
 	productIndex := service.indexByRemoteID(products)
@@ -319,12 +319,12 @@ func (service *Product) SyncRemoteProducts(session data.Session, userID primitiv
 			changed, err := currentProduct.Refresh(remoteProduct)
 
 			if err != nil {
-				return nil, nil, derp.Wrap(err, location, "Unable to refresh remote product", remoteProduct)
+				return nil, nil, derp.Wrap(err, location, "Refreshing remote product", remoteProduct)
 			}
 
 			if changed {
 				if err := service.Save(session, &currentProduct, "Updated Remote Product changes"); err != nil {
-					return nil, nil, derp.Wrap(err, location, "Unable to save updated remote product", currentProduct)
+					return nil, nil, derp.Wrap(err, location, "Saving updated remote product", currentProduct)
 				}
 			}
 
@@ -335,7 +335,7 @@ func (service *Product) SyncRemoteProducts(session data.Session, userID primitiv
 
 		// Add the remote product to the database
 		if err := service.Save(session, &remoteProduct, "Sync Remote Product"); err != nil {
-			return nil, nil, derp.Wrap(err, location, "Unable to save remote product", remoteProduct)
+			return nil, nil, derp.Wrap(err, location, "Saving remote product", remoteProduct)
 		}
 
 		// Add the new Remote Product to the result
@@ -345,7 +345,7 @@ func (service *Product) SyncRemoteProducts(session data.Session, userID primitiv
 	// Remove local Product records that are no longer in the remote products list
 	for _, product := range productIndex {
 		if err := service.Delete(session, &product, "Removed from merchant account"); err != nil {
-			return nil, nil, derp.Wrap(err, location, "Unable to delete local product", product)
+			return nil, nil, derp.Wrap(err, location, "Deleting local product", product)
 		}
 	}
 

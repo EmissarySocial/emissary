@@ -37,10 +37,10 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 		record.Message = "Unable to load ActivityPub Actor: " + err.Error()
 
 		if inner := importService.Save(session, record, "Import Error"); inner != nil {
-			return queue.Failure(derp.Wrap(inner, location, "Unable to save import failure", record))
+			return queue.Failure(derp.Wrap(inner, location, "Saving import failure", record))
 		}
 
-		return queue.Failure(derp.Wrap(err, location, "Unable to load ActivityPub actor", record.SourceID))
+		return queue.Failure(derp.Wrap(err, location, "Loading ActivityPub actor", record.SourceID))
 	}
 
 	// Call the Actor's "startMigration" endpoint to tell the source server where we're importing the data to.
@@ -52,7 +52,7 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 			With(options.BearerAuth(record.OAuthToken.AccessToken))
 
 		if err := txn.Send(); err != nil {
-			return queue.Error(derp.Wrap(err, location, "Unable to call startMigration endpoint", startEndpoint))
+			return queue.Error(derp.Wrap(err, location, "Calling startMigration endpoint", startEndpoint))
 		}
 	}
 
@@ -68,7 +68,7 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 		collection, err := client.Load(planItem.Href, ascache.WithWriteOnly(), withBearerAuth)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to load import collection", planItem))
+			derp.Report(derp.Wrap(err, location, "Loading import collection", planItem))
 			continue
 		}
 
@@ -85,7 +85,7 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 
 			// Save the ImportItem to the task list
 			if err := importItemService.Save(session, &importItem, "Created"); err != nil {
-				derp.Report(derp.Wrap(err, location, "Unable to create import item"))
+				derp.Report(derp.Wrap(err, location, "Creating import item"))
 				continue
 			}
 
@@ -100,7 +100,7 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 	record.SourceURL = actor.ID()
 
 	if err := importService.Save(session, record, "Updating item count"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to update import record", record))
+		return queue.Error(derp.Wrap(err, location, "Updating import record", record))
 	}
 
 	// Start a task (post-commit) to import all of the items for this source

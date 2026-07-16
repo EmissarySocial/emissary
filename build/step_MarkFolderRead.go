@@ -35,7 +35,7 @@ func (step StepMarkFolderRead) Post(builder Builder, _ io.Writer) PipelineBehavi
 	newsFeedService := builder.factory().NewsFeed()
 
 	if err := newsFeedService.MarkAllReadByFolder(builder.session(), builder.AuthenticatedID(), folderID); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to mark folder read", folderID))
+		return Halt().WithError(derp.Wrap(err, location, "Marking folder read", folderID))
 	}
 
 	return Continue()

@@ -17,7 +17,7 @@ func (service *CollectionItem) Import(session data.Session, _ *model.Import, imp
 	// Unmarshal the JSON document into a new CollectionItem
 	collectionItem := model.NewCollectionItem()
 	if err := json.Unmarshal(document, &collectionItem); err != nil {
-		return derp.Wrap(err, location, "Unable to parse remote document", document)
+		return derp.Wrap(err, location, "Parsing remote document", document)
 	}
 
 	// Update mapping values in the importItem
@@ -29,17 +29,17 @@ func (service *CollectionItem) Import(session data.Session, _ *model.Import, imp
 
 	// Map the UserID from the remote value to its new local value
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &collectionItem.UserID); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map UserID", "UserID: "+user.UserID.Hex()+", CollectionItemID: "+collectionItem.CollectionItemID.Hex()))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Mapping UserID", "UserID: "+user.UserID.Hex()+", CollectionItemID: "+collectionItem.CollectionItemID.Hex()))
 	}
 
 	// Map the parent CollectionID from the remote value to its new local value
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &collectionItem.CollectionID); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map CollectionID", "UserID: "+user.UserID.Hex()+", CollectionID: "+collectionItem.CollectionID.Hex()))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Mapping CollectionID", "UserID: "+user.UserID.Hex()+", CollectionID: "+collectionItem.CollectionID.Hex()))
 	}
 
 	// Save the CollectionItem to the database
 	if err := service.Save(session, &collectionItem, "Imported"); err != nil {
-		return derp.Wrap(err, location, "Unable to save imported CollectionItem")
+		return derp.Wrap(err, location, "Saving imported CollectionItem")
 	}
 
 	// A Man, A Plan, A Canal. Panama.
@@ -52,7 +52,7 @@ func (service *CollectionItem) UndoImport(session data.Session, importItem *mode
 	const location = "service.CollectionItem.UndoImport"
 
 	if err := service.HardDeleteByID(session, importItem.UserID, importItem.LocalID); err != nil {
-		return derp.Wrap(err, location, "Unable to delete record", importItem.LocalID)
+		return derp.Wrap(err, location, "Deleting record", importItem.LocalID)
 	}
 
 	return nil

@@ -17,7 +17,7 @@ func SetRuleCount(userCollection data.Collection, ruleCollection data.Collection
 	rulesCount, err := ruleCollection.Count(criteria)
 
 	if err != nil {
-		return derp.Wrap(err, "queries.SetRulesCount", "Error counting rules records")
+		return derp.Wrap(err, "queries.SetRulesCount", "Counting rules records")
 	}
 
 	return RawUpdate(context.TODO(), userCollection,

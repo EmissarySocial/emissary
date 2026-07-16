@@ -29,7 +29,7 @@ func (service *MerchantAccount) stripe_Connect(merchantAccount *model.MerchantAc
 	restrictedKey, err := service.stripe_getRestrictedKey(merchantAccount)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error retrieving API keys")
+		return derp.Wrap(err, location, "Retrieving API keys")
 	}
 
 	connectedAccountID := service.stripe_getConnectedAccountID(merchantAccount)
@@ -51,7 +51,7 @@ func (service *MerchantAccount) stripe_Connect(merchantAccount *model.MerchantAc
 		Result(&webhookResult)
 
 	if err := txn.Send(); err != nil {
-		return derp.Wrap(err, location, "Error connecting to Stripe API")
+		return derp.Wrap(err, location, "Connecting to Stripe API")
 	}
 
 	// Save the webhook data into the MerchantAccount

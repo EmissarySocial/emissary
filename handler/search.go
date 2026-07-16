@@ -25,7 +25,7 @@ func IndexAllStreams(ctx *steranko.Context, factory *service.Factory, session da
 	streams, err := streamService.RangePublished(session)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error retrieving Streams")
+		return derp.Wrap(err, location, "Retrieving Streams")
 	}
 
 	// Index each Stream in the range
@@ -38,7 +38,7 @@ func IndexAllStreams(ctx *steranko.Context, factory *service.Factory, session da
 		// If necessary, re-save the Stream
 		if !slice.Equal(stream.Hashtags, originalHashtags) {
 			if err := streamService.Save(session, &stream, "Updating Hashtags"); err != nil {
-				derp.Report(derp.Wrap(err, location, "Unable to save Stream"))
+				derp.Report(derp.Wrap(err, location, "Saving Stream"))
 			}
 		}
 
@@ -46,7 +46,7 @@ func IndexAllStreams(ctx *steranko.Context, factory *service.Factory, session da
 		searchResult := streamService.SearchResult(&stream)
 
 		if err := searchService.Sync(session, searchResult); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to save SearchResult"))
+			derp.Report(derp.Wrap(err, location, "Saving SearchResult"))
 		}
 	}
 
@@ -66,7 +66,7 @@ func IndexAllUsers(ctx *steranko.Context, factory *service.Factory, session data
 	allUsers, err := userService.RangeAll(session)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to query Users")
+		return derp.Wrap(err, location, "Querying Users")
 	}
 
 	for user := range allUsers {
@@ -74,7 +74,7 @@ func IndexAllUsers(ctx *steranko.Context, factory *service.Factory, session data
 		searchResult := userService.SearchResult(&user)
 
 		if err := searchService.Sync(session, searchResult); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to save SearchResult"))
+			derp.Report(derp.Wrap(err, location, "Saving SearchResult"))
 		}
 	}
 
@@ -89,7 +89,7 @@ func ReindexReplies(ctx *steranko.Context, factory *service.Factory, session dat
 	const location = "handler.ReindexReplies"
 
 	if err := factory.Stream().ReindexReplies(session); err != nil {
-		return derp.Wrap(err, location, "Unable to reindex replies")
+		return derp.Wrap(err, location, "Reindexing replies")
 	}
 
 	return ctx.NoContent(http.StatusOK)
@@ -115,14 +115,14 @@ func PostSearchLookup(ctx *steranko.Context, factory *service.Factory, session d
 	searchQuery, err := searchQueryService.LoadOrCreate(session, ctx.QueryParams())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to create search query token")
+		return derp.Wrap(err, location, "Creating search query token")
 	}
 
 	// Set the referer/URL if it's not already set
 	if searchQuery.URL == "" {
 		searchQuery.URL = referer
 		if err := searchQueryService.Save(session, &searchQuery, "Set source URL"); err != nil {
-			return derp.Wrap(err, location, "Error applying URL to search query")
+			return derp.Wrap(err, location, "Applying URL to search query")
 		}
 	}
 

@@ -17,7 +17,7 @@ func (service *Privilege) Import(session data.Session, _ *model.Import, importIt
 	// Unmarshal the JSON document into a new Privilege
 	privilege := model.NewPrivilege()
 	if err := json.Unmarshal(document, &privilege); err != nil {
-		return derp.Wrap(err, location, "Unable to parse remote document", document)
+		return derp.Wrap(err, location, "Parsing remote document", document)
 	}
 
 	// Update mapping values in the importItem
@@ -30,27 +30,27 @@ func (service *Privilege) Import(session data.Session, _ *model.Import, importIt
 
 	// Map the UserID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &privilege.UserID); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map UserID", "UserID: "+user.UserID.Hex()+", PrivilegeID: "+privilege.PrivilegeID.Hex()))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Mapping UserID", "UserID: "+user.UserID.Hex()+", PrivilegeID: "+privilege.PrivilegeID.Hex()))
 	}
 
 	// Map the CircleID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &privilege.CircleID); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map CircleID", "UserID: "+user.UserID.Hex()+", CircleID: "+privilege.CircleID.Hex()))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Mapping CircleID", "UserID: "+user.UserID.Hex()+", CircleID: "+privilege.CircleID.Hex()))
 	}
 
 	// Map the MerchantAccountID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &privilege.MerchantAccountID); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map MerchantAccountID", "UserID: "+user.UserID.Hex()+", MerchantAccountID: "+privilege.MerchantAccountID.Hex()))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Mapping MerchantAccountID", "UserID: "+user.UserID.Hex()+", MerchantAccountID: "+privilege.MerchantAccountID.Hex()))
 	}
 
 	// Map the ProductID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &privilege.ProductID); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map ProductID", "UserID: "+user.UserID.Hex()+", ProductID: "+privilege.ProductID.Hex()))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Mapping ProductID", "UserID: "+user.UserID.Hex()+", ProductID: "+privilege.ProductID.Hex()))
 	}
 
 	// Save the Privilege to the database
 	if err := service.Save(session, &privilege, "Imported"); err != nil {
-		return derp.Wrap(err, location, "Unable to save imported Privilege")
+		return derp.Wrap(err, location, "Saving imported Privilege")
 	}
 
 	// A Man, A Plan, A Canal. Panama.
@@ -63,7 +63,7 @@ func (service *Privilege) UndoImport(session data.Session, importItem *model.Imp
 	const location = "service.Privilege.UndoImport"
 
 	if err := service.HardDeleteByID(session, importItem.UserID, importItem.LocalID); err != nil {
-		return derp.Wrap(err, location, "Unable to delete record", importItem.LocalID)
+		return derp.Wrap(err, location, "Deleting record", importItem.LocalID)
 	}
 
 	return nil

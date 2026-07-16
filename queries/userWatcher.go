@@ -20,7 +20,7 @@ func WatchUsers(ctx context.Context, server data.Server, result chan<- realtime.
 	session, err := server.Session(ctx)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to open database session"))
+		derp.Report(derp.Wrap(err, location, "Opening database session"))
 		return
 	}
 
@@ -45,7 +45,7 @@ func WatchUsers(ctx context.Context, server data.Server, result chan<- realtime.
 			}
 		}
 
-		derp.Report(derp.Wrap(err, location, "Unable to open Mongodb Change User"))
+		derp.Report(derp.Wrap(err, location, "Opening Mongodb Change User"))
 		return
 	}
 

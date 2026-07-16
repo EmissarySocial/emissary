@@ -36,7 +36,7 @@ func (service *Following) SaveNewsItem(session data.Session, following *model.Fo
 
 	// Try to save a unique version of this newsItem to the database (always collapse duplicates)
 	if err := service.saveUniqueNewsItem(session, newsItem); err != nil {
-		return derp.Wrap(err, location, "Unable to save newsItem", newsItem)
+		return derp.Wrap(err, location, "Saving newsItem", newsItem)
 	}
 
 	// Crawl the document's context/reply chain in the background (post-commit)
@@ -63,7 +63,7 @@ func (service *Following) saveUniqueNewsItem(session data.Session, message model
 
 	if err := service.newsFeedService.LoadByURL(session, message.UserID, message.URL, &previousNewsItem); err != nil {
 		if !derp.IsNotFound(err) {
-			return derp.Wrap(err, location, "Unable to search for duplicate message", message)
+			return derp.Wrap(err, location, "Searching for duplicate message", message)
 		}
 	}
 
@@ -71,7 +71,7 @@ func (service *Following) saveUniqueNewsItem(session data.Session, message model
 	if previousNewsItem.IsNew() {
 
 		if err := service.newsFeedService.Save(session, &message, "Created"); err != nil {
-			return derp.Wrap(err, location, "Unable to save new message", message)
+			return derp.Wrap(err, location, "Saving new message", message)
 		}
 
 		return nil
@@ -92,7 +92,7 @@ func (service *Following) saveUniqueNewsItem(session data.Session, message model
 	// if the message was updated (from AddReference or MarkNewReplies) then save it.
 	if isReferenceUpdated || isStatusUpdated {
 		if err := service.newsFeedService.Save(session, &previousNewsItem, "NewsItem Imported"); err != nil {
-			return derp.Wrap(err, location, "Unable to update previous message with new origin and status", previousNewsItem)
+			return derp.Wrap(err, location, "Updating previous message with new origin and status", previousNewsItem)
 		}
 	}
 

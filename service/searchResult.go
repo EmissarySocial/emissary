@@ -83,7 +83,7 @@ func (service *SearchResult) Range(session data.Session, criteria exp.Expression
 	it, err := service.collection(session).Iterator(criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.SearchResult.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.SearchResult.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(it, model.NewSearchResult), nil
@@ -93,7 +93,7 @@ func (service *SearchResult) Range(session data.Session, criteria exp.Expression
 func (service *SearchResult) Load(session data.Session, criteria exp.Expression, searchResult *model.SearchResult) error {
 
 	if err := service.collection(session).Load(criteria, searchResult); err != nil {
-		return derp.Wrap(err, "service.SearchResult.Load", "Unable to load SearchResult", criteria)
+		return derp.Wrap(err, "service.SearchResult.Load", "Loading SearchResult", criteria)
 	}
 
 	return nil
@@ -118,7 +118,7 @@ func (service *SearchResult) Save(session data.Session, searchResult *model.Sear
 	_, tagValues, err := service.searchTagService.NormalizeTags(session, searchResult.Tags...)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error normalizing tags", searchResult)
+		return derp.Wrap(err, location, "Normalizing tags", searchResult)
 	}
 
 	// Make Tags Index
@@ -138,13 +138,13 @@ func (service *SearchResult) Save(session data.Session, searchResult *model.Sear
 
 	// Save the searchResult to the database
 	if err := service.collection(session).Save(searchResult, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Search", searchResult, note)
+		return derp.Wrap(err, location, "Saving Search", searchResult, note)
 	}
 
 	// Guarantee every tag exists in the domains SearchTag index
 	for _, tagName := range searchResult.Tags {
 		if err := service.searchTagService.Upsert(session, tagName); err != nil {
-			return derp.Wrap(err, location, "Unable to save SearchTag", searchResult, tagName)
+			return derp.Wrap(err, location, "Saving SearchTag", searchResult, tagName)
 		}
 	}
 
@@ -173,7 +173,7 @@ func (service *SearchResult) Delete(session data.Session, searchResult *model.Se
 
 	// Use HARD DELETE for search results.  No need to clutter up our indexes with "deleted" data.
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete SearchResult", searchResult, note)
+		return derp.Wrap(err, location, "Deleting SearchResult", searchResult, note)
 	}
 
 	return nil
@@ -207,7 +207,7 @@ func (service *SearchResult) Sync(session data.Session, searchResult model.Searc
 	if searchResult.IsDeleted() {
 
 		if err := service.DeleteByURL(session, searchResult.URL); err != nil {
-			return derp.Wrap(err, location, "Unable to delete SearchResult", searchResult)
+			return derp.Wrap(err, location, "Deleting SearchResult", searchResult)
 		}
 
 		return nil
@@ -228,7 +228,7 @@ func (service *SearchResult) Sync(session data.Session, searchResult model.Searc
 
 		// Save the updated SearchResult...
 		if inner := service.Save(session, &original, "updated"); inner != nil {
-			return derp.Wrap(inner, location, "Unable to update SearchResult", searchResult)
+			return derp.Wrap(inner, location, "Updating SearchResult", searchResult)
 		}
 
 		return nil
@@ -238,14 +238,14 @@ func (service *SearchResult) Sync(session data.Session, searchResult model.Searc
 	if derp.IsNotFound(err) {
 
 		if inner := service.Save(session, &searchResult, "added"); inner != nil {
-			return derp.Wrap(inner, location, "Unable to insert SearchResult", searchResult)
+			return derp.Wrap(inner, location, "Inserting SearchResult", searchResult)
 		}
 
 		return nil
 	}
 
 	// Return legitimate errors to the caller
-	return derp.Wrap(err, location, "Unable to query SearchResult", searchResult)
+	return derp.Wrap(err, location, "Querying SearchResult", searchResult)
 }
 
 // DeleteByURL removes a SearchResult from the database that matches the provided URL
@@ -267,7 +267,7 @@ func (service *SearchResult) DeleteByURL(session data.Session, url string) error
 			return nil
 		}
 
-		return derp.Wrap(err, location, "Unable to query SearchResult", url)
+		return derp.Wrap(err, location, "Querying SearchResult", url)
 	}
 
 	// Delete the SearchResult
@@ -282,7 +282,7 @@ func (service *SearchResult) Shuffle(session data.Session) error {
 	collection := service.collection(session)
 
 	if err := queries.Shuffle(session.Context(), collection); err != nil {
-		return derp.Wrap(err, location, "Unable to shuffle SearchResults")
+		return derp.Wrap(err, location, "Shuffling SearchResults")
 	}
 
 	return nil

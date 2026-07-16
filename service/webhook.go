@@ -71,7 +71,7 @@ func (service *Webhook) List(session data.Session, criteria exp.Expression, opti
 func (service *Webhook) Load(session data.Session, criteria exp.Expression, webhook *model.Webhook) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), webhook); err != nil {
-		return derp.Wrap(err, "service.Webhook.Load", "Unable to load Webhook", criteria)
+		return derp.Wrap(err, "service.Webhook.Load", "Loading Webhook", criteria)
 	}
 
 	return nil
@@ -84,12 +84,12 @@ func (service *Webhook) Save(session data.Session, webhook *model.Webhook, note 
 
 	// Validate the value (using the global webhook schema) before saving
 	if _, err := service.Schema().Validate(webhook); err != nil {
-		return derp.Wrap(err, location, "Unable to validate Webhook using WebhookSchema", webhook)
+		return derp.Wrap(err, location, "Validating Webhook using WebhookSchema", webhook)
 	}
 
 	// Try to save the Webhook to the database
 	if err := service.collection(session).Save(webhook, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Webhook", webhook, note)
+		return derp.Wrap(err, location, "Saving Webhook", webhook, note)
 	}
 
 	// Success
@@ -101,7 +101,7 @@ func (service *Webhook) Delete(session data.Session, webhook *model.Webhook, not
 
 	// Delete this Webhook
 	if err := service.collection(session).Delete(webhook, note); err != nil {
-		return derp.Wrap(err, "service.Webhook.Delete", "Unable to delete Webhook", webhook, note)
+		return derp.Wrap(err, "service.Webhook.Delete", "Deleting Webhook", webhook, note)
 	}
 
 	// Bueno!!
@@ -117,14 +117,14 @@ func (service *Webhook) DeleteMany(session data.Session, criteria exp.Expression
 	it, err := service.List(session, notDeleted(criteria))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to list webhooks to delete", criteria)
+		return derp.Wrap(err, location, "Listing webhooks to delete", criteria)
 	}
 
 	// Delete every webhook in the Iterator
 	for webhook := model.NewWebhook(); it.Next(&webhook); webhook = model.NewWebhook() {
 
 		if err := service.Delete(session, &webhook, note); err != nil {
-			return derp.Wrap(err, location, "Unable to delete webhook", webhook)
+			return derp.Wrap(err, location, "Deleting webhook", webhook)
 		}
 	}
 
@@ -218,7 +218,7 @@ func (service *Webhook) Send(getter model.WebhookDataGetter, events ...string) {
 		session, cancel, err := service.newSession(time.Minute)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to connect to database"))
+			derp.Report(derp.Wrap(err, location, "Connecting to database"))
 			return
 		}
 
@@ -229,7 +229,7 @@ func (service *Webhook) Send(getter model.WebhookDataGetter, events ...string) {
 			webhooks, err := service.QueryByEvent(session, event)
 
 			if err != nil {
-				derp.Report(derp.Wrap(err, location, "Unable to query webhooks", event))
+				derp.Report(derp.Wrap(err, location, "Querying webhooks", event))
 				continue
 			}
 
@@ -246,7 +246,7 @@ func (service *Webhook) Send(getter model.WebhookDataGetter, events ...string) {
 				txn := remote.Post(webhook.TargetURL).JSON(data)
 
 				if err := txn.Send(); err != nil {
-					derp.Report(derp.Wrap(err, location, "Unable to send webhook", webhook, data))
+					derp.Report(derp.Wrap(err, location, "Sending webhook", webhook, data))
 					continue
 				}
 

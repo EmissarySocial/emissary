@@ -27,14 +27,14 @@ func SetupDomainUsersGet(serverFactory *server.Factory, templates *template.Temp
 		domainConfig, factory, err := serverFactory.ByDomainID(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to load factory")
+			return derp.Wrap(err, location, "Loading factory")
 		}
 
 		// Open a database session
 		session, err := factory.Server().Session(ctx.Request().Context())
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to open database session")
+			return derp.Wrap(err, location, "Opening database session")
 		}
 
 		defer session.Close()
@@ -59,7 +59,7 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 		}
 
 		if err := ctx.Bind(&data); err != nil {
-			return derp.Wrap(err, location, "Unable to read form data")
+			return derp.Wrap(err, location, "Reading form data")
 		}
 
 		// Try to load the requested domain
@@ -67,14 +67,14 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 		domainConfig, factory, err := serverFactory.ByDomainID(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to load factory")
+			return derp.Wrap(err, location, "Loading factory")
 		}
 
 		// Open a database session
 		session, err := factory.Server().Session(ctx.Request().Context())
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to open database session")
+			return derp.Wrap(err, location, "Opening database session")
 		}
 
 		defer session.Close()
@@ -87,14 +87,14 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 		if userID, err := primitive.ObjectIDFromHex(ctx.QueryParam("userId")); err == nil {
 
 			if err := userService.LoadByID(session, userID, &user); err != nil {
-				return derp.Wrap(err, location, "Unable to load user")
+				return derp.Wrap(err, location, "Loading user")
 			}
 		}
 
 		// Allow admins to set passwords
 		if password := data.Password; password != "" {
 			if err := factory.Steranko(session).SetPassword(&user, password); err != nil {
-				return derp.Wrap(err, location, "Unable to set password")
+				return derp.Wrap(err, location, "Setting password")
 			}
 		}
 
@@ -107,7 +107,7 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 
 		// Try to save the new user record
 		if err := userService.Save(session, &user, "Created by Server Admin"); err != nil {
-			return derp.Wrap(err, location, "Unable to save user")
+			return derp.Wrap(err, location, "Saving user")
 		}
 
 		// Set the query parameter to display the updated user
@@ -128,14 +128,14 @@ func SetupDomainUserInvite(serverFactory *server.Factory, templates *template.Te
 		_, factory, err := serverFactory.ByDomainID(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to load factory")
+			return derp.Wrap(err, location, "Loading factory")
 		}
 
 		// Open a database session
 		session, err := factory.Server().Session(ctx.Request().Context())
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to open database session")
+			return derp.Wrap(err, location, "Opening database session")
 		}
 
 		defer session.Close()
@@ -146,18 +146,18 @@ func SetupDomainUserInvite(serverFactory *server.Factory, templates *template.Te
 		userService := factory.User()
 
 		if err := userService.LoadByToken(session, userID, &user); err != nil {
-			return derp.Wrap(err, location, "Unable to load user")
+			return derp.Wrap(err, location, "Loading user")
 		}
 
 		// RULE: Reset codes are single-use, so mint a new code in case a previous one was used or expired
 		if err := userService.MakeNewPasswordResetCode(session, &user, model.PasswordResetDurationWelcome); err != nil {
-			return derp.Wrap(err, location, "Unable to make password reset code")
+			return derp.Wrap(err, location, "Making password reset code")
 		}
 
 		// Try to (re?)send the email invitation
 		domainEmailService := factory.Email()
 		if err := domainEmailService.SendPasswordReset(&user); err != nil {
-			return derp.Wrap(err, location, "Unable to send email")
+			return derp.Wrap(err, location, "Sending email")
 		}
 
 		return nil
@@ -175,14 +175,14 @@ func SetupDomainUserDelete(serverFactory *server.Factory, templates *template.Te
 		domainConfig, factory, err := serverFactory.ByDomainID(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to load factory")
+			return derp.Wrap(err, location, "Loading factory")
 		}
 
 		// Open a database session
 		session, err := factory.Server().Session(ctx.Request().Context())
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to open database session")
+			return derp.Wrap(err, location, "Opening database session")
 		}
 
 		defer session.Close()
@@ -192,12 +192,12 @@ func SetupDomainUserDelete(serverFactory *server.Factory, templates *template.Te
 		userService := factory.User()
 
 		if err := userService.LoadByToken(session, ctx.Param("user"), &user); err != nil {
-			return derp.Wrap(err, location, "Unable to load user")
+			return derp.Wrap(err, location, "Loading user")
 		}
 
 		// Try to delete the user record
 		if err := userService.Delete(session, &user, "Deleted by Server Admin"); err != nil {
-			return derp.Wrap(err, location, "Unable to delete user")
+			return derp.Wrap(err, location, "Deleting user")
 		}
 
 		// Display the modal's NEW inner contents
@@ -223,7 +223,7 @@ func displayDomainUsersModal(ctx echo.Context, factory *service.Factory, session
 	// (not just localhost), so there is a single template for every domain.
 	var buffer bytes.Buffer
 	if err := templates.ExecuteTemplate(&buffer, "users.html", data); err != nil {
-		return derp.Wrap(err, location, "Error executing template")
+		return derp.Wrap(err, location, "Executing template")
 	}
 
 	// Set Headers to display modal dialog

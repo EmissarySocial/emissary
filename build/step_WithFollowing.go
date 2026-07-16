@@ -45,21 +45,21 @@ func (step StepWithFollowing) execute(builder Builder, buffer io.Writer, actionM
 	following, err := step.getFollowing(builder)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to get Following record"))
+		return Halt().WithError(derp.Wrap(err, location, "Getting Following record"))
 	}
 
 	// Create a new builder tied to the Following record
 	subBuilder, err := NewModel(factory, builder.session(), builder.request(), builder.response(), template, &following, builder.actionID())
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))
+		return Halt().WithError(derp.Wrap(err, location, "Creating sub-builder"))
 	}
 
 	// Execute the POST build pipeline on the child
 	result := Pipeline(step.SubSteps).Execute(factory, subBuilder, buffer, actionMethod)
 
 	if result.Error != nil {
-		return Halt().WithError(derp.Wrap(result.Error, location, "Error executing steps for child"))
+		return Halt().WithError(derp.Wrap(result.Error, location, "Executing steps for child"))
 	}
 
 	return UseResult(result)
@@ -73,7 +73,7 @@ func (step StepWithFollowing) getFollowing(builder Builder) (model.Following, er
 	userID, err := step.getUserID(builder)
 
 	if err != nil {
-		return model.NewFollowing(), derp.Wrap(err, location, "Unable to locate User ID")
+		return model.NewFollowing(), derp.Wrap(err, location, "Locating User ID")
 	}
 
 	// Collect required services and values
@@ -87,7 +87,7 @@ func (step StepWithFollowing) getFollowing(builder Builder) (model.Following, er
 
 		if err := followingService.LoadByURL(builder.session(), userID, url, &following); err != nil {
 			if !derp.IsNotFound(err) {
-				return model.NewFollowing(), derp.Wrap(err, location, "Unable to load Following by URL", url)
+				return model.NewFollowing(), derp.Wrap(err, location, "Loading Following by URL", url)
 			}
 		}
 
@@ -100,7 +100,7 @@ func (step StepWithFollowing) getFollowing(builder Builder) (model.Following, er
 
 	// Finally, try to load the Following record from the database.
 	if err := followingService.LoadByToken(builder.session(), userID, token, &following); err != nil {
-		return following, derp.Wrap(err, location, "Unable to load Following", token)
+		return following, derp.Wrap(err, location, "Loading Following", token)
 	}
 
 	// Success.

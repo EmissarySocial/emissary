@@ -87,7 +87,7 @@ func (service *NewsFeed) Range(session data.Session, criteria exp.Expression, op
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.NewsFeed.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.NewsFeed.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewNewsItem), nil
@@ -99,7 +99,7 @@ func (service *NewsFeed) Load(session data.Session, criteria exp.Expression, res
 	const location = "service.NewsFeed.Load"
 
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, location, "Unable to load NewsFeed message", criteria)
+		return derp.Wrap(err, location, "Loading NewsFeed message", criteria)
 	}
 
 	return nil
@@ -112,7 +112,7 @@ func (service *NewsFeed) Save(session data.Session, message *model.NewsItem, not
 
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(message); err != nil {
-		return derp.Wrap(err, location, "Unable to validate NewsFeed", message)
+		return derp.Wrap(err, location, "Validating NewsFeed", message)
 	}
 
 	// Calculate a (hopefully unique) rank for this message
@@ -120,12 +120,12 @@ func (service *NewsFeed) Save(session data.Session, message *model.NewsItem, not
 
 	// Save the value to the database
 	if err := service.collection(session).Save(message, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save NewsFeed", message, note)
+		return derp.Wrap(err, location, "Saving NewsFeed", message, note)
 	}
 
 	// Recalculate the unread count for the folder that owns this message.
 	if err := service.folderService.CalculateUnreadCount(session, message.UserID, message.FolderID); err != nil {
-		return derp.Wrap(err, location, "Unable to recalculate unread count", message)
+		return derp.Wrap(err, location, "Recalculating unread count", message)
 	}
 
 	// Wait 1 millisecond between each document to guarantee sorting by CreateDate
@@ -139,7 +139,7 @@ func (service *NewsFeed) Delete(session data.Session, message *model.NewsItem, n
 
 	// Delete NewsFeed record last.
 	if err := service.collection(session).Delete(message, note); err != nil {
-		return derp.Wrap(err, "service.NewsFeed.Delete", "Unable to delete NewsFeed", message, note)
+		return derp.Wrap(err, "service.NewsFeed.Delete", "Deleting NewsFeed", message, note)
 	}
 
 	return nil
@@ -151,12 +151,12 @@ func (service *NewsFeed) DeleteMany(session data.Session, criteria exp.Expressio
 	rangeFunc, err := service.Range(session, criteria)
 
 	if err != nil {
-		return derp.Wrap(err, "service.NewsFeed.DeleteMany", "Unable to list streams to delete", criteria)
+		return derp.Wrap(err, "service.NewsFeed.DeleteMany", "Listing streams to delete", criteria)
 	}
 
 	for message := range rangeFunc {
 		if err := service.Delete(session, &message, note); err != nil {
-			return derp.Wrap(err, "service.NewsFeed.DeleteMany", "Unable to delete message", message)
+			return derp.Wrap(err, "service.NewsFeed.DeleteMany", "Deleting message", message)
 		}
 	}
 
@@ -183,7 +183,7 @@ func (service *NewsFeed) HardDeleteByID(session data.Session, userID primitive.O
 	criteria := exp.Equal("userId", userID).AndEqual("_id", messageID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete NewsFeed", "userID: "+userID.Hex(), "messageID: "+messageID.Hex())
+		return derp.Wrap(err, location, "Deleting NewsFeed", "userID: "+userID.Hex(), "messageID: "+messageID.Hex())
 	}
 
 	return nil
@@ -333,7 +333,7 @@ func (service *NewsFeed) LoadSibling(session data.Session, folderID primitive.Ob
 	it, err := service.List(session, criteria, option.FirstRow(), sort)
 
 	if err != nil {
-		return model.NewsItem{}, derp.Wrap(err, location, "Unable to retrieve siblings")
+		return model.NewsItem{}, derp.Wrap(err, location, "Retrieving siblings")
 	}
 
 	// This *should* read the prev/next message into the pointer and be done.
@@ -355,7 +355,7 @@ func (service *NewsFeed) LoadOldestUnread(session data.Session, userID primitive
 	it, err := service.List(session, criteria, option.FirstRow(), sort)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to list messages")
+		return derp.Wrap(err, location, "Listing messages")
 	}
 
 	for it.Next(message) {
@@ -380,13 +380,13 @@ func (service *NewsFeed) MarkAllReadByFolder(session data.Session, userID primit
 	it, err := service.List(session, criteria)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to list unread messages", userID, folderID)
+		return derp.Wrap(err, location, "Listing unread messages", userID, folderID)
 	}
 
 	// Loop through every unread message and mark it as read
 	for message := model.NewNewsItem(); it.Next(&message); message = model.NewNewsItem() {
 		if err := service.MarkRead(session, &message); err != nil {
-			return derp.Wrap(err, location, "Unable to mark message as read", message)
+			return derp.Wrap(err, location, "Marking message as read", message)
 		}
 	}
 
@@ -403,13 +403,13 @@ func (service *NewsFeed) MarkReadByDate(session data.Session, userID primitive.O
 	it, err := service.List(session, criteria, sort)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to list messages")
+		return derp.Wrap(err, location, "Listing messages")
 	}
 
 	// Loop through every message and mark it as read
 	for message := model.NewNewsItem(); it.Next(&message); message = model.NewNewsItem() {
 		if err := service.MarkRead(session, &message); err != nil {
-			return derp.Wrap(err, location, "Unable to mark message as read")
+			return derp.Wrap(err, location, "Marking message as read")
 		}
 	}
 
@@ -432,12 +432,12 @@ func (service *NewsFeed) MarkRead(session data.Session, message *model.NewsItem)
 
 	// Save the message
 	if err := service.Save(session, message, "Update StateID to "+message.StateID); err != nil {
-		return derp.Wrap(err, location, "Unable to save message")
+		return derp.Wrap(err, location, "Saving message")
 	}
 
 	// Recalculate statistics
 	if err := service.folderService.CalculateUnreadCount(session, message.UserID, message.FolderID); err != nil {
-		return derp.Wrap(err, location, "Unable to set unread count")
+		return derp.Wrap(err, location, "Setting unread count")
 	}
 
 	// Lo hicimos!
@@ -456,12 +456,12 @@ func (service *NewsFeed) MarkUnread(session data.Session, message *model.NewsIte
 
 	// Save the message
 	if err := service.Save(session, message, "Update StateID to "+message.StateID); err != nil {
-		return derp.Wrap(err, location, "Unable to save message")
+		return derp.Wrap(err, location, "Saving message")
 	}
 
 	// Recalculate statistics
 	if err := service.folderService.CalculateUnreadCount(session, message.UserID, message.FolderID); err != nil {
-		return derp.Wrap(err, location, "Unable to set unread count")
+		return derp.Wrap(err, location, "Setting unread count")
 	}
 
 	// Success
@@ -479,7 +479,7 @@ func (service *NewsFeed) MarkMuted(session data.Session, message *model.NewsItem
 
 	// Save the message
 	if err := service.Save(session, message, "Set Status to MUTED"); err != nil {
-		return derp.Wrap(err, location, "Unable to save message")
+		return derp.Wrap(err, location, "Saving message")
 	}
 
 	return nil
@@ -496,7 +496,7 @@ func (service *NewsFeed) MarkUnmuted(session data.Session, message *model.NewsIt
 
 	// Save the message
 	if err := service.Save(session, message, "Set Status to MUTED"); err != nil {
-		return derp.Wrap(err, location, "Unable to save message")
+		return derp.Wrap(err, location, "Saving message")
 	}
 
 	// Success
@@ -518,7 +518,7 @@ func (service *NewsFeed) setResponse(session data.Session, userID primitive.Obje
 		}
 
 		// Failure and Shame!
-		return derp.Wrap(err, location, "Unable to load message by URL", url)
+		return derp.Wrap(err, location, "Loading message by URL", url)
 	}
 
 	// Set the response on the message
@@ -528,7 +528,7 @@ func (service *NewsFeed) setResponse(session data.Session, userID primitive.Obje
 
 	// Save the message
 	if err := service.Save(session, &message, "Set Response"); err != nil {
-		return derp.Wrap(err, location, "Unable to save message with response")
+		return derp.Wrap(err, location, "Saving message with response")
 	}
 
 	// Silence is GoLdEN.
@@ -573,19 +573,19 @@ func (service *NewsFeed) UpdateNewsFeedFolders(session data.Session, userID prim
 	rangeFunc, err := service.RangeByFollowingID(session, userID, followingID)
 
 	if err != nil {
-		return derp.Wrap(err, "service.NewsFeed", "Unable to list Activities by following", userID, followingID)
+		return derp.Wrap(err, "service.NewsFeed", "Listing Activities by following", userID, followingID)
 	}
 
 	for message := range rangeFunc {
 		message.FolderID = folderID
 		if err := service.Save(session, &message, "UpdateNewsFeedFolders"); err != nil {
-			return derp.Wrap(err, "service.NewsFeed", "Unable to save NewsFeed NewsItem", message)
+			return derp.Wrap(err, "service.NewsFeed", "Saving NewsFeed NewsItem", message)
 		}
 	}
 
 	// Recalculate the "unread" count on the new folder
 	if err := service.folderService.CalculateUnreadCount(session, userID, folderID); err != nil {
-		return derp.Wrap(err, "service.NewsFeed", "Unable to calculate unread count for new folder", userID, folderID)
+		return derp.Wrap(err, "service.NewsFeed", "Calculating unread count for new folder", userID, folderID)
 	}
 
 	return nil
@@ -604,12 +604,12 @@ func (service *NewsFeed) DeleteByFolder(session data.Session, userID primitive.O
 	rangeFunc, err := service.RangeByFolder(session, userID, folderID)
 
 	if err != nil {
-		return derp.Wrap(err, "service.NewsFeed", "Unable to list Activities by folder", userID, folderID)
+		return derp.Wrap(err, "service.NewsFeed", "Listing Activities by folder", userID, folderID)
 	}
 
 	for message := range rangeFunc {
 		if err := service.Delete(session, &message, "DeleteByFolder"); err != nil {
-			return derp.Wrap(err, "service.NewsFeed", "Unable to delete NewsFeed", message)
+			return derp.Wrap(err, "service.NewsFeed", "Deleting NewsFeed", message)
 		}
 	}
 

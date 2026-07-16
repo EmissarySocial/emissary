@@ -55,7 +55,7 @@ func (service *ImportItem) Range(session data.Session, criteria exp.Expression, 
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to list records", criteria)
+		return nil, derp.Wrap(err, location, "Listing records", criteria)
 	}
 
 	return RangeFunc(iter, model.NewImportItem), nil
@@ -75,7 +75,7 @@ func (service *ImportItem) List(session data.Session, criteria exp.Expression, o
 // Load retrieves an ImportItem from the database
 func (service *ImportItem) Load(session data.Session, criteria exp.Expression, result *model.ImportItem) error {
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.ImportItem.Load", "Unable to load ImportItem", criteria)
+		return derp.Wrap(err, "service.ImportItem.Load", "Loading ImportItem", criteria)
 	}
 
 	return nil
@@ -88,12 +88,12 @@ func (service *ImportItem) Save(session data.Session, item *model.ImportItem, no
 
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(item); err != nil {
-		return derp.Wrap(err, location, "Unable to validate ImportItem", item)
+		return derp.Wrap(err, location, "Validating ImportItem", item)
 	}
 
 	// Save the value to the database
 	if err := service.collection(session).Save(item, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save ImportItem", item, note)
+		return derp.Wrap(err, location, "Saving ImportItem", item, note)
 	}
 
 	return nil
@@ -103,7 +103,7 @@ func (service *ImportItem) Save(session data.Session, item *model.ImportItem, no
 func (service *ImportItem) Delete(session data.Session, item *model.ImportItem, note string) error {
 
 	if err := service.collection(session).Delete(item, note); err != nil {
-		return derp.Wrap(err, "service.ImportItem.Delete", "Unable to delete ImportItem", item, note)
+		return derp.Wrap(err, "service.ImportItem.Delete", "Deleting ImportItem", item, note)
 	}
 
 	// TODO: HIGH: Also remove connections to Users that still use this ImportItem
@@ -227,7 +227,7 @@ func (service *ImportItem) DeleteByImportID(session data.Session, userID primiti
 		AndEqual("userId", userID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete ImportItems", criteria)
+		return derp.Wrap(err, location, "Deleting ImportItems", criteria)
 	}
 
 	// Success.
@@ -243,7 +243,7 @@ func (service *ImportItem) mapRemoteID(session data.Session, userID primitive.Ob
 
 	// Load the ImportItem using the value as the sourceID
 	if err := service.LoadByRemoteID(session, userID, *value, &importItem); err != nil {
-		return derp.Wrap(err, location, "Unable to load Import Item", "userID: "+userID.Hex(), "remoteID: "+value.Hex())
+		return derp.Wrap(err, location, "Loading Import Item", "userID: "+userID.Hex(), "remoteID: "+value.Hex())
 	}
 
 	// Set the value to the localID

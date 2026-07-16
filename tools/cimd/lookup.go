@@ -26,7 +26,7 @@ func GetMetadata(host string, url string, options ...remote.Option) (Metadata, e
 
 	// Send the HTTP request
 	if err := txn.Send(); err != nil {
-		return Metadata{}, derp.Wrap(err, location, "Unable to retrieve CIMD metadata", url)
+		return Metadata{}, derp.Wrap(err, location, "Retrieving CIMD metadata", url)
 	}
 
 	// RULE: Prevent impersonation attacks by validating the returned Client ID against the requested URL

@@ -53,7 +53,7 @@ func OutboxPublish(factory *service.Factory, session data.Session, args mapof.An
 	// Fan out. Per-recipient failures are logged inside Deliver and do not fail the task; the
 	// actual deliveries are independently retryable OutboxSendToSingleRecipient sub-tasks.
 	if err := factory.Outbox().Deliver(session, actorType, actorID, activity, permissions, recipients, hasRecipients); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to fan out activity", args))
+		return queue.Error(derp.Wrap(err, location, "Fanning out activity", args))
 	}
 
 	return queue.Success()

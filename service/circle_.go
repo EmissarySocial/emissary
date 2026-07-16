@@ -73,7 +73,7 @@ func (service *Circle) Range(session data.Session, criteria exp.Expression, opti
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Circle.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.Circle.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewCircle), nil
@@ -85,7 +85,7 @@ func (service *Circle) Load(session data.Session, criteria exp.Expression, resul
 	const location = "service.Circle.Load"
 
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, location, "Unable to load Circle", criteria)
+		return derp.Wrap(err, location, "Loading Circle", criteria)
 	}
 
 	return nil
@@ -98,7 +98,7 @@ func (service *Circle) Save(session data.Session, circle *model.Circle, note str
 
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(circle); err != nil {
-		return derp.Wrap(err, location, "Unable to validate Circle", circle)
+		return derp.Wrap(err, location, "Validating Circle", circle)
 	}
 
 	// RULE: The Name MUST NOT collide with this User's other Circles
@@ -108,12 +108,12 @@ func (service *Circle) Save(session data.Session, circle *model.Circle, note str
 
 	// Save the value to the database
 	if err := service.collection(session).Save(circle, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Circle", circle, note)
+		return derp.Wrap(err, location, "Saving Circle", circle, note)
 	}
 
 	// Recalculate privileges based on new Circle settings.
 	if err := service.privilegeService.RefreshCircleInfo(session, circle); err != nil {
-		return derp.Wrap(err, location, "Unable to refresh Privileges for Circle", circle.CircleID, note)
+		return derp.Wrap(err, location, "Refreshing Privileges for Circle", circle.CircleID, note)
 	}
 
 	return nil
@@ -125,11 +125,11 @@ func (service *Circle) Delete(session data.Session, circle *model.Circle, note s
 	const location = "service.Circle.Delete"
 
 	if err := service.collection(session).Delete(circle, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Circle", circle, note)
+		return derp.Wrap(err, location, "Deleting Circle", circle, note)
 	}
 
 	if err := service.privilegeService.DeleteByCircle(session, circle.CircleID, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Privileges for Circle", circle.CircleID, note)
+		return derp.Wrap(err, location, "Deleting Privileges for Circle", circle.CircleID, note)
 	}
 
 	// TODO: HIGH: Also remove connections to Streams that still use this Circle
@@ -157,7 +157,7 @@ func (service *Circle) HardDeleteByID(session data.Session, userID primitive.Obj
 	criteria := exp.Equal("userId", userID).AndEqual("_id", circleID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Circle", "userID: "+userID.Hex(), "circleID: "+circleID.Hex())
+		return derp.Wrap(err, location, "Deleting Circle", "userID: "+userID.Hex(), "circleID: "+circleID.Hex())
 	}
 
 	return nil
@@ -243,7 +243,7 @@ func (service *Circle) QueryByIDs(session data.Session, userID primitive.ObjectI
 	result, err := service.Query(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to load merchant accounts")
+		return nil, derp.Wrap(err, location, "Loading merchant accounts")
 	}
 
 	return result, nil
@@ -321,13 +321,13 @@ func (service *Circle) DeleteByUserID(session data.Session, userID primitive.Obj
 	circles, err := service.RangeByUserID(session, userID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to query Circles by UserID", userID)
+		return derp.Wrap(err, location, "Querying Circles by UserID", userID)
 	}
 
 	// Delete each circle
 	for circle := range circles {
 		if err := service.Delete(session, &circle, note); err != nil {
-			return derp.Wrap(err, location, "Unable to delete Circle", circle)
+			return derp.Wrap(err, location, "Deleting Circle", circle)
 		}
 	}
 
@@ -340,7 +340,7 @@ func (service *Circle) HasProducts(session data.Session, userID primitive.Object
 	count, err := service.ProductCount(session, userID)
 
 	if err != nil {
-		return false, derp.Wrap(err, "service.Circle.HasProducts", "Error counting products for User", userID)
+		return false, derp.Wrap(err, "service.Circle.HasProducts", "Counting products for User", userID)
 	}
 
 	return count > 0, nil
@@ -359,7 +359,7 @@ func (service *Circle) ProductCount(session data.Session, userID primitive.Objec
 	circles, err := service.QueryFeaturedByUser(session, userID)
 
 	if err != nil {
-		return 0, derp.Wrap(err, location, "Error counting remote products for User", userID)
+		return 0, derp.Wrap(err, location, "Counting remote products for User", userID)
 	}
 
 	// Count all products across all "Featured" circles
@@ -383,7 +383,7 @@ func (service *Circle) AssignedProductIDs(session data.Session, userID primitive
 	circles, err := service.QueryFeaturedByUser(session, userID)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to load remote products for User", userID)
+		return nil, derp.Wrap(err, location, "Loading remote products for User", userID)
 	}
 
 	// Collect all of the Remote Product IDs from the Circles
@@ -440,7 +440,7 @@ func (service *Circle) QueryByUserAsLookupCode(session data.Session, userID prim
 	// Query for all Circles owned by the user
 	circles, err := service.QueryByUser(session, userID, options...)
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to query Circles by User", userID)
+		return nil, derp.Wrap(err, location, "Querying Circles by User", userID)
 	}
 
 	// Convert the Circles to a slice of lookup codes
@@ -462,14 +462,14 @@ func (service *Circle) RefreshMemberCounts(session data.Session, userID primitiv
 		if derp.IsNotFound(err) {
 			return nil
 		}
-		return derp.Wrap(err, location, "Unable to load Circle", circleID)
+		return derp.Wrap(err, location, "Loading Circle", circleID)
 	}
 
 	// Count the number of privileges for this Circle
 	count, err := service.privilegeService.CountByCircle(session, circleID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error counting privileges for Circle", circleID)
+		return derp.Wrap(err, location, "Counting privileges for Circle", circleID)
 	}
 
 	// If the count is correct, then we have triumphed
@@ -483,7 +483,7 @@ func (service *Circle) RefreshMemberCounts(session data.Session, userID primitiv
 	// Save the value to the database
 	// Saving directly to the Collection to bypass other validation and business logic.
 	if err := service.collection(session).Save(&circle, "Refreshing Member Count"); err != nil {
-		return derp.Wrap(err, location, "Unable to save Circle", circle)
+		return derp.Wrap(err, location, "Saving Circle", circle)
 	}
 
 	// We have survived another day

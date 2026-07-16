@@ -86,7 +86,7 @@ func (service *Import) Range(session data.Session, criteria exp.Expression, opti
 
 		// Soft fail.  Report, but do not crash.
 		if err != nil {
-			derp.Report(derp.Wrap(err, "service.Import.Range", "Unable to create iterator", criteria))
+			derp.Report(derp.Wrap(err, "service.Import.Range", "Creating iterator", criteria))
 			return
 		}
 
@@ -105,7 +105,7 @@ func (service *Import) Range(session data.Session, criteria exp.Expression, opti
 func (service *Import) Load(session data.Session, criteria exp.Expression, record *model.Import) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), record); err != nil {
-		return derp.Wrap(err, "service.Import.Load", "Unable to load Import", criteria)
+		return derp.Wrap(err, "service.Import.Load", "Loading Import", criteria)
 	}
 
 	return nil
@@ -123,12 +123,12 @@ func (service *Import) Save(session data.Session, record *model.Import, note str
 
 	// Execute state changes
 	if err := service.calcStateChange(session, record); err != nil {
-		return derp.Wrap(err, location, "Unable to calculate state change")
+		return derp.Wrap(err, location, "Calculating state change")
 	}
 
 	// Save the import to the database
 	if err := service.collection(session).Save(record, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Import", record, note)
+		return derp.Wrap(err, location, "Saving Import", record, note)
 	}
 
 	return nil
@@ -145,14 +145,14 @@ func (service *Import) Delete(session data.Session, record *model.Import, note s
 	case model.ImportStateDoUndo:
 
 		if err := service.doUndo(session, record); err != nil {
-			return derp.Wrap(err, location, "Unable to undo Import")
+			return derp.Wrap(err, location, "Undoing Import")
 		}
 
 	// Otherwise, just remove the import and its items, but not imported records
 	default:
 
 		if err := service.importItemService.DeleteByImportID(session, record.UserID, record.ImportID); err != nil {
-			return derp.Wrap(err, location, "Unable to delete related records", record.ImportID)
+			return derp.Wrap(err, location, "Deleting related records", record.ImportID)
 		}
 	}
 
@@ -161,7 +161,7 @@ func (service *Import) Delete(session data.Session, record *model.Import, note s
 
 	// Delete this Import
 	if err := service.collection(session).Delete(record, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Import", record, note)
+		return derp.Wrap(err, location, "Deleting Import", record, note)
 	}
 
 	// Hallelujah
@@ -341,7 +341,7 @@ func (service *Import) doAuthorize(record *model.Import) error {
 	record.OAuthChallenge, err = random.GenerateBytes(64)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to generate random string")
+		return derp.Wrap(err, location, "Generating random string")
 	}
 
 	// Populate the Import record with the new OAuth configuration data
@@ -425,7 +425,7 @@ func (service *Import) doUndo(session data.Session, record *model.Import) error 
 	items, err := service.importItemService.RangeByImportID(session, record.UserID, record.ImportID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to range over ImportItems", record.ImportID)
+		return derp.Wrap(err, location, "Ranging over ImportItems", record.ImportID)
 	}
 
 	// Undo each ImportItem record...
@@ -437,7 +437,7 @@ func (service *Import) doUndo(session data.Session, record *model.Import) error 
 			if importable, err := service.locator(item.Type); err == nil {
 
 				if err := importable.UndoImport(session, &item); err != nil {
-					derp.Report(derp.Wrap(err, location, "Unable to undo imported record"))
+					derp.Report(derp.Wrap(err, location, "Undoing imported record"))
 				}
 			}
 		}
@@ -468,7 +468,7 @@ func (service *Import) ImportAttachments(session data.Session, importRecord *mod
 	collection, err := client.Load(importItem.ImportURL + "/attachments")
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load Attachments")
+		return derp.Wrap(err, location, "Loading Attachments")
 	}
 
 	// Import each attachment in the collection
@@ -481,7 +481,7 @@ func (service *Import) ImportAttachments(session data.Session, importRecord *mod
 			Result(&document)
 
 		if err := txn.Send(); err != nil {
-			return derp.Wrap(err, location, "Unable to retrieve document from source server")
+			return derp.Wrap(err, location, "Retrieving document from source server")
 		}
 
 		// Import that attachment
@@ -494,7 +494,7 @@ func (service *Import) ImportAttachments(session data.Session, importRecord *mod
 		)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to import document", remoteID, remoteURL, localID, localURL)
+			return derp.Wrap(err, location, "Importing document", remoteID, remoteURL, localID, localURL)
 		}
 
 		// Update mappings IF this attachment is named in the containing stream

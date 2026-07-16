@@ -113,7 +113,7 @@ func WithSession(serverFactory ServerFactory, args mapof.Any, handler func(facto
 		})
 
 		if err != nil {
-			return queue.Error(derp.Wrap(err, location, "Error executing transaction."))
+			return queue.Error(derp.Wrap(err, location, "Executing transaction."))
 		}
 
 		// Return the queue result

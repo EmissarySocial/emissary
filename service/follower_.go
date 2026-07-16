@@ -88,7 +88,7 @@ func (service *Follower) Range(session data.Session, criteria exp.Expression, op
 
 		// Soft fail.  Report, but do not crash.
 		if err != nil {
-			derp.Report(derp.Wrap(err, "service.Follower.Range", "Unable to create iterator", criteria))
+			derp.Report(derp.Wrap(err, "service.Follower.Range", "Creating iterator", criteria))
 			return
 		}
 
@@ -130,7 +130,7 @@ func (service *Follower) Save(session data.Session, follower *model.Follower, no
 
 	// Recalculate the follower count for this user
 	if err := service.userService.CalcFollowerCount(session, follower.ParentID); err != nil {
-		return derp.Wrap(err, location, "Unable to re-calculate follower count", follower)
+		return derp.Wrap(err, location, "Re-calculating follower count", follower)
 	}
 
 	return nil
@@ -146,7 +146,7 @@ func (service *Follower) Delete(session data.Session, follower *model.Follower, 
 
 	// Delete this Follower
 	if err := service.collection(session).Delete(follower, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Follower", follower, note)
+		return derp.Wrap(err, location, "Deleting Follower", follower, note)
 	}
 
 	// Maybe delete the SearchQuery if it's no longer needed
@@ -186,7 +186,7 @@ func (service *Follower) HardDeleteByID(session data.Session, userID primitive.O
 	criteria := exp.Equal("userId", userID).AndEqual("_id", followerID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Follower", "userID: "+userID.Hex(), "followerID: "+followerID.Hex())
+		return derp.Wrap(err, location, "Deleting Follower", "userID: "+userID.Hex(), "followerID: "+followerID.Hex())
 	}
 
 	return nil
@@ -395,7 +395,7 @@ func (service *Follower) DeleteByUserID(session data.Session, userID primitive.O
 	for follower := range service.RangeByUserID(session, userID) {
 
 		if err := service.Delete(session, &follower, comment); err != nil {
-			return derp.Wrap(err, location, "Unable to delete follower", follower)
+			return derp.Wrap(err, location, "Deleting follower", follower)
 		}
 	}
 
@@ -588,7 +588,7 @@ func (service *Follower) SendFollowConfirmation(session data.Session, follower *
 	}
 
 	if err := service.domainEmail.SendFollowerConfirmation(actor, follower); err != nil {
-		return derp.Wrap(err, "service.Follower.SendFollowConfirmation", "Unable to send follow confirmation email", follower)
+		return derp.Wrap(err, "service.Follower.SendFollowConfirmation", "Sending follow confirmation email", follower)
 	}
 
 	return nil

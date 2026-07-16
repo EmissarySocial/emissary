@@ -25,20 +25,20 @@ func Version26(ctx context.Context, session *mongo.Database) error {
 	cursor, err := keyCollection.Find(ctx, map[string]any{})
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error retrieving keys iterator")
+		return derp.Wrap(err, location, "Retrieving keys iterator")
 	}
 
 	for record := mapof.NewAny(); cursor.Next(ctx); record = mapof.NewAny() {
 
 		if err := cursor.Decode(&record); err != nil {
-			return derp.Wrap(err, location, "Unable to decode key record")
+			return derp.Wrap(err, location, "Decoding key record")
 		}
 
 		// Create an actual encryption key
 		privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to generate RSA key")
+			return derp.Wrap(err, location, "Generating RSA key")
 		}
 
 		record["privatePEM"] = sigs.EncodePrivatePEM(privateKey)
@@ -49,7 +49,7 @@ func Version26(ctx context.Context, session *mongo.Database) error {
 		filter := bson.M{"_id": record["_id"]}
 
 		if _, err := keyCollection.ReplaceOne(ctx, filter, record); err != nil {
-			return derp.Wrap(err, location, "Unable to update key record")
+			return derp.Wrap(err, location, "Updating key record")
 		}
 
 		fmt.Print(".")

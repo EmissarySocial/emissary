@@ -116,7 +116,7 @@ func (service *Theme) Add(themeID string, filesystem fs.FS, definition []byte) e
 
 	// Try to parse the JSON in the buffer into a Theme object
 	if err := hjson.Unmarshal(definition, &theme); err != nil {
-		return derp.Wrap(err, location, "Unable to parse theme.json file", filesystem)
+		return derp.Wrap(err, location, "Parsing theme.json file", filesystem)
 	}
 
 	// Every format name in the schema must resolve in the format registry; unrecognized
@@ -127,12 +127,12 @@ func (service *Theme) Add(themeID string, filesystem fs.FS, definition []byte) e
 
 	// Load HTML templates into the theme
 	if err := loadHTMLTemplateFromFilesystem(filesystem, theme.HTMLTemplate, service.funcMap); err != nil {
-		return derp.Wrap(err, "service.theme.loadFromFilesystem", "Unable to load Template", themeID)
+		return derp.Wrap(err, "service.theme.loadFromFilesystem", "Loading Template", themeID)
 	}
 
 	// Load all Bundles from the filesystem
 	if err := populateBundles(theme.Bundles, filesystem); err != nil {
-		return derp.Wrap(err, "service.template.loadFromFilesystem", "Unable to load Bundles", themeID)
+		return derp.Wrap(err, "service.template.loadFromFilesystem", "Loading Bundles", themeID)
 	}
 
 	// Keep a pointer to the filesystem resources (if present)

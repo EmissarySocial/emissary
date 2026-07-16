@@ -43,14 +43,14 @@ func (step StepEditTemplate) Get(builder Builder, buffer io.Writer) PipelineBeha
 	// Write the form to HTML
 	h := html.New()
 	if err := form.BuildEditor(builder.object(), nil, h); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepEditTemplate.Get", "Unable to build form"))
+		return Halt().WithError(derp.Wrap(err, "build.StepEditTemplate.Get", "Building form"))
 	}
 
 	result := WrapForm(builder.RelativeURL(), h.String(), form.Encoding())
 
 	// Write the HTML to the buffer
 	if _, err := buffer.Write([]byte(result)); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepEditTemplate.Get", "Error writing HTML"))
+		return Halt().WithError(derp.Wrap(err, "build.StepEditTemplate.Get", "Writing HTML"))
 	}
 
 	return Continue()
@@ -68,7 +68,7 @@ func (step StepEditTemplate) Post(builder Builder, _ io.Writer) PipelineBehavior
 	transaction, err := formdata.Parse(builder.request())
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error parsing form"))
+		return Halt().WithError(derp.Wrap(err, location, "Parsing form"))
 	}
 
 	// Multiple Templates may be specified.  So, for each new value...
@@ -77,7 +77,7 @@ func (step StepEditTemplate) Post(builder Builder, _ io.Writer) PipelineBehavior
 		// Scan all allowed records
 		if newTemplateID := transaction.Get(path); step.isTemplateAllowed(builder, path, newTemplateID) {
 			if err := schema.Set(object, path, newTemplateID); err != nil {
-				return Halt().WithError(derp.Wrap(err, location, "Unable to set template", path))
+				return Halt().WithError(derp.Wrap(err, location, "Setting template", path))
 			}
 		}
 	}

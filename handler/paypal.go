@@ -20,14 +20,14 @@ func GetPayPalConnect(ctx *steranko.Context, factory *service.Factory, user *mod
 		connection := model.NewConnection()
 
 		if err := connectionService.LoadByProvider(model.ConnectionProviderPayPal, &connection); err != nil {
-			return derp.Wrap(err, location, "Unable to load PayPal Connection")
+			return derp.Wrap(err, location, "Loading PayPal Connection")
 		}
 
 		// Get the Access Token for this Connection
 		token, err := connectionService.GetAccessToken(&connection)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to load Access Token")
+			return derp.Wrap(err, location, "Loading Access Token")
 		}
 
 		// Create a MerchantAccount for this User
@@ -92,7 +92,7 @@ func GetPayPalConnect(ctx *steranko.Context, factory *service.Factory, user *mod
 			Result(&result)
 
 		if err := txn.Send(); err != nil {
-			return derp.Wrap(err, location, "Unable to send referral to PayPal", derp.WithInternalError())
+			return derp.Wrap(err, location, "Sending referral to PayPal", derp.WithInternalError())
 		}
 
 		// Find the "action_url" in the response
@@ -111,7 +111,7 @@ func GetPayPalConnect(ctx *steranko.Context, factory *service.Factory, user *mod
 
 		// Save the MerchantAccount
 		if err := factory.MerchantAccount().Save(&merchantAccount, "Linked by User"); err != nil {
-			return derp.Wrap(err, location, "Unable to create MerchantAccount")
+			return derp.Wrap(err, location, "Creating MerchantAccount")
 		}
 
 		// Forward the User to PayPal to complete the connection.
@@ -131,7 +131,7 @@ func PostPayPalWebhook(ctx *steranko.Context, factory *service.Factory) error {
 		// Collect the request body into a map
 		event := mapof.NewAny()
 		if err := ctx.Bind(&event); err != nil {
-			return derp.Wrap(err, location, "Error unmarshalling webhook event")
+			return derp.Wrap(err, location, "Unmarshalling webhook event")
 		}
 
 		switch event.GetString("event_type") {
@@ -160,7 +160,7 @@ func postPayPalWebhook_MerchantOnboardingCompleted(factory *service.Factory, eve
 		// Retrieve the MerchantAccount
 		merchantAccount := model.NewMerchantAccount()
 		if err := factory.MerchantAccount().LoadByToken(trackingID, &merchantAccount); err != nil {
-			return derp.Wrap(err, location, "Unable to load MerchantAccount")
+			return derp.Wrap(err, location, "Loading MerchantAccount")
 		}
 
 		// Update the MerchantAccount with the new information
@@ -168,7 +168,7 @@ func postPayPalWebhook_MerchantOnboardingCompleted(factory *service.Factory, eve
 		merchantAccount.Plaintext.SetString("merchantId", merchantID)
 
 		if err := factory.MerchantAccount().Save(&merchantAccount, "Onboarding Completed"); err != nil {
-			return derp.Wrap(err, location, "Unable to save MerchantAccount")
+			return derp.Wrap(err, location, "Saving MerchantAccount")
 		}
 
 		return nil

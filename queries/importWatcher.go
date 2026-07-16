@@ -19,7 +19,7 @@ func WatchImports(ctx context.Context, server data.Server, result chan<- realtim
 	session, err := server.Session(ctx)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to open database session"))
+		derp.Report(derp.Wrap(err, location, "Opening database session"))
 		return
 	}
 
@@ -42,7 +42,7 @@ func WatchImports(ctx context.Context, server data.Server, result chan<- realtim
 			}
 		}
 
-		derp.Report(derp.Wrap(err, location, "Unable to open Mongodb Change Import"))
+		derp.Report(derp.Wrap(err, location, "Opening Mongodb Change Import"))
 		return
 	}
 

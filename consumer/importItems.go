@@ -33,19 +33,19 @@ func ImportItems(factory *service.Factory, session data.Session, user *model.Use
 		} else {
 			importItem.StateID = model.ImportItemStateError
 			importItem.Message = derp.Message(err)
-			derp.Report(derp.Wrap(err, location, "Error importing item", importItem))
+			derp.Report(derp.Wrap(err, location, "Importing item", importItem))
 		}
 
 		// Update the ImportItem record in the database
 		if err := importItemService.Save(session, &importItem, ""); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to update Import status message"))
+			derp.Report(derp.Wrap(err, location, "Updating Import status message"))
 		}
 
 		// Increment the CompleteItems counter and save the Import
 		importRecord.CompleteItems = importRecord.CompleteItems + 1
 
 		if err := importService.Save(session, importRecord, "Increment counter"); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to increment item counter"))
+			derp.Report(derp.Wrap(err, location, "Incrementing item counter"))
 		}
 
 		// Requeue this task to locate the next importRecord in the chain
@@ -59,14 +59,14 @@ func ImportItems(factory *service.Factory, session data.Session, user *model.Use
 	// If no "next" importRecord is found, then the import is complete
 	if derp.IsNotFound(err) {
 		if inner := importService.SetState(session, importRecord, model.ImportStateReviewing); inner != nil {
-			return queue.Error(derp.Wrap(inner, location, "Unable to update import importRecord"))
+			return queue.Error(derp.Wrap(inner, location, "Updating import importRecord"))
 		}
 		return queue.Success()
 	}
 
 	// All other errors should be retried
 	if err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to load next importable item"))
+		return queue.Error(derp.Wrap(err, location, "Loading next importable item"))
 	}
 
 	// -----------------------------------------------
@@ -74,7 +74,7 @@ func ImportItems(factory *service.Factory, session data.Session, user *model.Use
 
 	// Update the display to show the URL that we're currently working on
 	if err := importService.SetMessage(session, importRecord, importItem.ImportURL); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to update Import status message", importRecord))
+		return queue.Error(derp.Wrap(err, location, "Updating Import status message", importRecord))
 	}
 
 	// -----------------------------------------------
@@ -96,7 +96,7 @@ func ImportItems(factory *service.Factory, session data.Session, user *model.Use
 		Result(&document)
 
 	if err := txn.Send(); err != nil {
-		return closeTask(derp.Wrap(err, location, "Unable to retrieve document from source server"))
+		return closeTask(derp.Wrap(err, location, "Retrieving document from source server"))
 	}
 
 	// Save the document to the local database

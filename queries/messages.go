@@ -29,7 +29,7 @@ func MessageMarkRead(inboxCollection data.Collection, userID primitive.ObjectID,
 	}
 
 	if _, err := mongo.UpdateOne(context.Background(), criteria, update); err != nil {
-		return derp.Wrap(err, "queries.MessageMarkRead", "Error marking message read")
+		return derp.Wrap(err, "queries.MessageMarkRead", "Marking message read")
 	}
 
 	return nil

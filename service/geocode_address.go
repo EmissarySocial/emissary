@@ -67,12 +67,12 @@ func (service GeocodeAddress) Geocode(session data.Session, stream *model.Stream
 	address, err := geocoder.GeocodeAddress(stream.Location.Formatted)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error geocoding address", stream.Location.Formatted)
+		return derp.Wrap(err, location, "Geocoding address", stream.Location.Formatted)
 	}
 
 	// Locate the timezone, too, if we don't already have it.
 	if err := service.timezoneService.Geocode(session, &address); err != nil {
-		return derp.Wrap(err, location, "Unable to get timezone for location", stream.Location)
+		return derp.Wrap(err, location, "Getting timezone for location", stream.Location)
 	}
 
 	// Populate the Stream with the newly geocoded address
@@ -90,7 +90,7 @@ func (service GeocodeAddress) getGeocoder(session data.Session) geocoder.Address
 	connection := model.NewConnection()
 
 	if err := service.connectionService.LoadActiveByType(session, model.ConnectionTypeGeocodeAddress, &connection); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to load geocoder"))
+		derp.Report(derp.Wrap(err, location, "Loading geocoder"))
 	}
 
 	apiKey := connection.Data.GetString("apiKey") // nolint:scopeguard

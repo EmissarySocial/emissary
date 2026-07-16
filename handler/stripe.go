@@ -34,7 +34,7 @@ func PostStripeWebhook_Checkout(ctx *steranko.Context, factory *service.Factory,
 	vault, err := merchantAccountService.DecryptVault(merchantAccount, "webhookSecret")
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error decrypting webhook secret")
+		return derp.Wrap(err, location, "Decrypting webhook secret")
 	}
 
 	if err = stripe_ProcessWebhook(factory, session, ctx.Request(), vault.GetString("webhookSecret"), merchantAccount.LiveMode); err != nil {
@@ -45,7 +45,7 @@ func PostStripeWebhook_Checkout(ctx *steranko.Context, factory *service.Factory,
 		}
 
 		// All other errors are reported to the caller
-		return derp.Wrap(err, location, "Error processing webhook data")
+		return derp.Wrap(err, location, "Processing webhook data")
 	}
 
 	// Success. WebHook complete.
@@ -61,7 +61,7 @@ func stripe_ProcessWebhook(factory *service.Factory, session data.Session, reque
 	event, err := stripe_UnmarshalEvent(request, webhookSecret, liveMode)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error unmarshalling Stripe event")
+		return derp.Wrap(err, location, "Unmarshalling Stripe event")
 	}
 
 	// Filter out other non-subscription events
@@ -72,20 +72,20 @@ func stripe_ProcessWebhook(factory *service.Factory, session data.Session, reque
 	// Unpack the Subscription from the Webhook event
 	var subscription stripe.Subscription
 	if err := json.Unmarshal(event.Data.Raw, &subscription); err != nil {
-		return derp.Wrap(err, location, "Error unmarshalling subscription data")
+		return derp.Wrap(err, location, "Unmarshalling subscription data")
 	}
 
 	// Load the Privilege associated with this Stripe Subscription.
 	privilege := model.NewPrivilege()
 	if err := factory.Privilege().LoadByRemotePurchaseID(session, subscription.ID, &privilege); err != nil {
-		return derp.Wrap(err, location, "Unable to load privilege")
+		return derp.Wrap(err, location, "Loading privilege")
 	}
 
 	// If the underlying Subscription is no longer active, then remove the Privilege
 	if isActive := stripeapi.SubscriptionIsActive(subscription); !isActive {
 
 		if err := factory.Privilege().Delete(session, &privilege, "Updated via WebHook"); err != nil {
-			return derp.Wrap(err, location, "Error syncing privilege records")
+			return derp.Wrap(err, location, "Syncing privilege records")
 		}
 	}
 
@@ -102,7 +102,7 @@ func stripe_UnmarshalEvent(request *http.Request, webhookSecret string, liveMode
 	body, err := io.ReadAll(reader)
 
 	if err != nil {
-		return stripe.Event{}, derp.Wrap(err, location, "Unable to read request body")
+		return stripe.Event{}, derp.Wrap(err, location, "Reading request body")
 	}
 
 	defer derp.ReportFunc(request.Body.Close)
@@ -113,7 +113,7 @@ func stripe_UnmarshalEvent(request *http.Request, webhookSecret string, liveMode
 		result, err := webhook.ConstructEvent(body, request.Header.Get("Stripe-Signature"), webhookSecret)
 
 		if err != nil {
-			return stripe.Event{}, derp.Wrap(err, location, "Error parsing webhook event")
+			return stripe.Event{}, derp.Wrap(err, location, "Parsing webhook event")
 		}
 
 		return result, nil
@@ -123,7 +123,7 @@ func stripe_UnmarshalEvent(request *http.Request, webhookSecret string, liveMode
 	result := stripe.Event{}
 
 	if err := json.Unmarshal(body, &result); err != nil {
-		return stripe.Event{}, derp.Wrap(err, location, "Error unmarshalling webhook event")
+		return stripe.Event{}, derp.Wrap(err, location, "Unmarshalling webhook event")
 	}
 
 	return result, nil

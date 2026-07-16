@@ -99,7 +99,7 @@ func Publish(session data.Session, q *queue.Queue, name string, args mapof.Any, 
 
 	// Non-transactional context: publish immediately.
 	if err := q.Publish(task); err != nil {
-		derp.Report(derp.Wrap(err, "tools.postcommit.Publish", "Unable to publish task", name))
+		derp.Report(derp.Wrap(err, "tools.postcommit.Publish", "Publishing task", name))
 	}
 }
 
@@ -129,7 +129,7 @@ func WithTransaction(ctx context.Context, server data.Server, q *queue.Queue, ca
 	if q != nil {
 		for _, task := range spool.Drain() {
 			if publishError := q.Publish(task); publishError != nil {
-				derp.Report(derp.Wrap(publishError, location, "Unable to publish post-commit task", task.Name))
+				derp.Report(derp.Wrap(publishError, location, "Publishing post-commit task", task.Name))
 			}
 		}
 	}

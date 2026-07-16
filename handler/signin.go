@@ -34,7 +34,7 @@ func GetSignIn(ctx *steranko.Context, factory *service.Factory, session data.Ses
 
 	// Render the template
 	if err := template.ExecuteTemplate(ctx.Response(), "user-signin", data); err != nil {
-		return derp.Wrap(err, "handler.GetSignIn", "Error executing template")
+		return derp.Wrap(err, "handler.GetSignIn", "Executing template")
 	}
 
 	return nil
@@ -116,7 +116,7 @@ func GetSignOut(ctx *steranko.Context, factory *service.Factory, session data.Se
 
 	// Render the template
 	if err := template.ExecuteTemplate(&buf, "user-signout", data); err != nil {
-		return derp.Wrap(err, "handler.GetSignIn", "Error executing template")
+		return derp.Wrap(err, "handler.GetSignIn", "Executing template")
 	}
 
 	return ctx.HTML(http.StatusOK, buf.String())
@@ -165,7 +165,7 @@ func PostResetPassword(ctx *steranko.Context, factory *service.Factory, session 
 
 	// Try to get the POST transaction data from the request body
 	if err := ctx.Bind(&transaction); err != nil {
-		return derp.Wrap(err, location, "Unable to read form data")
+		return derp.Wrap(err, location, "Reading form data")
 	}
 
 	// Try to load the user by username.  If the user cannot be found, the response
@@ -181,7 +181,7 @@ func PostResetPassword(ctx *steranko.Context, factory *service.Factory, session 
 	template := factory.Domain().Theme().HTMLTemplate
 
 	if err := template.ExecuteTemplate(ctx.Response(), "reset-confirm", nil); err != nil {
-		return derp.Wrap(err, location, "Error executing template")
+		return derp.Wrap(err, location, "Executing template")
 	}
 
 	return nil
@@ -199,7 +199,7 @@ func GetResetCode(ctx *steranko.Context, factory *service.Factory, session data.
 	userID := ctx.QueryParam("userId")
 
 	if err := userService.LoadByToken(session, userID, &user); err != nil {
-		return derp.Wrap(err, location, "Unable to load user")
+		return derp.Wrap(err, location, "Loading user")
 	}
 
 	// Get the template that will build the HTML response
@@ -213,7 +213,7 @@ func GetResetCode(ctx *steranko.Context, factory *service.Factory, session data.
 	// If the user was not found, then display an error message
 	if user.IsNew() {
 		if err := template.ExecuteTemplate(ctx.Response(), "reset-code-invalid", object); err != nil {
-			return derp.Wrap(err, location, "Error executing template")
+			return derp.Wrap(err, location, "Executing template")
 		}
 	}
 
@@ -226,7 +226,7 @@ func GetResetCode(ctx *steranko.Context, factory *service.Factory, session data.
 		object["code"] = resetCode
 
 		if err := template.ExecuteTemplate(ctx.Response(), "reset-code", object); err != nil {
-			return derp.Wrap(err, location, "Error executing template")
+			return derp.Wrap(err, location, "Executing template")
 		}
 
 		return nil
@@ -235,7 +235,7 @@ func GetResetCode(ctx *steranko.Context, factory *service.Factory, session data.
 	// If the reset code is expired, then give an "expired" message
 	if user.PasswordReset.NotActive() {
 		if err := template.ExecuteTemplate(ctx.Response(), "reset-code-inactive", object); err != nil {
-			return derp.Wrap(err, location, "Error executing template")
+			return derp.Wrap(err, location, "Executing template")
 		}
 
 		return nil
@@ -243,7 +243,7 @@ func GetResetCode(ctx *steranko.Context, factory *service.Factory, session data.
 
 	// Fall through means that the reset code is just plain wrong.
 	if err := template.ExecuteTemplate(ctx.Response(), "reset-code-invalid", object); err != nil {
-		return derp.Wrap(err, location, "Error executing template")
+		return derp.Wrap(err, location, "Executing template")
 	}
 
 	return nil
@@ -264,7 +264,7 @@ func PostResetCode(ctx *steranko.Context, factory *service.Factory, session data
 	}
 
 	if err := ctx.Bind(&txn); err != nil {
-		return derp.Wrap(err, location, "Unable to read form data")
+		return derp.Wrap(err, location, "Reading form data")
 	}
 
 	// RULE: Ensure that passwords match
@@ -278,32 +278,32 @@ func PostResetCode(ctx *steranko.Context, factory *service.Factory, session data
 	user := model.NewUser()
 
 	if err := userService.LoadByResetCode(session, txn.UserID, txn.Code, &user); err != nil {
-		return derp.Wrap(err, location, "Unable to load user")
+		return derp.Wrap(err, location, "Loading user")
 	}
 
 	// Update the user with the new password (hashed; never stored as plaintext)
 	if err := factory.Steranko(session).SetPassword(&user, txn.Password); err != nil {
-		return derp.Wrap(err, location, "Unable to set password")
+		return derp.Wrap(err, location, "Setting password")
 	}
 
 	// RULE: Reset codes are single-use.  Clear the code so this link cannot be replayed.
 	user.PasswordReset = model.PasswordReset{}
 
 	if err := userService.Save(session, &user, "Updated Password"); err != nil {
-		return derp.Wrap(err, location, "Unable to save user")
+		return derp.Wrap(err, location, "Saving user")
 	}
 
 	// Reset the failed signin attempts for this user so that they can sign in with their new password right away.
 	signinService := factory.SterankoSigninService(session)
 
 	if err := signinService.ClearSigninAttempts(user.Username); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to clear signin attempts for user", user.Username))
+		derp.Report(derp.Wrap(err, location, "Clearing signin attempts for user", user.Username))
 	}
 
 	// Try to send the password reset confirmation email.  If it fails, then log the error and move on.
 	emailService := factory.Email()
 	if err := emailService.SendPasswordResetConfirmation(session, &user); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to send password reset confirmation email to user", user.Username))
+		derp.Report(derp.Wrap(err, location, "Sending password reset confirmation email to user", user.Username))
 	}
 
 	// Forward to the sign-in page with a success message

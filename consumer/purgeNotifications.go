@@ -26,7 +26,7 @@ func PurgeNotifications(factory *service.Factory, session data.Session, _ mapof.
 	cutoffMillis := time.Now().AddDate(0, 0, -notificationRetentionDays).UnixMilli()
 
 	if err := factory.Notification().PurgeReadBefore(session, cutoffMillis); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to purge old notifications"))
+		return queue.Error(derp.Wrap(err, location, "Purging old notifications"))
 	}
 
 	return queue.Success()

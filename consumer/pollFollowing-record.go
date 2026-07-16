@@ -24,7 +24,7 @@ func PollFollowing_Record(factory *service.Factory, session data.Session, user *
 	actor, err := client.Load(following.URL, sherlock.AsActor())
 
 	if err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to load ActivityPub Actor", "url: "+following.URL))
+		return queue.Error(derp.Wrap(err, location, "Loading ActivityPub Actor", "url: "+following.URL))
 	}
 
 	// Create a channel from this outbox...
@@ -41,19 +41,19 @@ func PollFollowing_Record(factory *service.Factory, session data.Session, user *
 		result, err := document.Load(sherlock.WithDefaultValue(document.Map()))
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to load document", document.Value()))
+			derp.Report(derp.Wrap(err, location, "Loading document", document.Value()))
 			continue
 		}
 
 		// Save message to the Inbox
 		if err := factory.Following().SaveNewsItem(session, following, result, model.OriginTypePrimary); err != nil {
-			return queue.Error(derp.Wrap(err, location, "Unable to save NewsItem to NewsFeed", result.Value()))
+			return queue.Error(derp.Wrap(err, location, "Saving NewsItem to NewsFeed", result.Value()))
 		}
 	}
 
 	// Recalculate Folder unread counts
 	if err := factory.Folder().CalculateUnreadCount(session, following.UserID, following.FolderID.Value()); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to recalculate unread count"))
+		return queue.Error(derp.Wrap(err, location, "Recalculating unread count"))
 	}
 
 	// Success!

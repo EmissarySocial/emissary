@@ -91,7 +91,7 @@ func (service *Identity) Range(session data.Session, criteria exp.Expression, op
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, location, "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewIdentity), nil
@@ -103,7 +103,7 @@ func (service *Identity) Load(session data.Session, criteria exp.Expression, ide
 	const location = "service.Identity.Load"
 
 	if err := service.collection(session).Load(notDeleted(criteria), identity); err != nil {
-		return derp.Wrap(err, location, "Unable to load Identity", criteria)
+		return derp.Wrap(err, location, "Loading Identity", criteria)
 	}
 
 	return nil
@@ -116,38 +116,38 @@ func (service *Identity) Save(session data.Session, identity *model.Identity, no
 
 	// Try to calculate the ActivityPub Actor by looking up the WebFinger username.
 	if err := service.calcActivityPubActor(identity); err != nil {
-		return derp.Wrap(err, location, "Unable to calculating ActivityPub Actor for Identity")
+		return derp.Wrap(err, location, "Calculating ActivityPub Actor for Identity")
 	}
 
 	// Pick a default name, if necessary
 	if err := service.calcName(identity); err != nil {
-		return derp.Wrap(err, location, "Unable to calculate default name for Identity")
+		return derp.Wrap(err, location, "Calculating default name for Identity")
 	}
 
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(identity); err != nil {
-		return derp.Wrap(err, location, "Unable to validate Identity", identity)
+		return derp.Wrap(err, location, "Validating Identity", identity)
 	}
 
 	// Save the identity to the database
 	if err := service.collection(session).Save(identity, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Identity", identity, note)
+		return derp.Wrap(err, location, "Saving Identity", identity, note)
 	}
 
 	// Remove duplicate identifiers from other identities
 	if err := service.uniquify(session, identity); err != nil {
-		return derp.Wrap(err, location, "Unable to uniquify Identity", identity)
+		return derp.Wrap(err, location, "Uniquifying Identity", identity)
 	}
 
 	// Recalculate the privileges linked to this Identity
 	if err := service.privilegeService.refreshIdentity(session, identity); err != nil {
-		return derp.Wrap(err, location, "Unable to remove Privileges granted by email", identity)
+		return derp.Wrap(err, location, "Removing Privileges granted by email", identity)
 	}
 
 	// Recalculates privilegeIDs stored in Identity.  This probably duplicates
 	// logic from above, but this is a more comprehensive/idempotent calculation.
 	if err := service.refreshPrivileges(session, identity); err != nil {
-		return derp.Wrap(err, location, "Unable to recalculate privileges for Identity", identity)
+		return derp.Wrap(err, location, "Recalculating privileges for Identity", identity)
 	}
 
 	return nil
@@ -158,7 +158,7 @@ func (service *Identity) Delete(session data.Session, identity *model.Identity, 
 
 	// Delete this Identity
 	if err := service.collection(session).Delete(identity, note); err != nil {
-		return derp.Wrap(err, "service.Identity.Delete", "Unable to delete Identity", identity, note)
+		return derp.Wrap(err, "service.Identity.Delete", "Deleting Identity", identity, note)
 	}
 
 	return nil
@@ -175,7 +175,7 @@ func (service *Identity) SaveOrDelete(session data.Session, identity *model.Iden
 
 		// Delete the identity directly from the datbase (no business logic applied)
 		if err := service.collection(session).Delete(identity, note); err != nil {
-			return derp.Wrap(err, location, "Unable to delete empty Identity", identity, note)
+			return derp.Wrap(err, location, "Deleting empty Identity", identity, note)
 		}
 
 		return nil
@@ -183,7 +183,7 @@ func (service *Identity) SaveOrDelete(session data.Session, identity *model.Iden
 
 	// Otherwise, save the Identity directly to the DB (no business logic applied)
 	if err := service.collection(session).Save(identity, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Identity", identity, note)
+		return derp.Wrap(err, location, "Saving Identity", identity, note)
 	}
 
 	return nil
@@ -304,7 +304,7 @@ func (service *Identity) LoadOrCreate(session data.Session, name string, identif
 
 	// If the error was anything but "not found", then return the error
 	if !derp.IsNotFound(err) {
-		return model.Identity{}, derp.Wrap(err, location, "Unable to load identity", identifierType, identifierValue)
+		return model.Identity{}, derp.Wrap(err, location, "Loading identity", identifierType, identifierValue)
 	}
 
 	// Otherwise, populate the identifier into the Identity object
@@ -319,7 +319,7 @@ func (service *Identity) LoadOrCreate(session data.Session, name string, identif
 
 	// Save the Identity to the database
 	if err := service.Save(session, &identity, "Updated"); err != nil {
-		return model.Identity{}, derp.Wrap(err, location, "Unable to save identity", identity)
+		return model.Identity{}, derp.Wrap(err, location, "Saving identity", identity)
 	}
 
 	// Done.
@@ -384,17 +384,17 @@ func (service *Identity) RefreshPrivileges(session data.Session, identityID prim
 	// Load the Identity from the database
 	identity := model.NewIdentity()
 	if err := service.LoadByID(session, identityID, &identity); err != nil {
-		return derp.Wrap(err, location, "Unable to load identity", identityID)
+		return derp.Wrap(err, location, "Loading identity", identityID)
 	}
 
 	// Recalculate the privileges for this Identity
 	if err := service.refreshPrivileges(session, &identity); err != nil {
-		return derp.Wrap(err, location, "Unable to refresh privileges", identity.IdentityID)
+		return derp.Wrap(err, location, "Refreshing privileges", identity.IdentityID)
 	}
 
 	// Save changes (with no additional business logic)
 	if err := service.collection(session).Save(&identity, "Refreshed Privileges"); err != nil {
-		return derp.Wrap(err, location, "Unable to save identity", identity)
+		return derp.Wrap(err, location, "Saving identity", identity)
 	}
 
 	// Retire in Cabo
@@ -409,7 +409,7 @@ func (service *Identity) refreshPrivileges(session data.Session, identity *model
 	privileges, err := service.privilegeService.RangeByIdentity(session, identity.IdentityID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load privileges for identity", identity.IdentityID)
+		return derp.Wrap(err, location, "Loading privileges for identity", identity.IdentityID)
 	}
 
 	// Collect the CircleIDs and RemoteProductIDs from each privileges
@@ -444,7 +444,7 @@ func (service *Identity) SendGuestCode(session data.Session, identity *model.Ide
 	guestCode, err := service.makeGuestCode(nil, identifierType, identifierValue)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to create Guest Code", identifierValue)
+		return derp.Wrap(err, location, "Creating Guest Code", identifierValue)
 	}
 
 	switch identifierType {
@@ -453,7 +453,7 @@ func (service *Identity) SendGuestCode(session data.Session, identity *model.Ide
 	case model.IdentifierTypeEmail:
 
 		if err := service.emailService.SendGuestCode(identifierValue, guestCode); err != nil {
-			return derp.Wrap(err, location, "Unable to send Guest Code", identifierValue, guestCode)
+			return derp.Wrap(err, location, "Sending Guest Code", identifierValue, guestCode)
 		}
 
 		return nil
@@ -463,7 +463,7 @@ func (service *Identity) SendGuestCode(session data.Session, identity *model.Ide
 
 		// Send the Guest Code to the
 		if err := service.sendGuestCode_ActivityPub(session, identifierValue, guestCode); err != nil {
-			return derp.Wrap(err, location, "Unable to send Guest Code", identifierValue, guestCode)
+			return derp.Wrap(err, location, "Sending Guest Code", identifierValue, guestCode)
 		}
 
 		return nil
@@ -543,7 +543,7 @@ func (service *Identity) makeGuestCode(identity *model.Identity, identifierType 
 	token, err := service.jwtService.NewToken(claims)
 
 	if err != nil {
-		return "", derp.Wrap(err, "service.Identity.makeGuestCode", "Unable to create JWT token for Guest Code", identifier)
+		return "", derp.Wrap(err, "service.Identity.makeGuestCode", "Creating JWT token for Guest Code", identifier)
 	}
 
 	// Fantastic.
@@ -568,7 +568,7 @@ func (service *Identity) calcActivityPubActor(identity *model.Identity) error {
 	record, err := digit.Lookup(identity.WebfingerUsername)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to look up WebFinger username", identity.WebfingerUsername)
+		return derp.Wrap(err, location, "Looking up WebFinger username", identity.WebfingerUsername)
 	}
 
 	// Look for the ActivityPub Actor in the WebFinger record
@@ -602,7 +602,7 @@ func (service *Identity) calcName(identity *model.Identity) error {
 		actor, err := service.activityService.AppClient().Load(identity.ActivityPubActor, sherlock.AsActor())
 
 		if err != nil {
-			return derp.Wrap(err, "service.Identity.calcName", "Unable to load ActivityPub Actor", identity.ActivityPubActor)
+			return derp.Wrap(err, "service.Identity.calcName", "Loading ActivityPub Actor", identity.ActivityPubActor)
 		}
 
 		identity.Name = actor.Name()
@@ -632,14 +632,14 @@ func (service *Identity) uniquify(session data.Session, identity *model.Identity
 	privileges, err := service.privilegeService.RangeByIdentifiers(session, identity.EmailAddress, identity.WebfingerUsername, identity.ActivityPubActor)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load Privileges", identity)
+		return derp.Wrap(err, location, "Loading Privileges", identity)
 	}
 
 	// Link the current identity to each Privilege listed
 	for privilege := range privileges {
 
 		if err := service.privilegeService.maybeSetIdentity(session, &privilege, identity); err != nil {
-			return derp.Wrap(err, location, "Unable to link Identity to this Privilege", privilege)
+			return derp.Wrap(err, location, "Linking Identity to this Privilege", privilege)
 		}
 	}
 
@@ -647,7 +647,7 @@ func (service *Identity) uniquify(session data.Session, identity *model.Identity
 	identities, err := service.RangeByIdentifiers(session, identity.EmailAddress, identity.WebfingerUsername, identity.ActivityPubActor)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load Identities", identity)
+		return derp.Wrap(err, location, "Loading Identities", identity)
 	}
 
 	for other := range identities {
@@ -661,7 +661,7 @@ func (service *Identity) uniquify(session data.Session, identity *model.Identity
 		other.RemoveIdentifier(model.IdentifierTypeWebfinger, identity.WebfingerUsername)
 
 		if err := service.SaveOrDelete(session, &other, "Removed identity"); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error uniquifying Identity", other))
+			derp.Report(derp.Wrap(err, location, "Uniquifying Identity", other))
 		}
 	}
 

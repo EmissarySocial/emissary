@@ -24,20 +24,20 @@ func (service *MerchantAccount) ExportDocument(session data.Session, userID prim
 	// Load the User
 	merchantAccount := model.NewMerchantAccount()
 	if err := service.LoadByUserAndID(session, userID, merchantAccountID, &merchantAccount); err != nil {
-		return "", derp.Wrap(err, location, "Unable to load MerchantAccount", merchantAccount.MerchantAccountID)
+		return "", derp.Wrap(err, location, "Loading MerchantAccount", merchantAccount.MerchantAccountID)
 	}
 
 	// Get Connection Type
 	connection := model.NewConnection()
 	if err := service.connectionService.LoadByID(session, merchantAccount.ConnectionID, &connection); err != nil {
-		return "", derp.Wrap(err, location, "Unable to load connection", merchantAccount.ConnectionID)
+		return "", derp.Wrap(err, location, "Loading connection", merchantAccount.ConnectionID)
 	}
 
 	// Decrypt Vault values
 	decryptedVault, err := service.DecryptVault(&merchantAccount)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to decrypt vault")
+		return "", derp.Wrap(err, location, "Decrypting vault")
 	}
 
 	export := mapof.Any{
@@ -58,7 +58,7 @@ func (service *MerchantAccount) ExportDocument(session data.Session, userID prim
 	result, err := json.Marshal(export)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to marshal MerchantAccount", merchantAccount)
+		return "", derp.Wrap(err, location, "Marshaling MerchantAccount", merchantAccount)
 	}
 
 	// Success

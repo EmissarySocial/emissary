@@ -42,7 +42,7 @@ func (step StepForwardTo) do(builder Builder) PipelineBehavior {
 	var nextPage bytes.Buffer
 
 	if err := step.URL.Execute(&nextPage, builder); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error evaluating 'url'"))
+		return Halt().WithError(derp.Wrap(err, location, "Evaluating 'url'"))
 	}
 
 	// Reject dangerous or off-site-schemed targets. The value can be built from

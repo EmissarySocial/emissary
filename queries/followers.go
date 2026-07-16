@@ -17,7 +17,7 @@ func SetFollowersCount(userCollection data.Collection, followersCollection data.
 	followerCount, err := followersCollection.Count(criteria)
 
 	if err != nil {
-		return derp.Wrap(err, "queries.SetFollowersCount", "Error counting followers records")
+		return derp.Wrap(err, "queries.SetFollowersCount", "Counting followers records")
 	}
 
 	return RawUpdate(context.Background(), userCollection,

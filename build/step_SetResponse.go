@@ -23,14 +23,14 @@ func (step StepSetResponse) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	transaction := txnStepSetResponse{}
 
 	if err := transaction.Bind(builder.request()); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error binding transaction"))
+		return Halt().WithError(derp.Wrap(err, location, "Binding transaction"))
 	}
 
 	// Retrieve the currently authenticated user
 	user, err := builder.getUser()
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error getting user"))
+		return Halt().WithError(derp.Wrap(err, location, "Getting user"))
 	}
 
 	// Set the value in the database
@@ -40,7 +40,7 @@ func (step StepSetResponse) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	if transaction.Exists {
 
 		if err := responseService.SetResponse(builder.session(), user, transaction.URL, transaction.Type, transaction.Content); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Unable to set response"))
+			return Halt().WithError(derp.Wrap(err, location, "Setting response"))
 		}
 
 		return Continue()
@@ -48,7 +48,7 @@ func (step StepSetResponse) Post(builder Builder, _ io.Writer) PipelineBehavior 
 
 	// Fall through means DELETE the Response
 	if err := responseService.UnsetResponse(builder.session(), user, transaction.URL, transaction.Type); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to set response"))
+		return Halt().WithError(derp.Wrap(err, location, "Setting response"))
 	}
 
 	// Carry on, carry onnnnn...
@@ -70,7 +70,7 @@ func (txn *txnStepSetResponse) Bind(request *http.Request) error {
 	values, err := formdata.Parse(request)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error parsing form values")
+		return derp.Wrap(err, location, "Parsing form values")
 	}
 
 	// Populate data

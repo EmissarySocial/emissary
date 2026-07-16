@@ -32,12 +32,12 @@ func DeleteStream(factory *service.Factory, session data.Session, args mapof.Any
 			return queue.Success()
 		}
 
-		return queue.Error(derp.Wrap(err, location, "Unable to load stream", token))
+		return queue.Error(derp.Wrap(err, location, "Loading stream", token))
 	}
 
 	// Delete the Stream
 	if err := streamService.Delete(session, &stream, "Scheduled delete"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to delete stream", stream))
+		return queue.Error(derp.Wrap(err, location, "Deleting stream", stream))
 	}
 
 	// Woot.

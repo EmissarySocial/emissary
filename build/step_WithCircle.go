@@ -53,7 +53,7 @@ func (step StepWithCircle) execute(builder Builder, buffer io.Writer, actionMeth
 
 		if err := factory.Circle().LoadByID(builder.session(), builder.AuthenticatedID(), circleID, &circle); err != nil {
 			if actionMethod == ActionMethodGet {
-				return Halt().WithError(derp.Wrap(err, location, "Unable to load Circle", circleID))
+				return Halt().WithError(derp.Wrap(err, location, "Loading Circle", circleID))
 			}
 			// Fall through for POSTS..  we're just creating a new circle.
 		}
@@ -63,12 +63,12 @@ func (step StepWithCircle) execute(builder Builder, buffer io.Writer, actionMeth
 	subBuilder, err := NewModel(factory, builder.session(), builder.request(), builder.response(), template, &circle, builder.actionID())
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))
+		return Halt().WithError(derp.Wrap(err, location, "Creating sub-builder"))
 	}
 
 	// Execute the POST build pipeline on the child
 	result := Pipeline(step.SubSteps).Execute(factory, subBuilder, buffer, actionMethod)
-	result.Error = derp.WrapIF(result.Error, location, "Error executing steps for child")
+	result.Error = derp.WrapIF(result.Error, location, "Executing steps for child")
 
 	return UseResult(result)
 }

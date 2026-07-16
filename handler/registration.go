@@ -30,12 +30,12 @@ func GetRegister(ctx *steranko.Context, factory *service.Factory, session data.S
 	b, err := build.NewRegistration(factory, session, ctx.Request(), ctx.Response(), registration, actionID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to create Builder")
+		return derp.Wrap(err, location, "Creating Builder")
 	}
 
 	// Return a response to the client
 	if err := build.AsHTML(ctx, factory, b, build.ActionMethodGet); err != nil {
-		return derp.Wrap(err, location, "Unable to build HTML")
+		return derp.Wrap(err, location, "Building HTML")
 	}
 
 	return nil
@@ -56,29 +56,29 @@ func PostRegister(ctx *steranko.Context, factory *service.Factory, session data.
 	txn := model.NewRegistrationTxn()
 
 	if err := ctx.Bind(&txn); err != nil {
-		return derp.Wrap(err, location, "Error binding user input")
+		return derp.Wrap(err, location, "Binding user input")
 	}
 
 	// Validate the transaction
 	if err := factory.Registration().Validate(session, factory.User(), domain, txn); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to validate registration"))
+		derp.Report(derp.Wrap(err, location, "Validating registration"))
 		return inlineError(ctx, derp.Message(derp.Unwrap(err)))
 	}
 
 	// Send Welcome Email that includes the user's registration token
 	if err := factory.Email().SendWelcome(session, txn); err != nil {
-		return derp.Wrap(err, location, "Unable to send welcome email")
+		return derp.Wrap(err, location, "Sending welcome email")
 	}
 
 	// Build confirmation response
 	b, err := build.NewRegistration(factory, session, ctx.Request(), ctx.Response(), registration, "confirm")
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to create Builder")
+		return derp.Wrap(err, location, "Creating Builder")
 	}
 
 	if err := build.AsHTML(ctx, factory, b, build.ActionMethodGet); err != nil {
-		return derp.Wrap(err, location, "Unable to build HTML")
+		return derp.Wrap(err, location, "Building HTML")
 	}
 
 	// Report success to the client
@@ -97,7 +97,7 @@ func GetCompleteRegistration(ctx *steranko.Context, factory *service.Factory, se
 	token, err := jwt.ParseWithClaims(tokenString, &claims, keyFunc, steranko.JWTValidMethods())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error parsing JWT token")
+		return derp.Wrap(err, location, "Parsing JWT token")
 	}
 
 	if !token.Valid {
@@ -109,7 +109,7 @@ func GetCompleteRegistration(ctx *steranko.Context, factory *service.Factory, se
 
 	// Validate the registration transaction
 	if err := factory.Registration().Validate(session, factory.User(), domain, txn); err != nil {
-		return derp.Wrap(err, location, "Unable to validate registration")
+		return derp.Wrap(err, location, "Validating registration")
 	}
 
 	// Register the new User
@@ -125,7 +125,7 @@ func GetCompleteRegistration(ctx *steranko.Context, factory *service.Factory, se
 
 	// Try to sign-in with the new user's account
 	if err := factory.Steranko(session).SigninUser(ctx, &user); err != nil {
-		return derp.Wrap(err, location, "Error signing in user")
+		return derp.Wrap(err, location, "Signing in user")
 	}
 
 	return ctx.Redirect(http.StatusFound, "/@me")
@@ -143,14 +143,14 @@ func PostUpdateRegistration(ctx *steranko.Context, factory *service.Factory, ses
 	}{}
 
 	if err := ctx.Bind(&userInfo); err != nil {
-		return derp.Wrap(err, location, "Error binding user input")
+		return derp.Wrap(err, location, "Binding user input")
 	}
 
 	// Collect transaction info
 	txn := model.NewRegistrationTxn()
 
 	if err := ctx.Bind(&txn); err != nil {
-		return derp.Wrap(err, location, "Error binding user input")
+		return derp.Wrap(err, location, "Binding user input")
 	}
 
 	// Validate the Transaction
@@ -168,7 +168,7 @@ func PostUpdateRegistration(ctx *steranko.Context, factory *service.Factory, ses
 	registrationService := factory.Registration()
 
 	if err := registrationService.UpdateRegistration(session, factory.Group(), factory.User(), factory.Steranko(session), domain, userInfo.Source, userInfo.SourceID, txn); err != nil {
-		return derp.Wrap(err, location, "Unable to update user registration")
+		return derp.Wrap(err, location, "Updating user registration")
 	}
 
 	return ctx.NoContent(200)

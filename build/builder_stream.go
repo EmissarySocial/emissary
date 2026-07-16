@@ -48,7 +48,7 @@ func NewStream(factory Factory, session data.Session, request *http.Request, res
 	common, err := NewCommonWithTemplate(factory, session, request, response, template, stream, actionID)
 
 	if err != nil {
-		return Stream{}, derp.Wrap(err, location, "Unable to create common builder")
+		return Stream{}, derp.Wrap(err, location, "Creating common builder")
 	}
 
 	// Enforce permissions on the Action
@@ -80,14 +80,14 @@ func NewStreamWithoutTemplate(factory Factory, session data.Session, request *ht
 	template, err := templateService.Load(stream.TemplateID)
 
 	if err != nil {
-		return Stream{}, derp.Wrap(err, location, "Unable to load Template", stream)
+		return Stream{}, derp.Wrap(err, location, "Loading Template", stream)
 	}
 
 	// Return a fully populated service
 	result, err := NewStream(factory, session, request, response, template, stream, actionID)
 
 	if err != nil {
-		return Stream{}, derp.Wrap(err, location, "Unable to create Stream builder")
+		return Stream{}, derp.Wrap(err, location, "Creating Stream builder")
 	}
 
 	return result, nil
@@ -106,7 +106,7 @@ func (w Stream) Render() (template.HTML, error) {
 	status := Pipeline(w._action.Steps).Get(w._factory, w, &buffer)
 
 	if status.Error != nil {
-		err := derp.Wrap(status.Error, "build.Stream.Render", "Unable to generate HTML")
+		err := derp.Wrap(status.Error, "build.Stream.Render", "Generating HTML")
 		derp.Report(err)
 		return "", err
 	}
@@ -161,7 +161,7 @@ func (w Stream) View(actionID string) (template.HTML, error) {
 	subStream, err := NewStream(w._factory, w._session, w._request, w._response, w._template, w._stream, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, location, "Unable to create sub-builder")
+		return template.HTML(""), derp.Wrap(err, location, "Creating sub-builder")
 	}
 
 	// copy render data from parent to child
@@ -461,7 +461,7 @@ func (w Stream) Widgets(location string) (template.HTML, error) {
 			widgetBuilder := NewWidget(&w, streamWidget)
 
 			if err := widget.HTMLTemplate.ExecuteTemplate(&buffer, "widget", widgetBuilder); err != nil {
-				derp.Report(derp.Wrap(err, "build.Stream.Widgets", "Error executing widget template", widget))
+				derp.Report(derp.Wrap(err, "build.Stream.Widgets", "Executing widget template", widget))
 			}
 		}
 	}
@@ -482,7 +482,7 @@ func (w Stream) Grandparent(actionID string) (Stream, error) {
 	parent, err := w.Parent(actionID)
 
 	if err != nil {
-		return Stream{}, derp.Wrap(err, location, "Unable to load Parent")
+		return Stream{}, derp.Wrap(err, location, "Loading Parent")
 	}
 
 	return parent.Parent(actionID)
@@ -498,13 +498,13 @@ func (w Stream) ParentOutbox(actionID string) (Outbox, error) {
 	userService := w._factory.User()
 
 	if err := userService.LoadByID(w._session, w._stream.ParentID, &user); err != nil {
-		return Outbox{}, derp.Wrap(err, location, "Unable to load Parent")
+		return Outbox{}, derp.Wrap(err, location, "Loading Parent")
 	}
 
 	builder, err := NewOutbox(w._factory, w._session, w._request, w._response, &user, actionID)
 
 	if err != nil {
-		return Outbox{}, derp.Wrap(err, location, "Unable to create new Stream")
+		return Outbox{}, derp.Wrap(err, location, "Creating new Stream")
 	}
 
 	return builder, nil
@@ -520,13 +520,13 @@ func (w Stream) Parent(actionID string) (Stream, error) {
 	streamService := w._factory.Stream()
 
 	if err := streamService.LoadByID(w._session, w._stream.ParentID, &parent); err != nil {
-		return Stream{}, derp.Wrap(err, location, "Unable to load Parent")
+		return Stream{}, derp.Wrap(err, location, "Loading Parent")
 	}
 
 	builder, err := NewStreamWithoutTemplate(w._factory, w._session, w._request, w._response, &parent, actionID)
 
 	if err != nil {
-		return Stream{}, derp.Wrap(err, location, "Unable to create new Stream")
+		return Stream{}, derp.Wrap(err, location, "Creating new Stream")
 	}
 
 	return builder, nil
@@ -713,7 +713,7 @@ func (w Stream) Ancestors() QueryBuilder[model.StreamSummary] {
 	streamService := w._factory.Stream()
 
 	if err := streamService.LoadByID(w._session, w._stream.ParentID, &parent); err != nil {
-		derp.Report(derp.Wrap(err, "build.Stream.Ancestors", "Unable to load parent"))
+		derp.Report(derp.Wrap(err, "build.Stream.Ancestors", "Loading parent"))
 	}
 
 	criteria := exp.Equal("parentId", parent.ParentID).
@@ -856,7 +856,7 @@ func (w Stream) draftBuilder() (Stream, error) {
 
 	// Load the draft of the object
 	if err := draftService.LoadByID(w._session, w._stream.StreamID, &draft); err != nil {
-		return Stream{}, derp.Wrap(err, "build.Stream.draftBuilder", "Unable to load draft")
+		return Stream{}, derp.Wrap(err, "build.Stream.draftBuilder", "Loading draft")
 	}
 
 	// Make a duplicate of this builder.  Same object, template, action settings

@@ -23,14 +23,14 @@ func (service *Privilege) ExportDocument(session data.Session, userID primitive.
 	// Load the Privilege
 	privilege := model.NewPrivilege()
 	if err := service.LoadByID(session, userID, privilegeID, &privilege); err != nil {
-		return "", derp.Wrap(err, location, "Unable to load Privilege")
+		return "", derp.Wrap(err, location, "Loading Privilege")
 	}
 
 	// Marshal the privilege as JSON
 	result, err := json.Marshal(privilege)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to marshal Privilege", privilege)
+		return "", derp.Wrap(err, location, "Marshaling Privilege", privilege)
 	}
 
 	// Success

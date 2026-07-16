@@ -80,7 +80,7 @@ func (service *Folder) Range(session data.Session, criteria exp.Expression, opti
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, location, "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewFolder), nil
@@ -97,7 +97,7 @@ func (service *Folder) Load(session data.Session, criteria exp.Expression, resul
 	const location = "service.Folder.Load"
 
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, location, "Unable to load Folder", criteria)
+		return derp.Wrap(err, location, "Loading Folder", criteria)
 	}
 
 	return nil
@@ -120,7 +120,7 @@ func (service *Folder) Save(session data.Session, folder *model.Folder, comment 
 
 	// Save the value to the database
 	if err := service.collection(session).Save(folder, comment); err != nil {
-		return derp.Wrap(err, location, "Unable to save Folder", folder, comment)
+		return derp.Wrap(err, location, "Saving Folder", folder, comment)
 	}
 
 	return nil
@@ -133,17 +133,17 @@ func (service *Folder) Delete(session data.Session, folder *model.Folder, commen
 
 	// Delete the folder
 	if err := service.collection(session).Delete(folder, comment); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Folder", folder, comment)
+		return derp.Wrap(err, location, "Deleting Folder", folder, comment)
 	}
 
 	// Delete inbox items
 	if err := service.newsFeedService.DeleteByFolder(session, folder.UserID, folder.FolderID); err != nil {
-		return derp.Wrap(err, location, "Unable to delete related `NewsFeed Message` records.", folder, comment)
+		return derp.Wrap(err, location, "Deleting related `NewsFeed Message` records.", folder, comment)
 	}
 
 	// Delete any followings
 	if err := service.followingService.DeleteByFolder(session, folder.UserID, folder.FolderID, comment); err != nil {
-		return derp.Wrap(err, location, "Unable to delete related `Following` records.")
+		return derp.Wrap(err, location, "Deleting related `Following` records.")
 	}
 
 	return nil
@@ -169,7 +169,7 @@ func (service *Folder) HardDeleteByID(session data.Session, userID primitive.Obj
 	criteria := exp.Equal("userId", userID).AndEqual("_id", folderID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Folder", "userID: "+userID.Hex(), "folderID: "+folderID.Hex())
+		return derp.Wrap(err, location, "Deleting Folder", "userID: "+userID.Hex(), "folderID: "+folderID.Hex())
 	}
 
 	return nil
@@ -248,12 +248,12 @@ func (service *Folder) DeleteByUserID(session data.Session, userID primitive.Obj
 	rangeFunc, err := service.RangeByUserID(session, userID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to list folders", userID)
+		return derp.Wrap(err, location, "Listing folders", userID)
 	}
 
 	for folder := range rangeFunc {
 		if err := service.Delete(session, &folder, comment); err != nil {
-			return derp.Wrap(err, location, "Unable to delete folder", folder)
+			return derp.Wrap(err, location, "Deleting folder", folder)
 		}
 	}
 
@@ -349,13 +349,13 @@ func (service *Folder) CalculateUnreadCount(session data.Session, userID primiti
 	unreadCount, err := service.newsFeedService.CountUnreadNewsItems(session, userID, folderID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to count unread messages", userID, folderID)
+		return derp.Wrap(err, location, "Counting unread messages", userID, folderID)
 	}
 
 	collection := service.collection(session)
 
 	if err := queries.FolderSetUnreadCount(collection, userID, folderID, unreadCount); err != nil {
-		return derp.Wrap(err, location, "Unable to update folder read date", userID, folderID)
+		return derp.Wrap(err, location, "Updating folder read date", userID, folderID)
 	}
 
 	return nil

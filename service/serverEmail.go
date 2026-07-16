@@ -60,7 +60,7 @@ func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 	// Unmarshal the file into the schema.
 	temp := mapof.NewAny()
 	if err := hjson.Unmarshal(definition, &temp); err != nil {
-		return derp.Wrap(err, location, "Unable to load Schema")
+		return derp.Wrap(err, location, "Loading Schema")
 	}
 
 	email := model.NewEmail(temp.GetString("emailId"), service.funcMap)
@@ -74,14 +74,14 @@ func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 	if toTemplate, err := email.To.Parse(temp.GetString("to")); err == nil {
 		email.To = toTemplate
 	} else {
-		return derp.Wrap(err, location, "Error parsing 'to' template", email.EmailID)
+		return derp.Wrap(err, location, "Parsing 'to' template", email.EmailID)
 	}
 
 	// Read "subject" template
 	if subjectTemplate, err := email.Subject.Parse(temp.GetString("subject")); err == nil {
 		email.Subject = subjectTemplate
 	} else {
-		return derp.Wrap(err, location, "Error parsing 'subject' template", email.EmailID)
+		return derp.Wrap(err, location, "Parsing 'subject' template", email.EmailID)
 	}
 
 	// Read "headers" templates
@@ -89,7 +89,7 @@ func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 		if headerTemplate, err := email.Headers.New(name).Parse(convert.String(value)); err == nil {
 			email.Headers = headerTemplate
 		} else {
-			return derp.Wrap(err, location, "Error parsing 'headers' template", email.EmailID, name)
+			return derp.Wrap(err, location, "Parsing 'headers' template", email.EmailID, name)
 		}
 	}
 
@@ -103,7 +103,7 @@ func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 	if bodyTemplate, err := email.Body.Parse(string(content)); err == nil {
 		email.Body = bodyTemplate
 	} else {
-		return derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Unable to parse template HTML")
+		return derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Parsing template HTML")
 	}
 
 	// Keep a pointer to the filesystem resources (if present)
@@ -165,7 +165,7 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner con
 	client, err := server.Connect()
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error connecting to SMTP server", emailID, data, smtpConnection.Hostname, smtpConnection.Username, strings.Repeat("*", len(smtpConnection.Password)), smtpConnection.Port, smtpConnection.TLS)
+		return derp.Wrap(err, location, "Connecting to SMTP server", emailID, data, smtpConnection.Hostname, smtpConnection.Username, strings.Repeat("*", len(smtpConnection.Password)), smtpConnection.Port, smtpConnection.TLS)
 	}
 
 	message := mail.NewMSG()
@@ -174,14 +174,14 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner con
 	// Generate the "to" address
 	buffer := bytes.Buffer{}
 	if err := email.To.Execute(&buffer, data); err != nil {
-		return derp.Wrap(err, location, "Error executing 'to' template", emailID, data)
+		return derp.Wrap(err, location, "Executing 'to' template", emailID, data)
 	}
 	message.AddTo(buffer.String())
 	buffer.Reset()
 
 	// Generate the "subject" line
 	if err := email.Subject.Execute(&buffer, data); err != nil {
-		return derp.Wrap(err, location, "Error executing 'subject' template", emailID, data)
+		return derp.Wrap(err, location, "Executing 'subject' template", emailID, data)
 	}
 
 	message.SetSubject(buffer.String())
@@ -189,7 +189,7 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner con
 
 	// Generate the email body
 	if err := email.Body.Execute(&buffer, data); err != nil {
-		return derp.Wrap(err, location, "Error executing template", emailID, data)
+		return derp.Wrap(err, location, "Executing template", emailID, data)
 	}
 
 	message.SetBody(mail.TextHTML, buffer.String())
@@ -197,7 +197,7 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner con
 
 	// Try to send the email
 	if err := message.Send(client); err != nil {
-		return derp.Wrap(err, location, "Unable to send email", emailID, data)
+		return derp.Wrap(err, location, "Sending email", emailID, data)
 	}
 
 	return nil

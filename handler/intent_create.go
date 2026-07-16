@@ -22,7 +22,7 @@ func GetIntent_Create(ctx *steranko.Context, factory *service.Factory, session d
 	var transaction camper.CreateIntent
 
 	if err := ctx.Bind(&transaction); err != nil {
-		return derp.Wrap(err, location, "Unable to read form data")
+		return derp.Wrap(err, location, "Reading form data")
 	}
 
 	// Default values here
@@ -69,7 +69,7 @@ func PostIntent_Create(ctx *steranko.Context, factory *service.Factory, session 
 	// Collect values from the Form post
 	var transaction camper.CreateIntent
 	if err := ctx.Bind(&transaction); err != nil {
-		return derp.Wrap(err, location, "Unable to read form data")
+		return derp.Wrap(err, location, "Reading form data")
 	}
 
 	// Default values here
@@ -88,7 +88,7 @@ func PostIntent_Create(ctx *steranko.Context, factory *service.Factory, session 
 
 	// Save the new Stream to the database
 	if err := streamService.Publish(session, user, &stream, "published", true, false); err != nil {
-		return derp.Wrap(err, location, "Unable to publish stream")
+		return derp.Wrap(err, location, "Publishing stream")
 	}
 
 	// Return the "on-success" response

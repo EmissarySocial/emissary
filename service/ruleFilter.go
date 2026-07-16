@@ -61,7 +61,7 @@ func (filter *RuleFilter) Allow(session data.Session, document *streams.Document
 		rules, err := filter.ruleService.QueryByActorAndActions(session, filter.userID, actorID, allowedActions...)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, "emissary.RuleFilter.FilterOne", "Unable to load rules"))
+			derp.Report(derp.Wrap(err, "emissary.RuleFilter.FilterOne", "Loading rules"))
 			return false
 		}
 
@@ -102,7 +102,7 @@ func (filter *RuleFilter) Channel(ch <-chan streams.Document) <-chan streams.Doc
 		session, cancel, err := filter.newSession(time.Minute)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to connect to database"))
+			derp.Report(derp.Wrap(err, location, "Connecting to database"))
 			return
 		}
 

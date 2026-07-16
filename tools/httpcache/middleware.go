@@ -56,7 +56,7 @@ func (middleware HTTPMiddleware) RoundTrip(request *http.Request) (*http.Respons
 		if response != nil {
 			statusCode = response.StatusCode
 		}
-		return response, derp.Wrap(err, location, "Error executing HTTP request", derp.WithCode(statusCode))
+		return response, derp.Wrap(err, location, "Executing HTTP request", derp.WithCode(statusCode))
 	}
 
 	// Save the response to the cache (body capped to guard against an oversized response)
@@ -67,7 +67,7 @@ func (middleware HTTPMiddleware) RoundTrip(request *http.Request) (*http.Respons
 		if response != nil {
 			statusCode = response.StatusCode
 		}
-		return response, derp.Wrap(err, location, "Error cloning HTTP response", derp.WithCode(statusCode))
+		return response, derp.Wrap(err, location, "Cloning HTTP response", derp.WithCode(statusCode))
 	}
 
 	middleware.cache.setResponse(request, &responseCopy)

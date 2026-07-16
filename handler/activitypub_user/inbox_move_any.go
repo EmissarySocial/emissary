@@ -28,7 +28,7 @@ func inbox_MoveAny(context Context, document streams.Document) error {
 		if objectType == model.ActorTypeUser {
 
 			if err := moveLocalUser(context, document, objectID); err != nil {
-				return derp.Wrap(err, location, "Unable to move local User", "userID", objectID)
+				return derp.Wrap(err, location, "Moving local User", "userID", objectID)
 			}
 		}
 	}
@@ -56,7 +56,7 @@ func moveLocalUser(context Context, document streams.Document, userID primitive.
 	user := model.NewUser()
 
 	if err := userService.LoadByID(context.session, userID, &user); err != nil {
-		return derp.Wrap(err, location, "Unable to load User", "userID", userID)
+		return derp.Wrap(err, location, "Loading User", "userID", userID)
 	}
 
 	// Locate the Import record for this user
@@ -65,7 +65,7 @@ func moveLocalUser(context Context, document streams.Document, userID primitive.
 
 	if err := importService.LoadBySourceURL(context.session, user.UserID, document.ActorID(), &record); err != nil {
 
-		return derp.Wrap(err, location, "Unable to load Import record", "userID", user.UserID, "sourceID", document.ActorID())
+		return derp.Wrap(err, location, "Loading Import record", "userID", user.UserID, "sourceID", document.ActorID())
 	}
 
 	// RULE: Do not allow `Move` if the record is not in REVIEWING state
@@ -80,7 +80,7 @@ func moveLocalUser(context Context, document streams.Document, userID primitive.
 
 	if err := importService.Save(context.session, &record, "Finalizing Import"); err != nil {
 
-		return derp.Wrap(err, location, "Unable to save Import record")
+		return derp.Wrap(err, location, "Saving Import record")
 	}
 
 	// Success let the client know that we've got it.

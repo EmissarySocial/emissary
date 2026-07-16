@@ -23,14 +23,14 @@ func (service *Rule) ExportDocument(session data.Session, userID primitive.Objec
 	// Load the Rule
 	rule := model.NewRule()
 	if err := service.LoadByID(session, userID, ruleID, &rule); err != nil {
-		return "", derp.Wrap(err, location, "Unable to load Rule")
+		return "", derp.Wrap(err, location, "Loading Rule")
 	}
 
 	// Marshal the rule as JSON
 	result, err := json.Marshal(rule)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to marshal Rule", rule)
+		return "", derp.Wrap(err, location, "Marshaling Rule", rule)
 	}
 
 	// Success

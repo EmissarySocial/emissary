@@ -31,7 +31,7 @@ func undoFollow(context Context, activity streams.Document) error {
 		}
 
 		// All other errors are bad, tho.
-		return derp.Wrap(err, location, "Error retrieving original follow request", activity.Value())
+		return derp.Wrap(err, location, "Retrieving original follow request", activity.Value())
 	}
 
 	// Collect data from the original follow
@@ -49,12 +49,12 @@ func undoFollow(context Context, activity streams.Document) error {
 			return nil
 		}
 
-		return derp.Wrap(err, location, "Unable to load Follower", activity.Value(), streamID, actorURL)
+		return derp.Wrap(err, location, "Loading Follower", activity.Value(), streamID, actorURL)
 	}
 
 	// Try to delete the existing follower record
 	if err := followerService.Delete(context.session, &follower, "Removed by remote client"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete follower", follower)
+		return derp.Wrap(err, location, "Deleting follower", follower)
 	}
 
 	// Voila!

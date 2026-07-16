@@ -30,7 +30,7 @@ func ReceiveActivityPubMove(factory *service.Factory, session data.Session, args
 	target, err := client.Load(targetURL, ascache.WithWriteOnly())
 
 	if err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to load Target document", "target: "+targetURL))
+		return queue.Error(derp.Wrap(err, location, "Loading Target document", "target: "+targetURL))
 	}
 
 	// RULE: The targe document must be an Actor
@@ -43,21 +43,21 @@ func ReceiveActivityPubMove(factory *service.Factory, session data.Session, args
 	followings, err := followingService.RangeByActorID(session, actorURL)
 
 	if err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to load Following records", "actor: "+actorURL))
+		return queue.Error(derp.Wrap(err, location, "Loading Following records", "actor: "+actorURL))
 	}
 
 	for following := range followings {
 
 		// Move the Following record to the new target actor
 		if err := followingService.Move(session, &following, targetURL); err != nil {
-			return queue.Error(derp.Wrap(err, location, "Unable to update Following record", "followingID", following.FollowingID))
+			return queue.Error(derp.Wrap(err, location, "Updating Following record", "followingID", following.FollowingID))
 		}
 	}
 
 	// Try to remove the original Actor from the cache
 	if err := factory.ActivityStream().Delete(actorURL); err != nil {
 		if !derp.IsNotFound(err) {
-			return queue.Error(derp.Wrap(err, location, "Unable to remove Actor from cache", "actor: "+actorURL))
+			return queue.Error(derp.Wrap(err, location, "Removing Actor from cache", "actor: "+actorURL))
 		}
 	}
 

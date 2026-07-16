@@ -40,7 +40,7 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 	merchantAccounts, products, err := factory.Product().SyncRemoteProducts(builder.session(), attributedToID)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error retrieving products"))
+		return Halt().WithError(derp.Wrap(err, location, "Retrieving products"))
 	}
 
 	if merchantAccounts.IsEmpty() {
@@ -51,7 +51,7 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 	circles, err := factory.Circle().QueryByUser(builder.session(), attributedToID)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error retrieving circles"))
+		return Halt().WithError(derp.Wrap(err, location, "Retrieving circles"))
 	}
 
 	// If there are no multi-select options, then display the "empty" message
@@ -116,7 +116,7 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 	)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepSetPrivileges.Get", "Unable to build form"))
+		return Halt().WithError(derp.Wrap(err, "build.StepSetPrivileges.Get", "Building form"))
 	}
 
 	// Write the rest of the HTML that contains the form
@@ -138,7 +138,7 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 	b.CloseAll()
 
 	if _, err := io.WriteString(buffer, b.String()); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error writing form HTML to buffer"))
+		return Halt().WithError(derp.Wrap(err, location, "Writing form HTML to buffer"))
 	}
 
 	return nil
@@ -158,7 +158,7 @@ func (step StepSetPrivileges) Post(builder Builder, _ io.Writer) PipelineBehavio
 	request := streamBuilder.request()
 
 	if err := request.ParseForm(); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepSetPrivileges", "Error parsing form input"))
+		return Halt().WithError(derp.Wrap(err, "build.StepSetPrivileges", "Parsing form input"))
 	}
 
 	// Clear out existing product settings
@@ -172,7 +172,7 @@ func (step StepSetPrivileges) Post(builder Builder, _ io.Writer) PipelineBehavio
 		valueIDs, err := id.ConvertSlice(values)
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error converting form values to IDs"))
+			return Halt().WithError(derp.Wrap(err, location, "Converting form values to IDs"))
 		}
 
 		property, role, _ := strings.Cut(key, ".")
@@ -221,7 +221,7 @@ func (step StepSetPrivileges) GetEmpty(merchantAccounts sliceof.Object[model.Mer
 	b.Close()
 
 	if _, err := io.WriteString(buffer, b.String()); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepSetPrivileges.GetEmpty", "Error writing empty form HTML to buffer"))
+		return Halt().WithError(derp.Wrap(err, "build.StepSetPrivileges.GetEmpty", "Writing empty form HTML to buffer"))
 	}
 
 	return nil

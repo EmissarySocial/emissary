@@ -224,7 +224,7 @@ func ParseProfileURL_AsFollowing(value string) (primitive.ObjectID, primitive.Ob
 	_, userID, objectType, objectID, err := ParseProfileURL(value)
 
 	if err != nil {
-		return primitive.NilObjectID, primitive.NilObjectID, derp.Wrap(err, "service.ParseProfileURL_AsFollowing", "Unable to parse profile URL", value)
+		return primitive.NilObjectID, primitive.NilObjectID, derp.Wrap(err, "service.ParseProfileURL_AsFollowing", "Parsing profile URL", value)
 	}
 
 	if objectType != "following" {
@@ -256,7 +256,7 @@ func loadHTMLTemplateFromFilesystem(filesystem fs.FS, t *template.Template, func
 	files, err := fs.ReadDir(filesystem, ".")
 
 	if err != nil {
-		return derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Unable to list directory", filesystem)
+		return derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Listing directory", filesystem)
 	}
 
 	for _, file := range files {
@@ -286,12 +286,12 @@ func loadHTMLTemplateFromFilesystem(filesystem fs.FS, t *template.Template, func
 			contentTemplate, err := template.New(actionID).Funcs(funcMap).Parse(contentString)
 
 			if err != nil {
-				return derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Unable to parse template HTML", contentString)
+				return derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Parsing template HTML", contentString)
 			}
 
 			// Add this minified template into the resulting parse-tree
 			if _, err := t.AddParseTree(actionID, contentTemplate.Tree); err != nil {
-				derp.Report(derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Unable to add template to parse tree", actionID))
+				derp.Report(derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Adding template to parse tree", actionID))
 			}
 		}
 	}

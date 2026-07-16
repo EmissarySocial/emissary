@@ -28,7 +28,7 @@ func DeleteProfile_Avatar(serverFactory *server.Factory) func(model.Authorizatio
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return object.Account{}, derp.Wrap(err, location, "Unable to create session")
+			return object.Account{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -38,12 +38,12 @@ func DeleteProfile_Avatar(serverFactory *server.Factory) func(model.Authorizatio
 		user := model.NewUser()
 
 		if err := userService.LoadByID(session, auth.UserID, &user); err != nil {
-			return object.Account{}, derp.Wrap(err, location, "Unable to load User", auth.UserID)
+			return object.Account{}, derp.Wrap(err, location, "Loading User", auth.UserID)
 		}
 
 		// Delete the user's Avatar
 		if err := userService.DeleteAvatar(session, &user, "Deleted via Mastodon API"); err != nil {
-			return object.Account{}, derp.Wrap(err, location, "Unable to delete Avatar")
+			return object.Account{}, derp.Wrap(err, location, "Deleting Avatar")
 		}
 
 		return user.Toot(), nil
@@ -67,7 +67,7 @@ func DeleteProfile_Header(serverFactory *server.Factory) func(model.Authorizatio
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return object.Account{}, derp.Wrap(err, location, "Unable to create session")
+			return object.Account{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -77,7 +77,7 @@ func DeleteProfile_Header(serverFactory *server.Factory) func(model.Authorizatio
 		user := model.NewUser()
 
 		if err := userService.LoadByID(session, auth.UserID, &user); err != nil {
-			return object.Account{}, derp.Wrap(err, location, "Unable to load User", auth.UserID)
+			return object.Account{}, derp.Wrap(err, location, "Loading User", auth.UserID)
 		}
 
 		// Nothing to do right now because Emissary doesn't track Header images.

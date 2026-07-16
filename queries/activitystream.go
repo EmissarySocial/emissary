@@ -72,7 +72,7 @@ func UpdateContext(collection data.Collection, oldContext string, newContext str
 
 	// Return errors
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to update context in ActivityStream collection")
+		return derp.Wrap(err, location, "Updating context in ActivityStream collection")
 	}
 
 	// Brilliant.

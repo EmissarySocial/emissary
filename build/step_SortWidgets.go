@@ -35,7 +35,7 @@ func (step StepSortWidgets) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	transaction, err := formdata.Parse(builder.request())
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error binding form transaction"))
+		return Halt().WithError(derp.Wrap(err, location, "Binding form transaction"))
 	}
 
 	// Set up some variables

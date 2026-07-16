@@ -94,7 +94,7 @@ func (service *MerchantAccount) Range(session data.Session, criteria exp.Express
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.MerchantAccount.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.MerchantAccount.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewMerchantAccount), nil
@@ -104,7 +104,7 @@ func (service *MerchantAccount) Range(session data.Session, criteria exp.Express
 func (service *MerchantAccount) Load(session data.Session, criteria exp.Expression, merchantAccount *model.MerchantAccount) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), merchantAccount); err != nil {
-		return derp.Wrap(err, "service.MerchantAccount.Load", "Unable to load MerchantAccount", criteria)
+		return derp.Wrap(err, "service.MerchantAccount.Load", "Loading MerchantAccount", criteria)
 	}
 
 	return nil
@@ -119,17 +119,17 @@ func (service *MerchantAccount) Save(session data.Session, merchantAccount *mode
 	encryptionKey, err := hex.DecodeString(service.encryptionKey)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to decode encryption key")
+		return derp.Wrap(err, location, "Decoding encryption key")
 	}
 
 	// Encrypt plaintext values in vault
 	if err := merchantAccount.Vault.Encrypt(encryptionKey); err != nil {
-		return derp.Wrap(err, location, "Error encrypting vault values")
+		return derp.Wrap(err, location, "Encrypting vault values")
 	}
 
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(merchantAccount); err != nil {
-		return derp.Wrap(err, location, "Unable to validate MerchantAccount")
+		return derp.Wrap(err, location, "Validating MerchantAccount")
 	}
 
 	// Refresh OAuth connections (if necessary)
@@ -139,7 +139,7 @@ func (service *MerchantAccount) Save(session data.Session, merchantAccount *mode
 
 	// Save the merchantAccount to the database
 	if err := service.collection(session).Save(merchantAccount, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save MerchantAccount", merchantAccount, note)
+		return derp.Wrap(err, location, "Saving MerchantAccount", merchantAccount, note)
 	}
 
 	return nil
@@ -150,7 +150,7 @@ func (service *MerchantAccount) Delete(session data.Session, merchantAccount *mo
 
 	// Delete this MerchantAccount
 	if err := service.collection(session).Delete(merchantAccount, note); err != nil {
-		return derp.Wrap(err, "service.MerchantAccount.Delete", "Unable to delete MerchantAccount", merchantAccount, note)
+		return derp.Wrap(err, "service.MerchantAccount.Delete", "Deleting MerchantAccount", merchantAccount, note)
 	}
 
 	return nil
@@ -161,7 +161,7 @@ func (service *MerchantAccount) HardDeleteByID(session data.Session, userID prim
 
 	criteria := exp.Equal("userId", userID).AndEqual("_id", merchantAccountID)
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, "service.MerchantAccount.Delete", "Unable to hard delete MerchantAccount", "userID: "+userID.Hex(), "merchantAccountID: "+merchantAccountID.Hex())
+		return derp.Wrap(err, "service.MerchantAccount.Delete", "Hard-deleting MerchantAccount", "userID: "+userID.Hex(), "merchantAccountID: "+merchantAccountID.Hex())
 	}
 
 	return nil
@@ -261,7 +261,7 @@ func (service *MerchantAccount) QueryByUser(session data.Session, userID primiti
 	result, err := service.Query(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to load merchant accounts")
+		return nil, derp.Wrap(err, location, "Loading merchant accounts")
 	}
 
 	return result, nil
@@ -350,13 +350,13 @@ func (service *MerchantAccount) DeleteByUserID(session data.Session, userID prim
 	merchantAccounts, err := service.RangeByUserID(session, userID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to query merchantAccounts by UserID", userID)
+		return derp.Wrap(err, location, "Querying merchantAccounts by UserID", userID)
 	}
 
 	// Delete each merchantAccount
 	for merchantAccount := range merchantAccounts {
 		if err := service.Delete(session, &merchantAccount, note); err != nil {
-			return derp.Wrap(err, location, "Unable to delete MerchantAccount", merchantAccount)
+			return derp.Wrap(err, location, "Deleting MerchantAccount", merchantAccount)
 		}
 	}
 
@@ -377,20 +377,20 @@ func (service *MerchantAccount) DecryptVault(merchantAccount *model.MerchantAcco
 		FOR NOW, STRIPE DOESN'T REQUIRE US TO RENEW API KEYS, SO LET'S JUST NOT.
 		// Before retrieving the API keys, make sure they are up to date
 		if err := service.RefreshAPIKeys(merchantAccount); err != nil {
-			return nil, derp.Wrap(err, location, "Unable to refresh API keys")
+			return nil, derp.Wrap(err, location, "Refreshing API keys")
 		}
 	*/
 
 	// Decode the encryption key (this should never fail)
 	encryptionKey, err := hex.DecodeString(service.encryptionKey)
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to decode encryption key")
+		return nil, derp.Wrap(err, location, "Decoding encryption key")
 	}
 
 	// Open the Vault to get the clientID and secret key
 	vault, err := merchantAccount.Vault.Decrypt(encryptionKey, values...)
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error decrypting vault data")
+		return nil, derp.Wrap(err, location, "Decrypting vault data")
 	}
 
 	// Return vault data to the caller
@@ -444,12 +444,12 @@ func (service *MerchantAccount) ParseCheckoutResponse(session data.Session, merc
 	privilege, err := getter(session, merchantAccount, product, transactionID, queryParams)
 
 	if err != nil {
-		return model.Privilege{}, derp.Wrap(err, location, "Error processing checkout response")
+		return model.Privilege{}, derp.Wrap(err, location, "Processing checkout response")
 	}
 
 	// Save the (new?) Privilege record to the database
 	if err := service.privilegeService.Save(session, &privilege, "Created from Checkout"); err != nil {
-		return model.Privilege{}, derp.Wrap(err, location, "Error syncing privilege records")
+		return model.Privilege{}, derp.Wrap(err, location, "Syncing privilege records")
 	}
 
 	// Success!
@@ -490,7 +490,7 @@ func (service *MerchantAccount) RemoteProductsByUser(session data.Session, userI
 	merchantAccounts, err := service.QueryByUser(session, userID)
 
 	if err != nil {
-		return nil, nil, derp.Wrap(err, location, "Unable to load merchant accounts")
+		return nil, nil, derp.Wrap(err, location, "Loading merchant accounts")
 	}
 
 	result := sliceof.NewObject[model.Product]()
@@ -500,7 +500,7 @@ func (service *MerchantAccount) RemoteProductsByUser(session data.Session, userI
 		remoteProducts, err := service.getRemoteProducts(&merchantAccount)
 
 		if err != nil {
-			return nil, nil, derp.Wrap(err, location, "Unable to load products for merchant account", merchantAccount)
+			return nil, nil, derp.Wrap(err, location, "Loading products for merchant account", merchantAccount)
 		}
 
 		result = append(result, remoteProducts...)
@@ -540,7 +540,7 @@ func (service *MerchantAccount) CancelPrivilege(session data.Session, privilege 
 	merchantAccount := model.NewMerchantAccount()
 
 	if err := service.LoadByID(session, privilege.MerchantAccountID, &merchantAccount); err != nil {
-		return derp.Wrap(err, "service.MerchantAccount.CancelPrivilege", "Unable to load MerchantAccount for Privilege", privilege.PrivilegeID)
+		return derp.Wrap(err, "service.MerchantAccount.CancelPrivilege", "Loading MerchantAccount for Privilege", privilege.PrivilegeID)
 	}
 
 	switch merchantAccount.Type {

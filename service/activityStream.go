@@ -391,7 +391,7 @@ func (service *ActivityStream) GetActor(actor string) (streams.Document, error) 
 	document, err := service.AppClient().Load(actor, sherlock.AsActor())
 
 	if err != nil {
-		return streams.NilDocument(), derp.Wrap(err, location, "Unable to load ActivityPub Actor", actor)
+		return streams.NilDocument(), derp.Wrap(err, location, "Loading ActivityPub Actor", actor)
 	}
 
 	// RULE: Verify that this document is an Actor (not a document or activity)
@@ -410,7 +410,7 @@ func (service *ActivityStream) GetRecipient(recipient string) (string, string, e
 	document, err := service.GetActor(recipient)
 
 	if err != nil {
-		return "", "", derp.Wrap(err, location, "Unable to load ActivityPub Actor", recipient)
+		return "", "", derp.Wrap(err, location, "Loading ActivityPub Actor", recipient)
 	}
 
 	// Successssssssss.
@@ -445,7 +445,7 @@ func (service *ActivityStream) KeyPairFunc(actorType string, actorID primitive.O
 		defer cancel()
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to connect to database"))
+			derp.Report(derp.Wrap(err, location, "Connecting to database"))
 			return "", nil
 		}
 
@@ -453,7 +453,7 @@ func (service *ActivityStream) KeyPairFunc(actorType string, actorID primitive.O
 		publicKeyID, privateKey, err := service.locatorService.GetPrivateKey(session, actorType, actorID)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to retrieve private key"))
+			derp.Report(derp.Wrap(err, location, "Retrieving private key"))
 			return "", nil
 		}
 

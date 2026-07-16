@@ -40,14 +40,14 @@ func (service *MerchantAccount) paypal_refreshMerchantAccount(merchantAccount *m
 		encryptionKey, err := hex.DecodeString(service.encryptionKey)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to decode encryption key")
+			return derp.Wrap(err, location, "Decoding encryption key")
 		}
 
 		// Open the Vault to get the clientID and secret key
 		vault, err := merchantAccount.Vault.Decrypt(encryptionKey)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error decrypting vault data")
+			return derp.Wrap(err, location, "Decrypting vault data")
 		}
 
 		// Collect variables
@@ -65,7 +65,7 @@ func (service *MerchantAccount) paypal_refreshMerchantAccount(merchantAccount *m
 			Result(&result)
 
 		if err := txn.Send(); err != nil {
-			return derp.Wrap(err, location, "Error connecting to PayPal to refresh API key")
+			return derp.Wrap(err, location, "Connecting to PayPal to refresh API key")
 		}
 
 		// Update values in the vault
@@ -75,7 +75,7 @@ func (service *MerchantAccount) paypal_refreshMerchantAccount(merchantAccount *m
 
 		// Re-encrypt the vault data
 		if err := merchantAccount.Vault.Encrypt(encryptionKey); err != nil {
-			return derp.Wrap(err, location, "Error encrypting vault data")
+			return derp.Wrap(err, location, "Encrypting vault data")
 		}
 
 		// Success!
@@ -91,7 +91,7 @@ func (service *MerchantAccount) paypal_getProducts(merchantAccount *model.Mercha
 		// Load the PayPal connection
 		connection := model.NewConnection()
 		if err := service.connectionService.LoadActiveByType(model.ConnectionProviderPayPal, &connection); err != nil {
-			return nil, derp.Wrap(err, location, "Error retrieving PayPal connection")
+			return nil, derp.Wrap(err, location, "Retrieving PayPal connection")
 		}
 
 		// Query PayPal for all Products for this Merchant Account
@@ -106,7 +106,7 @@ func (service *MerchantAccount) paypal_getProducts(merchantAccount *model.Mercha
 			Result(&txnResult)
 
 		if err := txn.Send(); err != nil {
-			return nil, derp.Wrap(err, location, "Error connecting to PayPal API")
+			return nil, derp.Wrap(err, location, "Connecting to PayPal API")
 		}
 
 		return []model.Product{}, nil
@@ -123,7 +123,7 @@ func (service *MerchantAccount) paypal_getCheckoutURL(merchantAccount *model.Mer
 		apiKeys, err := service.DecryptVault(merchantAccount, "accessToken")
 
 		if err != nil {
-			return "", derp.Wrap(err, location, "Error retrieving API keys")
+			return "", derp.Wrap(err, location, "Retrieving API keys")
 		}
 
 		// Create the checkout URL
@@ -136,7 +136,7 @@ func (service *MerchantAccount) paypal_getCheckoutURL(merchantAccount *model.Mer
 			Result(&txnResult)
 
 		if err := txn.Send(); err != nil {
-			return "", derp.Wrap(err, location, "Error connecting to PayPal API")
+			return "", derp.Wrap(err, location, "Connecting to PayPal API")
 		}
 
 		return txnResult.GetString("checkout_url"), nil

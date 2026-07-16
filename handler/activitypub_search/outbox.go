@@ -48,7 +48,7 @@ func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, sessio
 	results, err := searchResultService.Query(session, criteria, option.SortDesc("createDate"), option.MaxRows(60))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error retrieving search results")
+		return derp.Wrap(err, location, "Retrieving search results")
 	}
 
 	activities := slice.Map(results, mapSearchResult(actorID))
@@ -76,7 +76,7 @@ func GetOutboxMessage(ctx *steranko.Context, factory *service.Factory, session d
 	searchResult := model.NewSearchResult()
 
 	if err := searchResultService.LoadByID(session, searchResultID, &searchResult); err != nil {
-		return derp.Wrap(err, location, "Unable to load SearchResult", searchResultID)
+		return derp.Wrap(err, location, "Loading SearchResult", searchResultID)
 	}
 
 	searchQueryService := factory.SearchQuery()

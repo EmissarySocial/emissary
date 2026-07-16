@@ -46,7 +46,7 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 	result, err := client.innerClient.Load(uri, options...)
 
 	if err != nil {
-		return streams.NilDocument(), derp.Wrap(err, location, "Unable to load document from inner client", uri)
+		return streams.NilDocument(), derp.Wrap(err, location, "Loading document from inner client", uri)
 	}
 
 	// Try to Normalize the document

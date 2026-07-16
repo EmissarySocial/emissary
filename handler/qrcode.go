@@ -30,14 +30,14 @@ func getQRCode(ctx *steranko.Context, url string) error {
 	qrc, err := qrcode.New(url)
 
 	if err != nil {
-		return derp.Wrap(err, "build.StepQRCode.Get", "Unable to generate QR Code")
+		return derp.Wrap(err, "build.StepQRCode.Get", "Generating QR Code")
 	}
 
 	// Generate the QR code, and "save" it to the response writer
 	w := standard.NewWithWriter(AsWriteCloser{ctx.Response().Writer})
 
 	if err := qrc.Save(w); err != nil {
-		return derp.Wrap(err, "build.StepQRCode.Get", "Error writing image")
+		return derp.Wrap(err, "build.StepQRCode.Get", "Writing image")
 	}
 
 	// QR-on, my wayward son.

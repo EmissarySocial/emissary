@@ -19,7 +19,7 @@ func NewTriggerEvent(stepInfo mapof.Any) (TriggerEvent, error) {
 	value, err := template.New("").Funcs(FuncMap()).Parse(stepInfo.GetString("value"))
 
 	if err != nil {
-		return TriggerEvent{}, derp.Wrap(err, "model.step.NewTriggerEvent", "Error parsing template")
+		return TriggerEvent{}, derp.Wrap(err, "model.step.NewTriggerEvent", "Parsing template")
 	}
 
 	return TriggerEvent{

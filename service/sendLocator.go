@@ -68,7 +68,7 @@ func (service SendLocator) Actor(url string) (sender.Actor, error) {
 	publicKeyID, privateKey, err := service.locatorService.GetPrivateKey(service.session, actorType, actorID)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to load signing key", "url", url, "actorType", actorType)
+		return nil, derp.Wrap(err, location, "Loading signing key", "url", url, "actorType", actorType)
 	}
 
 	// The activity's `actor` URL IS this actor's canonical ID, so reuse it directly.
@@ -118,21 +118,21 @@ func (service SendLocator) userActor(userID primitive.ObjectID) (sender.Actor, e
 	user := model.NewUser()
 
 	if err := service.userService.LoadByID(service.session, userID, &user); err != nil {
-		return nil, derp.Wrap(err, location, "Unable to load user", "userID", userID.Hex())
+		return nil, derp.Wrap(err, location, "Loading user", "userID", userID.Hex())
 	}
 
 	// Load the User's Encryption Key
 	encryptionKey := model.NewEncryptionKey()
 
 	if err := service.encryptionKeyService.LoadByParentID(service.session, model.EncryptionKeyTypeUser, user.UserID, &encryptionKey); err != nil {
-		return nil, derp.Wrap(err, location, "Unable to load encryption key", "userID", user.UserID.Hex())
+		return nil, derp.Wrap(err, location, "Loading encryption key", "userID", user.UserID.Hex())
 	}
 
 	// Extract the Private Key
 	privateKey, err := service.encryptionKeyService.GetPrivateKey(&encryptionKey)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to extract private key", "userID", user.UserID.Hex())
+		return nil, derp.Wrap(err, location, "Extracting private key", "userID", user.UserID.Hex())
 	}
 
 	// Build an Actor object
@@ -174,7 +174,7 @@ func (service SendLocator) Recipient(uri string) (iter.Seq[string], error) {
 	document, err := service.activityService.AppClient().Load(uri)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to load document for recipient", "uri", uri))
+		derp.Report(derp.Wrap(err, location, "Loading document for recipient", "uri", uri))
 		return ranges.Empty[string](), nil
 	}
 
@@ -228,7 +228,7 @@ func (service SendLocator) resolveGroup(token string) (iter.Seq[string], error) 
 	users, err := service.userService.RangeByGroup(service.session, groupID)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to retrieve group members")
+		return nil, derp.Wrap(err, location, "Retrieving group members")
 	}
 
 	// Locate each Follower's inbox URL
@@ -269,7 +269,7 @@ func (service SendLocator) resolveInboxURL(actorID string) string {
 	actor, err := service.activityService.AppClient().Load(actorID, sherlock.AsActor())
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to load actor for inbox URL", "actorID", actorID))
+		derp.Report(derp.Wrap(err, location, "Loading actor for inbox URL", "actorID", actorID))
 		return ""
 	}
 

@@ -30,7 +30,7 @@ func inbox_AddAny(context Context, activity streams.Document) error {
 
 	// RULE: Only process Add activities from Actors that we Follow.
 	if err := followingService.LoadByURL(context.session, context.user.UserID, activity.ActorID(), &following); err != nil {
-		return derp.Wrap(err, location, "Unable to locate `Following` record", context.user.UserID)
+		return derp.Wrap(err, location, "Locating `Following` record", context.user.UserID)
 	}
 
 	// Add a task to the queue (post-commit) to backfill the context of this activity

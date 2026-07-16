@@ -29,13 +29,13 @@ func buildSettings(ctx *steranko.Context, factory *service.Factory, session data
 	actionID := first.String(ctx.Param("action"), "general")
 
 	if ok, err := handleJSONLD(ctx, user); ok {
-		return derp.Wrap(err, location, "Unable to build JSON-LD")
+		return derp.Wrap(err, location, "Building JSON-LD")
 	}
 
 	builder, err := build.NewSettings(factory, session, ctx.Request(), ctx.Response(), user, actionID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to create builder")
+		return derp.Wrap(err, location, "Creating builder")
 	}
 
 	// Forward to the standard page builder to complete the job

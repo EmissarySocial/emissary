@@ -34,7 +34,7 @@ func (step StepUnPublish) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	searchResultService := factory.SearchResult()
 
 	if err := searchResultService.DeleteByURL(builder.session(), streamBuilder._stream.URL); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to delete search result", streamBuilder._stream.URL))
+		return Halt().WithError(derp.Wrap(err, location, "Deleting search result", streamBuilder._stream.URL))
 	}
 
 	// Try to load the User from the Database
@@ -42,14 +42,14 @@ func (step StepUnPublish) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	user := model.NewUser()
 
 	if err := userService.LoadByID(builder.session(), streamBuilder.AuthenticatedID(), &user); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to load user", streamBuilder.AuthenticatedID()))
+		return Halt().WithError(derp.Wrap(err, location, "Loading user", streamBuilder.AuthenticatedID()))
 	}
 
 	// Try to UnPublish the Stream from ActivityPub
 	streamService := factory.Stream()
 
 	if err := streamService.UnPublish(builder.session(), &user, streamBuilder._stream, step.StateID, step.Outbox); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error publishing stream", streamBuilder._stream))
+		return Halt().WithError(derp.Wrap(err, location, "Publishing stream", streamBuilder._stream))
 	}
 
 	return nil

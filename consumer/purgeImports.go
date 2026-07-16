@@ -28,12 +28,12 @@ func PurgeImports(factory *service.Factory, session data.Session, _ mapof.Any) q
 
 		// Hard Delete import items
 		if err := importItemService.DeleteByImportID(session, record.UserID, record.ImportID); err != nil {
-			return queue.Error(derp.Wrap(err, location, "Unable to delete ImportItems", record))
+			return queue.Error(derp.Wrap(err, location, "Deleting ImportItems", record))
 		}
 
 		// Delete the Import record
 		if err := importService.HardDeleteByID(session, record.UserID, record.ImportID); err != nil {
-			return queue.Error(derp.Wrap(err, location, "Unable to delete Import", record))
+			return queue.Error(derp.Wrap(err, location, "Deleting Import", record))
 		}
 	}
 

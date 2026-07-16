@@ -31,7 +31,7 @@ func (service GeocodeTiles) GetTileURL(session data.Session) form.LookupCode {
 
 	if err := service.connectionService.LoadActiveByType(session, model.ConnectionTypeGeocodeTiles, &connection); err != nil {
 		if !derp.IsNotFound(err) {
-			derp.Report(derp.Wrap(err, location, "Unable to load Map Tiles connection"))
+			derp.Report(derp.Wrap(err, location, "Loading Map Tiles connection"))
 		}
 	}
 

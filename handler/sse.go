@@ -163,13 +163,13 @@ func serverSentEvent(ctx *steranko.Context, factory *service.Factory, objectID p
 			// Add message ID if not empty
 			if message.Event != "" {
 				if _, err := fmt.Fprintf(w, "event: %s\n", message.Event); err != nil {
-					return derp.Wrap(err, location, "Unable to write event to response")
+					return derp.Wrap(err, location, "Writing event to response")
 				}
 			}
 
 			// Add message data
 			if _, err := fmt.Fprintf(w, "data: %s\n\n", message.Data); err != nil {
-				return derp.Wrap(err, location, "Unable to write data to response")
+				return derp.Wrap(err, location, "Writing data to response")
 			}
 
 			// Flush the response.  This is only possible if the response supports streaming.

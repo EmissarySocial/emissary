@@ -116,7 +116,7 @@ func (service *StreamArchive) Create(session data.Session, stream *model.Stream,
 	file, err := service.exportCache.Create(filename)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error opening file", filename)
+		return derp.Wrap(err, location, "Opening file", filename)
 	}
 
 	defer derp.ReportFunc(file.Close)
@@ -131,7 +131,7 @@ func (service *StreamArchive) Create(session data.Session, stream *model.Stream,
 	if err := service.writeToZip(session, zipWriter, nil, stream, "", options); err != nil {
 		// if the write fails, then remove the file before exiting.
 		derp.Report(service.exportCache.Remove(filename))
-		return derp.Wrap(err, location, "Error writing ZIP archive")
+		return derp.Wrap(err, location, "Writing ZIP archive")
 	}
 
 	log.Trace().Str("location", location).Str("filename", filename).Msg("ZIP file written to export cache successfully.")
@@ -151,14 +151,14 @@ func (service *StreamArchive) Read(streamID primitive.ObjectID, token string, wr
 	file, err := service.exportCache.Open(filename)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error opening file", filename)
+		return derp.Wrap(err, location, "Opening file", filename)
 	}
 
 	defer derp.ReportFunc(file.Close)
 
 	// Copy the file to the destination
 	if _, err = io.Copy(writer, file); err != nil {
-		return derp.Wrap(err, location, "Error copying file", filename)
+		return derp.Wrap(err, location, "Copying file", filename)
 	}
 
 	// Great success
@@ -184,7 +184,7 @@ func (service *StreamArchive) Delete(streamID primitive.ObjectID, token string) 
 
 	// Remove the file from the exportCache
 	if err := service.exportCache.Remove(filename); err != nil {
-		return derp.Wrap(err, location, "Unable to delete file", filename)
+		return derp.Wrap(err, location, "Deleting file", filename)
 	}
 
 	// Great success
@@ -229,19 +229,19 @@ func (service *StreamArchive) writeToZip(session data.Session, zipWriter *zip.Wr
 		fileWriter, err := zipWriter.Create(filenameJSON.String())
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to create JSON-LD file")
+			return derp.Wrap(err, location, "Creating JSON-LD file")
 		}
 
 		// Marshal the Stream data into JSON
 		streamJSON, err := json.MarshalIndent(streamData, "", "\t")
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error marshalling JSON-LD")
+			return derp.Wrap(err, location, "Marshalling JSON-LD")
 		}
 
 		// Write the JSON-LD to the file
 		if _, err := fileWriter.Write(streamJSON); err != nil {
-			return derp.Wrap(err, location, "Error writing JSON-LD file")
+			return derp.Wrap(err, location, "Writing JSON-LD file")
 		}
 	}
 
@@ -252,7 +252,7 @@ func (service *StreamArchive) writeToZip(session data.Session, zipWriter *zip.Wr
 		attachments, err := service.attachmentService.QueryByObjectID(session, model.AttachmentObjectTypeStream, stream.StreamID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to list attachments")
+			return derp.Wrap(err, location, "Listing attachments")
 		}
 
 		c := counter.NewCounter()
@@ -307,7 +307,7 @@ func (service *StreamArchive) writeToZip(session data.Session, zipWriter *zip.Wr
 				})
 
 				if err := pipeline.Execute(inSchema, inObject, outSchema, &filespec.Metadata); err != nil {
-					derp.Report(derp.Wrap(err, location, "Error processing metadata"))
+					derp.Report(derp.Wrap(err, location, "Processing metadata"))
 					continue
 				}
 			}
@@ -321,13 +321,13 @@ func (service *StreamArchive) writeToZip(session data.Session, zipWriter *zip.Wr
 			fileWriter, err := zipWriter.CreateHeader(&fileHeader)
 
 			if err != nil {
-				return derp.Wrap(err, location, "Unable to create attachment file")
+				return derp.Wrap(err, location, "Creating attachment file")
 			}
 
 			// Send the output from the MediaServer through FFmpeg one more time
 			// to add metadata to the file *before* it's written to the ZIP archive
 			if err := service.mediaserver.Process(context.Background(), filespec, fileWriter); err != nil {
-				return derp.Wrap(err, location, "Error processing attachment", filespec)
+				return derp.Wrap(err, location, "Processing attachment", filespec)
 			}
 		}
 	}
@@ -337,7 +337,7 @@ func (service *StreamArchive) writeToZip(session data.Session, zipWriter *zip.Wr
 		children, err := service.streamService.RangeByParent(session, stream.StreamID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to list children")
+			return derp.Wrap(err, location, "Listing children")
 		}
 
 		index := 1
@@ -352,7 +352,7 @@ func (service *StreamArchive) writeToZip(session data.Session, zipWriter *zip.Wr
 			}
 
 			if err := service.writeToZip(session, zipWriter, stream, &child, prefix, nextOptions); err != nil {
-				return derp.Wrap(err, location, "Error exporting child")
+				return derp.Wrap(err, location, "Exporting child")
 			}
 
 			index = index + 1

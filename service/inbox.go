@@ -85,7 +85,7 @@ func (service *Inbox) Range(session data.Session, criteria exp.Expression, optio
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Inbox.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.Inbox.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewInboxActivity), nil
@@ -95,7 +95,7 @@ func (service *Inbox) Range(session data.Session, criteria exp.Expression, optio
 func (service *Inbox) Load(session data.Session, criteria exp.Expression, result *model.InboxActivity) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, "service.Inbox.Load", "Unable to load Inbox activity", criteria)
+		return derp.Wrap(err, "service.Inbox.Load", "Loading Inbox activity", criteria)
 	}
 
 	return nil
@@ -128,7 +128,7 @@ func (service *Inbox) Save(session data.Session, inboxActivity *model.InboxActiv
 
 	// Check to see if this is a new record
 	if err := service.createOrUpdate(session, inboxActivity, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Inbox activity", inboxActivity, note)
+		return derp.Wrap(err, location, "Saving Inbox activity", inboxActivity, note)
 	}
 
 	// Removing this because it breaks with messages coming from Bonfire
@@ -149,7 +149,7 @@ func (service *Inbox) createOrUpdate(session data.Session, inboxActivity *model.
 	previousValue := model.NewInboxActivity()
 	if err := service.LoadByActivityID(session, inboxActivity.UserID, inboxActivity.ActivityID, &previousValue); err != nil {
 		if !derp.IsNotFound(err) {
-			return derp.Wrap(err, location, "Unable to load previous InboxActivity", inboxActivity)
+			return derp.Wrap(err, location, "Loading previous InboxActivity", inboxActivity)
 		}
 
 		inboxActivity.InboxActivityID = previousValue.InboxActivityID
@@ -158,7 +158,7 @@ func (service *Inbox) createOrUpdate(session data.Session, inboxActivity *model.
 
 	// Save the value to the database
 	if err := service.collection(session).Save(inboxActivity, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Inbox activity", inboxActivity, note)
+		return derp.Wrap(err, location, "Saving Inbox activity", inboxActivity, note)
 	}
 
 	return nil
@@ -181,7 +181,7 @@ func (service *Inbox) cacheObject(inboxActivity *model.InboxActivity) {
 	client := service.activityService.UserClient(inboxActivity.UserID)
 
 	if _, err := client.Load(inboxActivity.ObjectID, ascache.WithWriteOnly()); err != nil {
-		derp.Report(derp.Wrap(err, "service.Inbox.cacheObject", "Unable to load object into cache", inboxActivity.ObjectID))
+		derp.Report(derp.Wrap(err, "service.Inbox.cacheObject", "Loading object into cache", inboxActivity.ObjectID))
 	}
 }
 
@@ -205,7 +205,7 @@ func (service *Inbox) HardDeleteByID(session data.Session, userID primitive.Obje
 	criteria := exp.Equal("actorId", userID).AndEqual("_id", inboxActivityID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Inbox activity", "userID: "+userID.Hex(), "inboxActivityID: "+inboxActivityID.Hex())
+		return derp.Wrap(err, location, "Deleting Inbox activity", "userID: "+userID.Hex(), "inboxActivityID: "+inboxActivityID.Hex())
 	}
 
 	return nil
@@ -220,7 +220,7 @@ func (service *Inbox) Delete(session data.Session, inboxActivity *model.InboxAct
 	criteria := exp.Equal("_id", inboxActivity.InboxActivityID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Inbox activity", inboxActivity, note)
+		return derp.Wrap(err, location, "Deleting Inbox activity", inboxActivity, note)
 	}
 
 	return nil
@@ -347,7 +347,7 @@ func (service *Inbox) IsDuplicateActivity(session data.Session, userID primitive
 	count, err := service.Count(session, criteria)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to check for duplicate activity", "userID", userID, "activityID", activityID))
+		derp.Report(derp.Wrap(err, location, "Checking for duplicate activity", "userID", userID, "activityID", activityID))
 		return false
 	}
 
@@ -408,7 +408,7 @@ func (service *Inbox) CollectionIterator(session data.Session, userID primitive.
 		result, err := service.RangeByUser(session, userID, criteria, option.SortAsc("_id"))
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Unable to create iterator", "userID", userID.Hex())
+			return nil, derp.Wrap(err, location, "Creating iterator", "userID", userID.Hex())
 		}
 
 		// Map into a range of JSON-LD objects

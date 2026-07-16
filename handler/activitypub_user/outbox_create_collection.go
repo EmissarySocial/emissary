@@ -29,7 +29,7 @@ func outbox_CreateOrderedCollection(context Context, activity streams.Document) 
 
 	// Save the new Object to the database
 	if err := collectionService.Save(context.session, &collection, "Created via ActivityPub Outbox"); err != nil {
-		return derp.Wrap(err, location, "Unable to save collection", collection)
+		return derp.Wrap(err, location, "Saving collection", collection)
 	}
 
 	// RULE: Unlike other Create handlers (Article, Note, KeyPackage), a Collection is NOT

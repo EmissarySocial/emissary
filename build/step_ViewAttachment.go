@@ -60,7 +60,7 @@ func (step StepViewAttachment) Get(builder Builder, buffer io.Writer) PipelineBe
 		attachment, err = attachmentService.LoadFirstByCategory(builder.session(), model.AttachmentObjectTypeStream, objectID, step.Categories)
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Unable to load attachment", model.AttachmentObjectTypeStream, objectID, step.Categories))
+			return Halt().WithError(derp.Wrap(err, location, "Loading attachment", model.AttachmentObjectTypeStream, objectID, step.Categories))
 		}
 
 		// Search for a specific attachment
@@ -73,7 +73,7 @@ func (step StepViewAttachment) Get(builder Builder, buffer io.Writer) PipelineBe
 
 		// Load the attachment record to verify that it is valid for this parent object
 		if err := attachmentService.LoadByID(builder.session(), model.AttachmentObjectTypeStream, objectID, attachmentID, &attachment); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Unable to load attachment", model.AttachmentObjectTypeStream, objectID, attachmentID))
+			return Halt().WithError(derp.Wrap(err, location, "Loading attachment", model.AttachmentObjectTypeStream, objectID, attachmentID))
 		}
 	}
 
@@ -87,11 +87,11 @@ func (step StepViewAttachment) Get(builder Builder, buffer io.Writer) PipelineBe
 	filespec, err := step.makeFileSpec(&streamBuilder, streamBuilder._stream, &attachment)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to generate file spec"))
+		return Halt().WithError(derp.Wrap(err, location, "Generating file spec"))
 	}
 
 	if err := ms.Serve(streamBuilder.response(), streamBuilder.request(), filespec); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error accessing attachment file"))
+		return Halt().WithError(derp.Wrap(err, location, "Accessing attachment file"))
 	}
 
 	return Halt().AsFullPage()
@@ -170,7 +170,7 @@ func (step StepViewAttachment) makeFileSpec(builder *Stream, stream *model.Strea
 		})
 
 		if err := step.Metadata.Execute(inSchema, data, outSchema, &result.Metadata); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error executing metadata pipeline"))
+			derp.Report(derp.Wrap(err, location, "Executing metadata pipeline"))
 		}
 	}
 

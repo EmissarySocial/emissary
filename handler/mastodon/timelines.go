@@ -48,7 +48,7 @@ func GetTimeline_Home(serverFactory *server.Factory) func(model.Authorization, t
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unable to create session")
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -58,7 +58,7 @@ func GetTimeline_Home(serverFactory *server.Factory) func(model.Authorization, t
 		newsItems, err := newsFeedService.QueryByUserID(session, auth.UserID, queryExpression(t))
 
 		if err != nil {
-			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Error retrieving newsItems")
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Retrieving newsItems")
 		}
 
 		return getSliceOfToots(newsItems), getPageInfo(newsItems), nil
@@ -90,7 +90,7 @@ func GetTimeline_List(serverFactory *server.Factory) func(model.Authorization, t
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unable to create session")
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -102,7 +102,7 @@ func GetTimeline_List(serverFactory *server.Factory) func(model.Authorization, t
 		newsItems, err := newsFeedService.QueryByUserID(session, auth.UserID, criteria)
 
 		if err != nil {
-			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Error retrieving newsItems")
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Retrieving newsItems")
 		}
 
 		return getSliceOfToots(newsItems), getPageInfo(newsItems), nil

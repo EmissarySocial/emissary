@@ -48,7 +48,7 @@ func (step StepWithPrivilege) execute(builder Builder, buffer io.Writer, actionM
 	if circleID, identityID, exists := step.getCircleAndIdentity(builder); exists {
 
 		if err := privilegeService.LoadByIdentityAndCircle(builder.session(), builder.AuthenticatedID(), identityID, circleID, &privilege); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Unable to load Privilege by Identity and Circle", "identityID: "+identityID.Hex(), "circleID: "+circleID.Hex()))
+			return Halt().WithError(derp.Wrap(err, location, "Loading Privilege by Identity and Circle", "identityID: "+identityID.Hex(), "circleID: "+circleID.Hex()))
 		}
 	}
 
@@ -61,7 +61,7 @@ func (step StepWithPrivilege) execute(builder Builder, buffer io.Writer, actionM
 
 		if err := privilegeService.LoadByID(builder.session(), builder.AuthenticatedID(), privilegeID, &privilege); err != nil {
 			if actionMethod == ActionMethodGet {
-				return Halt().WithError(derp.Wrap(err, location, "Unable to load Privilege", privilegeID))
+				return Halt().WithError(derp.Wrap(err, location, "Loading Privilege", privilegeID))
 			}
 			// Fall through for POSTS..  we're just creating a new privilege.
 		}
@@ -71,12 +71,12 @@ func (step StepWithPrivilege) execute(builder Builder, buffer io.Writer, actionM
 	subBuilder, err := NewModel(factory, builder.session(), builder.request(), builder.response(), template, &privilege, builder.actionID())
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))
+		return Halt().WithError(derp.Wrap(err, location, "Creating sub-builder"))
 	}
 
 	// Execute the POST build pipeline on the child
 	result := Pipeline(step.SubSteps).Execute(factory, subBuilder, buffer, actionMethod)
-	result.Error = derp.WrapIF(result.Error, location, "Error executing steps for child")
+	result.Error = derp.WrapIF(result.Error, location, "Executing steps for child")
 
 	return UseResult(result)
 }

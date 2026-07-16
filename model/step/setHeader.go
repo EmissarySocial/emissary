@@ -20,7 +20,7 @@ func NewSetHeader(stepInfo mapof.Any) (SetHeader, error) {
 	value, err := template.New("").Parse(stepInfo.GetString("value"))
 
 	if err != nil {
-		return SetHeader{}, derp.Wrap(err, "step.NewSetHeader", "Error parsing value template", value)
+		return SetHeader{}, derp.Wrap(err, "step.NewSetHeader", "Parsing value template", value)
 	}
 
 	return SetHeader{

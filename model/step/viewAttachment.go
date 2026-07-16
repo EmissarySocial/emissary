@@ -35,7 +35,7 @@ func NewViewAttachment(stepInfo mapof.Any) (ViewAttachment, error) {
 	metadata, err := translate.NewFromMap(stepInfo.GetSliceOfPlainMap("metadata")...)
 
 	if err != nil {
-		return ViewAttachment{}, derp.Wrap(err, location, "Error parsing metadata pipeline")
+		return ViewAttachment{}, derp.Wrap(err, location, "Parsing metadata pipeline")
 	}
 
 	// Return the new step

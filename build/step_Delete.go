@@ -42,7 +42,7 @@ func (step StepDelete) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	modalHTML := WrapModal(builder.response(), b.String())
 
 	if _, err := io.WriteString(builder.response(), modalHTML); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepDelete.Get", "Error writing from builder to buffer"))
+		return Halt().WithError(derp.Wrap(err, "build.StepDelete.Get", "Writing from builder to buffer"))
 	}
 
 	return Halt().AsFullPage()
@@ -59,7 +59,7 @@ func (step StepDelete) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	// Delete the object via the model service.
 	if err := builder.service().ObjectDelete(builder.session(), builder.object(), "Deleted"); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to delete object"))
+		return Halt().WithError(derp.Wrap(err, location, "Deleting object"))
 	}
 
 	// If this object is also a SearchResulter, then we're gonna remove it from the search index
@@ -69,7 +69,7 @@ func (step StepDelete) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 		// Delete step here
 		if err := searchResultService.Delete(builder.session(), &searchResult, "unpublished"); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Unable to delete search result", searchResult))
+			return Halt().WithError(derp.Wrap(err, location, "Deleting search result", searchResult))
 		}
 	}
 

@@ -23,7 +23,7 @@ func (m Map) Execute(name string, value any) string {
 		if err := template.Execute(&buffer, value); err == nil {
 			return buffer.String()
 		} else {
-			derp.Report(derp.Wrap(err, "tools.templatemap.Execute", "Error executing template", name, value))
+			derp.Report(derp.Wrap(err, "tools.templatemap.Execute", "Executing template", name, value))
 		}
 	}
 
@@ -37,7 +37,7 @@ func (m *Map) UnmarshalJSON(data []byte) error {
 	temp := make(map[string]string)
 
 	if err := json.Unmarshal(data, &temp); err != nil {
-		return derp.Wrap(err, location, "Error unmarshalling JSON")
+		return derp.Wrap(err, location, "Unmarshalling JSON")
 	}
 
 	funcMap := funcmap.All()
@@ -46,7 +46,7 @@ func (m *Map) UnmarshalJSON(data []byte) error {
 		tmpl, err := template.New(key).Funcs(funcMap).Parse(value)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error parsing template", key)
+			return derp.Wrap(err, location, "Parsing template", key)
 		}
 
 		(*m)[key] = tmpl

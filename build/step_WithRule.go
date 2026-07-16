@@ -43,19 +43,19 @@ func (step StepWithRule) execute(builder Builder, buffer io.Writer, actionMethod
 
 	rule, err := step.getRule(builder)
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to load Rule"))
+		return Halt().WithError(derp.Wrap(err, location, "Loading Rule"))
 	}
 
 	// Create a new builder tied to the Rule record
 	subBuilder, err := NewModel(factory, builder.session(), builder.request(), builder.response(), template, &rule, builder.actionID())
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))
+		return Halt().WithError(derp.Wrap(err, location, "Creating sub-builder"))
 	}
 
 	// Execute the POST build pipeline on the child
 	result := Pipeline(step.SubSteps).Execute(factory, subBuilder, buffer, actionMethod)
-	result.Error = derp.WrapIF(result.Error, location, "Error executing steps for child")
+	result.Error = derp.WrapIF(result.Error, location, "Executing steps for child")
 
 	return UseResult(result)
 }
@@ -69,7 +69,7 @@ func (step StepWithRule) getRule(builder Builder) (model.Rule, error) {
 	if token := builder.QueryParam("ruleId"); notNewOrEmpty(token) {
 		if err := builder.factory().Rule().LoadByToken(builder.session(), builder.AuthenticatedID(), token, &rule); err != nil {
 			if !derp.IsNotFound(err) {
-				return rule, derp.Wrap(err, "build.StepWithRule.getRule", "Unable to load Rule with token "+token)
+				return rule, derp.Wrap(err, "build.StepWithRule.getRule", "Loading Rule with token "+token)
 			}
 		}
 		return rule, nil
@@ -79,7 +79,7 @@ func (step StepWithRule) getRule(builder Builder) (model.Rule, error) {
 
 		if err := builder.factory().Rule().LoadByTrigger(builder.session(), builder.AuthenticatedID(), model.RuleTypeActor, token, &rule); err != nil {
 			if !derp.IsNotFound(err) {
-				return rule, derp.Wrap(err, "build.StepWithRule.getRule", "Unable to load Rule with actor "+token)
+				return rule, derp.Wrap(err, "build.StepWithRule.getRule", "Loading Rule with actor "+token)
 			}
 		}
 		return rule, nil

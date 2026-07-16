@@ -32,21 +32,21 @@ func init() {
 		document, err := activity.Actor().Load()
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error parsing actor", activity)
+			return derp.Wrap(err, location, "Parsing actor", activity)
 		}
 
 		// Try to create a new follower record
 		followerService := context.factory.Follower()
 		follower := model.NewFollower()
 		if err := followerService.NewActivityPubFollower(context.session, model.FollowerTypeSearchDomain, primitive.NilObjectID, document, &follower); err != nil {
-			return derp.Wrap(err, location, "Unable to create new follower")
+			return derp.Wrap(err, location, "Creating new follower")
 		}
 
 		// Try to load the Actor for this user
 		actor, err := searchDomainService.ActivityPubActor(context.session)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to load domain search actor")
+			return derp.Wrap(err, location, "Loading domain search actor")
 		}
 
 		// Send the "Accept" message to the Requester as a post-commit queue task (F3): the signed

@@ -63,7 +63,7 @@ func (step StepGetArchive) Get(builder Builder, writer io.Writer) PipelineBehavi
 	log.Trace().Str("location", location).Msg("Stream archive exists. Sending response to client...")
 
 	if err := streamArchiveService.Read(streamID, step.Token, writer); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to read archive from cache"))
+		return Halt().WithError(derp.Wrap(err, location, "Reading archive from cache"))
 	}
 
 	// Add HTTP headers to the response.

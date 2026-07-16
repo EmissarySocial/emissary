@@ -23,14 +23,14 @@ func (service *Collection) ExportDocument(session data.Session, userID primitive
 	// Load the Collection
 	collection := model.NewCollection()
 	if err := service.LoadByID(session, userID, collectionID, &collection); err != nil {
-		return "", derp.Wrap(err, location, "Unable to load Collection")
+		return "", derp.Wrap(err, location, "Loading Collection")
 	}
 
 	// Marshal the collection as JSON
 	result, err := json.Marshal(collection)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to marshal Collection", collection)
+		return "", derp.Wrap(err, location, "Marshaling Collection", collection)
 	}
 
 	// Success

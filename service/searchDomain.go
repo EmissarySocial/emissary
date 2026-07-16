@@ -58,7 +58,7 @@ func (service *SearchDomain) GetJSONLD(session data.Session) (mapof.Any, error) 
 	publicKeyPEM, err := service.domainService.PublicKeyPEM(session)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to load public key PEM")
+		return nil, derp.Wrap(err, location, "Loading public key PEM")
 	}
 
 	// Return the result as a JSON-LD document
@@ -100,7 +100,7 @@ func (service *SearchDomain) ActivityPubActor(session data.Session) (outbox.Acto
 	privateKey, err := service.domainService.PrivateKey(session)
 
 	if err != nil {
-		return outbox.Actor{}, derp.Wrap(err, location, "Error getting private key")
+		return outbox.Actor{}, derp.Wrap(err, location, "Getting private key")
 	}
 
 	// Return the ActivityPub Actor

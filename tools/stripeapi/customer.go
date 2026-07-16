@@ -22,7 +22,7 @@ func Customer(restrictedKey string, connectedAccountID string, customerID string
 
 	// Send the transaction
 	if err := txn.Send(); err != nil {
-		return stripe.Customer{}, derp.Wrap(err, location, "Error connecting to Stripe API", derp.WithInternalError())
+		return stripe.Customer{}, derp.Wrap(err, location, "Connecting to Stripe API", derp.WithInternalError())
 	}
 
 	// Success

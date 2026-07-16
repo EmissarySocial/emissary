@@ -17,7 +17,7 @@ func WatchStreams(ctx context.Context, server data.Server, result chan<- realtim
 	session, err := server.Session(ctx)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "queries.WatchStreams", "Unable to open database session"))
+		derp.Report(derp.Wrap(err, "queries.WatchStreams", "Opening database session"))
 		return
 	}
 
@@ -40,7 +40,7 @@ func WatchStreams(ctx context.Context, server data.Server, result chan<- realtim
 			}
 		}
 
-		derp.Report(derp.Wrap(err, "queries.WatchStreams", "Unable to open Mongodb Change Stream"))
+		derp.Report(derp.Wrap(err, "queries.WatchStreams", "Opening Mongodb Change Stream"))
 		return
 	}
 

@@ -46,19 +46,19 @@ func (step StepSaveAndPublish) Post(builder Builder, _ io.Writer) PipelineBehavi
 	user := model.NewUser()
 
 	if err := userService.LoadByID(session, streamBuilder.AuthenticatedID(), &user); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to load user", streamBuilder.AuthenticatedID()))
+		return Halt().WithError(derp.Wrap(err, location, "Loading user", streamBuilder.AuthenticatedID()))
 	}
 
 	// Additional rules if this Stream is headed for the user's outbox...
 	if step.Outbox {
 		// Guarantee this Stream has a context collection.
 		if err := streamService.CalcContext(session, stream); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Unable to calculate context for stream", stream))
+			return Halt().WithError(derp.Wrap(err, location, "Calculating context for stream", stream))
 		}
 
 		// If this Stream is a reply, record it in the local parent's Replies collection.
 		if err := streamService.AddReply(session, stream.InReplyTo, stream.ActivityPubURL()); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Unable to add reply to parent's collection", stream))
+			return Halt().WithError(derp.Wrap(err, location, "Adding reply to parent's collection", stream))
 		}
 	}
 
@@ -66,7 +66,7 @@ func (step StepSaveAndPublish) Post(builder Builder, _ io.Writer) PipelineBehavi
 
 	// Publish the Stream to the ActivityPub Outbox
 	if err := streamService.Publish(session, &user, stream, step.StateID, step.Outbox, step.Republish); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to publish Stream", stream))
+		return Halt().WithError(derp.Wrap(err, location, "Publishing Stream", stream))
 	}
 
 	return nil

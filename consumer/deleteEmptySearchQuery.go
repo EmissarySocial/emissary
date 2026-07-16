@@ -24,7 +24,7 @@ func DeleteEmptySearchQuery(factory *service.Factory, session data.Session, args
 			return queue.Success()
 		}
 
-		return queue.Error(derp.Wrap(err, location, "Error locating searchQuery", args))
+		return queue.Error(derp.Wrap(err, location, "Locating searchQuery", args))
 	}
 
 	// Count the number of Followers that this SearchQuery has
@@ -32,7 +32,7 @@ func DeleteEmptySearchQuery(factory *service.Factory, session data.Session, args
 	followerCount, err := followerService.CountByParent(session, model.FollowerTypeSearch, searchQuery.SearchQueryID)
 
 	if err != nil {
-		return queue.Error(derp.Wrap(err, location, "Error counting followers", args))
+		return queue.Error(derp.Wrap(err, location, "Counting followers", args))
 	}
 
 	// If the SearchQuery still has followers, then there's nothing to do.  Exit in peace.
@@ -42,7 +42,7 @@ func DeleteEmptySearchQuery(factory *service.Factory, session data.Session, args
 
 	// Otherwise, the SearchQuery has no followers, so delete it
 	if err := searchQueryService.Delete(session, &searchQuery, "SearchQuery has no followers"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to delete searchQuery", args))
+		return queue.Error(derp.Wrap(err, location, "Deleting searchQuery", args))
 	}
 
 	// "This party's over, so GTFO." -- Slaughter

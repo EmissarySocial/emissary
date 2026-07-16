@@ -56,14 +56,14 @@ func OAuthUserTokens(session data.Session, userID primitive.ObjectID) (sliceof.M
 	cursor, err := collection.Aggregate(session.Context(), pipeline)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to query database")
+		return nil, derp.Wrap(err, location, "Querying database")
 	}
 
 	// Decode the query results
 	result := sliceof.NewMapOfAny()
 
 	if err := cursor.All(session.Context(), &result); err != nil {
-		return nil, derp.Wrap(err, location, "Unable to decode cursor results")
+		return nil, derp.Wrap(err, location, "Decoding cursor results")
 	}
 
 	// Success

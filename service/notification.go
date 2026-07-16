@@ -83,7 +83,7 @@ func (service *Notification) Range(session data.Session, criteria exp.Expression
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Notification.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.Notification.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewNotification), nil
@@ -93,7 +93,7 @@ func (service *Notification) Range(session data.Session, criteria exp.Expression
 func (service *Notification) Load(session data.Session, criteria exp.Expression, notification *model.Notification) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), notification); err != nil {
-		return derp.Wrap(err, "service.Notification.Load", "Unable to load Notification", criteria)
+		return derp.Wrap(err, "service.Notification.Load", "Loading Notification", criteria)
 	}
 
 	return nil
@@ -106,12 +106,12 @@ func (service *Notification) Save(session data.Session, notification *model.Noti
 
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(notification); err != nil {
-		return derp.Wrap(err, location, "Unable to validate Notification", notification)
+		return derp.Wrap(err, location, "Validating Notification", notification)
 	}
 
 	// Save the value to the database
 	if err := service.collection(session).Save(notification, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Notification", notification, note)
+		return derp.Wrap(err, location, "Saving Notification", notification, note)
 	}
 
 	return nil
@@ -124,7 +124,7 @@ func (service *Notification) Delete(session data.Session, notification *model.No
 
 	// Delete this Notification
 	if err := service.collection(session).Delete(notification, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Notification", notification)
+		return derp.Wrap(err, location, "Deleting Notification", notification)
 	}
 
 	return nil
@@ -234,7 +234,7 @@ func (service *Notification) HasUnread(session data.Session, userID primitive.Ob
 		return false, nil
 	}
 
-	return false, derp.Wrap(err, location, "Unable to load unread Notification", userID)
+	return false, derp.Wrap(err, location, "Loading unread Notification", userID)
 }
 
 // CountUnread returns the number of unread Notifications owned by the provided User,
@@ -271,7 +271,7 @@ func (service *Notification) LoadOrCreate(session data.Session, userID primitive
 		}
 
 		if !derp.IsNotFound(err) {
-			return result, derp.Wrap(err, "service.Notification.LoadOrCreate", "Unable to load Notification", userID, activityID)
+			return result, derp.Wrap(err, "service.Notification.LoadOrCreate", "Loading Notification", userID, activityID)
 		}
 	}
 
@@ -301,7 +301,7 @@ func (service *Notification) MarkAllRead(session data.Session, userID primitive.
 	update := bson.M{"$set": bson.M{"readDate": readDate}}
 
 	if err := queries.RawUpdate(session.Context(), service.collection(session), criteria, update); err != nil {
-		return derp.Wrap(err, location, "Unable to mark notifications read", userID)
+		return derp.Wrap(err, location, "Marking notifications read", userID)
 	}
 
 	return nil
@@ -323,7 +323,7 @@ func (service *Notification) PurgeReadBefore(session data.Session, cutoffMillis 
 		AndLessThan("readDate", int64(math.MaxInt64))
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to purge old notifications", cutoffMillis)
+		return derp.Wrap(err, location, "Purging old notifications", cutoffMillis)
 	}
 
 	return nil
@@ -341,12 +341,12 @@ func (service *Notification) DeleteByUserID(session data.Session, userID primiti
 	rangeFunc, err := service.RangeByUserID(session, userID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to query Notifications by UserID", userID)
+		return derp.Wrap(err, location, "Querying Notifications by UserID", userID)
 	}
 
 	for notification := range rangeFunc {
 		if err := service.Delete(session, &notification, note); err != nil {
-			return derp.Wrap(err, location, "Unable to delete Notification", notification)
+			return derp.Wrap(err, location, "Deleting Notification", notification)
 		}
 	}
 
@@ -361,12 +361,12 @@ func (service *Notification) DeleteByStreamID(session data.Session, streamID pri
 	notifications, err := service.QueryByStreamID(session, streamID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to query Notifications by StreamID", streamID)
+		return derp.Wrap(err, location, "Querying Notifications by StreamID", streamID)
 	}
 
 	for _, notification := range notifications {
 		if err := service.Delete(session, &notification, note); err != nil {
-			return derp.Wrap(err, location, "Unable to delete Notification", notification)
+			return derp.Wrap(err, location, "Deleting Notification", notification)
 		}
 	}
 
@@ -384,18 +384,19 @@ func (service *Notification) DeleteByActivityID(session data.Session, userID pri
 	}
 
 	notification := model.NewNotification()
-	err := service.LoadByActivityID(session, userID, activityID, &notification)
 
-	if derp.IsNotFound(err) {
-		return nil
-	}
+	if err := service.LoadByActivityID(session, userID, activityID, &notification); err != nil {
 
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to load Notification", userID, activityID)
+		// A notification that is already gone needs no deleting
+		if derp.IsNotFound(err) {
+			return nil
+		}
+
+		return derp.Wrap(err, location, "Loading Notification", userID, activityID)
 	}
 
 	if err := service.Delete(session, &notification, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Notification", notification)
+		return derp.Wrap(err, location, "Deleting Notification", notification)
 	}
 
 	return nil
@@ -421,14 +422,14 @@ func (service *Notification) DeleteFollowByActor(session data.Session, userID pr
 	rangeFunc, err := service.Range(session, criteria)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to query FOLLOW notifications by actor", userID, actorURL)
+		return derp.Wrap(err, location, "Querying FOLLOW notifications by actor", userID, actorURL)
 	}
 
 	// Delete every matching FOLLOW notification (normally one, but loop in case dedup let
 	// duplicates through under a varying/synthetic activityId).
 	for notification := range rangeFunc {
 		if err := service.Delete(session, &notification, note); err != nil {
-			return derp.Wrap(err, location, "Unable to delete FOLLOW notification", notification)
+			return derp.Wrap(err, location, "Deleting FOLLOW notification", notification)
 		}
 	}
 
@@ -450,12 +451,12 @@ func (service *Notification) DeleteByObjectURL(session data.Session, userID prim
 	rangeFunc, err := service.Range(session, criteria)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to query Notifications by ObjectURL", userID, objectURL)
+		return derp.Wrap(err, location, "Querying Notifications by ObjectURL", userID, objectURL)
 	}
 
 	for notification := range rangeFunc {
 		if err := service.Delete(session, &notification, note); err != nil {
-			return derp.Wrap(err, location, "Unable to delete Notification", notification)
+			return derp.Wrap(err, location, "Deleting Notification", notification)
 		}
 	}
 

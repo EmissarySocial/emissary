@@ -22,7 +22,7 @@ func (service *Attachment) Import(session data.Session, record *model.Import, im
 	if err := json.Unmarshal(document, &attachment); err != nil {
 		return primitive.NilObjectID, "",
 			primitive.NilObjectID, "",
-			derp.Wrap(err, location, "Unable to parse remote document", document)
+			derp.Wrap(err, location, "Parsing remote document", document)
 	}
 
 	// Get mapping IDs
@@ -45,7 +45,7 @@ func (service *Attachment) Import(session data.Session, record *model.Import, im
 	if err := txn.Send(); err != nil {
 		return primitive.NilObjectID, "",
 			primitive.NilObjectID, "",
-			derp.Wrap(err, location, "Unable to retrieve original attachment file")
+			derp.Wrap(err, location, "Retrieving original attachment file")
 	}
 
 	// Save the original file to the mediaserver
@@ -59,7 +59,7 @@ func (service *Attachment) Import(session data.Session, record *model.Import, im
 	if err := service.Save(session, &attachment, "Imported"); err != nil {
 		return primitive.NilObjectID, "",
 			primitive.NilObjectID, "",
-			derp.Wrap(err, location, "Unable to save imported Attachment")
+			derp.Wrap(err, location, "Saving imported Attachment")
 	}
 
 	localURL = attachment.URL
@@ -74,12 +74,12 @@ func (service *Attachment) UndoImport(session data.Session, userID primitive.Obj
 	const location = "service.Attachment.UndoImport"
 
 	if err := service.HardDeleteByID(session, userID, attachmentID); err != nil {
-		return derp.Wrap(err, location, "Unable to delete attachment", attachmentID)
+		return derp.Wrap(err, location, "Deleting attachment", attachmentID)
 	}
 
 	// Delete uploaded files from MediaServer
 	if err := service.mediaServer.Delete(attachmentID.Hex()); err != nil {
-		derp.Report(derp.Wrap(err, "service.Attachment", "Unable to delete attached files", attachmentID))
+		derp.Report(derp.Wrap(err, "service.Attachment", "Deleting attached files", attachmentID))
 		// Fail loudly, but do not stop.
 	}
 

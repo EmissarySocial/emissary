@@ -25,7 +25,7 @@ func PostEmailFollower(ctx *steranko.Context, factory *service.Factory, session 
 
 	// Collect inputs from the context
 	if err := ctx.Bind(&transaction); err != nil {
-		return derp.Wrap(err, location, "Unable to bind input")
+		return derp.Wrap(err, location, "Binding input")
 	}
 
 	// Generate follower secret (doing this first because it shouldn't fail,
@@ -33,7 +33,7 @@ func PostEmailFollower(ctx *steranko.Context, factory *service.Factory, session 
 	secret, err := random.GenerateString(64)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to generate secret")
+		return derp.Wrap(err, location, "Generating secret")
 	}
 
 	// Create the new "Follower" record.
@@ -42,7 +42,7 @@ func PostEmailFollower(ctx *steranko.Context, factory *service.Factory, session 
 	follower, err := followerService.LoadOrCreate(session, transaction.ParentID, transaction.Email)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to save follower")
+		return derp.Wrap(err, location, "Saving follower")
 	}
 
 	follower.ParentType = transaction.Type
@@ -62,11 +62,11 @@ func PostEmailFollower(ctx *steranko.Context, factory *service.Factory, session 
 	}
 
 	if err := followerService.Save(session, &follower, "Email Follower signup"); err != nil {
-		return derp.Wrap(err, location, "Unable to save follower")
+		return derp.Wrap(err, location, "Saving follower")
 	}
 
 	if err := followerService.SendFollowConfirmation(session, &follower); err != nil {
-		return derp.Wrap(err, location, "Unable to send confirmation email")
+		return derp.Wrap(err, location, "Sending confirmation email")
 	}
 
 	// Forward the user to the confirmation page

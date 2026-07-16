@@ -53,7 +53,7 @@ func (step StepDeleteAttachments) Post(builder Builder, _ io.Writer) PipelineBeh
 
 		// Clear the value from the attachment field
 		if err := s.Set(builder.object(), step.Field, ""); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error clearing field value"))
+			return Halt().WithError(derp.Wrap(err, location, "Clearing field value"))
 		}
 
 	} else {
@@ -80,7 +80,7 @@ func (step StepDeleteAttachments) Post(builder Builder, _ io.Writer) PipelineBeh
 
 	// Delete the attachments that match the object and criteria
 	if err := attachmentService.DeleteByCriteria(builder.session(), objectType, objectID, criteria, "Deleted by Workflow Step"); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to delete all attachments"))
+		return Halt().WithError(derp.Wrap(err, location, "Deleting all attachments"))
 	}
 
 	// Notify the client

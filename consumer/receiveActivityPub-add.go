@@ -29,7 +29,7 @@ func ReceiveActivityPubAdd(factory *service.Factory, session data.Session, args 
 	object, err := client.Load(objectID)
 
 	if err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to load Object document", "object: "+objectID))
+		return queue.Error(derp.Wrap(err, location, "Loading Object document", "object: "+objectID))
 	}
 
 	if object.Context() != contextID {
@@ -40,7 +40,7 @@ func ReceiveActivityPubAdd(factory *service.Factory, session data.Session, args 
 	context, err := client.Load(contextID)
 
 	if err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to load Context document", "context: "+contextID))
+		return queue.Error(derp.Wrap(err, location, "Loading Context document", "context: "+contextID))
 	}
 
 	// RULE: The context document must be AttributedTo the provided ActorID
@@ -60,7 +60,7 @@ func ReceiveActivityPubAdd(factory *service.Factory, session data.Session, args 
 		document, err := client.Load(document.ID())
 
 		if err != nil {
-			return queue.Error(derp.Wrap(err, location, "Unable to load Document", "document: "+document.ID()))
+			return queue.Error(derp.Wrap(err, location, "Loading Document", "document: "+document.ID()))
 		}
 
 		// If this document was already in the cache, then we have successfully backfilled the context

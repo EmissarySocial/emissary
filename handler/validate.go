@@ -165,7 +165,7 @@ func GetValidateStreamToken(ctx *steranko.Context, factory *service.Factory, ses
 			})
 		}
 
-		return derp.Wrap(err, "handler.GetValidateStreamToken", "Error loading stream by token")
+		return derp.Wrap(err, "handler.GetValidateStreamToken", "Loading stream by token")
 	}
 
 	// If there is no match, then the token is valid

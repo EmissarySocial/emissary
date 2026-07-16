@@ -32,7 +32,7 @@ func NewViewJSON(stepInfo mapof.Any) (ViewJSON, error) {
 	valueTemplate, err := template.New("").Funcs(FuncMap()).Parse(value)
 
 	if err != nil {
-		return ViewJSON{}, derp.Wrap(err, location, "Unable to parse JSON query template")
+		return ViewJSON{}, derp.Wrap(err, location, "Parsing JSON query template")
 	}
 
 	return ViewJSON{

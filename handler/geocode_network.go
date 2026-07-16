@@ -18,7 +18,7 @@ func GetGeocodeNetwork(ctx *steranko.Context, factory *service.Factory, session 
 	point, err := geocodeService.Geocode(session, ipAddress)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Error retrieving geocode for IP address", ipAddress))
+		derp.Report(derp.Wrap(err, location, "Retrieving geocode for IP address", ipAddress))
 	}
 
 	result := mapof.Any{

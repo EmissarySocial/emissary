@@ -53,12 +53,12 @@ func (step StepSave) do(builder Builder, buffer io.Writer, actionMethod ActionMe
 
 	// If there's no "on-error" pipeline, then fail in failure.
 	if len(step.OnError) == 0 {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to save model object"))
+		return Halt().WithError(derp.Wrap(err, location, "Saving model object"))
 	}
 
 	// Otherwise, execute the "on-error" pipeline instead of failing.
 	result := Pipeline(step.OnError).Execute(builder.factory(), builder, buffer, actionMethod)
-	result.Error = derp.WrapIF(result.Error, location, "Error executing steps for child")
+	result.Error = derp.WrapIF(result.Error, location, "Executing steps for child")
 
 	return UseResult(result)
 }

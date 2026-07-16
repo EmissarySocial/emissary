@@ -17,21 +17,21 @@ func (step StepEditWidget) Get(builder Builder, buffer io.Writer) PipelineBehavi
 	widget, streamWidget, _, err := step.common(builder)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepEditWidget.Get", "Error locating widget"))
+		return Halt().WithError(derp.Wrap(err, "build.StepEditWidget.Get", "Locating widget"))
 	}
 
 	// Render the Form
 	formHTML, err := form.Editor(widget.Schema, widget.Form, streamWidget.Data, nil)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepEditWidget.Get", "Unable to build form"))
+		return Halt().WithError(derp.Wrap(err, "build.StepEditWidget.Get", "Building form"))
 	}
 
 	// Wrap the form as a modal and return it to the client
 	formHTML = WrapModalForm(builder.response(), builder.RelativeURL(), formHTML, widget.Form.Encoding())
 
 	if _, err := buffer.Write([]byte(formHTML)); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepEditWidget.Get", "Error writing form HTML to buffer"))
+		return Halt().WithError(derp.Wrap(err, "build.StepEditWidget.Get", "Writing form HTML to buffer"))
 	}
 
 	return nil
@@ -46,19 +46,19 @@ func (step StepEditWidget) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	widget, streamWidget, streamBuilder, err := step.common(builder)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error locating widget"))
+		return Halt().WithError(derp.Wrap(err, location, "Locating widget"))
 	}
 
 	// Get the form post information
 	values, err := formdata.Parse(builder.request())
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error binding form data"))
+		return Halt().WithError(derp.Wrap(err, location, "Binding form data"))
 	}
 
 	// Apply the form data to the widget
 	f := form.New(widget.Schema, widget.Form)
 	if err := f.SetURLValues(&streamWidget.Data, values, nil); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error applying form data to widget"))
+		return Halt().WithError(derp.Wrap(err, location, "Applying form data to widget"))
 	}
 
 	// Update the stream with the new widget (in the same location)

@@ -73,7 +73,7 @@ func (step StepWithFollower) execute(builder Builder, buffer io.Writer, actionMe
 		followerService := factory.Follower()
 		secret := builder.QueryParam("secret")
 		if err := step.load(builder.session(), followerService, token, userID, secret, &follower); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Unable to load Follower via ID", token))
+			return Halt().WithError(derp.Wrap(err, location, "Loading Follower via ID", token))
 		}
 	}
 
@@ -81,12 +81,12 @@ func (step StepWithFollower) execute(builder Builder, buffer io.Writer, actionMe
 	subBuilder, err := NewFollower(factory, builder.session(), builder.request(), builder.response(), template, &follower, builder.actionID())
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to create sub-builder"))
+		return Halt().WithError(derp.Wrap(err, location, "Creating sub-builder"))
 	}
 
 	// Execute the build pipeline on the Follower record
 	result := Pipeline(step.SubSteps).Execute(factory, subBuilder, buffer, actionMethod)
-	result.Error = derp.WrapIF(result.Error, location, "Error executing steps for child")
+	result.Error = derp.WrapIF(result.Error, location, "Executing steps for child")
 
 	return UseResult(result)
 }

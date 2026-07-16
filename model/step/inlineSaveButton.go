@@ -21,7 +21,7 @@ func NewInlineSaveButton(stepInfo mapof.Any) (InlineSaveButton, error) {
 	idTemplate, err := template.New("").Funcs(FuncMap()).Parse(id)
 
 	if err != nil {
-		return InlineSaveButton{}, derp.Wrap(err, "model.step.NewInlineSaveButton", "Error parsing template")
+		return InlineSaveButton{}, derp.Wrap(err, "model.step.NewInlineSaveButton", "Parsing template")
 	}
 
 	// Get the Label.  Default is "Save Changes"
@@ -29,7 +29,7 @@ func NewInlineSaveButton(stepInfo mapof.Any) (InlineSaveButton, error) {
 	labelTemplate, err := template.New("").Funcs(FuncMap()).Parse(label)
 
 	if err != nil {
-		return InlineSaveButton{}, derp.Wrap(err, "model.step.NewInlineSaveButton", "Error parsing template")
+		return InlineSaveButton{}, derp.Wrap(err, "model.step.NewInlineSaveButton", "Parsing template")
 	}
 
 	return InlineSaveButton{

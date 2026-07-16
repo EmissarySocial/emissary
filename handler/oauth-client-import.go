@@ -24,14 +24,14 @@ func GetOAuthImportCallback(ctx *steranko.Context, factory *service.Factory, ses
 	record := model.NewImport()
 
 	if err := importService.LoadByToken(session, user.UserID, state, &record); err != nil {
-		return derp.Wrap(err, location, "Unable to load corresponding import record", user.UserID, state)
+		return derp.Wrap(err, location, "Loading corresponding import record", user.UserID, state)
 	}
 
 	// If this record is still "Authorizing", then exchange the OAuth code for a real OAuth token
 	if record.StateID == model.ImportStateAuthorizing {
 
 		if err := importService.OAuthExchange(session, &record, state, code); err != nil {
-			return derp.Wrap(err, location, "Unable to exchange code for token", providerID, code)
+			return derp.Wrap(err, location, "Exchanging code for token", providerID, code)
 		}
 	}
 

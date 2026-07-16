@@ -76,7 +76,7 @@ func getStreamJSONLD(ctx *steranko.Context, factory *service.Factory, session da
 		searchQuery, err := searchQueryService.LoadOrCreate(session, ctx.QueryParams())
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to load SearchQuery")
+			return derp.Wrap(err, location, "Loading SearchQuery")
 		}
 
 		// Return JSON-LD for this search query
@@ -99,12 +99,12 @@ func getStreamPipeline(ctx *steranko.Context, factory *service.Factory, session 
 	streamBuilder, err := build.NewStream(factory, session, ctx.Request(), ctx.Response(), *template, stream, actionID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to create Builder.")
+		return derp.Wrap(err, location, "Creating Builder.")
 	}
 
 	// Build the HTML page (execute the pipeline)
 	if err := build.AsHTML(ctx, factory, streamBuilder, actionMethod); err != nil {
-		return derp.Wrap(err, location, "Unable to build page", stream.Token)
+		return derp.Wrap(err, location, "Building page", stream.Token)
 	}
 
 	// Yusss

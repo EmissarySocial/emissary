@@ -27,7 +27,7 @@ func (service *Import) OAuthExchange(session data.Session, record *model.Import,
 		oauth2.SetAuthURLParam("redirect_uri", service.OAuthClientCallbackURL()))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to exchange OAuth code for token", derp.WithInternalError())
+		return derp.Wrap(err, location, "Exchanging OAuth code for token", derp.WithInternalError())
 	}
 
 	// Update the record with the new OAuth token and "Authorized" status
@@ -60,14 +60,14 @@ func (service *Import) GetOAuthToken(session data.Session, record *model.Import)
 	newToken, err := source.Token()
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to refresh OAuth token")
+		return nil, derp.Wrap(err, location, "Refreshing OAuth token")
 	}
 
 	// If the token has changed, save it
 	if record.OAuthToken.AccessToken != newToken.AccessToken {
 		record.OAuthToken = newToken
 		if err := service.Save(session, record, "Refreshing OAuth Token"); err != nil {
-			return nil, derp.Wrap(err, location, "Unable to save refreshed Token")
+			return nil, derp.Wrap(err, location, "Saving refreshed Token")
 		}
 	}
 

@@ -46,27 +46,27 @@ func BoostAny(context Context, activity streams.Document) error {
 		object := activity.Object()
 
 		if err := activityService.Save(object); err != nil {
-			return derp.Wrap(err, location, "Unable to insert object", object.ID())
+			return derp.Wrap(err, location, "Inserting object", object.ID())
 		}
 		return announce(context, object)
 
 	case vocab.ActivityTypeUpdate:
 		object := activity.Object()
 		if err := activityService.Save(object); err != nil {
-			return derp.Wrap(err, location, "Unable to update object", object.ID())
+			return derp.Wrap(err, location, "Updating object", object.ID())
 		}
 		return nil
 
 	case vocab.ActivityTypeAnnounce:
 		object := activity.Object()
 		if err := activityService.Save(object); err != nil {
-			return derp.Wrap(err, location, "Unable to save object", object.ID())
+			return derp.Wrap(err, location, "Saving object", object.ID())
 		}
 		return announce(context, object)
 
 	default:
 		if err := activityService.Save(activity); err != nil {
-			return derp.Wrap(err, location, "Unable to save activity", activity.ID())
+			return derp.Wrap(err, location, "Saving activity", activity.ID())
 		}
 		return announce(context, activity)
 	}
@@ -81,7 +81,7 @@ func announce(context Context, activity streams.Document) error {
 	actor, err := context.ActivityPubActor()
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load actor", context.stream)
+		return derp.Wrap(err, location, "Loading actor", context.stream)
 	}
 
 	// Convert the Activity into an Inbox Message
@@ -94,7 +94,7 @@ func announce(context Context, activity streams.Document) error {
 	// Try to save the message to the content Actor's outbox
 	outboxService := context.factory.Outbox()
 	if err := outboxService.Save(context.session, &message, "via ActivityPub"); err != nil {
-		return derp.Wrap(err, location, "Unable to save message", context.stream.StreamID, activity.ID())
+		return derp.Wrap(err, location, "Saving message", context.stream.StreamID, activity.ID())
 	}
 
 	// Publish the Announce to the stream's followers as a post-commit send (F3, W6 option B). The

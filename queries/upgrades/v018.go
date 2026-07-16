@@ -30,7 +30,7 @@ func Version18(ctx context.Context, session *mongo.Database) error {
 			permissionID, err := primitive.ObjectIDFromHex(permission)
 
 			if err != nil {
-				derp.Report(derp.Wrap(err, location, "Error converting permission", permission))
+				derp.Report(derp.Wrap(err, location, "Converting permission", permission))
 				continue
 			}
 

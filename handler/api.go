@@ -24,7 +24,7 @@ func GetAPIActors(ctx *steranko.Context, factory *service.Factory, session data.
 	actors, err := activityService.QueryActors(searchString)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to query actors", searchString)
+		return derp.Wrap(err, location, "Querying actors", searchString)
 	}
 
 	return ctx.JSON(http.StatusOK, actors)
@@ -42,7 +42,7 @@ func GetAPICollectionHeader(ctx *steranko.Context, factory *service.Factory, ses
 	document, err := activityService.AppClient().Load(url, sherlock.AsCollection())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load collection", "url: "+url)
+		return derp.Wrap(err, location, "Loading collection", "url: "+url)
 	}
 
 	// Create a "header" object
@@ -59,7 +59,7 @@ func GetAPICollectionHeader(ctx *steranko.Context, factory *service.Factory, ses
 	totalItems, err := collections.CountItems(document)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to count collection items", "url: "+url)
+		return derp.Wrap(err, location, "Counting collection items", "url: "+url)
 	}
 
 	result.TotalItems = totalItems

@@ -83,7 +83,7 @@ func (service *Response) Range(session data.Session, criteria exp.Expression, op
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.User.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.User.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewResponse), nil
@@ -93,7 +93,7 @@ func (service *Response) Range(session data.Session, criteria exp.Expression, op
 func (service *Response) Load(session data.Session, criteria exp.Expression, response *model.Response) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), response); err != nil {
-		return derp.Wrap(err, "service.Response.Load", "Unable to load Response", criteria)
+		return derp.Wrap(err, "service.Response.Load", "Loading Response", criteria)
 	}
 
 	return nil
@@ -106,17 +106,17 @@ func (service *Response) Save(session data.Session, response *model.Response, no
 
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(response); err != nil {
-		return derp.Wrap(err, location, "Unable to validate Response", response)
+		return derp.Wrap(err, location, "Validating Response", response)
 	}
 
 	// Save the value to the database
 	if err := service.collection(session).Save(response, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Response", response, note)
+		return derp.Wrap(err, location, "Saving Response", response, note)
 	}
 
 	// Try to update the inbox message being responded to
 	if err := service.newsFeedService.setResponse(session, response.UserID, response.Object, response.Type, response.ResponseID); err != nil {
-		return derp.Wrap(err, location, "Unable to set Response to inbox message", response.UserID)
+		return derp.Wrap(err, location, "Setting Response to inbox message", response.UserID)
 	}
 
 	// NOTE: a Response does NOT write its own CollectionItem. The object-side projection is owned
@@ -133,12 +133,12 @@ func (service *Response) Delete(session data.Session, response *model.Response, 
 
 	// Delete this Response
 	if err := service.collection(session).HardDelete(exp.Equal("_id", response.ResponseID)); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Response", response)
+		return derp.Wrap(err, location, "Deleting Response", response)
 	}
 
 	// Try to update the inbox message being responded to
 	if err := service.newsFeedService.setResponse(session, response.UserID, response.Object, response.Type, primitive.NilObjectID); err != nil {
-		return derp.Wrap(err, location, "Unable to remove Response from inbox message", response.UserID)
+		return derp.Wrap(err, location, "Removing Response from inbox message", response.UserID)
 	}
 
 	// NOTE: no direct CollectionItem removal here. The Undo published below loops back through the
@@ -149,7 +149,7 @@ func (service *Response) Delete(session data.Session, response *model.Response, 
 	// author and degrades safely.
 	user := model.NewUser()
 	if err := service.userService.LoadByID(session, response.UserID, &user); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to load User for Undo audience", response.UserID))
+		derp.Report(derp.Wrap(err, location, "Loading User for Undo audience", response.UserID))
 	}
 
 	// Build the ORIGINAL activity's JSON-LD (embedded inline in the Undo) and apply the same
@@ -161,7 +161,7 @@ func (service *Response) Delete(session data.Session, response *model.Response, 
 	options := service.reactionAudience(&user, response, originalActivity)
 
 	if err := service.outboxService.UndoActivity(session, model.FollowerTypeUser, response.UserID, originalActivity, model.NewAnonymousPermissions(), options...); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to send Undo activity"))
+		derp.Report(derp.Wrap(err, location, "Sending Undo activity"))
 	}
 
 	return nil
@@ -187,7 +187,7 @@ func (service *Response) HardDeleteByID(session data.Session, userID primitive.O
 	criteria := exp.Equal("userId", userID).AndEqual("_id", responseID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Response", "userID: "+userID.Hex(), "responseID: "+responseID.Hex())
+		return derp.Wrap(err, location, "Deleting Response", "userID: "+userID.Hex(), "responseID: "+responseID.Hex())
 	}
 
 	return nil
@@ -324,12 +324,12 @@ func (service *Response) DeleteByUserID(session data.Session, userID primitive.O
 	rangeFunc, err := service.RangeByUserID(session, userID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load responses by user", userID)
+		return derp.Wrap(err, location, "Loading responses by user", userID)
 	}
 
 	for response := range rangeFunc {
 		if err := service.Delete(session, &response, note); err != nil {
-			return derp.Wrap(err, location, "Unable to delete response", response)
+			return derp.Wrap(err, location, "Deleting response", response)
 		}
 	}
 
@@ -344,7 +344,7 @@ func (service *Response) SetResponse(session data.Session, user *model.User, url
 
 	// Remove previous Response (if it exists)
 	if err := service.UnsetResponse(session, user, url, responseType); err != nil {
-		return derp.Wrap(err, location, "Unable to remove previous response", user.UserID, url, responseType)
+		return derp.Wrap(err, location, "Removing previous response", user.UserID, url, responseType)
 	}
 
 	// Create a new Response object
@@ -357,7 +357,7 @@ func (service *Response) SetResponse(session data.Session, user *model.User, url
 
 	// Save the Response to the database (response service will automatically publish to ActivityPub and beyond)
 	if err := service.Save(session, &response, "Set Response"); err != nil {
-		return derp.Wrap(err, location, "Unable to save response", response)
+		return derp.Wrap(err, location, "Saving response", response)
 	}
 
 	// Build the outgoing activity map, then apply the per-type audience: Like/Dislike deliver
@@ -368,7 +368,7 @@ func (service *Response) SetResponse(session data.Session, user *model.User, url
 
 	// Publish the new Response to the Outbox.
 	if err := service.outboxService.Publish(session, model.FollowerTypeUser, user.UserID, streams.NewDocument(activityMap), model.NewAnonymousPermissions(), options...); err != nil {
-		derp.Report(derp.Wrap(err, location, "Error publishing Response", response))
+		derp.Report(derp.Wrap(err, location, "Publishing Response", response))
 	}
 
 	// Oye cómo va!
@@ -389,12 +389,12 @@ func (service *Response) UnsetResponse(session data.Session, user *model.User, u
 	}
 
 	if derp.NotNil(err) {
-		return derp.Wrap(err, location, "Unable to load original response", user.UserID, url, responseType)
+		return derp.Wrap(err, location, "Loading original response", user.UserID, url, responseType)
 	}
 
 	// Otherwise, delete the old Response
 	if err := service.Delete(session, &previousResponse, ""); err != nil {
-		return derp.Wrap(err, location, "Unable to delete old response", previousResponse)
+		return derp.Wrap(err, location, "Deleting old response", previousResponse)
 	}
 
 	// Success!!
@@ -409,7 +409,7 @@ func (service *Response) objectAuthorURL(response *model.Response) string {
 	object, err := service.activityStreamService.AppClient().Load(response.Object)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "service.Response.objectAuthorURL", "Unable to load reacted-to object to resolve its author", response.Object))
+		derp.Report(derp.Wrap(err, "service.Response.objectAuthorURL", "Loading reacted-to object to resolve its author", response.Object))
 		return ""
 	}
 

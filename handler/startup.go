@@ -25,7 +25,7 @@ func GetStartup(ctx *steranko.Context, factory *service.Factory, session data.Se
 	template, err := templateService.LoadAdmin("startup")
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load template")
+		return derp.Wrap(err, location, "Loading template")
 	}
 
 	actionID := first.String(ctx.Param("action"), "page")
@@ -34,14 +34,14 @@ func GetStartup(ctx *steranko.Context, factory *service.Factory, session data.Se
 	builder, err := build.NewDomain(factory, session, ctx.Request(), ctx.Response(), template, actionID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to create builder")
+		return derp.Wrap(err, location, "Creating builder")
 	}
 
 	// Render the HTML page.
 	result, err := builder.Render()
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to build page")
+		return derp.Wrap(err, location, "Building page")
 	}
 
 	// Return the HTML page to the browser
@@ -73,19 +73,19 @@ func PostStartup(ctx *steranko.Context, factory *service.Factory, session data.S
 	// Save the new ThemeID to the database
 	domain.ThemeID = themeID
 	if err := domainService.Save(session, domain, "Change Theme"); err != nil {
-		return derp.Wrap(err, location, "Unable to save domain", domain)
+		return derp.Wrap(err, location, "Saving domain", domain)
 	}
 
 	// Initialize Streams
 	streamService := factory.Stream()
 	if err := streamService.Startup(session, &theme); err != nil {
-		return derp.Wrap(err, location, "Unable to initialize Streams", themeID)
+		return derp.Wrap(err, location, "Initializing Streams", themeID)
 	}
 
 	// Initialize Groups
 	groupService := factory.Group()
 	if err := groupService.Startup(session, &theme); err != nil {
-		return derp.Wrap(err, location, "Unable to initialize Groups", themeID)
+		return derp.Wrap(err, location, "Initializing Groups", themeID)
 	}
 
 	// Success!!!!!

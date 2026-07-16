@@ -68,7 +68,7 @@ func (service *OAuthUserToken) Iterator(session data.Session, criteria exp.Expre
 func (service *OAuthUserToken) Load(session data.Session, criteria exp.Expression, application *model.OAuthUserToken) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), application); err != nil {
-		return derp.Wrap(err, "service.OAuthUserToken", "Unable to load OAuthUserToken", criteria)
+		return derp.Wrap(err, "service.OAuthUserToken", "Loading OAuthUserToken", criteria)
 	}
 
 	return nil
@@ -81,12 +81,12 @@ func (service *OAuthUserToken) Save(session data.Session, application *model.OAu
 
 	// Validate the value (using the global application schema) before saving
 	if _, err := service.Schema().Validate(application); err != nil {
-		return derp.Wrap(err, location, "Unable to validate OAuthUserToken using OAuthUserTokenSchema", application)
+		return derp.Wrap(err, location, "Validating OAuthUserToken using OAuthUserTokenSchema", application)
 	}
 
 	// Try to save the OAuthUserToken to the database
 	if err := service.collection(session).Save(application, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save OAuthUserToken", application, note)
+		return derp.Wrap(err, location, "Saving OAuthUserToken", application, note)
 	}
 
 	return nil
@@ -97,7 +97,7 @@ func (service *OAuthUserToken) Delete(session data.Session, application *model.O
 
 	// Delete this OAuthUserToken
 	if err := service.collection(session).Delete(application, note); err != nil {
-		return derp.Wrap(err, "service.OAuthUserToken.Delete", "Unable to delete OAuthUserToken", application, note)
+		return derp.Wrap(err, "service.OAuthUserToken.Delete", "Deleting OAuthUserToken", application, note)
 	}
 
 	// Bueno!!
@@ -113,13 +113,13 @@ func (service *OAuthUserToken) DeleteMany(session data.Session, criteria exp.Exp
 	it, err := service.Iterator(session, criteria)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to list streams to delete", criteria)
+		return derp.Wrap(err, location, "Listing streams to delete", criteria)
 	}
 
 	// Loop over each OAuthUserToken and delete it
 	for userToken := model.NewOAuthUserToken(); it.Next(&userToken); userToken = model.NewOAuthUserToken() {
 		if err := service.Delete(session, &userToken, note); err != nil {
-			return derp.Wrap(err, location, "Unable to delete stream", userToken)
+			return derp.Wrap(err, location, "Deleting stream", userToken)
 		}
 	}
 
@@ -255,7 +255,7 @@ func (service *OAuthUserToken) CreateFromUser(session data.Session, user *model.
 	// Load the client from the database
 	client := model.NewOAuthClient()
 	if err := service.oauthClientService.LoadByClientID(session, clientID, &client); err != nil {
-		return model.OAuthUserToken{}, derp.Wrap(err, "service.OAuthUserToken.CreateFromUser", "Unable to load client", clientID)
+		return model.OAuthUserToken{}, derp.Wrap(err, "service.OAuthUserToken.CreateFromUser", "Loading client", clientID)
 	}
 
 	// Create the JWT authorization
@@ -305,7 +305,7 @@ func (service *OAuthUserToken) Create(session data.Session, client model.OAuthCl
 	token, err := service.JWT(authorization.UserID, transaction.Scope)
 
 	if err != nil {
-		return model.OAuthUserToken{}, derp.Wrap(err, location, "Unable to generate random token")
+		return model.OAuthUserToken{}, derp.Wrap(err, location, "Generating random token")
 	}
 
 	// Copy data from the authorization
@@ -321,7 +321,7 @@ func (service *OAuthUserToken) Create(session data.Session, client model.OAuthCl
 
 	// Save the result to the database
 	if err := service.Save(session, &result, "Create"); err != nil {
-		return model.OAuthUserToken{}, derp.Wrap(err, location, "Unable to save OAuthUserToken", result)
+		return model.OAuthUserToken{}, derp.Wrap(err, location, "Saving OAuthUserToken", result)
 	}
 
 	return result, nil
@@ -349,7 +349,7 @@ func (service *OAuthUserToken) JWT(userID primitive.ObjectID, scopes string) (st
 	keyName, keyValue, err := service.jwtService.GetCurrentKey()
 
 	if err != nil {
-		return "", derp.Wrap(err, "service.OAuthUserToken.JWT", "Unable to create new JWT key")
+		return "", derp.Wrap(err, "service.OAuthUserToken.JWT", "Creating new JWT key")
 	}
 
 	result.Header["kid"] = keyName
@@ -357,7 +357,7 @@ func (service *OAuthUserToken) JWT(userID primitive.ObjectID, scopes string) (st
 	token, err := result.SignedString(keyValue)
 
 	if err != nil {
-		return "", derp.Wrap(err, "service.OAuthUserToken.JWT", "Error signing JWT")
+		return "", derp.Wrap(err, "service.OAuthUserToken.JWT", "Signing JWT")
 	}
 
 	// Woot.

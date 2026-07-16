@@ -108,21 +108,21 @@ func (vault *Vault) Encrypt(encryptionKey []byte) error {
 	block, err := aes.NewCipher(encryptionKey)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to create AES block cipher")
+		return derp.Wrap(err, location, "Creating AES block cipher")
 	}
 
 	// Create GCM
 	aesgcm, err := cipher.NewGCM(block)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to generate GCM cipher")
+		return derp.Wrap(err, location, "Generating GCM cipher")
 	}
 
 	// If not present, Create (and save) a randome n-once
 	nonce, err := vault.getNonce(aesgcm)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error retrieving n-once for vault")
+		return derp.Wrap(err, location, "Retrieving n-once for vault")
 	}
 
 	// Encrypt all plaintext values in the vault
@@ -145,14 +145,14 @@ func (vault Vault) Decrypt(encryptionKey []byte, values ...string) (mapof.String
 	block, err := aes.NewCipher(encryptionKey)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to create AES block cipher")
+		return nil, derp.Wrap(err, location, "Creating AES block cipher")
 	}
 
 	// Create GCM
 	aesgcm, err := cipher.NewGCM(block)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to generate GCM cipher")
+		return nil, derp.Wrap(err, location, "Generating GCM cipher")
 	}
 
 	// Retrieve the N-Once
@@ -181,7 +181,7 @@ func (vault Vault) Decrypt(encryptionKey []byte, values ...string) (mapof.String
 
 		plaintext, err := aesgcm.Open(nil, nonce, ciphertext, nil)
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Unable to decrypt value in vault", property)
+			return nil, derp.Wrap(err, location, "Decrypting value in vault", property)
 		}
 
 		result[property] = string(plaintext)
@@ -229,7 +229,7 @@ func (vault *Vault) getNonce(aesgcm cipher.AEAD) ([]byte, error) {
 		nonce := make([]byte, aesgcm.NonceSize())
 
 		if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-			return nil, derp.Wrap(err, location, "Unable to generate nonce")
+			return nil, derp.Wrap(err, location, "Generating nonce")
 		}
 
 		vault.Nonce = hex.EncodeToString(nonce)

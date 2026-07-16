@@ -102,7 +102,7 @@ func (adapter PayPal) BeforeSave(connection *model.Connection, vault mapof.Strin
 func (provider PayPal) Connect(connection *model.Connection, vault mapof.String, host string) error {
 
 	if err := provider.Refresh(connection, vault); err != nil {
-		return derp.Wrap(err, "service.providers.PayPal", "Unable to refresh access token", derp.WithInternalError())
+		return derp.Wrap(err, "service.providers.PayPal", "Refreshing access token", derp.WithInternalError())
 	}
 
 	return nil
@@ -130,7 +130,7 @@ func (provider PayPal) Refresh(connection *model.Connection, vault mapof.String)
 		Result(&token)
 
 	if err := txn.Send(); err != nil {
-		return derp.Wrap(err, location, "Error requesting Access Token from PayPal")
+		return derp.Wrap(err, location, "Requesting Access Token from PayPal")
 	}
 
 	// Calculate the Token expiry time.

@@ -23,12 +23,12 @@ func Aggregate[T any](ctx context.Context, collection *mongo.Collection, pipelin
 	cursor, err := collection.Aggregate(ctx, pipeline, opts...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error counting records", pipeline)
+		return nil, derp.Wrap(err, location, "Counting records", pipeline)
 	}
 
 	// Read results into the result
 	if err := cursor.All(ctx, &result); err != nil {
-		return nil, derp.Wrap(err, location, "Unable to read records from cursor", pipeline)
+		return nil, derp.Wrap(err, location, "Reading records from cursor", pipeline)
 	}
 
 	return result, nil
@@ -48,13 +48,13 @@ func GroupBy(collection data.Collection, pipeline []bson.M) (mapof.Int, error) {
 	cursor, err := mongo.Aggregate(ctx, pipeline)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "queries.GroupBy", "Error counting records", pipeline)
+		return nil, derp.Wrap(err, "queries.GroupBy", "Counting records", pipeline)
 	}
 
 	// Read results into a slice of maps
 	queryResult := make([]GroupedCounter, 0)
 	if err := cursor.All(ctx, &queryResult); err != nil {
-		return nil, derp.Wrap(err, "queries.GroupBy", "Unable to read records from cursor", pipeline)
+		return nil, derp.Wrap(err, "queries.GroupBy", "Reading records from cursor", pipeline)
 	}
 
 	result := mapof.NewInt()

@@ -46,7 +46,7 @@ func GetGeocodeAutocomplete(ctx *steranko.Context, factory *service.Factory, ses
 	results, err := autocompleteService.Search(session, query, bias)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to search geo database", derp.WithBadRequest())
+		return derp.Wrap(err, location, "Searching geo database", derp.WithBadRequest())
 	}
 
 	// Output the results as <option value="xx" data-latitude="xx" data-longitude="xx">Xxx</option>

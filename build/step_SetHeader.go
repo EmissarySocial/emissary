@@ -35,7 +35,7 @@ func (step StepSetHeader) setHeader(builder Builder) PipelineBehavior {
 	var value bytes.Buffer
 
 	if err := step.Value.Execute(&value, builder); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepSetHeader.Post", "Error executing template", step.Value))
+		return Halt().WithError(derp.Wrap(err, "build.StepSetHeader.Post", "Executing template", step.Value))
 	}
 
 	return Continue().WithHeader(step.HeaderName, value.String())

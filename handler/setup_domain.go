@@ -28,7 +28,7 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 		domain, err := factory.FindDomain(domainID)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to load configuration", domainID)
+			return derp.Wrap(err, location, "Loading configuration", domainID)
 		}
 
 		header := "Edit Domain"
@@ -44,7 +44,7 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 		formHTML, err := form.Editor(s, domainEditForm, &domain, nil)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to generate form")
+			return derp.Wrap(err, location, "Generating form")
 		}
 
 		result := build.WrapModalForm(ctx.Response(), "/domains/"+domain.DomainID, formHTML, domainEditForm.Encoding())
@@ -68,18 +68,18 @@ func SetupDomainPost(serverFactory *server.Factory) echo.HandlerFunc {
 		input := mapof.Any{}
 
 		if err := (&echo.DefaultBinder{}).BindBody(ctx, &input); err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Error binding form input"))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Binding form input"))
 		}
 
 		// Update the domain configuration and save it to the domain storage (db/file/etc)
 		s := schema.New(config.DomainSchema())
 
 		if err := s.SetAll(&domain, input); err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Unable to set config values"))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Setting config values"))
 		}
 
 		if _, err := s.Validate(&domain); err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Unable to validate config values"))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Validating config values"))
 		}
 
 		// Fail fast if the database is unreachable, so we don't hang on the driver's default
@@ -90,7 +90,7 @@ func SetupDomainPost(serverFactory *server.Factory) echo.HandlerFunc {
 		}
 
 		if err := serverFactory.PutDomain(domain); err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Unable to save domain"))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Saving domain"))
 		}
 
 		build.CloseModal(ctx)
@@ -108,7 +108,7 @@ func SetupDomainDelete(factory *server.Factory) echo.HandlerFunc {
 
 		// Delete the domain
 		if err := factory.DeleteDomain(domainID); err != nil {
-			return derp.Wrap(err, "handler.SetupDomainDelete", "Unable to delete domain")
+			return derp.Wrap(err, "handler.SetupDomainDelete", "Deleting domain")
 		}
 
 		// Close the modal and return OK
@@ -128,21 +128,21 @@ func SetupDomainSigninPost(serverFactory *server.Factory) echo.HandlerFunc {
 		domain, err := serverFactory.FindDomain(ctx.Param("domain"))
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to load configuration")
+			return derp.Wrap(err, location, "Loading configuration")
 		}
 
 		// Get the real factory for this domain
 		factory, err := serverFactory.ByHostname(domain.Hostname)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to load Domain")
+			return derp.Wrap(err, location, "Loading Domain")
 		}
 
 		// Create a new database session
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to open database session")
+			return derp.Wrap(err, location, "Opening database session")
 		}
 
 		defer cancel()
@@ -154,7 +154,7 @@ func SetupDomainSigninPost(serverFactory *server.Factory) echo.HandlerFunc {
 
 		// Sign the Administrator into the system
 		if err := factory.Steranko(session).SigninUser(ctx, &administrator); err != nil {
-			return derp.Wrap(err, location, "Error signing in administrator")
+			return derp.Wrap(err, location, "Signing in administrator")
 		}
 
 		// Redirect to the admin page of this domain

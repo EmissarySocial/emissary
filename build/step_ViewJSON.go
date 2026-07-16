@@ -16,7 +16,7 @@ type StepViewJSON struct {
 func (step StepViewJSON) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	if err := step.Value.Execute(buffer, builder); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepViewJSON.Get", "Unable to execute template"))
+		return Halt().WithError(derp.Wrap(err, "build.StepViewJSON.Get", "Executing template"))
 	}
 
 	result := Continue()

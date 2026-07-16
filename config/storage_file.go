@@ -60,7 +60,7 @@ func NewFileStorage(args *CommandLineArgs) FileStorage {
 
 		// Save the config to disk
 		if inner := storage.Write(config); inner != nil {
-			derp.Report(derp.Wrap(inner, "config.FileStorage", "Error initializing MongoDB config"))
+			derp.Report(derp.Wrap(inner, "config.FileStorage", "Initializing MongoDB config"))
 			log.Error().Msg("Error initializing File config: " + inner.Error())
 			os.Exit(1)
 		}
@@ -91,7 +91,7 @@ func NewFileStorage(args *CommandLineArgs) FileStorage {
 		defer derp.ReportFunc(watcher.Close)
 
 		if err := watcher.Add(storage.location); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to watch for changes to configuration: ", fileLocation))
+			derp.Report(derp.Wrap(err, location, "Watching for changes to configuration: ", fileLocation))
 			return
 		}
 
@@ -108,11 +108,11 @@ func NewFileStorage(args *CommandLineArgs) FileStorage {
 					}
 					storage.updateChannel <- config
 				} else {
-					derp.Report(derp.Wrap(err, location, "Unable to load the updated config from ", fileLocation))
+					derp.Report(derp.Wrap(err, location, "Loading the updated config from ", fileLocation))
 				}
 
 			case err := <-watcher.Errors:
-				derp.Report(derp.Wrap(err, location, "Error watching for changes to ", fileLocation))
+				derp.Report(derp.Wrap(err, location, "Watching for changes to ", fileLocation))
 			}
 		}
 
@@ -141,7 +141,7 @@ func (storage FileStorage) load() (Config, error) {
 	data, err := os.ReadFile(storage.location)
 
 	if err != nil {
-		return Config{}, derp.Wrap(err, "config.FileStorage.load", "Unable to read configuration", derp.WithNotFound())
+		return Config{}, derp.Wrap(err, "config.FileStorage.load", "Reading configuration", derp.WithNotFound())
 	}
 
 	if err := hjson.Unmarshal(data, &result); err != nil {
@@ -161,14 +161,14 @@ func (storage FileStorage) Write(config Config) error {
 	data, err := json.MarshalIndent(config, "", "    ")
 
 	if err != nil {
-		return derp.Wrap(err, "config.FileStorage.Write", "Error marshaling configuration")
+		return derp.Wrap(err, "config.FileStorage.Write", "Marshaling configuration")
 	}
 
 	// Try to write the configuration to disk.
 	// RULE: Mode 0600 (owner read/write only) because this file contains secrets
 	// (SMTP password, database credentials, certificate locations).
 	if err := os.WriteFile(storage.location, data, 0600); err != nil {
-		return derp.Wrap(err, "config.FileStorage.Write", "Error writing configuration")
+		return derp.Wrap(err, "config.FileStorage.Write", "Writing configuration")
 	}
 
 	// Return nil if no errors were encountered

@@ -21,7 +21,7 @@ func (service *MerchantAccount) stripe_getRestrictedKey(merchantAccount *model.M
 	apiKeys, err := service.DecryptVault(merchantAccount, "restrictedKey")
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Error retrieving API keys")
+		return "", derp.Wrap(err, location, "Retrieving API keys")
 	}
 
 	return apiKeys.GetString("restrictedKey"), nil
@@ -51,7 +51,7 @@ func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.Merchant
 	restrictedKey, err := service.stripe_getRestrictedKey(merchantAccount)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error retrieving restricted key")
+		return nil, derp.Wrap(err, location, "Retrieving restricted key")
 	}
 
 	connectedAccountID := merchantAccount.Plaintext.GetString("accountId")
@@ -60,7 +60,7 @@ func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.Merchant
 	prices, err := api.Prices(restrictedKey, connectedAccountID, priceIDs...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error retrieving prices from Stripe")
+		return nil, derp.Wrap(err, location, "Retrieving prices from Stripe")
 	}
 
 	result := make([]model.Product, 0, len(prices))

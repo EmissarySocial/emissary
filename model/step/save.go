@@ -30,7 +30,7 @@ func NewSave(stepInfo mapof.Any) (Save, error) {
 	comment, err := template.New("").Parse(stepInfo.GetString("comment"))
 
 	if err != nil {
-		return Save{}, derp.Wrap(err, location, "Error parsing comment template")
+		return Save{}, derp.Wrap(err, location, "Parsing comment template")
 	}
 
 	onError, err := NewPipeline(convert.SliceOfMap(stepInfo["on-error"]))

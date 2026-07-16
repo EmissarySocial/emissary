@@ -27,7 +27,7 @@ func (service *Following) Follow(session data.Session, userID primitive.ObjectID
 		actor, err := service.activityService.GetActor(actorID)
 
 		if err != nil {
-			return model.NewFollowing(), derp.Wrap(err, location, "Unable to find Actor for URL", actorID)
+			return model.NewFollowing(), derp.Wrap(err, location, "Finding Actor for URL", actorID)
 		}
 
 		actorID = actor.ID()
@@ -42,7 +42,7 @@ func (service *Following) Follow(session data.Session, userID primitive.ObjectID
 	}
 
 	if !derp.IsNotFound(err) {
-		return model.NewFollowing(), derp.Wrap(err, location, "Unable to load following for user and URL", userID, actorID)
+		return model.NewFollowing(), derp.Wrap(err, location, "Loading following for user and URL", userID, actorID)
 	}
 
 	// If the record is not found, then create a new one
@@ -50,7 +50,7 @@ func (service *Following) Follow(session data.Session, userID primitive.ObjectID
 	following.URL = actorID
 
 	if err := service.Connect(session, &following); err != nil {
-		return model.NewFollowing(), derp.Wrap(err, location, "Unable to connect to ActivityPub actor", following)
+		return model.NewFollowing(), derp.Wrap(err, location, "Connecting to ActivityPub actor", following)
 	}
 
 	// Success!
@@ -73,9 +73,9 @@ func (service *Following) Connect(session data.Session, following *model.Followi
 
 	if err != nil {
 		if inner := service.SetStatusFailure(session, following, "Unable to connect to ActivityPub Actor"); inner != nil {
-			return derp.Wrap(inner, location, "Unable to refresh ActivityPub Actor; Unable to mark `Following` record as `Failure`", err)
+			return derp.Wrap(inner, location, "Refreshing ActivityPub Actor; Unable to mark `Following` record as `Failure`", err)
 		}
-		return derp.Wrap(err, location, "Unable to refresh ActivityPub Actor")
+		return derp.Wrap(err, location, "Refreshing ActivityPub Actor")
 	}
 
 	// Set values in the Following record...
@@ -86,7 +86,7 @@ func (service *Following) Connect(session data.Session, following *model.Followi
 
 	// Update the following status
 	if err := service.SetStatusLoading(session, following); err != nil {
-		return derp.Wrap(err, location, "Unable to set `Following` status to `Loading`", following)
+		return derp.Wrap(err, location, "Setting `Following` status to `Loading`", following)
 	}
 
 	// Prep arguments to send to queue consumers
@@ -118,7 +118,7 @@ func (service *Following) ConnectActivityPub(session data.Session, following *mo
 	localActor, err := service.userService.ActivityPubActor(session, following.UserID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error getting ActivityPub actor", following.UserID)
+		return derp.Wrap(err, location, "Getting ActivityPub actor", following.UserID)
 	}
 
 	// Send the ActivityPub Follow request as a post-commit queue task (F3): the signed HTTP

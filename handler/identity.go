@@ -34,12 +34,12 @@ func buildIdentity(ctx *steranko.Context, factory *service.Factory, session data
 	builder, err := build.NewIdentity(factory, session, ctx.Request(), ctx.Response(), identity, actionID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to create builder")
+		return derp.Wrap(err, location, "Creating builder")
 	}
 
 	// Build the HTML response
 	if err := build.AsHTML(ctx, factory, builder, actionMethod); err != nil {
-		return derp.Wrap(err, location, "Unable to build page")
+		return derp.Wrap(err, location, "Building page")
 	}
 
 	return ctx.NoContent(http.StatusOK)
@@ -73,7 +73,7 @@ func GetPrivilegeDelete(ctx *steranko.Context, factory *service.Factory, session
 
 	user := model.NewUser()
 	if err := factory.User().LoadByID(session, privilege.UserID, &user); err != nil {
-		return derp.Wrap(err, "handler.GetPrivilegeDelete", "Unable to load User for Privilege", privilege.PrivilegeID)
+		return derp.Wrap(err, "handler.GetPrivilegeDelete", "Loading User for Privilege", privilege.PrivilegeID)
 	}
 
 	b := html.New()
@@ -103,7 +103,7 @@ func PostPrivilegeDelete(ctx *steranko.Context, factory *service.Factory, sessio
 
 	// Cancel the privilege
 	if err := factory.Privilege().Cancel(session, privilege); err != nil {
-		return derp.Wrap(err, location, "Error cancelling privilege", privilege.PrivilegeID)
+		return derp.Wrap(err, location, "Cancelling privilege", privilege.PrivilegeID)
 	}
 
 	// Close the modal and refresh the page
@@ -128,7 +128,7 @@ func GetIdentitySignin(ctx *steranko.Context, factory *service.Factory, session 
 
 	// Render the template
 	if err := template.ExecuteTemplate(ctx.Response(), "guest-signin", data); err != nil {
-		return derp.Wrap(err, location, "Error executing template")
+		return derp.Wrap(err, location, "Executing template")
 	}
 
 	return ctx.JSON(http.StatusOK, "")
@@ -153,7 +153,7 @@ func PostIdentitySignin(ctx *steranko.Context, factory *service.Factory, session
 	if err := identityService.SendGuestCode(session, nil, identifierType, identifier); err != nil {
 
 		// Report the error for debugging...
-		derp.Report(derp.Wrap(err, location, "Unable to send Guest Code"))
+		derp.Report(derp.Wrap(err, location, "Sending Guest Code"))
 
 		// Report errors to the caller
 		return inlineError(ctx, "Can't send guest code. Please double check your address.")
@@ -186,7 +186,7 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *service.Factory, s
 	token, err := jwt.ParseWithClaims(tokenString, &claims, jwtService.FindKey, steranko.JWTValidMethods())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error parsing JWT Token")
+		return derp.Wrap(err, location, "Parsing JWT Token")
 	}
 
 	if !token.Valid {
@@ -223,7 +223,7 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *service.Factory, s
 
 		// Create a new JWT token and return it as a cookie
 		if err := factory.Steranko(session).SetCookie(ctx, authorization); err != nil {
-			return derp.Wrap(err, location, "Unable to set authorization cookie")
+			return derp.Wrap(err, location, "Setting authorization cookie")
 		}
 
 	// Otherwise, add/update the identifier in the existing Identity
@@ -233,13 +233,13 @@ func GetIdentitySigninWithJWT(ctx *steranko.Context, factory *service.Factory, s
 		identity := model.NewIdentity()
 
 		if err := identityService.LoadByID(session, authorization.IdentityID, &identity); err != nil {
-			return derp.Wrap(err, location, "Unable to load Identity by ID", authorization.IdentityID)
+			return derp.Wrap(err, location, "Loading Identity by ID", authorization.IdentityID)
 		}
 
 		identity.SetIdentifier(identifierType, identifier)
 
 		if err := identityService.Save(session, &identity, "Added/Updated Identifier: "+identifierType); err != nil {
-			return derp.Wrap(err, location, "Unable to save Identity with new identifier", identity.IdentityID)
+			return derp.Wrap(err, location, "Saving Identity with new identifier", identity.IdentityID)
 		}
 	}
 
@@ -260,7 +260,7 @@ func PostIdentityIdentifier(ctx *steranko.Context, factory *service.Factory, ses
 	if identifierValue != "" {
 
 		if err := identityService.SendGuestCode(session, identity, identifierType, identifierValue); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to set identifier on Identity"))
+			derp.Report(derp.Wrap(err, location, "Setting identifier on Identity"))
 			return inlineError(ctx, "Unable to send signin code.")
 		}
 
@@ -271,7 +271,7 @@ func PostIdentityIdentifier(ctx *steranko.Context, factory *service.Factory, ses
 	identity.SetIdentifier(identifierType, "")
 
 	if err := identityService.Save(session, identity, "Removed identifier: "+identifierType); err != nil {
-		return derp.Wrap(err, location, "Unable to save Identity", identity.IdentityID)
+		return derp.Wrap(err, location, "Saving Identity", identity.IdentityID)
 	}
 
 	return closeModalAndRefreshPage(ctx)

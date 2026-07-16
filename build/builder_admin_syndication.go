@@ -33,7 +33,7 @@ func NewSyndication(factory Factory, session data.Session, request *http.Request
 	common, err := NewCommonWithTemplate(factory, session, request, response, template, domain, actionID)
 
 	if err != nil {
-		return Syndication{}, derp.Wrap(err, location, "Unable to create common builder")
+		return Syndication{}, derp.Wrap(err, location, "Creating common builder")
 	}
 
 	// Verify that the user is a Syndication Owner
@@ -65,7 +65,7 @@ func (w Syndication) Render() (template.HTML, error) {
 	status := Pipeline(w._action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
-		err := derp.Wrap(status.Error, location, "Unable to generate HTML")
+		err := derp.Wrap(status.Error, location, "Generating HTML")
 		derp.Report(err)
 		return "", err
 	}
@@ -83,7 +83,7 @@ func (w Syndication) View(actionID string) (template.HTML, error) {
 	builder, err := NewSyndication(w._factory, w._session, w._request, w._response, w._template, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, location, "Unable to create Group builder")
+		return template.HTML(""), derp.Wrap(err, location, "Creating Group builder")
 	}
 
 	return builder.Render()

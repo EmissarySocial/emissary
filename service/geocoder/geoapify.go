@@ -36,7 +36,7 @@ func (geocoder Geoapify) GeocodeAddress(address string) (geo.Address, error) {
 		Result(&response)
 
 	if err := txn.Send(); err != nil {
-		return geo.Address{}, derp.Wrap(err, location, "Error returned by Geoapify")
+		return geo.Address{}, derp.Wrap(err, location, "Calling Geoapify")
 	}
 
 	// Find the Properties for the first Feature in the response
@@ -55,7 +55,7 @@ func (geocoder Geoapify) GeocodeTimezone(address *geo.Address) error {
 	result, err := geocoder.GeocodeAddress(address.Formatted)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to retrieve timezone information")
+		return derp.Wrap(err, location, "Retrieving timezone information")
 	}
 
 	address.Timezone = result.Timezone
@@ -72,7 +72,7 @@ func (geocoder Geoapify) GeocodeNetwork(ip string) (point geo.Point, err error) 
 		Result(&response)
 
 	if err := txn.Send(); err != nil {
-		return geo.Point{}, derp.Wrap(err, "service.geocoder.Geoapify.GeocodeNetwork", "Error calling IPAPICOM")
+		return geo.Point{}, derp.Wrap(err, "service.geocoder.Geoapify.GeocodeNetwork", "Calling IPAPICOM")
 	}
 
 	// Parse response
@@ -100,7 +100,7 @@ func (geocoder Geoapify) AutocompleteAddress(query string, bias geo.Point) (slic
 	}
 
 	if err := txn.Send(); err != nil {
-		return nil, derp.Wrap(err, location, "Unable to retrieve search results")
+		return nil, derp.Wrap(err, location, "Retrieving search results")
 	}
 
 	// Map "features" from the result into geo.Address

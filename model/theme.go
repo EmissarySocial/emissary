@@ -108,7 +108,7 @@ func (theme *Theme) Inherit(parent *Theme) {
 	for _, templateName := range parent.HTMLTemplate.Templates() {
 		if theme.HTMLTemplate.Lookup(templateName.Name()) == nil {
 			if _, err := theme.HTMLTemplate.AddParseTree(templateName.Name(), templateName.Tree); err != nil {
-				derp.Report(derp.Wrap(err, "model.Theme.Inherit", "Error adding template", templateName.Name()))
+				derp.Report(derp.Wrap(err, "model.Theme.Inherit", "Adding template", templateName.Name()))
 			}
 		}
 	}

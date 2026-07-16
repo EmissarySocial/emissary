@@ -18,7 +18,7 @@ func (service *Stream) Import(session data.Session, importRecord *model.Import, 
 	// Unmarshal the JSON document into a new Stream
 	stream := model.NewStream()
 	if err := json.Unmarshal(document, &stream); err != nil {
-		return derp.Wrap(err, location, "Unable to parse remote document", document)
+		return derp.Wrap(err, location, "Parsing remote document", document)
 	}
 
 	// Update mapping values in the importItem
@@ -41,24 +41,24 @@ func (service *Stream) Import(session data.Session, importRecord *model.Import, 
 
 	// Map the ParentID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &stream.ParentID); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map ParentID. UserID: "+user.UserID.Hex()+", ParentID: "+stream.ParentID.Hex()))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Mapping ParentID. UserID: "+user.UserID.Hex()+", ParentID: "+stream.ParentID.Hex()))
 	}
 
 	// Map ParentIDs
 	for index, parentID := range stream.ParentIDs {
 		if err := service.importItemService.mapRemoteID(session, user.UserID, &stream.ParentIDs[index]); err != nil {
-			return derp.Wrap(err, location, "Unable to map ParentIDs", "index: "+convert.String(index), "ParentID: "+parentID.Hex())
+			return derp.Wrap(err, location, "Mapping ParentIDs", "index: "+convert.String(index), "ParentID: "+parentID.Hex())
 		}
 	}
 
 	// Import and Map Attachments
 	if err := service.importService.ImportAttachments(session, importRecord, importItem, &stream); err != nil {
-		return derp.Wrap(err, location, "Unable to import Attachments")
+		return derp.Wrap(err, location, "Importing Attachments")
 	}
 
 	// Save the Stream to the database
 	if err := service.Save(session, &stream, "Imported"); err != nil {
-		return derp.Wrap(err, location, "Unable to save imported Stream")
+		return derp.Wrap(err, location, "Saving imported Stream")
 	}
 
 	// The stream.URL is recalculated in the service.Save method.
@@ -78,18 +78,18 @@ func (service *Stream) UndoImport(session data.Session, importItem *model.Import
 	attachments, err := service.attachmentService.QueryByObjectID(session, model.AttachmentObjectTypeStream, importItem.LocalID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to list Attachments for Stream", importItem.LocalID)
+		return derp.Wrap(err, location, "Listing Attachments for Stream", importItem.LocalID)
 	}
 
 	for _, attachment := range attachments {
 		if err := service.attachmentService.UndoImport(session, importItem.UserID, attachment.AttachmentID); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to delete Stream", attachment.AttachmentID))
+			derp.Report(derp.Wrap(err, location, "Deleting Stream", attachment.AttachmentID))
 		}
 	}
 
 	// Remove the Stream
 	if err := service.HardDeleteByID(session, importItem.LocalID); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Stream", importItem.LocalID)
+		return derp.Wrap(err, location, "Deleting Stream", importItem.LocalID)
 	}
 
 	return nil

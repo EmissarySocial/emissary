@@ -56,7 +56,7 @@ func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[stri
 
 		// Fall through means that the index has been changed or deleted.  Drop the old index
 		if bsonRaw, err := collection.Indexes().DropOne(ctx, name); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error dropping index", "index", name, bsonRaw))
+			derp.Report(derp.Wrap(err, location, "Dropping index", "index", name, bsonRaw))
 		}
 	}
 
@@ -64,7 +64,7 @@ func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[stri
 	for indexName, newIndex := range newIndexes {
 		log.Trace().Str("database", database).Str("index", indexName).Msg("Creating added/changed index...")
 		if bsonRaw, err := collection.Indexes().CreateOne(ctx, newIndex); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to create index", "index", indexName, newIndex, bsonRaw))
+			derp.Report(derp.Wrap(err, location, "Creating index", "index", indexName, newIndex, bsonRaw))
 			continue
 		}
 	}

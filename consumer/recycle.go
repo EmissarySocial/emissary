@@ -33,7 +33,7 @@ func RecycleDomain(factory *service.Factory, session data.Session, _ mapof.Any) 
 
 	// Every collection has had its turn.  Surface a failure now so the task is retried.
 	if errorCount > 0 {
-		return queue.Error(derp.Internal(location, "Recycling collections", errorCount))
+		return queue.Error(derp.Internal(location, "Unable to recycle one or more collections", errorCount))
 	}
 
 	// Congratulatory affirmation.

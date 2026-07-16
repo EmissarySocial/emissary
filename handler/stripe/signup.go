@@ -47,7 +47,7 @@ func PostSignupWebhook(ctx *steranko.Context, factory *service.Factory, session 
 	payload, err := io.ReadAll(ctx.Request().Body)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to read request body")
+		return derp.Wrap(err, location, "Reading request body")
 	}
 
 	// Verify the WebHook signature
@@ -55,7 +55,7 @@ func PostSignupWebhook(ctx *steranko.Context, factory *service.Factory, session 
 	event, err := webhook.ConstructEvent(payload, signatureHeader, secret)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error verifying webhook signature")
+		return derp.Wrap(err, location, "Verifying webhook signature")
 	}
 
 	// Require that the event is a "product" event
@@ -86,7 +86,7 @@ func finishWebhook(factory *service.Factory, session data.Session, restrictedKey
 	subscription := stripe.Subscription{}
 
 	if err := json.Unmarshal(event.Data.Raw, &subscription); err != nil {
-		return derp.Wrap(err, "handler.getProduct", "Error unmarshalling event data")
+		return derp.Wrap(err, "handler.getProduct", "Unmarshalling event data")
 	}
 
 	// This is the price that was paid, but it doesn't include the metadata we need.
@@ -99,7 +99,7 @@ func finishWebhook(factory *service.Factory, session data.Session, restrictedKey
 	}
 
 	if err := loadStripeProduct(restrictedKey, price.Product); err != nil {
-		return derp.Wrap(err, location, "Error getting product details")
+		return derp.Wrap(err, location, "Getting product details")
 	}
 
 	// Get ready to create/update a user
@@ -114,7 +114,7 @@ func finishWebhook(factory *service.Factory, session data.Session, restrictedKey
 
 		// Try to load/create the user
 		if err := loadOrCreateUser(userService, session, restrictedKey, subscription.Customer, &user); err != nil {
-			return derp.Wrap(err, location, "Unable to create customer", subscription.Customer)
+			return derp.Wrap(err, location, "Creating customer", subscription.Customer)
 		}
 
 		// Add the user to the designated groups
@@ -143,7 +143,7 @@ func finishWebhook(factory *service.Factory, session data.Session, restrictedKey
 
 	// Save the new User to the database.  Yay!
 	if err := userService.Save(session, &user, "Created by Stripe Webhook"); err != nil {
-		return derp.Wrap(err, location, "Unable to save user record")
+		return derp.Wrap(err, location, "Saving user record")
 	}
 
 	// Success!
@@ -231,7 +231,7 @@ func loadUser(userService *service.User, session data.Session, customer *stripe.
 
 	// Try to load the user by their email address
 	if err := userService.LoadByMapID(session, model.UserMapIDStripe, customer.ID, user); err != nil {
-		return derp.Wrap(err, "handler.stripe.loadUser", "Unable to load user record")
+		return derp.Wrap(err, "handler.stripe.loadUser", "Loading user record")
 	}
 
 	return nil
@@ -248,7 +248,7 @@ func loadOrCreateUser(userService *service.User, session data.Session, apiKey st
 	if derp.IsNotFound(err) {
 
 		if inner := loadStripeCustomer(apiKey, customer); inner != nil {
-			return derp.Wrap(inner, "handler.stripe.loadOrCreateUser", "Unable to load customer from Stripe API")
+			return derp.Wrap(inner, "handler.stripe.loadOrCreateUser", "Loading customer from Stripe API")
 		}
 
 		if customer.Name != "" {
@@ -263,7 +263,7 @@ func loadOrCreateUser(userService *service.User, session data.Session, apiKey st
 		return nil
 	}
 
-	return derp.Wrap(err, "handler.stripe.loadOrCreateUser", "Unable to load user record")
+	return derp.Wrap(err, "handler.stripe.loadOrCreateUser", "Loading user record")
 }
 
 func loadStripeCustomer(apiKey string, customer *stripe.Customer) error {
@@ -287,7 +287,7 @@ func loadStripeCustomer(apiKey string, customer *stripe.Customer) error {
 	value, err := stripeClient.Customers.Get(customer.ID, &params)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load customer from Stripe API")
+		return derp.Wrap(err, location, "Loading customer from Stripe API")
 	}
 
 	// Copy the value from the API call into the original customer
@@ -318,7 +318,7 @@ func loadStripeProduct(apiKey string, product *stripe.Product) error {
 	value, err := stripeClient.Products.Get(product.ID, &params)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load product from Stripe API")
+		return derp.Wrap(err, location, "Loading product from Stripe API")
 	}
 
 	// Copy the value from the API call into the original product

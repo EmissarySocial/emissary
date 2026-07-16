@@ -25,7 +25,7 @@ func NewSetRenderData(stepInfo mapof.Any) (SetRenderData, error) {
 			valueTemplate, err := template.New("value").Parse(convert.String(value))
 
 			if err != nil {
-				return SetRenderData{}, derp.Wrap(err, "model.step.NewSetQueryParam", "Error parsing template", key, value)
+				return SetRenderData{}, derp.Wrap(err, "model.step.NewSetQueryParam", "Parsing template", key, value)
 			}
 			result.Values[key] = valueTemplate
 		}

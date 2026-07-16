@@ -33,7 +33,7 @@ func GetLists(serverFactory *server.Factory) func(model.Authorization, txn.GetLi
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Unable to create session")
+			return nil, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -42,7 +42,7 @@ func GetLists(serverFactory *server.Factory) func(model.Authorization, txn.GetLi
 		folders, err := folderService.QueryByUserID(session, auth.UserID)
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Unable to query database")
+			return nil, derp.Wrap(err, location, "Querying database")
 		}
 
 		return getSliceOfToots(folders), nil
@@ -74,7 +74,7 @@ func GetList(serverFactory *server.Factory) func(model.Authorization, txn.GetLis
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return object.List{}, derp.Wrap(err, location, "Unable to create session")
+			return object.List{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -84,7 +84,7 @@ func GetList(serverFactory *server.Factory) func(model.Authorization, txn.GetLis
 		folder := model.NewFolder()
 
 		if err := folderService.LoadByID(session, auth.UserID, folderID, &folder); err != nil {
-			return object.List{}, derp.Wrap(err, location, "Unable to load folder")
+			return object.List{}, derp.Wrap(err, location, "Loading folder")
 		}
 
 		// Reply with a Toot!
@@ -110,7 +110,7 @@ func PostList(serverFactory *server.Factory) func(model.Authorization, txn.PostL
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return object.List{}, derp.Wrap(err, location, "Unable to create session")
+			return object.List{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -123,7 +123,7 @@ func PostList(serverFactory *server.Factory) func(model.Authorization, txn.PostL
 		// Save it to the database
 		folderService := factory.Folder()
 		if err := folderService.Save(session, &folder, "Created via Mastodon API"); err != nil {
-			return object.List{}, derp.Wrap(err, location, "Unable to save folder")
+			return object.List{}, derp.Wrap(err, location, "Saving folder")
 		}
 
 		// Return a Toot!
@@ -156,7 +156,7 @@ func PutList(serverFactory *server.Factory) func(model.Authorization, txn.PutLis
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return object.List{}, derp.Wrap(err, location, "Unable to create session")
+			return object.List{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -166,7 +166,7 @@ func PutList(serverFactory *server.Factory) func(model.Authorization, txn.PutLis
 		folder := model.NewFolder()
 
 		if err := folderService.LoadByID(session, auth.UserID, folderID, &folder); err != nil {
-			return object.List{}, derp.Wrap(err, location, "Unable to load folder")
+			return object.List{}, derp.Wrap(err, location, "Loading folder")
 		}
 
 		// Update Folder Data
@@ -174,7 +174,7 @@ func PutList(serverFactory *server.Factory) func(model.Authorization, txn.PutLis
 
 		// Save it to the database
 		if err := folderService.Save(session, &folder, "Created via Mastodon API"); err != nil {
-			return object.List{}, derp.Wrap(err, location, "Unable to save folder")
+			return object.List{}, derp.Wrap(err, location, "Saving folder")
 		}
 
 		// Return a Toot!
@@ -206,7 +206,7 @@ func DeleteList(serverFactory *server.Factory) func(model.Authorization, txn.Del
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Unable to create session")
+			return struct{}{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -216,12 +216,12 @@ func DeleteList(serverFactory *server.Factory) func(model.Authorization, txn.Del
 		folder := model.NewFolder()
 
 		if err := folderService.LoadByID(session, auth.UserID, folderID, &folder); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Unable to load folder")
+			return struct{}{}, derp.Wrap(err, location, "Loading folder")
 		}
 
 		// Delete the Folder
 		if err := folderService.Delete(session, &folder, "Deleted via Mastodon API"); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Unable to delete folder")
+			return struct{}{}, derp.Wrap(err, location, "Deleting folder")
 		}
 
 		// Return a successful response
@@ -254,7 +254,7 @@ func GetList_Accounts(serverFactory *server.Factory) func(model.Authorization, t
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unable to create session")
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -265,7 +265,7 @@ func GetList_Accounts(serverFactory *server.Factory) func(model.Authorization, t
 		followingSummaries, err := followingService.QueryByFolderAndExp(session, auth.UserID, folderID, criteria)
 
 		if err != nil {
-			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unable to query database")
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Querying database")
 		}
 
 		// Convert the results to a slice of objects

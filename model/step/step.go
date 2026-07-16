@@ -318,7 +318,7 @@ func NewPipeline[T ~map[string]any](stepInfo []T) ([]Step, error) {
 	for index := range stepInfo {
 
 		if step, err := New(mapof.Any(stepInfo[index])); err != nil {
-			return result, derp.Wrap(err, location, "Error parsing step", stepInfo)
+			return result, derp.Wrap(err, location, "Parsing step", stepInfo)
 		} else {
 			result[index] = step
 		}

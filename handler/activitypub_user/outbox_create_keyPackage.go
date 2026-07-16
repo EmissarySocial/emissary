@@ -48,12 +48,12 @@ func outbox_CreateKeyPackage(context Context, activity streams.Document) error {
 
 	// Save the KeyPackage to the database
 	if err := keyPackageService.Save(context.session, &keyPackage, "Created via ActivityPub API"); err != nil {
-		return derp.Wrap(err, location, "Unable to save KeyPackage")
+		return derp.Wrap(err, location, "Saving KeyPackage")
 	}
 
 	// Put the activity into the User's outbox (which triggers delivery to all recipients)
 	if err := putActivityIntoOutbox(context, activity); err != nil {
-		return derp.Wrap(err, location, "Unable to process activity")
+		return derp.Wrap(err, location, "Processing activity")
 	}
 
 	// Write the response to the context

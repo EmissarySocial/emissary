@@ -65,14 +65,14 @@ func (service *StreamDraft) Load(session data.Session, criteria exp.Expression, 
 	if err := service.collection(session).Load(criteria, result); err == nil {
 		return nil
 	} else if !derp.IsNotFound(err) {
-		derp.Report(derp.Wrap(err, location, "Unable to load StreamDraft"))
+		derp.Report(derp.Wrap(err, location, "Loading StreamDraft"))
 	}
 
 	// Fall through means we could not load a draft (probably 404 not found)
 
 	// Try to locate the original stream
 	if err := service.streamService.Load(session, criteria, result); err != nil {
-		return derp.Wrap(err, location, "Unable to load original stream")
+		return derp.Wrap(err, location, "Loading original stream")
 	}
 
 	// Reset the journal so that this item can be saved in the new collection.
@@ -80,7 +80,7 @@ func (service *StreamDraft) Load(session data.Session, criteria exp.Expression, 
 
 	// Save a draft copy of the original stream
 	if err := service.Save(session, result, "create draft record"); err != nil {
-		return derp.Wrap(err, location, "Unable to save draft", criteria)
+		return derp.Wrap(err, location, "Saving draft", criteria)
 	}
 
 	// Return the original stream as a new draft to use.
@@ -115,7 +115,7 @@ func (service *StreamDraft) Save(session data.Session, draft *model.Stream, note
 	}
 
 	if err := service.collection(session).Save(draft, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save draft", draft, note)
+		return derp.Wrap(err, location, "Saving draft", draft, note)
 	}
 
 	return nil
@@ -128,7 +128,7 @@ func (service *StreamDraft) Delete(session data.Session, draft *model.Stream, _n
 
 	// Use a hard delete to remove drafts permanently.
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, "service.StreamDraft.Delete", "Unable to delete draft", criteria)
+		return derp.Wrap(err, "service.StreamDraft.Delete", "Deleting draft", criteria)
 	}
 
 	return nil
@@ -211,12 +211,12 @@ func (service *StreamDraft) Promote(session data.Session, streamID primitive.Obj
 
 	// Try to load the draft
 	if err := service.LoadByID(session, streamID, &draft); err != nil {
-		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Unable to load draft")
+		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Loading draft")
 	}
 
 	// Try to load the production stream
 	if err := service.streamService.LoadByID(session, streamID, &stream); err != nil {
-		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Unable to load draft")
+		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Loading draft")
 	}
 
 	// Copy data from draft to production
@@ -236,12 +236,12 @@ func (service *StreamDraft) Promote(session data.Session, streamID primitive.Obj
 
 	// Try to save the updated stream back to the database
 	if err := service.streamService.Save(session, &stream, "published"); err != nil {
-		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Error publishing stream")
+		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Publishing stream")
 	}
 
 	// Try to save the updated stream back to the database
 	if err := service.Delete(session, &draft, "published"); err != nil {
-		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Unable to delete draft")
+		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Deleting draft")
 	}
 
 	return stream, nil

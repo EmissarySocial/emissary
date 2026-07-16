@@ -72,7 +72,7 @@ func getBundle(bundles mapof.Object[model.Bundle], bundleID string, response *ec
 	response.WriteHeader(200)
 
 	if _, err := response.Write(bundle.Content); err != nil {
-		return derp.Wrap(err, "handler.getBundle", "Error writing bundle content", bundleID)
+		return derp.Wrap(err, "handler.getBundle", "Writing bundle content", bundleID)
 	}
 
 	return nil

@@ -19,7 +19,7 @@ func SyncSharedIndexes(connectionString string, databaseName string) error {
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(connectionString))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to create mongodb client")
+		return derp.Wrap(err, location, "Creating mongodb client")
 	}
 
 	session := client.Database(databaseName)
@@ -59,7 +59,7 @@ func SyncDomainIndexes(connectionString string, databaseName string) error { // 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(connectionString))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to create mongodb client")
+		return derp.Wrap(err, location, "Creating mongodb client")
 	}
 
 	session := client.Database(databaseName)

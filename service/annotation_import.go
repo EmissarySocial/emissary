@@ -17,7 +17,7 @@ func (service *Annotation) Import(session data.Session, _ *model.Import, importI
 	// Unmarshal the JSON document into a new Annotation
 	annotation := model.NewAnnotation()
 	if err := json.Unmarshal(document, &annotation); err != nil {
-		return derp.Wrap(err, location, "Unable to parse remote document", document)
+		return derp.Wrap(err, location, "Parsing remote document", document)
 	}
 
 	// Update mapping values in the importItem
@@ -29,12 +29,12 @@ func (service *Annotation) Import(session data.Session, _ *model.Import, importI
 
 	// Map the UserID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &annotation.UserID); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map UserID", "UserID: "+user.UserID.Hex()+", AnnotationID: "+annotation.AnnotationID.Hex()))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Mapping UserID", "UserID: "+user.UserID.Hex()+", AnnotationID: "+annotation.AnnotationID.Hex()))
 	}
 
 	// Save the Annotation to the database
 	if err := service.Save(session, &annotation, "Imported"); err != nil {
-		return derp.Wrap(err, location, "Unable to save imported Annotation")
+		return derp.Wrap(err, location, "Saving imported Annotation")
 	}
 
 	// A Man, A Plan, A Canal. Panama.
@@ -47,7 +47,7 @@ func (service *Annotation) UndoImport(session data.Session, importItem *model.Im
 	const location = "service.Annotation.UndoImport"
 
 	if err := service.HardDeleteByID(session, importItem.UserID, importItem.LocalID); err != nil {
-		return derp.Wrap(err, location, "Unable to delete record", importItem.LocalID)
+		return derp.Wrap(err, location, "Deleting record", importItem.LocalID)
 	}
 
 	return nil

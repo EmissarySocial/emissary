@@ -24,28 +24,28 @@ func NewScheduleDelete(stepInfo mapof.Any) (ScheduleDelete, error) {
 	days, err := template.New("").Parse(stepInfo.GetString("days"))
 
 	if err != nil {
-		return ScheduleDelete{}, derp.Wrap(err, location, "Unable to parse 'days' template", stepInfo)
+		return ScheduleDelete{}, derp.Wrap(err, location, "Parsing 'days' template", stepInfo)
 	}
 
 	// Hours template
 	hours, err := template.New("").Parse(stepInfo.GetString("hours"))
 
 	if err != nil {
-		return ScheduleDelete{}, derp.Wrap(err, location, "Unable to parse 'hours' template", stepInfo)
+		return ScheduleDelete{}, derp.Wrap(err, location, "Parsing 'hours' template", stepInfo)
 	}
 
 	// Minutes template
 	minutes, err := template.New("").Parse(stepInfo.GetString("minutes"))
 
 	if err != nil {
-		return ScheduleDelete{}, derp.Wrap(err, location, "Unable to parse 'minutes' template", stepInfo)
+		return ScheduleDelete{}, derp.Wrap(err, location, "Parsing 'minutes' template", stepInfo)
 	}
 
 	// Seconds template
 	seconds, err := template.New("").Parse(stepInfo.GetString("seconds"))
 
 	if err != nil {
-		return ScheduleDelete{}, derp.Wrap(err, location, "Unable to parse 'seconds' template", stepInfo)
+		return ScheduleDelete{}, derp.Wrap(err, location, "Parsing 'seconds' template", stepInfo)
 	}
 
 	// Return the step

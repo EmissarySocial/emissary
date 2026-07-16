@@ -27,7 +27,7 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	transaction, err := formdata.Parse(builder.request())
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error parsing form data"))
+		return Halt().WithError(derp.Wrap(err, location, "Parsing form data"))
 	}
 
 	// RULE: Verify that the user is trying to set a new password
@@ -60,7 +60,7 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	user := model.NewUser()
 
 	if err := userService.LoadByID(builder.session(), authorization.UserID, &user); err != nil {
-		err := WrapInlineError(response, derp.Wrap(err, location, "Unable to load user"))
+		err := WrapInlineError(response, derp.Wrap(err, location, "Loading user"))
 		return Halt().WithError(err)
 	}
 
@@ -84,13 +84,13 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 
 	// Update the User's password using the server-wide hashing policy
 	if err := steranko.SetPassword(&user, newPassword); err != nil {
-		err := WrapInlineError(response, derp.Wrap(err, location, "Unable to set password"))
+		err := WrapInlineError(response, derp.Wrap(err, location, "Setting password"))
 		return Halt().WithError(err)
 	}
 
 	// Save the User back to the database
 	if err := userService.Save(builder.session(), &user, "Password changed"); err != nil {
-		err := WrapInlineError(response, derp.Wrap(err, location, "Unable to save user"))
+		err := WrapInlineError(response, derp.Wrap(err, location, "Saving user"))
 		return Halt().WithError(err)
 	}
 

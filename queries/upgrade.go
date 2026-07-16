@@ -57,7 +57,7 @@ func UpgradeMongoDB(connectionString string, databaseName string, domain *model.
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(connectionString))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to create mongodb client")
+		return derp.Wrap(err, location, "Creating mongodb client")
 	}
 
 	session := client.Database(databaseName)
@@ -78,7 +78,7 @@ func UpgradeMongoDB(connectionString string, databaseName string, domain *model.
 
 		// Run the upgrade
 		if err := fn(ctx, session); err != nil {
-			return derp.Wrap(err, location, "Error upgrading database to version %d", index)
+			return derp.Wrap(err, location, "Upgrading database to version %d", index)
 		}
 
 		// Mark the Domain as "upgraded"
@@ -88,7 +88,7 @@ func UpgradeMongoDB(connectionString string, databaseName string, domain *model.
 		update := bson.M{"$set": bson.M{"databaseVersion": index}}
 
 		if _, err := domainCollection.UpdateOne(ctx, filter, update); err != nil {
-			return derp.Wrap(err, location, "Unable to update domain record")
+			return derp.Wrap(err, location, "Updating domain record")
 		}
 	}
 

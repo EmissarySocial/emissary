@@ -21,7 +21,7 @@ func New(input string, options ...Option) (Template, error) {
 	innerTemplate, err := template.New("").Parse(beginScript + input + endScript)
 
 	if err != nil {
-		return result, derp.Wrap(err, "jsontemplate.New", "Error parsing template", input)
+		return result, derp.Wrap(err, "jsontemplate.New", "Parsing template", input)
 	}
 
 	result.innerTemplate = innerTemplate
@@ -39,7 +39,7 @@ func (t *Template) Execute(result any, value any) error {
 	// Execute the template with the provided value
 	var buffer bytes.Buffer
 	if err := t.innerTemplate.Execute(&buffer, value); err != nil {
-		return derp.Wrap(err, "jsontemplate.Execute", "Error executing template", value)
+		return derp.Wrap(err, "jsontemplate.Execute", "Executing template", value)
 	}
 
 	// Strip <script> tags from the executed template
@@ -51,13 +51,13 @@ func (t *Template) Execute(result any, value any) error {
 
 		// Unmarshal JSON into the result variable
 		if err := json.Unmarshal([]byte(resultText), &result); err != nil {
-			return derp.Wrap(err, "jsontemplate.Execute", "Error unmarshalling JSON", resultText)
+			return derp.Wrap(err, "jsontemplate.Execute", "Unmarshalling JSON", resultText)
 		}
 
 	} else {
 
 		if err := hjson.Unmarshal([]byte(resultText), &result); err != nil {
-			return derp.Wrap(err, "jsontemplate.Execute", "Error unmarshalling HJSON", resultText)
+			return derp.Wrap(err, "jsontemplate.Execute", "Unmarshalling HJSON", resultText)
 		}
 	}
 

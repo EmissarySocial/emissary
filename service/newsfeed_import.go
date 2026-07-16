@@ -17,7 +17,7 @@ func (service *NewsFeed) Import(session data.Session, _ *model.Import, importIte
 	// Unmarshal the JSON document into a new NewsFeed
 	newsItem := model.NewNewsItem()
 	if err := json.Unmarshal(document, &newsItem); err != nil {
-		return derp.Wrap(err, location, "Unable to parse remote document", document)
+		return derp.Wrap(err, location, "Parsing remote document", document)
 	}
 
 	// Update mapping values in the importItem
@@ -29,22 +29,22 @@ func (service *NewsFeed) Import(session data.Session, _ *model.Import, importIte
 
 	// Map the UserID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &newsItem.UserID); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map UserID", "UserID: "+user.UserID.Hex()+", NewsItemID: "+newsItem.NewsItemID.Hex()))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Mapping UserID", "UserID: "+user.UserID.Hex()+", NewsItemID: "+newsItem.NewsItemID.Hex()))
 	}
 
 	// Map the FollowingID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &newsItem.FollowingID); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map FollowingID", "UserID: "+user.UserID.Hex()+", NewsItemID: "+newsItem.NewsItemID.Hex()))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Mapping FollowingID", "UserID: "+user.UserID.Hex()+", NewsItemID: "+newsItem.NewsItemID.Hex()))
 	}
 
 	// Map the FolderID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &newsItem.FolderID); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map FolderID", "UserID: "+user.UserID.Hex()+", NewsItemID: "+newsItem.NewsItemID.Hex()))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Mapping FolderID", "UserID: "+user.UserID.Hex()+", NewsItemID: "+newsItem.NewsItemID.Hex()))
 	}
 
 	// Save the NewsFeed to the database
 	if err := service.Save(session, &newsItem, "Imported"); err != nil {
-		return derp.Wrap(err, location, "Unable to save imported NewsFeed")
+		return derp.Wrap(err, location, "Saving imported NewsFeed")
 	}
 
 	// A Man, A Plan, A Canal. Panama.
@@ -57,7 +57,7 @@ func (service *NewsFeed) UndoImport(session data.Session, importItem *model.Impo
 	const location = "service.NewsFeed.UndoImport"
 
 	if err := service.HardDeleteByID(session, importItem.UserID, importItem.LocalID); err != nil {
-		return derp.Wrap(err, location, "Unable to delete record", importItem.LocalID)
+		return derp.Wrap(err, location, "Deleting record", importItem.LocalID)
 	}
 
 	return nil

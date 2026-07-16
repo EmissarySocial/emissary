@@ -28,7 +28,7 @@ func CrawlContext(factory *service.Factory, args mapof.Any) queue.Result {
 	document, err := client.Load(objectID)
 
 	if err != nil {
-		return requeue(derp.Wrap(err, location, "Unable to load document"))
+		return requeue(derp.Wrap(err, location, "Loading document"))
 	}
 
 	// Start first with the document's Context property
@@ -51,7 +51,7 @@ func CrawlContext(factory *service.Factory, args mapof.Any) queue.Result {
 			}
 
 			// Other errors are ignored
-			derp.Report(derp.Wrap(err, location, "Unable to load context collection"))
+			derp.Report(derp.Wrap(err, location, "Loading context collection"))
 		}
 	}
 

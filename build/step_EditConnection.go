@@ -25,7 +25,7 @@ func (step StepEditConnection) Get(builder Builder, buffer io.Writer) PipelineBe
 	connection, err := connectionService.LoadOrCreateByProvider(builder.session(), providerID)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to load connection", providerID))
+		return Halt().WithError(derp.Wrap(err, location, "Loading connection", providerID))
 	}
 
 	// Try to find a Manual Provider for this Provider
@@ -49,14 +49,14 @@ func (step StepEditConnection) Get(builder Builder, buffer io.Writer) PipelineBe
 	)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to generate form editor"))
+		return Halt().WithError(derp.Wrap(err, location, "Generating form editor"))
 	}
 
 	// Wrap the form as a ModalForm and return
 	formHTML = WrapModalForm(builder.response(), builder.RelativeURL(), formHTML, form.Encoding())
 
 	if _, err := buffer.Write([]byte(formHTML)); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error writing form HTML to buffer"))
+		return Halt().WithError(derp.Wrap(err, location, "Writing form HTML to buffer"))
 	}
 
 	return Halt().AsFullPage()
@@ -79,7 +79,7 @@ func (step StepEditConnection) Post(builder Builder, _ io.Writer) PipelineBehavi
 	connection, err := connectionService.LoadOrCreateByProvider(builder.session(), providerID)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to load connection", providerID))
+		return Halt().WithError(derp.Wrap(err, location, "Loading connection", providerID))
 	}
 
 	// To manually configure a connection, it must be a "ManualProvider".  Other types,
@@ -95,17 +95,17 @@ func (step StepEditConnection) Post(builder Builder, _ io.Writer) PipelineBehavi
 
 	// Parse the data in the Form post
 	if err := builder.request().ParseForm(); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error parsing form body"))
+		return Halt().WithError(derp.Wrap(err, location, "Parsing form body"))
 	}
 
 	// Apply the form data to the domain object
 	if err := form.SetURLValues(&connection, builder.request().Form, nil); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to update domain object with form data"))
+		return Halt().WithError(derp.Wrap(err, location, "Updating domain object with form data"))
 	}
 
 	// Try to save the domain object back to the database
 	if err := connectionService.Save(builder.session(), &connection, "Updated by Administrator"); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to save domain object"))
+		return Halt().WithError(derp.Wrap(err, location, "Saving domain object"))
 	}
 
 	return Halt().WithEvent("closeModal", "").WithEvent("refreshPage", "").AsFullPage()

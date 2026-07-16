@@ -37,7 +37,7 @@ func outbox_UpdateKeyPackage(context Context, activity streams.Document) error {
 	keyPackage := model.NewKeyPackage()
 
 	if err := keyPackageService.LoadByURL(context.session, object.ID(), &keyPackage); err != nil {
-		return derp.Wrap(err, location, "Unable to load KeyPackage", "url", object.ID())
+		return derp.Wrap(err, location, "Loading KeyPackage", "url", object.ID())
 	}
 
 	// RULE: Guarantee that the KeyPackage belongs to the user making this request
@@ -58,14 +58,14 @@ func outbox_UpdateKeyPackage(context Context, activity streams.Document) error {
 
 	// Save the KeyPackage to the database
 	if err := keyPackageService.Save(context.session, &keyPackage, "Updated via ActivityPub API"); err != nil {
-		return derp.Wrap(err, location, "Unable to save KeyPackage")
+		return derp.Wrap(err, location, "Saving KeyPackage")
 	}
 	// Update values in the activity object
 	activity.SetProperty(vocab.PropertyObject, keyPackageService.ActivityPubURL(keyPackage.UserID, keyPackage.KeyPackageID))
 
 	// Put the activity into the User's outbox (which triggers delivery to all recipients)
 	if err := putActivityIntoOutbox(context, activity); err != nil {
-		return derp.Wrap(err, location, "Unable to process activity")
+		return derp.Wrap(err, location, "Processing activity")
 	}
 
 	// Write the response to the context

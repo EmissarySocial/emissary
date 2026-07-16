@@ -194,7 +194,7 @@ func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, doma
 
 	// Refresh the configuration with values that (may) change during the lifetime of the factory
 	if err := factory.Refresh(domain, attachmentOriginals, attachmentCache); err != nil {
-		return nil, derp.Wrap(err, location, "Unable to create factory", domain)
+		return nil, derp.Wrap(err, location, "Creating factory", domain)
 	}
 
 	// Success!
@@ -275,7 +275,7 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 		server, err := mongodb.New(newConfig.ConnectString, newConfig.DatabaseName, opts)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Unable to connect to MongoDB (Server)", newConfig)
+			return derp.Wrap(err, location, "Connecting to MongoDB (Server)", newConfig)
 		}
 
 		factory.server = server
@@ -283,7 +283,7 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 
 		// Start the domain service (load domain, upgrade collections, reindex collections)
 		if err := factory.domainService.Start(); err != nil {
-			return derp.Wrap(err, location, "Unable to start domain service", newConfig)
+			return derp.Wrap(err, location, "Starting domain service", newConfig)
 		}
 
 		// REALTIME WATCHERS
@@ -675,7 +675,7 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
 
 	// Try to make a new subfolder at the chosen path (returns nil if already exists)
 	if err := base.MkdirAll(path, 0777); err != nil {
-		derp.Report(derp.Wrap(err, "domain.factory.getSubFolder", "Unable to create subfolder", path))
+		derp.Report(derp.Wrap(err, "domain.factory.getSubFolder", "Creating subfolder", path))
 		// panic(err)
 	}
 

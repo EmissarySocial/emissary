@@ -140,7 +140,7 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 		if template.SocialRules.NotEmpty() {
 			schma := service.activityStreamSchema()
 			if err := template.SocialRules.Execute(schma, stream, schma, &result); err != nil {
-				derp.Report(derp.Wrap(err, location, "Unable to apply social rules to stream", stream.StreamID, template.SocialRules))
+				derp.Report(derp.Wrap(err, location, "Applying social rules to stream", stream.StreamID, template.SocialRules))
 			}
 		}
 	}
@@ -172,14 +172,14 @@ func (service *Stream) PrivateKey(session data.Session, streamID primitive.Objec
 	// Try to load the user's keys from the database
 	encryptionKey := model.NewEncryptionKey()
 	if err := service.keyService.LoadByParentID(session, model.EncryptionKeyTypeStream, streamID, &encryptionKey); err != nil {
-		return nil, derp.Wrap(err, location, "Unable to load encryption key", streamID)
+		return nil, derp.Wrap(err, location, "Loading encryption key", streamID)
 	}
 
 	// Extract the Private Key from the Encryption Key
 	privateKey, err := service.keyService.GetPrivateKey(&encryptionKey)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Error extracting private key", encryptionKey)
+		return nil, derp.Wrap(err, location, "Extracting private key", encryptionKey)
 	}
 
 	// Success
@@ -196,14 +196,14 @@ func (service *Stream) ActivityPubActor(session data.Session, streamID primitive
 	// Try to load the user's keys from the database
 	encryptionKey := model.NewEncryptionKey()
 	if err := service.keyService.LoadByParentID(session, model.EncryptionKeyTypeStream, streamID, &encryptionKey); err != nil {
-		return outbox.Actor{}, derp.Wrap(err, location, "Unable to load encryption key", streamID)
+		return outbox.Actor{}, derp.Wrap(err, location, "Loading encryption key", streamID)
 	}
 
 	// Extract the Private Key from the Encryption Key
 	privateKey, err := service.keyService.GetPrivateKey(&encryptionKey)
 
 	if err != nil {
-		return outbox.Actor{}, derp.Wrap(err, location, "Error extracting private key", encryptionKey)
+		return outbox.Actor{}, derp.Wrap(err, location, "Extracting private key", encryptionKey)
 	}
 
 	// Return the ActivityPub Actor
@@ -276,7 +276,7 @@ func (service *Stream) CalcContext(session data.Session, stream *model.Stream) e
 			document, err := client.Load(inReplyTo)
 
 			if err != nil {
-				return derp.Wrap(err, location, "Unable to load InReplyTo document", inReplyTo)
+				return derp.Wrap(err, location, "Loading InReplyTo document", inReplyTo)
 			}
 
 			// If this document has a context then use it and exit
@@ -392,13 +392,13 @@ func (service *Stream) ReindexReplies(session data.Session) error {
 	replies, err := service.Range(session, exp.NotEqual("inReplyTo", ""))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to range reply Streams")
+		return derp.Wrap(err, location, "Ranging reply Streams")
 	}
 
 	for reply := range replies {
 		if err := service.AddReply(session, reply.InReplyTo, reply.ActivityPubURL()); err != nil {
 			// Report and continue: one bad row must not abort the whole backfill.
-			derp.Report(derp.Wrap(err, location, "Unable to project reply", reply.StreamID.Hex()))
+			derp.Report(derp.Wrap(err, location, "Projecting reply", reply.StreamID.Hex()))
 		}
 	}
 
@@ -424,7 +424,7 @@ func (service *Stream) RemoveReply(session data.Session, inReplyToURL string, re
 		if derp.IsNotFound(err) {
 			return nil
 		}
-		return derp.Wrap(err, location, "Unable to load parent Stream", "inReplyTo: "+inReplyToURL)
+		return derp.Wrap(err, location, "Loading parent Stream", "inReplyTo: "+inReplyToURL)
 	}
 
 	// Locate the parent's Replies collection. If none exists, there is nothing to remove.
@@ -434,15 +434,15 @@ func (service *Stream) RemoveReply(session data.Session, inReplyToURL string, re
 		if derp.IsNotFound(err) {
 			return nil
 		}
-		return derp.Wrap(err, location, "Unable to load Replies collection", "parentID: "+parent.StreamID.Hex())
+		return derp.Wrap(err, location, "Loading Replies collection", "parentID: "+parent.StreamID.Hex())
 	}
 
 	if err := service.collectionService.RemoveItem(session, &collection, replyURL); err != nil {
-		return derp.Wrap(err, location, "Unable to remove reply from collection", "replyURL: "+replyURL)
+		return derp.Wrap(err, location, "Removing reply from collection", "replyURL: "+replyURL)
 	}
 
 	if err := service.refreshReplyCount(session, &parent, &collection); err != nil {
-		return derp.Wrap(err, location, "Unable to refresh reply count", parent.StreamID.Hex())
+		return derp.Wrap(err, location, "Refreshing reply count", parent.StreamID.Hex())
 	}
 
 	return nil
@@ -459,13 +459,13 @@ func (service *Stream) refreshReplyCount(session data.Session, parent *model.Str
 	count, err := service.collectionService.CountItems(session, collection)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to count Replies collection", collection.CollectionID.Hex())
+		return derp.Wrap(err, location, "Counting Replies collection", collection.CollectionID.Hex())
 	}
 
 	parent.ReplyCount = int(count)
 
 	if err := service.Save(session, parent, "Refreshed reply count"); err != nil {
-		return derp.Wrap(err, location, "Unable to save Stream with refreshed reply count", parent.StreamID.Hex())
+		return derp.Wrap(err, location, "Saving Stream with refreshed reply count", parent.StreamID.Hex())
 	}
 
 	return nil
@@ -545,7 +545,7 @@ func (service *Stream) RemoveResponseCollectionItem(session data.Session, target
 		if derp.IsNotFound(err) {
 			return nil
 		}
-		return derp.Wrap(err, location, "Unable to load target Stream", "target: "+targetURL)
+		return derp.Wrap(err, location, "Loading target Stream", "target: "+targetURL)
 	}
 
 	// Project (removal) via the shared primitive. A zero collectionType means there was nothing
@@ -561,7 +561,7 @@ func (service *Stream) RemoveResponseCollectionItem(session data.Session, target
 	}
 
 	if err := service.refreshResponseCount(session, &target, &collection, collectionType); err != nil {
-		return derp.Wrap(err, location, "Unable to refresh response count", target.StreamID.Hex())
+		return derp.Wrap(err, location, "Refreshing response count", target.StreamID.Hex())
 	}
 
 	return nil
@@ -578,7 +578,7 @@ func (service *Stream) refreshResponseCount(session data.Session, target *model.
 	count, err := service.collectionService.CountItems(session, collection)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to count response collection", collection.CollectionID.Hex())
+		return derp.Wrap(err, location, "Counting response collection", collection.CollectionID.Hex())
 	}
 
 	switch collectionType {
@@ -597,7 +597,7 @@ func (service *Stream) refreshResponseCount(session data.Session, target *model.
 	}
 
 	if err := service.Save(session, target, "Refreshed response count"); err != nil {
-		return derp.Wrap(err, location, "Unable to save Stream with refreshed response count", target.StreamID.Hex())
+		return derp.Wrap(err, location, "Saving Stream with refreshed response count", target.StreamID.Hex())
 	}
 
 	return nil

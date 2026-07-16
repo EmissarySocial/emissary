@@ -46,7 +46,7 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 		children, err := builder.factory().Stream().ListPublishedByParent(builder.session(), builder.objectID())
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Unable to query child streams"))
+			return Halt().WithError(derp.Wrap(err, location, "Querying child streams"))
 		}
 
 		// Special case for JSONFeed
@@ -67,7 +67,7 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 			Slice()
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Unable to query search queryResults"))
+			return Halt().WithError(derp.Wrap(err, location, "Querying search queryResults"))
 		}
 
 		result.Items = slice.Map(queryResults, convert.SearchResultToGorillaFeed)
@@ -91,11 +91,11 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 		}
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Unable to generate feed. This should never happen"))
+			return Halt().WithError(derp.Wrap(err, location, "Generating feed. This should never happen"))
 		}
 
 		if _, err := buffer.Write([]byte(xml)); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error writing feed to buffer"))
+			return Halt().WithError(derp.Wrap(err, location, "Writing feed to buffer"))
 		}
 
 		return Halt().AsFullPage().WithContentType(mimeType)
@@ -151,11 +151,11 @@ func (step StepViewFeed) asJSONFeed(builder Builder, buffer io.Writer, children 
 	bytes, err := json.Marshal(feed)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to generate JSONFeed"))
+		return Halt().WithError(derp.Wrap(err, location, "Generating JSONFeed"))
 	}
 
 	if _, err := buffer.Write(bytes); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error writing JSONFeed to buffer"))
+		return Halt().WithError(derp.Wrap(err, location, "Writing JSONFeed to buffer"))
 	}
 
 	// Set ContentType

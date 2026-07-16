@@ -22,7 +22,7 @@ func GetApplicationActor(ctx *steranko.Context, factory *service.Factory, sessio
 	result, err := domainService.GetJSONLD(session)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to generate JSON-LD for domain actor")
+		return derp.Wrap(err, location, "Generating JSON-LD for domain actor")
 	}
 
 	// Return Success

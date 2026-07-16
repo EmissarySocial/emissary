@@ -44,7 +44,7 @@ func outbox_DeleteKeyPackage(context Context, activity streams.Document) error {
 		}
 
 		// Otherwise, you suck. I won't delete this KeyPackage for you.
-		return derp.Wrap(err, location, "Unable to load KeyPackage", "url", object.ID())
+		return derp.Wrap(err, location, "Loading KeyPackage", "url", object.ID())
 	}
 
 	// RULE: The actor must own the keyPackage
@@ -54,12 +54,12 @@ func outbox_DeleteKeyPackage(context Context, activity streams.Document) error {
 
 	// Delete the KeyPackage
 	if err := keyPackageService.Delete(context.session, &keyPackage, "Deleted via ActivityPub API"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete KeyPackage")
+		return derp.Wrap(err, location, "Deleting KeyPackage")
 	}
 
 	// Put the activity into the User's outbox (which triggers delivery to all recipients)
 	if err := putActivityIntoOutbox(context, activity); err != nil {
-		return derp.Wrap(err, location, "Unable to process activity")
+		return derp.Wrap(err, location, "Processing activity")
 	}
 
 	// Win.

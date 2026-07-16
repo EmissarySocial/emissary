@@ -22,7 +22,7 @@ func Version25(ctx context.Context, session *mongo.Database) error {
 	cursor, err := session.Collection("Connection").Find(ctx, bson.M{})
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to read Connections from database")
+		return derp.Wrap(err, location, "Reading Connections from database")
 	}
 
 	// Copy connections into a map
@@ -40,7 +40,7 @@ func Version25(ctx context.Context, session *mongo.Database) error {
 	domain := model.NewDomain()
 
 	if err := session.Collection("Domain").FindOne(ctx, bson.M{}).Decode(&domain); err != nil {
-		return derp.Wrap(err, location, "Unable to read Domain from database")
+		return derp.Wrap(err, location, "Reading Domain from database")
 	}
 
 	// Update the domain with the new connections data
@@ -48,7 +48,7 @@ func Version25(ctx context.Context, session *mongo.Database) error {
 
 	// Write the domain back to the database
 	if _, err := session.Collection("Domain").ReplaceOne(ctx, bson.M{"_id": domain.DomainID}, domain); err != nil {
-		return derp.Wrap(err, location, "Unable to write Domain to database")
+		return derp.Wrap(err, location, "Writing Domain to database")
 	}
 
 	return nil

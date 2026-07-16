@@ -29,7 +29,7 @@ func MaxRank(ctx context.Context, collection data.Collection, parentID primitive
 
 	// Try to execute the query as a mongodb pipeline
 	if err := pipeline(ctx, collection, &result, query); err != nil {
-		return 0, derp.Wrap(err, "queries.CountRecords", "Error counting records")
+		return 0, derp.Wrap(err, "queries.CountRecords", "Counting records")
 	}
 
 	// If there are no results, then the collection is empty.

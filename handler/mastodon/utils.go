@@ -107,7 +107,7 @@ func getStreamFromURL(serverFactory *server.Factory, streamURL string) (*service
 	session, cancel, err := factory.Session(time.Minute)
 
 	if err != nil {
-		return nil, nil, model.Stream{}, derp.Wrap(err, location, "Unable to create session")
+		return nil, nil, model.Stream{}, derp.Wrap(err, location, "Creating session")
 	}
 
 	defer cancel()
@@ -117,7 +117,7 @@ func getStreamFromURL(serverFactory *server.Factory, streamURL string) (*service
 	stream := model.NewStream()
 
 	if err := streamService.LoadByURL(session, streamURL, &stream); err != nil {
-		return nil, nil, model.Stream{}, derp.Wrap(err, location, "Unable to load stream")
+		return nil, nil, model.Stream{}, derp.Wrap(err, location, "Loading stream")
 	}
 
 	// Return values to the caller.
@@ -142,14 +142,14 @@ func userCanStream(factory *service.Factory, session data.Session, authorization
 	template, err := factory.Template().Load(stream.TemplateID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load template")
+		return derp.Wrap(err, location, "Loading template")
 	}
 
 	// Check permissions for the requested action
 	allowed, err := factory.Permission().UserCan(session, authorization, &template, stream, actionID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error checking permissions")
+		return derp.Wrap(err, location, "Checking permissions")
 	}
 
 	if !allowed {

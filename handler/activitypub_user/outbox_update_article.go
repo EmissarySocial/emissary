@@ -24,7 +24,7 @@ func outbox_UpdateArticle(context Context, activity streams.Document) error {
 	userID, objectID, err := locatorService.ParseObject(document.ID())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to parse object ID", document.ID())
+		return derp.Wrap(err, location, "Parsing object ID", document.ID())
 	}
 
 	// Verify that the UserID matches the current user
@@ -37,7 +37,7 @@ func outbox_UpdateArticle(context Context, activity streams.Document) error {
 	object := model.NewObject()
 
 	if err := objectService.LoadByID(context.session, userID, objectID, &object); err != nil {
-		return derp.Wrap(err, location, "Unable to load object", "objectID", objectID)
+		return derp.Wrap(err, location, "Loading object", "objectID", objectID)
 	}
 
 	// Update the Object's value
@@ -46,12 +46,12 @@ func outbox_UpdateArticle(context Context, activity streams.Document) error {
 
 	// Save the updated Object to the database
 	if err := objectService.Save(context.session, &object, "Updated via ActivityPub Outbox"); err != nil {
-		return derp.Wrap(err, location, "Unable to save object", object)
+		return derp.Wrap(err, location, "Saving object", object)
 	}
 
 	// Put the activity into the User's outbox (which triggers delivery to all recipients)
 	if err := putActivityIntoOutbox(context, activity); err != nil {
-		return derp.Wrap(err, location, "Unable to process activity")
+		return derp.Wrap(err, location, "Processing activity")
 	}
 
 	// Send response to caller

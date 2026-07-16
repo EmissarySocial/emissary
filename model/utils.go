@@ -110,7 +110,7 @@ func markdownToHTML(value string, options ...goldmark.Extender) string {
 	md := goldmark.New(goldmark.WithExtensions(options...))
 
 	if err := md.Convert([]byte(valueBytes), &buffer); err != nil {
-		derp.Report(derp.Wrap(err, "tools.templates.functions.markdown", "Error converting Markdown to HTML"))
+		derp.Report(derp.Wrap(err, "tools.templates.functions.markdown", "Converting Markdown to HTML"))
 	}
 
 	return buffer.String()

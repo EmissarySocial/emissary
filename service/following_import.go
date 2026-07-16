@@ -17,7 +17,7 @@ func (service *Following) Import(session data.Session, _ *model.Import, importIt
 	// Unmarshal the JSON document into a new Following
 	following := model.NewFollowing()
 	if err := json.Unmarshal(document, &following); err != nil {
-		return derp.Wrap(err, location, "Unable to parse remote document", document)
+		return derp.Wrap(err, location, "Parsing remote document", document)
 	}
 
 	// Update mapping values in the importItem
@@ -30,17 +30,17 @@ func (service *Following) Import(session data.Session, _ *model.Import, importIt
 
 	// Map the UserID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &following.UserID); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map UserID", "UserID: "+user.UserID.Hex()+", FollowingID: "+following.FollowingID.Hex()))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Mapping UserID", "UserID: "+user.UserID.Hex()+", FollowingID: "+following.FollowingID.Hex()))
 	}
 
 	// Map the FolderID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, following.FolderID.Pointer()); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map FolderID", "UserID: "+user.UserID.Hex()+", FollowingID: "+following.FollowingID.Hex()))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Mapping FolderID", "UserID: "+user.UserID.Hex()+", FollowingID: "+following.FollowingID.Hex()))
 	}
 
 	// Save the Following to the database
 	if err := service.Save(session, &following, "Imported"); err != nil {
-		return derp.Wrap(err, location, "Unable to save imported Following")
+		return derp.Wrap(err, location, "Saving imported Following")
 	}
 
 	// A Man, A Plan, A Canal. Panama.
@@ -53,7 +53,7 @@ func (service *Following) UndoImport(session data.Session, importItem *model.Imp
 	const location = "service.Following.UndoImport"
 
 	if err := service.HardDeleteByID(session, importItem.UserID, importItem.LocalID); err != nil {
-		return derp.Wrap(err, location, "Unable to delete record", importItem.LocalID)
+		return derp.Wrap(err, location, "Deleting record", importItem.LocalID)
 	}
 
 	return nil

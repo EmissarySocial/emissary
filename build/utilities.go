@@ -30,7 +30,7 @@ func WrapInlineSuccess(response http.ResponseWriter, message any) error {
 	response.WriteHeader(http.StatusOK)
 
 	if _, err := response.Write([]byte(`<span class="text-green">` + convert.String(message) + `</span>`)); err != nil {
-		return derp.Wrap(err, "build.WrapInlineSuccess", "Unable to write response. This should never happen", message)
+		return derp.Wrap(err, "build.WrapInlineSuccess", "Writing response. This should never happen", message)
 	}
 
 	return nil
@@ -46,7 +46,7 @@ func WrapInlineError(response http.ResponseWriter, err error) error {
 	response.WriteHeader(http.StatusOK)
 
 	if _, writeError := response.Write([]byte(`<span class="text-red">` + derp.Message(err) + `</span>`)); writeError != nil {
-		return derp.Wrap(writeError, "build.WrapInlineError", "Error writing response", err)
+		return derp.Wrap(writeError, "build.WrapInlineError", "Writing response", err)
 	}
 
 	return nil
@@ -232,7 +232,7 @@ func executeTemplate(template TemplateLike, data any) string {
 	var buffer bytes.Buffer
 
 	if err := template.Execute(&buffer, data); err != nil {
-		derp.Report(derp.Wrap(err, "build.execute", "Error executing template", data))
+		derp.Report(derp.Wrap(err, "build.execute", "Executing template", data))
 		return ""
 	}
 
@@ -272,7 +272,7 @@ func AsHTML(ctx echo.Context, factory Factory, b Builder, actionMethod ActionMet
 	status := pipeline.Execute(factory, b, &partialPage, actionMethod)
 
 	if status.Error != nil {
-		return derp.Wrap(status.Error, location, "Error executing action pipeline")
+		return derp.Wrap(status.Error, location, "Executing action pipeline")
 	}
 
 	// Copy status values into the Response...
@@ -281,7 +281,7 @@ func AsHTML(ctx echo.Context, factory Factory, b Builder, actionMethod ActionMet
 	// Partial page requests can be completed here.
 	if b.IsPartialRequest() || status.FullPage {
 		if err := ctx.HTML(status.GetStatusCode(), partialPage.String()); err != nil {
-			return derp.Wrap(err, location, "Unable to build partial-page content", status.GetStatusCode())
+			return derp.Wrap(err, location, "Building partial-page content", status.GetStatusCode())
 		}
 
 		return nil
@@ -293,7 +293,7 @@ func AsHTML(ctx echo.Context, factory Factory, b Builder, actionMethod ActionMet
 	var fullPage bytes.Buffer
 
 	if err := htmlTemplate.ExecuteTemplate(&fullPage, "page", b); err != nil {
-		return derp.Wrap(err, location, "Unable to build full-page content")
+		return derp.Wrap(err, location, "Building full-page content")
 	}
 
 	return ctx.HTML(http.StatusOK, fullPage.String())
@@ -322,7 +322,7 @@ func isUserVisible(authorization *model.Authorization, user *model.User) bool {
 func multipartForm(request *http.Request) (*multipart.Form, error) {
 
 	if err := request.ParseMultipartForm(32 << 20); err != nil {
-		return nil, derp.Wrap(err, "build.multipartForm", "Error parsing multipart form")
+		return nil, derp.Wrap(err, "build.multipartForm", "Parsing multipart form")
 	}
 
 	return request.MultipartForm, nil

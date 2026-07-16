@@ -27,7 +27,7 @@ func (service CircleLookupProvider) Get() []form.LookupCode {
 	circles, err := service.circleService.QueryByUser(service.session, service.userID, option.SortAsc("name"))
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, "service.CircleLookupProvider.Get", "Error retrieving circles for user", service.userID.Hex()))
+		derp.Report(derp.Wrap(err, "service.CircleLookupProvider.Get", "Retrieving circles for user", service.userID.Hex()))
 	}
 
 	result := make([]form.LookupCode, 0, len(circles))
@@ -46,7 +46,7 @@ func (service CircleLookupProvider) Add(name string) (string, error) {
 	circle.UserID = service.userID
 
 	if err := service.circleService.Save(service.session, &circle, "created"); err != nil {
-		return "", derp.Wrap(err, "service.CircleLookupProvider.Add", "Unable to save circle", name)
+		return "", derp.Wrap(err, "service.CircleLookupProvider.Add", "Saving circle", name)
 	}
 
 	return circle.ID(), nil

@@ -23,14 +23,14 @@ func (service *Following) ExportDocument(session data.Session, userID primitive.
 	// Load the Following
 	following := model.NewFollowing()
 	if err := service.LoadByID(session, userID, followingID, &following); err != nil {
-		return "", derp.Wrap(err, location, "Unable to load Following")
+		return "", derp.Wrap(err, location, "Loading Following")
 	}
 
 	// Marshal the following as JSON
 	result, err := json.Marshal(following)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to marshal Following", following)
+		return "", derp.Wrap(err, location, "Marshaling Following", following)
 	}
 
 	// Success

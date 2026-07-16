@@ -50,7 +50,7 @@ func inboxUndoLike(context Context, activity streams.Document) error {
 	// Remove this Like/Dislike/Announce from the target Stream's response collection (if the target
 	// is a local Stream). Keyed by the original activity's own ID, matching what the add path stored.
 	if err := context.factory.Stream().RemoveResponseCollectionItem(context.session, originalActivity.Object().ID(), originalActivity.Type(), originalActivity.ID()); err != nil {
-		return derp.Wrap(err, location, "Unable to remove response from collection", originalActivity.ID())
+		return derp.Wrap(err, location, "Removing response from collection", originalActivity.ID())
 	}
 
 	// Get/Generate the ID of the original activity
@@ -62,7 +62,7 @@ func inboxUndoLike(context Context, activity streams.Document) error {
 
 	// Remove the original activity from the database.
 	if err := context.factory.ActivityStream().Delete(originalActivityID); err != nil {
-		return derp.Wrap(err, location, "Unable to delete original activity", originalActivity)
+		return derp.Wrap(err, location, "Deleting original activity", originalActivity)
 	}
 
 	return nil

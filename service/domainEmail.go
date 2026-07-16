@@ -53,7 +53,7 @@ func (service *DomainEmail) SendWelcome(session data.Session, txn model.Registra
 	token, err := sterankoService.CreateJWT(txn.Claims())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to create JWT")
+		return derp.Wrap(err, location, "Creating JWT")
 	}
 
 	// Get the domain information from the DomainService
@@ -81,7 +81,7 @@ func (service *DomainEmail) SendWelcome(session data.Session, txn model.Registra
 	)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to send welcome email to user", txn.EmailAddress)
+		return derp.Wrap(err, location, "Sending welcome email to user", txn.EmailAddress)
 	}
 
 	// Woot!
@@ -120,7 +120,7 @@ func (service *DomainEmail) SendPasswordReset(user *model.User) error {
 	)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to send password reset email to user", user.Username)
+		return derp.Wrap(err, location, "Sending password reset email to user", user.Username)
 	}
 
 	return nil
@@ -158,7 +158,7 @@ func (service *DomainEmail) SendPasswordResetConfirmation(session data.Session, 
 	)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to send password reset confirmation email to user", user.Username)
+		return derp.Wrap(err, location, "Sending password reset confirmation email to user", user.Username)
 	}
 
 	return nil
@@ -196,7 +196,7 @@ func (service *DomainEmail) SendUserLockout(session data.Session, user *model.Us
 	)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to send user lockout email to user", user.Username)
+		return derp.Wrap(err, location, "Sending user lockout email to user", user.Username)
 	}
 
 	return nil
@@ -230,7 +230,7 @@ func (service *DomainEmail) SendGuestCode(identifier string, token string) error
 	)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to send guest code to: "+identifier)
+		return derp.Wrap(err, location, "Sending guest code to: "+identifier)
 	}
 
 	// Woot!
@@ -268,7 +268,7 @@ func (service *DomainEmail) SendFollowerConfirmation(actor model.PersonLink, fol
 	)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to send follow confirmation email to user", follower.Actor.EmailAddress)
+		return derp.Wrap(err, location, "Sending follow confirmation email to user", follower.Actor.EmailAddress)
 	}
 
 	return nil
@@ -310,7 +310,7 @@ func (service *DomainEmail) SendFollowerActivity(follower *model.Follower, activ
 	)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to send follower email to user", follower.Actor.EmailAddress)
+		return derp.Wrap(err, location, "Sending follower email to user", follower.Actor.EmailAddress)
 	}
 
 	return nil

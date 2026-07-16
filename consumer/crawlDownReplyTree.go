@@ -21,7 +21,7 @@ func CrawlDownReplyTree(factory *service.Factory, args mapof.Any) queue.Result {
 	document, err := client.Load(url)
 
 	if err != nil {
-		return requeue(derp.Wrap(err, location, "Unable to load document"))
+		return requeue(derp.Wrap(err, location, "Loading document"))
 	}
 
 	/*
@@ -36,7 +36,7 @@ func CrawlDownReplyTree(factory *service.Factory, args mapof.Any) queue.Result {
 	replies, err := document.Replies().Load()
 
 	if err != nil {
-		return requeue(derp.Wrap(err, location, "Unable to load replies"))
+		return requeue(derp.Wrap(err, location, "Loading replies"))
 	}
 
 	// Exit if the replies object isn't actually a collection

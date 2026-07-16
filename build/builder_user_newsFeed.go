@@ -40,14 +40,14 @@ func NewInbox(factory Factory, session data.Session, request *http.Request, resp
 	template, err := templateService.Load(user.InboxTemplate)
 
 	if err != nil {
-		return Inbox{}, derp.Wrap(err, location, "Unable to load template")
+		return Inbox{}, derp.Wrap(err, location, "Loading template")
 	}
 
 	// Create the underlying Common builder
 	common, err := NewCommonWithTemplate(factory, session, request, response, template, user, actionID)
 
 	if err != nil {
-		return Inbox{}, derp.Wrap(err, location, "Unable to create common builder")
+		return Inbox{}, derp.Wrap(err, location, "Creating common builder")
 	}
 
 	// Enforce user permissions on the requested action
@@ -78,7 +78,7 @@ func (w Inbox) Render() (template.HTML, error) {
 	status := Pipeline(w._action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
-		return "", derp.Wrap(status.Error, "build.NewsFeed.Render", "Unable to generate HTML", w._request.URL.String())
+		return "", derp.Wrap(status.Error, "build.NewsFeed.Render", "Generating HTML", w._request.URL.String())
 	}
 
 	// Success!
@@ -92,7 +92,7 @@ func (w Inbox) View(actionID string) (template.HTML, error) {
 	builder, err := NewInbox(w._factory, w._session, w._request, w._response, w._user, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, "build.NewsFeed.View", "Unable to create Inbox builder")
+		return template.HTML(""), derp.Wrap(err, "build.NewsFeed.View", "Creating Inbox builder")
 	}
 
 	return builder.Render()
@@ -266,7 +266,7 @@ func (w Inbox) FollowingByToken(followingToken string) (model.Following, error) 
 	following := model.NewFollowing()
 
 	if err := followingService.LoadByToken(w._session, userID, followingToken, &following); err != nil {
-		return model.Following{}, derp.Wrap(err, "build.NewsFeed.FollowingByID", "Unable to load following")
+		return model.Following{}, derp.Wrap(err, "build.NewsFeed.FollowingByID", "Loading following")
 	}
 
 	return following, nil
@@ -293,7 +293,7 @@ func (w Inbox) RuleByToken(token string) model.Rule {
 	rule := model.NewRule()
 
 	if err := ruleService.LoadByToken(w._session, w.AuthenticatedID(), token, &rule); err != nil {
-		derp.Report(derp.Wrap(err, "build.NewsFeed.RuleByToken", "Unable to load rule", token))
+		derp.Report(derp.Wrap(err, "build.NewsFeed.RuleByToken", "Loading rule", token))
 	}
 
 	return rule
@@ -386,7 +386,7 @@ func (w Inbox) Folders() (model.FolderList, error) {
 	folders, err := folderService.QueryByUserID(w._session, w.AuthenticatedID())
 
 	if err != nil {
-		return result, derp.Wrap(err, "build.NewsFeed.Folders", "Unable to load folders")
+		return result, derp.Wrap(err, "build.NewsFeed.Folders", "Loading folders")
 	}
 
 	result.Folders = folders
@@ -402,7 +402,7 @@ func (w Inbox) FoldersWithSelection(section string) (model.FolderList, error) {
 	result, err := w.Folders()
 
 	if err != nil {
-		return result, derp.Wrap(err, location, "Unable to load folders")
+		return result, derp.Wrap(err, location, "Loading folders")
 	}
 
 	// If the "Conversations" section is selected, then we are done.
@@ -476,7 +476,7 @@ func (w Inbox) SubBuilder(object any) (Builder, error) {
 	}
 
 	if err != nil {
-		err = derp.Wrap(err, "build.Common.SubBuilder", "Unable to create sub-builder for object", object)
+		err = derp.Wrap(err, "build.Common.SubBuilder", "Creating sub-builder for object", object)
 		derp.Report(err)
 	}
 
@@ -508,7 +508,7 @@ func (w Inbox) Message() model.NewsItem {
 	newsItem := model.NewNewsItem()
 
 	if err := inboxService.LoadByID(w._session, w.AuthenticatedID(), newsItemID, &newsItem); err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to load newsItem", newsItemID))
+		derp.Report(derp.Wrap(err, location, "Loading newsItem", newsItemID))
 		return model.NewNewsItem()
 	}
 
@@ -536,7 +536,7 @@ func (w Inbox) Message() model.NewsItem {
 		result, err := inboxService.Query(w._session, criteria, options...)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to query sibling newsItem", sibling, newsItem.MessageID))
+			derp.Report(derp.Wrap(err, location, "Querying sibling newsItem", sibling, newsItem.MessageID))
 			return model.NewNewsItem()
 		}
 
@@ -639,7 +639,7 @@ func (w Inbox) HasRule(ruleType string, trigger string) model.Rule {
 	// In either case, do not halt the request
 	if err := ruleService.LoadByTrigger(w._session, w._user.UserID, ruleType, trigger, &rule); err != nil {
 		if !derp.IsNotFound(err) {
-			derp.Report(derp.Wrap(err, "build.NewsFeed.HasRule", "Unable to load rule", ruleType, trigger))
+			derp.Report(derp.Wrap(err, "build.NewsFeed.HasRule", "Loading rule", ruleType, trigger))
 		}
 	}
 

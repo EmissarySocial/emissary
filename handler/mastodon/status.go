@@ -30,7 +30,7 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unable to create session")
+			return object.Status{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -40,7 +40,7 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		user := model.NewUser()
 
 		if err := userSerivce.LoadByID(session, authorization.UserID, &user); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unable to load user")
+			return object.Status{}, derp.Wrap(err, location, "Loading user")
 		}
 
 		// Create the stream for the new mastodon "Status"
@@ -65,12 +65,12 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		// Save the stream
 		streamService := factory.Stream()
 		if err := streamService.Save(session, &stream, "Created via Mastodon API"); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unable to save stream")
+			return object.Status{}, derp.Wrap(err, location, "Saving stream")
 		}
 
 		// Publish the Stream to the User's outbox
 		if err := streamService.Publish(session, &user, &stream, "published", true, false); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Error publishing stream")
+			return object.Status{}, derp.Wrap(err, location, "Publishing stream")
 		}
 
 		return stream.Toot(), nil
@@ -88,21 +88,21 @@ func GetStatus(serverFactory *server.Factory) func(model.Authorization, txn.GetS
 		factory, _, stream, err := getStreamFromURL(serverFactory, transaction.ID)
 
 		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unable to load stream")
+			return object.Status{}, derp.Wrap(err, location, "Loading stream")
 		}
 
 		// Get a database session for this request
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unable to create session")
+			return object.Status{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
 
 		// Validate that this user is allowed to view this Stream
 		if err := userCanStream(factory, session, &authorization, &stream, "view"); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unable to view stream")
+			return object.Status{}, derp.Wrap(err, location, "Viewing stream")
 		}
 
 		// Return the value
@@ -120,26 +120,26 @@ func DeleteStatus(serverFactory *server.Factory) func(model.Authorization, txn.D
 		factory, streamService, stream, err := getStreamFromURL(serverFactory, transaction.ID)
 
 		if err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Unable to load stream")
+			return struct{}{}, derp.Wrap(err, location, "Loading stream")
 		}
 
 		// Validate that this user is allowed to delete this Stream.  Deleting is an
 		// author-only operation, matching the Mastodon API contract.
 		if err := userOwnsStream(&authorization, &stream); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Unable to delete stream")
+			return struct{}{}, derp.Wrap(err, location, "Deleting stream")
 		}
 
 		// Get a database session for this request
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Unable to create session")
+			return struct{}{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
 
 		if err := streamService.Delete(session, &stream, "Deleted via Mastodon API"); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Unable to delete stream")
+			return struct{}{}, derp.Wrap(err, location, "Deleting stream")
 		}
 
 		return struct{}{}, nil
@@ -167,21 +167,21 @@ func PostStatus_Translate(serverFactory *server.Factory) func(model.Authorizatio
 		factory, _, stream, err := getStreamFromURL(serverFactory, t.ID)
 
 		if err != nil {
-			return object.Translation{}, derp.Wrap(err, location, "Unable to load stream")
+			return object.Translation{}, derp.Wrap(err, location, "Loading stream")
 		}
 
 		// Get a database session for this request
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return object.Translation{}, derp.Wrap(err, location, "Unable to create session")
+			return object.Translation{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
 
 		// Validate that this user is allowed to view this Stream
 		if err := userCanStream(factory, session, &auth, &stream, "view"); err != nil {
-			return object.Translation{}, derp.Wrap(err, location, "Unable to view stream")
+			return object.Translation{}, derp.Wrap(err, location, "Viewing stream")
 		}
 
 		result := object.Translation{
@@ -228,7 +228,7 @@ func PostStatus_Favourite(serverFactory *server.Factory) func(model.Authorizatio
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unable to create session")
+			return object.Status{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -237,7 +237,7 @@ func PostStatus_Favourite(serverFactory *server.Factory) func(model.Authorizatio
 		userService := factory.User()
 		user := model.NewUser()
 		if err := userService.LoadByID(session, auth.UserID, &user); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unable to load user")
+			return object.Status{}, derp.Wrap(err, location, "Loading user")
 		}
 
 		// Load the news feed item being favorited
@@ -245,7 +245,7 @@ func PostStatus_Favourite(serverFactory *server.Factory) func(model.Authorizatio
 		message := model.NewNewsItem()
 
 		if err := newsFeedService.LoadByURL(session, auth.UserID, t.ID, &message); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unable to load message")
+			return object.Status{}, derp.Wrap(err, location, "Loading message")
 		}
 
 		// Create the new response
@@ -257,7 +257,7 @@ func PostStatus_Favourite(serverFactory *server.Factory) func(model.Authorizatio
 		response.Object = message.URL
 		response.Type = vocab.ActivityTypeLike
 		if err := responseService.Save(session, &response, "Created via Mastodon API"); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unable to save response")
+			return object.Status{}, derp.Wrap(err, location, "Saving response")
 		}
 
 		return response.Toot(), nil
@@ -282,7 +282,7 @@ func PostStatus_Unfavourite(serverFactory *server.Factory) func(model.Authorizat
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unable to create session")
+			return object.Status{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -299,12 +299,12 @@ func PostStatus_Unfavourite(serverFactory *server.Factory) func(model.Authorizat
 			}
 
 			// Otherwise, return a legitimate error
-			return object.Status{}, derp.Wrap(err, location, "Unable to load response")
+			return object.Status{}, derp.Wrap(err, location, "Loading response")
 		}
 
 		// Fall through means a response exists.  Delete it
 		if err := responseService.Delete(session, &response, "Deleted via Mastodon API"); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unable to delete response")
+			return object.Status{}, derp.Wrap(err, location, "Deleting response")
 		}
 
 		// Return success
@@ -362,7 +362,7 @@ func PostStatus_Mute(serverFactory *server.Factory) func(model.Authorization, tx
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unable to create session")
+			return object.Status{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -372,12 +372,12 @@ func PostStatus_Mute(serverFactory *server.Factory) func(model.Authorization, tx
 		message := model.NewNewsItem()
 
 		if err := newsFeedService.LoadByURL(session, auth.UserID, t.ID, &message); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Error retrieving message")
+			return object.Status{}, derp.Wrap(err, location, "Retrieving message")
 		}
 
 		// Mark the message as Muted
 		if err := newsFeedService.MarkMuted(session, &message); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Error muting message")
+			return object.Status{}, derp.Wrap(err, location, "Muting message")
 		}
 
 		return message.Toot(), nil
@@ -402,7 +402,7 @@ func PostStatus_Unmute(serverFactory *server.Factory) func(model.Authorization, 
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unable to create session")
+			return object.Status{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -412,12 +412,12 @@ func PostStatus_Unmute(serverFactory *server.Factory) func(model.Authorization, 
 		message := model.NewNewsItem()
 
 		if err := newsFeedService.LoadByURL(session, auth.UserID, t.ID, &message); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Error retrieving message")
+			return object.Status{}, derp.Wrap(err, location, "Retrieving message")
 		}
 
 		// Mark the message as Muted
 		if err := newsFeedService.MarkUnmuted(session, &message); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Error muting message")
+			return object.Status{}, derp.Wrap(err, location, "Muting message")
 		}
 
 		return message.Toot(), nil
@@ -458,7 +458,7 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unable to create session")
+			return object.Status{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -468,13 +468,13 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 		stream := model.NewStream()
 
 		if err := streamService.LoadByURL(session, t.ID, &stream); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Error loading stream")
+			return object.Status{}, derp.Wrap(err, location, "Loading stream")
 		}
 
 		// Validate that this user is allowed to edit this Stream.  Editing is an
 		// author-only operation, matching the Mastodon API contract.
 		if err := userOwnsStream(&auth, &stream); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unable to edit stream")
+			return object.Status{}, derp.Wrap(err, location, "Editing stream")
 		}
 
 		// Edit stream values
@@ -488,7 +488,7 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 
 		// Save the stream to the database
 		if err := streamService.Save(session, &stream, "Edited via Mastodon API"); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unable to save stream")
+			return object.Status{}, derp.Wrap(err, location, "Saving stream")
 		}
 
 		return stream.Toot(), nil
@@ -521,7 +521,7 @@ func GetStatus_Source(serverFactory *server.Factory) func(model.Authorization, t
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return object.StatusSource{}, derp.Wrap(err, location, "Unable to create session")
+			return object.StatusSource{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -531,12 +531,12 @@ func GetStatus_Source(serverFactory *server.Factory) func(model.Authorization, t
 		stream := model.NewStream()
 
 		if err := streamService.LoadByURL(session, t.ID, &stream); err != nil {
-			return object.StatusSource{}, derp.Wrap(err, location, "Error loading stream")
+			return object.StatusSource{}, derp.Wrap(err, location, "Loading stream")
 		}
 
 		// Validate that this user is allowed to view this Stream
 		if err := userCanStream(factory, session, &auth, &stream, "view"); err != nil {
-			return object.StatusSource{}, derp.Wrap(err, location, "Unable to view stream")
+			return object.StatusSource{}, derp.Wrap(err, location, "Viewing stream")
 		}
 
 		result := object.StatusSource{

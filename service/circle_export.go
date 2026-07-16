@@ -23,14 +23,14 @@ func (service *Circle) ExportDocument(session data.Session, userID primitive.Obj
 	// Load the Circle
 	circle := model.NewCircle()
 	if err := service.LoadByID(session, userID, circleID, &circle); err != nil {
-		return "", derp.Wrap(err, location, "Unable to load Circle")
+		return "", derp.Wrap(err, location, "Loading Circle")
 	}
 
 	// Marshal the circle as JSON
 	result, err := json.Marshal(circle)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Unable to marshal Circle", circle)
+		return "", derp.Wrap(err, location, "Marshaling Circle", circle)
 	}
 
 	// Success

@@ -49,7 +49,7 @@ func getResponseCollection(ctx *steranko.Context, factory *service.Factory, sess
 		if derp.IsNotFound(err) {
 			collectionExists = false
 		} else {
-			return derp.Wrap(err, location, "Unable to load response collection", collectionType)
+			return derp.Wrap(err, location, "Loading response collection", collectionType)
 		}
 	}
 
@@ -77,7 +77,7 @@ func getResponseCollection(ctx *steranko.Context, factory *service.Factory, sess
 	items, err := factory.CollectionItem().QueryByCollectionAndDate(session, collection.CollectionID, publishedDate, pageSize)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load response items")
+		return derp.Wrap(err, location, "Loading response items")
 	}
 
 	// Serve the page as a collection of links (each item is a response activity URI).

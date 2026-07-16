@@ -75,7 +75,7 @@ func (step StepViewHTML) execute(builder Builder, buffer io.Writer) PipelineBeha
 	}
 
 	if err := builder.execute(buffer, filename, builder); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepViewHTML.Get", "Error executing template"))
+		return Halt().WithError(derp.Wrap(err, "build.StepViewHTML.Get", "Executing template"))
 	}
 
 	// TODO: MEDIUM: Re-implement caching.  Will need to automatically compute the "Vary" header.

@@ -22,7 +22,7 @@ func (service *Identity) sendGuestCode_ActivityPub(session data.Session, identif
 	recipientID, _, err := service.activityService.GetRecipient(identifier)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to find recipient inbox", identifier)
+		return derp.Wrap(err, location, "Finding recipient inbox", identifier)
 	}
 
 	// Create the outbound message

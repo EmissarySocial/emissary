@@ -30,7 +30,7 @@ func PostUserExportStart(ctx *steranko.Context, factory *service.Factory, sessio
 
 	// Collect parameters from form post
 	if err := ctx.Bind(&txn); err != nil {
-		return derp.Wrap(err, location, "Unable to parse request")
+		return derp.Wrap(err, location, "Parsing request")
 	}
 
 	// Populate the OAuthUserToken Data with values from the client
@@ -41,7 +41,7 @@ func PostUserExportStart(ctx *steranko.Context, factory *service.Factory, sessio
 	// Save the updated OAuthUserToken
 	oauthUserTokenService := factory.OAuthUserToken()
 	if err := oauthUserTokenService.Save(session, oauthUserToken, "Starting Export via OAuth"); err != nil {
-		return derp.Wrap(err, location, "Unable to save OAuthUserToken", "oauthUserTokenID", oauthUserToken.OAuthUserTokenID)
+		return derp.Wrap(err, location, "Saving OAuthUserToken", "oauthUserTokenID", oauthUserToken.OAuthUserTokenID)
 	}
 
 	// Return an empty 200 OK response
@@ -70,7 +70,7 @@ func GetUserExportCollection(ctx *steranko.Context, factory *service.Factory, se
 	records, err := service.ExportCollection(session, user.UserID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to retrieve exportable records", collection)
+		return derp.Wrap(err, location, "Retrieving exportable records", collection)
 	}
 
 	// Return the result to the caller as a JSON-LD Collection
@@ -94,7 +94,7 @@ func GetUserExportDocument(ctx *steranko.Context, factory *service.Factory, sess
 	service, err := exportService.FindService(collection)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to find export service", collection)
+		return derp.Wrap(err, location, "Finding export service", collection)
 	}
 
 	recordID, err := primitive.ObjectIDFromHex(ctx.Param("recordId"))
@@ -126,7 +126,7 @@ func GetAttachmentsExportCollection(ctx *steranko.Context, factory *service.Fact
 	records, err := factory.Attachment().ExportCollection(session, model.AttachmentObjectTypeStream, stream.StreamID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to retrieve exportable attachments")
+		return derp.Wrap(err, location, "Retrieving exportable attachments")
 	}
 
 	// Return the result to the caller as a JSON-LD Collection
@@ -212,7 +212,7 @@ func PostUserExportFinish(ctx *steranko.Context, factory *service.Factory, sessi
 	oauthUserToken := model.NewOAuthUserToken()
 
 	if err := oauthUserTokenService.LoadByID(session, user.UserID, oauthUserTokenID, &oauthUserToken); err != nil {
-		return derp.Wrap(err, location, "Unable to load OAuthUserToken", oauthUserTokenID)
+		return derp.Wrap(err, location, "Loading OAuthUserToken", oauthUserTokenID)
 	}
 
 	actor := oauthUserToken.Data.GetString("actor")
@@ -220,7 +220,7 @@ func PostUserExportFinish(ctx *steranko.Context, factory *service.Factory, sessi
 
 	// Mark the User as "Moved"
 	if err := factory.User().Move(session, user, actor, oracle); err != nil {
-		return derp.Wrap(err, location, "Unable to mark User as 'Moved'", user, actor)
+		return derp.Wrap(err, location, "Marking User as 'Moved'", user, actor)
 	}
 
 	// Sign the user out of this website.

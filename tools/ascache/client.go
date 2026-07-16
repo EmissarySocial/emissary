@@ -81,7 +81,7 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 	session, cancel, err := client.timeoutSession(config.timeoutSeconds)
 
 	if err != nil {
-		return streams.NilDocument(), derp.Wrap(err, location, "Unable to connect to database")
+		return streams.NilDocument(), derp.Wrap(err, location, "Connecting to database")
 	}
 
 	if session == nil {
@@ -127,11 +127,11 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 		// If the original document is gone, and we're forcing a reload, then remove the value from the cache
 		if derp.IsNotFound(err) && config.isWriteAllowed() {
 			if inner := client.Delete(url); inner != nil {
-				return result, derp.Wrap(inner, location, "Unable to remove document from cache", url)
+				return result, derp.Wrap(inner, location, "Removing document from cache", url)
 			}
 		}
 
-		return result, derp.Wrap(err, location, "Unable to load document from inner client", url)
+		return result, derp.Wrap(err, location, "Loading document from inner client", url)
 	}
 
 	// If we're allowed to write to the cache, then try to update it here
@@ -140,7 +140,7 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 		value := asValue(result)
 
 		if err := client.save(session.Context(), url, &value); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to write document to cache.. continuing process.."))
+			derp.Report(derp.Wrap(err, location, "Writing document to cache.. continuing process.."))
 		}
 
 		client.countRelatedDocuments(result)
@@ -162,7 +162,7 @@ func (client *Client) Save(document streams.Document) error {
 	value := asValue(document)
 
 	if err := client.save(ctx, document.ID(), &value); err != nil {
-		return derp.Wrap(err, location, "Unable to put document into cache")
+		return derp.Wrap(err, location, "Putting document into cache")
 	}
 
 	return nil
@@ -193,20 +193,20 @@ func (client *Client) Delete(url string) error {
 			return nil
 		}
 
-		return derp.Wrap(err, location, "Unable to load cached ActivityStream document", url)
+		return derp.Wrap(err, location, "Loading cached ActivityStream document", url)
 	}
 
 	// Delete the document from the cache
 	criteria := exp.Equal("urls", url)
 
 	if err := collection.HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete", url)
+		return derp.Wrap(err, location, "Deleting", url)
 	}
 
 	// Maybe recalculate statistics
 	if value.Metadata.HasRelationship() {
 		if err := client.CalcParentRelationships(session, value.Metadata.RelationType, value.Metadata.RelationHref); err != nil {
-			return derp.Wrap(err, location, "Error calculating statistics", url)
+			return derp.Wrap(err, location, "Calculating statistics", url)
 		}
 	}
 
@@ -229,7 +229,7 @@ func (client *Client) session(ctx context.Context) (data.Session, error) {
 	session, err := client.commonDatabase.Session(ctx)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to connect to common database")
+		return nil, derp.Wrap(err, location, "Connecting to common database")
 	}
 
 	return session, nil
@@ -244,7 +244,7 @@ func (client *Client) timeoutSession(seconds int) (data.Session, context.CancelF
 
 	if err != nil {
 		cancel()
-		return nil, nil, derp.Wrap(err, location, "Unable to connect to common database")
+		return nil, nil, derp.Wrap(err, location, "Connecting to common database")
 	}
 
 	if session == nil {
@@ -283,7 +283,7 @@ func (client *Client) save(ctx context.Context, url string, value *Value) error 
 		// doing this check HERE using the object.id field.
 
 		if err := client.removeDuplicates(session, value.URLs...); err != nil {
-			return nil, derp.Wrap(err, location, "Unable to search for duplicate document in cache")
+			return nil, derp.Wrap(err, location, "Searching for duplicate document in cache")
 		}
 
 		// Some calculations before we save the value
@@ -295,13 +295,13 @@ func (client *Client) save(ctx context.Context, url string, value *Value) error 
 		// Try to upsert the document into the cache
 		collection := client.collection(session)
 		if err := collection.Save(value, "updated"); err != nil {
-			return nil, derp.Wrap(err, location, "Unable to save cached value", url)
+			return nil, derp.Wrap(err, location, "Saving cached value", url)
 		}
 
 		// Maybe recalculate statistics
 		if value.Metadata.HasRelationship() {
 			if err := client.CalcParentRelationships(session, value.Metadata.RelationType, value.Metadata.RelationHref); err != nil {
-				return nil, derp.Wrap(err, location, "Unable to calculate relationships", url)
+				return nil, derp.Wrap(err, location, "Calculating relationships", url)
 			}
 		}
 
@@ -322,7 +322,7 @@ func (client *Client) removeDuplicates(session data.Session, urls ...string) err
 	criteria := exp.In("urls", urls)
 
 	if err := collection.HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to remove duplicate documents from cache", urls)
+		return derp.Wrap(err, location, "Removing duplicate documents from cache", urls)
 	}
 
 	return nil
@@ -386,7 +386,7 @@ func (client *Client) load(session data.Session, criteria exp.Expression, value 
 
 	// Query the cache database
 	if err := collection.Load(criteria, value); err != nil {
-		return derp.Wrap(err, location, "Unable to load cached value", criteria)
+		return derp.Wrap(err, location, "Loading cached value", criteria)
 	}
 
 	// Success.

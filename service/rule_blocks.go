@@ -25,7 +25,7 @@ func (service *Rule) BlockActor(session data.Session, userID primitive.ObjectID,
 
 	// Report legitimate errors
 	if !derp.IsNotFound(err) {
-		return derp.Wrap(err, location, "Unable to load rule for user and URL", userID, actorID)
+		return derp.Wrap(err, location, "Loading rule for user and URL", userID, actorID)
 	}
 
 	// Otherwise, create a new Rule record to block this actor
@@ -36,7 +36,7 @@ func (service *Rule) BlockActor(session data.Session, userID primitive.ObjectID,
 	rule.Note = note
 
 	if err := service.Save(session, &rule, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save rule for user and URL", rule)
+		return derp.Wrap(err, location, "Saving rule for user and URL", rule)
 	}
 
 	// Success.
@@ -60,12 +60,12 @@ func (service *Rule) UnblockActor(session data.Session, userID primitive.ObjectI
 			return nil
 		}
 
-		return derp.Wrap(err, location, "Unable to load rule for user and URL", userID, actorID)
+		return derp.Wrap(err, location, "Loading rule for user and URL", userID, actorID)
 	}
 
 	// Delete the existing Rule
 	if err := service.Delete(session, &rule, "Unblocking actor"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete rule for user and URL", rule)
+		return derp.Wrap(err, location, "Deleting rule for user and URL", rule)
 	}
 
 	// Success

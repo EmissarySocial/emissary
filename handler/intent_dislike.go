@@ -21,7 +21,7 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *service.Factory, session 
 	// Collect values from the QueryString
 	var transaction camper.DislikeIntent
 	if err := ctx.Bind(&transaction); err != nil {
-		return derp.Wrap(err, location, "Unable to read form data")
+		return derp.Wrap(err, location, "Reading form data")
 	}
 
 	// Default values here
@@ -31,7 +31,7 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *service.Factory, session 
 	object, err := client.Load(transaction.Object)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load object", ctx.Request().URL.String(), ctx.Request().URL, transaction)
+		return derp.Wrap(err, location, "Loading object", ctx.Request().URL.String(), ctx.Request().URL, transaction)
 	}
 
 	// Buiild HTML response

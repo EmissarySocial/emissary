@@ -27,7 +27,7 @@ func PostProxyURL(context *steranko.Context, factory *service.Factory, session d
 
 	// Bind the form data to the transaction object.
 	if err := context.Bind(&transaction); err != nil {
-		return derp.Wrap(err, location, "Unable to bind form data")
+		return derp.Wrap(err, location, "Binding form data")
 	}
 
 	// RULE: Don't allow empty IDs
@@ -56,7 +56,7 @@ func PostProxyURL(context *steranko.Context, factory *service.Factory, session d
 	result, err := client.Load(transaction.URL, ascache.WithWriteOnly())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load URL", transaction.URL)
+		return derp.Wrap(err, location, "Loading URL", transaction.URL)
 	}
 
 	// Success

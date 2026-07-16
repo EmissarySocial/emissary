@@ -25,13 +25,13 @@ func (service *Stream) UnPublish(session data.Session, user *model.User, stream 
 		// Send "Undo" activities to all User followers.
 		if !user.IsNew() {
 			if err := service.unpublish_outbox_user(session, user.UserID, stream); err != nil {
-				return derp.Wrap(err, location, "Unable to unpublish from the User's outbox", stream)
+				return derp.Wrap(err, location, "Unpublishing from the User's outbox", stream)
 			}
 		}
 
 		// Send "Undo" activities to all Stream followers.
 		if err := service.unpublish_outbox_stream(session, stream); err != nil {
-			return derp.Wrap(err, location, "Unable to unpublish from parent Stream's outbox", stream)
+			return derp.Wrap(err, location, "Unpublishing from parent Stream's outbox", stream)
 		}
 
 		// Send stream:publish:undo Webhooks
@@ -39,7 +39,7 @@ func (service *Stream) UnPublish(session data.Session, user *model.User, stream 
 
 		// Send syndication:undo messages to all targets
 		if err := service.sendSyndicationMessages(session, stream, nil, nil, stream.Syndication.Values); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to send syndication messages", stream))
+			derp.Report(derp.Wrap(err, location, "Sending syndication messages", stream))
 		}
 	}
 
@@ -49,7 +49,7 @@ func (service *Stream) UnPublish(session data.Session, user *model.User, stream 
 
 	// Re-save the Stream with the updated values.
 	if err := service.Save(session, stream, "UnPublish"); err != nil {
-		return derp.Wrap(err, location, "Unable to save the Stream", stream)
+		return derp.Wrap(err, location, "Saving the Stream", stream)
 	}
 
 	// Done.
@@ -64,7 +64,7 @@ func (service *Stream) unpublish_outbox_user(session data.Session, userID primit
 	// Try to publish via sendNotifications
 	log.Trace().Str("id", stream.URL).Msg("Publishing a DELETE from User's outbox")
 	if err := service.outboxService.DeleteActivity(session, model.FollowerTypeUser, userID, stream.URL, stream.DefaultAllow); err != nil {
-		return derp.Wrap(err, location, "Unable to unpublish activity", stream.URL)
+		return derp.Wrap(err, location, "Unpublishing activity", stream.URL)
 	}
 
 	// Done.
@@ -85,7 +85,7 @@ func (service *Stream) unpublish_outbox_stream(session data.Session, stream *mod
 	parentTemplate, err := service.templateService.Load(stream.ParentTemplateID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load parent template", stream.ParentTemplateID)
+		return derp.Wrap(err, location, "Loading parent template", stream.ParentTemplateID)
 	}
 
 	// RULE: If the parent Actor is not set to boost children, then NOOP
@@ -95,7 +95,7 @@ func (service *Stream) unpublish_outbox_stream(session data.Session, stream *mod
 
 	// Try to publish via sendNotifications
 	if err := service.outboxService.DeleteActivity(session, model.FollowerTypeStream, stream.ParentID, stream.ActivityPubURL(), stream.DefaultAllow); err != nil {
-		return derp.Wrap(err, location, "Unable to publish a DELETE activity for this Stream", stream)
+		return derp.Wrap(err, location, "Publishing a DELETE activity for this Stream", stream)
 	}
 
 	// Done.

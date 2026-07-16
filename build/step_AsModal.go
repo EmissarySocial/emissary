@@ -31,7 +31,7 @@ func (step StepAsModal) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 		}
 
 		if _, err := io.WriteString(buffer, modalContent); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error writing from builder to buffer"))
+			return Halt().WithError(derp.Wrap(err, location, "Writing from builder to buffer"))
 		}
 
 		result := UseResult(status).
@@ -55,7 +55,7 @@ func (step StepAsModal) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 	fullPageBuilder, err := builder.clone(step.Background)
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to create fullPageBuilder"))
+		return Halt().WithError(derp.Wrap(err, location, "Creating fullPageBuilder"))
 	}
 
 	// Execute the action pipeline
@@ -66,7 +66,7 @@ func (step StepAsModal) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 	status := pipeline.Execute(factory, fullPageBuilder, &partialPage, ActionMethodGet)
 
 	if status.Error != nil {
-		return Halt().WithError(derp.Wrap(status.Error, location, "Unable to build modal with fullPageBuilder"))
+		return Halt().WithError(derp.Wrap(status.Error, location, "Building modal with fullPageBuilder"))
 	}
 
 	// Copy status values into the Response...
@@ -78,7 +78,7 @@ func (step StepAsModal) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 	fullPageBuilder.SetContent(partialPage.String())
 
 	if err := htmlTemplate.ExecuteTemplate(&fullPage, "page", fullPageBuilder); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error executing template"))
+		return Halt().WithError(derp.Wrap(err, location, "Executing template"))
 	}
 
 	// Insert the modal into the page
@@ -88,7 +88,7 @@ func (step StepAsModal) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 	fullPageString := strings.Replace(fullPage.String(), asideBegin+asideEnd, asideBegin+modalString+asideEnd, 1)
 
 	if _, err := io.WriteString(buffer, fullPageString); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error writing from builder to buffer"))
+		return Halt().WithError(derp.Wrap(err, location, "Writing from builder to buffer"))
 	}
 
 	return UseResult(result).AsFullPage()
@@ -99,7 +99,7 @@ func (step StepAsModal) Post(builder Builder, buffer io.Writer) PipelineBehavior
 
 	// Write inner items
 	result := Pipeline(step.SubSteps).Post(builder.factory(), builder, buffer)
-	result.Error = derp.WrapIF(result.Error, "build.StepAsModal.Post", "Error executing subSteps")
+	result.Error = derp.WrapIF(result.Error, "build.StepAsModal.Post", "Executing subSteps")
 
 	return UseResult(result).WithEvent("closeModal", "true")
 }
@@ -112,7 +112,7 @@ func (step StepAsModal) getModalContent(builder Builder) (string, PipelineResult
 	var buffer bytes.Buffer
 
 	result := Pipeline(step.SubSteps).Get(builder.factory(), builder, &buffer)
-	result.Error = derp.WrapIF(result.Error, location, "Error executing subSteps")
+	result.Error = derp.WrapIF(result.Error, location, "Executing subSteps")
 
 	if result.Halt {
 		return "", result

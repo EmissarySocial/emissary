@@ -25,14 +25,14 @@ func Version8(ctx context.Context, session *mongo.Database) error {
 		cursor, err := collection.Find(ctx, map[string]any{})
 
 		if err != nil {
-			return derp.Wrap(err, location, "Error retrieving streams iterator")
+			return derp.Wrap(err, location, "Retrieving streams iterator")
 		}
 
 		for record := mapof.NewAny(); cursor.Next(ctx); record = mapof.NewAny() {
 
 			// Read the record from the database
 			if err := cursor.Decode(&record); err != nil {
-				return derp.Wrap(err, location, "Unable to decode stream record")
+				return derp.Wrap(err, location, "Decoding stream record")
 			}
 
 			// Update the record
@@ -48,7 +48,7 @@ func Version8(ctx context.Context, session *mongo.Database) error {
 			filter := bson.M{"_id": record["_id"]}
 
 			if _, err := collection.ReplaceOne(ctx, filter, record); err != nil {
-				return derp.Wrap(err, location, "Unable to update stream record")
+				return derp.Wrap(err, location, "Updating stream record")
 			}
 
 			fmt.Print(".")

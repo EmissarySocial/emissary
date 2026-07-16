@@ -32,7 +32,7 @@ func NewGroup(factory Factory, session data.Session, request *http.Request, resp
 	common, err := NewCommonWithTemplate(factory, session, request, response, template, group, actionID)
 
 	if err != nil {
-		return Group{}, derp.Wrap(err, location, "Unable to create common builder")
+		return Group{}, derp.Wrap(err, location, "Creating common builder")
 	}
 
 	// Verify that the user is a Domain Owner
@@ -60,7 +60,7 @@ func (w Group) Render() (template.HTML, error) {
 	status := Pipeline(w._action.Steps).Get(w._factory, &w, &buffer)
 
 	if status.Error != nil {
-		err := derp.Wrap(status.Error, "build.Group.Render", "Unable to generate HTML")
+		err := derp.Wrap(status.Error, "build.Group.Render", "Generating HTML")
 		derp.Report(err)
 		return "", err
 	}
@@ -78,7 +78,7 @@ func (w Group) View(actionID string) (template.HTML, error) {
 	builder, err := NewGroup(w._factory, w._session, w._request, w._response, w._template, w._group, actionID)
 
 	if err != nil {
-		return template.HTML(""), derp.Wrap(err, location, "Unable to create Group builder")
+		return template.HTML(""), derp.Wrap(err, location, "Creating Group builder")
 	}
 
 	return builder.Render()

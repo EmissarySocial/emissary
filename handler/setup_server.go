@@ -30,7 +30,7 @@ func SetupPageGet(factory *server.Factory, templates *template.Template, templat
 		header.Set("Cache-Control", "no-store")
 
 		if err := templates.ExecuteTemplate(ctx.Response().Writer, templateID, config); err != nil {
-			derp.Report(build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.getIndex", "Unable to build index page")))
+			derp.Report(build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.getIndex", "Building index page")))
 		}
 
 		return nil
@@ -66,7 +66,7 @@ func SetupServerGet(factory *server.Factory) echo.HandlerFunc {
 		result, err := widget.Editor(&config, nil)
 
 		if err != nil {
-			return derp.Wrap(err, "setup.serverTable", "Unable to create form")
+			return derp.Wrap(err, "setup.serverTable", "Creating form")
 		}
 
 		// Return the form
@@ -82,7 +82,7 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 		data, err := formdata.Parse(ctx.Request())
 
 		if err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.serverPost", "Error parsing form data"))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.serverPost", "Parsing form data"))
 		}
 
 		// Data schema and UI schema
@@ -104,7 +104,7 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 
 			// Apply the changes to the configuration
 			if err := widget.Do(ctx.Request().URL, convert.MapOfAny(data)); err != nil {
-				return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.serverTable", "Unable to save form data"))
+				return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.serverTable", "Saving form data"))
 			}
 
 			// Try to save the configuration to the persistent storage
@@ -121,7 +121,7 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 
 		// Apply the changes to the configuration
 		if err := form.SetURLValues(&config, data, nil); err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.serverPost", "Unable to save form data", data))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.serverPost", "Saving form data", data))
 		}
 
 		// Try to save the configuration to the persistent storage

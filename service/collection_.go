@@ -329,27 +329,23 @@ func (service *Collection) loadOrCreateByParent(session data.Session, userID pri
 
 	const location = "service.Collection.loadOrCreateByParent"
 
-	// This is concurrency-safe: when two callers race to create the same collection,
-	// the unique index on (parentId, collectionType) rejects the loser's insert with a
-	// duplicate-key error, and that caller re-loads the winner instead of duplicating.
-	// See queries/sync/collection.go for the index, and COLLECTIONS-REDESIGN.md (D2) for
-	// why this replaces the racy load-then-save idiom used elsewhere.
-
+	// Concurrency-safe: when two callers race to create the same collection, the unique index on
+	// (parentId, collectionType) rejects the loser's insert and that caller re-loads the winner.
+	// See queries/sync/collection.go for the index, and COLLECTIONS-REDESIGN.md (D2).
 	collection := model.NewCollection()
 
-	// Fast path: the collection almost always already exists.
-	err := service.LoadByType(session, parentID, collectionType, &collection)
+	// Fast path: the collection almost always already exists
+	if err := service.LoadByType(session, parentID, collectionType, &collection); err != nil {
 
-	if err == nil {
+		// Anything other than NotFound is a real failure; a NotFound falls through to create one
+		if !derp.IsNotFound(err) {
+			return collection, derp.Wrap(err, location, "Loading Collection", parentType, parentID, collectionType)
+		}
+	} else {
 		return collection, nil
 	}
 
-	// Any error other than "not found" is a real failure.
-	if !derp.IsNotFound(err) {
-		return collection, derp.Wrap(err, location, "Loading Collection", parentType, parentID, collectionType)
-	}
-
-	// Slow path: no collection yet, so try to create one.
+	// Slow path: no collection yet, so try to create one
 	collection.UserID = userID
 	collection.ParentType = parentType
 	collection.ParentID = parentID
@@ -357,23 +353,20 @@ func (service *Collection) loadOrCreateByParent(session data.Session, userID pri
 	collection.Read = read
 	collection.Write = write
 
-	if saveErr := service.Save(session, &collection, ""); saveErr != nil {
+	if err := service.Save(session, &collection, ""); err != nil {
 
-		// If we lost a creation race, the unique index rejects our insert. Re-load
-		// the winner's record (which is now guaranteed to exist) and return it.
-		// data-mongo reports that rejection as a derp Conflict.
-		if derp.IsConflict(saveErr) {
+		// A lost creation race trips the unique index, which data-mongo reports as a Conflict.
+		// Re-load the winner's record, which is now guaranteed to exist.
+		if derp.IsConflict(err) {
 
-			if reloadErr := service.LoadByType(session, parentID, collectionType, &collection); reloadErr != nil {
-				return collection, derp.Wrap(reloadErr, location, "Re-loading Collection after duplicate-key conflict", parentType, parentID, collectionType)
+			if err := service.LoadByType(session, parentID, collectionType, &collection); err != nil {
+				return collection, derp.Wrap(err, location, "Re-loading Collection after duplicate-key conflict", parentType, parentID, collectionType)
 			}
 
 			return collection, nil
 		}
 
-		// Any other save error is a real failure.
-		return collection, derp.Wrap(saveErr, location, "Creating Collection", parentType, parentID, collectionType)
-
+		return collection, derp.Wrap(err, location, "Creating Collection", parentType, parentID, collectionType)
 	}
 
 	return collection, nil
@@ -406,22 +399,19 @@ func (service *Collection) AddItem(session data.Session, collection *model.Colle
 	return nil
 }
 
-// ProjectResponse adds (add=true) or removes (add=false) itemURI in the given Stream's
-// Like/Dislike/Share collection and returns the affected collection plus its collection type.
-//
-// This is the single, side-agnostic projection primitive shared by BOTH the actor-side funnel
-// (service.Response, for LOCAL reactions) and the object-side handlers (inbound remote reactions).
-// The two sides differ in everything around this call — whether a Response record exists, outbox
-// federation, newsfeed state — but the projection itself is identical, so it lives here once.
-//
-// itemURI is the caller's choice of stable key (local: response.ActivityPubURL(); remote: the
-// inbound activity's own ID). Because the count field lives on the Stream, the caller refreshes it
-// using the returned collection (see Stream.refreshResponseCount). Returns a zero collection and an
-// empty collectionType (no error) when responseType is not a projected type; on remove, the returned
-// collection is likewise zero when the Stream has no such collection yet (nothing to remove).
+// ProjectResponse adds or removes itemURI in the given Stream's Like/Dislike/Share collection, and
+// returns the affected collection plus its collection type
 func (service *Collection) ProjectResponse(session data.Session, stream *model.Stream, responseType string, itemURI string, add bool) (model.Collection, string, error) {
 
 	const location = "service.Collection.ProjectResponse"
+
+	// This is the side-agnostic projection primitive shared by BOTH the actor-side funnel
+	// (service.Response, for local reactions) and the object-side handlers (inbound remote ones).
+	// Everything around this call differs; the projection itself is identical, so it lives here once.
+
+	// itemURI is the caller's choice of stable key: local reactions pass response.ActivityPubURL(),
+	// remote ones pass the inbound activity's own ID.  The count field lives on the Stream, so the
+	// caller refreshes it from the returned collection (see Stream.refreshResponseCount).
 
 	// RULE: Only Like/Dislike/Announce project into a per-Stream collection.
 	collectionType := model.CollectionTypeForResponse(responseType)
@@ -478,13 +468,13 @@ func (service *Collection) RemoveItem(session data.Session, collection *model.Co
 
 	collectionItem := model.NewCollectionItem()
 
-	err := service.collectionItemService.LoadByURI(session, collection.CollectionID, itemURI, &collectionItem)
+	if err := service.collectionItemService.LoadByURI(session, collection.CollectionID, itemURI, &collectionItem); err != nil {
 
-	if derp.IsNotFound(err) {
-		return nil
-	}
+		// An item that is already gone needs no removing
+		if derp.IsNotFound(err) {
+			return nil
+		}
 
-	if err != nil {
 		return derp.Wrap(err, location, "Loading CollectionItem", "uri: "+itemURI)
 	}
 

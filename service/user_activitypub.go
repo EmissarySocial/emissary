@@ -29,7 +29,7 @@ func (service *User) ParseProfileURL(session data.Session, value string) (primit
 	parsedURL, err := url.Parse(value)
 
 	if err != nil {
-		return primitive.NilObjectID, derp.Wrap(err, location, "Error parsing profile URL", value)
+		return primitive.NilObjectID, derp.Wrap(err, location, "Parsing profile URL", value)
 	}
 
 	// RULE: server must be the same as the server we're running on
@@ -56,7 +56,7 @@ func (service *User) ParseProfileURL(session data.Session, value string) (primit
 	user := model.NewUser()
 
 	if err := service.LoadByUsername(session, username, &user); err != nil {
-		return primitive.NilObjectID, derp.Wrap(err, location, "Unable to load user by username", username)
+		return primitive.NilObjectID, derp.Wrap(err, location, "Loading user by username", username)
 	}
 
 	return user.UserID, nil
@@ -77,14 +77,14 @@ func (service *User) PrivateKey(session data.Session, userID primitive.ObjectID)
 	// Try to load the user's keys from the database
 	encryptionKey := model.NewEncryptionKey()
 	if err := service.keyService.LoadByParentID(session, model.EncryptionKeyTypeUser, userID, &encryptionKey); err != nil {
-		return outbox.Actor{}, derp.Wrap(err, location, "Unable to load encryption key", userID)
+		return outbox.Actor{}, derp.Wrap(err, location, "Loading encryption key", userID)
 	}
 
 	// Extract the Private Key from the Encryption Key
 	privateKey, err := service.keyService.GetPrivateKey(&encryptionKey)
 
 	if err != nil {
-		return outbox.Actor{}, derp.Wrap(err, location, "Error extracting private key", encryptionKey)
+		return outbox.Actor{}, derp.Wrap(err, location, "Extracting private key", encryptionKey)
 	}
 
 	return privateKey, nil

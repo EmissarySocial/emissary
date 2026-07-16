@@ -46,19 +46,19 @@ func inbox_LikeOrAnnounce(context Context, activity streams.Document) error {
 	document, err := activity.Object().Load()
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load ActivityStream document", activity.Object().ID())
+		return derp.Wrap(err, location, "Loading ActivityStream document", activity.Object().ID())
 	}
 
 	// Add the activity into the ActivityStream cache (for statistics)
 	if err := context.factory.ActivityStream().Save(activity); err != nil {
-		return derp.Wrap(err, location, "Unable to save activity", activity.ID())
+		return derp.Wrap(err, location, "Saving activity", activity.ID())
 	}
 
 	// Project this Like/Dislike/Announce into the reacted-to object's response collection (if the
 	// object is a local Stream). This inbound funnel is the SOLE writer of response CollectionItems
 	// (D6); it is a no-op for remote/non-Stream objects.
 	if err := context.factory.Stream().AddResponseCollectionItem(context.session, document.ID(), activity.Type(), activity.ID()); err != nil {
-		return derp.Wrap(err, location, "Unable to project response into collection", activity.ID())
+		return derp.Wrap(err, location, "Projecting response into collection", activity.ID())
 	}
 
 	// Add the reacted-to message into the User's newsfeed — ONLY when it arrived from an actor we
@@ -67,7 +67,7 @@ func inbox_LikeOrAnnounce(context Context, activity streams.Document) error {
 		originType := getOriginType(activity.Type())
 
 		if err := context.factory.Following().SaveNewsItem(context.session, following, document, originType); err != nil {
-			return derp.Wrap(err, location, "Unable to save news item", context.user.UserID, activity.Value())
+			return derp.Wrap(err, location, "Saving news item", context.user.UserID, activity.Value())
 		}
 	}
 

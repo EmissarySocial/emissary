@@ -20,7 +20,7 @@ func populateBundles(bundles mapof.Object[model.Bundle], filesystem fs.FS) error
 	for bundleID, bundle := range bundles {
 
 		if err := populateBundle(bundleID, &bundle, filesystem); err != nil {
-			return derp.Wrap(err, "service.populateBundles", "Error populating bundle", bundleID)
+			return derp.Wrap(err, "service.populateBundles", "Populating bundle", bundleID)
 		}
 
 		bundles[bundleID] = bundle
@@ -49,14 +49,14 @@ func populateBundle(bundleID string, bundle *model.Bundle, filesystem fs.FS) err
 	subdirectory, err := fs.Sub(filesystem, bundleID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to read bundle sub-directory", bundleID)
+		return derp.Wrap(err, location, "Reading bundle sub-directory", bundleID)
 	}
 
 	// Read all files in the sub-directory
 	fileList, err := fs.ReadDir(subdirectory, ".")
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to read files in bundle sub-directory", bundleID)
+		return derp.Wrap(err, location, "Reading files in bundle sub-directory", bundleID)
 	}
 
 	// Import every file into the bundle
@@ -77,7 +77,7 @@ func populateBundle(bundleID string, bundle *model.Bundle, filesystem fs.FS) err
 
 		// Copy the file into the content buffer
 		if _, err := io.Copy(&content, file); err != nil {
-			return derp.Wrap(err, location, "Unable to copy file into bundle", entry.Name())
+			return derp.Wrap(err, location, "Copying file into bundle", entry.Name())
 		}
 
 		// Add a newline between items.  This will likely be removed by the minifier.
@@ -88,7 +88,7 @@ func populateBundle(bundleID string, bundle *model.Bundle, filesystem fs.FS) err
 	result, err := minifyContent(bundle.ContentType, &content)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to minify bundle", bundleID)
+		return derp.Wrap(err, location, "Minifying bundle", bundleID)
 	}
 
 	// Save the minified content in the bundle
@@ -117,7 +117,7 @@ func minifyContent(contentType string, content *bytes.Buffer) ([]byte, error) {
 		m.AddFunc("text/javascript", js.Minify)
 
 		if err := m.Minify(contentType, &result, content); err != nil {
-			return nil, derp.Wrap(err, location, "Unable to minify bundle content.", contentType)
+			return nil, derp.Wrap(err, location, "Minifying bundle content.", contentType)
 		}
 
 		return result.Bytes(), nil

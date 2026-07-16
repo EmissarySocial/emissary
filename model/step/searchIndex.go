@@ -19,7 +19,7 @@ func NewSearchIndex(stepInfo mapof.Any) (SearchIndex, error) {
 	ifTemplate, err := template.New("").Parse(ifString)
 
 	if err != nil {
-		return SearchIndex{}, derp.Wrap(err, "step.NewSearchIndex", "Error parsing `if` template")
+		return SearchIndex{}, derp.Wrap(err, "step.NewSearchIndex", "Parsing `if` template")
 	}
 
 	// Create the SearchIndex value

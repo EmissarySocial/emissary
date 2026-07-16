@@ -29,7 +29,7 @@ func PostApplication(serverFactory *server.Factory) func(model.Authorization, tx
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return object.Application{}, derp.Wrap(err, location, "Unable to create session")
+			return object.Application{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -44,7 +44,7 @@ func PostApplication(serverFactory *server.Factory) func(model.Authorization, tx
 		// Save the application to the database
 		oauthClientService := factory.OAuthClient()
 		if err := oauthClientService.Save(session, &oauthClient, "Created via Mastodon API"); err != nil {
-			return object.Application{}, derp.Wrap(err, location, "Unable to save application")
+			return object.Application{}, derp.Wrap(err, location, "Saving application")
 		}
 
 		// Success
@@ -69,7 +69,7 @@ func GetApplication_VerifyCredentials(serverFactory *server.Factory) func(model.
 		session, cancel, err := factory.Session(time.Minute)
 
 		if err != nil {
-			return object.Application{}, derp.Wrap(err, location, "Unable to create session")
+			return object.Application{}, derp.Wrap(err, location, "Creating session")
 		}
 
 		defer cancel()
@@ -79,7 +79,7 @@ func GetApplication_VerifyCredentials(serverFactory *server.Factory) func(model.
 
 		// Try to load the client record from the database
 		if err := oauthClientService.LoadByClientID(session, auth.ClientID, &result); err != nil {
-			return object.Application{}, derp.Wrap(err, location, "Unable to load application")
+			return object.Application{}, derp.Wrap(err, location, "Loading application")
 		}
 
 		return result.Toot(), nil

@@ -34,7 +34,7 @@ func (step StepTableEditor) Get(builder Builder, buffer io.Writer) PipelineBehav
 	requestURL := builder.request().URL
 
 	if err := t.Draw(requestURL, buffer); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to build HTML"))
+		return Halt().WithError(derp.Wrap(err, location, "Building HTML"))
 	}
 
 	return Continue().WithHeader("Hx-Push-Url", "false")
@@ -72,7 +72,7 @@ func (step StepTableEditor) Post(builder Builder, _ io.Writer) PipelineBehavior 
 			path := step.Path + "." + edit + "." + field.Path
 
 			if err := s.Set(object, path, body.Get(field.Path)); err != nil {
-				return Halt().WithError(derp.Wrap(err, location, "Unable to set value in table", object, field.Path, path, body[field.Path]))
+				return Halt().WithError(derp.Wrap(err, location, "Setting value in table", object, field.Path, path, body[field.Path]))
 			}
 		}
 
@@ -82,7 +82,7 @@ func (step StepTableEditor) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		table, err := s.Get(object, step.Path)
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Error locating table in data object"))
+			return Halt().WithError(derp.Wrap(err, location, "Locating table in data object"))
 		}
 
 		// Bounds checking
@@ -114,7 +114,7 @@ func (step StepTableEditor) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	t.AllowAll()
 
 	if err := t.DrawView(builder.response()); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to build HTML"))
+		return Halt().WithError(derp.Wrap(err, location, "Building HTML"))
 	}
 
 	return Continue().WithHeader("Hx-Push-Url", "false")

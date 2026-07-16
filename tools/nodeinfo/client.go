@@ -40,7 +40,7 @@ func (client *Client) Load(server string) (NodeInfo, error) {
 		Result(&wellknown)
 
 	if err := txn.Send(); err != nil {
-		return NewNodeInfo(), derp.Wrap(err, location, "Error retrieving /.well-known/nodeinfo")
+		return NewNodeInfo(), derp.Wrap(err, location, "Retrieving /.well-known/nodeinfo")
 	}
 
 	// Limit to only "nodeinfo" links
@@ -63,7 +63,7 @@ func (client *Client) Load(server string) (NodeInfo, error) {
 				Result(&result)
 
 			if err := txn.Send(); err != nil {
-				derp.Report(derp.Wrap(err, location, "Error retrieving nodeinfo document"))
+				derp.Report(derp.Wrap(err, location, "Retrieving nodeinfo document"))
 			} else {
 				return result, nil
 			}

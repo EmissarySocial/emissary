@@ -31,7 +31,7 @@ func (service Geocodio) GeocodeAddress(address string) (geo.Address, error) {
 		Result(&response)
 
 	if err := txn.Send(); err != nil {
-		return geo.Address{}, derp.Wrap(err, location, "Unable to connect to Geocodio API server")
+		return geo.Address{}, derp.Wrap(err, location, "Connecting to Geocodio API server")
 	}
 
 	// Parse API results
@@ -80,7 +80,7 @@ func (service Geocodio) GeocodeTimezone(address *geo.Address) error {
 		Result(&response)
 
 	if err := txn.Send(); err != nil {
-		return derp.Wrap(err, location, "Unable to connect to Geocodio API server")
+		return derp.Wrap(err, location, "Connecting to Geocodio API server")
 	}
 
 	// Parse results

@@ -90,7 +90,7 @@ func PostProfileDelete(ctx *steranko.Context, factory *service.Factory, session 
 	values, err := formdata.Parse(ctx.Request())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Error parsing form values")
+		return derp.Wrap(err, location, "Parsing form values")
 	}
 
 	if values.Get("confirm") != user.Username {
@@ -100,7 +100,7 @@ func PostProfileDelete(ctx *steranko.Context, factory *service.Factory, session 
 	userService := factory.User()
 
 	if err := userService.Delete(session, user, "Deleted by User"); err != nil {
-		return derp.Wrap(err, "handler.PostProfileDelete", "Unable to delete user")
+		return derp.Wrap(err, "handler.PostProfileDelete", "Deleting user")
 	}
 
 	// Clear the (now deleted) user's authentication cookie.  GET /signout only displays
@@ -119,7 +119,7 @@ func buildOutbox(ctx *steranko.Context, factory *service.Factory, session data.S
 	username, err := profileUsername(ctx)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load user ID")
+		return derp.Wrap(err, location, "Loading user ID")
 	}
 
 	if !isUserVisible(ctx, user) {
@@ -145,7 +145,7 @@ func buildOutbox(ctx *steranko.Context, factory *service.Factory, session data.S
 	builder, err := build.NewOutbox(factory, session, ctx.Request(), ctx.Response(), user, actionID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to create builder")
+		return derp.Wrap(err, location, "Creating builder")
 	}
 
 	// Forward to the standard page builder to complete the job
@@ -177,7 +177,7 @@ func getUserAttachment(ctx *steranko.Context, factory *service.Factory, user *mo
 	// Retrieve the file from the mediaserver
 	ms := factory.MediaServer()
 	if err := ms.Serve(ctx.Response().Writer, ctx.Request(), filespec); err != nil {
-		return derp.Wrap(err, location, "Error accessing profile attachment file")
+		return derp.Wrap(err, location, "Accessing profile attachment file")
 	}
 
 	return nil

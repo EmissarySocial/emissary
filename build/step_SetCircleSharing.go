@@ -42,7 +42,7 @@ func (step StepSetCircleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 	element, err := step.form(builder.lookupProvider())
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Unable to build form for StepSetCircleSharing"))
+		return Halt().WithError(derp.Wrap(err, location, "Building form for StepSetCircleSharing"))
 	}
 
 	f := form.New(schema, element)
@@ -57,7 +57,7 @@ func (step StepSetCircleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 	formHTML, err := f.Editor(value, builder.lookupProvider())
 
 	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error rendering form for StepSetCircleSharing"))
+		return Halt().WithError(derp.Wrap(err, location, "Rendering form for StepSetCircleSharing"))
 	}
 
 	b.WriteString(formHTML)
@@ -74,7 +74,7 @@ func (step StepSetCircleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 
 	// Write the result to the buffer
 	if _, err := io.WriteString(buffer, result); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Error writing HTML to buffer"))
+		return Halt().WithError(derp.Wrap(err, location, "Writing HTML to buffer"))
 	}
 
 	return nil
@@ -99,7 +99,7 @@ func (step StepSetCircleSharing) Post(builder Builder, _ io.Writer) PipelineBeha
 	request := streamBuilder.request()
 
 	if err := request.ParseForm(); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepSetCircleSharing", "Error parsing form input"))
+		return Halt().WithError(derp.Wrap(err, "build.StepSetCircleSharing", "Parsing form input"))
 	}
 
 	// Reset mapped privileges for the Stream

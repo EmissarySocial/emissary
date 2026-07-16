@@ -18,14 +18,14 @@ func (service *MerchantAccount) Import(session data.Session, _ *model.Import, im
 	// Unmarshal the JSON document into a new MerchantAccount
 	remoteRecord := mapof.NewAny()
 	if err := json.Unmarshal(document, &remoteRecord); err != nil {
-		return derp.Wrap(err, location, "Unable to parse remote document", document)
+		return derp.Wrap(err, location, "Parsing remote document", document)
 	}
 
 	// Parse the remote record ID
 	remoteRecordID, err := primitive.ObjectIDFromHex(remoteRecord.GetString("MerchantAccountID"))
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to parse remoteRecordID", remoteRecord.GetString("MerchantAccountID"))
+		return derp.Wrap(err, location, "Parsing remoteRecordID", remoteRecord.GetString("MerchantAccountID"))
 	}
 
 	// Update mapping values in the importItem
@@ -49,12 +49,12 @@ func (service *MerchantAccount) Import(session data.Session, _ *model.Import, im
 
 	// Map the UserID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &merchantAccount.UserID); err != nil {
-		return derp.ReportAndReturn(derp.Wrap(err, location, "Unable to map UserID: "+user.UserID.Hex()))
+		return derp.ReportAndReturn(derp.Wrap(err, location, "Mapping UserID: "+user.UserID.Hex()))
 	}
 
 	// Save the MerchantAccount to the database
 	if err := service.Save(session, &merchantAccount, "Imported"); err != nil {
-		return derp.Wrap(err, location, "Unable to save imported MerchantAccount")
+		return derp.Wrap(err, location, "Saving imported MerchantAccount")
 	}
 
 	// A Man, A Plan, A Canal. Panama.
@@ -67,7 +67,7 @@ func (service *MerchantAccount) UndoImport(session data.Session, importItem *mod
 	const location = "service.MerchantAccount.UndoImport"
 
 	if err := service.HardDeleteByID(session, importItem.UserID, importItem.LocalID); err != nil {
-		return derp.Wrap(err, location, "Unable to delete record", importItem.LocalID)
+		return derp.Wrap(err, location, "Deleting record", importItem.LocalID)
 	}
 
 	return nil

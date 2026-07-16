@@ -25,7 +25,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session d
 	// Collect values from the QueryString
 	var transaction camper.FollowIntent
 	if err := ctx.Bind(&transaction); err != nil {
-		return derp.Wrap(err, location, "Unable to read form data")
+		return derp.Wrap(err, location, "Reading form data")
 	}
 
 	// Default values here
@@ -36,7 +36,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session d
 	actor, err := client.Load(transaction.Object, sherlock.AsActor())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load object", transaction)
+		return derp.Wrap(err, location, "Loading object", transaction)
 	}
 
 	// Try to load an existing "Following" record (allow "NOT FOUND" errors)
@@ -44,7 +44,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session d
 	following := model.NewFollowing()
 	if err := followingService.LoadByURL(session, user.UserID, actor.ID(), &following); err != nil {
 		if !derp.IsNotFound(err) {
-			return derp.Wrap(err, location, "Unable to load existing following")
+			return derp.Wrap(err, location, "Loading existing following")
 		}
 	}
 
@@ -54,7 +54,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session d
 	formHTML, err := formStruct.Editor(following, lookupProvider)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to build form")
+		return derp.Wrap(err, location, "Building form")
 	}
 
 	// Buiild HTML response
@@ -160,7 +160,7 @@ func PostIntent_Follow(ctx *steranko.Context, factory *service.Factory, session 
 	transaction, err := formdata.Parse(ctx.Request())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to read form data")
+		return derp.Wrap(err, location, "Reading form data")
 	}
 
 	// Default values here
@@ -174,12 +174,12 @@ func PostIntent_Follow(ctx *steranko.Context, factory *service.Factory, session 
 	// Update the Following with values from the user
 	form := getForm_FollowingIntent()
 	if err := form.SetURLValues(&following, transaction, factory.LookupProvider(ctx.Request(), session, user.UserID)); err != nil {
-		return derp.Wrap(err, location, "Unable to set form values")
+		return derp.Wrap(err, location, "Setting form values")
 	}
 
 	// Save the new Stream to the database
 	if err := followingService.Save(session, &following, "Created via Activity Intent"); err != nil {
-		return derp.Wrap(err, location, "Unable to save stream")
+		return derp.Wrap(err, location, "Saving stream")
 	}
 
 	// Return the "on-success" response

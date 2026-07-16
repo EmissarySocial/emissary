@@ -25,7 +25,7 @@ func CrawlUpReplyTree(factory *service.Factory, args mapof.Any) queue.Result {
 	document, err := client.Load(url)
 
 	if err != nil {
-		return requeue(derp.Wrap(err, location, "Unable to load document"))
+		return requeue(derp.Wrap(err, location, "Loading document"))
 	}
 
 	// If this document is NOT already in the cache, then keep crawling UP the tree

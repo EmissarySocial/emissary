@@ -17,7 +17,7 @@ func (service *User) Import(session data.Session, _ *model.Import, importItem *m
 
 	// Unmarshal the document into the new User
 	if err := json.Unmarshal(document, &importedUser); err != nil {
-		return derp.Wrap(err, location, "Unable to parse remote document", document)
+		return derp.Wrap(err, location, "Parsing remote document", document)
 	}
 
 	importItem.RemoteID = importedUser.UserID
@@ -37,7 +37,7 @@ func (service *User) Import(session data.Session, _ *model.Import, importItem *m
 
 		// Save the User to the database
 		if err := service.Save(session, user, "Imported"); err != nil {
-			return derp.Wrap(err, location, "Unable to save imported User")
+			return derp.Wrap(err, location, "Saving imported User")
 		}
 	*/
 

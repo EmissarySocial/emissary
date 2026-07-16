@@ -69,7 +69,7 @@ func (service *Annotation) Range(session data.Session, criteria exp.Expression, 
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.User.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.User.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewAnnotation), nil
@@ -81,7 +81,7 @@ func (service *Annotation) Load(session data.Session, criteria exp.Expression, r
 	const location = "service.Annotation.Load"
 
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
-		return derp.Wrap(err, location, "Unable to load Annotation", criteria)
+		return derp.Wrap(err, location, "Loading Annotation", criteria)
 	}
 
 	return nil
@@ -96,7 +96,7 @@ func (service *Annotation) Save(session data.Session, annotation *model.Annotati
 	document, err := service.activityService.UserClient(annotation.UserID).Load(annotation.URL)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load annotated document", annotation.URL)
+		return derp.Wrap(err, location, "Loading annotated document", annotation.URL)
 	}
 
 	annotation.Name = document.Name()
@@ -104,12 +104,12 @@ func (service *Annotation) Save(session data.Session, annotation *model.Annotati
 
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(annotation); err != nil {
-		return derp.Wrap(err, location, "Unable to validate Annotation", annotation)
+		return derp.Wrap(err, location, "Validating Annotation", annotation)
 	}
 
 	// Save the value to the database
 	if err := service.collection(session).Save(annotation, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save Annotation", annotation, note)
+		return derp.Wrap(err, location, "Saving Annotation", annotation, note)
 	}
 
 	return nil
@@ -121,7 +121,7 @@ func (service *Annotation) Delete(session data.Session, annotation *model.Annota
 	const location = "service.Annotation.Delete"
 
 	if err := service.collection(session).Delete(annotation, note); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Annotation", annotation, note)
+		return derp.Wrap(err, location, "Deleting Annotation", annotation, note)
 	}
 
 	return nil
@@ -147,7 +147,7 @@ func (service *Annotation) HardDeleteByID(session data.Session, userID primitive
 	criteria := exp.Equal("userId", userID).AndEqual("_id", annotationID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Annotation", "userID: "+userID.Hex(), "annotationID: "+annotationID.Hex())
+		return derp.Wrap(err, location, "Deleting Annotation", "userID: "+userID.Hex(), "annotationID: "+annotationID.Hex())
 	}
 
 	return nil
@@ -295,13 +295,13 @@ func (service *Annotation) DeleteByUserID(session data.Session, userID primitive
 	annotations, err := service.RangeByUserID(session, userID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to query annotations by UserID", userID)
+		return derp.Wrap(err, location, "Querying annotations by UserID", userID)
 	}
 
 	// Delete each annotation
 	for annotation := range annotations {
 		if err := service.Delete(session, &annotation, note); err != nil {
-			return derp.Wrap(err, location, "Unable to delete Annotation", annotation)
+			return derp.Wrap(err, location, "Deleting Annotation", annotation)
 		}
 	}
 
