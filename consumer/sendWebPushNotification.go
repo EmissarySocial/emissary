@@ -30,6 +30,15 @@ func SendWebPushNotification(factory *service.Factory, session data.Session, arg
 
 	log.Trace().Msg("Task: SendWebPushNotification")
 
+	// DIAGNOSTIC: this line proves the queue actually dispatched this task.  Its ABSENCE means the
+	// task never ran, and the fault is in the queue rather than anywhere in Web Push.  Note that a
+	// working SSE nudge cannot tell you this: SSE publishes with queue.WithInline(), which bypasses
+	// the buffer and the storage provider entirely, so it runs even when the queue does not.
+	log.Debug().
+		Str("userId", args.GetString("userId")).
+		Str("notificationId", args.GetString("notificationId")).
+		Msg("WebPush: task STARTED")
+
 	userID, err := primitive.ObjectIDFromHex(args.GetString("userId"))
 
 	if err != nil {
@@ -58,6 +67,13 @@ func SendWebPushNotification(factory *service.Factory, session data.Session, arg
 	// (born read — see service.Notification.notify) and items the user already read
 	// between enqueue and delivery.
 	if notification.IsRead() {
+
+		// DIAGNOSTIC: a notification that was SUPPRESSED by the recipient's channel settings is
+		// "born read" (service.Notification.notify), so it lands here and delivers nothing.
+		log.Debug().
+			Str("notificationId", notificationID.Hex()).
+			Msg("WebPush: notification is already READ -- nothing to deliver")
+
 		return queue.Success()
 	}
 
@@ -80,8 +96,19 @@ func SendWebPushNotification(factory *service.Factory, session data.Session, arg
 		return queue.Error(derp.Wrap(err, location, "Unable to load push subscriptions", userID))
 	}
 
+	subscriptionCount := 0
+
 	for subscription := range subscriptions {
+		subscriptionCount = subscriptionCount + 1
 		sendWebPushToSubscription(factory, session, &subscription, payload)
+	}
+
+	// DIAGNOSTIC: zero subscriptions is not an error -- but it is the quietest way for a push to do
+	// nothing whatsoever, because the loop above simply never runs.  Say so out loud.
+	if subscriptionCount == 0 {
+		log.Debug().
+			Str("userId", userID.Hex()).
+			Msg("WebPush: User has NO push subscriptions -- nothing to deliver")
 	}
 
 	return queue.Success()
@@ -103,10 +130,32 @@ func sendWebPushToSubscription(factory *service.Factory, session data.Session, s
 
 	// 404/410 means the subscription is gone — prune it.
 	if statusCode == http.StatusNotFound || statusCode == http.StatusGone {
+
+		log.Debug().
+			Int("statusCode", statusCode).
+			Str("endpoint", subscription.Endpoint).
+			Msg("WebPush: subscription is GONE -- pruning it")
+
 		if err := factory.PushSubscription().DeleteByEndpoint(session, subscription.Endpoint, "expired"); err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to delete expired push subscription", subscription.Endpoint))
 		}
+
+		return
 	}
+
+	// RULE: Any other non-2xx is the push service REFUSING to deliver -- a rejected VAPID JWT, an
+	// oversized payload, rate limiting.  These used to fall through in silence, which made a push
+	// the service rejected indistinguishable from one that was never attempted.  WebPush.Send logs
+	// the service's own stated reason; report it here so the failure also reaches the error log.
+	if (statusCode < 200) || (statusCode > 299) {
+		derp.Report(derp.Internal(location, "Web Push service refused delivery", subscription.Endpoint, statusCode))
+		return
+	}
+
+	log.Debug().
+		Int("statusCode", statusCode).
+		Str("endpoint", subscription.Endpoint).
+		Msg("WebPush: DELIVERED to push service")
 }
 
 // notificationTitle builds the push notification title (actor + verb).

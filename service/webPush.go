@@ -1,8 +1,11 @@
 package service
 
 import (
+	"io"
 	"net"
 	"net/http"
+	"net/mail"
+	"strings"
 	"syscall"
 	"time"
 
@@ -10,7 +13,13 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/uri"
+	"github.com/rs/zerolog/log"
 )
+
+// webPushErrorBodyMaxLength caps how much of a push service's error response we read back.  The
+// useful part is a short JSON reason; the cap keeps a hostile or broken service from streaming
+// unbounded data into the log.
+const webPushErrorBodyMaxLength = 1024
 
 // Domain.Data keys under which the per-domain VAPID keypair is stored (generated lazily).
 const domainDataVAPIDPublicKey = "vapidPublicKey"
@@ -27,6 +36,7 @@ const webPushTimeout = 30 * time.Second
 type WebPush struct {
 	domainService   *Domain
 	hostname        string
+	ownerEmail      string
 	allowPrivateIPs bool
 	httpClient      *http.Client
 }
@@ -44,6 +54,10 @@ func NewWebPush() WebPush {
 func (service *WebPush) Refresh(factory *Factory) {
 	service.domainService = factory.Domain()
 	service.hostname = factory.Hostname()
+
+	// The Domain owner is this server's real human contact -- the same address DomainEmail uses as
+	// its return address -- which is exactly what the VAPID "sub" claim is for (see vapidSubscriber).
+	service.ownerEmail = factory.config.Owner.EmailAddress
 
 	// A local/dev instance (served from a local hostname) may reach private addresses so it can
 	// talk to itself; a production instance must not.  This mirrors ActivityStream.AllowPrivateIPs()
@@ -128,8 +142,6 @@ func (service *WebPush) Send(session data.Session, endpoint string, p256dh strin
 		},
 	}
 
-	subscriber := "admin@" + service.hostname
-
 	// Deliver through the guarded client so the request cannot reach a non-public address.
 	// Fall back to a guarded client if the service was never refreshed (fail closed, not open).
 	client := service.httpClient
@@ -137,19 +149,47 @@ func (service *WebPush) Send(session data.Session, endpoint string, p256dh strin
 		client = webPushHTTPClient(false)
 	}
 
+	// NOTE: this is BARE ("admin@example.com"), and must stay that way -- webpush-go prepends the
+	// "mailto:" scheme itself.  See vapidSubscriber.
+	subscriber := vapidSubscriber(service.ownerEmail, service.hostname)
+
+	log.Trace().
+		Str("endpoint", endpoint).
+		Str("vapidSubscriber", subscriber).
+		Msg("WebPush: sending to push service")
+
 	response, err := webpush.SendNotification(payload, subscription, &webpush.Options{
 		HTTPClient:      client,
-		Subscriber:      "mailto:" + subscriber,
+		Subscriber:      subscriber,
 		VAPIDPublicKey:  public,
 		VAPIDPrivateKey: private,
 		TTL:             webPushTTL,
 	})
 
 	if err != nil {
-		return 0, derp.Wrap(err, location, "Unable to send Web Push notification", endpoint)
+		return 0, derp.Wrap(err, location, "Unable to send Web Push notification", endpoint, subscriber)
 	}
 
 	defer response.Body.Close()
+
+	// DIAGNOSTIC: a push service states WHY it rejected a message in the response BODY -- Apple
+	// returns `{"reason":"BadJwtToken"}`, for instance -- and the status code alone is rarely
+	// enough to act on.  The VAPID subscriber is logged beside it because it is a prime suspect:
+	// it is derived from the hostname, so a hostname carrying a port yields
+	// `mailto:admin@example.com:8080`, which is not a valid email address and which strict push
+	// services reject outright.
+	if (response.StatusCode < 200) || (response.StatusCode > 299) {
+
+		// Best-effort: a body we cannot read must not mask the status code we CAN report.
+		body, _ := io.ReadAll(io.LimitReader(response.Body, webPushErrorBodyMaxLength))
+
+		log.Warn().
+			Int("statusCode", response.StatusCode).
+			Str("endpoint", endpoint).
+			Str("vapidSubscriber", subscriber).
+			Str("response", string(body)).
+			Msg("WebPush: push service REJECTED this message")
+	}
 
 	return response.StatusCode, nil
 }
@@ -165,6 +205,74 @@ func (service *WebPush) EndpointIsAllowed(endpoint string) bool {
 	}
 
 	return uri.NotLocalURL(endpoint)
+}
+
+/******************************************
+ * VAPID Subscriber
+ ******************************************/
+
+// vapidSubscriberFallback is the contact address used when neither the configured administrator's
+// address nor this instance's hostname can supply a usable one.  It is BARE, for the reason spelled
+// out on vapidSubscriber.
+const vapidSubscriberFallback = "admin@example.com"
+
+// vapidSubscriber returns the VAPID "sub" claim (RFC 8292): a contact address that the push service
+// may use to reach whoever operates this server.  It need not be deliverable, but it must be
+// syntactically valid, and it should be a real contact where we have one.
+//
+// RULE: the returned address MUST be BARE -- "admin@example.com", NEVER "mailto:admin@example.com".
+// webpush-go prepends the scheme itself for any subscriber that does not already begin with
+// "https:" (getVAPIDAuthorizationHeader in webpush-go/vapid.go), so handing it a "mailto:" URI
+// yields the double-prefixed `mailto:mailto:admin@example.com` in the signed token.  Push services
+// reject the entire JWT for that, and the reason they give names neither the claim nor the scheme:
+// Apple answers `{"reason":"BadJwtToken"}` with an HTTP 403, which reads exactly like a key
+// mismatch and sends you hunting in the wrong place.  Older webpush-go releases also skipped the
+// prefix for an existing "mailto:", which is why this is easy to get wrong by analogy.
+//
+// A hostname-derived address additionally has to survive two shapes that a real deployment hits:
+// a port must never reach the address ("admin@example.com:8443" is invalid -- ":" is not permitted
+// in a domain), and a local/dev host yields a contact nobody could ever use ("admin@127.0.0.1"),
+// so we substitute the placeholder rather than assert a meaningless address.
+func vapidSubscriber(adminEmail string, hostname string) string {
+
+	// The configured administrator IS the contact this claim is meant to carry, so prefer it.
+	if isBareEmailAddress(adminEmail) {
+		return adminEmail
+	}
+
+	// Otherwise derive one from the hostname.  Reduce any shape (bare host, "host:port", a full
+	// URL) to its bare hostname, so a port cannot survive into the address.
+	host := uri.Hostname(hostname)
+
+	// A local/dev host cannot yield a contact anyone could reach.
+	if uri.IsLocalHostname(host) {
+		return vapidSubscriberFallback
+	}
+
+	// An email domain needs at least one dot, so a single-label host cannot be one.
+	if !strings.Contains(host, ".") {
+		return vapidSubscriberFallback
+	}
+
+	return "admin@" + host
+}
+
+// isBareEmailAddress reports whether the value is a syntactically valid email address AND carries
+// nothing but the address itself -- no display name ("Ben <ben@example.com>"), no scheme.  The
+// VAPID "sub" claim takes the bare form only.
+func isBareEmailAddress(value string) bool {
+
+	if value == "" {
+		return false
+	}
+
+	address, err := mail.ParseAddress(value)
+
+	if err != nil {
+		return false
+	}
+
+	return address.Address == value
 }
 
 /******************************************
