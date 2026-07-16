@@ -1,6 +1,7 @@
 package model
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/benpate/hannibal/streams"
@@ -37,6 +38,46 @@ func TestRuleMatchKey_Empty(t *testing.T) {
 	require.Equal(t, "", RuleMatchKey("SOMETHING-NEW", "value"))
 	require.Equal(t, "", RuleMatchKey(RuleTypeTag, ""))
 	require.Equal(t, "", RuleMatchKey(RuleTypeDomain, ""))
+}
+
+// TestActorMatchKeys pins the wire gate's key set: the ACTOR key plus a DOMAIN key for every host
+// suffix, and NO tag keys (the gate blocks by who, never by content). A blocked actor rule and a
+// blocked domain rule must both be reachable from these keys.
+func TestActorMatchKeys(t *testing.T) {
+	keys := ActorMatchKeys("https://sub.example.com/@bob")
+
+	require.Contains(t, keys, "ACTOR:https://sub.example.com/@bob")
+	require.Contains(t, keys, "DOMAIN:sub.example.com")
+	require.Contains(t, keys, "DOMAIN:example.com")
+	require.Contains(t, keys, "DOMAIN:com")
+
+	// No TAG keys ever come from the actor gate.
+	for _, key := range keys {
+		require.False(t, strings.HasPrefix(key, "TAG:"), key)
+	}
+
+	// The suffix boundary holds: notevil.com is not a suffix of evil.com.
+	require.NotContains(t, ActorMatchKeys("https://notevil.com/@x"), "DOMAIN:evil.com")
+
+	// An empty actor contributes nothing.
+	require.Empty(t, ActorMatchKeys(""))
+}
+
+// TestActorMatchKeys_HostCase confirms the host is lower-cased on both the ACTOR and DOMAIN keys, so
+// a mixed-case delivering actor cannot alias past a block.
+func TestActorMatchKeys_HostCase(t *testing.T) {
+	keys := ActorMatchKeys("https://Example.COM/@Bob")
+	require.Contains(t, keys, "ACTOR:https://example.com/@Bob")
+	require.Contains(t, keys, "DOMAIN:example.com")
+}
+
+// TestDomainMatchKeys pins the keyId-host key set: DOMAIN keys only, one per suffix, Punycode'd. This
+// is what extends a DOMAIN block to the delivering server named in a signature's keyId.
+func TestDomainMatchKeys(t *testing.T) {
+	keys := DomainMatchKeys("https://relay.example.com/actor#main-key")
+	require.Contains(t, keys, "DOMAIN:relay.example.com")
+	require.Contains(t, keys, "DOMAIN:example.com")
+	require.Empty(t, DomainMatchKeys(""))
 }
 
 // TestDocumentMatchKeys_Actor confirms an actor contributes its own ACTOR key plus a DOMAIN key for

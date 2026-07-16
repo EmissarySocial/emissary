@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
@@ -467,6 +468,33 @@ func (service *Rule) QueryByMatchKeys(session data.Session, userID primitive.Obj
 	criteria := service.byUserID(userID).And(exp.In("matchKey", matchKeys))
 
 	return service.QuerySummary(session, criteria)
+}
+
+// Disposition evaluates a document against this User's Rules (plus domain-wide admin rules) and
+// returns the resulting RuleDisposition. This is the session-taking service method that the inbox
+// validator (Stage 1), the handler check (Stage 2), and the future queue worker all adapt over
+// (D17) -- one matcher, one place. It is a single indexed `matchKey IN [...]` query plus the pure
+// engine; `now` is the current Unix time in SECONDS (used to skip expired rules).
+func (service *Rule) Disposition(session data.Session, userID primitive.ObjectID, document streams.Document, now int64) (model.RuleDisposition, error) {
+	return service.DispositionForKeys(session, userID, model.DocumentMatchKeys(document), now)
+}
+
+// DispositionForKeys evaluates a pre-computed match-key set against this User's Rules (plus
+// domain-wide admin rules). The wire gate calls this directly because it knows only actor/domain
+// keys -- the claimed actor and the signature keyId host -- never a whole document. Passing
+// NilObjectID as userID evaluates against admin-tier rules alone (the domain/stream/search inboxes).
+func (service *Rule) DispositionForKeys(session data.Session, userID primitive.ObjectID, keys []string, now int64) (model.RuleDisposition, error) {
+
+	const location = "service.Rule.DispositionForKeys"
+
+	rules, err := service.QueryByMatchKeys(session, userID, keys)
+
+	if err != nil {
+		return model.RuleDisposition{}, derp.Wrap(err, location, "Querying rules by match key", userID, keys)
+	}
+
+	// Silence is golden
+	return model.NewRuleDispositionForKeys(keys, rules, now), nil
 }
 
 // QueryDomainBlocks returns all external domains blocked by this Instance/Domain.

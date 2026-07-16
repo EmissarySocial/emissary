@@ -62,8 +62,14 @@ func (disposition RuleDisposition) HasLabels() bool {
 // "ADMIN is a floor" is therefore a theorem, not a rule -- a maximum over the union cannot be lowered
 // by adding user rules.
 func NewRuleDisposition(document streams.Document, rules []RuleSummary, now int64) RuleDisposition {
+	return NewRuleDispositionForKeys(DocumentMatchKeys(document), rules, now)
+}
 
-	keys := DocumentMatchKeys(document)
+// NewRuleDispositionForKeys is the disposition engine over a pre-computed key set. Callers that hold
+// a whole document should use NewRuleDisposition; the wire gate uses this directly because it knows
+// only the actor/domain keys (a claimed actor plus the signature keyId host), never the full document.
+// The algorithm is identical -- intersect `keys` with `rules`, take the max severity, ties to USER.
+func NewRuleDispositionForKeys(keys []string, rules []RuleSummary, now int64) RuleDisposition {
 
 	result := RuleDisposition{}
 	bestSeverity := 0

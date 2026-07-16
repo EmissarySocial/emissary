@@ -31,6 +31,31 @@ func actorRule(userID primitive.ObjectID, action string, actorURI string) RuleSu
 	}
 }
 
+// TestNewRuleDispositionForKeys confirms the wire-gate entry point evaluates rules against an
+// explicit key set (no document): a DOMAIN block on the delivering host wins even when the caller
+// passes only actor/domain keys, and an unrelated key set produces no disposition.
+func TestNewRuleDispositionForKeys(t *testing.T) {
+	user := primitive.NewObjectID()
+
+	domainBlock := RuleSummary{
+		RuleID:   primitive.NewObjectID(),
+		UserID:   user,
+		Type:     RuleTypeDomain,
+		Action:   RuleActionBlock,
+		Trigger:  "evil.com",
+		MatchKey: RuleMatchKey(RuleTypeDomain, "evil.com"),
+	}
+
+	// The delivering actor's keys include the blocked domain suffix -> blocked.
+	blocked := NewRuleDispositionForKeys(ActorMatchKeys("https://sub.evil.com/@spammer"), []RuleSummary{domainBlock}, testNow)
+	require.True(t, blocked.IsBlocked())
+	require.Equal(t, domainBlock.RuleID, blocked.RuleID)
+
+	// A different origin's keys never reach the rule.
+	clean := NewRuleDispositionForKeys(ActorMatchKeys("https://good.example/@friend"), []RuleSummary{domainBlock}, testNow)
+	require.False(t, clean.IsFiltered())
+}
+
 func TestEvaluate_NoRules(t *testing.T) {
 	disposition := NewRuleDisposition(actorDocument("https://example.com/@bob"), nil, testNow)
 	require.Equal(t, RuleDispositionNone, disposition.Action)

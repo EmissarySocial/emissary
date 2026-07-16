@@ -90,6 +90,32 @@ func DocumentMatchKeys(document streams.Document) []string {
 	return result
 }
 
+// ActorMatchKeys returns the ACTOR and DOMAIN keys an actor URI can match: the actor itself, plus
+// every host suffix. This is the wire gate's key set -- the inbox gate blocks by WHO is talking
+// (ACTOR/DOMAIN), never by content (TAG), so it deliberately excludes the tag keys that
+// DocumentMatchKeys adds. An empty actorID contributes nothing.
+func ActorMatchKeys(actorID string) []string {
+
+	if actorID == "" {
+		return make([]string, 0)
+	}
+
+	result := make([]string, 0)
+
+	if actor := normalizeActorURI(actorID); actor != "" {
+		result = append(result, RuleTypeActor+":"+actor)
+	}
+
+	return append(result, domainMatchKeys(actorID)...)
+}
+
+// DomainMatchKeys returns the DOMAIN keys for a value's host: one per dot-boundary suffix. Used by
+// the wire gate to extend a DOMAIN block to the delivering server named in a signature's keyId,
+// which is a bare key URL, not an actor.
+func DomainMatchKeys(value string) []string {
+	return domainMatchKeys(value)
+}
+
 // normalizeActorURI lower-cases the scheme and host of an actor URI while preserving the path, so
 // that a host-case variation cannot alias past an ACTOR rule. A value that does not parse as a URL
 // is returned trimmed but otherwise unchanged.

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
@@ -17,6 +18,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// GetInboxCollection serves the User's ActivityPub inbox as a paged collection.
 func GetInboxCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	inboxService := factory.Inbox()
@@ -29,6 +31,7 @@ func GetInboxCollection(ctx *steranko.Context, factory *service.Factory, session
 	)
 }
 
+// GetInboxCollection_DirectMessages serves the private (direct-message) subset of the User's inbox.
 func GetInboxCollection_DirectMessages(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	inboxService := factory.Inbox()
@@ -42,6 +45,7 @@ func GetInboxCollection_DirectMessages(ctx *steranko.Context, factory *service.F
 	)
 }
 
+// GetInboxCollection_DirectMessages_MLS serves the MLS-encrypted direct messages in the User's inbox.
 func GetInboxCollection_DirectMessages_MLS(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	inboxService := factory.Inbox()
@@ -55,6 +59,8 @@ func GetInboxCollection_DirectMessages_MLS(ctx *steranko.Context, factory *servi
 	)
 }
 
+// PostInbox receives an inbound ActivityPub activity: it verifies the HTTP signature, drops
+// duplicates, applies the Stage-2 rule gate, then saves, notifies, and routes the activity.
 func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.PostInbox"
@@ -86,13 +92,13 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 		return derp.Wrap(err, location, "Receiving ActivityPub request")
 	}
 
-	// Prevent duplicate actiities from being processes multiple times (e.g. due to retries or multiple deliveries)
+	// Drop duplicate activities so retries and multiple deliveries are processed only once
 	if inbox_IsDuplicateActivity(context, activity) {
 		return nil
 	}
 
 	// Validate the Activity meets basic criteria to be processed.
-	if err := inbox_ValidateActivity(activity); err != nil {
+	if err := inbox_ValidateActivity(context, activity); err != nil {
 		return derp.Wrap(err, location, "Validating ActivityPub request", activity.Value())
 	}
 
@@ -124,9 +130,10 @@ func inbox_IsDuplicateActivity(context Context, activity streams.Document) bool 
 	return context.factory.Inbox().IsDuplicateActivity(context.session, context.user.UserID, activity.ID())
 }
 
-// inbox_ValidateActivity performs additional validate on activities received in the inbox.
-// This is called before routing the activity to the appropriate handler, so it applies to all activities
-func inbox_ValidateActivity(activity streams.Document) error {
+// inbox_ValidateActivity performs additional validation on activities received in the inbox. It runs
+// after HTTP-signature verification and before the activity is saved or routed, so it is the
+// authoritative Stage-2 rule gate (D5/D17) on the VERIFIED actor.
+func inbox_ValidateActivity(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.inbox_ValidateActivity"
 
@@ -140,15 +147,44 @@ func inbox_ValidateActivity(activity streams.Document) error {
 		return derp.BadRequest(location, "Activity must have a Type", activity.Value())
 	}
 
-	// ADDITIONAL VALIDATION LOGIC GOES HERE...
-	// Rules/Blocks
+	// RULE: An activity's id must share its actor's origin (D18). This closes the dedup-poisoning
+	// primitive where an attacker pre-registers a victim's future activity id: the poisoned activity
+	// is now rejected before it can be stored under that id. Only the top-level id is bound here;
+	// cross-origin object references are legitimate and are bound separately (D19). A missing id
+	// cannot poison (inbox_SaveActivity mints a local one), so it is exempt.
+	if activityID := activity.ID(); activityID != "" {
+		if !activitypub.IsSameOrigin(activity.ActorID(), activityID) {
+			return derp.Unauthorized(location, "Activity id must share the actor's origin", activity.ActorID(), activityID)
+		}
+	}
+
+	// RULE: Blocks stop inbound content at the front door (R1). The check is on the VERIFIED actor and
+	// is authoritative. The gate blocks by WHO is talking (ACTOR/DOMAIN), never by content (TAG, which
+	// is filtered at newsfeed ingest); and MUTE never gates the wire (D5) -- only BLOCK. Exception-set
+	// types are verified but handed to their per-type handler, never discarded here.
+	if !inboxIsWireGateException(activity.Type()) {
+
+		keys := model.ActorMatchKeys(activity.ActorID())
+
+		disposition, err := context.factory.Rule().DispositionForKeys(context.session, context.user.UserID, keys, time.Now().Unix())
+
+		// Stage 2 fails CLOSED (D17): a rules-query failure must not let blocked content through.
+		if err != nil {
+			return derp.Wrap(err, location, "Checking inbound rules against the verified actor", activity.ActorID())
+		}
+
+		// A blocked actor's activity is discarded. The 401 is byte-and-status identical to a signature
+		// failure (D3) so a blocked server cannot tell it was blocked (vs. a transient auth error).
+		if disposition.IsBlocked() {
+			return derp.Unauthorized(location, "Cannot validate received activity", activity.ActorID())
+		}
+	}
 
 	// All good so far...
 	return nil
 }
 
-// inbox_SaveActivity accepts all activities that are delivered to this actor, and
-// saves them into their inbox
+// inbox_SaveActivity saves a received activity into the target User's inbox.
 func inbox_SaveActivity(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.inbox_SaveActivity"
@@ -161,7 +197,7 @@ func inbox_SaveActivity(context Context, activity streams.Document) error {
 	// If not already a "map" then load the link to the object
 	object := activity.Object().LoadLink()
 
-	// Create a new InboxActivity and save it to the Inbox
+	// Build the InboxActivity record from the received activity
 	inboxService := context.factory.Inbox()
 	inboxActivity := model.NewInboxActivity()
 	inboxActivity.UserID = context.user.UserID
@@ -191,4 +227,16 @@ func inbox_SaveActivity(context Context, activity streams.Document) error {
 
 	// Suxxess
 	return nil
+}
+
+// inboxIsWireGateException returns TRUE for the activity types that the inbox block gate must VERIFY
+// but never discard (the D5 exception set). Their per-type handlers deliberately process a blocked
+// actor's activity: Follow rejects loudly, Delete/Undo run subtractively (D6), Move copies the block
+// to the target (R20). Discarding them at the gate would make those behaviors unreachable.
+func inboxIsWireGateException(activityType string) bool {
+	switch activityType {
+	case vocab.ActivityTypeFollow, vocab.ActivityTypeDelete, vocab.ActivityTypeUndo, vocab.ActivityTypeMove:
+		return true
+	}
+	return false
 }
