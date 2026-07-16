@@ -138,11 +138,3 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-// LOCAL DEVELOPMENT: derp gains a Conflict (409) code + IsConflict predicate, and data-mongo maps
-// MongoDB's E11000 duplicate-key error onto it, so the service layer can detect a unique-index
-// violation without importing the mongo driver. Both replaces come out once derp and data-mongo
-// are tagged and these requires are bumped past the new versions.
-replace github.com/benpate/derp => ../../benpate/derp
-
-replace github.com/benpate/data-mongo => ../../benpate/data-mongo
