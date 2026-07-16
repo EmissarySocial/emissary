@@ -29,7 +29,7 @@ func PostPushSubscription(ctx *steranko.Context, factory *service.Factory, sessi
 	var body pushSubscriptionRequest
 
 	if err := ctx.Bind(&body); err != nil {
-		return derp.Wrap(err, location, "Unable to parse request body", derp.WithBadRequest())
+		return derp.Wrap(err, location, "Parsing request body", derp.WithBadRequest())
 	}
 
 	// RULE: A subscription is useless without its endpoint and both crypto keys
@@ -48,46 +48,50 @@ func PostPushSubscription(ctx *steranko.Context, factory *service.Factory, sessi
 	userAgent := ctx.Request().UserAgent()
 
 	if err := factory.PushSubscription().Upsert(session, user.UserID, body.Endpoint, body.Keys.P256DH, body.Keys.Auth, userAgent); err != nil {
-		return derp.Wrap(err, location, "Unable to save push subscription")
+		return derp.Wrap(err, location, "Saving PushSubscription")
 	}
 
 	return ctx.NoContent(http.StatusNoContent)
 }
 
-// DeletePushSubscription removes a Web Push subscription (on explicit unsubscribe).  It only deletes
-// a subscription that belongs to the authenticated User.
+// DeletePushSubscription removes a Web Push subscription (on explicit unsubscribe)
 func DeletePushSubscription(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.DeletePushSubscription"
 
+	// Parse the endpoint to unsubscribe from the request body
 	var body pushSubscriptionRequest
 
 	if err := ctx.Bind(&body); err != nil {
-		return derp.Wrap(err, location, "Unable to parse request body", derp.WithBadRequest())
+		return derp.Wrap(err, location, "Parsing request body", derp.WithBadRequest())
 	}
 
+	// RULE: The endpoint names the subscription to remove, so it is required
 	if body.Endpoint == "" {
 		return derp.BadRequest(location, "endpoint is required")
 	}
 
-	// Verify the subscription belongs to this user before deleting.
+	// Load the subscription that claims this endpoint
 	subscription := model.NewPushSubscription()
-	err := factory.PushSubscription().LoadByEndpoint(session, body.Endpoint, &subscription)
 
-	if derp.IsNotFound(err) {
-		return ctx.NoContent(http.StatusNoContent) // Already gone — idempotent success.
+	if err := factory.PushSubscription().LoadByEndpoint(session, body.Endpoint, &subscription); err != nil {
+
+		// A subscription that is already gone is an idempotent success, not a failure
+		if derp.IsNotFound(err) {
+			return ctx.NoContent(http.StatusNoContent)
+		}
+
+		return derp.Wrap(err, location, "Loading PushSubscription")
 	}
 
-	if err != nil {
-		return derp.Wrap(err, location, "Unable to load push subscription")
-	}
-
+	// RULE: Only the owner may unsubscribe their own device
 	if subscription.UserID != user.UserID {
 		return derp.Forbidden(location, "You do not have permission to delete this subscription")
 	}
 
+	// Remove the subscription
 	if err := factory.PushSubscription().DeleteByEndpoint(session, body.Endpoint, "unsubscribe"); err != nil {
-		return derp.Wrap(err, location, "Unable to delete push subscription")
+		return derp.Wrap(err, location, "Deleting PushSubscription")
 	}
 
 	return ctx.NoContent(http.StatusNoContent)

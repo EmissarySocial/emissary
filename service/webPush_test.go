@@ -36,11 +36,10 @@ func TestWebPush_EndpointIsAllowed_DevAllowsAll(t *testing.T) {
 	require.True(t, service.EndpointIsAllowed("http://127.0.0.1:8080/@me"))
 }
 
-// TestVapidSubscriber_IsAlwaysBare pins the bug that actually produced Apple's
-// `{"reason":"BadJwtToken"}` (HTTP 403).  webpush-go prepends "mailto:" to any subscriber that does
-// not begin with "https:", so returning a "mailto:" URI here is double-prefixed into
-// `mailto:mailto:admin@example.com` inside the signed token, and the push service rejects it.
-// Every value this function can return must be a BARE address.
+// TestVapidSubscriber_IsAlwaysBare confirms every value this function can return is a bare address
+//
+// webpush-go prepends "mailto:" to any subscriber that does not begin with "https:", so a "mailto:"
+// URI double-prefixes inside the signed token and the push service rejects the whole JWT.
 func TestVapidSubscriber_IsAlwaysBare(t *testing.T) {
 
 	subscribers := []string{
@@ -55,8 +54,7 @@ func TestVapidSubscriber_IsAlwaysBare(t *testing.T) {
 	}
 }
 
-// TestVapidSubscriber_PrefersOwnerEmail confirms the Domain owner's real address wins: it is an
-// actual human contact, which is what RFC 8292 asks the "sub" claim to carry.
+// TestVapidSubscriber_PrefersOwnerEmail confirms the Domain owner's real address wins
 func TestVapidSubscriber_PrefersOwnerEmail(t *testing.T) {
 
 	require.Equal(t, "owner@example.social", vapidSubscriber("owner@example.social", "example.social"))
@@ -65,8 +63,8 @@ func TestVapidSubscriber_PrefersOwnerEmail(t *testing.T) {
 	require.Equal(t, "owner@example.social", vapidSubscriber("owner@example.social", "127.0.0.1"))
 }
 
-// TestVapidSubscriber_RejectsUnusableOwnerEmail confirms we never forward a value that would be
-// rejected downstream: an empty, malformed, or display-name-wrapped address falls back instead.
+// TestVapidSubscriber_RejectsUnusableOwnerEmail confirms an empty, malformed, or
+// display-name-wrapped owner address falls back instead of being forwarded
 func TestVapidSubscriber_RejectsUnusableOwnerEmail(t *testing.T) {
 
 	require.Equal(t, vapidSubscriberFallback, vapidSubscriber("", "127.0.0.1"))
@@ -75,7 +73,7 @@ func TestVapidSubscriber_RejectsUnusableOwnerEmail(t *testing.T) {
 }
 
 // TestVapidSubscriber_LocalHostsFallBack confirms a local/dev host yields the placeholder rather
-// than a contact address nobody could ever reach.
+// than a contact nobody could reach
 func TestVapidSubscriber_LocalHostsFallBack(t *testing.T) {
 
 	require.Equal(t, vapidSubscriberFallback, vapidSubscriber("", "127.0.0.1"))
@@ -89,8 +87,7 @@ func TestVapidSubscriber_LocalHostsFallBack(t *testing.T) {
 }
 
 // TestVapidSubscriber_DerivedFromHostname confirms that with no configured owner, a production
-// hostname still yields a plausible contact -- and that a PORT never survives into it, since ":"
-// is not permitted in a domain and `admin@example.social:8443` would fail the same silent way.
+// hostname still yields a plausible contact, and that a port never survives into it
 func TestVapidSubscriber_DerivedFromHostname(t *testing.T) {
 
 	require.Equal(t, "admin@example.social", vapidSubscriber("", "example.social"))

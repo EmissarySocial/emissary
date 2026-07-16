@@ -74,7 +74,7 @@ func (service *CollectionItem) Range(session data.Session, criteria exp.Expressi
 	iter, err := service.List(session, criteria, options...)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.CollectionItem.Range", "Unable to create iterator", criteria)
+		return nil, derp.Wrap(err, "service.CollectionItem.Range", "Creating iterator", criteria)
 	}
 
 	return RangeFunc(iter, model.NewCollectionItem), nil
@@ -84,7 +84,7 @@ func (service *CollectionItem) Range(session data.Session, criteria exp.Expressi
 func (service *CollectionItem) Load(session data.Session, criteria exp.Expression, collectionItem *model.CollectionItem) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), collectionItem); err != nil {
-		return derp.Wrap(err, "service.CollectionItem.Load", "Unable to load CollectionItem", criteria)
+		return derp.Wrap(err, "service.CollectionItem.Load", "Loading CollectionItem", criteria)
 	}
 
 	return nil
@@ -97,12 +97,12 @@ func (service *CollectionItem) Save(session data.Session, collectionItem *model.
 
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(collectionItem); err != nil {
-		return derp.Wrap(err, location, "Unable to validate CollectionItem", collectionItem)
+		return derp.Wrap(err, location, "Validating CollectionItem", collectionItem)
 	}
 
 	// Save the value to the database
 	if err := service.collection(session).Save(collectionItem, note); err != nil {
-		return derp.Wrap(err, location, "Unable to save CollectionItem", collectionItem, note)
+		return derp.Wrap(err, location, "Saving CollectionItem", collectionItem, note)
 	}
 
 	return nil
@@ -115,7 +115,7 @@ func (service *CollectionItem) Delete(session data.Session, collectionItem *mode
 
 	// Delete this CollectionItem from the database
 	if err := service.collection(session).HardDelete(exp.Equal("_id", collectionItem.CollectionItemID)); err != nil {
-		return derp.Wrap(err, location, "Unable to delete CollectionItem", collectionItem)
+		return derp.Wrap(err, location, "Deleting CollectionItem", collectionItem)
 	}
 
 	return nil
@@ -141,7 +141,7 @@ func (service *CollectionItem) HardDeleteByID(session data.Session, userID primi
 	criteria := exp.Equal("userId", userID).AndEqual("_id", collectionItemID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete CollectionItem", "userID: "+userID.Hex(), "collectionItemID: "+collectionItemID.Hex())
+		return derp.Wrap(err, location, "Deleting CollectionItem", "userID: "+userID.Hex(), "collectionItemID: "+collectionItemID.Hex())
 	}
 
 	return nil
@@ -263,7 +263,7 @@ func (service *CollectionItem) HardDeleteByURI(session data.Session, URI string)
 
 	// Delete this CollectionItem from the database
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, "service.CollectionItem.HardDeleteByURI", "Unable to delete CollectionItem", "uri: "+URI)
+		return derp.Wrap(err, "service.CollectionItem.HardDeleteByURI", "Deleting CollectionItem", "uri: "+URI)
 	}
 	return nil
 }
@@ -277,13 +277,13 @@ func (service *CollectionItem) DeleteByCollection(session data.Session, parentID
 	collectionItems, err := service.RangeByCollection(session, parentID, collectionID, exp.All())
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to query collection items by CollectionID", "parentID: "+parentID.Hex(), "collectionID: "+collectionID.Hex())
+		return derp.Wrap(err, location, "Querying CollectionItems by CollectionID", "parentID: "+parentID.Hex(), "collectionID: "+collectionID.Hex())
 	}
 
 	// Delete each collection item
 	for collectionItem := range collectionItems {
 		if err := service.Delete(session, &collectionItem, note); err != nil {
-			return derp.Wrap(err, location, "Unable to delete CollectionItem", collectionItem)
+			return derp.Wrap(err, location, "Deleting CollectionItem", collectionItem)
 		}
 	}
 
@@ -302,35 +302,33 @@ func (service *CollectionItem) SaveUnique(session data.Session, collectionItem *
 
 	// Fold onto any existing CollectionItem with the same URI (Save becomes an update).
 	if err := service.mergeOntoExistingURI(session, collectionItem); err != nil {
-		return derp.Wrap(err, location, "Unable to check for existing CollectionItem", collectionItem)
+		return derp.Wrap(err, location, "Checking for existing CollectionItem", collectionItem)
 	}
 
-	saveErr := service.Save(session, collectionItem, note)
+	// Save the CollectionItem
+	if err := service.Save(session, collectionItem, note); err != nil {
 
-	if saveErr == nil {
-		return nil
-	}
+		// A lost creation race trips the unique (collectionId, uri) index, which data-mongo reports
+		// as a Conflict.  Re-merge onto the winner's record and Save again as an update.
+		// See queries/sync/collectionItem.go for the index.
+		if derp.IsConflict(err) {
 
-	// If we lost a creation race, the unique (collectionId, uri) index rejects our
-	// insert. Re-merge onto the winner's record and Save again as an update. This
-	// replaces the old load-then-save idiom, which let two concurrent adds of the
-	// same URI both insert. See queries/sync/collectionItem.go for the index.
-	// data-mongo reports that rejection as a derp Conflict.
-	if derp.IsConflict(saveErr) {
+			if err := service.mergeOntoExistingURI(session, collectionItem); err != nil {
+				return derp.Wrap(err, location, "Re-loading CollectionItem after duplicate-key conflict", collectionItem)
+			}
 
-		if err := service.mergeOntoExistingURI(session, collectionItem); err != nil {
-			return derp.Wrap(err, location, "Unable to re-load CollectionItem after duplicate-key conflict", collectionItem)
+			if err := service.Save(session, collectionItem, note); err != nil {
+				return derp.Wrap(err, location, "Saving CollectionItem after duplicate-key conflict", collectionItem, note)
+			}
+
+			return nil
 		}
 
-		if err := service.Save(session, collectionItem, note); err != nil {
-			return derp.Wrap(err, location, "Unable to save CollectionItem after duplicate-key conflict", collectionItem, note)
-		}
-
-		return nil
+		// Any other save error is a real failure.
+		return derp.Wrap(err, location, "Saving CollectionItem", collectionItem, note)
 	}
 
-	// Any other save error is a real failure.
-	return derp.Wrap(saveErr, location, "Unable to save CollectionItem", collectionItem, note)
+	return nil
 }
 
 // mergeOntoExistingURI copies the identity of any existing CollectionItem sharing this
@@ -395,7 +393,7 @@ func (service *CollectionItem) CollectionIterator(session data.Session, parentID
 		)
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Unable to create iterator", "collectionID: "+collectionID.Hex())
+			return nil, derp.Wrap(err, location, "Creating iterator", "collectionID: "+collectionID.Hex())
 		}
 
 		// Map into a range of JSON-LD objects

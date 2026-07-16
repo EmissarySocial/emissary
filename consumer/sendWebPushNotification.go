@@ -60,7 +60,7 @@ func SendWebPushNotification(factory *service.Factory, session data.Session, arg
 			return queue.Success()
 		}
 
-		return queue.Error(derp.Wrap(err, location, "Unable to load notification", notificationID))
+		return queue.Error(derp.Wrap(err, location, "Loading Notification", notificationID))
 	}
 
 	// Defense in depth: never push a read notification.  This covers suppressed records
@@ -86,14 +86,14 @@ func SendWebPushNotification(factory *service.Factory, session data.Session, arg
 	})
 
 	if err != nil {
-		return queue.Failure(derp.Wrap(err, location, "Unable to marshal push payload"))
+		return queue.Failure(derp.Wrap(err, location, "Marshaling push payload"))
 	}
 
 	// Load the recipient's push subscriptions
 	subscriptions, err := factory.PushSubscription().RangeByUserID(session, userID)
 
 	if err != nil {
-		return queue.Error(derp.Wrap(err, location, "Unable to load push subscriptions", userID))
+		return queue.Error(derp.Wrap(err, location, "Loading PushSubscriptions", userID))
 	}
 
 	subscriptionCount := 0
@@ -124,7 +124,7 @@ func sendWebPushToSubscription(factory *service.Factory, session data.Session, s
 	statusCode, err := factory.WebPush().Send(session, subscription.Endpoint, subscription.P256DH, subscription.Auth, payload)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to send Web Push", subscription.Endpoint))
+		derp.Report(derp.Wrap(err, location, "Sending Web Push", subscription.Endpoint))
 		return
 	}
 
@@ -137,7 +137,7 @@ func sendWebPushToSubscription(factory *service.Factory, session data.Session, s
 			Msg("WebPush: subscription is GONE -- pruning it")
 
 		if err := factory.PushSubscription().DeleteByEndpoint(session, subscription.Endpoint, "expired"); err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to delete expired push subscription", subscription.Endpoint))
+			derp.Report(derp.Wrap(err, location, "Deleting expired PushSubscription", subscription.Endpoint))
 		}
 
 		return

@@ -16,9 +16,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// webPushErrorBodyMaxLength caps how much of a push service's error response we read back.  The
-// useful part is a short JSON reason; the cap keeps a hostile or broken service from streaming
-// unbounded data into the log.
+// webPushErrorBodyMaxLength caps how much of a push service's error response is read back, so a
+// hostile or broken service cannot stream unbounded data into the log
 const webPushErrorBodyMaxLength = 1024
 
 // Domain.Data keys under which the per-domain VAPID keypair is stored (generated lazily).
@@ -100,7 +99,7 @@ func (service *WebPush) vapidKeys(session data.Session) (publicKey string, priva
 	newPrivate, newPublic, err := webpush.GenerateVAPIDKeys()
 
 	if err != nil {
-		return "", "", derp.Wrap(err, location, "Unable to generate VAPID keys")
+		return "", "", derp.Wrap(err, location, "Generating VAPID keys")
 	}
 
 	updated := *domain
@@ -111,7 +110,7 @@ func (service *WebPush) vapidKeys(session data.Session) (publicKey string, priva
 	updated.Data[domainDataVAPIDPrivateKey] = newPrivate
 
 	if err := service.domainService.Save(session, updated, "Generate VAPID keys"); err != nil {
-		return "", "", derp.Wrap(err, location, "Unable to save VAPID keys")
+		return "", "", derp.Wrap(err, location, "Saving VAPID keys")
 	}
 
 	return newPublic, newPrivate, nil
@@ -131,7 +130,7 @@ func (service *WebPush) Send(session data.Session, endpoint string, p256dh strin
 	public, private, err := service.vapidKeys(session)
 
 	if err != nil {
-		return 0, derp.Wrap(err, location, "Unable to load VAPID keys")
+		return 0, derp.Wrap(err, location, "Loading VAPID keys")
 	}
 
 	subscription := &webpush.Subscription{
@@ -167,17 +166,14 @@ func (service *WebPush) Send(session data.Session, endpoint string, p256dh strin
 	})
 
 	if err != nil {
-		return 0, derp.Wrap(err, location, "Unable to send Web Push notification", endpoint, subscriber)
+		return 0, derp.Wrap(err, location, "Sending Web Push notification", endpoint, subscriber)
 	}
 
 	defer response.Body.Close()
 
-	// DIAGNOSTIC: a push service states WHY it rejected a message in the response BODY -- Apple
-	// returns `{"reason":"BadJwtToken"}`, for instance -- and the status code alone is rarely
-	// enough to act on.  The VAPID subscriber is logged beside it because it is a prime suspect:
-	// it is derived from the hostname, so a hostname carrying a port yields
-	// `mailto:admin@example.com:8080`, which is not a valid email address and which strict push
-	// services reject outright.
+	// A push service states WHY it rejected a message in the response body -- Apple returns
+	// `{"reason":"BadJwtToken"}`, for instance -- and the status code alone is rarely enough to act
+	// on.  The subscriber rides along because a malformed "sub" claim is a common cause.
 	if (response.StatusCode < 200) || (response.StatusCode > 299) {
 
 		// Best-effort: a body we cannot read must not mask the status code we CAN report.
@@ -211,29 +207,17 @@ func (service *WebPush) EndpointIsAllowed(endpoint string) bool {
  * VAPID Subscriber
  ******************************************/
 
-// vapidSubscriberFallback is the contact address used when neither the configured administrator's
-// address nor this instance's hostname can supply a usable one.  It is BARE, for the reason spelled
-// out on vapidSubscriber.
+// vapidSubscriberFallback is the contact address used when no valid one can be derived
 const vapidSubscriberFallback = "admin@example.com"
 
-// vapidSubscriber returns the VAPID "sub" claim (RFC 8292): a contact address that the push service
-// may use to reach whoever operates this server.  It need not be deliverable, but it must be
-// syntactically valid, and it should be a real contact where we have one.
-//
-// RULE: the returned address MUST be BARE -- "admin@example.com", NEVER "mailto:admin@example.com".
-// webpush-go prepends the scheme itself for any subscriber that does not already begin with
-// "https:" (getVAPIDAuthorizationHeader in webpush-go/vapid.go), so handing it a "mailto:" URI
-// yields the double-prefixed `mailto:mailto:admin@example.com` in the signed token.  Push services
-// reject the entire JWT for that, and the reason they give names neither the claim nor the scheme:
-// Apple answers `{"reason":"BadJwtToken"}` with an HTTP 403, which reads exactly like a key
-// mismatch and sends you hunting in the wrong place.  Older webpush-go releases also skipped the
-// prefix for an existing "mailto:", which is why this is easy to get wrong by analogy.
-//
-// A hostname-derived address additionally has to survive two shapes that a real deployment hits:
-// a port must never reach the address ("admin@example.com:8443" is invalid -- ":" is not permitted
-// in a domain), and a local/dev host yields a contact nobody could ever use ("admin@127.0.0.1"),
-// so we substitute the placeholder rather than assert a meaningless address.
+// vapidSubscriber returns the VAPID "sub" claim (RFC 8292): a contact address for whoever operates
+// this server
 func vapidSubscriber(adminEmail string, hostname string) string {
+
+	// RULE: every address returned here MUST be bare.  webpush-go prepends "mailto:" to any
+	// subscriber that does not start with "https:", so a "mailto:" URI double-prefixes inside the
+	// signed token.  Push services reject the whole JWT for that, naming neither the claim nor the
+	// scheme: Apple answers `{"reason":"BadJwtToken"}` with an HTTP 403.
 
 	// The configured administrator IS the contact this claim is meant to carry, so prefer it.
 	if isBareEmailAddress(adminEmail) {
@@ -257,9 +241,8 @@ func vapidSubscriber(adminEmail string, hostname string) string {
 	return "admin@" + host
 }
 
-// isBareEmailAddress reports whether the value is a syntactically valid email address AND carries
-// nothing but the address itself -- no display name ("Ben <ben@example.com>"), no scheme.  The
-// VAPID "sub" claim takes the bare form only.
+// isBareEmailAddress reports whether the value is a valid email address and nothing else -- no
+// display name ("Ben <ben@example.com>"), no scheme
 func isBareEmailAddress(value string) bool {
 
 	if value == "" {

@@ -148,7 +148,7 @@ func (service *Collection) HardDeleteByID(session data.Session, userID primitive
 	criteria := exp.Equal("userId", userID).AndEqual("_id", collectionID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
-		return derp.Wrap(err, location, "Unable to delete Collection", "userID: "+userID.Hex(), "collectionID: "+collectionID.Hex())
+		return derp.Wrap(err, location, "Deleting Collection", "userID: "+userID.Hex(), "collectionID: "+collectionID.Hex())
 	}
 
 	return nil
@@ -269,7 +269,7 @@ func (service *Collection) DeleteByUserID(session data.Session, userID primitive
 	collections, err := service.RangeByUserID(session, userID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to query collections by UserID", "userID: "+userID.Hex())
+		return derp.Wrap(err, location, "Querying Collections by UserID", "userID: "+userID.Hex())
 	}
 
 	// Delete each collection
@@ -365,14 +365,14 @@ func (service *Collection) loadOrCreateByParent(session data.Session, userID pri
 		if derp.IsConflict(saveErr) {
 
 			if reloadErr := service.LoadByType(session, parentID, collectionType, &collection); reloadErr != nil {
-				return collection, derp.Wrap(reloadErr, location, "Unable to re-load Collection after duplicate-key conflict", parentType, parentID, collectionType)
+				return collection, derp.Wrap(reloadErr, location, "Re-loading Collection after duplicate-key conflict", parentType, parentID, collectionType)
 			}
 
 			return collection, nil
 		}
 
 		// Any other save error is a real failure.
-		return collection, derp.Wrap(saveErr, location, "Unable to create Collection", parentType, parentID, collectionType)
+		return collection, derp.Wrap(saveErr, location, "Creating Collection", parentType, parentID, collectionType)
 
 	}
 
@@ -485,11 +485,11 @@ func (service *Collection) RemoveItem(session data.Session, collection *model.Co
 	}
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to load collection item", "uri: "+itemURI)
+		return derp.Wrap(err, location, "Loading CollectionItem", "uri: "+itemURI)
 	}
 
 	if err := service.collectionItemService.Delete(session, &collectionItem, ""); err != nil {
-		return derp.Wrap(err, location, "Unable to delete collection item", collectionItem)
+		return derp.Wrap(err, location, "Deleting CollectionItem", collectionItem)
 	}
 
 	// Keep the W3C-required `totalItems` accurate (D9).
@@ -518,13 +518,13 @@ func (service *Collection) refreshTotalItems(session data.Session, collection *m
 	count, err := service.CountItems(session, collection)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to count collection items", collection.CollectionID.Hex())
+		return derp.Wrap(err, location, "Counting CollectionItems", collection.CollectionID.Hex())
 	}
 
 	collection.TotalItems = int(count)
 
 	if err := service.Save(session, collection, "Refresh totalItems"); err != nil {
-		return derp.Wrap(err, location, "Unable to save collection", collection.CollectionID.Hex())
+		return derp.Wrap(err, location, "Saving Collection", collection.CollectionID.Hex())
 	}
 
 	return nil

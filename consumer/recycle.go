@@ -26,14 +26,14 @@ func RecycleDomain(factory *service.Factory, session data.Session, _ mapof.Any) 
 	// Please try to enjoy each collection equally.
 	for _, collection := range factory.Collections() {
 		if err := queries.Recycle(session, collection); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error recycling collection", collection))
+			derp.Report(derp.Wrap(err, location, "Recycling collection", collection))
 			errorCount = errorCount + 1
 		}
 	}
 
 	// Every collection has had its turn.  Surface a failure now so the task is retried.
 	if errorCount > 0 {
-		return queue.Error(derp.Internal(location, "Unable to recycle one or more collections", errorCount))
+		return queue.Error(derp.Internal(location, "Recycling collections", errorCount))
 	}
 
 	// Congratulatory affirmation.

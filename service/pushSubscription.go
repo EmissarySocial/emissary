@@ -138,10 +138,14 @@ func (service *PushSubscription) Upsert(session data.Session, userID primitive.O
 
 	// Load any subscription that already claims this endpoint
 	sub := model.NewPushSubscription()
-	err := service.LoadByEndpoint(session, endpoint, &sub)
 
-	if err != nil && !derp.IsNotFound(err) {
-		return derp.Wrap(err, location, "Loading PushSubscription", endpoint)
+	if err := service.LoadByEndpoint(session, endpoint, &sub); err != nil {
+
+		// A NotFound just means the endpoint is unclaimed, which is the normal path for a new
+		// registration; anything else is a real database failure.
+		if !derp.IsNotFound(err) {
+			return derp.Wrap(err, location, "Loading PushSubscription", endpoint)
+		}
 	}
 
 	// RULE: An endpoint identifies a BROWSER, so only its current owner may re-bind it.  The row is
@@ -157,20 +161,20 @@ func (service *PushSubscription) Upsert(session data.Session, userID primitive.O
 	sub.Auth = auth
 	sub.UserAgent = userAgent
 
-	saveErr := service.Save(session, &sub, "Upsert push subscription")
+	// Save the subscription
+	if err := service.Save(session, &sub, "Upsert push subscription"); err != nil {
 
-	if saveErr == nil {
-		return nil
+		// A lost creation race trips the unique endpoint index: a concurrent request inserted this
+		// endpoint between our Load and our Save.  Re-apply the ownership rule against the winner
+		// rather than retrying blindly, which would hand the loser the winner's subscription.
+		if derp.IsConflict(err) {
+			return service.upsertOntoRaceWinner(session, &sub, userID, endpoint)
+		}
+
+		return derp.Wrap(err, location, "Saving PushSubscription", endpoint)
 	}
 
-	// A lost creation race trips the unique endpoint index: a concurrent request inserted this
-	// endpoint between our Load and our Save.  Re-apply the ownership rule against the winner rather
-	// than retrying blindly, which would hand the loser the winner's subscription.
-	if derp.IsConflict(saveErr) {
-		return service.upsertOntoRaceWinner(session, &sub, userID, endpoint)
-	}
-
-	return derp.Wrap(saveErr, location, "Saving PushSubscription", endpoint)
+	return nil
 }
 
 // upsertOntoRaceWinner completes an Upsert that lost a creation race, folding onto the winner's record
