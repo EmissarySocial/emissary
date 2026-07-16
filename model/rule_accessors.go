@@ -8,11 +8,13 @@ import (
 func RuleSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
+			// NOTE: `followingId` is deliberately ABSENT. It is written only by the import path
+			// (service/rule_import.go); exposing it here would let a form post forge a Rule's origin
+			// -- flipping Origin() to REMOTE and steering the IsPublic clamp and dedup merge. See D9.
 			"ruleId":         schema.String{Required: true, Format: "objectId"},
 			"userId":         schema.String{Required: true, Format: "objectId"},
-			"followingId":    schema.String{Format: "objectId"},
 			"followingLabel": schema.String{Format: "text", MaxLength: 64},
-			"type":           schema.String{Required: true, Enum: []string{RuleTypeDomain, RuleTypeActor, RuleTypeContent}},
+			"type":           schema.String{Required: true, Enum: []string{RuleTypeDomain, RuleTypeActor, RuleTypeTag}},
 			"action":         schema.String{Required: true, Enum: []string{RuleActionBlock, RuleActionMute, RuleActionLabel}},
 			"label":          schema.String{Format: "text", MaxLength: 64},
 			"trigger":        schema.String{MaxLength: 256, Required: true},
@@ -20,6 +22,7 @@ func RuleSchema() schema.Element {
 			"reasonCode":     schema.String{MaxLength: 64},
 			"isPublic":       schema.Boolean{},
 			"publishDate":    schema.Integer{BitSize: 64},
+			"expireDate":     schema.Integer{BitSize: 64},
 		},
 	}
 }
@@ -37,6 +40,9 @@ func (rule *Rule) GetPointer(name string) (any, bool) {
 
 	case "publishDate":
 		return &rule.PublishDate, true
+
+	case "expireDate":
+		return &rule.ExpireDate, true
 
 	case "type":
 		return &rule.Type, true
@@ -97,11 +103,8 @@ func (rule *Rule) SetString(name string, value string) bool {
 			return true
 		}
 
-	case "followingId":
-		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			rule.FollowingID = objectID
-			return true
-		}
+		// NOTE: no "followingId" case -- it is import-only and must not be settable from a form. See
+		// RuleSchema and D9. Reading it back (GetStringOK) stays available for templates.
 	}
 
 	return false

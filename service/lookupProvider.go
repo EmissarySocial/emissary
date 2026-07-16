@@ -117,7 +117,7 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 		return form.NewReadOnlyLookupGroup(
 			form.LookupCode{Label: "Filter by Person", Value: model.RuleTypeActor},
 			form.LookupCode{Label: "Filter by Domain", Value: model.RuleTypeDomain},
-			form.LookupCode{Label: "Filter by Tags & Keywords", Value: model.RuleTypeContent},
+			form.LookupCode{Label: "Filter by Tag", Value: model.RuleTypeTag},
 		)
 
 	case "rule-reasons":

@@ -1,13 +1,13 @@
 package model
 
-// RuleTypeDomain rules all messages that link to a specific domain or URL prefix
+// RuleTypeDomain rules all messages that originate from a specific domain
 const RuleTypeDomain = "DOMAIN"
 
-// RuleTypeUser rules all messages from a specific user
+// RuleTypeActor rules all messages from a specific actor
 const RuleTypeActor = "ACTOR"
 
-// RuleTypeUser rules all messages that contain a particular phrase (hashtag)
-const RuleTypeContent = "CONTENT"
+// RuleTypeTag rules all messages carrying a specific hashtag
+const RuleTypeTag = "TAG"
 
 // RuleActionBlock rules all contact with a particular user or domain
 const RuleActionBlock = "BLOCK"

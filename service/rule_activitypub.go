@@ -73,7 +73,9 @@ func (service *Rule) JSONLD(rule model.Rule) mapof.Any {
 			vocab.PropertyID:   rule.Trigger,
 		}
 
-	case model.RuleTypeContent:
+	// NOTE: the wire form for a TAG rule is a Phase 7 decision (a `Hashtag` object rather than a
+	// `Note`); this dormant mapping is unreachable until domain publishing ships. See RULES.md D12.
+	case model.RuleTypeTag:
 		result[vocab.PropertyObject] = mapof.Any{
 			vocab.PropertyType:    vocab.ObjectTypeNote,
 			vocab.PropertyContent: rule.Trigger,

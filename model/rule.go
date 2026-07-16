@@ -16,10 +16,12 @@ type Rule struct {
 	Action         string             `bson:"action"`         // Action to take when this rule is triggered (e.g. "BLOCK", "MUTE", "LABEL")
 	Label          string             `bson:"label"`          // Human-friendly label to add to messages
 	Trigger        string             `bson:"trigger"`        // Parameter for this rule type)
+	MatchKey       string             `bson:"matchKey"`       // Derived "<TYPE>:<normalized trigger>" -- the indexed key that a matching document also produces. Computed in Save from Type+Trigger; NEVER set from a form (see RuleSchema).
 	ReasonCode     string             `bson:"reasonCode"`     // Optional code to identify the reason for this rule (e.g. "SPAM", "NSFW", "SENSITIVE")
 	Summary        string             `bson:"summary"`        // Optional comment describing why this rule exists
 	IsPublic       bool               `bson:"isPublic"`       // If TRUE, this record is visible publicly
 	PublishDate    int64              `bson:"publishDate"`    // Unix epoch SECONDS when this rule was published to followers (0 = unpublished)
+	ExpireDate     int64              `bson:"expireDate"`     // Unix epoch SECONDS when this rule expires and becomes inert (0 = never)
 
 	journal.Journal `json:"-" bson:",inline"`
 }

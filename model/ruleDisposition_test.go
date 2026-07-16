@@ -1,0 +1,150 @@
+package model
+
+import (
+	"reflect"
+	"strings"
+	"testing"
+
+	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+const testNow = int64(1_000_000)
+
+// actorDocument builds a minimal document attributed to the given actor URI.
+func actorDocument(actorURI string) streams.Document {
+	return streams.NewDocument(mapof.Any{vocab.PropertyActor: actorURI})
+}
+
+// actorRule builds a RuleSummary that matches the given actor URI.
+func actorRule(userID primitive.ObjectID, action string, actorURI string) RuleSummary {
+	return RuleSummary{
+		RuleID:   primitive.NewObjectID(),
+		UserID:   userID,
+		Type:     RuleTypeActor,
+		Action:   action,
+		Trigger:  actorURI,
+		MatchKey: RuleMatchKey(RuleTypeActor, actorURI),
+	}
+}
+
+func TestEvaluate_NoRules(t *testing.T) {
+	disposition := Evaluate(actorDocument("https://example.com/@bob"), nil, testNow)
+	require.Equal(t, RuleDispositionNone, disposition.Action)
+	require.False(t, disposition.IsFiltered())
+}
+
+func TestEvaluate_Block(t *testing.T) {
+	rule := actorRule(primitive.NewObjectID(), RuleActionBlock, "https://example.com/@bob")
+	disposition := Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{rule}, testNow)
+
+	require.True(t, disposition.IsBlocked())
+	require.Equal(t, rule.RuleID, disposition.RuleID)
+	require.Equal(t, RuleOriginUser, disposition.Tier)
+}
+
+func TestEvaluate_MaxSeverityWins(t *testing.T) {
+	user := primitive.NewObjectID()
+	mute := actorRule(user, RuleActionMute, "https://example.com/@bob")
+	block := actorRule(user, RuleActionBlock, "https://example.com/@bob")
+
+	// Regardless of order, BLOCK (higher severity) wins.
+	require.True(t, Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{mute, block}, testNow).IsBlocked())
+	require.True(t, Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{block, mute}, testNow).IsBlocked())
+}
+
+func TestEvaluate_MuteOnly(t *testing.T) {
+	rule := actorRule(primitive.NewObjectID(), RuleActionMute, "https://example.com/@bob")
+	disposition := Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{rule}, testNow)
+
+	require.True(t, disposition.IsMuted())
+	require.True(t, disposition.IsFiltered())
+	require.False(t, disposition.IsBlocked())
+}
+
+func TestEvaluate_LabelDoesNotFilter(t *testing.T) {
+	rule := actorRule(primitive.NewObjectID(), RuleActionLabel, "https://example.com/@bob")
+	rule.Label = "State media"
+	disposition := Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{rule}, testNow)
+
+	require.Equal(t, RuleDispositionNone, disposition.Action)
+	require.False(t, disposition.IsFiltered())
+	require.True(t, disposition.HasLabels())
+	require.Equal(t, "State media", disposition.Labels[0].Label)
+}
+
+func TestEvaluate_LabelsCollectedUnderBlock(t *testing.T) {
+	user := primitive.NewObjectID()
+	block := actorRule(user, RuleActionBlock, "https://example.com/@bob")
+	label := actorRule(user, RuleActionLabel, "https://example.com/@bob")
+	label.Label = "Explains the block"
+
+	disposition := Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{block, label}, testNow)
+
+	require.True(t, disposition.IsBlocked())
+	require.True(t, disposition.HasLabels(), "labels are collected even when the final action is BLOCK")
+}
+
+func TestEvaluate_ExpiredRuleSkipped(t *testing.T) {
+	expired := actorRule(primitive.NewObjectID(), RuleActionBlock, "https://example.com/@bob")
+	expired.ExpireDate = testNow - 1 // already passed
+
+	require.False(t, Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{expired}, testNow).IsFiltered())
+
+	// A not-yet-expired rule still applies.
+	future := actorRule(primitive.NewObjectID(), RuleActionBlock, "https://example.com/@bob")
+	future.ExpireDate = testNow + 1
+	require.True(t, Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{future}, testNow).IsBlocked())
+}
+
+// TestEvaluate_TieBreaksToUser pins D14: when an ADMIN and a USER rule match at the same severity,
+// the USER rule is named the winner (attribution only). Order must not matter.
+func TestEvaluate_TieBreaksToUser(t *testing.T) {
+	admin := actorRule(primitive.NilObjectID, RuleActionBlock, "https://example.com/@bob")
+	user := actorRule(primitive.NewObjectID(), RuleActionBlock, "https://example.com/@bob")
+
+	require.Equal(t, RuleOriginUser, Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{admin, user}, testNow).Tier)
+	require.Equal(t, RuleOriginUser, Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{user, admin}, testNow).Tier)
+}
+
+// TestEvaluate_AdminFloorHolds confirms an ADMIN block still blocks when the only user-tier rule is a
+// weaker (or absent) action -- the "admin is a floor" theorem.
+func TestEvaluate_AdminFloorHolds(t *testing.T) {
+	adminBlock := actorRule(primitive.NilObjectID, RuleActionBlock, "https://example.com/@bob")
+	userLabel := actorRule(primitive.NewObjectID(), RuleActionLabel, "https://example.com/@bob")
+
+	disposition := Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{userLabel, adminBlock}, testNow)
+	require.True(t, disposition.IsBlocked())
+	require.Equal(t, RuleOriginAdmin, disposition.Tier)
+}
+
+// TestEvaluate_NonMatchingRuleIgnored confirms a rule whose key is not among the document's keys is
+// never applied -- the query pre-filters, but the engine re-checks so a broad candidate set is safe.
+func TestEvaluate_NonMatchingRuleIgnored(t *testing.T) {
+	other := actorRule(primitive.NewObjectID(), RuleActionBlock, "https://elsewhere.example/@carol")
+	disposition := Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{other}, testNow)
+	require.False(t, disposition.IsFiltered())
+}
+
+// TestRuleSummaryFields_PinnedToStruct is the guard against the silent all-ADMIN-tier failure: every
+// bson field on RuleSummary MUST be in the projection, or a dropped field (esp. userId) reads as its
+// zero value with no error.
+func TestRuleSummaryFields_PinnedToStruct(t *testing.T) {
+
+	fields := RuleSummaryFields()
+	summaryType := reflect.TypeOf(RuleSummary{})
+
+	for i := range summaryType.NumField() {
+
+		bsonName, _, _ := strings.Cut(summaryType.Field(i).Tag.Get("bson"), ",")
+
+		if (bsonName == "") || (bsonName == "-") {
+			continue
+		}
+
+		require.Contains(t, fields, bsonName, "RuleSummaryFields() must project struct field %q (bson %q)", summaryType.Field(i).Name, bsonName)
+	}
+}

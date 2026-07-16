@@ -119,6 +119,11 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 		return derp.Wrap(err, location, "Validating Rule", rule)
 	}
 
+	// Recompute the derived match key from the (now-validated) Type and Trigger. UNCONDITIONAL: the
+	// edit form posts Trigger, and a MatchKey that disagreed with its Trigger would silently stop
+	// matching -- a block that quietly stops blocking. Never sourced from a form (absent from RuleSchema).
+	rule.MatchKey = model.RuleMatchKey(rule.Type, rule.Trigger)
+
 	// If this is a duplicate rule, then halt
 	if service.hasDuplicate(session, rule) {
 		return nil
@@ -436,7 +441,7 @@ func (service *Rule) QueryByActorAndActions(session data.Session, userID primiti
 		exp.Or(
 			exp.Equal("type", model.RuleTypeActor).AndEqual("trigger", actorID),
 			exp.Equal("type", model.RuleTypeDomain).AndEqual("trigger", uri.Hostname(actorID)),
-			exp.Equal("type", model.RuleTypeContent),
+			exp.Equal("type", model.RuleTypeTag),
 		),
 		exp.In("action", actions),
 	)
