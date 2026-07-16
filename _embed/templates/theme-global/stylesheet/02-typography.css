@@ -339,6 +339,22 @@ code.inline {
 }
 
 /******************************************
+ * Wrapping
+ ******************************************/
+
+/* A long unbroken token (a pasted URL, a hash) offers no soft wrap opportunity,
+ * so it lays out on one line and overflows its container. `anywhere` rather than
+ * `break-word` is required: it also shrinks the min-content size, which is what
+ * lets a flex item narrower than the token shrink to fit instead of forcing the
+ * whole row wide. Inherited, so it reaches every content surface -- many of which
+ * have no class hook of their own. The break-word line is the fallback for
+ * Safari < 15.4, which drops the `anywhere` declaration. */
+body {
+	overflow-wrap: break-word;
+	overflow-wrap: anywhere;
+}
+
+/******************************************
  * Links and Anchors
  ******************************************/
 
