@@ -37,7 +37,7 @@
 				{do:"edit-content", file:"create", format:"HTML", require-content:true}
 				{do:"process-content", remove-html:true, add-links:true, add-tags:true}
 				{do:"save"}
-				{do:"upload-attachments", maximum:10}
+				{do:"upload-attachments", maximum:10, accept-type:"image/*,video/*,audio/*,application/pdf"}
 				{do:"set-thumbnail", path:"iconUrl"}
 				{do:"save-and-publish", state:"default", outbox:true}
 				{do:"search-index"}

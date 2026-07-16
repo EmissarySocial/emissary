@@ -48,6 +48,11 @@ func (service *Attachment) Import(session data.Session, record *model.Import, im
 			derp.Wrap(err, location, "Retrieving original attachment file")
 	}
 
+	// RULE: Sniff the imported file's own bytes to determine its content-type.
+	// The remote server wrote both this file and the JSON that describes it, so
+	// neither its "contentType" nor its "original" filename is taken at face value.
+	attachment.ContentType = model.DetectContentType(buffer.Bytes())
+
 	// Save the original file to the mediaserver
 	if err := service.mediaServer.Put(localID.Hex(), &buffer); err != nil {
 		return primitive.NilObjectID, "",

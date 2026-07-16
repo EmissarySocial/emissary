@@ -57,10 +57,11 @@ func TestVerifyContentType_Reject(t *testing.T) {
 
 	source := strings.NewReader("this is definitely not an image, it is plain text")
 
-	reader, err := verifyContentType(source, "image/*")
+	reader, contentType, err := verifyContentType(source, "image/*")
 
 	require.Error(t, err)
 	require.Nil(t, reader)
+	require.Zero(t, contentType)
 }
 
 // TestVerifyContentType_AcceptImage confirms that a real image is accepted AND
@@ -70,10 +71,11 @@ func TestVerifyContentType_AcceptImage(t *testing.T) {
 	// Minimal valid PNG header + body (enough for http.DetectContentType to sniff "image/png").
 	png := []byte("\x89PNG\r\n\x1a\n" + strings.Repeat("payload-bytes", 100))
 
-	reader, err := verifyContentType(bytes.NewReader(png), "image/*")
+	reader, contentType, err := verifyContentType(bytes.NewReader(png), "image/*")
 
 	require.Nil(t, err)
 	require.NotNil(t, reader)
+	require.Equal(t, "image/png", contentType)
 
 	// The reader must replay every original byte, in order, with nothing lost or duplicated.
 	roundTrip, err := io.ReadAll(reader)
@@ -83,18 +85,35 @@ func TestVerifyContentType_AcceptImage(t *testing.T) {
 
 // TestVerifyContentType_EmptyAcceptAllows confirms legacy behavior: when no accept
 // pattern is configured, any file is accepted and the stream is replayed intact.
+// The content-type is still detected, because it is recorded on the Attachment.
 func TestVerifyContentType_EmptyAcceptAllows(t *testing.T) {
 
 	payload := []byte("arbitrary non-image bytes")
 
-	reader, err := verifyContentType(bytes.NewReader(payload), "")
+	reader, contentType, err := verifyContentType(bytes.NewReader(payload), "")
 
 	require.Nil(t, err)
 	require.NotNil(t, reader)
+	require.Equal(t, "text/plain", contentType)
 
 	roundTrip, err := io.ReadAll(reader)
 	require.Nil(t, err)
 	require.Equal(t, payload, roundTrip)
+}
+
+// TestVerifyContentType_Polyglot confirms that a file whose bytes pass the accept
+// pattern is reported by its *sniffed* type, not the type its filename implies.
+// An HTML document behind GIF magic bytes is "image/gif" here -- model.Attachment
+// is what refuses to serve it inline.
+func TestVerifyContentType_Polyglot(t *testing.T) {
+
+	polyglot := []byte("GIF89a=1;\n<script>window.__xss=document.domain</script>")
+
+	reader, contentType, err := verifyContentType(bytes.NewReader(polyglot), "image/*")
+
+	require.Nil(t, err)
+	require.NotNil(t, reader)
+	require.Equal(t, "image/gif", contentType)
 }
 
 // TestVerifyContentType_ShortFile confirms that a file smaller than the 512-byte
@@ -103,7 +122,7 @@ func TestVerifyContentType_ShortFile(t *testing.T) {
 
 	payload := []byte("tiny")
 
-	reader, err := verifyContentType(bytes.NewReader(payload), "")
+	reader, _, err := verifyContentType(bytes.NewReader(payload), "")
 
 	require.Nil(t, err)
 

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"net/http"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -98,11 +97,11 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		//nolint:errcheck
 		defer source.Close()
 
-		// If this step restricts the accepted content-types, then sniff the actual
-		// file contents (NOT the attacker-controlled filename or Content-Type header)
-		// and reject anything that does not match.  `reader` re-assembles the bytes
-		// we peeked so the full stream is still available for MediaServer.Put.
-		reader, err := verifyContentType(source, step.AcceptType)
+		// Sniff the actual file contents (NOT the attacker-controlled filename or
+		// Content-Type header) and, if this step restricts the accepted content-types,
+		// reject anything that does not match.  `reader` re-assembles the bytes we
+		// peeked so the full stream is still available for MediaServer.Put.
+		reader, contentType, err := verifyContentType(source, step.AcceptType)
 
 		if err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Uploaded file is not an allowed type", fileHeader.Filename, step.AcceptType))
@@ -111,6 +110,7 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		// Create a new Attachment object
 		attachment := model.NewAttachment(objectType, objectID)
 		attachment.Original = fileHeader.Filename
+		attachment.ContentType = contentType
 		attachment.Category = step.Category
 
 		// Try to set labels from the stepInfo and form
@@ -197,14 +197,17 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 	return Continue().WithEvent("attachments-updated", "true")
 }
 
-// verifyContentType sniffs the leading bytes of an uploaded file to determine its
-// actual content-type, and confirms that it matches the provided accept pattern
-// (for instance "image/*" or "image/png,image/webp").  It returns a reader that
-// replays the sniffed bytes followed by the rest of the file, so callers can still
-// consume the entire stream.  When acceptType is empty, no restriction is applied.
-func verifyContentType(source io.Reader, acceptType string) (io.Reader, error) {
+// verifyContentType sniffs an uploaded file to determine its actual content-type, and
+// confirms that it matches the provided accept pattern (for instance "image/*" or
+// "image/png,image/webp").
+func verifyContentType(source io.Reader, acceptType string) (io.Reader, string, error) {
 
 	const location = "build.verifyContentType"
+
+	// The returned reader replays the sniffed bytes followed by the rest of the file, so
+	// callers can still consume the entire stream.  The detected type is returned even when
+	// acceptType is empty ("allow anything"), because it is recorded on the Attachment and
+	// decides how the file may be served later.
 
 	// Peek at the first 512 bytes -- the amount http.DetectContentType inspects.
 	header := make([]byte, 512)
@@ -215,7 +218,7 @@ func verifyContentType(source io.Reader, acceptType string) (io.Reader, error) {
 		// io.EOF / io.ErrUnexpectedEOF simply mean the file is shorter than 512 bytes, which is
 		// fine.  Any other error is a genuine read failure.
 		if err != io.EOF && err != io.ErrUnexpectedEOF {
-			return nil, derp.Wrap(err, location, "Reading uploaded file")
+			return nil, "", derp.Wrap(err, location, "Reading uploaded file")
 		}
 	}
 
@@ -224,19 +227,20 @@ func verifyContentType(source io.Reader, acceptType string) (io.Reader, error) {
 	// Reassemble the full stream: the bytes we peeked, followed by whatever remains.
 	reader := io.MultiReader(bytes.NewReader(header), source)
 
+	// Sniff the actual content-type from the file's own bytes.
+	detected := model.DetectContentType(header)
+
 	// An empty accept pattern means "allow anything" -- preserve legacy behavior.
 	if acceptType == "" {
-		return reader, nil
+		return reader, detected, nil
 	}
 
-	// Sniff the actual content-type from the file's bytes, then confirm it is allowed.
-	detected := http.DetectContentType(header)
-
+	// RULE: The file's contents must match the types this step accepts.
 	if !contentTypeMatches(detected, acceptType) {
-		return nil, derp.BadRequest(location, "Uploaded file type is not allowed", detected, acceptType)
+		return nil, "", derp.BadRequest(location, "Uploaded file type is not allowed", detected, acceptType)
 	}
 
-	return reader, nil
+	return reader, detected, nil
 }
 
 // contentTypeMatches reports whether a detected content-type (e.g. "image/png")

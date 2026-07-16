@@ -17,6 +17,7 @@ func AttachmentSchema() schema.Element {
 			"description":  schema.String{MaxLength: 1024},
 			"url":          schema.String{Format: "url"},
 			"original":     schema.String{MaxLength: 1024},
+			"contentType":  schema.String{MaxLength: 255},
 			"status":       schema.String{Enum: []string{AttachmentStatusReady, AttachmentStatusWorking}},
 			"height":       schema.Integer{},
 			"width":        schema.Integer{},
@@ -55,6 +56,9 @@ func (attachment *Attachment) GetPointer(name string) (any, bool) {
 
 	case "original":
 		return &attachment.Original, true
+
+	case "contentType":
+		return &attachment.ContentType, true
 
 	case "status":
 		return &attachment.Status, true
