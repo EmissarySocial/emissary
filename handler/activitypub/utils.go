@@ -6,7 +6,23 @@ import (
 
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/uri"
 )
+
+// IsSameOrigin returns TRUE if two URLs share the same scheme+host authority.
+// An unparseable or hostless value on either side is never same-origin -- two
+// empty hosts must not compare equal, or garbage-in would silently authorize.
+func IsSameOrigin(first string, second string) bool {
+
+	firstHost := uri.Host(first)
+
+	// RULE: A value with no recognizable host binds to nothing
+	if firstHost == "" {
+		return false
+	}
+
+	return firstHost == uri.Host(second)
+}
 
 func FakeActivityID(activity streams.Document) string {
 

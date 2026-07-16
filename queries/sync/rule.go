@@ -16,6 +16,9 @@ func Rule(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Rule"), indexer.IndexSet{
 
+		// Serves the admin block queries (QueryDomainBlocks / QueryBlockedActors) on the canonical
+		// Type/Trigger fields. (idx_Rule_User_Public was dropped: post-D9 nothing is public, so it
+		// indexed zero documents.)
 		"idx_Rule_User": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "userId", Value: 1},
@@ -25,16 +28,15 @@ func Rule(ctx context.Context, database *mongo.Database) error {
 			},
 		},
 
-		"idx_Rule_User_Public": mongo.IndexModel{
+		// The disposition engine's query (userId IN [me, nil] AND matchKey IN [...]) and the UNIQUE
+		// dedup invariant. Unique with no partial filter: hard delete (D16) leaves no tombstone to
+		// collide with, so the database enforces one rule per (userId, matchKey).
+		"idx_Rule_MatchKey": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "userId", Value: 1},
-				{Key: "type", Value: 1},
-				{Key: "trigger", Value: 1},
-				{Key: "publishDate", Value: -1},
+				{Key: "matchKey", Value: 1},
 			},
-			Options: options.Index().SetUnique(true).SetPartialFilterExpression(bson.D{
-				{Key: "isPublic", Value: true},
-			}),
+			Options: options.Index().SetUnique(true),
 		},
 	})
 }

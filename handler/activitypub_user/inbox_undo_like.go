@@ -47,6 +47,16 @@ func inboxUndoLike(context Context, activity streams.Document) error {
 		return derp.Unauthorized(location, "Actor undoing this activity must be the same as the original activity")
 	}
 
+	// RULE: The undone activity must share the actor's origin (D19). originalActivity is resolved from a
+	// link the sender controls, so a bare-URL id could name a victim's activity; the actor-match guard
+	// above is satisfied trivially by attacker-supplied content. Binding the id host to the verified
+	// actor's host stops an attacker from evicting arbitrary cache entries by naming someone else's URL.
+	if originalActivityID := originalActivity.ID(); originalActivityID != "" {
+		if !activitypub.IsSameOrigin(activity.ActorID(), originalActivityID) {
+			return derp.Forbidden(location, "Undone activity must share the same origin as the actor", activity.ActorID(), originalActivityID)
+		}
+	}
+
 	// Remove this Like/Dislike/Announce from the target Stream's response collection (if the target
 	// is a local Stream). Keyed by the original activity's own ID, matching what the add path stored.
 	if err := context.factory.Stream().RemoveResponseCollectionItem(context.session, originalActivity.Object().ID(), originalActivity.Type(), originalActivity.ID()); err != nil {

@@ -49,19 +49,19 @@ func (disposition RuleDisposition) HasLabels() bool {
 	return len(disposition.Labels) > 0
 }
 
-// Evaluate is the disposition engine: a PURE function with no I/O and no document mutation. It
-// intersects the document's own match keys with the provided Rules and returns the resulting
-// RuleDisposition.
+// NewRuleDisposition is the disposition engine: a PURE function with no I/O and no document
+// mutation. It intersects the document's own match keys with the provided Rules and returns the
+// resulting RuleDisposition.
 //
 // `rules` are the candidate summaries the caller pre-fetched (by matchKey, or a whole user's set);
-// Evaluate re-checks membership, so passing a broader set is safe. `now` is the current Unix time in
+// it re-checks membership, so passing a broader set is safe. `now` is the current Unix time in
 // seconds, used to skip expired rules -- it is a parameter (not time.Now) to keep the function pure.
 //
 // The algorithm, after D8 (no ALLOW) and D10 (two tiers): the winning Action is the maximum severity
 // across all matches (BLOCK > MUTE); ties are broken toward the USER tier (D14, attribution only).
 // "ADMIN is a floor" is therefore a theorem, not a rule -- a maximum over the union cannot be lowered
 // by adding user rules.
-func Evaluate(document streams.Document, rules []RuleSummary, now int64) RuleDisposition {
+func NewRuleDisposition(document streams.Document, rules []RuleSummary, now int64) RuleDisposition {
 
 	keys := DocumentMatchKeys(document)
 

@@ -977,23 +977,23 @@
 			]
 		}
 
-		rule-edit-content: {
+		rule-edit-tag: {
 			roles:["self"]
 			steps:[
 				{do:"with-rule", steps:[
 					{do:"view-html"}
 					{
-						do:"edit", 
+						do:"edit",
 						options:[
-							"endpoint:/@me/settings/rule-edit-content?ruleId={{.ObjectID}}"
+							"endpoint:/@me/settings/rule-edit-tag?ruleId={{.ObjectID}}"
 							"delete:/@me/settings/rule-delete?ruleId={{.ObjectID}}"
 							"delete-label:Delete Rule"
 						]
 						form:{
 							type:"layout-vertical",
 							children:[
-								{type:"hidden", path:"type", options:{value:"CONTENT"}}
-								{type:"text", path:"trigger", label:"Tags or Keywords", description:"Individual words or hashtags, separated by spaces", options:{focus:true}}
+								{type:"hidden", path:"type", options:{value:"TAG"}}
+								{type:"text", path:"trigger", label:"Tag", description:"A single hashtag to filter (e.g. #uspol)", options:{focus:true}}
 								{type:"select", path:"action", label:"Action", options:{provider:"rule-actions"}}
 								{type:"text", path:"label", label:"Label", options:{show-if:"action is LABEL"}}
 								{type:"textarea", path:"summary", label:"Reason", description:"Notes about why this rule was made.", required:true}

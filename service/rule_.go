@@ -124,9 +124,11 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 	// matching -- a block that quietly stops blocking. Never sourced from a form (absent from RuleSchema).
 	rule.MatchKey = model.RuleMatchKey(rule.Type, rule.Trigger)
 
-	// If this is a duplicate rule, then halt
-	if service.hasDuplicate(session, rule) {
-		return nil
+	// Reconcile against any existing rule with the same (userId, matchKey): adopt its identity so this
+	// save UPDATES that row in place rather than inserting a second row that would violate the unique
+	// index. A real database error surfaces here (the old hasDuplicate silently dropped the write).
+	if err := service.reconcileDuplicate(session, rule); err != nil {
+		return derp.Wrap(err, location, "Reconciling duplicate Rule", rule)
 	}
 
 	// RULE: Externally imported rules cannot be re-shared automatically.
@@ -207,9 +209,11 @@ func (service *Rule) Delete(session data.Session, rule *model.Rule, note string)
 		}
 	}
 
-	// Delete this Rule
-	if err := service.collection(session).Delete(rule, note); err != nil {
-		return derp.Wrap(err, location, "Deleting Rule", rule, note)
+	// Hard-delete this Rule (D16). No tombstone remains -- so the unique {userId, matchKey} index has
+	// a free slot to re-create the same rule, and cleanup tasks must carry a snapshot (they cannot load
+	// the row after it is gone). The `note` is not journaled on a hard delete.
+	if err := service.collection(session).HardDelete(exp.Equal("_id", rule.RuleID)); err != nil {
+		return derp.Wrap(err, location, "Deleting Rule", rule)
 	}
 
 	// Recalculate the rule count for this user
@@ -449,6 +453,22 @@ func (service *Rule) QueryByActorAndActions(session data.Session, userID primiti
 	return service.QuerySummary(session, criteria)
 }
 
+// QueryByMatchKeys returns the RuleSummaries for a User (plus domain-wide rules) whose MatchKey is
+// one of the provided keys -- typically model.DocumentMatchKeys(document). Every returned rule
+// matches by construction, so the disposition engine only ranks them; it never re-scans. Expired
+// rules are NOT filtered here (kept out of the query on purpose); the engine skips them by date.
+func (service *Rule) QueryByMatchKeys(session data.Session, userID primitive.ObjectID, matchKeys []string) ([]model.RuleSummary, error) {
+
+	// No keys means no possible match; skip the query entirely.
+	if len(matchKeys) == 0 {
+		return make([]model.RuleSummary, 0), nil
+	}
+
+	criteria := service.byUserID(userID).And(exp.In("matchKey", matchKeys))
+
+	return service.QuerySummary(session, criteria)
+}
+
 // QueryDomainBlocks returns all external domains blocked by this Instance/Domain.
 func (service *Rule) QueryDomainBlocks(session data.Session) ([]model.Rule, error) {
 
@@ -530,39 +550,51 @@ func (service *Rule) shouldPublish(rule model.Rule) bool {
 	return true
 }
 
-// hasDuplicate returns TRUE if the provided Rule is a duplicate of an existing Rule.
-// IMPORTANT: This method MAY update the provided Rule
-func (service *Rule) hasDuplicate(session data.Session, rule *model.Rule) bool {
+// reconcileDuplicate finds any OTHER rule with the same (userId, matchKey) and, if one exists, makes
+// the incoming rule adopt its identity -- so Save updates that row IN PLACE instead of inserting a
+// second row that would violate the unique {userId, matchKey} index. The incoming Action, ExpireDate,
+// and other settings win (re-creating a rule over an expired one makes it active again -- D16), while
+// the existing row's identity, provenance (FollowingID), publish state, and creation Journal are
+// retained. Returns an error ONLY on a real database failure -- never swallowing it, unlike the old
+// hasDuplicate, which returned TRUE on any non-NotFound error and silently dropped the write.
+//
+// IMPORTANT: this method MAY mutate the provided Rule.
+func (service *Rule) reconcileDuplicate(session data.Session, rule *model.Rule) error {
 
-	// Search the database for duplicate rules
+	const location = "service.Rule.reconcileDuplicate"
+
 	criteria := exp.NotEqual("_id", rule.RuleID).
 		AndEqual("userId", rule.UserID).
-		AndEqual("type", rule.Type).
-		AndEqual("trigger", rule.Trigger)
+		AndEqual("matchKey", rule.MatchKey)
 
-	duplicate := model.NewRule()
+	existing := model.NewRule()
+	err := service.Load(session, criteria, &existing)
 
-	// If a duplicate is not found, then return FALSE
-	if err := service.Load(session, criteria, &duplicate); derp.IsNotFound(err) {
-		return false
+	// No existing rule with this key -- this save is a fresh insert.
+	if derp.IsNotFound(err) {
+		return nil
 	}
 
-	// If the new rule was made manually, but the duplicate was imported from a Following...
-	if rule.OriginUser() && duplicate.OriginRemote() {
-		// Change the RuleID so that we overwrite the duplicate with new information
-		rule.FollowingID = duplicate.FollowingID
-		rule.Journal = duplicate.Journal
-		return false
+	// A genuine database error must surface, not be swallowed.
+	if err != nil {
+		return derp.Wrap(err, location, "Loading possible duplicate", rule.MatchKey)
 	}
 
-	// In all other cases, we should NOT SAVE the new record
-	// because it is a duplicate
-	return true
+	// Adopt the existing row so the save becomes an in-place update carrying the incoming settings.
+	rule.RuleID = existing.RuleID
+	rule.FollowingID = existing.FollowingID
+	rule.PublishDate = existing.PublishDate
+	rule.Journal = existing.Journal
+
+	return nil
 }
 
 // byUserID generates a criteria expression that searches for:
 // 1) Rules that belong to the provided User
-// 2) Rules that belong to no User (i.e. public rules)
+// 2) Rules that belong to no User (i.e. domain-wide/admin rules)
+//
+// Expressed as a single IN (not an OR of equalities) so the query planner sees one bound set against
+// the {userId, matchKey} index instead of an OR-of-ORs.
 func (service *Rule) byUserID(userID primitive.ObjectID) exp.Expression {
-	return exp.Equal("userId", userID).Or(exp.Equal("userId", primitive.NilObjectID))
+	return exp.In("userId", []primitive.ObjectID{userID, primitive.NilObjectID})
 }

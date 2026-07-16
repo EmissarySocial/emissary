@@ -29,9 +29,11 @@ func Tags(document streams.Document) []map[string]any {
 			continue
 		}
 
-		// If the tag is allowed, then include it in the result.
+		// If the tag is allowed, then include it in the result. Preserve the tag's actual TYPE
+		// (Hashtag / Mention / Emoji) -- writing the literal "tag" property name here erased it, which
+		// made Hashtags indistinguishable from Mentions downstream (D12; the TAG rule engine needs it).
 		result = append(result, map[string]any{
-			vocab.PropertyType: vocab.PropertyTag,
+			vocab.PropertyType: tag.Type(),
 			vocab.PropertyHref: first(tag.Href(), tag.ID()),
 			vocab.PropertyName: tag.Name(),
 		})

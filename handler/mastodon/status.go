@@ -248,16 +248,21 @@ func PostStatus_Favourite(serverFactory *server.Factory) func(model.Authorizatio
 			return object.Status{}, derp.Wrap(err, location, "Loading message")
 		}
 
-		// Create the new response
+		// Save the Response via SetResponse, which publishes the activity, keeps Likes and Dislikes
+		// mutually exclusive, and makes this endpoint idempotent -- as the Mastodon API requires,
+		// since un-favouriting has its own endpoint (see PostStatus_Unfavourite, below).
 		responseService := factory.Response()
-		response := model.NewResponse()
-		response.UserID = auth.UserID
-		response.Actor = user.ActivityPubURL()
-		response.Content = "👍"
-		response.Object = message.URL
-		response.Type = vocab.ActivityTypeLike
-		if err := responseService.Save(session, &response, "Created via Mastodon API"); err != nil {
+
+		if err := responseService.SetResponse(session, &user, message.URL, vocab.ActivityTypeLike, "👍"); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Saving response")
+		}
+
+		// Read the active Response back, so the caller is returned the record that actually
+		// persisted -- which, for a favourite that lost a creation race, is the winner's.
+		response := model.NewResponse()
+
+		if err := responseService.LoadByUserAndObject(session, auth.UserID, message.URL, vocab.ActivityTypeLike, &response); err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Loading response")
 		}
 
 		return response.Toot(), nil

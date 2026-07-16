@@ -102,7 +102,7 @@ func PostIntent_Like(ctx *steranko.Context, factory *service.Factory, session da
 
 func postIntent_Response(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User, responseType string) error {
 
-	const location = "handler.GetIntent_Response"
+	const location = "handler.postIntent_Response"
 
 	// Collect values from the Form post
 	var transaction camper.LikeIntent
@@ -113,17 +113,13 @@ func postIntent_Response(ctx *steranko.Context, factory *service.Factory, sessio
 	// Default values here
 	onSuccess := firstOf(transaction.OnSuccess, "/@me")
 
-	// Create a new Response object
+	// Save the Response via SetResponse, which publishes the activity, keeps Likes and Dislikes
+	// mutually exclusive, and makes a repeated intent idempotent.  This form is posted from
+	// another website and never reads back the reaction it is setting, so a resubmit must
+	// confirm the reaction rather than toggle it back off.
 	responseService := factory.Response()
 
-	response := model.NewResponse()
-	response.UserID = user.UserID
-	response.Actor = user.ActivityPubURL()
-	response.Object = transaction.Object
-	response.Type = responseType
-
-	// Save the Response to the database
-	if err := responseService.Save(session, &response, "Created via Activity Intent"); err != nil {
+	if err := responseService.SetResponse(session, user, transaction.Object, responseType, ""); err != nil {
 		return derp.Wrap(err, location, "Saving response", transaction)
 	}
 

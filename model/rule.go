@@ -12,7 +12,7 @@ type Rule struct {
 	UserID         primitive.ObjectID `bson:"userId"`         // Unique identifier of the User who owns this Rule
 	FollowingID    primitive.ObjectID `bson:"followingId"`    // Unique identifier of the Following record that created this Rule.  If Zero, then this rule was created by the user.
 	FollowingLabel string             `bson:"followingLabel"` // Label of the Following record that created this Rule.
-	Type           string             `bson:"type"`           // Type of Rule (e.g. "ACTOR", "DOMAIN", "CONTENT")
+	Type           string             `bson:"type"`           // Type of Rule (e.g. "ACTOR", "DOMAIN", "TAG")
 	Action         string             `bson:"action"`         // Action to take when this rule is triggered (e.g. "BLOCK", "MUTE", "LABEL")
 	Label          string             `bson:"label"`          // Human-friendly label to add to messages
 	Trigger        string             `bson:"trigger"`        // Parameter for this rule type)

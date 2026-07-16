@@ -32,14 +32,14 @@ func actorRule(userID primitive.ObjectID, action string, actorURI string) RuleSu
 }
 
 func TestEvaluate_NoRules(t *testing.T) {
-	disposition := Evaluate(actorDocument("https://example.com/@bob"), nil, testNow)
+	disposition := NewRuleDisposition(actorDocument("https://example.com/@bob"), nil, testNow)
 	require.Equal(t, RuleDispositionNone, disposition.Action)
 	require.False(t, disposition.IsFiltered())
 }
 
 func TestEvaluate_Block(t *testing.T) {
 	rule := actorRule(primitive.NewObjectID(), RuleActionBlock, "https://example.com/@bob")
-	disposition := Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{rule}, testNow)
+	disposition := NewRuleDisposition(actorDocument("https://example.com/@bob"), []RuleSummary{rule}, testNow)
 
 	require.True(t, disposition.IsBlocked())
 	require.Equal(t, rule.RuleID, disposition.RuleID)
@@ -52,13 +52,13 @@ func TestEvaluate_MaxSeverityWins(t *testing.T) {
 	block := actorRule(user, RuleActionBlock, "https://example.com/@bob")
 
 	// Regardless of order, BLOCK (higher severity) wins.
-	require.True(t, Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{mute, block}, testNow).IsBlocked())
-	require.True(t, Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{block, mute}, testNow).IsBlocked())
+	require.True(t, NewRuleDisposition(actorDocument("https://example.com/@bob"), []RuleSummary{mute, block}, testNow).IsBlocked())
+	require.True(t, NewRuleDisposition(actorDocument("https://example.com/@bob"), []RuleSummary{block, mute}, testNow).IsBlocked())
 }
 
 func TestEvaluate_MuteOnly(t *testing.T) {
 	rule := actorRule(primitive.NewObjectID(), RuleActionMute, "https://example.com/@bob")
-	disposition := Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{rule}, testNow)
+	disposition := NewRuleDisposition(actorDocument("https://example.com/@bob"), []RuleSummary{rule}, testNow)
 
 	require.True(t, disposition.IsMuted())
 	require.True(t, disposition.IsFiltered())
@@ -68,7 +68,7 @@ func TestEvaluate_MuteOnly(t *testing.T) {
 func TestEvaluate_LabelDoesNotFilter(t *testing.T) {
 	rule := actorRule(primitive.NewObjectID(), RuleActionLabel, "https://example.com/@bob")
 	rule.Label = "State media"
-	disposition := Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{rule}, testNow)
+	disposition := NewRuleDisposition(actorDocument("https://example.com/@bob"), []RuleSummary{rule}, testNow)
 
 	require.Equal(t, RuleDispositionNone, disposition.Action)
 	require.False(t, disposition.IsFiltered())
@@ -82,7 +82,7 @@ func TestEvaluate_LabelsCollectedUnderBlock(t *testing.T) {
 	label := actorRule(user, RuleActionLabel, "https://example.com/@bob")
 	label.Label = "Explains the block"
 
-	disposition := Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{block, label}, testNow)
+	disposition := NewRuleDisposition(actorDocument("https://example.com/@bob"), []RuleSummary{block, label}, testNow)
 
 	require.True(t, disposition.IsBlocked())
 	require.True(t, disposition.HasLabels(), "labels are collected even when the final action is BLOCK")
@@ -92,12 +92,12 @@ func TestEvaluate_ExpiredRuleSkipped(t *testing.T) {
 	expired := actorRule(primitive.NewObjectID(), RuleActionBlock, "https://example.com/@bob")
 	expired.ExpireDate = testNow - 1 // already passed
 
-	require.False(t, Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{expired}, testNow).IsFiltered())
+	require.False(t, NewRuleDisposition(actorDocument("https://example.com/@bob"), []RuleSummary{expired}, testNow).IsFiltered())
 
 	// A not-yet-expired rule still applies.
 	future := actorRule(primitive.NewObjectID(), RuleActionBlock, "https://example.com/@bob")
 	future.ExpireDate = testNow + 1
-	require.True(t, Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{future}, testNow).IsBlocked())
+	require.True(t, NewRuleDisposition(actorDocument("https://example.com/@bob"), []RuleSummary{future}, testNow).IsBlocked())
 }
 
 // TestEvaluate_TieBreaksToUser pins D14: when an ADMIN and a USER rule match at the same severity,
@@ -106,8 +106,8 @@ func TestEvaluate_TieBreaksToUser(t *testing.T) {
 	admin := actorRule(primitive.NilObjectID, RuleActionBlock, "https://example.com/@bob")
 	user := actorRule(primitive.NewObjectID(), RuleActionBlock, "https://example.com/@bob")
 
-	require.Equal(t, RuleOriginUser, Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{admin, user}, testNow).Tier)
-	require.Equal(t, RuleOriginUser, Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{user, admin}, testNow).Tier)
+	require.Equal(t, RuleOriginUser, NewRuleDisposition(actorDocument("https://example.com/@bob"), []RuleSummary{admin, user}, testNow).Tier)
+	require.Equal(t, RuleOriginUser, NewRuleDisposition(actorDocument("https://example.com/@bob"), []RuleSummary{user, admin}, testNow).Tier)
 }
 
 // TestEvaluate_AdminFloorHolds confirms an ADMIN block still blocks when the only user-tier rule is a
@@ -116,7 +116,7 @@ func TestEvaluate_AdminFloorHolds(t *testing.T) {
 	adminBlock := actorRule(primitive.NilObjectID, RuleActionBlock, "https://example.com/@bob")
 	userLabel := actorRule(primitive.NewObjectID(), RuleActionLabel, "https://example.com/@bob")
 
-	disposition := Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{userLabel, adminBlock}, testNow)
+	disposition := NewRuleDisposition(actorDocument("https://example.com/@bob"), []RuleSummary{userLabel, adminBlock}, testNow)
 	require.True(t, disposition.IsBlocked())
 	require.Equal(t, RuleOriginAdmin, disposition.Tier)
 }
@@ -125,7 +125,7 @@ func TestEvaluate_AdminFloorHolds(t *testing.T) {
 // never applied -- the query pre-filters, but the engine re-checks so a broad candidate set is safe.
 func TestEvaluate_NonMatchingRuleIgnored(t *testing.T) {
 	other := actorRule(primitive.NewObjectID(), RuleActionBlock, "https://elsewhere.example/@carol")
-	disposition := Evaluate(actorDocument("https://example.com/@bob"), []RuleSummary{other}, testNow)
+	disposition := NewRuleDisposition(actorDocument("https://example.com/@bob"), []RuleSummary{other}, testNow)
 	require.False(t, disposition.IsFiltered())
 }
 
