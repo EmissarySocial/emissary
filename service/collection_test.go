@@ -293,15 +293,18 @@ func TestCollection_LoadOrCreateByUser(t *testing.T) {
  * loadOrCreateByParent — duplicate-key retry
  ******************************************/
 
-// duplicateKeyError returns an error shaped like MongoDB's unique-index violation.
+// duplicateKeyError returns the error that data-mongo.Save produces for a unique-index violation
 func duplicateKeyError() error {
 
-	// Code 11000 is what mongo.IsDuplicateKeyError looks for.
-	return mongo.WriteException{
+	// Mirror data-mongo exactly: the raw driver E11000, wrapped by derp with the Conflict code.
+	// Keeping the WriteException inside means mongo.IsDuplicateKeyError still recognizes it too.
+	writeException := mongo.WriteException{
 		WriteErrors: mongo.WriteErrors{
 			{Code: 11000, Message: "E11000 duplicate key error"},
 		},
 	}
+
+	return derp.Wrap(writeException, "data-mongo.Collection.Save", "Inserting object", derp.WithConflict())
 }
 
 // raceCollection is a data.Collection that simulates losing a creation race.

@@ -12,7 +12,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // Collection defines a service that can send and receive collection data
@@ -362,7 +361,8 @@ func (service *Collection) loadOrCreateByParent(session data.Session, userID pri
 
 		// If we lost a creation race, the unique index rejects our insert. Re-load
 		// the winner's record (which is now guaranteed to exist) and return it.
-		if mongo.IsDuplicateKeyError(saveErr) {
+		// data-mongo reports that rejection as a derp Conflict.
+		if derp.IsConflict(saveErr) {
 
 			if reloadErr := service.LoadByType(session, parentID, collectionType, &collection); reloadErr != nil {
 				return collection, derp.Wrap(reloadErr, location, "Unable to re-load Collection after duplicate-key conflict", parentType, parentID, collectionType)

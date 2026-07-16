@@ -15,7 +15,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // CollectionItem defines a service that can send and receive collectionItem data
@@ -316,7 +315,8 @@ func (service *CollectionItem) SaveUnique(session data.Session, collectionItem *
 	// insert. Re-merge onto the winner's record and Save again as an update. This
 	// replaces the old load-then-save idiom, which let two concurrent adds of the
 	// same URI both insert. See queries/sync/collectionItem.go for the index.
-	if mongo.IsDuplicateKeyError(saveErr) {
+	// data-mongo reports that rejection as a derp Conflict.
+	if derp.IsConflict(saveErr) {
 
 		if err := service.mergeOntoExistingURI(session, collectionItem); err != nil {
 			return derp.Wrap(err, location, "Unable to re-load CollectionItem after duplicate-key conflict", collectionItem)
