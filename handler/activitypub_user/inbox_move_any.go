@@ -59,6 +59,17 @@ func moveLocalUser(context Context, document streams.Document, userID primitive.
 		return derp.Wrap(err, location, "Loading User", "userID", userID)
 	}
 
+	// RULE: if the User has blocked the actor they are moving FROM, do not finalize the import (R20).
+	blocked, err := context.factory.Rule().IsActorBlocked(context.session, user.UserID, document)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Checking block rules", document.ActorID())
+	}
+
+	if blocked {
+		return context.context.NoContent(http.StatusOK)
+	}
+
 	// Locate the Import record for this user
 	importService := context.factory.Import()
 	record := model.NewImport()

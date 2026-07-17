@@ -1,6 +1,8 @@
 package consumer
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/postcommit"
@@ -30,6 +32,21 @@ func SendSearchResult(factory *service.Factory, session data.Session, args mapof
 
 	if err := searchResultService.LoadByID(session, searchResultID, &searchResult); err != nil {
 		return queue.Error(derp.Wrap(err, location, "Retrieving SearchResult", args))
+	}
+
+	// RULE: never syndicate a search result from a blocked origin to followers -- search is an ingest
+	// surface like any other (R16). Search is a domain-level actor, so this evaluates admin-tier rules
+	// (NilObjectID): the result's author (ACTOR keys) and its URL host (DOMAIN keys).
+	blockKeys := append(model.ActorMatchKeys(searchResult.AttributedTo), model.DomainMatchKeys(searchResult.URL)...)
+
+	disposition, err := factory.Rule().DispositionForKeys(session, primitive.NilObjectID, blockKeys, time.Now().Unix())
+
+	if err != nil {
+		return queue.Error(derp.Wrap(err, location, "Checking rules", searchResult.URL))
+	}
+
+	if disposition.IsBlocked() {
+		return queue.Success()
 	}
 
 	// PART 1:

@@ -270,24 +270,44 @@ func (w *primaryPostWalk) objectFiltered(document streams.Document) (bool, error
 		return true, nil
 	}
 
-	return w.quoteHostFiltered(document)
+	return w.quoteFiltered(document)
 }
 
-// quoteHostFiltered returns TRUE if any URL the document quotes is on a blocked or muted DOMAIN.
-// Quotes ride non-standard fields, so a blocked author reaches the feed as quoted content unless we
-// check them (R18). This covers the DOMAIN dimension without a fetch; per-quote AUTHOR checking (which
-// must fetch each quoted object) is a deferred follow-on.
-func (w *primaryPostWalk) quoteHostFiltered(document streams.Document) (bool, error) {
+// quoteFiltered returns TRUE if any post this document quotes is blocked or muted (R18) -- otherwise a
+// blocked author reaches the feed as the quoted body of an allowed post. Quotes ride non-standard
+// fields, so they are extracted explicitly. Each quote is checked by host first (no fetch), then by
+// resolving the quoted object and checking its author; an unresolvable quote fails open (a broken
+// quote must not drop an allowed post).
+func (w *primaryPostWalk) quoteFiltered(document streams.Document) (bool, error) {
 
 	for _, url := range quoteURLs(document) {
 
-		filtered, err := w.hostFiltered(url)
+		// Pre-fetch host check: a quote of a blocked DOMAIN drops the item without a fetch.
+		hostFiltered, err := w.hostFiltered(url)
 
 		if err != nil {
 			return false, err
 		}
 
-		if filtered {
+		if hostFiltered {
+			return true, nil
+		}
+
+		// Resolve the quoted object (via this document's cache-and-block-aware client) and check its
+		// author. A fetch failure -- network error, or asblock refusing a blocked origin -- fails open.
+		quoted, err := document.Client().Load(url)
+
+		if err != nil {
+			continue
+		}
+
+		authorFiltered, err := w.authorFiltered(quoted)
+
+		if err != nil {
+			return false, err
+		}
+
+		if authorFiltered {
 			return true, nil
 		}
 	}

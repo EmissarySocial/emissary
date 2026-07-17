@@ -1,11 +1,14 @@
 package activitypub_stream
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/rs/zerolog/log"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func init() {
@@ -35,6 +38,19 @@ func BoostAny(context Context, activity streams.Document) error {
 		if !context.factory.Follower().IsActivityPubFollower(context.session, model.FollowerTypeStream, context.stream.StreamID, activity.ActorID()) {
 			return derp.Forbidden(location, "Must be a follower to post to this Actor", activity.ActorID())
 		}
+	}
+
+	// RULE: never cache or amplify content from a blocked/muted actor. A Stream is a domain-level
+	// actor, so this evaluates admin-tier rules (NilObjectID); announce() re-broadcasts to every
+	// follower, making this the one amplification choke point (block AND mute both suppress it).
+	disposition, err := context.factory.Rule().ActorDisposition(context.session, primitive.NilObjectID, activity, time.Now().Unix())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Checking rules", activity.ActorID())
+	}
+
+	if disposition.IsFiltered() {
+		return nil
 	}
 
 	activityService := context.factory.ActivityStream() // nolint:scopeguard (readability)
