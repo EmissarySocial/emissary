@@ -27,7 +27,10 @@ func init() {
 			return derp.Internal(location, "Invalid User ID", userID, context.user.UserID)
 		}
 
-		// RULE: A blocked actor may not Follow. Verify first (D5 exception set), then reject loudly.
+		// RULE: A blocked actor may not Follow. Verify first (D5 exception set), then reject loudly --
+		// the check lives HERE because the wire gate deliberately defers Follows; see
+		// activitypub.IsWireGateException (handler/activitypub/ruleValidator.go) for why Follow
+		// rejects loudly while other activity types are silently discarded.
 		blocked, err := context.factory.Rule().IsActorBlocked(context.session, context.user.UserID, activity)
 
 		if err != nil {
