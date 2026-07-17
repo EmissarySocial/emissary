@@ -11,11 +11,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// notificationRetentionDays is the number of days a READ notification is kept before it is purged.
-// Unread notifications are kept indefinitely.
+// notificationRetentionDays is the number of days a notification is kept before it is purged.
+// The window is UNIFORM: read and unread notifications age out alike (see Notification.PurgeBefore).
 const notificationRetentionDays = 90
 
-// PurgeNotifications removes READ notifications that are older than notificationRetentionDays.
+// PurgeNotifications removes notifications that are older than notificationRetentionDays.
 func PurgeNotifications(factory *service.Factory, session data.Session, _ mapof.Any) queue.Result {
 
 	const location = "consumer.PurgeNotifications"
@@ -25,7 +25,7 @@ func PurgeNotifications(factory *service.Factory, session data.Session, _ mapof.
 	// journal.createDate is stored in Unix MILLISECONDS, so compute the cutoff in millis.
 	cutoffMillis := time.Now().AddDate(0, 0, -notificationRetentionDays).UnixMilli()
 
-	if err := factory.Notification().PurgeReadBefore(session, cutoffMillis); err != nil {
+	if err := factory.Notification().PurgeBefore(session, cutoffMillis); err != nil {
 		return queue.Error(derp.Wrap(err, location, "Purging old notifications"))
 	}
 

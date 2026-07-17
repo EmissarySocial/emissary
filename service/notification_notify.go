@@ -151,9 +151,15 @@ func (service *Notification) notify(session data.Session, user *model.User, acti
 
 	const location = "service.Notification.notify"
 
-	// RULE: blocked/muted actors do not generate notifications.
-	ruleFilter := service.ruleService.Filter(user.UserID, WithBlocksOnly()) // nolint:scopeguard
-	if ruleFilter.Disallow(session, &activity) {
+	// RULE: a blocked OR muted actor generates no notifications (R9). Unlike the wire gate, MUTE
+	// counts here -- a muted actor is silent. LABEL never suppresses; labels attach at render (Phase 6).
+	disposition, err := service.ruleService.ActorDisposition(session, user.UserID, activity, time.Now().Unix())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Checking notification rules", user.UserID, activity.ActorID())
+	}
+
+	if disposition.IsFiltered() {
 		return nil
 	}
 
@@ -185,7 +191,7 @@ func (service *Notification) notify(session data.Session, user *model.User, acti
 	surfaced := user.NotificationEnabled(notification.Channels())
 
 	// Suppressed notifications are born read: they never light the dot, and they age out
-	// through the normal purge of read rows.  They remain in the list as passive history.
+	// through the normal retention purge.  They remain in the list as passive history.
 	if isNew && !surfaced {
 		notification.ReadDate = time.Now().Unix()
 	}

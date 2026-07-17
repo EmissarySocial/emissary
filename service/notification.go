@@ -311,16 +311,20 @@ func (service *Notification) MarkAllRead(session data.Session, userID primitive.
  * Maintenance
  ******************************************/
 
-// PurgeReadBefore hard-deletes READ notifications whose createDate is older than the provided
-// cutoff (Unix epoch MILLISECONDS, matching journal.createDate).  Unread notifications are kept
-// indefinitely.  Called from the daily PurgeNotifications task.
-func (service *Notification) PurgeReadBefore(session data.Session, cutoffMillis int64) error {
+// PurgeBefore hard-deletes notifications whose createDate is older than the provided cutoff
+// (Unix epoch MILLISECONDS, matching journal.createDate).  Called from the daily
+// PurgeNotifications task.
+//
+// RULE: Retention is UNIFORM -- read and unread notifications age out on the same clock.
+// Read-state is deliberately not part of the criteria.  A Notification is a derived display
+// snapshot (the activity itself lives on in the User's Inbox), so a stale one costs a pointer,
+// not content; and because suppressed notifications are born read (see notify), a read-only
+// purge would age out passive history while leaving an unread flood untouched forever.
+func (service *Notification) PurgeBefore(session data.Session, cutoffMillis int64) error {
 
-	const location = "service.Notification.PurgeReadBefore"
+	const location = "service.Notification.PurgeBefore"
 
-	// READ = readDate strictly less than the unread sentinel.
-	criteria := exp.LessThan("createDate", cutoffMillis).
-		AndLessThan("readDate", int64(math.MaxInt64))
+	criteria := exp.LessThan("createDate", cutoffMillis)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
 		return derp.Wrap(err, location, "Purging old notifications", cutoffMillis)

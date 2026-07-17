@@ -41,6 +41,15 @@ func Notification(ctx context.Context, database *mongo.Database) error {
 			},
 		},
 
+		// Supports the daily retention purge (Notification.PurgeBefore), which spans every User
+		// and so cannot use any of the userId-prefixed indexes above.  No partial filter: the
+		// purge hard-deletes soft-deleted rows too.
+		"idx_Notification_Purge": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "createDate", Value: 1},
+			},
+		},
+
 		"idx_Notification_Stream": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "streamId", Value: 1},
