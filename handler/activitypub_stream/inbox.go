@@ -3,11 +3,13 @@ package activitypub_stream
 import (
 	"net/http"
 
+	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/steranko"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
@@ -32,8 +34,9 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 		actor:   &actor,
 	}
 
-	// Retrieve the activity from the request body
-	if err := streamRouter.ReceiveAndHandle(context, ctx.Request(), client); err != nil {
+	// Retrieve the activity from the request body, gated by the canonical inbox validator chain
+	// evaluated against admin-tier rules (NilObjectID) -- Stage 1 of the block gate (D5).
+	if err := streamRouter.ReceiveAndHandle(context, ctx.Request(), client, activitypub.InboxValidators(factory.Rule(), session, primitive.NilObjectID)); err != nil {
 		return derp.Wrap(err, location, "Receiving ActivityPub request")
 	}
 

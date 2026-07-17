@@ -27,9 +27,14 @@ func init() {
 			return derp.Internal(location, "Invalid User ID", userID, context.user.UserID)
 		}
 
-		// RULE: Do not allow new "Follows" of any blocked Actors
-		ruleFilter := context.factory.Rule().Filter(context.user.UserID, service.WithBlocksOnly()) // nolint:scopeguard
-		if ruleFilter.Disallow(context.session, &activity) {
+		// RULE: A blocked actor may not Follow. Verify first (D5 exception set), then reject loudly.
+		blocked, err := context.factory.Rule().IsActorBlocked(context.session, context.user.UserID, activity)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Checking block rules", activity.ActorID())
+		}
+
+		if blocked {
 			return derp.Forbidden(location, "Blocked by rule", activity.Object().ID())
 		}
 

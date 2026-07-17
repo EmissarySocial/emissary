@@ -214,6 +214,32 @@ func TestRule_DispositionForKeys_ForeignUserRuleIgnored(t *testing.T) {
 }
 
 /******************************************
+ * IsActorBlocked
+ ******************************************/
+
+// IsActorBlocked is TRUE for a blocked actor and FALSE for a merely-muted one (MUTE never gates the
+// wire) -- the shared check behind the Stage-2 gate and the Follow handlers.
+func TestRule_IsActorBlocked(t *testing.T) {
+
+	userID := primitive.NewObjectID()
+	block := summaryRule(userID, model.RuleTypeActor, model.RuleActionBlock, "https://evil.example/@spammer")
+	mute := summaryRule(userID, model.RuleTypeActor, model.RuleActionMute, "https://noisy.example/@chatty")
+	store := &ruleStore{records: []model.RuleSummary{block, mute}}
+
+	service, session := newRuleService(store)
+
+	blockedDoc := streams.NewDocument(mapof.Any{vocab.PropertyActor: "https://evil.example/@spammer"})
+	blocked, err := service.IsActorBlocked(session, userID, blockedDoc)
+	require.Nil(t, err)
+	require.True(t, blocked)
+
+	mutedDoc := streams.NewDocument(mapof.Any{vocab.PropertyActor: "https://noisy.example/@chatty"})
+	muted, err := service.IsActorBlocked(session, userID, mutedDoc)
+	require.Nil(t, err)
+	require.False(t, muted)
+}
+
+/******************************************
  * Disposition (document convenience)
  ******************************************/
 

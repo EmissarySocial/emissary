@@ -1,6 +1,8 @@
 package activitypub_user
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
@@ -42,6 +44,28 @@ func inbox_LikeOrAnnounce(context Context, activity streams.Document) error {
 		return nil
 	}
 
+	// RULE: Evaluate the sender against this User's rules (R9). Self-messages are exempt -- a local
+	// user's own reactions loop back through this same funnel and must never be filtered. A remote
+	// blocked sender is already rejected at the Stage-2 inbox gate; the BLOCK branch here is the
+	// authoritative gate for the self-loopback path and defense-in-depth for the rest.
+	var disposition model.RuleDisposition
+
+	if actorID != context.user.ActivityPubURL() {
+		d, err := context.factory.Rule().ActorDisposition(context.session, context.user.UserID, activity, time.Now().Unix())
+
+		if err != nil {
+			return derp.Wrap(err, location, "Checking rules", actorID)
+		}
+
+		disposition = d
+	}
+
+	// BLOCK drops the reaction entirely: no fetch (possibly from a blocked server), no cache write,
+	// no response-collection entry, no newsfeed item.
+	if disposition.IsBlocked() {
+		return nil
+	}
+
 	// Load the original ActivityStream document being Liked/Announced (which also adds it to the cache)
 	document, err := activity.Object().Load()
 
@@ -62,8 +86,10 @@ func inbox_LikeOrAnnounce(context Context, activity streams.Document) error {
 	}
 
 	// Add the reacted-to message into the User's newsfeed — ONLY when it arrived from an actor we
-	// Follow (self-messages and private-messages without a Following record have no newsfeed side).
-	if following != nil {
+	// Follow (self-messages and private-messages without a Following record have no newsfeed side),
+	// and NOT when that actor is muted: a muted actor's reactions stay in the aggregate collection
+	// totals (written above, R9) but never surface in the feed.
+	if (following != nil) && !disposition.IsMuted() {
 		originType := getOriginType(activity.Type())
 
 		if err := context.factory.Following().SaveNewsItem(context.session, following, document, originType); err != nil {

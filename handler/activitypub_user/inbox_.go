@@ -77,12 +77,15 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	activityService := factory.ActivityStream()
 	client := activityService.UserClient(user.UserID)
 
-	// Receive the activity from the request, verifying HTTP signatures using our
-	// own PublicKeyFinder (which looks up the key by the signature's keyID and
-	// bypasses the cache, to avoid verifying against a stale signing key).
+	// Receive and parse the activity through the canonical inbox validator chain (Stage 1 of the block
+	// gate + the standard validators), then our cache-aware key finder. WithPublicKeyFinder MUST come
+	// after the chain: it patches the HTTPSig entry in place (so a stale cached signing key is never
+	// trusted) and would be discarded if the chain were replaced afterward.
 	activity, err := router.ReceiveRequest(
 		ctx.Request(),
 		client,
+
+		activitypub.InboxValidators(factory.Rule(), session, user.UserID),
 
 		// Injecting our own key finder that is aware of the ascache middleware.
 		router.WithPublicKeyFinder(activityService.PublicKeyFinder),
@@ -162,11 +165,9 @@ func inbox_ValidateActivity(context Context, activity streams.Document) error {
 	// is authoritative. The gate blocks by WHO is talking (ACTOR/DOMAIN), never by content (TAG, which
 	// is filtered at newsfeed ingest); and MUTE never gates the wire (D5) -- only BLOCK. Exception-set
 	// types are verified but handed to their per-type handler, never discarded here.
-	if !inboxIsWireGateException(activity.Type()) {
+	if !activitypub.IsWireGateException(activity.Type()) {
 
-		keys := model.ActorMatchKeys(activity.ActorID())
-
-		disposition, err := context.factory.Rule().DispositionForKeys(context.session, context.user.UserID, keys, time.Now().Unix())
+		blocked, err := context.factory.Rule().IsActorBlocked(context.session, context.user.UserID, activity)
 
 		// Stage 2 fails CLOSED (D17): a rules-query failure must not let blocked content through.
 		if err != nil {
@@ -175,7 +176,7 @@ func inbox_ValidateActivity(context Context, activity streams.Document) error {
 
 		// A blocked actor's activity is discarded. The 401 is byte-and-status identical to a signature
 		// failure (D3) so a blocked server cannot tell it was blocked (vs. a transient auth error).
-		if disposition.IsBlocked() {
+		if blocked {
 			return derp.Unauthorized(location, "Cannot validate received activity", activity.ActorID())
 		}
 	}
@@ -227,16 +228,4 @@ func inbox_SaveActivity(context Context, activity streams.Document) error {
 
 	// Suxxess
 	return nil
-}
-
-// inboxIsWireGateException returns TRUE for the activity types that the inbox block gate must VERIFY
-// but never discard (the D5 exception set). Their per-type handlers deliberately process a blocked
-// actor's activity: Follow rejects loudly, Delete/Undo run subtractively (D6), Move copies the block
-// to the target (R20). Discarding them at the gate would make those behaviors unreachable.
-func inboxIsWireGateException(activityType string) bool {
-	switch activityType {
-	case vocab.ActivityTypeFollow, vocab.ActivityTypeDelete, vocab.ActivityTypeUndo, vocab.ActivityTypeMove:
-		return true
-	}
-	return false
 }

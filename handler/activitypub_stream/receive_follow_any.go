@@ -2,7 +2,6 @@ package activitypub_stream
 
 import (
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -19,9 +18,17 @@ func init() {
 			return derp.Internal(location, "Invalid User ID", context.stream.ActivityPubURL(), activity.Object().ID())
 		}
 
-		// Apply rules to filter out unwanted follow activities
-		ruleFilter := context.factory.Rule().Filter(primitive.NilObjectID, service.WithBlocksOnly()) // nolint:scopeguard (readability)
-		if ruleFilter.Disallow(context.session, &activity) {
+		// RULE: A blocked actor may not Follow. Verify first (D5 exception set), then reject loudly --
+		// the check lives HERE because the wire gate deliberately defers Follows; see
+		// activitypub.IsWireGateException (handler/activitypub/ruleValidator.go) for why Follow
+		// rejects loudly while other activity types are silently discarded.
+		blocked, err := context.factory.Rule().IsActorBlocked(context.session, primitive.NilObjectID, activity)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Checking block rules", activity.ActorID())
+		}
+
+		if blocked {
 			return derp.Forbidden(location, "Blocked by rule", activity.Object().ID())
 		}
 

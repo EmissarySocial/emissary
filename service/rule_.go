@@ -471,22 +471,21 @@ func (service *Rule) QueryByMatchKeys(session data.Session, userID primitive.Obj
 }
 
 // Disposition evaluates a document against this User's Rules (plus domain-wide admin rules) and
-// returns the resulting RuleDisposition. This is the session-taking service method that the inbox
-// validator (Stage 1), the handler check (Stage 2), and the future queue worker all adapt over
-// (D17) -- one matcher, one place. It is a single indexed `matchKey IN [...]` query plus the pure
-// engine; `now` is the current Unix time in SECONDS (used to skip expired rules).
+// returns the resulting RuleDisposition. `now` is the current Unix time in seconds.
 func (service *Rule) Disposition(session data.Session, userID primitive.ObjectID, document streams.Document, now int64) (model.RuleDisposition, error) {
+
+	// One matcher, one place (D17): Stage 1, Stage 2, and the future queue worker all adapt over this.
+	// DocumentMatchKeys covers the actor AND the document's content tags.
 	return service.DispositionForKeys(session, userID, model.DocumentMatchKeys(document), now)
 }
 
 // DispositionForKeys evaluates a pre-computed match-key set against this User's Rules (plus
-// domain-wide admin rules). The wire gate calls this directly because it knows only actor/domain
-// keys -- the claimed actor and the signature keyId host -- never a whole document. Passing
-// NilObjectID as userID evaluates against admin-tier rules alone (the domain/stream/search inboxes).
+// domain-wide admin rules). Passing NilObjectID as userID evaluates against admin-tier rules alone.
 func (service *Rule) DispositionForKeys(session data.Session, userID primitive.ObjectID, keys []string, now int64) (model.RuleDisposition, error) {
 
 	const location = "service.Rule.DispositionForKeys"
 
+	// Keys, not a Document: the wire gate builds actor/domain keys by hand (claimed actor + keyId host).
 	rules, err := service.QueryByMatchKeys(session, userID, keys)
 
 	if err != nil {
@@ -495,6 +494,31 @@ func (service *Rule) DispositionForKeys(session data.Session, userID primitive.O
 
 	// Silence is golden
 	return model.NewRuleDispositionForKeys(keys, rules, now), nil
+}
+
+// ActorDisposition evaluates the document's actor -- its ACTOR key and the DOMAIN keys of its host,
+// but no content keys -- against this User's Rules (plus admin rules). `now` is the current Unix seconds.
+func (service *Rule) ActorDisposition(session data.Session, userID primitive.ObjectID, document streams.Document, now int64) (model.RuleDisposition, error) {
+
+	// Actor keys only; content/TAG filtering belongs to newsfeed ingest, not to "is this actor filtered?".
+	return service.DispositionForKeys(session, userID, model.ActorMatchKeys(document.ActorID()), now)
+}
+
+// IsActorBlocked returns TRUE if the document's actor is BLOCK-ed for this User (plus admin-tier
+// rules) by an ACTOR or DOMAIN rule. MUTE never gates the wire (D5), so only BLOCK counts.
+func (service *Rule) IsActorBlocked(session data.Session, userID primitive.ObjectID, document streams.Document) (bool, error) {
+
+	const location = "service.Rule.IsActorBlocked"
+
+	// The Stage-2 gate and the Follow handlers share this so they agree on what "blocked" means.
+	disposition, err := service.ActorDisposition(session, userID, document, time.Now().Unix())
+
+	if err != nil {
+		return false, derp.Wrap(err, location, "Checking block rules", document.ActorID())
+	}
+
+	// Not blocked? Then the dude abides.
+	return disposition.IsBlocked(), nil
 }
 
 // QueryDomainBlocks returns all external domains blocked by this Instance/Domain.

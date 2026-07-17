@@ -2,10 +2,10 @@ package activitypub_search
 
 import (
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func init() {
@@ -23,9 +23,19 @@ func init() {
 			return derp.Internal(location, "Invalid Search Query ID", actorURL, activity.Object().ID())
 		}
 
-		// RULE: Do not allow new "Follows" of any blocked Actors
-		ruleFilter := context.factory.Rule().Filter(context.searchQuery.SearchQueryID, service.WithBlocksOnly()) // nolint:scopeguard
-		if ruleFilter.Disallow(context.session, &activity) {
+		// RULE: A blocked actor may not Follow. Verify first (D5 exception set), then reject loudly --
+		// the check lives HERE because the wire gate deliberately defers Follows; see
+		// activitypub.IsWireGateException (handler/activitypub/ruleValidator.go) for why Follow
+		// rejects loudly while other activity types are silently discarded.
+		// Evaluated against admin-tier rules (NilObjectID) -- NOT searchQuery.SearchQueryID, which is a
+		// SearchQuery id, not a UserID; passing it would query a nonexistent user's rules and never block.
+		blocked, err := context.factory.Rule().IsActorBlocked(context.session, primitive.NilObjectID, activity)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Checking block rules", activity.ActorID())
+		}
+
+		if blocked {
 			return derp.Forbidden(location, "Blocked by rule", activity.Object().ID())
 		}
 
