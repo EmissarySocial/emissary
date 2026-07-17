@@ -1,6 +1,9 @@
 package service
 
 import (
+	"strings"
+	"time"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
@@ -11,21 +14,42 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// saveToInbox adds/updates an individual NewsItem based on an RSS item.  It returns TRUE if a new record was created
+// maxReplyDepth bounds how far the provenance walk climbs an inReplyTo chain. A malicious cycle or an
+// absurdly deep thread would otherwise recurse until the stack overflows -- a remote-triggerable DoS.
+const maxReplyDepth = 32
+
+// SaveNewsItem adds/updates a NewsItem for a followed document, after walking its provenance chain to
+// the primary post and dropping anything authored (or delivered) by a blocked or muted identity (R18).
 func (service *Following) SaveNewsItem(session data.Session, following *model.Following, document streams.Document, originType string) error {
 
 	const location = "service.Following.SaveNewsItem"
 
-	// Send SSE notifications to any stream that is referenced in the "inReplyTo" field of the document
-	service.streamService.NotifyInReplyTo(session, document.InReplyTo().ID())
+	// Walk `Create`/`Update`/`inReplyTo` back to the primary document, filtering the whole provenance
+	// chain against this User's rules along the way.
+	walk := &primaryPostWalk{
+		ruleService: service.ruleService,
+		session:     session,
+		userID:      following.UserID,
+		now:         time.Now().Unix(),
+		seen:        make(map[string]bool),
+	}
 
-	// Traverse `Create` and `Update` activities, as well as `inReplyTo`` values back to the primary document
-	original, originType := getPrimaryPost(document, originType)
+	original, originType, dropped, err := walk.primaryPost(document, originType, 0)
 
-	// Do nothing with `Delete` or `Undo` activities
-	if original.IsNil() {
+	if err != nil {
+		return derp.Wrap(err, location, "Walking provenance chain", document.ID())
+	}
+
+	// `dropped` means a blocked/muted identity was found anywhere in the chain; a nil `original` means
+	// the chain terminated in a `Delete`/`Undo`. Either way there are no newsfeed side effects (no
+	// item, no reply-thread SSE).
+	if dropped || original.IsNil() {
 		return nil
 	}
+
+	// Send SSE notifications to any local stream referenced in the document's "inReplyTo" -- behind the
+	// rule gate, so a blocked/muted reply never nudges a thread view.
+	service.streamService.NotifyInReplyTo(session, document.InReplyTo().ID())
 
 	// Convert the document into a newsItem (and traverse responses if necessary)
 	newsItem := getNewsItem(following.UserID, original)
@@ -101,66 +125,250 @@ func (service *Following) saveUniqueNewsItem(session data.Session, message model
 }
 
 /******************************************
- * Helper Functions
+ * Provenance Walk
  ******************************************/
 
-// getPrimaryPost traverses UP a chain of replies to locate the first message that was posted.
-// If there are one or more replies in the chain, then the returned originType is "REPLY"
-// TODO: LOW: In the future, the "context" value may be useful in traversing this list.
-func getPrimaryPost(document streams.Document, originType string) (streams.Document, string) {
+// primaryPostWalk carries the state of a single provenance traversal: the rule check it applies at
+// every identity, the User it runs for, and the cycle/depth guards that bound the recursion.
+type primaryPostWalk struct {
+	ruleService *Rule
+	session     data.Session
+	userID      primitive.ObjectID
+	now         int64
+	seen        map[string]bool
+}
 
-	// Special cases for Activities we receive
+// primaryPost traverses UP a chain of Activities and replies to the first message that was posted. It
+// returns that document, the accumulated originType (REPLY if any hop was a reply), and a `dropped`
+// flag. `dropped` is TRUE when any identity in the chain -- a booster, an author, or the host of a
+// link about to be fetched -- is blocked or muted (R18); the caller must then create no newsfeed item.
+// A nil document with dropped=FALSE means the chain simply terminated in a subtractive activity.
+func (w *primaryPostWalk) primaryPost(document streams.Document, originType string, depth int) (streams.Document, string, bool, error) {
+
+	// RULE: bound the recursion so a hostile inReplyTo cycle cannot overflow the stack.
+	if depth >= maxReplyDepth {
+		return streams.NilDocument(), "", false, nil
+	}
+
+	// Activities unwrap to their object; subtractive activities produce no newsfeed item.
 	switch document.Type() {
 
-	case vocab.ActivityTypeAdd:
-		return getPrimaryPost(document.Object().LoadLink(), originType)
+	case vocab.ActivityTypeAdd, vocab.ActivityTypeCreate, vocab.ActivityTypeUpdate:
+		return w.primaryPost(document.Object().LoadLink(), originType, depth+1)
 
 	case vocab.ActivityTypeAnnounce:
-		return getPrimaryPost(document.Object().LoadLink(), model.OriginTypeAnnounce)
+		// RULE: an Announce carries its OWN actor; a blocked/muted booster's boost creates nothing (R2).
+		// Checked before unwrapping, because the announcer's identity is discarded past this point.
+		filtered, err := w.actorFiltered(document.ActorID())
 
-	case vocab.ActivityTypeCreate:
-		return getPrimaryPost(document.Object().LoadLink(), originType)
+		if err != nil {
+			return streams.NilDocument(), "", false, err
+		}
 
-	case vocab.ActivityTypeDelete:
-		return streams.NilDocument(), ""
+		if filtered {
+			return streams.NilDocument(), "", true, nil
+		}
+
+		return w.primaryPost(document.Object().LoadLink(), model.OriginTypeAnnounce, depth+1)
 
 	case vocab.ActivityTypeDislike:
-		return getPrimaryPost(document.Object().LoadLink(), model.OriginTypeDislike)
+		return w.primaryPost(document.Object().LoadLink(), model.OriginTypeDislike, depth+1)
 
 	case vocab.ActivityTypeLike:
-		return getPrimaryPost(document.Object().LoadLink(), model.OriginTypeLike)
+		return w.primaryPost(document.Object().LoadLink(), model.OriginTypeLike, depth+1)
 
-	case vocab.ActivityTypeRemove:
-		return streams.NilDocument(), ""
-
-	case vocab.ActivityTypeUndo:
-		return streams.NilDocument(), ""
-
-	case vocab.ActivityTypeUpdate:
-		return getPrimaryPost(document.Object().LoadLink(), originType)
-
+	case vocab.ActivityTypeDelete, vocab.ActivityTypeRemove, vocab.ActivityTypeUndo:
+		return streams.NilDocument(), "", false, nil
 	}
 
-	// Fall through means we (should) have an Object, not an Activity
+	// Fall through: this is an Object (Note/Article), not an Activity.
 
-	// If this is a reply to a previous post, then traverse up the tree
-	if inReplyTo := document.InReplyTo(); inReplyTo.NotNil() {
+	// RULE: drop the item if this Object is filtered -- its author is blocked/muted, or it quotes
+	// blocked/muted content. Objects carry `attributedTo`, not `actor`, so an ActorID-only check would
+	// silently pass every post here (R18).
+	filtered, err := w.objectFiltered(document)
 
-		// Change origin type from PRIMARY to REPLY without affecting
-		// LIKE and DISLIKE types
-		if originType == model.OriginTypePrimary {
-			originType = model.OriginTypeReply
-		}
-
-		// Traverse up the tree.  If the "primary" document is found, then return that instead.
-		if primaryDocument, originType := getPrimaryPost(inReplyTo.LoadLink(), originType); primaryDocument.NotNil() {
-			return primaryDocument, originType
-		}
+	if err != nil {
+		return streams.NilDocument(), "", false, err
 	}
 
-	// Otherwise, return the document and the accumulated origiin type
-	return document, originType
+	if filtered {
+		return streams.NilDocument(), "", true, nil
+	}
+
+	// Cycle guard: stop climbing (but keep this document) if we have already visited it.
+	if id := document.ID(); id != "" {
+		if w.seen[id] {
+			return document, originType, false, nil
+		}
+		w.seen[id] = true
+	}
+
+	// Walk UP the reply chain to the primary post.
+	return w.climbReplyChain(document, originType, depth)
 }
+
+// climbReplyChain resolves the parent of a reply, returning the primary post found upthread or the
+// document itself. It propagates a `dropped` verdict from any blocked/muted ancestor -- distinct from a
+// nil-with-dropped=false result, which just means no primary was found (subtractive or depth-limited).
+func (w *primaryPostWalk) climbReplyChain(document streams.Document, originType string, depth int) (streams.Document, string, bool, error) {
+
+	inReplyTo := document.InReplyTo()
+
+	if inReplyTo.IsNil() {
+		return document, originType, false, nil
+	}
+
+	// Change origin type from PRIMARY to REPLY without affecting LIKE and DISLIKE types.
+	if originType == model.OriginTypePrimary {
+		originType = model.OriginTypeReply
+	}
+
+	// RULE: pre-fetch host check (privacy, not optimization). The next LoadLink is signed with the
+	// User's own key, so dereferencing a blocked host would tell a blocked server who is reading.
+	hostFiltered, err := w.hostFiltered(inReplyTo.ID())
+
+	if err != nil {
+		return streams.NilDocument(), "", false, err
+	}
+
+	if hostFiltered {
+		return streams.NilDocument(), "", true, nil
+	}
+
+	// Traverse up the tree.
+	parent, parentOrigin, dropped, err := w.primaryPost(inReplyTo.LoadLink(), originType, depth+1)
+
+	if err != nil {
+		return streams.NilDocument(), "", false, err
+	}
+
+	// A blocked/muted ancestor drops the whole item -- propagate that verdict up.
+	if dropped {
+		return streams.NilDocument(), "", true, nil
+	}
+
+	// A primary found upthread wins; otherwise this document is itself the primary.
+	if parent.NotNil() {
+		return parent, parentOrigin, false, nil
+	}
+
+	return document, originType, false, nil
+}
+
+// objectFiltered returns TRUE if an Object node should drop the item: its author is blocked/muted, or
+// it quotes blocked/muted content (R18).
+func (w *primaryPostWalk) objectFiltered(document streams.Document) (bool, error) {
+
+	authorFiltered, err := w.authorFiltered(document)
+
+	if err != nil {
+		return false, err
+	}
+
+	if authorFiltered {
+		return true, nil
+	}
+
+	return w.quoteHostFiltered(document)
+}
+
+// quoteHostFiltered returns TRUE if any URL the document quotes is on a blocked or muted DOMAIN.
+// Quotes ride non-standard fields, so a blocked author reaches the feed as quoted content unless we
+// check them (R18). This covers the DOMAIN dimension without a fetch; per-quote AUTHOR checking (which
+// must fetch each quoted object) is a deferred follow-on.
+func (w *primaryPostWalk) quoteHostFiltered(document streams.Document) (bool, error) {
+
+	for _, url := range quoteURLs(document) {
+
+		filtered, err := w.hostFiltered(url)
+
+		if err != nil {
+			return false, err
+		}
+
+		if filtered {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// quoteURLs returns the URLs a post quotes, gathered from the non-standard fields that carry
+// quote-posts across vocabularies: the Misskey/Fedibird `quoteUrl`/`quoteUri`/`_misskey_quote` string
+// fields, and FEP-e232 `Link` tags whose `rel` names a quote (the target being the tag's `href`).
+func quoteURLs(document streams.Document) []string {
+
+	result := make([]string, 0)
+
+	for _, property := range []string{"quoteUrl", "quoteUri", "_misskey_quote"} {
+		if url := document.Get(property).String(); url != "" {
+			result = append(result, url)
+		}
+	}
+
+	for tag := document.Tag(); tag.NotNil(); tag = tag.Next() {
+
+		if tag.IsString() || (tag.Type() != vocab.CoreTypeLink) {
+			continue
+		}
+
+		if href := tag.Href(); (href != "") && strings.Contains(tag.Rel().String(), "quote") {
+			result = append(result, href)
+		}
+	}
+
+	return result
+}
+
+// actorFiltered returns TRUE if the given actor URI is blocked or muted for this walk's User. An empty
+// URI matches nothing.
+func (w *primaryPostWalk) actorFiltered(actorID string) (bool, error) {
+
+	if actorID == "" {
+		return false, nil
+	}
+
+	disposition, err := w.ruleService.DispositionForKeys(w.session, w.userID, model.ActorMatchKeys(actorID), w.now)
+
+	if err != nil {
+		return false, err
+	}
+
+	return disposition.IsFiltered(), nil
+}
+
+// authorFiltered returns TRUE if the document's author is blocked or muted. Objects name their author
+// with `attributedTo`; it falls back to `actor` for the rare object that uses it. Reads only loaded
+// fields -- the document is already resolved by the time the walk reaches this check.
+func (w *primaryPostWalk) authorFiltered(document streams.Document) (bool, error) {
+
+	author := document.AttributedTo().ID()
+
+	if author == "" {
+		author = document.ActorID()
+	}
+
+	return w.actorFiltered(author)
+}
+
+// hostFiltered returns TRUE if the host of the given URL is domain-blocked or domain-muted. It checks
+// DOMAIN keys only, because pre-fetch that host is the only identity known (the author is not yet loaded).
+func (w *primaryPostWalk) hostFiltered(url string) (bool, error) {
+
+	disposition, err := w.ruleService.DispositionForKeys(w.session, w.userID, model.DomainMatchKeys(url), w.now)
+
+	if err != nil {
+		return false, err
+	}
+
+	return disposition.IsFiltered(), nil
+}
+
+/******************************************
+ * Helper Functions
+ ******************************************/
 
 // getNewsItem returns an inbox NewsItem object based on the provided arguments.
 func getNewsItem(userID primitive.ObjectID, document streams.Document) model.NewsItem {
