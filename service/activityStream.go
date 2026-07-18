@@ -8,15 +8,16 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
-	"github.com/EmissarySocial/emissary/tools/asblock"
 	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/EmissarySocial/emissary/tools/ascacherules"
 	"github.com/EmissarySocial/emissary/tools/ashash"
 	"github.com/EmissarySocial/emissary/tools/asnormalizer"
+	"github.com/EmissarySocial/emissary/tools/asrules"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/metadata"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/sliceof"
@@ -138,14 +139,9 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 	// Apply custom caching rules to documents
 	cacheRulesClient := ascacherules.New(normalizerClient)
 
-	// Refuse to fetch documents from blocked origins (R19). This sits BELOW the cache, so cache hits
-	// still serve (D2's click-to-reveal needs cached blocked content) while live network fetches to a
-	// blocked origin are refused.
-	blockClient := asblock.New(cacheRulesClient, service.blockChecker(actorType, actorID))
-
 	// Cache data in UWU DB
 	cacheClient := ascache.New(
-		blockClient,
+		cacheRulesClient,
 		service.queue,
 		service.commonDatabase,
 		actorType,
@@ -154,39 +150,54 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 		ascache.WithIgnoreHeaders(),
 	)
 
+	// Evaluate the viewer's Rules on every result. This sits ABOVE the cache so that cache hits and
+	// network fetches alike are stamped with a per-viewer verdict (hide + labels) that never touches
+	// the shared cache. A document the viewer's rules hide is refused before descending (R19);
+	// asrules.WithReveal is the render layer's click-to-reveal override (D2).
+	rulesClient := asrules.New(cacheClient, service.ruleChecker(actorType, actorID))
+
 	// Find inter-page IDs (like https://yo.mama.social/@sofat#main-key)
-	hashClient := ashash.New(cacheClient)
+	hashClient := ashash.New(rulesClient)
 
 	return hashClient
 }
 
-// blockChecker returns an asblock.BlockChecker for the given actor: it refuses fetches whose origin is
-// blocked for the actor's User (admin-tier rules alone for non-User actors, since a Stream/SearchQuery
-// id is not a UserID). It opens its own session per call, because the client stack outlives any single
-// request. DOMAIN blocks gate every fetch and, when the URI is an actor URL, an ACTOR block gates it too.
-func (service *ActivityStream) blockChecker(actorType string, actorID primitive.ObjectID) asblock.BlockChecker {
+// ruleChecker returns an asrules.Checker for the given actor: it evaluates a URL -- and, once it
+// loads, its document -- against the actor's Rules (the User's own plus admin rules for a User
+// actor; admin-tier alone for the others, since a Stream/SearchQuery id is not a UserID). It opens
+// its own session per call, because the client stack outlives any single request.
+func (service *ActivityStream) ruleChecker(actorType string, actorID primitive.ObjectID) asrules.Checker {
 
 	userID := ruleUserID(actorType, actorID)
 
-	return func(uri string) (bool, error) {
+	return func(uri string, document streams.Document) (metadata.LabelSet, error) {
 
 		session, cancel, err := service.newSession(30 * time.Second)
 
 		if err != nil {
-			return false, err
+			return nil, err
 		}
 
 		defer cancel()
 
-		// Only BLOCK gates a fetch (mute is a display act, not a fetch act); ACTOR keys catch a blocked
-		// actor's own URL, DOMAIN keys catch every URL on a blocked host.
-		disposition, err := service.ruleService.DispositionForKeys(session, userID, model.ActorMatchKeys(uri), time.Now().Unix())
+		// Before the fetch, only the URL is known: ACTOR keys catch a blocked actor's own URL,
+		// DOMAIN keys catch every URL on a blocked host. Once loaded, the document contributes its
+		// own keys (author, tags) -- which is what lets a MUTE or LABEL on an author reach every
+		// reply and quote fetched through this stack.
+		keys := model.ActorMatchKeys(uri)
 
-		if err != nil {
-			return false, err
+		if document.NotNil() {
+			keys = append(keys, model.DocumentMatchKeys(document)...)
 		}
 
-		return disposition.IsBlocked(), nil
+		disposition, err := service.ruleService.DispositionForKeys(session, userID, keys, time.Now().Unix())
+
+		if err != nil {
+			return nil, err
+		}
+
+		// Translate the winning Rule(s) into the viewer's per-document label set.
+		return disposition.LabelSet(), nil
 	}
 }
 

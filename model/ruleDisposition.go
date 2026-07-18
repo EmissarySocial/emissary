@@ -3,6 +3,7 @@ package model
 import (
 	"slices"
 
+	"github.com/benpate/hannibal/metadata"
 	"github.com/benpate/hannibal/streams"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -47,6 +48,54 @@ func (disposition RuleDisposition) IsFiltered() bool {
 // HasLabels returns TRUE if any LABEL rule matched.
 func (disposition RuleDisposition) HasLabels() bool {
 	return len(disposition.Labels) > 0
+}
+
+// LabelSet renders this disposition as the per-viewer metadata.LabelSet that rides on a document's
+// Metadata: a leading hidden Label when the winning Action filters (block or mute), then one
+// annotation per matched LABEL rule. Hidden-first matches the set's display convention.
+func (disposition RuleDisposition) LabelSet() metadata.LabelSet {
+
+	result := make(metadata.LabelSet, 0, len(disposition.Labels)+1)
+
+	// A filtering Action (block or mute) hides the document; its Value names the action and tier.
+	if disposition.IsFiltered() {
+		result = append(result, metadata.Label{
+			Value:    disposition.hiddenReason(),
+			IsHidden: true,
+		})
+	}
+
+	// Every LABEL match annotates without hiding.
+	for _, label := range disposition.Labels {
+		if label.Label != "" {
+			result = append(result, metadata.Label{Value: label.Label})
+		}
+	}
+
+	return result
+}
+
+// hiddenReason composes the display text for a filtering disposition, naming both what happened
+// (blocked or muted) and who is responsible (server policy, or the viewer's own rules).
+func (disposition RuleDisposition) hiddenReason() string {
+
+	action := "Filtered"
+
+	switch disposition.Action {
+	case RuleActionBlock:
+		action = "Blocked"
+	case RuleActionMute:
+		action = "Muted"
+	}
+
+	switch disposition.Tier {
+	case RuleOriginAdmin:
+		return action + " by server policy"
+	case RuleOriginUser:
+		return action + " by your rules"
+	}
+
+	return action
 }
 
 // NewRuleDisposition is the disposition engine: a PURE function with no I/O and no document

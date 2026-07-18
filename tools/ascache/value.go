@@ -8,6 +8,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/tools/cacheheader"
 	"github.com/benpate/data/journal"
+	"github.com/benpate/hannibal/metadata"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
@@ -19,9 +20,9 @@ type Value struct {
 	ValueID primitive.ObjectID `bson:"_id"`
 
 	// Original HTTP Response
-	URLs     sliceof.String   `bson:"urls"`     // One or more URLs used to retrieve this document
-	Object   mapof.Any        `bson:"object"`   // Original document, parsed as a map
-	Metadata streams.Metadata `bson:"metadata"` // Metadata about this document
+	URLs     sliceof.String    `bson:"urls"`     // One or more URLs used to retrieve this document
+	Object   mapof.Any         `bson:"object"`   // Original document, parsed as a map
+	Metadata metadata.Metadata `bson:"metadata"` // Metadata about this document
 
 	// Caching Rules
 	HTTPHeader  http.Header `bson:"httpHeader"`  // HTTP headers that were returned with this document
@@ -39,7 +40,7 @@ func NewValue() Value {
 		URLs:       make([]string, 0, 1),
 		Object:     make(mapof.Any),
 		HTTPHeader: make(http.Header),
-		Metadata:   streams.NewMetadata(),
+		Metadata:   metadata.New(),
 	}
 }
 

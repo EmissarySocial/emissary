@@ -22,7 +22,7 @@ func inbox_AddAny(context Context, activity streams.Document) error {
 	// RULE: Blocks are already enforced around this handler, so no check is repeated here: Add is not
 	// in the D5 exception set, so the Stage-2 inbox gate rejects a blocked delivering actor before
 	// routing; and the ReceiveActivityPub-Add backfill fetches run through the AS-client stack, whose
-	// asblock middleware refuses blocked origins (R19). Context participants blocked at the per-actor
+	// asrules middleware refuses blocked origins (R19). Context participants blocked at the per-actor
 	// level surface only in the cache, gated at render (Phase 6).
 
 	// RULE: For now, no additional processing is required for non-public activities.

@@ -294,7 +294,7 @@ func (w *primaryPostWalk) quoteFiltered(document streams.Document) (bool, error)
 		}
 
 		// Resolve the quoted object (via this document's cache-and-block-aware client) and check its
-		// author. A fetch failure -- network error, or asblock refusing a blocked origin -- fails open.
+		// author. A fetch failure -- network error, or asrules refusing a blocked origin -- fails open.
 		quoted, err := document.Client().Load(url)
 
 		if err != nil {
