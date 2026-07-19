@@ -3,6 +3,7 @@ package service
 import (
 	"iter"
 	"slices"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries"
@@ -15,6 +16,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/uri"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -25,8 +27,14 @@ type Response struct {
 	importItemService     *ImportItem
 	newsFeedService       *NewsFeed
 	outboxService         *Outbox
+	ruleService           *Rule
 	userService           *User
 	host                  string
+
+	// loadDocument resolves a URL to an ActivityStream Document via the App client (which caches).
+	// It is held as a field -- rather than reaching through activityStreamService inline -- so that
+	// tests can inject a fake loader without standing up the concrete ActivityStream/network stack.
+	loadDocument func(string) (streams.Document, error)
 }
 
 // NewResponse returns a fully initialized Response service
@@ -44,8 +52,15 @@ func (service *Response) Refresh(factory *Factory) {
 	service.importItemService = factory.ImportItem()
 	service.newsFeedService = factory.NewsFeed()
 	service.outboxService = factory.Outbox()
+	service.ruleService = factory.Rule()
 	service.userService = factory.User()
 	service.host = factory.Host()
+
+	// Resolve reaction targets through the App client, which caches the loaded document so the
+	// validation fetch and the later author-audience lookup share a single round-trip.
+	service.loadDocument = func(url string) (streams.Document, error) {
+		return service.activityStreamService.AppClient().Load(url)
+	}
 }
 
 // Close stops any background processes controlled by this service
@@ -159,7 +174,7 @@ func (service *Response) Delete(session data.Session, response *model.Response, 
 	// hard-deleted, so its /pub/liked/<id> URL would 404 if dereferenced (D7). The options spread
 	// MUST be preserved so an author-only reaction's Undo stays author-only (D7b).
 	originalActivity := response.GetJSONLD()
-	options := service.reactionAudience(&user, response, originalActivity)
+	options := service.reactionAudience(&user, response, originalActivity, service.objectAuthorURL(response))
 
 	if err := service.outboxService.UndoActivity(session, model.FollowerTypeUser, response.UserID, originalActivity, model.NewAnonymousPermissions(), options...); err != nil {
 		derp.Report(derp.Wrap(err, location, "Sending Undo activity"))
@@ -345,6 +360,36 @@ func (service *Response) SetResponse(session data.Session, user *model.User, url
 
 	const location = "service.Response.SetResponse"
 
+	// RULE: validate the reaction target BEFORE reading or writing anything.  It must be a
+	// well-formed http(s) URL that resolves to a real object -- a reaction to a malformed,
+	// nonexistent, or unreachable URL is rejected here rather than stored and (over federation)
+	// broadcast to an arbitrary target.  The loaded document is reused below for the delivery
+	// audience, so the target is fetched only once.
+	object, err := service.validateReactionTarget(url)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid reaction target", url)
+	}
+
+	// RULE: R11 -- reacting to content from an actor this User has blocked is refused. Every
+	// reaction funnel (web, Mastodon API, intents) passes through here, so all of them inherit
+	// it. The author check mirrors the newsfeed walk: attributedTo, falling back to actor.
+	author := object.AttributedTo().ID()
+
+	if author == "" {
+		author = object.ActorID()
+	}
+
+	disposition, err := service.ruleService.DispositionForKeys(session, user.UserID, model.ActorMatchKeys(author), time.Now().Unix())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Checking rules before reacting", author)
+	}
+
+	if disposition.IsBlocked() {
+		return derp.Forbidden(location, "Cannot react to content from a blocked account", author)
+	}
+
 	// Find every existing reaction that this new one displaces
 	displaced, err := service.conflictingResponses(session, user.UserID, url, responseType)
 
@@ -390,9 +435,10 @@ func (service *Response) SetResponse(session data.Session, user *model.User, url
 
 	// Build the outgoing activity map, then apply the per-type audience: Like/Dislike deliver
 	// author-only (via the returned WithRecipients option); Announce is stamped Public + cc and
-	// keeps the default follower fan-out (D7b / resolved Q3).
+	// keeps the default follower fan-out (D7b / resolved Q3).  The author is read from the object
+	// already loaded during validation, so no second fetch is needed here.
 	activityMap := response.GetJSONLD()
-	options := service.reactionAudience(user, &response, activityMap)
+	options := service.reactionAudience(user, &response, activityMap, object.AttributedTo().ID())
 
 	// Publish the new Response to the Outbox.
 	if err := service.outboxService.Publish(session, model.FollowerTypeUser, user.UserID, streams.NewDocument(activityMap), model.NewAnonymousPermissions(), options...); err != nil {
@@ -473,12 +519,37 @@ func responseIsUnchanged(existing []model.Response, responseType string, content
 	return existing[0].Content == content
 }
 
+// validateReactionTarget verifies that a reaction's target URL is safe to react to and returns the
+// loaded object for reuse. It rejects (a) anything that is not a well-formed http(s) URL and (b)
+// anything that does not resolve to a real object. A successful load also warms the document cache
+// for the delivery-audience lookup that follows.
+func (service *Response) validateReactionTarget(url string) (streams.Document, error) {
+
+	const location = "service.Response.validateReactionTarget"
+
+	// RULE: the target must be a syntactically valid http(s) URL. This is a cheap, network-free
+	// gate that also keeps the client below from being pointed at non-http schemes.
+	if uri.NotValidURL(url) {
+		return streams.NilDocument(), derp.BadRequest(location, "Reaction target must be a valid http(s) URL", url)
+	}
+
+	// RULE: the target must resolve to a real object. A successful load proves the object exists
+	// (and is reachable); a failure rejects reactions to nonexistent or unreachable URLs.
+	object, err := service.loadDocument(url)
+
+	if err != nil {
+		return streams.NilDocument(), derp.Wrap(err, location, "Reaction target does not resolve to a known object", url)
+	}
+
+	return object, nil
+}
+
 // objectAuthorURL resolves the AUTHOR ACTOR (attributedTo) of the object this Response reacted to.
 // Only actors have inboxes (D7a), so the author — not the object URL — is the deliverable target of
 // a reaction. Returns "" if the object cannot be loaded or has no attributedTo.
 func (service *Response) objectAuthorURL(response *model.Response) string {
 
-	object, err := service.activityStreamService.AppClient().Load(response.Object)
+	object, err := service.loadDocument(response.Object)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, "service.Response.objectAuthorURL", "Loading reacted-to object to resolve its author", response.Object))
@@ -498,11 +569,11 @@ func (service *Response) objectAuthorURL(response *model.Response) string {
 //     addressee (via `cc`) so they are delivered to as well.
 //
 // The `activity` map is mutated in place (Announce addressing). `user` is the reacting actor, needed
-// for its followers-collection URL. When the author cannot be resolved, Like/Dislike fall back to an
-// empty recipient set (suppressing fan-out) rather than accidentally broadcasting.
-func (service *Response) reactionAudience(user *model.User, response *model.Response, activity mapof.Any) []PublishOption {
-
-	authorURL := service.objectAuthorURL(response)
+// for its followers-collection URL. `authorURL` is the reacted-to object's author (attributedTo),
+// resolved by the caller -- "" when it could not be determined. When the author cannot be resolved,
+// Like/Dislike fall back to an empty recipient set (suppressing fan-out) rather than accidentally
+// broadcasting.
+func (service *Response) reactionAudience(user *model.User, response *model.Response, activity mapof.Any, authorURL string) []PublishOption {
 
 	// Announce is a public broadcast: Public in `to`, followers + author in `cc`.
 	if response.Type == vocab.ActivityTypeAnnounce {

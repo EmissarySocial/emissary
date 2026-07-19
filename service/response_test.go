@@ -9,7 +9,9 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -29,7 +31,8 @@ import (
  ******************************************/
 
 type responseStore struct {
-	records []model.Response
+	records    []model.Response
+	queryCount int // number of times Query has been called (proves the gate short-circuits before any read)
 }
 
 func (c *responseStore) Context() context.Context { return context.Background() }
@@ -39,6 +42,8 @@ func (c *responseStore) Count(exp.Expression, ...option.Option) (int64, error) {
 }
 
 func (c *responseStore) Query(target any, criteria exp.Expression, _ ...option.Option) error {
+
+	c.queryCount++
 
 	result, ok := target.(*[]model.Response)
 
@@ -305,4 +310,103 @@ func TestResponse_IsUnchanged_ContradictionIsNeverUnchanged(t *testing.T) {
 	}
 
 	require.False(t, responseIsUnchanged(existing, vocab.ActivityTypeLike, ""))
+}
+
+/******************************************
+ * validateReactionTarget
+ ******************************************/
+
+// loaderThatFails returns a loadDocument fake that always fails, and records whether it was called.
+func loaderThatFails(called *bool) func(string) (streams.Document, error) {
+	return func(string) (streams.Document, error) {
+		*called = true
+		return streams.NilDocument(), derp.NotFound("test", "object does not exist")
+	}
+}
+
+// A malformed / non-http(s) URL is rejected WITHOUT ever hitting the network -- the cheap syntactic
+// gate must short-circuit before the loader runs.
+func TestResponse_ValidateReactionTarget_InvalidURL(t *testing.T) {
+
+	loaderCalled := false
+	service, _ := newResponseService(&responseStore{})
+	service.loadDocument = loaderThatFails(&loaderCalled)
+
+	for _, url := range []string{"", "not-a-url", "javascript:alert(1)", "/relative/path", "ftp://example.test/x"} {
+		object, err := service.validateReactionTarget(url)
+
+		require.NotNil(t, err, "url %q should be rejected", url)
+		require.True(t, object.IsNil())
+		require.False(t, loaderCalled, "url %q must be rejected before the loader is called", url)
+	}
+}
+
+// A well-formed URL that does not resolve to a real object is rejected -- this is the nonexistent
+// local object / arbitrary external URL case from the bug report.
+func TestResponse_ValidateReactionTarget_Unresolvable(t *testing.T) {
+
+	loaderCalled := false
+	service, _ := newResponseService(&responseStore{})
+	service.loadDocument = loaderThatFails(&loaderCalled)
+
+	object, err := service.validateReactionTarget("https://example.com/000000000000000000000000-does-not-exist")
+
+	require.NotNil(t, err)
+	require.True(t, object.IsNil())
+	require.True(t, loaderCalled, "a valid URL must be resolved through the loader")
+}
+
+// A well-formed URL that resolves is accepted, and the loaded document is returned for reuse.
+func TestResponse_ValidateReactionTarget_Valid(t *testing.T) {
+
+	service, _ := newResponseService(&responseStore{})
+	service.loadDocument = func(url string) (streams.Document, error) {
+		return streams.NewDocument(mapof.Any{"id": url, "attributedTo": "https://example.com/@author"}), nil
+	}
+
+	object, err := service.validateReactionTarget("https://example.com/post")
+
+	require.Nil(t, err)
+	require.Equal(t, "https://example.com/post", object.ID())
+	require.Equal(t, "https://example.com/@author", object.AttributedTo().ID())
+}
+
+/******************************************
+ * SetResponse -- validation gate
+ ******************************************/
+
+// SetResponse rejects a malformed target and, crucially, writes NOTHING: the gate runs before the
+// conflict query, so the store is never even read.
+func TestResponse_SetResponse_RejectsInvalidURL(t *testing.T) {
+
+	loaderCalled := false
+	store := &responseStore{}
+	service, session := newResponseService(store)
+	service.loadDocument = loaderThatFails(&loaderCalled)
+
+	user := model.NewUser()
+
+	err := service.SetResponse(session, &user, "not-a-url", vocab.ActivityTypeLike, "")
+
+	require.NotNil(t, err)
+	require.False(t, loaderCalled)
+	require.Zero(t, store.queryCount, "a rejected target must not reach the conflict query")
+}
+
+// SetResponse rejects a well-formed but unresolvable target (nonexistent local object or arbitrary
+// external URL) and, again, writes nothing.
+func TestResponse_SetResponse_RejectsUnresolvableTarget(t *testing.T) {
+
+	loaderCalled := false
+	store := &responseStore{}
+	service, session := newResponseService(store)
+	service.loadDocument = loaderThatFails(&loaderCalled)
+
+	user := model.NewUser()
+
+	err := service.SetResponse(session, &user, "https://evil.example.com/anything", vocab.ActivityTypeLike, "")
+
+	require.NotNil(t, err)
+	require.True(t, loaderCalled)
+	require.Zero(t, store.queryCount, "a rejected target must not reach the conflict query")
 }

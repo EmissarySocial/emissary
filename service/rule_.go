@@ -521,6 +521,28 @@ func (service *Rule) IsActorBlocked(session data.Session, userID primitive.Objec
 	return disposition.IsBlocked(), nil
 }
 
+// DeliveryBlocked returns TRUE if outbound delivery from this User (or from the admin tier alone,
+// for NilObjectID) to the recipient actor must be halted (R4). BLOCK-only: mute never gates
+// egress (D5). Local and remote recipients are filtered identically (P5-1).
+func (service *Rule) DeliveryBlocked(session data.Session, userID primitive.ObjectID, recipientURL string) bool {
+
+	// An unidentifiable recipient cannot be cleared, so it is not delivered to
+	if recipientURL == "" {
+		return true
+	}
+
+	disposition, err := service.DispositionForKeys(session, userID, model.ActorMatchKeys(recipientURL), time.Now().Unix())
+
+	// RULE: skip silently on error (P5-2) -- the recipient is treated as blocked, with no alert
+	// and no retry. Wrongly delivering to a blocked actor is the unrecoverable failure; a dropped
+	// delivery is indistinguishable from ordinary federation weather.
+	if err != nil {
+		return true
+	}
+
+	return disposition.IsBlocked()
+}
+
 // QueryDomainBlocks returns all external domains blocked by this Instance/Domain.
 func (service *Rule) QueryDomainBlocks(session data.Session) ([]model.Rule, error) {
 

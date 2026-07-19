@@ -142,7 +142,9 @@ func (service *Outbox) Deliver(session data.Session, actorType string, actorID p
 	// The authoritative signer URL (stamped by Publish) — the delivery tasks resolve the key from it.
 	actorURL := payload.GetString(vocab.PropertyActor)
 
-	ruleFilter := service.ruleService.Filter(actorID, WithBlocksOnly())
+	// The rules userID for the egress gate: a User actor binds their own rules; Stream and
+	// SearchQuery actorIDs are NOT UserIDs, so those actors bind the admin tier alone.
+	rulesUserID := ruleUserID(actorType, actorID)
 	isLocalhost := uri.IsLocalHostname(service.host)
 
 	for follower := range recipientSeq {
@@ -163,9 +165,9 @@ func (service *Outbox) Deliver(session data.Session, actorType string, actorID p
 			continue
 		}
 
-		// RULE: Do not send to blocked Followers
-		if !ruleFilter.AllowSend(session, follower.Actor.ProfileURL) {
-			log.Trace().Msg("Follower blocked by rule filter: " + follower.Actor.ProfileURL)
+		// RULE: Delivery to blocked recipients is halted (R4) -- BOTH methods, email included
+		if service.ruleService.DeliveryBlocked(session, rulesUserID, follower.Actor.ProfileURL) {
+			log.Trace().Msg("Follower blocked by rule: " + follower.Actor.ProfileURL)
 			continue
 		}
 

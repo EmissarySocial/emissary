@@ -28,16 +28,6 @@ func IgnoreLabels() RuleFilterOption {
 	}
 }
 
-// WithLabelsOnly returns a RuleFilterOption that allows ONLY `Block` -type
-// rules, and ignores all others.
-func WithBlocksOnly() RuleFilterOption {
-	return func(filter *RuleFilter) {
-		filter.allowBlocks = true
-		filter.allowMutes = false
-		filter.allowLabels = false
-	}
-}
-
 // WithLabelsOnly returns a RuleFilterOption that allows ONLY `Mute` -type
 // rules, and ignores all others.
 func WithMutesOnly() RuleFilterOption {

@@ -24,6 +24,11 @@ type SendLocator struct {
 	userService          *User
 	host                 string
 	session              data.Session
+
+	// deliveryBlocked is the R4 egress gate (normally Rule.DeliveryBlocked; a func field so tests
+	// can inject verdicts). ruleUserID scopes it: a local User's own rules, or admin tier alone.
+	deliveryBlocked func(data.Session, primitive.ObjectID, string) bool
+	ruleUserID      primitive.ObjectID
 }
 
 // NewSendLocator returns a fully initialized SendLocator service
@@ -36,7 +41,24 @@ func NewSendLocator(factory *Factory, session data.Session) SendLocator {
 		userService:          factory.User(),
 		host:                 factory.Host(),
 		session:              session,
+		deliveryBlocked:      factory.Rule().DeliveryBlocked,
+		ruleUserID:           primitive.NilObjectID,
 	}
+}
+
+// BoundToSender returns a copy of this SendLocator whose recipient resolution filters through the
+// SENDING actor's block rules (R4). A local User actor binds their own rules; every other actor
+// (Stream, SearchQuery, @search, @application, or an unparseable URL) binds the admin tier alone.
+func (service SendLocator) BoundToSender(actorURL string) SendLocator {
+	result := service
+	result.ruleUserID = service.ParseUserURI(actorURL)
+	return result
+}
+
+// recipientBlocked returns TRUE when delivery to this actor is halted by the sender's rules (R4).
+// Local and remote recipients are filtered identically (P5-1).
+func (service SendLocator) recipientBlocked(actorURL string) bool {
+	return service.deliveryBlocked(service.session, service.ruleUserID, actorURL)
 }
 
 // Actor is a part of the sender.Locator interface. It returns a sender.Actor
@@ -155,6 +177,13 @@ func (service SendLocator) Recipient(uri string) (iter.Seq[string], error) {
 		return ranges.Empty[string](), nil
 	}
 
+	// RULE: Delivery to blocked recipients is halted (R4). Checking the raw URI first catches
+	// blocked single actors AND anything on a blocked domain before a single byte is fetched from
+	// them. Collection and follower URIs still expand below; their members are filtered one by one.
+	if service.recipientBlocked(uri) {
+		return ranges.Empty[string](), nil
+	}
+
 	// TODO: Special uri scheme for circle members
 	// if strings.HasPrefix(uri, "circle:") {
 	//	return service.resolveCircle(uri)
@@ -185,6 +214,12 @@ func (service SendLocator) Recipient(uri string) (iter.Seq[string], error) {
 
 	// Return the inbox URL for a single actor
 	if document.IsActor() {
+
+		// RULE: Re-check the canonical actor ID -- redirects may make it differ from the URI (R4)
+		if service.recipientBlocked(document.ID()) {
+			return ranges.Empty[string](), nil
+		}
+
 		return ranges.Values(document.PreferredInbox()), nil
 	}
 
@@ -202,8 +237,14 @@ func (service SendLocator) resolveFollowers(actorType string, actorID primitive.
 	// Get all ActivityPub Followers for this actor
 	followers := service.followerService.RangeActivityPubByType(service.session, actorType, actorID)
 
+	// RULE: Followers the sender blocked are stripped before inbox resolution (R4), so no fetch
+	// is ever made on a blocked follower's behalf
+	allowed := ranges.Filter(followers, func(follower model.Follower) bool {
+		return !service.recipientBlocked(follower.Actor.ProfileURL)
+	})
+
 	// Locate each Follower's inbox URL
-	inboxURLs := ranges.Map(followers, func(follower model.Follower) string {
+	inboxURLs := ranges.Map(allowed, func(follower model.Follower) string {
 		return service.resolveInboxURL(follower.Actor.ProfileURL)
 	})
 
@@ -231,8 +272,13 @@ func (service SendLocator) resolveGroup(token string) (iter.Seq[string], error) 
 		return nil, derp.Wrap(err, location, "Retrieving group members")
 	}
 
+	// RULE: Local recipients are subject to the same rule filters as remote ones (P5-1)
+	allowed := ranges.Filter(users, func(user model.User) bool {
+		return !service.recipientBlocked(user.ActivityPubURL())
+	})
+
 	// Locate each Follower's inbox URL
-	inboxURLs := ranges.Map(users, func(user model.User) string {
+	inboxURLs := ranges.Map(allowed, func(user model.User) string {
 		return user.ActivityPubInboxURL()
 	})
 
@@ -246,9 +292,9 @@ func (service SendLocator) resolveCollection(collection streams.Document) (iter.
 	// Get all documents in this collection
 	documents := collections.RangeDocuments(collection)
 
-	// Verify that documents are actors
+	// Verify that documents are actors, and strip any the sender has blocked (R4)
 	actors := ranges.Filter(documents, func(document streams.Document) bool {
-		return document.IsActor()
+		return document.IsActor() && !service.recipientBlocked(document.ID())
 	})
 
 	// Find the best inbox URL for each document

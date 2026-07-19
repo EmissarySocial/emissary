@@ -143,6 +143,22 @@ func (service *Following) Save(session data.Session, following *model.Following,
 		return derp.Wrap(err, location, "Validating Following record", following)
 	}
 
+	// RULE: R11 -- following an actor this User has blocked is refused at creation. Existing
+	// records stay editable, so block-driven pause/cleanup flows can still update them.
+	if following.IsNew() {
+
+		keys := append(model.ActorMatchKeys(following.URL), model.ActorMatchKeys(following.ProfileURL)...)
+		disposition, err := service.ruleService.DispositionForKeys(session, following.UserID, keys, time.Now().Unix())
+
+		if err != nil {
+			return derp.Wrap(err, location, "Checking rules before following", following.URL)
+		}
+
+		if disposition.IsBlocked() {
+			return derp.Validation("You have blocked this account. Remove the block rule before following it.")
+		}
+	}
+
 	// Prevent duplicate following records
 	if err := service.preventDuplicates(session, following); err != nil {
 		return derp.Wrap(err, location, "Preventing duplicate", following)

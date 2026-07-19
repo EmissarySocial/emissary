@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/sender"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
 )
@@ -83,11 +84,17 @@ func WithSender(serverFactory ServerFactory, args mapof.Any, handler func(sender
 
 	return WithSession(serverFactory, args, func(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
+		// RULE: Recipient resolution filters through the SENDING actor's block rules (R4). Both
+		// task shapes carry the sender under "actor" -- the raw activity's own property for
+		// SendToAllRecipients, the explicit argument for SendToSingleRecipient (where the locator
+		// only signs, so the binding is inert but harmless).
+		locator := factory.SendLocator(session).BoundToSender(args.GetString(vocab.PropertyActor))
+
 		// Create a new Sender. AllowPrivateIPs is normally FALSE (remote's SSRF guard
 		// stays active); it is enabled only for local/dev federation between machines
 		// on a private network.
 		sender := sender.New(
-			factory.SendLocator(session),
+			locator,
 			factory.Queue(),
 			sender.AllowPrivateIPs(serverFactory.AllowPrivateIPs()),
 		)
