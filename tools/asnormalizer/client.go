@@ -4,7 +4,6 @@ import (
 	"strconv"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/property"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -66,25 +65,12 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 	// Additional Metadata for Objects only
 	if result.IsObject() {
 
-		// Calculate Relationships
+		// Calculate Relationships. Response COUNTS are not computed here: ascache's
+		// CalcParentRelationships maintains them from locally-cached evidence, and it is the
+		// single writer on purpose (two writers with different sources would fight).
 		relationType, relationHref := calcRelationType(result)
 		result.Metadata.RelationType = relationType
 		result.Metadata.RelationHref = relationHref
-
-		// Count `Likes`
-		if likes, err := collections.CountItems(result.Likes()); err == nil {
-			result.Metadata.SetRelationCount(vocab.PropertyLikes, int64(likes))
-		}
-
-		// Count `Replies`
-		if replies, err := collections.CountItems(result.Replies()); err == nil {
-			result.Metadata.SetRelationCount(vocab.PropertyReplies, int64(replies))
-		}
-
-		// Count `Shares`
-		if shares, err := collections.CountItems(result.Shares()); err == nil {
-			result.Metadata.SetRelationCount(vocab.PropertyShares, int64(shares))
-		}
 	}
 
 	// Return the result
