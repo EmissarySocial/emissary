@@ -9,12 +9,18 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/labstack/echo/v4"
+	"github.com/benpate/steranko"
 )
 
-func RenderProfileJSONLD(context echo.Context, factory *service.Factory, session data.Session, user *model.User) error {
+func RenderProfileJSONLD(context *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.RenderProfileJSONLD"
+
+	// RULE: Non-public profiles are hidden from anonymous/remote requesters, matching the HTML
+	// path and every sibling ActivityPub endpoint. The domain owner and the user themselves are allowed.
+	if !isUserVisible(context, user) {
+		return derp.NotFound(location, "User not found")
+	}
 
 	// Try to load the key from the Datbase
 	keyService := factory.EncryptionKey()

@@ -846,6 +846,14 @@ func (service *User) WebFinger(session data.Session, token string) (digit.Resour
 		return digit.Resource{}, derp.Wrap(err, location, "Loading user", token)
 	}
 
+	// RULE: Non-public profiles are hidden from public discovery. WebFinger is unauthenticated,
+	// so there is no requester to exempt (the owner discovers themselves via the app, not WebFinger).
+	// This keeps "Hidden from Public Servers" true at the discovery layer, matching the hidden
+	// actor document and every sibling ActivityPub endpoint.
+	if !user.IsPublic {
+		return digit.Resource{}, derp.NotFound(location, "User not found", token)
+	}
+
 	// Make a WebFinger resource for this user.
 	result := digit.NewResource("acct:"+user.Username+"@"+uri.Hostname(service.host)).
 		Alias(service.host+"/@"+user.Username).
