@@ -4,6 +4,14 @@ import (
 	"github.com/benpate/rosetta/html"
 )
 
+// ContentMaxLength is the hard ceiling (in runes) on how much body content a
+// single Stream or Activity may store.  It bounds `content.raw` and `content.html`
+// in ContentSchema so that no write path -- local authoring, ActivityPub ingest, or
+// import -- can persist an unbounded body and exhaust storage.  The `edit-content`
+// step enforces its own, usually smaller, per-template limit up to this ceiling
+// (see model/step.EditContent).
+const ContentMaxLength = 1 << 20 // 1 MiB
+
 // Content represents the WYSIWYG body content in a Stream or Activity
 type Content struct {
 	Format string `json:"format" bson:"format"`

@@ -28,7 +28,7 @@
 			roles: ["author", "editor"]
 			steps: [
 				{do:"with-draft", steps: [
-					{do:"edit-content", file:"editor", format:"EDITORJS"}
+					{do:"edit-content", file:"editor", format:"EDITORJS", max-length:1024}
 				]}
 			]
 		}

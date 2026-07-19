@@ -7,8 +7,8 @@ func ContentSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
 			"format": schema.String{Enum: []string{ContentFormatHTML, ContentFormatEditorJS, ContentFormatMarkdown, ContentFormatText}},
-			"raw":    schema.String{Format: "unsafe-any"},
-			"html":   schema.String{Format: "html"},
+			"raw":    schema.String{Format: "unsafe-any", MaxLength: ContentMaxLength},
+			"html":   schema.String{Format: "html", MaxLength: ContentMaxLength},
 		},
 	}
 }
