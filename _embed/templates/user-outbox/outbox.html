@@ -1,4 +1,12 @@
-{{- if eq .StateID "LIVE" -}}
+{{- /* FIX #1 (HTTP 500 when viewing another user's profile): the onboarding wizard branch
+       renders `{{ .View "wizard-1" }}`, and `wizard-1` is a roles:["self"] action. Previously ANY
+       non-LIVE profile took the wizard branch for EVERY viewer, so building that self-only sub-view
+       failed for non-owners/anonymous -> "build.Outbox.View: Unable to create Outbox builder" -> 500.
+       Now the wizard is shown ONLY to the profile owner; everyone else falls through to the normal
+       (read-only) profile regardless of state. */ -}}
+{{- if and (ne .StateID "LIVE") .IsMyself -}}
+	{{- template "wizard-step-1" . -}}
+{{- else -}}
 
 <!-- Page content -->
 <div class="app framed page h-card scroll-vertical" script="init send SelectNav(id:'outbox')">
@@ -57,8 +65,6 @@
 		hx-swap="innerHTML"
 		hx-push-url="false">
 	</div>
-	
+
 </div>
-{{- else -}}
-	{{- template "wizard-step-1" . -}}
 {{- end -}}

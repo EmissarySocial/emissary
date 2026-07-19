@@ -129,6 +129,14 @@ func (w User) clone(action string) (Builder, error) {
 	return NewUser(w._factory, w._session, w._request, w._response, w._template, w._user, action)
 }
 
+// setState makes this builder a StateSetter so template pipelines can run a `set-state` step
+// against an admin-managed User (mirrors Outbox.setState). FIX #2 relies on this to move a
+// newly created User to the "LIVE" state during the admin "add" action.
+func (w User) setState(stateID string) error {
+	w._user.SetState(stateID)
+	return nil
+}
+
 /******************************************
  * User Data
  ******************************************/

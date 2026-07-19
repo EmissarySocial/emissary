@@ -77,6 +77,11 @@
 							]
 						}
 					}
+					// FIX #2 (root cause of the non-owner profile 500): admin-created accounts skip the
+					// self-service onboarding wizard, which is the ONLY step that moves a User to the "LIVE"
+					// state. Without this they stay pre-LIVE forever, and their profile.html renders the
+					// self-only wizard branch -> HTTP 500 for every other viewer. Activate them on creation.
+					{do: "set-state", state: "LIVE"}
 					{do: "save"}
 					{do: "refresh-page"}
 				]
