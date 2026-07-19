@@ -65,7 +65,7 @@ func GetIntent_Like(ctx *steranko.Context, factory *service.Factory, session dat
 
 				b.Div().Class("flex-row", "margin-bottom")
 				{
-					b.Img(attributedTo.Icon().Href()).Class("flex-shrink-0", "circle", "width-32").Close()
+					b.Img(safeIntentURL(attributedTo.Icon().Href())).Class("flex-shrink-0", "circle", "width-32").Close()
 					b.Div().Class("text-sm", "margin-none")
 					{
 						b.Div().Class("bold").InnerText(attributedTo.Name()).Close()
@@ -76,11 +76,9 @@ func GetIntent_Like(ctx *steranko.Context, factory *service.Factory, session dat
 				b.Close()
 			}
 
-			if summary := object.Summary(); summary != "" {
-				b.Div().Class("flex-grow-1").InnerHTML(summary).Close()
-			} else if content := object.Content(); content != "" {
-				b.Div().Class("flex-grow-1").InnerHTML(content).Close()
-			}
+			// SECURITY: object is loaded from the caller-supplied `object` URL, so its summary/content
+			// are untrusted remote HTML. write_intentObjectContent sanitizes before InnerHTML.
+			write_intentObjectContent(b, object.Summary(), object.Content())
 		}
 		b.Close()
 

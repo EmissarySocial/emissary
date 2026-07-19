@@ -84,12 +84,14 @@ func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session d
 		{
 			b.Div().Class("flex-row", "flex-align-center", "margin-bottom")
 			{
-				b.Img(actor.Icon().Href()).Class("circle width-48", "flex-shrink-0").Close()
+				b.Img(safeIntentURL(actor.Icon().Href())).Class("circle width-48", "flex-shrink-0").Close()
 				b.Div().Class("flex-grow")
 				{
 					b.Div().Class("text-lg", "bold", "margin-none").InnerText(`Follow "` + actor.Name() + `"`)
 					b.Div().Class("text-gray")
-					b.A(actor.URL()).InnerText(ActorUsername(actor))
+					// SECURITY: actor is a remote-fetched document, so actor.URL() is untrusted. Guard the
+					// href scheme (uri.IsSafeRedirectURL) so a "javascript:" profile URL cannot execute on click.
+					b.A(safeIntentURL(actor.URL())).InnerText(ActorUsername(actor))
 					b.Close()
 				}
 				b.Close()

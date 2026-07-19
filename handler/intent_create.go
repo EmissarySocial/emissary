@@ -49,7 +49,10 @@ func GetIntent_Create(ctx *steranko.Context, factory *service.Factory, session d
 	{
 		write_intent_header(ctx, b, user)
 
-		b.Textarea("content").Class("flex-grow-1", "margin-vertical", "width-100%").Attr("autofocus", "true").Style("height:100%").InnerHTML(transaction.Content).Close()
+		// SECURITY: `content` is a caller-supplied query param. Use InnerText (which HTML-escapes)
+		// and NOT InnerHTML — otherwise a `</textarea>`-prefixed value breaks out of the textarea
+		// and executes as reflected XSS. A textarea is a plain-text field, so escaping is correct.
+		b.Textarea("content").Class("flex-grow-1", "margin-vertical", "width-100%").Attr("autofocus", "true").Style("height:100%").InnerText(transaction.Content).Close()
 
 		b.Div().Class("flex-shrink-0")
 		{
