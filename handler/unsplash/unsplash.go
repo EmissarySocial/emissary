@@ -164,9 +164,6 @@ func displayPhoto(ctx echo.Context, applicationName string, photo mapof.Any) err
 
 	// UTM Trackers and Credits are required by Unsplash API
 	tracker := "?utm_medium=referral&utm_source=" + url.QueryEscape(applicationName)
-	credits := `Photo By <a href="https://unsplash.com/@` + user.GetString("username") + tracker + `" target="_blank" style="color:` + textColor + `">` +
-		user.GetString("name") +
-		`</a> on <a href="https://unsplash.com` + tracker + `" target="_blank" style="color:` + textColor + `">Unsplash</a>.&nbsp;`
 
 	// Write the Unsplash HTML
 	b := html.New()
@@ -183,7 +180,18 @@ func displayPhoto(ctx echo.Context, applicationName string, photo mapof.Any) err
 		EndBracket()
 
 	b.Close()
-	b.Div().Class("pos-absolute-bottom-right padding-xs text-xs").Style("background-color:"+photoColor, "color:"+textColor).InnerHTML(credits).Close()
+
+	// SECURITY: the photographer username/name come from the Unsplash API (external, untrusted).
+	// Build the credit line with the html builder so the href is Attr-escaped and the display name is
+	// InnerText-escaped, instead of hand-assembling an HTML string and emitting it via InnerHTML -- which
+	// would let a crafted username/name inject markup that runs in the Emissary origin.
+	b.Div().Class("pos-absolute-bottom-right padding-xs text-xs").Style("background-color:"+photoColor, "color:"+textColor).EndBracket()
+	b.WriteString("Photo By ")
+	b.A("https://unsplash.com/@"+user.GetString("username")+tracker).Attr("target", "_blank").Style("color:" + textColor).InnerText(user.GetString("name")).Close()
+	b.WriteString(" on ")
+	b.A("https://unsplash.com"+tracker).Attr("target", "_blank").Style("color:" + textColor).InnerText("Unsplash").Close()
+	b.WriteString(".&nbsp;")
+	b.Close()
 	b.Close()
 
 	return ctx.HTML(200, b.String())
