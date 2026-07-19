@@ -34,10 +34,18 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 		actor:   &actor,
 	}
 
-	// Retrieve the activity from the request body, gated by the canonical inbox validator chain
-	// evaluated against admin-tier rules (NilObjectID) -- Stage 1 of the block gate (D5).
-	if err := streamRouter.ReceiveAndHandle(context, ctx.Request(), client, activitypub.InboxValidators(factory.Rule(), session, primitive.NilObjectID)); err != nil {
+	// Retrieve the activity through the canonical inbox receive funnel (Stage-1 validators + the
+	// reserved-namespace sanitizer), evaluated against admin-tier rules (NilObjectID) -- Stage 1 of
+	// the block gate (D5).
+	activity, err := activitypub.ReceiveRequest(ctx.Request(), client, factory.Rule(), session, primitive.NilObjectID)
+
+	if err != nil {
 		return derp.Wrap(err, location, "Receiving ActivityPub request")
+	}
+
+	// Route the activity to the appropriate handler
+	if err := streamRouter.Handle(context, activity); err != nil {
+		return derp.Wrap(err, location, "Handling ActivityPub request")
 	}
 
 	// Send the response to the client

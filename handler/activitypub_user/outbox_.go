@@ -7,6 +7,7 @@ import (
 	"github.com/EmissarySocial/emissary/handler/activitypub"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/assanitizer"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/router"
@@ -111,8 +112,19 @@ func PostOutbox(ctx *steranko.Context, factory *service.Factory, session data.Se
 		validator.NewMatchActor(user.ActivityPubURL()),
 	)
 
-	// Retrieve the activity from the request body and route it to the correct handler
-	if err := outboxRouter.ReceiveAndHandle(context, ctx.Request(), client, matchActor); err != nil {
+	// Retrieve the activity from the request body
+	activity, err := router.ReceiveRequest(ctx.Request(), client, matchActor)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Receiving ActivityPub request")
+	}
+
+	// RULE: reserved "emissary:" properties are server-generated only; a client cannot speak in the
+	// server's voice, so any inbound ones are stripped before the activity is stored or delivered.
+	assanitizer.Strip(activity.Value(), model.NamespaceEmissary)
+
+	// Route the activity to the correct handler
+	if err := outboxRouter.Handle(context, activity); err != nil {
 		return derp.Wrap(err, location, "Handling ActivityPub request")
 	}
 

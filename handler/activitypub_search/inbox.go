@@ -27,12 +27,20 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 		searchQuery: searchQuery,
 	}
 
-	// Retrieve the activity from the request body, gated by the canonical inbox validator chain -- Stage
-	// 1 of the block gate (D5). The owner is NilObjectID (admin-tier rules) -- NOT
-	// searchQuery.SearchQueryID, which is a SearchQuery id, not a UserID; passing it would scope the
-	// gate to a nonexistent user's rules and silently disable admin blocking here.
-	if err := inboxRouter.ReceiveAndHandle(context, ctx.Request(), client, activitypub.InboxValidators(factory.Rule(), session, primitive.NilObjectID)); err != nil {
+	// Retrieve the activity through the canonical inbox receive funnel (Stage-1 validators + the
+	// reserved-namespace sanitizer) -- Stage 1 of the block gate (D5). The owner is NilObjectID
+	// (admin-tier rules) -- NOT searchQuery.SearchQueryID, which is a SearchQuery id, not a UserID;
+	// passing it would scope the gate to a nonexistent user's rules and silently disable admin
+	// blocking here.
+	activity, err := activitypub.ReceiveRequest(ctx.Request(), client, factory.Rule(), session, primitive.NilObjectID)
+
+	if err != nil {
 		return derp.Wrap(err, location, "Receiving ActivityPub request")
+	}
+
+	// Route the activity to the appropriate handler
+	if err := inboxRouter.Handle(context, activity); err != nil {
+		return derp.Wrap(err, location, "Handling ActivityPub request")
 	}
 
 	// Send the response to the client

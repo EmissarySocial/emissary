@@ -77,15 +77,16 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	activityService := factory.ActivityStream()
 	client := activityService.UserClient(user.UserID)
 
-	// Receive and parse the activity through the canonical inbox validator chain (Stage 1 of the block
-	// gate + the standard validators), then our cache-aware key finder. WithPublicKeyFinder MUST come
-	// after the chain: it patches the HTTPSig entry in place (so a stale cached signing key is never
-	// trusted) and would be discarded if the chain were replaced afterward.
-	activity, err := router.ReceiveRequest(
+	// Receive and parse the activity through the canonical inbox receive funnel: Stage-1 validators,
+	// signature verification, then the reserved-namespace sanitizer. The funnel puts the validator
+	// chain before caller options, so our cache-aware key finder (which patches the HTTPSig entry in
+	// place, so a stale cached signing key is never trusted) is never discarded.
+	activity, err := activitypub.ReceiveRequest(
 		ctx.Request(),
 		client,
-
-		activitypub.InboxValidators(factory.Rule(), session, user.UserID),
+		factory.Rule(),
+		session,
+		user.UserID,
 
 		// Injecting our own key finder that is aware of the ascache middleware.
 		router.WithPublicKeyFinder(activityService.PublicKeyFinder),
