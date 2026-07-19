@@ -13,6 +13,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/ashash"
 	"github.com/EmissarySocial/emissary/tools/asnormalizer"
 	"github.com/EmissarySocial/emissary/tools/asrules"
+	"github.com/EmissarySocial/emissary/tools/assanitizer"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -133,8 +134,12 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 	// Look up #Hashtags
 	tagspubClient := tagspub.New(bridgyfedClient)
 
+	// RULE: strip reserved "emissary:" properties at the trust boundary, so every layer above --
+	// including the cache at rest -- only ever sees server-generated values in this namespace
+	sanitizerClient := assanitizer.New(tagspubClient, model.NamespaceEmissary)
+
 	// Enforce opinionated data formats
-	normalizerClient := asnormalizer.New(tagspubClient)
+	normalizerClient := asnormalizer.New(sanitizerClient)
 
 	// Apply custom caching rules to documents
 	cacheRulesClient := ascacherules.New(normalizerClient)
