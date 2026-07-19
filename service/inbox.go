@@ -2,6 +2,7 @@ package service
 
 import (
 	"iter"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/realtime"
@@ -366,14 +367,19 @@ func (service *Inbox) sendSSEUpdate(activity *model.InboxActivity) {
 	// Additional rules for Direct Messages
 	if !activity.IsPublic {
 
+		// The DM/MLS topics carry the rule labels (4C), matching what their collections serve.
+		// TODO(ben): revisit once the client half lands -- the labels in SSE payloads are not
+		// consumed yet, and this may be trimmable back to String() to save the work.
+		payload := activity.LabeledJSON()
+
 		// Send an update on the "DirectMessage" topic for this User
-		service.sseUpdateChannel <- realtime.NewMessage_InboxActivity_DirectMessage(activity.UserID, activity.String())
+		service.sseUpdateChannel <- realtime.NewMessage_InboxActivity_DirectMessage(activity.UserID, payload)
 
 		// Additional rules for MLS-encrypted messages
 		if activity.MediaType == vocab.MediaTypeMLS {
 
 			// Send an update on the "DirectMessage_MLS" topic for this User
-			service.sseUpdateChannel <- realtime.NewMessage_InboxActivity_DirectMessage_MLS(activity.UserID, activity.String())
+			service.sseUpdateChannel <- realtime.NewMessage_InboxActivity_DirectMessage_MLS(activity.UserID, payload)
 		}
 	}
 }
@@ -416,4 +422,130 @@ func (service *Inbox) CollectionIterator(session data.Session, userID primitive.
 			return item.GetJSONLD()
 		}), nil
 	}
+}
+
+// labelChunkSize is the batching knob for CollectionIteratorWithLabels: one rules query per this
+// many items. It is deliberately independent of the collection page size -- if the two drift, the
+// worst case is one extra small query per page, never truncation.
+const labelChunkSize = 60
+
+// CollectionIteratorWithLabels returns a collection iterator that merges each item's rule labels
+// into its JSON under the reserved "emissary:labels" key: served = persisted (the receive-time
+// stamp) ∪ current (the viewer's rules right now). Current rules are queried once per chunk, and
+// each item is then evaluated in memory.
+func (service *Inbox) CollectionIteratorWithLabels(session data.Session, userID primitive.ObjectID, criteria exp.Expression, ruleService *Rule) collection.IteratorFunc {
+
+	const location = "service.Inbox.CollectionIteratorWithLabels"
+
+	return func(startAfter string) (iter.Seq[mapof.Any], error) {
+
+		// Add the "startAfter" criteria (if applicable)
+		if startAfter != "" {
+			marker := model.NewInboxActivity()
+			if err := service.LoadByActivityID(session, userID, startAfter, &marker); err == nil {
+				criteria = criteria.AndGreaterThan("_id", marker.InboxActivityID)
+			}
+		}
+
+		// Get InboxActivitys for this User (sorted by insertion date)
+		result, err := service.RangeByUser(session, userID, criteria, option.SortAsc("_id"))
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Creating iterator", "userID", userID.Hex())
+		}
+
+		// Collect items into chunks, evaluate each chunk against the viewer's current rules, and
+		// yield the labeled JSON
+		return func(yield func(mapof.Any) bool) {
+
+			now := time.Now().Unix()
+			chunk := make([]model.InboxActivity, 0, labelChunkSize)
+
+			// flush evaluates the pending chunk and yields its labeled items
+			flush := func() bool {
+
+				if len(chunk) == 0 {
+					return true
+				}
+
+				rules := service.chunkRules(session, userID, chunk, ruleService)
+
+				for _, labeled := range labeledChunkJSON(chunk, rules, now) {
+					if !yield(labeled) {
+						return false
+					}
+				}
+
+				chunk = chunk[:0]
+				return true
+			}
+
+			for item := range result {
+
+				chunk = append(chunk, item)
+
+				if len(chunk) >= labelChunkSize {
+					if !flush() {
+						return
+					}
+				}
+			}
+
+			_ = flush()
+		}, nil
+	}
+}
+
+// chunkRules queries the viewer's Rules matching any sender in the chunk: ONE indexed query for
+// the whole chunk, evaluated per-item in memory afterward.
+func (service *Inbox) chunkRules(session data.Session, userID primitive.ObjectID, chunk []model.InboxActivity, ruleService *Rule) []model.RuleSummary {
+
+	const location = "service.Inbox.chunkRules"
+
+	// Union the actor match keys across the chunk (the engine re-checks membership per item,
+	// so a broader set is safe by design)
+	keys := make([]string, 0, len(chunk)*2)
+
+	for _, item := range chunk {
+		keys = append(keys, model.ActorMatchKeys(item.ActorID)...)
+	}
+
+	rules, err := ruleService.QueryByMatchKeys(session, userID, keys)
+
+	// Fail OPEN: this is a display path, so a rules blip serves persisted stamps only rather
+	// than turning the whole collection into a 500
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Querying rules for inbox labels; serving persisted labels only", userID))
+		return nil
+	}
+
+	return rules
+}
+
+// labeledChunkJSON evaluates each activity in the chunk against the pre-fetched rules and returns
+// its JSON with the merged (current ∪ persisted) labels applied. Pure: no I/O.
+func labeledChunkJSON(chunk []model.InboxActivity, rules []model.RuleSummary, now int64) []mapof.Any {
+
+	result := make([]mapof.Any, 0, len(chunk))
+
+	for _, item := range chunk {
+
+		// Evaluate the viewer's current rules against this sender, then merge with the
+		// receive-time stamp (ties keep the current attribution -- the persisted rule may have
+		// been deleted since)
+		current := model.NewRuleDispositionForKeys(model.ActorMatchKeys(item.ActorID), rules, now)
+		merged := current.Merge(item.Disposition)
+
+		// Apply (or scrub) the reserved labels property on the served JSON
+		raw := item.GetJSONLD()
+
+		if raw == nil {
+			raw = mapof.Any{}
+		}
+
+		merged.ApplyLabels(raw)
+		result = append(result, raw)
+	}
+
+	return result
 }

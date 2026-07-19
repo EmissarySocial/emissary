@@ -84,6 +84,13 @@ func (v RuleValidator) Validate(request *http.Request, document *streams.Documen
 		return validator.ResultUnknown
 	}
 
+	// RULE: inline non-public MLS is never fast-discarded (4B): every ciphertext must reach storage
+	// for epoch safety, so its rules are evaluated -- and stamped -- at Stage 2 instead. No possible
+	// discard means no reason to query, either.
+	if IsMLSCreate(*document) {
+		return validator.ResultUnknown
+	}
+
 	// Keys from the claimed actor (ACTOR + its domain suffixes) plus the signature keyId host (as
 	// DOMAIN keys), so a DOMAIN block extends to the delivering server and its key is never fetched.
 	keys := model.ActorMatchKeys(document.ActorID())

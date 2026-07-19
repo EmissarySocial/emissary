@@ -5,6 +5,7 @@ import (
 
 	"github.com/benpate/hannibal/metadata"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -14,19 +15,101 @@ const RuleDispositionNone = ""
 // RuleDisposition is the result of evaluating a document against a set of Rules: the winning Action
 // (the most severe of BLOCK/MUTE, or none), the tier and RuleID that produced it (for attribution),
 // and every LABEL that matched (regardless of the Action -- labels ride alongside a block, and
-// explain it in audit UI).
+// explain it in audit UI). The bson tags let an InboxActivity persist its receive-time disposition.
 type RuleDisposition struct {
-	Action string             // RuleActionBlock | RuleActionMute | RuleDispositionNone
-	Tier   string             // RuleOriginAdmin | RuleOriginUser (of the winning rule; "" if none)
-	RuleID primitive.ObjectID // The winning rule, for "why am I seeing this?" UI
-	Labels []RuleLabelMatch   // Every LABEL match, from every tier
+	Action string             `bson:"action,omitempty"` // RuleActionBlock | RuleActionMute | RuleDispositionNone
+	Tier   string             `bson:"tier,omitempty"`   // RuleOriginAdmin | RuleOriginUser (of the winning rule; "" if none)
+	RuleID primitive.ObjectID `bson:"ruleId,omitempty"` // The winning rule, for "why am I seeing this?" UI
+	Labels []RuleLabelMatch   `bson:"labels,omitempty"` // Every LABEL match, from every tier
 }
 
 // RuleLabelMatch is one LABEL rule that matched, carried on a RuleDisposition for display and attribution.
 type RuleLabelMatch struct {
-	RuleID primitive.ObjectID
-	Source string // Attribution (FollowingLabel), or "" for the user's own rule
-	Label  string // Human-readable label text (Rule.Label)
+	RuleID primitive.ObjectID `bson:"ruleId,omitempty"` // The LABEL rule that matched
+	Source string             `bson:"source,omitempty"` // Attribution (FollowingLabel), or "" for the user's own rule
+	Label  string             `bson:"label,omitempty"`  // Human-readable label text (Rule.Label)
+}
+
+// IsZero returns TRUE if this disposition filters nothing and carries no labels. The mongo driver
+// uses it (as a bsoncodec.Zeroer) to honor `omitempty` on struct fields, so a clean disposition
+// writes no field at all -- and rows stored before the field existed read back as clean.
+func (disposition RuleDisposition) IsZero() bool {
+	return disposition.Action == "" &&
+		disposition.Tier == "" &&
+		disposition.RuleID.IsZero() &&
+		len(disposition.Labels) == 0
+}
+
+// Merge combines this disposition with another: the more severe Action wins (ties keep the
+// RECEIVER's attribution -- call as current.Merge(persisted) so a live rule outranks a possibly
+// deleted one), and LABEL matches are unioned, deduplicated by RuleID. Neither input is modified.
+func (disposition RuleDisposition) Merge(other RuleDisposition) RuleDisposition {
+
+	result := disposition
+	result.Labels = slices.Clone(disposition.Labels)
+
+	// The more severe Action wins; on a tie, the receiver's attribution stands.
+	if actionSeverity(other.Action) > actionSeverity(disposition.Action) {
+		result.Action = other.Action
+		result.Tier = other.Tier
+		result.RuleID = other.RuleID
+	}
+
+	// Union the LABEL matches, deduplicated by RuleID
+	for _, label := range other.Labels {
+		if !result.hasLabelRule(label.RuleID) {
+			result.Labels = append(result.Labels, label)
+		}
+	}
+
+	return result
+}
+
+// hasLabelRule returns TRUE if this disposition already carries a LABEL match from the given Rule.
+func (disposition RuleDisposition) hasLabelRule(ruleID primitive.ObjectID) bool {
+	return slices.ContainsFunc(disposition.Labels, func(label RuleLabelMatch) bool {
+		return label.RuleID == ruleID
+	})
+}
+
+// ApplyLabels writes this disposition's LabelSet into the target JSON-LD map under the reserved
+// PropertyEmissaryLabels key. Any existing value is ALWAYS deleted first -- the anti-spoofing
+// backstop for rows stored before ingress stripping existed -- and the key is set only when there
+// is something server-generated to say.
+func (disposition RuleDisposition) ApplyLabels(target mapof.Any) {
+
+	// RULE: the reserved key is server-generated only; whatever is there now is not ours.
+	delete(target, PropertyEmissaryLabels)
+
+	// A clean disposition has nothing to add
+	if disposition.IsZero() {
+		return
+	}
+
+	// Serialize the LabelSet as [{value, href, isHidden}]
+	labelSet := disposition.LabelSet()
+	labels := make([]mapof.Any, 0, len(labelSet))
+
+	for _, label := range labelSet {
+
+		entry := mapof.Any{
+			"value":    label.Value,
+			"isHidden": label.IsHidden,
+		}
+
+		if label.Href != "" {
+			entry["href"] = label.Href
+		}
+
+		labels = append(labels, entry)
+	}
+
+	// Nothing to say after all? Then say nothing.
+	if len(labels) == 0 {
+		return
+	}
+
+	target[PropertyEmissaryLabels] = labels
 }
 
 // IsBlocked returns TRUE if the winning Action is BLOCK.

@@ -32,6 +32,8 @@ func GetInboxCollection(ctx *steranko.Context, factory *service.Factory, session
 }
 
 // GetInboxCollection_DirectMessages serves the private (direct-message) subset of the User's inbox.
+// Items carry the "emissary:labels" property (4C): persisted receive-time stamps merged with the
+// viewer's current rules, so the client can hide or annotate without its own rule engine.
 func GetInboxCollection_DirectMessages(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	inboxService := factory.Inbox()
@@ -40,12 +42,14 @@ func GetInboxCollection_DirectMessages(ctx *steranko.Context, factory *service.F
 	return collection.Serve(ctx,
 		user.ActivityPubURL()+"/pub/inbox/direct-messages",
 		inboxService.CollectionCount(session, user.UserID, criteria),
-		inboxService.CollectionIterator(session, user.UserID, criteria),
+		inboxService.CollectionIteratorWithLabels(session, user.UserID, criteria, factory.Rule()),
 		collection.WithSSEEndpoint(user.ActivityPubSSEEndpoint_Inbox_DirectMessages()),
 	)
 }
 
-// GetInboxCollection_DirectMessages_MLS serves the MLS-encrypted direct messages in the User's inbox.
+// GetInboxCollection_DirectMessages_MLS serves the MLS-encrypted direct messages in the User's
+// inbox. Items carry the "emissary:labels" property (4C) -- essential here, because MLS from
+// blocked/muted senders is stored rather than dropped and the labels are how the client knows.
 func GetInboxCollection_DirectMessages_MLS(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	inboxService := factory.Inbox()
@@ -54,7 +58,7 @@ func GetInboxCollection_DirectMessages_MLS(ctx *steranko.Context, factory *servi
 	return collection.Serve(ctx,
 		user.ActivityPubURL()+"/pub/inbox/direct-messages/mls",
 		inboxService.CollectionCount(session, user.UserID, criteria),
-		inboxService.CollectionIterator(session, user.UserID, criteria),
+		inboxService.CollectionIteratorWithLabels(session, user.UserID, criteria, factory.Rule()),
 		collection.WithSSEEndpoint(user.ActivityPubSSEEndpoint_Inbox_DirectMessages_MLS()),
 	)
 }
@@ -101,13 +105,23 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 		return nil
 	}
 
-	// Validate the Activity meets basic criteria to be processed.
-	if err := inbox_ValidateActivity(context, activity); err != nil {
+	// Validate the Activity meets basic criteria to be processed. This is the authoritative Stage-2
+	// rule gate: it computes the sender's disposition ONCE and returns it for the steps below.
+	disposition, err := inbox_ValidateActivity(context, activity)
+
+	if err != nil {
 		return derp.Wrap(err, location, "Validating ActivityPub request", activity.Value())
 	}
 
-	// Save the activity to the actor's Inbox
-	if err := inbox_SaveActivity(context, activity); err != nil {
+	// RULE: A muted actor's plain (non-MLS) direct message is accepted but never stored (4B):
+	// invisible to the sender, gone for the viewer, and idempotent on redelivery (no row, no dedup
+	// hit). Returning here also skips notifications and routing, which follow storage.
+	if inbox_SuppressStorage(disposition, activity) {
+		return ctx.String(http.StatusOK, "")
+	}
+
+	// Save the activity to the actor's Inbox, stamped with the sender's disposition
+	if err := inbox_SaveActivity(context, activity, disposition); err != nil {
 		return derp.Wrap(err, location, "Saving activity to inbox", activity.Value())
 	}
 
@@ -136,19 +150,20 @@ func inbox_IsDuplicateActivity(context Context, activity streams.Document) bool 
 
 // inbox_ValidateActivity performs additional validation on activities received in the inbox. It runs
 // after HTTP-signature verification and before the activity is saved or routed, so it is the
-// authoritative Stage-2 rule gate (D5/D17) on the VERIFIED actor.
-func inbox_ValidateActivity(context Context, activity streams.Document) error {
+// authoritative Stage-2 rule gate (D5/D17) on the VERIFIED actor. It returns the sender's
+// disposition, computed here ONCE and threaded forward through the rest of the pipeline.
+func inbox_ValidateActivity(context Context, activity streams.Document) (model.RuleDisposition, error) {
 
 	const location = "handler.activitypub_user.inbox_ValidateActivity"
 
 	// Require that the Activity has a valid ActorID
 	if actorID := activity.ActorID(); actorID == "" {
-		return derp.BadRequest(location, "Activity must have an ActorID", activity.Value())
+		return model.RuleDisposition{}, derp.BadRequest(location, "Activity must have an ActorID", activity.Value())
 	}
 
 	// Require that the activity has a valid Type
 	if activityType := activity.Type(); activityType == "" {
-		return derp.BadRequest(location, "Activity must have a Type", activity.Value())
+		return model.RuleDisposition{}, derp.BadRequest(location, "Activity must have a Type", activity.Value())
 	}
 
 	// RULE: An activity's id must share its actor's origin (D18). This closes the dedup-poisoning
@@ -158,36 +173,67 @@ func inbox_ValidateActivity(context Context, activity streams.Document) error {
 	// cannot poison (inbox_SaveActivity mints a local one), so it is exempt.
 	if activityID := activity.ID(); activityID != "" {
 		if !activitypub.IsSameOrigin(activity.ActorID(), activityID) {
-			return derp.Unauthorized(location, "Activity id must share the actor's origin", activity.ActorID(), activityID)
+			return model.RuleDisposition{}, derp.Unauthorized(location, "Activity id must share the actor's origin", activity.ActorID(), activityID)
 		}
 	}
 
-	// RULE: Blocks stop inbound content at the front door (R1). The check is on the VERIFIED actor and
-	// is authoritative. The gate blocks by WHO is talking (ACTOR/DOMAIN), never by content (TAG, which
-	// is filtered at newsfeed ingest); and MUTE never gates the wire (D5) -- only BLOCK. Exception-set
-	// types are verified but handed to their per-type handler, never discarded here.
-	if !activitypub.IsWireGateException(activity.Type()) {
+	// Compute the sender's disposition ONCE, for every type -- exceptions included -- so the gate
+	// below, storage stamping, and the served labels all read the same answer (4B/4C).
+	disposition, err := context.factory.Rule().ActorDisposition(context.session, context.user.UserID, activity, time.Now().Unix())
 
-		blocked, err := context.factory.Rule().IsActorBlocked(context.session, context.user.UserID, activity)
+	// Stage 2 fails CLOSED (D17): a rules-query failure must not let blocked content through.
+	if err != nil {
+		return model.RuleDisposition{}, derp.Wrap(err, location, "Checking inbound rules against the verified actor", activity.ActorID())
+	}
 
-		// Stage 2 fails CLOSED (D17): a rules-query failure must not let blocked content through.
-		if err != nil {
-			return derp.Wrap(err, location, "Checking inbound rules against the verified actor", activity.ActorID())
-		}
-
-		// A blocked actor's activity is discarded. The 401 is byte-and-status identical to a signature
-		// failure (D3) so a blocked server cannot tell it was blocked (vs. a transient auth error).
-		if blocked {
-			return derp.Unauthorized(location, "Cannot validate received activity", activity.ActorID())
-		}
+	// RULE: Blocks stop inbound content at the front door (R1) -- by WHO is talking (ACTOR/DOMAIN),
+	// never by content, and MUTE never gates the wire (D5). Exception-set types are verified but
+	// handed to their per-type handler, never discarded here. Inline non-public MLS is NEVER dropped
+	// (4B): it is accepted carrying this disposition, because a skipped ciphertext breaks the
+	// conversation's epoch ratchet. The 401 is byte-and-status identical to a signature failure (D3)
+	// so a blocked server cannot tell it was blocked (vs. a transient auth error).
+	if disposition.IsBlocked() && !activitypub.IsWireGateException(activity.Type()) && !activitypub.IsMLSCreate(activity) {
+		return model.RuleDisposition{}, derp.Unauthorized(location, "Cannot validate received activity", activity.ActorID())
 	}
 
 	// All good so far...
-	return nil
+	return disposition, nil
 }
 
-// inbox_SaveActivity saves a received activity into the target User's inbox.
-func inbox_SaveActivity(context Context, activity streams.Document) error {
+// inbox_SuppressStorage returns TRUE for activities that are accepted but never stored: a muted
+// actor's plain (non-MLS) direct message. The Create-only scope is load-bearing: Likes and Undos
+// usually carry no addressing at all (so IsPublic is FALSE for them), and suppressing those would
+// break muted-actor aggregates (R9) and subtractive actions (D6).
+func inbox_SuppressStorage(disposition model.RuleDisposition, activity streams.Document) bool {
+
+	// Only MUTE suppresses storage: blocked non-MLS content never gets this far, and clean
+	// content always stores
+	if !disposition.IsMuted() {
+		return false
+	}
+
+	// Only a Create (an actual message delivery) is suppressed
+	if activity.Type() != vocab.ActivityTypeCreate {
+		return false
+	}
+
+	// Public posts store as today: the newsfeed walk (3F) already keeps them out of view
+	if activity.IsPublic() {
+		return false
+	}
+
+	// MLS is never dropped (4B)
+	if activitypub.IsMLSCreate(activity) {
+		return false
+	}
+
+	// Muted + plain + private: accepted, never stored. Poof.
+	return true
+}
+
+// inbox_SaveActivity saves a received activity into the target User's inbox, stamped with the
+// sender's disposition so stored rows are self-describing (4C).
+func inbox_SaveActivity(context Context, activity streams.Document, disposition model.RuleDisposition) error {
 
 	const location = "handler.activitypub_user.inbox_SaveActivity"
 
@@ -213,6 +259,7 @@ func inbox_SaveActivity(context Context, activity streams.Document) error {
 	inboxActivity.ReceivedDate = time.Now().UnixMilli()
 	inboxActivity.RawActivity = activity.Map()
 	inboxActivity.IsPublic = activity.IsPublic()
+	inboxActivity.Disposition = disposition
 
 	// PublishedDate is stored in MILLISECONDS (see model.InboxActivity and the outbox2 write path),
 	// so use UnixMilli — .Unix() here would store seconds and sort this activity ~1000x too early.

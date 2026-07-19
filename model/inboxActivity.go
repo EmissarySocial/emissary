@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"maps"
 
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
@@ -13,19 +14,20 @@ import (
 // These inboxActivitys are opaque to the server and are simply stored and forwarded
 // to MLS clients as requested.
 type InboxActivity struct {
-	InboxActivityID primitive.ObjectID `bson:"_id"`           // Unique identifier for this InboxActivity
-	UserID          primitive.ObjectID `bson:"userId"`        // The user that received this InboxActivity
-	ActorID         string             `bson:"actorId"`       // The ID/URL of the actor that sent this InboxActivity (e.g. "https://example.com/users/alice")
-	ActivityID      string             `bson:"activityId"`    // The ID/URL of this InboxActivity
-	ActivityType    string             `bson:"activityType"`  // The type of Activity received (Create, Update, Like, Follow, etc.)
-	Context         string             `bson:"context"`       // The ID/URL of the context of this activity (e.g. the conversation thread)
-	ObjectID        string             `bson:"objectId"`      // The ID/URL of the Object of this Activity
-	ObjectType      string             `bson:"objectType"`    // The type of Object of this Activity is about (Note, Person, etc.)
-	MediaType       string             `bson:"mediaType"`     // The media type of the content (e.g. "message/mls")
-	RawActivity     mapof.Any          `bson:"rawActivity"`   // The original, unprocessed activity received by the server
-	PublishedDate   int64              `bson:"publishedDate"` // Unix epoch (in milliseconds) when this InboxActivity was published
-	ReceivedDate    int64              `bson:"receivedDate"`  // Unix epoch (in milliseconds) when this InboxActivity was received by the server
-	IsPublic        bool               `bson:"isPublic"`      // Whether this activity was addressed to the public (i.e. "Public")
+	InboxActivityID primitive.ObjectID `bson:"_id"`                   // Unique identifier for this InboxActivity
+	UserID          primitive.ObjectID `bson:"userId"`                // The user that received this InboxActivity
+	ActorID         string             `bson:"actorId"`               // The ID/URL of the actor that sent this InboxActivity (e.g. "https://example.com/users/alice")
+	ActivityID      string             `bson:"activityId"`            // The ID/URL of this InboxActivity
+	ActivityType    string             `bson:"activityType"`          // The type of Activity received (Create, Update, Like, Follow, etc.)
+	Context         string             `bson:"context"`               // The ID/URL of the context of this activity (e.g. the conversation thread)
+	ObjectID        string             `bson:"objectId"`              // The ID/URL of the Object of this Activity
+	ObjectType      string             `bson:"objectType"`            // The type of Object of this Activity is about (Note, Person, etc.)
+	MediaType       string             `bson:"mediaType"`             // The media type of the content (e.g. "message/mls")
+	RawActivity     mapof.Any          `bson:"rawActivity"`           // The original, unprocessed activity received by the server
+	PublishedDate   int64              `bson:"publishedDate"`         // Unix epoch (in milliseconds) when this InboxActivity was published
+	ReceivedDate    int64              `bson:"receivedDate"`          // Unix epoch (in milliseconds) when this InboxActivity was received by the server
+	IsPublic        bool               `bson:"isPublic"`              // Whether this activity was addressed to the public (i.e. "Public")
+	Disposition     RuleDisposition    `bson:"disposition,omitempty"` // The sender's rule disposition at receive time (server-computed; not in the JSON schema)
 
 	journal.Journal `bson:",inline"`
 }
@@ -64,5 +66,31 @@ func (inboxActivity InboxActivity) String() string {
 	}
 
 	// Success. Always success.
+	return string(data)
+}
+
+// LabeledJSON returns the RawActivity as a JSON string with the server-generated "emissary:labels"
+// property applied from the stored Disposition. The stored RawActivity is never modified.
+func (inboxActivity InboxActivity) LabeledJSON() string {
+
+	// Work on a copy: ApplyLabels only touches the top-level key, so a shallow clone is enough
+	value := maps.Clone(inboxActivity.RawActivity)
+
+	if value == nil {
+		value = mapof.Any{}
+	}
+
+	// Apply (or scrub) the reserved labels property
+	inboxActivity.Disposition.ApplyLabels(value)
+
+	// Marshal the labeled activity as JSON
+	data, err := json.Marshal(value)
+
+	// Report errors (this should never happen)
+	if err != nil {
+		derp.Report(derp.Wrap(err, "model.InboxActivity.LabeledJSON", "Marshaling RawActivity (this should never happen)", value))
+	}
+
+	// Ta-da!
 	return string(data)
 }

@@ -94,6 +94,20 @@ func TestRuleValidator_ExceptionTypesDeferred(t *testing.T) {
 	}
 }
 
+// Inline non-public MLS is never fast-discarded (4B), even from a blocked actor -- and since no
+// discard is possible, the checker is not consulted at all.
+func TestRuleValidator_MLSCreateNeverDiscarded(t *testing.T) {
+
+	checker := &fakeChecker{disposition: model.RuleDisposition{Action: model.RuleActionBlock}}
+	subject := NewRuleValidator(checker, nil, primitive.NilObjectID)
+
+	doc := streams.NewDocument(mlsCreate())
+	result := subject.Validate(request(""), &doc)
+
+	require.Equal(t, validator.ResultUnknown, result)
+	require.False(t, checker.called)
+}
+
 // A clean actor defers to signature verification.
 func TestRuleValidator_CleanActor(t *testing.T) {
 
