@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	activitypub "github.com/EmissarySocial/emissary/handler/activitypub_user"
 	"github.com/EmissarySocial/emissary/model"
@@ -77,6 +78,57 @@ func WithActorAndUser(serverFactory *server.Factory, fn WithFunc2[string, model.
 			})(ctx)
 		})(ctx)
 	})
+}
+
+// WithAuthorizedActorAndUser resolves the requesting Actor and the requested User, and REFUSES the
+// request unless the Actor is identified and welcome: anonymous requests get a 401 UNIFORMLY --
+// before the target is even loaded, so probing reveals nothing -- and a requester BLOCKED by the
+// target User (or the domain) gets a 404, indistinguishable from a User that does not exist. MUTE
+// and LABEL rules never gate here: a muted actor must not be able to detect the mute.
+func WithAuthorizedActorAndUser(serverFactory *server.Factory, fn WithFunc2[string, model.User]) echo.HandlerFunc {
+
+	const location = "handler.WithAuthorizedActorAndUser"
+
+	return WithActor(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, actorID *string) error {
+
+		// RULE: Anonymous requests are refused before the target is even loaded, so probing
+		// reveals nothing. A capable remote server retries the 401 with a signed request.
+		if *actorID == "" {
+			return derp.Unauthorized(location, "Authentication required")
+		}
+
+		return WithUser(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
+
+			// Evaluate the target User's Rules (plus admin-tier rules) against the requester
+			disposition, err := factory.Rule().DispositionForKeys(session, user.UserID, model.ActorMatchKeys(*actorID), time.Now().Unix())
+
+			// RULE: The gate fails CLOSED -- a rules-query failure must not serve a blocked actor
+			if err != nil {
+				return derp.Wrap(err, location, "Checking rules for authorized fetch", *actorID)
+			}
+
+			// RULE: A blocked requester is refused before the continuation runs
+			if refusal := authorizedActorRefusal(location, disposition); refusal != nil {
+				return refusal
+			}
+
+			// Pass the vetted Actor and User to the continuation function
+			return fn(ctx, factory, session, actorID, user)
+		})(ctx)
+	})
+}
+
+// authorizedActorRefusal maps the requester's disposition to the authorized-fetch outcome: a
+// blocked requester gets a 404 (identical to a User that does not exist), and everyone else --
+// muted included -- gets through, because a muted actor must never detect the mute (D5).
+func authorizedActorRefusal(location string, disposition model.RuleDisposition) error {
+
+	if disposition.IsBlocked() {
+		return derp.NotFound(location, "User not found")
+	}
+
+	// The velvet rope parts.
+	return nil
 }
 
 // WithActorAndStream resolves both the requesting Actor (authenticated by HTTP signatures) and the
