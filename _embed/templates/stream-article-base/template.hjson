@@ -21,9 +21,9 @@
 			label: {type:"string", maxLength:128}
 			summary: {type:"string", maxLength:2048}
 			content: {type:"object", properties: {
-				format: {type:"string"}
-				raw: {type:"string"}
-				html: {type:"string", format:"html", maxLength:200000}
+				format: {type:"string", enum:["HTML","EDITORJS","MARKDOWN","TEXT"]}
+				raw: {type:"string", format:"unsafe-any", maxLength:1048576}
+				html: {type:"string", format:"html", maxLength:1048576}
 			}}
 			data: {type:"object", properties: {
 				tags: {type:"string", maxLength:2048}
