@@ -197,12 +197,12 @@ func (service *Inbox) QueryIDOnly(session data.Session, criteria exp.Expression,
 	return result, err
 }
 
-// HardDeleteByID removes a specific Folder record, without applying any additional business rules
+// HardDeleteByID removes a specific InboxActivity record, without applying any additional business rules
 func (service *Inbox) HardDeleteByID(session data.Session, userID primitive.ObjectID, inboxActivityID primitive.ObjectID) error {
 
 	const location = "service.Inbox.HardDeleteByID"
 
-	criteria := exp.Equal("actorId", userID).AndEqual("_id", inboxActivityID)
+	criteria := exp.Equal("userId", userID).AndEqual("_id", inboxActivityID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
 		return derp.Wrap(err, location, "Deleting Inbox activity", "userID: "+userID.Hex(), "inboxActivityID: "+inboxActivityID.Hex())
@@ -211,12 +211,12 @@ func (service *Inbox) HardDeleteByID(session data.Session, userID primitive.Obje
 	return nil
 }
 
-// Delete removes an Inbox from the database (virtual delete)
+// Delete removes an InboxActivity from the database (hard delete)
 func (service *Inbox) Delete(session data.Session, inboxActivity *model.InboxActivity, note string) error {
 
 	const location = "service.Inbox.Delete"
 
-	// Delete the activity from the outbox
+	// Delete the activity from the inbox
 	criteria := exp.Equal("_id", inboxActivity.InboxActivityID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
@@ -361,7 +361,7 @@ func (service *Inbox) IsDuplicateActivity(session data.Session, userID primitive
 func (service *Inbox) sendSSEUpdate(activity *model.InboxActivity) {
 
 	// Send an update on the "Inbox" topic for this User
-	service.sseUpdateChannel <- realtime.NewMessage_InboxActivity_DirectMessage(activity.UserID, activity.String())
+	service.sseUpdateChannel <- realtime.NewMessage_InboxActivity(activity.UserID, activity.String())
 
 	// Additional rules for Direct Messages
 	if !activity.IsPublic {
