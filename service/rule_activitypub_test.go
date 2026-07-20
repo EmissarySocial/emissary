@@ -5,6 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -98,6 +99,44 @@ func TestRule_shouldPublish_DoesNotMutate(t *testing.T) {
 
 	require.False(t, service.shouldPublish(rule))
 	require.True(t, rule.IsPublic, "shouldPublish must not rewrite the Rule it is asked about")
+}
+
+// TestRule_JSONLD_WireGrammar pins the one wire grammar (P7-1): the activity type carries the
+// action, the object type carries the trigger kind -- actor URI for ACTOR, Service for DOMAIN,
+// Hashtag for TAG. TAG names ride in Mastodon-convention form ("#token", ToToken-normalized) with
+// no href: receivers key on `name`, because href is per-instance and carries no identity.
+func TestRule_JSONLD_WireGrammar(t *testing.T) {
+
+	service := Rule{}
+
+	rule := model.NewRule()
+	rule.Action = model.RuleActionBlock
+
+	// ACTOR rules: object = the actor, by ID
+	rule.Type = model.RuleTypeActor
+	rule.Trigger = "https://evil.example/@spammer"
+	object := service.JSONLD(rule)[vocab.PropertyObject].(mapof.Any)
+	require.Equal(t, vocab.ActorTypePerson, object[vocab.PropertyType])
+	require.Equal(t, "https://evil.example/@spammer", object[vocab.PropertyID])
+
+	// DOMAIN rules: object = a Service naming the host
+	rule.Type = model.RuleTypeDomain
+	rule.Trigger = "spam.example"
+	object = service.JSONLD(rule)[vocab.PropertyObject].(mapof.Any)
+	require.Equal(t, vocab.ActorTypeService, object[vocab.PropertyType])
+	require.Equal(t, "spam.example", object[vocab.PropertyID])
+
+	// TAG rules: object = a Hashtag, name normalized into "#token" form, no per-instance href
+	rule.Type = model.RuleTypeTag
+	rule.Trigger = "#CryptoSpam"
+	object = service.JSONLD(rule)[vocab.PropertyObject].(mapof.Any)
+	require.Equal(t, vocab.LinkTypeHashtag, object[vocab.PropertyType])
+	require.Equal(t, "#cryptospam", object[vocab.PropertyName])
+	require.NotContains(t, object, vocab.PropertyHref)
+
+	// MUTE tags use the same grammar under an Ignore activity
+	rule.Action = model.RuleActionMute
+	require.Equal(t, vocab.ActivityTypeIgnore, service.JSONLD(rule)[vocab.PropertyType])
 }
 
 // TestRule_JSONLD_LabelHasNoType documents the reason the LABEL type must be made UNREACHABLE rather

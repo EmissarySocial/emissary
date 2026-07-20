@@ -73,12 +73,14 @@ func (service *Rule) JSONLD(rule model.Rule) mapof.Any {
 			vocab.PropertyID:   rule.Trigger,
 		}
 
-	// NOTE: the wire form for a TAG rule is a Phase 7 decision (a `Hashtag` object rather than a
-	// `Note`); this dormant mapping is unreachable until domain publishing ships. See RULES.md D12.
+	// RULE: P7-1 -- a TAG rule federates as a Hashtag object, extending the one wire grammar
+	// (activity = action, object = trigger kind). `name` carries the Mastodon-convention form
+	// ("#token", ToToken-normalized on both publish and ingest). No `href` until a canonical
+	// tag page exists -- receivers key on `name` regardless, because href is per-instance.
 	case model.RuleTypeTag:
 		result[vocab.PropertyObject] = mapof.Any{
-			vocab.PropertyType:    vocab.ObjectTypeNote,
-			vocab.PropertyContent: rule.Trigger,
+			vocab.PropertyType: vocab.LinkTypeHashtag,
+			vocab.PropertyName: "#" + model.ToToken(rule.Trigger),
 		}
 
 	case model.RuleTypeDomain:
