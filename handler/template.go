@@ -19,7 +19,7 @@ func executeDomainTemplate(ctx *steranko.Context, factory *service.Factory, temp
 	// Find and execute the template
 	template := factory.Domain().Theme().HTMLTemplate
 
-	if err := template.ExecuteTemplate(&buffer, templateName, &domain); err != nil {
+	if err := template.ExecuteTemplate(&buffer, templateName, domain); err != nil {
 		return derp.Wrap(err, location, "Executing template")
 	}
 

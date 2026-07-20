@@ -107,6 +107,17 @@ func (domain Domain) NotEmpty() bool {
 	return !domain.IsEmpty()
 }
 
+// IsIndexable returns FALSE because the domain-level pages that render with a
+// Domain as their template context (sign-in, sign-out, password reset) are
+// authentication pages that should never be indexed by search engines.
+func (domain Domain) IsIndexable() bool {
+
+	// It
+	// satisfies the same contract as the page builders' IsIndexable method so that
+	// the shared "includes-head" template can emit a "noindex" robots tag.
+	return false
+}
+
 // HasRegistrationForm returns TRUE if this domain includes a valid signup form.
 func (domain *Domain) HasRegistrationForm() bool {
 	return domain.RegistrationID != ""
