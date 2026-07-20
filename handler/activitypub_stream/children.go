@@ -16,18 +16,29 @@ func GetChildrenCollection(ctx *steranko.Context, factory *service.Factory, sess
 
 	const location = "handler.activitypub_stream.GetChildrenCollection"
 
-	// Get an iterator of all child streams
+	// Calculate the caller's permissions from the HTTP signature (defaults to
+	// anonymous when the request is unsigned).
+	permissions := factory.Permission().ParseHTTPSignature(session, ctx.Request())
+
+	// Get an iterator of the currently-published child streams. The publish-date
+	// window is applied in the query; per-child permissions are applied below.
 	streamService := factory.Stream()
-	children, err := streamService.RangeByParent(session, parent.StreamID)
+	children, err := streamService.RangePublishedByParent(session, parent.StreamID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Loading children")
 	}
 
-	// Map each child into JSON and stuff it into the collection's OrderedItems
+	// Map each VISIBLE child into JSON and stuff it into the collection's OrderedItems.
 	result := activitypub.Collection(parent.ActivityPubChildrenURL())
 	count := 0
 	for child := range children {
+
+		// RULE: Skip children the caller is not permitted to view.
+		if !child.IsVisibleTo(permissions) {
+			continue
+		}
+
 		childJSON := streamService.JSONLD(session, &child)
 		result.OrderedItems = append(result.OrderedItems, childJSON)
 		count++

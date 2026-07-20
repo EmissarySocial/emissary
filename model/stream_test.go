@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func TestStreamSchema(t *testing.T) {
@@ -134,6 +135,57 @@ func TestPermissionSchema(t *testing.T) {
 	}
 
 	tableTest_Schema(t, &s, &m, table)
+}
+
+func TestStream_IsVisibleTo(t *testing.T) {
+
+	// A private Group and a signed-in User, used to build viewer permissions below.
+	privateGroup := primitive.NewObjectID()
+	otherGroup := primitive.NewObjectID()
+	userID := primitive.NewObjectID()
+
+	// anonymousViewer sees the world with no signature (the /pub/children default).
+	anonymousViewer := NewAnonymousPermissions()
+
+	// memberViewer is a signed-in User who belongs to privateGroup. Mirrors how
+	// Permission.ParseHTTPSignature builds a viewer: anonymous base + authenticated
+	// + the User's own ID + their group memberships.
+	memberViewer := append(NewAnonymousPermissions(), MagicGroupIDAuthenticated, userID, privateGroup)
+
+	// RULE: A Stream that allows Anonymous is visible to everyone, including anonymous callers.
+	{
+		stream := Stream{DefaultAllow: Permissions{MagicGroupIDAnonymous}}
+		require.True(t, stream.IsVisibleTo(anonymousViewer), "anonymous-allowed stream must be visible to anonymous caller")
+		require.True(t, stream.IsVisibleTo(memberViewer), "anonymous-allowed stream must be visible to members")
+	}
+
+	// RULE: A Stream restricted to a Group is HIDDEN from an anonymous caller...
+	{
+		stream := Stream{DefaultAllow: Permissions{privateGroup}}
+		require.False(t, stream.IsVisibleTo(anonymousViewer), "group-restricted stream must be hidden from anonymous caller")
+
+		// ...but VISIBLE to a member of that Group.
+		require.True(t, stream.IsVisibleTo(memberViewer), "group-restricted stream must be visible to a member of that group")
+	}
+
+	// RULE: A Stream restricted to a Group the viewer does NOT belong to is hidden.
+	{
+		stream := Stream{DefaultAllow: Permissions{otherGroup}}
+		require.False(t, stream.IsVisibleTo(memberViewer), "stream restricted to a non-member group must be hidden")
+	}
+
+	// RULE: A Stream with an empty DefaultAllow is visible to no one (fail closed).
+	{
+		stream := Stream{DefaultAllow: Permissions{}}
+		require.False(t, stream.IsVisibleTo(anonymousViewer), "stream with empty DefaultAllow must be hidden from anonymous caller")
+		require.False(t, stream.IsVisibleTo(memberViewer), "stream with empty DefaultAllow must be hidden from members")
+	}
+
+	// RULE: An empty viewer permission set sees only... nothing (fail closed).
+	{
+		stream := Stream{DefaultAllow: Permissions{MagicGroupIDAnonymous}}
+		require.False(t, stream.IsVisibleTo(Permissions{}), "empty viewer permissions must not match any stream")
+	}
 }
 
 func TestStream_JSON(t *testing.T) {

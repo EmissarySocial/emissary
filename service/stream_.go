@@ -589,6 +589,21 @@ func (service *Stream) RangeByParent(session data.Session, parentID primitive.Ob
 	return service.Range(session, exp.Equal("parentId", parentID))
 }
 
+// RangePublishedByParent returns an iterator over the currently-published child streams of the
+// provided parentID. It applies the publish-date window (a Stream's own lifecycle state, not a
+// permission check) in the query so unpublished/scheduled children never leave the database.
+// Per-viewer permission filtering (Stream.IsVisibleTo) is intentionally left to the caller.
+func (service *Stream) RangePublishedByParent(session data.Session, parentID primitive.ObjectID) (iter.Seq[model.Stream], error) {
+
+	now := time.Now().Unix()
+
+	criteria := exp.Equal("parentId", parentID).
+		AndLessOrEqual("publishDate", now).
+		AndGreaterOrEqual("unpublishDate", now)
+
+	return service.Range(session, criteria)
+}
+
 // RangeByParentIDs returns an iterator that contains a descendant (at any level) of the provided parentID
 func (service *Stream) RangeByParentIDs(session data.Session, parentID primitive.ObjectID) (iter.Seq[model.Stream], error) {
 	return service.Range(session, exp.Equal("parentIds", parentID))

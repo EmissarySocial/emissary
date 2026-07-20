@@ -255,6 +255,15 @@ func (stream Stream) DefaultAllowAnonymous() bool {
 	return false
 }
 
+// IsVisibleTo returns TRUE if any of the provided permissions grants the default
+// (VIEW) action on this Stream. It compares the viewer's permissions against the
+// Stream's DefaultAllow list -- the same rule the ActivityPub handlers apply when
+// gating a single Stream, exposed here as a named predicate so callers that filter
+// a range of Streams can reuse it instead of re-inlining the intersection.
+func (stream Stream) IsVisibleTo(permissions Permissions) bool {
+	return stream.DefaultAllow.Intersects(permissions)
+}
+
 /******************************************
  * Privilege Methods
  ******************************************/
