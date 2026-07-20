@@ -7,6 +7,16 @@
 <div id="modal-body" class="turboclick padding-top" hx-target="#modal-window" hx-swap="innerHTML" hx-push-url="false">
 
 	{{- range $document := $timeline -}}
+
+		{{- if $document.Metadata.IsRuleHidden -}}
+
+		{{- /* D2 placeholder: hidden by the viewer's rules; select to open its tree revealed */ -}}
+		<div class="card text-sm padding-xs margin-bottom-sm" role="button"
+			hx-get="/@me/newsfeed/browse-tree?url={{$document.ID}}&reveal=true">
+			{{- template "hidden-placeholder" $document -}}
+		</div>
+
+		{{- else -}}
 		<div class="flex-row clickable card text-sm padding-xs margin-bottom-sm {{ if eq $url $document.ID}}selected{{end}}">
 
 			<div hx-get="/@me/newsfeed/browse-tree?url={{$document.ID}}" class="flex-row flex-grow flex-align-center">
@@ -27,6 +37,7 @@
 				<a href="{{$document.ID}}" target="_blank" class="button" aria-label="Visit Original Website">{{icon "globe"}}</a>
 			</div>
 		</div>
+		{{- end -}}
 	{{- end -}}
 
 </div>

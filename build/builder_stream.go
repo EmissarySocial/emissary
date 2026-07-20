@@ -8,7 +8,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
-	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -600,10 +599,23 @@ func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option
 	return Stream{}
 }
 
-func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[ascache.Value] {
+func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[streams.Document] {
+
 	activityStreamsService := w._factory.ActivityStream()
 	minDate := convert.Int64(dateString)
-	return activityStreamsService.QueryRepliesAfterDate(w._request.Context(), w._stream.URL, minDate, int64(maxRows))
+	values := activityStreamsService.QueryRepliesAfterDate(w._request.Context(), w._stream.URL, minDate, int64(maxRows))
+
+	// Map cached values into documents, then stamp each with the viewer's rule verdict, so
+	// templates can render D2 placeholders for hidden replies without a per-reply rules query.
+	result := make(sliceof.Object[streams.Document], 0, len(values))
+
+	for _, value := range values {
+		result = append(result, value.AsDocument())
+	}
+
+	w._factory.Rule().LabelDocuments(w._session, w.AuthenticatedID(), result)
+
+	return result
 }
 
 func (w Stream) ReplyLinksAfter(dateString string, maxRows int) (sliceof.Object[model.CollectionItem], error) {

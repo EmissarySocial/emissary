@@ -1,0 +1,8 @@
+{{- /* Renders the anonymous collapsed state for a document hidden by the viewer's rules (D2/R17).
+       Context is a streams.Document whose Metadata.Labels carries the verdict. Deliberately shows
+       NO avatar, name, or preview -- only the reason -- until the caller's reveal wiring fires. */ -}}
+{{- $labels := .Metadata.Labels -}}
+<div class="flex-row flex-align-center text-sm noselect clickable">
+	{{- template "label-chips" $labels.Hidden -}}
+	<span class="text-light-gray margin-left">Select to show</span>
+</div>

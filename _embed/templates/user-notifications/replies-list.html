@@ -4,12 +4,32 @@
 	filtered to MENTION + REPLY; ?createDate= drives the infinite scroll.  The row markup is
 	inlined here (rather than a shared row partial) so this page can format its own content.
 */ -}}
-{{- $notifications := .Notifications.Top60.ByCreateDate.Reverse.Slice -}}
+{{- $notifications := .LabelNotifications .Notifications.Top60.ByCreateDate.Reverse.Slice -}}
 {{- $createDate := .QueryParam "createDate" -}}
 
 {{- if $notifications.NotEmpty -}}
 
 	{{- range $notification := $notifications -}}
+		{{- if $notification.Labels.IsHidden -}}
+
+		{{- /* D2 placeholder: the actor is hidden by the viewer's rules (rule created after this
+		       notification; the cleanup task purges these). Anonymous until selected (R17). */ -}}
+		<div
+			role="button"
+			hx-get="/@me/newsfeed/browse?url={{$notification.ObjectURL}}&reveal=true"
+			hx-push-url="true"
+			class="notification flex-row flex-align-center padding-vertical hover-trigger {{if $notification.NotRead}}unread{{end}}">
+			<span class="notification-dot text-red" style="width:12px;">
+				{{- if $notification.NotRead -}}&#9679;{{- end -}}
+			</span>
+			<div class="flex-grow text-sm">
+				{{- template "label-chips" $notification.Labels.Hidden -}}
+				<span class="text-light-gray margin-left">Select to show</span>
+			</div>
+			<div class="text-sm text-gray nowrap">{{$notification.CreateDate | tinyDate}}</div>
+		</div>
+
+		{{- else -}}
 		{{- $actor := $notification.Actor -}}
 		<div
 			role="button"
@@ -40,6 +60,7 @@
 					{{- else -}}
 						<span>mentioned you</span>
 					{{- end -}}
+					{{- template "label-chips" $notification.Labels.Annotations -}}
 				</div>
 				<div class="ellipsis">{{$notification.ObjectSummary}}</div>
 			</div>
@@ -48,6 +69,7 @@
 			<div class="text-sm text-gray nowrap">{{$notification.CreateDate | tinyDate}}</div>
 
 		</div>
+		{{- end -}}
 	{{- end -}}
 
 	<!-- Infinite scroll: load older notifications when the sentinel is revealed -->

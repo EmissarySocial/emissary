@@ -166,6 +166,43 @@ func (service *Follower) Delete(session data.Session, follower *model.Follower, 
 	return nil
 }
 
+// Pause marks this Follower as paused by a block rule (R8): it stays out of every delivery
+// fan-out until the block is deleted and the restore pass reactivates it. Saved directly
+// (like the DELETED path) because PAUSED is server-set only and deliberately absent from the
+// user-facing schema enum, so Save's validation would refuse it.
+func (service *Follower) Pause(session data.Session, follower *model.Follower) error {
+
+	const location = "service.Follower.Pause"
+
+	// A Follower that is already paused has nothing more to pause
+	if follower.StateID == model.FollowerStatePaused {
+		return nil
+	}
+
+	follower.StateID = model.FollowerStatePaused
+
+	if err := service.collection(session).Save(follower, "Paused by block rule"); err != nil {
+		return derp.Wrap(err, location, "Saving Follower", follower)
+	}
+
+	return nil
+}
+
+// Reactivate returns a paused Follower to ACTIVE. It is the restore pass's write half: called
+// only after the remaining rules have been re-evaluated and no block covers this actor anymore.
+func (service *Follower) Reactivate(session data.Session, follower *model.Follower) error {
+
+	const location = "service.Follower.Reactivate"
+
+	follower.StateID = model.FollowerStateActive
+
+	if err := service.collection(session).Save(follower, "Reactivated after block removed"); err != nil {
+		return derp.Wrap(err, location, "Saving Follower", follower)
+	}
+
+	return nil
+}
+
 /******************************************
  * Special Case Methods
  ******************************************/
@@ -359,11 +396,14 @@ func (service *Follower) RangeByUserID(session data.Session, userID primitive.Ob
 
 // RangeActivityPubByUserID returns an iterator containing all of the Followers of a specific User
 func (service *Follower) RangeActivityPubByType(session data.Session, followerType string, userID primitive.ObjectID) iter.Seq[model.Follower] {
+
+	// RULE: Followers paused by a block rule are excluded from delivery fan-out (R8)
 	return service.Range(
 		session,
 		exp.Equal("parentId", userID).
 			AndEqual("type", followerType).
-			AndEqual("method", model.FollowerMethodActivityPub),
+			AndEqual("method", model.FollowerMethodActivityPub).
+			AndNotEqual("stateId", model.FollowerStatePaused),
 	)
 }
 
@@ -405,10 +445,24 @@ func (service *Follower) DeleteByUserID(session data.Session, userID primitive.O
 // RangeFollowers returns a rangeFunc containing all of the Followers of specific parentID
 func (service *Follower) RangeFollowers(session data.Session, parentType string, parentID primitive.ObjectID) iter.Seq[model.Follower] {
 
+	// RULE: Followers paused by a block rule are excluded from delivery fan-out (R8). Only
+	// PAUSED is excluded -- other states keep their existing delivery behavior.
 	return service.Range(
 		session,
 		exp.Equal("parentId", parentID).
-			AndEqual("type", parentType),
+			AndEqual("type", parentType).
+			AndNotEqual("stateId", model.FollowerStatePaused),
+	)
+}
+
+// RangePausedByUserID returns an iterator containing every PAUSED Follower of the provided User.
+// This is the restore pass's source: deleting a block re-evaluates exactly these rows (R8).
+func (service *Follower) RangePausedByUserID(session data.Session, userID primitive.ObjectID) iter.Seq[model.Follower] {
+	return service.Range(
+		session,
+		exp.Equal("parentId", userID).
+			AndEqual("type", model.FollowerTypeUser).
+			AndEqual("stateId", model.FollowerStatePaused),
 	)
 }
 

@@ -8,7 +8,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
-	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -566,9 +565,18 @@ func (w Inbox) Message() model.NewsItem {
 }
 
 func (w Inbox) QueryByContext(contextID string, afterDate int64, maxRows int) (sliceof.Object[streams.Document], error) {
+
 	activityService := w._factory.ActivityStream()
 	result, err := activityService.QueryByContext(w._request.Context(), contextID, afterDate, maxRows)
-	return result, err
+
+	if err != nil {
+		return result, err
+	}
+
+	// Stamp each document with the viewer's rule verdict (D2 placeholders + label chips)
+	w._factory.Rule().LabelDocuments(w._session, w.AuthenticatedID(), result)
+
+	return result, nil
 }
 
 // LikesBefore returns the actors who "Liked" the specified URL, before the specified date.
@@ -583,21 +591,36 @@ func (w Inbox) LikesBefore(url string, dateString string, maxRows int) sliceof.O
 	maxDate := convert.Int64Default(dateString, math.MaxInt)
 	likes := activityService.QueryLikesBeforeDate(w._request.Context(), url, maxDate, done)
 
-	// Filter likes based on rules
-	ruleService := w._factory.Rule()
-	ruleFilter := ruleService.Filter(w.AuthenticatedID())
-	filteredLikes := ruleFilter.Channel(likes)
-
 	// Collect into a slice, newest-first
-	result := channel.Slice(filteredLikes)
-	return slice.Reverse(result)
+	result := slice.Reverse(channel.Slice(likes))
+
+	// RULE: likes from actors the viewer's rules hide are dropped, not placeheld -- a likes
+	// list is a roll call, not thread structure. Aggregate counts are unaffected (R9).
+	w._factory.Rule().LabelDocuments(w._session, w.AuthenticatedID(), result)
+
+	return slice.Filter(result, func(document streams.Document) bool {
+		return !document.Metadata.Labels.IsHidden()
+	})
 }
 
 // RepliesAfter returns replies to the specified URL after the specified date
-func (w Inbox) RepliesAfter(url string, dateString string, maxRows int) sliceof.Object[ascache.Value] {
+func (w Inbox) RepliesAfter(url string, dateString string, maxRows int) sliceof.Object[streams.Document] {
+
 	activityService := w._factory.ActivityStream()
 	minDate := convert.Int64(dateString)
-	return activityService.QueryRepliesAfterDate(w._request.Context(), url, minDate, int64(maxRows))
+	values := activityService.QueryRepliesAfterDate(w._request.Context(), url, minDate, int64(maxRows))
+
+	// Map cached values into documents, then stamp each with the viewer's rule verdict, so
+	// templates can render D2 placeholders for hidden replies without a per-reply rules query.
+	result := make(sliceof.Object[streams.Document], 0, len(values))
+
+	for _, value := range values {
+		result = append(result, value.AsDocument())
+	}
+
+	w._factory.Rule().LabelDocuments(w._session, w.AuthenticatedID(), result)
+
+	return result
 }
 
 // AmFollowing returns the Following record for the specified URL.

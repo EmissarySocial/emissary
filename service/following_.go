@@ -378,7 +378,10 @@ func (service *Following) QueryByFolderAndExp(session data.Session, userID primi
 
 // RangePollable returns an iterator of all following that are ready to be polled
 func (service *Following) RangePollable(session data.Session) (iter.Seq[model.Following], error) {
-	criteria := exp.LessThan("nextPoll", time.Now().Unix())
+
+	// RULE: a Following paused by a block rule is never polled (R8)
+	criteria := exp.LessThan("nextPoll", time.Now().Unix()).
+		AndNotEqual("status", model.FollowingStatusPaused)
 
 	return service.Range(session, criteria, option.SortAsc("lastPolled"))
 }
@@ -663,6 +666,37 @@ func (service *Following) SetStatusFailure(session data.Session, following *mode
 	// Save the Following to the database (no other busines rules)
 	if err := service.collection(session).Save(following, "Updating status"); err != nil {
 		return derp.Wrap(err, "service.Following.SetStatusFailure", "Saving Following", following)
+	}
+
+	// Notify the user that their Following list has been changed
+	service.sseUpdateChannel <- realtime.NewMessage_FollowingUpdated(following.UserID)
+
+	return nil
+}
+
+// Pause suspends a Following that a BLOCK rule now covers (R8): it sends the Undo/Follow
+// (enqueued, delivered post-commit), then marks the row PAUSED so polling stops. The row is
+// kept, never auto-resumed -- the paused Following is the one-click re-follow affordance, and
+// re-following runs the normal Connect flow.
+func (service *Following) Pause(session data.Session, following *model.Following) error {
+
+	const location = "service.Following.Pause"
+
+	// A Following that is already paused has nothing more to pause
+	if following.Status == model.FollowingStatusPaused {
+		return nil
+	}
+
+	// Notify the remote actor that this relationship has ended
+	service.Disconnect(session, following)
+
+	// Update Following state
+	following.Status = model.FollowingStatusPaused
+	following.StatusMessage = "Paused by a block rule"
+
+	// Save the Following to the database (no other business rules)
+	if err := service.collection(session).Save(following, "Paused by block rule"); err != nil {
+		return derp.Wrap(err, location, "Saving Following", following)
 	}
 
 	// Notify the user that their Following list has been changed

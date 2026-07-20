@@ -1,6 +1,8 @@
 package service
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
@@ -38,6 +40,15 @@ func (service *Following) Follow(session data.Session, userID primitive.ObjectID
 	err := service.LoadByURL(session, userID, actorID, &following)
 
 	if err == nil {
+
+		// RULE: a Following paused by a (since-deleted) block resumes only on an explicit
+		// re-follow like this one -- never automatically (R8)
+		if following.Status == model.FollowingStatusPaused {
+			if err := service.Resume(session, &following); err != nil {
+				return model.NewFollowing(), derp.Wrap(err, location, "Resuming paused Following", following.FollowingID)
+			}
+		}
+
 		return following, nil
 	}
 
@@ -130,4 +141,44 @@ func (service *Following) ConnectActivityPub(session data.Session, following *mo
 
 	// Success!
 	return nil
+}
+
+// Resume re-activates a PAUSED Following on the user's explicit re-follow (R8): ActivityPub rows
+// re-send their Follow request (an Undo/Follow went out when the row was paused), poll rows simply
+// resume polling. Never called by the restore pass -- re-following is a user decision.
+func (service *Following) Resume(session data.Session, following *model.Following) error {
+
+	const location = "service.Following.Resume"
+
+	// RULE: only PAUSED rows can be resumed
+	if following.Status != model.FollowingStatusPaused {
+		return nil
+	}
+
+	// RULE: R11 -- a Following cannot resume while a block still covers this actor
+	keys := append(model.ActorMatchKeys(following.URL), model.ActorMatchKeys(following.ProfileURL)...)
+	disposition, err := service.ruleService.DispositionForKeys(session, following.UserID, keys, time.Now().Unix())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Checking rules before resuming", following.URL)
+	}
+
+	if disposition.IsBlocked() {
+		return derp.Validation("You have blocked this account. Remove the block rule before following it.")
+	}
+
+	// Re-send the ActivityPub Follow request (poll rows have nothing to send)
+	if following.Method == model.FollowingMethodActivityPub {
+
+		localActor, err := service.userService.ActivityPubActor(session, following.UserID)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Getting ActivityPub actor", following.UserID)
+		}
+
+		service.outboxService.SendFollow(session, localActor.ActorID(), service.ActivityPubID(following), following.ProfileURL)
+	}
+
+	// Back to LOADING: the Accept handler (or the next poll) promotes it to SUCCESS from here
+	return service.SetStatusLoading(session, following)
 }

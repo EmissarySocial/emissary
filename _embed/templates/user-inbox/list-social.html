@@ -19,7 +19,20 @@
 
 		{{- $document := $inboxBuilder.ActivityStream $message.URL -}}
 
-		{{- if ne "" $document.ID -}}
+		{{- if $document.Metadata.IsRuleHidden -}}
+
+			{{- /* D2 placeholder: this message is hidden by the viewer's rules. Selecting it opens
+			       the message view with ?reveal=true (the one click-to-reveal mechanism). */ -}}
+			<div class="message max-width-640">
+				<hr class="noselect">
+				<div role="button" class="padding-vertical-sm"
+					hx-get="/@me/newsfeed/message?messageId={{$message.ID}}&folderId={{$folderID}}&origin.followingId={{$internalID}}&reveal=true"
+					hx-push-url="false">
+					{{- template "hidden-placeholder" $document -}}
+				</div>
+			</div>
+
+		{{- else if ne "" $document.ID -}}
 
 			{{- $image := $document.ImageOrIcon -}}
 			{{- $attributedTo := $document.AttributedTo -}}

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/benpate/data/journal"
+	"github.com/benpate/hannibal/metadata"
 	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -28,6 +29,7 @@ type Notification struct {
 	StreamID       primitive.ObjectID `bson:"streamId,omitempty"`      // Local Stream involved, if any (cleanup + stream-page query)
 	InReplyTo      string             `bson:"inReplyTo,omitempty"`     // For REPLY/MENTION threading into browse view
 	ReadDate       int64              `bson:"readDate"`                // Unix epoch SECONDS when read (math.MaxInt64 = unread)
+	Labels         metadata.LabelSet  `bson:"-" json:"-"`              // The viewer's rule verdict for the Actor, stamped at render time. Never persisted (R8: derive, don't record).
 
 	journal.Journal `json:"-" bson:",inline"`
 }

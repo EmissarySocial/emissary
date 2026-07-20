@@ -14,7 +14,6 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
-	"github.com/benpate/uri"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -132,6 +131,11 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 		return derp.Wrap(err, location, "Reconciling duplicate Rule", rule)
 	}
 
+	// Snapshot the stored row's Action and MatchKey (empty for a fresh insert) so the post-commit
+	// cleanup task can detect transitions into/out of BLOCK and into MUTE (R8). Read AFTER
+	// reconcileDuplicate, which may have re-pointed rule.RuleID at an adopted row.
+	oldAction, oldMatchKey := service.previousRuleState(session, rule.RuleID)
+
 	// RULE: Externally imported rules cannot be re-shared automatically.
 	if rule.OriginRemote() {
 		rule.IsPublic = false
@@ -190,6 +194,9 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 		return derp.Wrap(err, location, "Calculating rule count")
 	}
 
+	// Enqueue the retroactive cleanup task for action/trigger transitions (R8, post-commit)
+	service.enqueueCleanup(session, *rule, oldAction, oldMatchKey, rule.Action)
+
 	return nil
 }
 
@@ -222,6 +229,9 @@ func (service *Rule) Delete(session data.Session, rule *model.Rule, note string)
 	if err := service.userService.CalcRuleCount(session, rule.UserID); err != nil {
 		return derp.Wrap(err, location, "Calculating rule count")
 	}
+
+	// Enqueue the retroactive cleanup task -- deleting a BLOCK restores paused relationships (R8)
+	service.enqueueCleanup(session, *rule, rule.Action, rule.MatchKey, "")
 
 	// The Rule is gone, and so is its shadow on the wire.
 	return nil
@@ -438,22 +448,6 @@ func (service *Rule) QueryByTypeDomain(session data.Session, userID primitive.Ob
 	return service.QueryByType(session, userID, model.RuleTypeDomain, criteria, options...)
 }
 
-// QueryByActorAndActions retrieves a slice of RuleSummaries that match the provided User, Actor, and potential actions
-func (service *Rule) QueryByActorAndActions(session data.Session, userID primitive.ObjectID, actorID string, actions ...string) ([]model.RuleSummary, error) {
-
-	criteria := exp.And(
-		service.byUserID(userID),
-		exp.Or(
-			exp.Equal("type", model.RuleTypeActor).AndEqual("trigger", actorID),
-			exp.Equal("type", model.RuleTypeDomain).AndEqual("trigger", uri.Hostname(actorID)),
-			exp.Equal("type", model.RuleTypeTag),
-		),
-		exp.In("action", actions),
-	)
-
-	return service.QuerySummary(session, criteria)
-}
-
 // QueryByMatchKeys returns the RuleSummaries for a User (plus domain-wide rules) whose MatchKey is
 // one of the provided keys -- typically model.DocumentMatchKeys(document). Every returned rule
 // matches by construction, so the disposition engine only ranks them; it never re-scans. Expired
@@ -585,14 +579,6 @@ func (service *Rule) DeleteByUserID(session data.Session, userID primitive.Objec
 	}
 
 	return nil
-}
-
-/******************************************
- * Rule Filters
- ******************************************/
-
-func (service *Rule) Filter(userID primitive.ObjectID, options ...RuleFilterOption) RuleFilter {
-	return NewRuleFilter(service, userID, options...)
 }
 
 /******************************************

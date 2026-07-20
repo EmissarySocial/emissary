@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/exp"
 	builder "github.com/benpate/exp-builder"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -172,6 +173,14 @@ func (w Notifications) Notifications() (QueryBuilder[model.Notification], error)
 	)
 
 	return NewQueryBuilder[model.Notification](w._factory.Notification(), w._session, criteria), nil
+}
+
+// LabelNotifications stamps each Notification's transient Labels field with the viewer's rule
+// verdict for its snapshotted Actor, and returns the same slice for template chaining. Verdicts
+// are derived fresh on every render (R8), so a deleted rule stops labeling immediately.
+func (w Notifications) LabelNotifications(notifications sliceof.Object[model.Notification]) sliceof.Object[model.Notification] {
+	w._factory.Rule().LabelNotifications(w._session, w.AuthenticatedID(), notifications)
+	return notifications
 }
 
 // UnreadNotificationCount returns the number of unread Notifications in the provided

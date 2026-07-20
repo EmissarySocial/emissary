@@ -9,13 +9,17 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/exp"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/dlclark/metaphone3"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type SearchBuilder struct {
 	searchTagService    *service.SearchTag
 	searchResultService *service.SearchResult
+	ruleService         *service.Rule
+	userID              primitive.ObjectID
 	session             data.Session
 	criteria            exp.Expression
 	textQuery           string
@@ -24,11 +28,13 @@ type SearchBuilder struct {
 	maxRows             int64
 }
 
-func NewSearchBuilder(searchTagService *service.SearchTag, searchResultService *service.SearchResult, session data.Session, criteria exp.Expression, textQuery string) SearchBuilder {
+func NewSearchBuilder(searchTagService *service.SearchTag, searchResultService *service.SearchResult, ruleService *service.Rule, userID primitive.ObjectID, session data.Session, criteria exp.Expression, textQuery string) SearchBuilder {
 
 	return SearchBuilder{
 		searchTagService:    searchTagService,
 		searchResultService: searchResultService,
+		ruleService:         ruleService,
+		userID:              userID,
 		session:             session,
 		criteria:            criteria,
 		textQuery:           textQuery,
@@ -192,14 +198,53 @@ func (builder SearchBuilder) Reverse() SearchBuilder {
 
 // Slice returns the results of the query as a slice of objects
 func (builder SearchBuilder) Slice() (sliceof.Object[model.SearchResult], error) {
+
 	criteria := builder.assembleCriteria()
-	return builder.searchResultService.Query(builder.session, criteria, builder.makeOptions()...)
+	result, err := builder.searchResultService.Query(builder.session, criteria, builder.makeOptions()...)
+
+	if err != nil {
+		return result, err
+	}
+
+	// RULE: results hidden by the viewer's rules are dropped, not placeheld. A search listing is
+	// discovery, not thread structure, so a hole needs no explanation (R17 leaks nothing this way).
+	builder.ruleService.LabelSearchResults(builder.session, builder.userID, result)
+	result = slice.Filter(result, func(searchResult model.SearchResult) bool {
+		return !searchResult.Labels.IsHidden()
+	})
+
+	return result, nil
 }
 
 // Range returns the results of the query as a Go 1.23 RangeFunc
 func (builder SearchBuilder) Range() (iter.Seq[model.SearchResult], error) {
+
 	criteria := builder.assembleCriteria()
-	return builder.searchResultService.Range(builder.session, criteria, builder.makeOptions()...)
+	values, err := builder.searchResultService.Range(builder.session, criteria, builder.makeOptions()...)
+
+	if err != nil {
+		return values, err
+	}
+
+	// RULE: same drop-not-placehold rule as Slice, applied one result at a time
+	result := func(yield func(model.SearchResult) bool) {
+
+		for searchResult := range values {
+
+			single := []model.SearchResult{searchResult}
+			builder.ruleService.LabelSearchResults(builder.session, builder.userID, single)
+
+			if single[0].Labels.IsHidden() {
+				continue
+			}
+
+			if !yield(single[0]) {
+				return
+			}
+		}
+	}
+
+	return result, nil
 }
 
 // Count returns the number of records that match the query criteria

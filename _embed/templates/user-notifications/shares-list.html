@@ -4,12 +4,26 @@
 	filtered to that type; ?createDate= drives the infinite scroll.  The row markup is inlined
 	here (rather than a shared row partial) so this page can format its own content.
 */ -}}
-{{- $notifications := .Notifications.Top60.ByCreateDate.Reverse.Slice -}}
+{{- $notifications := .LabelNotifications .Notifications.Top60.ByCreateDate.Reverse.Slice -}}
 {{- $createDate := .QueryParam "createDate" -}}
 
 {{- if $notifications.NotEmpty -}}
 
 	{{- range $notification := $notifications -}}
+		{{- if $notification.Labels.IsHidden -}}
+
+		{{- /* D2 placeholder: the actor is hidden by the viewer's rules. Anonymous until selected (R17). */ -}}
+		<div class="notification flex-row flex-align-center padding-vertical text-sm {{if $notification.NotRead}}unread{{end}}">
+			<span class="notification-dot text-red" style="width:12px;">
+				{{- if $notification.NotRead -}}&#9679;{{- end -}}
+			</span>
+			<div class="flex-grow">
+				{{- template "label-chips" $notification.Labels.Hidden -}}
+			</div>
+			<div class="text-sm text-gray nowrap">{{$notification.CreateDate | tinyDate}}</div>
+		</div>
+
+		{{- else -}}
 		{{- $actor := $notification.Actor -}}
 		<a href="{{$notification.ObjectURL}}"
 			class="text-nocolor notification flex-row flex-align-center padding-vertical hover-trigger {{if $notification.NotRead}}unread{{end}}"
@@ -36,6 +50,7 @@
 						{{- if ne "" $actor.Name -}}{{$actor.Name}}{{- else -}}{{$actor.UsernameOrID}}{{- end}}
 					</span>
 					<span>shared your post</span>
+					{{- template "label-chips" $notification.Labels.Annotations -}}
 				</div>
 				{{- if ne "" $notification.ObjectSummary -}}
 					<div class="text-sm text-gray ellipsis">{{$notification.ObjectSummary}}</div>
@@ -45,6 +60,7 @@
 			<!-- Relative time -->
 			<div class="text-sm text-gray nowrap">{{$notification.CreateDate | tinyDate}}</div>
 		</a>
+		{{- end -}}
 	{{- end -}}
 
 	<!-- Infinite scroll: load older notifications when the sentinel is revealed -->

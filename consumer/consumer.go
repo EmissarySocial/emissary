@@ -92,6 +92,9 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	case "PurgeNotifications":
 		return WithSession(consumer.serverFactory, args, PurgeNotifications)
 
+	case "Rule-Cleanup":
+		return WithSession(consumer.serverFactory, args, RuleCleanup)
+
 	case "ReceiveActivityPub-Add":
 		return WithSession(consumer.serverFactory, args, ReceiveActivityPubAdd)
 

@@ -5,10 +5,27 @@
 
 {{- $pageSize := 4 -}}
 {{- $builder := . -}}
+{{- $reveal := eq (.QueryParam "reveal") "true" -}}
 
 {{- $replies := .RepliesAfter $url "0" $pageSize -}}
 
+<div class="recursive-replies-page">
+
 {{- range $index, $document := $replies -}}
+
+	{{- if and $document.Metadata.IsRuleHidden (not $reveal) -}}
+
+	{{- /* D2 placeholder: this reply is hidden by the viewer's rules. Selecting it re-renders
+	       this page of replies with ?reveal=true. */ -}}
+	<div class="margin-top-xs" role="button"
+		hx-get="/@me/newsfeed/responses-replies-recursive?url={{$url}}&messageId={{$messageID}}&folderId={{$folderID}}&origin.followingId={{$followingID}}&reveal=true"
+		hx-target="closest .recursive-replies-page"
+		hx-swap="outerHTML"
+		hx-push-url="false">
+		{{- template "hidden-placeholder" $document -}}
+	</div>
+
+	{{- else -}}
 
 	{{- $object := $document.UnwrapActivity -}}
 	{{- $attributedTo := $object.AttributedTo.Load -}}
@@ -104,6 +121,8 @@
 		<div class="flex-grow-1 margin-vertical recursive-replies"></div>
 	</div>
 
+	{{- end -}}
+
 {{- end -}}
 
 {{- if eq $replies.Length $pageSize -}}
@@ -111,3 +130,5 @@
 		<span class="button text-xs">Show All Replies</span>
 	</div>
 {{- end -}}
+
+</div>

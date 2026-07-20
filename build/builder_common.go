@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/ascache"
+	"github.com/EmissarySocial/emissary/tools/asrules"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
@@ -470,18 +470,28 @@ func (w Common) ActivityStream(url string) streams.Document {
 
 	const location = "build.Common.ActivityStream"
 
-	// Load the document from the Interwebs
-	activityService := w._factory.ActivityStream()
-	result, err := activityService.UserClient(w.AuthenticatedID()).Load(url)
+	// RULE: ?reveal=true is the D2 click-to-reveal override. It only lifts the REFUSAL of documents
+	// the viewer's own rules hide -- the verdict is still stamped, so labels stay visible. It grants
+	// nothing: an anonymous or other-user viewer has different rules, not fewer.
+	options := make([]any, 0, 1)
 
-	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Loading ActivityStream. Returning empty document to template."))
+	if w.QueryParam("reveal") == "true" {
+		options = append(options, asrules.WithReveal(true))
 	}
 
-	// Search for rules that might add a LABEL to this document.
-	ruleService := w._factory.Rule()
-	filter := ruleService.Filter(w.AuthenticatedID(), service.WithLabelsOnly())
-	filter.Allow(w._session, &result)
+	// Load the document from the Interwebs. The asrules layer in this client stack stamps the
+	// viewer's verdict into result.Metadata.Labels -- hides, annotations, and attribution alike.
+	activityService := w._factory.ActivityStream()
+	result, err := activityService.UserClient(w.AuthenticatedID()).Load(url, options...)
+
+	if err != nil {
+
+		// RULE: a rules refusal is the expected shape of a hidden document, not an error. The
+		// refused document still carries the verdict, so templates render the D2 placeholder.
+		if !derp.IsForbidden(err) {
+			derp.Report(derp.Wrap(err, location, "Loading ActivityStream. Returning empty document to template."))
+		}
+	}
 
 	// Return the result
 	return result
@@ -815,7 +825,7 @@ func (w Common) Search() SearchBuilder {
 	criteria := b.Evaluate(w._request.URL.Query())
 
 	// Create the SearchBuilder for this request
-	return NewSearchBuilder(searchTagService, searchResultService, w._session, criteria, textQuery)
+	return NewSearchBuilder(searchTagService, searchResultService, w._factory.Rule(), w.AuthenticatedID(), w._session, criteria, textQuery)
 }
 
 func (w Common) SearchTag(tagName string) model.SearchTag {

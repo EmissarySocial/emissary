@@ -6,6 +6,7 @@ import (
 
 	"github.com/benpate/data/journal"
 	"github.com/benpate/geo"
+	"github.com/benpate/hannibal/metadata"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -28,6 +29,7 @@ type SearchResult struct {
 	Rank            int64              `json:"rank"                   bson:"rank"`                   // Rank is the rank of this SearchResult in the search index.
 	Shuffle         int64              `json:"shuffle"                bson:"shuffle"`                // Shuffle is a random number used to shuffle the search results.
 	Local           bool               `json:"local"                  bson:"local"`                  // Local is true if this SearchResult originates on the local server.  Only local SearchResults will be syndicated to external servers.
+	Labels          metadata.LabelSet  `json:"-"                      bson:"-"`                      // Labels is the viewer's rule verdict for this SearchResult. Per-viewer and display-only, so it is never persisted or serialized.
 	journal.Journal `json:"-" bson:",inline"`
 }
 

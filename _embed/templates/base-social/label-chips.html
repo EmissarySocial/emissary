@@ -1,0 +1,11 @@
+{{- /* Renders a metadata.LabelSet as warning chips. USER-tier labels link to the rule that caused
+       them (halting the bubble so the link never triggers a wrapper's hx-get); ADMIN-tier labels
+       are text-only, because "server policy" is not user-removable. Pass .Hidden or .Annotations
+       to scope which labels appear. */ -}}
+{{- range $label := . -}}
+	{{- if ne "" $label.Href -}}
+		<a href="{{$label.Href}}" class="warning tag" script="on click halt the event's bubbling">{{$label.Value}}</a>
+	{{- else -}}
+		<span class="warning tag">{{$label.Value}}</span>
+	{{- end -}}
+{{- end -}}

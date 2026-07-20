@@ -16,6 +16,10 @@ const RuleDispositionNone = ""
 // (the most severe of BLOCK/MUTE, or none), the tier and RuleID that produced it (for attribution),
 // and every LABEL that matched (regardless of the Action -- labels ride alongside a block, and
 // explain it in audit UI). The bson tags let an InboxActivity persist its receive-time disposition.
+//
+// BOUNDARY: RuleDisposition is the DECISION -- machine fields, severity ordering, persistable --
+// consumed by everything the server must DO (refuse, suppress, halt delivery, purge). Its display
+// twin is metadata.LabelSet -- lossy and never persisted -- produced ONLY by LabelSet() below.
 type RuleDisposition struct {
 	Action string             `bson:"action,omitempty"` // RuleActionBlock | RuleActionMute | RuleDispositionNone
 	Tier   string             `bson:"tier,omitempty"`   // RuleOriginAdmin | RuleOriginUser (of the winning rule; "" if none)
@@ -26,6 +30,7 @@ type RuleDisposition struct {
 // RuleLabelMatch is one LABEL rule that matched, carried on a RuleDisposition for display and attribution.
 type RuleLabelMatch struct {
 	RuleID primitive.ObjectID `bson:"ruleId,omitempty"` // The LABEL rule that matched
+	Tier   string             `bson:"tier,omitempty"`   // RuleOriginAdmin | RuleOriginUser (rows persisted before this field read back as "", which links nowhere)
 	Source string             `bson:"source,omitempty"` // Attribution (FollowingLabel), or "" for the user's own rule
 	Label  string             `bson:"label,omitempty"`  // Human-readable label text (Rule.Label)
 }
@@ -136,6 +141,9 @@ func (disposition RuleDisposition) HasLabels() bool {
 // LabelSet renders this disposition as the per-viewer metadata.LabelSet that rides on a document's
 // Metadata: a leading hidden Label when the winning Action filters (block or mute), then one
 // annotation per matched LABEL rule. Hidden-first matches the set's display convention.
+//
+// This one-way derivation is the ONLY producer of a LabelSet anywhere: the decision object stays
+// authoritative, and the display set can never say more than the decision did.
 func (disposition RuleDisposition) LabelSet() metadata.LabelSet {
 
 	result := make(metadata.LabelSet, 0, len(disposition.Labels)+1)
@@ -144,6 +152,7 @@ func (disposition RuleDisposition) LabelSet() metadata.LabelSet {
 	if disposition.IsFiltered() {
 		result = append(result, metadata.Label{
 			Value:    disposition.hiddenReason(),
+			Href:     ruleEditHref(disposition.Tier, disposition.RuleID),
 			IsHidden: true,
 		})
 	}
@@ -151,11 +160,28 @@ func (disposition RuleDisposition) LabelSet() metadata.LabelSet {
 	// Every LABEL match annotates without hiding.
 	for _, label := range disposition.Labels {
 		if label.Label != "" {
-			result = append(result, metadata.Label{Value: label.Label})
+			result = append(result, metadata.Label{
+				Value: label.Label,
+				Href:  ruleEditHref(label.Tier, label.RuleID),
+			})
 		}
 	}
 
 	return result
+}
+
+// ruleEditHref returns the attribution link for a matched rule: USER-tier rules link to the
+// viewer's own rule editor ("delete your own rule"), ADMIN-tier rules link nowhere -- they are
+// attributed in text ("by server policy") but are not user-removable (D8/D9). Deleting the linked
+// rule does NOT promise a reveal: another rule may still cover the item, and the next render
+// re-evaluates from scratch (D14).
+func ruleEditHref(tier string, ruleID primitive.ObjectID) string {
+
+	if tier == RuleOriginUser && !ruleID.IsZero() {
+		return "/@me/settings/rule-edit?ruleId=" + ruleID.Hex()
+	}
+
+	return ""
 }
 
 // hiddenReason composes the display text for a filtering disposition, naming both what happened
@@ -222,6 +248,7 @@ func NewRuleDispositionForKeys(keys []string, rules []RuleSummary, now int64) Ru
 		if rule.Action == RuleActionLabel {
 			result.Labels = append(result.Labels, RuleLabelMatch{
 				RuleID: rule.RuleID,
+				Tier:   rule.tier(),
 				Source: rule.FollowingLabel,
 				Label:  rule.Label,
 			})
