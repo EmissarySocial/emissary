@@ -79,6 +79,7 @@ func DefaultConfig() Config {
 		HTTPPort:            8080,
 		HTTPSPort:           443,
 		MasterKey:           hex.EncodeToString(masterKey),
+		ClientIPStrategy:    "REMOTE-ADDR",
 	}
 }
 
