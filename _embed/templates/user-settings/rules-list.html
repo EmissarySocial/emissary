@@ -3,7 +3,7 @@
 {{- $rules := $rules.Slice -}}
 
 {{- range $rules -}}
-	<div role="button" class="flex-row width-100% turboclick origin-{{.Origin}}" hx-get="/@me/settings/rule-edit?ruleId={{.RuleID.Hex}}">
+	<div role="button" tabIndex="0" class="flex-row width-100% turboclick origin-{{.Origin}}" hx-get="/@me/settings/rule-edit?ruleId={{.RuleID.Hex}}">
 
 		<div class="width-2-6 flex-row" nowrap>
 			<div class="text-xl margin-none flex-align-start">
@@ -30,7 +30,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="width-3-6 nowrap">
+		<div class="flex-grow nowrap">
 			<div class="bold">
 				{{- if eq "BLOCK" .Action -}}
 					{{icon "block"}} Block
@@ -42,7 +42,7 @@
 			</div>
 			<div class="text-gray text-sm">{{.Summary}}</div>
 		</div>
-		<div class="width-1-6 align-right nowrap">
+		<!--div class="width-1-6 align-right nowrap">
 			{{- if .OriginRemote -}}
 				{{icon "cloud"}} Imported
 			{{- else if .IsPublic -}}
@@ -50,7 +50,7 @@
 			{{- else -}}
 				{{icon "invisible"}} Private
 			{{- end -}}
-		</div>
+		</div-->
 	</div>
 {{- end -}}
 
