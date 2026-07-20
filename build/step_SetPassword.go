@@ -55,6 +55,14 @@ func (step StepSetPassword) Post(builder Builder, _ io.Writer) PipelineBehavior 
 		return Halt().WithError(err)
 	}
 
+	// RULE: New password must satisfy the server-side password policy (minimum length,
+	// strength, and any configured breach rules). This is the authoritative check; the
+	// template's minLength is only a client-side convenience that a crafted request ignores.
+	if err := steranko.ValidatePassword(newPassword); err != nil {
+		err := WrapInlineError(response, derp.Wrap(err, location, "Password does not meet requirements"))
+		return Halt().WithError(err)
+	}
+
 	// Load the User from the database
 	userService := factory.User()
 	user := model.NewUser()

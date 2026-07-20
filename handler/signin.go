@@ -272,6 +272,13 @@ func PostResetCode(ctx *steranko.Context, factory *service.Factory, session data
 		return derp.BadRequest(location, "Passwords do not match")
 	}
 
+	// RULE: New password must satisfy the server-side password policy (minimum length,
+	// strength, and any configured breach rules). This is the authoritative check; the
+	// reset-code template's minLength is only a client-side convenience.
+	if err := factory.Steranko(session).ValidatePassword(txn.Password); err != nil {
+		return derp.Wrap(err, location, "Password does not meet requirements")
+	}
+
 	// Try to load the user by userID and resetCode
 	userService := factory.User()
 
