@@ -7,6 +7,12 @@
 	containedBy:["admin"]
 	label: "User"
 	description: "Manage all users on this website"
+	states: {
+		LIVE: {
+			label: Live
+			description: This user is activated and visible to all viewers
+		}
+	}
 	actions: {
 		index: {
 			roles:["owner"]
