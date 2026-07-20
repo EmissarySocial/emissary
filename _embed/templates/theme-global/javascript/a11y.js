@@ -37,9 +37,9 @@
 	
 				// Special rules for links and buttons
 				element.querySelectorAll("a,button,[role=link],[role=button],[role=tab]").forEach(function(/** @type {HTMLElement} */ node) {
-					
+
 					// If tabIndex is not already set, then default it to 0
-					if (node.attributes["tabIndex"] == undefined) {
+					if (node.tabIndex == -1) {
 						node.tabIndex = 0
 					}
 	
