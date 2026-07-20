@@ -27,9 +27,6 @@ func invokeHttpsRedirect(t *testing.T, scheme string, host string) (*httptest.Re
 
 	e := echo.New()
 	recorder := httptest.NewRecorder()
-	if recorder == nil {
-		t.Fatal("httptest.NewRecorder returned nil")
-	}
 	ctx := e.NewContext(request, recorder)
 
 	passed := false
@@ -49,6 +46,7 @@ func TestHttpsRedirect_InsecurePublic(t *testing.T) {
 	// An insecure public request is permanently redirected to its HTTPS URL,
 	// and does not reach the handler
 	recorder, passed := invokeHttpsRedirect(t, "http", "emissary.example")
+	require.NotNil(t, recorder)
 
 	require.False(t, passed, "insecure public request must be short-circuited")
 	require.Equal(t, http.StatusPermanentRedirect, recorder.Code)
@@ -60,6 +58,7 @@ func TestHttpsRedirect_SecurePublic(t *testing.T) {
 
 	// A secure public request passes through to the handler with the HSTS header set
 	recorder, passed := invokeHttpsRedirect(t, "https", "emissary.example")
+	require.NotNil(t, recorder)
 
 	require.True(t, passed, "secure public request must reach the handler")
 	require.Equal(t, "max-age=63072000", recorder.Header().Get("Strict-Transport-Security"))
@@ -83,6 +82,7 @@ func TestHttpsRedirect_LocalHosts(t *testing.T) {
 	for _, scheme := range []string{"http", "https"} {
 		for _, host := range localHosts {
 			recorder, passed := invokeHttpsRedirect(t, scheme, host)
+			require.NotNil(t, recorder)
 
 			require.True(t, passed, "%s://%s must pass through untouched", scheme, host)
 			require.NotEqual(t, http.StatusPermanentRedirect, recorder.Code, "%s://%s must not be redirected", scheme, host)
