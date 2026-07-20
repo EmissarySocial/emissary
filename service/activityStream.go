@@ -21,6 +21,7 @@ import (
 	"github.com/benpate/hannibal/metadata"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/sherlock/activitypub"
@@ -125,8 +126,18 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 	// Replace 410 Gone errors with "Tombstone" documents
 	tombstoneClient := tombstone.New(activityPubClient)
 
-	// Look up WebFinger URIs
-	webfingerClient := webfinger.New(tombstoneClient)
+	// Look up WebFinger URIs. The WebFinger lookup (digit.Lookup) is a SEPARATE HTTP call from the
+	// ActivityPub fetch above, so it needs the private-IP allowance threaded in independently -- without
+	// it, resolving a handle for a local/private account (e.g. @user@127.0.0.1) is refused by the
+	// remote transport's SSRF guard even when allowPrivateIPs is on. remote already supports this via
+	// its Option API; the bug was that it was never passed here.
+	allowPrivateIPsOption := remote.Option{
+		BeforeRequest: func(transaction *remote.Transaction) error {
+			transaction.AllowPrivateIPs(allowPrivateIPs)
+			return nil
+		},
+	}
+	webfingerClient := webfinger.New(tombstoneClient, allowPrivateIPsOption)
 
 	// Look up BlueSky names
 	bridgyfedClient := bridgyfed.New(webfingerClient)
