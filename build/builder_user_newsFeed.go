@@ -660,7 +660,7 @@ func (w Inbox) HasRule(ruleType string, trigger string) model.Rule {
 
 	// Retrieve rule record.  "Not Found" is acceptable, but "legitimate" errors are not.
 	// In either case, do not halt the request
-	if err := ruleService.LoadByTrigger(w._session, w._user.UserID, ruleType, trigger, &rule); err != nil {
+	if err := ruleService.LoadByMatchKey(w._session, w._user.UserID, ruleType, trigger, &rule); err != nil {
 		if !derp.IsNotFound(err) {
 			derp.Report(derp.Wrap(err, "build.NewsFeed.HasRule", "Loading rule", ruleType, trigger))
 		}

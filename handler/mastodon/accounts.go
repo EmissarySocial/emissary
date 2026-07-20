@@ -405,7 +405,7 @@ func PostAccount_Unblock(serverFactory *server.Factory) func(model.Authorization
 		ruleService := factory.Rule()
 		rule := model.NewRule()
 
-		if err := ruleService.LoadByTrigger(session, auth.UserID, model.RuleTypeActor, t.ID, &rule); err != nil {
+		if err := ruleService.LoadByMatchKey(session, auth.UserID, model.RuleTypeActor, t.ID, &rule); err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Loading rule")
 		}
 
@@ -483,7 +483,7 @@ func PostAccount_Unmute(serverFactory *server.Factory) func(model.Authorization,
 		ruleService := factory.Rule()
 		rule := model.NewRule()
 
-		if err := ruleService.LoadByTrigger(session, auth.UserID, model.RuleTypeActor, t.ID, &rule); err != nil {
+		if err := ruleService.LoadByMatchKey(session, auth.UserID, model.RuleTypeActor, t.ID, &rule); err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Loading rule")
 		}
 

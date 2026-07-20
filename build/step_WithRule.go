@@ -77,7 +77,7 @@ func (step StepWithRule) getRule(builder Builder) (model.Rule, error) {
 
 	if token := builder.QueryParam("actor"); token != "" {
 
-		if err := builder.factory().Rule().LoadByTrigger(builder.session(), builder.AuthenticatedID(), model.RuleTypeActor, token, &rule); err != nil {
+		if err := builder.factory().Rule().LoadByMatchKey(builder.session(), builder.AuthenticatedID(), model.RuleTypeActor, token, &rule); err != nil {
 			if !derp.IsNotFound(err) {
 				return rule, derp.Wrap(err, "build.StepWithRule.getRule", "Loading Rule with actor "+token)
 			}

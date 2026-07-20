@@ -18,8 +18,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// actorLoader resolves a Fediverse address (a webfinger handle or a profile URL) to its canonical
+// Actor document. *ActivityStream satisfies it; narrowing the Rule service's dependency to this one
+// method keeps actor-trigger resolution unit-testable without standing up the full stream stack.
+type actorLoader interface {
+	GetActor(string) (streams.Document, error)
+}
+
 // Rule defines a service that manages all content rules created and imported by Users.
 type Rule struct {
+	activityStreamService  actorLoader
 	importItemService      *ImportItem
 	outboxService          *Outbox
 	ruleSuppressionService *RuleSuppression
@@ -41,6 +49,7 @@ func NewRule() Rule {
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *Rule) Refresh(factory *Factory) {
+	service.activityStreamService = factory.ActivityStream()
 	service.importItemService = factory.ImportItem()
 	service.outboxService = factory.Outbox()
 	service.ruleSuppressionService = factory.RuleSuppression()
@@ -121,10 +130,23 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 		return derp.Wrap(err, location, "Validating Rule", rule)
 	}
 
-	// Recompute the derived match key from the (now-validated) Type and Trigger. UNCONDITIONAL: the
-	// edit form posts Trigger, and a MatchKey that disagreed with its Trigger would silently stop
-	// matching -- a block that quietly stops blocking. Never sourced from a form (absent from RuleSchema).
-	rule.MatchKey = model.RuleMatchKey(rule.Type, rule.Trigger)
+	// Resolve the value the MatchKey is derived from -- WITHOUT touching the user-entered Trigger. A
+	// hand-typed ACTOR Trigger may be a webfinger handle (@user@host) or an alias/redirecting profile
+	// URL, neither of which equals the actor URL that inbound activities carry, so keying on it verbatim
+	// would produce a rule that silently never matches. We resolve it to the canonical actor id for the
+	// key only, leaving Trigger as the friendly value the user typed (for display). A Trigger that will
+	// not resolve is REFUSED, not saved inert (a block that looks active but isn't is worse than a
+	// visible error).
+	matchKeyTrigger, err := service.resolveMatchKeyTrigger(rule)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Resolving actor address", rule.Trigger)
+	}
+
+	// Recompute the derived match key from the (now-validated) Type and resolved trigger. UNCONDITIONAL:
+	// the edit form posts Trigger, and a MatchKey that disagreed with it would silently stop matching --
+	// a block that quietly stops blocking. Never sourced from a form (absent from RuleSchema).
+	rule.MatchKey = model.RuleMatchKey(rule.Type, matchKeyTrigger)
 
 	// Reconcile against any existing rule with the same (userId, matchKey): adopt its identity so this
 	// save UPDATES that row in place rather than inserting a second row that would violate the unique
@@ -214,6 +236,40 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 	service.enqueueCleanup(session, *rule, oldAction, oldMatchKey, rule.Action)
 
 	return nil
+}
+
+// resolveMatchKeyTrigger returns the value the Rule's MatchKey should be derived from, WITHOUT
+// modifying the user-entered Trigger. For an ACTOR rule it loads the actor through the ActivityStream
+// stack (which resolves webfinger @user@host handles and follows profile aliases/redirects) and
+// returns its canonical id -- the exact value inbound activities carry, so the key matches. For other
+// types (and empty triggers) it returns the Trigger unchanged. An ACTOR address that will not resolve
+// to a real Actor is reported as a Validation error so the caller refuses the save rather than
+// persisting a rule whose MatchKey can never match.
+func (service *Rule) resolveMatchKeyTrigger(rule *model.Rule) (string, error) {
+
+	// RULE: Only ACTOR triggers name an actor; DOMAIN (host) and TAG (token) resolve differently.
+	if rule.Type != model.RuleTypeActor {
+		return rule.Trigger, nil
+	}
+
+	// An empty trigger is a caller/validation concern, not something to network-resolve.
+	if rule.Trigger == "" {
+		return rule.Trigger, nil
+	}
+
+	// Load the actor. GetActor resolves @user@host handles and canonicalizes alias/redirect URLs,
+	// and fails when the address does not resolve to a real Actor.
+	actor, err := service.activityStreamService.GetActor(rule.Trigger)
+
+	if err != nil {
+		// User-facing 422 with a friendly message, but keep the real cause (SSRF block, TLS/connection
+		// failure, 404, not-an-actor) as a detail so the error dump stays diagnosable -- otherwise every
+		// resolution failure collapses to the same opaque message.
+		return "", derp.Validation("This address could not be found. Please check that it is a valid Fediverse handle or profile URL.", rule.Trigger, err)
+	}
+
+	// Key on the canonical id; the caller keeps rule.Trigger as the friendly value the user typed.
+	return actor.ID(), nil
 }
 
 // Delete removes an Rule from the database (virtual delete)
@@ -401,8 +457,15 @@ func (service *Rule) LoadByToken(session data.Session, userID primitive.ObjectID
 	return service.Load(session, criteria, rule)
 }
 
-// LoadByTrigger retrieves a single Rule that maches the provided User, RuleType, and Trigger
-func (service *Rule) LoadByTrigger(session data.Session, userID primitive.ObjectID, ruleType string, trigger string, rule *model.Rule) error {
+// LoadByMatchKey retrieves the single Rule for the provided User and RuleType whose derived MatchKey
+// equals RuleMatchKey(ruleType, trigger). The caller passes the CANONICAL trigger value -- an actor
+// URL, Mastodon account id, or domain, NEVER a raw @user@host handle. The lookup keys on MatchKey
+// (the rule's identity under the unique {userId, matchKey} index), NOT the stored Trigger, so it finds
+// the rule regardless of the friendly value the user originally typed: a rule entered as "@alice@host"
+// resolves to the same MatchKey as its canonical URL, so both are found by the same canonical lookup.
+func (service *Rule) LoadByMatchKey(session data.Session, userID primitive.ObjectID, ruleType string, trigger string, rule *model.Rule) error {
+
+	const location = "service.Rule.LoadByMatchKey"
 
 	// RULE: UserID cannot be zero
 	if userID.IsZero() {
@@ -419,9 +482,16 @@ func (service *Rule) LoadByTrigger(session data.Session, userID primitive.Object
 		return derp.Validation("Trigger cannot be empty")
 	}
 
-	criteria := service.byUserID(userID).
-		AndEqual("type", ruleType).
-		AndEqual("trigger", trigger)
+	// Derive the identity key the caller is looking for. An empty key (unknown type, or a trigger that
+	// normalizes to nothing) can never identify a rule, so report Not Found rather than matching rows
+	// that happen to carry an empty MatchKey.
+	matchKey := model.RuleMatchKey(ruleType, trigger)
+
+	if matchKey == "" {
+		return derp.NotFound(location, "No rule matches the provided trigger", ruleType, trigger)
+	}
+
+	criteria := service.byUserID(userID).AndEqual("matchKey", matchKey)
 
 	return service.Load(session, criteria, rule)
 }

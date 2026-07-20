@@ -16,7 +16,7 @@ func (service *Rule) BlockActor(session data.Session, userID primitive.ObjectID,
 
 	// Try to load the existing Rule record for this user and URL
 	rule := model.NewRule()
-	err := service.LoadByTrigger(session, userID, model.RuleTypeActor, actorID, &rule)
+	err := service.LoadByMatchKey(session, userID, model.RuleTypeActor, actorID, &rule)
 
 	// If the record already exists, then there you go.
 	if err == nil {
@@ -51,7 +51,7 @@ func (service *Rule) UnblockActor(session data.Session, userID primitive.ObjectI
 
 	// Try to load the existing Rule record for this user and URL
 	rule := model.NewRule()
-	err := service.LoadByTrigger(session, userID, model.RuleTypeActor, actorID, &rule)
+	err := service.LoadByMatchKey(session, userID, model.RuleTypeActor, actorID, &rule)
 
 	if err != nil {
 
