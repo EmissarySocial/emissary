@@ -54,6 +54,21 @@ func (service *Rule) ActivityType(rule model.Rule) string {
 	return ""
 }
 
+// publishedJSONLD recomposes the Rule's activity AS LAST PUBLISHED (P7-2): the live Rule with its
+// Action replaced by PublishedAction, so a retraction embeds the activity type the wire actually
+// saw -- never the live Action, which may have changed since. An empty PublishedAction (a row
+// stamped before the field existed) falls back to the live Action, which is exactly the old
+// behavior. Object-body drift from later Trigger edits is accepted: receivers key a retraction
+// on the embedded activity's `id`, which never changes.
+func (service *Rule) publishedJSONLD(rule model.Rule) mapof.Any {
+
+	if rule.PublishedAction != "" {
+		rule.Action = rule.PublishedAction
+	}
+
+	return service.JSONLD(rule)
+}
+
 // JSONLD returns a JSON-LD representation of the provided Rule
 func (service *Rule) JSONLD(rule model.Rule) mapof.Any {
 

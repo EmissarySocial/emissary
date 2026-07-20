@@ -29,9 +29,10 @@ func (service *Rule) unpublish(session data.Session, rule model.Rule) error {
 	const location = "service.Rule.unpublish"
 
 	// UnPublish this Rule from the User's outbox. A Block is a first-class ACTIVITY, so it is
-	// UNDONE (embedding the original Block inline, looked up by its own URL) — not deleted as an
-	// object. See COLLECTIONS-REDESIGN.md D7.
-	if err := service.outboxService.UndoActivity(session, model.FollowerTypeUser, rule.UserID, service.JSONLD(rule), model.NewAnonymousPermissions()); err != nil {
+	// UNDONE (embedding the original Block inline) — not deleted as an object. The embedded
+	// original is recomposed from PublishedAction (P7-2): the Undo must name what the wire last
+	// saw, not the live Action. See COLLECTIONS-REDESIGN.md D7.
+	if err := service.outboxService.UndoActivity(session, model.FollowerTypeUser, rule.UserID, service.publishedJSONLD(rule), model.NewAnonymousPermissions()); err != nil {
 		return derp.Wrap(err, location, "Retracting Rule", rule)
 	}
 
@@ -44,7 +45,9 @@ func (service *Rule) republish(session data.Session, rule model.Rule) error {
 	const location = "service.Rule.republish"
 
 	// UnPublish the original Rule from the User's outbox (Undo the Block activity — see D7).
-	if err := service.outboxService.UndoActivity(session, model.FollowerTypeUser, rule.UserID, service.JSONLD(rule), model.NewAnonymousPermissions()); err != nil {
+	// The embedded original is recomposed from PublishedAction (P7-2), so an Action change
+	// retracts what the wire last saw before publishing the new shape.
+	if err := service.outboxService.UndoActivity(session, model.FollowerTypeUser, rule.UserID, service.publishedJSONLD(rule), model.NewAnonymousPermissions()); err != nil {
 		return derp.Wrap(err, location, "Retracting previous Rule", rule)
 	}
 

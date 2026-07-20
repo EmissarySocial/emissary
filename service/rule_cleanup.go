@@ -11,14 +11,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// previousRuleState returns the Action and MatchKey currently stored for the provided RuleID, or
-// empty strings for a fresh insert. Loaded explicitly because nothing else on the Save path
-// exposes the pre-mutation row.
-func (service *Rule) previousRuleState(session data.Session, ruleID primitive.ObjectID) (string, string) {
+// previousRuleState returns the row currently stored for the provided RuleID, or a zero-value
+// Rule for a fresh insert. Loaded explicitly because nothing else on the Save path exposes the
+// pre-mutation row -- the cleanup trigger reads its Action/MatchKey, and P7-2 reads its
+// PublishedAction.
+func (service *Rule) previousRuleState(session data.Session, ruleID primitive.ObjectID) model.Rule {
 
 	const location = "service.Rule.previousRuleState"
 
-	previous := model.NewRule()
+	previous := model.Rule{}
 
 	if err := service.Load(session, exp.Equal("_id", ruleID), &previous); err != nil {
 
@@ -28,10 +29,10 @@ func (service *Rule) previousRuleState(session data.Session, ruleID primitive.Ob
 			derp.Report(derp.Wrap(err, location, "Loading previous Rule state; treating as new", ruleID))
 		}
 
-		return "", ""
+		return model.Rule{}
 	}
 
-	return previous.Action, previous.MatchKey
+	return previous
 }
 
 // cleanupTransitions is the PURE decision half of enqueueCleanup: given the stored row's prior

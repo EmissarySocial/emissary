@@ -139,6 +139,33 @@ func TestRule_JSONLD_WireGrammar(t *testing.T) {
 	require.Equal(t, vocab.ActivityTypeIgnore, service.JSONLD(rule)[vocab.PropertyType])
 }
 
+// TestRule_PublishedJSONLD pins P7-2 (D15): a retraction embeds the activity AS LAST PUBLISHED.
+// A Rule whose Action changed after publishing must retract the OLD type -- the wire saw a Block,
+// so the Undo must name a Block, even though the live rule now says MUTE.
+func TestRule_PublishedJSONLD(t *testing.T) {
+
+	service := Rule{}
+
+	rule := model.NewRule()
+	rule.Type = model.RuleTypeActor
+	rule.Trigger = "https://evil.example/@spammer"
+	rule.Action = model.RuleActionMute
+	rule.PublishedAction = model.RuleActionBlock
+
+	// The retraction names what the wire last saw...
+	require.Equal(t, vocab.ActivityTypeBlock, service.publishedJSONLD(rule)[vocab.PropertyType])
+
+	// ...while the live document names the current Action...
+	require.Equal(t, vocab.ActivityTypeIgnore, service.JSONLD(rule)[vocab.PropertyType])
+
+	// ...and the caller's Rule is never mutated by asking.
+	require.Equal(t, model.RuleActionMute, rule.Action)
+
+	// RULE: a row stamped before the field existed falls back to the live Action (the old behavior)
+	rule.PublishedAction = ""
+	require.Equal(t, vocab.ActivityTypeIgnore, service.publishedJSONLD(rule)[vocab.PropertyType])
+}
+
 // TestRule_JSONLD_LabelHasNoType documents the reason the LABEL type must be made UNREACHABLE rather
 // than merely unmapped: JSONLD writes `type` unconditionally, so a LABEL rule that reached this far
 // would serialize an explicit empty type -- invalid ActivityStreams, and worse than the original bug

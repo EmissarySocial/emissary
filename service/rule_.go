@@ -131,10 +131,15 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 		return derp.Wrap(err, location, "Reconciling duplicate Rule", rule)
 	}
 
-	// Snapshot the stored row's Action and MatchKey (empty for a fresh insert) so the post-commit
-	// cleanup task can detect transitions into/out of BLOCK and into MUTE (R8). Read AFTER
-	// reconcileDuplicate, which may have re-pointed rule.RuleID at an adopted row.
-	oldAction, oldMatchKey := service.previousRuleState(session, rule.RuleID)
+	// Snapshot the stored row (empty for a fresh insert) so the post-commit cleanup task can
+	// detect transitions into/out of BLOCK and into MUTE (R8). Read AFTER reconcileDuplicate,
+	// which may have re-pointed rule.RuleID at an adopted row.
+	previous := service.previousRuleState(session, rule.RuleID)
+	oldAction, oldMatchKey := previous.Action, previous.MatchKey
+
+	// RULE: PublishedAction is server truth (P7-2) -- restored from the stored row so an inbound
+	// record can neither forge nor erase the publish state. Stamped below on publish/retract.
+	rule.PublishedAction = previous.PublishedAction
 
 	// RULE: Externally imported rules cannot be re-shared automatically.
 	if rule.OriginRemote() {
@@ -158,11 +163,19 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 				return derp.Wrap(err, location, "Publishing Rule", rule)
 			}
 
+			// Record what actually went on the wire (P7-2)
+			rule.PublishedAction = rule.Action
+
 		// "Republish" changes when a public Rule is updated
 		default:
+
+			// republish retracts using the rule's PublishedAction (what the wire last saw),
+			// then publishes the current Action -- so the stamp updates only afterwards (P7-2).
 			if err := service.republish(session, *rule); err != nil {
 				return derp.Wrap(err, location, "Republishing Rule", rule)
 			}
+
+			rule.PublishedAction = rule.Action
 		}
 
 	case false:
@@ -180,6 +193,7 @@ func (service *Rule) Save(session data.Session, rule *model.Rule, note string) e
 			}
 
 			rule.PublishDate = 0
+			rule.PublishedAction = ""
 		}
 	}
 

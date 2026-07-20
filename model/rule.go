@@ -8,20 +8,21 @@ import (
 
 // Rule represents many kinds of filters that are applied to messages before they are added into a User's inbox
 type Rule struct {
-	RuleID         primitive.ObjectID `bson:"_id"`            // Unique identifier of this Rule
-	UserID         primitive.ObjectID `bson:"userId"`         // Unique identifier of the User who owns this Rule
-	FollowingID    primitive.ObjectID `bson:"followingId"`    // Unique identifier of the Following record that created this Rule.  If Zero, then this rule was created by the user.
-	FollowingLabel string             `bson:"followingLabel"` // Label of the Following record that created this Rule.
-	Type           string             `bson:"type"`           // Type of Rule (e.g. "ACTOR", "DOMAIN", "TAG")
-	Action         string             `bson:"action"`         // Action to take when this rule is triggered (e.g. "BLOCK", "MUTE", "LABEL")
-	Label          string             `bson:"label"`          // Human-friendly label to add to messages
-	Trigger        string             `bson:"trigger"`        // Parameter for this rule type)
-	MatchKey       string             `bson:"matchKey"`       // Derived "<TYPE>:<normalized trigger>" -- the indexed key that a matching document also produces. Computed in Save from Type+Trigger; NEVER set from a form (see RuleSchema).
-	ReasonCode     string             `bson:"reasonCode"`     // Optional code to identify the reason for this rule (e.g. "SPAM", "NSFW", "SENSITIVE")
-	Summary        string             `bson:"summary"`        // Optional comment describing why this rule exists
-	IsPublic       bool               `bson:"isPublic"`       // If TRUE, this record is visible publicly
-	PublishDate    int64              `bson:"publishDate"`    // Unix epoch SECONDS when this rule was published to followers (0 = unpublished)
-	ExpireDate     int64              `bson:"expireDate"`     // Unix epoch SECONDS when this rule expires and becomes inert (0 = never)
+	RuleID          primitive.ObjectID `bson:"_id"`                       // Unique identifier of this Rule
+	UserID          primitive.ObjectID `bson:"userId"`                    // Unique identifier of the User who owns this Rule
+	FollowingID     primitive.ObjectID `bson:"followingId"`               // Unique identifier of the Following record that created this Rule.  If Zero, then this rule was created by the user.
+	FollowingLabel  string             `bson:"followingLabel"`            // Label of the Following record that created this Rule.
+	Type            string             `bson:"type"`                      // Type of Rule (e.g. "ACTOR", "DOMAIN", "TAG")
+	Action          string             `bson:"action"`                    // Action to take when this rule is triggered (e.g. "BLOCK", "MUTE", "LABEL")
+	Label           string             `bson:"label"`                     // Human-friendly label to add to messages
+	Trigger         string             `bson:"trigger"`                   // Parameter for this rule type)
+	MatchKey        string             `bson:"matchKey"`                  // Derived "<TYPE>:<normalized trigger>" -- the indexed key that a matching document also produces. Computed in Save from Type+Trigger; NEVER set from a form (see RuleSchema).
+	ReasonCode      string             `bson:"reasonCode"`                // Optional code to identify the reason for this rule (e.g. "SPAM", "NSFW", "SENSITIVE")
+	Summary         string             `bson:"summary"`                   // Optional comment describing why this rule exists
+	IsPublic        bool               `bson:"isPublic"`                  // If TRUE, this record is visible publicly
+	PublishDate     int64              `bson:"publishDate"`               // Unix epoch SECONDS when this rule was published to followers (0 = unpublished)
+	PublishedAction string             `bson:"publishedAction,omitempty"` // The Action as LAST PUBLISHED (D15/P7-2): retractions embed this, never the live Action, which may have changed since. "" = never published (or retracted). Server-set only -- NEVER in RuleSchema.
+	ExpireDate      int64              `bson:"expireDate"`                // Unix epoch SECONDS when this rule expires and becomes inert (0 = never)
 
 	journal.Journal `json:"-" bson:",inline"`
 }
