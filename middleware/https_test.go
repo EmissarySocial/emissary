@@ -27,6 +27,7 @@ func invokeHttpsRedirect(t *testing.T, scheme string, host string) (*httptest.Re
 
 	e := echo.New()
 	recorder := httptest.NewRecorder()
+	require.NotNil(t, recorder)
 	ctx := e.NewContext(request, recorder)
 
 	passed := false
