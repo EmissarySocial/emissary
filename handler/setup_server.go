@@ -19,7 +19,7 @@ import (
 )
 
 // SetupPageGet generates simple template pages for the setup server, based on the Templates and ID provided.
-func SetupPageGet(factory *server.Factory, templates *template.Template, templateID string) echo.HandlerFunc {
+func SetupPageGet(factory *server.SetupFactory, templates *template.Template, templateID string) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -38,7 +38,7 @@ func SetupPageGet(factory *server.Factory, templates *template.Template, templat
 }
 
 // SetupServerGet generates a form for the setup app.
-func SetupServerGet(factory *server.Factory) echo.HandlerFunc {
+func SetupServerGet(factory *server.SetupFactory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -75,7 +75,7 @@ func SetupServerGet(factory *server.Factory) echo.HandlerFunc {
 }
 
 // SetupServerPost saves the form data to the config file.
-func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
+func SetupServerPost(factory *server.SetupFactory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
@@ -107,9 +107,11 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 				return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.serverTable", "Saving form data"))
 			}
 
-			// Try to save the configuration to the persistent storage
+			// Try to save the configuration to the persistent storage.  The error is
+			// surfaced directly (not re-wrapped) so actionable messages -- like the
+			// ActivityPub Cache connection warning -- reach the user.
 			if err := factory.UpdateConfig(config); err != nil {
-				return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.postServer", "Internal error saving config.  Try again later."))
+				return build.WrapInlineError(ctx.Response(), err)
 			}
 
 			// Redraw the table
@@ -124,9 +126,11 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.serverPost", "Saving form data", data))
 		}
 
-		// Try to save the configuration to the persistent storage
+		// Try to save the configuration to the persistent storage.  The error is
+		// surfaced directly (not re-wrapped) so actionable messages -- like the
+		// ActivityPub Cache connection warning -- reach the user.
 		if err := factory.UpdateConfig(config); err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, "setup.postServer", "Internal error saving config.  Try again later."))
+			return build.WrapInlineError(ctx.Response(), err)
 		}
 
 		// Success!
@@ -137,11 +141,6 @@ func SetupServerPost(factory *server.Factory) echo.HandlerFunc {
 // getSetupForm generates the different form layouts to use on the setup/server page.
 func getSetupForm(name string) (form.Element, bool, error) {
 
-	trustForwardedHostOptions := []form.LookupCode{
-		{Value: "false", Label: "'Host' header. (use when NOT behind a proxy)"},
-		{Value: "true", Label: "'X-Forwarded-Host' (use when your proxy sets this value)"},
-	}
-
 	switch name {
 
 	case "general":
@@ -149,11 +148,18 @@ func getSetupForm(name string) (form.Element, bool, error) {
 			Type: "layout-group",
 			Children: []form.Element{
 				{Type: "layout-vertical", Label: "Common Services", Description: "Common queue and cache services used across multiple installations.  This should only be shared across trusted servers.", Children: []form.Element{
-					{Type: "text", Label: "Database Connection String", Path: "activityPubCache.connectString", Description: "MongoDB connection string only"},
+					{Type: "text", Label: "Database Connection String", Path: "activityPubCache.connectString", Description: "Should look like: mongodb://127.0.0.1:27017/?directConnection=true&replicaSet=rs0"},
 					{Type: "text", Label: "Database Name", Path: "activityPubCache.database"},
 				}},
 				{Type: "layout-vertical", Label: "Networking", Children: []form.Element{
-					{Type: "select", Label: "Host Header", Path: "trustForwardedHost", Description: "Enables your server to identify the domain/hostname being requested.", Options: mapof.Any{"enum": trustForwardedHostOptions}},
+					{Type: "select", Label: "Private Network Connections?", Path: "allowPrivateIPs", Description: "Controls whether the server can connect to private IP addresses.", Options: mapof.Any{"enum": []form.LookupCode{
+						{Value: "false", Label: "DISALLOWED (Required for production systems)"},
+						{Value: "true", Label: "ALLOWED (Development systems only)"},
+					}}},
+					{Type: "select", Label: "Host Header", Path: "trustForwardedHost", Description: "Enables your server to identify the domain/hostname being requested.", Options: mapof.Any{"enum": []form.LookupCode{
+						{Value: "false", Label: "'Host' header. (use when NOT behind a proxy)"},
+						{Value: "true", Label: "'X-Forwarded-Host' (use when your proxy sets this value)"},
+					}}},
 					{Type: "select", Label: "Client IP Lookup", Path: "clientIPStrategy", Description: "Method used to determine the client's IP address.  Important for rate-limiting and abuse prevention.", Options: mapof.Any{"enum": []form.LookupCode{
 						{Value: "REMOTE-ADDR", Label: "Remote Address (use when NOT behind a proxy)"},
 						{Value: "RIGHTMOST-TRUSTED-COUNT", Label: "Rightmost Trusted Count (use when behind a known number of proxies)"},
@@ -169,10 +175,6 @@ func getSetupForm(name string) (form.Element, bool, error) {
 						{Value: "X-Real-IP"},
 					}}},
 					{Type: "text", Label: "Trusted Proxy Count", Path: "clientIPTrustedCount", Description: "Number of trusted proxies to consider when determining the client's IP address.", Options: mapof.Any{"show-if": "clientIPStrategy is RIGHTMOST-TRUSTED-COUNT"}},
-					{Type: "select", Label:"Private Network Connections?", Path: "allowPrivateIPs", Description:"Controls whether the server can connect to private IP addresses.", Options: mapof.Any{"enum": []form.LookupCode{
-						{Value: "false", Label: "DISALLOWED (Required for production systems)"},
-						{Value: "true", Label: "ALLOWED (Development systems only)"},
-					}}},
 				}},
 				{Type: "layout-vertical", Label: "Server Ports", Children: []form.Element{
 					{Type: "text", Label: "HTTP", Description: "Port to use for HTTP connections (standard: 80, disabled: 0)", Path: "httpPort", Options: mapof.Any{"format": "number", "min": 0, "max:": 65535}},

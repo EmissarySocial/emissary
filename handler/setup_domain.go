@@ -17,7 +17,7 @@ import (
 )
 
 // SetupDomainGet displays the form for creating/editing a domain.
-func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
+func SetupDomainGet(factory *server.SetupFactory) echo.HandlerFunc {
 
 	const location = "handler.SetupDomainGet"
 
@@ -54,7 +54,7 @@ func SetupDomainGet(factory *server.Factory) echo.HandlerFunc {
 }
 
 // SetupDomainPost updates/creates a domain
-func SetupDomainPost(serverFactory *server.Factory) echo.HandlerFunc {
+func SetupDomainPost(serverFactory *server.SetupFactory) echo.HandlerFunc {
 
 	const location = "handler.SetupDomainPost"
 
@@ -89,8 +89,10 @@ func SetupDomainPost(serverFactory *server.Factory) echo.HandlerFunc {
 			return build.WrapInlineError(ctx.Response(), err)
 		}
 
+		// The error is surfaced directly (not re-wrapped) so actionable messages -- like
+		// "configure the ActivityPub Cache first" -- reach the user.
 		if err := serverFactory.PutDomain(domain); err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Saving domain"))
+			return build.WrapInlineError(ctx.Response(), err)
 		}
 
 		build.CloseModal(ctx)
@@ -100,7 +102,7 @@ func SetupDomainPost(serverFactory *server.Factory) echo.HandlerFunc {
 }
 
 // SetupDomainDelete deletes a domain from the configuration
-func SetupDomainDelete(factory *server.Factory) echo.HandlerFunc {
+func SetupDomainDelete(factory *server.SetupFactory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		// Get the domain ID
@@ -118,7 +120,7 @@ func SetupDomainDelete(factory *server.Factory) echo.HandlerFunc {
 }
 
 // SetupDomainSigninPost signs you in to the requested domain as an administrator
-func SetupDomainSigninPost(serverFactory *server.Factory) echo.HandlerFunc {
+func SetupDomainSigninPost(serverFactory *server.SetupFactory) echo.HandlerFunc {
 
 	const location = "handler.SetupDomainSigninPost"
 

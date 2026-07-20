@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func SetupGetConfig(factory *server.Factory) func(c echo.Context) error {
+func SetupGetConfig(factory *server.SetupFactory) func(c echo.Context) error {
 
 	return func(c echo.Context) error {
 

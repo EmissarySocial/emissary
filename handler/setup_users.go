@@ -16,7 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func SetupDomainUsersGet(serverFactory *server.Factory, templates *template.Template) echo.HandlerFunc {
+func SetupDomainUsersGet(serverFactory *server.SetupFactory, templates *template.Template) echo.HandlerFunc {
 
 	const location = "handler.SetupDomainUsersGet"
 
@@ -44,7 +44,7 @@ func SetupDomainUsersGet(serverFactory *server.Factory, templates *template.Temp
 	}
 }
 
-func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Template) echo.HandlerFunc {
+func SetupDomainUserPost(serverFactory *server.SetupFactory, templates *template.Template) echo.HandlerFunc {
 
 	const location = "handler.SetupDomainUsersPost"
 
@@ -118,7 +118,7 @@ func SetupDomainUserPost(serverFactory *server.Factory, templates *template.Temp
 	}
 }
 
-func SetupDomainUserInvite(serverFactory *server.Factory, templates *template.Template) echo.HandlerFunc {
+func SetupDomainUserInvite(serverFactory *server.SetupFactory, templates *template.Template) echo.HandlerFunc {
 
 	const location = "handler.SetupDomainUserInvite"
 
@@ -164,7 +164,7 @@ func SetupDomainUserInvite(serverFactory *server.Factory, templates *template.Te
 	}
 }
 
-func SetupDomainUserDelete(serverFactory *server.Factory, templates *template.Template) echo.HandlerFunc {
+func SetupDomainUserDelete(serverFactory *server.SetupFactory, templates *template.Template) echo.HandlerFunc {
 
 	const location = "handler.SetupDomainUsersPost"
 

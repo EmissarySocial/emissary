@@ -11,7 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func GetThemeResource(serverFactory *server.Factory) echo.HandlerFunc {
+func GetThemeResource(serverFactory ThemeProvider) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 

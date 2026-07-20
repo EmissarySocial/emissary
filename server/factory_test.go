@@ -5,13 +5,23 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/config"
+	"github.com/EmissarySocial/emissary/consumer"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/stretchr/testify/require"
 )
 
 func TestServerFactory(t *testing.T) {
+
+	// Both run modes must satisfy the interfaces that domain factories
+	// and queue consumers depend on.
 	var factory service.ServerFactory = &Factory{}
 	require.NotNil(t, factory)
+
+	var setupFactory service.ServerFactory = &SetupFactory{}
+	require.NotNil(t, setupFactory)
+
+	var consumerFactory consumer.ServerFactory = &SetupFactory{}
+	require.NotNil(t, consumerFactory)
 }
 
 // TestTestDatabaseConnection verifies the fail-fast behavior used by the setup console: an

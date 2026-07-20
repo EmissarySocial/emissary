@@ -101,21 +101,44 @@ func main() {
 
 	e.Use(middleware.Recover())
 
-	if serverFactory := server.NewFactory(&commandLineArgs, embeddedFiles); serverFactory.IsSetupMode() {
+	// Load the configuration storage and wait for the first "read" of the config
+	// file, so the run mode can be decided BEFORE any factory is constructed.
+	// (FACTORY-MODES D2: a not-ready config must reach the setup console, never
+	// the live factory's hard requirements.)
+	storage := config.Load(&commandLineArgs)
+	subscription := storage.Subscribe()
+	firstConfig := <-subscription
+
+	// RULE: Setup mode runs when asked for (--setup), or when the config is too
+	// incomplete to serve domains.
+	runSetup := commandLineArgs.Setup
+
+	if !runSetup && !firstConfig.IsReadyForDomains() {
+		log.Warn().Msg("Server config is not complete. Switching to `setup` mode.")
+		runSetup = true
+	}
+
+	if runSetup {
+
+		// Build the setup factory (tolerates a missing/unreachable common database)
+		setupFactory := server.NewSetupFactory(storage, firstConfig, embeddedFiles)
 
 		// Get config modifiers from the command line (like HTTP PORT)
 		configOptions := commandLineArgs.ConfigOptions()
 
 		// Add routes for setup tool
-		makeSetupRoutes(serverFactory, e)
+		makeSetupRoutes(setupFactory, e)
 
 		// When running the setup tool, wait a second, then open a browser window to the correct URL
-		openLocalhostBrowser(serverFactory, configOptions...)
+		openLocalhostBrowser(setupFactory, configOptions...)
 
 		// Prepare HTTP (only) server using the new configuration
-		go startHTTP(serverFactory, e, configOptions...)
+		go startHTTP(setupFactory, e, configOptions...)
 
 	} else {
+
+		// Build the live factory (hard-requires the common database)
+		serverFactory := server.NewFactory(storage, firstConfig, subscription, embeddedFiles)
 
 		// Add routes for standard web server
 		makeStandardRoutes(serverFactory, e)
@@ -143,10 +166,17 @@ func main() {
  * Routes for Different Application Modes
  ******************************************/
 
-// makeSetupRoutes generates a new Echo instance for the setup behavior
-func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
+// configProvider is the minimal factory surface needed by the HTTP bootstrap
+// helpers below, which both run modes satisfy.
+type configProvider interface {
+	Config() config.Config
+}
 
-	log.Info().Msg("Starting Emissary Setup Console")
+// makeSetupRoutes generates a new Echo instance for the setup behavior
+func makeSetupRoutes(factory *server.SetupFactory, e *echo.Echo) {
+
+	// Boot proof-of-life prints unconditionally: it must be visible at every log level
+	fmt.Println("Starting Emissary Setup Console.")
 
 	// Locate the setup templates
 	setupFiles, err := fs.Sub(embeddedFiles, "_embed/setup")
@@ -189,7 +219,8 @@ func makeSetupRoutes(factory *server.Factory, e *echo.Echo) {
 // makeStandardRoutes generates a new Echo instance the primary server behavior
 func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
-	log.Info().Msg("Starting Emissary Server.")
+	// Boot proof-of-life prints unconditionally: it must be visible at every log level
+	fmt.Println("Starting Emissary Server.")
 
 	// Recovery Middleware to catch panics
 	e.Pre(middleware.Recover())
@@ -523,7 +554,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 // startHTTP starts the HTTPS server using Let's Encrypt SSL certificates.
 // If the configured port is not available, it will wait one second and retry until it is
-func startHTTPS(factory *server.Factory, e *echo.Echo, options ...config.Option) {
+func startHTTPS(factory configProvider, e *echo.Echo, options ...config.Option) {
 
 	// Get and modify the configuration
 	config := factory.Config()
@@ -536,7 +567,7 @@ func startHTTPS(factory *server.Factory, e *echo.Echo, options ...config.Option)
 		domains := slice.Filter(config.DomainNames(), uri.NotLocalHostname)
 
 		if len(domains) == 0 {
-			log.Info().Msg("Skipping HTTPS server because there are no non-local domains.")
+			fmt.Println("Skipping HTTPS server because there are no non-local domains.")
 			return
 		}
 
@@ -548,22 +579,23 @@ func startHTTPS(factory *server.Factory, e *echo.Echo, options ...config.Option)
 			Email:      config.AdminEmail,
 		}
 
-		log.Info().Msg("Starting HTTPS server on port " + portString + ".")
+		fmt.Println("Starting HTTPS server on port " + portString + ".")
 
 		for {
 			if err := e.StartAutoTLS(portString); err != nil {
-				log.Error().Err(err).Send()
+				// Bind failures print unconditionally: a silently-retrying server reads as a hang
+				fmt.Println("ERROR: Unable to start HTTPS server: " + err.Error())
 				time.Sleep(1 * time.Second)
 			}
 		}
 	}
 
-	log.Info().Msg("NO HTTPS PORT CONFIGURED. Skipping HTTPS server.")
+	fmt.Println("NO HTTPS PORT CONFIGURED. Skipping HTTPS server.")
 }
 
 // startHTTP starts the HTTP server.
 // If the configured port is not available, it will wait one second and retry until it is
-func startHTTP(factory *server.Factory, e *echo.Echo, options ...config.Option) {
+func startHTTP(factory configProvider, e *echo.Echo, options ...config.Option) {
 
 	// Get and modify the configuration
 	config := factory.Config()
@@ -571,17 +603,18 @@ func startHTTP(factory *server.Factory, e *echo.Echo, options ...config.Option) 
 
 	if portString, ok := config.HTTPPortString(); ok {
 
-		log.Info().Msg("Starting HTTP server on port " + portString + ".")
+		fmt.Println("Starting HTTP server on port " + portString + ".")
 
 		for {
 			if err := e.Start(portString); err != nil {
-				log.Error().Err(err).Send()
+				// Bind failures print unconditionally: a silently-retrying server reads as a hang
+				fmt.Println("ERROR: Unable to start HTTP server: " + err.Error())
 				time.Sleep(1 * time.Second)
 			}
 		}
 	}
 
-	log.Info().Msg("NO HTTP PORT CONFIGURED. Skipping HTTP server")
+	fmt.Println("NO HTTP PORT CONFIGURED. Skipping HTTP server")
 }
 
 /******************************************
@@ -590,7 +623,7 @@ func startHTTP(factory *server.Factory, e *echo.Echo, options ...config.Option) 
 
 // openLocalhostBrowser opens a browser window to the localhost URL
 // IF the server is configured to run on HTTP or HTTPS
-func openLocalhostBrowser(factory *server.Factory, options ...config.Option) {
+func openLocalhostBrowser(factory configProvider, options ...config.Option) {
 
 	// Get and modify the configuration
 	config := factory.Config()
@@ -604,7 +637,7 @@ func openLocalhostBrowser(factory *server.Factory, options ...config.Option) {
 		}
 
 	} else {
-		log.Error().Msg("Unable to open setup tool because no HTTP port is configured.")
+		fmt.Println("ERROR: Unable to open setup tool because no HTTP port is configured.")
 		os.Exit(0)
 	}
 }

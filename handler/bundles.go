@@ -3,19 +3,26 @@ package handler
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/labstack/echo/v4"
 )
 
-func GetThemeBundle(serverFactory *server.Factory) echo.HandlerFunc {
+// ThemeProvider is the minimal server-factory surface needed to serve theme
+// bundles and resources.  Both the live server and the setup console satisfy it.
+type ThemeProvider interface {
+	Theme() *service.Theme
+}
+
+func GetThemeBundle(themeProvider ThemeProvider) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
 		themeID := ctx.Param("themeId")
 		bundleID := ctx.Param("bundleId")
 
-		themeService := serverFactory.Theme()
+		themeService := themeProvider.Theme()
 		theme := themeService.GetTheme(themeID)
 
 		return getBundle(theme.Bundles, bundleID, ctx.Response())
