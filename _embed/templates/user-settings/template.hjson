@@ -162,6 +162,18 @@
 						]
 					}}
 				]}
+
+				// Persist on POST (as-modal halts on GET, so this runs only when the form is submitted). A
+				// chosen action (BLOCK/MUTE/LABEL) saves; "Allow" (empty action) clears an existing rule and
+				// is a no-op for a rule that was never saved.
+				{do:"if", condition:"{{ne `` .Object.Action}}", then:[
+					{do:"save"}
+				], else:[
+					{do:"if", condition:"{{not .Object.IsNew}}", then:[
+						{do:"delete", method:"post"}
+					]}
+				]}
+				{do:"trigger-event", event:"refreshPeers"}
 				]}
 			]
 		}

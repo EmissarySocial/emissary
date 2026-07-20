@@ -82,6 +82,13 @@ func (step StepWithRule) getRule(builder Builder) (model.Rule, error) {
 				return rule, derp.Wrap(err, "build.StepWithRule.getRule", "Loading Rule with actor "+token)
 			}
 		}
+
+		// Seed the Trigger for a brand-new Rule so Save can resolve its (Required) MatchKey. An
+		// existing Rule already carries the friendly Trigger the User originally typed, so leave it.
+		if rule.IsNew() {
+			rule.Trigger = token
+		}
+
 		return rule, nil
 	}
 
