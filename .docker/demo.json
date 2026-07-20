@@ -4,7 +4,7 @@
             "domainId": "66035ca755847621dc21a5b0",
             "label": "localhost",
             "hostname": "localhost",
-            "connectString": "mongodb://mongodb",
+            "connectString": "mongodb://mongodb/?replicaSet=rs0",
             "databaseName": "emissary-localhost",
             "smtp": {
                 "hostname": "",
@@ -54,7 +54,7 @@
         "location": "/data/uploads/certificates"
     },
     "activityPubCache": {
-        "connectString": "mongodb://mongodb",
+        "connectString": "mongodb://mongodb/?replicaSet=rs0",
         "database": "activitystream"
     },
     "adminEmail": "",

@@ -19,7 +19,8 @@ services:
     environment:
       - EMISSARY_CONFIG=file:///data/config/config.json
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     volumes:
       - config:/data/config
       - uploads:/data/uploads
@@ -38,20 +39,36 @@ services:
       - EMISSARY_CONFIG=file:///data/config/config.json
     command: ["--setup", "--port", "8888"]
     depends_on:
-      - mongodb
-      - server
+      mongodb:
+        condition: service_healthy
+      server:
+        condition: service_started
     volumes:
       - config:/data/config
 
   # This mongo database stores data for the Emissary site.
   # You can connect to it using any MongoDB client.
+  #
+  # Emissary writes inside MongoDB transactions, which are only supported on a
+  # replica set (never a standalone mongod). We run mongod with --replSet and use
+  # the healthcheck to run rs.initiate() exactly once, forming a single-node
+  # replica set. The member is advertised as "mongodb:27017" so it is reachable
+  # by the other containers over the compose network.
   mongodb:
     container_name: emissary_demo_database
     image: "mongo:latest"
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
     ports:
       - "27017:27017"
     volumes:
       - mongo:/data/db
+    healthcheck:
+      test: echo "try { rs.status() } catch (err) { rs.initiate({_id:'rs0',members:[{_id:0,host:'mongodb:27017'}]}) }" | mongosh --port 27017 --quiet
+      interval: 5s
+      timeout: 30s
+      start_period: 0s
+      start_interval: 1s
+      retries: 30
 
 volumes:
   config:
