@@ -30,7 +30,9 @@ func Rule(ctx context.Context, database *mongo.Database) error {
 
 		// The disposition engine's query (userId IN [me, nil] AND matchKey IN [...]) and the UNIQUE
 		// dedup invariant. Unique with no partial filter: hard delete (D16) leaves no tombstone to
-		// collide with, so the database enforces one rule per (userId, matchKey).
+		// collide with, so the database enforces one rule per (userId, matchKey). The legacy rows
+		// that predate this key are reconciled once by upgrades.Version27, which runs BEFORE this
+		// sync so the index can build.
 		"idx_Rule_MatchKey": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "userId", Value: 1},
