@@ -24,7 +24,10 @@ func (smtp SMTPConnection) IsNil() bool {
 
 // Validate confirms that the SMTPConnection matches ths SMTPConnectionSchema
 func (smtp SMTPConnection) Validate() error {
-	_, err := schema.New(SMTPConnectionSchema()).Validate(smtp)
+	// RULE: pass a POINTER. The schema resolves properties through GetPointer,
+	// which is declared on a pointer receiver, so a value copy does not satisfy
+	// the schema's PointerGetter interface and every property fails validation.
+	_, err := schema.New(SMTPConnectionSchema()).Validate(&smtp)
 	return err
 }
 

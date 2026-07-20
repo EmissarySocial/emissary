@@ -10,15 +10,15 @@ import (
 
 // Domain contains all of the configuration data required to operate a single domain.
 type Domain struct {
-	DomainID       string         `bson:"domainId"`      // Unique ID for this domain
-	Label          string         `bson:"label"`         // Human-friendly label for administrators
-	Hostname       string         `bson:"hostname"`      // Domain name of a virtual server
-	ConnectString  string         `bson:"connectString"` // MongoDB connect string
-	DatabaseName   string         `bson:"databaseName"`  // Name of the MongoDB Database (can be empty string to use default db for the connect string)
-	SMTPConnection SMTPConnection `bson:"smtp"`          // Information for connecting to an SMTP server to send email on behalf of the domain.
-	Owner          Owner          `bson:"owner"`         // Information about the owner of this domain
-	MasterKey      string         `bson:"masterKey"`     // Key used to encrypt/decrypt JWT keys stored in the database
-	CreateOwner    bool           `bson:"createOwner"`   // TRUE if the owner should be created when the domain is created
+	DomainID       string         `json:"domainId"       bson:"domainId"`      // Unique ID for this domain
+	Label          string         `json:"label"          bson:"label"`         // Human-friendly label for administrators
+	Hostname       string         `json:"hostname"       bson:"hostname"`      // Domain name of a virtual server
+	ConnectString  string         `json:"connectString"  bson:"connectString"` // MongoDB connect string
+	DatabaseName   string         `json:"databaseName"   bson:"databaseName"`  // Name of the MongoDB Database (can be empty string to use default db for the connect string)
+	SMTPConnection SMTPConnection `json:"smtp"           bson:"smtp"`          // Information for connecting to an SMTP server to send email on behalf of the domain.
+	Owner          Owner          `json:"owner"          bson:"owner"`         // Information about the owner of this domain
+	MasterKey      string         `json:"masterKey"      bson:"masterKey"`     // Key used to encrypt/decrypt JWT keys stored in the database
+	CreateOwner    bool           `json:"createOwner"    bson:"createOwner"`   // TRUE if the owner should be created when the domain is created
 }
 
 // NewDomain returns a fully initialized Domain object.
