@@ -1,6 +1,8 @@
 package service
 
 import (
+	"crypto/subtle"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/cimd"
 	"github.com/EmissarySocial/emissary/tools/random"
@@ -216,8 +218,9 @@ func (service *OAuthClient) ValidateClientSecret(session data.Session, clientID 
 		return derp.Wrap(err, location, "Loading client", clientID)
 	}
 
-	// Confirm the client.Secret
-	if client.ClientSecret != clientSecret {
+	// Confirm the client.Secret using a constant-time comparison to avoid
+	// leaking the secret through timing.
+	if subtle.ConstantTimeCompare([]byte(client.ClientSecret), []byte(clientSecret)) != 1 {
 		return derp.BadRequest(location, "Invalid client_secret")
 	}
 

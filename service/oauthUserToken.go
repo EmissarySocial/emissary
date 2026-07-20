@@ -220,12 +220,11 @@ func (service *OAuthUserToken) LoadByUserAndScope(session data.Session, userID p
 	return service.Load(session, criteria, result)
 }
 
-func (service *OAuthUserToken) LoadByClientAndCode(session data.Session, userTokenID primitive.ObjectID, clientID primitive.ObjectID, clientSecret string, result *model.OAuthUserToken) error {
-
-	// RULE: must have a valid clientSecret to load this record
-	if err := service.oauthClientService.ValidateClientSecret(session, clientID, clientSecret); err != nil {
-		return derp.Wrap(err, "service.OAuthUserToken.LoadByClientAndToken", "Invalid client secret")
-	}
+// LoadByClientAndCode loads the OAuthUserToken identified by an authorization code
+// (its ObjectID) for the given client.  It performs NO client authentication: the
+// caller MUST authenticate the code redemption (a matching client_secret for a
+// confidential client, or PKCE for a public client) before issuing the token.
+func (service *OAuthUserToken) LoadByClientAndCode(session data.Session, userTokenID primitive.ObjectID, clientID primitive.ObjectID, result *model.OAuthUserToken) error {
 
 	criteria := exp.Equal("_id", userTokenID).
 		AndEqual("clientId", clientID)

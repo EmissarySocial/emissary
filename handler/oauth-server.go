@@ -210,12 +210,25 @@ func PostOAuthToken(ctx *steranko.Context, factory *service.Factory, session dat
 		return derp.Wrap(err, location, "Invalid code", transaction)
 	}
 
-	// Load the UserToken
+	// Load the UserToken bound to this code.  This performs NO authentication --
+	// the redemption is authenticated below, keyed on the client type.
 	userTokenService := factory.OAuthUserToken()
 	userToken := model.NewOAuthUserToken()
 
-	if err := userTokenService.LoadByClientAndCode(session, userTokenID, oauthClient.ClientID, transaction.ClientSecret, &userToken); err != nil {
+	if err := userTokenService.LoadByClientAndCode(session, userTokenID, oauthClient.ClientID, &userToken); err != nil {
 		return derp.Wrap(err, location, "Loading OAuthUserToken", transaction)
+	}
+
+	// RULE: Authenticate the code redemption (RFC 8252 / OAuth 2.1).  A
+	// confidential client must present its matching client_secret; a public client
+	// (no secret -- e.g. a CIMD/FEP-d8c2 client) must instead have bound its code
+	// to a PKCE challenge, so an intercepted code is useless without the verifier.
+	if oauthClient.IsConfidential() {
+		if err := oauthClient.ValidateSecret(transaction.ClientSecret); err != nil {
+			return derp.Wrap(err, location, "Invalid client_secret", transaction)
+		}
+	} else if !userToken.HasPKCEChallenge() {
+		return derp.BadRequest(location, "This client must use PKCE (a code_verifier is required)", transaction)
 	}
 
 	// RULE: PKCE (RFC 7636). If the code was issued with a code_challenge, a

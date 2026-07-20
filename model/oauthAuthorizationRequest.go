@@ -83,6 +83,14 @@ func (req *OAuthAuthorizationRequest) Validate(client OAuthClient) error {
 		return err
 	}
 
+	// RULE: Public clients (no client_secret) MUST use PKCE for the code grant
+	// (RFC 8252 / OAuth 2.1), so an intercepted authorization code is useless
+	// without the matching code_verifier.  The implicit "token" grant has no code
+	// to intercept, so it is exempt.
+	if req.ResponseType == "code" && client.ClientSecret == "" && req.CodeChallenge == "" {
+		return derp.BadRequest(location, "This client must use PKCE (a code_challenge is required)")
+	}
+
 	// Success
 	return nil
 }

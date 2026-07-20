@@ -1,7 +1,10 @@
 package model
 
 import (
+	"crypto/subtle"
+
 	"github.com/benpate/data/journal"
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/toot/object"
@@ -32,6 +35,36 @@ func NewOAuthClient() OAuthClient {
 
 func (app OAuthClient) ID() string {
 	return app.ClientID.Hex()
+}
+
+// IsConfidential reports whether this client authenticates with a shared secret.
+// Public clients -- native/mobile apps and clients registered via a Client ID
+// Metadata Document (FEP-d8c2) -- have no secret and MUST instead prove
+// possession of their authorization code via PKCE (RFC 8252 / OAuth 2.1).
+func (app OAuthClient) IsConfidential() bool {
+	return app.ClientSecret != ""
+}
+
+// ValidateSecret confirms a supplied client_secret against this client's stored
+// secret.  It is only meaningful for confidential clients; a public client has
+// no secret and must be authenticated via PKCE instead.
+func (app OAuthClient) ValidateSecret(clientSecret string) error {
+
+	const location = "model.OAuthClient.ValidateSecret"
+
+	// RULE: An empty secret is never a valid credential.  This also prevents a
+	// public client's empty stored secret from being satisfied by an empty
+	// supplied secret ("" == "").
+	if clientSecret == "" {
+		return derp.BadRequest(location, "Invalid client_secret")
+	}
+
+	// RULE: Constant-time comparison avoids leaking the secret through timing.
+	if subtle.ConstantTimeCompare([]byte(app.ClientSecret), []byte(clientSecret)) != 1 {
+		return derp.BadRequest(location, "Invalid client_secret")
+	}
+
+	return nil
 }
 
 // ToToot converts this object into a Mastodon-compatible Application object

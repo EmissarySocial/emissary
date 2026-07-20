@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/benpate/rosetta/schema"
+	"github.com/stretchr/testify/require"
 )
 
 func TestOAuthClientSchema(t *testing.T) {
@@ -26,4 +27,47 @@ func TestOAuthClientSchema(t *testing.T) {
 	}
 
 	tableTest_Schema(t, &s, &client, table)
+}
+
+func TestOAuthClient_IsConfidential(t *testing.T) {
+
+	t.Run("client with a secret is confidential", func(t *testing.T) {
+		client := OAuthClient{ClientSecret: "topsecret"}
+		require.True(t, client.IsConfidential())
+	})
+
+	t.Run("client without a secret is public", func(t *testing.T) {
+		client := OAuthClient{ClientSecret: ""}
+		require.False(t, client.IsConfidential())
+	})
+}
+
+func TestOAuthClient_ValidateSecret(t *testing.T) {
+
+	// --- Confidential client (a secret is stored) ---
+	confidential := OAuthClient{ClientSecret: "topsecret"}
+
+	t.Run("correct secret is accepted", func(t *testing.T) {
+		require.Nil(t, confidential.ValidateSecret("topsecret"))
+	})
+
+	t.Run("wrong secret is rejected", func(t *testing.T) {
+		require.NotNil(t, confidential.ValidateSecret("guess"))
+	})
+
+	t.Run("empty secret is rejected", func(t *testing.T) {
+		require.NotNil(t, confidential.ValidateSecret(""))
+	})
+
+	// --- Public client (no secret stored): the reported bypass ---
+	// An empty supplied secret must NEVER satisfy an empty stored secret.
+	public := OAuthClient{ClientSecret: ""}
+
+	t.Run("public client: empty secret is rejected (the bug)", func(t *testing.T) {
+		require.NotNil(t, public.ValidateSecret(""))
+	})
+
+	t.Run("public client: any secret is rejected", func(t *testing.T) {
+		require.NotNil(t, public.ValidateSecret("anything"))
+	})
 }

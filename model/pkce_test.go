@@ -155,6 +155,56 @@ func TestOAuthUserToken_SetPKCEChallenge(t *testing.T) {
 	})
 }
 
+func TestOAuthUserToken_HasPKCEChallenge(t *testing.T) {
+
+	t.Run("no bound challenge", func(t *testing.T) {
+		token := NewOAuthUserToken()
+		require.False(t, token.HasPKCEChallenge())
+	})
+
+	t.Run("challenge bound via SetPKCEChallenge", func(t *testing.T) {
+		token := NewOAuthUserToken()
+		token.SetPKCEChallenge(s256(validVerifier), PKCEMethodS256)
+		require.True(t, token.HasPKCEChallenge())
+	})
+}
+
+// TestOAuthAuthorizationRequest_Validate_PublicClientRequiresPKCE covers the
+// authorize-time gate: a public client (no client_secret) must use PKCE for the
+// authorization-code grant, while confidential clients and the implicit "token"
+// grant are exempt.
+func TestOAuthAuthorizationRequest_Validate_PublicClientRequiresPKCE(t *testing.T) {
+
+	// newClient builds a minimally-valid client with the given secret so that
+	// Validate reaches the PKCE rule (it needs a redirect_uri to get that far).
+	newClient := func(secret string) OAuthClient {
+		client := NewOAuthClient()
+		client.ClientSecret = secret
+		client.RedirectURIs = []string{"https://example.com/callback"}
+		return client
+	}
+
+	t.Run("public client, code grant, no challenge is rejected", func(t *testing.T) {
+		req := OAuthAuthorizationRequest{ResponseType: "code"}
+		require.NotNil(t, req.Validate(newClient("")))
+	})
+
+	t.Run("public client, code grant, with challenge is accepted", func(t *testing.T) {
+		req := OAuthAuthorizationRequest{ResponseType: "code", CodeChallenge: s256(validVerifier), CodeChallengeMethod: PKCEMethodS256}
+		require.Nil(t, req.Validate(newClient("")))
+	})
+
+	t.Run("confidential client, code grant, no challenge is accepted", func(t *testing.T) {
+		req := OAuthAuthorizationRequest{ResponseType: "code"}
+		require.Nil(t, req.Validate(newClient("topsecret")))
+	})
+
+	t.Run("public client, implicit token grant is exempt", func(t *testing.T) {
+		req := OAuthAuthorizationRequest{ResponseType: "token"}
+		require.Nil(t, req.Validate(newClient("")))
+	})
+}
+
 func TestOAuthAuthorizationRequest_validatePKCE(t *testing.T) {
 
 	t.Run("no challenge is fine", func(t *testing.T) {

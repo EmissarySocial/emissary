@@ -100,6 +100,13 @@ func (token *OAuthUserToken) SetPKCEChallenge(challenge string, method string) {
 	token.Data[pkceDataMethod] = method
 }
 
+// HasPKCEChallenge reports whether a PKCE code_challenge was bound to this token
+// when its authorization code was issued.  A public client (no client_secret)
+// MUST have one, so an intercepted code cannot be redeemed without the verifier.
+func (token *OAuthUserToken) HasPKCEChallenge() bool {
+	return token.Data.GetString(pkceDataChallenge) != ""
+}
+
 // VerifyPKCE enforces the PKCE binding (RFC 7636) at code-exchange time.
 //
 //   - If this token carries NO stored challenge, PKCE does not apply and any
