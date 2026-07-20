@@ -91,6 +91,7 @@ type Factory struct {
 	responseService         Response
 	webPushService          WebPush
 	ruleService             Rule
+	ruleSuppressionService  RuleSuppression
 	searchDomainService     SearchDomain
 	searchQueryService      SearchQuery
 	searchTagService        SearchTag
@@ -181,6 +182,7 @@ func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, doma
 	factory.responseService = NewResponse()
 	factory.realtimeBroker = realtime.NewBroker(factory.SSEUpdateChannel())
 	factory.ruleService = NewRule()
+	factory.ruleSuppressionService = NewRuleSuppression()
 	factory.searchDomainService = NewSearchDomain()
 	factory.searchQueryService = NewSearchQuery()
 	factory.searchResultService = NewSearchResult()
@@ -253,6 +255,7 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	factory.realtimeBroker.Refresh()
 	factory.responseService.Refresh(factory)
 	factory.ruleService.Refresh(factory)
+	factory.ruleSuppressionService.Refresh(factory)
 	factory.searchDomainService.Refresh(factory)
 	factory.searchQueryService.Refresh(factory)
 	factory.searchResultService.Refresh(factory)
@@ -557,6 +560,11 @@ func (factory *Factory) Response() *Response {
 // Rule returns a fully populated Rule service
 func (factory *Factory) Rule() *Rule {
 	return &factory.ruleService
+}
+
+// RuleSuppression returns a fully populated RuleSuppression service
+func (factory *Factory) RuleSuppression() *RuleSuppression {
+	return &factory.ruleSuppressionService
 }
 
 // SearchDomain returns a fully populated SearchDomain service

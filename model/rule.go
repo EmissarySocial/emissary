@@ -17,6 +17,7 @@ type Rule struct {
 	Label           string             `bson:"label"`                     // Human-friendly label to add to messages
 	Trigger         string             `bson:"trigger"`                   // Parameter for this rule type)
 	MatchKey        string             `bson:"matchKey"`                  // Derived "<TYPE>:<normalized trigger>" -- the indexed key that a matching document also produces. Computed in Save from Type+Trigger; NEVER set from a form (see RuleSchema).
+	RemoteID        string             `bson:"remoteId,omitempty"`        // Canonical id (URL) of the remote moderation entry this Rule was imported from (P7-3). "" = created locally. Server-set only -- NEVER in RuleSchema.
 	ReasonCode      string             `bson:"reasonCode"`                // Optional code to identify the reason for this rule (e.g. "SPAM", "NSFW", "SENSITIVE")
 	Summary         string             `bson:"summary"`                   // Optional comment describing why this rule exists
 	IsPublic        bool               `bson:"isPublic"`                  // If TRUE, this record is visible publicly

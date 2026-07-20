@@ -20,11 +20,12 @@ import (
 
 // Rule defines a service that manages all content rules created and imported by Users.
 type Rule struct {
-	importItemService *ImportItem
-	outboxService     *Outbox
-	userService       *User
-	host              string
-	newSession        func(timeout time.Duration) (data.Session, context.CancelFunc, error)
+	importItemService      *ImportItem
+	outboxService          *Outbox
+	ruleSuppressionService *RuleSuppression
+	userService            *User
+	host                   string
+	newSession             func(timeout time.Duration) (data.Session, context.CancelFunc, error)
 
 	queue *queue.Queue
 }
@@ -42,6 +43,7 @@ func NewRule() Rule {
 func (service *Rule) Refresh(factory *Factory) {
 	service.importItemService = factory.ImportItem()
 	service.outboxService = factory.Outbox()
+	service.ruleSuppressionService = factory.RuleSuppression()
 	service.userService = factory.User()
 	service.queue = factory.Queue()
 	service.host = factory.Host()
@@ -228,6 +230,16 @@ func (service *Rule) Delete(session data.Session, rule *model.Rule, note string)
 	if rule.PublishDate > 0 {
 		if err := service.unpublish(session, *rule); err != nil {
 			return derp.Wrap(err, location, "Unpublishing Rule", rule)
+		}
+	}
+
+	// RULE: P7-3 -- deleting an IMPORTED rule writes a don't-re-import record FIRST, so the
+	// provider's next backfill cannot resurrect it. (Locally-created rules have no RemoteID and
+	// suppress nothing.) Written before the hard delete for the same reason retraction is: the
+	// transactionless Mastodon-API path must not delete the row and THEN fail to remember why.
+	if rule.RemoteID != "" {
+		if err := service.ruleSuppressionService.Suppress(session, rule.UserID, rule.FollowingID, rule.RemoteID); err != nil {
+			return derp.Wrap(err, location, "Suppressing re-import of deleted Rule", rule.RemoteID)
 		}
 	}
 

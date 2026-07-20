@@ -166,6 +166,10 @@ func SyncDomainIndexes(connectionString string, databaseName string) error { // 
 		derp.Report(err)
 	}
 
+	if err := sync.RuleSuppression(ctx, session); err != nil {
+		derp.Report(err)
+	}
+
 	if err := sync.SearchQuery(ctx, session); err != nil {
 		derp.Report(err)
 	}
