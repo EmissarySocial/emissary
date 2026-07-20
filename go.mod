@@ -29,7 +29,7 @@ require (
 	github.com/benpate/sniff v0.2.0
 	github.com/benpate/steranko v0.28.0
 	github.com/benpate/table v0.8.0
-	github.com/benpate/toot v0.3.0
+	github.com/benpate/toot v0.4.0
 	github.com/benpate/turbine v0.7.0
 	github.com/benpate/uri v0.3.0
 	github.com/cespare/xxhash/v2 v2.3.0

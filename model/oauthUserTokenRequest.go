@@ -14,6 +14,7 @@ import (
 type OAuthUserTokenRequest struct {
 	GrantType    string `form:"grant_type"`
 	Code         string `form:"code"`
+	RefreshToken string `form:"refresh_token"` // The rotating refresh token, presented for a refresh_token grant (RFC 6749 §6)
 	ClientID     string `form:"client_id"`
 	ClientSecret string `form:"client_secret"`
 	RedirectURI  string `form:"redirect_uri"`

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"strings"
 	"time"
 
 	activitypub "github.com/EmissarySocial/emissary/handler/activitypub_user"
@@ -440,16 +439,20 @@ func WithOAuthUser(serverFactory *server.Factory, fn WithFunc2[model.OAuthUserTo
 			return derp.NotFound(location, "UserID in URL must match authenticated User")
 		}
 
-		// Locate the OAuth Bearer token in the request
-		bearerToken := ctx.Request().Header.Get("Authorization")
-		bearerToken = strings.TrimPrefix(bearerToken, "Bearer ")
+		// The access token (validated by WithAuthenticatedUser) carries the grant ID.
+		grantID := getAuthorization(ctx).OAuthUserTokenID
 
-		// Load the OAuthUserToken from the database
+		if grantID.IsZero() {
+			return derp.Unauthorized(location, "Access token is not an OAuth grant")
+		}
+
+		// Load the grant by ID. A missing record means the grant was revoked, so the
+		// (still-signed) access token is no longer honored.
 		oauthUserTokenService := factory.OAuthUserToken()
 		oauthUserToken := model.NewOAuthUserToken()
 
-		if err := oauthUserTokenService.LoadByUserAndToken(session, user.UserID, bearerToken, &oauthUserToken); err != nil {
-			return derp.Wrap(err, location, "Loading OAuthUserToken")
+		if err := oauthUserTokenService.LoadByID(session, user.UserID, grantID, &oauthUserToken); err != nil {
+			return derp.Wrap(err, location, "Loading OAuthUserToken", derp.WithUnauthorized())
 		}
 
 		// Call the continuation function

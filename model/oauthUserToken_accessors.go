@@ -11,15 +11,19 @@ func OAuthUserTokenSchema() schema.Element {
 			"oauthUserTokenId": schema.String{Format: "objectId", Required: true},
 			"userId":           schema.String{Format: "objectId", Required: true},
 			"clientId":         schema.String{Format: "objectId", Required: true},
-			// token and clientSecret are opaque secrets; unsafe-any preserves them verbatim
-			// (the no-html default would strip characters and collapse whitespace).
-			"token":            schema.String{Format: "unsafe-any", MaxLength: 512},
-			"clientSecret":     schema.String{Format: "unsafe-any", MaxLength: 512},
+			// Refresh-token hashes are hex SHA-256 (64 chars); unsafe-any preserves
+			// them verbatim with only a length bound (the no-html default would strip
+			// characters). See emissary-specs/OAUTH-REFRESH-TOKENS.md.
+			"refreshHash":     schema.String{Format: "unsafe-any", MaxLength: 128},
+			"refreshPrevHash": schema.String{Format: "unsafe-any", MaxLength: 128},
+			"generation":      schema.Integer{},
+			"rotatedAt":       schema.Integer{BitSize: 64},
+			"codeRedeemed":    schema.Boolean{},
 			// OAuth scopes are colon-delimited (e.g. "reading:expand:media"), which the token
 			// format rejects; unsafe-any preserves them verbatim with only a length bound.
-			"scopes":           schema.Array{Items: schema.String{Format: "unsafe-any", MaxLength: 128}},
-			"data":             schema.Object{Wildcard: schema.Any{}},
-			"apiUser":          schema.Boolean{},
+			"scopes":  schema.Array{Items: schema.String{Format: "unsafe-any", MaxLength: 128}},
+			"data":    schema.Object{Wildcard: schema.Any{}},
+			"apiUser": schema.Boolean{},
 		},
 	}
 }
@@ -27,8 +31,20 @@ func OAuthUserTokenSchema() schema.Element {
 func (userToken *OAuthUserToken) GetPointer(name string) (any, bool) {
 	switch name {
 
-	case "token":
-		return &userToken.Token, true
+	case "refreshHash":
+		return &userToken.RefreshHash, true
+
+	case "refreshPrevHash":
+		return &userToken.RefreshPrevHash, true
+
+	case "generation":
+		return &userToken.Generation, true
+
+	case "rotatedAt":
+		return &userToken.RotatedAt, true
+
+	case "codeRedeemed":
+		return &userToken.CodeRedeemed, true
 
 	case "scopes":
 		return &userToken.Scopes, true

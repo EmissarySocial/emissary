@@ -76,8 +76,8 @@ github.com/benpate/steranko v0.28.0 h1:stp97xqhQ5UIPrWE7iLXFCXSKYYjKWhtY7y8jZcZ4
 github.com/benpate/steranko v0.28.0/go.mod h1:YiqmhAfI57oUHoCdNTGuh6vIpZ+b3ScASEa+eu4LwNw=
 github.com/benpate/table v0.8.0 h1:0hH4JFFBk5s7zv+lTwn8+s3WPnZ/y/UtJdf/QaD9jYw=
 github.com/benpate/table v0.8.0/go.mod h1:kHM33zm01xr6GBu0azQL6rPNCkT78zc+ofNidWqUEAk=
-github.com/benpate/toot v0.3.0 h1:Nv64oUTJo9yNQnrWVdEQRIBWi/exvwOUYo4PBdjJg9w=
-github.com/benpate/toot v0.3.0/go.mod h1:ihtqpjldJGzL0dd3S/g9dLE3HaO82P+f45kvfh1TXEc=
+github.com/benpate/toot v0.4.0 h1:qxDUj/+X17QFaWSREr2Mz94mZLkc9RraLcueME0S3CM=
+github.com/benpate/toot v0.4.0/go.mod h1:ihtqpjldJGzL0dd3S/g9dLE3HaO82P+f45kvfh1TXEc=
 github.com/benpate/turbine v0.7.0 h1:g0wusGxhFwCJt/fUEfIG5pZUFaCweFLrVZN+mgoZP84=
 github.com/benpate/turbine v0.7.0/go.mod h1:miMNaDl0laapB+iS3Q1PpbikfazjkuJDziX+m1W/RhY=
 github.com/benpate/uri v0.3.0 h1:r6u1QCy3PapfANleGwKJ4buPgsrNEwrGazllV+KUonM=

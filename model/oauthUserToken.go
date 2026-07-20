@@ -14,13 +14,25 @@ import (
 // UserOAuthToken represents an application-specific token that
 // a remote API can use to access a user's account on their behalf
 type OAuthUserToken struct {
-	OAuthUserTokenID primitive.ObjectID `json:"I" bson:"_id"`      // Unique identifier for this OAuthUserToken
-	ClientID         primitive.ObjectID `json:"C" bson:"clientId"` // Unique identifier of the OAuthClient that created this token
-	UserID           primitive.ObjectID `json:"U" bson:"userId"`   // Unique identifier of the User that authorized this token
-	Token            string             `json:"T" bson:"token"`    // The actual OAuth2 access token
-	APIUser          bool               `json:"A" bson:"apiUser"`  // TRUE if this token represents an API user (as opposed to a human user)
-	Scopes           sliceof.String     `json:"S" bson:"scopes"`   // The OAuth2 scopes that were authorized for this token
-	Data             mapof.Any          `json:"D" bson:"data"`     // Additional data associated with this token
+	OAuthUserTokenID primitive.ObjectID `json:"I" bson:"_id"`             // Unique identifier for this OAuthUserToken (also the authorization code)
+	ClientID         primitive.ObjectID `json:"C" bson:"clientId"`        // Unique identifier of the OAuthClient that created this token
+	UserID           primitive.ObjectID `json:"U" bson:"userId"`          // Unique identifier of the User that authorized this token
+	APIUser          bool               `json:"A" bson:"apiUser"`         // TRUE if this token represents an API user (as opposed to a human user)
+	Scopes           sliceof.String     `json:"S" bson:"scopes"`          // The OAuth2 scopes that were authorized for this token
+	RefreshHash      string             `json:"-" bson:"refreshHash"`     // SHA-256 of the current refresh-token secret (empty until the code is exchanged)
+	RefreshPrevHash  string             `json:"-" bson:"refreshPrevHash"` // SHA-256 of the immediately-prior refresh secret, for the grace window (RFC 6819 reuse detection)
+	Generation       int                `json:"-" bson:"generation"`      // Monotonic refresh-token generation counter (1 on first issuance)
+	RotatedAt        int64              `json:"-" bson:"rotatedAt"`       // Unix seconds of the last refresh rotation, for the grace window
+	CodeRedeemed     bool               `json:"-" bson:"codeRedeemed"`    // TRUE once the authorization code has been exchanged (single-use)
+	Data             mapof.Any          `json:"D" bson:"data"`            // Additional data associated with this token
+
+	// Token (the access-token JWT) and RefreshToken (the "grantID.gen.secret"
+	// string) are transient, derived values — minted at issuance/refresh and
+	// returned to the client once, but NEVER persisted. The grant is keyed by
+	// RefreshHash; a stateless JWT and a bearer secret do not belong in the
+	// database.
+	Token        string `json:"-" bson:"-"`
+	RefreshToken string `json:"-" bson:"-"`
 
 	journal.Journal `json:"-" bson:",inline"`
 }
@@ -86,23 +98,46 @@ func (token OAuthUserToken) Code() string {
 	return token.OAuthUserTokenID.Hex()
 }
 
-// JSONResponse returns the token as a map suitable for JSON API responses.
+// JSONResponse returns the token as a map suitable for JSON API responses
+// (RFC 6749 §5.1). It includes the access token, its lifetime (expires_in), and
+// the rotating refresh token the client uses to obtain the next access token.
 func (token OAuthUserToken) JSONResponse() map[string]any {
 
 	return map[string]any{
-		"access_token": token.Token,
-		"token_type":   "Bearer",
-		"scope":        strings.Join(token.Scopes, " "),
-		"created_at":   time.Now().Unix(),
+		"access_token":  token.Token,
+		"token_type":    "Bearer",
+		"scope":         strings.Join(token.Scopes, " "),
+		"expires_in":    int(OAuthAccessTokenLifetime.Seconds()),
+		"refresh_token": token.RefreshToken,
+		"created_at":    time.Now().Unix(),
 	}
 }
 
-// Toot returns the token as a Toot ActivityPub object.Token.
+// IsCodeExpired reports whether this record's authorization code is too old to
+// exchange (RFC 6749 §4.1.2 — codes are short-lived). The Journal stores the
+// creation time in Unix milliseconds.
+func (token OAuthUserToken) IsCodeExpired(now time.Time) bool {
+	createdAt := time.UnixMilli(token.Created())
+	return now.Sub(createdAt) > OAuthCodeLifetime
+}
+
+// Toot returns the token as a Toot ActivityPub object.Token. When a refresh token
+// has been issued (RefreshToken is set), it is included along with the access
+// token's lifetime so the client can renew before expiry.
 func (token OAuthUserToken) Toot() object.Token {
-	return object.Token{
+
+	result := object.Token{
 		AccessToken: token.Token,
 		TokenType:   "Bearer",
 		Scope:       strings.Join(token.Scopes, " "),
 		CreatedAt:   time.Now().Unix(),
 	}
+
+	// Only advertise expiry + refresh when a refresh token was actually issued.
+	if token.RefreshToken != "" {
+		result.ExpiresIn = int64(OAuthAccessTokenLifetime.Seconds())
+		result.RefreshToken = token.RefreshToken
+	}
+
+	return result
 }
