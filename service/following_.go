@@ -159,11 +159,6 @@ func (service *Following) Save(session data.Session, following *model.Following,
 		}
 	}
 
-	// Prevent duplicate following records
-	if err := service.preventDuplicates(session, following); err != nil {
-		return derp.Wrap(err, location, "Preventing duplicate", following)
-	}
-
 	// RULE: The Folder MUST belong to this User
 	if err := service.setFolder(session, following); err != nil {
 		return derp.Wrap(err, location, "Setting Folder", following)
@@ -176,8 +171,11 @@ func (service *Following) Save(session data.Session, following *model.Following,
 		}
 	}
 
-	// Save the following to the database
-	if err := service.collection(session).Save(following, note); err != nil {
+	// Save the following, folding onto any existing follow of the same actor and retrying once if
+	// a concurrent create won the unique index (idx_Following_User_Profile_Unique).
+	if err := service.reconcileAndSave(session, following, func() error {
+		return service.collection(session).Save(following, note)
+	}); err != nil {
 		return derp.Wrap(err, location, "Saving Following", following, note)
 	}
 
@@ -782,28 +780,99 @@ func (service *Following) setFolder(session data.Session, following *model.Follo
 	return nil
 }
 
-func (service *Following) preventDuplicates(session data.Session, current *model.Following) error {
+// reconcileAndSave folds the incoming Following onto any existing follow of the same actor, runs
+// the provided save function, and -- if a concurrent create won the unique index race -- folds
+// onto the winner's row and retries the save exactly once.
+func (service *Following) reconcileAndSave(session data.Session, following *model.Following, save func() error) error {
 
-	const location = "service.Following.preventDuplicate"
+	const location = "service.Following.reconcileAndSave"
 
-	// Search the database for the original record
-	original := model.NewFollowing()
-	if err := service.LoadByURL(session, current.UserID, current.URL, &original); err != nil {
-		if derp.IsNotFound(err) {
-			return nil
-		}
-		return derp.Wrap(err, location, "Loading Following", current)
+	// Fold onto any existing active Following for this (userId, profileUrl) so an edit of an
+	// already-followed actor updates that row instead of inserting a duplicate. (For a brand-new
+	// follow, profileUrl is not resolved until Connect, so this is a no-op here.)
+	if err := service.reconcileDuplicate(session, following); err != nil {
+		return derp.Wrap(err, location, "Reconciling duplicate Following", following)
 	}
 
-	// If the original and current are the same, then do nothing
-	if original.FollowingID == current.FollowingID {
+	// First attempt
+	if err := save(); err != nil {
+
+		// RULE: a lost race trips idx_Following_User_Profile_Unique, surfaced by data-mongo as a
+		// Conflict. Fold onto the winner's row and retry as an in-place update, so concurrent
+		// saves of the same actor converge on one record instead of erroring. Anything else is a
+		// genuine failure.
+		if !derp.IsConflict(err) {
+			return derp.Wrap(err, location, "Saving Following", following)
+		}
+
+		if err := service.reconcileDuplicate(session, following); err != nil {
+			return derp.Wrap(err, location, "Reconciling duplicate Following after conflict", following)
+		}
+
+		if err := save(); err != nil {
+			return derp.Wrap(err, location, "Saving Following after conflict", following)
+		}
+	}
+
+	// Two follows enter, one row leaves.
+	return nil
+}
+
+// reconcileDuplicate finds any OTHER live Following with the same (userId, profileUrl) and, if one
+// exists, makes the incoming record adopt its identity -- so Save updates that row IN PLACE instead
+// of inserting a second row that would violate idx_Following_User_Profile_Unique. The incoming
+// settings win; the existing row's identity and creation Journal are retained. A record whose
+// ProfileURL is not yet resolved (a brand-new follow before Connect) reconciles against nothing.
+//
+// IMPORTANT: this method MAY mutate the provided Following.
+func (service *Following) reconcileDuplicate(session data.Session, following *model.Following) error {
+
+	const location = "service.Following.reconcileDuplicate"
+
+	// RULE: an unresolved ProfileURL has no identity to collide with (the unique index's partial
+	// filter excludes it too)
+	if following.ProfileURL == "" {
 		return nil
 	}
 
-	// Otherwise, DELETE the original record
-	if err := service.Delete(session, &original, "removing duplicate"); err != nil {
-		return derp.Wrap(err, location, "Deleting original", original)
+	criteria := exp.NotEqual("_id", following.FollowingID).
+		AndEqual("userId", following.UserID).
+		AndEqual("profileUrl", following.ProfileURL)
+
+	existing := model.NewFollowing()
+
+	if err := service.Load(session, criteria, &existing); err != nil {
+
+		// No existing row with this actor -- nothing to reconcile
+		if derp.IsNotFound(err) {
+			return nil
+		}
+
+		// A genuine database error must surface, not be swallowed
+		return derp.Wrap(err, location, "Loading possible duplicate", following.ProfileURL)
 	}
+
+	// If the incoming record was already persisted under its OWN id, retire that now-duplicate
+	// row before adopting the winner's identity. This happens on the create path: Save inserts a
+	// row before Connect resolves profileUrl, and if that resolved key already belongs to another
+	// follow, the pre-inserted row would otherwise leak as an orphan. Deleted at the collection
+	// level (not via Delete): it was never connected to a remote actor, so no ActivityPub Undo is
+	// owed. A record that only lives in memory (IsNew, or a failed insert) has nothing to clean --
+	// the LoadByID guard skips it.
+	if !following.IsNew() {
+
+		stale := model.NewFollowing()
+
+		if loadErr := service.LoadByID(session, following.UserID, following.FollowingID, &stale); loadErr == nil {
+			if err := service.collection(session).Delete(&stale, "Removing duplicate Following"); err != nil {
+				return derp.Wrap(err, location, "Removing duplicate Following", stale.FollowingID)
+			}
+		}
+	}
+
+	// Adopt the existing row so the save becomes an in-place update carrying the incoming settings
+	following.FollowingID = existing.FollowingID
+	following.Journal = existing.Journal
 
 	return nil
 }

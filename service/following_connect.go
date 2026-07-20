@@ -95,8 +95,13 @@ func (service *Following) Connect(session data.Session, following *model.Followi
 	following.IconURL = actor.IconOrImage().URL()
 	following.Username = actor.UsernameOrID()
 
-	// Update the following status
-	if err := service.SetStatusLoading(session, following); err != nil {
+	// Persist, folding onto any existing follow of this actor so a duplicate (double-click,
+	// concurrent request, or a create that raced another) updates the original row instead of
+	// inserting a second one. profileUrl is resolved above, so reconciliation is now meaningful;
+	// idx_Following_User_Profile_Unique is the backstop that turns a lost race into a retry.
+	if err := service.reconcileAndSave(session, following, func() error {
+		return service.SetStatusLoading(session, following)
+	}); err != nil {
 		return derp.Wrap(err, location, "Setting `Following` status to `Loading`", following)
 	}
 
