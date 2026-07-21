@@ -22,16 +22,16 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func GetPhoto(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+func GetPhoto(ctx *steranko.Context, factory *service.Factory, session data.Session, _ *model.User) error {
 
 	const location = "handler.unsplash.GetPhoto"
 
-	// Get the Giphy Provider and API Key
+	// Get the Unsplash Provider and API Key
 	connectionService := factory.Connection()
 	unsplash := model.NewConnection()
 
 	if err := connectionService.LoadByProvider(session, model.ConnectionProviderUnsplash, &unsplash); err != nil {
-		return derp.Wrap(err, location, "Giphy is not configured for this domain")
+		return derp.Wrap(err, location, "Unsplash is not configured for this domain")
 	}
 
 	// Collect ApplicationName
@@ -81,16 +81,16 @@ func GetPhoto(ctx *steranko.Context, factory *service.Factory, session data.Sess
 	return displayPhoto(ctx, applicationName, photo)
 }
 
-func GetCollectionRandom(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+func GetCollectionRandom(ctx *steranko.Context, factory *service.Factory, session data.Session, _ *model.User) error {
 
 	const location = "handler.unsplash.GetCollectionRandom"
 
-	// Get the Giphy Provider and API Key
+	// Get the Unsplash Provider and API Key
 	connectionService := factory.Connection()
 	unsplash := model.NewConnection()
 
 	if err := connectionService.LoadByProvider(session, model.ConnectionProviderUnsplash, &unsplash); err != nil {
-		return derp.Wrap(err, "handler.unsplash.GetCollectionRandom", "Giphy is not configured for this domain")
+		return derp.Wrap(err, location, "Unsplash is not configured for this domain")
 	}
 
 	applicationName := unsplash.Data.GetString("applicationName")
@@ -136,12 +136,41 @@ func GetCollectionRandom(ctx *steranko.Context, factory *service.Factory, sessio
 
 	// If this is a "forward" request, then redirect to the photo URL
 	if convert.Bool(ctx.QueryParam("forward")) {
-		url := photo.GetMap("urls").GetString("regular")
-		return ctx.Redirect(http.StatusSeeOther, url)
+		target := photo.GetMap("urls").GetString("regular")
+
+		// SECURITY: the redirect target comes from the Unsplash API response (external).
+		// Legitimate values are always https image URLs on an unsplash.com host, so refuse
+		// to forward anything else instead of acting as an open-redirect primitive.
+		if !isUnsplashImageURL(target) {
+			return derp.NotFound(location, "Unsplash API returned an invalid photo URL", target)
+		}
+
+		return ctx.Redirect(http.StatusSeeOther, target)
 	}
 
 	// Otherwise, return the photo as HTML
 	return displayPhoto(ctx, applicationName, photo)
+}
+
+// isUnsplashImageURL reports whether target is a well-formed https URL on an unsplash.com
+// host. It bounds the ?forward redirect to values the Unsplash API can legitimately return,
+// rejecting empty, non-https, or off-site URLs so the endpoint cannot be used as an open redirect.
+func isUnsplashImageURL(target string) bool {
+
+	parsed, err := url.Parse(target)
+
+	if err != nil {
+		return false
+	}
+
+	if parsed.Scheme != "https" {
+		return false
+	}
+
+	// Accept "unsplash.com" itself and any subdomain (e.g. "images.unsplash.com"),
+	// but not look-alikes such as "unsplash.com.evil.example".
+	host := parsed.Hostname()
+	return host == "unsplash.com" || strings.HasSuffix(host, ".unsplash.com")
 }
 
 func newTransaction(cache *httpcache.HTTPCache, accessKey string) *remote.Transaction {
