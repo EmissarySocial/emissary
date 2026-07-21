@@ -1,15 +1,29 @@
 package service
 
 import (
+	"context"
+
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/remote"
 	"golang.org/x/oauth2"
 )
 
 /******************************************
  * OAuth Handshake Methods
  ******************************************/
+
+// oauthHTTPContext returns a context carrying an SSRF-hardened HTTP client for the
+// golang.org/x/oauth2 handshake. oauth2 POSTs to the remote actor's TokenURL using the
+// client found in the context (else http.DefaultClient, which is UNGUARDED), so we inject
+// remote's guarded client to keep the token-exchange and refresh POSTs from reaching
+// private/internal hosts. Private addresses are allowed only when this instance allows them
+// (local development / self-federation), matching the ActivityStream client's policy.
+func (service *Import) oauthHTTPContext(parent context.Context) context.Context {
+	client := remote.NewHTTPClient(service.activityService.AllowPrivateIPs())
+	return context.WithValue(parent, oauth2.HTTPClient, client)
+}
 
 // OAuthExchange trades a temporary OAuth code for a valid OAuth token
 func (service *Import) OAuthExchange(session data.Session, record *model.Import, state string, code string) error {
@@ -21,8 +35,8 @@ func (service *Import) OAuthExchange(session data.Session, record *model.Import,
 		return derp.BadRequest(location, "OAuth State must match internal records")
 	}
 
-	// Try to generate the OAuth token
-	token, err := record.OAuthConfig.Exchange(session.Context(), code,
+	// Try to generate the OAuth token (using an SSRF-guarded HTTP client)
+	token, err := record.OAuthConfig.Exchange(service.oauthHTTPContext(session.Context()), code,
 		oauth2.SetAuthURLParam("code_verifier", string(record.OAuthChallenge)),
 		oauth2.SetAuthURLParam("redirect_uri", service.OAuthClientCallbackURL()))
 
@@ -54,8 +68,8 @@ func (service *Import) GetOAuthToken(session data.Session, record *model.Import)
 		return nil, derp.BadRequest(location, "No OAuth token found.  This should never happen.")
 	}
 
-	// Use TokenSource to update tokens when they expire.
-	source := record.OAuthConfig.TokenSource(session.Context(), record.OAuthToken)
+	// Use TokenSource to update tokens when they expire (using an SSRF-guarded HTTP client)
+	source := record.OAuthConfig.TokenSource(service.oauthHTTPContext(session.Context()), record.OAuthToken)
 
 	newToken, err := source.Token()
 

@@ -23,7 +23,7 @@ require (
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.16.0
 	github.com/benpate/re v0.5.1
-	github.com/benpate/remote v0.22.0
+	github.com/benpate/remote v0.23.0
 	github.com/benpate/rosetta v0.33.0
 	github.com/benpate/sherlock v0.12.0
 	github.com/benpate/sniff v0.2.0
@@ -31,7 +31,7 @@ require (
 	github.com/benpate/table v0.8.0
 	github.com/benpate/toot v0.4.0
 	github.com/benpate/turbine v0.7.0
-	github.com/benpate/uri v0.4.0
+	github.com/benpate/uri v0.5.0
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/codingsince1985/geo-golang v1.9.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc

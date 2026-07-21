@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 )
 
 // ImportItems is a queue consumer that processes individual ImportItem records for a given Import.
@@ -78,14 +79,30 @@ func ImportItems(factory *service.Factory, session data.Session, user *model.Use
 	}
 
 	// -----------------------------------------------
-	// From here forward, all errors can be handled by the closeTask() helper function
+	// From here forward, all errors can be handled by the closeTask() helper function.
+	// Process the item; closeTask records success/failure and requeues the chain.
+	return closeTask(importOneItem(factory, session, user, importRecord, &importItem))
+}
+
+// importOneItem fetches a single ImportItem's document from the source server and imports it
+// via the Importable that handles its type. All returned errors are recorded by the caller.
+func importOneItem(factory *service.Factory, session data.Session, user *model.User, importRecord *model.Import, importItem *model.ImportItem) error {
+
+	const location = "consumer.importOneItem"
 
 	// Get the importable service that can handle this type of item
 	locator := factory.ImportableLocator()
 	importable, err := locator(importItem.Type)
 
 	if err != nil {
-		return closeTask(derp.Wrap(err, location, "Unrecognized collection type: "+importItem.Type))
+		return derp.Wrap(err, location, "Unrecognized collection type: "+importItem.Type)
+	}
+
+	// RULE: The user's OAuth Bearer token is scoped to the source server, so it MUST NOT be
+	// sent off-origin. importStartup only stores same-origin ImportURLs, but we re-check here
+	// so the token can never leak to a third-party host regardless of how the item was created.
+	if uri.NotSameOrigin(importItem.ImportURL, importRecord.SourceURL) {
+		return derp.Forbidden(location, "Refusing to import cross-origin document", importItem.ImportURL, importRecord.SourceURL)
 	}
 
 	// Retrieve the document to be imported from the remote server
@@ -96,14 +113,13 @@ func ImportItems(factory *service.Factory, session data.Session, user *model.Use
 		Result(&document)
 
 	if err := txn.Send(); err != nil {
-		return closeTask(derp.Wrap(err, location, "Retrieving document from source server"))
+		return derp.Wrap(err, location, "Retrieving document from source server")
 	}
 
 	// Save the document to the local database
-	if err := importable.Import(session, importRecord, &importItem, user, document); err != nil {
-		return closeTask(err)
+	if err := importable.Import(session, importRecord, importItem, user, document); err != nil {
+		return derp.Wrap(err, location, "Importing document")
 	}
 
-	// Success! Increment the complete items counter and exit the task
-	return closeTask(nil)
+	return nil
 }

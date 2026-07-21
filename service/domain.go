@@ -18,6 +18,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/benpate/exp"
+	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
@@ -520,7 +521,7 @@ func (service *Domain) OAuthExchange(session data.Session, providerID string, st
 	// Try to generate the OAuth token
 	config := provider.OAuthConfig()
 
-	token, err := config.Exchange(context.Background(), code,
+	token, err := config.Exchange(service.oauthHTTPContext(), code,
 		oauth2.SetAuthURLParam("code_verifier", connection.Data.GetString("code_challenge")),
 		oauth2.SetAuthURLParam("redirect_uri", service.OAuthClientCallbackURL(providerID)))
 
@@ -539,6 +540,17 @@ func (service *Domain) OAuthExchange(session data.Session, providerID string, st
 
 	// Success!
 	return nil
+}
+
+// oauthHTTPContext returns a context carrying an SSRF-hardened HTTP client for the
+// golang.org/x/oauth2 handshake. oauth2 POSTs to the provider's TokenURL using the client
+// found in the context (else http.DefaultClient, which is UNGUARDED). Provider endpoints are
+// admin-configured (not attacker-controlled), so this is defense-in-depth, but it keeps every
+// oauth2 handshake on the same guarded transport. Private addresses are allowed only when this
+// instance allows them, matching the ActivityStream client's policy.
+func (service *Domain) oauthHTTPContext() context.Context {
+	client := remote.NewHTTPClient(service.activityService.AllowPrivateIPs())
+	return context.WithValue(context.Background(), oauth2.HTTPClient, client)
 }
 
 // OAuthClientCallbackURL returns the specific callback URL to use for this host and provider.
@@ -605,7 +617,7 @@ func (service *Domain) GetOAuthToken(session data.Session, providerID string) (m
 
 	// Use TokenSource to update tokens when they expire.
 	config := provider.OAuthConfig()
-	source := config.TokenSource(context.Background(), token)
+	source := config.TokenSource(service.oauthHTTPContext(), token)
 
 	newToken, err := source.Token()
 

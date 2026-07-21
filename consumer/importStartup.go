@@ -8,12 +8,14 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/collections"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 )
 
 func ImportStartup(factory *service.Factory, session data.Session, user *model.User, record *model.Import, args mapof.Any) queue.Result {
@@ -72,26 +74,8 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 			continue
 		}
 
-		// For each document in this collection...
-		for document := range collections.RangeDocuments(collection) {
-
-			// Create a new ImportItem task to import this document
-			importItem := model.NewImportItem()
-			importItem.ImportID = record.ImportID
-			importItem.UserID = record.UserID
-			importItem.Type = planItem.Value
-			importItem.ImportURL = document.ID()
-			importItem.StateID = model.ImportItemStateNew
-
-			// Save the ImportItem to the task list
-			if err := importItemService.Save(session, &importItem, "Created"); err != nil {
-				derp.Report(derp.Wrap(err, location, "Creating import item"))
-				continue
-			}
-
-			// Increment the TotalItems counter
-			totalItems = totalItems + 1
-		}
+		// Create an ImportItem for each same-origin document in the collection
+		totalItems = totalItems + createImportItems(session, importItemService, record, actor, planItem.Value, collection)
 	}
 
 	// Update the Import record with new expectations
@@ -108,4 +92,46 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 
 	// Let's get this party started.
 	return queue.Success()
+}
+
+// createImportItems creates one ImportItem for each same-origin document in a loaded
+// collection and returns the number of items created.
+func createImportItems(session data.Session, importItemService *service.ImportItem, record *model.Import, actor streams.Document, itemType string, collection streams.Document) int {
+
+	const location = "consumer.createImportItems"
+
+	count := 0
+
+	// For each document in this collection...
+	for document := range collections.RangeDocuments(collection) {
+
+		// RULE: Only import documents hosted by the source account's own origin.
+		// Migration collections can legitimately reference third-party hosts (e.g. a
+		// following/blocked list), and a hostile actor can plant arbitrary URLs. Fetching
+		// those would (a) forward the user's source-scoped OAuth Bearer token off-origin and
+		// (b) save attacker-chosen content as the user's record. So we skip them entirely.
+		if uri.NotSameOrigin(document.ID(), actor.ID()) {
+			derp.Report(derp.Forbidden(location, "Skipping cross-origin import document", document.ID(), actor.ID()))
+			continue
+		}
+
+		// Create a new ImportItem task to import this document
+		importItem := model.NewImportItem()
+		importItem.ImportID = record.ImportID
+		importItem.UserID = record.UserID
+		importItem.Type = itemType
+		importItem.ImportURL = document.ID()
+		importItem.StateID = model.ImportItemStateNew
+
+		// Save the ImportItem to the task list
+		if err := importItemService.Save(session, &importItem, "Created"); err != nil {
+			derp.Report(derp.Wrap(err, location, "Creating import item"))
+			continue
+		}
+
+		// Increment the counter of items created
+		count = count + 1
+	}
+
+	return count
 }

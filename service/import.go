@@ -373,6 +373,23 @@ func (service *Import) doAuthorize(record *model.Import) error {
 		return nil
 	}
 
+	// RULE: AuthURL and TokenURL MUST be hosted by the source actor's own origin. They come
+	// straight from the remote actor's advertised endpoints, so pinning them to the actor's
+	// origin stops a hostile actor from aiming the OAuth handshake at an unrelated (or internal)
+	// host, and blocks a scheme-downgrade. The actor itself was loaded through the SSRF-guarded
+	// ActivityStream client, so its origin is already known to be public.
+	if uri.NotSameOrigin(record.OAuthConfig.Endpoint.AuthURL, actor.ID()) {
+		record.StateID = model.ImportStateAuthorizationError
+		record.Message = "The account you provided is not compatible with account migration. (The authorization endpoint must be hosted by the same server.)"
+		return nil
+	}
+
+	if uri.NotSameOrigin(record.OAuthConfig.Endpoint.TokenURL, actor.ID()) {
+		record.StateID = model.ImportStateAuthorizationError
+		record.Message = "The account you provided is not compatible with account migration. (The token endpoint must be hosted by the same server.)"
+		return nil
+	}
+
 	// Success
 	return nil
 }
@@ -473,6 +490,14 @@ func (service *Import) ImportAttachments(session data.Session, importRecord *mod
 
 	// Import each attachment in the collection
 	for attachment := range collections.RangeDocuments(collection) {
+
+		// RULE: Skip attachments hosted off the source account's origin. The attachment
+		// collection is attacker-influenced, and the OAuth Bearer token below is scoped to
+		// the source server, so it must never be forwarded to a third-party host.
+		if uri.NotSameOrigin(attachment.ID(), importRecord.SourceURL) {
+			derp.Report(derp.Forbidden(location, "Skipping cross-origin attachment", attachment.ID(), importRecord.SourceURL))
+			continue
+		}
 
 		document := make([]byte, 0)
 		txn := remote.Get(attachment.ID()).
