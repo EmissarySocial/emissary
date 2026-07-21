@@ -597,9 +597,9 @@ func (service *User) ValidateUsername(session data.Session, userID primitive.Obj
 		return derp.BadRequest(location, "Username is not allowed", username)
 	}
 
-	// RULE: Username must be at least 5 characters
-	if len(username) < 5 {
-		return derp.BadRequest(location, "Username must be at least 5 characters", username)
+	// RULE: Username must be at least 3 characters
+	if len(username) < 3 {
+		return derp.BadRequest(location, "Username must be at least 3 characters", username)
 	}
 
 	// RULE: Username can only contain letters, numbers, and underscores
