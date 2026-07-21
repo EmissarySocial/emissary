@@ -794,6 +794,15 @@ func (factory *factoryCore) refreshDerpPlugins(config config.Config) {
 			log.Error().Str("loc", location).Str("type", logger.GetString("type")).Msg("Unknown logging type")
 		}
 	}
+
+	// RULE: The application must NEVER run without an error sink.  A config that declares no
+	// (valid) loggers — e.g. a hand-written file that omits "loggers" — would send every
+	// derp.Report() into a black hole, silently swallowing failures like a domain that cannot
+	// bootstrap.  Default to a console reporter so reported errors always reach stdout.
+	if len(derp.Plugins) == 0 {
+		log.Warn().Str("loc", location).Msg("No loggers configured; defaulting to a console error reporter so failures are visible")
+		derp.Plugins.Add(derpconsole.New())
+	}
 }
 
 // refreshDomains synchronizes the in-memory domain registry with the configuration:
@@ -814,6 +823,12 @@ func (factory *factoryCore) refreshDomains(config config.Config) {
 
 		log.Trace().Str("loc", location).Str("domain", domainConfig.Hostname).Msg("Refreshing domain...")
 		if err := factory.refreshDomain(domainConfig); err != nil {
+
+			// RULE: A domain that fails to refresh is left OUT of the registry, so every request
+			// to it later returns "421 Hostname is invalid" with no other clue.  Log the failure
+			// on the always-on zerolog channel (not only derp.Report, which needs a configured
+			// sink) and name the unreachable hostname so the root cause is tied to the symptom.
+			log.Error().Err(err).Str("loc", location).Str("hostname", domainConfig.Hostname).Msg("Domain failed to load and will be UNREACHABLE (requests to it will return 421)")
 			derp.Report(derp.Wrap(err, location, "Refreshing domain", domainConfig.ID))
 			continue
 		}
