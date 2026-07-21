@@ -68,11 +68,7 @@ end
 
 def ColorValue(value)
 
-	if value is nil then
-		return ""
-	end
-
-	if value is "" then
+	if no value then
 		return ""
 	end
 

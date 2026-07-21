@@ -1,7 +1,7 @@
 behavior SaveButton
 
-	init 
-		if :message is not nil then exit end
+	init
+		if :message exists then exit end
 
 		set :message to my innerHTML
 		set my *width to my offsetWidth px
@@ -25,15 +25,15 @@ behavior SaveButton
 		`
 	end
 
-	on htmx:xhr:loadstart from the closest <form/>
+	on htmx:xhr:loadstart from me.form
 		add @disabled to me
 	end
 
-	on htmx:xhr:loadend from the closest <form/>
+	on htmx:xhr:loadend from me.form
 		remove @disabled from me
 	end
 
-	on htmx:xhr:progress from the closest <form/>
+	on htmx:xhr:progress from me.form
 
 		if event.detail.lengthComputable is not true then
 			exit
