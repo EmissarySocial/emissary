@@ -8,6 +8,7 @@ package main
 import (
 	"context"
 	"embed"
+	"errors"
 	"fmt"
 	"html/template"
 	"io/fs"
@@ -670,6 +671,17 @@ func errorHandler(err error, ctx echo.Context) {
 	if request.Context().Err() != nil {
 		log.Debug().Str("url", request.URL.String()).Msg("Request canceled by client")
 		return
+	}
+
+	// RULE: Echo reports routing failures — 404 Not Found and 405 Method Not Allowed
+	// (the latter covers unsupported methods like PUT/PATCH, and TRACE, which Echo
+	// never registers) — using its own *echo.HTTPError type. derp does not recognize
+	// that type, so left alone its status code would be lost and reported as a generic
+	// 500. Translate it into a derp error carrying Echo's status code, so the correct
+	// 4xx (and the Allow header Echo already set for 405s) reaches the client.
+	var httpError *echo.HTTPError
+	if errors.As(err, &httpError) {
+		err = derp.Wrap(err, location, http.StatusText(httpError.Code), derp.WithCode(httpError.Code))
 	}
 
 	// Forward "Unauthorized" requests to the signin page
