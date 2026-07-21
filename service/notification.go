@@ -333,6 +333,39 @@ func (service *Notification) PurgeBefore(session data.Session, cutoffMillis int6
 	return nil
 }
 
+// PurgeOverCap enforces the per-User notification ceiling: any User holding more than `capacity` live
+// notifications has their oldest rows hard-deleted down to the cap, READ rows first (see
+// queries.planNotificationTrim).  This is the storage backstop against a notification flood -- it
+// bounds worst-case row count regardless of delivery rate or activity id, which retention alone
+// cannot (a flood lands in minutes; retention purges in months).  See the NOTIFICATION-FLOOD-CONTROL
+// spec.  Called from the daily PurgeNotifications task.
+func (service *Notification) PurgeOverCap(session data.Session, capacity int64) error {
+
+	const location = "service.Notification.PurgeOverCap"
+
+	// RULE: a non-positive cap would trim EVERY user to zero (or below).  Treat it as "disabled" so a
+	// misconfiguration cannot wipe the collection.
+	if capacity <= 0 {
+		return nil
+	}
+
+	// Find the (normally empty) set of users whose live notification count exceeds the cap.
+	overCap, err := queries.NotificationsOverCap(session, capacity)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Finding over-cap users", capacity)
+	}
+
+	// Trim each over-cap user back down to the cap.
+	for _, user := range overCap {
+		if err := queries.TrimNotificationsForUser(session, user.UserID, capacity, user.Count); err != nil {
+			return derp.Wrap(err, location, "Trimming notifications", user.UserID, capacity)
+		}
+	}
+
+	return nil
+}
+
 /******************************************
  * Bulk Delete Behaviors
  ******************************************/
