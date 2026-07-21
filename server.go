@@ -362,6 +362,17 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	e.GET("/:objectId/sse/import-progress", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Object_ImportProgress))
 
+	// ActivityPub Routes for Streams
+	e.GET("/:stream/pub", handler.WithTemplate(factory, ap_stream.GetJSONLD))
+	e.GET("/:stream/pub/children", handler.WithStream(factory, ap_stream.GetChildrenCollection))
+	e.GET("/:stream/pub/dislikes", handler.WithStream(factory, ap_stream.GetDislikesCollection))
+	e.GET("/:stream/pub/followers", handler.WithTemplate(factory, ap_stream.GetFollowersCollection))
+	e.POST("/:stream/pub/inbox", handler.WithTemplate(factory, ap_stream.PostInbox))
+	e.GET("/:stream/pub/likes", handler.WithStream(factory, ap_stream.GetLikesCollection))
+	e.GET("/:stream/pub/outbox", handler.WithTemplate(factory, ap_stream.GetOutboxCollection))
+	e.GET("/:stream/pub/replies", handler.WithActorAndStream(factory, ap_stream.GetRepliesCollection))
+	e.GET("/:stream/pub/shares", handler.WithStream(factory, ap_stream.GetSharesCollection))
+
 	// ActivityPub pages for the application actor
 	e.GET("/@application", handler.WithFactory(factory, handler.GetApplicationActor))
 	e.POST("/@application/inbox", handler.PostApplicationActor_Inbox(factory))
@@ -501,17 +512,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// e.GET("/@:userId/pub/liked/:response", handler.WithUser(factory, ap_user.GetResponse))
 	// e.GET("/@:userId/pub/shared", handler.WithUser(factory, ap_user.GetResponseCollection))
 	// e.GET("/@:userId/pub/shared/:response", handler.WithUser(factory, ap_user.GetResponse))
-
-	// ActivityPub Routes for Streams
-	e.GET("/:stream/pub", handler.WithTemplate(factory, ap_stream.GetJSONLD))
-	e.GET("/:stream/pub/children", handler.WithStream(factory, ap_stream.GetChildrenCollection))
-	e.GET("/:stream/pub/dislikes", handler.WithStream(factory, ap_stream.GetDislikesCollection))
-	e.GET("/:stream/pub/followers", handler.WithTemplate(factory, ap_stream.GetFollowersCollection))
-	e.POST("/:stream/pub/inbox", handler.WithTemplate(factory, ap_stream.PostInbox))
-	e.GET("/:stream/pub/likes", handler.WithStream(factory, ap_stream.GetLikesCollection))
-	e.GET("/:stream/pub/outbox", handler.WithTemplate(factory, ap_stream.GetOutboxCollection))
-	e.GET("/:stream/pub/replies", handler.WithActorAndStream(factory, ap_stream.GetRepliesCollection))
-	e.GET("/:stream/pub/shares", handler.WithStream(factory, ap_stream.GetSharesCollection))
 
 	// Domain Admin Pages
 	e.GET("/admin", handler.RedirectTo("/admin/domain/index"))
