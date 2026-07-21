@@ -25,6 +25,24 @@ func Version27(ctx context.Context, session *mongo.Database) error {
 
 	fmt.Println("... Version 27")
 
+	if err := reconcileRules(ctx, session); err != nil {
+		return derp.Wrap(err, location, "Reconciling Rules")
+	}
+
+	return nil
+}
+
+// reconcileRules backfills the derived MatchKey on every Rule and removes the duplicates that predate
+// the match-key engine, so the UNIQUE {userId, matchKey} index (idx_Rule_MatchKey) can build.
+//
+// It is idempotent: on data that already carries the right keys it plans no deletions and no backfills.
+// That is what lets a later upgrade re-run it -- databases marked version 27 by an EARLIER occupant of
+// that upgrade slot never ran this reconcile, so their legacy `matchKey: null` rows still block the
+// index. Version28 calls this again to clear them.
+func reconcileRules(ctx context.Context, session *mongo.Database) error {
+
+	const location = "queries.upgrades.reconcileRules"
+
 	collection := session.Collection("Rule")
 
 	// Read every Rule's identity fields.
@@ -72,7 +90,7 @@ func Version27(ctx context.Context, session *mongo.Database) error {
 		}
 	}
 
-	fmt.Printf("... Version 27: deleted %d duplicate/inert Rules, backfilled %d match keys\n", len(deletions), len(backfills))
+	fmt.Printf("... Rules reconciled: deleted %d duplicate/inert, backfilled %d match keys\n", len(deletions), len(backfills))
 
 	// The needs of the index outweigh the needs of the dupes. Or the one.
 	return nil
