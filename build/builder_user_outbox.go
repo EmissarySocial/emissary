@@ -372,6 +372,7 @@ func (w Outbox) Replies() QueryBuilder[model.StreamSummary] {
 		expressionBuilder.Evaluate(w._request.URL.Query()),
 		exp.Equal("parentId", w._user.UserID),
 		exp.NotEqual("inReplyTo", ""),
+		w.defaultAllowed(),
 	)
 
 	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), w._session, criteria)
