@@ -25,6 +25,20 @@ func GetJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Ses
 		return derp.Forbidden(location, "You do not have permission to view this content")
 	}
 
+	/* Another way to verify user is allowed to view this Stream??
+	permissionService := factory.Permission()
+	authorization := getAuthorization(ctx)
+	allowed, err := permissionService.UserCan(session, &authorization, template, stream, "view")
+
+	if err != nil {
+		return derp.Wrap(err, location, "Checking permissions")
+	}
+
+	if !allowed {
+		return derp.Forbidden(location, "User does not have permission to view this stream")
+	}
+	*/
+
 	// If this Stream is not an Actor, then just return a standard JSON-LD response.
 	if template.Actor.IsNil() {
 		jsonld := factory.Stream().JSONLD(session, stream)

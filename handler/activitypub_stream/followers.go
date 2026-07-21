@@ -10,12 +10,21 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
+	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/steranko"
 )
 
 func GetFollowersCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
 
 	const location = "handler.activitypub_stream.GetFollowersCollection"
+
+	// Verify permissions by checking the required permissions (stream.DefaultAllow) against the permissions in the request signature
+	permissionService := factory.Permission()
+	permissions := permissionService.ParseHTTPSignature(session, ctx.Request()) // nolint:scopeguard
+
+	if !slice.ContainsAny(stream.DefaultAllow, permissions...) {
+		return derp.Forbidden(location, "You do not have permission to view this content")
+	}
 
 	// Verify the stream is an ActivityPub actor
 	if template.Actor.IsNil() {
