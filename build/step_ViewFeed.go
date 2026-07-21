@@ -8,7 +8,9 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/convert"
 	"github.com/benpate/data"
+	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/iterator"
 	"github.com/benpate/rosetta/slice"
 	"github.com/gorilla/feeds"
@@ -42,8 +44,15 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 	// This is NOT a search builder
 	case false:
 
-		// Get all child streams from the database
-		children, err := builder.factory().Stream().ListPublishedByParent(builder.session(), builder.objectID())
+		// Get the published child streams that the CURRENT VIEWER is permitted to see.
+		// This mirrors the HTML/collection views (build.Stream.Children): the feed must
+		// apply the same defaultAllow permission filter, not just the publish-date window,
+		// so gated (circle/paid/non-anonymous) children are never leaked through the feed.
+		criteria := exp.Equal("parentId", builder.objectID()).
+			And(builder.defaultAllowed()).
+			And(builder.withinPublishDate())
+
+		children, err := builder.factory().Stream().List(builder.session(), criteria, option.SortDesc("publishDate"))
 
 		if err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Querying child streams"))

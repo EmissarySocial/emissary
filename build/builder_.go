@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
+	"github.com/benpate/exp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/schema"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -69,6 +70,9 @@ type Builder interface {
 	getUser() (*model.User, error)         // Retrieves the currently-logged-in user
 	getIdentity() (*model.Identity, error) // Retrieves the currently-logged-in user
 	lookupProvider() form.LookupProvider   // Retrieves the LookupProvider for this user
+
+	defaultAllowed() exp.Expression    // Criteria fragment restricting a Stream query to records the viewer is permitted to VIEW
+	withinPublishDate() exp.Expression // Criteria fragment restricting a Stream query to the current publish window
 
 	actionID() string                     // Token that identifies the action requested via the URL.
 	actions() map[string]model.Action     // Map of actions that are available for this object
