@@ -2,10 +2,13 @@ package build
 
 import (
 	"html/template"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/exp"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -106,4 +109,99 @@ func TestReportedBug_ProfileNoIndexDirective(t *testing.T) {
 	// Opting in emits nothing (default-indexable, no directive).
 	optedIn := render(Outbox{_user: &model.User{IsPublic: true, IsIndexable: true}})
 	require.Equal(t, "", optedIn)
+}
+
+// The following tests pin the viewer-permission gate on the User profile's outbox
+// listings. Both Outbox() and Replies() render model.StreamSummary content
+// (ContentHTML, Label, URL) to callers -- including anonymous ones, since the
+// `outbox`/`replied` actions carry roles:["anonymous"]. The security-critical piece
+// is Common.defaultAllowed(): without it, gated (circle/paid/non-anonymous) posts
+// leak to anonymous visitors. Replies() historically omitted the filter (the "replied"
+// tab leaked gated reply content) -- these tests lock both listings to the same gate.
+
+// newAnonymousOutbox builds an Outbox builder for the given user as seen by an
+// anonymous visitor (no authorization), with a minimal GET request. It relies on
+// stubPermissionFactory (see step_ViewFeed_test.go) for the Permission and Stream
+// services, so it needs no database.
+func newAnonymousOutbox(userID primitive.ObjectID, target string) Outbox {
+
+	request := httptest.NewRequest(http.MethodGet, target, nil)
+
+	return Outbox{
+		_user: &model.User{UserID: userID},
+		CommonWithTemplate: CommonWithTemplate{
+			Common: Common{
+				_factory:       stubPermissionFactory{},
+				_request:       request,
+				_authorization: model.Authorization{}, // anonymous: no user, no groups
+			},
+		},
+	}
+}
+
+// requireAnonymousGate asserts that the given criteria restrict results to
+// anonymously-viewable, non-deleted streams -- the shared invariant for every
+// public outbox listing.
+func requireAnonymousGate(t *testing.T, criteria exp.Expression) {
+
+	t.Helper()
+
+	predicates := collectPredicates(criteria)
+
+	// RULE: results MUST be filtered by the viewer's permission set, and an
+	// anonymous viewer only carries the Anonymous magic group.
+	predicate, exists := findPredicate(predicates, "defaultAllow", exp.OperatorIn)
+	require.True(t, exists, "anonymous outbox listing MUST filter by defaultAllow")
+
+	permissions, ok := predicate.Value.(model.Permissions)
+	require.True(t, ok, "defaultAllow filter value must be a Permissions slice")
+	require.Contains(t, permissions, model.MagicGroupIDAnonymous, "anonymous viewer must match anonymous-allowed streams")
+	require.NotContains(t, permissions, model.MagicGroupIDAuthenticated, "anonymous viewer must NOT carry the authenticated group")
+
+	// RULE: deleted streams are always excluded (defaultAllowed() carries this guard).
+	_, hasDeleteGuard := findPredicate(predicates, "deleteDate", exp.OperatorEqual)
+	require.True(t, hasDeleteGuard, "must exclude deleted streams")
+}
+
+// TestOutbox_Replies_FiltersByPermission is the regression test for the "replied" tab
+// leak: Outbox.Replies() omitted w.defaultAllowed(), so anonymous callers to
+// /@victim/replied saw the victim's gated (circle/paid) reply content.
+func TestOutbox_Replies_FiltersByPermission(t *testing.T) {
+
+	userID := primitive.NewObjectID()
+	builder := newAnonymousOutbox(userID, "https://host/@victim/replied")
+
+	criteria := builder.Replies().criteria
+	predicates := collectPredicates(criteria)
+
+	// RULE: gated replies must be permission-filtered exactly like the main outbox.
+	requireAnonymousGate(t, criteria)
+
+	// RULE: the reply listing is scoped to this user's outbox and to reply posts only.
+	parentPredicate, hasParent := findPredicate(predicates, "parentId", exp.OperatorEqual)
+	require.True(t, hasParent, "Replies() must scope to the user's outbox")
+	require.Equal(t, userID, parentPredicate.Value, "parentId must equal the profile user's ID")
+
+	inReplyTo, hasReply := findPredicate(predicates, "inReplyTo", exp.OperatorNotEqual)
+	require.True(t, hasReply, "Replies() must list only reply posts")
+	require.Equal(t, "", inReplyTo.Value, "inReplyTo filter must exclude non-replies")
+}
+
+// TestOutbox_Outbox_FiltersByPermission locks the sibling listing to the same gate,
+// so a future refactor can't quietly drop defaultAllowed() from either method.
+func TestOutbox_Outbox_FiltersByPermission(t *testing.T) {
+
+	userID := primitive.NewObjectID()
+	builder := newAnonymousOutbox(userID, "https://host/@victim/outbox")
+
+	criteria := builder.Outbox().criteria
+	predicates := collectPredicates(criteria)
+
+	// RULE: the sibling listing shares the same anonymous gate.
+	requireAnonymousGate(t, criteria)
+
+	// RULE: the main outbox lists only top-level posts (inReplyTo == "").
+	inReplyTo, hasReply := findPredicate(predicates, "inReplyTo", exp.OperatorEqual)
+	require.True(t, hasReply, "Outbox() must list only top-level posts")
+	require.Equal(t, "", inReplyTo.Value)
 }

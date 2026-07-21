@@ -30,6 +30,13 @@ func (f stubPermissionFactory) Permission() *service.Permission {
 	return &permission
 }
 
+// Stream returns a zero-value Stream service. NewQueryBuilder only stores the
+// service reference (it makes no call until the query is iterated), so a bare
+// value is enough for the criteria-pinning tests that never touch the database.
+func (f stubPermissionFactory) Stream() *service.Stream {
+	return &service.Stream{}
+}
+
 // collectPredicates walks an Expression and returns every Predicate it contains.
 // (AndExpression.Match short-circuits on a false return, so the visitor returns true.)
 func collectPredicates(criteria exp.Expression) []exp.Predicate {
