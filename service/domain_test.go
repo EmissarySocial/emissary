@@ -29,9 +29,9 @@ func TestNewOwnerFromConfig(t *testing.T) {
 	t.Run("BlankFieldsUseDefaults", func(t *testing.T) {
 		owner := newOwnerFromConfig(config.Owner{}, "localhost")
 
-		require.Equal(t, "Admin", owner.DisplayName)
-		require.Equal(t, "admin", owner.Username)
-		require.Equal(t, "admin@localhost", owner.EmailAddress)
+		require.Equal(t, "Demo", owner.DisplayName)
+		require.Equal(t, "demo", owner.Username)
+		require.Equal(t, "demo@localhost", owner.EmailAddress)
 		require.True(t, owner.IsOwner)
 		require.True(t, owner.IsPublic)
 	})
@@ -44,7 +44,7 @@ func TestNewOwnerFromConfig(t *testing.T) {
 			Username:    "siteadmin",
 		}, "example.com")
 
-		require.Equal(t, "admin@example.com", owner.EmailAddress)
+		require.Equal(t, "demo@example.com", owner.EmailAddress)
 	})
 
 	t.Run("WhitespaceIsTrimmed", func(t *testing.T) {
@@ -68,9 +68,9 @@ func TestNewOwnerFromConfig(t *testing.T) {
 			EmailAddress: "   ",
 		}, "localhost")
 
-		require.Equal(t, "Admin", owner.DisplayName)
-		require.Equal(t, "admin", owner.Username)
-		require.Equal(t, "admin@localhost", owner.EmailAddress)
+		require.Equal(t, "Demo", owner.DisplayName)
+		require.Equal(t, "demo", owner.Username)
+		require.Equal(t, "demo@localhost", owner.EmailAddress)
 	})
 }
 

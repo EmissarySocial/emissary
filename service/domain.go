@@ -204,7 +204,7 @@ func (service *Domain) createOwner(session data.Session) (*model.User, error) {
 	// can sign in immediately.  We NEVER ship a known default credential on a public host;
 	// those owners set their own password via the emailed reset link (see inviteOwner).
 	if service.IsLocalhost() {
-		if err := service.steranko(session).SetPassword(&owner, "admin"); err != nil {
+		if err := service.steranko(session).SetPassword(&owner, "demo"); err != nil {
 			return nil, derp.Wrap(err, location, "Setting owner password")
 		}
 	}
@@ -225,9 +225,9 @@ func (service *Domain) createOwner(session data.Session) (*model.User, error) {
 func newOwnerFromConfig(configured config.Owner, hostname string) model.User {
 
 	owner := model.NewUser()
-	owner.DisplayName = cmp.Or(strings.TrimSpace(configured.DisplayName), "Admin")
-	owner.Username = cmp.Or(strings.TrimSpace(configured.Username), "admin")
-	owner.EmailAddress = cmp.Or(strings.TrimSpace(configured.EmailAddress), "admin@"+hostname)
+	owner.DisplayName = cmp.Or(strings.TrimSpace(configured.DisplayName), "Demo")
+	owner.Username = cmp.Or(strings.TrimSpace(configured.Username), "demo")
+	owner.EmailAddress = cmp.Or(strings.TrimSpace(configured.EmailAddress), "demo@"+hostname)
 	owner.IsOwner = true
 	owner.IsPublic = true
 

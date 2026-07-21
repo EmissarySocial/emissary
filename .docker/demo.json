@@ -1,64 +1,69 @@
 {
-    "domains": [
-        {
-            "domainId": "66035ca755847621dc21a5b0",
-            "label": "localhost",
-            "hostname": "localhost",
-            "connectString": "mongodb://mongodb/?replicaSet=rs0",
-            "databaseName": "emissary-localhost",
-            "smtp": {
-                "hostname": "",
-                "username": "",
-                "password": "",
-                "port": 0,
-                "tls": false
-            },
-            "createOwner": true,
-            "owner": {
-                "displayName": "Demo Admin",
-                "username": "admin",
-                "emailAddress": "",
-                "phoneNumber": "",
-                "mailingAddress": ""
-            },
-            "keyEncryptingKey": "abcdefghijklmnopqrstuvwxyz123456"
-        }
-    ],
-    "providers": null,
-    "templates": [
-        {
-            "adapter": "EMBED",
-            "location": "templates"
-        }
-    ],
-    "emails": [
-        {
-            "adapter": "EMBED",
-            "location": "emails"
-        }
-    ],
-    "attachmentOriginals": {
-        "adapter": "FILE",
-        "location": "/data/uploads/originals"
-    },
-    "attachmentCache": {
-        "adapter": "FILE",
-        "location": "/data/uploads/cache"
-    },
-    "exportCache": {
-        "adapter": "FILE",
-        "location": "/data/uploads/exports"
-    },
-    "certificates": {
-        "adapter": "FILE",
-        "location": "/data/uploads/certificates"
-    },
-    "activityPubCache": {
-        "connectString": "mongodb://mongodb/?replicaSet=rs0",
-        "database": "activitystream"
-    },
-    "adminEmail": "",
-    "httpPort": 8080,
-    "httpsPort": 0,
-    "debugLevel": "Debug"
+	"domains": [
+		{
+			"domainId": "66035ca755847621dc21a5b0",
+			"label": "localhost",
+			"hostname": "localhost",
+			"connectString": "mongodb://mongodb/?replicaSet=rs0",
+			"databaseName": "emissary-localhost",
+			"smtp": {
+				"hostname": "",
+				"username": "",
+				"password": "",
+				"port": 0,
+				"tls": false
+			},
+			"createOwner": true,
+			"owner": {
+				"displayName": "Demo",
+				"username": "demo",
+				"emailAddress": "",
+				"phoneNumber": "",
+				"mailingAddress": ""
+			},
+			"keyEncryptingKey": "abcdefghijklmnopqrstuvwxyz123456"
+		}
+	],
+	"providers": null,
+	"templates": [
+		{
+			"adapter": "EMBED",
+			"location": "templates"
+		}
+	],
+	"emails": [
+		{
+			"adapter": "EMBED",
+			"location": "emails"
+		}
+	],
+	"attachmentOriginals": {
+		"adapter": "FILE",
+		"location": "/data/uploads/originals"
+	},
+	"attachmentCache": {
+		"adapter": "FILE",
+		"location": "/data/uploads/cache"
+	},
+	"exportCache": {
+		"adapter": "FILE",
+		"location": "/data/uploads/exports"
+	},
+	"certificates": {
+		"adapter": "FILE",
+		"location": "/data/uploads/certificates"
+	},
+	"activityPubCache": {
+		"connectString": "mongodb://mongodb/?replicaSet=rs0",
+		"database": "activitystream"
+	},
+	"adminEmail": "",
+	"httpPort": 8080,
+	"httpsPort": 0,
+	"debugLevel": "Debug",
+	"loggers": [
+		{
+			"type": "console"
+		}
+	]
 }
