@@ -16,7 +16,7 @@ import (
 // Version3 updates all public keys to 512-bit RSA keys (to hopefully match Mastodon)
 func Version3(ctx context.Context, session *mongo.Database) error {
 
-	const location = "queries.upgrades.Version1"
+	const location = "queries.upgrades.Version3"
 	streamCollection := session.Collection("EncryptionKey")
 
 	fmt.Println("... Version 3")
@@ -33,11 +33,15 @@ func Version3(ctx context.Context, session *mongo.Database) error {
 			return derp.Wrap(err, location, "Decoding stream record")
 		}
 
+		// 2026-07-21: This originally upgraded to 512-bit keys, but those are
+		// no longer supported by Go.  Retrofitting this to 2048 so that new
+		// installs don't break.
+
 		// Create an actual encryption key
-		privateKey, err := rsa.GenerateKey(rand.Reader, 512)
+		privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 
 		if err != nil {
-			return derp.Wrap(err, "model.CreateEncryptionKey", "Generating RSA key")
+			return derp.Wrap(err, location, "Generating RSA key")
 		}
 
 		record["privatePEM"] = sigs.EncodePrivatePEM(privateKey)
