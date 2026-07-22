@@ -18,7 +18,7 @@ require (
 	github.com/benpate/exp-builder v0.11.0
 	github.com/benpate/form v0.27.0
 	github.com/benpate/geo v0.1.1
-	github.com/benpate/hannibal v0.28.0
+	github.com/benpate/hannibal v0.29.0
 	github.com/benpate/html v0.17.0
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.16.0
@@ -138,3 +138,5 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/benpate/hannibal => /Users/benpate/Library/CloudStorage/Dropbox/Source_Code/github.com/benpate/hannibal
