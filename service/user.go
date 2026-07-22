@@ -205,10 +205,12 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 		}
 	}
 
-	// RULE: Extract #hashtags from profile fields for Templates that configure tagging.  Users
-	// are extract-only (no linkification) because statusMessage stores raw Markdown that is
-	// rendered to HTML at display time.
+	// RULE: Denormalize the tag URL from the outbox Template and extract #hashtags from profile
+	// fields.  Linkification itself happens at render time (User.SummaryHTML), not here, because
+	// statusMessage stores raw Markdown that is rendered to HTML at display time.
 	if template, err := service.templateService.Load(user.OutboxTemplate); err == nil {
+		user.TagURL = template.TagURL
+
 		if len(template.TagPaths) > 0 {
 			service.CalculateTags(session, user)
 		}

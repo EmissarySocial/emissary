@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/id"
+	"github.com/EmissarySocial/emissary/tools/replace"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/delta"
 	"github.com/benpate/hannibal/vocab"
@@ -37,6 +38,7 @@ type User struct {
 	OutboxTemplate       string                     `bson:"outboxTemplate"`       // Template for the user's outbox
 	NoteTemplate         string                     `bson:"noteTemplate"`         // Template for generically created notes
 	Hashtags             sliceof.String             `bson:"hashtags"`             // Slice of tags that can be used to categorize this user.
+	TagURL               string                     `bson:"tagUrl"`               // URL prefix for hashtag links, denormalized from the outbox Template ("%23" + tag is appended).
 	Links                sliceof.Object[PersonLink] `bson:"links"`                // Slice of links to profiles on other web services.
 	NotificationChannels sliceof.String             `bson:"notificationChannels"` // Slice of ENABLED notification channel keys (see model.NotificationChannel* constants). Empty = all notifications off.
 	PasswordReset        PasswordReset              `bson:"passwordReset"`        // Most recent password reset information.
@@ -224,6 +226,21 @@ func (user *User) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
 	return NewPermissions()
 }
 
+// SummaryHTML renders the user's StatusMessage from Markdown to HTML, and linkifies any #hashtags
+// using the tag URL denormalized from the outbox Template.  Goldmark (without unsafe HTML) blanks
+// dangerous link targets and drops raw HTML, so the result is safe to render on our own origin.
+func (user User) SummaryHTML() string {
+
+	result := markdownToHTML(user.StatusMessage)
+
+	// RULE: Only linkify when the outbox Template defines a tag URL
+	if user.TagURL != "" {
+		result = replace.Linkify(result, user.TagURL, user.Hashtags)
+	}
+
+	return result
+}
+
 /******************************************
  * ActivityPub Interfaces
  ******************************************/
@@ -294,7 +311,7 @@ func (user User) GetJSONLD() mapof.Any {
 	}
 
 	if user.StatusMessage != "" {
-		result[vocab.PropertySummary] = markdownToHTML(user.StatusMessage)
+		result[vocab.PropertySummary] = user.SummaryHTML()
 	}
 
 	if iconURL := user.ActivityPubIconURL(); iconURL != "" {
@@ -315,11 +332,18 @@ func (user User) GetJSONLD() mapof.Any {
 
 	if user.Hashtags.NotEmpty() {
 		result[vocab.PropertyTag] = slice.Map(user.Hashtags, func(tag string) mapof.Any {
-			return mapof.Any{
+
+			hashtag := mapof.Any{
 				vocab.PropertyType: vocab.LinkTypeHashtag,
 				vocab.PropertyName: "#" + tag,
-				// vocab.PropertyHref: fmt.Sprintf("%s/tags/%s", user.Host(), tag), // Omitting this because we don't have a tag page yet.
 			}
+
+			// Include the link target when the outbox Template defines one
+			if user.TagURL != "" {
+				hashtag[vocab.PropertyHref] = user.TagURL + "%23" + tag
+			}
+
+			return hashtag
 		})
 	}
 
@@ -355,7 +379,6 @@ func (user *User) ActivityPubImageURL() string {
 	}
 	return user.ProfileURL + "/attachments/" + user.ImageID.Hex()
 }
-
 
 func (user *User) ActivityPubFeaturedURL() string {
 	if user.ProfileURL == "" {

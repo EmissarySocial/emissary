@@ -216,6 +216,11 @@ func (w Outbox) StatusMessage() string {
 	return w._user.StatusMessage
 }
 
+// StatusMessageHTML returns the profile summary rendered from Markdown, with #hashtags linkified.
+func (w Outbox) StatusMessageHTML() template.HTML {
+	return template.HTML(w._user.SummaryHTML())
+}
+
 func (w Outbox) ProfileURL() string {
 	return w._user.ProfileURL
 }
@@ -236,13 +241,13 @@ func (w Outbox) Links() sliceof.Object[model.PersonLink] {
 	return w._user.Links
 }
 
-// Tags returns all tags (mentions, hashtags, etc) for the stream being built
+// Tags returns all tags (mentions, hashtags, etc) for the user being built
 func (w Outbox) Tags() sliceof.Object[mapof.String] {
 	return slice.Map(w._user.Hashtags, func(tag string) mapof.String {
 		return mapof.String{
 			"Name": tag,
 			"Type": vocab.LinkTypeHashtag,
-			"Href": w.Host() + "/users?q=%23" + tag,
+			"Href": w._user.TagURL + "%23" + tag,
 		}
 	})
 }

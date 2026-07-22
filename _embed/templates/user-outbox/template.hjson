@@ -8,6 +8,8 @@
 	icon:inbox
 	extends:["base-social", "base-intent"]
 	containedBy: []
+	tagPaths:["statusMessage"]
+	tagUrl:"/search?q="
 	schema: {
 		title:User Profile
 		type:object
