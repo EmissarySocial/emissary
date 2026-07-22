@@ -95,6 +95,14 @@ func getOEmbed_Stream(factory *service.Factory, session data.Session, token stri
 		return mapof.Any{}, derp.Wrap(err, location, "Loading stream from database")
 	}
 
+	// RULE: Only expose oEmbed metadata for publicly-viewable Streams. oEmbed is
+	// consumed anonymously by third-party sites, so a non-public Stream must not
+	// leak its Label or thumbnail here. Return NotFound (not Forbidden) so we don't
+	// confirm the token's existence.
+	if !stream.DefaultAllowAnonymous() {
+		return mapof.Any{}, derp.NotFound(location, "Stream not found")
+	}
+
 	// Export the stream as an OEmbed object
 	// Export the user as an OEmbed object
 	// Get the domain
@@ -165,6 +173,14 @@ func getOEmbed_User(factory *service.Factory, session data.Session, token string
 
 	if err := userService.LoadByToken(session, token, &user); err != nil {
 		return mapof.Any{}, derp.Wrap(err, location, "Loading user from database")
+	}
+
+	// RULE: Only expose oEmbed metadata for public User profiles. oEmbed is consumed
+	// anonymously by third-party sites, so a non-public profile must not leak its
+	// handle or avatar here. Return NotFound (not Forbidden) so we don't confirm the
+	// token's existence.
+	if !user.IsPublic {
+		return mapof.Any{}, derp.NotFound(location, "User not found")
 	}
 
 	// Get the domain
