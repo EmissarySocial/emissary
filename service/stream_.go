@@ -373,6 +373,14 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	// RULE: Calculate "defaultAllow" groups for this stream.
 	service.calcDefaultAllow(&template, stream)
 
+	// RULE: Extract and linkify #hashtags for Templates that configure tagging.  This runs
+	// BEFORE Normalize so the injected anchors pass through the same schema sanitization as
+	// any other content HTML.
+	if len(template.TagPaths) > 0 {
+		service.CalculateTags(session, stream)
+		service.applyHashtagLinks(&template, stream)
+	}
+
 	// Normalize the value (using the template-specific schema) before saving.  Values are
 	// rewritten in place to conform to the schema, so that legacy data written under older
 	// rules is repaired progressively as records are saved.  The template schema inherits
@@ -1204,6 +1212,22 @@ func (service *Stream) CalculateTags(session data.Session, stream *model.Stream)
 
 	// Apply the #hashtags back to the Stream
 	stream.Hashtags = hashtagNames
+}
+
+// applyHashtagLinks wraps each of the Stream's #hashtags in its content with a link to the Template's TagURL.
+func (service *Stream) applyHashtagLinks(template *model.Template, stream *model.Stream) {
+
+	// RULE: Only linkify when the Template defines a tag URL
+	if template.TagURL == "" {
+		return
+	}
+
+	// RULE: Nothing to link if there are no hashtags
+	if len(stream.Hashtags) == 0 {
+		return
+	}
+
+	service.contentService.ApplyTags(&stream.Content, template.TagURL, stream.Hashtags)
 }
 
 // NotifyInReplyTo sends an SSE notification to any stream that is referenced in the "inReplyTo" field of a Stream

@@ -2,6 +2,8 @@ package service
 
 import (
 	"bytes"
+	stdhtml "html"
+	"net/url"
 	"regexp"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -164,15 +166,17 @@ func (service *Content) ApplyTags(content *model.Content, base string, tags []st
 		return
 	}
 
-	// Add a "hash"
-	base = base + "%23"
-
-	// Last, apply tags back into the Content as links
+	// Wrap each #hashtag in a link back to the Template's tag URL
 	for _, tag := range tags {
+
 		if tag == "" {
 			continue
 		}
 
-		content.HTML = replace.Content(content.HTML, "#"+tag, `<a href="`+base+tag+`" target="_blank">#`+tag+`</a>`)
+		// RULE: `tag` may carry a database-sourced SearchTag name, so escape it for both the href and the visible label
+		href := base + "%23" + url.QueryEscape(tag)
+		label := stdhtml.EscapeString("#" + tag)
+
+		content.HTML = replace.Content(content.HTML, "#"+tag, `<a href="`+href+`" target="_blank">`+label+`</a>`)
 	}
 }
