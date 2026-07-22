@@ -41,7 +41,8 @@ type Template struct {
 	AccessRoles        mapof.Object[Role]   `json:"roles"              bson:"accessRoles"`        // Map of custom roles defined by this Template.
 	Actions            mapof.Object[Action] `json:"actions"            bson:"actions"`            // Map of actions that can be performed on streams of this Template
 	HTMLTemplate       *template.Template   `json:"-"                  bson:"-"`                  // Compiled HTML template
-	TagPaths           []string             `json:"tagPaths"           bson:"tagPaths"`           // List of paths to tags that are used in this template
+	TagPaths           []string             `json:"tagPaths"           bson:"tagPaths"`           // List of schema paths whose values are scanned for #hashtags
+	TagURL             string               `json:"tagUrl"             bson:"tagUrl"`             // URL prefix for hashtag links rendered into content ("%23" + tag is appended)
 	SearchOptions      templatemap.Map      `json:"search"             bson:"search"`             // Compiled templates that override default search result values
 	Bundles            mapof.Object[Bundle] `json:"bundles"            bson:"bundles"`            // Additional resources (JS, HS, CSS) reqired tp remder this Template.
 	Resources          fs.FS                `json:"-"                  bson:"-"`                  // File system containing the template resources
@@ -237,6 +238,11 @@ func (template *Template) Inherit(parent *Template) {
 	// Inherit Model.
 	if template.Model == "" {
 		template.Model = parent.Model
+	}
+
+	// Inherit TagURL. (TagPaths deliberately does NOT inherit; external template packages depend on that.)
+	if template.TagURL == "" {
+		template.TagURL = parent.TagURL
 	}
 
 	// Apply SocialRules
