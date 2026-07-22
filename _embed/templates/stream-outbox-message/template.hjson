@@ -4,6 +4,8 @@
 	category: Special
 	socialRole:Note
 	extends:["base-social", "base-intent"]
+	tagPaths:["content.html"]
+	tagUrl:"/search?q="
 	model: Stream
 	icon:message
 	label:Post

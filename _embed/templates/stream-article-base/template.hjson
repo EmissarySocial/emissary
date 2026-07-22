@@ -5,6 +5,7 @@
 	socialRole: Article
 	model: Stream
 	extends: ["base-widget-editor"]
+	tagUrl: "/search?q="
 	label: Article (BASE TEMPLATE)
 	description:"Base Template, extended by article-editorjs and article-markdown"
 	widgetlocations: ["LEFT", "TOP", "RIGHT", "BOTTOM"]

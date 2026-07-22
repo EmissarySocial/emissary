@@ -4,6 +4,8 @@
 	category: Special
 	socialRole:"Note"
 	extends:["outbox-message"]
+	tagPaths:["content.html"]
+	tagUrl:"/search?q="
 	model: Stream
 	icon:"message"
 	label:"Reply"

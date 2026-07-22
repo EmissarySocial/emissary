@@ -2,6 +2,7 @@
 	templateId:"article-html"
 	category: Content
 	extends:["article-base"]
+	tagPaths:["data.tags"]
 	containedBy: ["top", "home", "folder", "article"]
 	label:"HTML Code"
 	description:"HTML code editor. Experts only."

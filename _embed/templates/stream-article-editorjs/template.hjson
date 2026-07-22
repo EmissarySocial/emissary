@@ -2,6 +2,7 @@
 	templateId:"article-editorjs"
 	category: Content
 	extends: ["article-base"]
+	tagPaths:["data.tags"]
 	containedBy: ["top", "home", "folder", "article"]
 	label:"Visual Editor"
 	description:"Block-based WYSIWYG editor. Best for beginners."

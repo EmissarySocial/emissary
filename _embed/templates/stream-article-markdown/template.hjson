@@ -2,6 +2,7 @@
 	templateId:"article-markdown"
 	category: Content
 	extends:["article-base"]
+	tagPaths:["data.tags"]
 	containedBy: ["top", "home", "folder", "article"]
 	label:"Markdown Editor"
 	description:"Simple text-based format."
