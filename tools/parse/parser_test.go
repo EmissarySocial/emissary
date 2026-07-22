@@ -68,6 +68,13 @@ func TestRegression(t *testing.T) {
 	require.Equal(t, sliceof.String{"all", "rock", "funky", "chicken"}, tokens)
 }
 
+// Hashtags may contain digits, and a leading digit does not split the token.
+func TestHashtags_WithDigits(t *testing.T) {
+	testMessage := "Testing hashtags #travel #Food2024 #2024recap here"
+	tokens := Hashtags(testMessage)
+	require.Equal(t, sliceof.String{"travel", "Food2024", "2024recap"}, tokens)
+}
+
 // Demonstrates that the "default" setting is Case Sensitivity
 func TestCaseSensitive_Default(t *testing.T) {
 	testMessage := "#LoL #YOLO #tokens #bRo"
