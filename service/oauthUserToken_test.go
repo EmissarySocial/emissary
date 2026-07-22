@@ -84,7 +84,7 @@ func TestExchangeCode_Expired(t *testing.T) {
 	grant := newTestGrant()
 
 	// Age the code past its TTL.
-	grant.Journal.CreateDate = time.Now().Add(-model.OAuthCodeLifetime - time.Minute).UnixMilli()
+	grant.CreateDate = time.Now().Add(-model.OAuthCodeLifetime - time.Minute).UnixMilli()
 
 	require.NotNil(t, service.ExchangeCode(session, &grant))
 	require.False(t, grant.CodeRedeemed, "an expired code is never consumed")

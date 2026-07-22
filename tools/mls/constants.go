@@ -45,7 +45,7 @@ var credentialTypeNames = map[uint16]string{
 	0x0002: "x509",
 }
 
-var wireFormatNames = map[uint16]string{
+var wireFormatNames = map[uint16]string{ //nolint:unused // retained for future use
 	0x0000: "RESERVED",
 	0x0001: "mls_public_message",
 	0x0002: "mls_private_message",

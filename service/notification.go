@@ -241,7 +241,7 @@ func (service *Notification) HasUnread(session data.Session, userID primitive.Ob
 // optionally filtered to specific notification types (the notifications-page tabs).
 func (service *Notification) CountUnread(session data.Session, userID primitive.ObjectID, types ...string) (int64, error) {
 
-	var criteria exp.Expression = exp.Equal("userId", userID).AndEqual("readDate", int64(math.MaxInt64))
+	criteria := exp.Equal("userId", userID).AndEqual("readDate", int64(math.MaxInt64))
 
 	if len(types) > 0 {
 		criteria = criteria.And(exp.In("type", types))
@@ -292,7 +292,7 @@ func (service *Notification) MarkAllRead(session data.Session, userID primitive.
 
 	const location = "service.Notification.MarkAllRead"
 
-	var criteria exp.Expression = exp.Equal("userId", userID).AndEqual("readDate", int64(math.MaxInt64)).AndEqual("deleteDate", 0)
+	criteria := exp.Equal("userId", userID).AndEqual("readDate", int64(math.MaxInt64)).AndEqual("deleteDate", 0)
 
 	if len(types) > 0 {
 		criteria = criteria.And(exp.In("type", types))

@@ -6,7 +6,6 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/realtime"
-	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -17,7 +16,6 @@ import (
 	"github.com/benpate/rosetta/ranges"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -163,27 +161,6 @@ func (service *Inbox) createOrUpdate(session data.Session, inboxActivity *model.
 	}
 
 	return nil
-}
-
-// cacheObject attempts to load the object associated with this InboxActivity into the ActivityStream cache.
-func (service *Inbox) cacheObject(inboxActivity *model.InboxActivity) {
-
-	// If there is no ObjectID, then there's nothing to cache
-	if inboxActivity.ObjectID == "" {
-		return
-	}
-
-	// If the ObjectID is not a valid URL, then don't even try to load it into the cache.
-	if uri.NotValidURL(inboxActivity.ObjectID) {
-		return
-	}
-
-	// Get an ActivityStream client and rewrite the object into the cache
-	client := service.activityService.UserClient(inboxActivity.UserID)
-
-	if _, err := client.Load(inboxActivity.ObjectID, ascache.WithWriteOnly()); err != nil {
-		derp.Report(derp.Wrap(err, "service.Inbox.cacheObject", "Loading object into cache", inboxActivity.ObjectID))
-	}
 }
 
 /******************************************

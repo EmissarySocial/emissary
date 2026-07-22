@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/benpate/derp"
 	"github.com/stretchr/testify/require"
 )
 
@@ -115,6 +116,7 @@ func TestWebPushHTTPClient_BlocksLoopback(t *testing.T) {
 	dev := webPushHTTPClient(true)
 	response, err := dev.Get(server.URL)
 	require.Nil(t, err)
-	defer response.Body.Close()
+	defer derp.ReportFunc(response.Body.Close)
+
 	require.Equal(t, http.StatusOK, response.StatusCode)
 }

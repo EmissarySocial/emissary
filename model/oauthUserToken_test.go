@@ -15,17 +15,17 @@ func TestOAuthUserToken_IsCodeExpired(t *testing.T) {
 	grant := NewOAuthUserToken()
 
 	t.Run("fresh code is not expired", func(t *testing.T) {
-		grant.Journal.CreateDate = now.UnixMilli()
+		grant.CreateDate = now.UnixMilli()
 		require.False(t, grant.IsCodeExpired(now))
 	})
 
 	t.Run("code within the TTL is not expired", func(t *testing.T) {
-		grant.Journal.CreateDate = now.Add(-OAuthCodeLifetime + time.Second).UnixMilli()
+		grant.CreateDate = now.Add(-OAuthCodeLifetime + time.Second).UnixMilli()
 		require.False(t, grant.IsCodeExpired(now))
 	})
 
 	t.Run("code past the TTL is expired", func(t *testing.T) {
-		grant.Journal.CreateDate = now.Add(-OAuthCodeLifetime - time.Second).UnixMilli()
+		grant.CreateDate = now.Add(-OAuthCodeLifetime - time.Second).UnixMilli()
 		require.True(t, grant.IsCodeExpired(now))
 	})
 }

@@ -50,43 +50,6 @@ func GetCollection(ctx *steranko.Context, factory *service.Factory, session data
 	)
 }
 
-func getCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User, actorID *string, collectionType string, collectionURL string) error {
-
-	const location = "handler.activitypub_user.getCollection"
-
-	// RULE: Only public users can be queried
-	if !user.IsPublic {
-		return derp.NotFound(location, "User not found")
-	}
-
-	// Load the Collection (to enforce access permissions)
-	collectionService := factory.Collection()
-	record := model.NewCollection()
-
-	if err := collectionService.LoadByType(session, user.UserID, collectionType, &record); err != nil {
-
-		if derp.IsNotFound(err) {
-			return collection.ServeEmpty(ctx, collectionURL)
-		}
-
-		return derp.Wrap(err, location, "Loading collection")
-	}
-
-	// RULE: Enforce access permissions on the collection
-	if !canViewCollection(ctx, &record, *actorID) {
-		return derp.Forbidden(location, "Collection not readable by "+*actorID)
-	}
-
-	collectionItemService := factory.CollectionItem()
-
-	return collection.Serve(
-		ctx,
-		collectionURL,
-		collectionItemService.CollectionCount(session, user.UserID, record.CollectionID, exp.All()),
-		collectionItemService.CollectionIterator(session, user.UserID, record.CollectionID, exp.All()),
-	)
-}
-
 // canViewCollection returns TRUE if the requesting actor may read the given Collection: the
 // owner and domain owners always can, otherwise the actor must be a named participant (or the
 // Collection must be public). ownerActorURL is the ActivityPub URL of the Collection's owner.

@@ -11,7 +11,7 @@ import (
 )
 
 // stripe_Connect ensures that the Stripe webhook is configured for this MerchantAccount
-func (service *MerchantAccount) stripe_Connect(merchantAccount *model.MerchantAccount) error {
+func (service *MerchantAccount) stripe_Connect(merchantAccount *model.MerchantAccount) error { //nolint:unused // direct Stripe provider is dormant, not deleted
 
 	const location = "service.MerchantAccount.stripe_Connect"
 

@@ -40,7 +40,7 @@ func TestRegistration_SetUserData_PasswordIgnoredForExistingUser(t *testing.T) {
 	domain := model.NewDomain()
 
 	user := model.NewUser()
-	user.Journal.CreateDate = 1234567890 // saved => not new
+	user.CreateDate = 1234567890 // saved => not new
 	user.Password = "$2a$12$existing-hash-value"
 	require.False(t, user.IsNew())
 

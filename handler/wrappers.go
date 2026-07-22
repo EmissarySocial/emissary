@@ -68,7 +68,6 @@ func WithActor(serverFactory *server.Factory, fn WithFunc1[string]) echo.Handler
 //
 //	requested (but un-authenticated) User from the URL path
 func WithActorAndUser(serverFactory *server.Factory, fn WithFunc2[string, model.User]) echo.HandlerFunc {
-	const location = "handler.WithActorAndUser"
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 		return WithActor(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, actorID *string) error {
@@ -133,7 +132,6 @@ func authorizedActorRefusal(location string, disposition model.RuleDisposition) 
 // WithActorAndStream resolves both the requesting Actor (authenticated by HTTP signatures) and the
 // Stream they have requested
 func WithActorAndStream(serverFactory *server.Factory, fn WithFunc2[string, model.Stream]) echo.HandlerFunc {
-	const location = "handler.WithActorAndStream"
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 		return WithActor(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, actorID *string) error {

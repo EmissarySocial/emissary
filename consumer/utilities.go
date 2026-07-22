@@ -7,13 +7,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
 	"github.com/benpate/uri"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-func objectID(original string) primitive.ObjectID {
-	result, _ := primitive.ObjectIDFromHex(original)
-	return result
-}
 
 // isHour returns TRUE if the current hour matches the modulo and startHour.
 // For example, isHour(2, 0) returns TRUE every two hours from midnight, 2am, 4am, etc.

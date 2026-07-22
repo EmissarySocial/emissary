@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/benpate/derp"
 	"github.com/labstack/echo/v4"
 )
 
@@ -79,7 +80,7 @@ func GetEcho(serverFactory *server.Factory) echo.HandlerFunc {
 		if err != nil {
 			return ctx.String(http.StatusInternalServerError, "failed to read body")
 		}
-		defer r.Body.Close()
+		defer derp.ReportFunc(r.Body.Close)
 
 		fmt.Fprintf(&b, "\nBody (%d bytes)\n", len(body))
 		if len(body) == 0 {

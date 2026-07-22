@@ -169,7 +169,11 @@ func (service *WebPush) Send(session data.Session, endpoint string, p256dh strin
 		return 0, derp.Wrap(err, location, "Sending Web Push notification", endpoint, subscriber)
 	}
 
-	defer response.Body.Close()
+	defer func() {
+		if err := response.Body.Close(); err != nil {
+			derp.Report(derp.Wrap(err, location, "Closing response body", endpoint, subscriber))
+		}
+	}()
 
 	// A push service states WHY it rejected a message in the response body -- Apple returns
 	// `{"reason":"BadJwtToken"}`, for instance -- and the status code alone is rarely enough to act

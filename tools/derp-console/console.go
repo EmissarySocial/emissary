@@ -26,7 +26,7 @@ func New() Console {
 }
 
 func (console Console) Report(err error) {
-	_, _ = fmt.Fprintln(output, "")
+	_, _ = fmt.Fprintln(output, "") //nolint:errcheck
 	console.report(err)
 }
 

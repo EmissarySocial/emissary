@@ -1,8 +1,8 @@
 package ascacherules
 
-import "golang.org/x/exp/constraints"
+import "cmp"
 
-func clamp[T constraints.Ordered](min T, mid T, max T) T {
+func clamp[T cmp.Ordered](min T, mid T, max T) T {
 
 	if min > max {
 		return max
