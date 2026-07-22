@@ -12,7 +12,7 @@ type Parser struct {
 	prefixes      []rune
 	remainder     *strings.Builder
 	includePrefix bool // If TRUE, include the prefix character in the final result, i.e. #hashtag or @mention (default is FALSE)
-	caseSensitive bool // If TRUE, tags are case sensitive (default is FALSE)
+	caseSensitive bool // If TRUE, tags keep their original case; if FALSE, tags are lower-cased (default is TRUE)
 	trimRemainder bool // If TRUE, trim leading and trailing whitespace from the remainder (default is FALSE)
 }
 
