@@ -2,39 +2,22 @@ package build
 
 import (
 	"io"
-
-	"github.com/benpate/derp"
 )
 
-// StepProcessTags is an action step that adds tags to a stream, either by scanning the content, or by
-// calculating template values
+// StepProcessTags is a DEPRECATED action step. #hashtags are now extracted automatically when a
+// Stream or User is saved, so this step does nothing. It is retained only so that older Templates
+// that still reference "process-tags" continue to load (see model.step.NewProcessTags, which logs
+// the deprecation warning at Template-load time).
 type StepProcessTags struct {
 	Paths []string
 }
 
-// Get builds the HTML for this step - either a modal template selector, or the embedded edit form
+// Get is a no-op for this deprecated step.
 func (step StepProcessTags) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	return nil
 }
 
+// Post is a no-op for this deprecated step. Tag processing now happens automatically on save.
 func (step StepProcessTags) Post(builder Builder, buffer io.Writer) PipelineBehavior {
-
-	const location = "build.StepProcessTags.Post"
-
-	switch typed := builder.(type) {
-
-	case Stream:
-		stream := typed._stream
-		streamService := builder.factory().Stream()
-		streamService.CalculateTags(builder.session(), stream)
-		return Continue()
-
-	case Outbox:
-		user := typed._user
-		userService := builder.factory().User()
-		userService.CalculateTags(builder.session(), user)
-		return Continue()
-	}
-
-	return Halt().WithError(derp.Internal(location, "This step can only be used in a Stream or User builder"))
+	return Continue()
 }

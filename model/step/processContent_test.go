@@ -38,3 +38,13 @@ func TestProcessContent_InvalidFormat(t *testing.T) {
 	_, err := NewProcessContent(mapof.Any{"format": "not-allowed"})
 	require.NotNil(t, err)
 }
+
+// TestProcessContent_DeprecatedTagFieldsStillParse guards the backward-compatibility contract:
+// the deprecated "add-tags"/"tag-path" options must still parse without error so that older
+// (external) Templates that set them continue to load. They are ignored at build time.
+func TestProcessContent_DeprecatedTagFieldsStillParse(t *testing.T) {
+	step, err := NewProcessContent(mapof.Any{"add-tags": true, "tag-path": "/home?q="})
+	require.Nil(t, err)
+	require.True(t, step.AddTags)
+	require.Equal(t, "/home?q=", step.TagPath)
+}

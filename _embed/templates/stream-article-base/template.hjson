@@ -176,7 +176,6 @@
 			steps: [
 				{do:"as-confirmation", title:"Promote this Draft?", message:"The live page will be replaced with this content.", submit:"Promote"}
 				{do:"promote-draft"}
-				{do:"process-tags", paths:"data.tags"}
 				{do:"save-and-publish", state:"published", outbox:"false"}
 				{do:"search-index"}
 				{do:"refresh-page"}

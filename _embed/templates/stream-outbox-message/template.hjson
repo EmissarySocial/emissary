@@ -35,7 +35,7 @@
 			roles:["author"]
 			steps: [
 				{do:"edit-content", file:"create", format:"HTML", require-content:true}
-				{do:"process-content", remove-html:true, add-links:true, add-tags:true}
+				{do:"process-content", remove-html:true, add-links:true}
 				{do:"save"}
 				{do:"upload-attachments", maximum:10, accept-type:"image/*,video/*,audio/*,application/pdf"}
 				{do:"set-thumbnail", path:"iconUrl"}
@@ -58,7 +58,7 @@
 				{do:"as-modal", steps:[
 					{do:"set-args", postTo:"/{{.StreamID}}/edit"}
 					{do:"edit-content", file:"edit", format:"HTML", require-content:true}
-					{do:"process-content", remove-html:true, add-links:true, add-tags:true}
+					{do:"process-content", remove-html:true, add-links:true}
 					{do:"save-and-publish", state:"default", outbox:true}
 					{do:"refresh-page"}
 				]}

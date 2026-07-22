@@ -7,14 +7,16 @@ import (
 	"github.com/benpate/rosetta/html"
 )
 
-// StepProcessContent is an action step that adds tags to a stream, either by scanning the content, or by
-// calculating template values
+// StepProcessContent is an action step that reformats a Stream's content (format conversion, HTML
+// removal, link detection).  The AddTags and TagPath fields are DEPRECATED and ignored: #hashtags
+// are now extracted and linkified automatically in Stream.Save.  The fields remain so this struct
+// stays convertible from model.step.ProcessContent.
 type StepProcessContent struct {
 	Format     string
 	RemoveHTML bool
 	AddLinks   bool
-	AddTags    bool
-	TagPath    string
+	AddTags    bool   // Deprecated: #hashtags are processed automatically in Stream.Save
+	TagPath    string // Deprecated: #hashtags are processed automatically in Stream.Save
 }
 
 // Get builds the HTML for this step - either a modal template selector, or the embedded edit form
@@ -50,13 +52,8 @@ func (step StepProcessContent) Post(builder Builder, buffer io.Writer) PipelineB
 		contentService.ApplyLinks(&stream.Content)
 	}
 
-	if step.AddTags {
-		factory.Stream().CalculateTags(builder.session(), stream)
-
-		if step.TagPath != "" {
-			contentService.ApplyTags(&stream.Content, step.TagPath, stream.Hashtags)
-		}
-	}
+	// NOTE: AddTags/TagPath are intentionally ignored here. #hashtags are extracted and linkified
+	// automatically in Stream.Save (driven by the Template's tagPaths / tagUrl).
 
 	return Continue()
 }
