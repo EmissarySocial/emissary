@@ -83,10 +83,21 @@ func (t *Tasks) Drain() []queue.Task {
 // publish errors are reported, never returned.
 func Publish(session data.Session, q *queue.Queue, name string, args mapof.Any, options ...queue.TaskOption) {
 
+	const location = "tools.postcommit.Publish"
+
 	task := queue.NewTask(name, args, options...)
 
-	// Transactional context: spool for post-commit publication.
-	if spool := From(session.Context()); spool != nil {
+	// RULE: session must never be nil here — every production Builder carries a live
+	// data.Session, so a nil one is a broken invariant (a Builder assembled without a session.
+	if session == nil {
+
+		// We can't inspect a transaction context without it, so report the defect
+		// for observability and fall through to immediate publish: the safest available
+		// action, since it preserves the task and never panics this fire-and-forget path.
+		derp.Report(derp.Internal(location, "Nil session passed to Publish (this should never happen)", name))
+
+	} else if spool := From(session.Context()); spool != nil {
+		// Transactional context: spool for post-commit publication.
 		spool.Add(task)
 		return
 	}
@@ -99,7 +110,7 @@ func Publish(session data.Session, q *queue.Queue, name string, args mapof.Any, 
 
 	// Non-transactional context: publish immediately.
 	if err := q.Publish(task); err != nil {
-		derp.Report(derp.Wrap(err, "tools.postcommit.Publish", "Publishing task", name))
+		derp.Report(derp.Wrap(err, location, "Publishing task", name))
 	}
 }
 

@@ -63,6 +63,12 @@ func purgeLegacyOAuthTokens(ctx context.Context, collection *mongo.Collection) e
 		return derp.Wrap(err, location, "Deleting legacy OAuth tokens")
 	}
 
+	// RULE: the mongo driver returns a non-nil result whenever err is nil, but nilaway
+	// can't prove that contract, so guard explicitly before reading DeletedCount.
+	if result == nil {
+		return nil
+	}
+
 	if result.DeletedCount > 0 {
 		log.Info().
 			Str("database", collection.Database().Name()).
