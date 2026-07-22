@@ -71,6 +71,18 @@ func IndexAllUsers(ctx *steranko.Context, factory *service.Factory, session data
 
 	for user := range allUsers {
 
+		// Recompute Hashtags
+		originalHashtags := user.Hashtags // nolint:scopeguard (caching value about to be changed)
+		userService.CalculateTags(session, &user)
+
+		// If necessary, re-save the User (this also backfills the denormalized TagURL)
+		if !slice.Equal(user.Hashtags, originalHashtags) {
+			if err := userService.Save(session, &user, "Updating Hashtags"); err != nil {
+				derp.Report(derp.Wrap(err, location, "Saving User"))
+			}
+		}
+
+		// Create a new SearchResult from the (updated?) User
 		searchResult := userService.SearchResult(&user)
 
 		if err := searchService.Sync(session, searchResult); err != nil {
