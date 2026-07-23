@@ -92,6 +92,13 @@ func UpgradeMongoDB(connectionString string, databaseName string, domain *model.
 		if _, err := domainCollection.UpdateOne(ctx, filter, update); err != nil {
 			return derp.Wrap(err, location, "Updating domain record")
 		}
+
+		// Keep the in-memory Domain record in sync with the value we just wrote to Mongo.
+		// UpgradeMongoDB holds the live *model.Domain owned by the Domain service, so if we
+		// bump the version in the database but not here, the cache keeps reporting a stale
+		// schema version -- which a later whole-document save would then persist back over
+		// the correct value, triggering a destructive re-migration on the next restart.
+		domain.DatabaseVersion = uint(index)
 	}
 
 	log.Info().Msg("DONE UPGRADING DATABASE")
