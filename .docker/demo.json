@@ -60,6 +60,7 @@
 	"adminEmail": "",
 	"httpPort": 8080,
 	"httpsPort": 0,
+	"clientIpStrategy": "REMOTE-ADDR",
 	"debugLevel": "Debug",
 	"loggers": [
 		{

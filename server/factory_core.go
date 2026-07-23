@@ -548,7 +548,10 @@ func (factory *factoryCore) calcClientIPStrategy(config config.Config) realclien
 
 	switch config.ClientIPStrategy {
 
-	case "REMOTE-ADDR":
+	// RULE: An empty strategy falls back to REMOTE-ADDR, the documented default.
+	// A config file that omits "clientIpStrategy" unmarshals into an empty string,
+	// so this MUST be treated as the default rather than an unknown value.
+	case "", "REMOTE-ADDR":
 		return realclientip.RemoteAddrStrategy{}
 
 	case "RIGHTMOST-TRUSTED-COUNT":
