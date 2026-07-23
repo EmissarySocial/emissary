@@ -2,48 +2,15 @@ package upgrades
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/EmissarySocial/emissary/model"
-	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Version10 updates "AttributedTo" values to be single values, not slices
-func Version10(ctx context.Context, session *mongo.Database) error {
-
-	fmt.Println("... Version 10")
-
-	err := ForEachRecord(session.Collection("Stream"), func(record mapof.Any) bool { // nolint:scopeguard (readability)
-		if attributedTo, ok := record["attributedTo"]; ok {
-			if attributedToSlice, ok := attributedTo.([]any); ok {
-				if len(attributedToSlice) > 0 {
-					record["attributedTo"] = attributedToSlice[0]
-					return true
-				}
-			}
-			record["attributedTo"] = model.NewPersonLink()
-			return true
-		}
-		return false
-	})
-
-	if err != nil {
-		return err
-	}
-
-	return ForEachRecord(session.Collection("Inbox"), func(record mapof.Any) bool {
-		if attributedTo, ok := record["attributedTo"]; ok {
-			if attributedToSlice, ok := attributedTo.([]any); ok {
-				if len(attributedToSlice) > 0 {
-					record["attributedTo"] = attributedToSlice[0]
-					return true
-				}
-			}
-			record["attributedTo"] = model.NewPersonLink()
-			return true
-		}
-
-		return false
-	})
+// Version10 is retired: it collapsed Stream and Inbox `attributedTo` slices to single values. A
+// one-time cleanup (2026-07-22) zeroed every upgrade below version 20 -- the sole database in
+// service is long past it, and a fresh install is born in the current schema -- so this step is
+// now a no-op that only advances the database version. The slot is preserved (never renumbered) so
+// stored databaseVersion values keep their meaning; see git history for the original implementation.
+func Version10(_ context.Context, _ *mongo.Database) error {
+	return nil
 }

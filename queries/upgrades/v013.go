@@ -3,25 +3,14 @@ package upgrades
 import (
 	"context"
 
-	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Version13 updates User's InboxTemplate and OutboxTemplate values
-func Version13(ctx context.Context, session *mongo.Database) error {
-
-	return ForEachRecord(session.Collection("User"), func(record mapof.Any) bool {
-		changed := false
-		if _, ok := record["inboxTemplate"]; !ok {
-			record["inboxTemplate"] = "user-inbox"
-			changed = true
-		}
-
-		if _, ok := record["outboxTemplate"]; !ok {
-			record["outboxTemplate"] = "user-outbox"
-			changed = true
-		}
-
-		return changed
-	})
+// Version13 is retired: it defaulted each User's `inboxTemplate` and `outboxTemplate`. A one-time
+// cleanup (2026-07-22) zeroed every upgrade below version 20 -- the sole database in service is
+// long past it, and a fresh install is born in the current schema -- so this step is now a no-op
+// that only advances the database version. The slot is preserved (never renumbered) so stored
+// databaseVersion values keep their meaning; see git history for the original implementation.
+func Version13(_ context.Context, _ *mongo.Database) error {
+	return nil
 }

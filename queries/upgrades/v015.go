@@ -2,32 +2,15 @@ package upgrades
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/EmissarySocial/emissary/model"
-	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Version15...
-func Version15(ctx context.Context, session *mongo.Database) error {
-
-	fmt.Println("... Version 15")
-	{
-		err := ForEachRecord(session.Collection("Follower"), func(record mapof.Any) bool { // nolint:scopeguard (readability)
-
-			if record.GetString("stateId") == "" {
-				record["stateId"] = model.FollowerStateActive
-				return true
-			}
-
-			return false
-		})
-
-		if err != nil {
-			return derp.Wrap(err, "queries.upgrades.Version15", "Updating Following collection")
-		}
-	}
+// Version15 is retired: it defaulted each Follower's empty `stateId` to Active. A one-time cleanup
+// (2026-07-22) zeroed every upgrade below version 20 -- the sole database in service is long past
+// it, and a fresh install is born in the current schema -- so this step is now a no-op that only
+// advances the database version. The slot is preserved (never renumbered) so stored databaseVersion
+// values keep their meaning; see git history for the original implementation.
+func Version15(_ context.Context, _ *mongo.Database) error {
 	return nil
 }

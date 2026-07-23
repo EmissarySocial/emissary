@@ -2,108 +2,16 @@ package upgrades
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Version14...
-func Version14(ctx context.Context, session *mongo.Database) error {
-
-	fmt.Println("... Version 14")
-	{
-		err := ForEachRecord(session.Collection("Follower"), func(record mapof.Any) bool { // nolint:scopeguard (readability)
-
-			if actor := record.GetMap("actor"); actor.NotEmpty() {
-				if actorImageURL, ok := actor["imageUrl"]; ok {
-					actor["iconUrl"] = actorImageURL
-					delete(actor, "imageUrl")
-					record["actor"] = actor
-					return true
-				}
-			}
-
-			return false
-		})
-
-		if err != nil {
-			return derp.Wrap(err, "queries.upgrades.Version14", "Updating Following collection")
-		}
-	}
-	{
-		err := ForEachRecord(session.Collection("Following"), func(record mapof.Any) bool { // nolint:scopeguard (readability)
-
-			if imageURL, ok := record["imageUrl"]; ok {
-				record["iconUrl"] = imageURL
-				delete(record, "imageUrl")
-				return true
-			}
-
-			return false
-		})
-
-		if err != nil {
-			return derp.Wrap(err, "queries.upgrades.Version14", "Updating Following collection")
-		}
-	}
-
-	{
-		err := ForEachRecord(session.Collection("Message"), func(record mapof.Any) bool { // nolint:scopeguard (readability)
-
-			if origin := record.GetMap("origin"); origin.NotEmpty() {
-				if originImageURL, ok := origin["imageUrl"]; ok {
-					origin["iconUrl"] = originImageURL
-					delete(origin, "imageUrl")
-					record["origin"] = origin
-					return true
-				}
-			}
-
-			return false
-		})
-
-		if err != nil {
-			return derp.Wrap(err, "queries.upgrades.Version14", "Updating Stream collection")
-		}
-	}
-
-	{
-		err := ForEachRecord(session.Collection("Stream"), func(record mapof.Any) bool { // nolint:scopeguard (readability)
-
-			changed := false
-			if imageURL, ok := record["imageUrl"]; ok {
-				record["iconUrl"] = imageURL
-				delete(record, "imageUrl")
-				changed = true
-			}
-
-			if attributedTo := record.GetMap("attributedTo"); attributedTo.NotEmpty() {
-				if attributedToImageURL, ok := attributedTo["imageUrl"]; ok {
-					attributedTo["iconUrl"] = attributedToImageURL
-					delete(attributedTo, "imageUrl")
-					record["attributedTo"] = attributedTo
-					changed = true
-				}
-			}
-
-			return changed
-		})
-
-		if err != nil {
-			return derp.Wrap(err, "queries.upgrades.Version14", "Updating Stream collection")
-		}
-	}
-
-	return ForEachRecord(session.Collection("User"), func(record mapof.Any) bool {
-
-		if imageID, ok := record["imageId"]; ok {
-			record["iconId"] = imageID
-			delete(record, "imageId")
-			return true
-		}
-
-		return false
-	})
+// Version14 is retired: it renamed `imageUrl`->`iconUrl` (and `imageId`->`iconId`) across Follower,
+// Following, Message, Stream, and User records. A one-time cleanup (2026-07-22) zeroed every upgrade
+// below version 20 -- the sole database in service is long past it, and a fresh install is born in
+// the current schema -- so this step is now a no-op that only advances the database version. The
+// slot is preserved (never renumbered) so stored databaseVersion values keep their meaning; see git
+// history for the original implementation.
+func Version14(_ context.Context, _ *mongo.Database) error {
+	return nil
 }

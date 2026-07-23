@@ -2,25 +2,15 @@ package upgrades
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
-	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Version9 moves all `journal.*` fields into the top level of each model object
-func Version9(ctx context.Context, session *mongo.Database) error {
-
-	fmt.Println("... Version 9")
-
-	return ForEachRecord(session.Collection("Stream"), func(record mapof.Any) bool {
-		if content, ok := record["content"]; ok {
-			if contentMap, ok := content.(mapof.Any); ok {
-				contentMap["contentType"] = strings.ToUpper(contentMap.GetString("type"))
-				return true
-			}
-		}
-		return false
-	})
+// Version9 is retired: it derived each Stream's `content.contentType` from `content.type`. A
+// one-time cleanup (2026-07-22) zeroed every upgrade below version 20 -- the sole database in
+// service is long past it, and a fresh install is born in the current schema -- so this step is
+// now a no-op that only advances the database version. The slot is preserved (never renumbered) so
+// stored databaseVersion values keep their meaning; see git history for the original implementation.
+func Version9(_ context.Context, _ *mongo.Database) error {
+	return nil
 }

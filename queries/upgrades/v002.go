@@ -2,51 +2,15 @@ package upgrades
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/mapof"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func Version2(ctx context.Context, session *mongo.Database) error {
-
-	const location = "queries.upgrades.Version1"
-	streamCollection := session.Collection("Stream")
-
-	fmt.Println("... Version 2")
-
-	cursor, err := streamCollection.Find(ctx, map[string]any{})
-
-	if err != nil {
-		return derp.Wrap(err, location, "Retrieving streams iterator")
-	}
-
-	for record := mapof.NewAny(); cursor.Next(ctx); record = mapof.NewAny() {
-
-		if err := cursor.Decode(&record); err != nil {
-			return derp.Wrap(err, location, "Decoding stream record")
-		}
-
-		document := record.GetMap("document")
-		if _, ok := document["attributedTo"]; !ok {
-			if author, ok := document["author"]; ok {
-				document["attributedTo"] = []any{author}
-				delete(document, "author")
-				delete(record, "author")
-				record["document"] = document
-			}
-		}
-
-		filter := bson.M{"_id": record["_id"]}
-
-		if _, err := streamCollection.ReplaceOne(ctx, filter, record); err != nil {
-			return derp.Wrap(err, location, "Updating stream record")
-		}
-
-		fmt.Print(".")
-	}
-
+// Version2 is retired: it moved each Stream document's `author` into `attributedTo`. A one-time
+// cleanup (2026-07-22) zeroed every upgrade below version 20 -- the sole database in service is
+// long past it, and a fresh install is born in the current schema -- so this step is now a no-op
+// that only advances the database version. The slot is preserved (never renumbered) so stored
+// databaseVersion values keep their meaning; see git history for the original implementation.
+func Version2(_ context.Context, _ *mongo.Database) error {
 	return nil
 }

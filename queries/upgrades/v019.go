@@ -2,115 +2,16 @@ package upgrades
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/EmissarySocial/emissary/model"
-	"github.com/benpate/rosetta/mapof"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Version19...
-func Version19(ctx context.Context, session *mongo.Database) error {
-
-	fmt.Println("... Version 19")
-
-	err := ForEachRecord(session.Collection("Outbox"), func(record mapof.Any) bool { // nolint:scopeguard (readability)
-
-		if parentID, exists := record["parentId"]; exists {
-			record["actorId"] = parentID
-			delete(record, "parentId")
-		}
-
-		if parentType, exists := record["parentType"]; exists {
-			record["actorType"] = parentType
-			delete(record, "parentType")
-		}
-
-		if _, exists := record["type"]; exists {
-			record["activityType"] = "Create"
-			delete(record, "type")
-		}
-
-		if url, exists := record["url"]; exists {
-			record["objectId"] = url
-			delete(record, "url")
-		}
-
-		record["permissions"] = model.NewAnonymousPermissions()
-
-		return true
-	})
-
-	if err != nil {
-		return err
-	}
-
-	// Update all User Outbox records
-	{
-		cursor, err := session.Collection("User").Find(ctx, mapof.Any{"deleteDate": 0})
-
-		if err != nil {
-			return err
-		}
-
-		for cursor.Next(ctx) {
-			user := model.NewUser()
-			if err := cursor.Decode(&user); err != nil {
-				return err
-			}
-
-			_, err := session.Collection("Outbox").UpdateMany( // nolint:scopeguard (readability)
-				ctx,
-				bson.M{
-					"actorType": "User",
-					"actorId":   user.UserID,
-				},
-				bson.M{
-					"$set": mapof.Any{
-						"actorUrl": user.ActivityPubURL(),
-					},
-				},
-			)
-
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	// Update all Stream Outbox records
-	{
-		cursor, err := session.Collection("Stream").Find(ctx, mapof.Any{"deleteDate": 0})
-
-		if err != nil {
-			return err
-		}
-
-		for cursor.Next(ctx) {
-			stream := model.NewStream()
-			if err := cursor.Decode(&stream); err != nil {
-				return err
-			}
-
-			_, err := session.Collection("Outbox").UpdateMany( // nolint:scopeguard (readability)
-				ctx,
-				bson.M{
-					"actorType": "Stream",
-					"actorId":   stream.StreamID,
-				},
-				bson.M{
-					"$set": mapof.Any{
-						"actorUrl": stream.ActivityPubURL(),
-					},
-				},
-			)
-
-			if err != nil {
-				return err
-			}
-		}
-	}
-
+// Version19 is retired: it renamed Outbox actor fields (parentId->actorId, etc.) and backfilled
+// `actorUrl` for User and Stream outboxes. A one-time cleanup (2026-07-22) zeroed every upgrade
+// below version 20 -- the sole database in service is long past it, and a fresh install is born in
+// the current schema -- so this step is now a no-op that only advances the database version. The
+// slot is preserved (never renumbered) so stored databaseVersion values keep their meaning; see git
+// history for the original implementation.
+func Version19(_ context.Context, _ *mongo.Database) error {
 	return nil
 }

@@ -2,38 +2,16 @@ package upgrades
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/EmissarySocial/emissary/model"
-	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Version11 updates "AttributedTo" values to be single values, not slices
-func Version11(ctx context.Context, session *mongo.Database) error {
-
-	fmt.Println("... Version 11")
-
-	for _, collection := range []string{"Stream", "StreamSummary", "Inbox"} {
-		err := ForEachRecord(session.Collection(collection), func(record mapof.Any) bool { // nolint:scopeguard (readability)
-			if attributedTo, ok := record["attributedTo"]; ok {
-				if attributedToSlice, ok := attributedTo.([]any); ok {
-					if len(attributedToSlice) > 0 {
-						record["attributedTo"] = attributedToSlice[0]
-						return true
-					}
-				}
-				record["attributedTo"] = model.NewPersonLink()
-				return true
-			}
-			return false
-		})
-
-		if err != nil {
-			return err
-		}
-
-	}
-
+// Version11 is retired: it collapsed Stream, StreamSummary, and Inbox `attributedTo` slices to
+// single values. A one-time cleanup (2026-07-22) zeroed every upgrade below version 20 -- the sole
+// database in service is long past it, and a fresh install is born in the current schema -- so this
+// step is now a no-op that only advances the database version. The slot is preserved (never
+// renumbered) so stored databaseVersion values keep their meaning; see git history for the original
+// implementation.
+func Version11(_ context.Context, _ *mongo.Database) error {
 	return nil
 }

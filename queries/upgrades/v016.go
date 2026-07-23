@@ -2,16 +2,16 @@ package upgrades
 
 import (
 	"context"
-	"fmt"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Version16...
-func Version16(ctx context.Context, session *mongo.Database) error {
-
-	fmt.Println("... Version 16")
-	_, _ = session.Collection("JWT").DeleteMany(ctx, bson.M{})
+// Version16 is retired: it deleted every JWT session record (already neutralized before this
+// cleanup). A one-time cleanup (2026-07-22) zeroed every upgrade below version 20 -- the sole
+// database in service is long past it, and a fresh install is born in the current schema -- so this
+// step is now a no-op that only advances the database version. The slot is preserved (never
+// renumbered) so stored databaseVersion values keep their meaning; see git history for the original
+// implementation.
+func Version16(_ context.Context, _ *mongo.Database) error {
 	return nil
 }
