@@ -36,6 +36,9 @@ func Response(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, collection, indexer.IndexSet{
 
+		// idx_Response_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_Response_Recycle": recycleIndex(),
+
 		"idx_Response_User": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "userId", Value: 1},

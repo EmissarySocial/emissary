@@ -16,6 +16,9 @@ func Stream(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Stream"), indexer.IndexSet{
 
+		// idx_Stream_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_Stream_Recycle": recycleIndex(),
+
 		"idx_Stream_Parent": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "parentId", Value: 1},

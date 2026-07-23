@@ -16,6 +16,9 @@ func Connection(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Connection"), indexer.IndexSet{
 
+		// idx_Connection_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_Connection_Recycle": recycleIndex(),
+
 		"idx_Connection_Type_Active": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "type", Value: 1},

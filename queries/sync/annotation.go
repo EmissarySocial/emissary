@@ -15,6 +15,9 @@ func Annotation(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Annotation"), indexer.IndexSet{
 
+		// idx_Annotation_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_Annotation_Recycle": recycleIndex(),
+
 		"idx_Annotation_URL": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "userId", Value: 1},

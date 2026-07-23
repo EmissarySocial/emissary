@@ -150,6 +150,10 @@ func SyncDomainIndexes(connectionString string, databaseName string) error { // 
 		derp.Report(err)
 	}
 
+	if err := sync.OAuthClient(ctx, session); err != nil {
+		derp.Report(err)
+	}
+
 	if err := sync.OAuthUserToken(ctx, session); err != nil {
 		derp.Report(err)
 	}
@@ -159,6 +163,10 @@ func SyncDomainIndexes(connectionString string, databaseName string) error { // 
 	}
 
 	if err := sync.Privilege(ctx, session); err != nil {
+		derp.Report(err)
+	}
+
+	if err := sync.Product(ctx, session); err != nil {
 		derp.Report(err)
 	}
 

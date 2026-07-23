@@ -16,6 +16,9 @@ func Collection(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Collection"), indexer.IndexSet{
 
+		// idx_Collection_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_Collection_Recycle": recycleIndex(),
+
 		// Enforces one Collection per (parentId, collectionType). This is what makes JIT
 		// creation concurrency-safe: LoadOrCreateByParent inserts optimistically
 		// and relies on this index to reject the loser of a create race.

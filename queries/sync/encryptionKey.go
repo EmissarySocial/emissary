@@ -15,6 +15,9 @@ func EncryptionKey(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("EncryptionKey"), indexer.IndexSet{
 
+		// idx_EncryptionKey_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_EncryptionKey_Recycle": recycleIndex(),
+
 		"idx_EncryptionKey_Parent": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "parentId", Value: 1},

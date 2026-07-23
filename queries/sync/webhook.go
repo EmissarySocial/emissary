@@ -15,6 +15,9 @@ func Webhook(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Webhook"), indexer.IndexSet{
 
+		// idx_Webhook_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_Webhook_Recycle": recycleIndex(),
+
 		"idx_Webhook_Event": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "events", Value: 1},

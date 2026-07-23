@@ -16,6 +16,9 @@ func Privilege(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Privilege"), indexer.IndexSet{
 
+		// idx_Privilege_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_Privilege_Recycle": recycleIndex(),
+
 		"idx_Privilege_Identifier": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "identifierType", Value: 1},

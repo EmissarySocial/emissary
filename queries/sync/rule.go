@@ -16,6 +16,9 @@ func Rule(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Rule"), indexer.IndexSet{
 
+		// idx_Rule_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_Rule_Recycle": recycleIndex(),
+
 		// Serves the admin block queries (QueryDomainBlocks / QueryBlockedActors) on the canonical
 		// Type/Trigger fields. (idx_Rule_User_Public was dropped: post-D9 nothing is public, so it
 		// indexed zero documents.)

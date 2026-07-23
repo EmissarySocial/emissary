@@ -15,6 +15,9 @@ func Outbox(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Outbox"), indexer.IndexSet{
 
+		// idx_Outbox_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_Outbox_Recycle": recycleIndex(),
+
 		"idx_Outbox_Actor": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "actorType", Value: 1},

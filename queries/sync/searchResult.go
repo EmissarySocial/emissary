@@ -16,6 +16,9 @@ func SearchResult(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("SearchResult"), indexer.IndexSet{
 
+		// idx_SearchResult_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_SearchResult_Recycle": recycleIndex(),
+
 		"idx_SearchResult_URL": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "url", Value: 1},

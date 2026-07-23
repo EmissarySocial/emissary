@@ -15,6 +15,9 @@ func Circle(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Circle"), indexer.IndexSet{
 
+		// idx_Circle_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_Circle_Recycle": recycleIndex(),
+
 		"idx_Circle_User_Name": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "userId", Value: 1},

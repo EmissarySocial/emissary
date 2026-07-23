@@ -16,6 +16,9 @@ func User(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("User"), indexer.IndexSet{
 
+		// idx_User_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_User_Recycle": recycleIndex(),
+
 		"idx_User_Username": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "username", Value: 1},

@@ -25,6 +25,27 @@ func Document(ctx context.Context, database *mongo.Database) error {
 			},
 		},
 
+		// idx_Document_Context serves QueryByContext (service.ActivityStream.QueryByContext),
+		// which opens a conversation thread: object.context == X AND published > afterDate,
+		// sorted by published. The equality-then-range-then-sort key order lets MongoDB bound
+		// and order from the index, so thread reads scale with the thread -- not with the total
+		// size of the shared Document cache.
+		"idx_Document_Context": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "object.context", Value: 1},
+				{Key: "published", Value: 1},
+			},
+		},
+
+		// idx_Document_Expires serves the daily PurgeActivityStreamCache DeleteMany, which
+		// removes documents whose "expires" epoch is older than the cutoff. Without it, the
+		// purge is a full scan of the shared Document collection.
+		"idx_Document_Expires": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "expires", Value: 1},
+			},
+		},
+
 		"idx_Document_ActorFullText": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "_fts", Value: "text"},

@@ -15,6 +15,9 @@ func SearchTag(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("SearchTag"), indexer.IndexSet{
 
+		// idx_SearchTag_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_SearchTag_Recycle": recycleIndex(),
+
 		"idx_SearchTag_Value": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "value", Value: 1},

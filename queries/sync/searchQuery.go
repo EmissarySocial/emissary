@@ -16,6 +16,9 @@ func SearchQuery(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("SearchQuery"), indexer.IndexSet{
 
+		// idx_SearchQuery_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_SearchQuery_Recycle": recycleIndex(),
+
 		"idx_SearchQuery_Signature": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "signature", Value: 1},

@@ -15,6 +15,9 @@ func Folder(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Folder"), indexer.IndexSet{
 
+		// idx_Folder_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_Folder_Recycle": recycleIndex(),
+
 		"idx_Folder_User": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "userId", Value: 1},

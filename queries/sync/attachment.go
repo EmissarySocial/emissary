@@ -15,6 +15,9 @@ func Attachment(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Attachment"), indexer.IndexSet{
 
+		// idx_Attachment_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_Attachment_Recycle": recycleIndex(),
+
 		"idx_Attachment_Object": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "objectType", Value: 1},

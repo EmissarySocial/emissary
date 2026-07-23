@@ -16,6 +16,9 @@ func Notification(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Notification"), indexer.IndexSet{
 
+		// idx_Notification_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_Notification_Recycle": recycleIndex(),
+
 		"idx_Notification_User": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "userId", Value: 1},

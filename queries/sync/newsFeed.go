@@ -16,6 +16,9 @@ func NewsFeed(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("NewsFeed"), indexer.IndexSet{
 
+		// idx_NewsFeed_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_NewsFeed_Recycle": recycleIndex(),
+
 		"idx_NewsFeed_User_Folder": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "userId", Value: 1},

@@ -16,6 +16,9 @@ func PushSubscription(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("PushSubscription"), indexer.IndexSet{
 
+		// idx_PushSubscription_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_PushSubscription_Recycle": recycleIndex(),
+
 		"idx_PushSubscription_User": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "userId", Value: 1},

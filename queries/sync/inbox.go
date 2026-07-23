@@ -31,5 +31,16 @@ func Inbox(ctx context.Context, database *mongo.Database) error {
 			},
 			Options: options.Index().SetPartialFilterExpression(bson.M{"isPublic": false}),
 		},
+
+		// idx_Inbox_User serves the general inbox listing (Inbox.RangeByUser), which filters by
+		// userId and sorts by _id. The DirectMessages index above is partial on isPublic:false, so
+		// it cannot serve an all-messages listing; without this non-partial index MongoDB blocking-
+		// sorts the user's whole inbox on every page.
+		"idx_Inbox_User": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "userId", Value: 1},
+				{Key: "_id", Value: 1},
+			},
+		},
 	})
 }

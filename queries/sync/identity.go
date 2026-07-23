@@ -16,6 +16,9 @@ func Identity(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Identity"), indexer.IndexSet{
 
+		// idx_Identity_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_Identity_Recycle": recycleIndex(),
+
 		"idx_Identity_EmailAddress": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "emailAddress", Value: 1},

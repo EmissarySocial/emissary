@@ -15,6 +15,9 @@ func JWT(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("JWT"), indexer.IndexSet{
 
+		// idx_JWT_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_JWT_Recycle": recycleIndex(),
+
 		"idx_JWT_Key": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "keyName", Value: 1},

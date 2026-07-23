@@ -15,6 +15,9 @@ func Follower(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Follower"), indexer.IndexSet{
 
+		// idx_Follower_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_Follower_Recycle": recycleIndex(),
+
 		"idx_Follower_Parent": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "type", Value: 1},

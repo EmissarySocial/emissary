@@ -28,6 +28,9 @@ func OAuthUserToken(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, collection, indexer.IndexSet{
 
+		// idx_OAuthUserToken_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_OAuthUserToken_Recycle": recycleIndex(),
+
 		// Supports LoadByID / LoadByUserAndScope (userId-scoped lookups).
 		"idx_OAuthUserToken_User": mongo.IndexModel{
 			Keys: bson.D{

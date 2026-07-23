@@ -15,6 +15,9 @@ func MerchantAccount(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("MerchantAccount"), indexer.IndexSet{
 
+		// idx_MerchantAccount_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
+		"idx_MerchantAccount_Recycle": recycleIndex(),
+
 		"idx_MerchantAccount_User": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "userId", Value: 1},
