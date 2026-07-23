@@ -372,6 +372,11 @@ func (service *Inbox) CollectionCount(session data.Session, userID primitive.Obj
 	}
 }
 
+// inboxPageMaxRows caps each inbox page at the database. hannibal serves at most 60 items per
+// collection page (collection.maxItemsPerPage) and trims client-side, so without this limit
+// MongoDB materializes and sorts the user's entire inbox only to have all but 60 rows discarded.
+const inboxPageMaxRows = 60
+
 // CollectionIterator returns the iterator function for this collection
 func (service *Inbox) CollectionIterator(session data.Session, userID primitive.ObjectID, criteria exp.Expression) collection.IteratorFunc {
 
@@ -387,8 +392,8 @@ func (service *Inbox) CollectionIterator(session data.Session, userID primitive.
 			}
 		}
 
-		// Get InboxActivitys for this User (sorted by insertion date)
-		result, err := service.RangeByUser(session, userID, criteria, option.SortAsc("_id"))
+		// Get InboxActivitys for this User (sorted by insertion date), capped at one page
+		result, err := service.RangeByUser(session, userID, criteria, option.SortAsc("_id"), option.MaxRows(inboxPageMaxRows))
 
 		if err != nil {
 			return nil, derp.Wrap(err, location, "Creating iterator", "userID", userID.Hex())
@@ -424,8 +429,8 @@ func (service *Inbox) CollectionIteratorWithLabels(session data.Session, userID 
 			}
 		}
 
-		// Get InboxActivitys for this User (sorted by insertion date)
-		result, err := service.RangeByUser(session, userID, criteria, option.SortAsc("_id"))
+		// Get InboxActivitys for this User (sorted by insertion date), capped at one page
+		result, err := service.RangeByUser(session, userID, criteria, option.SortAsc("_id"), option.MaxRows(inboxPageMaxRows))
 
 		if err != nil {
 			return nil, derp.Wrap(err, location, "Creating iterator", "userID", userID.Hex())
