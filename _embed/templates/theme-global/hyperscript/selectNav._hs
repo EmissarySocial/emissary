@@ -1,9 +1,16 @@
 behavior SelectNav
 
+	-- SelectNav highlights the nav-item whose id is "nav-{id}" and marks it as the
+	-- current section.  `.selected` drives the visual state (icon swap + styling);
+	-- `aria-current="page"` is the programmatic cue that assistive technology reads
+	-- to announce which section the user is in.  Both are mutually exclusive across
+	-- the whole nav bar, so we clear every nav-item before marking the chosen one.
 	on SelectNav(id)
 		set node to document.getElementById('nav-' + id)
 		if node is null then exit end
 		take .selected from .nav-item for node
+		remove [@aria-current] from .nav-item
+		add [@aria-current='page'] to node
 	end
 
 end
