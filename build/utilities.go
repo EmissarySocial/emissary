@@ -272,6 +272,16 @@ func AsHTML(ctx echo.Context, factory Factory, b Builder, actionMethod ActionMet
 	status := pipeline.Execute(factory, b, &partialPage, actionMethod)
 
 	if status.Error != nil {
+
+		// RULE: A validation error on an htmx form submission must be shown to the user, not swallowed.
+		// WrapForm renders the form with hx-swap="none" plus an empty #htmx-response-message span; the
+		// global error handler would otherwise return a bare 422, which htmx discards -- leaving the Save
+		// button looking like it did nothing. WrapInlineError retargets the message into that span and
+		// returns 200 so htmx actually swaps it in.
+		if actionMethod == ActionMethodPost && b.IsPartialRequest() && derp.IsValidationError(status.Error) {
+			return WrapInlineError(ctx.Response(), status.Error)
+		}
+
 		return derp.Wrap(status.Error, location, "Executing action pipeline")
 	}
 
