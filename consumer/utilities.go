@@ -1,6 +1,7 @@
 package consumer
 
 import (
+	"context"
 	"time"
 
 	"github.com/benpate/derp"
@@ -63,11 +64,12 @@ func requeue(err error) queue.Result {
 	return queue.Error(err)
 }
 
-/* Unused function
+// timeoutContext returns a Context that cancels after the provided number of seconds. Background
+// purge tasks use this to bound a DeleteMany, mirroring queries.timeoutContext, so a slow delete
+// cannot hold a queue worker open indefinitely.
 func timeoutContext(seconds int) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(
 		context.Background(),
 		time.Duration(seconds)*time.Second,
 	)
 }
-*/

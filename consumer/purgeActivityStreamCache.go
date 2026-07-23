@@ -1,7 +1,6 @@
 package consumer
 
 import (
-	"context"
 	"time"
 
 	"github.com/benpate/turbine/queue"
@@ -21,7 +20,12 @@ func PurgeActivityStreamCache(factory ServerFactory) queue.Result {
 		"expires": bson.M{"$lt": time.Now().AddDate(0, 0, -2).Unix()},
 	}
 
-	if _, err := collection.DeleteMany(context.Background(), criteria); err != nil {
+	// Bound the delete to 180s (matching queries.Recycle) so a slow purge of a large
+	// collection cannot hold this queue worker open indefinitely.
+	ctx, cancel := timeoutContext(180)
+	defer cancel()
+
+	if _, err := collection.DeleteMany(ctx, criteria); err != nil {
 		return queue.Error(err)
 	}
 
