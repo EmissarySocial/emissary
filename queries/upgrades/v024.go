@@ -14,7 +14,12 @@ func Version24(ctx context.Context, session *mongo.Database) error {
 	fmt.Println("... Version 24")
 
 	return ForEachRecord(session.Collection("Domain"), func(record mapof.Any) bool {
-		record["mlsMode"] = "NONE"
-		return true
+
+		if record.GetString("mlsMode") == "" {
+			record["mlsMode"] = "NONE"
+			return true
+		}
+
+		return false
 	})
 }
