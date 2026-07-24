@@ -26,7 +26,6 @@ type SearchQuery struct {
 	activityService  *ActivityStream
 	domainService    *Domain
 	followerService  *Follower
-	ruleService      *Rule
 	searchTagService *SearchTag
 	queue            *queue.Queue
 	host             string
@@ -46,7 +45,6 @@ func (service *SearchQuery) Refresh(factory *Factory) {
 	service.activityService = factory.ActivityStream()
 	service.domainService = factory.Domain()
 	service.followerService = factory.Follower()
-	service.ruleService = factory.Rule()
 	service.searchTagService = factory.SearchTag()
 	service.queue = factory.Queue()
 	service.host = factory.Host()

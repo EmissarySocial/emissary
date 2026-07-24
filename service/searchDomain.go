@@ -22,7 +22,6 @@ type SearchDomain struct {
 	followerService  *Follower
 	host             string
 	queue            *queue.Queue
-	ruleService      *Rule
 	searchTagService *SearchTag
 }
 
@@ -42,7 +41,6 @@ func (service *SearchDomain) Refresh(factory *Factory) {
 	service.followerService = factory.Follower()
 	service.host = factory.Host()
 	service.queue = factory.Queue()
-	service.ruleService = factory.Rule()
 	service.searchTagService = factory.SearchTag()
 }
 
