@@ -18,6 +18,7 @@ import (
 	"github.com/benpate/data"
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
+	"github.com/benpate/digital-dome/dome"
 	"github.com/benpate/form"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
@@ -703,6 +704,12 @@ func (factory *Factory) Camper() camper.Camper {
 
 func (factory *Factory) ClientIP(request *http.Request) string {
 	return factory.serverFactory.ClientIP(request)
+}
+
+// DigitalDome returns the shared Digital Dome web-application firewall, which
+// tracks and blocks abusive client IP addresses.
+func (factory *Factory) DigitalDome() *dome.Dome {
+	return factory.serverFactory.DigitalDome()
 }
 
 // Content returns the Content transformation service

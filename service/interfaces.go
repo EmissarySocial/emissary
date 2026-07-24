@@ -9,6 +9,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
+	"github.com/benpate/digital-dome/dome"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -16,6 +17,7 @@ type ServerFactory interface {
 	ByHostname(hostname string) (*Factory, error)
 	Email() *ServerEmail
 	ClientIP(request *http.Request) string
+	DigitalDome() *dome.Dome
 }
 
 type DomainFactory interface {

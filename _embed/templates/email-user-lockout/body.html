@@ -17,12 +17,12 @@
         {{- end -}}
 
         <p>Hello {{.Name}},</p>
-        
-		<p>Someone has attempted to sign in to your account on <b>{{.Domain_Name}}</b> multiple times.</p>
-        <p>For your safety, your account has been locked and your password has been reset.</p>
-		<p>If you did not make these signin attempts, your account may be under attack, and you may want to contact the system administrator for assistance.</p>
-        
-        <p><a href="{{.Domain_URL}}/signin/reset-code?userId={{.UserID}}&code={{.ResetCode}}" style="
+
+		<p>Someone has made repeated failed attempts to sign in to your account on <b>{{.Domain_Name}}</b>.</p>
+        <p>For your safety, your account has been temporarily locked. It will unlock automatically after a short while &mdash; just try signing in again later. <b>Your password has not been changed.</b></p>
+		<p>If this was not you, your account may be the target of a password-guessing attack. Your current password is still safe, but if it is weak or reused elsewhere, we recommend resetting it and contacting the system administrator for assistance.</p>
+
+        <p><a href="{{.Domain_URL}}/signin/reset" style="
             display:inline-block;
             padding:9px 18px;
             background-color:#ff5522;
