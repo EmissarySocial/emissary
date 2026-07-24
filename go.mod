@@ -13,7 +13,7 @@ require (
 	github.com/benpate/delta v0.1.0
 	github.com/benpate/derp v0.37.0
 	github.com/benpate/digit v0.15.0
-	github.com/benpate/digital-dome v0.4.0
+	github.com/benpate/digital-dome v0.5.0
 	github.com/benpate/exp v0.10.0
 	github.com/benpate/exp-builder v0.11.0
 	github.com/benpate/form v0.27.0
