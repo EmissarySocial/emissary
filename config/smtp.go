@@ -1,6 +1,9 @@
 package config
 
 import (
+	"time"
+
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/schema"
 	mail "github.com/xhit/go-simple-mail/v2"
 )
@@ -53,4 +56,48 @@ func (smtp SMTPConnection) Server() (*mail.SMTPServer, bool) {
 	}
 
 	return result, true
+}
+
+// TestConnection verifies that the mail server is actually reachable and that the credentials work,
+// then disconnects WITHOUT sending a message.  It mirrors the database TestConnection so a typo'd
+// hostname, wrong port, bad password, or mismatched TLS setting fails loudly at configuration time
+// instead of silently, months later, the first time a member needs a password reset.  `timeout`
+// bounds the connect so an unreachable host fails in seconds rather than hanging the setup request.
+func (smtp SMTPConnection) TestConnection(timeout time.Duration) error {
+
+	const location = "config.SMTPConnection.TestConnection"
+
+	// RULE: An empty SMTP block means "no email configured" -- a legitimate, optional state.
+	// There is nothing to reach, so the test passes.
+	if smtp.IsNil() {
+		return nil
+	}
+
+	// Build the server.  This also runs Validate(), so a malformed block (e.g. a port out of
+	// range) is reported before we ever open a socket.
+	server, ok := smtp.Server()
+
+	if !ok {
+		return derp.Validation("Mail server settings are incomplete or invalid. Please check the hostname, port, and credentials.", smtp.Hostname, smtp.Port)
+	}
+
+	// Bound the connect so an unreachable host fails in seconds, not on the library's default.
+	// KeepAlive is off because this is a throwaway connection we close immediately.
+	server.ConnectTimeout = timeout
+	server.SendTimeout = timeout
+	server.KeepAlive = false
+
+	// Connect opens the TCP socket, negotiates TLS, and authenticates -- exercising hostname, port,
+	// TLS, and credentials together -- without sending a message.
+	client, err := server.Connect()
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to reach the mail server. Please check the hostname, port, credentials, and TLS setting.", smtp.Hostname, smtp.Port, smtp.TLS)
+	}
+
+	// Politely end the SMTP session and release the socket.  A failure here does not matter --
+	// the connection already succeeded, which is all we were testing.
+	_ = client.Quit()
+
+	return nil
 }

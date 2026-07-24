@@ -16,6 +16,10 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// smtpTestTimeout bounds the SMTP connectivity check run when a domain is saved, so an unreachable
+// mail server fails in seconds instead of hanging the setup request.
+const smtpTestTimeout = 10 * time.Second
+
 // SetupDomainGet displays the form for creating/editing a domain.
 func SetupDomainGet(factory *server.SetupFactory) echo.HandlerFunc {
 
@@ -86,6 +90,14 @@ func SetupDomainPost(serverFactory *server.SetupFactory) echo.HandlerFunc {
 		// timeout or leave a broken domain persisted in the configuration file.  The error is
 		// surfaced directly (not re-wrapped) so its specific, actionable message reaches the user.
 		if err := serverFactory.TestConnection(domain); err != nil {
+			return build.WrapInlineError(ctx.Response(), err)
+		}
+
+		// Verify the mail server is actually reachable (and the credentials work) before persisting,
+		// so a typo'd host, wrong port, bad password, or mismatched TLS setting is caught HERE -- not
+		// silently, the first time a member needs a password reset.  An unconfigured (empty) SMTP block
+		// is allowed; TestConnection treats it as a no-op success.
+		if err := domain.SMTPConnection.TestConnection(smtpTestTimeout); err != nil {
 			return build.WrapInlineError(ctx.Response(), err)
 		}
 

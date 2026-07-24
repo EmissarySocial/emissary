@@ -772,51 +772,54 @@ func (service *User) DeleteAvatar(session data.Session, user *model.User, note s
  * Email Methods
  ******************************************/
 
-// SendPasswordResetEmail generates a new password reset code (valid for the provided duration)
-// and sends a welcome email to a new user. If there is a problem sending the email, then the new code is not saved.
-func (service *User) SendPasswordResetEmail(session data.Session, user *model.User, duration time.Duration) {
+// SendPasswordResetEmail generates a new password reset code (valid for the provided duration) and
+// emails it to the user.  The error is RETURNED (not swallowed) so callers on member-facing flows can
+// tell the member the email could not be sent, instead of pointing them at an inbox that will never
+// receive it.  NOTE: the reset code is persisted by MakeNewPasswordResetCode BEFORE the email is sent,
+// and a send failure does NOT roll it back -- so a code issued here stays valid for a later retry.
+func (service *User) SendPasswordResetEmail(session data.Session, user *model.User, duration time.Duration) error {
 
 	const location = "service.User.SendPasswordResetEmail"
 
 	if err := service.MakeNewPasswordResetCode(session, user, duration); err != nil {
-		derp.Report(derp.Wrap(err, location, "Making password reset", user))
-		return
+		return derp.Wrap(err, location, "Making password reset", user)
 	}
 
-	// Try to send the welcome email.  If it fails, then don't save the new password reset code.
 	if err := service.emailService.SendPasswordReset(user); err != nil {
-		derp.Report(derp.Wrap(err, location, "Sending password reset", user))
-		return
+		return derp.Wrap(err, location, "Sending password reset", user)
 	}
+
+	return nil
 }
 
-// Lockout sends a lockout notification email to the user.  This method
-// swallows errors so that it can be run asynchronously.
-func (service *User) Lockout(session data.Session, username string) {
+// NotifySigninLockout emails the account owner that their account has been
+// temporarily locked after repeated failed signin attempts. This method swallows
+// errors so it can run inline on the signin path.
+//
+// RULE: it MUST NOT change the stored password. A failed-login lockout is triggered
+// by unauthenticated input against a known username, so resetting the credential
+// here would hand an attacker a one-request account-takeover-disruption primitive
+// (the original CWE-645 bug). The lock is temporary and clears on its own; the owner
+// signs in normally once the window passes.
+func (service *User) NotifySigninLockout(session data.Session, username string) {
 
-	const location = "service.User.Lockout"
+	const location = "service.User.NotifySigninLockout"
 
 	user := model.NewUser()
 	if err := service.LoadByUsername(session, username, &user); err != nil {
-		derp.Report(derp.Wrap(err, location, "Loading user by username", username))
+
+		// A failed attempt against a username that does not exist has no owner to
+		// notify. This is an expected, high-volume case (attackers guess nonexistent
+		// usernames), so do not report it -- only report genuine load errors.
+		if !derp.IsNotFound(err) {
+			derp.Report(derp.Wrap(err, location, "Loading user by username", username))
+		}
+
 		return
 	}
 
-	// Reset the password to a random value so the old credential stops working.
-	// 48 random bytes base64-encode to 64 characters, under bcrypt's 72-byte input limit.
-	if newPassword, err := random.GenerateString(48); err != nil {
-		derp.Report(derp.Wrap(err, location, "Generating random password", user))
-	} else if err := service.steranko(session).SetPassword(&user, newPassword); err != nil {
-		derp.Report(derp.Wrap(err, location, "Setting random password", user))
-	}
-
-	// Make a ResetCode
-	if err := service.MakeNewPasswordResetCode(session, &user, model.PasswordResetDurationReset); err != nil {
-		derp.Report(derp.Wrap(err, location, "Making password reset", user))
-		return
-	}
-
-	// Try to send the lockout email.  If it fails, then don't save the new password reset code.
+	// Notify the owner that their account is being targeted. No password reset code
+	// is issued -- the credential is untouched.
 	if err := service.emailService.SendUserLockout(session, &user); err != nil {
 		derp.Report(derp.Wrap(err, location, "Sending user lockout email", user))
 	}

@@ -179,13 +179,12 @@ func (service *DomainEmail) SendUserLockout(session data.Session, user *model.Us
 		"user-lockout",
 		"User",
 		mapof.Any{
-			// User info available to the template
-			"UserID":     user.UserID.Hex(),
-			"Username":   user.Username,
-			"Name":       user.DisplayName,
-			"Email":      user.EmailAddress,
-			"ResetCode":  user.PasswordReset.AuthCode,
-			"ExpireDate": user.PasswordReset.ExpireDate,
+			// User info available to the template.
+			// NOTE: no ResetCode/ExpireDate -- a lockout no longer resets the password.
+			"UserID":   user.UserID.Hex(),
+			"Username": user.Username,
+			"Name":     user.DisplayName,
+			"Email":    user.EmailAddress,
 
 			// Domain info available to the template
 			"Domain_Owner": service.owner,

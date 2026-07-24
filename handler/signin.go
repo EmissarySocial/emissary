@@ -174,17 +174,21 @@ func PostResetPassword(ctx *steranko.Context, factory *service.Factory, session 
 	user := model.NewUser()
 
 	if err := userService.LoadByUsernameOrEmail(session, transaction.EmailAddress, &user); err == nil {
-		userService.SendPasswordResetEmail(session, &user, model.PasswordResetDurationReset)
+
+		// RULE: The account exists but the reset email could not be delivered (SMTP down or
+		// misconfigured).  Tell the member honestly instead of pointing them at an inbox that will
+		// never receive it, and report loudly so the operator sees it -- this is the flow where a
+		// broken mail server otherwise stays invisible until a locked-out member files a ticket.
+		// NOTE: this response differs from the "not found" case only while mail is broken, which is a
+		// mild account-enumeration signal accepted in exchange for not stranding locked-out members.
+		if err := userService.SendPasswordResetEmail(session, &user, model.PasswordResetDurationReset); err != nil {
+			derp.Report(derp.Wrap(err, location, "Sending password reset email", user.Username))
+			return executeDomainTemplate(ctx, factory, "reset-error")
+		}
 	}
 
-	// Return a success message regardless of whether or not the user was found.
-	template := factory.Domain().Theme().HTMLTemplate
-
-	if err := template.ExecuteTemplate(ctx.Response(), "reset-confirm", nil); err != nil {
-		return derp.Wrap(err, location, "Executing template")
-	}
-
-	return nil
+	// Uniform success message for both "email sent" and "user not found".
+	return executeDomainTemplate(ctx, factory, "reset-confirm")
 }
 
 // GetResetCode displays a form (authenticated by the reset code) for resetting a user's password

@@ -268,7 +268,11 @@ func (service *Domain) inviteOwner(session data.Session, owner *model.User) {
 	switch calcOwnerInviteMethod(service.IsLocalhost(), service.configuration.Owner.EmailAddress) {
 
 	case ownerInviteEmail:
-		service.userService.SendPasswordResetEmail(session, owner, model.PasswordResetDurationWelcome)
+		// Report-and-continue: owner bootstrap must not fail because the welcome email bounced.
+		// The reset code is still issued, so the operator can recover once mail is fixed.
+		if err := service.userService.SendPasswordResetEmail(session, owner, model.PasswordResetDurationWelcome); err != nil {
+			derp.Report(derp.Wrap(err, "service.Domain.inviteOwner", "Sending owner welcome email", owner.Username))
+		}
 
 	case ownerInviteManual:
 		// There is no password and no way to deliver one.  Surface a clear, loud message
