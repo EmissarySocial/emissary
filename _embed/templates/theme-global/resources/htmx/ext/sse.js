@@ -238,7 +238,10 @@ This extension adds support for Server Sent Events to htmx.  See /www/extensions
 			// Otherwise, try to reconnect the EventSource
 			if (source.readyState === EventSource.CLOSED) {
 				retryCount = retryCount || 0;
-				var timeout = Math.random() * (2 ^ retryCount) * 500;
+				// PATCHED: upstream wrote this as `(2 ^ retryCount)`, which is bitwise XOR, not
+				// exponentiation (2 ^ 7 === 5).  The delay therefore never grew past ~3.5s, so a
+				// URL that always fails reconnected several times per second, forever.
+				var timeout = Math.random() * Math.pow(2, retryCount) * 500;
 				window.setTimeout(function() {
 					ensureEventSourceOnElement(elt, Math.min(7, retryCount + 1));
 				}, timeout);
