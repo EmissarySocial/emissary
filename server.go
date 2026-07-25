@@ -475,6 +475,14 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/attachments/:attachmentId", handler.WithUser(factory, handler.GetUserAttachment))
 	e.GET("/@:userId/qrcode", handler.WithUser(factory, handler.GetQRCode_User))
 
+	// DEPRECATED: Backwards-compatible alias for "/@me/sse".  Pages built before BUG-003234 moved
+	// the SSE routes still name the User in the URL, and they reconnect forever.  Without this
+	// route they fall through to "/@:userId/:action" and log an error on every retry.  The handler
+	// ignores :userId entirely and streams the *signed-in* User's events, so this cannot reopen
+	// the unauthenticated-subscription hole that BUG-003234 closed.  Remove once those pages
+	// (and third-party skins) have aged out.
+	e.GET("/@:userId/sse", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me))
+
 	// Export Routes for Users
 	e.GET("/@:userId/export", handler.NotFound)
 	e.POST("/@:userId/export/start", handler.WithOAuthUser(factory, handler.PostUserExportStart))
