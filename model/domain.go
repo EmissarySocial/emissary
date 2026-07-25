@@ -166,6 +166,10 @@ func (domain *Domain) UserCanMLS(user *User) bool {
 		return false
 	}
 
+	if user.IsOwner {
+		return true
+	}
+
 	switch domain.MLSMode {
 
 	case DomainMLSModeAll:
