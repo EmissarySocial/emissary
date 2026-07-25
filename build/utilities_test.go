@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -175,4 +176,44 @@ OTHER
 	bufferedReader := bufio.NewReader(reader)
 	result, err := http.ReadRequest(bufferedReader)
 	return result, err
+}
+
+// TestOEmbedURL proves the permalink survives as a single query-string VALUE.
+// Raw concatenation used to truncate it at the first "&" or "#".
+func TestOEmbedURL(t *testing.T) {
+
+	// A plain permalink round-trips unchanged
+	{
+		result := oEmbedURL("https://bandwagon.fm", "https://bandwagon.fm/@681c4330b949b6b581af8a51", "json")
+
+		parsed, err := url.Parse(result)
+
+		require.Nil(t, err)
+		require.Equal(t, "/.oembed", parsed.Path)
+		require.Equal(t, "https://bandwagon.fm/@681c4330b949b6b581af8a51", parsed.Query().Get("url"))
+		require.Equal(t, "json", parsed.Query().Get("format"))
+	}
+
+	// A permalink containing reserved characters is not truncated
+	{
+		permalink := "https://bandwagon.fm/my-stream?a=1&b=2#anchor"
+		result := oEmbedURL("https://bandwagon.fm", permalink, "xml")
+
+		parsed, err := url.Parse(result)
+
+		require.Nil(t, err)
+		require.Equal(t, permalink, parsed.Query().Get("url"))
+		require.Equal(t, "xml", parsed.Query().Get("format"))
+	}
+
+	// The port in a development permalink is preserved
+	{
+		permalink := "http://localhost:8080/@681c4330b949b6b581af8a51"
+		result := oEmbedURL("http://localhost:8080", permalink, "json")
+
+		parsed, err := url.Parse(result)
+
+		require.Nil(t, err)
+		require.Equal(t, permalink, parsed.Query().Get("url"))
+	}
 }

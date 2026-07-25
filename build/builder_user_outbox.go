@@ -256,14 +256,14 @@ func (w Outbox) Data(path string) any {
 	return w._user.Data[path]
 }
 
-// OEmbedJSON returns the URL for the oEmbed JSON endpoint for this stream
+// OEmbedJSON returns the URL for the oEmbed JSON endpoint for this User's profile
 func (w Outbox) OEmbedJSON() string {
-	return w.Host() + "/.oembed?url=" + w.Permalink() + "&format=json"
+	return oEmbedURL(w.Host(), w.Permalink(), "json")
 }
 
-// OEmbedXML returns the URL for the oEmbed XML endpoint for this stream
+// OEmbedXML returns the URL for the oEmbed XML endpoint for this User's profile
 func (w Outbox) OEmbedXML() string {
-	return w.Host() + "/.oembed?url=" + w.Permalink() + "&format=xml"
+	return oEmbedURL(w.Host(), w.Permalink(), "xml")
 }
 
 func (w Outbox) ActivityPubURL() string {

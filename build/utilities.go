@@ -5,6 +5,7 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"slices"
 	"strings"
 
@@ -433,4 +434,12 @@ func groupLookupCodes(lookupCodes []form.LookupCode) sliceof.Object[sliceof.Obje
 	}
 
 	return result
+}
+
+// oEmbedURL returns the URL of this domain's oEmbed endpoint, describing the provided permalink
+func oEmbedURL(host string, permalink string, format string) string {
+
+	// The permalink is escaped because it is a VALUE inside this URL's query string.  Raw
+	// concatenation truncates the "url" parameter at the permalink's first "&" or "#".
+	return host + "/.oembed?url=" + url.QueryEscape(permalink) + "&format=" + format
 }
