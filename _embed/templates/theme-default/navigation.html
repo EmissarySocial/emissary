@@ -26,12 +26,6 @@
 			<span id="nav-notifications-badge" class="nav-badge text-red text-sm {{if not .HasUnreadNotifications}}hide{{end}}">&#9679;</span>
 		</a>
 
-		<!-- Live-refresh the notification dot on any page when a notification arrives (SSE), or
-		     when notifications are marked read (refreshSidebar).  The client just refetches the
-		     badge fragment.
-		     RULE: on htmx 1.9.12 an sse: trigger only binds to an EventSource found on an
-		     ANCESTOR element, so sse-connect MUST live on an outer wrapper and hx-trigger="sse:..."
-		     on an inner child.  A single element that both connects and triggers never fires. -->
 		<div hx-ext="sse" sse-connect="/@me/sse/notifications" style="display:none;">
 			<div
 				hx-get="/@me/notifications/badge"
@@ -42,13 +36,11 @@
 			</div>
 		</div>
 
-		{{- if .UserCanMLS -}}
-			<a href="/@me/conversations" id="nav-conversations" class="nav-item turboclick" aria-label="Conversations">
-				<span class="icon selected-hide">{{- icon "chat" }}</span>
-				<span class="icon selected-show">{{- icon "chat-fill" }}</span>
-				<span class="mobile-show label">Conversations</span>
-			</a>
-		{{- end -}}
+		<a href="/@me/conversations" id="nav-conversations" class="nav-item turboclick" aria-label="Conversations">
+			<span class="icon selected-hide">{{- icon "chat" }}</span>
+			<span class="icon selected-show">{{- icon "chat-fill" }}</span>
+			<span class="mobile-show label">Conversations</span>
+		</a>
 
 		<a href="/@me" id="nav-outbox" class="nav-item turboclick" aria-label="Profile">
 			<span class="icon selected-hide">{{icon "user"}}</span>
