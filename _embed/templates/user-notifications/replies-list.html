@@ -1,8 +1,9 @@
 {{- /*
-	replies-list.html renders the "Replies & Mentions" notification list.  The replies-list
-	action bakes ?type=MENTION into the request, so the .Notifications query is already
-	filtered to MENTION + REPLY; ?createDate= drives the infinite scroll.  The row markup is
-	inlined here (rather than a shared row partial) so this page can format its own content.
+	replies-list.html renders the "Messages & Replies" notification list.  The replies-list
+	action bakes ?type=MENTION into the request, which notificationTabTypes expands, so the
+	.Notifications query is already filtered to DIRECT + MENTION + REPLY; ?createDate= drives
+	the infinite scroll.  The row markup is inlined here (rather than a shared row partial) so
+	this page can format its own content.
 */ -}}
 {{- $notifications := .LabelNotifications .Notifications.Top60.ByCreateDate.Reverse.Slice -}}
 {{- $createDate := .QueryParam "createDate" -}}
@@ -10,15 +11,29 @@
 {{- if $notifications.NotEmpty -}}
 
 	{{- range $notification := $notifications -}}
+		{{- /* RULE: This variable name MUST stay all-lowercase.  Templates are run through the HTML
+		       minifier before html/template parses them, and the minifier lowercases anything in
+		       *attribute position* inside a tag -- so `{{if $notification.IsConversation}}` on the
+		       <a> below arrives as `.isconversation` and fails at execution time.  Hoisting the
+		       value here (in element content, where case is preserved) into a lowercase variable
+		       makes the in-tag reference immune to the rewrite. */ -}}
+		{{- $isconversation := $notification.IsConversation -}}
 		{{- if $notification.Labels.IsHidden -}}
 
 		{{- /* D2 placeholder: the actor is hidden by the viewer's rules (rule created after this
 		       notification; the cleanup task purges these). Anonymous until selected (R17). */ -}}
-		<div
+		{{- /* A private message opens the Conversations app here too. `reveal` is a browse-view
+		       concept (it lifts the viewer's own rule refusal), so it rides only on the browse
+		       link; the Conversations app carries its own client-side label handling. */ -}}
+		<a
+			{{- if $isconversation}}
+			href="/@me/conversations"
+			{{- else}}
 			role="button"
 			hx-get="/@me/newsfeed/browse?url={{$notification.ObjectURL}}&reveal=true"
 			hx-push-url="true"
-			class="notification flex-row flex-align-center padding-vertical hover-trigger {{if $notification.NotRead}}unread{{end}}">
+			{{- end}}
+			class="text-nocolor notification flex-row flex-align-center padding-vertical hover-trigger {{if $notification.NotRead}}unread{{end}}">
 			<span class="notification-dot text-red" style="width:12px;">
 				{{- if $notification.NotRead -}}&#9679;{{- end -}}
 			</span>
@@ -27,15 +42,25 @@
 				<span class="text-light-gray margin-left">Select to show</span>
 			</div>
 			<div class="text-sm text-gray nowrap">{{$notification.CreateDate | tinyDate}}</div>
-		</div>
+		</a>
 
 		{{- else -}}
 		{{- $actor := $notification.Actor -}}
-		<div
+		{{- /* RULE: A PRIVATE message must NEVER open /@me/newsfeed/browse -- that viewer is the
+		       public ActivityStream surface, and sending a DM there leaks the conversation into a
+		       public context. Private messages hand off to the Conversations app, which is the only
+		       surface that owns them (and the only one that can decrypt MLS). Conversations is a
+		       separate page carrying its own hash routing, so it is a real navigation (href), never
+		       an htmx swap into the notifications modal. See MESSAGE-AUDIENCE.md D2/D7. */ -}}
+		<a
+			{{- if $isconversation}}
+			href="/@me/conversations"
+			{{- else}}
 			role="button"
 			hx-get="/@me/newsfeed/browse?url={{$notification.ObjectURL}}"
 			hx-push-url="true"
-			class="notification flex-row flex-align-center padding-vertical hover-trigger {{if $notification.NotRead}}unread{{end}}">
+			{{- end}}
+			class="text-nocolor notification flex-row flex-align-center padding-vertical hover-trigger {{if $notification.NotRead}}unread{{end}}">
 
 			<!-- Unread dot -->
 			<span class="notification-dot text-red" style="width:12px;">
@@ -55,20 +80,28 @@
 			<div class="flex-grow ellipsis-block">
 				<div class="text-gray text-sm">
 					<span class="bold">{{$actor.Name}}</span>
-					{{- if eq $notification.Type "REPLY" }}
+					{{- if eq $notification.Type "DIRECT" }}
+						<span>sent you a message</span>
+					{{- else if eq $notification.Type "REPLY" }}
 						<span>replied to you</span>
 					{{- else -}}
 						<span>mentioned you</span>
 					{{- end -}}
 					{{- template "label-chips" $notification.Labels.Annotations -}}
 				</div>
-				<div class="ellipsis">{{$notification.ObjectSummary}}</div>
+				{{- /* An MLS message has no server-side summary (only the recipient's Conversations
+				       client can decrypt it), so name the state instead of rendering an empty row. */ -}}
+				{{- if $notification.IsEncrypted -}}
+					<div class="ellipsis text-gray">{{icon "lock"}} Encrypted message</div>
+				{{- else -}}
+					<div class="ellipsis">{{$notification.ObjectSummary}}</div>
+				{{- end -}}
 			</div>
 
 			<!-- Relative time -->
 			<div class="text-sm text-gray nowrap">{{$notification.CreateDate | tinyDate}}</div>
 
-		</div>
+		</a>
 		{{- end -}}
 	{{- end -}}
 
@@ -85,6 +118,6 @@
 
 {{- else if eq "" $createDate -}}
 
-	<h2 class="text-gray">No replies yet. When someone mentions you or replies to your posts, it will show up here.</h2>
+	<h2 class="text-gray">Nothing here yet. When someone messages you, mentions you, or replies to your posts, it will show up here.</h2>
 
 {{- end -}}

@@ -13,7 +13,7 @@
 {{- $followCount := .UnreadNotificationCount "FOLLOW" -}}
 
 {{- $currentCount := $mentionCount -}}
-{{- $currentLabel := "Replies & Mentions" -}}
+{{- $currentLabel := "Messages & Replies" -}}
 {{- if eq $type "ANNOUNCE" -}}
 	{{- $currentCount = $announceCount -}}
 	{{- $currentLabel = "Shares" -}}
@@ -30,7 +30,7 @@
 <div class="flex-row">
 	{{- if $isMobile -}}
 		<div role="tablist" class="underlined margin-bottom" hx-boost="true" hx-target="main" hx-push-url="true">
-			<a href="/@me/notifications/replies" role="tab" class="tab {{if eq $type `MENTION`}}selected{{end}}">Replies &amp; Mentions{{if gt $mentionCount 0}} <span class="tab-count">{{if gt $mentionCount 99}}99+{{else}}{{$mentionCount}}{{end}}</span>{{end}}</a>
+			<a href="/@me/notifications/replies" role="tab" class="tab {{if eq $type `MENTION`}}selected{{end}}">Messages &amp; Replies{{if gt $mentionCount 0}} <span class="tab-count">{{if gt $mentionCount 99}}99+{{else}}{{$mentionCount}}{{end}}</span>{{end}}</a>
 			<a href="/@me/notifications/shares" role="tab" class="tab {{if eq $type `ANNOUNCE`}}selected{{end}}">Shares{{if gt $announceCount 0}} <span class="tab-count">{{if gt $announceCount 99}}99+{{else}}{{$announceCount}}{{end}}</span>{{end}}</a>
 			<a href="/@me/notifications/likes" role="tab" class="tab {{if eq $type `LIKE`}}selected{{end}}">Likes{{if gt $likeCount 0}} <span class="tab-count">{{if gt $likeCount 99}}99+{{else}}{{$likeCount}}{{end}}</span>{{end}}</a>
 			<a href="/@me/notifications/followers" role="tab" class="tab {{if eq $type `FOLLOW`}}selected{{end}}">Followers{{if gt $followCount 0}} <span class="tab-count">{{if gt $followCount 99}}99+{{else}}{{$followCount}}{{end}}</span>{{end}}</a>

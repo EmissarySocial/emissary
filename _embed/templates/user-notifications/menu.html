@@ -1,5 +1,5 @@
 {{- /*
-	menu.html renders the notification section links (Replies & Mentions, Shares,
+	menu.html renders the notification section links (Messages & Replies, Shares,
 	Likes, Followers) as sidebar menu items, each with a live unread count, plus a "Settings"
 	link to the notification options page (Settings > Social > Notifications — the ONE place
 	those options are managed).  Each section is its own page; the selected item comes from
@@ -22,7 +22,7 @@
 			{{- icon "chat" -}}
 		{{- end }}
 	</span>
-	<span>Replies &amp; Mentions</span>
+	<span>Messages &amp; Replies</span>
 	{{- if gt $mentionCount 0 -}}
 		<span class="menu-count">{{if gt $mentionCount 99}}99+{{else}}{{$mentionCount}}{{end}}</span>
 	{{- end -}}

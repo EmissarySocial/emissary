@@ -1,9 +1,10 @@
 {{- /*
-	replies.html is the "Replies & Mentions" notifications page — one of four
+	replies.html is the "Messages & Replies" notifications page — one of four
 	section pages (replies / shares / likes / followers).  The page action bakes
 	?type=MENTION into the request via set-query-param, so the shared sidebar and header
 	fragments and the .Notifications query all read the right section.  The list content is
-	section-specific: replies-list.html renders MENTION and REPLY rows.
+	section-specific: replies-list.html renders DIRECT, MENTION, and REPLY rows (the ?type=
+	value stays MENTION, and notificationTabTypes expands it to all three).
 */ -}}
 {{- $isMobile := .IsMobile -}}
 {{- $isDesktop := not $isMobile -}}
