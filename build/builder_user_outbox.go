@@ -247,7 +247,7 @@ func (w Outbox) Tags() sliceof.Object[mapof.String] {
 		return mapof.String{
 			"Name": tag,
 			"Type": vocab.LinkTypeHashtag,
-			"Href": w._user.TagURL + "%23" + tag,
+			"Href": model.HashtagURL(w.Host(), w._user.TagURL, tag),
 		}
 	})
 }

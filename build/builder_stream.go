@@ -257,7 +257,7 @@ func (w Stream) Tags() sliceof.Object[mapof.String] {
 		return mapof.String{
 			"Name": tag,
 			"Type": vocab.LinkTypeHashtag,
-			"Href": w.Host() + "/search?q=%23" + tag,
+			"Href": model.HashtagURL(w.Host(), w._template.TagURL, tag),
 		}
 	})
 }

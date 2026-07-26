@@ -40,6 +40,13 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 
 	const location = "service.Stream.JSONLD"
 
+	// Load the Template for this Stream.  It provides the hashtag URLs and the "social mapping" below.
+	template, templateErr := service.templateService.Load(stream.TemplateID)
+
+	if templateErr != nil {
+		derp.Report(derp.Wrap(templateErr, location, "Loading Template", stream.TemplateID))
+	}
+
 	result := mapof.Any{
 		vocab.AtContext:         sliceof.Any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
 		vocab.PropertyID:        stream.ActivityPubURL(),
@@ -75,7 +82,9 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 	}
 
 	if len(stream.Hashtags) > 0 {
-		result[vocab.PropertyTag] = slice.Map(stream.Hashtags, service.HashtagAsJSONLD)
+		result[vocab.PropertyTag] = slice.Map(stream.Hashtags, func(tag string) mapof.String {
+			return service.HashtagAsJSONLD(template.TagURL, tag)
+		})
 	}
 
 	if stream.Location.NotZero() {
@@ -135,7 +144,7 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 	}
 
 	// Try to apply the "social mapping" to the stream
-	if template, err := service.templateService.Load(stream.TemplateID); err == nil {
+	if templateErr == nil {
 		result[vocab.PropertyType] = template.SocialRole
 		if template.SocialRules.NotEmpty() {
 			schma := service.activityStreamSchema()
@@ -148,13 +157,23 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 	return result
 }
 
-// HashtagAsJSONLD returns a JSON-LD map document that represents a hashtag
-func (service *Stream) HashtagAsJSONLD(tag string) mapof.String {
-	return mapof.String{
+// HashtagAsJSONLD returns a JSON-LD map document that represents a hashtag.
+// The tagURL is the link prefix defined by the Stream's Template; it is made
+// absolute because this document is read by other servers.  When the Template
+// defines no tagURL, the hashtag is published without a link.
+func (service *Stream) HashtagAsJSONLD(tagURL string, tag string) mapof.String {
+
+	result := mapof.String{
 		vocab.PropertyType: vocab.LinkTypeHashtag,
-		vocab.PropertyName: tag,
-		vocab.PropertyHref: service.host + "/search?q=%23=" + tag,
+		vocab.PropertyName: "#" + tag,
 	}
+
+	// Include the link target when the Template defines one
+	if href := model.HashtagURL(service.host, tagURL, tag); href != "" {
+		result[vocab.PropertyHref] = href
+	}
+
+	return result
 }
 
 func (service *Stream) ActivityPubURL(streamID primitive.ObjectID) string {

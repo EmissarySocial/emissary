@@ -229,13 +229,14 @@ func (user *User) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
 // SummaryHTML renders the user's StatusMessage from Markdown to HTML, and linkifies any #hashtags
 // using the tag URL denormalized from the outbox Template.  Goldmark (without unsafe HTML) blanks
 // dangerous link targets and drops raw HTML, so the result is safe to render on our own origin.
+// The hashtag links are absolute, because this HTML is also published as the ActivityPub summary.
 func (user User) SummaryHTML() string {
 
 	result := markdownToHTML(user.StatusMessage)
 
 	// RULE: Only linkify when the outbox Template defines a tag URL
-	if user.TagURL != "" {
-		result = replace.Linkify(result, user.TagURL, user.Hashtags)
+	if tagURL := HashtagURLPrefix(uri.Host(user.ProfileURL), user.TagURL); tagURL != "" {
+		result = replace.Linkify(result, tagURL, user.Hashtags)
 	}
 
 	return result
@@ -338,9 +339,10 @@ func (user User) GetJSONLD() mapof.Any {
 				vocab.PropertyName: "#" + tag,
 			}
 
-			// Include the link target when the outbox Template defines one
-			if user.TagURL != "" {
-				hashtag[vocab.PropertyHref] = user.TagURL + "%23" + tag
+			// Include the link target when the outbox Template defines one.
+			// It is made absolute because this document is read by other servers.
+			if href := HashtagURL(serverURL, user.TagURL, tag); href != "" {
+				hashtag[vocab.PropertyHref] = href
 			}
 
 			return hashtag

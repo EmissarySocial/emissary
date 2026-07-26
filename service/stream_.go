@@ -1214,11 +1214,14 @@ func (service *Stream) CalculateTags(session data.Session, stream *model.Stream)
 	stream.Hashtags = hashtagNames
 }
 
-// applyHashtagLinks wraps each of the Stream's #hashtags in its content with a link to the Template's TagURL.
+// applyHashtagLinks wraps each of the Stream's #hashtags in its content with a link to the
+// Template's TagURL.  The links are absolute, because this content is read by other servers.
 func (service *Stream) applyHashtagLinks(template *model.Template, stream *model.Stream) {
 
 	// RULE: Only linkify when the Template defines a tag URL
-	if template.TagURL == "" {
+	tagURL := model.HashtagURLPrefix(service.host, template.TagURL)
+
+	if tagURL == "" {
 		return
 	}
 
@@ -1227,7 +1230,7 @@ func (service *Stream) applyHashtagLinks(template *model.Template, stream *model
 		return
 	}
 
-	service.contentService.ApplyTags(&stream.Content, template.TagURL, stream.Hashtags)
+	service.contentService.ApplyTags(&stream.Content, tagURL, stream.Hashtags)
 }
 
 // NotifyInReplyTo sends an SSE notification to any stream that is referenced in the "inReplyTo" field of a Stream
