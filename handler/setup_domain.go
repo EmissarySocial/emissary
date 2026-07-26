@@ -263,15 +263,6 @@ func setupDomainForm(header string) form.Element {
 				Path:  "smtp.tls",
 				Label: "Use TLS?",
 			}},
-		}, {
-			Label: "Master Key",
-			Type:  "layout-vertical",
-			Children: []form.Element{{
-				Type:        "text",
-				Path:        "masterKey",
-				Label:       "64 Cryptographically Random Hexadecimal Characters.",
-				Description: "Used for encrypting certain sensitive fields",
-			}},
 		}},
 	}
 }
