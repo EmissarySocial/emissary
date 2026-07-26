@@ -3,6 +3,7 @@ package sync
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
@@ -110,30 +111,71 @@ func TestCollectionIndex_SoftDeleteDoesNotBlock(t *testing.T) {
 
 // TestCollectionIndex_SyncIsIdempotent guards against index churn. tools/indexer.Sync drops and
 // recreates any index whose stored definition does not compare equal to the declared one, so a
-// partial filter that fails to round-trip would drop and rebuild this UNIQUE index on every single
-// boot -- wasteful, and each rebuild opens a window with no uniqueness enforcement at all. A second
-// Sync must therefore leave the index in place, unchanged.
+// partial filter that fails to round-trip drops and rebuilds this UNIQUE index on every single
+// boot -- wasteful, and each rebuild opens a window with no uniqueness enforcement at all. This is
+// not hypothetical: writing the nested `$exists` operator as a bson.D instead of a bson.M does
+// exactly that, because indexer.convertMapValue normalizes maps but Mongo returns the stored
+// operator as one.
+//
+// Comparing the two DEFINITIONS cannot detect this -- a rebuilt index has an identical definition.
+// $indexStats.accesses.since is the observable that distinguishes them: it is the moment stats
+// collection began for that index, and a drop-and-recreate resets it.
 func TestCollectionIndex_SyncIsIdempotent(t *testing.T) {
 
 	database := newResponseTestDatabase(t)
 	ctx := context.Background()
 
 	require.NoError(t, Collection(ctx, database))
-	first := loadIndex(ctx, t, database, "idx_Collection_Parent_Type")
+	before := indexCreatedAt(ctx, t, database, "idx_Collection_Parent_Type")
 
 	require.NoError(t, Collection(ctx, database))
-	second := loadIndex(ctx, t, database, "idx_Collection_Parent_Type")
+	after := indexCreatedAt(ctx, t, database, "idx_Collection_Parent_Type")
 
-	require.Equal(t, first, second, "Sync must not rewrite an unchanged index")
+	require.Equal(t, before, after,
+		"Sync rebuilt an unchanged index -- the declared partial filter does not round-trip through indexer.compareModel")
 
-	// The declared filter must actually be what Mongo stored -- a silently-dropped condition
-	// would leave the domain-wide conversation cap in place while the tests above still passed
-	// against a freshly-created index.
+	// The declared filter must be what Mongo actually stored. A silently-dropped condition would
+	// leave the domain-wide conversation cap in place while the tests above still passed against
+	// a freshly-created index.
+	stored := loadIndex(ctx, t, database, "idx_Collection_Parent_Type")
+
 	require.Equal(t,
 		bson.M{"deleteDate": int32(0), "parentId": bson.M{"$exists": true}},
-		second["partialFilterExpression"],
+		stored["partialFilterExpression"],
 	)
-	require.Equal(t, true, second["unique"])
+	require.Equal(t, true, stored["unique"])
+}
+
+// indexCreatedAt returns the moment MongoDB began collecting stats for the named index, which
+// resets whenever the index is dropped and recreated.
+func indexCreatedAt(ctx context.Context, t *testing.T, database *mongo.Database, name string) time.Time {
+
+	t.Helper()
+
+	cursor, err := database.Collection("Collection").Aggregate(ctx, mongo.Pipeline{
+		bson.D{{Key: "$indexStats", Value: bson.D{}}},
+	})
+	require.NoError(t, err)
+
+	var stats []bson.M
+	require.NoError(t, cursor.All(ctx, &stats))
+
+	for _, stat := range stats {
+		if stat["name"] != name {
+			continue
+		}
+
+		accesses, ok := stat["accesses"].(bson.M)
+		require.True(t, ok, "$indexStats returned no accesses for "+name)
+
+		since, ok := accesses["since"].(primitive.DateTime)
+		require.True(t, ok, "$indexStats returned no accesses.since for "+name)
+
+		return since.Time()
+	}
+
+	require.Fail(t, "index not found in $indexStats: "+name)
+	return time.Time{}
 }
 
 // loadIndex returns one index's stored definition by name.
