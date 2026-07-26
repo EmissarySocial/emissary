@@ -2,6 +2,7 @@ package id
 
 import (
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -115,7 +116,17 @@ func (slice *Slice) SetString(name string, value string) bool {
 	return false
 }
 
+// SetValue replaces the entire slice with the provided value. Implements schema.ValueSetter.
+//
+// RULE: The type switch below cannot be the only path.  Multi-value form widgets
+// (multiselect, check-button-group) hand rosetta a `*sliceof.String` -- not a plain
+// `[]string` -- because that is the only shape that satisfies rosetta's ArrayGetterSetter
+// validation.  Anything the switch does not name falls through to convert.SliceOfStringOk,
+// which unwraps pointers and named slice types by reflection.  Without that fallback,
+// every multiselect bound to an id.Slice silently discards its input.
 func (slice *Slice) SetValue(value any) error {
+
+	const location = "id.Slice.SetValue"
 
 	if value == nil {
 		*slice = make([]primitive.ObjectID, 0)
@@ -128,24 +139,43 @@ func (slice *Slice) SetValue(value any) error {
 		*slice = typed
 		return nil
 
-	case []string:
-		*slice = make([]primitive.ObjectID, len(typed))
-		for index := range typed {
-			item, _ := primitive.ObjectIDFromHex(typed[index])
-			(*slice)[index] = item
-		}
+	case Slice:
+		*slice = typed
 		return nil
 
 	case primitive.ObjectID:
-		return slice.SetValue([]primitive.ObjectID{typed})
-
-	case string:
-		return slice.SetValue([]string{typed})
-
-	default:
-		return derp.BadRequest("id.Slice.SetValue", "Unable to convert value to Slice", value)
+		*slice = Slice{typed}
+		return nil
 	}
 
+	// Everything else is treated as a collection of hex strings.
+	values, ok := convert.SliceOfStringOk(value)
+
+	if !ok {
+		return derp.BadRequest(location, "Unable to convert value to Slice", value)
+	}
+
+	result := make(Slice, 0, len(values))
+
+	for _, item := range values {
+
+		// RULE: Empty entries are dropped, not converted into a zero ObjectID.
+		// (An unchecked widget can post an empty placeholder value.)
+		if item == "" {
+			continue
+		}
+
+		objectID, err := primitive.ObjectIDFromHex(item)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Invalid ObjectID in Slice", item)
+		}
+
+		result = append(result, objectID)
+	}
+
+	*slice = result
+	return nil
 }
 
 // Append adds one or more elements to the end of the slice
