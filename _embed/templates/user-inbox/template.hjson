@@ -486,7 +486,7 @@
 
 		// LEGACY entry point.  Notifications live in their own template/route now
 		// (/@me/notifications — see the user-notifications template); redirect old
-		// /@me/newsfeed/notifications(?type=xxx) URLs to the matching section page.
+		// /@me/notifications(?type=xxx) URLs to the matching section page.
 		notifications: {
 			roles:["self"]
 			steps:[
