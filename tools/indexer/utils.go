@@ -164,6 +164,12 @@ func convertMapValue(value any) any {
 		return typedValue
 	case bson.M:
 		return primitiveToMap(typedValue)
+	case bson.D:
+		// A nested bson.D (e.g. a partial-filter operator written as bson.D{{"$exists", true}})
+		// must normalize to the same map Mongo returns when it reads the index back, or
+		// compareModel reports a permanent mismatch and Sync drops and rebuilds the index on
+		// every boot.  Prefer bson.M at call sites; this keeps bson.D from silently churning.
+		return primitiveToMap(typedValue)
 	}
 
 	// Fallback for other types

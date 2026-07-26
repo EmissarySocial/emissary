@@ -45,9 +45,13 @@ func Collection(ctx context.Context, database *mongo.Database) error {
 				{Key: "parentId", Value: 1},
 				{Key: "collectionType", Value: 1},
 			},
+			// NOTE: the nested operator is a bson.M, not a bson.D. indexer.compareModel diffs the
+			// declared filter against the one Mongo stored, and Mongo returns nested operators as
+			// maps -- so a bson.D here would never compare equal, and Sync would drop and rebuild
+			// this UNIQUE index on every boot. See TestCollectionIndex_SyncIsIdempotent.
 			Options: options.Index().SetUnique(true).SetPartialFilterExpression(bson.D{
 				{Key: "deleteDate", Value: 0},
-				{Key: "parentId", Value: bson.D{{Key: "$exists", Value: true}}},
+				{Key: "parentId", Value: bson.M{"$exists": true}},
 			}),
 		},
 	})
