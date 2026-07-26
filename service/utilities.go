@@ -145,13 +145,38 @@ func parseFollowersURI(host string, uri string) (string, primitive.ObjectID) {
 	return "", primitive.NilObjectID
 }
 
-func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID, objectType string, objectID primitive.ObjectID, err error) {
+// ParseProfileURL parses a LOCAL actor URL -- https://<hostname>/@<userID>[/pub/<objectType>/<objectID>]
+// -- into its component parts.
+//
+// `hostname` is this domain's bare hostname (service.Factory.Hostname()) and is REQUIRED.  These URLs
+// arrive from remote servers, and the path grammar alone says nothing about WHO owns the actor, so
+// without the hostname there is no way to tell a local actor from a look-alike path on someone
+// else's server.
+func ParseProfileURL(hostname string, value string) (urlValue *url.URL, userID primitive.ObjectID, objectType string, objectID primitive.ObjectID, err error) {
+
+	const location = "service.ParseProfileURL"
+
+	// RULE: An empty hostname would silently disable the ownership check below, so refuse it. This
+	// is a programming error (every caller has a Factory), not a malformed request.
+	if hostname == "" {
+		return nil, primitive.NilObjectID, "", primitive.NilObjectID, derp.Internal(location, "Hostname is required", value)
+	}
 
 	// Parse the value into a URL
 	urlValue, err = url.Parse(value)
 
 	if err != nil {
-		return nil, primitive.NilObjectID, "", primitive.NilObjectID, derp.Wrap(err, "service.ParseURL", "Cannot parse value", value)
+		return nil, primitive.NilObjectID, "", primitive.NilObjectID, derp.Wrap(err, location, "Cannot parse value", value)
+	}
+
+	// RULE: The URL must name an actor on THIS domain.  Only the path was inspected before, so a
+	// remote server could hand us `https://anywhere.example/@<localUserID>` and have it resolve to a
+	// local User.  This is a 422 (not a 400): the URL is perfectly well-formed, it just does not
+	// describe anything we own.  Compare the bare hostname -- case-insensitively, per RFC 3986 -- and
+	// deliberately ignore the port, because a domain reached on a non-standard port still serves the
+	// same actors.
+	if !strings.EqualFold(urlValue.Hostname(), hostname) {
+		return urlValue, primitive.NilObjectID, "", primitive.NilObjectID, derp.Validation("URL does not belong to this domain", value, derp.WithLocation(location))
 	}
 
 	// View the path as a "/" delimited list
@@ -162,7 +187,7 @@ func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID
 	username, path := path.Split()
 
 	if !strings.HasPrefix(username, "@") {
-		return urlValue, primitive.NilObjectID, "", primitive.NilObjectID, derp.BadRequest("service.ParseURL", "Username must begin with '@'", value)
+		return urlValue, primitive.NilObjectID, "", primitive.NilObjectID, derp.BadRequest(location, "Username must begin with '@'", value)
 	}
 
 	username = strings.TrimPrefix(username, "@")
@@ -170,7 +195,7 @@ func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID
 	userID, err = primitive.ObjectIDFromHex(username)
 
 	if err != nil {
-		return urlValue, userID, "", primitive.NilObjectID, derp.BadRequest("service.ParseURL", "Username must be a valid hex string", value)
+		return urlValue, userID, "", primitive.NilObjectID, derp.BadRequest(location, "Username must be a valid hex string", value)
 	}
 
 	// If this is the end of the path, then we're done.
@@ -182,7 +207,7 @@ func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID
 	pub, path := path.Split()
 
 	if pub != "pub" {
-		return urlValue, userID, "", primitive.NilObjectID, derp.BadRequest("service.ParseURL", "Path must contain with '/pub/'", value)
+		return urlValue, userID, "", primitive.NilObjectID, derp.BadRequest(location, "Path must contain with '/pub/'", value)
 	}
 
 	if path.IsEmpty() {
@@ -203,7 +228,7 @@ func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID
 	objectID, err = primitive.ObjectIDFromHex(objectName)
 
 	if err != nil {
-		return urlValue, userID, objectType, primitive.NilObjectID, derp.BadRequest("service.ParseURL", "ObjectID must be a valid hex string", value)
+		return urlValue, userID, objectType, primitive.NilObjectID, derp.BadRequest(location, "ObjectID must be a valid hex string", value)
 	}
 
 	// This should be the end of the path.
@@ -212,16 +237,19 @@ func ParseProfileURL(value string) (urlValue *url.URL, userID primitive.ObjectID
 	}
 
 	// But if we get here, then there are unrecognized values in the path.
-	return urlValue, userID, objectType, objectID, derp.BadRequest("service.ParseURL", "Path contains unrecognized values", value)
+	return urlValue, userID, objectType, objectID, derp.BadRequest(location, "Path contains unrecognized values", value)
 }
 
-func ParseProfileURL_UserID(value string) (primitive.ObjectID, error) {
-	_, userID, _, _, err := ParseProfileURL(value)
+// ParseProfileURL_UserID returns the UserID named by a local actor URL on `hostname`.
+func ParseProfileURL_UserID(hostname string, value string) (primitive.ObjectID, error) {
+	_, userID, _, _, err := ParseProfileURL(hostname, value)
 	return userID, err
 }
 
-func ParseProfileURL_AsFollowing(value string) (primitive.ObjectID, primitive.ObjectID, error) {
-	_, userID, objectType, objectID, err := ParseProfileURL(value)
+// ParseProfileURL_AsFollowing returns the (UserID, FollowingID) named by a local `following` URL
+// on `hostname`.
+func ParseProfileURL_AsFollowing(hostname string, value string) (primitive.ObjectID, primitive.ObjectID, error) {
+	_, userID, objectType, objectID, err := ParseProfileURL(hostname, value)
 
 	if err != nil {
 		return primitive.NilObjectID, primitive.NilObjectID, derp.Wrap(err, "service.ParseProfileURL_AsFollowing", "Parsing profile URL", value)

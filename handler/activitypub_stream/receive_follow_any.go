@@ -13,9 +13,11 @@ func init() {
 
 		const location = "handler.activityPub_stream.FollowAny"
 
-		// Validate that the receiving Stream matches the Actor ID in the Activity
+		// RULE: A Follow must be delivered to the inbox of the actor it names.  This is a 422, not a
+		// 500: the request is well-formed and the server is healthy -- the sender simply addressed a
+		// Follow for one actor to a different actor's inbox, and no retry will change that.
 		if context.stream.ActivityPubURL() != activity.Object().ID() {
-			return derp.Internal(location, "Invalid User ID", context.stream.ActivityPubURL(), activity.Object().ID())
+			return derp.Validation("Follow object does not match the Stream that owns this inbox", context.stream.ActivityPubURL(), activity.Object().ID(), derp.WithLocation(location))
 		}
 
 		// RULE: A blocked actor may not Follow. Verify first (D5 exception set), then reject loudly --

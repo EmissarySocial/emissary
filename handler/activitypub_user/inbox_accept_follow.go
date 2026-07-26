@@ -21,8 +21,10 @@ func inbox_AcceptFollow(context Context, activity streams.Document) error {
 
 	followingService := context.factory.Following()
 
-	// Parse the Object.ID of the activity, which should be our original "Follow" activity
-	userID, followingID, err := service.ParseProfileURL_AsFollowing(activity.Object().ID())
+	// Parse the Object.ID of the activity, which should be our original "Follow" activity.  Passing
+	// our hostname binds it to THIS domain: the remote server is echoing a URL back to us, and only
+	// a URL we actually issued can name a local `Following` record.
+	userID, followingID, err := service.ParseProfileURL_AsFollowing(context.factory.Hostname(), activity.Object().ID())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Parsing followingID", activity.Object().ID())

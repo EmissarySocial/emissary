@@ -16,15 +16,19 @@ func init() {
 		// Look up the requested user account
 		userService := context.factory.User()
 
-		// Try to verify the User
-		userID, err := service.ParseProfileURL_UserID(activity.Object().ID())
+		// Try to verify the User.  Passing our hostname binds the Follow's object to THIS domain --
+		// the path grammar alone would accept `https://anywhere.example/@<localUserID>`.
+		userID, err := service.ParseProfileURL_UserID(context.factory.Hostname(), activity.Object().ID())
 
 		if err != nil {
 			return derp.Wrap(err, location, "Invalid User URL", activity.Object().ID())
 		}
 
+		// RULE: A Follow must be delivered to the inbox of the actor it names.  This is a 422, not a
+		// 500: the request is well-formed and the server is healthy -- the sender simply addressed a
+		// Follow for one actor to a different actor's inbox, and no retry will change that.
 		if userID != context.user.UserID {
-			return derp.Internal(location, "Invalid User ID", userID, context.user.UserID)
+			return derp.Validation("Follow object does not match the User who owns this inbox", userID.Hex(), context.user.UserID.Hex(), derp.WithLocation(location))
 		}
 
 		// RULE: A blocked actor may not Follow. Verify first (D5 exception set), then reject loudly --
