@@ -195,5 +195,5 @@ func notificationURL(host string, notification *model.Notification) string {
 		}
 	}
 
-	return host + "/@me/newsfeed/notifications"
+	return host + "/@me/notifications"
 }
