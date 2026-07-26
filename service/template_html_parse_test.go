@@ -3,13 +3,16 @@ package service
 import (
 	"html/template"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
 	emissarytemplates "github.com/EmissarySocial/emissary/tools/templates"
 	"github.com/benpate/icon"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tdewolff/minify/v2"
 	"github.com/tdewolff/minify/v2/html"
@@ -71,6 +74,91 @@ func TestEmbeddedTemplates_HTMLParses(t *testing.T) {
 		require.NoError(t, err, "read dir %s", dir)
 
 		parseDir(t, dir, files)
+	}
+}
+
+// templateActionRegex matches a single {{...}} template action, including trim markers.
+var templateActionRegex = regexp.MustCompile(`(?s)\{\{.*?\}\}`)
+
+// TestEmbeddedTemplates_MinifierPreservesCase guards a silent, execution-time-only trap: the HTML
+// minifier that every template passes through at startup lowercases *attribute names*, and it treats
+// a {{...}} action sitting in attribute position (between the tag name and the closing ">") as an
+// attribute.  So `<a {{if $x.IsConversation}}...>` reaches html/template as `.isconversation`, which
+// parses fine and then fails with "can't evaluate field" the first time the page is rendered.
+//
+// Actions inside quoted attribute *values* and inside element content are left alone -- only the
+// in-tag ones are rewritten.  The fix at each call site is to hoist the value into an all-lowercase
+// variable in element content, where the case survives.
+func TestEmbeddedTemplates_MinifierPreservesCase(t *testing.T) {
+
+	m := minify.New()
+	minifier := html.Minifier{KeepEndTags: true, KeepQuotes: true, KeepDocumentTags: true}
+	m.AddFunc("text/html", minifier.Minify)
+
+	err := filepath.Walk("../_embed/templates", func(path string, info fs.FileInfo, err error) error {
+
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() || !strings.HasSuffix(path, ".html") {
+			return nil
+		}
+
+		content, err := os.ReadFile(path) // nolint:gosec // test-only, fixed root
+		require.NoError(t, err, "read %s", path)
+
+		minified, err := m.String("text/html", string(content))
+		require.NoError(t, err, "minify %s", path)
+
+		assertActionsPreserveCase(t, path, string(content), minified)
+
+		return nil
+	})
+
+	require.NoError(t, err, "walking template directory")
+}
+
+// assertActionsPreserveCase fails the test for every {{...}} action that the minifier rewrote into a
+// different case.  `original` and `minified` are the same template before and after minification.
+func assertActionsPreserveCase(t *testing.T, path string, original string, minified string) {
+
+	t.Helper()
+
+	// Count each original action so that duplicates are matched one-for-one.  The two lists cannot be
+	// compared by index, because the minifier also *removes* actions (those inside HTML comments) and
+	// collapses the whitespace around the ones it keeps.
+	counts := make(map[string]int)
+	byLowercase := make(map[string][]string)
+
+	for _, action := range templateActionRegex.FindAllString(original, -1) {
+		counts[action]++
+		lowercase := strings.ToLower(action)
+		byLowercase[lowercase] = append(byLowercase[lowercase], action)
+	}
+
+	// An action that survived minification unchanged is fine.  One with no exact match, but that does
+	// match an original case-insensitively, was rewritten.
+	for _, action := range templateActionRegex.FindAllString(minified, -1) {
+
+		if counts[action] > 0 {
+			counts[action]--
+			continue
+		}
+
+		for _, source := range byLowercase[strings.ToLower(action)] {
+
+			if source == action {
+				continue
+			}
+
+			assert.Fail(t,
+				"minifier lowercased a template action",
+				"%s\n  before: %s\n  after:  %s\n\nHoist this value into an all-lowercase variable outside the tag.",
+				path, strings.TrimSpace(source), strings.TrimSpace(action))
+
+			break
+		}
 	}
 }
 
