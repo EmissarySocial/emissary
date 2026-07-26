@@ -60,11 +60,19 @@ func (service *Notification) NotifyFromActivity(session data.Session, user *mode
 	return nil
 }
 
-// notifyFromCreateOrUpdate handles the Create/Update branch of NotifyFromActivity: a REPLY when
-// the object replies to a local Stream this user owns, otherwise a MENTION when it tags them.
+// notifyFromCreateOrUpdate handles the Create/Update branch of NotifyFromActivity, classifying the
+// activity down a strict precedence ladder: DIRECT, then REPLY, then MENTION.  Exactly one
+// Notification is created per activity.
 func (service *Notification) notifyFromCreateOrUpdate(session data.Session, user *model.User, activity streams.Document) error {
 
 	object := activity.Object()
+
+	// DIRECT: a private message, which outranks everything below it.  A DM that also replies to
+	// one of this user's posts is still a DM -- it lives in the Conversations app, and that is
+	// where its Notification must point.
+	if isDirectMessage(activity, user) {
+		return service.NotifyDirectMessage(session, user, activity, object)
+	}
 
 	// REPLY: the object's inReplyTo resolves to a local Stream owned by this user.
 	// Replies are classified FIRST — a MENTION specifically means a mention that is NOT
@@ -94,6 +102,29 @@ func (service *Notification) notifyFromCreateOrUpdate(session data.Session, user
 /******************************************
  * Producers
  ******************************************/
+
+// NotifyDirectMessage creates a DIRECT notification for the recipient User: a private message that
+// belongs to the Conversations app rather than the public ActivityStream viewer.
+func (service *Notification) NotifyDirectMessage(session data.Session, user *model.User, activity streams.Document, object streams.Document) error {
+
+	notification := service.newNotification(user, model.NotificationTypeDirect, activity)
+	notification.ObjectURL = object.ID()
+	notification.InReplyTo = object.InReplyTo().ID()
+
+	// A DIRECT Notification's Subtype is the message's CODEC, not the recipient's follow-state
+	// (see the Subtype note in model/notification_constants.go).  It is stamped here rather than in
+	// notify(), which stamps follow-state for every other type.
+	notification.Subtype = messageCodec(object)
+
+	// RULE: never snapshot MLS ciphertext as a display summary.  The object's content is an opaque
+	// base64 blob that only the recipient's Conversations client can decrypt, so storing it would
+	// put noise in the notification list AND on the lock screen (the Web Push body is this field).
+	if notification.Subtype != model.NotificationSubtypeMLS {
+		notification.ObjectSummary = objectSummary(object)
+	}
+
+	return service.notify(session, user, activity, &notification)
+}
 
 // NotifyMention creates a MENTION notification for the recipient User.
 func (service *Notification) NotifyMention(session data.Session, user *model.User, activity streams.Document, object streams.Document) error {
@@ -175,7 +206,13 @@ func (service *Notification) notify(session data.Session, user *model.User, acti
 
 	if isNew {
 		// Follow-state is a fact about receipt time; stamp it once, on new records only.
-		notification.Subtype = service.subtypeFor(session, user.UserID, notification.Actor.ProfileURL)
+		//
+		// RULE: DIRECT is exempt.  Its Subtype carries the message's codec (MLS/PLAINTEXT), stamped
+		// by NotifyDirectMessage, and overwriting it here would erase the one fact that tells the
+		// UI it cannot render the content.
+		if notification.Type != model.NotificationTypeDirect {
+			notification.Subtype = service.subtypeFor(session, user.UserID, notification.Actor.ProfileURL)
+		}
 	} else {
 		// An already-persisted record was found (it has a journal createDate) — refresh its display
 		// snapshot in place and keep its existing ID, Type, Subtype, and ReadDate.
@@ -354,6 +391,55 @@ func actorPersonLink(actor streams.Document) model.PersonLink {
 		InboxURL:     actor.Get("inbox").String(),
 		EmailAddress: actor.Get("email").String(),
 	}
+}
+
+// isDirectMessage returns TRUE if this activity is a private message TO this user: non-public, and
+// addressed to them BY NAME.
+//
+// Both halves are load-bearing.  Non-public alone would also match a followers-only post, which is
+// a timeline post that belongs in the public viewer, not a conversation.  The distinction is exact
+// rather than heuristic: a followers-only post addresses the author's *followers collection* URL,
+// while a direct message addresses this user's *actor* URL, so only a real DM names them.
+//
+// Addressing -- not the presence of a Mention tag -- is the test, because a DM that never tags the
+// recipient is still a DM, and it already appears in their Conversations app (the direct-message
+// inbox collection serves every non-public activity).  Before this, such a message produced an
+// unread badge in the chat app and no Notification at all.
+//
+// Recipients from the activity AND its object are both consulted: the conversations-mls codecs put
+// `to` on both, but other clients address only one or the other.  A union is safe here because this
+// is a classification, not an access gate.
+func isDirectMessage(activity streams.Document, user *model.User) bool {
+
+	if activity.IsPublic() {
+		return false
+	}
+
+	actorURL := user.ActivityPubURL()
+
+	if actorURL == "" {
+		return false
+	}
+
+	if activity.Recipients().Contains(actorURL) {
+		return true
+	}
+
+	return activity.Object().Recipients().Contains(actorURL)
+}
+
+// messageCodec returns the Subtype for a DIRECT Notification: MLS when the message is end-to-end
+// encrypted ciphertext, otherwise PLAINTEXT.  This mirrors the media-type test in
+// handler/activitypub.IsMLSCreate (duplicated rather than imported, because `service` must not
+// depend on `handler`); the privacy and inline-object conditions that function also checks are
+// already established by isDirectMessage and by reading the object we were handed.
+func messageCodec(object streams.Document) string {
+
+	if object.MediaType() == vocab.MediaTypeMLS {
+		return model.NotificationSubtypeMLS
+	}
+
+	return model.NotificationSubtypePlaintext
 }
 
 // reactionType maps an ActivityPub activity type to a Notification reaction type.

@@ -10,8 +10,8 @@ func NotificationSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"notificationId": schema.String{Format: "objectId"},
 			"userId":         schema.String{Format: "objectId"},
-			"type":           schema.String{Enum: []string{NotificationTypeMention, NotificationTypeReply, NotificationTypeLike, NotificationTypeDislike, NotificationTypeAnnounce, NotificationTypeFollow}},
-			"subtype":        schema.String{Enum: []string{NotificationSubtypeFollowing, NotificationSubtypeNotFollowing}},
+			"type":           schema.String{Enum: []string{NotificationTypeDirect, NotificationTypeMention, NotificationTypeReply, NotificationTypeLike, NotificationTypeDislike, NotificationTypeAnnounce, NotificationTypeFollow}},
+			"subtype":        schema.String{Enum: []string{NotificationSubtypeFollowing, NotificationSubtypeNotFollowing, NotificationSubtypeMLS, NotificationSubtypePlaintext}},
 			"actor":          PersonLinkSchema(),
 			"activityId":     schema.String{Format: "url"},
 			"objectUrl":      schema.String{Format: "url"},

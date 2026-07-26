@@ -31,6 +31,7 @@ func UserSchema() schema.Element {
 			"outboxTemplate": schema.String{MaxLength: 128},
 			"hashtags":       schema.Array{Items: schema.String{Format: "token"}},
 			"notificationChannels": schema.Array{Items: schema.String{Enum: []string{
+				NotificationChannelDirectMessage,
 				NotificationChannelMentionFollowing,
 				NotificationChannelMentionNotFollowing,
 				NotificationChannelReply,

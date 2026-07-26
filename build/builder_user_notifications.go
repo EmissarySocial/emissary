@@ -204,7 +204,8 @@ func (w Notifications) UnreadNotificationCount(notificationType string) int64 {
 
 // notificationTabTypes expands the notifications-page "type" query param into the list of
 // notification types that section displays.  Grouped sections cast wide nets: MENTION includes
-// replies (reply-first classification would otherwise hide them — there is no Replies section),
+// replies and direct messages (the classification ladder is DIRECT > REPLY > MENTION, so without
+// the expansion those would be invisible — there is no Replies section and no Messages section),
 // and LIKE includes dislikes (too rare for a section of their own).  ANNOUNCE passes through
 // unexpanded as the "Shares" section.  An empty section name returns nil, meaning "all types".
 //
@@ -218,7 +219,7 @@ func notificationTabTypes(notificationType string) []string {
 		return nil
 
 	case model.NotificationTypeMention:
-		return []string{model.NotificationTypeMention, model.NotificationTypeReply}
+		return []string{model.NotificationTypeMention, model.NotificationTypeReply, model.NotificationTypeDirect}
 
 	case model.NotificationTypeLike:
 		return []string{model.NotificationTypeLike, model.NotificationTypeDislike}

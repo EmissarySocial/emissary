@@ -20,8 +20,8 @@ import (
 type Notification struct {
 	NotificationID primitive.ObjectID `bson:"_id"`                     // Unique ID for this Notification
 	UserID         primitive.ObjectID `bson:"userId"`                  // Recipient (local User) who owns this Notification
-	Type           string             `bson:"type"`                    // MENTION/REPLY/LIKE/DISLIKE/ANNOUNCE/FOLLOW
-	Subtype        string             `bson:"subtype,omitempty"`       // FOLLOWING/NOT_FOLLOWING - recipient's follow-state for the actor at receipt time
+	Type           string             `bson:"type"`                    // DIRECT/MENTION/REPLY/LIKE/DISLIKE/ANNOUNCE/FOLLOW
+	Subtype        string             `bson:"subtype,omitempty"`       // Per-Type discriminant: MLS/PLAINTEXT for DIRECT, otherwise FOLLOWING/NOT_FOLLOWING (see notification_constants.go)
 	Actor          PersonLink         `bson:"actor"`                   // Who did the thing
 	ActivityID     string             `bson:"activityId,omitempty"`    // AP id of the triggering activity (dedup + undo)
 	ObjectURL      string             `bson:"objectUrl,omitempty"`     // The thing acted on / the mentioning object
@@ -110,6 +110,25 @@ func (notification Notification) NotRead() bool {
 	return notification.ReadDate == math.MaxInt64
 }
 
+// IsConversation returns TRUE if this Notification points at a PRIVATE message, which belongs to
+// the Conversations app rather than to the public ActivityStream viewer.  It is the SINGLE source
+// of that routing decision -- the notification list templates and the Web Push consumer both read
+// it, so the two surfaces cannot drift apart.
+//
+// Records written before the DIRECT type existed are typed MENTION and keep opening the public
+// viewer.  That is the honest fallback: they age out on the normal retention clock, and the
+// Conversations app can only open a message it has synced.
+func (notification Notification) IsConversation() bool {
+	return notification.Type == NotificationTypeDirect
+}
+
+// IsEncrypted returns TRUE if this Notification points at an MLS-encrypted message.  Only the
+// Conversations app holds the group's ratchet state, so nothing server-side can render the
+// message's content -- callers must not try to display it.
+func (notification Notification) IsEncrypted() bool {
+	return notification.Subtype == NotificationSubtypeMLS
+}
+
 // Channels returns the settings channels that can surface this Notification.  A Notification
 // surfaces (unread dot, SSE nudge, Web Push) if ANY of its channels is enabled in the
 // recipient's User.NotificationChannels.  This is the SINGLE source of policy mapping
@@ -123,6 +142,16 @@ func (notification Notification) Channels() []string {
 	}
 
 	switch notification.Type {
+
+	case NotificationTypeDirect:
+		// The direct-message channel is the SOLE authority here.  There is deliberately no
+		// "either enables it" fallback to the mention channels (as REPLY has below), so switching
+		// this toggle off means off.  It is not split by follow-state -- see the constant.
+		//
+		// Returning an empty slice here would mark every direct message born-read and deliver no
+		// SSE nudge and no Web Push (see service.Notification.notify), so this case must never
+		// fall through to the default.
+		return []string{NotificationChannelDirectMessage}
 
 	case NotificationTypeMention:
 		return []string{mentionChannel}
@@ -198,7 +227,10 @@ func (notification Notification) GetRank() int64 {
 // DISLIKE has no Mastodon equivalent and maps to "" (callers should exclude it from the API).
 func (notification Notification) MastodonType() string {
 	switch notification.Type {
-	case NotificationTypeMention, NotificationTypeReply:
+	case NotificationTypeDirect, NotificationTypeMention, NotificationTypeReply:
+		// Mastodon has no separate notification type for direct messages -- a DM arrives as a
+		// "mention" notification whose status carries visibility "direct".  Omitting DIRECT here
+		// would hit the "" default and drop every DM from the Mastodon API.
 		return "mention"
 	case NotificationTypeLike:
 		return "favourite"

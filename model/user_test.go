@@ -58,12 +58,14 @@ func TestUserSchema(t *testing.T) {
 }
 
 // TestUser_NotificationDefaults pins the locked design: new Users get the conversational
-// channels (mentions + replies) enabled, and ambient channels (followers, reactions) off.
+// channels (direct messages, mentions, replies) enabled, and ambient channels (followers,
+// reactions) off.
 func TestUser_NotificationDefaults(t *testing.T) {
 
 	user := NewUser()
 
 	require.Equal(t, sliceof.String{
+		NotificationChannelDirectMessage,
 		NotificationChannelMentionFollowing,
 		NotificationChannelMentionNotFollowing,
 		NotificationChannelReply,

@@ -167,6 +167,8 @@ func notificationTitle(notification *model.Notification) string {
 	}
 
 	switch notification.Type {
+	case model.NotificationTypeDirect:
+		return actor + " sent you a message"
 	case model.NotificationTypeMention:
 		return actor + " mentioned you"
 	case model.NotificationTypeReply:
@@ -186,6 +188,13 @@ func notificationTitle(notification *model.Notification) string {
 
 // notificationURL returns the URL that clicking the OS notification should open.
 func notificationURL(host string, notification *model.Notification) string {
+
+	// RULE: A private message opens the Conversations app -- the only surface that owns it --
+	// never a public one. This mirrors the same decision in the notification list templates;
+	// model.Notification.IsConversation is the single source for both. See MESSAGE-AUDIENCE.md D2.
+	if notification.IsConversation() {
+		return host + "/@me/conversations"
+	}
 
 	// Reactions link to the local content; everything else opens the notifications section.
 	switch notification.Type {
