@@ -165,8 +165,12 @@ func (factory *SetupFactory) connectCommonDatabase(connection mapof.String) erro
 
 		// Roll back to "not connected" so a later save retries, and so domain management
 		// stays gated with a clear message instead of binding domains to a dead client.
+		// The core's connection snapshots roll back too, so refreshCommonDatabase's
+		// unchanged-guard cannot skip the reconnect when the same settings are retried.
 		client := factory.commonDatabase.Client()
 		factory.commonDatabase = nil
+		factory.commonDatabaseURI = ""
+		factory.commonDatabaseName = ""
 		factory.connectedConnectString = ""
 		factory.connectedDatabase = ""
 		_ = client.Disconnect(context.Background())

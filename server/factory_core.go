@@ -70,6 +70,25 @@ type factoryCore struct {
 	digitalDome         *dome.Dome
 	clientIPStrategy    realclientip.Strategy
 
+	// Snapshot of the settings that produced the current commonDatabase client.  Stored as plain
+	// strings (never the config's mapof.String) because config handlers mutate those maps in
+	// place, so a map comparison cannot detect changes.  refreshCommonDatabase compares against
+	// these to keep the live client when a config reload does not change the connection --
+	// disconnecting an unchanged client would strand every existing domain factory, the queue's
+	// storage, and the ActivityStream cache on a dead mongo client.
+	commonDatabaseURI  string
+	commonDatabaseName string
+
+	// Snapshot of the inputs that produced the current queue.  refreshQueue compares against
+	// these to keep the running queue when nothing it depends on has changed -- rebuilding stops
+	// the old queue, and any task already handed to it dies silently ("Turbine Queue: stopped").
+	// queueReady distinguishes a real, consumer-bearing queue from the inert placeholder that
+	// init() installs; queueDatabase is compared by POINTER IDENTITY, which changes exactly when
+	// refreshCommonDatabase swaps the connection.
+	queueReady       bool
+	queueWithStorage bool
+	queueDatabase    *mongo.Database
+
 	funcMap   template.FuncMap
 	domains   *xsync.Map[string, *service.Factory]
 	httpCache httpcache.HTTPCache
@@ -114,7 +133,7 @@ func (factory *factoryCore) RangeDomains() iter.Seq[*service.Factory] {
 
 	return func(yield func(*service.Factory) bool) {
 
-		factory.domains.Range(func(key string, domain *service.Factory) bool {
+		factory.domains.Range(func(_ string, domain *service.Factory) bool {
 			return yield(domain)
 		})
 	}
@@ -305,16 +324,15 @@ func (factory *factoryCore) refreshDomain(domainConfig config.Domain) error {
 		return derp.Internal(location, "Common database must be connected before creating domains")
 	}
 
-	// Fall through means that the domain does not exist, so we need to create it
+	// Fall through means that the domain does not exist, so we need to create it.  The common
+	// database and queue are not passed: the domain factory reads them through `factory` (its
+	// ServerFactory) on every use, so a later config reload can never strand it on a dead handle.
 	newDomain, err := service.NewFactory(
 		factory,
-		mongodb.NewServer(factory.commonDatabase),
 		domainConfig,
 		factory.port(domainConfig),
 		&factory.contentService,
-		&factory.emailService,
 		&factory.jwtService,
-		factory.queue,
 		&factory.registrationService,
 		&factory.templateService,
 		&factory.themeService,
@@ -674,6 +692,16 @@ func (factory *factoryCore) refreshCommonDatabase(connection mapof.String) error
 		return derp.Internal(location, "Common database must have a database name")
 	}
 
+	// RULE: Keep the live connection when the settings are unchanged.  Every config reload runs
+	// this method, and most reloads do not touch the database settings.  Reconnecting anyway
+	// would disconnect the old client -- stranding every existing domain factory, the queue's
+	// mongo storage, and the ActivityStream cache on a dead client ("client is disconnected").
+	// This mirrors the guard SetupFactory.UpdateConfig already applies for the same reason.
+	if factory.commonDatabase != nil && uri == factory.commonDatabaseURI && database == factory.commonDatabaseName {
+		log.Trace().Msg("Common database settings unchanged. Keeping current connection.")
+		return nil
+	}
+
 	// Make a copy of the commonDatabase (pointer) so we can close it after we set up a new one
 	commonDatabaseCopy := factory.commonDatabase // nolint:scopeguard
 
@@ -686,6 +714,10 @@ func (factory *factoryCore) refreshCommonDatabase(connection mapof.String) error
 
 	log.Trace().Msg("Connected to common database")
 	factory.commonDatabase = client.Database(database)
+
+	// Record the settings behind the new connection (snapshot scalars; see the field comment)
+	factory.commonDatabaseURI = uri
+	factory.commonDatabaseName = database
 
 	// If there is already a cache connection in place, then close it before we open a new one
 	if commonDatabaseCopy != nil {
@@ -739,7 +771,24 @@ func (factory *factoryCore) refreshFilesystems(config config.Config) {
 // refreshQueue rebuilds the task queue, optionally backed by mongo storage
 func (factory *factoryCore) refreshQueue(withStorage bool) {
 
-	// If there is already a queue in place, then close it before we open a new one
+	// RULE: Keep the running queue when nothing it depends on has changed.  Rebuilding stops the
+	// old queue, and every domain service that captured it -- plus any task already handed to it
+	// -- dies silently ("Turbine Queue: stopped").  The queue depends on its storage mode and,
+	// when storage is on, on the common database connection: queueDatabase is compared by pointer
+	// identity, which changes exactly when refreshCommonDatabase swaps the connection.  (Ordering:
+	// readConfig refreshes the common database BEFORE the queue, so this comparison always sees
+	// the current connection.)
+	if factory.queueReady && withStorage == factory.queueWithStorage {
+		if !withStorage || factory.commonDatabase == factory.queueDatabase {
+			log.Trace().Msg("Queue inputs unchanged. Keeping current queue.")
+			return
+		}
+	}
+
+	// If there is already a queue in place, then close it before we open a new one.  Each queue is
+	// stopped AT MOST ONCE (a second Stop would panic on its closed `done` channel): the guard
+	// above returns early unless we are about to replace it, and the replacement drops the only
+	// long-lived reference.
 	factory.queue.Stop()
 
 	// Configure queue options, including task consumers
@@ -762,6 +811,11 @@ func (factory *factoryCore) refreshQueue(withStorage bool) {
 
 	// Create a new queue object with consumers, storage, and polling
 	factory.queue = queue.New(options...)
+
+	// Record the inputs behind the new queue, so the guard above can detect "unchanged"
+	factory.queueReady = true
+	factory.queueWithStorage = withStorage
+	factory.queueDatabase = factory.commonDatabase
 }
 
 // refreshDerpPlugins rebuilds the derp error-reporting plugins named in the configuration
@@ -815,7 +869,7 @@ func (factory *factoryCore) refreshDomains(config config.Config) {
 	const location = "server.factoryCore.refreshDomains"
 
 	// First, mark ALL for deletion
-	factory.domains.Range(func(key string, domain *service.Factory) bool {
+	factory.domains.Range(func(_ string, domain *service.Factory) bool {
 		domain.MarkForDeletion = true
 		return true
 	})

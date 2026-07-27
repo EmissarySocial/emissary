@@ -33,19 +33,21 @@ import (
 )
 
 // Factory knows how to create an populate all services
+//
+// RULE: Server-level resources that a config reload can REBUILD (the common database connection,
+// the task queue) are never captured here.  They are read through serverFactory on every use --
+// see CommonDatabase() and Queue() -- so a reload can never strand this domain on a dead handle.
 type Factory struct {
-	serverFactory  ServerFactory
-	commonDatabase mongodb.Server
-	server         mongodb.Server
-	config         config.Domain
-	port           string
+	serverFactory ServerFactory
+	server        mongodb.Server
+	config        config.Domain
+	port          string
 
 	// services (from server)
 	contentService      *Content
 	httpCache           *httpcache.HTTPCache
 	jwtService          *JWT
 	registrationService *Registration
-	queue               *queue.Queue
 	templateService     *Template
 	themeService        *Theme
 	widgetService       *Widget
@@ -112,8 +114,11 @@ type Factory struct {
 	MarkForDeletion bool
 }
 
-// NewFactory creates a new factory tied to a MongoDB database
-func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, domain config.Domain, port string, contentService *Content, emailService *ServerEmail, jwtService *JWT, queue *queue.Queue, registrationService *Registration, templateService *Template, themeService *Theme, widgetService *Widget, attachmentOriginals afero.Fs, attachmentCache afero.Fs, exportCache afero.Fs, httpCache *httpcache.HTTPCache, workingDirectory *mediaserver.WorkingDirectory) (*Factory, error) { // NOSONAR: this constructor really needs this many arguments.
+// NewFactory creates a new factory tied to a MongoDB database.  The common database and the task
+// queue are NOT parameters: both can be rebuilt by a config reload, so the factory reads them
+// through serverFactory on every use instead of capturing them here.  (The server email service
+// is reached the same way -- see ServerEmail() -- so it is not a parameter either.)
+func NewFactory(serverFactory ServerFactory, domain config.Domain, port string, contentService *Content, jwtService *JWT, registrationService *Registration, templateService *Template, themeService *Theme, widgetService *Widget, attachmentOriginals afero.Fs, attachmentCache afero.Fs, exportCache afero.Fs, httpCache *httpcache.HTTPCache, workingDirectory *mediaserver.WorkingDirectory) (*Factory, error) { // NOSONAR: this constructor really needs this many arguments.
 
 	const location = "domain.factory.NewFactory"
 	log.Info().Msg("Starting domain: " + domain.Hostname)
@@ -121,10 +126,8 @@ func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, doma
 	// Base Factory object
 	factory := Factory{
 		serverFactory:       serverFactory,
-		commonDatabase:      commonDatabase,
 		contentService:      contentService,
 		jwtService:          jwtService,
-		queue:               queue,
 		registrationService: registrationService,
 		themeService:        themeService,
 		templateService:     templateService,
@@ -204,6 +207,8 @@ func NewFactory(serverFactory ServerFactory, commonDatabase mongodb.Server, doma
 	return &factory, nil
 }
 
+// Refresh applies a (possibly changed) domain configuration to this Factory and re-links every
+// service to its dependencies.  It runs once from NewFactory and again on every config reload.
 func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afero.Fs, attachmentCache afero.Fs) error {
 
 	const location = "domain.factory.Refresh"
@@ -316,6 +321,7 @@ func (factory *Factory) Close() {
  * Domain Data Accessors
  ******************************************/
 
+// Version returns the current version of the Emissary server software
 func (factory *Factory) Version() string {
 	return "0.9.0"
 }
@@ -340,6 +346,7 @@ func (factory *Factory) IsLocalhost() bool {
 	return uri.IsLocalHostname(factory.Hostname())
 }
 
+// Config returns the domain configuration that this Factory currently runs under
 func (factory *Factory) Config() config.Domain {
 	return factory.config
 }
@@ -348,10 +355,26 @@ func (factory *Factory) Config() config.Domain {
  * Database Connection Methods
  ******************************************/
 
+// CommonDatabase returns the CURRENT connection to the shared (ActivityPub Cache) database.  It
+// reads through the server factory on every call -- deliberately never captured -- because a
+// config reload can reconnect that database, and a captured handle would then fail every call
+// with "client is disconnected" (this stranded the ActivityStream cache, which broke inbound
+// signature verification with a bare 401).
 func (factory *Factory) CommonDatabase() mongodb.Server {
-	return factory.commonDatabase
+
+	commonDatabase := factory.serverFactory.CommonDatabase()
+
+	// While the server factory is disconnected (setup mode, FACTORY-MODES D7), return the zero
+	// Server rather than letting mongodb.NewServer panic on a nil database.  Domain factories
+	// only exist while the common database is connected, so this is defense in depth.
+	if commonDatabase == nil {
+		return mongodb.Server{}
+	}
+
+	return mongodb.NewServer(commonDatabase)
 }
 
+// Server returns the connection to this domain's OWN database (not the shared common database)
 func (factory *Factory) Server() mongodb.Server {
 	return factory.server
 }
@@ -374,7 +397,7 @@ func (factory *Factory) Session(timeout time.Duration) (data.Session, context.Ca
 // publishes nothing.  This is the ONLY way transactions should be opened; do not call
 // factory.Server().WithTransaction directly.  (See emissary-specs/POST-COMMIT-TASKS-DESIGN.md)
 func (factory *Factory) WithTransaction(ctx context.Context, callback data.TransactionCallbackFunc) (any, error) {
-	return postcommit.WithTransaction(ctx, factory.server, factory.queue, callback)
+	return postcommit.WithTransaction(ctx, factory.server, factory.Queue(), callback)
 }
 
 /******************************************
@@ -481,7 +504,7 @@ func (factory *Factory) Import() *Import {
 	return &factory.importService
 }
 
-// Import returns the ImportItem service, which manages individual records to be imported
+// ImportItem returns the ImportItem service, which manages individual records to be imported
 func (factory *Factory) ImportItem() *ImportItem {
 	return &factory.importItemService
 }
@@ -588,10 +611,13 @@ func (factory *Factory) SearchTag() *SearchTag {
 	return &factory.searchTagService
 }
 
+// SendLocator returns a SendLocator bound to the provided session, which resolves outbound
+// ActivityPub actors, signing keys, and recipients for this domain
 func (factory *Factory) SendLocator(session data.Session) SendLocator {
 	return NewSendLocator(factory, session)
 }
 
+// ServerEmail returns the server-level email service (read through the server factory)
 func (factory *Factory) ServerEmail() *ServerEmail {
 	return factory.serverFactory.Email()
 }
@@ -702,6 +728,8 @@ func (factory *Factory) Camper() camper.Camper {
 	return camper.New(camper.WithRoundTripper(middleware))
 }
 
+// ClientIP returns the real client IP for the provided request, using the server's
+// configured client-IP strategy
 func (factory *Factory) ClientIP(request *http.Request) string {
 	return factory.serverFactory.ClientIP(request)
 }
@@ -759,9 +787,12 @@ func (factory *Factory) MasterKey() string {
 	return factory.config.MasterKey
 }
 
-// Queue returns the Queue service, which manages background jobs
+// Queue returns the Queue service, which manages background jobs.  It reads through the server
+// factory on every call -- deliberately never captured -- because a config reload can rebuild the
+// queue, and a captured pointer would then publish tasks into a stopped queue that silently drops
+// them ("Turbine Queue: stopped").
 func (factory *Factory) Queue() *queue.Queue {
-	return factory.queue
+	return factory.serverFactory.Queue()
 }
 
 // Registration returns the Registration service, which managaes new user registrations
@@ -806,7 +837,7 @@ func (factory *Factory) LookupProvider(request *http.Request, session data.Sessi
  * External APIs
  ******************************************/
 
-// OAuth returns a fully populated OAuth service
+// Provider returns a fully populated Provider service (external OAuth/API providers)
 func (factory *Factory) Provider() *Provider {
 	return &factory.providerService
 }

@@ -36,13 +36,13 @@ import (
 
 // ActivityStream implements the Hannibal HTTP client interface, and provides a cache for ActivityStream documents.
 type ActivityStream struct {
-	commonDatabase data.Server
-	locatorService *Locator
-	ruleService    *Rule
-	hostname       string
-	queue          *queue.Queue
-	version        string
-	newSession     func(time.Duration) (data.Session, context.CancelFunc, error)
+	getCommonDatabase func() data.Server // read LIVE on every use (never captured): a config reload can reconnect the common database, and a captured handle would fail every call with "client is disconnected"
+	locatorService    *Locator
+	ruleService       *Rule
+	hostname          string
+	queue             *queue.Queue
+	version           string
+	newSession        func(time.Duration) (data.Session, context.CancelFunc, error)
 }
 
 /******************************************
@@ -56,7 +56,11 @@ func NewActivityStream() ActivityStream {
 
 // Refresh updates links to additional services that may not have been initialized when this service was created.
 func (service *ActivityStream) Refresh(factory *Factory) {
-	service.commonDatabase = factory.CommonDatabase()
+	// The common database is stored as a GETTER, not a value: factory.CommonDatabase() reads
+	// through to the server factory, so every call here sees the current connection even after a
+	// config reload swaps it.  (The closure over `factory` is safe: a domain's *Factory pointer
+	// is stable for its whole lifetime -- reloads Refresh it in place.)
+	service.getCommonDatabase = func() data.Server { return factory.CommonDatabase() }
 	service.locatorService = factory.Locator()
 	service.ruleService = factory.Rule()
 	service.hostname = factory.Hostname()
@@ -159,7 +163,7 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 	cacheClient := ascache.New(
 		cacheRulesClient,
 		service.queue,
-		service.commonDatabase,
+		service.getCommonDatabase(),
 		actorType,
 		actorID,
 		service.hostname,
@@ -233,7 +237,7 @@ func ruleUserID(actorType string, actorID primitive.ObjectID) primitive.ObjectID
  * Hannibal HTTP Client Interface
  ******************************************/
 
-// Put adds a single document to the ActivityStream cache
+// Save adds a single document to the ActivityStream cache
 func (service *ActivityStream) Save(document streams.Document) error {
 	return service.AppClient().Save(document)
 }
@@ -247,6 +251,7 @@ func (service *ActivityStream) Delete(url string) error {
  * Custom Query Methods
  ******************************************/
 
+// Range iterates over the cached ActivityStream documents that match the provided criteria
 func (service *ActivityStream) Range(ctx context.Context, criteria exp.Expression, options ...option.Option) iter.Seq[ascache.Value] {
 
 	const location = "service.ActivityStream.Range"
@@ -494,6 +499,8 @@ func (service *ActivityStream) GetRecipient(recipient string) (string, string, e
 	return document.ID(), document.Inbox().String(), nil
 }
 
+// PublicKeyFinder returns the PEM-encoded public key for the provided keyID, loading the owning
+// Actor's document through the (cache-revalidating) app client
 func (service *ActivityStream) PublicKeyFinder(keyID string) (string, error) {
 
 	const location = "service.ActivityStream.PublicKeyFinder"
@@ -566,13 +573,13 @@ func (service *ActivityStream) collection(ctx context.Context) (data.Collection,
 
 	const location = "service.ActivityStream.collection"
 
-	// NILCHECK: commonDatabase must be populated
-	if service.commonDatabase == nil {
+	// NILCHECK: the common-database getter is only nil before Refresh has run
+	if service.getCommonDatabase == nil {
 		return nil, derp.Internal(location, "Service not initialized")
 	}
 
-	// Connect to the database
-	session, err := service.commonDatabase.Session(ctx)
+	// Connect to the database (read live through the getter -- see the field comment)
+	session, err := service.getCommonDatabase().Session(ctx)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Connecting to database", derp.WithInternalError())
