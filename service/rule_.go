@@ -257,18 +257,28 @@ func (service *Rule) resolveMatchKeyTrigger(rule *model.Rule) (string, error) {
 		return rule.Trigger, nil
 	}
 
-	// Load the actor. GetActor resolves @user@host handles and canonicalizes alias/redirect URLs,
-	// and fails when the address does not resolve to a real Actor.
-	actor, err := service.activityStreamService.GetActor(rule.Trigger)
+	// Key on the canonical id; the caller keeps rule.Trigger as the friendly value the user typed.
+	return service.resolveActorAddress(rule.Trigger)
+}
+
+// resolveActorAddress resolves a Fediverse address -- a webfinger @user@host handle or an
+// alias/redirecting profile URL -- to the canonical Actor id that ACTOR MatchKeys are derived from.
+// GetActor canonicalizes both forms and fails when the address does not name a real Actor.
+//
+// Every caller that turns a user-friendly address into a MatchKey MUST route through here. Deriving
+// a key from the raw address instead produces a key that no document can ever match (a rule that
+// silently never fires), or -- for a lookup -- misses the rule it was searching for.
+func (service *Rule) resolveActorAddress(address string) (string, error) {
+
+	actor, err := service.activityStreamService.GetActor(address)
 
 	if err != nil {
 		// User-facing 422 with a friendly message, but keep the real cause (SSRF block, TLS/connection
 		// failure, 404, not-an-actor) as a detail so the error dump stays diagnosable -- otherwise every
 		// resolution failure collapses to the same opaque message.
-		return "", derp.Validation("This address could not be found. Please check that it is a valid Fediverse handle or profile URL.", rule.Trigger, err)
+		return "", derp.Validation("This address could not be found. Please check that it is a valid Fediverse handle or profile URL.", address, err)
 	}
 
-	// Key on the canonical id; the caller keeps rule.Trigger as the friendly value the user typed.
 	return actor.ID(), nil
 }
 

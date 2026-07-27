@@ -6,6 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/realtime"
+	"github.com/EmissarySocial/emissary/tools/asrules"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -455,8 +456,13 @@ func (service *Following) GetFollowingID(session data.Session, userID primitive.
 
 	const location = "service.Following.IsFollowing"
 
-	// Load the ActivityStream document
-	document, err := service.activityService.UserClient(userID).Load(uri)
+	// Load the ActivityStream document.
+	//
+	// RULE: this answers "does the User already follow this actor?" -- a question about the User's OWN
+	// Following records, not a request to show them the actor's content. Letting the viewer's rules
+	// refuse the fetch would report a blocked or muted actor as "not followed" (or fail the caller
+	// outright), so the reveal keeps the answer truthful. The verdict is still stamped on the document.
+	document, err := service.activityService.UserClient(userID).Load(uri, asrules.WithReveal(true))
 
 	if err != nil {
 		return "", derp.Wrap(err, location, "Loading ActivityStream document", uri)

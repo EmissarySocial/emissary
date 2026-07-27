@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/asrules"
 	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -78,9 +79,29 @@ func (service *Following) Connect(session data.Session, following *model.Followi
 		return nil
 	}
 
-	// Try to load the Actor in the cache
+	// RULE: R11 -- a Following cannot be created while a block still covers this actor. This mirrors
+	// the identical check in Resume, and it is what MAKES the reveal below safe: the refusal is now an
+	// explicit, friendly decision about BLOCK alone, instead of an opaque 403 from the rules client
+	// that also swept up mutes and labels.
+	disposition, err := service.ruleService.DispositionForKeys(session, following.UserID, model.ActorMatchKeys(following.URL), time.Now().Unix())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Checking rules before connecting", following.URL)
+	}
+
+	if disposition.IsBlocked() {
+		return derp.Validation("You have blocked this account. Remove the block rule before following it.")
+	}
+
+	// Try to load the Actor in the cache.
+	//
+	// RULE: an explicit follow is a deliberate request FOR this actor, not unsolicited content, so the
+	// viewer's own rules must not refuse the fetch. R19 exists to keep hidden content from being pulled
+	// in behind the User's back; it should never stop the User from acting on their own intent. Without
+	// the reveal, merely MUTING an account made it impossible to follow -- and the failure surfaced as
+	// a raw 403 that took down the whole enclosing form. BLOCK is still refused, above.
 	client := service.activityService.UserClient(following.UserID)
-	actor, err := client.Load(following.URL, sherlock.AsActor())
+	actor, err := client.Load(following.URL, sherlock.AsActor(), asrules.WithReveal(true))
 
 	if err != nil {
 		if inner := service.SetStatusFailure(session, following, "Unable to connect to ActivityPub Actor"); inner != nil {
