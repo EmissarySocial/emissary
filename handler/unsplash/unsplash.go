@@ -22,7 +22,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func GetPhoto(ctx *steranko.Context, factory *service.Factory, session data.Session, _ *model.User) error {
+// GetPhoto returns a single photo from Unsplash. The user DOES NOT need to be authenticated.
+func GetPhoto(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.unsplash.GetPhoto"
 
@@ -81,7 +82,8 @@ func GetPhoto(ctx *steranko.Context, factory *service.Factory, session data.Sess
 	return displayPhoto(ctx, applicationName, photo)
 }
 
-func GetCollectionRandom(ctx *steranko.Context, factory *service.Factory, session data.Session, _ *model.User) error {
+// GetCollectionRandom returns a random photo from a collection on Unsplash. The user DOES NOT need to be authenticated.
+func GetCollectionRandom(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.unsplash.GetCollectionRandom"
 
