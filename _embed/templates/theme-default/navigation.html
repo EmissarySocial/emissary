@@ -62,14 +62,22 @@
 			</a>
 		{{- end -}}
 	{{- else if .IsIdentity -}}
-		<a href="/@guest" id="nav-settings" class="nav-item turboclick" aria-label="Profile">
+		<a href="/@guest" id="nav-profile" class="nav-item turboclick" aria-label="Profile">
 			<span class="icon selected-hide">{{icon "user"}}</span>
 			<span class="label">Profile</span>
 		</a>
 	{{- else -}}
+
 		<a href="/signin" id="nav-signin" class="nav-item turboclick" aria-label="Sign In">
 			<span class="icon">{{icon "user"}}</span>
 			<span class="label">Sign In</span>
 		</a>
+
+		{{- if .DomainHasRegistrationForm -}}
+			<a href="/register" id="nav-signup" class="nav-item primary turboclick" aria-label="join now">
+				<span class="label">Join Now</span>
+			</a>
+		{{- end -}}
+
 	{{- end -}}
 </div>

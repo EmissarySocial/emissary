@@ -79,6 +79,17 @@ nav {
 		white-space: nowrap;
 		text-overflow: ellipsis;
 
+		&.primary {
+			background-color: var(--button-primary-background);
+			color: var(--button-primary-color);
+
+			&:hover,
+			&:focus {
+				background-color: var(--button-primary-background-hover);
+				color: var(--button-primary-color-hover);
+			}
+		}
+
 		&:hover,
 		&:focus {
 			color: var(--gray90);
