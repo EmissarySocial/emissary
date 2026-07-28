@@ -48,8 +48,7 @@ func (service *Notification) NotifyFromActivity(session data.Session, user *mode
 
 	case vocab.ActivityTypeLike, vocab.ActivityTypeDislike, vocab.ActivityTypeAnnounce:
 		// The reacted-to object must be a local Stream owned by this user.
-		stream := model.NewStream()
-		if service.loadLocalStreamOwnedBy(session, activity.Object().ID(), user, &stream) {
+		if stream := model.NewStream(); service.loadLocalStreamOwnedBy(session, activity.Object().ID(), user, &stream) {
 			return service.NotifyReaction(session, user, activity, &stream)
 		}
 
@@ -82,8 +81,7 @@ func (service *Notification) notifyFromCreateOrUpdate(session data.Session, user
 	// existing record in place, preserving its Type.
 	if activity.Type() == vocab.ActivityTypeCreate {
 		if inReplyTo := object.InReplyTo().ID(); inReplyTo != "" {
-			stream := model.NewStream()
-			if service.loadLocalStreamOwnedBy(session, inReplyTo, user, &stream) {
+			if stream := model.NewStream(); service.loadLocalStreamOwnedBy(session, inReplyTo, user, &stream) {
 				return service.NotifyReply(session, user, activity, object, &stream)
 			}
 		}
@@ -175,6 +173,14 @@ func (service *Notification) NotifyFollow(session data.Session, user *model.User
  * Common notify() funnel
  ******************************************/
 
+// notificationMatchKeys returns the rule keys an activity's notification is judged by: the delivering
+// actor's identity keys plus the unwrapped payload's own keys (author, hashtags). Wrapper activities
+// carry their tags on the inner object, so the activity is unwrapped before reading content keys; a
+// link-shaped (bare string) object contributes nothing, because reading it would fetch.
+func notificationMatchKeys(activity streams.Document) []string {
+	return append(model.ActorMatchKeys(activity.ActorID()), model.DocumentMatchKeys(activity.UnwrapActivity())...)
+}
+
 // notify applies the Rule filter, dedups against any existing notification for the same activity,
 // stamps the actor's follow-state subtype, applies the recipient's channel settings, saves the
 // record, and (if the notification surfaces) publishes an SSE nudge and enqueues a Web Push task.
@@ -182,9 +188,10 @@ func (service *Notification) notify(session data.Session, user *model.User, acti
 
 	const location = "service.Notification.notify"
 
-	// RULE: a blocked OR muted actor generates no notifications (R9). Unlike the wire gate, MUTE
-	// counts here -- a muted actor is silent. LABEL never suppresses; labels attach at render (Phase 6).
-	disposition, err := service.ruleService.ActorDisposition(session, user.UserID, activity, time.Now().Unix())
+	// RULE: a blocked OR muted actor -- or a payload carrying a blocked/muted hashtag (D12) --
+	// generates no notifications (R9/R16). Unlike the wire gate, MUTE counts here -- a muted actor
+	// is silent. LABEL never suppresses; labels attach at render (Phase 6).
+	disposition, err := service.ruleService.DispositionForKeys(session, user.UserID, notificationMatchKeys(activity), time.Now().Unix())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Checking notification rules", user.UserID, activity.ActorID())
@@ -477,8 +484,7 @@ func plainText(value string) string {
 	stripped := html.UnescapeString(convert.SanitizeText(value))
 	stripped = strings.TrimSpace(stripped)
 
-	runes := []rune(stripped)
-	if len(runes) > objectSummaryMaxLength {
+	if runes := []rune(stripped); len(runes) > objectSummaryMaxLength {
 		return strings.TrimSpace(string(runes[:objectSummaryMaxLength])) + "…"
 	}
 

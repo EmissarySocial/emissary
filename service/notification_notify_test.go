@@ -5,9 +5,54 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/stretchr/testify/require"
 )
+
+// A Create wrapper is judged by the delivering actor's identity keys AND the inner object's content
+// keys -- so a TAG rule reaches the hashtags on the wrapped Note (D12/R16).
+func TestNotificationMatchKeys_CreateWithTags(t *testing.T) {
+
+	activity := streams.NewDocument(map[string]any{
+		vocab.PropertyType:  vocab.ActivityTypeCreate,
+		vocab.PropertyActor: "https://origin.example/@author",
+		vocab.PropertyObject: map[string]any{
+			vocab.PropertyID:           "https://origin.example/tagged",
+			vocab.PropertyAttributedTo: "https://origin.example/@author",
+			vocab.PropertyTag: map[string]any{
+				vocab.PropertyType: vocab.LinkTypeHashtag,
+				vocab.PropertyName: "#qatest",
+			},
+		},
+	})
+
+	keys := notificationMatchKeys(activity)
+
+	require.Contains(t, keys, "ACTOR:https://origin.example/@author")
+	require.Contains(t, keys, "DOMAIN:origin.example")
+	require.Contains(t, keys, "TAG:qatest")
+}
+
+// A Follow whose object is a bare URL contributes actor keys only -- the string object is never
+// fetched, and produces no keys of its own.
+func TestNotificationMatchKeys_FollowBareObject(t *testing.T) {
+
+	activity := streams.NewDocument(map[string]any{
+		vocab.PropertyType:   vocab.ActivityTypeFollow,
+		vocab.PropertyActor:  "https://origin.example/@follower",
+		vocab.PropertyObject: "https://local.example/@me",
+	})
+
+	keys := notificationMatchKeys(activity)
+
+	require.Contains(t, keys, "ACTOR:https://origin.example/@follower")
+	require.NotContains(t, keys, "ACTOR:https://local.example/@me")
+
+	for _, key := range keys {
+		require.False(t, strings.HasPrefix(key, "TAG:"), key)
+	}
+}
 
 func TestReactionType(t *testing.T) {
 	require.Equal(t, model.NotificationTypeLike, reactionType(vocab.ActivityTypeLike))
