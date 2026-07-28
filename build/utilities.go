@@ -46,11 +46,26 @@ func WrapInlineError(response http.ResponseWriter, err error) error {
 	response.Header().Set("HX-Retarget", "#htmx-response-message")
 	response.WriteHeader(http.StatusOK)
 
-	if _, writeError := response.Write([]byte(`<span class="text-red">` + derp.Message(err) + `</span>`)); writeError != nil {
+	if _, writeError := response.Write([]byte(`<span class="text-red">` + inlineErrorMessage(err) + `</span>`)); writeError != nil {
 		return derp.Wrap(writeError, "build.WrapInlineError", "Writing response", err)
 	}
 
 	return nil
+}
+
+// inlineErrorMessage returns the user-facing text for an error shown inline in a form.
+func inlineErrorMessage(err error) string {
+
+	// RULE: A validation (422) chain always terminates in a message written for a human --
+	// the wrappers above it ("Saving model object", "Executing steps for child") are for the
+	// error log, so hoist the root message past them.
+	if derp.IsValidationError(err) {
+		return derp.RootMessage(err)
+	}
+
+	// Any other error is the opposite shape: its root is internals (a database or network
+	// failure), and the outermost message is the presentable one.
+	return derp.Message(err)
 }
 
 func WrapModal(response http.ResponseWriter, content string, options ...string) string {

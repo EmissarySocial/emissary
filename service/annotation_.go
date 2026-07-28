@@ -259,7 +259,7 @@ func (service *Annotation) LoadByToken(session data.Session, userID primitive.Ob
 		return service.LoadByID(session, userID, annotationID, result)
 	}
 
-	return derp.Validation("Token is must be a valid ObjectID", token)
+	return derp.Validation("Token must be a valid ObjectID", token)
 }
 
 // LoadByID loads a single model.Annotation object that matches the provided annotationID

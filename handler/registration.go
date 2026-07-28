@@ -62,7 +62,7 @@ func PostRegister(ctx *steranko.Context, factory *service.Factory, session data.
 	// Validate the transaction
 	if err := factory.Registration().Validate(session, factory.User(), domain, txn); err != nil {
 		derp.Report(derp.Wrap(err, location, "Validating registration"))
-		return inlineError(ctx, derp.Message(derp.Unwrap(err)))
+		return inlineError(ctx, derp.RootMessage(err))
 	}
 
 	// Send Welcome Email that includes the user's registration token

@@ -78,7 +78,7 @@ func (smtp SMTPConnection) TestConnection(timeout time.Duration) error {
 	server, ok := smtp.Server()
 
 	if !ok {
-		return derp.Validation("Mail server settings are incomplete or invalid. Please check the hostname, port, and credentials.", smtp.Hostname, smtp.Port)
+		return derp.Validation("Mail server settings are incomplete or invalid", smtp.Hostname, smtp.Port)
 	}
 
 	// Bound the connect so an unreachable host fails in seconds, not on the library's default.

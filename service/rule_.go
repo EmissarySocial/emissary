@@ -273,10 +273,11 @@ func (service *Rule) resolveActorAddress(address string) (string, error) {
 	actor, err := service.activityStreamService.GetActor(address)
 
 	if err != nil {
-		// User-facing 422 with a friendly message, but keep the real cause (SSRF block, TLS/connection
-		// failure, 404, not-an-actor) as a detail so the error dump stays diagnosable -- otherwise every
-		// resolution failure collapses to the same opaque message.
-		return "", derp.Validation("This address could not be found. Please check that it is a valid Fediverse handle or profile URL.", address, err)
+		// User-facing 422 whose message renders verbatim in the edit dialog, so it stays short.
+		// The real cause (SSRF block, TLS/connection failure, 404, not-an-actor) rides along as a
+		// detail so the error dump stays diagnosable -- otherwise every resolution failure
+		// collapses to the same opaque message.
+		return "", derp.Validation("Address not found", address, err)
 	}
 
 	return actor.ID(), nil
