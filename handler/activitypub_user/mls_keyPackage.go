@@ -15,7 +15,7 @@ import (
 // GetKeyPackageCollection serves the User's published MLS KeyPackages as a collection of IDs.
 // The route runs behind WithAuthorizedActorAndUser (R10): the requester is already identified
 // and confirmed not-blocked before this handler runs.
-func GetKeyPackageCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, _ *string, user *model.User) error {
+func GetKeyPackageCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.GetKeyPackageCollection"
 
@@ -52,7 +52,7 @@ func GetKeyPackageCollection(ctx *steranko.Context, factory *service.Factory, se
 // GetKeyPackageRecord serves a single MLS KeyPackage. The route runs behind
 // WithAuthorizedActorAndUser (R10): the requester is already identified and confirmed
 // not-blocked before this handler runs.
-func GetKeyPackageRecord(ctx *steranko.Context, factory *service.Factory, session data.Session, _ *string, user *model.User) error {
+func GetKeyPackageRecord(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.GetKeyPackageRecord"
 
