@@ -95,6 +95,60 @@ func TestDocumentMatchKeys_Actor(t *testing.T) {
 	require.Contains(t, keys, "DOMAIN:social")
 }
 
+// TestDocumentMatchKeys_AttributedTo confirms an Object's author (`attributedTo`) contributes ACTOR
+// and DOMAIN keys just like an Activity's `actor` -- Objects name their author with attributedTo, so
+// an ACTOR/DOMAIN rule must reach a document that carries no `actor` property at all.
+func TestDocumentMatchKeys_AttributedTo(t *testing.T) {
+
+	// A bare-string attributedTo (the common wire form)
+	document := streams.NewDocument(mapof.Any{
+		vocab.PropertyAttributedTo: "https://mastodon.social/@alice",
+	})
+
+	keys := DocumentMatchKeys(document)
+
+	require.Contains(t, keys, "ACTOR:https://mastodon.social/@alice")
+	require.Contains(t, keys, "DOMAIN:mastodon.social")
+
+	// An object-valued attributedTo keys off its `id`
+	document = streams.NewDocument(mapof.Any{
+		vocab.PropertyAttributedTo: mapof.Any{vocab.PropertyID: "https://mastodon.social/@bob"},
+	})
+
+	require.Contains(t, DocumentMatchKeys(document), "ACTOR:https://mastodon.social/@bob")
+}
+
+// TestDocumentMatchKeys_ActorAndAuthor confirms a document carrying BOTH identities keys them both --
+// and that a self-attributed document (actor == attributedTo) does not duplicate its keys.
+func TestDocumentMatchKeys_ActorAndAuthor(t *testing.T) {
+
+	// Distinct identities: both are keyed.
+	document := streams.NewDocument(mapof.Any{
+		vocab.PropertyActor:        "https://relay.example/@booster",
+		vocab.PropertyAttributedTo: "https://origin.example/@author",
+	})
+
+	keys := DocumentMatchKeys(document)
+
+	require.Contains(t, keys, "ACTOR:https://relay.example/@booster")
+	require.Contains(t, keys, "ACTOR:https://origin.example/@author")
+
+	// Identical identities: keyed exactly once.
+	document = streams.NewDocument(mapof.Any{
+		vocab.PropertyActor:        "https://origin.example/@author",
+		vocab.PropertyAttributedTo: "https://origin.example/@author",
+	})
+
+	actorKeyCount := 0
+	for _, key := range DocumentMatchKeys(document) {
+		if key == "ACTOR:https://origin.example/@author" {
+			actorKeyCount++
+		}
+	}
+
+	require.Equal(t, 1, actorKeyCount)
+}
+
 // TestDocumentMatchKeys_HashtagsOnly confirms Hashtags produce TAG keys while Mentions do not --
 // the guard that keeps a TAG rule for "alice" from matching a post that mentions @alice.
 func TestDocumentMatchKeys_HashtagsOnly(t *testing.T) {

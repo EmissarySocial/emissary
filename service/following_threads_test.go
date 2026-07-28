@@ -206,3 +206,145 @@ func TestPrimaryPost_DepthLimit(t *testing.T) {
 	require.False(t, dropped)
 	require.True(t, primary.NotNil())
 }
+
+// A TAG MUTE drops a post carrying the hashtag -- content filtering at ingest (D12), not just
+// identity filtering. Rule trigger and wire tag both carry the `#` prefix (the Mastodon convention).
+func TestPrimaryPost_MutedTagDropped(t *testing.T) {
+
+	userID := primitive.NewObjectID()
+	mute := summaryRule(userID, model.RuleTypeTag, model.RuleActionMute, "#qatest")
+	walk := newTestWalk(&ruleStore{records: []model.RuleSummary{mute}}, userID)
+
+	document := streams.NewDocument(map[string]any{
+		vocab.PropertyID:           "https://good.example/tagged",
+		vocab.PropertyAttributedTo: "https://good.example/@friend",
+		vocab.PropertyTag: map[string]any{
+			vocab.PropertyType: vocab.LinkTypeHashtag,
+			vocab.PropertyName: "#qatest",
+		},
+	})
+
+	_, _, dropped, err := walk.primaryPost(document, model.OriginTypePrimary, 0)
+
+	require.Nil(t, err)
+	require.True(t, dropped)
+}
+
+// The control post WITHOUT the hashtag still lands -- a TAG rule matches the tag, never the author.
+func TestPrimaryPost_ControlPostWithoutTagKept(t *testing.T) {
+
+	userID := primitive.NewObjectID()
+	mute := summaryRule(userID, model.RuleTypeTag, model.RuleActionMute, "#qatest")
+	walk := newTestWalk(&ruleStore{records: []model.RuleSummary{mute}}, userID)
+
+	document := streams.NewDocument(map[string]any{
+		vocab.PropertyID:           "https://good.example/control",
+		vocab.PropertyAttributedTo: "https://good.example/@friend",
+	})
+
+	primary, _, dropped, err := walk.primaryPost(document, model.OriginTypePrimary, 0)
+
+	require.Nil(t, err)
+	require.False(t, dropped)
+	require.Equal(t, "https://good.example/control", primary.ID())
+}
+
+// A domain-wide ADMIN TAG rule (UserID zero) drops the tagged post for a regular User -- the
+// server-wide moderation case from the QA report.
+func TestPrimaryPost_AdminTagRuleDropped(t *testing.T) {
+
+	userID := primitive.NewObjectID()
+	adminMute := summaryRule(primitive.NilObjectID, model.RuleTypeTag, model.RuleActionMute, "#qatest")
+	walk := newTestWalk(&ruleStore{records: []model.RuleSummary{adminMute}}, userID)
+
+	document := streams.NewDocument(map[string]any{
+		vocab.PropertyID:           "https://good.example/tagged",
+		vocab.PropertyAttributedTo: "https://good.example/@friend",
+		vocab.PropertyTag: map[string]any{
+			vocab.PropertyType: vocab.LinkTypeHashtag,
+			vocab.PropertyName: "#qatest",
+		},
+	})
+
+	_, _, dropped, err := walk.primaryPost(document, model.OriginTypePrimary, 0)
+
+	require.Nil(t, err)
+	require.True(t, dropped)
+}
+
+// A clean booster Announcing a TAGGED post is dropped -- the muted tag rides the boosted object, and
+// the walk checks every Object node it unwraps.
+func TestPrimaryPost_MutedTagOnBoostedPostDropped(t *testing.T) {
+
+	userID := primitive.NewObjectID()
+	mute := summaryRule(userID, model.RuleTypeTag, model.RuleActionMute, "#qatest")
+	walk := newTestWalk(&ruleStore{records: []model.RuleSummary{mute}}, userID)
+
+	announce := streams.NewDocument(map[string]any{
+		vocab.PropertyType:  vocab.ActivityTypeAnnounce,
+		vocab.PropertyActor: "https://booster.example/@clean",
+		vocab.PropertyObject: map[string]any{
+			vocab.PropertyID:           "https://origin.example/tagged",
+			vocab.PropertyAttributedTo: "https://origin.example/@author",
+			vocab.PropertyTag: map[string]any{
+				vocab.PropertyType: vocab.LinkTypeHashtag,
+				vocab.PropertyName: "#qatest",
+			},
+		},
+	})
+
+	_, _, dropped, err := walk.primaryPost(announce, model.OriginTypePrimary, 0)
+
+	require.Nil(t, err)
+	require.True(t, dropped)
+}
+
+// A muted hashtag on an ANCESTOR drops the reply's item too, matching the identity semantics: any
+// filtered node in the provenance chain stops the walk (R18).
+func TestPrimaryPost_MutedTagUpthreadDropped(t *testing.T) {
+
+	userID := primitive.NewObjectID()
+	mute := summaryRule(userID, model.RuleTypeTag, model.RuleActionMute, "#qatest")
+	walk := newTestWalk(&ruleStore{records: []model.RuleSummary{mute}}, userID)
+
+	reply := streams.NewDocument(map[string]any{
+		vocab.PropertyID:           "https://good.example/reply",
+		vocab.PropertyAttributedTo: "https://good.example/@friend",
+		vocab.PropertyInReplyTo: map[string]any{
+			vocab.PropertyID:           "https://good.example/parent",
+			vocab.PropertyAttributedTo: "https://good.example/@op",
+			vocab.PropertyTag: map[string]any{
+				vocab.PropertyType: vocab.LinkTypeHashtag,
+				vocab.PropertyName: "#qatest",
+			},
+		},
+	})
+
+	_, _, dropped, err := walk.primaryPost(reply, model.OriginTypePrimary, 0)
+
+	require.Nil(t, err)
+	require.True(t, dropped)
+}
+
+// A Mention-typed tag whose name matches the trigger does NOT drop the post -- TAG rules match
+// Hashtags only (D12), so a rule for "qatest" cannot silence posts that merely mention @qatest.
+func TestPrimaryPost_MentionTagNotDropped(t *testing.T) {
+
+	userID := primitive.NewObjectID()
+	mute := summaryRule(userID, model.RuleTypeTag, model.RuleActionMute, "#qatest")
+	walk := newTestWalk(&ruleStore{records: []model.RuleSummary{mute}}, userID)
+
+	document := streams.NewDocument(map[string]any{
+		vocab.PropertyID:           "https://good.example/mention",
+		vocab.PropertyAttributedTo: "https://good.example/@friend",
+		vocab.PropertyTag: map[string]any{
+			vocab.PropertyType: vocab.LinkTypeMention,
+			vocab.PropertyName: "qatest",
+		},
+	})
+
+	_, _, dropped, err := walk.primaryPost(document, model.OriginTypePrimary, 0)
+
+	require.Nil(t, err)
+	require.False(t, dropped)
+}

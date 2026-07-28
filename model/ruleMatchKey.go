@@ -49,25 +49,26 @@ func RuleMatchKey(ruleType string, trigger string) string {
 }
 
 // DocumentMatchKeys returns every match key that the provided document's own identity can produce:
-// its actor (as an ACTOR key and as the DOMAIN keys of the actor's host), and each of its Hashtag
-// tags (as TAG keys). A Rule matches this document when its MatchKey is in this set, so the engine
-// never re-scans -- it intersects two key sets.
+// its responsible identities -- `actor` (Activities) and `attributedTo` (Objects) -- each as an ACTOR
+// key plus the DOMAIN keys of its host, and each of its Hashtag tags (as TAG keys). A Rule matches
+// this document when its MatchKey is in this set, so the engine never re-scans -- it intersects two
+// key sets.
 //
-// This reads only fetch-free properties. `ActorID()` short-circuits on a bare-string actor, and tag
-// names are read only from object-valued tags (a bare-string tag is skipped, because reading its
-// name would fetch it over the network).
+// This reads only fetch-free properties. `ActorID()` and `AttributedTo().ID()` short-circuit on
+// bare-string values, and tag names are read only from object-valued tags (a bare-string tag is
+// skipped, because reading its name would fetch it over the network).
 func DocumentMatchKeys(document streams.Document) []string {
 
 	result := make([]string, 0)
 
-	// Keys derived from the document's actor: the actor itself, and every suffix of its host.
-	if actorID := document.ActorID(); actorID != "" {
+	// Keys derived from the document's responsible identities. Objects name their author with
+	// `attributedTo`, Activities with `actor` -- a document may carry either or both, so both are
+	// keyed (skipping the duplicate when a self-attributed document repeats the same identity).
+	actorID := document.ActorID()
+	result = append(result, ActorMatchKeys(actorID)...)
 
-		if actor := normalizeActorURI(actorID); actor != "" {
-			result = append(result, RuleTypeActor+":"+actor)
-		}
-
-		result = append(result, domainMatchKeys(actorID)...)
+	if authorID := document.AttributedTo().ID(); authorID != actorID {
+		result = append(result, ActorMatchKeys(authorID)...)
 	}
 
 	// A TAG key for each Hashtag on the document. Mentions and Emoji are deliberately excluded

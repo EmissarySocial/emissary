@@ -19,7 +19,8 @@ import (
 const maxReplyDepth = 32
 
 // SaveNewsItem adds/updates a NewsItem for a followed document, after walking its provenance chain to
-// the primary post and dropping anything authored (or delivered) by a blocked or muted identity (R18).
+// the primary post and dropping anything authored (or delivered) by a blocked or muted identity, or
+// carrying a blocked or muted hashtag (R18, D12).
 func (service *Following) SaveNewsItem(session data.Session, following *model.Following, document streams.Document, originType string) error {
 
 	const location = "service.Following.SaveNewsItem"
@@ -40,9 +41,9 @@ func (service *Following) SaveNewsItem(session data.Session, following *model.Fo
 		return derp.Wrap(err, location, "Walking provenance chain", document.ID())
 	}
 
-	// `dropped` means a blocked/muted identity was found anywhere in the chain; a nil `original` means
-	// the chain terminated in a `Delete`/`Undo`. Either way there are no newsfeed side effects (no
-	// item, no reply-thread SSE).
+	// `dropped` means a blocked/muted identity or hashtag was found anywhere in the chain; a nil
+	// `original` means the chain terminated in a `Delete`/`Undo`. Either way there are no newsfeed
+	// side effects (no item, no reply-thread SSE).
 	if dropped || original.IsNil() {
 		return nil
 	}
@@ -141,8 +142,9 @@ type primaryPostWalk struct {
 // primaryPost traverses UP a chain of Activities and replies to the first message that was posted. It
 // returns that document, the accumulated originType (REPLY if any hop was a reply), and a `dropped`
 // flag. `dropped` is TRUE when any identity in the chain -- a booster, an author, or the host of a
-// link about to be fetched -- is blocked or muted (R18); the caller must then create no newsfeed item.
-// A nil document with dropped=FALSE means the chain simply terminated in a subtractive activity.
+// link about to be fetched -- is blocked or muted (R18), or when any document in the chain carries a
+// blocked or muted hashtag (D12); the caller must then create no newsfeed item. A nil document with
+// dropped=FALSE means the chain simply terminated in a subtractive activity.
 func (w *primaryPostWalk) primaryPost(document streams.Document, originType string, depth int) (streams.Document, string, bool, error) {
 
 	// RULE: bound the recursion so a hostile inReplyTo cycle cannot overflow the stack.
@@ -183,9 +185,8 @@ func (w *primaryPostWalk) primaryPost(document streams.Document, originType stri
 
 	// Fall through: this is an Object (Note/Article), not an Activity.
 
-	// RULE: drop the item if this Object is filtered -- its author is blocked/muted, or it quotes
-	// blocked/muted content. Objects carry `attributedTo`, not `actor`, so an ActorID-only check would
-	// silently pass every post here (R18).
+	// RULE: drop the item if this Object is filtered -- its author is blocked/muted, it carries a
+	// blocked/muted hashtag, or it quotes blocked/muted content (R18, D12).
 	filtered, err := w.objectFiltered(document)
 
 	if err != nil {
@@ -256,17 +257,17 @@ func (w *primaryPostWalk) climbReplyChain(document streams.Document, originType 
 	return document, originType, false, nil
 }
 
-// objectFiltered returns TRUE if an Object node should drop the item: its author is blocked/muted, or
-// it quotes blocked/muted content (R18).
+// objectFiltered returns TRUE if an Object node should drop the item: its own disposition (author
+// identity or content hashtags) is blocked/muted, or it quotes blocked/muted content (R18, D12).
 func (w *primaryPostWalk) objectFiltered(document streams.Document) (bool, error) {
 
-	authorFiltered, err := w.authorFiltered(document)
+	filtered, err := w.documentFiltered(document)
 
 	if err != nil {
 		return false, err
 	}
 
-	if authorFiltered {
+	if filtered {
 		return true, nil
 	}
 
@@ -276,8 +277,8 @@ func (w *primaryPostWalk) objectFiltered(document streams.Document) (bool, error
 // quoteFiltered returns TRUE if any post this document quotes is blocked or muted (R18) -- otherwise a
 // blocked author reaches the feed as the quoted body of an allowed post. Quotes ride non-standard
 // fields, so they are extracted explicitly. Each quote is checked by host first (no fetch), then by
-// resolving the quoted object and checking its author; an unresolvable quote fails open (a broken
-// quote must not drop an allowed post).
+// resolving the quoted object and checking its full disposition (author and hashtags); an
+// unresolvable quote fails open (a broken quote must not drop an allowed post).
 func (w *primaryPostWalk) quoteFiltered(document streams.Document) (bool, error) {
 
 	for _, url := range quoteURLs(document) {
@@ -294,20 +295,21 @@ func (w *primaryPostWalk) quoteFiltered(document streams.Document) (bool, error)
 		}
 
 		// Resolve the quoted object (via this document's cache-and-block-aware client) and check its
-		// author. A fetch failure -- network error, or asrules refusing a blocked origin -- fails open.
+		// full disposition. A fetch failure -- network error, or asrules refusing a blocked origin --
+		// fails open.
 		quoted, err := document.Client().Load(url)
 
 		if err != nil {
 			continue
 		}
 
-		authorFiltered, err := w.authorFiltered(quoted)
+		quotedFiltered, err := w.documentFiltered(quoted)
 
 		if err != nil {
 			return false, err
 		}
 
-		if authorFiltered {
+		if quotedFiltered {
 			return true, nil
 		}
 	}
@@ -359,18 +361,19 @@ func (w *primaryPostWalk) actorFiltered(actorID string) (bool, error) {
 	return disposition.IsFiltered(), nil
 }
 
-// authorFiltered returns TRUE if the document's author is blocked or muted. Objects name their author
-// with `attributedTo`; it falls back to `actor` for the rare object that uses it. Reads only loaded
-// fields -- the document is already resolved by the time the walk reaches this check.
-func (w *primaryPostWalk) authorFiltered(document streams.Document) (bool, error) {
+// documentFiltered returns TRUE if this document's own disposition is blocked or muted: ONE indexed
+// rules query over DocumentMatchKeys, which names the document's author (`attributedTo` and `actor`)
+// AND its content (Hashtag TAG keys, D12). Reads only loaded fields -- the document is already
+// resolved by the time the walk reaches this check.
+func (w *primaryPostWalk) documentFiltered(document streams.Document) (bool, error) {
 
-	author := document.AttributedTo().ID()
+	disposition, err := w.ruleService.Disposition(w.session, w.userID, document, w.now)
 
-	if author == "" {
-		author = document.ActorID()
+	if err != nil {
+		return false, err
 	}
 
-	return w.actorFiltered(author)
+	return disposition.IsFiltered(), nil
 }
 
 // hostFiltered returns TRUE if the host of the given URL is domain-blocked or domain-muted. It checks
