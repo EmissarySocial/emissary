@@ -61,6 +61,11 @@ func GetBlueskyDID(serverFactory *server.Factory) echo.HandlerFunc {
 			return derp.Wrap(err, location, "Loading User", username)
 		}
 
+		// RULE: Require that the user is public
+		if !user.IsPublic {
+			return derp.NotFound(location, "User is not public", username)
+		}
+
 		// RULE: Requre that the user has opted in to Bluesky bridging
 		if user.IsBridgeBluesky.IsFalse() {
 			return derp.Wrap(err, location, "User has not opted in to Bluesky bridging", username)
