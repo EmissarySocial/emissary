@@ -11,13 +11,14 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// KeyPackage defines a service that tracks the (possibly external) accounts an internal User is keyPackage.
+// KeyPackage defines a service that manages the MLS KeyPackages published by each User.
 type KeyPackage struct {
 	host string
 }
@@ -45,6 +46,7 @@ func (service *KeyPackage) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the mongodb collection where KeyPackages are stored
 func (service *KeyPackage) collection(session data.Session) data.Collection {
 	return session.Collection("KeyPackage")
 }
@@ -78,7 +80,7 @@ func (service *KeyPackage) Query(session data.Session, criteria exp.Expression, 
 	return result, err
 }
 
-// Load retrieves an KeyPackage from the database
+// Load retrieves a KeyPackage from the database
 func (service *KeyPackage) Load(session data.Session, criteria exp.Expression, keyPackage *model.KeyPackage) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), keyPackage); err != nil {
@@ -88,10 +90,15 @@ func (service *KeyPackage) Load(session data.Session, criteria exp.Expression, k
 	return nil
 }
 
-// Save adds/updates an KeyPackage in the database
+// Save adds/updates a KeyPackage in the database
 func (service *KeyPackage) Save(session data.Session, keyPackage *model.KeyPackage, note string) error {
 
 	const location = "service.KeyPackage.Save"
+
+	// Validate the value before saving
+	if _, err := service.Schema().Validate(keyPackage); err != nil {
+		return derp.Wrap(err, location, "Validating KeyPackage", keyPackage)
+	}
 
 	// Save the KeyPackage to the database
 	if err := service.collection(session).Save(keyPackage, note); err != nil {
@@ -101,7 +108,7 @@ func (service *KeyPackage) Save(session data.Session, keyPackage *model.KeyPacka
 	return nil
 }
 
-// Delete removes an KeyPackage from the database (virtual delete)
+// Delete removes a KeyPackage from the database (virtual delete)
 func (service *KeyPackage) Delete(session data.Session, keyPackage *model.KeyPackage, note string) error {
 
 	const location = "service.KeyPackage.Delete"
@@ -123,12 +130,13 @@ func (service *KeyPackage) ObjectType() string {
 	return "KeyPackage"
 }
 
-// New returns a fully initialized model.KeyPackage as a data.Object.
+// ObjectNew returns a fully initialized model.KeyPackage as a data.Object.
 func (service *KeyPackage) ObjectNew() data.Object {
 	result := model.NewKeyPackage()
 	return &result
 }
 
+// ObjectID returns the primary key of the provided data.Object
 func (service *KeyPackage) ObjectID(object data.Object) primitive.ObjectID {
 
 	if keyPackage, ok := object.(*model.KeyPackage); ok {
@@ -138,16 +146,19 @@ func (service *KeyPackage) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery populates the result value with all KeyPackages that match the provided criteria
 func (service *KeyPackage) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad returns the first KeyPackage that matches the provided criteria as a data.Object
 func (service *KeyPackage) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewKeyPackage()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave saves the provided data.Object, which must be a model.KeyPackage
 func (service *KeyPackage) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if keyPackage, ok := object.(*model.KeyPackage); ok {
 		return service.Save(session, keyPackage, comment)
@@ -155,6 +166,7 @@ func (service *KeyPackage) ObjectSave(session data.Session, object data.Object, 
 	return derp.Internal("service.KeyPackage.ObjectSave", "Invalid Object Type", object)
 }
 
+// ObjectDelete deletes the provided data.Object, which must be a model.KeyPackage
 func (service *KeyPackage) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if keyPackage, ok := object.(*model.KeyPackage); ok {
 		return service.Delete(session, keyPackage, comment)
@@ -162,10 +174,12 @@ func (service *KeyPackage) ObjectDelete(session data.Session, object data.Object
 	return derp.Internal("service.KeyPackage.ObjectDelete", "Invalid Object Type", object)
 }
 
-func (service *KeyPackage) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
+// ObjectUserCan always refuses generic object-level permissions for KeyPackages
+func (service *KeyPackage) ObjectUserCan(_ data.Object, _ model.Authorization, _ string) error {
 	return derp.Unauthorized("service.KeyPackage", "Not Authorized")
 }
 
+// Schema returns the validation schema for KeyPackage records
 func (service *KeyPackage) Schema() schema.Schema {
 	return schema.New(model.KeyPackageSchema())
 }
@@ -250,6 +264,7 @@ func (service *KeyPackage) LoadByURL(session data.Session, url string, keyPackag
 // GetJSONLD returns a JSON-LD representation of this KeyPackage
 func (service *KeyPackage) GetJSONLD(keyPackage *model.KeyPackage) mapof.Any {
 
+	// The stored summary is client-authored (e.g. an EmojiKey); fall back to generic text for legacy records.
 	return mapof.Any{
 		vocab.AtContext: []string{
 			vocab.ContextTypeActivityStreams,
@@ -259,7 +274,7 @@ func (service *KeyPackage) GetJSONLD(keyPackage *model.KeyPackage) mapof.Any {
 		vocab.PropertyID:           service.ActivityPubURL(keyPackage.UserID, keyPackage.KeyPackageID),
 		vocab.PropertyAttributedTo: service.ActivityPubAttributedToURL(keyPackage.UserID),
 		vocab.PropertyTo:           vocab.NamespacePublic,
-		vocab.PropertySummary:      "A binary-encoded cryptographic key",
+		vocab.PropertySummary:      first.String(keyPackage.Summary, "A binary-encoded cryptographic key"),
 		vocab.PropertyMediaType:    keyPackage.MediaType,
 		vocab.PropertyEncoding:     keyPackage.Encoding,
 		vocab.PropertyContent:      keyPackage.Content,
@@ -292,6 +307,7 @@ func (service *KeyPackage) ActivityPubURL(userID primitive.ObjectID, keyPackageI
  * Helper Methods
  ******************************************/
 
+// ParseKeyPackageURL extracts the UserID and KeyPackageID from an ActivityPub KeyPackage URL
 func (service *KeyPackage) ParseKeyPackageURL(url string) (primitive.ObjectID, primitive.ObjectID, error) {
 
 	const location = "service.KeyPackage.ParseKeyPackageURL"

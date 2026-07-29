@@ -65,7 +65,7 @@ func TestValue_CalcExpires(t *testing.T) {
 		value.HTTPHeader.Set(HeaderExpires, "not-a-date")
 		value.calcExpires(cacheheader.Header{MaxAge: 0})
 
-		require.False(t, value.IsExpired())                                 // roughly a week out
+		require.False(t, value.IsExpired()) // roughly a week out
 		require.Greater(t, value.Expires, time.Now().AddDate(0, 0, 6).Unix())
 	})
 }

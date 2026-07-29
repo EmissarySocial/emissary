@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// KeyPackageSchema returns the validation schema for KeyPackage records
 func KeyPackageSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
@@ -14,6 +15,7 @@ func KeyPackageSchema() schema.Element {
 			"mediaType":     schema.String{Enum: []string{vocab.MediaTypeMLS}, Required: true},
 			"encoding":      schema.String{Enum: []string{vocab.EncodingTypeBase64}, Required: true},
 			"content":       schema.String{Required: true},
+			"summary":       schema.String{MaxLength: 256},
 			"generatorId":   schema.String{Required: true},
 			"generatorName": schema.String{Required: true},
 			"ciphersuite":   schema.String{Required: true},
@@ -25,6 +27,7 @@ func KeyPackageSchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
+// GetStringOK returns the string value of the named property, and TRUE if the property exists
 func (keyPackage *KeyPackage) GetStringOK(name string) (string, bool) {
 	switch name {
 
@@ -43,6 +46,9 @@ func (keyPackage *KeyPackage) GetStringOK(name string) (string, bool) {
 	case "content":
 		return keyPackage.Content, true
 
+	case "summary":
+		return keyPackage.Summary, true
+
 	case "generatorId":
 		return keyPackage.GeneratorID, true
 
@@ -57,9 +63,10 @@ func (keyPackage *KeyPackage) GetStringOK(name string) (string, bool) {
 }
 
 /******************************************
- * Getter Interfaces
+ * Setter Interfaces
  ******************************************/
 
+// SetString sets the named property to the provided string value, returning TRUE on success
 func (keyPackage *KeyPackage) SetString(name string, value string) bool {
 	switch name {
 
@@ -85,6 +92,10 @@ func (keyPackage *KeyPackage) SetString(name string, value string) bool {
 
 	case "content":
 		keyPackage.Content = value
+		return true
+
+	case "summary":
+		keyPackage.Summary = value
 		return true
 
 	case "generatorId":

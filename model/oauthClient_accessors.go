@@ -15,8 +15,7 @@ func OAuthClientSchema() schema.Element {
 			"iconUrl":      schema.String{Format: "url"},
 			"website":      schema.String{Format: "url"},
 			"redirectUris": schema.Array{Items: schema.String{Format: "url"}},
-			// OAuth scopes are colon-delimited; unsafe-any bounds length without the token format's rejection.
-			"scopes":       schema.Array{Items: schema.String{Format: "unsafe-any", MaxLength: 128}},
+			"scopes":       schema.Array{Items: schema.String{Format: "unsafe-any", MaxLength: 128}}, // OAuth scopes are colon-delimited; unsafe-any bounds length without the token format's rejection.
 		},
 	}
 }

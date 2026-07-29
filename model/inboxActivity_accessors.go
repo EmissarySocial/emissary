@@ -17,15 +17,15 @@ func InboxActivitySchema() schema.Element {
 			// and add length bounds; no stricter format (token/uri) is used because valid AP values
 			// legitimately contain characters those formats reject (e.g. "application/ld+json",
 			// full-URI activity types, or tag: scheme IDs) and rejecting them would drop the activity.
-			"activityId":      schema.String{MaxLength: 1024, Required: true},
-			"activityType":    schema.String{MaxLength: 256, Required: true},
-			"objectType":      schema.String{MaxLength: 256},
-			"objectId":        schema.String{MaxLength: 1024},
-			"mediaType":       schema.String{MaxLength: 128},
-			"rawActivity":     schema.Object{Wildcard: schema.Any{}},
-			"publishedDate":   schema.Integer{BitSize: 64, Required: true},
-			"receivedDate":    schema.Integer{BitSize: 64, Required: true},
-			"isPublic":        schema.Boolean{},
+			"activityId":    schema.String{MaxLength: 1024, Required: true},
+			"activityType":  schema.String{MaxLength: 256, Required: true},
+			"objectType":    schema.String{MaxLength: 256},
+			"objectId":      schema.String{MaxLength: 1024},
+			"mediaType":     schema.String{MaxLength: 128},
+			"rawActivity":   schema.Object{Wildcard: schema.Any{}},
+			"publishedDate": schema.Integer{BitSize: 64, Required: true},
+			"receivedDate":  schema.Integer{BitSize: 64, Required: true},
+			"isPublic":      schema.Boolean{},
 		},
 	}
 }

@@ -1,26 +1,26 @@
 package model
 
 import (
-	"github.com/EmissarySocial/emissary/tools/emojikey"
 	"github.com/benpate/data/journal"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// KeyPackage represents a published MLS KeyPackage that other actors can use to add this User to encrypted groups.
 type KeyPackage struct {
-	KeyPackageID     primitive.ObjectID `bson:"_id"`
-	UserID           primitive.ObjectID `bson:"userId"`
-	MediaType        string             `bson:"mediaType"`
-	Encoding         string             `bson:"encoding"`
-	Content          string             `bson:"content"`
-	GeneratorID      string             `bson:"generatorId"`
-	Ciphersuite      string             `bson:"ciphersuite"`
-	GeneratorName    string             `bson:"generatorName"`
-	ContentSignature string             `bson:"contentSignature"`
-	EmojiKey         [5]emojikey.Emoji  `bson:"emojiKey"`
+	KeyPackageID  primitive.ObjectID `bson:"_id"`
+	UserID        primitive.ObjectID `bson:"userId"`
+	MediaType     string             `bson:"mediaType"`
+	Encoding      string             `bson:"encoding"`
+	Content       string             `bson:"content"`
+	Summary       string             `bson:"summary"`
+	GeneratorID   string             `bson:"generatorId"`
+	Ciphersuite   string             `bson:"ciphersuite"`
+	GeneratorName string             `bson:"generatorName"`
 
 	journal.Journal `bson:",inline"`
 }
 
+// NewKeyPackage returns a fully initialized KeyPackage
 func NewKeyPackage() KeyPackage {
 	return KeyPackage{
 		KeyPackageID: primitive.NewObjectID(),
@@ -31,6 +31,8 @@ func NewKeyPackage() KeyPackage {
  * data.Object Interface
  ******************************/
 
+// ID returns the primary key of this KeyPackage as a hex-encoded string.
+// It is part of the data.Object interface
 func (keyPackage *KeyPackage) ID() string {
 	return keyPackage.KeyPackageID.Hex()
 }
@@ -39,7 +41,7 @@ func (keyPackage *KeyPackage) ID() string {
  * AccessLister Interface
  ******************************************/
 
-// State returns the current state of this Stream.
+// State returns the current state of this KeyPackage.
 // It is part of the AccessLister interface
 func (keyPackage KeyPackage) State() string {
 	return "default"
@@ -65,6 +67,6 @@ func (keyPackage KeyPackage) RolesToGroupIDs(roles ...string) Permissions {
 
 // RolesToPrivilegeIDs returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (keyPackage KeyPackage) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
+func (keyPackage KeyPackage) RolesToPrivilegeIDs(_ ...string) Permissions {
 	return NewPermissions()
 }

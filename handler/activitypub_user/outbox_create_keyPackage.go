@@ -9,13 +9,14 @@ import (
 	"github.com/benpate/hannibal/vocab"
 )
 
+// init registers the KeyPackage activity handlers with the outbox router
 func init() {
 	outboxRouter.Add(vocab.ActivityTypeCreate, vocab.ObjectTypeKeyPackage, outbox_CreateKeyPackage)
 	outboxRouter.Add(vocab.ActivityTypeAdd, vocab.ObjectTypeKeyPackage, outbox_AddKeyPackage)
 	outboxRouter.Add(vocab.ActivityTypeRemove, vocab.ObjectTypeKeyPackage, outbox_RemoveKeyPackage)
 }
 
-// Create a new KeyPackage record from the ActivityPub API
+// outbox_CreateKeyPackage creates a new KeyPackage record from the ActivityPub API
 func outbox_CreateKeyPackage(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.outbox_CreateKeyPackage"
@@ -42,6 +43,7 @@ func outbox_CreateKeyPackage(context Context, activity streams.Document) error {
 	keyPackage.MediaType = object.MediaType()
 	keyPackage.Encoding = object.Encoding()
 	keyPackage.Content = object.Content()
+	keyPackage.Summary = object.Summary()
 	keyPackage.GeneratorID = object.Generator().ID()
 	keyPackage.GeneratorName = object.Generator().Name()
 	keyPackage.Ciphersuite = object.MLSCiphersuite()
@@ -61,12 +63,12 @@ func outbox_CreateKeyPackage(context Context, activity streams.Document) error {
 	return context.context.NoContent(http.StatusCreated)
 }
 
-// Add a KeyPackage to the user's collection (make it public)
-func outbox_AddKeyPackage(context Context, activity streams.Document) error {
+// outbox_AddKeyPackage adds a KeyPackage to the user's collection (make it public)
+func outbox_AddKeyPackage(_ Context, _ streams.Document) error {
 	return nil
 }
 
-// Remove a KeyPackage from the user's collection (make it private)
-func outbox_RemoveKeyPackage(context Context, activity streams.Document) error {
+// outbox_RemoveKeyPackage removes a KeyPackage from the user's collection (make it private)
+func outbox_RemoveKeyPackage(_ Context, _ streams.Document) error {
 	return nil
 }

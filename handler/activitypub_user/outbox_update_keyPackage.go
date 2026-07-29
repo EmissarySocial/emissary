@@ -9,11 +9,12 @@ import (
 	"github.com/benpate/hannibal/vocab"
 )
 
+// init registers the KeyPackage update handler with the outbox router
 func init() {
 	outboxRouter.Add(vocab.ActivityTypeUpdate, vocab.ObjectTypeKeyPackage, outbox_UpdateKeyPackage)
 }
 
-// Update an existing KeyPackage record from the ActivityPub API
+// outbox_UpdateKeyPackage updates an existing KeyPackage record from the ActivityPub API
 func outbox_UpdateKeyPackage(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.outbox_UpdateKeyPackage"
@@ -54,6 +55,7 @@ func outbox_UpdateKeyPackage(context Context, activity streams.Document) error {
 	keyPackage.MediaType = object.MediaType()
 	keyPackage.Encoding = object.Encoding()
 	keyPackage.Content = object.Content()
+	keyPackage.Summary = object.Summary()
 	keyPackage.GeneratorName = object.Generator().Name()
 
 	// Save the KeyPackage to the database
