@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/EmissarySocial/emissary/tools/emojikey"
 	"github.com/benpate/data/journal"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -69,4 +70,13 @@ func (keyPackage KeyPackage) RolesToGroupIDs(roles ...string) Permissions {
 // It is part of the AccessLister interface
 func (keyPackage KeyPackage) RolesToPrivilegeIDs(_ ...string) Permissions {
 	return NewPermissions()
+}
+
+/******************************************
+ * Other Methods
+ ******************************************/
+
+// EmojiKey returns the individual emojis (with display names) that make up this KeyPackage's Summary
+func (keyPackage KeyPackage) EmojiKey() []emojikey.Emoji {
+	return emojikey.Parse(keyPackage.Summary)
 }

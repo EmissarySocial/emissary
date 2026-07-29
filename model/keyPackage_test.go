@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/EmissarySocial/emissary/tools/emojikey"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/schema"
 	"github.com/stretchr/testify/require"
@@ -54,4 +55,16 @@ func TestKeyPackageSummaryMaxLength(t *testing.T) {
 	keyPackage.Summary = strings.Repeat("🕌", 256+1)
 	_, err = s.Validate(&keyPackage)
 	require.Error(t, err)
+}
+
+// TestKeyPackageEmojiKey confirms that EmojiKey parses the Summary into named emojis
+func TestKeyPackageEmojiKey(t *testing.T) {
+
+	keyPackage := NewKeyPackage()
+	keyPackage.Summary = "🕌🍉"
+
+	require.Equal(t, []emojikey.Emoji{
+		{Character: "🕌", Description: "Mosque"},
+		{Character: "🍉", Description: "Watermelon"},
+	}, keyPackage.EmojiKey())
 }

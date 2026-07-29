@@ -1,5 +1,7 @@
+// Package emojikey holds the canonical emoji table used to display client-computed EmojiKeys.
 package emojikey
 
+// Emoji is one entry in the canonical table: an emoji character and its display name.
 type Emoji struct {
 	Character   string
 	Description string

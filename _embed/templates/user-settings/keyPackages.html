@@ -71,12 +71,10 @@
 							</div>
 							<div class="flex-grow nowrap">
 								<a hx-get="/@me/settings/keyPackage-verify?keyPackageId={{$keyPackage.ID}}" class="block text-nocolor align-center">
-									<div class="margin-none">
-										{{- range $index, $emoji :=$keyPackage.EmojiKey -}}
-											{{- $emoji.Character -}}
-										{{- end -}}
+									<div class="flex-row flex-justify-center margin-none">
+										{{- $keyPackage.Summary -}}
 									</div>
-									<div class="text-xs text-gray">What's this?</div>
+									<div class="text-sm text-gray margin-bottom">What's this?</div>
 								</a>
 							</div>
 							<div class="align-right nowrap">
