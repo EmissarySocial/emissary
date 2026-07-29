@@ -23,10 +23,19 @@ func outbox_CreateArticle(context Context, activity streams.Document) error {
 	// Create a new Object using the incoming ActivityStream Document
 	objectService := context.factory.Object()
 	object := model.NewObject()
+
+	// RULE: The server assigns the created object's canonical id, replacing any client-
+	// provided value (ActivityPub §6). Recipients key incoming messages by this id, so it
+	// must travel inside the delivered activity — not just the Location header.
+	objectURL := objectService.ActivityPubURL(context.user.UserID, object.ObjectID)
+	objectValue := document.Map()
+	objectValue[vocab.PropertyID] = objectURL
+	activity.SetProperty(vocab.PropertyObject, objectValue)
+
 	object.Context = document.Context()
 	object.UserID = context.user.UserID
 	object.Permissions = document.Recipients()
-	object.Value = document.Map()
+	object.Value = objectValue
 
 	// Save the new Object to the database
 	if err := objectService.Save(context.session, &object, "Created via ActivityPub Outbox"); err != nil {
@@ -39,6 +48,6 @@ func outbox_CreateArticle(context Context, activity streams.Document) error {
 	}
 
 	// Write the response to the client
-	context.context.Response().Header().Set("Location", objectService.ActivityPubURL(object.UserID, object.ObjectID))
+	context.context.Response().Header().Set("Location", objectURL)
 	return context.context.NoContent(http.StatusCreated)
 }

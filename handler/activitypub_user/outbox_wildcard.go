@@ -60,6 +60,17 @@ func putActivityIntoOutbox(context Context, activity streams.Document) error {
 	// Add an activity record to the Outbox2
 	outboxItem := model.NewOutboxItem()
 	outboxItem.URL = locatorService.ActivityURL(model.ActorTypeUser, context.user.UserID, outboxItem.ActivityID)
+
+	// RULE: The server assigns the activity's canonical id, replacing any client-provided
+	// value (ActivityPub §6.1). Client-generated ids (e.g. "urn:uuid:...") are not
+	// dereferenceable URLs, and remote servers reject activities that carry them.
+	activity.SetProperty(vocab.PropertyID, outboxItem.URL)
+
+	// Report the assigned id to the C2S client. The Location header stays reserved for the
+	// created OBJECT's URL, so the ACTIVITY id travels in its own header. Clients use it to
+	// seed inbox cursors with an id the server will actually serve back.
+	context.context.Response().Header().Set("X-Activity-Id", outboxItem.URL)
+
 	outboxItem.ActorType = model.ActorTypeUser
 	outboxItem.ActorID = context.user.UserID
 	outboxItem.Activity = activity.Map()
