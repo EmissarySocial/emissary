@@ -270,4 +270,11 @@ func TestWrapInlineError(t *testing.T) {
 	require.Equal(t, "innerHTML", recorder.Header().Get("HX-Reswap"))
 	require.Equal(t, "#htmx-response-message", recorder.Header().Get("HX-Retarget"))
 	require.Equal(t, `<span class="text-red">Address not found</span>`, recorder.Body.String())
+
+	// A message echoing hostile input is escaped, not swapped into the page as markup
+	recorder = httptest.NewRecorder()
+	err = derp.Validation(`<script>alert(1)</script> is not a valid address`)
+
+	require.Nil(t, WrapInlineError(recorder, err))
+	require.Equal(t, `<span class="text-red">&lt;script&gt;alert(1)&lt;/script&gt; is not a valid address</span>`, recorder.Body.String())
 }

@@ -2,6 +2,7 @@ package build
 
 import (
 	"bytes"
+	stdhtml "html"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -46,7 +47,11 @@ func WrapInlineError(response http.ResponseWriter, err error) error {
 	response.Header().Set("HX-Retarget", "#htmx-response-message")
 	response.WriteHeader(http.StatusOK)
 
-	if _, writeError := response.Write([]byte(`<span class="text-red">` + inlineErrorMessage(err) + `</span>`)); writeError != nil {
+	// Escape the message: error text can echo fragments of remote/user input, and this span
+	// is swapped into the page as raw HTML.
+	message := stdhtml.EscapeString(inlineErrorMessage(err))
+
+	if _, writeError := response.Write([]byte(`<span class="text-red">` + message + `</span>`)); writeError != nil {
 		return derp.Wrap(writeError, "build.WrapInlineError", "Writing response", err)
 	}
 

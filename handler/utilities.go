@@ -1,6 +1,7 @@
 package handler
 
 import (
+	stdhtml "html"
 	"net/http"
 	"net/url"
 
@@ -133,7 +134,9 @@ func inlineError(ctx echo.Context, message string) error {
 	header.Set("Hx-Reswap", "innerHTML")
 	header.Set("Hx-Retarget", "#htmx-response-message")
 
-	return ctx.String(http.StatusOK, `<span class="text-red">`+message+`</span>`)
+	// Escape the message: error text can echo fragments of remote/user input, and this span
+	// is swapped into the page as raw HTML.
+	return ctx.String(http.StatusOK, `<span class="text-red">`+stdhtml.EscapeString(message)+`</span>`)
 }
 
 func closeModalAndRefreshPage(ctx echo.Context) error {
