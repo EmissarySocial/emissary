@@ -57,7 +57,7 @@ func TestVerifyContentType_Reject(t *testing.T) {
 
 	source := strings.NewReader("this is definitely not an image, it is plain text")
 
-	reader, contentType, err := verifyContentType(source, "image/*")
+	reader, contentType, err := verifyContentType(source, "photo.jpg", "image/*")
 
 	require.Error(t, err)
 	require.Nil(t, reader)
@@ -71,7 +71,7 @@ func TestVerifyContentType_AcceptImage(t *testing.T) {
 	// Minimal valid PNG header + body (enough for http.DetectContentType to sniff "image/png").
 	png := []byte("\x89PNG\r\n\x1a\n" + strings.Repeat("payload-bytes", 100))
 
-	reader, contentType, err := verifyContentType(bytes.NewReader(png), "image/*")
+	reader, contentType, err := verifyContentType(bytes.NewReader(png), "photo.png", "image/*")
 
 	require.Nil(t, err)
 	require.NotNil(t, reader)
@@ -90,7 +90,7 @@ func TestVerifyContentType_EmptyAcceptAllows(t *testing.T) {
 
 	payload := []byte("arbitrary non-image bytes")
 
-	reader, contentType, err := verifyContentType(bytes.NewReader(payload), "")
+	reader, contentType, err := verifyContentType(bytes.NewReader(payload), "notes.txt", "")
 
 	require.Nil(t, err)
 	require.NotNil(t, reader)
@@ -109,11 +109,30 @@ func TestVerifyContentType_Polyglot(t *testing.T) {
 
 	polyglot := []byte("GIF89a=1;\n<script>window.__xss=document.domain</script>")
 
-	reader, contentType, err := verifyContentType(bytes.NewReader(polyglot), "image/*")
+	reader, contentType, err := verifyContentType(bytes.NewReader(polyglot), "poc.html", "image/*")
 
 	require.Nil(t, err)
 	require.NotNil(t, reader)
 	require.Equal(t, "image/gif", contentType)
+}
+
+// TestVerifyContentType_AcceptFLAC confirms that a FLAC upload passes an "audio/*"
+// accept pattern -- the file that started it all was rejected because the standard
+// library cannot sniff FLAC.
+func TestVerifyContentType_AcceptFLAC(t *testing.T) {
+
+	flac := append([]byte("fLaC\x00\x00\x00\x22\x10\x00\x10\x00"), bytes.Repeat([]byte{0xA5}, 600)...)
+
+	reader, contentType, err := verifyContentType(bytes.NewReader(flac), "02 Key 13 - Primavera 2024.flac", "audio/*")
+
+	require.Nil(t, err)
+	require.NotNil(t, reader)
+	require.Equal(t, "audio/flac", contentType)
+
+	// The reader must replay every original byte, in order, with nothing lost or duplicated.
+	roundTrip, err := io.ReadAll(reader)
+	require.Nil(t, err)
+	require.Equal(t, flac, roundTrip)
 }
 
 // TestVerifyContentType_ShortFile confirms that a file smaller than the 512-byte
@@ -122,7 +141,7 @@ func TestVerifyContentType_ShortFile(t *testing.T) {
 
 	payload := []byte("tiny")
 
-	reader, _, err := verifyContentType(bytes.NewReader(payload), "")
+	reader, _, err := verifyContentType(bytes.NewReader(payload), "tiny.txt", "")
 
 	require.Nil(t, err)
 

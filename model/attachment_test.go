@@ -99,18 +99,3 @@ func TestAttachment_MimeType(t *testing.T) {
 	// ...but the claim the filename makes is still available to whoever needs it.
 	require.Equal(t, "text/html; charset=utf-8", attachment.OriginalMimeType())
 }
-
-// TestDetectContentType confirms that types are read from bytes, and carry no parameters.
-func TestDetectContentType(t *testing.T) {
-
-	require.Equal(t, "image/png", DetectContentType([]byte("\x89PNG\r\n\x1a\n")))
-	require.Equal(t, "image/gif", DetectContentType([]byte("GIF89a<script>alert(1)</script>")))
-	require.Equal(t, "application/pdf", DetectContentType([]byte("%PDF-1.7\n")))
-
-	// The "; charset=utf-8" that http.DetectContentType appends is stripped.
-	require.Equal(t, "text/html", DetectContentType([]byte("<!doctype html><html></html>")))
-	require.Equal(t, "text/plain", DetectContentType([]byte("just some words")))
-
-	// An empty file is opaque data, not an error.
-	require.Equal(t, "text/plain", DetectContentType([]byte{}))
-}

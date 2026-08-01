@@ -51,7 +51,8 @@ func (service *Attachment) Import(session data.Session, record *model.Import, im
 	// RULE: Sniff the imported file's own bytes to determine its content-type.
 	// The remote server wrote both this file and the JSON that describes it, so
 	// neither its "contentType" nor its "original" filename is taken at face value.
-	attachment.ContentType = model.DetectContentType(buffer.Bytes())
+	// The filename only refines audio-vs-video inside a byte-confirmed container.
+	attachment.ContentType = model.DetectContentType(buffer.Bytes(), attachment.Original)
 
 	// Save the original file to the mediaserver
 	if err := service.mediaServer.Put(localID.Hex(), &buffer); err != nil {

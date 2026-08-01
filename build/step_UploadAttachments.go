@@ -101,7 +101,7 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 		// Content-Type header) and, if this step restricts the accepted content-types,
 		// reject anything that does not match.  `reader` re-assembles the bytes we
 		// peeked so the full stream is still available for MediaServer.Put.
-		reader, contentType, err := verifyContentType(source, step.AcceptType)
+		reader, contentType, err := verifyContentType(source, fileHeader.Filename, step.AcceptType)
 
 		if err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Uploaded file is not an allowed type", fileHeader.Filename, step.AcceptType))
@@ -200,14 +200,15 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 // verifyContentType sniffs an uploaded file to determine its actual content-type, and
 // confirms that it matches the provided accept pattern (for instance "image/*" or
 // "image/png,image/webp").
-func verifyContentType(source io.Reader, acceptType string) (io.Reader, string, error) {
+func verifyContentType(source io.Reader, filename string, acceptType string) (io.Reader, string, error) {
 
 	const location = "build.verifyContentType"
 
 	// The returned reader replays the sniffed bytes followed by the rest of the file, so
 	// callers can still consume the entire stream.  The detected type is returned even when
 	// acceptType is empty ("allow anything"), because it is recorded on the Attachment and
-	// decides how the file may be served later.
+	// decides how the file may be served later.  The filename never decides the type; it
+	// only picks audio-vs-video inside containers the bytes have already confirmed.
 
 	// Peek at the first 512 bytes -- the amount http.DetectContentType inspects.
 	header := make([]byte, 512)
@@ -228,7 +229,7 @@ func verifyContentType(source io.Reader, acceptType string) (io.Reader, string, 
 	reader := io.MultiReader(bytes.NewReader(header), source)
 
 	// Sniff the actual content-type from the file's own bytes.
-	detected := model.DetectContentType(header)
+	detected := model.DetectContentType(header, filename)
 
 	// An empty accept pattern means "allow anything" -- preserve legacy behavior.
 	if acceptType == "" {

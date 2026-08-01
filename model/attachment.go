@@ -2,7 +2,6 @@ package model
 
 import (
 	"mime"
-	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -188,16 +187,6 @@ func (attachment Attachment) CanServeInline() bool {
 	// and contents disagree is lying in one direction or the other, so it is downloaded
 	// rather than rendered.
 	return isInlineMediaCategory(list.Slash(attachment.ContentType).First())
-}
-
-// DetectContentType returns the media type of a file's leading bytes, without parameters.
-func DetectContentType(header []byte) string {
-
-	// This is the only supported way to calculate Attachment.ContentType: it reads the
-	// file itself, so it cannot be talked out of the answer by a filename, a multipart
-	// header, or a remote server's JSON.  http.DetectContentType appends "; charset=utf-8"
-	// to the text types, which callers neither store nor compare against.
-	return strings.TrimSpace(list.Semicolon(http.DetectContentType(header)).First())
 }
 
 // isInlineMediaCategory returns TRUE if a mime category is one that MediaServer re-encodes.
