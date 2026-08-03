@@ -58,18 +58,22 @@ func (builder OAuthAuthorization) User() model.UserSummary {
 	return builder._user.Summary()
 }
 
+// ClientID returns the unique ID of the OAuth client being authorized
 func (builder OAuthAuthorization) ClientID() string {
 	return builder._client.ClientID.Hex()
 }
 
+// Name returns the human-friendly name of the OAuth client
 func (builder OAuthAuthorization) Name() string {
 	return builder._client.Name
 }
 
+// IconURL returns the icon image that represents the OAuth client
 func (builder OAuthAuthorization) IconURL() string {
 	return builder._client.IconURL
 }
 
+// Website returns the public website of the OAuth client
 func (builder OAuthAuthorization) Website() string {
 	if website := builder._client.Website; website != "" {
 		return uri.PrependProtocol(website)
@@ -82,18 +86,22 @@ func (builder OAuthAuthorization) Website() string {
 	return ""
 }
 
+// RedirectURI returns the callback URI where the user is sent after authorizing
 func (builder OAuthAuthorization) RedirectURI() string {
 	return builder._request.RedirectURI
 }
 
+// ResponseType returns the OAuth response type ("code" or "token") being requested
 func (builder OAuthAuthorization) ResponseType() string {
 	return builder._request.ResponseType
 }
 
+// Scope returns the raw, space-delimited scope string being requested
 func (builder OAuthAuthorization) Scope() string {
 	return builder._request.Scope
 }
 
+// Scopes returns the individual scopes being requested, defaulting to "read"
 func (builder OAuthAuthorization) Scopes() []string {
 
 	if builder._request.Scope == "" {
@@ -103,6 +111,16 @@ func (builder OAuthAuthorization) Scopes() []string {
 	return strings.Split(builder._request.Scope, " ")
 }
 
+// State returns the opaque state value that is echoed back to the OAuth client
 func (builder OAuthAuthorization) State() string {
 	return builder._request.State
+}
+
+// IsIndexable returns FALSE because the OAuth consent page is ephemeral and
+// user-specific, so search engines must never index it.
+func (builder OAuthAuthorization) IsIndexable() bool {
+
+	// This builder does not embed Common, so it must satisfy the shared
+	// "includes-head" template's IsIndexable contract on its own.
+	return false
 }
