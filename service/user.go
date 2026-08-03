@@ -46,6 +46,7 @@ type User struct {
 	keyService        *EncryptionKey
 	newsFeedService   *NewsFeed
 	outboxService     *Outbox
+	outbox2Service    *Outbox2
 	responseService   *Response
 	ruleService       *Rule
 	searchTagService  *SearchTag
@@ -81,6 +82,7 @@ func (service *User) Refresh(factory *Factory) {
 	service.newsFeedService = factory.NewsFeed()
 	service.keyService = factory.EncryptionKey()
 	service.outboxService = factory.Outbox()
+	service.outbox2Service = factory.Outbox2()
 	service.responseService = factory.Response()
 	service.ruleService = factory.Rule()
 	service.steranko = factory.Steranko
@@ -248,6 +250,18 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 		user.PasswordReset.AuthCode = ""
 	}
 
+	// Fingerprint the public actor document to detect profile changes worth federating.
+	// An empty stored fingerprint (pre-feature record) counts as changed: better one chatty
+	// Update per user during the transition than a missed one (PROFILE-UPDATE-FEDERATION.md D-6).
+	newFingerprint, err := user.CalcProfileFingerprint()
+
+	if err != nil {
+		return derp.Wrap(err, location, "Calculating profile fingerprint", user)
+	}
+
+	profileChanged := (user.ProfileFingerprint != newFingerprint) && !isNew
+	user.ProfileFingerprint = newFingerprint
+
 	// Try to save the User record to the database
 	if err := service.collection(session).Save(user, note); err != nil {
 		return derp.Wrap(err, location, "Saving User", user, note)
@@ -274,6 +288,13 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 
 	// Set AttributedTo value
 	service.streamService.SetAttributedTo(user)
+
+	// RULE: Federate profile changes to followers via an ActivityPub Update (post-commit)
+	if profileChanged {
+		if err := service.sendProfileUpdate(session, user); err != nil {
+			return derp.Wrap(err, location, "Sending profile Update", user)
+		}
+	}
 
 	// Send Webhooks (if configured)
 	eventName := iif(isNew, model.WebhookEventUserCreate, model.WebhookEventUserUpdate)

@@ -10,7 +10,10 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/outbox"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/list"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -129,4 +132,77 @@ func (service *User) rangeActivityPubFollowers(session data.Session, userID prim
 			}
 		}
 	}
+}
+
+// ActivityPubProfile returns the User's complete actor document: User.GetJSONLD() plus the
+// publicKey block and, when the domain allows it, the MLS messaging properties.
+func (service *User) ActivityPubProfile(session data.Session, user *model.User) (mapof.Any, error) {
+
+	const location = "service.User.ActivityPubProfile"
+
+	// Load the User's encryption key
+	encryptionKey := model.NewEncryptionKey()
+
+	if err := service.keyService.LoadByParentID(session, model.EncryptionKeyTypeUser, user.UserID, &encryptionKey); err != nil {
+		return nil, derp.Wrap(err, location, "Loading encryption key", user.UserID)
+	}
+
+	// Combine the profile and the public key
+	result := user.GetJSONLD()
+	result[vocab.PropertyPublicKey] = mapof.Any{
+		vocab.PropertyID:           user.ActivityPubPublicKeyURL(),
+		vocab.PropertyOwner:        user.ActivityPubURL(),
+		vocab.PropertyPublicKeyPEM: encryptionKey.PublicPEM,
+	}
+
+	// If the domain allows it, append MLS messaging values as well.
+	domain := service.domainService.Get()
+
+	if domain.UserCanMLS(user) {
+		result[vocab.PropertyMLSMessages] = user.ActivityPubInboxURL_DirectMessages_MLS()
+		result[vocab.PropertyMLSKeyPackages] = user.ActivityPubKeyPackagesURL()
+	}
+
+	// Success!
+	return result, nil
+}
+
+// sendProfileUpdate federates a changed profile: it wraps the User's complete actor document
+// in an ActivityPub Update and hands it to the Outbox2 sender pipeline, record-less (see
+// PROFILE-UPDATE-FEDERATION.md D-1). The fragment id derives from the profile fingerprint,
+// so re-sends of the same profile state are idempotent for receivers that dedup by id.
+func (service *User) sendProfileUpdate(session data.Session, user *model.User) error {
+
+	const location = "service.User.sendProfileUpdate"
+
+	// Assemble the complete actor document (profile + publicKey + MLS)
+	object, err := service.ActivityPubProfile(session, user)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Assembling actor document", user.UserID)
+	}
+
+	// Derive the activity's fragment id from the profile fingerprint
+	fragment := user.ProfileFingerprint
+	if len(fragment) > 16 {
+		fragment = fragment[:16]
+	}
+
+	// Build the Update activity, addressed to this User's followers
+	activity := mapof.Any{
+		vocab.AtContext:      vocab.ContextTypeActivityStreams,
+		vocab.PropertyID:     user.ActivityPubURL() + "#updates/" + fragment,
+		vocab.PropertyType:   vocab.ActivityTypeUpdate,
+		vocab.PropertyActor:  user.ActivityPubURL(),
+		vocab.PropertyCC:     sliceof.String{user.ActivityPubFollowersURL()},
+		vocab.PropertyObject: object,
+	}
+
+	// RULE: Only public profiles are also addressed to the Public audience
+	if user.IsPublic {
+		activity[vocab.PropertyTo] = sliceof.String{vocab.NamespaceActivityStreamsPublic}
+	}
+
+	// Deliver through the sender pipeline (post-commit)
+	return service.outbox2Service.Send(session, activity)
 }

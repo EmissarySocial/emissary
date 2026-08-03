@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/ranges"
 	"github.com/benpate/sherlock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -177,6 +178,13 @@ func (service SendLocator) Recipient(uri string) (iter.Seq[string], error) {
 		return ranges.Empty[string](), nil
 	}
 
+	// RULE: The Public marker is an audience label, not a deliverable recipient. Skip it
+	// explicitly -- otherwise it falls through to AppClient().Load() below, a wasted
+	// outbound fetch (with a swallowed error) on every publicly-addressed send.
+	if isPublicURI(uri) {
+		return ranges.Empty[string](), nil
+	}
+
 	// RULE: Delivery to blocked recipients is halted (R4). Checking the raw URI first catches
 	// blocked single actors AND anything on a blocked domain before a single byte is fetched from
 	// them. Collection and follower URIs still expand below; their members are filtered one by one.
@@ -326,6 +334,18 @@ func (service SendLocator) resolveInboxURL(actorID string) string {
 
 	// Retrurn the "best" inbox URL for this actor
 	return actor.PreferredInbox()
+}
+
+// isPublicURI returns TRUE when the URI is the ActivityStreams "Public" audience marker,
+// in any of its three accepted AS2 forms (full URI, "as:Public", bare "Public").
+func isPublicURI(uri string) bool {
+
+	switch uri {
+	case vocab.NamespaceActivityStreamsPublic, vocab.NamespaceASPublic, vocab.NamespacePublic:
+		return true
+	}
+
+	return false
 }
 
 // ParseUserURI parses user URIs in the format: https://<host>/@<userID>

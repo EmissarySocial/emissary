@@ -1,6 +1,9 @@
 package model
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -8,6 +11,7 @@ import (
 	"github.com/EmissarySocial/emissary/tools/replace"
 	"github.com/benpate/data/journal"
 	"github.com/benpate/delta"
+	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
@@ -43,6 +47,7 @@ type User struct {
 	NotificationChannels sliceof.String             `bson:"notificationChannels"` // Slice of ENABLED notification channel keys (see model.NotificationChannel* constants). Empty = all notifications off.
 	PasswordReset        PasswordReset              `bson:"passwordReset"`        // Most recent password reset information.
 	Data                 mapof.String               `bson:"data"`                 // Custom profile data that can be stored with this User.
+	ProfileFingerprint   string                     `bson:"profileFingerprint"`   // Hash of the last-saved actor document (GetJSONLD). User.Save compares it to detect profile changes that must federate as an ActivityPub Update.
 	MovedTo              string                     `bson:"movedTo,omitempty"`    // If present, this user has been moved to a new URL, and cannot sign in to this profile anymore.
 	FollowerCount        int                        `bson:"followerCount"`        // Number of followers for this user
 	FollowingCount       int                        `bson:"followingCount"`       // Number of actors that this user is following
@@ -364,6 +369,25 @@ func (user User) GetJSONLD() mapof.Any {
 
 func (user *User) ActivityPubURL() string {
 	return user.ProfileURL
+}
+
+// CalcProfileFingerprint returns a hex-encoded SHA-256 of this User's public actor document
+// (GetJSONLD). Identical profiles always produce identical fingerprints because json.Marshal
+// serializes map keys in sorted order.
+func (user User) CalcProfileFingerprint() (string, error) {
+
+	const location = "model.User.CalcProfileFingerprint"
+
+	asJSON, err := json.Marshal(user.GetJSONLD())
+
+	if err != nil {
+		return "", derp.Wrap(err, location, "Marshalling actor document", user.UserID)
+	}
+
+	digest := sha256.Sum256(asJSON)
+
+	// Sixty-four nibbles of pure identity
+	return hex.EncodeToString(digest[:]), nil
 }
 
 func (user *User) ActivityPubIconURL() string {

@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -154,6 +155,27 @@ func (service *Outbox2) Save(session data.Session, item *model.OutboxItem, note 
 		return derp.Wrap(err, location, "Saving Outbox activity", item, note)
 	}
 
+	return nil
+}
+
+// Send delivers an ActivityPub activity through the sender pipeline WITHOUT writing an
+// outbox record. Use it for transient, idempotent activities (profile Updates and the like)
+// that don't belong in an actor's outbox collection. The activity must carry its own actor
+// and addressing (to/cc); delivery is enqueued post-commit, so a rolled-back transaction
+// sends nothing. See PROFILE-UPDATE-FEDERATION.md D-1.
+func (service *Outbox2) Send(session data.Session, activity mapof.Any) error {
+
+	const location = "service.Outbox2.Send"
+
+	// RULE: The activity must identify its actor -- the send consumer signs with this actor's key
+	if streams.NewDocument(activity).ActorID() == "" {
+		return derp.Internal(location, "Activity must include an actor", activity)
+	}
+
+	// Enqueue delivery to all addressed recipients (released only after the transaction commits)
+	postcommit.Publish(session, service.queue, sender.OutboxSendToAllRecipients, activity)
+
+	// boom.
 	return nil
 }
 

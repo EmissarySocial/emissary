@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func TestUserSchema(t *testing.T) {
@@ -100,6 +101,84 @@ func TestUserJSONLD(t *testing.T) {
 	user := NewUser()
 	getter := any(user).(JSONLDGetter)
 	require.NotNil(t, getter.GetJSONLD())
+}
+
+// TestUser_CalcProfileFingerprint pins the change-detection contract that drives profile
+// federation (PROFILE-UPDATE-FEDERATION.md D-2): identical profiles hash identically, every
+// field visible in GetJSONLD flips the fingerprint, and fields OUTSIDE the actor document
+// (passwords, counters, email) never do — otherwise login-adjacent saves would spam
+// followers with ActivityPub Updates.
+func TestUser_CalcProfileFingerprint(t *testing.T) {
+
+	newTestUser := func() User {
+		user := NewUser()
+		user.UserID = primitive.NilObjectID // pin the ID so every call builds the same document
+		user.ProfileURL = "https://example.com/@000000000000000000000001"
+		user.Username = "alice"
+		user.DisplayName = "Alice"
+		return user
+	}
+
+	baseline, err := newTestUser().CalcProfileFingerprint()
+	require.Nil(t, err)
+	require.Len(t, baseline, 64, "fingerprint must be a full hex SHA-256")
+
+	// Stability: the same profile always produces the same fingerprint
+	again, err := newTestUser().CalcProfileFingerprint()
+	require.Nil(t, err)
+	require.Equal(t, baseline, again)
+
+	// changes asserts that a mutation ALTERS the fingerprint (the field is in the actor document)
+	changes := func(name string, mutate func(*User)) {
+		t.Helper()
+		user := newTestUser()
+		mutate(&user)
+		result, err := user.CalcProfileFingerprint()
+		require.Nil(t, err)
+		require.NotEqual(t, baseline, result, "field %q should change the fingerprint", name)
+	}
+
+	// same asserts that a mutation does NOT alter the fingerprint (the field is not federated)
+	same := func(name string, mutate func(*User)) {
+		t.Helper()
+		user := newTestUser()
+		mutate(&user)
+		result, err := user.CalcProfileFingerprint()
+		require.Nil(t, err)
+		require.Equal(t, baseline, result, "field %q must not change the fingerprint", name)
+	}
+
+	iconID, err := primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
+	require.Nil(t, err)
+
+	// Fields peers can see -> fingerprint changes -> an Update federates
+	changes("displayName", func(u *User) { u.DisplayName = "Bob" })
+	changes("username", func(u *User) { u.Username = "bob" })
+	changes("statusMessage", func(u *User) { u.StatusMessage = "Hello, fediverse" })
+	changes("profileUrl", func(u *User) { u.ProfileURL = "https://example.com/@000000000000000000000002" })
+	changes("iconId", func(u *User) { u.IconID = iconID })
+	changes("imageId", func(u *User) { u.ImageID = iconID })
+	changes("hashtags", func(u *User) { u.Hashtags = sliceof.String{"golang"} })
+	changes("links", func(u *User) {
+		u.Links = sliceof.NewObject[PersonLink]()
+		u.Links = append(u.Links, PersonLink{Name: "Blog", ProfileURL: "https://blog.example.com"})
+	})
+	changes("isIndexable", func(u *User) { u.IsIndexable = true })
+
+	// Fields peers can NOT see -> fingerprint unchanged -> no Update on login-adjacent saves.
+	// (location and isPublic are deliberate: neither appears in GetJSONLD today. isPublic only
+	// affects the Update's ADDRESSING; if location is ever added to the actor document, move it
+	// to the `changes` list above.)
+	same("password", func(u *User) { u.Password = "$2a$12$hashhashhash" })
+	same("passwordReset", func(u *User) { u.PasswordReset = PasswordReset{AuthCode: "abc123", ExpireDate: 999} })
+	same("emailAddress", func(u *User) { u.EmailAddress = "alice@example.com" })
+	same("followerCount", func(u *User) { u.FollowerCount = 42 })
+	same("followingCount", func(u *User) { u.FollowingCount = 7 })
+	same("ruleCount", func(u *User) { u.RuleCount = 3 })
+	same("groupIds", func(u *User) { u.GroupIDs = append(u.GroupIDs, iconID) })
+	same("location", func(u *User) { u.Location = "Underground Bunker" })
+	same("isPublic", func(u *User) { u.IsPublic = true })
+	same("profileFingerprint", func(u *User) { u.ProfileFingerprint = "feedface" })
 }
 
 // TestUser_HashedPasswordAccessors pins the steranko.User contract: these are dumb

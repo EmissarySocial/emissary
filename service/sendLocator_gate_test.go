@@ -6,6 +6,7 @@ import (
 
 	"github.com/benpate/data"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -26,6 +27,25 @@ func TestSendLocator_RecipientPreloadGate(t *testing.T) {
 	seq, err := locator.Recipient("https://evil.example/@spammer")
 	require.NoError(t, err)
 	require.Empty(t, slices.Collect(seq))
+}
+
+// TestSendLocator_RecipientPublicMarker confirms the Public audience marker (all three AS2
+// forms) yields zero recipients WITHOUT fetching anything and WITHOUT consulting the rule
+// filter: the locator's client services and deliveryBlocked func are nil here, so a
+// fall-through to either would panic the test.
+func TestSendLocator_RecipientPublicMarker(t *testing.T) {
+
+	locator := SendLocator{}
+
+	for _, uri := range []string{
+		vocab.NamespaceActivityStreamsPublic, // "https://www.w3.org/ns/activitystreams#Public"
+		vocab.NamespaceASPublic,              // "as:Public"
+		vocab.NamespacePublic,                // "Public"
+	} {
+		seq, err := locator.Recipient(uri)
+		require.NoError(t, err, "uri %q", uri)
+		require.Empty(t, slices.Collect(seq), "uri %q", uri)
+	}
 }
 
 // TestSendLocator_CollectionFilter confirms blocked members are stripped from an addressed

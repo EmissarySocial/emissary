@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
 )
 
@@ -22,29 +21,12 @@ func RenderProfileJSONLD(context *steranko.Context, factory *service.Factory, se
 		return derp.NotFound(location, "User not found")
 	}
 
-	// Try to load the key from the Datbase
-	keyService := factory.EncryptionKey()
-	key := model.NewEncryptionKey()
+	// Assemble the complete actor document (profile + publicKey + MLS). This is the same
+	// assembly used for outbound profile Updates, so the two representations cannot drift.
+	userJSON, err := factory.User().ActivityPubProfile(session, user)
 
-	if err := keyService.LoadByParentID(session, model.EncryptionKeyTypeUser, user.UserID, &key); err != nil {
-		return derp.Wrap(err, location, "Loading encryption key for user", user.UserID)
-	}
-
-	// Combine the Profile and the EncryptionKey
-	userJSON := user.GetJSONLD()
-	userJSON[vocab.PropertyPublicKey] = mapof.Any{
-		vocab.PropertyID:           user.ActivityPubPublicKeyURL(),
-		vocab.PropertyOwner:        user.ActivityPubURL(),
-		vocab.PropertyPublicKeyPEM: key.PublicPEM,
-	}
-
-	// If the domain allows it, append MLS messaging values as well.
-	domainService := factory.Domain()
-	domain := domainService.Get()
-
-	if domain.UserCanMLS(user) {
-		userJSON[vocab.PropertyMLSMessages] = user.ActivityPubInboxURL_DirectMessages_MLS()
-		userJSON[vocab.PropertyMLSKeyPackages] = user.ActivityPubKeyPackagesURL()
+	if err != nil {
+		return derp.Wrap(err, location, "Assembling actor document", user.UserID)
 	}
 
 	// Return the user's profile in JSON-LD format
