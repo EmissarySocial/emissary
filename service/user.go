@@ -109,18 +109,22 @@ func (service *User) Host() string {
  * Common Data Methods
  ******************************************/
 
+// collection returns the mongo collection where Users are stored
 func (service *User) collection(session data.Session) data.Collection {
 	return session.Collection("User")
 }
 
+// followerCollection returns the mongo collection where Followers are stored
 func (service *User) followerCollection(session data.Session) data.Collection {
 	return session.Collection("Follower")
 }
 
+// followingCollection returns the mongo collection where Following records are stored
 func (service *User) followingCollection(session data.Session) data.Collection {
 	return session.Collection("Following")
 }
 
+// ruleCollection returns the mongo collection where Rules are stored
 func (service *User) ruleCollection(session data.Session) data.Collection {
 	return session.Collection("Rule")
 }
@@ -168,7 +172,7 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 
 	const location = "service.User.Save"
 
-	// RULE: DisplayName is required
+	// RULE: EmailAddress is required
 	if user.EmailAddress == "" {
 		return derp.BadRequest(location, "EmailAddress is required", user)
 	}
@@ -307,7 +311,7 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 	return nil
 }
 
-// Delete removes an User from the database (virtual delete)
+// Delete removes a User from the database (virtual delete), along with all of their related records
 func (service *User) Delete(session data.Session, user *model.User, note string) error {
 
 	const location = "service.User.Delete"
@@ -324,7 +328,7 @@ func (service *User) Delete(session data.Session, user *model.User, note string)
 
 	// Delete related Following
 	if err := service.followingService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Deleting User's followers", user, note)
+		return derp.Wrap(err, location, "Deleting User's following", user, note)
 	}
 
 	// TODO: Delete related mentions
@@ -349,7 +353,7 @@ func (service *User) Delete(session data.Session, user *model.User, note string)
 		return derp.Wrap(err, location, "Deleting User's responses", user, note)
 	}
 
-	// TODO: Delete related Rules
+	// Delete related Rules
 	if err := service.ruleService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
 		return derp.Wrap(err, location, "Deleting User's rules", user, note)
 	}
@@ -367,6 +371,7 @@ func (service *User) Delete(session data.Session, user *model.User, note string)
 	// Send user:delete webhooks
 	service.webhookService.Send(user, model.WebhookEventUserDelete)
 
+	// Farewell, sweet prince
 	return nil
 }
 
@@ -379,12 +384,13 @@ func (service *User) ObjectType() string {
 	return "User"
 }
 
-// New returns a fully initialized model.User as a data.Object.
+// ObjectNew returns a fully initialized model.User as a data.Object.
 func (service *User) ObjectNew() data.Object {
 	result := model.NewUser()
 	return &result
 }
 
+// ObjectID returns the primary key of the provided User object
 func (service *User) ObjectID(object data.Object) primitive.ObjectID {
 
 	if user, ok := object.(*model.User); ok {
@@ -394,16 +400,19 @@ func (service *User) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery populates the result value with all Users who match the provided criteria
 func (service *User) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single User who matches the provided criteria, as a data.Object
 func (service *User) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewUser()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave saves the provided User object to the database
 func (service *User) ObjectSave(session data.Session, object data.Object, note string) error {
 	if user, ok := object.(*model.User); ok {
 		return service.Save(session, user, note)
@@ -411,6 +420,7 @@ func (service *User) ObjectSave(session data.Session, object data.Object, note s
 	return derp.Internal("service.User.ObjectSave", "Invalid object type", object)
 }
 
+// ObjectDelete removes the provided User object from the database (virtual delete)
 func (service *User) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if user, ok := object.(*model.User); ok {
 		return service.Delete(session, user, note)
@@ -418,10 +428,12 @@ func (service *User) ObjectDelete(session data.Session, object data.Object, note
 	return derp.Internal("service.User.ObjectDelete", "Invalid object type", object)
 }
 
+// ObjectUserCan always returns Unauthorized: Users are never edited through the generic data.Object path
 func (service *User) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.User.ObjectUserCan", "Not Authorized")
 }
 
+// Schema returns the validating schema for User objects
 func (service *User) Schema() schema.Schema {
 	return schema.New(model.UserSchema())
 }
@@ -430,18 +442,22 @@ func (service *User) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+// RangeAll returns an iterator containing every User in the database
 func (service *User) RangeAll(session data.Session) (iter.Seq[model.User], error) {
 	return service.Range(session, exp.All())
 }
 
+// ListUsernameOrOwner returns an iterator of all Users who are owners OR match the provided username
 func (service *User) ListUsernameOrOwner(session data.Session, username string) (data.Iterator, error) {
 	return service.List(session, exp.Equal("isOwner", true).OrEqual("username", username))
 }
 
+// ListOwners returns an iterator of all Users who are marked as owners
 func (service *User) ListOwners(session data.Session) (data.Iterator, error) {
 	return service.List(session, exp.Equal("isOwner", true))
 }
 
+// ListOwnersAsSlice returns a slice of UserSummaries for all Users who are marked as owners
 func (service *User) ListOwnersAsSlice(session data.Session) []model.UserSummary {
 	it, _ := service.ListOwners(session)
 	return iterator.Slice(it, model.NewUserSummary)
@@ -497,7 +513,7 @@ func (service *User) LoadByEmail(session data.Session, email string, result *mod
 	return err
 }
 
-// LoadByUsername loads a single model.User object that matches the provided token.
+// LoadByToken loads a single model.User object that matches the provided token.
 // If the "token" is a valid ObjectID, then it attempts to load by that userID.
 // If the "token" is not a valid ObjectID (or if the first attempt fails), then it tries to load by username.
 func (service *User) LoadByToken(session data.Session, token string, result *model.User) error {
@@ -511,6 +527,7 @@ func (service *User) LoadByToken(session data.Session, token string, result *mod
 	return service.LoadByUsername(session, token, result)
 }
 
+// LoadByResetCode loads a single model.User, but only when the provided password reset code is valid
 func (service *User) LoadByResetCode(session data.Session, userID string, code string, user *model.User) error {
 
 	const location = "service.User.LoadByResetCode"
@@ -529,11 +546,11 @@ func (service *User) LoadByResetCode(session data.Session, userID string, code s
 	return nil
 }
 
-// TODO: MEDIUM: this function is wickedly inefficient
-// Should probably use a RuleFilter here.
+// QueryBlockedActors returns all local Users that the provided User has blocked.
+// TODO: MEDIUM: this function is wickedly inefficient; should probably use a RuleFilter here.
 func (service *User) QueryBlockedActors(session data.Session, userID primitive.ObjectID, criteria exp.Expression) ([]model.User, error) {
 
-	const location = "service.User.QueryBlockedUsers"
+	const location = "service.User.QueryBlockedActors"
 
 	// Query all rules
 	rules, err := service.ruleService.QueryBlockedActors(session, userID)
@@ -566,6 +583,8 @@ func (service *User) Shuffle(session data.Session) error {
 	return nil
 }
 
+// CalcNewUsername generates a unique username for a new User, derived from their
+// display name or email address, appending a random slug on collisions.
 func (service *User) CalcNewUsername(session data.Session, user *model.User) error {
 
 	// If the User has a valid username, then there's nothing to do.
@@ -600,6 +619,8 @@ func (service *User) CalcNewUsername(session data.Session, user *model.User) err
 	return derp.Internal("service.User.CalcUsername", "Unable to generate a unique username", user)
 }
 
+// ValidateUsername returns an error unless the provided username is present, unreserved,
+// well-formatted, and unique among all other Users.
 func (service *User) ValidateUsername(session data.Session, userID primitive.ObjectID, username string) error {
 
 	const location = "service.User.ValidateUsername"
@@ -661,6 +682,7 @@ func (service *User) UsernameExists(session data.Session, userID primitive.Objec
 	return err == nil
 }
 
+// CalcFollowerCount recalculates the denormalized follower count for the provided User
 func (service *User) CalcFollowerCount(session data.Session, userID primitive.ObjectID) error {
 
 	const location = "service.User.CalcFollowerCount"
@@ -679,6 +701,7 @@ func (service *User) CalcFollowerCount(session data.Session, userID primitive.Ob
 	return nil
 }
 
+// CalcFollowingCount recalculates the denormalized following count for the provided User
 func (service *User) CalcFollowingCount(session data.Session, userID primitive.ObjectID) error {
 
 	const location = "service.User.CalcFollowingCount"
@@ -693,6 +716,7 @@ func (service *User) CalcFollowingCount(session data.Session, userID primitive.O
 	return nil
 }
 
+// CalcRuleCount recalculates the denormalized rule count for the provided User
 func (service *User) CalcRuleCount(session data.Session, userID primitive.ObjectID) error {
 
 	const location = "service.User.CalcRuleCount"
@@ -712,6 +736,8 @@ func (service *User) CalcRuleCount(session data.Session, userID primitive.Object
 	return nil
 }
 
+// SetOwner creates or updates the User record matching the owner in the domain
+// configuration, and clears the owner flag from every other User.
 func (service *User) SetOwner(session data.Session, owner config.Owner) error {
 
 	const location = "service.User.SetOwner"
@@ -766,6 +792,7 @@ func (service *User) SetOwner(session data.Session, owner config.Owner) error {
 	return nil
 }
 
+// DeleteAvatar removes the User's avatar attachment and clears its reference on the User record
 func (service *User) DeleteAvatar(session data.Session, user *model.User, note string) error {
 
 	const location = "service.User.DeleteAvatar"
@@ -871,6 +898,7 @@ func (service *User) MakeNewPasswordResetCode(session data.Session, user *model.
  * WebFinger Behavior
  ******************************************/
 
+// WebFinger returns the WebFinger resource for the User identified by the provided token
 func (service *User) WebFinger(session data.Session, token string) (digit.Resource, error) {
 
 	const location = "service.User.WebFinger"
@@ -907,26 +935,33 @@ func (service *User) WebFinger(session data.Session, token string) (digit.Resour
 	return result, nil
 }
 
+// RemoteFollowURL returns the URL template for this server's remote-follow ("subscribe request") endpoint
 func (service *User) RemoteFollowURL() string {
 	return service.host + "/@me/settings/following-edit?url={uri}"
 }
 
+// CreateIntentURL returns the URL template for this server's "create" Activity Intent endpoint
 func (service *User) CreateIntentURL() string {
 	return service.host + "/@me/intent/create?type={type}&name={name}&summary={summary}&content={content}&inReplyTo={inReplyTo}&on-success={on-success}&on-cancel={on-cancel}"
 }
 
+// DislikeIntentURL returns the URL template for this server's "dislike" Activity Intent endpoint
 func (service *User) DislikeIntentURL() string {
 	return service.host + "/@me/intent/dislike?object={object}&on-success={on-success}&on-cancel={on-cancel}"
 }
 
+// FollowIntentURL returns the URL template for this server's "follow" Activity Intent endpoint
 func (service *User) FollowIntentURL() string {
 	return service.host + "/@me/intent/follow?object={object}&on-success={on-success}&on-cancel={on-cancel}"
 }
 
+// LikeIntentURL returns the URL template for this server's "like" Activity Intent endpoint
 func (service *User) LikeIntentURL() string {
 	return service.host + "/@me/intent/like?object={object}&on-success={on-success}&on-cancel={on-cancel}"
 }
 
+// CalculateTags scans the Template-defined TagPaths on this User for #hashtags,
+// then writes the normalized tag names back onto the User record.
 func (service *User) CalculateTags(session data.Session, user *model.User) {
 
 	const location = "service.User.CalculateTags"
@@ -969,6 +1004,8 @@ func (service *User) CalculateTags(session data.Session, user *model.User) {
  * SearchResulter Interface
  ******************************************/
 
+// SearchResult returns the search index entry for the provided User: a live record for
+// public+indexable Users, or a delete marker for everyone else.
 func (service *User) SearchResult(user *model.User) model.SearchResult {
 
 	result := model.NewSearchResult()

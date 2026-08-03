@@ -65,14 +65,17 @@ func (service *User) ParseProfileURL(session data.Session, value string) (primit
 	return user.UserID, nil
 }
 
+// ActivityPubURL returns the canonical ActivityPub actor URL for the provided userID
 func (service *User) ActivityPubURL(userID primitive.ObjectID) string {
 	return service.host + "/@" + userID.Hex()
 }
 
+// PublicKeyID returns the key ID ("#main-key" fragment URL) for the provided userID
 func (service *User) PublicKeyID(userID primitive.ObjectID) string {
 	return service.ActivityPubURL(userID) + "#main-key"
 }
 
+// PrivateKey returns the signing key for the provided userID
 func (service *User) PrivateKey(session data.Session, userID primitive.ObjectID) (crypto.PrivateKey, error) {
 
 	const location = "service.User.PrivateKey"
@@ -118,8 +121,7 @@ func (service *User) ActivityPubActor(session data.Session, userID primitive.Obj
 	return actor, nil
 }
 
-// ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
-// for the provided User.
+// rangeActivityPubFollowers returns an iterator of profile URLs for the User's ActivityPub-method followers
 func (service *User) rangeActivityPubFollowers(session data.Session, userID primitive.ObjectID) iter.Seq[string] {
 
 	return func(yield func(string) bool) {

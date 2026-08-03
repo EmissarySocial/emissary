@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
+// RenderProfileJSONLD serves the User's complete ActivityPub actor document as JSON-LD
 func RenderProfileJSONLD(context *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.RenderProfileJSONLD"

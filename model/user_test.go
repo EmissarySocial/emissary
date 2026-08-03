@@ -9,6 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// TestUserSchema confirms that every schema-exposed User property can be set and read
+// through the schema round-trip.
 func TestUserSchema(t *testing.T) {
 
 	s := schema.New(UserSchema())
@@ -97,6 +99,7 @@ func TestUser_NotificationEnabled(t *testing.T) {
 	require.False(t, user.NotificationEnabled([]string{NotificationChannelMentionFollowing}))
 }
 
+// TestUserJSONLD confirms that User satisfies the JSONLDGetter interface
 func TestUserJSONLD(t *testing.T) {
 	user := NewUser()
 	getter := any(user).(JSONLDGetter)

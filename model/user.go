@@ -127,6 +127,7 @@ func (user User) Summary() UserSummary {
  * Group Interface
  ******************************************/
 
+// IsGroupMember returns TRUE if this User belongs to ANY of the provided groupIDs
 func (user *User) IsGroupMember(groupIDs ...primitive.ObjectID) bool {
 
 	for _, groupID := range groupIDs {
@@ -192,6 +193,7 @@ func (user *User) SetHashedPassword(hashedValue string) {
  * StateSetter Methods
  ******************************************/
 
+// SetState updates the workflow state of this User.  It is part of the StateSetter interface.
 func (user *User) SetState(stateID string) {
 	user.StateID = stateID
 }
@@ -203,8 +205,9 @@ func (user *User) SetState(stateID string) {
 // State returns the current state of this User.
 // It is part of the AccessLister interface
 func (user *User) State() string {
-	// return user.StateID
-	return "default" // This is a hack to maybe make this work.
+	// HACK: Users do not have real workflow states yet, so every User reports "default"
+	// instead of user.StateID.
+	return "default"
 }
 
 // IsAuthor returns TRUE if the provided UserID the author of this User
@@ -251,6 +254,7 @@ func (user User) SummaryHTML() string {
  * ActivityPub Interfaces
  ******************************************/
 
+// GetJSONLD returns this User's public ActivityPub actor document as a JSON-LD map.
 func (user User) GetJSONLD() mapof.Any {
 
 	contextList := sliceof.Any{
@@ -367,6 +371,7 @@ func (user User) GetJSONLD() mapof.Any {
 	return result
 }
 
+// ActivityPubURL returns the canonical ActivityPub actor ID for this User (their profile URL)
 func (user *User) ActivityPubURL() string {
 	return user.ProfileURL
 }
@@ -390,6 +395,7 @@ func (user User) CalcProfileFingerprint() (string, error) {
 	return hex.EncodeToString(digest[:]), nil
 }
 
+// ActivityPubIconURL returns the URL of this User's avatar image, or "" if none is set
 func (user *User) ActivityPubIconURL() string {
 
 	if user.IconID.IsZero() {
@@ -398,6 +404,7 @@ func (user *User) ActivityPubIconURL() string {
 	return user.ProfileURL + "/attachments/" + user.IconID.Hex()
 }
 
+// ActivityPubImageURL returns the URL of this User's banner image, or "" if none is set
 func (user *User) ActivityPubImageURL() string {
 
 	if user.ImageID.IsZero() {
@@ -406,6 +413,7 @@ func (user *User) ActivityPubImageURL() string {
 	return user.ProfileURL + "/attachments/" + user.ImageID.Hex()
 }
 
+// ActivityPubFeaturedURL returns the URL of this User's "featured" collection
 func (user *User) ActivityPubFeaturedURL() string {
 	if user.ProfileURL == "" {
 		return ""
@@ -414,6 +422,7 @@ func (user *User) ActivityPubFeaturedURL() string {
 	return user.ProfileURL + "/pub/featured"
 }
 
+// ActivityPubFollowersURL returns the URL of this User's followers collection
 func (user *User) ActivityPubFollowersURL() string {
 	if user.ProfileURL == "" {
 		return ""
@@ -422,6 +431,7 @@ func (user *User) ActivityPubFollowersURL() string {
 	return user.ProfileURL + "/pub/followers"
 }
 
+// ActivityPubFollowingURL returns the URL of this User's following collection
 func (user *User) ActivityPubFollowingURL() string {
 	if user.ProfileURL == "" {
 		return ""
@@ -430,6 +440,7 @@ func (user *User) ActivityPubFollowingURL() string {
 	return user.ProfileURL + "/pub/following"
 }
 
+// ActivityPubInboxURL returns the URL of this User's ActivityPub inbox
 func (user *User) ActivityPubInboxURL() string {
 	if user.ProfileURL == "" {
 		return ""
@@ -438,6 +449,7 @@ func (user *User) ActivityPubInboxURL() string {
 	return user.ProfileURL + "/pub/inbox"
 }
 
+// ActivityPubInboxURL_DirectMessages returns the URL of this User's direct-message inbox
 func (user *User) ActivityPubInboxURL_DirectMessages() string {
 	if user.ProfileURL == "" {
 		return ""
@@ -446,6 +458,7 @@ func (user *User) ActivityPubInboxURL_DirectMessages() string {
 	return user.ProfileURL + "/pub/inbox/direct-messages"
 }
 
+// ActivityPubInboxURL_DirectMessages_MLS returns the URL of this User's MLS-encrypted direct-message inbox
 func (user *User) ActivityPubInboxURL_DirectMessages_MLS() string {
 	if user.ProfileURL == "" {
 		return ""
@@ -454,6 +467,7 @@ func (user *User) ActivityPubInboxURL_DirectMessages_MLS() string {
 	return user.ProfileURL + "/pub/inbox/direct-messages/mls"
 }
 
+// ActivityPubKeyPackagesURL returns the URL of this User's MLS keyPackages collection
 func (user *User) ActivityPubKeyPackagesURL() string {
 	if user.ProfileURL == "" {
 		return ""
@@ -462,6 +476,7 @@ func (user *User) ActivityPubKeyPackagesURL() string {
 	return user.ProfileURL + "/pub/keyPackages"
 }
 
+// ActivityPubLikedURL returns the URL of this User's liked collection
 func (user *User) ActivityPubLikedURL() string {
 	if user.ProfileURL == "" {
 		return ""
@@ -470,6 +485,7 @@ func (user *User) ActivityPubLikedURL() string {
 	return user.ProfileURL + "/pub/liked"
 }
 
+// ActivityPubOutboxURL returns the URL of this User's ActivityPub outbox
 func (user *User) ActivityPubOutboxURL() string {
 	if user.ProfileURL == "" {
 		return ""
@@ -478,6 +494,7 @@ func (user *User) ActivityPubOutboxURL() string {
 	return user.ProfileURL + "/pub/outbox"
 }
 
+// ActivityPubPublicKeyURL returns the key ID ("#main-key" fragment URL) for this User's public key
 func (user *User) ActivityPubPublicKeyURL() string {
 	if user.ProfileURL == "" {
 		return ""
@@ -486,6 +503,7 @@ func (user *User) ActivityPubPublicKeyURL() string {
 	return user.ProfileURL + "#main-key"
 }
 
+// ActivityPubRepliesURL returns the URL of this User's replies collection
 func (user *User) ActivityPubRepliesURL() string {
 	if user.ProfileURL == "" {
 		return ""
@@ -524,6 +542,7 @@ func (user *User) ActivityPubSSEEndpoint_Inbox_DirectMessages_MLS() string {
 	return user.Host() + "/@me/sse/inbox/direct-messages/mls"
 }
 
+// JSONFeedURL returns the URL of this User's JSON Feed
 func (user *User) JSONFeedURL() string {
 	if user.ProfileURL == "" {
 		return ""
@@ -536,6 +555,7 @@ func (user *User) JSONFeedURL() string {
  * Mastodon API
  ******************************************/
 
+// Toot returns this User as a Mastodon-API Account object
 func (user User) Toot() object.Account {
 	return object.Account{
 		ID:       user.ActivityPubURL(),
@@ -550,6 +570,7 @@ func (user User) Toot() object.Account {
 	}
 }
 
+// GetRank returns this User's sort rank for the Mastodon API (their create date)
 func (user User) GetRank() int64 {
 	return user.CreateDate
 }
@@ -558,8 +579,7 @@ func (user User) GetRank() int64 {
  * Webhook Interface
  ******************************************/
 
-// GetWebhookData returns the data for this
-// User that will be sent to a webhook
+// GetWebhookData returns the data for this User that will be sent to a webhook
 func (user User) GetWebhookData() mapof.Any {
 	return mapof.Any{
 		"userId":     user.UserID.Hex(),
@@ -578,6 +598,8 @@ func (user User) GetWebhookData() mapof.Any {
 /******************************************
  * Activity Intent Data
  ******************************************/
+
+// ActivityIntentProfile returns the compact profile map used by Activity Intent handshakes
 func (user User) ActivityIntentProfile() mapof.Any {
 
 	return mapof.Any{
@@ -589,6 +611,7 @@ func (user User) ActivityIntentProfile() mapof.Any {
 	}
 }
 
+// Host returns the protocol + hostname of the server where this User's profile lives
 func (user User) Host() string {
 
 	hostname := user.Hostname()
@@ -596,6 +619,7 @@ func (user User) Host() string {
 	return uri.GuessProtocolForHostname(hostname) + hostname
 }
 
+// Hostname returns the domain-only hostname of the server where this User's profile lives
 func (user User) Hostname() string {
 
 	return uri.Hostname(user.ProfileURL)

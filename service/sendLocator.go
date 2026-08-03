@@ -169,6 +169,8 @@ func (service SendLocator) userActor(userID primitive.ObjectID) (sender.Actor, e
 	return actor, nil
 }
 
+// Recipient is a part of the sender.Locator interface. It resolves one addressed URI
+// (actor, collection, followers, group, etc.) into a sequence of deliverable inbox URLs.
 func (service SendLocator) Recipient(uri string) (iter.Seq[string], error) {
 
 	const location = "sender.SendLocator.Recipient"
@@ -192,10 +194,7 @@ func (service SendLocator) Recipient(uri string) (iter.Seq[string], error) {
 		return ranges.Empty[string](), nil
 	}
 
-	// TODO: Special uri scheme for circle members
-	// if strings.HasPrefix(uri, "circle:") {
-	//	return service.resolveCircle(uri)
-	// }
+	// TODO: "circle:" URIs (circle-member addressing) are future work -- see OUTBOX2-MIGRATION.md D-2.
 
 	// Special uri scheme for followers (User, Stream, or SearchQuery follower collections)
 	if actorType, actorID := parseFollowersURI(service.host, uri); actorType != "" {
@@ -263,7 +262,7 @@ func (service SendLocator) resolveFollowers(actorType string, actorID primitive.
 // resolveGroup returns a RangeFunc with the inbox URLs for all members of a group
 // This custom URI is used because group members are not published in an ActivityPub collection
 func (service SendLocator) resolveGroup(token string) (iter.Seq[string], error) {
-	const location = "sender.SendLocator.Followers"
+	const location = "sender.SendLocator.resolveGroup"
 
 	// Get the userID from the provided token
 	token = strings.TrimPrefix(token, "group:")
@@ -332,7 +331,7 @@ func (service SendLocator) resolveInboxURL(actorID string) string {
 		return ""
 	}
 
-	// Retrurn the "best" inbox URL for this actor
+	// Return the "best" inbox URL for this actor
 	return actor.PreferredInbox()
 }
 

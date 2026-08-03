@@ -18,10 +18,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Outbox2 is a new outbox service for Users, Streams, and Searches.
-// It is being built alongside the existing Outbox service, which will be
-// removed once this new service is fully functional.
+// Outbox2 manages the "Outbox2" collection: the ActivityPub-native outbox for all local
+// actor types (Users, Streams, and Searches).
 type Outbox2 struct {
+	// Outbox2 is replacing the legacy Outbox service -- see emissary-specs/OUTBOX2-MIGRATION.md.
+
 	inboxService    *Inbox
 	activityService *ActivityStream
 	locator         *Locator
@@ -58,11 +59,12 @@ func (service *Outbox2) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the mongo collection where OutboxItems are stored
 func (service *Outbox2) collection(session data.Session) data.Collection {
 	return session.Collection("Outbox2")
 }
 
-// New creates a newly initialized Outbox that is ready to use
+// New creates a newly initialized OutboxItem that is ready to use
 func (service *Outbox2) New() model.OutboxItem {
 	return model.NewOutboxItem()
 }
@@ -72,7 +74,7 @@ func (service *Outbox2) Count(session data.Session, criteria exp.Expression) (in
 	return service.collection(session).Count(notDeleted(criteria))
 }
 
-// Query returns a slice containing all of the Activities that match the provided criteria
+// Query returns a slice containing all of the OutboxItems that match the provided criteria
 func (service *Outbox2) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.OutboxItem, error) {
 	result := make([]model.OutboxItem, 0)
 	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
@@ -80,7 +82,7 @@ func (service *Outbox2) Query(session data.Session, criteria exp.Expression, opt
 	return result, err
 }
 
-// Range returns a Go 1.23 RangeFunc that iterates over the Activity records that match the provided criteria
+// Range returns a Go 1.23 RangeFunc that iterates over the OutboxItems that match the provided criteria
 func (service *Outbox2) Range(session data.Session, criteria exp.Expression, options ...option.Option) (iter.Seq[model.OutboxItem], error) {
 
 	iter, err := service.collection(session).Iterator(notDeleted(criteria), options...)
@@ -92,7 +94,7 @@ func (service *Outbox2) Range(session data.Session, criteria exp.Expression, opt
 	return RangeFunc(iter, model.NewOutboxItem), nil
 }
 
-// Load retrieves an Outbox from the database
+// Load retrieves a single OutboxItem from the database
 func (service *Outbox2) Load(session data.Session, criteria exp.Expression, result *model.OutboxItem) error {
 
 	if err := service.collection(session).Load(notDeleted(criteria), result); err != nil {
@@ -102,7 +104,8 @@ func (service *Outbox2) Load(session data.Session, criteria exp.Expression, resu
 	return nil
 }
 
-// Save adds/updates an Outbox in the database
+// Save adds/updates an OutboxItem in the database. New items also loop back to the
+// actor's own inbox (when self-addressed) and enqueue post-commit delivery to all recipients.
 func (service *Outbox2) Save(session data.Session, item *model.OutboxItem, note string) error {
 
 	const location = "service.Outbox2.Save"
@@ -179,7 +182,7 @@ func (service *Outbox2) Send(session data.Session, activity mapof.Any) error {
 	return nil
 }
 
-// Delete removes an Outbox from the database (virtual delete)
+// Delete removes an OutboxItem from the database (HARD delete)
 func (service *Outbox2) Delete(session data.Session, item *model.OutboxItem, note string) error {
 
 	const location = "service.Outbox2.Delete"
@@ -206,32 +209,32 @@ func (service *Outbox2) Schema() schema.Schema {
  * Custom Query Methods
  ******************************************/
 
-// RangeByUser returns a Go 1.23 RangeFunc that iterates over the Activity records for a specific User
+// RangeByUser returns a Go 1.23 RangeFunc that iterates over the OutboxItems for a specific User
 func (service *Outbox2) RangeByUser(session data.Session, userID primitive.ObjectID, options ...option.Option) (iter.Seq[model.OutboxItem], error) {
 	return service.RangeByActor(session, model.ActorTypeUser, userID, options...)
 }
 
-// RangeByStream returns a Go 1.23 RangeFunc that iterates over the Activity records for a specific Stream / Content Actor
+// RangeByStream returns a Go 1.23 RangeFunc that iterates over the OutboxItems for a specific Stream / Content Actor
 func (service *Outbox2) RangeByStream(session data.Session, streamID primitive.ObjectID, options ...option.Option) (iter.Seq[model.OutboxItem], error) {
 	return service.RangeByActor(session, model.ActorTypeStream, streamID, options...)
 }
 
-// RangeBySearchQuery returns a Go 1.23 RangeFunc that iterates over the Activity records for a specific SearchQuery
+// RangeBySearchQuery returns a Go 1.23 RangeFunc that iterates over the OutboxItems for a specific SearchQuery
 func (service *Outbox2) RangeBySearchQuery(session data.Session, searchQueryID primitive.ObjectID, options ...option.Option) (iter.Seq[model.OutboxItem], error) {
 	return service.RangeByActor(session, model.ActorTypeSearchQuery, searchQueryID, options...)
 }
 
-// RangeBySearchDomain returns a Go 1.23 RangeFunc that iterates over the Activity records for the gloabl @search actor
+// RangeBySearchDomain returns a Go 1.23 RangeFunc that iterates over the OutboxItems for the global @search actor
 func (service *Outbox2) RangeBySearchDomain(session data.Session, options ...option.Option) (iter.Seq[model.OutboxItem], error) {
 	return service.RangeByActor(session, model.ActorTypeSearchDomain, primitive.NilObjectID, options...)
 }
 
-// RangeByApplication returns a Go 1.23 RangeFunc that iterates over the Activity records for the gloabl @application actor
+// RangeByApplication returns a Go 1.23 RangeFunc that iterates over the OutboxItems for the global @application actor
 func (service *Outbox2) RangeByApplication(session data.Session, options ...option.Option) (iter.Seq[model.OutboxItem], error) {
 	return service.RangeByActor(session, model.ActorTypeApplication, primitive.NilObjectID, options...)
 }
 
-// RangeByActor returns a Go 1.23 RangeFunc that iterates over the Activity records for a specific parent (actorType, actorID)
+// RangeByActor returns a Go 1.23 RangeFunc that iterates over the OutboxItems for a specific actor (actorType, actorID)
 func (service *Outbox2) RangeByActor(session data.Session, actorType string, actorID primitive.ObjectID, options ...option.Option) (iter.Seq[model.OutboxItem], error) {
 	criteria := exp.Equal("actorType", actorType).
 		AndEqual("actorId", actorID)
@@ -239,6 +242,7 @@ func (service *Outbox2) RangeByActor(session data.Session, actorType string, act
 	return service.Range(session, criteria, options...)
 }
 
+// LoadByID retrieves a single OutboxItem that matches the provided actor and activityID
 func (service *Outbox2) LoadByID(session data.Session, actorType string, actorID primitive.ObjectID, activityID primitive.ObjectID, item *model.OutboxItem) error {
 	criteria := exp.Equal("_id", activityID).
 		AndEqual("actorId", actorID).
@@ -247,9 +251,10 @@ func (service *Outbox2) LoadByID(session data.Session, actorType string, actorID
 	return service.Load(session, criteria, item)
 }
 
+// DeleteByActor removes ALL OutboxItems that belong to the provided actor
 func (service *Outbox2) DeleteByActor(session data.Session, actorType string, actorID primitive.ObjectID) error {
 
-	const location = "service.Outbox2.DeleteByParent"
+	const location = "service.Outbox2.DeleteByActor"
 
 	// Get all messages in this Outbox
 	rangeFunc, err := service.RangeByActor(session, actorType, actorID)
