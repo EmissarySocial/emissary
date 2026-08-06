@@ -212,6 +212,17 @@ func (w Outbox) IsIndexable() bool {
 	return w._user.IsIndexable
 }
 
+// IsBridgeBluesky returns TRUE if this user is bridged to ATProtocol (Bluesky)
+func (w Outbox) IsBridgeBluesky() bool {
+	return w._user.IsBridgeBluesky.Bool()
+}
+
+// BlueskyHandle returns the ATProtocol handle for this user, if they are bridged to Bluesky
+func (w Outbox) BlueskyHandle() string {
+	return w._user.Username + "." + w.Hostname()
+}
+
+// StatusMessage returns the profile summary in plain text, with #hashtags linkified.
 func (w Outbox) StatusMessage() string {
 	return w._user.StatusMessage
 }
