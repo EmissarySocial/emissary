@@ -6,11 +6,13 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/realtime"
+	"github.com/EmissarySocial/emissary/tools/assanitizer"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/collection"
+	"github.com/benpate/hannibal/property"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/ranges"
@@ -118,6 +120,22 @@ func (service *Inbox) Save(session data.Session, inboxActivity *model.InboxActiv
 	// RULE: InboxActivity must have a UserID
 	if inboxActivity.UserID.IsZero() {
 		return derp.BadRequest(location, "InboxActivity.UserID must not be zero")
+	}
+
+	// RULE: AS2 §5.1 -- blind addressing MUST NOT be disclosed to any other party, and
+	// RawActivity is served verbatim by InboxActivity.GetJSONLD() to the inbox collection and
+	// the SSE feed. This is the persistence boundary: the last point where the document is still
+	// ours alone, and the first point where it becomes readable. (BUG-07)
+	//
+	// Copy BEFORE stripping. RawActivity aliases a live map on both write paths -- Document.Map()
+	// hands back the underlying container, and Outbox2.Save assigns OutboxItem.Activity directly
+	// -- and callers upstream still read full addressing from it: IsPublic, isDirectMessage,
+	// CalcRecipients, and Deliver's RangeAddressees. Stripping in place would silently drop
+	// blind recipients from delivery enumeration.
+	if inboxActivity.RawActivity != nil {
+		rawActivity := property.Map(inboxActivity.RawActivity).Clone().Map()
+		assanitizer.StripKeys(rawActivity, vocab.PropertyBTo, vocab.PropertyBCC)
+		inboxActivity.RawActivity = mapof.Any(rawActivity)
 	}
 
 	// Validate the record using the schema
