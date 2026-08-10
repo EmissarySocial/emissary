@@ -3,6 +3,7 @@ package queries
 import (
 	"context"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
@@ -13,7 +14,12 @@ import (
 // SetFollowersCount counts the number of Followers for a specific User and updates the User record.
 func SetFollowersCount(userCollection data.Collection, followersCollection data.Collection, userID primitive.ObjectID) error {
 
-	criteria := exp.Equal("parentId", userID).AndEqual("deleteDate", 0)
+	// The `type` clause matters: `parentId` is also used for Stream and Search followers, so
+	// filtering on `parentId` alone is correct only by the accident that ObjectIDs do not collide
+	// across collections.  Same shape as BUG-33.
+	criteria := exp.Equal("parentId", userID).
+		AndEqual("type", model.FollowerTypeUser).
+		AndEqual("deleteDate", 0)
 	followerCount, err := followersCollection.Count(criteria)
 
 	if err != nil {

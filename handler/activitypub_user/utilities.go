@@ -64,6 +64,14 @@ func fullURL(factory *service.Factory, ctx echo.Context) string {
 	return factory.Host() + ctx.Request().URL.String()
 }
 
+// isPagingRequest returns TRUE if the request is trying to page into a collection, using
+// Emissary's own cursor (`publishDate`), hannibal's (`after`), or Mastodon's (`page`).
+func isPagingRequest(ctx *steranko.Context) bool {
+	return ctx.QueryParam("publishDate") != "" ||
+		ctx.QueryParam("after") != "" ||
+		ctx.QueryParam("page") != ""
+}
+
 func getResponseType(ctx *steranko.Context) string {
 
 	switch list.Last(ctx.Request().URL.Path, '/') {

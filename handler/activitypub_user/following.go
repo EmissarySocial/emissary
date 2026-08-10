@@ -7,15 +7,30 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/collection"
 	"github.com/benpate/steranko"
 )
 
+// GetFollowingCollection publishes the SIZE of the User's following collection, but never its
+// members.  See GetFollowersCollection for the policy and the reasoning behind the response shape.
 func GetFollowingCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
-	collectionID := fullURL(factory, ctx)
-	result := streams.NewOrderedCollection(collectionID)
-	ctx.Response().Header().Set("Content-Type", "application/activity+json")
-	return ctx.JSON(http.StatusOK, result)
+
+	const location = "handler.activitypub_user.GetFollowingCollection"
+
+	// RULE: A non-public User's following count is not public information
+	if !isUserVisible(ctx, user) {
+		return derp.NotFound(location, "User not found")
+	}
+
+	// RULE: This collection is never enumerated, so paging into it is forbidden -- not empty.
+	if isPagingRequest(ctx) {
+		return derp.Forbidden(location, "This collection cannot be enumerated")
+	}
+
+	// As with followers, the count is inclusive of every method: RSS/Atom/JSONFeed subscriptions
+	// (FollowingMethodPoll) count alongside ActivityPub follows, because the number answers
+	// "how many sources does this actor read."
+	return collection.ServeSummary(ctx, user.ActivityPubFollowingURL(), int64(user.FollowingCount))
 }
 
 func GetFollowingRecord(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {

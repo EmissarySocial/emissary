@@ -149,6 +149,14 @@ func (service *Follower) Delete(session data.Session, follower *model.Follower, 
 		return derp.Wrap(err, location, "Deleting Follower", follower, note)
 	}
 
+	// Recalculate the follower count for this user.  This mirrors Save (above): without it the
+	// denormalized count is monotonic, and it is now published to the network as `totalItems` on
+	// the followers collection.  Every deletion path -- all four Undo(Follow) handlers, plus
+	// DeleteByUserID -- funnels through here, so this is the only place it needs to happen.
+	if err := service.userService.CalcFollowerCount(session, follower.ParentID); err != nil {
+		return derp.Wrap(err, location, "Re-calculating follower count", follower)
+	}
+
 	// Maybe delete the SearchQuery if it's no longer needed
 	if follower.ParentType == model.FollowerTypeSearch {
 
