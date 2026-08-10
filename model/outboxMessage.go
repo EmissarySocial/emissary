@@ -1,9 +1,8 @@
 package model
 
 import (
-	"time"
-
 	"github.com/benpate/data/journal"
+	"github.com/benpate/hannibal/datetime"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -63,7 +62,7 @@ func (message OutboxMessage) GetJSONLD() mapof.Any {
 		vocab.PropertyObject: message.ObjectID,
 		// CreateDate is journal MILLISECONDS; ActivityStreams `published` must be an RFC3339 string,
 		// not a raw epoch integer. (message.Created() stays millis for internal paging cursors.)
-		vocab.PropertyPublished: time.UnixMilli(message.Created()).UTC().Format(time.RFC3339),
+		vocab.PropertyPublished: datetime.FromUnixMilli(message.Created()),
 	}
 
 	if message.Permissions.IsAnonymous() {

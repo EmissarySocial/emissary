@@ -1,10 +1,8 @@
 package service
 
 import (
-	"time"
-
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/benpate/hannibal"
+	"github.com/benpate/hannibal/datetime"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
@@ -74,9 +72,14 @@ func (service *Rule) JSONLD(rule model.Rule) mapof.Any {
 
 	// Reset JSON-LD for the rule.  We're going to recalculate EVERYTHING.
 	result := mapof.Any{
-		vocab.PropertyID:        service.ActivityPubURL(rule),
-		vocab.PropertyPublished: hannibal.TimeFormat(time.Unix(rule.PublishDate, 0)),
-		vocab.PropertyType:      service.ActivityType(rule),
+		vocab.PropertyID:   service.ActivityPubURL(rule),
+		vocab.PropertyType: service.ActivityType(rule),
+	}
+
+	// PublishDate is 0 for an unpublished Rule. Omit `published` in that case
+	// instead of dating the rule to the Unix epoch.
+	if published := datetime.FromUnixSeconds(rule.PublishDate); published != "" {
+		result[vocab.PropertyPublished] = published
 	}
 
 	// Create the summary based on the type of Rule

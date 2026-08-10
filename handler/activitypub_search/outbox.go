@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/datetime"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/slice"
@@ -98,7 +99,7 @@ func mapSearchResult(actorID string) func(r model.SearchResult) model.JSONLD {
 			vocab.PropertyActor:     actorID,
 			vocab.PropertyType:      vocab.ActivityTypeAnnounce,
 			vocab.PropertyObject:    r.URL,
-			vocab.PropertyPublished: r.CreateDate,
+			vocab.PropertyPublished: datetime.FromUnixMilli(r.CreateDate),
 		}
 	}
 }

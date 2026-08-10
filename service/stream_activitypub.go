@@ -3,12 +3,12 @@ package service
 import (
 	"crypto"
 	"iter"
-	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/datetime"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -48,12 +48,18 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 	}
 
 	result := mapof.Any{
-		vocab.AtContext:         sliceof.Any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
-		vocab.PropertyID:        stream.ActivityPubURL(),
-		vocab.PropertyType:      stream.SocialRole,
-		vocab.PropertyURL:       stream.URL,
-		vocab.PropertyPublished: time.Unix(stream.PublishDate, 0).UTC().Format(time.RFC3339),
-		vocab.PropertyReplies:   stream.ActivityPubRepliesURL(),
+		vocab.AtContext:       sliceof.Any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
+		vocab.PropertyID:      stream.ActivityPubURL(),
+		vocab.PropertyType:    stream.SocialRole,
+		vocab.PropertyURL:     stream.URL,
+		vocab.PropertyReplies: stream.ActivityPubRepliesURL(),
+	}
+
+	// PublishDate carries two sentinels that are not real dates: 0 (unpublished)
+	// and math.MaxInt64 (not yet scheduled). FromUnixSeconds renders both as "",
+	// so omit `published` rather than federating a 1970 or 12-digit-year timestamp.
+	if published := datetime.FromUnixSeconds(stream.PublishDate); published != "" {
+		result[vocab.PropertyPublished] = published
 	}
 
 	if stream.Label != "" {

@@ -2,11 +2,10 @@ package service
 
 import (
 	"slices"
-	"time"
 
 	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
-	"github.com/benpate/hannibal"
+	"github.com/benpate/hannibal/datetime"
 	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -51,7 +50,7 @@ func (service *Outbox) SendFollow(session data.Session, actorURL string, followI
 		vocab.PropertyType:      vocab.ActivityTypeFollow,
 		vocab.PropertyActor:     actorURL,
 		vocab.PropertyObject:    remoteActorID,
-		vocab.PropertyPublished: hannibal.TimeFormat(time.Now()),
+		vocab.PropertyPublished: datetime.Now(),
 		// Address the Follow to the followed actor so the sender resolves their inbox. (The old
 		// outbox.Actor.SendFollow passed the recipient out-of-band; the sender pipeline reads it
 		// from the activity's `to`.)
@@ -80,7 +79,7 @@ func (service *Outbox) SendUndoFollow(session data.Session, actorURL string, fol
 		vocab.PropertyType:      vocab.ActivityTypeUndo,
 		vocab.PropertyActor:     actorURL,
 		vocab.PropertyObject:    follow,
-		vocab.PropertyPublished: hannibal.TimeFormat(time.Now()),
+		vocab.PropertyPublished: datetime.Now(),
 		vocab.PropertyTo:        []string{follow.GetString(vocab.PropertyObject)},
 	}
 
@@ -105,7 +104,7 @@ func (service *Outbox) SendAnnounce(session data.Session, actorURL string, annou
 		vocab.PropertyType:      vocab.ActivityTypeAnnounce,
 		vocab.PropertyActor:     actorURL,
 		vocab.PropertyObject:    object.Map(),
-		vocab.PropertyPublished: hannibal.TimeFormat(time.Now()),
+		vocab.PropertyPublished: datetime.Now(),
 		vocab.PropertyTo:        []string{vocab.NamespacePublic},
 		vocab.PropertyCC:        []string{followersURL},
 	}

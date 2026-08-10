@@ -55,12 +55,15 @@ func GetJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	}
 
 	// Combine the Actor and the Public Key
+	// Key ID/owner must use the actor `id` -- it is what this Actor signs with,
+	// and what remote servers dereference when verifying our signatures.
+	actorID := stream.ActivityPubURL()
+
 	result := template.Actor.JSONLD(stream)
 	result[vocab.PropertyPublicKey] = mapof.Any{
-		vocab.PropertyID:   stream.Permalink() + "#main-key",
-		vocab.PropertyType: "Key",
-		"owner":            stream.Permalink(),
-		"publicKeyPem":     key.PublicPEM,
+		vocab.PropertyID:           actorID + "#main-key",
+		vocab.PropertyOwner:        actorID,
+		vocab.PropertyPublicKeyPEM: key.PublicPEM,
 	}
 
 	// Return an ActivityPub response

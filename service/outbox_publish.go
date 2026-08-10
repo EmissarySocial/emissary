@@ -4,13 +4,12 @@ import (
 	"iter"
 	"maps"
 	"slices"
-	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/hannibal"
+	"github.com/benpate/hannibal/datetime"
 	"github.com/benpate/hannibal/outbox"
 	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/hannibal/streams"
@@ -226,7 +225,7 @@ func (service *Outbox) DeleteActivity(session data.Session, actorType string, ac
 			vocab.PropertyID:   objectID,
 			vocab.PropertyType: vocab.ObjectTypeTombstone,
 		},
-		vocab.PropertyPublished: hannibal.TimeFormat(time.Now()),
+		vocab.PropertyPublished: datetime.Now(),
 	})
 
 	if err := service.Publish(session, actorType, actorID, document, permissions); err != nil {
@@ -266,7 +265,7 @@ func (service *Outbox) UndoActivity(session data.Session, actorType string, acto
 		vocab.PropertyActor:     actor.ActorID(),
 		vocab.PropertyType:      vocab.ActivityTypeUndo,
 		vocab.PropertyObject:    originalActivity,
-		vocab.PropertyPublished: hannibal.TimeFormat(time.Now()),
+		vocab.PropertyPublished: datetime.Now(),
 	}
 
 	// Mirror the original activity's top-level audience (`to`/`cc`) onto the Undo. Publish derives

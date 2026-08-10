@@ -3,13 +3,13 @@ package service
 import (
 	"iter"
 	"strings"
-	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/datetime"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
@@ -283,7 +283,7 @@ func (service *KeyPackage) GetJSONLD(keyPackage *model.KeyPackage) mapof.Any {
 			vocab.PropertyType: vocab.ActorTypeApplication,
 			vocab.PropertyName: keyPackage.GeneratorName,
 		},
-		vocab.PropertyPublished:      time.UnixMilli(keyPackage.CreateDate).Format(time.RFC3339),
+		vocab.PropertyPublished:      datetime.FromUnixMilli(keyPackage.CreateDate),
 		vocab.PropertyMLSCiphersuite: keyPackage.Ciphersuite,
 	}
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/hannibal"
+	"github.com/benpate/hannibal/datetime"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
@@ -118,7 +118,7 @@ func (service *Stream) publish_outbox(session data.Session, user *model.User, st
 		vocab.PropertyType:      activityType,
 		vocab.PropertyActor:     user.ActivityPubURL(),
 		vocab.PropertyObject:    object,
-		vocab.PropertyPublished: hannibal.TimeFormat(time.Now()),
+		vocab.PropertyPublished: datetime.Now(),
 	}
 
 	if to, ok := object[vocab.PropertyTo]; ok {
