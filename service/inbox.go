@@ -146,13 +146,11 @@ func (service *Inbox) createOrUpdate(session data.Session, inboxActivity *model.
 
 	// Check to see if this is a new record
 	previousValue := model.NewInboxActivity()
-	if err := service.LoadByActivityID(session, inboxActivity.UserID, inboxActivity.ActivityID, &previousValue); err != nil {
-		if !derp.IsNotFound(err) {
-			return derp.Wrap(err, location, "Loading previous InboxActivity", inboxActivity)
-		}
-
+	if err := service.LoadByActivityID(session, inboxActivity.UserID, inboxActivity.ActivityID, &previousValue); err == nil {
 		inboxActivity.InboxActivityID = previousValue.InboxActivityID
 		inboxActivity.CreateDate = previousValue.CreateDate
+	} else if !derp.IsNotFound(err) {
+		return derp.Wrap(err, location, "Loading previous InboxActivity", inboxActivity)
 	}
 
 	// Save the value to the database
