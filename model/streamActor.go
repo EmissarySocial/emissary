@@ -3,6 +3,7 @@ package model
 import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 )
 
 // StreamActor defines the settings for a Stream to be used as an Actor in social integrations
@@ -32,7 +33,14 @@ func (actor StreamActor) JSONLD(stream *Stream) mapof.Any {
 	}
 
 	result := mapof.Any{
-		vocab.AtContext:                 vocab.ContextTypeActivityStreams,
+		// Security and Toot vocabularies are required because this document carries
+		// a `publicKey` (attached by the handler). Without them, strict JSON-LD
+		// consumers drop the key and HTTP Signature verification fails.
+		vocab.AtContext: sliceof.Any{
+			vocab.ContextTypeActivityStreams,
+			vocab.ContextTypeSecurity,
+			vocab.ContextTypeToot,
+		},
 		vocab.PropertyType:              actor.SocialRole,
 		vocab.PropertyID:                stream.ActivityPubURL(),
 		vocab.PropertyInbox:             stream.ActivityPubInboxURL(),
