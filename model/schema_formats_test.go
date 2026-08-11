@@ -35,6 +35,7 @@ func modelSchemas() map[string]schema.Element {
 		"ImportItemSchema":       ImportItemSchema(),
 		"InboxActivitySchema":    InboxActivitySchema(),
 		"KeyPackageSchema":       KeyPackageSchema(),
+		"MentionSchema":          MentionSchema(),
 		"MerchantAccountSchema":  MerchantAccountSchema(),
 		"NewsItemSchema":         NewsItemSchema(),
 		"NotificationSchema":     NotificationSchema(),

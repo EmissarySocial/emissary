@@ -375,9 +375,12 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 
 	// RULE: Extract and linkify #hashtags for Templates that configure tagging.  This runs
 	// BEFORE Normalize so the injected anchors pass through the same schema sanitization as
-	// any other content HTML.
+	// any other content HTML.  @mentions are extracted from the same paths, but only as far
+	// as their handles -- resolving a handle to an Actor URL is a network call, so it happens
+	// once at publish time (resolveMentions) rather than on every save.
 	if len(template.TagPaths) > 0 {
 		service.CalculateTags(session, stream)
+		service.CalculateMentions(stream)
 		service.applyHashtagLinks(&template, stream)
 	}
 
@@ -1212,6 +1215,89 @@ func (service *Stream) CalculateTags(session data.Session, stream *model.Stream)
 
 	// Apply the #hashtags back to the Stream
 	stream.Hashtags = hashtagNames
+}
+
+// CalculateMentions scans the Template-defined TagPaths on this Stream for @mentions and
+// merges them into the Stream's Mentions list.
+func (service *Stream) CalculateMentions(stream *model.Stream) {
+
+	// This runs on every save, so it deliberately does NO network work: handles are extracted
+	// here, and resolved to Actor URLs exactly once, later, by resolveMentions at publish time.
+	// A handle that is already present keeps its existing Href, so editing a document neither
+	// discards nor re-requests a resolution that has already been made.
+
+	const location = "service.Stream.CalculateMentions"
+
+	// Load the template (to get the tag paths)
+	template, err := service.templateService.Load(stream.TemplateID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Loading Template", stream.TemplateID))
+		return
+	}
+
+	// Index the Hrefs we have already resolved, so that re-scanning preserves them
+	resolved := make(map[string]string, len(stream.Mentions))
+
+	for _, mention := range stream.Mentions {
+		resolved[mention.Handle] = mention.Href
+	}
+
+	// Scan each tag path in the Stream for @mentions
+	schema := service.Schema()
+	result := model.NewMentions()
+	seen := make(map[string]struct{}, len(stream.Mentions))
+	hostname := uri.Hostname(service.host)
+
+	for _, path := range template.TagPaths {
+
+		if value, err := schema.Get(stream, path); err == nil {
+
+			// Massage the value into a cleanly scannable string
+			stringValue := convert.String(value)
+			stringValue = html.ToSearchText(stringValue)
+
+			for _, handle := range parse.Mentions(stringValue) {
+
+				// RULE: A bare "@" yields an empty token, which is not a handle.  Without this,
+				// resolveMentions would spend a WebFinger lookup on the empty string.
+				if handle == "" {
+					continue
+				}
+
+				// RULE: A handle with no hostname is anchored to THIS server -- on bandwagon.fm,
+				// "@bob" means "@bob@bandwagon.fm".  Qualifying at extraction (rather than at
+				// resolution) stores a handle that is unambiguous to the remote servers that read
+				// this document, and makes "@bob" and "@bob@bandwagon.fm" in the same document
+				// dedupe to a single Mention.
+				if !strings.Contains(handle, "@") {
+
+					// With no hostname to anchor to, the handle can never resolve. Drop it here
+					// rather than storing an address that is guaranteed to fail on every publish.
+					if hostname == "" {
+						continue
+					}
+
+					handle = handle + "@" + hostname
+				}
+
+				// RULE: One handle may be mentioned many times in a single document
+				if _, exists := seen[handle]; exists {
+					continue
+				}
+
+				seen[handle] = struct{}{}
+
+				result = append(result, model.Mention{
+					Handle: handle,
+					Href:   resolved[handle], // empty for handles that have not been resolved yet
+				})
+			}
+		}
+	}
+
+	// Apply the @mentions back to the Stream
+	stream.Mentions = result
 }
 
 // applyHashtagLinks wraps each of the Stream's #hashtags in its content with a link to the

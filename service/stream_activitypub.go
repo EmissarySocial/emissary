@@ -15,7 +15,6 @@ import (
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -87,10 +86,42 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 		result[vocab.PropertyAttributedTo] = stream.AttributedTo.ProfileURL
 	}
 
-	if len(stream.Hashtags) > 0 {
-		result[vocab.PropertyTag] = slice.Map(stream.Hashtags, func(tag string) mapof.String {
-			return service.HashtagAsJSONLD(template.TagURL, tag)
-		})
+	// The `tag` array carries BOTH #hashtags and @mentions, and is assigned exactly once, so
+	// both must be collected before it is written.
+	tags := make([]mapof.String, 0, len(stream.Hashtags)+len(stream.Mentions))
+
+	for _, hashtag := range stream.Hashtags {
+		tags = append(tags, service.HashtagAsJSONLD(template.TagURL, hashtag))
+	}
+
+	// RULE: Only RESOLVED @mentions are federated. An unresolved handle stays on the Stream so
+	// the author can correct it, but a `Mention` tag with no `href` gives a receiving server
+	// nothing to route to, so it is not published. (resolveMentions fills these in at publish.)
+	mentioned := make([]string, 0, len(stream.Mentions))
+
+	for _, mention := range stream.Mentions {
+
+		if mention.NotResolved() {
+			continue
+		}
+
+		tags = append(tags, mention.JSONLD())
+		mentioned = append(mentioned, mention.Href)
+	}
+
+	if len(tags) > 0 {
+		result[vocab.PropertyTag] = tags
+	}
+
+	// RULE: A mentioned actor must also be ADDRESSED. Mastodon resolves mentions from the `tag`
+	// array, but delivery is driven by addressing -- without this, a mentioned account that does
+	// not already follow the author never receives the post at all. Outbox.Publish delivers to
+	// every addressee on top of the follower fan-out (see publishRecipients).
+	//
+	// This is a plain []string because service.Stream.publish_outbox type-asserts it as one when
+	// it appends the in-reply-to author; a named slice type would silently fail that assertion.
+	if len(mentioned) > 0 {
+		result[vocab.PropertyCC] = mentioned
 	}
 
 	if stream.Location.NotZero() {

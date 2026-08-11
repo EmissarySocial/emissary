@@ -42,6 +42,7 @@ func StreamSchema() schema.Element {
 			"startDate":        datetime.Schema(),
 			"endDate":          datetime.Schema(),
 			"hashtags":         schema.Array{Items: schema.String{Format: "token", MaxLength: 32}},
+			"mentions":         schema.Array{Items: MentionSchema()},
 			"location":         geo.AddressSchema(),
 			"data":             schema.Object{Wildcard: schema.Any{}},
 			"publishDate":      schema.Integer{BitSize: 64},
@@ -128,6 +129,9 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 
 	case "hashtags":
 		return &stream.Hashtags, true
+
+	case "mentions":
+		return &stream.Mentions, true
 
 	case "attributedTo":
 		return &stream.AttributedTo, true
