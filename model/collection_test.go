@@ -59,11 +59,15 @@ func TestCollection_ID(t *testing.T) {
 	require.Equal(t, collection.CollectionID.Hex(), collection.ID())
 }
 
+// TestCollection_Fields checks the projection against the struct's actual bson tags. The previous
+// version of this test simply restated the literal, so it passed for as long as the list named
+// four fields ("collectionId", "to", "cc", "name") that Collection has never had.
 func TestCollection_Fields(t *testing.T) {
 
 	collection := NewCollection()
 
-	require.Equal(t, []string{"collectionId", "to", "cc", "name"}, collection.Fields())
+	require.Equal(t, []string{"_id", "userId", "parentId", "parentType", "collectionType", "read", "write", "totalItems"}, collection.Fields())
+	require.Subset(t, bsonNames(Collection{}), collection.Fields(), "every projected name must be a real bson field")
 }
 
 /******************************************

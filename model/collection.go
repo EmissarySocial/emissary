@@ -44,10 +44,14 @@ func (collection Collection) ID() string {
 
 func (collection Collection) Fields() []string {
 	return []string{
-		"collectionId",
-		"to",
-		"cc",
-		"name",
+		"_id",
+		"userId",
+		"parentId",
+		"parentType",
+		"collectionType",
+		"read",
+		"write",
+		"totalItems",
 	}
 }
 

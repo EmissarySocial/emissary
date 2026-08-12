@@ -87,7 +87,11 @@ func (response Response) ID() string {
 }
 
 func (response Response) Fields() []string {
-	return []string{"responseId", "url", "object", "type", "content", "createDate"}
+
+	// NOTE: "actor" and "userId" are not decoration. ActivityPubURL/Toot build their
+	// URLs from Actor, and the AccessLister methods key off UserID -- so omitting either
+	// one yields a Response that looks valid but computes wrong answers.
+	return []string{"_id", "userId", "actor", "object", "type", "summary", "content", "createDate"}
 }
 
 /******************************************

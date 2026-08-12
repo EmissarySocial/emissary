@@ -36,5 +36,5 @@ func (objectLink ObjectLink) ID() string {
 }
 
 func (objectLink ObjectLink) Fields() []string {
-	return []string{"_id", "objectLink", "inReplyTo", "actor", "recipients", "object"}
+	return []string{"_id", "objectLink", "inReplyTo", "recipients", "object"}
 }

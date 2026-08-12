@@ -43,7 +43,8 @@ func (identity Identity) Fields() []string {
 		"iconUrl",
 		"emailAddress",
 		"activityPubActor",
-		"activityPubUsername",
+		"webfingerUsername",
+		"privileges",
 	}
 }
 
