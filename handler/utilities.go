@@ -32,6 +32,11 @@ func ActorUsername(actor streams.Document) string {
 	return actor.ID()
 }
 
+// isHTMXRequest returns TRUE if this request was made by htmx (an HX-Request header is present)
+func isHTMXRequest(ctx echo.Context) bool {
+	return ctx.Request().Header.Get("HX-Request") != ""
+}
+
 // getActionID returns the :action token from the Request (or a default)
 func getActionID(ctx echo.Context) string {
 

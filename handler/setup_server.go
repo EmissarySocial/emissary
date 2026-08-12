@@ -42,6 +42,13 @@ func SetupServerGet(factory *server.SetupFactory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
+		// RULE: This endpoint serves a bare htmx fragment. Rendered standalone (a direct
+		// navigation) it is a scriptless page whose Save button falls back to a native
+		// form submit (BUG-109), so non-htmx requests are sent to the parent page instead.
+		if !isHTMXRequest(ctx) {
+			return ctx.Redirect(http.StatusSeeOther, "/server")
+		}
+
 		// Data schema and UI schema
 		config := factory.Config()
 		schema := config.Schema()

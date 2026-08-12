@@ -22,6 +22,13 @@ func SetupDomainUsersGet(serverFactory *server.SetupFactory, templates *template
 
 	return func(ctx echo.Context) error {
 
+		// RULE: This endpoint serves a bare htmx fragment. Rendered standalone (a direct
+		// navigation) it is a scriptless page with no working controls (BUG-109), so
+		// non-htmx requests are sent to the parent page instead.
+		if !isHTMXRequest(ctx) {
+			return ctx.Redirect(http.StatusSeeOther, "/domains")
+		}
+
 		// Get the domain configuration
 		domainID := ctx.Param("domain")
 		domainConfig, factory, err := serverFactory.ByDomainID(domainID)
