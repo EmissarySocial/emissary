@@ -2,6 +2,7 @@ package parse
 
 import "strings"
 
+// Option is a function that configures a Parser before it scans
 type Option func(*Parser)
 
 // WithHashtagsOnly sets the parser to only look for #Hashtags

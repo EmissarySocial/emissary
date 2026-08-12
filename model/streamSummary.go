@@ -49,10 +49,13 @@ func NewStreamSummary() StreamSummary {
 	}
 }
 
+// StreamSummaryFields returns the database columns that must be loaded to populate a StreamSummary
 func StreamSummaryFields() []string {
 	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "icon", "iconUrl", "hashtags", "tags", "attributedTo", "inReplyTo", "publishDate", "unpublishDate", "rank", "shuffle", "isFeatured", "startDate", "createDate", "location"}
 }
 
+// Fields returns the database columns that must be loaded to populate a StreamSummary
+// It is part of the FieldLister interface
 func (summary StreamSummary) Fields() []string {
 	return StreamSummaryFields()
 }
@@ -61,38 +64,47 @@ func (summary StreamSummary) Fields() []string {
  * Other Data Accessors
  *************************************/
 
+// ID returns the unique identifier for this Stream (in string format)
 func (summary StreamSummary) ID() string {
 	return summary.ObjectID.Hex()
 }
 
+// Name returns the label of this Stream
 func (summary StreamSummary) Name() string {
 	return summary.Label
 }
 
+// Description returns the summary of this Stream
 func (summary StreamSummary) Description() string {
 	return summary.Summary
 }
 
+// Author returns the PersonLink of whoever this Stream is attributed to
 func (summary StreamSummary) Author() PersonLink {
 	return summary.AttributedTo
 }
 
+// StreamID returns the unique identifier for this Stream (in string format)
 func (summary StreamSummary) StreamID() string {
 	return summary.ObjectID.Hex()
 }
 
+// ParentID returns the unique identifier of this Stream's parent (in string format)
 func (summary StreamSummary) ParentID() string {
 	return summary.ParentObjectID.Hex()
 }
 
+// ContentHTML returns this Stream's content, rendered as HTML
 func (summary StreamSummary) ContentHTML() string {
 	return summary.Content.HTML
 }
 
+// ContentRaw returns this Stream's content in its original, unrendered format
 func (summary StreamSummary) ContentRaw() string {
 	return summary.Content.Raw
 }
 
+// IsPublished returns TRUE if this Stream is inside its publication window right now
 func (summary StreamSummary) IsPublished() bool {
 	now := time.Now().Unix()
 	return (summary.PublishDate < now) && (summary.UnPublishDate > now)

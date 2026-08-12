@@ -1,3 +1,16 @@
+// Package parse scans plain text for fediverse tags -- #hashtags and @mentions -- and returns
+// them alongside the text that remains once they are removed.
+//
+// The entry points are the package-level helpers (All, Hashtags, Mentions, Split) for one-off
+// scans, and Parser for callers that need to configure the scan.  A Parser is configured with
+// the WithXXX Option functions: which prefix runes to look for, whether to keep the prefix in
+// the result, whether tags are case-folded, and where to collect the leftover text.
+//
+// Terminators -- the runes that end a tag -- vary by prefix, because hashtags and mentions do
+// not agree on what counts as punctuation.  A hashtag breaks on '-' and '@' so that "#well-being"
+// matches what every other fediverse server indexes; a mention must not, so that the WebFinger
+// handle "@user@my-host.social" survives as a single token.  See constants.go for the lists and
+// the reasoning behind each one.
 package parse
 
 import (
@@ -42,6 +55,7 @@ func New(options ...Option) Parser {
 	return result
 }
 
+// With applies additional Options to this Parser, and returns the Parser for chaining
 func (parser *Parser) With(options ...Option) *Parser {
 	for _, option := range options {
 		option(parser)
@@ -155,6 +169,7 @@ func (parser Parser) startToken(currentToken *strings.Builder, prefix rune) {
 	}
 }
 
+// foundTag appends a completed tag to the result set, folding its case if the Parser requires it
 func (parser Parser) foundTag(tag string, found []string) []string {
 	if !parser.caseSensitive {
 		tag = strings.ToLower(tag)

@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestHashtag_Beginning confirms that a tag is found at the very start of a message
 func TestHashtag_Beginning(t *testing.T) {
 
 	testMessage := "#This is a tag at the beginning of the message"
@@ -16,6 +17,7 @@ func TestHashtag_Beginning(t *testing.T) {
 	require.Equal(t, " is a tag at the beginning of the message", remainder)
 }
 
+// TestMention_Ending confirms that a tag is found at the very end of a message
 func TestMention_Ending(t *testing.T) {
 
 	testMessage := "This is a tag at the ending of the @message"
@@ -25,6 +27,7 @@ func TestMention_Ending(t *testing.T) {
 	require.Equal(t, "This is a tag at the ending of the ", remainder)
 }
 
+// TestHashtag_SkipMiddle confirms that a prefix in the middle of a word does not start a tag
 func TestHashtag_SkipMiddle(t *testing.T) {
 	testMessage := "This has no#hashtags in it."
 	tokens, remainder := HashtagsAndRemainder(testMessage)
@@ -32,6 +35,7 @@ func TestHashtag_SkipMiddle(t *testing.T) {
 	require.Equal(t, testMessage, remainder)
 }
 
+// TestMentions_Long scans a multi-line message for @mentions, ignoring its #hashtags
 func TestMentions_Long(t *testing.T) {
 
 	testMessage := "This is a #story of a #lovely_lady who was living with #three #very #lovely_girls.\n"
@@ -42,6 +46,7 @@ func TestMentions_Long(t *testing.T) {
 	require.Equal(t, "This is a #story of a #lovely_lady who was living with #three #very #lovely_girls.\nThey all had hair of #gold, like their . The #youngest one in #curls", remainder)
 }
 
+// TestHashtags_Long scans a multi-line message for #hashtags, ignoring its @mentions
 func TestHashtags_Long(t *testing.T) {
 
 	testMessage := "This is a #story of a #lovely_lady who was living with #three #very #lovely_girls.\n"
@@ -52,6 +57,7 @@ func TestHashtags_Long(t *testing.T) {
 	require.Equal(t, "This is a  of a  who was living with   .\nThey all had hair of , like their @mother. The  one in ", remainder)
 }
 
+// TestCombined scans a message for both prefixes at once, keeping each prefix in the result
 func TestCombined(t *testing.T) {
 
 	testMessage := "This is a #story of a @lovely_lady who was living with #three #very #lovely_girls.\n"
@@ -62,6 +68,7 @@ func TestCombined(t *testing.T) {
 	require.Equal(t, "This is a  of a  who was living with   .\nThey all had hair of , like their . The  in ", remainder)
 }
 
+// TestRegression confirms that comma-separated tags are each scanned separately
 func TestRegression(t *testing.T) {
 	testMessage := "#all, #rock, #funky, #chicken"
 	tokens := Hashtags(testMessage)
@@ -83,6 +90,7 @@ func TestCaseSensitive_Default(t *testing.T) {
 	require.Equal(t, sliceof.String{"LoL", "YOLO", "tokens", "bRo"}, tokens)
 }
 
+// TestCaseSensitive confirms that tags keep their original case when the option is set
 func TestCaseSensitive(t *testing.T) {
 	testMessage := "#LoL #YOLO #tokens #bRo"
 
@@ -90,6 +98,7 @@ func TestCaseSensitive(t *testing.T) {
 	require.Equal(t, sliceof.String{"LoL", "YOLO", "tokens", "bRo"}, tokens)
 }
 
+// TestCaseInSensitive confirms that tags are lower-cased when the option is set
 func TestCaseInSensitive(t *testing.T) {
 	testMessage := "#LoL #YOLO #tokens #bRo"
 
@@ -97,6 +106,7 @@ func TestCaseInSensitive(t *testing.T) {
 	require.Equal(t, sliceof.String{"lol", "yolo", "tokens", "bro"}, tokens)
 }
 
+// TestIncludePrefix confirms that '#' is kept in the result when the option is set
 func TestIncludePrefix(t *testing.T) {
 	testMessage := "#lol #yolo #tokens #bro"
 
@@ -104,6 +114,7 @@ func TestIncludePrefix(t *testing.T) {
 	require.Equal(t, sliceof.String{"#lol", "#yolo", "#tokens", "#bro"}, tokens)
 }
 
+// TestIncludePrefix_Mentions confirms that '@' is kept in the result when the option is set
 func TestIncludePrefix_Mentions(t *testing.T) {
 	testMessage := "@john. @sarah, @kyle: @jane; ignore this remainder text. #ignore-hashtag"
 
@@ -111,6 +122,7 @@ func TestIncludePrefix_Mentions(t *testing.T) {
 	require.Equal(t, sliceof.String{"@john", "@sarah", "@kyle", "@jane"}, tokens)
 }
 
+// TestWeirdTerminators confirms which punctuation ends a hashtag mid-word, and which does not
 func TestWeirdTerminators(t *testing.T) {
 
 	testMessage := "#Standard #ThisTag.Sure,Has:Weird;Terminators? "
@@ -119,6 +131,7 @@ func TestWeirdTerminators(t *testing.T) {
 	require.Equal(t, sliceof.String{"Standard", "ThisTag.Sure"}, tokens)
 }
 
+// TestSoftTerminators1 confirms that a period ends a hashtag only at a word boundary
 func TestSoftTerminators1(t *testing.T) {
 
 	testMessage := "#One #Two. #Three.Four"
@@ -127,6 +140,7 @@ func TestSoftTerminators1(t *testing.T) {
 	require.Equal(t, sliceof.String{"One", "Two", "Three.Four"}, tokens)
 }
 
+// TestSoftTerminators2 confirms that a trailing period does not truncate a WebFinger handle
 func TestSoftTerminators2(t *testing.T) {
 
 	testMessage := "Please tell @username@server.social. It's important."
@@ -135,6 +149,7 @@ func TestSoftTerminators2(t *testing.T) {
 	require.Equal(t, sliceof.String{"username@server.social"}, tokens)
 }
 
+// TestSoftTerminators3 confirms that commas and question marks end a mention outright
 func TestSoftTerminators3(t *testing.T) {
 
 	testMessage := "Please tell @username@server.social, it's important, okay @username2?"
@@ -158,6 +173,7 @@ func TestInTheMiddleOfATag(t *testing.T) {
 	require.Equal(t, sliceof.String{"username@server.social"}, mentions)
 }
 
+// TestNewlines confirms that a tag may begin immediately after a line break
 func TestNewlines(t *testing.T) {
 
 	testMessage := "This is a tag after a\n#newline"

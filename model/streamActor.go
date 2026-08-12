@@ -26,6 +26,7 @@ func (actor StreamActor) NotNil() bool {
 	return !actor.IsNil()
 }
 
+// JSONLD returns the ActivityStreams actor document for the provided Stream
 func (actor StreamActor) JSONLD(stream *Stream) mapof.Any {
 
 	if actor.IsNil() {

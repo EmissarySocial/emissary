@@ -117,10 +117,12 @@ func (stream Stream) ID() string {
  * Other Data Accessors
  ******************************************/
 
+// Name returns the label of this Stream
 func (stream Stream) Name() string {
 	return stream.Label
 }
 
+// Permalink returns the canonical URL of this Stream
 func (stream Stream) Permalink() string {
 	return stream.URL
 }
@@ -134,6 +136,7 @@ func (stream Stream) SummaryOrContent() string {
 	return stream.Content.HTML
 }
 
+// WidgetsByLocation returns every Widget that this Stream places in the named location
 func (stream Stream) WidgetsByLocation(location string) []StreamWidget {
 
 	return slice.Filter(stream.Widgets, func(widget StreamWidget) bool {
@@ -141,6 +144,7 @@ func (stream Stream) WidgetsByLocation(location string) []StreamWidget {
 	})
 }
 
+// WidgetByID returns the named Widget, or an empty Widget if this Stream does not have one
 func (stream Stream) WidgetByID(streamWidgetID primitive.ObjectID) StreamWidget {
 
 	for _, widget := range stream.Widgets {
@@ -170,6 +174,8 @@ func (stream Stream) GetSort(fieldName string) any {
  * StateSetter Interface
  ******************************************/
 
+// SetState moves this Stream into a different workflow state
+// It is part of the StateSetter interface
 func (stream *Stream) SetState(stateID string) {
 	stream.StateID = stateID
 }
@@ -270,6 +276,7 @@ func (stream Stream) IsVisibleTo(permissions Permissions) bool {
  * Privilege Methods
  ******************************************/
 
+// IsPublic returns TRUE if anonymous visitors may view this Stream
 func (stream Stream) IsPublic() bool {
 	return stream.DefaultAllowAnonymous()
 }
@@ -285,10 +292,12 @@ func (stream Stream) ProductIDs() id.Slice {
 	return flatten(stream.Products)
 }
 
+// GroupIDs returns every Group that has a role on this Stream, whatever the role
 func (stream Stream) GroupIDs() id.Slice {
 	return flatten(stream.Groups)
 }
 
+// CircleIDs returns every Circle that has a role on this Stream, whatever the role
 func (stream Stream) CircleIDs() id.Slice {
 	return flatten(stream.Circles)
 }
@@ -297,50 +306,62 @@ func (stream Stream) CircleIDs() id.Slice {
  * ActivityStream Methods
  ******************************************/
 
+// ActivityPubURL returns the URL that identifies this Stream to ActivityPub
 func (stream Stream) ActivityPubURL() string {
 	return stream.URL
 }
 
+// ActivityPubInboxURL returns the URL of this Stream's ActivityPub inbox
 func (stream Stream) ActivityPubInboxURL() string {
 	return stream.URL + "/pub/inbox"
 }
 
+// ActivityPubOutboxURL returns the URL of this Stream's ActivityPub outbox
 func (stream Stream) ActivityPubOutboxURL() string {
 	return stream.URL + "/pub/outbox"
 }
 
+// ActivityPubFollowersURL returns the URL of this Stream's ActivityPub followers collection
 func (stream Stream) ActivityPubFollowersURL() string {
 	return stream.URL + "/pub/followers"
 }
 
+// ActivityPubAnnouncedURL returns the URL of the collection of Announces that this Stream has made
 func (stream Stream) ActivityPubAnnouncedURL() string {
 	return stream.URL + "/pub/shared"
 }
 
+// ActivityPubType returns the ActivityStreams type that this Stream presents as
 func (stream Stream) ActivityPubType() string {
 	return stream.SocialRole
 }
 
+// ActivityPubLikesURL returns the URL of the collection of Likes on this Stream
 func (stream Stream) ActivityPubLikesURL() string {
 	return stream.URL + "/pub/likes"
 }
 
+// ActivityPubDislikesURL returns the URL of the collection of Dislikes on this Stream
 func (stream Stream) ActivityPubDislikesURL() string {
 	return stream.URL + "/pub/dislikes"
 }
 
+// ActivityPubSharesURL returns the URL of the collection of Announces of this Stream
 func (stream Stream) ActivityPubSharesURL() string {
 	return stream.URL + "/pub/shares"
 }
 
+// ActivityPubRepliesURL returns the URL of the collection of replies to this Stream
 func (stream Stream) ActivityPubRepliesURL() string {
 	return stream.URL + "/pub/replies"
 }
 
+// ActivityPubChildrenURL returns the URL of the collection of this Stream's children
 func (stream Stream) ActivityPubChildrenURL() string {
 	return stream.URL + "/pub/children"
 }
 
+// ActivityPubResponses returns the URL of the response collection matching the provided activity type
 func (stream Stream) ActivityPubResponses(responseType string) string {
 
 	switch responseType {
@@ -376,6 +397,7 @@ func (stream Stream) IsPublished() bool {
  * Mastodon API Methods
  ******************************************/
 
+// Toot returns this Stream as a Mastodon API Status object
 func (stream Stream) Toot() object.Status {
 
 	return object.Status{
@@ -391,6 +413,7 @@ func (stream Stream) Toot() object.Status {
 	}
 }
 
+// GetRank returns this Stream's sort order within its parent
 func (stream Stream) GetRank() int64 {
 	return int64(stream.Rank)
 }

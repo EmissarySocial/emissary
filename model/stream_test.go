@@ -14,6 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// TestStreamSchema confirms that every Stream field round-trips through its JSON-Schema
 func TestStreamSchema(t *testing.T) {
 
 	s := schema.New(StreamSchema())
@@ -130,6 +131,7 @@ func TestStreamSchema_Aliases(t *testing.T) {
 	}
 }
 
+// TestPermissionSchema confirms that role-to-ID permission maps round-trip through their schema
 func TestPermissionSchema(t *testing.T) {
 
 	m := mapof.NewObject[sliceof.String]()
@@ -145,6 +147,7 @@ func TestPermissionSchema(t *testing.T) {
 	tableTest_Schema(t, &s, &m, table)
 }
 
+// TestStream_IsVisibleTo confirms that DefaultAllow decides visibility for a set of permissions
 func TestStream_IsVisibleTo(t *testing.T) {
 
 	// A private Group and a signed-in User, used to build viewer permissions below.
@@ -196,6 +199,7 @@ func TestStream_IsVisibleTo(t *testing.T) {
 	}
 }
 
+// TestStream_JSON confirms that a Stream survives a round-trip through JSON
 func TestStream_JSON(t *testing.T) {
 
 	test := func(stream Stream, expected ...string) {

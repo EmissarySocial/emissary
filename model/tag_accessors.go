@@ -4,6 +4,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TagSchema returns the JSON-Schema that validates a Tag
 func TagSchema() schema.Element {
 
 	return schema.Object{
@@ -22,6 +23,8 @@ func TagSchema() schema.Element {
  * Getter/Setter Interfaces
  ********************************/
 
+// GetPointer returns a pointer to the named field, and TRUE if the name is recognized
+// It is part of the schema.PointerGetter interface
 func (tag *Tag) GetPointer(name string) (any, bool) {
 	switch name {
 
