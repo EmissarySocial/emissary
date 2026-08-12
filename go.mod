@@ -24,7 +24,7 @@ require (
 	github.com/benpate/mediaserver v0.16.0
 	github.com/benpate/re v0.5.1
 	github.com/benpate/remote v0.23.0
-	github.com/benpate/rosetta v0.33.0
+	github.com/benpate/rosetta v0.34.0
 	github.com/benpate/sherlock v0.12.0
 	github.com/benpate/sniff v0.2.0
 	github.com/benpate/steranko v0.29.0
@@ -65,7 +65,7 @@ require (
 	github.com/xhit/go-simple-mail/v2 v2.16.0
 	github.com/yeqown/go-qrcode/v2 v2.2.5
 	github.com/yeqown/go-qrcode/writer/standard v1.3.0
-	github.com/yuin/goldmark v1.8.2
+	github.com/yuin/goldmark v1.8.5
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.abhg.dev/goldmark/anchor v0.2.0
 	go.mongodb.org/mongo-driver v1.17.9

@@ -21,7 +21,7 @@
 				"phoneNumber": "",
 				"mailingAddress": ""
 			},
-			"keyEncryptingKey": "abcdefghijklmnopqrstuvwxyz123456"
+			"masterKey": "6dcc2f456c269b6cbb2012ad434981c8a868ee8a7ed1be8f3a75cec449d1b31f"
 		}
 	],
 	"providers": null,

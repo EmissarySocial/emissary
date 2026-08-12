@@ -111,7 +111,7 @@ func (factory *Factory) readConfig(config config.Config) {
 	}
 
 	// JWT Service configuration
-	factory.jwtService.Refresh(server, config.MasterKey)
+	factory.jwtService.Refresh(server)
 
 	// Digital Dome configuration
 	factory.digitalDome.With(dome.LogDatabase(session.Collection("DigitalDome")))

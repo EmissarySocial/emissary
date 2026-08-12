@@ -155,13 +155,17 @@ func (service SterankoUserService) MasqueradeAs(user *model.User) (jwt.Claims, e
 		return nil, derp.Forbidden(location, "User moved to new server", user.MovedTo)
 	}
 
+	// Create a new claim for the target user
 	claims, err := service.claims(user)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Creating JWT claims for masquerade")
 	}
+
+	// Mark this claim as a "masquerade" claim, which allows the administrator to act as the target user
 	claims.Masquerade = true
 
+	// Success.
 	return &claims, nil
 }
 

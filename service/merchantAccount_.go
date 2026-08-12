@@ -1,12 +1,12 @@
 package service
 
 import (
-	"encoding/hex"
 	"iter"
 	"net/url"
 	"slices"
 	"time"
 
+	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -116,7 +116,7 @@ func (service *MerchantAccount) Save(session data.Session, merchantAccount *mode
 	const location = "service.MerchantAccount.Save"
 
 	// Decode the EncryptionKey
-	encryptionKey, err := hex.DecodeString(service.encryptionKey)
+	encryptionKey, err := config.DecodeMasterKey(service.encryptionKey)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Decoding encryption key")
@@ -381,8 +381,8 @@ func (service *MerchantAccount) DecryptVault(merchantAccount *model.MerchantAcco
 		}
 	*/
 
-	// Decode the encryption key (this should never fail)
-	encryptionKey, err := hex.DecodeString(service.encryptionKey)
+	// Decode the encryption key
+	encryptionKey, err := config.DecodeMasterKey(service.encryptionKey)
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Decoding encryption key")
 	}

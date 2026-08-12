@@ -27,11 +27,18 @@ import (
 // WrapInlineSuccess sends a confirmation message to the #htmx-response-message element
 func WrapInlineSuccess(response http.ResponseWriter, message any) error {
 
+	// Content-Type must be explicit: Go's sniffer doesn't recognize `<span` as HTML, so an
+	// unlabeled fragment goes out as text/plain and renders as raw markup anywhere the
+	// browser shows the response directly (e.g. a non-htmx form submit on the setup console).
+	response.Header().Set("Content-Type", "text/html; charset=utf-8")
 	response.Header().Set("HX-Reswap", "innerHTML")
 	response.Header().Set("HX-Retarget", "#htmx-response-message")
 	response.WriteHeader(http.StatusOK)
 
-	if _, err := response.Write([]byte(`<span class="text-green">` + convert.String(message) + `</span>`)); err != nil {
+	// Escape the message: this span is swapped into the page as raw HTML.
+	escaped := stdhtml.EscapeString(convert.String(message))
+
+	if _, err := response.Write([]byte(`<span class="text-green">` + escaped + `</span>`)); err != nil {
 		return derp.Wrap(err, "build.WrapInlineSuccess", "Writing response. This should never happen", message)
 	}
 
@@ -43,6 +50,10 @@ func WrapInlineError(response http.ResponseWriter, err error) error {
 
 	derp.Report(err)
 
+	// Content-Type must be explicit: Go's sniffer doesn't recognize `<span` as HTML, so an
+	// unlabeled fragment goes out as text/plain and renders as raw markup anywhere the
+	// browser shows the response directly (BUG-109's headline symptom).
+	response.Header().Set("Content-Type", "text/html; charset=utf-8")
 	response.Header().Set("HX-Reswap", "innerHTML")
 	response.Header().Set("HX-Retarget", "#htmx-response-message")
 	response.WriteHeader(http.StatusOK)

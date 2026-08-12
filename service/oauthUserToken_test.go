@@ -12,8 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-const testMasterKey = "0123456789ABCDEF0123456789ABCDE0123456789ABCDEF0123456789ABCDEFF"
-
 // newTestOAuthUserTokenService wires an OAuthUserToken service against an in-memory
 // mock database, with a working JWT service for minting access tokens.
 func newTestOAuthUserTokenService(t *testing.T) (*OAuthUserToken, data.Session) {
@@ -26,7 +24,7 @@ func newTestOAuthUserTokenService(t *testing.T) (*OAuthUserToken, data.Session) 
 	require.Nil(t, err)
 
 	jwtService := NewJWT()
-	jwtService.Refresh(server, testMasterKey)
+	jwtService.Refresh(server)
 
 	tokenService := NewOAuthUserToken()
 	tokenService.jwtService = &jwtService

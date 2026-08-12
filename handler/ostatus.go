@@ -25,8 +25,10 @@ func PostOStatusDiscover(ctx *steranko.Context, factory *service.Factory, sessio
 		return err
 	}
 
-	// Use WebFinger to get information about the user's account.
-	resource, err := digit.Lookup(transaction.RemoteAccount)
+	// Use WebFinger to get information about the user's account. The Camper
+	// carries the standard outbound HTTP options (cache middleware, private-IP policy).
+	camper := factory.Camper()
+	resource, err := camper.Lookup(transaction.RemoteAccount)
 
 	if err != nil {
 		return ctx.String(http.StatusOK, "Your account doesn't support auto-discovery.")

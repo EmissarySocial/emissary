@@ -271,10 +271,34 @@ func TestWrapInlineError(t *testing.T) {
 	require.Equal(t, "#htmx-response-message", recorder.Header().Get("HX-Retarget"))
 	require.Equal(t, `<span class="text-red">Address not found</span>`, recorder.Body.String())
 
+	// The fragment must be labeled HTML: Go's sniffer reads `<span` as text/plain, which
+	// renders as raw markup on any direct (non-htmx) render path -- BUG-109's symptom.
+	require.Equal(t, "text/html; charset=utf-8", recorder.Header().Get("Content-Type"))
+
 	// A message echoing hostile input is escaped, not swapped into the page as markup
 	recorder = httptest.NewRecorder()
 	err = derp.Validation(`<script>alert(1)</script> is not a valid address`)
 
 	require.Nil(t, WrapInlineError(recorder, err))
 	require.Equal(t, `<span class="text-red">&lt;script&gt;alert(1)&lt;/script&gt; is not a valid address</span>`, recorder.Body.String())
+}
+
+func TestWrapInlineSuccess(t *testing.T) {
+
+	// The full writer path: 200 status, htmx retargeting headers, explicit HTML
+	// Content-Type, and the message inside the green span.
+	recorder := httptest.NewRecorder()
+
+	require.Nil(t, WrapInlineSuccess(recorder, "Record Updated"))
+	require.Equal(t, http.StatusOK, recorder.Code)
+	require.Equal(t, "innerHTML", recorder.Header().Get("HX-Reswap"))
+	require.Equal(t, "#htmx-response-message", recorder.Header().Get("HX-Retarget"))
+	require.Equal(t, "text/html; charset=utf-8", recorder.Header().Get("Content-Type"))
+	require.Equal(t, `<span class="text-green">Record Updated</span>`, recorder.Body.String())
+
+	// A message echoing hostile input is escaped, not swapped into the page as markup
+	recorder = httptest.NewRecorder()
+
+	require.Nil(t, WrapInlineSuccess(recorder, `<img src=x onerror=alert(1)>`))
+	require.Equal(t, `<span class="text-green">&lt;img src=x onerror=alert(1)&gt;</span>`, recorder.Body.String())
 }

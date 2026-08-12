@@ -5,8 +5,6 @@ adapters for reading/writing from the filesystem or a mongodb database.
 package config
 
 import (
-	"crypto/rand"
-	"encoding/hex"
 	"strconv"
 
 	"github.com/EmissarySocial/emissary/tools/set"
@@ -19,23 +17,22 @@ import (
 
 // Config defines all of the domains available on this server
 type Config struct {
-	Domains              set.Slice[Domain]            `json:"domains"`             // Slice of one or more domain configurations
-	Templates            sliceof.Object[mapof.String] `json:"templates"`           // Folders containing all stream templates
-	AttachmentOriginals  mapof.String                 `json:"attachmentOriginals"` // Folder where original attachments will be stored
-	AttachmentCache      mapof.String                 `json:"attachmentCache"`     // Folder (possibly memory cache) where cached versions of attachmented files will be stored.
-	ExportCache          mapof.String                 `json:"exportCache"`         // Folder where exported files will be stored
-	Certificates         mapof.String                 `json:"certificates"`        // Folder containing the SSL certificate cache for Let's Encrypt AutoSSL
-	ActivityPubCache     mapof.String                 `json:"activityPubCache"`    // Connection string for ActivityPub cache database
-	AdminEmail           string                       `json:"adminEmail"`          // Email address of the administrator
-	HTTPPort             int                          `json:"httpPort"`            // Port to listen on for HTTP requests
-	HTTPSPort            int                          `json:"httpsPort"`           // Port to listen on for HTTPS requests
-	DebugLevel           string                       `json:"debugLevel"`          // Amount of debugging information to log for the server, using zerolog levels (Trace, Debug, Info, Warn, Error, None)
-	Source               string                       `json:"-"`                   // READONLY: Where did the initial config location come from?  (Command Line, Environment Variable, Default)
-	Location             string                       `json:"-"`                   // READONLY: Location where this config file is read from/to.  Not a part of the configuration itself.
-	MongoID              primitive.ObjectID           `json:"-" bson:"_id"`        // Used as unique key for MongoDB
-	Loggers              sliceof.Object[mapof.Any]    `json:"loggers"`             // Logging configuration for this server
-	LogSlowQueries       int                          `json:"logSlowQueries"`      // Log queries that take longer than this many milliseconds (0 = do not log)
-	MasterKey            string                       `json:"masterKey"`
+	Domains              set.Slice[Domain]            `json:"domains"`              // Slice of one or more domain configurations
+	Templates            sliceof.Object[mapof.String] `json:"templates"`            // Folders containing all stream templates
+	AttachmentOriginals  mapof.String                 `json:"attachmentOriginals"`  // Folder where original attachments will be stored
+	AttachmentCache      mapof.String                 `json:"attachmentCache"`      // Folder (possibly memory cache) where cached versions of attachmented files will be stored.
+	ExportCache          mapof.String                 `json:"exportCache"`          // Folder where exported files will be stored
+	Certificates         mapof.String                 `json:"certificates"`         // Folder containing the SSL certificate cache for Let's Encrypt AutoSSL
+	ActivityPubCache     mapof.String                 `json:"activityPubCache"`     // Connection string for ActivityPub cache database
+	AdminEmail           string                       `json:"adminEmail"`           // Email address of the administrator
+	HTTPPort             int                          `json:"httpPort"`             // Port to listen on for HTTP requests
+	HTTPSPort            int                          `json:"httpsPort"`            // Port to listen on for HTTPS requests
+	DebugLevel           string                       `json:"debugLevel"`           // Amount of debugging information to log for the server, using zerolog levels (Trace, Debug, Info, Warn, Error, None)
+	Source               string                       `json:"-"`                    // READONLY: Where did the initial config location come from?  (Command Line, Environment Variable, Default)
+	Location             string                       `json:"-"`                    // READONLY: Location where this config file is read from/to.  Not a part of the configuration itself.
+	MongoID              primitive.ObjectID           `json:"-" bson:"_id"`         // Used as unique key for MongoDB
+	Loggers              sliceof.Object[mapof.Any]    `json:"loggers"`              // Logging configuration for this server
+	LogSlowQueries       int                          `json:"logSlowQueries"`       // Log queries that take longer than this many milliseconds (0 = do not log)
 	ClientIPStrategy     string                       `json:"clientIpStrategy"`     // Method used to determine the client's IP address.  Important for rate-limiting and abuse prevention.
 	ClientIPTrustedCount int                          `json:"clientIpTrustedCount"` // When using "RIGHTMOST-TRUSTED-COUNT" strategy, number of trusted IP addresses to look back when determining the client's IP address.
 	ClientIPHeader       string                       `json:"clientIpHeader"`       // When using the "SINGLE-IP-HEADER" strategy, header to inspect to determine the client's IP address.
@@ -60,10 +57,6 @@ func NewConfig() Config {
 // DefaultConfig return sthe default configuration for this application.
 func DefaultConfig() Config {
 
-	// Create a default master key as random 32-byte slice
-	masterKey := make([]byte, 32)
-	_, _ = rand.Reader.Read(masterKey)
-
 	return Config{
 		Domains: make(set.Slice[Domain], 0),
 
@@ -78,7 +71,6 @@ func DefaultConfig() Config {
 		Loggers:             sliceof.Object[mapof.Any]{{"type": "console"}},
 		HTTPPort:            8080,
 		HTTPSPort:           443,
-		MasterKey:           hex.EncodeToString(masterKey),
 		ClientIPStrategy:    "REMOTE-ADDR",
 	}
 }

@@ -27,6 +27,13 @@ func SetupDomainGet(factory *server.SetupFactory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
 
+		// RULE: This endpoint serves a bare htmx fragment. Rendered standalone (a direct
+		// navigation) it is a scriptless page whose Save button falls back to a native
+		// form submit (BUG-109), so non-htmx requests are sent to the parent page instead.
+		if !isHTMXRequest(ctx) {
+			return ctx.Redirect(http.StatusSeeOther, "/domains")
+		}
+
 		domainID := ctx.Param("domain")
 
 		domain, err := factory.FindDomain(domainID)
@@ -69,17 +76,26 @@ func SetupDomainPost(serverFactory *server.SetupFactory) echo.HandlerFunc {
 		// Try to load the existing domain.  If it does not exist, then create a new one.
 		domain, _ := serverFactory.FindDomain(domainID)
 
+		// RULE: Heal domains that have no master key.  Domains declared directly in a config
+		// file skip NewDomain(), so they can arrive here without one; generate a key now so
+		// this save persists it.  The key is deliberately not settable through the form (BUG-110).
+		if domain.MasterKey == "" {
+			domain.MasterKey = config.NewMasterKey()
+		}
+
 		input := mapof.Any{}
 
+		// These wrap messages are user-facing: WrapInlineError displays the OUTERMOST message
+		// of a non-validation chain, so they must read as sentences, not pipeline labels.
 		if err := (&echo.DefaultBinder{}).BindBody(ctx, &input); err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Binding form input"))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Unable to read the submitted form"))
 		}
 
 		// Update the domain configuration and save it to the domain storage (db/file/etc)
 		s := schema.New(config.DomainSchema())
 
 		if err := s.SetAll(&domain, input); err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Setting config values"))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "One or more settings could not be saved"))
 		}
 
 		if _, err := s.Validate(&domain); err != nil {
