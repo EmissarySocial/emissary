@@ -65,8 +65,7 @@ func WithActor(serverFactory *server.Factory, fn WithFunc1[string]) echo.Handler
 }
 
 // WithActorAndUser resolves both the requesting Actor (authenticated by HTTP signatures) and the
-//
-//	requested (but un-authenticated) User from the URL path
+// requested (but un-authenticated) User from the URL path
 func WithActorAndUser(serverFactory *server.Factory, fn WithFunc2[string, model.User]) echo.HandlerFunc {
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
@@ -78,15 +77,16 @@ func WithActorAndUser(serverFactory *server.Factory, fn WithFunc2[string, model.
 	})
 }
 
-// WithAuthorizedActorAndUser resolves the requesting Actor and the requested User, and REFUSES the
-// request unless the Actor is identified and welcome: anonymous requests get a 401 UNIFORMLY --
-// before the target is even loaded, so probing reveals nothing -- and a requester BLOCKED by the
-// target User (or the domain) gets a 404, indistinguishable from a User that does not exist. MUTE
-// and LABEL rules never gate here: a muted actor must not be able to detect the mute.
+// WithAuthorizedActorAndUser resolves the requesting Actor and the requested User, refusing the
+// request unless that Actor is both identified and welcome
 func WithAuthorizedActorAndUser(serverFactory *server.Factory, fn WithFunc2[string, model.User]) echo.HandlerFunc {
 
 	const location = "handler.WithAuthorizedActorAndUser"
 
+	// This is the authorized-fetch ("secure mode") gate, and it is wired to NO route today --
+	// it is kept for a future Domain-level RequireSignedFetch setting. No handler may assume it
+	// runs; check server.go for a route's actual wrapper. Its unit test drives the disposition
+	// gate directly, so a green CI says nothing about reachability. (BUG-21)
 	return WithActor(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, actorID *string) error {
 
 		// RULE: Anonymous requests are refused before the target is even loaded, so probing
@@ -116,11 +116,12 @@ func WithAuthorizedActorAndUser(serverFactory *server.Factory, fn WithFunc2[stri
 	})
 }
 
-// authorizedActorRefusal maps the requester's disposition to the authorized-fetch outcome: a
-// blocked requester gets a 404 (identical to a User that does not exist), and everyone else --
-// muted included -- gets through, because a muted actor must never detect the mute (D5).
+// authorizedActorRefusal maps a requester's rule disposition to the authorized-fetch outcome
 func authorizedActorRefusal(location string, disposition model.RuleDisposition) error {
 
+	// RULE: A blocked requester gets a 404 -- identical to a User who does not exist -- so that
+	// signed probing cannot tell the two apart. MUTE and bare LABEL matches deliberately do NOT
+	// gate here: a muted actor must never be able to detect the mute (D5).
 	if disposition.IsBlocked() {
 		return derp.NotFound(location, "User not found")
 	}
