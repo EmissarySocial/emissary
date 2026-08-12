@@ -1,0 +1,95 @@
+# revive configuration for Emissary
+#
+# `revive ./...` from the repo root picks this file up automatically -- verified with revive 1.15.0
+# on 2026-08-12, by running with and without the file present.  (Its `-help` text mentions only
+# $XDG_CONFIG_HOME and $HOME, but the working directory is searched too.)  Pass
+# `-config revive.toml` explicitly if you ever run revive from somewhere else.
+#
+# This file pins the rule set rather than inheriting revive's defaults, so a revive upgrade cannot
+# silently change what the gate means.  The list below IS revive's default (legacy golint) set,
+# minus `unused-parameter`, plus `early-return` -- see the notes on each.
+
+ignoreGeneratedHeader = false
+severity = "warning"
+confidence = 0.8
+errorCode = 1
+warningCode = 1
+
+# ---------------------------------------------------------------------------
+# Documentation
+# ---------------------------------------------------------------------------
+
+# Every exported symbol needs a doc comment that starts with its own name.
+#
+# This is the single largest source of findings in the tree (~1,700 as of 2026-08-12), and it is
+# deliberately left ON.  The backlog is paid down as a RATCHET, not in one sweep: any file you
+# touch comes out fully documented before the change lands.  See the go-comments skill.
+#
+# NOTE: the house standard is stricter than this rule -- go-comments requires a comment on EVERY
+# symbol, exported or not, which revive cannot check (`checkPrivateReceivers` covers only private
+# receivers on exported methods).  Measured against the house rule the real backlog is ~2,800.
+# Treat a clean `exported` run as necessary, not sufficient.
+[rule.exported]
+
+# Every package that others import gets a package doc comment, conventionally in doc.go.
+[rule.package-comments]
+
+# ---------------------------------------------------------------------------
+# Naming
+# ---------------------------------------------------------------------------
+
+[rule.var-naming]
+[rule.receiver-naming]
+[rule.error-naming]
+[rule.error-strings]
+[rule.time-naming]
+[rule.context-as-argument]
+[rule.context-keys-type]
+[rule.unexported-return]
+[rule.redefines-builtin-id]
+
+# ---------------------------------------------------------------------------
+# Control flow and correctness
+# ---------------------------------------------------------------------------
+
+# These agree with the go-control-flow skill: prefer guard clauses, do not indent the happy path.
+[rule.indent-error-flow]
+[rule.superfluous-else]
+[rule.early-return]
+
+[rule.error-return]
+[rule.errorf]
+[rule.unreachable-code]
+[rule.empty-block]
+[rule.increment-decrement]
+[rule.range]
+[rule.var-declaration]
+[rule.blank-imports]
+[rule.dot-imports]
+
+# ---------------------------------------------------------------------------
+# Disabled, with reasons
+# ---------------------------------------------------------------------------
+
+# unused-parameter -- DISABLED (2026-08-12).
+#
+# It produced 646 findings, essentially all of them false in this codebase.  The top offenders by
+# name were serverFactory (89), session (53), vault (45), connection (44), builder (42), auth (34),
+# buffer (31), authorization (31), object (30), action (29), and factory (25).
+#
+# Every one of those exists to satisfy a SHARED FUNCTION TYPE or interface, not because someone
+# forgot to use it: handler.WithFunc1[T] and its siblings, the build.Step interface's
+# Get/Post(builder, buffer), model.AccessLister, and service.ModelService.ObjectUserCan.  The
+# parameter must be in the signature whether or not a given implementation reads it.
+#
+# Renaming them to `_` would strip self-documenting signatures and leave each handler family half
+# named and half blank, which is worse to read and actively fights the go-comments standard.  The
+# rule is measuring the wrong thing here, so it is off rather than suppressed 646 times.
+
+# Candidates considered and NOT enabled, to avoid opening a second backlog before the `exported`
+# one is paid down.  Revisit once that number is near zero:
+#   [rule.confusing-naming]   -- flags methods differing only by case
+#   [rule.flag-parameter]     -- boolean parameters that switch behavior (see go-variable-names)
+#   [rule.bare-return]        -- naked returns in long functions
+#   [rule.deep-exit]          -- os.Exit outside main
+#   [rule.unhandled-error]    -- overlaps Gate 7 (errcheck), which already runs clean

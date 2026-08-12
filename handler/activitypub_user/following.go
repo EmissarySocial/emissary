@@ -33,6 +33,7 @@ func GetFollowingCollection(ctx *steranko.Context, factory *service.Factory, ses
 	return collection.ServeSummary(ctx, user.ActivityPubFollowingURL(), int64(user.FollowingCount))
 }
 
+// GetFollowingRecord serves a single Following record from the User's following collection
 func GetFollowingRecord(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.GetFollowingRecord"

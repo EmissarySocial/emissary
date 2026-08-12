@@ -15,7 +15,6 @@ import (
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -29,12 +28,13 @@ func (service *Stream) JSONLDGetter(session data.Session, stream *model.Stream) 
 	return NewStreamJSONLDGetter(session, service, stream)
 }
 
+// Activity returns a Stream as a hannibal ActivityStreams Document
 func (service *Stream) Activity(session data.Session, stream *model.Stream) streams.Document {
 	// Create a new ActivityPub Document for this Stream
 	return streams.NewDocument(service.JSONLD(session, stream))
 }
 
-// GetJSONLD returns a map document that conforms to the ActivityStreams 2.0 spec.
+// JSONLD returns a map document that conforms to the ActivityStreams 2.0 spec.
 // This map will still need to be marshalled into JSON
 func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.Any {
 
@@ -87,10 +87,45 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 		result[vocab.PropertyAttributedTo] = stream.AttributedTo.ProfileURL
 	}
 
-	if len(stream.Hashtags) > 0 {
-		result[vocab.PropertyTag] = slice.Map(stream.Hashtags, func(tag string) mapof.String {
-			return service.HashtagAsJSONLD(template.TagURL, tag)
-		})
+	// The `tag` array carries every kind of tag and is assigned exactly ONCE, so all of them
+	// must be collected before it is written.
+	tags := make([]mapof.String, 0, len(stream.Tags))
+	mentioned := make([]string, 0, len(stream.Tags))
+
+	for _, tag := range stream.Tags {
+
+		switch tag.Type {
+
+		// Tag.Link derives a #hashtag's target from the host and Template, so a change to either
+		// takes effect on every existing document immediately.
+		case vocab.LinkTypeHashtag:
+			tags = append(tags, tag.JSONLD(service.host, template.TagURL))
+
+		// Only RESOLVED @mentions are federated: a `Mention` with no `href` gives a receiving
+		// server nothing to route to. Unresolved handles stay on the Stream so the author can
+		// correct them.
+		case vocab.LinkTypeMention:
+
+			if tag.IsResolved() {
+				tags = append(tags, tag.JSONLD(service.host, template.TagURL))
+				mentioned = append(mentioned, tag.Href)
+			}
+		}
+	}
+
+	if len(tags) > 0 {
+		result[vocab.PropertyTag] = tags
+	}
+
+	// RULE: A mentioned actor must also be ADDRESSED. Mastodon resolves mentions from the `tag`
+	// array, but delivery is driven by addressing -- without this, a mentioned account that does
+	// not already follow the author never receives the post at all. Outbox.Publish delivers to
+	// every addressee on top of the follower fan-out (see publishRecipients).
+	//
+	// This is a plain []string because service.Stream.publish_outbox type-asserts it as one when
+	// it appends the in-reply-to author; a named slice type would silently fail that assertion.
+	if len(mentioned) > 0 {
+		result[vocab.PropertyCC] = mentioned
 	}
 
 	if stream.Location.NotZero() {
@@ -163,33 +198,17 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 	return result
 }
 
-// HashtagAsJSONLD returns a JSON-LD map document that represents a hashtag.
-// The tagURL is the link prefix defined by the Stream's Template; it is made
-// absolute because this document is read by other servers.  When the Template
-// defines no tagURL, the hashtag is published without a link.
-func (service *Stream) HashtagAsJSONLD(tagURL string, tag string) mapof.String {
-
-	result := mapof.String{
-		vocab.PropertyType: vocab.LinkTypeHashtag,
-		vocab.PropertyName: "#" + tag,
-	}
-
-	// Include the link target when the Template defines one
-	if href := model.HashtagURL(service.host, tagURL, tag); href != "" {
-		result[vocab.PropertyHref] = href
-	}
-
-	return result
-}
-
+// ActivityPubURL returns the URL that identifies the provided Stream to ActivityPub
 func (service *Stream) ActivityPubURL(streamID primitive.ObjectID) string {
 	return service.host + "/" + streamID.Hex()
 }
 
+// PublicKeyID returns the key ID ("#main-key" fragment URL) that this Stream Actor advertises
 func (service *Stream) PublicKeyID(streamID primitive.ObjectID) string {
 	return service.ActivityPubURL(streamID) + "#main-key"
 }
 
+// PrivateKey returns the private key that the provided Stream Actor signs with
 func (service *Stream) PrivateKey(session data.Session, streamID primitive.ObjectID) (crypto.PrivateKey, error) {
 
 	const location = "service.Stream.PrivateKey"
@@ -243,8 +262,7 @@ func (service *Stream) ActivityPubActor(session data.Session, streamID primitive
 	return actor, nil
 }
 
-// ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
-// for the provided User.
+// RangeActivityPubFollowers iterates over the profile URLs of a Stream Actor's ActivityPub Followers
 func (service *Stream) RangeActivityPubFollowers(session data.Session, streamID primitive.ObjectID) iter.Seq[string] {
 
 	return func(yield func(string) bool) {
@@ -260,6 +278,7 @@ func (service *Stream) RangeActivityPubFollowers(session data.Session, streamID 
 	}
 }
 
+// activityStreamSchema returns a permissive schema that preserves an ActivityStreams document's @context
 func (service *Stream) activityStreamSchema() schema.Schema {
 
 	return schema.New(
@@ -272,7 +291,7 @@ func (service *Stream) activityStreamSchema() schema.Schema {
 	)
 }
 
-// Post updates the stream with a new Context Collection (if none already exists)
+// CalcContext attaches a new Context Collection to the Stream, if it does not already have one
 func (service *Stream) CalcContext(session data.Session, stream *model.Stream) error {
 
 	const location = "service.Stream.CalcContext"

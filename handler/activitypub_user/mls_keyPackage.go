@@ -25,8 +25,7 @@ func GetKeyPackageCollection(ctx *steranko.Context, factory *service.Factory, se
 	}
 
 	// RULE: Verify that the Domain allows MLS messages for this User
-	domain := factory.Domain().Get()
-	if !domain.UserCanMLS(user) {
+	if domain := factory.Domain().Get(); !domain.UserCanMLS(user) {
 		return derp.Forbidden(location, "MLS messages not allowed for this User")
 	}
 
@@ -62,8 +61,7 @@ func GetKeyPackageRecord(ctx *steranko.Context, factory *service.Factory, sessio
 	}
 
 	// RULE: Verify that the Domain allows MLS messages for this User
-	domain := factory.Domain().Get()
-	if !domain.UserCanMLS(user) {
+	if domain := factory.Domain().Get(); !domain.UserCanMLS(user) {
 		return derp.Forbidden(location, "MLS messages not allowed for this User")
 	}
 
@@ -78,8 +76,7 @@ func GetKeyPackageRecord(ctx *steranko.Context, factory *service.Factory, sessio
 	result := keyPackageService.GetJSONLD(&keyPackage)
 
 	// Rewrite the generator for non-owners to only include the ID, not the name
-	authorization := getAuthorization(ctx)
-	if authorization.UserID != user.UserID {
+	if authorization := getAuthorization(ctx); authorization.UserID != user.UserID {
 		result["generator"] = result.GetMap("generator").GetString("id")
 	}
 

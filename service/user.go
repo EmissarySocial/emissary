@@ -263,6 +263,9 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 		return derp.Wrap(err, location, "Calculating profile fingerprint", user)
 	}
 
+	// This comparison MUST happen before the assignment below, and cannot move down to the
+	// `if profileChanged` that consumes it: once ProfileFingerprint holds newFingerprint the two
+	// are equal by construction, and profile updates would silently stop federating.
 	profileChanged := (user.ProfileFingerprint != newFingerprint) && !isNew
 	user.ProfileFingerprint = newFingerprint
 

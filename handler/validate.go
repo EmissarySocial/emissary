@@ -24,9 +24,7 @@ func GetValidateSignupCode(ctx *steranko.Context, factory *service.Factory, sess
 	}
 
 	// Validate the secret code against the registration template
-	domain := factory.Domain().Get()
-
-	if ctx.QueryParam("value") != domain.RegistrationData.GetString("secret") {
+	if domain := factory.Domain().Get(); ctx.QueryParam("value") != domain.RegistrationData.GetString("secret") {
 		return ctx.JSON(http.StatusOK, mapof.Any{
 			"valid":   false,
 			"message": "",
@@ -156,7 +154,7 @@ func GetValidateStreamToken(ctx *steranko.Context, factory *service.Factory, ses
 	streamService := factory.Stream()
 	stream := model.NewStream()
 
-	if err := streamService.LoadByToken(session, ctx.QueryParam("value"), &stream); err != nil {
+	if err := streamService.LoadByToken(session, token, &stream); err != nil {
 
 		if derp.IsNotFound(err) {
 			return ctx.JSON(http.StatusOK, mapof.Any{

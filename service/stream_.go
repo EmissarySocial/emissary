@@ -21,6 +21,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/geo"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/delta"
@@ -106,6 +107,7 @@ func (service *Stream) Refresh(factory *Factory) {
 	service.sseUpdateChannel = factory.SSEUpdateChannel()
 }
 
+// Startup seeds an empty database with the Streams that a new Theme provides
 func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 
 	const location = "service.Stream.Startup"
@@ -187,6 +189,7 @@ func (service *Stream) newStartupStream(data mapof.Any) (model.Stream, error) {
  * Common Methods
  ******************************************/
 
+// collection returns the mongo collection where Streams are stored
 func (service *Stream) collection(session data.Session) data.Collection {
 	return session.Collection("Stream")
 }
@@ -217,6 +220,7 @@ func (service *Stream) QuerySummary(session data.Session, criteria exp.Expressio
 	return result, err
 }
 
+// QueryIDOnly returns just the IDs of every Stream that matches the provided criteria
 func (service *Stream) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.IDOnly, error) {
 	result := make([]model.IDOnly, 0)
 	options = append(options, option.Fields("_id"))
@@ -375,9 +379,12 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 
 	// RULE: Extract and linkify #hashtags for Templates that configure tagging.  This runs
 	// BEFORE Normalize so the injected anchors pass through the same schema sanitization as
-	// any other content HTML.
+	// any other content HTML.  @mentions are extracted from the same paths and resolved here
+	// too -- CalculateMentions carries already-resolved Hrefs forward, so a save only reaches
+	// the network for a handle this Stream has never seen.
 	if len(template.TagPaths) > 0 {
 		service.CalculateTags(session, stream)
+		service.CalculateMentions(stream)
 		service.applyHashtagLinks(&template, stream)
 	}
 
@@ -520,12 +527,13 @@ func (service *Stream) ObjectType() string {
 	return "Stream"
 }
 
-// New returns a fully initialized model.Stream as a data.Object.
+// ObjectNew returns a fully initialized model.Stream as a data.Object.
 func (service *Stream) ObjectNew() data.Object {
 	result := model.NewStream()
 	return &result
 }
 
+// ObjectID returns the primary key of the provided Stream object
 func (service *Stream) ObjectID(object data.Object) primitive.ObjectID {
 
 	if stream, ok := object.(*model.Stream); ok {
@@ -535,16 +543,19 @@ func (service *Stream) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery populates the result value with all Streams that match the provided criteria
 func (service *Stream) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single Stream that matches the provided criteria, as a data.Object
 func (service *Stream) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewStream()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave saves the provided Stream object to the database
 func (service *Stream) ObjectSave(session data.Session, object data.Object, note string) error {
 
 	if stream, ok := object.(*model.Stream); ok {
@@ -553,6 +564,7 @@ func (service *Stream) ObjectSave(session data.Session, object data.Object, note
 	return derp.Internal("service.Stream.ObjectSave", "Invalid object type", object)
 }
 
+// ObjectDelete removes the provided Stream object from the database (virtual delete)
 func (service *Stream) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if stream, ok := object.(*model.Stream); ok {
 		return service.Delete(session, stream, note)
@@ -560,10 +572,12 @@ func (service *Stream) ObjectDelete(session data.Session, object data.Object, no
 	return derp.Internal("service.Stream.ObjectDelete", "Invalid object type", object)
 }
 
+// ObjectUserCan always returns Unauthorized: Streams are never edited through the generic data.Object path
 func (service *Stream) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Stream", "Not Authorized")
 }
 
+// Schema returns the validating schema for Stream objects
 func (service *Stream) Schema() schema.Schema {
 	return schema.New(model.StreamSchema())
 }
@@ -617,6 +631,7 @@ func (service *Stream) RangeByParentIDs(session data.Session, parentID primitive
 	return service.Range(session, exp.Equal("parentIds", parentID))
 }
 
+// RangeByPrivileges iterates over every Stream that grants a role to any of the provided Privileges
 func (service *Stream) RangeByPrivileges(session data.Session, privileges ...primitive.ObjectID) (iter.Seq[model.Stream], error) {
 
 	const location = "service.Stream.RangeByPrivilege"
@@ -691,7 +706,7 @@ func (service *Stream) QueryByParentAndDate(session data.Session, parentID primi
 	return service.Query(session, criteria, option.SortDesc("publishDate"), option.MaxRows(int64(pageSize)))
 }
 
-// QueryByParentAndDate returns a slice of Streams that are ANY DEPTH below the provided StreamID
+// QueryByAncestorAndDate returns a slice of Streams that are ANY DEPTH below the provided StreamID
 func (service *Stream) QueryByAncestorAndDate(session data.Session, streamID primitive.ObjectID, publishedDate int64, pageSize int) ([]model.Stream, error) {
 
 	const location = "service.Stream.QueryByAncestorAndDate"
@@ -804,6 +819,7 @@ func (service *Stream) LoadNavigationByID(session data.Session, streamID primiti
 	return service.Load(session, criteria, result)
 }
 
+// LoadWithOptions loads the first Stream that matches the provided criteria and query options
 func (service *Stream) LoadWithOptions(session data.Session, criteria exp.Expression, result *model.Stream, options ...option.Option) error {
 
 	const location = "service.stream.LoadWithOptions"
@@ -821,10 +837,12 @@ func (service *Stream) LoadWithOptions(session data.Session, criteria exp.Expres
 	return derp.NotFound(location, "collection is empty")
 }
 
+// LoadFirstSibling loads the lowest-ranked child of the provided parent
 func (service *Stream) LoadFirstSibling(session data.Session, parentID primitive.ObjectID, result *model.Stream) error {
 	return service.LoadWithOptions(session, exp.Equal("parentId", parentID), result, option.SortAsc("rank"))
 }
 
+// LoadPrevSibling loads the child ranked just before the provided rank, wrapping around to the last
 func (service *Stream) LoadPrevSibling(session data.Session, parentID primitive.ObjectID, rank int, result *model.Stream) error {
 
 	const location = "service.stream.LoadPreviousSibling"
@@ -848,6 +866,7 @@ func (service *Stream) LoadPrevSibling(session data.Session, parentID primitive.
 	return derp.Wrap(err, location, "Loading Previous Sibling")
 }
 
+// LoadNextSibling loads the child ranked just after the provided rank, wrapping around to the first
 func (service *Stream) LoadNextSibling(session data.Session, parentID primitive.ObjectID, rank int, result *model.Stream) error {
 
 	const location = "service.stream.LoadNextSibling"
@@ -867,10 +886,12 @@ func (service *Stream) LoadNextSibling(session data.Session, parentID primitive.
 	return derp.Wrap(err, location, "Loading Next Sibling")
 }
 
+// LoadLastSibling loads the highest-ranked child of the provided parent
 func (service *Stream) LoadLastSibling(session data.Session, parentID primitive.ObjectID, result *model.Stream) error {
 	return service.LoadWithOptions(session, exp.Equal("parentId", parentID), result, option.SortDesc("rank"))
 }
 
+// LoadFirstAttachment loads the first Attachment that belongs to the provided Stream
 func (service *Stream) LoadFirstAttachment(session data.Session, streamID primitive.ObjectID) (model.Attachment, error) {
 	return service.attachmentService.LoadFirstByObjectID(session, model.AttachmentObjectTypeStream, streamID)
 }
@@ -902,7 +923,7 @@ func (service *Stream) SetLocationTop(template *model.Template, stream *model.St
 	return nil
 }
 
-// SetLocationInbox sets a Stream's location to be a User's outbox
+// SetLocationOutbox sets a Stream's location to be a User's outbox
 func (service *Stream) SetLocationOutbox(template *model.Template, stream *model.Stream, userID primitive.ObjectID) error {
 
 	const location = "service.Stream.SetLocationOutbox"
@@ -1002,7 +1023,7 @@ func (service *Stream) DeleteByParent(session data.Session, parentID primitive.O
 	return service.DeleteMany(session, exp.Equal("parentId", parentID), note)
 }
 
-// Delete RelatedDuplicate hard deletes any inbox/outbox streams that point to the same original.
+// DeleteRelatedDuplicate hard deletes any inbox/outbox streams that point to the same original.
 func (service *Stream) DeleteRelatedDuplicate(session data.Session, parentID primitive.ObjectID, originalStreamID primitive.ObjectID) error {
 
 	criteria := exp.Equal("parentId", parentID).AndEqual("data.originalStreamId", originalStreamID)
@@ -1141,6 +1162,7 @@ func (service *Stream) calcParentIDs(session data.Session, stream *model.Stream)
 	stream.ParentIDs = []primitive.ObjectID{stream.ParentID}
 }
 
+// calcDefaultAllow denormalizes the permissions that grant the Stream's default (VIEW) action
 func (service *Stream) calcDefaultAllow(template *model.Template, stream *model.Stream) {
 
 	// NILCHECK: Template cannot be empty
@@ -1176,6 +1198,7 @@ func (service *Stream) calcPrivilegeIDs(stream *model.Stream) {
 	stream.PrivilegeIDs = model.Permissions(append(circles, privileges...))
 }
 
+// CalculateTags rebuilds a Stream's tag list from the tag paths that its Template declares
 func (service *Stream) CalculateTags(session data.Session, stream *model.Stream) {
 
 	const location = "service.Stream.CalculateTags"
@@ -1210,8 +1233,198 @@ func (service *Stream) CalculateTags(session data.Session, stream *model.Stream)
 		derp.Report(derp.Wrap(err, location, "Normalizing tags"))
 	}
 
-	// Apply the #hashtags back to the Stream
+	// Apply the #hashtags back to the Stream.
+	//
+	// Hashtags is DEPRECATED and dual-written for one release while the external template
+	// packages migrate (see projects/TAGS-UNIFICATION.md).  Tags is the value readers use.
+	// Only Hashtag-typed entries are replaced, so @mentions survive untouched.
 	stream.Hashtags = hashtagNames
+
+	hashtagTags := make(model.TagList, 0, len(hashtagNames))
+
+	for _, name := range hashtagNames {
+		hashtagTags = append(hashtagTags, model.NewTag(vocab.LinkTypeHashtag, name))
+	}
+
+	stream.Tags = model.ReplaceTagsOfType(stream.Tags, vocab.LinkTypeHashtag, hashtagTags)
+}
+
+// mentionResolveTimeout bounds an ENTIRE batch of @mention lookups.  `remote` allows a full
+// minute per request and each resolution is two requests, so without this a single blackholed
+// host could stall a user's save for minutes.
+const mentionResolveTimeout = 5 * time.Second
+
+// mentionResolveConcurrency caps simultaneous @mention lookups, so a post naming a large number
+// of people cannot open an unbounded number of outbound connections at once.
+const mentionResolveConcurrency = 8
+
+// CalculateMentions scans the Template-defined TagPaths on this Stream for @mentions and
+// merges them into the Stream's Tags, resolving any handle it has not seen before.
+func (service *Stream) CalculateMentions(stream *model.Stream) {
+
+	// Extraction is pure string work.  Resolution is not -- it is a WebFinger lookup followed by
+	// an Actor fetch -- but it happens at most once per handle: a handle already present keeps
+	// its Href, and `ascache` keys actor documents by the handle string, so a handle first seen
+	// on some OTHER Stream is a cache hit here.  Only genuinely new handles reach the network.
+	// See projects/TAGS-UNIFICATION.md and bugs/BUG-09-Mentions-Not-Emitted.md.
+
+	const location = "service.Stream.CalculateMentions"
+
+	// Load the template (to get the tag paths)
+	template, err := service.templateService.Load(stream.TemplateID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Loading Template", stream.TemplateID))
+		return
+	}
+
+	// Index the Hrefs already known, so that re-scanning preserves them.  This carries the
+	// TagHrefUnresolvable sentinel forward too, which is what stops a handle that cannot be
+	// resolved from being looked up again on every single save.
+	known := make(map[string]string, len(stream.Tags))
+
+	for _, tag := range model.TagsOfType(stream.Tags, vocab.LinkTypeMention) {
+		known[tag.Name] = tag.Href
+	}
+
+	// Scan each tag path in the Stream for @mentions
+	schema := service.Schema()
+	mentions := make(model.TagList, 0, len(stream.Tags))
+	seen := make(map[string]struct{}, len(stream.Tags))
+	hostname := uri.Hostname(service.host)
+
+	for _, path := range template.TagPaths {
+
+		if value, err := schema.Get(stream, path); err == nil {
+
+			// Massage the value into a cleanly scannable string
+			stringValue := convert.String(value)
+			stringValue = html.ToSearchText(stringValue)
+
+			for _, handle := range parse.Mentions(stringValue) {
+
+				// RULE: A bare "@" yields an empty token, which is not a handle.  Without this,
+				// resolution would spend a WebFinger lookup on the empty string.
+				if handle == "" {
+					continue
+				}
+
+				// RULE: A handle with no hostname is anchored to THIS server -- on bandwagon.fm,
+				// "@bob" means "@bob@bandwagon.fm".  Qualifying at extraction (rather than at
+				// resolution) stores a handle that is unambiguous to the remote servers that read
+				// this document, and makes "@bob" and "@bob@bandwagon.fm" in the same document
+				// dedupe to a single Tag.
+				if !strings.Contains(handle, "@") {
+
+					// With no hostname to anchor to, the handle can never resolve. Drop it here
+					// rather than storing an address that is guaranteed to fail on every publish.
+					if hostname == "" {
+						continue
+					}
+
+					handle = handle + "@" + hostname
+				}
+
+				// RULE: One handle may be mentioned many times in a single document
+				if _, exists := seen[handle]; exists {
+					continue
+				}
+
+				seen[handle] = struct{}{}
+
+				mentions = append(mentions, model.Tag{
+					Type: vocab.LinkTypeMention,
+					Name: handle,
+					Href: known[handle], // empty for handles that have never been looked up
+				})
+			}
+		}
+	}
+
+	// Look up the Actor URL for every handle we have not seen before
+	service.resolveMentions(mentions)
+
+	// Apply the @mentions back to the Stream, leaving #hashtags untouched
+	stream.Tags = model.ReplaceTagsOfType(stream.Tags, vocab.LinkTypeMention, mentions)
+}
+
+// resolveMentions fills in the Actor URL for every Mention Tag that does not already have one,
+// rewriting the provided slice in place.
+func (service *Stream) resolveMentions(tags model.TagList) {
+
+	const location = "service.Stream.resolveMentions"
+
+	// Collect the entries that still need a lookup.  Usually there are none.
+	pending := make([]int, 0, len(tags))
+
+	for index, tag := range tags {
+		if tag.NeedsResolution() {
+			pending = append(pending, index)
+		}
+	}
+
+	if len(pending) == 0 {
+		return
+	}
+
+	// Lookups are independent of each other, so they run concurrently: the cost of a post that
+	// mentions twenty people tracks the SLOWEST handle rather than the sum of all twenty.  The
+	// deadline bounds the whole batch, because `remote` allows a full minute PER REQUEST and
+	// resolution is two requests -- far too long to hold a user's save.
+	ctx, cancel := context.WithTimeout(context.Background(), mentionResolveTimeout)
+	defer cancel()
+
+	// Buffered to len(pending) so a straggler can always deliver its result and exit, even after
+	// this function has stopped listening.  Nothing writes to `tags` except the loop below, so
+	// abandoning a slow lookup cannot race with the caller.
+	type resolved struct {
+		index int
+		href  string
+	}
+
+	results := make(chan resolved, len(pending))
+	semaphore := make(chan struct{}, mentionResolveConcurrency)
+
+	for _, index := range pending {
+
+		go func(index int) {
+
+			semaphore <- struct{}{}
+			defer func() { <-semaphore }()
+
+			handle := tags[index].Name
+			actor, err := service.activityService.GetActor(handle)
+
+			if err != nil {
+				derp.Report(derp.Wrap(err, location, "Unable to resolve @mention; publishing without it", handle))
+				results <- resolved{index: index, href: model.TagHrefUnresolvable}
+				return
+			}
+
+			if actorID := actor.ID(); actorID != "" {
+				results <- resolved{index: index, href: actorID}
+				return
+			}
+
+			results <- resolved{index: index, href: model.TagHrefUnresolvable}
+		}(index)
+	}
+
+	for range pending {
+
+		select {
+
+		case result := <-results:
+			tags[result.index].Href = result.href
+
+		case <-ctx.Done():
+
+			// The batch blew its time budget.  Whatever resolved is kept; the rest keep an empty
+			// Href, so the next save retries them rather than marking them permanently bad.
+			derp.Report(derp.Wrap(ctx.Err(), location, "Timed out resolving @mentions; unresolved handles will retry on next save"))
+			return
+		}
+	}
 }
 
 // applyHashtagLinks wraps each of the Stream's #hashtags in its content with a link to the
@@ -1226,11 +1439,13 @@ func (service *Stream) applyHashtagLinks(template *model.Template, stream *model
 	}
 
 	// RULE: Nothing to link if there are no hashtags
-	if len(stream.Hashtags) == 0 {
+	hashtags := model.TagNames(stream.Tags, vocab.LinkTypeHashtag)
+
+	if len(hashtags) == 0 {
 		return
 	}
 
-	service.contentService.ApplyTags(&stream.Content, tagURL, stream.Hashtags)
+	service.contentService.ApplyTags(&stream.Content, tagURL, hashtags)
 }
 
 // NotifyInReplyTo sends an SSE notification to any stream that is referenced in the "inReplyTo" field of a Stream
@@ -1272,7 +1487,7 @@ func (service *Stream) NotifyInReplyTo(session data.Session, inReplyTo string) {
  * Migration Methods
  ******************************************/
 
-// Move locates all Streams inside the profile of the provided UserID, and moves them
+// MoveByUserID locates all Streams inside the profile of the provided UserID, and moves them
 // using the 'movedTo' forwarding address
 func (service *Stream) MoveByUserID(session data.Session, userID primitive.ObjectID, movedTo string) error {
 
@@ -1325,6 +1540,7 @@ func (service *Stream) Move(session data.Session, stream *model.Stream, movedTo 
 	stream.Content = model.NewContent()
 	stream.Widgets = set.NewSlice[model.StreamWidget]()
 	stream.Hashtags = sliceof.NewString()
+	stream.Tags = model.NewTagList()
 	stream.Location = geo.NewAddress()
 	stream.Data = mapof.NewAny()
 	stream.StartDate = datetime.New()
@@ -1381,7 +1597,7 @@ func (service *Stream) SearchResult(stream *model.Stream) model.SearchResult {
 				if len(template.SearchOptions) > 0 {
 
 					result.URL = stream.URL
-					result.Tags = slice.Map(stream.Hashtags, model.ToToken)
+					result.Tags = slice.Map(model.TagNames(stream.Tags, vocab.LinkTypeHashtag), model.ToToken)
 					result.Type = firstOf(template.SearchOptions.Execute("type", stream), template.SocialRole)
 					result.Name = firstOf(template.SearchOptions.Execute("name", stream), stream.Label)
 					result.AttributedTo = firstOf(template.SearchOptions.Execute("attributedTo", stream), stream.AttributedTo.Name)

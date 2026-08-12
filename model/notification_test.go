@@ -166,6 +166,10 @@ func TestUserSchema_AllowsEveryNotificationChannel(t *testing.T) {
 		user.NotificationChannels = nil
 
 		require.NoError(t, s.Set(&user, "notificationChannels.0", channel), "channel %q must be valid in the User schema", channel)
+
+		// Set must GROW the nil slice, not just accept the value -- indexing straight into it would
+		// panic on a Set that reported success without writing anything.
+		require.Len(t, user.NotificationChannels, 1, "channel %q must be written into the slice", channel)
 		require.Equal(t, channel, user.NotificationChannels[0])
 	}
 }

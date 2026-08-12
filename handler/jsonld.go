@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/headers"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal"
-	"github.com/benpate/hannibal/vocab"
 	"github.com/labstack/echo/v4"
 )
 
@@ -22,8 +22,8 @@ func handleJSONLD(context echo.Context, object model.JSONLDGetter) (bool, error)
 		return false, nil
 	}
 
-	// Set header and serve JSON-LD document
-	context.Response().Header().Set(vocab.ContentType, vocab.ContentTypeActivityPub)
+	// Set headers and serve JSON-LD document
+	headers.SetVariant(context.Response().Header(), headers.VariantActivityPub)
 
 	if err := context.JSON(http.StatusOK, object.GetJSONLD()); err != nil {
 		return true, derp.Wrap(err, location, "Generating JSON-LD", object)

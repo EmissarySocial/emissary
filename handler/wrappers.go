@@ -30,7 +30,7 @@ type WithFunc2[T any, U any] func(ctx *steranko.Context, factory *service.Factor
 // WithFunc3 is a function signature for a continuation function that requires the domain Factory and three values
 type WithFunc3[T any, U any, V any] func(ctx *steranko.Context, factory *service.Factory, session data.Session, value *T, value2 *U, value3 *V) error
 
-// Header used by HTMX to force a client-side redirect
+// HxRedirectHeader is the header that HTMX reads to force a client-side redirect
 const HxRedirectHeader = "Hx-Redirect"
 
 // WithActor resolves the actor making the request from its credentials and passes the actor's
@@ -194,6 +194,7 @@ func WithAuthenticatedUser(serverFactory *server.Factory, fn WithFunc1[model.Use
 	})
 }
 
+// WithConnection handles boilerplate code for requests that load a Connection object
 func WithConnection(provider string, serverFactory *server.Factory, fn WithFunc1[model.Connection]) echo.HandlerFunc {
 
 	const location = "handler.WithConnection"
@@ -286,6 +287,7 @@ func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 	}
 }
 
+// WithFollowing handles boilerplate code for requests that load a Following object
 func WithFollowing(serverFactory *server.Factory, fn WithFunc1[model.Following]) echo.HandlerFunc {
 
 	const location = "handler.WithFollowing"
@@ -318,6 +320,7 @@ func WithFollowing(serverFactory *server.Factory, fn WithFunc1[model.Following])
 	})
 }
 
+// WithIdentity handles boilerplate code for requests that load (or create) the requester's Identity
 func WithIdentity(serverFactory *server.Factory, fn WithFunc1[model.Identity]) echo.HandlerFunc {
 
 	const location = "handler.WithIdentity"
@@ -370,6 +373,7 @@ func WithIdentity(serverFactory *server.Factory, fn WithFunc1[model.Identity]) e
 	})
 }
 
+// WithMerchantAccount handles boilerplate code for requests that load a MerchantAccount object
 func WithMerchantAccount(serverFactory *server.Factory, fn WithFunc1[model.MerchantAccount]) echo.HandlerFunc {
 
 	const location = "handler.WithMerchantAccount"
@@ -390,6 +394,7 @@ func WithMerchantAccount(serverFactory *server.Factory, fn WithFunc1[model.Merch
 	})
 }
 
+// WithMerchantAccountJWT handles boilerplate code for requests that name their Product inside a signed JWT
 func WithMerchantAccountJWT(serverFactory *server.Factory, fn WithFunc2[model.MerchantAccount, model.Product]) echo.HandlerFunc {
 
 	const location = "handler.WithProductJWT"
@@ -458,6 +463,7 @@ func WithOAuthUser(serverFactory *server.Factory, fn WithFunc2[model.OAuthUserTo
 	})
 }
 
+// WithOwner handles boilerplate code for requests that are restricted to the domain owner
 func WithOwner(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 
 	const location = "handler.WithAdmin"
@@ -474,6 +480,7 @@ func WithOwner(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 	})
 }
 
+// WithPrivilege handles boilerplate code for requests that load a Privilege belonging to the requester's Identity
 func WithPrivilege(serverFactory *server.Factory, fn WithFunc2[model.Identity, model.Privilege]) echo.HandlerFunc {
 
 	const location = "handler.WithPrivilege"

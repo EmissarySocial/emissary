@@ -212,10 +212,8 @@ func ruleCleanup_collectionItems(factory *service.Factory, session data.Session,
 
 	for item := range rangeFunc {
 
-		keys := model.DomainMatchKeys(item.URI)
-
 		// ACTOR rules: attribute via the locally-cached activity (a database read, never a fetch)
-		if !slices.Contains(keys, matchKey) {
+		if keys := model.DomainMatchKeys(item.URI); !slices.Contains(keys, matchKey) {
 
 			document, exists := ruleCleanup_cachedDocument(factory, item.URI)
 
@@ -277,9 +275,7 @@ func ruleCleanup_pauseRelationships(factory *service.Factory, session data.Sessi
 
 	for following := range rangeFunc {
 
-		keys := append(model.ActorMatchKeys(following.URL), model.ActorMatchKeys(following.ProfileURL)...)
-
-		if !slices.Contains(keys, matchKey) {
+		if keys := append(model.ActorMatchKeys(following.URL), model.ActorMatchKeys(following.ProfileURL)...); !slices.Contains(keys, matchKey) {
 			continue
 		}
 

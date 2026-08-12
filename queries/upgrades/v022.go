@@ -20,7 +20,7 @@ func Version22(ctx context.Context, session *mongo.Database) error {
 	newsFeed := session.Collection("NewsFeed")
 
 	// Try to move all records from the Inbox to the NewsFeed
-	err := ForEachRecord(inbox, func(record mapof.Any) bool {
+	if err := ForEachRecord(inbox, func(record mapof.Any) bool {
 		const location = "upgrade.Version22"
 
 		// Save the record to the NewsFeed
@@ -32,9 +32,7 @@ func Version22(ctx context.Context, session *mongo.Database) error {
 		}
 
 		return true
-	})
-
-	if err != nil {
+	}); err != nil {
 		return derp.Wrap(err, location, "Copying records to NewsFeed")
 	}
 

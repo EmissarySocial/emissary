@@ -70,5 +70,5 @@ func (console Console) report(err error) {
 		}
 	}
 
-	fmt.Fprintln(output, "")
+	_, _ = fmt.Fprintln(output, "")
 }

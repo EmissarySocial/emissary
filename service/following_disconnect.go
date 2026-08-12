@@ -30,9 +30,7 @@ func (service *Following) Unfollow(session data.Session, userID primitive.Object
 
 	// Try to load the existing Following record for this user and URL
 	following := model.NewFollowing()
-	err := service.LoadByURL(session, userID, actorID, &following)
-
-	if err != nil {
+	if err := service.LoadByURL(session, userID, actorID, &following); err != nil {
 
 		if derp.IsNotFound(err) {
 			return nil

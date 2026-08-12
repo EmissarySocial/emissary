@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// StreamSchema returns the JSON-Schema that validates a Stream
 func StreamSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
@@ -42,6 +43,7 @@ func StreamSchema() schema.Element {
 			"startDate":        datetime.Schema(),
 			"endDate":          datetime.Schema(),
 			"hashtags":         schema.Array{Items: schema.String{Format: "token", MaxLength: 32}},
+			"tags":             TagListSchema(),
 			"location":         geo.AddressSchema(),
 			"data":             schema.Object{Wildcard: schema.Any{}},
 			"publishDate":      schema.Integer{BitSize: 64},
@@ -80,6 +82,8 @@ func permissionSchema() schema.Element {
  * Getter/Setter Interfaces
  *********************************/
 
+// GetPointer returns a pointer to the named field, and TRUE if the name is recognized
+// It is part of the schema.PointerGetter interface
 func (stream *Stream) GetPointer(name string) (any, bool) {
 
 	switch name { // NOSONAR: There really are this many properties to check..
@@ -128,6 +132,9 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 
 	case "hashtags":
 		return &stream.Hashtags, true
+
+	case "tags":
+		return &stream.Tags, true
 
 	case "attributedTo":
 		return &stream.AttributedTo, true
@@ -197,6 +204,8 @@ func (stream *Stream) GetPointer(name string) (any, bool) {
 	}
 }
 
+// GetBoolOK returns the named boolean value, and TRUE if the name is recognized
+// It is part of the schema.BoolGetter interface
 func (stream *Stream) GetBoolOK(name string) (bool, bool) {
 
 	switch name {
@@ -209,6 +218,8 @@ func (stream *Stream) GetBoolOK(name string) (bool, bool) {
 	return false, false
 }
 
+// SetBool writes the named boolean value, and returns TRUE if the name is recognized
+// It is part of the schema.BoolSetter interface
 func (stream *Stream) SetBool(name string, value bool) bool {
 
 	switch name {
@@ -222,6 +233,8 @@ func (stream *Stream) SetBool(name string, value bool) bool {
 	return false
 }
 
+// GetStringOK returns the named string value, and TRUE if the name is recognized
+// It is part of the schema.StringGetter interface
 func (stream *Stream) GetStringOK(name string) (string, bool) {
 
 	switch name {
@@ -243,6 +256,8 @@ func (stream *Stream) GetStringOK(name string) (string, bool) {
 	}
 }
 
+// SetString writes the named string value, and returns TRUE if the name is recognized
+// It is part of the schema.StringSetter interface
 func (stream *Stream) SetString(name string, value string) bool {
 
 	switch name {

@@ -58,6 +58,14 @@ func addDirectMessageChannel(ctx context.Context, session *mongo.Database) error
 		return derp.Wrap(err, location, "Updating User notification channels")
 	}
 
+	// The driver pairs a nil result with a non-nil error on every path it takes today, but that is
+	// an internal detail of updateOrReplace rather than a documented promise.  The count is only
+	// used for the line below, so report the migration as done instead of panicking on it.
+	if result == nil {
+		fmt.Println("...... granted DIRECT_MESSAGE to an unreported number of users")
+		return nil
+	}
+
 	fmt.Println("...... granted DIRECT_MESSAGE to " + fmt.Sprint(result.ModifiedCount) + " users")
 
 	return nil

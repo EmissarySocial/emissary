@@ -27,6 +27,7 @@ func (service *Rule) ActivityPubURL(rule model.Rule) string {
 	return service.ActivityPubActorURL(rule) + "/pub/blocked/" + rule.RuleID.Hex()
 }
 
+// Activity returns a Rule as a hannibal ActivityStreams Document
 func (service *Rule) Activity(rule model.Rule) streams.Document {
 	return streams.NewDocument(service.JSONLD(rule))
 }

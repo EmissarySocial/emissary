@@ -112,46 +112,57 @@ func (w Outbox) NavigationID() string {
 	return "user"
 }
 
+// PageTitle returns the User's display name, for use in the page <title>
 func (w Outbox) PageTitle() string {
 	return w._user.DisplayName
 }
 
+// Permalink returns the absolute, canonical URL of this User's profile
 func (w Outbox) Permalink() string {
 	return w.Host() + "/@" + w._user.UserID.Hex()
 }
 
+// BasePath returns the root path that this builder's actions hang from
 func (w Outbox) BasePath() string {
 	return "/@" + w._user.UserID.Hex()
 }
 
+// Token returns the name of this builder's route family
 func (w Outbox) Token() string {
 	return "users"
 }
 
+// object returns the User record that this builder wraps
 func (w Outbox) object() data.Object {
 	return w._user
 }
 
+// objectID returns the UserID of the record that this builder wraps
 func (w Outbox) objectID() primitive.ObjectID {
 	return w._user.UserID
 }
 
+// objectType returns the name of the model that this builder wraps
 func (w Outbox) objectType() string {
 	return "User"
 }
 
+// schema returns the JSON-Schema that validates writes to this builder's object
 func (w Outbox) schema() schema.Schema {
 	return schema.New(model.UserSchema())
 }
 
+// service returns the ModelService that loads and saves this builder's object
 func (w Outbox) service() service.ModelService {
 	return w._factory.User()
 }
 
+// templateRole returns the Template role that this builder can build
 func (w Outbox) templateRole() string {
 	return "outbox"
 }
 
+// clone returns a copy of this builder, bound to a different action
 func (w Outbox) clone(action string) (Builder, error) {
 	return NewOutbox(w._factory, w._session, w._request, w._response, w._user, action)
 }
@@ -166,6 +177,7 @@ func (w Outbox) IsMyself() bool {
  * Data Accessors
  ******************************************/
 
+// UserID returns the hex-encoded ID of the User being built
 func (w Outbox) UserID() string {
 	return w._user.UserID.Hex()
 }
@@ -175,31 +187,37 @@ func (w Outbox) Myself() bool {
 	return w._user.IsMyself(w._authorization.UserID)
 }
 
+// Username returns the username of the User being built
 func (w Outbox) Username() string {
 	return w._user.Username
 }
 
+// RuleCount returns the number of Rules that the User has defined
 func (w Outbox) RuleCount() int {
 	return w._user.RuleCount
 }
 
+// FollowerCount returns the number of Followers that the User has
 func (w Outbox) FollowerCount() int {
 	return w._user.FollowerCount
 }
 
+// FollowingCount returns the number of Actors that the User follows
 func (w Outbox) FollowingCount() int {
 	return w._user.FollowingCount
 }
 
+// DisplayName returns the display name of the User being built
 func (w Outbox) DisplayName() string {
 	return w._user.DisplayName
 }
 
+// StateID returns the workflow state of the User being built
 func (w Outbox) StateID() string {
 	return w._user.StateID
 }
 
-// IsPublished returns TRUE if the stream has been published
+// IsPublic returns TRUE if this User's profile is visible to anonymous visitors
 func (w Outbox) IsPublic() bool {
 	return w._user.IsPublic
 }
@@ -232,22 +250,27 @@ func (w Outbox) StatusMessageHTML() template.HTML {
 	return template.HTML(w._user.SummaryHTML())
 }
 
+// ProfileURL returns the User's canonical profile URL
 func (w Outbox) ProfileURL() string {
 	return w._user.ProfileURL
 }
 
+// IconURL returns the URL of the User's avatar image
 func (w Outbox) IconURL() string {
 	return w._user.ActivityPubIconURL()
 }
 
+// ImageURL returns the URL of the User's banner image
 func (w Outbox) ImageURL() string {
 	return w._user.ActivityPubImageURL()
 }
 
+// Location returns the User's self-reported location
 func (w Outbox) Location() string {
 	return w._user.Location
 }
 
+// Links returns the User's list of profile links
 func (w Outbox) Links() sliceof.Object[model.PersonLink] {
 	return w._user.Links
 }
@@ -263,6 +286,7 @@ func (w Outbox) Tags() sliceof.Object[mapof.String] {
 	})
 }
 
+// Data returns a single custom value from the User's extra data map
 func (w Outbox) Data(path string) any {
 	return w._user.Data[path]
 }
@@ -277,34 +301,42 @@ func (w Outbox) OEmbedXML() string {
 	return oEmbedURL(w.Host(), w.Permalink(), "xml")
 }
 
+// ActivityPubURL returns the URL of the User's ActivityPub actor document
 func (w Outbox) ActivityPubURL() string {
 	return w._user.ActivityPubURL()
 }
 
+// ActivityPubIconURL returns the URL of the User's avatar, as published to ActivityPub
 func (w Outbox) ActivityPubIconURL() string {
 	return w._user.ActivityPubIconURL()
 }
 
+// ActivityPubInboxURL returns the URL of the User's ActivityPub inbox
 func (w Outbox) ActivityPubInboxURL() string {
 	return w._user.ActivityPubInboxURL()
 }
 
+// ActivityPubOutboxURL returns the URL of the User's ActivityPub outbox
 func (w Outbox) ActivityPubOutboxURL() string {
 	return w._user.ActivityPubOutboxURL()
 }
 
+// ActivityPubFollowersURL returns the URL of the User's ActivityPub followers collection
 func (w Outbox) ActivityPubFollowersURL() string {
 	return w._user.ActivityPubFollowersURL()
 }
 
+// ActivityPubFollowingURL returns the URL of the User's ActivityPub following collection
 func (w Outbox) ActivityPubFollowingURL() string {
 	return w._user.ActivityPubFollowingURL()
 }
 
+// ActivityPubLikedURL returns the URL of the User's ActivityPub liked collection
 func (w Outbox) ActivityPubLikedURL() string {
 	return w._user.ActivityPubLikedURL()
 }
 
+// ActivityPubPublicKeyURL returns the URL of the User's ActivityPub public key
 func (w Outbox) ActivityPubPublicKeyURL() string {
 	return w._user.ActivityPubPublicKeyURL()
 }
@@ -313,6 +345,7 @@ func (w Outbox) ActivityPubPublicKeyURL() string {
  * Outbox Methods
  ******************************************/
 
+// Outbox returns a QueryBuilder for the User's own top-level Streams
 func (w Outbox) Outbox() QueryBuilder[model.StreamSummary] {
 
 	expressionBuilder := builder.NewBuilder().
@@ -330,6 +363,7 @@ func (w Outbox) Outbox() QueryBuilder[model.StreamSummary] {
 	return result
 }
 
+// Circles returns a QueryBuilder for the Circles that the User has defined
 func (w Outbox) Circles() QueryBuilder[model.Circle] {
 
 	expressionBuilder := builder.NewBuilder().
@@ -345,14 +379,17 @@ func (w Outbox) Circles() QueryBuilder[model.Circle] {
 	return result
 }
 
+// HasProducts returns TRUE if the User has any purchaseable Products
 func (w Outbox) HasProducts() (bool, error) {
 	return w._factory.Circle().HasProducts(w._session, w._user.UserID)
 }
 
+// ProductCount returns the number of purchaseable Products that the User offers
 func (w Outbox) ProductCount() (int, error) {
 	return w._factory.Circle().ProductCount(w._session, w._user.UserID)
 }
 
+// Products returns every purchaseable Product from the User's Featured Circles
 func (w Outbox) Products() (sliceof.Object[model.Product], error) {
 
 	const location = "build.Outbox.Products"
@@ -379,6 +416,7 @@ func (w Outbox) Products() (sliceof.Object[model.Product], error) {
 	return products, nil
 }
 
+// Replies returns a QueryBuilder for the User's Streams that reply to something else
 func (w Outbox) Replies() QueryBuilder[model.StreamSummary] {
 
 	expressionBuilder := builder.NewBuilder().
@@ -396,6 +434,7 @@ func (w Outbox) Replies() QueryBuilder[model.StreamSummary] {
 	return result
 }
 
+// Responses returns a QueryBuilder for the User's Responses (likes, dislikes, and shares)
 func (w Outbox) Responses() QueryBuilder[model.Response] {
 
 	expressionBuilder := builder.NewBuilder().
@@ -411,11 +450,13 @@ func (w Outbox) Responses() QueryBuilder[model.Response] {
 	return result
 }
 
+// setState moves the User into a different workflow state
 func (w Outbox) setState(stateID string) error {
 	w._user.SetState(stateID)
 	return nil
 }
 
+// debug writes the wrapped User to the debug log
 func (w Outbox) debug() {
 	log.Debug().Interface("object", w.object()).Msg("builder_Outbox")
 }

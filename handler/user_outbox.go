@@ -2,20 +2,18 @@ package handler
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/formdata"
+	"github.com/EmissarySocial/emissary/tools/headers"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
-	accept "github.com/timewasted/go-accept-headers"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -31,22 +29,9 @@ func HeadOutbox(ctx *steranko.Context, factory *service.Factory, session data.Se
 		return derp.NotFound("handler.HeadOutbox", "User not found")
 	}
 
-	allowedContentTypes := []string{
-		vocab.ContentTypeHTML,
-		vocab.ContentTypeActivityPub,
-		vocab.ContentTypeJSONLDWithProfile,
-		vocab.ContentTypeJSONLD,
-		vocab.ContentTypeJSON,
-	}
-
-	if result, err := accept.Negotiate(ctx.Request().Header.Get("Accept"), allowedContentTypes...); err == nil {
-		ctx.Response().Header().Set("Content-Type", result)
-	} else {
-		ctx.Response().Header().Set("Content-Type", vocab.ContentTypeHTML)
-	}
-
-	ctx.Response().Header().Set("Last-Modified", time.UnixMilli(user.UpdateDate).Format(http.TimeFormat))
-	ctx.Response().Header().Set("ETag", user.ETag())
+	// RULE: HEAD must report the headers the equivalent GET would send (RFC 9110 s9.3.2). Both verbs
+	// derive them from `headers`, so neither can drift away from the other.
+	headers.SetAll(ctx.Response().Header(), headers.VariantOf(ctx.Request()), user)
 
 	return ctx.NoContent(http.StatusOK)
 }
@@ -61,6 +46,7 @@ func PostOutbox(ctx *steranko.Context, factory *service.Factory, session data.Se
 	return buildOutbox(ctx, factory, session, user, build.ActionMethodPost)
 }
 
+// GetProfileIcon serves the User's avatar image, resized to a square thumbnail
 func GetProfileIcon(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	filespec := mediaserver.FileSpec{
@@ -72,6 +58,7 @@ func GetProfileIcon(ctx *steranko.Context, factory *service.Factory, session dat
 	return getUserAttachment(ctx, factory, user, "iconId", filespec)
 }
 
+// GetProfileImage serves the User's banner image, resized to a maximum width
 func GetProfileImage(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	filespec := mediaserver.FileSpec{
@@ -82,6 +69,7 @@ func GetProfileImage(ctx *steranko.Context, factory *service.Factory, session da
 	return getUserAttachment(ctx, factory, user, "imageId", filespec)
 }
 
+// PostProfileDelete deletes the signed-in User's own account, and signs them out
 func PostProfileDelete(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.PostProfileDelete"
@@ -93,10 +81,12 @@ func PostProfileDelete(ctx *steranko.Context, factory *service.Factory, session 
 		return derp.Wrap(err, location, "Parsing form values")
 	}
 
+	// RULE: The User must retype their own username to confirm this is deliberate
 	if values.Get("confirm") != user.Username {
 		return inlineError(ctx, `Incorrect Username. Try Again.`)
 	}
 
+	// Delete the User record
 	userService := factory.User()
 
 	if err := userService.Delete(session, user, "Deleted by User"); err != nil {
@@ -152,10 +142,12 @@ func buildOutbox(ctx *steranko.Context, factory *service.Factory, session data.S
 	return build.AsHTML(ctx, factory, builder, actionMethod)
 }
 
+// getUserAttachment serves the image named by a User field (icon or banner) through the mediaserver
 func getUserAttachment(ctx *steranko.Context, factory *service.Factory, user *model.User, field string, filespec mediaserver.FileSpec) error {
 
 	const location = "handler.outbox.getUserAttachment"
 
+	// RULE: A non-public User's images are not public
 	if !isUserVisible(ctx, user) {
 		return derp.NotFound(location, "User not found")
 	}

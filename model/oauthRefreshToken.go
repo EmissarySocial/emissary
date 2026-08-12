@@ -164,9 +164,7 @@ func (token *OAuthUserToken) ClassifyRefresh(generation int, secret string, now 
 	// guessed grant ID plus a bogus secret can never force a revocation.
 	if generation == token.Generation-1 && refreshHashMatches(token.RefreshPrevHash, secret) {
 
-		rotatedAt := time.Unix(token.RotatedAt, 0)
-
-		if now.Sub(rotatedAt) <= grace {
+		if rotatedAt := time.Unix(token.RotatedAt, 0); now.Sub(rotatedAt) <= grace {
 			return RefreshMatchGrace
 		}
 

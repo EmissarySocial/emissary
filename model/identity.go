@@ -43,7 +43,8 @@ func (identity Identity) Fields() []string {
 		"iconUrl",
 		"emailAddress",
 		"activityPubActor",
-		"activityPubUsername",
+		"webfingerUsername",
+		"privileges",
 	}
 }
 
@@ -80,6 +81,7 @@ func (identity Identity) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
  * Other Getters
  ******************************************/
 
+// IsEmpty returns TRUE if this Identity has no identifiers at all
 func (identity Identity) IsEmpty() bool {
 	return (identity.EmailAddress == "") && (identity.WebfingerUsername == "")
 }
@@ -113,6 +115,7 @@ func (identity Identity) Icon() string {
 	return "person-circle"
 }
 
+// Identifier returns the value of the provided identifier type, or empty if the type is unrecognized
 func (identity *Identity) Identifier(identifierType string) string {
 
 	switch identifierType {
@@ -153,6 +156,7 @@ func (identity *Identity) SetIdentifier(identifierType string, value string) boo
 	return false
 }
 
+// RemoveIdentifier clears the provided identifier, and returns TRUE if it matched and was removed
 func (identity *Identity) RemoveIdentifier(identifierType string, value string) bool {
 
 	switch identifierType {
