@@ -33,10 +33,11 @@ type WithFunc3[T any, U any, V any] func(ctx *steranko.Context, factory *service
 // HxRedirectHeader is the header that HTMX reads to force a client-side redirect
 const HxRedirectHeader = "Hx-Redirect"
 
-// WithActor resolves the actor making the request from its credentials and passes the actor's
-// ID (as a string) to the continuation function. The actor identified using 1) a signed-in
-// User's cookie, 2) a valid HTTP signature, or 3) neither (an empty string for anonymous).
+// WithActor resolves the Actor making the request and passes their ID (as a string) to the
+// continuation function, REFUSING any request that carries a signature it cannot verify
 func WithActor(serverFactory *server.Factory, fn WithFunc1[string]) echo.HandlerFunc {
+
+	const location = "handler.WithActor"
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
@@ -51,17 +52,45 @@ func WithActor(serverFactory *server.Factory, fn WithFunc1[string]) echo.Handler
 			}
 		}
 
-		// A valid HTTP signature identifies a (possibly remote) actor.
-		publicKeyFinder := factory.ActivityStream().PublicKeyFinder
-		if signature, err := sigs.Verify(ctx.Request(), publicKeyFinder); err == nil {
-			actorID := signature.ActorID()
-			return fn(ctx, factory, session, &actorID)
+		// Otherwise, an HTTP Signature identifies a (possibly remote) Actor.
+		actorID, err := resolveSignedActor(ctx.Request(), factory.ActivityStream().PublicKeyFinder)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Resolving Actor from JSON-LD")
 		}
 
-		// Fall through means the request is Anonymous
-		actorID := ""
 		return fn(ctx, factory, session, &actorID)
 	})
+}
+
+// resolveSignedActor returns the ID of the Actor named by the request's HTTP Signature, or an empty
+// string when the request carries no signature at all
+func resolveSignedActor(request *http.Request, publicKeyFinder sigs.PublicKeyFinder) (string, error) {
+
+	const location = "handler.resolveSignedActor"
+
+	// The three cases this function exists to keep apart are: no signature (anonymous), a valid
+	// signature (an Actor), and a signature that FAILS to verify (a refusal). Collapsing the third
+	// into the first is BUG-20.
+
+	// RULE: A request that offers no Signature at all is Anonymous, not refused
+	if !sigs.HasSignature(request) {
+		return "", nil
+	}
+
+	signature, err := sigs.Verify(request, publicKeyFinder)
+
+	// RULE: A signature that is present but INVALID fails the whole request. Falling through to
+	// anonymous would hand the peer a normal-looking response with no hint that their signature was
+	// rejected -- their operator then hunts a permissions bug that does not exist. Nothing is logged
+	// or reported: the 401 IS the signal, and it reaches the only party who can act on it. The
+	// message is fixed on purpose, so verifier internals never reach an unauthenticated prober.
+	if err != nil {
+		return "", derp.Unauthorized(location, "Invalid HTTP Signature")
+	}
+
+	// A verified signature speaks for its Actor
+	return signature.ActorID(), nil
 }
 
 // WithActorAndUser resolves both the requesting Actor (authenticated by HTTP signatures) and the
