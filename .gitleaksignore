@@ -1,0 +1,50 @@
+# .gitleaksignore -- fingerprints reviewed and accepted on 2026-08-12.
+#
+# Every entry below was inspected and confirmed to be test data, a placeholder, or a
+# value in deleted history that is not a live credential. Fingerprints are
+# `commit:file:rule:line`, so an entry stops matching if the secret moves or changes --
+# a genuinely new leak in one of these files will still be reported.
+#
+# Add to this file only after confirming a finding is safe. If a real credential is
+# ever committed, rotate it: removing the file does not remove it from history.
+
+# _embed/templates/registration-stripe/registration.hjson
+# Form placeholder text ("pk_live_xxxxxxxxxx"), not a key -- and `pk_` keys are publishable by design
+2eb27caa28e44dc7217bd8825ed1d96fce1ce8df:_embed/templates/registration-stripe/registration.hjson:stripe-access-token:19
+d8693725c5a6e0874ff3f0fbbbdfb04c799bce77:_embed/templates/registration-stripe/registration.hjson:stripe-access-token:21
+1069c63e6aad02a669fa4a49500ef75a75403eaf:_embed/templates/registration-stripe/registration.hjson:stripe-access-token:21
+
+# _embed/templates/user-mls/resources/app/dist/app.js.map
+# Deleted build artifact: high-entropy strings in a generated source map
+d3e71c4891aafe97b35a3e6bdf9eeac04424ee6a:_embed/templates/user-mls/resources/app/dist/app.js.map:generic-api-key:6
+d3e71c4891aafe97b35a3e6bdf9eeac04424ee6a:_embed/templates/user-mls/resources/app/dist/app.js.map:generic-api-key:6
+
+# build/utilities_test.go
+# Test fixture: hand-built JWTs for the builder tests
+5d8e0e23a65ae9763de626d92efef0a50604f960:build/utilities_test.go:jwt:59
+5d8e0e23a65ae9763de626d92efef0a50604f960:build/utilities_test.go:jwt:59
+
+# content/wysiwyg.go
+# Deleted 2021: reviewed and confirmed not a live credential
+ff04e78aa408fdd4e458adca7b96c183eaed48e8:content/wysiwyg.go:generic-api-key:29
+
+# docker/config-docker.json
+# Deleted 2024: reviewed and confirmed not a live credential
+c4d3453b69211386ce08ea20d825f67e58a2b6bd:docker/config-docker.json:generic-api-key:24
+
+# model/pushSubscription_test.go
+# Test fixture: fake Web Push subscription credentials
+a7f505fd5d3191c678b7cb1b2751df7737c217c2:model/pushSubscription_test.go:generic-api-key:20
+
+# service/geocoder/googlemaps_test.go
+# Test fixture: fake Google Maps API key
+9bc13cb901bd434ef208067fa00435ededd132ec:service/geocoder/googlemaps_test.go:gcp-api-key:8
+
+# service/merchantAccount_test.go
+# Test fixture: fake merchant account credentials
+e1c7ae897381a3d8ab1271a8531e84870926340c:service/merchantAccount_test.go:generic-api-key:20
+e1c7ae897381a3d8ab1271a8531e84870926340c:service/merchantAccount_test.go:generic-api-key:39
+
+# service/oauthUserToken_test.go
+# Test fixture: fake OAuth token
+82d9fbabb026c196e6072c618395c7337aa7b04b:service/oauthUserToken_test.go:generic-api-key:15
