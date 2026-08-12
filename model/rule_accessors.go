@@ -16,13 +16,16 @@ func RuleSchema() schema.Element {
 			"followingLabel": schema.String{Format: "text", MaxLength: 64},
 			"type":           schema.String{Required: true, Enum: []string{RuleTypeDomain, RuleTypeActor, RuleTypeTag}},
 			"action":         schema.String{Required: true, Enum: []string{RuleActionBlock, RuleActionMute, RuleActionLabel}},
-			"label":          schema.String{Format: "text", MaxLength: 64},
-			"trigger":        schema.String{MaxLength: 256, Required: true},
-			"summary":        schema.String{Format: "text", MaxLength: 256},
-			"reasonCode":     schema.String{MaxLength: 64},
-			"isPublic":       schema.Boolean{},
-			"publishDate":    schema.Integer{BitSize: 64},
-			"expireDate":     schema.Integer{BitSize: 64},
+			// RULE: A LABEL rule with no label text matches documents but annotates nothing (LabelSet
+			// skips empty labels), so it LOOKS active while doing nothing. Refuse it at validation
+			// instead of saving it inert -- the same posture Save takes toward unresolvable Triggers.
+			"label":       schema.String{Format: "text", MaxLength: 64, RequiredIf: "action is LABEL"},
+			"trigger":     schema.String{MaxLength: 256, Required: true},
+			"summary":     schema.String{Format: "text", MaxLength: 256},
+			"reasonCode":  schema.String{MaxLength: 64},
+			"isPublic":    schema.Boolean{},
+			"publishDate": schema.Integer{BitSize: 64},
+			"expireDate":  schema.Integer{BitSize: 64},
 		},
 	}
 }

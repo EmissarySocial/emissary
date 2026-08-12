@@ -43,3 +43,34 @@ func TestRuleSchema_NoForgeableFields(t *testing.T) {
 	require.Error(t, s.Set(&rule, "matchKey", "ACTOR:https://evil.example/@forged"))
 	require.Equal(t, "", rule.MatchKey, "matchKey must not be settable via the schema")
 }
+
+// TestRuleSchema_LabelRequiredForLabelAction confirms that a LABEL rule cannot validate with empty
+// label text: such a rule matches documents but annotates nothing (LabelSet skips empty labels), so
+// it would look active while doing nothing. MUTE and BLOCK rules keep the label optional.
+func TestRuleSchema_LabelRequiredForLabelAction(t *testing.T) {
+
+	s := schema.New(RuleSchema())
+
+	// A LABEL rule with no label text is refused
+	rule := NewRule()
+	rule.Trigger = "@person@other.server"
+	rule.Action = RuleActionLabel
+
+	_, err := s.Validate(&rule)
+	require.Error(t, err)
+
+	// The same rule with label text is accepted
+	rule.Label = "QA flagged"
+	_, err = s.Validate(&rule)
+	require.Nil(t, err)
+
+	// MUTE and BLOCK rules validate without a label
+	for _, action := range []string{RuleActionMute, RuleActionBlock} {
+		rule := NewRule()
+		rule.Trigger = "@person@other.server"
+		rule.Action = action
+
+		_, err := s.Validate(&rule)
+		require.Nil(t, err)
+	}
+}
