@@ -1,3 +1,8 @@
+// Package activitypub_user serves the ActivityPub endpoints for a User actor: the actor document
+// itself, its inbox and outbox, and its social-graph collections.
+//
+// The followers and following collections publish only their SIZE, never their members -- see
+// GetFollowersCollection for the policy and the reasoning behind that response shape.
 package activitypub_user
 
 import (
@@ -5,9 +10,9 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/headers"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/steranko"
 )
 
@@ -31,6 +36,6 @@ func RenderProfileJSONLD(context *steranko.Context, factory *service.Factory, se
 	}
 
 	// Return the user's profile in JSON-LD format
-	context.Response().Header().Set(vocab.ContentType, vocab.ContentTypeActivityPub)
+	headers.SetAll(context.Response().Header(), headers.VariantActivityPub, user)
 	return context.JSON(http.StatusOK, userJSON)
 }

@@ -2,8 +2,8 @@ package build
 
 import (
 	"io"
-	"time"
 
+	"github.com/EmissarySocial/emissary/tools/headers"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/compare"
 )
@@ -62,8 +62,8 @@ func (step StepViewCSS) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 	// If we have a valid object, then try to set ETag headers.
 	if object := builder.object(); compare.NotNil(object) {
 		result = result.
-			WithHeader("Last-Modified", time.UnixMilli(object.Updated()).Format(time.RFC3339)).
-			WithHeader("ETag", object.ETag())
+			WithHeader("Last-Modified", headers.LastModified(object)).
+			WithHeader("ETag", headers.EntityTag(object.ETag(), "css"))
 	}
 
 	// Otherwise, just continue without headers.

@@ -2,9 +2,8 @@ package build
 
 import (
 	"io"
-	"time"
 
-	"github.com/EmissarySocial/emissary/tools/negotiate"
+	"github.com/EmissarySocial/emissary/tools/headers"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/compare"
 )
@@ -50,7 +49,7 @@ func (step StepViewHTML) execute(builder Builder, buffer io.Writer) PipelineBeha
 
 	// RULE: this must include `Accept` -- the same URL serves two representations, so a cache that
 	// ignores it would hand a peer's AS2 document to a browser
-	header.Set("Vary", negotiate.VaryHTML)
+	header.Set("Vary", headers.VaryHTML)
 
 	// Render the named template, defaulting to the one that matches the action
 	var filename string
@@ -70,8 +69,8 @@ func (step StepViewHTML) execute(builder Builder, buffer io.Writer) PipelineBeha
 
 	if object := builder.object(); compare.NotNil(object) {
 		result = result.
-			WithHeader("Last-Modified", time.UnixMilli(object.Updated()).Format(time.RFC3339)).
-			WithHeader("ETag", object.ETag())
+			WithHeader("Last-Modified", headers.LastModified(object)).
+			WithHeader("ETag", headers.ETag(headers.VariantHTML, object))
 	}
 
 	// If "as-full-page" was specified, then include that in the result

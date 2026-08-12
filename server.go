@@ -748,7 +748,7 @@ func errorHandler(err error, ctx echo.Context) {
 func handleActivityPubError(ctx echo.Context, err error) bool {
 
 	// If this is not an ActivityPub request, then don't handle it here.
-	if !hannibal.IsActivityPubContentType(ctx.Request().Header.Get("Accept")) {
+	if hannibal.NotActivityPubRequest(ctx.Request()) {
 		return false
 	}
 

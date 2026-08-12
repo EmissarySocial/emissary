@@ -2,41 +2,26 @@ package handler
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/handler/activitypub_search"
 	"github.com/EmissarySocial/emissary/handler/activitypub_stream"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/headers"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal"
-	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/steranko"
 	"github.com/labstack/echo/v4"
-	accept "github.com/timewasted/go-accept-headers"
 )
 
 // HeadStream handles HEAD requests
 func HeadStream(ctx *steranko.Context, factory *service.Factory, session data.Session, stream *model.Stream) error {
 
-	allowedContentTypes := []string{
-		vocab.ContentTypeHTML,
-		vocab.ContentTypeActivityPub,
-		vocab.ContentTypeJSONLDWithProfile,
-		vocab.ContentTypeJSONLD,
-		vocab.ContentTypeJSON,
-	}
-
-	if result, err := accept.Negotiate(ctx.Request().Header.Get("Accept"), allowedContentTypes...); err == nil {
-		ctx.Response().Header().Set("Content-Type", result)
-	} else {
-		ctx.Response().Header().Set("Content-Type", vocab.ContentTypeHTML)
-	}
-
-	ctx.Response().Header().Set("Last-Modified", time.UnixMilli(stream.UpdateDate).Format(http.TimeFormat))
-	ctx.Response().Header().Set("ETag", stream.ETag())
+	// RULE: HEAD must report the headers the equivalent GET would send (RFC 9110 s9.3.2). Both verbs
+	// derive them from `headers`, so neither can drift away from the other.
+	headers.SetAll(ctx.Response().Header(), headers.VariantOf(ctx.Request()), stream)
 
 	return ctx.NoContent(http.StatusOK)
 }
@@ -64,6 +49,7 @@ func PostStreamWithAction(ctx *steranko.Context, factory *service.Factory, sessi
 	return getStreamPipeline(ctx, factory, session, template, stream, build.ActionMethodPost)
 }
 
+// getStreamJSONLD serves a Stream as JSON-LD, routing to the search or stream Actor as its Template requires
 func getStreamJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
 
 	const location = "handler.getStreamJSONLD"
