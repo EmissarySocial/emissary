@@ -60,6 +60,18 @@ func (authorization Authorization) GetRevalidationTime() (time.Time, bool) {
 	return time.Unix(authorization.Revalidate, 0), true
 }
 
+// CarryForwardSessionState implements the steranko.SessionCarrier interface, preserving the
+// security-critical Masquerade flag across a revalidation re-mint.
+func (authorization *Authorization) CarryForwardSessionState(previous jwt.Claims) {
+
+	// Revalidation rebuilds this Authorization from the User record, which resets any field
+	// NOT stored there. Masquerade must survive, so it is copied forward. Every other field
+	// (DomainOwner, GroupIDs, ...) is left to be re-derived, so a demotion takes effect.
+	if previousAuthorization, ok := previous.(*Authorization); ok {
+		authorization.Masquerade = previousAuthorization.Masquerade
+	}
+}
+
 // IsAuthenticated returns TRUE if this authorization is valid and has a non-zero UserID
 func (authorization Authorization) IsAuthenticated() bool {
 	return !authorization.UserID.IsZero()

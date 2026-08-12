@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/benpate/steranko"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -39,6 +40,48 @@ func TestAuthorization_GetRevalidationTime_Set(t *testing.T) {
 	at, ok := auth.GetRevalidationTime()
 	require.True(t, ok)
 	require.Equal(t, now.Unix(), at.Unix())
+}
+
+// TestAuthorization_SessionCarrier confirms that Authorization satisfies the
+// steranko.SessionCarrier interface.
+func TestAuthorization_SessionCarrier(t *testing.T) {
+	var auth any = &Authorization{}
+	_, ok := auth.(steranko.SessionCarrier)
+	require.True(t, ok)
+}
+
+// TestAuthorization_CarryForwardSessionState confirms that the security-critical Masquerade
+// flag is copied forward, while user-record-derived fields (DomainOwner) are not.
+func TestAuthorization_CarryForwardSessionState(t *testing.T) {
+
+	// The previous session: a masquerading owner marker.
+	previous := NewAuthorization()
+	previous.Masquerade = true
+	previous.DomainOwner = true
+
+	// The freshly-rebuilt session (from the user record) does NOT know it was a masquerade,
+	// and rebuilds DomainOwner from the record (here, false).
+	fresh := NewAuthorization()
+	fresh.Masquerade = false
+	fresh.DomainOwner = false
+
+	fresh.CarryForwardSessionState(&previous)
+
+	require.True(t, fresh.Masquerade, "Masquerade must be carried forward across the re-mint")
+	require.False(t, fresh.DomainOwner, "DomainOwner must NOT be carried forward; it is re-derived from the record")
+}
+
+// TestAuthorization_CarryForwardSessionState_WrongType confirms that carrying forward from
+// an unrelated claims type is a safe no-op (no panic, no change).
+func TestAuthorization_CarryForwardSessionState_WrongType(t *testing.T) {
+
+	fresh := NewAuthorization()
+	fresh.Masquerade = false
+
+	require.NotPanics(t, func() {
+		fresh.CarryForwardSessionState(jwt.MapClaims{"M": true})
+	})
+	require.False(t, fresh.Masquerade, "an unrelated claims type must not alter Masquerade")
 }
 
 // TestAuthorization_RevalidateRoundTrip confirms that both the "sub" subject and

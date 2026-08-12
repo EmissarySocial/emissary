@@ -27,7 +27,7 @@ require (
 	github.com/benpate/rosetta v0.34.0
 	github.com/benpate/sherlock v0.12.0
 	github.com/benpate/sniff v0.2.0
-	github.com/benpate/steranko v0.29.0
+	github.com/benpate/steranko v0.30.0
 	github.com/benpate/table v0.8.0
 	github.com/benpate/toot v0.4.0
 	github.com/benpate/turbine v0.7.0
