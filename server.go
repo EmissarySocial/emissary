@@ -34,6 +34,7 @@ import (
 	"github.com/benpate/digital-dome/dome4echo"
 	"github.com/benpate/form/widget"
 	"github.com/benpate/hannibal"
+	"github.com/benpate/hannibal/sigs"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/uri"
@@ -699,6 +700,16 @@ func errorHandler(err error, ctx echo.Context) {
 
 		// Special case for ActivityPub requests: Just display the status code and JSON-LD error
 		if handleActivityPubError(ctx, err) {
+			return
+		}
+
+		// RULE: A signed request is a machine, so it gets the status code rather than a redirect.
+		// Only a browser can act on /signin, and a peer whose signature was just refused would read
+		// the 303 as "your request worked" -- re-hiding the failure that the refusal exists to
+		// surface. The Accept header cannot be relied on to tell them apart here: a peer with a
+		// misconfigured Accept is exactly the population being diagnosed. (BUG-20)
+		if sigs.HasSignature(request) {
+			_ = ctx.String(derp.ErrorCode(err), derp.Message(err))
 			return
 		}
 
