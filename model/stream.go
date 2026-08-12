@@ -48,8 +48,8 @@ type Stream struct {
 	AttributedTo     PersonLink              `bson:"attributedTo,omitempty"` // List of people who are attributed to this document
 	Content          Content                 `bson:"content,omitempty"`      // Body content object for this Stream.
 	Widgets          set.Slice[StreamWidget] `bson:"widgets,omitempty"`      // Additional widgets to include when building this Stream.
-	Hashtags         sliceof.String          `bson:"hashtags,omitempty"`     // List of hashtags that are associated with this document
-	Mentions         sliceof.Object[Mention] `bson:"mentions,omitempty"`     // List of @mentions found in this document, with the Actor URLs they resolve to
+	Hashtags         sliceof.String          `bson:"hashtags,omitempty"`     // DEPRECATED: superseded by Tags. Dual-written for one release; see projects/TAGS-UNIFICATION.md
+	Tags             TagList                 `bson:"tags,omitempty"`         // All tags on this document -- #hashtags and @mentions -- with their AS2 types
 	Location         geo.Address             `bson:"location,omitempty"`     // Location assigned to this stream
 	Data             mapof.Any               `bson:"data,omitempty"`         // Set of data to populate into the Template.  This is validated by the JSON-Schema of the Template.
 	StartDate        datetime.DateTime       `bson:"startDate,omitempty"`    // Date/Time to publish as a "start date" for this Stream (semantics are dependent on the Template)
@@ -92,7 +92,7 @@ func NewStream() Stream {
 		Widgets:       NewStreamWidgets(),
 		Data:          mapof.NewAny(),
 		Hashtags:      sliceof.NewString(),
-		Mentions:      NewMentions(),
+		Tags:          NewTagList(),
 		PublishDate:   math.MaxInt64,
 		UnPublishDate: math.MaxInt64,
 		Syndication:   delta.NewSlice[string](),
@@ -530,7 +530,7 @@ func (stream *Stream) Update(other Stream) {
 	stream.Content = other.Content
 	stream.Widgets = other.Widgets
 	stream.Hashtags = other.Hashtags
-	stream.Mentions = other.Mentions
+	stream.Tags = other.Tags
 	stream.Data = other.Data
 	stream.Syndication = other.Syndication
 	stream.PublishDate = other.PublishDate

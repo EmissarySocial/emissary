@@ -86,27 +86,30 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 		result[vocab.PropertyAttributedTo] = stream.AttributedTo.ProfileURL
 	}
 
-	// The `tag` array carries BOTH #hashtags and @mentions, and is assigned exactly once, so
-	// both must be collected before it is written.
-	tags := make([]mapof.String, 0, len(stream.Hashtags)+len(stream.Mentions))
+	// The `tag` array carries every kind of tag and is assigned exactly ONCE, so all of them
+	// must be collected before it is written.
+	tags := make([]mapof.String, 0, len(stream.Tags))
+	mentioned := make([]string, 0, len(stream.Tags))
 
-	for _, hashtag := range stream.Hashtags {
-		tags = append(tags, service.HashtagAsJSONLD(template.TagURL, hashtag))
-	}
+	for _, tag := range stream.Tags {
 
-	// RULE: Only RESOLVED @mentions are federated. An unresolved handle stays on the Stream so
-	// the author can correct it, but a `Mention` tag with no `href` gives a receiving server
-	// nothing to route to, so it is not published. (resolveMentions fills these in at publish.)
-	mentioned := make([]string, 0, len(stream.Mentions))
+		switch tag.Type {
 
-	for _, mention := range stream.Mentions {
+		// Tag.Link derives a #hashtag's target from the host and Template, so a change to either
+		// takes effect on every existing document immediately.
+		case vocab.LinkTypeHashtag:
+			tags = append(tags, tag.JSONLD(service.host, template.TagURL))
 
-		if mention.NotResolved() {
-			continue
+		// Only RESOLVED @mentions are federated: a `Mention` with no `href` gives a receiving
+		// server nothing to route to. Unresolved handles stay on the Stream so the author can
+		// correct them.
+		case vocab.LinkTypeMention:
+
+			if tag.IsResolved() {
+				tags = append(tags, tag.JSONLD(service.host, template.TagURL))
+				mentioned = append(mentioned, tag.Href)
+			}
 		}
-
-		tags = append(tags, mention.JSONLD())
-		mentioned = append(mentioned, mention.Href)
 	}
 
 	if len(tags) > 0 {
@@ -189,25 +192,6 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 				derp.Report(derp.Wrap(err, location, "Applying social rules to stream", stream.StreamID, template.SocialRules))
 			}
 		}
-	}
-
-	return result
-}
-
-// HashtagAsJSONLD returns a JSON-LD map document that represents a hashtag.
-// The tagURL is the link prefix defined by the Stream's Template; it is made
-// absolute because this document is read by other servers.  When the Template
-// defines no tagURL, the hashtag is published without a link.
-func (service *Stream) HashtagAsJSONLD(tagURL string, tag string) mapof.String {
-
-	result := mapof.String{
-		vocab.PropertyType: vocab.LinkTypeHashtag,
-		vocab.PropertyName: "#" + tag,
-	}
-
-	// Include the link target when the Template defines one
-	if href := model.HashtagURL(service.host, tagURL, tag); href != "" {
-		result[vocab.PropertyHref] = href
 	}
 
 	return result

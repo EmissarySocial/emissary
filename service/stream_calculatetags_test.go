@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/stretchr/testify/require"
 )
 
@@ -90,6 +91,43 @@ func TestStream_CalculateTags_NoTagPaths(t *testing.T) {
 	streamService.CalculateTags(emptyTagSession{}, &stream)
 
 	require.Empty(t, stream.Hashtags)
+}
+
+// TestStream_CalculateTags_DualWrites confirms that extraction fills BOTH the deprecated Hashtags
+// slice and the unified Tags list. Hashtags is dual-written for one release while the external
+// template packages migrate -- see projects/TAGS-UNIFICATION.md.
+func TestStream_CalculateTags_DualWrites(t *testing.T) {
+	streamService, _ := newTagStreamService([]string{"content.html"}, "/search?q=")
+	stream := newTagStream("Testing hashtags #travel #Food2024 here")
+
+	streamService.CalculateTags(emptyTagSession{}, &stream)
+
+	require.Equal(t, []string{"Food2024", "travel"}, []string(stream.Hashtags))
+	require.Equal(t, []string{"Food2024", "travel"}, []string(model.TagNames(stream.Tags, vocab.LinkTypeHashtag)))
+
+	for _, tag := range stream.Tags {
+		require.Equal(t, vocab.LinkTypeHashtag, tag.Type)
+		require.Empty(t, tag.Href, "a hashtag's href is derived at emission, never stored")
+	}
+}
+
+// TestStream_CalculateTags_PreservesMentions confirms that recalculating #hashtags leaves @mention
+// entries alone. Both kinds share one field, and each is recalculated independently.
+func TestStream_CalculateTags_PreservesMentions(t *testing.T) {
+	streamService, _ := newTagStreamService([]string{"content.html"}, "/search?q=")
+	stream := newTagStream("Testing #travel here")
+	stream.Tags = model.TagList{{
+		Type: vocab.LinkTypeMention,
+		Name: "sarah@mastodon.social",
+		Href: "https://mastodon.social/users/sarah",
+	}}
+
+	streamService.CalculateTags(emptyTagSession{}, &stream)
+
+	mentions := model.TagsOfType(stream.Tags, vocab.LinkTypeMention)
+	require.Equal(t, 1, len(mentions), "recalculating hashtags must not disturb mentions")
+	require.Equal(t, "https://mastodon.social/users/sarah", mentions[0].Href, "and must not discard their resolutions")
+	require.Equal(t, []string{"travel"}, []string(model.TagNames(stream.Tags, vocab.LinkTypeHashtag)))
 }
 
 // TestStream_CalculateTags_ThenLinkify_Idempotent mirrors what Stream.Save does (extract, then

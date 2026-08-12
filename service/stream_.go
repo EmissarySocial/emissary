@@ -21,6 +21,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/geo"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/delta"
@@ -1213,18 +1214,40 @@ func (service *Stream) CalculateTags(session data.Session, stream *model.Stream)
 		derp.Report(derp.Wrap(err, location, "Normalizing tags"))
 	}
 
-	// Apply the #hashtags back to the Stream
+	// Apply the #hashtags back to the Stream.
+	//
+	// Hashtags is DEPRECATED and dual-written for one release while the external template
+	// packages migrate (see projects/TAGS-UNIFICATION.md).  Tags is the value readers use.
+	// Only Hashtag-typed entries are replaced, so @mentions survive untouched.
 	stream.Hashtags = hashtagNames
+
+	hashtagTags := make(model.TagList, 0, len(hashtagNames))
+
+	for _, name := range hashtagNames {
+		hashtagTags = append(hashtagTags, model.NewTag(vocab.LinkTypeHashtag, name))
+	}
+
+	stream.Tags = model.ReplaceTagsOfType(stream.Tags, vocab.LinkTypeHashtag, hashtagTags)
 }
 
+// mentionResolveTimeout bounds an ENTIRE batch of @mention lookups.  `remote` allows a full
+// minute per request and each resolution is two requests, so without this a single blackholed
+// host could stall a user's save for minutes.
+const mentionResolveTimeout = 5 * time.Second
+
+// mentionResolveConcurrency caps simultaneous @mention lookups, so a post naming a large number
+// of people cannot open an unbounded number of outbound connections at once.
+const mentionResolveConcurrency = 8
+
 // CalculateMentions scans the Template-defined TagPaths on this Stream for @mentions and
-// merges them into the Stream's Mentions list.
+// merges them into the Stream's Tags, resolving any handle it has not seen before.
 func (service *Stream) CalculateMentions(stream *model.Stream) {
 
-	// This runs on every save, so it deliberately does NO network work: handles are extracted
-	// here, and resolved to Actor URLs exactly once, later, by resolveMentions at publish time.
-	// A handle that is already present keeps its existing Href, so editing a document neither
-	// discards nor re-requests a resolution that has already been made.
+	// Extraction is pure string work.  Resolution is not -- it is a WebFinger lookup followed by
+	// an Actor fetch -- but it happens at most once per handle: a handle already present keeps
+	// its Href, and `ascache` keys actor documents by the handle string, so a handle first seen
+	// on some OTHER Stream is a cache hit here.  Only genuinely new handles reach the network.
+	// See projects/TAGS-UNIFICATION.md and bugs/BUG-09-Mentions-Not-Emitted.md.
 
 	const location = "service.Stream.CalculateMentions"
 
@@ -1236,17 +1259,19 @@ func (service *Stream) CalculateMentions(stream *model.Stream) {
 		return
 	}
 
-	// Index the Hrefs we have already resolved, so that re-scanning preserves them
-	resolved := make(map[string]string, len(stream.Mentions))
+	// Index the Hrefs already known, so that re-scanning preserves them.  This carries the
+	// TagHrefUnresolvable sentinel forward too, which is what stops a handle that cannot be
+	// resolved from being looked up again on every single save.
+	known := make(map[string]string, len(stream.Tags))
 
-	for _, mention := range stream.Mentions {
-		resolved[mention.Handle] = mention.Href
+	for _, tag := range model.TagsOfType(stream.Tags, vocab.LinkTypeMention) {
+		known[tag.Name] = tag.Href
 	}
 
 	// Scan each tag path in the Stream for @mentions
 	schema := service.Schema()
-	result := model.NewMentions()
-	seen := make(map[string]struct{}, len(stream.Mentions))
+	mentions := make(model.TagList, 0, len(stream.Tags))
+	seen := make(map[string]struct{}, len(stream.Tags))
 	hostname := uri.Hostname(service.host)
 
 	for _, path := range template.TagPaths {
@@ -1260,7 +1285,7 @@ func (service *Stream) CalculateMentions(stream *model.Stream) {
 			for _, handle := range parse.Mentions(stringValue) {
 
 				// RULE: A bare "@" yields an empty token, which is not a handle.  Without this,
-				// resolveMentions would spend a WebFinger lookup on the empty string.
+				// resolution would spend a WebFinger lookup on the empty string.
 				if handle == "" {
 					continue
 				}
@@ -1269,7 +1294,7 @@ func (service *Stream) CalculateMentions(stream *model.Stream) {
 				// "@bob" means "@bob@bandwagon.fm".  Qualifying at extraction (rather than at
 				// resolution) stores a handle that is unambiguous to the remote servers that read
 				// this document, and makes "@bob" and "@bob@bandwagon.fm" in the same document
-				// dedupe to a single Mention.
+				// dedupe to a single Tag.
 				if !strings.Contains(handle, "@") {
 
 					// With no hostname to anchor to, the handle can never resolve. Drop it here
@@ -1288,16 +1313,99 @@ func (service *Stream) CalculateMentions(stream *model.Stream) {
 
 				seen[handle] = struct{}{}
 
-				result = append(result, model.Mention{
-					Handle: handle,
-					Href:   resolved[handle], // empty for handles that have not been resolved yet
+				mentions = append(mentions, model.Tag{
+					Type: vocab.LinkTypeMention,
+					Name: handle,
+					Href: known[handle], // empty for handles that have never been looked up
 				})
 			}
 		}
 	}
 
-	// Apply the @mentions back to the Stream
-	stream.Mentions = result
+	// Look up the Actor URL for every handle we have not seen before
+	service.resolveMentions(mentions)
+
+	// Apply the @mentions back to the Stream, leaving #hashtags untouched
+	stream.Tags = model.ReplaceTagsOfType(stream.Tags, vocab.LinkTypeMention, mentions)
+}
+
+// resolveMentions fills in the Actor URL for every Mention Tag that does not already have one,
+// rewriting the provided slice in place.
+func (service *Stream) resolveMentions(tags model.TagList) {
+
+	const location = "service.Stream.resolveMentions"
+
+	// Collect the entries that still need a lookup.  Usually there are none.
+	pending := make([]int, 0, len(tags))
+
+	for index, tag := range tags {
+		if tag.NeedsResolution() {
+			pending = append(pending, index)
+		}
+	}
+
+	if len(pending) == 0 {
+		return
+	}
+
+	// Lookups are independent of each other, so they run concurrently: the cost of a post that
+	// mentions twenty people tracks the SLOWEST handle rather than the sum of all twenty.  The
+	// deadline bounds the whole batch, because `remote` allows a full minute PER REQUEST and
+	// resolution is two requests -- far too long to hold a user's save.
+	ctx, cancel := context.WithTimeout(context.Background(), mentionResolveTimeout)
+	defer cancel()
+
+	// Buffered to len(pending) so a straggler can always deliver its result and exit, even after
+	// this function has stopped listening.  Nothing writes to `tags` except the loop below, so
+	// abandoning a slow lookup cannot race with the caller.
+	type resolved struct {
+		index int
+		href  string
+	}
+
+	results := make(chan resolved, len(pending))
+	semaphore := make(chan struct{}, mentionResolveConcurrency)
+
+	for _, index := range pending {
+
+		go func(index int) {
+
+			semaphore <- struct{}{}
+			defer func() { <-semaphore }()
+
+			handle := tags[index].Name
+			actor, err := service.activityService.GetActor(handle)
+
+			if err != nil {
+				derp.Report(derp.Wrap(err, location, "Unable to resolve @mention; publishing without it", handle))
+				results <- resolved{index: index, href: model.TagHrefUnresolvable}
+				return
+			}
+
+			if actorID := actor.ID(); actorID != "" {
+				results <- resolved{index: index, href: actorID}
+				return
+			}
+
+			results <- resolved{index: index, href: model.TagHrefUnresolvable}
+		}(index)
+	}
+
+	for range pending {
+
+		select {
+
+		case result := <-results:
+			tags[result.index].Href = result.href
+
+		case <-ctx.Done():
+
+			// The batch blew its time budget.  Whatever resolved is kept; the rest keep an empty
+			// Href, so the next save retries them rather than marking them permanently bad.
+			derp.Report(derp.Wrap(ctx.Err(), location, "Timed out resolving @mentions; unresolved handles will retry on next save"))
+			return
+		}
+	}
 }
 
 // applyHashtagLinks wraps each of the Stream's #hashtags in its content with a link to the
@@ -1312,11 +1420,13 @@ func (service *Stream) applyHashtagLinks(template *model.Template, stream *model
 	}
 
 	// RULE: Nothing to link if there are no hashtags
-	if len(stream.Hashtags) == 0 {
+	hashtags := model.TagNames(stream.Tags, vocab.LinkTypeHashtag)
+
+	if len(hashtags) == 0 {
 		return
 	}
 
-	service.contentService.ApplyTags(&stream.Content, tagURL, stream.Hashtags)
+	service.contentService.ApplyTags(&stream.Content, tagURL, hashtags)
 }
 
 // NotifyInReplyTo sends an SSE notification to any stream that is referenced in the "inReplyTo" field of a Stream
@@ -1411,6 +1521,7 @@ func (service *Stream) Move(session data.Session, stream *model.Stream, movedTo 
 	stream.Content = model.NewContent()
 	stream.Widgets = set.NewSlice[model.StreamWidget]()
 	stream.Hashtags = sliceof.NewString()
+	stream.Tags = model.NewTagList()
 	stream.Location = geo.NewAddress()
 	stream.Data = mapof.NewAny()
 	stream.StartDate = datetime.New()
@@ -1467,7 +1578,7 @@ func (service *Stream) SearchResult(stream *model.Stream) model.SearchResult {
 				if len(template.SearchOptions) > 0 {
 
 					result.URL = stream.URL
-					result.Tags = slice.Map(stream.Hashtags, model.ToToken)
+					result.Tags = slice.Map(model.TagNames(stream.Tags, vocab.LinkTypeHashtag), model.ToToken)
 					result.Type = firstOf(template.SearchOptions.Execute("type", stream), template.SocialRole)
 					result.Name = firstOf(template.SearchOptions.Execute("name", stream), stream.Label)
 					result.AttributedTo = firstOf(template.SearchOptions.Execute("attributedTo", stream), stream.AttributedTo.Name)

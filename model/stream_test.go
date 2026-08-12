@@ -57,6 +57,14 @@ func TestStreamSchema(t *testing.T) {
 		{"iconUrl", "https://DOC.ICONURL.COM", nil},
 		{"hashtags.0", "first-tag", nil},
 		{"hashtags.1", "second-tag", nil},
+
+		// tags is an array of objects, so each Tag property is addressed individually. The list
+		// grows to fit, which is what lets a caller write tags.1.* before tags.1 exists.
+		{"tags.0.type", "Hashtag", nil},
+		{"tags.0.name", "first-tag", nil},
+		{"tags.1.type", "Mention", nil},
+		{"tags.1.name", "bob@server.social", nil},
+		{"tags.1.href", "https://server.social/@bob", nil},
 		// note: "isPublished" is a read-only virtual field (computed from publishDate/unpublishDate),
 		// "syndication" is a delta.Slice not settable by element path, and "widgets" is a nested
 		// object — none round-trip through this table helper, so they are intentionally omitted.

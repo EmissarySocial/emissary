@@ -8,35 +8,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestStream_HashtagAsJSONLD confirms that hashtag links use the Template's TagURL, anchored to the host.
-func TestStream_HashtagAsJSONLD(t *testing.T) {
-	service := &Stream{host: "https://example.com"}
+// hashtagStream returns a Stream carrying the provided content and one #hashtag Tag.
+func hashtagStream(html string, hashtags ...string) model.Stream {
 
-	result := service.HashtagAsJSONLD("/search?q=", "travel")
+	stream := model.NewStream()
+	stream.Content = model.NewContent()
+	stream.Content.HTML = html
 
-	require.Equal(t, vocab.LinkTypeHashtag, result[vocab.PropertyType])
-	require.Equal(t, "#travel", result[vocab.PropertyName], "Mastodon convention includes the # prefix")
-	require.Equal(t, "https://example.com/search?q=%23travel", result[vocab.PropertyHref], "the path must come from the Template")
-}
+	for _, hashtag := range hashtags {
+		stream.Tags = append(stream.Tags, model.NewTag(vocab.LinkTypeHashtag, hashtag))
+	}
 
-// TestStream_HashtagAsJSONLD_OtherTagURL confirms that a Template can point its hashtags somewhere else.
-func TestStream_HashtagAsJSONLD_OtherTagURL(t *testing.T) {
-	service := &Stream{host: "https://example.com"}
-
-	result := service.HashtagAsJSONLD("/home?q=", "travel")
-
-	require.Equal(t, "https://example.com/home?q=%23travel", result[vocab.PropertyHref])
-}
-
-// TestStream_HashtagAsJSONLD_NoTagURL confirms that hashtags are published without a link when the Template has no TagURL.
-func TestStream_HashtagAsJSONLD_NoTagURL(t *testing.T) {
-	service := &Stream{host: "https://example.com"}
-
-	result := service.HashtagAsJSONLD("", "travel")
-
-	require.Equal(t, vocab.LinkTypeHashtag, result[vocab.PropertyType])
-	require.Equal(t, "#travel", result[vocab.PropertyName])
-	require.NotContains(t, result, vocab.PropertyHref, "no TagURL means no link")
+	return stream
 }
 
 // TestStream_applyHashtagLinks confirms that hashtags are linkified when the Template defines a TagURL.
@@ -46,10 +29,7 @@ func TestStream_applyHashtagLinks(t *testing.T) {
 	template := model.NewTemplate("test", nil)
 	template.TagURL = "/search?q="
 
-	stream := model.NewStream()
-	stream.Content = model.NewContent()
-	stream.Content.HTML = "Testing #travel here"
-	stream.Hashtags = []string{"travel"}
+	stream := hashtagStream("Testing #travel here", "travel")
 
 	service.applyHashtagLinks(&template, &stream)
 
@@ -61,11 +41,7 @@ func TestStream_applyHashtagLinks_NoTagURL(t *testing.T) {
 	service := &Stream{contentService: &Content{}, host: "https://example.com"}
 
 	template := model.NewTemplate("test", nil)
-
-	stream := model.NewStream()
-	stream.Content = model.NewContent()
-	stream.Content.HTML = "Testing #travel here"
-	stream.Hashtags = []string{"travel"}
+	stream := hashtagStream("Testing #travel here", "travel")
 
 	service.applyHashtagLinks(&template, &stream)
 
@@ -79,11 +55,30 @@ func TestStream_applyHashtagLinks_NoHashtags(t *testing.T) {
 	template := model.NewTemplate("test", nil)
 	template.TagURL = "/search?q="
 
-	stream := model.NewStream()
-	stream.Content = model.NewContent()
-	stream.Content.HTML = "Testing #travel here"
+	stream := hashtagStream("Testing #travel here")
 
 	service.applyHashtagLinks(&template, &stream)
 
 	require.Equal(t, "Testing #travel here", stream.Content.HTML, "no hashtags means nothing to link")
+}
+
+// TestStream_applyHashtagLinks_IgnoresMentions confirms that @mention Tags are not fed to the
+// hashtag linkifier, which would wrap them in hashtag search links.
+func TestStream_applyHashtagLinks_IgnoresMentions(t *testing.T) {
+	service := &Stream{contentService: &Content{}, host: "https://example.com"}
+
+	template := model.NewTemplate("test", nil)
+	template.TagURL = "/search?q="
+
+	stream := hashtagStream("Hey @bob@example.com about #travel", "travel")
+	stream.Tags = append(stream.Tags, model.Tag{
+		Type: vocab.LinkTypeMention,
+		Name: "bob@example.com",
+		Href: "https://example.com/@bob",
+	})
+
+	service.applyHashtagLinks(&template, &stream)
+
+	require.Contains(t, stream.Content.HTML, `>#travel</a>`)
+	require.Contains(t, stream.Content.HTML, "Hey @bob@example.com about", "mentions are not hashtag-linkified")
 }

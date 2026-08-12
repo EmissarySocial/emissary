@@ -80,11 +80,8 @@ func (service *Stream) publish_outbox(session data.Session, user *model.User, st
 
 	const location = "service.Stream.publish_outbox"
 
-	// RULE: Resolve any @mentions BEFORE building the object, so that the Mention tags and the
-	// `cc` entries derived from them are present in the document we are about to publish.
-	service.resolveMentions(session, stream)
-
-	// Create the Activity to send to the User's Outbox
+	// Create the Activity to send to the User's Outbox.  @mentions were already extracted and
+	// resolved by Stream.Save (CalculateMentions), so the object arrives fully tagged.
 	object := service.JSONLD(session, stream)
 
 	// RULE: A reply must reach the AUTHOR of the post it replies to, so they receive it (and a Reply
@@ -216,60 +213,6 @@ func (service *Stream) publish_outbox_stream(session data.Session, stream *model
 
 	// Done.
 	return nil
-}
-
-// resolveMentions resolves every one of the Stream's @mentions that does not yet have an Actor
-// URL, then re-saves the Stream if anything changed.
-func (service *Stream) resolveMentions(session data.Session, stream *model.Stream) {
-
-	// Resolving a handle is a WebFinger lookup followed by an Actor fetch (both cached by
-	// ascache), so it happens HERE -- once, at publish -- rather than on every save, which would
-	// put network calls in the edit path, or inside JSONLD, which would put them in every render.
-	//
-	// The result is PERSISTED rather than injected into the outgoing document, so that the copy
-	// served when a remote server dereferences this object carries the same Mention tags that
-	// were delivered.
-	//
-	// A handle that does not resolve is reported and skipped, never fatal: a typo in a post's
-	// text must not prevent the post from publishing.
-
-	const location = "service.Stream.resolveMentions"
-
-	changed := false
-
-	for index, mention := range stream.Mentions {
-
-		// Already resolved. Resolution is permanent; handles are re-scanned on every save, but
-		// CalculateMentions carries existing Hrefs forward precisely so this stays a no-op.
-		if mention.IsResolved() {
-			continue
-		}
-
-		actor, err := service.activityService.GetActor(mention.Handle)
-
-		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Unable to resolve @mention; publishing without it", mention.Handle, stream.StreamID))
-			continue
-		}
-
-		actorID := actor.ID()
-
-		if actorID == "" {
-			derp.Report(derp.NotFound(location, "Resolved @mention has no ID; publishing without it", mention.Handle, stream.StreamID))
-			continue
-		}
-
-		stream.Mentions[index].Href = actorID
-		changed = true
-	}
-
-	// Only touch the database when a resolution actually happened. Re-publishing an unchanged
-	// document, or one whose mentions all resolved on a previous publish, writes nothing.
-	if changed {
-		if err := service.Save(session, stream, "Resolving @mentions"); err != nil {
-			derp.Report(derp.Wrap(err, location, "Error saving Stream with resolved @mentions", stream.StreamID))
-		}
-	}
 }
 
 // inReplyToAuthorURL resolves the AUTHOR (attributedTo) of the post this Stream replies to, so a

@@ -24,7 +24,8 @@ type StreamSummary struct {
 	Icon           string             `bson:"icon,omitempty"`         // Icon name for this document
 	IconURL        string             `bson:"iconUrl,omitempty"`      // URL of the icon image for this document
 	AttributedTo   PersonLink         `bson:"attributedTo,omitempty"` // List of people who are attributed to this document
-	Hashtags       sliceof.String     `bson:"hashtags,omitempty"`     // List of hashtags associated with this document
+	Hashtags       sliceof.String     `bson:"hashtags,omitempty"`     // DEPRECATED: superseded by Tags. See projects/TAGS-UNIFICATION.md
+	Tags           TagList            `bson:"tags,omitempty"`         // All tags associated with this document, with their AS2 types
 	InReplyTo      string             `bson:"inReplyTo,omitempty"`    // If this stream is a reply to another stream or web page, then this links to the original document.
 	StartDate      datetime.DateTime  `bson:"startDate,omitempty"`    // Date when this stream was published
 	PublishDate    int64              `bson:"publishDate"`            // Unix epoch SECONDS when this stream was published (mirrors Stream.PublishDate)
@@ -49,7 +50,7 @@ func NewStreamSummary() StreamSummary {
 }
 
 func StreamSummaryFields() []string {
-	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "icon", "iconUrl", "hashtags", "attributedTo", "inReplyTo", "publishDate", "unpublishDate", "rank", "shuffle", "isFeatured", "startDate", "createDate", "places"}
+	return []string{"_id", "parentId", "token", "templateId", "url", "label", "summary", "content", "data", "icon", "iconUrl", "hashtags", "tags", "attributedTo", "inReplyTo", "publishDate", "unpublishDate", "rank", "shuffle", "isFeatured", "startDate", "createDate", "location"}
 }
 
 func (summary StreamSummary) Fields() []string {
