@@ -8,6 +8,7 @@ type Option func(*Parser)
 func WithHashtagsOnly() Option {
 	return func(parser *Parser) {
 		parser.prefixes = []rune{'#'}
+		parser.hardTerminators = hashtagTerminators
 	}
 }
 
@@ -15,6 +16,7 @@ func WithHashtagsOnly() Option {
 func WithMentionsOnly() Option {
 	return func(parser *Parser) {
 		parser.prefixes = []rune{'@'}
+		parser.hardTerminators = mentionTerminators
 	}
 }
 
