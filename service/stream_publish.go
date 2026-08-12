@@ -76,6 +76,7 @@ func (service *Stream) Publish(session data.Session, user *model.User, stream *m
 	return nil
 }
 
+// publish_outbox sends a Create (or Update) activity for the Stream to its author's Outbox
 func (service *Stream) publish_outbox(session data.Session, user *model.User, stream *model.Stream, wasPublished bool) error {
 
 	const location = "service.Stream.publish_outbox"

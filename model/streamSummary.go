@@ -37,7 +37,7 @@ type StreamSummary struct {
 	CreateDate     int64              `bson:"createDate"`             // Unix epoch MILLISECONDS when this stream was created (journal field; mirrors Stream.CreateDate)
 }
 
-// NewStream returns a fully initialized Stream object.
+// NewStreamSummary returns a fully initialized StreamSummary object.
 func NewStreamSummary() StreamSummary {
 
 	streamID := primitive.NewObjectID()

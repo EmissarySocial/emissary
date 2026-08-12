@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSplit confirms that a string is split into tokens, with any prefix characters removed
 func TestSplit(t *testing.T) {
 
 	require.Equal(t, sliceof.String{}, Split(""))
@@ -18,6 +19,7 @@ func TestSplit(t *testing.T) {
 	require.Equal(t, sliceof.String{"hey", "there", "ladies", "and", "gentlemen"}, Split("hey there ladies and gentlemen"))
 }
 
+// TestIsEndOfToken confirms which runes end a token for a default, mixed-prefix Parser
 func TestIsEndOfToken(t *testing.T) {
 
 	// isEndOfToken is a Parser method now, because hashtags and mentions terminate differently.

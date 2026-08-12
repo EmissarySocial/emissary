@@ -107,6 +107,7 @@ func (service *Stream) Refresh(factory *Factory) {
 	service.sseUpdateChannel = factory.SSEUpdateChannel()
 }
 
+// Startup seeds an empty database with the Streams that a new Theme provides
 func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 
 	const location = "service.Stream.Startup"
@@ -188,6 +189,7 @@ func (service *Stream) newStartupStream(data mapof.Any) (model.Stream, error) {
  * Common Methods
  ******************************************/
 
+// collection returns the mongo collection where Streams are stored
 func (service *Stream) collection(session data.Session) data.Collection {
 	return session.Collection("Stream")
 }
@@ -218,6 +220,7 @@ func (service *Stream) QuerySummary(session data.Session, criteria exp.Expressio
 	return result, err
 }
 
+// QueryIDOnly returns just the IDs of every Stream that matches the provided criteria
 func (service *Stream) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.IDOnly, error) {
 	result := make([]model.IDOnly, 0)
 	options = append(options, option.Fields("_id"))
@@ -524,12 +527,13 @@ func (service *Stream) ObjectType() string {
 	return "Stream"
 }
 
-// New returns a fully initialized model.Stream as a data.Object.
+// ObjectNew returns a fully initialized model.Stream as a data.Object.
 func (service *Stream) ObjectNew() data.Object {
 	result := model.NewStream()
 	return &result
 }
 
+// ObjectID returns the primary key of the provided Stream object
 func (service *Stream) ObjectID(object data.Object) primitive.ObjectID {
 
 	if stream, ok := object.(*model.Stream); ok {
@@ -539,16 +543,19 @@ func (service *Stream) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery populates the result value with all Streams that match the provided criteria
 func (service *Stream) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single Stream that matches the provided criteria, as a data.Object
 func (service *Stream) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewStream()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave saves the provided Stream object to the database
 func (service *Stream) ObjectSave(session data.Session, object data.Object, note string) error {
 
 	if stream, ok := object.(*model.Stream); ok {
@@ -557,6 +564,7 @@ func (service *Stream) ObjectSave(session data.Session, object data.Object, note
 	return derp.Internal("service.Stream.ObjectSave", "Invalid object type", object)
 }
 
+// ObjectDelete removes the provided Stream object from the database (virtual delete)
 func (service *Stream) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if stream, ok := object.(*model.Stream); ok {
 		return service.Delete(session, stream, note)
@@ -564,10 +572,12 @@ func (service *Stream) ObjectDelete(session data.Session, object data.Object, no
 	return derp.Internal("service.Stream.ObjectDelete", "Invalid object type", object)
 }
 
+// ObjectUserCan always returns Unauthorized: Streams are never edited through the generic data.Object path
 func (service *Stream) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Stream", "Not Authorized")
 }
 
+// Schema returns the validating schema for Stream objects
 func (service *Stream) Schema() schema.Schema {
 	return schema.New(model.StreamSchema())
 }
@@ -621,6 +631,7 @@ func (service *Stream) RangeByParentIDs(session data.Session, parentID primitive
 	return service.Range(session, exp.Equal("parentIds", parentID))
 }
 
+// RangeByPrivileges iterates over every Stream that grants a role to any of the provided Privileges
 func (service *Stream) RangeByPrivileges(session data.Session, privileges ...primitive.ObjectID) (iter.Seq[model.Stream], error) {
 
 	const location = "service.Stream.RangeByPrivilege"
@@ -695,7 +706,7 @@ func (service *Stream) QueryByParentAndDate(session data.Session, parentID primi
 	return service.Query(session, criteria, option.SortDesc("publishDate"), option.MaxRows(int64(pageSize)))
 }
 
-// QueryByParentAndDate returns a slice of Streams that are ANY DEPTH below the provided StreamID
+// QueryByAncestorAndDate returns a slice of Streams that are ANY DEPTH below the provided StreamID
 func (service *Stream) QueryByAncestorAndDate(session data.Session, streamID primitive.ObjectID, publishedDate int64, pageSize int) ([]model.Stream, error) {
 
 	const location = "service.Stream.QueryByAncestorAndDate"
@@ -808,6 +819,7 @@ func (service *Stream) LoadNavigationByID(session data.Session, streamID primiti
 	return service.Load(session, criteria, result)
 }
 
+// LoadWithOptions loads the first Stream that matches the provided criteria and query options
 func (service *Stream) LoadWithOptions(session data.Session, criteria exp.Expression, result *model.Stream, options ...option.Option) error {
 
 	const location = "service.stream.LoadWithOptions"
@@ -825,10 +837,12 @@ func (service *Stream) LoadWithOptions(session data.Session, criteria exp.Expres
 	return derp.NotFound(location, "collection is empty")
 }
 
+// LoadFirstSibling loads the lowest-ranked child of the provided parent
 func (service *Stream) LoadFirstSibling(session data.Session, parentID primitive.ObjectID, result *model.Stream) error {
 	return service.LoadWithOptions(session, exp.Equal("parentId", parentID), result, option.SortAsc("rank"))
 }
 
+// LoadPrevSibling loads the child ranked just before the provided rank, wrapping around to the last
 func (service *Stream) LoadPrevSibling(session data.Session, parentID primitive.ObjectID, rank int, result *model.Stream) error {
 
 	const location = "service.stream.LoadPreviousSibling"
@@ -852,6 +866,7 @@ func (service *Stream) LoadPrevSibling(session data.Session, parentID primitive.
 	return derp.Wrap(err, location, "Loading Previous Sibling")
 }
 
+// LoadNextSibling loads the child ranked just after the provided rank, wrapping around to the first
 func (service *Stream) LoadNextSibling(session data.Session, parentID primitive.ObjectID, rank int, result *model.Stream) error {
 
 	const location = "service.stream.LoadNextSibling"
@@ -871,10 +886,12 @@ func (service *Stream) LoadNextSibling(session data.Session, parentID primitive.
 	return derp.Wrap(err, location, "Loading Next Sibling")
 }
 
+// LoadLastSibling loads the highest-ranked child of the provided parent
 func (service *Stream) LoadLastSibling(session data.Session, parentID primitive.ObjectID, result *model.Stream) error {
 	return service.LoadWithOptions(session, exp.Equal("parentId", parentID), result, option.SortDesc("rank"))
 }
 
+// LoadFirstAttachment loads the first Attachment that belongs to the provided Stream
 func (service *Stream) LoadFirstAttachment(session data.Session, streamID primitive.ObjectID) (model.Attachment, error) {
 	return service.attachmentService.LoadFirstByObjectID(session, model.AttachmentObjectTypeStream, streamID)
 }
@@ -906,7 +923,7 @@ func (service *Stream) SetLocationTop(template *model.Template, stream *model.St
 	return nil
 }
 
-// SetLocationInbox sets a Stream's location to be a User's outbox
+// SetLocationOutbox sets a Stream's location to be a User's outbox
 func (service *Stream) SetLocationOutbox(template *model.Template, stream *model.Stream, userID primitive.ObjectID) error {
 
 	const location = "service.Stream.SetLocationOutbox"
@@ -1006,7 +1023,7 @@ func (service *Stream) DeleteByParent(session data.Session, parentID primitive.O
 	return service.DeleteMany(session, exp.Equal("parentId", parentID), note)
 }
 
-// Delete RelatedDuplicate hard deletes any inbox/outbox streams that point to the same original.
+// DeleteRelatedDuplicate hard deletes any inbox/outbox streams that point to the same original.
 func (service *Stream) DeleteRelatedDuplicate(session data.Session, parentID primitive.ObjectID, originalStreamID primitive.ObjectID) error {
 
 	criteria := exp.Equal("parentId", parentID).AndEqual("data.originalStreamId", originalStreamID)
@@ -1145,6 +1162,7 @@ func (service *Stream) calcParentIDs(session data.Session, stream *model.Stream)
 	stream.ParentIDs = []primitive.ObjectID{stream.ParentID}
 }
 
+// calcDefaultAllow denormalizes the permissions that grant the Stream's default (VIEW) action
 func (service *Stream) calcDefaultAllow(template *model.Template, stream *model.Stream) {
 
 	// NILCHECK: Template cannot be empty
@@ -1180,6 +1198,7 @@ func (service *Stream) calcPrivilegeIDs(stream *model.Stream) {
 	stream.PrivilegeIDs = model.Permissions(append(circles, privileges...))
 }
 
+// CalculateTags rebuilds a Stream's tag list from the tag paths that its Template declares
 func (service *Stream) CalculateTags(session data.Session, stream *model.Stream) {
 
 	const location = "service.Stream.CalculateTags"
@@ -1468,7 +1487,7 @@ func (service *Stream) NotifyInReplyTo(session data.Session, inReplyTo string) {
  * Migration Methods
  ******************************************/
 
-// Move locates all Streams inside the profile of the provided UserID, and moves them
+// MoveByUserID locates all Streams inside the profile of the provided UserID, and moves them
 // using the 'movedTo' forwarding address
 func (service *Stream) MoveByUserID(session data.Session, userID primitive.ObjectID, movedTo string) error {
 

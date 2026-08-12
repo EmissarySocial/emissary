@@ -38,7 +38,7 @@ func OutboxMessageFields() []string {
 
 // Fields returns the database columns that must be loaded to populate an OutboxMessage
 // It is part of the FieldLister interface
-func (summary OutboxMessage) Fields() []string {
+func (message OutboxMessage) Fields() []string {
 	return OutboxMessageFields()
 }
 

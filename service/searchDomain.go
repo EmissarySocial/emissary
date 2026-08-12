@@ -48,6 +48,7 @@ func (service *SearchDomain) Refresh(factory *Factory) {
  * ActivityPub Methods
  ******************************************/
 
+// GetJSONLD returns the ActivityStreams actor document for the domain-wide search Actor
 func (service *SearchDomain) GetJSONLD(session data.Session) (mapof.Any, error) {
 
 	const location = "service.SearchDomain.GetJSONLD"
@@ -113,6 +114,7 @@ func (service *SearchDomain) ActivityPubActor(session data.Session) (outbox.Acto
 	return actor, nil
 }
 
+// rangeActivityPubFollowers iterates over the profile URLs of the domain-wide search Actor's ActivityPub Followers
 func (service *SearchDomain) rangeActivityPubFollowers(session data.Session) iter.Seq[string] {
 
 	return func(yield func(string) bool) {
@@ -128,14 +130,17 @@ func (service *SearchDomain) rangeActivityPubFollowers(session data.Session) ite
 	}
 }
 
+// ActivityPubUsername returns the preferred username of the domain-wide search Actor
 func (service *SearchDomain) ActivityPubUsername() string {
 	return "search"
 }
 
+// ActivityPubURL returns the URL that identifies the domain-wide search Actor to ActivityPub
 func (service *SearchDomain) ActivityPubURL() string {
 	return service.host + "/@search"
 }
 
+// ActivityPubProfileURL returns the URL of the domain-wide search Actor's human-readable profile page
 func (service *SearchDomain) ActivityPubProfileURL() string {
 	return service.host + "/@search"
 }
@@ -149,27 +154,33 @@ func (service *SearchDomain) PublicKeyID() string {
 	return service.ActivityPubURL() + "#main-key"
 }
 
+// ActivityPubName returns the display name of the domain-wide search Actor
 func (service *SearchDomain) ActivityPubName() string {
 	domain := service.domainService.Get()
 	return "All Search Results on " + domain.Label
 }
 
+// ActivityPubFollowersURL returns the URL of the domain-wide search Actor's ActivityPub followers collection
 func (service *SearchDomain) ActivityPubFollowersURL() string {
 	return service.ActivityPubURL() + "/pub/followers"
 }
 
+// ActivityPubFollowingURL returns the URL of the domain-wide search Actor's ActivityPub following collection
 func (service *SearchDomain) ActivityPubFollowingURL() string {
 	return service.ActivityPubURL() + "/pub/following"
 }
 
+// ActivityPubInboxURL returns the URL of the domain-wide search Actor's ActivityPub inbox
 func (service *SearchDomain) ActivityPubInboxURL() string {
 	return service.ActivityPubURL() + "/pub/inbox"
 }
 
+// ActivityPubOutboxURL returns the URL of the domain-wide search Actor's ActivityPub outbox
 func (service *SearchDomain) ActivityPubOutboxURL() string {
 	return service.ActivityPubURL() + "/pub/outbox"
 }
 
+// ActivityPubSharesURL returns the URL of the collection of Announces that the domain-wide search Actor has made
 func (service *SearchDomain) ActivityPubSharesURL() string {
 	return service.ActivityPubURL() + "/pub/shares"
 }
@@ -178,6 +189,7 @@ func (service *SearchDomain) ActivityPubSharesURL() string {
  * WebFinger Behavior
  ******************************************/
 
+// WebFinger returns the WebFinger resource that advertises the domain-wide search Actor
 func (service *SearchDomain) WebFinger() digit.Resource {
 
 	usernameWithHost := "search@" + service.Hostname()
@@ -186,11 +198,11 @@ func (service *SearchDomain) WebFinger() digit.Resource {
 	result := digit.NewResource("acct:"+usernameWithHost).
 		Alias(service.ActivityPubURL()).
 		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, service.ActivityPubURL())
-		// .Link(digit.RelationTypeProfile, model.MimeTypeHTML, service.ActivityPubProfileURL())
 
 	return result
 }
 
+// Hostname returns the bare hostname of this domain, without its protocol
 func (service *SearchDomain) Hostname() string {
 	return uri.Hostname(service.host)
 }
@@ -199,6 +211,7 @@ func (service *SearchDomain) Hostname() string {
  * Custom Queries
  ******************************************/
 
+// RangeActivityPubFollowers iterates over the inbox addresses of the domain-wide search Actor's ActivityPub Followers
 func (service *SearchDomain) RangeActivityPubFollowers(session data.Session) iter.Seq[string] {
 	followers := service.followerService.RangeActivityPubByType(session, model.FollowerTypeSearchDomain, primitive.NilObjectID)
 	return iterateFollowerAddresses(followers)

@@ -28,12 +28,13 @@ func (service *Stream) JSONLDGetter(session data.Session, stream *model.Stream) 
 	return NewStreamJSONLDGetter(session, service, stream)
 }
 
+// Activity returns a Stream as a hannibal ActivityStreams Document
 func (service *Stream) Activity(session data.Session, stream *model.Stream) streams.Document {
 	// Create a new ActivityPub Document for this Stream
 	return streams.NewDocument(service.JSONLD(session, stream))
 }
 
-// GetJSONLD returns a map document that conforms to the ActivityStreams 2.0 spec.
+// JSONLD returns a map document that conforms to the ActivityStreams 2.0 spec.
 // This map will still need to be marshalled into JSON
 func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.Any {
 
@@ -197,14 +198,17 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 	return result
 }
 
+// ActivityPubURL returns the URL that identifies the provided Stream to ActivityPub
 func (service *Stream) ActivityPubURL(streamID primitive.ObjectID) string {
 	return service.host + "/" + streamID.Hex()
 }
 
+// PublicKeyID returns the key ID ("#main-key" fragment URL) that this Stream Actor advertises
 func (service *Stream) PublicKeyID(streamID primitive.ObjectID) string {
 	return service.ActivityPubURL(streamID) + "#main-key"
 }
 
+// PrivateKey returns the private key that the provided Stream Actor signs with
 func (service *Stream) PrivateKey(session data.Session, streamID primitive.ObjectID) (crypto.PrivateKey, error) {
 
 	const location = "service.Stream.PrivateKey"
@@ -258,8 +262,7 @@ func (service *Stream) ActivityPubActor(session data.Session, streamID primitive
 	return actor, nil
 }
 
-// ActivityPubActor returns an ActivityPub Actor object ** WHICH INCLUDES ENCRYPTION KEYS **
-// for the provided User.
+// RangeActivityPubFollowers iterates over the profile URLs of a Stream Actor's ActivityPub Followers
 func (service *Stream) RangeActivityPubFollowers(session data.Session, streamID primitive.ObjectID) iter.Seq[string] {
 
 	return func(yield func(string) bool) {
@@ -275,6 +278,7 @@ func (service *Stream) RangeActivityPubFollowers(session data.Session, streamID 
 	}
 }
 
+// activityStreamSchema returns a permissive schema that preserves an ActivityStreams document's @context
 func (service *Stream) activityStreamSchema() schema.Schema {
 
 	return schema.New(
@@ -287,7 +291,7 @@ func (service *Stream) activityStreamSchema() schema.Schema {
 	)
 }
 
-// Post updates the stream with a new Context Collection (if none already exists)
+// CalcContext attaches a new Context Collection to the Stream, if it does not already have one
 func (service *Stream) CalcContext(session data.Session, stream *model.Stream) error {
 
 	const location = "service.Stream.CalcContext"

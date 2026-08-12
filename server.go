@@ -54,6 +54,8 @@ var embeddedFiles embed.FS
  * Main Application Entry Point
  ******************************************/
 
+// main boots the Emissary server: it reads the configuration, then serves either the setup
+// console or the live domains, depending on whether that configuration is complete.
 func main() {
 
 	fmt.Println(" _____           _                          ")

@@ -31,6 +31,7 @@ import (
 // the criteria but never the read-modify-write that is the actual subject here. They skip when no
 // database is reachable, so `go test ./...` still passes on a machine without one.
 
+// followersTestConnection is the local MongoDB that these tests require
 const followersTestConnection = "mongodb://localhost:27017/?directConnection=true"
 
 // newFollowersTestSession connects to a local MongoDB and returns a throwaway session that is

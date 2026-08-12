@@ -87,7 +87,7 @@ func (collection *Collection) RolesToGroupIDs(roleIDs ...string) Permissions {
 	return defaultRolesToGroupIDs(collection.UserID, roleIDs...)
 }
 
-// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
+// RolesToPrivilegeIDs returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
 func (collection *Collection) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
 	return NewPermissions()

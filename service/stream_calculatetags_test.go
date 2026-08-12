@@ -23,6 +23,8 @@ import (
  * emptyTagStore -- a data.Session whose SearchTag collection has no records
  ******************************************/
 
+// emptyTagCollection is a data.Collection that holds no records.  Only the read methods that
+// NormalizeTags reaches are implemented; the rest fail loudly if a test ever calls them.
 type emptyTagCollection struct{}
 
 func (c emptyTagCollection) Context() context.Context                              { return context.Background() }
@@ -38,6 +40,7 @@ func (c emptyTagCollection) Save(data.Object, string) error   { return derp.Inte
 func (c emptyTagCollection) Delete(data.Object, string) error { return derp.Internal("test", "unused") }
 func (c emptyTagCollection) HardDelete(exp.Expression) error  { return derp.Internal("test", "unused") }
 
+// emptyTagSession is a data.Session that hands out emptyTagCollections
 type emptyTagSession struct{}
 
 func (s emptyTagSession) Collection(string) data.Collection { return emptyTagCollection{} }
@@ -61,6 +64,7 @@ func newTagStreamService(tagPaths []string, tagURL string) (*Stream, model.Templ
 	return streamService, template
 }
 
+// newTagStream returns an unsaved Stream carrying the provided HTML content
 func newTagStream(html string) model.Stream {
 	stream := model.NewStream()
 	stream.TemplateID = "test-post"

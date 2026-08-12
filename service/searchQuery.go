@@ -59,10 +59,12 @@ func (service *SearchQuery) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the mongo collection where SearchQueries are stored
 func (service *SearchQuery) collection(session data.Session) data.Collection {
 	return session.Collection("SearchQuery")
 }
 
+// Count returns the number of SearchQueries that match the provided criteria
 func (service *SearchQuery) Count(session data.Session, criteria exp.Expression) (int64, error) {
 	return service.collection(session).Count(notDeleted(criteria))
 }
@@ -285,6 +287,7 @@ func (service *SearchQuery) LoadOrCreate(session data.Session, queryValues url.V
 	return model.NewSearchQuery(), derp.Wrap(err, location, "Locating SearchQuery")
 }
 
+// parseQueryValues normalizes a URL query string into the fields of a SearchQuery
 func (service *SearchQuery) parseQueryValues(queryValues url.Values) (model.SearchQuery, bool) {
 
 	result := model.NewSearchQuery()
@@ -362,6 +365,7 @@ func (service *SearchQuery) ActivityPubActor(session data.Session, searchQueryID
 	return actor, nil
 }
 
+// rangeActivityPubFollowers iterates over the profile URLs of a saved SearchQuery Actor's ActivityPub Followers
 func (service *SearchQuery) rangeActivityPubFollowers(session data.Session, searchQueryID primitive.ObjectID) iter.Seq[string] {
 
 	return func(yield func(string) bool) {
@@ -420,14 +424,17 @@ func (service *SearchQuery) GetJSONLD(session data.Session, searchQuery *model.S
 	return result, nil
 }
 
+// ActivityPubUsername returns the preferred username of a saved SearchQuery Actor
 func (service *SearchQuery) ActivityPubUsername(searchQueryID primitive.ObjectID) string {
 	return "search_" + searchQueryID.Hex()
 }
 
+// ActivityPubURL returns the URL that identifies a saved SearchQuery Actor to ActivityPub
 func (service *SearchQuery) ActivityPubURL(searchQueryID primitive.ObjectID) string {
 	return service.host + "/@" + service.ActivityPubUsername(searchQueryID)
 }
 
+// ActivityPubProfileURL returns the URL of a saved SearchQuery Actor's human-readable profile page
 func (service *SearchQuery) ActivityPubProfileURL(searchQuery *model.SearchQuery) string {
 	return searchQuery.URL
 }
@@ -441,6 +448,7 @@ func (service *SearchQuery) PublicKeyID(searchQueryID primitive.ObjectID) string
 	return service.ActivityPubURL(searchQueryID) + "#main-key"
 }
 
+// ActivityPubName returns the display name of a saved SearchQuery Actor
 func (service *SearchQuery) ActivityPubName(searchQuery *model.SearchQuery) string {
 	domain := service.domainService.Get()
 
@@ -451,22 +459,27 @@ func (service *SearchQuery) ActivityPubName(searchQuery *model.SearchQuery) stri
 	}
 }
 
+// ActivityPubFollowersURL returns the URL of a saved SearchQuery Actor's ActivityPub followers collection
 func (service *SearchQuery) ActivityPubFollowersURL(searchQueryID primitive.ObjectID) string {
 	return service.ActivityPubURL(searchQueryID) + "/pub/followers"
 }
 
+// ActivityPubFollowingURL returns the URL of a saved SearchQuery Actor's ActivityPub following collection
 func (service *SearchQuery) ActivityPubFollowingURL(searchQueryID primitive.ObjectID) string {
 	return service.ActivityPubURL(searchQueryID) + "/pub/following"
 }
 
+// ActivityPubInboxURL returns the URL of a saved SearchQuery Actor's ActivityPub inbox
 func (service *SearchQuery) ActivityPubInboxURL(searchQueryID primitive.ObjectID) string {
 	return service.ActivityPubURL(searchQueryID) + "/pub/inbox"
 }
 
+// ActivityPubOutboxURL returns the URL of a saved SearchQuery Actor's ActivityPub outbox
 func (service *SearchQuery) ActivityPubOutboxURL(searchQueryID primitive.ObjectID) string {
 	return service.ActivityPubURL(searchQueryID) + "/pub/outbox"
 }
 
+// ActivityPubSharesURL returns the URL of the collection of Announces that a saved SearchQuery Actor has made
 func (service *SearchQuery) ActivityPubSharesURL(searchQueryID primitive.ObjectID) string {
 	return service.ActivityPubURL(searchQueryID) + "/pub/shares"
 }
@@ -475,6 +488,7 @@ func (service *SearchQuery) ActivityPubSharesURL(searchQueryID primitive.ObjectI
  * WebFinger Behavior
  ******************************************/
 
+// WebFinger returns the WebFinger resource that advertises a saved SearchQuery Actor
 func (service *SearchQuery) WebFinger(session data.Session, token string) (digit.Resource, error) {
 
 	const location = "service.SearchQuery.LoadWebFinger"
@@ -516,6 +530,7 @@ func (service *SearchQuery) WebFinger(session data.Session, token string) (digit
 	return result, nil
 }
 
+// Hostname returns the bare hostname of this domain, without its protocol
 func (service *SearchQuery) Hostname() string {
 	return uri.Hostname(service.host)
 }

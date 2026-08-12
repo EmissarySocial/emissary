@@ -442,7 +442,7 @@ func (stream Stream) HasGrandparent() bool {
 	return len(stream.ParentIDs) > 1
 }
 
-// GrandParentID returns the ID of the parent of the parent of this Stream (if it exists)
+// GrandparentID returns the ID of the parent of the parent of this Stream (if it exists)
 func (stream Stream) GrandparentID() primitive.ObjectID {
 	if parentIDsLength := len(stream.ParentIDs); parentIDsLength > 1 {
 		return stream.ParentIDs[parentIDsLength-2]

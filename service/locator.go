@@ -23,10 +23,12 @@ type Locator struct {
 	host                string
 }
 
+// NewLocator returns a fully initialized Locator service
 func NewLocator() Locator {
 	return Locator{}
 }
 
+// Refresh updates any stateful data that is cached inside this service.
 func (service *Locator) Refresh(factory *Factory) {
 
 	service.domainService = factory.Domain()
@@ -110,6 +112,7 @@ func (service *Locator) GetObjectFromURL(session data.Session, value string) (st
 	return "", primitive.NilObjectID, derp.BadRequest(location, "Invalid Object Type", objectType)
 }
 
+// GetActor returns the outbox Actor for the named actor type and ID
 func (service *Locator) GetActor(session data.Session, actorType string, actorID string) (outbox.Actor, error) {
 
 	const location = "service.Locator.GetActor"
@@ -187,6 +190,7 @@ func (service *Locator) PublicKeyID(actorType string, actorID primitive.ObjectID
 	return "", derp.BadRequest(location, "Invalid Actor Type", actorType)
 }
 
+// GetPrivateKey returns the key ID and private key that the named Actor signs with
 func (service *Locator) GetPrivateKey(session data.Session, actorType string, actorID primitive.ObjectID) (publicKeyID string, privateKey crypto.PrivateKey, err error) {
 
 	const location = "service.locator.GetPrivateKey"

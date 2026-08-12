@@ -13,6 +13,7 @@ func bsonNames(value any) []string {
 	return bsonNamesOfType(reflect.TypeOf(value))
 }
 
+// bsonNamesOfType returns the bson name of every field on a struct type, following inlined embeds.
 func bsonNamesOfType(structType reflect.Type) []string {
 
 	result := make([]string, 0, structType.NumField())

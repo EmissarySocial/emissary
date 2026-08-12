@@ -217,7 +217,7 @@ func (w Outbox) StateID() string {
 	return w._user.StateID
 }
 
-// IsPublished returns TRUE if the stream has been published
+// IsPublic returns TRUE if this User's profile is visible to anonymous visitors
 func (w Outbox) IsPublic() bool {
 	return w._user.IsPublic
 }
