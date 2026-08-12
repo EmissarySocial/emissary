@@ -2,8 +2,8 @@ package build
 
 import (
 	"io"
-	"time"
 
+	"github.com/EmissarySocial/emissary/tools/headers"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/compare"
 )
@@ -25,6 +25,7 @@ func (step StepViewHTML) Get(builder Builder, buffer io.Writer) PipelineBehavior
 	return nil
 }
 
+// Post builds the Stream HTML to the context
 func (step StepViewHTML) Post(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	if step.Method != "get" {
@@ -34,38 +35,23 @@ func (step StepViewHTML) Post(builder Builder, buffer io.Writer) PipelineBehavio
 	return nil
 }
 
+// execute renders the template and decorates the response with its cache-validation headers
 func (step StepViewHTML) execute(builder Builder, buffer io.Writer) PipelineBehavior {
 
-	/* TODO: MEDIUM: Re-implement client-side caching later.
-	Caching leads to problems on INDEX-ONLY pages because you may have added/changed/deleted a child
-	object, but the parent page is still cached.  So, you need to invalidate the cache for the parent.
+	// This step publishes ETag/Last-Modified below, but deliberately does NOT act on If-None-Match
+	// or If-Modified-Since.  An INDEX-ONLY page goes stale as soon as a child is added, changed, or
+	// deleted, and nothing invalidates the parent when that happens -- so a 304 here would serve a
+	// listing that is missing its newest entry.
 
-	requestHeader := context.Request().Header
-
-	// Validate If-None-Match Header
-	if etag := requestHeader.Get("If-None-Match"); etag != "" {
-		if etag == builder.object().ETag() {
-			context.Response().WriteHeader(http.StatusNotModified)
-			return nil
-		}
-	}
-
-	// Validate If-Modified-Since Header
-	if modifiedSince := requestHeader.Get("If-Modified-Since"); modifiedSince != "" {
-		if modifiedSinceDate, err := time.Parse(time.RFC3339, modifiedSince); err == nil {
-			if modifiedSinceDate.UnixMilli() >= builder.object().Updated() {
-				context.Response().WriteHeader(http.StatusNotModified)
-				return nil
-			}
-		}
-	}
-	*/
-
-	// TODO: LOW: We can do a better job with caching.  If a page is public, then caching should be public, too.
+	// Cache-Control is left unset rather than pinned to "private": a public page should be publicly
+	// cacheable, and this step cannot yet tell the two apart.
 	header := builder.response().Header()
-	header.Set("Vary", "Cookie, HX-Request")
-	// header.Set("Cache-Control", "private")
 
+	// RULE: this must include `Accept` -- the same URL serves two representations, so a cache that
+	// ignores it would hand a peer's AS2 document to a browser
+	header.Set("Vary", headers.VaryHTML)
+
+	// Render the named template, defaulting to the one that matches the action
 	var filename string
 
 	if step.File != "" {
@@ -78,14 +64,13 @@ func (step StepViewHTML) execute(builder Builder, buffer io.Writer) PipelineBeha
 		return Halt().WithError(derp.Wrap(err, "build.StepViewHTML.Get", "Executing template"))
 	}
 
-	// TODO: MEDIUM: Re-implement caching.  Will need to automatically compute the "Vary" header.
+	// If we have a valid object, then try to set ETag headers.
 	result := Continue()
 
-	// If we have a valid object, then try to set ETag headers.
 	if object := builder.object(); compare.NotNil(object) {
 		result = result.
-			WithHeader("Last-Modified", time.UnixMilli(object.Updated()).Format(time.RFC3339)).
-			WithHeader("ETag", object.ETag())
+			WithHeader("Last-Modified", headers.LastModified(object)).
+			WithHeader("ETag", headers.ETag(headers.VariantHTML, object))
 	}
 
 	// If "as-full-page" was specified, then include that in the result

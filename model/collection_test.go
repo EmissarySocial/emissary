@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// TestCollectionSchema confirms that every Collection field round-trips through its JSON-Schema
 func TestCollectionSchema(t *testing.T) {
 
 	collection := NewCollection()
@@ -29,6 +30,7 @@ func TestCollectionSchema(t *testing.T) {
 	tableTest_Schema(t, &s, &collection, table)
 }
 
+// TestNewCollection confirms that a fresh Collection is fully initialized
 func TestNewCollection(t *testing.T) {
 
 	collection := NewCollection()
@@ -51,6 +53,7 @@ func TestNewCollection(t *testing.T) {
 	require.Empty(t, collection.CollectionType)
 }
 
+// TestCollection_ID confirms that ID returns the hex encoding of the CollectionID
 func TestCollection_ID(t *testing.T) {
 
 	collection := NewCollection()
@@ -59,17 +62,22 @@ func TestCollection_ID(t *testing.T) {
 	require.Equal(t, collection.CollectionID.Hex(), collection.ID())
 }
 
+// TestCollection_Fields checks the projection against the struct's actual bson tags. The previous
+// version of this test simply restated the literal, so it passed for as long as the list named
+// four fields ("collectionId", "to", "cc", "name") that Collection has never had.
 func TestCollection_Fields(t *testing.T) {
 
 	collection := NewCollection()
 
-	require.Equal(t, []string{"collectionId", "to", "cc", "name"}, collection.Fields())
+	require.Equal(t, []string{"_id", "userId", "parentId", "parentType", "collectionType", "read", "write", "totalItems"}, collection.Fields())
+	require.Subset(t, bsonNames(Collection{}), collection.Fields(), "every projected name must be a real bson field")
 }
 
 /******************************************
  * AccessLister Interface
  ******************************************/
 
+// TestCollection_State confirms that a Collection reports a single, constant workflow state
 func TestCollection_State(t *testing.T) {
 
 	collection := NewCollection()
@@ -77,6 +85,7 @@ func TestCollection_State(t *testing.T) {
 	require.Equal(t, "DEFAULT", collection.State())
 }
 
+// TestCollection_IsAuthor confirms that only the owning User is the author, and the zero UserID never is
 func TestCollection_IsAuthor(t *testing.T) {
 
 	userID := primitive.NewObjectID()
@@ -97,6 +106,7 @@ func TestCollection_IsAuthor(t *testing.T) {
 	require.False(t, empty.IsAuthor(primitive.NilObjectID))
 }
 
+// TestCollection_IsMyself confirms that a Collection never represents a User directly
 func TestCollection_IsMyself(t *testing.T) {
 
 	collection := NewCollection()
@@ -106,6 +116,7 @@ func TestCollection_IsMyself(t *testing.T) {
 	require.False(t, collection.IsMyself(primitive.NilObjectID))
 }
 
+// TestCollection_RolesToGroupIDs confirms that roles map onto the default Group permissions
 func TestCollection_RolesToGroupIDs(t *testing.T) {
 
 	userID := primitive.NewObjectID()
@@ -122,6 +133,7 @@ func TestCollection_RolesToGroupIDs(t *testing.T) {
 	require.Zero(t, len(collection.RolesToGroupIDs()))
 }
 
+// TestCollection_RolesToPrivilegeIDs confirms that a Collection grants no Privileges
 func TestCollection_RolesToPrivilegeIDs(t *testing.T) {
 
 	collection := NewCollection()
@@ -136,6 +148,7 @@ func TestCollection_RolesToPrivilegeIDs(t *testing.T) {
  * Read / Write Permissions
  ******************************************/
 
+// TestCollection_Readable confirms that only actors on the Read list may read a Collection
 func TestCollection_Readable(t *testing.T) {
 
 	const alice = "https://alice.test/@alice"
@@ -153,6 +166,7 @@ func TestCollection_Readable(t *testing.T) {
 	require.True(t, collection.NotReadable(bob))
 }
 
+// TestCollection_Readable_Public confirms that the Public namespace on the Read list opens a Collection to everyone
 func TestCollection_Readable_Public(t *testing.T) {
 
 	const stranger = "https://stranger.test/@nobody"
@@ -167,6 +181,7 @@ func TestCollection_Readable_Public(t *testing.T) {
 	require.False(t, collection.NotReadable(stranger))
 }
 
+// TestCollection_Readable_Empty confirms that an empty Read list denies everyone
 func TestCollection_Readable_Empty(t *testing.T) {
 
 	// A Collection with an empty Read list is readable by no one.
@@ -177,6 +192,7 @@ func TestCollection_Readable_Empty(t *testing.T) {
 	require.False(t, collection.IsReadable(""))
 }
 
+// TestCollection_Writable confirms that only actors on the Write list may write to a Collection
 func TestCollection_Writable(t *testing.T) {
 
 	const alice = "https://alice.test/@alice"
@@ -194,6 +210,7 @@ func TestCollection_Writable(t *testing.T) {
 	require.True(t, collection.NotWritable(bob))
 }
 
+// TestCollection_Writable_Public confirms that the Public namespace on the Write list opens a Collection to everyone
 func TestCollection_Writable_Public(t *testing.T) {
 
 	const stranger = "https://stranger.test/@nobody"
@@ -208,6 +225,7 @@ func TestCollection_Writable_Public(t *testing.T) {
 	require.False(t, collection.NotWritable(stranger))
 }
 
+// TestCollection_Writable_Empty confirms that an empty Write list denies everyone
 func TestCollection_Writable_Empty(t *testing.T) {
 
 	// A Collection with an empty Write list is writable by no one.
@@ -239,6 +257,7 @@ func TestCollection_ReadWrite_Independent(t *testing.T) {
  * Getter / Setter Interfaces
  ******************************************/
 
+// TestCollection_GetPointer confirms that every schema field resolves to a pointer, and unknown names do not
 func TestCollection_GetPointer(t *testing.T) {
 
 	collection := NewCollection()
@@ -289,6 +308,7 @@ func TestCollection_GetPointer(t *testing.T) {
 	require.False(t, ok)
 }
 
+// TestCollection_GetStringOK confirms that the string fields read back, and unknown names report FALSE
 func TestCollection_GetStringOK(t *testing.T) {
 
 	collectionID := primitive.NewObjectID()
@@ -337,6 +357,7 @@ func TestCollection_GetStringOK(t *testing.T) {
 	require.False(t, ok)
 }
 
+// TestCollection_SetString confirms that the string fields write through
 func TestCollection_SetString(t *testing.T) {
 
 	collectionID := primitive.NewObjectID()
@@ -356,6 +377,7 @@ func TestCollection_SetString(t *testing.T) {
 	require.Equal(t, parentID, collection.ParentID)
 }
 
+// TestCollection_SetString_Invalid confirms that an unparseable value is rejected rather than stored
 func TestCollection_SetString_Invalid(t *testing.T) {
 
 	collection := NewCollection()

@@ -557,10 +557,11 @@ func (service Icons) get(name string) string {
 	return `<i class="bi bi-` + name + `"></i>`
 }
 
+// Write renders the named icon directly to the provided Writer
 func (service Icons) Write(name string, writer io.Writer) {
-	// Okay to ignore write error
-	// nolint:errcheck
-	writer.Write([]byte(service.Get(name)))
+	// The writer here is a template buffer or an already-committed HTTP response, so there is
+	// nothing useful to do with a write error at this point.
+	_, _ = writer.Write([]byte(service.Get(name)))
 }
 
 func (service Icons) copyright() string {

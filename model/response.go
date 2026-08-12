@@ -86,8 +86,14 @@ func (response Response) ID() string {
 	return response.ResponseID.Hex()
 }
 
+// Fields returns the database columns that must be loaded to populate a Response
+// It is part of the FieldLister interface
 func (response Response) Fields() []string {
-	return []string{"responseId", "url", "object", "type", "content", "createDate"}
+
+	// NOTE: "actor" and "userId" are not decoration. ActivityPubURL/Toot build their
+	// URLs from Actor, and the AccessLister methods key off UserID -- so omitting either
+	// one yields a Response that looks valid but computes wrong answers.
+	return []string{"_id", "userId", "actor", "object", "type", "summary", "content", "createDate"}
 }
 
 /******************************************
@@ -122,6 +128,7 @@ func (response Response) GetJSONLD() mapof.Any {
 	return result
 }
 
+// ActivityPubURL returns the URL that identifies this Response to ActivityPub
 func (response Response) ActivityPubURL() string {
 
 	switch response.Type {
@@ -206,6 +213,7 @@ func (response *Response) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
  * Mastodon API
  ******************************************/
 
+// Toot returns this Response as a Mastodon API Status object
 func (response Response) Toot() object.Status {
 
 	return object.Status{

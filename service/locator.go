@@ -23,10 +23,12 @@ type Locator struct {
 	host                string
 }
 
+// NewLocator returns a fully initialized Locator service
 func NewLocator() Locator {
 	return Locator{}
 }
 
+// Refresh updates any stateful data that is cached inside this service.
 func (service *Locator) Refresh(factory *Factory) {
 
 	service.domainService = factory.Domain()
@@ -110,6 +112,7 @@ func (service *Locator) GetObjectFromURL(session data.Session, value string) (st
 	return "", primitive.NilObjectID, derp.BadRequest(location, "Invalid Object Type", objectType)
 }
 
+// GetActor returns the outbox Actor for the named actor type and ID
 func (service *Locator) GetActor(session data.Session, actorType string, actorID string) (outbox.Actor, error) {
 
 	const location = "service.Locator.GetActor"
@@ -144,27 +147,78 @@ func (service *Locator) GetActor(session data.Session, actorType string, actorID
 	return outbox.Actor{}, derp.BadRequest(location, "ActorID must be a valid ObjectID", actorType)
 }
 
+// PublicKeyID returns the keyId that the provided LOCAL actor advertises in its actor document,
+// and which it must therefore use when signing. Every branch delegates to the same accessor that
+// builds the actor document, so the signed and published identifiers cannot drift apart.
+//
+// This is deliberately separate from the private-key lookup in GetPrivateKey: several actors SHARE
+// one private key, but no two actors may share a keyId. Receivers that bind the HTTP Signature to
+// the Activity's actor -- hannibal (validator.HTTPSig.Validate) and Mastodon -- reject a keyId
+// belonging to a different actor, even when the key material itself is valid.
+//
+// It reads no database, so the routing is unit-testable on its own.
+func (service *Locator) PublicKeyID(actorType string, actorID primitive.ObjectID) (string, error) {
+
+	const location = "service.locator.PublicKeyID"
+
+	switch actorType {
+
+	case model.ActorTypeApplication:
+		return service.domainService.PublicKeyID(), nil
+
+	case model.ActorTypeSearchDomain:
+		return service.searchDomainService.PublicKeyID(), nil
+
+	case model.ActorTypeSearchQuery:
+
+		// A SearchQuery keyId is derived from its ID, so a missing ID would mint a keyId for an
+		// actor that does not exist ("@search_000000000000000000000000#main-key"). Fail loudly
+		// instead -- unlike the two Domain-level actors above, the ID is not optional here.
+		if actorID.IsZero() {
+			return "", derp.BadRequest(location, "SearchQuery actorID cannot be empty", actorType)
+		}
+
+		return service.searchQueryService.PublicKeyID(actorID), nil
+
+	case model.ActorTypeStream:
+		return service.streamService.PublicKeyID(actorID), nil
+
+	case model.ActorTypeUser:
+		return service.userService.PublicKeyID(actorID), nil
+	}
+
+	return "", derp.BadRequest(location, "Invalid Actor Type", actorType)
+}
+
+// GetPrivateKey returns the key ID and private key that the named Actor signs with
 func (service *Locator) GetPrivateKey(session data.Session, actorType string, actorID primitive.ObjectID) (publicKeyID string, privateKey crypto.PrivateKey, err error) {
 
 	const location = "service.locator.GetPrivateKey"
 
+	// The advertised keyId is this actor's own, whatever key material it signs with.
+	publicKeyID, err = service.PublicKeyID(actorType, actorID)
+
+	if err != nil {
+		return "", nil, derp.Wrap(err, location, "Locating public key ID", "actorType", actorType)
+	}
+
 	switch actorType {
 
+	// RULE: These three actors SHARE the Domain private key. Sharing key MATERIAL across actors is
+	// fine -- each one publishes that same public key in its own document. Sharing a keyId is not,
+	// which is why the identifier above is resolved per-actor.
 	case model.ActorTypeApplication,
 		model.ActorTypeSearchDomain,
 		model.ActorTypeSearchQuery:
 
-		publicKeyID := service.domainService.PublicKeyID()
 		privateKey, err := service.domainService.PrivateKey(session)
 		return publicKeyID, privateKey, err
 
 	case model.ActorTypeStream:
-		publicKeyID := service.streamService.PublicKeyID(actorID)
 		privateKey, err := service.streamService.PrivateKey(session, actorID)
 		return publicKeyID, privateKey, err
 
 	case model.ActorTypeUser:
-		publicKeyID := service.userService.PublicKeyID(actorID)
 		privateKey, err := service.userService.PrivateKey(session, actorID)
 		return publicKeyID, privateKey, err
 	}

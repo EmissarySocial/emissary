@@ -72,6 +72,8 @@ func isPagingRequest(ctx *steranko.Context) bool {
 		ctx.QueryParam("page") != ""
 }
 
+// getResponseType translates the last segment of the request path into the ActivityStream type
+// of the responses that the collection contains
 func getResponseType(ctx *steranko.Context) string {
 
 	switch list.Last(ctx.Request().URL.Path, '/') {

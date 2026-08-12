@@ -1,10 +1,15 @@
+// Package activitypub_domain serves the ActivityPub endpoints for the domain-wide "@search" actor:
+// its JSON-LD profile and the outbox collection of everything the domain has indexed publicly.
+//
+// This is one actor for the whole domain, distinct from the per-query actors in
+// activitypub_search and the per-user actors in activitypub_user.
 package activitypub_domain
 
 import (
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/headers"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/steranko"
 )
 
@@ -22,6 +27,6 @@ func GetJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	}
 
 	// Return success
-	ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
+	headers.SetVariant(ctx.Response().Header(), headers.VariantActivityPub)
 	return ctx.JSON(200, result)
 }

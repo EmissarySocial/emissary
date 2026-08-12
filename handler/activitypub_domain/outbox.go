@@ -18,6 +18,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// GetOutboxCollection serves the outbox of the domain-wide "@search" actor
 func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.activitypub_domain.GetOutboxCollection"
@@ -61,6 +62,7 @@ func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, sessio
 	return ctx.JSON(http.StatusOK, result)
 }
 
+// GetOutboxMessage serves a single Announce activity from the "@search" actor's outbox
 func GetOutboxMessage(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.activitypub_domain.GetOutboxMessage"
@@ -90,6 +92,7 @@ func GetOutboxMessage(ctx *steranko.Context, factory *service.Factory, session d
 	return ctx.JSON(http.StatusOK, jsonld)
 }
 
+// mapSearchResult returns a function that renders a SearchResult as an Announce activity by the named Actor
 func mapSearchResult(actorID string) func(r model.SearchResult) model.JSONLD {
 
 	return func(r model.SearchResult) model.JSONLD {

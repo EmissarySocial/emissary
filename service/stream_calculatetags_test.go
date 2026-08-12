@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,6 +23,8 @@ import (
  * emptyTagStore -- a data.Session whose SearchTag collection has no records
  ******************************************/
 
+// emptyTagCollection is a data.Collection that holds no records.  Only the read methods that
+// NormalizeTags reaches are implemented; the rest fail loudly if a test ever calls them.
 type emptyTagCollection struct{}
 
 func (c emptyTagCollection) Context() context.Context                              { return context.Background() }
@@ -37,6 +40,7 @@ func (c emptyTagCollection) Save(data.Object, string) error   { return derp.Inte
 func (c emptyTagCollection) Delete(data.Object, string) error { return derp.Internal("test", "unused") }
 func (c emptyTagCollection) HardDelete(exp.Expression) error  { return derp.Internal("test", "unused") }
 
+// emptyTagSession is a data.Session that hands out emptyTagCollections
 type emptyTagSession struct{}
 
 func (s emptyTagSession) Collection(string) data.Collection { return emptyTagCollection{} }
@@ -60,6 +64,7 @@ func newTagStreamService(tagPaths []string, tagURL string) (*Stream, model.Templ
 	return streamService, template
 }
 
+// newTagStream returns an unsaved Stream carrying the provided HTML content
 func newTagStream(html string) model.Stream {
 	stream := model.NewStream()
 	stream.TemplateID = "test-post"
@@ -90,6 +95,43 @@ func TestStream_CalculateTags_NoTagPaths(t *testing.T) {
 	streamService.CalculateTags(emptyTagSession{}, &stream)
 
 	require.Empty(t, stream.Hashtags)
+}
+
+// TestStream_CalculateTags_DualWrites confirms that extraction fills BOTH the deprecated Hashtags
+// slice and the unified Tags list. Hashtags is dual-written for one release while the external
+// template packages migrate -- see projects/TAGS-UNIFICATION.md.
+func TestStream_CalculateTags_DualWrites(t *testing.T) {
+	streamService, _ := newTagStreamService([]string{"content.html"}, "/search?q=")
+	stream := newTagStream("Testing hashtags #travel #Food2024 here")
+
+	streamService.CalculateTags(emptyTagSession{}, &stream)
+
+	require.Equal(t, []string{"Food2024", "travel"}, []string(stream.Hashtags))
+	require.Equal(t, []string{"Food2024", "travel"}, []string(model.TagNames(stream.Tags, vocab.LinkTypeHashtag)))
+
+	for _, tag := range stream.Tags {
+		require.Equal(t, vocab.LinkTypeHashtag, tag.Type)
+		require.Empty(t, tag.Href, "a hashtag's href is derived at emission, never stored")
+	}
+}
+
+// TestStream_CalculateTags_PreservesMentions confirms that recalculating #hashtags leaves @mention
+// entries alone. Both kinds share one field, and each is recalculated independently.
+func TestStream_CalculateTags_PreservesMentions(t *testing.T) {
+	streamService, _ := newTagStreamService([]string{"content.html"}, "/search?q=")
+	stream := newTagStream("Testing #travel here")
+	stream.Tags = model.TagList{{
+		Type: vocab.LinkTypeMention,
+		Name: "sarah@mastodon.social",
+		Href: "https://mastodon.social/users/sarah",
+	}}
+
+	streamService.CalculateTags(emptyTagSession{}, &stream)
+
+	mentions := model.TagsOfType(stream.Tags, vocab.LinkTypeMention)
+	require.Equal(t, 1, len(mentions), "recalculating hashtags must not disturb mentions")
+	require.Equal(t, "https://mastodon.social/users/sarah", mentions[0].Href, "and must not discard their resolutions")
+	require.Equal(t, []string{"travel"}, []string(model.TagNames(stream.Tags, vocab.LinkTypeHashtag)))
 }
 
 // TestStream_CalculateTags_ThenLinkify_Idempotent mirrors what Stream.Save does (extract, then

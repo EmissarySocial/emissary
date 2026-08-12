@@ -31,11 +31,14 @@ func NewOutboxMessage() OutboxMessage {
 	}
 }
 
+// OutboxMessageFields returns the database columns that must be loaded to populate an OutboxMessage
 func OutboxMessageFields() []string {
 	return []string{"objectId", "createDate"}
 }
 
-func (summary OutboxMessage) Fields() []string {
+// Fields returns the database columns that must be loaded to populate an OutboxMessage
+// It is part of the FieldLister interface
+func (message OutboxMessage) Fields() []string {
 	return OutboxMessageFields()
 }
 
@@ -43,6 +46,7 @@ func (summary OutboxMessage) Fields() []string {
  * JSONLDGetter Interface
  ******************************************/
 
+// ActivityPubURL returns the URL that identifies this message to ActivityPub
 func (message OutboxMessage) ActivityPubURL() string {
 
 	if message.ActivityURL != "" {
@@ -52,6 +56,8 @@ func (message OutboxMessage) ActivityPubURL() string {
 	return message.ActorURL + "/pub/outbox/" + message.OutboxMessageID.Hex()
 }
 
+// GetJSONLD returns this message as an ActivityStreams activity
+// It is part of the JSONLDGetter interface
 func (message OutboxMessage) GetJSONLD() mapof.Any {
 
 	result := mapof.Any{
@@ -74,6 +80,8 @@ func (message OutboxMessage) GetJSONLD() mapof.Any {
 	return result
 }
 
+// Created returns the creation date of this message, in Unix milliseconds
+// It is part of the JSONLDGetter interface
 func (message OutboxMessage) Created() int64 {
 	return message.CreateDate
 }
@@ -82,6 +90,8 @@ func (message OutboxMessage) Created() int64 {
  * data.Object Interface
  ******************************************/
 
+// ID returns the unique identifier for this OutboxMessage (in string format)
+// It is part of the data.Object interface
 func (message OutboxMessage) ID() string {
 	return message.OutboxMessageID.Hex()
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
+// sendGuestCode_ActivityPub delivers a guest sign-in code to an Identity as an ActivityPub direct message
 func (service *Identity) sendGuestCode_ActivityPub(session data.Session, identifier string, code string) error {
 
 	const location = "service.Identity.sendGuestCode_ActivityPub"

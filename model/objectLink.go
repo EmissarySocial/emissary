@@ -35,6 +35,8 @@ func (objectLink ObjectLink) ID() string {
 	return objectLink.ObjectLinkID.Hex()
 }
 
+// Fields returns the database columns that must be loaded to populate an ObjectLink
+// It is part of the FieldLister interface
 func (objectLink ObjectLink) Fields() []string {
-	return []string{"_id", "objectLink", "inReplyTo", "actor", "recipients", "object"}
+	return []string{"_id", "objectLink", "inReplyTo", "recipients", "object"}
 }

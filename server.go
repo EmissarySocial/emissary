@@ -54,6 +54,8 @@ var embeddedFiles embed.FS
  * Main Application Entry Point
  ******************************************/
 
+// main boots the Emissary server: it reads the configuration, then serves either the setup
+// console or the live domains, depending on whether that configuration is complete.
 func main() {
 
 	fmt.Println(" _____           _                          ")
@@ -746,7 +748,7 @@ func errorHandler(err error, ctx echo.Context) {
 func handleActivityPubError(ctx echo.Context, err error) bool {
 
 	// If this is not an ActivityPub request, then don't handle it here.
-	if !hannibal.IsActivityPubContentType(ctx.Request().Header.Get("Accept")) {
+	if hannibal.NotActivityPubRequest(ctx.Request()) {
 		return false
 	}
 

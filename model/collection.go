@@ -34,6 +34,8 @@ func NewCollection() Collection {
  * data.Object Interface
  ******************************************/
 
+// ID returns the unique identifier for this Collection (in string format)
+// It is part of the data.Object interface
 func (collection Collection) ID() string {
 	return collection.CollectionID.Hex()
 }
@@ -42,12 +44,18 @@ func (collection Collection) ID() string {
  * FieldLister Interface
  ******************************************/
 
+// Fields returns the database columns that must be loaded to populate a Collection
+// It is part of the FieldLister interface
 func (collection Collection) Fields() []string {
 	return []string{
-		"collectionId",
-		"to",
-		"cc",
-		"name",
+		"_id",
+		"userId",
+		"parentId",
+		"parentType",
+		"collectionType",
+		"read",
+		"write",
+		"totalItems",
 	}
 }
 
@@ -79,7 +87,7 @@ func (collection *Collection) RolesToGroupIDs(roleIDs ...string) Permissions {
 	return defaultRolesToGroupIDs(collection.UserID, roleIDs...)
 }
 
-// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
+// RolesToPrivilegeIDs returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
 func (collection *Collection) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
 	return NewPermissions()

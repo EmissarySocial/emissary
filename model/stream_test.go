@@ -14,6 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// TestStreamSchema confirms that every Stream field round-trips through its JSON-Schema
 func TestStreamSchema(t *testing.T) {
 
 	s := schema.New(StreamSchema())
@@ -57,6 +58,14 @@ func TestStreamSchema(t *testing.T) {
 		{"iconUrl", "https://DOC.ICONURL.COM", nil},
 		{"hashtags.0", "first-tag", nil},
 		{"hashtags.1", "second-tag", nil},
+
+		// tags is an array of objects, so each Tag property is addressed individually. The list
+		// grows to fit, which is what lets a caller write tags.1.* before tags.1 exists.
+		{"tags.0.type", "Hashtag", nil},
+		{"tags.0.name", "first-tag", nil},
+		{"tags.1.type", "Mention", nil},
+		{"tags.1.name", "bob@server.social", nil},
+		{"tags.1.href", "https://server.social/@bob", nil},
 		// note: "isPublished" is a read-only virtual field (computed from publishDate/unpublishDate),
 		// "syndication" is a delta.Slice not settable by element path, and "widgets" is a nested
 		// object — none round-trip through this table helper, so they are intentionally omitted.
@@ -122,6 +131,7 @@ func TestStreamSchema_Aliases(t *testing.T) {
 	}
 }
 
+// TestPermissionSchema confirms that role-to-ID permission maps round-trip through their schema
 func TestPermissionSchema(t *testing.T) {
 
 	m := mapof.NewObject[sliceof.String]()
@@ -137,6 +147,7 @@ func TestPermissionSchema(t *testing.T) {
 	tableTest_Schema(t, &s, &m, table)
 }
 
+// TestStream_IsVisibleTo confirms that DefaultAllow decides visibility for a set of permissions
 func TestStream_IsVisibleTo(t *testing.T) {
 
 	// A private Group and a signed-in User, used to build viewer permissions below.
@@ -188,6 +199,7 @@ func TestStream_IsVisibleTo(t *testing.T) {
 	}
 }
 
+// TestStream_JSON confirms that a Stream survives a round-trip through JSON
 func TestStream_JSON(t *testing.T) {
 
 	test := func(stream Stream, expected ...string) {

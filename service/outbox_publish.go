@@ -334,6 +334,7 @@ func (service *Outbox) removeOutboxMessagesByActivityURL(session data.Session, a
 	return nil
 }
 
+// getActor returns the outbox Actor for the named actor type and ID
 func (service *Outbox) getActor(session data.Session, actorType string, actorID primitive.ObjectID) (outbox.Actor, error) {
 
 	switch actorType {
@@ -383,6 +384,8 @@ func (service *Outbox) publishRecipients(session data.Session, actorType string,
 	)
 }
 
+// addresseesAsFollowers presents a list of addressee URLs as synthetic ActivityPub Followers, so that
+// directly-addressed recipients can share the follower fan-out path
 func (service *Outbox) addresseesAsFollowers(addressees iter.Seq[string]) iter.Seq[model.Follower] {
 
 	return func(yield func(model.Follower) bool) {

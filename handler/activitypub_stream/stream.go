@@ -1,3 +1,7 @@
+// Package activitypub_stream serves the ActivityPub representation of a Stream.
+//
+// A Stream is an actor only when its Template defines one; otherwise it is served as a plain
+// JSON-LD object.  Both shapes come out of the same endpoint, negotiated by the caller.
 package activitypub_stream
 
 import (
@@ -5,6 +9,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/headers"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
@@ -13,11 +18,12 @@ import (
 	"github.com/benpate/steranko"
 )
 
+// GetJSONLD serves the ActivityPub representation of a Stream, as either an Actor or a plain object
 func GetJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
 
 	const location = "handler.activitypub_stream.GetJSONLD"
 
-	// Verify permissions by checking the required permissions (stream.DefaultAllow) against the permissions in the request signature
+	// RULE: The permissions in the HTTP signature must satisfy the Stream's required permissions
 	permissionService := factory.Permission()
 	permissions := permissionService.ParseHTTPSignature(session, ctx.Request()) // nolint:scopeguard
 
@@ -25,38 +31,22 @@ func GetJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Ses
 		return derp.Forbidden(location, "You do not have permission to view this content")
 	}
 
-	/* Another way to verify user is allowed to view this Stream??
-	permissionService := factory.Permission()
-	authorization := getAuthorization(ctx)
-	allowed, err := permissionService.UserCan(session, &authorization, template, stream, "view")
-
-	if err != nil {
-		return derp.Wrap(err, location, "Checking permissions")
-	}
-
-	if !allowed {
-		return derp.Forbidden(location, "User does not have permission to view this stream")
-	}
-	*/
-
-	// If this Stream is not an Actor, then just return a standard JSON-LD response.
+	// If this Stream is not an Actor, then just return a standard JSON-LD response
 	if template.Actor.IsNil() {
 		jsonld := factory.Stream().JSONLD(session, stream)
-		ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
+		headers.SetAll(ctx.Response().Header(), headers.VariantActivityPub, stream)
 		return ctx.JSON(http.StatusOK, jsonld)
 	}
 
-	// Try to locate the domain
-	// Try to load the Encryption Key for this Actor
+	// Load the Encryption Key that this Actor signs with
 	keyService := factory.EncryptionKey()
 	key := model.NewEncryptionKey()
 	if err := keyService.LoadByParentID(session, model.EncryptionKeyTypeStream, stream.StreamID, &key); err != nil {
 		return derp.Wrap(err, location, "Loading Public Key", stream.StreamID)
 	}
 
-	// Combine the Actor and the Public Key
-	// Key ID/owner must use the actor `id` -- it is what this Actor signs with,
-	// and what remote servers dereference when verifying our signatures.
+	// Combine the Actor and the Public Key.  Key ID/owner must use the actor `id` -- it is what
+	// this Actor signs with, and what remote servers dereference when verifying our signatures.
 	actorID := stream.ActivityPubURL()
 
 	result := template.Actor.JSONLD(stream)
@@ -67,6 +57,6 @@ func GetJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	}
 
 	// Return an ActivityPub response
-	ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
+	headers.SetAll(ctx.Response().Header(), headers.VariantActivityPub, stream)
 	return ctx.JSON(http.StatusOK, result)
 }

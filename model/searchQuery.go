@@ -226,7 +226,7 @@ func (searchQuery *SearchQuery) MakeSignature() {
 
 	// Make a hash of the plaintext for easy indexing
 	h := md5.New()
-	io.WriteString(h, plaintext.String()) // nolint:errcheck
+	_, _ = io.WriteString(h, plaintext.String()) // hash.Hash.Write is documented never to return an error
 	signature := base64.StdEncoding.EncodeToString(h.Sum(nil))
 
 	// Save the signed value to the SearchQuery and GTFO.

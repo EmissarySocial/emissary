@@ -21,7 +21,6 @@ import (
 )
 
 // Follower defines a service that tracks the (possibly external) accounts that are followers of an internal User
-
 type Follower struct {
 	activityService   *ActivityStream
 	domainEmail       *DomainEmail
@@ -58,10 +57,12 @@ func (service *Follower) Refresh(factory *Factory) {
  * Common Data Methods
  ******************************************/
 
+// collection returns the mongo collection where Followers are stored
 func (service *Follower) collection(session data.Session) data.Collection {
 	return session.Collection("Follower")
 }
 
+// Query returns a slice containing all of the Followers who match the provided criteria
 func (service *Follower) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Follower, error) {
 	result := make([]model.Follower, 0)
 	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
@@ -246,12 +247,13 @@ func (service *Follower) ObjectType() string {
 	return "Follower"
 }
 
-// New returns a fully initialized model.Follower as a data.Object.
+// ObjectNew returns a fully initialized model.Follower as a data.Object.
 func (service *Follower) ObjectNew() data.Object {
 	result := model.NewFollower()
 	return &result
 }
 
+// ObjectID returns the primary key of the provided Follower object
 func (service *Follower) ObjectID(object data.Object) primitive.ObjectID {
 
 	if mention, ok := object.(*model.Follower); ok {
@@ -261,16 +263,19 @@ func (service *Follower) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery populates the result value with all Followers who match the provided criteria
 func (service *Follower) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single Follower who matches the provided criteria, as a data.Object
 func (service *Follower) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewFollower()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave saves the provided Follower object to the database
 func (service *Follower) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if follower, ok := object.(*model.Follower); ok {
 		return service.Save(session, follower, comment)
@@ -278,6 +283,7 @@ func (service *Follower) ObjectSave(session data.Session, object data.Object, co
 	return derp.Internal("service.Follower.ObjectSave", "Invalid Object Type", object)
 }
 
+// ObjectDelete removes the provided Follower object from the database (virtual delete)
 func (service *Follower) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if follower, ok := object.(*model.Follower); ok {
 		return service.Delete(session, follower, comment)
@@ -285,10 +291,12 @@ func (service *Follower) ObjectDelete(session data.Session, object data.Object, 
 	return derp.Internal("service.Follower.ObjectDelete", "Invalid Object Type", object)
 }
 
+// ObjectUserCan always returns Unauthorized: Followers are never edited through the generic data.Object path
 func (service *Follower) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Follower", "Not Authorized")
 }
 
+// Schema returns the validating schema for Follower objects
 func (service *Follower) Schema() schema.Schema {
 	return schema.New(model.FollowerSchema())
 }
@@ -297,11 +305,13 @@ func (service *Follower) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+// CountByParent counts the Followers of a single User or Stream
 func (service *Follower) CountByParent(session data.Session, parentType string, parentID primitive.ObjectID) (int64, error) {
 	criteria := exp.Equal("type", parentType).AndEqual("parentId", parentID)
 	return service.Count(session, criteria)
 }
 
+// LoadOrCreate returns the Follower record for an Actor, creating an unsaved one if none exists yet
 func (service *Follower) LoadOrCreate(session data.Session, parentID primitive.ObjectID, actorID string) (model.Follower, error) {
 
 	result := model.NewFollower()
@@ -402,7 +412,7 @@ func (service *Follower) RangeByUserID(session data.Session, userID primitive.Ob
 	)
 }
 
-// RangeActivityPubByUserID returns an iterator containing all of the Followers of a specific User
+// RangeActivityPubByType returns an iterator containing all of the ActivityPub Followers of a specific parent
 func (service *Follower) RangeActivityPubByType(session data.Session, followerType string, userID primitive.ObjectID) iter.Seq[model.Follower] {
 
 	// RULE: Followers paused by a block rule are excluded from delivery fan-out (R8)
@@ -424,7 +434,7 @@ func (service *Follower) RangeBySearch(session data.Session, searchQueryID primi
 	)
 }
 
-// RangeBySearch returns an iterator containing all of the Followers of a specific SearchQuery
+// RangeByGlobalSearch returns an iterator containing all of the Followers of the domain-wide search Actor
 func (service *Follower) RangeByGlobalSearch(session data.Session) iter.Seq[model.Follower] {
 
 	// Special case for Domain search queries.
@@ -474,6 +484,7 @@ func (service *Follower) RangePausedByUserID(session data.Session, userID primit
 	)
 }
 
+// QueryByParentAndDate returns one page of a parent's Followers of a single method, newest first
 func (service *Follower) QueryByParentAndDate(session data.Session, parentType string, parentID primitive.ObjectID, method string, maxCreateDate int64, pageSize int) ([]model.Follower, error) {
 
 	criteria := exp.Equal("type", parentType).
@@ -484,6 +495,7 @@ func (service *Follower) QueryByParentAndDate(session data.Session, parentType s
 	return service.Query(session, criteria, option.SortDesc("createDate"), option.MaxRows(int64(pageSize)))
 }
 
+// LoadParentActor returns the PersonLink of the User or Stream that a Follower follows
 func (service *Follower) LoadParentActor(session data.Session, follower *model.Follower) (model.PersonLink, error) {
 
 	const location = "service.Follower.LoadParentActor"
@@ -534,6 +546,7 @@ func (service *Follower) ListActivityPub(session data.Session, parentID primitiv
 	return service.List(session, criteria, options...)
 }
 
+// NewActivityPubFollower creates (or refreshes) an active Follower record from a remote Actor document
 func (service *Follower) NewActivityPubFollower(session data.Session, parentType string, parentID primitive.ObjectID, actor streams.Document, follower *model.Follower) error {
 
 	const location = "service.Follower.NewActivityPubFollower"
@@ -569,6 +582,7 @@ func (service *Follower) NewActivityPubFollower(session data.Session, parentType
 	return nil
 }
 
+// LoadByActivityPubFollower loads the ActivityPub Follower of a parent, identified by their profile URL
 func (service *Follower) LoadByActivityPubFollower(session data.Session, parentType string, parentID primitive.ObjectID, followerURL string, follower *model.Follower) error {
 
 	criteria := exp.
@@ -596,14 +610,17 @@ func (service *Follower) RemoteActor(session data.Session, follower *model.Follo
  * ActivityPub Methods
  ******************************************/
 
+// ActivityPubID returns the URL that identifies this Follow activity to ActivityPub
 func (service *Follower) ActivityPubID(follower *model.Follower) string {
 	return service.host + "/@" + follower.ParentID.Hex() + "/pub/follower/" + follower.FollowerID.Hex()
 }
 
+// ActivityPubObjectID returns the URL of the Actor that this Follower follows
 func (service *Follower) ActivityPubObjectID(follower *model.Follower) string {
 	return service.host + "/@" + follower.ParentID.Hex()
 }
 
+// AsJSONLD returns a Follower as an ActivityStreams Follow activity
 func (service *Follower) AsJSONLD(follower *model.Follower) mapof.Any {
 
 	return mapof.Any{
@@ -619,6 +636,7 @@ func (service *Follower) AsJSONLD(follower *model.Follower) mapof.Any {
  * Email Queries
  ******************************************/
 
+// LoadPendingEmailFollower loads an unconfirmed email Follower, and verifies their confirmation secret
 func (service *Follower) LoadPendingEmailFollower(session data.Session, followerID primitive.ObjectID, secret string, follower *model.Follower) error {
 
 	criteria := exp.

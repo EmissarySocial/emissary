@@ -2,12 +2,14 @@ package parse
 
 import "strings"
 
+// Option is a function that configures a Parser before it scans
 type Option func(*Parser)
 
 // WithHashtagsOnly sets the parser to only look for #Hashtags
 func WithHashtagsOnly() Option {
 	return func(parser *Parser) {
 		parser.prefixes = []rune{'#'}
+		parser.hardTerminators = hashtagTerminators
 	}
 }
 
@@ -15,6 +17,7 @@ func WithHashtagsOnly() Option {
 func WithMentionsOnly() Option {
 	return func(parser *Parser) {
 		parser.prefixes = []rune{'@'}
+		parser.hardTerminators = mentionTerminators
 	}
 }
 

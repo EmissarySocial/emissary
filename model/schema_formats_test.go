@@ -54,6 +54,8 @@ func modelSchemas() map[string]schema.Element {
 		"SearchTagSchema":        SearchTagSchema(),
 		"StreamSchema":           StreamSchema(),
 		"StreamWidgetSchema":     StreamWidgetSchema(),
+		"TagListSchema":          TagListSchema(),
+		"TagSchema":              TagSchema(),
 		"UserSchema":             UserSchema(),
 		"WebhookSchema":          WebhookSchema(),
 		"WidgetSchema":           WidgetSchema(),
