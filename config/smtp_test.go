@@ -107,7 +107,7 @@ func startMockSMTP(t *testing.T) (string, int, func()) {
 // serveMockSMTP handles one SMTP conversation, answering EHLO/HELO with 250 and QUIT with 221.
 func serveMockSMTP(conn net.Conn) {
 
-	defer conn.Close()
+	defer func() { _ = conn.Close() }() // A mock server has nowhere to report a close failure
 
 	writer := bufio.NewWriter(conn)
 	reader := bufio.NewReader(conn)

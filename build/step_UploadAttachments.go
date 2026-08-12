@@ -94,8 +94,7 @@ func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) Pipeli
 			return Halt().WithError(derp.Wrap(err, location, "Reading file from multi-part header", fileHeader))
 		}
 
-		//nolint:errcheck
-		defer source.Close()
+		defer derp.ReportFunc(source.Close)
 
 		// Sniff the actual file contents (NOT the attacker-controlled filename or
 		// Content-Type header) and, if this step restricts the accepted content-types,
