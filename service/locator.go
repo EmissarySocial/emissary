@@ -2,6 +2,7 @@ package service
 
 import (
 	"crypto"
+	"net/url"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -65,7 +66,10 @@ func (service *Locator) GetWebFingerResult(session data.Session, resource string
 
 	}
 
-	return digit.Resource{}, derp.BadRequest(location, "Invalid Resource", resource)
+	// RULE: An unrecognized object type means the resource named another host, or named nothing we
+	// publish. Both are 404s (RFC 7033 Section 4.5): the request itself is well formed, this server
+	// is simply not authoritative for what it asked about.
+	return digit.Resource{}, derp.NotFound(location, "Unknown WebFinger resource", resource)
 }
 
 // GetObjectFromURL parses a URL and verifies the existence of the referenced object.
@@ -226,11 +230,11 @@ func (service *Locator) GetPrivateKey(session data.Session, actorType string, ac
 	return "", nil, derp.BadRequest(location, "Invalid Actor Type", actorType)
 }
 
-// locateObjectFromURL parses a URL, determines what type of object it is,
-// and extracts the objectID.  It requires the current host (protocol + domain)
-// to match and the complete URL to be looked up. The returned object type
-// can be one of: (Stream, User, SearchQuery, or Service).  If the object
-// is not found, then both the type and token will be empty strings.
+// locateObjectFromURL parses a URL or WebFinger account, determines what type of object it is, and
+// extracts the objectID.  It requires the current host (protocol + domain) to match. The returned
+// object type can be one of: (Stream, User, SearchQuery, SearchDomain, or Application).  If the
+// object is not found -- including when the value names a DIFFERENT host -- then both the type and
+// token will be empty strings.
 func locateObjectFromURL(host string, value string) (string, string) {
 
 	hostname := uri.Hostname(host)
@@ -239,73 +243,113 @@ func locateObjectFromURL(host string, value string) (string, string) {
 	// and just NOT CARE if you include `acct:` or not.
 	value = strings.TrimPrefix(value, "acct:")
 
-	// Identify Username-type values.  Named `username` rather than shadowing `value`, because the
-	// blocks below still need the ORIGINAL value.
-	if username, found := strings.CutSuffix(value, "@"+hostname); found {
-
-		// Remove leading "@" if present
-		username = strings.TrimPrefix(username, "@")
-
-		// Special case for "Application" account
-		if username == "application" {
-			return model.ActorTypeApplication, ""
-		}
-
-		// Special case for Global Search actor
-		if username == "search" {
-			return model.ActorTypeSearchDomain, ""
-		}
-
-		// Special case for SearchQuery objects
-		if searchQueryID, found := strings.CutPrefix(username, "search_"); found {
-			return model.ActorTypeSearchQuery, searchQueryID
-		}
-
-		// Otherwise, it's a User
-		return model.ActorTypeUser, username
+	// Values that carry a protocol are URLs ("https://example.com/@username"); everything else is a
+	// WebFinger account ("@username@example.com") or a naked username ("username").
+	if strings.Contains(value, uri.ProtocolSuffix) {
+		return locateObjectFromPath(hostname, value)
 	}
 
-	// Identify URL-type values.  Named `path` rather than shadowing `value`, because the
-	// fallthrough below still needs the ORIGINAL value.
-	if path, found := strings.CutPrefix(value, host); found {
+	return locateObjectFromAccount(hostname, value)
+}
 
-		// Remove leading slash and query params (if present)
-		path = strings.TrimPrefix(path, "/")
+// locateObjectFromPath identifies the object named by a URL-type value, for example
+// "https://example.com/@username".
+func locateObjectFromPath(hostname string, value string) (string, string) {
 
-		// Special case for "Application" account
-		if path == "" {
-			return model.ActorTypeApplication, ""
-		}
-
-		// Keep only the first path segment; any trailing route data is discarded
-		// (e.g. "token/route" and "token/" both resolve on "token").
-		path, _, _ = strings.Cut(path, "/")
-
-		// Special case for "Application" account
-		if path == "@application" {
-			return model.ActorTypeApplication, ""
-		}
-
-		// Identify Global Search actor
-		if path == "@search" {
-			return model.ActorTypeSearchDomain, ""
-		}
-
-		// Identify SearchQuery URLs
-		if searchID, found := strings.CutPrefix(path, "@search_"); found {
-			return model.ActorTypeSearchQuery, searchID
-		}
-
-		// Identify User URLs
-		if userID, found := strings.CutPrefix(path, "@"); found {
-			return model.ActorTypeUser, userID
-		}
-
-		// Trim off any trailing path data
-		return model.ActorTypeStream, path
+	// RULE: A URL must name THIS host. Compare the bare hostname -- uri.Hostname folds case and
+	// strips the port, per RFC 3986 -- because a domain reached on a non-standard port still serves
+	// the same objects.
+	if uri.Hostname(value) != hostname {
+		return "", ""
 	}
 
-	// Last chance, assume we have a "naked" username. Try to
-	// find the user by looking up "value@hostname".
-	return locateObjectFromURL(host, value+"@"+hostname)
+	// Parsing (rather than trimming the host prefix) discards the query string and fragment, and
+	// tolerates a protocol that does not match the one this server advertises.
+	parsedURL, err := url.Parse(value)
+
+	if err != nil {
+		return "", ""
+	}
+
+	path := strings.TrimPrefix(parsedURL.Path, "/")
+
+	// Special case for "Application" account
+	if path == "" {
+		return model.ActorTypeApplication, ""
+	}
+
+	// Keep only the first path segment; any trailing route data is discarded
+	// (e.g. "token/route" and "token/" both resolve on "token").
+	path, _, _ = strings.Cut(path, "/")
+
+	// Special case for "Application" account
+	if path == "@application" {
+		return model.ActorTypeApplication, ""
+	}
+
+	// Identify Global Search actor
+	if path == "@search" {
+		return model.ActorTypeSearchDomain, ""
+	}
+
+	// Identify SearchQuery URLs
+	if searchID, found := strings.CutPrefix(path, "@search_"); found {
+		return model.ActorTypeSearchQuery, searchID
+	}
+
+	// Identify User URLs
+	if userID, found := strings.CutPrefix(path, "@"); found {
+		return model.ActorTypeUser, userID
+	}
+
+	// Trim off any trailing path data
+	return model.ActorTypeStream, path
+}
+
+// locateObjectFromAccount identifies the object named by an account-type value, for example
+// "@username@example.com", "username@example.com", or a naked "username".
+func locateObjectFromAccount(hostname string, value string) (string, string) {
+
+	// Remove the leading "@" (if present) so that the only "@" that can remain is the one that
+	// separates the username from its host.
+	username := strings.TrimPrefix(value, "@")
+
+	// RULE: An account that names a host must name THIS host. Otherwise "bob@other.example"
+	// describes an account elsewhere, and treating it as a naked username would query the database
+	// for a row that cannot exist -- usernames are letters, numbers, and underscores only
+	// (service.User.ValidateUsername), so an embedded "@" always separates a host. RFC 7033
+	// Section 4.5: this server answers only for the resources it is authoritative for. (BUG-18)
+	if before, after, found := strings.Cut(username, "@"); found {
+
+		if uri.Hostname(after) != hostname {
+			return "", ""
+		}
+
+		username = before
+	}
+
+	// An empty username names nothing. Left to fall through, it would look up a User whose token is
+	// the empty string, which is a database query with no possible answer.
+	if username == "" {
+		return "", ""
+	}
+
+	// Special case for "Application" account
+	if username == "application" {
+		return model.ActorTypeApplication, ""
+	}
+
+	// Special case for Global Search actor
+	if username == "search" {
+		return model.ActorTypeSearchDomain, ""
+	}
+
+	// Special case for SearchQuery objects
+	if searchQueryID, found := strings.CutPrefix(username, "search_"); found {
+		return model.ActorTypeSearchQuery, searchQueryID
+	}
+
+	// Otherwise, it's a User.  A naked username ("benpate") lands here too -- that leniency is
+	// deliberate, and the host check above is careful to allow it.
+	return model.ActorTypeUser, username
 }

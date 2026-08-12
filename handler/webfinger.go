@@ -17,12 +17,24 @@ func GetWebfinger(ctx *steranko.Context, factory *service.Factory, session data.
 
 	const location = "handler.GetWebfinger"
 
-	// Use the Locator service to find the WebFinger resource
 	resourceID := ctx.QueryParam("resource")
+
+	// RULE: RFC 7033 Section 4.2 requires a 400 when the `resource` parameter is missing. Falling
+	// through would look the empty string up as a local username, and a bare
+	// `GET /.well-known/webfinger` is a common probe, so this is reached by accident and not only
+	// by construction.
+	if resourceID == "" {
+		return derp.BadRequest(location, "Missing required parameter: resource")
+	}
+
+	// Use the Locator service to find the WebFinger resource
 	resource, err := factory.Locator().GetWebFingerResult(session, resourceID)
 
+	// The Locator already distinguishes "malformed" (400) from "we do not have that" (404), so the
+	// error code is passed through rather than flattened -- a resource on another host, or a User
+	// who is hidden from public discovery, is a 404 and must not be reported as a bad request.
 	if err != nil {
-		return derp.Wrap(err, location, "Retrieving WebFinger resource", derp.WithBadRequest())
+		return derp.Wrap(err, location, "Retrieving WebFinger resource")
 	}
 
 	// If relation is specified, then limit links to that type only
