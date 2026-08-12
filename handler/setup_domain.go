@@ -71,15 +71,17 @@ func SetupDomainPost(serverFactory *server.SetupFactory) echo.HandlerFunc {
 
 		input := mapof.Any{}
 
+		// These wrap messages are user-facing: WrapInlineError displays the OUTERMOST message
+		// of a non-validation chain, so they must read as sentences, not pipeline labels.
 		if err := (&echo.DefaultBinder{}).BindBody(ctx, &input); err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Binding form input"))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Unable to read the submitted form"))
 		}
 
 		// Update the domain configuration and save it to the domain storage (db/file/etc)
 		s := schema.New(config.DomainSchema())
 
 		if err := s.SetAll(&domain, input); err != nil {
-			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "Setting config values"))
+			return build.WrapInlineError(ctx.Response(), derp.Wrap(err, location, "One or more settings could not be saved"))
 		}
 
 		if _, err := s.Validate(&domain); err != nil {
