@@ -11,7 +11,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/collection"
-	"github.com/benpate/hannibal/router"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/steranko"
@@ -32,10 +31,10 @@ func GetInboxCollection(ctx *steranko.Context, factory *service.Factory, session
 }
 
 // GetInboxCollection_DirectMessages serves the private (direct-message) subset of the User's inbox.
-// Items carry the "emissary:labels" property (4C): persisted receive-time stamps merged with the
-// viewer's current rules, so the client can hide or annotate without its own rule engine.
 func GetInboxCollection_DirectMessages(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
+	// Items carry the "emissary:labels" property (4C): persisted receive-time stamps merged with the
+	// viewer's current rules, so the client can hide or annotate without its own rule engine.
 	inboxService := factory.Inbox()
 	criteria := exp.Equal("isPublic", false)
 
@@ -47,11 +46,11 @@ func GetInboxCollection_DirectMessages(ctx *steranko.Context, factory *service.F
 	)
 }
 
-// GetInboxCollection_DirectMessages_MLS serves the MLS-encrypted direct messages in the User's
-// inbox. Items carry the "emissary:labels" property (4C) -- essential here, because MLS from
-// blocked/muted senders is stored rather than dropped and the labels are how the client knows.
+// GetInboxCollection_DirectMessages_MLS serves the MLS-encrypted direct messages in the User's inbox.
 func GetInboxCollection_DirectMessages_MLS(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
+	// Items carry the "emissary:labels" property (4C) -- essential here, because MLS from
+	// blocked/muted senders is stored rather than dropped and the labels are how the client knows.
 	inboxService := factory.Inbox()
 	criteria := exp.Equal("isPublic", false).AndEqual("mediaType", vocab.MediaTypeMLS)
 
@@ -82,18 +81,16 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	client := activityService.UserClient(user.UserID)
 
 	// Receive and parse the activity through the canonical inbox receive funnel: Stage-1 validators,
-	// signature verification, then the reserved-namespace sanitizer. The funnel puts the validator
-	// chain before caller options, so our cache-aware key finder (which patches the HTTPSig entry in
-	// place, so a stale cached signing key is never trusted) is never discarded.
+	// signature verification, then the reserved-namespace sanitizer. The key finder is a required
+	// parameter of the funnel (BUG-19), so every inbox verifies signatures against keys loaded
+	// through Emissary's client stack -- cache-aware, rules-gated, and bound by the private-IP policy.
 	activity, err := activitypub.ReceiveRequest(
 		ctx.Request(),
 		client,
+		activityService.PublicKeyFinder,
 		factory.Rule(),
 		session,
 		user.UserID,
-
-		// Injecting our own key finder that is aware of the ascache middleware.
-		router.WithPublicKeyFinder(activityService.PublicKeyFinder),
 	)
 
 	if err != nil {
@@ -148,13 +145,15 @@ func inbox_IsDuplicateActivity(context Context, activity streams.Document) bool 
 	return context.factory.Inbox().IsDuplicateActivity(context.session, context.user.UserID, activity.ID())
 }
 
-// inbox_ValidateActivity performs additional validation on activities received in the inbox. It runs
-// after HTTP-signature verification and before the activity is saved or routed, so it is the
-// authoritative Stage-2 rule gate (D5/D17) on the VERIFIED actor. It returns the sender's
-// disposition, computed here ONCE and threaded forward through the rest of the pipeline.
+// inbox_ValidateActivity performs additional validation on activities received in the inbox, and
+// returns the sender's disposition.
 func inbox_ValidateActivity(context Context, activity streams.Document) (model.RuleDisposition, error) {
 
 	const location = "handler.activitypub_user.inbox_ValidateActivity"
+
+	// This runs after HTTP-signature verification and before the activity is saved or routed, so it is
+	// the authoritative Stage-2 rule gate (D5/D17) on the VERIFIED actor. The disposition is computed
+	// here ONCE and threaded forward through the rest of the pipeline.
 
 	// Require that the Activity has a valid ActorID
 	if actorID := activity.ActorID(); actorID == "" {
@@ -201,10 +200,12 @@ func inbox_ValidateActivity(context Context, activity streams.Document) (model.R
 }
 
 // inbox_SuppressStorage returns TRUE for activities that are accepted but never stored: a muted
-// actor's plain (non-MLS) direct message. The Create-only scope is load-bearing: Likes and Undos
-// usually carry no addressing at all (so IsPublic is FALSE for them), and suppressing those would
-// break muted-actor aggregates (R9) and subtractive actions (D6).
+// actor's plain (non-MLS) direct message.
 func inbox_SuppressStorage(disposition model.RuleDisposition, activity streams.Document) bool {
+
+	// The Create-only scope below is load-bearing: Likes and Undos usually carry no addressing at all
+	// (so IsPublic is FALSE for them), and suppressing those would break muted-actor aggregates (R9)
+	// and subtractive actions (D6).
 
 	// Only MUTE suppresses storage: blocked non-MLS content never gets this far, and clean
 	// content always stores
@@ -232,10 +233,12 @@ func inbox_SuppressStorage(disposition model.RuleDisposition, activity streams.D
 }
 
 // inbox_SaveActivity saves a received activity into the target User's inbox, stamped with the
-// sender's disposition so stored rows are self-describing (4C).
+// sender's disposition.
 func inbox_SaveActivity(context Context, activity streams.Document, disposition model.RuleDisposition) error {
 
 	const location = "handler.activitypub_user.inbox_SaveActivity"
+
+	// The stamp is what makes stored rows self-describing (4C).
 
 	// RULE: Create a default id for the activity if none is provided
 	if activity.ID() == "" {

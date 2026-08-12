@@ -16,13 +16,16 @@ import (
 
 // InboxValidators returns the router Option that installs the canonical inbox validator chain (Stage 1
 // of the block gate plus the standard validators). Pass NilObjectID as userID for admin-tier inboxes.
-func InboxValidators(checker RuleChecker, session data.Session, userID primitive.ObjectID) router.Option {
+func InboxValidators(keyFinder sigs.PublicKeyFinder, checker RuleChecker, session data.Session, userID primitive.ObjectID) router.Option {
+
+	// keyFinder is required, not optional: a nil one sends hannibal down its unprotected fallback
+	// path. See ReceiveRequest for the full reasoning (BUG-19).
 
 	// One definition so the chain cannot drift: WithValidators REPLACES it wholesale, so hand-assembling
 	// it per handler risks omitting NewHTTPSig and silently disabling signature verification there.
 	return router.WithValidators(
 		NewRuleValidator(checker, session, userID),
-		validator.NewHTTPSig(nil),
+		validator.NewHTTPSig(keyFinder),
 		validator.NewDeletedObject(),
 	)
 }
@@ -34,12 +37,11 @@ type RuleChecker interface {
 }
 
 // RuleValidator is Stage 1 of the inbox block gate: a hannibal router.Validator that discards
-// activities from blocked origins before signature verification. It is built per-request, closing over
-// the session and the inbox owner's UserID (NilObjectID for the admin-tier inboxes).
+// activities from blocked origins before signature verification.
 type RuleValidator struct {
-	checker RuleChecker
-	session data.Session
-	userID  primitive.ObjectID
+	checker RuleChecker        // Evaluates match keys against the inbox owner's Rules
+	session data.Session       // Closed over at construction, because the validator is built per-request
+	userID  primitive.ObjectID // Inbox owner, or NilObjectID for the admin-tier inboxes
 }
 
 // NewRuleValidator returns a RuleValidator bound to a checker, session, and inbox-owner UserID.
@@ -52,11 +54,12 @@ func NewRuleValidator(checker RuleChecker, session data.Session, userID primitiv
 }
 
 // IsWireGateException returns TRUE for the activity types the inbox block gate verifies but never
-// fast-discards -- the D5 exception set (Follow, Delete, Undo, Move).
+// fast-discards: Follow, Delete, Undo, and Move.
 func IsWireGateException(activityType string) bool {
 
-	// Their handlers deliberately process a blocked actor's activity (loud Follow reject; subtractive
-	// Delete/Undo per D6; Move copies the block per R20), so discarding here would make that unreachable.
+	// These four are the D5 exception set. Their handlers deliberately process a blocked actor's
+	// activity (loud Follow reject; subtractive Delete/Undo per D6; Move copies the block per R20), so
+	// discarding here would make that unreachable.
 	//
 	// Why Follow may reject LOUDLY (403) while everything else stays silent (401): the loud response
 	// fires only AFTER signature verification, so a caller can only ever test identities it owns
@@ -71,13 +74,12 @@ func IsWireGateException(activityType string) bool {
 	return false
 }
 
-// Validate runs the Stage-1 check on the CLAIMED (unverified) actor and signature keyId. It may DENY
-// but never GRANT: ResultInvalid discards a blocked origin, ResultUnknown defers to the rest of the
-// chain. It never returns ResultValid.
+// Validate runs the Stage-1 check on the CLAIMED (unverified) actor and signature keyId. It returns
+// ResultInvalid to discard a blocked origin, or ResultUnknown to defer, and never ResultValid.
 func (v RuleValidator) Validate(request *http.Request, document *streams.Document) validator.Result {
 
-	// A ResultValid would short-circuit the chain (validateRequest is first-decisive-wins) and skip
-	// signature verification entirely, so this validator only ever denies or defers.
+	// It may DENY but never GRANT: a ResultValid would short-circuit the chain (validateRequest is
+	// first-decisive-wins) and skip signature verification entirely.
 
 	// Exception-set types are verified first, then handled (D5), so they are never discarded here.
 	if IsWireGateException(document.Type()) {

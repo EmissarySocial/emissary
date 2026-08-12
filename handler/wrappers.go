@@ -33,10 +33,11 @@ type WithFunc3[T any, U any, V any] func(ctx *steranko.Context, factory *service
 // HxRedirectHeader is the header that HTMX reads to force a client-side redirect
 const HxRedirectHeader = "Hx-Redirect"
 
-// WithActor resolves the actor making the request from its credentials and passes the actor's
-// ID (as a string) to the continuation function. The actor identified using 1) a signed-in
-// User's cookie, 2) a valid HTTP signature, or 3) neither (an empty string for anonymous).
+// WithActor resolves the Actor making the request and passes their ID (as a string) to the
+// continuation function, REFUSING any request that carries a signature it cannot verify
 func WithActor(serverFactory *server.Factory, fn WithFunc1[string]) echo.HandlerFunc {
+
+	const location = "handler.WithActor"
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
@@ -51,22 +52,49 @@ func WithActor(serverFactory *server.Factory, fn WithFunc1[string]) echo.Handler
 			}
 		}
 
-		// A valid HTTP signature identifies a (possibly remote) actor.
-		publicKeyFinder := factory.ActivityStream().PublicKeyFinder
-		if signature, err := sigs.Verify(ctx.Request(), publicKeyFinder); err == nil {
-			actorID := signature.ActorID()
-			return fn(ctx, factory, session, &actorID)
+		// Otherwise, an HTTP Signature identifies a (possibly remote) Actor.
+		actorID, err := resolveSignedActor(ctx.Request(), factory.ActivityStream().PublicKeyFinder)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Resolving Actor from JSON-LD")
 		}
 
-		// Fall through means the request is Anonymous
-		actorID := ""
 		return fn(ctx, factory, session, &actorID)
 	})
 }
 
+// resolveSignedActor returns the ID of the Actor named by the request's HTTP Signature, or an empty
+// string when the request carries no signature at all
+func resolveSignedActor(request *http.Request, publicKeyFinder sigs.PublicKeyFinder) (string, error) {
+
+	const location = "handler.resolveSignedActor"
+
+	// The three cases this function exists to keep apart are: no signature (anonymous), a valid
+	// signature (an Actor), and a signature that FAILS to verify (a refusal). Collapsing the third
+	// into the first is BUG-20.
+
+	// RULE: A request that offers no Signature at all is Anonymous, not refused
+	if !sigs.HasSignature(request) {
+		return "", nil
+	}
+
+	signature, err := sigs.Verify(request, publicKeyFinder)
+
+	// RULE: A signature that is present but INVALID fails the whole request. Falling through to
+	// anonymous would hand the peer a normal-looking response with no hint that their signature was
+	// rejected -- their operator then hunts a permissions bug that does not exist. Nothing is logged
+	// or reported: the 401 IS the signal, and it reaches the only party who can act on it. The
+	// message is fixed on purpose, so verifier internals never reach an unauthenticated prober.
+	if err != nil {
+		return "", derp.Unauthorized(location, "Invalid HTTP Signature")
+	}
+
+	// A verified signature speaks for its Actor
+	return signature.ActorID(), nil
+}
+
 // WithActorAndUser resolves both the requesting Actor (authenticated by HTTP signatures) and the
-//
-//	requested (but un-authenticated) User from the URL path
+// requested (but un-authenticated) User from the URL path
 func WithActorAndUser(serverFactory *server.Factory, fn WithFunc2[string, model.User]) echo.HandlerFunc {
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
@@ -78,15 +106,16 @@ func WithActorAndUser(serverFactory *server.Factory, fn WithFunc2[string, model.
 	})
 }
 
-// WithAuthorizedActorAndUser resolves the requesting Actor and the requested User, and REFUSES the
-// request unless the Actor is identified and welcome: anonymous requests get a 401 UNIFORMLY --
-// before the target is even loaded, so probing reveals nothing -- and a requester BLOCKED by the
-// target User (or the domain) gets a 404, indistinguishable from a User that does not exist. MUTE
-// and LABEL rules never gate here: a muted actor must not be able to detect the mute.
+// WithAuthorizedActorAndUser resolves the requesting Actor and the requested User, refusing the
+// request unless that Actor is both identified and welcome
 func WithAuthorizedActorAndUser(serverFactory *server.Factory, fn WithFunc2[string, model.User]) echo.HandlerFunc {
 
 	const location = "handler.WithAuthorizedActorAndUser"
 
+	// This is the authorized-fetch ("secure mode") gate, and it is wired to NO route today --
+	// it is kept for a future Domain-level RequireSignedFetch setting. No handler may assume it
+	// runs; check server.go for a route's actual wrapper. Its unit test drives the disposition
+	// gate directly, so a green CI says nothing about reachability. (BUG-21)
 	return WithActor(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, actorID *string) error {
 
 		// RULE: Anonymous requests are refused before the target is even loaded, so probing
@@ -116,11 +145,12 @@ func WithAuthorizedActorAndUser(serverFactory *server.Factory, fn WithFunc2[stri
 	})
 }
 
-// authorizedActorRefusal maps the requester's disposition to the authorized-fetch outcome: a
-// blocked requester gets a 404 (identical to a User that does not exist), and everyone else --
-// muted included -- gets through, because a muted actor must never detect the mute (D5).
+// authorizedActorRefusal maps a requester's rule disposition to the authorized-fetch outcome
 func authorizedActorRefusal(location string, disposition model.RuleDisposition) error {
 
+	// RULE: A blocked requester gets a 404 -- identical to a User who does not exist -- so that
+	// signed probing cannot tell the two apart. MUTE and bare LABEL matches deliberately do NOT
+	// gate here: a muted actor must never be able to detect the mute (D5).
 	if disposition.IsBlocked() {
 		return derp.NotFound(location, "User not found")
 	}

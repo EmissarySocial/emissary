@@ -12,12 +12,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// PostInbox receives an inbound ActivityPub activity in a SearchQuery's inbox, verifies it, and
+// routes it to the matching handler.
 func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream, searchQuery *model.SearchQuery) error {
 
 	const location = "handler.activitypub_search.PostInbox"
 
 	// Get an ActivityStream service for the Search Domain
-	client := factory.ActivityStream().SearchDomainClient()
+	activityService := factory.ActivityStream()
+	client := activityService.SearchDomainClient()
 
 	// Create a new request context for the ActivityPub router
 	context := Context{
@@ -31,8 +34,8 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	// reserved-namespace sanitizer) -- Stage 1 of the block gate (D5). The owner is NilObjectID
 	// (admin-tier rules) -- NOT searchQuery.SearchQueryID, which is a SearchQuery id, not a UserID;
 	// passing it would scope the gate to a nonexistent user's rules and silently disable admin
-	// blocking here.
-	activity, err := activitypub.ReceiveRequest(ctx.Request(), client, factory.Rule(), session, primitive.NilObjectID)
+	// blocking here. The key finder keeps signature verification inside Emissary's client stack (BUG-19).
+	activity, err := activitypub.ReceiveRequest(ctx.Request(), client, activityService.PublicKeyFinder, factory.Rule(), session, primitive.NilObjectID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Receiving ActivityPub request")

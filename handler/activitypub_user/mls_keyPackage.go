@@ -12,12 +12,15 @@ import (
 	"github.com/benpate/steranko"
 )
 
-// GetKeyPackageCollection serves the User's published MLS KeyPackages as a collection of IDs.
-// The route runs behind WithAuthorizedActorAndUser (R10): the requester is already identified
-// and confirmed not-blocked before this handler runs.
+// GetKeyPackageCollection serves the User's published MLS KeyPackages as a collection of IDs
 func GetKeyPackageCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.GetKeyPackageCollection"
+
+	// This route is PUBLIC -- server.go registers it behind handler.WithUser -- because
+	// KeyPackages are published material that a peer must fetch before any authenticated
+	// relationship exists. The requester is neither identified nor checked against the User's
+	// Rules, so the two RULEs below are the only gate. (BUG-21)
 
 	// RULE: Only public users can be queried
 	if !user.IsPublic {
@@ -29,14 +32,15 @@ func GetKeyPackageCollection(ctx *steranko.Context, factory *service.Factory, se
 		return derp.Forbidden(location, "MLS messages not allowed for this User")
 	}
 
-	// Fallthrough means this is a request for a specific page
+	// Load every KeyPackage this User has published
 	keyPackageService := factory.KeyPackage()
 	keyPackages, err := keyPackageService.QueryIDOnlyByUser(session, user.UserID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Loading rules")
+		return derp.Wrap(err, location, "Loading KeyPackages")
 	}
 
+	// Map the records into a Collection of ActivityPub URLs
 	collection := streams.NewCollection(user.ActivityPubKeyPackagesURL())
 	collection.TotalItems = keyPackages.Length()
 	collection.Items = slice.Map(keyPackages, func(item model.IDOnly) any {
@@ -48,14 +52,18 @@ func GetKeyPackageCollection(ctx *steranko.Context, factory *service.Factory, se
 	return ctx.JSON(200, collection)
 }
 
-// GetKeyPackageRecord serves a single MLS KeyPackage. The route runs behind
-// WithAuthorizedActorAndUser (R10): the requester is already identified and confirmed
-// not-blocked before this handler runs.
+// GetKeyPackageRecord serves a single MLS KeyPackage, named by its token in the request URL
 func GetKeyPackageRecord(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.GetKeyPackageRecord"
 
-	// Confirm that the user is visible
+	// This route is PUBLIC -- server.go registers it behind handler.WithUser -- because a peer
+	// must fetch a KeyPackage before any authenticated relationship exists. Requester identity
+	// therefore comes from the steranko session, NOT from an ActivityPub signature: an anonymous
+	// requester resolves to the zero UserID, so the owner check below takes the non-owner path,
+	// which is the safe default. (BUG-21)
+
+	// RULE: Only visible users can be queried
 	if !isUserVisible(ctx, user) {
 		return ctx.NoContent(http.StatusNotFound)
 	}
@@ -73,9 +81,10 @@ func GetKeyPackageRecord(ctx *steranko.Context, factory *service.Factory, sessio
 		return derp.Wrap(err, location, "Loading keyPackage")
 	}
 
+	// Serialize the KeyPackage into its JSON-LD representation
 	result := keyPackageService.GetJSONLD(&keyPackage)
 
-	// Rewrite the generator for non-owners to only include the ID, not the name
+	// RULE: Non-owners see only the generator's ID, never its name
 	if authorization := getAuthorization(ctx); authorization.UserID != user.UserID {
 		result["generator"] = result.GetMap("generator").GetString("id")
 	}
