@@ -12,6 +12,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// PostInbox receives an inbound ActivityPub activity in a Stream actor's inbox, verifies it, and
+// routes it to the matching handler.
 func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
 
 	const location = "handler.activitypub_stream.PostInbox"
@@ -24,7 +26,8 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	}
 
 	// Get an ActivityStream service for the Stream
-	client := factory.ActivityStream().StreamClient(stream.StreamID)
+	activityService := factory.ActivityStream()
+	client := activityService.StreamClient(stream.StreamID)
 
 	// Create a new request context for the ActivityPub router
 	context := Context{
@@ -36,8 +39,9 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 
 	// Retrieve the activity through the canonical inbox receive funnel (Stage-1 validators + the
 	// reserved-namespace sanitizer), evaluated against admin-tier rules (NilObjectID) -- Stage 1 of
-	// the block gate (D5).
-	activity, err := activitypub.ReceiveRequest(ctx.Request(), client, factory.Rule(), session, primitive.NilObjectID)
+	// the block gate (D5). The key finder keeps signature verification inside Emissary's client stack,
+	// so it inherits the cache, the rules gate, and the private-IP policy (BUG-19).
+	activity, err := activitypub.ReceiveRequest(ctx.Request(), client, activityService.PublicKeyFinder, factory.Rule(), session, primitive.NilObjectID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Receiving ActivityPub request")
