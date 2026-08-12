@@ -725,7 +725,13 @@ func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
 // Camper returns a fully initialized Camper client (for Activity Intents)
 func (factory *Factory) Camper() camper.Camper {
 	middleware := httpcache.NewHTTPMiddleware(factory.HTTPCache())
-	return camper.New(camper.WithRoundTripper(middleware))
+
+	// AllowPrivateIPs is FALSE in production; local/dev installs opt in so that
+	// intent lookups can reach home servers on loopback/private addresses.
+	return camper.New(
+		camper.WithRoundTripper(middleware),
+		camper.WithAllowPrivateIPs(factory.ActivityStream().AllowPrivateIPs()),
+	)
 }
 
 // ClientIP returns the real client IP for the provided request, using the server's

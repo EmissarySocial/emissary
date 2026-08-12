@@ -1,4 +1,4 @@
-// Camper is an implementation of FEP-3b86 Activity Intents.
+// Package camper is an implementation of FEP-3b86 Activity Intents
 // that looks up Activity Intent URLs for a given account
 package camper
 
@@ -60,6 +60,12 @@ func (camper *Camper) GetURL(intentType string, accountID string, values map[str
 
 	// Success
 	return template
+}
+
+// Lookup resolves a WebFinger account using this Camper's HTTP options
+// (cache middleware, private-IP policy, etc.)
+func (camper *Camper) Lookup(accountID string) (digit.Resource, error) {
+	return digit.Lookup(accountID, camper.options...)
 }
 
 // GetTemplate looks up the Activity Intent URL Template for a given accountID.
@@ -189,6 +195,9 @@ func (camper *Camper) getTemplateFromNodeInfo(intentType string, server string) 
 // Endpoint list found on: https://palant.info/2023/10/19/implementing-a-share-on-mastodon-button-for-a-blog/
 func (camper *Camper) getTemplateFromKnownSoftware(intentType string, software string) string {
 
+	// Most Misskey/Mastodon-family servers share this path
+	const sharePath = "/share?text={content}"
+
 	// This only works with https://w3id.org/fep/3b86/Create activities
 	if intentType != vocab.ActivityTypeCreate {
 		return ""
@@ -198,34 +207,37 @@ func (camper *Camper) getTemplateFromKnownSoftware(intentType string, software s
 	switch strings.ToLower(software) {
 
 	case "calckey":
-		return "/share?text={content}"
+		return sharePath
 
 	case "diaspora":
 		return "/bookmarklet?title={name}&notes={content}&url={inReplyTo}"
 
 	case "emissary":
-		return "/.intents/create?name={name}&content={content}&inReplyTo={inReplyTo}"
+		// Keep in sync with service.User.CreateIntentURL, which advertises this same
+		// route via WebFinger. (The old value here, "/.intents/create", was the
+		// OUTBOUND picker route -- a dead end for visitors sent from another server.)
+		return "/@me/intent/create?type={type}&name={name}&summary={summary}&content={content}&inReplyTo={inReplyTo}&on-success={on-success}&on-cancel={on-cancel}"
 
 	case "fedibird":
-		return "/share?text={content}"
+		return sharePath
 
 	case "firefish":
-		return "/share?text={content}"
+		return sharePath
 
 	case "foundkey":
-		return "/share?text={content}"
+		return sharePath
 
 	case "friendica":
 		return "/compose?title={name}&body={content}"
 
 	case "glitchcafe":
-		return "/share?text={content}"
+		return sharePath
 
 	case "gnusocial":
 		return "/notice/new?status_textarea={content}"
 
 	case "hometown":
-		return "/share?text={content}"
+		return sharePath
 
 	case "hubzilla":
 		return "/rpost?title={name}&body={content}"
@@ -234,16 +246,16 @@ func (camper *Camper) getTemplateFromKnownSoftware(intentType string, software s
 		return "/new/link?url={inReplyTo}"
 
 	case "mastodon":
-		return "/share?text={content}"
+		return sharePath
 
 	case "meisskey":
-		return "/share?text={content}"
+		return sharePath
 
 	case "microdotblog":
 		return "/post?text=[{name}]({inReplyTo})%0A%0A{content}"
 
 	case "misskey":
-		return "/share?text={content}"
+		return sharePath
 	}
 
 	return ""
