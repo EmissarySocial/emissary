@@ -1,8 +1,7 @@
 package service
 
 import (
-	"encoding/hex"
-
+	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	dataslice "github.com/benpate/data-slice"
@@ -90,7 +89,7 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 	}
 
 	// Decode the EncryptionKey
-	encryptionKey, err := hex.DecodeString(service.masterKey)
+	encryptionKey, err := config.DecodeMasterKey(service.masterKey)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Decoding encryption key")
@@ -359,7 +358,7 @@ func (service *Connection) DecryptVault(connection *model.Connection, values ...
 	}
 
 	// Decode the EncryptionKey
-	encryptionKey, err := hex.DecodeString(service.masterKey)
+	encryptionKey, err := config.DecodeMasterKey(service.masterKey)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Decoding encryption key")

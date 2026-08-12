@@ -51,3 +51,28 @@ func TestVault(t *testing.T) {
 	require.Equal(t, "ABCDEFGHIJKLMNOPQRSTUVWXYZ", decrypted["letters"])
 	require.Equal(t, "!@#$%^&*()", decrypted["symbols"])
 }
+
+// TestVault_DecryptEmpty proves that decrypting a vault with no encrypted values
+// never touches the cipher, so it succeeds even with an unusable key (mirrors
+// the early exit in Encrypt).
+func TestVault_DecryptEmpty(t *testing.T) {
+
+	vault := NewVault()
+
+	// An empty vault decrypts successfully with a nil key
+	decrypted, err := vault.Decrypt(nil)
+	require.Nil(t, err)
+	require.Empty(t, decrypted)
+
+	// Not-yet-encrypted plaintext values are still returned
+	vault.SetString("pending", "not-saved-yet")
+
+	decrypted, err = vault.Decrypt(nil)
+	require.Nil(t, err)
+	require.Equal(t, "not-saved-yet", decrypted["pending"])
+
+	// The property filter applies to plaintext values, too
+	decrypted, err = vault.Decrypt(nil, "other")
+	require.Nil(t, err)
+	require.Empty(t, decrypted)
+}

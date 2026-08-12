@@ -76,6 +76,13 @@ func SetupDomainPost(serverFactory *server.SetupFactory) echo.HandlerFunc {
 		// Try to load the existing domain.  If it does not exist, then create a new one.
 		domain, _ := serverFactory.FindDomain(domainID)
 
+		// RULE: Heal domains that have no master key.  Domains declared directly in a config
+		// file skip NewDomain(), so they can arrive here without one; generate a key now so
+		// this save persists it.  The key is deliberately not settable through the form (BUG-110).
+		if domain.MasterKey == "" {
+			domain.MasterKey = config.NewMasterKey()
+		}
+
 		input := mapof.Any{}
 
 		// These wrap messages are user-facing: WrapInlineError displays the OUTERMOST message

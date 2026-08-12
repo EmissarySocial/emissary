@@ -1,9 +1,6 @@
 package config
 
 import (
-	"crypto/rand"
-	"encoding/hex"
-
 	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -17,21 +14,17 @@ type Domain struct {
 	DatabaseName   string         `json:"databaseName"   bson:"databaseName"`  // Name of the MongoDB Database (can be empty string to use default db for the connect string)
 	SMTPConnection SMTPConnection `json:"smtp"           bson:"smtp"`          // Information for connecting to an SMTP server to send email on behalf of the domain.
 	Owner          Owner          `json:"owner"          bson:"owner"`         // Information about the owner of this domain
-	MasterKey      string         `json:"masterKey"      bson:"masterKey"`     // Key used to encrypt/decrypt JWT keys stored in the database
+	MasterKey      string         `json:"masterKey"      bson:"masterKey"`     // Hex-encoded AES-256 key that encrypts Connection and MerchantAccount vaults.  Generated internally; not exposed through DomainSchema.
 	CreateOwner    bool           `json:"createOwner"    bson:"createOwner"`   // TRUE if the owner should be created when the domain is created
 }
 
 // NewDomain returns a fully initialized Domain object.
 func NewDomain() Domain {
 
-	// Create a default master key as random 32-byte slice
-	masterKey := make([]byte, 32)
-	_, _ = rand.Reader.Read(masterKey)
-
 	return Domain{
 		DomainID:       primitive.NewObjectID().Hex(),
 		SMTPConnection: SMTPConnection{},
-		MasterKey:      hex.EncodeToString(masterKey),
+		MasterKey:      NewMasterKey(),
 	}
 }
 

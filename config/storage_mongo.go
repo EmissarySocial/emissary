@@ -145,6 +145,9 @@ func (storage MongoStorage) load() (Config, error) {
 	result.Source = storage.source
 	result.Location = storage.location
 
+	// RULE: Warn loudly about domains that cannot encrypt vault data (BUG-110)
+	result.ReportInvalidMasterKeys()
+
 	return result, nil
 }
 

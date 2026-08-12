@@ -24,7 +24,7 @@ func TestJWT(t *testing.T) {
 
 	// Set up mock server and session
 	service := NewJWT()
-	service.Refresh(mockdb.New(), "0123456789ABCDEF0123456789ABCDE0123456789ABCDEF0123456789ABCDEFF")
+	service.Refresh(mockdb.New())
 
 	// Create Key1
 	name1, value1, err := service.GetCurrentKey()
@@ -59,7 +59,7 @@ func TestJWTCacheHit(t *testing.T) {
 
 	// Set up mock server and session
 	service := NewJWT()
-	service.Refresh(mockdb.New(), "0123456789ABCDEF0123456789ABCDE0123456789ABCDEF0123456789ABCDEFF")
+	service.Refresh(mockdb.New())
 
 	// Create Key1
 	name1, value1, err := service.GetCurrentKey()
@@ -82,7 +82,7 @@ func TestJWTCacheMiss(t *testing.T) {
 
 	// Set up mock server and session
 	service := NewJWT()
-	service.Refresh(mockdb.New(), "0123456789ABCDEF0123456789ABCDE0123456789ABCDEF0123456789ABCDEFF")
+	service.Refresh(mockdb.New())
 
 	// Create Key1
 	name1, value1, err := service.GetCurrentKey()
@@ -109,7 +109,7 @@ func TestJWTEncryptDecrypt(t *testing.T) {
 
 	// Set up mock server and session
 	service := NewJWT()
-	service.Refresh(mockdb.New(), "0123456789ABCDEF0123456789ABCDE0123456789ABCDEF0123456789ABCDEFF")
+	service.Refresh(mockdb.New())
 
 	original := []byte("This is a test.  It has to be very long because the encryption algorithms looked like they were cutting off after, idk, something like 32 bytes.  So this is mos/def more than 32 bytes.")
 
