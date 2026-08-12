@@ -79,7 +79,7 @@ func (service *SearchDomain) GetJSONLD(session data.Session) (mapof.Any, error) 
 		vocab.PropertyTootIndexable:     false,
 
 		vocab.PropertyPublicKey: map[string]any{
-			vocab.PropertyID:           actorID + "#main-key",
+			vocab.PropertyID:           service.PublicKeyID(),
 			vocab.PropertyOwner:        actorID,
 			vocab.PropertyPublicKeyPEM: publicKeyPEM,
 		},
@@ -138,6 +138,15 @@ func (service *SearchDomain) ActivityPubURL() string {
 
 func (service *SearchDomain) ActivityPubProfileURL() string {
 	return service.host + "/@search"
+}
+
+// PublicKeyID returns the key ID ("#main-key" fragment URL) for this actor's public key.
+// This actor SIGNS with the shared Domain private key, but it must ADVERTISE (and sign with)
+// its own keyId -- receivers that bind the signature to the Activity's actor reject a keyId
+// belonging to a different actor. Locator.GetPrivateKey and GetJSONLD both derive the keyId
+// here so the published and signing identifiers cannot drift apart.
+func (service *SearchDomain) PublicKeyID() string {
+	return service.ActivityPubURL() + "#main-key"
 }
 
 func (service *SearchDomain) ActivityPubName() string {

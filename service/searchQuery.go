@@ -411,7 +411,7 @@ func (service *SearchQuery) GetJSONLD(session data.Session, searchQuery *model.S
 		vocab.PropertyTootIndexable:     false,
 
 		vocab.PropertyPublicKey: map[string]any{
-			vocab.PropertyID:           actorID + "#main-key",
+			vocab.PropertyID:           service.PublicKeyID(searchQueryID),
 			vocab.PropertyOwner:        actorID,
 			vocab.PropertyPublicKeyPEM: publicKeyPEM,
 		},
@@ -430,6 +430,15 @@ func (service *SearchQuery) ActivityPubURL(searchQueryID primitive.ObjectID) str
 
 func (service *SearchQuery) ActivityPubProfileURL(searchQuery *model.SearchQuery) string {
 	return searchQuery.URL
+}
+
+// PublicKeyID returns the key ID ("#main-key" fragment URL) for this actor's public key.
+// This actor SIGNS with the shared Domain private key, but it must ADVERTISE (and sign with)
+// its own keyId -- receivers that bind the signature to the Activity's actor reject a keyId
+// belonging to a different actor. Locator.GetPrivateKey and GetJSONLD both derive the keyId
+// here so the published and signing identifiers cannot drift apart.
+func (service *SearchQuery) PublicKeyID(searchQueryID primitive.ObjectID) string {
+	return service.ActivityPubURL(searchQueryID) + "#main-key"
 }
 
 func (service *SearchQuery) ActivityPubName(searchQuery *model.SearchQuery) string {

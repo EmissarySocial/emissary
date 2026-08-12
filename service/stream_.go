@@ -376,9 +376,9 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 
 	// RULE: Extract and linkify #hashtags for Templates that configure tagging.  This runs
 	// BEFORE Normalize so the injected anchors pass through the same schema sanitization as
-	// any other content HTML.  @mentions are extracted from the same paths, but only as far
-	// as their handles -- resolving a handle to an Actor URL is a network call, so it happens
-	// once at publish time (resolveMentions) rather than on every save.
+	// any other content HTML.  @mentions are extracted from the same paths and resolved here
+	// too -- CalculateMentions carries already-resolved Hrefs forward, so a save only reaches
+	// the network for a handle this Stream has never seen.
 	if len(template.TagPaths) > 0 {
 		service.CalculateTags(session, stream)
 		service.CalculateMentions(stream)
