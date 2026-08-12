@@ -91,8 +91,7 @@ func (service *Stream) publish_outbox(session data.Session, user *model.User, st
 	// wrapper; Outbox.Publish then delivers to every addressee on top of the follower fan-out. This
 	// mirrors how an Announce cc's the reacted-to author (see service.Response.reactionAudience).
 	if authorURL := service.inReplyToAuthorURL(stream); authorURL != "" {
-		cc, _ := object[vocab.PropertyCC].([]string)
-		if !slices.Contains(cc, authorURL) {
+		if cc, _ := object[vocab.PropertyCC].([]string); !slices.Contains(cc, authorURL) {
 			object[vocab.PropertyCC] = append(cc, authorURL)
 		}
 	}

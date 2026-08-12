@@ -338,9 +338,7 @@ func (service *CollectionItem) mergeOntoExistingURI(session data.Session, collec
 	// Copying the identity makes a subsequent Save update in place rather than insert a duplicate.
 	existing := model.NewCollectionItem()
 
-	err := service.LoadByURI(session, collectionItem.CollectionID, collectionItem.URI, &existing)
-
-	switch {
+	switch err := service.LoadByURI(session, collectionItem.CollectionID, collectionItem.URI, &existing); {
 
 	case err == nil:
 		collectionItem.CollectionItemID = existing.CollectionItemID

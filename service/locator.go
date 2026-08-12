@@ -239,68 +239,70 @@ func locateObjectFromURL(host string, value string) (string, string) {
 	// and just NOT CARE if you include `acct:` or not.
 	value = strings.TrimPrefix(value, "acct:")
 
-	// Identify Username-type values
-	if value, found := strings.CutSuffix(value, "@"+hostname); found {
+	// Identify Username-type values.  Named `username` rather than shadowing `value`, because the
+	// blocks below still need the ORIGINAL value.
+	if username, found := strings.CutSuffix(value, "@"+hostname); found {
 
 		// Remove leading "@" if present
-		value = strings.TrimPrefix(value, "@")
+		username = strings.TrimPrefix(username, "@")
 
 		// Special case for "Application" account
-		if value == "application" {
+		if username == "application" {
 			return model.ActorTypeApplication, ""
 		}
 
 		// Special case for Global Search actor
-		if value == "search" {
+		if username == "search" {
 			return model.ActorTypeSearchDomain, ""
 		}
 
 		// Special case for SearchQuery objects
-		if searchQueryID, found := strings.CutPrefix(value, "search_"); found {
+		if searchQueryID, found := strings.CutPrefix(username, "search_"); found {
 			return model.ActorTypeSearchQuery, searchQueryID
 		}
 
 		// Otherwise, it's a User
-		return model.ActorTypeUser, value
+		return model.ActorTypeUser, username
 	}
 
-	// Identify URL-type values
-	if value, found := strings.CutPrefix(value, host); found {
+	// Identify URL-type values.  Named `path` rather than shadowing `value`, because the
+	// fallthrough below still needs the ORIGINAL value.
+	if path, found := strings.CutPrefix(value, host); found {
 
 		// Remove leading slash and query params (if present)
-		value = strings.TrimPrefix(value, "/")
+		path = strings.TrimPrefix(path, "/")
 
 		// Special case for "Application" account
-		if value == "" {
+		if path == "" {
 			return model.ActorTypeApplication, ""
 		}
 
 		// Keep only the first path segment; any trailing route data is discarded
 		// (e.g. "token/route" and "token/" both resolve on "token").
-		value, _, _ = strings.Cut(value, "/")
+		path, _, _ = strings.Cut(path, "/")
 
 		// Special case for "Application" account
-		if value == "@application" {
+		if path == "@application" {
 			return model.ActorTypeApplication, ""
 		}
 
 		// Identify Global Search actor
-		if value == "@search" {
+		if path == "@search" {
 			return model.ActorTypeSearchDomain, ""
 		}
 
 		// Identify SearchQuery URLs
-		if searchID, found := strings.CutPrefix(value, "@search_"); found {
+		if searchID, found := strings.CutPrefix(path, "@search_"); found {
 			return model.ActorTypeSearchQuery, searchID
 		}
 
 		// Identify User URLs
-		if userID, found := strings.CutPrefix(value, "@"); found {
+		if userID, found := strings.CutPrefix(path, "@"); found {
 			return model.ActorTypeUser, userID
 		}
 
 		// Trim off any trailing path data
-		return model.ActorTypeStream, value
+		return model.ActorTypeStream, path
 	}
 
 	// Last chance, assume we have a "naked" username. Try to

@@ -152,7 +152,6 @@ func TestStream_IsVisibleTo(t *testing.T) {
 
 	// A private Group and a signed-in User, used to build viewer permissions below.
 	privateGroup := primitive.NewObjectID()
-	otherGroup := primitive.NewObjectID()
 	userID := primitive.NewObjectID()
 
 	// anonymousViewer sees the world with no signature (the /pub/children default).
@@ -181,6 +180,7 @@ func TestStream_IsVisibleTo(t *testing.T) {
 
 	// RULE: A Stream restricted to a Group the viewer does NOT belong to is hidden.
 	{
+		otherGroup := primitive.NewObjectID()
 		stream := Stream{DefaultAllow: Permissions{otherGroup}}
 		require.False(t, stream.IsVisibleTo(memberViewer), "stream restricted to a non-member group must be hidden")
 	}

@@ -50,8 +50,6 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 
 	const location = "asrules.Client.Load"
 
-	config := newLoadConfig(options...)
-
 	// Evaluate the URL's own keys before anything is fetched.
 	verdict, err := client.checker(uri, streams.NilDocument())
 
@@ -66,10 +64,12 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 	// RULE: never fetch a document the viewer's rules hide (R19) -- unless the caller reveals it,
 	// which is the render layer's click-to-reveal path (D2). The refused document still carries the
 	// verdict, so the UX can render an attributed placeholder.
-	if verdict.IsHidden() && !config.reveal {
-		document := streams.NilDocument()
-		document.Metadata.Labels = verdict
-		return document, derp.Forbidden(location, "Refusing to fetch a document hidden by the viewer's rules", uri)
+	if verdict.IsHidden() {
+		if config := newLoadConfig(options...); !config.reveal {
+			document := streams.NilDocument()
+			document.Metadata.Labels = verdict
+			return document, derp.Forbidden(location, "Refusing to fetch a document hidden by the viewer's rules", uri)
+		}
 	}
 
 	// Pass the request down the chain (inner errors pass through unchanged).

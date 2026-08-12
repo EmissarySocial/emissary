@@ -22,8 +22,7 @@ func outbox_CreateKeyPackage(context Context, activity streams.Document) error {
 	const location = "handler.activitypub_user.outbox_CreateKeyPackage"
 
 	// RULE: Verify that the Domain allows MLS messages for this User
-	domain := context.factory.Domain().Get()
-	if !domain.UserCanMLS(context.user) {
+	if domain := context.factory.Domain().Get(); !domain.UserCanMLS(context.user) {
 		return derp.Forbidden(location, "MLS messages not allowed for this User")
 	}
 

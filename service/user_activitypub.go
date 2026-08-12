@@ -158,9 +158,7 @@ func (service *User) ActivityPubProfile(session data.Session, user *model.User) 
 	}
 
 	// If the domain allows it, append MLS messaging values as well.
-	domain := service.domainService.Get()
-
-	if domain.UserCanMLS(user) {
+	if domain := service.domainService.Get(); domain.UserCanMLS(user) {
 		result[vocab.PropertyMLSMessages] = user.ActivityPubInboxURL_DirectMessages_MLS()
 		result[vocab.PropertyMLSKeyPackages] = user.ActivityPubKeyPackagesURL()
 	}

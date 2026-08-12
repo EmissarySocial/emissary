@@ -88,10 +88,7 @@ func (service *WebPush) vapidKeys(session data.Session) (publicKey string, priva
 
 	domain := service.domainService.Get()
 
-	public := domain.Data.GetString(domainDataVAPIDPublicKey)
-	private := domain.Data.GetString(domainDataVAPIDPrivateKey)
-
-	if public != "" && private != "" {
+	if public, private := domain.Data.GetString(domainDataVAPIDPublicKey), domain.Data.GetString(domainDataVAPIDPrivateKey); public != "" && private != "" {
 		return public, private, nil
 	}
 

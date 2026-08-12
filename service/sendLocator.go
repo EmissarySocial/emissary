@@ -351,9 +351,7 @@ func isPublicURI(uri string) bool {
 // It returns the userID if successful, or primitive.NilObjectID if not.
 func (service SendLocator) ParseUserURI(uri string) primitive.ObjectID {
 
-	prefix := service.host + "/@"
-
-	if strings.HasPrefix(uri, prefix) {
+	if prefix := service.host + "/@"; strings.HasPrefix(uri, prefix) {
 		token := strings.TrimPrefix(uri, prefix)
 		if userID, err := primitive.ObjectIDFromHex(token); err == nil {
 			return userID

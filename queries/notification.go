@@ -172,12 +172,10 @@ func trimOldestNotifications(ctx context.Context, collection *mongo.Collection, 
 		CreateDate int64 `bson:"createDate"`
 	}
 
-	err := collection.FindOne(ctx, filter, findOptions).Decode(&boundary)
-
 	// Default to deleting every matching row (the "fewer than deleteCount rows exist" case).
 	deleteFilter := filter
 
-	switch err {
+	switch err := collection.FindOne(ctx, filter, findOptions).Decode(&boundary); err {
 
 	case nil:
 		// A boundary exists: delete strictly older than it.  The boundary row and its createDate ties survive.

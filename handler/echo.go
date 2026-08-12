@@ -31,8 +31,7 @@ func GetEcho(serverFactory *server.Factory) echo.HandlerFunc {
 		fmt.Fprintf(&b, "  %-12s %s\n", "Host:", r.Host)
 
 		// ── Query Parameters ─────────────────────────────────────────
-		queryParams := ctx.QueryParams()
-		if len(queryParams) > 0 {
+		if queryParams := ctx.QueryParams(); len(queryParams) > 0 {
 			fmt.Fprintf(&b, "\nQuery Parameters\n")
 			keys := make([]string, 0, len(queryParams))
 			for k := range queryParams {
@@ -86,9 +85,7 @@ func GetEcho(serverFactory *server.Factory) echo.HandlerFunc {
 		if len(body) == 0 {
 			fmt.Fprintf(&b, "  (empty)\n")
 		} else {
-			ct := r.Header.Get("Content-Type")
-			bodyStr := string(body)
-			switch {
+			switch ct, bodyStr := r.Header.Get("Content-Type"), string(body); {
 			case strings.Contains(ct, "application/x-www-form-urlencoded"):
 				// Restore body so ParseForm can read it
 				r.Body = io.NopCloser(bytes.NewBuffer(body))

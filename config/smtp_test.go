@@ -123,9 +123,7 @@ func serveMockSMTP(conn net.Conn) {
 			return
 		}
 
-		command := strings.ToUpper(strings.TrimSpace(line))
-
-		switch {
+		switch command := strings.ToUpper(strings.TrimSpace(line)); {
 
 		case strings.HasPrefix(command, "EHLO"), strings.HasPrefix(command, "HELO"):
 			_, _ = writer.WriteString("250 mock.smtp\r\n")
