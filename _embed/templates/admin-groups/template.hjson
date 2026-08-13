@@ -53,6 +53,7 @@
 						]
 					}
 				}
+				{do: "startup-save-task", value:"/admin/groups"}
 				{do: "refresh-page"}
 				]
 			}]
@@ -90,6 +91,7 @@
 						options: ["delete:/admin/groups/{{.GroupID}}/delete"]
 					}
 					{do: "save"}
+					{do: "startup-save-task", value:"/admin/groups"}
 					{do: "refresh-page"}
 				]
 			}]
@@ -99,6 +101,7 @@
 			roles:["owner"]
 			steps:[
 				{do: "delete", type: "group", message: "People will be removed from this group, but will not be deleted."}
+				{do: "startup-save-task", value:"/admin/groups"}
 				{do: "refresh-page"}
 			]
 		}

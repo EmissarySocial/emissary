@@ -1,0 +1,23 @@
+{{- $theme := .Theme .ThemeID -}}
+
+<h1>Add Default Content?</h1>
+
+<div class="margin-vertical">
+    This theme includes default content pages. Click below to install them now.
+</div>
+
+<form hx-post="/startup/content" hx-push-url="false">
+    <div class="margin-vertical">
+        {{- range $theme.StartupStreams -}}
+            <label for="id-stream-{{.token}}" class="block padding-xs">
+                <input id="id-stream-{{.token}}" name="tokens" value="{{.token}}" type="checkbox" checked>
+                {{.label}}
+            </label>
+        {{- end -}}
+    </div>
+
+    <div class="margin-top-lg">
+        <button type="submit" class="primary">Create Pages</button>
+        <button script="on click send closeModal">Cancel</button>
+    </div>
+</form>

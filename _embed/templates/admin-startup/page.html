@@ -1,84 +1,57 @@
-<html>
-<head>
-	<title>Emissary Startup Wizard</title>
-	<link rel="stylesheet" href="/.themes/global/stylesheet">
-	<style>
-		.x-grid {
-			box-sizing: border-box;
-			width:100%;
-			display:flex;
-			flex-direction:row;
-			flex-wrap:wrap;
-			justify-content:center;
-			align-items:stretch;
-			align-content:center;
-			gap:24px;
-			container-type:inline-size;
-		}
-		
-		.x-grid > .x-grid-item {
-			box-sizing: border-box;
-			flex-grow:0;
-			flex-shrink:0;
-			width:100%;
-		}
-		
-		@container (inline-size > 480px)  {
-			.x-grid > .x-grid-item {
-				width:calc(50% - 24px);
-			}
-		}
-		
-		@container (inline-size > 720px)  {
-			.x-grid > .x-grid-item {
-				width:calc(33% - 24px);
-			}
-		}
-		
-		@container (inline-size > 960px)  {
-			.x-grid > .x-grid-item {
-				width:calc(25% - 24px);
-			}
-		}
-		
-		@container (inline-size > 1200px)  {
-			.x-grid > .x-grid-item {
-				width:calc(20% - 24px);
-			}
-		}
-		
-		@container (inline-size > 1440px)  {
-			.x-grid > .x-grid-item {
-				width:calc(16% - 24px);
-			}
-		}
-		
-		.x-card {
-			box-sizing: border-box;
-			border:solid 1px var(--gray20);
-			background-color:var(--white);
-		}
+{{- $startupTasks := .StartupTasks -}}
+{{- $themes := .Themes -}}
+{{- $theme := .Theme .ThemeID -}}
 
-		.x-card:hover {
-			border:solid 1px var(--blue50);
-			cursor:pointer;
-			padding:0px;
-		}
+<div class="width-480 margin-horizontal-auto margin-top-xl">
+	<div class="align-center margin-bottom-lg">
+		<div class="margin-bottom">
+			<img src="/.themes/global/resources/emissary/Emissary-Icon-Black.svg" class="dark-mode-hide width-96">
+			<img src="/.themes/global/resources/emissary/Emissary-Icon-White.svg" class="dark-mode-show width-96">
+		</div>
+		<h1>Let's Start Your Emissary</h1>
+		<div>Here's some simple steps to get you on your way.</div>
+		<div>Don't worry, you can change these later.</div>
+	</div>
 
-		.x-card > .x-card-photo {
-			background-color:var(--gray30);
-			width:100%;
-			margin-bottom:1em;
-		}
+	<div class="width-480 margin-horizontal-auto margin-top-xl margin-bottom-lg">
 
-		.x-card > .x-card-text {
-			margin: 0.5em 2em;
-		}
-	</style>
+		{{- if gt 1 $themes.Length -}}
+		<div class="checkbutton" hx-get="/startup/choose">
+			<div class="align-left">
+				<div>Selected Website Theme:</div>
+				<div class="text-lg bold">{{$theme.Label}}</div>
+			</div>
+		</div>
+		<hr>
+		{{- end -}}
 
-</head>
-<body>
-	<main hx-target="main" hx-swap="innerHTML">{{.View "welcome"}}</main>
-</body>
-<script src="/.themes/global/resources/htmx-1.9.12/htmx.min.js"></script>
-</html>
+		{{- range $theme.StartupTasks -}}
+			<div class="checkbutton" hx-get="{{.Href}}">
+				<div class="text-lg flex-align-self-start margin-none margin-right-sm" style="width:1em;">
+					{{- if $startupTasks.Contains .Value -}}
+						<i class="bi bi-check-circle-fill text-green"></i>
+					{{- else -}}
+						<i class="bi bi-circle-fill text-light-gray"></i>
+					{{- end -}}
+				</div>
+				<div>
+					<div class="bold">{{.Label}}</div>
+					<div class="text-sm text-gray">{{.Description}}</div>
+				</div>
+			</div>
+		{{- end -}}
+
+		<div class="margin-top-lg">
+			<button hx-post="/startup/complete" class="primary"><i class="bi bi-check"></i> Mark All Complete</button>
+		</div>
+
+	</div>
+</div>
+
+<div
+	hx-get="/startup"
+	hx-trigger="refreshPage"
+	hx-target="main"
+	hx-swap="innerHTML"
+	hx-push-url="false">
+</div>
