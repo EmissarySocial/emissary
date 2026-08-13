@@ -53,7 +53,7 @@ func WithActor(serverFactory *server.Factory, fn WithFunc1[string]) echo.Handler
 		}
 
 		// Otherwise, an HTTP Signature identifies a (possibly remote) Actor.
-		actorID, err := resolveSignedActor(ctx.Request(), factory.ActivityStream().PublicKeyFinder)
+		actorID, err := resolveSignedActor(ctx.Request(), factory.ActivityStream().VerifySignature)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Resolving Actor from JSON-LD")
@@ -65,7 +65,7 @@ func WithActor(serverFactory *server.Factory, fn WithFunc1[string]) echo.Handler
 
 // resolveSignedActor returns the ID of the Actor named by the request's HTTP Signature, or an empty
 // string when the request carries no signature at all
-func resolveSignedActor(request *http.Request, publicKeyFinder sigs.PublicKeyFinder) (string, error) {
+func resolveSignedActor(request *http.Request, verifySignature func(*http.Request) (sigs.Signature, error)) (string, error) {
 
 	const location = "handler.resolveSignedActor"
 
@@ -78,7 +78,7 @@ func resolveSignedActor(request *http.Request, publicKeyFinder sigs.PublicKeyFin
 		return "", nil
 	}
 
-	signature, err := sigs.Verify(request, publicKeyFinder)
+	signature, err := verifySignature(request)
 
 	// RULE: A signature that is present but INVALID fails the whole request. Falling through to
 	// anonymous would hand the peer a normal-looking response with no hint that their signature was

@@ -39,9 +39,9 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 
 	// Retrieve the activity through the canonical inbox receive funnel (Stage-1 validators + the
 	// reserved-namespace sanitizer), evaluated against admin-tier rules (NilObjectID) -- Stage 1 of
-	// the block gate (D5). The key finder keeps signature verification inside Emissary's client stack,
+	// the block gate (D5). The verifier keeps signature verification inside Emissary's client stack,
 	// so it inherits the cache, the rules gate, and the private-IP policy (BUG-19).
-	activity, err := activitypub.ReceiveRequest(ctx.Request(), client, activityService.PublicKeyFinder, factory.Rule(), session, primitive.NilObjectID)
+	activity, err := activitypub.ReceiveRequest(ctx.Request(), client, activityService.VerifySignature, factory.Rule(), session, primitive.NilObjectID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Receiving ActivityPub request")

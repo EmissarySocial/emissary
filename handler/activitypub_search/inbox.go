@@ -34,8 +34,8 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	// reserved-namespace sanitizer) -- Stage 1 of the block gate (D5). The owner is NilObjectID
 	// (admin-tier rules) -- NOT searchQuery.SearchQueryID, which is a SearchQuery id, not a UserID;
 	// passing it would scope the gate to a nonexistent user's rules and silently disable admin
-	// blocking here. The key finder keeps signature verification inside Emissary's client stack (BUG-19).
-	activity, err := activitypub.ReceiveRequest(ctx.Request(), client, activityService.PublicKeyFinder, factory.Rule(), session, primitive.NilObjectID)
+	// blocking here. The verifier keeps signature verification inside Emissary's client stack (BUG-19).
+	activity, err := activitypub.ReceiveRequest(ctx.Request(), client, activityService.VerifySignature, factory.Rule(), session, primitive.NilObjectID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Receiving ActivityPub request")

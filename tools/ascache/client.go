@@ -14,6 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Client is a streams.Client wrapper that caches loaded documents in the common database.
 type Client struct {
 	commonDatabase data.Server
 	queue          *queue.Queue
@@ -90,18 +91,22 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 
 	defer cancel()
 
-	// If we're allowdd to READ from the cache, then try to load from the cache first
-	if config.isReadAllowed() {
+	// There are multiple reasons we might try the cache (minAge or isReadAllowed)
+	if config.tryCache() {
 
-		// Search the cache for the document
+		// Try to find the document in the cache
 		value := NewValue()
 
-		// Look for the document in the cache
 		if err := client.loadByURL(session, url, &value); err == nil {
 
-			// Expired values are treated as if they are not found in the cache
-			// at all.  But if this value is NOT expired, then it can be used.
-			if value.NotExpired() {
+			// MinAge is a cooldown to prevent us from requesting the same value
+			// too frequently. This outranks the cache mode on all transactions.
+			if value.IsWithinMinAge(config.minAge) {
+				return client.asCachedDocument(value), nil
+			}
+
+			// If the cache is allowed then check it here.
+			if config.isReadAllowed() && value.NotExpired() {
 
 				// If this value is stale-but-not-expired, then
 				// trigger a background revalidation.
@@ -109,12 +114,8 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 					client.revalidate(&value)
 				}
 
-				// Mark this values as "cached"
-				value.HTTPHeader.Set(HeaderHannibalCache, "true")
-				value.HTTPHeader.Set(HeaderHannibalCacheDate, time.Now().Format(time.RFC3339))
-
 				// Return cached document to the caller (no HTTP call required)
-				return client.asDocument(value), nil
+				return client.asCachedDocument(value), nil
 			}
 		}
 	}
@@ -150,6 +151,7 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 	return result, nil
 }
 
+// Save writes a document into the cache directly, without loading it from its origin first.
 func (client *Client) Save(document streams.Document) error {
 
 	const location = "ascache.Client.Save"
@@ -370,6 +372,19 @@ func (client *Client) asDocument(value Value) streams.Document {
 		streams.WithMetadata(value.Metadata),
 		streams.WithHTTPHeader(value.HTTPHeader),
 	)
+}
+
+// asCachedDocument converts a Value into a streams.Document that is STAMPED as having come from the
+// cache, so that callers can tell a cached answer from a fresh one.
+func (client *Client) asCachedDocument(value Value) streams.Document {
+
+	// The stamp is written to the in-memory copy only; it is never saved back to the database.
+	// service.ActivityStream reads it (via FromCache) to decide whether a failed signature is worth
+	// re-checking against a freshly loaded key. (BUG-22)
+	value.HTTPHeader.Set(HeaderHannibalCache, "true")
+	value.HTTPHeader.Set(HeaderHannibalCacheDate, time.Now().Format(time.RFC3339))
+
+	return client.asDocument(value)
 }
 
 /******************************************

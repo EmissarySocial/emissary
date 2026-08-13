@@ -81,13 +81,13 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	client := activityService.UserClient(user.UserID)
 
 	// Receive and parse the activity through the canonical inbox receive funnel: Stage-1 validators,
-	// signature verification, then the reserved-namespace sanitizer. The key finder is a required
+	// signature verification, then the reserved-namespace sanitizer. The verifier is a required
 	// parameter of the funnel (BUG-19), so every inbox verifies signatures against keys loaded
 	// through Emissary's client stack -- cache-aware, rules-gated, and bound by the private-IP policy.
 	activity, err := activitypub.ReceiveRequest(
 		ctx.Request(),
 		client,
-		activityService.PublicKeyFinder,
+		activityService.VerifySignature,
 		factory.Rule(),
 		session,
 		user.UserID,

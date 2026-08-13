@@ -93,7 +93,7 @@ func (service *Permission) UserCan(session data.Session, authorization *model.Au
 	return false, nil
 }
 
-// UserCan returns TRUE if this action is permitted on a stream (using the provided authorization)
+// TraceUserCan returns the step-by-step reasoning behind a UserCan decision, for debugging.
 func (service *Permission) TraceUserCan(session data.Session, authorization *model.Authorization, template *model.Template, accessLister model.AccessLister, actionID string) []string {
 
 	result := []string{"service.Permission.UserCan"}
@@ -264,6 +264,7 @@ func (service *Permission) AuthorInGroup(accessLister model.AccessLister, groupT
 	return false, derp.NotImplemented("service.Permission.AuthorInGroup", "AuthorInGroup is not implemented")
 }
 
+// Permissions returns the full set of Permissions granted by an Authorization and an Identity.
 func (service *Permission) Permissions(authorization *model.Authorization, identity *model.Identity) model.Permissions {
 
 	result := model.NewAnonymousPermissions()
@@ -289,6 +290,7 @@ func (service *Permission) Permissions(authorization *model.Authorization, ident
 	return result
 }
 
+// ParseHTTPSignature returns the Permissions granted by a request's (verified) HTTP Signature.
 func (service *Permission) ParseHTTPSignature(session data.Session, request *http.Request) model.Permissions {
 
 	result := model.NewAnonymousPermissions()
@@ -335,7 +337,7 @@ func (service *Permission) getSignature(request *http.Request) (sigs.Signature, 
 	const location = "service.Permission.getSignature"
 
 	// First, try to verify the signature using the standard method
-	signature, err := sigs.Verify(request, service.activityService.PublicKeyFinder)
+	signature, err := service.activityService.VerifySignature(request)
 
 	if err == nil {
 		return signature, nil

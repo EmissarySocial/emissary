@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/router"
+	"github.com/benpate/hannibal/sigs"
 	"github.com/benpate/hannibal/validator"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -25,6 +26,13 @@ func (f *fakeKeyFinder) find(keyID string) (string, error) {
 	f.called = true
 	f.gotKeyID = keyID
 	return "", derp.NotFound("test", "no key for this test")
+}
+
+// verify is the SignatureVerifier the funnel now takes.  It wraps this finder in a plain sigs.Verify,
+// which is exactly what the production verifier does on its first pass -- and the only pass these
+// tests reach, since a finder that never resolves a key gives the refresh path nothing to compare.
+func (f *fakeKeyFinder) verify(request *http.Request) (sigs.Signature, error) {
+	return sigs.Verify(request, f.find)
 }
 
 // signedRequest builds a POST inbox request carrying the given JSON body and a parseable HTTP
@@ -54,7 +62,7 @@ func TestReceiveRequest_UsesProvidedKeyFinder(t *testing.T) {
 	_, err := ReceiveRequest(
 		signedRequest("https://good.example/@friend#main-key", `{"actor":"https://good.example/@friend","type":"Create"}`),
 		nil,
-		keyFinder.find,
+		keyFinder.verify,
 		checker,
 		nil,
 		primitive.NilObjectID,
@@ -77,7 +85,7 @@ func TestReceiveRequest_BlockedKeyIDIsNotFetched(t *testing.T) {
 	_, err := ReceiveRequest(
 		signedRequest("https://relay.evil.example/actor#main-key", `{"actor":"https://good.example/@friend","type":"Create"}`),
 		nil,
-		keyFinder.find,
+		keyFinder.verify,
 		checker,
 		nil,
 		primitive.NilObjectID,
@@ -94,11 +102,11 @@ func TestInboxValidators_ChainShape(t *testing.T) {
 	// All four inbox families (user, stream, domain, search) receive through the one funnel, so the two
 	// tests above hold for each of them by construction. This one pins the chain the funnel installs.
 	keyFinder := &fakeKeyFinder{}
-	config := router.NewReceiveConfig(InboxValidators(keyFinder.find, &fakeChecker{}, nil, primitive.NilObjectID))
+	config := router.NewReceiveConfig(InboxValidators(keyFinder.verify, &fakeChecker{}, nil, primitive.NilObjectID))
 
 	require.Len(t, config.Validators, 3)
 	require.IsType(t, RuleValidator{}, config.Validators[0])
-	require.IsType(t, validator.HTTPSig{}, config.Validators[1])
+	require.IsType(t, HTTPSigValidator{}, config.Validators[1])
 	require.IsType(t, validator.NewDeletedObject(), config.Validators[2])
 
 	// Stage 1 must come BEFORE signature verification, or a blocked origin's key is fetched anyway.
