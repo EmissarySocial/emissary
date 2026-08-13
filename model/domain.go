@@ -137,7 +137,7 @@ func (domain *Domain) Host() string {
 func (domain *Domain) IconURL() string {
 
 	if domain.IconID.IsZero() {
-		return ""
+		return domain.Host() + "/.themes/global/resources/emissary/Emissary-Icon-Black.svg"
 	}
 
 	return domain.Host() + "/.domain/attachments/" + domain.IconID.Hex()
@@ -147,7 +147,7 @@ func (domain *Domain) IconURL() string {
 func (domain *Domain) ImageURL() string {
 
 	if domain.ImageID.IsZero() {
-		return domain.Host() + "/.theme/global/resources/emissary/Emissary-Icon-Black.svg"
+		return domain.Host() + "/.themes/global/resources/emissary/Emissary-Icon-Black.svg"
 	}
 
 	return domain.Host() + "/.domain/attachments/" + domain.ImageID.Hex()

@@ -14,8 +14,8 @@ func DomainSchema() schema.Element {
 			"domainId":             schema.String{Format: "objectId"},
 			"iconId":               schema.String{Format: "objectId"},
 			"imageId":              schema.String{Format: "objectId"},
-			"iconUrl":              schema.String{Format: "url"}, // virtual field
-			"imageUrl":             schema.String{Format: "url"}, // virtual field
+			"iconUrl":              schema.String{}, // virtual field
+			"imageUrl":             schema.String{}, // virtual field
 			"themeId":              schema.String{MaxLength: 128},
 			"registrationId":       schema.String{MaxLength: 128},
 			"inboxId":              schema.String{MaxLength: 128},
