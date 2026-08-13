@@ -3,6 +3,7 @@ package ascache
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -16,8 +17,10 @@ import (
 // countingClient is a streams.Client that stands in for the origin server, counting how many times
 // it was actually contacted.
 type countingClient struct {
-	calls        int    // Number of times Load reached this client
-	publicKeyPEM string // Value returned as the Actor's key, so a "rotation" can be simulated
+	calls            int    // Number of times Load reached this client
+	publicKeyPEM     string // Value returned as the Actor's key, so a "rotation" can be simulated
+	maxAge           int    // Cache-Control max-age (in seconds) stated by the origin
+	forgeCacheHeader bool   // Whether this (hostile) origin claims its response came from our cache
 }
 
 // SetRootClient satisfies streams.Client.  This client makes no recursive calls, so it needs no root.
@@ -29,7 +32,13 @@ func (client *countingClient) Load(uri string, options ...any) (streams.Document
 	client.calls++
 
 	header := make(http.Header)
-	header.Set(cacheheader.HeaderCacheControl, "max-age=3600")
+	header.Set(cacheheader.HeaderCacheControl, "max-age="+strconv.Itoa(client.maxAge))
+
+	// A hostile origin sets our own provenance headers on its response
+	if client.forgeCacheHeader {
+		header.Set(HeaderHannibalCache, "true")
+		header.Set(HeaderHannibalCacheDate, time.Now().Format(time.RFC3339))
+	}
 
 	document := streams.NewDocument(
 		mapof.Any{
@@ -52,13 +61,15 @@ func (client *countingClient) Delete(string) error { return nil }
 // newTestClient returns a cache Client backed by an in-memory database, plus the origin it fronts.
 func newTestClient() (*Client, *countingClient) {
 
-	inner := &countingClient{publicKeyPEM: "PEM-ORIGINAL"}
+	inner := &countingClient{publicKeyPEM: "PEM-ORIGINAL", maxAge: 3600}
 	client := New(inner, nil, newFakeServer(), "Application", primitive.NilObjectID, "test.example")
 
 	return client, inner
 }
 
-// ageCachedValue rewinds a cached entry's "Received" stamp, simulating the passage of time.
+// ageCachedValue rewinds all of a cached entry's timestamps, simulating the passage of time.
+// All three must move together: rewinding "Received" alone ages the entry past its cooldown while
+// leaving it un-expired, which is a state the cache itself can never produce.
 func ageCachedValue(t *testing.T, client *Client, url string, age time.Duration) {
 
 	t.Helper()
@@ -69,7 +80,11 @@ func ageCachedValue(t *testing.T, client *Client, url string, age time.Duration)
 	value := NewValue()
 	require.NoError(t, client.loadByURL(session, url, &value))
 
-	value.Received = time.Now().Add(-age).Unix()
+	seconds := int64(age.Seconds())
+	value.Received = value.Received - seconds
+	value.Expires = value.Expires - seconds
+	value.Revalidates = value.Revalidates - seconds
+
 	require.NoError(t, client.collection(session).Save(&value, "aging for test"))
 }
 
@@ -87,12 +102,12 @@ func TestClient_Load_BurstCollapse(t *testing.T) {
 	require.Equal(t, 1, origin.calls)
 }
 
-// TestClient_Load_WriteOnlyAlwaysFetches pins the behavior that made BUG-22 an amplifier: WithWriteOnly
-// skips the cache read, so every call is an outbound request.
-func TestClient_Load_WriteOnlyAlwaysFetches(t *testing.T) {
+// TestClient_Load_WriteOnlyIsCappedByDefault is the property that makes the cooldown a default rather
+// than an opt-in: a caller that says only WithWriteOnly is bounded anyway.
+func TestClient_Load_WriteOnlyIsCappedByDefault(t *testing.T) {
 
-	// This is why the public-key finder no longer uses WithWriteOnly on its own. The mode is still
-	// correct for a caller that genuinely wants a forced refresh -- it just must be bounded.
+	// Before this default, WithWriteOnly on its own was the amplifier -- every call an outbound
+	// request, at a URL the sender chose. A new call site now inherits the cap instead of asking. (BUG-22)
 	client, origin := newTestClient()
 
 	for range 5 {
@@ -100,7 +115,67 @@ func TestClient_Load_WriteOnlyAlwaysFetches(t *testing.T) {
 		require.NoError(t, err)
 	}
 
+	require.Equal(t, 1, origin.calls)
+}
+
+// TestClient_Load_MinAgeZeroRestoresForcedReload covers the opt-out, which the two import call sites
+// and the reindex task depend on: WithMinAge(0) makes every forced reload reach the origin.
+func TestClient_Load_MinAgeZeroRestoresForcedReload(t *testing.T) {
+
+	client, origin := newTestClient()
+
+	for range 5 {
+		_, err := client.Load("https://remote.example/@alice", WithWriteOnly(), WithMinAge(0))
+		require.NoError(t, err)
+	}
+
 	require.Equal(t, 5, origin.calls)
+}
+
+// TestClient_Load_CooldownDoesNotExtendShortTTL is the guard that makes a global default safe: the
+// cooldown must not outrank a TTL shorter than itself on a normal read.
+func TestClient_Load_CooldownDoesNotExtendShortTTL(t *testing.T) {
+
+	// Collections are deliberately capped at 60s or less so they stay near-real-time. IsWithinMinAge
+	// ignores expiry entirely, so a cooldown that answered here would silently raise the floor under
+	// every one of those windows -- which is why it is gated on notReadAllowed().
+	client, origin := newTestClient()
+	origin.maxAge = 10
+
+	_, err := client.Load("https://remote.example/@alice/followers")
+	require.NoError(t, err)
+	require.Equal(t, 1, origin.calls)
+
+	// 30 seconds is PAST the document's 10s TTL, but well inside the 1 minute default cooldown
+	ageCachedValue(t, client, "https://remote.example/@alice/followers", 30*time.Second)
+
+	_, err = client.Load("https://remote.example/@alice/followers")
+	require.NoError(t, err)
+	require.Equal(t, 2, origin.calls, "an expired document must be re-fetched, cooldown or not")
+}
+
+// TestClient_Load_ForgedCacheHeaderIsStripped confirms the trust boundary: a remote server cannot claim
+// that its response came from our cache.
+func TestClient_Load_ForgedCacheHeaderIsStripped(t *testing.T) {
+
+	// A believed forgery costs more than it looks like it should. VerifySignature reads this stamp to
+	// decide whether a rotation retry is worth attempting, and the context backfill in
+	// consumer.ReceiveActivityPub_Add stops walking the moment it sees one.
+	client, origin := newTestClient()
+	origin.forgeCacheHeader = true
+
+	fromOrigin, err := client.Load("https://evil.example/@mallory")
+	require.NoError(t, err)
+	require.False(t, FromCache(fromOrigin), "a forged header must not be believed")
+
+	// ...and it must not be persisted either, or the next read would inherit the lie
+	session, err := client.commonDatabase.Session(context.Background())
+	require.NoError(t, err)
+
+	value := NewValue()
+	require.NoError(t, client.loadByURL(session, "https://evil.example/@mallory", &value))
+	require.Empty(t, value.HTTPHeader.Get(HeaderHannibalCache))
+	require.Empty(t, value.HTTPHeader.Get(HeaderHannibalCacheDate))
 }
 
 // TestClient_Load_MinAgeCapsForcedReload is the assertion that the cooldown works: a repeated FORCED

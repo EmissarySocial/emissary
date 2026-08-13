@@ -35,7 +35,7 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	// (admin-tier rules) -- NOT searchQuery.SearchQueryID, which is a SearchQuery id, not a UserID;
 	// passing it would scope the gate to a nonexistent user's rules and silently disable admin
 	// blocking here. The verifier keeps signature verification inside Emissary's client stack (BUG-19).
-	activity, err := activitypub.ReceiveRequest(ctx.Request(), client, activityService.VerifySignature, factory.Rule(), session, primitive.NilObjectID)
+	activity, err := activitypub.ReceiveRequest(ctx.Request(), client, activityService, factory.Rule(), session, primitive.NilObjectID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Receiving ActivityPub request")

@@ -11,6 +11,28 @@ type LoadConfig struct {
 	minAge         time.Duration
 }
 
+// LoadOption is a functional option that can be passed to the Load() method.
+type LoadOption func(*LoadConfig)
+
+// defaultMinAge is the cooldown applied to every load that does not name one of its own.
+// It only ever governs WRITEONLY loads -- see the RULE in Client.Load.
+const defaultMinAge = 1 * time.Minute
+
+// NewLoadConfig creates a new LoadConfig object, and applies any functional options that are passed to it.
+func NewLoadConfig(options ...any) LoadConfig {
+
+	// A forced reload is something a remote peer can provoke, so the cooldown is on by default and a
+	// caller that genuinely needs an uncapped refresh opts OUT with WithMinAge(0). (BUG-22)
+	result := LoadConfig{
+		mode:           CacheModeReadWrite,
+		timeoutSeconds: 10,
+		minAge:         defaultMinAge,
+	}
+
+	result.With(options...)
+	return result
+}
+
 // tryCache returns TRUE if the system should check the cache before loading an HTTP resource
 func (config LoadConfig) tryCache() bool {
 	return config.isReadAllowed() || config.hasMinAge()
@@ -21,6 +43,16 @@ func (config LoadConfig) isReadAllowed() bool {
 	return config.mode != CacheModeWriteOnly
 }
 
+// notReadAllowed returns TRUE when this config forbids the normal (freshness-checked) cache read.
+func (config LoadConfig) notReadAllowed() bool {
+	return !config.isReadAllowed()
+}
+
+// IsWriteOnly returns TRUE when this config bypasses the cached copy and forces a reload.
+func (config LoadConfig) IsWriteOnly() bool {
+	return config.mode == CacheModeWriteOnly
+}
+
 // isWriteAllowed returns TRUE when this config permits writing the origin's response back to the cache.
 func (config LoadConfig) isWriteAllowed() bool {
 	return config.mode != CacheModeReadOnly
@@ -29,20 +61,6 @@ func (config LoadConfig) isWriteAllowed() bool {
 // hasMinAge returns TRUE when this config sets a cooldown before the origin may be contacted again.
 func (config LoadConfig) hasMinAge() bool {
 	return config.minAge > 0
-}
-
-// LoadOption is a functional option that can be passed to the Load() method.
-type LoadOption func(*LoadConfig)
-
-// NewLoadConfig creates a new LoadConfig object, and applies any functional options that are passed to it.
-func NewLoadConfig(options ...any) LoadConfig {
-	result := LoadConfig{
-		mode:           CacheModeReadWrite,
-		timeoutSeconds: 10,
-	}
-
-	result.With(options...)
-	return result
 }
 
 // With applies functional options to the LoadConfig object
@@ -85,8 +103,8 @@ func WithWriteOnly() LoadOption {
 	}
 }
 
-// WithMinAge is a functional option that contacts the origin only when the cached entry is older
-// than minAge.  A fresher entry is returned as-is, even in WRITEONLY mode.
+// WithMinAge is a functional option that sets the cooldown on a forced (WRITEONLY) reload: an entry
+// younger than minAge is returned as-is instead.  WithMinAge(0) removes the cooldown entirely.
 func WithMinAge(minAge time.Duration) LoadOption {
 
 	// Refetching a document we pulled seconds ago cannot produce a different answer, so the only

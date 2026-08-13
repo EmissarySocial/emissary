@@ -19,7 +19,7 @@ const testKeyID = "https://remote.example/@alice#main-key"
 // testActorID is the Actor that testKeyID resolves to.
 const testActorID = "https://remote.example/@alice"
 
-// verifierFor adapts a PublicKeyFinder into the SignatureVerifier that resolveSignedActor now takes.
+// verifierFor adapts a PublicKeyFinder into the verifier function that resolveSignedActor takes.
 // The production verifier (service.ActivityStream.VerifySignature) adds a key refresh on top of this
 // same sigs.Verify call; none of the cases below turn on that, so the plain call keeps them honest.
 func verifierFor(finder sigs.PublicKeyFinder) func(*http.Request) (sigs.Signature, error) {

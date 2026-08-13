@@ -107,9 +107,10 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 
 		if err := client.loadByURL(session, url, &value); err == nil {
 
-			// MinAge is a cooldown to prevent us from requesting the same value
-			// too frequently. This outranks the cache mode on all transactions.
-			if value.IsWithinMinAge(config.minAge) {
+			// RULE: The cooldown answers only for a caller that has opted OUT of the TTL. For a normal
+			// read the TTL is the authority -- a cooldown that outranked it would silently extend every
+			// window shorter than itself, and Collections are capped at 60s on purpose.
+			if config.notReadAllowed() && value.IsWithinMinAge(config.minAge) {
 				return client.asCachedDocument(value), nil
 			}
 

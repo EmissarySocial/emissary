@@ -64,7 +64,7 @@ func ReceiveActivityPubAdd(factory *service.Factory, session data.Session, args 
 		}
 
 		// If this document was already in the cache, then we have successfully backfilled the context
-		if document.HTTPHeader().Get(ascache.HeaderHannibalCache) == "true" {
+		if ascache.FromCache(document) {
 			return queue.Success()
 		}
 	}

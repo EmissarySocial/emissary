@@ -87,7 +87,7 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	activity, err := activitypub.ReceiveRequest(
 		ctx.Request(),
 		client,
-		activityService.VerifySignature,
+		activityService,
 		factory.Rule(),
 		session,
 		user.UserID,
