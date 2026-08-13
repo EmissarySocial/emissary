@@ -1,3 +1,11 @@
+// Package ascache is a streams.Client middleware that stores every document it loads in the common
+// database, so that a repeated read is answered without contacting the origin.  It decides freshness
+// from the Cache-Control headers that ascacherules writes just above it, and it stamps its own
+// answers with X-Hannibal-Cache so a caller can tell a cached document from a fresh one.
+//
+// Two load options change what "answer" means.  WithWriteOnly forces a reload past the cached copy,
+// and WithMinAge bounds how often that forced reload may actually reach the origin -- a cooldown that
+// is on by default, because a remote peer can provoke a forced reload at a URL of its choosing.
 package ascache
 
 import (
@@ -134,6 +142,13 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 
 		return result, derp.Wrap(err, location, "Loading document from inner client", url)
 	}
+
+	// RULE: A document from the interweb does not get to claim it came from our cache.
+	// This is the trust boundary for the X-Hannibal-* headers, and it must run BEFORE the document is
+	// either cached or returned -- a forged header that is never persisted is still believed once.
+	// Sanitizing inbound values is normally assanitizer's job, but assanitizer sits BELOW us in the
+	// client stack and importing these constants there would make an import cycle.
+	stripCacheHeaders(result)
 
 	// If we're allowed to write to the cache, then try to update it here
 
