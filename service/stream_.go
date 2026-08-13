@@ -107,10 +107,20 @@ func (service *Stream) Refresh(factory *Factory) {
 	service.sseUpdateChannel = factory.SSEUpdateChannel()
 }
 
-// Startup seeds an empty database with the Streams that a new Theme provides
-func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
+// Startup seeds an empty database with the Streams that a new Theme provides.  The `tokens`
+// argument names the Streams to create; the Theme remains the authority on what CAN be created,
+// so a token that the Theme does not define is ignored.
+func (service *Stream) Startup(session data.Session, theme *model.Theme, tokens sliceof.String) error {
 
 	const location = "service.Stream.Startup"
+
+	// If the caller has not requested any Streams, then there is nothing to do.  This check comes
+	// first because it needs no database access.
+	startupStreams := selectStartupStreams(theme, tokens)
+
+	if len(startupStreams) == 0 {
+		return nil
+	}
 
 	// Try to count the number of streams currently in the database
 	count, err := service.Count(session, exp.All())
@@ -124,7 +134,7 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 		return nil
 	}
 
-	for _, data := range theme.StartupStreams {
+	for _, data := range startupStreams {
 
 		// Build a Stream from the theme's startup data
 		stream, err := service.newStartupStream(data)
@@ -144,6 +154,24 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 	}
 
 	return nil
+}
+
+// selectStartupStreams returns the entries in a Theme's startup list whose "token" the caller
+// has requested.  Filtering this direction -- iterating the Theme and asking whether each entry
+// was requested -- is what limits the caller to the Theme's pre-defined list: a token that the
+// Theme does not define matches nothing and is silently dropped.
+func selectStartupStreams(theme *model.Theme, tokens sliceof.String) []mapof.Any {
+
+	result := make([]mapof.Any, 0, len(theme.StartupStreams))
+
+	for _, data := range theme.StartupStreams {
+
+		if tokens.Contains(data.GetString("token")) {
+			result = append(result, data)
+		}
+	}
+
+	return result
 }
 
 // newStartupStream builds a single published Stream from one theme.StartupStreams

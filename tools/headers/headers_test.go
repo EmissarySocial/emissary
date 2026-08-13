@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/EmissarySocial/emissary/tools/cacheheader"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
@@ -141,6 +142,19 @@ func TestLastModified(t *testing.T) {
 
 	// http.TimeFormat ends in a literal "GMT", so a non-UTC value would be labelled wrongly.
 	require.Contains(t, value, "GMT")
+}
+
+// TestDefaultCacheControlHTML covers the one property that makes the default safe: a page carrying
+// it can never be reused without asking the origin first.
+func TestDefaultCacheControlHTML(t *testing.T) {
+
+	// `no-cache` is the load-bearing directive -- it permits storage but forbids reuse without
+	// revalidation, which is exactly what denies a browser its heuristic freshness calculation.
+	directives := cacheheader.ParseString(DefaultCacheControlHTML)
+
+	require.True(t, directives.NoCache, "the default must forbid reuse without revalidation")
+	require.True(t, directives.Private, "a Cookie-varying page must not land in a shared cache")
+	require.True(t, directives.NotCacheAllowed())
 }
 
 // TestSetValidators covers both validators reaching the response together.

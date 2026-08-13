@@ -43,6 +43,8 @@ type Builder interface {
 	UserCan(string) bool                     // Returns TRUE if the signed-in user has access to the named action
 	AuthenticatedID() primitive.ObjectID     // Returns the ID of the signed-in user (or zero if not signed in)
 	Search() SearchBuilder                   // Returns a SearchBuilder for this Builder
+	ThemeID() string                         // ID of the Theme that this Domain has selected
+	Theme(string) model.Theme                // Theme with the provided ID
 
 	getArguments() map[string]string // Returns the arguments passed to the action
 	GetBool(name string) bool

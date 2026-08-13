@@ -6,6 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/davidscottmills/goeditorjs"
 	"github.com/hjson/hjson-go/v4"
 	"github.com/stretchr/testify/require"
@@ -142,4 +143,104 @@ func TestStream_newStartupStream_ExcludesContentObject(t *testing.T) {
 	// The built Stream must also survive Save's normalization gate.
 	_, err = streamService.Schema().Normalize(&stream)
 	require.NoError(t, err)
+}
+
+// newStartupTokensTheme builds a Theme whose startup Streams carry the provided tokens, in order.
+func newStartupTokensTheme(tokens ...string) model.Theme {
+
+	theme := model.NewTheme("test", nil)
+
+	for index, token := range tokens {
+		theme.StartupStreams = append(theme.StartupStreams, mapof.Any{
+			"templateId": "article-markdown",
+			"token":      token,
+			"label":      "Page " + token,
+			"rank":       index + 1,
+		})
+	}
+
+	return theme
+}
+
+// selectedTokens reduces a selection back to the tokens it contains, so the assertions below
+// read as the list a user checked rather than as a pile of maps.
+func selectedTokens(selection []mapof.Any) []string {
+
+	result := make([]string, 0, len(selection))
+
+	for _, data := range selection {
+		result = append(result, data.GetString("token"))
+	}
+
+	return result
+}
+
+// TestStream_selectStartupStreams covers the whole selection matrix: which Streams a request
+// creates is decided here, and every class of input a form POST can produce -- nothing checked,
+// a subset, everything, duplicates, and values the Theme never offered -- has to land somewhere
+// predictable.
+func TestStream_selectStartupStreams(t *testing.T) {
+
+	theme := newStartupTokensTheme("home", "about", "join-the-team")
+
+	// selectsTokens asserts that requesting `tokens` selects exactly `expected`, in Theme order.
+	selectsTokens := func(name string, tokens sliceof.String, expected []string) {
+		t.Run(name, func(t *testing.T) {
+			require.Equal(t, expected, selectedTokens(selectStartupStreams(&theme, tokens)))
+		})
+	}
+
+	selectsTokens("nil selects nothing", nil, []string{})
+	selectsTokens("empty selects nothing", sliceof.String{}, []string{})
+	selectsTokens("one token selects one Stream", sliceof.String{"about"}, []string{"about"})
+	selectsTokens("a subset selects only that subset", sliceof.String{"home", "join-the-team"}, []string{"home", "join-the-team"})
+	selectsTokens("every token selects every Stream", sliceof.String{"home", "about", "join-the-team"}, []string{"home", "about", "join-the-team"})
+
+	// The Theme -- not the request -- decides the order and the multiplicity of the result, so a
+	// reversed or repeated request cannot reorder or duplicate the Streams that get created.
+	selectsTokens("request order does not reorder the result", sliceof.String{"join-the-team", "home"}, []string{"home", "join-the-team"})
+	selectsTokens("a repeated token creates one Stream", sliceof.String{"about", "about"}, []string{"about"})
+
+	// RULE: The Theme is the authority on what CAN be created.  A token that it does not define
+	// is dropped, no matter what the browser posted.
+	selectsTokens("an unknown token selects nothing", sliceof.String{"../../etc/passwd"}, []string{})
+	selectsTokens("an empty token selects nothing", sliceof.String{""}, []string{})
+	selectsTokens("unknown tokens do not disturb known ones", sliceof.String{"nope", "home", ""}, []string{"home"})
+
+	// A Theme with no startup Streams has nothing to offer, whatever is requested.
+	t.Run("an empty Theme selects nothing", func(t *testing.T) {
+		empty := newStartupTokensTheme()
+		require.Equal(t, []string{}, selectedTokens(selectStartupStreams(&empty, sliceof.String{"home"})))
+	})
+}
+
+// TestStream_Startup_EmptySelectionSkipsDatabase pins the ordering inside Startup: an empty
+// selection must return BEFORE any database access.  The nil session is the proof -- a Startup
+// that counted Streams first would panic on it instead of returning cleanly.
+func TestStream_Startup_EmptySelectionSkipsDatabase(t *testing.T) {
+
+	theme := newStartupTokensTheme("home", "about")
+	streamService := &Stream{}
+
+	require.NoError(t, streamService.Startup(nil, &theme, nil))
+	require.NoError(t, streamService.Startup(nil, &theme, sliceof.String{}))
+
+	// A token the Theme does not define selects nothing, and so must not reach the database either.
+	require.NoError(t, streamService.Startup(nil, &theme, sliceof.String{"not-a-real-token"}))
+}
+
+// TestTheme_StartupStreamTokens covers the "everything the Theme defines" list that callers with
+// no selection of their own pass to Startup.  Feeding it back into the selection must reproduce
+// the Theme's whole startup list -- that round trip is what preserves the old create-everything
+// behavior for the /startup POST handler.
+func TestTheme_StartupStreamTokens(t *testing.T) {
+
+	theme := newStartupTokensTheme("home", "about", "join-the-team")
+
+	require.Equal(t, sliceof.String{"home", "about", "join-the-team"}, theme.StartupStreamTokens())
+	require.Equal(t, []string{"home", "about", "join-the-team"}, selectedTokens(selectStartupStreams(&theme, theme.StartupStreamTokens())))
+
+	// An empty Theme yields an empty (not nil) list, which selects nothing.
+	empty := newStartupTokensTheme()
+	require.Equal(t, sliceof.String{}, empty.StartupStreamTokens())
 }

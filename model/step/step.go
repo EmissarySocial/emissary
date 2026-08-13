@@ -33,6 +33,15 @@ type ModelRequirer interface {
 	RequireModel() string
 }
 
+// TemplateRoleRequirer interface wraps the "RequiredTemplateRoles" method, which specifies that a
+// Step can ONLY be used in a Template that declares one of the named template roles (like "admin").
+// This is a narrower restriction than RequiredModel, because several Templates can build the same
+// model object while playing very different roles in the system.  The interface is optional: Steps
+// that work in any Template simply do not implement it.
+type TemplateRoleRequirer interface {
+	RequiredTemplateRoles() []string
+}
+
 // FormGetter interface is implemented by steps that render a form, so that the
 // form can be validated against the Template schema when the Template is loaded.
 type FormGetter interface {
@@ -217,6 +226,15 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	case "sort-widgets":
 		return NewSortWidgets(stepInfo)
+
+	case "startup-complete":
+		return NewStartupComplete(stepInfo)
+
+	case "startup-create-streams":
+		return NewStartupCreateStreams(stepInfo)
+
+	case "startup-save-task":
+		return NewStartupSaveTask(stepInfo)
 
 	case "trigger-event":
 		return NewTriggerEvent(stepInfo)

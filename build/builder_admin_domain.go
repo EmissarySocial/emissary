@@ -170,13 +170,12 @@ func (w Domain) IsAdminBuilder() bool {
 	return true
 }
 
-func (w Domain) ThemeID() string {
-	return w._domain.ThemeID
+func (w Domain) StateID() string {
+	return w._domain.StateID
 }
 
-func (w Domain) Theme(themeID string) model.Theme {
-	themeService := w._factory.Theme()
-	return themeService.GetTheme(themeID)
+func (w Domain) StartupTasks() sliceof.String {
+	return w._domain.StartupTasks
 }
 
 // PropertyForm returns the custom property form for this Domain,
@@ -255,7 +254,7 @@ func (w Domain) Groups() (sliceof.Object[model.Group], error) {
  * Other Methods
  ******************************************/
 
-func (w Domain) Themes() []model.Theme {
+func (w Domain) Themes() sliceof.Object[model.Theme] {
 	themeService := w._factory.Theme()
 	result := themeService.List()
 

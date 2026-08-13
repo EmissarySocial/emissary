@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 )
 
 // Theme represents an HTML template used for building all hard-coded application elements (but not dynamic streams)
@@ -23,6 +24,7 @@ type Theme struct {
 	Bundles        mapof.Object[Bundle]    `json:"bundles"        bson:"bundles"`        // // Additional resources (JS, HS, CSS) reqired tp remder this Theme.
 	Resources      fs.FS                   `json:"-"              bson:"-"`              // File system containing the template resources
 	Datasets       mapof.Object[mapof.Any] `json:"datasets"       bson:"datasets"`       // Datasets used by this theme
+	StartupTasks   []form.LookupCode       `json:"startupTasks"   bson:"startupTasks"`   // A list of tasks to be completed at startup
 	StartupStreams []mapof.Any             `json:"startupStreams" bson:"startupStreams"` // Dataset of Streams to initialize when this theme is first chosen.
 	StartupGroups  []mapof.Any             `json:"startupGroups"  bson:"startupGroups"`  // Dataset of Groups to initialize when this theme is first chosen.
 	DefaultFolders []mapof.Any             `json:"defaultFolders" bson:"defaultFolders"` // Dataset of Folders to initialize when a User is added using this Theme.
@@ -43,6 +45,7 @@ func NewTheme(templateID string, funcMap template.FuncMap) Theme {
 		HTMLTemplate:   template.New("").Funcs(funcMap),
 		Bundles:        mapof.NewObject[Bundle](),
 		Datasets:       mapof.NewObject[mapof.Any](),
+		StartupTasks:   make([]form.LookupCode, 0),
 		StartupStreams: make([]mapof.Any, 0),
 		StartupGroups:  make([]mapof.Any, 0),
 		DefaultFolders: make([]mapof.Any, 0),
@@ -60,6 +63,20 @@ func (theme Theme) LookupCode() form.LookupCode {
 		Label:       theme.Label,
 		Description: theme.Description,
 	}
+}
+
+// StartupStreamTokens returns the "token" of every Stream that this Theme defines in
+// "startupStreams".  It names the complete set that a caller may ask Stream.Startup to create,
+// which is what a caller with no user-supplied selection of its own passes through.
+func (theme Theme) StartupStreamTokens() sliceof.String {
+
+	result := make(sliceof.String, 0, len(theme.StartupStreams))
+
+	for _, startupStream := range theme.StartupStreams {
+		result = append(result, startupStream.GetString("token"))
+	}
+
+	return result
 }
 
 func (theme Theme) IsEmpty() bool {

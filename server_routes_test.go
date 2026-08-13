@@ -37,9 +37,7 @@ type advertisedURL struct {
 // An entry suppresses the failure for that one path and nothing else.  Delete the entry when its
 // bug is fixed -- the test verifies that every listed path is still unrouted, so a stale entry
 // fails rather than quietly stopping enforcement.
-var knownGaps = map[string]string{
-	"/@" + testUserID + "/pub/liked": "BUG-25: the liked collection is advertised, but its route is commented out",
-}
+var knownGaps = map[string]string{}
 
 // TestRoutes_AdvertisedCollectionsAnswerGET asserts that every collection URL published in an actor
 // document is served by the GET route registered for that actor.

@@ -32,6 +32,8 @@ func DomainSchema() schema.Element {
 			"mlsGroupIds":          schema.String{MaxLength: 2048},
 			"syndication":          schema.Array{Items: form.LookupCodeSchema()},
 			"registrationData":     schema.Object{Wildcard: schema.String{MaxLength: 8192}},
+			"startupTasks":         schema.Array{Items: schema.String{MaxLength: 32}, MaxLength: 16},
+			"stateId":              schema.String{Enum: []string{DomainStateStartup, DomainStateLive}},
 		},
 	}
 }
@@ -88,6 +90,12 @@ func (domain *Domain) GetPointer(name string) (any, bool) {
 
 	case "defaultOwner":
 		return &domain.DefaultOwner, true
+
+	case "startupTasks":
+		return &domain.StartupTasks, true
+
+	case "stateId":
+		return &domain.StateID, true
 	}
 
 	return nil, false

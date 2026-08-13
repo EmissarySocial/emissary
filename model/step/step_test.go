@@ -77,6 +77,8 @@ func TestNew_Dispatch(t *testing.T) {
 		{"sort", mapof.Any{}, "set-sort"},
 		{"sort-attachments", mapof.Any{}, "sort-attachments"},
 		{"sort-widgets", mapof.Any{}, "sort-widgets"},
+		{"startup-create-streams", mapof.Any{}, "startup-create-streams"},
+		{"startup-save-task", mapof.Any{"value": "sample-content"}, "startup-save-task"},
 		{"trigger-event", mapof.Any{}, "trigger-event"},
 		{"unpublish", mapof.Any{}, "unpublish"},
 		{"upload-attachments", mapof.Any{}, "upload-attachments"},

@@ -17,3 +17,9 @@ const DomainMLSModeGroups = "GROUPS"
 
 // DomainMLSModeNone represents MLS mode where no users can use MLS features
 const DomainMLSModeNone = "NONE"
+
+// DomainStateLive represents a domain that is in production
+const DomainStateLive = ""
+
+// DomainStateStartup represents a domain that is still being configured
+const DomainStateStartup = "STARTUP"

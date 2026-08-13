@@ -64,7 +64,7 @@ func (step StepEditRegistration) Get(builder Builder, buffer io.Writer) Pipeline
 	}
 
 	if registration.IsZero() {
-		b.Button().Type("button").Class("primary").Attr("hx-post", "/admin/domain/signup?registrationId=").Attr("hx-swap", "none").InnerText("Save Changes").Close()
+		b.Button().Type("button").Class("primary").Attr("hx-post", "/admin/domain/signup?registrationId=").Attr("push-url", "false").Attr("hx-swap", "none").InnerText("Save Changes").Close()
 		b.Button().Script("on click send closeModal").InnerText("Cancel").Close()
 		result = b.String()
 
@@ -112,7 +112,7 @@ func (step StepEditRegistration) Post(builder Builder, _ io.Writer) PipelineBeha
 	if registrationID == "" {
 		domainBuilder._domain.RegistrationID = ""
 		domainBuilder._domain.RegistrationData = mapof.NewString()
-		return Continue().WithEvent("closeModal", "true")
+		return Continue().WithHeader("Hx-Push-Url", "false").WithEvent("closeModal", "true").WithEvent("refreshPage", "true")
 	}
 
 	// Otherwise, load and validate the Template
@@ -127,6 +127,11 @@ func (step StepEditRegistration) Post(builder Builder, _ io.Writer) PipelineBeha
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Binding form data"))
 	}
+
+	// RULE: `registrationId` is a control parameter in the endpoint's query string, and
+	// formdata.Parse merges query values with the request body.  It is not part of the
+	// Registration schema, so it must be removed before the schema validates the inputs.
+	inputs.Del("registrationId")
 
 	// Use the schema to set the form inputs into a new map
 	data := mapof.NewString()
@@ -144,5 +149,5 @@ func (step StepEditRegistration) Post(builder Builder, _ io.Writer) PipelineBeha
 	domainBuilder._domain.RegistrationData = data
 
 	// Success. (close the modal)
-	return Continue().WithEvent("closeModal", "true")
+	return Continue().WithHeader("Hx-Push-Url", "false").WithEvent("closeModal", "true").WithEvent("refreshPage", "true")
 }

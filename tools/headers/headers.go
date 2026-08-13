@@ -47,6 +47,9 @@ const ContentTypeHTML = "text/html; charset=UTF-8" // Exactly what Echo's ctx.HT
 // VaryHTML is the Vary header an HTML response carries.
 const VaryHTML = "Cookie, HX-Request, Accept" // The page differs per session, per htmx partial request, and per variant
 
+// DefaultCacheControlHTML is the Cache-Control an HTML response carries when its Template names none.
+const DefaultCacheControlHTML = "private, no-cache" // Revalidate before every reuse, and never in a shared cache -- the safe reading of a page that may be transactional
+
 // VaryActivityPub is the Vary header an ActivityStreams response carries.
 const VaryActivityPub = "Accept"
 

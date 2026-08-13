@@ -170,10 +170,19 @@ func WrapForm(endpoint string, content string, encoding string, options ...strin
 		b.Button().Type("submit").ID("inline-save-button").Class("primary").TabIndex("0").Script("install SaveButton").InnerText(submitLabel).Close()
 
 		if cancelButton := optionMap.GetString("cancel-button"); cancelButton != "hide" {
+
 			cancelLabel := first.String(optionMap.GetString("cancel-label"), "Cancel")
-			b.Space()
-			b.Button().Type("button").Script("on click trigger closeModal").TabIndex("0").InnerText(cancelLabel).Close()
-			b.Space()
+
+			if cancelHref := first.String(optionMap.GetString("cancel-href"), ""); cancelHref != "" {
+				b.Space()
+				b.A(cancelHref).Class("button").InnerText(cancelLabel).Close()
+				b.Space()
+
+			} else {
+				b.Space()
+				b.Button().Type("button").Script("on click trigger closeModal").TabIndex("0").InnerText(cancelLabel).Close()
+				b.Space()
+			}
 		}
 
 		b.Span().ID("htmx-response-message").Script("on submit from closest <form/> set my innerHTML to ''").Close()
