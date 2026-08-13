@@ -74,6 +74,33 @@ func TestNewOwnerFromConfig(t *testing.T) {
 	})
 }
 
+// TestNeedsHostnameStamp verifies the rule that decides when the stored Domain record's hostname
+// is rewritten from the server configuration.  The configuration is authoritative, EXCEPT that a
+// blank configured hostname never clears a stored one -- the setup console builds factories before
+// its configuration is complete, and a cleared hostname breaks every URL the domain derives.
+func TestNeedsHostnameStamp(t *testing.T) {
+
+	testCases := []struct {
+		name       string
+		stored     string
+		configured string
+		expected   bool
+	}{
+		{"LegacyRecordWithNoHostname", "", "example.com", true},
+		{"RenamedInSetupTool", "old.example.com", "new.example.com", true},
+		{"AlreadyMatches", "example.com", "example.com", false},
+		{"BlankConfigNeverClearsStored", "example.com", "", false},
+		{"BothBlank", "", "", false},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			result := needsHostnameStamp(testCase.stored, testCase.configured)
+			require.Equal(t, testCase.expected, result)
+		})
+	}
+}
+
 // TestCalcOwnerInviteMethod verifies the policy that decides how a newly-bootstrapped
 // owner receives their first password.  A known default password is only acceptable on
 // localhost; public hosts must never get one.

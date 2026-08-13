@@ -213,8 +213,10 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 
 	const location = "domain.factory.Refresh"
 
-	// Track changes for additional steps below
-	hasConfigChanged := factory.dbConfigChanged(newConfig) // nolint:scopeguard - this cached value is used below.
+	// Track changes for additional steps below.  Both are computed BEFORE the new configuration
+	// is applied, because each compares the incoming values against the current ones.
+	hasDatabaseChanged := factory.dbConfigChanged(newConfig)            // nolint:scopeguard - this cached value is used below.
+	hasHostnameChanged := factory.config.Hostname != newConfig.Hostname // nolint:scopeguard - this cached value is used below.
 
 	// Update the factory with the new configuration
 	factory.config = newConfig
@@ -275,7 +277,7 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 
 	// If the database connect string has changed,
 	// then reconnect to the new database
-	if hasConfigChanged {
+	if hasDatabaseChanged {
 
 		// Use standard mongodb client options
 		opts := options.Client()
@@ -288,14 +290,21 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 		}
 
 		factory.server = server
-		refreshContext := factory.newRefreshContext()
+	}
 
-		// Start the domain service (load domain, upgrade collections, reindex collections)
+	// Start the domain service (load domain, stamp hostname, upgrade collections, reindex).
+	// This runs AFTER the reconnect above, because Start needs a session on whichever database
+	// the new configuration points at.
+	if shouldStartDomainService(newConfig, hasDatabaseChanged, hasHostnameChanged) {
 		if err := factory.domainService.Start(); err != nil {
 			return derp.Wrap(err, location, "Starting domain service", newConfig)
 		}
+	}
 
-		// REALTIME WATCHERS
+	// REALTIME WATCHERS follow the database connection, so they restart only when it does.
+	if hasDatabaseChanged {
+
+		refreshContext := factory.newRefreshContext()
 
 		// Watch for updates to Import records
 		go queries.WatchImports(refreshContext, factory.server, factory.sseUpdateChannel)
@@ -308,6 +317,32 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	}
 
 	return nil
+}
+
+// shouldStartDomainService reports whether Refresh must (re)start the Domain service.  Start
+// reloads the stored Domain record and stamps the configured hostname into it, so it has to run
+// when the database connection changes AND when the hostname changes -- an operator can rename a
+// domain in the setup tool without touching its database, and the stored record still needs
+// rewriting.  It must never run before a database is configured, because it needs a session.
+func shouldStartDomainService(newConfig config.Domain, hasDatabaseChanged bool, hasHostnameChanged bool) bool {
+
+	// A reconnect always restarts the service.  dbConfigChanged has already proven that the
+	// incoming configuration names a database, so no further check is needed here.
+	if hasDatabaseChanged {
+		return true
+	}
+
+	// Otherwise, only a renamed domain needs its stored record rewritten
+	if !hasHostnameChanged {
+		return false
+	}
+
+	// ...and only once there is a database to rewrite it in
+	if newConfig.ConnectString == "" {
+		return false
+	}
+
+	return newConfig.DatabaseName != ""
 }
 
 // Close disconnects any background processes before this factory is destroyed
