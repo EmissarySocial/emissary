@@ -1,0 +1,5 @@
+# Markdown
+
+This widget (widgetId `markdown`) embeds Markdown content into a stream, the authored counterpart to [widget-html](../widget-html)'s raw-markup escape hatch. Editors write Markdown in a plain textarea; readers see the rendered HTML.
+
+Conversion happens at save time, not render time, so live pages never pay for parsing: [widget.hjson](widget.hjson) declares a `markdown` property with `format: "markdown"` (a pass-through format registered in `model/init.go` so rosetta's `no-html` fallback doesn't mangle the source), and `StepEditWidget.Post` (`build/step_EditWidget.go`) detects that property on save, runs the source through the shared `service.Content` pipeline — goldmark with the site's standard extensions, then the standard bluemonday sanitizer — and stores the result in the widget data's `html` key. [widget.html](widget.html) then simply prints that pre-sanitized HTML unescaped, exactly like widget-html. To extend the conversion (new goldmark extensions, a different sanitizer policy), change `service.Content.Format`, which also serves markdown stream content; the widget inherits it for free.

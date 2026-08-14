@@ -1,0 +1,27 @@
+{
+	widgetId:"markdown"
+	label:"Markdown"
+	description:"Format Markdown content as HTML"
+	schema:{
+		type:"object"
+		properties:{
+			markdown:{
+				type:"string"
+				format:"markdown"
+				maxLength:100000
+			}
+			html:{
+				type:"string"
+				format:"html"
+				maxLength:200000
+			}
+		}
+	}
+	form:{
+		type:"layout-vertical"
+		label:"Edit Markdown Content"
+		children: [
+			{type:"textarea", description:"Enter your markdown content here.", path:"markdown", options:{rows:10}}
+		]
+	}
+}
