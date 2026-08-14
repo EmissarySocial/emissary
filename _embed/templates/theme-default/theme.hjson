@@ -40,8 +40,8 @@
 	]
 	startupStreams: [
 		{templateId:"article-editorjs", token:"home", label:"Welcome!", rank:1}
-		{templateId:"article-markdown", token:"about", label:"About Minimus", rank:2}
 		{templateId:"article-markdown", token:"join-the-team", label:"Join the Team", rank:3}
+		// {templateId:"article-markdown", token:"about", label:"About Minimus", rank:2}
 	]
 	startupGroups:[
 		{label:"Publishers"}
