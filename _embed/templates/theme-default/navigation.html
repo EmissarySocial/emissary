@@ -17,10 +17,22 @@
 	<span class="spacer"></span>
 
 	{{- if .IsAuthenticated -}}
+		<a href="/@me" id="nav-outbox" class="nav-item turboclick" aria-label="Profile">
+			<span class="icon selected-hide">{{icon "user"}}</span>
+			<span class="icon selected-show">{{icon "user-fill"}}</span>
+			<span class="mobile-show label">Profile</span>
+		</a>
+
 		<a href="/@me/newsfeed" id="nav-inbox" class="nav-item turboclick" aria-label="Inbox">
 			<span class="icon selected-hide">{{icon "inbox"}}</span>
 			<span class="icon selected-show">{{icon "inbox-fill"}}</span>
 			<span class="mobile-show label">Inbox</span>
+		</a>
+
+		<a href="/@me/conversations" id="nav-conversations" class="nav-item turboclick" aria-label="Conversations">
+			<span class="icon selected-hide">{{- icon "chat" }}</span>
+			<span class="icon selected-show">{{- icon "chat-fill" }}</span>
+			<span class="mobile-show label">Conversations</span>
 		</a>
 
 		<a href="/@me/notifications/replies" id="nav-notifications" class="nav-item turboclick" aria-label="Notifications">
@@ -39,24 +51,6 @@
 				hx-push-url="false">
 			</div>
 		</div>
-
-		<a href="/@me/conversations" id="nav-conversations" class="nav-item turboclick" aria-label="Conversations">
-			<span class="icon selected-hide">{{- icon "chat" }}</span>
-			<span class="icon selected-show">{{- icon "chat-fill" }}</span>
-			<span class="mobile-show label">Conversations</span>
-		</a>
-
-		<a href="/@me" id="nav-outbox" class="nav-item turboclick" aria-label="Profile">
-			<span class="icon selected-hide">{{icon "user"}}</span>
-			<span class="icon selected-show">{{icon "user-fill"}}</span>
-			<span class="mobile-show label">Profile</span>
-		</a>
-
-		<a href="/@me/settings" id="nav-settings" class="nav-item turboclick" aria-label="Settings">
-			<span class="icon selected-hide">{{icon "settings"}}</span>
-			<span class="icon selected-show">{{icon "settings-fill"}}</span>
-			<span class="mobile-show label">Settings</span>
-		</a>
 
 		{{- if .IsOwner -}}
 			<a href="/admin/domain" id="nav-admin" class="nav-item turboclick" aria-label="Server Admin">
