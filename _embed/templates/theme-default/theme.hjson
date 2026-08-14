@@ -3,8 +3,8 @@
 	extends:["global"]
 	isVisible:true
 	category: General
-	label: Minimus
-	description: Clean, general purpose theme for content-focused websites. (Emissary Default)
+	label: Emissary Default
+	description: Clean, general purpose theme for content-focused websites.
 	rank: 0
 	schema: {
 		type: "object",
@@ -31,18 +31,25 @@
 			content-type:"text/css"
 		}
 	}
+	startupTasks: [
+		{label:"Website Name and Logo", description:"Set some basic info about this domain.", href:"/admin/domain/index", value:"/admin/domain"}
+		{label:"Add Default Content", description:"Sample content pages help you understand how Emissary works.", href:"/startup/content", value:"/startup/content"}
+		{label:"Blocklist Rules", description:"Create rules to filter content from the Internet.", href:"/admin/rules", value:"/admin/rules"}
+		{label:"Registration Form (Optional)", description:"Enable users to register on this website.", href:"/admin/domain/signup", value:"/admin/domain/signup"}
+		{label:"Configure Groups (Optional)", description:"Set up user groups to manage access and permissions.", href:"/admin/groups", value:"/admin/groups"}
+	]
 	startupStreams: [
 		{templateId:"article-editorjs", token:"home", label:"Welcome!", rank:1}
-		{templateId:"article-markdown", token:"about", label:"About Minimus", rank:2}
 		{templateId:"article-markdown", token:"join-the-team", label:"Join the Team", rank:3}
+		// {templateId:"article-markdown", token:"about", label:"About Minimus", rank:2}
 	]
 	startupGroups:[
 		{label:"Publishers"}
 		{label:"Subscribers"}
 	]
 	defaultFolders: [
-		{label:"Friends"}
-		{label:"Family"}
-		{label:"Colleagues"}
+		{label:"Personal"}
+		{label:"News"}
+		{label:"Work-Related"}
 	]
 }

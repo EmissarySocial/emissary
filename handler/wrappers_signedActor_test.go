@@ -19,6 +19,16 @@ const testKeyID = "https://remote.example/@alice#main-key"
 // testActorID is the Actor that testKeyID resolves to.
 const testActorID = "https://remote.example/@alice"
 
+// verifierFor adapts a PublicKeyFinder into the verifier function that resolveSignedActor takes.
+// The production verifier (service.ActivityStream.VerifySignature) adds a key refresh on top of this
+// same sigs.Verify call; none of the cases below turn on that, so the plain call keeps them honest.
+func verifierFor(finder sigs.PublicKeyFinder) func(*http.Request) (sigs.Signature, error) {
+
+	return func(request *http.Request) (sigs.Signature, error) {
+		return sigs.Verify(request, finder)
+	}
+}
+
 // signedRequest returns a GET request signed by a freshly generated key, plus a PublicKeyFinder
 // that resolves testKeyID to the matching public key.
 func signedRequest(t *testing.T) (*http.Request, sigs.PublicKeyFinder) {
@@ -63,7 +73,7 @@ func TestResolveSignedActor_Unsigned(t *testing.T) {
 
 	request := httptest.NewRequest(http.MethodGet, "https://local.example/@bob/pub/objects/123", nil)
 
-	actorID, err := resolveSignedActor(request, unusedFinder(t))
+	actorID, err := resolveSignedActor(request, verifierFor(unusedFinder(t)))
 
 	require.NoError(t, err)
 	require.Empty(t, actorID)
@@ -77,7 +87,7 @@ func TestResolveSignedActor_Valid(t *testing.T) {
 
 	request, finder := signedRequest(t)
 
-	actorID, err := resolveSignedActor(request, finder)
+	actorID, err := resolveSignedActor(request, verifierFor(finder))
 
 	require.NoError(t, err)
 	require.Equal(t, testActorID, actorID)
@@ -92,7 +102,7 @@ func TestResolveSignedActor_Corrupted(t *testing.T) {
 	request := httptest.NewRequest(http.MethodGet, "https://local.example/@bob/pub/objects/123", nil)
 	request.Header.Set("Signature", "this-is-not-a-signature")
 
-	actorID, err := resolveSignedActor(request, unusedFinder(t))
+	actorID, err := resolveSignedActor(request, verifierFor(unusedFinder(t)))
 
 	require.Error(t, err)
 	require.Equal(t, http.StatusUnauthorized, derp.ErrorCode(err))
@@ -110,7 +120,7 @@ func TestResolveSignedActor_Tampered(t *testing.T) {
 	// Alter a signed header AFTER signing, so the digest no longer matches
 	request.Header.Set("Date", "Tue, 01 Jan 2030 00:00:00 GMT")
 
-	actorID, err := resolveSignedActor(request, finder)
+	actorID, err := resolveSignedActor(request, verifierFor(finder))
 
 	require.Error(t, err)
 	require.Equal(t, http.StatusUnauthorized, derp.ErrorCode(err))
@@ -129,7 +139,7 @@ func TestResolveSignedActor_KeyUnresolvable(t *testing.T) {
 		return "", derp.Internal("test.finder", "Remote host unreachable")
 	}
 
-	actorID, err := resolveSignedActor(request, finder)
+	actorID, err := resolveSignedActor(request, verifierFor(finder))
 
 	require.Error(t, err)
 	require.Equal(t, http.StatusUnauthorized, derp.ErrorCode(err))
@@ -149,7 +159,7 @@ func TestResolveSignedActor_RefusalLeaksNothing(t *testing.T) {
 		return "", derp.Internal("test.finder", "SECRET-INTERNAL-DETAIL")
 	}
 
-	_, err := resolveSignedActor(request, finder)
+	_, err := resolveSignedActor(request, verifierFor(finder))
 
 	require.Error(t, err)
 	require.Equal(t, "Invalid HTTP Signature", derp.Message(err))
@@ -167,7 +177,7 @@ func TestResolveSignedActor_RefusalStaysOutOfDerp(t *testing.T) {
 	request := httptest.NewRequest(http.MethodGet, "https://local.example/@bob/pub/objects/123", nil)
 	request.Header.Set("Signature", "this-is-not-a-signature")
 
-	_, err := resolveSignedActor(request, unusedFinder(t))
+	_, err := resolveSignedActor(request, verifierFor(unusedFinder(t)))
 
 	require.Error(t, err)
 	require.True(t, derp.IsUnauthorized(err), "refusal must be Unauthorized so errorHandler skips derp.Report")

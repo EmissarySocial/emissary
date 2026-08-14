@@ -6,17 +6,24 @@ import (
 
 // ViewHTML is a Step that can build a Stream into HTML
 type ViewHTML struct {
-	File       string
-	Method     string
-	AsFullPage bool
+	File         string
+	Method       string
+	CacheControl string
+	AsFullPage   bool
 }
 
 // NewViewHTML generates a fully initialized ViewHTML step.
 func NewViewHTML(stepInfo mapof.Any) (ViewHTML, error) {
 
 	return ViewHTML{
-		File:       stepInfo.GetString("file"),
-		Method:     first(stepInfo.GetString("method"), "get"),
+		File: stepInfo.GetString("file"),
+
+		Method: first(stepInfo.GetString("method"), "get"),
+
+		// Left empty on purpose.  The default lives in the build step, beside the headers it guards,
+		// so that a ViewHTML assembled any other way still gets a safe policy.
+		CacheControl: stepInfo.GetString("cache-control"),
+
 		AsFullPage: stepInfo.GetBool("as-full-page"),
 	}, nil
 }

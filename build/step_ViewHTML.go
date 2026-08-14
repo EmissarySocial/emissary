@@ -6,13 +6,15 @@ import (
 	"github.com/EmissarySocial/emissary/tools/headers"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/compare"
+	"github.com/benpate/rosetta/first"
 )
 
 // StepViewHTML is a Step that can build a Stream into HTML
 type StepViewHTML struct {
-	File       string
-	Method     string
-	AsFullPage bool
+	File         string
+	Method       string
+	CacheControl string
+	AsFullPage   bool
 }
 
 // Get builds the Stream HTML to the context
@@ -42,14 +44,16 @@ func (step StepViewHTML) execute(builder Builder, buffer io.Writer) PipelineBeha
 	// or If-Modified-Since.  An INDEX-ONLY page goes stale as soon as a child is added, changed, or
 	// deleted, and nothing invalidates the parent when that happens -- so a 304 here would serve a
 	// listing that is missing its newest entry.
-
-	// Cache-Control is left unset rather than pinned to "private": a public page should be publicly
-	// cacheable, and this step cannot yet tell the two apart.
 	header := builder.response().Header()
 
 	// RULE: this must include `Accept` -- the same URL serves two representations, so a cache that
 	// ignores it would hand a peer's AS2 document to a browser
 	header.Set("Vary", headers.VaryHTML)
+
+	// RULE: every HTML page states a cache policy, and the default one denies caching.  Left unset,
+	// a browser reads the ETag/Last-Modified below as license to invent its own freshness lifetime
+	// (RFC 9111 s4.2.2) and will reuse a transactional page for hours without ever revalidating it.
+	header.Set("Cache-Control", first.String(step.CacheControl, headers.DefaultCacheControlHTML))
 
 	// Render the named template, defaulting to the one that matches the action
 	var filename string

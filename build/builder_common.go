@@ -302,6 +302,17 @@ func (w Common) HasConnectionProvider(provider string) bool {
 	return w.factory().Domain().Get().HasConnectionProvider(provider)
 }
 
+// ThemeID returns the ID of the Theme that this Domain has selected.
+func (w Common) ThemeID() string {
+	return w.factory().Domain().Get().ThemeID
+}
+
+// Theme returns the Theme with the provided ID, or this Domain's default Theme if
+// the requested Theme does not exist.
+func (w Common) Theme(themeID string) model.Theme {
+	return w.factory().Theme().GetTheme(themeID)
+}
+
 // Now returns the current time in milliseconds since the Unix epoch
 func (w Common) Now() int64 {
 	return time.Now().Unix()
@@ -376,6 +387,10 @@ func (w Common) IsIndexable() bool {
  * Domain Data
  ******************************************/
 
+func (w Common) DomainStateID() string {
+	return w._factory.Domain().Get().StateID
+}
+
 func (w Common) DomainLabel() string {
 	return w._factory.Domain().Get().Label
 }
@@ -390,6 +405,14 @@ func (w Common) DomainImage() string {
 
 func (w Common) DomainHasRegistrationForm() bool {
 	return w._factory.Domain().Get().HasRegistrationForm()
+}
+
+func (w Common) IsDomainStartup() bool {
+	return (w._factory.Domain().Get().StateID == model.DomainStateStartup)
+}
+
+func (w Common) NotDomainStartup() bool {
+	return (w._factory.Domain().Get().StateID != model.DomainStateStartup)
 }
 
 /***************************

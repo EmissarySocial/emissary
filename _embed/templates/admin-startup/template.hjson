@@ -17,37 +17,40 @@
 		page: {
 			roles:["owner"]
 			steps:[
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
 				{do:"view-html"}
 			]
 		}
-		
-		welcome: {
+				
+		choose-theme: {
 			roles:["owner"]
 			steps:[
-				{do:"view-html"}
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+					{do:"set-data", from-url:["themeId"]}
+					{do:"save"}
+				]}
 			]
 		}
-		
-		theme: {
+
+		content: {
 			roles:["owner"]
 			steps:[
-				{do:"view-html"}
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+					{do:"startup-create-streams"}
+					{do:"startup-save-task", value:"/startup/content"}					
+				]}
+				{do:"refresh-page"}
 			]
 		}
-		
-		user: {
+
+		complete: {
 			roles:["owner"]
 			steps:[
-				{do:"view-html"}
+				{do:"startup-complete"}
+				{do:"forward-to", url:"/@me"}
 			]
-		}
-		
-		confirm: {
-			roles:["owner"]
-			steps:[
-				{do:"view-html"}
-			]
-		}
-		
+		}				
 	}
 }

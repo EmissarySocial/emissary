@@ -1,23 +1,48 @@
-<div class="align-center width-40% margin-horizontal-auto margin-top-xl margin-bottom-lg">
+{{- $startupTasks := .StartupTasks -}}
+{{- $themes := .Themes -}}
+{{- $theme := .Theme .ThemeID -}}
+
+<div class="width-480 margin-horizontal-auto margin-top-xl">
+<div class="align-center margin-bottom-lg">
 	<div class="margin-bottom">
 		<img src="/.themes/global/resources/emissary/Emissary-Icon-Black.svg" class="dark-mode-hide width-128">
 		<img src="/.themes/global/resources/emissary/Emissary-Icon-White.svg" class="dark-mode-show width-128">
 	</div>
-	<h1>Let's Start Up Your Emissary</h1>
-	<div>Choose the theme for the kind of server you're making.</div>
-	<div>Don't worry, you can always change your mind later.</div>
+	<h1>Let's Start Your Emissary</h1>
+	<div>Here's some simple steps to get you on your way.</div>
+	<div>Don't worry, you can change these later.</div>
 </div>
 
-<div class="flex-row flex-wrap margin-horizontal-auto width-80% flex-align-center flex-justify-center">
-	{{ range .Themes }}
-		<div class="width-40% padding-sm flex-column">
-			<div hx-get="/startup/theme?themeId={{.ThemeID}}" class="flex-grow card clickable">
-				<img src="/.themes/{{.ThemeID}}/resources/startup/icon.png" class="rounded-top width-100%">
-				<h2 class="padding bold">{{.Label}}</h2>
-				<div class="padding">{{.Description}}</div>
-			</div>
+<div class="width-480 margin-horizontal-auto margin-top-xl margin-bottom-lg">
+
+	{{- if gt 1 $themes.Length -}}
+	<div class="checkbutton" hx-get="/startup/choose">
+		<div class="align-left">
+			<div>Selected Website Theme:</div>
+			<div class="text-lg bold">{{$theme.Label}}</div>
 		</div>
-	{{ end }}
-</div>
-<hr>
+	</div>
+	<hr>
+	{{- end -}}
 
+	{{- range $theme.StartupTasks -}}
+	<div class="checkbutton" hx-get="{{.Href}}">
+		<div class="text-lg padding-right-sm flex-align-self-start margin-none">
+			{{- if $startupTasks.Contains .Value -}}
+				<i class="bi bi-check-circle-fill text-green"></i>
+			{{- else -}}
+				<i class="bi bi-circle text-light-gray"></i>
+			{{- end -}}
+		</div>
+		<div>
+			<div class="bold">{{.Label}}</div>
+			<div class="text-sm text-gray">{{.Description}}</div>
+		</div>
+	</div>
+	{{- end -}}
+
+	<hr>
+	<span class="link" role="button">Skip For Now &rarr;</span>
+
+</div>
+</div>

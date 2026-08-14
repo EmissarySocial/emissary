@@ -1,30 +1,20 @@
-{{- /* FIX #1 (HTTP 500 when viewing another user's profile): the onboarding wizard branch
-       renders `{{ .View "wizard-1" }}`, and `wizard-1` is a roles:["self"] action. Previously ANY
-       non-LIVE profile took the wizard branch for EVERY viewer, so building that self-only sub-view
-       failed for non-owners/anonymous -> "build.Outbox.View: Unable to create Outbox builder" -> 500.
-       Now the wizard is shown ONLY to the profile owner; everyone else falls through to the normal
-       (read-only) profile regardless of state. */ -}}
-{{- if and (ne .StateID "LIVE") .IsMyself -}}
-	{{- template "wizard-step-1" . -}}
-{{- else -}}
-
 <!-- Page content -->
 <div class="app framed page h-card scroll-vertical" script="init send SelectNav(id:'outbox')">
 
 	<title>{{.DisplayName}}</title>
 
 	<!-- Metadata -->
-	<link rel="icon" href="{{.IconURL}}"/>
+	<link rel="icon" href="{{.IconURL}}" />
 
 	<!-- ActivityPub links -->
-	<link rel="http://webfinger.net/rel/profile-page" href="{{.ProfileURL}}"/>
+	<link rel="http://webfinger.net/rel/profile-page" href="{{.ProfileURL}}" />
 	<link rel="http://ostatus.org/schema/1.0/subscribe" href="{{.Host}}/@me/settings/following-edit?url={uri}">
-	<link rel="self" type="application/activity+json" href="{{.ActivityPubURL}}"/>
+	<link rel="self" type="application/activity+json" href="{{.ActivityPubURL}}" />
 
 	<!-- RSS Links -->
-	<link rel="alternate" type="application/rss+xml" href="{{.Host}}/@{{.UserID}}/feed?format=rss"/>
-	<link rel="alternate" type="application/atom+xml" href="{{.Host}}/@{{.UserID}}/feed?format=atom"/>
-	<link rel="alternate" type="application/feed+json" href="{{.Host}}/@{{.UserID}}/feed?format=json"/>
+	<link rel="alternate" type="application/rss+xml" href="{{.Host}}/@{{.UserID}}/feed?format=rss" />
+	<link rel="alternate" type="application/atom+xml" href="{{.Host}}/@{{.UserID}}/feed?format=atom" />
+	<link rel="alternate" type="application/feed+json" href="{{.Host}}/@{{.UserID}}/feed?format=json" />
 
 	{{ .View "sidebar" }}
 
@@ -37,20 +27,20 @@
 		</div>
 
 		{{if .IsMyself -}}
-			<div class="flex-row margin-bottom">
-				<div class="flex-shrink-0" style="width:80px;">
-					{{- if eq "" .IconURL -}}
-						<div class="circle width-64"></div>
-					{{- else -}}
-						<img src="{{.ActivityPubIconURL}}" class="circle width-64">
-					{{- end -}}
-				</div>
-				<div style="flex-grow:1">
-					<div style="max-width:600px;">
-						{{- .View "outbox-add" -}}
-					</div>
+		<div class="flex-row margin-bottom">
+			<div class="flex-shrink-0" style="width:80px;">
+				{{- if eq "" .IconURL -}}
+				<div class="circle width-64"></div>
+				{{- else -}}
+				<img src="{{.ActivityPubIconURL}}" class="circle width-64">
+				{{- end -}}
+			</div>
+			<div style="flex-grow:1">
+				<div style="max-width:600px;">
+					{{- .View "outbox-add" -}}
 				</div>
 			</div>
+		</div>
 		{{- end -}}
 
 		<div class="h-feed">
@@ -58,13 +48,8 @@
 		</div>
 	</div>
 
-	<div
-		hx-get="/@{{.UserID}}" 
-		hx-trigger="refreshPage from:window" 
-		hx-target="main" 
-		hx-swap="innerHTML"
+	<div hx-get="/@{{.UserID}}" hx-trigger="refreshPage from:window" hx-target="main" hx-swap="innerHTML"
 		hx-push-url="false">
 	</div>
 
 </div>
-{{- end -}}

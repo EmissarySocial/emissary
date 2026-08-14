@@ -49,7 +49,9 @@ type Domain struct {
 
 // NewDomain returns a fully initialized Domain service
 func NewDomain() Domain {
-	return Domain{}
+	return Domain{
+		domain: model.NewDomain(),
+	}
 }
 
 /******************************************
@@ -61,12 +63,17 @@ func (service *Domain) collection(session data.Session) data.Collection {
 }
 
 // Refresh updates any stateful data that is cached inside this service.
+//
+// RULE: This method must NOT reset the cached Domain record.  Refresh runs on every configuration
+// reload, but Start (the only thing that reloads the record from the database) runs only when the
+// database connection or the hostname changes.  Blanking here therefore strands the service holding
+// an empty Domain -- no Label, no PrivateKey, and a zero DomainID that makes the next Save INSERT a
+// second record instead of updating the real one.  Start does the resetting, next to its Load.
 func (service *Domain) Refresh(factory *Factory) {
 
 	service.activityService = factory.ActivityStream()
 	service.configuration = factory.config
 	service.connectionService = factory.Connection()
-	service.domain = model.NewDomain()
 	service.funcMap = factory.FuncMap()
 	service.newSession = factory.Session
 	service.withTransaction = factory.WithTransaction
@@ -94,13 +101,20 @@ func (service *Domain) Start() error {
 
 	defer cancel()
 
+	// Reset the cached record HERE -- immediately before the Load that refills it -- so that this
+	// service is never left holding a blank Domain.  See the RULE on Refresh.
+	service.domain = model.NewDomain()
+
 	// Try to load the domain model into memory
 	err = service.collection(session).Load(exp.All(), &service.domain)
 
 	switch {
 
-	// If the domain record already exists, then there is nothing to bootstrap.
+	// If the domain record already exists, then bring its hostname up to date.
 	case err == nil:
+		if err := service.stampHostname(session); err != nil {
+			return derp.Wrap(err, location, "Updating domain hostname")
+		}
 
 	// If "Not Found", then this is the first run, so bootstrap the domain and owner.
 	case derp.IsNotFound(err):
@@ -145,7 +159,12 @@ func (service *Domain) bootstrap(session data.Session) error {
 
 	// Build the new domain record locally.  We publish it to the in-memory cache only
 	// after the transaction commits, so a rollback never leaves the cache out of sync.
+	//
+	// The hostname must be stamped BEFORE persist(): Domain.Host() builds every derived URL from
+	// it, and persist validates iconUrl/imageUrl as absolute URLs.  Without it, the very first
+	// save of a new domain fails with "https:///..." -- a scheme and no authority.
 	domain := service.domain
+	domain.Hostname = service.hostname
 	domain.Label = service.configuration.Label
 
 	var owner *model.User
@@ -181,6 +200,43 @@ func (service *Domain) bootstrap(session data.Session) error {
 	}
 
 	return nil
+}
+
+// stampHostname writes the configured hostname into the stored Domain record whenever the two
+// disagree.  The server configuration owns the hostname -- an operator can rename a domain in the
+// setup tool at any time -- but the record needs its own copy because Domain.Host() builds every
+// derived URL (federation actor, OAuth client metadata, oEmbed, email links) from it.  Writing it
+// back on every Start is what keeps the stored copy from going stale after a rename.
+func (service *Domain) stampHostname(session data.Session) error {
+
+	const location = "service.Domain.stampHostname"
+
+	// NO-OP: the stored record already agrees with the configuration
+	if !needsHostnameStamp(service.domain.Hostname, service.hostname) {
+		return nil
+	}
+
+	domain := service.domain
+	domain.Hostname = service.hostname
+
+	if err := service.Save(session, domain, "Updated Hostname"); err != nil {
+		return derp.Wrap(err, location, "Saving Domain", service.hostname)
+	}
+
+	return nil
+}
+
+// needsHostnameStamp reports whether the stored hostname must be rewritten to match the configured
+// one.  A blank configured hostname never overwrites a stored value: the setup console builds
+// factories before its configuration is complete, and clearing a good hostname would break every
+// URL the domain derives from it.
+func needsHostnameStamp(stored string, configured string) bool {
+
+	if configured == "" {
+		return false
+	}
+
+	return stored != configured
 }
 
 // createOwner creates the domain owner account when the configuration requests one,

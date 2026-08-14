@@ -1,3 +1,11 @@
+// Package ascache is a streams.Client middleware that stores every document it loads in the common
+// database, so that a repeated read is answered without contacting the origin.  It decides freshness
+// from the Cache-Control headers that ascacherules writes just above it, and it stamps its own
+// answers with X-Hannibal-Cache so a caller can tell a cached document from a fresh one.
+//
+// Two load options change what "answer" means.  WithWriteOnly forces a reload past the cached copy,
+// and WithMinAge bounds how often that forced reload may actually reach the origin -- a cooldown that
+// is on by default, because a remote peer can provoke a forced reload at a URL of its choosing.
 package ascache
 
 import (
@@ -14,6 +22,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Client is a streams.Client wrapper that caches loaded documents in the common database.
 type Client struct {
 	commonDatabase data.Server
 	queue          *queue.Queue
@@ -90,18 +99,23 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 
 	defer cancel()
 
-	// If we're allowdd to READ from the cache, then try to load from the cache first
-	if config.isReadAllowed() {
+	// There are multiple reasons we might try the cache (minAge or isReadAllowed)
+	if config.tryCache() {
 
-		// Search the cache for the document
+		// Try to find the document in the cache
 		value := NewValue()
 
-		// Look for the document in the cache
 		if err := client.loadByURL(session, url, &value); err == nil {
 
-			// Expired values are treated as if they are not found in the cache
-			// at all.  But if this value is NOT expired, then it can be used.
-			if value.NotExpired() {
+			// RULE: The cooldown answers only for a caller that has opted OUT of the TTL. For a normal
+			// read the TTL is the authority -- a cooldown that outranked it would silently extend every
+			// window shorter than itself, and Collections are capped at 60s on purpose.
+			if config.notReadAllowed() && value.IsWithinMinAge(config.minAge) {
+				return client.asCachedDocument(value), nil
+			}
+
+			// If the cache is allowed then check it here.
+			if config.isReadAllowed() && value.NotExpired() {
 
 				// If this value is stale-but-not-expired, then
 				// trigger a background revalidation.
@@ -109,12 +123,8 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 					client.revalidate(&value)
 				}
 
-				// Mark this values as "cached"
-				value.HTTPHeader.Set(HeaderHannibalCache, "true")
-				value.HTTPHeader.Set(HeaderHannibalCacheDate, time.Now().Format(time.RFC3339))
-
 				// Return cached document to the caller (no HTTP call required)
-				return client.asDocument(value), nil
+				return client.asCachedDocument(value), nil
 			}
 		}
 	}
@@ -134,6 +144,13 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 		return result, derp.Wrap(err, location, "Loading document from inner client", url)
 	}
 
+	// RULE: A document from the interweb does not get to claim it came from our cache.
+	// This is the trust boundary for the X-Hannibal-* headers, and it must run BEFORE the document is
+	// either cached or returned -- a forged header that is never persisted is still believed once.
+	// Sanitizing inbound values is normally assanitizer's job, but assanitizer sits BELOW us in the
+	// client stack and importing these constants there would make an import cycle.
+	stripCacheHeaders(result)
+
 	// If we're allowed to write to the cache, then try to update it here
 
 	if config.isWriteAllowed() {
@@ -150,6 +167,7 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 	return result, nil
 }
 
+// Save writes a document into the cache directly, without loading it from its origin first.
 func (client *Client) Save(document streams.Document) error {
 
 	const location = "ascache.Client.Save"
@@ -370,6 +388,19 @@ func (client *Client) asDocument(value Value) streams.Document {
 		streams.WithMetadata(value.Metadata),
 		streams.WithHTTPHeader(value.HTTPHeader),
 	)
+}
+
+// asCachedDocument converts a Value into a streams.Document that is STAMPED as having come from the
+// cache, so that callers can tell a cached answer from a fresh one.
+func (client *Client) asCachedDocument(value Value) streams.Document {
+
+	// The stamp is written to the in-memory copy only; it is never saved back to the database.
+	// service.ActivityStream reads it (via FromCache) to decide whether a failed signature is worth
+	// re-checking against a freshly loaded key. (BUG-22)
+	value.HTTPHeader.Set(HeaderHannibalCache, "true")
+	value.HTTPHeader.Set(HeaderHannibalCacheDate, time.Now().Format(time.RFC3339))
+
+	return client.asDocument(value)
 }
 
 /******************************************

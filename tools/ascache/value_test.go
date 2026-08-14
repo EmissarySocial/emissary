@@ -34,6 +34,29 @@ func TestValue_IsExpired(t *testing.T) {
 	})
 }
 
+// TestValue_IsWithinMinAge confirms the cooldown gate that bounds forced reloads (BUG-22 D3).
+func TestValue_IsWithinMinAge(t *testing.T) {
+
+	// A value received seconds ago is inside a one-minute cooldown: do NOT contact the origin.
+	t.Run("recent value is within min age", func(t *testing.T) {
+		value := Value{Received: time.Now().Add(-5 * time.Second).Unix()}
+		require.True(t, value.IsWithinMinAge(time.Minute))
+	})
+
+	// Once the cooldown has passed, the origin may be contacted again.
+	t.Run("old value is outside min age", func(t *testing.T) {
+		value := Value{Received: time.Now().Add(-5 * time.Minute).Unix()}
+		require.False(t, value.IsWithinMinAge(time.Minute))
+	})
+
+	// A value with no Received stamp predates the field. Treating it as fresh would pin an unknown
+	// entry inside the cooldown forever, so it must read as old enough to refetch.
+	t.Run("unstamped value is outside min age", func(t *testing.T) {
+		value := Value{Received: 0}
+		require.False(t, value.IsWithinMinAge(time.Minute))
+	})
+}
+
 // TestValue_CalcExpires confirms the precedence of the three expiry sources:
 // Max-Age wins, then a valid Expires header, then the 7-day fallback.
 func TestValue_CalcExpires(t *testing.T) {

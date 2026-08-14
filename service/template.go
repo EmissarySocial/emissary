@@ -470,6 +470,25 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 					}
 				}
 
+				// RULE: If the step is restricted to specific template roles, then verify that
+				// this Template declares one of them.  RequiredModel alone is not enough: several
+				// Templates can build the same model object while playing different roles, so a
+				// step meant for the admin console would otherwise be usable on a public page.
+				if requirer, ok := step.(modelStep.TemplateRoleRequirer); ok {
+					if requiredRoles := requirer.RequiredTemplateRoles(); len(requiredRoles) > 0 {
+						if !slices.Contains(requiredRoles, template.TemplateRole) {
+							errors.Append(derp.Validation(
+								"Step can only be used in Templates with a specific templateRole",
+								"template: "+templateID,
+								"action: "+actionID,
+								"step: "+step.Name(),
+								"templateRoles required by step: "+strings.Join(requiredRoles, ", "),
+								"templateRole defined in template: "+template.TemplateRole,
+							))
+						}
+					}
+				}
+
 				// RULE: States used in action steps must be defined
 				for _, state := range step.RequiredStates() {
 					if !template.IsValidState(state) {

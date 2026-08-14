@@ -48,6 +48,9 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 )
 
+// embeddedFiles contains the templates, themes, widgets, and static assets that ship inside the
+// Emissary binary
+//
 //go:embed all:_embed/**
 var embeddedFiles embed.FS
 
@@ -220,7 +223,7 @@ func makeSetupRoutes(factory *server.SetupFactory, e *echo.Echo) {
 	e.GET("/.themes/:themeId/resources/:filename", handler.GetThemeResource(factory))
 }
 
-// makeStandardRoutes generates a new Echo instance the primary server behavior
+// makeStandardRoutes configures the middleware and routes for the primary server behavior
 func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// Boot proof-of-life prints unconditionally: it must be visible at every log level
@@ -253,6 +256,16 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// Restore Steranko in the future
 	// e.Use(steranko.Middleware(factory))
+
+	makeApplicationRoutes(factory, e)
+}
+
+// makeApplicationRoutes registers every application route on the provided Echo instance
+func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
+
+	// Split from makeStandardRoutes (which owns middleware) so that server_routes_test.go can build
+	// the route table alone.  Every handler below closes over the Factory and dereferences it only
+	// once a request arrives, so a nil Factory registers the real routes safely.
 
 	// Common routes (but not .well-known)
 	e.GET("/robots.txt", handler.RobotsTxt)                 // https://developers.google.com/search/docs/advanced/robots/create-robots-txt
@@ -452,18 +465,24 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@guest/identifier", handler.WithIdentity(factory, handler.PostIdentityIdentifier))
 
 	// Global Search Actor (ActivityPub)
+	// RULE: The followers/following collections are advertised in the actor document, so they
+	// must answer GET.  They were registered as POST until BUG-24; GetEmptyCollection is a read
+	// handler, and a POST to a followers collection is meaningless for an actor that accepts no C2S.
 	e.GET("/@search", handler.WithFactory(factory, ap_domain.GetJSONLD))
-	e.POST("/@search/pub/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
-	e.POST("/@search/pub/following", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.GET("/@search/pub/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.GET("/@search/pub/following", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.GET("/@search/pub/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.POST("/@search/pub/inbox", handler.WithFactory(factory, ap_domain.PostInbox))
 	e.GET("/@search/pub/outbox", handler.WithFactory(factory, ap_domain.GetOutboxCollection))
 	e.GET("/@search/pub/outbox/:searchResultId", handler.WithFactory(factory, ap_domain.GetOutboxMessage))
 
 	// Search Query Routes (ActivityPub)
+	// RULE: These routes must mirror the @search routes above, verb for verb.  The two actors are
+	// the same type and must give the same answer to the same request (BUG-24).
 	e.POST("/.searchQuery", handler.WithFactory(factory, handler.PostSearchLookup))
 	e.GET("/@search_:searchId", handler.WithSearchQuery(factory, ap_search.GetJSONLD))
-	e.POST("/@search_:searchId/pub/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
-	e.POST("/@search_:searchId/pub/following", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.GET("/@search_:searchId/pub/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.GET("/@search_:searchId/pub/following", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@search_:searchId/pub/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.POST("/@search_:searchId/pub/inbox", handler.WithSearchQuery(factory, ap_search.PostInbox))
 	e.GET("/@search_:searchId/pub/outbox", handler.WithSearchQuery(factory, ap_search.GetOutboxCollection))
@@ -500,8 +519,6 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	// ActivityPub Routes for Users
 	e.GET("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))
 	e.GET("/@:userId/pub/collections/:collectionId", handler.WithActorAndUser(factory, ap_user.GetCollection))
-	e.GET("/@:userId/pub/disliked", handler.WithUser(factory, ap_user.GetResponseCollection))
-	e.GET("/@:userId/pub/disliked/:response", handler.WithUser(factory, ap_user.GetResponse))
 	e.GET("/@:userId/pub/featured", handler.WithUser(factory, ap_user.GetFeaturedCollection))
 	e.GET("/@:userId/pub/followers", handler.WithUser(factory, ap_user.GetFollowersCollection))
 	e.GET("/@:userId/pub/following", handler.WithUser(factory, ap_user.GetFollowingCollection))
@@ -519,11 +536,11 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/@:userId/pub/outbox/:messageId", handler.WithUser(factory, ap_user.GetOutboxActivity))
 	e.POST("/@:userId/pub/proxy", handler.WithAuthenticatedUser(factory, handler.PostProxyURL))
 
-	// Removing these paths for now. They're not in the standard ActivityPub specification.
+	// Removed these routes for now...
+	// e.GET("/@:userId/pub/disliked", handler.WithUser(factory, ap_user.GetResponseCollection))
+	// e.GET("/@:userId/pub/disliked/:response", handler.WithUser(factory, ap_user.GetResponse))
 	// e.GET("/@:userId/pub/liked", handler.WithUser(factory, ap_user.GetResponseCollection))
 	// e.GET("/@:userId/pub/liked/:response", handler.WithUser(factory, ap_user.GetResponse))
-	// e.GET("/@:userId/pub/shared", handler.WithUser(factory, ap_user.GetResponseCollection))
-	// e.GET("/@:userId/pub/shared/:response", handler.WithUser(factory, ap_user.GetResponse))
 
 	// Domain Admin Pages
 	e.GET("/admin", handler.RedirectTo("/admin/domain/index"))
@@ -542,6 +559,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/startup", handler.WithOwner(factory, handler.GetStartup))
 	e.GET("/startup/:action", handler.WithOwner(factory, handler.GetStartup))
 	e.POST("/startup", handler.WithOwner(factory, handler.PostStartup))
+	e.POST("/startup/:action", handler.WithOwner(factory, handler.PostStartup))
 
 	// OAuth Client Connections
 	e.GET("/oauth/metadata", handler.WithFactory(factory, handler.GetOAuthClientMetadata))
@@ -641,16 +659,19 @@ func openLocalhostBrowser(factory configProvider, options ...config.Option) {
 	config := factory.Config()
 	config.With(options...)
 
-	if portString, ok := config.HTTPPortString(); ok {
-		time.Sleep(500 * time.Millisecond)
+	portString, ok := config.HTTPPortString()
 
-		if err := browser.OpenURL("http://localhost" + portString + "/"); err != nil {
-			log.Debug().Err(err).Msg("Unable to open setup tool browser window. Visit http://localhost" + portString + "/ in your web browser to edit Emissary settings")
-		}
-
-	} else {
+	// RULE: The setup tool is unreachable without an HTTP port, so there is nothing to open
+	if !ok {
 		fmt.Println("ERROR: Unable to open setup tool because no HTTP port is configured.")
 		os.Exit(0)
+	}
+
+	// Give the server a moment to begin listening before the browser knocks
+	time.Sleep(500 * time.Millisecond)
+
+	if err := browser.OpenURL("http://localhost" + portString + "/"); err != nil {
+		log.Debug().Err(err).Msg("Unable to open setup tool browser window. Visit http://localhost" + portString + "/ in your web browser to edit Emissary settings")
 	}
 }
 

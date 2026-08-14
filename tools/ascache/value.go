@@ -16,6 +16,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Value is a single cached document, along with the HTTP caching metadata that decides how long it
+// may be served.
 type Value struct {
 	ValueID primitive.ObjectID `bson:"_id"`
 
@@ -34,6 +36,7 @@ type Value struct {
 	journal.Journal `bson:"-,inline"`
 }
 
+// NewValue returns a fully initialized (and empty) Value object.
 func NewValue() Value {
 	return Value{
 		ValueID:    primitive.NewObjectID(),
@@ -44,10 +47,12 @@ func NewValue() Value {
 	}
 }
 
+// ID returns this Value's unique identifier, satisfying the data.Object interface.
 func (value Value) ID() string {
 	return value.ValueID.Hex()
 }
 
+// DocumentID returns the canonical URL of the document stored in this Value.
 func (value Value) DocumentID() string {
 	if objectID := value.Object.GetString(vocab.PropertyID); objectID != "" {
 		return objectID
@@ -55,6 +60,7 @@ func (value Value) DocumentID() string {
 	return value.URLs.First()
 }
 
+// AsDocument converts this Value into a streams.Document, with no client attached.
 func (value Value) AsDocument() streams.Document {
 	return streams.NewDocument(
 		value.Object,
@@ -63,7 +69,7 @@ func (value Value) AsDocument() streams.Document {
 	)
 }
 
-// appendURL (safely) adds a URL to the value's list of URLs, avoiding duplicates and empty strings.
+// AppendURL (safely) adds a URL to the value's list of URLs, avoiding duplicates and empty strings.
 func (value *Value) AppendURL(url string) {
 
 	if url == "" {
@@ -80,6 +86,17 @@ func (value *Value) AppendURL(url string) {
 // ShouldRevalidate returns TRUE if the "RevalidatesDate" is in the past.
 func (value Value) ShouldRevalidate() bool {
 	return (value.Revalidates > 0) && (value.Revalidates < time.Now().Unix())
+}
+
+// IsWithinMinAge returns TRUE if this value was received from the origin less than minAge ago.
+func (value Value) IsWithinMinAge(minAge time.Duration) bool {
+
+	// A value with no "Received" stamp predates this field, so treat it as old enough to refetch.
+	if value.Received == 0 {
+		return false
+	}
+
+	return time.Since(time.Unix(value.Received, 0)) < minAge
 }
 
 // IsExpired returns TRUE if the "Expires" date is in the past.

@@ -14,6 +14,8 @@ type Domain struct {
 	DomainID             primitive.ObjectID              `bson:"_id"`                  // This is the internal ID for the domain.  It should not be available via the web service.
 	IconID               primitive.ObjectID              `bson:"iconId"`               // ID of the logo to use for this domain (as an icon on other websites, etc)
 	ImageID              primitive.ObjectID              `bson:"imageId"`              // ID of theimage to use for this domain (on sign in pages, etc)
+	StateID              string                          `bson:"stateId"`              // Empty == LIVE
+	StartupTasks         sliceof.String                  `bson:"startupTasks"`         // Completed Tasks
 	Hostname             string                          `bson:"hostname"`             // Hostname of this domain (e.g. "example.com")
 	Label                string                          `bson:"label"`                // Human-friendly name displayed at the top of this domain
 	Description          string                          `bson:"description"`          // Human-friendly description of this domain
@@ -41,12 +43,15 @@ type Domain struct {
 // NewDomain returns a fully initialized Domain object
 func NewDomain() Domain {
 	return Domain{
-		ThemeData:   mapof.NewAny(),
-		ColorMode:   DomainColorModeAuto,
-		MLSGroupIDs: sliceof.NewString(),
-		Data:        mapof.NewString(),
-		Syndication: sliceof.NewObject[form.LookupCode](),
-		Connections: mapof.NewMatchable[Connection](),
+		ThemeID:      "default",
+		ThemeData:    mapof.NewAny(),
+		ColorMode:    DomainColorModeAuto,
+		MLSGroupIDs:  sliceof.NewString(),
+		Data:         mapof.NewString(),
+		Syndication:  sliceof.NewObject[form.LookupCode](),
+		Connections:  mapof.NewMatchable[Connection](),
+		StartupTasks: sliceof.NewString(),
+		StateID:      "STARTUP",
 	}
 }
 
@@ -132,7 +137,7 @@ func (domain *Domain) Host() string {
 func (domain *Domain) IconURL() string {
 
 	if domain.IconID.IsZero() {
-		return ""
+		return domain.Host() + "/.themes/global/resources/emissary/Emissary-Icon-Black.svg"
 	}
 
 	return domain.Host() + "/.domain/attachments/" + domain.IconID.Hex()
@@ -142,7 +147,7 @@ func (domain *Domain) IconURL() string {
 func (domain *Domain) ImageURL() string {
 
 	if domain.ImageID.IsZero() {
-		return ""
+		return domain.Host() + "/.themes/global/resources/emissary/Emissary-Icon-Black.svg"
 	}
 
 	return domain.Host() + "/.domain/attachments/" + domain.ImageID.Hex()
@@ -242,6 +247,10 @@ func (domain *Domain) GetConnectionForProvider(provider string) (Connection, boo
 }
 
 func (domain Domain) DefaultPage(authorization Authorization) string {
+
+	if domain.StateID == DomainStateStartup {
+		return "/startup"
+	}
 
 	if authorization.NotAuthenticated() {
 		return domain.DefaultPage_Anonymous()

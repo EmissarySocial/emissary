@@ -37,6 +37,7 @@
 					]
 				}},
 				{do:"save"}
+				{do:"startup-save-task", value:"/admin/rules"}
 			]}
 			{do:"refresh-page"}
 		]}
@@ -61,14 +62,16 @@
 					}
 				]}
 			{do:"save"}
+			{do:"startup-save-task", value:"/admin/rules"}
 			{do:"refresh-page"}
 		]}
 		
 		delete: {
 			roles:["owner"]
 			steps:[
-				{do: "delete"}
+				{do:"delete"}
 				{do:"refresh-page"}
+				{do:"startup-save-task", value:"/admin/rules"}
 			]
 		}
 	}

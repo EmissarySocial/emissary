@@ -280,7 +280,9 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.PropertyOutbox:            user.ActivityPubOutboxURL(),
 		vocab.PropertyFollowing:         user.ActivityPubFollowingURL(),
 		vocab.PropertyFollowers:         user.ActivityPubFollowersURL(),
-		vocab.PropertyLiked:             user.ActivityPubLikedURL(),
+
+		// Removed "Liked" for now.
+		// vocab.PropertyLiked:             user.ActivityPubLikedURL(),
 
 		// Always allow general direct messages, but MLS messages require additional approval.
 		"emissary:messages": user.ActivityPubInboxURL_DirectMessages(),

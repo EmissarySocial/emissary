@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// ReindexActivityStream refreshes a single cached ActivityStream document from its origin server.
 func ReindexActivityStream(factory *service.Factory, args mapof.Any) queue.Result {
 
 	const location = "consumer.ReindexActivityStream"
@@ -18,19 +19,21 @@ func ReindexActivityStream(factory *service.Factory, args mapof.Any) queue.Resul
 	log.Debug().Str("loc", location).Str("url", url).Msg("Reindexing ActivityStream")
 	activityService := factory.ActivityStream()
 
-	// Try to load the ActivityStream. Skip the cache, and to not re-trigger the crawler.
-	if _, err := activityService.AppClient().Load(url, ascache.WithWriteOnly()); err != nil {
+	// Try to load the ActivityStream. Skip the cache, and waive the default cooldown.
+	if _, err := activityService.AppClient().Load(url, ascache.WithWriteOnly(), ascache.WithMinAge(0)); err != nil {
 
-		// If the ActivityStream no longer exists, then remove it from the cache
+		// If there is any error, then remove the item from the cache
+		if inner := activityService.Delete(url); inner != nil {
+			return queue.Error(derp.Wrap(inner, location, "Deleting ActivityStream", url))
+		}
+
+		// If the ActivityStream no longer exists then this is a success
 		if derp.IsNotFoundOrGone(err) {
-			if inner := activityService.Delete(url); inner != nil {
-				return queue.Error(derp.Wrap(inner, location, "Deleting ActivityStream", url))
-			}
 			return queue.Success()
 		}
 
-		// Use default requeue behavior
-		return requeue(derp.Wrap(err, location, "Loading ActivityStream", url))
+		// Any other errors are failures. Do not retry.
+		return queue.Failure(err)
 	}
 
 	// No error => success!

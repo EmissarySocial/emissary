@@ -14,18 +14,30 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// PublicKeyProvider supplies the two key lookups that inbound signature verification needs: the
+// normal (cache-backed) finder, and the refresh consulted when a signature fails against it.
+// *service.ActivityStream satisfies it.
+type PublicKeyProvider interface {
+	PublicKeyFinder(keyID string) (string, error)
+	RefreshPublicKey(keyID string) (string, error)
+}
+
 // InboxValidators returns the router Option that installs the canonical inbox validator chain (Stage 1
 // of the block gate plus the standard validators). Pass NilObjectID as userID for admin-tier inboxes.
-func InboxValidators(keyFinder sigs.PublicKeyFinder, checker RuleChecker, session data.Session, userID primitive.ObjectID) router.Option {
+func InboxValidators(keys PublicKeyProvider, checker RuleChecker, session data.Session, userID primitive.ObjectID) router.Option {
 
-	// keyFinder is required, not optional: a nil one sends hannibal down its unprotected fallback
-	// path. See ReceiveRequest for the full reasoning (BUG-19).
+	// keys is required, not optional: hannibal's own HTTPSig validator treats a nil key finder as
+	// permission to fetch the key itself, outside Emissary's client stack. See ReceiveRequest for the
+	// full reasoning (BUG-19).
+
+	// The two finders travel together as ONE argument so that no inbox can install the primary without
+	// the refresh -- an inbox that did would silently stop repairing key rotation. (BUG-22)
 
 	// One definition so the chain cannot drift: WithValidators REPLACES it wholesale, so hand-assembling
-	// it per handler risks omitting NewHTTPSig and silently disabling signature verification there.
+	// it per handler risks omitting the signature check and silently disabling verification there.
 	return router.WithValidators(
 		NewRuleValidator(checker, session, userID),
-		validator.NewHTTPSig(keyFinder),
+		validator.NewHTTPSig(keys.PublicKeyFinder, sigs.WithRefreshKey(keys.RefreshPublicKey)),
 		validator.NewDeletedObject(),
 	)
 }

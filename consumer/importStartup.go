@@ -18,6 +18,8 @@ import (
 	"github.com/benpate/uri"
 )
 
+// ImportStartup begins an account migration: it loads the source Actor, tells the source server where
+// the data is going, and queues an ImportItem for every document in the import plan.
 func ImportStartup(factory *service.Factory, session data.Session, user *model.User, record *model.Import, args mapof.Any) queue.Result {
 
 	const location = "consumer.ImportStartup"
@@ -25,11 +27,15 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 	importService := factory.Import()
 
 	// We'll need to authenticated using BEARER tokens (not HTTP signatures)
+	// WithMinAge(0) waives the default cooldown on both loads below. The cache is keyed by URL alone,
+	// so a cooldown here could answer an AUTHENTICATED request with the public copy that some earlier
+	// unauthenticated load left behind. (BUG-104)
 	client := factory.ActivityStream().AppClient()
 	withBearerAuth := sherlock.WithRemoteOptions(options.BearerAuth(record.OAuthToken.AccessToken))
+	withoutCooldown := ascache.WithMinAge(0)
 
 	// Load the actor so we can make an import plan
-	actor, err := client.Load(record.SourceID, sherlock.AsActor(), ascache.WithWriteOnly(), withBearerAuth)
+	actor, err := client.Load(record.SourceID, sherlock.AsActor(), ascache.WithWriteOnly(), withBearerAuth, withoutCooldown)
 
 	// We should have already loaded the actor when starting the Import process.
 	// If we cannot load the actor now, then just abandon the whole damned thing.
@@ -67,7 +73,7 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 	for _, planItem := range plan {
 
 		// Load the collection
-		collection, err := client.Load(planItem.Href, ascache.WithWriteOnly(), withBearerAuth)
+		collection, err := client.Load(planItem.Href, ascache.WithWriteOnly(), withBearerAuth, withoutCooldown)
 
 		if err != nil {
 			derp.Report(derp.Wrap(err, location, "Loading import collection", planItem))
