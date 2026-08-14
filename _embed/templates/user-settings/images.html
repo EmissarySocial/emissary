@@ -37,15 +37,31 @@
 				Your icon displays next to your name, and your banner appears at the top of your profile page.
 			</div>
 
+
 			<div
 				hx-get="/@me/settings/images-form"
-				hx-trigger="load, refreshPage from:window"
+				hx-trigger="refreshPage from:window"
 				hx-target="this"
 				hx-swap="innerHTML"
 				hx-push-url="false">
+				{{- .View "images-form" -}}
 			</div>
 		</div>
 
 	</div>
 
 </div>
+
+<script>
+	const el = document.querySelector('.transition-main-card');
+	const box = () => Math.round(el.getBoundingClientRect().height);
+	const content = () => {
+	const r = el.getBoundingClientRect();
+	const k = [...el.children].map(c => c.getBoundingClientRect());
+	return Math.round(Math.max(...k.map(x => x.bottom)) - r.top);
+	};
+	console.log('with name   → box', box(), 'content', content());
+	el.style.viewTransitionName = 'none';
+	console.log('without name → box', box(), 'content', content());
+	el.style.viewTransitionName = '';
+</script>

@@ -39,13 +39,21 @@
 				home pages on the Internet.
 			</div>
 
-			<div
-				hx-get="/@me/settings/links-form"
-				hx-trigger="load"
-				hx-target="this"
-				hx-swap="outerHTML"
-				hx-push-url="false">
-			</div>
+			{{- .View "links-form" -}}
 		</div>
 	</div>
 </div>
+
+<script>
+	const el = document.querySelector('.transition-main-card');
+	const box = () => Math.round(el.getBoundingClientRect().height);
+	const content = () => {
+	const r = el.getBoundingClientRect();
+	const k = [...el.children].map(c => c.getBoundingClientRect());
+	return Math.round(Math.max(...k.map(x => x.bottom)) - r.top);
+	};
+	console.log('with name   → box', box(), 'content', content());
+	el.style.viewTransitionName = 'none';
+	console.log('without name → box', box(), 'content', content());
+	el.style.viewTransitionName = '';
+</script>

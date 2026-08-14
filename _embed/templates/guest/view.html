@@ -7,6 +7,8 @@
 
 	{{- if and $isDesktop .IsAuthenticated -}}
 		<div id="app-sidebar" class="expanded">
+			<a href="/@me" hx-boost="true" class="menu-item ellipsis link">&larr; My Profile</a>
+			<br>
 			<a href="/@me/settings/general" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name:nav-general;">{{icon "settings"}} Profile</a>
 			<a href="/@me/settings/visibility" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name:nav-security;">{{icon "shield"}} Security</a>
 			<a href="/@me/settings/following" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name:nav-following;">{{icon "people"}} Social</a>
