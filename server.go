@@ -519,8 +519,6 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	// ActivityPub Routes for Users
 	e.GET("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))
 	e.GET("/@:userId/pub/collections/:collectionId", handler.WithActorAndUser(factory, ap_user.GetCollection))
-	e.GET("/@:userId/pub/disliked", handler.WithUser(factory, ap_user.GetResponseCollection))
-	e.GET("/@:userId/pub/disliked/:response", handler.WithUser(factory, ap_user.GetResponse))
 	e.GET("/@:userId/pub/featured", handler.WithUser(factory, ap_user.GetFeaturedCollection))
 	e.GET("/@:userId/pub/followers", handler.WithUser(factory, ap_user.GetFollowersCollection))
 	e.GET("/@:userId/pub/following", handler.WithUser(factory, ap_user.GetFollowingCollection))
@@ -531,14 +529,18 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@:userId/pub/inbox", handler.WithUser(factory, ap_user.PostInbox))
 	e.GET("/@:userId/pub/keyPackages", handler.WithUser(factory, ap_user.GetKeyPackageCollection))
 	e.GET("/@:userId/pub/keyPackages/:keyPackageId", handler.WithUser(factory, ap_user.GetKeyPackageRecord))
-	e.GET("/@:userId/pub/liked", handler.WithUser(factory, ap_user.GetResponseCollection))
-	e.GET("/@:userId/pub/liked/:response", handler.WithUser(factory, ap_user.GetResponse))
 	e.GET("/@:userId/pub/objects", handler.WithUser(factory, ap_user.GetObjectsCollection))
 	e.GET("/@:userId/pub/objects/:objectId", handler.WithActor(factory, ap_user.GetObject))
 	e.GET("/@:userId/pub/outbox", handler.WithUser(factory, ap_user.GetOutboxCollection))
 	e.POST("/@:userId/pub/outbox", handler.WithAuthenticatedUser(factory, ap_user.PostOutbox))
 	e.GET("/@:userId/pub/outbox/:messageId", handler.WithUser(factory, ap_user.GetOutboxActivity))
 	e.POST("/@:userId/pub/proxy", handler.WithAuthenticatedUser(factory, handler.PostProxyURL))
+
+	// Removed these routes for now...
+	// e.GET("/@:userId/pub/disliked", handler.WithUser(factory, ap_user.GetResponseCollection))
+	// e.GET("/@:userId/pub/disliked/:response", handler.WithUser(factory, ap_user.GetResponse))
+	// e.GET("/@:userId/pub/liked", handler.WithUser(factory, ap_user.GetResponseCollection))
+	// e.GET("/@:userId/pub/liked/:response", handler.WithUser(factory, ap_user.GetResponse))
 
 	// Domain Admin Pages
 	e.GET("/admin", handler.RedirectTo("/admin/domain/index"))

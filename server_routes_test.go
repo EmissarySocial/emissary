@@ -23,6 +23,9 @@ const testUserID = "012345678901234567890123"
 // testSearchQueryID is the hex ObjectID of the sample SearchQuery actor used in these tests
 const testSearchQueryID = "5f2b8a9c1d4e6f0011223344"
 
+// testResponseID is the hex ObjectID of the sample Response used in these tests
+const testResponseID = "aabbccddeeff001122334455"
+
 // advertisedURL is one collection URL that an actor document publishes to the network
 type advertisedURL struct {
 	actor    string // Name of the actor that publishes this URL, used to label subtests
@@ -86,6 +89,59 @@ func TestRoutes_SearchActorsAgree(t *testing.T) {
 	searchQueryRoutes := methodsByPathSuffix(e, "/@search_:searchId/pub")
 
 	require.Equal(t, searchDomainRoutes, searchQueryRoutes)
+}
+
+// withdrawnUserCollection is a response collection that the User actor deliberately neither
+// advertises nor serves
+type withdrawnUserCollection struct {
+	name     string // Path segment that names the collection, e.g. "liked"
+	property string // ActivityPub property that must stay absent from the actor document, if one exists
+}
+
+// TestRoutes_WithdrawnUserCollectionsStayWithdrawn asserts that the response collections removed from
+// the User actor are absent from both sides at once -- unadvertised AND unrouted.
+//
+// BUG-25 is the disagreement between an actor document and the route table, and withdrawing a
+// collection can recreate it in either direction: restoring the property without the route brings the
+// original 404 back, and restoring the route without the property publishes likes that were
+// deliberately made private.  Neither half is safe to change alone.
+func TestRoutes_WithdrawnUserCollectionsStayWithdrawn(t *testing.T) {
+
+	e := makeTestRoutes()
+
+	user := model.NewUser()
+	userID, err := primitive.ObjectIDFromHex(testUserID)
+	require.Nil(t, err)
+
+	user.UserID = userID
+	user.ProfileURL = "https://example.com/@" + testUserID
+	userDocument := user.GetJSONLD()
+
+	withdrawn := []withdrawnUserCollection{
+		{"liked", vocab.PropertyLiked},
+
+		// "disliked" has no ActivityStreams property, so only its routes can be checked
+		{"disliked", ""},
+	}
+
+	for _, collection := range withdrawn {
+		t.Run(collection.name, func(t *testing.T) {
+
+			// RULE: A withdrawn collection must not be named in the actor document
+			if collection.property != "" {
+				require.Empty(t, userDocument.GetString(collection.property), "the User actor advertises %s -- restore its route or drop the property", collection.property)
+			}
+
+			// RULE: Neither the collection nor its members may resolve.  Compare patterns rather than
+			// checking for a 404: these paths fall through to "/@:userId/:action", so they answer from
+			// an unrelated handler instead of failing outright.
+			collectionPath := "/@" + testUserID + "/pub/" + collection.name
+			memberPath := collectionPath + "/" + testResponseID
+
+			require.NotEqual(t, "/@:userId/pub/"+collection.name, matchedGetRoute(e, collectionPath))
+			require.NotEqual(t, "/@:userId/pub/"+collection.name+"/:response", matchedGetRoute(e, memberPath))
+		})
+	}
 }
 
 /******************************************
@@ -154,7 +210,6 @@ func collectionURLs(t *testing.T) []advertisedURL {
 		{vocab.PropertyOutbox, "/@:userId/pub/outbox"},
 		{vocab.PropertyFollowers, "/@:userId/pub/followers"},
 		{vocab.PropertyFollowing, "/@:userId/pub/following"},
-		{vocab.PropertyLiked, "/@:userId/pub/liked"},
 	}
 
 	for _, collection := range userCollections {
