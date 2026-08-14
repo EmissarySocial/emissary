@@ -401,18 +401,18 @@ func (service *MerchantAccount) DecryptVault(merchantAccount *model.MerchantAcco
  * Provider-Specific Methods
  ******************************************/
 
-func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAccount, product *model.Product, returnURL string) (string, error) {
+func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAccount, product *model.Product, returnURL string, customerEmail string) (string, error) {
 
 	switch merchantAccount.Type {
 
 	// case model.ConnectionProviderPayPal:
-	//	return service.paypal_getCheckoutURL(merchantAccount, remoteProductID, returnURL)
+	//	return service.paypal_getCheckoutURL(merchantAccount, remoteProductID, returnURL, customerEmail)
 
 	// case model.ConnectionProviderStripe:
-	//	return service.stripe_getCheckoutURL(merchantAccount, product, returnURL)
+	//	return service.stripe_getCheckoutURL(merchantAccount, product, returnURL, customerEmail)
 
 	case model.ConnectionProviderStripeConnect:
-		return service.stripe_getCheckoutURL(merchantAccount, product, returnURL)
+		return service.stripe_getCheckoutURL(merchantAccount, product, returnURL, customerEmail)
 	}
 
 	return "", derp.BadRequest("service.MerchantAccount.GetCheckoutURL", "Invalid MerchantAccount Type", merchantAccount.Type)

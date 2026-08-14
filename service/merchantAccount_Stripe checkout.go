@@ -16,7 +16,7 @@ import (
 )
 
 // stripe_getCheckoutURL generates a URL where users can purchase a product from Stripe.
-func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.MerchantAccount, product *model.Product, returnURL string) (string, error) {
+func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.MerchantAccount, product *model.Product, returnURL string, customerEmail string) (string, error) {
 
 	const location = "service.MerchantAccount.stripe_getCheckoutURL"
 	restrictedKey, err := service.stripe_getRestrictedKey(merchantAccount)
@@ -77,6 +77,13 @@ func (service *MerchantAccount) stripe_getCheckoutURL(merchantAccount *model.Mer
 		Form("cancel_url", returnURL).
 		Form("success_url", successURL).
 		Result(&checkoutResult)
+
+	// RULE: If the buyer is already signed in, then lock the checkout email to their verified address.
+	// Stripe prefills this value and prevents the buyer from editing it in the hosted Checkout UI, so
+	// a signed-in guest cannot purchase under a different email.
+	if customerEmail != "" {
+		txn.Form("customer_email", customerEmail)
+	}
 
 	// If this is a single payment (not a subscription), then we need to create a customer
 	if checkoutMode == "payment" {
