@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"io/fs"
 
+	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
@@ -15,6 +16,7 @@ type Widget struct {
 	Description  string               `bson:"description"`  // Human-readable description for this widget
 	Schema       schema.Schema        `bson:"schema"`       // Custom data schema to use for this widget
 	Form         form.Element         `bson:"form"`         // Property/Settings form for this widget
+	SaveSteps    step.Pipeline        `bson:"saveSteps"`    // Pipeline executed against this Widget's data whenever the containing Stream is saved
 	HTMLTemplate *template.Template   `bson:"htmlTemplate"` // HTML template for this widget
 	Bundles      mapof.Object[Bundle] `bson:"bundles"`      // List of bundles that this widget uses
 	Resources    fs.FS                `json:"-" bson:"-"`   // File system containing the template resources

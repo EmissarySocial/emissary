@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/hjson/hjson-go/v4"
 )
 
 // Step interface is used here to bind together the structs in this package
@@ -324,6 +325,35 @@ func New(stepInfo mapof.Any) (Step, error) {
 
 	// Fall through means we have an unrecognized action
 	return nil, derp.Internal("model.step.New", "Unrecognized step type", stepInfo.GetString("do"), stepInfo)
+}
+
+// Pipeline is an ordered list of Steps that knows how to load itself from
+// JSON/HJSON.  Because Step is an interface whose concrete type is chosen by the
+// "do" property, a plain []Step cannot be unmarshalled directly -- declaring a
+// field as a Pipeline lets the encoder resolve each step without the containing
+// type needing an UnmarshalJSON of its own.
+type Pipeline []Step
+
+// UnmarshalJSON loads a list of Steps from its JSON/HJSON source.
+func (pipeline *Pipeline) UnmarshalJSON(data []byte) error {
+
+	const location = "model.step.Pipeline.UnmarshalJSON"
+
+	var stepsInfo []mapof.Any
+
+	if err := hjson.Unmarshal(data, &stepsInfo); err != nil {
+		return derp.Wrap(err, location, "Invalid JSON")
+	}
+
+	result, err := NewPipeline(stepsInfo)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid pipeline")
+	}
+
+	*pipeline = result
+
+	return nil
 }
 
 // NewPipeline parses a series of build steps into a new array
