@@ -24,7 +24,7 @@
 			{type:"textarea", description:"Enter your markdown content here.", path:"markdown", options:{rows:10}}
 		]
 	}
-	save: [
+	saveSteps: [
 		{do:"set-data", values:{"data.html":"{{.Data.markdown | markdown}}"}}
 	]
 }
