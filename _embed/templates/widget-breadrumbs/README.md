@@ -1,0 +1,5 @@
+# Breadcrumbs
+
+This widget (widgetId `breadcrumbs`; the folder name's missing "c" is a historical typo) displays a breadcrumb trail showing the current stream's path within the site hierarchy, so visitors can navigate back up to any ancestor page. It has no schema or settings form, so it is not user-configurable and does not appear editable in the stream designer.
+
+[widget.hjson](widget.hjson) holds only the id, label, and description; [widget.html](widget.html) renders the trail from the `build.Widget` context, which embeds the Stream builder. It calls `.Breadcrumbs` (which returns the stream's ancestor summaries) and renders each as a bullet-separated `<a href="/{{.Token}}">` link with the `turboclick` class for fast client-side navigation, then appends the current stream's own `.Token`/`.Label` as the final crumb; the whole block is omitted when the stream has no ancestors. To extend it, edit the HTML directly or add a schema/form pair to widget.hjson and read the values through `.Widget.Data` as other widgets do.

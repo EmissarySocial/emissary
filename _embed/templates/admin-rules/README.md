@@ -1,0 +1,5 @@
+# Rules
+
+Admin console page for server-wide moderation rules, served at `/admin/rules` (the "Rules" tab in the shared menubar). [template.hjson](template.hjson) declares `model: Rule`, and `handler/admin.go` deliberately loads records with `Rule.LoadServerWideByID` — the admin console only ever manages server-wide Rules, never a User's personal rules. All actions are owner-only.
+
+The `index` action renders [index.html](index.html), which embeds the `list` action inline via `{{.View "list"}}`; [list.html](list.html) iterates `.ServerWideRules`, rendering each rule's action, type, trigger, and optional label as a clickable row into the `edit` modal. The `add` and `edit` actions open modals (with `background:"/admin/rules"`) sharing a form defined inline in the hjson — type and action selects backed by the `rule-types` and `rule-actions` providers, a trigger text field, and a label field shown only when the action is `LABEL` via `show-if`. Add, edit, and delete all run `startup-save-task` to tick the "/admin/rules" item on the startup checklist. Extends `admin-common` for the shared menubar partial.

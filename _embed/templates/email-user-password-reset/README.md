@@ -1,0 +1,5 @@
+# Password Reset Email
+
+Carries a single-use password reset link to a User. `DomainEmail.SendPasswordReset` (service/domainEmail.go) is reached through `User.SendPasswordResetEmail` (service/user.go), which first generates a fresh reset code; triggers include the forgot-password form (handler/signin.go), the setup console's "reset password" action (handler/setup_users.go), the Mastodon admin API (handler/mastodon/emails.go), the `send-email` build step (build/step_SendEmail.go), first-time owner setup (service/domain.go), and steranko's password-reset hook (service/sterankoUser.go). The button links to `{{.Domain_URL}}/signin/reset-code?userId={{.UserID}}&code={{.ResetCode}}`, where the code is validated and cleared after use.
+
+[email.hjson](email.hjson) declares the `user-password-reset` emailId, the `User` model guard, and the to/subject templates; [body.html](body.html) is a Go html/template rendered by `ServerEmail.Send` (service/serverEmail.go). The data map provides `UserID`, `Username`, `Name`, `Email`, `ResetCode`, `ExpireDate`, plus `Domain_Owner`, `Domain_URL`, `Domain_Name`, and `Domain_Icon`.

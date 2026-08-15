@@ -1,0 +1,5 @@
+# Connections
+
+Admin console page for connecting the server to third-party API providers, served at `/admin/connections` (the "External > API Keys" tab in the shared menubar). `handler/admin.go` maps the first URL segment to templateId `admin-connections` via `Template.LoadAdmin`, and because [template.hjson](template.hjson) declares `model: Domain` the page is built with `build.NewDomain`; all actions require the `owner` role.
+
+The `index` action renders [index.html](index.html), which iterates the registered `.Providers` grouped by their `group` attribute and cross-references `.AllConnections` to show a "Connected" badge per provider; clicking a row calls the `edit` action, which runs the `edit-connection` build step — the setup form is generated per provider in Go, not from an HTML file in this folder. The schema declares the `connections.stripe_*` fields (active flag, API key, webhook secret) that those forms write into the Domain record. The template extends `admin-common` for the shared menubar partial, so adding a new connectable provider means registering it in the providers dataset consumed by the builder, not editing this folder.

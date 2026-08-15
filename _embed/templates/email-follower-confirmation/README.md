@@ -1,0 +1,5 @@
+# Follower Confirmation Email
+
+Double-opt-in confirmation for email subscriptions. When someone asks to follow a user or stream by email, `Follower.SendFollowConfirmation` (service/follower_.go) loads the parent actor and calls `DomainEmail.SendFollowerConfirmation` (service/domainEmail.go); the Follower record stays in the PENDING state until the recipient clicks the button linking to `{{.Actor.ProfileURL}}/follower-confirm?followerId=...&secret=...`, which is verified against the stored secret by `Follower.LoadPendingEmailFollower`.
+
+[email.hjson](email.hjson) declares the `follower-confirmation` emailId, the `Follower` model guard, and the to/subject templates; [body.html](body.html) is a Go html/template rendered by `ServerEmail.Send` (service/serverEmail.go). The data map provides `Actor` (a model.PersonLink for the account being followed, giving `.Actor.Name`, `.Actor.ProfileURL`, and `.Actor.IconURL`), `FollowerID`, `Name`, `Email`, `Secret`, plus `Domain_Owner`, `Domain_URL`, `Domain_Name`, and `Domain_Icon`.

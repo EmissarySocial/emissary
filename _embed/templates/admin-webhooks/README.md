@@ -1,0 +1,5 @@
+# Webhooks
+
+Admin console page for managing outbound webhooks, served at `/admin/webhooks` under the "External > Webhooks" sub-menu. [template.hjson](template.hjson) declares `model: Webhook`, so `handler/admin.go` loads the Webhook named by the URL's objectID and builds the page with `build.NewWebhook`; all actions are owner-only.
+
+The `index` action renders [index.html](index.html), a simple table of `.Webhooks.All.ByLabel` with an "Add a Webhook" row and an empty-state prompt. The `add` and `edit` actions open modals sharing an hjson-defined form of three fields — label, target URL, and a multiselect of events backed by the `webhook-types` provider — followed by `save` and `refresh-page`. Several pieces are copy-over remnants from admin-users to be aware of when editing: [edit.html](edit.html) (the edit modal's heading) still renders user-profile markup (`.UserID`, Stripe link, masquerade form), the `add` and `delete` steps declare `type: user`, and the hjson includes a `send-welcome` action that emails the "welcome" template. Extends `admin-common` for the shared menubar partial.

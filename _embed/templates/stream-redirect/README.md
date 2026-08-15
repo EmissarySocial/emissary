@@ -1,0 +1,5 @@
+# Redirect
+
+A Redirect (`templateId: redirect`) is a placeholder stream that forwards visitors to another web address stored in its `data.url` schema property. It can be placed at the site's top level or inside a folder (`containedBy: ["top", "folder"]`), has a single `default` state, and uses the usual `viewer`/`editor` roles — useful for putting an external link into site navigation or a folder listing.
+
+The behavior lives in [view.html](view.html): for visitors without edit rights it emits a small script that sets `globalThis.location` to the target URL (or a "not configured" message when `data.url` is empty), while users who can edit see a management panel instead of being redirected, with links to the `edit`, `sharing`, and `delete` actions. Per [template.hjson](template.hjson), `edit` opens an hjson-defined modal form (label, summary, URL) over the view background, `create` saves immediately and forwards to the new stream so the owner can configure it, and there is no publish workflow — visibility is controlled entirely through `sharing` (simple-sharing on the `viewer` role).

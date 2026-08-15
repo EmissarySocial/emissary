@@ -1,0 +1,5 @@
+# Guest Sign-In Code Email
+
+Delivers a one-time sign-in link to a guest Identity (a visitor with purchased privileges, not a full User account). `Identity.SendGuestCode` (service/identity.go) mints a JWT guest code and, when the identifier is an email address, calls `DomainEmail.SendGuestCode` (service/domainEmail.go); this is triggered from the guest sign-in pages (handler/identity.go) and after a Stripe checkout (handler/checkout.go). ActivityPub/WebFinger identifiers get the code by direct message instead, so this template only ever goes to email identifiers.
+
+[email.hjson](email.hjson) declares the emailId `user-guest-code` (note: not the folder name), the `Identity` model guard, and the to/subject templates; [body.html](body.html) is a Go html/template rendered by `ServerEmail.Send` (service/serverEmail.go), with its button linking to `{{.Domain_URL}}/@guest/signin/{{.Token}}`. The data map is small: `Email`, `Token` (the JWT guest code), plus `Domain_Owner`, `Domain_URL`, `Domain_Name`, and `Domain_Icon`.

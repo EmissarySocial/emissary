@@ -1,0 +1,5 @@
+# HTML Code
+
+This widget (widgetId `html`) embeds arbitrary HTML directly into a stream, letting editors drop in custom markup, embeds, or snippets that no purpose-built widget covers. It is the escape hatch of the widget system.
+
+[widget.hjson](widget.hjson) defines a single schema property `html` (string, format `html`, maxLength 100000) edited through a 10-row textarea, and [widget.html](widget.html) is the one-liner `{{.Widget.Data.html | html}}`, where the `html` template function casts the stored string to `template.HTML` so Go's auto-escaping is bypassed and the markup renders verbatim. Because the content is deliberately unescaped, whoever can edit the widget can inject live script into the page — placement is gated by stream edit permissions, but keep that trust boundary in mind before loosening access or reusing this pattern elsewhere. For authored text content that should be sanitized, prefer [widget-markdown](../widget-markdown), which converts Markdown to bluemonday-sanitized HTML at save time.

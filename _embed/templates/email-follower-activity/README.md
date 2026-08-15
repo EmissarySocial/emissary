@@ -1,0 +1,5 @@
+# Follower Activity Email
+
+Notifies an email-method Follower that the account or stream they subscribe to has published new content. When an activity is published through the Outbox, `Outbox.sendNotification_Email` (service/outbox_publish.go) calls `DomainEmail.SendFollowerActivity` (service/domainEmail.go), which sends one message per email Follower with the subject "New Activity From {{.Name}}" and a `List-Unsubscribe` header populated from the Follower's unsubscribe link.
+
+[email.hjson](email.hjson) declares the `follower-activity` emailId, the `Follower` model guard, and the to/subject/header templates; [body.html](body.html) is a Go html/template rendered by `ServerEmail.Send` (service/serverEmail.go) with the shared funcMap (it uses `htmlMinimal` to sanitize activity content). The data map provides `Name`, `Email`, `FollowerID`, `Secret`, `ParentLink`, `Unsubscribe`, `Activity` (the raw activity map, from which the body pulls `.Activity.object`), plus `Domain_Owner`, `Domain_URL`, `Domain_Name`, and `Domain_Icon`; note that the body also references `.URL` and `.Actor`, which `SendFollowerActivity` does not currently supply, so those spots render empty.

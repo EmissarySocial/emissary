@@ -1,0 +1,7 @@
+# Startup
+
+The first-run setup wizard for a new domain. Unlike the other admin templates it is not served through `/admin/...`: `handler/startup.go` registers `/startup` and `/startup/:action`, calls `Template.LoadAdmin("startup")` directly, defaults the action to `page`, and permanently redirects to `/` once the Domain leaves `DomainStateStartup` — so the wizard only exists while setup is incomplete. [template.hjson](template.hjson) declares `model: Domain` and a `themeId` schema field, and all actions are owner-only.
+
+The `page` action renders [page.html](page.html) (with `Cache-Control: no-store`): the checklist of the current theme's `StartupTasks`, with each item checked off when `.StartupTasks` contains its value — which is exactly what the `startup-save-task` steps scattered through admin-domain, admin-groups, admin-rules, and this template's own `content` action record. `choose-theme` opens a theme-selection modal, `content` ([content.html](content.html)) installs the theme's default streams via `startup-create-streams`, and `complete` runs `startup-complete` then forwards to `/@me`; the banner partial in admin-common's startup.html points owners back here from every other admin page while startup mode lasts.
+
+Beware of action/file drift when editing: the pages link to `/startup/choose` but the hjson action is named `choose-theme` (whose `view-html` would look for a `choose-theme` template, while the file on disk is [choose.html](choose.html)), and [theme.html](theme.html) and [welcome.html](welcome.html) are referenced by no action at all.
