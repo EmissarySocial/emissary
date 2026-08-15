@@ -2,18 +2,15 @@
 {{- $themes := .Themes -}}
 {{- $theme := .Theme .ThemeID -}}
 
-<div class="width-480 margin-horizontal-auto margin-top-xl">
-	<div class="align-center margin-bottom-lg">
-		<div class="margin-bottom">
-			<img src="/.themes/global/resources/emissary/Emissary-Icon-Black.svg" class="dark-mode-hide width-96">
-			<img src="/.themes/global/resources/emissary/Emissary-Icon-White.svg" class="dark-mode-show width-96">
-		</div>
-		<h1>Let's Start Your Emissary</h1>
-		<div>Here's some simple steps to get you on your way.</div>
-		<div>Don't worry, you can change these later.</div>
+<div class="width-480 margin-horizontal-auto">
+
+	<div class="align-center margin-vertical-lg">
+		<img src="/.themes/global/resources/emissary/Emissary-Icon-Black.svg" class="dark-mode-hide width-96">
+		<img src="/.themes/global/resources/emissary/Emissary-Icon-White.svg" class="dark-mode-show width-96">
+		<h1 class="margin-vertical-lg">Let's Start Your Emissary</h1>
 	</div>
 
-	<div class="width-480 margin-horizontal-auto margin-top-xl margin-bottom-lg">
+	<div class="width-480 margin-horizontal-auto margin-vertical-lg">
 
 		{{- if gt 1 $themes.Length -}}
 		<div class="checkbutton" hx-get="/startup/choose">
