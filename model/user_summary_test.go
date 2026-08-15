@@ -1,6 +1,8 @@
 package model
 
 import (
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -57,13 +59,48 @@ func TestUser_SummaryHTML_RendersMarkdown(t *testing.T) {
 	require.Contains(t, result, "<strong>bold</strong>")
 }
 
-// TestUser_SummaryHTML_DropsDangerousHTML confirms that markdown rendering does not emit executable markup.
+// summaryEventHandler matches an on* event handler inside a real HTML tag.
+// Escaped or plain text such as "[x](javascript:alert(1))" is inert and must not match.
+var summaryEventHandler = regexp.MustCompile(`(?is)<[^>]*[\s/]on[a-z]+\s*=`)
+
+// summaryScriptURL matches a javascript: scheme used as a URL inside a real HTML tag.
+var summaryScriptURL = regexp.MustCompile(`(?is)<[^>]*=\s*["']?\s*javascript:`)
+
+// TestUser_SummaryHTML_DropsDangerousHTML confirms that markdown rendering does not emit
+// executable markup.  The assertions target markup the browser would ACT on: a leftover
+// "javascript:" in plain text is inert, so matching the bare string would be a false alarm.
 func TestUser_SummaryHTML_DropsDangerousHTML(t *testing.T) {
+
+	inputs := []string{
+		"<script>alert(1)</script> [x](javascript:alert(1))",
+		"[x](javascript:alert(1))",
+		"<img src=x onerror=alert(1)>",
+		"<div onclick=\"alert(1)\">click</div>",
+		"<a href=\"javascript:alert(1)\">click</a>",
+	}
+
+	for _, input := range inputs {
+		user := NewUser()
+		user.StatusMessage = input
+
+		result := user.SummaryHTML()
+
+		require.NotContains(t, strings.ToLower(result), "<script", "input: %q", input)
+		require.NotRegexp(t, summaryEventHandler, result, "input: %q", input)
+		require.NotRegexp(t, summaryScriptURL, result, "input: %q", input)
+	}
+}
+
+// TestUser_SummaryHTML_SanitizesRatherThanEscapes pins the fact that a bio is rendered by
+// the application's shared Markdown converter, which passes raw HTML through the sanitizer
+// instead of escaping it.  Safe inline markup therefore renders, and unsafe markup is dropped.
+func TestUser_SummaryHTML_SanitizesRatherThanEscapes(t *testing.T) {
+
 	user := NewUser()
-	user.StatusMessage = "<script>alert(1)</script> [x](javascript:alert(1))"
+	user.StatusMessage = "<b>bold</b> <script>alert(1)</script>"
 
 	result := user.SummaryHTML()
 
-	require.NotContains(t, result, "<script>")
-	require.NotContains(t, result, "javascript:")
+	require.Contains(t, result, "<b>bold</b>")
+	require.NotContains(t, result, "<script")
 }
