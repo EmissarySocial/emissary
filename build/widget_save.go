@@ -45,9 +45,8 @@ func executeWidgetSaveSteps(builder Builder, buffer io.Writer, actionMethod Acti
 
 		// Execute the Widget's pipeline against the Widget itself
 		widgetBuilder := NewWidget(&streamBuilder, streamWidget)
-		result := Pipeline(definition.SaveSteps).Execute(streamBuilder.factory(), widgetBuilder, buffer, actionMethod)
 
-		if result.Error != nil {
+		if result := Pipeline(definition.SaveSteps).Execute(streamBuilder.factory(), widgetBuilder, buffer, actionMethod); result.Error != nil {
 			return derp.Wrap(result.Error, location, "Error executing save pipeline for widget", streamWidget.Type)
 		}
 	}
