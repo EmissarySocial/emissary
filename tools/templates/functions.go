@@ -16,6 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/EmissarySocial/emissary/tools/groupie"
+	"github.com/EmissarySocial/emissary/tools/markdown"
 	"github.com/EmissarySocial/emissary/tools/parse"
 	"github.com/EmissarySocial/emissary/tools/tinyDate"
 	"github.com/benpate/icon"
@@ -24,6 +25,13 @@ import (
 func FuncMap(icons icon.Provider) template.FuncMap {
 
 	result := funcmap.All()
+
+	// RULE: Override rosetta's "markdown" helper so that every Markdown value in
+	// every template is converted and sanitized by the application's single
+	// converter, instead of rosetta's unsanitized one.
+	result["markdown"] = func(value any) template.HTML {
+		return template.HTML(markdown.ToHTML(convert.String(value))) // #nosec G203 -- markdown.ToHTML sanitizes its output
+	}
 
 	result["humanizeTime"] = func(value any) string {
 		valueTime := convert.Time(value)
