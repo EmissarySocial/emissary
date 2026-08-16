@@ -31,14 +31,14 @@
 		</div>
 
 		<div class="card padding max-width-640 transition-main-card">
-
-			<div
-				hx-get="/@me/settings/general-form"
-				hx-trigger="load"
-				hx-target="this"
-				hx-swap="outerHTML"
-				hx-push-url="false">
-			</div>
+			{{.View "general-form"}}
 		</div>
 	</div>
 </div>
+
+<script>
+[...document.styleSheets].forEach((s,i)=>console.log(i, s.href||'(inline)', s.cssRules?.length??'CORS'));
+const f=document.querySelector('.transition-main-card form');
+console.log('form rect', JSON.stringify(f.getBoundingClientRect()));
+console.log('textarea rect', JSON.stringify(document.querySelector('#statusMessage_textarea').getBoundingClientRect()));
+</script>
