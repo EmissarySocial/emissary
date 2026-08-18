@@ -2,14 +2,22 @@ package moderation
 
 import (
 	"github.com/EmissarySocial/emissary/config"
-	"github.com/EmissarySocial/emissary/model"
-	"github.com/benpate/toot/object"
-	"github.com/benpate/toot/txn"
 )
+
+// ReportRequest is the ActivityPub-native input for a moderation report,
+// derived from an inbound Flag activity.
+// See https://www.w3.org/TR/activitystreams-vocabulary/#dfn-flag
+type ReportRequest struct {
+	ActorID       string // reporter's ActivityPub actor URI (Flag.actor)
+	ObjectID      string // URI of the flagged content (Flag.object.id)
+	ObjectContent string // content text of the flagged object (if known)
+	AuthorID      string // author of the flagged content (if known)
+	Comment       string // report comment (Flag.content)
+}
 
 // Moderation is the interface for external moderation backends.
 type Moderation interface {
-	SubmitReport(auth model.Authorization, report txn.PostReport) (object.Report, error)
+	SubmitReport(report ReportRequest) error
 	VerifySignature(signature string, body []byte) bool
 }
 
