@@ -18,7 +18,7 @@ func NewModeration(m config.Moderation) Moderation {
 	switch m.Provider {
 
 	case config.ModerationProviderCoop:
-		coop := NewCoop(m.URL, m.Coop.APIKey, m.Coop.WebhookPublicKey)
+		coop := NewCoop(m.URL, m.Coop.APIKey, m.Coop.WebhookPublicKey, m.Coop.UserItemTypeID, m.Coop.StatusItemTypeID)
 		return &coop
 
 	default:

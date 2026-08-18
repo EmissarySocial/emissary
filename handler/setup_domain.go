@@ -303,6 +303,36 @@ func setupDomainForm(header string) form.Element {
 				Label:       "Coop Webhook Public Key",
 				Description: "PEM-encoded RSA public key used to verify incoming action callbacks from Coop",
 				Options:     mapof.Any{"show-if": "moderation.provider eq coop", "rows": "6"},
+			}, {
+				Type:        "text",
+				Path:        "moderation.coop.userItemTypeId",
+				Label:       "User Item Type ID",
+				Description: "Coop item type ID for Mastodon accounts (users). Find this in Coop's Item Types settings.",
+				Options:     mapof.Any{"show-if": "moderation.provider eq coop"},
+			}, {
+				Type:        "text",
+				Path:        "moderation.coop.statusItemTypeId",
+				Label:       "Status Item Type ID",
+				Description: "Coop item type ID for Mastodon statuses (posts). Find this in Coop's Item Types settings.",
+				Options:     mapof.Any{"show-if": "moderation.provider eq coop"},
+			}, {
+				Type:        "text",
+				Path:        "moderation.coop.suspendActionId",
+				Label:       "Suspend Action ID",
+				Description: "Coop action ID for suspending a user. Find this in Coop's Actions settings.",
+				Options:     mapof.Any{"show-if": "moderation.provider eq coop"},
+			}, {
+				Type:        "text",
+				Path:        "moderation.coop.silenceActionId",
+				Label:       "Silence Action ID",
+				Description: "Coop action ID for silencing a user. Find this in Coop's Actions settings.",
+				Options:     mapof.Any{"show-if": "moderation.provider eq coop"},
+			}, {
+				Type:        "text",
+				Path:        "moderation.coop.deleteActionId",
+				Label:       "Delete Action ID",
+				Description: "Coop action ID for deleting a status. Find this in Coop's Actions settings.",
+				Options:     mapof.Any{"show-if": "moderation.provider eq coop"},
 			}},
 		}},
 	}

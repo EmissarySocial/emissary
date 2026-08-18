@@ -12,6 +12,11 @@ import (
 type Coop struct {
 	APIKey           string `json:"apiKey"           bson:"apiKey"`           // API key for authenticating outgoing requests to Coop (X-API-KEY header)
 	WebhookPublicKey string `json:"webhookPublicKey" bson:"webhookPublicKey"` // PEM-encoded RSA public key used to verify incoming Coop action callbacks (RSASSA-PKCS1-v1_5 + SHA-256)
+	UserItemTypeID   string `json:"userItemTypeId"   bson:"userItemTypeId"`   // Coop item type ID for Mastodon accounts (users)
+	StatusItemTypeID string `json:"statusItemTypeId" bson:"statusItemTypeId"` // Coop item type ID for Mastodon statuses (posts)
+	SuspendActionID  string `json:"suspendActionId"  bson:"suspendActionId"`  // Coop action ID for suspending a user
+	SilenceActionID  string `json:"silenceActionId"  bson:"silenceActionId"`  // Coop action ID for silencing a user
+	DeleteActionID   string `json:"deleteActionId"   bson:"deleteActionId"`   // Coop action ID for deleting a status
 }
 
 // NewCoop returns a fully initialized (empty) Coop config.

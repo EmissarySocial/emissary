@@ -27,9 +27,11 @@ type coopReportResponse struct {
 
 // Coop implements the Moderation interface for a Coop moderation backend.
 type Coop struct {
-	url              string
-	apiKey           string
-	webhookPublicKey string
+	url               string
+	apiKey            string
+	webhookPublicKey  string
+	userItemTypeID    string
+	statusItemTypeID string
 }
 
 // NewCoop returns a fully configured Coop moderation backend.
