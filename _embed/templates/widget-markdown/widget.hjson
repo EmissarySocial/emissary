@@ -5,14 +5,23 @@
 	schema:{
 		type:"object"
 		properties:{
+			// Authors may embed raw HTML here (video embeds, for example), so this cannot
+			// use format:"markdown" -- that one rejects any HTML tag outright.  Safety
+			// comes from the render boundary, which sanitizes.  Omitting the format is
+			// not an option: an absent format falls back to no-html, which strips every
+			// tag and collapses the whitespace that Markdown depends on.
 			markdown:{
 				type:"string"
-				format:"markdown"
+				format:"unsafe-any"
 				maxLength:100000
 			}
+			// Derived by the saveSteps pipeline below, which sanitizes with the
+			// application's policy.  Do NOT use format:"html" here -- that re-sanitizes
+			// with rosetta's stricter policy and silently deletes embeds that the
+			// application allows.
 			html:{
 				type:"string"
-				format:"html"
+				format:"unsafe-any"
 				maxLength:200000
 			}
 		}
