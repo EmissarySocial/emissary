@@ -283,12 +283,26 @@ func setupDomainForm(header string) form.Element {
 				Description: "Select a moderation backend to forward reports to",
 				Options: mapof.Any{"enum": []form.LookupCode{
 					{Value: "", Label: "— None —"},
+					{Value: "coop", Label: "Coop"},
 				}},
+			}, {
 				Type:        "text",
 				Path:        "moderation.url",
 				Label:       "Backend URL",
 				Description: "Base URL of the moderation backend (e.g. http://coop:3000)",
 				Options:     mapof.Any{"show-if": "moderation.provider eq coop"},
+			}, {
+				Type:        "text",
+				Path:        "moderation.coop.apiKey",
+				Label:       "Coop API Key",
+				Description: "API key for authenticating outgoing requests to Coop (sent as X-API-KEY header)",
+				Options:     mapof.Any{"show-if": "moderation.provider eq coop"},
+			}, {
+				Type:        "textarea",
+				Path:        "moderation.coop.webhookPublicKey",
+				Label:       "Coop Webhook Public Key",
+				Description: "PEM-encoded RSA public key used to verify incoming action callbacks from Coop",
+				Options:     mapof.Any{"show-if": "moderation.provider eq coop", "rows": "6"},
 			}},
 		}},
 	}
