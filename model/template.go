@@ -334,6 +334,12 @@ func (template Template) PrivilegedRoles() []Role {
  * OEmbed Methods
  ******************************************/
 
+// TODO: (oembed/TODO.md Phases 9+11) These two lookups have no callers anywhere.
+// Re-evaluate when the oEmbed rework lands: either wire them into the /.oembed
+// handler so template packages can serve custom (rich/video) oEmbed documents
+// via the Phase 9 primitives, or delete them. Consumer-side metadata is moving
+// to sherlock/metadata and will not use these.
+
 // HasOEmbed returns TRUE if this Template has an OEmbed template
 func (template Template) HasOEmbed() bool {
 	return template.HTMLTemplate.Lookup("oembed") != nil

@@ -3,26 +3,26 @@ package handler
 import (
 	"encoding/json"
 	"encoding/xml"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
 
+	"github.com/benpate/derp"
+	"github.com/benpate/oembed"
+	"github.com/benpate/rosetta/lenient"
 	"github.com/stretchr/testify/require"
 )
 
-// TestOEmbedResponse_XML is the regression test for the bug that made every
-// "format=xml" request fail: the document used to be a map, and encoding/xml
-// cannot marshal a map at all.
+// TestOEmbedResponse_XML pins the XML document that this domain serves.  It is the
+// regression test for the bug that made every "format=xml" request fail: the document
+// used to be a map, and encoding/xml cannot marshal a map at all.
 func TestOEmbedResponse_XML(t *testing.T) {
 
-	response := oEmbedResponse{
-		Version:      oEmbedVersion,
-		Type:         oEmbedTypeLink,
-		Title:        "Hello World",
-		CacheAge:     oEmbedCacheAge,
-		ProviderName: "Bandwagon",
-		ProviderURL:  "https://bandwagon.fm",
-	}
+	response := oembed.NewLink("Hello World")
+	response.CacheAge = oEmbedCacheAge
+	response.ProviderName = "Bandwagon"
+	response.ProviderURL = "https://bandwagon.fm"
 
 	result, err := xml.Marshal(response)
 
@@ -46,13 +46,8 @@ func TestOEmbedResponse_XML(t *testing.T) {
 // TestOEmbedResponse_XML_Thumbnail proves the optional thumbnail fields marshal when present
 func TestOEmbedResponse_XML_Thumbnail(t *testing.T) {
 
-	response := oEmbedResponse{
-		Version:         oEmbedVersion,
-		Type:            oEmbedTypeLink,
-		ThumbnailURL:    "https://bandwagon.fm/icon.webp",
-		ThumbnailHeight: oEmbedThumbnailSize,
-		ThumbnailWidth:  oEmbedThumbnailSize,
-	}
+	response := oembed.NewLink("")
+	response.SetThumbnail("https://bandwagon.fm/icon.webp", oEmbedThumbnailSize, oEmbedThumbnailSize)
 
 	result, err := xml.Marshal(response)
 
@@ -65,14 +60,10 @@ func TestOEmbedResponse_XML_Thumbnail(t *testing.T) {
 // TestOEmbedResponse_JSON pins the JSON field names that oEmbed consumers read
 func TestOEmbedResponse_JSON(t *testing.T) {
 
-	response := oEmbedResponse{
-		Version:      oEmbedVersion,
-		Type:         oEmbedTypeLink,
-		Title:        "Hello World",
-		CacheAge:     oEmbedCacheAge,
-		ProviderName: "Bandwagon",
-		ProviderURL:  "https://bandwagon.fm",
-	}
+	response := oembed.NewLink("Hello World")
+	response.CacheAge = oEmbedCacheAge
+	response.ProviderName = "Bandwagon"
+	response.ProviderURL = "https://bandwagon.fm"
 
 	result, err := json.Marshal(response)
 
@@ -95,6 +86,45 @@ func TestOEmbedResponse_JSON(t *testing.T) {
 	require.NotContains(t, unmarshalled, "thumbnail_url")
 	require.NotContains(t, unmarshalled, "thumbnail_height")
 	require.NotContains(t, unmarshalled, "thumbnail_width")
+}
+
+// TestOEmbedResponse_Write proves that the documents this domain serves reach the wire
+// through the library's writer: validated, correctly encoded, and correctly typed.
+func TestOEmbedResponse_Write(t *testing.T) {
+
+	response := oembed.NewLink("Hello World")
+	response.CacheAge = oEmbedCacheAge
+	setOEmbedThumbnail(&response, "bandwagon.fm", "https://bandwagon.fm/@user/attachments/123")
+
+	// An empty format means "no preference", and is answered with JSON
+	for _, format := range []string{"", oembed.FormatJSON} {
+
+		recorder := httptest.NewRecorder()
+		require.Nil(t, oembed.WriteResponse(recorder, response, format))
+
+		require.Equal(t, "application/json; charset=utf-8", recorder.Header().Get("Content-Type"))
+		require.Contains(t, recorder.Body.String(), `"thumbnail_width":300`)
+	}
+
+	// XML is served as text/xml, rooted at <oembed>
+	{
+		recorder := httptest.NewRecorder()
+		require.Nil(t, oembed.WriteResponse(recorder, response, oembed.FormatXML))
+
+		require.Equal(t, "text/xml; charset=utf-8", recorder.Header().Get("Content-Type"))
+		require.Contains(t, recorder.Body.String(), "<oembed>")
+		require.Contains(t, recorder.Body.String(), "<thumbnail_width>300</thumbnail_width>")
+	}
+
+	// RULE: an unsupported format is a 501, and writes nothing at all
+	{
+		recorder := httptest.NewRecorder()
+		err := oembed.WriteResponse(recorder, response, "yaml")
+
+		require.NotNil(t, err)
+		require.Equal(t, 501, derp.ErrorCode(err))
+		require.Zero(t, recorder.Body.Len())
+	}
 }
 
 // TestNormalizeHostname proves that a hostname is reduced to a comparable value,
@@ -230,8 +260,8 @@ func TestOEmbedResponse_setThumbnail(t *testing.T) {
 
 	// An empty icon produces no thumbnail at all
 	{
-		response := oEmbedResponse{}
-		response.setThumbnail(hostname, "")
+		response := oembed.Response{}
+		setOEmbedThumbnail(&response, hostname, "")
 
 		require.Zero(t, response.ThumbnailURL)
 		require.Zero(t, response.ThumbnailHeight)
@@ -240,28 +270,28 @@ func TestOEmbedResponse_setThumbnail(t *testing.T) {
 
 	// A local icon is handed to this domain's mediaserver
 	{
-		response := oEmbedResponse{}
-		response.setThumbnail(hostname, "https://bandwagon.fm/@user/attachments/123")
+		response := oembed.Response{}
+		setOEmbedThumbnail(&response, hostname, "https://bandwagon.fm/@user/attachments/123")
 
 		require.Equal(t, "https://bandwagon.fm/@user/attachments/123.webp?height=300&width=300", response.ThumbnailURL)
-		require.Equal(t, oEmbedThumbnailSize, response.ThumbnailHeight)
-		require.Equal(t, oEmbedThumbnailSize, response.ThumbnailWidth)
+		require.Equal(t, lenient.Int64(oEmbedThumbnailSize), response.ThumbnailHeight)
+		require.Equal(t, lenient.Int64(oEmbedThumbnailSize), response.ThumbnailWidth)
 	}
 
 	// A remote icon is published untouched -- its server cannot answer a resize request
 	{
-		response := oEmbedResponse{}
-		response.setThumbnail(hostname, "https://mastodon.social/media/abc.jpg")
+		response := oembed.Response{}
+		setOEmbedThumbnail(&response, hostname, "https://mastodon.social/media/abc.jpg")
 
 		require.Equal(t, "https://mastodon.social/media/abc.jpg", response.ThumbnailURL)
-		require.Equal(t, oEmbedThumbnailSize, response.ThumbnailHeight)
-		require.Equal(t, oEmbedThumbnailSize, response.ThumbnailWidth)
+		require.Equal(t, lenient.Int64(oEmbedThumbnailSize), response.ThumbnailHeight)
+		require.Equal(t, lenient.Int64(oEmbedThumbnailSize), response.ThumbnailWidth)
 	}
 
 	// The decorated URL must remain parseable, with exactly one query string
 	{
-		response := oEmbedResponse{}
-		response.setThumbnail(hostname, "/@user/attachments/123")
+		response := oembed.Response{}
+		setOEmbedThumbnail(&response, hostname, "/@user/attachments/123")
 
 		parsed, err := url.Parse(response.ThumbnailURL)
 
