@@ -95,6 +95,30 @@ func TestWidgetBuilder_MarkdownPipeline(t *testing.T) {
 	require.NotContains(t, html, "alert(1)")
 }
 
+// TestWidgetBuilder_MarkdownPipeline_KeepsEmbeds confirms that markup the application's
+// policy allows -- an iframe embed -- survives all the way into stored data.  The schema
+// must not re-sanitize with a stricter policy, which would silently delete the embed.
+func TestWidgetBuilder_MarkdownPipeline_KeepsEmbeds(t *testing.T) {
+
+	source := `Watch this:
+
+<iframe src="https://www.youtube.com/embed/abc123" width="560" height="315" allowfullscreen></iframe>`
+
+	widgetBuilder, streamWidget := markdownWidgetBuilder(t, source)
+
+	valueTemplate, err := template.New("value").Funcs(step.FuncMap()).Parse("{{.Data.markdown | markdown}}")
+	require.NoError(t, err)
+
+	var buffer bytes.Buffer
+	require.NoError(t, valueTemplate.Execute(&buffer, widgetBuilder))
+	require.NoError(t, widgetBuilder.schema().Set(widgetBuilder.object(), "data.html", buffer.String()))
+
+	html := streamWidget.Data.GetString("html")
+	require.Contains(t, html, "<iframe")
+	require.Contains(t, html, "https://www.youtube.com/embed/abc123")
+	require.Contains(t, html, "Watch this:")
+}
+
 // TestWidgetBuilder_MarkdownPipeline_EmptySource confirms that empty Markdown
 // produces no stored HTML, instead of an error.
 func TestWidgetBuilder_MarkdownPipeline_EmptySource(t *testing.T) {
