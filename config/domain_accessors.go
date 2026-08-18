@@ -15,6 +15,7 @@ func DomainSchema() schema.Element {
 			"smtp":          SMTPConnectionSchema(),
 			"owner":         OwnerSchema(),
 			"masterKey":     schema.String{MinLength: 64, MaxLength: 64, Pattern: "^[0-9A-Fa-f]{64}$"},
+			"moderation":    ModerationSchema(),
 		},
 	}
 }
@@ -47,6 +48,9 @@ func (domain *Domain) GetPointer(name string) (any, bool) {
 
 	case "masterKey":
 		return &domain.MasterKey, true
+
+	case "moderation":
+		return &domain.Moderation, true
 	}
 
 	return nil, false
