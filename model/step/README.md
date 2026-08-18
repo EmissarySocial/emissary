@@ -12,7 +12,9 @@ A step is a JSON/HJSON object whose `do` property names the step. [New()](step.g
 {do: "view-html", file: "detail"}
 ```
 
-Several steps take a nested pipeline (usually under `steps`, sometimes `then`/`else`/`defaults`/`on-error`), which is parsed recursively by [NewPipeline()](step.go#L327).
+Several steps take a nested pipeline (usually under `steps`, sometimes `then`/`else`/`defaults`/`on-error`), which is parsed recursively by [NewPipeline()](step.go).
+
+To hold a pipeline on your own type, declare the field as [Pipeline](step.go) rather than `[]Step`. `Step` is an interface whose concrete type is chosen at parse time by the `do` property, so a plain slice of them cannot be unmarshalled — `Pipeline` is a named `[]Step` that implements `UnmarshalJSON`, which lets the containing type decode declaratively instead of hand-parsing its steps. `model.Widget.SaveSteps` is the simplest example.
 
 ## GET vs. POST
 

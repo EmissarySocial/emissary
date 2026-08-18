@@ -109,6 +109,11 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 	userAgent := service.hostname + " /Emissary@v" + service.version + " (https://emissary.social)"
 
 	// Build a new client stack
+
+	// TODO: (oembed/TODO.md Phases 11.3 + RSS-FOLLOWING-RESTORE.md) When URL lookups
+	// return, do NOT restore this legacy path — use sherlock's new metadata package
+	// (sherlock.Client.Metadata → metadata.Card), which merges oEmbed, Open Graph,
+	// Twitter Cards, and HTML signals with SSRF/body-cap guards built in.
 	/* Removing legacy Sherlock lookups (RSS, oEmbed, OGP, etc) since these are not being used.
 	sherlockClient := sherlock.NewClient(
 		sherlock.WithKeyPairFunc(service.KeyPairFunc(actorType, actorID)),

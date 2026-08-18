@@ -11,7 +11,10 @@ import (
 func GetOEmbed(serverFactory *server.Factory) func(model.Authorization, txn.GetOEmbed) (map[string]any, error) {
 
 	return func(model.Authorization, txn.GetOEmbed) (map[string]any, error) {
-		// TODO: Wire up OEmbed lookups with Sherlock
+		// TODO: (oembed/TODO.md Phase 9.6) Re-evaluate when the oEmbed rework lands.
+		// This endpoint SERVES oEmbed for local records, so it should be built on the
+		// benpate/oembed Phase 9 server primitives plus handler.GetOEmbed's record
+		// resolution — not on sherlock/metadata, which is the CONSUMER-side engine.
 		return map[string]any{}, derp.NotImplemented("handler.mastodon.GetOEmbed")
 	}
 }
