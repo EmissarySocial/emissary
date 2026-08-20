@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"encoding/xml"
+	"net"
 	"net/http/httptest"
 	"net/url"
 	"strings"
@@ -321,7 +322,13 @@ func FuzzNormalizeHostname(f *testing.F) {
 
 		// A normalized hostname never carries a port, a path, or a scheme
 		require.NotContains(t, result, "/")
-		require.NotContains(t, result, ":")
+
+		// RULE: An unbracketed IPv6 literal ("::1") legitimately contains colons --
+		// uri.NormalizeHost documents that it returns IPv6 in exactly that canonical
+		// form. Only a colon in a NON-IP result would be a port that survived.
+		if net.ParseIP(result) == nil {
+			require.NotContains(t, result, ":")
+		}
 
 		// Normalizing is idempotent, so comparing two normalized values is stable
 		require.Equal(t, result, normalizeHostname(result))
