@@ -10,9 +10,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// InboxActivity represents a inboxActivity that was received via the MLS protocol.
-// These inboxActivitys are opaque to the server and are simply stored and forwarded
-// to MLS clients as requested.
+// InboxActivity represents a single ActivityPub activity delivered to a User's inbox.
+// The original document is retained verbatim in RawActivity; every other field is a
+// server-computed projection of it, used for querying, filtering, and rule evaluation.
+// MLS direct messages are one special case among many, identified by MediaType ==
+// vocab.MediaTypeMLS -- those are opaque to the server and forwarded to MLS clients as
+// requested, which is what this comment used to describe as if it were the whole type.
 type InboxActivity struct {
 	InboxActivityID primitive.ObjectID `bson:"_id"`                   // Unique identifier for this InboxActivity
 	UserID          primitive.ObjectID `bson:"userId"`                // The user that received this InboxActivity
