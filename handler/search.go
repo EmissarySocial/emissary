@@ -107,6 +107,7 @@ func ReindexReplies(ctx *steranko.Context, factory *service.Factory, session dat
 	return ctx.NoContent(http.StatusOK)
 }
 
+// PostSearchLookup records a visitor's search selection, and is callable only from a page on this domain
 func PostSearchLookup(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostSearchLookup"

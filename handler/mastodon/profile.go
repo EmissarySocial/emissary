@@ -50,6 +50,7 @@ func DeleteProfile_Avatar(serverFactory *server.Factory) func(model.Authorizatio
 	}
 }
 
+// DeleteProfile_Header implements the Mastodon "delete profile header image" endpoint
 func DeleteProfile_Header(serverFactory *server.Factory) func(model.Authorization, txn.DeleteProfile_Header) (object.Account, error) {
 
 	const location = "handler.mastodon.DeleteProfile_Header"

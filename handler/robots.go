@@ -4,6 +4,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// RobotsTxt serves the /robots.txt document for this server
 func RobotsTxt(ctx echo.Context) error {
 
 	content := `# Oi Clanker,

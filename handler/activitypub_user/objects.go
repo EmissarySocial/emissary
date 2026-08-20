@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// GetObjectsCollection serves a User's Objects collection
 func GetObjectsCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.GetObjectsCollection"
@@ -18,6 +19,7 @@ func GetObjectsCollection(ctx *steranko.Context, factory *service.Factory, sessi
 	return derp.NotImplemented(location, "Not Implemented")
 }
 
+// GetObject serves a single Object owned by a User
 func GetObject(ctx *steranko.Context, factory *service.Factory, session data.Session, actorID *string) error {
 
 	const location = "handler.activitypub_user.GetObject"

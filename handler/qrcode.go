@@ -10,10 +10,12 @@ import (
 	"github.com/yeqown/go-qrcode/writer/standard"
 )
 
+// GetQRCode_Stream serves a QR code image that links to a Stream
 func GetQRCode_Stream(ctx *steranko.Context, factory *service.Factory, _ data.Session, stream *model.Stream) error {
 	return getQRCode(ctx, stream.ActivityPubURL())
 }
 
+// GetQRCode_User serves a QR code image that links to a User profile
 func GetQRCode_User(ctx *steranko.Context, factory *service.Factory, _ data.Session, user *model.User) error {
 	return getQRCode(ctx, user.ActivityPubURL())
 }

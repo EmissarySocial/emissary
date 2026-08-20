@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
+// GetPublicKey serves a public User's ActivityPub signing key
 func GetPublicKey(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.GetPublicKey"

@@ -70,6 +70,7 @@ func PostSignIn(ctx *steranko.Context, factory *service.Factory, session data.Se
 	return ctx.NoContent(http.StatusNoContent)
 }
 
+// calcNextURL reduces a "next" parameter to a safe, same-origin path, avoiding open redirects and sign-in loops
 func calcNextURL(next string) string {
 
 	// If "next" is empty, then redirect to the user's profile

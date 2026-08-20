@@ -15,6 +15,7 @@ func GetTag(serverFactory *server.Factory) func(model.Authorization, txn.GetTag)
 	}
 }
 
+// PostTag_Follow implements the Mastodon "follow a hashtag" endpoint as a no-op
 func PostTag_Follow(serverFactory *server.Factory) func(model.Authorization, txn.PostTag_Follow) (object.Tag, error) {
 
 	return func(model.Authorization, txn.PostTag_Follow) (object.Tag, error) {
@@ -22,6 +23,7 @@ func PostTag_Follow(serverFactory *server.Factory) func(model.Authorization, txn
 	}
 }
 
+// PostTag_Unfollow implements the Mastodon "unfollow a hashtag" endpoint as a no-op
 func PostTag_Unfollow(serverFactory *server.Factory) func(model.Authorization, txn.PostTag_Unfollow) (object.Tag, error) {
 
 	return func(model.Authorization, txn.PostTag_Unfollow) (object.Tag, error) {

@@ -15,6 +15,7 @@ type Context struct {
 	searchQuery *model.SearchQuery
 }
 
+// ActivityPubActor returns the Actor that owns this SearchQuery inbox
 func (context Context) ActivityPubActor() (outbox.Actor, error) {
 	searchQueryService := context.factory.SearchQuery()
 	return searchQueryService.ActivityPubActor(context.session, context.searchQuery.SearchQueryID)

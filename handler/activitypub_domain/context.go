@@ -12,6 +12,7 @@ type Context struct {
 	session data.Session
 }
 
+// ActivityPubActor returns the Actor that owns this Domain search inbox
 func (context Context) ActivityPubActor() (outbox.Actor, error) {
 	return context.factory.SearchDomain().ActivityPubActor(context.session)
 }

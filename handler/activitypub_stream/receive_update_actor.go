@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/sherlock"
 )
 
+// init registers the handlers for a remote actor's profile Update, one per Actor type
 func init() {
 
 	// An actor's profile Update routes here (exact routes beat any Update wildcard),

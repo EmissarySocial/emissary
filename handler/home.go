@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// GetHome redirects a visitor to the home page configured for this Domain
 func GetHome(serverFactory *server.Factory) echo.HandlerFunc {
 
 	const location = "handler.GetHome"

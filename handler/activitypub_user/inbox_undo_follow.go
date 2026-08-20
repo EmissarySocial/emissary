@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 )
 
+// init registers the handlers for inbound Undo/Follow and Delete/Follow activities
 func init() {
 	inboxRouter.Add(vocab.ActivityTypeUndo, vocab.ActivityTypeFollow, inbox_UndoFollow)
 	inboxRouter.Add(vocab.ActivityTypeDelete, vocab.ActivityTypeFollow, inbox_UndoFollow)

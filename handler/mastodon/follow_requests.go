@@ -17,6 +17,7 @@ func GetFollowRequests(serverFactory *server.Factory) func(model.Authorization, 
 	}
 }
 
+// PostFollowRequest_Authorize is the Mastodon "accept follow request" endpoint, which Emissary does not implement
 func PostFollowRequest_Authorize(serverFactory *server.Factory) func(model.Authorization, txn.PostFollowRequest_Authorize) (object.Relationship, error) {
 
 	return func(model.Authorization, txn.PostFollowRequest_Authorize) (object.Relationship, error) {
@@ -24,6 +25,7 @@ func PostFollowRequest_Authorize(serverFactory *server.Factory) func(model.Autho
 	}
 }
 
+// PostFollowRequest_Reject is the Mastodon "reject follow request" endpoint, which Emissary does not implement
 func PostFollowRequest_Reject(serverFactory *server.Factory) func(model.Authorization, txn.PostFollowRequest_Reject) (object.Relationship, error) {
 
 	return func(model.Authorization, txn.PostFollowRequest_Reject) (object.Relationship, error) {

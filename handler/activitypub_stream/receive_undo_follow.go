@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 )
 
+// init registers the handlers for inbound Undo/Follow and Delete/Follow activities
 func init() {
 	streamRouter.Add(vocab.ActivityTypeUndo, vocab.ActivityTypeFollow, undoFollow)
 	streamRouter.Add(vocab.ActivityTypeDelete, vocab.ActivityTypeFollow, undoFollow)

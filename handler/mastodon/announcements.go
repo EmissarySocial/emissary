@@ -9,6 +9,7 @@ import (
 
 // https://docs.joinmastodon.org/methods/announcements/
 
+// GetAnnouncements implements the Mastodon "get announcements" endpoint. Emissary has no announcements, so this is always empty.
 func GetAnnouncements(serverFactory *server.Factory) func(model.Authorization, txn.GetAnnouncements) ([]object.Announcement, error) {
 
 	return func(auth model.Authorization, t txn.GetAnnouncements) ([]object.Announcement, error) {
@@ -16,6 +17,7 @@ func GetAnnouncements(serverFactory *server.Factory) func(model.Authorization, t
 	}
 }
 
+// PostAnnouncement_Dismiss implements the Mastodon "dismiss announcement" endpoint as a no-op
 func PostAnnouncement_Dismiss(serverFactory *server.Factory) func(model.Authorization, txn.PostAnnouncement_Dismiss) (struct{}, error) {
 
 	return func(auth model.Authorization, t txn.PostAnnouncement_Dismiss) (struct{}, error) {
@@ -23,6 +25,7 @@ func PostAnnouncement_Dismiss(serverFactory *server.Factory) func(model.Authoriz
 	}
 }
 
+// PutAnnouncement_Reaction implements the Mastodon "add announcement reaction" endpoint as a no-op
 func PutAnnouncement_Reaction(serverFactory *server.Factory) func(model.Authorization, txn.PutAnnouncement_Reaction) (struct{}, error) {
 
 	return func(auth model.Authorization, t txn.PutAnnouncement_Reaction) (struct{}, error) {
@@ -31,6 +34,7 @@ func PutAnnouncement_Reaction(serverFactory *server.Factory) func(model.Authoriz
 
 }
 
+// DeleteAnnouncement_Reaction implements the Mastodon "remove announcement reaction" endpoint as a no-op
 func DeleteAnnouncement_Reaction(serverFactory *server.Factory) func(model.Authorization, txn.DeleteAnnouncement_Reaction) (struct{}, error) {
 
 	return func(auth model.Authorization, t txn.DeleteAnnouncement_Reaction) (struct{}, error) {

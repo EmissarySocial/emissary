@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
+// GetRepliesCollection serves the Replies collection for a Stream
 func GetRepliesCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, actorID *string, stream *model.Stream) error {
 
 	return serveCollection(

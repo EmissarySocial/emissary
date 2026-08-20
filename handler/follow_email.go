@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// PostEmailFollower subscribes an email address to a Stream or User, without requiring an account
 func PostEmailFollower(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostEmailFollower"

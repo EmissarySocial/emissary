@@ -18,6 +18,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
+// GetIntent_Follow renders the Activity Intent confirmation page for following a remote actor
 func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetIntent_Follow"
@@ -154,6 +155,7 @@ func getForm_FollowingIntent() form.Form {
 	}
 }
 
+// PostIntent_Follow records a Follow from the Activity Intent form
 func PostIntent_Follow(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetIntent_Follow"

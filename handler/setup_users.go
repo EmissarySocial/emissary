@@ -16,6 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// SetupDomainUsersGet renders the list of owners for a Domain, as an htmx fragment
 func SetupDomainUsersGet(serverFactory *server.SetupFactory, templates *template.Template) echo.HandlerFunc {
 
 	const location = "handler.SetupDomainUsersGet"
@@ -51,6 +52,7 @@ func SetupDomainUsersGet(serverFactory *server.SetupFactory, templates *template
 	}
 }
 
+// SetupDomainUserPost adds or updates an owner on a Domain
 func SetupDomainUserPost(serverFactory *server.SetupFactory, templates *template.Template) echo.HandlerFunc {
 
 	const location = "handler.SetupDomainUsersPost"
@@ -125,6 +127,7 @@ func SetupDomainUserPost(serverFactory *server.SetupFactory, templates *template
 	}
 }
 
+// SetupDomainUserInvite emails a sign-in invitation to a Domain owner
 func SetupDomainUserInvite(serverFactory *server.SetupFactory, templates *template.Template) echo.HandlerFunc {
 
 	const location = "handler.SetupDomainUserInvite"
@@ -171,6 +174,7 @@ func SetupDomainUserInvite(serverFactory *server.SetupFactory, templates *templa
 	}
 }
 
+// SetupDomainUserDelete removes an owner from a Domain
 func SetupDomainUserDelete(serverFactory *server.SetupFactory, templates *template.Template) echo.HandlerFunc {
 
 	const location = "handler.SetupDomainUsersPost"
@@ -212,6 +216,7 @@ func SetupDomainUserDelete(serverFactory *server.SetupFactory, templates *templa
 	}
 }
 
+// displayDomainUsersModal renders the owner-management modal for a Domain
 func displayDomainUsersModal(ctx echo.Context, factory *service.Factory, session data.Session, domainConfig config.Domain, templates *template.Template) error {
 
 	const location = "handler.displayDomainUsersModal"

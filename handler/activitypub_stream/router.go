@@ -19,6 +19,7 @@ type Context struct {
 	actor   *model.StreamActor
 }
 
+// ActivityPubActor returns the Actor that owns this Stream inbox
 func (context Context) ActivityPubActor() (outbox.Actor, error) {
 
 	return context.factory.Stream().ActivityPubActor(context.session, context.stream.StreamID)

@@ -9,10 +9,12 @@ import (
 	"github.com/benpate/hannibal/vocab"
 )
 
+// init registers the handler for outbound Create/OrderedCollection activities
 func init() {
 	outboxRouter.Add(vocab.ActivityTypeCreate, vocab.CoreTypeOrderedCollection, outbox_CreateOrderedCollection)
 }
 
+// outbox_CreateOrderedCollection creates a new Collection from the User's outbox
 func outbox_CreateOrderedCollection(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.outbox_CreateOrderedCollection"

@@ -14,6 +14,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
+// GetIntent_Like renders the Activity Intent confirmation page for liking a remote object
 func GetIntent_Like(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetIntent_Like"
@@ -94,10 +95,12 @@ func GetIntent_Like(ctx *steranko.Context, factory *service.Factory, session dat
 	return ctx.HTML(http.StatusOK, b.String())
 }
 
+// PostIntent_Like records a Like from the Activity Intent form
 func PostIntent_Like(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 	return postIntent_Response(ctx, factory, session, user, vocab.ActivityTypeLike)
 }
 
+// postIntent_Response records a Like or Dislike from an Activity Intent form, idempotently
 func postIntent_Response(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User, responseType string) error {
 
 	const location = "handler.postIntent_Response"

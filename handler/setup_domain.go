@@ -192,6 +192,7 @@ func SetupDomainSigninPost(serverFactory *server.SetupFactory) echo.HandlerFunc 
 	}
 }
 
+// setupDomainForm returns the form definition used to create and edit a Domain
 func setupDomainForm(header string) form.Element {
 	return form.Element{
 		Type:  "layout-tabs",

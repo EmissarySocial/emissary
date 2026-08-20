@@ -84,6 +84,7 @@ func GetUserExportCollection(ctx *steranko.Context, factory *service.Factory, se
 	return ctx.JSON(http.StatusOK, result)
 }
 
+// GetUserExportDocument is a part of the Data Portability process.  It retrieves a single document from a collection
 func GetUserExportDocument(ctx *steranko.Context, factory *service.Factory, session data.Session, oauthUserToken *model.OAuthUserToken, user *model.User) error {
 
 	const location = "handler.GetUserExportDocument"

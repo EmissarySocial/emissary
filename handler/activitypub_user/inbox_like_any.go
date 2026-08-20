@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// init registers the handler for inbound Like activities
 func init() {
 	inboxRouter.Add(vocab.ActivityTypeLike, vocab.Any, inbox_LikeOrAnnounce)
 }

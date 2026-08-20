@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// init registers the handlers that boost inbound activities to this Stream's followers
 func init() {
 	streamRouter.Add(vocab.ActivityTypeCreate, vocab.Any, BoostAny)
 	streamRouter.Add(vocab.ActivityTypeUpdate, vocab.Any, BoostAny)

@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/rosetta/list"
 )
 
+// Collection returns an OrderedCollection stub that points at the first page of the named collection
 func Collection(collectionID string) streams.OrderedCollection {
 
 	// Determine the first page URL
@@ -21,6 +22,7 @@ func Collection(collectionID string) streams.OrderedCollection {
 	return result
 }
 
+// CollectionPage returns one page of an OrderedCollection, rendering each value as a JSON-LD document
 func CollectionPage[T model.JSONLDGetter](pageID string, partOf string, pageSize int, values []T) streams.OrderedCollectionPage {
 
 	// Generate the Page record
@@ -42,6 +44,7 @@ func CollectionPage[T model.JSONLDGetter](pageID string, partOf string, pageSize
 	return result
 }
 
+// CollectionPage_Links returns one page of an OrderedCollection, rendering each value as a bare URL
 func CollectionPage_Links[T model.ActivityPubURLGetter](pageID string, partOf string, pageSize int, values []T) streams.OrderedCollectionPage {
 
 	// Generate the Page record

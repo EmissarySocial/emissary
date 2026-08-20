@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
+// serveCollection serves one of a Stream's ActivityPub collections, enforcing its access permissions first
 func serveCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, actorID *string, stream *model.Stream, collectionType string, collectionURL string) error {
 
 	const location = "handler.activitypub_stream.serveCollection"

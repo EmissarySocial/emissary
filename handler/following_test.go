@@ -22,6 +22,7 @@ func invokeFollowingTunnel(t *testing.T, queryString string) *httptest.ResponseR
 	return recorder
 }
 
+// TestGetFollowingTunnel verifies that a legacy tunnel link redirects to the "following-edit" settings page
 func TestGetFollowingTunnel(t *testing.T) {
 
 	// Legacy tunnel links redirect to the "following-edit" settings page
@@ -31,6 +32,7 @@ func TestGetFollowingTunnel(t *testing.T) {
 	require.Equal(t, "/@me/settings/following-edit?url=https%3A%2F%2Fother.example%2F%40person", response.Header().Get("Location"))
 }
 
+// TestGetFollowingTunnel_EmptyURI verifies that a missing "uri" parameter still redirects
 func TestGetFollowingTunnel_EmptyURI(t *testing.T) {
 
 	// A missing "uri" parameter still redirects (the settings page shows its empty form)
@@ -40,6 +42,7 @@ func TestGetFollowingTunnel_EmptyURI(t *testing.T) {
 	require.Equal(t, "/@me/settings/following-edit?url=", response.Header().Get("Location"))
 }
 
+// TestGetFollowingTunnel_EscapesHTML verifies that a hostile "uri" cannot inject markup into the response
 func TestGetFollowingTunnel_EscapesHTML(t *testing.T) {
 
 	// RULE: hostile "uri" values are fully escaped, so they cannot inject markup or scripts
@@ -50,6 +53,7 @@ func TestGetFollowingTunnel_EscapesHTML(t *testing.T) {
 	require.NotContains(t, response.Body.String(), "<script>")
 }
 
+// TestGetFollowingTunnel_EscapesHeaderInjection verifies that CR/LF in the "uri" cannot split the Location header
 func TestGetFollowingTunnel_EscapesHeaderInjection(t *testing.T) {
 
 	// RULE: CR/LF in the "uri" value must not split the Location header

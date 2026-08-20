@@ -14,6 +14,7 @@ import (
 	"github.com/benpate/uri"
 )
 
+// GetIntentInfo serves the discovery document that tells a remote site which Activity Intents this server supports
 func GetIntentInfo(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetIntentInfo"

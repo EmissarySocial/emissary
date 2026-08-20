@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/toot"
 )
 
+// Mastodon wires every Emissary handler into the toot API, which serves the Mastodon-compatible REST endpoints
 func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 
 	return toot.API[model.Authorization]{

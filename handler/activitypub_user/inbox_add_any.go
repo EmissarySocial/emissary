@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
+// init registers the handler for inbound Add activities
 func init() {
 	inboxRouter.Add(vocab.ActivityTypeAdd, vocab.Any, inbox_AddAny)
 }

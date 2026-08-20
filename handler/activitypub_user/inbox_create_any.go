@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
+// init registers the Create and Update handlers, and the object types that are deliberately ignored
 func init() {
 
 	// Wildcard to handle Create/Update of (nearlly) any type
@@ -27,6 +28,7 @@ func init() {
 	inboxRouter.Add(vocab.ActivityTypeUpdate, vocab.ObjectTypeTombstone, inbox_Unknown)
 }
 
+// inbox_CreateOrUpdate adds a public Create or Update activity to the User's newsfeed
 func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.inbox_CreateOrUpdate"

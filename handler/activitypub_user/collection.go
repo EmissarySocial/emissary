@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// GetCollection serves one of a User's ActivityPub Collections, identified in the request URL
 func GetCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, actorID *string, user *model.User) error {
 
 	const location = "handler.activitypub_user.GetCollection"

@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
+// GetGeocodeAutocomplete returns place-name suggestions for a partial address
 func GetGeocodeAutocomplete(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetGeocodeAutocomplete"

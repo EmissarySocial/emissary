@@ -175,6 +175,7 @@ func isUnsplashImageURL(target string) bool {
 	return host == "unsplash.com" || strings.HasSuffix(host, ".unsplash.com")
 }
 
+// newTransaction returns a cached, authenticated request to the Unsplash API
 func newTransaction(cache *httpcache.HTTPCache, accessKey string) *remote.Transaction {
 
 	return remote.New().
@@ -184,6 +185,7 @@ func newTransaction(cache *httpcache.HTTPCache, accessKey string) *remote.Transa
 		Header("Accept-Version", "v1")
 }
 
+// displayPhoto renders an Unsplash photo as HTML, including the attribution that the API requires
 func displayPhoto(ctx echo.Context, applicationName string, photo mapof.Any) error {
 
 	urls := photo.GetMap("urls")

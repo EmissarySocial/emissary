@@ -16,6 +16,7 @@ func GetPoll(serverFactory *server.Factory) func(model.Authorization, txn.GetPol
 	}
 }
 
+// PostPoll_Votes is the Mastodon "vote on a poll" endpoint, which Emissary does not implement
 func PostPoll_Votes(serverFactory *server.Factory) func(model.Authorization, txn.PostPoll_Votes) ([]object.Poll, error) {
 
 	return func(model.Authorization, txn.PostPoll_Votes) ([]object.Poll, error) {

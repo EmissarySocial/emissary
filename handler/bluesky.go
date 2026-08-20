@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// GetBlueskyDID serves the did.json document that proves this domain owns its Bluesky handle
 func GetBlueskyDID(serverFactory *server.Factory) echo.HandlerFunc {
 
 	const location = "handler.GetBlueskyDID"

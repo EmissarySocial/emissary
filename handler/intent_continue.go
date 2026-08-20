@@ -12,11 +12,13 @@ import (
 	"github.com/benpate/uri"
 )
 
+// GetIntent_Continue renders the "return to the calling site" page shown after an Activity Intent completes
 func GetIntent_Continue(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 	url := first.String(ctx.QueryParam("url"), "/@me")
 	return ctx.HTML(http.StatusOK, getIntent_Continue(url))
 }
 
+// getIntent_Continue renders the continue page for a URL, neutralizing unsafe schemes before they reach the href
 func getIntent_Continue(url string) string {
 
 	// (close) directive can be handled without a confirmation page

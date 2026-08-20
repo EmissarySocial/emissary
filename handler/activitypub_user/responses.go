@@ -13,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// GetResponseCollection serves one of a public User's response collections (shared, liked, or disliked)
 func GetResponseCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub_user.GetResponseCollection"
@@ -57,6 +58,7 @@ func GetResponseCollection(ctx *steranko.Context, factory *service.Factory, sess
 	return ctx.JSON(http.StatusOK, result)
 }
 
+// GetResponse serves a single Response record owned by a User
 func GetResponse(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.activitypub.ActivityPub_GetUserResponse"

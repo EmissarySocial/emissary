@@ -15,6 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// GetOAuthWellKnown serves the OAuth authorization-server metadata document (RFC 8414)
 func GetOAuthWellKnown(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	// Get the server's host (scheme + host)
@@ -39,6 +40,7 @@ func GetOAuthWellKnown(ctx *steranko.Context, factory *service.Factory, session 
 	return ctx.JSON(http.StatusOK, response)
 }
 
+// GetOAuthAuthorization renders the "authorize this application" consent page
 func GetOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetOAuthAuthorization"
@@ -67,6 +69,7 @@ func GetOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, sess
 	return nil
 }
 
+// PostOAuthAuthorization accepts the consent form, and issues a code or token per the requested grant type
 func PostOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.PostOAuthAuthorization"

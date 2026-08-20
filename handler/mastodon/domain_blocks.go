@@ -52,6 +52,7 @@ func GetDomainBlocks(serverFactory *server.Factory) func(model.Authorization, tx
 	}
 }
 
+// PostDomainBlock implements the Mastodon "block domain" endpoint
 func PostDomainBlock(serverFactory *server.Factory) func(model.Authorization, txn.PostDomainBlock) (struct{}, error) {
 
 	const location = "handler.mastodon.PostDomainBlock"
@@ -92,6 +93,7 @@ func PostDomainBlock(serverFactory *server.Factory) func(model.Authorization, tx
 	}
 }
 
+// DeleteDomainBlock implements the Mastodon "unblock domain" endpoint
 func DeleteDomainBlock(serverFactory *server.Factory) func(model.Authorization, txn.DeleteDomainBlock) (struct{}, error) {
 
 	const location = "handler.mastodon.DeleteDomainRule"

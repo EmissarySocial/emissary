@@ -16,6 +16,7 @@ func GetFeaturedTags(serverFactory *server.Factory) func(model.Authorization, tx
 	}
 }
 
+// PostFeaturedTag is the Mastodon "feature a tag" endpoint, which Emissary does not implement
 func PostFeaturedTag(serverFactory *server.Factory) func(model.Authorization, txn.PostFeaturedTag) (object.FeaturedTag, error) {
 
 	return func(model.Authorization, txn.PostFeaturedTag) (object.FeaturedTag, error) {
@@ -23,6 +24,7 @@ func PostFeaturedTag(serverFactory *server.Factory) func(model.Authorization, tx
 	}
 }
 
+// DeleteFeaturedTag is the Mastodon "unfeature a tag" endpoint, which Emissary does not implement
 func DeleteFeaturedTag(serverFactory *server.Factory) func(model.Authorization, txn.DeleteFeaturedTag) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteFeaturedTag) (struct{}, error) {
@@ -30,6 +32,7 @@ func DeleteFeaturedTag(serverFactory *server.Factory) func(model.Authorization, 
 	}
 }
 
+// GetFeaturedTags_Suggestions implements the Mastodon "suggested featured tags" endpoint, and always returns an empty list
 func GetFeaturedTags_Suggestions(serverFactory *server.Factory) func(model.Authorization, txn.GetFeaturedTags_Suggestions) ([]object.FeaturedTag, error) {
 
 	return func(model.Authorization, txn.GetFeaturedTags_Suggestions) ([]object.FeaturedTag, error) {

@@ -37,6 +37,7 @@ func GetOutboundIntent(ctx *steranko.Context, factory *service.Factory, session 
 	return ctx.Redirect(http.StatusTemporaryRedirect, nextURL)
 }
 
+// outboundIntentError renders the page shown when a visitor's home server does not support the requested intent
 func outboundIntentError(ctx echo.Context, intent string) error {
 
 	b := html.New()

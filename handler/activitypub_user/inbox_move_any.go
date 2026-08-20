@@ -12,10 +12,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// init registers the handler for inbound Move activities
 func init() {
 	inboxRouter.Add(vocab.ActivityTypeMove, vocab.Any, inbox_MoveAny)
 }
 
+// inbox_MoveAny re-points local Followings at an actor's new address
 func inbox_MoveAny(context Context, document streams.Document) error {
 
 	const location = "activitypub_user.inbox_MoveAny"

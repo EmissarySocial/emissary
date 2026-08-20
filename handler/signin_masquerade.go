@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// PostMasquerade lets a domain owner sign in as one of their Users
 func PostMasquerade(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostMasquerade"

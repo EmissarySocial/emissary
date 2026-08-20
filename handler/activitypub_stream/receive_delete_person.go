@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 )
 
+// init registers the handler for inbound Delete/Person activities
 func init() {
 	streamRouter.Add(vocab.ActivityTypeDelete, vocab.ActorTypePerson, func(context Context, activity streams.Document) error {
 

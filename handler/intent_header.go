@@ -41,6 +41,7 @@ func write_intentObjectContent(b *html.Builder, summary string, content string) 
 	}
 }
 
+// write_intent_header renders the "signed in as" banner shown at the top of every Activity Intent page
 func write_intent_header(ctx *steranko.Context, b *html.Builder, user *model.User) {
 
 	currentURL := ctx.Request().URL.String()

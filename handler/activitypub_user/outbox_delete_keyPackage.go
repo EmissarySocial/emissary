@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 )
 
+// init registers the handler for outbound Delete/KeyPackage activities
 func init() {
 	outboxRouter.Add(vocab.ActivityTypeDelete, vocab.ObjectTypeKeyPackage, outbox_DeleteKeyPackage)
 }

@@ -28,6 +28,7 @@ func outbox_Wildcard(context Context, activity streams.Document) error {
 	return context.context.NoContent(http.StatusAccepted)
 }
 
+// putActivityIntoOutbox delivers an activity to every recipient it names
 func putActivityIntoOutbox(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.putActivityIntoOutbox"

@@ -24,6 +24,7 @@ func mlsCreate() mapof.Any {
 	}
 }
 
+// TestIsMLSCreate verifies which document shapes qualify as an MLS message, and which do not
 func TestIsMLSCreate(t *testing.T) {
 
 	// The canonical shape qualifies

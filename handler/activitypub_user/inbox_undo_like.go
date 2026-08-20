@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 )
 
+// init registers the handlers that undo Like, Dislike, and Announce activities
 func init() {
 	inboxRouter.Add(vocab.ActivityTypeUndo, vocab.ActivityTypeLike, inboxUndoLike)
 	inboxRouter.Add(vocab.ActivityTypeDelete, vocab.ActivityTypeLike, inboxUndoLike)

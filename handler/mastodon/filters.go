@@ -17,6 +17,7 @@ func GetFilters(serverFactory *server.Factory) func(model.Authorization, txn.Get
 	}
 }
 
+// GetFilter implements the Mastodon "get filter" endpoint, and always returns an empty Filter
 func GetFilter(serverFactory *server.Factory) func(model.Authorization, txn.GetFilter) (object.Filter, error) {
 
 	return func(model.Authorization, txn.GetFilter) (object.Filter, error) {
@@ -24,6 +25,7 @@ func GetFilter(serverFactory *server.Factory) func(model.Authorization, txn.GetF
 	}
 }
 
+// PostFilter is the Mastodon "create filter" endpoint, which Emissary does not implement
 func PostFilter(serverFactory *server.Factory) func(model.Authorization, txn.PostFilter) (object.Filter, error) {
 
 	return func(model.Authorization, txn.PostFilter) (object.Filter, error) {
@@ -31,6 +33,7 @@ func PostFilter(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 	}
 }
 
+// PutFilter is the Mastodon "update filter" endpoint, which Emissary does not implement
 func PutFilter(serverFactory *server.Factory) func(model.Authorization, txn.PutFilter) (object.Filter, error) {
 
 	return func(model.Authorization, txn.PutFilter) (object.Filter, error) {
@@ -38,6 +41,7 @@ func PutFilter(serverFactory *server.Factory) func(model.Authorization, txn.PutF
 	}
 }
 
+// DeleteFilter is the Mastodon "delete filter" endpoint, which Emissary does not implement
 func DeleteFilter(serverFactory *server.Factory) func(model.Authorization, txn.DeleteFilter) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteFilter) (struct{}, error) {
@@ -45,6 +49,7 @@ func DeleteFilter(serverFactory *server.Factory) func(model.Authorization, txn.D
 	}
 }
 
+// GetFilter_Keywords implements the Mastodon "get filter keywords" endpoint, and always returns an empty list
 func GetFilter_Keywords(serverFactory *server.Factory) func(model.Authorization, txn.GetFilter_Keywords) ([]string, error) {
 
 	return func(model.Authorization, txn.GetFilter_Keywords) ([]string, error) {
@@ -52,6 +57,7 @@ func GetFilter_Keywords(serverFactory *server.Factory) func(model.Authorization,
 	}
 }
 
+// PostFilter_Keyword is the Mastodon "add filter keyword" endpoint, which Emissary does not implement
 func PostFilter_Keyword(serverFactory *server.Factory) func(model.Authorization, txn.PostFilter_Keyword) (struct{}, error) {
 
 	return func(model.Authorization, txn.PostFilter_Keyword) (struct{}, error) {
@@ -59,6 +65,7 @@ func PostFilter_Keyword(serverFactory *server.Factory) func(model.Authorization,
 	}
 }
 
+// GetFilter_Keyword implements the Mastodon "get filter keyword" endpoint, and always returns an empty keyword
 func GetFilter_Keyword(serverFactory *server.Factory) func(model.Authorization, txn.GetFilter_Keyword) (object.FilterKeyword, error) {
 
 	return func(model.Authorization, txn.GetFilter_Keyword) (object.FilterKeyword, error) {
@@ -66,6 +73,7 @@ func GetFilter_Keyword(serverFactory *server.Factory) func(model.Authorization, 
 	}
 }
 
+// PutFilter_Keyword is the Mastodon "update filter keyword" endpoint, which Emissary does not implement
 func PutFilter_Keyword(serverFactory *server.Factory) func(model.Authorization, txn.PutFilter_Keyword) (object.FilterKeyword, error) {
 
 	return func(model.Authorization, txn.PutFilter_Keyword) (object.FilterKeyword, error) {
@@ -73,6 +81,7 @@ func PutFilter_Keyword(serverFactory *server.Factory) func(model.Authorization, 
 	}
 }
 
+// DeleteFilter_Keyword is the Mastodon "delete filter keyword" endpoint, which Emissary does not implement
 func DeleteFilter_Keyword(serverFactory *server.Factory) func(model.Authorization, txn.DeleteFilter_Keyword) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteFilter_Keyword) (struct{}, error) {
@@ -80,6 +89,7 @@ func DeleteFilter_Keyword(serverFactory *server.Factory) func(model.Authorizatio
 	}
 }
 
+// GetFilter_Statuses implements the Mastodon "get filter statuses" endpoint, and always returns an empty list
 func GetFilter_Statuses(serverFactory *server.Factory) func(model.Authorization, txn.GetFilter_Statuses) ([]object.FilterStatus, error) {
 
 	return func(model.Authorization, txn.GetFilter_Statuses) ([]object.FilterStatus, error) {
@@ -87,6 +97,7 @@ func GetFilter_Statuses(serverFactory *server.Factory) func(model.Authorization,
 	}
 }
 
+// PostFilter_Status is the Mastodon "add filter status" endpoint, which Emissary does not implement
 func PostFilter_Status(serverFactory *server.Factory) func(model.Authorization, txn.PostFilter_Status) (object.FilterStatus, error) {
 
 	return func(model.Authorization, txn.PostFilter_Status) (object.FilterStatus, error) {
@@ -94,6 +105,7 @@ func PostFilter_Status(serverFactory *server.Factory) func(model.Authorization, 
 	}
 }
 
+// GetFilter_Status implements the Mastodon "get filter status" endpoint, and always returns an empty status
 func GetFilter_Status(serverFactory *server.Factory) func(model.Authorization, txn.GetFilter_Status) (object.FilterStatus, error) {
 
 	return func(model.Authorization, txn.GetFilter_Status) (object.FilterStatus, error) {
@@ -101,6 +113,7 @@ func GetFilter_Status(serverFactory *server.Factory) func(model.Authorization, t
 	}
 }
 
+// DeleteFilter_Status is the Mastodon "delete filter status" endpoint, which Emissary does not implement
 func DeleteFilter_Status(serverFactory *server.Factory) func(model.Authorization, txn.DeleteFilter_Status) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteFilter_Status) (struct{}, error) {
@@ -108,6 +121,7 @@ func DeleteFilter_Status(serverFactory *server.Factory) func(model.Authorization
 	}
 }
 
+// GetFilters_V1 implements the deprecated V1 "get filters" endpoint, and always returns an empty list
 func GetFilters_V1(serverFactory *server.Factory) func(model.Authorization, txn.GetFilters_V1) ([]object.Filter, toot.PageInfo, error) {
 
 	return func(model.Authorization, txn.GetFilters_V1) ([]object.Filter, toot.PageInfo, error) {
@@ -115,6 +129,7 @@ func GetFilters_V1(serverFactory *server.Factory) func(model.Authorization, txn.
 	}
 }
 
+// GetFilter_V1 implements the deprecated V1 "get filter" endpoint, and always returns an empty Filter
 func GetFilter_V1(serverFactory *server.Factory) func(model.Authorization, txn.GetFilter_V1) (object.Filter, error) {
 
 	return func(model.Authorization, txn.GetFilter_V1) (object.Filter, error) {
@@ -122,6 +137,7 @@ func GetFilter_V1(serverFactory *server.Factory) func(model.Authorization, txn.G
 	}
 }
 
+// PostFilter_V1 is the deprecated V1 "create filter" endpoint, which Emissary does not implement
 func PostFilter_V1(serverFactory *server.Factory) func(model.Authorization, txn.PostFilter_V1) (object.Filter, error) {
 
 	return func(model.Authorization, txn.PostFilter_V1) (object.Filter, error) {
@@ -129,6 +145,7 @@ func PostFilter_V1(serverFactory *server.Factory) func(model.Authorization, txn.
 	}
 }
 
+// PutFilter_V1 is the deprecated V1 "update filter" endpoint, which Emissary does not implement
 func PutFilter_V1(serverFactory *server.Factory) func(model.Authorization, txn.PutFilter_V1) (object.Filter, error) {
 
 	return func(model.Authorization, txn.PutFilter_V1) (object.Filter, error) {
@@ -136,6 +153,7 @@ func PutFilter_V1(serverFactory *server.Factory) func(model.Authorization, txn.P
 	}
 }
 
+// DeleteFilter_V1 is the deprecated V1 "delete filter" endpoint, which Emissary does not implement
 func DeleteFilter_V1(serverFactory *server.Factory) func(model.Authorization, txn.DeleteFilter_V1) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteFilter_V1) (struct{}, error) {

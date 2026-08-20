@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
+// GetOAuthImportCallback receives the OAuth callback that authorizes an account import from another server
 func GetOAuthImportCallback(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.OAuthImportCallback"

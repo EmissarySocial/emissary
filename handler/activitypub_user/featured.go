@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
+// GetFeaturedCollection serves the Featured collection for a public User
 func GetFeaturedCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 	const location = "handler.activitypub_user.GetFeaturedCollection"
 

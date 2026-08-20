@@ -14,6 +14,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
+// GetIntent_Dislike renders the Activity Intent confirmation page for disliking a remote object
 func GetIntent_Dislike(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetIntent_Dislike"
@@ -95,6 +96,7 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *service.Factory, session 
 	return ctx.HTML(http.StatusOK, b.String())
 }
 
+// PostIntent_Dislike records a Dislike from the Activity Intent form
 func PostIntent_Dislike(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 	return postIntent_Response(ctx, factory, session, user, vocab.ActivityTypeDislike)
 }

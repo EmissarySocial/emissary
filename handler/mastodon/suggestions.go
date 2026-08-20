@@ -15,6 +15,7 @@ func GetSuggestions(serverFactory *server.Factory) func(model.Authorization, txn
 	}
 }
 
+// DeleteSuggestion implements the Mastodon "remove a suggestion" endpoint as a no-op
 func DeleteSuggestion(serverFactory *server.Factory) func(model.Authorization, txn.DeleteSuggestion) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteSuggestion) (struct{}, error) {

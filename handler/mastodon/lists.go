@@ -182,6 +182,7 @@ func PutList(serverFactory *server.Factory) func(model.Authorization, txn.PutLis
 	}
 }
 
+// DeleteList implements the Mastodon "delete list" endpoint
 func DeleteList(serverFactory *server.Factory) func(model.Authorization, txn.DeleteList) (struct{}, error) {
 
 	const location = "handler.mastodon.DeleteList"
@@ -283,12 +284,15 @@ func GetList_Accounts(serverFactory *server.Factory) func(model.Authorization, t
 	}
 }
 
+// PostList_Accounts is the Mastodon "add accounts to list" endpoint, which Emissary does not implement
 func PostList_Accounts(serverFactory *server.Factory) func(model.Authorization, txn.PostList_Accounts) (struct{}, error) {
 
 	return func(model.Authorization, txn.PostList_Accounts) (struct{}, error) {
 		return struct{}{}, derp.NotImplemented("handler.mastodon.PostListAccounts")
 	}
 }
+
+// DeleteList_Accounts is the Mastodon "remove accounts from list" endpoint, which Emissary does not implement
 func DeleteList_Accounts(serverFactory *server.Factory) func(model.Authorization, txn.DeleteList_Accounts) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteList_Accounts) (struct{}, error) {

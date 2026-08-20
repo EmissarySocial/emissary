@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// init registers the handlers for inbound Delete and Undo activities
 func init() {
 	streamRouter.Add(vocab.ActivityTypeDelete, vocab.Any, DeleteAny)
 	streamRouter.Add(vocab.ActivityTypeUndo, vocab.Any, DeleteAny)

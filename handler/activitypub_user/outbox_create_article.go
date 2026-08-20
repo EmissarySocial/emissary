@@ -9,10 +9,12 @@ import (
 	"github.com/benpate/hannibal/vocab"
 )
 
+// init registers the handler for outbound Create/Article activities
 func init() {
 	outboxRouter.Add(vocab.ActivityTypeCreate, vocab.ObjectTypeArticle, outbox_CreateArticle)
 }
 
+// outbox_CreateArticle publishes a new Article from the User's outbox
 func outbox_CreateArticle(context Context, activity streams.Document) error {
 
 	const location = "handler.activitypub_user.outbox_CreateArticle"

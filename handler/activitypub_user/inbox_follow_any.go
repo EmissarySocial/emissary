@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 )
 
+// init registers the handler for inbound Follow activities
 func init() {
 	inboxRouter.Add(vocab.ActivityTypeFollow, vocab.Any, func(context Context, activity streams.Document) error {
 

@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestIsSameOrigin verifies that two URLs are compared by host, and that malformed input is rejected
 func TestIsSameOrigin(t *testing.T) {
 
 	testCases := []struct {

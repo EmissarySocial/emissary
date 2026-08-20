@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
+// GetGiphyWidget renders the Giphy image picker for a signed-in User
 func GetGiphyWidget(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	// Verify authorization

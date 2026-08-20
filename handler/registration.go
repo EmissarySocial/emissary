@@ -41,6 +41,7 @@ func GetRegister(ctx *steranko.Context, factory *service.Factory, session data.S
 	return nil
 }
 
+// PostRegister accepts a registration form, and begins the sign-up process for a new User
 func PostRegister(ctx *steranko.Context, factory *service.Factory, session data.Session, domain *model.Domain, registration *model.Registration) error {
 
 	const location = "handler.PostPreRegister"

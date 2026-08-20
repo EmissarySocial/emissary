@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/toot/txn"
 )
 
+// PostApplication implements the Mastodon "create an application" endpoint, registering a new OAuth client
 func PostApplication(serverFactory *server.Factory) func(model.Authorization, txn.PostApplication) (object.Application, error) {
 
 	const location = "handler.mastodon_PostApplication"
@@ -52,6 +53,7 @@ func PostApplication(serverFactory *server.Factory) func(model.Authorization, tx
 	}
 }
 
+// GetApplication_VerifyCredentials implements the Mastodon "verify application credentials" endpoint
 func GetApplication_VerifyCredentials(serverFactory *server.Factory) func(model.Authorization, txn.GetApplication_VerifyCredentials) (object.Application, error) {
 
 	const location = "handler.mastodon_GetApplication_VerifyCredentials"

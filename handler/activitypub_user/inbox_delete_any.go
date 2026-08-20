@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 )
 
+// init registers the handler for inbound Delete activities
 func init() {
 	inboxRouter.Add(vocab.ActivityTypeDelete, vocab.Any, func(context Context, activity streams.Document) error {
 

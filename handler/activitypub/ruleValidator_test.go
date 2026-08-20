@@ -25,6 +25,7 @@ type fakeChecker struct {
 	gotKeys     []string
 }
 
+// DispositionForKeys implements the rule Checker interface, recording the keys it was asked about
 func (c *fakeChecker) DispositionForKeys(_ data.Session, _ primitive.ObjectID, keys []string, _ int64) (model.RuleDisposition, error) {
 	c.called = true
 	c.gotKeys = keys

@@ -14,6 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// GetIntent_Create renders the Activity Intent form for composing a new post
 func GetIntent_Create(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetIntent_Create"
@@ -65,6 +66,7 @@ func GetIntent_Create(ctx *steranko.Context, factory *service.Factory, session d
 	return ctx.HTML(http.StatusOK, b.String())
 }
 
+// PostIntent_Create publishes the post composed on the Create Activity Intent form
 func PostIntent_Create(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetIntent_Create"

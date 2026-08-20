@@ -14,6 +14,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
+// GetOutboxCollection serves the Outbox collection for a Stream actor
 func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
 
 	const location = "handler.activitypub_stream.GetOutboxCollection"

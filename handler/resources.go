@@ -11,6 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// GetThemeResource serves a static file that belongs to a Theme
 func GetThemeResource(serverFactory ThemeProvider) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
@@ -25,6 +26,7 @@ func GetThemeResource(serverFactory ThemeProvider) echo.HandlerFunc {
 	}
 }
 
+// GetTemplateResource serves a static file that belongs to a Template
 func GetTemplateResource(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
@@ -43,6 +45,7 @@ func GetTemplateResource(serverFactory *server.Factory) echo.HandlerFunc {
 	}
 }
 
+// GetWidgetResource serves a static file that belongs to a Widget
 func GetWidgetResource(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
@@ -61,6 +64,7 @@ func GetWidgetResource(serverFactory *server.Factory) echo.HandlerFunc {
 	}
 }
 
+// getResource copies a single file out of the provided filesystem and into the response
 func getResource(filesystem fs.FS, filename string, response *echo.Response) error {
 
 	const location = "handler.getResource"

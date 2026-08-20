@@ -15,11 +15,13 @@ import (
 	"github.com/benpate/toot/txn"
 )
 
+// tootGetter is any ranked model object that can render itself as a Mastodon API object
 type tootGetter[Result any] interface {
 	Toot() Result
 	rankGetter
 }
 
+// rankGetter is any object that exposes the rank used to paginate Mastodon API results
 type rankGetter interface {
 	GetRank() int64
 }

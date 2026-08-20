@@ -67,6 +67,7 @@ func getAuthorization(ctx echo.Context) model.Authorization {
 	return model.NewAuthorization()
 }
 
+// isUserVisible returns TRUE if the caller is allowed to see the provided User's profile
 func isUserVisible(context *steranko.Context, user *model.User) bool {
 
 	// If the User is public, then their profile is always visible
@@ -133,6 +134,7 @@ func firstOf[T comparable](values ...T) T {
 	return empty
 }
 
+// inlineError swaps a red error message into the page's htmx response slot
 func inlineError(ctx echo.Context, message string) error {
 
 	header := ctx.Response().Header()
@@ -144,6 +146,7 @@ func inlineError(ctx echo.Context, message string) error {
 	return ctx.String(http.StatusOK, `<span class="text-red">`+stdhtml.EscapeString(message)+`</span>`)
 }
 
+// closeModalAndRefreshPage tells htmx to dismiss the open modal and reload the underlying page
 func closeModalAndRefreshPage(ctx echo.Context) error {
 	header := ctx.Response().Header()
 	header.Set("Hx-Push-Url", "false")

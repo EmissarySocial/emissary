@@ -5,6 +5,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// inbox_Unknown logs and discards an activity that this server does not act on
 func inbox_Unknown(context Context, activity streams.Document) error {
 
 	log.Trace().

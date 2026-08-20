@@ -12,14 +12,17 @@ import (
 	"github.com/benpate/steranko"
 )
 
+// GetStartup renders a page of the first-run setup checklist
 func GetStartup(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 	return doStartup(ctx, factory, session, build.ActionMethodGet)
 }
 
+// PostStartup applies an action from the first-run setup checklist
 func PostStartup(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 	return doStartup(ctx, factory, session, build.ActionMethodPost)
 }
 
+// doStartup renders or applies a setup checklist action, for a domain owner only
 func doStartup(ctx *steranko.Context, factory *service.Factory, session data.Session, method build.ActionMethod) error {
 
 	const location = "handler.doStartup"

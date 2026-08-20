@@ -15,6 +15,7 @@ type ThemeProvider interface {
 	Theme() *service.Theme
 }
 
+// GetThemeBundle serves a bundled asset (CSS, JS, etc.) that belongs to a Theme
 func GetThemeBundle(themeProvider ThemeProvider) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
@@ -29,6 +30,7 @@ func GetThemeBundle(themeProvider ThemeProvider) echo.HandlerFunc {
 	}
 }
 
+// GetTemplateBundle serves a bundled asset (CSS, JS, etc.) that belongs to a Template
 func GetTemplateBundle(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
@@ -47,6 +49,7 @@ func GetTemplateBundle(serverFactory *server.Factory) echo.HandlerFunc {
 	}
 }
 
+// GetWidgetBundle serves a bundled asset (CSS, JS, etc.) that belongs to a Widget
 func GetWidgetBundle(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {
@@ -65,6 +68,7 @@ func GetWidgetBundle(serverFactory *server.Factory) echo.HandlerFunc {
 	}
 }
 
+// getBundle writes a single named Bundle to the response, with its content type and cache headers
 func getBundle(bundles mapof.Object[model.Bundle], bundleID string, response *echo.Response) error {
 
 	bundle, ok := bundles[bundleID]

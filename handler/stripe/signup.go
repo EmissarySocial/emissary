@@ -17,6 +17,7 @@ import (
 	"github.com/stripe/stripe-go/v78/webhook"
 )
 
+// PostSignupWebhook receives and verifies a Stripe subscription webhook, then applies it to the signing-up User
 func PostSignupWebhook(ctx *steranko.Context, factory *service.Factory, session data.Session, domain *model.Domain) error {
 
 	const location = "handler.stripe.PostWebhook"
@@ -78,6 +79,7 @@ func PostSignupWebhook(ctx *steranko.Context, factory *service.Factory, session 
 	return ctx.NoContent(http.StatusOK)
 }
 
+// finishWebhook applies a verified Stripe subscription event to the matching User record
 func finishWebhook(factory *service.Factory, session data.Session, restrictedKey string, event stripe.Event) error {
 
 	const location = "handler.stripe.finishWebhook"
@@ -210,6 +212,7 @@ func setPublic(user *model.User, product *stripe.Product, value bool) {
 	}
 }
 
+// getSubscriptionPrice returns the Price of the first priced item in a Stripe subscription, or nil
 func getSubscriptionPrice(subscription *stripe.Subscription) *stripe.Price {
 
 	if items := subscription.Items; items != nil {
@@ -223,6 +226,7 @@ func getSubscriptionPrice(subscription *stripe.Subscription) *stripe.Price {
 	return nil
 }
 
+// loadUser loads the User record that is mapped to the provided Stripe customer
 func loadUser(userService *service.User, session data.Session, customer *stripe.Customer, user *model.User) error {
 
 	if customer == nil {
@@ -237,6 +241,7 @@ func loadUser(userService *service.User, session data.Session, customer *stripe.
 	return nil
 }
 
+// loadOrCreateUser loads the User mapped to a Stripe customer, creating one from the Stripe profile if none exists
 func loadOrCreateUser(userService *service.User, session data.Session, apiKey string, customer *stripe.Customer, user *model.User) error {
 
 	err := loadUser(userService, session, customer, user)
@@ -266,6 +271,7 @@ func loadOrCreateUser(userService *service.User, session data.Session, apiKey st
 	return derp.Wrap(err, "handler.stripe.loadOrCreateUser", "Loading user record")
 }
 
+// loadStripeCustomer fills in a Stripe customer record from the Stripe API, using its ID
 func loadStripeCustomer(apiKey string, customer *stripe.Customer) error {
 
 	const location = "handler.stripe.loadStripeCustomer"
@@ -297,6 +303,7 @@ func loadStripeCustomer(apiKey string, customer *stripe.Customer) error {
 	return nil
 }
 
+// loadStripeProduct fills in a Stripe product record from the Stripe API, using its ID
 func loadStripeProduct(apiKey string, product *stripe.Product) error {
 
 	const location = "handler.stripe.loadStripeProduct"

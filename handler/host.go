@@ -9,6 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// GetHostMeta serves the /.well-known/host-meta document, in XRD or JSON format
 func GetHostMeta(serverFactory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
@@ -39,6 +40,7 @@ func GetHostMeta(serverFactory *server.Factory) echo.HandlerFunc {
 	}
 }
 
+// GetHostMetaJSON serves the /.well-known/host-meta document in JSON format
 func GetHostMetaJSON(serverFactory *server.Factory) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
@@ -61,6 +63,7 @@ func GetHostMetaJSON(serverFactory *server.Factory) echo.HandlerFunc {
 	}
 }
 
+// GetChangePassword redirects the legacy password-change URL to the password reset page
 func GetChangePassword(serverFactory *server.Factory) echo.HandlerFunc {
 
 	return func(ctx echo.Context) error {

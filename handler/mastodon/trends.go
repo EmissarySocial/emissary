@@ -16,6 +16,7 @@ func GetTrends(serverFactory *server.Factory) func(model.Authorization, txn.GetT
 	}
 }
 
+// GetTrends_Statuses implements the Mastodon "trending statuses" endpoint, and always returns an empty list
 func GetTrends_Statuses(serverFactory *server.Factory) func(model.Authorization, txn.GetTrends_Statuses) ([]object.Status, toot.PageInfo, error) {
 
 	return func(model.Authorization, txn.GetTrends_Statuses) ([]object.Status, toot.PageInfo, error) {
@@ -23,6 +24,7 @@ func GetTrends_Statuses(serverFactory *server.Factory) func(model.Authorization,
 	}
 }
 
+// GetTrends_Links implements the Mastodon "trending links" endpoint, and always returns an empty list
 func GetTrends_Links(serverFactory *server.Factory) func(model.Authorization, txn.GetTrends_Links) ([]object.PreviewCard, toot.PageInfo, error) {
 
 	return func(model.Authorization, txn.GetTrends_Links) ([]object.PreviewCard, toot.PageInfo, error) {

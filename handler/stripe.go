@@ -93,6 +93,7 @@ func stripe_ProcessWebhook(factory *service.Factory, session data.Session, reque
 	return nil
 }
 
+// stripe_UnmarshalEvent reads and signature-verifies an inbound Stripe webhook payload
 func stripe_UnmarshalEvent(request *http.Request, webhookSecret string, liveMode bool) (stripe.Event, error) {
 
 	const location = "service.MerchantAccount.stripe_UnmarshalEvent"

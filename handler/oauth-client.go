@@ -28,6 +28,7 @@ func GetOAuth(ctx *steranko.Context, factory *service.Factory, session data.Sess
 	return ctx.Redirect(http.StatusTemporaryRedirect, redirectURL)
 }
 
+// GetOAuthCallback receives the OAuth callback from a third-party provider, and exchanges the code for a token
 func GetOAuthCallback(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.OAuthCallback"
@@ -69,6 +70,7 @@ func GetOAuthClientMetadata(ctx *steranko.Context, factory *service.Factory, ses
 	return ctx.JSON(http.StatusOK, metadata)
 }
 
+// OAuthRedirect is the OAuth redirect endpoint, which is registered but does nothing yet
 func OAuthRedirect(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 	return nil
 }

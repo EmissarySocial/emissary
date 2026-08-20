@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
+// executeDomainTemplate renders a named template from this Domain's Theme, and writes it to the response
 func executeDomainTemplate(ctx *steranko.Context, factory *service.Factory, templateName string) error {
 
 	const location = "handler.executeDomainTemplate"

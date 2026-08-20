@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// init registers the wildcard handler that drops unrecognized activities
 func init() {
 	// Wildcard handler to drop any unrecognized activities
 	inboxRouter.Add(vocab.Any, vocab.Any, func(context Context, activity streams.Document) error {

@@ -12,6 +12,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// GetSingleSignOn signs a visitor into a third-party service using this Domain's shared SSO secret
 func GetSingleSignOn(ctx *steranko.Context, factory *service.Factory, session data.Session, domain *model.Domain) error {
 	const location = "handler.GetSingleSignOn"
 

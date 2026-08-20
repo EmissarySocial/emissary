@@ -26,6 +26,7 @@ func ownedStream(authorID primitive.ObjectID) model.Stream {
 	return stream
 }
 
+// TestUserOwnsStream_Author_Allowed verifies that a Stream's author may act on it
 func TestUserOwnsStream_Author_Allowed(t *testing.T) {
 
 	author := primitive.NewObjectID()
@@ -37,6 +38,7 @@ func TestUserOwnsStream_Author_Allowed(t *testing.T) {
 	require.Nil(t, userOwnsStream(&auth, &stream), "the author must be allowed to modify their own stream")
 }
 
+// TestUserOwnsStream_OtherUser_Denied verifies that a different signed-in User may not act on a Stream
 func TestUserOwnsStream_OtherUser_Denied(t *testing.T) {
 
 	author := primitive.NewObjectID()
@@ -50,6 +52,7 @@ func TestUserOwnsStream_OtherUser_Denied(t *testing.T) {
 	require.True(t, derp.IsForbidden(err), "the denial must be a Forbidden error")
 }
 
+// TestUserOwnsStream_DomainOwner_Allowed verifies that a domain owner may act on any Stream
 func TestUserOwnsStream_DomainOwner_Allowed(t *testing.T) {
 
 	author := primitive.NewObjectID()
@@ -64,6 +67,7 @@ func TestUserOwnsStream_DomainOwner_Allowed(t *testing.T) {
 	require.Nil(t, userOwnsStream(&auth, &stream), "a domain owner must be allowed to modify any stream")
 }
 
+// TestUserOwnsStream_Anonymous_Denied verifies that an anonymous request may not act on a Stream
 func TestUserOwnsStream_Anonymous_Denied(t *testing.T) {
 
 	author := primitive.NewObjectID()
@@ -77,6 +81,7 @@ func TestUserOwnsStream_Anonymous_Denied(t *testing.T) {
 	require.True(t, derp.IsForbidden(err), "the denial must be a Forbidden error")
 }
 
+// TestUserOwnsStream_AnonymousAgainstZeroAuthor_Denied verifies that a zero UserID does not match an unauthored Stream
 func TestUserOwnsStream_AnonymousAgainstZeroAuthor_Denied(t *testing.T) {
 
 	// Edge case: a Stream with no author (zero AttributedTo.UserID) must not be

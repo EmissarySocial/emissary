@@ -45,6 +45,7 @@ func buildIdentity(ctx *steranko.Context, factory *service.Factory, session data
 	return ctx.NoContent(http.StatusOK)
 }
 
+// GetPrivilegeDelete renders the confirmation prompt for canceling a guest Privilege
 func GetPrivilegeDelete(ctx *steranko.Context, factory *service.Factory, session data.Session, identity *model.Identity, privilege *model.Privilege) error {
 
 	if privilege.IsRecurring() {
@@ -93,6 +94,7 @@ func GetPrivilegeDelete(ctx *steranko.Context, factory *service.Factory, session
 
 }
 
+// PostPrivilegeDelete cancels a guest Privilege, ending any recurring subscription behind it
 func PostPrivilegeDelete(ctx *steranko.Context, factory *service.Factory, session data.Session, identity *model.Identity, privilege *model.Privilege) error {
 
 	const location = "handler.PostPrivilegeCancel"

@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/steranko"
 )
 
+// GetGeocodeNetwork returns the approximate coordinates of the caller, based on their IP address
 func GetGeocodeNetwork(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetGeocode"

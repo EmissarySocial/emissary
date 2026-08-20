@@ -26,15 +26,18 @@ import (
  * back through the production code path. Anonymous requests carry no token.
  ******************************************/
 
+// testJWTSecret is the fixed HMAC secret that the stub key service signs and verifies with
 const testJWTSecret = "profile-test-secret-key"
 
 // stubKeyService signs and verifies with a single fixed HMAC secret.
 type stubKeyService struct{}
 
+// GetCurrentKey implements the steranko KeyService interface, returning the fixed test secret
 func (stubKeyService) GetCurrentKey() (string, any, error) {
 	return "test", []byte(testJWTSecret), nil
 }
 
+// FindKey implements the steranko KeyService interface, returning the fixed test secret
 func (stubKeyService) FindKey(*jwt.Token) (any, error) {
 	return []byte(testJWTSecret), nil
 }
@@ -43,21 +46,37 @@ func (stubKeyService) FindKey(*jwt.Token) (any, error) {
 // a *model.Authorization so the parsed token populates it. Everything else is an unused no-op.
 type stubUserService struct{}
 
-func (stubUserService) New() steranko.User               { return nil }
+// New implements the steranko UserService interface. Unused by these tests.
+func (stubUserService) New() steranko.User { return nil }
+
+// Load implements the steranko UserService interface. Unused by these tests.
 func (stubUserService) Load(string, steranko.User) error { return derp.NotFound("test", "unused") }
+
+// LoadBySubject implements the steranko UserService interface. Unused by these tests.
 func (stubUserService) LoadBySubject(string, steranko.User) error {
 	return derp.NotFound("test", "unused")
 }
-func (stubUserService) Save(steranko.User, string) error   { return derp.Internal("test", "unused") }
+
+// Save implements the steranko UserService interface. Unused by these tests.
+func (stubUserService) Save(steranko.User, string) error { return derp.Internal("test", "unused") }
+
+// Delete implements the steranko UserService interface. Unused by these tests.
 func (stubUserService) Delete(steranko.User, string) error { return derp.Internal("test", "unused") }
+
+// RequestPasswordReset implements the steranko UserService interface. Unused by these tests.
 func (stubUserService) RequestPasswordReset(steranko.User) error {
 	return derp.Internal("test", "unused")
 }
+
+// Claims implements the steranko UserService interface. Unused by these tests.
 func (stubUserService) Claims(steranko.User) (jwt.Claims, error) {
 	return nil, derp.Internal("test", "unused")
 }
+
+// Close implements the steranko UserService interface. The stub holds no resources to release.
 func (stubUserService) Close() {}
 
+// NewClaims implements the steranko UserService interface, returning an empty Authorization to parse into
 func (stubUserService) NewClaims() jwt.Claims {
 	authorization := model.NewAuthorization()
 	return &authorization

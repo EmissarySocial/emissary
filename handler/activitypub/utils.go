@@ -24,6 +24,7 @@ func IsSameOrigin(first string, second string) bool {
 	return firstHost == uri.Host(second)
 }
 
+// FakeActivityID returns a stable hash that identifies an activity, even when it carries no ID of its own
 func FakeActivityID(activity streams.Document) string {
 
 	// Dig past create/update/delete Activities to find the real object

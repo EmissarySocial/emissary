@@ -16,6 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// GetDomainAttachment serves a file attached to the Domain record
 func GetDomainAttachment(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetDomainAttachment"
@@ -58,6 +59,7 @@ func GetDomainAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 	return nil
 }
 
+// GetSearchTagAttachment serves a file attached to a SearchTag
 func GetSearchTagAttachment(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetSearchTagAttachment"
@@ -102,6 +104,7 @@ func GetSearchTagAttachment(ctx *steranko.Context, factory *service.Factory, ses
 	return nil
 }
 
+// GetStreamAttachment serves a file attached to a Stream
 func GetStreamAttachment(ctx *steranko.Context, factory *service.Factory, session data.Session, stream *model.Stream) error {
 
 	const location = "handler.GetAttachment"
@@ -142,6 +145,7 @@ func GetStreamAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 	return nil
 }
 
+// GetUserAttachment serves a file attached to a User profile
 func GetUserAttachment(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
 	const location = "handler.GetUserAttachment"

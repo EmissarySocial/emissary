@@ -7,6 +7,7 @@ type AsWriteCloser struct {
 	io.Writer
 }
 
+// Close implements the io.Closer interface. The wrapped Writer owns no resources to release.
 func (writeCloser AsWriteCloser) Close() error {
 	// no op
 	return nil

@@ -69,6 +69,7 @@ func GetAPICollectionHeader(ctx *steranko.Context, factory *service.Factory, ses
 	return ctx.JSON(http.StatusOK, result)
 }
 
+// calcCollectionFirstPage returns the URL of a Collection's first page, treating an inline collection as its own page
 func calcCollectionFirstPage(collection streams.Document) string {
 
 	// If the collection publishes a "first page" then just use that

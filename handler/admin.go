@@ -22,6 +22,7 @@ func PostAdmin(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	return buildAdmin(ctx, factory, session, build.ActionMethodPost)
 }
 
+// buildAdmin renders an admin page, or applies an admin action, for a domain owner
 func buildAdmin(ctx *steranko.Context, factory *service.Factory, session data.Session, actionMethod build.ActionMethod) error {
 
 	const location = "handler.adminBuilder"
@@ -52,6 +53,7 @@ func buildAdmin(ctx *steranko.Context, factory *service.Factory, session data.Se
 	return build.AsHTML(ctx, factory, builder, actionMethod)
 }
 
+// buildAdmin_ParsePath splits an admin URL into its templateID, actionID, and (optional) objectID
 func buildAdmin_ParsePath(ctx echo.Context) (string, string, primitive.ObjectID) {
 
 	// First parameter is always the templateID
@@ -69,6 +71,7 @@ func buildAdmin_ParsePath(ctx echo.Context) (string, string, primitive.ObjectID)
 	return templateID, actionID, primitive.NilObjectID
 }
 
+// buildAdmin_GetBuilder returns the Builder that matches the model named by the provided Template
 func buildAdmin_GetBuilder(ctx *steranko.Context, factory *service.Factory, session data.Session, template model.Template, actionID string, objectID primitive.ObjectID) (build.Builder, error) {
 
 	const location = "handler.buildAdmin_GetBuilder"

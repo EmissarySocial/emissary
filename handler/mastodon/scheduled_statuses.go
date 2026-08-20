@@ -16,6 +16,7 @@ func GetScheduledStatuses(serverFactory *server.Factory) func(model.Authorizatio
 	}
 }
 
+// GetScheduledStatus implements the Mastodon "get scheduled status" endpoint, and always returns an empty status
 func GetScheduledStatus(serverFactory *server.Factory) func(model.Authorization, txn.GetScheduledStatus) (object.ScheduledStatus, error) {
 
 	return func(model.Authorization, txn.GetScheduledStatus) (object.ScheduledStatus, error) {
@@ -24,6 +25,7 @@ func GetScheduledStatus(serverFactory *server.Factory) func(model.Authorization,
 	}
 }
 
+// PutScheduledStatus implements the Mastodon "update scheduled status" endpoint as a no-op
 func PutScheduledStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutScheduledStatus) (object.ScheduledStatus, error) {
 
 	return func(model.Authorization, txn.PutScheduledStatus) (object.ScheduledStatus, error) {
@@ -32,6 +34,7 @@ func PutScheduledStatus(serverFactory *server.Factory) func(model.Authorization,
 	}
 }
 
+// DeleteScheduledStatus implements the Mastodon "delete scheduled status" endpoint as a no-op
 func DeleteScheduledStatus(serverFactory *server.Factory) func(model.Authorization, txn.DeleteScheduledStatus) (struct{}, error) {
 
 	return func(model.Authorization, txn.DeleteScheduledStatus) (struct{}, error) {

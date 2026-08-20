@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// SetupGetConfig serves the whole server configuration as JSON, for the setup console
 func SetupGetConfig(factory *server.SetupFactory) func(c echo.Context) error {
 
 	return func(c echo.Context) error {

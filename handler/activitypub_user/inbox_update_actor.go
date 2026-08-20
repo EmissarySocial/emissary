@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/sherlock"
 )
 
+// init registers the profile-Update handlers, one per Actor type
 func init() {
 
 	// An actor's profile Update routes here instead of the (Update, Any) news-item wildcard:

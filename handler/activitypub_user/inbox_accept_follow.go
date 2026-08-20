@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/rosetta/first"
 )
 
+// init registers the handler for inbound Accept/Follow activities
 func init() {
 	inboxRouter.Add(vocab.ActivityTypeAccept, vocab.ActivityTypeFollow, inbox_AcceptFollow)
 }

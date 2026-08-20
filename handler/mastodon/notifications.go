@@ -49,6 +49,7 @@ func GetNotifications(serverFactory *server.Factory) func(model.Authorization, t
 	}
 }
 
+// GetNotification implements the Mastodon "get notification" endpoint
 func GetNotification(serverFactory *server.Factory) func(model.Authorization, txn.GetNotification) (object.Notification, error) {
 
 	const location = "handler.mastodon.GetNotification"
@@ -86,6 +87,7 @@ func GetNotification(serverFactory *server.Factory) func(model.Authorization, tx
 	}
 }
 
+// PostNotifications_Clear implements the Mastodon "clear all notifications" endpoint
 func PostNotifications_Clear(serverFactory *server.Factory) func(model.Authorization, txn.PostNotifications_Clear) (object.Notification, error) {
 
 	const location = "handler.mastodon.PostNotifications_Clear"
@@ -114,6 +116,7 @@ func PostNotifications_Clear(serverFactory *server.Factory) func(model.Authoriza
 	}
 }
 
+// PostNotification_Dismiss implements the Mastodon "dismiss notification" endpoint
 func PostNotification_Dismiss(serverFactory *server.Factory) func(model.Authorization, txn.PostNotification_Dismiss) (object.Notification, error) {
 
 	const location = "handler.mastodon.PostNotification_Dismiss"
