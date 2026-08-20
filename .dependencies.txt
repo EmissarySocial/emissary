@@ -15,6 +15,7 @@ NO DEPENDENTS
 
 FEW DEPENDENTS
 
+- oembed
 - geo
 - toot
 - hannibal
