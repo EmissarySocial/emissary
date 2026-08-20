@@ -29,6 +29,7 @@ func NewStreamWidget(widgetType string, label string, location string) StreamWid
 	return StreamWidget{
 		StreamWidgetID: primitive.NewObjectID(),
 		Type:           widgetType,
+		Location:       location,
 		Label:          label,
 		Data:           mapof.NewAny(),
 	}
