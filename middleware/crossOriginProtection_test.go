@@ -32,6 +32,7 @@ func invokeCrossOriginProtection(t *testing.T, method string, headers map[string
 	return CrossOriginProtection()(passed)(ctx)
 }
 
+// TestCrossOriginProtection_SafeMethods verifies that GET, HEAD, and OPTIONS are always allowed
 func TestCrossOriginProtection_SafeMethods(t *testing.T) {
 
 	// Safe methods are always allowed, even when explicitly cross-site
@@ -41,6 +42,7 @@ func TestCrossOriginProtection_SafeMethods(t *testing.T) {
 	}
 }
 
+// TestCrossOriginProtection_ServerToServer verifies that non-browser requests are allowed through
 func TestCrossOriginProtection_ServerToServer(t *testing.T) {
 
 	// Requests without Sec-Fetch-Site or Origin headers (ActivityPub, webhooks, curl)
@@ -49,6 +51,7 @@ func TestCrossOriginProtection_ServerToServer(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// TestCrossOriginProtection_SameOrigin verifies that same-origin and user-initiated requests are allowed
 func TestCrossOriginProtection_SameOrigin(t *testing.T) {
 
 	// Same-origin browser requests are allowed
@@ -64,6 +67,7 @@ func TestCrossOriginProtection_SameOrigin(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// TestCrossOriginProtection_CrossSite verifies that cross-site and same-site POSTs are rejected
 func TestCrossOriginProtection_CrossSite(t *testing.T) {
 
 	// Cross-site POSTs are rejected via Sec-Fetch-Site
@@ -82,6 +86,7 @@ func TestCrossOriginProtection_CrossSite(t *testing.T) {
 	require.True(t, derp.IsForbidden(err))
 }
 
+// TestCrossOriginProtection_CrossSiteDelete verifies that every unsafe method is guarded, not just POST
 func TestCrossOriginProtection_CrossSiteDelete(t *testing.T) {
 
 	// All non-safe methods are covered, not just POST

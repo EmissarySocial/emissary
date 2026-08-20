@@ -41,6 +41,7 @@ func invokeHttpsRedirect(t *testing.T, scheme string, host string) (*httptest.Re
 	return recorder, passed
 }
 
+// TestHttpsRedirect_InsecurePublic verifies that an insecure public request is redirected instead of handled
 func TestHttpsRedirect_InsecurePublic(t *testing.T) {
 
 	// An insecure public request is permanently redirected to its HTTPS URL,
@@ -54,6 +55,7 @@ func TestHttpsRedirect_InsecurePublic(t *testing.T) {
 	require.Empty(t, recorder.Header().Get("Strict-Transport-Security"))
 }
 
+// TestHttpsRedirect_SecurePublic verifies that a secure public request reaches the handler and gets an HSTS header
 func TestHttpsRedirect_SecurePublic(t *testing.T) {
 
 	// A secure public request passes through to the handler with the HSTS header set
@@ -64,6 +66,7 @@ func TestHttpsRedirect_SecurePublic(t *testing.T) {
 	require.Equal(t, "max-age=63072000", recorder.Header().Get("Strict-Transport-Security"))
 }
 
+// TestHttpsRedirect_LocalHosts verifies that local and private hosts are exempt from the redirect and HSTS
 func TestHttpsRedirect_LocalHosts(t *testing.T) {
 
 	// Local, loopback, and private hosts are exempt from both the redirect and
