@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestCounter verifies that Add increments a named tally and Get reads it back
 func TestCounter(t *testing.T) {
 
 	counter := NewCounter()

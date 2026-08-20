@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestTemplateMap verifies that templates parsed from JSON render with the provided data
 func TestTemplateMap(t *testing.T) {
 
 	// Create a new Map

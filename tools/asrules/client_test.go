@@ -17,15 +17,20 @@ type fakeInner struct {
 	deleted int
 }
 
+// SetRootClient implements the streams.Client interface. The stub ignores the root client.
 func (c *fakeInner) SetRootClient(streams.Client) {}
 
+// Load implements the streams.Client interface, recording the URI and returning a bare document
 func (c *fakeInner) Load(uri string, _ ...any) (streams.Document, error) {
 	c.loaded = append(c.loaded, uri)
 	return streams.NewDocument(map[string]any{vocab.PropertyID: uri}), nil
 }
 
+// Save implements the streams.Client interface, counting the call
 func (c *fakeInner) Save(streams.Document) error { c.saved++; return nil }
-func (c *fakeInner) Delete(string) error         { c.deleted++; return nil }
+
+// Delete implements the streams.Client interface, counting the call
+func (c *fakeInner) Delete(string) error { c.deleted++; return nil }
 
 // checkerFunc builds a Checker returning `pre` for the URL-only call (NilDocument) and `post` once
 // a document has loaded.
@@ -38,10 +43,12 @@ func checkerFunc(pre metadata.LabelSet, post metadata.LabelSet) Checker {
 	}
 }
 
+// hiddenLabels builds a LabelSet containing a single hidden label with the provided reason
 func hiddenLabels(reason string) metadata.LabelSet {
 	return metadata.LabelSet{{Value: reason, IsHidden: true}}
 }
 
+// annotationLabels builds a LabelSet containing one visible label per provided value
 func annotationLabels(values ...string) metadata.LabelSet {
 	result := make(metadata.LabelSet, 0, len(values))
 	for _, value := range values {

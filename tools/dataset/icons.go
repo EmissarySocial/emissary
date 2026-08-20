@@ -2,6 +2,7 @@ package dataset
 
 import "github.com/benpate/form"
 
+// Icons returns the list of icon names available to templates and forms
 func Icons() []form.LookupCode {
 
 	return []form.LookupCode{

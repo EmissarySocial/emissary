@@ -7,6 +7,7 @@ type testPerson struct {
 	email string
 }
 
+// ID implements the Value interface, returning this stub's identifier
 func (p testPerson) ID() string {
 	return p.id
 }

@@ -18,14 +18,18 @@ import (
 const DefaultRegion = "us-east-1"
 
 var (
-	ErrBucketNotFound    = errors.New("bucket name could not be found")
-	ErrHostnameNotFound  = errors.New("hostname could not be found")
+	// ErrBucketNotFound is returned when a URI contains no recognizable bucket name
+	ErrBucketNotFound = errors.New("bucket name could not be found")
+	// ErrHostnameNotFound is returned when a URI contains no hostname
+	ErrHostnameNotFound = errors.New("hostname could not be found")
+	// ErrInvalidS3Endpoint is returned when a URI does not name an S3 endpoint
 	ErrInvalidS3Endpoint = errors.New("an invalid S3 endpoint URL")
 
 	// Pattern used to parse multiple path and host style S3 endpoint URLs.
 	s3URLPattern = regexp.MustCompile(`^(.+\.)?s3[.-](?:(accelerated|dualstack|website)[.-])?([a-z0-9-]+)\.`)
 )
 
+// S3URI is a parsed Amazon S3 resource address, in either host style or path style
 type S3URI struct {
 	uri       *url.URL
 	options   []Option
@@ -47,50 +51,62 @@ type S3URI struct {
 	Secret    *string
 }
 
+// NewS3URI returns an empty S3URI, configured with the provided Options
 func NewS3URI(opts ...Option) *S3URI {
 	return &S3URI{options: opts}
 }
 
+// Reset returns this S3URI to its zero state, so that it can be reused
 func (s3u *S3URI) Reset() *S3URI {
 	return reset(s3u)
 }
 
+// Parse populates this S3URI from a string or a *url.URL
 func (s3u *S3URI) Parse(v any) (*S3URI, error) {
 	return parse(s3u, v)
 }
 
+// ParseURL populates this S3URI from a *url.URL
 func (s3u *S3URI) ParseURL(u *url.URL) (*S3URI, error) {
 	return parse(s3u, u)
 }
 
+// ParseString populates this S3URI from a string
 func (s3u *S3URI) ParseString(s string) (*S3URI, error) {
 	return parse(s3u, s)
 }
 
+// URI returns the underlying *url.URL that this S3URI was parsed from
 func (s3u *S3URI) URI() *url.URL {
 	return s3u.uri
 }
 
+// HasCredentials returns TRUE if this S3URI carries both an access key and a secret
 func (s3u *S3URI) HasCredentials() bool {
 	return (s3u.AccessKey != nil) && (s3u.Secret != nil)
 }
 
+// GetCredentials returns the access key, secret, and (always empty) session token for this S3URI
 func (s3u *S3URI) GetCredentials() (string, string, string) {
 	return *s3u.AccessKey, *s3u.Secret, ""
 }
 
+// Parse converts a string or a *url.URL into a new S3URI
 func Parse(v any) (*S3URI, error) {
 	return NewS3URI().Parse(v)
 }
 
+// ParseURL converts a *url.URL into a new S3URI
 func ParseURL(u *url.URL) (*S3URI, error) {
 	return NewS3URI().ParseURL(u)
 }
 
+// ParseString converts a string into a new S3URI
 func ParseString(s string) (*S3URI, error) {
 	return NewS3URI().ParseString(s)
 }
 
+// MustParse unwraps a Parse result, panicking if it failed
 func MustParse(s3u *S3URI, err error) *S3URI {
 	if err != nil {
 		panic(err)
@@ -98,21 +114,25 @@ func MustParse(s3u *S3URI, err error) *S3URI {
 	return s3u
 }
 
+// Validate returns TRUE if the provided string or *url.URL names a valid S3 resource
 func Validate(v any) bool {
 	_, err := NewS3URI().Parse(v)
 	return err == nil
 }
 
+// ValidateURL returns TRUE if the provided *url.URL names a valid S3 resource
 func ValidateURL(u *url.URL) bool {
 	_, err := NewS3URI().Parse(u)
 	return err == nil
 }
 
+// ValidateString returns TRUE if the provided string names a valid S3 resource
 func ValidateString(s string) bool {
 	_, err := NewS3URI().Parse(s)
 	return err == nil
 }
 
+// parse populates an S3URI from a string or a *url.URL, deriving the bucket, key, region, and style
 func parse(s3u *S3URI, s any) (*S3URI, error) {
 	var (
 		u   *url.URL
@@ -285,14 +305,17 @@ func reset(s3u *S3URI) *S3URI {
 	return s3u
 }
 
+// String returns a pointer to the provided string
 func String(s string) *string {
 	return &s
 }
 
+// Bool returns a pointer to the provided boolean
 func Bool(b bool) *bool {
 	return &b
 }
 
+// StringValue dereferences a string pointer, returning an empty string if it is nil
 func StringValue(s *string) string {
 	if s != nil {
 		return *s
@@ -300,6 +323,7 @@ func StringValue(s *string) string {
 	return ""
 }
 
+// BoolValue dereferences a boolean pointer, returning FALSE if it is nil
 func BoolValue(b *bool) bool {
 	if b != nil {
 		return *b

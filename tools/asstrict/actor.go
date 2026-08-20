@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/convert"
 )
 
+// Actor is a strictly-typed representation of an ActivityStreams Actor
 type Actor struct {
 
 	// Profile

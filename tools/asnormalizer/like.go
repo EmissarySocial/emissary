@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 )
 
+// Like normalizes a Like activity into a plain map
 func Like(document streams.Document) map[string]any {
 
 	return map[string]any{

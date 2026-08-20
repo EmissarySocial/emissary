@@ -10,11 +10,13 @@ import (
 	"github.com/hjson/hjson-go/v4"
 )
 
+// Template renders a Go text template whose output is then parsed as JSON
 type Template struct {
 	innerTemplate *template.Template
 	strictMode    bool // if TRUE, then use the standard (strict) unmarshaller. (Default is to use https://hjson.github.io )
 }
 
+// New compiles a JSON template from the provided source, returning an error if the template does not parse
 func New(input string, options ...Option) (Template, error) {
 
 	result := Template{}

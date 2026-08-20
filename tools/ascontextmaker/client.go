@@ -37,6 +37,7 @@ func New(innerClient streams.Client, commonDatabase data.Server, options ...Clie
 	return result
 }
 
+// SetRootClient implements the streams.Client interface, and passes the root client down the chain
 func (client *Client) SetRootClient(rootClient streams.Client) {
 	client.rootClient = rootClient
 	if client.innerClient != nil {
@@ -74,14 +75,17 @@ func (client Client) Load(uri string, options ...any) (streams.Document, error) 
 	return result, nil
 }
 
+// Save implements the streams.Client interface, and passes the document to the innerClient
 func (client *Client) Save(document streams.Document) error {
 	return client.innerClient.Save(document)
 }
 
+// Delete implements the streams.Client interface, and passes the documentID to the innerClient
 func (client *Client) Delete(documentID string) error {
 	return client.innerClient.Delete(documentID)
 }
 
+// getParentContext walks up the reply chain to find the context that this document belongs to
 func (client *Client) getParentContext(document streams.Document) string {
 
 	// If this is a reply to another document...

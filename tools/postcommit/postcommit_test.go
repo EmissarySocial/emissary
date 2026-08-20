@@ -23,9 +23,14 @@ type testSession struct {
 	ctx context.Context
 }
 
+// Collection implements the data.Session interface. The stub owns no collections.
 func (s testSession) Collection(_ string) data.Collection { return nil }
-func (s testSession) Context() context.Context            { return s.ctx }
-func (s testSession) Close()                              {}
+
+// Context implements the data.Session interface, returning the carried context
+func (s testSession) Context() context.Context { return s.ctx }
+
+// Close implements the data.Session interface. The stub holds no resources to release.
+func (s testSession) Close() {}
 
 // testServer is a data.Server that runs the transaction callback `attempts` times
 // (simulating mongo driver retries on transient errors) and then returns `err`
@@ -35,10 +40,12 @@ type testServer struct {
 	err      error
 }
 
+// Session implements the data.Server interface, returning a session that carries the provided context
 func (s testServer) Session(ctx context.Context) (data.Session, error) {
 	return testSession{ctx: ctx}, nil
 }
 
+// WithTransaction implements the data.Server interface, replaying the callback to simulate driver retries
 func (s testServer) WithTransaction(ctx context.Context, fn data.TransactionCallbackFunc) (any, error) {
 
 	var result any
@@ -103,6 +110,7 @@ func expectNoTask(t *testing.T, received chan string) {
  * Spool Primitives
  ******************************************/
 
+// TestTasks_AddDrain_FIFO verifies that Drain returns spooled tasks in insertion order, then empties the spool
 func TestTasks_AddDrain_FIFO(t *testing.T) {
 
 	spool := postcommit.NewTasks()
@@ -120,6 +128,7 @@ func TestTasks_AddDrain_FIFO(t *testing.T) {
 	require.Empty(t, spool.Drain())
 }
 
+// TestTasks_Reset verifies that Reset discards every spooled task
 func TestTasks_Reset(t *testing.T) {
 
 	spool := postcommit.NewTasks()
@@ -129,6 +138,7 @@ func TestTasks_Reset(t *testing.T) {
 	require.Empty(t, spool.Drain())
 }
 
+// TestTasks_ConcurrentAdd verifies that the spool is safe for concurrent writers
 func TestTasks_ConcurrentAdd(t *testing.T) {
 
 	spool := postcommit.NewTasks()
@@ -146,6 +156,7 @@ func TestTasks_ConcurrentAdd(t *testing.T) {
 	require.Len(t, spool.Drain(), 32)
 }
 
+// TestFrom_MissingSpool verifies that a context with no spool returns nil instead of panicking
 func TestFrom_MissingSpool(t *testing.T) {
 	require.Nil(t, postcommit.From(context.Background()))
 }
@@ -154,6 +165,7 @@ func TestFrom_MissingSpool(t *testing.T) {
  * Publish
  ******************************************/
 
+// TestPublish_SpoolsInsideTransaction verifies that a task raised inside a transaction waits in the spool
 func TestPublish_SpoolsInsideTransaction(t *testing.T) {
 
 	q, received := newTestQueue()
@@ -173,6 +185,7 @@ func TestPublish_SpoolsInsideTransaction(t *testing.T) {
 	require.Equal(t, "spooled-task", drained[0].Name)
 }
 
+// TestPublish_ImmediateOutsideTransaction verifies that a task raised outside a transaction publishes right away
 func TestPublish_ImmediateOutsideTransaction(t *testing.T) {
 
 	q, received := newTestQueue()
@@ -184,6 +197,7 @@ func TestPublish_ImmediateOutsideTransaction(t *testing.T) {
 	require.Equal(t, "immediate-task", expectTask(t, received))
 }
 
+// TestPublish_NilQueueOutsideTransaction verifies that a nil queue drops the task instead of panicking
 func TestPublish_NilQueueOutsideTransaction(t *testing.T) {
 
 	// Must not panic (preserves the no-op-safe behavior of nil-queue call sites)
@@ -195,6 +209,7 @@ func TestPublish_NilQueueOutsideTransaction(t *testing.T) {
  * WithTransaction
  ******************************************/
 
+// TestWithTransaction_PublishesAfterCommit verifies that spooled tasks publish in order once the transaction commits
 func TestWithTransaction_PublishesAfterCommit(t *testing.T) {
 
 	q, received := newTestQueue()
@@ -219,6 +234,7 @@ func TestWithTransaction_PublishesAfterCommit(t *testing.T) {
 	require.Equal(t, "two", expectTask(t, received))
 }
 
+// TestWithTransaction_DropsTasksOnRollback verifies that a rolled-back transaction publishes nothing
 func TestWithTransaction_DropsTasksOnRollback(t *testing.T) {
 
 	q, received := newTestQueue()
@@ -236,6 +252,7 @@ func TestWithTransaction_DropsTasksOnRollback(t *testing.T) {
 	expectNoTask(t, received)
 }
 
+// TestWithTransaction_ResetsSpoolOnRetry verifies that a retried transaction publishes each task exactly once
 func TestWithTransaction_ResetsSpoolOnRetry(t *testing.T) {
 
 	q, received := newTestQueue()

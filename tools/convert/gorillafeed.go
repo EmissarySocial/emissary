@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/feeds"
 )
 
+// StreamToGorillaFeed converts a Stream into an RSS/Atom feed item
 func StreamToGorillaFeed(stream model.Stream) *feeds.Item {
 	result := &feeds.Item{
 		Title:       stream.Label,
@@ -23,6 +24,7 @@ func StreamToGorillaFeed(stream model.Stream) *feeds.Item {
 	return result
 }
 
+// SearchResultToGorillaFeed converts a SearchResult into an RSS/Atom feed item
 func SearchResultToGorillaFeed(searchResult model.SearchResult) *feeds.Item {
 	result := &feeds.Item{
 		Title:       searchResult.Name,

@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/convert"
 )
 
+// Activity is a strictly-typed representation of an ActivityStreams Activity
 type Activity struct {
 	ID     string
 	Type   string

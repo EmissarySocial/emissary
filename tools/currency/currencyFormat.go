@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/convert"
 )
 
+// UnitFormat renders an integer number of currency units (e.g. cents) as a human-readable amount
 func UnitFormat(currency string, units int64) string {
 
 	var result string

@@ -40,6 +40,7 @@ func newWebFingerServer(t *testing.T, links []digit.Link) string {
 	return server.URL
 }
 
+// TestGetTemplate_AllowPrivateIPs verifies that the SSRF guard blocks loopback lookups unless AllowPrivateIPs is set
 func TestGetTemplate_AllowPrivateIPs(t *testing.T) {
 
 	// Publish a FEP-3b86 Follow intent on a loopback home server
@@ -66,6 +67,7 @@ func TestGetTemplate_AllowPrivateIPs(t *testing.T) {
 	require.Equal(t, "", explicit.GetTemplate("follow", account))
 }
 
+// TestGetTemplate_LegacyRemoteFollow verifies that the OStatus "subscribe" link is rewritten into a Follow intent
 func TestGetTemplate_LegacyRemoteFollow(t *testing.T) {
 
 	// Publish only the legacy OStatus "subscribe" link (Mastodon-style remote follow)
@@ -84,6 +86,7 @@ func TestGetTemplate_LegacyRemoteFollow(t *testing.T) {
 	require.Equal(t, "", allowed.GetTemplate("like", account))
 }
 
+// TestLookup verifies that Lookup returns the published WebFinger resource, and is refused by the SSRF guard by default
 func TestLookup(t *testing.T) {
 
 	followTemplate := "https://example.com/@me/intent/follow?object={object}"
@@ -107,6 +110,7 @@ func TestLookup(t *testing.T) {
 	require.Error(t, err)
 }
 
+// TestGetTemplateFromKnownSoftware verifies the hard-coded intent templates for well-known server software
 func TestGetTemplateFromKnownSoftware(t *testing.T) {
 
 	camper := New()
@@ -129,6 +133,7 @@ func TestGetTemplateFromKnownSoftware(t *testing.T) {
 	require.Equal(t, "", camper.getTemplateFromKnownSoftware(vocab.ActivityTypeCreate, "friendster"))
 }
 
+// TestGetServername verifies that URLs, handles, and degenerate inputs all reduce to a server name
 func TestGetServername(t *testing.T) {
 
 	camper := New()

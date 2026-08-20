@@ -9,12 +9,15 @@ import (
 	"github.com/davidscottmills/goeditorjs"
 )
 
+// Code renders an EditorJS "code" block
 type Code struct{}
 
+// Type returns the EditorJS block name that this renderer handles
 func (code Code) Type() string {
 	return "code"
 }
 
+// GenerateHTML renders the block as a <pre><code> element
 func (code Code) GenerateHTML(block goeditorjs.EditorJSBlock) (string, error) {
 
 	data := mapof.NewAny()

@@ -8,12 +8,15 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Slice is a list of ObjectIDs that can be read and written through a rosetta schema
 type Slice []primitive.ObjectID
 
+// NewSlice returns a fully initialized, empty Slice
 func NewSlice() Slice {
 	return make(Slice, 0)
 }
 
+// SliceSchema returns the rosetta schema that describes a Slice
 func SliceSchema() schema.Element {
 	return schema.Array{
 		Items: schema.String{Format: "objectId"},
@@ -24,6 +27,7 @@ func SliceSchema() schema.Element {
  * Schema Getter/Setter Interfaces
  ******************************************/
 
+// Length returns the number of ObjectIDs in this Slice
 func (slice Slice) Length() int {
 	if slice == nil {
 		return 0
@@ -31,14 +35,17 @@ func (slice Slice) Length() int {
 	return len(slice)
 }
 
+// IsEmpty returns TRUE if this Slice contains no ObjectIDs
 func (slice Slice) IsEmpty() bool {
 	return slice.Length() == 0
 }
 
+// NotEmpty returns TRUE if this Slice contains at least one ObjectID
 func (slice Slice) NotEmpty() bool {
 	return slice.Length() > 0
 }
 
+// First returns the first ObjectID in this Slice, or NilObjectID if it is empty
 func (slice Slice) First() primitive.ObjectID {
 	if slice.Length() == 0 {
 		return primitive.NilObjectID
@@ -46,6 +53,7 @@ func (slice Slice) First() primitive.ObjectID {
 	return slice[0]
 }
 
+// IndexOf returns the position of the provided ObjectID in this Slice, or -1 if it is not present
 func (slice Slice) IndexOf(value primitive.ObjectID) int {
 
 	for index, item := range slice {
@@ -56,6 +64,7 @@ func (slice Slice) IndexOf(value primitive.ObjectID) int {
 	return -1
 }
 
+// GetStringOK returns the hex value at the provided index. Implements schema.StringGetter.
 func (slice Slice) GetStringOK(name string) (string, bool) {
 
 	if index, ok := schema.Index(name, slice.Length()); ok {
@@ -98,6 +107,7 @@ func (slice *Slice) SetIndex(index int, value any) bool {
 	return true
 }
 
+// SetString stores a hex-encoded ObjectID at the provided index, growing the Slice to fit. Implements schema.StringSetter.
 func (slice *Slice) SetString(name string, value string) bool {
 
 	if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
@@ -183,14 +193,17 @@ func (x *Slice) Append(value ...primitive.ObjectID) {
 	*x = append(*x, value...)
 }
 
+// Contains returns TRUE if this Slice contains the provided ObjectID
 func (x Slice) Contains(value primitive.ObjectID) bool {
 	return slice.Contains(x, value)
 }
 
+// NotContains returns TRUE if this Slice does not contain the provided ObjectID
 func (x Slice) NotContains(value primitive.ObjectID) bool {
 	return !slice.Contains(x, value)
 }
 
+// ContainsAny returns TRUE if this Slice contains at least one of the provided ObjectIDs
 func (x Slice) ContainsAny(values ...primitive.ObjectID) bool {
 	return slice.ContainsAny(x, values...)
 }
@@ -207,6 +220,7 @@ func (x Slice) ContainsInterface(value any) bool {
 	return false
 }
 
+// SliceOfString returns every ObjectID in this Slice as a hex string
 func (x Slice) SliceOfString() []string {
 
 	// Convert the slice of ObjectIDs to a slice of strings

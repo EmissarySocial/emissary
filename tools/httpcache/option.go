@@ -2,6 +2,7 @@ package httpcache
 
 import "time"
 
+// Option is a configuration function that modifies an HTTPCache
 type Option func(*HTTPCache)
 
 // WithTTL sets the default TTL for this cache, which is used

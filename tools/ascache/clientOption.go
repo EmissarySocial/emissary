@@ -1,5 +1,6 @@
 package ascache
 
+// ClientOptionFunc is a configuration function that modifies a cache Client
 type ClientOptionFunc func(*Client)
 
 // WithObeyHeaders instructs the cache to use HTTP headers

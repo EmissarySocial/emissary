@@ -86,14 +86,17 @@ func (set *Slice[V]) Delete(key string) {
 	}
 }
 
+// Less implements the sort.Interface, ordering values by their ID
 func (set Slice[V]) Less(i int, j int) bool {
 	return set[i].ID() < set[j].ID()
 }
 
+// Swap implements the sort.Interface, exchanging the values at two positions
 func (set *Slice[V]) Swap(i int, j int) {
 	(*set)[i], (*set)[j] = (*set)[j], (*set)[i]
 }
 
+// Sort orders this Slice in place, ascending by ID
 func (set *Slice[V]) Sort() {
 	sort.Sort(set)
 }
@@ -102,6 +105,7 @@ func (set *Slice[V]) Sort() {
  * schema Interfaces
  ******************************************/
 
+// GetPointer returns a pointer to the value at the named index, growing the Slice to fit. Implements schema.PointerGetter.
 func (set *Slice[V]) GetPointer(name string) (any, bool) {
 
 	if index, ok := schema.Index(name); ok {
@@ -117,6 +121,7 @@ func (set *Slice[V]) GetPointer(name string) (any, bool) {
 	return nil, false
 }
 
+// Length returns the number of values in this Slice
 func (set Slice[V]) Length() int {
 	return len(set)
 }
@@ -155,6 +160,7 @@ func (set *Slice[V]) SetIndex(index int, value any) bool {
 	return true
 }
 
+// Remove deletes the value with the provided ID from this Slice
 func (set *Slice[V]) Remove(name string) {
 	set.Delete(name)
 }
@@ -163,6 +169,7 @@ func (set *Slice[V]) Remove(name string) {
  * Other Slilce Methods
  ******************************************/
 
+// Append adds a value to the end of this Slice
 func (set *Slice[V]) Append(value V) {
 	*set = append(*set, value)
 }

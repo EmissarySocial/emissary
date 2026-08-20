@@ -12,6 +12,7 @@ type OtterCache interface {
 	Close()
 }
 
+// NewOtterCache returns an HTTPCache backed by the provided Otter cache
 func NewOtterCache(cache OtterCache, options ...Option) HTTPCache {
 	result := HTTPCache{
 		Adapter: cache,

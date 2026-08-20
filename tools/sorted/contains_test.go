@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestContains verifies that Contains finds present values and rejects absent ones
 func TestContains(t *testing.T) {
 
 	set := []string{"A", "C", "E", "G"}
@@ -20,6 +21,7 @@ func TestContains(t *testing.T) {
 	require.False(t, Contains(set, "H"))
 }
 
+// TestContainsAll_SimpleSuccess verifies that a subset fully contained in the superset returns TRUE
 func TestContainsAll_SimpleSuccess(t *testing.T) {
 
 	subset := []string{"A", "C", "E", "G"}
@@ -28,6 +30,7 @@ func TestContainsAll_SimpleSuccess(t *testing.T) {
 	require.True(t, ContainsAll(subset, superset))
 }
 
+// TestContainsAll_SimpleFailure verifies that a value missing from the middle of the superset returns FALSE
 func TestContainsAll_SimpleFailure(t *testing.T) {
 
 	subset := []string{"A", "C", "D", "E", "G"}
@@ -36,6 +39,7 @@ func TestContainsAll_SimpleFailure(t *testing.T) {
 	require.False(t, ContainsAll(subset, superset))
 }
 
+// TestContainsAll_FailBegin verifies that a value missing from the start of the superset returns FALSE
 func TestContainsAll_FailBegin(t *testing.T) {
 
 	subset := []string{"A", "C", "E", "G"}
@@ -44,6 +48,7 @@ func TestContainsAll_FailBegin(t *testing.T) {
 	require.False(t, ContainsAll(subset, superset))
 }
 
+// TestContainsAll_FailEnd verifies that a value missing from the end of the superset returns FALSE
 func TestContainsAll_FailEnd(t *testing.T) {
 
 	subset := []string{"A", "C", "E", "G"}

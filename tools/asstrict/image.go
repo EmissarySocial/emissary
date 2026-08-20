@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
+// Image is a strictly-typed representation of an ActivityStreams Image or Link
 type Image struct {
 	Type      string
 	Width     int
@@ -16,6 +17,7 @@ type Image struct {
 	BlurHash  string
 }
 
+// NewImage converts an arbitrary value into a strictly-typed Image
 func NewImage(value any) Image {
 
 	var object mapof.Any = convert.MapOfAny(value)

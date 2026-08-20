@@ -2,6 +2,7 @@ package striputm
 
 import "net/url"
 
+// knownCodes is the list of tracking query parameters that StripFromURL removes
 var knownCodes = KnownCodes()
 
 // https://orionfeedback.org/d/4375-remove-trackers-from-copied-urls

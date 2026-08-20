@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// TestSchema verifies that a Slice can be read and written through the rosetta schema
 func TestSchema(t *testing.T) {
 	s := schema.New(SliceSchema())
 	value := NewSlice()
@@ -20,6 +21,7 @@ func TestSchema(t *testing.T) {
 
 }
 
+// TestSort verifies that Sort orders ObjectIDs ascending by hex value
 func TestSort(t *testing.T) {
 
 	id0, _ := primitive.ObjectIDFromHex("000000000000000000000000")

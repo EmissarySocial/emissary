@@ -12,12 +12,14 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// Plugin is a derp.Reporter that writes error records into a MongoDB collection
 type Plugin struct {
 	collection   *mongo.Collection
 	includeCodes sliceof.Int
 	excludeCodes sliceof.Int
 }
 
+// New returns a fully initialized Plugin that writes to the provided collection
 func New(collection *mongo.Collection, options mapof.Any) Plugin {
 
 	return Plugin{
@@ -27,6 +29,7 @@ func New(collection *mongo.Collection, options mapof.Any) Plugin {
 	}
 }
 
+// Report implements the derp.Plugin interface, writing the error to MongoDB unless its status code is filtered out
 func (plugin Plugin) Report(err error) {
 
 	if err == nil {

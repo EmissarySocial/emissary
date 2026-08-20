@@ -7,6 +7,7 @@ import (
 	"willnorris.com/go/microformats"
 )
 
+// MicroformatToNewsItem converts a microformats h-entry into a NewsItem
 func MicroformatToNewsItem(feed *microformats.Microformat, entry *microformats.Microformat) model.NewsItem {
 
 	message := model.NewNewsItem()
@@ -29,6 +30,7 @@ func MicroformatToNewsItem(feed *microformats.Microformat, entry *microformats.M
 	return message
 }
 
+// MicroformatToAuthor converts a microformats h-card into a PersonLink
 func MicroformatToAuthor(entry *microformats.Microformat) model.PersonLink {
 
 	var author model.PersonLink
@@ -41,6 +43,7 @@ func MicroformatToAuthor(entry *microformats.Microformat) model.PersonLink {
 	return author
 }
 
+// AnyToMicroformat coerces an arbitrary microformats property value into a single Microformat, or nil
 func AnyToMicroformat(value any) *microformats.Microformat {
 
 	switch o := value.(type) {
@@ -56,6 +59,7 @@ func AnyToMicroformat(value any) *microformats.Microformat {
 	return nil
 }
 
+// MicroformatPropertyToString returns the first non-empty string found among the named properties
 func MicroformatPropertyToString(entry *microformats.Microformat, names ...string) string {
 
 	for _, name := range names {

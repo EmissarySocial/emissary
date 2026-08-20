@@ -2,6 +2,7 @@ package dataset
 
 import "github.com/benpate/form"
 
+// GeocodeTiles returns the list of raster tile providers that maps can be drawn with
 func GeocodeTiles() []form.LookupCode {
 
 	// https://wiki.openstreetmap.org/wiki/Raster_tile_providers

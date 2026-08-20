@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// Sync makes the indexes on a MongoDB collection match the provided set, dropping the ones that are no longer used
 func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[string]mongo.IndexModel) error {
 
 	const location = "tools.indexer.Sync"

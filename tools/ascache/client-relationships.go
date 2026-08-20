@@ -65,6 +65,7 @@ func (client *Client) CalcParentRelationships(session data.Session, relationType
 	return nil
 }
 
+// CountRelatedValues returns the number of cached Values that link to the provided href via the provided relationType
 func (client *Client) CountRelatedValues(session data.Session, relationType string, relationHref string) (int64, error) {
 
 	const location = "ascache.client.countRelatedValues"

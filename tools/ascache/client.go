@@ -236,6 +236,7 @@ func (client *Client) Delete(url string) error {
  * Database Methods
  ******************************************/
 
+// session opens a new database session for the common (cache) database
 func (client *Client) session(ctx context.Context) (data.Session, error) {
 
 	const location = "ascache.Client.session"
@@ -253,6 +254,7 @@ func (client *Client) session(ctx context.Context) (data.Session, error) {
 	return session, nil
 }
 
+// timeoutSession opens a database session that cancels itself after the provided number of seconds
 func (client *Client) timeoutSession(seconds int) (data.Session, context.CancelFunc, error) {
 
 	const location = "ascache.Client.timeoutSession"
@@ -273,6 +275,7 @@ func (client *Client) timeoutSession(seconds int) (data.Session, context.CancelF
 	return session, cancel, nil
 }
 
+// collection returns the "Document" collection, where all cached Values are stored
 func (client *Client) collection(session data.Session) data.Collection {
 	return session.Collection("Document")
 }
@@ -430,6 +433,7 @@ func (client *Client) loadByURL(session data.Session, url string, value *Value) 
 	return client.load(session, exp.Equal("urls", url), value)
 }
 
+// revalidate queues a background task to refresh this Value, if its cache rules say it is stale
 func (client *Client) revalidate(value *Value) {
 
 	// If we're allowed to write to the cache, then do it.

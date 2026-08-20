@@ -2,6 +2,7 @@ package derpmongo
 
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
+// Record is a single error report, as it is stored in MongoDB
 type Record struct {
 	RecordID   primitive.ObjectID `bson:"_id"`
 	StatusCode int                `bson:"statusCode"`

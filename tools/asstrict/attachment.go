@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
+// Attachment is a strictly-typed representation of an ActivityStreams Attachment
 type Attachment struct {
 	Type      string
 	MediaType string
@@ -16,6 +17,7 @@ type Attachment struct {
 	Content   string
 }
 
+// NewAttachment converts an arbitrary value into a strictly-typed Attachment
 func NewAttachment(value any) Attachment {
 
 	var valueMap mapof.Any = convert.MapOfAny(value)

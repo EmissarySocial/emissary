@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// ExampleTemplate_Execute demonstrates rendering a template into a map
 func ExampleTemplate_Execute() {
 
 	template, _ := New(`{"template": "Hello, {{.name}}!"}`)
@@ -21,6 +22,7 @@ func ExampleTemplate_Execute() {
 	fmt.Println(result["template"]) // Output: Hello, World!
 }
 
+// TestEscapedCharacters verifies that quotes, apostrophes, and angle brackets survive the JSON round-trip
 func TestEscapedCharacters(t *testing.T) {
 
 	template, _ := New(`{"message": "{{.message}}"}`)
@@ -39,6 +41,7 @@ func TestEscapedCharacters(t *testing.T) {
 	}
 }
 
+// TestCrazyArrays verifies that a template producing a trailing-comma array still parses
 func TestCrazyArrays(t *testing.T) {
 
 	template, _ := New(`[{{range .values}}"{{.}}",{{end}}]`)

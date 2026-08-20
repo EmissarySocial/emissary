@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// HTTPCache stores HTTP responses in an Adapter, honoring Cache-Control, Vary, and ETag headers
 type HTTPCache struct {
 	Adapter
 	ttl time.Duration
@@ -27,6 +28,7 @@ support ETags
 
 */
 
+// With applies the provided Options to this cache
 func (cache *HTTPCache) With(options ...Option) {
 	for _, option := range options {
 		option(cache)
@@ -110,6 +112,7 @@ func (cache *HTTPCache) getVariesValues(request *http.Request, metadata url.Valu
 	return result.Encode()
 }
 
+// getTTL returns the lifetime for a response: its own max-age, this cache's default, or one minute
 func (cache *HTTPCache) getTTL(response *http.Response) time.Duration {
 
 	if header := cacheheader.ParseString(response.Header.Get("Cache-Control")); header.MaxAge > 0 {

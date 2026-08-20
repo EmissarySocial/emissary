@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/rosetta/convert"
 )
 
+// Object is a strictly-typed representation of an ActivityStreams Object, such as a Note or an Article
 type Object struct {
 	Type         string
 	ID           string

@@ -9,8 +9,10 @@ import (
 	"github.com/benpate/rosetta/funcmap"
 )
 
+// Map is a collection of named, pre-parsed text templates
 type Map map[string]*template.Template
 
+// New returns a fully initialized, empty Map
 func New() Map {
 	return make(Map)
 }
@@ -30,6 +32,7 @@ func (m Map) Execute(name string, value any) string {
 	return ""
 }
 
+// UnmarshalJSON implements the json.Unmarshaler interface, compiling each JSON string value into a template
 func (m *Map) UnmarshalJSON(data []byte) error {
 
 	const location = "tools.templatemap.UnmarshalJSON"

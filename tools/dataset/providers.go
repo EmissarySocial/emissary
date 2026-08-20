@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 )
 
+// Providers returns the list of third-party services that a Domain can connect to
 func Providers() sliceof.Object[form.LookupCode] {
 
 	return []form.LookupCode{

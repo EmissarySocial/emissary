@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Test_Map verifies that values can be written, read back, counted, and removed from a Map
 func Test_Map(t *testing.T) {
 
 	s := NewMap[testPerson]()

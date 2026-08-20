@@ -2,6 +2,7 @@ package currency
 
 import "strings"
 
+// Symbol returns the display symbol for an ISO-4217 currency code
 func Symbol(code string) string {
 
 	switch strings.ToUpper(code) {

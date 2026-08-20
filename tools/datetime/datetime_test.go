@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestDateTime verifies that every schema property round-trips through Set and Get
 func TestDateTime(t *testing.T) {
 
 	test := func(path string, value any) {
@@ -31,6 +32,7 @@ func TestDateTime(t *testing.T) {
 	test("unix", int64(1609542240))
 }
 
+// TestDateTime_JSON verifies that a DateTime survives a JSON marshal/unmarshal round-trip
 func TestDateTime_JSON(t *testing.T) {
 
 	test := func(value DateTime) {

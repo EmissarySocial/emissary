@@ -7,12 +7,14 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
+// Tag is a strictly-typed representation of an ActivityStreams Tag, such as a Hashtag or Mention
 type Tag struct {
 	Type string `json:"type" bson:"type"`
 	Href string `json:"href" bson:"href"`
 	Name string `json:"name" bson:"name"`
 }
 
+// NewTag converts an arbitrary value into a strictly-typed Tag
 func NewTag(value any) Tag {
 	var object mapof.Any = convert.MapOfAny(value)
 

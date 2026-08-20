@@ -9,12 +9,15 @@ import (
 	"github.com/davidscottmills/goeditorjs"
 )
 
+// Quote renders an EditorJS "quote" block
 type Quote struct{}
 
+// Type returns the EditorJS block name that this renderer handles
 func (quote Quote) Type() string {
 	return "quote"
 }
 
+// GenerateHTML renders the block as a <blockquote> element
 func (quote Quote) GenerateHTML(block goeditorjs.EditorJSBlock) (string, error) {
 
 	data := mapof.NewAny()

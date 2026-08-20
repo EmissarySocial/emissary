@@ -7,11 +7,13 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
+// PublicKey is a strictly-typed representation of an ActivityPub actor public key
 type PublicKey struct {
 	ID           string `json:"id"           bson:"id"`
 	PublicKeyPEM string `json:"publicKeyPEM" bson:"publicKeyPEM"`
 }
 
+// NewPublicKey converts an arbitrary value into a strictly-typed PublicKey
 func NewPublicKey(value any) PublicKey {
 
 	var object mapof.Any = convert.MapOfAny(value)

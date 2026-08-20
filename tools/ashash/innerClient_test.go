@@ -2,10 +2,13 @@ package ashash
 
 import "github.com/benpate/hannibal/streams"
 
+// testInnerClient is a stub streams.Client that serves a fixed set of documents to the tests in this package
 type testInnerClient struct{}
 
+// SetRootClient implements the streams.Client interface. The stub ignores the root client.
 func (client testInnerClient) SetRootClient(rootClient streams.Client) {}
 
+// Load implements the streams.Client interface, and returns one of this stub's canned documents
 func (client testInnerClient) Load(url string, options ...any) (streams.Document, error) {
 
 	switch url {
@@ -32,10 +35,12 @@ func (client testInnerClient) Load(url string, options ...any) (streams.Document
 	return streams.NilDocument(), nil
 }
 
+// Save implements the streams.Client interface. The stub discards all writes.
 func (client testInnerClient) Save(document streams.Document) error {
 	return nil
 }
 
+// Delete implements the streams.Client interface. The stub discards all deletes.
 func (client testInnerClient) Delete(documentID string) error {
 	return nil
 }

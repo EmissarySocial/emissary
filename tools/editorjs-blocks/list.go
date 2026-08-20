@@ -9,12 +9,15 @@ import (
 	"github.com/davidscottmills/goeditorjs"
 )
 
+// List renders an EditorJS "list" block
 type List struct{}
 
+// Type returns the EditorJS block name that this renderer handles
 func (list List) Type() string {
 	return "list"
 }
 
+// GenerateHTML renders the block as an ordered or unordered list
 func (list List) GenerateHTML(block goeditorjs.EditorJSBlock) (string, error) {
 
 	data := mapof.NewAny()
@@ -27,6 +30,7 @@ func (list List) GenerateHTML(block goeditorjs.EditorJSBlock) (string, error) {
 	return generateList(b, data.GetString("style"), data.GetSliceOfMap("items")), nil
 }
 
+// generateList writes one list level, recursing into any nested items
 func generateList(b *html.Builder, style string, items []mapof.Any) string {
 
 	var list *html.Element

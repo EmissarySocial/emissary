@@ -10,10 +10,12 @@ import (
 	"github.com/benpate/rosetta/slice"
 )
 
+// Client fetches NodeInfo documents from remote Fediverse servers
 type Client struct {
 	options []remote.Option
 }
 
+// NewClient returns a fully initialized NodeInfo Client
 func NewClient(options ...remote.Option) Client {
 	result := Client{
 		options: make([]remote.Option, 0),
@@ -24,11 +26,13 @@ func NewClient(options ...remote.Option) Client {
 	return result
 }
 
+// With applies additional remote.Options to every request this Client makes
 func (client *Client) With(options ...remote.Option) *Client {
 	client.options = append(client.options, options...)
 	return client
 }
 
+// Load discovers and retrieves the NodeInfo document published by the provided server
 func (client *Client) Load(server string) (NodeInfo, error) {
 
 	const location = "nodeinfo.Client.Load"

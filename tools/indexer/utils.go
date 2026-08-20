@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// rangeFunc adapts a MongoDB cursor into an iterator that decodes each document into T
 func rangeFunc[T any](ctx context.Context, cursor *mongo.Cursor) iter.Seq[T] {
 
 	const location = "tools.indexer.rangeFunc"
@@ -51,6 +52,7 @@ func compareModel(currentIndex mapof.Any, newIndex mongo.IndexModel) bool {
 	return false
 }
 
+// convertModelToMap flattens a mongo.IndexModel into a map, so that it can be compared against a live index definition
 func convertModelToMap(newIndex mongo.IndexModel) mapof.Any {
 
 	result := mapof.NewAny()
@@ -118,6 +120,7 @@ func convertModelToMap(newIndex mongo.IndexModel) mapof.Any {
 	return result
 }
 
+// primitiveToMap converts a bson.E, bson.D, or bson.M into a mapof.Any
 func primitiveToMap(input any) mapof.Any {
 
 	result := mapof.NewAny()
@@ -152,6 +155,7 @@ func primitiveToMap(input any) mapof.Any {
 	return result
 }
 
+// convertMapValue normalizes a BSON value into the type that MongoDB reports back when the index is read
 func convertMapValue(value any) any {
 
 	switch typedValue := value.(type) {

@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Convert coerces an ObjectID, hex string, or nil into a primitive.ObjectID
 func Convert(value any) (primitive.ObjectID, error) {
 
 	if value == nil {
@@ -24,6 +25,7 @@ func Convert(value any) (primitive.ObjectID, error) {
 	}
 }
 
+// ConvertSlice converts a slice of hex strings into a slice of ObjectIDs, failing on the first invalid value
 func ConvertSlice(original []string) ([]primitive.ObjectID, error) {
 
 	result := make([]primitive.ObjectID, 0, len(original))

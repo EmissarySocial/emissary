@@ -18,22 +18,27 @@ type fakeInner struct {
 	deleted  []string
 }
 
+// SetRootClient implements the streams.Client interface. The stub ignores the root client.
 func (fake *fakeInner) SetRootClient(streams.Client) {}
 
+// Load implements the streams.Client interface, returning this stub's canned document and error
 func (fake *fakeInner) Load(uri string, options ...any) (streams.Document, error) {
 	return fake.document, fake.loadErr
 }
 
+// Save implements the streams.Client interface, recording each saved document
 func (fake *fakeInner) Save(document streams.Document) error {
 	fake.saved = append(fake.saved, document)
 	return nil
 }
 
+// Delete implements the streams.Client interface, recording each deleted documentID
 func (fake *fakeInner) Delete(documentID string) error {
 	fake.deleted = append(fake.deleted, documentID)
 	return nil
 }
 
+// TestClient_LoadStrips verifies that reserved-namespace properties are removed at every depth on Load
 func TestClient_LoadStrips(t *testing.T) {
 
 	inner := &fakeInner{
@@ -61,6 +66,7 @@ func TestClient_LoadStrips(t *testing.T) {
 		map[string]any(document.Map()))
 }
 
+// TestClient_LoadErrorPassesThrough verifies that an error from the innerClient is returned to the caller
 func TestClient_LoadErrorPassesThrough(t *testing.T) {
 
 	inner := &fakeInner{
@@ -74,6 +80,7 @@ func TestClient_LoadErrorPassesThrough(t *testing.T) {
 	require.Error(t, err)
 }
 
+// TestClient_LoadStringDocument verifies that a document with a bare string value survives Load untouched
 func TestClient_LoadStringDocument(t *testing.T) {
 
 	// A document whose value is a bare string is left alone (nothing to strip, nothing to panic on)
@@ -87,6 +94,7 @@ func TestClient_LoadStringDocument(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// TestClient_SaveStrips verifies that the innerClient only ever sees a document with no reserved properties
 func TestClient_SaveStrips(t *testing.T) {
 
 	inner := &fakeInner{}
@@ -106,6 +114,7 @@ func TestClient_SaveStrips(t *testing.T) {
 		map[string]any(inner.saved[0].Map()))
 }
 
+// TestClient_DeletePassesThrough verifies that Delete forwards the documentID to the innerClient unchanged
 func TestClient_DeletePassesThrough(t *testing.T) {
 
 	inner := &fakeInner{}

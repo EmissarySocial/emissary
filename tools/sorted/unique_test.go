@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestUnique verifies that adjacent duplicates are collapsed into a single value
 func TestUnique(t *testing.T) {
 
 	do := func(input []string, expected []string) {

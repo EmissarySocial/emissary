@@ -84,6 +84,7 @@ func Object(rootClient streams.Client, document streams.Document) map[string]any
 	return result
 }
 
+// unwrapEmptyPages replaces a content-less Page wrapper with the Note it contains
 func unwrapEmptyPages(activity streams.Document) streams.Document {
 
 	if activity.Type() != vocab.ObjectTypePage {

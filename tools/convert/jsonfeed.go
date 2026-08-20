@@ -11,6 +11,7 @@ import (
 	"github.com/kr/jsonfeed"
 )
 
+// IteratorToJSonFeed converts an Iterator of Streams into a complete JSONFeed document
 func IteratorToJSonFeed(url string, title string, description string, it data.Iterator) jsonfeed.Feed {
 
 	return jsonfeed.Feed{
@@ -23,6 +24,7 @@ func IteratorToJSonFeed(url string, title string, description string, it data.It
 	}
 }
 
+// StreamToJsonFeed converts a Stream into a JSONFeed item
 func StreamToJsonFeed(stream model.Stream) jsonfeed.Item {
 
 	result := jsonfeed.Item{

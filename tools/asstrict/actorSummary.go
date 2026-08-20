@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
+// ActorSummary is an abbreviated Actor, used when an Actor is embedded inside another document
 type ActorSummary struct {
 	Type              string     `json:"type" bson:"type"`
 	ID                string     `json:"id" bson:"id"`
@@ -19,6 +20,7 @@ type ActorSummary struct {
 	URL               string     `json:"url" bson:"url"`
 }
 
+// NewActorSummary converts an arbitrary value into a strictly-typed ActorSummary
 func NewActorSummary(value any) ActorSummary {
 
 	var actorSummary mapof.Any = convert.MapOfAny(value)

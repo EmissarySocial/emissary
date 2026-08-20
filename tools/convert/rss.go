@@ -40,10 +40,12 @@ func RSSToActivity(feed *gofeed.Feed, rssItem *gofeed.Item) mapof.Any {
 	return result
 }
 
+// rssSummary returns the plain-text summary of an RSS item
 func rssSummary(rssItem *gofeed.Item) string {
 	return htmlTools.ToText(rssItem.Description)
 }
 
+// rssContent sanitizes the HTML content of an RSS item
 func rssContent(value string) string {
 	return bluemonday.UGCPolicy().Sanitize(value)
 }
@@ -128,6 +130,7 @@ func rssIconURL(_ *gofeed.Feed, rssItem *gofeed.Item) string {
 	return ""
 }
 
+// rssDate converts an optional RSS timestamp into Unix seconds, or zero if it is missing
 func rssDate(date *time.Time) int64 {
 
 	if date == nil {

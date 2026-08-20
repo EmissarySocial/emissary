@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestUnitFormat verifies that unit amounts render with the correct symbol, decimal point, and sign
 func TestUnitFormat(t *testing.T) {
 
 	test := func(currency string, amount int64, expected string) {

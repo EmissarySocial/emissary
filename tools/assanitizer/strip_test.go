@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestStrip_TopLevel verifies that reserved properties are removed from the top level of a document
 func TestStrip_TopLevel(t *testing.T) {
 
 	value := map[string]any{
@@ -21,6 +22,7 @@ func TestStrip_TopLevel(t *testing.T) {
 	require.Equal(t, map[string]any{"type": "Note", "content": "Hello"}, value)
 }
 
+// TestStrip_NestedObject verifies that reserved properties are removed from nested objects
 func TestStrip_NestedObject(t *testing.T) {
 
 	// The forged key on the inner object matters as much as the envelope
@@ -48,6 +50,7 @@ func TestStrip_NestedObject(t *testing.T) {
 		value)
 }
 
+// TestStrip_InsideArrays verifies that Strip descends into arrays and skips non-map items
 func TestStrip_InsideArrays(t *testing.T) {
 
 	value := map[string]any{
@@ -73,6 +76,7 @@ func TestStrip_InsideArrays(t *testing.T) {
 		value)
 }
 
+// TestStrip_MultiplePrefixes verifies that Strip removes properties matching any of several prefixes
 func TestStrip_MultiplePrefixes(t *testing.T) {
 
 	value := map[string]any{
@@ -86,6 +90,7 @@ func TestStrip_MultiplePrefixes(t *testing.T) {
 	require.Equal(t, map[string]any{"type": "Note"}, value)
 }
 
+// TestStrip_PrefixNotSubstring verifies that a prefix only matches at the start of a property name
 func TestStrip_PrefixNotSubstring(t *testing.T) {
 
 	// The reserved namespace is a PREFIX match, not a substring match
@@ -99,6 +104,7 @@ func TestStrip_PrefixNotSubstring(t *testing.T) {
 	require.Equal(t, map[string]any{"type": "Note", "not-emissary:labels": "survives"}, value)
 }
 
+// TestStrip_NonContainersUntouched verifies that scalar and nil values are a no-op rather than a panic
 func TestStrip_NonContainersUntouched(t *testing.T) {
 
 	// Non-container values are a silent no-op, never a panic
@@ -108,6 +114,7 @@ func TestStrip_NonContainersUntouched(t *testing.T) {
 	Strip(true, "emissary:")
 }
 
+// TestStrip_TypedContainers verifies that Strip descends property.Map, property.Slice, and mapof.Any
 func TestStrip_TypedContainers(t *testing.T) {
 
 	// The same walk descends rosetta and hannibal container types, not just raw JSON shapes

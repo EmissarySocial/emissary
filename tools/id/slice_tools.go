@@ -6,7 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Converts a value into a slice of ObjectIDs
+// SliceOfID coerces a value into a Slice of ObjectIDs
 func SliceOfID(value any) Slice {
 
 	switch v := value.(type) {
@@ -25,6 +25,7 @@ func SliceOfID(value any) Slice {
 	return make([]primitive.ObjectID, 0)
 }
 
+// SliceOfString converts a slice of ObjectIDs into a slice of hex strings
 func SliceOfString(value []primitive.ObjectID) []string {
 	result := make([]string, len(value))
 
@@ -35,6 +36,7 @@ func SliceOfString(value []primitive.ObjectID) []string {
 	return result
 }
 
+// Sort orders a slice of ObjectIDs in place, ascending by hex value, and returns it
 func Sort(value []primitive.ObjectID) []primitive.ObjectID {
 
 	sort.Slice(value, func(i int, j int) bool {

@@ -5,8 +5,10 @@ import (
 	"github.com/benpate/rosetta/convert"
 )
 
+// Slice is a strictly-typed list of property values, all of the same type
 type Slice[T property.Value] []T
 
+// NewSlice converts an arbitrary value into a Slice, mapping each item through the provided function
 func NewSlice[T property.Value](fn func(any) T, value any) Slice[T] {
 
 	items := convert.SliceOfAny(value)

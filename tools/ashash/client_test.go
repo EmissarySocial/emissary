@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestClient_WithoutHash_Success verifies that a URL with no hash loads the top-level document
 func TestClient_WithoutHash_Success(t *testing.T) {
 
 	client := New(testInnerClient{})
@@ -16,6 +17,7 @@ func TestClient_WithoutHash_Success(t *testing.T) {
 	require.Equal(t, "Ain't nobody got no hash", result.Summary())
 }
 
+// TestClient_WithoutHash_Fail verifies that a hash that the document does not contain returns an error
 func TestClient_WithoutHash_Fail(t *testing.T) {
 
 	client := New(testInnerClient{})
@@ -27,6 +29,7 @@ func TestClient_WithoutHash_Fail(t *testing.T) {
 	require.Equal(t, "", result.Summary())
 }
 
+// TestClient_WithHash_Success1 verifies that loading a hash-bearing document without the hash returns the top-level document
 func TestClient_WithHash_Success1(t *testing.T) {
 
 	client := New(testInnerClient{})
@@ -37,6 +40,7 @@ func TestClient_WithHash_Success1(t *testing.T) {
 	require.Equal(t, "It's my hash and I can cry if I want to", result.Summary())
 }
 
+// TestClient_WithHash_Success2 verifies that a hash resolves to the matching sub-document
 func TestClient_WithHash_Success2(t *testing.T) {
 
 	client := New(testInnerClient{})
@@ -47,6 +51,7 @@ func TestClient_WithHash_Success2(t *testing.T) {
 	require.Equal(t, "Done somebody gots a hash, now.", result.Summary())
 }
 
+// TestClient_WithHash_Fail verifies that an unrecognized hash returns an error
 func TestClient_WithHash_Fail(t *testing.T) {
 
 	client := New(testInnerClient{})

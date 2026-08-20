@@ -2,6 +2,7 @@ package ascacherules
 
 import "cmp"
 
+// clamp returns "mid", bounded to the range between "min" and "max"
 func clamp[T cmp.Ordered](min T, mid T, max T) T {
 
 	if min > max {

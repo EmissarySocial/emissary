@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestFormat verifies that a time difference renders as an abbreviated duration at each scale
 func TestFormat(t *testing.T) {
 
 	{
@@ -52,6 +53,7 @@ func TestFormat(t *testing.T) {
 	}
 }
 
+// TestYears verifies that a multi-decade difference renders in years
 func TestYears(t *testing.T) {
 	t1, _ := time.Parse(time.RFC3339, "2000-01-01T00:00:00Z")
 	t2, _ := time.Parse(time.RFC3339, "2021-02-01T23:00:00Z")

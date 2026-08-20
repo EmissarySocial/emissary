@@ -45,6 +45,7 @@ func SubscriptionIsActive(subscription stripe.Subscription) bool {
 	return false
 }
 
+// SubscriptionCancel cancels a Stripe subscription immediately
 func SubscriptionCancel(restrictedKey string, connectedAccountID string, subscriptionID string) error {
 
 	const location = "tools.stripeapi.SubscriptionCancel"

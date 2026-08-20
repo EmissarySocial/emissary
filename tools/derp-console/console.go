@@ -19,17 +19,21 @@ import (
 // stdout is reserved for a program's actual output data, which a long-running server has none of.
 var output = os.Stderr
 
+// Console is a derp.Reporter that writes a human-readable error report to the console
 type Console struct{}
 
+// New returns a fully initialized Console reporter
 func New() Console {
 	return Console{}
 }
 
+// Report implements the derp.Plugin interface, printing the full error chain
 func (console Console) Report(err error) {
 	_, _ = fmt.Fprintln(output, "") //nolint:errcheck
 	console.report(err)
 }
 
+// report walks the error chain from the root outward, printing one section per link
 func (console Console) report(err error) {
 
 	red := color.New(color.FgRed, color.Bold)   // nolint:scopeguard

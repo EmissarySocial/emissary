@@ -22,6 +22,7 @@ import (
 	"github.com/benpate/icon"
 )
 
+// FuncMap returns every helper function available to Emissary HTML templates
 func FuncMap(icons icon.Provider) template.FuncMap {
 
 	result := funcmap.All()

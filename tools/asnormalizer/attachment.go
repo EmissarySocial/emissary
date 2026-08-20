@@ -5,6 +5,7 @@ import (
 	"github.com/benpate/hannibal/vocab"
 )
 
+// Attachment normalizes each attachment in the provided document into a plain map
 func Attachment(document streams.Document) []map[string]any {
 
 	result := make([]map[string]any, 0, document.Len())

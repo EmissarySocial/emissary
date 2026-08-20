@@ -19,7 +19,10 @@ type testObject struct {
 	updated int64
 }
 
-func (o testObject) ETag() string   { return o.etag }
+// ETag implements the header source interface, returning this stub's entity tag
+func (o testObject) ETag() string { return o.etag }
+
+// Updated implements the header source interface, returning this stub's update timestamp
 func (o testObject) Updated() int64 { return o.updated }
 
 // TestVariantOf covers the mapping from an "Accept" header to a Variant.

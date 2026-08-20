@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestCanonicalCapitalization verifies that intent names normalize to their ActivityStreams capitalization
 func TestCanonicalCapitalization(t *testing.T) {
 
 	require.Equal(t, "Like", CanonicalCapitalization("like"))

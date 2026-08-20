@@ -10,11 +10,13 @@ import (
 	"github.com/cespare/xxhash/v2"
 )
 
+// Client is a streams.Client decorator that normalizes every document it loads into a predictable shape
 type Client struct {
 	rootClient  streams.Client
 	innerClient streams.Client
 }
 
+// New returns a fully initialized normalizer Client that wraps the provided innerClient
 func New(innerClient streams.Client) *Client {
 	result := &Client{
 		innerClient: innerClient,
@@ -24,6 +26,7 @@ func New(innerClient streams.Client) *Client {
 	return result
 }
 
+// SetRootClient implements the streams.Client interface, and passes the root client down the chain
 func (client *Client) SetRootClient(rootClient streams.Client) {
 	client.rootClient = rootClient
 	if client.innerClient != nil {
@@ -31,6 +34,7 @@ func (client *Client) SetRootClient(rootClient streams.Client) {
 	}
 }
 
+// Load implements the streams.Client interface, normalizing the document and populating its Metadata
 func (client *Client) Load(uri string, options ...any) (streams.Document, error) {
 
 	const location = "asnormalizer.Client.Load"
@@ -77,14 +81,17 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 	return result, nil
 }
 
+// Save implements the streams.Client interface, and passes the document to the innerClient
 func (client *Client) Save(document streams.Document) error {
 	return client.innerClient.Save(document)
 }
 
+// Delete implements the streams.Client interface, and passes the documentID to the innerClient
 func (client *Client) Delete(documentID string) error {
 	return client.innerClient.Delete(documentID)
 }
 
+// Normalize converts a document into a plain map, using the normalizer that matches the document type
 func Normalize(rootClient streams.Client, document streams.Document) map[string]any {
 
 	switch {

@@ -24,6 +24,7 @@ func New(innerClient streams.Client) *Client {
 	return result
 }
 
+// SetRootClient implements the streams.Client interface, and passes the root client down the chain
 func (client Client) SetRootClient(rootClient streams.Client) {
 	if client.innerClient != nil {
 		client.innerClient.SetRootClient(rootClient)
@@ -72,10 +73,12 @@ func (client Client) Load(id string, options ...any) (streams.Document, error) {
 	return result, nil
 }
 
+// Save implements the streams.Client interface, and passes the document to the innerClient
 func (client *Client) Save(document streams.Document) error {
 	return client.innerClient.Save(document)
 }
 
+// Delete implements the streams.Client interface, and passes the documentID to the innerClient
 func (client *Client) Delete(documentID string) error {
 	return client.innerClient.Delete(documentID)
 }

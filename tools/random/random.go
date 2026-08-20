@@ -50,6 +50,7 @@ func GenerateString(s int) (string, error) {
 	return str, nil
 }
 
+// GenerateInt returns a pseudo-random integer in the range [low, high)
 func GenerateInt(low int, high int) int {
 	return low + mathrand.Intn(high-low)
 }
