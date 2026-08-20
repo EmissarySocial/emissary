@@ -73,11 +73,11 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	case "notification-channels":
 		return form.NewReadOnlyLookupGroup(
-			form.LookupCode{Value: model.NotificationChannelDirectMessage, Label: "Direct Messages", Description: "Someone sends you a private message.", Icon: "email"},
+			form.LookupCode{Value: model.NotificationChannelDirectMessage, Label: "Direct Messages", Description: "Someone sends you a private message.", Icon: "envelope"},
 			form.LookupCode{Value: model.NotificationChannelReply, Label: "Replies to my posts", Description: "Someone replies to one of your posts.", Icon: "reply"},
 			form.LookupCode{Value: model.NotificationChannelMentionFollowing, Label: "Mentions from people I follow", Description: "Someone you follow tags you in a public post.", Icon: "chat"},
 			form.LookupCode{Value: model.NotificationChannelMentionNotFollowing, Label: "Mentions from people I don't follow", Description: "Someone you don't follow tags you in a public post.", Icon: "chat"},
-			form.LookupCode{Value: model.NotificationChannelFollow, Label: "New Followers", Description: "Someone starts following you.", Icon: "person"},
+			form.LookupCode{Value: model.NotificationChannelFollow, Label: "New Followers", Description: "Someone starts following you.", Icon: "person-add"},
 			form.LookupCode{Value: model.NotificationChannelReaction, Label: "Boosts and Likes", Description: "Someone boosts or likes one of your posts.", Icon: "heart"},
 		)
 
