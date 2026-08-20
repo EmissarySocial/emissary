@@ -31,6 +31,10 @@ func NewWidget(widgetID string, funcMap template.FuncMap) Widget {
 }
 
 func (widget Widget) IsEditable() bool {
-	// TODO: LOW: These should rules be IsEmpty() accessors in the schema and form packages
-	return (widget.Schema.Element != nil) && (len(widget.Form.Children) > 0)
+
+	if (widget.Schema.Element == nil) {
+		return false
+	}
+
+	return len(widget.Form.Children) > 0
 }
