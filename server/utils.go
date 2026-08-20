@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// timeoutContext returns a background context that cancels itself after the provided number of seconds
 func timeoutContext(seconds int) (context.Context, context.CancelFunc) {
 
 	// Create a context with a timeout

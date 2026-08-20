@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestServerFactory verifies that both run modes satisfy the factory interfaces their consumers depend on
 func TestServerFactory(t *testing.T) {
 
 	// Both run modes must satisfy the interfaces that domain factories
