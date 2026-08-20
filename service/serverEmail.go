@@ -20,12 +20,14 @@ import (
 	mail "github.com/xhit/go-simple-mail/v2"
 )
 
+// ServerEmail holds every email template on this server, and sends messages built from them
 type ServerEmail struct {
 	filesystemService Filesystem
 	funcMap           template.FuncMap
 	emails            map[string]model.Email
 }
 
+// NewServerEmail returns a fully initialized ServerEmail service, loaded from the provided locations
 func NewServerEmail(filesystemService Filesystem, funcMap template.FuncMap, locations []mapof.String) ServerEmail {
 
 	service := ServerEmail{
@@ -43,6 +45,7 @@ func NewServerEmail(filesystemService Filesystem, funcMap template.FuncMap, loca
  * Lifecycle Methods
  ******************************************/
 
+// Refresh updates this service with the latest configuration values
 func (service *ServerEmail) Refresh() {
 
 	// Reset all emails (to be reloaced by the Template service)
@@ -53,6 +56,7 @@ func (service *ServerEmail) Refresh() {
  * Real-Time Updates
  ******************************************/
 
+// Add parses an email definition and registers it in this service's library
 func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 
 	const location = "service.ServerEmail.Add"
@@ -118,6 +122,7 @@ func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 	return nil
 }
 
+// Names returns the ID of every email template in this service's library, sorted
 func (service *ServerEmail) Names() []string {
 	result := maps.Keys(service.emails)
 	slices.Sort(result)
@@ -128,6 +133,7 @@ func (service *ServerEmail) Names() []string {
  * Send Emails API
  ******************************************/
 
+// Send renders the named email template and delivers it over the provided SMTP connection
 func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner config.Owner, emailID string, model string, data mapof.Any) error {
 
 	const location = "service.ServerEmail.Send"

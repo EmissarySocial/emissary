@@ -7,8 +7,10 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// Bluesky connects a Domain to the Bluesky bridge, which mirrors posts to the AT Protocol network
 type Bluesky struct{}
 
+// NewBluesky returns a fully initialized Bluesky provider
 func NewBluesky() Bluesky {
 	return Bluesky{}
 }
@@ -17,6 +19,7 @@ func NewBluesky() Bluesky {
  * Setup / Configuration Methods
  ******************************************/
 
+// ManualConfig returns the form used to configure this Connection by hand. Implements the ManualProvider interface.
 func (adapter Bluesky) ManualConfig() form.Form {
 
 	return form.Form{
@@ -68,6 +71,7 @@ func (adapter Bluesky) ManualConfig() form.Form {
  * Lifecycle Methods
  ******************************************/
 
+// BeforeSave applies any last-minute changes to this Connection before it is written to the database
 func (adapter Bluesky) BeforeSave(connection *model.Connection, vault mapof.String) error {
 
 	if connection.Data.GetString("allowType") == "NONE" {

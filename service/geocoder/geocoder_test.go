@@ -10,12 +10,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// testLocation is one query and the coordinates that a geocoder is expected to resolve it to
 type testLocation struct {
 	query     string
 	longitude float64
 	latitude  float64
 }
 
+// testGeocodeAddress runs the shared AddressGeocoder conformance suite against the provided geocoder
 func testGeocodeAddress(t *testing.T, geocoder AddressGeocoder) {
 
 	run := func(location testLocation) {
@@ -57,6 +59,7 @@ func testGeocodeAddress(t *testing.T, geocoder AddressGeocoder) {
 
 }
 
+// testGeocodeNetwork runs the shared NetworkGeocoder conformance suite against the provided geocoder
 func testGeocodeNetwork(t *testing.T, geocoder NetworkGeocoder) {
 
 	run := func(location testLocation) {
@@ -78,6 +81,7 @@ func testGeocodeNetwork(t *testing.T, geocoder NetworkGeocoder) {
 	})
 }
 
+// testAutocompleteAddress runs the shared AddressAutocompleter conformance suite against the provided geocoder
 func testAutocompleteAddress(t *testing.T, geocoder AddressAutocompleter) {
 
 	run := func(location string) {
@@ -97,6 +101,7 @@ func testAutocompleteAddress(t *testing.T, geocoder AddressAutocompleter) {
 	run("1600 Amphitheatre Pkwy, Mountain View, CA 94043, USA")
 }
 
+// testGeocodeTimezone runs the shared TimezoneGeocoder conformance suite against the provided geocoder
 func testGeocodeTimezone(t *testing.T, geocoder TimezoneGeocoder) {
 
 	run := func(streetAddress string, timezone string) {

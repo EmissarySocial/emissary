@@ -11,6 +11,7 @@ import (
  * WebFinger Behavior
  ******************************************/
 
+// WebFinger returns the WebFinger resource that describes the Stream with the provided token
 func (service *Stream) WebFinger(session data.Session, token string) (digit.Resource, error) {
 
 	const location = "service.User.WebFinger"

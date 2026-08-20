@@ -102,6 +102,7 @@ func (service *Registration) List() []form.LookupCode {
 	return result
 }
 
+// Load retrieves a single Registration from the database
 func (service *Registration) Load(registrationID string) (model.Registration, error) {
 
 	// Allow "empty" registration
@@ -125,6 +126,7 @@ func (service *Registration) Load(registrationID string) (model.Registration, er
  * User Registration
  ******************************************/
 
+// Validate confirms that a registration transaction satisfies this Domain's sign-up rules
 func (service *Registration) Validate(session data.Session, userService *User, domain *model.Domain, txn model.RegistrationTxn) error {
 
 	// TODO: Once we have a single "factory" architecture, we should remove userService as an argument to this function
@@ -155,6 +157,7 @@ func (service *Registration) Validate(session data.Session, userService *User, d
 	return nil
 }
 
+// Register creates a new User from a validated registration transaction, and signs them in
 func (service *Registration) Register(session data.Session, groupService *Group, userService *User, steranko *steranko.Steranko, domain *model.Domain, txn model.RegistrationTxn) (model.User, error) {
 
 	const location = "service.Registration.Register"

@@ -12,6 +12,7 @@ import (
 // Bridgy Fed publishes; the Rule and Following services resolve it to its canonical URL themselves.
 const bridgyFedBlueskyActor = "@bsky.brid.gy@bsky.brid.gy"
 
+// connectBluesky follows or blocks the Bridgy Fed actor, mirroring this User's Bluesky bridge setting
 func (service *User) connectBluesky(session data.Session, user *model.User) error {
 
 	const location = "service.User.connectBluesky"

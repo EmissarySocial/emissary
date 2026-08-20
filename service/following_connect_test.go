@@ -14,6 +14,7 @@ import (
 // BLOCK is enforced here or nowhere. Every case leaves activityService nil on purpose -- a panic
 // would prove the gate let execution through to the network.
 
+// blockedActorURL is the actor that the tests below block before calling Connect
 const blockedActorURL = "https://evil.example/@bob"
 
 // TestConnect_BlockedActorRefused proves a User cannot create a Following for an actor they have

@@ -167,6 +167,7 @@ func userAgentOf(request *http.Request) string {
 	return request.UserAgent()
 }
 
+// collection returns the SterankoSigninService collection for the provided database session
 func (s SterankoSigninService) collection() data.Collection {
 	return s.session.Collection("SigninAttempt")
 }

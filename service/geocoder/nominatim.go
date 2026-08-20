@@ -17,6 +17,7 @@ type Nominatim struct {
 	referer   string
 }
 
+// NewNominatim returns a Nominatim geocoder
 func NewNominatim(searchURL string, apiKey string, userAgent string, referer string) Nominatim {
 
 	// Default value uses public server.
@@ -32,6 +33,7 @@ func NewNominatim(searchURL string, apiKey string, userAgent string, referer str
 	}
 }
 
+// GeocodeAddress resolves a free-text address into a geo.Address. Implements the AddressGeocoder interface.
 func (geocoder Nominatim) GeocodeAddress(query string) (point geo.Address, err error) {
 
 	const location = "service.ggeocoder.Nominatim.AutocompleteAddress"
@@ -59,6 +61,7 @@ func (geocoder Nominatim) GeocodeAddress(query string) (point geo.Address, err e
 	return mapNominatimAddress(place), nil
 }
 
+// AutocompleteAddress returns address suggestions for a partial query, biased toward the provided point. Implements the AddressAutocompleter interface.
 func (geocoder Nominatim) AutocompleteAddress(query string, bias geo.Point) (sliceof.Object[geo.Address], error) {
 
 	const location = "service.ggeocoder.Nominatim.AutocompleteAddress"
@@ -81,6 +84,7 @@ func (geocoder Nominatim) AutocompleteAddress(query string, bias geo.Point) (sli
 	return result, nil
 }
 
+// mapNominatimAddress converts one Nominatim API result into a geo.Address
 func mapNominatimAddress(place mapof.Any) geo.Address {
 	return geo.Address{
 		Name:      place.GetString("display_name"),

@@ -38,6 +38,7 @@ func (service *Group) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the Group collection for the provided database session
 func (service *Group) collection(session data.Session) data.Collection {
 	return session.Collection("Group")
 }
@@ -47,6 +48,7 @@ func (service *Group) Count(session data.Session, criteria exp.Expression) (int6
 	return service.collection(session).Count(notDeleted(criteria))
 }
 
+// Query returns every Group that matches the provided criteria
 func (service *Group) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Group, error) {
 	result := make([]model.Group, 0)
 	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
@@ -111,6 +113,7 @@ func (service *Group) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided Group. Implements the ModelService interface.
 func (service *Group) ObjectID(object data.Object) primitive.ObjectID {
 
 	if group, ok := object.(*model.Group); ok {
@@ -120,16 +123,19 @@ func (service *Group) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every Group that matches the provided criteria. Implements the ModelService interface.
 func (service *Group) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single Group as a data.Object. Implements the ModelService interface.
 func (service *Group) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewGroup()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a Group in the database. Implements the ModelService interface.
 func (service *Group) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if group, ok := object.(*model.Group); ok {
 		return service.Save(session, group, comment)
@@ -137,6 +143,7 @@ func (service *Group) ObjectSave(session data.Session, object data.Object, comme
 	return derp.Internal("service.Group.ObjectSave", "Invalid Object Type", object)
 }
 
+// ObjectDelete marks a Group as deleted. Implements the ModelService interface.
 func (service *Group) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if group, ok := object.(*model.Group); ok {
 		return service.Delete(session, group, comment)
@@ -144,10 +151,12 @@ func (service *Group) ObjectDelete(session data.Session, object data.Object, com
 	return derp.Internal("service.Group.ObjectDelete", "Invalid Object Type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a Group. Implements the ModelService interface.
 func (service *Group) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Group", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a Group
 func (service *Group) Schema() schema.Schema {
 	return schema.New(model.GroupSchema())
 }
@@ -162,6 +171,7 @@ func (service *Group) LoadByID(session data.Session, groupID primitive.ObjectID,
 	return service.Load(session, criteria, result)
 }
 
+// ListByIDs returns every Group named in the provided list of IDs
 func (service *Group) ListByIDs(session data.Session, groupIDs ...primitive.ObjectID) ([]model.Group, error) {
 
 	result := make([]model.Group, len(groupIDs)+1)
@@ -215,6 +225,7 @@ func (service *Group) ListByGroup(session data.Session, group string) (data.Iter
 	return service.List(session, exp.Equal("groupId", group))
 }
 
+// ListAsOptions returns every Group on this Domain, as form lookup codes sorted by label
 func (service *Group) ListAsOptions(session data.Session) []form.LookupCode {
 
 	result := make([]form.LookupCode, 0)
@@ -242,6 +253,7 @@ func (service *Group) ListAsOptions(session data.Session) []form.LookupCode {
  * Custom Methods
  ******************************************/
 
+// Startup seeds a new Domain with the default Groups defined by its Theme
 func (service *Group) Startup(session data.Session, theme *model.Theme) error {
 
 	const location = "service.Group.Startup"

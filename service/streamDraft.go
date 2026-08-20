@@ -42,6 +42,7 @@ func (service *StreamDraft) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the StreamDraft collection for the provided database session
 func (service *StreamDraft) collection(session data.Session) data.Collection {
 	return session.Collection("StreamDraft")
 }
@@ -149,6 +150,7 @@ func (service *StreamDraft) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided StreamDraft. Implements the ModelService interface.
 func (service *StreamDraft) ObjectID(object data.Object) primitive.ObjectID {
 
 	if streamDraft, ok := object.(*model.Stream); ok {
@@ -158,16 +160,19 @@ func (service *StreamDraft) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every StreamDraft that matches the provided criteria. Implements the ModelService interface.
 func (service *StreamDraft) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single StreamDraft as a data.Object. Implements the ModelService interface.
 func (service *StreamDraft) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewStream()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a StreamDraft in the database. Implements the ModelService interface.
 func (service *StreamDraft) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if stream, ok := object.(*model.Stream); ok {
 		return service.Save(session, stream, comment)
@@ -175,6 +180,7 @@ func (service *StreamDraft) ObjectSave(session data.Session, object data.Object,
 	return derp.Internal("service.StreamDraft.ObjectSave", "Invalid Object Type", object)
 }
 
+// ObjectDelete marks a StreamDraft as deleted. Implements the ModelService interface.
 func (service *StreamDraft) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if stream, ok := object.(*model.Stream); ok {
 		return service.Delete(session, stream, comment)
@@ -182,10 +188,12 @@ func (service *StreamDraft) ObjectDelete(session data.Session, object data.Objec
 	return derp.Internal("service.StreamDraft.ObjectDelete", "Invalid Object Type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a StreamDraft. Implements the ModelService interface.
 func (service *StreamDraft) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.StreamDraft", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a StreamDraft
 func (service *StreamDraft) Schema() schema.Schema {
 	return schema.New(model.StreamSchema())
 }
@@ -204,6 +212,7 @@ func (service *StreamDraft) LoadByID(session data.Session, streamID primitive.Ob
  * Custom Actions
  ******************************************/
 
+// Promote publishes a StreamDraft over its live Stream, moving it into the provided state
 func (service *StreamDraft) Promote(session data.Session, streamID primitive.ObjectID, stateID string) (model.Stream, error) {
 
 	var draft model.Stream

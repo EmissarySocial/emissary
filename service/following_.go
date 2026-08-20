@@ -311,16 +311,19 @@ func (service *Following) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every Following that matches the provided criteria. Implements the ModelService interface.
 func (service *Following) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single Following as a data.Object. Implements the ModelService interface.
 func (service *Following) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewFollowing()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a Following in the database. Implements the ModelService interface.
 func (service *Following) ObjectSave(session data.Session, object data.Object, note string) error {
 	if following, ok := object.(*model.Following); ok {
 		return service.Save(session, following, note)
@@ -328,6 +331,7 @@ func (service *Following) ObjectSave(session data.Session, object data.Object, n
 	return derp.Internal("service.Following.ObjectSave", "Invalid object type", object)
 }
 
+// ObjectDelete marks a Following as deleted. Implements the ModelService interface.
 func (service *Following) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if following, ok := object.(*model.Following); ok {
 		return service.Delete(session, following, note)
@@ -335,10 +339,12 @@ func (service *Following) ObjectDelete(session data.Session, object data.Object,
 	return derp.Internal("service.Following.ObjectDelete", "Invalid object type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a Following. Implements the ModelService interface.
 func (service *Following) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Following.ObjectUserCan", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a Following
 func (service *Following) Schema() schema.Schema {
 	return schema.New(model.FollowingSchema())
 }
@@ -452,6 +458,7 @@ func (service *Following) LoadByURL(session data.Session, userID primitive.Objec
  * Custom Actions
  ******************************************/
 
+// GetFollowingID returns the ID of the User's Following record for the provided URI, if one exists
 func (service *Following) GetFollowingID(session data.Session, userID primitive.ObjectID, uri string) (string, error) {
 
 	const location = "service.Following.IsFollowing"
@@ -606,6 +613,7 @@ func (service *Following) SetStatusLoading(session data.Session, following *mode
 	return nil
 }
 
+// SetStatusPolling marks a Following as successfully polled, and saves it
 func (service *Following) SetStatusPolling(session data.Session, following *model.Following) error {
 
 	// Update Following state

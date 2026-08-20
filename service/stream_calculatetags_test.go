@@ -27,25 +27,45 @@ import (
 // NormalizeTags reaches are implemented; the rest fail loudly if a test ever calls them.
 type emptyTagCollection struct{}
 
-func (c emptyTagCollection) Context() context.Context                              { return context.Background() }
+// Context implements the interface, returning a background context
+func (c emptyTagCollection) Context() context.Context { return context.Background() }
+
+// Count implements the data.Collection interface. Unused by these tests.
 func (c emptyTagCollection) Count(exp.Expression, ...option.Option) (int64, error) { return 0, nil }
-func (c emptyTagCollection) Query(any, exp.Expression, ...option.Option) error     { return nil }
+
+// Query implements the data.Collection interface. Unused by these tests.
+func (c emptyTagCollection) Query(any, exp.Expression, ...option.Option) error { return nil }
+
+// Iterator implements the data.Collection interface. Unused by these tests.
 func (c emptyTagCollection) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
 	return nil, derp.Internal("test", "unused")
 }
+
+// Load implements the data.Collection interface. Unused by these tests.
 func (c emptyTagCollection) Load(exp.Expression, data.Object, ...option.Option) error {
 	return derp.NotFound("test", "unused")
 }
-func (c emptyTagCollection) Save(data.Object, string) error   { return derp.Internal("test", "unused") }
+
+// Save implements the data.Collection interface. Unused by these tests.
+func (c emptyTagCollection) Save(data.Object, string) error { return derp.Internal("test", "unused") }
+
+// Delete implements the data.Collection interface. Unused by these tests.
 func (c emptyTagCollection) Delete(data.Object, string) error { return derp.Internal("test", "unused") }
-func (c emptyTagCollection) HardDelete(exp.Expression) error  { return derp.Internal("test", "unused") }
+
+// HardDelete implements the data.Collection interface. Unused by these tests.
+func (c emptyTagCollection) HardDelete(exp.Expression) error { return derp.Internal("test", "unused") }
 
 // emptyTagSession is a data.Session that hands out emptyTagCollections
 type emptyTagSession struct{}
 
+// Collection implements the data.Session interface, returning this stub's single collection
 func (s emptyTagSession) Collection(string) data.Collection { return emptyTagCollection{} }
-func (s emptyTagSession) Context() context.Context          { return context.Background() }
-func (s emptyTagSession) Close()                            {}
+
+// Context implements the interface, returning a background context
+func (s emptyTagSession) Context() context.Context { return context.Background() }
+
+// Close implements the interface. The stub holds no resources to release.
+func (s emptyTagSession) Close() {}
 
 // newTagStreamService builds a Stream service whose one Template carries the given tag settings.
 func newTagStreamService(tagPaths []string, tagURL string) (*Stream, model.Template) {

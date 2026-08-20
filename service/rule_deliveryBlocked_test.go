@@ -16,6 +16,7 @@ type failingRuleStore struct {
 	ruleStore
 }
 
+// Query implements the data.Collection interface. Unused by these tests.
 func (c *failingRuleStore) Query(any, exp.Expression, ...option.Option) error {
 	return derp.Internal("test", "database is on fire")
 }

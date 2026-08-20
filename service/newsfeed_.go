@@ -54,6 +54,7 @@ func (service *NewsFeed) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the NewsFeed collection for the provided database session
 func (service *NewsFeed) collection(session data.Session) data.Collection {
 	return session.Collection("NewsFeed")
 }
@@ -204,6 +205,7 @@ func (service *NewsFeed) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided NewsFeed. Implements the ModelService interface.
 func (service *NewsFeed) ObjectID(object data.Object) primitive.ObjectID {
 
 	if message, ok := object.(*model.NewsItem); ok {
@@ -213,16 +215,19 @@ func (service *NewsFeed) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every NewsFeed that matches the provided criteria. Implements the ModelService interface.
 func (service *NewsFeed) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single NewsFeed as a data.Object. Implements the ModelService interface.
 func (service *NewsFeed) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewNewsItem()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a NewsFeed in the database. Implements the ModelService interface.
 func (service *NewsFeed) ObjectSave(session data.Session, object data.Object, note string) error {
 	if message, ok := object.(*model.NewsItem); ok {
 		return service.Save(session, message, note)
@@ -230,6 +235,7 @@ func (service *NewsFeed) ObjectSave(session data.Session, object data.Object, no
 	return derp.Internal("service.NewsFeed.ObjectSave", "Invalid Object Type", object)
 }
 
+// ObjectDelete marks a NewsFeed as deleted. Implements the ModelService interface.
 func (service *NewsFeed) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if message, ok := object.(*model.NewsItem); ok {
 		return service.Delete(session, message, note)
@@ -237,10 +243,12 @@ func (service *NewsFeed) ObjectDelete(session data.Session, object data.Object, 
 	return derp.Internal("service.NewsFeed.ObjectDelete", "Invalid Object Type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a NewsFeed. Implements the ModelService interface.
 func (service *NewsFeed) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.NewsFeed.ObjectUserCan", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a NewsFeed
 func (service *NewsFeed) Schema() schema.Schema {
 	return schema.New(model.NewsItemSchema())
 }
@@ -249,11 +257,13 @@ func (service *NewsFeed) Schema() schema.Schema {
  * Custom Query Methods
  ******************************************/
 
+// QueryByUserID returns every NewsItem belonging to the provided User that also matches the criteria
 func (service *NewsFeed) QueryByUserID(session data.Session, userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.NewsItem, error) {
 	criteria = criteria.AndEqual("userId", userID)
 	return service.Query(session, criteria, options...)
 }
 
+// RangeByFolder returns an iterator over every NewsItem in the provided User's Folder
 func (service *NewsFeed) RangeByFolder(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID) (iter.Seq[model.NewsItem], error) {
 	criteria := exp.Equal("userId", userID).
 		AndEqual("folderId", folderID)
@@ -345,6 +355,7 @@ func (service *NewsFeed) LoadSibling(session data.Session, folderID primitive.Ob
 	return model.NewsItem{}, derp.NotFound(location, "Sibling record not found")
 }
 
+// LoadOldestUnread retrieves the oldest unread NewsItem belonging to the provided User
 func (service *NewsFeed) LoadOldestUnread(session data.Session, userID primitive.ObjectID, message *model.NewsItem) error {
 
 	const location = "service.NewsFeed.LoadOldestUnread"
@@ -393,6 +404,7 @@ func (service *NewsFeed) MarkAllReadByFolder(session data.Session, userID primit
 	return nil
 }
 
+// MarkReadByDate marks every NewsItem older than the provided rank as read
 func (service *NewsFeed) MarkReadByDate(session data.Session, userID primitive.ObjectID, rank int64) error {
 
 	const location = "service.NewsFeed.MarkReadByDate"
@@ -468,6 +480,7 @@ func (service *NewsFeed) MarkUnread(session data.Session, message *model.NewsIte
 	return nil
 }
 
+// MarkMuted mutes a NewsItem, so that it no longer appears in the User's newsfeed
 func (service *NewsFeed) MarkMuted(session data.Session, message *model.NewsItem) error {
 
 	const location = "service.NewsFeed.MarkMuted"
@@ -485,6 +498,7 @@ func (service *NewsFeed) MarkMuted(session data.Session, message *model.NewsItem
 	return nil
 }
 
+// MarkUnmuted un-mutes a NewsItem, returning it to the User's newsfeed
 func (service *NewsFeed) MarkUnmuted(session data.Session, message *model.NewsItem) error {
 
 	const location = "service.NewsFeed.MarkUnmuted"
@@ -568,6 +582,7 @@ func (service *NewsFeed) CountUnreadNewsItems(session data.Session, userID primi
 	return int(count), err
 }
 
+// UpdateNewsFeedFolders moves every NewsItem from a Following into a different Folder, then recalculates its unread count
 func (service *NewsFeed) UpdateNewsFeedFolders(session data.Session, userID primitive.ObjectID, followingID primitive.ObjectID, folderID primitive.ObjectID) error {
 
 	rangeFunc, err := service.RangeByFollowingID(session, userID, followingID)
@@ -591,14 +606,17 @@ func (service *NewsFeed) UpdateNewsFeedFolders(session data.Session, userID prim
 	return nil
 }
 
+// DeleteByUserID marks every NewsFeed belonging to the provided User as deleted
 func (service *NewsFeed) DeleteByUserID(session data.Session, userID primitive.ObjectID, note string) error {
 	return service.DeleteMany(session, exp.Equal("userId", userID), note)
 }
 
+// DeleteByOrigin marks every NewsItem that came from the provided Following as deleted
 func (service *NewsFeed) DeleteByOrigin(session data.Session, internalID primitive.ObjectID, note string) error {
 	return service.DeleteMany(session, exp.Equal("origin.followingId", internalID), note)
 }
 
+// DeleteByFolder marks every NewsItem in the provided Folder as deleted
 func (service *NewsFeed) DeleteByFolder(session data.Session, userID primitive.ObjectID, folderID primitive.ObjectID) error {
 
 	rangeFunc, err := service.RangeByFolder(session, userID, folderID)

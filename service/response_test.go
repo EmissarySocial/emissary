@@ -30,17 +30,21 @@ import (
  * QueryByUserAndObject uses: userId, object, deleteDate.
  ******************************************/
 
+// responseStore is an in-memory data.Collection of Responses, used by the tests in this file
 type responseStore struct {
 	records    []model.Response
 	queryCount int // number of times Query has been called (proves the gate short-circuits before any read)
 }
 
+// Context implements the interface, returning a background context
 func (c *responseStore) Context() context.Context { return context.Background() }
 
+// Count implements the data.Collection interface. Unused by these tests.
 func (c *responseStore) Count(exp.Expression, ...option.Option) (int64, error) {
 	return 0, derp.NotFound("test", "unused")
 }
 
+// Query implements the data.Collection interface. Unused by these tests.
 func (c *responseStore) Query(target any, criteria exp.Expression, _ ...option.Option) error {
 
 	c.queryCount++
@@ -60,22 +64,27 @@ func (c *responseStore) Query(target any, criteria exp.Expression, _ ...option.O
 	return nil
 }
 
+// Iterator implements the data.Collection interface. Unused by these tests.
 func (c *responseStore) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
 	return nil, derp.NotFound("test", "unused")
 }
 
+// Load implements the data.Collection interface. Unused by these tests.
 func (c *responseStore) Load(exp.Expression, data.Object, ...option.Option) error {
 	return derp.NotFound("test", "unused")
 }
 
+// Save implements the data.Collection interface. Unused by these tests.
 func (c *responseStore) Save(data.Object, string) error {
 	return derp.NotFound("test", "unused")
 }
 
+// Delete implements the data.Collection interface. Unused by these tests.
 func (c *responseStore) Delete(data.Object, string) error {
 	return derp.NotFound("test", "unused")
 }
 
+// HardDelete implements the data.Collection interface. Unused by these tests.
 func (c *responseStore) HardDelete(exp.Expression) error {
 	return derp.NotFound("test", "unused")
 }
@@ -111,14 +120,21 @@ func matchesResponse(criteria exp.Expression, record model.Response) bool {
 	})
 }
 
+// responseSession is a data.Session that hands out a single responseStore
 type responseSession struct {
 	store data.Collection
 }
 
+// Collection implements the data.Session interface, returning this stub's single collection
 func (s responseSession) Collection(string) data.Collection { return s.store }
-func (s responseSession) Context() context.Context          { return context.Background() }
-func (s responseSession) Close()                            {}
 
+// Context implements the interface, returning a background context
+func (s responseSession) Context() context.Context { return context.Background() }
+
+// Close implements the interface. The stub holds no resources to release.
+func (s responseSession) Close() {}
+
+// newResponseService returns a Response service backed by the provided store
 func newResponseService(store data.Collection) (*Response, responseSession) {
 	service := NewResponse()
 	return &service, responseSession{store: store}
@@ -254,6 +270,7 @@ type brokenResponseStore struct {
 	responseStore
 }
 
+// Query implements the data.Collection interface. Unused by these tests.
 func (c *brokenResponseStore) Query(any, exp.Expression, ...option.Option) error {
 	return derp.Internal("test", "database is on fire")
 }

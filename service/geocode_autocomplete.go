@@ -9,11 +9,13 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 )
 
+// GeocodeAutocomplete suggests complete addresses as a User types, using this Domain's configured provider
 type GeocodeAutocomplete struct {
 	connectionService *Connection
 	hostname          string
 }
 
+// NewGeocodeAutocomplete returns a fully initialized GeocodeAutocomplete service
 func NewGeocodeAutocomplete(connectionService *Connection, hostname string) GeocodeAutocomplete {
 	return GeocodeAutocomplete{
 		connectionService: connectionService,

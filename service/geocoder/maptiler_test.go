@@ -6,11 +6,13 @@ import (
 	"testing"
 )
 
+// TestMaptiler_Address exercises the MapTiler geocoder against the shared address suite
 func TestMaptiler_Address(t *testing.T) {
 	encoder := NewMaptiler(testMaptilerAPIKey)
 	testGeocodeAddress(t, encoder)
 }
 
+// TestMaptiler_Autocomplete exercises the MapTiler geocoder against the shared autocomplete suite
 func TestMaptiler_Autocomplete(t *testing.T) {
 	encoder := NewMaptiler(testMaptilerAPIKey)
 	testAutocompleteAddress(t, encoder)

@@ -26,6 +26,7 @@ import (
  * lives in queries/sync/pushSubscription.go and needs a live database to exercise.
  ******************************************/
 
+// subStore is an in-memory data.Collection of PushSubscriptions, used by the tests in this file
 type subStore struct {
 	records []*model.PushSubscription
 
@@ -34,8 +35,10 @@ type subStore struct {
 	duplicateKeyOnce bool
 }
 
+// Context implements the interface, returning a background context
 func (c *subStore) Context() context.Context { return context.Background() }
 
+// Count implements the data.Collection interface. Unused by these tests.
 func (c *subStore) Count(criteria exp.Expression, _ ...option.Option) (int64, error) {
 	var count int64
 	for _, record := range c.records {
@@ -46,14 +49,17 @@ func (c *subStore) Count(criteria exp.Expression, _ ...option.Option) (int64, er
 	return count, nil
 }
 
+// Query implements the data.Collection interface. Unused by these tests.
 func (c *subStore) Query(any, exp.Expression, ...option.Option) error {
 	return derp.NotFound("test", "unused")
 }
 
+// Iterator implements the data.Collection interface. Unused by these tests.
 func (c *subStore) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
 	return nil, derp.NotFound("test", "unused")
 }
 
+// Load implements the data.Collection interface, backed by this stub's in-memory records
 func (c *subStore) Load(criteria exp.Expression, target data.Object, _ ...option.Option) error {
 
 	for _, record := range c.records {
@@ -70,6 +76,7 @@ func (c *subStore) Load(criteria exp.Expression, target data.Object, _ ...option
 	return derp.NotFound("test", "not found")
 }
 
+// Save implements the data.Collection interface, backed by this stub's in-memory records
 func (c *subStore) Save(object data.Object, _ string) error {
 
 	sub, ok := object.(*model.PushSubscription)
@@ -99,8 +106,10 @@ func (c *subStore) Save(object data.Object, _ string) error {
 	return nil
 }
 
+// Delete implements the data.Collection interface. Unused by these tests.
 func (c *subStore) Delete(data.Object, string) error { return nil }
 
+// HardDelete implements the data.Collection interface. Unused by these tests.
 func (c *subStore) HardDelete(criteria exp.Expression) error {
 	remaining := make([]*model.PushSubscription, 0, len(c.records))
 	for _, record := range c.records {
@@ -146,14 +155,21 @@ func matchesSub(criteria exp.Expression, record *model.PushSubscription) bool {
 	})
 }
 
+// subSession is a data.Session that hands out a single subStore
 type subSession struct {
 	collection *subStore
 }
 
+// Collection implements the data.Session interface, returning this stub's single collection
 func (s subSession) Collection(string) data.Collection { return s.collection }
-func (s subSession) Context() context.Context          { return context.Background() }
-func (s subSession) Close()                            {}
 
+// Context implements the interface, returning a background context
+func (s subSession) Context() context.Context { return context.Background() }
+
+// Close implements the interface. The stub holds no resources to release.
+func (s subSession) Close() {}
+
+// newSubService returns a PushSubscription service backed by the provided store
 func newSubService(store *subStore) (*PushSubscription, subSession) {
 	service := NewPushSubscription()
 	return &service, subSession{collection: store}

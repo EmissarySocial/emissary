@@ -4,12 +4,15 @@ import (
 	"io"
 )
 
+// Icons renders the named icons used throughout the Emissary user interface
 type Icons struct{}
 
+// NewIcons returns a fully initialized Icons service
 func NewIcons() Icons {
 	return Icons{}
 }
 
+// Get returns the HTML markup for the named icon
 func (service Icons) Get(name string) string {
 
 	switch name {
@@ -553,6 +556,7 @@ func (service Icons) Get(name string) string {
 	return service.get(name)
 }
 
+// get returns the markup for a Bootstrap icon of the provided name
 func (service Icons) get(name string) string {
 	return `<i class="bi bi-` + name + `"></i>`
 }
@@ -564,10 +568,12 @@ func (service Icons) Write(name string, writer io.Writer) {
 	_, _ = writer.Write([]byte(service.Get(name)))
 }
 
+// copyright returns the copyright symbol
 func (service Icons) copyright() string {
 	return "©"
 }
 
+// ccCC returns the Creative Commons "CC" badge
 func (service Icons) ccCC() string {
 	return `<svg viewBox="5.5 -3.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em; vertical-align:text-bottom;">
 <circle stroke="currentColor" fill-opacity="0" cx="37.47" cy="28.736" r="29.471"/>
@@ -593,6 +599,7 @@ c0-3.048,0.885-5.466,2.658-7.257c1.77-1.79,4.008-2.686,6.713-2.686C51.117,18.558
 `
 }
 
+// ccBy returns the Creative Commons "Attribution" badge
 func (service Icons) ccBy() string {
 	return `<svg viewBox="5.5 -3.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em; vertical-align:text-bottom;">
 <circle stroke="currentColor" fill-opacity="0" cx="37.47" cy="28.736" r="29.471"/>
@@ -609,6 +616,7 @@ c0,2.971-1.486,4.457-4.457,4.457S33.042,15.3,33.042,12.329z"/>
 `
 }
 
+// ccSa returns the Creative Commons "Share Alike" badge
 func (service Icons) ccSa() string {
 	return `<svg viewBox="5.5 -3.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em; vertical-align:text-bottom;">
 <circle stroke="currentColor" fill-opacity="0" cx="37.47" cy="28.736" r="29.471"/>
@@ -627,6 +635,7 @@ c-4.268,0-6.667,1.885-7.2,5.656h2.343l-6.342,6.343l-6.343-6.343L23.271,23.985L23
 `
 }
 
+// ccNc returns the Creative Commons "Non-Commercial" badge
 func (service Icons) ccNc() string {
 	return `<svg viewBox="5.5 -3.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em; vertical-align:text-bottom;">
 <circle stroke="currentColor" fill-opacity="0" cx="37.47" cy="28.736" r="29.471"/>
@@ -646,6 +655,7 @@ c0-7.353-2.552-13.543-7.656-18.573C51.005,4.785,44.831,2.214,37.557,2.214z"/>
 `
 }
 
+// ccNd returns the Creative Commons "No Derivatives" badge
 func (service Icons) ccNd() string {
 	return `<svg viewBox="5.5 -3.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"  version="1.1" style="height:1em; vertical-align:text-bottom;">
 <circle stroke="currentColor" fill-opacity="0" cx="37.47" cy="28.736" r="29.471"/>
@@ -660,6 +670,7 @@ z"/>
 `
 }
 
+// cc0 returns the Creative Commons "CC0" badge
 func (service Icons) cc0() string {
 	return `<svg viewBox="-0.5 0.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"  version="1.1" style="height:1em; vertical-align:text-bottom;">
 <circle stroke="currentColor" fill-opacity="0" cx="31.325" cy="32.873" r="30.096"/>
@@ -682,6 +693,7 @@ C18.092,8.818,24.252,6.259,31.567,6.259z"/>
 `
 }
 
+// publicDomain returns the Public Domain badge
 func (service Icons) publicDomain() string {
 	return `<svg viewBox="5.5 -3.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em; vertical-align:text-bottom;">
 <circle stroke="currentColor" fill-opacity="0" cx="37.47" cy="28.736" r="29.471"/>
@@ -702,6 +714,7 @@ L43.387,23.186z"/>
 `
 }
 
+// fediverse returns the Fediverse logo
 func (service Icons) fediverse() string {
 	return `<svg viewBox="-10 -5 1034 1034" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em;">
 <path fill="currentColor"
@@ -713,6 +726,7 @@ q2 9 1 18q-1 19 -9 35l256 41q-1 -9 -1 -18q1 -18 10 -35zM646 863q-32 0 -55 22.5t-
 </svg>`
 }
 
+// activityPub returns the ActivityPub logo
 func (service Icons) activityPub() string {
 	return `<svg viewBox="0 0 1034 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="height:1em;">
 <g transform="matrix(1,0,0,1,17,-128)">
@@ -722,6 +736,7 @@ func (service Icons) activityPub() string {
 `
 }
 
+// webhooks returns the Webhooks logo
 func (service Icons) webhooks() string {
 	return `<svg viewBox="-10 -5 1034 1034" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em;">
 <path fill="currentColor"
@@ -734,6 +749,7 @@ q2 -17 -1.5 -33t-13.5 -30q-16 -22 -41 -32q-17 -7 -35.5 -6.5t-35.5 7.5q-28 12 -43
 </svg>`
 }
 
+// bluesky returns the Bluesky logo
 func (service Icons) bluesky() string {
 	return `<svg xmlns="http://www.w3.org/2000/svg" style="height:1em;" fill="currentColor" class="bi bi-bluesky" viewBox="0 0 16 16">
   <path d="M3.468 1.948C5.303 3.325 7.276 6.118 8 7.616c.725-1.498 2.698-4.29 4.532-5.668C13.855.955 16 .186 16 2.632c0 .489-.28 4.105-.444 4.692-.572 2.04-2.653 2.561-4.504 2.246 3.236.551 4.06 2.375 2.281 4.2-3.376 3.464-4.852-.87-5.23-1.98-.07-.204-.103-.3-.103-.218 0-.081-.033.014-.102.218-.379 1.11-1.855 5.444-5.231 1.98-1.778-1.825-.955-3.65 2.28-4.2-1.85.315-3.932-.205-4.503-2.246C.28 6.737 0 3.12 0 2.632 0 .186 2.145.955 3.468 1.948"/>

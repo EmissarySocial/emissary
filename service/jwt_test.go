@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestJWTKeyServiceInterface verifies that the JWT service satisfies steranko.KeyService
 func TestJWTKeyServiceInterface(t *testing.T) {
 	var service steranko.KeyService
 	jwtService := NewJWT()
@@ -20,6 +21,7 @@ func TestJWTKeyServiceInterface(t *testing.T) {
 	require.NotNil(t, service)
 }
 
+// TestJWT verifies that signing keys are created, rotated, and looked up by name
 func TestJWT(t *testing.T) {
 
 	// Set up mock server and session
@@ -55,6 +57,7 @@ func TestJWT(t *testing.T) {
 	require.Equal(t, value1, value3)
 }
 
+// TestJWTCacheHit verifies that a repeated key lookup is served from the in-memory cache
 func TestJWTCacheHit(t *testing.T) {
 
 	// Set up mock server and session
@@ -78,6 +81,7 @@ func TestJWTCacheHit(t *testing.T) {
 	require.Equal(t, value1, value2)
 }
 
+// TestJWTCacheMiss verifies that a key missing from the cache is still resolved from the database
 func TestJWTCacheMiss(t *testing.T) {
 
 	// Set up mock server and session
@@ -105,6 +109,7 @@ func TestJWTCacheMiss(t *testing.T) {
 	require.Equal(t, value1, value2)
 }
 
+// TestJWTEncryptDecrypt verifies that a payload longer than one cipher block survives a round-trip
 func TestJWTEncryptDecrypt(t *testing.T) {
 
 	// Set up mock server and session
@@ -121,6 +126,7 @@ func TestJWTEncryptDecrypt(t *testing.T) {
 	require.Equal(t, original, plaintext)
 }
 
+// TestJWTKeyEncryptingKey verifies that a key is encrypted at rest with the key-encrypting key
 func TestJWTKeyEncryptingKey(t *testing.T) {
 
 	key := make([]byte, 32)

@@ -14,6 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// LookupProvider resolves the named lookup groups that forms use to populate their pickers
 type LookupProvider struct {
 	factory *Factory
 	request *http.Request
@@ -21,6 +22,7 @@ type LookupProvider struct {
 	userID  primitive.ObjectID
 }
 
+// NewLookupProvider returns a fully initialized LookupProvider for the provided User and request
 func NewLookupProvider(factory *Factory, request *http.Request, session data.Session, userID primitive.ObjectID) LookupProvider {
 	return LookupProvider{
 		factory: factory,
@@ -30,6 +32,7 @@ func NewLookupProvider(factory *Factory, request *http.Request, session data.Ses
 	}
 }
 
+// Group returns the named LookupGroup. Implements the form.LookupProvider interface.
 func (service LookupProvider) Group(path string) form.LookupGroup {
 
 	switch path {

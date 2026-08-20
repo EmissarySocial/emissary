@@ -28,8 +28,10 @@ type memoryCollection struct {
 	records []*model.Collection
 }
 
+// Context implements the interface, returning a background context
 func (c *memoryCollection) Context() context.Context { return context.Background() }
 
+// Count implements the data.Collection interface. Unused by these tests.
 func (c *memoryCollection) Count(criteria exp.Expression, _ ...option.Option) (int64, error) {
 	var count int64
 	for _, record := range c.records {
@@ -40,14 +42,17 @@ func (c *memoryCollection) Count(criteria exp.Expression, _ ...option.Option) (i
 	return count, nil
 }
 
+// Query implements the data.Collection interface. Unused by these tests.
 func (c *memoryCollection) Query(any, exp.Expression, ...option.Option) error {
 	return derp.NotFound("test", "unused")
 }
 
+// Iterator implements the data.Collection interface. Unused by these tests.
 func (c *memoryCollection) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
 	return nil, derp.NotFound("test", "unused")
 }
 
+// Load implements the data.Collection interface, backed by this stub's in-memory records
 func (c *memoryCollection) Load(criteria exp.Expression, target data.Object, _ ...option.Option) error {
 	for _, record := range c.records {
 		if matchesCollection(criteria, record) {
@@ -61,6 +66,7 @@ func (c *memoryCollection) Load(criteria exp.Expression, target data.Object, _ .
 	return derp.NotFound("test", "not found")
 }
 
+// Save implements the data.Collection interface, backed by this stub's in-memory records
 func (c *memoryCollection) Save(object data.Object, _ string) error {
 	collection, ok := object.(*model.Collection)
 	if !ok {
@@ -81,8 +87,11 @@ func (c *memoryCollection) Save(object data.Object, _ string) error {
 	return nil
 }
 
+// Delete implements the data.Collection interface. Unused by these tests.
 func (c *memoryCollection) Delete(data.Object, string) error { return nil }
-func (c *memoryCollection) HardDelete(exp.Expression) error  { return nil }
+
+// HardDelete implements the data.Collection interface. Unused by these tests.
+func (c *memoryCollection) HardDelete(exp.Expression) error { return nil }
 
 // matchesCollection reports whether a record satisfies an equality criteria on parentId/type/deleteDate.
 func matchesCollection(criteria exp.Expression, record *model.Collection) bool {
@@ -113,10 +122,16 @@ type memorySession struct {
 	collection *memoryCollection
 }
 
+// Collection implements the data.Session interface, returning this stub's single collection
 func (s memorySession) Collection(string) data.Collection { return s.collection }
-func (s memorySession) Context() context.Context          { return context.Background() }
-func (s memorySession) Close()                            {}
 
+// Context implements the interface, returning a background context
+func (s memorySession) Context() context.Context { return context.Background() }
+
+// Close implements the interface. The stub holds no resources to release.
+func (s memorySession) Close() {}
+
+// newMemoryService returns a Collection service backed by an in-memory store
 func newMemoryService() (*Collection, memorySession) {
 	service := NewCollection()
 	service.collectionItemService = &CollectionItem{}
@@ -321,16 +336,20 @@ type raceCollection struct {
 	saved            *model.Collection // captured on a successful Save
 }
 
+// Context implements the interface, returning a background context
 func (c *raceCollection) Context() context.Context { return context.Background() }
 
+// Count implements the data.Collection interface. Unused by these tests.
 func (c *raceCollection) Count(exp.Expression, ...option.Option) (int64, error) {
 	return 0, nil
 }
 
+// Query implements the data.Collection interface. Unused by these tests.
 func (c *raceCollection) Query(any, exp.Expression, ...option.Option) error {
 	return derp.NotFound("test", "unused")
 }
 
+// Iterator implements the data.Collection interface. Unused by these tests.
 func (c *raceCollection) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
 	return nil, derp.NotFound("test", "unused")
 }
@@ -359,6 +378,7 @@ func (c *raceCollection) Load(_ exp.Expression, target data.Object, _ ...option.
 	return derp.Internal("test", "unexpected target type")
 }
 
+// Save implements the data.Collection interface, backed by this stub's in-memory records
 func (c *raceCollection) Save(object data.Object, _ string) error {
 
 	c.saveCalls++
@@ -375,8 +395,10 @@ func (c *raceCollection) Save(object data.Object, _ string) error {
 	return nil
 }
 
+// Delete implements the data.Collection interface. Unused by these tests.
 func (c *raceCollection) Delete(data.Object, string) error { return nil }
 
+// HardDelete implements the data.Collection interface. Unused by these tests.
 func (c *raceCollection) HardDelete(exp.Expression) error { return nil }
 
 // raceSession hands out a single shared raceCollection.
@@ -384,9 +406,14 @@ type raceSession struct {
 	collection *raceCollection
 }
 
+// Collection implements the data.Session interface, returning this stub's single collection
 func (s raceSession) Collection(string) data.Collection { return s.collection }
-func (s raceSession) Context() context.Context          { return context.Background() }
-func (s raceSession) Close()                            {}
+
+// Context implements the interface, returning a background context
+func (s raceSession) Context() context.Context { return context.Background() }
+
+// Close implements the interface. The stub holds no resources to release.
+func (s raceSession) Close() {}
 
 // When the insert loses the race, the service detects the duplicate key and returns the winner.
 func TestCollection_loadOrCreateByParent_DuplicateKeyReloadsWinner(t *testing.T) {
@@ -477,29 +504,49 @@ type hardLoadCollection struct {
 	saveCalls int
 }
 
-func (c *hardLoadCollection) Context() context.Context                              { return context.Background() }
+// Context implements the interface, returning a background context
+func (c *hardLoadCollection) Context() context.Context { return context.Background() }
+
+// Count implements the data.Collection interface. Unused by these tests.
 func (c *hardLoadCollection) Count(exp.Expression, ...option.Option) (int64, error) { return 0, nil }
+
+// Query implements the data.Collection interface. Unused by these tests.
 func (c *hardLoadCollection) Query(any, exp.Expression, ...option.Option) error {
 	return derp.NotFound("test", "unused")
 }
+
+// Iterator implements the data.Collection interface. Unused by these tests.
 func (c *hardLoadCollection) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
 	return nil, derp.NotFound("test", "unused")
 }
+
+// Load implements the data.Collection interface, backed by this stub's in-memory records
 func (c *hardLoadCollection) Load(exp.Expression, data.Object, ...option.Option) error {
 	return c.loadErr
 }
+
+// Save implements the data.Collection interface, backed by this stub's in-memory records
 func (c *hardLoadCollection) Save(data.Object, string) error {
 	c.saveCalls++
 	return nil
 }
+
+// Delete implements the data.Collection interface. Unused by these tests.
 func (c *hardLoadCollection) Delete(data.Object, string) error { return nil }
-func (c *hardLoadCollection) HardDelete(exp.Expression) error  { return nil }
+
+// HardDelete implements the data.Collection interface. Unused by these tests.
+func (c *hardLoadCollection) HardDelete(exp.Expression) error { return nil }
 
 // fakeSession hands out any data.Collection.
 type fakeSession struct {
 	collection data.Collection
 }
 
+// Collection implements the data.Session interface, returning this stub's single collection
 func (s fakeSession) Collection(string) data.Collection { return s.collection }
-func (s fakeSession) Context() context.Context          { return context.Background() }
-func (s fakeSession) Close()                            {}
+
+// Context implements the interface, returning a background context
+func (s fakeSession) Context() context.Context { return context.Background() }
+
+// Close implements the interface. The stub holds no resources to release.
+func (s fakeSession) Close() {}

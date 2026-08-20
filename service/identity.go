@@ -62,10 +62,12 @@ func (service *Identity) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the Identity collection for the provided database session
 func (service *Identity) collection(session data.Session) data.Collection {
 	return session.Collection("Identity")
 }
 
+// Count returns the number of Identity records that match the provided criteria
 func (service *Identity) Count(session data.Session, criteria exp.Expression) (int64, error) {
 	return service.collection(session).Count(notDeleted(criteria))
 }
@@ -204,6 +206,7 @@ func (service *Identity) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided Identity. Implements the ModelService interface.
 func (service *Identity) ObjectID(object data.Object) primitive.ObjectID {
 
 	if mention, ok := object.(*model.Identity); ok {
@@ -213,16 +216,19 @@ func (service *Identity) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every Identity that matches the provided criteria. Implements the ModelService interface.
 func (service *Identity) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single Identity as a data.Object. Implements the ModelService interface.
 func (service *Identity) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewIdentity()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a Identity in the database. Implements the ModelService interface.
 func (service *Identity) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if identity, ok := object.(*model.Identity); ok {
 		return service.Save(session, identity, comment)
@@ -230,6 +236,7 @@ func (service *Identity) ObjectSave(session data.Session, object data.Object, co
 	return derp.Internal("service.Identity.ObjectSave", "Invalid Object Type", object)
 }
 
+// ObjectDelete marks a Identity as deleted. Implements the ModelService interface.
 func (service *Identity) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if identity, ok := object.(*model.Identity); ok {
 		return service.Delete(session, identity, comment)
@@ -237,10 +244,12 @@ func (service *Identity) ObjectDelete(session data.Session, object data.Object, 
 	return derp.Internal("service.Identity.ObjectDelete", "Invalid Object Type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a Identity. Implements the ModelService interface.
 func (service *Identity) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Identity.ObjectUserCan", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a Identity
 func (service *Identity) Schema() schema.Schema {
 	return schema.New(model.IdentitySchema())
 }
@@ -326,6 +335,7 @@ func (service *Identity) LoadOrCreate(session data.Session, name string, identif
 	return identity, nil
 }
 
+// LoadByIdentifier retrieves an Identity using whichever kind of identifier is provided
 func (service *Identity) LoadByIdentifier(session data.Session, identifierType string, identifierValue string, identity *model.Identity) error {
 
 	switch identifierType {
@@ -401,6 +411,7 @@ func (service *Identity) RefreshPrivileges(session data.Session, identityID prim
 	return nil
 }
 
+// refreshPrivileges recalculates the Circles and Products that this Identity currently has access to
 func (service *Identity) refreshPrivileges(session data.Session, identity *model.Identity) error {
 
 	const location = "service.Identity.refreshPrivileges"
@@ -436,6 +447,7 @@ func (service *Identity) refreshPrivileges(session data.Session, identity *model
 	return nil
 }
 
+// SendGuestCode emails or messages a one-time sign-in code to the provided identifier
 func (service *Identity) SendGuestCode(session data.Session, identity *model.Identity, identifierType string, identifierValue string) error {
 
 	const location = "service.Identity.SendGuestCode"
@@ -550,6 +562,7 @@ func (service *Identity) makeGuestCode(identity *model.Identity, identifierType 
 	return token, nil
 }
 
+// calcActivityPubActor resolves this Identity's WebFinger username into an ActivityPub actor URL
 func (service *Identity) calcActivityPubActor(identity *model.Identity) error {
 
 	const location = "service.Identity.calcActivityPubActor"
@@ -590,6 +603,7 @@ func (service *Identity) calcActivityPubActor(identity *model.Identity) error {
 	return derp.BadRequest(location, "WebFinger record does not include an ActivityPub address", identity.WebfingerUsername)
 }
 
+// calcName fills in this Identity's display name from its ActivityPub profile, if it has one
 func (service *Identity) calcName(identity *model.Identity) error {
 
 	// If we already have a "Name", then there's nothing else to do
@@ -668,6 +682,7 @@ func (service *Identity) uniquify(session data.Session, identity *model.Identity
 	return nil
 }
 
+// hostname returns the bare hostname of the Domain that owns this Identity
 func (service *Identity) hostname() string {
 	return uri.Hostname(service.host)
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestLocator verifies that every recognized Emissary URL shape resolves to its object type and token
 func TestLocator(t *testing.T) {
 
 	do := func(value string, objType string, objToken string) {

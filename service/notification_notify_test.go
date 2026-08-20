@@ -54,6 +54,7 @@ func TestNotificationMatchKeys_FollowBareObject(t *testing.T) {
 	}
 }
 
+// TestReactionType verifies that each reaction activity maps to its Notification type, and that unknown types fall back to "Like"
 func TestReactionType(t *testing.T) {
 	require.Equal(t, model.NotificationTypeLike, reactionType(vocab.ActivityTypeLike))
 	require.Equal(t, model.NotificationTypeDislike, reactionType(vocab.ActivityTypeDislike))
@@ -61,16 +62,19 @@ func TestReactionType(t *testing.T) {
 	require.Equal(t, model.NotificationTypeLike, reactionType("SomethingElse")) // default
 }
 
+// TestPlainText_StripsTags verifies that HTML markup is removed from a notification summary
 func TestPlainText_StripsTags(t *testing.T) {
 	result := plainText("<p>Hello <b>world</b></p>")
 	require.Equal(t, "Hello world", result)
 }
 
+// TestPlainText_UnescapesEntities verifies that HTML entities are decoded in a notification summary
 func TestPlainText_UnescapesEntities(t *testing.T) {
 	result := plainText("Fish &amp; chips")
 	require.Equal(t, "Fish & chips", result)
 }
 
+// TestPlainText_Truncates verifies that an over-long summary is cut to the maximum length, plus an ellipsis
 func TestPlainText_Truncates(t *testing.T) {
 	long := strings.Repeat("a", objectSummaryMaxLength+50)
 	result := plainText(long)
@@ -80,6 +84,7 @@ func TestPlainText_Truncates(t *testing.T) {
 	require.True(t, strings.HasSuffix(result, "…"))
 }
 
+// TestPlainText_ShortStringUnchanged verifies that a short summary passes through untouched
 func TestPlainText_ShortStringUnchanged(t *testing.T) {
 	require.Equal(t, "short", plainText("short"))
 	require.Equal(t, "", plainText(""))

@@ -51,6 +51,7 @@ func persistTestGrant(t *testing.T, service *OAuthUserToken, session data.Sessio
 	return grant
 }
 
+// TestExchangeCode verifies that an authorization code is redeemable exactly once
 func TestExchangeCode(t *testing.T) {
 
 	service, session := newTestOAuthUserTokenService(t)
@@ -76,6 +77,7 @@ func TestExchangeCode(t *testing.T) {
 	require.NotNil(t, service.ExchangeCode(session, &grant))
 }
 
+// TestExchangeCode_Expired verifies that an expired code is rejected and never consumed
 func TestExchangeCode_Expired(t *testing.T) {
 
 	service, session := newTestOAuthUserTokenService(t)
@@ -88,6 +90,7 @@ func TestExchangeCode_Expired(t *testing.T) {
 	require.False(t, grant.CodeRedeemed, "an expired code is never consumed")
 }
 
+// TestRefreshGrant_Rotate verifies that refreshing a grant advances its generation and rotates its secret
 func TestRefreshGrant_Rotate(t *testing.T) {
 
 	service, session := newTestOAuthUserTokenService(t)
@@ -110,6 +113,7 @@ func TestRefreshGrant_Rotate(t *testing.T) {
 	require.NotEqual(t, secret1, secret2, "the refresh secret rotated")
 }
 
+// TestRefreshGrant_GarbageSecret verifies that a wrong secret is rejected without revoking the grant
 func TestRefreshGrant_GarbageSecret(t *testing.T) {
 
 	service, session := newTestOAuthUserTokenService(t)
@@ -123,6 +127,7 @@ func TestRefreshGrant_GarbageSecret(t *testing.T) {
 	require.False(t, grant.IsDeleted())
 }
 
+// TestRefreshGrant_ReuseRevokes verifies that replaying a spent refresh secret revokes the whole grant
 func TestRefreshGrant_ReuseRevokes(t *testing.T) {
 
 	service, session := newTestOAuthUserTokenService(t)
@@ -146,6 +151,7 @@ func TestRefreshGrant_ReuseRevokes(t *testing.T) {
 	require.NotNil(t, service.LoadByID(session, grant.UserID, grant.OAuthUserTokenID, &reloaded), "the grant is revoked on reuse")
 }
 
+// TestRefreshGrant_ScopeNarrowing verifies which scope changes a refresh request may ask for
 func TestRefreshGrant_ScopeNarrowing(t *testing.T) {
 
 	service, session := newTestOAuthUserTokenService(t)

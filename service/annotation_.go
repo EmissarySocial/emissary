@@ -43,6 +43,7 @@ func (service *Annotation) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the Annotation collection for the provided database session
 func (service *Annotation) collection(session data.Session) data.Collection {
 	return session.Collection("Annotation")
 }
@@ -52,6 +53,7 @@ func (service *Annotation) Count(session data.Session, criteria exp.Expression) 
 	return service.collection(session).Count(notDeleted(criteria))
 }
 
+// Query returns every Annotation that matches the provided criteria
 func (service *Annotation) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Annotation, error) {
 	result := make([]model.Annotation, 0)
 	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
@@ -168,6 +170,7 @@ func (service *Annotation) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided Annotation. Implements the ModelService interface.
 func (service *Annotation) ObjectID(object data.Object) primitive.ObjectID {
 
 	if annotation, ok := object.(*model.Annotation); ok {
@@ -177,16 +180,19 @@ func (service *Annotation) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every Annotation that matches the provided criteria. Implements the ModelService interface.
 func (service *Annotation) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single Annotation as a data.Object. Implements the ModelService interface.
 func (service *Annotation) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewAnnotation()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a Annotation in the database. Implements the ModelService interface.
 func (service *Annotation) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if annotation, ok := object.(*model.Annotation); ok {
 		return service.Save(session, annotation, comment)
@@ -194,6 +200,7 @@ func (service *Annotation) ObjectSave(session data.Session, object data.Object, 
 	return derp.Internal("service.Annotation.ObjectSave", "Invalid Object Type", object)
 }
 
+// ObjectDelete marks a Annotation as deleted. Implements the ModelService interface.
 func (service *Annotation) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if annotation, ok := object.(*model.Annotation); ok {
 		return service.Delete(session, annotation, comment)
@@ -201,10 +208,12 @@ func (service *Annotation) ObjectDelete(session data.Session, object data.Object
 	return derp.Internal("service.Annotation.ObjectDelete", "Invalid Object Type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a Annotation. Implements the ModelService interface.
 func (service *Annotation) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Annotation", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a Annotation
 func (service *Annotation) Schema() schema.Schema {
 	return schema.New(model.AnnotationSchema())
 }
@@ -213,6 +222,7 @@ func (service *Annotation) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+// QueryByUser returns every Annotation that belongs to the provided User
 func (service *Annotation) QueryByUser(session data.Session, userID primitive.ObjectID, options ...option.Option) ([]model.Annotation, error) {
 
 	// RULE: Require a valid UserID
@@ -243,6 +253,7 @@ func (service *Annotation) LoadByID(session data.Session, userID primitive.Objec
 	return service.Load(session, criteria, result)
 }
 
+// LoadByToken retrieves a single Annotation using its URL token
 func (service *Annotation) LoadByToken(session data.Session, userID primitive.ObjectID, token string, result *model.Annotation) error {
 
 	// RULE: Require a valid UserID

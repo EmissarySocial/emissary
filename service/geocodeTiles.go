@@ -10,11 +10,13 @@ import (
 	"github.com/benpate/form"
 )
 
+// GeocodeTiles resolves the map-tile provider that this Domain draws maps with
 type GeocodeTiles struct {
 	connectionService *Connection
 	hostname          string
 }
 
+// NewGeocodeTiles returns a fully initialized GeocodeTiles service
 func NewGeocodeTiles(connectionService *Connection, hostname string) GeocodeTiles {
 	return GeocodeTiles{
 		connectionService: connectionService,
@@ -22,6 +24,7 @@ func NewGeocodeTiles(connectionService *Connection, hostname string) GeocodeTile
 	}
 }
 
+// GetTileURL returns the tile-server URL configured for this Domain, as a LookupCode
 func (service GeocodeTiles) GetTileURL(session data.Session) form.LookupCode {
 
 	const location = "service.geocodeTiles.GetTileURL"

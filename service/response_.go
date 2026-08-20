@@ -72,6 +72,7 @@ func (service *Response) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the Response collection for the provided database session
 func (service *Response) collection(session data.Session) data.Collection {
 	return session.Collection("Response")
 }
@@ -224,6 +225,7 @@ func (service *Response) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided Response. Implements the ModelService interface.
 func (service *Response) ObjectID(object data.Object) primitive.ObjectID {
 
 	if response, ok := object.(*model.Response); ok {
@@ -233,16 +235,19 @@ func (service *Response) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every Response that matches the provided criteria. Implements the ModelService interface.
 func (service *Response) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single Response as a data.Object. Implements the ModelService interface.
 func (service *Response) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewResponse()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a Response in the database. Implements the ModelService interface.
 func (service *Response) ObjectSave(session data.Session, object data.Object, note string) error {
 
 	if response, ok := object.(*model.Response); ok {
@@ -251,6 +256,7 @@ func (service *Response) ObjectSave(session data.Session, object data.Object, no
 	return derp.Internal("service.Response.ObjectSave", "Invalid object type", object)
 }
 
+// ObjectDelete marks a Response as deleted. Implements the ModelService interface.
 func (service *Response) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if response, ok := object.(*model.Response); ok {
 		return service.Delete(session, response, note)
@@ -258,10 +264,12 @@ func (service *Response) ObjectDelete(session data.Session, object data.Object, 
 	return derp.Internal("service.Response.ObjectDelete", "Invalid object type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a Response. Implements the ModelService interface.
 func (service *Response) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Response", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a Response
 func (service *Response) Schema() schema.Schema {
 	return schema.New(model.ResponseSchema())
 }
@@ -270,6 +278,7 @@ func (service *Response) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+// QueryByUserAndDate returns one page of a User's Responses of the provided type, newest first
 func (service *Response) QueryByUserAndDate(session data.Session, userID primitive.ObjectID, responseType string, maxDate int64, pageSize int) ([]model.Response, error) {
 
 	criteria := exp.Equal("userId", userID).AndEqual("type", responseType).And(exp.LessThan("createDate", maxDate))
@@ -278,6 +287,7 @@ func (service *Response) QueryByUserAndDate(session data.Session, userID primiti
 	return service.Query(session, criteria, options...)
 }
 
+// QueryByObjectAndDate returns one page of the Responses to an object, newest first
 func (service *Response) QueryByObjectAndDate(session data.Session, objectID string, responseType string, maxDate int64, pageSize int) ([]model.Response, error) {
 
 	criteria := exp.Equal("object", objectID).AndEqual("type", responseType).And(exp.LessThan("createDate", maxDate))
@@ -286,11 +296,13 @@ func (service *Response) QueryByObjectAndDate(session data.Session, objectID str
 	return service.Query(session, criteria, options...)
 }
 
+// LoadByID retrieves a single Response using its unique ID
 func (service *Response) LoadByID(session data.Session, userID primitive.ObjectID, responseID primitive.ObjectID, response *model.Response) error {
 	criteria := exp.Equal("userId", userID).AndEqual("_id", responseID)
 	return service.Load(session, criteria, response)
 }
 
+// RangeByUserID returns an iterator over every Response belonging to the provided User
 func (service *Response) RangeByUserID(session data.Session, userID primitive.ObjectID, options ...option.Option) (iter.Seq[model.Response], error) {
 
 	criteria := exp.Equal("userId", userID)
@@ -298,6 +310,7 @@ func (service *Response) RangeByUserID(session data.Session, userID primitive.Ob
 	return service.Range(session, criteria, options...)
 }
 
+// QueryByUserAndObject returns every Response that the provided User has made to an object
 func (service *Response) QueryByUserAndObject(session data.Session, userID primitive.ObjectID, object string, options ...option.Option) ([]model.Response, error) {
 
 	criteria := exp.Equal("userId", userID).
@@ -306,6 +319,7 @@ func (service *Response) QueryByUserAndObject(session data.Session, userID primi
 	return service.Query(session, criteria, options...)
 }
 
+// LoadByUserAndObject retrieves the Response of the provided type that a User made to an object
 func (service *Response) LoadByUserAndObject(session data.Session, userID primitive.ObjectID, object string, responseType string, response *model.Response) error {
 
 	criteria := exp.Equal("userId", userID).
@@ -315,6 +329,7 @@ func (service *Response) LoadByUserAndObject(session data.Session, userID primit
 	return service.Load(session, criteria, response)
 }
 
+// LoadByActorAndObject retrieves the Response of the provided type that a remote actor made to an object
 func (service *Response) LoadByActorAndObject(session data.Session, actor string, object string, responseType string, response *model.Response) error {
 
 	criteria := exp.Equal("actor", actor).
@@ -324,6 +339,7 @@ func (service *Response) LoadByActorAndObject(session data.Session, actor string
 	return service.Load(session, criteria, response)
 }
 
+// CountByContent tallies the Responses to an object, grouped by their content
 func (service *Response) CountByContent(session data.Session, objectID string) (mapof.Int, error) {
 	collection := service.collection(session)
 	return queries.CountResponsesByContent(collection, objectID)
@@ -333,6 +349,7 @@ func (service *Response) CountByContent(session data.Session, objectID string) (
  * Custom Behaviors
  ******************************************/
 
+// DeleteByUserID marks every Response belonging to the provided User as deleted
 func (service *Response) DeleteByUserID(session data.Session, userID primitive.ObjectID, note string) error {
 
 	const location = "service.Response.DeleteByUserID"

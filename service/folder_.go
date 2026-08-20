@@ -51,6 +51,7 @@ func (service *Folder) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the Folder collection for the provided database session
 func (service *Folder) collection(session data.Session) data.Collection {
 	return session.Collection("Folder")
 }
@@ -190,6 +191,7 @@ func (service *Folder) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided Folder. Implements the ModelService interface.
 func (service *Folder) ObjectID(object data.Object) primitive.ObjectID {
 
 	if folder, ok := object.(*model.Folder); ok {
@@ -199,16 +201,19 @@ func (service *Folder) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every Folder that matches the provided criteria. Implements the ModelService interface.
 func (service *Folder) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single Folder as a data.Object. Implements the ModelService interface.
 func (service *Folder) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewFolder()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a Folder in the database. Implements the ModelService interface.
 func (service *Folder) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if folder, ok := object.(*model.Folder); ok {
 		return service.Save(session, folder, comment)
@@ -216,6 +221,7 @@ func (service *Folder) ObjectSave(session data.Session, object data.Object, comm
 	return derp.Internal("service.Folder.ObjectSave", "Invalid object type", object)
 }
 
+// ObjectDelete marks a Folder as deleted. Implements the ModelService interface.
 func (service *Folder) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if folder, ok := object.(*model.Folder); ok {
 		return service.Delete(session, folder, comment)
@@ -223,10 +229,12 @@ func (service *Folder) ObjectDelete(session data.Session, object data.Object, co
 	return derp.Internal("service.Folder.ObjectDelete", "Invalid object type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a Folder. Implements the ModelService interface.
 func (service *Folder) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Folder", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a Folder
 func (service *Folder) Schema() schema.Schema {
 	return schema.New(model.FolderSchema())
 }
@@ -361,6 +369,7 @@ func (service *Folder) CalculateUnreadCount(session data.Session, userID primiti
 	return nil
 }
 
+// CreateDefaultFolders creates the starter Folders that a new User begins with, as defined by this Domain's Theme
 func (service *Folder) CreateDefaultFolders(session data.Session, userID primitive.ObjectID) error {
 
 	domain := service.domainService.Get()

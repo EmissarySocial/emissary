@@ -6,16 +6,19 @@ import (
 	"github.com/benpate/rosetta/slice"
 )
 
+// ThemeLookupProvider lists this server's Themes as form lookup codes
 type ThemeLookupProvider struct {
 	themeService *Theme
 }
 
+// NewThemeLookupProvider returns a fully initialized ThemeLookupProvider
 func NewThemeLookupProvider(themeService *Theme) ThemeLookupProvider {
 	return ThemeLookupProvider{
 		themeService: themeService,
 	}
 }
 
+// Get returns every active Theme. Implements the form.LookupGroup interface.
 func (service ThemeLookupProvider) Get() []form.LookupCode {
 
 	// Generate a slice containing all themes

@@ -7,8 +7,10 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// GeocodeAutocomplete connects a Domain to the service that suggests complete addresses as a User types
 type GeocodeAutocomplete struct{}
 
+// NewGeocodeAutocomplete returns a fully initialized GeocodeAutocomplete provider
 func NewGeocodeAutocomplete() GeocodeAutocomplete {
 	return GeocodeAutocomplete{}
 }
@@ -17,6 +19,7 @@ func NewGeocodeAutocomplete() GeocodeAutocomplete {
  * Setup / Configuration Methods
  ******************************************/
 
+// ManualConfig returns the form used to configure this Connection by hand. Implements the ManualProvider interface.
 func (adapter GeocodeAutocomplete) ManualConfig() form.Form {
 
 	return form.Form{
@@ -94,6 +97,7 @@ func (adapter GeocodeAutocomplete) ManualConfig() form.Form {
  * Lifecycle Methods
  ******************************************/
 
+// BeforeSave applies any last-minute changes to this Connection before it is written to the database
 func (adapter GeocodeAutocomplete) BeforeSave(connection *model.Connection, vault mapof.String) error {
 	return nil
 }

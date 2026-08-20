@@ -55,6 +55,7 @@ func (service *Connection) Count(session data.Session, criteria exp.Expression) 
 	return int64(len(service.domain.Connections)), nil
 }
 
+// Load retrieves a single Connection from the database
 func (service *Connection) Load(session data.Session, criteria exp.Expression, result *model.Connection) error {
 	const location = "service.Connection.Load"
 
@@ -69,6 +70,7 @@ func (service *Connection) Load(session data.Session, criteria exp.Expression, r
 	return nil
 }
 
+// Query returns every Connection that matches the provided criteria
 func (service *Connection) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Connection, error) {
 	connections := service.domain.Connections.Match(criteria).Values()
 
@@ -193,6 +195,7 @@ func (service *Connection) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided Connection. Implements the ModelService interface.
 func (service *Connection) ObjectID(object data.Object) primitive.ObjectID {
 
 	if group, ok := object.(*model.Connection); ok {
@@ -202,16 +205,19 @@ func (service *Connection) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every Connection that matches the provided criteria. Implements the ModelService interface.
 func (service *Connection) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return derp.NotImplemented("service.Connection.ObjectQuery", "Not Implemented")
 }
 
+// ObjectLoad retrieves a single Connection as a data.Object. Implements the ModelService interface.
 func (service *Connection) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewConnection()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a Connection in the database. Implements the ModelService interface.
 func (service *Connection) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if group, ok := object.(*model.Connection); ok {
 		return service.Save(session, group, comment)
@@ -219,6 +225,7 @@ func (service *Connection) ObjectSave(session data.Session, object data.Object, 
 	return derp.Internal("service.Connection.ObjectSave", "Invalid Object Type", object)
 }
 
+// ObjectDelete marks a Connection as deleted. Implements the ModelService interface.
 func (service *Connection) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if group, ok := object.(*model.Connection); ok {
 		return service.Delete(session, group, comment)
@@ -226,10 +233,12 @@ func (service *Connection) ObjectDelete(session data.Session, object data.Object
 	return derp.Internal("service.Connection.ObjectDelete", "Invalid Object Type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a Connection. Implements the ModelService interface.
 func (service *Connection) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Connection", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a Connection
 func (service *Connection) Schema() schema.Schema {
 	return schema.New(model.ConnectionSchema())
 }
@@ -238,20 +247,24 @@ func (service *Connection) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+// QueryAll returns every Connection configured on this Domain
 func (service *Connection) QueryAll(session data.Session, options ...option.Option) ([]model.Connection, error) {
 	result := service.domain.Connections.Values()
 	result = dataslice.ApplyOptions(result, options...)
 	return result, nil
 }
 
+// ActiveByType returns the active Connections of the provided type
 func (service *Connection) ActiveByType(typeID string) mapof.Matchable[model.Connection] {
 	return service.domain.Connections.Match(exp.Equal("type", typeID).AndEqual("active", true))
 }
 
+// AllAsMap returns every Connection configured on this Domain, keyed by provider
 func (service *Connection) AllAsMap(session data.Session) mapof.Object[model.Connection] {
 	return mapof.Object[model.Connection](service.domain.Connections)
 }
 
+// LoadByID retrieves a single Connection using its unique ID
 func (service *Connection) LoadByID(session data.Session, connectionID primitive.ObjectID, connection *model.Connection) error {
 
 	const location = "service.Connection.LoadByID"
@@ -270,6 +283,7 @@ func (service *Connection) LoadByID(session data.Session, connectionID primitive
 	return nil
 }
 
+// LoadByToken retrieves a single Connection using its URL token
 func (service *Connection) LoadByToken(session data.Session, token string, connection *model.Connection) error {
 
 	const location = "service.Connection.LoadByToken"
@@ -285,6 +299,7 @@ func (service *Connection) LoadByToken(session data.Session, token string, conne
 	return service.LoadByID(session, connectionID, connection)
 }
 
+// LoadActiveByType retrieves the single active Connection of the provided type
 func (service *Connection) LoadActiveByType(session data.Session, typeID string, connection *model.Connection) error {
 
 	const location = "service.Connection.LoadActiveByType"
@@ -349,6 +364,7 @@ func (service *Connection) LoadOrCreateByProvider(session data.Session, provider
 	return result, nil
 }
 
+// DecryptVault opens the named secrets stored in this Connection's vault
 func (service *Connection) DecryptVault(connection *model.Connection, values ...string) (mapof.String, error) {
 	const location = "service.Connection.DecryptVault"
 
@@ -374,6 +390,7 @@ func (service *Connection) DecryptVault(connection *model.Connection, values ...
 	return result, nil
 }
 
+// GetAccessToken returns this Connection's OAuth access token, refreshing it if it has expired
 func (service *Connection) GetAccessToken(connection *model.Connection) (oauth2.Token, error) {
 
 	const location = "service.Connection.GetAccessToken"

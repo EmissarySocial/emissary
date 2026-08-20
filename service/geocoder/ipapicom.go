@@ -7,16 +7,19 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
+// IPAPICOM geocodes IP addresses using the ip-api.com service
 type IPAPICOM struct {
 	apiKey string
 }
 
+// NewIPAPICOM returns a IPAPICOM geocoder
 func NewIPAPICOM(apiKey string) IPAPICOM {
 	return IPAPICOM{
 		apiKey: apiKey,
 	}
 }
 
+// GeocodeNetwork resolves an IP address into approximate coordinates. Implements the NetworkGeocoder interface.
 func (geocoder IPAPICOM) GeocodeNetwork(ipAddress string) (point geo.Point, err error) {
 
 	const location = "geocode.IPAPICOM.GeocodeNetwork"

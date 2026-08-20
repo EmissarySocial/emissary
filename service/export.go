@@ -16,6 +16,7 @@ func NewExport(factory *Factory) Export {
 	}
 }
 
+// FindService returns the service that exports the named collection, for the Data Portability process
 func (service *Export) FindService(collectionName string) (Exportable, error) {
 
 	const location = "service.Export.FindService"

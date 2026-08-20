@@ -11,11 +11,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// ExportCollection returns the IDs of every Annotation to include in a User's data export
 func (service *Annotation) ExportCollection(session data.Session, userID primitive.ObjectID) ([]model.IDOnly, error) {
 	criteria := exp.Equal("userId", userID)
 	return service.QueryIDOnly(session, criteria, option.SortAsc("createDate"))
 }
 
+// ExportDocument returns a single Annotation as a JSON string, for a User's data export
 func (service *Annotation) ExportDocument(session data.Session, userID primitive.ObjectID, annotationID primitive.ObjectID) (string, error) {
 
 	const location = "service.Annotation.ExportDocument"

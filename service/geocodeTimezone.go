@@ -8,11 +8,13 @@ import (
 	"github.com/benpate/geo"
 )
 
+// GeocodeTimezone resolves an address into its timezone, using this Domain's configured provider
 type GeocodeTimezone struct {
 	connectionService *Connection
 	hostname          string
 }
 
+// NewGeocodeTimezone returns a fully initialized GeocodeTimezone service
 func NewGeocodeTimezone(connectionService *Connection, hostname string) GeocodeTimezone {
 	return GeocodeTimezone{
 		connectionService: connectionService,

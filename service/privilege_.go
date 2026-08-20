@@ -48,10 +48,12 @@ func (service *Privilege) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the Privilege collection for the provided database session
 func (service *Privilege) collection(session data.Session) data.Collection {
 	return session.Collection("Privilege")
 }
 
+// Count returns the number of Privilege records that match the provided criteria
 func (service *Privilege) Count(session data.Session, criteria exp.Expression) (int64, error) {
 	return service.collection(session).Count(notDeleted(criteria))
 }
@@ -64,6 +66,7 @@ func (service *Privilege) Query(session data.Session, criteria exp.Expression, o
 	return result, err
 }
 
+// QueryIDOnly returns just the IDs of the Privilege records that match the provided criteria
 func (service *Privilege) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.IDOnly], error) {
 	result := make([]model.IDOnly, 0)
 	options = append(options, option.Fields("_id"))
@@ -197,6 +200,7 @@ func (service *Privilege) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided Privilege. Implements the ModelService interface.
 func (service *Privilege) ObjectID(object data.Object) primitive.ObjectID {
 
 	if mention, ok := object.(*model.Privilege); ok {
@@ -206,16 +210,19 @@ func (service *Privilege) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every Privilege that matches the provided criteria. Implements the ModelService interface.
 func (service *Privilege) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single Privilege as a data.Object. Implements the ModelService interface.
 func (service *Privilege) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewPrivilege()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a Privilege in the database. Implements the ModelService interface.
 func (service *Privilege) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if privilege, ok := object.(*model.Privilege); ok {
 		return service.Save(session, privilege, comment)
@@ -223,6 +230,7 @@ func (service *Privilege) ObjectSave(session data.Session, object data.Object, c
 	return derp.Internal("service.Privilege.ObjectSave", "Invalid Object Type", object)
 }
 
+// ObjectDelete marks a Privilege as deleted. Implements the ModelService interface.
 func (service *Privilege) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if privilege, ok := object.(*model.Privilege); ok {
 		return service.Delete(session, privilege, comment)
@@ -230,10 +238,12 @@ func (service *Privilege) ObjectDelete(session data.Session, object data.Object,
 	return derp.Internal("service.Privilege.ObjectDelete", "Invalid Object Type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a Privilege. Implements the ModelService interface.
 func (service *Privilege) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Privilege.ObjectUserCan", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a Privilege
 func (service *Privilege) Schema() schema.Schema {
 	return schema.New(model.PrivilegeSchema())
 }
@@ -242,11 +252,13 @@ func (service *Privilege) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+// LoadByID retrieves a single Privilege using its unique ID
 func (service *Privilege) LoadByID(session data.Session, userID primitive.ObjectID, privilegeID primitive.ObjectID, privilege *model.Privilege) error {
 	criteria := exp.Equal("_id", privilegeID).AndEqual("userId", userID)
 	return service.Load(session, criteria, privilege)
 }
 
+// LoadByIdentity retrieves a Privilege that belongs to the provided guest Identity
 func (service *Privilege) LoadByIdentity(session data.Session, identityID primitive.ObjectID, privilegeID primitive.ObjectID, privilege *model.Privilege) error {
 
 	const location = "service.Privilege.LoadByIdentity"
@@ -266,6 +278,7 @@ func (service *Privilege) LoadByIdentity(session data.Session, identityID primit
 	return service.Load(session, criteria, privilege)
 }
 
+// LoadByIdentityAndCircle retrieves the Privilege that grants a guest Identity access to a Circle
 func (service *Privilege) LoadByIdentityAndCircle(session data.Session, userID primitive.ObjectID, identityID primitive.ObjectID, circleID primitive.ObjectID, privilege *model.Privilege) error {
 
 	const location = "service.Privilege.LoadByIdentityAndCircle"
@@ -344,6 +357,7 @@ func (service *Privilege) RangeByCircle(session data.Session, circleID primitive
 	return service.Range(session, criteria, options...)
 }
 
+// RangeByProducts returns an iterator over every Privilege granted by the provided Products
 func (service *Privilege) RangeByProducts(session data.Session, productIDs ...primitive.ObjectID) (iter.Seq[model.Privilege], error) {
 
 	const location = "service.Privilege.RangeByProductIDs"
@@ -386,6 +400,7 @@ func (service *Privilege) DeleteByUserID(session data.Session, userID primitive.
 	return nil
 }
 
+// QueryByIdentity returns every Privilege that belongs to the provided guest Identity
 func (service *Privilege) QueryByIdentity(session data.Session, identityID primitive.ObjectID, options ...option.Option) ([]model.Privilege, error) {
 
 	const location = "service.Privilege.QueryByIdentity"
@@ -417,6 +432,7 @@ func (service *Privilege) LoadByRemotePurchaseID(session data.Session, remotePur
  * Custom Behaviors
  ******************************************/
 
+// DeleteByCircle marks every Privilege that grants access to the provided Circle as deleted
 func (service *Privilege) DeleteByCircle(session data.Session, circleID primitive.ObjectID, note string) error {
 
 	const location = "service.Circle.DeleteByCircle"
@@ -494,6 +510,7 @@ func (service *Privilege) maybeCreateIdentity(session data.Session, privilege *m
 	return nil
 }
 
+// validateCircle confirms that this Privilege names a real Circle, and copies its denormalized values
 func (service *Privilege) validateCircle(session data.Session, privilege *model.Privilege) error {
 
 	const location = "service.Privilege.validateCircle"
@@ -591,6 +608,7 @@ func (service *Privilege) refreshIdentity(session data.Session, identity *model.
 	return nil
 }
 
+// RefreshCircleInfo re-points every Privilege at a Circle whose Products or settings have changed
 func (service *Privilege) RefreshCircleInfo(session data.Session, circle *model.Circle) error {
 
 	const location = "service.Privilege.RefreshCircle"
@@ -687,6 +705,7 @@ func (service *Privilege) maybeSetIdentity(session data.Session, privilege *mode
 	return nil
 }
 
+// maybeRemoveIdentity revokes a guest Identity's membership when they no longer hold any Privilege for it
 func (service *Privilege) maybeRemoveIdentity(session data.Session, privilege *model.Privilege, identity *model.Identity) error {
 
 	const location = "service.Privilege.RemoveIdentity"

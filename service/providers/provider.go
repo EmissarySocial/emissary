@@ -7,6 +7,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// Provider is the lifecycle that every third-party Connection follows
 type Provider interface {
 
 	// Lifecycle Methods
@@ -16,10 +17,12 @@ type Provider interface {
 	Disconnect(connection *model.Connection, vault mapof.String) error
 }
 
+// OAuthProvider is implemented by Providers that authenticate through OAuth
 type OAuthProvider interface {
 	OAuthConfig() oauth2.Config
 }
 
+// ManualProvider is implemented by Providers that are configured by hand, using a form
 type ManualProvider interface {
 	ManualConfig() form.Form
 }

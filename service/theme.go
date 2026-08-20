@@ -46,6 +46,7 @@ func NewTheme(templateService *Template, contentService *Content, funcMap templa
  * Data Access Methods
  ******************************************/
 
+// List returns an iterator over the Theme records that match the provided criteria
 func (service *Theme) List() []model.Theme {
 
 	// Generate a slice containing all themes
@@ -64,6 +65,7 @@ func (service *Theme) List() []model.Theme {
 	return result
 }
 
+// ListSorted returns every Theme, in display order
 func (service *Theme) ListSorted() []model.Theme {
 	result := service.List()
 
@@ -74,12 +76,14 @@ func (service *Theme) ListSorted() []model.Theme {
 	return result
 }
 
+// ListActive returns every Theme that is not a placeholder, in display order
 func (service *Theme) ListActive() []model.Theme {
 	return slice.Filter(service.ListSorted(), func(theme model.Theme) bool {
 		return !theme.IsPlaceholder()
 	})
 }
 
+// GetTheme returns the named Theme, falling back to the default Theme if it does not exist
 func (service *Theme) GetTheme(themeID string) model.Theme {
 
 	service.mutex.RLock()
@@ -106,6 +110,7 @@ func (service *Theme) GetTheme(themeID string) model.Theme {
  * Loading Themes
  ******************************************/
 
+// Add parses a theme definition and registers it under the provided themeID
 func (service *Theme) Add(themeID string, filesystem fs.FS, definition []byte) error {
 
 	const location = "service.Theme.loadModel"
@@ -149,6 +154,7 @@ func (service *Theme) Add(themeID string, filesystem fs.FS, definition []byte) e
 	return nil
 }
 
+// set writes a Theme into the in-memory map, guarding against concurrent readers
 func (service *Theme) set(theme model.Theme) {
 
 	service.mutex.Lock()
@@ -157,6 +163,7 @@ func (service *Theme) set(theme model.Theme) {
 	service.themes[theme.ThemeID] = theme
 }
 
+// calculateAllInheritance re-applies inheritance to every registered Theme
 func (service *Theme) calculateAllInheritance() {
 
 	for _, theme := range service.themes {
@@ -164,6 +171,7 @@ func (service *Theme) calculateAllInheritance() {
 	}
 }
 
+// calculateInheritance fills in a Theme's empty values from each of the Themes it extends
 func (service *Theme) calculateInheritance(theme model.Theme) model.Theme {
 
 	if len(theme.Extends) == 0 {
@@ -181,6 +189,7 @@ func (service *Theme) calculateInheritance(theme model.Theme) model.Theme {
 	return theme
 }
 
+// setStartupContent loads the sample content that a new Domain is seeded with from this Theme
 func (service *Theme) setStartupContent(theme *model.Theme, filesystem fs.FS) {
 
 	// Try to read files in the "content" directory

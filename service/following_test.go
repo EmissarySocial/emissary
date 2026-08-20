@@ -30,8 +30,10 @@ type folderCollection struct {
 	err     error // When present, every read fails with this error
 }
 
+// Context implements the interface, returning a background context
 func (c *folderCollection) Context() context.Context { return context.Background() }
 
+// Count implements the data.Collection interface. Unused by these tests.
 func (c *folderCollection) Count(exp.Expression, ...option.Option) (int64, error) {
 	return 0, derp.Internal("test", "unused")
 }
@@ -81,6 +83,7 @@ func (c *folderCollection) Query(target any, criteria exp.Expression, options ..
 	return nil
 }
 
+// Iterator implements the data.Collection interface. Unused by these tests.
 func (c *folderCollection) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
 	return nil, derp.Internal("test", "unused")
 }
@@ -111,9 +114,14 @@ func (c *folderCollection) Load(criteria exp.Expression, target data.Object, _ .
 	return derp.NotFound("test", "not found")
 }
 
-func (c *folderCollection) Save(data.Object, string) error   { return derp.Internal("test", "unused") }
+// Save implements the data.Collection interface. Unused by these tests.
+func (c *folderCollection) Save(data.Object, string) error { return derp.Internal("test", "unused") }
+
+// Delete implements the data.Collection interface. Unused by these tests.
 func (c *folderCollection) Delete(data.Object, string) error { return derp.Internal("test", "unused") }
-func (c *folderCollection) HardDelete(exp.Expression) error  { return derp.Internal("test", "unused") }
+
+// HardDelete implements the data.Collection interface. Unused by these tests.
+func (c *folderCollection) HardDelete(exp.Expression) error { return derp.Internal("test", "unused") }
 
 // matchesFolder reports whether a Folder satisfies a criteria on _id/userId/label/deleteDate.
 // "_id" also honors "!=", which Folder.LabelExists uses to exclude the Folder being edited.
@@ -165,9 +173,14 @@ type folderSession struct {
 	collection *folderCollection
 }
 
+// Collection implements the data.Session interface, returning this stub's single collection
 func (s folderSession) Collection(string) data.Collection { return s.collection }
-func (s folderSession) Context() context.Context          { return context.Background() }
-func (s folderSession) Close()                            {}
+
+// Context implements the interface, returning a background context
+func (s folderSession) Context() context.Context { return context.Background() }
+
+// Close implements the interface. The stub holds no resources to release.
+func (s folderSession) Close() {}
 
 // newFollowingService returns a Following service backed by an in-memory set of Folders
 func newFollowingService(folders ...model.Folder) (*Following, folderSession) {

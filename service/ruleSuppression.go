@@ -35,6 +35,7 @@ func (service *RuleSuppression) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the RuleSuppression collection for the provided database session
 func (service *RuleSuppression) collection(session data.Session) data.Collection {
 	return session.Collection("RuleSuppression")
 }

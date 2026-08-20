@@ -43,6 +43,7 @@ func (service *MerchantAccount) stripe_getConnectedAccountID(merchantAccount *mo
 	return merchantAccount.Plaintext.GetString("accountId")
 }
 
+// stripe_getPrices retrieves the named Stripe Prices, and converts them into Products
 func (service *MerchantAccount) stripe_getPrices(merchantAccount *model.MerchantAccount, priceIDs ...string) ([]model.Product, error) {
 
 	const location = "service.MerchantAccount.stripe_getPrices"

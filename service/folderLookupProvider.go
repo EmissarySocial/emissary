@@ -8,12 +8,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// FolderLookupProvider lists a User's Folders as form lookup codes
 type FolderLookupProvider struct {
 	session       data.Session
 	folderService *Folder
 	userID        primitive.ObjectID
 }
 
+// NewFolderLookupProvider returns a fully initialized FolderLookupProvider for the provided User
 func NewFolderLookupProvider(session data.Session, folderService *Folder, userID primitive.ObjectID) FolderLookupProvider {
 	return FolderLookupProvider{
 		session:       session,
@@ -22,10 +24,12 @@ func NewFolderLookupProvider(session data.Session, folderService *Folder, userID
 	}
 }
 
+// Group returns this LookupGroup, whatever name is requested. Implements the form.LookupProvider interface.
 func (service FolderLookupProvider) Group(name string) form.LookupGroup {
 	return service
 }
 
+// Get returns every Folder belonging to this User. Implements the form.LookupGroup interface.
 func (service FolderLookupProvider) Get() []form.LookupCode {
 
 	if service.userID.IsZero() {
@@ -42,6 +46,7 @@ func (service FolderLookupProvider) Get() []form.LookupCode {
 	return result
 }
 
+// Add returns the ID of a Folder with the provided name, creating one if it does not exist. Implements the form.LookupGroup interface.
 func (service FolderLookupProvider) Add(name string) (string, error) {
 
 	const location = "service.FolderLookupProvider.Add"

@@ -47,6 +47,7 @@ func (service *CollectionItem) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the CollectionItem collection for the provided database session
 func (service *CollectionItem) collection(session data.Session) data.Collection {
 	return session.Collection("CollectionItem")
 }
@@ -162,6 +163,7 @@ func (service *CollectionItem) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided CollectionItem. Implements the ModelService interface.
 func (service *CollectionItem) ObjectID(object data.Object) primitive.ObjectID {
 
 	if collectionItem, ok := object.(*model.CollectionItem); ok {
@@ -171,16 +173,19 @@ func (service *CollectionItem) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every CollectionItem that matches the provided criteria. Implements the ModelService interface.
 func (service *CollectionItem) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single CollectionItem as a data.Object. Implements the ModelService interface.
 func (service *CollectionItem) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewCollectionItem()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a CollectionItem in the database. Implements the ModelService interface.
 func (service *CollectionItem) ObjectSave(session data.Session, object data.Object, note string) error {
 
 	if collectionItem, ok := object.(*model.CollectionItem); ok {
@@ -189,6 +194,7 @@ func (service *CollectionItem) ObjectSave(session data.Session, object data.Obje
 	return derp.Internal("service.CollectionItem.ObjectSave", "Invalid object type", object)
 }
 
+// ObjectDelete marks a CollectionItem as deleted. Implements the ModelService interface.
 func (service *CollectionItem) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if collectionItem, ok := object.(*model.CollectionItem); ok {
 		return service.Delete(session, collectionItem, note)
@@ -196,10 +202,12 @@ func (service *CollectionItem) ObjectDelete(session data.Session, object data.Ob
 	return derp.Internal("service.CollectionItem.ObjectDelete", "Invalid object type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a CollectionItem. Implements the ModelService interface.
 func (service *CollectionItem) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.CollectionItem", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a CollectionItem
 func (service *CollectionItem) Schema() schema.Schema {
 	return schema.New(model.CollectionItemSchema())
 }
@@ -358,6 +366,7 @@ func (service *CollectionItem) mergeOntoExistingURI(session data.Session, collec
  * Collection Interface
  ******************************************/
 
+// CollectionCount returns the counter function for this collection
 func (service *CollectionItem) CollectionCount(session data.Session, parentID primitive.ObjectID, collectionID primitive.ObjectID, criteria exp.Expression) collection.CounterFunc {
 	return func() (int64, error) {
 		return service.CountByCollection(session, parentID, collectionID, criteria)

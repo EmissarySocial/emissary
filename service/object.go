@@ -42,6 +42,7 @@ func (service *Object) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the Object collection for the provided database session
 func (service *Object) collection(session data.Session) data.Collection {
 	return session.Collection("Object")
 }
@@ -133,6 +134,7 @@ func (service *Object) RangeByUser(session data.Session, userID primitive.Object
  * Other Getters
  ******************************************/
 
+// ActivityPubURL returns the ActivityPub URL of the provided Object
 func (service *Object) ActivityPubURL(userID primitive.ObjectID, objectID primitive.ObjectID) string {
 	return service.host + "/@" + userID.Hex() + "/pub/objects/" + objectID.Hex()
 }
@@ -141,6 +143,7 @@ func (service *Object) ActivityPubURL(userID primitive.ObjectID, objectID primit
  * Permissions
  ******************************************/
 
+// IsAllowed returns TRUE if the provided actor may read this Object
 func (service *Object) IsAllowed(object *model.Object, actorID string) bool {
 
 	// RULE: All requests match "Public"/anonymous role
@@ -158,6 +161,7 @@ func (service *Object) IsAllowed(object *model.Object, actorID string) bool {
 	return object.Permissions.ContainsAny(credentials...)
 }
 
+// NotAllowed returns TRUE if the provided actor may not read this Object
 func (service *Object) NotAllowed(object *model.Object, actorID string) bool {
 	return !service.IsAllowed(object, actorID)
 }

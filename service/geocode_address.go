@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/turbine/queue"
 )
 
+// GeocodeAddress resolves free-text addresses into coordinates, using this Domain's configured provider
 type GeocodeAddress struct {
 	hostname          string
 	queue             *queue.Queue
@@ -17,6 +18,7 @@ type GeocodeAddress struct {
 	timezoneService   GeocodeTimezone
 }
 
+// NewGeocodeAddress returns a fully initialized GeocodeAddress service
 func NewGeocodeAddress(hostname string, queue *queue.Queue, connectionService *Connection, timezoneService GeocodeTimezone) GeocodeAddress {
 	return GeocodeAddress{
 		hostname:          hostname,

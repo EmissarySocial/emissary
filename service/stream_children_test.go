@@ -26,47 +26,74 @@ import (
  * exercises; every other method is an explicit "unused".
  ******************************************/
 
+// criteriaCollection is a data.Collection that records the criteria it was queried with, and returns nothing
 type criteriaCollection struct {
 	captured exp.Expression
 }
 
+// Iterator implements the data.Collection interface. Unused by these tests.
 func (c *criteriaCollection) Iterator(criteria exp.Expression, _ ...option.Option) (data.Iterator, error) {
 	c.captured = criteria
 	return &emptyIterator{}, nil
 }
 
+// Query implements the data.Collection interface. Unused by these tests.
 func (c *criteriaCollection) Query(any, exp.Expression, ...option.Option) error {
 	return derp.NotFound("test", "unused")
 }
+
+// Load implements the data.Collection interface. Unused by these tests.
 func (c *criteriaCollection) Load(exp.Expression, data.Object, ...option.Option) error {
 	return derp.NotFound("test", "unused")
 }
+
+// Save implements the data.Collection interface. Unused by these tests.
 func (c *criteriaCollection) Save(data.Object, string) error { return derp.NotFound("test", "unused") }
+
+// Delete implements the data.Collection interface. Unused by these tests.
 func (c *criteriaCollection) Delete(data.Object, string) error {
 	return derp.NotFound("test", "unused")
 }
+
+// Count implements the data.Collection interface. Unused by these tests.
 func (c *criteriaCollection) Count(exp.Expression, ...option.Option) (int64, error) {
 	return 0, derp.NotFound("test", "unused")
 }
+
+// HardDelete implements the data.Collection interface. Unused by these tests.
 func (c *criteriaCollection) HardDelete(exp.Expression) error { return derp.NotFound("test", "unused") }
-func (c *criteriaCollection) Context() context.Context        { return context.Background() }
+
+// Context implements the interface, returning a background context
+func (c *criteriaCollection) Context() context.Context { return context.Background() }
 
 // emptyIterator is a data.Iterator with no records.
 type emptyIterator struct{}
 
+// Next implements the data.Iterator interface, reporting that there are no more records
 func (i *emptyIterator) Next(any) bool { return false }
-func (i *emptyIterator) Count() int    { return 0 }
-func (i *emptyIterator) Error() error  { return nil }
-func (i *emptyIterator) Close() error  { return nil }
+
+// Count implements the data.Iterator interface, reporting an empty result set
+func (i *emptyIterator) Count() int { return 0 }
+
+// Error implements the data.Iterator interface. The stub never fails.
+func (i *emptyIterator) Error() error { return nil }
+
+// Close implements the data.Iterator interface. The stub holds no resources to release.
+func (i *emptyIterator) Close() error { return nil }
 
 // criteriaSession hands every Collection() call the same capturing collection.
 type criteriaSession struct {
 	collection *criteriaCollection
 }
 
+// Collection implements the data.Session interface, returning this stub's single collection
 func (s criteriaSession) Collection(string) data.Collection { return s.collection }
-func (s criteriaSession) Context() context.Context          { return context.Background() }
-func (s criteriaSession) Close()                            {}
+
+// Context implements the interface, returning a background context
+func (s criteriaSession) Context() context.Context { return context.Background() }
+
+// Close implements the interface. The stub holds no resources to release.
+func (s criteriaSession) Close() {}
 
 // collectPredicates walks an Expression and returns every Predicate it contains.
 func collectPredicates(criteria exp.Expression) []exp.Predicate {
@@ -88,6 +115,7 @@ func hasPredicate(predicates []exp.Predicate, field string, operator string) boo
 	return false
 }
 
+// TestStream_RangePublishedByParent_Criteria verifies the exact query that RangePublishedByParent issues
 func TestStream_RangePublishedByParent_Criteria(t *testing.T) {
 
 	parentID := primitive.NewObjectID()

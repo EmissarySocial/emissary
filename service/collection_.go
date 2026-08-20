@@ -48,6 +48,7 @@ func (service *Collection) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the Collection collection for the provided database session
 func (service *Collection) collection(session data.Session) data.Collection {
 	return session.Collection("Collection")
 }
@@ -169,6 +170,7 @@ func (service *Collection) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided Collection. Implements the ModelService interface.
 func (service *Collection) ObjectID(object data.Object) primitive.ObjectID {
 
 	if collection, ok := object.(*model.Collection); ok {
@@ -178,16 +180,19 @@ func (service *Collection) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every Collection that matches the provided criteria. Implements the ModelService interface.
 func (service *Collection) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single Collection as a data.Object. Implements the ModelService interface.
 func (service *Collection) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewCollection()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a Collection in the database. Implements the ModelService interface.
 func (service *Collection) ObjectSave(session data.Session, object data.Object, note string) error {
 
 	if collection, ok := object.(*model.Collection); ok {
@@ -196,6 +201,7 @@ func (service *Collection) ObjectSave(session data.Session, object data.Object, 
 	return derp.Internal("service.Collection.ObjectSave", "Invalid object type", object)
 }
 
+// ObjectDelete marks a Collection as deleted. Implements the ModelService interface.
 func (service *Collection) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if collection, ok := object.(*model.Collection); ok {
 		return service.Delete(session, collection, note)
@@ -203,6 +209,7 @@ func (service *Collection) ObjectDelete(session data.Session, object data.Object
 	return derp.Internal("service.Collection.ObjectDelete", "Invalid object type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a Collection. Implements the ModelService interface.
 func (service *Collection) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Collection", "Not Authorized")
 }
@@ -234,6 +241,7 @@ func (service *Collection) RangeByUserID(session data.Session, userID primitive.
 	return service.Range(session, criteria)
 }
 
+// DeleteByURL marks the Collection at the provided URL as deleted, ignoring URLs that are not local
 func (service *Collection) DeleteByURL(session data.Session, url string) error {
 
 	// Try to parse the Collection URL as a local collection
@@ -287,6 +295,7 @@ func (service *Collection) DeleteByUserID(session data.Session, userID primitive
  * Data Getters
  ******************************************/
 
+// ActivityPubURL returns the ActivityPub URL of the provided Collection
 func (service *Collection) ActivityPubURL(userID primitive.ObjectID, collectionID primitive.ObjectID) string {
 	return service.host + "/@" + userID.Hex() + "/pub/collections/" + collectionID.Hex()
 }
@@ -295,6 +304,7 @@ func (service *Collection) ActivityPubURL(userID primitive.ObjectID, collectionI
  * Other Methods
  ******************************************/
 
+// LoadOrCreateByStream retrieves a Stream's Collection of the provided type, creating it if it does not exist
 func (service *Collection) LoadOrCreateByStream(session data.Session, stream *model.Stream, collectionType string) (model.Collection, error) {
 
 	return service.loadOrCreateByParent(
@@ -308,6 +318,7 @@ func (service *Collection) LoadOrCreateByStream(session data.Session, stream *mo
 	)
 }
 
+// LoadOrCreateByUser retrieves a User's Collection of the provided type, creating it if it does not exist
 func (service *Collection) LoadOrCreateByUser(session data.Session, user *model.User, collectionType string) (model.Collection, error) {
 
 	return service.loadOrCreateByParent(

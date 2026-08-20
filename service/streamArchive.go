@@ -23,6 +23,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// streamArchiveLock serializes archive creation, so that two workers never build the same archive at once
 var streamArchiveLock sync.Mutex
 
 // StreamArchive defines a service that manages all content streamArchives created and imported by Users.
@@ -363,6 +364,7 @@ func (service *StreamArchive) writeToZip(session data.Session, zipWriter *zip.Wr
 	return nil
 }
 
+// filename returns the name of the ZIP file that holds a Stream's archive
 func (service *StreamArchive) filename(streamID primitive.ObjectID, token string) string {
 	return streamID.Hex() + "_" + token + ".zip"
 }

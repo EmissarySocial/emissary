@@ -67,10 +67,12 @@ func (service *MerchantAccount) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the MerchantAccount collection for the provided database session
 func (service *MerchantAccount) collection(session data.Session) data.Collection {
 	return session.Collection("MerchantAccount")
 }
 
+// Count returns the number of MerchantAccount records that match the provided criteria
 func (service *MerchantAccount) Count(session data.Session, criteria exp.Expression) (int64, error) {
 	return service.collection(session).Count(notDeleted(criteria))
 }
@@ -182,6 +184,7 @@ func (service *MerchantAccount) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided MerchantAccount. Implements the ModelService interface.
 func (service *MerchantAccount) ObjectID(object data.Object) primitive.ObjectID {
 
 	if mention, ok := object.(*model.MerchantAccount); ok {
@@ -191,16 +194,19 @@ func (service *MerchantAccount) ObjectID(object data.Object) primitive.ObjectID 
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every MerchantAccount that matches the provided criteria. Implements the ModelService interface.
 func (service *MerchantAccount) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single MerchantAccount as a data.Object. Implements the ModelService interface.
 func (service *MerchantAccount) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewMerchantAccount()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a MerchantAccount in the database. Implements the ModelService interface.
 func (service *MerchantAccount) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if merchantAccount, ok := object.(*model.MerchantAccount); ok {
 		return service.Save(session, merchantAccount, comment)
@@ -208,6 +214,7 @@ func (service *MerchantAccount) ObjectSave(session data.Session, object data.Obj
 	return derp.Internal("service.MerchantAccount.ObjectSave", "Invalid Object Type", object)
 }
 
+// ObjectDelete marks a MerchantAccount as deleted. Implements the ModelService interface.
 func (service *MerchantAccount) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if merchantAccount, ok := object.(*model.MerchantAccount); ok {
 		return service.Delete(session, merchantAccount, comment)
@@ -215,10 +222,12 @@ func (service *MerchantAccount) ObjectDelete(session data.Session, object data.O
 	return derp.Internal("service.MerchantAccount.ObjectDelete", "Invalid Object Type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a MerchantAccount. Implements the ModelService interface.
 func (service *MerchantAccount) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.MerchantAccount.ObjectUserCan", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a MerchantAccount
 func (service *MerchantAccount) Schema() schema.Schema {
 	return schema.New(model.MerchantAccountSchema())
 }
@@ -227,6 +236,7 @@ func (service *MerchantAccount) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+// AvailableMerchantAccounts returns the payment providers this Domain has connected, as LookupCodes
 func (service *MerchantAccount) AvailableMerchantAccounts(session data.Session) (sliceof.Object[form.LookupCode], error) {
 
 	// Query configured Connections
@@ -239,6 +249,7 @@ func (service *MerchantAccount) AvailableMerchantAccounts(session data.Session) 
 	return result, nil
 }
 
+// QueryIDOnly returns just the IDs of the MerchantAccount records that match the provided criteria
 func (service *MerchantAccount) QueryIDOnly(session data.Session, criteria exp.Expression, options ...option.Option) (sliceof.Object[model.IDOnly], error) {
 	result := make([]model.IDOnly, 0)
 	options = append(options, option.Fields("_id"))
@@ -246,6 +257,7 @@ func (service *MerchantAccount) QueryIDOnly(session data.Session, criteria exp.E
 	return result, err
 }
 
+// QueryByUser returns every MerchantAccount that belongs to the provided User
 func (service *MerchantAccount) QueryByUser(session data.Session, userID primitive.ObjectID, options ...option.Option) (sliceof.Object[model.MerchantAccount], error) {
 
 	const location = "service.MerchantAccount.QueryByUser"
@@ -267,6 +279,7 @@ func (service *MerchantAccount) QueryByUser(session data.Session, userID primiti
 	return result, nil
 }
 
+// LoadByID retrieves a single MerchantAccount using its unique ID
 func (service *MerchantAccount) LoadByID(session data.Session, merchantAccountID primitive.ObjectID, merchantAccount *model.MerchantAccount) error {
 
 	// RULE: Require a valid MerchantAccountID
@@ -278,6 +291,7 @@ func (service *MerchantAccount) LoadByID(session data.Session, merchantAccountID
 	return service.Load(session, criteria, merchantAccount)
 }
 
+// LoadByUserAndID retrieves a MerchantAccount that belongs to the provided User, using its unique ID
 func (service *MerchantAccount) LoadByUserAndID(session data.Session, userID primitive.ObjectID, merchantAccountID primitive.ObjectID, merchantAccount *model.MerchantAccount) error {
 
 	// RULE: Require a valid UserID
@@ -294,6 +308,7 @@ func (service *MerchantAccount) LoadByUserAndID(session data.Session, userID pri
 	return service.Load(session, criteria, merchantAccount)
 }
 
+// LoadByToken retrieves a single MerchantAccount using its URL token
 func (service *MerchantAccount) LoadByToken(session data.Session, token string, merchantAccount *model.MerchantAccount) error {
 
 	const location = "service.MerchantAccount.LoadByToken"
@@ -312,6 +327,7 @@ func (service *MerchantAccount) LoadByToken(session data.Session, token string, 
 	return service.LoadByID(session, merchantAccountID, merchantAccount)
 }
 
+// LoadByUserAndToken retrieves a MerchantAccount that belongs to the provided User, using its URL token
 func (service *MerchantAccount) LoadByUserAndToken(session data.Session, userID primitive.ObjectID, token string, merchantAccount *model.MerchantAccount) error {
 
 	const location = "service.MerchantAccount.LoadByUserAndToken"
@@ -368,6 +384,7 @@ func (service *MerchantAccount) DeleteByUserID(session data.Session, userID prim
  * Custom Actions
  ******************************************/
 
+// DecryptVault opens the named API credentials stored in this MerchantAccount's vault
 func (service *MerchantAccount) DecryptVault(merchantAccount *model.MerchantAccount, values ...string) (mapof.String, error) {
 
 	const location = "service.MerchantAccount.DecryptVault"
@@ -401,6 +418,7 @@ func (service *MerchantAccount) DecryptVault(merchantAccount *model.MerchantAcco
  * Provider-Specific Methods
  ******************************************/
 
+// GetCheckoutURL returns the payment provider's hosted checkout URL for the provided Product
 func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAccount, product *model.Product, returnURL string, customerEmail string) (string, error) {
 
 	switch merchantAccount.Type {
@@ -418,6 +436,7 @@ func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAc
 	return "", derp.BadRequest("service.MerchantAccount.GetCheckoutURL", "Invalid MerchantAccount Type", merchantAccount.Type)
 }
 
+// ParseCheckoutResponse converts a payment provider's checkout callback into the Privilege it granted
 func (service *MerchantAccount) ParseCheckoutResponse(session data.Session, merchantAccount *model.MerchantAccount, product *model.Product, transactionID string, queryParams url.Values) (model.Privilege, error) {
 
 	const location = "service.MerchantAccount.ParseCheckoutResponse"
@@ -456,6 +475,7 @@ func (service *MerchantAccount) ParseCheckoutResponse(session data.Session, merc
 	return privilege, nil
 }
 
+// Connect refreshes this MerchantAccount's API credentials, if they are close to expiring
 func (service *MerchantAccount) Connect(merchantAccount *model.MerchantAccount) error {
 
 	// RULE: Do not refresh API keys if they will not expire within the next hour
@@ -533,6 +553,7 @@ func (service *MerchantAccount) getRemoteProducts(merchantAccount *model.Merchan
 	return nil, derp.Internal(location, "Invalid MerchantAccount Type", merchantAccount.Type)
 }
 
+// CancelPrivilege cancels a purchased Privilege with the payment provider that issued it
 func (service *MerchantAccount) CancelPrivilege(session data.Session, privilege *model.Privilege) error {
 
 	const location = "service.MerchantAccount.CancelPrivilege"

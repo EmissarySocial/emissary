@@ -58,6 +58,7 @@ func NewDomain() Domain {
  * Lifecycle Methods
  ******************************************/
 
+// collection returns the Domain collection for the provided database session
 func (service *Domain) collection(session data.Session) data.Collection {
 	return session.Collection("Domain")
 }
@@ -295,11 +296,15 @@ func newOwnerFromConfig(configured config.Owner, hostname string) model.User {
 type ownerInviteMethod int
 
 const (
+	// ownerInviteLocalhost means the convenience password is already set, so nothing needs to be sent
 	ownerInviteLocalhost ownerInviteMethod = iota // convenience password already set; nothing to send
-	ownerInviteEmail                              // public host + configured email: send a reset link
-	ownerInviteManual                             // public host + no email: operator must set one manually
+	// ownerInviteEmail means a password-reset link should be emailed to the owner
+	ownerInviteEmail // public host + configured email: send a reset link
+	// ownerInviteManual means the operator must set the owner's password by hand
+	ownerInviteManual // public host + no email: operator must set one manually
 )
 
+// calcOwnerInviteMethod decides how a new Domain's owner is invited to set their password
 func calcOwnerInviteMethod(isLocalhost bool, ownerEmail string) ownerInviteMethod {
 
 	switch {
@@ -417,6 +422,7 @@ func (service *Domain) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided Domain. Implements the ModelService interface.
 func (service *Domain) ObjectID(object data.Object) primitive.ObjectID {
 
 	if domain, ok := object.(*model.Domain); ok {
@@ -426,14 +432,17 @@ func (service *Domain) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every Domain that matches the provided criteria. Implements the ModelService interface.
 func (service *Domain) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single Domain as a data.Object. Implements the ModelService interface.
 func (service *Domain) ObjectLoad(_ data.Session, _ exp.Expression) (data.Object, error) {
 	return &service.domain, nil
 }
 
+// ObjectSave adds or updates a Domain in the database. Implements the ModelService interface.
 func (service *Domain) ObjectSave(session data.Session, object data.Object, note string) error {
 	if domain, ok := object.(*model.Domain); ok {
 		return service.Save(session, *domain, note)
@@ -442,14 +451,17 @@ func (service *Domain) ObjectSave(session data.Session, object data.Object, note
 	return derp.Internal("service.Domain.ObjectSave", "Invalid Object Type", object)
 }
 
+// ObjectDelete marks a Domain as deleted. Implements the ModelService interface.
 func (service *Domain) ObjectDelete(session data.Session, object data.Object, note string) error {
 	return derp.BadRequest("service.Domain.ObjectDelete", "Unsupported")
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a Domain. Implements the ModelService interface.
 func (service *Domain) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Domain", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a Domain
 func (service *Domain) Schema() schema.Schema {
 	return schema.New(model.DomainSchema())
 }
@@ -458,6 +470,7 @@ func (service *Domain) Schema() schema.Schema {
  * Provider Methods
  ******************************************/
 
+// Theme returns the Theme that this Domain is displayed with
 func (service *Domain) Theme() model.Theme {
 	return service.themeService.GetTheme(service.domain.ThemeID)
 }
@@ -467,6 +480,7 @@ func (service *Domain) HasRegistrationForm() bool {
 	return service.domain.HasRegistrationForm()
 }
 
+// LoadRegistration returns the sign-up Registration configured for this Domain
 func (service *Domain) LoadRegistration() model.Registration {
 
 	if registrationID := service.domain.RegistrationID; registrationID != "" {
@@ -701,6 +715,7 @@ func (service *Domain) GetOAuthToken(session data.Session, providerID string) (m
  * WebFinger Behavior
  ******************************************/
 
+// LoadWebFinger returns the WebFinger resource that describes this Domain's service Actor
 func (service *Domain) LoadWebFinger(username string) (digit.Resource, error) {
 
 	const location = "service.User.LoadWebFinger"

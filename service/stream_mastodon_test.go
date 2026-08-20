@@ -19,6 +19,7 @@ func testStreamService() *Stream {
 	return &streamService
 }
 
+// TestStream_VisibilityCriteria_Owner verifies that a User sees every Stream they own
 func TestStream_VisibilityCriteria_Owner(t *testing.T) {
 
 	streamService := testStreamService()
@@ -32,6 +33,7 @@ func TestStream_VisibilityCriteria_Owner(t *testing.T) {
 	require.Equal(t, exp.Expression(exp.All()), criteria)
 }
 
+// TestStream_VisibilityCriteria_DomainOwner verifies that a domain owner sees every Stream
 func TestStream_VisibilityCriteria_DomainOwner(t *testing.T) {
 
 	streamService := testStreamService()
@@ -46,6 +48,7 @@ func TestStream_VisibilityCriteria_DomainOwner(t *testing.T) {
 	require.Equal(t, exp.Expression(exp.All()), criteria)
 }
 
+// TestStream_VisibilityCriteria_OtherUser verifies that another User sees only the Streams their Groups allow
 func TestStream_VisibilityCriteria_OtherUser(t *testing.T) {
 
 	streamService := testStreamService()
@@ -73,6 +76,7 @@ func TestStream_VisibilityCriteria_OtherUser(t *testing.T) {
 	require.NotContains(t, permissions, ownerID)
 }
 
+// TestStream_VisibilityCriteria_Anonymous verifies that an anonymous caller sees only public Streams
 func TestStream_VisibilityCriteria_Anonymous(t *testing.T) {
 
 	streamService := testStreamService()

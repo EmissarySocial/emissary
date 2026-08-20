@@ -7,8 +7,10 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// Stripe connects a Domain to the Stripe payment integration
 type Stripe struct{}
 
+// NewStripe returns a fully initialized Stripe provider
 func NewStripe() Stripe {
 	return Stripe{}
 }
@@ -17,6 +19,7 @@ func NewStripe() Stripe {
  * Setup / Configuration Methods
  ******************************************/
 
+// ManualConfig returns the form used to configure this Connection by hand. Implements the ManualProvider interface.
 func (adapter Stripe) ManualConfig() form.Form {
 
 	return form.Form{
@@ -57,6 +60,7 @@ func (adapter Stripe) ManualConfig() form.Form {
  * Lifecycle Methods
  ******************************************/
 
+// BeforeSave applies any last-minute changes to this Connection before it is written to the database
 func (adapter Stripe) BeforeSave(connection *model.Connection, vault mapof.String) error {
 	return nil
 }

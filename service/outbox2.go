@@ -201,6 +201,7 @@ func (service *Outbox2) Delete(session data.Session, item *model.OutboxItem, not
  * Generic Data Methods
  ******************************************/
 
+// Schema returns the rosetta schema that describes a Outbox2
 func (service *Outbox2) Schema() schema.Schema {
 	return schema.New(model.OutboxItemSchema())
 }

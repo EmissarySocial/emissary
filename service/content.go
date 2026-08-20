@@ -11,10 +11,12 @@ import (
 	"github.com/davidscottmills/goeditorjs"
 )
 
+// Content converts Stream content between its source format and sanitized HTML
 type Content struct {
 	editorJS *goeditorjs.HTMLEngine
 }
 
+// NewContent returns a fully initialized Content service, with every EditorJS block handler registered
 func NewContent(editorJS *goeditorjs.HTMLEngine) Content {
 
 	editorJS.RegisterBlockHandlers(
@@ -29,6 +31,7 @@ func NewContent(editorJS *goeditorjs.HTMLEngine) Content {
 	}
 }
 
+// New builds a Content record from a raw value in the provided format, and renders it to HTML
 func (service *Content) New(format string, raw string) model.Content {
 
 	result := model.NewContent()
@@ -39,6 +42,7 @@ func (service *Content) New(format string, raw string) model.Content {
 	return result
 }
 
+// Format renders a Content record's raw value into sanitized HTML, based on its source format
 func (service *Content) Format(content *model.Content) {
 
 	const location = "service.Content.Format"
@@ -71,11 +75,13 @@ func (service *Content) Format(content *model.Content) {
 	content.HTML = markdown.Sanitize(content.HTML)
 }
 
+// NewByExtension builds a Content record, choosing its format from the provided file extension
 func (service *Content) NewByExtension(extension string, raw string) model.Content {
 	format := service.FormatByExtension(extension)
 	return service.New(format, raw)
 }
 
+// FormatByExtension returns the content format implied by a file extension, defaulting to HTML
 func (service *Content) FormatByExtension(extension string) string {
 
 	switch extension {
@@ -91,6 +97,7 @@ func (service *Content) FormatByExtension(extension string) string {
 	}
 }
 
+// ApplyLinks rewrites bare URLs in the rendered HTML as clickable links
 func (service *Content) ApplyLinks(content *model.Content) {
 
 	x := regexp.MustCompile(`https?://[^\s]+`)
@@ -102,6 +109,7 @@ func (service *Content) ApplyLinks(content *model.Content) {
 	content.HTML = string(newHTML)
 }
 
+// ApplyTags rewrites each hashtag in the rendered HTML as a link back to the Template's tag URL
 func (service *Content) ApplyTags(content *model.Content, base string, tags []string) {
 
 	// RULE: Skip processing if content is empty

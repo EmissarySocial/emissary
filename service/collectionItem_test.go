@@ -27,12 +27,15 @@ import (
  * fields SaveUnique queries: collectionId, uri, deleteDate.
  ******************************************/
 
+// itemStore is an in-memory data.Collection of CollectionItems, used by the tests in this file
 type itemStore struct {
 	records []*model.CollectionItem
 }
 
+// Context implements the interface, returning a background context
 func (c *itemStore) Context() context.Context { return context.Background() }
 
+// Count implements the data.Collection interface. Unused by these tests.
 func (c *itemStore) Count(criteria exp.Expression, _ ...option.Option) (int64, error) {
 	var count int64
 	for _, record := range c.records {
@@ -43,14 +46,17 @@ func (c *itemStore) Count(criteria exp.Expression, _ ...option.Option) (int64, e
 	return count, nil
 }
 
+// Query implements the data.Collection interface. Unused by these tests.
 func (c *itemStore) Query(any, exp.Expression, ...option.Option) error {
 	return derp.NotFound("test", "unused")
 }
 
+// Iterator implements the data.Collection interface. Unused by these tests.
 func (c *itemStore) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
 	return nil, derp.NotFound("test", "unused")
 }
 
+// Load implements the data.Collection interface, backed by this stub's in-memory records
 func (c *itemStore) Load(criteria exp.Expression, target data.Object, _ ...option.Option) error {
 	for _, record := range c.records {
 		if matchesItem(criteria, record) {
@@ -64,6 +70,7 @@ func (c *itemStore) Load(criteria exp.Expression, target data.Object, _ ...optio
 	return derp.NotFound("test", "not found")
 }
 
+// Save implements the data.Collection interface, backed by this stub's in-memory records
 func (c *itemStore) Save(object data.Object, _ string) error {
 
 	// AddItem/RemoveItem refresh the parent Collection's totalItems by Saving the Collection
@@ -98,6 +105,7 @@ func (c *itemStore) Save(object data.Object, _ string) error {
 	return nil
 }
 
+// Delete implements the data.Collection interface, backed by this stub's in-memory records
 func (c *itemStore) Delete(object data.Object, _ string) error {
 	item, ok := object.(*model.CollectionItem)
 	if !ok {
@@ -119,6 +127,7 @@ func (c *itemStore) HardDelete(criteria exp.Expression) error {
 	return nil
 }
 
+// removeByID deletes the CollectionItem with the provided ID from this stub's records
 func (c *itemStore) removeByID(id primitive.ObjectID) error {
 	for index, record := range c.records {
 		if record.CollectionItemID == id {
@@ -159,19 +168,27 @@ func matchesItem(criteria exp.Expression, record *model.CollectionItem) bool {
 	})
 }
 
+// itemSession is a data.Session that hands out a single itemStore
 type itemSession struct {
 	store data.Collection
 }
 
+// Collection implements the data.Session interface, returning this stub's single collection
 func (s itemSession) Collection(string) data.Collection { return s.store }
-func (s itemSession) Context() context.Context          { return context.Background() }
-func (s itemSession) Close()                            {}
 
+// Context implements the interface, returning a background context
+func (s itemSession) Context() context.Context { return context.Background() }
+
+// Close implements the interface. The stub holds no resources to release.
+func (s itemSession) Close() {}
+
+// newItemService returns a CollectionItem service backed by the provided store
 func newItemService(store data.Collection) (*CollectionItem, itemSession) {
 	service := NewCollectionItem()
 	return &service, itemSession{store: store}
 }
 
+// newItem builds a CollectionItem that points at the provided collection and URI
 func newItem(collectionID primitive.ObjectID, uri string) *model.CollectionItem {
 	item := model.NewCollectionItem()
 	item.UserID = primitive.NewObjectID()
@@ -244,17 +261,25 @@ type itemRaceStore struct {
 	saved            []*model.CollectionItem
 }
 
+// Context implements the interface, returning a background context
 func (c *itemRaceStore) Context() context.Context { return context.Background() }
+
+// Count implements the data.Collection interface. Unused by these tests.
 func (c *itemRaceStore) Count(exp.Expression, ...option.Option) (int64, error) {
 	return 0, nil
 }
+
+// Query implements the data.Collection interface. Unused by these tests.
 func (c *itemRaceStore) Query(any, exp.Expression, ...option.Option) error {
 	return derp.NotFound("test", "unused")
 }
+
+// Iterator implements the data.Collection interface. Unused by these tests.
 func (c *itemRaceStore) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
 	return nil, derp.NotFound("test", "unused")
 }
 
+// Load implements the data.Collection interface, backed by this stub's in-memory records
 func (c *itemRaceStore) Load(_ exp.Expression, target data.Object, _ ...option.Option) error {
 	if c.saveCalls > 0 && c.winnerOnConflict != nil {
 		if item, ok := target.(*model.CollectionItem); ok {
@@ -265,6 +290,7 @@ func (c *itemRaceStore) Load(_ exp.Expression, target data.Object, _ ...option.O
 	return derp.NotFound("test", "not found")
 }
 
+// Save implements the data.Collection interface, backed by this stub's in-memory records
 func (c *itemRaceStore) Save(object data.Object, _ string) error {
 	c.saveCalls++
 
@@ -280,8 +306,11 @@ func (c *itemRaceStore) Save(object data.Object, _ string) error {
 	return nil
 }
 
+// Delete implements the data.Collection interface. Unused by these tests.
 func (c *itemRaceStore) Delete(data.Object, string) error { return nil }
-func (c *itemRaceStore) HardDelete(exp.Expression) error  { return nil }
+
+// HardDelete implements the data.Collection interface. Unused by these tests.
+func (c *itemRaceStore) HardDelete(exp.Expression) error { return nil }
 
 // When the optimistic insert loses the race, SaveUnique merges onto the winner
 // and updates in place rather than erroring or double-inserting.
@@ -330,25 +359,40 @@ type itemHardLoadStore struct {
 	saveCalls int
 }
 
+// Context implements the interface, returning a background context
 func (c *itemHardLoadStore) Context() context.Context { return context.Background() }
+
+// Count implements the data.Collection interface. Unused by these tests.
 func (c *itemHardLoadStore) Count(exp.Expression, ...option.Option) (int64, error) {
 	return 0, nil
 }
+
+// Query implements the data.Collection interface. Unused by these tests.
 func (c *itemHardLoadStore) Query(any, exp.Expression, ...option.Option) error {
 	return derp.NotFound("test", "unused")
 }
+
+// Iterator implements the data.Collection interface. Unused by these tests.
 func (c *itemHardLoadStore) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
 	return nil, derp.NotFound("test", "unused")
 }
+
+// Load implements the data.Collection interface, backed by this stub's in-memory records
 func (c *itemHardLoadStore) Load(exp.Expression, data.Object, ...option.Option) error {
 	return c.loadErr
 }
+
+// Save implements the data.Collection interface, backed by this stub's in-memory records
 func (c *itemHardLoadStore) Save(data.Object, string) error {
 	c.saveCalls++
 	return nil
 }
+
+// Delete implements the data.Collection interface. Unused by these tests.
 func (c *itemHardLoadStore) Delete(data.Object, string) error { return nil }
-func (c *itemHardLoadStore) HardDelete(exp.Expression) error  { return nil }
+
+// HardDelete implements the data.Collection interface. Unused by these tests.
+func (c *itemHardLoadStore) HardDelete(exp.Expression) error { return nil }
 
 // A non-NotFound error from the initial existence check propagates, and no Save
 // is attempted.
@@ -404,16 +448,25 @@ type itemResaveStore struct {
 	saveCalls int
 }
 
+// Context implements the interface, returning a background context
 func (c *itemResaveStore) Context() context.Context { return context.Background() }
+
+// Count implements the data.Collection interface. Unused by these tests.
 func (c *itemResaveStore) Count(exp.Expression, ...option.Option) (int64, error) {
 	return 0, nil
 }
+
+// Query implements the data.Collection interface. Unused by these tests.
 func (c *itemResaveStore) Query(any, exp.Expression, ...option.Option) error {
 	return derp.NotFound("test", "unused")
 }
+
+// Iterator implements the data.Collection interface. Unused by these tests.
 func (c *itemResaveStore) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
 	return nil, derp.NotFound("test", "unused")
 }
+
+// Load implements the data.Collection interface, backed by this stub's in-memory records
 func (c *itemResaveStore) Load(_ exp.Expression, target data.Object, _ ...option.Option) error {
 	c.loadCalls++
 	if c.loadCalls == 1 {
@@ -426,6 +479,8 @@ func (c *itemResaveStore) Load(_ exp.Expression, target data.Object, _ ...option
 	}
 	return nil
 }
+
+// Save implements the data.Collection interface, backed by this stub's in-memory records
 func (c *itemResaveStore) Save(data.Object, string) error {
 	c.saveCalls++
 	if c.saveCalls == 1 {
@@ -433,8 +488,12 @@ func (c *itemResaveStore) Save(data.Object, string) error {
 	}
 	return derp.Internal("test", "update failed")
 }
+
+// Delete implements the data.Collection interface. Unused by these tests.
 func (c *itemResaveStore) Delete(data.Object, string) error { return nil }
-func (c *itemResaveStore) HardDelete(exp.Expression) error  { return nil }
+
+// HardDelete implements the data.Collection interface. Unused by these tests.
+func (c *itemResaveStore) HardDelete(exp.Expression) error { return nil }
 
 // itemRemergeStore: first Load misses (NotFound), first Save hits duplicate-key,
 // second Load (the re-merge) fails hard.
@@ -443,16 +502,25 @@ type itemRemergeStore struct {
 	saveCalls int
 }
 
+// Context implements the interface, returning a background context
 func (c *itemRemergeStore) Context() context.Context { return context.Background() }
+
+// Count implements the data.Collection interface. Unused by these tests.
 func (c *itemRemergeStore) Count(exp.Expression, ...option.Option) (int64, error) {
 	return 0, nil
 }
+
+// Query implements the data.Collection interface. Unused by these tests.
 func (c *itemRemergeStore) Query(any, exp.Expression, ...option.Option) error {
 	return derp.NotFound("test", "unused")
 }
+
+// Iterator implements the data.Collection interface. Unused by these tests.
 func (c *itemRemergeStore) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
 	return nil, derp.NotFound("test", "unused")
 }
+
+// Load implements the data.Collection interface, backed by this stub's in-memory records
 func (c *itemRemergeStore) Load(exp.Expression, data.Object, ...option.Option) error {
 	c.loadCalls++
 	if c.loadCalls == 1 {
@@ -460,6 +528,8 @@ func (c *itemRemergeStore) Load(exp.Expression, data.Object, ...option.Option) e
 	}
 	return derp.Internal("test", "index corrupt on re-merge")
 }
+
+// Save implements the data.Collection interface, backed by this stub's in-memory records
 func (c *itemRemergeStore) Save(data.Object, string) error {
 	c.saveCalls++
 	if c.saveCalls == 1 {
@@ -467,8 +537,12 @@ func (c *itemRemergeStore) Save(data.Object, string) error {
 	}
 	return nil
 }
+
+// Delete implements the data.Collection interface. Unused by these tests.
 func (c *itemRemergeStore) Delete(data.Object, string) error { return nil }
-func (c *itemRemergeStore) HardDelete(exp.Expression) error  { return nil }
+
+// HardDelete implements the data.Collection interface. Unused by these tests.
+func (c *itemRemergeStore) HardDelete(exp.Expression) error { return nil }
 
 /******************************************
  * Collection.RemoveItem (uses the CollectionItem store)

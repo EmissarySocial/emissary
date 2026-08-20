@@ -11,11 +11,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// ExportCollection returns the IDs of every Privilege to include in a User's data export
 func (service *Privilege) ExportCollection(session data.Session, userID primitive.ObjectID) ([]model.IDOnly, error) {
 	criteria := exp.Equal("userId", userID)
 	return service.QueryIDOnly(session, criteria, option.SortAsc("createDate"))
 }
 
+// ExportDocument returns a single Privilege as a JSON string, for a User's data export
 func (service *Privilege) ExportDocument(session data.Session, userID primitive.ObjectID, privilegeID primitive.ObjectID) (string, error) {
 
 	const location = "service.Privilege.ExportDocument"

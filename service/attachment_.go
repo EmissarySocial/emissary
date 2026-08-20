@@ -47,6 +47,7 @@ func (service *Attachment) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the Attachment collection for the provided database session
 func (service *Attachment) collection(session data.Session) data.Collection {
 	return session.Collection("Attachment")
 }
@@ -80,6 +81,7 @@ func (service *Attachment) Range(session data.Session, criteria exp.Expression, 
 	return RangeFunc(iter, model.NewEmptyAttachment), nil
 }
 
+// Query returns every Attachment that matches the provided criteria
 func (service *Attachment) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Attachment, error) {
 
 	const location = "service.Attachment.Query"
@@ -262,6 +264,7 @@ func (service *Attachment) QueryByCategory(session data.Session, objectType stri
 	return service.Query(session, criteria, option.SortAsc("rank"))
 }
 
+// LoadFirstByCategory retrieves the highest-ranked Attachment on an object that falls in one of the provided categories
 func (service *Attachment) LoadFirstByCategory(session data.Session, objectType string, objectID primitive.ObjectID, categories []string) (model.Attachment, error) {
 
 	const location = "service.Attachment.LoadFirstByCategory"
@@ -284,6 +287,7 @@ func (service *Attachment) LoadFirstByCategory(session data.Session, objectType 
 	return model.Attachment{}, derp.NotFound(location, "No attachments found", objectType, objectID)
 }
 
+// LoadFirstByObjectID retrieves the highest-ranked Attachment on the provided object
 func (service *Attachment) LoadFirstByObjectID(session data.Session, objectType string, objectID primitive.ObjectID) (model.Attachment, error) {
 
 	const location = "service.Attachment.LoadFirstByObjectID"
@@ -305,6 +309,7 @@ func (service *Attachment) LoadFirstByObjectID(session data.Session, objectType 
 	return model.Attachment{}, derp.NotFound(location, "No attachments found", objectType, objectID)
 }
 
+// LoadByID retrieves a single Attachment using its unique ID
 func (service *Attachment) LoadByID(session data.Session, objectType string, objectID primitive.ObjectID, attachmentID primitive.ObjectID, result *model.Attachment) error {
 
 	criteria := exp.Equal("_id", attachmentID).
@@ -318,6 +323,7 @@ func (service *Attachment) LoadByID(session data.Session, objectType string, obj
 	return nil
 }
 
+// LoadByToken retrieves a single Attachment using its URL token
 func (service *Attachment) LoadByToken(session data.Session, objectType string, objectID primitive.ObjectID, token string, result *model.Attachment) error {
 
 	const location = "service.Attachment.LoadByToken"
@@ -331,6 +337,7 @@ func (service *Attachment) LoadByToken(session data.Session, objectType string, 
 	return service.LoadByID(session, objectType, objectID, attachmentID, result)
 }
 
+// DeleteByID marks a single Attachment on the provided object as deleted
 func (service *Attachment) DeleteByID(session data.Session, objectType string, objectID primitive.ObjectID, attachmentID primitive.ObjectID, note string) error {
 
 	const location = "service.Attachment.DeleteByID"

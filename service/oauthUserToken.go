@@ -48,6 +48,7 @@ func (service *OAuthUserToken) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the OAuthUserToken collection for the provided database session
 func (service *OAuthUserToken) collection(session data.Session) data.Collection {
 	return session.Collection("OAuthUserToken")
 }
@@ -146,6 +147,7 @@ func (service *OAuthUserToken) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided OAuthUserToken. Implements the ModelService interface.
 func (service *OAuthUserToken) ObjectID(object data.Object) primitive.ObjectID {
 
 	if folder, ok := object.(*model.OAuthUserToken); ok {
@@ -155,16 +157,19 @@ func (service *OAuthUserToken) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every OAuthUserToken that matches the provided criteria. Implements the ModelService interface.
 func (service *OAuthUserToken) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single OAuthUserToken as a data.Object. Implements the ModelService interface.
 func (service *OAuthUserToken) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewOAuthUserToken()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a OAuthUserToken in the database. Implements the ModelService interface.
 func (service *OAuthUserToken) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if folder, ok := object.(*model.OAuthUserToken); ok {
 		return service.Save(session, folder, comment)
@@ -172,6 +177,7 @@ func (service *OAuthUserToken) ObjectSave(session data.Session, object data.Obje
 	return derp.Internal("service.OAuthUserToken.ObjectSave", "Invalid object type", object)
 }
 
+// ObjectDelete marks a OAuthUserToken as deleted. Implements the ModelService interface.
 func (service *OAuthUserToken) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if folder, ok := object.(*model.OAuthUserToken); ok {
 		return service.Delete(session, folder, comment)
@@ -179,10 +185,12 @@ func (service *OAuthUserToken) ObjectDelete(session data.Session, object data.Ob
 	return derp.Internal("service.OAuthUserToken.ObjectDelete", "Invalid object type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a OAuthUserToken. Implements the ModelService interface.
 func (service *OAuthUserToken) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.OAuthUserToken", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a OAuthUserToken
 func (service *OAuthUserToken) Schema() schema.Schema {
 	return schema.New(model.OAuthUserTokenSchema())
 }
@@ -227,6 +235,7 @@ func (service *OAuthUserToken) LoadByClientAndID(session data.Session, userToken
  * Custom Methods
  ******************************************/
 
+// CreateFromUser issues a new OAuth token that grants the provided client access to a User's account
 func (service *OAuthUserToken) CreateFromUser(session data.Session, user *model.User, clientID primitive.ObjectID, scope string) (model.OAuthUserToken, error) {
 
 	const location = "service.OAuthUserToken.CreateFromUser"
@@ -478,6 +487,7 @@ func narrowScopes(granted sliceof.String, requested string) (sliceof.String, err
 	return result, nil
 }
 
+// DeleteByClient marks every OAuth token issued to the provided client as deleted
 func (service *OAuthUserToken) DeleteByClient(session data.Session, clientID primitive.ObjectID, note string) error {
 	criteria := exp.Equal("clientId", clientID)
 	return service.DeleteMany(session, criteria, note)

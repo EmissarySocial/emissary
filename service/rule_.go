@@ -68,10 +68,12 @@ func (service *Rule) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the Rule collection for the provided database session
 func (service *Rule) collection(session data.Session) data.Collection {
 	return session.Collection("Rule")
 }
 
+// Count returns the number of Rule records that match the provided criteria
 func (service *Rule) Count(session data.Session, criteria exp.Expression) (int64, error) {
 	return service.collection(session).Count(notDeleted(criteria))
 }
@@ -371,6 +373,7 @@ func (service *Rule) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided Rule. Implements the ModelService interface.
 func (service *Rule) ObjectID(object data.Object) primitive.ObjectID {
 
 	if mention, ok := object.(*model.Rule); ok {
@@ -380,16 +383,19 @@ func (service *Rule) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every Rule that matches the provided criteria. Implements the ModelService interface.
 func (service *Rule) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single Rule as a data.Object. Implements the ModelService interface.
 func (service *Rule) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewRule()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a Rule in the database. Implements the ModelService interface.
 func (service *Rule) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if rule, ok := object.(*model.Rule); ok {
 		return service.Save(session, rule, comment)
@@ -397,6 +403,7 @@ func (service *Rule) ObjectSave(session data.Session, object data.Object, commen
 	return derp.Internal("service.Rule.ObjectSave", "Invalid Object Type", object)
 }
 
+// ObjectDelete marks a Rule as deleted. Implements the ModelService interface.
 func (service *Rule) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if rule, ok := object.(*model.Rule); ok {
 		return service.Delete(session, rule, comment)
@@ -404,10 +411,12 @@ func (service *Rule) ObjectDelete(session data.Session, object data.Object, comm
 	return derp.Internal("service.Rule.ObjectDelete", "Invalid Object Type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a Rule. Implements the ModelService interface.
 func (service *Rule) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Rule", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a Rule
 func (service *Rule) Schema() schema.Schema {
 	return schema.New(model.RuleSchema())
 }
@@ -416,6 +425,7 @@ func (service *Rule) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+// LoadByID retrieves a single Rule using its unique ID
 func (service *Rule) LoadByID(session data.Session, userID primitive.ObjectID, ruleID primitive.ObjectID, rule *model.Rule) error {
 
 	// RULE: UserID cannot be zero
@@ -449,6 +459,7 @@ func (service *Rule) LoadServerWideByID(session data.Session, ruleID primitive.O
 	return service.Load(session, criteria, rule)
 }
 
+// LoadByToken retrieves a single Rule using its URL token
 func (service *Rule) LoadByToken(session data.Session, userID primitive.ObjectID, token string, rule *model.Rule) error {
 
 	// RULE: UserID cannot be zero
@@ -538,6 +549,7 @@ func (service *Rule) LoadByFollowing(session data.Session, userID primitive.Obje
 	return service.Load(session, criteria, rule)
 }
 
+// QueryByType returns every public Rule of the provided type that belongs to a User
 func (service *Rule) QueryByType(session data.Session, userID primitive.ObjectID, ruleType string, criteria exp.Expression, options ...option.Option) ([]model.Rule, error) {
 
 	criteria = service.byUserID(userID).
@@ -551,6 +563,7 @@ func (service *Rule) QueryByType(session data.Session, userID primitive.ObjectID
 	return result, err
 }
 
+// QueryByTypeDomain returns every public domain-blocking Rule that belongs to a User
 func (service *Rule) QueryByTypeDomain(session data.Session, userID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.Rule, error) {
 	return service.QueryByType(session, userID, model.RuleTypeDomain, criteria, options...)
 }
@@ -669,6 +682,7 @@ func (service *Rule) RangeByUserID(session data.Session, userID primitive.Object
 	return service.Range(session, exp.Equal("userId", userID))
 }
 
+// DeleteByUserID marks every Rule belonging to the provided User as deleted
 func (service *Rule) DeleteByUserID(session data.Session, userID primitive.ObjectID, comment string) error {
 
 	const location = "service.Rule.DeleteByUserID"

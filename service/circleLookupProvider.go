@@ -9,12 +9,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// CircleLookupProvider lists a User's Circles as form lookup codes
 type CircleLookupProvider struct {
 	circleService *Circle
 	userID        primitive.ObjectID
 	session       data.Session
 }
 
+// NewCircleLookupProvider returns a fully initialized CircleLookupProvider for the provided User
 func NewCircleLookupProvider(session data.Session, circleService *Circle, userID primitive.ObjectID) CircleLookupProvider {
 	return CircleLookupProvider{
 		circleService: circleService,
@@ -23,6 +25,7 @@ func NewCircleLookupProvider(session data.Session, circleService *Circle, userID
 	}
 }
 
+// Get returns every Circle belonging to this User, sorted by name. Implements the form.LookupGroup interface.
 func (service CircleLookupProvider) Get() []form.LookupCode {
 	circles, err := service.circleService.QueryByUser(service.session, service.userID, option.SortAsc("name"))
 
@@ -39,6 +42,7 @@ func (service CircleLookupProvider) Get() []form.LookupCode {
 	return result
 }
 
+// Add creates a new Circle with the provided name, and returns its ID. Implements the form.LookupGroup interface.
 func (service CircleLookupProvider) Add(name string) (string, error) {
 
 	circle := model.NewCircle()

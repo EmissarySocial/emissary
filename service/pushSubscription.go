@@ -38,6 +38,7 @@ func (service *PushSubscription) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the PushSubscription collection for the provided database session
 func (service *PushSubscription) collection(session data.Session) data.Collection {
 	return session.Collection("PushSubscription")
 }
@@ -113,6 +114,7 @@ func (service *PushSubscription) Delete(session data.Session, sub *model.PushSub
 	return nil
 }
 
+// Schema returns the rosetta schema that describes a PushSubscription
 func (service *PushSubscription) Schema() schema.Schema {
 	return schema.New(model.PushSubscriptionSchema())
 }

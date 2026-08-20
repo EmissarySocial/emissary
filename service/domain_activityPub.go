@@ -29,6 +29,7 @@ func (service *Domain) Host() string {
 	return service.host
 }
 
+// GetJSONLD returns this Domain's service Actor as a JSON-LD document
 func (service *Domain) GetJSONLD(session data.Session) (mapof.Any, error) {
 
 	const location = "service.Domain.GetJSONLD"
@@ -162,6 +163,7 @@ func (service *Domain) ActivityPubActor(session data.Session) (outbox.Actor, err
 	return actor, nil
 }
 
+// WebFinger returns the WebFinger resource that describes this Domain's service Actor
 func (service *Domain) WebFinger() digit.Resource {
 
 	// Make a WebFinger resource for this Stream.
@@ -177,18 +179,22 @@ func (service *Domain) WebFinger() digit.Resource {
 	return result
 }
 
+// CreateIntentURL returns the Activity Intent template for composing a post on this Domain
 func (service *Domain) CreateIntentURL() string {
 	return service.host + "/@me/intent/create?type={type}&name={name}&summary={summary}&content={content}&inReplyTo={inReplyTo}&on-success={on-success}&on-cancel={on-cancel}"
 }
 
+// DislikeIntentURL returns the Activity Intent template for disliking an object on this Domain
 func (service *Domain) DislikeIntentURL() string {
 	return service.host + "/@me/intent/dislike?object={object}&on-success={on-success}&on-cancel={on-cancel}"
 }
 
+// FollowIntentURL returns the Activity Intent template for following an actor on this Domain
 func (service *Domain) FollowIntentURL() string {
 	return service.host + "/@me/intent/follow?object={object}&on-success={on-success}&on-cancel={on-cancel}"
 }
 
+// LikeIntentURL returns the Activity Intent template for liking an object on this Domain
 func (service *Domain) LikeIntentURL() string {
 	return service.host + "/@me/intent/like?object={object}&on-success={on-success}&on-cancel={on-cancel}"
 }

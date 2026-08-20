@@ -21,7 +21,10 @@ import (
 // nullIconProvider is a no-op icon.Provider so the funcMap's icon() helper resolves during parsing.
 type nullIconProvider struct{}
 
-func (nullIconProvider) Get(name string) string              { return "" }
+// Get implements the icon.Provider interface. The stub renders nothing.
+func (nullIconProvider) Get(name string) string { return "" }
+
+// Write implements the icon.Provider interface. The stub writes nothing.
 func (nullIconProvider) Write(name string, writer io.Writer) {}
 
 // TestEmbeddedTemplates_HTMLParses walks every _embed/templates directory and parses each *.html

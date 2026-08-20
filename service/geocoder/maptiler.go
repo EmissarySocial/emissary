@@ -13,10 +13,12 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 )
 
+// Maptiler geocodes addresses using the MapTiler Geocoding API
 type Maptiler struct {
 	apiKey string
 }
 
+// NewMaptiler returns a Maptiler geocoder
 func NewMaptiler(apiKey string) Maptiler {
 
 	return Maptiler{
@@ -24,6 +26,7 @@ func NewMaptiler(apiKey string) Maptiler {
 	}
 }
 
+// GeocodeAddress resolves a free-text address into a geo.Address. Implements the AddressGeocoder interface.
 func (geocoder Maptiler) GeocodeAddress(address string) (point geo.Address, err error) {
 
 	const location = "service.geocoder.Maptiler.GeocodeNetwork"
@@ -50,6 +53,7 @@ func (geocoder Maptiler) GeocodeAddress(address string) (point geo.Address, err 
 	return mapMaptilerAddress(features.First()), nil
 }
 
+// AutocompleteAddress returns address suggestions for a partial query, biased toward the provided point. Implements the AddressAutocompleter interface.
 func (geocoder Maptiler) AutocompleteAddress(query string, bias geo.Point) (sliceof.Object[geo.Address], error) {
 
 	const location = "service.geocoder.Maptiler.AutocompleteAddress"
@@ -83,6 +87,7 @@ only return the location of the SERVER, and not the
 location of the USER'S machine.  Sooo close :(
 */
 
+// mapMaptilerAddress converts one Maptiler API result into a geo.Address
 func mapMaptilerAddress(feature mapof.Any) geo.Address {
 
 	point := geo.Point{}

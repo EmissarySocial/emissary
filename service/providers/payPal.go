@@ -14,12 +14,15 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// PayPal connects a Domain to the PayPal payment integration
 type PayPal struct{}
 
+// NewPayPal returns a fully initialized PayPal provider
 func NewPayPal() PayPal {
 	return PayPal{}
 }
 
+// ManualConfig returns the form used to configure this Connection by hand. Implements the ManualProvider interface.
 func (provider PayPal) ManualConfig() form.Form {
 
 	options := []any{
@@ -95,10 +98,12 @@ func (provider PayPal) ManualConfig() form.Form {
 	}
 }
 
+// BeforeSave applies any last-minute changes to this Connection before it is written to the database
 func (adapter PayPal) BeforeSave(connection *model.Connection, vault mapof.String) error {
 	return nil
 }
 
+// Connect applies any extra changes required when this Connection is first activated
 func (provider PayPal) Connect(connection *model.Connection, vault mapof.String, host string) error {
 
 	if err := provider.Refresh(connection, vault); err != nil {
@@ -108,6 +113,7 @@ func (provider PayPal) Connect(connection *model.Connection, vault mapof.String,
 	return nil
 }
 
+// Refresh updates this Connection if its credentials have expired
 func (provider PayPal) Refresh(connection *model.Connection, vault mapof.String) error {
 
 	const location = "service.providers.PayPal.Refresh"

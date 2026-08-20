@@ -23,6 +23,7 @@ import (
 // results to the engine. A hand-built data.Collection is used for the same reason as
 // response_test.go -- data-mock matches on raw bson tags and can't handle the projection.
 
+// dispositionNow is the fixed timestamp that the rule-disposition tests below are anchored to
 const dispositionNow = int64(1_000_000)
 
 /******************************************
@@ -30,12 +31,15 @@ const dispositionNow = int64(1_000_000)
  * QueryByMatchKeys uses: userId (IN), matchKey (IN), and the notDeleted() deleteDate guard.
  ******************************************/
 
+// ruleStore is an in-memory data.Collection of RuleSummaries, used by the tests in this file
 type ruleStore struct {
 	records []model.RuleSummary
 }
 
+// Context implements the interface, returning a background context
 func (c *ruleStore) Context() context.Context { return context.Background() }
 
+// Query implements the data.Collection interface. Unused by these tests.
 func (c *ruleStore) Query(target any, criteria exp.Expression, _ ...option.Option) error {
 
 	result, ok := target.(*[]model.RuleSummary)
@@ -53,21 +57,29 @@ func (c *ruleStore) Query(target any, criteria exp.Expression, _ ...option.Optio
 	return nil
 }
 
+// Count implements the data.Collection interface. Unused by these tests.
 func (c *ruleStore) Count(exp.Expression, ...option.Option) (int64, error) {
 	return 0, derp.NotFound("test", "unused")
 }
 
+// Iterator implements the data.Collection interface. Unused by these tests.
 func (c *ruleStore) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
 	return nil, derp.NotFound("test", "unused")
 }
 
+// Load implements the data.Collection interface. Unused by these tests.
 func (c *ruleStore) Load(exp.Expression, data.Object, ...option.Option) error {
 	return derp.NotFound("test", "unused")
 }
 
-func (c *ruleStore) Save(data.Object, string) error   { return derp.NotFound("test", "unused") }
+// Save implements the data.Collection interface. Unused by these tests.
+func (c *ruleStore) Save(data.Object, string) error { return derp.NotFound("test", "unused") }
+
+// Delete implements the data.Collection interface. Unused by these tests.
 func (c *ruleStore) Delete(data.Object, string) error { return derp.NotFound("test", "unused") }
-func (c *ruleStore) HardDelete(exp.Expression) error  { return derp.NotFound("test", "unused") }
+
+// HardDelete implements the data.Collection interface. Unused by these tests.
+func (c *ruleStore) HardDelete(exp.Expression) error { return derp.NotFound("test", "unused") }
 
 // matchesRule reports whether a RuleSummary satisfies the IN criteria on userId/matchKey plus the
 // notDeleted() deleteDate==0 guard. Any unsupported field or operator conservatively counts as "no".
@@ -95,14 +107,21 @@ func matchesRule(criteria exp.Expression, record model.RuleSummary) bool {
 	})
 }
 
+// ruleSession is a data.Session that hands out a single ruleStore
 type ruleSession struct {
 	store data.Collection
 }
 
+// Collection implements the data.Session interface, returning this stub's single collection
 func (s ruleSession) Collection(string) data.Collection { return s.store }
-func (s ruleSession) Context() context.Context          { return context.Background() }
-func (s ruleSession) Close()                            {}
 
+// Context implements the interface, returning a background context
+func (s ruleSession) Context() context.Context { return context.Background() }
+
+// Close implements the interface. The stub holds no resources to release.
+func (s ruleSession) Close() {}
+
+// newRuleService returns a Rule service backed by the provided store
 func newRuleService(store data.Collection) (*Rule, ruleSession) {
 	service := NewRule()
 	return &service, ruleSession{store: store}

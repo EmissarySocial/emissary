@@ -45,6 +45,7 @@ func RangeFunc[T any](it data.Iterator, new func() T) iter.Seq[T] {
 	}
 }
 
+// joinIterators chains several iterators into one, yielding every value in order
 func joinIterators[T any](iterators ...iter.Seq[T]) iter.Seq[T] {
 
 	return func(yield func(T) bool) {
@@ -58,6 +59,7 @@ func joinIterators[T any](iterators ...iter.Seq[T]) iter.Seq[T] {
 	}
 }
 
+// iterateFollowerAddresses yields the profile URL of each Follower in the provided iterator
 func iterateFollowerAddresses(followers iter.Seq[model.Follower]) iter.Seq[string] {
 
 	return func(yield func(string) bool) {
@@ -69,6 +71,7 @@ func iterateFollowerAddresses(followers iter.Seq[model.Follower]) iter.Seq[strin
 	}
 }
 
+// textIndex splits the provided values into the individual words that a search index is built from
 func textIndex(tokens ...string) sliceof.String {
 
 	// RULE: Exit early on empty strings (why would you do this? Who hurt you?)
@@ -389,6 +392,7 @@ func readJSON(filesystem fs.FS, filename string) ([]byte, error) {
 	return fs.ReadFile(filesystem, filename+".json")
 }
 
+// slicesAreEqual returns TRUE if two slices of string maps hold the same values, in the same order
 func slicesAreEqual(value1 []mapof.String, value2 []mapof.String) bool {
 	// Lengths must be identical
 	if len(value1) != len(value2) {

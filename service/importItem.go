@@ -38,6 +38,7 @@ func (service *ImportItem) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the ImportItem collection for the provided database session
 func (service *ImportItem) collection(session data.Session) data.Collection {
 	return session.Collection("ImportItem")
 }
@@ -61,6 +62,7 @@ func (service *ImportItem) Range(session data.Session, criteria exp.Expression, 
 	return RangeFunc(iter, model.NewImportItem), nil
 }
 
+// Query returns every ImportItem that matches the provided criteria
 func (service *ImportItem) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.ImportItem, error) {
 	result := make([]model.ImportItem, 0)
 	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
@@ -127,6 +129,7 @@ func (service *ImportItem) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided ImportItem. Implements the ModelService interface.
 func (service *ImportItem) ObjectID(object data.Object) primitive.ObjectID {
 
 	if item, ok := object.(*model.ImportItem); ok {
@@ -136,16 +139,19 @@ func (service *ImportItem) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every ImportItem that matches the provided criteria. Implements the ModelService interface.
 func (service *ImportItem) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single ImportItem as a data.Object. Implements the ModelService interface.
 func (service *ImportItem) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewImportItem()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a ImportItem in the database. Implements the ModelService interface.
 func (service *ImportItem) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if item, ok := object.(*model.ImportItem); ok {
 		return service.Save(session, item, comment)
@@ -153,6 +159,7 @@ func (service *ImportItem) ObjectSave(session data.Session, object data.Object, 
 	return derp.Internal("service.ImportItem.ObjectSave", "Invalid Object Type", object)
 }
 
+// ObjectDelete marks a ImportItem as deleted. Implements the ModelService interface.
 func (service *ImportItem) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if item, ok := object.(*model.ImportItem); ok {
 		return service.Delete(session, item, comment)
@@ -160,6 +167,7 @@ func (service *ImportItem) ObjectDelete(session data.Session, object data.Object
 	return derp.Internal("service.ImportItem.ObjectDelete", "Invalid Object Type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a ImportItem. Implements the ModelService interface.
 func (service *ImportItem) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.ImportItem", "Not Authorized")
 }

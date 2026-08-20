@@ -46,6 +46,7 @@ func (service *Circle) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the Circle collection for the provided database session
 func (service *Circle) collection(session data.Session) data.Collection {
 	return session.Collection("Circle")
 }
@@ -178,6 +179,7 @@ func (service *Circle) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided Circle. Implements the ModelService interface.
 func (service *Circle) ObjectID(object data.Object) primitive.ObjectID {
 
 	if circle, ok := object.(*model.Circle); ok {
@@ -187,16 +189,19 @@ func (service *Circle) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every Circle that matches the provided criteria. Implements the ModelService interface.
 func (service *Circle) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single Circle as a data.Object. Implements the ModelService interface.
 func (service *Circle) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewCircle()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a Circle in the database. Implements the ModelService interface.
 func (service *Circle) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if circle, ok := object.(*model.Circle); ok {
 		return service.Save(session, circle, comment)
@@ -204,6 +209,7 @@ func (service *Circle) ObjectSave(session data.Session, object data.Object, comm
 	return derp.Internal("service.Circle.ObjectSave", "Invalid Object Type", object)
 }
 
+// ObjectDelete marks a Circle as deleted. Implements the ModelService interface.
 func (service *Circle) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if circle, ok := object.(*model.Circle); ok {
 		return service.Delete(session, circle, comment)
@@ -211,10 +217,12 @@ func (service *Circle) ObjectDelete(session data.Session, object data.Object, co
 	return derp.Internal("service.Circle.ObjectDelete", "Invalid Object Type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a Circle. Implements the ModelService interface.
 func (service *Circle) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Circle", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a Circle
 func (service *Circle) Schema() schema.Schema {
 	return schema.New(model.CircleSchema())
 }
@@ -223,6 +231,7 @@ func (service *Circle) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+// QueryByIDs returns every Circle in the provided list that belongs to the provided User
 func (service *Circle) QueryByIDs(session data.Session, userID primitive.ObjectID, circleIDs []primitive.ObjectID, options ...option.Option) ([]model.Circle, error) {
 
 	const location = "service.Circle.QueryByIDs"
@@ -290,6 +299,7 @@ func (service *Circle) LoadByID(session data.Session, userID primitive.ObjectID,
 	return service.Load(session, criteria, result)
 }
 
+// LoadByProductID retrieves the Circle that is unlocked by the provided Product
 func (service *Circle) LoadByProductID(session data.Session, userID primitive.ObjectID, productID primitive.ObjectID, result *model.Circle) error {
 
 	// RULE: Require a valid UserID
@@ -335,6 +345,7 @@ func (service *Circle) DeleteByUserID(session data.Session, userID primitive.Obj
 	return nil
 }
 
+// HasProducts returns TRUE if any of this User's featured Circles are unlocked by a Product
 func (service *Circle) HasProducts(session data.Session, userID primitive.ObjectID) (bool, error) {
 
 	count, err := service.ProductCount(session, userID)
@@ -346,6 +357,7 @@ func (service *Circle) HasProducts(session data.Session, userID primitive.Object
 	return count > 0, nil
 }
 
+// ProductCount returns the number of Products across all of this User's featured Circles
 func (service *Circle) ProductCount(session data.Session, userID primitive.ObjectID) (int, error) {
 
 	const location = "service.Circle.ProductCount"
@@ -370,6 +382,7 @@ func (service *Circle) ProductCount(session data.Session, userID primitive.Objec
 	return result, nil
 }
 
+// AssignedProductIDs returns every Product ID used by this User's featured Circles
 func (service *Circle) AssignedProductIDs(session data.Session, userID primitive.ObjectID) (id.Slice, error) {
 
 	const location = "service.Circle.AssignedProductIDs"

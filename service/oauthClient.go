@@ -48,6 +48,7 @@ func (service *OAuthClient) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the OAuthClient collection for the provided database session
 func (service *OAuthClient) collection(session data.Session) data.Collection {
 	return session.Collection("OAuthClient")
 }
@@ -129,6 +130,7 @@ func (service *OAuthClient) Delete(session data.Session, client *model.OAuthClie
 	return nil
 }
 
+// Schema returns the rosetta schema that describes a OAuthClient
 func (service *OAuthClient) Schema() schema.Schema {
 	return schema.New(model.OAuthClientSchema())
 }
@@ -208,6 +210,7 @@ func (service *OAuthClient) LoadOrCreateByClientToken(session data.Session, toke
  * Custom Methods
  ******************************************/
 
+// ValidateClientSecret confirms that the provided secret matches the named OAuthClient
 func (service *OAuthClient) ValidateClientSecret(session data.Session, clientID primitive.ObjectID, clientSecret string) error {
 
 	const location = "service.OAuthClient.ValidateClientSecret"

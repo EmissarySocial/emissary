@@ -15,6 +15,7 @@ import (
 	"github.com/tdewolff/minify/v2/js"
 )
 
+// populateBundles reads and minifies every Bundle in the provided map, from the provided filesystem
 func populateBundles(bundles mapof.Object[model.Bundle], filesystem fs.FS) error {
 
 	for bundleID, bundle := range bundles {
@@ -29,6 +30,7 @@ func populateBundles(bundles mapof.Object[model.Bundle], filesystem fs.FS) error
 	return nil
 }
 
+// populateBundle reads a single Bundle's source files, concatenates them, and minifies the result
 func populateBundle(bundleID string, bundle *model.Bundle, filesystem fs.FS) error {
 
 	const location = "service.populateBundle"
@@ -96,6 +98,7 @@ func populateBundle(bundleID string, bundle *model.Bundle, filesystem fs.FS) err
 	return nil
 }
 
+// minifyContent compresses HTML, CSS, or JavaScript, passing every other content type through unchanged
 func minifyContent(contentType string, content *bytes.Buffer) ([]byte, error) {
 
 	const location = "service.minifyContent"

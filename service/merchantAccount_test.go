@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestPayPal_OAuth exercises a live PayPal OAuth token request
 func TestPayPal_OAuth(t *testing.T) {
 
 	var response mapof.Any
@@ -34,6 +35,7 @@ func TestPayPal_OAuth(t *testing.T) {
 	require.NotEmpty(t, response.GetFloat("expires_in"))
 }
 
+// TestPayPal_API exercises a live PayPal API call
 func TestPayPal_API(t *testing.T) {
 
 	clientID := "ASJSNmgI1_3dOc5THh5pWfYVMjdwGtEBANUilgF5IjxilefFuLmJIcEZNab80_k63kQdPDjRvbAHpKgv"

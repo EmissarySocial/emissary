@@ -8,11 +8,13 @@ import (
 	"github.com/benpate/form"
 )
 
+// GroupLookupProvider lists this Domain's Groups as form lookup codes
 type GroupLookupProvider struct {
 	groupService *Group
 	session      data.Session
 }
 
+// NewGroupLookupProvider returns a fully initialized GroupLookupProvider
 func NewGroupLookupProvider(session data.Session, groupService *Group) GroupLookupProvider {
 	return GroupLookupProvider{
 		groupService: groupService,
@@ -20,6 +22,7 @@ func NewGroupLookupProvider(session data.Session, groupService *Group) GroupLook
 	}
 }
 
+// Get returns every Group on this Domain. Implements the form.LookupGroup interface.
 func (service GroupLookupProvider) Get() []form.LookupCode {
 	groups, _ := service.groupService.Query(service.session, exp.All())
 	result := make([]form.LookupCode, 0, len(groups))
@@ -32,6 +35,7 @@ func (service GroupLookupProvider) Get() []form.LookupCode {
 
 }
 
+// Add creates a new Group with the provided name, and returns its ID. Implements the form.LookupGroup interface.
 func (service GroupLookupProvider) Add(name string) (string, error) {
 
 	group := model.NewGroup()

@@ -41,16 +41,20 @@ type followingStore struct {
 	deleted   []primitive.ObjectID
 }
 
+// Context implements the interface, returning a background context
 func (s *followingStore) Context() context.Context { return context.Background() }
 
+// Count implements the data.Collection interface. Unused by these tests.
 func (s *followingStore) Count(exp.Expression, ...option.Option) (int64, error) {
 	return 0, derp.Internal("test", "unused")
 }
 
+// Query implements the data.Collection interface. Unused by these tests.
 func (s *followingStore) Query(any, exp.Expression, ...option.Option) error {
 	return derp.NotFound("test", "unused")
 }
 
+// Iterator implements the data.Collection interface. Unused by these tests.
 func (s *followingStore) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
 	return nil, derp.NotFound("test", "unused")
 }
@@ -87,6 +91,7 @@ func (s *followingStore) Save(object data.Object, _ string) error {
 	return nil
 }
 
+// Delete implements the data.Collection interface. Unused by these tests.
 func (s *followingStore) Delete(object data.Object, _ string) error {
 
 	if following, ok := object.(*model.Following); ok {
@@ -96,6 +101,7 @@ func (s *followingStore) Delete(object data.Object, _ string) error {
 	return nil
 }
 
+// HardDelete implements the data.Collection interface. Unused by these tests.
 func (s *followingStore) HardDelete(exp.Expression) error { return nil }
 
 // followingSession is a data.Session whose Collection always returns the fake store.
@@ -104,6 +110,7 @@ type followingSession struct {
 	store data.Collection
 }
 
+// Collection implements the data.Session interface, returning this stub's single collection
 func (s followingSession) Collection(string) data.Collection { return s.store }
 
 /******************************************

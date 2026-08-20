@@ -8,16 +8,19 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 )
 
+// Geocodio geocodes addresses and timezones using the Geocodio API
 type Geocodio struct {
 	apiKey string
 }
 
+// NewGeocodio returns a Geocodio geocoder
 func NewGeocodio(apiKey string) Geocodio {
 	return Geocodio{
 		apiKey: apiKey,
 	}
 }
 
+// GeocodeAddress resolves a free-text address into a geo.Address. Implements the AddressGeocoder interface.
 func (service Geocodio) GeocodeAddress(address string) (geo.Address, error) {
 
 	const location = "service.geocoder.Geocodio.GeocodeTimezone"
@@ -67,6 +70,7 @@ func (service Geocodio) GeocodeAddress(address string) (geo.Address, error) {
 	return result, nil
 }
 
+// GeocodeTimezone fills in the timezone of the provided address. Implements the TimezoneGeocoder interface.
 func (service Geocodio) GeocodeTimezone(address *geo.Address) error {
 
 	const location = "service.geocoder.Geocodio.GeocodeTimezone"

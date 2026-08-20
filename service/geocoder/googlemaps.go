@@ -12,10 +12,12 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 )
 
+// GoogleMaps geocodes addresses and timezones using the Google Maps Platform API
 type GoogleMaps struct {
 	apiKey string
 }
 
+// NewGoogleMaps returns a GoogleMaps geocoder
 func NewGoogleMaps(apiKey string) GoogleMaps {
 
 	return GoogleMaps{
@@ -23,6 +25,7 @@ func NewGoogleMaps(apiKey string) GoogleMaps {
 	}
 }
 
+// GeocodeAddress resolves a free-text address into a geo.Address. Implements the AddressGeocoder interface.
 func (geocoder GoogleMaps) GeocodeAddress(query string) (geo.Address, error) {
 
 	const location = "service.geocoder.GoogleMaps.GeocodeAddress"
@@ -52,6 +55,7 @@ func (geocoder GoogleMaps) GeocodeAddress(query string) (geo.Address, error) {
 	return address, nil
 }
 
+// GeocodeTimezone fills in the timezone of the provided address. Implements the TimezoneGeocoder interface.
 func (geocoder GoogleMaps) GeocodeTimezone(address *geo.Address) error {
 
 	const location = "service.geocoder.GoogleMaps.GeocodeTimestamp"
@@ -75,6 +79,7 @@ func (geocoder GoogleMaps) GeocodeTimezone(address *geo.Address) error {
 	return nil
 }
 
+// AutocompleteAddress returns address suggestions for a partial query, biased toward the provided point. Implements the AddressAutocompleter interface.
 func (geocoder GoogleMaps) AutocompleteAddress(query string, bias geo.Point) (sliceof.Object[geo.Address], error) {
 
 	const location = "service.geocoder.GoogleMaps.AutocompleteAddress"
@@ -114,6 +119,7 @@ func (geocoder GoogleMaps) AutocompleteAddress(query string, bias geo.Point) (sl
 	return addresses, nil
 }
 
+// mapGooglePlaceSuggestion converts one Google Places autocomplete suggestion into a geo.Address
 func mapGooglePlaceSuggestion(suggestion mapof.Any) geo.Address {
 
 	placePrediction := suggestion.GetMap("placePrediction")
@@ -125,6 +131,7 @@ func mapGooglePlaceSuggestion(suggestion mapof.Any) geo.Address {
 	}
 }
 
+// mapGoogleSearchResult converts one Google geocoding result into a geo.Address
 func mapGoogleSearchResult(result mapof.Any) geo.Address {
 
 	address := geo.NewAddress()

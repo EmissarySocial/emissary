@@ -56,6 +56,7 @@ func actionTemplate(actionID string, roles ...string) model.Template {
 	return template
 }
 
+// TestUserCan_View_AuthorOnly_DeniesOtherUser verifies that an author-gated Stream refuses a different signed-in User
 func TestUserCan_View_AuthorOnly_DeniesOtherUser(t *testing.T) {
 
 	author := primitive.NewObjectID()
@@ -117,6 +118,7 @@ func TestUserCan_AuthorGatedActions(t *testing.T) {
 	}
 }
 
+// TestUserCan_View_AuthorOnly_DeniesAnonymous verifies that an author-gated Stream refuses an anonymous caller
 func TestUserCan_View_AuthorOnly_DeniesAnonymous(t *testing.T) {
 
 	author := primitive.NewObjectID()
@@ -134,6 +136,7 @@ func TestUserCan_View_AuthorOnly_DeniesAnonymous(t *testing.T) {
 	require.False(t, allowed, "an anonymous caller must NOT be allowed to view an author-gated stream")
 }
 
+// TestUserCan_View_Anonymous_AllowsEveryone verifies that an anonymous-gated Stream is readable by anyone
 func TestUserCan_View_Anonymous_AllowsEveryone(t *testing.T) {
 
 	author := primitive.NewObjectID()
@@ -160,6 +163,7 @@ func TestUserCan_View_Anonymous_AllowsEveryone(t *testing.T) {
 	require.True(t, allowed, "an anonymous caller may view an anonymous-gated stream")
 }
 
+// TestUserCan_View_DomainOwner_AlwaysAllowed verifies that a domain owner may view any Stream
 func TestUserCan_View_DomainOwner_AlwaysAllowed(t *testing.T) {
 
 	author := primitive.NewObjectID()
@@ -179,6 +183,7 @@ func TestUserCan_View_DomainOwner_AlwaysAllowed(t *testing.T) {
 	require.True(t, allowed, "a domain owner may view any stream")
 }
 
+// TestUserCan_View_MissingAction_Denies verifies that a Template with no "view" action denies everyone
 func TestUserCan_View_MissingAction_Denies(t *testing.T) {
 
 	author := primitive.NewObjectID()

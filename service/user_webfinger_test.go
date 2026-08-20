@@ -29,16 +29,20 @@ type userCollection struct {
 	found  bool
 }
 
+// Context implements the interface, returning a background context
 func (c *userCollection) Context() context.Context { return context.Background() }
 
+// Count implements the data.Collection interface. Unused by these tests.
 func (c *userCollection) Count(exp.Expression, ...option.Option) (int64, error) {
 	return 0, derp.Internal("test", "unused")
 }
 
+// Query implements the data.Collection interface. Unused by these tests.
 func (c *userCollection) Query(any, exp.Expression, ...option.Option) error {
 	return derp.Internal("test", "unused")
 }
 
+// Iterator implements the data.Collection interface. Unused by these tests.
 func (c *userCollection) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
 	return nil, derp.Internal("test", "unused")
 }
@@ -64,9 +68,14 @@ func (c *userCollection) Load(criteria exp.Expression, target data.Object, _ ...
 	return nil
 }
 
-func (c *userCollection) Save(data.Object, string) error   { return derp.Internal("test", "unused") }
+// Save implements the data.Collection interface. Unused by these tests.
+func (c *userCollection) Save(data.Object, string) error { return derp.Internal("test", "unused") }
+
+// Delete implements the data.Collection interface. Unused by these tests.
 func (c *userCollection) Delete(data.Object, string) error { return derp.Internal("test", "unused") }
-func (c *userCollection) HardDelete(exp.Expression) error  { return derp.Internal("test", "unused") }
+
+// HardDelete implements the data.Collection interface. Unused by these tests.
+func (c *userCollection) HardDelete(exp.Expression) error { return derp.Internal("test", "unused") }
 
 // matchesUser reports whether the stored User satisfies a criteria on username/deleteDate,
 // which is exactly what LoadByUsername (wrapped in notDeleted) builds.
@@ -95,9 +104,14 @@ type userSession struct {
 	collection *userCollection
 }
 
+// Collection implements the data.Session interface, returning this stub's single collection
 func (s userSession) Collection(string) data.Collection { return s.collection }
-func (s userSession) Context() context.Context          { return context.Background() }
-func (s userSession) Close()                            {}
+
+// Context implements the interface, returning a background context
+func (s userSession) Context() context.Context { return context.Background() }
+
+// Close implements the interface. The stub holds no resources to release.
+func (s userSession) Close() {}
 
 // newWebFingerTestService returns a User service and a session holding the provided User.
 func newWebFingerTestService(user model.User) (*User, userSession) {

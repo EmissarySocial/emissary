@@ -13,11 +13,13 @@ import (
 
 // Consider: https://www.here.com
 
+// Here geocodes addresses and timezones using the HERE Location Services API
 type Here struct {
 	apiID  string
 	apiKey string
 }
 
+// NewHere returns a Here geocoder
 func NewHere(apiID string, apiKey string) Here {
 	return Here{
 		apiID:  apiID,
@@ -25,6 +27,7 @@ func NewHere(apiID string, apiKey string) Here {
 	}
 }
 
+// GeocodeAddress resolves a free-text address into a geo.Address. Implements the AddressGeocoder interface.
 func (geocoder Here) GeocodeAddress(q string) (geo.Address, error) {
 
 	const location = "service.geocoder.Geoapify.GeocodeNetwork"
@@ -51,6 +54,7 @@ func (geocoder Here) GeocodeAddress(q string) (geo.Address, error) {
 	return mapHereAddress(items.First()), nil
 }
 
+// GeocodeTimezone fills in the timezone of the provided address. Implements the TimezoneGeocoder interface.
 func (geocoder Here) GeocodeTimezone(address *geo.Address) error {
 
 	const location = "service.geocoder.Here.GeocodeNetwork"
@@ -82,6 +86,7 @@ func (geocoder Here) GeocodeTimezone(address *geo.Address) error {
 	return nil
 }
 
+// AutocompleteAddress returns address suggestions for a partial query, biased toward the provided point. Implements the AddressAutocompleter interface.
 func (geocoder Here) AutocompleteAddress(query string, bias geo.Point) (sliceof.Object[geo.Address], error) {
 
 	const location = "service.geocoder.Here.AutocompleteAddress"
@@ -108,6 +113,7 @@ func (geocoder Here) AutocompleteAddress(query string, bias geo.Point) (sliceof.
 	return result, nil
 }
 
+// mapHereAddress converts one Here API result into a geo.Address
 func mapHereAddress(item mapof.Any) geo.Address {
 
 	address := item.GetMap("address")

@@ -7,8 +7,10 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// GeocodeAddress connects a Domain to the service that resolves free-text addresses into coordinates
 type GeocodeAddress struct{}
 
+// NewGeocodeAddress returns a fully initialized GeocodeAddress provider
 func NewGeocodeAddress() GeocodeAddress {
 	return GeocodeAddress{}
 }
@@ -17,6 +19,7 @@ func NewGeocodeAddress() GeocodeAddress {
  * Setup / Configuration Methods
  ******************************************/
 
+// ManualConfig returns the form used to configure this Connection by hand. Implements the ManualProvider interface.
 func (adapter GeocodeAddress) ManualConfig() form.Form {
 
 	return form.Form{
@@ -95,6 +98,7 @@ func (adapter GeocodeAddress) ManualConfig() form.Form {
  * Lifecycle Methods
  ******************************************/
 
+// BeforeSave applies any last-minute changes to this Connection before it is written to the database
 func (adapter GeocodeAddress) BeforeSave(connection *model.Connection, vault mapof.String) error {
 	return nil
 }

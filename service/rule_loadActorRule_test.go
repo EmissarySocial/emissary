@@ -24,14 +24,17 @@ import (
  * LoadByMatchKey queries: userId (IN), matchKey (equal), and the notDeleted() deleteDate guard.
  ******************************************/
 
+// actorRuleStore is an in-memory data.Collection of Rules, used by the tests in this file
 type actorRuleStore struct {
 	records []model.Rule
 	loaded  []string // every matchKey this store was asked for, in order
 	err     error    // when present, every Load fails with this error
 }
 
+// Context implements the interface, returning a background context
 func (c *actorRuleStore) Context() context.Context { return context.Background() }
 
+// Load implements the data.Collection interface. Unused by these tests.
 func (c *actorRuleStore) Load(criteria exp.Expression, target data.Object, _ ...option.Option) error {
 
 	c.loaded = append(c.loaded, criteriaMatchKey(criteria))
@@ -56,21 +59,29 @@ func (c *actorRuleStore) Load(criteria exp.Expression, target data.Object, _ ...
 	return derp.NotFound("test", "rule not found")
 }
 
+// Count implements the data.Collection interface. Unused by these tests.
 func (c *actorRuleStore) Count(exp.Expression, ...option.Option) (int64, error) {
 	return 0, derp.Internal("test", "unused")
 }
 
+// Query implements the data.Collection interface. Unused by these tests.
 func (c *actorRuleStore) Query(any, exp.Expression, ...option.Option) error {
 	return derp.Internal("test", "unused")
 }
 
+// Iterator implements the data.Collection interface. Unused by these tests.
 func (c *actorRuleStore) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
 	return nil, derp.Internal("test", "unused")
 }
 
-func (c *actorRuleStore) Save(data.Object, string) error   { return derp.Internal("test", "unused") }
+// Save implements the data.Collection interface. Unused by these tests.
+func (c *actorRuleStore) Save(data.Object, string) error { return derp.Internal("test", "unused") }
+
+// Delete implements the data.Collection interface. Unused by these tests.
 func (c *actorRuleStore) Delete(data.Object, string) error { return derp.Internal("test", "unused") }
-func (c *actorRuleStore) HardDelete(exp.Expression) error  { return derp.Internal("test", "unused") }
+
+// HardDelete implements the data.Collection interface. Unused by these tests.
+func (c *actorRuleStore) HardDelete(exp.Expression) error { return derp.Internal("test", "unused") }
 
 // matchesActorRule reports whether a Rule satisfies the userId IN / matchKey == criteria plus the
 // notDeleted() guard. Any unsupported field or operator conservatively counts as "no".

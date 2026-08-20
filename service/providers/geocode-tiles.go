@@ -7,8 +7,10 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// GeocodeTiles connects a Domain to the map-tile provider used to draw maps
 type GeocodeTiles struct{}
 
+// NewGeocodeTiles returns a fully initialized GeocodeTiles provider
 func NewGeocodeTiles() GeocodeTiles {
 	return GeocodeTiles{}
 }
@@ -17,6 +19,7 @@ func NewGeocodeTiles() GeocodeTiles {
  * Setup / Configuration Methods
  ******************************************/
 
+// ManualConfig returns the form used to configure this Connection by hand. Implements the ManualProvider interface.
 func (adapter GeocodeTiles) ManualConfig() form.Form {
 
 	return form.Form{
@@ -102,6 +105,7 @@ func (adapter GeocodeTiles) ManualConfig() form.Form {
  * Lifecycle Methods
  ******************************************/
 
+// BeforeSave applies any last-minute changes to this Connection before it is written to the database
 func (adapter GeocodeTiles) BeforeSave(connection *model.Connection, vault mapof.String) error {
 	return nil
 }

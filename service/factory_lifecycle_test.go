@@ -28,26 +28,32 @@ type lifecycleServerFactory struct {
 	queue    *queue.Queue
 }
 
+// ByHostname implements the ServerFactory interface. Unused by these tests.
 func (factory *lifecycleServerFactory) ByHostname(hostname string) (*Factory, error) {
 	return nil, derp.NotFound("lifecycleServerFactory.ByHostname", "Not implemented in this test double", hostname)
 }
 
+// Email implements the ServerFactory interface. Unused by these tests.
 func (factory *lifecycleServerFactory) Email() *ServerEmail {
 	return nil
 }
 
+// ClientIP implements the ServerFactory interface. Unused by these tests.
 func (factory *lifecycleServerFactory) ClientIP(_ *http.Request) string {
 	return ""
 }
 
+// DigitalDome implements the ServerFactory interface. Unused by these tests.
 func (factory *lifecycleServerFactory) DigitalDome() *dome.Dome {
 	return nil
 }
 
+// Queue implements the ServerFactory interface, returning this stub's queue
 func (factory *lifecycleServerFactory) Queue() *queue.Queue {
 	return factory.queue
 }
 
+// CommonDatabase implements the ServerFactory interface, returning this stub's database
 func (factory *lifecycleServerFactory) CommonDatabase() *mongo.Database {
 	return factory.database
 }

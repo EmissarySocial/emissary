@@ -63,6 +63,7 @@ func (service *Outbox) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the Outbox collection for the provided database session
 func (service *Outbox) collection(session data.Session) data.Collection {
 	return session.Collection("Outbox")
 }
@@ -137,6 +138,7 @@ func (service *Outbox) Save(session data.Session, outboxMessage *model.OutboxMes
 	return nil
 }
 
+// cacheMessage warms the ActivityStream cache with a message that this server just published
 func (service *Outbox) cacheMessage(outboxMessage *model.OutboxMessage) {
 
 	// Wait for things to settle.  IDK, man
@@ -210,6 +212,7 @@ func (service *Outbox) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided Outbox. Implements the ModelService interface.
 func (service *Outbox) ObjectID(object data.Object) primitive.ObjectID {
 
 	if message, ok := object.(*model.OutboxMessage); ok {
@@ -219,16 +222,19 @@ func (service *Outbox) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every Outbox that matches the provided criteria. Implements the ModelService interface.
 func (service *Outbox) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single Outbox as a data.Object. Implements the ModelService interface.
 func (service *Outbox) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewOutboxMessage()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a Outbox in the database. Implements the ModelService interface.
 func (service *Outbox) ObjectSave(session data.Session, object data.Object, note string) error {
 
 	if message, ok := object.(*model.OutboxMessage); ok {
@@ -238,6 +244,7 @@ func (service *Outbox) ObjectSave(session data.Session, object data.Object, note
 	return derp.Internal("service.Outbox.ObjectSave", "Invalid object type", object)
 }
 
+// ObjectDelete marks a Outbox as deleted. Implements the ModelService interface.
 func (service *Outbox) ObjectDelete(session data.Session, object data.Object, note string) error {
 
 	if message, ok := object.(*model.OutboxMessage); ok {
@@ -247,10 +254,12 @@ func (service *Outbox) ObjectDelete(session data.Session, object data.Object, no
 	return derp.Internal("service.Outbox.ObjectDelete", "Invalid object type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a Outbox. Implements the ModelService interface.
 func (service *Outbox) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.OutboxMessage", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a Outbox
 func (service *Outbox) Schema() schema.Schema {
 	result := schema.New(model.OutboxMessageSchema())
 	result.ID = "https://emissary.social/schemas/stream"
@@ -269,6 +278,7 @@ func (service *Outbox) RangeByParentID(session data.Session, actorType string, a
 	return service.Range(session, criteria)
 }
 
+// QueryByParentAndDate returns one page of an Actor's outbox, filtered by the caller's permissions
 func (service *Outbox) QueryByParentAndDate(session data.Session, actorType string, actorID primitive.ObjectID, permissions model.Permissions, maxDate int64, maxRows int) ([]model.OutboxMessage, error) {
 
 	const location = "service.Outbox.QueryByParentAndDate"
@@ -292,6 +302,7 @@ func (service *Outbox) QueryByParentAndDate(session data.Session, actorType stri
 	return result, nil
 }
 
+// RangeByObjectID returns an iterator over every OutboxMessage that publishes the provided object
 func (service *Outbox) RangeByObjectID(session data.Session, actorType string, actorID primitive.ObjectID, objectID string) (iter.Seq[model.OutboxMessage], error) {
 
 	criteria := exp.Equal("actorType", actorType).
@@ -314,11 +325,13 @@ func (service *Outbox) RangeByActivityURL(session data.Session, actorType string
 	return service.Range(session, criteria)
 }
 
+// LoadByID retrieves a single Outbox using its unique ID
 func (service *Outbox) LoadByID(session data.Session, userID primitive.ObjectID, outboxMessageID primitive.ObjectID, outboxMessage *model.OutboxMessage) error {
 	criteria := exp.Equal("actorId", userID).AndEqual("_id", outboxMessageID)
 	return service.Load(session, criteria, outboxMessage)
 }
 
+// DeleteByParentID marks every Outbox belonging to the provided parent as deleted
 func (service *Outbox) DeleteByParentID(session data.Session, actorType string, actorID primitive.ObjectID) error {
 
 	const location = "service.Outbox.DeleteByParent"
@@ -339,6 +352,7 @@ func (service *Outbox) DeleteByParentID(session data.Session, actorType string, 
 	return nil
 }
 
+// calcActivityURL returns the public URL of the provided OutboxMessage
 func (service *Outbox) calcActivityURL(outboxMessage *model.OutboxMessage) string {
 
 	switch outboxMessage.ActorType {

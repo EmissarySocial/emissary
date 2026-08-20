@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// TestParsePath verifies that every recognized profile URL shape parses into its object type and ID
 func TestParsePath(t *testing.T) {
 
 	id1, _ := primitive.ObjectIDFromHex("123456789012345678901234")
@@ -52,6 +53,7 @@ func TestParsePath(t *testing.T) {
 	}
 }
 
+// TestParsePathErrors verifies that malformed and foreign profile URLs are rejected
 func TestParsePathErrors(t *testing.T) {
 	{
 		_, _, _, _, err := ParseProfileURL("example.com", "not-a-url")
@@ -136,6 +138,7 @@ func TestParseProfileURL_Hostname(t *testing.T) {
 	require.Equal(t, http.StatusInternalServerError, derp.ErrorCode(err))
 }
 
+// TestParseFollowersURI verifies that a followers-collection URI parses back into its owner
 func TestParseFollowersURI(t *testing.T) {
 
 	host := "https://example.com"

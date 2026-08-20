@@ -19,6 +19,7 @@ type fakeActorLoader struct {
 	called bool
 }
 
+// GetActor implements the actor-loader interface, returning this stub's canned document or error
 func (loader *fakeActorLoader) GetActor(address string) (streams.Document, error) {
 	loader.called = true
 

@@ -43,6 +43,7 @@ func (service *Product) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the Product collection for the provided database session
 func (service *Product) collection(session data.Session) data.Collection {
 	return session.Collection("Product")
 }
@@ -154,6 +155,7 @@ func (service *Product) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided Product. Implements the ModelService interface.
 func (service *Product) ObjectID(object data.Object) primitive.ObjectID {
 
 	if product, ok := object.(*model.Product); ok {
@@ -163,16 +165,19 @@ func (service *Product) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every Product that matches the provided criteria. Implements the ModelService interface.
 func (service *Product) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single Product as a data.Object. Implements the ModelService interface.
 func (service *Product) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewProduct()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a Product in the database. Implements the ModelService interface.
 func (service *Product) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if product, ok := object.(*model.Product); ok {
 		return service.Save(session, product, comment)
@@ -180,6 +185,7 @@ func (service *Product) ObjectSave(session data.Session, object data.Object, com
 	return derp.Internal("service.Product.ObjectSave", "Invalid Object Type", object)
 }
 
+// ObjectDelete marks a Product as deleted. Implements the ModelService interface.
 func (service *Product) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if product, ok := object.(*model.Product); ok {
 		return service.Delete(session, product, comment)
@@ -187,10 +193,12 @@ func (service *Product) ObjectDelete(session data.Session, object data.Object, c
 	return derp.Internal("service.Product.ObjectDelete", "Invalid Object Type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a Product. Implements the ModelService interface.
 func (service *Product) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Product", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a Product
 func (service *Product) Schema() schema.Schema {
 	return schema.New(model.ProductSchema())
 }
@@ -211,6 +219,7 @@ func (service *Product) LoadByUserAndID(session data.Session, userID primitive.O
 	return service.Load(session, criteria, result)
 }
 
+// LoadByToken retrieves a single Product using its URL token
 func (service *Product) LoadByToken(session data.Session, token string, result *model.Product) error {
 
 	productID, err := primitive.ObjectIDFromHex(token)
@@ -279,6 +288,7 @@ func (service *Product) DeleteByUserID(session data.Session, userID primitive.Ob
  * Custom Behaviors
  ******************************************/
 
+// SyncRemoteProducts reconciles this User's local Products against the ones their payment providers list
 func (service *Product) SyncRemoteProducts(session data.Session, userID primitive.ObjectID) (sliceof.Object[model.MerchantAccount], sliceof.Object[model.Product], error) {
 
 	const location = "service.Product.SyncRemoteProducts"
@@ -352,6 +362,7 @@ func (service *Product) SyncRemoteProducts(session data.Session, userID primitiv
 	return merchantAccounts, products, nil
 }
 
+// indexByRemoteID keys a slice of Products by their remote provider ID, skipping the ones that have none
 func (service *Product) indexByRemoteID(remoteProducts sliceof.Object[model.Product]) map[string]model.Product {
 
 	// Create a map of remote IDs to Products

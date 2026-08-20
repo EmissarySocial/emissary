@@ -47,6 +47,7 @@ func (service *EncryptionKey) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the EncryptionKey collection for the provided database session
 func (service *EncryptionKey) collection(session data.Session) data.Collection {
 	return session.Collection("EncryptionKey")
 }
@@ -108,6 +109,7 @@ func (service *EncryptionKey) Delete(session data.Session, encryptionKey *model.
  * Custom Queries
  ******************************************/
 
+// RangeByParentID returns an iterator over every EncryptionKey belonging to the provided parent
 func (service *EncryptionKey) RangeByParentID(session data.Session, parentID primitive.ObjectID) (iter.Seq[model.EncryptionKey], error) {
 	return service.Range(session, exp.Equal("parentId", parentID))
 }
@@ -145,6 +147,7 @@ func (service *EncryptionKey) LoadByParentID(session data.Session, parentType st
  * Custom Actions
  ******************************************/
 
+// Create generates a new RSA key pair for the provided parent, and saves it
 func (service *EncryptionKey) Create(session data.Session, parentType string, parentID primitive.ObjectID) (model.EncryptionKey, error) {
 
 	// Create new model object
@@ -170,6 +173,7 @@ func (service *EncryptionKey) Create(session data.Session, parentType string, pa
 	return encryptionKey, nil
 }
 
+// DeleteByParentID marks every EncryptionKey belonging to the provided parent as deleted
 func (service *EncryptionKey) DeleteByParentID(session data.Session, parentID primitive.ObjectID, note string) error {
 
 	const location = "service.EncryptionKey.DeleteByParentID"
@@ -193,6 +197,7 @@ func (service *EncryptionKey) DeleteByParentID(session data.Session, parentID pr
  * Data Accessors
  ******************************************/
 
+// GetPublicKey returns the RSA public key half of the provided EncryptionKey
 func (service *EncryptionKey) GetPublicKey(encryptionKey *model.EncryptionKey) (*rsa.PublicKey, error) {
 
 	const location = "service.EncryptionKey.PublicKey"
@@ -210,6 +215,7 @@ func (service *EncryptionKey) GetPublicKey(encryptionKey *model.EncryptionKey) (
 	return &privateKey.PublicKey, nil
 }
 
+// GetPrivateKey returns the RSA private key half of the provided EncryptionKey
 func (service *EncryptionKey) GetPrivateKey(encryptionKey *model.EncryptionKey) (*rsa.PrivateKey, error) {
 
 	const location = "service.EncryptionKey.GetPrivateKey"
@@ -235,6 +241,7 @@ func (service *EncryptionKey) GetPrivateKey(encryptionKey *model.EncryptionKey) 
 	return privateKey, nil
 }
 
+// Sign signs a message with the private half of the provided EncryptionKey
 func (service *EncryptionKey) Sign(message []byte, encryptionKey *model.EncryptionKey) ([]byte, error) {
 
 	privateKey, err := service.GetPrivateKey(encryptionKey)
@@ -246,6 +253,7 @@ func (service *EncryptionKey) Sign(message []byte, encryptionKey *model.Encrypti
 	return rsa.SignPKCS1v15(rand.Reader, privateKey, 0, message)
 }
 
+// Verify confirms that a signature was made by the private half of the provided EncryptionKey
 func (service *EncryptionKey) Verify(message []byte, signature []byte, encryptionKey *model.EncryptionKey) error {
 
 	publicKey, err := service.GetPublicKey(encryptionKey)

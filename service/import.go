@@ -56,10 +56,12 @@ func (service *Import) Refresh(factory *Factory) {
  * Common Data Methods
  ******************************************/
 
+// collection returns the Import collection for the provided database session
 func (service *Import) collection(session data.Session) data.Collection {
 	return session.Collection("Import")
 }
 
+// Query returns every Import that matches the provided criteria
 func (service *Import) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Import, error) {
 	result := make([]model.Import, 0)
 	err := service.collection(session).Query(&result, notDeleted(criteria), options...)
@@ -193,16 +195,19 @@ func (service *Import) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every Import that matches the provided criteria. Implements the ModelService interface.
 func (service *Import) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single Import as a data.Object. Implements the ModelService interface.
 func (service *Import) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewImport()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a Import in the database. Implements the ModelService interface.
 func (service *Import) ObjectSave(session data.Session, object data.Object, note string) error {
 	if record, ok := object.(*model.Import); ok {
 		return service.Save(session, record, note)
@@ -210,6 +215,7 @@ func (service *Import) ObjectSave(session data.Session, object data.Object, note
 	return derp.Internal("service.Import.ObjectSave", "Invalid object type", object)
 }
 
+// ObjectDelete marks a Import as deleted. Implements the ModelService interface.
 func (service *Import) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if record, ok := object.(*model.Import); ok {
 		return service.Delete(session, record, note)
@@ -217,10 +223,12 @@ func (service *Import) ObjectDelete(session data.Session, object data.Object, no
 	return derp.Internal("service.Import.ObjectDelete", "Invalid object type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a Import. Implements the ModelService interface.
 func (service *Import) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Import.ObjectUserCan", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a Import
 func (service *Import) Schema() schema.Schema {
 	return schema.New(model.ImportSchema())
 }
@@ -276,11 +284,13 @@ func (service *Import) HardDeleteByID(session data.Session, userID primitive.Obj
  * Custom Actions
  ******************************************/
 
+// SetMessage updates the human-readable status message on an Import, and saves it
 func (service *Import) SetMessage(session data.Session, record *model.Import, message string) error {
 	record.Message = message
 	return service.Save(session, record, "Update message")
 }
 
+// SetState moves an Import into a new state, clearing its status message
 func (service *Import) SetState(session data.Session, record *model.Import, stateID string) error {
 	record.StateID = stateID
 	record.Message = ""
@@ -476,6 +486,7 @@ func (service *Import) doUndo(session data.Session, record *model.Import) error 
  * Import Attachments
  ******************************************/
 
+// ImportAttachments copies the attachments of one imported item into the Stream it became
 func (service *Import) ImportAttachments(session data.Session, importRecord *model.Import, importItem *model.ImportItem, stream *model.Stream) error {
 
 	const location = "consumer.importItems_Attachments"

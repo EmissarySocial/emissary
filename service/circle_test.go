@@ -28,16 +28,20 @@ type circleCollection struct {
 	err     error // When present, every read fails with this error
 }
 
+// Context implements the interface, returning a background context
 func (c *circleCollection) Context() context.Context { return context.Background() }
 
+// Count implements the data.Collection interface. Unused by these tests.
 func (c *circleCollection) Count(exp.Expression, ...option.Option) (int64, error) {
 	return 0, derp.Internal("test", "unused")
 }
 
+// Query implements the data.Collection interface. Unused by these tests.
 func (c *circleCollection) Query(any, exp.Expression, ...option.Option) error {
 	return derp.Internal("test", "unused")
 }
 
+// Iterator implements the data.Collection interface. Unused by these tests.
 func (c *circleCollection) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
 	return nil, derp.Internal("test", "unused")
 }
@@ -68,9 +72,14 @@ func (c *circleCollection) Load(criteria exp.Expression, target data.Object, _ .
 	return derp.NotFound("test", "not found")
 }
 
-func (c *circleCollection) Save(data.Object, string) error   { return derp.Internal("test", "unused") }
+// Save implements the data.Collection interface. Unused by these tests.
+func (c *circleCollection) Save(data.Object, string) error { return derp.Internal("test", "unused") }
+
+// Delete implements the data.Collection interface. Unused by these tests.
 func (c *circleCollection) Delete(data.Object, string) error { return derp.Internal("test", "unused") }
-func (c *circleCollection) HardDelete(exp.Expression) error  { return derp.Internal("test", "unused") }
+
+// HardDelete implements the data.Collection interface. Unused by these tests.
+func (c *circleCollection) HardDelete(exp.Expression) error { return derp.Internal("test", "unused") }
 
 // matchesCircle reports whether a Circle satisfies a criteria on _id/userId/name/deleteDate.
 // "_id" also honors "!=", which Circle.NameExists uses to exclude the Circle being edited.
@@ -122,9 +131,14 @@ type circleSession struct {
 	collection *circleCollection
 }
 
+// Collection implements the data.Session interface, returning this stub's single collection
 func (s circleSession) Collection(string) data.Collection { return s.collection }
-func (s circleSession) Context() context.Context          { return context.Background() }
-func (s circleSession) Close()                            {}
+
+// Context implements the interface, returning a background context
+func (s circleSession) Context() context.Context { return context.Background() }
+
+// Close implements the interface. The stub holds no resources to release.
+func (s circleSession) Close() {}
 
 // newCircleService returns a Circle service backed by an in-memory set of Circles
 func newCircleService(circles ...model.Circle) (*Circle, circleSession) {

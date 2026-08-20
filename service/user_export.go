@@ -11,12 +11,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// ExportCollection returns the IDs of every User to include in a User's data export
 func (service *User) ExportCollection(session data.Session, userID primitive.ObjectID) ([]model.IDOnly, error) {
 	return []model.IDOnly{
 		{ID: userID},
 	}, nil
 }
 
+// ExportDocument returns a single User as a JSON string, for a User's data export
 func (service *User) ExportDocument(session data.Session, userID primitive.ObjectID, _ primitive.ObjectID) (string, error) {
 
 	const location = "service.User.ExportDocument"

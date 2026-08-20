@@ -22,6 +22,8 @@ const webPushErrorBodyMaxLength = 1024
 
 // Domain.Data keys under which the per-domain VAPID keypair is stored (generated lazily).
 const domainDataVAPIDPublicKey = "vapidPublicKey"
+
+// domainDataVAPIDPrivateKey is the Domain.Data key that this Domain's VAPID private key is stored under
 const domainDataVAPIDPrivateKey = "vapidPrivateKey"
 
 // webPushTTL is the number of seconds a push message may be queued by the push service.

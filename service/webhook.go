@@ -31,6 +31,7 @@ func NewWebhook() Webhook {
  * Lifecycle Methods
  ******************************************/
 
+// Refresh updates this service with the latest configuration values
 func (service *Webhook) Refresh(factory *Factory) {
 	service.queue = factory.Queue()
 	service.newSession = factory.Session
@@ -40,6 +41,7 @@ func (service *Webhook) Refresh(factory *Factory) {
  * Common Methods
  ******************************************/
 
+// collection returns the Webhook collection for the provided database session
 func (service *Webhook) collection(session data.Session) data.Collection {
 	return session.Collection("Webhook")
 }
@@ -146,6 +148,7 @@ func (service *Webhook) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided Webhook. Implements the ModelService interface.
 func (service *Webhook) ObjectID(object data.Object) primitive.ObjectID {
 
 	if user, ok := object.(*model.Webhook); ok {
@@ -155,16 +158,19 @@ func (service *Webhook) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every Webhook that matches the provided criteria. Implements the ModelService interface.
 func (service *Webhook) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single Webhook as a data.Object. Implements the ModelService interface.
 func (service *Webhook) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewWebhook()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a Webhook in the database. Implements the ModelService interface.
 func (service *Webhook) ObjectSave(session data.Session, object data.Object, note string) error {
 	if user, ok := object.(*model.Webhook); ok {
 		return service.Save(session, user, note)
@@ -172,6 +178,7 @@ func (service *Webhook) ObjectSave(session data.Session, object data.Object, not
 	return derp.Internal("service.Webhook.ObjectSave", "Invalid object type", object)
 }
 
+// ObjectDelete marks a Webhook as deleted. Implements the ModelService interface.
 func (service *Webhook) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if user, ok := object.(*model.Webhook); ok {
 		return service.Delete(session, user, note)
@@ -179,10 +186,12 @@ func (service *Webhook) ObjectDelete(session data.Session, object data.Object, n
 	return derp.Internal("service.Webhook.ObjectDelete", "Invalid object type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a Webhook. Implements the ModelService interface.
 func (service *Webhook) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Webhook.ObjectUserCan", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a Webhook
 func (service *Webhook) Schema() schema.Schema {
 	return schema.New(model.WebhookSchema())
 }
@@ -191,10 +200,12 @@ func (service *Webhook) Schema() schema.Schema {
  * Common Queries
  ******************************************/
 
+// LoadByID retrieves a single Webhook using its unique ID
 func (service *Webhook) LoadByID(session data.Session, webhookID primitive.ObjectID, result *model.Webhook) error {
 	return service.Load(session, exp.Equal("_id", webhookID), result)
 }
 
+// QueryByEvent returns every Webhook that subscribes to the provided event
 func (service *Webhook) QueryByEvent(session data.Session, event string) ([]model.Webhook, error) {
 	return service.Query(session, exp.Equal("events", event))
 }

@@ -7,10 +7,13 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// Giphy_APIKey is the vault key that this provider stores its Giphy credential under
 const Giphy_APIKey = "apiKey"
 
+// Giphy connects a Domain to the Giphy image-search integration
 type Giphy struct{}
 
+// NewGiphy returns a fully initialized Giphy provider
 func NewGiphy() Giphy {
 	return Giphy{}
 }
@@ -19,6 +22,7 @@ func NewGiphy() Giphy {
  * Setup / Configuration Methods
  ******************************************/
 
+// ManualConfig returns the form used to configure this Connection by hand. Implements the ManualProvider interface.
 func (adapter Giphy) ManualConfig() form.Form {
 
 	return form.Form{
@@ -58,6 +62,7 @@ func (adapter Giphy) ManualConfig() form.Form {
  * Lifecycle Methods
  ******************************************/
 
+// BeforeSave applies any last-minute changes to this Connection before it is written to the database
 func (adapter Giphy) BeforeSave(connection *model.Connection, vault mapof.String) error {
 	return nil
 }

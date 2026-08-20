@@ -46,10 +46,12 @@ func (service *SearchTag) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the SearchTag collection for the provided database session
 func (service *SearchTag) collection(session data.Session) data.Collection {
 	return session.Collection("SearchTag")
 }
 
+// Count returns the number of SearchTag records that match the provided criteria
 func (service *SearchTag) Count(session data.Session, criteria exp.Expression) (int64, error) {
 	return service.collection(session).Count(notDeleted(criteria))
 }
@@ -146,6 +148,7 @@ func (service *SearchTag) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided SearchTag. Implements the ModelService interface.
 func (service *SearchTag) ObjectID(object data.Object) primitive.ObjectID {
 
 	if mention, ok := object.(*model.SearchTag); ok {
@@ -155,16 +158,19 @@ func (service *SearchTag) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every SearchTag that matches the provided criteria. Implements the ModelService interface.
 func (service *SearchTag) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single SearchTag as a data.Object. Implements the ModelService interface.
 func (service *SearchTag) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewSearchTag()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a SearchTag in the database. Implements the ModelService interface.
 func (service *SearchTag) ObjectSave(session data.Session, object data.Object, comment string) error {
 	if searchTag, ok := object.(*model.SearchTag); ok {
 		return service.Save(session, searchTag, comment)
@@ -172,6 +178,7 @@ func (service *SearchTag) ObjectSave(session data.Session, object data.Object, c
 	return derp.Internal("service.SearchTag.ObjectSave", "Invalid Object Type", object)
 }
 
+// ObjectDelete marks a SearchTag as deleted. Implements the ModelService interface.
 func (service *SearchTag) ObjectDelete(session data.Session, object data.Object, comment string) error {
 	if searchTag, ok := object.(*model.SearchTag); ok {
 		return service.Delete(session, searchTag, comment)
@@ -179,10 +186,12 @@ func (service *SearchTag) ObjectDelete(session data.Session, object data.Object,
 	return derp.Internal("service.SearchTag.ObjectDelete", "Invalid Object Type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a SearchTag. Implements the ModelService interface.
 func (service *SearchTag) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.SearchTag", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a SearchTag
 func (service *SearchTag) Schema() schema.Schema {
 	return schema.New(model.SearchTagSchema())
 }
@@ -191,11 +200,13 @@ func (service *SearchTag) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+// LoadByID retrieves a single SearchTag using its unique ID
 func (service *SearchTag) LoadByID(session data.Session, searchTagID primitive.ObjectID, searchTag *model.SearchTag) error {
 	criteria := exp.Equal("_id", searchTagID)
 	return service.Load(session, criteria, searchTag)
 }
 
+// LoadByValue retrieves a SearchTag using its display value, ignoring case
 func (service *SearchTag) LoadByValue(session data.Session, value string, searchTag *model.SearchTag) error {
 	criteria := exp.Equal("value", model.ToToken(value))
 	return service.LoadWithOptions(session, criteria, searchTag, option.CaseSensitive(false))

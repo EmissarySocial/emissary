@@ -332,6 +332,7 @@ func (service *Permission) ParseHTTPSignature(session data.Session, request *htt
 	return result
 }
 
+// getSignature verifies and returns the HTTP signature on an inbound request
 func (service *Permission) getSignature(request *http.Request) (sigs.Signature, error) {
 
 	const location = "service.Permission.getSignature"

@@ -358,6 +358,7 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 	return result, nil
 }
 
+// looksLikeValidURI returns TRUE if the provided value is a URI that this server knows how to fetch
 func (service *ActivityStream) looksLikeValidURI(uri string) bool {
 
 	if sherlock.IsValidAddress(uri) {

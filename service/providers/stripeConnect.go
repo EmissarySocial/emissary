@@ -11,8 +11,10 @@ import (
 	"github.com/benpate/uri"
 )
 
+// StripeConnect connects a Domain to the Stripe Connect payment integration, which processes payments on behalf of a merchant
 type StripeConnect struct{}
 
+// NewStripeConnect returns a fully initialized StripeConnect provider
 func NewStripeConnect() StripeConnect {
 	return StripeConnect{}
 }
@@ -21,6 +23,7 @@ func NewStripeConnect() StripeConnect {
  * Setup / Configuration Methods
  ******************************************/
 
+// ManualConfig returns the form used to configure this Connection by hand. Implements the ManualProvider interface.
 func (adapter StripeConnect) ManualConfig() form.Form {
 
 	return form.Form{
@@ -114,6 +117,7 @@ func (adapter StripeConnect) ManualConfig() form.Form {
  * Lifecycle Methods
  ******************************************/
 
+// BeforeSave applies any last-minute changes to this Connection before it is written to the database
 func (adapter StripeConnect) BeforeSave(connection *model.Connection, vault mapof.String) error {
 	return nil
 }

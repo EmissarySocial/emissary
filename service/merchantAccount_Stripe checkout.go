@@ -183,6 +183,7 @@ func (service *MerchantAccount) stripe_getPrivilegeFromCheckoutResponse(session 
 	return privilege, nil
 }
 
+// stripe_CancelPrivilege cancels a purchased Privilege through the Stripe API
 func (service *MerchantAccount) stripe_CancelPrivilege(merchantAccount *model.MerchantAccount, privilege *model.Privilege) error {
 
 	const location = "service.MerchantAccount.stripe_CancelPrivilege"

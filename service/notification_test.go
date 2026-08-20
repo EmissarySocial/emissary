@@ -19,51 +19,66 @@ import (
  * purgeStore -- an in-memory data.Collection that records HardDelete's criteria.
  ******************************************/
 
+// purgeStore is an in-memory data.Collection that records the criteria HardDelete was called with
 type purgeStore struct {
 	criteria exp.Expression
 	called   bool
 	err      error
 }
 
+// Context implements the interface, returning a background context
 func (c *purgeStore) Context() context.Context { return context.Background() }
 
+// Count implements the data.Collection interface. Unused by these tests.
 func (c *purgeStore) Count(exp.Expression, ...option.Option) (int64, error) {
 	return 0, derp.Internal("test", "unused")
 }
 
+// Query implements the data.Collection interface. Unused by these tests.
 func (c *purgeStore) Query(any, exp.Expression, ...option.Option) error {
 	return derp.Internal("test", "unused")
 }
 
+// Iterator implements the data.Collection interface. Unused by these tests.
 func (c *purgeStore) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
 	return nil, derp.Internal("test", "unused")
 }
 
+// Load implements the data.Collection interface. Unused by these tests.
 func (c *purgeStore) Load(exp.Expression, data.Object, ...option.Option) error {
 	return derp.Internal("test", "unused")
 }
 
+// Save implements the data.Collection interface. Unused by these tests.
 func (c *purgeStore) Save(data.Object, string) error {
 	return derp.Internal("test", "unused")
 }
 
+// Delete implements the data.Collection interface. Unused by these tests.
 func (c *purgeStore) Delete(data.Object, string) error {
 	return derp.Internal("test", "unused")
 }
 
+// HardDelete implements the data.Collection interface. Unused by these tests.
 func (c *purgeStore) HardDelete(criteria exp.Expression) error {
 	c.called = true
 	c.criteria = criteria
 	return c.err
 }
 
+// purgeSession is a data.Session that hands out a single purgeStore
 type purgeSession struct {
 	store data.Collection
 }
 
+// Collection implements the data.Session interface, returning this stub's single collection
 func (s purgeSession) Collection(string) data.Collection { return s.store }
-func (s purgeSession) Context() context.Context          { return context.Background() }
-func (s purgeSession) Close()                            {}
+
+// Context implements the interface, returning a background context
+func (s purgeSession) Context() context.Context { return context.Background() }
+
+// Close implements the interface. The stub holds no resources to release.
+func (s purgeSession) Close() {}
 
 // predicatesOf flattens every Predicate in an Expression into a slice.  The MatcherFunc returns
 // TRUE so the walk visits the whole tree -- AndExpression.Match short-circuits on FALSE.

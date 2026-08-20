@@ -20,6 +20,7 @@ type suppressionStore struct {
 	records []model.RuleSuppression
 }
 
+// Load implements the data.Collection interface, backed by this stub's in-memory records
 func (s *suppressionStore) Load(_ exp.Expression, target data.Object, _ ...option.Option) error {
 
 	if len(s.records) == 0 {
@@ -30,6 +31,7 @@ func (s *suppressionStore) Load(_ exp.Expression, target data.Object, _ ...optio
 	return nil
 }
 
+// Save implements the data.Collection interface, backed by this stub's in-memory records
 func (s *suppressionStore) Save(object data.Object, _ string) error {
 	s.records = append(s.records, *(object.(*model.RuleSuppression)))
 	return nil

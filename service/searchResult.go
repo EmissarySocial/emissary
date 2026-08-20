@@ -53,10 +53,12 @@ func (service *SearchResult) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the SearchResult collection for the provided database session
 func (service *SearchResult) collection(session data.Session) data.Collection {
 	return session.Collection("SearchResult")
 }
 
+// Count returns the number of SearchResult records that match the provided criteria
 func (service *SearchResult) Count(session data.Session, criteria exp.Expression) (int64, error) {
 	return service.collection(session).Count(criteria)
 }

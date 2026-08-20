@@ -12,10 +12,12 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 )
 
+// Geoapify geocodes addresses, networks, and timezones using the Geoapify API
 type Geoapify struct {
 	apiKey string
 }
 
+// NewGeoapify returns a Geoapify geocoder
 func NewGeoapify(apiKey string) Geoapify {
 
 	return Geoapify{
@@ -23,6 +25,7 @@ func NewGeoapify(apiKey string) Geoapify {
 	}
 }
 
+// GeocodeAddress resolves a free-text address into a geo.Address. Implements the AddressGeocoder interface.
 func (geocoder Geoapify) GeocodeAddress(address string) (geo.Address, error) {
 
 	const location = "service.geocoder.Geoapify.GeocodeNetwork"
@@ -48,6 +51,7 @@ func (geocoder Geoapify) GeocodeAddress(address string) (geo.Address, error) {
 	return result, nil
 }
 
+// GeocodeTimezone fills in the timezone of the provided address. Implements the TimezoneGeocoder interface.
 func (geocoder Geoapify) GeocodeTimezone(address *geo.Address) error {
 
 	const location = "service.geocoder.Geoapify.GeocodeTimezone"
@@ -62,6 +66,7 @@ func (geocoder Geoapify) GeocodeTimezone(address *geo.Address) error {
 	return nil
 }
 
+// GeocodeNetwork resolves an IP address into approximate coordinates. Implements the NetworkGeocoder interface.
 func (geocoder Geoapify) GeocodeNetwork(ip string) (point geo.Point, err error) {
 
 	// Request IP address location from Geoapify
@@ -84,6 +89,7 @@ func (geocoder Geoapify) GeocodeNetwork(ip string) (point geo.Point, err error) 
 	return geo.NewPoint(longitude, latitude), nil
 }
 
+// AutocompleteAddress returns address suggestions for a partial query, biased toward the provided point. Implements the AddressAutocompleter interface.
 func (geocoder Geoapify) AutocompleteAddress(query string, bias geo.Point) (sliceof.Object[geo.Address], error) {
 
 	const location = "service.geocoder.Geoapify.AutocompleteAddress"
@@ -109,6 +115,7 @@ func (geocoder Geoapify) AutocompleteAddress(query string, bias geo.Point) (slic
 	return result, nil
 }
 
+// mapGeoapifyAddress converts one Geoapify API result into a geo.Address
 func mapGeoapifyAddress(feature mapof.Any) geo.Address {
 
 	properties := feature.GetMap("properties")

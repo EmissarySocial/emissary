@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestOpenStreetMap verifies that the OpenStreetMap geocoder resolves a known address
 func TestOpenStreetMap(t *testing.T) {
 
 	coder := openstreetmap.Geocoder()

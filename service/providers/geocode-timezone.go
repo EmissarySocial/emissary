@@ -7,8 +7,10 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// GeocodeTimezone connects a Domain to the service that resolves an address into its timezone
 type GeocodeTimezone struct{}
 
+// NewGeocodeTimezone returns a fully initialized GeocodeTimezone provider
 func NewGeocodeTimezone() GeocodeTimezone {
 	return GeocodeTimezone{}
 }
@@ -17,6 +19,7 @@ func NewGeocodeTimezone() GeocodeTimezone {
  * Setup / Configuration Methods
  ******************************************/
 
+// ManualConfig returns the form used to configure this Connection by hand. Implements the ManualProvider interface.
 func (adapter GeocodeTimezone) ManualConfig() form.Form {
 
 	return form.Form{
@@ -94,6 +97,7 @@ func (adapter GeocodeTimezone) ManualConfig() form.Form {
  * Lifecycle Methods
  ******************************************/
 
+// BeforeSave applies any last-minute changes to this Connection before it is written to the database
 func (adapter GeocodeTimezone) BeforeSave(connection *model.Connection, vault mapof.String) error {
 	return nil
 }

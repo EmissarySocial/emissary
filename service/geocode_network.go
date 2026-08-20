@@ -10,12 +10,14 @@ import (
 	"github.com/benpate/turbine/queue"
 )
 
+// GeocodeNetwork resolves IP addresses into approximate coordinates, using this Domain's configured provider
 type GeocodeNetwork struct {
 	connectionService *Connection
 	queue             *queue.Queue
 	hostname          string
 }
 
+// NewGeocodeNetwork returns a fully initialized GeocodeNetwork service
 func NewGeocodeNetwork(connectionService *Connection, queue *queue.Queue, hostname string) GeocodeNetwork {
 	return GeocodeNetwork{
 		connectionService: connectionService,
@@ -24,6 +26,7 @@ func NewGeocodeNetwork(connectionService *Connection, queue *queue.Queue, hostna
 	}
 }
 
+// Geocode returns the approximate coordinates of the provided IP address
 func (service GeocodeNetwork) Geocode(session data.Session, ipAddress string) (geo.Point, error) {
 
 	const location = "service.GeocodeNetwork.Geocode"

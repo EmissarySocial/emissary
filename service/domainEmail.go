@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/uri"
 )
 
+// DomainEmail sends the transactional emails that a single Domain generates
 type DomainEmail struct {
 	serverEmail   *ServerEmail
 	domainService *Domain
@@ -20,6 +21,7 @@ type DomainEmail struct {
 	newSteranko   func(session data.Session) *steranko.Steranko
 }
 
+// NewDomainEmail returns an empty DomainEmail service, which Refresh populates
 func NewDomainEmail() DomainEmail {
 	return DomainEmail{}
 }
@@ -28,6 +30,7 @@ func NewDomainEmail() DomainEmail {
  * Lifecycle Methods
  ******************************************/
 
+// Refresh updates this service with the latest configuration values
 func (service *DomainEmail) Refresh(factory *Factory) {
 	service.serverEmail = factory.ServerEmail()
 	service.domainService = factory.Domain()
@@ -236,6 +239,7 @@ func (service *DomainEmail) SendGuestCode(identifier string, token string) error
 	return nil
 }
 
+// SendFollowerConfirmation emails a new Follower the link that confirms their subscription
 func (service *DomainEmail) SendFollowerConfirmation(actor model.PersonLink, follower *model.Follower) error {
 
 	const location = "service.DomainEmail.SendFollowerConfirmation"
@@ -273,6 +277,7 @@ func (service *DomainEmail) SendFollowerConfirmation(actor model.PersonLink, fol
 	return nil
 }
 
+// SendFollowerActivity emails an activity to a Follower who subscribed by email
 func (service *DomainEmail) SendFollowerActivity(follower *model.Follower, activity mapof.Any) error {
 
 	const location = "service.DomainEmail.SendFollowerActivity"
@@ -315,6 +320,7 @@ func (service *DomainEmail) SendFollowerActivity(follower *model.Follower, activ
 	return nil
 }
 
+// host returns this Domain's hostname, with its protocol prefix
 func (service *DomainEmail) host() string {
 	return uri.PrependProtocol(service.hostname)
 }

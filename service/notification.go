@@ -56,6 +56,7 @@ func (service *Notification) Close() {
  * Common Data Methods
  ******************************************/
 
+// collection returns the Notification collection for the provided database session
 func (service *Notification) collection(session data.Session) data.Collection {
 	return session.Collection("Notification")
 }
@@ -145,6 +146,7 @@ func (service *Notification) ObjectNew() data.Object {
 	return &result
 }
 
+// ObjectID returns the unique ID of the provided Notification. Implements the ModelService interface.
 func (service *Notification) ObjectID(object data.Object) primitive.ObjectID {
 
 	if notification, ok := object.(*model.Notification); ok {
@@ -154,16 +156,19 @@ func (service *Notification) ObjectID(object data.Object) primitive.ObjectID {
 	return primitive.NilObjectID
 }
 
+// ObjectQuery returns every Notification that matches the provided criteria. Implements the ModelService interface.
 func (service *Notification) ObjectQuery(session data.Session, result any, criteria exp.Expression, options ...option.Option) error {
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
+// ObjectLoad retrieves a single Notification as a data.Object. Implements the ModelService interface.
 func (service *Notification) ObjectLoad(session data.Session, criteria exp.Expression) (data.Object, error) {
 	result := model.NewNotification()
 	err := service.Load(session, criteria, &result)
 	return &result, err
 }
 
+// ObjectSave adds or updates a Notification in the database. Implements the ModelService interface.
 func (service *Notification) ObjectSave(session data.Session, object data.Object, note string) error {
 	if notification, ok := object.(*model.Notification); ok {
 		return service.Save(session, notification, note)
@@ -171,6 +176,7 @@ func (service *Notification) ObjectSave(session data.Session, object data.Object
 	return derp.Internal("service.Notification.ObjectSave", "Invalid Object Type", object)
 }
 
+// ObjectDelete marks a Notification as deleted. Implements the ModelService interface.
 func (service *Notification) ObjectDelete(session data.Session, object data.Object, note string) error {
 	if notification, ok := object.(*model.Notification); ok {
 		return service.Delete(session, notification, note)
@@ -178,10 +184,12 @@ func (service *Notification) ObjectDelete(session data.Session, object data.Obje
 	return derp.Internal("service.Notification.ObjectDelete", "Invalid Object Type", object)
 }
 
+// ObjectUserCan reports whether the provided Authorization may run an action on a Notification. Implements the ModelService interface.
 func (service *Notification) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Notification", "Not Authorized")
 }
 
+// Schema returns the rosetta schema that describes a Notification
 func (service *Notification) Schema() schema.Schema {
 	return schema.New(model.NotificationSchema())
 }

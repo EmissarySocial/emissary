@@ -66,6 +66,7 @@ func NewTemplate(filesystemService Filesystem, registrationService *Registration
  * Lifecycle Methods
  ******************************************/
 
+// Refresh updates this service with the latest configuration values
 func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
 
 	// Reset the "Refresh" channel
@@ -259,6 +260,7 @@ func (service *Template) loadTemplates(haltOnError bool) error {
 	return nil
 }
 
+// maybeHalt reports an error, and exits the process if the caller asked it to be fatal
 func maybeHalt(err error, halt bool) {
 	derp.Report(err)
 
@@ -267,6 +269,7 @@ func maybeHalt(err error, halt bool) {
 	}
 }
 
+// Add parses a template definition and registers it under the provided templateID
 func (service *Template) Add(templateID string, filesystem fs.FS, definition []byte) error {
 
 	const location = "service.template.Add"
@@ -309,6 +312,7 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 	return nil
 }
 
+// validateTemplates checks every registered Template against the model registry, and collects the problems it finds
 func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 
 	log.Debug().Msg("Template Service: Validating templates...")
@@ -619,6 +623,7 @@ func (service *Template) calculateAccessLists() error {
  * Common Data Methods
  ******************************************/
 
+// Names returns the ID of every registered Template, sorted
 func (service *Template) Names() []string {
 
 	result := rosettamaps.Keys(service.templates)
@@ -724,6 +729,7 @@ func (service *Template) ListByContainerLimited(containedByRole string, limitRol
  * Admin Templates
  ******************************************/
 
+// LoadAdmin retrieves an admin Template, which is stored under an "admin-" prefix
 func (service *Template) LoadAdmin(templateID string) (model.Template, error) {
 
 	const location = "service.Template.LoadAdmin"

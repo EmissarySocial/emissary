@@ -83,6 +83,7 @@ func (service *Widget) Get(widgetID string) (model.Widget, bool) {
 	return result, ok
 }
 
+// List returns an iterator over the Widget records that match the provided criteria
 func (service *Widget) List() []form.LookupCode {
 
 	service.mutex.RLock()
@@ -104,6 +105,7 @@ func (service *Widget) List() []form.LookupCode {
 	return result
 }
 
+// IsValidWidgetType returns TRUE if the provided widget type has been registered
 func (service *Widget) IsValidWidgetType(widgetType string) bool {
 	_, ok := service.widgets[widgetType]
 	return ok

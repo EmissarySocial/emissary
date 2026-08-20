@@ -25,6 +25,7 @@ type JWT struct {
 	hasCache bool                        // Flag to indicate if the cache is enabled
 }
 
+// NewJWT returns an empty JWT service, which Refresh populates
 func NewJWT() JWT {
 	return JWT{}
 }
@@ -33,6 +34,7 @@ func NewJWT() JWT {
  * Lifecycle Methods
  ******************************************/
 
+// Refresh updates this service with the latest configuration values
 func (service *JWT) Refresh(server data.Server) {
 
 	service.server = server
@@ -49,6 +51,7 @@ func (service *JWT) Refresh(server data.Server) {
 	}
 }
 
+// Close stops any background processes controlled by this service
 func (service *JWT) Close() {
 	service.cache.Close()
 }
@@ -110,6 +113,7 @@ func (service *JWT) Parse(request *http.Request) (*jwt.Token, error) {
 	return service.ParseString(authorization)
 }
 
+// ParseString parses and verifies a JWT from its encoded string form
 func (service *JWT) ParseString(tokenString string) (*jwt.Token, error) {
 
 	const location = "service.JWT.ParseString"
@@ -135,6 +139,7 @@ func (service *JWT) ParseString(tokenString string) (*jwt.Token, error) {
  * Database Methods
  ******************************************/
 
+// collection returns the JWT collection for the provided database session
 func (service *JWT) collection(ctx context.Context) (data.Collection, error) {
 
 	const location = "service.JWT.collection"
@@ -266,6 +271,7 @@ func (service *JWT) load(keyName string) ([]byte, error) {
  * Encryption Methods
  ******************************************/
 
+// NewToken signs the provided claims into an encoded JWT, using the current signing key
 func (service *JWT) NewToken(claims jwt.Claims) (string, error) {
 
 	const location = "service.JWT.NewToken"
@@ -292,6 +298,7 @@ func (service *JWT) NewToken(claims jwt.Claims) (string, error) {
 	return result, nil
 }
 
+// ParseToken parses and verifies a JWT, unmarshalling it into the provided claims
 func (service *JWT) ParseToken(tokenString string, claims jwt.Claims) error {
 
 	const location = "service.JWT.ParseToken"
