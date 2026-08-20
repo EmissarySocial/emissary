@@ -477,6 +477,11 @@ func groupLookupCodes(lookupCodes []form.LookupCode) sliceof.Object[sliceof.Obje
 }
 
 // oEmbedURL returns the URL of this domain's oEmbed endpoint, describing the provided permalink
+//
+// TODO: (oembed/TODO.md Phase 9.5) Re-evaluate when the oEmbed rework lands: the
+// discovery-link primitives should replace this hand-built URL. NOTE this helper is
+// LIVE despite having no in-repo callers — bandwagon and qwertylicious templates call
+// it through Stream.OEmbedJSON/OEmbedXML, so its URL shape may not change casually.
 func oEmbedURL(host string, permalink string, format string) string {
 
 	// The permalink is escaped because it is a VALUE inside this URL's query string.  Raw

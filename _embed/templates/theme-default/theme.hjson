@@ -33,10 +33,10 @@
 	}
 	startupTasks: [
 		{label:"Website Name and Logo", description:"Set some basic info about this domain.", href:"/admin/domain/index", value:"/admin/domain"}
-		{label:"Add Default Content", description:"Sample content pages help you understand how Emissary works.", href:"/startup/content", value:"/startup/content"}
 		{label:"Blocklist Rules", description:"Create rules to filter content from the Internet.", href:"/admin/rules", value:"/admin/rules"}
 		{label:"Registration Form (Optional)", description:"Enable users to register on this website.", href:"/admin/domain/signup", value:"/admin/domain/signup"}
 		{label:"Configure Groups (Optional)", description:"Set up user groups to manage access and permissions.", href:"/admin/groups", value:"/admin/groups"}
+		{label:"Add Default Content", description:"Sample content pages help you understand how Emissary works.", href:"/startup/content", value:"/startup/content"}
 	]
 	startupStreams: [
 		{templateId:"article-editorjs", token:"home", label:"Welcome!", rank:1}

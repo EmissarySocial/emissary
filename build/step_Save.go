@@ -39,6 +39,11 @@ func (step StepSave) do(builder Builder, buffer io.Writer, actionMethod ActionMe
 
 	const location = "build.StepSave.Post"
 
+	// Let each Widget derive its stored values before the object is written
+	if err := executeWidgetSaveSteps(builder, buffer, actionMethod); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Executing widget save pipelines"))
+	}
+
 	modelService := builder.service()
 	object := builder.object()
 	comment := executeTemplate(step.Comment, builder)

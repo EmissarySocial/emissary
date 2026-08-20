@@ -1,21 +1,14 @@
 package service
 
 import (
-	"bytes"
 	"regexp"
 
 	"github.com/EmissarySocial/emissary/model"
 	blocks "github.com/EmissarySocial/emissary/tools/editorjs-blocks"
+	"github.com/EmissarySocial/emissary/tools/markdown"
 	"github.com/EmissarySocial/emissary/tools/replace"
 	"github.com/benpate/derp"
 	"github.com/davidscottmills/goeditorjs"
-	"github.com/microcosm-cc/bluemonday"
-	"github.com/yuin/goldmark"
-	highlighting "github.com/yuin/goldmark-highlighting/v2"
-	"github.com/yuin/goldmark/extension"
-	"github.com/yuin/goldmark/parser"
-	"github.com/yuin/goldmark/renderer/html"
-	"go.abhg.dev/goldmark/anchor"
 )
 
 type Content struct {
@@ -66,64 +59,16 @@ func (service *Content) Format(content *model.Content) {
 
 	case model.ContentFormatMarkdown:
 
-		// TODO: Enable markdown plugins (tables, etc)
-		// https://github.com/yuin/goldmark#built-in-extensions
-		var buffer bytes.Buffer
-
-		// This extension adds anchor tags next to all headers
-		anchorExtension := &anchor.Extender{
-			Texter: anchor.Text(` `),
-			Attributer: anchor.Attributes{
-				"class": "bi bi-link header-hover-show",
-			},
-		}
-
-		md := goldmark.New(
-			goldmark.WithParserOptions(
-				parser.WithAutoHeadingID(),
-			),
-			goldmark.WithExtensions(
-				extension.Table,
-				extension.Linkify,
-				extension.Typographer,
-				extension.DefinitionList,
-				anchorExtension,
-				highlighting.NewHighlighting(
-					highlighting.WithStyle("github"),
-				),
-			),
-			goldmark.WithRendererOptions(
-				html.WithUnsafe(),
-			),
-		)
-
-		if err := md.Convert([]byte(content.Raw), &buffer); err != nil {
-			derp.Report(derp.Wrap(err, location, "Converting Markdown to HTML"))
-		}
-
-		content.HTML = buffer.String()
+		// ToHTML sanitizes its own output, but the shared Sanitize below is
+		// harmless (and required for the other formats), so it runs regardless.
+		content.HTML = markdown.ToHTML(content.Raw)
 
 	default:
 		content.HTML = ""
 	}
 
 	// Sanitize all HTML, no matter what source format
-	policy := bluemonday.UGCPolicy()
-	policy.AllowStyling()
-
-	policy.AllowElements("iframe")
-	policy.AllowAttrs("src").OnElements("img")
-	policy.AllowAttrs("alt").OnElements("img")
-
-	policy.AllowElements("img")
-	policy.AllowAttrs("width").Matching(bluemonday.NumberOrPercent).OnElements("iframe")
-	policy.AllowAttrs("height").Matching(bluemonday.NumberOrPercent).OnElements("iframe")
-	policy.AllowAttrs("src").OnElements("iframe")
-	policy.AllowAttrs("frameborder").Matching(bluemonday.Number).OnElements("iframe")
-	policy.AllowAttrs("allow").Matching(regexp.MustCompile(`[a-z; -]*`)).OnElements("iframe")
-	policy.AllowAttrs("allowfullscreen").OnElements("iframe")
-
-	content.HTML = policy.Sanitize(content.HTML)
+	content.HTML = markdown.Sanitize(content.HTML)
 }
 
 func (service *Content) NewByExtension(extension string, raw string) model.Content {

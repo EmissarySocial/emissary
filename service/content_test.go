@@ -1,6 +1,8 @@
 package service
 
 import (
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -88,4 +90,61 @@ func TestContent_ApplyTags_EscapesHostileTag(t *testing.T) {
 	// The tag must appear URL-escaped in the href and HTML-escaped in the label
 	require.Contains(t, content.HTML, `%3Cimg`)
 	require.Contains(t, content.HTML, `&lt;img`)
+}
+
+// contentEventHandler matches an on* event handler inside a real HTML tag.
+var contentEventHandler = regexp.MustCompile(`(?is)<[^>]*[\s/]on[a-z]+\s*=`)
+
+// contentScriptURL matches a javascript: scheme used as a URL inside a real HTML tag.
+var contentScriptURL = regexp.MustCompile(`(?is)<[^>]*=\s*["']?\s*javascript:`)
+
+// TestContent_Format_SanitizesEveryFormat confirms that Content.Format emits no executable
+// markup, whichever source format it was given.  Markdown is converted by the shared
+// converter (which sanitizes), and every format is sanitized again on the way out, so no
+// source format is a path for injected script.
+func TestContent_Format_SanitizesEveryFormat(t *testing.T) {
+
+	service := &Content{}
+
+	hostile := []string{
+		"<script>alert(1)</script>",
+		"# Title\n\n<script>alert(1)</script>",
+		"<img src=x onerror=alert(1)>",
+		"[link](javascript:alert(1))",
+		"<a href=\"javascript:alert(1)\">click</a>",
+		"<iframe src=\"javascript:alert(1)\"></iframe>",
+		"<div onclick=\"alert(1)\">x</div>",
+	}
+
+	for _, format := range []string{model.ContentFormatMarkdown, model.ContentFormatHTML} {
+		for _, raw := range hostile {
+
+			content := service.New(format, raw)
+
+			require.NotContains(t, strings.ToLower(content.HTML), "<script", "format %s, raw %q", format, raw)
+			require.NotRegexp(t, contentEventHandler, content.HTML, "format %s, raw %q", format, raw)
+			require.NotRegexp(t, contentScriptURL, content.HTML, "format %s, raw %q", format, raw)
+		}
+	}
+}
+
+// TestContent_Format_MarkdownStillRenders confirms that sanitizing does not defeat the
+// conversion itself -- safe Markdown must still produce real markup.
+func TestContent_Format_MarkdownStillRenders(t *testing.T) {
+
+	service := &Content{}
+	content := service.New(model.ContentFormatMarkdown, "# Title\n\n**bold**")
+
+	require.Contains(t, content.HTML, "<h1")
+	require.Contains(t, content.HTML, "<strong>bold</strong>")
+}
+
+// TestContent_Format_UnknownFormatIsEmpty confirms that an unrecognized format yields no
+// HTML at all, rather than passing the raw source through unconverted.
+func TestContent_Format_UnknownFormatIsEmpty(t *testing.T) {
+
+	service := &Content{}
+	content := service.New("NOT-A-FORMAT", "<script>alert(1)</script>")
+
+	require.Equal(t, "", content.HTML)
 }

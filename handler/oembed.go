@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"encoding/xml"
-	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -11,15 +9,10 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/oembed"
 	"github.com/benpate/steranko"
 	"github.com/benpate/uri"
 )
-
-// oEmbedVersion is the version of the oEmbed specification that these documents conform to
-const oEmbedVersion = "1.0"
-
-// oEmbedTypeLink is the oEmbed document type used for records that have no embeddable player
-const oEmbedTypeLink = "link"
 
 // oEmbedCacheAge is the number of seconds that consumers should cache an oEmbed document
 const oEmbedCacheAge = 86400
@@ -27,25 +20,17 @@ const oEmbedCacheAge = 86400
 // oEmbedThumbnailSize is the height and width (in pixels) of the thumbnail images we advertise
 const oEmbedThumbnailSize = 300
 
-// oEmbedResponse is the response document defined by the oEmbed specification (https://oembed.com)
-type oEmbedResponse struct {
-
-	// This MUST remain a struct, not a map.  encoding/xml cannot marshal a map at all, so
-	// a map-based document makes every "format=xml" request fail before it writes a byte.
-
-	XMLName         xml.Name `json:"-"                          xml:"oembed"`
-	Version         string   `json:"version"                    xml:"version"`
-	Type            string   `json:"type"                       xml:"type"`
-	Title           string   `json:"title,omitempty"            xml:"title,omitempty"`
-	CacheAge        int      `json:"cache_age"                  xml:"cache_age"`
-	ProviderName    string   `json:"provider_name"              xml:"provider_name"`
-	ProviderURL     string   `json:"provider_url"               xml:"provider_url"`
-	ThumbnailURL    string   `json:"thumbnail_url,omitempty"    xml:"thumbnail_url,omitempty"`
-	ThumbnailHeight int      `json:"thumbnail_height,omitempty" xml:"thumbnail_height,omitempty"`
-	ThumbnailWidth  int      `json:"thumbnail_width,omitempty"  xml:"thumbnail_width,omitempty"`
-}
-
 // GetOEmbed will provide an OEmbed service to be used exclusively by websites on this domain.
+//
+// benpate/oembed owns the spec mechanics -- valid-by-construction documents, validation,
+// and encoding -- while record resolution and access control stay here.  Request parsing
+// also stays here: the library is a consumer library on that half, so its ParseRequest was
+// cut deliberately and is not coming back.
+//
+// TODO: (oembed/TODO.md Phase 9.6) "maxwidth"/"maxheight" are still ignored; every document
+// we serve is a "link" with a fixed 300px thumbnail.  This route is LIVE (bandwagon and
+// qwertylicious templates advertise it via discovery links) and may not move without a
+// compat alias.
 func GetOEmbed(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.GetOEmbed"
@@ -55,9 +40,11 @@ func GetOEmbed(ctx *steranko.Context, factory *service.Factory, session data.Ses
 
 	// RULE: The spec requires "501 Not Implemented" when a consumer demands a format we
 	// cannot produce.  An empty value means "no preference" and is answered with JSON.
+	// oembed.WriteResponse refuses the same set, so this guard is here to fail fast --
+	// before spending a database lookup on a request we will never answer.
 	switch format {
 
-	case "", "json", "xml":
+	case "", oembed.FormatJSON, oembed.FormatXML:
 		// These are the formats we serve
 
 	default:
@@ -85,16 +72,18 @@ func GetOEmbed(ctx *steranko.Context, factory *service.Factory, session data.Ses
 		return derp.Wrap(err, location, "Loading OEmbed record", token)
 	}
 
-	// Serve the document in the requested format
-	if format == "xml" {
-		return ctx.XML(http.StatusOK, result)
+	// Serve the document in the requested format.  WriteResponse validates the document
+	// before it writes anything, so we can never publish a spec-invalid document.
+	if err := oembed.WriteResponse(ctx.Response(), result, format); err != nil {
+		return derp.Wrap(err, location, "Writing oEmbed response", token)
 	}
 
-	return ctx.JSON(http.StatusOK, result)
+	// Embed, and let embed.
+	return nil
 }
 
 // getOEmbed_record builds the oEmbed document that describes a single path on this domain
-func getOEmbed_record(factory *service.Factory, session data.Session, path string) (oEmbedResponse, error) {
+func getOEmbed_record(factory *service.Factory, session data.Session, path string) (oembed.Response, error) {
 
 	token := oEmbedToken(path)
 
@@ -113,13 +102,13 @@ func getOEmbed_record(factory *service.Factory, session data.Session, path strin
 }
 
 // getOEmbed_Domain builds the oEmbed document that describes this domain's home page
-func getOEmbed_Domain(factory *service.Factory) oEmbedResponse {
+func getOEmbed_Domain(factory *service.Factory) oembed.Response {
 	domain := factory.Domain().Get()
 	return newOEmbedResponse(factory, domain.Label)
 }
 
 // getOEmbed_Stream builds the oEmbed document that describes a single Stream
-func getOEmbed_Stream(factory *service.Factory, session data.Session, token string) (oEmbedResponse, error) {
+func getOEmbed_Stream(factory *service.Factory, session data.Session, token string) (oembed.Response, error) {
 
 	const location = "handler.getOEmbed_Stream"
 
@@ -128,7 +117,7 @@ func getOEmbed_Stream(factory *service.Factory, session data.Session, token stri
 	stream := model.NewStream()
 
 	if err := streamService.LoadByToken(session, token, &stream); err != nil {
-		return oEmbedResponse{}, derp.Wrap(err, location, "Loading stream from database", token)
+		return oembed.Response{}, derp.Wrap(err, location, "Loading stream from database", token)
 	}
 
 	// RULE: Only expose oEmbed metadata for publicly-viewable Streams. oEmbed is
@@ -136,18 +125,18 @@ func getOEmbed_Stream(factory *service.Factory, session data.Session, token stri
 	// leak its Label or thumbnail here. Return NotFound (not Forbidden) so we don't
 	// confirm the token's existence.
 	if !stream.DefaultAllowAnonymous() {
-		return oEmbedResponse{}, derp.NotFound(location, "Stream not found", token)
+		return oembed.Response{}, derp.NotFound(location, "Stream not found", token)
 	}
 
 	// Describe the Stream
 	result := newOEmbedResponse(factory, stream.Label)
-	result.setThumbnail(factory.Hostname(), firstOf(stream.IconURL, stream.Data.GetString("bannerUrl")))
+	setOEmbedThumbnail(&result, factory.Hostname(), firstOf(stream.IconURL, stream.Data.GetString("bannerUrl")))
 
 	return result, nil
 }
 
 // getOEmbed_User builds the oEmbed document that describes a single User's profile
-func getOEmbed_User(factory *service.Factory, session data.Session, token string) (oEmbedResponse, error) {
+func getOEmbed_User(factory *service.Factory, session data.Session, token string) (oembed.Response, error) {
 
 	const location = "handler.getOEmbed_User"
 
@@ -156,7 +145,7 @@ func getOEmbed_User(factory *service.Factory, session data.Session, token string
 	user := model.NewUser()
 
 	if err := userService.LoadByToken(session, token, &user); err != nil {
-		return oEmbedResponse{}, derp.Wrap(err, location, "Loading user from database", token)
+		return oembed.Response{}, derp.Wrap(err, location, "Loading user from database", token)
 	}
 
 	// RULE: Only expose oEmbed metadata for public User profiles. oEmbed is consumed
@@ -164,30 +153,30 @@ func getOEmbed_User(factory *service.Factory, session data.Session, token string
 	// handle or avatar here. Return NotFound (not Forbidden) so we don't confirm the
 	// token's existence.
 	if !user.IsPublic {
-		return oEmbedResponse{}, derp.NotFound(location, "User not found", token)
+		return oembed.Response{}, derp.NotFound(location, "User not found", token)
 	}
 
 	// Describe the User
 	domain := factory.Domain().Get()
 	result := newOEmbedResponse(factory, "@"+user.Username+"@"+domain.Hostname)
-	result.setThumbnail(factory.Hostname(), user.ActivityPubIconURL())
+	setOEmbedThumbnail(&result, factory.Hostname(), user.ActivityPubIconURL())
 
 	return result, nil
 }
 
 // newOEmbedResponse returns an oEmbed document carrying the values that every record on this domain shares
-func newOEmbedResponse(factory *service.Factory, title string) oEmbedResponse {
+func newOEmbedResponse(factory *service.Factory, title string) oembed.Response {
 
 	domain := factory.Domain().Get()
 
-	return oEmbedResponse{
-		Version:      oEmbedVersion,
-		Type:         oEmbedTypeLink,
-		Title:        title,
-		CacheAge:     oEmbedCacheAge,
-		ProviderName: domain.Label,
-		ProviderURL:  domain.Host(),
-	}
+	// oembed.NewLink stamps the required version and type, so this document
+	// cannot be spec-invalid by construction.
+	result := oembed.NewLink(title)
+	result.CacheAge = oEmbedCacheAge
+	result.ProviderName = domain.Label
+	result.ProviderURL = domain.Host()
+
+	return result
 }
 
 // oEmbedToken reduces a URL path to the single token that identifies a record
@@ -201,8 +190,8 @@ func oEmbedToken(path string) string {
 	return token
 }
 
-// setThumbnail adds the thumbnail fields to an oEmbed document, when an icon is available
-func (response *oEmbedResponse) setThumbnail(hostname string, iconURL string) {
+// setOEmbedThumbnail adds the thumbnail fields to an oEmbed document, when an icon is available
+func setOEmbedThumbnail(response *oembed.Response, hostname string, iconURL string) {
 
 	// Records without an icon simply have no thumbnail
 	if iconURL == "" {
@@ -218,11 +207,10 @@ func (response *oEmbedResponse) setThumbnail(hostname string, iconURL string) {
 		iconURL += ".webp?height=" + size + "&width=" + size
 	}
 
-	// The spec requires dimensions alongside every thumbnail_url, so a remote icon
-	// reports the size we asked for rather than a size we measured.
-	response.ThumbnailURL = iconURL
-	response.ThumbnailHeight = oEmbedThumbnailSize
-	response.ThumbnailWidth = oEmbedThumbnailSize
+	// SetThumbnail stamps url, width, and height together, so the spec's all-or-none
+	// rule cannot be broken here.  A remote icon reports the size we asked for rather
+	// than a size we measured.
+	response.SetThumbnail(iconURL, oEmbedThumbnailSize, oEmbedThumbnailSize)
 }
 
 // isLocalMediaURL returns TRUE if a media URL can be resized by this domain's mediaserver

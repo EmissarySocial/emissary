@@ -1,16 +1,23 @@
 package model
 
 import (
+	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// StreamWidget is a single Widget placed into a Stream.  The embedded Journal
+// completes the data.Object interface, so that build pipelines can treat a
+// StreamWidget as a first-class object.  A StreamWidget is still saved only as
+// part of its containing Stream, never on its own.
 type StreamWidget struct {
 	StreamWidgetID primitive.ObjectID `bson:"streamWidgetId"`
 	Type           string             `bson:"type"`
 	Location       string             `bson:"location"`
 	Label          string             `bson:"label"`
 	Data           mapof.Any          `bson:"data"`
+
+	journal.Journal `json:"-" bson:",inline"`
 
 	// These values are not stored in the database, but injected during building
 	Stream *Stream `bson:"-"`

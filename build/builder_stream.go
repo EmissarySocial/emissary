@@ -457,7 +457,7 @@ func (w Stream) Widgets(location string) (template.HTML, error) {
 	buffer.WriteString(`<div id="widget-` + location + `" class="widgets ` + location + `">`)
 	for _, streamWidget := range list {
 		if widget, ok := widgetService.Get(streamWidget.Type); ok {
-			widgetBuilder := NewWidget(&w, streamWidget)
+			widgetBuilder := NewWidget(&w, &streamWidget)
 
 			if err := widget.HTMLTemplate.ExecuteTemplate(&buffer, "widget", widgetBuilder); err != nil {
 				derp.Report(derp.Wrap(err, "build.Stream.Widgets", "Executing widget template", widget))

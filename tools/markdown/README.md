@@ -1,0 +1,7 @@
+# Markdown
+
+This package is the single Markdown converter for Emissary. Every path that renders Markdown routes through it: Stream content via `service.Content.Format`, User profile summaries via `User.SummaryHTML`, Widget data via a Widget's `saveSteps` pipeline, and the `markdown` function available to every HTML template. Keeping one converter means Markdown behaves identically everywhere, and there is exactly one place to reason about what markup is allowed.
+
+`ToHTML` converts Markdown source into sanitized HTML, and `Sanitize` applies the same policy to HTML that did not come from Markdown. The Goldmark converter runs with `WithUnsafe`, so raw HTML embedded in Markdown reaches the renderer instead of being escaped — that is only safe because `ToHTML` always sanitizes afterwards with bluemonday, so never call the converter directly. The policy is bluemonday's `UGCPolicy` plus styling, images, and iframes (needed for embedded media in Stream content). Both the converter and the policy are built once at init and reused, since Goldmark and bluemonday are safe for concurrent use.
+
+To change what Markdown supports, add a Goldmark extension in `newConverter`; to change what markup survives, edit `newPolicy`. Either edit changes Markdown everywhere in the application, which is the point — resist adding a second converter or a private policy, because that is how sanitization rules drift apart and a weaker path becomes an XSS hole.
