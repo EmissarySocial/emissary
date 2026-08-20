@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+// RawUpdate applies a raw MongoDB update to every record matching the provided criteria
 func RawUpdate(ctx context.Context, collection data.Collection, criteria exp.Expression, update bson.M) error {
 
 	// Guarantee that we're using MongoDB

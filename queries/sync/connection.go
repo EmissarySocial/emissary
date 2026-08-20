@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// Connection synchronizes the MongoDB indexes for the Connection collection
 func Connection(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "Connection").Msg("COLLECTION:")

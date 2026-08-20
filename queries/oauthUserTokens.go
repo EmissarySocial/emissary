@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// OAuthUserTokens returns every active OAuth token belonging to the provided User, oldest first
 func OAuthUserTokens(session data.Session, userID primitive.ObjectID) (sliceof.MapOfAny, error) {
 
 	const location = "queries.OAuthUserToken"

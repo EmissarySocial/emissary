@@ -10,8 +10,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// ForEachFunc is called once per record, and returns TRUE if the record has been modified
 type ForEachFunc func(value mapof.Any) bool
 
+// ForEachRecord walks every record in a collection, writing back the ones that the callback modifies
 func ForEachRecord(collection *mongo.Collection, fn ForEachFunc) error {
 
 	const location = "queries.upgrades.ForEachRecord"

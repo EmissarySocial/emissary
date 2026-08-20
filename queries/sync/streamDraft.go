@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// StreamDraft synchronizes the MongoDB indexes for the StreamDraft collection
 func StreamDraft(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "StreamDraft").Msg("COLLECTION:")

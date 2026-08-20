@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// Folder synchronizes the MongoDB indexes for the Folder collection
 func Folder(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "Folder").Msg("COLLECTION:")

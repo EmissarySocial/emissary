@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// Stream synchronizes the MongoDB indexes for the Stream collection
 func Stream(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "Stream").Msg("COLLECTION:")

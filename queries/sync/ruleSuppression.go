@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// RuleSuppression synchronizes the MongoDB indexes for the RuleSuppression collection
 func RuleSuppression(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "RuleSuppression").Msg("COLLECTION:")

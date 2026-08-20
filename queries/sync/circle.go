@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// Circle synchronizes the MongoDB indexes for the Circle collection
 func Circle(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "Circle").Msg("COLLECTION:")

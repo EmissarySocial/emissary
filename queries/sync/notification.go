@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// Notification synchronizes the MongoDB indexes for the Notification collection
 func Notification(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "Notification").Msg("COLLECTION:")

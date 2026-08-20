@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// Webhook synchronizes the MongoDB indexes for the Webhook collection
 func Webhook(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "Webhook").Msg("COLLECTION:")

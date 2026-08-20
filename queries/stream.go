@@ -41,6 +41,7 @@ func MaxRank(ctx context.Context, collection data.Collection, parentID primitive
 	return result[0].MaxRank + 1, nil
 }
 
+// SetAttributedTo refreshes the denormalized author record on every document a User has written
 func SetAttributedTo(ctx context.Context, collection data.Collection, personLink model.PersonLink) error {
 
 	criteria := exp.Equal("attributedTo.userId", personLink.UserID)

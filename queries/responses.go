@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+// CountResponsesByContent tallies the Responses to an object, grouped by their content, most popular first
 func CountResponsesByContent(collection data.Collection, object string) (mapof.Int, error) {
 
 	// Query pipeline to count all responses by type

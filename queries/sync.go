@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// SyncSharedIndexes updates the MongoDB indexes in the database that every Domain shares
 func SyncSharedIndexes(connectionString string, databaseName string) error {
 
 	const location = "queries.SyncSharedIndexes"
@@ -51,6 +52,7 @@ func SyncSharedIndexes(connectionString string, databaseName string) error {
 	return nil
 }
 
+// SyncDomainIndexes updates the MongoDB indexes in a single Domain's database
 func SyncDomainIndexes(connectionString string, databaseName string) error { // NOSONAR
 	const location = "queries.SyncDomainIndexes"
 

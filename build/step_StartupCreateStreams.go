@@ -4,11 +4,10 @@ import (
 	"io"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/sliceof"
 )
 
-// StepStartupCreateStreams is a Step that seeds an empty Domain with the Streams that its
-// Theme defines in "startupStreams" and the user has selected via the "tokens" form field.
+// StepStartupCreateStreams is a Step that seeds an empty Domain with every Stream that its
+// Theme defines in "startupStreams".
 type StepStartupCreateStreams struct{}
 
 // Get does nothing.  Seeding a Domain writes to the database, so it only happens on POST.
@@ -16,7 +15,7 @@ func (step StepStartupCreateStreams) Get(builder Builder, _ io.Writer) PipelineB
 	return nil
 }
 
-// Post creates the Streams that this Domain's Theme defines and the user has selected.
+// Post creates every Stream that this Domain's Theme defines.
 func (step StepStartupCreateStreams) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepStartupCreateStreams.Post"

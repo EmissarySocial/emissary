@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+// SearchTags_Groups returns the distinct, non-empty group names used by SearchTags
 func SearchTags_Groups(collection data.Collection) ([]string, error) {
 
 	const location = "queries.SearchTags_Groups"

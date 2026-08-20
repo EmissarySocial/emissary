@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// SearchResult synchronizes the MongoDB indexes for the SearchResult collection
 func SearchResult(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "SearchResult").Msg("COLLECTION:")

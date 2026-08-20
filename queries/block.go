@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// SetRuleCount recalculates a User's cached rule count from the Rule collection
 func SetRuleCount(userCollection data.Collection, ruleCollection data.Collection, userID primitive.ObjectID) error {
 
 	// Count the rules for this User

@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// SearchTag synchronizes the MongoDB indexes for the SearchTag collection
 func SearchTag(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "SearchTag").Msg("COLLECTION:")

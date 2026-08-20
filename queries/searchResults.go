@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// LockSearchResults claims the provided SearchResults for one worker, so that no other worker indexes them
 func LockSearchResults(ctx context.Context, collection data.Collection, searchResultIDs []primitive.ObjectID, lockID primitive.ObjectID) error {
 
 	const location = "queries.LockSearchResults"

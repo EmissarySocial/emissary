@@ -7,11 +7,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// StepStartupCreateStreams.Post reaches the "tokens" form field only after it has narrowed the
-// Builder to a concrete build.Domain, and a Domain builder resolves its Theme through the Theme
-// service, whose registry is unexported and therefore cannot be seeded from this package.  The
-// selection itself is covered where it lives, in service.selectStartupStreams; what remains
-// testable here is the guard that stands in front of all of it.
+// StepStartupCreateStreams.Post reads nothing but the Domain's Theme, and a Domain builder
+// resolves its Theme through the Theme service, whose registry is unexported and therefore
+// cannot be seeded from this package.  What the Step then seeds is covered where it lives, in
+// service.Stream.Startup; what remains testable here is the guard that stands in front of it.
 
 // TestStepStartupCreateStreams_Post_RequiresDomainBuilder covers the runtime backstop behind
 // RequiredModel/RequiredTemplateRoles.  Template validation rejects any Template that could reach

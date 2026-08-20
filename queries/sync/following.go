@@ -18,6 +18,7 @@ import (
 // dedup guard below is not fooled into skipping the scan by the pre-existing index.
 const followingUniqueIndex = "idx_Following_User_Profile_Unique"
 
+// Following synchronizes the MongoDB indexes for the Following collection, de-duplicating it first so the unique index can build
 func Following(ctx context.Context, database *mongo.Database) error {
 
 	const location = "queries.sync.Following"

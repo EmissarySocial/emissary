@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// Conversation synchronizes the MongoDB indexes for the Conversation collection
 func Conversation(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "Conversation").Msg("COLLECTION:")

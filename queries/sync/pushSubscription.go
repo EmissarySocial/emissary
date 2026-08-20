@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// PushSubscription synchronizes the MongoDB indexes for the PushSubscription collection
 func PushSubscription(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "PushSubscription").Msg("COLLECTION:")

@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// EncryptionKey synchronizes the MongoDB indexes for the EncryptionKey collection
 func EncryptionKey(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "EncryptionKey").Msg("COLLECTION:")

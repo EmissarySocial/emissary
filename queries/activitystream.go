@@ -53,6 +53,7 @@ func SearchActivityStreamActors(collection data.Collection, text string) ([]mode
 	return Aggregate[model.ActorSummary](collection.Context(), mongoCollection, pipeline)
 }
 
+// UpdateContext re-points every document in a collection from one conversation context to another
 func UpdateContext(collection data.Collection, oldContext string, newContext string) error {
 
 	const location = "queries.UpdateContext"

@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// SearchQuery synchronizes the MongoDB indexes for the SearchQuery collection
 func SearchQuery(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "SearchQuery").Msg("COLLECTION:")

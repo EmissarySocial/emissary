@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// Outbox synchronizes the MongoDB indexes for the Outbox collection
 func Outbox(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "Outbox").Msg("COLLECTION:")

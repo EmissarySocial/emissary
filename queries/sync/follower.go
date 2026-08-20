@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// Follower synchronizes the MongoDB indexes for the Follower collection
 func Follower(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "Follower").Msg("COLLECTION:")

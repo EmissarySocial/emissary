@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// NewsFeed synchronizes the MongoDB indexes for the NewsFeed collection
 func NewsFeed(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "NewsFeed").Msg("COLLECTION:")

@@ -58,6 +58,7 @@ func mongoCollection(original data.Collection) *mongo.Collection {
 	}
 }
 
+// timeoutContext returns a background context that cancels itself after the provided number of seconds
 func timeoutContext(seconds int) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.Background(), time.Duration(seconds)*time.Second)
 }

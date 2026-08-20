@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// MerchantAccount synchronizes the MongoDB indexes for the MerchantAccount collection
 func MerchantAccount(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "MerchantAccount").Msg("COLLECTION:")

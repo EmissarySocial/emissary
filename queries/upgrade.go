@@ -13,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// UpgradeMongoDB runs every pending schema migration against a Domain's database, in order
 func UpgradeMongoDB(connectionString string, databaseName string, domain *model.Domain) error {
 
 	const location = "queries.UpgradeMongoDB"

@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// MessageMarkRead marks a single Inbox message as read, for the provided User
 func MessageMarkRead(inboxCollection data.Collection, userID primitive.ObjectID, messageID primitive.ObjectID) error {
 
 	mongo := mongoCollection(inboxCollection)

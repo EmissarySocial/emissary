@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// Domain synchronizes the MongoDB indexes for the Domain collection
 func Domain(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "Domain").Msg("COLLECTION:")

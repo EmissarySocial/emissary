@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// Inbox synchronizes the MongoDB indexes for the Inbox collection
 func Inbox(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "Inbox").Msg("COLLECTION:")

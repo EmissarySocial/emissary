@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// OAuthClient synchronizes the MongoDB indexes for the OAuthClient collection
 func OAuthClient(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "OAuthClient").Msg("COLLECTION:")

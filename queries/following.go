@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// SetFollowingCount recalculates a User's cached following count from the Following collection
 func SetFollowingCount(userCollection data.Collection, followingCollection data.Collection, userID primitive.ObjectID) error {
 
 	criteria := exp.Equal("userId", userID).AndEqual("deleteDate", 0)

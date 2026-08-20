@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// Annotation synchronizes the MongoDB indexes for the Annotation collection
 func Annotation(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "Annotation").Msg("COLLECTION:")
