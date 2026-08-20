@@ -1,13 +1,37 @@
-{{- $rules := .ServerWideRules.Slice -}}
+{{- $rules := .ServerWideRules.Top60.By "trigger" -}}
+{{- $rules := $rules.Slice -}}
+{{- $trigger := .QueryParam "trigger" -}}
+{{- $isFirstPage := eq "" $trigger -}}
 
-{{- if $rules.IsEmpty -}}
+{{- if not $rules.IsEmpty -}}
 
-No Rules here...
-
-{{- else -}}
-	{{- range $rules -}}
-		<div hx-get="/admin/rules/{{.RuleID.Hex}}/edit" role="button">
-			{{.Action}} {{.Type}}: {{.Trigger}}{{if .Label}} &mdash; &ldquo;{{.Label}}&rdquo;{{end}}
-		</div>
+	{{- if $isFirstPage -}}
+		<table id="rules" class="table margin-bottom-none">
+			<tbody>
+				<tr role="link" hx-get="/admin/rules/add" class="bold link"><td colspan="2">
+					{{icon "add"}} &nbsp;<span>Add Server-Wide Rule</span>
+				</td></tr>
+			</tbody>
 	{{- end -}}
+
+	<tbody hx-trigger="revealed" hx-get="/admin/rules/list?trigger=gt:{{$rules.Last.Trigger | queryEscape}}" hx-target="#rules" hx-swap="beforeend" hx-push-url="false">
+		{{- range $rules -}}
+			<tr class="clickable">
+				<td role="link" hx-get="/admin/rules/{{.RuleID.Hex}}/edit" class="width-100%">
+					<div class="ellipsis">
+						{{.Action}} {{.Type}}: {{.Trigger}}{{if .Label}} &mdash; &ldquo;{{.Label}}&rdquo;{{end}}
+					</div>
+				</td>
+			</tr>
+		{{- end -}}
+	</tbody>
+
+	{{- if $isFirstPage -}}
+		</table>
+	{{- end -}}
+
+{{- else if eq "" $trigger -}}
+
+	{{- template "welcome" . -}}
+
 {{- end -}}

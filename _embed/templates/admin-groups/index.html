@@ -5,14 +5,7 @@
 	{{template "menubar" .}}
 
 	<div class="card padding">
-		<table id="groups" class="table margin-bottom-none">
-			<tbody>
-				<tr role="link" hx-get="/admin/groups/add"><td colspan="2" class="link">
-					{{icon "add"}} &nbsp;<span>Add a Group</span>
-				</td></tr>
-			</tbody>
-			{{.View "list"}}
-		</table>
+		{{.View "list"}}
 	</div>
 
 	<div 

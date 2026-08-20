@@ -1,16 +1,37 @@
-{{- $groups := .Groups.Top60.ByLabel.Slice -}}
-{{- if not $groups.IsEmpty -}}
-    <tbody hx-get="/admin/groups/list?label=gt:{{$groups.Last.Label}}" hx-trigger="revealed" hx-target="#groups" hx-swap="beforeend" hx-push-url="false">
-    {{- range $groups -}}
-        <tr class="clickable">
-            <td role="link" hx-get="/admin/groups/{{.GroupID.Hex}}/edit" class="width-100%">
-				<div class="ellipsis">
+{{- $groups := .Groups.Top600.ByLabel.Slice -}}
+{{- $trigger := .QueryParam "label" -}}
+{{- $isFirstPage := eq "" $trigger -}}
+
+{{- if $groups.NotEmpty -}}
+
+	{{if $isFirstPage}}
+
+		<table id="groups" class="table margin-bottom-none">
+			<tbody>
+				<tr role="link" hx-get="/admin/groups/add" class="bold link"><td colspan="2">
+					{{icon "add"}} &nbsp;<span>Add a Group</span>
+				</td></tr>
+			</tbody>
+	{{- end -}}
+
+	<tbody hx-get="/admin/groups/list?label=gt:{{$groups.Last.Label}}" hx-trigger="revealed" hx-target="#groups" hx-swap="beforeend" hx-push-url="false">
+		{{- range $groups -}}
+			<tr role="link" hx-get="/admin/groups/{{.GroupID.Hex}}/edit" class="clickable">
+				<td nowrap>
 					{{ icon .IconWithDefault }}
 					{{.Label}}
-					<span class="text-gray margin-left">{{.Description}}</span>
-				</div>
-            </td>
-        </tr>
-    {{- end -}}
-    </tbody>
+				</td>
+				<td class="width-100%">
+					<div class="ellipsis text-gray margin-left">{{.Description}}</div>
+				</td>
+			</tr>
+		{{- end -}}
+	</tbody>
+
+	{{- if $isFirstPage -}}
+		</table>
+	{{- end -}}
+
+{{- else if $isFirstPage -}}
+	{{- template "welcome" . -}}
 {{- end -}}

@@ -32,21 +32,9 @@
 	</div>
 	-->
 
-	<div class="md:flex-row">
-		<div class="card padding-sm padding-horizontal margin-bottom md:width-66%">
-		</div>
-		<div class="clickable card flex-center padding margin-bottom md:width-33%" hx-get="/admin/rules/add">
-			<div class="text-lg bold">
-				<button class="primary"><span aria-hidden>{{icon "add"}}</span> Add a Rule</button>
-			</div>
-		</div>
-	</div>
-
 	<!-- Contents -->
 	<div class="card padding">
-		<div class="table">
-			{{.View "list"}}
-		</div>
+		{{.View "list"}}
 	</div>
 
 	<div 
