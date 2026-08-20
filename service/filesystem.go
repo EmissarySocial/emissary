@@ -15,18 +15,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 
-	// nolint:staticcheck
-	// SA1019 ignore deprecation warnings
-	"github.com/aws/aws-sdk-go/aws"
-
-	// nolint:staticcheck
-	// SA1019 ignore deprecation warnings
-	"github.com/aws/aws-sdk-go/aws/credentials"
-
-	// nolint:staticcheck
-	// SA1019 ignore deprecation warnings
-	"github.com/aws/aws-sdk-go/aws/session"
-
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	awss3 "github.com/aws/aws-sdk-go-v2/service/s3"
 	s3 "github.com/fclairamb/afero-s3"
 )
 
@@ -128,22 +119,23 @@ func (filesystem *Filesystem) GetAfero(folder mapof.String) (afero.Fs, error) {
 		// bucket
 		// path
 
-		// Read session configuration
-		config := aws.Config{
-			Credentials: credentials.NewStaticCredentials(folder["accessKey"], folder["secretKey"], folder["token"]),
-			Region:      pointerTo(folder["region"]),
-			Endpoint:    pointerTo(folder["location"]),
+		// Read AWS configuration
+		awsConfig := aws.Config{
+			Credentials: credentials.NewStaticCredentialsProvider(folder["accessKey"], folder["secretKey"], folder["token"]),
+			Region:      folder["region"],
 		}
 
-		// Try to make an S3 session
-		session, err := session.NewSession(&config)
+		// Make an S3 client.  If a custom endpoint is configured (for S3-compatible
+		// services such as MinIO or Wasabi) then point the client at it instead of AWS.
+		client := awss3.NewFromConfig(awsConfig, func(options *awss3.Options) {
 
-		if err != nil {
-			return nil, derp.Wrap(err, "service.Filesystem.GetAfero", "Creating AWS session", folder)
-		}
+			if location := folder["location"]; location != "" {
+				options.BaseEndpoint = pointerTo(location)
+			}
+		})
 
 		// Create an S3 filesystem
-		result := s3.NewFs(folder["bucket"], session)
+		result := s3.NewFsFromClient(folder["bucket"], client)
 
 		// Force sub-directory
 		return afero.NewBasePathFs(result, folder["path"]), nil
