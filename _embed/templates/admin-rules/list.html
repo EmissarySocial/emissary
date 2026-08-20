@@ -1,7 +1,13 @@
 {{- $rules := .ServerWideRules.Slice -}}
 
-{{- range $rules -}}
-	<div hx-get="/admin/rules/{{.RuleID.Hex}}/edit" role="button">
-		{{.Action}} {{.Type}}: {{.Trigger}}{{if .Label}} &mdash; &ldquo;{{.Label}}&rdquo;{{end}}
-	</div>
+{{- if $rules.IsEmpty -}}
+
+No Rules here...
+
+{{- else -}}
+	{{- range $rules -}}
+		<div hx-get="/admin/rules/{{.RuleID.Hex}}/edit" role="button">
+			{{.Action}} {{.Type}}: {{.Trigger}}{{if .Label}} &mdash; &ldquo;{{.Label}}&rdquo;{{end}}
+		</div>
+	{{- end -}}
 {{- end -}}

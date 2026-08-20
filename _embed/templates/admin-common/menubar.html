@@ -1,3 +1,4 @@
+{{- template "startup" . -}}
 
 <div id="menu-bar" hx-push-url="true" script="init send SelectNav(id:'admin')">
 	<div class="center">
@@ -29,25 +30,7 @@
 
 </div>
 
-<!-- Sub-Menus -->
-{{ if in .Token "rules"}}
-
-	<div id="menu-bar-sub">
-		<a href="/admin/rules" hx-boost="true" class="turboclick {{if eq `groups` .Token}}selected{{end}}">
-			All Rules
-		</a>
-		<a href="/admin/rules?action=LABEL" hx-boost="true" class="turboclick {{if eq `groups` .Token}}selected{{end}}">
-			Labels
-		</a>
-		<a href="/admin/rules?action=MUTE" hx-boost="true" class="turboclick {{if eq `groups` .Token}}selected{{end}}">
-			Mutes
-		</a>
-		<a href="/admin/rules?action=BLOCK" hx-boost="true" class="turboclick {{if eq `groups` .Token}}selected{{end}}">
-			Blocks
-		</a>
-	</div>
-
-{{ else if in .Token "users" "groups" }}
+{{- if in .Token "users" "groups" -}}
 
 	<div id="menu-bar-sub">
 		<a href="/admin/users/index" hx-boost="true" class="turboclick {{if eq `users` .Token}}selected{{end}}">
@@ -58,7 +41,7 @@
 		</a>
 	</div>
 
-{{ else if in .Token "search" "followers" "following" "tags" }}
+{{- else if in .Token "search" "followers" "following" "tags" -}}
 
 	<div id="menu-bar-sub">
 	
@@ -80,7 +63,7 @@
 
 	</div>
 
-{{ else if in .Token "connections" "mls" "webhooks" "syndication" "sso" }}
+{{- else if in .Token "connections" "mls" "webhooks" "syndication" "sso" -}}
 
 	<span id="menu-bar-sub">
 
@@ -106,4 +89,4 @@
 
 	</span>
 
-{{ end }}
+{{- end -}}
