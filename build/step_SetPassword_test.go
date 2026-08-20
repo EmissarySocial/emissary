@@ -26,17 +26,34 @@ import (
 // methods, so every method is a no-op / error stub that exists only to satisfy the interface.
 type stubPasswordUserService struct{}
 
-func (stubPasswordUserService) New() steranko.User                        { return nil }
-func (stubPasswordUserService) Load(string, steranko.User) error          { return nil }
+// New implements the steranko.UserService interface. Unused by these tests.
+func (stubPasswordUserService) New() steranko.User { return nil }
+
+// Load implements the steranko.UserService interface. Unused by these tests.
+func (stubPasswordUserService) Load(string, steranko.User) error { return nil }
+
+// LoadBySubject implements the steranko.UserService interface. Unused by these tests.
 func (stubPasswordUserService) LoadBySubject(string, steranko.User) error { return nil }
-func (stubPasswordUserService) Save(steranko.User, string) error          { return nil }
-func (stubPasswordUserService) Delete(steranko.User, string) error        { return nil }
-func (stubPasswordUserService) RequestPasswordReset(steranko.User) error  { return nil }
+
+// Save implements the steranko.UserService interface. Unused by these tests.
+func (stubPasswordUserService) Save(steranko.User, string) error { return nil }
+
+// Delete implements the steranko.UserService interface. Unused by these tests.
+func (stubPasswordUserService) Delete(steranko.User, string) error { return nil }
+
+// RequestPasswordReset implements the steranko.UserService interface. Unused by these tests.
+func (stubPasswordUserService) RequestPasswordReset(steranko.User) error { return nil }
+
+// Claims implements the steranko.UserService interface. Unused by these tests.
 func (stubPasswordUserService) Claims(steranko.User) (jwt.Claims, error) {
 	authorization := model.NewAuthorization()
 	return &authorization, nil
 }
+
+// Close implements the steranko.UserService interface. The stub holds no resources to release.
 func (stubPasswordUserService) Close() {}
+
+// NewClaims implements the steranko.UserService interface, returning an empty Authorization to parse into
 func (stubPasswordUserService) NewClaims() jwt.Claims {
 	authorization := model.NewAuthorization()
 	return &authorization
@@ -45,9 +62,12 @@ func (stubPasswordUserService) NewClaims() jwt.Claims {
 // stubPasswordKeyService satisfies steranko.KeyService with a single fixed HMAC secret.
 type stubPasswordKeyService struct{}
 
+// GetCurrentKey implements the steranko.KeyService interface, returning the fixed test secret
 func (stubPasswordKeyService) GetCurrentKey() (string, any, error) {
 	return "test", []byte("test-secret"), nil
 }
+
+// FindKey implements the steranko.KeyService interface, returning the fixed test secret
 func (stubPasswordKeyService) FindKey(*jwt.Token) (any, error) {
 	return []byte("test-secret"), nil
 }
@@ -60,6 +80,7 @@ type stubPasswordFactory struct {
 	steranko *steranko.Steranko
 }
 
+// Steranko implements the build.Factory interface, returning a Steranko backed by the stub services
 func (f stubPasswordFactory) Steranko(data.Session) *steranko.Steranko { return f.steranko }
 
 // stubPasswordBuilder is a build.Builder exposing only the methods StepSetPassword.Post reaches
@@ -72,10 +93,19 @@ type stubPasswordBuilder struct {
 	auth         model.Authorization
 }
 
-func (b stubPasswordBuilder) request() *http.Request             { return b.req }
-func (b stubPasswordBuilder) response() http.ResponseWriter      { return b.res }
-func (b stubPasswordBuilder) factory() Factory                   { return b.factoryValue }
-func (b stubPasswordBuilder) session() data.Session              { return nil }
+// request implements the Builder interface, returning this stub's request
+func (b stubPasswordBuilder) request() *http.Request { return b.req }
+
+// response implements the Builder interface, returning this stub's response recorder
+func (b stubPasswordBuilder) response() http.ResponseWriter { return b.res }
+
+// factory implements the Builder interface, returning this stub's factory
+func (b stubPasswordBuilder) factory() Factory { return b.factoryValue }
+
+// session implements the Builder interface. The stub owns no database session.
+func (b stubPasswordBuilder) session() data.Session { return nil }
+
+// authorization implements the Builder interface, returning this stub's Authorization
 func (b stubPasswordBuilder) authorization() model.Authorization { return b.auth }
 
 // setPasswordRequest builds a urlencoded POST carrying a new/confirm password pair.

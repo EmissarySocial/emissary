@@ -37,10 +37,12 @@ type StepUploadAttachments struct {
 	RuleTypes  []string // Allowed extensions.  The first value is used as the default.
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepUploadAttachments) Get(builder Builder, _ io.Writer) PipelineBehavior {
 	return nil
 }
 
+// Post applies this step during a POST request. Implements the Step interface.
 func (step StepUploadAttachments) Post(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	const location = "handler.StepUploadAttachments.Post"

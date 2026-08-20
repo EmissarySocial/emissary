@@ -17,6 +17,7 @@ type stubHostnameFactory struct {
 	hostname string
 }
 
+// Hostname returns the bare domain name of this server. Implements the Builder interface.
 func (f stubHostnameFactory) Hostname() string { return f.hostname }
 
 // newTestCommon builds a Common whose factory reports the given hostname and whose

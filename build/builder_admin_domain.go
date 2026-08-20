@@ -101,23 +101,28 @@ func (w Domain) View(actionID string) (template.HTML, error) {
 	return builder.Render()
 }
 
+// Token returns the URL token of the record being built. Implements the Builder interface.
 func (w Domain) Token() string {
 	return list.Second(w.PathList())
 	// return w.context().Param("param1")
 }
 
+// object returns the model object being built. Implements the Builder interface.
 func (w Domain) object() data.Object {
 	return w._domain
 }
 
+// objectID returns the unique ID of the object being built. Implements the Builder interface.
 func (w Domain) objectID() primitive.ObjectID {
 	return w._domain.DomainID
 }
 
+// objectType returns the name of the model type being built. Implements the Builder interface.
 func (w Domain) objectType() string {
 	return "Domain"
 }
 
+// schema returns the rosetta schema that validates this object. Implements the Builder interface.
 func (w Domain) schema() schema.Schema {
 	theme := w.Theme(w.ThemeID())
 	domainSchema := schema.New(model.DomainSchema())
@@ -125,26 +130,32 @@ func (w Domain) schema() schema.Schema {
 	return domainSchema
 }
 
+// service returns the ModelService that backs this Builder. Implements the Builder interface.
 func (w Domain) service() service.ModelService {
 	return w._factory.Domain()
 }
 
+// NavigationID returns the top-level navigation item to highlight. Implements the Builder interface.
 func (w Domain) NavigationID() string {
 	return "admin"
 }
 
+// Permalink returns the permanent URL of the record being built. Implements the Builder interface.
 func (w Domain) Permalink() string {
 	return w.Host() + "/admin/domains"
 }
 
+// BasePath returns the URL path of this object, without any action. Implements the Builder interface.
 func (w Domain) BasePath() string {
 	return "/admin/domains"
 }
 
+// PageTitle returns the human-friendly title to display at the top of the page. Implements the Builder interface.
 func (w Domain) PageTitle() string {
 	return "Settings"
 }
 
+// clone returns a copy of this Builder, pointed at a different action. Implements the Builder interface.
 func (w Domain) clone(action string) (Builder, error) {
 	return NewDomain(w._factory, w._session, w._request, w._response, w._template, action)
 }
@@ -153,14 +164,17 @@ func (w Domain) clone(action string) (Builder, error) {
  * Other Data Accessors
  ******************************************/
 
+// MLSMode returns the MLS mode of the Domain being built
 func (w Domain) MLSMode() string {
 	return w._domain.MLSMode
 }
 
+// MLSGroupIDs returns the MLS group IDs of the Domain being built
 func (w Domain) MLSGroupIDs() sliceof.String {
 	return w._domain.MLSGroupIDs
 }
 
+// Data returns the named value from this Domain's custom data map
 func (w Domain) Data(key string) string {
 	return w._domain.Data.GetString(key)
 }
@@ -170,10 +184,12 @@ func (w Domain) IsAdminBuilder() bool {
 	return true
 }
 
+// StateID returns the state ID of the Domain being built
 func (w Domain) StateID() string {
 	return w._domain.StateID
 }
 
+// StartupTasks returns the startup tasks of the Domain being built
 func (w Domain) StartupTasks() sliceof.String {
 	return w._domain.StartupTasks
 }
@@ -211,6 +227,7 @@ func (w Domain) RegistrationTemplate() model.Registration {
  * Queries
  ******************************************/
 
+// Followers returns a QueryBuilder that lists the Followers of this Domain's search actor
 func (w Domain) Followers() QueryBuilder[model.FollowerSummary] {
 
 	query := builder.NewBuilder().
@@ -227,6 +244,7 @@ func (w Domain) Followers() QueryBuilder[model.FollowerSummary] {
 	return NewQueryBuilder[model.FollowerSummary](w._factory.Follower(), w._session, criteria)
 }
 
+// Following returns a QueryBuilder that lists the actors this Domain follows
 func (w Domain) Following() QueryBuilder[model.FollowingSummary] {
 
 	query := builder.NewBuilder().
@@ -242,6 +260,7 @@ func (w Domain) Following() QueryBuilder[model.FollowingSummary] {
 	return NewQueryBuilder[model.FollowingSummary](w._factory.Following(), w._session, criteria)
 }
 
+// Groups returns every Group on this Domain, sorted by label
 func (w Domain) Groups() (sliceof.Object[model.Group], error) {
 
 	groupService := w._factory.Group()
@@ -254,6 +273,7 @@ func (w Domain) Groups() (sliceof.Object[model.Group], error) {
  * Other Methods
  ******************************************/
 
+// Themes returns every Theme installed on this server, in display order
 func (w Domain) Themes() sliceof.Object[model.Theme] {
 	themeService := w._factory.Theme()
 	result := themeService.List()
@@ -270,6 +290,7 @@ func (w Domain) Providers() sliceof.Object[form.LookupCode] {
 	return dataset.Providers()
 }
 
+// Provider returns the third-party service provider with the provided ID
 func (w Domain) Provider(providerID string) providers.Provider {
 	result, _ := w._provider.GetProvider(providerID)
 	return result
@@ -280,6 +301,7 @@ func (w Domain) AllConnections() mapof.Object[model.Connection] {
 	return w._factory.Connection().AllAsMap(w._session)
 }
 
+// debug writes this Builder's state to the console. Implements the Builder interface.
 func (w Domain) debug() {
 	log.Debug().Interface("object", w.object()).Msg("builder_admin_domain")
 }

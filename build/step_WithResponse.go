@@ -14,6 +14,7 @@ type StepWithResponse struct {
 	SubSteps []step.Step
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepWithResponse) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	return step.execute(builder, buffer, ActionMethodGet)
 }
@@ -23,6 +24,7 @@ func (step StepWithResponse) Post(builder Builder, buffer io.Writer) PipelineBeh
 	return step.execute(builder, buffer, ActionMethodPost)
 }
 
+// execute performs this step's work for either a GET or a POST
 func (step StepWithResponse) execute(builder Builder, buffer io.Writer, actionMethod ActionMethod) PipelineBehavior {
 
 	const location = "build.StepWithResponse.doStep"

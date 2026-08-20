@@ -13,6 +13,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// StepAddStream is a Step that adds a new child Stream, using a chooser or an inline form
 type StepAddStream struct {
 	Style         string                        // Style of input widget to use. Options are: "chooser"  and "inline".  Defaults to "chooser".
 	Title         string                        // Title to use on the create modal. Defaults to "Add a Stream"
@@ -200,6 +201,7 @@ func (step StepAddStream) getInline(builder Builder, buffer io.Writer) error {
  * POST Methods
  ******************************************/
 
+// Post applies this step during a POST request. Implements the Step interface.
 func (step StepAddStream) Post(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	const location = "build.StepAddStream.Post"
@@ -385,6 +387,7 @@ func (step StepAddStream) getBestTemplate_result(templateService *service.Templa
 	return eligible, template, nil
 }
 
+// parentRole returns the Template role that new Streams are added under
 func (step StepAddStream) parentRole(builder Builder) string {
 
 	if step.Location == "child" {

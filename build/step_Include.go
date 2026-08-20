@@ -11,6 +11,7 @@ type StepInclude struct {
 	Action string
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepInclude) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	const location = "build.StepInclude.Get"

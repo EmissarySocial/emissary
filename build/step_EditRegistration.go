@@ -14,6 +14,7 @@ import (
 // StepEditRegistration is a Step that can update the data.DataMap custom data stored in a Stream
 type StepEditRegistration struct{}
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepEditRegistration) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	const location = "builder.StepEditRegistration.Get"

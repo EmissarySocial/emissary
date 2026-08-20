@@ -84,6 +84,7 @@ func inlineErrorMessage(err error) string {
 	return derp.Message(err)
 }
 
+// WrapModal wraps the provided content in a modal window, and sets the htmx headers that display it
 func WrapModal(response http.ResponseWriter, content string, options ...string) string {
 
 	// These three headers make it a modal
@@ -112,6 +113,7 @@ func WrapModal(response http.ResponseWriter, content string, options ...string) 
 	return b.String()
 }
 
+// WrapModalWithCloseButton wraps the provided content in a modal window that has its own close button
 func WrapModalWithCloseButton(response http.ResponseWriter, content string, options ...string) string {
 	b := html.New()
 
@@ -121,6 +123,7 @@ func WrapModalWithCloseButton(response http.ResponseWriter, content string, opti
 	return WrapModal(response, content+b.String())
 }
 
+// WrapTooltip wraps the provided content in a tooltip, and sets the htmx headers that display it
 func WrapTooltip(response http.ResponseWriter, content string) string {
 
 	// These headers make it a modal
@@ -137,6 +140,7 @@ func WrapTooltip(response http.ResponseWriter, content string) string {
 	return b.String()
 }
 
+// WrapForm wraps the provided content in a form that posts back to the named endpoint
 func WrapForm(endpoint string, content string, encoding string, options ...string) string {
 
 	optionMap := parseOptions(options...)
@@ -209,6 +213,7 @@ func WrapForm(endpoint string, content string, encoding string, options ...strin
 	return b.String()
 }
 
+// WrapModalForm wraps the provided content in a form, inside a modal window
 func WrapModalForm(response http.ResponseWriter, endpoint string, content string, encoding string, options ...string) string {
 	return WrapModal(response, WrapForm(endpoint, content, encoding, options...), options...)
 }
@@ -218,12 +223,14 @@ func CloseModal(ctx echo.Context) {
 	ctx.Response().Header().Set("HX-Trigger", `{"closeModal":"", "refreshPage": ""}`)
 }
 
+// RefreshPage sets the response headers that tell htmx to reload the current page
 func RefreshPage(ctx echo.Context) {
 	header := ctx.Response().Header()
 	header.Set("HX-Trigger", "refreshPage")
 	header.Set("HX-Reswap", "none")
 }
 
+// TriggerEvent sets the response header that fires the named event on the client
 func TriggerEvent(ctx echo.Context, event string) {
 	ctx.Response().Header().Set("HX-Trigger", event)
 }
@@ -263,6 +270,7 @@ func replaceActionID(path string, newActionID string) string {
 	return "/" + parsedPath + "/" + newActionID
 }
 
+// TemplateLike is anything that can render itself into a Writer, which lets HTML and text templates share one code path
 type TemplateLike interface {
 	Execute(wr io.Writer, data interface{}) error
 }
@@ -396,6 +404,7 @@ func getTemplate(builder Builder) (model.Template, bool) {
 	return model.Template{}, false
 }
 
+// getSearchResult returns the SearchResult that represents the object this Builder is displaying
 func getSearchResult(builder Builder) model.SearchResult {
 
 	switch typed := builder.(type) {
@@ -419,6 +428,7 @@ func getSearchResult(builder Builder) model.SearchResult {
 	return model.SearchResult{}
 }
 
+// mapProductsToLookupCodes converts Products into form lookup codes, sorted by group then label
 func mapProductsToLookupCodes(products ...model.Product) sliceof.Object[form.LookupCode] {
 
 	lookupCodes := make([]form.LookupCode, len(products))
@@ -431,6 +441,7 @@ func mapProductsToLookupCodes(products ...model.Product) sliceof.Object[form.Loo
 	return lookupCodes
 }
 
+// mapCirclesToLookupCodes converts Circles into form lookup codes, sorted by group then label
 func mapCirclesToLookupCodes(circles ...model.Circle) sliceof.Object[form.LookupCode] {
 
 	lookupCodes := make([]form.LookupCode, len(circles))
@@ -443,6 +454,7 @@ func mapCirclesToLookupCodes(circles ...model.Circle) sliceof.Object[form.Lookup
 	return lookupCodes
 }
 
+// groupLookupCodes splits a flat list of lookup codes into one slice per group, special groups first
 func groupLookupCodes(lookupCodes []form.LookupCode) sliceof.Object[sliceof.Object[form.LookupCode]] {
 
 	// First, sort all LookupCodes into groups

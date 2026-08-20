@@ -111,10 +111,12 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 	}
 }
 
+// Post applies this step during a POST request. Implements the Step interface.
 func (step StepViewFeed) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	return nil
 }
 
+// detectMimeType chooses the feed format, preferring the "format" query parameter over the Accept header
 func (step StepViewFeed) detectMimeType(builder Builder) string {
 
 	// First, try to get the format from the query string
@@ -141,6 +143,7 @@ func (step StepViewFeed) detectMimeType(builder Builder) string {
 	return model.MimeTypeRSS
 }
 
+// asJSONFeed renders the provided children as a JSONFeed document
 func (step StepViewFeed) asJSONFeed(builder Builder, buffer io.Writer, children data.Iterator) PipelineBehavior {
 
 	const location = "build.StepViewFeed.asJSONFeed"

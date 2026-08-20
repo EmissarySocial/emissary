@@ -14,6 +14,7 @@ type StepWithParent struct {
 	SubSteps []step.Step
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepWithParent) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	return nil
 }
@@ -54,6 +55,7 @@ func (step StepWithParent) Post(builder Builder, buffer io.Writer) PipelineBehav
 	return UseResult(result)
 }
 
+// postUser runs this step's sub-steps against the User that owns the Stream's outbox
 func (step StepWithParent) postUser(streamBuilder Stream, buffer io.Writer) PipelineBehavior {
 
 	const location = "build.StepWithParent.postUser"

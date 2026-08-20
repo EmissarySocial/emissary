@@ -11,6 +11,7 @@ type StepTriggerEvent struct {
 	Value *template.Template
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepTriggerEvent) Get(builder Builder, _ io.Writer) PipelineBehavior {
 	return nil
 }

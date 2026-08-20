@@ -15,6 +15,7 @@ type StepSetHeader struct {
 	Value      *template.Template
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepSetHeader) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	if step.Method == "post" {
 		return nil
@@ -30,6 +31,7 @@ func (step StepSetHeader) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	return step.setHeader(builder)
 }
 
+// setHeader renders the configured value template, and sets it as a response header
 func (step StepSetHeader) setHeader(builder Builder) PipelineBehavior {
 
 	var value bytes.Buffer

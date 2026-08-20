@@ -13,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// TestOutboxBuilder verifies that the Outbox builders satisfy the interfaces their pipeline steps require
 func TestOutboxBuilder(t *testing.T) {
 	var _ StateSetter = Outbox{}
 

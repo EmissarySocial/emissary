@@ -97,6 +97,7 @@ func (step StepViewAttachment) Get(builder Builder, buffer io.Writer) PipelineBe
 	return Halt().AsFullPage()
 }
 
+// Post applies this step during a POST request. Implements the Step interface.
 func (step StepViewAttachment) Post(streamBuilder Builder, buffer io.Writer) PipelineBehavior {
 	return Halt().WithError(derp.BadRequest("build.StepViewAttachment.Post", "POST method not allowed for this step"))
 }

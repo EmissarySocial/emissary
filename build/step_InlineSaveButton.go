@@ -19,6 +19,7 @@ func (step StepInlineSaveButton) Get(builder Builder, buffer io.Writer) Pipeline
 	return nil
 }
 
+// Post applies this step during a POST request. Implements the Step interface.
 func (step StepInlineSaveButton) Post(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	h := html.New()

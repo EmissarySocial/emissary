@@ -84,46 +84,57 @@ func (w Rule) View(actionID string) (template.HTML, error) {
 	return builder.Render()
 }
 
+// NavigationID returns the top-level navigation item to highlight. Implements the Builder interface.
 func (w Rule) NavigationID() string {
 	return "admin"
 }
 
+// Permalink returns the permanent URL of the record being built. Implements the Builder interface.
 func (w Rule) Permalink() string {
 	return w.Host() + "/admin/rules/" + w.RuleID()
 }
 
+// BasePath returns the URL path of this object, without any action. Implements the Builder interface.
 func (w Rule) BasePath() string {
 	return "/admin/rules/" + w.RuleID()
 }
 
+// Token returns the URL token of the record being built. Implements the Builder interface.
 func (w Rule) Token() string {
 	return "rules"
 }
 
+// PageTitle returns the human-friendly title to display at the top of the page. Implements the Builder interface.
 func (w Rule) PageTitle() string {
 	return "Settings"
 }
 
+// object returns the model object being built. Implements the Builder interface.
 func (w Rule) object() data.Object {
 	return w._rule
 }
 
+// objectID returns the unique ID of the object being built. Implements the Builder interface.
 func (w Rule) objectID() primitive.ObjectID {
 	return w._rule.RuleID
 }
 
+// objectType returns the name of the model type being built. Implements the Builder interface.
 func (w Rule) objectType() string {
 	return "Rule"
 }
 
+// schema returns the rosetta schema that validates this object. Implements the Builder interface.
 func (w Rule) schema() schema.Schema {
 	return schema.New(model.RuleSchema())
 }
 
+// service returns the ModelService that backs this Builder. Implements the Builder interface.
 func (w Rule) service() service.ModelService {
 	return w._factory.Rule()
 }
 
+// clone returns a copy of this Builder, pointed at a different action. Implements the Builder interface.
 func (w Rule) clone(action string) (Builder, error) {
 	return NewRule(w._factory, w._session, w._request, w._response, w._rule, w._template, action)
 }
@@ -137,6 +148,7 @@ func (w Rule) IsAdminBuilder() bool {
 	return true
 }
 
+// RuleID returns the unique ID of the Rule being built, as a string
 func (w Rule) RuleID() string {
 	if w._rule == nil {
 		return ""
@@ -144,6 +156,7 @@ func (w Rule) RuleID() string {
 	return w._rule.RuleID.Hex()
 }
 
+// Label returns the label of the Rule being built
 func (w Rule) Label() string {
 	if w._rule == nil {
 		return ""
@@ -174,6 +187,7 @@ func (w Rule) ServerWideRules() *QueryBuilder[model.Rule] {
 	return &result
 }
 
+// debug writes this Builder's state to the console. Implements the Builder interface.
 func (w Rule) debug() {
 	log.Debug().Interface("object", w.object()).Msg("builder_admin_rule")
 }

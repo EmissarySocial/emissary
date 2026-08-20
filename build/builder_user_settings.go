@@ -91,46 +91,57 @@ func (w Settings) NavigationID() string {
 	return "settings"
 }
 
+// PageTitle returns the human-friendly title to display at the top of the page. Implements the Builder interface.
 func (w Settings) PageTitle() string {
 	return "Settings"
 }
 
+// BasePath returns the URL path of this object, without any action. Implements the Builder interface.
 func (w Settings) BasePath() string {
 	return "/@me/settings"
 }
 
+// Permalink returns the permanent URL of the record being built. Implements the Builder interface.
 func (w Settings) Permalink() string {
 	return w.Host() + "/@me/settings"
 }
 
+// Token returns the URL token of the record being built. Implements the Builder interface.
 func (w Settings) Token() string {
 	return "users"
 }
 
+// object returns the model object being built. Implements the Builder interface.
 func (w Settings) object() data.Object {
 	return w._user
 }
 
+// objectID returns the unique ID of the object being built. Implements the Builder interface.
 func (w Settings) objectID() primitive.ObjectID {
 	return w._user.UserID
 }
 
+// objectType returns the name of the model type being built. Implements the Builder interface.
 func (w Settings) objectType() string {
 	return "User"
 }
 
+// schema returns the rosetta schema that validates this object. Implements the Builder interface.
 func (w Settings) schema() schema.Schema {
 	return schema.New(model.UserSchema())
 }
 
+// service returns the ModelService that backs this Builder. Implements the Builder interface.
 func (w Settings) service() service.ModelService {
 	return w._factory.User()
 }
 
+// templateRole returns the role this Template plays, which chooses the child template. Implements the Builder interface.
 func (w Settings) templateRole() string {
 	return "inbox"
 }
 
+// clone returns a copy of this Builder, pointed at a different action. Implements the Builder interface.
 func (w Settings) clone(action string) (Builder, error) {
 	return NewSettings(w._factory, w._session, w._request, w._response, w._user, action)
 }
@@ -139,6 +150,7 @@ func (w Settings) clone(action string) (Builder, error) {
  * Data Accessors
  ******************************************/
 
+// UserID returns the unique ID of the User whose settings are being built, as a string
 func (w Settings) UserID() string {
 	return w._user.UserID.Hex()
 }
@@ -148,30 +160,37 @@ func (w Settings) Myself() bool {
 	return w._authorization.UserID == w._user.UserID
 }
 
+// Username returns the username of the Settings being built
 func (w Settings) Username() string {
 	return w._user.Username
 }
 
+// FollowerCount returns the follower count of the Settings being built
 func (w Settings) FollowerCount() int {
 	return w._user.FollowerCount
 }
 
+// FollowingCount returns the following count of the Settings being built
 func (w Settings) FollowingCount() int {
 	return w._user.FollowingCount
 }
 
+// RuleCount returns the rule count of the Settings being built
 func (w Settings) RuleCount() int {
 	return w._user.RuleCount
 }
 
+// DisplayName returns the display name of the Settings being built
 func (w Settings) DisplayName() string {
 	return w._user.DisplayName
 }
 
+// ProfileURL returns the profile URL of the Settings being built
 func (w Settings) ProfileURL() string {
 	return w._user.ProfileURL
 }
 
+// IconURL returns the icon URL of the Settings being built
 func (w Settings) IconURL() string {
 	return w._user.ActivityPubIconURL()
 }
@@ -223,6 +242,7 @@ func (w Settings) Circles() QueryBuilder[model.Circle] {
 	return NewQueryBuilder[model.Circle](w._factory.Circle(), w._session, criteria)
 }
 
+// Followers returns a QueryBuilder that lists the signed-in User's Followers
 func (w Settings) Followers() QueryBuilder[model.FollowerSummary] {
 
 	// Define inbound parameters
@@ -240,6 +260,7 @@ func (w Settings) Followers() QueryBuilder[model.FollowerSummary] {
 	return NewQueryBuilder[model.FollowerSummary](w._factory.Follower(), w._session, criteria)
 }
 
+// Following returns a QueryBuilder that lists the actors the signed-in User follows
 func (w Settings) Following() QueryBuilder[model.FollowingSummary] {
 
 	expressionBuilder := builder.NewBuilder().
@@ -254,6 +275,7 @@ func (w Settings) Following() QueryBuilder[model.FollowingSummary] {
 	return NewQueryBuilder[model.FollowingSummary](w._factory.Following(), w._session, criteria)
 }
 
+// FollowingByFolder returns every Following that the signed-in User routes into the named Folder
 func (w Settings) FollowingByFolder(token string) ([]model.FollowingSummary, error) {
 
 	// Get the UserID from the authentication scope
@@ -275,6 +297,7 @@ func (w Settings) FollowingByFolder(token string) ([]model.FollowingSummary, err
 	return followingService.QueryByFolder(w._session, userID, followingID)
 }
 
+// FollowingByToken returns the signed-in User's Following record with the provided token
 func (w Settings) FollowingByToken(followingToken string) (model.Following, error) {
 
 	userID := w.AuthenticatedID()

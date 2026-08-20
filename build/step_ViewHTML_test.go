@@ -21,9 +21,16 @@ type stubViewHTMLBuilder struct {
 	recorder *httptest.ResponseRecorder
 }
 
-func (b stubViewHTMLBuilder) response() http.ResponseWriter              { return b.recorder }
-func (b stubViewHTMLBuilder) actionID() string                           { return "view" }
-func (b stubViewHTMLBuilder) object() data.Object                        { return nil }
+// response implements the Builder interface, returning this stub's response recorder
+func (b stubViewHTMLBuilder) response() http.ResponseWriter { return b.recorder }
+
+// actionID implements the Builder interface, returning a fixed "view" action
+func (b stubViewHTMLBuilder) actionID() string { return "view" }
+
+// object implements the Builder interface. The stub owns no object, so the validator branch is skipped.
+func (b stubViewHTMLBuilder) object() data.Object { return nil }
+
+// execute implements the Builder interface. The stub renders nothing.
 func (b stubViewHTMLBuilder) execute(_ io.Writer, _ string, _ any) error { return nil }
 
 // runViewHTML executes the Step against a stub builder and returns the headers it wrote.

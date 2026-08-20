@@ -120,10 +120,12 @@ func (w Stream) object() data.Object {
 	return w._stream
 }
 
+// objectID returns the unique ID of the object being built. Implements the Builder interface.
 func (w Stream) objectID() primitive.ObjectID {
 	return w._stream.StreamID
 }
 
+// objectType returns the name of the model type being built. Implements the Builder interface.
 func (w Stream) objectType() string {
 	return "Stream"
 }
@@ -133,6 +135,7 @@ func (w Stream) schema() schema.Schema {
 	return w._template.Schema
 }
 
+// service returns the ModelService that backs this Builder. Implements the Builder interface.
 func (w Stream) service() service.ModelService {
 	return w._service
 }
@@ -143,6 +146,7 @@ func (w Stream) templateRole() string {
 	return w._template.TemplateRole
 }
 
+// clone returns a copy of this Builder, pointed at a different action. Implements the Builder interface.
 func (w Stream) clone(action string) (Builder, error) {
 	return NewStream(w._factory, w._session, w._request, w._response, w._template, w._stream, action)
 }
@@ -242,6 +246,7 @@ func (w Stream) ShortSummary() string {
 	return htmlconv.Summary(w._stream.Summary)
 }
 
+// SummaryOrContent returns the summary or content of the Stream being built
 func (w Stream) SummaryOrContent() string {
 	return w._stream.SummaryOrContent()
 }
@@ -267,6 +272,7 @@ func (w Stream) Permalink() string {
 	return w._stream.Permalink()
 }
 
+// BasePath returns the URL path of this object, without any action. Implements the Builder interface.
 func (w Stream) BasePath() string {
 	return "/" + w._stream.StreamID.Hex()
 }
@@ -281,6 +287,7 @@ func (w Stream) Author() model.PersonLink {
 	return w._stream.AttributedTo
 }
 
+// IsAuthor returns TRUE if the signed-in User wrote this Stream
 func (w Stream) IsAuthor() bool {
 	return w._stream.IsAuthor(w.AuthenticatedID())
 }
@@ -300,18 +307,22 @@ func (w Stream) ContentHTML() template.HTML {
 	return template.HTML(w._stream.Content.HTML)
 }
 
+// Location returns the location of the Stream being built
 func (w Stream) Location() geo.Address {
 	return w._stream.Location
 }
 
+// StartDate returns the start of this Stream's event window
 func (w Stream) StartDate() time.Time {
 	return w._stream.StartDate.Time
 }
 
+// EndDate returns the end of this Stream's event window
 func (w Stream) EndDate() time.Time {
 	return w._stream.EndDate.Time
 }
 
+// ContentRaw returns this Stream's content in its source format, or an empty JSON object
 func (w Stream) ContentRaw() string {
 
 	if w._stream.Content.Raw == "" {
@@ -599,6 +610,7 @@ func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option
 	return Stream{}
 }
 
+// RepliesAfter returns the cached replies to this Stream published after the provided date, each labeled with the viewer's rule verdict
 func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[streams.Document] {
 
 	activityStreamsService := w._factory.ActivityStream()
@@ -618,6 +630,7 @@ func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[stre
 	return result
 }
 
+// ReplyLinksAfter returns the reply links in this Stream's Replies collection created after the provided date
 func (w Stream) ReplyLinksAfter(dateString string, maxRows int) (sliceof.Object[model.CollectionItem], error) {
 	collectionItemService := w._factory.CollectionItem()
 	minDate := convert.Int64(dateString)
@@ -690,6 +703,7 @@ func (w Stream) Outbox() (QueryBuilder[model.OutboxMessage], error) {
  * Other Records
  ******************************************/
 
+// Streams returns a QueryBuilder that lists the Streams this viewer may see
 func (w Stream) Streams() QueryBuilder[model.StreamSummary] {
 	streamService := w._factory.Stream()
 
@@ -699,6 +713,7 @@ func (w Stream) Streams() QueryBuilder[model.StreamSummary] {
 	return NewQueryBuilder[model.StreamSummary](streamService, w._session, criteria)
 }
 
+// Users returns a QueryBuilder that lists the public Users on this Domain
 func (w Stream) Users() QueryBuilder[model.UserSummary] {
 	userService := w._factory.User()
 	criteria := exp.Equal("isPublic", true)
@@ -709,6 +724,7 @@ func (w Stream) Users() QueryBuilder[model.UserSummary] {
  * Related Streams
  ******************************************/
 
+// Breadcrumbs returns this Stream's ancestors, from the root down
 func (w Stream) Breadcrumbs() ([]model.StreamSummary, error) {
 
 	criteria := exp.In("_id", w._stream.ParentIDs).
@@ -800,6 +816,7 @@ func (w Stream) StreamHasPrivileges() bool {
 	return w._stream.HasPrivileges()
 }
 
+// MerchantAccounts returns a QueryBuilder that lists this Domain's payment providers
 func (w Stream) MerchantAccounts() QueryBuilder[model.MerchantAccount] {
 
 	expressionBuilder := builder.NewBuilder().
@@ -828,6 +845,7 @@ func (w Stream) PrivilegeIDs() model.Permissions {
 	return w._stream.PrivilegeIDs
 }
 
+// IsPublic returns the is public of the Stream being built
 func (w Stream) IsPublic() bool {
 	return w._stream.IsPublic()
 }
@@ -879,11 +897,13 @@ func (w Stream) draftBuilder() (Stream, error) {
 	}, nil
 }
 
+// setState moves the underlying object into the provided state
 func (w Stream) setState(stateID string) error {
 	w._stream.SetState(stateID)
 	return nil
 }
 
+// debug writes this Builder's state to the console. Implements the Builder interface.
 func (w Stream) debug() {
 	log.Debug().Interface("object", w.object()).Msg("builder_Stream")
 }

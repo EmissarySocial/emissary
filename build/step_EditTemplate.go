@@ -86,6 +86,7 @@ func (step StepEditTemplate) Post(builder Builder, _ io.Writer) PipelineBehavior
 	return Continue()
 }
 
+// fieldLabel returns the human-readable label for one of the editable template fields
 func (step StepEditTemplate) fieldLabel(value string) string {
 
 	switch value {
@@ -103,6 +104,7 @@ func (step StepEditTemplate) fieldLabel(value string) string {
 	return ""
 }
 
+// isTemplateAllowed returns TRUE if the provided Template may be selected at this path
 func (step StepEditTemplate) isTemplateAllowed(builder Builder, path string, templateID string) bool {
 
 	allowedTemplates := step.listTemplates(builder, path)
@@ -116,6 +118,7 @@ func (step StepEditTemplate) isTemplateAllowed(builder Builder, path string, tem
 	return false
 }
 
+// listTemplates returns the Templates that may be selected at the provided path
 func (step StepEditTemplate) listTemplates(builder Builder, path string) []form.LookupCode {
 
 	switch path {

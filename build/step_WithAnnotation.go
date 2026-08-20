@@ -13,6 +13,7 @@ type StepWithAnnotation struct {
 	SubSteps []step.Step
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepWithAnnotation) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	return step.execute(builder, buffer, ActionMethodGet)
 }
@@ -22,6 +23,7 @@ func (step StepWithAnnotation) Post(builder Builder, buffer io.Writer) PipelineB
 	return step.execute(builder, buffer, ActionMethodPost)
 }
 
+// execute performs this step's work for either a GET or a POST
 func (step StepWithAnnotation) execute(builder Builder, buffer io.Writer, actionMethod ActionMethod) PipelineBehavior {
 
 	const location = "build.StepWithAnnotation.execute"
@@ -56,6 +58,7 @@ func (step StepWithAnnotation) execute(builder Builder, buffer io.Writer, action
 	return UseResult(result)
 }
 
+// getAnnotation loads the Annotation named in the query string, or returns a new one
 func (step StepWithAnnotation) getAnnotation(builder Builder) (model.Annotation, error) {
 
 	const location = "build.StepWithAnnotation.getAnnotation"

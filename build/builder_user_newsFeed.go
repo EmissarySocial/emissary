@@ -102,14 +102,17 @@ func (w Inbox) NavigationID() string {
 	return "inbox"
 }
 
+// PageTitle returns the human-friendly title to display at the top of the page. Implements the Builder interface.
 func (w Inbox) PageTitle() string {
 	return w._user.DisplayName
 }
 
+// BasePath returns the URL path of this object, without any action. Implements the Builder interface.
 func (w Inbox) BasePath() string {
 	return "/@me/newsfeed"
 }
 
+// Permalink returns the permanent URL of the record being built. Implements the Builder interface.
 func (w Inbox) Permalink() string {
 
 	if newsItem := w.Message(); !newsItem.IsNew() {
@@ -123,34 +126,42 @@ func (w Inbox) Permalink() string {
 	return w.Host() + "/@me/newsfeed"
 }
 
+// Token returns the URL token of the record being built. Implements the Builder interface.
 func (w Inbox) Token() string {
 	return "users"
 }
 
+// object returns the model object being built. Implements the Builder interface.
 func (w Inbox) object() data.Object {
 	return w._user
 }
 
+// objectID returns the unique ID of the object being built. Implements the Builder interface.
 func (w Inbox) objectID() primitive.ObjectID {
 	return w._user.UserID
 }
 
+// objectType returns the name of the model type being built. Implements the Builder interface.
 func (w Inbox) objectType() string {
 	return "User"
 }
 
+// schema returns the rosetta schema that validates this object. Implements the Builder interface.
 func (w Inbox) schema() schema.Schema {
 	return schema.New(model.UserSchema())
 }
 
+// service returns the ModelService that backs this Builder. Implements the Builder interface.
 func (w Inbox) service() service.ModelService {
 	return w._factory.User()
 }
 
+// templateRole returns the role this Template plays, which chooses the child template. Implements the Builder interface.
 func (w Inbox) templateRole() string {
 	return "inbox"
 }
 
+// clone returns a copy of this Builder, pointed at a different action. Implements the Builder interface.
 func (w Inbox) clone(action string) (Builder, error) {
 	return NewInbox(w._factory, w._session, w._request, w._response, w._user, action)
 }
@@ -159,10 +170,12 @@ func (w Inbox) clone(action string) (Builder, error) {
  * Data Accessors
  ******************************************/
 
+// UserID returns the unique ID of the User whose inbox is being built, as a string
 func (w Inbox) UserID() string {
 	return w._user.UserID.Hex()
 }
 
+// ActorURL returns the ActivityPub URL of the User whose inbox is being built
 func (w Inbox) ActorURL() string {
 	return w.Host() + "/@" + w._user.UserID.Hex()
 }
@@ -172,30 +185,37 @@ func (w Inbox) Myself() bool {
 	return w._authorization.UserID == w._user.UserID
 }
 
+// Username returns the username of the Inbox being built
 func (w Inbox) Username() string {
 	return w._user.Username
 }
 
+// FollowerCount returns the follower count of the Inbox being built
 func (w Inbox) FollowerCount() int {
 	return w._user.FollowerCount
 }
 
+// FollowingCount returns the following count of the Inbox being built
 func (w Inbox) FollowingCount() int {
 	return w._user.FollowingCount
 }
 
+// RuleCount returns the rule count of the Inbox being built
 func (w Inbox) RuleCount() int {
 	return w._user.RuleCount
 }
 
+// DisplayName returns the display name of the Inbox being built
 func (w Inbox) DisplayName() string {
 	return w._user.DisplayName
 }
 
+// ProfileURL returns the profile URL of the Inbox being built
 func (w Inbox) ProfileURL() string {
 	return w._user.ProfileURL
 }
 
+// IconURL returns the icon URL of the Inbox being built
 func (w Inbox) IconURL() string {
 	return w._user.ActivityPubIconURL()
 }
@@ -204,6 +224,7 @@ func (w Inbox) IconURL() string {
  * Inbox Methods
  ******************************************/
 
+// Followers returns a QueryBuilder that lists the signed-in User's Followers
 func (w Inbox) Followers() QueryBuilder[model.FollowerSummary] {
 
 	// Define inbound parameters
@@ -221,6 +242,7 @@ func (w Inbox) Followers() QueryBuilder[model.FollowerSummary] {
 	return NewQueryBuilder[model.FollowerSummary](w._factory.Follower(), w._session, criteria)
 }
 
+// Following returns a QueryBuilder that lists the actors the signed-in User follows
 func (w Inbox) Following() QueryBuilder[model.FollowingSummary] {
 
 	expressionBuilder := builder.NewBuilder().
@@ -235,6 +257,7 @@ func (w Inbox) Following() QueryBuilder[model.FollowingSummary] {
 	return NewQueryBuilder[model.FollowingSummary](w._factory.Following(), w._session, criteria)
 }
 
+// FollowingByFolder returns every Following that the signed-in User routes into the named Folder
 func (w Inbox) FollowingByFolder(token string) ([]model.FollowingSummary, error) {
 
 	// Get the UserID from the authentication scope
@@ -256,6 +279,7 @@ func (w Inbox) FollowingByFolder(token string) ([]model.FollowingSummary, error)
 	return followingService.QueryByFolder(w._session, userID, followingID)
 }
 
+// FollowingByToken returns the signed-in User's Following record with the provided token
 func (w Inbox) FollowingByToken(followingToken string) (model.Following, error) {
 
 	userID := w.AuthenticatedID()
@@ -271,6 +295,7 @@ func (w Inbox) FollowingByToken(followingToken string) (model.Following, error) 
 	return following, nil
 }
 
+// Rules returns a QueryBuilder that lists the signed-in User's Rules
 func (w Inbox) Rules() QueryBuilder[model.Rule] {
 
 	expressionBuilder := builder.NewBuilder().
@@ -287,6 +312,7 @@ func (w Inbox) Rules() QueryBuilder[model.Rule] {
 	return result
 }
 
+// RuleByToken returns the signed-in User's Rule with the provided token, or an empty Rule
 func (w Inbox) RuleByToken(token string) model.Rule {
 	ruleService := w._factory.Rule()
 	rule := model.NewRule()
@@ -393,6 +419,7 @@ func (w Inbox) Folders() (model.FolderList, error) {
 	return result, nil
 }
 
+// FoldersWithSelection returns the signed-in User's Folder list, with the named section marked as selected
 func (w Inbox) FoldersWithSelection(section string) (model.FolderList, error) {
 
 	const location = "build.NewsFeed.FoldersWithSelection"
@@ -564,6 +591,7 @@ func (w Inbox) Message() model.NewsItem {
 	return newsItem
 }
 
+// QueryByContext returns the cached documents in a conversation, each labeled with the viewer's rule verdict
 func (w Inbox) QueryByContext(contextID string, afterDate int64, maxRows int) (sliceof.Object[streams.Document], error) {
 
 	activityService := w._factory.ActivityStream()
@@ -670,6 +698,7 @@ func (w Inbox) HasRule(ruleType string, trigger string) model.Rule {
 	return rule
 }
 
+// debug writes this Builder's state to the console. Implements the Builder interface.
 func (w Inbox) debug() {
 	log.Debug().Interface("object", w.object()).Msg("builder_Inbox")
 }

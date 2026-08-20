@@ -39,6 +39,7 @@ type Common struct {
 	arguments mapof.String // Temporary data scope for this request
 }
 
+// NewCommon returns the Common builder that every other Builder embeds
 func NewCommon(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter) Common {
 
 	// Retrieve the user's authorization information
@@ -89,10 +90,12 @@ func (w Common) authorization() model.Authorization {
  * Page Defaults
  ******************************************/
 
+// PageTitle returns the human-friendly title to display at the top of the page. Implements the Builder interface.
 func (w Common) PageTitle() string {
 	return ""
 }
 
+// Summary returns the human-friendly summary to display at the top of the page. Implements the Builder interface.
 func (w Common) Summary() string {
 	return ""
 }
@@ -192,6 +195,7 @@ func (w Common) SetQueryParam(name string, value string) string {
 	return ""
 }
 
+// DefaultQueryParam sets a query parameter only if it is not already present. Implements the Builder interface.
 func (w Common) DefaultQueryParam(name string, value string) string {
 	query := w._request.URL.Query()
 
@@ -329,48 +333,59 @@ func (w Common) NavigationID() string {
  * Request Data (Getters and Setters)
  ******************************************/
 
+// getArguments returns the arguments passed to this action. Implements the Builder interface.
 func (w Common) getArguments() map[string]string {
 	return w.arguments
 }
 
+// setArguments merges the provided arguments into this Builder's temporary data scope
 func (w *Common) setArguments(arguments map[string]string) {
 	for key, value := range arguments {
 		w.arguments.SetString(key, value)
 	}
 }
 
+// GetBool returns the named argument as a boolean. Implements the Builder interface.
 func (w Common) GetBool(name string) bool {
 	return convert.Bool(w.GetString(name))
 }
 
+// GetFloat returns the named argument as a float. Implements the Builder interface.
 func (w Common) GetFloat(name string) float64 {
 	return convert.Float(w.GetString(name))
 }
 
+// GetHTML returns the named argument as trusted HTML. Implements the Builder interface.
 func (w Common) GetHTML(name string) template.HTML {
 	return template.HTML(w.GetString(name))
 }
 
+// GetInt returns the named argument as an integer. Implements the Builder interface.
 func (w Common) GetInt(name string) int {
 	return convert.Int(w.GetString(name))
 }
 
+// GetInt64 returns the named argument as a 64-bit integer. Implements the Builder interface.
 func (w Common) GetInt64(name string) int64 {
 	return convert.Int64(w.GetString(name))
 }
 
+// GetString returns the named argument as a string. Implements the Builder interface.
 func (w Common) GetString(name string) string {
 	return w.arguments.GetString(name)
 }
 
+// setString writes a named argument into this Builder's temporary data scope
 func (w Common) setString(name string, value string) {
 	w.arguments.SetString(name, value)
 }
 
+// SetContent writes the "content" argument, which the next step in the pipeline renders
 func (w Common) SetContent(value string) {
 	w.setString("content", value)
 }
 
+// GetContent returns the "content" argument, as trusted HTML
 func (w Common) GetContent() template.HTML {
 	return w.GetHTML("content")
 }
@@ -387,30 +402,37 @@ func (w Common) IsIndexable() bool {
  * Domain Data
  ******************************************/
 
+// DomainStateID returns the lifecycle state of this Domain
 func (w Common) DomainStateID() string {
 	return w._factory.Domain().Get().StateID
 }
 
+// DomainLabel returns the human-readable name of this Domain
 func (w Common) DomainLabel() string {
 	return w._factory.Domain().Get().Label
 }
 
+// DomainIcon returns the URL of this Domain's icon image
 func (w Common) DomainIcon() string {
 	return w._factory.Domain().Get().IconURL()
 }
 
+// DomainImage returns the URL of this Domain's banner image
 func (w Common) DomainImage() string {
 	return w._factory.Domain().Get().ImageURL()
 }
 
+// DomainHasRegistrationForm returns TRUE if this Domain accepts new sign-ups
 func (w Common) DomainHasRegistrationForm() bool {
 	return w._factory.Domain().Get().HasRegistrationForm()
 }
 
+// IsDomainStartup returns TRUE if this Domain has not finished its first-run setup
 func (w Common) IsDomainStartup() bool {
 	return (w._factory.Domain().Get().StateID == model.DomainStateStartup)
 }
 
+// NotDomainStartup returns TRUE if this Domain has finished its first-run setup
 func (w Common) NotDomainStartup() bool {
 	return (w._factory.Domain().Get().StateID != model.DomainStateStartup)
 }
@@ -425,6 +447,7 @@ func (w Common) IsAuthenticated() bool {
 	return authorization.IsAuthenticated()
 }
 
+// IsIdentity returns TRUE if the caller is signed in as a guest Identity
 func (w Common) IsIdentity() bool {
 	authorization := w.authorization()
 	return authorization.IsIdentity()
@@ -520,6 +543,7 @@ func (w Common) ActivityStream(url string) streams.Document {
 	return result
 }
 
+// ActivityStreamCollection returns the item URLs in the remote ActivityPub collection at the provided URL
 func (w Common) ActivityStreamCollection(url string) sliceof.String {
 
 	const location = "build.Common.ActivityStreamCollection"
@@ -556,6 +580,7 @@ func (w Common) ActivityStreamActor(url string) streams.Document {
 	return result
 }
 
+// ActivityStreamActors returns the cached remote Actors that match the provided search text
 func (w Common) ActivityStreamActors(search string) (sliceof.Object[model.ActorSummary], error) {
 	activityService := w._factory.ActivityStream()
 	return activityService.QueryActors(search)
@@ -582,6 +607,7 @@ func (w Common) AmFollowing(url string) model.Following {
 	return following
 }
 
+// IsFollower returns the signed-in User's Follower record for the provided URL, or an empty record
 func (w Common) IsFollower(url string) model.Follower {
 
 	followerService := w._factory.Follower()
@@ -665,6 +691,7 @@ func (w Common) DatasetValue(name string, value string) form.LookupCode {
 	return form.LookupCode{}
 }
 
+// withinPublishDate returns the criteria fragment limiting a query to the current publish window. Implements the Builder interface.
 func (w Common) withinPublishDate() exp.Expression {
 	return exp.LessThan("publishDate", time.Now().Unix()).
 		AndGreaterThan("unpublishDate", time.Now().Unix())
@@ -733,6 +760,7 @@ func (w Common) getUser() (*model.User, error) {
 	return w._user, nil
 }
 
+// getIdentity returns the currently signed-in guest Identity. Implements the Builder interface.
 func (w Common) getIdentity() (*model.Identity, error) {
 
 	const location = "build.Common.getIdentity"
@@ -776,6 +804,7 @@ func (w Common) Navigation() (sliceof.Object[model.StreamSummary], error) {
 	return result, err
 }
 
+// GetResponseID returns the ID of the signed-in User's response of the provided type to a URL
 func (w Common) GetResponseID(responseType string, url string) string {
 
 	// If the user is not signed in, then they can't have responded.
@@ -798,6 +827,7 @@ func (w Common) GetResponseID(responseType string, url string) string {
 	return ""
 }
 
+// GetResponseSummary returns which responses the signed-in User has made to the provided URL
 func (w Common) GetResponseSummary(url string) model.UserResponseSummary {
 
 	result := model.NewUserResponseSummary()
@@ -823,6 +853,7 @@ func (w Common) GetResponseSummary(url string) model.UserResponseSummary {
 	return result
 }
 
+// AvailableMerchantAccounts returns the payment providers this Domain has connected, as LookupCodes
 func (w Common) AvailableMerchantAccounts() (sliceof.Object[form.LookupCode], error) {
 	merchantAccountService := w._factory.MerchantAccount()
 	return merchantAccountService.AvailableMerchantAccounts(w._session)
@@ -832,6 +863,7 @@ func (w Common) AvailableMerchantAccounts() (sliceof.Object[form.LookupCode], er
  * Search Engine
  ******************************************/
 
+// Search returns a SearchBuilder seeded from this request's query string. Implements the Builder interface.
 func (w Common) Search() SearchBuilder {
 
 	// Collect required values
@@ -851,6 +883,7 @@ func (w Common) Search() SearchBuilder {
 	return NewSearchBuilder(searchTagService, searchResultService, w._factory.Rule(), w.AuthenticatedID(), w._session, criteria, textQuery)
 }
 
+// SearchTag returns the SearchTag with the provided name, or an empty tag if it does not exist
 func (w Common) SearchTag(tagName string) model.SearchTag {
 
 	const location = "build.Common.SearchTag"
@@ -864,16 +897,19 @@ func (w Common) SearchTag(tagName string) model.SearchTag {
 	return result
 }
 
+// MapTiles returns the map-tile provider that this Domain draws maps with
 func (w Common) MapTiles() form.LookupCode {
 	return w.factory().GeocodeTiles().GetTileURL(w.session())
 }
 
+// MerchantAccount returns the MerchantAccount with the provided token
 func (w Common) MerchantAccount(merchantAccountID string) (model.MerchantAccount, error) {
 	result := model.NewMerchantAccount()
 	err := w._factory.MerchantAccount().LoadByToken(w._session, merchantAccountID, &result)
 	return result, err
 }
 
+// FeaturedSearchTags returns a QueryBuilder over this Domain's featured SearchTags
 func (w Common) FeaturedSearchTags() *QueryBuilder[model.SearchTag] {
 
 	criteria := exp.And(

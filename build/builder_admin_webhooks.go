@@ -82,46 +82,57 @@ func (w Webhook) View(actionID string) (template.HTML, error) {
 	return builder.Render()
 }
 
+// NavigationID returns the top-level navigation item to highlight. Implements the Builder interface.
 func (w Webhook) NavigationID() string {
 	return "admin"
 }
 
+// Token returns the URL token of the record being built. Implements the Builder interface.
 func (w Webhook) Token() string {
 	return "webhooks"
 }
 
+// PageTitle returns the human-friendly title to display at the top of the page. Implements the Builder interface.
 func (w Webhook) PageTitle() string {
 	return "Settings"
 }
 
+// Permalink returns the permanent URL of the record being built. Implements the Builder interface.
 func (w Webhook) Permalink() string {
 	return w.Host() + "/admin/webhooks/" + w.WebhookID()
 }
 
+// BasePath returns the URL path of this object, without any action. Implements the Builder interface.
 func (w Webhook) BasePath() string {
 	return "/admin/webhooks/" + w.WebhookID()
 }
 
+// object returns the model object being built. Implements the Builder interface.
 func (w Webhook) object() data.Object {
 	return w._webhook
 }
 
+// objectID returns the unique ID of the object being built. Implements the Builder interface.
 func (w Webhook) objectID() primitive.ObjectID {
 	return w._webhook.WebhookID
 }
 
+// objectType returns the name of the model type being built. Implements the Builder interface.
 func (w Webhook) objectType() string {
 	return "Webhook"
 }
 
+// schema returns the rosetta schema that validates this object. Implements the Builder interface.
 func (w Webhook) schema() schema.Schema {
 	return schema.New(model.WebhookSchema())
 }
 
+// service returns the ModelService that backs this Builder. Implements the Builder interface.
 func (w Webhook) service() service.ModelService {
 	return w._factory.Webhook()
 }
 
+// clone returns a copy of this Builder, pointed at a different action. Implements the Builder interface.
 func (w Webhook) clone(action string) (Builder, error) {
 	return NewWebhook(w._factory, w._session, w._request, w._response, w._template, w._webhook, action)
 }
@@ -130,6 +141,7 @@ func (w Webhook) clone(action string) (Builder, error) {
  * Webhook Data
  ******************************************/
 
+// WebhookID returns the unique ID of the Webhook being built, as a string
 func (w Webhook) WebhookID() string {
 	if w._webhook == nil {
 		return ""
@@ -137,14 +149,17 @@ func (w Webhook) WebhookID() string {
 	return w._webhook.WebhookID.Hex()
 }
 
+// Label returns the label of the Webhook being built
 func (w Webhook) Label() string {
 	return w._webhook.Label
 }
 
+// Events returns the events of the Webhook being built
 func (w Webhook) Events() []string {
 	return w._webhook.Events
 }
 
+// TargetURL returns the target URL of the Webhook being built
 func (w Webhook) TargetURL() string {
 	return w._webhook.TargetURL
 }
@@ -162,6 +177,7 @@ func (w Webhook) IsAdminBuilder() bool {
  * Query Builders
  ******************************************/
 
+// Webhooks returns a QueryBuilder that lists Webhooks
 func (w Webhook) Webhooks() *QueryBuilder[model.Webhook] {
 
 	query := builder.NewBuilder().
@@ -183,6 +199,7 @@ func (w Webhook) Webhooks() *QueryBuilder[model.Webhook] {
  * Debugging Methods
  ******************************************/
 
+// debug writes this Builder's state to the console. Implements the Builder interface.
 func (w Webhook) debug() {
 	log.Debug().Interface("object", w.object()).Msg("builder_admin_webhooks")
 }

@@ -91,46 +91,57 @@ func (w Attachment) UpdateDate() int64 {
 	return w._attachment.UpdateDate
 }
 
+// Original returns the original of the Attachment being built
 func (w Attachment) Original() string {
 	return w._attachment.Original
 }
 
+// Category returns the category of the Attachment being built
 func (w Attachment) Category() string {
 	return w._attachment.Category
 }
 
+// Label returns the label of the Attachment being built
 func (w Attachment) Label() string {
 	return w._attachment.Label
 }
 
+// Description returns the description of the Attachment being built
 func (w Attachment) Description() string {
 	return w._attachment.Description
 }
 
+// URL returns the URL of the Attachment being built
 func (w Attachment) URL() string {
 	return w._attachment.URL
 }
 
+// Status returns the status of the Attachment being built
 func (w Attachment) Status() string {
 	return w._attachment.Status
 }
 
+// Rules returns the rules of the Attachment being built
 func (w Attachment) Rules() model.AttachmentRules {
 	return w._attachment.Rules
 }
 
+// Height returns the height of the Attachment being built
 func (w Attachment) Height() int {
 	return w._attachment.Height
 }
 
+// Width returns the width of the Attachment being built
 func (w Attachment) Width() int {
 	return w._attachment.Width
 }
 
+// Duration returns the duration of the Attachment being built
 func (w Attachment) Duration() int {
 	return w._attachment.Duration
 }
 
+// Rank returns the rank of the Attachment being built
 func (w Attachment) Rank() int {
 	return w._attachment.Rank
 }
@@ -139,46 +150,57 @@ func (w Attachment) Rank() int {
  * Builder Interface
  ******************************************/
 
+// object returns the model object being built. Implements the Builder interface.
 func (w Attachment) object() data.Object {
 	return w._attachment
 }
 
+// objectType returns the name of the model type being built. Implements the Builder interface.
 func (w Attachment) objectType() string {
 	return "Attachment"
 }
 
+// objectID returns the unique ID of the object being built. Implements the Builder interface.
 func (w Attachment) objectID() primitive.ObjectID {
 	return w._attachment.AttachmentID
 }
 
+// schema returns the rosetta schema that validates this object. Implements the Builder interface.
 func (w Attachment) schema() schema.Schema {
 	return schema.New(model.AttachmentSchema())
 }
 
+// service returns the ModelService that backs this Builder. Implements the Builder interface.
 func (w Attachment) service() service.ModelService {
 	return w._factory.Attachment()
 }
 
+// Token returns the URL token of the record being built. Implements the Builder interface.
 func (w Attachment) Token() string {
 	return w._attachment.AttachmentID.Hex()
 }
 
+// PageTitle returns the human-friendly title to display at the top of the page. Implements the Builder interface.
 func (w Attachment) PageTitle() string {
 	return w._attachment.Label
 }
 
+// Permalink returns the permanent URL of the record being built. Implements the Builder interface.
 func (w Attachment) Permalink() string {
 	return w._attachment.CalcURL(w._factory.Host())
 }
 
+// BasePath returns the URL path of this object, without any action. Implements the Builder interface.
 func (w Attachment) BasePath() string {
 	return w._attachment.CalcURL(w._factory.Host())
 }
 
+// UserCan returns TRUE if the signed-in User may run the named action. Implements the Builder interface.
 func (w Attachment) UserCan(string) bool {
 	return false
 }
 
+// Render builds this object into HTML. Implements the Builder interface.
 func (w Attachment) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
@@ -213,14 +235,17 @@ func (w Attachment) View(actionID string) (template.HTML, error) {
 	return subStream.Render()
 }
 
+// setState moves the underlying object into the provided state
 func (w Attachment) setState(stateID string) error {
 	return nil
 }
 
+// clone returns a copy of this Builder, pointed at a different action. Implements the Builder interface.
 func (w Attachment) clone(action string) (Builder, error) {
 	return NewAttachment(w._factory, w._session, w._request, w._response, w._template, w._attachment, action)
 }
 
+// debug writes this Builder's state to the console. Implements the Builder interface.
 func (w Attachment) debug() {
 	log.Debug().Interface("object", w.object()).Msg("builder_Model")
 }

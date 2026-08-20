@@ -85,6 +85,7 @@ type Builder interface {
 	debug()                               // Outputs debug information to the console
 }
 
+// templateGetter is implemented by every Builder that renders through a model.Template
 type templateGetter interface {
 	template() model.Template
 }

@@ -13,6 +13,7 @@ type StepWithNextSibling struct {
 	SubSteps []step.Step
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepWithNextSibling) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	return step.execute(builder, buffer, ActionMethodGet)
 }

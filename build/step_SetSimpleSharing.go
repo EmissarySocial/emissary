@@ -20,6 +20,7 @@ type StepSetSimpleSharing struct {
 	Role    string
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepSetSimpleSharing) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	const location = "build.StepSetSimpleSharing.Get"
@@ -75,6 +76,7 @@ func (step StepSetSimpleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 	return nil
 }
 
+// Post applies this step during a POST request. Implements the Step interface.
 func (step StepSetSimpleSharing) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepSetSimpleSharing.Post"
@@ -196,6 +198,7 @@ func (step StepSetSimpleSharing) form() (form.Element, error) {
 	}, nil
 }
 
+// calculateValue returns the Groups this Stream is shared with, defaulting to "anonymous" when it has none
 func (step StepSetSimpleSharing) calculateValue(stream *model.Stream) mapof.Object[id.Slice] {
 
 	if groupIds := stream.Groups[step.Role]; groupIds.NotEmpty() {

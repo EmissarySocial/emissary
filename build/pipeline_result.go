@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
+// PipelineResult is the accumulated outcome of running a build Pipeline: the response to write, and whether to keep going
 type PipelineResult struct {
 	StatusCode  int          // HTTP Status Code to be returned
 	ContentType string       // If present, then this option sets the content-type header
@@ -18,6 +19,7 @@ type PipelineResult struct {
 	Error       error        // If present, then there was an error building this page
 }
 
+// NewPipelineResult returns a fully initialized, empty PipelineResult
 func NewPipelineResult() PipelineResult {
 	return PipelineResult{
 		Headers: mapof.NewString(),
@@ -25,6 +27,7 @@ func NewPipelineResult() PipelineResult {
 	}
 }
 
+// GetContentType returns this result's content type, defaulting to HTML
 func (result PipelineResult) GetContentType() string {
 
 	if result.ContentType != "" {
@@ -34,6 +37,7 @@ func (result PipelineResult) GetContentType() string {
 	return "text/html"
 }
 
+// GetStatusCode returns this result's HTTP status code, derived from its error if one was set
 func (result PipelineResult) GetStatusCode() int {
 
 	if result.StatusCode != 0 {
@@ -47,6 +51,7 @@ func (result PipelineResult) GetStatusCode() int {
 	return http.StatusOK
 }
 
+// Apply writes this result's content type, headers, and client events onto the response
 func (result PipelineResult) Apply(response http.ResponseWriter) {
 
 	header := response.Header()

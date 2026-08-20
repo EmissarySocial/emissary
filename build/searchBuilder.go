@@ -15,6 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// SearchBuilder is a chainable search API that templates use to select SearchResults
 type SearchBuilder struct {
 	searchTagService    *service.SearchTag
 	searchResultService *service.SearchResult
@@ -28,6 +29,7 @@ type SearchBuilder struct {
 	maxRows             int64
 }
 
+// NewSearchBuilder returns a SearchBuilder seeded with the provided criteria and text query
 func NewSearchBuilder(searchTagService *service.SearchTag, searchResultService *service.SearchResult, ruleService *service.Rule, userID primitive.ObjectID, session data.Session, criteria exp.Expression, textQuery string) SearchBuilder {
 
 	return SearchBuilder{
@@ -48,145 +50,175 @@ func NewSearchBuilder(searchTagService *service.SearchTag, searchResultService *
  * Query Builder
  ********************************/
 
+// Top1 limits this search to 1 result
 func (builder SearchBuilder) Top1() SearchBuilder {
 	builder.maxRows = 1
 	return builder
 }
 
+// Top6 limits this search to 6 results
 func (builder SearchBuilder) Top6() SearchBuilder {
 	builder.maxRows = 6
 	return builder
 }
 
+// Top8 limits this search to 8 results
 func (builder SearchBuilder) Top8() SearchBuilder {
 	builder.maxRows = 8
 	return builder
 }
 
+// Top12 limits this search to 12 results
 func (builder SearchBuilder) Top12() SearchBuilder {
 	builder.maxRows = 12
 	return builder
 }
 
+// Top24 limits this search to 24 results
 func (builder SearchBuilder) Top24() SearchBuilder {
 	builder.maxRows = 24
 	return builder
 }
 
+// Top30 limits this search to 30 results
 func (builder SearchBuilder) Top30() SearchBuilder {
 	builder.maxRows = 30
 	return builder
 }
 
+// Top60 limits this search to 60 results
 func (builder SearchBuilder) Top60() SearchBuilder {
 	builder.maxRows = 60
 	return builder
 }
+
+// Top120 limits this search to 120 results
 func (builder SearchBuilder) Top120() SearchBuilder {
 	builder.maxRows = 120
 	return builder
 }
 
+// Top150 limits this search to 150 results
 func (builder SearchBuilder) Top150() SearchBuilder {
 	builder.maxRows = 150
 	return builder
 }
 
+// Top200 limits this search to 200 results
 func (builder SearchBuilder) Top200() SearchBuilder {
 	builder.maxRows = 200
 	return builder
 }
 
+// Top300 limits this search to 300 results
 func (builder SearchBuilder) Top300() SearchBuilder {
 	builder.maxRows = 300
 	return builder
 }
 
+// Top400 limits this search to 400 results
 func (builder SearchBuilder) Top400() SearchBuilder {
 	builder.maxRows = 400
 	return builder
 }
 
+// Top500 limits this search to 500 results
 func (builder SearchBuilder) Top500() SearchBuilder {
 	builder.maxRows = 500
 	return builder
 }
 
+// Top600 limits this search to 600 results
 func (builder SearchBuilder) Top600() SearchBuilder {
 	builder.maxRows = 600
 	return builder
 }
 
+// All removes the row limit from this search
 func (builder SearchBuilder) All() SearchBuilder {
 	builder.maxRows = 0
 	return builder
 }
 
+// AfterRank pages this search forward, past the provided rank
 func (builder SearchBuilder) AfterRank(rank int64) SearchBuilder {
 	builder.criteria = builder.criteria.AndGreaterThan("rank", rank)
 	return builder
 }
 
+// AfterShuffle pages this search forward, past the provided shuffle value
 func (builder SearchBuilder) AfterShuffle(shuffle int64) SearchBuilder {
 	builder.criteria = builder.criteria.AndGreaterThan("shuffle", shuffle)
 	return builder
 }
 
+// Where limits this search to results whose field equals the provided value
 func (builder SearchBuilder) Where(field string, value any) SearchBuilder {
 	builder.criteria = builder.criteria.AndEqual(field, value)
 	return builder
 }
 
+// WhereLT limits this search to results whose field is less than the provided value
 func (builder SearchBuilder) WhereLT(field string, value any) SearchBuilder {
 	builder.criteria = builder.criteria.AndLessThan(field, value)
 	return builder
 }
 
+// WhereGT limits this search to results whose field is greater than the provided value
 func (builder SearchBuilder) WhereGT(field string, value any) SearchBuilder {
 	builder.criteria = builder.criteria.AndGreaterThan(field, value)
 	return builder
 }
 
+// WhereType limits this search to results of the provided types
 func (builder SearchBuilder) WhereType(typeNames ...string) SearchBuilder {
 	builder.criteria = builder.criteria.AndIn("type", typeNames)
 	return builder
 }
 
+// WhereTags limits this search to results carrying at least one of the provided tags
 func (builder SearchBuilder) WhereTags(tags ...string) SearchBuilder {
 	builder.criteria = builder.criteria.AndInAll("tags", tags)
 	return builder
 }
 
+// ByCreateDate sorts this search by creation date
 func (builder SearchBuilder) ByCreateDate() SearchBuilder {
 	builder.sortField = "createDate"
 	return builder
 }
 
+// ByDate sorts this search by date
 func (builder SearchBuilder) ByDate() SearchBuilder {
 	builder.sortField = "date"
 	return builder
 }
 
+// ByName sorts this search by name
 func (builder SearchBuilder) ByName() SearchBuilder {
 	builder.sortField = "name"
 	return builder
 }
 
+// ByRank sorts this search by rank
 func (builder SearchBuilder) ByRank() SearchBuilder {
 	builder.sortField = "rank"
 	return builder
 }
 
+// ByShuffle sorts this search by its shuffle value, which randomizes the order
 func (builder SearchBuilder) ByShuffle() SearchBuilder {
 	builder.sortField = "shuffle"
 	return builder
 }
 
+// By sorts this search by the named field
 func (builder SearchBuilder) By(sortField string) SearchBuilder {
 	builder.sortField = sortField
 	return builder
 }
 
+// Reverse flips this search into descending order
 func (builder SearchBuilder) Reverse() SearchBuilder {
 	builder.sortDirection = option.SortDirectionDescending
 	return builder
@@ -257,6 +289,7 @@ func (builder SearchBuilder) Count() (int64, error) {
  * Misc Helpers
  ********************************/
 
+// assembleCriteria combines this builder's filters, text query, and the viewer's blocking rules into one expression
 func (builder SearchBuilder) assembleCriteria() exp.Expression {
 
 	result := builder.criteria
@@ -290,6 +323,7 @@ func (builder SearchBuilder) assembleCriteria() exp.Expression {
 	return result
 }
 
+// makeOptions converts this builder's state into the query options that the database expects
 func (builder SearchBuilder) makeOptions() []option.Option {
 
 	var object model.SearchResult

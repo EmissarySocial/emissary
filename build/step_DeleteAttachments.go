@@ -16,10 +16,12 @@ type StepDeleteAttachments struct {
 	Category string
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepDeleteAttachments) Get(builder Builder, _ io.Writer) PipelineBehavior {
 	return nil
 }
 
+// Post applies this step during a POST request. Implements the Step interface.
 func (step StepDeleteAttachments) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "builder.StepDeleteAttachments.Post"

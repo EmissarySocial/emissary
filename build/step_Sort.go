@@ -18,6 +18,7 @@ type StepSort struct {
 	Message string
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepSort) Get(builder Builder, _ io.Writer) PipelineBehavior {
 	return nil
 }

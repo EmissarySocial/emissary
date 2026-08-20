@@ -14,6 +14,7 @@ type StepWithPrivilege struct {
 	SubSteps []step.Step
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepWithPrivilege) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	return step.execute(builder, buffer, ActionMethodGet)
 }
@@ -23,6 +24,7 @@ func (step StepWithPrivilege) Post(builder Builder, buffer io.Writer) PipelineBe
 	return step.execute(builder, buffer, ActionMethodPost)
 }
 
+// execute performs this step's work for either a GET or a POST
 func (step StepWithPrivilege) execute(builder Builder, buffer io.Writer, actionMethod ActionMethod) PipelineBehavior {
 
 	const location = "build.StepWithPrivilege.doStep"

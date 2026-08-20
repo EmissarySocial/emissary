@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestParseForm verifies that a urlencoded request body parses into its form values
 func TestParseForm(t *testing.T) {
 
 	body := strings.NewReader(`first=1&second=2&third=3&third=4`)
@@ -28,6 +29,7 @@ func TestParseForm(t *testing.T) {
 	require.Equal(t, []string{"1"}, values["first"])
 }
 
+// TestParseMultipartForm verifies that a multipart request body parses into its form values
 func TestParseMultipartForm(t *testing.T) {
 
 	request, err := getTestRequest()
@@ -42,6 +44,7 @@ func TestParseMultipartForm(t *testing.T) {
 	require.Equal(t, []string{"http://localhost/6692c69bfe80a9aacf125b0d/attachments/6723b7b74aa88ca07dc8614e"}, values["iconUrl"])
 }
 
+// TestIsNewOrEmpty verifies which token values count as "new or empty"
 func TestIsNewOrEmpty(t *testing.T) {
 	require.True(t, isNewOrEmpty(""))
 	require.True(t, isNewOrEmpty("new"))
@@ -220,6 +223,7 @@ func TestOEmbedURL(t *testing.T) {
 	}
 }
 
+// TestInlineErrorMessage verifies that the root message of a wrapped error is the one shown to the User
 func TestInlineErrorMessage(t *testing.T) {
 
 	// A validation error buried under pipeline wrappers surfaces its ROOT message --
@@ -258,6 +262,7 @@ func TestInlineErrorMessage(t *testing.T) {
 	}
 }
 
+// TestWrapInlineError verifies the status, htmx headers, and message written for an inline error
 func TestWrapInlineError(t *testing.T) {
 
 	// The full writer path: 200 status, htmx retargeting headers, and the root
@@ -283,6 +288,7 @@ func TestWrapInlineError(t *testing.T) {
 	require.Equal(t, `<span class="text-red">&lt;script&gt;alert(1)&lt;/script&gt; is not a valid address</span>`, recorder.Body.String())
 }
 
+// TestWrapInlineSuccess verifies the status, htmx headers, and markup written for an inline success
 func TestWrapInlineSuccess(t *testing.T) {
 
 	// The full writer path: 200 status, htmx retargeting headers, explicit HTML

@@ -11,11 +11,13 @@ import (
 	"github.com/benpate/table"
 )
 
+// StepTableEditor is a Step that edits a table of values stored at the provided path
 type StepTableEditor struct {
 	Path string
 	Form form.Element
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepTableEditor) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	const location = "build.StepTableEditor.Get"
@@ -40,6 +42,7 @@ func (step StepTableEditor) Get(builder Builder, buffer io.Writer) PipelineBehav
 	return Continue().WithHeader("Hx-Push-Url", "false")
 }
 
+// Post applies this step during a POST request. Implements the Step interface.
 func (step StepTableEditor) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepTableEditor.Post"

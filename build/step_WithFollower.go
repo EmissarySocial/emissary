@@ -16,6 +16,7 @@ type StepWithFollower struct {
 	SubSteps []step.Step
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepWithFollower) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	return step.execute(builder, buffer, ActionMethodGet)
 }
@@ -25,6 +26,7 @@ func (step StepWithFollower) Post(builder Builder, buffer io.Writer) PipelineBeh
 	return step.execute(builder, buffer, ActionMethodPost)
 }
 
+// execute performs this step's work for either a GET or a POST
 func (step StepWithFollower) execute(builder Builder, buffer io.Writer, actionMethod ActionMethod) PipelineBehavior {
 
 	const location = "build.StepWithFollower.execute"
@@ -91,6 +93,7 @@ func (step StepWithFollower) execute(builder Builder, buffer io.Writer, actionMe
 	return UseResult(result)
 }
 
+// load retrieves a Follower record, by its unlisted secret when one is present, and by its owner otherwise
 func (step StepWithFollower) load(session data.Session, followerService *service.Follower, token string, authenticatedID primitive.ObjectID, secret string, follower *model.Follower) error {
 
 	const location = "build.StepWithFollower.load"

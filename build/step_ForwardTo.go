@@ -15,6 +15,7 @@ type StepForwardTo struct {
 	Method string
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepForwardTo) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	if (step.Method == "get") || (step.Method == "both") {

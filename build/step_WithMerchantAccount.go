@@ -13,6 +13,7 @@ type StepWithMerchantAccount struct {
 	SubSteps []step.Step
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepWithMerchantAccount) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	return step.execute(builder, buffer, ActionMethodGet)
 }
@@ -22,6 +23,7 @@ func (step StepWithMerchantAccount) Post(builder Builder, buffer io.Writer) Pipe
 	return step.execute(builder, buffer, ActionMethodPost)
 }
 
+// execute performs this step's work for either a GET or a POST
 func (step StepWithMerchantAccount) execute(builder Builder, buffer io.Writer, actionMethod ActionMethod) PipelineBehavior {
 
 	const location = "build.StepWithMerchantAccount.doStep"

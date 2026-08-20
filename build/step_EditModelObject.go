@@ -81,6 +81,7 @@ func (step StepEditModelObject) Post(builder Builder, _ io.Writer) PipelineBehav
 	return nil
 }
 
+// getForm returns the form this step edits with, falling back to the Builder's own PropertyForm
 func (step StepEditModelObject) getForm(builder Builder) form.Element {
 
 	form := step.Form
@@ -100,6 +101,7 @@ func (step StepEditModelObject) getForm(builder Builder) form.Element {
 	return result
 }
 
+// executeOptionTemplates renders any template expressions in a form element's options, recursively
 func (step StepEditModelObject) executeOptionTemplates(builder Builder, element form.Element) form.Element {
 
 	// Recursively scan all child elements

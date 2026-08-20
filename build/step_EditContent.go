@@ -28,6 +28,7 @@ type StepEditContent struct {
 	RequireContent bool
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepEditContent) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	const location = "build.StepEditContent.Get"
@@ -41,6 +42,7 @@ func (step StepEditContent) Get(builder Builder, buffer io.Writer) PipelineBehav
 	return nil
 }
 
+// Post applies this step during a POST request. Implements the Step interface.
 func (step StepEditContent) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepEditContent.Post"

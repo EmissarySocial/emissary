@@ -20,6 +20,7 @@ func (step StepSetRenderData) Post(builder Builder, _ io.Writer) PipelineBehavio
 	return step.Do(builder)
 }
 
+// Do renders each configured value template, and writes it into the Builder's render data
 func (step StepSetRenderData) Do(builder Builder) PipelineBehavior {
 	for key, value := range step.Values {
 		queryValue := executeTemplate(value, builder)

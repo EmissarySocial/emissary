@@ -13,6 +13,7 @@ type StepWithRule struct {
 	SubSteps []step.Step
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepWithRule) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	return step.execute(builder, buffer, ActionMethodGet)
 }
@@ -22,6 +23,7 @@ func (step StepWithRule) Post(builder Builder, buffer io.Writer) PipelineBehavio
 	return step.execute(builder, buffer, ActionMethodPost)
 }
 
+// execute performs this step's work for either a GET or a POST
 func (step StepWithRule) execute(builder Builder, buffer io.Writer, actionMethod ActionMethod) PipelineBehavior {
 
 	const location = "build.StepWithRule.doStep"
@@ -60,6 +62,7 @@ func (step StepWithRule) execute(builder Builder, buffer io.Writer, actionMethod
 	return UseResult(result)
 }
 
+// getRule loads the Rule named in the query string, or returns a new one
 func (step StepWithRule) getRule(builder Builder) (model.Rule, error) {
 
 	rule := model.NewRule()

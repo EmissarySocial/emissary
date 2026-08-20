@@ -24,6 +24,7 @@ func (step StepProcessContent) Get(builder Builder, buffer io.Writer) PipelineBe
 	return nil
 }
 
+// Post applies this step during a POST request. Implements the Step interface.
 func (step StepProcessContent) Post(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	const location = "build.StepProcessContent.Post"

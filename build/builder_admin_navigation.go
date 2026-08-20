@@ -83,50 +83,62 @@ func (w Navigation) View(actionID string) (template.HTML, error) {
 	return builder.Render()
 }
 
+// Token returns the URL token of the record being built. Implements the Builder interface.
 func (w Navigation) Token() string {
 	return list.Second(w.PathList())
 }
 
+// NavigationID returns the top-level navigation item to highlight. Implements the Builder interface.
 func (w Navigation) NavigationID() string {
 	return "admin"
 }
 
+// PageTitle returns the human-friendly title to display at the top of the page. Implements the Builder interface.
 func (w Navigation) PageTitle() string {
 	return "Settings"
 }
 
+// Permalink returns the permanent URL of the record being built. Implements the Builder interface.
 func (w Navigation) Permalink() string {
 	return ""
 }
 
+// BasePath returns the URL path of this object, without any action. Implements the Builder interface.
 func (w Navigation) BasePath() string {
 	return ""
 }
 
+// object returns the model object being built. Implements the Builder interface.
 func (w Navigation) object() data.Object {
 	return w._stream
 }
 
+// objectID returns the unique ID of the object being built. Implements the Builder interface.
 func (w Navigation) objectID() primitive.ObjectID {
 	return w._stream.StreamID
 }
 
+// objectType returns the name of the model type being built. Implements the Builder interface.
 func (w Navigation) objectType() string {
 	return "Stream"
 }
 
+// schema returns the rosetta schema that validates this object. Implements the Builder interface.
 func (w Navigation) schema() schema.Schema {
 	return w._template.Schema
 }
 
+// service returns the ModelService that backs this Builder. Implements the Builder interface.
 func (w Navigation) service() service.ModelService {
 	return w._factory.Stream()
 }
 
+// clone returns a copy of this Builder, pointed at a different action. Implements the Builder interface.
 func (w Navigation) clone(action string) (Builder, error) {
 	return NewNavigation(w._factory, w._session, w._request, w._response, w._template, w._stream, action)
 }
 
+// debug writes this Builder's state to the console. Implements the Builder interface.
 func (w Navigation) debug() {
 	log.Debug().Interface("object", w.object()).Msg("builder_admin_avigation")
 }
@@ -140,21 +152,25 @@ func (w Navigation) IsAdminBuilder() bool {
 	return true
 }
 
+// DefaultPage returns the landing page for a visitor, based on how they are signed in
 func (w Navigation) DefaultPage() string {
 	domain := w.factory().Domain().Get()
 	return domain.DefaultPage(w._authorization)
 }
 
+// DefaultPage_Anonymous returns the landing page for a visitor who is not signed in
 func (w Navigation) DefaultPage_Anonymous() string {
 	domain := w.factory().Domain().Get()
 	return domain.DefaultPage_Anonymous()
 }
 
+// DefaultPage_Authenticated returns the landing page for a signed-in User
 func (w Navigation) DefaultPage_Authenticated() string {
 	domain := w.factory().Domain().Get()
 	return domain.DefaultPage_Authenticated()
 }
 
+// DefaultPage_Owner returns the landing page for a domain owner
 func (w Navigation) DefaultPage_Owner() string {
 	domain := w.factory().Domain().Get()
 	return domain.DefaultPage_Owner()

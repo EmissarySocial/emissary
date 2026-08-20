@@ -11,6 +11,7 @@ import (
 // the "folderId" query parameter) as read.
 type StepMarkFolderRead struct{}
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepMarkFolderRead) Get(builder Builder, _ io.Writer) PipelineBehavior {
 	return nil
 }

@@ -14,6 +14,7 @@ type StepWithFollowing struct {
 	SubSteps []step.Step
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepWithFollowing) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	return step.execute(builder, buffer, ActionMethodGet)
 }
@@ -23,6 +24,7 @@ func (step StepWithFollowing) Post(builder Builder, buffer io.Writer) PipelineBe
 	return step.execute(builder, buffer, ActionMethodPost)
 }
 
+// execute performs this step's work for either a GET or a POST
 func (step StepWithFollowing) execute(builder Builder, buffer io.Writer, actionMethod ActionMethod) PipelineBehavior {
 
 	const location = "build.StepWithFollowing.execute"
@@ -65,6 +67,7 @@ func (step StepWithFollowing) execute(builder Builder, buffer io.Writer, actionM
 	return UseResult(result)
 }
 
+// getFollowing loads the Following named in the query string, or returns a new one
 func (step StepWithFollowing) getFollowing(builder Builder) (model.Following, error) {
 
 	const location = "build.StepWithFollowing.getFollowing"
@@ -107,6 +110,7 @@ func (step StepWithFollowing) getFollowing(builder Builder) (model.Following, er
 	return following, nil
 }
 
+// getUserID returns the User whose Followings this step operates on, which is zero on admin routes
 func (step StepWithFollowing) getUserID(builder Builder) (primitive.ObjectID, error) {
 
 	const location = "build.StepWithFollowing.getUserID"

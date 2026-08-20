@@ -93,46 +93,57 @@ func (w Conversations) NavigationID() string {
 	return "conversations"
 }
 
+// PageTitle returns the human-friendly title to display at the top of the page. Implements the Builder interface.
 func (w Conversations) PageTitle() string {
 	return w._user.DisplayName
 }
 
+// BasePath returns the URL path of this object, without any action. Implements the Builder interface.
 func (w Conversations) BasePath() string {
 	return "/@me/conversations"
 }
 
+// Permalink returns the permanent URL of the record being built. Implements the Builder interface.
 func (w Conversations) Permalink() string {
 	return w.Host() + "/@me/conversations"
 }
 
+// Token returns the URL token of the record being built. Implements the Builder interface.
 func (w Conversations) Token() string {
 	return "conversations"
 }
 
+// object returns the model object being built. Implements the Builder interface.
 func (w Conversations) object() data.Object {
 	return w._user
 }
 
+// objectID returns the unique ID of the object being built. Implements the Builder interface.
 func (w Conversations) objectID() primitive.ObjectID {
 	return w._user.UserID
 }
 
+// objectType returns the name of the model type being built. Implements the Builder interface.
 func (w Conversations) objectType() string {
 	return "User"
 }
 
+// schema returns the rosetta schema that validates this object. Implements the Builder interface.
 func (w Conversations) schema() schema.Schema {
 	return schema.New(model.UserSchema())
 }
 
+// service returns the ModelService that backs this Builder. Implements the Builder interface.
 func (w Conversations) service() service.ModelService {
 	return w._factory.User()
 }
 
+// templateRole returns the role this Template plays, which chooses the child template. Implements the Builder interface.
 func (w Conversations) templateRole() string {
 	return "conversations"
 }
 
+// clone returns a copy of this Builder, pointed at a different action. Implements the Builder interface.
 func (w Conversations) clone(action string) (Builder, error) {
 	return NewConversations(w._factory, w._session, w._request, w._response, w._user, action)
 }
@@ -141,10 +152,12 @@ func (w Conversations) clone(action string) (Builder, error) {
  * Data Accessors
  ******************************************/
 
+// UserID returns the unique ID of the User whose conversations are being built, as a string
 func (w Conversations) UserID() string {
 	return w._user.UserID.Hex()
 }
 
+// ActorURL returns the ActivityPub URL of the User whose conversations are being built
 func (w Conversations) ActorURL() string {
 	return w.Host() + "/@" + w._user.UserID.Hex()
 }
@@ -154,18 +167,22 @@ func (w Conversations) Myself() bool {
 	return w._authorization.UserID == w._user.UserID
 }
 
+// Username returns the username of the Conversations being built
 func (w Conversations) Username() string {
 	return w._user.Username
 }
 
+// DisplayName returns the display name of the Conversations being built
 func (w Conversations) DisplayName() string {
 	return w._user.DisplayName
 }
 
+// ProfileURL returns the profile URL of the Conversations being built
 func (w Conversations) ProfileURL() string {
 	return w._user.ProfileURL
 }
 
+// IconURL returns the icon URL of the Conversations being built
 func (w Conversations) IconURL() string {
 	return w._user.ActivityPubIconURL()
 }
@@ -174,6 +191,7 @@ func (w Conversations) IconURL() string {
  * Conversations Methods
  ******************************************/
 
+// debug writes this Builder's state to the console. Implements the Builder interface.
 func (w Conversations) debug() {
 	log.Debug().Interface("object", w.object()).Msg("builder_Conversations")
 }

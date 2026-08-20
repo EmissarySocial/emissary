@@ -38,6 +38,7 @@ func (step StepAsTooltip) Get(builder Builder, buffer io.Writer) PipelineBehavio
 	return Halt().AsFullPage()
 }
 
+// UseGlobalWrapper returns FALSE, because a tooltip is rendered on its own, outside the page template
 func (step StepAsTooltip) UseGlobalWrapper() bool {
 	return false
 }

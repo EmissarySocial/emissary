@@ -14,6 +14,7 @@ type StepSearchIndex struct {
 	If *template.Template
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepSearchIndex) Get(builder Builder, _ io.Writer) PipelineBehavior {
 	return nil
 }

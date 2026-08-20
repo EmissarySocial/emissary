@@ -10,6 +10,7 @@ type StepAddEvent struct {
 	Event  string
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepAddEvent) Get(_ Builder, _ io.Writer) PipelineBehavior {
 
 	if step.Method == "post" {

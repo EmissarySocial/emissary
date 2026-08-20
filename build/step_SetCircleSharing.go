@@ -22,6 +22,7 @@ type StepSetCircleSharing struct {
 	Role    string
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepSetCircleSharing) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	const location = "build.StepSetCircleSharing.Get"
@@ -80,6 +81,7 @@ func (step StepSetCircleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 	return nil
 }
 
+// Post applies this step during a POST request. Implements the Step interface.
 func (step StepSetCircleSharing) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepSetCircleSharing.Post"
@@ -198,6 +200,7 @@ func (step StepSetCircleSharing) form(lookupProvider form.LookupProvider) (form.
 	return result, nil
 }
 
+// calculateValue returns the Circles this Stream is shared with, defaulting to "anonymous" when it has none
 func (step StepSetCircleSharing) calculateValue(stream *model.Stream) mapof.Object[id.Slice] {
 
 	if circles := stream.Circles[step.Role]; circles.NotEmpty() {

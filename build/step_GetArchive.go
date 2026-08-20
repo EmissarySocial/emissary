@@ -80,6 +80,7 @@ func (step StepGetArchive) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	return Continue()
 }
 
+// FileNotReady tells the caller that the archive is still being generated, and to retry shortly
 func (step StepGetArchive) FileNotReady(builder Builder, writer io.Writer) PipelineBehavior {
 	_, _ = writer.Write([]byte(`<div>Export file is being generated. Please <a href="javascript:window.location.reload()">try again</a> in one minute.</div>`))
 

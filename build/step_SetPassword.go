@@ -12,6 +12,7 @@ import (
 type StepSetPassword struct {
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepSetPassword) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	return nil
 }

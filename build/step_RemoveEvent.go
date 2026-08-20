@@ -9,6 +9,7 @@ type StepRemoveEvent struct {
 	Event string
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepRemoveEvent) Get(_ Builder, _ io.Writer) PipelineBehavior {
 	return Continue().RemoveEvent(step.Event)
 }

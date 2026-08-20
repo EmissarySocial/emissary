@@ -15,6 +15,7 @@ func (step StepInlineError) Get(builder Builder, buffer io.Writer) PipelineBehav
 	return nil
 }
 
+// Post applies this step during a POST request. Implements the Step interface.
 func (step StepInlineError) Post(builder Builder, buffer io.Writer) PipelineBehavior {
 	result := executeTemplate(step.Message, builder)
 

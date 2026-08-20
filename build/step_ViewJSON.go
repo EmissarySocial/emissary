@@ -26,6 +26,7 @@ func (step StepViewJSON) Get(builder Builder, buffer io.Writer) PipelineBehavior
 	return result
 }
 
+// Post applies this step during a POST request. Implements the Step interface.
 func (step StepViewJSON) Post(builder Builder, buffer io.Writer) PipelineBehavior {
 	return Continue()
 }

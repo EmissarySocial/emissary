@@ -11,6 +11,7 @@ type StepStreamPromoteDraft struct {
 	StateID string
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepStreamPromoteDraft) Get(builder Builder, _ io.Writer) PipelineBehavior {
 	return nil
 }

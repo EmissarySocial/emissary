@@ -12,6 +12,7 @@ type StepWithChildren struct {
 	SubSteps []step.Step
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepWithChildren) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	return nil
 }

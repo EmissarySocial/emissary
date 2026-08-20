@@ -9,12 +9,15 @@ import (
 	"github.com/benpate/rosetta/convert"
 )
 
+// StepSetResponse is a Step that records a User's Like, Dislike, or Announce of a remote object
 type StepSetResponse struct{}
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepSetResponse) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	return nil
 }
 
+// Post applies this step during a POST request. Implements the Step interface.
 func (step StepSetResponse) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepSetResponse.Post"
@@ -55,6 +58,7 @@ func (step StepSetResponse) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	return Continue()
 }
 
+// txnStepSetResponse is the form posted to a "set-response" step
 type txnStepSetResponse struct {
 	URL     string // The URL of the object being responded to
 	Type    string // The Response.Type (Like, Dislike, etc)
@@ -62,6 +66,7 @@ type txnStepSetResponse struct {
 	Exists  bool   // If TRUE, then create/update the response.  If FALSE, remove it.
 }
 
+// Bind reads this transaction from the request form values
 func (txn *txnStepSetResponse) Bind(request *http.Request) error {
 
 	const location = "build.txnStepSetResponse.Bind"

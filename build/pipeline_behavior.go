@@ -1,5 +1,6 @@
 package build
 
+// PipelineBehavior modifies the PipelineResult after a Step runs, which is how Steps signal what should happen next
 type PipelineBehavior func(*PipelineResult)
 
 // Continue is a NOOP that does not change the PipelineResult object
@@ -72,6 +73,7 @@ func (exit PipelineBehavior) WithHeader(name string, value string) PipelineBehav
 	}
 }
 
+// WithStatusCode chains an HTTP status code onto this behavior
 func (exit PipelineBehavior) WithStatusCode(statusCode int) PipelineBehavior {
 	return func(status *PipelineResult) {
 		if exit != nil {
@@ -81,6 +83,7 @@ func (exit PipelineBehavior) WithStatusCode(statusCode int) PipelineBehavior {
 	}
 }
 
+// WithContentType chains a content type onto this behavior
 func (exit PipelineBehavior) WithContentType(contentType string) PipelineBehavior {
 	return func(status *PipelineResult) {
 		exit(status)

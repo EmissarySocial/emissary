@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/model/step"
 )
 
+// Pipeline is an ordered list of Steps that build one action
 type Pipeline []step.Step
 
 // Execute switches between GET and POST methods for this pipeline, based on the provided ActionMethod
@@ -60,6 +61,7 @@ func (pipeline Pipeline) Post(factory Factory, builder Builder, buffer io.Writer
 	return status
 }
 
+// IsEmpty returns TRUE if this Pipeline contains no Steps
 func (pipeline Pipeline) IsEmpty() bool {
 	return len(pipeline) == 0
 }

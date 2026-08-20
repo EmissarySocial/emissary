@@ -84,14 +84,17 @@ func (w Group) View(actionID string) (template.HTML, error) {
 	return builder.Render()
 }
 
+// NavigationID returns the top-level navigation item to highlight. Implements the Builder interface.
 func (w Group) NavigationID() string {
 	return "admin"
 }
 
+// Permalink returns the permanent URL of the record being built. Implements the Builder interface.
 func (w Group) Permalink() string {
 	return w.Host() + "/groups/" + w.GroupID()
 }
 
+// BasePath returns the URL path of this object, without any action. Implements the Builder interface.
 func (w Group) BasePath() string {
 	if w._group == nil {
 		return "/groups"
@@ -99,34 +102,42 @@ func (w Group) BasePath() string {
 	return "/groups/" + w.GroupID()
 }
 
+// Token returns the URL token of the record being built. Implements the Builder interface.
 func (w Group) Token() string {
 	return "groups"
 }
 
+// PageTitle returns the human-friendly title to display at the top of the page. Implements the Builder interface.
 func (w Group) PageTitle() string {
 	return "Settings"
 }
 
+// object returns the model object being built. Implements the Builder interface.
 func (w Group) object() data.Object {
 	return w._group
 }
 
+// objectID returns the unique ID of the object being built. Implements the Builder interface.
 func (w Group) objectID() primitive.ObjectID {
 	return w._group.GroupID
 }
 
+// objectType returns the name of the model type being built. Implements the Builder interface.
 func (w Group) objectType() string {
 	return "Group"
 }
 
+// schema returns the rosetta schema that validates this object. Implements the Builder interface.
 func (w Group) schema() schema.Schema {
 	return schema.New(model.GroupSchema())
 }
 
+// service returns the ModelService that backs this Builder. Implements the Builder interface.
 func (w Group) service() service.ModelService {
 	return w._factory.Group()
 }
 
+// clone returns a copy of this Builder, pointed at a different action. Implements the Builder interface.
 func (w Group) clone(action string) (Builder, error) {
 	return NewGroup(w._factory, w._session, w._request, w._response, w._template, w._group, action)
 }
@@ -140,6 +151,7 @@ func (w Group) IsAdminBuilder() bool {
 	return true
 }
 
+// GroupID returns the unique ID of the Group being built, as a string
 func (w Group) GroupID() string {
 	if w._group == nil {
 		return ""
@@ -147,6 +159,7 @@ func (w Group) GroupID() string {
 	return w._group.GroupID.Hex()
 }
 
+// Label returns the label of the Group being built
 func (w Group) Label() string {
 	if w._group == nil {
 		return ""
@@ -154,6 +167,7 @@ func (w Group) Label() string {
 	return w._group.Label
 }
 
+// Description returns the description of the Group being built
 func (w Group) Description() string {
 	if w._group == nil {
 		return ""
@@ -161,10 +175,12 @@ func (w Group) Description() string {
 	return w._group.Description
 }
 
+// Icon returns the icon of the Group being built
 func (w Group) Icon() string {
 	return w._group.Icon
 }
 
+// IconWithDefault returns the icon, falling back to a default of the Group being built
 func (w Group) IconWithDefault() string {
 	return w._group.IconWithDefault()
 }
@@ -173,6 +189,7 @@ func (w Group) IconWithDefault() string {
  * QUERY BUILDERS
  ******************************************/
 
+// Groups returns a QueryBuilder that lists Groups
 func (w Group) Groups() *QueryBuilder[model.Group] {
 
 	query := builder.NewBuilder().
@@ -189,6 +206,7 @@ func (w Group) Groups() *QueryBuilder[model.Group] {
 	return &result
 }
 
+// debug writes this Builder's state to the console. Implements the Builder interface.
 func (w Group) debug() {
 	log.Debug().Interface("object", w.object()).Msg("builder_admin_group")
 }

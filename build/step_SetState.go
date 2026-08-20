@@ -11,6 +11,7 @@ type StepSetState struct {
 	State string
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepSetState) Get(builder Builder, _ io.Writer) PipelineBehavior {
 	return nil
 }

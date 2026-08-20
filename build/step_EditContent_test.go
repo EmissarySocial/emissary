@@ -27,8 +27,13 @@ type stubEditContentBuilder struct {
 	res    http.ResponseWriter
 }
 
-func (b stubEditContentBuilder) object() data.Object           { return b.stream }
-func (b stubEditContentBuilder) request() *http.Request        { return b.req }
+// object implements the Builder interface, returning this stub's Stream
+func (b stubEditContentBuilder) object() data.Object { return b.stream }
+
+// request implements the Builder interface, returning this stub's request
+func (b stubEditContentBuilder) request() *http.Request { return b.req }
+
+// response implements the Builder interface, returning this stub's response recorder
 func (b stubEditContentBuilder) response() http.ResponseWriter { return b.res }
 
 // editContentFormRequest builds a urlencoded POST carrying the given content in the "content" field.

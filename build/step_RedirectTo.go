@@ -16,6 +16,7 @@ type StepRedirectTo struct {
 	Method     string
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepRedirectTo) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	if step.Method != "post" {
 		return step.execute(builder)

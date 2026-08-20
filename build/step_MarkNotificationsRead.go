@@ -12,6 +12,7 @@ import (
 // the same type expansion as the tab filter); without it, ALL notifications are marked read.
 type StepMarkNotificationsRead struct{}
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepMarkNotificationsRead) Get(builder Builder, _ io.Writer) PipelineBehavior {
 	return nil
 }

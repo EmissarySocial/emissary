@@ -20,6 +20,7 @@ type StepRequirePassword struct {
 	Cancel      string
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepRequirePassword) Get(builder Builder, _ io.Writer) PipelineBehavior {
 
 	b := html.New()
@@ -105,6 +106,7 @@ func (step StepRequirePassword) Post(builder Builder, writer io.Writer) Pipeline
 	return nil
 }
 
+// error swaps a red error message into the page's htmx response slot, and halts the pipeline
 func (step StepRequirePassword) error(builder Builder, message string) PipelineBehavior {
 	const location = "build.StepRequirePassword.Post"
 

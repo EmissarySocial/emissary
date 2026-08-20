@@ -14,6 +14,7 @@ type StepWithOAuthToken struct {
 	SubSteps []step.Step
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepWithOAuthToken) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	return step.execute(builder, buffer, ActionMethodGet)
 }
@@ -23,6 +24,7 @@ func (step StepWithOAuthToken) Post(builder Builder, buffer io.Writer) PipelineB
 	return step.execute(builder, buffer, ActionMethodPost)
 }
 
+// execute performs this step's work for either a GET or a POST
 func (step StepWithOAuthToken) execute(builder Builder, buffer io.Writer, actionMethod ActionMethod) PipelineBehavior {
 
 	const location = "build.StepWithOAuthToken.execute"

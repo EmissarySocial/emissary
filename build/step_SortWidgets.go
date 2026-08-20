@@ -13,10 +13,12 @@ import (
 // StepSortWidgets is a Step that can edit/update Container in a streamDraft.
 type StepSortWidgets struct{}
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepSortWidgets) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	return nil
 }
 
+// Post applies this step during a POST request. Implements the Step interface.
 func (step StepSortWidgets) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepSortWidgets.Post"

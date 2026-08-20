@@ -7,8 +7,10 @@ import (
 	"github.com/benpate/derp"
 )
 
+// StepEditConnection is a Step that edits a Domain's connection to a third-party service
 type StepEditConnection struct{}
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepEditConnection) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	const location = "build.StepEditConnection.Get"
@@ -62,6 +64,7 @@ func (step StepEditConnection) Get(builder Builder, buffer io.Writer) PipelineBe
 	return Halt().AsFullPage()
 }
 
+// Post applies this step during a POST request. Implements the Step interface.
 func (step StepEditConnection) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepEditConnection.Post"

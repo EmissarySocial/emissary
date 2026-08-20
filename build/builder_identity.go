@@ -133,6 +133,7 @@ func (w Identity) UpdateDate() int64 {
 	return w._identity.UpdateDate
 }
 
+// PrivilegeIDs returns the privilege IDs of the Identity being built
 func (w Identity) PrivilegeIDs() id.Slice {
 	// Return the PrivilegeIDs property of this Identity
 	return w._identity.PrivilegeIDs
@@ -167,50 +168,62 @@ func (w Identity) PrivilegedStreams(privileges sliceof.Object[model.Privilege]) 
  * Builder Interface
  ******************************************/
 
+// object returns the model object being built. Implements the Builder interface.
 func (w Identity) object() data.Object {
 	return w._identity
 }
 
+// objectType returns the name of the model type being built. Implements the Builder interface.
 func (w Identity) objectType() string {
 	return "Identity"
 }
 
+// objectID returns the unique ID of the object being built. Implements the Builder interface.
 func (w Identity) objectID() primitive.ObjectID {
 	return w._identity.IdentityID
 }
 
+// schema returns the rosetta schema that validates this object. Implements the Builder interface.
 func (w Identity) schema() schema.Schema {
 	return schema.New(model.IdentitySchema())
 }
 
+// service returns the ModelService that backs this Builder. Implements the Builder interface.
 func (w Identity) service() service.ModelService {
 	return w._factory.Identity()
 }
 
+// Label returns the label of the Identity being built
 func (w Identity) Label() string {
 	return w._identity.Name
 }
 
+// Token returns the URL token of the record being built. Implements the Builder interface.
 func (w Identity) Token() string {
 	return ""
 }
 
+// PageTitle returns the human-friendly title to display at the top of the page. Implements the Builder interface.
 func (w Identity) PageTitle() string {
 	return w._identity.Name
 }
 
+// Permalink returns the permanent URL of the record being built. Implements the Builder interface.
 func (w Identity) Permalink() string {
 	return ""
 }
 
+// BasePath returns the URL path of this object, without any action. Implements the Builder interface.
 func (w Identity) BasePath() string {
 	return ""
 }
 
+// UserCan returns TRUE if the signed-in User may run the named action. Implements the Builder interface.
 func (w Identity) UserCan(string) bool {
 	return false
 }
 
+// Render builds this object into HTML. Implements the Builder interface.
 func (w Identity) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
@@ -245,14 +258,17 @@ func (w Identity) View(actionID string) (template.HTML, error) {
 	return subStream.Render()
 }
 
+// setState moves the underlying object into the provided state
 func (w Identity) setState(stateID string) error {
 	return nil
 }
 
+// clone returns a copy of this Builder, pointed at a different action. Implements the Builder interface.
 func (w Identity) clone(action string) (Builder, error) {
 	return NewIdentity(w._factory, w._session, w._request, w._response, w._identity, action)
 }
 
+// debug writes this Builder's state to the console. Implements the Builder interface.
 func (w Identity) debug() {
 	log.Debug().Interface("object", w.object()).Msg("builder_Model")
 }

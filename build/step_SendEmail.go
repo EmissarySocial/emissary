@@ -12,6 +12,7 @@ type StepSendEmail struct {
 	Email string
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepSendEmail) Get(_ Builder, _ io.Writer) PipelineBehavior {
 	return nil
 }

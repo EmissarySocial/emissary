@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/derp"
 )
 
+// CommonWithTemplate is embedded by every Builder that renders through a model.Template
 type CommonWithTemplate struct {
 	_actionID     string
 	_action       model.Action
@@ -18,6 +19,7 @@ type CommonWithTemplate struct {
 	Common
 }
 
+// NewCommonWithTemplate returns a CommonWithTemplate for the provided Template and action
 func NewCommonWithTemplate(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, template model.Template, accessLister model.AccessLister, actionID string) (CommonWithTemplate, error) {
 
 	const location = "build.NewCommonWithTemplate"
@@ -48,6 +50,7 @@ func NewCommonWithTemplate(factory Factory, session data.Session, request *http.
  * Builder Interface
  ******************************************/
 
+// actions returns every action available on this object. Implements the Builder interface.
 func (builder CommonWithTemplate) actions() map[string]model.Action {
 	return builder._template.Actions
 }
@@ -57,14 +60,17 @@ func (builder CommonWithTemplate) action() model.Action {
 	return builder._action
 }
 
+// actionID returns the token that names the action requested by the URL. Implements the Builder interface.
 func (builder CommonWithTemplate) actionID() string {
 	return builder._actionID
 }
 
+// Action returns the ID of the action that this Builder is running
 func (builder CommonWithTemplate) Action() string {
 	return builder._actionID
 }
 
+// IsAction returns TRUE if this Builder is running the named action
 func (builder CommonWithTemplate) IsAction(actionID string) bool {
 	return builder._actionID == actionID
 }

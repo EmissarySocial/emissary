@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestContentTypeMatches verifies which uploaded content types are accepted, including wildcard categories
 func TestContentTypeMatches(t *testing.T) {
 
 	table := []struct {

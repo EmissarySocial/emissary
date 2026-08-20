@@ -20,6 +20,7 @@ type StepSetPrivileges struct {
 	Title string
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	const location = "build.StepSetPrivileges.Get"
@@ -144,6 +145,7 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 	return nil
 }
 
+// Post applies this step during a POST request. Implements the Step interface.
 func (step StepSetPrivileges) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepSetPrivileges.Post"
@@ -198,6 +200,7 @@ func (step StepSetPrivileges) Post(builder Builder, _ io.Writer) PipelineBehavio
 	return nil
 }
 
+// GetEmpty renders the "no privileges yet" form, listing the payment providers a Product can be sold through
 func (step StepSetPrivileges) GetEmpty(merchantAccounts sliceof.Object[model.MerchantAccount], iconFunc func(string) string, buffer io.Writer) PipelineBehavior {
 
 	// Write the rest of the HTML that contains the form

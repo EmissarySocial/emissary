@@ -12,6 +12,7 @@ import (
 // StepEditWidget is a Step that displays a form for editing Widgets.
 type StepEditWidget struct{}
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepEditWidget) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	widget, streamWidget, _, err := step.common(builder)

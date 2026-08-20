@@ -13,6 +13,7 @@ type StepWithImport struct {
 	SubSteps []step.Step
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepWithImport) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 	return step.execute(builder, buffer, ActionMethodGet)
 }
@@ -22,6 +23,7 @@ func (step StepWithImport) Post(builder Builder, buffer io.Writer) PipelineBehav
 	return step.execute(builder, buffer, ActionMethodPost)
 }
 
+// execute performs this step's work for either a GET or a POST
 func (step StepWithImport) execute(builder Builder, buffer io.Writer, actionMethod ActionMethod) PipelineBehavior {
 
 	const location = "build.StepWithImport.execute"
@@ -64,6 +66,7 @@ func (step StepWithImport) execute(builder Builder, buffer io.Writer, actionMeth
 	return UseResult(result)
 }
 
+// getImport loads the Import named in the query string, or returns a new one
 func (step StepWithImport) getImport(builder Builder) (model.Import, error) {
 
 	const location = "build.StepWithImport.getImport"

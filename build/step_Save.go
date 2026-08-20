@@ -15,6 +15,7 @@ type StepSave struct {
 	OnError []step.Step
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepSave) Get(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	if (step.Method == "get") || (step.Method == "both") {

@@ -21,6 +21,7 @@ type stubStartupCompleteFactory struct {
 	domainService *service.Domain
 }
 
+// Domain implements the build.Factory interface, returning this stub's Domain service
 func (f stubStartupCompleteFactory) Domain() *service.Domain { return f.domainService }
 
 // stubStartupCompleteBuilder is a build.Builder exposing only what StepStartupComplete.Post reaches.
@@ -29,7 +30,10 @@ type stubStartupCompleteBuilder struct {
 	factoryValue Factory
 }
 
-func (b stubStartupCompleteBuilder) factory() Factory      { return b.factoryValue }
+// factory implements the Builder interface, returning this stub's factory
+func (b stubStartupCompleteBuilder) factory() Factory { return b.factoryValue }
+
+// session implements the Builder interface. The stub owns no database session.
 func (b stubStartupCompleteBuilder) session() data.Session { return nil }
 
 // newStartupCompleteBuilder wires a stub builder around a Domain service holding the provided record.

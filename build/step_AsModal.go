@@ -104,6 +104,7 @@ func (step StepAsModal) Post(builder Builder, buffer io.Writer) PipelineBehavior
 	return UseResult(result).WithEvent("closeModal", "true")
 }
 
+// getModalContent renders this step's sub-steps into the body of the modal
 func (step StepAsModal) getModalContent(builder Builder) (string, PipelineResult) {
 
 	const location = "build.StepAsModal.getModalContent"

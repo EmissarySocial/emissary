@@ -6,6 +6,7 @@ import (
 	"github.com/EmissarySocial/emissary/model/step"
 )
 
+// Step is a single unit of work inside a build Pipeline
 type Step interface {
 	Get(Builder, io.Writer) PipelineBehavior
 	Post(Builder, io.Writer) PipelineBehavior

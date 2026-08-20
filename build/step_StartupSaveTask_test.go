@@ -23,6 +23,7 @@ type stubStartupTaskFactory struct {
 	domainService *service.Domain
 }
 
+// Domain implements the build.Factory interface, returning this stub's Domain service
 func (f stubStartupTaskFactory) Domain() *service.Domain { return f.domainService }
 
 // stubStartupTaskBuilder is a build.Builder exposing only what StepStartupSaveTask.Post reaches.
@@ -34,9 +35,16 @@ type stubStartupTaskBuilder struct {
 	theme        model.Theme
 }
 
-func (b stubStartupTaskBuilder) factory() Factory           { return b.factoryValue }
-func (b stubStartupTaskBuilder) session() data.Session      { return nil }
-func (b stubStartupTaskBuilder) ThemeID() string            { return b.theme.ThemeID }
+// factory implements the Builder interface, returning this stub's factory
+func (b stubStartupTaskBuilder) factory() Factory { return b.factoryValue }
+
+// session implements the Builder interface. The stub owns no database session.
+func (b stubStartupTaskBuilder) session() data.Session { return nil }
+
+// ThemeID implements the Builder interface, returning this stub's theme ID
+func (b stubStartupTaskBuilder) ThemeID() string { return b.theme.ThemeID }
+
+// Theme implements the Builder interface, returning this stub's Theme
 func (b stubStartupTaskBuilder) Theme(_ string) model.Theme { return b.theme }
 
 // newStartupTaskTheme builds a Theme whose startup tasks carry the provided values.

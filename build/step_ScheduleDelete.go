@@ -19,6 +19,7 @@ type StepScheduleDelete struct {
 	Seconds *template.Template
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepScheduleDelete) Get(_ Builder, _ io.Writer) PipelineBehavior {
 	return Continue()
 }

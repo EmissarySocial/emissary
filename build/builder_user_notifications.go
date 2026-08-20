@@ -99,46 +99,57 @@ func (w Notifications) NavigationID() string {
 	return "notifications"
 }
 
+// PageTitle returns the human-friendly title to display at the top of the page. Implements the Builder interface.
 func (w Notifications) PageTitle() string {
 	return w._user.DisplayName
 }
 
+// BasePath returns the URL path of this object, without any action. Implements the Builder interface.
 func (w Notifications) BasePath() string {
 	return "/@me/notifications"
 }
 
+// Permalink returns the permanent URL of the record being built. Implements the Builder interface.
 func (w Notifications) Permalink() string {
 	return w.Host() + "/@me/notifications"
 }
 
+// Token returns the URL token of the record being built. Implements the Builder interface.
 func (w Notifications) Token() string {
 	return "notifications"
 }
 
+// object returns the model object being built. Implements the Builder interface.
 func (w Notifications) object() data.Object {
 	return w._user
 }
 
+// objectID returns the unique ID of the object being built. Implements the Builder interface.
 func (w Notifications) objectID() primitive.ObjectID {
 	return w._user.UserID
 }
 
+// objectType returns the name of the model type being built. Implements the Builder interface.
 func (w Notifications) objectType() string {
 	return "User"
 }
 
+// schema returns the rosetta schema that validates this object. Implements the Builder interface.
 func (w Notifications) schema() schema.Schema {
 	return schema.New(model.UserSchema())
 }
 
+// service returns the ModelService that backs this Builder. Implements the Builder interface.
 func (w Notifications) service() service.ModelService {
 	return w._factory.User()
 }
 
+// templateRole returns the role this Template plays, which chooses the child template. Implements the Builder interface.
 func (w Notifications) templateRole() string {
 	return "notifications"
 }
 
+// clone returns a copy of this Builder, pointed at a different action. Implements the Builder interface.
 func (w Notifications) clone(action string) (Builder, error) {
 	return NewNotifications(w._factory, w._session, w._request, w._response, w._user, action)
 }
@@ -240,6 +251,7 @@ func notificationTypeFilter(notificationType string) exp.Expression {
 	return exp.In("type", types)
 }
 
+// debug writes this Builder's state to the console. Implements the Builder interface.
 func (w Notifications) debug() {
 	log.Debug().Interface("object", w.object()).Msg("builder_Notifications")
 }

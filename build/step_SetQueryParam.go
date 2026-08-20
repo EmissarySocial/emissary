@@ -20,6 +20,7 @@ func (step StepSetQueryParam) Post(builder Builder, _ io.Writer) PipelineBehavio
 	return step.Do(builder)
 }
 
+// Do renders each configured value template, and writes it into the request query string
 func (step StepSetQueryParam) Do(builder Builder) PipelineBehavior {
 	query := builder.request().URL.Query()
 

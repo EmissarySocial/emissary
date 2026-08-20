@@ -25,6 +25,7 @@ type stubPermissionFactory struct {
 	Factory
 }
 
+// Permission implements the build.Factory interface, returning this stub's Permission service
 func (f stubPermissionFactory) Permission() *service.Permission {
 	permission := service.NewPermission()
 	return &permission
@@ -58,6 +59,7 @@ func findPredicate(predicates []exp.Predicate, field string, operator string) (e
 	return exp.Predicate{}, false
 }
 
+// TestCommon_defaultAllowed_Anonymous verifies the query criteria applied for a viewer with no authorization
 func TestCommon_defaultAllowed_Anonymous(t *testing.T) {
 
 	// An anonymous viewer: no authorization at all.
@@ -83,6 +85,7 @@ func TestCommon_defaultAllowed_Anonymous(t *testing.T) {
 	require.True(t, hasDeleteGuard, "must exclude deleted streams")
 }
 
+// TestCommon_defaultAllowed_Member verifies that a signed-in User's Group memberships widen the query criteria
 func TestCommon_defaultAllowed_Member(t *testing.T) {
 
 	// A signed-in User who belongs to a private Group.
@@ -113,6 +116,7 @@ func TestCommon_defaultAllowed_Member(t *testing.T) {
 	require.Contains(t, permissions, privateGroup)
 }
 
+// TestCommon_defaultAllowed_DomainOwner verifies that a domain owner's query criteria are not restricted at all
 func TestCommon_defaultAllowed_DomainOwner(t *testing.T) {
 
 	// A domain owner sees everything: the criteria must NOT restrict by defaultAllow.

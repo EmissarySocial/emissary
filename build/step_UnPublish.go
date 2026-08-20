@@ -13,6 +13,7 @@ type StepUnPublish struct {
 	StateID string
 }
 
+// Get renders this step during a GET request. Implements the Step interface.
 func (step StepUnPublish) Get(builder Builder, _ io.Writer) PipelineBehavior {
 	return nil
 }

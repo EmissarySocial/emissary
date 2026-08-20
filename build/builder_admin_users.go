@@ -85,46 +85,57 @@ func (w User) View(actionID string) (template.HTML, error) {
 	return builder.Render()
 }
 
+// NavigationID returns the top-level navigation item to highlight. Implements the Builder interface.
 func (w User) NavigationID() string {
 	return "admin"
 }
 
+// Token returns the URL token of the record being built. Implements the Builder interface.
 func (w User) Token() string {
 	return "users"
 }
 
+// PageTitle returns the human-friendly title to display at the top of the page. Implements the Builder interface.
 func (w User) PageTitle() string {
 	return "Settings"
 }
 
+// Permalink returns the permanent URL of the record being built. Implements the Builder interface.
 func (w User) Permalink() string {
 	return w.Host() + "/admin/users/" + w.UserID()
 }
 
+// BasePath returns the URL path of this object, without any action. Implements the Builder interface.
 func (w User) BasePath() string {
 	return "/admin/users/" + w.UserID()
 }
 
+// object returns the model object being built. Implements the Builder interface.
 func (w User) object() data.Object {
 	return w._user
 }
 
+// objectID returns the unique ID of the object being built. Implements the Builder interface.
 func (w User) objectID() primitive.ObjectID {
 	return w._user.UserID
 }
 
+// objectType returns the name of the model type being built. Implements the Builder interface.
 func (w User) objectType() string {
 	return "User"
 }
 
+// schema returns the rosetta schema that validates this object. Implements the Builder interface.
 func (w User) schema() schema.Schema {
 	return schema.New(model.UserSchema())
 }
 
+// service returns the ModelService that backs this Builder. Implements the Builder interface.
 func (w User) service() service.ModelService {
 	return w._factory.User()
 }
 
+// clone returns a copy of this Builder, pointed at a different action. Implements the Builder interface.
 func (w User) clone(action string) (Builder, error) {
 	return NewUser(w._factory, w._session, w._request, w._response, w._template, w._user, action)
 }
@@ -141,6 +152,7 @@ func (w User) setState(stateID string) error {
  * User Data
  ******************************************/
 
+// UserID returns the unique ID of the User being built, as a string
 func (w User) UserID() string {
 	if w._user == nil {
 		return ""
@@ -148,10 +160,12 @@ func (w User) UserID() string {
 	return w._user.UserID.Hex()
 }
 
+// ProfileURL returns the profile URL of the User being built
 func (w User) ProfileURL() string {
 	return w._user.ProfileURL
 }
 
+// Label returns the label of the User being built
 func (w User) Label() string {
 	if w._user == nil {
 		return ""
@@ -159,6 +173,7 @@ func (w User) Label() string {
 	return w._user.DisplayName
 }
 
+// DisplayName returns the display name of the User being built
 func (w User) DisplayName() string {
 	if w._user == nil {
 		return ""
@@ -166,6 +181,7 @@ func (w User) DisplayName() string {
 	return w._user.DisplayName
 }
 
+// IconURL returns the icon URL of the User being built
 func (w User) IconURL() string {
 	if w._user == nil {
 		return ""
@@ -173,6 +189,7 @@ func (w User) IconURL() string {
 	return w._user.ActivityPubIconURL()
 }
 
+// MapIDs returns the map IDs of the User being built
 func (w User) MapIDs() map[string]string {
 	return w._user.MapIDs
 }
@@ -181,6 +198,7 @@ func (w User) MapIDs() map[string]string {
  * Query Builders
  ******************************************/
 
+// Users returns a QueryBuilder that lists Users
 func (w User) Users() *QueryBuilder[model.UserSummary] {
 
 	query := builder.NewBuilder().
@@ -261,6 +279,7 @@ func (w User) AssignedGroups() ([]model.Group, error) {
 	return result, derp.Wrap(err, "build.User.AssignedGroups", "Listing groups", w._user.GroupIDs)
 }
 
+// debug writes this Builder's state to the console. Implements the Builder interface.
 func (w User) debug() {
 	log.Debug().Interface("object", w.object()).Msg("builder_admin_users")
 }

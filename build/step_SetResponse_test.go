@@ -29,6 +29,7 @@ type stubResponseFactory struct {
 	responseService *service.Response
 }
 
+// Response implements the build.Factory interface, returning this stub's Response service
 func (f stubResponseFactory) Response() *service.Response { return f.responseService }
 
 // stubResponseBuilder is a build.Builder that exposes only the four methods StepSetResponse.Post
@@ -40,10 +41,17 @@ type stubResponseBuilder struct {
 	factoryValue Factory
 }
 
-func (b stubResponseBuilder) request() *http.Request        { return b.req }
+// request implements the Builder interface, returning this stub's request
+func (b stubResponseBuilder) request() *http.Request { return b.req }
+
+// getUser implements the Builder interface, returning this stub's signed-in User
 func (b stubResponseBuilder) getUser() (*model.User, error) { return b.user, nil }
-func (b stubResponseBuilder) factory() Factory              { return b.factoryValue }
-func (b stubResponseBuilder) session() data.Session         { return nil }
+
+// factory implements the Builder interface, returning this stub's factory
+func (b stubResponseBuilder) factory() Factory { return b.factoryValue }
+
+// session implements the Builder interface. The stub owns no database session.
+func (b stubResponseBuilder) session() data.Session { return nil }
 
 // setResponseRequest builds a urlencoded POST that StepSetResponse.Post can bind.
 func setResponseRequest(object string) *http.Request {

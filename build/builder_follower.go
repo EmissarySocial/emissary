@@ -136,54 +136,67 @@ func (w Follower) ExpireDate() int64 {
  * Builder Interface
  ******************************************/
 
+// Follower returns the Follower record being built
 func (w Follower) Follower() model.Follower {
 	return *w._follower
 }
 
+// object returns the model object being built. Implements the Builder interface.
 func (w Follower) object() data.Object {
 	return w._follower
 }
 
+// objectType returns the name of the model type being built. Implements the Builder interface.
 func (w Follower) objectType() string {
 	return "Follower"
 }
 
+// objectID returns the unique ID of the object being built. Implements the Builder interface.
 func (w Follower) objectID() primitive.ObjectID {
 	return w._follower.FollowerID
 }
 
+// schema returns the rosetta schema that validates this object. Implements the Builder interface.
 func (w Follower) schema() schema.Schema {
 	return schema.New(model.FollowerSchema())
 }
 
+// service returns the ModelService that backs this Builder. Implements the Builder interface.
 func (w Follower) service() service.ModelService {
 	return w._factory.Follower()
 }
 
+// Label returns the display name of the actor who follows this object
 func (w Follower) Label() string {
 	return w._follower.Actor.Name
 }
 
+// Token returns the URL token of the record being built. Implements the Builder interface.
 func (w Follower) Token() string {
 	return ""
 }
 
+// PageTitle returns the human-friendly title to display at the top of the page. Implements the Builder interface.
 func (w Follower) PageTitle() string {
 	return ""
 }
 
+// Permalink returns the permanent URL of the record being built. Implements the Builder interface.
 func (w Follower) Permalink() string {
 	return ""
 }
 
+// BasePath returns the URL path of this object, without any action. Implements the Builder interface.
 func (w Follower) BasePath() string {
 	return ""
 }
 
+// UserCan returns TRUE if the signed-in User may run the named action. Implements the Builder interface.
 func (w Follower) UserCan(string) bool {
 	return false
 }
 
+// Render builds this object into HTML. Implements the Builder interface.
 func (w Follower) Render() (template.HTML, error) {
 
 	var buffer bytes.Buffer
@@ -218,14 +231,17 @@ func (w Follower) View(actionID string) (template.HTML, error) {
 	return subStream.Render()
 }
 
+// setState moves the underlying object into the provided state
 func (w Follower) setState(stateID string) error {
 	return nil
 }
 
+// clone returns a copy of this Builder, pointed at a different action. Implements the Builder interface.
 func (w Follower) clone(action string) (Builder, error) {
 	return NewFollower(w._factory, w._session, w._request, w._response, w._template, w._follower, action)
 }
 
+// debug writes this Builder's state to the console. Implements the Builder interface.
 func (w Follower) debug() {
 	log.Debug().Interface("object", w.object()).Msg("builder_Model")
 }
