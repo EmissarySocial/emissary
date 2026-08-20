@@ -20,7 +20,7 @@ func NewSleep(stepInfo mapof.Any) (Sleep, error) {
 
 // Name returns the name of the step, which is used in debugging.
 func (step Sleep) Name() string {
-	return "set-sleep"
+	return "sleep"
 }
 
 // RequiredModel returns the name of the model object that MUST be present in the Template.

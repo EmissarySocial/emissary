@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestSort verifies that a "set-sort" step parses its configuration
+// TestSort verifies that a "sort" step parses its configuration
 func TestSort(t *testing.T) {
 
 	step, err := NewSort(mapof.Any{"model": "Stream", "keys": "token", "values": "order", "message": "Reordered"})
@@ -23,8 +23,7 @@ func TestSort(t *testing.T) {
 	require.Equal(t, "_id", step.Keys)
 	require.Equal(t, "rank", step.Values)
 
-	// Note: Name() is "set-sort".
-	require.Equal(t, "set-sort", step.Name())
+	require.Equal(t, "sort", step.Name())
 	require.Equal(t, "", step.RequiredModel())
 	require.Equal(t, []string{}, step.RequiredStates())
 	require.Equal(t, []string{}, step.RequiredRoles())

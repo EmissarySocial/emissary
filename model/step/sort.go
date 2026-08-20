@@ -25,7 +25,7 @@ func NewSort(stepInfo mapof.Any) (Sort, error) {
 
 // Name returns the name of the step, which is used in debugging.
 func (step Sort) Name() string {
-	return "set-sort"
+	return "sort"
 }
 
 // RequiredModel returns the name of the model object that MUST be present in the Template.

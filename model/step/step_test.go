@@ -12,8 +12,8 @@ import (
 // accidentally constructing a Sort) would surface as a Name() mismatch here. The config for each
 // case is the minimum required for that constructor to succeed.
 //
-// Note: a step's Name() is not always equal to its "do" key (e.g. do "set-args" -> Name "set-args",
-// do "sleep" -> Name "set-sleep", do "require-password" -> Name "requirePassword"),
+// Note: a step's Name() is not always equal to its "do" key
+// (e.g. do "require-password" -> Name "requirePassword"),
 // so expectedName is asserted explicitly per case.
 func TestNew_Dispatch(t *testing.T) {
 
@@ -73,8 +73,8 @@ func TestNew_Dispatch(t *testing.T) {
 		{"set-simple-sharing", mapof.Any{"role": "editor"}, "set-simple-sharing"},
 		{"set-state", mapof.Any{"state": "published"}, "set-state"},
 		{"set-thumbnail", mapof.Any{}, "set-thumbnail"},
-		{"sleep", mapof.Any{}, "set-sleep"},
-		{"sort", mapof.Any{}, "set-sort"},
+		{"sleep", mapof.Any{}, "sleep"},
+		{"sort", mapof.Any{}, "sort"},
 		{"sort-attachments", mapof.Any{}, "sort-attachments"},
 		{"sort-widgets", mapof.Any{}, "sort-widgets"},
 		{"startup-create-streams", mapof.Any{}, "startup-create-streams"},
