@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestEditRegistration verifies that an "edit-registration" step parses its configuration
 func TestEditRegistration(t *testing.T) {
 	step, err := NewEditRegistration(mapof.Any{})
 	require.Nil(t, err)

@@ -7,6 +7,7 @@ import (
 // SortWidgets is a Step that can update multiple records at once
 type SortWidgets struct{}
 
+// NewSortWidgets returns a fully initialized SortWidgets step, or an error if its configuration is invalid
 func NewSortWidgets(stepInfo mapof.Any) (SortWidgets, error) {
 
 	return SortWidgets{}, nil

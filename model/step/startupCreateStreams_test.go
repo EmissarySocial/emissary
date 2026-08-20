@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestStartupCreateStreams verifies that a "startup-create-streams" step parses its configuration
 func TestStartupCreateStreams(t *testing.T) {
 
 	step, err := NewStartupCreateStreams(mapof.Any{})

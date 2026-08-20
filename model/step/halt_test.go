@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestHalt verifies that a "halt" step parses its configuration
 func TestHalt(t *testing.T) {
 	step, err := NewHalt(mapof.Any{})
 	require.Nil(t, err)

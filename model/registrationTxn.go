@@ -33,6 +33,7 @@ func NewRegistrationTxn() RegistrationTxn {
 	}
 }
 
+// ParseRegistrationFromClaims rebuilds a RegistrationTxn from the claims in a signed JWT
 func ParseRegistrationFromClaims(claims jwt.MapClaims) RegistrationTxn {
 	return RegistrationTxn{
 		UserID:         convert.String(claims["userId"]),
@@ -49,6 +50,7 @@ func ParseRegistrationFromClaims(claims jwt.MapClaims) RegistrationTxn {
 	}
 }
 
+// Claims returns this RegistrationTxn as JWT claims that expire in 24 hours
 func (txn RegistrationTxn) Claims() jwt.MapClaims {
 
 	// Create a new JWT token that expires in 24 hours

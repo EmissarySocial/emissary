@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// StreamWidgetSchema returns the rosetta schema that describes a StreamWidget
 func StreamWidgetSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
@@ -18,6 +19,7 @@ func StreamWidgetSchema() schema.Element {
 	}
 }
 
+// GetStringOK returns the named property. Implements schema.StringGetter.
 func (x StreamWidget) GetStringOK(key string) (string, bool) {
 
 	switch key {
@@ -32,6 +34,7 @@ func (x StreamWidget) GetStringOK(key string) (string, bool) {
 	return "", false
 }
 
+// SetString writes the named property. Implements schema.StringSetter.
 func (x *StreamWidget) SetString(key string, value string) bool {
 
 	switch key {
@@ -49,6 +52,7 @@ func (x *StreamWidget) SetString(key string, value string) bool {
 	return false
 }
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (x *StreamWidget) GetPointer(key string) (any, bool) {
 
 	switch key {

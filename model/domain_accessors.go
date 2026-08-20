@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// DomainSchema returns the rosetta schema that describes a Domain
 func DomainSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
@@ -42,6 +43,7 @@ func DomainSchema() schema.Element {
  * Getter/Setter Interfaces
  ********************************/
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (domain *Domain) GetPointer(name string) (any, bool) {
 
 	switch name {
@@ -101,6 +103,7 @@ func (domain *Domain) GetPointer(name string) (any, bool) {
 	return nil, false
 }
 
+// GetStringOK returns the named property. Implements schema.StringGetter.
 func (domain Domain) GetStringOK(name string) (string, bool) {
 
 	switch name {
@@ -131,6 +134,7 @@ func (domain Domain) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  *********************************/
 
+// SetString writes the named property. Implements schema.StringSetter.
 func (domain *Domain) SetString(name string, value string) bool {
 
 	switch name {

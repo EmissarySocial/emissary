@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestPushSubscription verifies that every PushSubscription property round-trips through the schema
 func TestPushSubscription(t *testing.T) {
 
 	sub := NewPushSubscription()

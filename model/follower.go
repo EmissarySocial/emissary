@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Follower is a person or service that has subscribed to a User, Stream, or SearchQuery
 type Follower struct {
 	FollowerID primitive.ObjectID `bson:"_id"`        // Unique identifier for this Follower
 	ParentType string             `bson:"type"`       // Type of record being followed (e.g. "User", "Stream", or "Search")
@@ -21,6 +22,7 @@ type Follower struct {
 	journal.Journal `json:"-" bson:",inline"`
 }
 
+// NewFollower returns a fully initialized Follower, in the PENDING state
 func NewFollower() Follower {
 	return Follower{
 		FollowerID: primitive.NewObjectID(),
@@ -33,6 +35,7 @@ func NewFollower() Follower {
  * data.Object Interface
  ******************************************/
 
+// ID returns the primary key of this Follower, as a string
 func (follower *Follower) ID() string {
 	return follower.FollowerID.Hex()
 }
@@ -104,10 +107,12 @@ func (follower Follower) UnsubscribeLink(host string) string {
  * ActivityPub Methods
  ******************************************/
 
+// ActivityPubURL returns the ActivityPub URL of this Follower
 func (follower Follower) ActivityPubURL() string {
 	return follower.Actor.ProfileURL
 }
 
+// GetJSONLD returns this Follower as a JSON-LD document
 func (follower Follower) GetJSONLD() mapof.Any {
 
 	return mapof.Any{

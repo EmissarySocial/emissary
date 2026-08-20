@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSaveAndPublish verifies that a "save-and-publish" step parses its configuration
 func TestSaveAndPublish(t *testing.T) {
 
 	step, err := NewSaveAndPublish(mapof.Any{"state": "live", "outbox": true, "republish": true})

@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSetResponse verifies that a "set-response" step parses its configuration
 func TestSetResponse(t *testing.T) {
 	step, err := NewSetResponse(mapof.Any{})
 	require.Nil(t, err)

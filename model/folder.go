@@ -35,6 +35,7 @@ func NewFolder() Folder {
  * data.Object Interface
  ******************************************/
 
+// ID returns the primary key of this Folder, as a string
 func (folder Folder) ID() string {
 	return folder.FolderID.Hex()
 }
@@ -43,6 +44,7 @@ func (folder Folder) ID() string {
  * Other Data Accessors
  ******************************************/
 
+// LookupCode returns this Folder as a form.LookupCode, so it can be listed in a picker
 func (folder Folder) LookupCode() form.LookupCode {
 	return form.LookupCode{
 		Value: folder.FolderID.Hex(),
@@ -88,6 +90,7 @@ func (folder *Folder) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
  * Mastodon API
  ******************************************/
 
+// Toot returns this Folder as its Mastodon API equivalent
 func (folder Folder) Toot() object.List {
 	return object.List{
 		ID:            folder.FolderID.Hex(),
@@ -96,6 +99,7 @@ func (folder Folder) Toot() object.List {
 	}
 }
 
+// GetRank returns the sort rank of this Folder
 func (folder Folder) GetRank() int64 {
 	return int64(folder.Rank)
 }

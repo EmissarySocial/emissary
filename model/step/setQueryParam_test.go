@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSetQueryParam verifies that a "set-query-param" step parses its configuration
 func TestSetQueryParam(t *testing.T) {
 
 	// All keys except "do" become value templates.
@@ -22,6 +23,7 @@ func TestSetQueryParam(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestSetQueryParam_InvalidTemplate verifies that an invalid template is rejected
 func TestSetQueryParam_InvalidTemplate(t *testing.T) {
 	_, err := NewSetQueryParam(mapof.Any{"bad": "{{ .Unclosed"})
 	require.NotNil(t, err)

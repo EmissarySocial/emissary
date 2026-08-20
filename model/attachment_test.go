@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// TestAttachmentSchema returns the rosetta schema that describes a TestAttachment
 func TestAttachmentSchema(t *testing.T) {
 
 	attachment := NewAttachment("TEMP", primitive.NewObjectID())

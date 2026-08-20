@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// PrivilegeSchema returns the rosetta schema that describes a Privilege
 func PrivilegeSchema() schema.Element {
 
 	return schema.Object{
@@ -26,6 +27,7 @@ func PrivilegeSchema() schema.Element {
  * Getter/Setter Interfaces
  *********************************/
 
+// GetStringOK returns the named property. Implements schema.StringGetter.
 func (privilege *Privilege) GetStringOK(name string) (string, bool) {
 	switch name {
 
@@ -45,6 +47,7 @@ func (privilege *Privilege) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
+// SetString writes the named property. Implements schema.StringSetter.
 func (privilege *Privilege) SetString(name string, value string) bool {
 
 	switch name {
@@ -76,6 +79,7 @@ func (privilege *Privilege) SetString(name string, value string) bool {
 	return false
 }
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (privilege *Privilege) GetPointer(name string) (any, bool) {
 
 	switch name {

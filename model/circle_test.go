@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestCircleSchema returns the rosetta schema that describes a TestCircle
 func TestCircleSchema(t *testing.T) {
 
 	group := NewCircle()

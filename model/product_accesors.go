@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// ProductSchema returns the rosetta schema that describes a Product
 func ProductSchema() schema.Element {
 
 	return schema.Object{
@@ -21,6 +22,7 @@ func ProductSchema() schema.Element {
 	}
 }
 
+// GetStringOK returns the named property. Implements schema.StringGetter.
 func (product Product) GetStringOK(property string) (string, bool) {
 	switch property {
 
@@ -52,6 +54,7 @@ func (product Product) GetStringOK(property string) (string, bool) {
 	return "", false
 }
 
+// SetString writes the named property. Implements schema.StringSetter.
 func (product *Product) SetString(property string, value string) bool {
 	switch property {
 

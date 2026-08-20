@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestRequirePassword verifies that a "requirePassword" step parses its configuration
 func TestRequirePassword(t *testing.T) {
 
 	step, err := NewRequirePassword(mapof.Any{
@@ -30,6 +31,7 @@ func TestRequirePassword(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestRequirePassword_Defaults verifies the values a "requirePassword" step falls back to when its configuration is empty
 func TestRequirePassword_Defaults(t *testing.T) {
 	step, err := NewRequirePassword(mapof.Any{})
 	require.Nil(t, err)

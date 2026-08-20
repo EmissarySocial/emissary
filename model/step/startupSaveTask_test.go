@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestStartupSaveTask verifies that a "startup-save-task" step parses its configuration
 func TestStartupSaveTask(t *testing.T) {
 
 	step, err := NewStartupSaveTask(mapof.Any{"value": "sample-content"})

@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestInlineSuccess verifies that an "inline-success" step parses its configuration
 func TestInlineSuccess(t *testing.T) {
 	step, err := NewInlineSuccess(mapof.Any{"message": "Saved!"})
 	require.Nil(t, err)
@@ -18,6 +19,7 @@ func TestInlineSuccess(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestInlineSuccess_InvalidTemplate verifies that an invalid template is rejected
 func TestInlineSuccess_InvalidTemplate(t *testing.T) {
 	_, err := NewInlineSuccess(mapof.Any{"message": "{{ .Unclosed"})
 	require.NotNil(t, err)

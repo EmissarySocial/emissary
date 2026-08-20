@@ -86,6 +86,7 @@ func (vault *Vault) SetString(name string, value string) bool {
 	return true
 }
 
+// Encrypt seals this Vault's plaintext values using the provided key
 func (vault *Vault) Encrypt(encryptionKey []byte) error {
 
 	const location = "model.vault.Encrypt"
@@ -137,6 +138,7 @@ func (vault *Vault) Encrypt(encryptionKey []byte) error {
 	return nil
 }
 
+// Decrypt opens the named values in this Vault using the provided key
 func (vault Vault) Decrypt(encryptionKey []byte, values ...string) (mapof.String, error) {
 
 	const location = "model.vault.Decrypt"

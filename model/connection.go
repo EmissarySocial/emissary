@@ -66,6 +66,7 @@ func (connection Connection) Match(predicate exp.Predicate) bool {
 	return false
 }
 
+// Compare orders this Connection against another, by the named field
 func (connection Connection) Compare(fieldName string, other Connection) int {
 
 	switch fieldName {
@@ -89,6 +90,7 @@ func (connection Connection) Compare(fieldName string, other Connection) int {
 	return 0
 }
 
+// LookupCode returns this Connection as a form.LookupCode, so it can be listed in a picker
 func (connection Connection) LookupCode() form.LookupCode {
 
 	switch connection.ProviderID {
@@ -127,6 +129,7 @@ func (connection Connection) LookupCode() form.LookupCode {
 	}
 }
 
+// ConnectionAsLookupCode adapts Connection.LookupCode into a mapping function
 func ConnectionAsLookupCode(connection Connection) form.LookupCode {
 	return connection.LookupCode()
 }

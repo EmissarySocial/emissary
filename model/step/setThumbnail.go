@@ -7,6 +7,7 @@ type SetThumbnail struct {
 	Path string
 }
 
+// NewSetThumbnail returns a fully initialized SetThumbnail step, or an error if its configuration is invalid
 func NewSetThumbnail(stepInfo mapof.Any) (SetThumbnail, error) {
 	return SetThumbnail{
 		Path: stepInfo.GetString("path"),

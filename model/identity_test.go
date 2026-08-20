@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestIdentitySchema returns the rosetta schema that describes a TestIdentity
 func TestIdentitySchema(t *testing.T) {
 
 	identity := NewIdentity()

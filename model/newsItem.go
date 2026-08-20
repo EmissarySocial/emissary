@@ -46,10 +46,12 @@ func NewNewsItem() NewsItem {
 	}
 }
 
+// NewsItemFields returns the database fields required to populate a NewsItem
 func NewsItemFields() []string {
 	return []string{"_id", "userId", "socialRole", "origin", "url", "folderId", "publishDate", "rank", "response", "stateId", "readDate", "createDate", "updateDate"}
 }
 
+// Fields returns the database fields required to populate a NewsItem
 func (newsItem NewsItem) Fields() []string {
 	return NewsItemFields()
 }
@@ -58,6 +60,7 @@ func (newsItem NewsItem) Fields() []string {
  * data.Object Interface
  ******************************************/
 
+// ID returns the primary key of this NewsItem, as a string
 func (newsItem NewsItem) ID() string {
 	return newsItem.NewsItemID.Hex()
 }
@@ -322,6 +325,7 @@ func (newsItem NewsItem) Toot() object.Status {
 	}
 }
 
+// GetRank returns the sort rank of this NewsItem
 func (newsItem NewsItem) GetRank() int64 {
 	return newsItem.Rank
 }

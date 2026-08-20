@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestTableEditor verifies that an "edit-table" step parses its configuration
 func TestTableEditor(t *testing.T) {
 
 	step, err := NewTableEditor(mapof.Any{
@@ -23,6 +24,7 @@ func TestTableEditor(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestTableEditor_InvalidForm verifies that an invalid form is rejected
 func TestTableEditor_InvalidForm(t *testing.T) {
 	_, err := NewTableEditor(mapof.Any{"form": "not-valid-json"})
 	require.NotNil(t, err)

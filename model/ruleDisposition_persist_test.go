@@ -15,6 +15,7 @@ type dispositionCarrier struct {
 	Disposition RuleDisposition `bson:"disposition,omitempty"`
 }
 
+// TestRuleDisposition_IsZero verifies which disposition values count as "clean"
 func TestRuleDisposition_IsZero(t *testing.T) {
 
 	require.True(t, RuleDisposition{}.IsZero())
@@ -64,6 +65,7 @@ func TestRuleDisposition_BSONRoundTrip(t *testing.T) {
 	require.Equal(t, original, restored)
 }
 
+// TestRuleDisposition_Merge verifies that merging two dispositions keeps the higher severity
 func TestRuleDisposition_Merge(t *testing.T) {
 
 	blockedAdmin := RuleDisposition{Action: RuleActionBlock, Tier: RuleOriginAdmin, RuleID: primitive.NewObjectID()}
@@ -89,6 +91,7 @@ func TestRuleDisposition_Merge(t *testing.T) {
 	require.Equal(t, mutedUser.RuleID, tied.RuleID)
 }
 
+// TestRuleDisposition_MergeLabels verifies that labels from both dispositions are combined
 func TestRuleDisposition_MergeLabels(t *testing.T) {
 
 	shared := primitive.NewObjectID()
@@ -110,6 +113,7 @@ func TestRuleDisposition_MergeLabels(t *testing.T) {
 	require.Len(t, theirs.Labels, 2)
 }
 
+// TestRuleDisposition_ApplyLabels verifies that a disposition writes its labels into a document, scrubbing any forged ones
 func TestRuleDisposition_ApplyLabels(t *testing.T) {
 
 	// RULE: a forged value under the reserved key is always scrubbed, even by a clean disposition

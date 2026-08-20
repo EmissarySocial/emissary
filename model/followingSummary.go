@@ -2,6 +2,7 @@ package model
 
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
+// FollowingSummary is an abbreviated Following, used when listing many Followings at once
 type FollowingSummary struct {
 	FollowingID primitive.ObjectID `bson:"_id"`
 	Username    string             `bson:"username"`
@@ -22,10 +23,12 @@ func FollowingSummaryFields() []string {
 	return []string{"_id", "username", "url", "label", "folder", "folderId", "iconUrl", "method", "status", "lastPolled", "nextPoll", "createDate"}
 }
 
+// Fields returns the database fields required to populate a FollowingSummary
 func (summary FollowingSummary) Fields() []string {
 	return FollowingSummaryFields()
 }
 
+// Icon returns the name of the icon that represents this Following's polling method
 func (summary FollowingSummary) Icon() string {
 
 	var icon string
@@ -52,6 +55,7 @@ func (summary FollowingSummary) Icon() string {
 	}
 }
 
+// StatusClass returns the CSS class that represents this Following's current status
 func (summary FollowingSummary) StatusClass() string {
 
 	switch summary.Status {
@@ -70,10 +74,12 @@ func (summary FollowingSummary) StatusClass() string {
 	}
 }
 
+// GetRank returns the sort rank of this FollowingSummary
 func (summary FollowingSummary) GetRank() int64 {
 	return summary.CreateDate
 }
 
+// UsernameOrID returns this Following's username, falling back to its URL
 func (summary FollowingSummary) UsernameOrID() string {
 	if summary.Username != "" {
 		return summary.Username

@@ -34,6 +34,7 @@ func InboxActivitySchema() schema.Element {
  * Getter/Setter Methods
  ******************************************/
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (inboxActivity *InboxActivity) GetPointer(name string) (any, bool) {
 	switch name {
 
@@ -72,6 +73,7 @@ func (inboxActivity *InboxActivity) GetPointer(name string) (any, bool) {
 	}
 }
 
+// GetStringOK returns the named property. Implements schema.StringGetter.
 func (mlsMessage *InboxActivity) GetStringOK(name string) (string, bool) {
 
 	switch name {
@@ -94,6 +96,7 @@ func (mlsMessage *InboxActivity) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  ******************************************/
 
+// SetString writes the named property. Implements schema.StringSetter.
 func (inboxActivity *InboxActivity) SetString(name string, value string) bool {
 
 	switch name {

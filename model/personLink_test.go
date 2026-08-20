@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestPersonLink verifies that every PersonLink property round-trips through the schema
 func TestPersonLink(t *testing.T) {
 
 	s := schema.New(PersonLinkSchema())

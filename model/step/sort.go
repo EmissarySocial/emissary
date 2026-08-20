@@ -12,6 +12,7 @@ type Sort struct {
 	Message string
 }
 
+// NewSort returns a fully initialized Sort step, or an error if its configuration is invalid
 func NewSort(stepInfo mapof.Any) (Sort, error) {
 
 	return Sort{

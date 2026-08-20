@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestAsModal verifies that an "as-modal" step parses its configuration
 func TestAsModal(t *testing.T) {
 
 	step, err := NewAsModal(mapof.Any{
@@ -26,6 +27,7 @@ func TestAsModal(t *testing.T) {
 	require.Equal(t, "", step.RequiredModel())
 }
 
+// TestAsModal_InvalidSteps verifies that an invalid steps is rejected
 func TestAsModal_InvalidSteps(t *testing.T) {
 	_, err := NewAsModal(mapof.Any{"steps": []mapof.Any{{"do": "nonexistent-step"}}})
 	require.NotNil(t, err)

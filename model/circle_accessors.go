@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// CircleSchema returns the rosetta schema that describes a Circle
 func CircleSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
@@ -25,6 +26,7 @@ func CircleSchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
+// GetStringOK returns the named property. Implements schema.StringGetter.
 func (circle *Circle) GetStringOK(name string) (string, bool) {
 
 	switch name {
@@ -55,6 +57,7 @@ func (circle *Circle) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  ******************************************/
 
+// SetString writes the named property. Implements schema.StringSetter.
 func (circle *Circle) SetString(name string, value string) bool {
 
 	switch name {
@@ -92,6 +95,7 @@ func (circle *Circle) SetString(name string, value string) bool {
 	return false
 }
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (circle *Circle) GetPointer(name string) (any, bool) {
 
 	switch name {

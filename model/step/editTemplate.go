@@ -11,6 +11,7 @@ type EditTemplate struct {
 	Paths []string
 }
 
+// NewEditTemplate returns a fully initialized EditTemplate step, or an error if its configuration is invalid
 func NewEditTemplate(stepInfo mapof.Any) (EditTemplate, error) {
 
 	const location = "model.step.EditTemplate.NewEditTemplate"

@@ -17,6 +17,7 @@ func ContentSchema() schema.Element {
  * Getter/Setter Interfaces
  ********************************/
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (content *Content) GetPointer(name string) (any, bool) {
 
 	switch name {

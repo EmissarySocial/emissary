@@ -97,6 +97,7 @@ func (following *Following) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
  * Mastodon API Methods
  ******************************************/
 
+// Toot returns this Following as its Mastodon API equivalent
 func (following Following) Toot() object.Relationship {
 
 	return object.Relationship{
@@ -109,6 +110,7 @@ func (following Following) Toot() object.Relationship {
  * Other Methods
  ******************************************/
 
+// Origin returns an OriginLink that points back at this Following, tagged with the provided type
 func (following *Following) Origin(originType string) OriginLink {
 	return OriginLink{
 		FollowingID: following.FollowingID,
@@ -141,6 +143,7 @@ func (following Following) NotZero() bool {
 	return !following.IsZero()
 }
 
+// UsernameOrID returns this Following's username, falling back to its profile URL
 func (following Following) UsernameOrID() string {
 	if following.Username != "" {
 		return following.Username

@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestProcessContent verifies that a "process-content" step parses its configuration
 func TestProcessContent(t *testing.T) {
 
 	step, err := NewProcessContent(mapof.Any{
@@ -34,6 +35,7 @@ func TestProcessContent(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestProcessContent_InvalidFormat verifies that an invalid format is rejected
 func TestProcessContent_InvalidFormat(t *testing.T) {
 	_, err := NewProcessContent(mapof.Any{"format": "not-allowed"})
 	require.NotNil(t, err)

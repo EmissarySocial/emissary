@@ -42,6 +42,7 @@ func ToToken(value string) string {
 	return result.String()
 }
 
+// flatten merges every id.Slice in the provided map into a single slice
 func flatten(original mapof.Object[id.Slice]) id.Slice {
 
 	length := len(original)
@@ -59,11 +60,13 @@ func flatten(original mapof.Object[id.Slice]) id.Slice {
 	return result
 }
 
+// objectID parses a hex string into an ObjectID, returning NilObjectID if it is malformed
 func objectID(value string) primitive.ObjectID {
 	result, _ := primitive.ObjectIDFromHex(value)
 	return result
 }
 
+// defaultRolesToGroupIDs converts a list of magic role names into the Group IDs that satisfy them
 func defaultRolesToGroupIDs(ownerID primitive.ObjectID, roleIDs ...string) Permissions {
 	result := make(Permissions, 0, len(roleIDs))
 

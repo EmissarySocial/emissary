@@ -5,6 +5,7 @@ import "github.com/benpate/rosetta/mapof"
 // EditConnection contains the configuration data for a modal that lets administrators manage connections to external servers.
 type EditConnection struct{}
 
+// NewEditConnection returns a fully initialized EditConnection step, or an error if its configuration is invalid
 func NewEditConnection(stepInfo mapof.Any) (EditConnection, error) {
 	return EditConnection{}, nil
 }

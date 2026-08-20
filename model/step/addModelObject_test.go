@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestAddModelObject verifies that an "add" step parses its configuration
 func TestAddModelObject(t *testing.T) {
 
 	// Parses a form and a default pipeline. (form.Parse accepts map[string]any, not mapof.Any.)
@@ -29,6 +30,7 @@ func TestAddModelObject(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestAddModelObject_InvalidDefaults verifies that an invalid defaults is rejected
 func TestAddModelObject_InvalidDefaults(t *testing.T) {
 
 	// An unrecognized step in "defaults" propagates an error.

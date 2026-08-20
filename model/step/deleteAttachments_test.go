@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestDeleteAttachments verifies that a "delete-attachments" step parses its configuration
 func TestDeleteAttachments(t *testing.T) {
 
 	step, err := NewDeleteAttachments(mapof.Any{

@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSetRenderData verifies that a "set-args" step parses its configuration
 func TestSetRenderData(t *testing.T) {
 
 	step, err := NewSetRenderData(mapof.Any{"do": "set-args", "title": "{{.Label}}", "count": "5"})
@@ -22,6 +23,7 @@ func TestSetRenderData(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestSetRenderData_InvalidTemplate verifies that an invalid template is rejected
 func TestSetRenderData_InvalidTemplate(t *testing.T) {
 	_, err := NewSetRenderData(mapof.Any{"bad": "{{ .Unclosed"})
 	require.NotNil(t, err)

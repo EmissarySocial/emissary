@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// testNow is the fixed timestamp that the rule-evaluation tests below are anchored to
 const testNow = int64(1_000_000)
 
 // actorDocument builds a minimal document attributed to the given actor URI.
@@ -56,12 +57,14 @@ func TestNewRuleDispositionForKeys(t *testing.T) {
 	require.False(t, clean.IsFiltered())
 }
 
+// TestEvaluate_NoRules verifies that a document matched by no rules is left clean
 func TestEvaluate_NoRules(t *testing.T) {
 	disposition := NewRuleDisposition(actorDocument("https://example.com/@bob"), nil, testNow)
 	require.Equal(t, RuleDispositionNone, disposition.Action)
 	require.False(t, disposition.IsFiltered())
 }
 
+// TestEvaluate_Block verifies that a matching BLOCK rule blocks the document
 func TestEvaluate_Block(t *testing.T) {
 	rule := actorRule(primitive.NewObjectID(), RuleActionBlock, "https://example.com/@bob")
 	disposition := NewRuleDisposition(actorDocument("https://example.com/@bob"), []RuleSummary{rule}, testNow)
@@ -71,6 +74,7 @@ func TestEvaluate_Block(t *testing.T) {
 	require.Equal(t, RuleOriginUser, disposition.Tier)
 }
 
+// TestEvaluate_MaxSeverityWins verifies that BLOCK beats MUTE, whatever order the rules arrive in
 func TestEvaluate_MaxSeverityWins(t *testing.T) {
 	user := primitive.NewObjectID()
 	mute := actorRule(user, RuleActionMute, "https://example.com/@bob")
@@ -81,6 +85,7 @@ func TestEvaluate_MaxSeverityWins(t *testing.T) {
 	require.True(t, NewRuleDisposition(actorDocument("https://example.com/@bob"), []RuleSummary{block, mute}, testNow).IsBlocked())
 }
 
+// TestEvaluate_MuteOnly verifies that a matching MUTE rule mutes without blocking
 func TestEvaluate_MuteOnly(t *testing.T) {
 	rule := actorRule(primitive.NewObjectID(), RuleActionMute, "https://example.com/@bob")
 	disposition := NewRuleDisposition(actorDocument("https://example.com/@bob"), []RuleSummary{rule}, testNow)
@@ -90,6 +95,7 @@ func TestEvaluate_MuteOnly(t *testing.T) {
 	require.False(t, disposition.IsBlocked())
 }
 
+// TestEvaluate_LabelDoesNotFilter verifies that a LABEL rule annotates a document without filtering it
 func TestEvaluate_LabelDoesNotFilter(t *testing.T) {
 	rule := actorRule(primitive.NewObjectID(), RuleActionLabel, "https://example.com/@bob")
 	rule.Label = "State media"
@@ -101,6 +107,7 @@ func TestEvaluate_LabelDoesNotFilter(t *testing.T) {
 	require.Equal(t, "State media", disposition.Labels[0].Label)
 }
 
+// TestEvaluate_LabelsCollectedUnderBlock verifies that labels are still collected when a BLOCK also matches
 func TestEvaluate_LabelsCollectedUnderBlock(t *testing.T) {
 	user := primitive.NewObjectID()
 	block := actorRule(user, RuleActionBlock, "https://example.com/@bob")
@@ -113,6 +120,7 @@ func TestEvaluate_LabelsCollectedUnderBlock(t *testing.T) {
 	require.True(t, disposition.HasLabels(), "labels are collected even when the final action is BLOCK")
 }
 
+// TestEvaluate_ExpiredRuleSkipped verifies that an expired rule is ignored, while a live one still applies
 func TestEvaluate_ExpiredRuleSkipped(t *testing.T) {
 	expired := actorRule(primitive.NewObjectID(), RuleActionBlock, "https://example.com/@bob")
 	expired.ExpireDate = testNow - 1 // already passed

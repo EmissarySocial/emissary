@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestResponse verifies that every Response property round-trips through the schema
 func TestResponse(t *testing.T) {
 
 	s := schema.New(ResponseSchema())

@@ -10,6 +10,7 @@ type IDOnly struct {
 	ID primitive.ObjectID `bson:"_id"`
 }
 
+// GetIDOnly extracts the ObjectIDs from a slice of IDOnly records
 func GetIDOnly(values []IDOnly) []primitive.ObjectID {
 	return slice.Map(values, func(value IDOnly) primitive.ObjectID {
 		return value.ID

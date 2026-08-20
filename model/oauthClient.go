@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// OAuthClient is a third-party application that has been registered to use this server's OAuth API
 type OAuthClient struct {
 	ClientID     primitive.ObjectID `bson:"_id"`          // Unique identifier for this Client record
 	ClientSecret string             `bson:"clientSecret"` // Shared secret used to retrieve OAuth Tokens
@@ -25,6 +26,7 @@ type OAuthClient struct {
 	journal.Journal `json:"-" bson:",inline"`
 }
 
+// NewOAuthClient returns a fully initialized, empty OAuthClient
 func NewOAuthClient() OAuthClient {
 	return OAuthClient{
 		ClientID:     primitive.NewObjectID(),
@@ -33,6 +35,7 @@ func NewOAuthClient() OAuthClient {
 	}
 }
 
+// ID returns the primary key of this OAuthClient, as a string
 func (app OAuthClient) ID() string {
 	return app.ClientID.Hex()
 }

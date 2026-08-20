@@ -50,6 +50,7 @@ func NewOAuthUserToken() OAuthUserToken {
  * data.Object Interface
  ******************************************/
 
+// ID returns the primary key of this OAuthUserToken, as a string
 func (token OAuthUserToken) ID() string {
 	return token.OAuthUserTokenID.Hex()
 }

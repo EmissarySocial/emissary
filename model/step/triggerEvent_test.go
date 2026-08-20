@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestTriggerEvent verifies that a "trigger-event" step parses its configuration
 func TestTriggerEvent(t *testing.T) {
 	step, err := NewTriggerEvent(mapof.Any{"event": "saved", "value": "{{.ID}}"})
 	require.Nil(t, err)
@@ -19,6 +20,7 @@ func TestTriggerEvent(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestTriggerEvent_InvalidTemplate verifies that an invalid template is rejected
 func TestTriggerEvent_InvalidTemplate(t *testing.T) {
 	_, err := NewTriggerEvent(mapof.Any{"value": "{{ .Unclosed"})
 	require.NotNil(t, err)

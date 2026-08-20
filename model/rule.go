@@ -28,6 +28,7 @@ type Rule struct {
 	journal.Journal `json:"-" bson:",inline"`
 }
 
+// NewRule returns a fully initialized Rule, defaulting to a private "mute this actor" rule
 func NewRule() Rule {
 	return Rule{
 		RuleID:   primitive.NewObjectID(),
@@ -41,10 +42,12 @@ func NewRule() Rule {
  * data.Object Interface
  ******************************************/
 
+// ID returns the primary key of this Rule, as a string
 func (rule Rule) ID() string {
 	return rule.RuleID.Hex()
 }
 
+// Fields returns the database fields required to populate a Rule
 func (rule Rule) Fields() []string {
 	return []string{
 		"_id",
@@ -98,6 +101,7 @@ func (rule *Rule) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
  * Mastodon API Methods
  ******************************************/
 
+// Toot returns this Rule as its Mastodon API equivalent
 func (rule Rule) Toot() object.Relationship {
 	return object.Relationship{
 		ID:       rule.Trigger,

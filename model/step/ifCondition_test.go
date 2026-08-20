@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestIfCondition verifies that an "if" step parses its configuration
 func TestIfCondition(t *testing.T) {
 
 	step, err := NewIfCondition(mapof.Any{
@@ -27,16 +28,19 @@ func TestIfCondition(t *testing.T) {
 	require.Equal(t, "", step.RequiredModel())
 }
 
+// TestIfCondition_InvalidCondition verifies that an invalid condition is rejected
 func TestIfCondition_InvalidCondition(t *testing.T) {
 	_, err := NewIfCondition(mapof.Any{"condition": "{{ .Unclosed"})
 	require.NotNil(t, err)
 }
 
+// TestIfCondition_InvalidThen verifies that an invalid then is rejected
 func TestIfCondition_InvalidThen(t *testing.T) {
 	_, err := NewIfCondition(mapof.Any{"then": []mapof.Any{{"do": "nonexistent-step"}}})
 	require.NotNil(t, err)
 }
 
+// TestIfCondition_InvalidElse verifies that an invalid else is rejected
 func TestIfCondition_InvalidElse(t *testing.T) {
 	_, err := NewIfCondition(mapof.Any{"else": []mapof.Any{{"do": "nonexistent-step"}}})
 	require.NotNil(t, err)

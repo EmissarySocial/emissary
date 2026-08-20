@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSetPrivileges verifies that a "set-privileges" step parses its configuration
 func TestSetPrivileges(t *testing.T) {
 
 	step, err := NewSetPrivileges(mapof.Any{"title": "Memberships"})

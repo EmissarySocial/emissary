@@ -27,16 +27,19 @@ type Privilege struct {
 	journal.Journal `bson:",inline"`
 }
 
+// NewPrivilege returns a fully initialized, empty Privilege
 func NewPrivilege() Privilege {
 	return Privilege{
 		PrivilegeID: primitive.NewObjectID(),
 	}
 }
 
+// ID returns the primary key of this Privilege, as a string
 func (privilege Privilege) ID() string {
 	return privilege.PrivilegeID.Hex()
 }
 
+// Fields returns the database fields required to populate a Privilege
 func (privilege Privilege) Fields() []string {
 	return []string{
 		"_id",
@@ -96,10 +99,12 @@ func (privilege *Privilege) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
  * Other Getter Methods
  ******************************************/
 
+// IsPurchase returns TRUE if this Privilege was bought through a payment provider
 func (privilege Privilege) IsPurchase() bool {
 	return privilege.RemotePurchaseID != ""
 }
 
+// IsRecurring returns TRUE if this Privilege renews on a schedule, rather than being a one-time purchase
 func (privilege Privilege) IsRecurring() bool {
 	switch privilege.RecurringType {
 
@@ -113,10 +118,12 @@ func (privilege Privilege) IsRecurring() bool {
 	return false
 }
 
+// IsCircle returns TRUE if this Privilege grants access to a Circle
 func (privilege Privilege) IsCircle() bool {
 	return !privilege.CircleID.IsZero()
 }
 
+// CompoundIDs returns the Circle and Product IDs that this Privilege grants, skipping the ones it does not
 func (privilege Privilege) CompoundIDs() []primitive.ObjectID {
 	result := make([]primitive.ObjectID, 0, 2)
 
@@ -135,6 +142,7 @@ func (privilege Privilege) CompoundIDs() []primitive.ObjectID {
  * Other Setter Methods
  ******************************************/
 
+// SetCircleInfo copies the denormalized Circle values onto this Privilege, and returns TRUE if anything changed
 func (privilege *Privilege) SetCircleInfo(circle *Circle) bool {
 
 	changed := false

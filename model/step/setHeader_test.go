@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSetHeader verifies that a "set-header" step parses its configuration
 func TestSetHeader(t *testing.T) {
 
 	step, err := NewSetHeader(mapof.Any{"method": "post", "name": "HX-Trigger", "value": "{{.Event}}"})
@@ -26,6 +27,7 @@ func TestSetHeader(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestSetHeader_InvalidTemplate verifies that an invalid template is rejected
 func TestSetHeader_InvalidTemplate(t *testing.T) {
 	_, err := NewSetHeader(mapof.Any{"value": "{{ .Unclosed"})
 	require.NotNil(t, err)

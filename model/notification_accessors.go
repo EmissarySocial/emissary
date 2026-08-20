@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// NotificationSchema returns the rosetta schema that describes a Notification
 func NotificationSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
@@ -27,6 +28,7 @@ func NotificationSchema() schema.Element {
  * Getter/Setter Interfaces
  ******************************************/
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (notification *Notification) GetPointer(name string) (any, bool) {
 
 	switch name {
@@ -59,6 +61,7 @@ func (notification *Notification) GetPointer(name string) (any, bool) {
 	return nil, false
 }
 
+// GetStringOK returns the named property. Implements schema.StringGetter.
 func (notification *Notification) GetStringOK(name string) (string, bool) {
 	switch name {
 
@@ -75,6 +78,7 @@ func (notification *Notification) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
+// SetString writes the named property. Implements schema.StringSetter.
 func (notification *Notification) SetString(name string, value string) bool {
 	switch name {
 

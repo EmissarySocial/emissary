@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestSearchTag verifies that every SearchTag property round-trips through the schema
 func TestSearchTag(t *testing.T) {
 
 	s := schema.New(SearchTagSchema())

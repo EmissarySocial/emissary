@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSetThumbnail verifies that a "set-thumbnail" step parses its configuration
 func TestSetThumbnail(t *testing.T) {
 	step, err := NewSetThumbnail(mapof.Any{"path": "image"})
 	require.Nil(t, err)

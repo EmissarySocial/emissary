@@ -24,6 +24,7 @@ type StreamWidget struct {
 	Widget Widget  `bson:"-"`
 }
 
+// NewStreamWidget returns a fully initialized StreamWidget of the provided type
 func NewStreamWidget(widgetType string, label string, location string) StreamWidget {
 	return StreamWidget{
 		StreamWidgetID: primitive.NewObjectID(),
@@ -39,6 +40,7 @@ func (widget StreamWidget) ID() string {
 	return widget.StreamWidgetID.Hex()
 }
 
+// IsNew returns TRUE if this StreamWidget has not been assigned an ID yet
 func (widget StreamWidget) IsNew() bool {
 	return widget.StreamWidgetID.IsZero()
 }

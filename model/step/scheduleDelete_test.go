@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestScheduleDelete verifies that a "schedule-delete" step parses its configuration
 func TestScheduleDelete(t *testing.T) {
 
 	step, err := NewScheduleDelete(mapof.Any{
@@ -27,6 +28,7 @@ func TestScheduleDelete(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestScheduleDelete_InvalidTemplate verifies that an invalid template is rejected
 func TestScheduleDelete_InvalidTemplate(t *testing.T) {
 	_, err := NewScheduleDelete(mapof.Any{"days": "{{ .Unclosed"})
 	require.NotNil(t, err)

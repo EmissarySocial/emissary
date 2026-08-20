@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestAsConfirmation verifies that an "as-confirmation" step parses its configuration
 func TestAsConfirmation(t *testing.T) {
 
 	step, err := NewAsConfirmation(mapof.Any{

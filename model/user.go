@@ -101,6 +101,7 @@ func (user User) NotificationEnabled(channels []string) bool {
  * Conversion Methods
  ******************************************/
 
+// PersonLink returns a PersonLink that points at this User
 func (user User) PersonLink() PersonLink {
 	return PersonLink{
 		UserID:       user.UserID,

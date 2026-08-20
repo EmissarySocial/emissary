@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestViewFeed verifies that a "view-feed" step parses its configuration
 func TestViewFeed(t *testing.T) {
 	step, err := NewViewFeed(mapof.Any{"search-types": []string{"streams", "users"}})
 	require.Nil(t, err)

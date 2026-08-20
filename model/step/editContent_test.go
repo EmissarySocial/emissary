@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestEditContent verifies that an "edit-content" step parses its configuration
 func TestEditContent(t *testing.T) {
 
 	step, err := NewEditContent(mapof.Any{
@@ -25,6 +26,7 @@ func TestEditContent(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestEditContent_Defaults verifies the values an "edit-content" step falls back to when its configuration is empty
 func TestEditContent_Defaults(t *testing.T) {
 
 	// "field" defaults to "content", "format" defaults to "editorjs".
@@ -36,6 +38,7 @@ func TestEditContent_Defaults(t *testing.T) {
 	require.Equal(t, editContentDefaultMaxLengthKB*runesPerKilobyte, step.MaxLength)
 }
 
+// TestEditContent_MaxLength verifies that an explicit "max-length" in kilobytes is converted to runes
 func TestEditContent_MaxLength(t *testing.T) {
 
 	// An explicit, in-range "max-length" (in KB) is converted to runes.
@@ -44,6 +47,7 @@ func TestEditContent_MaxLength(t *testing.T) {
 	require.Equal(t, 100*runesPerKilobyte, step.MaxLength)
 }
 
+// TestEditContent_MaxLength_DefaultsWhenZeroOrNegative verifies that a zero or negative "max-length" falls back to the default
 func TestEditContent_MaxLength_DefaultsWhenZeroOrNegative(t *testing.T) {
 
 	// A zero or negative "max-length" falls back to the default.
@@ -56,6 +60,7 @@ func TestEditContent_MaxLength_DefaultsWhenZeroOrNegative(t *testing.T) {
 	require.Equal(t, editContentDefaultMaxLengthKB*runesPerKilobyte, step.MaxLength)
 }
 
+// TestEditContent_MaxLength_ClampedToCeiling verifies that a "max-length" above the storage ceiling is clamped down
 func TestEditContent_MaxLength_ClampedToCeiling(t *testing.T) {
 
 	// A "max-length" (KB) larger than the storage ceiling is clamped down, so a template
@@ -65,6 +70,7 @@ func TestEditContent_MaxLength_ClampedToCeiling(t *testing.T) {
 	require.Equal(t, editContentMaxLengthCeilingKB*runesPerKilobyte, step.MaxLength)
 }
 
+// TestEditContent_InvalidFormat verifies that an invalid format is rejected
 func TestEditContent_InvalidFormat(t *testing.T) {
 
 	// "format" is a required enum; an invalid value fails schema validation.

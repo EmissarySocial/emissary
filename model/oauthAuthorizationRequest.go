@@ -28,10 +28,12 @@ type OAuthAuthorizationRequest struct {
 	Language            string `query:"language"              form:"language"`
 }
 
+// NewOAuthAuthorizationRequest returns a fully initialized, empty OAuthAuthorizationRequest
 func NewOAuthAuthorizationRequest() OAuthAuthorizationRequest {
 	return OAuthAuthorizationRequest{}
 }
 
+// Scopes returns the requested OAuth scopes, split into individual values
 func (req OAuthAuthorizationRequest) Scopes() []string {
 	return strings.Split(req.Scope, " ")
 }

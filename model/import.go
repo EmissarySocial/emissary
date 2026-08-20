@@ -11,6 +11,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// Import tracks the progress of migrating one account from another server into this one
 type Import struct {
 	ImportID       primitive.ObjectID `bson:"_id"`            // Unique identifier for this Import record
 	UserID         primitive.ObjectID `bson:"userId"`         // User profile that we're importing INTO
@@ -28,6 +29,7 @@ type Import struct {
 	journal.Journal `bson:",inline"`
 }
 
+// NewImport returns a fully initialized Import, in the NEW state
 func NewImport() Import {
 	return Import{
 		ImportID:  primitive.NewObjectID(),
@@ -40,6 +42,7 @@ func NewImport() Import {
  * data.Object Interface
  ******************************************/
 
+// ID returns the primary key of this Import, as a string
 func (record Import) ID() string {
 	return record.ImportID.Hex()
 }
@@ -102,6 +105,7 @@ func (record *Import) ClearOAuthToken() {
  * Other Methods
  ******************************************/
 
+// PercentComplete returns how far along this Import is, as a whole-number percentage
 func (record Import) PercentComplete() int {
 	ratio := convert.Float(record.CompleteItems) / convert.Float(record.TotalItems) * 100
 	return convert.Int(ratio)

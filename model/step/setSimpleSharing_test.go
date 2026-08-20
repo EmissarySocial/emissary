@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSetSimpleSharing verifies that a "set-simple-sharing" step parses its configuration
 func TestSetSimpleSharing(t *testing.T) {
 
 	step, err := NewSetSimpleSharing(mapof.Any{"title": "Share", "message": "msg", "role": "viewer"})
@@ -21,6 +22,7 @@ func TestSetSimpleSharing(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredStates())
 }
 
+// TestSetSimpleSharing_RequiresRole verifies that a "set-simple-sharing" step requires a role
 func TestSetSimpleSharing_RequiresRole(t *testing.T) {
 	_, err := NewSetSimpleSharing(mapof.Any{})
 	require.NotNil(t, err)

@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestFolderSchema returns the rosetta schema that describes a TestFolder
 func TestFolderSchema(t *testing.T) {
 
 	folder := NewFolder()

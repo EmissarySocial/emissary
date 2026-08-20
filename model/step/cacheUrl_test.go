@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestCacheURL verifies that a "cache-url" step parses its configuration
 func TestCacheURL(t *testing.T) {
 
 	// Public cache with an explicit max-age.

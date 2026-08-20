@@ -57,6 +57,7 @@ func (action *Action) CalcAccessList(template *Template, debug bool) error {
 	return nil
 }
 
+// calcAccessListForStateAndRole returns every role allowed to run this Action while a Stream is in the provided state
 func (action *Action) calcAccessListForStateAndRole(stateID string) sliceof.String {
 
 	// Create an AccessList for Streams in this State

@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestRemoveEvent verifies that a "remove-event" step parses its configuration
 func TestRemoveEvent(t *testing.T) {
 	step, err := NewRemoveEvent(mapof.Any{"event": "closeModal"})
 	require.Nil(t, err)

@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestImportItemSchema returns the rosetta schema that describes a TestImportItem
 func TestImportItemSchema(t *testing.T) {
 
 	importItem := NewImportItem()

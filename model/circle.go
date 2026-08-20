@@ -23,16 +23,19 @@ type Circle struct {
 	journal.Journal `json:"-" bson:",inline"`
 }
 
+// NewCircle returns a fully initialized, empty Circle
 func NewCircle() Circle {
 	return Circle{
 		CircleID: primitive.NewObjectID(),
 	}
 }
 
+// CircleFields returns the database fields required to populate a Circle
 func CircleFields() []string {
 	return []string{"_id", "name", "icon", "color", "description", "productIds", "memberCount", "isFeatured"}
 }
 
+// Fields returns the database fields required to populate a Circle
 func (circle Circle) Fields() []string {
 	return CircleFields()
 }
@@ -41,6 +44,7 @@ func (circle Circle) Fields() []string {
  * data.Object Interface
  ******************************************/
 
+// ID returns the primary key of this Circle, as a string
 func (circle *Circle) ID() string {
 	return circle.CircleID.Hex()
 }
@@ -83,14 +87,17 @@ func (circle *Circle) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
  * Other Data Accessors
  ******************************************/
 
+// HasProducts returns TRUE if this Circle is unlocked by purchasing a Product
 func (circle Circle) HasProducts() bool {
 	return circle.ProductIDs.NotEmpty()
 }
 
+// ProductCount returns the number of Products that unlock this Circle
 func (circle Circle) ProductCount() int {
 	return circle.ProductIDs.Length()
 }
 
+// Privileges returns every ID that grants access to this Circle: the Circle itself, plus any Products
 func (circle Circle) Privileges() id.Slice {
 
 	result := id.Slice{circle.CircleID}
@@ -102,6 +109,7 @@ func (circle Circle) Privileges() id.Slice {
 	return result
 }
 
+// LookupCode returns this Circle as a form.LookupCode, so it can be listed in a picker
 func (circle Circle) LookupCode() form.LookupCode {
 	return form.LookupCode{
 		Value:       circle.CircleID.Hex(),

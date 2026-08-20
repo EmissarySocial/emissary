@@ -51,6 +51,7 @@ type Template struct {
 	Actor              StreamActor          `json:"actor"              bson:"actor"`              // ActivityPub Actor operated on behalf of this Template/Stream
 }
 
+// DatasetMap is the set of lookup-code groups that a Template makes available to its forms
 type DatasetMap map[string]form.ReadOnlyLookupGroup
 
 // NewTemplate creates a new, fully initialized Template object
@@ -122,6 +123,7 @@ func (template *Template) CanBeContainedBy(templateRoles ...string) bool {
 	return false
 }
 
+// IsValidWidgetLocation returns TRUE if this Template accepts widgets in the named location
 func (template *Template) IsValidWidgetLocation(location string) bool {
 
 	// NILCHECK: Template cannot be nil
@@ -205,6 +207,7 @@ func (template *Template) Default() Action {
 	return template.Actions[template.DefaultAction]
 }
 
+// Inherit fills in this Template's empty values from a parent Template
 func (template *Template) Inherit(parent *Template) {
 
 	// NILCHECK: Parent cannot be nil
@@ -312,6 +315,7 @@ func (template Template) IsSubscribable() bool {
 	return false
 }
 
+// PrivilegedRoles returns every Role in this Template that requires a purchase or membership
 func (template Template) PrivilegedRoles() []Role {
 
 	result := make([]Role, 0)
@@ -503,6 +507,7 @@ func pathToSchema(path string, element schema.Element) schema.Element {
 	return element
 }
 
+// CompareTemplate orders two Templates by their sort value, then by their ID
 func CompareTemplate(a, b Template) int {
 
 	if compareSort := compare.Int(a.Sort, b.Sort); compareSort != 0 {

@@ -111,6 +111,7 @@ func (authorization Authorization) Scopes() []string {
 	return strings.Split(authorization.Scope, " ")
 }
 
+// Debug returns this Authorization as a map, for logging and troubleshooting
 func (authorization Authorization) Debug() mapof.Any {
 
 	return mapof.Any{

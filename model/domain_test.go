@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// TestDomainSchema returns the rosetta schema that describes a TestDomain
 func TestDomainSchema(t *testing.T) {
 
 	domain := NewDomain()

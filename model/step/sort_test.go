@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSort verifies that a "set-sort" step parses its configuration
 func TestSort(t *testing.T) {
 
 	step, err := NewSort(mapof.Any{"model": "Stream", "keys": "token", "values": "order", "message": "Reordered"})

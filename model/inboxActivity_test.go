@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestInboxActivitySchema returns the rosetta schema that describes a TestInboxActivity
 func TestInboxActivitySchema(t *testing.T) {
 
 	activity := NewInboxActivity()

@@ -14,6 +14,7 @@ func NewUserResponseSummary() UserResponseSummary {
 	return UserResponseSummary{}
 }
 
+// SetResponse records whether the User has made the provided kind of response
 func (summary *UserResponseSummary) SetResponse(responseType string, value bool) {
 	switch responseType {
 

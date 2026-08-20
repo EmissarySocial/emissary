@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestOriginLink verifies that every OriginLink property round-trips through the schema
 func TestOriginLink(t *testing.T) {
 
 	origin := NewOriginLink()

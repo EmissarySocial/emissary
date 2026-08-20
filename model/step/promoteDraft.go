@@ -9,6 +9,7 @@ type StreamPromoteDraft struct {
 	StateID string
 }
 
+// NewStreamPromoteDraft returns a fully initialized StreamPromoteDraft step, or an error if its configuration is invalid
 func NewStreamPromoteDraft(stepInfo mapof.Any) (StreamPromoteDraft, error) {
 	return StreamPromoteDraft{
 		StateID: first(stepInfo.GetString("state"), "published"),

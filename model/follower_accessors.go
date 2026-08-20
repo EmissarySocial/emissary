@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// FollowerSchema returns the rosetta schema that describes a Follower
 func FollowerSchema() schema.Element {
 
 	return schema.Object{
@@ -26,6 +27,7 @@ func FollowerSchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (follower *Follower) GetPointer(name string) (any, bool) {
 
 	switch name {
@@ -55,6 +57,7 @@ func (follower *Follower) GetPointer(name string) (any, bool) {
 	return nil, false
 }
 
+// GetStringOK returns the named property. Implements schema.StringGetter.
 func (follower *Follower) GetStringOK(name string) (string, bool) {
 	switch name {
 
@@ -68,6 +71,7 @@ func (follower *Follower) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
+// SetString writes the named property. Implements schema.StringSetter.
 func (follower *Follower) SetString(name string, value string) bool {
 
 	switch name {

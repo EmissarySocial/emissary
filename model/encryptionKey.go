@@ -6,8 +6,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// EncryptionKeyEncodingPlaintext marks a key whose PEM values are stored unencrypted
 const EncryptionKeyEncodingPlaintext = "plaintext"
 
+// EncryptionKey is a public/private key pair belonging to a User or a Stream
 type EncryptionKey struct {
 	EncryptionKeyID primitive.ObjectID `json:"encryptionKeyId" bson:"_id"`
 	ParentType      string             `json:"parentType"      bson:"parentType"`
@@ -19,12 +21,14 @@ type EncryptionKey struct {
 	journal.Journal `json:"-" bson:",inline"`
 }
 
+// NewEncryptionKey returns a fully initialized, empty EncryptionKey
 func NewEncryptionKey() EncryptionKey {
 	return EncryptionKey{
 		EncryptionKeyID: primitive.NewObjectID(),
 	}
 }
 
+// EncryptionKeySchema returns the rosetta schema that describes a EncryptionKey
 func EncryptionKeySchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
@@ -42,6 +46,7 @@ func EncryptionKeySchema() schema.Element {
  * data.Object Interface
  ******************************/
 
+// ID returns the primary key of this EncryptionKey, as a string
 func (encryptionKey *EncryptionKey) ID() string {
 	return encryptionKey.EncryptionKeyID.Hex()
 }

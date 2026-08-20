@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSearchIndex verifies that a "search-index" step parses its configuration
 func TestSearchIndex(t *testing.T) {
 
 	step, err := NewSearchIndex(mapof.Any{"if": "{{.IsPublic}}"})
@@ -24,6 +25,7 @@ func TestSearchIndex(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestSearchIndex_InvalidTemplate verifies that an invalid template is rejected
 func TestSearchIndex_InvalidTemplate(t *testing.T) {
 	_, err := NewSearchIndex(mapof.Any{"if": "{{ .Unclosed"})
 	require.NotNil(t, err)

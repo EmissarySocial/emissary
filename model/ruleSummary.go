@@ -37,6 +37,7 @@ func RuleSummaryFields() []string {
 	}
 }
 
+// Fields returns the database fields required to populate a RuleSummary
 func (rule RuleSummary) Fields() []string {
 	return RuleSummaryFields()
 }

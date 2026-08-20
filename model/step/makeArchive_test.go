@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestMakeArchive verifies that a "make-archive" step parses its configuration
 func TestMakeArchive(t *testing.T) {
 
 	step, err := NewMakeArchive(mapof.Any{

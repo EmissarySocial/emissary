@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestViewAttachment verifies that a "view-attachment" step parses its configuration
 func TestViewAttachment(t *testing.T) {
 
 	step, err := NewViewAttachment(mapof.Any{
@@ -28,12 +29,14 @@ func TestViewAttachment(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestViewAttachment_RequiresFormat verifies that a "view-attachment" step requires a format
 func TestViewAttachment_RequiresFormat(t *testing.T) {
 	// At least one format is required.
 	_, err := NewViewAttachment(mapof.Any{})
 	require.NotNil(t, err)
 }
 
+// TestViewAttachment_CacheDefaultsTrue verifies that caching is enabled unless the configuration turns it off
 func TestViewAttachment_CacheDefaultsTrue(t *testing.T) {
 	step, err := NewViewAttachment(mapof.Any{"format": []string{"pdf"}})
 	require.Nil(t, err)

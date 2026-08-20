@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestDelete verifies that a "delete" step parses its configuration
 func TestDelete(t *testing.T) {
 
 	step, err := NewDelete(mapof.Any{
@@ -29,6 +30,7 @@ func TestDelete(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestDelete_Defaults verifies the values a "delete" step falls back to when its configuration is empty
 func TestDelete_Defaults(t *testing.T) {
 
 	step, err := NewDelete(mapof.Any{})
@@ -40,6 +42,7 @@ func TestDelete_Defaults(t *testing.T) {
 	require.NotNil(t, step.Message) // default message template
 }
 
+// TestDelete_InvalidConfig verifies that an invalid config is rejected
 func TestDelete_InvalidConfig(t *testing.T) {
 
 	// "method" outside the schema enum fails validation.

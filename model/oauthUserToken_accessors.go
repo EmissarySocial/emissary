@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// OAuthUserTokenSchema returns the rosetta schema that describes a OAuthUserToken
 func OAuthUserTokenSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
@@ -28,6 +29,7 @@ func OAuthUserTokenSchema() schema.Element {
 	}
 }
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (userToken *OAuthUserToken) GetPointer(name string) (any, bool) {
 	switch name {
 
@@ -59,6 +61,7 @@ func (userToken *OAuthUserToken) GetPointer(name string) (any, bool) {
 	return nil, false
 }
 
+// GetStringOK returns the named property. Implements schema.StringGetter.
 func (userToken *OAuthUserToken) GetStringOK(name string) (string, bool) {
 
 	switch name {
@@ -76,6 +79,7 @@ func (userToken *OAuthUserToken) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
+// SetString writes the named property. Implements schema.StringSetter.
 func (userToken *OAuthUserToken) SetString(name string, value string) bool {
 
 	switch name {

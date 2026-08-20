@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestUnPublish verifies that an "unpublish" step parses its configuration
 func TestUnPublish(t *testing.T) {
 
 	step, err := NewUnPublish(mapof.Any{"state": "archived", "outbox": true})

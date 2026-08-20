@@ -37,6 +37,7 @@ func FollowingSchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (following *Following) GetPointer(name string) (any, bool) {
 	switch name {
 
@@ -96,6 +97,7 @@ func (following *Following) GetPointer(name string) (any, bool) {
 	return nil, false
 }
 
+// GetStringOK returns the named property. Implements schema.StringGetter.
 func (following Following) GetStringOK(name string) (string, bool) {
 
 	switch name {
@@ -117,6 +119,7 @@ func (following Following) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  ******************************************/
 
+// SetString writes the named property. Implements schema.StringSetter.
 func (following *Following) SetString(name string, value string) bool {
 
 	switch name {

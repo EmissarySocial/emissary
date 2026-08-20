@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestMerchantAccountSchema returns the rosetta schema that describes a TestMerchantAccount
 func TestMerchantAccountSchema(t *testing.T) {
 
 	merchantAccount := NewMerchantAccount()

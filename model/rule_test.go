@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestRuleSchema returns the rosetta schema that describes a TestRule
 func TestRuleSchema(t *testing.T) {
 
 	block := NewRule()

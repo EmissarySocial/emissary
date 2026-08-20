@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSave verifies that a "save" step parses its configuration
 func TestSave(t *testing.T) {
 
 	step, err := NewSave(mapof.Any{
@@ -30,12 +31,14 @@ func TestSave(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestSave_InvalidConfig verifies that an invalid config is rejected
 func TestSave_InvalidConfig(t *testing.T) {
 	// "method" outside the schema enum fails validation.
 	_, err := NewSave(mapof.Any{"method": "not-a-method"})
 	require.NotNil(t, err)
 }
 
+// TestSave_InvalidOnError verifies that an invalid on error is rejected
 func TestSave_InvalidOnError(t *testing.T) {
 	_, err := NewSave(mapof.Any{"on-error": []mapof.Any{{"do": "nonexistent-step"}}})
 	require.NotNil(t, err)

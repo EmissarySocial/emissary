@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestStreamPromoteDraft verifies that a "promote-draft" step parses its configuration
 func TestStreamPromoteDraft(t *testing.T) {
 
 	step, err := NewStreamPromoteDraft(mapof.Any{"state": "live"})

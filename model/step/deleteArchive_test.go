@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestDeleteArchive verifies that a "delete-archive" step parses its configuration
 func TestDeleteArchive(t *testing.T) {
 
 	step, err := NewDeleteArchive(mapof.Any{"token": "backup-2024"})

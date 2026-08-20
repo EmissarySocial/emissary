@@ -46,6 +46,7 @@ func (registration Registration) ID() string {
 	return registration.RegistrationID
 }
 
+// IsZero returns TRUE if this Registration has not been populated
 func (registration Registration) IsZero() bool {
 	if registration.RegistrationID != "" {
 		return false
@@ -62,6 +63,7 @@ func (registration *Registration) Action(actionID string) (Action, bool) {
 	return action, ok
 }
 
+// Inherit fills in this Registration's empty values from a parent Registration
 func (registration *Registration) Inherit(parent *Registration) {
 
 	// Null check.

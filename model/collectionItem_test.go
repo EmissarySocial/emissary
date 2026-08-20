@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestCollectionItemSchema returns the rosetta schema that describes a TestCollectionItem
 func TestCollectionItemSchema(t *testing.T) {
 
 	collectionItem := NewCollectionItem()

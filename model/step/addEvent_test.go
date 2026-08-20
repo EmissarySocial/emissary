@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestAddEvent verifies that an "add-event" step parses its configuration
 func TestAddEvent(t *testing.T) {
 
 	// Explicit values are parsed through.

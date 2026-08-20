@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSetPassword verifies that a "set-password" step parses its configuration
 func TestSetPassword(t *testing.T) {
 	step, err := NewSetPassword(mapof.Any{})
 	require.Nil(t, err)

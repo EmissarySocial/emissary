@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestViewJSON verifies that a "view-json" step parses its configuration
 func TestViewJSON(t *testing.T) {
 
 	step, err := NewViewJSON(mapof.Any{"value": ".Object"})
@@ -24,6 +25,7 @@ func TestViewJSON(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestViewJSON_RequiresValue verifies that a "view-json" step requires a value
 func TestViewJSON_RequiresValue(t *testing.T) {
 	// A query template is required.
 	_, err := NewViewJSON(mapof.Any{})

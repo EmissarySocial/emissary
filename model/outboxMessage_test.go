@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestOutboxMessage verifies that every OutboxMessage property round-trips through the schema
 func TestOutboxMessage(t *testing.T) {
 
 	s := schema.New(OutboxMessageSchema())

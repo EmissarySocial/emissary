@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestOutboxItemSchema returns the rosetta schema that describes a TestOutboxItem
 func TestOutboxItemSchema(t *testing.T) {
 
 	annotation := NewOutboxItem()

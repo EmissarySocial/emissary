@@ -25,6 +25,7 @@ func NewSigninAttempt(username string, ipAddress string, userAgent string) Signi
 	}
 }
 
+// ID returns the primary key of this SigninAttempt, as a string
 func (signinAttempt SigninAttempt) ID() string {
 	return signinAttempt.SigninAttemptID.Hex()
 }

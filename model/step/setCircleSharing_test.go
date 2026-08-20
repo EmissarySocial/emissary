@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSetCircleSharing verifies that a "set-circle-sharing" step parses its configuration
 func TestSetCircleSharing(t *testing.T) {
 
 	step, err := NewSetCircleSharing(mapof.Any{
@@ -29,6 +30,7 @@ func TestSetCircleSharing(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredStates())
 }
 
+// TestSetCircleSharing_RequiresRole verifies that a "set-circle-sharing" step requires a role
 func TestSetCircleSharing_RequiresRole(t *testing.T) {
 	_, err := NewSetCircleSharing(mapof.Any{})
 	require.NotNil(t, err)

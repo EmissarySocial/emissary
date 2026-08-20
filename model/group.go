@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// Group is a named set of Users, used to grant permissions in bulk
 type Group struct {
 	GroupID     primitive.ObjectID `bson:"_id"`         // Unique identifier assigned by the database
 	Token       string             `bson:"token"`       // Uniqe token chosen by the administrator
@@ -16,16 +17,19 @@ type Group struct {
 	journal.Journal `json:"-" bson:",inline"`
 }
 
+// NewGroup returns a fully initialized, empty Group
 func NewGroup() Group {
 	return Group{
 		GroupID: primitive.NewObjectID(),
 	}
 }
 
+// GroupFields returns the database fields required to populate a Group
 func GroupFields() []string {
 	return []string{"_id", "label", "description", "icon"}
 }
 
+// Fields returns the database fields required to populate a Group
 func (userSummary Group) Fields() []string {
 	return GroupFields()
 }
@@ -34,6 +38,7 @@ func (userSummary Group) Fields() []string {
  * data.Object Interface
  ******************************************/
 
+// ID returns the primary key of this Group, as a string
 func (group *Group) ID() string {
 	return group.GroupID.Hex()
 }
@@ -42,10 +47,12 @@ func (group *Group) ID() string {
  * Mock Activity Vocabulary
  ******************************************/
 
+// Name returns the human-readable label of this Group
 func (group Group) Name() string {
 	return group.Label
 }
 
+// Summary returns an abbreviated copy of this Group
 func (group Group) Summary() string {
 	return group.Description
 }
@@ -88,6 +95,7 @@ func (group *Group) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
  * Other Data Accessors
  ******************************************/
 
+// IconWithDefault returns this Group's icon, falling back to the generic "people" icon
 func (group Group) IconWithDefault() string {
 	if group.Icon == "" {
 		return "people"
@@ -95,6 +103,7 @@ func (group Group) IconWithDefault() string {
 	return group.Icon
 }
 
+// LookupCode returns this Group as a form.LookupCode, so it can be listed in a picker
 func (group Group) LookupCode() form.LookupCode {
 	return form.LookupCode{
 		Value:       group.GroupID.Hex(),

@@ -2,8 +2,10 @@ package model
 
 import "github.com/benpate/hannibal/vocab"
 
+// CollectionParentTypeUser identifies a Collection that belongs to a User
 const CollectionParentTypeUser = "User"
 
+// CollectionParentTypeStream identifies a Collection that belongs to a Stream
 const CollectionParentTypeStream = "Stream"
 
 // CollectionTypeContext is the type of collection that is used to group messages that are part of the same conversation thread.

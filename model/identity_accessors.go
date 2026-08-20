@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// IdentitySchema returns the rosetta schema that describes a Identity
 func IdentitySchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
@@ -22,6 +23,7 @@ func IdentitySchema() schema.Element {
  * Getter/Setter Interfaces
  ********************************/
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (identity *Identity) GetPointer(name string) (any, bool) {
 
 	switch name {
@@ -45,6 +47,7 @@ func (identity *Identity) GetPointer(name string) (any, bool) {
 	return nil, false
 }
 
+// GetStringOK returns the named property. Implements schema.StringGetter.
 func (identity Identity) GetStringOK(name string) (string, bool) {
 
 	switch name {
@@ -56,6 +59,7 @@ func (identity Identity) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
+// SetString writes the named property. Implements schema.StringSetter.
 func (identity *Identity) SetString(name string, value string) bool {
 
 	switch name {

@@ -20,6 +20,7 @@ func NewAnonymousPermissions() Permissions {
 	return Permissions{MagicGroupIDAnonymous}
 }
 
+// NewAuthenticatedPermissions returns a Permissions slice containing the "authenticated" magic group
 func NewAuthenticatedPermissions() Permissions {
 	return Permissions{MagicGroupIDAuthenticated}
 }

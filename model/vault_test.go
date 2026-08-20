@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestVault verifies that values written into a Vault survive an encrypt/decrypt round-trip
 func TestVault(t *testing.T) {
 
 	encryptionKey, _ := hex.DecodeString("6368616e676520746869732070617373776f726420746f206120736563726574")

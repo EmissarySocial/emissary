@@ -19,6 +19,7 @@ func s256(verifier string) string {
 // a valid 43-char verifier (the RFC minimum) drawn from the unreserved set.
 const validVerifier = "0123456789012345678901234567890123456789012" // 43 chars
 
+// TestIsValidPKCEVerifier verifies the length and character rules that RFC 7636 places on a verifier
 func TestIsValidPKCEVerifier(t *testing.T) {
 
 	valid := func(name, verifier string) {
@@ -49,6 +50,7 @@ func TestIsValidPKCEVerifier(t *testing.T) {
 	invalid("contains equals", strings.Repeat("a", 42)+"=")
 }
 
+// TestPKCEChallengeMatches verifies challenge checking for both the "plain" and "S256" methods
 func TestPKCEChallengeMatches(t *testing.T) {
 
 	match := func(name, method, verifier, challenge string) {
@@ -77,6 +79,7 @@ func TestPKCEChallengeMatches(t *testing.T) {
 	noMatch("empty method never matches", "", validVerifier, validVerifier)
 }
 
+// TestOAuthUserToken_VerifyPKCE verifies that a stored challenge is only redeemed by its own verifier
 func TestOAuthUserToken_VerifyPKCE(t *testing.T) {
 
 	// tokenWith builds a token carrying the given stored challenge/method.
@@ -125,6 +128,7 @@ func TestOAuthUserToken_VerifyPKCE(t *testing.T) {
 	rejects("defaulted-plain wrong verifier", tokenWith(validVerifier, ""), strings.Repeat("w", 43))
 }
 
+// TestOAuthUserToken_SetPKCEChallenge verifies which challenge and method values are accepted onto a token
 func TestOAuthUserToken_SetPKCEChallenge(t *testing.T) {
 
 	t.Run("blank challenge is a no-op", func(t *testing.T) {
@@ -155,6 +159,7 @@ func TestOAuthUserToken_SetPKCEChallenge(t *testing.T) {
 	})
 }
 
+// TestOAuthUserToken_HasPKCEChallenge verifies when a token counts as carrying a PKCE challenge
 func TestOAuthUserToken_HasPKCEChallenge(t *testing.T) {
 
 	t.Run("no bound challenge", func(t *testing.T) {
@@ -205,6 +210,7 @@ func TestOAuthAuthorizationRequest_Validate_PublicClientRequiresPKCE(t *testing.
 	})
 }
 
+// TestOAuthAuthorizationRequest_validatePKCE verifies which PKCE parameters an authorization request accepts
 func TestOAuthAuthorizationRequest_validatePKCE(t *testing.T) {
 
 	t.Run("no challenge is fine", func(t *testing.T) {

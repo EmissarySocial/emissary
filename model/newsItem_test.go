@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestNewsItemSchema returns the rosetta schema that describes a TestNewsItem
 func TestNewsItemSchema(t *testing.T) {
 
 	activity := NewNewsItem()

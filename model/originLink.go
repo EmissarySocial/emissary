@@ -29,6 +29,7 @@ func (origin OriginLink) IsEmpty() bool {
 	return origin.FollowingID.IsZero() && (origin.URL == "")
 }
 
+// NotEmpty returns TRUE if this OriginLink points at a Following or a URL
 func (origin OriginLink) NotEmpty() bool {
 	return !origin.IsEmpty()
 }

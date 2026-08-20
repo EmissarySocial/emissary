@@ -18,6 +18,7 @@ type Object struct {
 	journal.Journal `bson:",inline"`
 }
 
+// NewObject returns a fully initialized, empty Object
 func NewObject() Object {
 	return Object{
 		ObjectID:    primitive.NewObjectID(),

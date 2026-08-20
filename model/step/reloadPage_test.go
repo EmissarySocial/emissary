@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestReloadPage verifies that a "reload-page" step parses its configuration
 func TestReloadPage(t *testing.T) {
 	step, err := NewReloadPage(mapof.Any{})
 	require.Nil(t, err)

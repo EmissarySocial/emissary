@@ -38,6 +38,7 @@ func NewsItemSchema() schema.Element {
  * Getter/Setter Methods
  ******************************************/
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (newsItem *NewsItem) GetPointer(name string) (any, bool) {
 	switch name {
 
@@ -76,6 +77,7 @@ func (newsItem *NewsItem) GetPointer(name string) (any, bool) {
 	}
 }
 
+// GetStringOK returns the named property. Implements schema.StringGetter.
 func (newsItem *NewsItem) GetStringOK(name string) (string, bool) {
 
 	switch name {
@@ -101,6 +103,7 @@ func (newsItem *NewsItem) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  ******************************************/
 
+// SetString writes the named property. Implements schema.StringSetter.
 func (newsItem *NewsItem) SetString(name string, value string) bool {
 
 	switch name {

@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestEditTemplate verifies that an "edit-template" step parses its configuration
 func TestEditTemplate(t *testing.T) {
 
 	step, err := NewEditTemplate(mapof.Any{
@@ -27,6 +28,7 @@ func TestEditTemplate(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestEditTemplate_InvalidKey verifies that an invalid key is rejected
 func TestEditTemplate_InvalidKey(t *testing.T) {
 	// Any key other than do/title/templateId/inboxTemplate/outboxTemplate is rejected.
 	_, err := NewEditTemplate(mapof.Any{"unexpectedKey": true})

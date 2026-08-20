@@ -13,6 +13,7 @@ type InlineSuccess struct {
 	Href    *template.Template
 }
 
+// NewInlineSuccess returns a fully initialized InlineSuccess step, or an error if its configuration is invalid
 func NewInlineSuccess(stepInfo mapof.Any) (InlineSuccess, error) {
 
 	message, err := template.New("").Funcs(FuncMap()).Parse(stepInfo.GetString("message"))

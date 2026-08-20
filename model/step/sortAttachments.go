@@ -11,6 +11,7 @@ type SortAttachments struct {
 	Message string
 }
 
+// NewSortAttachments returns a fully initialized SortAttachments step, or an error if its configuration is invalid
 func NewSortAttachments(stepInfo mapof.Any) (SortAttachments, error) {
 
 	return SortAttachments{

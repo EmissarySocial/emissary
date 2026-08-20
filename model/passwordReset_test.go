@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestNewPasswordReset verifies that a new reset code carries full entropy and is immediately usable
 func TestNewPasswordReset(t *testing.T) {
 
 	reset := NewPasswordReset(PasswordResetDurationReset)
@@ -22,6 +23,7 @@ func TestNewPasswordReset(t *testing.T) {
 	require.InDelta(t, now+int64(PasswordResetDurationReset.Seconds()), reset.ExpireDate, 5)
 }
 
+// TestNewPasswordReset_WelcomeDuration verifies that welcome and invite codes get the longer expiration window
 func TestNewPasswordReset_WelcomeDuration(t *testing.T) {
 
 	reset := NewPasswordReset(PasswordResetDurationWelcome)
@@ -31,6 +33,7 @@ func TestNewPasswordReset_WelcomeDuration(t *testing.T) {
 	require.InDelta(t, now+int64(PasswordResetDurationWelcome.Seconds()), reset.ExpireDate, 5)
 }
 
+// TestPasswordReset_RefreshExpireDate verifies that refreshing an expired code makes it usable again
 func TestPasswordReset_RefreshExpireDate(t *testing.T) {
 
 	reset := NewPasswordReset(PasswordResetDurationReset)
@@ -45,6 +48,7 @@ func TestPasswordReset_RefreshExpireDate(t *testing.T) {
 	require.InDelta(t, now+int64(PasswordResetDurationReset.Seconds()), reset.ExpireDate, 5)
 }
 
+// TestPasswordReset_IsValid verifies that only the matching code is accepted, and only before it expires
 func TestPasswordReset_IsValid(t *testing.T) {
 
 	reset := NewPasswordReset(PasswordResetDurationReset)
@@ -62,6 +66,7 @@ func TestPasswordReset_IsValid(t *testing.T) {
 	require.False(t, expired.IsValid(expired.AuthCode))
 }
 
+// TestPasswordReset_IsValid_Consumed verifies that a consumed reset rejects every code, including an empty one
 func TestPasswordReset_IsValid_Consumed(t *testing.T) {
 
 	// A consumed (zeroed) reset rejects every code, including the empty string.
@@ -71,6 +76,7 @@ func TestPasswordReset_IsValid_Consumed(t *testing.T) {
 	require.False(t, consumed.IsValid("ANY-CODE"))
 }
 
+// TestPasswordReset_IsActive verifies which reset states count as active
 func TestPasswordReset_IsActive(t *testing.T) {
 
 	// Zero value (never issued, or consumed) is not active

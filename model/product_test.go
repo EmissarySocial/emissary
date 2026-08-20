@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestProductSchema returns the rosetta schema that describes a TestProduct
 func TestProductSchema(t *testing.T) {
 
 	product := NewProduct()

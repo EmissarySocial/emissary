@@ -22,10 +22,12 @@ type OAuthUserTokenRequest struct {
 	CodeVerifier string `form:"code_verifier"` // PKCE (RFC 7636) verifier, presented to redeem a code bound to a code_challenge
 }
 
+// NewOAuthUserTokenRequest returns a fully initialized, empty OAuthUserTokenRequest
 func NewOAuthUserTokenRequest() OAuthUserTokenRequest {
 	return OAuthUserTokenRequest{}
 }
 
+// Scopes returns the requested OAuth scopes, split into individual values, defaulting to "read"
 func (o OAuthUserTokenRequest) Scopes() []string {
 	if o.Scope == "" {
 		return []string{"read"}

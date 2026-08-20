@@ -19,6 +19,7 @@ type UserSummary struct {
 	MovedTo       string             `bson:"movedTo"`
 }
 
+// NewUserSummary returns a fully initialized, empty UserSummary
 func NewUserSummary() UserSummary {
 	return UserSummary{
 		UserID:        primitive.NewObjectID(),
@@ -32,14 +33,17 @@ func NewUserSummary() UserSummary {
 	}
 }
 
+// UserSummaryFields returns the database fields required to populate a UserSummary
 func UserSummaryFields() []string {
 	return []string{"_id", "displayName", "emailAddress", "username", "iconId", "profileUrl", "statusMessage", "hashtags", "shuffle", "movedTo"}
 }
 
+// Fields returns the database fields required to populate a UserSummary
 func (userSummary UserSummary) Fields() []string {
 	return UserSummaryFields()
 }
 
+// IconURL returns the URL of this User's avatar image, or an empty string if they have none
 func (userSummary UserSummary) IconURL() string {
 	if userSummary.IconID.IsZero() {
 		return ""

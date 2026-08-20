@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestEditWidget verifies that an "edit-widget" step parses its configuration
 func TestEditWidget(t *testing.T) {
 	step, err := NewEditWidget(mapof.Any{})
 	require.Nil(t, err)

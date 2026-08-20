@@ -23,6 +23,7 @@ func FolderSchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
+// GetIntOK returns the named property. Implements schema.IntGetter.
 func (folder *Folder) GetIntOK(name string) (int, bool) {
 	switch name {
 
@@ -33,6 +34,7 @@ func (folder *Folder) GetIntOK(name string) (int, bool) {
 	return 0, false
 }
 
+// GetStringOK returns the named property. Implements schema.StringGetter.
 func (folder *Folder) GetStringOK(name string) (string, bool) {
 	switch name {
 
@@ -59,6 +61,7 @@ func (folder *Folder) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  ******************************************/
 
+// SetInt writes the named property. Implements schema.IntSetter.
 func (folder *Folder) SetInt(name string, value int) bool {
 	switch name {
 
@@ -70,6 +73,7 @@ func (folder *Folder) SetInt(name string, value int) bool {
 	return false
 }
 
+// SetString writes the named property. Implements schema.StringSetter.
 func (folder *Folder) SetString(name string, value string) bool {
 	switch name {
 

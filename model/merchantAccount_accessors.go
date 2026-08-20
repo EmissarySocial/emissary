@@ -24,6 +24,7 @@ func MerchantAccountSchema() schema.Element {
  * Getter/Setter Methods
  ******************************************/
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (merchantAccount *MerchantAccount) GetPointer(name string) (any, bool) {
 	switch name {
 
@@ -47,6 +48,7 @@ func (merchantAccount *MerchantAccount) GetPointer(name string) (any, bool) {
 	}
 }
 
+// GetStringOK returns the named property. Implements schema.StringGetter.
 func (merchantAccount *MerchantAccount) GetStringOK(name string) (string, bool) {
 
 	switch name {
@@ -66,6 +68,7 @@ func (merchantAccount *MerchantAccount) GetStringOK(name string) (string, bool) 
  * Setter Interfaces
  ******************************************/
 
+// SetString writes the named property. Implements schema.StringSetter.
 func (merchantAccount *MerchantAccount) SetString(name string, value string) bool {
 
 	switch name {

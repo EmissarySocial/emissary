@@ -33,6 +33,7 @@ type SearchResult struct {
 	journal.Journal `json:"-" bson:",inline"`
 }
 
+// NewSearchResult returns a fully initialized, empty SearchResult
 func NewSearchResult() SearchResult {
 	return SearchResult{
 		SearchResultID: primitive.NewObjectID(),
@@ -127,6 +128,7 @@ func (searchResult *SearchResult) Update(other SearchResult) bool {
 	return changed
 }
 
+// Fields returns the database fields required to populate a SearchResult
 func (searchResult SearchResult) Fields() []string {
 	return []string{
 		"type",
@@ -143,6 +145,7 @@ func (searchResult SearchResult) Fields() []string {
 	}
 }
 
+// IsZero returns TRUE if this SearchResult has not been populated
 func (searchResult SearchResult) IsZero() bool {
 
 	if searchResult.Type == "" {
@@ -160,6 +163,7 @@ func (searchResult SearchResult) IsZero() bool {
 	return false
 }
 
+// NotZero returns TRUE if this SearchResult has been populated
 func (searchResult SearchResult) NotZero() bool {
 	return !searchResult.IsZero()
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestFollowerSchema returns the rosetta schema that describes a TestFollower
 func TestFollowerSchema(t *testing.T) {
 
 	follower := NewFollower()

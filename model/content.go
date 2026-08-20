@@ -19,6 +19,7 @@ type Content struct {
 	HTML   string `json:"html"   bson:"html"`
 }
 
+// NewContent returns a fully initialized, empty Content
 func NewContent() Content {
 	return Content{}
 }

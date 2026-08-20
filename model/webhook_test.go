@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestWebhookSchema returns the rosetta schema that describes a TestWebhook
 func TestWebhookSchema(t *testing.T) {
 
 	s := schema.New(WebhookSchema())

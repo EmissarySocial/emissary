@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSortWidgets verifies that a "sort-widgets" step parses its configuration
 func TestSortWidgets(t *testing.T) {
 	step, err := NewSortWidgets(mapof.Any{})
 	require.Nil(t, err)

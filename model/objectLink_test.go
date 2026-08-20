@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestObjectLink verifies that every ObjectLink property round-trips through the schema
 func TestObjectLink(t *testing.T) {
 
 	s := schema.New(ObjectLinkSchema())

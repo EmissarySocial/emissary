@@ -15,6 +15,7 @@ func first[T comparable](values ...T) T {
 	return zero
 }
 
+// requiredStates returns every state named by the provided steps, in order
 func requiredStates(steps ...Step) []string {
 
 	result := make([]string, 0)
@@ -29,6 +30,7 @@ func requiredStates(steps ...Step) []string {
 	return result
 }
 
+// requiredRoles returns every role named by the provided steps, in order
 func requiredRoles(steps ...Step) []string {
 
 	result := make([]string, 0)

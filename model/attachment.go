@@ -45,6 +45,7 @@ func NewAttachment(objectType string, objectID primitive.ObjectID) Attachment {
 	}
 }
 
+// NewEmptyAttachment returns a zero-value Attachment, with no ID and no rules
 func NewEmptyAttachment() Attachment {
 	return Attachment{}
 }
@@ -103,6 +104,7 @@ func (attachment Attachment) RolesToPrivilegeIDs(roleIDs ...string) Permissions 
  * Other Methods
  ******************************************/
 
+// CalcURL returns the public URL of this Attachment on the provided host
 func (attachment Attachment) CalcURL(host string) string {
 
 	switch attachment.ObjectType {
@@ -118,6 +120,7 @@ func (attachment Attachment) CalcURL(host string) string {
 	}
 }
 
+// DownloadExtension returns the file extension this Attachment is served with, which may differ from the original
 func (attachment Attachment) DownloadExtension() string {
 
 	ext := strings.ToLower(attachment.OriginalExtension())
@@ -130,6 +133,7 @@ func (attachment Attachment) DownloadExtension() string {
 	return ext
 }
 
+// DownloadMimeType returns the content type this Attachment is served with
 func (attachment Attachment) DownloadMimeType() string {
 	return mime.TypeByExtension(attachment.DownloadExtension())
 }
@@ -203,6 +207,7 @@ func isInlineMediaCategory(mimeCategory string) bool {
 	return false
 }
 
+// AspectRatio returns the width-to-height ratio of this Attachment, or an empty string if it has no width
 func (attachment Attachment) AspectRatio() string {
 
 	if attachment.Width == 0 {
@@ -212,6 +217,7 @@ func (attachment Attachment) AspectRatio() string {
 	return strconv.Itoa(attachment.Width / attachment.Height)
 }
 
+// HasDimensions returns TRUE if this Attachment has both a width and a height
 func (attachment Attachment) HasDimensions() bool {
 	if attachment.Width == 0 {
 		return false
@@ -224,6 +230,7 @@ func (attachment Attachment) HasDimensions() bool {
 	return true
 }
 
+// FileSpec returns the mediaserver FileSpec that describes how to render this Attachment for the provided URL
 func (attachment Attachment) FileSpec(address *url.URL) mediaserver.FileSpec {
 
 	if address == nil {
@@ -235,6 +242,7 @@ func (attachment Attachment) FileSpec(address *url.URL) mediaserver.FileSpec {
 	return attachment.Rules.FileSpec(address, attachment.OriginalExtension())
 }
 
+// JSONLD returns this Attachment as a JSON-LD map
 func (attachment Attachment) JSONLD() map[string]any {
 
 	result := map[string]any{
@@ -260,6 +268,7 @@ func (attachment Attachment) JSONLD() map[string]any {
  * Setter Methods
  ******************************************/
 
+// SetRules replaces the dimension and format rules that this Attachment is processed with
 func (attachment *Attachment) SetRules(width int, height int, extensions []string) {
 	attachment.Rules.Extensions = extensions
 	attachment.Rules.Width = width

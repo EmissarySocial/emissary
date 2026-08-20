@@ -24,16 +24,19 @@ type Product struct {
 	journal.Journal `json:"-" bson:",inline"`
 }
 
+// NewProduct returns a fully initialized, empty Product
 func NewProduct() Product {
 	return Product{
 		ProductID: primitive.NewObjectID(),
 	}
 }
 
+// ID returns the primary key of this Product, as a string
 func (product Product) ID() string {
 	return product.ProductID.Hex()
 }
 
+// LookupCode returns this Product as a form.LookupCode, so it can be listed in a picker
 func (product Product) LookupCode() form.LookupCode {
 	return form.LookupCode{
 		Group: product.Name,
@@ -88,6 +91,7 @@ func (product *Product) Refresh(other Product) (bool, error) {
 
 }
 
+// SortProducts orders two Products by name, then by price
 func SortProducts(p1 Product, p2 Product) int {
 
 	if comparison := compare.String(p1.Name, p2.Name); comparison != 0 {

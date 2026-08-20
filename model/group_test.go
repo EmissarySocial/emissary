@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestGroupSchema returns the rosetta schema that describes a TestGroup
 func TestGroupSchema(t *testing.T) {
 
 	group := NewGroup()

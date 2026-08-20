@@ -38,6 +38,7 @@ func (searchTag SearchTag) ID() string {
 	return searchTag.SearchTagID.Hex()
 }
 
+// StatusText returns the human-readable name of this SearchTag's moderation state
 func (searchTag SearchTag) StatusText() string {
 	switch searchTag.StateID {
 

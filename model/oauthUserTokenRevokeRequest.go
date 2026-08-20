@@ -12,10 +12,12 @@ type OAuthUserTokenRevokeRequest struct {
 	Token        string `form:"token"`
 }
 
+// NewOAuthUserTokenRevokeRequest returns a fully initialized, empty OAuthUserTokenRevokeRequest
 func NewOAuthUserTokenRevokeRequest() OAuthUserTokenRevokeRequest {
 	return OAuthUserTokenRevokeRequest{}
 }
 
+// Validate confirms that this revoke request presents the credentials of the provided OAuthClient
 func (req *OAuthUserTokenRevokeRequest) Validate(app OAuthClient) error {
 
 	const location = "model.OAuthUserTokenRevokeRequest.Validate"

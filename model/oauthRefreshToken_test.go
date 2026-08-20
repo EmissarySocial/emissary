@@ -21,6 +21,7 @@ func newGrant(generation int, currentSecret string, priorSecret string, rotatedA
 	return &grant
 }
 
+// TestRefreshToken_BuildParse_RoundTrip verifies that a built refresh token parses back into its parts
 func TestRefreshToken_BuildParse_RoundTrip(t *testing.T) {
 
 	id := primitive.NewObjectID()
@@ -36,6 +37,7 @@ func TestRefreshToken_BuildParse_RoundTrip(t *testing.T) {
 	}
 }
 
+// TestParseRefreshToken_Malformed verifies that every malformed token shape is rejected
 func TestParseRefreshToken_Malformed(t *testing.T) {
 
 	id := primitive.NewObjectID().Hex()
@@ -64,6 +66,7 @@ func TestParseRefreshToken_Malformed(t *testing.T) {
 	})
 }
 
+// TestNewRefreshSecret verifies that generated secrets are the expected length and do not repeat
 func TestNewRefreshSecret(t *testing.T) {
 	first, err := NewRefreshSecret()
 	require.Nil(t, err)
@@ -74,6 +77,7 @@ func TestNewRefreshSecret(t *testing.T) {
 	require.NotEqual(t, first, second, "secrets must be unique")
 }
 
+// TestRefreshHashMatches verifies that a secret matches its own hash, and nothing else
 func TestRefreshHashMatches(t *testing.T) {
 	hash := hashRefreshSecret("the-secret")
 
@@ -83,6 +87,7 @@ func TestRefreshHashMatches(t *testing.T) {
 	require.False(t, refreshHashMatches(hash, ""), "empty secret never matches a real hash")
 }
 
+// TestClassifyRefresh verifies how a presented token is classified against the grant's current and previous generation
 func TestClassifyRefresh(t *testing.T) {
 
 	base := time.Unix(1_700_000_000, 0)
@@ -128,6 +133,7 @@ func TestClassifyRefresh(t *testing.T) {
 	})
 }
 
+// TestInitRefresh verifies the state a grant is left in when its refresh chain is first created
 func TestInitRefresh(t *testing.T) {
 	now := time.Unix(1_700_000_000, 0)
 	grant := NewOAuthUserToken()
@@ -139,6 +145,7 @@ func TestInitRefresh(t *testing.T) {
 	require.Equal(t, now.Unix(), grant.RotatedAt)
 }
 
+// TestRotateRefresh verifies that rotating a grant advances the generation and retains the previous secret
 func TestRotateRefresh(t *testing.T) {
 	start := time.Unix(1_700_000_000, 0)
 	grant := NewOAuthUserToken()

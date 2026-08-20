@@ -241,11 +241,13 @@ func (domain *Domain) HasConnectionProvider(provider string) bool {
 	return connection.Active
 }
 
+// GetConnectionForProvider returns the Connection configured for the named provider, if one exists
 func (domain *Domain) GetConnectionForProvider(provider string) (Connection, bool) {
 	connection, exists := domain.Connections[provider]
 	return connection, exists
 }
 
+// DefaultPage returns the landing page for a visitor, based on how they are signed in
 func (domain Domain) DefaultPage(authorization Authorization) string {
 
 	if domain.StateID == DomainStateStartup {
@@ -263,6 +265,7 @@ func (domain Domain) DefaultPage(authorization Authorization) string {
 	return domain.DefaultPage_Authenticated()
 }
 
+// DefaultPage_Anonymous returns the landing page for a visitor who is not signed in
 func (domain Domain) DefaultPage_Anonymous() string {
 	if domain.DefaultAnonymous != "" {
 		return domain.DefaultAnonymous
@@ -271,6 +274,7 @@ func (domain Domain) DefaultPage_Anonymous() string {
 	return "/home"
 }
 
+// DefaultPage_Authenticated returns the landing page for a signed-in User
 func (domain Domain) DefaultPage_Authenticated() string {
 	if domain.DefaultAuthenticated != "" {
 		return domain.DefaultAuthenticated
@@ -279,6 +283,7 @@ func (domain Domain) DefaultPage_Authenticated() string {
 	return "/@me/newsfeed"
 }
 
+// DefaultPage_Owner returns the landing page for a domain owner
 func (domain Domain) DefaultPage_Owner() string {
 	if domain.DefaultOwner != "" {
 		return domain.DefaultOwner

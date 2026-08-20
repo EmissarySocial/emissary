@@ -122,11 +122,13 @@ func TestNew_Dispatch(t *testing.T) {
 	}
 }
 
+// TestNew_UnrecognizedStep verifies that an unknown step name is rejected
 func TestNew_UnrecognizedStep(t *testing.T) {
 	_, err := New(mapof.Any{"do": "this-step-does-not-exist"})
 	require.NotNil(t, err)
 }
 
+// TestNew_MissingDo verifies that a step with no "do" key is rejected
 func TestNew_MissingDo(t *testing.T) {
 	// An empty "do" is unrecognized and returns an error.
 	_, err := New(mapof.Any{})

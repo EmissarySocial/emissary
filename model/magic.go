@@ -30,6 +30,7 @@ const MagicRoleMyself = "self"
 // MagicRoleOwner grants full access to a user with database owner privileges
 const MagicRoleOwner = "owner"
 
+// init assigns the fixed ObjectIDs of the magic Groups, which are reserved and never stored
 func init() {
 	MagicGroupIDAnonymous = primitive.ObjectID{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	MagicGroupIDAuthenticated = primitive.ObjectID{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}

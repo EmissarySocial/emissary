@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// WebhookSchema returns the rosetta schema that describes a Webhook
 func WebhookSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
@@ -27,6 +28,7 @@ func WebhookSchema() schema.Element {
 	}
 }
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (webhook *Webhook) GetPointer(name string) (any, bool) {
 
 	switch name {
@@ -44,6 +46,7 @@ func (webhook *Webhook) GetPointer(name string) (any, bool) {
 	return nil, false
 }
 
+// GetStringOK returns the named property. Implements schema.StringGetter.
 func (webhook Webhook) GetStringOK(name string) (string, bool) {
 
 	switch name {
@@ -55,6 +58,7 @@ func (webhook Webhook) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
+// SetString writes the named property. Implements schema.StringSetter.
 func (webhook *Webhook) SetString(name string, value string) bool {
 
 	switch name {

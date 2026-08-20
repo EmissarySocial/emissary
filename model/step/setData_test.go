@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSetData verifies that a "set-data" step parses its configuration
 func TestSetData(t *testing.T) {
 
 	step, err := NewSetData(mapof.Any{
@@ -27,6 +28,7 @@ func TestSetData(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestSetData_InvalidTemplate verifies that an invalid template is rejected
 func TestSetData_InvalidTemplate(t *testing.T) {
 	_, err := NewSetData(mapof.Any{"values": map[string]any{"bad": "{{ .Unclosed"}})
 	require.NotNil(t, err)

@@ -10,6 +10,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// Widget is a reusable, configurable component that can be placed on a Stream
 type Widget struct {
 	WidgetID     string               `bson:"widgetId"`     // Unique identifier for this widget
 	Label        string               `bson:"label"`        // Human-readable label for this widget
@@ -22,6 +23,7 @@ type Widget struct {
 	Resources    fs.FS                `json:"-" bson:"-"`   // File system containing the template resources
 }
 
+// NewWidget returns a fully initialized Widget with the provided ID and template helpers
 func NewWidget(widgetID string, funcMap template.FuncMap) Widget {
 	return Widget{
 		WidgetID:     widgetID,
@@ -30,9 +32,10 @@ func NewWidget(widgetID string, funcMap template.FuncMap) Widget {
 	}
 }
 
+// IsEditable returns TRUE if this Widget defines a settings form that a User can fill in
 func (widget Widget) IsEditable() bool {
 
-	if (widget.Schema.Element == nil) {
+	if widget.Schema.Element == nil {
 		return false
 	}
 

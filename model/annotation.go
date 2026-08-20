@@ -17,16 +17,19 @@ type Annotation struct {
 	journal.Journal `json:"-" bson:",inline"`
 }
 
+// NewAnnotation returns a fully initialized, empty Annotation
 func NewAnnotation() Annotation {
 	return Annotation{
 		AnnotationID: primitive.NewObjectID(),
 	}
 }
 
+// AnnotationFields returns the database fields required to populate a Annotation
 func AnnotationFields() []string {
 	return []string{"_id", "url", "name", "icon", "content"}
 }
 
+// Fields returns the database fields required to populate a Annotation
 func (annotation Annotation) Fields() []string {
 	return AnnotationFields()
 }
@@ -35,6 +38,7 @@ func (annotation Annotation) Fields() []string {
  * data.Object Interface
  ******************************************/
 
+// ID returns the primary key of this Annotation, as a string
 func (annotation *Annotation) ID() string {
 	return annotation.AnnotationID.Hex()
 }

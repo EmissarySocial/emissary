@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestOAuthUserToken_IsCodeExpired verifies the expiration window of an authorization code
 func TestOAuthUserToken_IsCodeExpired(t *testing.T) {
 
 	now := time.Unix(1_700_000_000, 0)
@@ -30,6 +31,7 @@ func TestOAuthUserToken_IsCodeExpired(t *testing.T) {
 	})
 }
 
+// TestOAuthUserToken_JSONResponse verifies the JSON body returned to an OAuth client
 func TestOAuthUserToken_JSONResponse(t *testing.T) {
 
 	grant := NewOAuthUserToken()
@@ -47,6 +49,7 @@ func TestOAuthUserToken_JSONResponse(t *testing.T) {
 	require.Equal(t, 3600, response["expires_in"], "access token lifetime is 1 hour")
 }
 
+// TestOAuthUserToken_Toot verifies that a token renders as its Mastodon API equivalent
 func TestOAuthUserToken_Toot(t *testing.T) {
 
 	t.Run("with a refresh token, advertises expiry + refresh", func(t *testing.T) {

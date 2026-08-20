@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestContentSchema returns the rosetta schema that describes a TestContent
 func TestContentSchema(t *testing.T) {
 
 	content := NewHTMLContent("TEST")

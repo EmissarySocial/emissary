@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestRedirectTo verifies that a "redirect-to" step parses its configuration
 func TestRedirectTo(t *testing.T) {
 
 	step, err := NewRedirectTo(mapof.Any{"url": "/home", "method": "GET", "status": http.StatusFound})
@@ -28,6 +29,7 @@ func TestRedirectTo(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestRedirectTo_InvalidTemplate verifies that an invalid template is rejected
 func TestRedirectTo_InvalidTemplate(t *testing.T) {
 	_, err := NewRedirectTo(mapof.Any{"url": "{{ .Unclosed"})
 	require.NotNil(t, err)

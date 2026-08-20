@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestAnnotationSchema returns the rosetta schema that describes a TestAnnotation
 func TestAnnotationSchema(t *testing.T) {
 
 	annotation := NewAnnotation()

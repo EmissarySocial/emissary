@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// CollectionItemSchema returns the rosetta schema that describes a CollectionItem
 func CollectionItemSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
@@ -22,6 +23,7 @@ func CollectionItemSchema() schema.Element {
  * Getter/Setter Interfaces
  ********************************/
 
+// GetStringOK returns the named property. Implements schema.StringGetter.
 func (collectionItem CollectionItem) GetStringOK(name string) (string, bool) {
 
 	switch name {
@@ -52,6 +54,7 @@ func (collectionItem CollectionItem) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  *********************************/
 
+// SetString writes the named property. Implements schema.StringSetter.
 func (collectionItem *CollectionItem) SetString(name string, value string) bool {
 
 	switch name {

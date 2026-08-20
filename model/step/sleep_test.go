@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSleep verifies that a "set-sleep" step parses its configuration
 func TestSleep(t *testing.T) {
 	step, err := NewSleep(mapof.Any{"duration": 500})
 	require.Nil(t, err)

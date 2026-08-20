@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestViewHTML verifies that a "view-html" step parses its configuration
 func TestViewHTML(t *testing.T) {
 
 	step, err := NewViewHTML(mapof.Any{"file": "detail", "method": "post", "cache-control": "public, max-age=300", "as-full-page": true})

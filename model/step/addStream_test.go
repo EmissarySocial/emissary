@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestAddStream verifies that an "add-stream" step parses its configuration
 func TestAddStream(t *testing.T) {
 
 	// Explicit values are parsed through, including the with-data templates.
@@ -32,6 +33,7 @@ func TestAddStream(t *testing.T) {
 	require.Equal(t, []string{"draft"}, step.RequiredStates())
 }
 
+// TestAddStream_Defaults verifies the values an "add-stream" step falls back to when its configuration is empty
 func TestAddStream_Defaults(t *testing.T) {
 
 	step, err := NewAddStream(mapof.Any{})
@@ -45,6 +47,7 @@ func TestAddStream_Defaults(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestAddStream_InvalidLocation verifies that an invalid location is coerced to a valid value
 func TestAddStream_InvalidLocation(t *testing.T) {
 
 	// An out-of-enum location is coerced to the first allowed value ("top").
@@ -53,6 +56,7 @@ func TestAddStream_InvalidLocation(t *testing.T) {
 	require.Equal(t, "top", step.Location)
 }
 
+// TestAddStream_InvalidTemplate verifies that an invalid template is rejected
 func TestAddStream_InvalidTemplate(t *testing.T) {
 
 	// A malformed with-data template returns an error.

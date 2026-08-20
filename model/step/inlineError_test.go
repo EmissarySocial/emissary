@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestInlineError verifies that an "inline-error" step parses its configuration
 func TestInlineError(t *testing.T) {
 	step, err := NewInlineError(mapof.Any{"message": "Something went wrong"})
 	require.Nil(t, err)
@@ -18,6 +19,7 @@ func TestInlineError(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestInlineError_InvalidTemplate verifies that an invalid template is rejected
 func TestInlineError_InvalidTemplate(t *testing.T) {
 	_, err := NewInlineError(mapof.Any{"message": "{{ .Unclosed"})
 	require.NotNil(t, err)

@@ -39,6 +39,7 @@ func (merchantAccount MerchantAccount) ID() string {
 	return merchantAccount.MerchantAccountID.Hex()
 }
 
+// Fields returns the database fields required to populate a MerchantAccount
 func (merchantAccount MerchantAccount) Fields() []string {
 	return []string{
 		"_id",
@@ -87,6 +88,7 @@ func (merchantAccount *MerchantAccount) RolesToPrivilegeIDs(roleIDs ...string) P
  * API URL Getters
  ******************************************/
 
+// Icon returns the name of the icon that represents this MerchantAccount's payment provider
 func (merchantAccount MerchantAccount) Icon() string {
 
 	switch merchantAccount.Type {
@@ -162,6 +164,7 @@ func (merchantAccount MerchantAccount) HelpURL() string {
  * Other Methods
  ******************************************/
 
+// LookupCode returns this MerchantAccount as a form.LookupCode, so it can be listed in a picker
 func (merchantAccount MerchantAccount) LookupCode() form.LookupCode {
 
 	return form.LookupCode{

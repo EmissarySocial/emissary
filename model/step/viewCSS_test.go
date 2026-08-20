@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestViewCSS verifies that a "view-css" step parses its configuration
 func TestViewCSS(t *testing.T) {
 	step, err := NewViewCSS(mapof.Any{"file": "theme"})
 	require.Nil(t, err)

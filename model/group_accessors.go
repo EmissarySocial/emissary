@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// GroupSchema returns the rosetta schema that describes a Group
 func GroupSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
@@ -21,6 +22,7 @@ func GroupSchema() schema.Element {
  * Getter Interfaces
  ******************************************/
 
+// GetStringOK returns the named property. Implements schema.StringGetter.
 func (group *Group) GetStringOK(name string) (string, bool) {
 
 	switch name {
@@ -36,6 +38,7 @@ func (group *Group) GetStringOK(name string) (string, bool) {
  * Setter Interfaces
  ******************************************/
 
+// SetString writes the named property. Implements schema.StringSetter.
 func (group *Group) SetString(name string, value string) bool {
 
 	switch name {
@@ -50,6 +53,7 @@ func (group *Group) SetString(name string, value string) bool {
 	return false
 }
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (group *Group) GetPointer(name string) (any, bool) {
 
 	switch name {

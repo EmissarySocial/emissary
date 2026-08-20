@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestOAuthClientSchema returns the rosetta schema that describes a TestOAuthClient
 func TestOAuthClientSchema(t *testing.T) {
 
 	client := NewOAuthClient()
@@ -29,6 +30,7 @@ func TestOAuthClientSchema(t *testing.T) {
 	tableTest_Schema(t, &s, &client, table)
 }
 
+// TestOAuthClient_IsConfidential verifies that a client counts as confidential only when it stores a secret
 func TestOAuthClient_IsConfidential(t *testing.T) {
 
 	t.Run("client with a secret is confidential", func(t *testing.T) {
@@ -42,6 +44,7 @@ func TestOAuthClient_IsConfidential(t *testing.T) {
 	})
 }
 
+// TestOAuthClient_ValidateSecret verifies secret checking for both confidential and public clients
 func TestOAuthClient_ValidateSecret(t *testing.T) {
 
 	// --- Confidential client (a secret is stored) ---

@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestNotification verifies that every Notification property round-trips through the schema
 func TestNotification(t *testing.T) {
 
 	notification := NewNotification()

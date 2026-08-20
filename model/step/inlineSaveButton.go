@@ -14,6 +14,7 @@ type InlineSaveButton struct {
 	Label *template.Template
 }
 
+// NewInlineSaveButton returns a fully initialized InlineSaveButton step, or an error if its configuration is invalid
 func NewInlineSaveButton(stepInfo mapof.Any) (InlineSaveButton, error) {
 
 	// Get the ID.  Default is "inline-save-button"

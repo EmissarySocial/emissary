@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestPrivilegeSchema returns the rosetta schema that describes a TestPrivilege
 func TestPrivilegeSchema(t *testing.T) {
 
 	privilege := NewPrivilege()

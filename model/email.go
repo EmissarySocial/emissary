@@ -6,6 +6,7 @@ import (
 	texttemplate "text/template"
 )
 
+// Email is a single email template, along with the resources it needs to render
 type Email struct {
 	EmailID   string                 // Unique identifier for this email.
 	EmailRole string                 // Role of the email - for system emails that may have multiple options

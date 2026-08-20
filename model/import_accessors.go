@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// ImportSchema returns the rosetta schema that describes a Import
 func ImportSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
@@ -38,6 +39,7 @@ func ImportSchema() schema.Element {
  * Getter/Setter Interfaces
  ********************************/
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (record *Import) GetPointer(name string) (any, bool) {
 
 	switch name {
@@ -65,6 +67,7 @@ func (record *Import) GetPointer(name string) (any, bool) {
 	return nil, false
 }
 
+// GetStringOK returns the named property. Implements schema.StringGetter.
 func (record Import) GetStringOK(name string) (string, bool) {
 
 	switch name {
@@ -79,6 +82,7 @@ func (record Import) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
+// SetString writes the named property. Implements schema.StringSetter.
 func (record *Import) SetString(name string, value string) bool {
 
 	switch name {

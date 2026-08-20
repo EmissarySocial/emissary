@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestGetArchive verifies that a "get-archive" step parses its configuration
 func TestGetArchive(t *testing.T) {
 
 	step, err := NewGetArchive(mapof.Any{

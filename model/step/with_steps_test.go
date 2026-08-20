@@ -13,6 +13,7 @@ import (
 // the propagated-states/roles behavior, the four interface methods, and the error path (an
 // unrecognized sub-step).
 
+// withStepCase describes one "with-" step: how to build it, and the Name and RequiredModel it must report
 type withStepCase struct {
 	name          string
 	build         func(mapof.Any) (Step, error)
@@ -20,6 +21,7 @@ type withStepCase struct {
 	expectedModel string
 }
 
+// withStepCases returns one case per "with-" step, so that the table below covers all of them
 func withStepCases() []withStepCase {
 	return []withStepCase{
 		{"WithAnnotation", func(s mapof.Any) (Step, error) { return NewWithAnnotation(s) }, "with-annotation", ""},
@@ -44,6 +46,7 @@ func withStepCases() []withStepCase {
 	}
 }
 
+// TestWithSteps_Success verifies that every "with-" step parses the sub-steps nested inside it
 func TestWithSteps_Success(t *testing.T) {
 
 	for _, testCase := range withStepCases() {
@@ -63,6 +66,7 @@ func TestWithSteps_Success(t *testing.T) {
 	}
 }
 
+// TestWithSteps_InvalidSubStep verifies that a malformed sub-step is rejected by every "with-" step
 func TestWithSteps_InvalidSubStep(t *testing.T) {
 
 	for _, testCase := range withStepCases() {

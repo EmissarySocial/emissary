@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestInlineSaveButton verifies that an "inline-save-button" step parses its configuration
 func TestInlineSaveButton(t *testing.T) {
 
 	step, err := NewInlineSaveButton(mapof.Any{
@@ -32,6 +33,7 @@ func TestInlineSaveButton(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestInlineSaveButton_InvalidTemplate verifies that an invalid template is rejected
 func TestInlineSaveButton_InvalidTemplate(t *testing.T) {
 	_, err := NewInlineSaveButton(mapof.Any{"label": "{{ .Unclosed"})
 	require.NotNil(t, err)

@@ -14,6 +14,7 @@ type IfCondition struct {
 	Otherwise []Step
 }
 
+// NewIfCondition returns a fully initialized IfCondition step, or an error if its configuration is invalid
 func NewIfCondition(stepInfo mapof.Any) (IfCondition, error) {
 
 	const location = "model.step.NewIfCondition"

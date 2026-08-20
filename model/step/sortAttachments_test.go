@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSortAttachments verifies that a "sort-attachments" step parses its configuration
 func TestSortAttachments(t *testing.T) {
 
 	step, err := NewSortAttachments(mapof.Any{"keys": "token", "values": "order", "message": "Done"})

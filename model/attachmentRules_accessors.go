@@ -2,6 +2,7 @@ package model
 
 import "github.com/benpate/rosetta/schema"
 
+// AttachmentRulesSchema returns the rosetta schema that describes a AttachmentRules
 func AttachmentRulesSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
@@ -12,6 +13,7 @@ func AttachmentRulesSchema() schema.Element {
 	}
 }
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (rules *AttachmentRules) GetPointer(name string) (any, bool) {
 
 	switch name {

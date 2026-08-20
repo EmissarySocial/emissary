@@ -12,6 +12,7 @@ type SearchIndex struct {
 	If *template.Template
 }
 
+// NewSearchIndex returns a fully initialized SearchIndex step, or an error if its configuration is invalid
 func NewSearchIndex(stepInfo mapof.Any) (SearchIndex, error) {
 
 	// Default "if" condition to "true" if none is provided

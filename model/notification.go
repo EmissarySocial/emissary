@@ -48,6 +48,7 @@ func NotificationFields() []string {
 	return []string{"_id", "userId", "type", "subtype", "actor", "activityId", "objectUrl", "objectSummary", "streamId", "inReplyTo", "readDate", "createDate"}
 }
 
+// Fields returns the database fields required to populate a Notification
 func (notification Notification) Fields() []string {
 	return NotificationFields()
 }

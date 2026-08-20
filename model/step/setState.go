@@ -10,6 +10,7 @@ type SetState struct {
 	State string
 }
 
+// NewSetState returns a fully initialized SetState step, or an error if its configuration is invalid
 func NewSetState(stepInfo mapof.Any) (SetState, error) {
 
 	stateID := stepInfo.GetString("state")

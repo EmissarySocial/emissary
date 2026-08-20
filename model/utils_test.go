@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// TestToToken verifies that arbitrary text is reduced to a safe, URL-friendly token
 func TestToToken(t *testing.T) {
 
 	do := func(input, expected string) {
@@ -106,8 +107,11 @@ func TestMust(t *testing.T) {
 	require.Equal(t, 42, must(42, errExample))
 }
 
+// errExample is a sentinel error used by the tests in this file
 var errExample = primitiveError("example")
 
+// primitiveError is a string-backed error, used to build sentinel errors in these tests
 type primitiveError string
 
+// Error implements the error interface, returning the underlying string
 func (e primitiveError) Error() string { return string(e) }

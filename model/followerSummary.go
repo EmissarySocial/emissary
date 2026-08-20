@@ -4,6 +4,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// FollowerSummary is an abbreviated Follower, used when listing many Followers at once
 type FollowerSummary struct {
 	FollowerID primitive.ObjectID `bson:"_id"`      // Unique identifier for this Follower
 	ParentID   primitive.ObjectID `bson:"parentId"` // Unique identifier for the User that is being followed
@@ -16,6 +17,7 @@ func FollowerSummaryFields() []string {
 	return []string{"_id", "parentId", "actor", "method"}
 }
 
+// Fields returns the database fields required to populate a FollowerSummary
 func (summary FollowerSummary) Fields() []string {
 	return FollowerSummaryFields()
 }
@@ -24,6 +26,7 @@ func (summary FollowerSummary) Fields() []string {
  * Other Methods
  ******************************************/
 
+// Icon returns the name of the icon that represents this Follower's delivery method
 func (summary FollowerSummary) Icon() string {
 	switch summary.Method {
 

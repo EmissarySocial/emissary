@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestProcessTags verifies that a "process-tags" step parses its configuration
 func TestProcessTags(t *testing.T) {
 
 	// Comma-separated paths are split and trimmed.

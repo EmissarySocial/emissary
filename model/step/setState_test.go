@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSetState verifies that a "set-state" step parses its configuration
 func TestSetState(t *testing.T) {
 
 	step, err := NewSetState(mapof.Any{"state": "published"})
@@ -19,6 +20,7 @@ func TestSetState(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestSetState_RequiresState verifies that a "set-state" step requires a state
 func TestSetState_RequiresState(t *testing.T) {
 	// "state" is required.
 	_, err := NewSetState(mapof.Any{})

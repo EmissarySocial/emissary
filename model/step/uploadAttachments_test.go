@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestUploadAttachments verifies that an "upload-attachments" step parses its configuration
 func TestUploadAttachments(t *testing.T) {
 
 	step, err := NewUploadAttachments(mapof.Any{
@@ -34,6 +35,7 @@ func TestUploadAttachments(t *testing.T) {
 	require.Equal(t, "upload-attachments", step.Name())
 }
 
+// TestUploadAttachments_Defaults verifies the values an "upload-attachments" step falls back to when its configuration is empty
 func TestUploadAttachments_Defaults(t *testing.T) {
 
 	// Defaults: action "append", fieldname "file", maximum at least 1.

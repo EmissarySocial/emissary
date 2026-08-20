@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestInclude verifies that an "include" step parses its configuration
 func TestInclude(t *testing.T) {
 	step, err := NewInclude(mapof.Any{"action": "view"})
 	require.Nil(t, err)

@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestStartupComplete verifies that a "startup-complete" step parses its configuration
 func TestStartupComplete(t *testing.T) {
 
 	step, err := NewStartupComplete(mapof.Any{})

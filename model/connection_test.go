@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestConnection verifies that every Connection property round-trips through the schema
 func TestConnection(t *testing.T) {
 
 	origin := NewConnection()

@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestForwardTo verifies that a "forward-to" step parses its configuration
 func TestForwardTo(t *testing.T) {
 
 	step, err := NewForwardTo(mapof.Any{"url": "/next/{{.Token}}", "method": "GET"})
@@ -25,6 +26,7 @@ func TestForwardTo(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestForwardTo_InvalidTemplate verifies that an invalid template is rejected
 func TestForwardTo_InvalidTemplate(t *testing.T) {
 	_, err := NewForwardTo(mapof.Any{"url": "{{ .Unclosed"})
 	require.NotNil(t, err)

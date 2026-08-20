@@ -12,6 +12,7 @@ type InlineError struct {
 	Message *template.Template
 }
 
+// NewInlineError returns a fully initialized InlineError step, or an error if its configuration is invalid
 func NewInlineError(stepInfo mapof.Any) (InlineError, error) {
 
 	message, err := template.New("").Funcs(FuncMap()).Parse(stepInfo.GetString("message"))

@@ -23,10 +23,12 @@ func NewWebhook() Webhook {
 	}
 }
 
+// WebhookFields returns the database fields required to populate a Webhook
 func WebhookFields() []string {
 	return []string{"_id", "events", "label", "targetUrl"}
 }
 
+// Fields returns the database fields required to populate a Webhook
 func (userSummary Webhook) Fields() []string {
 	return WebhookFields()
 }
