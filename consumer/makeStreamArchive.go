@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// MakeStreamArchive builds a downloadable archive of a Stream and its descendants
 func MakeStreamArchive(factory *service.Factory, session data.Session, _ *service.Stream, stream *model.Stream, args mapof.Any) queue.Result {
 
 	const location = "consumer.MakeStreamArchive"

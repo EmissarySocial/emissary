@@ -9,6 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// Scheduler runs at server startup, priming the startup, daily, and hourly task batches
 func Scheduler(serverFactory ServerFactory) queue.Result {
 
 	const location = "consumer.ScheduleDaily"

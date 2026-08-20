@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/turbine/queue"
 )
 
+// SendToAllRecipients delivers an ActivityPub message to every recipient named in the task arguments
 func SendToAllRecipients(sender sender.Sender, args mapof.Any) queue.Result {
 	return sender.SendToAllRecipients(args)
 }

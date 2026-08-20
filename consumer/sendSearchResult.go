@@ -15,6 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// SendSearchResult federates a single SearchResult to the Followers of every SearchQuery it matches
 func SendSearchResult(factory *service.Factory, session data.Session, args mapof.Any) queue.Result {
 
 	const location = "consumer.SendSearchResult"

@@ -60,6 +60,7 @@ func AddToCollection(factory *service.Factory, session data.Session, args mapof.
 	return queue.Success()
 }
 
+// addToCollection_Context adds a document to the Collection named by its own "context" property
 func addToCollection_Context(factory *service.Factory, session data.Session, actorID string, document streams.Document) queue.Result {
 
 	// Get the context defined in the document.
@@ -72,6 +73,7 @@ func addToCollection_Context(factory *service.Factory, session data.Session, act
 	return addToCollection_Continue(factory, session, actorID, context, document.ID(), document.InReplyTo().String())
 }
 
+// addToCollection_InReplyTo adds a document to the Collection named by the nearest ancestor that has a "context"
 func addToCollection_InReplyTo(factory *service.Factory, session data.Session, actorID string, document streams.Document) queue.Result {
 
 	// Traverse the reply tree to find the closest ancestor with a `context`
@@ -90,6 +92,7 @@ func addToCollection_InReplyTo(factory *service.Factory, session data.Session, a
 	return addToCollection_Continue(factory, session, actorID, context, document.ID(), document.InReplyTo().String())
 }
 
+// addToCollection_Continue resolves a context URL into a local Collection, then adds the document to it
 func addToCollection_Continue(factory *service.Factory, session data.Session, actorID string, contextID string, url string, inReplyTo string) queue.Result {
 
 	const location = "consumer.addToCollection_Continue"
@@ -135,6 +138,7 @@ func addToCollection_Continue(factory *service.Factory, session data.Session, ac
 	return queue.Success()
 }
 
+// findRootContext walks up the reply tree looking for a "context", giving up after "count" more hops
 func findRootContext(document streams.Document, count int) (string, error) {
 
 	const location = "consumer.findRootContext"

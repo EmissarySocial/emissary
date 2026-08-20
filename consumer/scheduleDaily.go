@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// ScheduleDaily queues the next day's worth of scheduled tasks for every Domain
 func ScheduleDaily(serverFactory ServerFactory) queue.Result {
 
 	const location = "consumer.ScheduleDaily"

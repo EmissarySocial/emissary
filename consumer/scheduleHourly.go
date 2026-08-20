@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// ScheduleHourly queues the next hour's worth of scheduled tasks for every Domain
 func ScheduleHourly(serverFactory ServerFactory) queue.Result {
 
 	const location = "consumer.ScheduleHourly"

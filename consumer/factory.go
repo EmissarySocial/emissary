@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// ServerFactory is the slice of the server Factory that queue consumers depend on
 type ServerFactory interface {
 	RangeDomains() iter.Seq[*service.Factory]
 	ByHostname(hostname string) (*service.Factory, error)

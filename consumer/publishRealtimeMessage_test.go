@@ -44,6 +44,7 @@ func TestMessageForTopic(t *testing.T) {
 	test(realtime.TopicNotification, "", "notification")
 }
 
+// TestMessageForTopic_Unrecognized verifies that a filter-only or unknown topic errors instead of publishing
 func TestMessageForTopic_Unrecognized(t *testing.T) {
 
 	// TopicAll is a subscription filter, not a publishable topic — and any

@@ -17,8 +17,10 @@ type mockClient struct {
 	documents mapof.Any
 }
 
+// SetRootClient implements the streams.Client interface. The stub ignores the root client.
 func (client mockClient) SetRootClient(streams.Client) {}
 
+// Load implements the streams.Client interface, resolving a URI from this stub's in-memory map
 func (client mockClient) Load(uri string, _ ...any) (streams.Document, error) {
 
 	if value, ok := client.documents[uri]; ok {
@@ -28,8 +30,10 @@ func (client mockClient) Load(uri string, _ ...any) (streams.Document, error) {
 	return streams.NilDocument(), derp.Internal("mockClient.Load", "Unknown URI", uri)
 }
 
+// Save implements the streams.Client interface. The stub discards all writes.
 func (client mockClient) Save(streams.Document) error { return nil }
 
+// Delete implements the streams.Client interface. The stub discards all deletes.
 func (client mockClient) Delete(string) error { return nil }
 
 // newDocument builds a streams.Document from a raw value, wired to a client that can
@@ -38,6 +42,7 @@ func newDocument(client mockClient, value any) streams.Document {
 	return streams.NewDocument(value, streams.WithClient(client))
 }
 
+// TestFindRootContext verifies how the reply tree is walked, including the hop limit and load failures
 func TestFindRootContext(t *testing.T) {
 
 	// A document that carries its own `context` returns it immediately, without

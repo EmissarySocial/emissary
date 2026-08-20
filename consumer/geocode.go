@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/turbine/queue"
 )
 
+// Geocode resolves the Places attached to a Stream into map coordinates, then saves the Stream
 func Geocode(factory *service.Factory, session data.Session, streamService *service.Stream, stream *model.Stream, args mapof.Any) queue.Result {
 
 	const location = "consumer.Geocode"
