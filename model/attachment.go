@@ -187,9 +187,11 @@ func (attachment Attachment) CanServeInline() bool {
 		return true
 	}
 
-	// RULE: The sniffed content-type must agree with the filename.  A file whose name
-	// and contents disagree is lying in one direction or the other, so it is downloaded
-	// rather than rendered.
+	// RULE: The sniffed contents must be a re-encodable category too.  MediaServer picks
+	// the pipeline from the filename, so this is defense in depth: a file named ".png"
+	// that actually contains HTML is downloaded rather than rendered, whatever FFmpeg
+	// makes of it.  The two categories need not match each other -- FFmpeg generates
+	// the output bytes either way.
 	return isInlineMediaCategory(list.Slash(attachment.ContentType).First())
 }
 
@@ -207,14 +209,18 @@ func isInlineMediaCategory(mimeCategory string) bool {
 	return false
 }
 
-// AspectRatio returns the width-to-height ratio of this Attachment, or an empty string if it has no width
+// AspectRatio returns the width-to-height ratio of this Attachment, or "auto" if its dimensions are unknown
 func (attachment Attachment) AspectRatio() string {
 
-	if attachment.Width == 0 {
-		return ""
+	// RULE: Without both dimensions there is no ratio to compute
+	if !attachment.HasDimensions() {
+		return "auto"
 	}
 
-	return strconv.Itoa(attachment.Width / attachment.Height)
+	// Templates drop this straight into a CSS `aspect-ratio`, so emit a real
+	// number.  Integer division would round every ratio down to 1 or 0.
+	ratio := float64(attachment.Width) / float64(attachment.Height)
+	return strconv.FormatFloat(ratio, 'f', -1, 64)
 }
 
 // HasDimensions returns TRUE if this Attachment has both a width and a height
