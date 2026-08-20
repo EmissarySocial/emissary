@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestOwnerSchema verifies that every Owner property round-trips through the schema
 func TestOwnerSchema(t *testing.T) {
 
 	o := NewOwner()

@@ -4,6 +4,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// DomainSchema returns the rosetta schema that describes a Domain
 func DomainSchema() schema.Element {
 
 	return schema.Object{
@@ -26,6 +27,7 @@ func DomainSchema() schema.Element {
  * Getter/Setter Interfaces
  ******************************************/
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (domain *Domain) GetPointer(name string) (any, bool) {
 
 	switch name {

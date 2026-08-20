@@ -2,6 +2,7 @@ package config
 
 import "testing"
 
+// TestConfig verifies that every Config property round-trips through the schema
 func TestConfig(t *testing.T) {
 
 	c := NewConfig()

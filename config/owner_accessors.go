@@ -4,6 +4,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// OwnerSchema returns the rosetta schema that describes an Owner
 func OwnerSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
@@ -16,6 +17,7 @@ func OwnerSchema() schema.Element {
 	}
 }
 
+// GetStringOK returns the named property. Implements schema.StringGetter.
 func (owner Owner) GetStringOK(name string) (string, bool) {
 
 	switch name {
@@ -39,6 +41,7 @@ func (owner Owner) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
+// SetString writes the named property. Implements schema.StringSetter.
 func (owner *Owner) SetString(name string, value string) bool {
 
 	switch name {

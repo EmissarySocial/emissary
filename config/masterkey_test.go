@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestDecodeMasterKey verifies that only a well-formed, correctly-sized hex key decodes
 func TestDecodeMasterKey(t *testing.T) {
 
 	table := []struct {
@@ -38,6 +39,7 @@ func TestDecodeMasterKey(t *testing.T) {
 	}
 }
 
+// TestNewMasterKey verifies that generated keys are valid and do not repeat
 func TestNewMasterKey(t *testing.T) {
 
 	// A generated key must round-trip through DecodeMasterKey
@@ -49,6 +51,7 @@ func TestNewMasterKey(t *testing.T) {
 	require.NotEqual(t, NewMasterKey(), NewMasterKey())
 }
 
+// TestNewDomain_HasValidMasterKey verifies that every new Domain can encrypt vault data
 func TestNewDomain_HasValidMasterKey(t *testing.T) {
 
 	// Every Domain built by the constructor must be able to encrypt vault data

@@ -79,6 +79,7 @@ func DefaultConfig() Config {
  * Data Accessors
  ************************/
 
+// Schema returns the rosetta schema that describes a Config
 func (config Config) Schema() schema.Schema {
 	return Schema()
 }

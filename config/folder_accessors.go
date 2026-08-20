@@ -2,6 +2,7 @@ package config
 
 import "github.com/benpate/rosetta/schema"
 
+// ReadableFolderSchema returns the rosetta schema for a read-only folder at the provided config location
 func ReadableFolderSchema(location string) schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
@@ -17,6 +18,7 @@ func ReadableFolderSchema(location string) schema.Element {
 	}
 }
 
+// WritableFolderSchema returns the rosetta schema for a read/write folder at the provided config location
 func WritableFolderSchema(location string) schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{

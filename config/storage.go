@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// Storage reads the server Config from its home (a file or a database), and publishes every update
 type Storage interface {
 	Subscribe() <-chan Config
 	Write(Config) error

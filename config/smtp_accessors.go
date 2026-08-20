@@ -5,6 +5,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// SMTPConnectionSchema returns the rosetta schema that describes an SMTPConnection
 func SMTPConnectionSchema() schema.Element {
 	return schema.Object{
 		Properties: schema.ElementMap{
@@ -17,6 +18,7 @@ func SMTPConnectionSchema() schema.Element {
 	}
 }
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (smtp *SMTPConnection) GetPointer(name string) (any, bool) {
 
 	switch name {

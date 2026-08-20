@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// tableTestItem is a single property/value pair exercised by tableTest_Schema
 type tableTestItem struct {
 	property string
 	input    any

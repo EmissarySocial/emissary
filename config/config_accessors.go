@@ -38,6 +38,7 @@ func Schema() schema.Schema {
  * Getter/Setter Interfaces
  ******************************************/
 
+// GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
 func (config *Config) GetPointer(name string) (any, bool) {
 
 	switch name {

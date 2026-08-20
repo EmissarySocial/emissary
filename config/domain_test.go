@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestDomainSchema verifies that every Domain property round-trips through the schema
 func TestDomainSchema(t *testing.T) {
 
 	d := NewDomain()

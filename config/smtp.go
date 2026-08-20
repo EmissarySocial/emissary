@@ -8,6 +8,7 @@ import (
 	mail "github.com/xhit/go-simple-mail/v2"
 )
 
+// SMTPConnection describes the outbound mail server that a Domain sends through
 type SMTPConnection struct {
 	Hostname string `json:"hostname"` // Server name to connect to
 	Username string `json:"username"` // Username for authentication
@@ -16,6 +17,7 @@ type SMTPConnection struct {
 	TLS      bool   `json:"tls"`      // If TRUE, then use TLS to connect
 }
 
+// NewSMTPConnection returns a fully initialized, empty SMTPConnection
 func NewSMTPConnection() SMTPConnection {
 	return SMTPConnection{}
 }

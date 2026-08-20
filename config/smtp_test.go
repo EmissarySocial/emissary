@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestSMTPSchema verifies that every SMTPConnection property round-trips through the schema
 func TestSMTPSchema(t *testing.T) {
 
 	d := NewSMTPConnection()

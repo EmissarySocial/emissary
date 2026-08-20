@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 )
 
+// TestReadableFolder verifies that every read-only folder property round-trips through the schema
 func TestReadableFolder(t *testing.T) {
 
 	value := mapof.Any{
@@ -35,6 +36,7 @@ func TestReadableFolder(t *testing.T) {
 	tableTest_Schema(t, &s, &value, table)
 }
 
+// TestWritableFolder verifies that every read/write folder property round-trips through the schema
 func TestWritableFolder(t *testing.T) {
 
 	value := mapof.Any{
