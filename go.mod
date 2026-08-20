@@ -33,7 +33,7 @@ require (
 	github.com/benpate/table v0.9.0
 	github.com/benpate/toot v0.5.0
 	github.com/benpate/turbine v0.8.0
-	github.com/benpate/uri v0.6.0
+	github.com/benpate/uri v0.7.0
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/codingsince1985/geo-golang v1.9.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -89,10 +89,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.39 // indirect
 	github.com/aws/smithy-go v1.27.8 // indirect
 	github.com/dlclark/regexp2/v2 v2.2.1 // indirect
-	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/mmcdole/goxpp/v2 v2.0.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	google.golang.org/protobuf v1.36.11 // indirect
 )
 
 require (
@@ -107,7 +105,6 @@ require (
 	github.com/cloudflare/ahocorasick v0.0.0-20240916140611-054963ec9396 // indirect
 	github.com/cloudflare/circl v1.6.5 // indirect
 	github.com/cyphar/filepath-securejoin v0.7.0 // indirect
-	github.com/dlclark/regexp2 v1.12.0 // indirect
 	github.com/dolthub/maphash v0.1.0 // indirect
 	github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
