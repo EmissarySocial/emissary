@@ -20,6 +20,9 @@ import (
 // mail server fails in seconds instead of hanging the setup request.
 const smtpTestTimeout = 10 * time.Second
 
+// moderationTestTimeout bounds the moderation backend connectivity check run when a domain is saved.
+const moderationTestTimeout = 10 * time.Second
+
 // SetupDomainGet displays the form for creating/editing a domain.
 func SetupDomainGet(factory *server.SetupFactory) echo.HandlerFunc {
 
@@ -98,6 +101,13 @@ func SetupDomainPost(serverFactory *server.SetupFactory) echo.HandlerFunc {
 		// silently, the first time a member needs a password reset.  An unconfigured (empty) SMTP block
 		// is allowed; TestConnection treats it as a no-op success.
 		if err := domain.SMTPConnection.TestConnection(smtpTestTimeout); err != nil {
+			return build.WrapInlineError(ctx.Response(), err)
+		}
+
+		// Verify the moderation backend is reachable (and the API key works) before persisting.
+		// An unconfigured (empty) moderation block is allowed; TestConnection treats it as a no-op
+		// success.  The URL is stored per-domain, not at the server level.
+		if err := domain.Moderation.TestConnection(moderationTestTimeout); err != nil {
 			return build.WrapInlineError(ctx.Response(), err)
 		}
 
@@ -262,6 +272,67 @@ func setupDomainForm(header string) form.Element {
 				Type:  "toggle",
 				Path:  "smtp.tls",
 				Label: "Use TLS?",
+			}},
+		}, {
+			Label: "Moderation",
+			Type:  "layout-vertical",
+			Children: []form.Element{{
+				Type:        "select",
+				Path:        "moderation.provider",
+				Label:       "Provider",
+				Description: "Select a moderation backend to forward reports to",
+				Options: mapof.Any{"enum": []form.LookupCode{
+					{Value: "", Label: "— None —"},
+					{Value: "coop", Label: "Coop"},
+				}},
+			}, {
+				Type:        "text",
+				Path:        "moderation.url",
+				Label:       "Backend URL",
+				Description: "Base URL of the moderation backend (e.g. http://coop:3000)",
+				Options:     mapof.Any{"show-if": "moderation.provider eq coop"},
+			}, {
+				Type:        "text",
+				Path:        "moderation.coop.apiKey",
+				Label:       "Coop API Key",
+				Description: "API key for authenticating outgoing requests to Coop (sent as X-API-KEY header)",
+				Options:     mapof.Any{"show-if": "moderation.provider eq coop"},
+			}, {
+				Type:        "textarea",
+				Path:        "moderation.coop.webhookPublicKey",
+				Label:       "Coop Webhook Public Key",
+				Description: "PEM-encoded RSA public key used to verify incoming action callbacks from Coop",
+				Options:     mapof.Any{"show-if": "moderation.provider eq coop", "rows": "6"},
+			}, {
+				Type:        "text",
+				Path:        "moderation.coop.userItemTypeId",
+				Label:       "User Item Type ID",
+				Description: "Coop item type ID for Mastodon accounts (users). Find this in Coop's Item Types settings.",
+				Options:     mapof.Any{"show-if": "moderation.provider eq coop"},
+			}, {
+				Type:        "text",
+				Path:        "moderation.coop.statusItemTypeId",
+				Label:       "Status Item Type ID",
+				Description: "Coop item type ID for Mastodon statuses (posts). Find this in Coop's Item Types settings.",
+				Options:     mapof.Any{"show-if": "moderation.provider eq coop"},
+			}, {
+				Type:        "text",
+				Path:        "moderation.coop.suspendActionId",
+				Label:       "Suspend Action ID",
+				Description: "Coop action ID for suspending a user. Find this in Coop's Actions settings.",
+				Options:     mapof.Any{"show-if": "moderation.provider eq coop"},
+			}, {
+				Type:        "text",
+				Path:        "moderation.coop.silenceActionId",
+				Label:       "Silence Action ID",
+				Description: "Coop action ID for silencing a user. Find this in Coop's Actions settings.",
+				Options:     mapof.Any{"show-if": "moderation.provider eq coop"},
+			}, {
+				Type:        "text",
+				Path:        "moderation.coop.deleteActionId",
+				Label:       "Delete Action ID",
+				Description: "Coop action ID for deleting a status. Find this in Coop's Actions settings.",
+				Options:     mapof.Any{"show-if": "moderation.provider eq coop"},
 			}},
 		}},
 	}

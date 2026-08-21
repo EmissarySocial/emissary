@@ -27,6 +27,10 @@ func TestDomainSchema(t *testing.T) {
 		{"owner.phoneNumber", "123-456-7890", nil},
 		{"owner.mailingAddress", "1234 Owner Street, Ownerville, OW 00000", nil},
 		{"masterKey", "1234567890123456789012345678901234567890123456789012345678901234", nil},
+		{"moderation.provider", "coop", nil},
+		{"moderation.url", "http://coop:3000", nil},
+		{"moderation.coop.apiKey", "COOP_API_KEY", nil},
+		{"moderation.coop.webhookPublicKey", "COOP_WEBHOOK_PUBLIC_KEY", nil},
 	}
 
 	tableTest_Schema(t, &s, &d, table)

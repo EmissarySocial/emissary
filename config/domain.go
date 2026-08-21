@@ -19,6 +19,7 @@ type Domain struct {
 	Owner          Owner          `json:"owner"          bson:"owner"`         // Information about the owner of this domain
 	MasterKey      string         `json:"masterKey"      bson:"masterKey"`     // Key used to encrypt/decrypt JWT keys stored in the database
 	CreateOwner    bool           `json:"createOwner"    bson:"createOwner"`   // TRUE if the owner should be created when the domain is created
+	Moderation     Moderation     `json:"moderation"     bson:"moderation"`    // Configuration for external moderation backends (e.g. Coop)
 }
 
 // NewDomain returns a fully initialized Domain object.

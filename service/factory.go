@@ -106,6 +106,7 @@ type Factory struct {
 	realtimeBroker          *realtime.Broker
 	userService             User
 	webhookService          Webhook
+	moderationService       Moderation
 
 	// real-time watchers
 	refreshContext   context.CancelFunc
@@ -197,6 +198,7 @@ func NewFactory(serverFactory ServerFactory, domain config.Domain, port string, 
 	factory.privilegeService = NewPrivilege()
 	factory.userService = NewUser()
 	factory.webhookService = NewWebhook()
+	factory.moderationService = NewModeration()
 
 	// Refresh the configuration with values that (may) change during the lifetime of the factory
 	if err := factory.Refresh(domain, attachmentOriginals, attachmentCache); err != nil {
@@ -272,6 +274,7 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	factory.privilegeService.Refresh(factory)
 	factory.userService.Refresh(factory)
 	factory.webhookService.Refresh(factory)
+	factory.moderationService.Refresh(factory)
 
 	// If the database connect string has changed,
 	// then reconnect to the new database
@@ -650,6 +653,11 @@ func (factory *Factory) Widget() *Widget {
 // Webhook returns a fully populated Webhook service
 func (factory *Factory) Webhook() *Webhook {
 	return &factory.webhookService
+}
+
+// Moderation returns the moderation service for this domain
+func (factory *Factory) Moderation() *Moderation {
+	return &factory.moderationService
 }
 
 /******************************************
