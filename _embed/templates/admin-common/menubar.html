@@ -1,5 +1,3 @@
-{{- template "startup" . -}}
-
 <div id="menu-bar" hx-push-url="true" script="init send SelectNav(id:'admin')">
 	<div class="center">
 		<a href="/admin/domain/index" hx-boost="true" class="turboclick {{if eq .Token `domain`}}selected{{end}}">
@@ -90,3 +88,5 @@
 	</span>
 
 {{- end -}}
+
+{{- template "startup" . -}}
