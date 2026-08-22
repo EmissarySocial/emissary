@@ -37,22 +37,13 @@ func (step StepStartupCreateStreams) Post(builder Builder, _ io.Writer) Pipeline
 		return Halt().WithError(derp.NotFound(location, "Theme not found", themeID))
 	}
 
-	// Collect the "tokens" that the user has chosen to create.  These are only ever used to
-	// filter the Theme's own list, so an unrecognized token creates nothing.  An empty list is
-	// a legitimate choice -- "install none of this content" -- not an error.
-	request := domainBuilder.request()
-
-	if err := request.ParseForm(); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Parsing form input"))
-	}
-
-	tokens := sliceof.String(request.Form["tokens"])
-
-	// Seed the Domain.  Stream.Startup does nothing if the Domain already has Streams of its
-	// own, so running this Step more than once is safe.
+	// Seed the Domain.  The Theme is the only input: this Step reads nothing from the form,
+	// because a caller cannot ask for a subset of a Theme's startup Streams.  Stream.Startup
+	// does nothing if the Domain already has Streams of its own, so running this Step more
+	// than once is safe.
 	streamService := domainBuilder.factory().Stream()
 
-	if err := streamService.Startup(domainBuilder.session(), &theme, tokens); err != nil {
+	if err := streamService.Startup(domainBuilder.session(), &theme); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Initializing Streams", themeID))
 	}
 

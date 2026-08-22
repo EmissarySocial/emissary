@@ -107,16 +107,16 @@ func (service *Stream) Refresh(factory *Factory) {
 	service.sseUpdateChannel = factory.SSEUpdateChannel()
 }
 
-// Startup seeds an empty database with the Streams that a new Theme provides.  The `tokens`
-// argument names the Streams to create; the Theme remains the authority on what CAN be created,
-// so a token that the Theme does not define is ignored.
-func (service *Stream) Startup(session data.Session, theme *model.Theme, tokens sliceof.String) error {
+// Startup seeds an empty database with the Streams that a new Theme provides.  The Theme is the
+// sole authority on what gets created: callers create all of a Theme's "startupStreams" or none
+// of them, and cannot ask for a subset.
+func (service *Stream) Startup(session data.Session, theme *model.Theme) error {
 
 	const location = "service.Stream.Startup"
 
-	// If the caller has not requested any Streams, then there is nothing to do.  This check comes
-	// first because it needs no database access.
-	startupStreams := selectStartupStreams(theme, tokens)
+	// If the Theme defines no Streams, then there is nothing to do.  This check comes first
+	// because it needs no database access.
+	startupStreams := theme.StartupStreams
 
 	if len(startupStreams) == 0 {
 		return nil
@@ -154,24 +154,6 @@ func (service *Stream) Startup(session data.Session, theme *model.Theme, tokens 
 	}
 
 	return nil
-}
-
-// selectStartupStreams returns the entries in a Theme's startup list whose "token" the caller
-// has requested.  Filtering this direction -- iterating the Theme and asking whether each entry
-// was requested -- is what limits the caller to the Theme's pre-defined list: a token that the
-// Theme does not define matches nothing and is silently dropped.
-func selectStartupStreams(theme *model.Theme, tokens sliceof.String) []mapof.Any {
-
-	result := make([]mapof.Any, 0, len(theme.StartupStreams))
-
-	for _, data := range theme.StartupStreams {
-
-		if tokens.Contains(data.GetString("token")) {
-			result = append(result, data)
-		}
-	}
-
-	return result
 }
 
 // newStartupStream builds a single published Stream from one theme.StartupStreams
@@ -1217,7 +1199,7 @@ func (service *Stream) calcDefaultAllow(template *model.Template, stream *model.
 	stream.DefaultAllow = result
 }
 
-// CalcPrivileges denormalizes all privileges (CircleIDs and ProductIDs)
+// calcPrivilegeIDs denormalizes all privileges (CircleIDs and ProductIDs)
 // for a Stream into a single data structure that can be scanned
 // easily by MongoDB.
 func (service *Stream) calcPrivilegeIDs(stream *model.Stream) {
