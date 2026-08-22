@@ -5,8 +5,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/EmissarySocial/emissary/config"
+	"github.com/EmissarySocial/emissary/service"
+	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/benpate/turbine/queue"
+	"github.com/puzpuzpuz/xsync/v4"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -86,16 +92,16 @@ func requireConnected(t *testing.T, client *mongo.Client) {
 // disconnect the old client and strand every captured handle (the original incident).
 func TestRefreshCommonDatabase_UnchangedSettingsKeepClient(t *testing.T) {
 
-	factory := factoryCore{}
+	factory := &factoryCore{}
 
-	require.NoError(t, factory.refreshCommonDatabase(lifecycleConnection("59999", "lifecycle-a")))
-	first := factory.commonDatabase
+	require.NoError(t, reloadCommonDatabase(factory, lifecycleConnection("59999", "lifecycle-a")))
+	first := factory.currentWiring().commonDatabase
 	require.NotNil(t, first)
 
 	// Reload with a FRESH map carrying equal values (value comparison, not map identity)
-	require.NoError(t, factory.refreshCommonDatabase(lifecycleConnection("59999", "lifecycle-a")))
+	require.NoError(t, reloadCommonDatabase(factory, lifecycleConnection("59999", "lifecycle-a")))
 
-	require.Same(t, first, factory.commonDatabase, "unchanged settings must keep the same database handle")
+	require.Same(t, first, factory.currentWiring().commonDatabase, "unchanged settings must keep the same database handle")
 	requireConnected(t, first.Client())
 }
 
@@ -103,33 +109,33 @@ func TestRefreshCommonDatabase_UnchangedSettingsKeepClient(t *testing.T) {
 // the settings DO change, the connection must be replaced and the old client disconnected.
 func TestRefreshCommonDatabase_ChangedDatabaseNameReconnects(t *testing.T) {
 
-	factory := factoryCore{}
+	factory := &factoryCore{}
 
-	require.NoError(t, factory.refreshCommonDatabase(lifecycleConnection("59999", "lifecycle-a")))
-	oldClient := factory.commonDatabase.Client()
+	require.NoError(t, reloadCommonDatabase(factory, lifecycleConnection("59999", "lifecycle-a")))
+	oldClient := factory.currentWiring().commonDatabase.Client()
 
-	require.NoError(t, factory.refreshCommonDatabase(lifecycleConnection("59999", "lifecycle-b")))
+	require.NoError(t, reloadCommonDatabase(factory, lifecycleConnection("59999", "lifecycle-b")))
 
-	require.Equal(t, "lifecycle-b", factory.commonDatabase.Name())
-	require.NotSame(t, oldClient, factory.commonDatabase.Client(), "changed settings must build a new client")
+	require.Equal(t, "lifecycle-b", factory.currentWiring().commonDatabase.Name())
+	require.NotSame(t, oldClient, factory.currentWiring().commonDatabase.Client(), "changed settings must build a new client")
 	requireDisconnected(t, oldClient)
-	requireConnected(t, factory.commonDatabase.Client())
+	requireConnected(t, factory.currentWiring().commonDatabase.Client())
 }
 
 // TestRefreshCommonDatabase_ChangedConnectStringReconnects covers the connectString leg of the
 // comparison (same database name, different server address).
 func TestRefreshCommonDatabase_ChangedConnectStringReconnects(t *testing.T) {
 
-	factory := factoryCore{}
+	factory := &factoryCore{}
 
-	require.NoError(t, factory.refreshCommonDatabase(lifecycleConnection("59999", "lifecycle-a")))
-	oldClient := factory.commonDatabase.Client()
+	require.NoError(t, reloadCommonDatabase(factory, lifecycleConnection("59999", "lifecycle-a")))
+	oldClient := factory.currentWiring().commonDatabase.Client()
 
-	require.NoError(t, factory.refreshCommonDatabase(lifecycleConnection("59998", "lifecycle-a")))
+	require.NoError(t, reloadCommonDatabase(factory, lifecycleConnection("59998", "lifecycle-a")))
 
-	require.NotSame(t, oldClient, factory.commonDatabase.Client(), "changed connect string must build a new client")
+	require.NotSame(t, oldClient, factory.currentWiring().commonDatabase.Client(), "changed connect string must build a new client")
 	requireDisconnected(t, oldClient)
-	requireConnected(t, factory.commonDatabase.Client())
+	requireConnected(t, factory.currentWiring().commonDatabase.Client())
 }
 
 // TestRefreshCommonDatabase_RequiresSettings pins the validations: missing settings error out and
@@ -147,11 +153,56 @@ func TestRefreshCommonDatabase_RequiresSettings(t *testing.T) {
 
 	for _, testCase := range table {
 		t.Run(testCase.name, func(t *testing.T) {
-			factory := factoryCore{}
-			require.Error(t, factory.refreshCommonDatabase(testCase.connection))
-			require.Nil(t, factory.commonDatabase)
+			factory := &factoryCore{}
+			require.Error(t, reloadCommonDatabase(factory, testCase.connection))
+			require.Nil(t, factory.currentWiring().commonDatabase)
 		})
 	}
+}
+
+// TestRefreshCommonDatabase_VerifyRollsBackOnUnreachable pins the verify half of the ONE shared
+// connect path.  When the ping fails, the factory must roll back to "not connected" -- publishing
+// the un-pinged client would bind every later domain lookup to a server that never answered, and
+// keeping the PREVIOUS connection would quietly disagree with the settings the operator just
+// saved.  The domain registry is cleared for the same reason.
+func TestRefreshCommonDatabase_VerifyRollsBackOnUnreachable(t *testing.T) {
+
+	factory := &factoryCore{}
+	factory.domains = xsync.NewMap[string, *service.Factory]()
+
+	// Nothing listens on this port, so the ping fails after the URI's 200ms selection timeout
+	changed, err := verifyCommonDatabase(factory, lifecycleConnection("59999", "lifecycle-verify"))
+
+	require.Error(t, err)
+	require.True(t, changed, "a rollback IS a change to the live connection")
+
+	result := factory.currentWiring()
+	require.Nil(t, result.commonDatabase)
+	require.False(t, result.commonDatabaseVerified)
+	require.Empty(t, result.commonDatabaseURI)
+}
+
+// TestRefreshCommonDatabase_UnverifiedIsNotKeptWhenVerifying pins the guard's verify leg: an
+// UNVERIFIED connection with the same settings must not satisfy a caller that requires
+// verification.  Skipping there would let the setup console report "connected" against a client
+// that never answered a Ping.
+func TestRefreshCommonDatabase_UnverifiedIsNotKeptWhenVerifying(t *testing.T) {
+
+	factory := &factoryCore{}
+	factory.domains = xsync.NewMap[string, *service.Factory]()
+
+	connection := lifecycleConnection("59999", "lifecycle-verify")
+
+	// An unverified connection to these settings exists (the live-mode path)
+	require.NoError(t, reloadCommonDatabase(factory, connection))
+	require.NotNil(t, factory.currentWiring().commonDatabase)
+
+	// Verification must attempt the ping (and fail against the closed port), not skip
+	changed, err := verifyCommonDatabase(factory, connection)
+
+	require.Error(t, err, "an unverified connection must not satisfy the verified guard")
+	require.True(t, changed)
+	require.Nil(t, factory.currentWiring().commonDatabase)
 }
 
 /******************************************
@@ -161,9 +212,48 @@ func TestRefreshCommonDatabase_RequiresSettings(t *testing.T) {
 // newTestFactoryCore returns a factoryCore carrying the same inert placeholder queue that init()
 // installs, so refreshQueue's first run behaves exactly as it does at boot.
 func newTestFactoryCore() *factoryCore {
-	return &factoryCore{
-		queue: queue.New(),
-	}
+
+	result := &factoryCore{}
+
+	result.rewire(func(value *wiring) {
+		value.queue = queue.New()
+	})
+
+	return result
+}
+
+// reloadCommonDatabase runs refreshCommonDatabase the way a live-mode configuration reload
+// does: holding reloadLock, which every writer of the server wiring is required to hold.
+func reloadCommonDatabase(factory *factoryCore, connection mapof.String) error {
+	factory.reloadLock.Lock()
+	defer factory.reloadLock.Unlock()
+
+	_, err := factory.refreshCommonDatabase(connection, false)
+	return err
+}
+
+// verifyCommonDatabase runs refreshCommonDatabase the way the setup console does: under
+// reloadLock and with verification on, so the connection must answer a Ping to be published.
+func verifyCommonDatabase(factory *factoryCore, connection mapof.String) (bool, error) {
+	factory.reloadLock.Lock()
+	defer factory.reloadLock.Unlock()
+
+	return factory.refreshCommonDatabase(connection, true)
+}
+
+// reloadQueue runs refreshQueue under reloadLock, as a configuration reload does.
+func reloadQueue(factory *factoryCore, withStorage bool) {
+	factory.reloadLock.Lock()
+	defer factory.reloadLock.Unlock()
+	factory.refreshQueue(withStorage)
+}
+
+// setTestCommonDatabase swaps in a database handle without connecting to anything, so the
+// pointer-identity half of refreshQueue's guard can be exercised directly.
+func setTestCommonDatabase(factory *factoryCore, database *mongo.Database) {
+	factory.rewire(func(value *wiring) {
+		value.commonDatabase = database
+	})
 }
 
 // stopQueueOnCleanup stops the factory's CURRENT queue when the test ends.  Queues that
@@ -172,7 +262,7 @@ func newTestFactoryCore() *factoryCore {
 func stopQueueOnCleanup(t *testing.T, factory *factoryCore) {
 	t.Helper()
 	t.Cleanup(func() {
-		factory.queue.Stop()
+		factory.currentWiring().queue.Stop()
 	})
 }
 
@@ -183,16 +273,16 @@ func TestRefreshQueue_UnchangedInputsKeepQueue(t *testing.T) {
 
 	factory := newTestFactoryCore()
 	stopQueueOnCleanup(t, factory)
-	placeholder := factory.queue
+	placeholder := factory.currentWiring().queue
 
 	// First refresh always rebuilds: the placeholder has no consumers
-	factory.refreshQueue(false)
-	first := factory.queue
+	reloadQueue(factory, false)
+	first := factory.currentWiring().queue
 	require.NotSame(t, placeholder, first, "first refresh must replace init()'s inert placeholder")
 
 	// Reload: same inputs, same queue
-	factory.refreshQueue(false)
-	require.Same(t, first, factory.queue, "unchanged inputs must keep the same queue")
+	reloadQueue(factory, false)
+	require.Same(t, first, factory.currentWiring().queue, "unchanged inputs must keep the same queue")
 }
 
 // TestRefreshQueue_InMemoryIgnoresDatabaseSwap pins the !withStorage leg of the guard: an
@@ -203,13 +293,13 @@ func TestRefreshQueue_InMemoryIgnoresDatabaseSwap(t *testing.T) {
 	factory := newTestFactoryCore()
 	stopQueueOnCleanup(t, factory)
 
-	factory.refreshQueue(false)
-	first := factory.queue
+	reloadQueue(factory, false)
+	first := factory.currentWiring().queue
 
-	factory.commonDatabase = lazyDatabase(t, "lifecycle-swap")
-	factory.refreshQueue(false)
+	setTestCommonDatabase(factory, lazyDatabase(t, "lifecycle-swap"))
+	reloadQueue(factory, false)
 
-	require.Same(t, first, factory.queue, "an in-memory queue must survive a database swap")
+	require.Same(t, first, factory.currentWiring().queue, "an in-memory queue must survive a database swap")
 }
 
 // TestRefreshQueue_RebuildsWhenStorageModeChanges pins the withStorage leg of the guard.
@@ -217,13 +307,13 @@ func TestRefreshQueue_RebuildsWhenStorageModeChanges(t *testing.T) {
 
 	factory := newTestFactoryCore()
 	stopQueueOnCleanup(t, factory)
-	factory.commonDatabase = lazyDatabase(t, "lifecycle-mode")
+	setTestCommonDatabase(factory, lazyDatabase(t, "lifecycle-mode"))
 
-	factory.refreshQueue(false)
-	first := factory.queue
+	reloadQueue(factory, false)
+	first := factory.currentWiring().queue
 
-	factory.refreshQueue(true)
-	require.NotSame(t, first, factory.queue, "a storage-mode change must rebuild the queue")
+	reloadQueue(factory, true)
+	require.NotSame(t, first, factory.currentWiring().queue, "a storage-mode change must rebuild the queue")
 }
 
 // TestRefreshQueue_RebuildsWhenCommonDatabaseSwaps pins the storage-bearing leg: when
@@ -233,19 +323,19 @@ func TestRefreshQueue_RebuildsWhenCommonDatabaseSwaps(t *testing.T) {
 
 	factory := newTestFactoryCore()
 	stopQueueOnCleanup(t, factory)
-	factory.commonDatabase = lazyDatabase(t, "lifecycle-storage-a")
+	setTestCommonDatabase(factory, lazyDatabase(t, "lifecycle-storage-a"))
 
-	factory.refreshQueue(true)
-	first := factory.queue
+	reloadQueue(factory, true)
+	first := factory.currentWiring().queue
 
 	// Reload without a swap: keep the queue
-	factory.refreshQueue(true)
-	require.Same(t, first, factory.queue, "same database handle must keep the same queue")
+	reloadQueue(factory, true)
+	require.Same(t, first, factory.currentWiring().queue, "same database handle must keep the same queue")
 
 	// Swap the database (what refreshCommonDatabase does on a real settings change), then reload
-	factory.commonDatabase = lazyDatabase(t, "lifecycle-storage-b")
-	factory.refreshQueue(true)
-	require.NotSame(t, first, factory.queue, "a database swap must rebuild the queue")
+	setTestCommonDatabase(factory, lazyDatabase(t, "lifecycle-storage-b"))
+	reloadQueue(factory, true)
+	require.NotSame(t, first, factory.currentWiring().queue, "a database swap must rebuild the queue")
 }
 
 /******************************************
@@ -262,22 +352,52 @@ func TestConfigReload_KeepsHandlesAlive(t *testing.T) {
 	stopQueueOnCleanup(t, factory)
 
 	// Boot
-	require.NoError(t, factory.refreshCommonDatabase(lifecycleConnection("59999", "lifecycle-reload")))
-	factory.refreshQueue(true)
+	require.NoError(t, reloadCommonDatabase(factory, lifecycleConnection("59999", "lifecycle-reload")))
+	reloadQueue(factory, true)
 
-	bootDatabase := factory.commonDatabase
-	bootQueue := factory.queue
+	bootDatabase := factory.currentWiring().commonDatabase
+	bootQueue := factory.currentWiring().queue
 
 	// Config reload with unchanged database settings (fresh, equal-valued map)
-	require.NoError(t, factory.refreshCommonDatabase(lifecycleConnection("59999", "lifecycle-reload")))
-	factory.refreshQueue(true)
+	require.NoError(t, reloadCommonDatabase(factory, lifecycleConnection("59999", "lifecycle-reload")))
+	reloadQueue(factory, true)
 
 	// Both handles survive, and the getters domain factories read through agree
-	require.Same(t, bootDatabase, factory.commonDatabase)
-	require.Same(t, bootQueue, factory.queue)
+	require.Same(t, bootDatabase, factory.currentWiring().commonDatabase)
+	require.Same(t, bootQueue, factory.currentWiring().queue)
 	require.Same(t, bootDatabase, factory.CommonDatabase())
 	require.Same(t, bootQueue, factory.Queue())
 
 	// The boot client was never disconnected
 	requireConnected(t, bootDatabase.Client())
+}
+
+/******************************************
+ * refreshDerpPlugins
+ ******************************************/
+
+// TestRefreshDerpPlugins_NeverZero pins the error-sink rule across the new atomic swap: a
+// configuration with no (usable) loggers must still leave ONE reporter installed, and the swap
+// must be the only mutation -- the registry is global, so an empty moment here would swallow
+// every concurrently reported error in the process.
+func TestRefreshDerpPlugins_NeverZero(t *testing.T) {
+
+	// Restore the global registry so other tests see what they expect
+	t.Cleanup(func() { derp.SetPlugins(derpconsole.New()) })
+
+	factory := &factoryCore{}
+
+	// No loggers configured at all: the console fallback must land
+	empty := config.DefaultConfig()
+	empty.Loggers = nil
+
+	factory.refreshDerpPlugins(empty)
+	require.Equal(t, 1, derp.Plugins.Len(), "the fallback console reporter must be installed")
+
+	// A mongo logger without a connected common database is skipped -- but never down to zero
+	mongoOnly := config.DefaultConfig()
+	mongoOnly.Loggers = sliceof.Object[mapof.Any]{{"type": "mongo"}}
+
+	factory.refreshDerpPlugins(mongoOnly)
+	require.Equal(t, 1, derp.Plugins.Len(), "an unusable logger list must still fall back to the console")
 }

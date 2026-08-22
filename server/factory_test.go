@@ -57,3 +57,70 @@ func TestTestDatabaseConnection(t *testing.T) {
 		require.Error(t, err)
 	})
 }
+
+/******************************************
+ * Reload Fault Tolerance
+ ******************************************/
+
+// TestFactory_BadReloadKeepsLastKnownGood is the regression test for the cluster kill-switch.
+// readConfig used to os.Exit(1) when a configuration's common database could not be opened --
+// so one bad save, delivered reliably by the change stream, took down EVERY node at once and
+// then crash-looped them all against the same stored document.  A rejected reload must now
+// leave the node running its previous configuration, completely untouched.
+func TestFactory_BadReloadKeepsLastKnownGood(t *testing.T) {
+
+	factory := &Factory{}
+
+	// Establish a known-good state the way a reload would
+	good := config.DefaultConfig()
+	good.AdminEmail = "known-good@example.com"
+	setTestConfig(&factory.factoryCore, good)
+	setTestCommonDatabase(&factory.factoryCore, lazyDatabase(t, "last-known-good"))
+
+	before := factory.CommonDatabase()
+	require.NotNil(t, before)
+
+	// A configuration with NO common database cannot be applied
+	bad := config.DefaultConfig()
+	bad.AdminEmail = "bad@example.com"
+
+	err := factory.readConfig(bad)
+	require.Error(t, err)
+
+	// RULE: NOTHING from the rejected configuration may be visible
+	require.Equal(t, "known-good@example.com", factory.Config().AdminEmail)
+	require.Same(t, before, factory.CommonDatabase(), "a rejected reload must not touch the database connection")
+}
+
+// TestFactory_StartSurvivesABadReload pins the supervision half: the subscription loop reports
+// a failed reload and KEEPS DRAINING, so the next good configuration still recovers the node.
+func TestFactory_StartSurvivesABadReload(t *testing.T) {
+
+	factory := &Factory{}
+
+	good := config.DefaultConfig()
+	good.AdminEmail = "known-good@example.com"
+	setTestConfig(&factory.factoryCore, good)
+	setTestCommonDatabase(&factory.factoryCore, lazyDatabase(t, "start-survives"))
+
+	// Two bad configurations arrive; the loop must consume both without dying
+	subscription := make(chan config.Config, 2)
+	subscription <- config.DefaultConfig()
+	subscription <- config.DefaultConfig()
+	close(subscription)
+
+	finished := make(chan struct{})
+
+	go func() {
+		defer close(finished)
+		factory.start(subscription)
+	}()
+
+	select {
+	case <-finished:
+	case <-time.After(10 * time.Second):
+		t.Fatal("start() did not drain the subscription after failed reloads")
+	}
+
+	require.Equal(t, "known-good@example.com", factory.Config().AdminEmail)
+}

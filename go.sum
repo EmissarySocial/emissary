@@ -75,8 +75,8 @@ github.com/benpate/data-slice v0.1.0 h1:wBe0ryDZXHVlz//xX6Ji+16gFz3ajgzASkpa6PYQ
 github.com/benpate/data-slice v0.1.0/go.mod h1:c73++Q0z7HrVDnrFGKyKP2abIZ2PPt8oY1RvPV8+xck=
 github.com/benpate/delta v0.1.0 h1:vTuFtBXfilQQFcukicXKMLWt0Wh6rvV9zJNtMm9JEPo=
 github.com/benpate/delta v0.1.0/go.mod h1:PtXjyNvWiHYHFDH0jYUaHxvw+0H3Gw79mZiGu11D16Q=
-github.com/benpate/derp v0.39.0 h1:lgxuAWzYK6vNrcf5phMAUSPMK53dpHXOkNaRBunVjxk=
-github.com/benpate/derp v0.39.0/go.mod h1:eWyOubqTrcUKVPnBoQBw9J9GdpCxupkMO56mGGvjCtI=
+github.com/benpate/derp v0.40.0 h1:Gtigyb7QpZ9nFjcR3lEJr4kOcR13ggZ6tTj9Q0u/z8E=
+github.com/benpate/derp v0.40.0/go.mod h1:S+BfAuBBh12eVaAGCQhut2w1i5aQQdWOmKQo40IgqjM=
 github.com/benpate/digit v0.16.0 h1:X/DNaQtGVO0iVc+cYaea+koLQHUszk/T6DmeFM/fGP0=
 github.com/benpate/digit v0.16.0/go.mod h1:1fHVQufIle8jGq8Mnf8p2U3TT0cXVqS1LWR5oQsP/PY=
 github.com/benpate/digital-dome v0.6.0 h1:ZPLqGAEwQLHB4wg98kqIbisPd4RB8bPAyzMJMQDfYDQ=

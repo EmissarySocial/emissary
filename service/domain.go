@@ -26,6 +26,7 @@ import (
 	"github.com/benpate/uri"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/oauth2"
 )
 
@@ -36,6 +37,7 @@ type Domain struct {
 	connectionService   *Connection
 	domain              model.Domain
 	funcMap             template.FuncMap
+	database            func() *mongo.Database
 	newSession          func(time.Duration) (data.Session, context.CancelFunc, error)
 	withTransaction     func(context.Context, data.TransactionCallbackFunc) (any, error)
 	providerService     *Provider
@@ -76,6 +78,7 @@ func (service *Domain) Refresh(factory *Factory) {
 	service.configuration = factory.config
 	service.connectionService = factory.Connection()
 	service.funcMap = factory.FuncMap()
+	service.database = factory.Database
 	service.newSession = factory.Session
 	service.withTransaction = factory.WithTransaction
 	service.providerService = factory.Provider()
@@ -128,19 +131,32 @@ func (service *Domain) Start() error {
 		return derp.Wrap(err, location, "Loading domain record")
 	}
 
-	// ASYNC: Update database tables and indexes
+	// ASYNC: Update database tables and indexes.  Both steps work through the connection the
+	// factory already holds (read at call time, so a reconnect is picked up) -- the old
+	// connect-string signatures dialed a fresh client per call and never disconnected it,
+	// leaking one client per domain at boot and per domain change after.
 	go func() {
 
+		// RULE: Bounded.  Nothing holds a lock here, but an unreachable server must not pin
+		// this goroutine (and the migration it guards) forever.
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+		defer cancel()
+
+		database := service.database()
+
+		if database == nil {
+			derp.Report(derp.Internal(location, "Domain Not Ready: no database connection for upgrades and index sync"))
+			return
+		}
+
 		// Once we have the domain loaded, try to upgrade the database
-		if err := queries.UpgradeMongoDB(service.configuration.ConnectString, service.configuration.DatabaseName, &service.domain); err != nil {
+		if err := queries.UpgradeMongoDB(ctx, database, &service.domain); err != nil {
 			derp.Report(derp.Wrap(err, location, "Domain Not Ready: Error upgrading domain record"))
 			return
 		}
 
 		// After any necessary upgrades, sync the indexes for the domain collection
-		if err := queries.SyncDomainIndexes(service.configuration.ConnectString, service.configuration.DatabaseName); err != nil {
-			derp.Report(derp.Wrap(err, location, "Syncing domain indexes", service.configuration, service.domain))
-		}
+		queries.SyncDomainIndexes(ctx, database)
 	}()
 
 	return nil
@@ -416,7 +432,7 @@ func (service *Domain) ObjectType() string {
 	return "Domain"
 }
 
-// New returns a fully initialized model.Domain as a data.Object.
+// ObjectNew returns a fully initialized model.Domain as a data.Object.
 func (service *Domain) ObjectNew() data.Object {
 	result := model.NewDomain()
 	return &result
@@ -665,7 +681,7 @@ func (service *Domain) NewOAuthClient(session data.Session, providerID string) (
 	return connection, nil
 }
 
-// GetAuthToken retrieves the OAuth token for the specified provider.  If the token has expired
+// GetOAuthToken retrieves the OAuth token for the specified provider.  If the token has expired
 // then it is refreshed (and saved) automatically before returning.
 func (service *Domain) GetOAuthToken(session data.Session, providerID string) (model.Connection, *oauth2.Token, error) {
 

@@ -71,8 +71,7 @@ func main() {
 	fmt.Println("")
 
 	// Derp configuration (rewritten once we have a shared database)
-	derp.Plugins.Clear()
-	derp.Plugins.Add(derpconsole.New())
+	derp.SetPlugins(derpconsole.New())
 
 	// Troubleshoot / Error Reporting
 	spew.Config.DisableMethods = true
@@ -112,7 +111,19 @@ func main() {
 	// file, so the run mode can be decided BEFORE any factory is constructed.
 	// (FACTORY-MODES D2: a not-ready config must reach the setup console, never
 	// the live factory's hard requirements.)
-	storage := config.Load(&commandLineArgs)
+	//
+	// RULE: This is where boot failures end the process.  The config and server packages never
+	// call os.Exit -- they return errors carrying the operator-facing guidance, and main (here)
+	// is the ONE place that decides a failure is fatal.
+	storage, err := config.Load(&commandLineArgs)
+
+	if err != nil {
+		derp.Report(err)
+		log.Error().Msg("Emissary could not start because the configuration could not be loaded.")
+		log.Error().Msg(derp.Message(err))
+		os.Exit(1)
+	}
+
 	subscription := storage.Subscribe()
 	firstConfig := <-subscription
 
@@ -128,7 +139,7 @@ func main() {
 	if runSetup {
 
 		// Build the setup factory (tolerates a missing/unreachable common database)
-		setupFactory := server.NewSetupFactory(storage, firstConfig, embeddedFiles)
+		setupFactory := server.NewSetupFactory(storage, firstConfig, subscription, embeddedFiles)
 
 		// Get config modifiers from the command line (like HTTP PORT)
 		configOptions := commandLineArgs.ConfigOptions()
@@ -145,7 +156,16 @@ func main() {
 	} else {
 
 		// Build the live factory (hard-requires the common database)
-		serverFactory := server.NewFactory(storage, firstConfig, subscription, embeddedFiles)
+		serverFactory, err := server.NewFactory(storage, firstConfig, subscription, embeddedFiles)
+
+		// RULE: A FIRST configuration that cannot be applied refuses to start the server.  Later
+		// configurations that fail are handled inside the factory, which keeps last-known-good.
+		if err != nil {
+			derp.Report(err)
+			log.Error().Msg("Emissary could not start because the configuration could not be applied.")
+			log.Error().Msg(derp.Message(err))
+			os.Exit(1)
+		}
 
 		// Add routes for standard web server
 		makeStandardRoutes(serverFactory, e)
@@ -172,12 +192,6 @@ func main() {
 /******************************************
  * Routes for Different Application Modes
  ******************************************/
-
-// configProvider is the minimal factory surface needed by the HTTP bootstrap
-// helpers below, which both run modes satisfy.
-type configProvider interface {
-	Config() config.Config
-}
 
 // makeSetupRoutes generates a new Echo instance for the setup behavior
 func makeSetupRoutes(factory *server.SetupFactory, e *echo.Echo) {
@@ -582,9 +596,9 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
  * Start HTTP/HTTPS Servers
  ******************************************/
 
-// startHTTP starts the HTTPS server using Let's Encrypt SSL certificates.
+// startHTTPS starts the HTTPS server using Let's Encrypt SSL certificates.
 // If the configured port is not available, it will wait one second and retry until it is
-func startHTTPS(factory configProvider, e *echo.Echo, options ...config.Option) {
+func startHTTPS(factory server.ConfigProvider, e *echo.Echo, options ...config.Option) {
 
 	// Get and modify the configuration
 	config := factory.Config()
@@ -593,18 +607,30 @@ func startHTTPS(factory configProvider, e *echo.Echo, options ...config.Option) 
 	// If HTTPS is configured, then try to start an HTTPS server
 	if portString, ok := config.HTTPSPortString(); ok {
 
-		// Find all NON-LOCAL domain names.  We need AT LEAST ONE to get an SSL Certificate
-		domains := slice.Filter(config.DomainNames(), uri.NotLocalHostname)
-
-		if len(domains) == 0 {
+		// RULE: We need AT LEAST ONE non-local domain before binding the TLS port, because a
+		// server with nothing to certify has no business holding :443.
+		//
+		// This check is still a BOOT-TIME gate, and deliberately so: binding :443 unconditionally
+		// would make every developer running with the default config fail on a privileged port.
+		// The consequence is that a server whose FIRST non-local domain is added at runtime still
+		// needs a restart to serve HTTPS.  Every domain added AFTER that is picked up live, by the
+		// host policy below.
+		if len(slice.Filter(config.DomainNames(), uri.NotLocalHostname)) == 0 {
 			fmt.Println("Skipping HTTPS server because there are no non-local domains.")
+			fmt.Println("Add a non-local domain and restart the server to enable HTTPS.")
 			return
 		}
 
-		// Initialize Let's Encrypt autocert for TLS certificates
+		// Initialize Let's Encrypt autocert for TLS certificates.
+		//
+		// RULE: HostPolicy and Cache read the LIVE configuration on every use -- see
+		// server.CertificateHosts and server.CertificateCache.  The Manager itself is built once
+		// and lives for the whole process, so anything captured here by value is frozen until the
+		// next restart.  Email is exactly that: autocert reads it once, when it registers the
+		// ACME account, and never again (BUG-137).
 		e.AutoTLSManager = autocert.Manager{
-			HostPolicy: autocert.HostWhitelist(domains...),
-			Cache:      autocert.DirCache(config.Certificates["location"]),
+			HostPolicy: server.NewCertificateHosts(factory).HostPolicy,
+			Cache:      server.NewCertificateCache(factory),
 			Prompt:     autocert.AcceptTOS,
 			Email:      config.AdminEmail,
 		}
@@ -625,7 +651,7 @@ func startHTTPS(factory configProvider, e *echo.Echo, options ...config.Option) 
 
 // startHTTP starts the HTTP server.
 // If the configured port is not available, it will wait one second and retry until it is
-func startHTTP(factory configProvider, e *echo.Echo, options ...config.Option) {
+func startHTTP(factory server.ConfigProvider, e *echo.Echo, options ...config.Option) {
 
 	// Get and modify the configuration
 	config := factory.Config()
@@ -653,7 +679,7 @@ func startHTTP(factory configProvider, e *echo.Echo, options ...config.Option) {
 
 // openLocalhostBrowser opens a browser window to the localhost URL
 // IF the server is configured to run on HTTP or HTTPS
-func openLocalhostBrowser(factory configProvider, options ...config.Option) {
+func openLocalhostBrowser(factory server.ConfigProvider, options ...config.Option) {
 
 	// Get and modify the configuration
 	config := factory.Config()

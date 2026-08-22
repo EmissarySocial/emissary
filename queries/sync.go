@@ -7,23 +7,20 @@ import (
 	"github.com/benpate/derp"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// SyncSharedIndexes updates the MongoDB indexes in the database that every Domain shares
-func SyncSharedIndexes(connectionString string, databaseName string) error {
-
-	const location = "queries.SyncSharedIndexes"
-
-	// Connect to the database
-	ctx := context.Background()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(connectionString))
-
-	if err != nil {
-		return derp.Wrap(err, location, "Creating mongodb client")
-	}
-
-	session := client.Database(databaseName)
+// SyncSharedIndexes updates the MongoDB indexes in the database that every Domain shares.
+//
+// RULE: It works through the connection the CALLER already holds -- it opens nothing.  The old
+// signature took a connect string and dialed a fresh client on every call, without ever
+// disconnecting it: each configuration reload leaked a mongo client (its topology-monitor
+// goroutines and pooled sockets included), on every live node, forever.  Callers own the
+// context too, and should give it a deadline: against a degraded server every index operation
+// waits out server selection, and this runs under the factory's reload lock.
+//
+// Failures are reported per collection and do not stop the rest -- one broken collection must
+// not block indexes the others need -- so there is nothing left to return.
+func SyncSharedIndexes(ctx context.Context, session *mongo.Database) {
 
 	log.Trace().Msg("** BEGIN SYNCING SHARED INDEXES")
 
@@ -48,25 +45,18 @@ func SyncSharedIndexes(connectionString string, databaseName string) error {
 	}
 
 	log.Trace().Msg("!! Finished syncing shared indexes")
-
-	return nil
 }
 
-// SyncDomainIndexes updates the MongoDB indexes in a single Domain's database
-func SyncDomainIndexes(connectionString string, databaseName string) error { // NOSONAR
-	const location = "queries.SyncDomainIndexes"
+// SyncDomainIndexes updates the MongoDB indexes in a single Domain's database.
+//
+// RULE: Same contract as SyncSharedIndexes -- it works through the connection the CALLER
+// already holds, opening nothing.  The old connect-string signature dialed a fresh client per
+// call and never disconnected it, leaking one client (topology goroutines, heartbeat sockets)
+// for every domain at boot and every domain change after.  Failures are reported per
+// collection and do not stop the rest, so there is nothing left to return.
+func SyncDomainIndexes(ctx context.Context, session *mongo.Database) { // NOSONAR
 
-	// Connect to the database
-	ctx := context.Background()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(connectionString))
-
-	if err != nil {
-		return derp.Wrap(err, location, "Creating mongodb client")
-	}
-
-	session := client.Database(databaseName)
-
-	log.Trace().Msg("Syncing indexes for: " + databaseName)
+	log.Trace().Msg("Syncing indexes for: " + session.Name())
 
 	if err := sync.Annotation(ctx, session); err != nil {
 		derp.Report(err)
@@ -212,7 +202,5 @@ func SyncDomainIndexes(connectionString string, databaseName string) error { // 
 		derp.Report(err)
 	}
 
-	log.Debug().Msg("Finished syncing indexes for: " + databaseName)
-
-	return nil
+	log.Debug().Msg("Finished syncing indexes for: " + session.Name())
 }

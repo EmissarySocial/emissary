@@ -10,11 +10,10 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // UpgradeMongoDB runs every pending schema migration against a Domain's database, in order
-func UpgradeMongoDB(connectionString string, databaseName string, domain *model.Domain) error {
+func UpgradeMongoDB(ctx context.Context, session *mongo.Database, domain *model.Domain) error {
 
 	const location = "queries.UpgradeMongoDB"
 
@@ -51,20 +50,17 @@ func UpgradeMongoDB(connectionString string, databaseName string, domain *model.
 		upgrades.Version29,
 	}
 
-	// If we're already at the target database version or higher, then skip any other work
+	// If we're already at the target database version or higher, then skip any other work.
+	// This check runs before `session` is touched, so an up-to-date domain costs nothing here.
 	if domain.DatabaseVersion >= uint(len(upgradeFns)-1) {
 		return nil
 	}
 
-	// Connect to the database
-	ctx := context.Background()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(connectionString))
-
-	if err != nil {
-		return derp.Wrap(err, location, "Creating mongodb client")
+	// RULE: Work through the connection the CALLER already holds -- open nothing.  The old
+	// connect-string signature dialed a fresh client per call and never disconnected it.
+	if session == nil {
+		return derp.Internal(location, "Cannot upgrade without a database connection")
 	}
-
-	session := client.Database(databaseName)
 
 	log.Info().Msg("UPGRADING DATABASE...")
 

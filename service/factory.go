@@ -29,6 +29,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/afero"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -412,6 +413,14 @@ func (factory *Factory) CommonDatabase() mongodb.Server {
 // Server returns the connection to this domain's OWN database (not the shared common database)
 func (factory *Factory) Server() mongodb.Server {
 	return factory.server
+}
+
+// Database returns the raw mongo handle for this domain's OWN database.  It exists for the
+// maintenance paths (index sync, migrations) that need driver-level access; everything else
+// should go through Session/WithTransaction.  Reading through this method -- rather than
+// capturing the handle -- keeps callers on the CURRENT connection across database reconnects.
+func (factory *Factory) Database() *mongo.Database {
+	return factory.server.Database()
 }
 
 // Session returns a new data.Session using the primary database for this domain, using the specified timeout
