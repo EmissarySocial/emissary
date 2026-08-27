@@ -528,22 +528,24 @@
 		general-form: {
 			roles:["self"]
 			steps:[
-				{do:"edit", 
-				options:["cancel-button:hide"]
-				form:{
-					type:layout-vertical
-					children:[
-						{type:"text", path:"userId", label:"Permanent ID", readOnly:true}
-						{type:"text", path:"displayName", label:"Name", description:"Displayed wherever someone sees your profile. (PUBLIC)"}
-						{type:"text", path:"username", label:"Username", description:"How others will identify you online. (PUBLIC)", options:{autocomplete:"off", validator:"/.validate/user/username"}}
-						{type:"text", path:"emailAddress", label:"Email Address", description:"Used to sign in and support your account. Not shared. (PRIVATE)"}
-						{type:"textarea", path:"statusMessage", label:"About Me", description:"Displayed on your profile page. Markdown is allowed. (PUBLIC)", options:{rows:4, showLimit:true}}
-						{type:"text", path:"location", label:"Location", description:"City, State, or whatever you want. (PUBLIC)"}
-						{type:"text", path:"data.tags", label:"Hashtags", description:"Enter #Hashtags separated by spaces.  (PUBLIC)"}
-					]
-				}}
+				{
+					do:"edit", 
+					options:["endpoint:/@me/settings/general-form", "cancel-button:hide"]
+					form:{
+						type:layout-vertical
+						children:[
+							{type:"text", path:"userId", label:"Permanent ID", readOnly:true}
+							{type:"text", path:"displayName", label:"Name", description:"Displayed wherever someone sees your profile. (PUBLIC)"}
+							{type:"text", path:"username", label:"Username", description:"How others will identify you online. (PUBLIC)", options:{autocomplete:"off", validator:"/.validate/user/username"}}
+							{type:"text", path:"emailAddress", label:"Email Address", description:"Used to sign in and support your account. Not shared. (PRIVATE)"}
+							{type:"textarea", path:"statusMessage", label:"About Me", description:"Displayed on your profile page. Markdown is allowed. (PUBLIC)", options:{rows:4, showLimit:true}}
+							{type:"text", path:"location", label:"Location", description:"City, State, or whatever you want. (PUBLIC)"}
+							{type:"text", path:"data.tags", label:"Hashtags", description:"Enter #Hashtags separated by spaces.  (PUBLIC)"}
+						]
+					}
+				}
 				{do:"save"}
-				{do: "inline-save-button"}
+				{do:"inline-save-button"}
 			]
 		}
 
@@ -558,7 +560,7 @@
 			roles:["self"]
 			steps:[
 				{do:"edit", 
-				options:["cancel-button:hide"]
+				options:["endpoint:/@me/settings/images-form", "cancel-button:hide"]
 				form:{
 					type:layout-vertical
 					children:[
@@ -821,7 +823,7 @@
 				{do:"view-html", file:"notifications-push"}
 				{
 					do:"edit",
-					options:["cancel-button:hide"]
+					options:["endpoint:/@me/settings/notifications-form", "cancel-button:hide"]
 					form:{
 						type:layout-vertical
 						children:[
@@ -867,7 +869,7 @@
 			roles:["self"]
 			steps:[
 				{do:"edit", 
-				options:["cancel-button:hide"]
+				options:["endpoint:/@me/settings/password-form", "cancel-button:hide"]
 				form:{
 					type:layout-vertical
 					children:[
@@ -1049,7 +1051,11 @@
 			steps:[
 				{
 					do:"edit", 
-					options:["cancel-button:hide", "show-bluesky:{{.UserCanBridgeToBluesky}}"]
+					options:[
+						"endpoint:/@me/settings/visibility-form"
+						"cancel-button:hide", 
+						"show-bluesky:{{.UserCanBridgeToBluesky}}"
+					]
 					form:{
 						type:layout-vertical
 						children:[
