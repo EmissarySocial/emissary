@@ -55,12 +55,14 @@ func CrawlContext(factory *service.Factory, args mapof.Any) queue.Result {
 		}
 	}
 
-	// Otherwise, try to crawl the InReplyTo tree
+	// Otherwise, try to crawl the InReplyTo tree.  The signature collapses concurrent
+	// climbs through the same document (the same thread arriving via many followers).
 	if inReplyTo := document.InReplyTo().ID(); inReplyTo != "" {
 
 		factory.Queue().NewTask(
 			"CrawlUpReplyTree",
 			mapof.Any{"hostname": factory.Hostname(), "url": inReplyTo},
+			queue.WithSignature("CrawlUpReplyTree:"+factory.Hostname()+":"+inReplyTo),
 		)
 	}
 

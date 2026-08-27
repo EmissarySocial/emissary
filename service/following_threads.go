@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -64,12 +65,15 @@ func (service *Following) SaveNewsItem(session data.Session, following *model.Fo
 		return derp.Wrap(err, location, "Saving newsItem", newsItem)
 	}
 
-	// Crawl the document's context/reply chain in the background (post-commit)
+	// Crawl the document's context/reply chain in the background (post-commit).  The
+	// signature collapses duplicate crawls of the same document -- the same reply
+	// arriving via many local followers must seed ONE crawl, not one per follower.
 	postcommit.Publish(
 		session,
 		service.queue,
 		"CrawlContext",
 		mapof.Any{"url": document.ID(), "hostname": service.hostname},
+		queue.WithSignature("CrawlContext:"+service.hostname+":"+document.ID()),
 	)
 
 	// Yee. Haw.

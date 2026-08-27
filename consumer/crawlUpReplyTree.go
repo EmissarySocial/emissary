@@ -31,24 +31,43 @@ func CrawlUpReplyTree(factory *service.Factory, args mapof.Any) queue.Result {
 	// If this document is NOT already in the cache, then keep crawling UP the tree
 	if !ascache.FromCache(document) {
 
-		// If the loaded document also has an InReplyTo property then continue crawling UP the tree
-		if inReplyTo := document.InReplyTo().ID(); inReplyTo != "" {
+		// RULE: ...but only up to the depth cap.  A hostile or broken server can serve an
+		// endless chain of fresh "inReplyTo" URLs; past the cap we settle for crawling
+		// down from wherever the climb has reached.
+		if depth := args.GetInt("depth"); depth < maxCrawlDepth {
 
-			// Then queue up another task to crawl higher up the tree
-			factory.Queue().NewTask(
-				"CrawlUpReplyTree",
-				mapof.Any{"hostname": factory.Hostname(), "url": inReplyTo},
-			)
+			// If the loaded document also has an InReplyTo property then continue crawling UP the tree
+			if inReplyTo := document.InReplyTo().ID(); inReplyTo != "" {
 
-			return queue.Success()
+				// Then queue up another task to crawl higher up the tree.  The signature
+				// collapses concurrent climbs through the same document.
+				factory.Queue().NewTask(
+					"CrawlUpReplyTree",
+					mapof.Any{
+						"hostname": factory.Hostname(),
+						"url":      inReplyTo,
+						"depth":    depth + 1,
+					},
+					queue.WithSignature("CrawlUpReplyTree:"+factory.Hostname()+":"+inReplyTo),
+				)
+
+				return queue.Success()
+			}
 		}
 	}
 
-	// Otherwise, we have reached the top of the reply tree,
-	// so try to crawl DOWN through its replies
+	// Otherwise, we have reached the top of the reply tree (or the depth cap), so try to
+	// crawl DOWN through its replies.  "force" exempts this seed from the down-crawl's
+	// already-cached guard: the Load above has just cached this URL, and without the
+	// exemption every crawl would stop dead at its seed.
 	factory.Queue().NewTask(
 		"CrawlDownReplyTree",
-		mapof.Any{"hostname": factory.Hostname(), "url": url},
+		mapof.Any{
+			"hostname": factory.Hostname(),
+			"url":      url,
+			"force":    true,
+		},
+		queue.WithSignature("CrawlDownReplyTree:"+factory.Hostname()+":"+url),
 	)
 
 	// Success!
