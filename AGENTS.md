@@ -1,0 +1,33 @@
+# Emissary — Notes for AI Agents
+
+See [README.md](README.md) for what Emissary is and [build/README.md](build/README.md) for how templates and action pipelines fit together. These are the repo-wide rules that are not visible in the code.
+
+Package-specific notes live in the nearest `AGENTS.md` — currently [service](service/AGENTS.md) and [handler/mastodon](handler/mastodon/AGENTS.md). Put a lesson in the most specific file that covers it; this one is only for rules that span packages.
+
+## Never re-purpose an upgrade slot number
+
+[queries/upgrade.go](queries/upgrade.go) holds an ordered slice of `upgrades.VersionN` functions, and **the slice index is the `databaseVersion` written to each Domain record**. A deployed server that already recorded version N will never re-run slot N, so changing what slot N does silently skips the migration on every existing install while running it on new ones. Only ever append a new slot; to fix a bad migration, add the correction as the next slot.
+
+## Enqueue background work through `postcommit.Publish`, never `queue.Publish`
+
+Inside a transaction, a task published directly to the queue can be consumed before — or instead of — the commit that makes its data visible, so the worker reads a record that does not exist yet. [tools/postcommit](tools/postcommit/postcommit.go) spools tasks onto the transaction's context and publishes them FIFO only after a successful commit; a rollback drops them. Non-transactional callers (GETs, schedulers, startup) fall through to an immediate publish, so `postcommit.Publish` is always the correct call. Pair it with `postcommit.WithTransaction` rather than `server.WithTransaction` wherever a transaction may enqueue anything.
+
+## `Response.SetResponse` is the only writer of Response records
+
+[service/response_.go](service/response_.go) centralizes the create/update/delete decision for likes, dislikes, and other responses, plus the target resolution and counter bookkeeping that go with it. There are two entry paths into it (a remote activity and a self-loopback), but still one writer. Writing a `model.Response` from anywhere else desynchronizes the counters and defeats the unique index that keeps duplicates out.
+
+## Local MongoDB requires `?directConnection=true`
+
+A Go client connecting to a single-node replica set from the host will otherwise try to reach the node by its advertised replica-set name and hang until timeout, with no useful error. Every local connect string — config, tests, `mongosh` one-liners — needs the flag.
+
+## Never run `go mod tidy` while a local `replace` is in `go.mod`
+
+Emissary regularly consumes `benpate/*` and `EmissarySocial/*` libraries from local working copies while a fix waits for a tag. `go mod tidy` rewrites `go.sum` and the require block against those local trees, which produces a `go.mod` that cannot build for anyone else and is easy to commit by accident. If tidy is genuinely needed, drop the replaces first — and never keep its rewrite silently.
+
+## The template funcmap has helpers that emit unescaped HTML
+
+`markdown`, `highlight`, `icon`, and their siblings in [tools/templates/functions.go](tools/templates/functions.go) return `template.HTML`, which tells `html/template` the value is already safe. `markdown` earns that by sanitizing; `highlight` does **not** — it returns its input verbatim. Any new helper with an `HTML`/`CSS`/`HTMLAttr` return type is a trust boundary, so sanitize inside the helper and check every call site before pointing one at federated or user-supplied content.
+
+## Templates are data, not code — a stale copy will not announce itself
+
+Templates in [_embed/templates](_embed/templates/) are embedded at build time, but a server can also load template folders from Git or disk. Those copies are cached, so an edit to a template's actions, states, or roles may need a restart before it takes effect, and a stale external copy silently keeps serving the old pipeline. When a template change appears to do nothing, confirm which copy is actually being served before debugging the Go code.

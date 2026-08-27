@@ -17,6 +17,6 @@
 //
 // Several routes serve one URL as either an HTML page or an ActivityStreams document, chosen by
 // the request's Accept header.  That choice, and the response headers implied by it, belong to
-// tools/negotiate -- so that the HEAD and GET handlers for a resource always describe it the
+// tools/headers -- so that the HEAD and GET handlers for a resource always describe it the
 // same way.
 package handler

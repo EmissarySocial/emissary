@@ -31,23 +31,28 @@ if urlTemplate != "" {
 
 Each camper client can be configured using functional options.  You can apply these options to camper on initialization via functional options, or after the client has been created, using the `.With()` method
 
-### `WithClient(*http.Client)`
-This option allows you to specify a custom HTTP client to use for all camper calls.
-For instance, you may want to use an HTTP client that caches responses from frequently
-visited services.
+### `WithRoundTripper(RoundTripperMiddleware)`
+This option decorates the HTTP transport used for all camper calls.  For instance, you may
+want to wrap the transport so that responses from frequently visited services are cached.
 
 ``` go
-// Create a custom HTTP client
-customClient := &http.NewClient{}
-
-// Apply the custom client to camper upon initialization
-client := camper.New(camper.WithClient(customClient))
+// Apply a custom transport to camper upon initialization
+client := camper.New(camper.WithRoundTripper(myCachingMiddleware))
 
 // Or apply afterwards using `With`
-client.With(camper.NewClient(customClient))
+client.With(camper.WithRoundTripper(myCachingMiddleware))
 
 // continue using the camper service...
 ```
+
+### `WithAllowPrivateIPs(bool)`
+Camper refuses lookups to private and loopback addresses by default, which blocks SSRF
+attempts against internal services.  Set this to TRUE only for local development or
+self-federation, where the target host is genuinely expected to be private.
+
+### `WithRemoteOption(remote.Option)`
+The general-purpose escape hatch: applies any `remote.Option` to every HTTP call camper
+makes.  Both options above are built on top of it.
 
 ## Transaction Types
 
