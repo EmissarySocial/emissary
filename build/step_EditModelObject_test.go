@@ -94,3 +94,59 @@ func TestEditModelObject_Multiselect_SliceOfString(t *testing.T) {
 	require.NoError(t, editForm.SetURLValues(&webhook, values, nil))
 	require.Equal(t, []string{model.WebhookEventUserCreate}, []string(webhook.Events))
 }
+
+// TestEditModelObject_Multiselect_DeltaSlice covers the third and last slice type behind a
+// multiselect: delta.Slice, which backs Stream.Syndication and the "Distribute to Streaming
+// Stations" control in the bandwagon-album template.  delta.Slice was missed when id.Slice
+// was taught to accept the *sliceof.String that multi-value widgets post, so every
+// syndication selection was silently discarded.
+func TestEditModelObject_Multiselect_DeltaSlice(t *testing.T) {
+
+	widget.UseAll()
+
+	element := form.Element{
+		Type: "layout-vertical",
+		Children: []form.Element{
+			{Type: "multiselect", Path: "syndication", Options: map[string]any{"provider": "syndication-targets"}},
+		},
+	}
+
+	editForm := form.New(schema.New(model.StreamSchema()), element)
+
+	{ // Checking two targets adds both to the Stream
+		stream := model.NewStream()
+		values := url.Values{"syndication": []string{"bandwagon", "spotify"}}
+
+		require.NoError(t, editForm.SetURLValues(&stream, values, nil))
+		require.Equal(t, []string{"bandwagon", "spotify"}, stream.Syndication.Values)
+		require.Equal(t, []string{"bandwagon", "spotify"}, stream.Syndication.Added)
+		require.Empty(t, stream.Syndication.Deleted)
+	}
+
+	{ // Un-checking every target clears the Stream, and records the removals
+		stream := model.NewStream()
+		require.NoError(t, editForm.SetURLValues(&stream, url.Values{"syndication": []string{"bandwagon"}}, nil))
+		stream.Syndication.Reset()
+
+		require.NoError(t, editForm.SetURLValues(&stream, url.Values{}, nil))
+		require.Empty(t, stream.Syndication.Values)
+		require.Equal(t, []string{"bandwagon"}, stream.Syndication.Deleted)
+	}
+
+	// RULE: Re-saving a Stream with the SAME targets ticked is not a change.  Stream.publish
+	// broadcasts Syndication.Deleted to every partner, so a phantom diff here would send a
+	// "delete" to services the album is still supposed to be on.
+	{
+		stream := model.NewStream()
+		require.NoError(t, editForm.SetURLValues(&stream, url.Values{"syndication": []string{"bandwagon", "spotify"}}, nil))
+		stream.Syndication.Reset()
+
+		values := url.Values{"syndication": []string{"bandwagon", "spotify"}}
+		require.NoError(t, editForm.SetURLValues(&stream, values, nil))
+
+		require.Equal(t, []string{"bandwagon", "spotify"}, stream.Syndication.Values)
+		require.Empty(t, stream.Syndication.Added)
+		require.Empty(t, stream.Syndication.Deleted)
+		require.False(t, stream.Syndication.IsChanged())
+	}
+}
