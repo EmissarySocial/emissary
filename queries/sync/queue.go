@@ -17,6 +17,12 @@ func Queue(ctx context.Context, database *mongo.Database) error {
 
 	return indexer.Sync(ctx, database.Collection("Queue"), indexer.IndexSet{
 
+		"idx_Queue_TaskName": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "name", Value: 1},
+			},
+		},
+
 		"idx_Queue_NotifiedDate": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "startDate", Value: 1},
