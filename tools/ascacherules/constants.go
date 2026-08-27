@@ -26,4 +26,4 @@ const month = 60 * 60 * 24 * 30
 
 // year represents the number of seconds in 365 days.  No, not exactly a year, but close enough for ascache
 // nolint:unused
-const year = 60 * 60 * 24 * 356
+const year = 60 * 60 * 24 * 365
