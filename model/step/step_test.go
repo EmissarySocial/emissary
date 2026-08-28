@@ -70,6 +70,7 @@ func TestNew_Dispatch(t *testing.T) {
 		{"set-privileges", mapof.Any{}, "set-privileges"},
 		{"set-query-param", mapof.Any{}, "set-query-param"},
 		{"set-response", mapof.Any{}, "set-response"},
+		{"set-sharing", mapof.Any{"role": "viewer", "group": "anonymous"}, "set-sharing"},
 		{"set-simple-sharing", mapof.Any{"role": "editor"}, "set-simple-sharing"},
 		{"set-state", mapof.Any{"state": "published"}, "set-state"},
 		{"set-thumbnail", mapof.Any{}, "set-thumbnail"},

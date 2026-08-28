@@ -1274,6 +1274,31 @@ Creates, updates, or removes the authenticated User's Response — like, dislike
 
 ---
 
+## set-sharing
+
+Forces the Stream's sharing settings for a role to a fixed magic Group on `POST`, replacing whatever was there — no dialog, no user input. Does nothing on `GET`. Requires the `Stream` model.
+
+**Attributes**
+
+| Attribute | Description |
+| --- | --- |
+| role | **Required.** Role granted to the audience, enforced at load time. Must be defined in the Template's `roles` |
+| group | **Required.** Magic Group to share with: `anonymous`, `authenticated`, or `owner`. Enforced at load time |
+
+<br>
+
+**Example**
+
+```hjson
+{
+	do: "set-sharing"
+	role: "viewer"
+	group: "anonymous"
+}
+```
+
+---
+
 ## set-simple-sharing
 
 The plain public/private sharing dialog. Requires the `Stream` model.

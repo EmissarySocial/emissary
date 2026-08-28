@@ -207,6 +207,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "set-response":
 		return NewSetResponse(stepInfo)
 
+	case "set-sharing":
+		return NewSetSharing(stepInfo)
+
 	case "set-simple-sharing":
 		return NewSetSimpleSharing(stepInfo)
 
