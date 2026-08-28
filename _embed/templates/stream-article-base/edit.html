@@ -2,6 +2,7 @@
 
 	{{- $breadcrumbs := .Breadcrumbs -}}
 	<div id="menu-bar" class="margin-bottom">
+		<a href="/admin/navigation" class="text-gray margin-none padding-horizontal-xs">Navigation &rarr;</a>
 		{{- range $index, $stream := $breadcrumbs -}}
 			<a href="/{{$stream.ID}}/edit" class="text-gray margin-none padding-horizontal-xs">{{$stream.Name}} &rarr;</a>
 		{{- end -}}
