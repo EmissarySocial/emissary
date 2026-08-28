@@ -1,0 +1,30 @@
+<div class="page">
+
+	{{- $breadcrumbs := .Breadcrumbs -}}
+	<div id="menu-bar" class="margin-bottom">
+		<a href="/admin/navigation" class="text-gray margin-none padding-horizontal-xs">Navigation &rarr;</a>
+		{{- range $index, $stream := $breadcrumbs -}}
+			<a href="/{{$stream.ID}}/edit" class="text-gray margin-none padding-horizontal-xs">{{$stream.Name}} &rarr;</a>
+		{{- end -}}
+		<a href="/{{.StreamID}}" class="bold margin-none padding-horizontal-xs">{{.Name}}</a>
+	</div>
+
+	<div id="menu-bar">
+		<div class="left">
+			<a href="/{{.StreamID}}/edit" class="bold">Edit Redirect</a>
+		</div>
+
+		<div class="right">
+			<button script="on click send submit to #edit-form" class="button primary" tabIndex="0">Save Changes</button>
+			<a hx-get="/{{.StreamID}}/delete" class="text-red" tabIndex="0">Delete</a>
+		</div>
+
+	</div>
+
+	<div class="margin-top max-width-640">
+		<div class="margin-vertical italics">Redirect pages forward visitors to a new URL when clicked.  Enter the forwarding URL below to configure this redirect.</div>
+
+		{{.View "edit-form"}}
+	</div>
+
+</div>

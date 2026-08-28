@@ -10,6 +10,7 @@
 		type: object
 		properties: {
 			label: {type:"string", format:"text", maxLength:256}
+			icon: {type:"string", format:"token", maxLength:64}
 			summary: {type:"string", format:"html", maxLength:2048}
 			data: {type: "object", properties: {
 				url: {type: "string", format:"url"}
@@ -20,6 +21,10 @@
 		default: {
 			label: Default
 			description: Default state for Redirects
+		}
+		published: {
+			label: Published
+			description: The redirect is published and active
 		}
 	}
 
@@ -37,45 +42,58 @@
 		create: {
 			roles:["author", "editor"]
 			steps:[
+				{do:"set-data", values:{"label": "New Redirect"}}
 				{do:"save"}
-				{do:"forward-to", url:"/{{.StreamID}}"}
+				{do:"forward-to", url:"/{{.StreamID}}/edit"}
 			]
 		}
+
 		view: {
-			roles:["viewer", "author", "editor"]
+			stateRoles: {
+				"published": ["anonymous"]
+			}
+			roles: ["author", "editor"]
 			steps:[
-				{do: "view-html"}
+				{do:"redirect-to", url:"{{.Data `url`}}"}
 			]
 		}
+
 		edit: {
 			roles: ["author", "editor"]
 			steps:[
-				{
-					do: "as-modal"
-					background:"view"
-					steps: [
-						{
-							do: "edit"
-							label: "Edit Redirect"
-							form: {
-								type: "layout-vertical"
-								children: [
-									{type: "text", label: "Label", path: "label"}
-									{type: "textarea", label: "Summary", path: "summary"}
-									{type: "text", label: "URL", path: "data.url"}
-								]
-							}
-						}, 
-						{do: "save", comment: "Updated Redirect"}
-					]
-				}
+				{do:"view-html"}
 			]
+		}
+		edit-form: {
+			roles: ["author", "editor"]
+			steps:[
+					{
+						do:edit
+						form: {
+							type: layout-vertical
+							children: [
+								{type: "text", label: "Label", path: "label", description:"Displays in website navigation"}
+								{type: "select", path:"icon", label:"Icon", options:{provider:"folder-icons"}}
+								{type: "text", label: "URL", path: "data.url", description:"Full URL that visitors will be forwarded to (e.g. https://example.com/page-here)"}
+								{type: "textarea", label: "Summary", path: "summary", options:{rows:4}}
+							]
+						}
+						options:[
+							id:edit-form
+							submit-button:hide
+							cancel-button:hide
+							endpoint:/{{.StreamID}}/edit-form
+						]
+					},
+					{do:"save-and-publish", comment: "Updated Redirect"}
+					{do:"reload-page"}
+				]
 		}
 		delete: {
 			roles: ["author", "editor"]
 			steps: [
-				{do:"delete", title:"Delete this Item?", message:"This will permanently delete this item from your website."}
-				{do:"forward-to", url:"{{.ParentID}}/"}
+				{do:"delete", title:"Delete this Redirect?", message:"This will permanently delete this content item from your website."}
+				{do:"forward-to", url:"/admin/navigation"}
 			]
 		}
 		
@@ -83,7 +101,7 @@
 			roles: ["author", "editor"]
 			steps: [
 				{do:"as-modal", steps: [
-					{do: "set-simple-sharing", role: "viewer", title:"Who Can See This Folder?", message: "Select who can view this folder."}
+					{do:"set-simple-sharing", role: "viewer", title:"Who Can See This Folder?", message: "Select who can view this folder."}
 					{do:"save", message: "Sharing updated by {{.Author}}"}
 				]}
 			]
