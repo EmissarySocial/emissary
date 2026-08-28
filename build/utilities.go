@@ -154,6 +154,7 @@ func WrapForm(endpoint string, content string, encoding string, options ...strin
 
 	// Form Wrapper
 	b.Form("post", "").
+		ID(optionMap.GetString("id")).
 		Attr("hx-post", endpoint).
 		Attr("hx-swap", "none").
 		Attr("hx-push-url", "false").
@@ -170,9 +171,15 @@ func WrapForm(endpoint string, content string, encoding string, options ...strin
 	b.Div().Class("flex-row", "flex-align-center")
 	b.Div().Class("flex-grow")
 	{
-		submitLabel := first.String(optionMap.GetString("submit-label"), "Save Changes")
-		b.Button().Type("submit").ID("inline-save-button").Class("primary").TabIndex("0").Script("install SaveButton").InnerText(submitLabel).Close()
+		// Show the submit button
+		if submitButton := optionMap.GetString("submit-button"); submitButton != "hide" {
+			submitLabel := first.String(optionMap.GetString("submit-label"), "Save Changes")
+			b.Button().Type("submit").ID("inline-save-button").Class("primary").TabIndex("0").Script("install SaveButton").InnerText(submitLabel).Close()
+		} else {
+			b.Button().Type("submit").Class("hide").Close()
+		}
 
+		// Show the cancel button
 		if cancelButton := optionMap.GetString("cancel-button"); cancelButton != "hide" {
 
 			cancelLabel := first.String(optionMap.GetString("cancel-label"), "Cancel")
