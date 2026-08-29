@@ -4,6 +4,7 @@
 	category: Special
 	model: Stream
 	containedBy: ["top", "folder"]
+	extends: ["base-widget-editor"]
 	label: Folder
 	description: Contains other web pages
 	icon: folder
@@ -19,6 +20,17 @@
 				showImages: {type:"string", enum: ["SHOW", "HIDE"], default:"SHOW"}
 			}}
 		}
+	}
+	datasets: {
+		formats: [
+			{value:"TABLE", label:"Table", icon:"list"},
+			{value:"CARDS", label:"Cards", icon:"grid"},
+			{value:"COLUMNS", label:"Columns", icon:"columns"}
+		]
+		showImages: [
+			{label:"Show Thumbnail Images", value:"SHOW"},
+			{label:"Hide Thumbnail Images", value:"HIDE"}
+		]
 	}
 	states: {
 		default: {
@@ -66,6 +78,12 @@
 		}
 		edit: {
 			roles: ["author", "editor"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+		properties: {
+			roles: ["author", "editor"]
 			steps:[
 				{
 					do:"as-modal"
@@ -75,7 +93,7 @@
 							do:"edit"
 							form: {
 								type:"layout-vertical"
-								label:"Edit Folder"
+								label:"Folder Info"
 								children: [
 									{type:"text", label:"Token", path:"token"}
 									{type:"text", label:"Label", path:"label"}
@@ -91,6 +109,28 @@
 				{do:"refresh-page"}
 			]
 		}
+
+		layout: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"as-modal", steps:[
+					{
+						do:"edit"
+						form: {
+							type:"layout-vertical"
+							label: "Folder Layout"
+							children: [
+								{type:"radio-button-group", path:"data.format", options:{provider:"folder.formats"}}
+								{type:"select", path:"data.showImages", label:"Images?", options:{provider:"folder.showImages", show-if:"data.format != TABLE"}}
+							]
+						}
+					}
+				]}
+				{do:"save"}
+				{do:"refresh-page"}
+			]
+		}
+
 		delete: {
 			roles: ["author", "editor"]
 			steps: [
@@ -113,6 +153,7 @@
 				{do:"sort"}
 			]
 		}
+
 		sharing: {
 			roles: ["author", "editor"]
 			steps: [
@@ -122,6 +163,24 @@
 				]}
 			]
 		}
+
+		widgets: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"sort-widgets"}
+				{do:"save", message:"Widgets updated by {{.Author}}"}
+				{do:"view-html", method:"both"}
+			]
+		}
+		
+		widget: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"edit-widget"}
+				{do:"save", comment:"Widget updated by {{.Author}}"}
+			]
+		}
+
 		feed: {
 			roles: ["viewer", "author", "editor"], 
 			steps:[

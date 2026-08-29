@@ -1,0 +1,18 @@
+<table class="table">
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th>Summary</th>
+			<th>Date</th>
+		</tr>
+	</thead>
+	<tbody>
+		{{- range .Children.ByRank.Slice -}}
+			<tr class="h-entry" hx-get="/{{.Token}}" role="link">
+				<td nowrap>{{icon "file"}} <span class="h-name">{{.Label}}</span></td>
+				<td class="h-summary">{{.Summary}}</td>
+				<td class="dt-published" datetime="{{.PublishDate | isoDate}}"></td>
+			</tr>
+		{{- end -}}
+	</tbody>
+</table>

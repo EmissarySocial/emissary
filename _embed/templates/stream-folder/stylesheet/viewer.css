@@ -1,0 +1,53 @@
+.widgets {
+	margin-bottom:24px;
+}
+
+/** MEDIUM Screens (tablet/vertical) ******/
+@media screen and (min-width:768px) {
+
+	.content {
+		display:flex;
+		flex-direction:row;	
+		flex-wrap:nowrap;
+		align-items: stretch;
+		width:100%;
+	}
+
+	.content > .content-main {
+		flex-grow:1;
+	}
+
+	.widgets {
+		padding:0px;
+	}
+
+	.widgets.TOP {
+		margin-bottom:16px;
+	}
+
+	.widgets.LEFT {
+		width:20%;
+		min-width:160px;
+		max-width:320px;
+		padding-right:24px;
+		margin-right:24px;
+		border-right: solid 1px var(--gray20);
+		flex-grow:0;
+		flex-shrink:0;
+	}
+
+	.widgets.RIGHT {
+		width:20%;
+		min-width:160px;
+		max-width:240px;
+		padding-left:24px;
+		margin-left:24px;
+		border-left: solid 1px var(--gray20);
+		flex-grow:0;
+		flex-shrink:0;
+	}
+
+	.widgets.BOTTOM {
+		margin-top:16px;
+	}
+}

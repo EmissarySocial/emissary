@@ -1,0 +1,18 @@
+<div class="cols-5" script="install sortContainer">
+
+	{{- range .Children.ByRank.Slice -}}
+		<article class="h-entry">
+			<a class="block card text-nocolor padding-sm" href="/{{.Token}}" hx-boost="true">
+				{{- if ne .IconURL "" -}}
+					<picture loading="lazy" class="picture aspect-4-3">
+						<source type="image/webp" srcset="/{{.StreamID}}/attachments/{{.IconURL}}.webp?width=400&height=300"/>
+						<img class="u-photo" src="/{{.StreamID}}/attachments/{{.IconURL}}.jpg?width=400&height=300"/>
+					</picture>
+				{{- end -}}
+				<h3 role="link p-name">{{.Label}}</h3>
+				<p class="p-summary">{{.Summary}}</p>
+			</a>
+		</article>
+	{{- end -}}
+
+</div>

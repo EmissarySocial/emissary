@@ -1,99 +1,39 @@
 <div class="page h-item">
 
+	<link rel="stylesheet" href="/.templates/article-base/stylesheet"/>
+
 	<!-- Alternate links for service discovery -->
 	<link rel="alternate" type="application/rss+xml" href="/{{.StreamID}}/rss"/>
 	<link rel="alternate" type="application/atom+xml" href="/{{.StreamID}}/atom"/>
 	<link rel="alternate" type="application/feed+json" href="/{{.StreamID}}/json"/>
-	
+
+	<article class="content margin-bottom">
+		{{- .Widgets "LEFT" -}}
+		<div class="content-main">
+			{{- .Widgets "TOP" -}}
+
+			<!-- Begin Custom Content -->
+			{{- if eq (.Data "format") "CARDS" -}}
+				{{- template "view-cards" . -}}
+
+			{{- else if eq (.Data "format") "COLUMNS" -}}
+				{{- template "view-columns" . -}}
+
+			{{- else -}}
+				{{- template "view-table" . -}}
+			{{- end -}}
+			<!-- End Custom Content -->
+			
+			<div class="e-content layout-{{.Data `width`}}">{{- .ContentHTML -}}</div>
+			{{- .Widgets "BOTTOM" -}}
+		</div>
+		{{- .Widgets "RIGHT" -}}
+	</article>
+
 	{{- if .UserCan "edit" -}}
-		<div id="menu-bar">
-			<div class="left">
-				{{- if .UserCan "add-child" -}}
-					<button hx-get="/{{.StreamID}}/add-child">Add Item</button>
-				{{- end -}}
-
-				<button hx-get="/{{.StreamID}}/edit">Edit Folder</button>
-
-				{{- if .UserCan "sharing" -}}
-					<button hx-get="/{{.StreamID}}/sharing">Sharing</button>
-				{{- end -}}
-			</div>
-
-			<div class="right">
-				{{- if .UserCan "delete" -}}
-					<button hx-get="/{{.StreamID}}/delete" class="text-red">Delete</button>
-				{{- end -}}
-			</div>
+		<div class="pos-absolute-top-right text-sm">
+			<button hx-get="/{{.StreamID}}/edit">Edit &rarr;</button>
 		</div>
-	{{- end -}}
-
-	<h1 class="margin-top-none p-name">{{.Label}}</h1>
-	{{- if ne "" .Summary -}}
-		<div class="margin-bottom b-summary">{{.Summary}}</div>
-	{{- end -}}
-
-	{{- if eq (.Data "format") "CARDS" -}}
-
-		<div class="cols-5" script="install sortContainer">
-
-			{{- range .Children.ByRank.Slice -}}
-				<article class="h-entry">
-					<div class="draggable clickable card padding-sm" hx-get="/{{.Token}}" href="/{{.Token}}">
-						<input type="hidden" name="keys" value="{{.StreamID}}"/>
-						{{- if ne .IconURL "" -}}
-							<picture loading="lazy" class="picture aspect-4-3">
-								<source type="image/webp" srcset="/{{.StreamID}}/attachments/{{.IconURL}}.webp?width=400&height=300"/>
-								<img class="u-photo" src="/{{.StreamID}}/attachments/{{.IconURL}}.jpg?width=400&height=300"/>
-							</picture>
-						{{- end -}}
-						<h3 role="link p-name">{{.Label}}</h3>
-						<p class="p-summary">{{.Summary}}</p>
-					</div>
-				</article>
-			{{- end -}}
-
-		</div>
-
-	{{- else if eq (.Data "format") "COLUMNS" -}}
-
-		<div class="cols-4" script="install sortContainer">
-
-			{{- range .Children.ByRank.Slice -}}
-				<article class="draggable h-entry" hx-get="/{{.Token}}" href="/{{.Token}}">
-					<input type="hidden" name="keys" value="{{.StreamID}}"/>
-					<div class="card" role="link">
-						{{- if ne .IconURL "" -}}
-						<picture loading="lazy" class="picture aspect-4-3">
-							<source type="image/webp" srcset="/{{.StreamID}}/attachments/{{.IconURL}}.webp?width=400&height=300"/>
-							<img class="u-photo" src="/{{.StreamID}}/attachments/{{.IconURL}}.jpg?width=400&height=300"/>
-						</picture>
-						{{- end -}}
-						<div class="text text-lg align-center p-name">{{.Label}}</div>
-					</div>
-				</article>
-			{{- end -}}
-		</div>
-
-	{{- else -}}
-		<table class="table">
-			<thead>
-				<tr>
-					<th>Name</th>
-					<th>Summary</th>
-					<th>Date</th>
-				</tr>
-			</thead>
-			<tbody script="install sortContainer">
-				{{- range .Children.ByRank.Slice -}}
-					<tr class="draggable h-entry" hx-get="/{{.Token}}" href="/{{.Token}}" role="link">
-						<input type="hidden" name="keys" value="{{.StreamID}}"/>
-						<td nowrap>{{icon "file"}} <span class="h-name">{{.Label}}</span></td>
-						<td class="h-summary">{{.Summary}}</td>
-						<td class="dt-published" datetime="{{.PublishDate | isoDate}}"></td>
-					</tr>
-				{{- end -}}
-			</tbody>
-		</table>
 	{{- end -}}
 
 	<div
@@ -103,18 +43,5 @@
 		hx-swap="innerHTML" 
 		hx-push-url="true">
 	</div>
-
-	{{- if .UserCan "sort" -}}
-		<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-
-		<form
-			hx-post="/{{.StreamID}}/sort" 
-			hx-push-url="false" 
-			hx-swap="none"
-			hx-trigger="end from:document"
-			hx-include="[name=keys]">
-		</form>
-
-	{{- end -}}
 
 </div>
