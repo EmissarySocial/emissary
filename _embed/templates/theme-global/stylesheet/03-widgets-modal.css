@@ -21,7 +21,7 @@
 	/* Opacity updated by animations */
 	opacity: 0;
 	transition:opacity;
-	transition-duration:240ms;
+	transition-duration:200ms;
 	transition-timing-function: ease;
 }
 
@@ -37,7 +37,7 @@
 	background-color: var(--black);
 	opacity: 0;
 	transition:opacity, backdrop-filter;
-	transition-duration:240ms;
+	transition-duration:200ms;
 	transition-timing-function: ease;
 }
 
@@ -66,7 +66,7 @@
 	opacity:0;
 	transform:scale(0.8);
 	transition:transform, opacity;
-	transition-duration:240ms;
+	transition-duration:200ms;
 	transition-timing-function: ease
 }
 
@@ -129,7 +129,7 @@
 	opacity:1;
 	transform:scale(1);
 	transition:transform, opacity;
-	transition-duration:240ms;
+	transition-duration:200ms;
 	transition-timing-function: ease
 }
 
@@ -137,7 +137,7 @@
 	backdrop-filter: blur(5px);
 	opacity:0.6;
 	transition:opacity;
-	transition-duration:240ms;
+	transition-duration:200ms;
 	transition-timing-function: ease;
 
 	@media (prefers-color-scheme: dark) {
