@@ -196,11 +196,6 @@ func (w Stream) NavigationID() string {
 	return w._stream.NavigationID
 }
 
-// PageTitle returns the Label for the stream being built
-func (w Stream) PageTitle() string {
-	return w._stream.Label
-}
-
 // StateID returns the current state of the stream being built
 func (w Stream) StateID() string {
 	return w._stream.StateID
@@ -211,9 +206,19 @@ func (w Stream) TemplateID() string {
 	return w._stream.TemplateID
 }
 
+// Action returns the name of the currently executing action
+func (w Stream) Action() string {
+	return w._actionID
+}
+
 // Token returns the unique URL token for the stream being built
 func (w Stream) Token() string {
 	return w._stream.Token
+}
+
+// PageTitle returns the Label for the stream being built
+func (w Stream) PageTitle() string {
+	return w._stream.Label
 }
 
 // Name returns the Name for the stream being built (alias of .Label)
