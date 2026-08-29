@@ -15,15 +15,37 @@
 			description: {type:"string", maxLength:100}
 			themeId: {type:"string", maxLength: 100}
 			registrationId: {type:"string", maxLength: 100}
+			themeData: {type:"object", properties: {
+				"stylesheet": {type:"string", format:"css", maxLength: 1048576}
+			}}
 		}
 	}
 	form: {
-		type: layout-vertical
+		type: layout-tabs
 		children: [
-			{type: "text", label: "Website Name", path: "label", description: "Title of this website and domain."}
-			{type: "upload", label: "Icon", path: "iconUrl", description: "Icon for this website. Must be square. Often cropped to be a circle.", options:{accept:"image/*", delete:"/admin/domain/delete-icon"}, rules:{types:["webp"]}}
-			{type: "upload", label: "Image", path: "imageUrl", description: "Image to display on signin pages and emails. Roughly 16:9 works best.", options:{accept:"image/*", delete:"/admin/domain/delete-image"}, rules:{types:["webp"]}}
-			{type: "textarea", label: "Description", path: "description", options:{rows:5}}
+			{
+				type: layout-vertical
+				label: Description
+				children: [
+					{type: "text", label: "Website Name", path: "label", description: "Title of this website and domain."}
+					{type: "textarea", label: "Description", path: "description", options:{rows:8}}
+				]
+			}
+			{
+				type: layout-vertical
+				label: Images
+				children: [
+					{type: "upload", label: "Icon", path: "iconUrl", description: "Icon for this website. Must be square. Often cropped to be a circle.", options:{accept:"image/*", delete:"/admin/domain/delete-icon"}, rules:{types:["webp"]}}
+					{type: "upload", label: "Image", path: "imageUrl", description: "Image to display on signin pages and emails. Roughly 16:9 works best.", options:{accept:"image/*", delete:"/admin/domain/delete-image"}, rules:{types:["webp"]}}
+				]
+			}
+			{
+				type: layout-vertical
+				label: Stylesheet
+				children: [
+					{type: "textarea", path: "themeData.stylesheet", description: "Custom CSS stylesheet; affects every page on this domain. <a href='https://developer.mozilla.org/en-US/docs/Web/CSS' target='_blank' class='text-gray text-nocolor text-underline'>Learn more about CSS.</a>", options:{rows:12}}
+				]
+			}
 		]
 	}
 	bundles: {
