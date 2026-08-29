@@ -83,6 +83,22 @@ func (step StepEditContent) Post(builder Builder, _ io.Writer) PipelineBehavior 
 
 		rawContent = buffer.String()
 
+		// RULE: POST handlers run inside a MongoDB transaction, and the driver re-runs the
+		// entire callback when a transient error is labeled on it -- a WriteConflict raised by
+		// a second, concurrent write to the same StreamDraft is the common one.  An
+		// http.Request.Body is a one-shot stream, so a retried attempt reads zero bytes and
+		// would silently overwrite the Stream's content with an empty string.  Rewind the body
+		// after each read so that every attempt sees the same payload.  The Form branch below
+		// needs no equivalent because ParseForm caches its result on the Request.
+		builder.request().Body = io.NopCloser(strings.NewReader(rawContent))
+
+		// RULE: EditorJS always posts a JSON document, so an empty body means the body was
+		// consumed or never sent -- never that the author cleared the article.  Reject it
+		// rather than replacing good content with nothing.
+		if rawContent == "" {
+			return Halt().WithError(derp.BadRequest(location, "Empty request body"))
+		}
+
 	// All other types are a Form post
 	default:
 
