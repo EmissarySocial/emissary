@@ -76,5 +76,5 @@ func GetCheckoutResponse(ctx *steranko.Context, factory *service.Factory, sessio
 	}
 
 	// Tell the buyer to check their inbox to claim the purchase.
-	return executeDomainTemplate(ctx, factory, "checkout-claim")
+	return executeDomainTemplate(ctx, factory, session, "checkout-claim")
 }

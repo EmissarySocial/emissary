@@ -53,20 +53,14 @@ func GetOAuthAuthorization(ctx *steranko.Context, factory *service.Factory, sess
 	}
 
 	// Load the OAuth Builder
-	builder, err := build.NewOAuthAuthorization(factory, session, transaction, user)
+	builder, err := build.NewOAuthAuthorization(factory, session, ctx.Request(), ctx.Response(), transaction, user)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Generating Builder")
 	}
 
 	// Render the template
-	template := factory.Domain().Theme().HTMLTemplate
-
-	if err := template.ExecuteTemplate(ctx.Response(), "oauth", builder); err != nil {
-		return derp.Wrap(err, location, "Executing template")
-	}
-
-	return nil
+	return executeThemeTemplate(ctx, factory, "oauth", builder)
 }
 
 // PostOAuthAuthorization accepts the consent form, and issues a code or token per the requested grant type

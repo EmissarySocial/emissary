@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Sign In &middot; {{.DomainName}}</title>
+	<title>Sign In &middot; {{.DomainLabel}}</title>
 	{{- template "includes-head" . -}}
 </head>
 
@@ -11,11 +11,11 @@
 
 		<div class="card" style="width:clamp(540px, 50%, 720px); margin:auto; padding:16px 32px; line-height:150%;">
 			
-			<form hx-post="/signin?next={{.Next}}" hx-trigger="submit" hx-target="#message">
+			<form hx-post="/signin?next={{.QueryParam "next" | urlquery}}" hx-trigger="submit" hx-target="#message">
 
 				<div class="layout-vertical margin-bottom">
 
-					{{- if eq .message "password-reset" -}}
+					{{- if eq (.QueryParam "message") "password-reset" -}}
 						<div class="text-green margin-bottom-lg">{{icon "thumbs-up-fill"}} <b>Your password has been updated.</b> To continue, please sign in with your new password below.</div>
 						<div script="on load focus the #password"></div>
 					{{- else -}}
@@ -28,7 +28,7 @@
 					<div class="layout-elements">
 						<div class="layout-element">
 							<label for="username">Email / Username</label>
-							<input type="text" name="username" id="username" required="true" value="{{.username}}" maxlength="50" autofocus autocomplete="username">
+							<input type="text" name="username" id="username" required="true" value="{{.QueryParam "username"}}" maxlength="50" autofocus autocomplete="username">
 						</div>
 					</div>
 
@@ -52,7 +52,7 @@
 
 					<a href="/signin/reset" class="margin-left nowrap">Forgot Password?</a>
 
-					{{- if .HasRegistrationForm -}}
+					{{- if .DomainHasRegistrationForm -}}
 						<div class="margin-top-xl">
 							<h2>Need an Account?</h2>
 							<a href="/register" class="button">Register Now &rarr;</a>

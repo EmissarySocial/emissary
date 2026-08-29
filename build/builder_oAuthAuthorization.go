@@ -1,6 +1,7 @@
 package build
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -13,34 +14,41 @@ import (
 // OAuthAuthorization is a lightweight builder that
 // displays UI pages for an OAuth Application.
 type OAuthAuthorization struct {
-	_service       *service.OAuthClient
-	_domainService *service.Domain
-	_client        model.OAuthClient
-	_request       model.OAuthAuthorizationRequest
-	_user          *model.User
+	_service *service.OAuthClient
+	_client  model.OAuthClient
+
+	// _transaction is the OAuth request being authorized.  It is NOT the HTTP request,
+	// which the embedded Common already carries as `_request`.
+	_transaction model.OAuthAuthorizationRequest
+	_user        *model.User
+
+	Theme
 }
 
 // NewOAuthAuthorization returns a fully initialized/loaded `OAuthAuthorization` builder
-func NewOAuthAuthorization(factory Factory, session data.Session, request model.OAuthAuthorizationRequest, user *model.User) (OAuthAuthorization, error) {
+func NewOAuthAuthorization(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, transaction model.OAuthAuthorizationRequest, user *model.User) (OAuthAuthorization, error) {
 
 	const location = "build.NewOAuthAuthorization"
 
-	// Create the result object
+	// Create the result object.  Theme is embedded because the consent page is rendered by
+	// a handler rather than by a Template action, and Theme carries the accessors -- and
+	// the "noindex" rule -- that every such page needs.
 	result := OAuthAuthorization{
-		_service:       factory.OAuthClient(),
-		_domainService: factory.Domain(),
-		_client:        model.NewOAuthClient(),
-		_request:       request,
-		_user:          user,
+		_service:     factory.OAuthClient(),
+		_client:      model.NewOAuthClient(),
+		_transaction: transaction,
+		_user:        user,
+
+		Theme: NewTheme(factory, session, request, response),
 	}
 
 	// Try to load the OAuthClient object
-	if err := result._service.LoadOrCreateByClientToken(session, request.ClientID, &result._client); err != nil {
+	if err := result._service.LoadOrCreateByClientToken(session, transaction.ClientID, &result._client); err != nil {
 		return OAuthAuthorization{}, derp.Wrap(err, location, "Loading OAuth Application")
 	}
 
 	// Validate the transaction
-	if err := result._request.Validate(result._client); err != nil {
+	if err := result._transaction.Validate(result._client); err != nil {
 		return OAuthAuthorization{}, derp.Wrap(err, location, "Invalid authorization request")
 	}
 
@@ -50,7 +58,7 @@ func NewOAuthAuthorization(factory Factory, session data.Session, request model.
 
 // Domain returns a summary of the current Domain
 func (builder OAuthAuthorization) Domain() model.DomainSummary {
-	return builder._domainService.Get().Summary()
+	return builder._factory.Domain().Get().Summary()
 }
 
 // User returns a summary of the Authenticated User
@@ -88,39 +96,30 @@ func (builder OAuthAuthorization) Website() string {
 
 // RedirectURI returns the callback URI where the user is sent after authorizing
 func (builder OAuthAuthorization) RedirectURI() string {
-	return builder._request.RedirectURI
+	return builder._transaction.RedirectURI
 }
 
 // ResponseType returns the OAuth response type ("code" or "token") being requested
 func (builder OAuthAuthorization) ResponseType() string {
-	return builder._request.ResponseType
+	return builder._transaction.ResponseType
 }
 
 // Scope returns the raw, space-delimited scope string being requested
 func (builder OAuthAuthorization) Scope() string {
-	return builder._request.Scope
+	return builder._transaction.Scope
 }
 
 // Scopes returns the individual scopes being requested, defaulting to "read"
 func (builder OAuthAuthorization) Scopes() []string {
 
-	if builder._request.Scope == "" {
+	if builder._transaction.Scope == "" {
 		return []string{"read"}
 	}
 
-	return strings.Split(builder._request.Scope, " ")
+	return strings.Split(builder._transaction.Scope, " ")
 }
 
 // State returns the opaque state value that is echoed back to the OAuth client
 func (builder OAuthAuthorization) State() string {
-	return builder._request.State
-}
-
-// IsIndexable returns FALSE because the OAuth consent page is ephemeral and
-// user-specific, so search engines must never index it.
-func (builder OAuthAuthorization) IsIndexable() bool {
-
-	// This builder does not embed Common, so it must satisfy the shared
-	// "includes-head" template's IsIndexable contract on its own.
-	return false
+	return builder._transaction.State
 }

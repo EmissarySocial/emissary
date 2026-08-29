@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>You Have Been Signed Out &middot; {{.DomainName}}</title>
+	<title>You Have Been Signed Out &middot; {{.DomainLabel}}</title>
 	{{- template "includes-head" . -}}
 </head>
 
@@ -14,9 +14,9 @@
 			<div class="margin-vertical-xl">
 				{{- $domainImage := .DomainImage -}}
 				{{- if ne "" $domainImage -}}
-					<img src="{{$domainImage}}" alt="{{.DomainName}}" style="max-height:128px; max-width:60%; margin:0px auto; display:block;">
+					<img src="{{$domainImage}}" alt="{{.DomainLabel}}" style="max-height:128px; max-width:60%; margin:0px auto; display:block;">
 				{{- else -}}
-					<div class="bold text-gray text-lg margin-none">{{.DomainName}}</div>
+					<div class="bold text-gray text-lg margin-none">{{.DomainLabel}}</div>
 				{{- end -}}
 			</div>
 	

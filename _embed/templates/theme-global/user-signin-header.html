@@ -1,10 +1,10 @@
 {{- $domainImage := .DomainImage -}}
 {{- if ne "" $domainImage -}}
 	<div class="margin-vertical-lg" style="margin-bottom:32px; text-align: center;">
-		<img src="{{$domainImage}}" alt="{{.DomainName}}" style="max-height: 128px; max-width:60%; margin:0px auto; display:block;">
+		<img src="{{$domainImage}}" alt="{{.DomainLabel}}" style="max-height: 128px; max-width:60%; margin:0px auto; display:block;">
 	</div>
 	<h2>Sign In</h2>
 {{- else -}}
-	<div class="bold text-gray text-lg margin-vertical-none">{{.DomainName}}</div>
+	<div class="bold text-gray text-lg margin-vertical-none">{{.DomainLabel}}</div>
 	<h1 class="margin-top-none">{{icon "shield-lock"}} Sign In</h1>
 {{- end -}}

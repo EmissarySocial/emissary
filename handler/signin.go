@@ -1,12 +1,12 @@
 package handler
 
 import (
-	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/url"
 	"strings"
 
+	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
@@ -19,25 +19,7 @@ import (
 // GetSignIn generates an echo.HandlerFunc that handles GET /signin requests
 func GetSignIn(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
-	// Get the standard Signin page
-	template := factory.Domain().Theme().HTMLTemplate
-
-	domain := factory.Domain().Get()
-
-	// Get a clean version of the URL query parameters
-	data := cleanQueryParams(ctx.QueryParams())
-	data["DomainName"] = domain.Label
-	data["DomainIcon"] = domain.IconURL()
-	data["DomainImage"] = domain.ImageURL()
-	data["HasRegistrationForm"] = factory.Domain().HasRegistrationForm()
-	data["Next"] = url.QueryEscape(data.GetString("next"))
-
-	// Render the template
-	if err := template.ExecuteTemplate(ctx.Response(), "user-signin", data); err != nil {
-		return derp.Wrap(err, "handler.GetSignIn", "Executing template")
-	}
-
-	return nil
+	return executeDomainTemplate(ctx, factory, session, "user-signin")
 }
 
 // PostSignIn generates an echo.HandlerFunc that handles POST /signin requests
@@ -101,26 +83,7 @@ func calcNextURL(next string) string {
 // The actual sign-out only happens in PostSignOut, so that state never changes on a GET request.
 func GetSignOut(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
-	// Get the standard Signin page
-	template := factory.Domain().Theme().HTMLTemplate
-	domain := factory.Domain().Get()
-
-	// Get a clean version of the URL query parameters
-	data := cleanQueryParams(ctx.QueryParams())
-	data["DomainName"] = domain.Label
-	data["DomainIcon"] = domain.IconURL()
-	data["DomainImage"] = domain.ImageURL()
-	data["HasRegistrationForm"] = factory.Domain().HasRegistrationForm()
-	data["Next"] = url.QueryEscape(data.GetString("next"))
-
-	var buf bytes.Buffer
-
-	// Render the template
-	if err := template.ExecuteTemplate(&buf, "user-signout", data); err != nil {
-		return derp.Wrap(err, "handler.GetSignIn", "Executing template")
-	}
-
-	return ctx.HTML(http.StatusOK, buf.String())
+	return executeDomainTemplate(ctx, factory, session, "user-signout")
 }
 
 // PostSignOut generates an echo.HandlerFunc that handles POST /signout requests
@@ -151,7 +114,7 @@ func PostSignOut(ctx *steranko.Context, factory *service.Factory, session data.S
 
 // GetResetPassword displays the "reset password" form
 func GetResetPassword(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
-	return executeDomainTemplate(ctx, factory, "reset-password")
+	return executeDomainTemplate(ctx, factory, session, "reset-password")
 }
 
 // PostResetPassword processes the "reset password" form.  If the user enters a valid email address,
@@ -184,12 +147,12 @@ func PostResetPassword(ctx *steranko.Context, factory *service.Factory, session 
 		// mild account-enumeration signal accepted in exchange for not stranding locked-out members.
 		if err := userService.SendPasswordResetEmail(session, &user, model.PasswordResetDurationReset); err != nil {
 			derp.Report(derp.Wrap(err, location, "Sending password reset email", user.Username))
-			return executeDomainTemplate(ctx, factory, "reset-error")
+			return executeDomainTemplate(ctx, factory, session, "reset-error")
 		}
 	}
 
 	// Uniform success message for both "email sent" and "user not found".
-	return executeDomainTemplate(ctx, factory, "reset-confirm")
+	return executeDomainTemplate(ctx, factory, session, "reset-confirm")
 }
 
 // GetResetCode displays a form (authenticated by the reset code) for resetting a user's password
@@ -207,51 +170,30 @@ func GetResetCode(ctx *steranko.Context, factory *service.Factory, session data.
 		return derp.Wrap(err, location, "Loading user")
 	}
 
-	// Get the template that will build the HTML response
-	template := factory.Domain().Theme().HTMLTemplate
-	domain := factory.Domain().Get()
-	object := mapof.Any{
-		"domainName": domain.Label,
-		"domainIcon": domain.IconURL(),
-	}
+	// Build the dot for the HTML response
+	builder := build.NewPasswordReset(factory, session, ctx.Request(), ctx.Response(), user)
 
+	// RULE: Each branch returns.  Without that, a User who fails the first test falls through
+	// into the later ones and the handler writes a second complete document into the same
+	// response.
+	//
 	// If the user was not found, then display an error message
 	if user.IsNew() {
-		if err := template.ExecuteTemplate(ctx.Response(), "reset-code-invalid", object); err != nil {
-			return derp.Wrap(err, location, "Executing template")
-		}
+		return executeThemeTemplate(ctx, factory, "reset-code-invalid", builder)
 	}
 
 	// Is the reset code is valid, then display the form to reset the password
 	if resetCode := ctx.QueryParam("code"); user.PasswordReset.IsValid(resetCode) {
-
-		object["userId"] = userID
-		object["username"] = user.Username
-		object["displayName"] = user.DisplayName
-		object["code"] = resetCode
-
-		if err := template.ExecuteTemplate(ctx.Response(), "reset-code", object); err != nil {
-			return derp.Wrap(err, location, "Executing template")
-		}
-
-		return nil
+		return executeThemeTemplate(ctx, factory, "reset-code", builder)
 	}
 
 	// If the reset code is expired, then give an "expired" message
 	if user.PasswordReset.NotActive() {
-		if err := template.ExecuteTemplate(ctx.Response(), "reset-code-inactive", object); err != nil {
-			return derp.Wrap(err, location, "Executing template")
-		}
-
-		return nil
+		return executeThemeTemplate(ctx, factory, "reset-code-inactive", builder)
 	}
 
 	// Fall through means that the reset code is just plain wrong.
-	if err := template.ExecuteTemplate(ctx.Response(), "reset-code-invalid", object); err != nil {
-		return derp.Wrap(err, location, "Executing template")
-	}
-
-	return nil
+	return executeThemeTemplate(ctx, factory, "reset-code-invalid", builder)
 }
 
 // PostResetCode processes the "reset code" form to update the user's password.

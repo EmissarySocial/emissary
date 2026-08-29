@@ -114,26 +114,7 @@ func PostPrivilegeDelete(ctx *steranko.Context, factory *service.Factory, sessio
 
 // GetIdentitySignin displays the Signin page for guest Identities
 func GetIdentitySignin(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
-
-	const location = "handler.GetIdentitySignin"
-
-	// Get the standard Signin page
-	template := factory.Domain().Theme().HTMLTemplate
-
-	domain := factory.Domain().Get()
-
-	// Get a clean version of the URL query parameters
-	data := cleanQueryParams(ctx.QueryParams())
-	data["DomainName"] = domain.Label
-	data["DomainIcon"] = domain.IconURL()
-	data["DomainImage"] = domain.ImageURL()
-
-	// Render the template
-	if err := template.ExecuteTemplate(ctx.Response(), "guest-signin", data); err != nil {
-		return derp.Wrap(err, location, "Executing template")
-	}
-
-	return ctx.JSON(http.StatusOK, "")
+	return executeDomainTemplate(ctx, factory, session, "guest-signin")
 }
 
 // PostIdentitySignin accepts POST from the guest Signin page, and sends

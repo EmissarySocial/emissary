@@ -10,8 +10,9 @@ import (
 
 // TestReportedBug_OAuthAuthorizePageNo500 is the regression test for the reported
 // HTTP 500 on GET /oauth/authorize: the shared includes-head template evaluates
-// .IsIndexable, and OAuthAuthorization (which does not embed Common) had no such
-// method, so html/template failed with "can't evaluate field IsIndexable".
+// .IsIndexable, and OAuthAuthorization had no such method, so html/template failed
+// with "can't evaluate field IsIndexable".  The builder now embeds Theme, which
+// supplies both the method and the FALSE that keeps this page out of the index.
 func TestReportedBug_OAuthAuthorizePageNo500(t *testing.T) {
 
 	// The literal conditional from the theme includes-head.html templates.

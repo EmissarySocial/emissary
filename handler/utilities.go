@@ -3,12 +3,10 @@ package handler
 import (
 	stdhtml "html"
 	"net/http"
-	"net/url"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/hannibal/streams"
-	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/steranko"
 	"github.com/benpate/uri"
 	"github.com/golang-jwt/jwt/v5"
@@ -102,19 +100,6 @@ func isOwner(claims jwt.Claims, err error) bool {
 	}
 
 	return false
-}
-
-// cleanQueryParams returns a "clean" version of a url.Values structure.
-// It truncates all slices into a single string.
-func cleanQueryParams(values url.Values) mapof.Any {
-	result := make(mapof.Any, len(values))
-	for key, value := range values {
-		if len(value) > 0 {
-			result[key] = value[0]
-		}
-	}
-
-	return result
 }
 
 // firstOf is a quickie generic helper that returns the first

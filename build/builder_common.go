@@ -104,7 +104,7 @@ func (w Common) Summary() string {
  * Request Info
  ******************************************/
 
-// Returns the request method
+// Method returns the HTTP method of the current request
 func (w Common) Method() string {
 	return w._request.Method
 }
@@ -208,9 +208,8 @@ func (w Common) DefaultQueryParam(name string, value string) string {
 	return ""
 }
 
-// Returns the designated request parameter.  If there are
-// multiple values for the parameter, then only the first
-// value is returned.
+// QueryParam returns the named query string parameter.  If the parameter has
+// multiple values, then only the first value is returned.
 func (w Common) QueryParam(param string) string {
 	return w._request.URL.Query().Get(param)
 }
@@ -319,16 +318,11 @@ func (w Common) Theme(themeID string) model.Theme {
 
 // ThemeData returns a single custom value from this Domain's theme data.
 // If the token does not exist, it returns an empty string.
-//
-// RULE: Theme values live in `model.Domain.ThemeData` -- the Domain RECORD, not
-// `model.Theme.Data`.  The Theme is a process-wide singleton shared by every Domain on
-// this server, so its static `Data` map is the same for all of them and is never written
-// by the admin form.  Reading it here would return one Domain's value (or, in practice,
-// an empty string) on every other Domain.
-//
-// RULE: Theme values are also kept OUT of `model.Domain.Data`, which holds secrets like
-// the VAPID private key.  ThemeData is rendered into public pages; Data must not be.
 func (w Common) ThemeData(token string) string {
+
+	// RULE: Read the Domain RECORD.  model.Theme.Data is a process-wide singleton shared
+	// by every Domain on this server, and model.Domain.Data holds secrets (the VAPID
+	// private key) that must never reach a page.
 	return w.factory().Domain().Get().ThemeData.GetString(token)
 }
 
@@ -506,7 +500,7 @@ func (w Common) UserName() (string, error) {
 	return user.DisplayName, nil
 }
 
-// UserAvatar returns the avatar image of the user
+// UserImage returns the avatar image of the signed-in User
 func (w Common) UserImage() (string, error) {
 
 	const location = "build.Stream.UserImage"
@@ -664,8 +658,8 @@ func (w Common) NotMe(url string) bool {
 	return !w.IsMe(url)
 }
 
-// IsFollowing returns TRUE if the curren user is following the
-// document at a specific URI (or the actor who created the document)
+// GetFollowingID returns the FollowingID that connects the signed-in User to the
+// document at the provided URL (or to the actor who created it)
 func (w Common) GetFollowingID(url string) string {
 
 	const location = "build.Common.GetFollowingID"

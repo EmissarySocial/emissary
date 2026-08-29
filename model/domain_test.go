@@ -37,6 +37,8 @@ func TestDomainSchema(t *testing.T) {
 		{"data.value", "VALUE", nil},
 		{"data.sso_active", "true", nil},
 		{"data.sso_secret", "123456789-10-11-12", nil},
+		{"themeData.custom", "CUSTOM", nil},
+		{"themeData.stylesheet", "body { color: red; }", nil},
 		{"colorMode", "LIGHT", nil},
 		{"registrationData.custom", "CUSTOM", nil},
 		{"registrationData.value", "VALUE", nil},
@@ -53,6 +55,27 @@ func TestDomainSchema(t *testing.T) {
 	}
 
 	tableTest_Schema(t, &s, &domain, table)
+}
+
+// TestDomainSchema_ThemeDataIsSeparateFromData pins the separation between a Domain's two
+// custom-value maps.  `themeData` holds the Theme's public values and is rendered into
+// pages; `data` holds operational secrets (the VAPID private key, SSO secrets) and is not.
+// Writing a theme value into `data` would stage those secrets for publication.
+func TestDomainSchema_ThemeDataIsSeparateFromData(t *testing.T) {
+
+	domain := NewDomain()
+	domain.Data["vapidPrivateKey"] = "SECRET"
+
+	s := schema.New(DomainSchema())
+
+	require.Nil(t, s.Set(&domain, "themeData.stylesheet", "body { color: red; }"))
+
+	// The theme value lands in themeData...
+	require.Equal(t, "body { color: red; }", domain.ThemeData.GetString("stylesheet"))
+
+	// ...and data is left holding only its own secret.
+	require.Equal(t, "SECRET", domain.Data["vapidPrivateKey"])
+	require.Empty(t, domain.Data["stylesheet"])
 }
 
 // TestDomainURLs_RequireHostname pins the reason a Domain must carry its own hostname: Host()
