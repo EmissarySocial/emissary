@@ -2,7 +2,6 @@
 
 <div class="page">
 
-	<script src="/.themes/global/resources/sortable-1.15.7/Sortable.min.js"></script>
 
 	{{template "menubar" .}}
 
@@ -70,14 +69,38 @@
 	{{- end -}}
 
 	<script>
-		var sortables = document.querySelectorAll(".sortable");
-		for (var node of sortables) {
-			new Sortable(node, {
-				animation: 150,
-				ghostClass: 'draggable-whisper'
-			});
+		// RULE: init must survive an htmx swap.  htmx re-inserts swapped <script src> tags
+		// ASYNCHRONOUSLY, so Sortable is still undefined when an inline script runs and the list
+		// silently stops being draggable.  Init therefore runs both immediately (full page load,
+		// where the parser has already run the library) and from the script tag's onload (the
+		// swap case); the per-node guard makes whichever loses a no-op.  The name is specific to
+		// this page because newsfeed-menu.html has its own emissaryInitSortables() over the same
+		// ".sortable" selector, with different options.
+		function emissaryInitNavigationSortables() {
+
+			if (!window.Sortable) {
+				return;
+			}
+
+			var sortables = document.querySelectorAll(".sortable");
+
+			for (var node of sortables) {
+
+				if (node._emissarySortable) {
+					continue;
+				}
+
+				node._emissarySortable = new Sortable(node, {
+					animation: 150,
+					ghostClass: 'draggable-whisper'
+				});
+			}
 		}
 	</script>
+	<script
+		src="/.themes/global/resources/sortable-1.15.7/Sortable.min.js"
+		onload="emissaryInitNavigationSortables()"></script>
+	<script>emissaryInitNavigationSortables();</script>
 
 	<style>
 		.draggable {
