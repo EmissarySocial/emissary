@@ -29,6 +29,7 @@
 			data: {type:"object", properties: {
 				tags: {type:"string", maxLength:2048}
 				width: {type:"string", enum:["LARGE", "MEDIUM", "SMALL"], required:true}
+				stylesheet: {type:"string", format:"css", maxLength:1048576}
 			}}
 		}
 	}
@@ -103,11 +104,22 @@
 			]
 		}
 
-		editor:{
+		editor: {
 			roles: ["author", "editor"]
 			steps: [
 				{do:"with-draft", steps: [
 					{do:"edit-content", file:"edit", format:"EDITORJS", max-length:1024}
+				]}
+			]
+		}
+
+		style: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"with-draft", steps: [
+					{do:"view-html"}
+					{do:"set-data", from-form:"data.stylesheet"}
+					{do:"save"}
 				]}
 			]
 		}

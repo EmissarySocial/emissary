@@ -1,0 +1,12 @@
+<div class="page flex-column">
+
+	{{- template "edit-menubar" . -}}
+
+	<form id="saveForm" hx-post="/{{.StreamID}}/style" hx-swap="none" hx-push-url="false" class="flex-column flex-grow">
+		<textarea id="stylesheet" name="data.stylesheet" class="width-100% flex-grow" script="install showLimit onblur save()" aria-labelledby="stylesheetLabel">{{.Data "stylesheet"}}</textarea>
+		<div id="stylesheetLabel" class="text-sm text-gray">Custom CSS stylesheet applies ONLY to this article. 
+			<a href="https://developer.mozilla.org/en-US/docs/Web/CSS" target="_blank" class="text-nocolor text-underline">Learn more about CSS.</a>
+		</div>
+	</form>
+	
+</div>

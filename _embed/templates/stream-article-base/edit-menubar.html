@@ -1,0 +1,184 @@
+{{- $breadcrumbs := .Breadcrumbs -}}
+{{- $selected := .Action -}}
+
+<script type="text/hyperscript">
+
+	init 
+		set $isSaving to false
+		set $isPromoting to false
+		set $saveFailed to false
+		set $promoteFailed to false
+	end
+
+	def saveAndPromote()
+		save()
+		promote()
+		view()
+	end
+
+	def saveAndView()
+		save()
+		view()		
+	end
+
+	def save()
+
+		-- RULE: another save is already running.  Wait for it, then report ITS outcome as our
+		-- own -- a caller that only waited must not tell saveAndPromote() the content is safe
+		-- when the save it waited on failed.
+		if $isSaving
+			repeat while $isSaving
+				wait 50ms
+			end
+			if $saveFailed
+				throw "Failed to save content"
+			end
+			exit
+		end
+
+		if #saveForm is null
+			exit
+		end
+
+		set $isSaving to true
+		set $saveFailed to false
+		clearError()
+
+		beforeSave()
+
+		send submit to #saveForm
+		wait for htmx:afterRequest or 35s from #saveForm
+		
+		if the result.detail.successful is not true
+			throw "Failed to save content"
+		end
+
+		set $isSaving to false
+
+	catch error
+		-- RULE: record the failure BEFORE releasing the lock, so a waiter woken by the release
+		-- always reads the outcome of the save it was waiting for.
+		set $saveFailed to true
+		set $isSaving to false
+		showError("Could not save your changes.")
+		throw error
+	end
+
+	def promote()
+
+		-- RULE: another promote is already running.  Wait for it, then report ITS outcome as our
+		-- own -- a caller that only waited must not run view() and navigate away from an article
+		-- whose promote failed.
+		if $isPromoting
+			repeat while $isPromoting
+				wait 50ms
+			end
+			if $promoteFailed
+				throw "Failed to promote content"
+			end
+			exit
+		end
+
+		set $isPromoting to true
+		set $promoteFailed to false
+
+		-- RULE: no status check here.  Hyperscript's "fetch" throws on 4xx/5xx by itself, and it
+		-- leaves "result" holding the response body rather than an htmx event -- so a
+		-- detail.successful test finds nothing and rejects every successful promote.  The
+		-- form-based save() needs its explicit check precisely because htmx, unlike fetch,
+		-- resolves its event on any status.
+		fetch /{{.StreamID}}/promote-draft with {
+			method:"POST",
+			timeout: 30000,
+		}
+
+		set $isPromoting to false
+
+	catch error
+		-- RULE: record the failure BEFORE releasing the lock, so a waiter woken by the release
+		-- always reads the outcome of the promote it was waiting for.
+		set $promoteFailed to true
+		set $isPromoting to false
+		showError("Could not publish this article.")
+		throw error
+	end
+
+	def view()
+		set window.location to "/{{.Token}}"
+	end
+
+	def beforeSave()
+		return true
+	end
+
+	-- RULE: report failures in the chrome, not only the console.  A save that fails silently
+	-- leaves the author typing into an editor that stopped persisting, and the only other
+	-- signal is a hyperscript stack trace nobody is watching.  #htmx-response-message is the
+	-- same element the server retargets its own inline errors into, so placement and styling
+	-- already match.  innerText, not innerHTML: this element also receives server-rendered
+	-- markup, and nothing here should add a second way for text to become HTML.
+	def showError(message)
+		if #htmx-response-message is null
+			exit
+		end
+		add .text-red to #htmx-response-message
+		set #htmx-response-message's innerText to message
+	end
+
+	def clearError()
+		if #htmx-response-message is null
+			exit
+		end
+		remove .text-red from #htmx-response-message
+		set #htmx-response-message's innerText to ""
+	end
+
+</script>
+
+<div id="menu-bar" class="margin-bottom">
+	<a href="/admin/navigation" class="turboclick text-gray margin-none padding-horizontal-xs">Navigation &rarr;</a>
+	{{- range $index, $stream := $breadcrumbs -}}
+		<a href="/{{$stream.ID}}/edit" class="turboclick text-gray margin-none padding-horizontal-xs">{{$stream.Name}} &rarr;</a>
+	{{- end -}}
+	<button hx-on:click="saveAndView()" class="turboclick bold margin-none padding-horizontal-xs">{{.Name}}</button>
+</div>
+
+<div id="menu-bar">
+	<div class="left">
+
+		{{- if .UserCan "edit" -}}
+			<a href="/{{.StreamID}}/edit" class="turboclick {{- if eq $selected `edit` }} bold{{- end -}}">Content</a>
+		{{- end -}}
+
+		{{- if .UserCan "style" -}}
+			<a href="/{{.StreamID}}/style" class="turboclick {{- if eq $selected `style` }} bold{{- end -}}">Styles</a>
+		{{- end -}}
+
+		{{- if .UserCan "widgets" -}}
+			<a href="/{{.StreamID}}/widgets" class="turboclick {{- if eq $selected `widgets` }} bold{{- end -}}">Widgets</a>
+		{{- end -}}
+
+		{{- if .UserCan "children" -}}
+			<a href="/{{.StreamID}}/children" class="turboclick {{- if eq $selected `children` }} bold{{- end -}}">Children</a>
+		{{- end -}}
+
+		{{- if .UserCan "properties" -}}
+			<a hx-get="/{{.StreamID}}/properties" class="turboclick {{- if eq $selected `properties` }} bold{{- end -}}">Info</a>
+		{{- end -}}
+
+		{{- if .UserCan "sharing" -}}
+			<a hx-get="/{{.StreamID}}/sharing" class="turboclick {{- if eq $selected `sharing` }} bold{{- end -}}">Sharing</a>
+		{{- end -}}
+	</div>
+
+	<div class="right">
+		<span id="htmx-response-message" class="margin-right-sm"></span>
+		<button hx-on:click="saveAndPromote()" class="turboclick button primary">Promote</button>
+		<button hx-get="/{{.StreamID}}/discard-draft" class="turboclick">Discard Draft</button>
+
+		{{- if .UserCan "delete" -}}
+			<a hx-get="/{{.StreamID}}/delete" class="turboclick text-red">Delete</a>
+		{{- end -}}
+	</div>
+
+</div>

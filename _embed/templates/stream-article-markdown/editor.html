@@ -1,14 +1,6 @@
 <!-- // TODO: Inline these scripts into the template. -->
 <!-- Uses https://github.com/Ionaru/easy-markdown-editor -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
-<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
-
-<article>
-	<form id="markdownForm" hx-post="/{{.StreamID}}/editor" hx-trigger="save" hx-swap="none" hx-push-url="false">
-		<textarea id="markdownContent" name="content">{{.ContentRaw}}</textarea>
-	</form>
-</article>
-
 <style>
 	.EasyMDEContainer {
 
@@ -37,32 +29,56 @@
 	}
 </style>
 
+<article>
+	<textarea id="markdownContent">{{.ContentRaw}}</textarea>
+</article>
 
 <script type="text/javascript">
-console.log("Initializing EasyMDE Editor");
-	var easyMDE = new EasyMDE({
-		toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "guide"],
-		element:document.getElementById('markdownContent'),
-		uploadImage:true,
-		imageUploadEndpoint:"/{{.StreamID}}/upload-image",
-		imagePathAbsolute:true,
-	});
 
-	easyMDE.codemirror.on("blur", function() {
-		saveDraft(false);
-	});
+	// RULE: init must survive an htmx swap.  When you navigate here from another page this
+	// fragment is swapped into <main>, and htmx loads external scripts ASYNCHRONOUSLY -- so
+	// EasyMDE is still undefined when an inline script runs, and the editor dies with
+	// "Can't find variable: EasyMDE".  Init therefore runs three ways: immediately (full page
+	// load, where the parser has already run the library), from the script tag's onload (the
+	// swap case), and never twice, because EasyMDE replaces the textarea with a CodeMirror and
+	// a second pass would stack a second editor on top.
+	function emissaryInitMarkdownEditor() {
+
+		if (!window.EasyMDE) {
+			return;
+		}
+
+		var element = document.getElementById("markdownContent");
+
+		if ((element === null) || element.emissaryEasyMDE) {
+			return;
+		}
+
+		element.emissaryEasyMDE = true;
+
+		// RULE: easyMDE must be global -- beforeSave() in the hyperscript block below reads it
+		// to copy the editor's value into the shared #saveFormContent field.
+		window.easyMDE = new EasyMDE({
+			toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "guide"],
+			element: element,
+			uploadImage: true,
+			imageUploadEndpoint: "/{{.StreamID}}/upload-image",
+			imagePathAbsolute: true,
+		});
+
+		window.easyMDE.codemirror.on("blur", function() {
+			save();
+		});
+	}
 </script>
+<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js" onload="emissaryInitMarkdownEditor()"></script>
+<script type="text/javascript">emissaryInitMarkdownEditor();</script>
 
 <script type="text/hyperscript">
 
-	def saveDraft(promote)
-		set #markdownContent.value to easyMDE.value()
-		send save to #markdownForm
-		wait for htmx:afterOnLoad from #markdownForm
-		if promote then
-			fetch /{{.StreamID}}/promote-draft with method:"POST"
-			set window.location to "/{{.StreamID}}"
-		end
+	def beforeSave()
+		set #saveFormContent.value to easyMDE.value()
 	end
+
 </script>
 

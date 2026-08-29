@@ -1,22 +1,16 @@
-<article>
-	<form id="codeForm" hx-post="/{{.StreamID}}/editor" hx-trigger="save" hx-swap="none">
-		<textarea id="markdownContent" name="content" class="width-100%" style="height:600px;">{{.ContentRaw}}</textarea>
-	</form>
+<article class="flex-grow flex-column">
+	<textarea id="htmlContent" class="flex-grow width-100%" style="min-height:600px" aria-labelledby="htmlContentLabel">{{.ContentRaw}}</textarea>
+	<div id="htmlContentLabel" class="text-gray text-sm padding-vertical-xs">This HTML content will be displayed directly on your web page.</div>
 </article>
 
 <script type="text/hyperscript">
 
-	def saveDraft(promote)
-		send save to #codeForm
-		wait for htmx:afterOnLoad from #codeForm
-		if promote then
-			fetch /{{.StreamID}}/promote-draft with method:"POST"
-			set window.location to "/{{.StreamID}}"
-		end
+	def beforeSave()
+		set #saveFormContent.value to #htmlContent.value
 	end
 
-	on blur from #codeForm
-		saveDraft(false)
+	on blur from #htmlContent
+		save()
 	end
+
 </script>
-

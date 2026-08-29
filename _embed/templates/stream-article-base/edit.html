@@ -1,49 +1,11 @@
-<div class="page">
+<div class="page flex-column">
 
-	{{- $breadcrumbs := .Breadcrumbs -}}
-	<div id="menu-bar" class="margin-bottom">
-		<a href="/admin/navigation" class="text-gray margin-none padding-horizontal-xs">Navigation &rarr;</a>
-		{{- range $index, $stream := $breadcrumbs -}}
-			<a href="/{{$stream.ID}}/edit" class="text-gray margin-none padding-horizontal-xs">{{$stream.Name}} &rarr;</a>
-		{{- end -}}
-		<a href="/{{.StreamID}}" class="bold margin-none padding-horizontal-xs">{{.Name}}</a>
-	</div>
-
-	<div id="menu-bar">
-		<div class="left">
-
-			{{- if .UserCan "edit" -}}
-				<a href="/{{.StreamID}}/edit" class="bold">Edit</a>
-			{{- end -}}
-
-			{{- if .UserCan "widgets" -}}
-				<a href="/{{.StreamID}}/widgets">Widgets</a>
-			{{- end -}}
-
-			{{- if .UserCan "children" -}}
-				<a href="/{{.StreamID}}/children">Children</a>
-			{{- end -}}
-
-			{{- if .UserCan "properties" -}}
-				<a hx-get="/{{.StreamID}}/properties">Info</a>
-			{{- end -}}
-
-			{{- if .UserCan "sharing" -}}
-				<a hx-get="/{{.StreamID}}/sharing">Sharing</a>
-			{{- end -}}
-		</div>
-
-		<div class="right">
-			<button script="on click saveDraft(true)" class="button primary">Promote</button>
-			<button hx-get="/{{.StreamID}}/discard-draft">Discard Draft</button>
-
-			{{- if .UserCan "delete" -}}
-				<a hx-get="/{{.StreamID}}/delete" class="text-red">Delete</a>
-			{{- end -}}
-		</div>
-
-	</div>
+	{{- template "edit-menubar" . -}}
 
 	{{template "editor" . }}
 	
 </div>
+
+<form id="saveForm" hx-post="/{{.StreamID}}/editor" hx-swap="none" hx-push-url="false" hx-request='{"timeout":30000}'>
+	<input id="saveFormContent" type="hidden" name="content" value="{{.ContentRaw}}">
+</form>

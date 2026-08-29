@@ -2,6 +2,12 @@
 
 	<link rel="stylesheet" href="/.templates/article-base/stylesheet"/>
 
+	<!-- Custom stylesheet (if defined) -->
+	{{- $stylesheet := .Data "stylesheet" | string -}}
+	{{- if ne "" $stylesheet -}}
+		<style>{{ $stylesheet | css }}</style>
+	{{- end -}}
+
 	<article class="content margin-bottom">
 		{{- .Widgets "LEFT" -}}
 		<div class="content-main">

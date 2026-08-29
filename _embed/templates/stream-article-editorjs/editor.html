@@ -39,100 +39,169 @@
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/code@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/quote@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@editorjs/table@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/editorjs-color-picker@latest/dist/index.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/editorjs-color-picker@latest/dist/index.umd.js" onload="emissaryInitEditorJS()"></script>
 <script>
-	const { ColorPicker } = window;
-	var editor = new EditorJS({
-		holder: "content-editor",
-		data: JSON.parse(document.getElementById("content-editor").getAttribute("data-content")),
-		tools: {
-			paragraph: {
-				class: Paragraph,
-				inlineToolbar: true,
-			},
-			header: {
-				class: Header,
-				inlineToolbar: ['link'],
-				config: {
-					placeholder: 'Header',
-					levels: [1, 2, 3],
-					defaultLevel: 2,
-				},
-			},
-			linkTool: {
-				class: LinkTool,
-				config: {
-				// endpoint: 'http://localhost:8008/fetchUrl', // Your backend endpoint for url data fetching,
-				}
-			},
-			image: {
-				class: ImageTool,
-				config: {
-					endpoints: {
-						byFile: '/{{.StreamID}}/upload-image', // Your backend file uploader endpoint
-						byUrl: '/{{.StreamID}}/upload-image', // Your endpoint that provides uploading by Url
-					}
-				}
-			},
-			embed: {
-				class: Embed,
-				config: {
-				}
-			},
-			attaches: {
-				class: AttachesTool,
-				config: {
-					endpoint: 'http://localhost:8008/uploadFile'
-				}
-			},
-			/* REMOVED FOR NOW
-			table: {
-				class: Table,
-				inlineToolbar: true,
-				config: {
-					rows: 2,
-					cols: 3,
-				},
-			},
-			*/
-			list: {
-				class: EditorjsList,
-				inlineToolbar: true,
-				config: {
-					defaultStyle: 'unordered',
-				},
-			},
-			quote: {
-				class: Quote,
-				inlineToolbar: true,
-			},
-			code: {
-				class: CodeTool,
-			},
-			ColorPicker: {
-      			class: ColorPicker.default,
-    		}
-		},
-	})
 
-	async function saveDraft(promote) {
-		// Get the content from the editor
-		content = await editor.save()
+	// RULE: init must survive an htmx swap.  When you navigate here from another page this
+	// fragment is swapped into <main>, and htmx loads external scripts ASYNCHRONOUSLY -- so
+	// EditorJS and its tools are still undefined when an inline script runs, and the editor
+	// dies with "Can't find variable: EditorJS".  Init therefore runs three ways: immediately
+	// (full page load, where the parser has already run the libraries), from the onload of the
+	// LAST tool script (htmx sets async=false, so the tools execute in insertion order and that
+	// load event is the point where every one of them is defined), and never twice, because
+	// EditorJS renders into #content-editor and a second pass would stack a second editor in it.
+	function emissaryInitEditorJS() {
 
-		// POST the content to the server
-		await fetch("/{{.StreamID}}/editor", {
-			method: "POST",
-			body: JSON.stringify(content),
-		})
-
-		// Maybe Promote the draft
-		if (promote) {
-			await fetch("/{{.StreamID}}/promote-draft", {
-				method: "POST"
-			})
+		if (!window.EditorJS) {
+			return;
 		}
 
-		// Redirect to the top of the page.
-		window.location = "/{{.StreamID}}"
+		const element = document.getElementById("content-editor")
+
+		if ((element === null) || element.emissaryEditorJS) {
+			return;
+		}
+
+		element.emissaryEditorJS = true
+
+		// Parse content from the server
+		const rawContent = element.dataset?.content
+		var content = {blocks:[]}
+
+		try {
+			content = rawContent ? JSON.parse(rawContent) : {blocks:[]}
+		} catch (e) {
+			console.error("Failed to parse content:", e, rawContent)
+		}
+
+		const { ColorPicker } = window;
+
+		// RULE: editor must be global -- save() in the hyperscript block below calls
+		// editor.save() to collect the content it POSTs.
+		window.editor = new EditorJS({
+			holder: "content-editor",
+			data: content,
+			tools: {
+				paragraph: {
+					class: Paragraph,
+					inlineToolbar: true,
+				},
+				header: {
+					class: Header,
+					inlineToolbar: ['link'],
+					config: {
+						placeholder: 'Header',
+						levels: [1, 2, 3],
+						defaultLevel: 2,
+					},
+				},
+				linkTool: {
+					class: LinkTool,
+					config: {
+					// endpoint: 'http://localhost:8008/fetchUrl', // Your backend endpoint for url data fetching,
+					}
+				},
+				image: {
+					class: ImageTool,
+					config: {
+						endpoints: {
+							byFile: '/{{.StreamID}}/upload-image', // Your backend file uploader endpoint
+							byUrl: '/{{.StreamID}}/upload-image', // Your endpoint that provides uploading by Url
+						}
+					}
+				},
+				embed: {
+					class: Embed,
+					config: {
+					}
+				},
+				attaches: {
+					class: AttachesTool,
+					config: {
+						endpoint: 'http://localhost:8008/uploadFile'
+					}
+				},
+				/* REMOVED FOR NOW
+				table: {
+					class: Table,
+					inlineToolbar: true,
+					config: {
+						rows: 2,
+						cols: 3,
+					},
+				},
+				*/
+				list: {
+					class: EditorjsList,
+					inlineToolbar: true,
+					config: {
+						defaultStyle: 'unordered',
+					},
+				},
+				quote: {
+					class: Quote,
+					inlineToolbar: true,
+				},
+				code: {
+					class: CodeTool,
+				},
+				ColorPicker: {
+	      			class: ColorPicker.default,
+	    		}
+			},
+		})
 	}
+</script>
+<script>emissaryInitEditorJS();</script>
+
+<script type="text/hyperscript">
+
+	on focusout from #content-editor
+		save()
+	end
+
+	def save()
+
+		-- RULE: another save is already running.  Wait for it, then report ITS outcome as our
+		-- own -- a caller that only waited must not tell saveAndPromote() the content is safe
+		-- when the save it waited on failed.
+		if $isSaving
+			repeat while $isSaving
+				wait 50ms
+			end
+			if $saveFailed
+				throw "Failed to save content"
+			end
+			exit
+		end
+
+		set $isSaving to true
+		set $saveFailed to false
+		clearError()
+
+		set content to editor.save()
+		set contentJSON to JSON.stringify(content)
+
+		-- RULE: no status check here.  Hyperscript's "fetch" throws on 4xx/5xx by itself, and
+		-- it leaves "result" holding the response body rather than an htmx event -- so a
+		-- detail.successful test would find nothing and reject every successful save.  The
+		-- form-based save() in edit-menubar.html needs its explicit check precisely because
+		-- htmx, unlike fetch, resolves its event on any status.
+		fetch /{{.StreamID}}/editor with {
+			method: "POST",
+			body: contentJSON,
+			timeout: 30000,
+		}
+
+		set $isSaving to false
+
+	catch error
+		-- RULE: record the failure BEFORE releasing the lock, so a waiter woken by the release
+		-- always reads the outcome of the save it was waiting for.
+		set $saveFailed to true
+		set $isSaving to false
+		showError("Could not save your changes.")
+		throw error
+	end
+
 </script>
