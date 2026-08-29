@@ -1,6 +1,5 @@
-<!-- // TODO: Inline these scripts into the template. -->
-<!-- Uses https://github.com/Ionaru/easy-markdown-editor -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+<!-- Uses https://github.com/Ionaru/easy-markdown-editor, vendored in theme-global/resources -->
+<link rel="stylesheet" href="/.themes/global/resources/easymde-2.21.0/easymde.min.css">
 <style>
 	.EasyMDEContainer {
 
@@ -59,7 +58,39 @@
 		// RULE: easyMDE must be global -- beforeSave() in the hyperscript block below reads it
 		// to copy the editor's value into the shared #saveFormContent field.
 		window.easyMDE = new EasyMDE({
-			toolbar: ["bold", "italic", "heading", "|", "quote", "unordered-list", "ordered-list", "|", "link", "image", "|", "guide"],
+
+			// RULE: the toolbar is spelled out button-by-button so that each one can name a
+			// Bootstrap Icons class.  EasyMDE's built-in buttons hardcode FontAwesome names, and
+			// with no FontAwesome on the page they render as blank squares -- so the library
+			// injects a <link> to maxcdn.bootstrapcdn.com the moment it starts.  Bootstrap Icons
+			// is already loaded by includes-head, which makes that download pure waste.  Note the
+			// "iconClassMap" option cannot do this: EasyMDE merges it into its options and then
+			// never reads it back for built-in buttons.
+			toolbar: [
+				{name: "bold",           action: EasyMDE.toggleBold,           className: "bi bi-type-bold",     title: "Bold"},
+				{name: "italic",         action: EasyMDE.toggleItalic,         className: "bi bi-type-italic",   title: "Italic"},
+				{name: "heading",        action: EasyMDE.toggleHeadingSmaller, className: "bi bi-type-h1",       title: "Heading"},
+				"|",
+				{name: "quote",          action: EasyMDE.toggleBlockquote,     className: "bi bi-quote",         title: "Quote"},
+				{name: "unordered-list", action: EasyMDE.toggleUnorderedList,  className: "bi bi-list-ul",       title: "Bulleted List"},
+				{name: "ordered-list",   action: EasyMDE.toggleOrderedList,    className: "bi bi-list-ol",       title: "Numbered List"},
+				"|",
+				{name: "link",           action: EasyMDE.drawLink,             className: "bi bi-link-45deg",    title: "Link"},
+				{name: "image",          action: EasyMDE.drawImage,            className: "bi bi-image",         title: "Image"},
+				"|",
+				{name: "guide", action: "https://www.markdownguide.org/basic-syntax/", className: "bi bi-question-circle", title: "Markdown Guide", noDisable: true},
+			],
+
+			// RULE: belt and braces on the icons above -- this is the switch that actually
+			// suppresses the FontAwesome download, and it must stay false even if the toolbar
+			// changes.
+			autoDownloadFontAwesome: false,
+
+			// RULE: EasyMDE's own spell-checker XHRs a ~500KB en_US dictionary from a CDN on
+			// every load, and only knows English.  Turning it off falls back to the browser's
+			// native spellcheck, which needs no download and follows the reader's own language.
+			spellChecker: false,
+
 			element: element,
 			uploadImage: true,
 			imageUploadEndpoint: "/{{.StreamID}}/upload-image",
@@ -71,7 +102,7 @@
 		});
 	}
 </script>
-<script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js" onload="emissaryInitMarkdownEditor()"></script>
+<script src="/.themes/global/resources/easymde-2.21.0/easymde.min.js" onload="emissaryInitMarkdownEditor()"></script>
 <script type="text/javascript">emissaryInitMarkdownEditor();</script>
 
 <script type="text/hyperscript">
