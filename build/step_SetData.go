@@ -25,7 +25,7 @@ func (step StepSetData) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 	const location = "build.StepSetData.Get"
 
 	if err := step.setURLPaths(builder); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepSetData.Get", "Setting data from URL"))
+		return Halt().WithError(derp.Wrap(err, location, "Setting data from URL"))
 	}
 
 	object := builder.object()
@@ -59,7 +59,7 @@ func (step StepSetData) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	const location = "build.StepSetData.Post"
 
 	if err := step.setURLPaths(builder); err != nil {
-		return Halt().WithError(derp.Wrap(err, "build.StepSetData.Get", "Setting data from URL"))
+		return Halt().WithError(derp.Wrap(err, location, "Setting data from URL"))
 	}
 
 	object := builder.object()
