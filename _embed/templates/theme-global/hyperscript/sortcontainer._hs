@@ -1,9 +1,22 @@
 behavior sortContainer
 
-	on load 
-		wait 0.5s
-		if Sortable is not null then 
-			make a Sortable from me, {animation:150, whisperClass:'draggable-whisper'}
+	-- RULE: Sortable arrives from an external <script src>, and htmx loads external scripts in
+	-- swapped content ASYNCHRONOUSLY -- so after a swap the library is usually still missing
+	-- when this behavior installs.  Initialise on load AND on the sortableReady event that the
+	-- script tag fires when it finishes, whichever wins; the guard makes the loser a no-op.
+	-- Waiting a fixed interval instead silently left the list undraggable whenever the download
+	-- ran long, with nothing to retry it.
+	on load or sortableReady from window
+
+		if Sortable is null then
+			exit
 		end
+
+		if :sortableInstalled is true then
+			exit
+		end
+
+		set :sortableInstalled to true
+		make a Sortable from me, {animation:150, ghostClass:'draggable-whisper'}
 	end
 end

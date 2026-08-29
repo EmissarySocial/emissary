@@ -309,6 +309,15 @@ textarea:invalid:focus-visible,
 	outline: 0;
 }
 
+/* Drag placeholder, mirroring .draggable-whisper in 03-widgets-draggable.css.  It must come
+   AFTER the .selected rule above: the behavior gives the dragged label .selected on focus, the
+   two selectors have equal specificity, and a highlighted row that does not fade reads as
+   though nothing is moving. */
+.multiselect > .options > label.multiselect-ghost {
+	cursor: grabbing;
+	opacity: 0.1;
+}
+
 .multiselect > .options > label > input {
 	vertical-align: middle;
 	display: inline-block;
