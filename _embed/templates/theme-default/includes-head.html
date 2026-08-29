@@ -7,3 +7,9 @@
 <link rel="stylesheet" href="/.themes/global/resources/bootstrap-icons-1.13.1/bootstrap-icons.min.css" rel="preload">
 <link rel="stylesheet" href="/.themes/global/stylesheet" rel="preload">
 <link rel="stylesheet" href="/.themes/default/stylesheet" rel="preload">
+
+<!-- Custom Stylesheet -->
+{{- $stylesheet := .ThemeData "stylesheet" -}}
+{{- if ne "" $stylesheet -}}
+	<style>{{- $stylesheet |css -}}</style>
+{{- end -}}
