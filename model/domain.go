@@ -24,7 +24,7 @@ type Domain struct {
 	InboxID              string                          `bson:"inboxId"`              // ID of the default inbox template to use for this domain
 	OutboxID             string                          `bson:"outboxId"`             // ID of the default outbox template to use for this domain
 	Forward              string                          `bson:"forward"`              // If present, then all requests for this domain should be forwarded to the designated new domain.
-	ThemeData            mapof.Any                       `bson:"themeData"`            // Custom data stored in this domain
+	ThemeData            mapof.Any                       `bson:"themeData"`            // Custom data for the Theme, defined by the Theme's own schema/form. PUBLIC: rendered into pages.
 	RegistrationData     mapof.String                    `bson:"registrationData"`     // Custom data for signup template stored in this domain
 	ColorMode            string                          `bson:"colorMode"`            // Color mode for this domain (e.g. "LIGHT", "DARK", or "AUTO")
 	MLSMode              string                          `bson:"mlsMode"`              // MLS mode for this domain (e.g. "ALL", "GROUPS", or "NONE")
@@ -32,7 +32,7 @@ type Domain struct {
 	DefaultAnonymous     string                          `bson:"defaultAnonymous"`     // Default page for anonymous users (defaults to "/home")
 	DefaultAuthenticated string                          `bson:"defaultAuthenticated"` // Default page for authenticated users (defaults to "/@me")
 	DefaultOwner         string                          `bson:"defaultOwner"`         // Default page for owners (defaults to "/admin")
-	Data                 mapof.String                    `bson:"data"`                 // Custom data stored in this domain
+	Data                 mapof.String                    `bson:"data"`                 // Operational settings for this domain (VAPID keys, feature flags). SECRET: never render into a page.
 	DatabaseVersion      uint                            `bson:"databaseVersion"`      // Version of the database schema
 	Syndication          sliceof.Object[form.LookupCode] `bson:"syndication"`          // List of external services that this domain can syndicate to
 	Connections          mapof.Matchable[Connection]     `bson:"connections"`          // Map of external connections for this domain

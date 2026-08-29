@@ -317,6 +317,21 @@ func (w Common) Theme(themeID string) model.Theme {
 	return w.factory().Theme().GetTheme(themeID)
 }
 
+// ThemeData returns a single custom value from this Domain's theme data.
+// If the token does not exist, it returns an empty string.
+//
+// RULE: Theme values live in `model.Domain.ThemeData` -- the Domain RECORD, not
+// `model.Theme.Data`.  The Theme is a process-wide singleton shared by every Domain on
+// this server, so its static `Data` map is the same for all of them and is never written
+// by the admin form.  Reading it here would return one Domain's value (or, in practice,
+// an empty string) on every other Domain.
+//
+// RULE: Theme values are also kept OUT of `model.Domain.Data`, which holds secrets like
+// the VAPID private key.  ThemeData is rendered into public pages; Data must not be.
+func (w Common) ThemeData(token string) string {
+	return w.factory().Domain().Get().ThemeData.GetString(token)
+}
+
 // Now returns the current time in milliseconds since the Unix epoch
 func (w Common) Now() int64 {
 	return time.Now().Unix()

@@ -25,6 +25,7 @@ func DomainSchema() schema.Element {
 			"description":          schema.String{MaxLength: 1024},
 			"forward":              schema.String{Format: "url", Required: false},
 			"data":                 schema.Object{Wildcard: schema.String{MaxLength: 4096}},
+			"themeData":            schema.Object{Wildcard: schema.String{MaxLength: 1048576}},
 			"colorMode":            schema.String{Enum: []string{DomainColorModeAuto, DomainColorModeLight, DomainColorModeDark}},
 			"mlsMode":              schema.String{Enum: []string{DomainMLSModeAll, DomainMLSModeGroups, DomainMLSModeNone}},
 			"defaultAnonymous":     schema.String{MaxLength: 128},
@@ -80,6 +81,9 @@ func (domain *Domain) GetPointer(name string) (any, bool) {
 
 	case "data":
 		return &domain.Data, true
+
+	case "themeData":
+		return &domain.ThemeData, true
 
 	case "syndication":
 		return &domain.Syndication, true

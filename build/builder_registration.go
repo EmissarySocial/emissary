@@ -188,11 +188,6 @@ func (w Registration) Data(key string) string {
 	return w._domain.Data[key]
 }
 
-// ThemeData returns the named value from this Domain's custom data map
-func (w Registration) ThemeData(key string) string {
-	return w._domain.Data[key]
-}
-
 // RegistrationData returns the named value from this Domain's registration data map
 func (w Registration) RegistrationData(key string) string {
 	return w._domain.RegistrationData[key]
