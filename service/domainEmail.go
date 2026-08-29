@@ -305,11 +305,12 @@ func (service *DomainEmail) SendFollowerActivity(follower *model.Follower, activ
 			"Activity": activity,
 
 			// Domain info available to the template
-			"Domain_Owner": service.owner,
-			"Domain_URL":   service.host(),
-			"Domain_Name":  domain.Label,
-			"Domain_Icon":  domain.IconURL(),
-			"Unsubscribe":  follower.UnsubscribeLink(domain.Host()),
+			"Domain_Owner":            service.owner,
+			"Domain_URL":              service.host(),
+			"Domain_Name":             domain.Label,
+			"Domain_Icon":             domain.IconURL(),
+			"Unsubscribe":             follower.UnsubscribeLink(domain.Host()),
+			"UnsubscribeWithBrackets": follower.UnsubscribeLinkWithBrackets(domain.Host()),
 		},
 	)
 

@@ -103,6 +103,22 @@ func (follower Follower) UnsubscribeLink(host string) string {
 	return ""
 }
 
+// UnsubscribeLinkWithBrackets returns the unsubscribe URL inside the angle brackets that RFC 2369
+// requires of a List-Unsubscribe header, or an empty string when there is no link to wrap.
+func (follower Follower) UnsubscribeLinkWithBrackets(host string) string {
+
+	// Derived from UnsubscribeLink so the two can never disagree about the URL itself
+	link := follower.UnsubscribeLink(host)
+
+	// An empty value must stay empty: ServerEmail omits headers that render empty, and
+	// a bare "<>" would be a malformed header rather than an absent one
+	if link == "" {
+		return ""
+	}
+
+	return "<" + link + ">"
+}
+
 /******************************************
  * ActivityPub Methods
  ******************************************/

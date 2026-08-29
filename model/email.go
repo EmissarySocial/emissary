@@ -23,10 +23,16 @@ type Email struct {
 // NewEmail creates an empty Email. funcMap is an html/template.FuncMap (the same map the web
 // templates use); text/template accepts the same map type, so it is shared across all four templates.
 func NewEmail(emailID string, funcMap htmltemplate.FuncMap) Email {
+
+	// RULE: To and Headers reject a missing key, because text/template otherwise renders one as
+	// the literal "<no value>" -- which is not empty, so it survives the skip-empty rule and then
+	// fails mail.ParseAddress, killing the entire send.  Subject and Body stay lenient: there the
+	// consequence is cosmetic, and Body is html/template, which renders a missing key as "".
+	// A key that is present but empty is still fine, and remains the way to omit a header.
 	return Email{
 		EmailID: emailID,
-		Headers: texttemplate.New("").Funcs(texttemplate.FuncMap(funcMap)),
-		To:      texttemplate.New("").Funcs(texttemplate.FuncMap(funcMap)),
+		Headers: texttemplate.New("").Funcs(texttemplate.FuncMap(funcMap)).Option("missingkey=error"),
+		To:      texttemplate.New("").Funcs(texttemplate.FuncMap(funcMap)).Option("missingkey=error"),
 		Subject: texttemplate.New("").Funcs(texttemplate.FuncMap(funcMap)),
 		Body:    htmltemplate.New("").Funcs(funcMap),
 	}

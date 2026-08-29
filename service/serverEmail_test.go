@@ -1,0 +1,478 @@
+package service
+
+import (
+	"html/template"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+	"testing/fstest"
+
+	"github.com/EmissarySocial/emissary/model"
+	emissarytemplates "github.com/EmissarySocial/emissary/tools/templates"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/stretchr/testify/require"
+	mail "github.com/xhit/go-simple-mail/v2"
+)
+
+/******************************************
+ * Outbound Email Headers
+ *
+ * These tests pin the header contract for outbound email.
+ * Header VALUES are protected by go-simple-mail, which strips
+ * CRLF from every one and parses address headers with
+ * mail.ParseAddress; the tests below pin those guarantees so
+ * that losing them fails here. Header NAMES get no such
+ * treatment from the library -- they are written verbatim --
+ * so Emissary validates those itself, at load time.
+ ******************************************/
+
+// testEmail returns a model.Email whose Headers set holds the provided name/template pairs
+func testEmail(t *testing.T, headers map[string]string) model.Email {
+
+	t.Helper()
+
+	email := model.NewEmail("test-email", template.FuncMap{})
+
+	for name, value := range headers {
+		headerTemplate, err := email.Headers.New(name).Parse(value)
+		require.NoError(t, err)
+		email.Headers = headerTemplate
+	}
+
+	return email
+}
+
+// headerLines returns the header block of a rendered message, split into individual lines
+func headerLines(message *mail.Email) []string {
+	headers, _, _ := strings.Cut(message.GetMessage(), "\r\n\r\n")
+	return strings.Split(headers, "\r\n")
+}
+
+/******************************************
+ * applyHeaders
+ ******************************************/
+
+// TestApplyHeaders verifies that a custom header is rendered and added to the message
+func TestApplyHeaders(t *testing.T) {
+
+	email := testEmail(t, map[string]string{
+		"Reply-To":        "{{.ReplyTo}}",
+		"X-Emissary-Test": "{{.Marker}}",
+	})
+
+	message := mail.NewMSG()
+	data := mapof.Any{"ReplyTo": "visitor@example.com", "Marker": "hello"}
+
+	require.NoError(t, applyHeaders(message, email, data))
+	require.NoError(t, message.GetError())
+
+	rendered := message.GetMessage()
+	require.Contains(t, rendered, "visitor@example.com")
+	require.Contains(t, rendered, "X-Emissary-Test: hello")
+}
+
+// TestApplyHeaders_NoHeaders verifies that an Email declaring no headers is a no-op
+func TestApplyHeaders_NoHeaders(t *testing.T) {
+
+	message := mail.NewMSG()
+
+	require.NoError(t, applyHeaders(message, testEmail(t, nil), mapof.Any{}))
+	require.NoError(t, message.GetError())
+}
+
+// TestApplyHeaders_NilHeaders verifies that an uninitialized Headers template does not panic
+func TestApplyHeaders_NilHeaders(t *testing.T) {
+
+	message := mail.NewMSG()
+
+	require.NoError(t, applyHeaders(message, model.Email{}, mapof.Any{}))
+	require.NoError(t, message.GetError())
+}
+
+// TestApplyHeaders_SkipsEmptyValues verifies that a header rendering empty is omitted instead
+// of poisoning the message.  go-simple-mail parses address headers with mail.ParseAddress,
+// where an empty string is an error that silently no-ops every later setter.
+func TestApplyHeaders_SkipsEmptyValues(t *testing.T) {
+
+	email := testEmail(t, map[string]string{"Reply-To": "{{.ReplyTo}}"})
+
+	message := mail.NewMSG()
+
+	require.NoError(t, applyHeaders(message, email, mapof.Any{"ReplyTo": ""}))
+	require.NoError(t, message.GetError())
+	require.NotContains(t, message.GetMessage(), "Reply-To")
+}
+
+// TestApplyHeaders_MissingKeyIsRejected verifies that a key absent from the data map fails the
+// render outright.  Without missingkey=error, text/template renders it as the literal "<no value>",
+// which is not empty, so it survives the skip-empty rule and then fails mail.ParseAddress -- turning
+// a definition's typo into a dead send.  This also proves the option reaches sub-templates created
+// by Headers.New(), since text/template stores it on the shared template set.
+func TestApplyHeaders_MissingKeyIsRejected(t *testing.T) {
+
+	email := testEmail(t, map[string]string{"Reply-To": "{{.ReplyTo}}"})
+
+	message := mail.NewMSG()
+
+	require.ErrorContains(t, applyHeaders(message, email, mapof.Any{}), "Executing 'headers' template")
+}
+
+// TestApplyHeaders_EmptyKeyIsStillAllowed verifies that missingkey=error rejects an ABSENT key,
+// not an empty one -- supplying "" remains the way a sender omits an optional header.
+func TestApplyHeaders_EmptyKeyIsStillAllowed(t *testing.T) {
+
+	email := testEmail(t, map[string]string{"Reply-To": "{{.ReplyTo}}"})
+
+	message := mail.NewMSG()
+
+	require.NoError(t, applyHeaders(message, email, mapof.Any{"ReplyTo": ""}))
+	require.NoError(t, message.GetError())
+	require.NotContains(t, message.GetMessage(), "Reply-To")
+}
+
+// TestApplyHeaders_InjectionIsNeutralized verifies that CRLF in a rendered header value cannot
+// forge a header of its own.  Emissary does not strip those characters itself -- go-simple-mail's
+// encoder does (its secureHeader) -- so this test exists to fail loudly if a version bump ever
+// removes that guarantee.
+func TestApplyHeaders_InjectionIsNeutralized(t *testing.T) {
+
+	email := testEmail(t, map[string]string{"X-Emissary-Test": "{{.Value}}"})
+
+	message := mail.NewMSG()
+	data := mapof.Any{"Value": "ok\r\nBcc: attacker@example.com"}
+
+	require.NoError(t, applyHeaders(message, email, data))
+	require.NoError(t, message.GetError())
+
+	// The forged header must never appear as a line of its own.  Folded continuation lines
+	// always begin with whitespace, so a bare "Bcc:" prefix means the injection succeeded.
+	for _, line := range headerLines(message) {
+		require.False(t, strings.HasPrefix(line, "Bcc:"), "forged header became its own line: %q", line)
+	}
+
+	require.Empty(t, message.GetRecipients())
+}
+
+// TestApplyHeaders_AddressInjectionIsRejected verifies that CRLF in an address header is
+// rejected outright by mail.ParseAddress, rather than silently delivering to an unintended
+// recipient.  Like the test above, this pins a guarantee that go-simple-mail makes for us.
+func TestApplyHeaders_AddressInjectionIsRejected(t *testing.T) {
+
+	email := testEmail(t, map[string]string{"Reply-To": "{{.ReplyTo}}"})
+
+	message := mail.NewMSG()
+	data := mapof.Any{"ReplyTo": "visitor@example.com\r\nBcc: attacker@example.com"}
+
+	require.NoError(t, applyHeaders(message, email, data))
+	require.Error(t, message.GetError())
+
+	for _, line := range headerLines(message) {
+		require.False(t, strings.HasPrefix(line, "Bcc:"), "forged header became its own line: %q", line)
+	}
+}
+
+/******************************************
+ * ServerEmail.Add
+ ******************************************/
+
+// testServerEmail returns a bare ServerEmail service, with no filesystem locations loaded.
+// It carries the real funcMap because shipped body.html files call helpers such as htmlMinimal.
+func testServerEmail() ServerEmail {
+	return ServerEmail{
+		funcMap: emissarytemplates.FuncMap(nullIconProvider{}),
+		emails:  make(map[string]model.Email),
+	}
+}
+
+// testFilesystem returns the minimum filesystem that an email definition requires
+func testFilesystem() fstest.MapFS {
+	return fstest.MapFS{
+		"body.html": &fstest.MapFile{Data: []byte("<p>Hello</p>")},
+	}
+}
+
+// TestServerEmailAdd_ParsesHeaders verifies that a valid header definition is loaded
+func TestServerEmailAdd_ParsesHeaders(t *testing.T) {
+
+	service := testServerEmail()
+
+	definition := []byte(`{
+		emailId: test-email
+		model: Stream
+		to: "{{.To}}"
+		subject: "Hello"
+		headers: {"Reply-To": "{{.ReplyTo}}"}
+	}`)
+
+	require.NoError(t, service.Add(testFilesystem(), definition))
+
+	email := service.emails["test-email"]
+	require.NotNil(t, email.Headers.Lookup("Reply-To"))
+}
+
+// TestServerEmailAdd_RejectsInvalidHeaderName verifies that a header name which could break
+// out of its own field is rejected at load time.  Names are written into the message verbatim,
+// without the encoding that protects values.
+func TestServerEmailAdd_RejectsInvalidHeaderName(t *testing.T) {
+
+	table := []struct {
+		name       string
+		headerName string
+	}{
+		{"carriage return and newline", `Reply-To\r\nBcc`},
+		{"bare newline", `Reply-To\nBcc`},
+		{"embedded colon", `Reply-To:Bcc`},
+		{"embedded space", `Reply To`},
+		{"empty name", ``},
+		{"leading space", ` Reply-To`},
+	}
+
+	for _, testCase := range table {
+		t.Run(testCase.name, func(t *testing.T) {
+
+			service := testServerEmail()
+
+			definition := []byte(`{
+				emailId: test-email
+				model: Stream
+				to: "{{.To}}"
+				subject: "Hello"
+				headers: {"` + testCase.headerName + `": "value"}
+			}`)
+
+			// Assert on the message: an hjson parse failure would otherwise let this test
+			// pass without ever reaching the name validation it is meant to cover.
+			require.ErrorContains(t, service.Add(testFilesystem(), definition), "Invalid email header name")
+			require.NotContains(t, service.emails, "test-email")
+		})
+	}
+}
+
+// testDefinition returns an email definition with the required fields present, plus whatever
+// extra lines a test needs (such as a headers block)
+func testDefinition(extra string) []byte {
+	return []byte(`{
+		emailId: test-email
+		model: Stream
+		to: "{{.To}}"
+		subject: "Hello"
+		` + extra + `
+	}`)
+}
+
+// TestServerEmailAdd_RequiresEmailID verifies that a definition must identify itself
+func TestServerEmailAdd_RequiresEmailID(t *testing.T) {
+
+	service := testServerEmail()
+
+	definition := []byte(`{
+		model: Stream
+		to: "{{.To}}"
+		subject: "Hello"
+	}`)
+
+	require.ErrorContains(t, service.Add(testFilesystem(), definition), "must include an 'emailId'")
+	require.Empty(t, service.emails)
+}
+
+// TestServerEmailAdd_RequiresModel verifies that a definition must name the model it belongs to.
+// Send() refuses any email whose model does not match the caller's, so one with no model is
+// undeliverable rather than merely under-specified.
+func TestServerEmailAdd_RequiresModel(t *testing.T) {
+
+	service := testServerEmail()
+
+	definition := []byte(`{
+		emailId: test-email
+		to: "{{.To}}"
+		subject: "Hello"
+	}`)
+
+	require.ErrorContains(t, service.Add(testFilesystem(), definition), "must include a 'model'")
+	require.Empty(t, service.emails)
+}
+
+// TestServerEmailAdd_AcceptsModelOutsideTemplateRegistry verifies that an email may name a model
+// the Template registry does not know.  Shipped definitions use "Follower", which is the object
+// the message is about, not a builder model -- see D16 in the CONTACT-FORM spec.
+func TestServerEmailAdd_AcceptsModelOutsideTemplateRegistry(t *testing.T) {
+
+	service := testServerEmail()
+
+	definition := []byte(`{
+		emailId: test-email
+		model: Follower
+		to: "{{.To}}"
+		subject: "Hello"
+	}`)
+
+	require.NoError(t, service.Add(testFilesystem(), definition))
+	require.Contains(t, service.emails, "test-email")
+}
+
+// TestServerEmailAdd_RequiresTo verifies that a definition must name a recipient
+func TestServerEmailAdd_RequiresTo(t *testing.T) {
+
+	service := testServerEmail()
+
+	definition := []byte(`{
+		emailId: test-email
+		model: Stream
+		subject: "Hello"
+	}`)
+
+	require.ErrorContains(t, service.Add(testFilesystem(), definition), "must include a 'to' address")
+	require.Empty(t, service.emails)
+}
+
+// TestServerEmailAdd_RejectsReservedHeaderName verifies that a definition cannot set a header that
+// decides who receives the message, who it claims to be from, or how the body is framed
+func TestServerEmailAdd_RejectsReservedHeaderName(t *testing.T) {
+
+	table := []struct {
+		name       string
+		headerName string
+	}{
+		{"recipient: To", "To"},
+		{"recipient: Cc", "Cc"},
+		{"recipient: Bcc", "Bcc"},
+		{"lowercase is canonicalized first", "bcc"},
+		{"identity: From", "From"},
+		{"identity: Sender", "Sender"},
+		{"identity: Return-Path", "Return-Path"},
+		{"library-owned: Date", "Date"},
+		{"library-owned: MIME-Version", "MIME-Version"},
+		{"library-owned: Content-Type", "Content-Type"},
+	}
+
+	for _, testCase := range table {
+		t.Run(testCase.name, func(t *testing.T) {
+
+			service := testServerEmail()
+			definition := testDefinition(`headers: {"` + testCase.headerName + `": "value"}`)
+
+			require.ErrorContains(t, service.Add(testFilesystem(), definition), "header name is reserved")
+			require.Empty(t, service.emails)
+		})
+	}
+}
+
+// TestServerEmailAdd_AllowsReplyTo verifies that Reply-To is NOT reserved.  Setting it is the
+// reason the headers block exists, so a denylist that caught it would defeat the feature.
+func TestServerEmailAdd_AllowsReplyTo(t *testing.T) {
+
+	service := testServerEmail()
+
+	require.NoError(t, service.Add(testFilesystem(), testDefinition(`headers: {"Reply-To": "{{.ReplyTo}}"}`)))
+	require.Contains(t, service.emails, "test-email")
+}
+
+// TestServerEmailAdd_DuplicateReplaces verifies that a second definition with the same emailId
+// replaces the first rather than failing.  A later filesystem location may deliberately override
+// an embedded email, so a duplicate is legal -- it only warns (D17).
+func TestServerEmailAdd_DuplicateReplaces(t *testing.T) {
+
+	service := testServerEmail()
+
+	require.NoError(t, service.Add(testFilesystem(), testDefinition("")))
+	require.NoError(t, service.Add(testFilesystem(), testDefinition(`emailRole: overridden`)))
+
+	require.Len(t, service.emails, 1)
+	require.Equal(t, "overridden", service.emails["test-email"].EmailRole)
+}
+
+/******************************************
+ * Shipped Definitions
+ ******************************************/
+
+// loadEmbeddedEmail loads one of the email definitions that ships in the binary, from disk
+func loadEmbeddedEmail(t *testing.T, folder string, emailID string) model.Email {
+
+	t.Helper()
+
+	filesystem := os.DirFS(filepath.Join("..", "_embed", "templates", folder))
+
+	definition, err := fs.ReadFile(filesystem, "email.hjson")
+	require.NoError(t, err)
+
+	service := testServerEmail()
+	require.NoError(t, service.Add(filesystem, definition))
+
+	email, exists := service.emails[emailID]
+	require.True(t, exists, "definition does not declare emailId %q", emailID)
+
+	return email
+}
+
+// TestFollowerActivity_ListUnsubscribe verifies that the one shipped definition using a headers:
+// block emits its List-Unsubscribe from the pre-formatted UnsubscribeWithBrackets key.  The RFC
+// 2369 bracketing itself is Follower.UnsubscribeLinkWithBrackets' job, tested in package model;
+// what this pins is the wiring.  The header was inert until applyHeaders existed.
+func TestFollowerActivity_ListUnsubscribe(t *testing.T) {
+
+	email := loadEmbeddedEmail(t, "email-follower-activity", "follower-activity")
+
+	message := mail.NewMSG()
+	data := mapof.Any{"UnsubscribeWithBrackets": "<https://example.com/unsub?id=1>"}
+
+	require.NoError(t, applyHeaders(message, email, data))
+	require.NoError(t, message.GetError())
+
+	require.Contains(t, message.GetMessage(), "List-Unsubscribe: <https://example.com/unsub?id=1>")
+}
+
+// TestFollowerActivity_ListUnsubscribeOmitted verifies that an empty UnsubscribeWithBrackets omits
+// the header entirely rather than emitting a malformed empty "<>".  UnsubscribeLinkWithBrackets
+// returns "" for every method except email; today's only caller reaches this email from the
+// FollowerMethodEmail branch, so the case is defensive -- it pins the contract, not the call path.
+func TestFollowerActivity_ListUnsubscribeOmitted(t *testing.T) {
+
+	email := loadEmbeddedEmail(t, "email-follower-activity", "follower-activity")
+
+	message := mail.NewMSG()
+
+	require.NoError(t, applyHeaders(message, email, mapof.Any{"UnsubscribeWithBrackets": ""}))
+	require.NoError(t, message.GetError())
+
+	require.NotContains(t, message.GetMessage(), "List-Unsubscribe")
+}
+
+// TestEmbeddedEmails_Load loads every email definition that ships in the binary, exactly the way
+// the Template service does at startup.  This is what keeps the load-time rules in Add() honest:
+// a rule that rejects one of Emissary's own definitions fails here rather than at a customer's
+// next boot.  It is the email-definition sibling of TestEmbeddedTemplates_HTMLParses.
+func TestEmbeddedEmails_Load(t *testing.T) {
+
+	const root = "../_embed/templates"
+
+	entries, err := os.ReadDir(root)
+	require.NoError(t, err)
+
+	service := testServerEmail()
+	loaded := make([]string, 0)
+
+	for _, entry := range entries {
+
+		if !entry.IsDir() {
+			continue
+		}
+
+		filesystem := os.DirFS(filepath.Join(root, entry.Name()))
+		definitionType, definition := findDefinition(filesystem)
+
+		if definitionType != DefinitionEmail {
+			continue
+		}
+
+		require.NoError(t, service.Add(filesystem, definition), "email definition %q does not load", entry.Name())
+		loaded = append(loaded, entry.Name())
+	}
+
+	// A silent zero would make this test pass forever if the directory ever moved
+	require.NotEmpty(t, loaded, "no email definitions found under "+root)
+
+	// Every definition must claim its own emailId, or one silently replaces another
+	require.Len(t, service.emails, len(loaded), "two shipped definitions share an emailId")
+}

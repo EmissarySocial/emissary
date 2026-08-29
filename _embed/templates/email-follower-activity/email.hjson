@@ -5,6 +5,6 @@
     subject: New Activity From {{.Name}}
     to: "{{.Email}}"
     headers: {
-        "List-Unsubscribe": "{{.Unsubscribe}}"
+        "List-Unsubscribe": "{{.UnsubscribeWithBrackets}}"
     }
 }
