@@ -1,8 +1,11 @@
+/* One gap value drives every space between regions, on both axes, so the vertical
+   rhythm and the horizontal rhythm cannot drift apart. */
 .widget-editor-layout {
 	display: flex;
 	flex-direction:row;
 	align-items: stretch;
 	min-height:500px;
+	gap:16px;
 }
 
 .widget-editor-title {
@@ -15,10 +18,7 @@
 	width: 25%;
 	flex-grow:0;
 	flex-shrink:0;
-	margin-right:16px;
-	border-right:solid 1px var(--gray20);
-	padding:8px;
-	padding-right:16px;
+	padding:0px;
 	position:relative;
 }
 
@@ -29,50 +29,57 @@
 	flex-grow:1;
 	flex-shrink:1;
 	padding:0px;
+	gap:16px;
 }
 
 .widget-editor-RIGHT {
 	width: 25%;
 	flex-grow:0;
 	flex-shrink:0;
-	margin-left:16px;
-	border-left:solid 1px var(--gray20);
-	padding:8px;
-	padding-left:16px;
+	padding:0px;
 	position:relative;
 }
 
 .widget-editor-TOP {
 	flex-grow:1;
 	flex-shrink:1;
-	margin-bottom:16px;
-	padding:8px;
+	padding:0px;
 	position:relative;
 }
 
+/* Hatched rather than filled: an empty drop zone and a fixed region were previously the
+   same flat gray panel, which is why the canvas read as four identical boxes. */
 .widget-editor-MAIN {
 	flex-grow:2;
 	flex-shrink:1;
 	background-color:var(--gray05);
+	background-image: repeating-linear-gradient(
+		45deg,
+		transparent 0px,
+		transparent 9px,
+		var(--gray10) 9px,
+		var(--gray10) 18px
+	);
 	border:solid 1px var(--gray15);
+	border-radius:8px;
 	padding:8px;
 	display:flex;
 	flex-direction:column;
 	align-items: center;
 	justify-content:center;
+	transition: opacity 120ms ease-out;
 }
 
 .widget-editor-BOTTOM {
 	flex-grow:1;
 	flex-shrink:1;
-	margin-top:16px;
-	padding:8px;
+	padding:0px;
 	position:relative;
 }
 
+/* Captions the fixed Page Content block, which is now the only thing wearing this class. */
 .widget-label {
 	color: var(--gray60);
-	text-transform: uppercase;
 }
 
 .widget-editor-sortable {
@@ -118,6 +125,8 @@
 	padding:8px;
 	background-color:var(--gray05);
 	border:solid 1px var(--gray15);
+	border-radius:8px;
+	position:relative;
 }
 
 .widget-editor-NONE .widget-editor-sortable {
@@ -135,3 +144,112 @@
 	display:none;
 }
 
+
+/******************************************
+ * Drop targets
+ *
+ * A placement region used to be an unlabeled gap in the page: nothing showed
+ * where a target began, how big it was, or that it was a target at all.  The
+ * outline is permanent so the page's structure stays legible while widgets are
+ * being arranged, and every state below is driven off :has(), so none of it
+ * needs markup or a JavaScript hook.
+ ******************************************/
+
+.widget-editor-layout .widget-editor-sortable {
+	box-sizing:border-box;
+	min-height:96px;
+	padding:8px;
+	border:dashed 2px var(--gray20);
+	border-radius:8px;
+	transition: border-color 120ms ease-out, background-color 120ms ease-out;
+}
+
+/* Each zone carries a hidden <input>, so :empty never matches it.  "Holds no .widget"
+   is the real test for an unoccupied region, and the prompt belongs only there. */
+.widget-editor-layout .widget-editor-sortable:not(:has(.widget))::after {
+	content:"+   Drop a Widget Here";
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	height:100%;
+	min-height:76px;
+	color:var(--gray50);
+	font-size:13px;
+	text-align:center;
+}
+
+/* The zone's own padding supplies the bottom inset; the last widget's margin would
+   otherwise double it. */
+.widget-editor-layout .widget-editor-sortable .widget:last-child {
+	margin-bottom:0px;
+}
+
+/* Sortable puts .widget-ghost on the placeholder it inserts into the receiving list, so
+   the class appearing anywhere inside the editor means precisely "a drag is underway". */
+.widget-editor:has(.widget-ghost) .widget-editor-layout .widget-editor-sortable {
+	border-color:var(--blue40);
+	background-color:var(--blue10);
+}
+
+.widget-editor:has(.widget-ghost) .widget-editor-layout .widget-editor-sortable:not(:has(.widget))::after {
+	color:var(--blue70);
+}
+
+/* Page Content is the one region that accepts nothing.  Fading it while a drag is in
+   flight leaves only the live targets holding the eye. */
+.widget-editor:has(.widget-ghost) .widget-editor-MAIN {
+	opacity:0.4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.widget-editor-MAIN,
+	.widget-editor-layout .widget-editor-sortable {
+		transition:none;
+	}
+}
+
+
+/******************************************
+ * Drop hint
+ *
+ * The tray accepts a drop, and what that drop MEANS depends on where the widget
+ * came from: a placed widget dropped here is removed, while a new one dropped
+ * here is simply cancelled.  The hyperscript behavior marks which case is in
+ * flight; this only paints it.
+ ******************************************/
+
+.widget-editor-drop-hint {
+	position:absolute;
+	inset:0;
+	display:none;
+	align-items:center;
+	justify-content:center;
+	border:dashed 2px var(--red30);
+	border-radius:8px;
+	background-color:var(--red10);
+	color:var(--red70);
+	font-size:13px;
+
+	/* RULE: the panel must never be the element under the cursor, or it swallows the
+	   very drop it is advertising.  Events pass through to the chips beneath, which is
+	   also why they are covered rather than hidden. */
+	pointer-events:none;
+}
+
+.widget-editor.dragging-new .widget-editor-drop-hint,
+.widget-editor.dragging-placed .widget-editor-drop-hint {
+	display:flex;
+}
+
+.widget-editor-drop-cancel,
+.widget-editor-drop-remove {
+	display:none;
+}
+
+.widget-editor.dragging-new .widget-editor-drop-cancel {
+	display:inline;
+}
+
+.widget-editor.dragging-placed .widget-editor-drop-remove {
+	display:inline;
+}

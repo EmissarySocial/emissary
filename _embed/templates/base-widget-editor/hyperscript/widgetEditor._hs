@@ -24,6 +24,24 @@ behavior widgetEditor(url)
 		end
 	end
 
+	-- Sortable dispatches "start"/"end" as bubbling DOM events carrying the source list,
+	-- which is the only way to tell "placing a new widget" from "moving a placed one".
+	-- The tray means REMOVE for the second and merely CANCEL for the first.
+	on start
+		set source to the event's from
+
+		if source[@data-location] is "NONE"
+			add .dragging-new to me
+		otherwise
+			add .dragging-placed to me
+		end
+	end
+
+	on end
+		remove .dragging-new from me
+		remove .dragging-placed from me
+	end
+
 	on sort throttled at 100ms
 
 		tell <.widget-editor-sortable /> in me

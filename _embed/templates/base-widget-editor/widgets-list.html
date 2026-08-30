@@ -9,7 +9,6 @@
 	<div class="widget-editor" script="install widgetEditor(url:'/{{$streamID}}/widgets')">
 
 		<div class="widget-editor-NONE">
-			<div class="widget-label">Available Widgets</div>
 			<div class="widget-editor-sortable" data-location="NONE">
 				{{- range .ListAllWidgets -}}
 					<div class="widget" data-widgetId="{{.Value}}">
@@ -18,12 +17,19 @@
 					</div>
 				{{- end -}}
 			</div>
+
+			<!-- Covers the tray during a drag instead of replacing it: Sortable hit-tests the
+			     chips underneath, so they have to keep their geometry.  See the CSS for why
+			     pointer-events must stay off. -->
+			<div class="widget-editor-drop-hint" aria-hidden="true">
+				<span class="widget-editor-drop-cancel">Drop Here to Cancel</span>
+				<span class="widget-editor-drop-remove">Drop Here to Remove</span>
+			</div>
 		</div>
 
 		<div class="widget-editor-layout">
 
 			<div class="widget-editor-LEFT">
-				<div class="widget-label">Left</div>
 				<div class="widget-editor-sortable" data-location="LEFT">
 					<input type="hidden" name="LEFT" value="">
 					{{- range .ListWidgetsByLocation "LEFT" -}}
@@ -34,7 +40,6 @@
 
 			<div class="widget-editor-CENTER">
 				<div class="widget-editor-TOP">
-					<div class="widget-label">Top</div>
 					<div class="widget-editor-sortable" data-location="TOP">
 						<input type="hidden" name="TOP" value="">
 						{{- range .ListWidgetsByLocation "TOP" -}}
@@ -44,11 +49,10 @@
 				</div>
 				
 				<div class="widget-editor-MAIN">
-					<div class="widget-label">... Stream Content Here ...</div>
+					<div class="widget-label">Page Content</div>
 				</div>
 
 				<div class="widget-editor-BOTTOM">
-					<div class="widget-label">Bottom</div>
 					<div class="widget-editor-sortable" data-location="BOTTOM">
 						<input type="hidden" name="BOTTOM" value="">
 						{{- range .ListWidgetsByLocation "BOTTOM" -}}
@@ -59,7 +63,6 @@
 			</div>
 
 			<div class="widget-editor-RIGHT">
-				<div class="widget-label">Right</div>
 				<div class="widget-editor-sortable" data-location="RIGHT">
 					<input type="hidden" name="RIGHT" value="">
 					{{- range .ListWidgetsByLocation "RIGHT" -}}
