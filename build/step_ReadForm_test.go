@@ -32,8 +32,13 @@ func (b stubFormBuilder) setString(name string, value string) { b.values[name] =
 
 // newStubFormBuilder returns a stub carrying a urlencoded POST of the provided fields
 func newStubFormBuilder(fields url.Values) stubFormBuilder {
+	return newStubFormBuilderWithQuery("", fields)
+}
 
-	request := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(fields.Encode()))
+// newStubFormBuilderWithQuery returns a stub whose POST also carries a URL query string
+func newStubFormBuilderWithQuery(query string, fields url.Values) stubFormBuilder {
+
+	request := httptest.NewRequest(http.MethodPost, "/?"+query, strings.NewReader(fields.Encode()))
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	return stubFormBuilder{req: request, values: make(mapof.String)}
@@ -131,6 +136,42 @@ func TestStepReadForm_LengthIsCountedInRunes(t *testing.T) {
 
 	require.Nil(t, result, "a message that fits in runes must be accepted")
 	require.Equal(t, message, builder.values["message"], "the message must survive intact")
+}
+
+// TestStepReadForm_IgnoresQueryString verifies that a declared field is read from the request
+// BODY only. formdata.Parse merges the query string and returns both values under one name,
+// which this step joins with a comma -- so without ParseBody, the link
+// "/contact/submit?message=..." would append the attacker's text to whatever the visitor wrote,
+// and the email would go out carrying it. The visitor would see only their own words.
+func TestStepReadForm_IgnoresQueryString(t *testing.T) {
+
+	builder := newStubFormBuilderWithQuery("message=INJECTED", url.Values{
+		"name":    {"Sarah"},
+		"email":   {"sarah@example.com"},
+		"message": {"Hello"},
+	})
+
+	result := StepReadForm{Schema: contactFormSchema()}.Post(builder, nil)
+
+	require.Nil(t, result)
+	require.Equal(t, "Hello", builder.values["message"], "the query value must not reach the email")
+	require.NotContains(t, builder.values["message"], "INJECTED")
+}
+
+// TestStepReadForm_QueryCannotSupplyAMissingField verifies that the query string cannot stand in
+// for a required field the visitor never filled out. Reading it would let a crafted link forge
+// the whole submission through a bare GET-shaped POST.
+func TestStepReadForm_QueryCannotSupplyAMissingField(t *testing.T) {
+
+	builder := newStubFormBuilderWithQuery("message=SuppliedByLink", url.Values{
+		"name":  {"Sarah"},
+		"email": {"sarah@example.com"},
+	})
+
+	result := StepReadForm{Schema: contactFormSchema()}.Post(builder, nil)
+
+	require.NotNil(t, result)
+	require.Error(t, behaviorError(result), "a required field must not be satisfiable from the query string")
 }
 
 // TestStepReadForm_RejectsMissingRequiredField verifies that a required field left out fails

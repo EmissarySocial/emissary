@@ -28,8 +28,11 @@ func (step StepReadForm) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepReadForm.Post"
 
-	// Collect the form POST
-	transaction, err := formdata.Parse(builder.request())
+	// RULE: read the request BODY only.  formdata.Parse merges the URL query string into
+	// its result, and a repeated name yields BOTH values joined below -- so a crafted link
+	// could append attacker-controlled text to a field the visitor believes is theirs, and
+	// the message would go out carrying it.
+	transaction, err := formdata.ParseBody(builder.request())
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Error parsing form data", derp.WithBadRequest()))
