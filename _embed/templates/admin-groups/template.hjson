@@ -39,7 +39,7 @@
 								label: Basics
 								children: [
 									{type: "text", label: "Label", path: "label", description:"Human readable name for the group"}
-									{type: "text", label: "Token", path: "token", description:"(Optional) identifier used by automated APIs"}
+									{type: "text", label: "Token", path: "token", description:"(Optional) identifier used by automated APIs", options:{autocomplete:"off", validator:"/.validate/groupToken"}}
 									{type: "select", label: "Icon", path: "icon", options:{provider:"group-icons"}}
 								]
 							}
@@ -75,7 +75,7 @@
 									label: Basics
 									children: [
 										{type: "text", label: "Label", path: "label", description:"Human readable name for the group"}
-										{type: "text", label: "Token", path: "token", description:"(Optional) identifier used by automated APIs"}
+										{type: "text", label: "Token", path: "token", description:"(Optional) identifier used by automated APIs", options:{autocomplete:"off", validator:"/.validate/groupToken?groupId={{.GroupID}}"}}
 										{type: "select", label: "Icon", path: "icon", options:{provider:"group-icons"}}
 									]
 								}

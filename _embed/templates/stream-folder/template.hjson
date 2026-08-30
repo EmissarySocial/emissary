@@ -95,7 +95,7 @@
 								type:"layout-vertical"
 								label:"Folder Info"
 								children: [
-									{type:"text", label:"Token", path:"token"}
+									{type:"text", label:"Token", path:"token", options:{autocomplete:"off", validator:"/.validate/streamToken?streamId={{.StreamID}}"}}
 									{type:"text", label:"Label", path:"label"}
 									{type:"textarea", label:"Summary", path:"summary"}
 									{type:"select", label:"Format", path:"data.format", if:{"my value is not 'FOLDER'": {show:["data.showImages"]}}}
