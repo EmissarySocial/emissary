@@ -256,3 +256,32 @@ func TestStreamSchema_Syndication(t *testing.T) {
 		require.Error(t, s.Set(&stream, "syndication.0", "bandwagon"))
 	}
 }
+
+// TestStream_RolesToGroupIDs_ZeroAuthorIsNotAnonymous verifies that a Stream with no author does
+// not hand its author-gated actions to the entire internet.  MagicGroupIDAnonymous IS the zero
+// ObjectID, so mapping the "author" role straight through to an unset AttributedTo.UserID produces
+// a Permissions slice that IsAnonymous() reports as true -- turning "only the author may do this"
+// into "anyone may do this".  Every Stream created through add-stream carries a real author, so
+// this guards an invariant that lives in a different file from the code depending on it.
+func TestStream_RolesToGroupIDs_ZeroAuthorIsNotAnonymous(t *testing.T) {
+
+	stream := NewStream()
+	require.True(t, stream.AttributedTo.UserID.IsZero(), "a new Stream must start with no author")
+
+	permissions := stream.RolesToGroupIDs(MagicRoleAuthor)
+
+	require.False(t, permissions.IsAnonymous(), "an unset author must never read as anonymous access")
+	require.Empty(t, permissions, "an unset author grants nothing at all")
+}
+
+// TestStream_RolesToGroupIDs_AuthorIsIncluded verifies that a real author still resolves, so the
+// guard above cannot be satisfied by dropping the role entirely
+func TestStream_RolesToGroupIDs_AuthorIsIncluded(t *testing.T) {
+
+	author := primitive.NewObjectID()
+
+	stream := NewStream()
+	stream.AttributedTo = PersonLink{UserID: author}
+
+	require.Equal(t, Permissions{author}, stream.RolesToGroupIDs(MagicRoleAuthor))
+}

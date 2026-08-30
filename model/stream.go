@@ -218,7 +218,14 @@ func (stream Stream) RolesToGroupIDs(roles ...string) Permissions {
 		case MagicRoleAuthenticated:
 			return NewAuthenticatedPermissions()
 
+		// RULE: an unset author grants nothing.  MagicGroupIDAnonymous IS the zero ObjectID, so
+		// passing an empty AttributedTo.UserID through would make Permissions.IsAnonymous report
+		// true and open every author-gated action to anyone.
 		case MagicRoleAuthor:
+			if stream.AttributedTo.UserID.IsZero() {
+				continue
+			}
+
 			result = append(result, stream.AttributedTo.UserID)
 
 		default:
