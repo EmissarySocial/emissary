@@ -11,9 +11,11 @@
 	<article class="content margin-bottom">
 		{{- .Widgets "LEFT" -}}
 		<div class="content-main">
-			{{- .Widgets "TOP" -}}
-			<div class="e-content layout-{{.Data `width`}}">{{- .ContentHTML -}}</div>
-			{{- .Widgets "BOTTOM" -}}
+			<div class="layout-{{.Data `width`}}">
+				{{- .Widgets "TOP" -}}
+				<div class="e-content">{{- .ContentHTML -}}</div>
+				{{- .Widgets "BOTTOM" -}}
+			</div>
 		</div>
 		{{- .Widgets "RIGHT" -}}
 	</article>
