@@ -180,6 +180,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "search-index":
 		return NewSearchIndex(stepInfo)
 
+	case "read-form":
+		return NewReadForm(stepInfo)
+
 	case "send-email":
 		return NewSendEmail(stepInfo)
 

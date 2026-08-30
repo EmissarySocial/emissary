@@ -138,6 +138,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.SearchIndex:
 		return StepSearchIndex(s)
 
+	case step.ReadForm:
+		return StepReadForm(s)
+
 	case step.SendEmail:
 		return StepSendEmail(s)
 
