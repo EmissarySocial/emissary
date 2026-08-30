@@ -180,3 +180,56 @@ func GetValidateStreamToken(ctx *steranko.Context, factory *service.Factory, ses
 		"message": "This token is already in use by another stream",
 	})
 }
+
+// GetValidateGroupToken validates a Group.Token for uniqueness/availability
+func GetValidateGroupToken(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+
+	const location = "handler.GetValidateGroupToken"
+
+	token := ctx.QueryParam("value")
+
+	if len(token) < 3 {
+		return ctx.JSON(http.StatusOK, mapof.Any{
+			"valid":   false,
+			"message": "Token must be at least 3 characters",
+		})
+	}
+
+	// This service can only validate the "token" field
+	if field := ctx.QueryParam("field"); field != "token" {
+		return ctx.JSON(http.StatusBadRequest, mapof.Any{
+			"valid":   false,
+			"message": "Invalid field",
+		})
+	}
+
+	// Collect variables
+	groupService := factory.Group()
+	group := model.NewGroup()
+
+	if err := groupService.LoadByToken(session, token, &group); err != nil {
+
+		if derp.IsNotFound(err) {
+			return ctx.JSON(http.StatusOK, mapof.Any{
+				"valid":   true,
+				"message": "",
+			})
+		}
+
+		return derp.Wrap(err, location, "Loading group by token")
+	}
+
+	// If the only match is the Group being edited, then the token is still valid
+	if group.ID() == ctx.QueryParam("groupId") {
+		return ctx.JSON(http.StatusOK, mapof.Any{
+			"valid":   true,
+			"message": "",
+		})
+	}
+
+	// Otherwise, the token is taken
+	return ctx.JSON(http.StatusOK, mapof.Any{
+		"valid":   false,
+		"message": "This token is already in use by another group",
+	})
+}

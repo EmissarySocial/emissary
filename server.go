@@ -335,6 +335,7 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.unsplash/collections/:collection/random", handler.WithFactory(factory, unsplash.GetCollectionRandom))
 	e.GET("/.validate/signupCode", handler.WithFactory(factory, handler.GetValidateSignupCode))
 	e.GET("/.validate/streamToken", handler.WithFactory(factory, handler.GetValidateStreamToken))
+	e.GET("/.validate/groupToken", handler.WithOwner(factory, handler.GetValidateGroupToken))
 	e.GET("/.validate/user/username", handler.WithFactory(factory, handler.GetValidateUsername))
 	e.GET("/.validate/folder/name", handler.WithAuthenticatedUser(factory, handler.GetValidateFoldername))
 	e.GET("/.validate/circle/name", handler.WithAuthenticatedUser(factory, handler.GetValidateCirclename))
