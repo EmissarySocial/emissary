@@ -1,0 +1,10 @@
+{
+	emailId: contact-form
+	emailRole: contact-form
+	model: Stream
+	subject: "{{.Subject}}"
+	to: "{{.To}}"
+	headers: {
+		"Reply-To": "{{.ReplyEmail}}"
+	}
+}
