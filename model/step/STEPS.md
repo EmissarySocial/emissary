@@ -831,6 +831,42 @@ Copies a StreamDraft's content over its live Stream and moves the Stream into `s
 
 ---
 
+## read-form
+
+Reads named fields from a form POST into the Builder's temporary data scope, where later steps read them with `.GetString`. Visitor input never reaches the object being built — for a Stream, that is the page record itself.
+
+Values come from the request **body** only. Unlike most steps, `read-form` ignores the URL query string, so a crafted link cannot supply or append to a field.
+
+Does nothing on `GET`.
+
+**Attributes**
+
+| Attribute | Description |
+| --- | --- |
+| schema | **Required.** A JSON-Schema object describing every field this step accepts |
+
+<br>
+
+The schema is an allowlist, not a suggestion: a field the template did not declare is never read, and a declared field that fails validation halts the pipeline. A value longer than its `maxLength` is **rejected**, not shortened — the same rule [`edit-content`](#edit-content) uses, and for the same reason. `maxLength` counts characters, not bytes.
+
+**Example**
+
+```hjson
+{
+	do: "read-form"
+	schema: {
+		type: "object"
+		properties: {
+			name: {type:"string", maxLength:128, required:true}
+			email: {type:"string", format:"email", maxLength:255, required:true}
+			message: {type:"string", maxLength:4096, required:true}
+		}
+	}
+}
+```
+
+---
+
 ## redirect-to
 
 A real HTTP redirect, for non-HTMX navigation. Use [`forward-to`](#forward-to) inside an HTMX request.
@@ -1055,22 +1091,31 @@ Synchronizes the object's search record on `POST`. When `if` evaluates false the
 
 ## send-email
 
-Sends one of the domain's named emails to the current user.
+Sends one of the domain's named emails. The email definition names its own recipient, subject, headers, and the model object its data describes; this step only names the email and supplies the values it interpolates.
+
+`welcome` and `password-reset` are special: each mints a password-reset credential before it sends, so they route through the User service and take no `values`.
 
 **Attributes**
 
 | Attribute | Description |
 | --- | --- |
-| email | **Required.** Name of the email template to send |
+| email | **Required.** Name of the email definition to send |
+| values | Key/value pairs passed into the email's data. Each value is compiled as a template. |
 
 <br>
+
+Every key that the email's `to` and `headers` templates interpolate must appear in `values` — those templates reject a missing key outright, and the check runs when Templates are loaded, not when the email is sent.
 
 **Example**
 
 ```hjson
 {
 	do: "send-email"
-	email: "welcome"
+	email: "stream-contact-form"
+	values: {
+		To: "{{.Data `emailAddress`}}"
+		ReplyEmail: "{{.GetString `email`}}"
+	}
 }
 ```
 

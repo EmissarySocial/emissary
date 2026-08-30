@@ -278,8 +278,8 @@ func TestServerEmailAdd_RequiresEmailID(t *testing.T) {
 }
 
 // TestServerEmailAdd_RequiresModel verifies that a definition must name the model it belongs to.
-// Send() refuses any email whose model does not match the caller's, so one with no model is
-// undeliverable rather than merely under-specified.
+// The definition is the only place this is declared, and RequireModel() is what compares a Go
+// sender's fixed data shape against it.
 func TestServerEmailAdd_RequiresModel(t *testing.T) {
 
 	service := testServerEmail()
@@ -310,6 +310,69 @@ func TestServerEmailAdd_AcceptsModelOutsideTemplateRegistry(t *testing.T) {
 
 	require.NoError(t, service.Add(testFilesystem(), definition))
 	require.Contains(t, service.emails, "test-email")
+}
+
+/******************************************
+ * Model Assertions
+ *
+ * RequireModel is the guard for senders written in Go, which
+ * build a fixed data shape for a fixed email.  Emails named by
+ * a Template do not use it: there the data and the email name
+ * are authored together, and the load-time RequiredKeys check
+ * already verifies the keys line up.
+ ******************************************/
+
+// testServerEmailWithModel returns a ServerEmail holding one "test-email" definition for modelName
+func testServerEmailWithModel(t *testing.T, modelName string) ServerEmail {
+
+	t.Helper()
+
+	service := testServerEmail()
+
+	definition := []byte(`{
+		emailId: test-email
+		model: ` + modelName + `
+		to: "{{.To}}"
+		subject: "Hello"
+	}`)
+
+	require.NoError(t, service.Add(testFilesystem(), definition))
+	return service
+}
+
+// TestServerEmail_RequireModel verifies that an email declared for the caller's model is accepted
+func TestServerEmail_RequireModel(t *testing.T) {
+
+	service := testServerEmailWithModel(t, "Follower")
+
+	require.NoError(t, service.RequireModel("test-email", "Follower"))
+}
+
+// TestServerEmail_RequireModel_Mismatch verifies that an email declared for a different object is
+// refused.  This is the case that matters in production: an administrator can override a shipped
+// definition from an external template folder, and a Go sender's data shape would not fit it.
+func TestServerEmail_RequireModel_Mismatch(t *testing.T) {
+
+	service := testServerEmailWithModel(t, "Identity")
+
+	require.ErrorContains(t, service.RequireModel("test-email", "Follower"), "requires a different model object")
+}
+
+// TestServerEmail_RequireModel_EmptyModel verifies that a caller must state a model to assert one
+func TestServerEmail_RequireModel_EmptyModel(t *testing.T) {
+
+	service := testServerEmailWithModel(t, "Follower")
+
+	require.ErrorContains(t, service.RequireModel("test-email", ""), "Model is required")
+}
+
+// TestServerEmail_RequireModel_UnknownEmail verifies that an undefined email fails the assertion
+// rather than passing it vacuously
+func TestServerEmail_RequireModel_UnknownEmail(t *testing.T) {
+
+	service := testServerEmail()
+
+	require.ErrorContains(t, service.RequireModel("test-email", "Follower"), "Email is not defined")
 }
 
 // TestServerEmailAdd_RequiresTo verifies that a definition must name a recipient
@@ -475,4 +538,87 @@ func TestEmbeddedEmails_Load(t *testing.T) {
 
 	// Every definition must claim its own emailId, or one silently replaces another
 	require.Len(t, service.emails, len(loaded), "two shipped definitions share an emailId")
+}
+
+/******************************************
+ * Load-Time Queries
+ ******************************************/
+
+// TestServerEmailExists verifies the lookup that load-time validation uses to confirm a
+// send-email step names a definition that was actually loaded
+func TestServerEmailExists(t *testing.T) {
+
+	service := testServerEmail()
+
+	require.False(t, service.Exists("test-email"))
+	require.NoError(t, service.Add(testFilesystem(), testDefinition("")))
+	require.True(t, service.Exists("test-email"))
+}
+
+// TestServerEmailRequiredKeys verifies that the keys an email's "to" and "headers" templates
+// interpolate are reported, so a step that omits one fails at load rather than at send
+func TestServerEmailRequiredKeys(t *testing.T) {
+
+	service := testServerEmail()
+	definition := []byte(`{
+		emailId: test-email
+		model: Stream
+		to: "{{.Recipient}}"
+		subject: "Hello {{.SubjectOnly}}"
+		headers: {"Reply-To": "{{.ReplyEmail}}"}
+	}`)
+
+	require.NoError(t, service.Add(testFilesystem(), definition))
+
+	// Subject is NOT included: it renders leniently, so a missing key there is cosmetic
+	require.Equal(t, []string{"Recipient", "ReplyEmail"}, []string(service.RequiredKeys("test-email")))
+}
+
+// TestServerEmailRequiredKeys_ExcludesProvided verifies that the Domain_* values DomainEmail.Send
+// supplies for every email are not reported. Requiring a step to pass them would make every
+// send-email block noise, and D20 exists precisely so callers do not.
+func TestServerEmailRequiredKeys_ExcludesProvided(t *testing.T) {
+
+	service := testServerEmail()
+	definition := []byte(`{
+		emailId: test-email
+		model: Stream
+		to: "{{.Recipient}}"
+		subject: "Hello"
+		headers: {"X-Domain": "{{.Domain_Name}} {{.Domain_URL}}"}
+	}`)
+
+	require.NoError(t, service.Add(testFilesystem(), definition))
+	require.Equal(t, []string{"Recipient"}, []string(service.RequiredKeys("test-email")))
+}
+
+// TestServerEmailRequiredKeys_GuardedKeysCount verifies that a key inside an {{if}} is still
+// reported. Under missingkey=error an absent key fails the guard itself, so it is required.
+func TestServerEmailRequiredKeys_GuardedKeysCount(t *testing.T) {
+
+	service := testServerEmail()
+	definition := []byte(`{
+		emailId: test-email
+		model: Stream
+		to: "{{.Recipient}}"
+		subject: "Hello"
+		headers: {"List-Unsubscribe": "{{if .Unsubscribe}}<{{.Unsubscribe}}>{{end}}"}
+	}`)
+
+	require.NoError(t, service.Add(testFilesystem(), definition))
+	require.Equal(t, []string{"Recipient", "Unsubscribe"}, []string(service.RequiredKeys("test-email")))
+}
+
+// TestServerEmailRequiredKeys_ShippedDefinition pins the keys the one shipped email with a
+// headers block actually needs, so a change to it surfaces here
+func TestServerEmailRequiredKeys_ShippedDefinition(t *testing.T) {
+
+	service := testServerEmail()
+	filesystem := os.DirFS(filepath.Join("..", "_embed", "templates", "email-follower-activity"))
+
+	definition, err := fs.ReadFile(filesystem, "email.hjson")
+	require.NoError(t, err)
+	require.NoError(t, service.Add(filesystem, definition))
+
+	require.Equal(t, []string{"Email", "UnsubscribeWithBrackets"}, []string(service.RequiredKeys("follower-activity")))
 }

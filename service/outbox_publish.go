@@ -146,6 +146,15 @@ func (service *Outbox) Deliver(session data.Session, actorType string, actorID p
 	rulesUserID := ruleUserID(actorType, actorID)
 	isLocalhost := uri.IsLocalHostname(service.host)
 
+	// RULE: ask once, not once per Follower.  DomainEmail.Send now treats an unconfigured SMTP
+	// connection as an error, and this loop can hold thousands of Followers -- reporting one
+	// error each would flood the log on a domain that deliberately runs without email.
+	canSendEmail := service.domainEmail.IsConfigured()
+
+	if !canSendEmail {
+		log.Debug().Str("location", location).Msg("SMTP is not configured. Skipping email Followers.")
+	}
+
 	for follower := range recipientSeq {
 
 		// Resolve the recipient's host from InboxURL, falling back to ProfileURL. Addressees
@@ -184,7 +193,9 @@ func (service *Outbox) Deliver(session data.Session, actorType string, actorID p
 			service.deliverActivityPub(session, actorURL, &follower, activity)
 
 		case model.FollowerMethodEmail:
-			service.sendNotification_Email(&follower, activity)
+			if canSendEmail {
+				service.sendNotification_Email(&follower, activity)
+			}
 
 		default:
 			derp.Report(derp.Internal(location, "Unknown Follower Method.  This should never happen", follower))

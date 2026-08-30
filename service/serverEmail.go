@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	texttemplate "text/template"
+	"text/template/parse"
 
 	"github.com/benpate/rosetta/maps"
 
@@ -16,6 +18,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/hjson/hjson-go/v4"
 	"github.com/rs/zerolog/log"
 
@@ -83,8 +86,8 @@ func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 	email.EmailRole = temp.GetString("emailRole")
 	email.Model = temp.GetString("model")
 
-	// RULE: Send() refuses any email whose model does not match the caller's, so a definition
-	// with no model can never be delivered at all.  This is deliberately not checked against
+	// RULE: every definition declares the object its data describes, which is what RequireModel()
+	// compares a Go sender's fixed data shape against.  This is deliberately not checked against
 	// templateModelRegistry: an email names the object the message is ABOUT (such as "Follower"),
 	// which is a different namespace from a Template's builder model.
 	if email.Model == "" {
@@ -183,11 +186,77 @@ func (service *ServerEmail) Names() []string {
 }
 
 /******************************************
+ * Load-Time Queries
+ ******************************************/
+
+// Exists returns TRUE if an email with this ID is defined in this service's library
+func (service *ServerEmail) Exists(emailID string) bool {
+	_, exists := service.emails[emailID]
+	return exists
+}
+
+// RequiredKeys returns every data key that an email's "to" and "headers" templates interpolate.
+// These are the templates that reject a missing key outright, so a caller that omits one of these
+// does not render a blank value -- it fails the whole send.  Keys that Send supplies for every
+// email are excluded, because no caller has to pass them.
+func (service *ServerEmail) RequiredKeys(emailID string) sliceof.String {
+
+	email, exists := service.emails[emailID]
+
+	if !exists {
+		return sliceof.String{}
+	}
+
+	found := make(mapof.Bool)
+	collectTreeFieldNames(email.To, found)
+
+	for _, headerTemplate := range email.Headers.Templates() {
+		collectTreeFieldNames(headerTemplate, found)
+	}
+
+	result := make(sliceof.String, 0, len(found))
+
+	for name := range found {
+		if !slices.Contains(providedKeys, name) {
+			result = append(result, name)
+		}
+	}
+
+	slices.Sort(result)
+	return result
+}
+
+// RequireModel returns an error unless the named email is defined for modelName.  Callers that
+// build a fixed data shape in Go use this to reject a definition -- possibly one an administrator
+// overrode on disk -- that describes some other object entirely.
+func (service *ServerEmail) RequireModel(emailID string, modelName string) error {
+
+	const location = "service.ServerEmail.RequireModel"
+
+	email, exists := service.emails[emailID]
+
+	if !exists {
+		return derp.BadRequest(location, "Email is not defined", emailID, maps.Keys(service.emails))
+	}
+
+	if modelName == "" {
+		return derp.BadRequest(location, "Model is required", emailID)
+	}
+
+	if email.Model != modelName {
+		return derp.BadRequest(location, "Email requires a different model object", "email: "+emailID, "required model: "+email.Model, "requested model: "+modelName)
+	}
+
+	// A model citizen
+	return nil
+}
+
+/******************************************
  * Send Emails API
  ******************************************/
 
 // Send renders the named email template and delivers it over the provided SMTP connection
-func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner config.Owner, emailID string, model string, data mapof.Any) error {
+func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner config.Owner, emailID string, data mapof.Any) error {
 
 	const location = "service.ServerEmail.Send"
 
@@ -199,16 +268,6 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner con
 
 	if !exists {
 		return derp.BadRequest(location, "Email is not defined", emailID, maps.Keys(service.emails))
-	}
-
-	// "Model" must be set
-	if model == "" {
-		return derp.BadRequest(location, "Model is required", emailID)
-	}
-
-	// Require that the email is defined for the correct model
-	if email.Model != model {
-		return derp.BadRequest(location, "Email requires a different model object", "email: "+emailID, "required model: "+email.Model, "requested model: "+model)
 	}
 
 	// If the SMTP Connection is empty, then don't try to send an email
@@ -348,4 +407,68 @@ func applyHeaders(message *mail.Email, email model.Email, data mapof.Any) error 
 
 	// Return to sender.  Address unknown
 	return nil
+}
+
+// providedKeys are supplied by DomainEmail.Send for every email, so no caller passes them
+var providedKeys = []string{"Domain_Owner", "Domain_URL", "Domain_Name", "Domain_Icon"}
+
+// collectTreeFieldNames walks one template's parse tree, skipping templates that never parsed
+func collectTreeFieldNames(tmpl *texttemplate.Template, result mapof.Bool) {
+
+	if (tmpl == nil) || (tmpl.Tree == nil) {
+		return
+	}
+
+	collectFieldNames(tmpl.Tree.Root, result)
+}
+
+// collectFieldNames walks a parsed template and records the top-level field name of every
+// value it interpolates, so that "{{.ReplyEmail}}" and "{{if .Unsubscribe}}" both yield one name
+func collectFieldNames(node parse.Node, result mapof.Bool) {
+
+	switch typed := node.(type) {
+
+	case *parse.ListNode:
+		if typed != nil {
+			for _, child := range typed.Nodes {
+				collectFieldNames(child, result)
+			}
+		}
+
+	case *parse.ActionNode:
+		collectFieldNames(typed.Pipe, result)
+
+	case *parse.PipeNode:
+		if typed != nil {
+			for _, command := range typed.Cmds {
+				collectFieldNames(command, result)
+			}
+		}
+
+	case *parse.CommandNode:
+		for _, argument := range typed.Args {
+			collectFieldNames(argument, result)
+		}
+
+	case *parse.IfNode:
+		collectFieldNames(typed.Pipe, result)
+		collectFieldNames(typed.List, result)
+		collectFieldNames(typed.ElseList, result)
+
+	case *parse.RangeNode:
+		collectFieldNames(typed.Pipe, result)
+		collectFieldNames(typed.List, result)
+		collectFieldNames(typed.ElseList, result)
+
+	case *parse.WithNode:
+		collectFieldNames(typed.Pipe, result)
+		collectFieldNames(typed.List, result)
+		collectFieldNames(typed.ElseList, result)
+
+	case *parse.FieldNode:
+		// Only the FIRST identifier is a data key: "{{.Actor.Name}}" requires "Actor"
+		if len(typed.Ident) > 0 {
+			result[typed.Ident[0]] = true
+		}
+	}
 }
