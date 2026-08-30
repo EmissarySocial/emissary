@@ -1,0 +1,15 @@
+.layout-LARGE {
+	width: 100%;
+}
+.layout-MEDIUM {
+	min-width:300px;
+	width: 66.6667%;
+	margin-left: auto;
+	margin-right: auto;
+}
+.layout-SMALL {
+	min-width:300px;
+	width: 50%;
+	margin-left: auto;
+	margin-right: auto;
+}

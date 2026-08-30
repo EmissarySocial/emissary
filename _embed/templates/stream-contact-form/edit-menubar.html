@@ -1,0 +1,39 @@
+<!-- Shared by the "edit" and "widgets" pages, so the tabs stay in one place.
+     .Action names the page being shown, which is what marks the current tab. -->
+{{- $breadcrumbs := .Breadcrumbs -}}
+{{- $selected := .Action -}}
+
+<div id="menu-bar" class="margin-bottom">
+	<a href="/admin/navigation" class="turboclick text-gray margin-none padding-horizontal-xs">Navigation &rarr;</a>
+	{{- range $index, $stream := $breadcrumbs -}}
+		<a href="/{{$stream.ID}}/edit" class="turboclick text-gray margin-none padding-horizontal-xs">{{$stream.Name}} &rarr;</a>
+	{{- end -}}
+	<a href="/{{.StreamID}}" class="bold margin-none padding-horizontal-xs">{{.Name}}</a>
+</div>
+
+<div id="menu-bar">
+	<div class="left">
+		<a href="/{{.Token}}" class="link">&larr; View</a>
+		<a href="/{{.StreamID}}/edit" class="button{{if eq $selected `edit`}} bold{{end}}">Form</a>
+
+		{{- if .UserCan "widgets" -}}
+			<a href="/{{.StreamID}}/widgets" class="button{{if eq $selected `widgets`}} bold{{end}}">Widgets</a>
+		{{- end -}}
+	</div>
+
+	<div class="right">
+		<!-- The save button belongs to the settings form, which only the "edit" page renders.
+		     It sits outside that form, so "form" is what associates it, natively, and it is
+		     also what makes the SaveButton behavior's "me.form" resolve for the saving
+		     spinner.  hx-preserve carries this element through the refreshPage reload:
+		     saving swaps a green "Saved" button in here, and the reload would otherwise
+		     destroy it long before the flash finished. -->
+		{{- if eq $selected `edit` -}}
+			<button type="submit" form="edit-form" id="inline-save-button" hx-preserve="true" class="primary" tabIndex="0" script="install SaveButton">Save Changes</button>
+		{{- end -}}
+
+		{{- if not .IsNew -}}
+			<a hx-get="/{{.StreamID}}/delete" class="text-red" tabIndex="0">Delete</a>
+		{{- end -}}
+	</div>
+</div>

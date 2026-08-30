@@ -4,6 +4,12 @@
 	category: Special
 	model: Stream
 	containedBy: ["top", "home", "folder"]
+	extends: ["base-widget-editor"]
+	bundles: {
+		stylesheet: {
+			content-type:"text/css"
+		}
+	}
 	label: Contact Form
 	description: "Lets visitors send you a message by email."
 	icon: message
@@ -16,19 +22,32 @@
 			label: {type:"string", format:"text", maxLength:128}
 			icon: {type:"string", format:"token", maxLength:64}
 			summary: {type:"string", format:"text", maxLength:2048}
-			// RULE: every author setting is required.  A contact form missing any one of them is
-			// broken in a way the visitor discovers, not the author -- no recipient means the send
-			// fails, and an empty prompt or confirmation means a blank page.  The settings form
-			// enforces this; Stream.Save does not validate the template schema, so "create" seeds
-			// everything it sensibly can and leaves only the recipient for the author.
+			// RULE: the settings a send depends on are required; the prompt is not.  Without a
+			// recipient the send fails, and without a subject or confirmation the visitor gets a
+			// broken message or a blank page -- all discovered by the visitor, not the author.
+			// The prompt is optional because a form with no preamble still works; view.html
+			// renders nothing when it is empty.
+			// NOTE: these are enforced on EVERY save, not just the settings form -- Stream.Save
+			// runs template.Schema.Normalize, which rejects a missing required value rather than
+			// filling in its default.  A required field with no value therefore blocks widget
+			// sorting and sharing too, so "create" must seed every one of them.
 			data: {type:"object", properties: {
 				emailAddress: {type:"string", format:"email", maxLength:255, required:true}
 				emailSubject: {type:"string", format:"text", maxLength:128, required:true}
-				promptContent: {type:"string", format:"text", maxLength:8192, required:true}
-				headerMessage: {type:"string", format:"text", maxLength:2048, required:true}
-				successMessage: {type:"string", format:"text", maxLength:2048, required:true}
+				promptContent: {type:"string", format:"unsafe-any", maxLength:8192}
+				headerMessage: {type:"string", format:"unsafe-any", maxLength:2048, required:true}
+				successMessage: {type:"string", format:"unsafe-any", maxLength:2048, required:true}
+				width: {type:"string", enum:["LARGE", "MEDIUM", "SMALL"], default:"MEDIUM", required:true}
 			}}
 		}
+	}
+
+	datasets: {
+		"layouts": [
+			{value:"LARGE", label:"Large (full page width)"}
+			{value:"MEDIUM", label:"Medium (about 2/3 page width)"}
+			{value:"SMALL", label:"Small (about 1/2 page width)"}
+		]
 	}
 
 	states: {
@@ -127,28 +146,35 @@
 						children: [
 							{
 								type: "layout-vertical"
-								label: "Page Content"
+								label: "Page Setup"
 								children: [
 									{type:"text", path:"label", label:"Page Title", description:"Displays in website navigation, and at the top of the page."}
 									{type:"text", path:"token", label:"Token/Slug", description:"This page\u0027s address on your website, for example \u0022contact\u0022.  Must be unique.", options:{autocomplete:"off", validator:"/.validate/streamToken?streamId={{.StreamID}}"}}
 									{type:"select", path:"icon", label:"Icon", description:"Displays beside the page title in website navigation.", options:{provider:"folder-icons"}}
-									{type:"textarea", path:"data.promptContent", label:"Prompt", description:"Shown to visitors above the form.  Accepts Markdown.", options:{rows:8}}
+									{type:"select", path:"data.width", label:"Content Width", description:"How much of the page the prompt and form fill.", options:{provider:"contact-form.layouts"}}
 								]
 							}
 							{
 								type: "layout-vertical"
-								label: "Email Content"
+								label: "Content"
+								children: [
+									{type:"textarea", path:"data.promptContent", description:"Shown to visitors above the form.  Markdown is allowed.", options:{rows:12}}
+								]
+							}
+							{
+								type: "layout-vertical"
+								label: "Email"
 								children: [
 									{type:"text", path:"data.emailAddress", label:"Send Messages To", description:"Every message from this form is emailed to this address.  Nothing is stored on the server."}
 									{type:"text", path:"data.emailSubject", label:"Subject Line", description:"The subject line of every email this form sends.  Visitors cannot change it."}
-									{type:"textarea", path:"data.headerMessage", label:"Message Header", description:"Added above the visitor\u0027s message in every email this form sends.  Accepts Markdown.", options:{rows:8}}
+									{type:"textarea", path:"data.headerMessage", label:"Message Header", description:"Added above the visitor\u0027s message in every email this form sends.  Markdown is allowed.", options:{rows:12}}
 								]
 							}
 							{
 								type: "layout-vertical"
 								label: "Confirmation"
 								children: [
-									{type:"textarea", path:"data.successMessage", label:"Confirmation Message", description:"Replaces the form once the visitor\u0027s message is sent.  Accepts Markdown.", options:{rows:8}}
+									{type:"textarea", path:"data.successMessage", description:"Replaces the form once the visitor\u0027s message is sent.  Markdown is allowed.", options:{rows:12}}
 								]
 							}
 						]
@@ -163,6 +189,23 @@
 				{do:"save-and-publish", state:"published", outbox:"false", comment:"Contact form updated by {{.Author}}"}
 				{do:"refresh-page"}
 				{do:"inline-save-button", form:"edit-form"}
+			]
+		}
+
+		widgets: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"sort-widgets"}
+				{do:"save", message:"Widgets updated by {{.Author}}"}
+				{do:"view-html", method:"both"}
+			]
+		}
+
+		widget: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"edit-widget"}
+				{do:"save", comment:"Widget updated by {{.Author}}"}
 			]
 		}
 
