@@ -555,8 +555,8 @@ func TestServerEmailExists(t *testing.T) {
 	require.True(t, service.Exists("test-email"))
 }
 
-// TestServerEmailRequiredKeys verifies that the keys an email's "to" and "headers" templates
-// interpolate are reported, so a step that omits one fails at load rather than at send
+// TestServerEmailRequiredKeys verifies that the keys an email's "to", "subject", and "headers"
+// templates interpolate are reported, so a step that omits one fails at load rather than at send
 func TestServerEmailRequiredKeys(t *testing.T) {
 
 	service := testServerEmail()
@@ -570,8 +570,11 @@ func TestServerEmailRequiredKeys(t *testing.T) {
 
 	require.NoError(t, service.Add(testFilesystem(), definition))
 
-	// Subject is NOT included: it renders leniently, so a missing key there is cosmetic
-	require.Equal(t, []string{"Recipient", "ReplyEmail"}, []string(service.RequiredKeys("test-email")))
+	// Subject IS included.  It renders leniently rather than failing the send, but text/template
+	// writes an absent key as the literal "<no value>", which reaches the recipient in the subject
+	// line -- visible, not cosmetic.  The BODY stays excluded: it is html/template, which renders a
+	// missing key as "", and email-follower-activity relies on that.
+	require.Equal(t, []string{"Recipient", "ReplyEmail", "SubjectOnly"}, []string(service.RequiredKeys("test-email")))
 }
 
 // TestServerEmailRequiredKeys_ExcludesProvided verifies that the Domain_* values DomainEmail.Send
@@ -620,5 +623,127 @@ func TestServerEmailRequiredKeys_ShippedDefinition(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, service.Add(filesystem, definition))
 
-	require.Equal(t, []string{"Email", "UnsubscribeWithBrackets"}, []string(service.RequiredKeys("follower-activity")))
+	// "Name" comes from the subject line, "New Activity From {{.Name}}"
+	require.Equal(t, []string{"Email", "Name", "UnsubscribeWithBrackets"}, []string(service.RequiredKeys("follower-activity")))
+}
+
+/******************************************
+ * Contact Form Email
+ *
+ * The contact form is the first email whose data comes from an
+ * anonymous visitor rather than from Emissary itself, so these
+ * tests pin the two properties that keep it safe: nothing the
+ * visitor writes is trusted as markup, and no template here
+ * references a key that nobody supplies.
+ ******************************************/
+
+// contactFormEmail loads the shipped contact-form definition exactly as the server does
+func contactFormEmail(t *testing.T) (ServerEmail, model.Email) {
+
+	t.Helper()
+
+	service := testServerEmail()
+	filesystem := os.DirFS("../_embed/templates/email-contact-form")
+
+	definitionType, definition := findDefinition(filesystem)
+	require.Equal(t, DefinitionEmail, definitionType)
+	require.NoError(t, service.Add(filesystem, definition))
+
+	email, exists := service.emails["contact-form"]
+	require.True(t, exists, "the shipped definition must declare emailId 'contact-form'")
+
+	return service, email
+}
+
+// contactFormContract is every key the contact-form templates may reference: the six the
+// send-email step supplies, plus the four DomainEmail.Send injects into every email
+var contactFormContract = []string{
+	"To", "Subject", "ReplyEmail", "Name", "Message", "HeaderMessage",
+	"Domain_Owner", "Domain_URL", "Domain_Name", "Domain_Icon",
+}
+
+// TestContactFormEmail_RequiredKeys pins the contract that the Stream template's send-email step
+// must satisfy.  These are the keys whose templates carry missingkey=error, so omitting one does
+// not render a blank -- it kills the whole send.  Asserting the exact set here means a Phase 5
+// mismatch fails when Templates load, rather than the first time a visitor submits the form.
+func TestContactFormEmail_RequiredKeys(t *testing.T) {
+
+	service, _ := contactFormEmail(t)
+
+	require.Equal(t, []string{"ReplyEmail", "Subject", "To"}, []string(service.RequiredKeys("contact-form")))
+}
+
+// TestContactFormEmail_KeysAreInTheContract closes the gap that load-time validation structurally
+// cannot cover.  RequiredKeys walks only "to" and "headers", because only those reject a missing
+// key; "subject" and "body" are lenient by design, so a key they reference but nobody supplies
+// fails SILENTLY -- blank in the body, and the literal "<no value>" in the subject, since
+// text/template renders an absent key that way.  Extending RequiredKeys to cover them would break
+// email-follower-activity, whose body references .URL and .Actor that nothing supplies, so this
+// check is scoped to the one email whose contract is fully known.
+func TestContactFormEmail_KeysAreInTheContract(t *testing.T) {
+
+	_, email := contactFormEmail(t)
+
+	found := make(mapof.Bool)
+	collectTreeFieldNames(email.Subject, found)
+
+	require.NotNil(t, email.Body.Tree, "the body must be parsed before its tree can be walked")
+	collectFieldNames(email.Body.Tree.Root, found)
+
+	require.NotEmpty(t, found, "a walk that finds nothing would pass forever")
+
+	for key := range found {
+		require.Contains(t, contactFormContract, key,
+			"body.html or email.hjson references %q, which no caller supplies -- it will render empty, with no error anywhere", key)
+	}
+}
+
+// TestContactFormEmail_EscapesVisitorInput verifies that everything an anonymous visitor writes is
+// escaped rather than rendered.  The body is html/template, so this holds as long as the visitor's
+// values stay plain interpolations: piping any of them through markdown, htmlMinimal, highlight, or
+// another helper with an HTML return type would declare the value already-safe and hand a stranger
+// script execution in the recipient's mail client.
+func TestContactFormEmail_EscapesVisitorInput(t *testing.T) {
+
+	_, email := contactFormEmail(t)
+
+	data := mapof.Any{
+		"Name":          `<script>alert("name")</script>`,
+		"ReplyEmail":    `"onmouseover="alert(1)`,
+		"Message":       `<script>alert("message")</script>` + "\n<b>bold</b>",
+		"HeaderMessage": "",
+		"Domain_Icon":   "",
+		"Domain_Name":   "Example",
+	}
+
+	var buffer strings.Builder
+	require.NoError(t, email.Body.Execute(&buffer, data))
+
+	result := buffer.String()
+
+	require.NotContains(t, result, "<script>", "visitor input must never reach the recipient as markup")
+	require.NotContains(t, result, "<b>bold</b>")
+	require.Contains(t, result, "&lt;script&gt;", "the script tag must survive as escaped text")
+	require.NotContains(t, result, `"onmouseover="alert(1)`, "an address must not break out of its attribute")
+}
+
+// TestContactFormEmail_RendersAuthorMarkdown verifies that the page author's header message is
+// converted, since it is the one value here that is meant to carry formatting
+func TestContactFormEmail_RendersAuthorMarkdown(t *testing.T) {
+
+	_, email := contactFormEmail(t)
+
+	data := mapof.Any{
+		"Name":          "Sarah",
+		"ReplyEmail":    "sarah@example.com",
+		"Message":       "Hello",
+		"HeaderMessage": "Please allow **two days** for a reply.",
+		"Domain_Icon":   "",
+		"Domain_Name":   "Example",
+	}
+
+	var buffer strings.Builder
+	require.NoError(t, email.Body.Execute(&buffer, data))
+
+	require.Contains(t, buffer.String(), "<strong>two days</strong>", "the author's Markdown must be converted")
 }

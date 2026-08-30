@@ -195,10 +195,14 @@ func (service *ServerEmail) Exists(emailID string) bool {
 	return exists
 }
 
-// RequiredKeys returns every data key that an email's "to" and "headers" templates interpolate.
-// These are the templates that reject a missing key outright, so a caller that omits one of these
-// does not render a blank value -- it fails the whole send.  Keys that Send supplies for every
-// email are excluded, because no caller has to pass them.
+// RequiredKeys returns every data key that an email's "to", "subject", and "headers" templates
+// interpolate.  Keys that Send supplies for every email are excluded, because no caller passes them.
+//
+// "to" and "headers" carry missingkey=error, so omitting one of their keys does not render a blank
+// value -- it fails the whole send.  "subject" is lenient by comparison, but text/template renders
+// an absent key as the literal "<no value>", which then ships to the recipient in the subject line,
+// so it is worth catching at load time too.  The body is deliberately excluded: it is html/template,
+// which renders a missing key as "", and email-follower-activity depends on that.
 func (service *ServerEmail) RequiredKeys(emailID string) sliceof.String {
 
 	email, exists := service.emails[emailID]
@@ -209,6 +213,7 @@ func (service *ServerEmail) RequiredKeys(emailID string) sliceof.String {
 
 	found := make(mapof.Bool)
 	collectTreeFieldNames(email.To, found)
+	collectTreeFieldNames(email.Subject, found)
 
 	for _, headerTemplate := range email.Headers.Templates() {
 		collectTreeFieldNames(headerTemplate, found)
