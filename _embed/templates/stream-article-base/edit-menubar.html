@@ -150,12 +150,12 @@
 			<a href="/{{.StreamID}}/edit" class="turboclick {{- if eq $selected `edit` }} bold{{- end -}}">Content</a>
 		{{- end -}}
 
-		{{- if .UserCan "style" -}}
-			<a href="/{{.StreamID}}/style" class="turboclick {{- if eq $selected `style` }} bold{{- end -}}">Styles</a>
-		{{- end -}}
-
 		{{- if .UserCan "widgets" -}}
 			<a href="/{{.StreamID}}/widgets" class="turboclick {{- if eq $selected `widgets` }} bold{{- end -}}">Widgets</a>
+		{{- end -}}
+
+		{{- if .UserCan "style" -}}
+			<a href="/{{.StreamID}}/style" class="turboclick {{- if eq $selected `style` }} bold{{- end -}}">Styles</a>
 		{{- end -}}
 
 		{{- if .UserCan "children" -}}
