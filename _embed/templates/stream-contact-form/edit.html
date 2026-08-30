@@ -1,0 +1,47 @@
+<div class="page">
+
+	{{- $breadcrumbs := .Breadcrumbs -}}
+	<div id="menu-bar" class="margin-bottom">
+		<a href="/admin/navigation" class="text-gray margin-none padding-horizontal-xs">Navigation &rarr;</a>
+		{{- range $index, $stream := $breadcrumbs -}}
+			<a href="/{{$stream.ID}}/edit" class="text-gray margin-none padding-horizontal-xs">{{$stream.Name}} &rarr;</a>
+		{{- end -}}
+		<a href="/{{.StreamID}}" class="bold margin-none padding-horizontal-xs">{{.Name}}</a>
+	</div>
+
+	<div id="menu-bar">
+		<div class="left">
+			<a href="/{{.StreamID}}/edit" class="bold">Edit Contact Form</a>
+		</div>
+
+		<div class="right">
+			<!-- Sits outside the form, so "form" is what associates it, natively, and it is
+			     also what makes the SaveButton behavior's "me.form" resolve for the saving
+			     spinner.  hx-preserve carries this element through the refreshPage reload
+			     below: saving swaps a green "Saved" button in here, and the reload would
+			     otherwise destroy it long before the 3.5s flash finished. -->
+			<button type="submit" form="edit-form" id="inline-save-button" hx-preserve="true" class="primary" tabIndex="0" script="install SaveButton">Save Changes</button>
+			{{- if not .IsNew -}}
+				<a hx-get="/{{.StreamID}}/delete" class="text-red" tabIndex="0">Delete</a>
+			{{- end -}}
+		</div>
+	</div>
+
+	<div class="margin-top max-width-640">
+
+		{{.View "edit-form"}}
+
+	</div>
+
+	<!-- Reloads the editor when a step fires "refreshPage", using the same pattern stream-folder
+	     uses, so the breadcrumb reflects a rename and the form shows any value the server
+	     normalized on save.  The save button opts out via hx-preserve. -->
+	<div
+		hx-get="/{{.StreamID}}/edit"
+		hx-trigger="refreshPage from:window"
+		hx-target="main"
+		hx-swap="innerHTML"
+		hx-push-url="true">
+	</div>
+
+</div>

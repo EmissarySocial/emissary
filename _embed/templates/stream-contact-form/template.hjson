@@ -1,0 +1,178 @@
+{
+	templateId: contact-form
+	templateRole: article
+	category: Special
+	model: Stream
+	containedBy: ["top", "home", "folder"]
+	label: Contact Form
+	description: "Lets visitors send you a message by email."
+	icon: message
+	sort: 60
+
+	schema: {
+		type: "object"
+		properties: {
+			token: {type:"string", format:"token", maxLength:64, required:true}
+			label: {type:"string", format:"text", maxLength:128}
+			icon: {type:"string", format:"token", maxLength:64}
+			summary: {type:"string", format:"text", maxLength:2048}
+			// RULE: every author setting is required.  A contact form missing any one of them is
+			// broken in a way the visitor discovers, not the author -- no recipient means the send
+			// fails, and an empty prompt or confirmation means a blank page.  The settings form
+			// enforces this; Stream.Save does not validate the template schema, so "create" seeds
+			// everything it sensibly can and leaves only the recipient for the author.
+			data: {type:"object", properties: {
+				emailAddress: {type:"string", format:"email", maxLength:255, required:true}
+				emailSubject: {type:"string", format:"text", maxLength:128, required:true}
+				promptContent: {type:"string", format:"text", maxLength:8192, required:true}
+				headerMessage: {type:"string", format:"text", maxLength:2048, required:true}
+				successMessage: {type:"string", format:"text", maxLength:2048, required:true}
+			}}
+		}
+	}
+
+	states: {
+		default: {
+			label: "Default"
+			description: "Visible only to Authors and Owners"
+		}
+		published: {
+			label: "Published"
+			description: "The form is live and accepting messages"
+		}
+	}
+
+	roles: {
+		editor: {
+			label: "Editor"
+			description: "Can make changes to this contact form."
+		}
+	}
+
+	actions: {
+		create: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"set-data", values: {
+					label: "Contact Us"
+					data.emailSubject: "New message from your contact form"
+					data.promptContent: "Send us a message using the form below, and we will get back to you."
+					data.headerMessage: "You received a new message from the contact form on your website."
+					data.successMessage: "Thank you.  Your message has been sent."
+				}}
+				{do:"save"}
+				{do:"forward-to", url:"/{{.StreamID}}/edit"}
+			]
+		}
+
+		view: {
+			roles: ["author", "editor"]
+			stateRoles: {
+				"published": ["anonymous"]
+			}
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		// RULE: submit mirrors "view" exactly, so the form is submittable precisely when the page
+		// is visible.  An anonymous grant is still scoped by state, which is what keeps a form
+		// that has been created but never saved from accepting messages; "author" in the base
+		// roles lets the page author exercise it in that window.
+		submit: {
+			roles: ["author"]
+			stateRoles: {
+				"published": ["anonymous"]
+			}
+			steps: [
+				{do:"read-form", schema: {
+					type: "object"
+					properties: {
+						name: {type:"string", format:"text", maxLength:128, required:true}
+						email: {type:"string", format:"email", maxLength:255, required:true}
+						message: {type:"string", format:"text", maxLength:8192, required:true}
+					}
+				}}
+				{do:"send-email", email:"contact-form", values: {
+					To: "{{.Data `emailAddress`}}"
+					Subject: "{{.Data `emailSubject`}}"
+					ReplyEmail: "{{.GetString `email`}}"
+					Name: "{{.GetString `name`}}"
+					Message: "{{.GetString `message`}}"
+					HeaderMessage: "{{.Data `headerMessage`}}"
+				}}
+				{do:"view-html", method:"post", file:"success"}
+			]
+		}
+
+		edit: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		// The settings form is rendered INLINE by edit.html (via {{.View "edit-form"}}), not in a
+		// modal, so the author edits the form and previews the result on one page.  The Save button
+		// lives in edit.html's menu bar, which is why the form hides its own.
+		edit-form: {
+			roles: ["author", "editor"]
+			steps: [
+				{
+					do: "edit"
+					// Grouped by WHO reads each value: the visitor before they submit, the
+					// recipient who gets the email, and the visitor again afterward.
+					form: {
+						type: "layout-tabs"
+						children: [
+							{
+								type: "layout-vertical"
+								label: "Page Content"
+								children: [
+									{type:"text", path:"label", label:"Page Title", description:"Displays in website navigation, and at the top of the page."}
+									{type:"text", path:"token", label:"Token/Slug", description:"This page\u0027s address on your website, for example \u0022contact\u0022.  Must be unique.", options:{autocomplete:"off", validator:"/.validate/streamToken?streamId={{.StreamID}}"}}
+									{type:"select", path:"icon", label:"Icon", description:"Displays beside the page title in website navigation.", options:{provider:"folder-icons"}}
+									{type:"textarea", path:"data.promptContent", label:"Prompt", description:"Shown to visitors above the form.  Accepts Markdown.", options:{rows:8}}
+								]
+							}
+							{
+								type: "layout-vertical"
+								label: "Email Content"
+								children: [
+									{type:"text", path:"data.emailAddress", label:"Send Messages To", description:"Every message from this form is emailed to this address.  Nothing is stored on the server."}
+									{type:"text", path:"data.emailSubject", label:"Subject Line", description:"The subject line of every email this form sends.  Visitors cannot change it."}
+									{type:"textarea", path:"data.headerMessage", label:"Message Header", description:"Added above the visitor\u0027s message in every email this form sends.  Accepts Markdown.", options:{rows:8}}
+								]
+							}
+							{
+								type: "layout-vertical"
+								label: "Confirmation"
+								children: [
+									{type:"textarea", path:"data.successMessage", label:"Confirmation Message", description:"Replaces the form once the visitor\u0027s message is sent.  Accepts Markdown.", options:{rows:8}}
+								]
+							}
+						]
+					}
+					options: [
+						"id:edit-form"
+						"submit-button:hide"
+						"cancel-button:hide"
+						"endpoint:/{{.StreamID}}/edit-form"
+					]
+				}
+				{do:"save-and-publish", state:"published", outbox:"false", comment:"Contact form updated by {{.Author}}"}
+				{do:"refresh-page"}
+				{do:"inline-save-button", form:"edit-form"}
+			]
+		}
+
+		delete: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"unpublish", state:"default", outbox:"false"}
+				{do:"delete", title:"Delete '{{.Label}}'?", message:"This contact form will be permanently removed.  There is NO UNDO."}
+				{do:"forward-to", url:"/{{.ParentID}}"}
+			]
+		}
+	}
+}
