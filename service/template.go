@@ -493,6 +493,42 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 					}
 				}
 
+				// RULE: A send-email step must name an email definition that exists, and must
+				// supply every key that definition's "to" and "headers" templates interpolate.
+				// Those two templates reject a missing key outright, so an omission is not a
+				// blank value -- it fails the whole send.  This can only run here, after every
+				// location has loaded: emails and Templates share one directory walk, and
+				// "email-*" sorting before "stream-*" is incidental, not guaranteed.
+				if emailStep, ok := step.(modelStep.SendEmail); ok {
+
+					if emailID := emailStep.EmailID(); emailID != "" {
+
+						if !service.emailService.Exists(emailID) {
+							errors.Append(derp.Validation(
+								"Undefined email used in action step",
+								"template: "+templateID,
+								"action: "+actionID,
+								"step: "+step.Name(),
+								"email required: "+emailID,
+								"emails defined: "+strings.Join(service.emailService.Names(), ", "),
+							))
+						} else {
+							for _, key := range service.emailService.RequiredKeys(emailID) {
+								if _, exists := emailStep.Values[key]; !exists {
+									errors.Append(derp.Validation(
+										"Email requires a value that this step does not provide",
+										"template: "+templateID,
+										"action: "+actionID,
+										"step: "+step.Name(),
+										"email: "+emailID,
+										"value required: "+key,
+									))
+								}
+							}
+						}
+					}
+				}
+
 				// RULE: States used in action steps must be defined
 				for _, state := range step.RequiredStates() {
 					if !template.IsValidState(state) {
