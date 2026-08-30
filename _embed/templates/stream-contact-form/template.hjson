@@ -3,7 +3,7 @@
 	templateRole: article
 	category: Special
 	model: Stream
-	containedBy: ["top", "home", "folder"]
+	containedBy: ["top", "folder", "article"]
 	extends: ["base-widget-editor"]
 	bundles: {
 		stylesheet: {

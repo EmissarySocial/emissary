@@ -2,7 +2,7 @@
 	templateId: redirect
 	category: Special
 	model: Stream
-	containedBy: ["top", "folder"]
+	containedBy: ["top", "folder", "article"]
 	label: Redirect
 	description: Forwards requests to another web address
 	icon: forward
