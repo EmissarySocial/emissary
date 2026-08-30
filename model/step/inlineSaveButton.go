@@ -12,6 +12,7 @@ type InlineSaveButton struct {
 	ID    *template.Template
 	Class string
 	Label *template.Template
+	Form  string
 }
 
 // NewInlineSaveButton returns a fully initialized InlineSaveButton step, or an error if its configuration is invalid
@@ -39,6 +40,7 @@ func NewInlineSaveButton(stepInfo mapof.Any) (InlineSaveButton, error) {
 		ID:    idTemplate,
 		Class: first(stepInfo.GetString("class"), "primary"),
 		Label: labelTemplate,
+		Form:  stepInfo.GetString("form"),
 	}, nil
 }
 
