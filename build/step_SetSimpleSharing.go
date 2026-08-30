@@ -198,9 +198,12 @@ func (step StepSetSimpleSharing) form() (form.Element, error) {
 	}, nil
 }
 
-// calculateValue returns the Groups this Stream is shared with, defaulting to "anonymous" when it has none
+// calculateValue returns the Groups this Stream is shared with, defaulting to owners-only when it has none
 func (step StepSetSimpleSharing) calculateValue(stream *model.Stream) mapof.Object[id.Slice] {
 
+	// An unshared Stream opens this form on "owners only", so accepting the default cannot
+	// publish something the author meant to keep private.  StepSetCircleSharing deliberately
+	// defaults the other way, because a Circle is already a deliberate act of sharing.
 	if groupIds := stream.Groups[step.Role]; groupIds.NotEmpty() {
 		return mapof.Object[id.Slice]{
 			"groupIds": groupIds,
