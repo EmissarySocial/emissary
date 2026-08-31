@@ -1,0 +1,93 @@
+{
+	themeId: minimal
+	extends:["global"]
+	isVisible:true
+	category: General
+	label: Minimal
+	description: A minimal theme for personal websites.
+	rank: 0
+	schema: {
+		type: "object",
+		properties: {
+			iconId: {type:"string", format:"objectId"}
+			iconUrl: {type:"string", format:"url"}
+			label: {type:"string", maxLength:100, required: true}
+			description: {type:"string", maxLength:100}
+			themeId: {type:"string", maxLength: 100}
+			registrationId: {type:"string", maxLength: 100}
+			themeData: {type:"object", properties: {
+				"stylesheet": {type:"string", format:"css", maxLength: 1048576}
+				// RULE: "default" is load-bearing on both of these, not decoration.  A Domain
+				// starts life with no themeData keys at all, and an absent boolean reads back
+				// as FALSE -- so without a declared default these toggles would render OFF,
+				// and the first save of ANY tab on this form would write that phantom FALSE
+				// and blank the navigation bar.  The default is what both the form widget and
+				// .ThemeData fall back to, so the two always agree.
+				"showNavigation": {type:"boolean", default:true}
+				"showSignup": {type:"boolean", default:true}
+			}}
+		}
+	}
+	form: {
+		type: layout-tabs
+		children: [
+			{
+				type: layout-vertical
+				label: Description
+				children: [
+					{type: "text", label: "Website Name", path: "label", description: "Title of this website and domain."}
+					{type: "textarea", label: "Description", path: "description", options:{rows:8}}
+				]
+			}
+			{
+				type: layout-vertical
+				label: Images
+				children: [
+					{type: "upload", label: "Icon", path: "iconUrl", description: "Icon for this website. Must be square. Often cropped to be a circle.", options:{accept:"image/*", delete:"/admin/domain/delete-icon"}, rules:{types:["webp"]}}
+					{type: "upload", label: "Image", path: "imageUrl", description: "Image to display on signin pages and emails. Roughly 16:9 works best.", options:{accept:"image/*", delete:"/admin/domain/delete-image"}, rules:{types:["webp"]}}
+				]
+			}
+			{
+				type: layout-vertical
+				label: Navigation
+				children: [
+					{type: "toggle", label: "Top-Level Navigation", path: "themeData.showNavigation", options:{true-text:"Visible. Top-level pages are listed in the navigation bar.", false-text:"Hidden. Top-level pages are not listed in the navigation bar."}}
+					{type: "toggle", label: "Sign In Link", path: "themeData.showSignup", options:{true-text:"Visible. Guests see Sign In and Join Now links.", false-text:"Hidden. Guests see no Sign In or Join Now links."}}
+				]
+			}
+			{
+				type: layout-vertical
+				label: Stylesheet
+				children: [
+					{type: "textarea", path: "themeData.stylesheet", description: "Custom CSS stylesheet; affects every page on this domain. <a href='https://developer.mozilla.org/en-US/docs/Web/CSS' target='_blank' class='text-gray text-nocolor text-underline'>Learn more about CSS.</a>", options:{rows:12}}
+				]
+			}
+		]
+	}
+	bundles: {
+		stylesheet: {
+			content-type:"text/css"
+		}
+	}
+	startupTasks: [
+		{label:"Website Name and Logo", description:"Set some basic info about this domain.", href:"/admin/domain/index", value:"/admin/domain"}
+		{label:"Blocklist Rules", description:"Create rules to filter content from the Internet.", href:"/admin/rules", value:"/admin/rules"}
+		{label:"Registration Form (Optional)", description:"Enable users to register on this website.", href:"/admin/domain/signup", value:"/admin/domain/signup"}
+		{label:"Configure Groups (Optional)", description:"Set up user groups to manage access and permissions.", href:"/admin/groups", value:"/admin/groups"}
+		{label:"Add Default Content", description:"Sample content pages help you understand how Emissary works.", href:"/startup/content", value:"/startup/content"}
+	]
+	startupStreams: [
+		{templateId:"article-editorjs", token:"home", label:"Welcome!", rank:1}
+		{templateId:"article-markdown", token:"join-the-team", label:"Join the Team", rank:3}
+		// {templateId:"article-markdown", token:"about", label:"About Minimus", rank:2}
+	]
+	startupGroups:[
+		{label:"Publishers"}
+		{label:"Subscribers"}
+	]
+	defaultFolders: [
+		{label:"Personal"}
+		{label:"News"}
+		{label:"Work-Related"}
+	]
+}

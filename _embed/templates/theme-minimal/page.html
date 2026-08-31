@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>{{.DomainLabel}} - {{.PageTitle}}</title>
+	{{ template "includes-head" .}}
+</head>
+
+<body hx-target="main" hx-swap="innerHTML transition:true show:none" hx-push-url="true" hx-ext="a11y" script="install SelectNav">
+
+	{{- template "navigation" . -}}
+
+	<main id="main">
+		{{- .GetContent -}}
+	</main>
+	
+	<aside></aside>
+
+</body>
+
+{{ template "includes-foot" .}}
+
+</html>

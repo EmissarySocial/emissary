@@ -1,0 +1,291 @@
+/******************************************
+ * PAGE LAYOUT CLASSES
+ ******************************************/
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	display:flex;
+	flex-direction:column;
+	background-color: var(--body-background);
+	color: var(--text-color);
+	margin:0px;
+	min-height:100dvh;
+	overflow-x:hidden;
+	overscroll-behavior: none;
+}
+
+nav {
+	display: flex;
+	align-items:stretch;
+	justify-content: center;
+
+	color: var(--gray80);
+	font-weight:400;
+	font-size:14px;
+	background-color: var(--white);
+	height:48px;
+	flex-shrink:0;
+	flex-grow:0;
+	padding-left:16px;
+	padding-right:16px;
+	overflow-x:auto;
+	overflow-y:hidden;
+	overscroll-behavior: none;
+
+	@media print {
+		display:none;
+	}
+
+	@media screen {
+
+		@media (width < 640px) {
+		}
+
+		@media (width >= 640px) {
+			& {border-bottom: solid 1px var(--gray15);}
+		}
+	}
+
+	.framed {
+		display: flex;
+		justify-content: space-evenly;
+
+		@media screen and (width >= 640px) {
+			& {
+				flex-grow:1;
+				justify-content: center;
+			}			
+		}
+	}
+
+	.spacer {
+		display:none;
+	}
+
+	a, button {
+		display:flex;
+		flex-direction:column;
+		align-items:center;
+
+		color: var(--gray80);
+		background-color: var(--white);
+		padding:6px 12px;
+		line-height:1.5em;
+		border-radius: var(--border-radius);
+		margin:6px 0px;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+
+		&.primary {
+			background-color: var(--button-primary-background);
+			color: var(--button-primary-color);
+
+			&:hover,
+			&:focus {
+				background-color: var(--button-primary-background-hover);
+				color: var(--button-primary-color-hover);
+			}
+		}
+
+		&:hover,
+		&:focus {
+			color: var(--gray90);
+			background-color:var(--gray10);
+		}
+
+		&.selected,
+		&.selected:hover,
+		&.selected:focus {
+			background-color: var(--gray20);
+			color: var(--black);
+		}
+
+		& > .icon {
+			font-size:24px;
+		}
+
+		& > .label {
+			font-size:10px;
+			line-height:14px;
+		}
+	}
+
+	b {
+		display:inline-block;
+		color: var(--black);
+		font-weight: 700;
+		padding: 8px 0px;
+		margin:10px 10px 10px 0px;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+}
+
+main {
+	flex-grow:1;
+	display: flex;
+	flex-direction:row;
+	justify-content: center;
+	container-type:inline-size;
+	overscroll-behavior: none;
+}
+
+body:has(> main > .app) {
+	height:100dvh;
+	width:100dvw;
+	overflow-x:hidden;
+	overflow-y:hidden;
+	overscroll-behavior: none;
+}
+
+main:has(> .app) {
+	height:100%;
+	overflow-x:hidden;
+	overflow-y:hidden;
+	overscroll-behavior:none;
+}
+
+@media screen and (width >= 640px) {
+
+	nav a {
+		display:inline;
+	}
+
+	nav a > .icon {
+		display:unset;
+		font-size:unset;
+	}
+	
+	nav a > .label {
+		font-size:unset;
+		line-height:unset;
+	}
+
+	nav .spacer {
+		display:unset;
+		flex-grow:1;
+	}
+}
+
+/******************************************
+ * Notification Badge (overlaid on the Notifications bell icon)
+ ******************************************/
+
+/* The anchor becomes the positioning context so the badge can overlay the
+   icon without occupying layout space -- the button never changes size. */
+#nav-notifications {
+	position: relative;
+}
+
+/* A small red dot pinned to the top-right of the icon.  It is positioned from
+   the anchor's horizontal CENTER (left:50%), which lines up with the icon's
+   center in both layouts -- the label always sits below the icon (mobile
+   tab-bar) or is hidden (desktop), never beside it, so label width never
+   shifts the dot.  position:absolute takes it out of normal flow, so text-sm's
+   font-size and margins no longer affect the button's size.
+   Tweak `top` / `margin-left` / `font-size` to fine-tune placement + size. */
+#nav-notifications .nav-badge {
+	position: absolute;
+	top: 4px;
+	left: 50%;
+	margin: 0 0 0 4px;
+	font-size: 8px;
+	line-height: 1;
+	color: var(--red60);
+	pointer-events: none;
+}
+
+/******************************************
+ * Floating Menu
+ *
+ * The signed-in user's own links, pinned to the bottom-right corner OUTSIDE <nav> -- so
+ * none of the `nav a` rules above reach them.  This block mirrors those rules so the two
+ * sets of items stay visually identical: change one, change the other.  (`.nav-item` is
+ * NOT a styling hook in this theme; nothing anywhere selects it.)
+ *
+ * Pair it with `card padding-xs` for the visual treatment.  It carries its own
+ * positioning, so it does NOT need `pos-absolute-bottom-right`.
+ ******************************************/
+
+.floating-menu {
+
+	position: absolute;
+	bottom: var(--rhythm);
+	right: var(--rhythm);
+
+	/* Float above the Inbox and Conversations apps, which fill the viewport. */
+	z-index: 1000;
+
+	/* RULE: turn OFF the query container that .card switches on.  A size query container
+	   is sized as if it had no contents -- that circularity is exactly what container
+	   queries have to forbid -- so a .card that sizes shrink-to-fit (as this one does,
+	   being absolutely positioned with width:auto) has nothing to size around and
+	   collapses to its own padding.  Note that `width:max-content` does NOT rescue it:
+	   containment zeroes the intrinsic sizes that max-content resolves against, so the
+	   card stays collapsed and the row of links simply runs off the right of the screen.
+	   Nothing here queries its own size, so normal containment is what it wants. */
+	container-type: normal;
+
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+
+	/* A corner-pinned menu must degrade by wrapping, never by pushing its links off the
+	   edge of the viewport where they cannot be seen or reached. */
+	flex-wrap: wrap;
+	justify-content: flex-end;
+
+	a {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+
+		color: var(--gray80);
+		padding: 6px 12px;
+		line-height: 1.5em;
+		border-radius: var(--border-radius);
+		white-space: nowrap;
+		text-overflow: ellipsis;
+
+		&:hover,
+		&:focus {
+			color: var(--gray90);
+			background-color: var(--gray10);
+		}
+
+		&.selected,
+		&.selected:hover,
+		&.selected:focus {
+			background-color: var(--gray20);
+			color: var(--black);
+		}
+
+		& > .icon {
+			font-size: 24px;
+		}
+
+		& > .label {
+			font-size: 10px;
+			line-height: 14px;
+		}
+	}
+}
+
+/* Desktop drops the stacked label exactly as the nav bar does -- .mobile-show hides the
+   label itself, leaving only the icon.  The anchor stays a centered column rather than
+   going inline, because that is what holds the notification badge over the icon. */
+@media screen and (width >= 640px) {
+
+	.floating-menu a > .icon {
+		font-size: unset;
+	}
+
+	.floating-menu a > .label {
+		font-size: unset;
+		line-height: unset;
+	}
+}

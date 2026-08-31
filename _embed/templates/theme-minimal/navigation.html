@@ -1,0 +1,94 @@
+{{- if ne "false" (.ThemeData "showNavigation") -}}
+	<nav>
+		<div hx-push-url="true" hx-swap="transition:true" class="framed">
+			<a href="#main" class="hide-visual">Skip navigation</a>
+			{{- if eq "STARTUP" .DomainStateID -}}
+				<a class="link nav-item turboclick" href="/startup">{ Startup Checklist }</a>
+			{{- else}}
+				{{- range .Navigation -}}
+					<a href="/{{.Token}}" id="nav-{{.StreamID}}" class="nav-item turboclick" aria-label="{{.Label}}">
+						{{- $icon := .Icon -}}
+						{{- if ne "" $icon -}}
+							<span class="icon selected-hide">{{icon $icon}}</span>
+							<span class="icon selected-show">{{icon (join $icon "-fill")}}</span>
+						{{- end }}
+						<span class="label">{{.Label}}</span>
+					</a>
+				{{- end -}}
+			{{- end -}}
+
+			{{- if .NotAuthenticatedOrIdentity -}}
+
+				{{- if ne "false" (.ThemeData "showSignup") -}}
+
+					<a href="/signin" id="nav-signin" class="nav-item turboclick" aria-label="Sign In">
+						<span class="icon">{{icon "user"}}</span>
+						<span class="label">Sign In</span>
+					</a>
+
+					{{- if .DomainHasRegistrationForm -}}
+						<a href="/register" id="nav-signup" class="nav-item primary turboclick" aria-label="join now">
+							<span class="label">Join Now</span>
+						</a>
+					{{- end -}}
+				{{- end -}}
+			{{- end -}}
+
+		</div>
+	</nav>
+{{- end -}}
+
+{{- if .IsAuthenticated -}}
+	<div class="floating-menu card padding-xs">
+		<a href="/@me" id="nav-outbox" class="turboclick" aria-label="Profile">
+			<span class="icon selected-hide">{{icon "user"}}</span>
+			<span class="icon selected-show">{{icon "user-fill"}}</span>
+			<span class="mobile-show label">Profile</span>
+		</a>
+
+		<a href="/@me/newsfeed" id="nav-inbox" class="turboclick" aria-label="Inbox">
+			<span class="icon selected-hide">{{icon "inbox"}}</span>
+			<span class="icon selected-show">{{icon "inbox-fill"}}</span>
+			<span class="mobile-show label">Inbox</span>
+		</a>
+
+		<a href="/@me/conversations" id="nav-conversations" class="turboclick" aria-label="Conversations">
+			<span class="icon selected-hide">{{- icon "chat" }}</span>
+			<span class="icon selected-show">{{- icon "chat-fill" }}</span>
+			<span class="mobile-show label">Conversations</span>
+		</a>
+
+		<a href="/@me/notifications/replies" id="nav-notifications" class="turboclick" aria-label="Notifications">
+			<span class="icon selected-hide">{{icon "bell"}}</span>
+			<span class="icon selected-show">{{icon "bell-fill"}}</span>
+			<span class="mobile-show label">Notifications</span>
+			<span id="nav-notifications-badge" class="nav-badge text-red text-sm {{if not .HasUnreadNotifications}}hide{{end}}">&#9679;</span>
+		</a>
+
+		<div hx-ext="sse" sse-connect="/@me/sse/notifications" style="display:none;">
+			<div
+				hx-get="/@me/notifications/badge"
+				hx-trigger="sse:message, refreshSidebar from:window"
+				hx-target="#nav-notifications-badge"
+				hx-swap="outerHTML"
+				hx-push-url="false">
+			</div>
+		</div>
+
+		{{- if .IsOwner -}}
+			<a href="/admin/domain" id="nav-admin" class="nav-item turboclick" aria-label="Server Admin">
+				<span class="icon selected-hide">{{icon "server"}}</span>
+				<span class="icon selected-show">{{icon "server-fill"}}</span>
+				<span class="mobile-show label">Server</span>
+			</a>
+		{{- end -}}
+	</div>
+
+{{- else if .IsIdentity -}}
+	<div class="floating-menu card padding-xs">
+		<a href="/@guest" id="nav-profile" class="nav-item turboclick" aria-label="Profile">
+			<span class="icon selected-hide">{{icon "user"}}</span>
+			<span class="label">Profile</span>
+		</a>
+	</div>
+{{- end -}}
