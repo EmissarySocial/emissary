@@ -14,8 +14,12 @@
 	color: var(--gray80);
 }
 
+/* Widths track .widgets.LEFT / .widgets.RIGHT in the article stylesheet, so what the
+   author arranges here is the proportion they actually get. */
 .widget-editor-LEFT {
-	width: 25%;
+	width: 20%;
+	min-width:160px;
+	max-width:320px;
 	flex-grow:0;
 	flex-shrink:0;
 	padding:0px;
@@ -33,7 +37,9 @@
 }
 
 .widget-editor-RIGHT {
-	width: 25%;
+	width: 20%;
+	min-width:160px;
+	max-width:240px;
 	flex-grow:0;
 	flex-shrink:0;
 	padding:0px;
@@ -98,6 +104,9 @@
 	position:relative;
 }
 
+/* Revealed on hover or keyboard focus.  A button on every card is noise once a page
+   fills up, and opacity rather than display keeps it in the tab order for anyone who
+   cannot point at it. */
 .widget button {
 	position:absolute;
 	font-size:12px;
@@ -107,6 +116,13 @@
 	border:solid 1px var(--gray30);
 	background:var(--gray20);
 	cursor:pointer;
+	opacity:0;
+	transition: opacity 120ms ease-out;
+}
+
+.widget:hover button,
+.widget button:focus-visible {
+	opacity:1;
 }
 
 .widget.widget-dragging {
@@ -167,7 +183,7 @@
 /* Each zone carries a hidden <input>, so :empty never matches it.  "Holds no .widget"
    is the real test for an unoccupied region, and the prompt belongs only there. */
 .widget-editor-layout .widget-editor-sortable:not(:has(.widget))::after {
-	content:"+   Drop a Widget Here";
+	content:"+   Drop Widgets Here";
 	display:flex;
 	align-items:center;
 	justify-content:center;
@@ -203,7 +219,8 @@
 
 @media (prefers-reduced-motion: reduce) {
 	.widget-editor-MAIN,
-	.widget-editor-layout .widget-editor-sortable {
+	.widget-editor-layout .widget-editor-sortable,
+	.widget button {
 		transition:none;
 	}
 }
