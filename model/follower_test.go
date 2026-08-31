@@ -50,14 +50,19 @@ func TestFollowerUnsubscribeLinkWithBrackets(t *testing.T) {
 	require.Equal(t, "<"+plain+">", follower.UnsubscribeLinkWithBrackets("https://example.com"))
 }
 
-// TestFollowerUnsubscribeLinkWithBrackets_Empty verifies that a Follower with no unsubscribe link
-// yields an empty string rather than a bare "<>".  ServerEmail omits headers that render empty, so
-// an empty result is what keeps a malformed List-Unsubscribe out of the message.
-func TestFollowerUnsubscribeLinkWithBrackets_Empty(t *testing.T) {
+// TestFollowerUnsubscribeLink_IgnoresMethod verifies that the link is built for every Follower,
+// not just email ones.
+//
+// The URL is public and can be typed by hand, so an empty return would have been the appearance
+// of an authorization check rather than one.  The real gate is service.Follower.LoadBySecret,
+// which loads EMAIL records only -- pinned by TestFollowerLoadBySecret_RejectsOtherMethods.
+func TestFollowerUnsubscribeLink_IgnoresMethod(t *testing.T) {
 
 	follower := NewFollower()
 	follower.Method = FollowerMethodActivityPub
 
-	require.Empty(t, follower.UnsubscribeLink("https://example.com"))
-	require.Empty(t, follower.UnsubscribeLinkWithBrackets("https://example.com"))
+	link := follower.UnsubscribeLink("https://example.com")
+
+	require.NotEmpty(t, link)
+	require.Equal(t, "<"+link+">", follower.UnsubscribeLinkWithBrackets("https://example.com"))
 }

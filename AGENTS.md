@@ -24,6 +24,14 @@ A Go client connecting to a single-node replica set from the host will otherwise
 
 Emissary regularly consumes `benpate/*` and `EmissarySocial/*` libraries from local working copies while a fix waits for a tag. `go mod tidy` rewrites `go.sum` and the require block against those local trees, which produces a `go.mod` that cannot build for anyone else and is easy to commit by accident. If tidy is genuinely needed, drop the replaces first — and never keep its rewrite silently.
 
+## An email recipient never comes from the request
+
+A `send-email` step reaches the outside world on behalf of a visitor who may be anonymous, which makes the `To:` value the line between a contact form and an open relay. It must resolve from the Stream — `{{.Data \`emailAddress\`}}`, set only through an author-gated settings form — and never from anything the sender controls. The builder that renders those step arguments also exposes `.QueryParam` and the posted form, so writing `To: "{{.QueryParam \`email\`}}"` compiles, loads, validates, and ships a relay. Nothing in the code stops it; this rule is the whole enforcement.
+
+The same reasoning covers `ReplyEmail`, which *does* carry visitor input: it is a reply-to hint on a message going to a fixed recipient, not a destination. Anything that selects a destination stays on the Stream.
+
+[StepSendEmail](build/step_SendEmail.go) also halts the pipeline when a send fails, rather than reporting and continuing. A web-form message exists only in flight — nothing is written and nothing is queued — so a swallowed error returns a success page to a visitor whose message reached nobody. `DomainEmail.Send` treats an unconfigured SMTP connection the same way, for the same reason.
+
 ## The template funcmap has helpers that emit unescaped HTML
 
 `markdown`, `highlight`, `icon`, and their siblings in [tools/templates/functions.go](tools/templates/functions.go) return `template.HTML`, which tells `html/template` the value is already safe. `markdown` earns that by sanitizing; `highlight` does **not** — it returns its input verbatim. Any new helper with an `HTML`/`CSS`/`HTMLAttr` return type is a trust boundary, so sanitize inside the helper and check every call site before pointing one at federated or user-supplied content.

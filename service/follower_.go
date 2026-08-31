@@ -355,7 +355,9 @@ func (service *Follower) LoadByToken(session data.Session, parentID primitive.Ob
 	return service.Load(session, criteria, follower)
 }
 
-// LoadBySecret loads a follower based on the FollowerID.  It confirms that the secret value matches
+// LoadBySecret loads an email Follower using the unlisted secret from their confirmation or
+// unsubscribe link.  It is the only path that an anonymous visitor can use to reach a Follower
+// record, so it carries the whole authorization for those two actions.
 func (service *Follower) LoadBySecret(session data.Session, followerID primitive.ObjectID, secret string, follower *model.Follower) error {
 
 	const location = "service.Follower.LoadBySecret"
@@ -365,8 +367,13 @@ func (service *Follower) LoadBySecret(session data.Session, followerID primitive
 		return derp.Forbidden(location, "Secret cannot be empty", followerID)
 	}
 
-	// Load the Follower using the FollowerID
-	criteria := exp.Equal("_id", followerID)
+	// RULE: Only EMAIL Followers can be reached by secret.  The email flow is the only one that
+	// issues a secret, so the method belongs in the query rather than in an assumption about who
+	// is holding the link.
+	criteria := exp.
+		Equal("_id", followerID).
+		AndEqual("method", model.FollowerMethodEmail)
+
 	if err := service.Load(session, criteria, follower); err != nil {
 		return derp.Wrap(err, location, "Loading follower", followerID)
 	}

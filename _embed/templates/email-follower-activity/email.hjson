@@ -6,5 +6,12 @@
     to: "{{.Email}}"
     headers: {
         "List-Unsubscribe": "{{.UnsubscribeWithBrackets}}"
+
+        // RFC 8058 one-click.  Gmail and Yahoo bulk-sender rules expect this alongside
+        // List-Unsubscribe; the provider then POSTs to the same URL instead of making the
+        // recipient click through.  The value is a fixed literal -- it is not a URL, and it
+        // is safe to send unconditionally because Follower.UnsubscribeLinkWithBrackets always
+        // produces a link, so List-Unsubscribe is never absent from this message.
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
     }
 }

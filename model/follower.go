@@ -92,31 +92,21 @@ func (follower Follower) ParentURL(host string) string {
 	return host + "/" + follower.ParentID.Hex()
 }
 
-// UnsubscribeLink returns a URL where an Email Follower can unsubscribe.
-// It returns an empty string for all other follower types (ActivityPub, etc.)
+// UnsubscribeLink returns the URL where an email Follower unsubscribes.
+//
+// RULE: The link is built for every Follower, including methods that will never receive one.
+// Withholding the string would look like an authorization check without being one -- the URL is
+// public, and anyone can type it.  The actual gate is service.Follower.LoadBySecret, which loads
+// EMAIL-method records only, and only for a caller who already holds the secret.
 func (follower Follower) UnsubscribeLink(host string) string {
-
-	if follower.Method == FollowerMethodEmail {
-		return follower.ParentURL(host) + "/follower-unsubscribe?followerId=" + follower.FollowerID.Hex() + "&secret=" + follower.Data.GetString("secret")
-	}
-
-	return ""
+	return follower.ParentURL(host) + "/follower-unsubscribe?followerId=" + follower.FollowerID.Hex() + "&secret=" + follower.Data.GetString("secret")
 }
 
 // UnsubscribeLinkWithBrackets returns the unsubscribe URL inside the angle brackets that RFC 2369
-// requires of a List-Unsubscribe header, or an empty string when there is no link to wrap.
+// requires of a List-Unsubscribe header.  It is derived from UnsubscribeLink so that the two can
+// never disagree about the URL itself.
 func (follower Follower) UnsubscribeLinkWithBrackets(host string) string {
-
-	// Derived from UnsubscribeLink so the two can never disagree about the URL itself
-	link := follower.UnsubscribeLink(host)
-
-	// An empty value must stay empty: ServerEmail omits headers that render empty, and
-	// a bare "<>" would be a malformed header rather than an absent one
-	if link == "" {
-		return ""
-	}
-
-	return "<" + link + ">"
+	return "<" + follower.UnsubscribeLink(host) + ">"
 }
 
 /******************************************

@@ -18,8 +18,9 @@ import (
 // provider, which is even less authenticated than the recipient.
 //
 // Authorization lives in the URL instead. with-follower refuses to load anything without a
-// matching followerId+secret pair (Follower.LoadBySecret), and refuses outright when no
-// followerId is supplied, so the open role does not open the action.
+// matching followerId+secret pair, and refuses outright when no followerId is supplied, so the
+// open role does not open the action. Follower.LoadBySecret narrows it further, to EMAIL-method
+// records only -- see TestFollowerLoadBySecret_RejectsOtherMethods.
 func TestFollowerUnsubscribe_ReachableByRecipient(t *testing.T) {
 
 	templateService := loadEmbeddedTemplates(t)

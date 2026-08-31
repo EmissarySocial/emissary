@@ -486,22 +486,6 @@ func TestFollowerActivity_ListUnsubscribe(t *testing.T) {
 	require.Contains(t, message.GetMessage(), "List-Unsubscribe: <https://example.com/unsub?id=1>")
 }
 
-// TestFollowerActivity_ListUnsubscribeOmitted verifies that an empty UnsubscribeWithBrackets omits
-// the header entirely rather than emitting a malformed empty "<>".  UnsubscribeLinkWithBrackets
-// returns "" for every method except email; today's only caller reaches this email from the
-// FollowerMethodEmail branch, so the case is defensive -- it pins the contract, not the call path.
-func TestFollowerActivity_ListUnsubscribeOmitted(t *testing.T) {
-
-	email := loadEmbeddedEmail(t, "email-follower-activity", "follower-activity")
-
-	message := mail.NewMSG()
-
-	require.NoError(t, applyHeaders(message, email, mapof.Any{"UnsubscribeWithBrackets": ""}))
-	require.NoError(t, message.GetError())
-
-	require.NotContains(t, message.GetMessage(), "List-Unsubscribe")
-}
-
 // TestFollowerActivity_OneClickUnsubscribe verifies the RFC 8058 header that turns a
 // List-Unsubscribe link into a one-click button in Gmail and Yahoo.
 //
@@ -521,19 +505,27 @@ func TestFollowerActivity_OneClickUnsubscribe(t *testing.T) {
 	require.Contains(t, message.GetMessage(), "List-Unsubscribe-Post: List-Unsubscribe=One-Click")
 }
 
-// TestFollowerActivity_OneClickOmittedWithoutLink verifies that the one-click header disappears
-// along with the link it depends on.  Announcing one-click support for an address that was never
-// sent would invite a POST to a URL the recipient does not have.
-func TestFollowerActivity_OneClickOmittedWithoutLink(t *testing.T) {
+// TestFollowerActivity_OneClickRequiresLink verifies that the two headers travel together.
+//
+// One-click announces that a POST to the List-Unsubscribe address will work, so shipping it
+// without that address would invite a POST to a URL the recipient never received.  The pairing
+// is structural rather than conditional: Follower.UnsubscribeLinkWithBrackets always returns a
+// link, which is what lets the one-click value be a fixed literal.
+func TestFollowerActivity_OneClickRequiresLink(t *testing.T) {
 
 	email := loadEmbeddedEmail(t, "email-follower-activity", "follower-activity")
 
 	message := mail.NewMSG()
+	data := mapof.Any{"UnsubscribeWithBrackets": model.NewFollower().UnsubscribeLinkWithBrackets("https://example.com")}
 
-	require.NoError(t, applyHeaders(message, email, mapof.Any{"UnsubscribeWithBrackets": ""}))
+	require.NoError(t, applyHeaders(message, email, data))
 	require.NoError(t, message.GetError())
 
-	require.NotContains(t, message.GetMessage(), "List-Unsubscribe-Post")
+	// The List-Unsubscribe value is long enough that go-simple-mail folds it onto its own line,
+	// so the URL is asserted separately from the header name that carries it
+	require.Contains(t, message.GetMessage(), "List-Unsubscribe: ")
+	require.Contains(t, message.GetMessage(), "<https://example.com/")
+	require.Contains(t, message.GetMessage(), "List-Unsubscribe-Post: List-Unsubscribe=One-Click")
 }
 
 // TestEmbeddedEmails_Load loads every email definition that ships in the binary, exactly the way
