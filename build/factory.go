@@ -66,6 +66,7 @@ type Factory interface {
 	Widget() *service.Widget
 
 	// Other data services
+	ClientIP(*http.Request) string
 	Config() config.Domain
 	Content() *service.Content
 	Domain() *service.Domain

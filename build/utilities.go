@@ -295,6 +295,21 @@ func executeTemplate(template TemplateLike, data any) string {
 	return buffer.String()
 }
 
+// truncateRunes shortens a value to at most maxLength runes, marking the cut with an ellipsis so
+// that a shortened value cannot be read as the whole one.  Counted in runes rather than bytes to
+// match schema.Set and the rest of the codebase, and so that a multi-byte character is never cut
+// in half into invalid UTF-8.
+func truncateRunes(value string, maxLength int) string {
+
+	runes := []rune(value)
+
+	if len(runes) <= maxLength {
+		return value
+	}
+
+	return string(runes[:maxLength]) + "\u2026"
+}
+
 // Returns TRUE if the value is either empty or "new" (case insensitive)
 func isNewOrEmpty(value string) bool {
 
