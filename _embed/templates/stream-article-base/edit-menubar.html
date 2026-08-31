@@ -145,6 +145,7 @@
 
 <div id="menu-bar">
 	<div class="left">
+		<a href="/{{.Token}}" class="link">&larr; View</a>
 
 		{{- if .UserCan "edit" -}}
 			<a href="/{{.StreamID}}/edit" class="turboclick {{- if eq $selected `edit` }} bold{{- end -}}">Content</a>
