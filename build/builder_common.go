@@ -317,13 +317,32 @@ func (w Common) Theme(themeID string) model.Theme {
 }
 
 // ThemeData returns a single custom value from this Domain's theme data.
-// If the token does not exist, it returns an empty string.
+// If the Domain has no value for the token, the Theme's declared default is used instead,
+// and if the Theme does not declare the token either, it returns an empty string.
 func (w Common) ThemeData(token string) string {
 
 	// RULE: Read the Domain RECORD.  model.Theme.Data is a process-wide singleton shared
 	// by every Domain on this server, and model.Domain.Data holds secrets (the VAPID
 	// private key) that must never reach a page.
-	return w.factory().Domain().Get().ThemeData.GetString(token)
+	domain := w.factory().Domain().Get()
+
+	if value, exists := domain.ThemeData[token]; exists {
+		return convert.String(value)
+	}
+
+	// RULE: Fall back to the SCHEMA default, not to the empty string.  A Domain begins with
+	// no themeData keys at all, so a setting that has never been saved has no stored value --
+	// and a settings toggle that is meant to start ON has to read as ON here too, or the page
+	// and the form that configures it disagree until the owner's first save.  The Theme's
+	// schema is the single place that default is declared; the form widget reads the same one.
+	theme := w.Theme(domain.ThemeID)
+	element, exists := theme.Schema.GetElement("themeData." + token)
+
+	if !exists {
+		return ""
+	}
+
+	return convert.String(element.DefaultValue())
 }
 
 // Now returns the current time in milliseconds since the Unix epoch
@@ -460,6 +479,20 @@ func (w Common) IsAuthenticated() bool {
 func (w Common) IsIdentity() bool {
 	authorization := w.authorization()
 	return authorization.IsIdentity()
+}
+
+// NotAuthenticatedOrIdentity returns TRUE if the caller is neither an authenticated user nor a guest identity
+func (w Common) NotAuthenticatedOrIdentity() bool {
+
+	if w.IsAuthenticated() {
+		return false
+	}
+
+	if w.IsIdentity() {
+		return false
+	}
+
+	return true
 }
 
 // IsOwner returns TRUE if the user is a Domain Owner
