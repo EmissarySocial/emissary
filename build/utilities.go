@@ -394,13 +394,6 @@ func multipartForm(request *http.Request) (*multipart.Form, error) {
 	return request.MultipartForm, nil
 }
 
-// redirect replicates the echo.Context.Redirect() function without using an echo.Context
-func redirect(response http.ResponseWriter, statusCode int, location string) error {
-	response.Header().Add("Location", location)
-	response.WriteHeader(statusCode)
-	return nil
-}
-
 // getTemplate returns the model.Template from a Builder, if it exists
 func getTemplate(builder Builder) (model.Template, bool) {
 

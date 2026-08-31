@@ -256,11 +256,16 @@ func (step StepAddStream) Post(builder Builder, buffer io.Writer) PipelineBehavi
 
 	// If this step includes a redirect, then do that.
 	if step.RedirectTo != nil {
-		redirectURL := executeTemplate(step.RedirectTo, newBuilder)
-		if err := redirect(builder.response(), http.StatusSeeOther, redirectURL); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Redirecting to", redirectURL))
+
+		// The URL is built against the NEW stream, but how it reaches the client is decided by
+		// the original request, which is the one the response is answering.
+		target, err := navigationURL(step.RedirectTo, newBuilder, location)
+
+		if err != nil {
+			return Halt().WithError(derp.Wrap(err, location, "Building redirect target"))
 		}
-		return Halt().AsFullPage()
+
+		return navigateContent(builder, http.StatusSeeOther, target)
 	}
 
 	// For "inline" styles, use the result from the child's "create" action
