@@ -1,7 +1,6 @@
 package step
 
 import (
-	"strings"
 	"text/template"
 
 	"github.com/benpate/derp"
@@ -25,9 +24,15 @@ func NewForwardTo(stepInfo mapof.Any) (ForwardTo, error) {
 		return ForwardTo{}, derp.Wrap(err, location, "Invalid 'url' template", stepInfo)
 	}
 
+	method, err := parseMethod(stepInfo, "post")
+
+	if err != nil {
+		return ForwardTo{}, derp.Wrap(err, location, "Invalid 'method'", stepInfo)
+	}
+
 	return ForwardTo{
 		URL:    url,
-		Method: first(strings.ToLower(stepInfo.GetString("method")), "post"),
+		Method: method,
 	}, nil
 }
 

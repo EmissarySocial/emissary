@@ -1,57 +1,49 @@
 package build
 
 import (
-	"bytes"
 	"io"
 	"text/template"
 
 	"github.com/benpate/derp"
-	"github.com/benpate/uri"
 )
 
-// StepForwardTo is a Step that sends an HTMX 'forward' to a new page.
+// StepForwardTo is a Step that sends a visitor to another URL, because they are finished
+// with this page. See [navigation.go] for how that reaches the client.
 type StepForwardTo struct {
 	URL    *template.Template
 	Method string
 }
 
 // Get renders this step during a GET request. Implements the Step interface.
-func (step StepForwardTo) Get(builder Builder, buffer io.Writer) PipelineBehavior {
+func (step StepForwardTo) Get(builder Builder, _ io.Writer) PipelineBehavior {
 
 	if (step.Method == "get") || (step.Method == "both") {
-		return step.do(builder)
+		return step.execute(builder)
 	}
 
 	return Continue()
 }
 
-// Post updates the stream with approved data from the request body.
+// Post renders this step during a POST request. Implements the Step interface.
 func (step StepForwardTo) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
-	if step.Method == "post" || step.Method == "both" {
-		return step.do(builder)
+	if (step.Method == "post") || (step.Method == "both") {
+		return step.execute(builder)
 	}
 
 	return Continue()
 }
 
-// Post updates the stream with approved data from the request body.
-func (step StepForwardTo) do(builder Builder) PipelineBehavior {
+// execute sends the visitor to this Step's target URL.
+func (step StepForwardTo) execute(builder Builder) PipelineBehavior {
 
-	const location = "build.StepForwardTo.do"
+	const location = "build.StepForwardTo.execute"
 
-	var nextPage bytes.Buffer
+	target, err := navigationURL(step.URL, builder, location)
 
-	if err := step.URL.Execute(&nextPage, builder); err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Evaluating 'url'"))
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Building forward target"))
 	}
 
-	// Reject dangerous or off-site-schemed targets. The value can be built from
-	// remote-influenced data, so a `javascript:`/`data:` scheme (or a protocol-
-	// relative host) must not become the forward target.
-	if !uri.IsSafeRedirectURL(nextPage.String()) {
-		return Halt().WithError(derp.BadRequest(location, "Unsafe forward target", nextPage.String()))
-	}
-
-	return Continue().WithEvent("closeModal", "true").WithHeader("Hx-Redirect", nextPage.String())
+	return navigateDocument(builder, target)
 }

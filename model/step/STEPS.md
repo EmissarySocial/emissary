@@ -98,6 +98,8 @@ Creates a new Stream. `style` decides how the user picks a Template: `chooser` s
 }
 ```
 
+The `redirect-to` property navigates exactly like the [`redirect-to`](#redirect-to) step, including its safety check and its off-site handling, but its template is evaluated against the **new** Stream so that `{{.StreamID}}` names the record that was just created.
+
 ---
 
 ## as-confirmation
@@ -498,14 +500,18 @@ Opens the settings form for the Widget named by the request, using that Widget d
 
 ## forward-to
 
-Sends the browser to a new URL via the `Hx-Redirect` header, and closes any open modal. The target is validated with `uri.IsSafeRedirectURL`, so a `javascript:` or protocol-relative URL built from remote data is rejected rather than followed.
+Sends the visitor somewhere else because they are finished with this page — after a save, a delete, or a checkout. Inside an htmx request this is the `Hx-Redirect` header, which moves the whole browser and closes any open modal; outside one it is an HTTP `303 See Other`, because `Hx-Redirect` means nothing to a browser following a plain link. Either way the visitor's whole document navigates.
+
+Use [`redirect-to`](#redirect-to) instead when the *content* lives at another URL and an htmx caller should swap the new fragment into the page rather than reload it.
+
+The target is validated with `uri.IsSafeRedirectURL`, so a `javascript:` or protocol-relative URL built from remote data is rejected rather than followed.
 
 **Attributes**
 
 | Attribute | Description |
 | --- | --- |
 | url | **Required.** Template URL to forward to |
-| method | `get`, `post`, or `both`. Defaults to `post` |
+| method | `get`, `post`, or `both`. Defaults to `post`; an unrecognized value fails at Template load. Think before widening this one — a pipeline that renders a form on `GET` keeps running past the form, so a `forward-to` set to `both` navigates away before the visitor ever sees it. |
 
 <br>
 
@@ -869,15 +875,21 @@ The schema is an allowlist, not a suggestion: a field the template did not decla
 
 ## redirect-to
 
-A real HTTP redirect, for non-HTMX navigation. Use [`forward-to`](#forward-to) inside an HTMX request.
+Sends the visitor to a new URL because the content they asked for lives there. This is a real HTTP redirect, which means an htmx caller follows it inside its own request and swaps the result into the page — a same-site `redirect-to` does not reload the browser, and that is usually what you want for a `view` action that normalizes its own URL.
+
+An **off-site** target is the exception, and it is handled automatically: htmx cannot read a cross-origin response, so the step emits `Hx-Redirect` instead and lets htmx navigate the whole browser. A Redirect stream therefore behaves the same whether a visitor opens it through a plain `<a href>` or through an `hx-get`, with no branch in the Template.
+
+Use [`forward-to`](#forward-to) instead when the visitor is finished with this page rather than being sent to the rest of it.
+
+The target is validated with `uri.IsSafeRedirectURL`, so a `javascript:` or protocol-relative URL built from remote data is rejected rather than followed.
 
 **Attributes**
 
 | Attribute | Description |
 | --- | --- |
 | url | **Required.** Template URL to redirect to |
-| method | `get`, `post`, or `both`. Defaults to `both` |
-| status | HTTP status code. Defaults to `307` |
+| method | `get`, `post`, or `both`. Defaults to `both`; an unrecognized value fails at Template load |
+| status | HTTP status code. Defaults to `307`. Ignored on the off-site path, where htmx acts on the header instead |
 
 <br>
 

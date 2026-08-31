@@ -28,6 +28,12 @@ Emissary regularly consumes `benpate/*` and `EmissarySocial/*` libraries from lo
 
 `markdown`, `highlight`, `icon`, and their siblings in [tools/templates/functions.go](tools/templates/functions.go) return `template.HTML`, which tells `html/template` the value is already safe. `markdown` earns that by sanitizing; `highlight` does **not** — it returns its input verbatim. Any new helper with an `HTML`/`CSS`/`HTMLAttr` return type is a trust boundary, so sanitize inside the helper and check every call site before pointing one at federated or user-supplied content.
 
+## An off-site hop needs `forward-to`, or a `redirect-to` that knows it is off-site
+
+Sending a visitor to another URL has two mechanisms and they are not interchangeable. An HTTP redirect is followed by whatever transport made the request: a browser navigates the whole document, but htmx's XHR follows the redirect *inside* the request and swaps the result in as a fragment — which CORS makes impossible across origins, so the click silently does nothing. The `Hx-Redirect` header is executed by htmx itself and always navigates the document, but it is inert for a plain `<a href>`, which lands on a blank 200. Neither failure raises an error anywhere.
+
+Navigation links routinely carry **both** attributes (`<a href="/x" hx-get="/x">`), so both paths must work. [build/navigation.go](build/navigation.go) owns that decision for every step — `redirect-to` means "the content lives at another URL" and `forward-to` means "the visitor goes somewhere else", and each falls back to the other's mechanism where its own cannot work. A Template must never branch on `.IsPartialRequest` to work around this; if a case is not handled, fix the helper.
+
 ## Templates are data, not code — a stale copy will not announce itself
 
 Templates in [_embed/templates](_embed/templates/) are embedded at build time, but a server can also load template folders from Git or disk. Those copies are cached, so an edit to a template's actions, states, or roles may need a restart before it takes effect, and a stale external copy silently keeps serving the old pipeline. When a template change appears to do nothing, confirm which copy is actually being served before debugging the Go code.
