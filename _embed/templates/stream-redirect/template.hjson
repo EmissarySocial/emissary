@@ -55,6 +55,9 @@
 			}
 			roles: ["author", "editor"]
 			steps:[
+				// "redirect-to" detects the off-origin target on its own and hands the navigation
+				// to htmx when htmx is asking, so this works whether the visitor arrived through a
+				// plain <a href> or through the sidebar's hx-get.  See build/navigation.go.
 				{do:"redirect-to", url:"{{.Data `url`}}"}
 			]
 		}
