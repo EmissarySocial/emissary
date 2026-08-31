@@ -1,0 +1,37 @@
+/******************************************
+ * Content Width
+ *
+ * How much of the page a Template's main content column fills.  A Template
+ * writes the class from its own "width" data value -- class="layout-{{...}}"
+ * -- so an unset value renders "layout-", which matches nothing here and
+ * fills the width exactly like LARGE.
+ *
+ * Global rather than copied into each Template's own stylesheet because the
+ * widget editor now draws these same proportions on its canvas, and a Template
+ * that quietly disagreed with the editor would be showing the author a layout
+ * their visitors never see.
+ *
+ * NOTE: stream-article-base and stream-contact-form shipped separate copies of
+ * this file that had already drifted -- article used min-width 640px/480px,
+ * contact-form 300px/300px.  The smaller value wins here: 66.6667% of a phone
+ * viewport is under 300px, so a 640px floor pushed the article content wider
+ * than the screen.
+ ******************************************/
+
+.layout-LARGE {
+	width: 100%;
+}
+
+.layout-MEDIUM {
+	min-width: 300px;
+	width: 66.6667%;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.layout-SMALL {
+	min-width: 300px;
+	width: 50%;
+	margin-left: auto;
+	margin-right: auto;
+}
