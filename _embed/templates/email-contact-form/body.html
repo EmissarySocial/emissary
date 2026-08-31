@@ -27,6 +27,8 @@
             }
             .field-label {color:#999!important;}
             .email-footer {color:#888!important;}
+            .sender-details {border-color:#333!important;}
+            .sender-details, .sender-details a {color:#888!important;}
         }
     </style>
 </head>
@@ -90,6 +92,89 @@
                 <tr><td class="email-footer" style="padding:16px 8px 0px 8px; text-align:center; font-size:13px; line-height:1.5em; color:#666;">
                     Sent from the contact form on <b>{{.Domain_Name}}</b>.
                     Replying to this message will reach {{.Name}} directly.
+                </td></tr>
+
+                {{/* Everything below describes the BROWSER that submitted the form: the visitor's
+                     IP, resolved through the server's trusted-proxy strategy, and the headers
+                     their client volunteered.  It is here so that a message can be attributed or
+                     reported; nothing is stored, so this email is the only place it exists.
+
+                     Every value is client-controlled, so each is interpolated plainly and escaped
+                     by html/template.  The IP is the ONE that may appear in an href, and only
+                     because every realclientip strategy returns "" for anything it cannot parse
+                     as an address.  Client_Referer is deliberately NOT a link -- see the RULE on
+                     Common.ClientReferer.
+
+                     Each row is wrapped in "with", which skips an empty value, so a client that
+                     sent nothing simply contributes no row.  The IP row uses "if" and always
+                     renders, so the block can never be an empty heading -- and so that a missing
+                     IP is stated rather than left to look like an omission.
+
+                     RULE: do NOT guard this block with "or".  Emissary's funcMap inherits
+                     rosetta/funcmap.All(), which SHADOWS the "and"/"or" builtins with
+                     func(...bool) bool -- so "or .Client_IP .Client_UserAgent" fails at render
+                     time with "expected bool; got string", and fails on an absent key with
+                     "invalid value; expected bool".  "if" and "with" are template keywords, not
+                     functions, so they still take any type and still tolerate a missing key --
+                     which the body relies on, since only "to" and "headers" carry
+                     missingkey=error (CONTACT-FORM D15). */}}
+                <tr><td style="padding:16px 8px 0px 8px;">
+                    <div class="sender-details" style="border-top:solid 1px #DDD; padding-top:12px; font-size:12px; line-height:1.5em; color:#666;">
+
+                        <div class="field-label" style="margin-bottom:8px; text-transform:uppercase; letter-spacing:0.06em; color:#767676;">Sender details</div>
+
+                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse; font-size:12px; line-height:1.5em;">
+                            <tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">IP Address</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-all;">{{if .Client_IP}}<a href="https://ipinfo.io/{{.Client_IP}}">{{.Client_IP}}</a>{{else}}Unavailable{{end}}</td>
+                            </tr>
+                            {{with .Client_Description}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Device</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_Referer}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Came From</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-all;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_UserAgent}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">User-Agent</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_Brands}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Browser</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_Platform}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Platform</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_Mobile}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Mobile</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_AcceptLanguage}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Languages</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_Accept}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Accepts</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_AcceptEncoding}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Encodings</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_DoNotTrack}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Do Not Track</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_PrivacyControl}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Global Privacy Control</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                        </table>
+
+                    </div>
                 </td></tr>
             </table>
 
