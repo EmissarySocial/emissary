@@ -15,7 +15,11 @@
 }
 
 /* Widths track .widgets.LEFT / .widgets.RIGHT in the article stylesheet, so what the
-   author arranges here is the proportion they actually get. */
+   author arranges here is the proportion they actually get.
+
+   Both sidebars are flex COLUMNS so that the narrow-screen note can sit below the drop
+   zone without stealing height from it, and both animate their width because they
+   collapse to a rail when empty -- see "Empty sidebars collapse to a rail" below. */
 .widget-editor-LEFT {
 	width: 20%;
 	min-width:160px;
@@ -24,6 +28,9 @@
 	flex-shrink:0;
 	padding:0px;
 	position:relative;
+	display:flex;
+	flex-direction:column;
+	transition: width 120ms ease-out, min-width 120ms ease-out;
 }
 
 .widget-editor-CENTER {
@@ -44,6 +51,9 @@
 	flex-shrink:0;
 	padding:0px;
 	position:relative;
+	display:flex;
+	flex-direction:column;
+	transition: width 120ms ease-out, min-width 120ms ease-out;
 }
 
 .widget-editor-TOP {
@@ -90,6 +100,15 @@
 
 .widget-editor-sortable {
 	height:100%;
+}
+
+/* The sidebars are flex columns (they carry a note below the zone), so the drop zone takes
+   the leftover space rather than the whole region. */
+.widget-editor-LEFT .widget-editor-sortable,
+.widget-editor-RIGHT .widget-editor-sortable {
+	height:auto;
+	flex-grow:1;
+	flex-shrink:1;
 }
 
 .widget-editor-sortable .widget {
@@ -160,6 +179,34 @@
 	display:none;
 }
 
+/* RULE: the tray must not change size while a drag is in flight.  It sits ABOVE the canvas,
+   so anything that makes it taller moves every drop zone out from under the cursor mid-
+   gesture, and the drop hint -- inset:0 on the tray -- stretches with it.
+
+   Sortable moves the dragged element into whichever list the pointer is over, and this row
+   wraps, so one more chip here can add a whole line.  Suppressing its box is free: the tray
+   is not a placement, it is remove-or-cancel, and the red overlay already says so.
+
+   RULE: .dragging-placed, not the tray on its own.  A NEW widget is dragged out of the tray
+   with pull:"clone", and Sortable keeps the count constant by itself -- the clone appears in
+   the tray the moment the original leaves, and is hidden again whenever the drag comes back
+   over the tray.  Hiding the original as well would make the tray SHRINK for as long as the
+   pointer had not left it yet, which is the same hazard pointing the other way.
+
+   Hiding is safe against Sortable's own geometry: captureAnimationState and lastChild both
+   skip an element whose computed display is none, _detectDirection returns "horizontal" off
+   this row's display:flex before it reads any child, and the one place that tests the INLINE
+   style instead (getChild) is reached only to ask whether the first child is the dragged
+   element -- which answers yes and completes the dragover as a no-op.  :has(.widget-ghost)
+   still matches either way, so every other drag-state style is unaffected.
+
+   If this ever does upset the hit-testing, collapse the chip to zero size instead
+   (width/padding/margin/border 0 plus overflow:hidden), which keeps a box in the flow that
+   still cannot force a wrap. */
+.widget-editor.dragging-placed .widget-editor-NONE .widget-ghost {
+	display:none;
+}
+
 
 /******************************************
  * Drop targets
@@ -177,7 +224,7 @@
 	padding:8px;
 	border:dashed 2px var(--gray20);
 	border-radius:8px;
-	transition: border-color 120ms ease-out, background-color 120ms ease-out;
+	transition: border-color 120ms ease-out, background-color 120ms ease-out, padding 120ms ease-out;
 }
 
 /* Each zone carries a hidden <input>, so :empty never matches it.  "Holds no .widget"
@@ -221,8 +268,16 @@
 	.widget-editor-MAIN,
 	.widget-editor-layout .widget-editor-sortable,
 	.widget-editor-CENTER > *,
+	.widget-editor-LEFT,
+	.widget-editor-RIGHT,
 	.widget button {
 		transition:none;
+	}
+
+	/* The marker stays put instead of fading.  It is cleared by the next save either way,
+	   so nothing accumulates. */
+	.widget-editor-status.widget-editor-saved {
+		animation:none;
 	}
 }
 
@@ -349,4 +404,120 @@
 	width:auto;
 	font-size:13px;
 	padding:4px 24px 4px 8px;
+}
+
+
+/******************************************
+ * Empty sidebars collapse to a rail
+ *
+ * An empty region renders NOTHING on the page -- Stream.Widgets returns an empty
+ * string, not even the wrapping div -- so drawing LEFT or RIGHT as a full 20%
+ * column asserts a structure the page will not have.  Collapsed, the rail still
+ * reads as a slot that is present, without claiming it costs the reader any width.
+ * TOP and BOTTOM are left alone: they cost no horizontal space, so their emptiness
+ * misleads nobody.
+ *
+ * 16px is a trial value, not a considered one.  Judge it on screen against 8px and
+ * 24px before it settles.
+ *
+ * RULE: every rule below is gated on the editor NOT holding a .widget-ghost -- that
+ * is, on no drag being in flight -- and so is the note in the next section.  Sortable
+ * moves the dragged element between lists as the pointer crosses them, so a sidebar
+ * holding exactly one widget loses its only .widget the instant the drag leaves it,
+ * and a rail that collapsed from 160px to 16px mid-gesture would yank the canvas
+ * sideways under the cursor.  Suspending all of it for the duration of a drag gives
+ * both sidebars the SAME geometry, whatever they hold, from the first pointer move to
+ * the drop -- and hands back a full-size drop target exactly when one is needed.
+ ******************************************/
+
+.widget-editor:not(:has(.widget-ghost)) .widget-editor-LEFT:not(:has(.widget)),
+.widget-editor:not(:has(.widget-ghost)) .widget-editor-RIGHT:not(:has(.widget)) {
+	width:32px;
+	min-width:32px;
+}
+
+/* The zone's own box does not fit in 16px: border-box, 8px of padding and a 2px dashed
+   border is 20px of chrome before any content.  Dropping the padding leaves a 12px
+   interior inside a border that still draws the slot. */
+.widget-editor:not(:has(.widget-ghost)) .widget-editor-LEFT:not(:has(.widget)) .widget-editor-sortable,
+.widget-editor:not(:has(.widget-ghost)) .widget-editor-RIGHT:not(:has(.widget)) .widget-editor-sortable {
+	padding:0px;
+}
+
+/* "+ Drop Widgets Here" cannot render in 12px, and the drag that would need it is also
+   what restores the full width. */
+.widget-editor:not(:has(.widget-ghost)) .widget-editor-LEFT:not(:has(.widget)) .widget-editor-sortable::after,
+.widget-editor:not(:has(.widget-ghost)) .widget-editor-RIGHT:not(:has(.widget)) .widget-editor-sortable::after {
+	display:none;
+}
+
+
+/******************************************
+ * How the sidebars behave on a narrow screen
+ *
+ * The canvas is a three-column row at every width, but the PAGE is only three columns
+ * above 768px; below it the regions stack in DOM order -- LEFT above the content and
+ * RIGHT below it.  An author arranging a sidebar on a desktop gets no sign of that
+ * from anything else on the page.
+ *
+ * Showing the stacked arrangement in the canvas at narrow widths is the alternative
+ * and is worse: the editor is a diagram of the page, not a preview of one viewport.
+ ******************************************/
+
+.widget-editor-note {
+	display:none;
+	padding-top:6px;
+	font-size:11px;
+	line-height:1.35;
+	color:var(--gray50);
+}
+
+/* Only on a sidebar that holds something: that is both when the fact matters and, per the
+   rail above, the only state with room to print it.  Gated on no drag being in flight for
+   the same reason the rail is -- see the RULE there. */
+.widget-editor:not(:has(.widget-ghost)) .widget-editor-LEFT:has(.widget) .widget-editor-note,
+.widget-editor:not(:has(.widget-ghost)) .widget-editor-RIGHT:has(.widget) .widget-editor-note {
+	display:block;
+}
+
+
+/******************************************
+ * Save feedback
+ *
+ * StepSortWidgets answers a reorder, a move, or a layout change with HX-Reswap:none,
+ * deliberately, so that the redraw cannot destroy a drag still in flight -- which
+ * leaves those saves with no acknowledgement at all.  The hyperscript behavior writes
+ * the word into this element off htmx's own request events.
+ ******************************************/
+
+.widget-editor-status {
+	/* The box is here whether or not it holds text.  It sits ABOVE the tray and the
+	   canvas, so a marker that appeared and disappeared would move every drop zone below
+	   it -- the same hazard the tray's hidden ghost exists to prevent. */
+	height:16px;
+	margin-bottom:4px;
+	font-size:12px;
+	line-height:16px;
+	text-align:right;
+	color:var(--gray50);
+}
+
+/* Success fades; a failure does not.  Both are cleared when the next save starts, and the
+   round trip between that clear and this class being re-added is what restarts the
+   animation on a second save. */
+.widget-editor-status.widget-editor-saved {
+	animation: widget-editor-status-fade 2400ms ease-out forwards;
+}
+
+.widget-editor-status.widget-editor-failed {
+	color:var(--red70);
+}
+
+@keyframes widget-editor-status-fade {
+	0%, 60% {
+		opacity:1;
+	}
+	100% {
+		opacity:0;
+	}
 }

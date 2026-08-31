@@ -56,6 +56,63 @@ behavior widgetEditor(url)
 		trigger editor:save
 	end
 
+	-- Save feedback.  StepSortWidgets answers a reorder, a move, or a layout change with
+	-- HX-Reswap:none -- deliberately, so that the redraw cannot destroy a drag still in
+	-- flight -- and that leaves those saves with no visible acknowledgement at all.  These
+	-- two handlers paint one, additively: they write into an element that is already in the
+	-- page and already the right size, so nothing here can move a drop zone or restart a
+	-- render.
+	--
+	-- htmx fires these on the FORM, which is this element's PARENT, so they never bubble
+	-- down and the listener has to name it.  That also means every OTHER request made from
+	-- inside the editor -- a widget chip's own Edit button, for one -- bubbles UP into the
+	-- same listener, which is what the target check is for.
+	on htmx:beforeRequest from closest <form/>
+
+		if the event's target is not closest <form/>
+			exit
+		end
+
+		tell the first <.widget-editor-status/> in me
+			remove .widget-editor-saved from you
+			remove .widget-editor-failed from you
+			set your innerText to ""
+		end
+	end
+
+	on htmx:afterRequest from closest <form/>
+
+		if the event's target is not closest <form/>
+			exit
+		end
+
+		-- A save fails two ways, and only one of them is a non-2xx response: a validation
+		-- error comes back 200 carrying HX-Retarget, because htmx silently discards a bare
+		-- 422 (see build/AGENTS.md).  htmx has already resolved that header into
+		-- detail.target by the time this fires, so the retargeted element IS the signal.
+		-- The message itself still lands in #htmx-response-message; this only says, where
+		-- the author is actually looking, that the drop they just made did not stick.
+		set saveFailed to false
+
+		if the event's detail's successful is not true
+			set saveFailed to true
+		end
+
+		if the event's detail's target's id is "htmx-response-message"
+			set saveFailed to true
+		end
+
+		tell the first <.widget-editor-status/> in me
+			if saveFailed
+				set your innerText to "Save failed"
+				add .widget-editor-failed to you
+			otherwise
+				set your innerText to "Saved"
+				add .widget-editor-saved to you
+			end
+		end
+	end
+
 	on sort throttled at 100ms
 
 		tell <.widget-editor-sortable /> in me

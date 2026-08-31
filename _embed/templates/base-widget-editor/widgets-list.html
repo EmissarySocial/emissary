@@ -8,6 +8,18 @@
 
 	<div class="widget-editor" script="install widgetEditor(url:'/{{$streamID}}/widgets')">
 
+		<!-- Save feedback.  A reorder, a move, or a layout change answers with HX-Reswap:none
+		     precisely so the canvas is NOT redrawn mid-drag, which leaves the author with no
+		     sign that anything was saved at all.  This marker is what the hyperscript behavior
+		     writes into; it is always present and always the same height, so painting it can
+		     never move a drop zone out from under the cursor.
+
+		     It does NOT cover creating a widget: that is the one path StepSortWidgets still
+		     redraws, and the swap that redraws it destroys this element.  Creation says so for
+		     itself -- the canvas visibly changes and the new chip arrives carrying an Edit
+		     button that the tray chip it replaced did not have. -->
+		<div class="widget-editor-status" aria-live="polite"></div>
+
 		<div class="widget-editor-NONE">
 			<div class="widget-editor-sortable" data-location="NONE">
 				{{- range .ListAllWidgets -}}
@@ -36,6 +48,14 @@
 						{{- template "widget" . -}}
 					{{- end -}}
 				</div>
+
+				<!-- The canvas is a three-column row at every width, but the PAGE only becomes
+				     three columns above 768px; below it the regions stack in DOM order, LEFT
+				     above the content and RIGHT below it.  Nothing in a desktop editing session
+				     shows that, so the sidebars say it themselves.  The note is always in the
+				     markup and revealed by :has() -- the sidebar gains and loses widgets by drag,
+				     with no round trip to re-render a conditional. -->
+				<div class="widget-editor-note">On narrow screens, these widgets stack above the page content.</div>
 			</div>
 
 			<div class="widget-editor-CENTER">
@@ -75,6 +95,9 @@
 						{{- template "widget" . -}}
 					{{- end -}}
 				</div>
+
+				<!-- See the LEFT sidebar above: same note, opposite side of the stack. -->
+				<div class="widget-editor-note">On narrow screens, these widgets stack below the page content.</div>
 			</div>
 		</div>
 	</div>
