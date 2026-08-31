@@ -17,20 +17,8 @@
 			summary: {type:"string", format:"html", maxLength:2048}
 			data: {type:"object", properties: {
 				format: {type:"string", enum: ["TABLE", "CARDS", "COLUMNS"], default:"CARDS", required:true}
-				showImages: {type:"string", enum: ["SHOW", "HIDE"], default:"SHOW"}
 			}}
 		}
-	}
-	datasets: {
-		formats: [
-			{value:"TABLE", label:"Table", icon:"list"},
-			{value:"CARDS", label:"Cards", icon:"grid"},
-			{value:"COLUMNS", label:"Columns", icon:"columns"}
-		]
-		showImages: [
-			{label:"Show Thumbnail Images", value:"SHOW"},
-			{label:"Hide Thumbnail Images", value:"HIDE"}
-		]
 	}
 	states: {
 		default: {
@@ -98,35 +86,12 @@
 									{type:"text", label:"Token", path:"token", options:{autocomplete:"off", validator:"/.validate/streamToken?streamId={{.StreamID}}"}}
 									{type:"text", label:"Label", path:"label"}
 									{type:"textarea", label:"Summary", path:"summary"}
-									{type:"select", label:"Format", path:"data.format", if:{"my value is not 'FOLDER'": {show:["data.showImages"]}}}
-									{type:"select", label:"Show Images", path:"data.showImages"}
 								]
 							}
 						}, 
 						{do:"save-and-publish", state:"published", outbox:"true"}
 					]
 				}
-				{do:"refresh-page"}
-			]
-		}
-
-		layout: {
-			roles: ["author", "editor"]
-			steps: [
-				{do:"as-modal", steps:[
-					{
-						do:"edit"
-						form: {
-							type:"layout-vertical"
-							label: "Folder Layout"
-							children: [
-								{type:"radio-button-group", path:"data.format", options:{provider:"folder.formats"}}
-								{type:"select", path:"data.showImages", label:"Images?", options:{provider:"folder.showImages", show-if:"data.format != TABLE"}}
-							]
-						}
-					}
-				]}
-				{do:"save"}
 				{do:"refresh-page"}
 			]
 		}
@@ -167,6 +132,10 @@
 		widgets: {
 			roles: ["author", "editor"]
 			steps: [
+				// The layout controls post inside the widget editor's own form, so page shape and
+				// widget placement save together in one request.  Both steps re-read the same
+				// cached form values; formdata.Parse caches on the Request and re-reads nothing.
+				{do:"set-data", from-form:["data.format"]}
 				{do:"sort-widgets"}
 				{do:"save", message:"Widgets updated by {{.Author}}"}
 				{do:"view-html", method:"both"}

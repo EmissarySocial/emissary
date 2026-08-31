@@ -12,18 +12,14 @@
 <div id="menu-bar">
 	<div class="left">
 		<a href="/{{.Token}}" class="link">&larr; View</a>
-		<a href="/{{.StreamID}}/edit" class="button{{if eq $selected `edit`}} bold{{end}}">Folder Contents</a>
+		<a href="/{{.StreamID}}/edit" class="button{{if eq $selected `edit`}} bold{{end}}">Items</a>
 
 		{{- if .UserCan "widgets" -}}
-			<a href="/{{.StreamID}}/widgets" class="button{{if eq $selected `widgets`}} bold{{end}}">Widgets</a>
+			<a href="/{{.StreamID}}/widgets" class="button{{if eq $selected `widgets`}} bold{{end}}">Layout</a>
 		{{- end -}}
 
 		{{- if .UserCan "properties" -}}
 			<button hx-get="/{{.StreamID}}/properties">Info</button>
-		{{- end -}}
-
-		{{- if .UserCan "layout" -}}
-			<button hx-get="/{{.StreamID}}/layout">Layout</button>
 		{{- end -}}
 
 		{{- if .UserCan "sharing" -}}
