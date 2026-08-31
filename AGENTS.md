@@ -36,6 +36,14 @@ The same reasoning covers `ReplyEmail`, which *does* carry visitor input: it is 
 
 `markdown`, `highlight`, `icon`, and their siblings in [tools/templates/functions.go](tools/templates/functions.go) return `template.HTML`, which tells `html/template` the value is already safe. `markdown` earns that by sanitizing; `highlight` does **not** — it returns its input verbatim. Any new helper with an `HTML`/`CSS`/`HTMLAttr` return type is a trust boundary, so sanitize inside the helper and check every call site before pointing one at federated or user-supplied content.
 
+## The funcMap shadows `and` and `or` with strict-bool versions
+
+Emissary's template funcMap is built on `rosetta/funcmap.All()` ([tools/templates/functions.go](tools/templates/functions.go)), which defines `and` and `or` as `func(values ...bool) bool` — **replacing the `text/template` builtins**, which accept any type and short-circuit on truthiness. Every Emissary template is affected: page templates, widgets, and email bodies alike.
+
+So `{{if or .Name .Label}}` does not mean "either one is non-empty". It fails at render with `wrong type for value; expected bool; got string`, and on a key that is absent from the data map with `invalid value; expected bool`. Neither is caught at parse time, so the template loads, ships, and breaks the first time the branch is reached — on a page nobody was looking at, or in an email nobody sees fail.
+
+`if`, `with`, `else if`, and `not` are unaffected: the first three are template keywords rather than functions, and `not` is not overridden. Write `{{if .Name}}`, nest, or lift the comparison into booleans first — `{{if or (ne "" .Name) (ne "" .Label)}}` is correct, because `ne` returns a real bool. Note that this last form also gives up the builtin's tolerance for missing keys, which matters wherever a template renders against a map that may not carry every key.
+
 ## An off-site hop needs `forward-to`, or a `redirect-to` that knows it is off-site
 
 Sending a visitor to another URL has two mechanisms and they are not interchangeable. An HTTP redirect is followed by whatever transport made the request: a browser navigates the whole document, but htmx's XHR follows the redirect *inside* the request and swaps the result in as a fragment — which CORS makes impossible across origins, so the click silently does nothing. The `Hx-Redirect` header is executed by htmx itself and always navigates the document, but it is inert for a plain `<a href>`, which lands on a blank 200. Neither failure raises an error anywhere.
@@ -55,3 +63,9 @@ Put a `.card` inside anything that sizes shrink-to-fit (an absolutely positioned
 **`width: max-content` does not fix it.** Containment zeroes the very intrinsic sizes that `max-content` resolves against, so the card stays collapsed — the circularity is what container queries have to forbid, not an oversight. The fix is `container-type: normal` on that specific card, which is safe whenever nothing inside it queries its own size — see `.floating-menu` in [theme-minimal/stylesheet/01-layout.css](_embed/templates/theme-minimal/stylesheet/01-layout.css). Do not remove `container-type` from `.card` itself; the `@container` queries throughout `05-*.css` depend on it.
 
 Styling reached through an element selector has the mirror-image problem: a theme that styles its nav items as `nav a { … }` silently loses all of it the moment those links move outside `<nav>`. Check where a rule's scope actually starts before relocating markup — `.nav-item` looks like the hook for this and is not; no stylesheet selects it.
+
+## A listener on a form hears every htmx request made inside it
+
+htmx fires `htmx:beforeRequest` / `htmx:afterRequest` on the element that made the request, and they bubble. So a handler attached to a form — the only way a hyperscript behavior installed *inside* that form can see the form's own POST, since the events never travel downward — also fires for every button, link, and input inside it that carries an `hx-*` attribute of its own. Nothing distinguishes them but `event.target`. A save-feedback handler written without that check reports "Saved" when the visitor merely opened an editor.
+
+Reading the outcome has two traps of its own. `detail.successful` is **undefined**, not `false`, on a transport failure: htmx sets it inside `handleAjaxResponse`, which `onerror`, `onabort`, and `ontimeout` never reach, so `successful is not true` is the test that covers all four paths and `successful is false` is the test that covers one. And a *validation* failure is not a failure by that measure at all — `WrapInlineError` answers 200 so htmx will not discard it (see [build/AGENTS.md](build/AGENTS.md)), and the only trace in the event is that htmx has resolved `HX-Retarget` into `detail.target`, which by then points at `#htmx-response-message` instead of the form's own target.
