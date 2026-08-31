@@ -56,6 +56,7 @@ func loadEmbeddedTemplates(t *testing.T) *Template {
 	}
 
 	require.NoError(t, templateService.calculateAllInheritance())
+	require.NoError(t, templateService.calculateAccessLists())
 
 	return templateService
 }

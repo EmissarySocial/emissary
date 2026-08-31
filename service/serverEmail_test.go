@@ -502,6 +502,40 @@ func TestFollowerActivity_ListUnsubscribeOmitted(t *testing.T) {
 	require.NotContains(t, message.GetMessage(), "List-Unsubscribe")
 }
 
+// TestFollowerActivity_OneClickUnsubscribe verifies the RFC 8058 header that turns a
+// List-Unsubscribe link into a one-click button in Gmail and Yahoo.
+//
+// Its value is a fixed literal, not a URL: the provider POSTs to the address already given in
+// List-Unsubscribe.  Providers only offer the button when BOTH headers are present, so a typo
+// here does not break anything visibly -- the button simply never appears.
+func TestFollowerActivity_OneClickUnsubscribe(t *testing.T) {
+
+	email := loadEmbeddedEmail(t, "email-follower-activity", "follower-activity")
+
+	message := mail.NewMSG()
+	data := mapof.Any{"UnsubscribeWithBrackets": "<https://example.com/unsub?id=1>"}
+
+	require.NoError(t, applyHeaders(message, email, data))
+	require.NoError(t, message.GetError())
+
+	require.Contains(t, message.GetMessage(), "List-Unsubscribe-Post: List-Unsubscribe=One-Click")
+}
+
+// TestFollowerActivity_OneClickOmittedWithoutLink verifies that the one-click header disappears
+// along with the link it depends on.  Announcing one-click support for an address that was never
+// sent would invite a POST to a URL the recipient does not have.
+func TestFollowerActivity_OneClickOmittedWithoutLink(t *testing.T) {
+
+	email := loadEmbeddedEmail(t, "email-follower-activity", "follower-activity")
+
+	message := mail.NewMSG()
+
+	require.NoError(t, applyHeaders(message, email, mapof.Any{"UnsubscribeWithBrackets": ""}))
+	require.NoError(t, message.GetError())
+
+	require.NotContains(t, message.GetMessage(), "List-Unsubscribe-Post")
+}
+
 // TestEmbeddedEmails_Load loads every email definition that ships in the binary, exactly the way
 // the Template service does at startup.  This is what keeps the load-time rules in Add() honest:
 // a rule that rejects one of Emissary's own definitions fails here rather than at a customer's
