@@ -38,8 +38,11 @@ select {
 
 input:invalid,
 input.invalid,
-.input.invalid,
+textarea:invalid,
+textarea.invalid,
 select:invalid,
+select.invalid,
+.input.invalid,
 [role="textbox"].invalid {
 	border: solid 1px var(--input-border-invalid);
 }
