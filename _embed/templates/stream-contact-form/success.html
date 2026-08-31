@@ -3,11 +3,6 @@
 <div class="contact-form-success">
 
 	{{- $confirmation := .Data "successMessage" | string -}}
-
-	{{- if ne "" $confirmation -}}
-		{{$confirmation | markdown}}
-	{{- else -}}
-		<p>Thank you.  Your message has been sent.</p>
-	{{- end -}}
+	{{$confirmation | markdown}}
 
 </div>

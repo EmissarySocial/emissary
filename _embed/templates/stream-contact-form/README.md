@@ -28,9 +28,23 @@ The `read-form` step's schema is an allowlist: a field the schema does not decla
 
 Access is granted to `anonymous` rather than to a `viewer` role because `model.NewStream` starts with no Groups — a sharing-gated contact form would be invisible to the public on the day it was created. Published means public here, which is why there is no `sharing` action.
 
+## What is captured about the sender
+
+Every email this form sends carries a **Sender details** footer: the visitor's IP address, resolved through the server's configured `clientIpStrategy`, plus a readable summary of their device and the headers their browser volunteered — `User-Agent`, `Referer`, `Accept-Language`, `Accept`, `Accept-Encoding`, the `Sec-CH-UA` client-hint family, `DNT`, and `Sec-GPC`. The IP links to `ipinfo.io` so the recipient can look it up.
+
+This is always on. There is no author setting, so a page author cannot turn a form into one that quietly collects less than the visitor was told, or more.
+
+None of it is stored. Nothing about a submission is (D1), so the email is the only place these values ever exist — which is exactly why they are in it: without them a message that needs answering, blocking, or reporting arrives with no way to act on it.
+
+**None of these are form fields**, and that is the whole of their worth. They come off the request, so `read-form`'s allowlist is untouched and a visitor cannot post their own. A `Client_IP` the sender chose would be worse than none at all: it looks authoritative in the footer. `TestContactFormTemplate_ClientValuesAreNotFormFields` and `TestContactFormTemplate_ClientValuesComeFromTheBuilder` pin both halves — that no such name is declared to `read-form`, and that no `Client_*` value is rendered from `.GetString` or `.QueryParam`.
+
+They reach the Template through a **closed set** of `Common` accessors (`ClientIP`, `ClientUserAgent`, `ClientAcceptLanguage`, and their siblings), never a general `.RequestHeader "name"`. `Cookie` and `Authorization` are request headers too, and this step renders whatever a template asks for into a message body whose recipient is configured per-page — one template line would exfiltrate a visitor's session token to an address the visitor never sees. `TestCommon_ClientHeadersCannotReachCredentials` is what should fail if that set is ever opened up.
+
+Visitors are told, in a fixed line under the Send button: *"Your IP address and browser details are sent along with this message."* It is not author-editable. An author can say more in the prompt; they cannot remove it.
+
 ## Two contracts that must not drift
 
-The `send-email` step's `values:` must supply every key the `contact-form` email interpolates. `To`, `Subject`, and `ReplyEmail` are checked when Templates load, because the email's `to`, `subject`, and `headers` templates reject a missing key. The body's keys — `Name`, `Message`, `HeaderMessage` — are not, because `body.html` is `html/template` and renders a missing key as `""`. `TestContactFormTemplate_SuppliesEveryBodyKey` covers that gap.
+The `send-email` step's `values:` must supply every key the `contact-form` email interpolates. `To`, `Subject`, and `ReplyEmail` are checked when Templates load, because the email's `to`, `subject`, and `headers` templates reject a missing key. The body's keys — `Name`, `Message`, `HeaderMessage`, and the twelve `Client_*` values — are not, because `body.html` is `html/template` and renders a missing key as `""`. `TestContactFormTemplate_SuppliesEveryBodyKey` covers that gap.
 
 Second, every visitor value the step reads with `.GetString` must first be declared to `read-form`, or it is silently never read. `TestContactFormTemplate_ReadFormDeclaresEveryVisitorField` pins that.
 

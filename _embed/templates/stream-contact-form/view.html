@@ -10,16 +10,13 @@
 			<div class="layout-{{.Data `width`}}">
 			{{- .Widgets "TOP" -}}
 
-			<!-- The page author's prompt carries the page's own heading, if it wants one.
-			     Markdown, through the one funcMap helper that sanitizes its own output. -->
-			{{- $prompt := .Data "promptContent" | string -}}
-			{{- if ne "" $prompt -}}
-				<div class="margin-bottom-lg">{{$prompt | markdown}}</div>
-			{{- end -}}
-
-			<!-- The form replaces itself with success.html, so a sent message cannot be
-			     resubmitted by pressing the button again. -->
+			<!-- The form replaces itself with success.html, so a sent message cannot be resubmitted by pressing the button again. -->
 			<form hx-post="/{{.StreamID}}/submit" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+
+				{{- $prompt := .Data "promptContent" | string -}}
+				{{- if ne "" $prompt -}}
+					<div class="margin-bottom-lg">{{$prompt | markdown}}</div>
+				{{- end -}}
 
 				<div class="layout-vertical margin-bottom-lg">
 
@@ -38,6 +35,9 @@
 					<div class="layout-elements">
 						<div class="layout-element">
 							<textarea id="contact-message" name="message" placeholder="Type Your Message Here" rows="10" maxlength="8192" required aria-label="Type Your Message Here"></textarea>
+							<div class="text-sm text-gray">
+								Your IP address and browser details are sent along with this message.
+							</div>
 						</div>
 					</div>
 

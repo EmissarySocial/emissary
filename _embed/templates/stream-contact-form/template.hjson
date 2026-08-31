@@ -110,6 +110,12 @@
 						message: {type:"string", format:"text", maxLength:8192, required:true}
 					}
 				}}
+				// The Client_* values come off the REQUEST, not the form, which is why none of them
+				// appears in the read-form schema above.  A visitor cannot post them: read-form is
+				// an allowlist and reads the body only (D23), so the only way into these keys is
+				// the header the browser actually sent.  They are the message's only forensic
+				// record -- nothing here is stored (D1) -- and they are bounded in Go, because a
+				// header has no length limit of its own.
 				{do:"send-email", email:"contact-form", values: {
 					To: "{{.Data `emailAddress`}}"
 					Subject: "{{.Data `emailSubject`}}"
@@ -117,6 +123,18 @@
 					Name: "{{.GetString `name`}}"
 					Message: "{{.GetString `message`}}"
 					HeaderMessage: "{{.Data `headerMessage`}}"
+					Client_IP: "{{.ClientIP}}"
+					Client_Description: "{{.ClientDescription}}"
+					Client_Referer: "{{.ClientReferer}}"
+					Client_UserAgent: "{{.ClientUserAgent}}"
+					Client_Brands: "{{.ClientBrands}}"
+					Client_Platform: "{{.ClientPlatform}}"
+					Client_Mobile: "{{.ClientMobile}}"
+					Client_AcceptLanguage: "{{.ClientAcceptLanguage}}"
+					Client_Accept: "{{.ClientAccept}}"
+					Client_AcceptEncoding: "{{.ClientAcceptEncoding}}"
+					Client_DoNotTrack: "{{.ClientDoNotTrack}}"
+					Client_PrivacyControl: "{{.ClientPrivacyControl}}"
 				}}
 				{do:"view-html", method:"post", file:"success"}
 			]
