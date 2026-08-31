@@ -37,17 +37,15 @@
 				promptContent: {type:"string", format:"unsafe-any", maxLength:8192}
 				headerMessage: {type:"string", format:"unsafe-any", maxLength:2048, required:true}
 				successMessage: {type:"string", format:"unsafe-any", maxLength:2048, required:true}
-				width: {type:"string", enum:["LARGE", "MEDIUM", "SMALL"], default:"MEDIUM", required:true}
+				// NOT required, and the enum is what makes that safe: view.html interpolates this
+				// value straight into a class attribute, and Set rejects anything outside the list.
+				// An absent value renders "layout-", which matches no rule and fills the width --
+				// the same result as LARGE.  Marking it required would only guarantee that the
+				// default can never fire, because Normalize rejects a missing value before it
+				// would ever apply one.
+				width: {type:"string", enum:["LARGE", "MEDIUM", "SMALL"], default:"MEDIUM"}
 			}}
 		}
-	}
-
-	datasets: {
-		"layouts": [
-			{value:"LARGE", label:"Large (full page width)"}
-			{value:"MEDIUM", label:"Medium (about 2/3 page width)"}
-			{value:"SMALL", label:"Small (about 1/2 page width)"}
-		]
 	}
 
 	states: {
@@ -151,7 +149,6 @@
 									{type:"text", path:"label", label:"Page Title", description:"Displays in website navigation, and at the top of the page."}
 									{type:"text", path:"token", label:"Token/Slug", description:"This page\u0027s address on your website, for example \u0022contact\u0022.  Must be unique.", options:{autocomplete:"off", validator:"/.validate/streamToken?streamId={{.StreamID}}"}}
 									{type:"select", path:"icon", label:"Icon", description:"Displays beside the page title in website navigation.", options:{provider:"folder-icons"}}
-									{type:"select", path:"data.width", label:"Content Width", description:"How much of the page the prompt and form fill.", options:{provider:"contact-form.layouts"}}
 								]
 							}
 							{
@@ -195,6 +192,10 @@
 		widgets: {
 			roles: ["author", "editor"]
 			steps: [
+				// The layout controls post inside the widget editor's own form, so page shape and
+				// widget placement save together in one request.  Both steps re-read the same
+				// cached form values; formdata.Parse caches on the Request and re-reads nothing.
+				{do:"set-data", from-form:["data.width"]}
 				{do:"sort-widgets"}
 				{do:"save", message:"Widgets updated by {{.Author}}"}
 				{do:"view-html", method:"both"}
