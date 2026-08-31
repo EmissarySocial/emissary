@@ -23,3 +23,11 @@ Every `User.Save` hashes `GetJSONLD()` into `ProfileFingerprint`; a changed hash
 ## TAG rules only exist in the full-document key set
 
 `model.ActorMatchKeys` deliberately excludes content (TAG) keys — it answers "is this actor filtered?", nothing more. Any enforcement surface that should honor TAG rules (newsfeed ingest, notifications, render labels) must evaluate `model.DocumentMatchKeys` / `Rule.Disposition` on the (unwrapped) payload, or TAG rules silently never fire there. A surface built on `ActorDisposition` alone looks complete and passes every identity-rule test while ignoring hashtag rules entirely.
+
+## A boolean in a Theme's `themeData` needs an explicit `default`, or its first save flips it
+
+A Theme's hjson schema layers `themeData` properties onto the Domain's own wildcard object ([build/builder_admin_domain.go](../build/builder_admin_domain.go) `schema()`), and the settings form is a tab layout — so saving **any** tab posts **every** field. `model.Domain.ThemeData` starts out an empty `mapof.Any`, and an absent boolean reads back as `false`. A toggle meant to start ON therefore renders OFF on a pristine Domain, and the owner's first save of an unrelated tab writes that phantom `false` — silently blanking whatever the flag controls.
+
+Declaring `default:true` on the property is what fixes it, and **both** halves read that one declaration: `form/widget.Toggle` falls back to the schema element's `DefaultValue()` when the object carries no value, and [build/builder_common.go](../build/builder_common.go) `ThemeData` falls back to `theme.Schema.GetElement("themeData." + token).DefaultValue()`. Keep them in step — a default that only one side honors is worse than none, because the page and the form that configures it then disagree. `ThemeData` returns a **string**, so compare against `"true"`, never truthiness.
+
+Note that `schema.Boolean.Default` does *not* surface through `schema.Schema.Get`: `getProperty_Boolean` errors on a missing map key rather than falling through to the default, which is why both fallbacks are written out by hand instead of coming for free.

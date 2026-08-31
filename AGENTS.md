@@ -37,3 +37,13 @@ Navigation links routinely carry **both** attributes (`<a href="/x" hx-get="/x">
 ## Templates are data, not code — a stale copy will not announce itself
 
 Templates in [_embed/templates](_embed/templates/) are embedded at build time, but a server can also load template folders from Git or disk. Those copies are cached, so an edit to a template's actions, states, or roles may need a restart before it takes effect, and a stale external copy silently keeps serving the old pipeline. When a template change appears to do nothing, confirm which copy is actually being served before debugging the Go code.
+
+## `.card` carries `container-type`, so it collapses inside a shrink-to-fit box
+
+`.card` in [theme-global/stylesheet/03-widgets-card.css](_embed/templates/theme-global/stylesheet/03-widgets-card.css) sets `container-type: inline-size` so card contents can use the design system's `@container` queries. That also applies inline-size containment, which sizes the box **as if it had no contents** — its children stop contributing to its intrinsic width.
+
+Put a `.card` inside anything that sizes shrink-to-fit (an absolutely positioned box with only `right`/`bottom` set, a float, an inline-block, a grid/flex item sized to content) and the parent has nothing to size around: the card collapses to its own padding. Nothing errors — a block card renders as a narrow vertical ribbon, and a flex card is worse, because its row does not wrap and simply runs off the edge of the screen where it cannot be seen or reached.
+
+**`width: max-content` does not fix it.** Containment zeroes the very intrinsic sizes that `max-content` resolves against, so the card stays collapsed — the circularity is what container queries have to forbid, not an oversight. The fix is `container-type: normal` on that specific card, which is safe whenever nothing inside it queries its own size — see `.floating-menu` in [theme-minimal/stylesheet/01-layout.css](_embed/templates/theme-minimal/stylesheet/01-layout.css). Do not remove `container-type` from `.card` itself; the `@container` queries throughout `05-*.css` depend on it.
+
+Styling reached through an element selector has the mirror-image problem: a theme that styles its nav items as `nav a { … }` silently loses all of it the moment those links move outside `<nav>`. Check where a rule's scope actually starts before relocating markup — `.nav-item` looks like the hook for this and is not; no stylesheet selects it.
