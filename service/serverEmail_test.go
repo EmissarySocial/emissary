@@ -681,10 +681,14 @@ func contactFormEmail(t *testing.T) (ServerEmail, model.Email) {
 	return service, email
 }
 
-// contactFormContract is every key the contact-form templates may reference: the six the
-// send-email step supplies, plus the four DomainEmail.Send injects into every email
+// contactFormContract is every key the contact-form templates may reference: the six message
+// keys and twelve Client_* keys the send-email step supplies, plus the four DomainEmail.Send
+// injects into every email
 var contactFormContract = []string{
 	"To", "Subject", "ReplyEmail", "Name", "Message", "HeaderMessage",
+	"Client_IP", "Client_Description", "Client_Referer", "Client_UserAgent",
+	"Client_Brands", "Client_Platform", "Client_Mobile", "Client_AcceptLanguage",
+	"Client_Accept", "Client_AcceptEncoding", "Client_DoNotTrack", "Client_PrivacyControl",
 	"Domain_Owner", "Domain_URL", "Domain_Name", "Domain_Icon",
 }
 
@@ -740,6 +744,14 @@ func TestContactFormEmail_EscapesVisitorInput(t *testing.T) {
 		"HeaderMessage": "",
 		"Domain_Icon":   "",
 		"Domain_Name":   "Example",
+
+		// The Client_* values are headers, so they are attacker-controlled in exactly the same
+		// way the three fields above are -- a client chooses every byte of its own User-Agent.
+		"Client_IP":         "203.0.113.42",
+		"Client_UserAgent":  `<script>alert("ua")</script>`,
+		"Client_Referer":    `javascript:alert(1)`,
+		"Client_Platform":   `"onmouseover="alert(2)`,
+		"Client_DoNotTrack": `<img src=x onerror=alert(3)>`,
 	}
 
 	var buffer strings.Builder
@@ -751,6 +763,18 @@ func TestContactFormEmail_EscapesVisitorInput(t *testing.T) {
 	require.NotContains(t, result, "<b>bold</b>")
 	require.Contains(t, result, "&lt;script&gt;", "the script tag must survive as escaped text")
 	require.NotContains(t, result, `"onmouseover="alert(1)`, "an address must not break out of its attribute")
+	require.NotContains(t, result, `"onmouseover="alert(2)`, "a header value must not break out of its cell")
+	require.NotContains(t, result, "<img src=x", "a header value must never reach the recipient as markup")
+
+	// RULE: the Referer is rendered as TEXT, never as a link.  If it ever becomes an href,
+	// html/template rewrites this to "#ZgotmplZ" -- which hides from the reader the one thing
+	// the row exists to show them.  Asserting the raw text survives pins the display choice.
+	require.Contains(t, result, "javascript:alert(1)", "the Referer must be shown verbatim, as text")
+	require.NotContains(t, result, "ZgotmplZ", "no Client_* value belongs in a URL context")
+
+	// The IP is the one value that IS a link, which is safe only because every realclientip
+	// strategy returns "" for anything it cannot parse as an address.
+	require.Contains(t, result, `href="https://ipinfo.io/203.0.113.42"`, "the IP must link to a lookup the recipient can follow")
 }
 
 // TestContactFormEmail_RendersAuthorMarkdown verifies that the page author's header message is

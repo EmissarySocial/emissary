@@ -2,6 +2,7 @@ package service
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -83,8 +84,60 @@ func TestContactFormTemplate_SuppliesEveryBodyKey(t *testing.T) {
 	step := sendEmailStep(t, contactFormTemplate(t), "submit")
 
 	// Every key body.html interpolates, minus the Domain_* values that DomainEmail.Send injects
-	for _, key := range []string{"Name", "ReplyEmail", "Message", "HeaderMessage"} {
+	for _, key := range []string{
+		"Name", "ReplyEmail", "Message", "HeaderMessage",
+		"Client_IP", "Client_Description", "Client_Referer", "Client_UserAgent",
+		"Client_Brands", "Client_Platform", "Client_Mobile", "Client_AcceptLanguage",
+		"Client_Accept", "Client_AcceptEncoding", "Client_DoNotTrack", "Client_PrivacyControl",
+	} {
 		require.Contains(t, step.Values, key, "body.html renders %q, which the submit action does not supply", key)
+	}
+}
+
+// TestContactFormTemplate_ClientValuesAreNotFormFields verifies that no Client_* value can be
+// posted.  These describe the browser, and their whole worth is that a sender cannot choose them:
+// a Client_IP the visitor typed is worse than none, because it looks authoritative in the footer.
+// read-form is an allowlist reading the body only (D23), so the guarantee is structural -- this
+// pins it against a future edit that "helpfully" adds one of these names to the schema.
+func TestContactFormTemplate_ClientValuesAreNotFormFields(t *testing.T) {
+
+	action, exists := contactFormTemplate(t).Actions["submit"]
+	require.True(t, exists)
+
+	var readForm modelStep.ReadForm
+
+	for _, step := range action.Steps {
+		if typed, ok := step.(modelStep.ReadForm); ok {
+			readForm = typed
+		}
+	}
+
+	// The visitor declares exactly three fields, and none of them feeds a Client_* value
+	for _, field := range []string{"clientIP", "ip", "ipAddress", "userAgent", "referer", "platform"} {
+		_, exists := readForm.Schema.GetElement(field)
+		require.False(t, exists, "read-form declares %q, which would let a visitor forge their own sender details", field)
+	}
+}
+
+// TestContactFormTemplate_ClientValuesComeFromTheBuilder verifies that every Client_* value is
+// rendered from a Builder accessor rather than from the transient form scope.  ".GetString" reads
+// what read-form stored -- visitor input -- while the accessors read the request itself.  A step
+// that mixed them would silently publish a forged fingerprint as fact.
+func TestContactFormTemplate_ClientValuesComeFromTheBuilder(t *testing.T) {
+
+	step := sendEmailStep(t, contactFormTemplate(t), "submit")
+
+	for key, valueTemplate := range step.Values {
+
+		if !strings.HasPrefix(key, "Client_") {
+			continue
+		}
+
+		require.NotNil(t, valueTemplate.Tree, "%q must be a parsed template", key)
+		require.NotContains(t, valueTemplate.Tree.Root.String(), "GetString",
+			"%q reads visitor input; sender details must come from the request", key)
+		require.NotContains(t, valueTemplate.Tree.Root.String(), "QueryParam",
+			"%q reads the query string, which the visitor also controls", key)
 	}
 }
 
