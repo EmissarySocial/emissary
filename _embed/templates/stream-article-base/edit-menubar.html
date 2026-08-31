@@ -152,7 +152,7 @@
 		{{- end -}}
 
 		{{- if .UserCan "widgets" -}}
-			<a href="/{{.StreamID}}/widgets" class="turboclick {{- if eq $selected `widgets` }} bold{{- end -}}">Widgets</a>
+			<a href="/{{.StreamID}}/widgets" class="turboclick {{- if eq $selected `widgets` }} bold{{- end -}}">Layout</a>
 		{{- end -}}
 
 		{{- if .UserCan "style" -}}

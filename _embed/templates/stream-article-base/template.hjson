@@ -28,19 +28,17 @@
 			}}
 			data: {type:"object", properties: {
 				tags: {type:"string", maxLength:2048}
-				width: {type:"string", enum:["LARGE", "MEDIUM", "SMALL"], required:true}
+				// NOT required, and the enum is what makes that safe: view.html interpolates this
+				// value straight into a class attribute, and Set rejects anything outside the list.
+				// An absent value renders "layout-", which matches no rule and fills the width --
+				// the same result as LARGE.  Required would only guarantee that a stream created
+				// before the author ever opened the Layout tab could not be saved at all, because
+				// "create" does not seed it and Normalize rejects a missing value.
+				width: {type:"string", enum:["LARGE", "MEDIUM", "SMALL"]}
 				stylesheet: {type:"string", format:"css", maxLength:1048576}
 			}}
 		}
 	}
-	datasets: {
-		"layouts": [
-			{value:"LARGE", label:"Large (full page width)"}
-			{value:"MEDIUM", label:"Medium (about 2/3 page width)"}
-			{value:"SMALL", label:"Small (about 1/2 page width)"}
-		]
-	}
-
 	states: {
 		default: {
 			label:"Default State"
@@ -128,6 +126,10 @@
 			roles: ["author", "editor"]
 			steps: [
 				{do:"with-draft", steps: [
+					// The layout controls post inside the widget editor's own form, so page shape and
+					// widget placement save together in one request.  Both steps re-read the same
+					// cached form values; formdata.Parse caches on the Request and re-reads nothing.
+					{do:"set-data", from-form:["data.width"]}
 					{do:"sort-widgets"}
 					{do:"save", message:"Widgets updated by {{.Author}}"}
 					{do:"view-html", method:"both"}
@@ -229,7 +231,6 @@
 									{type:"select", path:"icon", label:"Icon", options:{provider:"folder-icons"}}
 									{type:"text", path:"label", label:"Label"}
 									{type:"textarea", path:"summary", label:"Summary"}
-									{type:"select", path:"data.width", label:"Content Width", options:{provider:"article-base.layouts"}}
 									{type:"textarea", path:"data.tags", label:"Hashtags", description:"List hashtags here to categorize this article."}
 								]
 							}

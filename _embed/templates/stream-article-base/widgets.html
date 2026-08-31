@@ -4,4 +4,10 @@
 
 	{{- template "widgets-list" . -}}
 
+	<!-- A failed save returns 200 with HX-Retarget:#htmx-response-message (WrapInlineError).
+	     Without this span htmx retargets to nothing and dies inside its own swap with
+	     "undefined is not an object (evaluating 'c.classList')", which hides the real error.
+	     The edit page gets its copy from WrapForm; this page has no form of its own. -->
+	<span id="htmx-response-message" class="text-red"></span>
+
 </div>
