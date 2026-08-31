@@ -41,12 +41,18 @@ func NewDelete(stepInfo mapof.Any) (Delete, error) {
 		return Delete{}, derp.Wrap(err, location, "Invalid 'message' template", stepInfo)
 	}
 
+	method, err := parseMethod(stepInfo, "both")
+
+	if err != nil {
+		return Delete{}, derp.Wrap(err, location, "Invalid 'method'", stepInfo)
+	}
+
 	return Delete{
 		Title:   titleTemplate,
 		Message: messageTemplate,
 		Submit:  first(stepInfo.GetString("submit"), "Delete"),
 		Cancel:  first(stepInfo.GetString("cancel"), "Cancel"),
-		Method:  first(stepInfo.GetString("method"), "both"),
+		Method:  method,
 	}, nil
 }
 

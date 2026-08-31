@@ -1,6 +1,7 @@
 package step
 
 import (
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -15,10 +16,16 @@ type ViewHTML struct {
 // NewViewHTML generates a fully initialized ViewHTML step.
 func NewViewHTML(stepInfo mapof.Any) (ViewHTML, error) {
 
+	method, err := parseMethod(stepInfo, "get")
+
+	if err != nil {
+		return ViewHTML{}, derp.Wrap(err, "model.step.NewViewHTML", "Invalid 'method'", stepInfo)
+	}
+
 	return ViewHTML{
 		File: stepInfo.GetString("file"),
 
-		Method: first(stepInfo.GetString("method"), "get"),
+		Method: method,
 
 		// Left empty on purpose.  The default lives in the build step, beside the headers it guards,
 		// so that a ViewHTML assembled any other way still gets a safe policy.

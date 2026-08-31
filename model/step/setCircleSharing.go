@@ -1,8 +1,6 @@
 package step
 
 import (
-	"strings"
-
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 )
@@ -23,8 +21,14 @@ func NewSetCircleSharing(stepInfo mapof.Any) (SetCircleSharing, error) {
 		return SetCircleSharing{}, derp.Validation("Role is required")
 	}
 
+	method, err := parseMethod(stepInfo, "both")
+
+	if err != nil {
+		return SetCircleSharing{}, derp.Wrap(err, "model.step.NewSetCircleSharing", "Invalid 'method'", stepInfo)
+	}
+
 	return SetCircleSharing{
-		Method:  strings.ToLower(first(stepInfo.GetString("method"), "both")),
+		Method:  method,
 		Title:   first(stepInfo.GetString("title"), "Sharing Settings"),
 		Message: first(stepInfo.GetString("message"), "Public Settings"),
 		Button:  first(stepInfo.GetString("button"), "Save Changes"),

@@ -1,6 +1,7 @@
 package step
 
 import (
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 )
 
@@ -13,8 +14,14 @@ type AddEvent struct {
 // NewAddEvent returns a fully initialized AddEvent object
 func NewAddEvent(stepInfo mapof.Any) (AddEvent, error) {
 
+	method, err := parseMethod(stepInfo, "post")
+
+	if err != nil {
+		return AddEvent{}, derp.Wrap(err, "model.step.NewAddEvent", "Invalid 'method'", stepInfo)
+	}
+
 	return AddEvent{
-		Method: first(stepInfo.GetString("method"), "post"),
+		Method: method,
 		Event:  stepInfo.GetString("event"),
 	}, nil
 }

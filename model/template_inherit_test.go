@@ -1,6 +1,7 @@
 package model
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/hjson/hjson-go/v4"
@@ -51,4 +52,46 @@ func TestTemplate_Inherit_TagPathsNotInherited(t *testing.T) {
 	child.Inherit(&parent)
 
 	require.Empty(t, child.TagPaths)
+}
+
+// TestTemplate_Inherit_HTMLTemplate confirms a child receives the parent's named templates.
+// This is what lets base-widget-editor ship a shared canvas.
+func TestTemplate_Inherit_HTMLTemplate(t *testing.T) {
+
+	parent := NewTemplate("parent", nil)
+	_, err := parent.HTMLTemplate.New("layout-controls").Parse(`FROM-PARENT`)
+	require.Nil(t, err)
+
+	child := NewTemplate("child", nil)
+	child.Inherit(&parent)
+
+	require.NotNil(t, child.HTMLTemplate.Lookup("layout-controls"))
+	require.Equal(t, "FROM-PARENT", executeNamed(t, &child, "layout-controls"))
+}
+
+// TestTemplate_Inherit_HTMLTemplate_ChildWins confirms that a child's own definition of a
+// named template is NOT replaced by the parent's.  The "layout-controls" slot depends on
+// this: base-widget-editor ships an empty default, and any template that wants controls
+// simply defines its own and has it win.
+func TestTemplate_Inherit_HTMLTemplate_ChildWins(t *testing.T) {
+
+	parent := NewTemplate("parent", nil)
+	_, err := parent.HTMLTemplate.New("layout-controls").Parse(`FROM-PARENT`)
+	require.Nil(t, err)
+
+	child := NewTemplate("child", nil)
+	_, err = child.HTMLTemplate.New("layout-controls").Parse(`FROM-CHILD`)
+	require.Nil(t, err)
+
+	child.Inherit(&parent)
+
+	require.Equal(t, "FROM-CHILD", executeNamed(t, &child, "layout-controls"))
+}
+
+// executeNamed renders one named template from a Template's parse tree
+func executeNamed(t *testing.T, template *Template, name string) string {
+	t.Helper()
+	var buffer strings.Builder
+	require.Nil(t, template.HTMLTemplate.ExecuteTemplate(&buffer, name, nil))
+	return buffer.String()
 }

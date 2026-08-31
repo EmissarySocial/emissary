@@ -23,8 +23,14 @@ func NewSetHeader(stepInfo mapof.Any) (SetHeader, error) {
 		return SetHeader{}, derp.Wrap(err, "step.NewSetHeader", "Parsing value template", value)
 	}
 
+	method, err := parseMethod(stepInfo, "both")
+
+	if err != nil {
+		return SetHeader{}, derp.Wrap(err, "model.step.NewSetHeader", "Invalid 'method'", stepInfo)
+	}
+
 	return SetHeader{
-		Method:     first(stepInfo.GetString("method"), "both"),
+		Method:     method,
 		HeaderName: stepInfo.GetString("name"),
 		Value:      value,
 	}, nil
