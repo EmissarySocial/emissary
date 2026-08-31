@@ -220,6 +220,7 @@
 @media (prefers-reduced-motion: reduce) {
 	.widget-editor-MAIN,
 	.widget-editor-layout .widget-editor-sortable,
+	.widget-editor-CENTER > *,
 	.widget button {
 		transition:none;
 	}
@@ -269,4 +270,83 @@
 
 .widget-editor.dragging-placed .widget-editor-drop-remove {
 	display:inline;
+}
+
+
+/******************************************
+ * Content width
+ *
+ * A Template that ships a width control into the layout-controls slot gets the
+ * canvas re-proportioned straight from the checked radio -- :has() reads the
+ * control's state with no round trip and no JavaScript.  The base knows only
+ * the three shared values; the field name, the labels, and the dataset stay
+ * with the Template that owns them.
+ *
+ * The page applies its width class to a wrapper INSIDE content-main that
+ * surrounds the TOP widgets, the content, and the BOTTOM widgets -- so the
+ * setting narrows the widget zones too, which the canvas previously did not
+ * show at all.  There is no such wrapper here, so the same proportion is
+ * applied to the three children directly.  Identical effect, no change to the
+ * shared markup.
+ *
+ * These are deliberately NOT the page's own .layout-* classes, which are now
+ * global and so would otherwise apply here for free.  Those carry a 300px
+ * min-width, sized for a full-width page; the centre column of a three-column
+ * canvas is narrower than the page it stands for, so the floor would push its
+ * contents out past the column edge.  Same ratios, no minimums.
+ ******************************************/
+
+/* LARGE is stated rather than left to the default so every step of the range is a
+   percentage; width does not interpolate away from "auto", so without this the
+   canvas would animate in one direction only.  border-box because the page sets
+   no global box-sizing and .widget-editor-MAIN carries a border and padding. */
+.widget-editor-CENTER > * {
+	box-sizing:border-box;
+	width:100%;
+	transition: width 120ms ease-out;
+}
+
+.widget-editor-CENTER:has(.widget-editor-width [value="MEDIUM"]:checked) > * {
+	width:66.6667%;
+	margin-left:auto;
+	margin-right:auto;
+}
+
+.widget-editor-CENTER:has(.widget-editor-width [value="SMALL"]:checked) > * {
+	width:50%;
+	margin-left:auto;
+	margin-right:auto;
+}
+
+
+/******************************************
+ * Layout controls
+ *
+ * A caption and one dropdown, sized to stay legible inside the Page Content
+ * block even at SMALL, where the block itself is half its full width.  This is
+ * the shared row styling; .widget-editor-width above is a SEPARATE hook, worn
+ * only by the width control, so that a Template adding some other setting here
+ * cannot accidentally re-proportion the canvas.
+ ******************************************/
+
+.widget-editor-control {
+	display:flex;
+	flex-direction:row;
+	flex-wrap:wrap;
+	align-items:center;
+	justify-content:center;
+	gap:8px;
+	margin-top:12px;
+	font-size:13px;
+	color:var(--gray60);
+}
+
+/* The global rule stretches every select to fill its container.  Here it should be
+   only as wide as its longest option, so the Page Content block keeps reading as a
+   diagram of the page rather than as a form.  The right padding clears the arrow
+   that the global rule paints at 99%. */
+.widget-editor-control select {
+	width:auto;
+	font-size:13px;
+	padding:4px 24px 4px 8px;
 }

@@ -1,0 +1,39 @@
+<!-- A reusable "page width" control for the layout-controls slot.  It lives here, rather than
+     being copied into each Template that wants it, because the three values, the empty-means-
+     LARGE rule below, and the CSS that reads the chosen option are one contract that has to
+     move together.  A Template opts in by defining its own layout-controls.html containing
+     nothing but a call to this one.
+
+     The select posts as "data.width" inside the widget editor's own form, so the change handler
+     saves it through the pipeline that already saves widget order.  The base stylesheet
+     re-proportions the centre column straight from the chosen option, so the canvas responds
+     before the round trip finishes.
+
+     RULE: templates are minified before they are parsed, and the minifier knows nothing about
+     Go actions.  Two traps shape the markup below, and neither one raises an error:
+
+       - An action inside a TAG is read as attribute markup and lowercased, so a conditional
+         written between two attributes has its own string literals lowercased and then never
+         matches.  Hence no conditional "selected" attribute.
+       - An action inside a <select> is read as a stray text node in an element that admits
+         only <option>, and is DELETED outright.  Hence the whole <select> repeated per branch
+         rather than a conditional around each option.
+
+     TestEmbeddedTemplates_ActionsSurviveMinification catches both.
+
+     LARGE is the final "else" rather than a case of its own, so an unset or unrecognized value
+     selects it.  That is honest rather than merely convenient: an empty width renders "layout-"
+     on the page, which matches no rule and fills the width exactly like LARGE.  It also keeps
+     one option always selected, so the field is present in every POST. -->
+{{- $width := .DataString "width" -}}
+
+<div class="widget-editor-control widget-editor-width">
+	<label for="widget-editor-width">Page Width</label>
+	{{- if eq $width "MEDIUM" -}}
+		<select id="widget-editor-width" name="data.width"><option value="LARGE">Large</option><option value="MEDIUM" selected>Medium</option><option value="SMALL">Small</option></select>
+	{{- else if eq $width "SMALL" -}}
+		<select id="widget-editor-width" name="data.width"><option value="LARGE">Large</option><option value="MEDIUM">Medium</option><option value="SMALL" selected>Small</option></select>
+	{{- else -}}
+		<select id="widget-editor-width" name="data.width"><option value="LARGE" selected>Large</option><option value="MEDIUM">Medium</option><option value="SMALL">Small</option></select>
+	{{- end -}}
+</div>

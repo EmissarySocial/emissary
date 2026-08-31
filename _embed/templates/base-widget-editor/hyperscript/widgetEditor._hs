@@ -42,6 +42,20 @@ behavior widgetEditor(url)
 		remove .dragging-placed from me
 	end
 
+	-- Any control a Template drops into the layout-controls slot saves itself, with no
+	-- wiring of its own.
+	--
+	-- Scoped to the controls container, NOT to the editor: Sortable dispatches its own
+	-- bubbling "change" event every time the ghost moves to a new position, so a handler
+	-- listening on the whole editor fires mid-drag, saves a half-finished arrangement, and
+	-- swaps the DOM out from under the drag still in progress.  The sortable lists are a
+	-- sibling branch of this container, so their events never reach it.
+	--
+	-- Debounced so that clicking quickly through the options makes one save, not three.
+	on change from <.widget-editor-controls /> in me debounced at 300ms
+		trigger editor:save
+	end
+
 	on sort throttled at 100ms
 
 		tell <.widget-editor-sortable /> in me
