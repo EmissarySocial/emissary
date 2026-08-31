@@ -494,13 +494,24 @@ func (w Stream) Grandparent(actionID string) (Stream, error) {
 
 	const location = "build.Stream.Grandparent"
 
+	// RULE: Streams in the top two levels of the hierarchy have no grandparent to load
+	if !w.HasGrandparent() {
+		return Stream{}, derp.NotFound(location, "Stream does not have a grandparent", w._stream.StreamID)
+	}
+
 	parent, err := w.Parent(actionID)
 
 	if err != nil {
 		return Stream{}, derp.Wrap(err, location, "Loading Parent")
 	}
 
-	return parent.Parent(actionID)
+	grandparent, err := parent.Parent(actionID)
+
+	if err != nil {
+		return Stream{}, derp.Wrap(err, location, "Loading Grandparent")
+	}
+
+	return grandparent, nil
 }
 
 // ParentOutbox returns an Outbox builder containing the parent of the current stream
@@ -529,6 +540,11 @@ func (w Stream) ParentOutbox(actionID string) (Outbox, error) {
 func (w Stream) Parent(actionID string) (Stream, error) {
 
 	const location = "build.Stream.Parent"
+
+	// RULE: A top-level Stream has no parent to load
+	if !w.HasParent() {
+		return Stream{}, derp.NotFound(location, "Stream does not have a parent", w._stream.StreamID)
+	}
 
 	var parent model.Stream
 
@@ -741,19 +757,32 @@ func (w Stream) Breadcrumbs() ([]model.StreamSummary, error) {
 
 // Ancestors returns all Streams that have the same "parent" as the current Stream's parent
 func (w Stream) Ancestors() QueryBuilder[model.StreamSummary] {
+
+	const location = "build.Stream.Ancestors"
+
+	// RULE: A top-level Stream has no parent, and therefore no ancestor generation to list.
+	// Without this guard the query below would search for the children of NilObjectID, which
+	// is this Stream's OWN generation -- a list that callers cannot tell apart from a real one.
+	if !w.HasParent() {
+		return NewEmptyQueryBuilder[model.StreamSummary]()
+	}
+
+	// Load the parent, whose own parent defines the generation to list
 	var parent model.Stream
 
 	streamService := w._factory.Stream()
 
 	if err := streamService.LoadByID(w._session, w._stream.ParentID, &parent); err != nil {
-		derp.Report(derp.Wrap(err, "build.Stream.Ancestors", "Loading parent"))
+
+		// RULE: A parent we cannot read yields nothing.  Falling through with a zero-valued
+		// parent would list this Stream's own generation instead, which is a silent lie.
+		derp.Report(derp.Wrap(err, location, "Loading parent", w._stream.ParentID))
+		return NewEmptyQueryBuilder[model.StreamSummary]()
 	}
 
-	criteria := exp.Equal("parentId", parent.ParentID).
-		And(w.defaultAllowed()).
-		And(w.withinPublishDate())
-
-	return w.makeStreamQueryBuilder(criteria)
+	// Collect the parent and all of the parent's siblings.  makeStreamQueryBuilder applies
+	// the permission and publish-date filters, so they are not repeated here.
+	return w.makeStreamQueryBuilder(exp.Equal("parentId", parent.ParentID))
 }
 
 // Siblings returns all Streams that have the same "parent" as the current Stream

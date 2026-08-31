@@ -4,22 +4,9 @@
 		<div class="bold">{{- .Widget.Data.GetString "title" -}}</div>
 	{{- end -}}
 
-	{{- if not (.Widget.Data.IsZeroValue "grandparents") -}}
-
-		{{- template "grandparents" . -}}
-
-	{{- else if not (.Widget.Data.IsZeroValue "parents") -}}
-
-		{{- template "parents" . -}}
-
-	{{- else if not (.Widget.Data.IsZeroValue "siblings") -}}
-	
-		{{- template "siblings" . -}}
-
-	{{- else if not (.Widget.Data.IsZeroValue "children") -}}
-
-		{{- template "children" . -}}
-
-	{{- end -}}
+	<!-- Enter the tier chain at the top of the family tree.  Each tier decides for itself
+	     whether it can render, then hands off to the next one, so a tier that is unset or
+	     impossible for this Stream drops out of the chain instead of ending it. -->
+	{{- template "grandparents" . -}}
 
 </div>

@@ -1,52 +1,41 @@
 {{- $root := . -}}
 {{- $configGrandparents := .Widget.Data.GetString "grandparents" -}}
+{{- $hasGrandparentTier := false -}}
 
-{{- if eq $configGrandparents "All" -}}
+<!-- RULE: Both display modes need a grandparent.  Streams in the top two levels of the
+     hierarchy have none, so this whole tier is skipped for them.  Without the guard,
+     "All" would ask for the parent of a Stream that has no parent. -->
+{{- if .HasGrandparent -}}
 
-	{{- $parentBuilder := .Parent "view" -}}
-	{{- $ancestors := $parentBuilder.Ancestors.Slice -}}
-	{{- $grandparentID := $parentBuilder.ParentID -}}
-	{{- $streamID := $parentBuilder.StreamID -}}
+	{{- if eq $configGrandparents "All" -}}
 
-	{{- range $index, $ancestor := $ancestors -}}
+		{{- $parentBuilder := .Parent "view" -}}
+		{{- $grandparentID := $parentBuilder.ParentID -}}
 
-		{{- if eq $grandparentID $ancestor.StreamID -}}
+		{{- range $index, $ancestor := $parentBuilder.Ancestors.Slice -}}
 
 			<div class="ellipsis"><a href="/{{$ancestor.Token}}" hx-get="/{{$ancestor.Token}}" class="turboclick">{{$ancestor.Label}}</a></div>
 
-			{{- if not ($root.Widget.Data.IsZeroValue "parents")  -}}
+			{{- if eq $grandparentID $ancestor.StreamID -}}
+				{{- $hasGrandparentTier = true -}}
 				<div style="padding-left:8px; font-size:0.9em;">{{- template "parents" $root -}}</div>
-			{{- else if not ($root.Widget.Data.IsZeroValue "siblings")  -}}
-				<div style="padding-left:8px; font-size:0.9em;">{{- template "siblings" $root -}}</div>
-			{{- else if not ($root.Widget.Data.IsZeroValue "children") -}}
-				<div style="padding-left:8px; font-size:0.9em;">{{- template "children" $root -}}</div>
 			{{- end -}}
-			
-		{{- else -}}
-			<div class="ellipsis"><a href="/{{$ancestor.Token}}" hx-get="/{{$ancestor.Token}}" class="turboclick">{{$ancestor.Label}}</a></div>
+
 		{{- end -}}
 
-	{{- end -}}
+	{{- else if eq $configGrandparents "Grandparent Only" -}}
 
-{{- else -}} 
-
-	{{- if eq $configGrandparents "Grandparent Only" -}}
-
-		{{- if .HasGrandparent -}}
-			{{- $grandparent := .Grandparent "view" -}}
-			<div class="ellipsis">
-				<a href="/{{$grandparent.Token}}" hx-get="/{{$grandparent.Token}}" class="turboclick">{{- $grandparent.Label -}}</a>
-			</div>
-		{{- end -}}
-
-	{{- end -}}
-
-	{{- if not (.Widget.Data.IsZeroValue "parents") -}}
+		{{- $grandparent := .Grandparent "view" -}}
+		{{- $hasGrandparentTier = true -}}
+		<div class="ellipsis"><a href="/{{$grandparent.Token}}" hx-get="/{{$grandparent.Token}}" class="turboclick">{{- $grandparent.Label -}}</a></div>
 		<div style="padding-left:8px; font-size:0.9em;">{{- template "parents" $root -}}</div>
-	{{- else if not (.Widget.Data.IsZeroValue "siblings") -}}
-		<div style="padding-left:8px; font-size:0.9em;">{{- template "siblings" $root -}}</div>
-	{{- else if not (.Widget.Data.IsZeroValue "children") -}}
-		<div style="padding-left:8px; font-size:0.9em;">{{- template "children" $root -}}</div>
+
 	{{- end -}}
 
+{{- end -}}
+
+<!-- RULE: Hand off to the next tier whenever this one rendered nothing to nest it under.
+     A lineage that does not match must not swallow the rest of the menu. -->
+{{- if not $hasGrandparentTier -}}
+	{{- template "parents" $root -}}
 {{- end -}}
