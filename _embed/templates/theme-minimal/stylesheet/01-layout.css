@@ -213,7 +213,7 @@ main:has(> .app) {
 
 .floating-menu {
 
-	position: absolute;
+	position: fixed;
 	bottom: var(--rhythm);
 	right: var(--rhythm);
 

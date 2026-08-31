@@ -16,15 +16,11 @@
 			themeId: {type:"string", maxLength: 100}
 			registrationId: {type:"string", maxLength: 100}
 			themeData: {type:"object", properties: {
-				"stylesheet": {type:"string", format:"css", maxLength: 1048576}
-				// RULE: "default" is load-bearing on both of these, not decoration.  A Domain
-				// starts life with no themeData keys at all, and an absent boolean reads back
-				// as FALSE -- so without a declared default these toggles would render OFF,
-				// and the first save of ANY tab on this form would write that phantom FALSE
-				// and blank the navigation bar.  The default is what both the form widget and
-				// .ThemeData fall back to, so the two always agree.
-				"showNavigation": {type:"boolean", default:true}
-				"showSignup": {type:"boolean", default:true}
+				header: {type:"string", format:"unsafe-any", maxLength: 32768}
+				footer: {type:"string", format:"unsafe-any", maxLength: 32768}
+				stylesheet: {type:"string", format:"css", maxLength: 1048576}
+				showNavigation: {type:"boolean", default:true} // "default" ensures the navigation toggle is correctly initialized.
+				showSignup: {type:"boolean", default:true}     // this "default" is important, too.
 			}}
 		}
 	}
@@ -49,17 +45,25 @@
 			}
 			{
 				type: layout-vertical
-				label: Navigation
+				label: Stylesheet
 				children: [
-					{type: "toggle", label: "Top-Level Navigation", path: "themeData.showNavigation", options:{true-text:"Visible. Top-level pages are listed in the navigation bar.", false-text:"Hidden. Top-level pages are not listed in the navigation bar."}}
-					{type: "toggle", label: "Sign In Link", path: "themeData.showSignup", options:{true-text:"Visible. Guests see Sign In and Join Now links.", false-text:"Hidden. Guests see no Sign In or Join Now links."}}
+					{type: "textarea", path: "themeData.stylesheet", description: "Custom CSS stylesheet; affects every page on this domain. <a href='https://developer.mozilla.org/en-US/docs/Web/CSS' target='_blank' class='text-gray text-nocolor text-underline'>Learn more about CSS.</a>", options:{rows:12}}
 				]
 			}
 			{
 				type: layout-vertical
-				label: Stylesheet
+				label: Header
 				children: [
-					{type: "textarea", path: "themeData.stylesheet", description: "Custom CSS stylesheet; affects every page on this domain. <a href='https://developer.mozilla.org/en-US/docs/Web/CSS' target='_blank' class='text-gray text-nocolor text-underline'>Learn more about CSS.</a>", options:{rows:12}}
+					{type: "textarea", path: "themeData.header", description: "Custom HTML content to include above navigation bar.", options:{rows:12}}
+					{type: "toggle", path: "themeData.showNavigation", options:{true-text:"Top-Level Navigation: Visible", false-text:"Top-Level Navigation: Hidden"}}
+					{type: "toggle", path: "themeData.showSignup", options:{true-text:"Sign-In Link: Visible", false-text:"Sign-In Link: Hidden"}}
+				]
+			}
+			{
+				type: layout-vertical
+				label: Footer
+				children: [
+					{type: "textarea", path: "themeData.footer", description: "Custom HTML content to include after all other page content.", options:{rows:12}}
 				]
 			}
 		]
