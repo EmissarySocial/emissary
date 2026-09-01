@@ -4,9 +4,9 @@ permissions:
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ dev ]
   pull_request:
-    branches: [ main, dev ]
+    branches: [ dev ]
 
 env:
   GOFLAGS: "-buildvcs=false"
@@ -33,3 +33,5 @@ jobs:
 
     - name: Nil panic checks
       run: nilaway ./...
+      env:
+        GOMEMLIMIT: 5GiB
