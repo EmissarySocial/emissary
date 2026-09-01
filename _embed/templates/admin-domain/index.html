@@ -3,13 +3,3 @@
 	<script src="/.themes/global/resources/sortable-1.15.7/Sortable.min.js"></script>
 	
 	{{template "menubar" .}}
-
- 	<div 
-		hx-get="/admin/domain/index" 
-		hx-trigger="refreshPage from:window" 
-		hx-target="main" 
-		hx-swap="innerHTML" 
-		hx-push-url="false">
-	</div>
-
-	<div class="card padding">
