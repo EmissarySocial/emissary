@@ -225,8 +225,16 @@
 			]
 		}
 
+		// RULE: "anonymous" is correct here, and the SECRET is what authorizes the request.
+		// This action exists to be reached from a link in an email, by a recipient who is not
+		// signed in and never will be -- "self" rejected every one of them with a 403 before
+		// with-follower could look at their credentials at all.  with-follower refuses to load
+		// anything without a matching followerId+secret pair, refuses outright when no
+		// followerId is supplied, and Follower.LoadBySecret loads EMAIL-method records only --
+		// so opening the role does not open the action, and no other kind of Follower can be
+		// deleted through it.
 		follower-unsubscribe: {
-			roles:["self"]
+			roles:["anonymous"]
 			steps: [
 				{do:"with-follower", steps:[
 					{do:"view-html", file:"follower-unsubscribe"}
