@@ -135,32 +135,51 @@
 
 </script>
 
+<!-- NO .turboclick on anything here that LEAVES the page, and this is the whole reason why.
+
+     turboclick fires its synthetic click on mousedown, from a capture phase listener, which
+     runs before the browser's own default action moves focus.  Every editor on this menu bar
+     saves on blur, so a turboclick link starts navigating while the textarea still holds
+     focus: blur never fires, save() is never called, and the visitor's last edit is gone.
+     There is no error, because nothing failed.  Nobody asked to save.
+
+     What keeps its .turboclick, and why it is safe to:
+
+       * the two buttons, because they call save() themselves before they go anywhere, so
+         they never depend on blur having fired first
+       * the hx-get links, because a modal or a confirmation does not unload the page, and
+         blur still fires normally underneath it
+
+     So the cost of correctness here is about 100ms of perceived latency on the tab links.
+     That is what we trade for not silently eating people's work. -->
+
 <div id="menu-bar" class="margin-bottom">
-	<a href="/admin/navigation" class="turboclick text-gray margin-none padding-horizontal-xs">Navigation &rarr;</a>
+	<a href="/admin/navigation" class="text-gray margin-none padding-horizontal-xs">Navigation &rarr;</a>
 	{{- range $index, $stream := $breadcrumbs -}}
-		<a href="/{{$stream.ID}}/edit" class="turboclick text-gray margin-none padding-horizontal-xs">{{$stream.Name}} &rarr;</a>
+		<a href="/{{$stream.ID}}/edit" class="text-gray margin-none padding-horizontal-xs">{{$stream.Name}} &rarr;</a>
 	{{- end -}}
 	<button hx-on:click="saveAndView()" class="turboclick bold margin-none padding-horizontal-xs">{{.Name}}</button>
 </div>
 
 <div id="menu-bar">
 	<div class="left">
+		<!-- Tab links: full page navigations, so no .turboclick.  See the note above. -->
 		<a href="/{{.Token}}" class="link">&larr; View</a>
 
 		{{- if .UserCan "edit" -}}
-			<a href="/{{.StreamID}}/edit" class="turboclick {{- if eq $selected `edit` }} bold{{- end -}}">Content</a>
+			<a href="/{{.StreamID}}/edit" class="{{- if eq $selected `edit` }}bold{{- end -}}">Content</a>
 		{{- end -}}
 
 		{{- if .UserCan "widgets" -}}
-			<a href="/{{.StreamID}}/widgets" class="turboclick {{- if eq $selected `widgets` }} bold{{- end -}}">Layout</a>
+			<a href="/{{.StreamID}}/widgets" class="{{- if eq $selected `widgets` }}bold{{- end -}}">Layout</a>
 		{{- end -}}
 
 		{{- if .UserCan "style" -}}
-			<a href="/{{.StreamID}}/style" class="turboclick {{- if eq $selected `style` }} bold{{- end -}}">Stylesheet</a>
+			<a href="/{{.StreamID}}/style" class="{{- if eq $selected `style` }}bold{{- end -}}">Stylesheet</a>
 		{{- end -}}
 
 		{{- if .UserCan "children" -}}
-			<a href="/{{.StreamID}}/children" class="turboclick {{- if eq $selected `children` }} bold{{- end -}}">Children</a>
+			<a href="/{{.StreamID}}/children" class="{{- if eq $selected `children` }}bold{{- end -}}">Children</a>
 		{{- end -}}
 
 		{{- if .UserCan "properties" -}}
