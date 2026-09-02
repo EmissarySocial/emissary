@@ -70,6 +70,52 @@ func GetValidateUsername(ctx *steranko.Context, factory *service.Factory, sessio
 	})
 }
 
+// GetValidateUserExists is the inverse of GetValidateUsername: it reports a username as VALID
+// only when it already belongs to somebody on this server.  It backs form fields that name an
+// existing account -- the Follow Button widget's "username" -- rather than claiming a new one.
+//
+// It is gated to signed-in Users, unlike its sibling above, which the public signup form calls.
+// That is not because existence is a secret (/@username, WebFinger, and the availability check
+// all answer the same question anonymously) but because the only caller is an editor form, and
+// there is no reason to hand an unauthenticated client a lookup it has no use for.
+func GetValidateUserExists(ctx *steranko.Context, factory *service.Factory, session data.Session, _ *model.User) error {
+
+	const location = "handler.GetValidateUserExists"
+
+	// This service can only validate the "username" field
+	if field := ctx.QueryParam("field"); field != "username" {
+		return ctx.JSON(http.StatusBadRequest, mapof.Any{
+			"valid":   false,
+			"message": "Invalid field",
+		})
+	}
+
+	// RULE: Resolve the value exactly the way the "/@:userId" route will, so that this
+	// validator and the URL it is vetting can never disagree about who exists.  LoadByToken
+	// tries an ObjectID first and falls back to the username, which matters because a bare
+	// hex string is a legal username and would otherwise validate differently than it routes.
+	userService := factory.User()
+	user := model.NewUser()
+
+	if err := userService.LoadByToken(session, ctx.QueryParam("value"), &user); err != nil {
+
+		if derp.IsNotFound(err) {
+			return ctx.JSON(http.StatusOK, mapof.Any{
+				"valid":   false,
+				"message": "There is nobody with this username on this server",
+			})
+		}
+
+		return derp.Wrap(err, location, "Loading User by token")
+	}
+
+	// The User exists, so the value is valid
+	return ctx.JSON(http.StatusOK, mapof.Any{
+		"valid":   true,
+		"message": "",
+	})
+}
+
 // GetValidateFoldername validates a Folder.Label for uniqueness within the User's own Folders
 func GetValidateFoldername(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User) error {
 
