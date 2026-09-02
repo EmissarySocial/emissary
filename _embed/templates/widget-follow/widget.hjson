@@ -23,19 +23,38 @@
 			// a place to put arbitrary text.  Note "\\s" and "\\p": hjson unescapes the doubled
 			// backslash, so the regex the schema compiles is ^[\s\p{L}\p{N}_-]*$.
 			class:{type:"string", format:"regex=^[\\s\\p{L}\\p{N}_-]*$", maxLength:128, default:""}
+
+			// "css-declarations" is the contents of a style attribute; "css" is a whole
+			// stylesheet, and the two are NOT interchangeable -- each sanitizes the other's
+			// input away to an empty string, with a nil error and no complaint.  It applies
+			// the same property and value allowlists Emissary already applies to a page
+			// stylesheet, so this field cannot position:fixed an overlay over the page or
+			// name a url() that phones home.
+			style:{type:"string", format:"css-declarations", maxLength:1024, default:""}
 		}
 	}
 	form:{
-		type:"layout-vertical"
-		label:"Edit Follow Button"
-		description:"Choose the person that visitors will follow, and the label on the button."
+		type:"layout-tabs"
 		children:[
-			// The validator checks the name against the server as it is typed.  Its URL carries no
-			// parameters, which matters here: a widget.hjson form is NOT rendered as a template, so
-			// a "{{.Something}}" in this string would reach the browser verbatim.
-			{type:"text", path:"username", label:"Username", description:"The username of a person on this server. Letters, numbers, and underscores only.", options:{placeholder:"username", autocomplete:"off", validator:"/.validate/user/exists"}}
-			{type:"text", path:"label", label:"Button Label", description:"Defaults to 'Follow' when empty.", options:{placeholder:"Follow"}}
-			{type:"text", path:"class", label:"CSS Class", description:"Optional. Applied to a wrapper around the button, so your stylesheet can position it.", options:{autocomplete:"off"}}
+			{
+				type:"layout-vertical"
+				label:"Button"
+				children:[
+					// The validator checks the name against the server as it is typed.  Its URL carries no
+					// parameters, which matters here: a widget.hjson form is NOT rendered as a template, so
+					// a "{{.Something}}" in this string would reach the browser verbatim.
+					{type:"text", path:"username", label:"Username", description:"The username of a person on this server. Letters, numbers, and underscores only.", options:{placeholder:"username", autocomplete:"off", validator:"/.validate/user/exists"}}
+					{type:"text", path:"label", label:"Button Label", description:"Defaults to 'Follow' when empty.", options:{placeholder:"Follow"}}
+				]
+			}
+			{
+				type:"layout-vertical"
+				label:"Stylesheet"
+				children:[
+					{type:"text", path:"class", label:"CSS Class", description:"Optional. Applied to a wrapper around the button, so your stylesheet can position it.", options:{autocomplete:"off"}}
+					{type:"textarea", path:"style", label:"CSS Style", description:"Optional. Style declarations applied to that same wrapper, for example \u0022margin-top:1rem\u0022.", options:{rows:4}}
+				]
+			}
 		]
 	}
 }
