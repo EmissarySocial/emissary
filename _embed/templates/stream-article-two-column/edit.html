@@ -1,0 +1,14 @@
+<!-- Replaces article-base's edit.html, which ships a #saveForm holding ONE hidden "content"
+     field.  This Template posts three fields from two editors, and the form has to enclose
+     the editors themselves so that CodeMirror's own textareas submit with it -- so the form
+     lives in editor.html, next to the editors it carries, and this file is only the frame.
+
+     #saveForm is still the id the shared save() in edit-menubar.html sends "submit" to, and
+     beforeSave() is still the hook that fills it.  Both are defined in editor.html. -->
+<div class="page flex-column">
+
+	{{- template "edit-menubar" . -}}
+
+	{{- template "editor" . -}}
+
+</div>

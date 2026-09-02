@@ -1,0 +1,55 @@
+<div class="page h-entry" script="init send SelectNav(id:'{{.NavigationID}}')">
+
+	<link rel="stylesheet" href="/.templates/article-base/stylesheet"/>
+	<link rel="stylesheet" href="/.templates/article-two-column/stylesheet"/>
+
+	<!-- Custom stylesheet (if defined) -->
+	{{- $stylesheet := .Data "stylesheet" | string -}}
+	{{- if ne "" $stylesheet -}}
+		<style>{{ $stylesheet | css }}</style>
+	{{- end -}}
+
+	<article class="content margin-vertical">
+		{{- .Widgets "LEFT" -}}
+		<div class="content-main">
+			<div class="layout-{{.Data `width`}}">
+				{{- .Widgets "TOP" -}}
+
+				<!-- Both columns live inside ONE .e-content, so the h-entry still describes the
+				     whole article rather than half of it.  The split is CSS only.
+
+				     RULE: the "markdown" helper is what sanitizes here.  data.left and data.right
+				     are stored with format "unsafe-any" -- raw, unconverted Markdown source --
+				     and nothing between the form and this line inspects them.  Rendering either
+				     one any other way publishes whatever the author pasted.
+
+				     RULE: the two child classes are not decoration -- they are the hooks the
+				     stylesheet's ratio rules select, and the same two the editor wears.  Swapping
+				     them for :first-child/:last-child would work until the day something else is
+				     added to this row. -->
+				<div class="e-content two-column columns-{{.Data `columns`}}">
+					<div class="two-column-left">{{- .DataString "left" | markdown -}}</div>
+					<div class="two-column-right">{{- .DataString "right" | markdown -}}</div>
+				</div>
+
+				{{- .Widgets "BOTTOM" -}}
+			</div>
+		</div>
+		{{- .Widgets "RIGHT" -}}
+	</article>
+
+	{{- if .UserCan "edit" -}}
+		<div style="position:absolute; top:4px; right:8px;">
+			<a class="text-xs button" href="/{{.StreamID}}/edit">Edit &rarr;</a>
+		</div>
+	{{- end -}}
+
+	<div 
+		hx-get="/{{.StreamID}}" 
+		hx-trigger="refreshPage from:window"
+		hx-target="main"
+		hx-swap="innerHTML"
+		hx-push-url="false">
+	</div>
+	
+</div>

@@ -1,0 +1,64 @@
+<!-- Fills the "layout-controls" slot that base-widget-editor leaves inside the Page Content
+     block.  Template.Inherit copies a parent's named templates only where the child has not
+     defined that name, so defining this file at all IS the opt-in, and this one replaces the
+     base's default -- which is why it has to call the width control itself.
+
+     This Template's page shape has two dimensions, so the slot carries both: the base's own
+     width control, reused unchanged, and the split, which belongs here.
+
+     The split is the SAME picker the edit page ships, markup and stylesheet alike, because it
+     is the same setting in a second place rather than a second control.  It is radios instead
+     of a <select> for two reasons: an <option> cannot hold markup, so a dropdown could never
+     show these icons; and the widget editor's own behavior saves any "change" inside
+     .widget-editor-controls, so radios need no wiring of their own to be saved.
+
+     RULE: each input is emitted whole, from inside its branch, and the branch decides on a
+     BOOLEAN rather than building an attribute out of a string.  Two separate traps make that
+     the only safe form, and neither one errors:
+
+       - Templates are minified before they are parsed, and an action inside a TAG is read as
+         attribute markup and lowercased -- so a conditional comparing against "TWO-THIRDS"
+         written between two attributes would compare against "two-thirds" and never match.
+       - Hoisting the attribute into a variable dodges that but hits html/template instead: a
+         value interpolated where an attribute NAME goes is passed through htmlNameFilter,
+         which replaces anything that is not a valid name -- the empty string included -- with
+         the literal text ZgotmplZ.
+
+     ONE-HALF is the final "else" rather than a case of its own, so an unset or unrecognized
+     value selects it.  That is honest rather than merely convenient: an empty value renders
+     "columns-" on the page, which matches no rule and leaves the stylesheet's equal-halves
+     default in place.  It also keeps one radio always checked, so the field is present in
+     every POST. -->
+<link rel="stylesheet" href="/.templates/article-two-column/stylesheet">
+
+{{- template "layout-controls-width" . -}}
+
+{{- $checked_twothirds := false -}}
+{{- $checked_onehalf := false -}}
+{{- $checked_onethird := false -}}
+
+{{- $columns := .DataString "columns" -}}
+
+{{- if eq $columns "TWO-THIRDS" -}}
+	{{- $checked_twothirds = true -}}
+{{- else if eq $columns "ONE-THIRD" -}}
+	{{- $checked_onethird = true -}}
+{{- else -}}
+	{{- $checked_onehalf = true -}}
+{{- end -}}
+
+<div class="widget-editor-control">
+	<div class="two-column-split-picker" role="radiogroup" aria-labelledby="widgetEditorColumnsLabel">
+
+		<span id="widgetEditorColumnsLabel" class="two-column-split-picker-label">Column Widths</span>
+
+		{{if $checked_twothirds}}<input type="radio" id="widgetEditorColumnsTwoThirds" name="data.columns" value="TWO-THIRDS" checked>{{else}}<input type="radio" id="widgetEditorColumnsTwoThirds" name="data.columns" value="TWO-THIRDS">{{end}}
+		<label for="widgetEditorColumnsTwoThirds" title="Two thirds, one third"><span class="hide-visual">Two thirds, one third</span></label>
+
+		{{if $checked_onehalf}}<input type="radio" id="widgetEditorColumnsOneHalf" name="data.columns" value="ONE-HALF" checked>{{else}}<input type="radio" id="widgetEditorColumnsOneHalf" name="data.columns" value="ONE-HALF">{{end}}
+		<label for="widgetEditorColumnsOneHalf" title="Equal halves"><span class="hide-visual">Equal halves</span></label>
+
+		{{if $checked_onethird}}<input type="radio" id="widgetEditorColumnsOneThird" name="data.columns" value="ONE-THIRD" checked>{{else}}<input type="radio" id="widgetEditorColumnsOneThird" name="data.columns" value="ONE-THIRD">{{end}}
+		<label for="widgetEditorColumnsOneThird" title="One third, two thirds"><span class="hide-visual">One third, two thirds</span></label>
+	</div>
+</div>

@@ -1,0 +1,211 @@
+<!-- Uses https://github.com/Ionaru/easy-markdown-editor, vendored in theme-global/resources -->
+<link rel="stylesheet" href="/.themes/global/resources/easymde-2.21.0/easymde.min.css">
+<link rel="stylesheet" href="/.templates/article-two-column/stylesheet">
+
+<!-- The form ENCLOSES the editors, unlike article-base's edit.html, which keeps an empty
+     #saveForm at the bottom of the page and copies the editor's value into a hidden field.
+     EasyMDE is built on CodeMirror.fromTextArea, which leaves the original <textarea> in the
+     DOM -- hidden, in the same parent, still inside the form -- and writes back to it on
+     codemirror.save().  With the form around them the two columns post under their own names
+     and there is nothing to copy.
+
+     That also makes the plain textareas a working fallback: if EasyMDE never loads, both
+     columns are still editable and still post correctly.
+
+     RULE: the two child classes are the hooks the stylesheet's ratio rules select -- the same
+     pair the page wears -- so the writing surface is laid out at the proportion the picker
+     above it is set to. -->
+<form id="saveForm" hx-post="/{{.StreamID}}/editor" hx-swap="none" hx-push-url="false" hx-request='{"timeout":30000}' class="flex-column flex-grow">
+
+	<!-- The Column Split picker: the same data.columns the Layout tab writes, put where the
+	     writing happens.  Three radios inside #saveForm, so the value posts with the two
+	     columns and the "editor" action reads all three fields from one form.
+
+	     The Layout tab ships this same picker, markup and rules alike -- one setting in two
+	     places rather than two controls.  What differs between the surfaces is only the
+	     TRIGGER, never the engine: the page reads a stored class, both pickers read a checked
+	     radio, and all of them end at the same flex-basis/flex-grow pair on .two-column-left
+	     and .two-column-right.  Which is why the row below carries no columns-* class of its
+	     own: a stored class would still say whatever was last saved, and the point of putting
+	     the control here is that the writing surface re-proportions on the click.
+
+	     The change handler must go through save(), not submit #saveForm directly.  save() calls
+	     beforeSave(), which is what copies the CodeMirrors into their textareas; a bare submit
+	     would post whatever the textareas last held and silently revert typing.
+
+	     It is debounced for a sharper reason than tidiness.  save() takes a lock, and a second
+	     call arriving mid-flight WAITS for the first and then exits WITHOUT saving -- so
+	     clicking quickly through the options would leave the last click unsaved.  Debouncing
+	     collapses the run into one save that reads the final state.
+
+	     RULE: each input is emitted whole, from inside its branch, and the branch decides on a
+	     BOOLEAN rather than building an attribute out of a string.  Two separate traps make
+	     that the only safe form, and neither one errors:
+
+	       - Templates are minified before they are parsed, and an action inside a TAG is read
+	         as attribute markup and lowercased -- so `{{if eq $columns "TWO-THIRDS"}}checked`
+	         written between two attributes would compare against "two-thirds" and never match.
+	       - Hoisting the attribute into a variable dodges that but hits html/template instead:
+	         a value interpolated where an attribute NAME goes is passed through htmlNameFilter,
+	         which replaces anything that is not a valid name -- the empty string included --
+	         with the literal text ZgotmplZ.  Every unselected option gets a junk attribute. -->
+	{{- $checked_twothirds := false -}}
+	{{- $checked_onehalf := false -}}
+	{{- $checked_onethird := false -}}
+
+	{{- $columns := .DataString "columns" -}}
+
+	{{- if eq $columns "TWO-THIRDS" -}}
+		{{- $checked_twothirds = true -}}
+	{{- else if eq $columns "ONE-THIRD" -}}
+		{{- $checked_onethird = true -}}
+	{{- else -}}
+		{{- $checked_onehalf = true -}}
+	{{- end -}}
+
+	<div class="two-column-split-picker" role="radiogroup" aria-labelledby="columnsPickerLabel" script="on change debounced at 300ms call save()">
+
+		{{if $checked_twothirds}}<input type="radio" id="columnsTwoThirds" name="data.columns" value="TWO-THIRDS" checked>{{else}}<input type="radio" id="columnsTwoThirds" name="data.columns" value="TWO-THIRDS">{{end}}
+		<label for="columnsTwoThirds" title="Two thirds, one third"><span class="hide-visual">Two thirds, one third</span></label>
+
+		{{if $checked_onehalf}}<input type="radio" id="columnsOneHalf" name="data.columns" value="ONE-HALF" checked>{{else}}<input type="radio" id="columnsOneHalf" name="data.columns" value="ONE-HALF">{{end}}
+		<label for="columnsOneHalf" title="Equal halves"><span class="hide-visual">Equal halves</span></label>
+
+		{{if $checked_onethird}}<input type="radio" id="columnsOneThird" name="data.columns" value="ONE-THIRD" checked>{{else}}<input type="radio" id="columnsOneThird" name="data.columns" value="ONE-THIRD">{{end}}
+		<label for="columnsOneThird" title="One third, two thirds"><span class="hide-visual">One third, two thirds</span></label>
+	</div>
+
+	<div class="two-column two-column-editor flex-grow">
+
+		<div class="two-column-left">
+			<textarea id="leftContent" name="data.left">{{.DataString `left`}}</textarea>
+		</div>
+
+		<div class="two-column-right">
+			<textarea id="rightContent" name="data.right">{{.DataString `right`}}</textarea>
+		</div>
+	</div>
+</form>
+
+<script type="text/javascript">
+
+	// RULE: init must survive an htmx swap.  When you navigate here from another page this
+	// fragment is swapped into <main>, and htmx loads external scripts ASYNCHRONOUSLY -- so
+	// EasyMDE is still undefined when an inline script runs, and the editors die with
+	// "Can't find variable: EasyMDE".  Init therefore runs three ways: immediately (full page
+	// load, where the parser has already run the library), from the script tag's onload (the
+	// swap case), and never twice, because EasyMDE replaces each textarea with a CodeMirror
+	// and a second pass would stack a second editor on top of each.
+	function emissaryInitTwoColumnEditors() {
+
+		if (!window.EasyMDE) {
+			return;
+		}
+
+		if (window.emissaryTwoColumnEditors) {
+			return;
+		}
+
+		var left = emissaryNewMarkdownEditor("leftContent");
+		var right = emissaryNewMarkdownEditor("rightContent");
+
+		// RULE: both editors, or neither.  Publishing the pair is the LAST thing init does,
+		// so beforeSave() below never finds one live editor and one plain textarea.
+		if ((left === null) || (right === null)) {
+			return;
+		}
+
+		window.emissaryTwoColumnEditors = {left: left, right: right};
+
+		left.codemirror.on("blur", function() {
+			save();
+		});
+
+		right.codemirror.on("blur", function() {
+			save();
+		});
+	}
+
+	// emissaryTwoColumnBeforeSave prepares #saveForm for submission.  It is called from the
+	// hyperscript beforeSave() below, which the shared save() runs before it submits.
+	//
+	// codemirror.save() copies each editor's value back into the <textarea> it was built
+	// from, which is the field that actually posts.  There is nothing to do when EasyMDE is
+	// absent, because then the textarea IS the editor and already holds what was typed.
+	function emissaryTwoColumnBeforeSave() {
+
+		if (!window.emissaryTwoColumnEditors) {
+			return;
+		}
+
+		window.emissaryTwoColumnEditors.left.codemirror.save();
+		window.emissaryTwoColumnEditors.right.codemirror.save();
+	}
+
+	// emissaryNewMarkdownEditor builds one EasyMDE editor over the named <textarea>, or
+	// returns null if that element is missing.
+	function emissaryNewMarkdownEditor(elementId) {
+
+		var element = document.getElementById(elementId);
+
+		if (element === null) {
+			return null;
+		}
+
+		return new EasyMDE({
+
+			// RULE: the toolbar is spelled out button-by-button so that each one can name a
+			// Bootstrap Icons class.  EasyMDE's built-in buttons hardcode FontAwesome names, and
+			// with no FontAwesome on the page they render as blank squares -- so the library
+			// injects a <link> to maxcdn.bootstrapcdn.com the moment it starts.  Bootstrap Icons
+			// is already loaded by includes-head, which makes that download pure waste.  Note the
+			// "iconClassMap" option cannot do this: EasyMDE merges it into its options and then
+			// never reads it back for built-in buttons.
+			toolbar: [
+				{name: "bold",           action: EasyMDE.toggleBold,           className: "bi bi-type-bold",     title: "Bold"},
+				{name: "italic",         action: EasyMDE.toggleItalic,         className: "bi bi-type-italic",   title: "Italic"},
+				{name: "heading",        action: EasyMDE.toggleHeadingSmaller, className: "bi bi-type-h1",       title: "Heading"},
+				"|",
+				{name: "quote",          action: EasyMDE.toggleBlockquote,     className: "bi bi-quote",         title: "Quote"},
+				{name: "unordered-list", action: EasyMDE.toggleUnorderedList,  className: "bi bi-list-ul",       title: "Bulleted List"},
+				{name: "ordered-list",   action: EasyMDE.toggleOrderedList,    className: "bi bi-list-ol",       title: "Numbered List"},
+				"|",
+				{name: "link",           action: EasyMDE.drawLink,             className: "bi bi-link-45deg",    title: "Link"},
+				{name: "image",          action: EasyMDE.drawImage,            className: "bi bi-image",         title: "Image"},
+				"|",
+				{name: "guide", action: "https://www.markdownguide.org/basic-syntax/", className: "bi bi-question-circle", title: "Markdown Guide", noDisable: true},
+			],
+
+			// RULE: belt and braces on the icons above -- this is the switch that actually
+			// suppresses the FontAwesome download, and it must stay false even if the toolbar
+			// changes.
+			autoDownloadFontAwesome: false,
+
+			// RULE: EasyMDE's own spell-checker XHRs a ~500KB en_US dictionary from a CDN on
+			// every load, and only knows English.  Turning it off falls back to the browser's
+			// native spellcheck, which needs no download and follows the reader's own language.
+			spellChecker: false,
+
+			element: element,
+			uploadImage: true,
+			imageUploadEndpoint: "/{{.StreamID}}/upload-image",
+			imagePathAbsolute: true,
+		});
+	}
+</script>
+<script src="/.themes/global/resources/easymde-2.21.0/easymde.min.js" onload="emissaryInitTwoColumnEditors()"></script>
+<script type="text/javascript">emissaryInitTwoColumnEditors();</script>
+
+<script type="text/hyperscript">
+
+	-- Overrides the no-op beforeSave() that edit-menubar.html defines, which is what the
+	-- shared save() calls before it submits #saveForm.  A later definition of the same name
+	-- wins, and this block is rendered after the menu bar.
+	--
+	-- The work itself is a plain JavaScript function, because it has to run whether or not
+	-- EasyMDE loaded -- and a call is the one thing that behaves identically either way.
+	def beforeSave()
+		call emissaryTwoColumnBeforeSave()
+	end
+
+</script>

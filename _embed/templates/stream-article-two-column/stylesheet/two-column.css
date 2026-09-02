@@ -1,0 +1,268 @@
+/******************************************
+ * Two Column Layout
+ *
+ * ONE layout engine for both places this split is drawn -- the page and the editor -- so that
+ * neither can quietly disagree with the other.  That engine is flexbox: `flex-basis: 0` plus
+ * `flex-grow`, on the same two hooks.  There is no grid here, and adding one would mean the
+ * writing surface is no longer a picture of the page.
+ *
+ * Three triggers reach that one engine and only the TRIGGER ever differs: the page reads a
+ * stored class, and the editor and the Layout tab each read a checked radio.
+ *
+ * WHY flex-basis MUST BE 0
+ *
+ * flex-grow shares out the space left OVER once every item has taken its basis, and the
+ * default basis is `auto` -- the item's own content width.  Under that default a long left
+ * column and a short right one split only the remainder 2:1, which is not a 2:1 layout at all,
+ * and the proportion drifts with whatever the author happens to have written.  Zeroing the
+ * basis makes the whole row the space being shared, so flex-grow is the true proportion no
+ * matter what is in either column.  Every ratio rule below rests on that one line, and taking
+ * it out bends the layout rather than breaking it -- which is the kind of wrong nobody reports.
+ *
+ * WHY 768px, AND WHAT IT MEASURES
+ *
+ * Below MEDIUM -- SMALL and EXTRA-SMALL, which the design system defines as everything under
+ * 768px -- the columns reflow into rows.  Same breakpoint and same mechanism as every
+ * responsive utility in theme-global (`.md\:flex-row`, `.cols-*`, `.md\:hide`): an @container
+ * query resolved against `.page`, which both shipped themes declare as an inline-size
+ * container.  Reading the page instead of the viewport is what keeps the article in step with
+ * the theme's own chrome, and it is why nothing here declares a container of its own.
+ *
+ * That does mean a layout-MEDIUM or layout-SMALL article still splits on a wide page, even
+ * though its own column is narrower than 768px.  Deliberate: it is how every other .cols-*
+ * grid in the app behaves, and a narrowed layout is the author's choice rather than a screen
+ * they are stuck with.  Measuring the article's own column instead would put the two widths in
+ * charge of each other -- layout-MEDIUM could then never show an asymmetric split at all,
+ * because 66% of the widest page this theme draws is still under 768px.
+ ******************************************/
+
+.two-column {
+	display: flex;
+	flex-direction: column;
+	gap: 32px;
+}
+
+/* RULE: a flex item's min-width is `auto`, which refuses to shrink below its own content -- so
+   one long URL, wide table, or code block widens the whole row and pushes the other column off
+   the side of the page, where the reader cannot reach it.  0 lets the item shrink and the
+   content overflow inside its own column instead.  Needed stacked as well as side by side. */
+.two-column > * {
+	min-width: 0;
+}
+
+
+/* MEDIUM Screens (tablet) and up */
+@container (min-width:768px) {
+
+	.two-column {
+		flex-direction: row;
+	}
+
+	/* Equal columns, and the landing place for an unset value: that renders "columns-", which
+	   matches neither rule below -- the same fold the Layout tab's final "else" makes. */
+	.two-column > * {
+		flex-basis: 0;
+		flex-grow: 1;
+	}
+
+	.two-column.columns-TWO-THIRDS > .two-column-left {
+		flex-grow: 2;
+	}
+
+	.two-column.columns-ONE-THIRD > .two-column-right {
+		flex-grow: 2;
+	}
+}
+
+
+/******************************************
+ * Editor
+ *
+ * The two editors sit in the same flex row at the same proportion as the page, so the writing
+ * surface is a preview of the result.  Reflowed, they are read and edited in the same order
+ * the page renders them: left above right.
+ ******************************************/
+
+.two-column-editor label {
+	display: block;
+	margin-bottom: 4px;
+}
+
+/* EasyMDE sizes itself to its content, which starts a new column one line tall.  A floor keeps
+   both columns usable before anything is typed into them.
+
+   Reflowed, the two editors sit one above the other and their heights ADD UP, so the floor has
+   to be small enough that both fit on a phone with the menu bar above them.  Side by side they
+   share one row, and the taller floor is free. */
+.two-column-editor .CodeMirror {
+	min-height: 180px;
+}
+
+@container (min-width:768px) {
+	.two-column-editor .CodeMirror {
+		min-height: 320px;
+	}
+}
+
+.EasyMDEContainer {
+
+	.CodeMirror {
+		color: var(--black);
+		background-color: var(--gray10);
+		caret-color: var(--black);
+
+		.CodeMirror-cursor {
+			border-left: 1px solid var(--black)!important;
+		}
+	}
+
+	.editor-toolbar {
+
+		/* The toolbar is a row of inline-block buttons, so it wraps on its own -- but only if
+		   it is allowed to.  Reflowed on a phone the column is barely wider than the toolbar,
+		   and without this a rounding error puts the last button under a horizontal scrollbar
+		   that nothing else on the page has. */
+		white-space: normal;
+
+		button {
+			&.active {
+				color:var(--white);
+				background-color:var(--gray50);
+				border-color:var(--gray60);
+			}
+			&:hover {
+				background-color: var(--gray20);
+			}
+		}
+	}
+}
+
+
+/******************************************
+ * Editor: the Column Split picker
+ *
+ * The three icons above the editors, and the third trigger for the one engine.  It reads a
+ * checked radio with :has() rather than a stored class, because the control is meant to answer
+ * on the click, and a class rendered by the server still says whatever was last saved.  The
+ * properties it ends at are the same two, on the same two hooks, so the writing surface cannot
+ * show a proportion the page would not.
+ *
+ * The Layout tab ships this same picker, markup and rules alike -- the same setting in a second
+ * place rather than a second control.
+ *
+ * The `~` is why the picker has to stay a preceding SIBLING of the editor row.  Moving it
+ * inside the row, or below it, leaves these rules matching nothing -- the editors keep working
+ * and simply stop responding, which is the sort of wrong that gets shipped.
+ *
+ * The icons are the SVGs from resources/, pulled in as a mask with background-color:
+ * currentColor rather than as an <img>.  That is not a preference: an <img> loads the file as
+ * its own document, where the stroke="currentColor" in it has no color to read and paints
+ * black -- so the selected state, which is a color change, would not show at all.  A mask
+ * takes only the alpha channel and lets this element supply the color.
+ ******************************************/
+
+.two-column-split-picker {
+	position: relative;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	margin-bottom: 12px;
+}
+
+/* Sized and coloured like the Layout tab's own control captions, so the two places that set
+   this field read as the same control in two locations rather than as two controls. */
+.two-column-split-picker-label {
+	margin-right: 8px;
+	font-size: 13px;
+	color: var(--gray60);
+}
+
+/* Kept in the tab order and kept operable -- hidden, not removed.  Positioned inside the
+   picker rather than parked off-screen the way .hide-visual does it, so that focusing one by
+   keyboard cannot scroll the page to an element nobody can see. */
+.two-column-split-picker input {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.two-column-split-picker label {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 32px;
+	border: solid 1px var(--gray20);
+	border-radius: 4px;
+	color: var(--gray50);
+	cursor: pointer;
+	transition: color 120ms ease-out, border-color 120ms ease-out;
+}
+
+/* The mask goes on the pseudo-element, not the label: a mask clips the element it is set on,
+   border and background included, so a masked label would have no chrome left to show a
+   selected state with. */
+.two-column-split-picker label::before {
+	content: "";
+	display: block;
+	width: 26px;
+	height: 26px;
+	background-color: currentColor;
+	mask-repeat: no-repeat;
+	mask-position: center;
+	mask-size: contain;
+}
+
+.two-column-split-picker input[value="TWO-THIRDS"] + label::before {
+	mask-image: url("/.templates/article-two-column/resources/columns-TWO-THIRDS.svg");
+}
+
+.two-column-split-picker input[value="ONE-HALF"] + label::before {
+	mask-image: url("/.templates/article-two-column/resources/columns-ONE-HALF.svg");
+}
+
+.two-column-split-picker input[value="ONE-THIRD"] + label::before {
+	mask-image: url("/.templates/article-two-column/resources/columns-ONE-THIRD.svg");
+}
+
+.two-column-split-picker label:hover {
+	color: var(--gray70);
+	border-color: var(--gray40);
+}
+
+/* --focus-color, not a literal blue: 01-colors.css defines it as the accent for focus rings,
+   primary buttons, "and other interactive accents", which is what a selected state is.  It is
+   remapped for dark mode, and a page that scopes its own accent re-themes this for free.  The
+   wash is mixed from the same token rather than picked from the blue ramp, so it follows any
+   such override instead of staying blue underneath a re-themed border. */
+.two-column-split-picker input:checked + label {
+	color: var(--focus-color);
+	border-color: var(--focus-color);
+	background-color: color-mix(in srgb, var(--focus-color), transparent 92%);
+}
+
+/* The input carries the focus, and the input is invisible, so the ring has to be drawn on the
+   label instead.  :focus-visible rather than :focus, so a mouse click does not leave one. */
+.two-column-split-picker input:focus-visible + label {
+	outline: solid 2px var(--focus-color);
+	outline-offset: 2px;
+}
+
+
+/* The third trigger, wired to the same two properties as the page and the canvas. */
+@container (min-width:768px) {
+
+	.two-column-split-picker:has([value="TWO-THIRDS"]:checked) ~ .two-column-editor > .two-column-left {
+		flex-grow: 2;
+	}
+
+	.two-column-split-picker:has([value="ONE-THIRD"]:checked) ~ .two-column-editor > .two-column-right {
+		flex-grow: 2;
+	}
+}

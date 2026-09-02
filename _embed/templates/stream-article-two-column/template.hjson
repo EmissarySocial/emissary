@@ -1,0 +1,103 @@
+{
+	templateId:"article-two-column"
+	category: Content
+	extends:["article-base"]
+	tagPaths:["data.tags"]
+	containedBy: ["top", "home", "folder", "article"]
+	label:"Two Column"
+	description:"Two side-by-side blocks of Markdown text."
+	icon:"layout-split"
+	sort:75
+
+	// The page CSS, the editor CSS, and the Layout tab's split preview are one contract --
+	// all three read the same "columns" value -- so they ship as one bundle, served at
+	// /.templates/article-two-column/stylesheet.  Bundles are NOT inherited through
+	// "extends", so this declaration is required even though article-base has one too.
+	bundles: {
+		stylesheet: {
+			content-type:"text/css"
+		}
+	}
+
+	schema: {
+		type:"object"
+		properties: {
+			data: {type:"object", properties: {
+
+				// RULE: "unsafe-any" is required here, and content.raw carries it for the same
+				// reason.  A string element with NO format defaults to "no-html", which strips
+				// tags out of the value on the way IN -- and these hold Markdown source, which
+				// has not been converted or sanitized yet.  Sanitizing happens at render, in the
+				// "markdown" helper, which is the single converter for the whole application.
+				//
+				// 1,048,576 runes is the same ceiling the platform puts on any single body of
+				// article text (model.ContentMaxLength), applied here per column.
+				left: {type:"string", format:"unsafe-any", maxLength:1048576}
+				right: {type:"string", format:"unsafe-any", maxLength:1048576}
+
+				// NOT required, and the enum is what makes that safe -- see data.width in
+				// article-base for the whole argument.  ONE-HALF is the fallback: an absent
+				// value renders "columns-", which matches no rule and leaves the stylesheet's
+				// own equal-halves default in place, which is what the Layout tab's final
+				// "else" branch selects.
+				columns: {type:"string", enum:["TWO-THIRDS", "ONE-HALF", "ONE-THIRD"]}
+			}}
+		}
+	}
+
+	actions: {
+
+		create: {
+			roles:["author", "editor"]
+			steps: [
+				{
+					do:"set-data"
+					values: {
+						label:"New Article (Two Column)"
+						data.width:"FULL"
+						data.columns:"ONE-HALF"
+						data.left:"# New Article"
+					}
+				}
+				{do:"set-state", state:"default"}
+				{do:"save"}
+				{do:"forward-to", url:"/{{.StreamID}}/edit"}
+			]
+		}
+
+		// The two columns are ordinary custom fields, saved the way the Layout tab saves its
+		// own, rather than through edit-content -- there is no single content area for two
+		// blocks to occupy, and view.html renders them straight from data.*, so nothing needs
+		// content.* to be written.
+		//
+		// RULE: that leaves content.HTML empty, and content.HTML is the only body a remote
+		// reader ever sees -- ActivityPub, the Mastodon API, oEmbed, and link previews all
+		// read it and none of them look at this Template's HTML.  A Two Column article is
+		// therefore a website page: its Summary (Info tab) is what a preview shows.  See
+		// AGENTS.md, which also says why set-data cannot paper over this.
+		editor: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"with-draft", steps: [
+					{do:"set-data", from-form:["data.left", "data.right", "data.columns"]}
+					{do:"save", message:"Content edited by {{.Author}}"}
+				]}
+			]
+		}
+
+		// Overrides article-base only to add data.columns.  The Layout tab posts both
+		// settings inside the widget editor's own form, so page shape and widget placement
+		// save together in one request.
+		widgets: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"with-draft", steps: [
+					{do:"set-data", from-form:["data.width", "data.columns"]}
+					{do:"sort-widgets"}
+					{do:"save", message:"Widgets updated by {{.Author}}"}
+					{do:"view-html", method:"both"}
+				]}
+			]
+		}
+	}
+}
