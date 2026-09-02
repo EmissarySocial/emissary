@@ -337,6 +337,7 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/.validate/streamToken", handler.WithFactory(factory, handler.GetValidateStreamToken))
 	e.GET("/.validate/groupToken", handler.WithOwner(factory, handler.GetValidateGroupToken))
 	e.GET("/.validate/user/username", handler.WithFactory(factory, handler.GetValidateUsername))
+	e.GET("/.validate/user/exists", handler.WithAuthenticatedUser(factory, handler.GetValidateUserExists))
 	e.GET("/.validate/folder/name", handler.WithAuthenticatedUser(factory, handler.GetValidateFoldername))
 	e.GET("/.validate/circle/name", handler.WithAuthenticatedUser(factory, handler.GetValidateCirclename))
 	e.GET("/.web-push-worker.js", handler.GetWebPushWorker) // Web Push service worker (must be served from site root for full scope)
