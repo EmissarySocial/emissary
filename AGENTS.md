@@ -32,6 +32,14 @@ The same reasoning covers `ReplyEmail`, which *does* carry visitor input: it is 
 
 [StepSendEmail](build/step_SendEmail.go) also halts the pipeline when a send fails, rather than reporting and continuing. A web-form message exists only in flight — nothing is written and nothing is queued — so a swallowed error returns a success page to a visitor whose message reached nobody. `DomainEmail.Send` treats an unconfigured SMTP connection the same way, for the same reason.
 
+## `content.HTML` is the only body a remote reader ever sees
+
+A Stream's rendered page is not its published body. [service/stream_activitypub.go](service/stream_activitypub.go) writes `content.HTML` into the JSON-LD, `Stream.Toot` puts it in the Mastodon API status, and `SummaryOrContent` is what link previews and oEmbed fall back to. Nothing in that chain looks at a Template's HTML.
+
+So a Template that keeps its text somewhere other than `content.*` -- a custom `data.*` field, because a Stream has only one content area -- publishes a blank body, however complete its page looks. [stream-article-two-column](_embed/templates/stream-article-two-column/) is the worked example and accepts that deliberately: it is a website page, its two Markdown blocks live in `data.left`/`data.right`, and its Summary is what a preview shows. Know which trade a new Template is making before it ships.
+
+Writing `content.raw` through `set-data` does not fix it, which is the part that surprises people. `content.HTML` is produced by `service.Content.New`, and nothing but the `edit-content` step calls it -- no `save` path re-renders content -- so a `set-data` on `content.raw` stores a body that is never converted, never sanitized, and never published.
+
 ## The template funcmap has helpers that emit unescaped HTML
 
 `markdown`, `highlight`, `icon`, and their siblings in [tools/templates/functions.go](tools/templates/functions.go) return `template.HTML`, which tells `html/template` the value is already safe. `markdown` earns that by sanitizing; `highlight` does **not** — it returns its input verbatim. Any new helper with an `HTML`/`CSS`/`HTMLAttr` return type is a trust boundary, so sanitize inside the helper and check every call site before pointing one at federated or user-supplied content.
