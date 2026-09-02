@@ -23,7 +23,7 @@ type Theme struct {
 	HTMLTemplate   *template.Template              `json:"-"              bson:"-"`              // HTML template for this theme
 	Bundles        mapof.Object[Bundle]            `json:"bundles"        bson:"bundles"`        // // Additional resources (JS, HS, CSS) reqired tp remder this Theme.
 	Resources      fs.FS                           `json:"-"              bson:"-"`              // File system containing the template resources
-	Datasets       mapof.Object[mapof.Any]         `json:"datasets"       bson:"datasets"`       // Datasets used by this theme
+	Datasets       DatasetMap                      `json:"datasets"       bson:"datasets"`       // Lookup codes defined by this theme
 	StartupTasks   sliceof.Object[form.LookupCode] `json:"startupTasks"   bson:"startupTasks"`   // A list of tasks to be completed at startup
 	StartupStreams sliceof.Object[mapof.Any]       `json:"startupStreams" bson:"startupStreams"` // Dataset of Streams to initialize when this theme is first chosen.
 	StartupGroups  sliceof.Object[mapof.Any]       `json:"startupGroups"  bson:"startupGroups"`  // Dataset of Groups to initialize when this theme is first chosen.
@@ -44,7 +44,7 @@ func NewTheme(templateID string, funcMap template.FuncMap) Theme {
 		Extends:        make([]string, 0),
 		HTMLTemplate:   template.New("").Funcs(funcMap),
 		Bundles:        mapof.NewObject[Bundle](),
-		Datasets:       mapof.NewObject[mapof.Any](),
+		Datasets:       make(DatasetMap),
 		StartupTasks:   sliceof.NewObject[form.LookupCode](),
 		StartupStreams: sliceof.NewObject[mapof.Any](),
 		StartupGroups:  sliceof.NewObject[mapof.Any](),
