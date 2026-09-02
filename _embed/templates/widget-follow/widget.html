@@ -1,0 +1,20 @@
+{{- $username := .Widget.Data.GetString "username" -}}
+
+{{- if eq "" $username -}}
+
+	{{- if .UserCan "edit" -}}
+		<div class="widget widget-follow text-sm text-gray">
+			{{icon "alert"}} This Follow Button is not displayed because no username has been set for it.
+		</div>
+	{{- end -}}
+
+{{- else -}}
+
+	{{- $label := .Widget.Data.GetString "label" -}}
+	{{- $label = firstNonZero $label "Follow" -}}
+
+	<div class="widget widget-follow {{.Widget.Data.GetString `class`}}">
+		<button hx-get="/@{{$username}}/follow" hx-push-url="false" class="primary">{{$label}}</button>
+	</div>
+
+{{- end -}}
