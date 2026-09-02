@@ -6,9 +6,13 @@ import (
 	"strings"
 	"testing"
 
+	"net/url"
+
 	"github.com/EmissarySocial/emissary/model"
 	emissarytemplates "github.com/EmissarySocial/emissary/tools/templates"
+
 	"github.com/benpate/form"
+	"github.com/benpate/form/widget"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/stretchr/testify/require"
 )
@@ -125,33 +129,52 @@ func TestFollowWidget_NoUsername(t *testing.T) {
 	require.Equal(t, "", strings.TrimSpace(visitor))
 }
 
-// TestFollowWidget_CustomClass asserts that the author's class lands on a wrapper of its own,
-// outside the widget's own element.
-//
-// Keeping the two apart is the point.  If the author's class were merged onto .widget-follow, a
-// page stylesheet and the widget's own hooks would be selecting the same element, and either could
-// silently win over the other; a separate wrapper gives the author a box to position without
-// reaching inside the widget.  The wrapper is unconditional, so the DOM shape does not change when
-// the class is cleared and a rule written against the structure keeps matching.
-func TestFollowWidget_CustomClass(t *testing.T) {
+// TestFollowWidget_CustomClassAndStyle asserts that both author-supplied styling hooks land on
+// the widget's own element, alongside its built-in classes rather than replacing them.
+func TestFollowWidget_CustomClassAndStyle(t *testing.T) {
 
 	widget := loadFollowWidget(t)
 
-	stub := newFollowWidgetStub(mapof.Any{"username": "benpate", "class": "my-cta padding-lg"}, false)
+	stub := newFollowWidgetStub(mapof.Any{
+		"username": "benpate",
+		"class":    "my-cta padding-lg",
+		"style":    "margin-top: 1rem; color: red;",
+	}, false)
+
 	output := renderFollowWidget(t, widget, stub)
 
-	require.Contains(t, output, `<div class="my-cta padding-lg">`)
-	require.Contains(t, output, `<div class="widget widget-follow">`)
+	require.Contains(t, output, `class="widget widget-follow my-cta padding-lg"`)
+	require.Contains(t, output, `style="margin-top: 1rem; color: red;"`)
 
-	// The wrapper is still there, empty, when no class is set
+	// The widget's own hooks survive when the author sets neither
 	bare := renderFollowWidget(t, widget, newFollowWidgetStub(mapof.Any{"username": "benpate"}, false))
-	require.Contains(t, bare, `<div class="">`)
+	require.Contains(t, bare, "widget widget-follow")
 
-	// The unconfigured note is a diagnostic, not the widget, so it is not wrapped or styled by
-	// the author -- a class that positions or hides the button must not be able to hide this.
-	note := renderFollowWidget(t, widget, newFollowWidgetStub(mapof.Any{"class": "hidden"}, true))
+	// The unconfigured note is a diagnostic, not the widget, so the author's styling is not
+	// applied to it -- a class or style that positions or hides the button must not hide this.
+	note := renderFollowWidget(t, widget, newFollowWidgetStub(mapof.Any{"class": "hidden", "style": "display:none"}, true))
 	require.Contains(t, note, "no username has been set")
 	require.NotContains(t, note, "hidden")
+	require.NotContains(t, note, "display:none")
+}
+
+// TestFollowWidget_StyleAttributeIsNotZgotmplZ pins the one thing about this field that fails
+// silently and completely.
+//
+// html/template reads a `style` attribute as CSS context and runs its own value filter there.  A
+// plain string holding a declaration list does not survive that filter: it is replaced wholesale
+// with the literal text "ZgotmplZ", so the attribute is not merely wrong, it never works at all --
+// and nothing errors.  Piping through `css` is what suppresses the filter, and this test is what
+// notices if that pipe is ever dropped.
+func TestFollowWidget_StyleAttributeIsNotZgotmplZ(t *testing.T) {
+
+	widget := loadFollowWidget(t)
+
+	stub := newFollowWidgetStub(mapof.Any{"username": "benpate", "style": "margin-top: 1rem; color: red;"}, false)
+	output := renderFollowWidget(t, widget, stub)
+
+	require.NotContains(t, output, "ZgotmplZ")
+	require.Contains(t, output, `style="margin-top: 1rem; color: red;"`)
 }
 
 // TestFollowWidget_ClassFormatBoundsTheAttribute asserts that the schema confines the class to
@@ -191,6 +214,120 @@ func TestFollowWidget_ClassFormatBoundsTheAttribute(t *testing.T) {
 		_, err := widget.Schema.Validate(mapof.Any{"class": class})
 		require.NoError(t, err, "class %q must be accepted by the schema", class)
 	}
+}
+
+// saveFollowWidget runs values through the widget's real save path -- the same form.SetURLValues
+// call StepEditWidget.Post makes -- and returns the data as it would be stored.
+//
+// This is deliberately NOT schema.Validate.  Validate answers "does this value already conform",
+// so it reports an error for anything a format had to rewrite; every sanitizing format therefore
+// "fails" it even when it did its job.  Set is the call that rewrites in place, and it is the one
+// the save path actually makes, so it is the one worth asserting against.
+func saveFollowWidget(t *testing.T, followWidget model.Widget, values url.Values) mapof.Any {
+	t.Helper()
+
+	// SetURLValues resolves each element's Type through the form registry, which is populated
+	// by UseAll rather than by an init().  Without it every element -- not just the new ones --
+	// fails with "Unable to locate widget for element".
+	widget.UseAll()
+
+	data := mapof.NewAny()
+	f := form.New(followWidget.Schema, followWidget.Form)
+	require.NoError(t, f.SetURLValues(&data, values, nil))
+
+	return data
+}
+
+// TestFollowWidget_StyleFormatSanitizes asserts that the style field is confined to the same
+// policy Emissary already applies to an author's page stylesheet.
+//
+// This field is written into a `style` attribute through a trust cast, so the schema format is the
+// only thing deciding what an author may put there.  The two entries that matter are the ones the
+// allowlist exists for: `position:fixed` would let a widget lift itself out of the flow and cover
+// unrelated page chrome, and any `url()` would make the page fetch a third-party resource on every
+// view.  Both are dropped here exactly as they are dropped from a stylesheet.
+//
+// The format sanitizes rather than rejects, so an unsafe declaration is stripped and the rest is
+// kept.  These are assertions about what gets stored, not about whether the save succeeded.
+func TestFollowWidget_StyleFormatSanitizes(t *testing.T) {
+
+	widget := loadFollowWidget(t)
+
+	tests := []struct {
+		name     string
+		style    string
+		expected string
+	}{
+		{"ordinary declarations survive", "margin-top:1rem; color:red", "margin-top: 1rem; color: red;"},
+		{"overlay positioning is dropped", "position:fixed; top:0; color:red", "color: red;"},
+		{"in-flow positioning survives", "position:relative; color:red", "position: relative; color: red;"},
+		{"resource loading is dropped", "background:url(https://example.com/beacon); color:red", "color: red;"},
+		{"legacy script hooks are dropped", "behavior:url(x.htc); color:red", "color: red;"},
+		{"a quote discards the whole value", `color:red" onmouseover="alert(1)`, ""},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			data := saveFollowWidget(t, widget, url.Values{"style": {test.style}})
+			require.Equal(t, test.expected, data.GetString("style"))
+		})
+	}
+}
+
+// TestFollowWidget_SaveRoundTrip asserts that a whole settings form saves the way an author filled
+// it in, and that what comes back out is what the page renders.
+func TestFollowWidget_SaveRoundTrip(t *testing.T) {
+
+	widget := loadFollowWidget(t)
+
+	data := saveFollowWidget(t, widget, url.Values{
+		"username": {"benpate"},
+		"label":    {"Follow Me"},
+		"class":    {"my-cta"},
+		"style":    {"margin-top:1rem"},
+	})
+
+	require.Equal(t, "benpate", data.GetString("username"))
+	require.Equal(t, "Follow Me", data.GetString("label"))
+	require.Equal(t, "my-cta", data.GetString("class"))
+	require.Equal(t, "margin-top: 1rem;", data.GetString("style"))
+
+	output := renderFollowWidget(t, widget, followWidgetStub{Widget: &model.StreamWidget{Data: data}})
+
+	require.Contains(t, output, `class="widget widget-follow my-cta"`)
+	require.Contains(t, output, `style="margin-top: 1rem;"`)
+	require.Contains(t, output, ">Follow Me<")
+}
+
+// TestFollowWidget_FormTabs asserts the shape of the settings form: two tabs, named, with each
+// field on the one it belongs to.
+//
+// LayoutTabs takes each tab's name from its child element's Label, so a tab whose layout-vertical
+// has no label silently renders as "Tab 0".
+func TestFollowWidget_FormTabs(t *testing.T) {
+
+	widget := loadFollowWidget(t)
+
+	require.Equal(t, "layout-tabs", widget.Form.Type)
+	require.Len(t, widget.Form.Children, 2)
+
+	require.Equal(t, "Button", widget.Form.Children[0].Label)
+	require.Equal(t, "Stylesheet", widget.Form.Children[1].Label)
+
+	require.Equal(t, []string{"username", "label"}, formPaths(widget.Form.Children[0]))
+	require.Equal(t, []string{"class", "style"}, formPaths(widget.Form.Children[1]))
+}
+
+// formPaths returns the paths edited by a form Element's immediate children
+func formPaths(element form.Element) []string {
+
+	result := make([]string, 0, len(element.Children))
+
+	for _, child := range element.Children {
+		result = append(result, child.Path)
+	}
+
+	return result
 }
 
 // TestFollowWidget_UsernameValidator asserts that the username field asks the server whether the
