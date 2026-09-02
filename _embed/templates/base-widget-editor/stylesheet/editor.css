@@ -361,6 +361,12 @@
 	transition: width 120ms ease-out;
 }
 
+.widget-editor-CENTER:has(.widget-editor-width [value="LARGE"]:checked) > * {
+	width:75%;
+	margin-left:auto;
+	margin-right:auto;
+}
+
 .widget-editor-CENTER:has(.widget-editor-width [value="MEDIUM"]:checked) > * {
 	width:66.6667%;
 	margin-left:auto;

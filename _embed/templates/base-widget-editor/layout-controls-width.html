@@ -21,19 +21,37 @@
 
      TestEmbeddedTemplates_ActionsSurviveMinification catches both.
 
-     LARGE is the final "else" rather than a case of its own, so an unset or unrecognized value
+     FULL is the final "else" rather than a case of its own, so an unset or unrecognized value
      selects it.  That is honest rather than merely convenient: an empty width renders "layout-"
-     on the page, which matches no rule and fills the width exactly like LARGE.  It also keeps
-     one option always selected, so the field is present in every POST. -->
+     on the page, which matches no rule and fills the width exactly like FULL.
+
+     RULE: that fold has to happen HERE, because "select" has no default of its own -- it
+     answers "selected" only on a match.  Without it an unset width leaves EVERY option
+     unselected, the browser falls back to showing the first one, and the select then posts
+     that value: opening the Layout tab and moving a widget would quietly rewrite the width.
+     Keeping one option always selected is what makes the field honest in every POST.
+
+     The comparison is up here in element content rather than down in the tag, so its literals
+     keep their case through the minifier. -->
+
 {{- $width := .DataString "width" -}}
 
+{{- if not (or (eq $width "LARGE") (eq $width "MEDIUM") (eq $width "SMALL")) -}}
+	{{- $width = "FULL" -}}
+{{- end -}}
+
+<!-- RULE: the arguments below are lowercase ON PURPOSE, and "select" matches them without
+     regard to case.  This action sits INSIDE a tag, where the minifier reads it as attribute
+     markup and lowercases the whole thing -- a `FULL` written here is already a `full` by the
+     time the template is parsed.  Spelling it that way makes minification a no-op rather than
+     something the helper has to undo, so the guard in
+     TestEmbeddedTemplates_ActionsSurviveMinification stays strict for everyone else. -->
 <div class="widget-editor-control widget-editor-width">
 	<label for="widget-editor-width">Page Width</label>
-	{{- if eq $width "MEDIUM" -}}
-		<select id="widget-editor-width" name="data.width"><option value="LARGE">Large</option><option value="MEDIUM" selected>Medium</option><option value="SMALL">Small</option></select>
-	{{- else if eq $width "SMALL" -}}
-		<select id="widget-editor-width" name="data.width"><option value="LARGE">Large</option><option value="MEDIUM">Medium</option><option value="SMALL" selected>Small</option></select>
-	{{- else -}}
-		<select id="widget-editor-width" name="data.width"><option value="LARGE" selected>Large</option><option value="MEDIUM">Medium</option><option value="SMALL">Small</option></select>
-	{{- end -}}
+	<select id="widget-editor-width" name="data.width">
+		<option value="FULL" {{select $width `full`}}>Full width</option>
+		<option value="LARGE" {{select $width `large`}}>Large (3/4 width)</option>
+		<option value="MEDIUM" {{select $width `medium`}}>Medium (2/3 width)</option>
+		<option value="SMALL" {{select $width `small`}}>Small (1/2 width)</option>
+	</select>
 </div>

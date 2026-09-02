@@ -18,7 +18,7 @@
 						label:"New Article"
 						content.format:"EDITORJS"
 						content.raw:"{}"
-						data.width:"LARGE"
+						data.width:"FULL"
 					}
 				}
 				{do:"set-state", state:"default"}

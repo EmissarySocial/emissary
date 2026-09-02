@@ -18,7 +18,7 @@
 						label:"New Article (HTML Code)"
 						content.format:"HTML"
 						content.raw:"<h1>New Article</h1>"
-						data.width:"LARGE"
+						data.width:"FULL"
 					}
 				}
 				{do:"set-state", state:"default"}

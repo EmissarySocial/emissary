@@ -18,8 +18,15 @@
  * than the screen.
  ******************************************/
 
-.layout-LARGE {
+.layout-FULL {
 	width: 100%;
+}
+
+.layout-LARGE {
+	min-width: 300px;
+	width: 75%;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 .layout-MEDIUM {

@@ -43,7 +43,10 @@
 				// the same result as LARGE.  Marking it required would only guarantee that the
 				// default can never fire, because Normalize rejects a missing value before it
 				// would ever apply one.
-				width: {type:"string", enum:["LARGE", "MEDIUM", "SMALL"], default:"MEDIUM"}
+				// FULL is here because layout-controls-width offers it.  The shared control and
+				// every enum that reads from it are one contract: an option the schema cannot
+				// store is a validation error on save, from a dropdown that looked fine.
+				width: {type:"string", enum:["FULL", "LARGE", "MEDIUM", "SMALL"], default:"MEDIUM"}
 			}}
 		}
 	}

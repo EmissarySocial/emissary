@@ -18,7 +18,7 @@
 						label:"New Article (Markdown)", 
 						content.format:"MARKDOWN", 
 						content.raw:"# New Article"
-						data.width:"LARGE"
+						data.width:"FULL"
 					}
 				}
 				{do:"set-state", state:"default"}

@@ -28,13 +28,7 @@
 			}}
 			data: {type:"object", properties: {
 				tags: {type:"string", maxLength:2048}
-				// NOT required, and the enum is what makes that safe: view.html interpolates this
-				// value straight into a class attribute, and Set rejects anything outside the list.
-				// An absent value renders "layout-", which matches no rule and fills the width --
-				// the same result as LARGE.  Required would only guarantee that a stream created
-				// before the author ever opened the Layout tab could not be saved at all, because
-				// "create" does not seed it and Normalize rejects a missing value.
-				width: {type:"string", enum:["LARGE", "MEDIUM", "SMALL"]}
+				width: {type:"string", enum:["FULL", "LARGE", "MEDIUM", "SMALL"], default:"FULL"}
 				stylesheet: {type:"string", format:"css", maxLength:1048576}
 			}}
 		}
