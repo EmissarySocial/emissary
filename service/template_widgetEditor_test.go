@@ -15,6 +15,12 @@ import (
 // about the editor's fixed chrome, which is present whatever is placed in it.
 type widgetEditorStub struct{}
 
+// DataString mirrors build.Stream.DataString.  The base's layout-controls slot now ships the
+// width control by default, and that control reads one.
+func (stub widgetEditorStub) DataString(_ string) string {
+	return ""
+}
+
 // StreamID returns a stubbed stream ID, mirroring build.Stream.StreamID
 func (stub widgetEditorStub) StreamID() string {
 	return "000000000000000000000001"
