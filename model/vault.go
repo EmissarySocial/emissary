@@ -18,8 +18,9 @@ import (
 
 // Vault secures sensitive data in any model object
 type Vault struct {
-	Encrypted mapof.String `json:"-" bson:"encrypted"` // Encrypted vault data (generated from plaintet when saved)
-	Nonce     string       `json:"-" bson:"nonce"`     // Nonce used to encrypt the vault data
+	Encrypted mapof.String `json:"-" bson:"encrypted"` // Encrypted vault data (generated from plaintext when saved)
+	Nonces    mapof.String `json:"-" bson:"nonces"`    // Nonce used to encrypt each value, keyed the same as `Encrypted`
+	Nonce     string       `json:"-" bson:"nonce"`     // DEPRECATED. Shared nonce written by an earlier format; still read, never written.
 	plaintext mapof.String `json:"-" bson:"-"`
 }
 
@@ -28,6 +29,7 @@ func NewVault() Vault {
 
 	return Vault{
 		Encrypted: mapof.String{},
+		Nonces:    mapof.String{},
 		plaintext: mapof.String{},
 	}
 }
@@ -76,6 +78,10 @@ func (vault *Vault) SetString(name string, value string) bool {
 	if value == "" {
 		delete(vault.plaintext, name)
 		delete(vault.Encrypted, name)
+
+		// The nonce is meaningless without the ciphertext it opened, so it goes too.
+		// Leaving it behind would accumulate orphans that outlive every value they described.
+		delete(vault.Nonces, name)
 		return true
 	}
 
@@ -99,6 +105,10 @@ func (vault *Vault) Encrypt(encryptionKey []byte) error {
 		vault.Encrypted = mapof.NewString()
 	}
 
+	if vault.Nonces == nil {
+		vault.Nonces = mapof.NewString()
+	}
+
 	// If there are no plaintext values, then there is nothing to encrypt,
 	// so lets save the work of setting up a block cipher and exit now.
 	if !vault.hasEncryptableValues() {
@@ -113,26 +123,40 @@ func (vault *Vault) Encrypt(encryptionKey []byte) error {
 	}
 
 	// Create GCM
+	// UNREACHABLE ERROR: NewGCM fails only on a block size other than 16, and aes.NewCipher
+	// never returns one. Checked anyway, because the alternative is trusting that forever.
 	aesgcm, err := cipher.NewGCM(block)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Generating GCM cipher")
 	}
 
-	// If not present, Create (and save) a randome n-once
-	nonce, err := vault.getNonce(aesgcm)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Retrieving n-once for vault")
-	}
-
 	// Encrypt all plaintext values in the vault
 	for property, value := range vault.plaintext {
 
-		if isEncryptable(value) {
-			ciphertext := aesgcm.Seal(nil, nonce, []byte(value), nil)
-			vault.Encrypted[property] = hex.EncodeToString(ciphertext)
+		// DEFENSIVE: SetString is the only writer of `plaintext` and it already refuses
+		// empty and obscured values, so this cannot fire today. It stays because the cost
+		// of a future second writer forgetting that rule is a placeholder sealed as if it
+		// were a secret.
+		if !isEncryptable(value) {
+			continue
 		}
+
+		// RULE: every value gets a FRESH nonce, every time it is sealed. AES-GCM is counter
+		// mode: reusing a (key, nonce) pair across two values leaks the XOR of their
+		// plaintexts, and reusing one across two versions of the same value leaks it against
+		// whatever older copy an attacker already holds. A stored nonce is an OUTPUT of
+		// sealing and must never become an input to it.
+		nonce, err := newNonce(aesgcm)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Generating nonce", property)
+		}
+
+		ciphertext := aesgcm.Seal(nil, nonce, []byte(value), nil)
+
+		vault.Encrypted[property] = hex.EncodeToString(ciphertext)
+		vault.Nonces[property] = hex.EncodeToString(nonce)
 	}
 
 	return nil
@@ -160,17 +184,11 @@ func (vault Vault) Decrypt(encryptionKey []byte, values ...string) (mapof.String
 	}
 
 	// Create GCM
+	// UNREACHABLE ERROR: see the matching note in Encrypt.
 	aesgcm, err := cipher.NewGCM(block)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Generating GCM cipher")
-	}
-
-	// Retrieve the N-Once
-	nonce, err := vault.getNonce(aesgcm)
-
-	if err != nil {
-		return nil, derp.Wrap(err, location, "Invalid nonce in vault")
 	}
 
 	// Decode ciphertext values
@@ -183,6 +201,14 @@ func (vault Vault) Decrypt(encryptionKey []byte, values ...string) (mapof.String
 			}
 		}
 
+		// Resolve the nonce for THIS value, falling back to the shared nonce written
+		// by the earlier format for records that have not been re-saved since.
+		nonce, err := vault.nonceFor(aesgcm, property)
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Reading nonce for value in vault", property)
+		}
+
 		ciphertext, err := hex.DecodeString(value)
 
 		if err != nil {
@@ -190,6 +216,7 @@ func (vault Vault) Decrypt(encryptionKey []byte, values ...string) (mapof.String
 		}
 
 		plaintext, err := aesgcm.Open(nil, nonce, ciphertext, nil)
+
 		if err != nil {
 			return nil, derp.Wrap(err, location, "Decrypting value in vault", property)
 		}
@@ -236,29 +263,53 @@ func (vault Vault) hasEncryptableValues() bool {
 	return false
 }
 
-// getNonce retrieves (or generates) the N-Once used to encrypt the vault data.
-func (vault *Vault) getNonce(aesgcm cipher.AEAD) ([]byte, error) {
-	const location = "model.vault.getNonce"
+// nonceFor returns the nonce that opens the named value: the one stored beside it, or the
+// shared nonce written by the earlier format when this value predates the per-value nonces.
+// It never generates one -- decryption is a read, and a missing nonce is a fact about the
+// stored record, not something to invent a substitute for.
+func (vault Vault) nonceFor(aesgcm cipher.AEAD, property string) ([]byte, error) {
 
-	if len(vault.Nonce) == 0 {
+	const location = "model.vault.nonceFor"
 
-		// Generate a random N-Once
-		nonce := make([]byte, aesgcm.NonceSize())
+	encoded, ok := vault.Nonces[property]
 
-		if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-			return nil, derp.Wrap(err, location, "Generating nonce")
-		}
-
-		vault.Nonce = hex.EncodeToString(nonce)
-
-		return nonce, nil
+	// LEGACY: fall back to the single nonce that older records share across every value
+	if !ok || encoded == "" {
+		encoded = vault.Nonce
 	}
 
-	// Decode the n-once as a hex string
-	nonce, err := hex.DecodeString(vault.Nonce)
+	if encoded == "" {
+		return nil, derp.Internal(location, "Vault has no nonce for this value", property)
+	}
+
+	nonce, err := hex.DecodeString(encoded)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Invalid nonce in vault")
+		return nil, derp.Wrap(err, location, "Invalid nonce in vault", property)
+	}
+
+	// RULE: GCM PANICS on a nonce of the wrong size rather than returning an error, so a
+	// truncated or corrupted value read from the database would crash the request that
+	// touched it.  Check the length here, where it can be reported instead.
+	if len(nonce) != aesgcm.NonceSize() {
+		return nil, derp.Internal(location, "Nonce in vault is the wrong length", property, len(nonce), aesgcm.NonceSize())
+	}
+
+	return nonce, nil
+}
+
+// newNonce returns a fresh, cryptographically random nonce sized for the provided cipher
+func newNonce(aesgcm cipher.AEAD) ([]byte, error) {
+
+	const location = "model.vault.newNonce"
+
+	nonce := make([]byte, aesgcm.NonceSize())
+
+	// UNREACHABLE ERROR: crypto/rand.Reader failing is a process-level fault, not a
+	// condition this package can recover from -- but a silently short nonce would be far
+	// worse than an error, so it is checked.
+	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+		return nil, derp.Wrap(err, location, "Generating nonce")
 	}
 
 	return nonce, nil
