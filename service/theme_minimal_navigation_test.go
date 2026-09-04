@@ -16,6 +16,7 @@ import (
 	"github.com/benpate/rosetta/schema"
 	"github.com/hjson/hjson-go/v4"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/net/html"
 )
 
 /******************************************
@@ -52,6 +53,7 @@ type minimalNavigationItem struct {
 type minimalNavigationBuilder struct {
 	DomainStateID             string
 	Navigation                []minimalNavigationItem
+	NavigationID              string
 	IsAuthenticated           bool
 	IsIdentity                bool
 	IsOwner                   bool
@@ -323,4 +325,448 @@ func TestMinimalTheme_Form_SavePreservesNavigation(t *testing.T) {
 
 	result = renderMinimalNavigation(t, newMinimalNavigationBuilder(t, domain.ThemeData))
 	require.NotContains(t, result, `href="/about"`)
+}
+
+/******************************************
+ * Minimal Theme: Mobile Navigation Menu
+ *
+ * Below 640px the horizontal bar is display:none and every site
+ * navigation link is reached through a fixed control in the
+ * top-right corner that opens a full-screen sheet.  The bar and
+ * the sheet are SEPARATE elements rendering the SAME links twice.
+ *
+ * Every claim these tests make is about ancestry, sibling order,
+ * or the presence of one attribute -- never about text -- so they
+ * parse the rendered markup instead of matching substrings.  A
+ * substring assertion cannot tell "inside <nav>" from "beside it",
+ * and that distinction is the entire feature: the first attempt at
+ * this menu reached inside <nav>, removed `class="framed"` from the
+ * bar's wrapper, and took the desktop bar's flex layout, centering
+ * and 1100px frame with it.  Nothing rendered an error.
+ ******************************************/
+
+// parseMinimalNavigation renders the real navigation template and parses the result.
+func parseMinimalNavigation(t *testing.T, context minimalNavigationBuilder) *html.Node {
+
+	t.Helper()
+
+	document, err := html.Parse(strings.NewReader(renderMinimalNavigation(t, context)))
+	require.NoError(t, err)
+
+	return document
+}
+
+// navAttribute returns one attribute's value, or "" when the node does not carry it.
+func navAttribute(node *html.Node, name string) string {
+
+	for _, attribute := range node.Attr {
+		if attribute.Key == name {
+			return attribute.Val
+		}
+	}
+
+	return ""
+}
+
+// navHasClass reports whether the node carries one class TOKEN.  Token matching is the whole
+// point: "nav-menu-item" must not answer to "nav-item", because that is exactly how CSS and
+// hyperscript match, and it is what keeps SelectNav away from the sheet's copies.
+func navHasClass(node *html.Node, class string) bool {
+
+	for _, candidate := range strings.Fields(navAttribute(node, "class")) {
+		if candidate == class {
+			return true
+		}
+	}
+
+	return false
+}
+
+// navFind returns every element matching the predicate, in document order.
+func navFind(root *html.Node, match func(*html.Node) bool) []*html.Node {
+
+	var result []*html.Node
+
+	var walk func(*html.Node)
+	walk = func(node *html.Node) {
+
+		if node.Type == html.ElementNode {
+			if match(node) {
+				result = append(result, node)
+			}
+		}
+
+		for child := node.FirstChild; child != nil; child = child.NextSibling {
+			walk(child)
+		}
+	}
+
+	walk(root)
+	return result
+}
+
+// navFindOne returns the single element matching the predicate, failing when there is not
+// exactly one.
+func navFindOne(t *testing.T, root *html.Node, description string, match func(*html.Node) bool) *html.Node {
+
+	t.Helper()
+
+	found := navFind(root, match)
+	require.Len(t, found, 1, "expected exactly one %s", description)
+
+	return found[0]
+}
+
+// navHasAncestor reports whether the node is a DESCENDANT of an element matching the
+// predicate -- the question a substring assertion cannot answer.
+func navHasAncestor(node *html.Node, match func(*html.Node) bool) bool {
+
+	for parent := node.Parent; parent != nil; parent = parent.Parent {
+
+		if parent.Type == html.ElementNode {
+			if match(parent) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// navNextElement returns the next SIBLING element, skipping the whitespace text nodes
+// between them -- which is what the CSS adjacent sibling combinator does too.
+func navNextElement(node *html.Node) *html.Node {
+
+	for sibling := node.NextSibling; sibling != nil; sibling = sibling.NextSibling {
+
+		if sibling.Type == html.ElementNode {
+			return sibling
+		}
+	}
+
+	return nil
+}
+
+// navIsTag matches an element by tag name.
+func navIsTag(name string) func(*html.Node) bool {
+	return func(node *html.Node) bool {
+		return node.Data == name
+	}
+}
+
+// navHasID matches an element by its id attribute.
+func navHasID(id string) func(*html.Node) bool {
+	return func(node *html.Node) bool {
+		return navAttribute(node, "id") == id
+	}
+}
+
+// TestMinimalTheme_SkipLinkOutsideBothLayouts is the reason the skip link moved.  It used to be
+// the first child of the .framed div; <nav> is now display:none below 640px, and display:none
+// removes an element from the accessibility tree -- so a skip link left inside would stop
+// existing on every mobile page, for exactly the visitors it is there for.  The sheet is no
+// refuge either: it is display:none whenever the menu is closed, which is always on load.
+func TestMinimalTheme_SkipLinkOutsideBothLayouts(t *testing.T) {
+
+	document := parseMinimalNavigation(t, newMinimalNavigationBuilder(t, mapof.NewAny()))
+
+	skipLink := navFindOne(t, document, "skip link", func(node *html.Node) bool {
+		return node.Data == "a" && navAttribute(node, "href") == "#main"
+	})
+
+	require.False(t, navHasAncestor(skipLink, navIsTag("nav")),
+		"the skip link must not be inside <nav>, which is display:none below 640px")
+
+	require.False(t, navHasAncestor(skipLink, navHasID("nav-menu-panel")),
+		"the skip link must not be inside the sheet, which is display:none while the menu is closed")
+}
+
+// TestMinimalTheme_BarWrapperKeepsFramedClass pins down the class whose removal broke the first
+// attempt.  `.framed` is not a nav class: it is the shared page-width class from 02-page.css,
+// and inside <nav> it is additionally what supplies the bar's flex layout, its centering at
+// >=640px, and its 1100px frame at >=1024px.  Losing it costs all of that silently.
+func TestMinimalTheme_BarWrapperKeepsFramedClass(t *testing.T) {
+
+	document := parseMinimalNavigation(t, newMinimalNavigationBuilder(t, mapof.NewAny()))
+
+	bar := navFindOne(t, document, "<nav> element", navIsTag("nav"))
+
+	navFindOne(t, bar, "wrapper carrying class=framed inside <nav>", func(node *html.Node) bool {
+		return navHasClass(node, "framed")
+	})
+}
+
+// TestMinimalTheme_MenuIsNotASecondNavElement guards the landmark decision.  The theme's nav
+// styling is ELEMENT-scoped -- `nav { height:48px; overflow-x:auto; … }` and `nav a { … }` --
+// so a second <nav> would silently inherit the whole 48px bar treatment.  The sheet carries a
+// role instead, on a wrapper that stays in the tree while the menu is closed.
+func TestMinimalTheme_MenuIsNotASecondNavElement(t *testing.T) {
+
+	document := parseMinimalNavigation(t, newMinimalNavigationBuilder(t, mapof.NewAny()))
+
+	require.Len(t, navFind(document, navIsTag("nav")), 1, "there must be exactly one <nav> element")
+
+	menu := navFindOne(t, document, "mobile menu wrapper", func(node *html.Node) bool {
+		return navHasClass(node, "nav-menu")
+	})
+
+	require.Equal(t, "navigation", navAttribute(menu, "role"))
+	require.NotEmpty(t, navAttribute(menu, "aria-label"),
+		"two navigation landmarks on one page are indistinguishable in a landmark list without names")
+
+	// The wrapper stays in the tree when the menu is closed, so the panel cannot be the
+	// landmark -- it is display:none in that state.
+	require.False(t, navHasClass(menu, "nav-menu-panel"))
+}
+
+// TestMinimalTheme_ToggleSiblingOrder pins the DOM order the CSS depends on.  The label is
+// reached with `+` and the sheet with `~`, and both combinators only look FORWARD -- so a
+// checkbox emitted after either one leaves the menu permanently closed with no error anywhere.
+func TestMinimalTheme_ToggleSiblingOrder(t *testing.T) {
+
+	document := parseMinimalNavigation(t, newMinimalNavigationBuilder(t, mapof.NewAny()))
+
+	toggle := navFindOne(t, document, "menu checkbox", navHasID("nav-menu-toggle"))
+	label := navNextElement(toggle)
+
+	require.NotNil(t, label, "the checkbox must have a following sibling")
+	require.Equal(t, "label", label.Data, "the label must be the checkbox's ADJACENT sibling, for `+`")
+	require.Equal(t, "nav-menu-toggle", navAttribute(label, "for"))
+
+	// And the sheet is a LATER sibling of the same parent, for `~`
+	panel := navFindOne(t, document, "menu sheet", navHasID("nav-menu-panel"))
+	require.Same(t, toggle.Parent, panel.Parent, "the checkbox and the sheet must be siblings")
+
+	var seenToggle bool
+	var seenPanel bool
+
+	for sibling := toggle.Parent.FirstChild; sibling != nil; sibling = sibling.NextSibling {
+		switch sibling {
+		case toggle:
+			seenToggle = true
+		case panel:
+			seenPanel = true
+			require.True(t, seenToggle, "the checkbox must come BEFORE the sheet, for `~`")
+		}
+	}
+
+	require.True(t, seenPanel)
+}
+
+// TestMinimalTheme_ToggleCarriesRoleAndLabelDoesNot is the a11y-extension trap.  a11y.js walks
+// `a,button,[role=link],[role=button],[role=tab]`, sets tabIndex=0 on anything at -1, and adds
+// an Enter handler.  On the checkbox that is exactly right: it is already focusable, so the
+// tabIndex line is a no-op, and Enter is the key a native checkbox does NOT answer.  On the
+// <label> it is a trap -- a label sits at tabIndex -1, so this one control would take two tab
+// stops.
+func TestMinimalTheme_ToggleCarriesRoleAndLabelDoesNot(t *testing.T) {
+
+	document := parseMinimalNavigation(t, newMinimalNavigationBuilder(t, mapof.NewAny()))
+
+	toggle := navFindOne(t, document, "menu checkbox", navHasID("nav-menu-toggle"))
+
+	require.Equal(t, "checkbox", navAttribute(toggle, "type"))
+	require.Equal(t, "button", navAttribute(toggle, "role"))
+	require.Equal(t, "nav-menu-panel", navAttribute(toggle, "aria-controls"))
+	require.NotEmpty(t, navAttribute(toggle, "aria-label"), "the glyphs are aria-hidden, so the name lives here")
+
+	// A back-navigation restores form state; without this the menu reopens over the page the
+	// visitor just returned to.
+	require.Equal(t, "off", navAttribute(toggle, "autocomplete"))
+
+	// hide-visual keeps it FOCUSABLE, which is what makes the label a skin rather than a
+	// replacement.  Desktop hides the whole .nav-menu wrapper instead.
+	require.True(t, navHasClass(toggle, "hide-visual"))
+
+	label := navFindOne(t, document, "menu label", func(node *html.Node) bool {
+		return node.Data == "label" && navAttribute(node, "for") == "nav-menu-toggle"
+	})
+
+	require.Empty(t, navAttribute(label, "role"), "role on the label would cost a second tab stop")
+	require.Empty(t, navAttribute(label, "tabindex"))
+}
+
+// TestMinimalTheme_SheetCopiesAreInvisibleToSelectNav is the cost of rendering the links twice,
+// and the two omissions that pay it.  SelectNav resolves the current section with
+// getElementById('nav-'+id) -- which returns the FIRST match, not the visible one -- and then
+// runs `take .selected from .nav-item`, which would strip the server-rendered mark off whichever
+// copy it did not choose.  So the sheet's links carry neither.
+func TestMinimalTheme_SheetCopiesAreInvisibleToSelectNav(t *testing.T) {
+
+	context := newMinimalNavigationBuilder(t, mapof.NewAny())
+	context.DomainHasRegistrationForm = true
+
+	document := parseMinimalNavigation(t, context)
+	panel := navFindOne(t, document, "menu sheet", navHasID("nav-menu-panel"))
+
+	links := navFind(panel, navIsTag("a"))
+	require.NotEmpty(t, links)
+
+	for _, link := range links {
+		require.Empty(t, navAttribute(link, "id"),
+			"a sheet copy with an id would shadow the bar's copy in getElementById")
+		require.False(t, navHasClass(link, "nav-item"),
+			"a sheet copy carrying .nav-item would be swept by SelectNav's `take .selected`")
+	}
+
+	// The BAR's copies must keep both, or SelectNav stops working altogether
+	bar := navFindOne(t, document, "<nav> element", navIsTag("nav"))
+
+	for _, item := range context.Navigation {
+		link := navFindOne(t, bar, "bar copy of /"+item.Token, func(node *html.Node) bool {
+			return node.Data == "a" && navAttribute(node, "href") == "/"+item.Token
+		})
+
+		require.Equal(t, "nav-"+item.StreamID, navAttribute(link, "id"))
+		require.True(t, navHasClass(link, "nav-item"))
+	}
+}
+
+// TestMinimalTheme_EveryLinkRenderedTwice holds the two layouts to the same list.  A link added
+// to one and forgotten in the other is invisible on exactly one class of device, which is the
+// failure mode this whole design trades duplicate ids to avoid noticing too late.
+func TestMinimalTheme_EveryLinkRenderedTwice(t *testing.T) {
+
+	context := newMinimalNavigationBuilder(t, mapof.NewAny())
+	context.DomainHasRegistrationForm = true
+
+	document := parseMinimalNavigation(t, context)
+
+	counts := mapof.NewInt()
+
+	for _, link := range navFind(document, navIsTag("a")) {
+		counts[navAttribute(link, "href")]++
+	}
+
+	for _, href := range []string{"/about", "/contact", "/signin", "/register"} {
+		require.Equal(t, 2, counts[href], "%s must render once in the bar and once in the sheet", href)
+	}
+
+	require.Equal(t, 1, counts["#main"], "the skip link renders once, outside both layouts")
+}
+
+// TestMinimalTheme_SheetMarksCurrentSection covers the server-side replacement for SelectNav,
+// including both fallbacks.  .NavigationID is matched against .StreamID while ranging, so an
+// id that matches nothing -- and the empty string every Common builder starts with -- simply
+// marks nothing rather than marking the first row.
+func TestMinimalTheme_SheetMarksCurrentSection(t *testing.T) {
+
+	selectedInSheet := func(t *testing.T, navigationID string) []string {
+
+		t.Helper()
+
+		context := newMinimalNavigationBuilder(t, mapof.NewAny())
+		context.NavigationID = navigationID
+
+		document := parseMinimalNavigation(t, context)
+		panel := navFindOne(t, document, "menu sheet", navHasID("nav-menu-panel"))
+
+		var result []string
+
+		// Only the top-level SECTIONS carry a current-section state.  Sign In and Join Now
+		// are in the sheet too, and are deliberately not sections, so they carry no
+		// aria-current at all -- "false" would claim they are candidates for it.
+		for _, item := range context.Navigation {
+
+			link := navFindOne(t, panel, "sheet copy of /"+item.Token, func(node *html.Node) bool {
+				return node.Data == "a" && navAttribute(node, "href") == "/"+item.Token
+			})
+
+			if navHasClass(link, "selected") {
+				require.Equal(t, "page", navAttribute(link, "aria-current"),
+					".selected and aria-current must agree")
+				result = append(result, navAttribute(link, "href"))
+				continue
+			}
+
+			// aria-current is always emitted on a section, with the value "false", rather
+			// than being conditionally added -- a Go action in TAG position does not survive
+			// the template minifier, and "false" is valid ARIA for "not the current item".
+			require.Equal(t, "false", navAttribute(link, "aria-current"))
+		}
+
+		return result
+	}
+
+	require.Equal(t, []string{"/contact"}, selectedInSheet(t, "6a9484676097f8f87ef9a455"))
+	require.Equal(t, []string{"/about"}, selectedInSheet(t, "6a908f1d331aab271b96e5f8"))
+	require.Empty(t, selectedInSheet(t, ""), "an empty NavigationID must mark nothing")
+	require.Empty(t, selectedInSheet(t, "ffffffffffffffffffffffff"), "an unmatched id must mark nothing")
+}
+
+// TestMinimalTheme_NavigationToggle_HidesTheMenuToo verifies that showNavigation:false takes the
+// mobile menu with it.  The control is fixed to the corner of the SCREEN, so a menu left behind
+// by a Domain that switched the navigation off would be the only thing on the page.
+func TestMinimalTheme_NavigationToggle_HidesTheMenuToo(t *testing.T) {
+
+	document := parseMinimalNavigation(t, newMinimalNavigationBuilder(t, mapof.Any{"showNavigation": false}))
+
+	require.Empty(t, navFind(document, navIsTag("nav")))
+	require.Empty(t, navFind(document, navHasID("nav-menu-toggle")))
+	require.Empty(t, navFind(document, navHasID("nav-menu-panel")))
+	require.Empty(t, navFind(document, func(node *html.Node) bool {
+		return navHasClass(node, "nav-menu")
+	}))
+}
+
+// TestMinimalTheme_StartupCollapsesLikeAnyOtherState verifies that the STARTUP branch reaches
+// the sheet as well as the bar.  It is deliberately NOT special-cased: a branch that exists for
+// one screen a server sees once, on the least-exercised path in the theme, is worse than a
+// hamburger over a single link.
+func TestMinimalTheme_StartupCollapsesLikeAnyOtherState(t *testing.T) {
+
+	context := newMinimalNavigationBuilder(t, mapof.NewAny())
+	context.DomainStateID = model.DomainStateStartup
+
+	document := parseMinimalNavigation(t, context)
+	panel := navFindOne(t, document, "menu sheet", navHasID("nav-menu-panel"))
+
+	navFindOne(t, panel, "startup link inside the sheet", func(node *html.Node) bool {
+		return node.Data == "a" && navAttribute(node, "href") == "/startup"
+	})
+}
+
+// TestMinimalTheme_SheetLinksCarryTurboclick pins a deliberate choice that reads like an
+// oversight.  turboclick fires navigation on mousedown, and an earlier draft left it off the
+// sheet on the theory that a press starting a scroll drag would navigate instead.  It does not:
+// on a touch device the browser only synthesises a mousedown once it has already resolved the
+// gesture as a tap rather than a scroll.  The bar has always paired turboclick with a scrolling
+// container (overflow-x:auto) for the same reason.  Both layouts get it, or the sheet feels
+// slower than the bar for no reason anyone can see.
+func TestMinimalTheme_SheetLinksCarryTurboclick(t *testing.T) {
+
+	context := newMinimalNavigationBuilder(t, mapof.NewAny())
+	context.DomainHasRegistrationForm = true
+
+	document := parseMinimalNavigation(t, context)
+	panel := navFindOne(t, document, "menu sheet", navHasID("nav-menu-panel"))
+
+	links := navFind(panel, navIsTag("a"))
+	require.NotEmpty(t, links)
+
+	for _, link := range links {
+		require.True(t, navHasClass(link, "turboclick"),
+			"every sheet link needs turboclick: %s", navAttribute(link, "href"))
+	}
+
+	// The STARTUP branch is a separate code path in the template, and it is easy to miss
+	startup := newMinimalNavigationBuilder(t, mapof.NewAny())
+	startup.DomainStateID = model.DomainStateStartup
+
+	startupPanel := navFindOne(t, parseMinimalNavigation(t, startup), "menu sheet", navHasID("nav-menu-panel"))
+
+	// Scoped to the href: the STARTUP branch replaces only the NAVIGATION links, so an
+	// anonymous visitor still gets Sign In beside the checklist.
+	startupLink := navFindOne(t, startupPanel, "startup link", func(node *html.Node) bool {
+		return node.Data == "a" && navAttribute(node, "href") == "/startup"
+	})
+	require.True(t, navHasClass(startupLink, "turboclick"))
+
+	// The CONTROL must NOT carry it.  turboclick dispatches a synthetic click on the pressed
+	// element; on a <label> bound to the checkbox that toggles the menu twice, landing back
+	// where it started -- the same double-toggle that rules popUp out of this design (D3).
+	label := navFindOne(t, document, "menu label", func(node *html.Node) bool {
+		return node.Data == "label"
+	})
+	require.False(t, navHasClass(label, "turboclick"))
 }
