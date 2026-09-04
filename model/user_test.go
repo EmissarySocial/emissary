@@ -52,6 +52,7 @@ func TestUserSchema(t *testing.T) {
 		{"data.ABC", "DATA-ABC", nil},
 		{"data.XYZ", "DATA-XYZ", nil},
 		{"mapIds.federated", "fed-id-123", nil},
+		{"vault." + UserVaultMailchimpAPIKey, testMailchimpAPIKey, VaultObscuredValue},
 	}
 
 	tableTest_Schema(t, &s, &user, tests)
@@ -60,11 +61,11 @@ func TestUserSchema(t *testing.T) {
 
 }
 
-// TestUser_NotificationDefaults pins the locked design: new Users get the conversational
-// channels (direct messages, mentions, replies) enabled, and ambient channels (followers,
-// reactions) off.
+// TestUser_NotificationDefaults pins the locked design for a new User's channels
 func TestUser_NotificationDefaults(t *testing.T) {
 
+	// Conversational channels (direct messages, mentions, replies) start enabled;
+	// ambient ones (followers, reactions) start off.
 	user := NewUser()
 
 	require.Equal(t, sliceof.String{
@@ -106,13 +107,13 @@ func TestUserJSONLD(t *testing.T) {
 	require.NotNil(t, getter.GetJSONLD())
 }
 
-// TestUser_CalcProfileFingerprint pins the change-detection contract that drives profile
-// federation (PROFILE-UPDATE-FEDERATION.md D-2): identical profiles hash identically, every
-// field visible in GetJSONLD flips the fingerprint, and fields OUTSIDE the actor document
-// (passwords, counters, email) never do — otherwise login-adjacent saves would spam
-// followers with ActivityPub Updates.
+// TestUser_CalcProfileFingerprint pins the change-detection contract that drives
+// profile federation (PROFILE-UPDATE-FEDERATION.md D-2)
 func TestUser_CalcProfileFingerprint(t *testing.T) {
 
+	// Identical profiles hash identically, every field visible in GetJSONLD flips the
+	// fingerprint, and fields outside the actor document never do -- otherwise
+	// login-adjacent saves would spam followers with ActivityPub Updates.
 	newTestUser := func() User {
 		user := NewUser()
 		user.UserID = primitive.NilObjectID // pin the ID so every call builds the same document
@@ -168,10 +169,9 @@ func TestUser_CalcProfileFingerprint(t *testing.T) {
 	})
 	changes("isIndexable", func(u *User) { u.IsIndexable = true })
 
-	// Fields peers can NOT see -> fingerprint unchanged -> no Update on login-adjacent saves.
-	// (location and isPublic are deliberate: neither appears in GetJSONLD today. isPublic only
-	// affects the Update's ADDRESSING; if location is ever added to the actor document, move it
-	// to the `changes` list above.)
+	// Fields peers can NOT see -> fingerprint unchanged -> no Update on login-adjacent
+	// saves. location and isPublic are deliberate: neither appears in GetJSONLD today,
+	// and isPublic affects only the Update's ADDRESSING.
 	same("password", func(u *User) { u.Password = "$2a$12$hashhashhash" })
 	same("passwordReset", func(u *User) { u.PasswordReset = PasswordReset{AuthCode: "abc123", ExpireDate: 999} })
 	same("emailAddress", func(u *User) { u.EmailAddress = "alice@example.com" })
@@ -184,11 +184,12 @@ func TestUser_CalcProfileFingerprint(t *testing.T) {
 	same("profileFingerprint", func(u *User) { u.ProfileFingerprint = "feedface" })
 }
 
-// TestUser_HashedPasswordAccessors pins the steranko.User contract: these are dumb
-// accessors that store and return the value EXACTLY as given.  They must only ever
-// receive already-hashed values (see service.SetPassword); if they gained any
-// transformation logic, steranko's own hash writes would double-process.
+// TestUser_HashedPasswordAccessors pins the steranko.User contract: dumb accessors
+// that store and return the value EXACTLY as given
 func TestUser_HashedPasswordAccessors(t *testing.T) {
+
+	// They must only ever receive already-hashed values (see service.SetPassword). Any
+	// transformation here would make steranko's own hash writes double-process.
 	user := NewUser()
 
 	user.SetHashedPassword("$2a$12$not-really-a-hash-but-stored-verbatim")

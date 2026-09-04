@@ -11,43 +11,37 @@ func UserSchema() schema.Element {
 
 	return schema.Object{
 		Properties: schema.ElementMap{
-			"userId":         schema.String{Format: "objectId"},
-			"mapIds":         schema.Object{Wildcard: schema.String{MaxLength: 256}},
-			"groupIds":       id.SliceSchema(),
-			"iconId":         schema.String{Format: "objectId"},
-			"imageId":        schema.String{Format: "objectId"},
-			"iconUrl":        schema.String{Format: "url"}, // This is my first attempt at a "virtual field"
-			"imageUrl":       schema.String{Format: "url"}, // This is my first attempt at a "virtual field"
-			"displayName":    schema.String{MaxLength: 64, Format: "no-html", Required: true},
-			"statusMessage":  schema.String{Format: "text", MaxLength: 2048},
-			"location":       schema.String{Format: "text", MaxLength: 64},
-			"links":          schema.Array{Items: PersonLinkSchema(), MaxLength: 6},
-			"profileUrl":     schema.String{Format: "url"},
-			"emailAddress":   schema.String{Format: "email", Required: true},
-			"username":       schema.String{MaxLength: 32, Format: "username", Required: true},
-			"locale":         schema.String{},
-			"signupNote":     schema.String{MaxLength: 256},
-			"stateId":        schema.String{},
-			"inboxTemplate":  schema.String{MaxLength: 128},
-			"outboxTemplate": schema.String{MaxLength: 128},
-			"hashtags":       schema.Array{Items: schema.String{Format: "token"}},
-			"notificationChannels": schema.Array{Items: schema.String{Enum: []string{
-				NotificationChannelDirectMessage,
-				NotificationChannelMentionFollowing,
-				NotificationChannelMentionNotFollowing,
-				NotificationChannelReply,
-				NotificationChannelFollow,
-				NotificationChannelReaction,
-			}}},
-			"data":            schema.Object{Wildcard: schema.String{MaxLength: 4096}},
-			"movedTo":         schema.String{Format: "url"},
-			"followerCount":   schema.Integer{},
-			"followingCount":  schema.Integer{},
-			"ruleCount":       schema.Integer{},
-			"isPublic":        schema.Boolean{},
-			"isBridgeBluesky": schema.Boolean{},
-			"isOwner":         schema.Boolean{},
-			"isIndexable":     schema.Boolean{},
+			"userId":               schema.String{Format: "objectId"},
+			"mapIds":               schema.Object{Wildcard: schema.String{MaxLength: 256}},
+			"groupIds":             id.SliceSchema(),
+			"iconId":               schema.String{Format: "objectId"},
+			"imageId":              schema.String{Format: "objectId"},
+			"iconUrl":              schema.String{Format: "url"}, // This is my first attempt at a "virtual field"
+			"imageUrl":             schema.String{Format: "url"}, // This is my first attempt at a "virtual field"
+			"displayName":          schema.String{MaxLength: 64, Format: "no-html", Required: true},
+			"statusMessage":        schema.String{Format: "text", MaxLength: 2048},
+			"location":             schema.String{Format: "text", MaxLength: 64},
+			"links":                schema.Array{Items: PersonLinkSchema(), MaxLength: 6},
+			"profileUrl":           schema.String{Format: "url"},
+			"emailAddress":         schema.String{Format: "email", Required: true},
+			"username":             schema.String{MaxLength: 32, Format: "username", Required: true},
+			"locale":               schema.String{},
+			"signupNote":           schema.String{MaxLength: 256},
+			"stateId":              schema.String{},
+			"inboxTemplate":        schema.String{MaxLength: 128},
+			"outboxTemplate":       schema.String{MaxLength: 128},
+			"hashtags":             schema.Array{Items: schema.String{Format: "token"}},
+			"notificationChannels": schema.Array{Items: schema.String{Enum: AllNotificationChannels()}},
+			"data":                 schema.Object{Wildcard: schema.String{MaxLength: 4096}},
+			"vault":                schema.Object{Wildcard: schema.String{Format: "unsafe-any", MaxLength: 8192}},
+			"movedTo":              schema.String{Format: "url"},
+			"followerCount":        schema.Integer{},
+			"followingCount":       schema.Integer{},
+			"ruleCount":            schema.Integer{},
+			"isPublic":             schema.Boolean{},
+			"isBridgeBluesky":      schema.Boolean{},
+			"isOwner":              schema.Boolean{},
+			"isIndexable":          schema.Boolean{},
 		},
 	}
 }
@@ -123,6 +117,9 @@ func (user *User) GetPointer(name string) (any, bool) {
 
 	case "data":
 		return &user.Data, true
+
+	case "vault":
+		return &user.Vault, true
 
 	case "movedTo":
 		return &user.MovedTo, true

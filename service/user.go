@@ -57,6 +57,7 @@ type User struct {
 	queue             *queue.Queue
 	sseUpdateChannel  chan<- realtime.Message
 	host              string
+	masterKey         string
 }
 
 // NewUser returns a fully populated User service
@@ -93,6 +94,10 @@ func (service *User) Refresh(factory *Factory) {
 	service.queue = factory.Queue()
 
 	service.host = factory.Host()
+
+	// The domain's master key seals User.Vault. It is read here (not per-call) to match
+	// every other Vault owner -- see service.Connection.Refresh.
+	service.masterKey = factory.MasterKey()
 }
 
 // Hostname returns the domain-only name (no protocol)
@@ -222,15 +227,9 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 		}
 	}
 
-	// Normalize the value before saving.  Values are rewritten in place (formatted,
-	// clamped, truncated) to conform to the schema, so that legacy data written under
-	// older rules is repaired progressively as records are saved.
-	//
-	// This runs BEFORE ValidateUsername so that uniqueness and formatting rules are
-	// checked against the username as it will actually be stored (e.g. after truncation
-	// to the schema's max length), not the raw client-supplied value.  Otherwise an
-	// over-length username could pass uniqueness against its full form, then be truncated
-	// into a collision with an existing account.
+	// RULE: normalize BEFORE ValidateUsername, so uniqueness is checked against the
+	// username as it will be STORED. Otherwise an over-length name could pass against
+	// its full form, then truncate into a collision with an existing account.
 	rewrites, err := service.Schema().Normalize(user)
 
 	if err != nil {
@@ -268,6 +267,13 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 	// are equal by construction, and profile updates would silently stop federating.
 	profileChanged := (user.ProfileFingerprint != newFingerprint) && !isNew
 	user.ProfileFingerprint = newFingerprint
+
+	// RULE: seal the Vault on EVERY save, not only when a settings form ran. Vault holds
+	// plaintext in an unexported field that never persists, so a value set but not sealed
+	// vanishes at the database boundary -- silently, because the save still succeeds.
+	if err := service.encryptVault(user); err != nil {
+		return derp.Wrap(err, location, "Encrypting User vault", user)
+	}
 
 	// Try to save the User record to the database
 	if err := service.collection(session).Save(user, note); err != nil {
@@ -516,9 +522,8 @@ func (service *User) LoadByEmail(session data.Session, email string, result *mod
 	return err
 }
 
-// LoadByToken loads a single model.User object that matches the provided token.
-// If the "token" is a valid ObjectID, then it attempts to load by that userID.
-// If the "token" is not a valid ObjectID (or if the first attempt fails), then it tries to load by username.
+// LoadByToken loads the single model.User that matches the provided token, which
+// may be either an ObjectID or a username
 func (service *User) LoadByToken(session data.Session, token string, result *model.User) error {
 
 	// If the token is an ObjectID then try that first.
@@ -823,14 +828,15 @@ func (service *User) DeleteAvatar(session data.Session, user *model.User, note s
  * Email Methods
  ******************************************/
 
-// SendPasswordResetEmail generates a new password reset code (valid for the provided duration) and
-// emails it to the user.  The error is RETURNED (not swallowed) so callers on member-facing flows can
-// tell the member the email could not be sent, instead of pointing them at an inbox that will never
-// receive it.  NOTE: the reset code is persisted by MakeNewPasswordResetCode BEFORE the email is sent,
-// and a send failure does NOT roll it back -- so a code issued here stays valid for a later retry.
+// SendPasswordResetEmail generates a password reset code valid for the provided
+// duration, and emails it to the User
 func (service *User) SendPasswordResetEmail(session data.Session, user *model.User, duration time.Duration) error {
 
 	const location = "service.User.SendPasswordResetEmail"
+
+	// The error is RETURNED, not swallowed, so member-facing callers can say the mail
+	// failed instead of pointing someone at an inbox that will never receive it. The
+	// code is persisted before sending and is NOT rolled back, so it survives a retry.
 
 	if err := service.MakeNewPasswordResetCode(session, user, duration); err != nil {
 		return derp.Wrap(err, location, "Making password reset", user)
@@ -843,18 +849,15 @@ func (service *User) SendPasswordResetEmail(session data.Session, user *model.Us
 	return nil
 }
 
-// NotifySigninLockout emails the account owner that their account has been
-// temporarily locked after repeated failed signin attempts. This method swallows
-// errors so it can run inline on the signin path.
-//
-// RULE: it MUST NOT change the stored password. A failed-login lockout is triggered
-// by unauthenticated input against a known username, so resetting the credential
-// here would hand an attacker a one-request account-takeover-disruption primitive
-// (the original CWE-645 bug). The lock is temporary and clears on its own; the owner
-// signs in normally once the window passes.
+// NotifySigninLockout emails the account owner that their account was temporarily
+// locked after repeated failed signin attempts
 func (service *User) NotifySigninLockout(session data.Session, username string) {
 
 	const location = "service.User.NotifySigninLockout"
+
+	// RULE: this MUST NOT change the stored password, and swallows errors so it can run
+	// inline on signin. The lockout comes from unauthenticated input against a known
+	// username, so resetting a credential here would be CWE-645 all over again.
 
 	user := model.NewUser()
 	if err := service.LoadByUsername(session, username, &user); err != nil {
@@ -912,10 +915,9 @@ func (service *User) WebFinger(session data.Session, token string) (digit.Resour
 		return digit.Resource{}, derp.Wrap(err, location, "Loading user", token)
 	}
 
-	// RULE: Non-public profiles are hidden from public discovery. WebFinger is unauthenticated,
-	// so there is no requester to exempt (the owner discovers themselves via the app, not WebFinger).
-	// This keeps "Hidden from Public Servers" true at the discovery layer, matching the hidden
-	// actor document and every sibling ActivityPub endpoint.
+	// RULE: non-public profiles are hidden from public discovery. WebFinger is
+	// unauthenticated, so there is no requester to exempt -- this keeps "Hidden from
+	// Public Servers" true at the discovery layer, like every sibling endpoint.
 	if !user.IsPublic {
 		return digit.Resource{}, derp.NotFound(location, "User not found", token)
 	}

@@ -48,6 +48,7 @@ type User struct {
 	NotificationChannels sliceof.String             `bson:"notificationChannels"` // Slice of ENABLED notification channel keys (see model.NotificationChannel* constants). Empty = all notifications off.
 	PasswordReset        PasswordReset              `bson:"passwordReset"`        // Most recent password reset information.
 	Data                 mapof.String               `bson:"data"`                 // Custom profile data that can be stored with this User.
+	Vault                Vault                      `json:"-" bson:"vault"`       // Encrypted secrets for external service connections. RULE: `json:"-"` is load-bearing; ExportDocument marshals this struct.
 	ProfileFingerprint   string                     `bson:"profileFingerprint"`   // Hash of the last-saved actor document (GetJSONLD). User.Save compares it to detect profile changes that must federate as an ActivityPub Update.
 	MovedTo              string                     `bson:"movedTo,omitempty"`    // If present, this user has been moved to a new URL, and cannot sign in to this profile anymore.
 	FollowerCount        int                        `bson:"followerCount"`        // Number of followers for this user
@@ -69,6 +70,7 @@ func NewUser() User {
 		GroupIDs:             id.NewSlice(),
 		Links:                sliceof.NewObject[PersonLink](),
 		Data:                 mapof.NewString(),
+		Vault:                NewVault(),
 		NotificationChannels: DefaultNotificationChannels(),
 	}
 }
@@ -184,10 +186,12 @@ func (user *User) SetUsername(username string) {
 	user.Username = username
 }
 
-// SetHashedPassword updates the password for this User.  A part of the "steranko.User" interface.
-// The value must already be hashed; to set a password from plaintext, use steranko's SetPassword,
-// which hashes with the configured PasswordHasher first.
+// SetHashedPassword updates the already-hashed password for this User.
+// Part of the "steranko.User" interface.
 func (user *User) SetHashedPassword(hashedValue string) {
+
+	// To set a password from plaintext, use steranko's SetPassword, which hashes
+	// with the configured PasswordHasher first.
 	user.Password = hashedValue
 }
 
@@ -236,13 +240,12 @@ func (user *User) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
 	return NewPermissions()
 }
 
-// SummaryHTML renders the user's StatusMessage from Markdown to HTML, and linkifies any #hashtags
-// using the tag URL denormalized from the outbox Template.  The shared converter sanitizes its
-// output with bluemonday, so raw HTML in a bio is filtered down to safe markup (not escaped) and
-// the result is safe to render on our own origin.  The hashtag links are absolute, because this
-// HTML is also published as the ActivityPub summary.
+// SummaryHTML renders the User's StatusMessage from Markdown to HTML, linkifying
+// any #hashtags with the tag URL denormalized from the outbox Template
 func (user User) SummaryHTML() string {
 
+	// The shared converter sanitizes with bluemonday, so raw HTML in a bio is filtered
+	// down to safe markup (not escaped) and is safe to render on our own origin.
 	result := markdown.ToHTML(user.StatusMessage)
 
 	// RULE: Only linkify when the outbox Template defines a tag URL
@@ -381,12 +384,14 @@ func (user *User) ActivityPubURL() string {
 	return user.ProfileURL
 }
 
-// CalcProfileFingerprint returns a hex-encoded SHA-256 of this User's public actor document
-// (GetJSONLD). Identical profiles always produce identical fingerprints because json.Marshal
-// serializes map keys in sorted order.
+// CalcProfileFingerprint returns a hex-encoded SHA-256 of this User's public actor
+// document (GetJSONLD)
 func (user User) CalcProfileFingerprint() (string, error) {
 
 	const location = "model.User.CalcProfileFingerprint"
+
+	// Identical profiles always produce identical fingerprints, because json.Marshal
+	// serializes map keys in sorted order.
 
 	asJSON, err := json.Marshal(user.GetJSONLD())
 

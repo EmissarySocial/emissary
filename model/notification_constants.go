@@ -20,10 +20,8 @@ const NotificationTypeAnnounce = "ANNOUNCE"
 // NotificationTypeFollow identifies a Notification created because someone began following the recipient
 const NotificationTypeFollow = "FOLLOW"
 
-// NotificationTypeDirect identifies a Notification created because someone sent the recipient a
-// PRIVATE message: a non-public activity addressed to them by name.  It outranks REPLY and MENTION
-// in the classification ladder (see service.Notification.notifyFromCreateOrUpdate), because a
-// direct message belongs to the Conversations app no matter what else it also is.
+// NotificationTypeDirect identifies a Notification created because someone sent the
+// recipient a PRIVATE message, and outranks REPLY and MENTION in the classification ladder
 const NotificationTypeDirect = "DIRECT"
 
 // Subtype is a per-Type discriminant.  Its VOCABULARY DEPENDS ON Type: DIRECT carries the message's
@@ -36,19 +34,16 @@ const NotificationSubtypeFollowing = "FOLLOWING"
 // NotificationSubtypeNotFollowing marks a Notification whose actor was NOT followed by the recipient at receipt time
 const NotificationSubtypeNotFollowing = "NOT_FOLLOWING"
 
-// NotificationSubtypeMLS marks a DIRECT Notification whose message is MLS ciphertext (media type
-// "message/mls").  Only the Conversations app holds the group's ratchet state, so the server can
-// never render this message -- it can only point at it.
+// NotificationSubtypeMLS marks a DIRECT Notification whose message is MLS ciphertext
+// ("message/mls"), which the server can point at but never render
 const NotificationSubtypeMLS = "MLS"
 
 // NotificationSubtypePlaintext marks a DIRECT Notification whose message is readable (non-MLS)
 // content.  Private, but not encrypted end-to-end.
 const NotificationSubtypePlaintext = "PLAINTEXT"
 
-// NotificationChannelDirectMessage enables notifications for private messages sent to the recipient.
-// Unlike the mention channels, it is NOT split by follow-state: a DIRECT Notification's Subtype
-// carries the message codec (MLS/PLAINTEXT), so the recipient's follow-state is not recorded on the
-// record and Channels() -- a pure method -- cannot look it up.
+// NotificationChannelDirectMessage enables notifications for private messages, and is
+// NOT split by follow-state the way the mention channels are
 const NotificationChannelDirectMessage = "DIRECT_MESSAGE"
 
 // NotificationChannelMentionFollowing enables notifications for mentions by people the recipient follows
@@ -66,10 +61,28 @@ const NotificationChannelFollow = "FOLLOW"
 // NotificationChannelReaction enables notifications for likes, dislikes, and boosts
 const NotificationChannelReaction = "REACTION"
 
-// DefaultNotificationChannels returns the channels enabled for new Users: conversational
-// events (direct messages, mentions, and replies) notify by default; ambient events (followers,
-// reactions) are opt-in.  An EMPTY slice is a valid, deliberate state meaning "everything off".
+// AllNotificationChannels returns every notification channel a User may enable,
+// in display order
+func AllNotificationChannels() sliceof.String {
+
+	// This is the source of the User schema's enum, so a channel missing here cannot be
+	// saved through a form even though the constant exists.
+	return sliceof.String{
+		NotificationChannelDirectMessage,
+		NotificationChannelMentionFollowing,
+		NotificationChannelMentionNotFollowing,
+		NotificationChannelReply,
+		NotificationChannelFollow,
+		NotificationChannelReaction,
+	}
+}
+
+// DefaultNotificationChannels returns the channels enabled for new Users
 func DefaultNotificationChannels() sliceof.String {
+
+	// Conversational events (direct messages, mentions, replies) notify by default;
+	// ambient events (followers, reactions) are opt-in. An EMPTY slice is a valid,
+	// deliberate state meaning "everything off".
 	return sliceof.String{
 		NotificationChannelDirectMessage,
 		NotificationChannelMentionFollowing,

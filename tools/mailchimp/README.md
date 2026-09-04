@@ -1,0 +1,79 @@
+# mailchimp
+
+A thin client for the [Mailchimp Marketing API v3](https://mailchimp.com/developer/marketing/api/).
+
+This package speaks HTTP and nothing else. It has no dependency on Emissary's services,
+sessions, or model objects, so every function can be tested against an `httptest` server
+with no Factory and no database. Mailchimp publishes no official Go SDK, so it is
+hand-rolled over [`benpate/remote`](https://github.com/benpate/remote).
+
+Its consumer is the per-User mailing list integration described in
+[MAILING-LISTS.md](../../../emissary-specs/projects/MAILING-LISTS.md).
+
+## Credentials are opaque
+
+Nothing in this package parses a Mailchimp credential. `ValidateAPIKey` checks that a
+value can be *stored and sent* — non-empty, bounded, printable ASCII so it survives an
+`Authorization` header — and nothing else.
+
+That is deliberate, and it is the correction of an earlier design that extracted the data
+center from the key:
+
+- **The format is Mailchimp's to change.** An API key looks like `<32 hex>-us6` today.
+  Nothing contractual says it will tomorrow, and a parser that is right about a vendor's
+  undocumented format is right by luck.
+- **OAuth tokens do not share it.** Mailchimp accepts an API key *or* an OAuth token on
+  the same endpoints, and an OAuth token carries no data center at all — you call a
+  metadata endpoint for that. Any parser is wrong for half the credential types the API
+  itself accepts.
+- **Mailchimp's own clients do not parse it.** Their official Node and Python libraries
+  take `server` as a separate config value beside `apiKey`.
+
+Whether a credential actually works is answered by calling the API, which setup does
+before saving anything.
+
+## `BaseURL` is the only way to address the API
+
+Mailchimp has no single API hostname. Each account lives in a *data center* addressed as
+a subdomain:
+
+```
+https://us6.api.mailchimp.com/3.0
+```
+
+Since the credential is opaque, this value is its own piece of configuration: the User
+supplies it during setup, reading it from the start of their own Mailchimp web address
+(`us6.admin.mailchimp.com`).
+
+That makes it user-supplied text that becomes a hostname, so it is validated before it is
+composed. Interpolating it unchecked would be server-side request forgery: a value like
+`evil.example.com/x#` would send Emissary's requests, carrying Emissary's credentials and
+originating from Emissary's own network position, wherever the User liked. Servers
+commonly sit inside a private network where that position is worth something.
+
+`BaseURL` is the mitigation, and it is a *structural* one:
+
+- It validates against `^[a-z0-9]{2,32}$` before composing anything — a bare DNS label,
+  with no dots, slashes, colons, or at-signs.
+- Nothing else in Emissary composes a Mailchimp address.
+
+Note what the guard is *not*: a blocklist of frightening words. A data center can only
+ever become one label underneath `api.mailchimp.com`, so `localhost` yields
+`localhost.api.mailchimp.com` — Mailchimp's to resolve, not the loopback. Do not "harden"
+the pattern against such values; it would reject a future data center and add nothing.
+`TestBaseURL_ScaryButHarmless` pins this so the reasoning is not re-litigated.
+
+A rule that developers have to remember is not a mitigation. A single constructor is.
+If you find yourself writing `"https://" + something` for Mailchimp, that is the bug.
+
+## Credentials
+
+A Mailchimp API key carries **full account access and has no scopes**. Holding one means
+being able to read, alter, or delete the account and its campaigns. Two consequences:
+
+- Keys live in `User.Vault`, encrypted, never in `User.Data` (which exports).
+- Nothing in this package logs a key or quotes one in an error message, including the
+  errors that reject a malformed one.
+
+`ValidateAPIKey` is not proof that a key works -- only Mailchimp can say that, and setup
+asks before saving.

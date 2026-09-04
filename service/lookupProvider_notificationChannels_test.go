@@ -8,15 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestLookupProvider_NotificationChannels closes the loop on a silent data-loss path.  The
-// notification settings form renders its options from this lookup group and saves them through the
-// User schema, which validates against an enum in model/user_accessors.go.  An option offered here
-// but missing from that enum lets the user tick the box and watch the save quietly drop it -- no
-// error, no clue.  This test asserts every offered option round-trips.
-//
-// The "notification-channels" case reads no LookupProvider state, so a zero value is safe here.
+// TestLookupProvider_NotificationChannels asserts that every option this group offers
+// round-trips through the User schema
 func TestLookupProvider_NotificationChannels(t *testing.T) {
 
+	// The settings form renders from this group and saves through the schema, whose enum
+	// is model.AllNotificationChannels(). An option missing there lets the user tick the
+	// box and watch the save quietly drop it -- no error, no clue.
 	group := LookupProvider{}.Group("notification-channels")
 	require.NotNil(t, group)
 
@@ -44,17 +42,10 @@ func TestLookupProvider_NotificationChannels(t *testing.T) {
 // that the settings form never offers -- a channel a user can never switch on.
 func TestLookupProvider_NotificationChannels_Complete(t *testing.T) {
 
-	expected := []string{
-		model.NotificationChannelDirectMessage,
-		model.NotificationChannelReply,
-		model.NotificationChannelMentionFollowing,
-		model.NotificationChannelMentionNotFollowing,
-		model.NotificationChannelFollow,
-		model.NotificationChannelReaction,
-	}
+	expected := model.AllNotificationChannels()
 
-	// The composite literal needs parens inside a `range` clause, where it would otherwise be
-	// parsed as the start of the loop body.
+	// The composite literal needs parens inside a `range` clause, where it would
+	// otherwise be parsed as the start of the loop body.
 	offered := make([]string, 0, len(expected))
 	for _, code := range (LookupProvider{}).Group("notification-channels").Get() {
 		offered = append(offered, code.Value)

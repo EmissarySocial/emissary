@@ -12,9 +12,18 @@ import (
 	"github.com/benpate/rosetta/mapof"
 )
 
-// Created with help from:
-// https://pkg.go.dev/crypto/cipher#NewGCM
-// https://www.twilio.com/en-us/blog/encrypt-and-decrypt-data-in-go-with-aes-256
+/******************************************
+ * Vault
+ *
+ * Secure storage for secrets on any model object, sealed with the domain's
+ * master key. Values are masked on read and the mask ignored on write, so a
+ * settings form round-trips a secret without displaying or erasing it.
+ * Cardinal rule: AES-GCM is counter mode. Reusing a (key, nonce) pair leaks
+ * the XOR of the plaintexts sealed under it, so a stored nonce is an OUTPUT
+ * of sealing and must never become an input.
+ ******************************************/
+
+// Written with help from https://pkg.go.dev/crypto/cipher#NewGCM
 
 // Vault secures sensitive data in any model object
 type Vault struct {
@@ -34,11 +43,10 @@ func NewVault() Vault {
 	}
 }
 
-// HasString returns TRUE if the vault has a value for the specified name.
-// This method is lightweight because it does not decrypt the value, only
-// checks to see if it exists.
+// HasString returns TRUE if the vault has a value for the specified name
 func (vault Vault) HasString(name string) bool {
 
+	// Lightweight: this checks for presence only, and never decrypts.
 	if _, ok := vault.Encrypted[name]; ok {
 		return true
 	}
@@ -50,9 +58,8 @@ func (vault Vault) HasString(name string) bool {
 	return false
 }
 
-// GetStringOK returns human-visible value for the specified name,
-// which means returning a `VaultObscuredValue` the value is present,
-// or a blank string if it is not.
+// GetStringOK returns the human-visible value for the specified name: the mask
+// when a value is present, or a blank string when it is not
 func (vault Vault) GetStringOK(name string) (string, bool) {
 
 	if _, ok := vault.Encrypted[name]; ok {
@@ -66,11 +73,11 @@ func (vault Vault) GetStringOK(name string) (string, bool) {
 	return "", false
 }
 
-// SetString sets the value for a specified name in the vault. It does
-// this intelligently, by not overwriting actual values if a `VaultObscuredValue`
-// was passed in through the UX.
+// SetString sets the value for a specified name in the vault
 func (vault *Vault) SetString(name string, value string) bool {
 
+	// A `VaultObscuredValue` posted back from a form is the mask, not a new secret,
+	// so it is ignored rather than written over the stored value.
 	if vault.plaintext == nil {
 		vault.plaintext = mapof.NewString()
 	}
@@ -90,6 +97,15 @@ func (vault *Vault) SetString(name string, value string) bool {
 	}
 
 	return true
+}
+
+// NeedsEncryption returns TRUE if this Vault holds a value that has been set but
+// not yet sealed
+func (vault Vault) NeedsEncryption() bool {
+
+	// Callers ask this to decide whether to obtain an encryption key at all. Where a
+	// key is missing or malformed, obtaining one is a failure rather than a cost.
+	return vault.hasEncryptableValues()
 }
 
 // Encrypt seals this Vault's plaintext values using the provided key
@@ -134,19 +150,16 @@ func (vault *Vault) Encrypt(encryptionKey []byte) error {
 	// Encrypt all plaintext values in the vault
 	for property, value := range vault.plaintext {
 
-		// DEFENSIVE: SetString is the only writer of `plaintext` and it already refuses
-		// empty and obscured values, so this cannot fire today. It stays because the cost
-		// of a future second writer forgetting that rule is a placeholder sealed as if it
-		// were a secret.
+		// DEFENSIVE: SetString already refuses empty and obscured values, so this cannot
+		// fire today. It stays because a future second writer forgetting that rule would
+		// seal a placeholder as if it were a secret.
 		if !isEncryptable(value) {
 			continue
 		}
 
-		// RULE: every value gets a FRESH nonce, every time it is sealed. AES-GCM is counter
-		// mode: reusing a (key, nonce) pair across two values leaks the XOR of their
-		// plaintexts, and reusing one across two versions of the same value leaks it against
-		// whatever older copy an attacker already holds. A stored nonce is an OUTPUT of
-		// sealing and must never become an input to it.
+		// RULE: every value gets a FRESH nonce, every time it is sealed -- across values
+		// and across versions of one value alike. Never read a stored nonce here; see the
+		// cardinal rule at the top of this file.
 		nonce, err := newNonce(aesgcm)
 
 		if err != nil {
@@ -263,14 +276,14 @@ func (vault Vault) hasEncryptableValues() bool {
 	return false
 }
 
-// nonceFor returns the nonce that opens the named value: the one stored beside it, or the
-// shared nonce written by the earlier format when this value predates the per-value nonces.
-// It never generates one -- decryption is a read, and a missing nonce is a fact about the
-// stored record, not something to invent a substitute for.
+// nonceFor returns the nonce that opens the named value: the one stored beside it,
+// or the shared nonce that an older record wrote for every value
 func (vault Vault) nonceFor(aesgcm cipher.AEAD, property string) ([]byte, error) {
 
 	const location = "model.vault.nonceFor"
 
+	// This never generates a nonce. Decryption is a read, and a missing nonce is a
+	// fact about the stored record, not something to invent a substitute for.
 	encoded, ok := vault.Nonces[property]
 
 	// LEGACY: fall back to the single nonce that older records share across every value
