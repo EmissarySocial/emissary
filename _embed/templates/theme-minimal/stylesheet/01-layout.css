@@ -41,7 +41,15 @@ nav {
 
 	@media screen {
 
+		/* RULE: hide the bar WHOLESALE below 640px -- do NOT restyle anything inside it.
+		   `.framed` is a SHARED page-width class (02-page.css) that also frames user-outbox
+		   and the setup console, and inside <nav> it is additionally what gives this bar its
+		   flex layout, its centering, and its 1100px frame.  Reaching into <nav> to build a
+		   mobile layout is what broke the first attempt at this feature: it removed .framed
+		   and took the desktop bar's centering and max-width with it.  The mobile layout is
+		   .nav-menu further down, which shares no markup with this at all. */
 		@media (width < 640px) {
+			& {display: none;}
 		}
 
 		@media (width >= 640px) {
@@ -56,18 +64,21 @@ nav {
 		@media screen and (width >= 640px) {
 			& {
 				flex-grow:1;
-				justify-content: center;
-			}			
-		}
-	}
 
-	.spacer {
-		display:none;
+				/* RULE: `safe center`, not `center`.  <nav> is a scroll container (overflow-x
+				   above), and a CENTERED flex container whose content overflows spills past BOTH
+				   edges -- the overflow before the start edge is then unreachable, because
+				   scrollLeft cannot go negative.  A site with eight or ten top-level pages
+				   silently loses its first link or two between 640px and roughly 800px, with no
+				   symptom beyond the bar appearing to start in the middle.  `safe` falls back to
+				   start alignment exactly when the content overflows, so the whole track scrolls. */
+				justify-content: safe center;
+			}
+		}
 	}
 
 	a, button {
 		display:flex;
-		flex-direction:column;
 		align-items:center;
 
 		color: var(--gray80);
@@ -77,7 +88,6 @@ nav {
 		border-radius: var(--border-radius);
 		margin:6px 0px;
 		white-space: nowrap;
-		text-overflow: ellipsis;
 
 		&.primary {
 			background-color: var(--button-primary-background);
@@ -101,15 +111,6 @@ nav {
 		&.selected:focus {
 			background-color: var(--gray20);
 			color: var(--black);
-		}
-
-		& > .icon {
-			font-size:24px;
-		}
-
-		& > .label {
-			font-size:10px;
-			line-height:14px;
 		}
 	}
 
@@ -149,25 +150,255 @@ main:has(> .app) {
 	overscroll-behavior:none;
 }
 
+/* The stacked icon-over-10px-caption layout that `nav a` used below 640px is gone, and so are
+   the `font-size: unset` rules that used to undo it here.  That is behaviour-neutral at this
+   width, because `unset` on an inherited property is `inherit`.  The bar no longer renders at
+   all below 640px -- see .nav-menu. */
 @media screen and (width >= 640px) {
 
 	nav a {
 		display:inline;
 	}
+}
 
-	nav a > .icon {
-		display:unset;
-		font-size:unset;
-	}
-	
-	nav a > .label {
-		font-size:unset;
-		line-height:unset;
+/******************************************
+ * Mobile Navigation Menu (below 640px)
+ *
+ * A control fixed to the top-right corner of the SCREEN, and the full-screen sheet it opens.
+ * Both live OUTSIDE <nav>, which is display:none at these widths -- so NONE of the `nav a`
+ * rules above reach them and this block has to restate everything it needs.  That is the
+ * price of keeping the bar and the sheet as separate elements, and it is the cheaper half of
+ * the trade: nothing here has to be undone at >=640px, and nothing here touches `.framed`.
+ *
+ * Do NOT rebuild this as a second <nav> element.  The rules above are element-scoped, so a
+ * second <nav> would silently inherit height:48px, overflow-x:auto and the whole bar
+ * treatment.  The landmark is a role on .nav-menu instead.
+ ******************************************/
+
+/* Desktop: the entire mobile layout is off, which also keeps the checkbox from being a dead
+   tab stop.  display:none rather than the visually-hidden treatment it gets below 640px --
+   `hide-visual` deliberately leaves an element FOCUSABLE, which is right on a phone where a
+   visible <label> stands in for the checkbox, and wrong here where there is no label to see. */
+.nav-menu {
+	display: none;
+}
+
+@media screen and (width < 640px) {
+
+	/* The landmark, and the one switch that turns the mobile layout on.  It generates no
+	   layout of its own: both children are position:fixed, so this is a zero-height flex item
+	   in <body>. */
+	.nav-menu {
+		display: block;
 	}
 
-	nav .spacer {
-		display:unset;
-		flex-grow:1;
+	/* RULE: position:fixed, never absolute.  This control is the CLOSE button as well as the
+	   open button, so it has to stay put over a fixed full-screen sheet -- an absolute control
+	   would scroll away while the sheet it closes stayed where it was.  Fixed also keeps the
+	   menu reachable from anywhere in a long article, which the 48px bar it replaces never was.
+	   z-index sits ABOVE the sheet and BELOW the 1000 tier that .floating-menu, .popUp-content
+	   and #modal share, so a modal still opens over everything. */
+	.nav-menu-button {
+		position: fixed;
+		top: var(--rhythm);
+		right: var(--rhythm);
+		z-index: 901;
+
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		/* 44px -- the smallest target both mobile platforms treat as reliably tappable.  Do not
+		   express this as a multiple expecting --rhythm to grow on small screens: it is 8px at
+		   every breakpoint. */
+		width: calc(var(--rhythm) * 5.5);
+		height: calc(var(--rhythm) * 5.5);
+
+		border-radius: var(--border-radius);
+		color: var(--gray80);
+		cursor: pointer;
+
+		/* RULE: opaque, and it must stay that way.  NOTHING in the page reserves space for this
+		   control -- that is deliberate, because reserving it would put back the full-width strip
+		   this layout exists to remove -- so it floats over whatever is scrolling past, which on
+		   this theme is regularly a photograph.  The backdrop is the entire compensation for
+		   reserving no space; drop it only if the theme grows some other contrast guarantee.
+
+		   --gray10 rather than --white: the grays INVERT between light and dark mode, so this is
+		   one step off the page in both (#f4f4f4 on a white page, #272725 on a #171714 one),
+		   whereas --white resolves to the page's own colour in dark mode and left the control
+		   readable only by its shadow.  Know the one place it is weak: --body-background is
+		   literally var(--gray10), so anywhere this floats over body background instead of a
+		   .page it has no contrast at all, and the shadow below is what carries it. */
+		background-color: var(--gray10);
+		box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
+
+		& > .icon {
+			font-size: calc(var(--rhythm) * 3);
+			line-height: 1;
+		}
+	}
+
+	/* Closed shows the hamburger, open shows the X.  One control with two glyphs rather than two
+	   controls: that is what keeps it to one tab stop, one focus ring, and no focus to move when
+	   the sheet opens.  `+` reaches the label because it directly follows the checkbox -- the
+	   whitespace between them is a text node, which the adjacent sibling combinator skips. */
+	.nav-menu-button > .nav-menu-close {
+		display: none;
+	}
+
+	.nav-menu-toggle:checked + .nav-menu-button > .nav-menu-open {
+		display: none;
+	}
+
+	.nav-menu-toggle:checked + .nav-menu-button > .nav-menu-close {
+		display: block;
+	}
+
+	/* The focused element is the off-screen checkbox, so the ring has to be drawn on its label
+	   or nobody can see it.  --focus-color is the token every other control in the theme uses. */
+	.nav-menu-toggle:focus-visible + .nav-menu-button {
+		outline: solid 2px var(--focus-color);
+		outline-offset: 2px;
+	}
+
+	/* The sheet.  Hidden until the checkbox is checked -- which is the whole reason this is a
+	   checkbox and not a <details>: `:checked` is a SELECTOR, so it lives inside this media
+	   query and simply does not exist above 640px.  A <details> keeps its open state in a DOM
+	   attribute that no media query can reach. */
+	.nav-menu-panel {
+		position: fixed;
+		inset: 0px;
+		z-index: 900;
+
+		display: flex;
+		flex-direction: column;
+
+		/* Closed.  Fade plus a touch of scale, 200ms -- the same properties, duration and curve
+		   as #modal, which is the theme's only other full-screen overlay.  0.98 rather than the
+		   modal's 0.8: that scale is right for a 600px dialog and far too much across a whole
+		   viewport, where it reads as a zoom rather than as an arrival.
+
+		   RULE: visibility, NOT display.  `display` is not transitionable, and its modern
+		   replacement -- @starting-style with transition-behavior:allow-discrete -- animates the
+		   ENTRY only in Firefox 154: on exit `display` flips straight to none with zero
+		   transitions running, so the sheet would fade in and then vanish.  Measured against
+		   this rule as a control, which runs all three transitions in both directions.
+		   `visibility:hidden` removes the sheet from the accessibility tree and the tab order
+		   exactly as `display:none` did, so nothing is lost by the swap.
+
+		   The visibility delay is what holds the sheet on screen for the length of the fade-out;
+		   see the reduced-motion rule below, which exists because of it. */
+		visibility: hidden;
+		opacity: 0;
+		transform: scale(0.98);
+		transition: opacity var(--motion-base) var(--motion-ease), transform var(--motion-base) var(--motion-ease), visibility 0s linear var(--motion-base);
+
+		background-color: var(--white);
+
+		/* Clears the control, which is fixed over this sheet's own top-right corner */
+		padding-top: calc(var(--rhythm) * 9);
+
+		/* RULE: `contain`, not `none`.  A full-screen sheet with no scroll lock lets a swipe
+		   chain through to the document behind it, which then scrolls invisibly and leaves the
+		   visitor somewhere else when they close the menu.  Locking the body properly needs
+		   script (see Modal, which writes body.style.overflow); this stops the chaining without
+		   any, which is what keeps the menu working with scripting off. */
+		overflow-y: auto;
+		overscroll-behavior: contain;
+	}
+
+	.nav-menu-toggle:checked ~ .nav-menu-panel {
+		visibility: visible;
+		opacity: 1;
+		transform: scale(1);
+
+		/* Same durations, but the visibility delay drops to zero: the sheet has to become
+		   visible at the START of the fade-in and stay visible until the END of the fade-out. */
+		transition: opacity var(--motion-base) var(--motion-ease), transform var(--motion-base) var(--motion-ease), visibility 0s linear 0s;
+	}
+
+	/* RULE: zero the DELAY as well as the duration.  The theme's global reduced-motion switch
+	   ([02-accessibility.css]) is `* { transition-duration: 0.01ms !important }` -- it overrides
+	   duration and says nothing about transition-DELAY.  Without this rule, closing the sheet
+	   under reduced motion hides it instantly and then leaves a full-screen, invisible, still
+	   hit-testable box swallowing every tap for 200ms.  Verified: with only the global switch in
+	   force the computed delay stays `0s, 0.2s`. */
+	@media (prefers-reduced-motion: reduce) {
+
+		.nav-menu-panel,
+		.nav-menu-toggle:checked ~ .nav-menu-panel {
+			transition-delay: 0s;
+		}
+	}
+
+	/* RULE: .floating-menu is z-index 1000 and would paint straight over the sheet.  It sits
+	   outside <nav> AND outside .nav-menu, so no sibling combinator reaches it -- :has on the
+	   <body> is the only selector that does. */
+	body:has(.nav-menu-toggle:checked) .floating-menu {
+		display: none;
+	}
+
+	/* Sheet rows.  A ROW, not the stacked icon-over-caption the bar used at these widths: that
+	   layout only reads when an icon is present, a stream's icon is optional and usually absent,
+	   and it left the label at 10px -- under the floor both mobile platforms use for body text.
+	   In a row the icon is a leading glyph at the label's own size, which makes the icon /
+	   no-icon difference cosmetic instead of load-bearing.  Sized to match the Inbox's own
+	   mobile menu (user-inbox/mobile.html), which is the same shape. */
+	.nav-menu-panel a {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: var(--rhythm);
+
+		padding: calc(var(--rhythm) * 2);
+		border-bottom: solid 1px var(--gray15);
+
+		color: var(--gray80);
+		font-size: calc(var(--rhythm) * 2.5);
+		line-height: 1.4;
+		text-decoration: none;
+
+		&:hover,
+		&:focus {
+			color: var(--gray90);
+			background-color: var(--gray10);
+		}
+
+		/* Set SERVER-side from .NavigationID, not by SelectNav -- see navigation.html. */
+		&.selected {
+			background-color: var(--gray20);
+			color: var(--black);
+		}
+
+		& > .icon {
+			font-size: calc(var(--rhythm) * 3);
+			line-height: 1;
+			flex-shrink: 0;
+		}
+
+		& > .label {
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+	}
+
+	/* Join Now is a call to action, not a destination, so it reads as a button rather than as
+	   one more row in the list. */
+	.nav-menu-panel a.primary {
+		justify-content: center;
+		margin: calc(var(--rhythm) * 2);
+		padding: calc(var(--rhythm) * 1.5) calc(var(--rhythm) * 2);
+		border-bottom: none;
+		border-radius: var(--border-radius);
+		background-color: var(--button-primary-background);
+		color: var(--button-primary-color);
+
+		&:hover,
+		&:focus {
+			background-color: var(--button-primary-background-hover);
+			color: var(--button-primary-color-hover);
+		}
 	}
 }
 

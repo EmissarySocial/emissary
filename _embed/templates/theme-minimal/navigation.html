@@ -1,11 +1,55 @@
+{{- /*
+	navigation.html emits four independent pieces:
+
+	  1. The skip link.  A direct child of NEITHER <nav> nor the mobile menu -- it is emitted
+	     before both, because <nav> is display:none below 640px and a skip link inside a
+	     display:none box stops existing for exactly the visitors it is there for.
+
+	  2. <nav>, the horizontal bar.  Desktop only; display:none below 640px.  Its markup is
+	     UNCHANGED from before the mobile menu existed, and `class="framed"` on the inner div
+	     is load-bearing in two unrelated directions at once -- see 01-layout.css.
+
+	  3. .nav-menu, the control and the full-screen sheet it opens.  Below 640px only.
+
+	  4. .floating-menu, a signed-in user's own links.  Rendered outside <nav> so that none of
+	     the `nav a` rules reach it, and kept separate from the site's navigation on purpose:
+	     showNavigation can hide the bar without hiding these.
+
+	Pieces 2 and 3 render the SAME links twice, deliberately.  One element cannot be both a
+	horizontal bar and a full-screen sheet without every rule in one layout undoing a rule in
+	the other, on markup that is shared with pages which are not navigation at all.  The cost
+	is duplicate ids, and it is paid at the sheet -- see the comment there.
+*/ -}}
+
+{{- /* Read once: .Navigation runs a database query, and it is ranged twice below. */ -}}
+{{- $navigation := .Navigation -}}
+
+{{- /* The top-level section to highlight.  The BAR is marked client-side by SelectNav; the
+       SHEET is marked here, server-side, because SelectNav resolves by id and the sheet's
+       copies deliberately have none.  Falls back to matching nothing. */ -}}
+{{- $navigationID := .NavigationID -}}
+
+{{- /* Sign In and Join Now share two conditions, computed into one boolean rather than joined
+       with `and`.  The funcMap shadows `and` and `or` with strict-bool versions that abort the
+       render when handed a string, and they do it at RENDER time on whichever branch is
+       reached first -- never at parse time, so a broken join ships and fails later. */ -}}
+{{- $showSignin := false -}}
+{{- if .NotAuthenticatedOrIdentity -}}
+	{{- if ne "false" (.ThemeData "showSignup") -}}
+		{{- $showSignin = true -}}
+	{{- end -}}
+{{- end -}}
+
 {{- if ne "false" (.ThemeData "showNavigation") -}}
+
+	<a href="#main" class="hide-visual">Skip navigation</a>
+
 	<nav>
 		<div hx-push-url="true" hx-swap="transition:true" class="framed">
-			<a href="#main" class="hide-visual">Skip navigation</a>
 			{{- if eq "STARTUP" .DomainStateID -}}
 				<a class="link nav-item turboclick" href="/startup">{ Startup Checklist }</a>
 			{{- else}}
-				{{- range .Navigation -}}
+				{{- range $navigation -}}
 					<a href="/{{.Token}}" id="nav-{{.StreamID}}" class="nav-item turboclick" aria-label="{{.Label}}">
 						{{- $icon := .Icon -}}
 						{{- if ne "" $icon -}}
@@ -17,25 +61,102 @@
 				{{- end -}}
 			{{- end -}}
 
-			{{- if .NotAuthenticatedOrIdentity -}}
+			{{- if $showSignin -}}
 
-				{{- if ne "false" (.ThemeData "showSignup") -}}
+				<a href="/signin" id="nav-signin" class="nav-item turboclick" aria-label="Sign In">
+					<span class="icon">{{icon "user"}}</span>
+					<span class="label">Sign In</span>
+				</a>
 
-					<a href="/signin" id="nav-signin" class="nav-item turboclick" aria-label="Sign In">
-						<span class="icon">{{icon "user"}}</span>
-						<span class="label">Sign In</span>
+				{{- if .DomainHasRegistrationForm -}}
+					<a href="/register" id="nav-signup" class="nav-item primary turboclick" aria-label="join now">
+						<span class="label">Join Now</span>
 					</a>
-
-					{{- if .DomainHasRegistrationForm -}}
-						<a href="/register" id="nav-signup" class="nav-item primary turboclick" aria-label="join now">
-							<span class="label">Join Now</span>
-						</a>
-					{{- end -}}
 				{{- end -}}
 			{{- end -}}
 
 		</div>
 	</nav>
+
+	{{- /* The wrapper is the navigation landmark on a phone -- <nav> above is display:none at
+	       these widths, and the sheet itself is display:none whenever the menu is closed, which
+	       is always on load.  Putting the role here is what keeps a landmark on the page in the
+	       closed state.  It generates no layout of its own: both children are position:fixed,
+	       so it computes to a zero-height flex item in <body>. */ -}}
+	<div class="nav-menu" role="navigation" aria-label="Menu">
+
+		{{- /* A checkbox, not a <details>: `:checked` is a SELECTOR, so the 640px media query can
+		       override it, whereas a <details> keeps its open state in a DOM attribute that no
+		       media query can reach.  It must precede the label and the sheet in the DOM -- the
+		       CSS reaches both with sibling combinators.
+
+		       role=button gives it disclosure semantics and enrolls it in the htmx a11y
+		       extension, which supplies the Enter key that a native checkbox lacks (it answers
+		       Space only).  The role must NEVER move to the <label>: a label sits at tabIndex
+		       -1, so the extension would make it focusable too and this one control would
+		       occupy two tab stops.
+
+		       autocomplete=off stops a back-navigation restoring the menu open over the page
+		       the visitor just returned to. */ -}}
+		<input type="checkbox" id="nav-menu-toggle" class="nav-menu-toggle hide-visual" autocomplete="off"
+			role="button" aria-controls="nav-menu-panel" aria-expanded="false" aria-label="Navigation menu"
+			script="on change set @aria-expanded to my.checked end on keydown[key=='Escape'] from window if my.checked set my.checked to false then set @aria-expanded to 'false' then focus me end end">
+
+		{{- /* Icon only, and BOTH icons: this control floats over the page at the top-right
+		       corner and sits ABOVE the sheet, so it is the close button as well as the open
+		       button.  CSS swaps the glyphs on :checked, which keeps open and closed as one
+		       control -- one tab stop, one focus ring, and no focus to move when the sheet
+		       opens.  The accessible name lives on the checkbox, so both glyphs are hidden. */ -}}
+		<label for="nav-menu-toggle" class="nav-menu-button">
+			<span class="icon nav-menu-open" aria-hidden="true">{{icon "menu"}}</span>
+			<span class="icon nav-menu-close" aria-hidden="true">{{icon "cancel"}}</span>
+		</label>
+
+		{{- /* The sheet.  Its links carry NO `id` and NOT the `nav-item` class, and both
+		       omissions are load-bearing.  SelectNav resolves the current section with
+		       document.getElementById('nav-' + id), which returns the FIRST match rather than
+		       the visible one -- and it then runs `take .selected from .nav-item`, which would
+		       strip the server-rendered mark below off whichever copy it did not choose.  A
+		       class token is matched whole, so `nav-menu-item` is invisible to `.nav-item`.
+
+		       `turboclick` DOES belong here, same as on the bar.  It fires the navigation on
+		       mousedown, and on a touch device the browser only synthesises a mousedown once it
+		       has already resolved the gesture as a tap rather than a scroll -- so a drag that
+		       scrolls this sheet never triggers it.  (If a case ever does need excluding, the
+		       mechanism is turboclick's `.folder-handle` guard, not dropping the class.) */ -}}
+		<div id="nav-menu-panel" class="nav-menu-panel">
+			{{- if eq "STARTUP" .DomainStateID -}}
+				<a class="link nav-menu-item turboclick" href="/startup">{ Startup Checklist }</a>
+			{{- else}}
+				{{- range $navigation -}}
+					{{- $isCurrent := eq $navigationID .StreamID -}}
+					<a href="/{{.Token}}" class="nav-menu-item turboclick{{if $isCurrent}} selected{{end}}" aria-current="{{if $isCurrent}}page{{else}}false{{end}}">
+						{{- $icon := .Icon -}}
+						{{- if ne "" $icon -}}
+							<span class="icon selected-hide">{{icon $icon}}</span>
+							<span class="icon selected-show">{{icon (join $icon "-fill")}}</span>
+						{{- end }}
+						<span class="label">{{.Label}}</span>
+					</a>
+				{{- end -}}
+			{{- end -}}
+
+			{{- if $showSignin -}}
+
+				<a href="/signin" class="nav-menu-item turboclick">
+					<span class="icon">{{icon "user"}}</span>
+					<span class="label">Sign In</span>
+				</a>
+
+				{{- if .DomainHasRegistrationForm -}}
+					<a href="/register" class="nav-menu-item primary turboclick">
+						<span class="label">Join Now</span>
+					</a>
+				{{- end -}}
+			{{- end -}}
+
+		</div>
+	</div>
 {{- end -}}
 
 {{- if .IsAuthenticated -}}
