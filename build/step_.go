@@ -264,6 +264,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.WithMerchantAccount:
 		return StepWithMerchantAccount(s)
 
+	case step.WithUserConnection:
+		return StepWithUserConnection(s)
+
 	case step.WithMessage:
 		return StepWithMessage(s)
 

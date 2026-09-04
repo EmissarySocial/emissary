@@ -41,6 +41,7 @@ type Factory interface {
 	Import() *service.Import
 	ImportItem() *service.ImportItem
 	MerchantAccount() *service.MerchantAccount
+	UserConnection() *service.UserConnection
 	KeyPackage() *service.KeyPackage
 	NewsFeed() *service.NewsFeed
 	Notification() *service.Notification

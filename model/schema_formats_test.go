@@ -57,6 +57,7 @@ func modelSchemas() map[string]schema.Element {
 		"TagListSchema":          TagListSchema(),
 		"TagSchema":              TagSchema(),
 		"UserSchema":             UserSchema(),
+		"UserConnectionSchema":   UserConnectionSchema(),
 		"WebhookSchema":          WebhookSchema(),
 		"WidgetSchema":           WidgetSchema(),
 		"permissionSchema":       permissionSchema(),

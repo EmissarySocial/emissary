@@ -22,19 +22,19 @@ func ValidateAPIKey(apiKey string) error {
 
 	// RULE: a credential is required
 	if apiKey == "" {
-		return derp.BadRequest(location, "Mailchimp API key is required")
+		return derp.Validation("Mailchimp API key is required", derp.WithLocation(location))
 	}
 
 	// RULE: bound the length before anything else reads it
 	if len(apiKey) > apiKeyMaxLength {
-		return derp.BadRequest(location, "Mailchimp API key is too long")
+		return derp.Validation("Mailchimp API key is too long", derp.WithLocation(location))
 	}
 
 	// RULE: printable ASCII only, because this travels in an Authorization header.
 	// Nothing here checks FORMAT -- a credential is opaque; see README.md.
 	for _, character := range apiKey {
 		if character < '!' || character > '~' {
-			return derp.BadRequest(location, "Mailchimp API key contains a character that cannot be sent in a request")
+			return derp.Validation("Mailchimp API key contains a character that cannot be sent in a request", derp.WithLocation(location))
 		}
 	}
 

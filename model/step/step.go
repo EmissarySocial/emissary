@@ -300,6 +300,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "with-merchant-account":
 		return NewWithMerchantAccount(stepInfo)
 
+	case "with-user-connection":
+		return NewWithUserConnection(stepInfo)
+
 	case "with-message":
 		return NewWithMessage(stepInfo)
 

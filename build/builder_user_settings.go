@@ -441,6 +441,41 @@ func (w Settings) RemoteProducts() (sliceof.Object[model.Product], error) {
 	return remoteProducts, nil
 }
 
+/******************************************
+ * User Connections
+ ******************************************/
+
+// UserConnections returns every external service that this User has connected
+func (w Settings) UserConnections() (sliceof.Object[model.UserConnection], error) {
+
+	result, err := w._factory.UserConnection().QueryByUser(w._session, w._user.UserID)
+
+	if err != nil {
+		return nil, derp.Wrap(err, "build.Settings.UserConnections", "Loading connections for User", w._user.UserID)
+	}
+
+	return result, nil
+}
+
+// UserConnection returns this User's connection to the named service, or an empty
+// record when they have not connected it
+func (w Settings) UserConnection(connectionType string) model.UserConnection {
+
+	result := model.NewUserConnection()
+	result.UserID = w._user.UserID
+	result.Type = connectionType
+
+	// A miss is the ordinary case for a service the User has never set up, so it reads as
+	// an empty record rather than as an error the settings page has to render.
+	if err := w._factory.UserConnection().LoadByUserAndType(w._session, w._user.UserID, connectionType, &result); err != nil {
+		if !derp.IsNotFound(err) {
+			derp.Report(derp.Wrap(err, "build.Settings.UserConnection", "Loading connection", connectionType))
+		}
+	}
+
+	return result
+}
+
 // FilteredByFollowing returns the Following record that is being used to filter the Settings
 func (w Settings) FilteredByFollowing() model.Following {
 

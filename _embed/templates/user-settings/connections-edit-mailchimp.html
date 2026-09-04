@@ -1,0 +1,20 @@
+<div class="flex-row flex-align-center margin-bottom">
+	<h1 class="margin-none flex-grow">{{icon "email"}} Mailchimp</h1>
+	<a href="https://emissary.dev/connections" target="_blank">{{icon "help"}} Help</a>
+</div>
+
+<div class="alert-blue margin-bottom">
+	<a href="https://admin.mailchimp.com/account/api/" target="_blank">Sign in to your Mailchimp account {{icon "new-window"}}</a>
+	to create the API key below. Your data center is the few characters at the start of that web address, such as
+	<code>us6</code> in <code>us6.admin.mailchimp.com</code>.
+</div>
+
+<!-- D21: an API key is a bigger thing to hand over than it looks like, and the person
+     pasting it is entitled to know that before they paste it. -->
+<div class="alert-red margin-bottom-lg">
+	<b>{{icon "alert"}} A Mailchimp API key has no limits.</b>
+	Mailchimp does not offer restricted keys, so this one carries full access to your whole account:
+	anyone holding it can read, change, or delete your audiences and campaigns. Emissary stores it
+	encrypted and never includes it in your data export. Delete the key at Mailchimp if you ever
+	stop trusting this server.
+</div>

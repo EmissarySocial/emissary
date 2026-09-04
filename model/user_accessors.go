@@ -33,7 +33,6 @@ func UserSchema() schema.Element {
 			"hashtags":             schema.Array{Items: schema.String{Format: "token"}},
 			"notificationChannels": schema.Array{Items: schema.String{Enum: AllNotificationChannels()}},
 			"data":                 schema.Object{Wildcard: schema.String{MaxLength: 4096}},
-			"vault":                schema.Object{Wildcard: schema.String{Format: "unsafe-any", MaxLength: 8192}},
 			"movedTo":              schema.String{Format: "url"},
 			"followerCount":        schema.Integer{},
 			"followingCount":       schema.Integer{},
@@ -117,9 +116,6 @@ func (user *User) GetPointer(name string) (any, bool) {
 
 	case "data":
 		return &user.Data, true
-
-	case "vault":
-		return &user.Vault, true
 
 	case "movedTo":
 		return &user.MovedTo, true

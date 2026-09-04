@@ -48,7 +48,6 @@ type User struct {
 	NotificationChannels sliceof.String             `bson:"notificationChannels"` // Slice of ENABLED notification channel keys (see model.NotificationChannel* constants). Empty = all notifications off.
 	PasswordReset        PasswordReset              `bson:"passwordReset"`        // Most recent password reset information.
 	Data                 mapof.String               `bson:"data"`                 // Custom profile data that can be stored with this User.
-	Vault                Vault                      `json:"-" bson:"vault"`       // Encrypted secrets for external service connections. RULE: `json:"-"` is load-bearing; ExportDocument marshals this struct.
 	ProfileFingerprint   string                     `bson:"profileFingerprint"`   // Hash of the last-saved actor document (GetJSONLD). User.Save compares it to detect profile changes that must federate as an ActivityPub Update.
 	MovedTo              string                     `bson:"movedTo,omitempty"`    // If present, this user has been moved to a new URL, and cannot sign in to this profile anymore.
 	FollowerCount        int                        `bson:"followerCount"`        // Number of followers for this user
@@ -70,7 +69,6 @@ func NewUser() User {
 		GroupIDs:             id.NewSlice(),
 		Links:                sliceof.NewObject[PersonLink](),
 		Data:                 mapof.NewString(),
-		Vault:                NewVault(),
 		NotificationChannels: DefaultNotificationChannels(),
 	}
 }

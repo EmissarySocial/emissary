@@ -52,7 +52,6 @@ func TestUserSchema(t *testing.T) {
 		{"data.ABC", "DATA-ABC", nil},
 		{"data.XYZ", "DATA-XYZ", nil},
 		{"mapIds.federated", "fed-id-123", nil},
-		{"vault." + UserVaultMailchimpAPIKey, testMailchimpAPIKey, VaultObscuredValue},
 	}
 
 	tableTest_Schema(t, &s, &user, tests)

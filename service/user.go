@@ -35,29 +35,29 @@ import (
 
 // User manages all interactions with the User collection
 type User struct {
-	activityService   *ActivityStream
-	attachmentService *Attachment
-	connectionService *Connection
-	emailService      *DomainEmail
-	domainService     *Domain
-	folderService     *Folder
-	followerService   *Follower
-	followingService  *Following
-	keyService        *EncryptionKey
-	newsFeedService   *NewsFeed
-	outboxService     *Outbox
-	outbox2Service    *Outbox2
-	responseService   *Response
-	ruleService       *Rule
-	searchTagService  *SearchTag
-	steranko          func(data.Session) *steranko.Steranko
-	streamService     *Stream
-	templateService   *Template
-	webhookService    *Webhook
-	queue             *queue.Queue
-	sseUpdateChannel  chan<- realtime.Message
-	host              string
-	masterKey         string
+	activityService       *ActivityStream
+	attachmentService     *Attachment
+	connectionService     *Connection
+	emailService          *DomainEmail
+	domainService         *Domain
+	folderService         *Folder
+	followerService       *Follower
+	followingService      *Following
+	keyService            *EncryptionKey
+	newsFeedService       *NewsFeed
+	outboxService         *Outbox
+	outbox2Service        *Outbox2
+	responseService       *Response
+	ruleService           *Rule
+	searchTagService      *SearchTag
+	steranko              func(data.Session) *steranko.Steranko
+	streamService         *Stream
+	userConnectionService *UserConnection
+	templateService       *Template
+	webhookService        *Webhook
+	queue                 *queue.Queue
+	sseUpdateChannel      chan<- realtime.Message
+	host                  string
 }
 
 // NewUser returns a fully populated User service
@@ -88,6 +88,7 @@ func (service *User) Refresh(factory *Factory) {
 	service.ruleService = factory.Rule()
 	service.steranko = factory.Steranko
 	service.streamService = factory.Stream()
+	service.userConnectionService = factory.UserConnection()
 	service.templateService = factory.Template()
 	service.webhookService = factory.Webhook()
 	service.sseUpdateChannel = factory.SSEUpdateChannel()
@@ -95,9 +96,6 @@ func (service *User) Refresh(factory *Factory) {
 
 	service.host = factory.Host()
 
-	// The domain's master key seals User.Vault. It is read here (not per-call) to match
-	// every other Vault owner -- see service.Connection.Refresh.
-	service.masterKey = factory.MasterKey()
 }
 
 // Hostname returns the domain-only name (no protocol)
@@ -268,13 +266,6 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 	profileChanged := (user.ProfileFingerprint != newFingerprint) && !isNew
 	user.ProfileFingerprint = newFingerprint
 
-	// RULE: seal the Vault on EVERY save, not only when a settings form ran. Vault holds
-	// plaintext in an unexported field that never persists, so a value set but not sealed
-	// vanishes at the database boundary -- silently, because the save still succeeds.
-	if err := service.encryptVault(user); err != nil {
-		return derp.Wrap(err, location, "Encrypting User vault", user)
-	}
-
 	// Try to save the User record to the database
 	if err := service.collection(session).Save(user, note); err != nil {
 		return derp.Wrap(err, location, "Saving User", user, note)
@@ -370,6 +361,13 @@ func (service *User) Delete(session data.Session, user *model.User, note string)
 	// Delete related Streams
 	if err := service.streamService.DeleteByParent(session, user.UserID, "Deleted with owner"); err != nil {
 		return derp.Wrap(err, location, "Deleting User's streams", user, note)
+	}
+
+	// Delete related connections to external services.  This removes what Emissary installed
+	// at each service and erases the credential, but never touches the account itself -- see
+	// MAILING-LISTS.md D14 for why a deleted User must not unsubscribe their own followers.
+	if err := service.userConnectionService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, location, "Deleting User's external connections", user, note)
 	}
 
 	// Delete the User from the database

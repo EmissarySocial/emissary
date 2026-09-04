@@ -704,6 +704,52 @@
 			]
 		}
 
+		// A User's own connections to external services. `with-user-connection` scopes the
+		// standard edit/save/delete ceremony to one UserConnection record, which owns the
+		// credential and the IsActive switch that installs or removes it at that service.
+		connections: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		connections-edit-mailchimp: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"with-user-connection", steps:[
+						{do:"view-html", file:"connections-edit-mailchimp"}
+						{
+							do:edit
+							form:{
+								type:layout-vertical
+								children:[
+									{type:"hidden", path:"type", options:{value:"MAILCHIMP"}}
+									{type:"text", path:"vault.apiKey", label:"Mailchimp API Key", description:"(PRIVATE) Create using your Mailchimp account settings.", options:{required:true}}
+									{type:"text", path:"data.dataCenter", label:"Data Center", description:"The start of your own Mailchimp web address, such as `us6`.", options:{required:true, placeholder:"us6"}}
+									{type:"toggle", path:"isActive", options:{true-text:"Active. Sync my email followers to Mailchimp.", false-text:"Paused. Keep my key, but stop syncing."}}
+								]
+							}
+							options:["delete:/@me/settings/connections-delete?userConnectionId={{.ObjectID}}"]
+						}
+						{do:"save"}
+						{do:"refresh-page"}
+					]}
+				]}
+			]
+		}
+
+		connections-delete: {
+			roles:["self"]
+			steps:[
+				{do:"with-user-connection", steps:[
+					{do:"delete", title:"Remove this Connection?", message:"This deletes your credentials from this server and removes everything it installed in your account at that service. Your account there is left alone."}
+					{do:"refresh-page"}
+				]}
+			]
+		}
+
 		merchantAccounts: {
 			roles:["self"]
 			steps:[

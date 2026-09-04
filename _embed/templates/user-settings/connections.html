@@ -1,0 +1,72 @@
+{{- $isDesktop := .IsDesktop -}}
+{{- $mailchimp := .UserConnection "MAILCHIMP" -}}
+
+<div class="app" script="init send SelectNav(id:'settings')">
+	<title>Connections</title>
+
+	{{- if $isDesktop -}}
+		<div id="app-sidebar" class="expanded">
+			{{- template "menu" "connections" -}}
+		</div>
+	{{- end -}}
+
+	<div class="app-content padding">
+
+		{{- if $isDesktop -}}
+			<div class="flex-row flex-align-center margin-bottom">
+				<h1 class="text-xl bold margin-none flex-grow">Connections</h1>
+				<a href="https://emissary.dev/connections" target="_blank">{{icon "help"}} Help with Connections</a>
+			</div>
+		{{- else -}}
+			<div class="flex-row flex-align-center text-xl margin-none margin-bottom">
+				<a href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
+				<h1 class="bold flex-grow">Connections</h1>
+				<a href="https://emissary.dev/connections" target="_blank">{{icon "help"}}</a>
+			</div>
+		{{- end -}}
+
+		<div class="margin-bottom-lg md:width-80% lg:width-60%">
+			Connect your own accounts at other services, and let this server act on your behalf there.
+			Each connection is yours alone: nobody else on this server can see or use it, and you can
+			pause or remove any of them at any time.
+		</div>
+
+		<h2 class="text-lg bold margin-bottom">Mailing Lists</h2>
+
+		<div class="margin-bottom md:width-80% lg:width-60% text-gray">
+			Everyone who follows you by email is added to an audience you choose. This server keeps
+			sending its own follower email either way, so your mailing list is a copy of your
+			followers rather than a replacement for them.
+		</div>
+
+		<div class="table">
+			<div role="button" class="flex-row turboclick">
+				<div hx-get="/@me/settings/connections-edit-mailchimp?type=MAILCHIMP" class="flex-row flex-grow">
+					<div>{{- icon $mailchimp.Icon -}}</div>
+					<div class="flex-grow">{{$mailchimp.Label}}</div>
+					<div class="nowrap">
+						{{- if $mailchimp.NeedsReconnect -}}
+							<span class="text-red">{{icon "alert"}} Reconnect</span>
+						{{- else if $mailchimp.IsActive.IsTrue -}}
+							<span class="text-green">{{icon "check-circle-fill"}} Active</span>
+						{{- else if $mailchimp.IsNew -}}
+							<span class="text-gray">Not Connected</span>
+						{{- else -}}
+							<span class="text-gray">Paused</span>
+						{{- end -}}
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+	<div
+		hx-get="{{.RelativeURL}}"
+		hx-trigger="refreshPage from:window"
+		hx-target="main"
+		hx-swap="innerHTML"
+		hx-push-url="false">
+	</div>
+
+</div>

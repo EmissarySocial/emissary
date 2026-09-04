@@ -36,13 +36,13 @@ func ValidateDataCenter(dataCenter string) error {
 
 	// RULE: a missing data center says where to find one, because nothing derives it
 	if dataCenter == "" {
-		return derp.BadRequest(location, "Mailchimp data center is required. Find it at the start of your Mailchimp web address, such as 'us6' in 'us6.admin.mailchimp.com'")
+		return derp.Validation("Mailchimp data center is required. Find it at the start of your Mailchimp web address, such as 'us6' in 'us6.admin.mailchimp.com'", derp.WithLocation(location))
 	}
 
 	// RULE: this value becomes a hostname label, so it must carry nothing -- no dot,
 	// slash, colon, or at-sign -- that could steer a request elsewhere. See README.md.
 	if !dataCenterPattern.MatchString(dataCenter) {
-		return derp.BadRequest(location, "Mailchimp data center must be letters and digits only, such as 'us6'")
+		return derp.Validation("Mailchimp data center must be letters and digits only, such as 'us6'", derp.WithLocation(location))
 	}
 
 	// Three little characters, and they decide where everything goes.

@@ -71,9 +71,28 @@ If you find yourself writing `"https://" + something` for Mailchimp, that is the
 A Mailchimp API key carries **full account access and has no scopes**. Holding one means
 being able to read, alter, or delete the account and its campaigns. Two consequences:
 
-- Keys live in `User.Vault`, encrypted, never in `User.Data` (which exports).
+- Keys live in the `Vault` of a `UserConnection`, encrypted, never in its `Data` (which exports).
 - Nothing in this package logs a key or quotes one in an error message, including the
   errors that reject a malformed one.
 
 `ValidateAPIKey` is not proof that a key works -- only Mailchimp can say that, and setup
 asks before saving.
+
+## Errors are written for the person reading the form
+
+A failed request comes back through `describeError`, and the split it makes is deliberate.
+
+The four statuses a User can *act on* -- 401, 403, 404, 429 -- become **validation (422)
+errors whose message is the root of the chain**. That placement is what makes them survive:
+`build.inlineErrorMessage` reads the root message of a 422 and the outermost message of
+anything else, and these errors travel up through a service and a pipeline step that each
+wrap them. A sentence written anywhere but the root would be replaced by "Unable to connect
+to Mailchimp" before anyone saw it.
+
+Everything else -- a 500, a timeout, a DNS failure -- keeps its cause and stays non-422,
+because it is not the User's input being wrong and no instruction would help them.
+
+Those four also do **not** wrap the failed transaction. `derp` redacts credential-bearing
+headers when it records one, so the leak this originally guarded against is closed at the
+source; not wrapping is now belt-and-braces, and `TestGetAudiences_DoesNotCarryTheCredential`
+keeps it honest.

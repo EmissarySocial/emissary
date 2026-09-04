@@ -105,6 +105,7 @@ type Factory struct {
 	streamDraftService      StreamDraft
 	privilegeService        Privilege
 	realtimeBroker          *realtime.Broker
+	userConnectionService   UserConnection
 	userService             User
 	webhookService          Webhook
 
@@ -196,6 +197,7 @@ func NewFactory(serverFactory ServerFactory, domain config.Domain, port string, 
 	factory.streamArchiveService = NewStreamArchive()
 	factory.streamDraftService = NewStreamDraft()
 	factory.privilegeService = NewPrivilege()
+	factory.userConnectionService = NewUserConnection()
 	factory.userService = NewUser()
 	factory.webhookService = NewWebhook()
 
@@ -273,6 +275,7 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	factory.streamArchiveService.Refresh(factory)
 	factory.streamDraftService.Refresh(factory)
 	factory.privilegeService.Refresh(factory)
+	factory.userConnectionService.Refresh(factory)
 	factory.userService.Refresh(factory)
 	factory.webhookService.Refresh(factory)
 
@@ -566,6 +569,11 @@ func (factory *Factory) KeyPackage() *KeyPackage {
 // MerchantAccount returns a fully populated MerchantAccount service
 func (factory *Factory) MerchantAccount() *MerchantAccount {
 	return &factory.merchantAccountService
+}
+
+// UserConnection returns a fully populated UserConnection service
+func (factory *Factory) UserConnection() *UserConnection {
+	return &factory.userConnectionService
 }
 
 // Notification returns a fully populated Notification service
@@ -1025,6 +1033,9 @@ func (factory *Factory) Model(name string) (ModelService, error) {
 	case "merchantAccount":
 		return factory.MerchantAccount(), nil
 
+	case "userConnection":
+		return factory.UserConnection(), nil
+
 	case "oauthUserToken":
 		return factory.OAuthUserToken(), nil
 
@@ -1077,6 +1088,9 @@ func (factory *Factory) ModelService(object data.Object) ModelService {
 	case *model.MerchantAccount:
 		return factory.MerchantAccount()
 
+	case *model.UserConnection:
+		return factory.UserConnection()
+
 	case *model.NewsItem:
 		return factory.NewsFeed()
 
@@ -1122,6 +1136,7 @@ func (factory *Factory) Collections() []string {
 		// "KeyPackage",
 		"Notification",
 		"MerchantAccount",
+		"UserConnection",
 		"OAuthClient",
 		"OAuthUserToken",
 		"Outbox",
