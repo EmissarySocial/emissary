@@ -16,6 +16,16 @@ Inside a transaction, a task published directly to the queue can be consumed bef
 
 [service/response_.go](service/response_.go) centralizes the create/update/delete decision for likes, dislikes, and other responses, plus the target resolution and counter bookkeeping that go with it. There are two entry paths into it (a remote activity and a self-loopback), but still one writer. Writing a `model.Response` from anywhere else desynchronizes the counters and defeats the unique index that keeps duplicates out.
 
+## The Mailchimp webhook must never echo its own changes back out
+
+Two independent loops meet at [handler/mailchimp.go](handler/mailchimp.go), and both are silent when they go wrong.
+
+The first is Mailchimp's. A webhook registers `sources`, and `api` is one of them — so a member Emissary *adds* fires a delivery straight back at Emissary's own handler. The registration therefore lists `user` and `admin` and never `api`. The second is Emissary's. An inbound `unsubscribe` deletes a Follower through `Follower.Delete`, which is also where the outbound sync hook lives, so the inbound path must skip that hook or every unsubscribe Mailchimp reports is pushed back to Mailchimp as an unsubscribe.
+
+Neither loop errors. The first shows up as doubled API traffic against the User's own quota; the second as an unsubscribe that appears to work and then repeats.
+
+The route is public, unauthenticated, and authorized only by a per-connection secret in the query string, so three more rules hold there. Bound the body before reading it (`io.LimitReader`, matching the 65535-byte cap in [handler/stripe.go](handler/stripe.go)). Answer **identically** for every authorization outcome — unknown connection, wrong secret, paused connection, success — because ObjectIDs embed a timestamp and are partly guessable, and a distinguishable answer enumerates which connections exist. And scope every lookup to the connection's owner: the email address in the payload is attacker-supplied, so `Follower.LoadByEmailAddress` takes a `parentID` and an unscoped match would let one leaked secret reach every Follower on the server.
+
 ## Local MongoDB requires `?directConnection=true`
 
 A Go client connecting to a single-node replica set from the host will otherwise try to reach the node by its advertised replica-set name and hang until timeout, with no useful error. Every local connect string — config, tests, `mongosh` one-liners — needs the flag.

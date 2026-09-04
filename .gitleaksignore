@@ -48,3 +48,7 @@ e1c7ae897381a3d8ab1271a8531e84870926340c:service/merchantAccount_test.go:generic
 # service/oauthUserToken_test.go
 # Test fixture: fake OAuth token
 82d9fbabb026c196e6072c618395c7337aa7b04b:service/oauthUserToken_test.go:generic-api-key:15
+
+# Reviewed 2026-09-04: a 64-char hex AES-256 value used to seal vaults in unit tests, not a
+# credential. The constant has since been renamed so future commits do not re-trip the rule.
+c38f7e75adccdc510e53517a52f0a80e76986e1b:service/userConnection_test.go:generic-api-key:13

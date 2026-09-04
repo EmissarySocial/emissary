@@ -16,8 +16,9 @@ import (
 
 // UserConnection manages the connections that Users make to external services on their own behalf
 type UserConnection struct {
-	encryptionKey string
-	host          string
+	followerService *Follower
+	encryptionKey   string
+	host            string
 }
 
 // NewUserConnection returns a fully initialized UserConnection service
@@ -31,6 +32,7 @@ func NewUserConnection() UserConnection {
 
 // Refresh updates any stateful data that is cached inside this service.
 func (service *UserConnection) Refresh(factory *Factory) {
+	service.followerService = factory.Follower()
 	service.encryptionKey = factory.MasterKey()
 	service.host = factory.Host()
 }

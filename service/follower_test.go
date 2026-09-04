@@ -81,8 +81,8 @@ func (c *followerCollection) HardDelete(exp.Expression) error {
 	return derp.Internal("test", "unused")
 }
 
-// matchesFollower reports whether a Follower satisfies a criteria on _id/method/deleteDate,
-// which is every field that LoadBySecret queries
+// matchesFollower reports whether a Follower satisfies a criteria on _id, parentId, method,
+// actor.emailAddress, or deleteDate -- every field that LoadBySecret and LoadByEmailAddress query
 func matchesFollower(criteria exp.Expression, record model.Follower) bool {
 
 	// Any unsupported field or operator conservatively counts as "no match".
@@ -98,9 +98,17 @@ func matchesFollower(criteria exp.Expression, record model.Follower) bool {
 			value, ok := predicate.Value.(primitive.ObjectID)
 			return ok && record.FollowerID == value
 
+		case "parentId":
+			value, ok := predicate.Value.(primitive.ObjectID)
+			return ok && record.ParentID == value
+
 		case "method":
 			value, ok := predicate.Value.(string)
 			return ok && record.Method == value
+
+		case "actor.emailAddress":
+			value, ok := predicate.Value.(string)
+			return ok && record.Actor.EmailAddress == value
 
 		case "deleteDate":
 			value, ok := predicate.Value.(int)
@@ -205,4 +213,89 @@ func TestFollowerLoadBySecret_RejectsWrongSecret(t *testing.T) {
 
 	require.Error(t, err)
 	require.True(t, derp.IsForbidden(err))
+}
+
+/******************************************
+ * LoadByEmailAddress -- the inbound webhook's only lookup
+ ******************************************/
+
+// TestFollower_LoadByEmailAddress_IsScopedToTheParent guards the single check that bounds a
+// leaked webhook secret to one account
+func TestFollower_LoadByEmailAddress_IsScopedToTheParent(t *testing.T) {
+
+	// The email address in a Mailchimp payload is attacker-supplied. An unscoped match would
+	// let one forged (or misdirected) request remove any Follower on the server, for any
+	// User -- so the parentId is part of the query, not a check applied afterward. D27.
+
+	alice := primitive.NewObjectID()
+	bob := primitive.NewObjectID()
+	carol := primitive.NewObjectID()
+
+	service, session := newFollowerService(
+		newEmailFollower(alice, "shared@example.com"),
+		newEmailFollower(bob, "shared@example.com"),
+	)
+
+	// Each owner reaches their OWN follower, and only that one
+	for _, owner := range []primitive.ObjectID{alice, bob} {
+
+		result := model.NewFollower()
+
+		require.NoError(t, service.LoadByEmailAddress(session, owner, "shared@example.com", &result))
+		require.Equal(t, owner, result.ParentID)
+	}
+
+	// A third party holding the same address reaches nobody
+	result := model.NewFollower()
+	err := service.LoadByEmailAddress(session, carol, "shared@example.com", &result)
+
+	require.Error(t, err)
+	require.True(t, derp.IsNotFound(err))
+}
+
+// TestFollower_LoadByEmailAddress_RefusesAnEmptyAddress guards the match that would return
+// somebody else entirely
+func TestFollower_LoadByEmailAddress_RefusesAnEmptyAddress(t *testing.T) {
+
+	// A payload with no address would otherwise match the first Follower whose address was
+	// never recorded -- every ActivityPub follower, for instance.
+
+	alice := primitive.NewObjectID()
+	service, session := newFollowerService(newEmailFollower(alice, ""))
+
+	result := model.NewFollower()
+
+	require.Error(t, service.LoadByEmailAddress(session, alice, "", &result))
+}
+
+// TestFollower_LoadByEmailAddress_OnlyReachesEmailFollowers confirms the method is part of
+// the query
+func TestFollower_LoadByEmailAddress_OnlyReachesEmailFollowers(t *testing.T) {
+
+	// An ActivityPub actor can carry an email address in its profile. A Mailchimp unsubscribe
+	// must never delete one: those two subscriptions are unrelated.
+
+	alice := primitive.NewObjectID()
+
+	activityPubFollower := newEmailFollower(alice, "person@example.com")
+	activityPubFollower.Method = model.FollowerMethodActivityPub
+
+	service, session := newFollowerService(activityPubFollower)
+
+	result := model.NewFollower()
+	err := service.LoadByEmailAddress(session, alice, "person@example.com", &result)
+
+	require.Error(t, err)
+	require.True(t, derp.IsNotFound(err))
+}
+
+// newEmailFollower returns an EMAIL Follower of the provided parent, carrying an address
+func newEmailFollower(parentID primitive.ObjectID, emailAddress string) model.Follower {
+
+	follower := model.NewFollower()
+	follower.ParentID = parentID
+	follower.Method = model.FollowerMethodEmail
+	follower.Actor.EmailAddress = emailAddress
+
+	return follower
 }

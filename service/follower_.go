@@ -387,6 +387,32 @@ func (service *Follower) LoadBySecret(session data.Session, followerID primitive
 	return nil
 }
 
+// LoadByEmailAddress retrieves the EMAIL Follower that a parent has for the provided address
+func (service *Follower) LoadByEmailAddress(session data.Session, parentID primitive.ObjectID, emailAddress string, follower *model.Follower) error {
+
+	const location = "service.Follower.LoadByEmailAddress"
+
+	// RULE: The email address must not be empty.  An empty value here would match the first
+	// Follower whose address was never recorded, which is a different person.
+	if emailAddress == "" {
+		return derp.BadRequest(location, "Email address cannot be empty", parentID)
+	}
+
+	// RULE: scope by parentID as well as address. This is reached from an unauthenticated
+	// webhook whose payload names the address, so an unscoped match would let one forged
+	// request remove any Follower on the server (MAILING-LISTS.md D27).
+	criteria := exp.
+		Equal("parentId", parentID).
+		AndEqual("method", model.FollowerMethodEmail).
+		AndEqual("actor.emailAddress", emailAddress)
+
+	if err := service.Load(session, criteria, follower); err != nil {
+		return derp.Wrap(err, location, "Loading Follower by email address", parentID)
+	}
+
+	return nil
+}
+
 // LoadByActor retrieves an Follower from the database by parentID and actorID
 func (service *Follower) LoadByActor(session data.Session, parentID primitive.ObjectID, actorID string, follower *model.Follower) error {
 
