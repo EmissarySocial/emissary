@@ -213,7 +213,7 @@
 	color:var(--white);
 	font-size:12px;
 	margin:8px 8px 18px 8px;
-	transition:height 0.1s, width 0.1s, font-size 0.1s, margin 0.1s;
+	transition: height var(--motion-fast), width var(--motion-fast), font-size var(--motion-fast), margin var(--motion-fast);
 }
 
 [role="tablist"].wizard > [role="tab"] .step-label {
@@ -243,7 +243,7 @@
 	width:42px;
 	font-size:24px;
 	margin:0px 0px 8px 0px;
-	transition:height 0.1s, width 0.1s, font-size 0.1s, margin 0.1s;
+	transition: height var(--motion-fast), width var(--motion-fast), font-size var(--motion-fast), margin var(--motion-fast);
 }
 
 /* Completed Tab */

@@ -1,3 +1,36 @@
+/******************************************
+ * Motion
+ *
+ * TWO durations, and only two.  --motion-fast is for a change that happens in
+ * place -- a hover, a tab, a toggle, a colour.  --motion-base is for a layer
+ * arriving or leaving: the modal, the mobile navigation sheet.  Anything that
+ * needs a third value is either a loop (see the spinner and barberpole
+ * keyframes below, which are deliberately excluded) or wants a second look.
+ *
+ * Both sit inside the range every published guideline agrees on, and both are
+ * neutralised automatically by the reduced-motion switch in 02-accessibility.css
+ * -- which overrides transition-DURATION only, so if you add a transition-delay
+ * you must zero that yourself.
+ ******************************************/
+
+:root {
+	--motion-fast: 100ms;
+	--motion-base: 200ms;
+
+	/* ONE curve for everything that eases.  `ease-in-out` is cubic-bezier(.42,0,.58,1),
+	   which is exactly Apple's easeInEaseOut -- the default for essentially all UIKit
+	   animation -- so this is the platform curve rather than a taste.  Note that CSS's
+	   own default, `ease`, is cubic-bezier(.25,.1,.25,1): asymmetric, front-loaded, and
+	   not an Apple curve at all, which is why it is no longer used here.
+
+	   Material's rulebook of per-direction curves (decelerate in, accelerate out) is
+	   deliberately NOT followed; the HIG's instruction is "use consistent animation",
+	   and one curve is what that means.
+
+	   `linear` survives in exactly two places -- the `spin` and `barberpole` keyframes
+	   below.  A constant-rate infinite loop must not ease, or it hitches once per cycle. */
+	--motion-ease: ease-in-out;
+}
 
 @keyframes fadeIn {
 	0% {opacity: 0;}

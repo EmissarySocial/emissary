@@ -43,14 +43,14 @@
 	******************************************/
 
 	.hover-swell{
-		transition:transform 0.15s;
+		transition: transform var(--motion-fast);
 		transform:scale(1);
 	}
 
 	.hover-trigger:hover .hover-swell,
 	.hover-swell:hover,
 	.swell {
-		transition:transform 0.15s;
+		transition: transform var(--motion-fast);
 		transform: scale(1.05);
 	}
 }

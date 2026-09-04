@@ -21,7 +21,7 @@
 	opacity: 0;
 	transform: scaleY(0);
 	transform-origin: top;
-	transition: all 0.125s ease-in-out;
+	transition: all var(--motion-fast) var(--motion-ease);
 }
 
 .popUp.visible > .popUp-content {

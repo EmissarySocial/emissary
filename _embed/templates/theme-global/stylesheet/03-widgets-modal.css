@@ -21,8 +21,8 @@
 	/* Opacity updated by animations */
 	opacity: 0;
 	transition:opacity;
-	transition-duration:200ms;
-	transition-timing-function: ease;
+	transition-duration: var(--motion-base);
+	transition-timing-function: var(--motion-ease);
 }
 
 #modal-underlay {
@@ -34,11 +34,19 @@
 	bottom: 0px;
 	left: 0px;
 	right: 0px;
-	background-color: var(--black);
-	opacity: 0;
-	transition:opacity, backdrop-filter;
-	transition-duration:200ms;
-	transition-timing-function: ease;
+	/* RULE: the tint lives in the COLOUR's alpha, NEVER in `opacity`.  An element's own
+	   opacity composites its filtered backdrop back toward the unfiltered original, so an
+	   `opacity: 0.6` here throws away roughly 40% of the blur and the page behind reads as
+	   dimmed-but-sharp -- which looks exactly like backdrop-filter not being supported.
+	   color-mix keeps --black / --white doing the dark-mode inversion.
+
+	   backdrop-filter is declared here at blur(0px) rather than left off, so the transition
+	   has a real FROM value; interpolating out of the keyword `none` is not dependable. */
+	background-color: color-mix(in srgb, var(--black) 0%, transparent);
+	backdrop-filter: blur(0px);
+	transition: background-color, backdrop-filter;
+	transition-duration: var(--motion-base);
+	transition-timing-function: var(--motion-ease);
 }
 
 #modal-window {
@@ -66,8 +74,8 @@
 	opacity:0;
 	transform:scale(0.8);
 	transition:transform, opacity;
-	transition-duration:200ms;
-	transition-timing-function: ease
+	transition-duration: var(--motion-base);
+	transition-timing-function: var(--motion-ease)
 }
 
 /* Enhanced Modals with Fixed Header/Footer */
@@ -121,28 +129,27 @@
 #modal.ready {
 	opacity: 1;
 	transition:opacity;
-	transition-duration:240ms;
-	transition-timing-function: ease
+	transition-duration: var(--motion-base);
+	transition-timing-function: var(--motion-ease)
 }
 
 #modal.ready #modal-window {
 	opacity:1;
 	transform:scale(1);
 	transition:transform, opacity;
-	transition-duration:200ms;
-	transition-timing-function: ease
+	transition-duration: var(--motion-base);
+	transition-timing-function: var(--motion-ease)
 }
 
 #modal.ready #modal-underlay {
 	backdrop-filter: blur(5px);
-	opacity:0.6;
-	transition:opacity;
-	transition-duration:200ms;
-	transition-timing-function: ease;
+	background-color: color-mix(in srgb, var(--black) 60%, transparent);
+	transition: background-color, backdrop-filter;
+	transition-duration: var(--motion-base);
+	transition-timing-function: var(--motion-ease);
 
 	@media (prefers-color-scheme: dark) {
-		background-color:var(--white);
-		opacity:0.7;
+		background-color: color-mix(in srgb, var(--gray10) 70%, transparent);
 	}
 }
 
@@ -163,10 +170,5 @@
 		background-color:var(--gray20);
 		border-color:var(--gray30);
 		color: white;
-	}
-	
-	#modal-underlay {
-		background-color:black;
-		opacity: 0.9;
 	}
 }

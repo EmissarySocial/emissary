@@ -202,7 +202,7 @@
 	border-radius: 4px;
 	color: var(--gray50);
 	cursor: pointer;
-	transition: color 120ms ease-out, border-color 120ms ease-out;
+	transition: color var(--motion-fast, 100ms) var(--motion-ease, ease-in-out), border-color var(--motion-fast, 100ms) var(--motion-ease, ease-in-out);
 }
 
 /* The mask goes on the pseudo-element, not the label: a mask clips the element it is set on,

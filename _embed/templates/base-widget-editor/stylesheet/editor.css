@@ -30,7 +30,7 @@
 	position:relative;
 	display:flex;
 	flex-direction:column;
-	transition: width 120ms ease-out, min-width 120ms ease-out;
+	transition: width var(--motion-fast, 100ms) var(--motion-ease, ease-in-out), min-width var(--motion-fast, 100ms) var(--motion-ease, ease-in-out);
 }
 
 .widget-editor-CENTER {
@@ -53,7 +53,7 @@
 	position:relative;
 	display:flex;
 	flex-direction:column;
-	transition: width 120ms ease-out, min-width 120ms ease-out;
+	transition: width var(--motion-fast, 100ms) var(--motion-ease, ease-in-out), min-width var(--motion-fast, 100ms) var(--motion-ease, ease-in-out);
 }
 
 .widget-editor-TOP {
@@ -83,7 +83,7 @@
 	flex-direction:column;
 	align-items: center;
 	justify-content:center;
-	transition: opacity 120ms ease-out;
+	transition: opacity var(--motion-fast, 100ms) var(--motion-ease, ease-in-out);
 }
 
 .widget-editor-BOTTOM {
@@ -136,7 +136,7 @@
 	background:var(--gray20);
 	cursor:pointer;
 	opacity:0;
-	transition: opacity 120ms ease-out;
+	transition: opacity var(--motion-fast, 100ms) var(--motion-ease, ease-in-out);
 }
 
 .widget:hover button,
@@ -224,7 +224,7 @@
 	padding:8px;
 	border:dashed 2px var(--gray20);
 	border-radius:8px;
-	transition: border-color 120ms ease-out, background-color 120ms ease-out, padding 120ms ease-out;
+	transition: border-color var(--motion-fast, 100ms) var(--motion-ease, ease-in-out), background-color var(--motion-fast, 100ms) var(--motion-ease, ease-in-out), padding var(--motion-fast, 100ms) var(--motion-ease, ease-in-out);
 }
 
 /* Each zone carries a hidden <input>, so :empty never matches it.  "Holds no .widget"
@@ -358,7 +358,7 @@
 .widget-editor-CENTER > * {
 	box-sizing:border-box;
 	width:100%;
-	transition: width 120ms ease-out;
+	transition: width var(--motion-fast, 100ms) var(--motion-ease, ease-in-out);
 }
 
 .widget-editor-CENTER:has(.widget-editor-width [value="LARGE"]:checked) > * {
@@ -512,7 +512,7 @@
    round trip between that clear and this class being re-added is what restarts the
    animation on a second save. */
 .widget-editor-status.widget-editor-saved {
-	animation: widget-editor-status-fade 2400ms ease-out forwards;
+	animation: widget-editor-status-fade 2400ms var(--motion-ease, ease-in-out) forwards;
 }
 
 .widget-editor-status.widget-editor-failed {
