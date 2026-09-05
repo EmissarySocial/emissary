@@ -24,6 +24,7 @@ import (
 // followerCollection is an in-memory data.Collection that holds model.Follower records
 type followerCollection struct {
 	records []model.Follower
+	saved   []model.Follower // every record passed to Save, in order
 }
 
 // Context implements the data.Collection interface, returning a background context
@@ -66,9 +67,27 @@ func (c *followerCollection) Load(criteria exp.Expression, target data.Object, _
 	return derp.NotFound("test", "not found")
 }
 
-// Save implements the data.Collection interface. Unused by these tests.
-func (c *followerCollection) Save(data.Object, string) error {
-	return derp.Internal("test", "unused")
+// Save upserts a Follower, and remembers that it was asked to.  Tests that assert a code path
+// leaves the database alone read `saved`, which is emptier than any error could be.
+func (c *followerCollection) Save(object data.Object, _ string) error {
+
+	follower, ok := object.(*model.Follower)
+
+	if !ok {
+		return derp.Internal("test", "unexpected object type")
+	}
+
+	c.saved = append(c.saved, *follower)
+
+	for index, record := range c.records {
+		if record.FollowerID == follower.FollowerID {
+			c.records[index] = *follower
+			return nil
+		}
+	}
+
+	c.records = append(c.records, *follower)
+	return nil
 }
 
 // Delete implements the data.Collection interface. Unused by these tests.

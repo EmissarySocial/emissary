@@ -15,29 +15,15 @@
 		{{- if $isDesktop -}}
 			<div class="flex-row flex-align-center margin-bottom">
 				<h1 class="text-xl bold margin-none flex-grow">Connections</h1>
-				<a href="https://emissary.dev/connections" target="_blank">{{icon "help"}} Help with Connections</a>
+				<a href="https://emissary.dev/user-connections" target="_blank">{{icon "help"}} Help with Connections</a>
 			</div>
 		{{- else -}}
 			<div class="flex-row flex-align-center text-xl margin-none margin-bottom">
 				<a href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
 				<h1 class="bold flex-grow">Connections</h1>
-				<a href="https://emissary.dev/connections" target="_blank">{{icon "help"}}</a>
+				<a href="https://emissary.dev/user-connections" target="_blank">{{icon "help"}}</a>
 			</div>
 		{{- end -}}
-
-		<div class="margin-bottom-lg md:width-80% lg:width-60%">
-			Connect your own accounts at other services, and let this server act on your behalf there.
-			Each connection is yours alone: nobody else on this server can see or use it, and you can
-			pause or remove any of them at any time.
-		</div>
-
-		<h2 class="text-lg bold margin-bottom">Mailing Lists</h2>
-
-		<div class="margin-bottom md:width-80% lg:width-60% text-gray">
-			Everyone who follows you by email is added to an audience you choose. This server keeps
-			sending its own follower email either way, so your mailing list is a copy of your
-			followers rather than a replacement for them.
-		</div>
 
 		<div class="table">
 			<div role="button" class="flex-row turboclick">

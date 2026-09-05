@@ -5,10 +5,12 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/rs/zerolog/log"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 /******************************************
@@ -22,6 +24,7 @@ import (
 
 // Mailchimp webhook event names that Emissary listens for (D11)
 const (
+	mailchimpEventSubscribe   = "subscribe"
 	mailchimpEventUnsubscribe = "unsubscribe"
 	mailchimpEventUpdateEmail = "upemail"
 )
@@ -67,6 +70,9 @@ func (service *UserConnection) Mailchimp_ReceiveWebhook(session data.Session, us
 
 	switch event {
 
+	case mailchimpEventSubscribe:
+		return service.mailchimp_subscribe(session, userConnection, values)
+
 	case mailchimpEventUnsubscribe:
 		return service.mailchimp_unsubscribe(session, userConnection, values)
 
@@ -76,6 +82,72 @@ func (service *UserConnection) Mailchimp_ReceiveWebhook(session data.Session, us
 
 	// RULE: an event we did not register for is not an error. Mailchimp sends what it sends,
 	// and a delivery we have no use for is discarded rather than failed (D11).
+	return nil
+}
+
+// mailchimp_subscribe adds the Follower whose address joined this User's audience at Mailchimp
+func (service *UserConnection) mailchimp_subscribe(session data.Session, userConnection *model.UserConnection, values mapof.String) error {
+
+	const location = "service.UserConnection.mailchimp_subscribe"
+
+	// RULE: the address is the whole identity of the record this event creates, so an empty
+	// value is discarded rather than written.
+	emailAddress := strings.TrimSpace(values.GetString("data[email]"))
+
+	if emailAddress == "" {
+		return nil
+	}
+
+	// Find the Follower this address already has, if it has one
+	follower, err := service.mailchimp_follower(session, userConnection, emailAddress)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Loading Follower")
+	}
+
+	// Mint a record for an address that Emissary has not seen before.  A new Follower starts
+	// PENDING, exactly like one that signed up through the web form, so both take the promotion
+	// step below rather than two separate paths to the same state.
+	if follower == nil {
+
+		created, err := mailchimpNewFollower(userConnection.UserID, emailAddress, values)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Creating Follower", userConnection.UserConnectionID)
+		}
+
+		follower = &created
+	}
+
+	// RULE: only a PENDING record is ever promoted. ACTIVE is already correct -- and re-saving
+	// it would bounce the member back at Mailchimp on every duplicate delivery -- while PAUSED
+	// is a block rule the User applied (D20), which an inbound webhook must never undo.
+	if follower.StateID != model.FollowerStatePending {
+		return nil
+	}
+
+	follower.StateID = model.FollowerStateActive
+
+	// RULE: a payload the Follower schema refuses is DISCARDED, not failed. Every value in it is
+	// attacker-supplied, and an error here would turn one malformed delivery into a 500 that
+	// Mailchimp retries for as long as the webhook is installed.
+	if _, err := service.followerService.Schema().Validate(follower); err != nil {
+
+		log.Debug().
+			Str("userConnectionId", userConnection.UserConnectionID.Hex()).
+			Msg("Mailchimp webhook named a member that does not make a valid Follower")
+
+		return nil
+	}
+
+	// Unlike an inbound unsubscribe, this save MAY echo back out to Mailchimp once the outbound
+	// hook in MAILING-LISTS.md 1.2 lands: `PUT /members` upserts, `sources` excludes `api` so
+	// nothing loops, and the round trip is what stamps EMISSARYID onto the member (D38).
+	if err := service.followerService.Save(session, follower, "Subscribed at Mailchimp"); err != nil {
+		return derp.Wrap(err, location, "Saving Follower", follower.FollowerID)
+	}
+
+	// Come with me if you want to receive email
 	return nil
 }
 
@@ -137,6 +209,47 @@ func (service *UserConnection) mailchimp_updateEmail(session data.Session, userC
 	}
 
 	return nil
+}
+
+// mailchimpNewFollower builds the EMAIL Follower that an inbound `subscribe` event creates
+func mailchimpNewFollower(userID primitive.ObjectID, emailAddress string, values mapof.String) (model.Follower, error) {
+
+	const location = "service.mailchimpNewFollower"
+
+	// RULE: every EMAIL Follower needs a secret. It is the whole authorization for the
+	// unsubscribe link in the mail this person is about to start receiving, so a record without
+	// one cannot be unsubscribed by its own recipient.
+	secret, err := random.GenerateString(64)
+
+	if err != nil {
+		return model.Follower{}, derp.Wrap(err, location, "Generating secret")
+	}
+
+	// Fill in the same shape that handler.PostEmailFollower writes, so that one kind of EMAIL
+	// Follower exists rather than two.  ProfileURL carries the address because that is the key
+	// Follower.LoadByActor matches on.
+	result := model.NewFollower()
+	result.ParentType = model.FollowerTypeUser
+	result.ParentID = userID
+	result.Method = model.FollowerMethodEmail
+	result.Format = model.MimeTypeHTML
+	result.Actor.Name = mailchimpMemberName(values)
+	result.Actor.ProfileURL = emailAddress
+	result.Actor.EmailAddress = emailAddress
+	result.Data.SetString("secret", secret)
+
+	return result, nil
+}
+
+// mailchimpMemberName rejoins the FNAME and LNAME merge fields of an inbound Mailchimp event
+func mailchimpMemberName(values mapof.String) string {
+
+	// D8 fills those two fields by splitting Follower.Actor.Name on its last space, so joining
+	// them back with a space is that operation's exact inverse.
+	firstName := strings.TrimSpace(values.GetString("data[merges][FNAME]"))
+	lastName := strings.TrimSpace(values.GetString("data[merges][LNAME]"))
+
+	return strings.TrimSpace(firstName + " " + lastName)
 }
 
 // mailchimp_follower resolves the Follower named by a webhook payload, or NIL when the

@@ -66,3 +66,26 @@ func TestFollowerUnsubscribeLink_IgnoresMethod(t *testing.T) {
 	require.NotEmpty(t, link)
 	require.Equal(t, "<"+link+">", follower.UnsubscribeLinkWithBrackets("https://example.com"))
 }
+
+// TestFollowerSchema_AcceptsAnEmailFollower guards the validation that silently broke every
+// email subscription
+func TestFollowerSchema_AcceptsAnEmailFollower(t *testing.T) {
+
+	// An EMAIL Follower keeps its address in Actor.ProfileURL, which is how LoadByActor finds
+	// one.  A bare address has no scheme and no host, so while that field carried a `url`
+	// format, Follower.Save rejected signup, confirmation, and the Mailchimp webhook alike.
+
+	follower := NewFollower()
+	follower.ParentType = FollowerTypeUser
+	follower.StateID = FollowerStateActive
+	follower.Method = FollowerMethodEmail
+	follower.Format = MimeTypeHTML
+	follower.Actor.ProfileURL = "sarah@connor.mil"
+	follower.Actor.EmailAddress = "sarah@connor.mil"
+	follower.Actor.Name = "Sarah Connor"
+
+	s := schema.New(FollowerSchema())
+	_, err := s.Validate(&follower)
+
+	require.NoError(t, err)
+}
