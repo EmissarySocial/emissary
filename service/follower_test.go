@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -25,6 +26,7 @@ import (
 type followerCollection struct {
 	records []model.Follower
 	saved   []model.Follower // every record passed to Save, in order
+	deleted []model.Follower // every record passed to Delete, in order
 }
 
 // Context implements the data.Collection interface, returning a background context
@@ -40,10 +42,53 @@ func (c *followerCollection) Query(any, exp.Expression, ...option.Option) error 
 	return derp.Internal("test", "unused")
 }
 
-// Iterator implements the data.Collection interface. Unused by these tests.
-func (c *followerCollection) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
-	return nil, derp.Internal("test", "unused")
+// Iterator returns every matching Follower, in insertion order
+func (c *followerCollection) Iterator(criteria exp.Expression, _ ...option.Option) (data.Iterator, error) {
+
+	result := make([]model.Follower, 0)
+
+	for _, record := range c.records {
+		if matchesFollower(criteria, record) {
+			result = append(result, record)
+		}
+	}
+
+	return &followerIterator{records: result}, nil
 }
+
+// followerIterator walks a fixed slice of Followers. Implements data.Iterator.
+type followerIterator struct {
+	records []model.Follower
+	index   int
+}
+
+// Next copies the next Follower into the target, returning FALSE when the list is exhausted
+func (i *followerIterator) Next(target any) bool {
+
+	if i.index >= len(i.records) {
+		return false
+	}
+
+	follower, ok := target.(*model.Follower)
+
+	if !ok {
+		return false
+	}
+
+	*follower = i.records[i.index]
+	i.index++
+
+	return true
+}
+
+// Count returns the number of records this iterator walks
+func (i *followerIterator) Count() int { return len(i.records) }
+
+// Close releases this iterator. It holds nothing.
+func (i *followerIterator) Close() error { return nil }
+
+// Error returns the error encountered while iterating, of which there are none
+func (i *followerIterator) Error() error { return nil }
 
 // Load copies the first matching Follower into the target
 func (c *followerCollection) Load(criteria exp.Expression, target data.Object, _ ...option.Option) error {
@@ -90,9 +135,25 @@ func (c *followerCollection) Save(object data.Object, _ string) error {
 	return nil
 }
 
-// Delete implements the data.Collection interface. Unused by these tests.
-func (c *followerCollection) Delete(data.Object, string) error {
-	return derp.Internal("test", "unused")
+// Delete marks a Follower deleted, and remembers that it was asked to
+func (c *followerCollection) Delete(object data.Object, _ string) error {
+
+	follower, ok := object.(*model.Follower)
+
+	if !ok {
+		return derp.Internal("test", "unexpected object type")
+	}
+
+	c.deleted = append(c.deleted, *follower)
+
+	for index, record := range c.records {
+		if record.FollowerID == follower.FollowerID {
+			c.records[index].DeleteDate = 1
+			return nil
+		}
+	}
+
+	return nil
 }
 
 // HardDelete implements the data.Collection interface. Unused by these tests.
@@ -121,6 +182,10 @@ func matchesFollower(criteria exp.Expression, record model.Follower) bool {
 			value, ok := predicate.Value.(primitive.ObjectID)
 			return ok && record.ParentID == value
 
+		case "type":
+			value, ok := predicate.Value.(string)
+			return ok && record.ParentType == value
+
 		case "method":
 			value, ok := predicate.Value.(string)
 			return ok && record.Method == value
@@ -142,13 +207,22 @@ func matchesFollower(criteria exp.Expression, record model.Follower) bool {
 // followerSession hands out a single shared followerCollection
 type followerSession struct {
 	collection *followerCollection
+	ctx        context.Context
 }
 
 // Collection implements the data.Session interface, returning this stub's single collection
 func (s followerSession) Collection(string) data.Collection { return s.collection }
 
-// Context implements the data.Session interface, returning a background context
-func (s followerSession) Context() context.Context { return context.Background() }
+// Context implements the data.Session interface, carrying the post-commit spool when the
+// test supplied one
+func (s followerSession) Context() context.Context {
+
+	if s.ctx != nil {
+		return s.ctx
+	}
+
+	return context.Background()
+}
 
 // Close implements the data.Session interface. The stub holds no resources to release.
 func (s followerSession) Close() {}
@@ -159,6 +233,30 @@ func newFollowerService(followers ...model.Follower) (*Follower, followerSession
 	service := NewFollower()
 
 	return &service, followerSession{collection: &followerCollection{records: followers}}
+}
+
+// newSpooledFollowerService returns a Follower service whose session carries a post-commit
+// spool, so that a test can read the tasks a call decided to enqueue
+func newSpooledFollowerService(followers ...model.Follower) (*Follower, followerSession, *postcommit.Tasks) {
+
+	service, session := newFollowerService(followers...)
+
+	tasks := postcommit.NewTasks()
+	session.ctx = postcommit.WithContext(context.Background(), tasks)
+
+	return service, session, tasks
+}
+
+// taskNames returns the names of every task the spool holds, in order
+func taskNames(tasks *postcommit.Tasks) []string {
+
+	result := make([]string, 0)
+
+	for _, task := range tasks.Drain() {
+		result = append(result, task.Name)
+	}
+
+	return result
 }
 
 // newSecretFollower returns a Follower of the provided method, carrying a known secret

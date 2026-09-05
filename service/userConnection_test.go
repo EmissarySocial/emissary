@@ -12,24 +12,41 @@ import (
 // is named to avoid "key"/"secret", which is half of what a scanner matches on.
 const testDomainCipher = "0123456789abcdef0123456789abcdef" + "0123456789abcdef0123456789abcdef"
 
-// TestUserConnection_ConnectSkipsUnchangedRecords guards the gate that keeps a remote API
-// call off every routine save
-func TestUserConnection_ConnectSkipsUnchangedRecords(t *testing.T) {
+// TestUserConnection_ConnectAlwaysReprovesAnActiveConnection pins the deliberate absence of
+// a short-circuit
+func TestUserConnection_ConnectAlwaysReprovesAnActiveConnection(t *testing.T) {
 
-	// Save() runs for any edit. Re-proving a connection whose switch did not move and whose
-	// credential was not retyped would put a network round-trip behind writes that have
-	// nothing to do with the remote service -- and would fail the save when it is down.
+	// An earlier version skipped a connection that was already working, to keep a network
+	// round-trip off "routine" saves.  There are no routine saves: UserConnection.Save is
+	// reached only from the settings form.  Re-running setup every time is what puts back a
+	// webhook the User deleted inside Mailchimp, and setup is idempotent, so an unchanged
+	// save writes nothing at either end.
 
-	service := UserConnection{encryptionKey: testDomainCipher}
+	states := map[string]string{
+		"setup finished":   model.UserConnectionStatusReady,
+		"setup unfinished": "",
+		"credential stale": model.UserConnectionStatusReconnect,
+	}
 
-	userConnection := model.NewUserConnection()
-	userConnection.Type = model.UserConnectionTypeMailchimp
-	userConnection.IsActive.Set(true)
+	for name, status := range states {
 
-	// Simulate a record loaded from the database: already active, nothing retyped
-	userConnection = reloaded(userConnection)
+		t.Run(name, func(t *testing.T) {
 
-	require.NoError(t, service.connect(nil, &userConnection), "an unchanged connection must not reach the network")
+			service := UserConnection{encryptionKey: testDomainCipher}
+
+			userConnection := model.NewUserConnection()
+			userConnection.Type = model.UserConnectionTypeMailchimp
+			userConnection.IsActive.Set(true)
+			userConnection.Status = status
+
+			// Simulate a record loaded from the database: already active, nothing retyped
+			userConnection = reloaded(userConnection)
+			require.True(t, userConnection.IsActive.NotChanged())
+
+			// It reaches the network, and fails there -- which is the proof that it did not skip
+			require.Error(t, service.connect(nil, &userConnection))
+		})
+	}
 }
 
 // TestUserConnection_ConnectSkipsRecordsThatWereAlreadyOff confirms a paused connection is
@@ -108,4 +125,35 @@ func reloaded(userConnection model.UserConnection) model.UserConnection {
 	result.IsActive = delta.NewBool(userConnection.IsActive.Value())
 
 	return result
+}
+
+// TestUserConnection_PausingSurvivesAnUnreachableMailchimp is D37's rule on the path that
+// used to break it
+func TestUserConnection_PausingSurvivesAnUnreachableMailchimp(t *testing.T) {
+
+	// UserConnection.Delete has always reported a failed teardown and removed the record
+	// anyway. The PAUSE path propagated instead, so a User whose credential was revoked --
+	// or whose Mailchimp was simply down -- could not switch their connection off at all.
+	// Same rule, two paths; this pins the second one.
+
+	service := UserConnection{encryptionKey: testDomainCipher}
+
+	userConnection := model.NewUserConnection()
+	userConnection.Type = model.UserConnectionTypeMailchimp
+	userConnection.Status = model.UserConnectionStatusReady
+	userConnection.IsActive.Set(true)
+	userConnection = reloaded(userConnection)
+
+	// A connection with an installed webhook and a data center that resolves nowhere
+	userConnection.Data.SetString(model.UserConnectionDataAudienceID, "abc123")
+	userConnection.Data.SetString(model.UserConnectionDataWebhookID, "wh1")
+	userConnection.Data.SetString(model.UserConnectionDataCenter, "us6")
+	userConnection.Vault.SetString(model.UserConnectionVaultAPIKey, testMailchimpCredential)
+
+	// Now switch it off
+	userConnection.IsActive.Set(false)
+
+	require.NoError(t, service.connect(nil, &userConnection), "pausing must not fail on a teardown that cannot reach Mailchimp")
+	require.Equal(t, "", userConnection.Status, "and the local side must still be switched off")
+	require.False(t, userConnection.HasWebhook())
 }

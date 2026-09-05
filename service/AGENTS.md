@@ -16,6 +16,24 @@ This is about **credential leakage and content-injection, not private-IP SSRF** 
 
 `activityService.AllowPrivateIPs()` is the one predicate for "may this instance talk to private addresses" (true only on a local/private hostname). Thread it into any guarded-client construction here rather than re-deriving it.
 
+## A `UserConnection` is a User's own credential for a third-party service — six rules a second provider will need
+
+`UserConnection` holds one row per `(UserID, Type)` with an `IsActive delta.Bool`, a `Status`, a `Data mapof.String` for non-secret remote IDs, and a `Vault` for secrets. Mailchimp is the only type today; `MerchantAccount` has the same shape and has not migrated. What follows is not visible from the code.
+
+**`connect()` runs BEFORE `collection.Save`, not after.** A credential the remote service refuses must never reach the database, because everything downstream reads a stored connection as a working one. (`connectBluesky` in the Following service runs the other way round; do not copy that here.)
+
+**`IsActive` is a `delta.Bool`, and its CHANGE is the trigger.** Write it through the schema — `SetBool` calls `IsActive.Set` — never by assigning the field, or the change is lost and the connect/disconnect never fires. `Status` is deliberately separate: `IsActive` is what the User asked for, `Status` is whether it works, and folding a rejected credential into the switch would make Emissary look like it turned the connection off.
+
+**`IsReady()` means "switched on AND finished being set up".** It tests `Status == READY`, not `!= RECONNECT`, because a connection whose credential works but whose setup never completed carries *neither* status. Every consumer — the inbound webhook, the outbound sync — leans on that distinction.
+
+**There is deliberately no `Fields()` projection, and a test asserts its absence.** `QueryBuilder` projects with `T.Fields()`, and `MerchantAccount`'s projection omits `vault` — which here would make a configured connection read as unconfigured, and compare a presented webhook secret against an empty string.
+
+**The record is HARD deleted, and is not `Importable`.** It holds a live credential, so a soft-deleted copy keeps that credential readable by anything querying without `notDeleted`; hard delete is also what lets `{userId, type}` be a plain unique index instead of a partial one. And an account import that installed someone else's API key would hand this server a credential it should not have.
+
+**A failed remote teardown is reported, never propagated.** Both `Delete` and the pause path do this: a User whose key was already revoked at the far end must still be able to disconnect, and refusing would strand them with a connection they cannot switch off.
+
+Two further notes on the write paths. `Save` is reached *only* from the settings form, so there are no background writes to keep off the network — which is why an active connection is re-proved on every save, and why that re-run is what restores anything the User deleted by hand at the far end. And a queue task that discovers a rejected credential must write `Status` through `collection.Save` directly, **not** through `UserConnection.Save`, which would call `connect()` and reach for the same credential that was just refused.
+
 ## `User.GetJSONLD()` output is fingerprinted — keep it deterministic
 
 Every `User.Save` hashes `GetJSONLD()` into `ProfileFingerprint`; a changed hash federates an ActivityPub `Update` to all followers ([user.go](user.go) Save, [user_activitypub.go](user_activitypub.go) `sendProfileUpdate`, spec PROFILE-UPDATE-FEDERATION.md). Adding anything volatile or per-save (timestamps, counters, random values) to `User.GetJSONLD()` makes every save — including signin bookkeeping — spam followers with Updates. `TestUser_CalcProfileFingerprint` pins which fields participate; update it when the actor document gains a field.

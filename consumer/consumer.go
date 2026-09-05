@@ -1,6 +1,7 @@
 package consumer
 
 import (
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/turbine/queue"
 )
@@ -52,6 +53,12 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 
 	case "ImportItems":
 		return WithImport(consumer.serverFactory, args, ImportItems)
+
+	case service.MailingListAddMember:
+		return WithSession(consumer.serverFactory, args, MailingListAddMember)
+
+	case service.MailingListRemoveMember:
+		return WithSession(consumer.serverFactory, args, MailingListRemoveMember)
 
 	case "MakeStreamArchive":
 		return WithStream(consumer.serverFactory, args, MakeStreamArchive)

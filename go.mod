@@ -146,3 +146,7 @@ require (
 	golang.org/x/time v0.15.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
+
+// Local: carries the NewHTTPError credential-redaction fix, which is NOT in v0.40.0.
+// Drop this once benpate/derp is tagged past v0.40.0.
+replace github.com/benpate/derp => ../../benpate/derp

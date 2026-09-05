@@ -1,10 +1,24 @@
 <div class="flex-row flex-align-center margin-bottom">
-	<h1 class="margin-none flex-grow">{{icon "email"}} Mailchimp</h1>
+	{{- if .IsNew -}}
+		<h1 class="margin-none flex-grow">{{icon "email"}} Connect Mailchimp</h1>
+	{{- else -}}
+		<h1 class="margin-none flex-grow">{{icon "email"}} Mailchimp</h1>
+	{{- end -}}
 	<a href="https://emissary.dev/connections" target="_blank">{{icon "help"}} Help</a>
 </div>
+
+{{- $connection := .Object -}}
 
 <div class="alert-blue margin-bottom">
 	<a href="https://admin.mailchimp.com/account/api/" target="_blank">Sign in to your Mailchimp account {{icon "new-window"}}</a>
 	to create the API key below. Your data center is the few characters at the start of that web address, such as
 	<b>us6</b> in <b>us6.admin.mailchimp.com</b>.
 </div>
+
+<!-- The Audience ID is opaque, so the NAME is what tells the User whether they pasted
+     the right one.  It is only known once Mailchimp has confirmed the ID. -->
+{{- if $connection.IsConfigured -}}
+	<div class="alert-green margin-bottom">
+		{{icon "check-circle-fill"}} Syncing to <b>{{index $connection.Data `audienceName`}}</b>
+	</div>
+{{- end -}}

@@ -168,10 +168,10 @@ func (service *UserConnection) mailchimp_unsubscribe(session data.Session, userC
 		return nil
 	}
 
-	// RULE: this deletion must NOT push an unsubscribe back to Mailchimp. The outbound hook
-	// in MAILING-LISTS.md 1.2 does not exist yet; when it lands it must skip this path, or
-	// every inbound unsubscribe echoes straight back out at the account that sent it.
-	if err := service.followerService.Delete(session, follower, "Unsubscribed at Mailchimp"); err != nil {
+	// RULE: DeleteWithoutSync, never Delete. This unsubscribe ARRIVED from Mailchimp, so
+	// pushing it back would be a loop that reports success on every lap -- doubling the
+	// User's API traffic against their own quota, and reporting nothing.
+	if err := service.followerService.DeleteWithoutSync(session, follower, "Unsubscribed at Mailchimp"); err != nil {
 		return derp.Wrap(err, location, "Deleting Follower", follower.FollowerID)
 	}
 

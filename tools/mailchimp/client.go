@@ -44,7 +44,33 @@ func (client Client) get(path string) *remote.Transaction {
 
 	// Mailchimp accepts an API key or an OAuth token in this same header and cannot tell
 	// them apart, which is the whole reason nothing here inspects the value.
-	return remote.Get(client.baseURL + path).
+	return client.authorize(remote.Get(client.baseURL + path))
+}
+
+// post returns a Transaction that creates something in this Client's account
+func (client Client) post(path string, body any) *remote.Transaction {
+	return client.authorize(remote.Post(client.baseURL + path).JSON(body))
+}
+
+// put returns a Transaction that creates or replaces something in this Client's account
+func (client Client) put(path string, body any) *remote.Transaction {
+	return client.authorize(remote.Put(client.baseURL + path).JSON(body))
+}
+
+// patch returns a Transaction that partially updates something in this Client's account
+func (client Client) patch(path string, body any) *remote.Transaction {
+	return client.authorize(remote.Patch(client.baseURL + path).JSON(body))
+}
+
+// delete returns a Transaction that removes the named path from this Client's account
+func (client Client) delete(path string) *remote.Transaction {
+	return client.authorize(remote.Delete(client.baseURL + path))
+}
+
+// authorize applies this Client's credential and options to a Transaction
+func (client Client) authorize(transaction *remote.Transaction) *remote.Transaction {
+
+	return transaction.
 		With(options.BearerAuth(client.apiKey)).
 		With(options.Accept("application/json")).
 		With(client.options...)

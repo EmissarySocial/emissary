@@ -50,19 +50,38 @@ func (userConnection UserConnection) ID() string {
 	return userConnection.UserConnectionID.Hex()
 }
 
-// IsReady returns TRUE if this connection is switched on and its credentials still work
+// IsReady returns TRUE if this connection is switched on and finished being set up
 func (userConnection UserConnection) IsReady() bool {
 
 	if userConnection.IsActive.IsFalse() {
 		return false
 	}
 
-	return userConnection.Status != UserConnectionStatusReconnect
+	// Tested as "is READY" rather than "is not RECONNECT", because a connection whose
+	// credential works but whose setup never finished has neither status (D39).
+	return userConnection.IsConfigured()
+}
+
+// IsConfigured returns TRUE if everything this connection needs has been installed at
+// the remote service
+func (userConnection UserConnection) IsConfigured() bool {
+	return userConnection.Status == UserConnectionStatusReady
+}
+
+// NeedsSetup returns TRUE if this connection has a working credential but has not
+// finished being set up
+func (userConnection UserConnection) NeedsSetup() bool {
+	return userConnection.Status == ""
 }
 
 // NeedsReconnect returns TRUE if the remote service has rejected this connection's credentials
 func (userConnection UserConnection) NeedsReconnect() bool {
 	return userConnection.Status == UserConnectionStatusReconnect
+}
+
+// HasWebhook returns TRUE if the remote service is delivering events back to this connection
+func (userConnection UserConnection) HasWebhook() bool {
+	return userConnection.Data.GetString(UserConnectionDataWebhookID) != ""
 }
 
 // Label returns a human-friendly name for the service this connection reaches

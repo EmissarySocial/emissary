@@ -24,6 +24,10 @@ The first is Mailchimp's. A webhook registers `sources`, and `api` is one of the
 
 Neither loop errors. The first shows up as doubled API traffic against the User's own quota; the second as an unsubscribe that appears to work and then repeats.
 
+The mechanism for the second is `Follower.DeleteWithoutSync`, and it has **two** callers that both need it for different reasons. The inbound webhook uses it so an unsubscribe reported by Mailchimp is not pushed back to Mailchimp. `Follower.DeleteByUserID` uses it because deleting one User would otherwise unsubscribe every one of their followers from that User's own audience — at the far end, through an API where an unsubscribe cannot be undone. `Follower.Delete` still syncs, and must: an unsubscribe made *inside* Emissary is exactly the case that should travel outward.
+
+Note that the suppression is per path, not per direction. An inbound `subscribe` writes through `Follower.Save` and *should* echo back out: the member call is an upsert, `sources` excludes `api` so nothing loops, and the round trip is what stamps the `EMISSARYID` merge field onto a member who arrived from Mailchimp's side.
+
 The route is public, unauthenticated, and authorized only by a per-connection secret in the query string, so three more rules hold there. Bound the body before reading it (`io.LimitReader`, matching the 65535-byte cap in [handler/stripe.go](handler/stripe.go)). Answer **identically** for every authorization outcome — unknown connection, wrong secret, paused connection, success — because ObjectIDs embed a timestamp and are partly guessable, and a distinguishable answer enumerates which connections exist. And scope every lookup to the connection's owner: the email address in the payload is attacker-supplied, so `Follower.LoadByEmailAddress` takes a `parentID` and an unscoped match would let one leaked secret reach every Follower on the server.
 
 ## Local MongoDB requires `?directConnection=true`

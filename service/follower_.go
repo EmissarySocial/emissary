@@ -134,11 +134,34 @@ func (service *Follower) Save(session data.Session, follower *model.Follower, no
 		return derp.Wrap(err, location, "Re-calculating follower count", follower)
 	}
 
+	// Mirror this Follower into the User's mailing-list connection, if they have one
+	service.publishMailingListAdd(session, follower)
+
 	return nil
 }
 
 // Delete removes an Follower from the database (virtual delete)
 func (service *Follower) Delete(session data.Session, follower *model.Follower, note string) error {
+
+	// Removing a Follower here is Emissary's own decision, so it travels outward to the
+	// User's mailing list as an unsubscribe (D9).
+	service.publishMailingListRemove(session, follower)
+
+	return service.delete(session, follower, note)
+}
+
+// DeleteWithoutSync removes a Follower WITHOUT telling the User's mailing list about it.
+//
+// Two callers need this and both would otherwise do real damage.  Deleting a User must not
+// unsubscribe every one of their followers from the User's own audience (D14).  And an
+// unsubscribe that ARRIVED from Mailchimp must not be pushed straight back at Mailchimp,
+// which is a loop that reports success on every lap.
+func (service *Follower) DeleteWithoutSync(session data.Session, follower *model.Follower, note string) error {
+	return service.delete(session, follower, note)
+}
+
+// delete performs the deletion itself, and is the single funnel every path reaches
+func (service *Follower) delete(session data.Session, follower *model.Follower, note string) error {
 
 	const location = "service.Follower.Delete"
 
@@ -483,9 +506,12 @@ func (service *Follower) DeleteByUserID(session data.Session, userID primitive.O
 
 	const location = "service.Follower.DeleteByUserID"
 
+	// RULE: DeleteWithoutSync, never Delete. Removing a User must not push an unsubscribe for
+	// every one of their followers into that same User's own mailing list -- which is silent,
+	// happens at the far end, and cannot be undone through the API (D14).
 	for follower := range service.RangeByUserID(session, userID) {
 
-		if err := service.Delete(session, &follower, comment); err != nil {
+		if err := service.DeleteWithoutSync(session, &follower, comment); err != nil {
 			return derp.Wrap(err, location, "Deleting follower", follower)
 		}
 	}

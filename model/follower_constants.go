@@ -63,3 +63,15 @@ const FollowerStatePaused = "PAUSED"
 // FollowerStatePending represents an inactive Follower who has yet
 // to confirm their subscription status (e.g. via email confirmation)
 const FollowerStatePending = "PENDING"
+
+/******************************************
+ * Follower Data Keys
+ ******************************************/
+
+// FollowerDataSecret is the Data key holding the unlisted secret that authorizes an EMAIL
+// Follower's own confirmation and unsubscribe links
+const FollowerDataSecret = "secret" // #nosec G101 -- this is the NAME of a Data key, not a credential
+
+// FollowerDataIPSignup is the Data key holding the IP address that an EMAIL Follower
+// subscribed from, captured at signup because the request is long gone by confirmation
+const FollowerDataIPSignup = "ipSignup"

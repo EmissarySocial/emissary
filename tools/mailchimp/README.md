@@ -78,6 +78,34 @@ being able to read, alter, or delete the account and its campaigns. Two conseque
 `ValidateAPIKey` is not proof that a key works -- only Mailchimp can say that, and setup
 asks before saving.
 
+## What this package covers
+
+Four resources, which together are the whole integration:
+
+| Call | Used by |
+|---|---|
+| `GetAudiences` / `GetAudience` | proving a credential, and confirming the Audience ID a User pasted |
+| `GetMergeFields` / `CreateMergeField` | creating `EMISSARYID`, which links a member back to a Follower |
+| `GetWebhooks` / `CreateWebhook` / `DeleteWebhook` | inbound events |
+| `SetMember` / `UnsubscribeMember` | the outbound sync itself |
+
+Two things about members are easy to get wrong and silent when you do.
+
+**A member is addressed by `SubscriberHash` — the MD5 of the lowercased address.** Mailchimp
+accepts no other addressing, and a mis-cased hash does not error: it names a member who does
+not exist. The MD5 here is an identifier, not a security primitive, which is what the `#nosec`
+annotations record.
+
+**`SetMember` is a `PUT`, and that is load-bearing.** It upserts, so `Follower.Save` can call
+it on every save without first asking whether the member is already there. `UnsubscribeMember`
+likewise treats a 404 as success, because Emissary pushes only on confirmation — so someone
+who unsubscribes before their first push was never a member, and failing there would retry
+forever.
+
+Optional fields are **omitted rather than blanked**. A Follower with no name or no signup IP
+sends neither, because an empty string would overwrite whatever the User's own signup forms
+had already collected.
+
 ## Errors are written for the person reading the form
 
 A failed request comes back through `describeError`, and the split it makes is deliberate.

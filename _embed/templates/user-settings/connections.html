@@ -1,6 +1,13 @@
 {{- $isDesktop := .IsDesktop -}}
 {{- $mailchimp := .UserConnection "MAILCHIMP" -}}
 
+<!-- The Audience ID is editable only while creating a connection (D43), so the row has to
+     choose which of the two forms to open. -->
+{{- $mailchimpAction := "connections-new-mailchimp" -}}
+{{- if not $mailchimp.IsNew -}}
+	{{- $mailchimpAction = "connections-edit-mailchimp" -}}
+{{- end -}}
+
 <div class="app" script="init send SelectNav(id:'settings')">
 	<title>Connections</title>
 
@@ -27,18 +34,30 @@
 
 		<div class="table">
 			<div role="button" class="flex-row turboclick">
-				<div hx-get="/@me/settings/connections-edit-mailchimp?type=MAILCHIMP" class="flex-row flex-grow">
+				<div hx-get="/@me/settings/{{$mailchimpAction}}?type=MAILCHIMP" class="flex-row flex-grow">
 					<div>{{- icon $mailchimp.Icon -}}</div>
-					<div class="flex-grow">{{$mailchimp.Label}}</div>
+					<div class="flex-grow">
+						{{$mailchimp.Label}}
+						{{- if $mailchimp.IsConfigured -}}
+							<span class="text-sm gray50">{{index $mailchimp.Data `audienceName`}}</span>
+						{{- end -}}
+					</div>
 					<div class="nowrap">
-						{{- if $mailchimp.NeedsReconnect -}}
-							<span class="text-red">{{icon "alert"}} Reconnect</span>
-						{{- else if $mailchimp.IsActive.IsTrue -}}
-							<span class="text-green">{{icon "check-circle-fill"}} Active</span>
-						{{- else if $mailchimp.IsNew -}}
+						{{- if $mailchimp.IsNew -}}
 							<span class="text-gray">Not Connected</span>
-						{{- else -}}
+						{{- else if $mailchimp.NeedsReconnect -}}
+							<span class="text-red">{{icon "alert"}} Reconnect</span>
+						{{- else if $mailchimp.IsActive.IsFalse -}}
 							<span class="text-gray">Paused</span>
+						{{- else if $mailchimp.NeedsSetup -}}
+							<span class="text-red">{{icon "alert"}} Not Finished</span>
+						{{- else if $mailchimp.HasWebhook -}}
+							<span class="text-green">{{icon "check-circle-fill"}} Active</span>
+						{{- else -}}
+							<!-- Set up and syncing outward, but Mailchimp is not delivering its own
+							     changes back. Worth saying: unsubscribes there will not arrive here. -->
+							<span class="text-green">{{icon "check-circle-fill"}} Active</span>
+							<span class="text-gray">(outbound only)</span>
 						{{- end -}}
 					</div>
 				</div>

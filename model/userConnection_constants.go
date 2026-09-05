@@ -42,9 +42,9 @@ const UserConnectionDataCenter = "dataCenter"
 // User's followers are pushed into
 const UserConnectionDataAudienceID = "audienceId"
 
-// UserConnectionDataTagID is the Data key holding the ID of the `EMISSARY` segment applied to
-// every member Emissary adds
-const UserConnectionDataTagID = "tagId"
+// UserConnectionDataAudienceName is the Data key holding that audience's human-readable
+// name, echoed back to the User so a pasted ID can be seen to be the right one
+const UserConnectionDataAudienceName = "audienceName"
 
 // UserConnectionDataWebhookID is the Data key holding the ID of the webhook Emissary installed,
 // so that disconnecting can remove it

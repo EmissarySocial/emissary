@@ -72,12 +72,16 @@ func TestUserConnection_IsReady(t *testing.T) {
 		status   string
 		expected bool
 	}{
-		{"switched on and healthy", true, UserConnectionStatusReady, true},
-		{"switched on, never used", true, "", true},
+		{"switched on and set up", true, UserConnectionStatusReady, true},
+		{"switched on, setup unfinished", true, "", false},
 		{"switched on but rejected", true, UserConnectionStatusReconnect, false},
 		{"switched off", false, UserConnectionStatusReady, false},
 		{"switched off and rejected", false, UserConnectionStatusReconnect, false},
 	}
+
+	// The second row is the one that changed with D39.  A connection whose API key works but
+	// whose audience was never chosen carries NO status, and used to pass this predicate --
+	// so the inbound webhook trusted a connection that could not push or receive anything.
 
 	for _, test := range table {
 
@@ -90,6 +94,51 @@ func TestUserConnection_IsReady(t *testing.T) {
 			require.Equal(t, test.expected, userConnection.IsReady())
 		})
 	}
+}
+
+// TestUserConnection_SetupStates confirms the three states a connection moves through
+func TestUserConnection_SetupStates(t *testing.T) {
+
+	// NeedsSetup and IsConfigured and NeedsReconnect are mutually exclusive, and exactly one
+	// of them is true at any time.  The settings row branches on all three.
+
+	table := []struct {
+		status         string
+		needsSetup     bool
+		isConfigured   bool
+		needsReconnect bool
+	}{
+		{"", true, false, false},
+		{UserConnectionStatusReady, false, true, false},
+		{UserConnectionStatusReconnect, false, false, true},
+	}
+
+	for _, test := range table {
+
+		t.Run(test.status, func(t *testing.T) {
+
+			userConnection := NewUserConnection()
+			userConnection.Status = test.status
+
+			require.Equal(t, test.needsSetup, userConnection.NeedsSetup())
+			require.Equal(t, test.isConfigured, userConnection.IsConfigured())
+			require.Equal(t, test.needsReconnect, userConnection.NeedsReconnect())
+		})
+	}
+}
+
+// TestUserConnection_HasWebhook confirms the flag that D40 leaves behind when an install fails
+func TestUserConnection_HasWebhook(t *testing.T) {
+
+	// A webhook that would not install leaves an EMPTY webhookId rather than blocking the
+	// connection, and this is the only trace of that -- read by the settings row and by the
+	// disconnect path that has to know whether there is anything to remove.
+
+	userConnection := NewUserConnection()
+	require.False(t, userConnection.HasWebhook())
+
+	userConnection.Data.SetString(UserConnectionDataWebhookID, "wh1")
+	require.True(t, userConnection.HasWebhook())
 }
 
 // TestUserConnection_HasNoFieldsProjection guards the trap that would make a configured

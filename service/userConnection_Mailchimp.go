@@ -8,7 +8,6 @@ import (
 	"github.com/EmissarySocial/emissary/tools/random"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/benpate/rosetta/sliceof"
 )
 
 /******************************************
@@ -30,13 +29,6 @@ func (service *UserConnection) connect(session data.Session, userConnection *mod
 
 	const location = "service.UserConnection.connect"
 
-	// RULE: nothing to do unless the switch moved or a new secret was entered. Save() runs on
-	// every edit, and re-proving an unchanged connection would put a remote API call behind
-	// routine writes.
-	if userConnection.IsActive.NotChanged() && !userConnection.Vault.NeedsEncryption() {
-		return nil
-	}
-
 	// A connection that was already off has nothing installed to remove
 	if userConnection.IsActive.IsFalse() {
 
@@ -46,6 +38,11 @@ func (service *UserConnection) connect(session data.Session, userConnection *mod
 
 		return service.disconnect(session, userConnection)
 	}
+
+	// An active connection is re-proved on every save, deliberately. UserConnection.Save is
+	// reached only from the settings form a User submits by hand -- there are no background
+	// writes to keep off the network -- and re-running setup is what puts back a webhook the
+	// User deleted inside Mailchimp. Setup is idempotent, so an unchanged save writes nothing.
 
 	switch userConnection.Type {
 
@@ -95,9 +92,20 @@ func (service *UserConnection) mailchimp_connect(userConnection *model.UserConne
 		return err
 	}
 
-	// RULE: Mailchimp is the only authority on whether the pair works. A 401 means the key,
-	// a 404 usually means the data center, and a success returns the audiences to choose from.
-	if _, err := service.mailchimp_audiences(apiKey, dataCenter); err != nil {
+	client, err := mailchimp.New(apiKey, dataCenter)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Unable to reach Mailchimp with these values")
+	}
+
+	audienceID := strings.TrimSpace(userConnection.Data.GetString(model.UserConnectionDataAudienceID))
+
+	// RULE: Mailchimp is the only authority on whether these values work, and the Audience ID
+	// is as opaque as the credential is (D34) -- so it is proven by using it, not by parsing
+	// it. Reading the chosen audience proves the key, the data center, AND the ID at once.
+	audience, err := service.mailchimp_verifyAudience(client, audienceID)
+
+	if err != nil {
 		return err
 	}
 
@@ -117,45 +125,57 @@ func (service *UserConnection) mailchimp_connect(userConnection *model.UserConne
 	// Write the credential back in its resolved form, so a mask never reaches the database
 	userConnection.Vault.SetString(model.UserConnectionVaultAPIKey, apiKey)
 	userConnection.Data.SetString(model.UserConnectionDataCenter, dataCenter)
-	userConnection.Status = model.UserConnectionStatusReady
 
-	// Connected. Now go pick an audience.
-	return nil
+	// RULE: a proven credential is NOT a finished connection (D39). Without an audience there
+	// is nowhere to sync to, so the connection stays deliberately unmarked -- visible as
+	// half-configured rather than trusted by everything downstream.
+	if audienceID == "" {
+		userConnection.Status = ""
+		return nil
+	}
+
+	// Connected. Now go set up the audience.
+	return service.mailchimp_setup(client, userConnection, audience)
+}
+
+// mailchimp_verifyAudience reads the audience a User pasted the ID of, or reports an empty
+// audience as the half-finished state it is
+func (service *UserConnection) mailchimp_verifyAudience(client mailchimp.Client, audienceID string) (mailchimp.Audience, error) {
+
+	// An empty ID is not an error: the credential still has to be proven, so that the User
+	// can save a key now and paste an Audience ID later.
+	if audienceID == "" {
+
+		if _, err := client.GetAudiences(); err != nil {
+			return mailchimp.Audience{}, err
+		}
+
+		return mailchimp.Audience{}, nil
+	}
+
+	return client.GetAudience(audienceID)
 }
 
 // mailchimp_disconnect removes what Emissary installed in the User's Mailchimp account,
 // leaving their credential and their members alone
 func (service *UserConnection) mailchimp_disconnect(_ data.Session, userConnection *model.UserConnection) error {
 
+	const location = "service.UserConnection.mailchimp_disconnect"
+
+	// RULE: report a failed teardown, never propagate it. A User whose key was revoked at
+	// Mailchimp, or whose Mailchimp is simply unreachable, must still be able to switch their
+	// connection off (D37) -- and refusing here would strand them with a connection that
+	// cannot be paused. UserConnection.Delete already works this way; so does this now.
+	if err := service.mailchimp_removeWebhook(userConnection); err != nil {
+		derp.Report(derp.Wrap(err, location, "Unable to remove the webhook from your Mailchimp account", userConnection.UserConnectionID))
+	}
+
 	// Turning the connection off stops the sync immediately, because every hook reads
 	// IsReady() rather than the presence of a credential.
 	userConnection.Status = ""
-
-	// TODO(MAILING-LISTS.md 1.1): delete the installed webhook once one is installed. There
-	// is nothing at Mailchimp to remove until audience setup runs.
 	userConnection.Data.Remove(model.UserConnectionDataWebhookID)
 
 	return nil
-}
-
-// mailchimp_audiences reads the audiences that a credential can reach
-func (service *UserConnection) mailchimp_audiences(apiKey string, dataCenter string) (sliceof.Object[mailchimp.Audience], error) {
-
-	const location = "service.UserConnection.mailchimp_audiences"
-
-	client, err := mailchimp.New(apiKey, dataCenter)
-
-	if err != nil {
-		return nil, derp.Wrap(err, location, "Unable to reach Mailchimp with these values")
-	}
-
-	audiences, err := client.GetAudiences()
-
-	if err != nil {
-		return nil, err
-	}
-
-	return audiences, nil
 }
 
 // mailchimp_apiKey returns the credential to verify: the one the User just typed, or the

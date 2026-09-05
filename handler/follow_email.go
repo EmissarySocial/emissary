@@ -53,7 +53,12 @@ func PostEmailFollower(ctx *steranko.Context, factory *service.Factory, session 
 	follower.Actor.ProfileURL = transaction.Email
 	follower.Actor.EmailAddress = transaction.Email
 	follower.Actor.Name = transaction.Name
-	follower.Data.SetString("secret", secret)
+	follower.Data.SetString(model.FollowerDataSecret, secret)
+
+	// RULE: capture the signup IP HERE, or it is gone. The mailing-list sync pushes on
+	// CONFIRMATION, which may be days later, by which time the request that carried the
+	// address no longer exists (MAILING-LISTS.md D31).
+	follower.Data.SetString(model.FollowerDataIPSignup, ctx.RealIP())
 
 	// Only reset the status if this is a new follower.  Otherwise,
 	// this subscription may already be "ACTIVE" and we don't want to

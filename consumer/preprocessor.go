@@ -1,6 +1,7 @@
 package consumer
 
 import (
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/turbine/queue"
 )
 
@@ -61,6 +62,11 @@ func PreProcessor(task *queue.Task) error {
 		task.Priority = 64
 
 	// (256) Background Notifications
+	// The mailing-list sync is one HTTP call per follower against the User's own Mailchimp
+	// quota. It is never user-facing, and a minute late costs nothing.
+	case service.MailingListAddMember, service.MailingListRemoveMember:
+		task.Priority = 256
+
 	case "MakeStreamArchive":
 		task.Priority = 256
 

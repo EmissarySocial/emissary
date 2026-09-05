@@ -6,6 +6,11 @@ import (
 	"github.com/benpate/derp"
 )
 
+// isNotFound returns TRUE if a failed request reported that the resource does not exist
+func isNotFound(err error) bool {
+	return derp.ErrorCode(err) == http.StatusNotFound
+}
+
 // describeError converts a failed Mailchimp request into an error that a settings form
 // can show the User without rewording
 func describeError(err error, location string, message string) error {

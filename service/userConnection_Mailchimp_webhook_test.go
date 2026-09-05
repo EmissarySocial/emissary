@@ -6,6 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -263,13 +264,64 @@ func newMailchimpWebhookService(t *testing.T, followers ...model.Follower) (User
 
 	t.Helper()
 
+	service, userConnection, session, _ := newSpooledWebhookService(t, followers...)
+
+	return service, userConnection, session
+}
+
+// newSpooledWebhookService is the same, plus the post-commit spool that the outbound sync
+// hooks write to
+func newSpooledWebhookService(t *testing.T, followers ...model.Follower) (UserConnection, model.UserConnection, followerSession, *postcommit.Tasks) {
+
+	t.Helper()
+
 	// The owner's ID is deliberately zero: Follower.Save recalculates the owner's follower
 	// count, and CalcFollowerCount short-circuits on a zero ID rather than reaching for a User
 	// collection this harness does not have.
-	followerService, session := newFollowerService(followers...)
+	followerService, session, tasks := newSpooledFollowerService(followers...)
 	userConnection := readyConnection(t, "the-webhook-secret")
 
-	return UserConnection{encryptionKey: testDomainCipher, followerService: followerService}, userConnection, session
+	return UserConnection{encryptionKey: testDomainCipher, followerService: followerService}, userConnection, session, tasks
+}
+
+// TestMailchimpWebhook_UnsubscribeDoesNotEchoBack guards a loop that reports success on
+// every lap
+func TestMailchimpWebhook_UnsubscribeDoesNotEchoBack(t *testing.T) {
+
+	// Follower.Delete is where the OUTBOUND unsubscribe hook lives, so deleting through it
+	// here would push this same unsubscribe straight back at the Mailchimp account that just
+	// reported it -- doubling the User's API traffic against their own quota, and reporting
+	// nothing anywhere. The inbound path uses DeleteWithoutSync for exactly this reason.
+
+	follower := newMailingListFollower()
+	service, userConnection, session, tasks := newSpooledWebhookService(t, follower)
+
+	err := service.Mailchimp_ReceiveWebhook(session, &userConnection, "unsubscribe", mapof.String{
+		"data[email]": "sarah@connor.mil",
+	})
+
+	require.NoError(t, err)
+	require.Len(t, session.collection.deleted, 1, "the Follower must actually be removed")
+	require.Empty(t, tasks.Drain(), "an unsubscribe that arrived FROM Mailchimp must not go back TO Mailchimp")
+}
+
+// TestMailchimpWebhook_SubscribeMayEchoBack records the deliberate asymmetry
+func TestMailchimpWebhook_SubscribeMayEchoBack(t *testing.T) {
+
+	// Unlike an unsubscribe, an inbound subscribe SHOULD push back out: the member call is an
+	// upsert, `sources` excludes `api` so nothing loops, and the round trip is what stamps
+	// EMISSARYID onto a member who arrived from Mailchimp's side (D38).
+
+	service, userConnection, session, tasks := newSpooledWebhookService(t)
+
+	err := service.Mailchimp_ReceiveWebhook(session, &userConnection, "subscribe", mapof.String{
+		"data[email]":         "sarah@connor.mil",
+		"data[merges][FNAME]": "Sarah",
+		"data[merges][LNAME]": "Connor",
+	})
+
+	require.NoError(t, err)
+	require.Equal(t, []string{MailingListAddMember}, taskNames(tasks))
 }
 
 // readyConnection returns a Mailchimp connection with a sealed webhook secret, as it would
