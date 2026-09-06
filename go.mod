@@ -13,7 +13,7 @@ require (
 	github.com/benpate/data-mongo v0.34.0
 	github.com/benpate/data-slice v0.1.0
 	github.com/benpate/delta v0.1.0
-	github.com/benpate/derp v0.40.0
+	github.com/benpate/derp v0.41.0
 	github.com/benpate/digit v0.16.0
 	github.com/benpate/digital-dome v0.6.0
 	github.com/benpate/exp v0.11.0
@@ -146,7 +146,3 @@ require (
 	golang.org/x/time v0.15.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
-
-// Local: carries the NewHTTPError credential-redaction fix, which is NOT in v0.40.0.
-// Drop this once benpate/derp is tagged past v0.40.0.
-replace github.com/benpate/derp => ../../benpate/derp
