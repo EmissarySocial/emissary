@@ -52,3 +52,17 @@ e1c7ae897381a3d8ab1271a8531e84870926340c:service/merchantAccount_test.go:generic
 # Reviewed 2026-09-04: a 64-char hex AES-256 value used to seal vaults in unit tests, not a
 # credential. The constant has since been renamed so future commits do not re-trip the rule.
 c38f7e75adccdc510e53517a52f0a80e76986e1b:service/userConnection_test.go:generic-api-key:13
+
+# Reviewed 2026-09-05: Mailchimp mailing-list work.
+#
+# service/userConnection_Mailchimp_setup_test.go
+# Test fixture: a key-shaped constant built from halves ("0123..cdef" + "-us6"). The halves
+# split defeats a scan of the literal but not this rule, which matches the 32-hex run itself.
+2e4aa3cb9d38e561e9f7041e662d9d4ba272d9fa:service/userConnection_Mailchimp_setup_test.go:generic-api-key:20
+
+# model/vault_nonces_test.go
+# Test fixtures: alphabet placeholders ("pk_live_ABCDEFGHIJKLMNOP" and friends) sealed and
+# re-read to prove the per-encryption nonce change round-trips. Not live Stripe values.
+4d241e967f70c267160bd6cf56238d5b2bae98f2:model/vault_nonces_test.go:stripe-access-token:207
+4d241e967f70c267160bd6cf56238d5b2bae98f2:model/vault_nonces_test.go:generic-api-key:208
+4d241e967f70c267160bd6cf56238d5b2bae98f2:model/vault_nonces_test.go:stripe-access-token:215

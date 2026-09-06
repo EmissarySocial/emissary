@@ -124,3 +124,28 @@ Those four also do **not** wrap the failed transaction. `derp` redacts credentia
 headers when it records one, so the leak this originally guarded against is closed at the
 source; not wrapping is now belt-and-braces, and `TestGetAudiences_DoesNotCarryTheCredential`
 keeps it honest.
+
+## Member calls keep Mailchimp's status code — form calls do not
+
+There are two error paths here, and routing a call through the wrong one fails silently.
+
+`describeError` is for the **setup/form** path (`GetAudience`, `GetMergeFields`,
+`CreateWebhook`). It rewrites the four actionable statuses into 422s so the sentence
+survives to the form, as described above.
+
+`describeMemberError` is for the **queue** path (`SetMember`, `UnsubscribeMember`), and it
+keeps Mailchimp's own status code instead. Nothing on that path is shown to a User, and two
+readers depend on the code:
+
+- `requeue` tells a retry from a permanent failure by status. As a 422, a **429 rate limit**
+  read as a client error and the queue gave up for good — silently dropping that subscriber
+  from the mailing list. A bulk sync is exactly what provokes a 429, so this is the busiest
+  path, not the rarest.
+- `mailchimp_reportMemberError` flags a connection `RECONNECT` when it sees a **401/403**.
+  As a 422 that check never fired, so a revoked key left the connection reading `READY`
+  while every push failed in silence.
+
+The rule generalizes: **a 422 is a message for a human, so it is only correct where a human
+reads it.** Anything a queue interprets must keep its transport semantics. The member path
+also leaves the failed transaction out of the chain, because it carries an `Authorization`
+header and nobody on that path benefits from the detail.

@@ -34,3 +34,22 @@ func describeError(err error, location string, message string) error {
 	// by editing this form, so it keeps its cause and reads as a generic failure.
 	return derp.Wrap(err, location, message, derp.WithBadGateway())
 }
+
+// describeMemberError converts a failed member request into an error that keeps Mailchimp's
+// own status code, so the queue can tell a retry from a permanent failure
+func describeMemberError(err error, location string, message string) error {
+
+	statusCode := derp.ErrorCode(err)
+
+	// RULE: a transport failure carries no status of its own, and is always worth retrying
+	if statusCode < 400 {
+		return derp.BadGateway(location, message)
+	}
+
+	// RULE: the status code is the whole point here, and `describeError` would erase it.
+	// `requeue` reads it to tell a rate limit (retry) from a bad request (give up), and
+	// `mailchimp_reportMemberError` reads 401/403 to tell a revoked key from a blip.
+	// The failed transaction is deliberately left out: it carries an Authorization header,
+	// and nobody who reads this path would benefit from the detail.
+	return derp.Internal(location, message, derp.WithCode(statusCode))
+}

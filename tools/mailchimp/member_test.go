@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
+	"github.com/benpate/derp"
 	"github.com/stretchr/testify/require"
 )
 
@@ -150,7 +152,101 @@ func TestMember_ErrorsAreActionable(t *testing.T) {
 
 	err := client.SetMember("abc123", Member{EmailAddress: "sarah@connor.mil"})
 	require.Error(t, err)
-	require.Contains(t, err.Error(), "API key")
 
 	require.Error(t, client.UnsubscribeMember("abc123", "sarah@connor.mil"))
+}
+
+// TestMember_KeepsMailchimpsStatusCode is the regression guard for three silent failures
+func TestMember_KeepsMailchimpsStatusCode(t *testing.T) {
+
+	// A member call is never shown to a User -- it runs in a queue task. What reads its
+	// error is `requeue`, which tells a retry from a permanent failure by status code, and
+	// `mailchimp_reportMemberError`, which flags a revoked key by status code. Routing this
+	// path through `describeError` rewrote every one of them to 422, which silently made a
+	// rate limit permanent and made a rejected credential undetectable.
+
+	tests := map[string]int{
+		"rate limited":      http.StatusTooManyRequests,
+		"key revoked":       http.StatusUnauthorized,
+		"key lacks access":  http.StatusForbidden,
+		"audience deleted":  http.StatusNotFound,
+		"mailchimp is down": http.StatusInternalServerError,
+	}
+
+	for name, statusCode := range tests {
+
+		t.Run(name, func(t *testing.T) {
+
+			server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, _ *http.Request) {
+				response.WriteHeader(statusCode)
+			}))
+
+			defer server.Close()
+
+			err := testClient(server.URL).SetMember("abc123", Member{EmailAddress: "sarah@connor.mil"})
+
+			require.Error(t, err)
+			require.Equal(t, statusCode, derp.ErrorCode(err))
+		})
+	}
+}
+
+// TestMember_RateLimitIsRetryable pins the classification that keeps a subscriber from
+// being silently dropped
+func TestMember_RateLimitIsRetryable(t *testing.T) {
+
+	// A bulk sync is exactly what provokes a 429, so this is the busiest path, not the
+	// rarest one. As a 422 it read as a client error, and the queue gave up for good.
+
+	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, _ *http.Request) {
+		response.WriteHeader(http.StatusTooManyRequests)
+	}))
+
+	defer server.Close()
+
+	err := testClient(server.URL).SetMember("abc123", Member{EmailAddress: "sarah@connor.mil"})
+
+	require.Error(t, err)
+
+	isTooMany, delay := derp.IsTooManyRequests(err)
+	require.True(t, isTooMany, "a rate limit must be retryable, not a permanent failure")
+	require.Greater(t, delay, time.Duration(0))
+}
+
+// TestMember_RejectedCredentialIsDetectable pins the signal that flags a connection for
+// reconnection
+func TestMember_RejectedCredentialIsDetectable(t *testing.T) {
+
+	// This is what tells the User their key stopped working. As a 422 the check never
+	// fired, so the connection stayed READY and every push failed in silence.
+
+	for name, statusCode := range map[string]int{"unauthorized": http.StatusUnauthorized, "forbidden": http.StatusForbidden} {
+
+		t.Run(name, func(t *testing.T) {
+
+			server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, _ *http.Request) {
+				response.WriteHeader(statusCode)
+			}))
+
+			defer server.Close()
+
+			err := testClient(server.URL).SetMember("abc123", Member{EmailAddress: "sarah@connor.mil"})
+
+			require.Error(t, err)
+			require.True(t, derp.IsUnauthorized(err) || derp.IsForbidden(err))
+		})
+	}
+}
+
+// TestMember_TransportFailureIsRetryable confirms a network error is not mistaken for a
+// permanent client error
+func TestMember_TransportFailureIsRetryable(t *testing.T) {
+
+	server := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}))
+	server.Close() // Nothing is listening, so the request cannot complete
+
+	err := testClient(server.URL).SetMember("abc123", Member{EmailAddress: "sarah@connor.mil"})
+
+	require.Error(t, err)
+	require.True(t, derp.IsServerError(err), "a transport failure must be retryable")
 }

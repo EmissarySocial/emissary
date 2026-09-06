@@ -40,7 +40,7 @@ func (client Client) SetMember(audienceID string, member Member) error {
 	path := "/lists/" + audienceID + "/members/" + SubscriberHash(member.EmailAddress)
 
 	if err := client.put(path, member).Send(); err != nil {
-		return describeError(err, location, "Unable to add this member to Mailchimp")
+		return describeMemberError(err, location, "Unable to add this member to Mailchimp")
 	}
 
 	return nil
@@ -67,7 +67,7 @@ func (client Client) UnsubscribeMember(audienceID string, emailAddress string) e
 			return nil
 		}
 
-		return describeError(err, location, "Unable to unsubscribe this member from Mailchimp")
+		return describeMemberError(err, location, "Unable to unsubscribe this member from Mailchimp")
 	}
 
 	return nil
