@@ -733,7 +733,7 @@
 									{type:"text", path:"vault.apiKey", label:"Mailchimp API Key", description:"(PRIVATE) Create using your Mailchimp account settings.", options:{required:true}}
 									{type:"text", path:"data.dataCenter", label:"Data Center", description:"The start of your own Mailchimp web address, such as `us6`.", options:{required:true, placeholder:"us6"}}
 									{type:"text", path:"data.audienceId", label:"Audience ID", description:"In Mailchimp: Audience &rarr; Settings &rarr; 'Audience name and defaults'. NOT the number in your browser address bar.", options:{required:true}}
-									{type:"toggle", path:"isActive", options:{true-text:"Active. Sync my email followers to Mailchimp.", false-text:"Paused. Keep my key, but stop syncing."}}
+									{type:"toggle", path:"isActive", options:{true-text:"Active. New Followers will be sent to MailChimp.", false-text:"Activate?"}}
 								]
 							}
 						}
@@ -758,12 +758,8 @@
 									{type:"hidden", path:"type", options:{value:"MAILCHIMP"}}
 									{type:"text", path:"vault.apiKey", label:"Mailchimp API Key", description:"(PRIVATE) Create using your Mailchimp account settings.", options:{required:true}}
 									{type:"text", path:"data.dataCenter", label:"Data Center", description:"The start of your own Mailchimp web address, such as `us6`.", options:{required:true, placeholder:"us6"}}
-									// RULE: readOnly is what makes the audience immutable (D43), and it belongs
-									// HERE, beside `path` -- inside `options` it parses cleanly and does nothing.
-									// form.SetURLValues skips read-only elements, so a crafted POST cannot write
-									// it either. Changing audiences means deleting this connection and starting over.
 									{type:"text", path:"data.audienceId", label:"Audience ID", description:"Set when you connected. To sync to a different audience, remove this connection and set it up again.", readOnly:true}
-									{type:"toggle", path:"isActive", options:{true-text:"Active. Sync my email followers to Mailchimp.", false-text:"Paused. Keep my key, but stop syncing."}}
+									{type:"toggle", path:"isActive", options:{true-text:"Active. New Followers will be sent to MailChimp.", false-text:"Activate?"}}
 								]
 							}
 							options:["delete:/@me/settings/connections-delete?userConnectionId={{.ObjectID}}"]

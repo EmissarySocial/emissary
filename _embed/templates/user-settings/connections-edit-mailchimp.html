@@ -1,10 +1,10 @@
 <div class="flex-row flex-align-center margin-bottom">
 	{{- if .IsNew -}}
-		<h1 class="margin-none flex-grow">{{icon "email"}} Connect Mailchimp</h1>
+		<h1 class="flex-grow">{{icon "email"}} Connect to MailChimp</h1>
 	{{- else -}}
-		<h1 class="margin-none flex-grow">{{icon "email"}} Mailchimp</h1>
+		<h1 class="flex-grow">{{icon "email"}} Edit MailChimp Connection</h1>
 	{{- end -}}
-	<a href="https://emissary.dev/connections" target="_blank">{{icon "help"}} Help</a>
+	<a href="https://emissary.dev/connections" target="_blank">{{icon "help"}} Learn More</a>
 </div>
 
 {{- $connection := .Object -}}

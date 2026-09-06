@@ -22,7 +22,7 @@
 		{{- if $isDesktop -}}
 			<div class="flex-row flex-align-center margin-bottom">
 				<h1 class="text-xl bold margin-none flex-grow">Connections</h1>
-				<a href="https://emissary.dev/user-connections" target="_blank">{{icon "help"}} Help with Connections</a>
+				<a href="https://emissary.dev/user-connections" target="_blank" class="text-sm">{{icon "help"}} Help with Connections</a>
 			</div>
 		{{- else -}}
 			<div class="flex-row flex-align-center text-xl margin-none margin-bottom">
@@ -54,8 +54,6 @@
 						{{- else if $mailchimp.HasWebhook -}}
 							<span class="text-green">{{icon "check-circle-fill"}} Active</span>
 						{{- else -}}
-							<!-- Set up and syncing outward, but Mailchimp is not delivering its own
-							     changes back. Worth saying: unsubscribes there will not arrive here. -->
 							<span class="text-green">{{icon "check-circle-fill"}} Active</span>
 							<span class="text-gray">(outbound only)</span>
 						{{- end -}}
