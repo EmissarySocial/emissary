@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/derp"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -134,4 +135,19 @@ func TestFollower_DeleteWithoutSyncStillDeletes(t *testing.T) {
 
 	require.Len(t, session.collection.deleted, 1)
 	require.Empty(t, tasks.Drain())
+}
+
+// TestFollower_DeleteEnqueuesNothingWhenTheDeleteFails pins the order of the two halves
+func TestFollower_DeleteEnqueuesNothingWhenTheDeleteFails(t *testing.T) {
+
+	// Outside a transaction, postcommit.Publish sends immediately. So if the unsubscribe were
+	// published before the delete ran, a delete that then failed would leave a Follower who
+	// still exists here and has already been unsubscribed at Mailchimp.
+
+	follower := newMailingListFollower()
+	service, session, tasks := newSpooledFollowerService(follower)
+	session.collection.deleteError = derp.Internal("test", "the database is on fire")
+
+	require.Error(t, service.Delete(session, &follower, "Unsubscribed"))
+	require.Empty(t, tasks.Drain(), "a delete that failed must not have unsubscribed anyone")
 }

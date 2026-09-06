@@ -24,9 +24,10 @@ import (
 
 // followerCollection is an in-memory data.Collection that holds model.Follower records
 type followerCollection struct {
-	records []model.Follower
-	saved   []model.Follower // every record passed to Save, in order
-	deleted []model.Follower // every record passed to Delete, in order
+	records     []model.Follower
+	saved       []model.Follower // every record passed to Save, in order
+	deleted     []model.Follower // every record passed to Delete, in order
+	deleteError error            // when set, Delete fails with this instead of deleting
 }
 
 // Context implements the data.Collection interface, returning a background context
@@ -137,6 +138,10 @@ func (c *followerCollection) Save(object data.Object, _ string) error {
 
 // Delete marks a Follower deleted, and remembers that it was asked to
 func (c *followerCollection) Delete(object data.Object, _ string) error {
+
+	if c.deleteError != nil {
+		return c.deleteError
+	}
 
 	follower, ok := object.(*model.Follower)
 

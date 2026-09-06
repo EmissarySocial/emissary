@@ -140,8 +140,8 @@ func (service *UserConnection) mailchimp_subscribe(session data.Session, userCon
 		return nil
 	}
 
-	// Unlike an inbound unsubscribe, this save MAY echo back out to Mailchimp once the outbound
-	// hook in MAILING-LISTS.md 1.2 lands: `PUT /members` upserts, `sources` excludes `api` so
+	// Unlike an inbound unsubscribe, this save DOES echo back out to Mailchimp through the
+	// outbound hook, and that is fine: `PUT /members` upserts, `sources` excludes `api` so
 	// nothing loops, and the round trip is what stamps EMISSARYID onto the member (D38).
 	if err := service.followerService.Save(session, follower, "Subscribed at Mailchimp"); err != nil {
 		return derp.Wrap(err, location, "Saving Follower", follower.FollowerID)
@@ -183,8 +183,8 @@ func (service *UserConnection) mailchimp_updateEmail(session data.Session, userC
 
 	const location = "service.UserConnection.mailchimp_updateEmail"
 
-	// RULE: the NEW address is as attacker-supplied as the old one, so it is validated
-	// before it is written. An empty or malformed value would silently orphan the record.
+	// RULE: the NEW address is as attacker-supplied as the old one. An empty value is
+	// discarded here; a malformed one is discarded below, once the schema has seen it.
 	newEmail := strings.TrimSpace(values.GetString("data[new_email]"))
 
 	if newEmail == "" {
@@ -203,6 +203,18 @@ func (service *UserConnection) mailchimp_updateEmail(session data.Session, userC
 
 	follower.Actor.EmailAddress = newEmail
 	follower.Actor.ProfileURL = newEmail
+
+	// RULE: an address the Follower schema refuses is DISCARDED, not failed, for the same
+	// reason as in mailchimp_subscribe -- an error here becomes a 500 that Mailchimp retries
+	// for as long as the webhook is installed, and the old record is left untouched.
+	if _, err := service.followerService.Schema().Validate(follower); err != nil {
+
+		log.Debug().
+			Str("userConnectionId", userConnection.UserConnectionID.Hex()).
+			Msg("Mailchimp webhook named a new address that does not make a valid Follower")
+
+		return nil
+	}
 
 	if err := service.followerService.Save(session, follower, "Email address changed at Mailchimp"); err != nil {
 		return derp.Wrap(err, location, "Saving Follower", follower.FollowerID)
@@ -236,7 +248,7 @@ func mailchimpNewFollower(userID primitive.ObjectID, emailAddress string, values
 	result.Actor.Name = mailchimpMemberName(values)
 	result.Actor.ProfileURL = emailAddress
 	result.Actor.EmailAddress = emailAddress
-	result.Data.SetString("secret", secret)
+	result.Data.SetString(model.FollowerDataSecret, secret)
 
 	return result, nil
 }

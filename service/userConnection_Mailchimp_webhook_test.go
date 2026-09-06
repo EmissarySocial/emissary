@@ -343,3 +343,61 @@ func readyConnection(t *testing.T, secret string) model.UserConnection {
 
 	return result
 }
+
+// TestMailchimpUpdateEmail_MovesTheFollower walks the happy path of an `upemail` event
+func TestMailchimpUpdateEmail_MovesTheFollower(t *testing.T) {
+
+	follower := newMailingListFollower()
+	service, userConnection, session := newMailchimpWebhookService(t, follower)
+
+	err := service.Mailchimp_ReceiveWebhook(session, &userConnection, "upemail", mapof.String{
+		"data[old_email]": "sarah@connor.mil",
+		"data[new_email]": "sarah@resistance.org",
+	})
+
+	require.NoError(t, err)
+	require.Len(t, session.collection.saved, 1)
+	require.Equal(t, "sarah@resistance.org", session.collection.saved[0].Actor.EmailAddress)
+	require.Equal(t, "sarah@resistance.org", session.collection.saved[0].Actor.ProfileURL)
+	require.Equal(t, follower.FollowerID, session.collection.saved[0].FollowerID, "the same record moves; nothing is minted")
+}
+
+// TestMailchimpUpdateEmail_UnknownAddressIsIgnored confirms a stale or forged old address does nothing
+func TestMailchimpUpdateEmail_UnknownAddressIsIgnored(t *testing.T) {
+
+	service, userConnection, session := newMailchimpWebhookService(t)
+
+	err := service.Mailchimp_ReceiveWebhook(session, &userConnection, "upemail", mapof.String{
+		"data[old_email]": "nobody@connor.mil",
+		"data[new_email]": "nobody@resistance.org",
+	})
+
+	require.NoError(t, err)
+	require.Empty(t, session.collection.saved)
+}
+
+// TestMailchimpUpdateEmail_DiscardsAnAddressThatCannotBeSaved is the `upemail` half of the
+// discard rule that `subscribe` already follows
+func TestMailchimpUpdateEmail_DiscardsAnAddressThatCannotBeSaved(t *testing.T) {
+
+	// The new address is attacker-supplied. Returning an error would answer 500, and Mailchimp
+	// would retry that same delivery for as long as the webhook is installed -- while the old
+	// record sat untouched the whole time. So a value the schema refuses is dropped instead.
+
+	payloads := map[string]mapof.String{
+		"no new address":   {"data[old_email]": "sarah@connor.mil", "data[new_email]": ""},
+		"only whitespace":  {"data[old_email]": "sarah@connor.mil", "data[new_email]": "   "},
+		"not an address":   {"data[old_email]": "sarah@connor.mil", "data[new_email]": "not-an-email-address"},
+		"address too long": {"data[old_email]": "sarah@connor.mil", "data[new_email]": strings.Repeat("a", 200) + "@resistance.org"},
+	}
+
+	for name, payload := range payloads {
+		t.Run(name, func(t *testing.T) {
+
+			service, userConnection, session := newMailchimpWebhookService(t, newMailingListFollower())
+
+			require.NoError(t, service.Mailchimp_ReceiveWebhook(session, &userConnection, "upemail", payload))
+			require.Empty(t, session.collection.saved, "a new address that cannot be saved must not be saved")
+		})
+	}
+}
