@@ -143,27 +143,33 @@ func (service *Follower) Save(session data.Session, follower *model.Follower, no
 // Delete removes an Follower from the database (virtual delete)
 func (service *Follower) Delete(session data.Session, follower *model.Follower, note string) error {
 
-	// Removing a Follower here is Emissary's own decision, so it travels outward to the
-	// User's mailing list as an unsubscribe (D9).
+	const location = "service.Follower.Delete"
+
+	if err := service.delete(session, follower, note); err != nil {
+		return derp.Wrap(err, location, "Removing Follower", follower.FollowerID)
+	}
+
+	// RULE: publish AFTER the delete succeeds, never before. Outside a transaction the publish
+	// is immediate, so publishing first would unsubscribe a Follower who still exists whenever
+	// the delete then failed. This removal is Emissary's own decision, so it travels out (D9).
 	service.publishMailingListRemove(session, follower)
 
-	return service.delete(session, follower, note)
+	return nil
 }
 
-// DeleteWithoutSync removes a Follower WITHOUT telling the User's mailing list about it.
-//
-// Two callers need this and both would otherwise do real damage.  Deleting a User must not
-// unsubscribe every one of their followers from the User's own audience (D14).  And an
-// unsubscribe that ARRIVED from Mailchimp must not be pushed straight back at Mailchimp,
-// which is a loop that reports success on every lap.
+// DeleteWithoutSync removes a Follower WITHOUT telling the User's mailing list about it
 func (service *Follower) DeleteWithoutSync(session data.Session, follower *model.Follower, note string) error {
+
+	// Two callers need this: an unsubscribe that ARRIVED from Mailchimp must not be pushed
+	// back (a loop), and deleting a User must not unsubscribe all of their followers from
+	// that User's own audience (D14). The full reasoning is in AGENTS.md.
 	return service.delete(session, follower, note)
 }
 
 // delete performs the deletion itself, and is the single funnel every path reaches
 func (service *Follower) delete(session data.Session, follower *model.Follower, note string) error {
 
-	const location = "service.Follower.Delete"
+	const location = "service.Follower.delete"
 
 	// Mark the Follower as deleted
 	follower.StateID = model.FollowerStateDeleted
