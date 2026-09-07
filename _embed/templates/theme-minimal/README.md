@@ -13,7 +13,7 @@ Below 640px the `<nav>` bar is `display:none` and every site navigation link is 
 - **The disclosure is a checkbox, and `role="button"` goes on the checkbox, never the `<label>`.** `:checked` is a selector, so a media query can switch the whole mechanism off above 640px; a `<details>` keeps its open state in a DOM attribute that no media query can reach. The role must stay on the input because the htmx `a11y` extension makes anything with it focusable — on a `<label>`, that turns one control into two tab stops.
 - **The skip link sits outside both layouts.** `<nav>` is `display:none` on mobile and the sheet is `display:none` while closed, so a skip link inside either one stops existing for exactly the visitors it serves.
 
-The control is `position: fixed` and nothing in the page reserves space for it, so it floats over page content and carries an opaque backdrop of its own to stay legible over an image. It is the close button as well as the open button, swapping its glyph on `:checked`.
+The control is `position: fixed` and nothing in the page reserves space for it, so it floats over page content and carries an opaque backdrop of its own to stay legible over an image. It is the close button as well as the open button, swapping its glyph on `:checked`. The full set of rules behind this markup, with the reasons, is in [AGENTS.md](AGENTS.md).
 
 ## Navigation Settings
 
