@@ -151,3 +151,52 @@ func TestFollower_DeleteEnqueuesNothingWhenTheDeleteFails(t *testing.T) {
 	require.Error(t, service.Delete(session, &follower, "Unsubscribed"))
 	require.Empty(t, tasks.Drain(), "a delete that failed must not have unsubscribed anyone")
 }
+
+/******************************************
+ * Email address normalization
+ ******************************************/
+
+// TestFollower_SaveNormalizesTheAddress pins the one form an address is ever stored in
+func TestFollower_SaveNormalizesTheAddress(t *testing.T) {
+
+	service, session, _ := newSpooledFollowerService()
+
+	follower := newMailingListFollower()
+	follower.Actor.EmailAddress = " Sarah@Connor.MIL "
+	follower.Actor.ProfileURL = "Sarah@Connor.MIL"
+
+	require.NoError(t, service.Save(session, &follower, "Signed up"))
+
+	require.Len(t, session.collection.saved, 1)
+	require.Equal(t, "sarah@connor.mil", session.collection.saved[0].Actor.EmailAddress)
+	require.Equal(t, "sarah@connor.mil", session.collection.saved[0].Actor.ProfileURL, "an EMAIL Follower carries the address in profileUrl too")
+}
+
+// TestFollower_SaveLeavesAnActivityPubProfileURLAlone guards the other half of the rule
+func TestFollower_SaveLeavesAnActivityPubProfileURLAlone(t *testing.T) {
+
+	// A URL path is case-sensitive, so lowercasing it would point at a different actor
+
+	service, session, _ := newSpooledFollowerService()
+
+	follower := newMailingListFollower()
+	follower.Method = model.FollowerMethodActivityPub
+	follower.Actor.EmailAddress = ""
+	follower.Actor.ProfileURL = "https://example.com/@Sarah"
+
+	require.NoError(t, service.Save(session, &follower, "Followed"))
+
+	require.Len(t, session.collection.saved, 1)
+	require.Equal(t, "https://example.com/@Sarah", session.collection.saved[0].Actor.ProfileURL)
+}
+
+// TestFollower_LoadByEmailAddressIgnoresCase is what lets a webhook find the row it names
+func TestFollower_LoadByEmailAddressIgnoresCase(t *testing.T) {
+
+	stored := newMailingListFollower() // sarah@connor.mil, lowercase
+	service, session, _ := newSpooledFollowerService(stored)
+
+	found := model.NewFollower()
+	require.NoError(t, service.LoadByEmailAddress(session, stored.ParentID, " SARAH@Connor.mil ", &found))
+	require.Equal(t, stored.FollowerID, found.FollowerID)
+}

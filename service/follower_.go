@@ -119,6 +119,15 @@ func (service *Follower) Save(session data.Session, follower *model.Follower, no
 
 	const location = "service.Follower.Save"
 
+	// RULE: an email address is stored in ONE form, trimmed and lowercased, so that every
+	// lookup can normalize its argument and match. An EMAIL Follower carries the same address
+	// in ProfileURL; for anyone else ProfileURL is a real URL, whose path is case-sensitive.
+	follower.Actor.EmailAddress = model.NormalizeEmailAddress(follower.Actor.EmailAddress)
+
+	if follower.Method == model.FollowerMethodEmail {
+		follower.Actor.ProfileURL = model.NormalizeEmailAddress(follower.Actor.ProfileURL)
+	}
+
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(follower); err != nil {
 		return derp.Wrap(err, location, "Invalid Follower record", follower)
@@ -420,6 +429,9 @@ func (service *Follower) LoadBySecret(session data.Session, followerID primitive
 func (service *Follower) LoadByEmailAddress(session data.Session, parentID primitive.ObjectID, emailAddress string, follower *model.Follower) error {
 
 	const location = "service.Follower.LoadByEmailAddress"
+
+	// Stored addresses are lowercased by Save, so the argument is matched in the same form
+	emailAddress = model.NormalizeEmailAddress(emailAddress)
 
 	// RULE: The email address must not be empty.  An empty value here would match the first
 	// Follower whose address was never recorded, which is a different person.

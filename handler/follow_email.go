@@ -29,6 +29,10 @@ func PostEmailFollower(ctx *steranko.Context, factory *service.Factory, session 
 		return derp.Wrap(err, location, "Binding input")
 	}
 
+	// RULE: normalize BEFORE the lookup. LoadOrCreate matches profileUrl exactly, so a visitor
+	// re-subscribing as Sarah@Connor.mil would otherwise get a second record beside sarah@.
+	transaction.Email = model.NormalizeEmailAddress(transaction.Email)
+
 	// Generate follower secret (doing this first because it shouldn't fail,
 	// but if it does, we want to fail here before we hit the database)
 	secret, err := random.GenerateString(64)

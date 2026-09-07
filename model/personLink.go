@@ -2,6 +2,7 @@ package model
 
 import (
 	"net/url"
+	"strings"
 
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/toot/object"
@@ -17,6 +18,12 @@ type PersonLink struct {
 	InboxURL     string             `bson:"inboxUrl,omitempty"`     // URL of the person's inbox
 	EmailAddress string             `bson:"emailAddress,omitempty"` // Email address of the person
 	IconURL      string             `bson:"iconUrl,omitempty"`      // URL of the person's avatar/icon image
+}
+
+// NormalizeEmailAddress returns an email address in the one form Emissary stores and
+// compares: trimmed and lowercased
+func NormalizeEmailAddress(emailAddress string) string {
+	return strings.ToLower(strings.TrimSpace(emailAddress))
 }
 
 // NewPersonLink returns a fully initialized, empty PersonLink
