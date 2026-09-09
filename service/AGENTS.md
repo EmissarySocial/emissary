@@ -24,7 +24,7 @@ This is about **credential leakage and content-injection, not private-IP SSRF** 
 
 **`IsActive` is a `delta.Bool`, and its CHANGE is the trigger.** Write it through the schema — `SetBool` calls `IsActive.Set` — never by assigning the field, or the change is lost and the connect/disconnect never fires. `Status` is deliberately separate: `IsActive` is what the User asked for, `Status` is whether it works, and folding a rejected credential into the switch would make Emissary look like it turned the connection off.
 
-**`IsReady()` means "switched on AND finished being set up".** It tests `Status == READY`, not `!= RECONNECT`, because a connection whose credential works but whose setup never completed carries *neither* status. Every consumer — the inbound webhook, the outbound sync — leans on that distinction.
+**`IsReady()` means "switched on AND finished being set up".** It tests `Status == READY`, not `!= RECONNECT`, because a connection whose credential works but whose setup never completed is still `PENDING` (D48) — a real value, assigned by the constructor, never the empty string. Since D47, "set up" includes the webhook on a public domain and deliberately excludes it on a local one (D45) — that decision lives in `mailchimp_setup`'s ordering, not in the predicate, because the model has no host to ask. Every consumer — the inbound webhook, the outbound sync — leans on that distinction.
 
 **There is deliberately no `Fields()` projection, and a test asserts its absence.** `QueryBuilder` projects with `T.Fields()`, and `MerchantAccount`'s projection omits `vault` — which here would make a configured connection read as unconfigured, and compare a presented webhook secret against an empty string.
 
@@ -33,6 +33,12 @@ This is about **credential leakage and content-injection, not private-IP SSRF** 
 **A failed remote teardown is reported, never propagated.** Both `Delete` and the pause path do this: a User whose key was already revoked at the far end must still be able to disconnect, and refusing would strand them with a connection they cannot switch off.
 
 Two further notes on the write paths. `Save` is reached *only* from the settings form, so there are no background writes to keep off the network — which is why an active connection is re-proved on every save, and why that re-run is what restores anything the User deleted by hand at the far end. And a queue task that discovers a rejected credential must write `Status` through `collection.Save` directly, **not** through `UserConnection.Save`, which would call `connect()` and reach for the same credential that was just refused.
+
+## A Follower's email address is stored lowercased, and every lookup normalizes to match
+
+`Follower.Save` is the one writer and it applies `model.NormalizeEmailAddress` (trim + lowercase) to `Actor.EmailAddress` — and to `Actor.ProfileURL` **only when `Method == EMAIL`**, because for everyone else `ProfileURL` is a real URL whose path is case-sensitive. `LoadByEmailAddress` normalizes its argument; `LoadByActor` does not (it serves ActivityPub too), so a caller passing an email to it — `handler.PostEmailFollower` through `LoadOrCreate` — normalizes first. Mailchimp hashes members on the lowercased address, so an inbound webhook naming `Sarah@Connor.MIL` must find the row stored as `sarah@connor.mil`; before this rule it silently did not. Rows written before the rule are brought in line by upgrade slot 30.
+
+`Follower.Data["secret"]` — the unsubscribe-link token that `LoadBySecret` checks — is plaintext by design; see [model/AGENTS.md](../model/AGENTS.md).
 
 ## `User.GetJSONLD()` output is fingerprinted — keep it deterministic
 

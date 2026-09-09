@@ -49,7 +49,7 @@ func TestSetMember(t *testing.T) {
 	member := Member{
 		EmailAddress: "sarah@connor.mil",
 		Status:       MemberStatusSubscribed,
-		MergeFields:  map[string]string{"FNAME": "Sarah", "LNAME": "Connor", "EMISSARYID": "abc"},
+		MergeFields:  map[string]string{"FNAME": "Sarah", "LNAME": "Connor"},
 		IPSignup:     "10.0.0.1",
 	}
 
@@ -68,7 +68,6 @@ func TestSetMember(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, "Sarah", merges["FNAME"])
 	require.Equal(t, "Connor", merges["LNAME"])
-	require.Equal(t, "abc", merges["EMISSARYID"])
 }
 
 // TestSetMember_OmitsEmptyOptionalFields keeps Emissary from overwriting Mailchimp's data

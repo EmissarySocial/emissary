@@ -36,6 +36,7 @@ func NewUserConnection() UserConnection {
 	return UserConnection{
 		UserConnectionID: primitive.NewObjectID(),
 		IsActive:         delta.NewBool(false),
+		Status:           UserConnectionStatusPending,
 		Data:             mapof.NewString(),
 		Vault:            NewVault(),
 	}
@@ -58,7 +59,7 @@ func (userConnection UserConnection) IsReady() bool {
 	}
 
 	// Tested as "is READY" rather than "is not RECONNECT", because a connection whose
-	// credential works but whose setup never finished has neither status (D39).
+	// credential works but whose setup never finished is still PENDING (D39).
 	return userConnection.IsConfigured()
 }
 
@@ -68,10 +69,9 @@ func (userConnection UserConnection) IsConfigured() bool {
 	return userConnection.Status == UserConnectionStatusReady
 }
 
-// NeedsSetup returns TRUE if this connection has a working credential but has not
-// finished being set up
+// NeedsSetup returns TRUE if this connection is not yet set up at the remote service
 func (userConnection UserConnection) NeedsSetup() bool {
-	return userConnection.Status == ""
+	return userConnection.Status == UserConnectionStatusPending
 }
 
 // NeedsReconnect returns TRUE if the remote service has rejected this connection's credentials

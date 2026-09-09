@@ -99,6 +99,7 @@ func (follower Follower) ParentURL(host string) string {
 // public, and anyone can type it.  The actual gate is service.Follower.LoadBySecret, which loads
 // EMAIL-method records only, and only for a caller who already holds the secret.
 func (follower Follower) UnsubscribeLink(host string) string {
+	// The literal key and the plaintext value are both deliberate; see AGENTS.md
 	return follower.ParentURL(host) + "/follower-unsubscribe?followerId=" + follower.FollowerID.Hex() + "&secret=" + follower.Data.GetString("secret")
 }
 

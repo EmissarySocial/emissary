@@ -141,8 +141,8 @@ func (service *UserConnection) mailchimp_subscribe(session data.Session, userCon
 	}
 
 	// Unlike an inbound unsubscribe, this save DOES echo back out to Mailchimp through the
-	// outbound hook, and that is fine: `PUT /members` upserts, `sources` excludes `api` so
-	// nothing loops, and the round trip is what stamps EMISSARYID onto the member (D38).
+	// outbound hook, and that is fine: `PUT /members` upserts the same values, and `sources`
+	// excludes `api` so nothing loops (D38).
 	if err := service.followerService.Save(session, follower, "Subscribed at Mailchimp"); err != nil {
 		return derp.Wrap(err, location, "Saving Follower", follower.FollowerID)
 	}

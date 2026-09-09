@@ -66,12 +66,12 @@ func TestClient_SendsTheCredentialAsABearerToken(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		authorization = request.Header.Get("Authorization")
 		response.Header().Set("Content-Type", "application/json")
-		_, _ = response.Write([]byte(`{"lists":[]}`))
+		_, _ = response.Write([]byte(`{"health_status":"Everything's Chimpy!"}`))
 	}))
 
 	defer server.Close()
 
-	_, err := testClient(server.URL).GetAudiences()
+	err := testClient(server.URL).Ping()
 
 	require.NoError(t, err)
 	require.Equal(t, "Bearer "+testHex+"-us6", authorization)

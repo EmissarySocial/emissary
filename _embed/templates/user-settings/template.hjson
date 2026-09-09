@@ -715,9 +715,8 @@
 		}
 
 		// The connection form exists twice, and the ONLY difference is that the Audience ID is
-		// editable when creating and read-only when editing (D43). Everything Emissary installs
-		// lives inside one audience, so letting it move in place would strand the merge field
-		// and the webhook with nothing able to address them again.
+		// editable when creating and read-only when editing (D43). The webhook lives inside one
+		// audience, so letting it move in place would strand it with nothing able to address it.
 		connections-new-mailchimp: {
 			roles:["self"]
 			steps:[
@@ -730,9 +729,10 @@
 								type:layout-vertical
 								children:[
 									{type:"hidden", path:"type", options:{value:"MAILCHIMP"}}
-									{type:"text", path:"vault.apiKey", label:"Mailchimp API Key", description:"(PRIVATE) Create using your Mailchimp account settings.", options:{required:true}}
-									{type:"text", path:"data.dataCenter", label:"Data Center", description:"The start of your own Mailchimp web address, such as `us6`.", options:{required:true, placeholder:"us6"}}
-									{type:"text", path:"data.audienceId", label:"Audience ID", description:"In Mailchimp: Audience &rarr; Settings &rarr; 'Audience name and defaults'. NOT the number in your browser address bar.", options:{required:true}}
+									{type:"text", path:"vault.apiKey", label:"Mailchimp API Key", description:"Go to <a href='https://admin.mailchimp.com/account/api/' target='_blank'>Account &rarr; Extras &rarr; API Keys</a> to create an API key for your MailChimp account", options:{required:true}}
+									{type:"text", path:"data.dataCenter", label:"Data Center", description:"The start of your own Mailchimp web address, such as 'us6'.", options:{required:true, placeholder:"us6"}}
+									{type:"text", path:"data.audienceId", label:"Audience ID", description:"Go to <a href='https://admin.mailchimp.com/audience/' target='_blank'>Audience &rarr; Audience Settings</a> to retrieve your Audience ID"}
+									{type:"text", path:"data.tag", label:"Tag", description:"Optional. Every contact that Emissary sends to MailChimp is tagged with this name."}
 									{type:"toggle", path:"isActive", options:{true-text:"Active. New Followers will be sent to MailChimp.", false-text:"Activate?"}}
 								]
 							}
@@ -756,9 +756,10 @@
 								type:layout-vertical
 								children:[
 									{type:"hidden", path:"type", options:{value:"MAILCHIMP"}}
-									{type:"text", path:"vault.apiKey", label:"Mailchimp API Key", description:"(PRIVATE) Create using your Mailchimp account settings.", options:{required:true}}
-									{type:"text", path:"data.dataCenter", label:"Data Center", description:"The start of your own Mailchimp web address, such as `us6`.", options:{required:true, placeholder:"us6"}}
-									{type:"text", path:"data.audienceId", label:"Audience ID", description:"Set when you connected. To sync to a different audience, remove this connection and set it up again.", readOnly:true}
+									{type:"text", path:"vault.apiKey", label:"Mailchimp API Key", description:"Go to <a href='https://admin.mailchimp.com/account/api/' target='_blank'>Account &rarr; Extras &rarr; API Keys</a> to create an API key for your MailChimp account", options:{required:true}}
+									{type:"text", path:"data.dataCenter", label:"Data Center", description:"The start of your own Mailchimp web address, such as 'us6'.", options:{required:true, placeholder:"us6"}}
+									{type:"text", path:"data.audienceId", label:"Audience ID", readOnly:true}
+									{type:"text", path:"data.tag", label:"Tag", description:"Optional. Every contact that Emissary sends to MailChimp is tagged with this name."}
 									{type:"toggle", path:"isActive", options:{true-text:"Active. New Followers will be sent to MailChimp.", false-text:"Activate?"}}
 								]
 							}

@@ -106,8 +106,8 @@ func TestUserConnection_AudienceIsEditableOnlyWhenCreating(t *testing.T) {
 
 	// `form.SetURLValues` skips read-only elements before it reads anything from the request,
 	// so this is real enforcement rather than presentation -- and it is the whole of it.
-	// Without it, editing the audience strands the merge field and the webhook inside the
-	// old one, with nothing able to address them again, and nothing reports it (D43).
+	// Without it, editing the audience strands the webhook inside the old one, with nothing
+	// able to address it again, and nothing reports it (D43).
 
 	template := userSettingsTemplate(t)
 

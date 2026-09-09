@@ -1,19 +1,13 @@
-<div class="flex-row flex-align-center margin-bottom">
+<div class="flex-row flex-align-center margin-vertical">
 	{{- if .IsNew -}}
-		<h1 class="flex-grow">{{icon "email"}} Connect to MailChimp</h1>
+		<h1 class="flex-grow margin-none">{{icon "email"}} Connect to MailChimp</h1>
 	{{- else -}}
-		<h1 class="flex-grow">{{icon "email"}} Edit MailChimp Connection</h1>
+		<h1 class="flex-grow margin-none">{{icon "email"}} Edit MailChimp Connection</h1>
 	{{- end -}}
-	<a href="https://emissary.dev/connections" target="_blank">{{icon "help"}} Learn More</a>
+	<a href="https://emissary.dev/user-connections" target="_blank">{{icon "help"}} Learn More</a>
 </div>
 
 {{- $connection := .Object -}}
-
-<div class="alert-blue margin-bottom">
-	<a href="https://admin.mailchimp.com/account/api/" target="_blank">Sign in to your Mailchimp account {{icon "new-window"}}</a>
-	to create the API key below. Your data center is the few characters at the start of that web address, such as
-	<b>us6</b> in <b>us6.admin.mailchimp.com</b>.
-</div>
 
 <!-- The Audience ID is opaque, so the NAME is what tells the User whether they pasted
      the right one.  It is only known once Mailchimp has confirmed the ID. -->
@@ -21,4 +15,12 @@
 	<div class="alert-green margin-bottom">
 		{{icon "check-circle-fill"}} Syncing to <b>{{index $connection.Data `audienceName`}}</b>
 	</div>
+
+{{- else -}}
+
+	<div class="alert-blue margin-bottom">
+		When you synchronize Emissary with your MailChimp account, new followers in Emissary will be automatically sent to MailChimp, 
+		and new signups in MailChimp will be reflected back into Emissary.
+	</div>
+
 {{- end -}}

@@ -80,14 +80,13 @@ asks before saving.
 
 ## What this package covers
 
-Four resources, which together are the whole integration:
+Three resources, which together are the whole integration:
 
 | Call | Used by |
 |---|---|
-| `GetAudiences` / `GetAudience` | proving a credential, and confirming the Audience ID a User pasted |
-| `GetMergeFields` / `CreateMergeField` | creating `EMISSARYID`, which links a member back to a Follower |
+| `Ping` / `GetAudience` | proving a credential, and confirming the Audience ID a User pasted |
 | `GetWebhooks` / `CreateWebhook` / `DeleteWebhook` | inbound events |
-| `SetMember` / `UnsubscribeMember` | the outbound sync itself |
+| `SetMember` / `TagMember` / `UnsubscribeMember` | the outbound sync itself |
 
 Two things about members are easy to get wrong and silent when you do.
 
@@ -101,6 +100,14 @@ it on every save without first asking whether the member is already there. `Unsu
 likewise treats a 404 as success, because Emissary pushes only on confirmation — so someone
 who unsubscribes before their first push was never a member, and failing there would retry
 forever.
+
+**`TagMember` is a second call, after `SetMember`, and creates the tag on first use.** The
+member `PUT` has no `tags` parameter (Mailchimp's published Swagger, checked 2026-09-08), so a
+tag is `POST .../members/{hash}/tags` with the tag declared `active`, answered by a 204 with no
+body. Mailchimp creates a tag it does not have, so there is no list-then-create step. A blank
+name is refused before it reaches the wire: Mailchimp answers it with a 400, the one status the
+queue never retries. `is_syncing` is left at its default so the User's own tag-triggered
+automations fire.
 
 Optional fields are **omitted rather than blanked**. A Follower with no name or no signup IP
 sends neither, because an empty string would overwrite whatever the User's own signup forms
@@ -122,18 +129,17 @@ because it is not the User's input being wrong and no instruction would help the
 
 Those four also do **not** wrap the failed transaction. `derp` redacts credential-bearing
 headers when it records one, so the leak this originally guarded against is closed at the
-source; not wrapping is now belt-and-braces, and `TestGetAudiences_DoesNotCarryTheCredential`
+source; not wrapping is now belt-and-braces, and `TestPing_DoesNotCarryTheCredential`
 keeps it honest.
 
 ## Member calls keep Mailchimp's status code — form calls do not
 
 There are two error paths here, and routing a call through the wrong one fails silently.
 
-`describeError` is for the **setup/form** path (`GetAudience`, `GetMergeFields`,
-`CreateWebhook`). It rewrites the four actionable statuses into 422s so the sentence
+`describeError` is for the **setup/form** path (`GetAudience`, `CreateWebhook`). It rewrites the four actionable statuses into 422s so the sentence
 survives to the form, as described above.
 
-`describeMemberError` is for the **queue** path (`SetMember`, `UnsubscribeMember`), and it
+`describeMemberError` is for the **queue** path (`SetMember`, `TagMember`, `UnsubscribeMember`), and it
 keeps Mailchimp's own status code instead. Nothing on that path is shown to a User, and two
 readers depend on the code:
 

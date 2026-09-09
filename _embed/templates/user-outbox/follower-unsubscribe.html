@@ -1,4 +1,4 @@
-{{- $follower := .Object -}}
+{{- $follower := .Follower -}}
 {{- $parentURL := $follower.ParentURL .Host -}}
 {{- $actor := .ActivityStream $parentURL -}}
 
@@ -24,7 +24,7 @@
 
 	<div id="htmx-response-message">
 		<button hx-post="{{.RelativeURL}}" class="primary">Cancel Email Subscription</button>
-		<a class="button" href="/@{{.Object.ParentID.Hex}}">Keep Receiving Updates</a>
+		<a class="button" href="{{$parentURL}}">Keep Receiving Updates</a>
 	</div>
 
 </div>

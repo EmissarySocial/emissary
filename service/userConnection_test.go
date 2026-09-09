@@ -24,7 +24,7 @@ func TestUserConnection_ConnectAlwaysReprovesAnActiveConnection(t *testing.T) {
 
 	states := map[string]string{
 		"setup finished":   model.UserConnectionStatusReady,
-		"setup unfinished": "",
+		"setup unfinished": model.UserConnectionStatusPending,
 		"credential stale": model.UserConnectionStatusReconnect,
 	}
 
@@ -154,6 +154,6 @@ func TestUserConnection_PausingSurvivesAnUnreachableMailchimp(t *testing.T) {
 	userConnection.IsActive.Set(false)
 
 	require.NoError(t, service.connect(nil, &userConnection), "pausing must not fail on a teardown that cannot reach Mailchimp")
-	require.Equal(t, "", userConnection.Status, "and the local side must still be switched off")
+	require.Equal(t, model.UserConnectionStatusPending, userConnection.Status, "and the local side must still be switched off")
 	require.False(t, userConnection.HasWebhook())
 }

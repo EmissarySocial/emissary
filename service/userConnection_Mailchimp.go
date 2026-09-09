@@ -39,10 +39,9 @@ func (service *UserConnection) connect(session data.Session, userConnection *mod
 		return service.disconnect(session, userConnection)
 	}
 
-	// An active connection is re-proved on every save, deliberately. UserConnection.Save is
-	// reached only from the settings form a User submits by hand -- there are no background
-	// writes to keep off the network -- and re-running setup is what puts back a webhook the
-	// User deleted inside Mailchimp. Setup is idempotent, so an unchanged save writes nothing.
+	// An active connection is re-proved on every save, deliberately: Save is reached only from
+	// the settings form, and re-running setup is what puts back a webhook the User deleted at
+	// Mailchimp. Setup is idempotent, so an unchanged save writes nothing (see AGENTS.md).
 
 	switch userConnection.Type {
 
@@ -127,10 +126,10 @@ func (service *UserConnection) mailchimp_connect(userConnection *model.UserConne
 	userConnection.Data.SetString(model.UserConnectionDataCenter, dataCenter)
 
 	// RULE: a proven credential is NOT a finished connection (D39). Without an audience there
-	// is nowhere to sync to, so the connection stays deliberately unmarked -- visible as
-	// half-configured rather than trusted by everything downstream.
+	// is nowhere to sync to, so the connection stays PENDING -- visible as half-configured
+	// rather than trusted by everything downstream.
 	if audienceID == "" {
-		userConnection.Status = ""
+		userConnection.Status = model.UserConnectionStatusPending
 		return nil
 	}
 
@@ -143,10 +142,10 @@ func (service *UserConnection) mailchimp_connect(userConnection *model.UserConne
 func (service *UserConnection) mailchimp_verifyAudience(client mailchimp.Client, audienceID string) (mailchimp.Audience, error) {
 
 	// An empty ID is not an error: the credential still has to be proven, so that the User
-	// can save a key now and paste an Audience ID later.
+	// can save a key now and paste an Audience ID later. Ping proves it and fetches nothing.
 	if audienceID == "" {
 
-		if _, err := client.GetAudiences(); err != nil {
+		if err := client.Ping(); err != nil {
 			return mailchimp.Audience{}, err
 		}
 
@@ -162,17 +161,16 @@ func (service *UserConnection) mailchimp_disconnect(_ data.Session, userConnecti
 
 	const location = "service.UserConnection.mailchimp_disconnect"
 
-	// RULE: report a failed teardown, never propagate it. A User whose key was revoked at
-	// Mailchimp, or whose Mailchimp is simply unreachable, must still be able to switch their
-	// connection off (D37) -- and refusing here would strand them with a connection that
-	// cannot be paused. UserConnection.Delete already works this way; so does this now.
+	// RULE: report a failed teardown, never propagate it (D37). A User whose key was revoked,
+	// or whose Mailchimp is unreachable, must still be able to switch the connection off --
+	// refusing here would strand them with one that cannot be paused. Delete does the same.
 	if err := service.mailchimp_removeWebhook(userConnection); err != nil {
 		derp.Report(derp.Wrap(err, location, "Unable to remove the webhook from your Mailchimp account", userConnection.UserConnectionID))
 	}
 
 	// Turning the connection off stops the sync immediately, because every hook reads
 	// IsReady() rather than the presence of a credential.
-	userConnection.Status = ""
+	userConnection.Status = model.UserConnectionStatusPending
 	userConnection.Data.Remove(model.UserConnectionDataWebhookID)
 
 	return nil

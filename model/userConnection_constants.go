@@ -13,7 +13,11 @@ const UserConnectionTypeMailchimp = "MAILCHIMP"
  * User Connection Status
  ******************************************/
 
-// UserConnectionStatusReady marks a connection whose credentials worked the last time Emissary used them
+// UserConnectionStatusPending marks a connection that is not yet set up at the remote service:
+// brand new, switched off, or a proven credential with nowhere to sync to yet
+const UserConnectionStatusPending = "PENDING"
+
+// UserConnectionStatusReady marks a connection whose setup at the remote service has completed
 const UserConnectionStatusReady = "READY"
 
 // UserConnectionStatusReconnect marks a connection whose credentials the remote service rejected
@@ -49,3 +53,7 @@ const UserConnectionDataAudienceName = "audienceName"
 // UserConnectionDataWebhookID is the Data key holding the ID of the webhook Emissary installed,
 // so that disconnecting can remove it
 const UserConnectionDataWebhookID = "webhookId" // #nosec G101 -- this is the NAME of a Data key, not a credential
+
+// UserConnectionDataTag is the Data key holding the optional Mailchimp tag that is applied to
+// every member Emissary pushes into the audience
+const UserConnectionDataTag = "tag"

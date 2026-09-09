@@ -73,14 +73,14 @@ func TestUserConnection_IsReady(t *testing.T) {
 		expected bool
 	}{
 		{"switched on and set up", true, UserConnectionStatusReady, true},
-		{"switched on, setup unfinished", true, "", false},
+		{"switched on, setup unfinished", true, UserConnectionStatusPending, false},
 		{"switched on but rejected", true, UserConnectionStatusReconnect, false},
 		{"switched off", false, UserConnectionStatusReady, false},
 		{"switched off and rejected", false, UserConnectionStatusReconnect, false},
 	}
 
 	// The second row is the one that changed with D39.  A connection whose API key works but
-	// whose audience was never chosen carries NO status, and used to pass this predicate --
+	// whose audience was never chosen is still PENDING, and used to pass this predicate --
 	// so the inbound webhook trusted a connection that could not push or receive anything.
 
 	for _, test := range table {
@@ -108,9 +108,13 @@ func TestUserConnection_SetupStates(t *testing.T) {
 		isConfigured   bool
 		needsReconnect bool
 	}{
-		{"", true, false, false},
+		{UserConnectionStatusPending, true, false, false},
 		{UserConnectionStatusReady, false, true, false},
 		{UserConnectionStatusReconnect, false, false, true},
+
+		// An empty status is NO state at all -- not even "needs setup" -- which is why upgrade
+		// slot 31 rewrites every pre-D48 row to PENDING rather than leaving them to fall through.
+		{"", false, false, false},
 	}
 
 	for _, test := range table {
@@ -153,4 +157,51 @@ func TestUserConnection_HasNoFieldsProjection(t *testing.T) {
 	_, hasFields := object.(interface{ Fields() []string })
 
 	require.False(t, hasFields, "UserConnection must not define a Fields() projection")
+}
+
+// TestNewUserConnection_StartsPending pins the constructor's half of D48
+func TestNewUserConnection_StartsPending(t *testing.T) {
+
+	// Following does the same with NEW. Without this line a fresh record has no status and
+	// matches none of the three predicates, so the settings row would render it as nothing.
+	userConnection := NewUserConnection()
+
+	require.Equal(t, UserConnectionStatusPending, userConnection.Status)
+	require.True(t, userConnection.NeedsSetup())
+}
+
+// TestUserConnection_EveryStatusValidates pins the schema's enum to the three named states
+func TestUserConnection_EveryStatusValidates(t *testing.T) {
+
+	// This is the regression D48 shipped: PENDING was added to the constants, the constructor,
+	// and both assignment sites, but not to the schema's enum -- so every new connection was
+	// refused by Save with "Must be one of the specified values" before it reached Mailchimp.
+	// Nothing validated a whole record in any state but READY.
+
+	s := schema.New(UserConnectionSchema())
+
+	for _, status := range []string{UserConnectionStatusPending, UserConnectionStatusReady, UserConnectionStatusReconnect} {
+
+		t.Run(status, func(t *testing.T) {
+
+			userConnection := NewUserConnection()
+			userConnection.Type = UserConnectionTypeMailchimp
+			userConnection.Status = status
+
+			_, err := s.Validate(&userConnection)
+			require.NoError(t, err)
+		})
+	}
+
+	// And the empty string is no longer a state, so the schema refuses it: a row that somehow
+	// skipped upgrade slot 31 fails loudly here rather than rendering as nothing.
+	t.Run("empty is not a state", func(t *testing.T) {
+
+		userConnection := NewUserConnection()
+		userConnection.Type = UserConnectionTypeMailchimp
+		userConnection.Status = ""
+
+		_, err := s.Validate(&userConnection)
+		require.Error(t, err)
+	})
 }

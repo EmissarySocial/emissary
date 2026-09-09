@@ -33,7 +33,6 @@ const testMailchimpCredential = "0123456789abcdef0123456789abcdef" + "-us6"
 type mailchimpRecorder struct {
 	server    *httptest.Server
 	requests  []string
-	fields    string
 	webhooks  string
 	bodies    map[string]string // the last request body sent to each "METHOD /path"
 	failPaths map[string]int
@@ -44,7 +43,6 @@ type mailchimpRecorder struct {
 func newMailchimpRecorder() *mailchimpRecorder {
 
 	recorder := &mailchimpRecorder{
-		fields:    `{"merge_fields":[]}`,
 		webhooks:  `{"webhooks":[]}`,
 		bodies:    make(map[string]string),
 		failPaths: make(map[string]int),
@@ -69,13 +67,6 @@ func newMailchimpRecorder() *mailchimpRecorder {
 		response.Header().Set("Content-Type", "application/json")
 
 		switch {
-
-		case strings.HasSuffix(request.URL.Path, "/merge-fields"):
-			if request.Method == http.MethodPost {
-				_, _ = response.Write([]byte(`{"merge_id":9,"tag":"EMISSARYID"}`))
-				return
-			}
-			_, _ = response.Write([]byte(recorder.fields))
 
 		case strings.HasSuffix(request.URL.Path, "/webhooks"):
 			if request.Method == http.MethodPost {
@@ -173,12 +164,13 @@ func TestMailchimpSetup_InstallsEverythingAndMarksReady(t *testing.T) {
 	require.Equal(t, "Newsletter", userConnection.Data.GetString(model.UserConnectionDataAudienceName), "the name is what makes a pasted ID checkable")
 	require.Equal(t, "wh1", userConnection.Data.GetString(model.UserConnectionDataWebhookID))
 
-	require.Equal(t, 1, recorder.count("POST /lists/abc123/merge-fields"))
-
-	// D42: Emissary applies no tag.  EMISSARYID already marks exactly the members it pushed,
-	// and a tag call would cost a second request per follower on 1.2's hot path.
+	// D42 and D46: Emissary installs nothing in the audience but the webhook. No tag, which
+	// cost a second request per follower on 1.2's hot path, and no merge field, which was
+	// written on every push and read by nothing.
 	require.Equal(t, 0, recorder.count("GET /lists/abc123/segments"), "no tag is created")
 	require.Equal(t, 0, recorder.count("POST /lists/abc123/segments"), "no tag is created")
+	require.Equal(t, 0, recorder.count("GET /lists/abc123/merge-fields"), "no merge field is looked for")
+	require.Equal(t, 0, recorder.count("POST /lists/abc123/merge-fields"), "no merge field is created")
 	require.Equal(t, 1, recorder.count("POST /lists/abc123/webhooks"))
 }
 
@@ -234,24 +226,22 @@ func TestMailchimpSetup_IsIdempotent(t *testing.T) {
 	callbackURL, err := service.mailchimp_callbackURL(&userConnection)
 	require.NoError(t, err)
 
-	recorder.fields = `{"merge_fields":[{"merge_id":9,"tag":"EMISSARYID"}]}`
 	recorder.webhooks = `{"webhooks":[{"id":"wh1","url":"` + callbackURL + `"}]}`
 
 	require.NoError(t, service.mailchimp_setup(client, &userConnection, testAudience()))
 
-	require.Equal(t, 1, recorder.count("POST /lists/abc123/merge-fields"), "the EMISSARYID field must be created once")
 	require.Equal(t, 1, recorder.count("POST /lists/abc123/webhooks"), "a second webhook doubles every delivery")
 
 	require.Equal(t, "wh1", userConnection.Data.GetString(model.UserConnectionDataWebhookID))
 }
 
-// TestMailchimpSetup_WebhookFailureDoesNotBlockTheConnection pins D40
-func TestMailchimpSetup_WebhookFailureDoesNotBlockTheConnection(t *testing.T) {
+// TestMailchimpSetup_WebhookFailureBlocksOnAPublicDomain pins D47, which closed D40's carve-out
+func TestMailchimpSetup_WebhookFailureBlocksOnAPublicDomain(t *testing.T) {
 
-	// The webhook is the only step that asks Mailchimp to reach BACK at this server, which a
-	// development machine cannot receive.  Gating READY on it would mean this feature could
-	// only ever be built behind a tunnel.  §1.4 makes the gate strict; until then a failed
-	// install is recorded as an empty webhookId and the connection still works outbound.
+	// On a public domain the webhook install is an ordinary outbound call that should work,
+	// and a connection without one is a trap: outbound sync runs, while every unsubscribe
+	// made at Mailchimp silently never arrives. So it is not READY, and the User is told why.
+	// The development-machine case that D40 existed for is now D45's skip, tested above.
 
 	recorder := newMailchimpRecorder()
 	defer recorder.server.Close()
@@ -260,36 +250,11 @@ func TestMailchimpSetup_WebhookFailureDoesNotBlockTheConnection(t *testing.T) {
 
 	service, client, userConnection := newSetupService(t, recorder)
 
-	require.NoError(t, service.mailchimp_setup(client, &userConnection, testAudience()))
+	require.Error(t, service.mailchimp_setup(client, &userConnection, testAudience()))
 
-	require.Equal(t, model.UserConnectionStatusReady, userConnection.Status, "the connection is set up (D40)")
-	require.Equal(t, "Newsletter", userConnection.Data.GetString(model.UserConnectionDataAudienceName))
-	require.False(t, userConnection.HasWebhook(), "an install that failed leaves no webhookId")
-}
-
-// TestMailchimpSetup_MergeFieldFailureDoesBlock confirms D40's carve-out is narrow
-func TestMailchimpSetup_MergeFieldFailureDoesBlock(t *testing.T) {
-
-	// This is an ordinary outbound call that works the same everywhere, so there is no reason
-	// to tolerate it failing -- and a connection without EMISSARYID cannot link a member back
-	// to the Follower it came from.
-
-	for _, path := range []string{"POST /lists/abc123/merge-fields"} {
-
-		t.Run(path, func(t *testing.T) {
-
-			recorder := newMailchimpRecorder()
-			defer recorder.server.Close()
-
-			recorder.failPaths[path] = http.StatusBadRequest
-
-			service, client, userConnection := newSetupService(t, recorder)
-
-			require.Error(t, service.mailchimp_setup(client, &userConnection, testAudience()))
-			require.NotEqual(t, model.UserConnectionStatusReady, userConnection.Status)
-			require.False(t, userConnection.IsReady())
-		})
-	}
+	require.NotEqual(t, model.UserConnectionStatusReady, userConnection.Status, "a connection with no webhook is not set up")
+	require.False(t, userConnection.IsReady())
+	require.False(t, userConnection.HasWebhook())
 }
 
 // TestMailchimpCallbackURL_RefusesAnUnmintedSecret keeps an unauthenticated address out of
@@ -325,24 +290,30 @@ func TestMailchimpCallbackURL_CarriesTheSecret(t *testing.T) {
 
 // TestMailchimpSetup_RefusesAnUndeliverableCallback is the local-development case, and it
 // must stay non-fatal
-func TestMailchimpSetup_RefusesAnUndeliverableCallback(t *testing.T) {
+func TestMailchimpSetup_SkipsTheWebhookOnALocalDomain(t *testing.T) {
 
-	// Nothing on the public internet can reach `localhost`, so asking Mailchimp to deliver
-	// there is a round trip that can only fail. Refusing early says why; failing at Mailchimp
-	// does not. The connection still finishes and still syncs outward (D40) -- which is the
-	// whole reason this feature can be built on a laptop at all.
+	// Nothing on the public internet can reach a local domain, so a webhook install there
+	// could only fail (D45). It is skipped outright, and the connection is READY without one:
+	// this is the single carve-out from D47's gate, and the reason the feature can be built
+	// on a laptop at all.
 
-	recorder := newMailchimpRecorder()
-	defer recorder.server.Close()
+	for name, host := range map[string]string{"localhost": "http://localhost:8080", "loopback": "http://127.0.0.1:8080"} {
 
-	service, client, userConnection := newSetupService(t, recorder)
-	service.host = "http://localhost:8080"
+		t.Run(name, func(t *testing.T) {
 
-	require.NoError(t, service.mailchimp_setup(client, &userConnection, testAudience()))
+			recorder := newMailchimpRecorder()
+			defer recorder.server.Close()
 
-	require.Equal(t, model.UserConnectionStatusReady, userConnection.Status, "the connection is still set up")
-	require.False(t, userConnection.HasWebhook())
+			service, client, userConnection := newSetupService(t, recorder)
+			service.host = host
 
-	require.Equal(t, 0, recorder.count("GET /lists/abc123/webhooks"), "Mailchimp is never asked")
-	require.Equal(t, 0, recorder.count("POST /lists/abc123/webhooks"))
+			require.NoError(t, service.mailchimp_setup(client, &userConnection, testAudience()))
+
+			require.Equal(t, model.UserConnectionStatusReady, userConnection.Status, "the connection is still set up")
+			require.False(t, userConnection.HasWebhook())
+
+			require.Equal(t, 0, recorder.count("GET /lists/abc123/webhooks"), "Mailchimp is never asked")
+			require.Equal(t, 0, recorder.count("POST /lists/abc123/webhooks"))
+		})
+	}
 }

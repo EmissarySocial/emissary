@@ -36,10 +36,7 @@ func (service *UserConnection) MailchimpAddMember(session data.Session, userID p
 		return nil
 	}
 
-	member := mailchimp_member(follower)
-	audienceID := userConnection.Data.GetString(model.UserConnectionDataAudienceID)
-
-	if err := client.SetMember(audienceID, member); err != nil {
+	if err := mailchimp_pushMember(client, userConnection, follower); err != nil {
 		return service.mailchimp_reportMemberError(session, userConnection, derp.Wrap(err, location, "Unable to add member"))
 	}
 
@@ -140,6 +137,34 @@ func (service *UserConnection) mailchimp_reportMemberError(session data.Session,
 	return err
 }
 
+// mailchimp_pushMember writes a Follower into the connection's audience, then applies the
+// connection's tag when it has one
+func mailchimp_pushMember(client *mailchimp.Client, userConnection *model.UserConnection, follower *model.Follower) error {
+
+	const location = "service.mailchimp_pushMember"
+
+	audienceID := userConnection.Data.GetString(model.UserConnectionDataAudienceID)
+
+	if err := client.SetMember(audienceID, mailchimp_member(follower)); err != nil {
+		return derp.Wrap(err, location, "Unable to add member to the audience")
+	}
+
+	// The tag is optional (D49), and it is a second request because the member PUT cannot
+	// carry one. It is applied on every push: the call is idempotent, and an upsert cannot
+	// say whether the member was new.
+	tag := strings.TrimSpace(userConnection.Data.GetString(model.UserConnectionDataTag))
+
+	if tag == "" {
+		return nil
+	}
+
+	if err := client.TagMember(audienceID, follower.Actor.EmailAddress, tag); err != nil {
+		return derp.Wrap(err, location, "Unable to tag the member")
+	}
+
+	return nil
+}
+
 // mailchimp_member converts an Emissary Follower into the Mailchimp member it becomes
 func mailchimp_member(follower *model.Follower) mailchimp.Member {
 
@@ -153,9 +178,7 @@ func mailchimp_member(follower *model.Follower) mailchimp.Member {
 		// a second email for no additional consent.
 		Status: mailchimp.MemberStatusSubscribed,
 
-		MergeFields: map[string]string{
-			mailchimpMergeFieldTag: follower.FollowerID.Hex(),
-		},
+		MergeFields: map[string]string{},
 	}
 
 	// Merge fields are omitted rather than blanked, because an empty value would overwrite

@@ -13,7 +13,7 @@ func UserConnectionSchema() schema.Element {
 			"userId":           schema.String{Format: "objectId"},
 			"type":             schema.String{Enum: []string{UserConnectionTypeMailchimp}},
 			"isActive":         schema.Boolean{},
-			"status":           schema.String{Enum: []string{"", UserConnectionStatusReady, UserConnectionStatusReconnect}},
+			"status":           schema.String{Required: true, Enum: []string{UserConnectionStatusPending, UserConnectionStatusReady, UserConnectionStatusReconnect}}, // Required, or an empty string skips the enum and reads as no state at all
 			"data":             schema.Object{Wildcard: schema.String{MaxLength: 1024}},
 			"vault":            schema.Object{Wildcard: schema.String{Format: "unsafe-any", MaxLength: 8192}}, // vault holds secrets; unsafe-any avoids the no-html default corrupting stored values.
 		},

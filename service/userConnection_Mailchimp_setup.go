@@ -7,23 +7,16 @@ import (
 	"github.com/EmissarySocial/emissary/tools/mailchimp"
 	"github.com/benpate/derp"
 	"github.com/benpate/uri"
+	"github.com/rs/zerolog/log"
 )
 
 /******************************************
  * Mailchimp Audience Setup
  *
- * What Emissary installs inside the audience a User names: a merge field to
- * carry the FollowerID, and a webhook to hear about changes made at Mailchimp.
- * Both are create-if-missing, because this runs again on every reconnect.
- * See MAILING-LISTS.md 1.1.
+ * What Emissary installs inside the audience a User names: a webhook, to
+ * hear about changes made at Mailchimp. It is create-if-missing, because
+ * this runs again on every reconnect. See MAILING-LISTS.md 1.1.
  ******************************************/
-
-// mailchimpMergeFieldTag is the merge field carrying the Emissary FollowerID (D8).
-// Mailchimp caps a merge tag at 10 characters, and this is exactly 10.
-const mailchimpMergeFieldTag = "EMISSARYID"
-
-// mailchimpMergeFieldName is the human-readable label shown beside that merge field
-const mailchimpMergeFieldName = "Emissary ID"
 
 // mailchimp_setup installs everything Emissary needs inside the audience this User chose
 func (service *UserConnection) mailchimp_setup(client mailchimp.Client, userConnection *model.UserConnection, audience mailchimp.Audience) error {
@@ -32,56 +25,33 @@ func (service *UserConnection) mailchimp_setup(client mailchimp.Client, userConn
 
 	audienceID := audience.ID
 
-	// Find or create the EMISSARYID merge field (D8)
-	if err := mailchimp_setupMergeField(client, audienceID); err != nil {
-		return derp.Wrap(err, location, "Unable to set up the EMISSARYID field in this audience")
-	}
-
-	// Record what was installed, and mark the connection ready to use (D39). The audience NAME
-	// is stored so that the settings page can show the User which list they actually pasted
-	// the ID of -- the ID alone is unreadable, which is how a wrong paste stays wrong.
+	// Record the audience. Its NAME is stored so that the settings page can show the User
+	// which list they actually pasted the ID of -- the ID alone is unreadable, which is how
+	// a wrong paste stays wrong.
 	userConnection.Data.SetString(model.UserConnectionDataAudienceID, audienceID)
 	userConnection.Data.SetString(model.UserConnectionDataAudienceName, audience.Name)
-	userConnection.Status = model.UserConnectionStatusReady
 
-	// RULE: a webhook that will not install does NOT block the connection (D40). It is the
-	// only step that asks Mailchimp to reach back at this server -- which a development
-	// machine cannot receive -- so it is reported, and its absence recorded, rather than
-	// refused. Outbound sync works without it; only inbound events are missing.
-	webhookID, err := service.mailchimp_setupWebhook(client, userConnection, audienceID)
-
-	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Unable to install a Mailchimp webhook", userConnection.UserConnectionID))
+	// RULE: never ask Mailchimp to deliver to a local domain (D45). Nothing on the public
+	// internet can reach one, so the install could only fail -- and on a development machine
+	// that is the ordinary case. This is the ONE place a connection is READY with no webhook.
+	if uri.IsLocalHostname(uri.Hostname(service.host)) {
+		log.Debug().Str("host", service.host).Msg("Mailchimp webhook not installed: local domain")
+		userConnection.Status = model.UserConnectionStatusReady
 		return nil
 	}
 
-	userConnection.Data.SetString(model.UserConnectionDataWebhookID, webhookID)
-
-	return nil
-}
-
-// mailchimp_setupMergeField creates this audience's EMISSARYID merge field if it is absent
-func mailchimp_setupMergeField(client mailchimp.Client, audienceID string) error {
-
-	const location = "service.mailchimp_setupMergeField"
-
-	mergeFields, err := client.GetMergeFields(audienceID)
+	// RULE: on a public domain the webhook is part of being set up (D47). A connection whose
+	// webhook did not install is not READY, and the User sees why -- a silent half-connection
+	// would push outward while every unsubscribe made at Mailchimp quietly never arrived.
+	webhookID, err := service.mailchimp_setupWebhook(client, userConnection, audienceID)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Unable to read this audience's fields")
+		return derp.Wrap(err, location, "Unable to install a Mailchimp webhook")
 	}
 
-	// Members are addressed by merge TAG rather than by ID, so nothing needs to be recorded
-	// here -- only that the field exists.
-	for _, mergeField := range mergeFields {
-		if mergeField.Tag == mailchimpMergeFieldTag {
-			return nil
-		}
-	}
-
-	if _, err := client.CreateMergeField(audienceID, mailchimpMergeFieldTag, mailchimpMergeFieldName); err != nil {
-		return derp.Wrap(err, location, "Unable to create the EMISSARYID field. An audience can hold only 30 custom fields.")
-	}
+	// Set up, and ready to use (D39)
+	userConnection.Data.SetString(model.UserConnectionDataWebhookID, webhookID)
+	userConnection.Status = model.UserConnectionStatusReady
 
 	return nil
 }
@@ -96,15 +66,6 @@ func (service *UserConnection) mailchimp_setupWebhook(client mailchimp.Client, u
 
 	if err != nil {
 		return "", derp.Wrap(err, location, "Unable to build this connection's callback address")
-	}
-
-	// RULE: refuse a callback Mailchimp could never deliver to, BEFORE asking it to try. A
-	// development machine is the ordinary case here -- nothing on the public internet can
-	// reach `localhost` -- and failing fast says so, where failing at Mailchimp does not.
-	// This is not fatal: D40 records the miss as an empty webhookId and the connection works
-	// outbound regardless.
-	if uri.IsLocalURL(callbackURL) {
-		return "", derp.BadRequest(location, "Mailchimp cannot deliver to this server's address, so no webhook was installed. Outbound syncing still works; inbound changes made at Mailchimp will not arrive here.", uri.Hostname(service.host))
 	}
 
 	webhooks, err := client.GetWebhooks(audienceID)
@@ -178,8 +139,15 @@ func (service *UserConnection) mailchimp_removeWebhook(userConnection *model.Use
 	webhookID := userConnection.Data.GetString(model.UserConnectionDataWebhookID)
 	audienceID := userConnection.Data.GetString(model.UserConnectionDataAudienceID)
 
-	// A connection that never finished setup has nothing installed to remove
-	if (webhookID == "") || (audienceID == "") {
+	// RULE: no webhook ID means no webhook was ever installed -- D45's local-domain skip
+	// leaves exactly this -- so there is nothing at Mailchimp to remove.
+	if webhookID == "" {
+		return nil
+	}
+
+	// RULE: no audience ID means setup never reached an audience (D39), so nothing could have
+	// been installed under one, and there is no path to address a delete to anyway.
+	if audienceID == "" {
 		return nil
 	}
 

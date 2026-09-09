@@ -39,23 +39,19 @@
 					<div class="flex-grow">
 						{{$mailchimp.Label}}
 						{{- if $mailchimp.IsConfigured -}}
+							&nbsp;
 							<span class="text-sm gray50">{{index $mailchimp.Data `audienceName`}}</span>
 						{{- end -}}
 					</div>
-					<div class="nowrap">
-						{{- if $mailchimp.IsNew -}}
-							<span class="text-gray">Not Connected</span>
-						{{- else if $mailchimp.NeedsReconnect -}}
-							<span class="text-red">{{icon "alert"}} Reconnect</span>
-						{{- else if $mailchimp.IsActive.IsFalse -}}
-							<span class="text-gray">Paused</span>
-						{{- else if $mailchimp.NeedsSetup -}}
-							<span class="text-red">{{icon "alert"}} Not Finished</span>
-						{{- else if $mailchimp.HasWebhook -}}
-							<span class="text-green">{{icon "check-circle-fill"}} Active</span>
+					<!-- Two states only, matching the Domain Connections page (D44). Green means the
+					     connection is switched on AND finished setting up (IsReady, D39); every other
+					     state (new, paused, unfinished, rejected credential) invites a click. -->
+					<div class="text-sm nowrap">
+						&nbsp;
+						{{- if $mailchimp.IsReady -}}
+							<button class="success">{{icon "check"}} Connected</button>
 						{{- else -}}
-							<span class="text-green">{{icon "check-circle-fill"}} Active</span>
-							<span class="text-gray">(outbound only)</span>
+							<button>Connect</button>
 						{{- end -}}
 					</div>
 				</div>

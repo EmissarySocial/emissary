@@ -1,9 +1,9 @@
 package service
 
 import (
-	"testing"
-
+	"net/http"
 	"strings"
+	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
 
@@ -12,8 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestMailchimpMember_CarriesTheFourValues pins what D8 sends per member
-func TestMailchimpMember_CarriesTheFourValues(t *testing.T) {
+// TestMailchimpMember_CarriesTheThreeValues pins what D8 sends per member
+func TestMailchimpMember_CarriesTheThreeValues(t *testing.T) {
 
 	follower := newMailingListFollower()
 	follower.Data.SetString(model.FollowerDataIPSignup, "10.0.0.1")
@@ -23,7 +23,6 @@ func TestMailchimpMember_CarriesTheFourValues(t *testing.T) {
 	require.Equal(t, "sarah@connor.mil", member.EmailAddress)
 	require.Equal(t, "Sarah", member.MergeFields["FNAME"])
 	require.Equal(t, "Connor", member.MergeFields["LNAME"])
-	require.Equal(t, follower.FollowerID.Hex(), member.MergeFields[mailchimpMergeFieldTag])
 	require.Equal(t, "10.0.0.1", member.IPSignup)
 
 	// RULE: `subscribed`, never `pending`. Emissary has already run its own double opt-in,
@@ -46,7 +45,7 @@ func TestMailchimpMember_OmitsWhatItDoesNotKnow(t *testing.T) {
 	require.Empty(t, member.IPSignup)
 	require.NotContains(t, member.MergeFields, "FNAME")
 	require.NotContains(t, member.MergeFields, "LNAME")
-	require.Contains(t, member.MergeFields, mailchimpMergeFieldTag, "the Follower link is always sent")
+	require.Empty(t, member.MergeFields, "with nothing to say, no merge_fields key is sent at all")
 }
 
 // TestMailchimpSplitName verifies the split D8 describes, and its inverse
@@ -87,4 +86,81 @@ func TestMailchimpSplitName(t *testing.T) {
 			require.Equal(t, strings.TrimSpace(test.name), rejoined)
 		})
 	}
+}
+
+/******************************************
+ * Pushing a member, with and without a tag
+ *
+ * These pin the NUMBER and ORDER of requests. The wire format of each one is
+ * covered by tools/mailchimp; what matters here is that a tag costs exactly one
+ * extra call, after the member exists, and that no tag costs nothing.
+ ******************************************/
+
+// TestMailchimpPushMember_TagsAfterTheMemberExists pins the second call and its order
+func TestMailchimpPushMember_TagsAfterTheMemberExists(t *testing.T) {
+
+	recorder := newMailchimpRecorder()
+	defer recorder.server.Close()
+
+	_, client, userConnection := newSetupService(t, recorder)
+	userConnection.Data.SetString(model.UserConnectionDataAudienceID, "abc123")
+	userConnection.Data.SetString(model.UserConnectionDataTag, "Emissary")
+
+	follower := newMailingListFollower()
+	require.NoError(t, mailchimp_pushMember(&client, &userConnection, &follower))
+
+	// The member must exist before it can be tagged, so PUT comes first
+	memberPath := "/lists/abc123/members/" + mailchimp.SubscriberHash("sarah@connor.mil")
+	require.Equal(t, []string{"PUT " + memberPath, "POST " + memberPath + "/tags"}, recorder.requests)
+	require.JSONEq(t, `{"tags":[{"name":"Emissary","status":"active"}]}`, recorder.bodies["POST "+memberPath+"/tags"])
+}
+
+// TestMailchimpPushMember_NoTagIsOneRequest keeps the hot path at one call when nothing asks
+// for more
+func TestMailchimpPushMember_NoTagIsOneRequest(t *testing.T) {
+
+	for name, tag := range map[string]string{"absent": "", "blank": "   "} {
+
+		t.Run(name, func(t *testing.T) {
+
+			recorder := newMailchimpRecorder()
+			defer recorder.server.Close()
+
+			_, client, userConnection := newSetupService(t, recorder)
+			userConnection.Data.SetString(model.UserConnectionDataAudienceID, "abc123")
+
+			if tag != "" {
+				userConnection.Data.SetString(model.UserConnectionDataTag, tag)
+			}
+
+			follower := newMailingListFollower()
+			require.NoError(t, mailchimp_pushMember(&client, &userConnection, &follower))
+
+			require.Len(t, recorder.requests, 1)
+			require.Equal(t, http.MethodPut+" /lists/abc123/members/"+mailchimp.SubscriberHash("sarah@connor.mil"), recorder.requests[0])
+		})
+	}
+}
+
+// TestMailchimpPushMember_ATagFailureIsAnError keeps a tag Mailchimp refuses from vanishing
+func TestMailchimpPushMember_ATagFailureIsAnError(t *testing.T) {
+
+	// The member call succeeded, so the member is there. The task must still fail, so the
+	// queue retries and the tag is eventually applied rather than silently skipped.
+
+	recorder := newMailchimpRecorder()
+	defer recorder.server.Close()
+
+	memberPath := "/lists/abc123/members/" + mailchimp.SubscriberHash("sarah@connor.mil")
+	recorder.failPaths["POST "+memberPath+"/tags"] = http.StatusInternalServerError
+
+	_, client, userConnection := newSetupService(t, recorder)
+	userConnection.Data.SetString(model.UserConnectionDataAudienceID, "abc123")
+	userConnection.Data.SetString(model.UserConnectionDataTag, "Emissary")
+
+	follower := newMailingListFollower()
+	err := mailchimp_pushMember(&client, &userConnection, &follower)
+
+	require.Error(t, err)
+	require.Equal(t, 1, recorder.count("PUT "+memberPath), "the member was still written")
 }

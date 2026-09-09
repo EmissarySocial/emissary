@@ -22,7 +22,7 @@ func TestDescribeError_SurvivesWrapping(t *testing.T) {
 
 	defer server.Close()
 
-	_, err := testClient(server.URL).GetAudiences()
+	err := testClient(server.URL).Ping()
 
 	require.Error(t, err)
 
@@ -45,7 +45,7 @@ func TestDescribeError_TransientFailuresAreNotValidation(t *testing.T) {
 
 	defer server.Close()
 
-	_, err := testClient(server.URL).GetAudiences()
+	err := testClient(server.URL).Ping()
 
 	require.Error(t, err)
 	require.False(t, derp.IsValidationError(err))

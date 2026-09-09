@@ -308,9 +308,8 @@ func TestMailchimpWebhook_UnsubscribeDoesNotEchoBack(t *testing.T) {
 // TestMailchimpWebhook_SubscribeMayEchoBack records the deliberate asymmetry
 func TestMailchimpWebhook_SubscribeMayEchoBack(t *testing.T) {
 
-	// Unlike an unsubscribe, an inbound subscribe SHOULD push back out: the member call is an
-	// upsert, `sources` excludes `api` so nothing loops, and the round trip is what stamps
-	// EMISSARYID onto a member who arrived from Mailchimp's side (D38).
+	// Unlike an unsubscribe, an inbound subscribe MAY push back out: the member call upserts
+	// the same values, and `sources` excludes `api` so nothing loops (D38).
 
 	service, userConnection, session, tasks := newSpooledWebhookService(t)
 
@@ -400,4 +399,22 @@ func TestMailchimpUpdateEmail_DiscardsAnAddressThatCannotBeSaved(t *testing.T) {
 			require.Empty(t, session.collection.saved, "a new address that cannot be saved must not be saved")
 		})
 	}
+}
+
+// TestMailchimpWebhook_MatchesTheAddressRegardlessOfCase is D9 surviving a case change
+func TestMailchimpWebhook_MatchesTheAddressRegardlessOfCase(t *testing.T) {
+
+	// Mailchimp hashes members on the lowercased address, so what it echoes back need not match
+	// the case a visitor typed. Before addresses were normalized, this unsubscribe found nobody,
+	// answered 200, and the person kept receiving mail they had opted out of.
+
+	follower := newMailingListFollower() // stored as sarah@connor.mil
+	service, userConnection, session, _ := newSpooledWebhookService(t, follower)
+
+	err := service.Mailchimp_ReceiveWebhook(session, &userConnection, "unsubscribe", mapof.String{
+		"data[email]": "Sarah@Connor.MIL",
+	})
+
+	require.NoError(t, err)
+	require.Len(t, session.collection.deleted, 1, "the unsubscribe must reach the row it names")
 }
