@@ -48,8 +48,8 @@ func UpgradeMongoDB(ctx context.Context, session *mongo.Database, domain *model.
 		upgrades.Version27,
 		upgrades.Version28,
 		upgrades.Version29,
-		upgrades.Version30,
 		upgrades.Version31,
+		upgrades.Version32,
 	}
 
 	// If we're already at the target database version or higher, then skip any other work.
