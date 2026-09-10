@@ -15,7 +15,14 @@ func SearchResult(ctx context.Context, database *mongo.Database) error {
 
 	log.Trace().Str("database", database.Name()).Str("collection", "SearchResult").Msg("COLLECTION:")
 
-	return indexer.Sync(ctx, database.Collection("SearchResult"), indexer.IndexSet{
+	return indexer.Sync(ctx, database.Collection("SearchResult"), searchResultIndexes())
+}
+
+// searchResultIndexes returns the index set for the SearchResult collection.
+// It is separate from SearchResult so that tests can assert on the real keys.
+func searchResultIndexes() indexer.IndexSet {
+
+	return indexer.IndexSet{
 
 		// idx_SearchResult_Recycle serves the nightly RecycleDomain purge (deleteDate > 0).
 		"idx_SearchResult_Recycle": recycleIndex(),
@@ -73,9 +80,9 @@ func SearchResult(ctx context.Context, database *mongo.Database) error {
 
 		"idx_SearchResult_Location": mongo.IndexModel{
 			Keys: bson.D{
-				{Key: "place.location", Value: "2dsphere"},
+				{Key: "location", Value: "2dsphere"},
 			},
 			Options: options.Index().SetSphereVersion(3),
 		},
-	})
+	}
 }
