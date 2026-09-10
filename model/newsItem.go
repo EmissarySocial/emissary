@@ -320,8 +320,8 @@ func (newsItem NewsItem) Toot() object.Status {
 		ID:          newsItem.NewsItemID.Hex(),
 		URI:         newsItem.Origin.URL,
 		CreatedAt:   MastodonDate(time.UnixMilli(newsItem.CreateDate)), // CreateDate is milliseconds (journal UnixMilli)
-		SpoilerText: "",                                                             // newsItem.Label,
-		Content:     "",                                                             // newsItem.ContentHTML,
+		SpoilerText: "",                                                // newsItem.Label,
+		Content:     "",                                                // newsItem.ContentHTML,
 	}
 }
 
