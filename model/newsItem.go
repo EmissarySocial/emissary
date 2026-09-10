@@ -313,15 +313,30 @@ func (newsItem *NewsItem) AddReference(reference OriginLink) bool {
  * Mastodon API
  ******************************************/
 
-// Toot returns this object represented as a toot stateID
+// Toot returns this NewsItem as a Mastodon-API Status.
+//
+// The Account is built from the item's Origin (the followed actor). Content is
+// left empty because a NewsItem does not store the post body -- the timeline
+// handler is expected to fill it in from the ActivityStream cache. Without a
+// valid Account the whole Status fails to decode in the client, so this must
+// always return one.
 func (newsItem NewsItem) Toot() object.Status {
 
+	// PublishDate is the post's own time (Unix SECONDS); fall back to the ingest
+	// time when it is missing.
+	published := time.Unix(newsItem.PublishDate, 0)
+	if newsItem.PublishDate == 0 {
+		published = time.UnixMilli(newsItem.CreateDate)
+	}
+
 	return object.Status{
-		ID:          newsItem.NewsItemID.Hex(),
-		URI:         newsItem.Origin.URL,
-		CreatedAt:   MastodonDate(time.UnixMilli(newsItem.CreateDate)), // CreateDate is milliseconds (journal UnixMilli)
-		SpoilerText: "",                                                // newsItem.Label,
-		Content:     "",                                                // newsItem.ContentHTML,
+		ID:               newsItem.NewsItemID.Hex(),
+		URI:              newsItem.URL,
+		URL:              newsItem.URL,
+		CreatedAt:        MastodonDate(published),
+		Visibility:       "public",
+		Account:          RemoteActorAccount(newsItem.Origin.URL, newsItem.Origin.Label, newsItem.Origin.IconURL, time.Time{}),
+		MediaAttachments: []object.MediaAttachment{},
 	}
 }
 
