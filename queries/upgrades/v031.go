@@ -26,7 +26,7 @@ func Version31(ctx context.Context, session *mongo.Database) error {
 
 	const location = "queries.upgrades.Version31"
 
-	fmt.Println("... Version 30")
+	fmt.Println("... Version 31")
 
 	if err := normalizeFollowerAddresses(ctx, session); err != nil {
 		return derp.Wrap(err, location, "Normalizing Follower email addresses")

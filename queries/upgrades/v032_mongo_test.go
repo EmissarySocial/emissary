@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// These drive Version31 against a REAL MongoDB, because the behavior that matters is the
+// These drive Version32 against a REAL MongoDB, because the behavior that matters is the
 // filter's: whether `$in: ["", null]` reaches a row with NO status key at all, as well as one
 // with an empty string, while leaving a real status alone. They skip when no database is
 // reachable, so `go test ./...` still passes without one.
@@ -50,8 +50,8 @@ func loadStatus(t *testing.T, database *mongo.Database, id primitive.ObjectID) s
 	return result.Status
 }
 
-// TestVersion31 confirms both shapes of "no status" become PENDING and a real status survives
-func TestVersion31(t *testing.T) {
+// TestVersion32 confirms both shapes of "no status" become PENDING and a real status survives
+func TestVersion32(t *testing.T) {
 
 	database := newUpgradeTestDatabase(t)
 	ctx := context.Background()
@@ -63,15 +63,15 @@ func TestVersion31(t *testing.T) {
 	missing := insertConnectionWithStatus(t, database, nil)
 	configured := insertConnectionWithStatus(t, database, &ready)
 
-	require.NoError(t, Version31(ctx, database))
+	require.NoError(t, Version32(ctx, database))
 
 	require.Equal(t, model.UserConnectionStatusPending, loadStatus(t, database, blank))
 	require.Equal(t, model.UserConnectionStatusPending, loadStatus(t, database, missing), "a missing key is the same state as an empty one")
 	require.Equal(t, model.UserConnectionStatusReady, loadStatus(t, database, configured), "a set-up connection is left alone")
 }
 
-// TestVersion31_Idempotent confirms a second run changes nothing
-func TestVersion31_Idempotent(t *testing.T) {
+// TestVersion32_Idempotent confirms a second run changes nothing
+func TestVersion32_Idempotent(t *testing.T) {
 
 	database := newUpgradeTestDatabase(t)
 	ctx := context.Background()
@@ -79,8 +79,8 @@ func TestVersion31_Idempotent(t *testing.T) {
 	empty := ""
 	blank := insertConnectionWithStatus(t, database, &empty)
 
-	require.NoError(t, Version31(ctx, database))
-	require.NoError(t, Version31(ctx, database))
+	require.NoError(t, Version32(ctx, database))
+	require.NoError(t, Version32(ctx, database))
 
 	require.Equal(t, model.UserConnectionStatusPending, loadStatus(t, database, blank))
 }

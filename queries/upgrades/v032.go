@@ -20,7 +20,7 @@ func Version32(ctx context.Context, session *mongo.Database) error {
 
 	const location = "queries.upgrades.Version32"
 
-	fmt.Println("... Version 31")
+	fmt.Println("... Version 32")
 
 	collection := session.Collection("UserConnection")
 
