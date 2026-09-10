@@ -54,6 +54,7 @@ type Stream struct {
 	notificationService *Notification
 	outboxService       *Outbox
 	permissionService   *Permission
+	searchResultService *SearchResult
 	searchTagService    *SearchTag
 	templateService     *Template
 	followerService     *Follower
@@ -95,6 +96,7 @@ func (service *Stream) Refresh(factory *Factory) {
 	service.outboxService = factory.Outbox()
 	service.permissionService = factory.Permission()
 	service.ruleService = factory.Rule()
+	service.searchResultService = factory.SearchResult()
 	service.searchTagService = factory.SearchTag()
 	service.templateService = factory.Template()
 	service.userService = factory.User()
@@ -467,6 +469,12 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 		if err := service.sendSyndicationMessages(session, stream, nil, nil, stream.Syndication.Values); err != nil {
 			derp.Report(derp.Wrap(err, location, "Sending syndication messages", stream))
 		}
+	}
+
+	// RULE: Remove this Stream from the search index.  Keyed by URL, never by SearchResultID:
+	// the index is a projection of the Stream, so it holds no ID that a Stream can name.
+	if err := service.searchResultService.DeleteByURL(session, stream.URL); err != nil {
+		derp.Report(derp.Wrap(err, location, "Deleting search result", stream, note))
 	}
 
 	// RULE: Delete all related Children

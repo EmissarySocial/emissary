@@ -49,6 +49,7 @@ type User struct {
 	outbox2Service        *Outbox2
 	responseService       *Response
 	ruleService           *Rule
+	searchResultService   *SearchResult
 	searchTagService      *SearchTag
 	steranko              func(data.Session) *steranko.Steranko
 	streamService         *Stream
@@ -86,6 +87,7 @@ func (service *User) Refresh(factory *Factory) {
 	service.outbox2Service = factory.Outbox2()
 	service.responseService = factory.Response()
 	service.ruleService = factory.Rule()
+	service.searchResultService = factory.SearchResult()
 	service.steranko = factory.Steranko
 	service.streamService = factory.Stream()
 	service.userConnectionService = factory.UserConnection()
@@ -356,6 +358,12 @@ func (service *User) Delete(session data.Session, user *model.User, note string)
 	// Delete related Rules
 	if err := service.ruleService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
 		return derp.Wrap(err, location, "Deleting User's rules", user, note)
+	}
+
+	// RULE: Remove this User from the search index.  Keyed by ProfileURL, which is what
+	// SearchResult() indexes them under -- the index holds no ID that a User can name.
+	if err := service.searchResultService.DeleteByURL(session, user.ProfileURL); err != nil {
+		return derp.Wrap(err, location, "Deleting User's search result", user, note)
 	}
 
 	// Delete related Streams
