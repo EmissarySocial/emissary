@@ -112,18 +112,25 @@ func mapDocumentToAccount(factory *service.Factory, session data.Session, docume
 	avatar := document.Icon().URL()
 	header := document.Image().URL()
 
+	// Best-effort follower/following/post counts: the actor document only carries
+	// the collection URLs, so fetch each and read its "totalItems". A failure (a
+	// server that hides these, a 404) just leaves the count at 0, which is what
+	// Mastodon itself does. ascache serves repeat profile views without refetching.
 	return object.Account{
-		ID:           resolveAccountID(factory, session, document.ID()),
-		Acct:         acct,
-		Username:     document.PreferredUsername(),
-		DisplayName:  document.Name(),
-		Avatar:       avatar,
-		AvatarStatic: avatar,
-		Header:       header,
-		HeaderStatic: header,
-		URL:          document.URL(),
-		Note:         document.Summary(),
-		CreatedAt:    model.MastodonDate(createdAt),
+		ID:             resolveAccountID(factory, session, document.ID()),
+		Acct:           acct,
+		Username:       document.PreferredUsername(),
+		DisplayName:    document.Name(),
+		Avatar:         avatar,
+		AvatarStatic:   avatar,
+		Header:         header,
+		HeaderStatic:   header,
+		URL:            document.URL(),
+		Note:           document.Summary(),
+		CreatedAt:      model.MastodonDate(createdAt),
+		FollowersCount: document.Followers().LoadLink().TotalItems(),
+		FollowingCount: document.Following().LoadLink().TotalItems(),
+		StatusesCount:  document.Outbox().LoadLink().TotalItems(),
 	}
 }
 
