@@ -60,6 +60,20 @@ func getPageInfo[In rankGetter](slice []In) toot.PageInfo {
 // RULE: min_id/since_id mean "newer than" (greater); max_id means "older
 // than" (less). MinID using AndLessThan was backwards.
 func queryExpression(queryPager txn.QueryPager) exp.Expression {
+	return queryExpressionByField(queryPager, "createDate")
+}
+
+// queryExpressionByField is queryExpression's counterpart for model types whose
+// GetRank() does NOT return CreateDate. Folder/Stream/NewsItem's GetRank()
+// returns their own "rank" field instead (see rankGetter's implementations
+// across model/), independent of when the row was created -- federated
+// content can arrive with a publish date days before it's ingested.
+//
+// getPageInfo builds MaxID/MinID from whatever GetRank() returns, so filtering
+// pagination against a different field than the cursor was minted from
+// compares two unrelated numbers and can hand back items the caller already
+// has.
+func queryExpressionByField(queryPager txn.QueryPager, fieldName string) exp.Expression {
 
 	var result exp.Expression = exp.All()
 
@@ -67,19 +81,19 @@ func queryExpression(queryPager txn.QueryPager) exp.Expression {
 
 	if params.MinID != "" {
 		if minID, err := strconv.ParseInt(params.MinID, 10, 64); err == nil {
-			result = result.AndGreaterThan("createDate", minID)
+			result = result.AndGreaterThan(fieldName, minID)
 		}
 	}
 
 	if params.MaxID != "" {
 		if maxID, err := strconv.ParseInt(params.MaxID, 10, 64); err == nil {
-			result = result.AndLessThan("createDate", maxID)
+			result = result.AndLessThan(fieldName, maxID)
 		}
 	}
 
 	if params.SinceID != "" {
 		if sinceID, err := strconv.ParseInt(params.SinceID, 10, 64); err == nil {
-			result = result.AndGreaterThan("createDate", sinceID)
+			result = result.AndGreaterThan(fieldName, sinceID)
 		}
 	}
 
