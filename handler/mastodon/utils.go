@@ -39,6 +39,23 @@ func getSliceOfToots[In tootGetter[Out], Out any](slice []In) []Out {
 	return results
 }
 
+// pageLimit clamps a client-supplied "limit" to Mastodon's documented default
+// (20) and max (40) for list endpoints. A zero/omitted limit means "no limit"
+// to option.MaxRows, which defeats pagination entirely -- every page would
+// return the whole feed regardless of what the client asked for.
+func pageLimit(limit int64) int64 {
+
+	if limit <= 0 {
+		return 20
+	}
+
+	if limit > 40 {
+		return 40
+	}
+
+	return limit
+}
+
 // getPageInfo uses the GetRank() interface method to calclate
 // the MaxID and MinID values for a slice of tootGetters
 func getPageInfo[In rankGetter](slice []In) toot.PageInfo {
