@@ -56,6 +56,9 @@ func getPageInfo[In rankGetter](slice []In) toot.PageInfo {
 
 // queryExpression converts data from a txn.QueryPager into an exp.Expression
 // that can be used to filter database queries.
+//
+// RULE: min_id/since_id mean "newer than" (greater); max_id means "older
+// than" (less). MinID using AndLessThan was backwards.
 func queryExpression(queryPager txn.QueryPager) exp.Expression {
 
 	var result exp.Expression = exp.All()
@@ -64,7 +67,7 @@ func queryExpression(queryPager txn.QueryPager) exp.Expression {
 
 	if params.MinID != "" {
 		if minID, err := strconv.ParseInt(params.MinID, 10, 64); err == nil {
-			result = result.AndLessThan("createDate", minID)
+			result = result.AndGreaterThan("createDate", minID)
 		}
 	}
 
