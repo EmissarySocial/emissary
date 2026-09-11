@@ -109,15 +109,21 @@ func mapDocumentToAccount(factory *service.Factory, session data.Session, docume
 		createdAt = time.Now()
 	}
 
+	avatar := document.Icon().URL()
+	header := document.Image().URL()
+
 	return object.Account{
-		ID:          resolveAccountID(factory, session, document.ID()),
-		Acct:        acct,
-		Username:    document.PreferredUsername(),
-		DisplayName: document.Name(),
-		Avatar:      document.Icon().URL(),
-		URL:         document.URL(),
-		Note:        document.Summary(),
-		CreatedAt:   model.MastodonDate(createdAt),
+		ID:           resolveAccountID(factory, session, document.ID()),
+		Acct:         acct,
+		Username:     document.PreferredUsername(),
+		DisplayName:  document.Name(),
+		Avatar:       avatar,
+		AvatarStatic: avatar,
+		Header:       header,
+		HeaderStatic: header,
+		URL:          document.URL(),
+		Note:         document.Summary(),
+		CreatedAt:    model.MastodonDate(createdAt),
 	}
 }
 
