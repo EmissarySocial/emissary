@@ -33,6 +33,10 @@ func (adapter GeocodeTiles) ManualConfig() form.Form {
 							"provider": schema.String{Required: true},
 							"style":    schema.String{Required: true},
 							"apiKey":   schema.String{Required: false},
+
+							// RULE: No "url" format here. A ZXY template carries {z}/{x}/{y}
+							// placeholders, which URL validation rejects.
+							"href": schema.String{Required: false, MaxLength: 1024},
 						},
 					},
 				},

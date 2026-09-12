@@ -7,28 +7,32 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/dataset"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/schema"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// TestGeocodeTiles_CustomURLIsNotInTheSchema pins the defect that form.Validate reports: the
-// ZXY Tile URL field writes data.href, which the schema never declares.
-func TestGeocodeTiles_CustomURLIsNotInTheSchema(t *testing.T) {
+// TestGeocodeTiles_CustomURLIsInTheSchema confirms the ZXY Tile URL field and the schema agree.
+// They did not until 2026-09-11, and form.Validate is what reports the disagreement.
+func TestGeocodeTiles_CustomURLIsInTheSchema(t *testing.T) {
 
 	config := NewGeocodeTiles().ManualConfig()
 
-	_, declaredByTheForm := indexFormPaths(config)["data.href"]
-	require.True(t, declaredByTheForm, "the form still offers a ZXY Tile URL field")
+	require.True(t, indexFormPaths(config)["data.href"], "the form offers a ZXY Tile URL field")
 
-	_, declaredBySchema := config.Schema.GetElement("data.href")
-	require.False(t, declaredBySchema, "the schema still omits data.href")
+	element, declaredBySchema := config.Schema.GetElement("data.href")
+	require.True(t, declaredBySchema)
 
-	require.Error(t, config.Validate(), "form.Validate is what catches this")
+	stringElement, isString := element.(schema.String)
+	require.True(t, isString)
+	require.False(t, stringElement.Required, "a Domain on a named provider has no custom URL")
+
+	require.NoError(t, config.Validate())
 }
 
-// TestGeocodeTiles_CustomURLIsSilentlyDropped pins the consequence. An admin fills in the
-// ZXY Tile URL, the save reports success, and the value never reaches the Connection.
-func TestGeocodeTiles_CustomURLIsSilentlyDropped(t *testing.T) {
+// TestGeocodeTiles_CustomURLIsSaved confirms a ZXY template survives a form post, brace
+// placeholders included. A "url" format on that property would reject them.
+func TestGeocodeTiles_CustomURLIsSaved(t *testing.T) {
 
 	config := NewGeocodeTiles().ManualConfig()
 	value := newTestFormValue()
@@ -38,29 +42,72 @@ func TestGeocodeTiles_CustomURLIsSilentlyDropped(t *testing.T) {
 		"data.style":    []string{"CUSTOM"},
 		"data.href":     []string{"https://tile.example.com/{z}/{x}/{y}.png"},
 		"active":        []string{"true"},
-	}, testLookupProvider{}), "a rejected path is logged, not returned")
+	}, testLookupProvider{}))
 
 	data := value.GetMap("data")
 
-	require.Equal(t, "Custom", data.GetString("provider"), "the rest of the form saves normally")
+	require.Equal(t, "Custom", data.GetString("provider"))
 	require.Equal(t, "CUSTOM", data.GetString("style"))
-	require.Empty(t, data.GetString("href"), "the custom tile URL is gone")
+	require.Equal(t, "https://tile.example.com/{z}/{x}/{y}.png", data.GetString("href"))
 }
 
-// TestGeocodeTiles_CustomStyleNeedsTheDroppedHref ties the dropped field to the feature it
-// breaks: the CUSTOM tile style substitutes data.href, so it resolves to an empty URL.
-func TestGeocodeTiles_CustomStyleNeedsTheDroppedHref(t *testing.T) {
+// TestGeocodeTiles_CustomURLShapesAreSaved walks the template shapes a tile server can need,
+// because each carries a character that some schema format would strip.
+func TestGeocodeTiles_CustomURLShapesAreSaved(t *testing.T) {
+
+	urls := []string{
+		"https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+		"https://tile.example.com/{z}/{x}/{y}@2x.png?apikey=abc123",
+		"https://{s}.tile.example.com/{z}/{x}/{y}.png",
+		"http://192.168.1.10:8080/tiles/{z}/{x}/{y}.png",
+	}
+
+	for _, tileURL := range urls {
+
+		t.Run(tileURL, func(t *testing.T) {
+
+			config := NewGeocodeTiles().ManualConfig()
+			value := newTestFormValue()
+
+			require.NoError(t, config.SetURLValues(&value, url.Values{
+				"data.provider": []string{"Custom"},
+				"data.style":    []string{"CUSTOM"},
+				"data.href":     []string{tileURL},
+			}, testLookupProvider{}))
+
+			require.Equal(t, tileURL, value.GetMap("data").GetString("href"))
+		})
+	}
+}
+
+// TestGeocodeTiles_CustomStyleResolvesTheSavedHref closes the loop through the reader. The
+// CUSTOM tile style carries "{href}", which service.GeocodeTiles replaces with data.href.
+func TestGeocodeTiles_CustomStyleResolvesTheSavedHref(t *testing.T) {
 
 	var customStyle bool
 
 	for _, lookupCode := range dataset.GeocodeTiles() {
 		if lookupCode.Value == "CUSTOM" {
 			customStyle = true
-			require.Equal(t, "{href}", lookupCode.Href, "service.GeocodeTiles replaces this with data.href")
+			require.Equal(t, "{href}", lookupCode.Href)
 		}
 	}
 
 	require.True(t, customStyle, "the CUSTOM tile style is still offered")
+
+	config := NewGeocodeTiles().ManualConfig()
+	value := newTestFormValue()
+
+	require.NoError(t, config.SetURLValues(&value, url.Values{
+		"data.provider": []string{"Custom"},
+		"data.style":    []string{"CUSTOM"},
+		"data.href":     []string{"https://tile.example.com/{z}/{x}/{y}.png"},
+	}, testLookupProvider{}))
+
+	data := value.GetMap("data")
+
+	require.Equal(t, "CUSTOM", data.GetString("style"), "the style the reader looks up")
+	require.NotEmpty(t, data.GetString("href"), "the value the reader substitutes")
 }
 
 // TestGeocodeTiles_ProviderHoldsAGroupName pins that the select-group writes a tile GROUP
