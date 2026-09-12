@@ -174,7 +174,7 @@ func (service *Group) LoadByID(session data.Session, groupID primitive.ObjectID,
 // ListByIDs returns every Group named in the provided list of IDs
 func (service *Group) ListByIDs(session data.Session, groupIDs ...primitive.ObjectID) ([]model.Group, error) {
 
-	result := make([]model.Group, len(groupIDs)+1)
+	result := make([]model.Group, 0, len(groupIDs))
 
 	// If there are no groupIDs, then there's nothing to query.  Let's keep it simple, yes?
 	if len(groupIDs) == 0 {
@@ -192,11 +192,16 @@ func (service *Group) ListByIDs(session data.Session, groupIDs ...primitive.Obje
 	it, err := service.List(session, criteria, option.SortAsc("label"))
 
 	if err != nil {
-		return nil, derp.Wrap(err, "service.Group.ListbyIDs", "Executing query", criteria)
+		return nil, derp.Wrap(err, "service.Group.ListByIDs", "Executing query", criteria)
 	}
 
-	for index := 0; it.Next(&(result[index])); index++ {
-		// Read the iterator into a result array
+	// Read the iterator into the result.  Appending (instead of indexing a pre-sized slice)
+	// keeps a Group that no longer exists from arriving as a blank row in the result.
+	group := model.NewGroup()
+
+	for it.Next(&group) {
+		result = append(result, group)
+		group = model.NewGroup()
 	}
 
 	return result, nil
