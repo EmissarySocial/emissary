@@ -46,3 +46,5 @@ The packages under `tools/` are small, self-contained leaf libraries — see [RE
 ## honeypot
 
 - **`Validate` reads the request body through `re.ReadRequestBody`, which puts back a fresh reader.** That restore is load-bearing: form binding after `Validate` still sees the body. Note that despite the README's phrasing, `Validate` only rejects populated honeypot fields; it does not check that required fields are present.
+
+- **A type that embeds an interface can pass a test without running any of its own code.** `HTTPCache` embeds `Adapter` and declared neither `Set` nor `Get`, so a test that called both had them promoted to the test's own in-memory fake — the assertion was the fake testing itself, and the package measured 0.0% coverage while looking tested. Method promotion makes a delegating call identical to a real one at the call site, and nothing in the test's text says which type answers. When a type embeds an interface, a test that exercises the promoted methods proves nothing; assert against the concrete type, and treat 0.0% coverage under a passing test as the signal it is.

@@ -41,7 +41,6 @@ func PollFollowing_Record(factory *service.Factory, session data.Session, user *
 		result, err := document.Load(sherlock.WithDefaultValue(document.Map()))
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Loading document", document.Value()))
 			continue
 		}
 

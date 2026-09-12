@@ -74,11 +74,10 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 			return derp.Wrap(err, location, "Saving news item", context.user.UserID, activity.Value())
 		}
 
-	} else if derp.IsNotFound(err) {
-		// Not a followed source: no newsfeed placement. Continue to the context bookkeeping below.
-
-	} else {
-		// A real load error (not merely "no record") — surface it.
+	} else if !derp.IsNotFound(err) {
+		// A real load error, not merely "no record" -- surface it.  A genuine "not found"
+		// just means this is not a followed source: no newsfeed placement, and we continue
+		// to the context bookkeeping below.
 		return derp.Wrap(err, location, "Loading `Following` record", context.user.UserID)
 	}
 
