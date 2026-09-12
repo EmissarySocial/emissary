@@ -25,9 +25,9 @@ func stripCacheHeaders(document streams.Document) {
 	header.Del(HeaderHannibalCacheDate)
 }
 
-// timeoutContext returns a context.Context that cancels itself after the designated number of seconds.
-func timeoutContext(seconds int) (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), time.Duration(seconds)*time.Second)
+// timeoutContext returns a context.Context that cancels itself after the designated duration.
+func timeoutContext(timeout time.Duration) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.Background(), timeout)
 }
 
 // asValue converts a streams.Document into a cacheable Value, calculating its freshness metadata.

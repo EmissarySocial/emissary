@@ -1,5 +1,7 @@
 package ascache
 
+import "time"
+
 // CacheModeReadWrite represents a cache configuration that reads from and writes to the cache
 const CacheModeReadWrite = "READWRITE"
 
@@ -31,3 +33,23 @@ const HeaderHannibalCache = "X-Hannibal-Cache"
 
 // HeaderHannibalCacheDate is the custom header carrying the date the cached value was saved
 const HeaderHannibalCacheDate = "X-Hannibal-Cache-Date"
+
+/******************************************
+ * Load Budgets and Cooldowns
+ ******************************************/
+
+// defaultMinAge is the cooldown applied to every load that does not name one of its own.
+// It only ever governs WRITEONLY loads -- see the RULE in Client.Load.
+const defaultMinAge = 1 * time.Minute
+
+// defaultDatabaseTimeout is the default budget for ONE database phase of a load.
+const defaultDatabaseTimeout = 10 * time.Second
+
+// defaultFetchTimeout is the default budget for the outbound HTTP fetch.
+const defaultFetchTimeout = 60 * time.Second
+
+// directWriteTimeout is the budget for a write that has no HTTP fetch in front of it.
+const directWriteTimeout = 60 * time.Second
+
+// directDeleteTimeout is the budget for Client.Delete, which reads and deletes one value.
+const directDeleteTimeout = 10 * time.Second

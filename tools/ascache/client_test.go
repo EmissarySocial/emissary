@@ -9,6 +9,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/tools/cacheheader"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/remote"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -17,10 +18,12 @@ import (
 // countingClient is a streams.Client that stands in for the origin server, counting how many times
 // it was actually contacted.
 type countingClient struct {
-	calls            int    // Number of times Load reached this client
-	publicKeyPEM     string // Value returned as the Actor's key, so a "rotation" can be simulated
-	maxAge           int    // Cache-Control max-age (in seconds) stated by the origin
-	forgeCacheHeader bool   // Whether this (hostile) origin claims its response came from our cache
+	calls            int           // Number of times Load reached this client
+	publicKeyPEM     string        // Value returned as the Actor's key, so a "rotation" can be simulated
+	maxAge           int           // Cache-Control max-age (in seconds) stated by the origin
+	forgeCacheHeader bool          // Whether this (hostile) origin claims its response came from our cache
+	delay            time.Duration // How long this origin takes to answer, simulating a slow server
+	receivedOptions  []any         // Options this client was called with, in order
 }
 
 // SetRootClient satisfies streams.Client.  This client makes no recursive calls, so it needs no root.
@@ -30,6 +33,11 @@ func (client *countingClient) SetRootClient(streams.Client) {}
 func (client *countingClient) Load(uri string, options ...any) (streams.Document, error) {
 
 	client.calls++
+
+	client.receivedOptions = options
+
+	// A slow origin spends the caller's clock without sharing it. (BUG-140)
+	time.Sleep(client.delay)
 
 	header := make(http.Header)
 	header.Set(cacheheader.HeaderCacheControl, "max-age="+strconv.Itoa(client.maxAge))
@@ -260,4 +268,61 @@ func TestClient_Load_CacheHitIsStamped(t *testing.T) {
 	fromCooldown, err := client.Load("https://remote.example/@alice", WithWriteOnly(), WithMinAge(time.Minute))
 	require.NoError(t, err)
 	require.True(t, FromCache(fromCooldown))
+}
+
+// TestClient_save_ExpiredContextFails proves the test database honors its context.  Without this,
+// the slow-fetch test below would pass whether or not the write ever had a budget of its own.
+func TestClient_save_ExpiredContextFails(t *testing.T) {
+
+	client, _ := newTestClient()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 0)
+	defer cancel()
+
+	value := NewValue()
+	value.URLs = append(value.URLs, "https://remote.example/@alice")
+	value.HTTPHeader.Set(cacheheader.HeaderCacheControl, "max-age=3600")
+
+	require.Error(t, client.save(ctx, "https://remote.example/@alice", &value))
+}
+
+// TestClient_Load_SlowFetchStillCaches is the defect stated directly: a remote server slower than the
+// database budget must still be written to the cache, because the write gets a budget of its own.
+func TestClient_Load_SlowFetchStillCaches(t *testing.T) {
+
+	client, origin := newTestClient()
+
+	// The origin takes longer to answer than the whole database budget, so the session
+	// context is already spent by the time the cache write begins.
+	origin.delay = 250 * time.Millisecond
+
+	_, err := client.Load("https://slow.example/@alice", WithDatabaseTimeout(50*time.Millisecond))
+	require.NoError(t, err)
+
+	// A second read is answered from the cache only if the first one actually wrote.
+	origin.delay = 0
+	_, err = client.Load("https://slow.example/@alice")
+	require.NoError(t, err)
+
+	require.Equal(t, 1, origin.calls, "a document fetched slowly must still be cached")
+}
+
+// TestClient_Load_PassesFetchContextDown pins the plumbing that bounds the fetch: the inner client
+// receives a remote.Option carrying the fetch context, ahead of any option the caller supplied.
+func TestClient_Load_PassesFetchContextDown(t *testing.T) {
+
+	client, origin := newTestClient()
+
+	_, err := client.Load("https://remote.example/@alice", WithWriteOnly())
+	require.NoError(t, err)
+	require.NotEmpty(t, origin.receivedOptions)
+
+	// FIRST position is important: remote applies each hook in turn and WithContext simply
+	// assigns, so a caller's own context must be able to land after ours and win.
+	_, isRemoteOption := origin.receivedOptions[0].(remote.Option)
+	require.True(t, isRemoteOption, "the fetch context option must be passed first")
+
+	// The caller's own options must survive alongside it.
+	require.Len(t, remote.Options(origin.receivedOptions...), 1)
+	require.Equal(t, CacheModeWriteOnly, NewLoadConfig(origin.receivedOptions...).mode)
 }

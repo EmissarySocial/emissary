@@ -53,7 +53,7 @@ type fakeSession struct {
 
 // Collection returns the named collection.  All names share one store, because the cache uses one.
 func (session *fakeSession) Collection(name string) data.Collection {
-	return &fakeCollection{server: session.server}
+	return &fakeCollection{server: session.server, ctx: session.ctx}
 }
 
 // Context returns this session's context.
@@ -66,16 +66,21 @@ func (session *fakeSession) Close() {}
 
 // fakeCollection implements the slice of data.Collection that ascache.Client actually calls.
 type fakeCollection struct {
-	server *fakeServer // Underlying storage
+	server *fakeServer     // Underlying storage
+	ctx    context.Context // Context this collection was opened with
 }
 
-// Context satisfies data.Collection.  Nothing here is context-aware.
+// Context returns the context this collection was opened with.
 func (collection *fakeCollection) Context() context.Context {
-	return context.Background()
+	return collection.ctx
 }
 
 // Load returns the first stored Value matching the criteria.
 func (collection *fakeCollection) Load(criteria exp.Expression, target data.Object, options ...option.Option) error {
+
+	if err := collection.contextErr(); err != nil {
+		return err
+	}
 
 	for _, value := range collection.server.values {
 
@@ -94,6 +99,12 @@ func (collection *fakeCollection) Load(criteria exp.Expression, target data.Obje
 
 // Save inserts or replaces a Value, keyed by its ValueID.
 func (collection *fakeCollection) Save(object data.Object, note string) error {
+
+	// A spent budget must fail here exactly as mongo does, or no test can tell a real
+	// write from a write that had no time left to run. (BUG-140)
+	if err := collection.contextErr(); err != nil {
+		return err
+	}
 
 	typed, ok := object.(*Value)
 
@@ -114,6 +125,10 @@ func (collection *fakeCollection) Save(object data.Object, note string) error {
 
 // HardDelete removes every stored Value matching the criteria.
 func (collection *fakeCollection) HardDelete(criteria exp.Expression) error {
+
+	if err := collection.contextErr(); err != nil {
+		return err
+	}
 
 	collection.server.values = slices.DeleteFunc(collection.server.values, func(value Value) bool {
 		return criteria.Match(matchURLs(value))
@@ -140,6 +155,22 @@ func (collection *fakeCollection) Query(target any, criteria exp.Expression, opt
 // Iterator satisfies data.Collection.  Unused by the cache read/write path.
 func (collection *fakeCollection) Iterator(criteria exp.Expression, options ...option.Option) (data.Iterator, error) {
 	return nil, derp.NotImplemented("ascache.fakeCollection.Iterator", "Not needed by these tests")
+}
+
+// contextErr reports whether this collection's context has expired or been cancelled.
+func (collection *fakeCollection) contextErr() error {
+
+	const location = "ascache.fakeCollection.contextErr"
+
+	if collection.ctx == nil {
+		return nil
+	}
+
+	if err := collection.ctx.Err(); err != nil {
+		return derp.Wrap(err, location, "Context is done")
+	}
+
+	return nil
 }
 
 // matchURLs returns a matcher for the two `urls` predicates the cache issues: an EQUAL from
