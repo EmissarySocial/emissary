@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/stretchr/testify/assert"
@@ -148,9 +149,9 @@ func TestStripeConnect_KeyPatternsAcceptRealAndMaskedKeys(t *testing.T) {
 	}
 }
 
-// TestStripeConnect_LiveModeEnumDisagreesWithItsLabels pins a mismatch in the settings form:
-// the schema admits only "false" and "true" while the select offers SANDBOX and LIVE.
-func TestStripeConnect_LiveModeEnumDisagreesWithItsLabels(t *testing.T) {
+// TestStripeConnect_LiveModeEnumMatchesItsLabels confirms the schema admits exactly the two
+// values the select offers. It did not until 2026-09-11, which made live mode unreachable.
+func TestStripeConnect_LiveModeEnumMatchesItsLabels(t *testing.T) {
 
 	config := NewStripeConnect().ManualConfig()
 
@@ -159,28 +160,24 @@ func TestStripeConnect_LiveModeEnumDisagreesWithItsLabels(t *testing.T) {
 
 	stringElement, isString := element.(schema.String)
 	require.True(t, isString)
-	require.Equal(t, []string{"false", "true"}, stringElement.Enum)
 
 	offered := selectOptionValues(config, "data.liveMode")
 	require.Equal(t, []string{"SANDBOX", "LIVE"}, offered)
-
-	for _, value := range offered {
-		assert.NotContains(t, stringElement.Enum, value, "neither offered value is in the schema enum")
-	}
+	require.Equal(t, offered, stringElement.Enum)
 }
 
-// TestStripeConnect_LiveModeCannotBeSaved pins the consequence of that mismatch. Both values
-// the select offers are rejected by the schema and dropped without an error, so liveMode stays
-// empty and the handler's `liveMode == "LIVE"` test can never be true.
-func TestStripeConnect_LiveModeCannotBeSaved(t *testing.T) {
+// TestStripeConnect_LiveModeSaves confirms the value the select offers survives a save, and
+// that no other spelling does. Both readers in handler.stripeConnect compare against "LIVE".
+func TestStripeConnect_LiveModeSaves(t *testing.T) {
 
 	config := NewStripeConnect().ManualConfig()
 
 	testCases := map[string]string{
-		"LIVE":    "",
-		"SANDBOX": "",
-		"true":    "true",
-		"false":   "false",
+		"LIVE":    "LIVE",
+		"SANDBOX": "SANDBOX",
+		"true":    "",
+		"false":   "",
+		"live":    "",
 	}
 
 	for posted, expectedStored := range testCases {
@@ -189,7 +186,6 @@ func TestStripeConnect_LiveModeCannotBeSaved(t *testing.T) {
 
 			value := newTestFormValue()
 
-			// A rejected value is logged, not returned, so the admin sees a successful save
 			require.NoError(t, config.SetURLValues(&value, url.Values{
 				"data.clientId":        []string{"ca_1Abc123"},
 				"vault.publishableKey": []string{"pk_test_51Abc123"},
@@ -198,34 +194,49 @@ func TestStripeConnect_LiveModeCannotBeSaved(t *testing.T) {
 				"active":               []string{"true"},
 			}, testLookupProvider{}))
 
-			stored := value.GetMap("data").GetString("liveMode")
-			require.Equal(t, expectedStored, stored)
-			require.NotEqual(t, "LIVE", stored, "handler.stripeConnect reads liveMode == LIVE")
+			require.Equal(t, expectedStored, value.GetMap("data").GetString("liveMode"))
 		})
 	}
 }
 
-// TestStripeConnect_PayPalLiveModeIsDeclaredCorrectly contrasts the two payment forms:
-// PayPal declares the same values its select offers, so its live mode does save.
-func TestStripeConnect_PayPalLiveModeIsDeclaredCorrectly(t *testing.T) {
+// TestStripeConnect_LiveModeReachesTheHandlersTest closes the loop on the defect by asserting
+// the comparison that handler.stripeConnect makes, rather than only the stored value.
+func TestStripeConnect_LiveModeReachesTheHandlersTest(t *testing.T) {
 
-	config := NewPayPal().ManualConfig()
-
-	element, exists := config.Schema.GetElement("data.liveMode")
-	require.True(t, exists)
-
-	stringElement, isString := element.(schema.String)
-	require.True(t, isString)
-
-	for _, offered := range selectOptionValues(config, "data.liveMode") {
-		assert.Contains(t, stringElement.Enum, offered)
-	}
-
+	config := NewStripeConnect().ManualConfig()
 	value := newTestFormValue()
+
 	require.NoError(t, config.SetURLValues(&value, url.Values{
-		"data.bnCode":   []string{"EMISSARY_SP_PPCP"},
-		"data.liveMode": []string{"LIVE"},
+		"data.clientId":        []string{"ca_1Abc123"},
+		"vault.publishableKey": []string{"pk_live_51Abc123"},
+		"vault.restrictedKey":  []string{"rk_live_51Abc123"},
+		"data.liveMode":        []string{"LIVE"},
+		"active":               []string{"true"},
 	}, testLookupProvider{}))
 
-	require.Equal(t, "LIVE", value.GetMap("data").GetString("liveMode"))
+	liveMode := value.GetMap("data").GetString("liveMode") == "LIVE"
+	require.True(t, liveMode, "an admin who selects LIVE gets live mode")
+}
+
+// TestStripeConnect_MatchesPayPalLiveMode confirms both payment forms now declare the enum the
+// same way, since PayPal was already correct and is the pattern this one was fixed against.
+func TestStripeConnect_MatchesPayPalLiveMode(t *testing.T) {
+
+	for name, config := range map[string]form.Form{
+		"StripeConnect": NewStripeConnect().ManualConfig(),
+		"PayPal":        NewPayPal().ManualConfig(),
+	} {
+		t.Run(name, func(t *testing.T) {
+
+			element, exists := config.Schema.GetElement("data.liveMode")
+			require.True(t, exists)
+
+			stringElement, isString := element.(schema.String)
+			require.True(t, isString)
+
+			for _, offered := range selectOptionValues(config, "data.liveMode") {
+				assert.Contains(t, stringElement.Enum, offered)
+			}
+		})
+	}
 }

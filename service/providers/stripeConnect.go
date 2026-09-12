@@ -35,7 +35,7 @@ func (adapter StripeConnect) ManualConfig() form.Form {
 					"data": schema.Object{
 						Properties: schema.ElementMap{
 							"clientId": schema.String{Required: true},
-							"liveMode": schema.String{Enum: []string{"false", "true"}},
+							"liveMode": schema.String{Enum: []string{"SANDBOX", "LIVE"}},
 						},
 					},
 					"vault": schema.Object{
