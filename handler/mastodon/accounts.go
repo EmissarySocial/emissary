@@ -781,7 +781,9 @@ func GetAccount_Lookup(serverFactory *server.Factory) func(model.Authorization, 
 		document, err := client.Load(t.Acct)
 
 		if err != nil {
-			return object.Account{}, derp.Wrap(err, location, "Loading document")
+			// See the matching comment in GetAccount: don't let a remote origin's own
+			// status code read to the client as its own bearer token being invalid.
+			return object.Account{}, derp.Wrap(err, location, "Loading document", derp.WithBadGateway())
 		}
 
 		// Map the ActivityStream to a Mastodon Account. The caller already told us
