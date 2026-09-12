@@ -118,6 +118,19 @@ func (service *Outbox) Save(session data.Session, outboxMessage *model.OutboxMes
 
 	const location = "service.Outbox.Save"
 
+	// RULE: Resolve a missing ActorURL from the Actor itself.  A message with no ActorURL
+	// publishes an empty `actor` and a relative `id`, which no peer can dereference (BUG-145).
+	if outboxMessage.ActorURL == "" {
+
+		actor, err := service.getActor(session, outboxMessage.ActorType, outboxMessage.ActorID)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Cannot save an Outbox message whose Actor cannot be resolved", outboxMessage.ActorType, outboxMessage.ActorID)
+		}
+
+		outboxMessage.ActorURL = actor.ActorID()
+	}
+
 	// Mint an ActivityURL ONLY when the message does not already carry a canonical one. A first-class
 	// activity (e.g. a Like/Dislike/Announce or a Block) arrives with its own ID already stored in
 	// ActivityURL by Outbox.Publish; overwriting it here with the minted /pub/outbox/<id> form breaks
@@ -353,26 +366,13 @@ func (service *Outbox) DeleteByParentID(session data.Session, actorType string, 
 }
 
 // calcActivityURL returns the public URL of the provided OutboxMessage
+// RULE: Build from the Actor's own URL.  Rebuilding it from ActorType and ActorID copied the
+// route table into a second place, where it drifted out of step with the routes (see AGENTS.md).
 func (service *Outbox) calcActivityURL(outboxMessage *model.OutboxMessage) string {
 
-	switch outboxMessage.ActorType {
-
-	case model.ActorTypeApplication:
-		return service.host + "/@application/pub/outbox/" + outboxMessage.OutboxMessageID.Hex()
-
-	case model.ActorTypeSearchDomain:
-		return service.host + "/@search/pub/outbox/" + outboxMessage.OutboxMessageID.Hex()
-
-	case model.ActorTypeSearchQuery:
-		return service.host + "/@search_" + outboxMessage.ActorID.Hex() + "/pub/outbox/" + outboxMessage.OutboxMessageID.Hex()
-
-	case model.ActorTypeStream:
-		return service.host + "/" + outboxMessage.ActorID.Hex() + "/pub/outbox/" + outboxMessage.OutboxMessageID.Hex()
-
-	case model.ActorTypeUser:
-		return service.host + "/@" + outboxMessage.ActorID.Hex() + "/pub/outbox/" + outboxMessage.OutboxMessageID.Hex()
-
-	default:
+	if outboxMessage.ActorURL == "" {
 		return ""
 	}
+
+	return outboxMessage.ActorURL + "/pub/outbox/" + outboxMessage.OutboxMessageID.Hex()
 }
