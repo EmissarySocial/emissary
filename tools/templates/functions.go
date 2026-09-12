@@ -51,12 +51,21 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 		return color.Parse(value)
 	}
 
+	// RULE: Escape before wrapping.  This helper returns template.HTML, so html/template
+	// will not escape it downstream, and its inputs are plain text -- a search term and the
+	// text it was found in -- neither of which is trusted markup.
 	result["highlight"] = func(text string, search string) template.HTML {
+
+		escapedText := template.HTMLEscapeString(text)
+
 		if search == "" {
-			return template.HTML(text)
+			return template.HTML(escapedText) // #nosec G203 -- escaped immediately above
 		}
-		result := strings.ReplaceAll(text, search, `<b class="highlight">`+search+"</b>")
-		return template.HTML(result)
+
+		escapedSearch := template.HTMLEscapeString(search)
+		wrapped := strings.ReplaceAll(escapedText, escapedSearch, `<b class="highlight">`+escapedSearch+"</b>")
+
+		return template.HTML(wrapped) // #nosec G203 -- both halves are escaped above; only the <b> wrapper is markup
 	}
 
 	result["collection"] = func(max int, collection streams.Document) (sliceof.Object[streams.Document], error) {
@@ -106,11 +115,14 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 		if icons == nil {
 			return template.HTML("")
 		}
-		return template.HTML(icons.Get(name))
+		return template.HTML(icons.Get(name)) // #nosec G203 -- Icons.Get returns markup built from a fixed icon set; every call site passes a "token"-validated name
 	}
 
 	result["iconFilled"] = func(name string) template.HTML {
-		return template.HTML(icons.Get(name + "-fill"))
+		if icons == nil {
+			return template.HTML("")
+		}
+		return template.HTML(icons.Get(name + "-fill")) // #nosec G203 -- Icons.Get returns markup built from a fixed icon set; every call site passes a "token"-validated name
 	}
 
 	return result
