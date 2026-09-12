@@ -44,7 +44,7 @@ func (step AsModal) RequiredStates() []string {
 	return requiredStates(step.SubSteps...)
 }
 
-// RequiredRolesStates returns a slice of states that must be defined any Template that uses this Step
+// RequiredRoles returns a slice of roles that must be defined by any Template that uses this Step
 func (step AsModal) RequiredRoles() []string {
 	return requiredRoles(step.SubSteps...)
 }

@@ -7,9 +7,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// asContextMaker is a hannibal.Streams middleware that adds a "context" property to all documents
-// based on their "InReplyTo" property.  If a document does not have a context or inReplyTo, then
-// it is its own context, and is updated to reflect that.
+// Client is a streams.Client decorator that adds a "context" property to every document,
+// derived from its "inReplyTo" chain.  A document with neither is its own context.
 type Client struct {
 	rootClient     streams.Client
 	innerClient    streams.Client

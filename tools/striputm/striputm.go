@@ -5,6 +5,8 @@ import "net/url"
 // knownCodes is the list of tracking query parameters that StripFromURL removes
 var knownCodes = KnownCodes()
 
+// StripFromURL removes every known campaign-tracking parameter from the URL, in place
+//
 // https://orionfeedback.org/d/4375-remove-trackers-from-copied-urls
 // https://urlclean.com
 func StripFromURL(href *url.URL) {
@@ -16,6 +18,8 @@ func StripFromURL(href *url.URL) {
 	href.RawQuery = qs.Encode()
 }
 
+// KnownCodes returns every tracking parameter name that StripFromURL removes
+//
 // https://github.com/jparise/chrome-utm-stripper
 // https://www.bleepingcomputer.com/news/security/new-firefox-privacy-feature-strips-urls-of-tracking-parameters/
 // https://docs.clearurls.xyz/1.26.1/

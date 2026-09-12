@@ -11,7 +11,7 @@ type WithMerchantAccount struct {
 	SubSteps []Step
 }
 
-// NewNewWithMerchantAccount returns a fully initialized NewWithMerchantAccount object
+// NewWithMerchantAccount returns a fully initialized WithMerchantAccount object
 func NewWithMerchantAccount(stepInfo mapof.Any) (WithMerchantAccount, error) {
 
 	const location = "NewNewWithMerchantAccount"

@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Version21...
+// Version21 replaces the attributedTo map on each profile Stream with a plain UserID
 func Version21(ctx context.Context, session *mongo.Database) error {
 
 	fmt.Println("... Version 21")

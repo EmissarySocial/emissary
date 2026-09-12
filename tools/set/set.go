@@ -3,8 +3,9 @@
 // make its way into rosetta, once things settle down.
 package set
 
+// Set defines the functions that a set must implement
+//
 // TODO: Should we migrate the `set` package to Rosetta? Interop with other libs, like `sliceof` and `mapof`?
-// Set interface defines the functions that a set must implement
 type Set[V Value] interface {
 	Len() int
 	Keys() []string

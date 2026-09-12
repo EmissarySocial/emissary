@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Version25...
+// Version25 denormalizes the Connection collection into the Domain's Connections map
 func Version25(ctx context.Context, session *mongo.Database) error {
 
 	const location = "upgrade.Version25"

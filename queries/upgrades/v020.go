@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Version20...
+// Version20 rewrites each Stream's legacy "places" array into a single "location" address
 func Version20(ctx context.Context, session *mongo.Database) error {
 
 	fmt.Println("... Version 20")

@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// FormaDiff returns a string representation of the duration since this date in as little space as possible.
+// FormatDiff returns the duration between two times, in as little space as possible.
 func FormatDiff(firstTime time.Time, secondTime time.Time) string {
 	seconds := secondTime.Unix() - firstTime.Unix()
 
