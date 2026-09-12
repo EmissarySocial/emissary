@@ -20,14 +20,14 @@ require (
 	github.com/benpate/exp-builder v0.12.0
 	github.com/benpate/form v0.29.0
 	github.com/benpate/geo v0.3.0
-	github.com/benpate/hannibal v0.34.0
+	github.com/benpate/hannibal v0.35.0
 	github.com/benpate/html v0.18.0
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.17.0
 	github.com/benpate/re v0.6.0
-	github.com/benpate/remote v0.24.0
+	github.com/benpate/remote v0.25.0
 	github.com/benpate/rosetta v0.39.0
-	github.com/benpate/sherlock v0.13.0
+	github.com/benpate/sherlock v0.14.0
 	github.com/benpate/sniff v0.3.0
 	github.com/benpate/steranko v0.31.0
 	github.com/benpate/table v0.9.0
@@ -146,5 +146,3 @@ require (
 	golang.org/x/time v0.15.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
-
-replace github.com/benpate/derp => /Users/benpate/Library/CloudStorage/Dropbox/Source_Code/github.com/benpate/derp
