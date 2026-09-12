@@ -27,6 +27,11 @@ func (service *Outbox) Import(session data.Session, _ *model.Import, importItem 
 	// Map values from the original OutboxMessage into the new, local OutboxMessage
 	outboxMessage.OutboxMessageID = importItem.LocalID // Use the new localID for this record
 
+	// RULE: Discard the exporting server's Actor and Activity URLs.  They name a host that no
+	// longer owns this message, so Save re-mints both against the importing User's own Actor.
+	outboxMessage.ActorURL = ""
+	outboxMessage.ActivityURL = ""
+
 	// Map the UserID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &outboxMessage.ActorID); err != nil {
 		return derp.ReportAndReturn(derp.Wrap(err, location, "Mapping ActorID", "ActorID: "+user.UserID.Hex()+", OutboxMessageID: "+outboxMessage.OutboxMessageID.Hex()))

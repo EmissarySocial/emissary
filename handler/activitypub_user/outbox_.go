@@ -83,7 +83,12 @@ func GetOutboxActivity(ctx *steranko.Context, factory *service.Factory, session 
 		return derp.Wrap(err, location, "Loading outbox message", outboxMessageID)
 	}
 
-	// Return results as an OrderedCollectionPage
+	// RULE: A message with no Actor has no `id` to answer with, so there is nothing here to serve
+	if outboxMessage.ActivityPubURL() == "" {
+		return derp.NotFound(location, "Outbox message cannot be identified", outboxMessageID)
+	}
+
+	// Return the activity as a JSON-LD document
 	ctx.Response().Header().Set("Content-Type", "application/activity+json")
 	return ctx.JSON(http.StatusOK, outboxMessage.GetJSONLD())
 }

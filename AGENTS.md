@@ -54,6 +54,18 @@ So a Template that keeps its text somewhere other than `content.*` -- a custom `
 
 Writing `content.raw` through `set-data` does not fix it, which is the part that surprises people. `content.HTML` is produced by `service.Content.New`, and nothing but the `edit-content` step calls it -- no `save` path re-renders content -- so a `set-data` on `content.raw` stores a body that is never converted, never sanitized, and never published.
 
+## Repairing federated data takes two steps, and the second one is the cache
+
+Emissary reads its own published output back through the same `tools/ascache` layer a remote peer would, so a Domain-database repair to anything served over ActivityPub is invisible to Emissary's own consumers until the cached copy expires. Cached documents live in the **common** database's `Document` collection with `expires` and `revalidates` both set to `received + 604800` — a flat seven days and no revalidation window, so nothing re-fetches early.
+
+That makes a data fix two steps: repair the records, then purge the cached pages carrying the old copy. Verifying against the live HTTP endpoint proves only the first step; the poller keeps failing on the cached page for up to a week (BUG-146, where 455 stale pages kept a completed repair invisible). Filter the purge by the SHAPE of the defect rather than a list of IDs, so it stays correct as the cache turns over:
+
+```js
+db.collection("Document").deleteMany({ "object.orderedItems.id": { $regex: "^/pub/outbox/" } })
+```
+
+Note that the repair and its cleanup run against two different connections — the records are in the Domain database, the cache and the error log are in the common one.
+
 ## The template funcmap has helpers that emit unescaped HTML
 
 `markdown`, `highlight`, `icon`, and their siblings in [tools/templates/functions.go](tools/templates/functions.go) return `template.HTML`, which tells `html/template` the value is already safe. `markdown` earns that by sanitizing; `highlight` does **not** — it returns its input verbatim. Any new helper with an `HTML`/`CSS`/`HTMLAttr` return type is a trust boundary, so sanitize inside the helper and check every call site before pointing one at federated or user-supplied content.

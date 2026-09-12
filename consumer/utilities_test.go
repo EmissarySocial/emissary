@@ -1,9 +1,14 @@
 package consumer
 
 import (
+	"errors"
+	"net/http"
 	"testing"
+	"time"
 
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
 	"github.com/stretchr/testify/require"
 )
 
@@ -37,4 +42,64 @@ func TestGetHostnameFromArgs(t *testing.T) {
 
 	// An empty map yields no hostname.
 	require.Equal(t, "", getHostnameFromArgs(mapof.Any{}))
+}
+
+// TestRequeue pins the shared retry policy that PollFollowing_Record and every HTTP-backed
+// consumer share: a 429 is rescheduled after the server's own Retry-After, any other 4xx is
+// permanent, and everything else is retryable.
+func TestRequeue(t *testing.T) {
+
+	// No error is a success
+	require.Equal(t, queue.ResultStatusSuccess, requeue(nil).Status)
+
+	// RULE: 429 is retryable, and carries the delay the remote server asked for
+	tooMany := tooManyRequests("90")
+	result := requeue(tooMany)
+	require.Equal(t, queue.ResultStatusRequeue, result.Status)
+	require.Equal(t, 90*time.Second, result.Delay.Truncate(time.Second))
+
+	// A 429 with no Retry-After still requeues, on derp's own default
+	noHeader := requeue(tooManyRequests(""))
+	require.Equal(t, queue.ResultStatusRequeue, noHeader.Status)
+	require.Greater(t, noHeader.Delay, time.Duration(0))
+
+	// RULE: Every other 4xx is permanent -- retrying cannot change the answer.  The BadRequest
+	// here is exactly what hannibal.streams.document.Load returns for a relative ID (BUG-146).
+	require.Equal(t, queue.ResultStatusFailure, requeue(derp.BadRequest("test", "Document ID is not a valid URL")).Status)
+	require.Equal(t, queue.ResultStatusFailure, requeue(derp.NotFound("test", "Gone for good")).Status)
+	require.Equal(t, queue.ResultStatusFailure, requeue(derp.Forbidden("test", "Nope")).Status)
+
+	// 5xx and unclassified errors may succeed later
+	require.Equal(t, queue.ResultStatusError, requeue(derp.Internal("test", "Server exploded")).Status)
+	require.Equal(t, queue.ResultStatusError, requeue(errors.New("some transport failure")).Status)
+}
+
+// TestRequeue_WrappedTooManyRequests verifies that a 429 survives the derp.Wrap that every call
+// site applies. PollFollowing_Record wraps before requeueing, so an unwrapped-only check would
+// silently turn every rate limit into a permanent failure.
+func TestRequeue_WrappedTooManyRequests(t *testing.T) {
+
+	wrapped := derp.Wrap(tooManyRequests("30"), "test", "Loading document", "following: https://x.social/@bob")
+
+	result := requeue(wrapped)
+	require.Equal(t, queue.ResultStatusRequeue, result.Status)
+	require.Equal(t, 30*time.Second, result.Delay.Truncate(time.Second))
+}
+
+// tooManyRequests builds the 429 shape that benpate/remote returns, optionally carrying a
+// Retry-After header of the provided value
+func tooManyRequests(retryAfter string) derp.HTTPError {
+
+	header := http.Header{}
+
+	if retryAfter != "" {
+		header.Set("Retry-After", retryAfter)
+	}
+
+	return derp.HTTPError{
+		Response: derp.HTTPResponseReport{
+			StatusCode: http.StatusTooManyRequests,
+			Header:     header,
+		},
+	}
 }

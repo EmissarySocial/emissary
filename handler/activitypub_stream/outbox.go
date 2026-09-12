@@ -90,6 +90,11 @@ func GetOutboxMessage(ctx *steranko.Context, factory *service.Factory, session d
 		return derp.Forbidden(location, "You do not have permission to view this content")
 	}
 
+	// RULE: A message with no Actor has no `id` to answer with, so there is nothing here to serve
+	if outboxMessage.ActivityPubURL() == "" {
+		return derp.NotFound(location, "Outbox message cannot be identified", outboxMessageID)
+	}
+
 	ctx.Response().Header().Set("Content-Type", vocab.ContentTypeActivityPub)
 	return ctx.JSON(http.StatusOK, outboxMessage.GetJSONLD())
 }

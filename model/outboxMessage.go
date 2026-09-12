@@ -46,11 +46,18 @@ func (message OutboxMessage) Fields() []string {
  * JSONLDGetter Interface
  ******************************************/
 
-// ActivityPubURL returns the URL that identifies this message to ActivityPub
+// ActivityPubURL returns the URL that identifies this message to ActivityPub,
+// or empty if the message carries no Actor to build one from.
 func (message OutboxMessage) ActivityPubURL() string {
 
 	if message.ActivityURL != "" {
 		return message.ActivityURL
+	}
+
+	// RULE: An empty ActorURL would concatenate into the relative path "/pub/outbox/<id>",
+	// which no peer can dereference and which hannibal refuses outright.
+	if message.ActorURL == "" {
+		return ""
 	}
 
 	return message.ActorURL + "/pub/outbox/" + message.OutboxMessageID.Hex()

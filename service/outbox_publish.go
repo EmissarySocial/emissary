@@ -348,6 +348,8 @@ func (service *Outbox) removeOutboxMessagesByActivityURL(session data.Session, a
 // getActor returns the outbox Actor for the named actor type and ID
 func (service *Outbox) getActor(session data.Session, actorType string, actorID primitive.ObjectID) (outbox.Actor, error) {
 
+	const location = "service.Outbox.getActor"
+
 	switch actorType {
 
 	case model.FollowerTypeUser:
@@ -356,15 +358,11 @@ func (service *Outbox) getActor(session data.Session, actorType string, actorID 
 	case model.FollowerTypeStream:
 		return service.streamService.ActivityPubActor(session, actorID)
 
-	case model.FollowerTypeApplication:
-
-	case model.FollowerTypeSearch:
-
-	case model.FollowerTypeSearchDomain:
-
 	}
 
-	return outbox.Actor{}, derp.Internal("service.Outbox.getActor", "Unknown Actor Type", actorType)
+	// Application, Search, and SearchDomain are real Actors, but none of them has a route that
+	// serves an Outbox item, so a message they cannot identify must never reach the Outbox.
+	return outbox.Actor{}, derp.Internal(location, "Actor type cannot own an Outbox message", actorType)
 }
 
 /******************************************
