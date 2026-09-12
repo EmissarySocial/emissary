@@ -21,3 +21,13 @@ This package exists for Mongo-only features (aggregation pipelines, raw multi-do
 ## v027 keys ACTOR rules by the RAW trigger — both MatchKey shapes live on disk
 
 Service `Rule.Save` keys ACTOR rules by the resolved canonical actor URL, but [upgrades/v027.go](upgrades/v027.go) computes `model.RuleMatchKey(record.Type, record.Trigger)` from the raw stored trigger, because a migration cannot resolve handles over the network per-row. Both shapes persist, and point lookups probe both (`loadActorRule` in [../service/rule_blocks.go](../service/rule_blocks.go)). Do not write a migration that "fixes" raw-keyed rules by resolving them — that re-introduces network calls into a migration — and see [../model/AGENTS.md](../model/AGENTS.md) for the matching-engine side of this contract.
+
+## Nothing purges SearchResults by age
+
+There is no global time-based purge. The daily tasks are PurgeActivityStreamCache, PurgeErrors, PurgeDomeLog, Shuffle, RecycleDomain, PurgeImports, and PurgeNotifications; hourly is PollFollowing-Index; startup is empty. `queries.Recycle` only touches rows with `deleteDate > 0` older than 30 days, and SearchResults are **hard** deleted, so they never carry a deleteDate — and there is no TTL index on the collection. A SearchResult therefore lives forever unless something deletes it explicitly. Do not assume a retention window exists when reasoning about growth or about stale rows.
+
+## An aggregation-pipeline `$set` BROADCASTS across an existing array
+
+An update pipeline whose new value references the field it is replacing (`{$set: {loc: {type: "Point", coordinates: "$loc"}}}`) does **not** replace an array-valued field. It produces an array of N identical documents, one per original element. Only a real MongoDB shows this — reasoning about it does not. Use a plain, non-pipeline `$set` with a literal document computed in Go.
+
+Related and still open: `idx_SearchResult_Notified` indexes `notifiedDate`, which nothing writes, so the compound index is unusable for the lock query (its leading field is always missing). It looks copied from the SearchQuery index set where the field is real. By contrast `lockId` and `timeoutDate` ARE real despite being absent from `model.SearchResult` — `queries.LockSearchResults` writes them, bypassing the model on purpose. All three are recorded in the allow-list in `sync/searchResult_test.go`.

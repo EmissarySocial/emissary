@@ -55,3 +55,21 @@ A Theme's hjson schema layers `themeData` properties onto the Domain's own wildc
 Declaring `default:true` on the property is what fixes it, and **both** halves read that one declaration: `form/widget.Toggle` falls back to the schema element's `DefaultValue()` when the object carries no value, and [build/builder_common.go](../build/builder_common.go) `ThemeData` falls back to `theme.Schema.GetElement("themeData." + token).DefaultValue()`. Keep them in step — a default that only one side honors is worse than none, because the page and the form that configures it then disagree. `ThemeData` returns a **string**, so compare against `"true"`, never truthiness.
 
 Note that `schema.Boolean.Default` does *not* surface through `schema.Schema.Get`: `getProperty_Boolean` errors on a missing map key rather than falling through to the default, which is why both fallbacks are written out by hand instead of coming for free.
+
+## The email library sanitizes header VALUES, not header NAMES
+
+Outbound mail goes through `serverEmail.go` to `github.com/xhit/go-simple-mail/v2` v2.16.0. Two things about that boundary are invisible from Emissary's own code. Header **values** are already CRLF-safe — the library escapes them — so do **not** add a second sanitizer of our own. Header **names** are not checked, so a name assembled from data is the injection surface, not the value.
+
+The other trap is a template one: a Go template that renders an optional header emits the literal string `<no value>` for a missing key rather than nothing, which produces a malformed header instead of an absent one. Guard the whole header line with `{{if}}`, not just its value.
+
+When reading this dependency, confirm which copy you have: the module cache also holds a stale `go-simple-mail@v2.2.2+incompatible` tree under a different module path. Use `go list -m -f '{{.Dir}}' github.com/xhit/go-simple-mail/v2`.
+
+## Domain bootstrap is one transaction, and the invariant is what matters
+
+`Domain.Start()` delegates to `bootstrap(session)`, which wraps the domain-record write and `createOwner` in a single transaction. That establishes **domain record exists if and only if an owner exists** (when `CreateOwner` is set), so a failed first boot writes nothing and the next boot retries cleanly. Before this, the owner was a separate non-transactional write gated on "domain record not found": any failure stranded a domain record with no owner and the gate never re-ran, which locked every demo and fresh instance out. `persist()` is the write-only path used inside the transaction; the in-memory domain cache is published only **after** commit. Do not collapse `persist` back into `Save`.
+
+Three decisions here look like defects and are not. The `admin`/`admin` default password is set **only** under `IsLocalhost()`; that gate is the thing keeping a known credential off public hosts. `config.Owner` has no password field by design — a non-localhost owner signs in first through an emailed reset link, or the operator gets a loud warning pointing at the setup console. And `newOwnerFromConfig` falls back from a blank email to `admin@<hostname>` because `User.Save` requires a non-empty address.
+
+## Two geocoder response mappers are wrong, and the tests pin the bug
+
+Both are asserted as current behavior with "asserting the BUG" comments rather than fixed, so a fix will surface as a test failure. `mapGoogleSearchResult` matches `administrative_level_1` while Google actually sends `administrative_area_level_1`, so `Address.Region` is silently empty for **every** Google geocode. And `mapMaptilerAddress` builds `Street1` by concatenating house number and text, which yields a bare space when both are empty. The suite is non-network by construction; the methods that do reach the network need URL injection before they can be covered at all.

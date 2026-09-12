@@ -1,7 +1,7 @@
 package handler
 
 import (
-	_ "embed"
+	_ "embed" // for the //go:embed directive below
 	"html/template"
 	"net/http"
 	"time"
