@@ -423,9 +423,6 @@ func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAc
 
 	switch merchantAccount.Type {
 
-	// case model.ConnectionProviderPayPal:
-	//	return service.paypal_getCheckoutURL(merchantAccount, remoteProductID, returnURL, customerEmail)
-
 	// case model.ConnectionProviderStripe:
 	//	return service.stripe_getCheckoutURL(merchantAccount, product, returnURL, customerEmail)
 
@@ -446,9 +443,6 @@ func (service *MerchantAccount) ParseCheckoutResponse(session data.Session, merc
 	// Find the appropriate getter function for this MerchantAccount type
 	switch merchantAccount.Type {
 
-	// case model.ConnectionProviderPayPal:
-	//	getter = service.paypal_getPrivilegeFromCheckoutResponse
-
 	// case model.ConnectionProviderStripe:
 	//	getter = service.stripe_getPrivilegeFromCheckoutResponse
 
@@ -456,7 +450,7 @@ func (service *MerchantAccount) ParseCheckoutResponse(session data.Session, merc
 		getter = service.stripe_getPrivilegeFromCheckoutResponse
 
 	default:
-		return model.Privilege{}, derp.BadRequest(location, "MerchantAccount must be PAYPAL or STRIPE", merchantAccount.Type)
+		return model.Privilege{}, derp.BadRequest(location, "Invalid MerchantAccount Type", merchantAccount.Type)
 	}
 
 	// Retrieve the Privilege record from the checkout response
@@ -538,9 +532,6 @@ func (service *MerchantAccount) getRemoteProducts(merchantAccount *model.Merchan
 	const location = "service.MerchantAccount.getRemoteProducts"
 
 	switch merchantAccount.Type {
-
-	// case model.ConnectionProviderPayPal:
-	//	return service.paypal_getProducts(merchantAccount, productIDs...)
 
 	// case model.ConnectionProviderStripe:
 	//	return service.stripe_getPrices(merchantAccount, productIDs...)

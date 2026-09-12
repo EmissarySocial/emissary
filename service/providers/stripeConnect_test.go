@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/stretchr/testify/assert"
@@ -216,27 +215,4 @@ func TestStripeConnect_LiveModeReachesTheHandlersTest(t *testing.T) {
 
 	liveMode := value.GetMap("data").GetString("liveMode") == "LIVE"
 	require.True(t, liveMode, "an admin who selects LIVE gets live mode")
-}
-
-// TestStripeConnect_MatchesPayPalLiveMode confirms both payment forms now declare the enum the
-// same way, since PayPal was already correct and is the pattern this one was fixed against.
-func TestStripeConnect_MatchesPayPalLiveMode(t *testing.T) {
-
-	for name, config := range map[string]form.Form{
-		"StripeConnect": NewStripeConnect().ManualConfig(),
-		"PayPal":        NewPayPal().ManualConfig(),
-	} {
-		t.Run(name, func(t *testing.T) {
-
-			element, exists := config.Schema.GetElement("data.liveMode")
-			require.True(t, exists)
-
-			stringElement, isString := element.(schema.String)
-			require.True(t, isString)
-
-			for _, offered := range selectOptionValues(config, "data.liveMode") {
-				assert.Contains(t, stringElement.Enum, offered)
-			}
-		})
-	}
 }

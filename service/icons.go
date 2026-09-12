@@ -545,9 +545,6 @@ func (service Icons) Get(name string) string {
 		return service.publicDomain()
 
 	// Services
-	case "paypal", "PAYPAL":
-		return service.get("paypal")
-
 	case "stripe", "STRIPE":
 		return service.get("stripe")
 

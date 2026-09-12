@@ -51,7 +51,7 @@ type TemplateLike interface {
 	Execute(writer io.Writer, data any) error
 }
 
-// MerchantAccountAdapter abstracts one payment provider (Stripe, PayPal, ...) behind the
+// MerchantAccountAdapter abstracts one payment provider (Stripe Connect, ...) behind the
 // MerchantAccount service: signup, API-key refresh, checkout, and webhook parsing.
 type MerchantAccountAdapter interface {
 	GetSignupURL(*model.Connection) (string, error)

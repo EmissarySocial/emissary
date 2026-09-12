@@ -74,7 +74,7 @@ func (brokenShowIfProvider) ManualConfig() form.Form {
 	}
 }
 
-// TestProviderSettingsForm_AcceptsEveryRealProvider confirms the gate passes all eleven
+// TestProviderSettingsForm_AcceptsEveryRealProvider confirms the gate passes all ten
 // ManualProviders, so adding it breaks no existing connection settings page.
 func TestProviderSettingsForm_AcceptsEveryRealProvider(t *testing.T) {
 
@@ -86,7 +86,6 @@ func TestProviderSettingsForm_AcceptsEveryRealProvider(t *testing.T) {
 		"GeocodeTiles":        providers.NewGeocodeTiles(),
 		"GeocodeTimezone":     providers.NewGeocodeTimezone(),
 		"Giphy":               providers.NewGiphy(),
-		"PayPal":              providers.NewPayPal(),
 		"Stripe":              providers.NewStripe(),
 		"StripeConnect":       providers.NewStripeConnect(),
 		"Unsplash":            providers.NewUnsplash(),

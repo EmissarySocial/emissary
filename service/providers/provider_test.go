@@ -35,7 +35,6 @@ var _ Provider = GeocodeNetwork{}
 var _ Provider = GeocodeTiles{}
 var _ Provider = GeocodeTimezone{}
 var _ Provider = Giphy{}
-var _ Provider = PayPal{}
 var _ Provider = Stripe{}
 var _ Provider = StripeConnect{}
 var _ Provider = Unsplash{}
@@ -47,7 +46,6 @@ var _ ManualProvider = GeocodeNetwork{}
 var _ ManualProvider = GeocodeTiles{}
 var _ ManualProvider = GeocodeTimezone{}
 var _ ManualProvider = Giphy{}
-var _ ManualProvider = PayPal{}
 var _ ManualProvider = Stripe{}
 var _ ManualProvider = StripeConnect{}
 var _ ManualProvider = Unsplash{}
@@ -73,7 +71,6 @@ func allProviders() []namedProvider {
 		{"GeocodeTiles", NewGeocodeTiles()},
 		{"GeocodeTimezone", NewGeocodeTimezone()},
 		{"Giphy", NewGiphy()},
-		{"PayPal", NewPayPal()},
 		{"Stripe", NewStripe()},
 		{"StripeConnect", NewStripeConnect()},
 		{"Unsplash", NewUnsplash()},
@@ -189,8 +186,8 @@ func TestProvider_NoProviderImplementsOAuthProvider(t *testing.T) {
  ******************************************/
 
 // TestProvider_LifecycleSucceedsOnLocalhost drives all four lifecycle methods of every
-// Provider. A localhost host and a valid Token keep PayPal and StripeConnect on their
-// guard paths, so no method reaches the network.
+// Provider. A localhost host keeps StripeConnect on its guard path, so no method
+// reaches the network.
 func TestProvider_LifecycleSucceedsOnLocalhost(t *testing.T) {
 
 	for _, named := range allProviders() {
@@ -234,7 +231,6 @@ func TestProvider_LifecycleAcceptsZeroConnection(t *testing.T) {
 
 		t.Run(named.Name, func(t *testing.T) {
 
-			// The Token stays valid so PayPal.Refresh keeps to its guard path
 			connection := model.Connection{Token: newTestConnection().Token}
 			vault := mapof.NewString()
 

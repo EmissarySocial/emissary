@@ -112,15 +112,6 @@ func (connection Connection) LookupCode() form.LookupCode {
 			Description: "Stripe Connect is a powerful payment platform for techies. Connect your Stripe account via OAuth.",
 			Icon:        "/.templates/user-settings/resources/stripe.svg",
 		}
-
-		// case ConnectionProviderPayPal:
-		//	return form.LookupCode{
-		//		Group:       "MANUAL",
-		//		Value:       connection.ProviderID,
-		//		Label:       "PayPal",
-		//		Description: "PayPal is a leading payment platform for consumers and small businesses.",
-		//		Icon:        "/.templates/user-settings/resources/paypal.png",
-		//	}
 	}
 
 	return form.LookupCode{

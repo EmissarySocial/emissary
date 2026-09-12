@@ -13,7 +13,7 @@ type MerchantAccount struct {
 	MerchantAccountID    primitive.ObjectID `bson:"_id"`                  // Unique ID for the payment processor connection
 	ConnectionID         primitive.ObjectID `bson:"connectionId"`         // Unique ID of the Connection that this MerchantAccount uses to access the payment processor
 	UserID               primitive.ObjectID `bson:"userId"`               // Unique ID of the user who owns the account with this payment processor
-	Type                 string             `bson:"type"`                 // Internal identifier of the payment processor (STRIPE, PAYPAL, etc.)
+	Type                 string             `bson:"type"`                 // Internal identifier of the payment processor (STRIPE-CONNECT, etc.)
 	Name                 string             `bson:"name"`                 // Human-friendly name for the payment processor account
 	Description          string             `bson:"description"`          // Human-friendly Description of the payment processor account
 	Vault                Vault              `bson:"vault"`                // Vault data that is stored in the database (encrypted)
@@ -93,9 +93,6 @@ func (merchantAccount MerchantAccount) Icon() string {
 
 	switch merchantAccount.Type {
 
-	// case ConnectionProviderPayPal:
-	//	return "paypal"
-
 	// case ConnectionProviderStripe:
 	//	return "stripe"
 
@@ -110,9 +107,6 @@ func (merchantAccount MerchantAccount) Icon() string {
 func (merchantAccount MerchantAccount) ProductURL() string {
 
 	switch merchantAccount.Type {
-
-	// case ConnectionProviderPayPal:
-	//	return "https://www.paypal.com/business/products"
 
 	// case ConnectionProviderStripe:
 	//	return "https://dashboard.stripe.com/products?active=true"
@@ -129,9 +123,6 @@ func (merchantAccount MerchantAccount) APIKeyURL() string {
 
 	switch merchantAccount.Type {
 
-	// case ConnectionProviderPayPal:
-	//	return "https://www.paypal.com/business/keys"
-
 	// case ConnectionProviderStripe:
 	//	return "https://dashboard.stripe.com/apikeys"
 
@@ -146,9 +137,6 @@ func (merchantAccount MerchantAccount) APIKeyURL() string {
 func (merchantAccount MerchantAccount) HelpURL() string {
 
 	switch merchantAccount.Type {
-
-	// case ConnectionProviderPayPal:
-	//	return "https://emissary.dev/paypal"
 
 	// case ConnectionProviderStripe:
 	//	return "https://emissary.dev/stripe"

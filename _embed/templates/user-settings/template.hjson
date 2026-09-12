@@ -812,31 +812,6 @@
 			]
 		}
 
-		merchantAccount-edit-paypal: {
-			roles:["self"]
-			steps: [
-				{do:"as-modal", steps:[
-					{do:"with-merchant-account", steps:[
-						{do:"view-html", file:"merchantAccount-edit-paypal"}
-						{
-							do:edit
-							form:{
-								type:layout-vertical
-								children:[
-									{type:"hidden", path:"type", options:{value:"PAYPAL"}}
-									{type:"text", path:"name", label:"Account Label", description:"(PRIVATE) A label for you to recognize this account", options:{required:true}}
-									{type:"toggle", path:"liveMode", options:{true-text:"Live Mode (Yes. Use for Actual Payments)", false-text:"Live Mode (No. Sandbox Only)"}}
-								]
-							}
-							options:["delete:/@me/settings/merchantAccount-delete?merchantAccountId={{.ObjectID}}"]
-						}
-						{do:"save"}
-						{do:"refresh-page"}
-					]}
-				]}
-			]
-		}
-
 		merchantAccount-edit-stripe: {
 			roles:["self"]
 			steps: [
