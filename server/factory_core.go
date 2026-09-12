@@ -1247,6 +1247,7 @@ func (factory *factoryCore) init(storage config.Storage, embeddedFiles embed.FS)
 		dome.LogStatusCodes(
 			http.StatusBadRequest,
 			http.StatusNotFound,
+			http.StatusMethodNotAllowed,
 			http.StatusInternalServerError,
 		),
 	)
