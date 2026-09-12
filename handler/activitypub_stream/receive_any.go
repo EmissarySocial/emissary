@@ -102,9 +102,12 @@ func announce(context Context, activity streams.Document) error {
 	}
 
 	// Convert the Activity into an Inbox Message
+	// RULE: ActorURL is the Actor's own canonical URL, never just its ID.  It is what the
+	// published activity's `actor` property carries, and what its `id` is built from.
 	message := model.NewOutboxMessage()
 	message.ActorID = context.stream.StreamID
 	message.ActorType = model.FollowerTypeStream
+	message.ActorURL = actor.ActorID()
 	message.ActivityType = activity.Type()
 	message.ObjectID = activity.ID()
 
