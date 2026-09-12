@@ -30,7 +30,9 @@ func New(collection *mongo.Collection, options mapof.Any) Plugin {
 // Report implements the derp.Plugin interface, writing the error to MongoDB unless its status code is filtered out
 func (plugin Plugin) Report(err error) {
 
-	if err == nil {
+	// RULE: derp.IsNil also catches a typed nil inside the error interface, which "err == nil"
+	// lets through and which would be stored as a meaningless record.
+	if derp.IsNil(err) {
 		return
 	}
 
@@ -45,8 +47,11 @@ func (plugin Plugin) Report(err error) {
 	// We're gonna log the error..  I'm not scared.
 	record := newRecord(err, statusCode)
 
-	if _, err := plugin.collection.InsertOne(context.Background(), record); err != nil {
-		log.Error().Err(err).Msg("Unable to insert error record into MongoDB")
+	// The Reporter interface carries no context, so there is none to inherit here
+	if _, insertErr := plugin.collection.InsertOne(context.Background(), record); insertErr != nil {
+
+		// Reporting this through derp would call back into this plugin, forever
+		log.Error().Err(insertErr).Msg("Unable to insert error record into MongoDB")
 	}
 }
 

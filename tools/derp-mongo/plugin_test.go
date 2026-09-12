@@ -76,6 +76,19 @@ func TestPlugin_ReportIgnoresNil(t *testing.T) {
 	})
 }
 
+func TestPlugin_ReportIgnoresTypedNil(t *testing.T) {
+
+	// A nil pointer inside the error interface is NOT caught by "err == nil", and used to
+	// reach the insert as a record with no status code, location, or message.
+	plugin := New(nil, mapof.Any{})
+
+	var typed *derp.Error
+
+	assert.NotPanics(t, func() {
+		plugin.Report(typed)
+	})
+}
+
 func TestPlugin_ReportIgnoresFilteredErrors(t *testing.T) {
 
 	// The collection is nil, so this passes only because the filter returns before the insert

@@ -42,7 +42,8 @@ func SignatureOf(err error) string {
 // Signature builds the stable identity of an error from the four values that describe it
 func Signature(statusCode int, origin string, rootLocation string, rootMessage string) string {
 
-	// The separator keeps two fields from bleeding into one another
+	// Join the four values that identify this error.  The separator matters, because it is
+	// what keeps two adjacent fields from bleeding into one another.
 	seed := strings.Join([]string{
 		strconv.Itoa(statusCode),
 		origin,
@@ -50,9 +51,10 @@ func Signature(statusCode int, origin string, rootLocation string, rootMessage s
 		NormalizeMessage(rootMessage),
 	}, "|")
 
+	// Hash the seed down to something short enough to type on a command line
 	sum := sha256.Sum256([]byte(seed))
 
-	// The version travels with the signature, so an algorithm change is visible on disk
+	// Stamp the version onto the result, so that an algorithm change is visible on disk
 	return signatureVersion + ":" + hex.EncodeToString(sum[:])[:signatureLength]
 }
 
@@ -68,6 +70,6 @@ func NormalizeMessage(message string) string {
 	message = variableHostname.ReplaceAllString(message, placeholderHostname)
 	message = variableNumber.ReplaceAllString(message, placeholderNumber)
 
-	// Whitespace collapses last, once every placeholder is in place
+	// Collapse whitespace last, once every placeholder above is in place
 	return strings.TrimSpace(repeatedSpace.ReplaceAllString(message, " "))
 }

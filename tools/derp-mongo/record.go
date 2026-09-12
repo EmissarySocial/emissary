@@ -37,11 +37,12 @@ type Record struct {
 // that make it one item in the triage queue.
 func newRecord(err error, statusCode int) Record {
 
+	// Dig out the deepest location and message in the chain, which name the actual defect
 	rootLocation := derp.RootLocation(err)
 	rootMessage := derp.RootMessage(err)
 
-	// The signature is built from the values stored beside it, so the record can never
-	// describe one error while its signature describes another.
+	// Build the record, signing it from the very values stored beside it, so that a record
+	// can never describe one error while its signature describes another.
 	return Record{
 		RecordID:   primitive.NewObjectID(),
 		StatusCode: statusCode,
