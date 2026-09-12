@@ -280,6 +280,61 @@ func PatchAccount_UpdateCredentials(serverFactory *server.Factory) func(model.Au
 	}
 }
 
+// GetAccounts implements the Mastodon batch "get multiple accounts" endpoint
+// (GET /api/v1/accounts?id[]=...). The client uses it to refresh accounts it
+// already has on screen -- opening a profile reached from a post author or a
+// list -- so it must return the same fully-populated Account that GetAccount
+// does. An id that no longer resolves is skipped rather than failing the batch.
+func GetAccounts(serverFactory *server.Factory) func(model.Authorization, txn.GetAccounts) ([]object.Account, error) {
+
+	const location = "handler.mastodon_GetAccounts"
+
+	return func(auth model.Authorization, t txn.GetAccounts) ([]object.Account, error) {
+
+		factory, err := serverFactory.ByHostname(t.Host)
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Creating session")
+		}
+
+		defer cancel()
+
+		result := make([]object.Account, 0, len(t.IDs))
+
+		for _, id := range t.IDs {
+
+			// A local account
+			if user, err := loadUserByAccountID(factory, session, id); err == nil {
+				result = append(result, user.Toot())
+				continue
+			}
+
+			// A remote account: resolve + dereference, same as GetAccount.
+			accountURL, err := resolveAccountURL(factory, session, id)
+
+			if err != nil {
+				continue
+			}
+
+			document, err := factory.ActivityStream().UserClient(auth.UserID).Load(accountURL)
+
+			if err != nil {
+				continue
+			}
+
+			result = append(result, mapDocumentToAccount(factory, session, document))
+		}
+
+		return result, nil
+	}
+}
+
 // GetAccount implements the Mastodon "get account" endpoint
 func GetAccount(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount) (object.Account, error) {
 
