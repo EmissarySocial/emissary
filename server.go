@@ -404,6 +404,7 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/:stream/pub/inbox", handler.WithTemplate(factory, ap_stream.PostInbox))
 	e.GET("/:stream/pub/likes", handler.WithStream(factory, ap_stream.GetLikesCollection))
 	e.GET("/:stream/pub/outbox", handler.WithTemplate(factory, ap_stream.GetOutboxCollection))
+	e.GET("/:stream/pub/outbox/:messageId", handler.WithTemplate(factory, ap_stream.GetOutboxMessage))
 	e.GET("/:stream/pub/replies", handler.WithActorAndStream(factory, ap_stream.GetRepliesCollection))
 	e.GET("/:stream/pub/shares", handler.WithStream(factory, ap_stream.GetSharesCollection))
 
