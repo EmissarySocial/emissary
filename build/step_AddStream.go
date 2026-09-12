@@ -151,7 +151,7 @@ func (step StepAddStream) getInline(builder Builder, buffer io.Writer) error {
 
 			b.Close() // A
 
-			b.WriteString("&nbsp;")
+			b.WriteString("&nbsp;") // #nosec G104 -- html.Builder embeds *strings.Builder, whose WriteString is documented to always return a nil error
 		}
 		b.Close() // DIV
 	}
@@ -184,7 +184,7 @@ func (step StepAddStream) getInline(builder Builder, buffer io.Writer) error {
 		return derp.Wrap(err, location, "Building new child stream")
 	}
 
-	b.WriteString(string(widgetHTML))
+	b.WriteString(string(widgetHTML)) // #nosec G104 -- html.Builder embeds *strings.Builder, whose WriteString is documented to always return a nil error
 
 	// Close the container
 	b.Close()

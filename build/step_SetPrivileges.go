@@ -131,7 +131,7 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 		Script("init send checkFormRules(changed:me as Values)").
 		EndBracket()
 
-	b.WriteString(formHTML)
+	b.WriteString(formHTML) // #nosec G104 -- html.Builder embeds *strings.Builder, whose WriteString is documented to always return a nil error
 	b.Div()
 	b.Button().Type("submit").Class("primary").InnerText("Save Changes").Close()
 	b.A(streamBuilder._stream.URL).Class("button").InnerText("Cancel").Close()

@@ -58,7 +58,7 @@ func (step StepSetSimpleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 		return Halt().WithError(derp.Wrap(err, location, "Rendering form for StepSetSimpleSharing"))
 	}
 
-	b.WriteString(formHTML)
+	b.WriteString(formHTML) // #nosec G104 -- html.Builder embeds *strings.Builder, whose WriteString is documented to always return a nil error
 	b.CloseAll()
 
 	options := []string{}

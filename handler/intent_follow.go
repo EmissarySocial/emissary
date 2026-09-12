@@ -100,7 +100,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session d
 			b.Close()
 
 			b.Div().Class("flex-grow-1").EndBracket()
-			b.WriteString(formHTML)
+			b.WriteString(formHTML) // #nosec G104 -- html.Builder embeds *strings.Builder, whose WriteString is documented to always return a nil error
 			b.Close()
 		}
 		b.Close()

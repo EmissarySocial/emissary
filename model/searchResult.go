@@ -40,7 +40,7 @@ func NewSearchResult() SearchResult {
 		Location:       geo.NewPoint(0, 0),
 		Tags:           make(sliceof.String, 0),
 		Index:          make(sliceof.String, 0),
-		Shuffle:        rand.Int64(),
+		Shuffle:        rand.Int64(), // #nosec G404 -- Shuffle is a randomized sort key, not a secret
 	}
 }
 

@@ -64,7 +64,7 @@ func shuffleA(ctx context.Context, collection *mongo.Collection) error {
 		_, err := collection.UpdateOne( // nolint:scopeguard (readability)
 			ctx,
 			bson.M{"_id": result["_id"]},
-			bson.M{"$set": bson.M{"shuffle": rand.Int64()}},
+			bson.M{"$set": bson.M{"shuffle": rand.Int64()}}, // #nosec G404 -- Shuffle is a randomized sort key, not a secret
 		)
 
 		if err != nil {

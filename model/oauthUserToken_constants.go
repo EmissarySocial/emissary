@@ -3,7 +3,7 @@ package model
 import "time"
 
 // https://swicg.github.io/activitypub-data-portability/lola#Authorization
-const OAuthUserTokenScopeActivityPubPortability = "activitypub_account_portability"
+const OAuthUserTokenScopeActivityPubPortability = "activitypub_account_portability" // #nosec G101 -- this is the NAME of an OAuth scope, not a credential
 
 // OAuth token lifecycle durations (see emissary-specs/OAUTH-REFRESH-TOKENS.md).
 const (

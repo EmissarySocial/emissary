@@ -65,7 +65,7 @@ func parse(request *http.Request, location string) error {
 	// Try to parse multipart form data
 	if strings.HasPrefix(contentType, "multipart/form-data") {
 
-		if err := request.ParseMultipartForm(multipartMaxMemory); err != nil {
+		if err := request.ParseMultipartForm(multipartMaxMemory); err != nil { // #nosec G120 -- bounded by the multipartMaxMemory constant declared above
 			return derp.Wrap(err, location, "Parsing multipart form")
 		}
 

@@ -52,7 +52,7 @@ func GenerateString(s int) (string, error) {
 
 // GenerateInt returns a pseudo-random integer in the range [low, high)
 func GenerateInt(low int, high int) int {
-	return low + mathrand.Intn(high-low)
+	return low + mathrand.Intn(high-low) // #nosec G404 -- GenerateInt is for non-security values (username slugs, shuffle keys).  Secrets use GenerateBytes/GenerateString, which read crypto/rand
 }
 
 // Base64URLEncode base64 encodes the given bytes in a URL-safe way

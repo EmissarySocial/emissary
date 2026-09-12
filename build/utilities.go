@@ -105,7 +105,7 @@ func WrapModal(response http.ResponseWriter, content string, options ...string) 
 
 	// Contents
 	b.Grow(len(content))
-	b.WriteString(content)
+	b.WriteString(content) // #nosec G104 -- html.Builder embeds *strings.Builder, whose WriteString is documented to always return a nil error
 
 	// Done
 	b.CloseAll()
@@ -134,7 +134,7 @@ func WrapTooltip(response http.ResponseWriter, content string) string {
 	b := html.New()
 
 	b.Span().ID("tooltip").Script("install tooltip").EndBracket()
-	b.WriteString(content)
+	b.WriteString(content) // #nosec G104 -- html.Builder embeds *strings.Builder, whose WriteString is documented to always return a nil error
 	b.CloseAll()
 
 	return b.String()
@@ -165,7 +165,7 @@ func WrapForm(endpoint string, content string, encoding string, options ...strin
 
 	// Contents
 	b.Grow(len(content))
-	b.WriteString(content)
+	b.WriteString(content) // #nosec G104 -- html.Builder embeds *strings.Builder, whose WriteString is documented to always return a nil error
 
 	// Controls
 	b.Div().Class("flex-row", "flex-align-center")

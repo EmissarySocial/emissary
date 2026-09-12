@@ -11,6 +11,7 @@ import (
 )
 
 // stripe_Connect ensures that the Stripe webhook is configured for this MerchantAccount
+//
 //lint:ignore U1000 the direct Stripe provider is dormant, not deleted; see service/AGENTS.md
 func (service *MerchantAccount) stripe_Connect(merchantAccount *model.MerchantAccount) error {
 

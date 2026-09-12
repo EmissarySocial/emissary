@@ -1,7 +1,7 @@
 package model
 
 import (
-	"crypto/md5"
+	"crypto/md5" // #nosec G501 -- the SearchQuery signature is a dedup key over public query parameters, not a security primitive
 	"encoding/base64"
 	"io"
 	"slices"
@@ -227,7 +227,7 @@ func (searchQuery *SearchQuery) MakeSignature() {
 	}
 
 	// Make a hash of the plaintext for easy indexing
-	h := md5.New()
+	h := md5.New()                               // #nosec G401 -- see the import comment
 	_, _ = io.WriteString(h, plaintext.String()) // hash.Hash.Write is documented never to return an error
 	signature := base64.StdEncoding.EncodeToString(h.Sum(nil))
 

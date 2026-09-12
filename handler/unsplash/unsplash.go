@@ -129,7 +129,7 @@ func GetCollectionRandom(ctx *steranko.Context, factory *service.Factory, sessio
 	}
 
 	// Select a random photo from the collection
-	photo := photos[rand.Intn(len(photos))]
+	photo := photos[rand.Intn(len(photos))] // #nosec G404 -- picking a decorative stock photo is not a security decision
 
 	// If this iis a JSON request, then return nicely formatted JSON
 	if convert.Bool(ctx.QueryParam("json")) {
@@ -219,11 +219,11 @@ func displayPhoto(ctx echo.Context, applicationName string, photo mapof.Any) err
 	// InnerText-escaped, instead of hand-assembling an HTML string and emitting it via InnerHTML -- which
 	// would let a crafted username/name inject markup that runs in the Emissary origin.
 	b.Div().Class("pos-absolute-bottom-right padding-xs text-xs").Style("background-color:"+photoColor, "color:"+textColor).EndBracket()
-	b.WriteString("Photo By ")
+	b.WriteString("Photo By ") // #nosec G104 -- html.Builder embeds *strings.Builder, whose WriteString is documented to always return a nil error
 	b.A("https://unsplash.com/@"+user.GetString("username")+tracker).Attr("target", "_blank").Style("color:" + textColor).InnerText(user.GetString("name")).Close()
-	b.WriteString(" on ")
+	b.WriteString(" on ") // #nosec G104 -- html.Builder embeds *strings.Builder, whose WriteString is documented to always return a nil error
 	b.A("https://unsplash.com"+tracker).Attr("target", "_blank").Style("color:" + textColor).InnerText("Unsplash").Close()
-	b.WriteString(".&nbsp;")
+	b.WriteString(".&nbsp;") // #nosec G104 -- html.Builder embeds *strings.Builder, whose WriteString is documented to always return a nil error
 	b.Close()
 	b.Close()
 
