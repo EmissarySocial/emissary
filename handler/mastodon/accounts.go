@@ -453,13 +453,65 @@ func GetAccount_Followers(serverFactory *server.Factory) func(model.Authorizatio
 	}
 }
 
-// GetAccount_Following implements the Mastodon "get account following" endpoint, and always returns an empty list
+// GetAccount_Following implements the Mastodon "get account following" endpoint.
+// Emissary only knows one account's following graph -- the local User's own -- so
+// this returns that list when the caller asks for their own account, and an
+// honest empty result for anyone else (the same cross-account limit Mastodon
+// itself has).
 func GetAccount_Following(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Following) ([]object.Account, toot.PageInfo, error) {
+
+	const location = "handler.mastodon_GetAccount_Following"
 
 	return func(auth model.Authorization, t txn.GetAccount_Following) ([]object.Account, toot.PageInfo, error) {
 
-		// Emissary does not (currently?) publish following data
-		return []object.Account{}, toot.PageInfo{}, nil
+		factory, err := serverFactory.ByHostname(t.Host)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Creating session")
+		}
+
+		defer cancel()
+
+		// Only the caller's own following list is available.
+		if user, err := loadUserByAccountID(factory, session, t.ID); err != nil || user.UserID != auth.UserID {
+			return []object.Account{}, toot.PageInfo{}, nil
+		}
+
+		records, err := factory.Following().RangeByUserID(session, auth.UserID)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Querying following")
+		}
+
+		result := make([]object.Account, 0)
+		client := factory.ActivityStream().UserClient(auth.UserID)
+
+		for following := range records {
+
+			profileURL := following.ProfileURL
+			if profileURL == "" {
+				profileURL = following.URL
+			}
+
+			// Prefer a live (ascache-backed) dereference so the row carries real
+			// follower/following/post counts, same as a direct GetAccount fetch.
+			// Some origins are unreachable; fall back to the Following row's own
+			// data rather than dropping the account from the list.
+			if document, err := client.Load(profileURL); err == nil {
+				result = append(result, mapDocumentToAccount(factory, session, document))
+				continue
+			}
+
+			result = append(result, model.RemoteActorAccount(profileURL, following.Label, following.IconURL, time.UnixMilli(following.CreateDate)))
+		}
+
+		return result, toot.PageInfo{}, nil
 	}
 }
 
