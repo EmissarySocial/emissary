@@ -21,7 +21,8 @@ import (
 )
 
 // followingMimeStack lists the preferred mime types for follows
-const followingMimeStack = "application/activity+json; q=1.0, text/html; q=0.9, application/feed+json; q=0.8, application/atom+xml; q=0.7, application/rss+xml; q=0.6, text/xml; q=0.5, */*; q=0.1" //nolint:unused // retained for future use
+//lint:ignore U1000 unused while Sherlock-backed RSS following is disabled; see service/AGENTS.md
+const followingMimeStack = "application/activity+json; q=1.0, text/html; q=0.9, application/feed+json; q=0.8, application/atom+xml; q=0.7, application/rss+xml; q=0.6, text/xml; q=0.5, */*; q=0.1"
 
 // Following manages all interactions with the Following collection
 type Following struct {
