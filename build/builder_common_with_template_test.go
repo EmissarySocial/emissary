@@ -8,6 +8,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// unusedFactory satisfies build.Factory without implementing any of it.  The guards under
+// test all return before a dependency is touched, so a call through this stub is a bug in
+// the test rather than something to handle -- it panics rather than passing a nil Factory
+// into production code, which is what NewCommon would dereference.
+type unusedFactory struct {
+	Factory
+}
+
 // TestNewCommonWithTemplate_UnroutedPathIsNotFound asserts that a path this server does not route
 // answers 404 rather than 400.
 //
@@ -27,7 +35,7 @@ func TestNewCommonWithTemplate_UnroutedPathIsNotFound(t *testing.T) {
 
 	for _, actionID := range unrouted {
 		t.Run(actionID, func(t *testing.T) {
-			_, err := NewCommonWithTemplate(nil, nil, nil, nil, model.Template{}, nil, actionID)
+			_, err := NewCommonWithTemplate(unusedFactory{}, nil, nil, nil, model.Template{}, nil, actionID)
 
 			require.Error(t, err)
 			require.Equal(t, 404, derp.ErrorCode(err), "an unrouted path must not report as a malformed request")
@@ -41,7 +49,7 @@ func TestNewCommonWithTemplate_UnroutedPathIsNotFound(t *testing.T) {
 // be a broken Template link rather than a visitor typo, so it stays visible in the error log.
 func TestNewCommonWithTemplate_UnknownActionIsStillBadRequest(t *testing.T) {
 
-	_, err := NewCommonWithTemplate(nil, nil, nil, nil, model.Template{}, nil, "no-such-action")
+	_, err := NewCommonWithTemplate(unusedFactory{}, nil, nil, nil, model.Template{}, nil, "no-such-action")
 
 	require.Error(t, err)
 	require.Equal(t, 400, derp.ErrorCode(err))
@@ -58,8 +66,8 @@ func TestNewCommonWithTemplate_WithdrawnAndMissingAnswerAlike(t *testing.T) {
 	existing := "pub/liked/6a6bf5ebc984688fe7520f78"
 	missing := "pub/liked/000000000000000000000000"
 
-	_, errExisting := NewCommonWithTemplate(nil, nil, nil, nil, model.Template{}, nil, existing)
-	_, errMissing := NewCommonWithTemplate(nil, nil, nil, nil, model.Template{}, nil, missing)
+	_, errExisting := NewCommonWithTemplate(unusedFactory{}, nil, nil, nil, model.Template{}, nil, existing)
+	_, errMissing := NewCommonWithTemplate(unusedFactory{}, nil, nil, nil, model.Template{}, nil, missing)
 
 	require.Equal(t, derp.ErrorCode(errExisting), derp.ErrorCode(errMissing))
 	require.Equal(t, derp.Message(errExisting), derp.Message(errMissing))

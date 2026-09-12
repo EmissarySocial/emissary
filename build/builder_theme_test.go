@@ -45,8 +45,7 @@ func newTestDomainFactory(themeData mapof.Any, data mapof.String) stubDomainFact
 
 	// A theme folder carrying nothing but its definition: no HTML, bundles, or content,
 	// which are the parts Add() skips when the filesystem does not provide them.
-	filesystem := fstest.MapFS{
-		"theme.hjson": &fstest.MapFile{Data: []byte(`{
+	definition := []byte(`{
 			themeId: test
 			schema: {type:"object", properties:{
 				themeData: {type:"object", properties:{
@@ -54,10 +53,13 @@ func newTestDomainFactory(themeData mapof.Any, data mapof.String) stubDomainFact
 					"stylesheet": {type:"string"}
 				}}
 			}}
-		}`)},
+		}`)
+
+	filesystem := fstest.MapFS{
+		"theme.hjson": &fstest.MapFile{Data: definition},
 	}
 
-	if err := themeService.Add("test", filesystem, filesystem["theme.hjson"].Data); err != nil {
+	if err := themeService.Add("test", filesystem, definition); err != nil {
 		panic(err)
 	}
 
