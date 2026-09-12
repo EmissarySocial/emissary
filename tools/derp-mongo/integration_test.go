@@ -44,6 +44,8 @@ func newTestCollection(t *testing.T) *mongo.Collection {
 	database := "derpmongo_test_" + primitive.NewObjectID().Hex()
 	collection := client.Database(database).Collection("ErrorLog")
 
+	// The test context is already cancelled by the time cleanup runs, and a throwaway database
+	// that refuses to be dropped is not something a test result should report.
 	t.Cleanup(func() {
 		_ = client.Database(database).Drop(context.Background())
 		_ = client.Disconnect(context.Background())
