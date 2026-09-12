@@ -2,6 +2,8 @@ package build
 
 import (
 	"io"
+
+	"github.com/benpate/rosetta/compare"
 )
 
 // StepCacheURL is an action that can add new model objects of any type
@@ -14,15 +16,20 @@ func (step StepCacheURL) Get(builder Builder, buffer io.Writer) PipelineBehavior
 
 	header := builder.response().Header()
 
-	// Handle Etag caching (if possible)
-	if etag := builder.object().ETag(); etag != "" {
-		if ifNoneMatch := builder.request().Header.Get("If-None-Match"); ifNoneMatch == etag {
-			builder.response().WriteHeader(304)
-			return Halt()
-		}
+	// Handle Etag caching (if possible).  Not every Builder wraps a model object, so
+	// guard the same way StepViewHTML does before reading one.
+	if object := builder.object(); compare.NotNil(object) {
 
-		// Write Etag header
-		header.Set("Etag", etag)
+		if etag := object.ETag(); etag != "" {
+
+			if ifNoneMatch := builder.request().Header.Get("If-None-Match"); ifNoneMatch == etag {
+				builder.response().WriteHeader(304)
+				return Halt()
+			}
+
+			// Write Etag header
+			header.Set("Etag", etag)
+		}
 	}
 
 	// Write cache control header
