@@ -321,7 +321,12 @@ func GetAccount(serverFactory *server.Factory) func(model.Authorization, txn.Get
 		document, err := client.Load(accountURL)
 
 		if err != nil {
-			return object.Account{}, derp.Wrap(err, location, "Loading remote account", accountURL)
+			// RULE: derp.Wrap inherits the wrapped error's status code by default, and
+			// a remote origin's own failure (401, 403, 429...) is not our caller's
+			// fault. Passing it through as-is would make the client think its OWN
+			// bearer token is invalid. Report it as what it actually is: we could
+			// not reach the remote account.
+			return object.Account{}, derp.Wrap(err, location, "Loading remote account", accountURL, derp.WithBadGateway())
 		}
 
 		return mapDocumentToAccount(factory, session, document), nil
