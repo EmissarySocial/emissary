@@ -36,11 +36,11 @@ const (
 // SignatureOf returns the stable identity of an error, so that every occurrence of one
 // defect is recognized as a single item of work.
 func SignatureOf(err error) string {
-	return Signature(derp.ErrorCode(err), derp.Location(err), derp.RootLocation(err), derp.RootMessage(err))
+	return signature(derp.ErrorCode(err), derp.Location(err), derp.RootLocation(err), derp.RootMessage(err))
 }
 
-// Signature builds the stable identity of an error from the four values that describe it
-func Signature(statusCode int, origin string, rootLocation string, rootMessage string) string {
+// signature builds the stable identity of an error from the four values that describe it
+func signature(statusCode int, origin string, rootLocation string, rootMessage string) string {
 
 	// Join the four values that identify this error.  The separator matters, because it is
 	// what keeps two adjacent fields from bleeding into one another.
@@ -48,7 +48,7 @@ func Signature(statusCode int, origin string, rootLocation string, rootMessage s
 		strconv.Itoa(statusCode),
 		origin,
 		rootLocation,
-		NormalizeMessage(rootMessage),
+		normalizeMessage(rootMessage),
 	}, "|")
 
 	// Hash the seed down to something short enough to type on a command line
@@ -58,9 +58,9 @@ func Signature(statusCode int, origin string, rootLocation string, rootMessage s
 	return signatureVersion + ":" + hex.EncodeToString(sum[:])[:signatureLength]
 }
 
-// NormalizeMessage removes the parts of an error message that vary between occurrences, so
+// normalizeMessage removes the parts of an error message that vary between occurrences, so
 // that the same failure against two different hosts still produces one signature.
-func NormalizeMessage(message string) string {
+func normalizeMessage(message string) string {
 
 	// RULE: Single-pass only.  Each replacement rewrites the word boundaries around it, so a
 	// second pass matches text the first could not reach.  Order matters here too: a URL

@@ -11,6 +11,6 @@ and a status, which tracks the triage decision made about it.  Every
 occurrence of a defect shares one signature, and that is what lets the triage
 command collapse a noisy log into a short list of distinct problems.
 
-See ../../triage for the command that reads these records.
+See github.com/benpate/derp-triage for the command that reads these records.
 */
 package derpmongo

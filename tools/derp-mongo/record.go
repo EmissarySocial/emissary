@@ -49,7 +49,7 @@ func newRecord(err error, statusCode int) Record {
 		Location:   rootLocation,
 		Message:    rootMessage,
 		Error:      err,
-		Signature:  Signature(statusCode, derp.Location(err), rootLocation, rootMessage),
+		Signature:  signature(statusCode, derp.Location(err), rootLocation, rootMessage),
 		Status:     StatusNew,
 		CreateDate: primitive.NewDateTimeFromTime(time.Now()),
 	}
