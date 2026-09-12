@@ -21,9 +21,14 @@ const MimeTypeJSONLDWithProfile = `application/ld+json; profile="https://www.w3.
 // MimeTypeJSONFeed is the content type of a JSONFeed document
 const MimeTypeJSONFeed = "application/feed+json"
 
+// MimeTypeJSONResourceDescriptor is the content type of a WebFinger JSON Resource Descriptor
+//
 // https://datatracker.ietf.org/doc/html/rfc7033#section-10.2
 const MimeTypeJSONResourceDescriptor = "application/jrd+json"
 
+// MimeTypeJSONResourceDescriptorWithCharset is the JSON Resource Descriptor content type,
+// with the charset extension that Mastodon expects
+//
 // https://datatracker.ietf.org/doc/html/rfc7033#section-10.2
 // With charset extension to match Mastodon
 const MimeTypeJSONResourceDescriptorWithCharset = "application/jrd+json; charset=utf-8"

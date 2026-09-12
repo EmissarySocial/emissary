@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// RegistrationTsn represents the data that is submitted when a User registers for a new account
+// RegistrationTxn represents the data that is submitted when a User registers for a new account
 type RegistrationTxn struct {
 	DisplayName    string `form:"displayName"`    // required: User's DisplayName
 	EmailAddress   string `form:"emailAddress"`   // required: User's EmailAddress

@@ -13,6 +13,8 @@ import (
  * https://docs.joinmastodon.org/methods/oauth/
 ******************************************/
 
+// OAuthAuthorizationRequest holds the parameters of an OAuth authorization request
+//
 // https://docs.joinmastodon.org/methods/oauth/#authorize
 // GET /oauth/authorize
 // Returns: Authorization code

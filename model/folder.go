@@ -80,7 +80,7 @@ func (folder *Folder) RolesToGroupIDs(roleIDs ...string) Permissions {
 	return defaultRolesToGroupIDs(folder.UserID, roleIDs...)
 }
 
-// RolesToGroupIDs returns a slice of Group IDs that grant access to any of the requested roles.
+// RolesToPrivilegeIDs returns a slice of Privilege IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
 func (folder *Folder) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
 	return NewPermissions()

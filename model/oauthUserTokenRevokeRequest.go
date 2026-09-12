@@ -2,6 +2,8 @@ package model
 
 import "github.com/benpate/derp"
 
+// OAuthUserTokenRevokeRequest holds the parameters of an OAuth token revocation request
+//
 // https://docs.joinmastodon.org/methods/oauth/#revoke
 // POST /oauth/revoke
 // Returns: Empty struct

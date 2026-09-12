@@ -183,7 +183,7 @@ func (w Stream) StreamID() string {
 	return w._stream.StreamID.Hex()
 }
 
-// StreamID returns the unique ID for the stream being built
+// ParentID returns the unique ID of this Stream's parent
 func (w Stream) ParentID() string {
 	return w._stream.ParentID.Hex()
 }
@@ -246,7 +246,7 @@ func (w Stream) SummaryHTML() template.HTML {
 	return template.HTML(w._stream.Summary) // #nosec G203 -- Stream.Summary is written through schema.String{Format: "html"}, which sanitizes with bluemonday
 }
 
-// SummarySummary returns a plaintext summary (<200 characters) of the stream's description
+// ShortSummary returns a plaintext summary (<200 characters) of the stream's description
 func (w Stream) ShortSummary() string {
 	return htmlconv.Summary(w._stream.Summary)
 }
@@ -307,7 +307,7 @@ func (w Stream) InReplyTo() streams.Document {
 	return w.ActivityStream(w._stream.InReplyTo)
 }
 
-// Returns the body content as an HTML template
+// ContentHTML returns the body content as an HTML template
 func (w Stream) ContentHTML() template.HTML {
 	return template.HTML(w._stream.Content.HTML) // #nosec G203 -- Content.HTML is produced and sanitized by service.Content.New
 }
@@ -594,7 +594,7 @@ func (w Stream) FirstChild(sort string, action string) (Stream, error) {
 	return w.getFirstStream(criteria, sortOption, action), nil
 }
 
-// FirstChild returns the first child Stream underneath this one, based on the provided sort field
+// LastChild returns the last child Stream underneath this one, based on the provided sort field
 func (w Stream) LastChild(sort string, action string) (Stream, error) {
 
 	criteria := exp.Equal("parentId", w._stream.StreamID)
@@ -826,7 +826,7 @@ func (w Stream) makeStreamQueryBuilder(criteria exp.Expression) QueryBuilder[mod
  * Attachments
  ******************************************/
 
-// Reference to the first file attached to this stream
+// Attachment returns the first file attached to this stream
 func (w Stream) Attachment() (model.Attachment, error) {
 	return w._factory.Attachment().LoadFirstByObjectID(w._session, model.AttachmentObjectTypeStream, w._stream.StreamID)
 }
@@ -836,7 +836,7 @@ func (w Stream) Attachments() (sliceof.Object[model.Attachment], error) {
 	return w._factory.Attachment().QueryByObjectID(w._session, model.AttachmentObjectTypeStream, w._stream.StreamID)
 }
 
-// AttachmentByType lists all attachments for this stream.
+// AttachmentsByCategory lists this stream's attachments in the named category.
 func (w Stream) AttachmentsByCategory(category string) (sliceof.Object[model.Attachment], error) {
 	return w._factory.Attachment().QueryByCategory(w._session, model.AttachmentObjectTypeStream, w._stream.StreamID, category)
 }

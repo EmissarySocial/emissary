@@ -7,7 +7,7 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 // Go won't let us make constant arrays, but consider this variable to be immutable.
 var MagicGroupIDAnonymous primitive.ObjectID
 
-// MaicGroupIDAuthenticated refers to every user who has been signed in, regardless of other permissions,
+// MagicGroupIDAuthenticated refers to every user who has been signed in, regardless of other permissions,
 // but does not include Anonymous users who are not signed in.
 // Go won't let us make constant arrays, but consider this variable to be immutable.
 var MagicGroupIDAuthenticated primitive.ObjectID

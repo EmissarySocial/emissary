@@ -24,7 +24,7 @@ const AttachmentMediaTypeImage = "image"
 // AttachmentMediaTypeVideo represents an attachment that is a video
 const AttachmentMediaTypeVideo = "video"
 
-// AttachmentMediaTypeOther represents an attachment that is any type
+// AttachmentMediaTypeAny represents an attachment that is any type
 const AttachmentMediaTypeAny = "any"
 
 // AttachmentStatusReady represents an attachment that has been transcoded

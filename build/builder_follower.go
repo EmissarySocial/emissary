@@ -92,7 +92,7 @@ func (w Follower) ParentID() primitive.ObjectID {
 	return w._follower.ParentID
 }
 
-// ActorID returns the ActorID property of this Follow
+// StateID returns the StateID of this Follower
 func (w Follower) StateID() string {
 	return w._follower.StateID
 }
@@ -107,7 +107,7 @@ func (w Follower) Format() string {
 	return w._follower.Format
 }
 
-// ActorID returns the ActorID property of this Follow
+// Actor returns the actor being followed
 func (w Follower) Actor() model.PersonLink {
 	return w._follower.Actor
 }

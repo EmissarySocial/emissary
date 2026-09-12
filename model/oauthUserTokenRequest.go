@@ -7,6 +7,8 @@ import (
 	"github.com/benpate/rosetta/slice"
 )
 
+// OAuthUserTokenRequest holds the parameters of an OAuth token request
+//
 // https://docs.joinmastodon.org/methods/oauth/#token
 // POST /oauth/token
 // Returns: Token

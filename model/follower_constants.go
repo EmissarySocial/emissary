@@ -18,7 +18,7 @@ const FollowerTypeUser = "User"
 // ActorTypeApplication represents the domain service actor
 const ActorTypeApplication = "Application"
 
-// ActorTypeSearch represents a domain-level Search Query
+// ActorTypeSearchDomain represents a domain-level Search Query
 const ActorTypeSearchDomain = "SearchDomain"
 
 // ActorTypeSearchQuery represents a Search Query

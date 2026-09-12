@@ -70,7 +70,7 @@ func (app OAuthClient) ValidateSecret(clientSecret string) error {
 	return nil
 }
 
-// ToToot converts this object into a Mastodon-compatible Application object
+// Toot converts this object into a Mastodon-compatible Application object
 func (app OAuthClient) Toot() object.Application {
 	return object.Application{
 		Name:         app.Name,

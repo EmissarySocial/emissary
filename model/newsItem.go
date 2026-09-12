@@ -99,7 +99,7 @@ func (newsItem *NewsItem) RolesToGroupIDs(roleIDs ...string) Permissions {
 	return defaultRolesToGroupIDs(newsItem.UserID, roleIDs...)
 }
 
-// RolesToPrivilegeIDsductIDs returns a slice of Product IDs that grant access to any of the requested roles.
+// RolesToPrivilegeIDs returns a slice of Product IDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
 func (newsItem *NewsItem) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
 	return NewPermissions()
@@ -195,9 +195,7 @@ func (newsItem *NewsItem) MarkRead() bool {
 	return true
 }
 
-// MarkRead sets the stateID of this NewsItem to "READ".
-// If the ReadDate is not already set, then it is set to the current time.
-// This function returns TRUE if the value was changed
+// MarkUnmuted clears the "MUTED" state from this NewsItem.
 func (newsItem *NewsItem) MarkUnmuted() bool {
 
 	// If the status is anything but "MUTED" then there's nothing to do.

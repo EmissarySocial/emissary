@@ -15,7 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// PostExportStart is a part of the Data Portability process.  It is called by the "target" server when it
+// PostUserExportStart is a part of the Data Portability process.  It is called by the "target" server when it
 // begins a migration, in order to tell the "source" server where the exported data is going -- passing the
 // `actor` and `oracle` values to the "source" server for use at the end of the process.
 func PostUserExportStart(ctx *steranko.Context, factory *service.Factory, session data.Session, oauthUserToken *model.OAuthUserToken, user *model.User) error {
@@ -117,7 +117,7 @@ func GetUserExportDocument(ctx *steranko.Context, factory *service.Factory, sess
 
 }
 
-// GetAttachmentsExportDocument returns an OrderedCollection of all
+// GetAttachmentsExportCollection returns an OrderedCollection of all
 // Attachments associated with the provided objectType and objectID.
 func GetAttachmentsExportCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, oauthUserToken *model.OAuthUserToken, user *model.User, stream *model.Stream) error {
 
@@ -232,7 +232,7 @@ func PostUserExportFinish(ctx *steranko.Context, factory *service.Factory, sessi
 	return ctx.NoContent(http.StatusOK)
 }
 
-// This displays a message to users that their profile has been exported.
+// GetUserExportComplete displays a message to users that their profile has been exported.
 func GetUserExportComplete(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	b := html.New()

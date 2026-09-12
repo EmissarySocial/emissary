@@ -15,7 +15,7 @@ func NewPermissions() Permissions {
 	return make(Permissions, 0, 4)
 }
 
-// NewPermissions returns a fully initialized Permissions slice with "anonymous" permissions included.
+// NewAnonymousPermissions returns a fully initialized Permissions slice with "anonymous" permissions included.
 func NewAnonymousPermissions() Permissions {
 	return Permissions{MagicGroupIDAnonymous}
 }
@@ -94,7 +94,7 @@ func (permissions Permissions) Intersects(other Permissions) bool {
  * Schema Getter/Setter Methods
  ******************************************/
 
-// GetString returns the string value at the specified index
+// GetStringOK returns the string value at the specified index, and TRUE if that index exists
 func (permissions Permissions) GetStringOK(name string) (string, bool) {
 
 	if index, ok := schema.Index(name, permissions.Length()); ok {

@@ -117,7 +117,7 @@ func (action *Action) AllowedRoles(stateID string) sliceof.String {
 	return action.AccessList[stateID]
 }
 
-// Dump is a debugging method that outputs all of the contents of an Action
+// Debug is a debugging method that outputs all of the contents of an Action
 // without displaying steps/templates (which are huge)
 func (action *Action) Debug() mapof.Any {
 

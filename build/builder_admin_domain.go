@@ -296,7 +296,7 @@ func (w Domain) Provider(providerID string) providers.Provider {
 	return result
 }
 
-// Connection loads an external service connection from the database
+// AllConnections lists every external service connection configured for this Domain
 func (w Domain) AllConnections() mapof.Object[model.Connection] {
 	return w._factory.Connection().AllAsMap(w._session)
 }

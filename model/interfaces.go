@@ -64,8 +64,8 @@ type FieldLister interface {
 	Fields() []string
 }
 
-// ActivityPubProfileGetter wraps the ActivityPubProfile() method,
-// which lets a model object return its data formatted in JSON-LD
+// JSONLDGetter wraps the GetJSONLD() method, which lets a model object
+// return its data formatted as JSON-LD
 type JSONLDGetter interface {
 	GetJSONLD() mapof.Any
 	Created() int64

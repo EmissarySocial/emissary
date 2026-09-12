@@ -218,7 +218,7 @@ func (w Registration) Providers() sliceof.Object[form.LookupCode] {
 	return dataset.Providers()
 }
 
-// Connection loads an external service connection from the database
+// AllConnections lists every external service connection configured for this Domain
 func (w Registration) AllConnections() mapof.Object[model.Connection] {
 	return w._factory.Connection().AllAsMap(w._session)
 }
