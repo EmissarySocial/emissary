@@ -89,7 +89,7 @@ func (w Outbox) Render() (template.HTML, error) {
 
 	// Success!
 	status.Apply(w._response)
-	return template.HTML(buffer.String()), nil
+	return template.HTML(buffer.String()), nil // #nosec G203 -- buffer holds the action pipeline's own rendered output, already escaped by html/template
 }
 
 // View executes a separate view for this Outbox
@@ -247,7 +247,7 @@ func (w Outbox) StatusMessage() string {
 
 // StatusMessageHTML returns the profile summary rendered from Markdown, with #hashtags linkified.
 func (w Outbox) StatusMessageHTML() template.HTML {
-	return template.HTML(w._user.SummaryHTML())
+	return template.HTML(w._user.SummaryHTML()) // #nosec G203 -- User.SummaryHTML sanitizes; see TestUser_SummaryHTML_DropsDangerousHTML
 }
 
 // ProfileURL returns the User's canonical profile URL

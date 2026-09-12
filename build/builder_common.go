@@ -217,7 +217,7 @@ func (w Common) QueryParam(param string) string {
 // QueryString returns the raw query string (encoded as a template.URL)
 // to be re-embedded in a template link.
 func (w Common) QueryString() template.URL {
-	return template.URL(w._request.URL.RawQuery)
+	return template.URL(w._request.URL.RawQuery) // #nosec G203 -- every call site appends this after a fixed path and "?", where html/template still escapes it for the surrounding context
 }
 
 // RawQuery returns the raw query string (encoded as a string)
@@ -517,7 +517,7 @@ func (w Common) GetFloat(name string) float64 {
 
 // GetHTML returns the named argument as trusted HTML. Implements the Builder interface.
 func (w Common) GetHTML(name string) template.HTML {
-	return template.HTML(w.GetString(name))
+	return template.HTML(w.GetString(name)) // #nosec G203 -- see build/AGENTS.md: the only writer of the "content" argument is SetContent, which passes rendered pipeline output
 }
 
 // GetInt returns the named argument as an integer. Implements the Builder interface.

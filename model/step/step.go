@@ -1,7 +1,3 @@
-// Package Step encapsulates the DATA required for each pipeline step in the builder.
-// This package does not contain any building functions (that's in /build) but these
-// objects know how to parse and "compile" raw data into the arguments required to execute
-// each step.
 package step
 
 import (

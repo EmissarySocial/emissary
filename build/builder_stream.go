@@ -112,7 +112,7 @@ func (w Stream) Render() (template.HTML, error) {
 
 	// Success!
 	status.Apply(w._response)
-	return template.HTML(buffer.String()), nil
+	return template.HTML(buffer.String()), nil // #nosec G203 -- buffer holds the action pipeline's own rendered output, already escaped by html/template
 }
 
 // object returns the model object associated with this builder
@@ -243,7 +243,7 @@ func (w Stream) Summary() string {
 
 // SummaryHTML returns the description of the stream being built
 func (w Stream) SummaryHTML() template.HTML {
-	return template.HTML(w._stream.Summary)
+	return template.HTML(w._stream.Summary) // #nosec G203 -- Stream.Summary is written through schema.String{Format: "html"}, which sanitizes with bluemonday
 }
 
 // SummarySummary returns a plaintext summary (<200 characters) of the stream's description
@@ -309,7 +309,7 @@ func (w Stream) InReplyTo() streams.Document {
 
 // Returns the body content as an HTML template
 func (w Stream) ContentHTML() template.HTML {
-	return template.HTML(w._stream.Content.HTML)
+	return template.HTML(w._stream.Content.HTML) // #nosec G203 -- Content.HTML is produced and sanitized by service.Content.New
 }
 
 // Location returns the location of the Stream being built
@@ -482,7 +482,7 @@ func (w Stream) Widgets(location string) (template.HTML, error) {
 	}
 	buffer.WriteString(`</div>`)
 
-	return template.HTML(buffer.String()), nil
+	return template.HTML(buffer.String()), nil // #nosec G203 -- buffer holds the action pipeline's own rendered output, already escaped by html/template
 }
 
 /******************************************
