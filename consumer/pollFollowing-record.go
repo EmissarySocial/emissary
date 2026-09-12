@@ -12,6 +12,7 @@ import (
 	"github.com/benpate/rosetta/ranges"
 	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
+	"github.com/rs/zerolog/log"
 )
 
 // PollFollowing_Record polls an individual Following record for new post from its outbox (or RSS feed)
@@ -41,6 +42,22 @@ func PollFollowing_Record(factory *service.Factory, session data.Session, user *
 		result, err := document.Load(sherlock.WithDefaultValue(document.Map()))
 
 		if err != nil {
+
+			// RULE: A 429 rate-limits the HOST, not this document, so every document left in this
+			// window would hit it too.  requeue() reschedules the whole task after Retry-After.
+			if isTooMany, _ := derp.IsTooManyRequests(err); isTooMany {
+				return requeue(derp.Wrap(err, location, "Loading document", "following: "+following.URL))
+			}
+
+			// RULE: Any other 4xx is permanent for THIS document.  A malformed, relative, or missing
+			// document ID fails identically on every future poll, so reporting re-files it each cycle.
+			if derp.IsClientError(err) {
+				log.Debug().Str("location", location).Str("following", following.URL).Str("document", document.ID()).Msg("Skipping unreadable document")
+				continue
+			}
+
+			// Anything else may succeed on a later poll, and stays visible
+			derp.Report(derp.Wrap(err, location, "Loading document", "following: "+following.URL, document.Value()))
 			continue
 		}
 
