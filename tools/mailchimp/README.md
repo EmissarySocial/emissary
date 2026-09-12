@@ -95,7 +95,7 @@ accepts no other addressing, and a mis-cased hash does not error: it names a mem
 not exist. The MD5 here is an identifier, not a security primitive, which is what the `#nosec`
 annotations record.
 
-**`SetMember` is a `PUT`, and that is load-bearing.** It upserts, so `Follower.Save` can call
+**`SetMember` is a `PUT`, and that is important.** It upserts, so `Follower.Save` can call
 it on every save without first asking whether the member is already there. `UnsubscribeMember`
 likewise treats a 404 as success, because Emissary pushes only on confirmation — so someone
 who unsubscribes before their first push was never a member, and failing there would retry

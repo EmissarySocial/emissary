@@ -53,7 +53,7 @@ func TestRedirectTo_Defaults(t *testing.T) {
 	require.Equal(t, 307, step.StatusCode)
 }
 
-// TestForwardTo_DefaultMethodIsPost pins a default that is load-bearing, not incidental.
+// TestForwardTo_DefaultMethodIsPost pins a default that is important, not incidental.
 // StepAsModal returns without Halt on a partial GET and StepEditModelObject returns nil,
 // so a GET that opens a modal form runs on through to the forward-to that follows it --
 // and only this default keeps that GET from navigating away before the modal renders.

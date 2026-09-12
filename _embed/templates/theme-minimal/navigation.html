@@ -21,7 +21,7 @@
 	<!-- RULE: the skip link sits outside both layouts, which are each hidden at some width (see AGENTS.md). -->
 	<a href="#main" class="hide-visual">Skip navigation</a>
 
-	<!-- RULE: `class="framed"` on the inner div is load-bearing and must not be restyled (see AGENTS.md). -->
+	<!-- RULE: `class="framed"` on the inner div is important and must not be restyled (see AGENTS.md). -->
 	<nav>
 		<div hx-push-url="true" hx-swap="transition:true" class="framed">
 			{{- if eq "STARTUP" .DomainStateID -}}

@@ -21,7 +21,7 @@ type RuleSummary struct {
 // RuleSummaryFields returns a list of fields that should be queried from the
 // database when populating a RuleSummary object or collection.
 //
-// IMPORTANT: `userId` is load-bearing. If it is dropped, every rule projects a zero UserID and the
+// IMPORTANT: `userId` is important. If it is dropped, every rule projects a zero UserID and the
 // engine reads the entire rule set as ADMIN-tier. TestRuleSummaryFields pins this against the struct.
 func RuleSummaryFields() []string {
 	return []string{

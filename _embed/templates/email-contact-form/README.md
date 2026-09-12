@@ -56,7 +56,7 @@ An empty `ReplyEmail` is a present-but-empty key rather than a missing one, so `
 
 ## Trust boundary in body.html
 
-Two trust levels share one document, and the distinction is load-bearing rather than stylistic.
+Two trust levels share one document, and the distinction is not just stylistic.
 
 The page author's `HeaderMessage` is Markdown, rendered through the `markdown` helper — the one helper in the funcMap that sanitizes its own output before returning `template.HTML` (tools/templates/functions.go).
 

@@ -167,7 +167,7 @@ func TestDocumentMatchKeys_HashtagsOnly(t *testing.T) {
 	require.NotContains(t, keys, "TAG:alice")
 }
 
-// TestMatchKey_RoundTrip is the load-bearing test: for each type, a Rule's key must appear among the
+// TestMatchKey_RoundTrip is the important test: for each type, a Rule's key must appear among the
 // keys of a document it should match, across exactly the variations that fail silently -- host case
 // (ACTOR), subdomain and IDN (DOMAIN), and the `#` prefix (TAG). If the two producers ever disagree,
 // a block quietly stops blocking, and this is what catches it.

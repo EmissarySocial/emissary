@@ -133,7 +133,7 @@ func TestTwoColumn_ViewUnsetColumns(t *testing.T) {
 //
 // The Layout tab is not on this list.  Its slot picks the value; it no longer draws it.
 //
-// flex-basis:0 is the load-bearing line.  flex-grow shares out only the space left over after
+// flex-basis:0 is the important line.  flex-grow shares out only the space left over after
 // each item takes its basis, and the default basis is the item's own content -- so without it
 // the ratios drift with whatever the author wrote, which bends the layout rather than breaking
 // it, and nobody files a bug for that.
@@ -298,7 +298,7 @@ func TestTwoColumn_EditorPickerChecksExactlyOne(t *testing.T) {
 //
 // The two columns and the split are ordinary custom fields, so set-data reads them and save
 // writes them -- no edit-content, because there is no single content area for two blocks to
-// occupy and view.html renders them straight from data.*.  The save step is the load-bearing
+// occupy and view.html renders them straight from data.*.  The save step is the important
 // half: set-data only mutates the draft in memory, so without it the POST succeeds and stores
 // nothing.
 //

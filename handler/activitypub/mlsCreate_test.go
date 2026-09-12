@@ -10,7 +10,7 @@ import (
 )
 
 // mlsCreate builds the canonical qualifying activity: a Create of an inline, non-public MLS
-// message. Tests mutate one knob at a time to prove each condition is load-bearing.
+// message. Tests mutate one knob at a time to prove each condition is important.
 func mlsCreate() mapof.Any {
 	return mapof.Any{
 		vocab.PropertyType:  vocab.ActivityTypeCreate,

@@ -28,7 +28,7 @@ func mentionsOf(stream model.Stream) model.TagList {
  * Extraction
  ******************************************/
 
-// TestStream_CalculateMentions_PreservesResolved is the load-bearing case: extraction re-runs on
+// TestStream_CalculateMentions_PreservesResolved is the important case: extraction re-runs on
 // EVERY save, so a handle that has already been resolved must keep its Href.
 func TestStream_CalculateMentions_PreservesResolved(t *testing.T) {
 

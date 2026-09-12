@@ -10,7 +10,7 @@ See [README.md](README.md) for what the theme is and how [navigation.html](navig
 
 One element cannot be both a horizontal bar and a full-screen sheet without every rule in one layout undoing a rule in the other, on markup the bar shares with pages that are not navigation at all. So `<nav>` is desktop-only, `.nav-menu` is mobile-only, and both range over the same `$navigation` variable, which is read once because `.Navigation` runs a database query. The cost is duplicate links, and the next rule is where it is paid.
 
-## Sheet links carry no `id` and not the `nav-item` class, and both omissions are load-bearing
+## Sheet links carry no `id` and not the `nav-item` class, and both omissions are important
 
 [SelectNav](../theme-global/hyperscript/selectNav._hs) resolves the current section with `document.getElementById('nav-' + id)`, which returns the first match in the document rather than the visible one, then runs `take .selected from .nav-item` and removes `aria-current` from every `.nav-item`. A duplicate id would make it pick the wrong copy, and the class would make it strip the sheet's mark. So the bar is marked client-side by SelectNav and the sheet is marked server-side from `.NavigationID`. A class token is matched whole, so `nav-menu-item` is invisible to `.nav-item`.
 

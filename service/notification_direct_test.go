@@ -19,7 +19,7 @@ func testRecipient() *model.User {
 	return &user
 }
 
-// TestIsDirectMessage pins the DIRECT classification.  Both halves of the test are load-bearing:
+// TestIsDirectMessage pins the DIRECT classification.  Both halves of the test are important:
 // non-public alone would also match a followers-only post (a timeline post, not a conversation),
 // and addressing alone would match every public post that names the user.
 func TestIsDirectMessage(t *testing.T) {

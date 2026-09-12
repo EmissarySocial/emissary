@@ -203,7 +203,7 @@ func inbox_ValidateActivity(context Context, activity streams.Document) (model.R
 // actor's plain (non-MLS) direct message.
 func inbox_SuppressStorage(disposition model.RuleDisposition, activity streams.Document) bool {
 
-	// The Create-only scope below is load-bearing: Likes and Undos usually carry no addressing at all
+	// The Create-only scope below is important: Likes and Undos usually carry no addressing at all
 	// (so IsPublic is FALSE for them), and suppressing those would break muted-actor aggregates (R9)
 	// and subtractive actions (D6).
 
