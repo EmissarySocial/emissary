@@ -164,7 +164,7 @@ func (service *Annotation) ObjectType() string {
 	return "Annotation"
 }
 
-// New returns a fully initialized model.Annotation as a data.Object.
+// ObjectNew returns a fully initialized model.Annotation as a data.Object.
 func (service *Annotation) ObjectNew() data.Object {
 	result := model.NewAnnotation()
 	return &result
@@ -273,7 +273,7 @@ func (service *Annotation) LoadByToken(session data.Session, userID primitive.Ob
 	return derp.Validation("Token must be a valid ObjectID", token)
 }
 
-// LoadByID loads a single model.Annotation object that matches the provided annotationID
+// LoadByURL loads the single model.Annotation that this User made against the provided URL
 func (service *Annotation) LoadByURL(session data.Session, userID primitive.ObjectID, url string, result *model.Annotation) error {
 
 	// RULE: Require a valid UserID

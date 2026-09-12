@@ -142,7 +142,7 @@ func (service *SearchTag) ObjectType() string {
 	return "SearchTag"
 }
 
-// New returns a fully initialized model.SearchTag as a data.Object.
+// ObjectNew returns a fully initialized model.SearchTag as a data.Object.
 func (service *SearchTag) ObjectNew() data.Object {
 	result := model.NewSearchTag()
 	return &result

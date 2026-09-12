@@ -26,7 +26,7 @@ type Filesystem struct {
 	embedded fs.FS
 }
 
-// NewFilesytem returns a fully initialized Filesystem service
+// NewFilesystem returns a fully initialized Filesystem service
 func NewFilesystem(embedded fs.FS) Filesystem {
 
 	return Filesystem{

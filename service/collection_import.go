@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ImportSave is a part of the "Importable" interface, and saves an imported Collection to the new profile.
+// Import is a part of the "Importable" interface, and saves an imported Collection to the new profile.
 func (service *Collection) Import(session data.Session, _ *model.Import, importItem *model.ImportItem, user *model.User, document []byte) error {
 
 	const location = "service.Collection.Import"

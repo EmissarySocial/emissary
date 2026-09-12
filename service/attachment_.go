@@ -182,7 +182,7 @@ func (service *Attachment) ObjectType() string {
 	return "Attachment"
 }
 
-// New returns a fully initialized model.Attachment as a data.Object.
+// ObjectNew returns a fully initialized model.Attachment as a data.Object.
 func (service *Attachment) ObjectNew() data.Object {
 	result := model.NewAttachment("", primitive.NilObjectID)
 	return &result

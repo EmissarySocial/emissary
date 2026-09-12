@@ -173,7 +173,7 @@ func (service *Circle) ObjectType() string {
 	return "Circle"
 }
 
-// New returns a fully initialized model.Circle as a data.Object.
+// ObjectNew returns a fully initialized model.Circle as a data.Object.
 func (service *Circle) ObjectNew() data.Object {
 	result := model.NewCircle()
 	return &result
@@ -270,7 +270,7 @@ func (service *Circle) QueryByUser(session data.Session, userID primitive.Object
 	return service.Query(session, criteria, options...)
 }
 
-// QueryPrivilegedByUser returns all Circles that are marked as "featured" by the provided userID
+// QueryFeaturedByUser returns all Circles that are marked as "featured" by the provided userID
 func (service *Circle) QueryFeaturedByUser(session data.Session, userID primitive.ObjectID, options ...option.Option) (sliceof.Object[model.Circle], error) {
 
 	// RULE: Require a valid UserID

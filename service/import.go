@@ -179,7 +179,7 @@ func (service *Import) ObjectType() string {
 	return "Import"
 }
 
-// New returns a fully initialized model.Import as a data.Object.
+// ObjectNew returns a fully initialized model.Import as a data.Object.
 func (service *Import) ObjectNew() data.Object {
 	result := model.NewImport()
 	return &result

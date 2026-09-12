@@ -141,7 +141,7 @@ func (service *OAuthUserToken) ObjectType() string {
 	return "OAuthUserToken"
 }
 
-// New returns a fully initialized model.OAuthUserToken as a data.Object.
+// ObjectNew returns a fully initialized model.OAuthUserToken as a data.Object.
 func (service *OAuthUserToken) ObjectNew() data.Object {
 	result := model.NewOAuthUserToken()
 	return &result

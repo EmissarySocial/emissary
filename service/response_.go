@@ -219,7 +219,7 @@ func (service *Response) ObjectType() string {
 	return "Response"
 }
 
-// New returns a fully initialized model.Response as a data.Object.
+// ObjectNew returns a fully initialized model.Response as a data.Object.
 func (service *Response) ObjectNew() data.Object {
 	result := model.NewResponse()
 	return &result
@@ -466,7 +466,7 @@ func (service *Response) SetResponse(session data.Session, user *model.User, url
 	return nil
 }
 
-// UnsetReponse removes a reponse based on the User, URL, and Response Type
+// UnsetResponse removes a Response based on the User, URL, and Response Type
 func (service *Response) UnsetResponse(session data.Session, user *model.User, url string, responseType string) error {
 
 	const location = "service.Response.UnsetResponse"

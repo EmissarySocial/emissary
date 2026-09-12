@@ -164,7 +164,7 @@ func (service *Collection) ObjectType() string {
 	return "Collection"
 }
 
-// New returns a fully initialized model.Collection as a data.Object.
+// ObjectNew returns a fully initialized model.Collection as a data.Object.
 func (service *Collection) ObjectNew() data.Object {
 	result := model.NewCollection()
 	return &result

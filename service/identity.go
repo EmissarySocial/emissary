@@ -200,7 +200,7 @@ func (service *Identity) ObjectType() string {
 	return "Identity"
 }
 
-// New returns a fully initialized model.Identity as a data.Object.
+// ObjectNew returns a fully initialized model.Identity as a data.Object.
 func (service *Identity) ObjectNew() data.Object {
 	result := model.NewIdentity()
 	return &result
@@ -285,7 +285,7 @@ func (service *Identity) LoadByToken(session data.Session, token string, identit
 	return service.LoadByID(session, identityID, identity)
 }
 
-// LoadOrCreateByEmail searches for a Guest with the provided emailAddress.
+// LoadOrCreate searches for an Identity with the provided identifier.
 // If a matching record is found, it updates the record with the new values (if necessary).
 // If no matching record is found, it creates a new record with the provided values.
 func (service *Identity) LoadOrCreate(session data.Session, name string, identifierType string, identifierValue string) (model.Identity, error) {
@@ -353,7 +353,7 @@ func (service *Identity) LoadByIdentifier(session data.Session, identifierType s
 	return derp.Internal("service.Identity.LoadByAddress", "Invalid Identity Type", identifierType)
 }
 
-// LoadByEmail retrieves a single Identity from the database using the provided email address
+// LoadByEmailAddress retrieves a single Identity from the database using the provided email address
 func (service *Identity) LoadByEmailAddress(session data.Session, emailAddress string, identity *model.Identity) error {
 	criteria := exp.Equal("emailAddress", emailAddress)
 	return service.Load(session, criteria, identity)
@@ -504,7 +504,7 @@ func (service *Identity) HasPermissions(session data.Session, identifierType str
 	return identity.PrivilegeIDs.ContainsAny(permissions...)
 }
 
-// ParseIdentifier attempts to guess the type of identifier based on its format.
+// GuessIdentifierType attempts to guess the type of identifier based on its format.
 func (service *Identity) GuessIdentifierType(identifier string) string {
 
 	// WebFinger begins with "@" and needs to be translated into an ActivityPub Actor

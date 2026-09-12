@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ImportSave is a part of the "Importable" interface, and saves an imported Attachment to the new profile.
+// Import is a part of the "Importable" interface, and saves an imported Attachment to the new profile.
 func (service *Attachment) Import(session data.Session, record *model.Import, importItem *model.ImportItem, objectID primitive.ObjectID, document []byte) (remoteID primitive.ObjectID, remoteURL string, localID primitive.ObjectID, localURL string, err error) {
 
 	const location = "service.Attachment.Import"

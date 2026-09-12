@@ -57,7 +57,7 @@ func (service *Import) OAuthExchange(session data.Session, record *model.Import,
 	return nil
 }
 
-// GetAuthToken retrieves the OAuth token for the specified provider.  If the token has expired
+// GetOAuthToken retrieves the OAuth token for the specified provider.  If the token has expired
 // then it is refreshed (and saved) automatically before returning.
 func (service *Import) GetOAuthToken(session data.Session, record *model.Import) (*oauth2.Token, error) {
 

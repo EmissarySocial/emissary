@@ -107,7 +107,7 @@ func (service *Group) ObjectType() string {
 	return "Group"
 }
 
-// New returns a fully initialized model.Group as a data.Object.
+// ObjectNew returns a fully initialized model.Group as a data.Object.
 func (service *Group) ObjectNew() data.Object {
 	result := model.NewGroup()
 	return &result

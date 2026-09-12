@@ -297,7 +297,7 @@ func (service *Following) ObjectType() string {
 	return "Following"
 }
 
-// New returns a fully initialized model.Following as a data.Object.
+// ObjectNew returns a fully initialized model.Following as a data.Object.
 func (service *Following) ObjectNew() data.Object {
 	result := model.NewFollowing()
 	return &result

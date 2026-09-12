@@ -189,7 +189,7 @@ func (service *Connection) ObjectType() string {
 	return "Connection"
 }
 
-// New returns a fully initialized model.Connection as a data.Object.
+// ObjectNew returns a fully initialized model.Connection as a data.Object.
 func (service *Connection) ObjectNew() data.Object {
 	result := model.NewConnection()
 	return &result

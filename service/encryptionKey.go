@@ -114,8 +114,8 @@ func (service *EncryptionKey) RangeByParentID(session data.Session, parentID pri
 	return service.Range(session, exp.Equal("parentId", parentID))
 }
 
-// LoadByID tries to load the EncryptionKey from the database.  If no key
-// exists for the designated user, then a new one is generated.
+// LoadByParentID tries to load the EncryptionKey from the database.  If no key
+// exists for the designated parent, then a new one is generated.
 func (service *EncryptionKey) LoadByParentID(session data.Session, parentType string, parentID primitive.ObjectID, encryptionKey *model.EncryptionKey) error {
 
 	const location = "service.EncryptionKey.LoadByParentID"

@@ -337,10 +337,10 @@ const DefinitionEmail = "EMAIL"
 // DefinitionRegistration marks a filesystem that contains a Registration process definition
 const DefinitionRegistration = "REGISTRATION"
 
-// DefinitionEmail marks a filesystem that contains a stream Template definition.
+// DefinitionTemplate marks a filesystem that contains a stream Template definition.
 const DefinitionTemplate = "TEMPLATE"
 
-// DefinitionEmail marks a filesystem that contains a domain Theme definition.
+// DefinitionTheme marks a filesystem that contains a domain Theme definition.
 const DefinitionTheme = "THEME"
 
 // DefinitionWidget marks a filesystem that contains a Widget definition.

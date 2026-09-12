@@ -157,7 +157,7 @@ func (service *CollectionItem) ObjectType() string {
 	return "CollectionItem"
 }
 
-// New returns a fully initialized model.CollectionItem as a data.Object.
+// ObjectNew returns a fully initialized model.CollectionItem as a data.Object.
 func (service *CollectionItem) ObjectNew() data.Object {
 	result := model.NewCollectionItem()
 	return &result

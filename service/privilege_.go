@@ -194,7 +194,7 @@ func (service *Privilege) ObjectType() string {
 	return "Privilege"
 }
 
-// New returns a fully initialized model.Privilege as a data.Object.
+// ObjectNew returns a fully initialized model.Privilege as a data.Object.
 func (service *Privilege) ObjectNew() data.Object {
 	result := model.NewPrivilege()
 	return &result
@@ -415,13 +415,13 @@ func (service *Privilege) QueryByIdentity(session data.Session, identityID primi
 	return service.Query(session, criteria, options...)
 }
 
-// CountByIdentityAndCircle returns the number of privileges are granted to a particular Circle
+// CountByCircle returns the number of Privileges that are granted to a particular Circle
 func (service *Privilege) CountByCircle(session data.Session, circleID primitive.ObjectID) (int64, error) {
 	criteria := exp.Equal("circleId", circleID)
 	return service.Count(session, criteria)
 }
 
-// LoadByRemoteIDs retrieves a privilege using the remote IDs for the user, product, and privilege
+// LoadByRemotePurchaseID retrieves a Privilege using the remote purchase ID reported by the merchant
 func (service *Privilege) LoadByRemotePurchaseID(session data.Session, remotePurchaseID string, privilege *model.Privilege) error {
 	criteria := exp.Equal("remotePurchaseId", remotePurchaseID)
 

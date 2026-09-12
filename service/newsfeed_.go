@@ -199,7 +199,7 @@ func (service *NewsFeed) ObjectType() string {
 	return "NewsFeed"
 }
 
-// New returns a fully initialized model.NewsFeed record as a data.Object.
+// ObjectNew returns a fully initialized model.NewsFeed record as a data.Object.
 func (service *NewsFeed) ObjectNew() data.Object {
 	result := model.NewNewsItem()
 	return &result
@@ -456,7 +456,7 @@ func (service *NewsFeed) MarkRead(session data.Session, message *model.NewsItem)
 	return nil
 }
 
-// MarkRead updates a message to "UNREAD" status and recalculates statistics
+// MarkUnread updates a message to "UNREAD" status and recalculates statistics
 func (service *NewsFeed) MarkUnread(session data.Session, message *model.NewsItem) error {
 
 	const location = "service.NewsFeed.MarkUnread"
@@ -634,7 +634,7 @@ func (service *NewsFeed) DeleteByFolder(session data.Session, userID primitive.O
 	return nil
 }
 
-// QueryPurgeable returns a list of NewsFeeds that are older than the purge date for this following
+// RangePurgeable iterates the NewsItems that are older than the purge date for this Following
 func (service *NewsFeed) RangePurgeable(session data.Session, following *model.Following) (iter.Seq[model.NewsItem], error) {
 
 	// Purge date is X days before the current date

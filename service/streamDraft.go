@@ -88,7 +88,7 @@ func (service *StreamDraft) Load(session data.Session, criteria exp.Expression, 
 	return nil
 }
 
-// save adds/updates an StreamDraft in the database
+// Save adds or updates a StreamDraft in the database
 func (service *StreamDraft) Save(session data.Session, draft *model.Stream, note string) error {
 
 	const location = "service.StreamDraft.Save"
@@ -144,7 +144,7 @@ func (service *StreamDraft) ObjectType() string {
 	return "StreamDraft"
 }
 
-// New returns a fully initialized model.StreamDraft as a data.Object.
+// ObjectNew returns a fully initialized model.StreamDraft as a data.Object.
 func (service *StreamDraft) ObjectNew() data.Object {
 	result := model.NewStream()
 	return &result

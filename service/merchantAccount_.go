@@ -178,7 +178,7 @@ func (service *MerchantAccount) ObjectType() string {
 	return "MerchantAccount"
 }
 
-// New returns a fully initialized model.MerchantAccount as a data.Object.
+// ObjectNew returns a fully initialized model.MerchantAccount as a data.Object.
 func (service *MerchantAccount) ObjectNew() data.Object {
 	result := model.NewMerchantAccount()
 	return &result
@@ -490,7 +490,7 @@ func (service *MerchantAccount) Connect(merchantAccount *model.MerchantAccount) 
 
 }
 
-// ProductsByUser retrieves all available products configured in the remote MerchantAccount(s) of a specific User
+// RemoteProductsByUser retrieves all available products configured in the remote MerchantAccount(s) of a specific User
 func (service *MerchantAccount) RemoteProductsByUser(session data.Session, userID primitive.ObjectID) (sliceof.Object[model.MerchantAccount], sliceof.Object[model.Product], error) {
 
 	const location = "service.MerchantAccount.RemoteProductsByUser"

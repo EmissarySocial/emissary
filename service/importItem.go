@@ -123,7 +123,7 @@ func (service *ImportItem) ObjectType() string {
 	return "ImportItem"
 }
 
-// New returns a fully initialized model.ImportItem as a data.Object.
+// ObjectNew returns a fully initialized model.ImportItem as a data.Object.
 func (service *ImportItem) ObjectNew() data.Object {
 	result := model.NewImportItem()
 	return &result
@@ -193,7 +193,7 @@ func (service *ImportItem) LoadByRemoteID(session data.Session, userID primitive
 	return service.Load(session, criteria, result)
 }
 
-// LoadByURL loads a single Import record based on the original URL from the remote server
+// LoadByRemoteURL loads a single ImportItem based on the original URL from the remote server
 func (service *ImportItem) LoadByRemoteURL(session data.Session, remoteURL string, result *model.ImportItem) error {
 	criteria := exp.Equal("remoteUrl", remoteURL)
 	return service.Load(session, criteria, result)
