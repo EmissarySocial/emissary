@@ -828,13 +828,66 @@ func PostAccount_Note(serverFactory *server.Factory) func(model.Authorization, t
 	}
 }
 
-// GetAccount_Relationships is the Mastodon "get relationships" endpoint, which Emissary does not implement
+// GetAccount_Relationships implements the Mastodon "check relationships" endpoint.
+// The client calls this for every account it shows -- profile screens, follow
+// buttons -- and expects a JSON array, so a derp.NotImplemented here breaks those
+// screens. Emissary answers "following" from a Following record and
+// "blocking"/"muting" from an ACTOR Rule; every other flag is reported false.
 func GetAccount_Relationships(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Relationships) ([]object.Relationship, error) {
 
 	const location = "handler.mastodon_GetAccount_Relationships"
 
 	return func(auth model.Authorization, t txn.GetAccount_Relationships) ([]object.Relationship, error) {
-		return nil, derp.NotImplemented(location)
+
+		factory, err := serverFactory.ByHostname(t.Host)
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Creating session")
+		}
+
+		defer cancel()
+
+		followingService := factory.Following()
+		ruleService := factory.Rule()
+		result := make([]object.Relationship, 0, len(t.IDs))
+
+		for _, id := range t.IDs {
+
+			relationship := object.Relationship{
+				ID:        id,
+				Languages: []string{},
+			}
+
+			// "following": a Following record for the resolved actor URL.
+			if accountURL, err := resolveAccountURL(factory, session, id); err == nil {
+				following := model.NewFollowing()
+				if err := followingService.LoadByURL(session, auth.UserID, accountURL, &following); err == nil {
+					relationship.Following = true
+				}
+			}
+
+			// "blocking"/"muting": an ACTOR Rule keyed by the ID the client sent,
+			// matching how PostAccount_Block / PostAccount_Mute store it.
+			rule := model.NewRule()
+			if err := ruleService.LoadByMatchKey(session, auth.UserID, model.RuleTypeActor, id, &rule); err == nil {
+				switch rule.Action {
+				case model.RuleActionBlock:
+					relationship.Blocking = true
+				case model.RuleActionMute:
+					relationship.Muting = true
+				}
+			}
+
+			result = append(result, relationship)
+		}
+
+		return result, nil
 	}
 }
 
