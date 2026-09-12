@@ -274,25 +274,15 @@ func TestProvider_OnlyBlueskyChangesTheConnection(t *testing.T) {
  * ManualConfig Contract
  ******************************************/
 
-// TestProvider_ManualConfigValidatesAgainstOwnSchema runs form.Validate over every
-// settings form, which rejects a form element or show-if field that the schema omits.
+// TestProvider_ManualConfigValidatesAgainstOwnSchema runs form.Validate over every settings
+// form, which rejects a form element or show-if field that the schema omits. build's
+// providerSettingsForm runs the same check before rendering or saving a form.
 func TestProvider_ManualConfigValidatesAgainstOwnSchema(t *testing.T) {
-
-	// GeocodeTiles declares a "data.href" element that its schema never defines
-	const knownBrokenConfig = "GeocodeTiles"
 
 	for name, config := range allManualConfigs(t) {
 
 		t.Run(name, func(t *testing.T) {
-
-			err := config.Validate()
-
-			if name == knownBrokenConfig {
-				require.Error(t, err, "the data.href defect is still present -- see geocode-tiles_test.go")
-				return
-			}
-
-			require.NoError(t, err)
+			require.NoError(t, config.Validate())
 		})
 	}
 }
