@@ -13,9 +13,9 @@ require (
 	github.com/benpate/data-mongo v0.34.0
 	github.com/benpate/data-slice v0.1.0
 	github.com/benpate/delta v0.1.0
-	github.com/benpate/derp v0.41.0
+	github.com/benpate/derp v0.42.0
 	github.com/benpate/digit v0.16.0
-	github.com/benpate/digital-dome v0.7.0
+	github.com/benpate/digital-dome v0.8.0
 	github.com/benpate/exp v0.11.0
 	github.com/benpate/exp-builder v0.12.0
 	github.com/benpate/form v0.29.0
