@@ -3,6 +3,7 @@ package build
 import (
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
@@ -23,6 +24,15 @@ type CommonWithTemplate struct {
 func NewCommonWithTemplate(factory Factory, session data.Session, request *http.Request, response http.ResponseWriter, template model.Template, accessLister model.AccessLister, actionID string) (CommonWithTemplate, error) {
 
 	const location = "build.NewCommonWithTemplate"
+
+	// RULE: Echo's :param captures every REMAINING path segment when no deeper route matches, so a
+	// path this server does not route arrives here as a multi-segment "action" name.  That is a 404,
+	// not a 400: the request was well formed, and a deliberately withdrawn collection must answer
+	// exactly as a nonexistent one does or the difference discloses that the record exists.
+	// See BUG-144.  No Template action name contains a slash, so nothing valid is caught here.
+	if strings.Contains(actionID, "/") {
+		return CommonWithTemplate{}, derp.NotFound(location, "Path not found", actionID)
+	}
 
 	// Locate the Action inside the Template
 	action, ok := template.Action(actionID)
