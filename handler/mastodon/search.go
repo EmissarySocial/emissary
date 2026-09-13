@@ -76,6 +76,18 @@ func GetSearch(serverFactory *server.Factory) func(model.Authorization, txn.GetS
 			}
 		}
 
+		// A remote actor: dereference it. A miss is "no results", not an error.
+		client := factory.ActivityStream().UserClient(auth.UserID)
+		document, err := client.Load(query)
+
+		if err != nil {
+			return result, nil
+		}
+
+		if document.IsActor() {
+			result.Accounts = append(result.Accounts, mapDocumentToAccount(factory, session, document))
+		}
+
 		return result, nil
 	}
 }
