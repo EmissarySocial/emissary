@@ -1,6 +1,7 @@
 package mastodon
 
 import (
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -8,6 +9,8 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/toot"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
@@ -141,10 +144,89 @@ func newsItemsToToots(factory *service.Factory, session data.Session, auth model
 			status.Content = document.Content()
 			status.SpoilerText = document.Summary()
 			status.Sensitive = status.SpoilerText != ""
+			status.MediaAttachments = mapDocumentToMediaAttachments(document)
 		}
 
 		result[index] = status
 	}
 
 	return result
+}
+
+// mapDocumentToMediaAttachments converts a post document's AS2 "attachment"
+// property into Mastodon MediaAttachments. Emissary has no media proxy, so URL
+// always points at the origin's own file; PreviewURL only does for images.
+func mapDocumentToMediaAttachments(document streams.Document) []object.MediaAttachment {
+
+	result := make([]object.MediaAttachment, 0)
+
+	for attachment := range document.Attachment().Range() {
+
+		// RULE: only a real file (Image/Video/Audio/Document) belongs in
+		// media_attachments. A post's "attachment" property can also carry a
+		// bare AS2 Link (e.g. a link-preview card) with no url/mediaType/file --
+		// skip anything outside this set rather than guessing.
+		switch attachment.Type() {
+		case vocab.ObjectTypeImage, vocab.ObjectTypeVideo, vocab.ObjectTypeAudio, vocab.ObjectTypeDocument:
+			// A real file -- keep going.
+		default:
+			continue
+		}
+
+		url := attachment.URL()
+
+		if url == "" {
+			continue
+		}
+
+		id := attachment.ID()
+
+		if id == "" {
+			id = url
+		}
+
+		mediaType := mapAttachmentType(attachment)
+
+		previewURL := url
+
+		result = append(result, object.MediaAttachment{
+			ID:          id,
+			Type:        mediaType,
+			URL:         url,
+			PreviewURL:  previewURL,
+			Description: attachment.Name(),
+		})
+	}
+
+	return result
+}
+
+// mapAttachmentType derives the Mastodon media type [image|gifv|video|audio] for
+// one AS2 attachment. mediaType (a real MIME type) is checked first because it's
+// more reliable in practice than the AS2 object type, which some origins misreport
+// or omit; the object type is only a fallback.
+func mapAttachmentType(attachment streams.Document) string {
+
+	switch {
+
+	case strings.HasPrefix(attachment.MediaType(), "image/"):
+		return "image"
+
+	case strings.HasPrefix(attachment.MediaType(), "video/"):
+		return "video"
+
+	case strings.HasPrefix(attachment.MediaType(), "audio/"):
+		return "audio"
+	}
+
+	switch attachment.Type() {
+
+	case vocab.ObjectTypeVideo:
+		return "video"
+
+	case vocab.ObjectTypeAudio:
+		return "audio"
+	}
+
+	return "image"
 }
