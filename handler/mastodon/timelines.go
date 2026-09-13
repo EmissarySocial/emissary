@@ -112,14 +112,18 @@ func GetTimeline_List(serverFactory *server.Factory) func(model.Authorization, t
 }
 
 // newsItemsToToots converts NewsItems into Statuses, live-fetching each item's
-// actor to fill in what NewsItem itself doesn't store.
+// actor and post document to fill in what NewsItem itself doesn't store.
 //
-// RULE: the official app never re-fetches the Account embedded in a
+// RULE (Account): the official app never re-fetches the Account embedded in a
 // Status after tapping into it from a timeline post -- it reads straight from
 // what it already cached, unlike search or an ID lookup, which always
 // re-fetch. A placeholder here sticks at 0 followers forever, not just until
 // the next refresh. Falls back to NewsItem.Toot()'s placeholder on a failed
 // fetch.
+//
+// RULE (Content): NewsItem never stores the post body -- see NewsItem.Toot().
+// This fetch is normally a cache hit, since ingesting the document is how the
+// NewsItem came to exist in the first place.
 func newsItemsToToots(factory *service.Factory, session data.Session, auth model.Authorization, newsItems []model.NewsItem) []object.Status {
 
 	client := factory.ActivityStream().UserClient(auth.UserID)
@@ -131,6 +135,12 @@ func newsItemsToToots(factory *service.Factory, session data.Session, auth model
 
 		if document, err := client.Load(newsItem.Origin.URL); err == nil {
 			status.Account = mapDocumentToAccount(factory, session, document)
+		}
+
+		if document, err := client.Load(newsItem.URL); err == nil {
+			status.Content = document.Content()
+			status.SpoilerText = document.Summary()
+			status.Sensitive = status.SpoilerText != ""
 		}
 
 		result[index] = status
