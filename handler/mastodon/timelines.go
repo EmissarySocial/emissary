@@ -5,6 +5,8 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/toot"
 	"github.com/benpate/toot/object"
@@ -61,7 +63,7 @@ func GetTimeline_Home(serverFactory *server.Factory) func(model.Authorization, t
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Retrieving newsItems")
 		}
 
-		return getSliceOfToots(newsItems), getPageInfo(newsItems), nil
+		return newsItemsToToots(factory, session, auth, newsItems), getPageInfo(newsItems), nil
 	}
 }
 
@@ -105,6 +107,34 @@ func GetTimeline_List(serverFactory *server.Factory) func(model.Authorization, t
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Retrieving newsItems")
 		}
 
-		return getSliceOfToots(newsItems), getPageInfo(newsItems), nil
+		return newsItemsToToots(factory, session, auth, newsItems), getPageInfo(newsItems), nil
 	}
+}
+
+// newsItemsToToots converts NewsItems into Statuses, live-fetching each item's
+// actor to fill in what NewsItem itself doesn't store.
+//
+// RULE: the official app never re-fetches the Account embedded in a
+// Status after tapping into it from a timeline post -- it reads straight from
+// what it already cached, unlike search or an ID lookup, which always
+// re-fetch. A placeholder here sticks at 0 followers forever, not just until
+// the next refresh. Falls back to NewsItem.Toot()'s placeholder on a failed
+// fetch.
+func newsItemsToToots(factory *service.Factory, session data.Session, auth model.Authorization, newsItems []model.NewsItem) []object.Status {
+
+	client := factory.ActivityStream().UserClient(auth.UserID)
+	result := make([]object.Status, len(newsItems))
+
+	for index, newsItem := range newsItems {
+
+		status := newsItem.Toot()
+
+		if document, err := client.Load(newsItem.Origin.URL); err == nil {
+			status.Account = mapDocumentToAccount(factory, session, document)
+		}
+
+		result[index] = status
+	}
+
+	return result
 }
