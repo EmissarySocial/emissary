@@ -187,7 +187,15 @@ func mapDocumentToMediaAttachments(document streams.Document) []object.MediaAtta
 
 		mediaType := mapAttachmentType(attachment)
 
-		previewURL := url
+		// RULE: preview_url must be a static image -- the client loads it as
+		// one. An image's own file doubles as its preview; video/audio have no
+		// thumbnail to offer, so leave it empty rather than point at non-image
+		// bytes (the client tried to decode a raw .mp4 as an image and crashed).
+		previewURL := ""
+
+		if mediaType == "image" {
+			previewURL = url
+		}
 
 		result = append(result, object.MediaAttachment{
 			ID:          id,
