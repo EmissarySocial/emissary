@@ -11,6 +11,14 @@ The global `steranko.Middleware` in [../server.go](../server.go) is commented ou
 - **ActivityPub HTTP signatures**: `WithActor` and friends, via `resolveSignedActor`. Three outcomes, kept strictly apart: no signature = anonymous, valid signature = that Actor, INVALID signature = 401 for the whole request. Never collapse the third case into the first — a silently-anonymous response sends the peer's operator hunting a permissions bug that does not exist.
 - **JWT carried in the URL/query**: `WithMerchantAccountJWT` (checkout response) and `GetIdentitySigninWithJWT` (guest OTP link) parse a signed JWT from the request itself; these are the only paths where a link click authenticates.
 
+## A personalized domain and an abandoned one are spelled identically
+
+`GetHome` ([home.go](home.go)) is the only route that answers on a hostname the server does not serve. When the hostname is not itself a configured Domain, it reads the first label as a username and forwards to the parent — `artist.bandwagon.fm` becomes `bandwagon.fm/@artist`. That is how personalized domains work, and bandwagon.fm depends on it.
+
+The trap is that a subdomain which USED to be its own Domain is spelled the same way. When `atlasdemo.emissary.social` dropped out of the registry, its parent `emissary.social` was still served, so every request to its root was rewritten into a username and forwarded to `emissary.social/@atlasdemo` — a 307 into somebody else's 404. A visitor saw a missing account; the real condition was that a whole Domain, with a live follower graph and an inbox 43 remote servers were posting to, had stopped being served (BUG-142).
+
+Validating the TAIL cannot separate the two, because both are `label.served.host` and the parent is legitimately served in both cases. `server.Factory.ByPersonalizedHostname` therefore resolves the parent Domain and stops there; `GetHome` is what confirms that the username names a real User before forwarding. Failing either half answers 421 — the same answer every other route on that hostname already gives, so the root path stops being the one place a dead Domain looks like a live one.
+
 ## WithAuthorizedActorAndUser is wired to no route
 
 It is the authorized-fetch ("secure mode") gate, kept for a future Domain-level setting. Its unit test drives the gate directly, so green CI says nothing about reachability — check [../server.go](../server.go) for a route's actual wrapper before assuming it runs. Inside it, a blocked actor gets a 404 identical to a missing user (probing must not tell them apart), and MUTE or LABEL matches never gate (a muted actor must not be able to detect the mute).

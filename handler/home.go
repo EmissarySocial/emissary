@@ -2,11 +2,10 @@ package handler
 
 import (
 	"net/http"
-	"strings"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/derp"
-	"github.com/benpate/uri"
 	"github.com/labstack/echo/v4"
 )
 
@@ -29,20 +28,32 @@ func GetHome(serverFactory *server.Factory) echo.HandlerFunc {
 			return ctx.Redirect(http.StatusTemporaryRedirect, homePage)
 		}
 
-		// Otherwise, look up the hostname to see if this is a personalized domain (Like: yomama.serer.social)
+		// Otherwise, look up the hostname to see if this is a personalized domain (Like: yomama.server.social)
 		hostname := serverFactory.Hostname(ctx.Request())
-		username, hostname, exists := strings.Cut(hostname, ".")
+		parentFactory, username, err := serverFactory.ByPersonalizedHostname(hostname)
 
-		if !exists {
-			return derp.MisdirectedRequest(location, "Username/hostname not found")
+		if err != nil {
+			return derp.Wrap(err, location, "Hostname not found", "hostname: "+hostname)
 		}
 
-		if _, err := serverFactory.ByHostname(hostname); err == nil {
-			redirectTo := uri.PrependProtocol(hostname) + "/@" + username
-			return ctx.Redirect(http.StatusTemporaryRedirect, redirectTo)
+		// RULE: Forward ONLY to a User that exists.  The parent hostname alone cannot tell a
+		// personalized domain from a subdomain that used to be a Domain of its own, so a redirect
+		// issued without this reports an outage to the visitor as somebody else's 404 (BUG-142)
+		session, err := parentFactory.Server().Session(ctx.Request().Context())
+
+		if err != nil {
+			return derp.Wrap(err, location, "Opening database session", "hostname: "+hostname)
 		}
 
-		// Fall through means unrecognized domain. Return a 404 error.
-		return derp.MisdirectedRequest(location, "Hostname not found")
+		defer session.Close()
+
+		user := model.NewUser()
+
+		if err := parentFactory.User().LoadByUsername(session, username, &user); err != nil {
+			return derp.MisdirectedRequest(location, "Hostname not found", "hostname: "+hostname)
+		}
+
+		// Forward the visitor to this User's profile on the parent Domain
+		return ctx.Redirect(http.StatusTemporaryRedirect, parentFactory.Host()+"/@"+username)
 	}
 }

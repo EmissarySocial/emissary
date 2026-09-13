@@ -531,6 +531,32 @@ func (factory *factoryCore) ByHostname(hostname string) (*service.Factory, error
 	return nil, derp.MisdirectedRequest(location, "Hostname is invalid", "hostname: "+hostname)
 }
 
+// ByPersonalizedHostname resolves a personalized subdomain ("artist.bandwagon.fm") into the
+// Domain factory that serves its parent hostname, along with the username label it names.
+func (factory *factoryCore) ByPersonalizedHostname(hostname string) (*service.Factory, string, error) {
+
+	const location = "server.Factory.ByPersonalizedHostname"
+
+	// Clean up the hostname before using it
+	hostname = factory.normalizeHostname(hostname)
+
+	// Split the leading label (the username) away from its parent hostname
+	username, parentHostname, hasParent := strings.Cut(hostname, ".")
+
+	if !hasParent {
+		return nil, "", derp.MisdirectedRequest(location, "Hostname is invalid", "hostname: "+hostname)
+	}
+
+	// The parent hostname must be a Domain that this server actually serves
+	parentFactory, err := factory.ByHostname(parentHostname)
+
+	if err != nil {
+		return nil, "", derp.Wrap(err, location, "Hostname is invalid", "hostname: "+hostname)
+	}
+
+	return parentFactory, username, nil
+}
+
 // normalizeHostname removes inconsistencies in host names so that they
 // can be compared against the domain registry.
 func (factory *factoryCore) normalizeHostname(hostname string) string {
