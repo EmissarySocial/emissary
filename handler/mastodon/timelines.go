@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/toot"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
@@ -197,12 +198,35 @@ func mapDocumentToMediaAttachments(document streams.Document) []object.MediaAtta
 			previewURL = url
 		}
 
+		// RULE: width/height matter, not just cosmetics -- the official app
+		// lays out a multi-image post by averaging aspect ratios, and an image
+		// missing both drops out of that average; if every image in the post
+		// is missing them, it divides by zero and crashes.
+		//
+		// Read via the raw map, not attachment.Width()/Height(): those route
+		// through hannibal's property.NewValue(), which has no int32 case, so
+		// they silently return 0 for any document that's round-tripped through
+		// Mongo (the driver decodes a BSON int as int32). convert.Int() handles
+		// int32 fine, so read the map directly instead.
+		meta := map[string]any{}
+		attachmentMap := attachment.Map()
+		width := convert.Int(attachmentMap["width"])
+		height := convert.Int(attachmentMap["height"])
+
+		if width > 0 && height > 0 {
+			meta["original"] = map[string]any{
+				"width":  width,
+				"height": height,
+			}
+		}
+
 		result = append(result, object.MediaAttachment{
 			ID:          id,
 			Type:        mediaType,
 			URL:         url,
 			PreviewURL:  previewURL,
 			Description: attachment.Name(),
+			Meta:        meta,
 		})
 	}
 
