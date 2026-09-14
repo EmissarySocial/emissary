@@ -11,12 +11,10 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
-	"github.com/benpate/digit"
 	"github.com/benpate/exp"
-	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/slice"
-	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
 	"github.com/benpate/uri"
 	"github.com/golang-jwt/jwt/v5"
@@ -26,7 +24,7 @@ import (
 
 // Identity defines a service that manages all content identitys created and imported by Users.
 type Identity struct {
-	activityService  *ActivityStream
+	activityService  actorLoader
 	emailService     *DomainEmail
 	jwtService       *JWT
 	privilegeService *Privilege
@@ -116,15 +114,13 @@ func (service *Identity) Save(session data.Session, identity *model.Identity, no
 
 	const location = "service.Identity.Save"
 
-	// Try to calculate the ActivityPub Actor by looking up the WebFinger username.
-	if err := service.calcActivityPubActor(identity); err != nil {
-		return derp.Wrap(err, location, "Calculating ActivityPub Actor for Identity")
+	// Fill in the actor, handle, name, and icon from the ActivityPub profile
+	if err := service.calcActorDetails(identity); err != nil {
+		return derp.Wrap(err, location, "Calculating actor details for Identity")
 	}
 
 	// Pick a default name, if necessary
-	if err := service.calcName(identity); err != nil {
-		return derp.Wrap(err, location, "Calculating default name for Identity")
-	}
+	calcName(identity)
 
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(identity); err != nil {
@@ -302,22 +298,48 @@ func (service *Identity) LoadOrCreate(session data.Session, name string, identif
 		return model.Identity{}, derp.Internal(location, "Identifier value cannot be empty")
 	}
 
-	// Try to load the Identity using the provided identifier
 	identity := model.NewIdentity()
-	err := service.LoadByIdentifier(session, identifierType, identifierValue, &identity)
 
-	// If the identity was found, then just return it...
-	if err == nil {
-		return identity, nil
-	}
+	switch identifierType {
 
-	// If the error was anything but "not found", then return the error
-	if !derp.IsNotFound(err) {
-		return model.Identity{}, derp.Wrap(err, location, "Loading identity", identifierType, identifierValue)
-	}
+	// An email address is its own identifier
+	case model.IdentifierTypeEmail:
 
-	// Otherwise, populate the identifier into the Identity object
-	if ok := identity.SetIdentifier(identifierType, identifierValue); !ok {
+		found, err := service.locateIdentity(session, exp.Equal("emailAddress", identifierValue), &identity)
+
+		if err != nil {
+			return model.Identity{}, derp.Wrap(err, location, "Loading identity by email address", identifierValue)
+		}
+
+		if found {
+			return identity, nil
+		}
+
+		identity.SetIdentifier(model.IdentifierTypeEmail, identifierValue)
+
+	// RULE: A handle or URL is resolved to its actor FIRST, so the lookup is always by actor id
+	// and two Identities can never share one actor
+	case model.IdentifierTypeWebfinger, model.IdentifierTypeActivityPub:
+
+		actor, err := service.activityService.GetActor(identifierValue)
+
+		if err != nil {
+			return model.Identity{}, derp.Wrap(err, location, "Resolving ActivityPub actor", identifierValue)
+		}
+
+		found, err := service.locateIdentity(session, exp.Equal("activityPubActor", actor.ID()), &identity)
+
+		if err != nil {
+			return model.Identity{}, derp.Wrap(err, location, "Loading identity by actor", actor.ID())
+		}
+
+		if found {
+			return identity, nil
+		}
+
+		applyActor(&identity, actor)
+
+	default:
 		return model.Identity{}, derp.BadRequest(location, "Invalid Identifier Type", identifierType)
 	}
 
@@ -333,6 +355,24 @@ func (service *Identity) LoadOrCreate(session data.Session, name string, identif
 
 	// Done.
 	return identity, nil
+}
+
+// locateIdentity loads the Identity matching the criteria, reporting FALSE (not an error) when none exists
+func (service *Identity) locateIdentity(session data.Session, criteria exp.Expression, identity *model.Identity) (bool, error) {
+
+	const location = "service.Identity.locateIdentity"
+
+	if err := service.Load(session, criteria, identity); err != nil {
+
+		// A missing Identity is the "create" half of LoadOrCreate
+		if derp.IsNotFound(err) {
+			return false, nil
+		}
+
+		return false, derp.Wrap(err, location, "Loading Identity", criteria)
+	}
+
+	return true, nil
 }
 
 // LoadByIdentifier retrieves an Identity using whichever kind of identifier is provided
@@ -374,15 +414,29 @@ func (service *Identity) LoadByWebfingerUsername(session data.Session, username 
 // RangeByIdentifiers returns an iterator containing all of the Identities that match ANY of the provided identifiers.
 func (service *Identity) RangeByIdentifiers(session data.Session, emailAddress string, webfingerUsername string, activityPubActor string) (iter.Seq[model.Identity], error) {
 
-	// Create a criteria to find the Identity by any of the identifiers
-	criteria := exp.Or(
-		exp.Equal("emailAddress", emailAddress),
-		exp.Equal("webfingerUsername", webfingerUsername),
-		exp.Equal("activityPubActor", activityPubActor),
-	)
+	// RULE: Only identifiers that are present take part. An empty value would match every Identity
+	// that lacks that field, which is most of the collection.
+	clauses := make([]exp.Expression, 0, 3)
+
+	if emailAddress != "" {
+		clauses = append(clauses, exp.Equal("emailAddress", emailAddress))
+	}
+
+	if webfingerUsername != "" {
+		clauses = append(clauses, exp.Equal("webfingerUsername", webfingerUsername))
+	}
+
+	if activityPubActor != "" {
+		clauses = append(clauses, exp.Equal("activityPubActor", activityPubActor))
+	}
+
+	// Nothing to match means nothing matches
+	if len(clauses) == 0 {
+		return func(func(model.Identity) bool) { /* nothing to iterate */ }, nil
+	}
 
 	// Return query as a RangeFunc
-	return service.Range(session, criteria)
+	return service.Range(session, exp.Or(clauses...))
 }
 
 // RefreshPrivileges recalculates the privileges for the provided IdentityID by
@@ -452,17 +506,16 @@ func (service *Identity) SendGuestCode(session data.Session, identity *model.Ide
 
 	const location = "service.Identity.SendGuestCode"
 
-	// Create a new Guest Code for the identifier :)
-	guestCode, err := service.makeGuestCode(nil, identifierType, identifierValue)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Creating Guest Code", identifierValue)
-	}
-
 	switch identifierType {
 
 	// Send the Guest Code to an Email Address
 	case model.IdentifierTypeEmail:
+
+		guestCode, err := service.makeGuestCode(nil, identifierType, identifierValue)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Creating Guest Code", identifierValue)
+		}
 
 		if err := service.emailService.SendGuestCode(identifierValue, guestCode); err != nil {
 			return derp.Wrap(err, location, "Sending Guest Code", identifierValue, guestCode)
@@ -470,11 +523,25 @@ func (service *Identity) SendGuestCode(session data.Session, identity *model.Ide
 
 		return nil
 
-	// Send the Guest Code to an ActivityPub actor
+	// Resolve the handle or URL to an actor, then send the Guest Code to that actor's inbox
 	case model.IdentifierTypeWebfinger, model.IdentifierTypeActivityPub:
 
-		// Send the Guest Code to the
-		if err := service.sendGuestCode_ActivityPub(session, identifierValue, guestCode); err != nil {
+		// Load the ActivityPub actor for this identifier
+		actor, err := service.activityService.GetActor(identifierValue)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Resolving ActivityPub actor", identifierValue)
+		}
+
+		// RULE: The code carries the RESOLVED actor id, never the typed handle, so the actor whose
+		// inbox receives the code is the actor the Identity is bound to on confirmation.
+		guestCode, err := service.makeGuestCode(nil, model.IdentifierTypeActivityPub, actor.ID())
+
+		if err != nil {
+			return derp.Wrap(err, location, "Creating Guest Code", actor.ID())
+		}
+
+		if err := service.sendGuestCode_ActivityPub(session, identifierValue, actor.ID(), guestCode); err != nil {
 			return derp.Wrap(err, location, "Sending Guest Code", identifierValue, guestCode)
 		}
 
@@ -536,104 +603,122 @@ func (service *Identity) GuessIdentifierType(identifier string) string {
 // makeGuestCode creates a new JWT token for the Guest to authenticate
 func (service *Identity) makeGuestCode(identity *model.Identity, identifierType string, identifier string) (string, error) {
 
-	// Expires in 1 hour
-	expirationDate := time.Now().Add(time.Hour).Unix()
+	const location = "service.Identity.makeGuestCode"
 
 	// Claims for the Identifier, expiring in 1 hour
-	claims := jwt.MapClaims{
-		"exp": expirationDate, // expiration
-		"T":   identifierType, // Identifier Type
-		"A":   identifier,     // Identifier (Address)
-	}
-
-	// If we have an Identity, then include this in the claims.
-	if identity != nil && !identity.IdentityID.IsZero() {
-		claims["I"] = identity.IdentityID.Hex() // Identity ID
-	}
+	claims := guestCodeClaims(identity, identifierType, identifier, time.Now().Add(time.Hour).Unix())
 
 	// Create and sign the new JWT token
 	token, err := service.jwtService.NewToken(claims)
 
 	if err != nil {
-		return "", derp.Wrap(err, "service.Identity.makeGuestCode", "Creating JWT token for Guest Code", identifier)
+		return "", derp.Wrap(err, location, "Creating JWT token for Guest Code", identifier)
 	}
 
 	// Fantastic.
 	return token, nil
 }
 
-// calcActivityPubActor resolves this Identity's WebFinger username into an ActivityPub actor URL
-func (service *Identity) calcActivityPubActor(identity *model.Identity) error {
+// guestCodeClaims builds the JWT claims that a guest sign-in code carries
+func guestCodeClaims(identity *model.Identity, identifierType string, identifier string, expires int64) jwt.MapClaims {
 
-	const location = "service.Identity.calcActivityPubActor"
-
-	// If we don't have a WebFinger username, then there's nothing to do
-	if !identity.HasWebfingerUsername() {
-		return nil
+	claims := jwt.MapClaims{
+		"exp": expires,        // expiration
+		"T":   identifierType, // Identifier Type
+		"A":   identifier,     // Identifier (Address)
 	}
 
-	// If we already have an ActivityPub Actor, then we're done
-	if identity.HasActivityPubActor() {
-		return nil
+	// An Identity that already exists rides along so the code re-attaches to it
+	if identity == nil {
+		return claims
 	}
 
-	// Use Webfinger to look up the ActivityPub Actor.
-	record, err := digit.Lookup(identity.WebfingerUsername)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Looking up WebFinger username", identity.WebfingerUsername)
+	if identity.IdentityID.IsZero() {
+		return claims
 	}
 
-	// Look for the ActivityPub Actor in the WebFinger record
-	for _, link := range record.Links {
-
-		if link.RelationType != digit.RelationTypeSelf {
-			continue
-		}
-
-		if link.MediaType != vocab.ContentTypeActivityPub {
-			continue
-		}
-
-		identity.ActivityPubActor = link.Href
-		return nil
-	}
-
-	// uwuuwuwuuwuwuwuwuwuwuwuwuwuwuwuwuwu
-	return derp.BadRequest(location, "WebFinger record does not include an ActivityPub address", identity.WebfingerUsername)
+	claims["I"] = identity.IdentityID.Hex() // Identity ID
+	return claims
 }
 
-// calcName fills in this Identity's display name from its ActivityPub profile, if it has one
-func (service *Identity) calcName(identity *model.Identity) error {
+// calcActorDetails fills this Identity's actor, handle, name, and icon from its ActivityPub profile
+func (service *Identity) calcActorDetails(identity *model.Identity) error {
 
-	// If we already have a "Name", then there's nothing else to do
-	if identity.Name != "" {
-		return nil
-	}
+	const location = "service.Identity.calcActorDetails"
 
-	// If we have an ActivityPub Actor, then look up the name from their profile
-	if identity.HasActivityPubActor() {
-		actor, err := service.activityService.AppClient().Load(identity.ActivityPubActor, sherlock.AsActor())
+	// A handle that is not yet bound to an actor is resolved here (legacy rows, WEBFINGER identifiers)
+	if identity.NotHasActivityPubActor() {
 
-		if err != nil {
-			return derp.Wrap(err, "service.Identity.calcName", "Loading ActivityPub Actor", identity.ActivityPubActor)
+		if identity.NotHasWebfingerUsername() {
+			return nil
 		}
 
-		identity.Name = actor.Name()
-		identity.IconURL = actor.Icon().Href()
+		actor, err := service.activityService.GetActor(identity.WebfingerUsername)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Resolving WebFinger username", identity.WebfingerUsername)
+		}
+
+		applyActor(identity, actor)
 		return nil
 	}
 
-	// If we have a WebFinger username, then we can use that as the name
-	if identity.HasWebfingerUsername() {
-
-		identity.Name = identity.WebfingerUsername
+	// RULE: A routine save stays off the network. The actor is loaded only while a detail is missing.
+	if identity.HasWebfingerUsername() && (identity.Name != "") {
 		return nil
 	}
 
-	// If we can't look up an ActivityPub actor, then just use the email address as the name
-	identity.Name = identity.EmailAddress
+	// Otherwise, load the actor from the network to confirm the Webfinger results are not malicious
+	actor, err := service.activityService.GetActor(identity.ActivityPubActor)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Loading ActivityPub Actor", identity.ActivityPubActor)
+	}
+
+	applyActor(identity, actor)
 	return nil
+}
+
+// applyActor copies an actor's id, handle, name, and icon onto the Identity, keeping a name and icon already set.
+// This prevents a malicious WebFinger result from fraudulently claiming ownership of an account.
+func applyActor(identity *model.Identity, actor streams.Document) {
+
+	identity.ActivityPubActor = actor.ID()
+	identity.WebfingerUsername = actorHandle(actor)
+
+	if identity.Name == "" {
+		identity.Name = actor.Name()
+	}
+
+	if identity.IconURL == "" {
+		identity.IconURL = actor.Icon().Href()
+	}
+}
+
+// actorHandle returns the actor's own @username@host handle, or empty if the actor has no preferredUsername
+func actorHandle(actor streams.Document) string {
+
+	// UsernameOrID falls back to the bare id, which is a URL, not a handle
+	if handle := actor.UsernameOrID(); strings.HasPrefix(handle, "@") {
+		return handle
+	}
+
+	return ""
+}
+
+// calcName picks a default display name for an Identity that has none
+func calcName(identity *model.Identity) {
+
+	if identity.Name != "" {
+		return
+	}
+
+	if identity.HasWebfingerUsername() {
+		identity.Name = identity.WebfingerUsername
+		return
+	}
+
+	identity.Name = identity.EmailAddress
 }
 
 // uniquify takes duplicate Identitifiers from any other Identities
@@ -673,6 +758,7 @@ func (service *Identity) uniquify(session data.Session, identity *model.Identity
 
 		other.RemoveIdentifier(model.IdentifierTypeEmail, identity.EmailAddress)
 		other.RemoveIdentifier(model.IdentifierTypeWebfinger, identity.WebfingerUsername)
+		other.RemoveIdentifier(model.IdentifierTypeActivityPub, identity.ActivityPubActor)
 
 		if err := service.SaveOrDelete(session, &other, "Removed identity"); err != nil {
 			derp.Report(derp.Wrap(err, location, "Uniquifying Identity", other))

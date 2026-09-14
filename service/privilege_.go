@@ -323,23 +323,28 @@ func (service *Privilege) RangeByIdentity(session data.Session, identityID primi
 // RangeByIdentifiers returns an iterator containing all of the Privileges that match the provided identifiers (email, webfinger, activitypub)
 func (service *Privilege) RangeByIdentifiers(session data.Session, emailAddress string, webfingerUsername string, activityPubActor string) (iter.Seq[model.Privilege], error) {
 
-	// Create a criteria to find the Identity by any of the identifiers
-	criteria := exp.Or(
-		exp.And(
-			exp.Equal("identifierType", model.IdentifierTypeEmail),
-			exp.Equal("identifierValue", emailAddress),
-		),
-		exp.And(
-			exp.Equal("identifierType", model.IdentifierTypeWebfinger),
-			exp.Equal("identifierValue", webfingerUsername),
-		),
-		exp.And(
-			exp.Equal("identifierType", model.IdentifierTypeActivityPub),
-			exp.Equal("identifierValue", activityPubActor),
-		),
-	)
+	// RULE: Only identifiers that are present take part. An empty value would match every
+	// Privilege whose identifier is blank.
+	clauses := make([]exp.Expression, 0, 3)
 
-	return service.Range(session, criteria)
+	if emailAddress != "" {
+		clauses = append(clauses, exp.Equal("identifierType", model.IdentifierTypeEmail).AndEqual("identifierValue", emailAddress))
+	}
+
+	if webfingerUsername != "" {
+		clauses = append(clauses, exp.Equal("identifierType", model.IdentifierTypeWebfinger).AndEqual("identifierValue", webfingerUsername))
+	}
+
+	if activityPubActor != "" {
+		clauses = append(clauses, exp.Equal("identifierType", model.IdentifierTypeActivityPub).AndEqual("identifierValue", activityPubActor))
+	}
+
+	// Nothing to match means nothing matches
+	if len(clauses) == 0 {
+		return func(func(model.Privilege) bool) { /* nothing to iterate */ }, nil
+	}
+
+	return service.Range(session, exp.Or(clauses...))
 }
 
 // RangeByCircle returns an iterator containing all of the Privileges that match the provided CircleID

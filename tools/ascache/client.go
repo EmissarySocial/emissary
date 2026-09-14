@@ -314,8 +314,14 @@ func (client *Client) save(ctx context.Context, url string, value *Value) error 
 		}
 
 		// Make sure all relevant URLs are included in this value
-		value.AppendURL(value.Object.GetString("id"))
-		value.AppendURL(url)
+		documentID := value.Object.GetString("id")
+		value.AppendURL(documentID)
+
+		// RULE: The lookup key becomes an alias only when it lives on the document's own host.
+		// A host may say what its own names mean, never what another host's names mean.
+		if sameHost(url, documentID) {
+			value.AppendURL(url)
+		}
 
 		// Try to load an existing/duplicate values using the object.id field.
 		// There may be multiple URLs that point to the same document, so we're

@@ -1,6 +1,7 @@
 package ascache
 
 import (
+	"cmp"
 	"context"
 	"net/http"
 	"strconv"
@@ -24,6 +25,7 @@ type countingClient struct {
 	forgeCacheHeader bool          // Whether this (hostile) origin claims its response came from our cache
 	delay            time.Duration // How long this origin takes to answer, simulating a slow server
 	receivedOptions  []any         // Options this client was called with, in order
+	resolvedID       string        // When set, the id of the returned document, standing in for a resolved handle or redirect
 }
 
 // SetRootClient satisfies streams.Client.  This client makes no recursive calls, so it needs no root.
@@ -50,7 +52,7 @@ func (client *countingClient) Load(uri string, options ...any) (streams.Document
 
 	document := streams.NewDocument(
 		mapof.Any{
-			"id":           uri,
+			"id":           cmp.Or(client.resolvedID, uri),
 			"type":         "Person",
 			"publicKeyPem": client.publicKeyPEM,
 		},
@@ -325,4 +327,59 @@ func TestClient_Load_PassesFetchContextDown(t *testing.T) {
 	// The caller's own options must survive alongside it.
 	require.Len(t, remote.Options(origin.receivedOptions...), 1)
 	require.Equal(t, CacheModeWriteOnly, NewLoadConfig(origin.receivedOptions...).mode)
+}
+
+// cachedURLs returns the alias list stored for a document, or nil when nothing is cached under that key
+func cachedURLs(t *testing.T, client *Client, key string) []string {
+
+	t.Helper()
+
+	session, err := client.commonDatabase.Session(context.Background())
+	require.NoError(t, err)
+
+	value := NewValue()
+
+	if err := client.loadByURL(session, key, &value); err != nil {
+		return nil
+	}
+
+	return value.URLs
+}
+
+// TestClient_Load_AliasesSameHostKeyOnly is BUG-01's cache rule stated directly: a lookup key becomes
+// an alias of the document only when it lives on the document's own host, so a foreign WebFinger
+// server cannot make its handle a durable name for someone else's actor.
+func TestClient_Load_AliasesSameHostKeyOnly(t *testing.T) {
+
+	const bob = "https://good.example/@bob"
+
+	client, origin := newTestClient()
+	origin.resolvedID = bob
+
+	// A handle on another host resolves to Bob, but is NOT recorded as one of his names
+	_, err := client.Load("@alice@evil.example")
+	require.NoError(t, err)
+	require.Equal(t, []string{bob}, cachedURLs(t, client, bob))
+	require.Nil(t, cachedURLs(t, client, "@alice@evil.example"))
+
+	// So the same lookup goes back to the origin instead of being served the cached copy
+	_, err = client.Load("@alice@evil.example")
+	require.NoError(t, err)
+	require.Equal(t, 2, origin.calls, "a cross-host handle must not hit the cache")
+
+	// A handle on Bob's own host IS one of his names
+	_, err = client.Load("@bob@good.example")
+	require.NoError(t, err)
+	require.Equal(t, []string{bob, "@bob@good.example"}, cachedURLs(t, client, "@bob@good.example"))
+
+	// So is a redirecting URL on his own host
+	_, err = client.Load("https://good.example/users/bob")
+	require.NoError(t, err)
+	require.Equal(t, []string{bob, "https://good.example/users/bob"}, cachedURLs(t, client, "https://good.example/users/bob"))
+
+	// And a redirecting URL on another host is not
+	_, err = client.Load("https://evil.example/users/bob")
+	require.NoError(t, err)
+	require.Nil(t, cachedURLs(t, client, "https://evil.example/users/bob"))
+	require.Equal(t, []string{bob}, cachedURLs(t, client, bob))
 }

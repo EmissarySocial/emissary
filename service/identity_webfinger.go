@@ -5,25 +5,14 @@ import (
 
 	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
-	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/datetime"
 	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 )
 
-// sendGuestCode_ActivityPub delivers a guest sign-in code to an Identity as an ActivityPub direct message
-func (service *Identity) sendGuestCode_ActivityPub(session data.Session, identifier string, code string) error {
-
-	const location = "service.Identity.sendGuestCode_ActivityPub"
-
-	// Find Recipient
-
-	recipientID, _, err := service.activityService.GetRecipient(identifier)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Finding recipient inbox", identifier)
-	}
+// sendGuestCode_ActivityPub delivers a guest sign-in code to an actor as an ActivityPub direct message
+func (service *Identity) sendGuestCode_ActivityPub(session data.Session, identifier string, recipientID string, code string) error {
 
 	// Create the outbound message
 	hostname := service.hostname()
@@ -67,14 +56,9 @@ func (service *Identity) sendGuestCode_ActivityPub(session data.Session, identif
 		},
 	}
 
-	// Deliver the guest code as a post-commit ActivityPub send. GetRecipient above already
-	// validated the identifier and resolved its inbox SYNCHRONOUSLY, so a bad/unreachable
-	// address is still reported to the caller in real time (driving the "double-check your
-	// address" UX); only the signed HTTP POST is deferred to the queue — where a transient
-	// failure is now retried instead of lost. The activity is addressed to:[recipient] and
-	// signed as @application (SendLocator.Actor resolves the Application actor). This also
-	// removes the last signed HTTP send from inside the request transaction, and was the final
-	// caller of ActivityStream.SendMessage. See POST-COMMIT-FEDERATION.md F5.
+	// Deliver as a post-commit ActivityPub send, signed as @application. The caller resolved the
+	// recipient synchronously before minting the code, so a bad address is still reported in real
+	// time; only the signed HTTP POST is deferred to the queue (POST-COMMIT-FEDERATION.md F5).
 	postcommit.Publish(session, service.queue, sender.OutboxSendToAllRecipients, activity)
 
 	return nil

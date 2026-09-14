@@ -83,7 +83,17 @@ func (identity Identity) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
 
 // IsEmpty returns TRUE if this Identity has no identifiers at all
 func (identity Identity) IsEmpty() bool {
-	return (identity.EmailAddress == "") && (identity.WebfingerUsername == "")
+
+	if identity.HasEmailAddress() {
+		return false
+	}
+
+	if identity.HasWebfingerUsername() {
+		return false
+	}
+
+	// An actor without a preferredUsername leaves the handle empty, so the actor must count on its own
+	return !identity.HasActivityPubActor()
 }
 
 // HasEmailAddress returns TRUE if the Identity has an email address.
@@ -91,14 +101,29 @@ func (identity Identity) HasEmailAddress() bool {
 	return identity.EmailAddress != ""
 }
 
-// HasActivityPubActor TRUE if the Identity has an ActivityPub Actor.
+// NotHasEmailAddress returns TRUE if the Identity does not have an email address.
+func (identity Identity) NotHasEmailAddress() bool {
+	return identity.EmailAddress == ""
+}
+
+// HasActivityPubActor returns TRUE if the Identity has an ActivityPub Actor.
 func (identity Identity) HasActivityPubActor() bool {
 	return identity.ActivityPubActor != ""
 }
 
-// HasWebfingerUsername TRUE if the Identity has a Webfinger Username.
+// NotHasActivityPubActor returns TRUE if the Identity does not have an ActivityPub Actor.
+func (identity Identity) NotHasActivityPubActor() bool {
+	return identity.ActivityPubActor == ""
+}
+
+// HasWebfingerUsername returns TRUE if the Identity has a Webfinger Username.
 func (identity Identity) HasWebfingerUsername() bool {
 	return identity.WebfingerUsername != ""
+}
+
+// NotHasWebfingerUsername returns TRUE if the Identity does not have a Webfinger Username.
+func (identity Identity) NotHasWebfingerUsername() bool {
+	return identity.WebfingerUsername == ""
 }
 
 // Icon returns an icon name to use for this Identity, based on the type of identifier(s) present.
@@ -145,6 +170,7 @@ func (identity *Identity) SetIdentifier(identifierType string, value string) boo
 
 	case IdentifierTypeActivityPub:
 		identity.ActivityPubActor = value
+		identity.WebfingerUsername = "" // Cleared so that Save derives the handle from the actor itself
 		return true
 
 	case IdentifierTypeWebfinger:

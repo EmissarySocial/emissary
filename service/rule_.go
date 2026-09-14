@@ -18,13 +18,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// actorLoader resolves a Fediverse address (a webfinger handle or a profile URL) to its canonical
-// Actor document. *ActivityStream satisfies it; narrowing the Rule service's dependency to this one
-// method keeps actor-trigger resolution unit-testable without standing up the full stream stack.
-type actorLoader interface {
-	GetActor(string) (streams.Document, error)
-}
-
 // Rule defines a service that manages all content rules created and imported by Users.
 type Rule struct {
 	activityStreamService  actorLoader
