@@ -66,7 +66,7 @@ func getStreamJSONLD(ctx *steranko.Context, factory *service.Factory, session da
 		}
 
 		// Return JSON-LD for this search query
-		return activitypub_search.GetJSONLD(ctx, factory, session, template, stream, &searchQuery)
+		return activitypub_search.GetJSONLD(ctx, factory, session, &searchQuery)
 	}
 
 	// All other templates are "stream" templates

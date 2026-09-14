@@ -179,15 +179,6 @@ func GetValidateCirclename(ctx *steranko.Context, factory *service.Factory, sess
 // GetValidateStreamToken validates a Stream.Token for uniqueness/availability
 func GetValidateStreamToken(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
-	token := ctx.QueryParam("value")
-
-	if len(token) < 3 {
-		return ctx.JSON(http.StatusOK, mapof.Any{
-			"valid":   false,
-			"message": "Token must be at least 3 characters",
-		})
-	}
-
 	// This service can only validate the "token" field
 	if field := ctx.QueryParam("field"); field != "token" {
 		return ctx.JSON(http.StatusBadRequest, mapof.Any{
@@ -196,34 +187,28 @@ func GetValidateStreamToken(ctx *steranko.Context, factory *service.Factory, ses
 		})
 	}
 
-	// Collect variables
-	streamService := factory.Stream()
-	stream := model.NewStream()
+	// An absent or malformed streamId means a new Stream, which no existing record can match
+	streamID, _ := primitive.ObjectIDFromHex(ctx.QueryParam("streamId"))
+	token := ctx.QueryParam("value")
 
-	if err := streamService.LoadByToken(session, token, &stream); err != nil {
+	// If the token is not allowed, then report why
+	if err := factory.Stream().ValidateToken(session, streamID, token); err != nil {
 
-		if derp.IsNotFound(err) {
-			return ctx.JSON(http.StatusOK, mapof.Any{
-				"valid":   true,
-				"message": "",
-			})
+		// A rejected token is a normal answer for this endpoint; anything else is a real failure
+		if !derp.IsBadRequest(err) {
+			return derp.Wrap(err, "handler.GetValidateStreamToken", "Validating stream token", token)
 		}
 
-		return derp.Wrap(err, "handler.GetValidateStreamToken", "Loading stream by token")
-	}
-
-	// If there is no match, then the token is valid
-	if stream.ID() == ctx.QueryParam("streamId") {
 		return ctx.JSON(http.StatusOK, mapof.Any{
-			"valid":   true,
-			"message": "",
+			"valid":   false,
+			"message": derp.Message(err),
 		})
 	}
 
-	// Otherwise, the token is taken
+	// Otherwise, the token is available
 	return ctx.JSON(http.StatusOK, mapof.Any{
-		"valid":   false,
-		"message": "This token is already in use by another stream",
+		"valid":   true,
+		"message": "",
 	})
 }
 

@@ -4,9 +4,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/digit"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // TestLocator verifies that every recognized Emissary URL shape resolves to its object type and token
@@ -222,4 +224,87 @@ func FuzzLocateObjectFromURL(f *testing.F) {
 			require.Equal(t, "", foreignToken, "locating %q", foreign)
 		}
 	})
+}
+
+// newLocatorWebFingerTest returns a Locator whose User and Stream services share one fake session.
+// The User fake is empty unless a test fills it; the Streams all use an actor-bearing Template.
+func newLocatorWebFingerTest(streams ...model.Stream) (Locator, webfingerSession) {
+
+	streamService, session := newStreamWebFingerService([]model.Template{actorTemplate("group")}, streams...)
+	userService := &User{host: "https://example.com"}
+
+	locator := Locator{
+		host:          "https://example.com",
+		userService:   userService,
+		streamService: streamService,
+	}
+
+	return locator, session
+}
+
+// TestLocator_GetWebFingerResult_StreamByHandle is the regression test for BUG-98: an acct: handle
+// that names no User resolves to the Stream with that token, by the token and by the StreamID, and
+// the token form's subject is the handle that was queried.
+func TestLocator_GetWebFingerResult_StreamByHandle(t *testing.T) {
+
+	stream := newActorStream("group", "my-article")
+	streamID := stream.StreamID.Hex()
+	locator, session := newLocatorWebFingerTest(stream)
+
+	byToken, err := locator.GetWebFingerResult(session, "acct:my-article@example.com")
+	require.NoError(t, err)
+	require.Equal(t, "acct:my-article@example.com", byToken.Subject)
+	require.Equal(t, stream.ActivityPubURL(), selfLink(byToken))
+
+	byID, err := locator.GetWebFingerResult(session, "acct:"+streamID+"@example.com")
+	require.NoError(t, err)
+	require.Equal(t, byToken, byID)
+}
+
+// TestLocator_GetWebFingerResult_UserShadowsStream confirms that a User and a Stream sharing one
+// handle resolve to the User, which is why service.Stream.ValidateToken refuses such tokens.
+func TestLocator_GetWebFingerResult_UserShadowsStream(t *testing.T) {
+
+	user := model.NewUser()
+	user.UserID = primitive.NewObjectID()
+	user.Username = "alice"
+	user.IsPublic = true
+
+	locator, session := newLocatorWebFingerTest(newActorStream("group", "alice"))
+	session.users.record = user
+	session.users.found = true
+
+	result, err := locator.GetWebFingerResult(session, "acct:alice@example.com")
+
+	require.NoError(t, err)
+	require.Equal(t, "acct:alice@example.com", result.Subject)
+	require.Equal(t, user.ActivityPubURL(), selfLink(result))
+	require.Zero(t, session.streams.loads, "the Stream collection must not be consulted when a User matches")
+}
+
+// TestLocator_GetWebFingerResult_UnknownHandleIs404 confirms that a handle naming neither a User
+// nor a Stream is a 404, even though the parser labels it a User.
+func TestLocator_GetWebFingerResult_UnknownHandleIs404(t *testing.T) {
+
+	locator, session := newLocatorWebFingerTest()
+
+	for _, resource := range []string{"acct:nobody@example.com", "nobody", "acct:" + primitive.NewObjectID().Hex() + "@example.com"} {
+		_, err := locator.GetWebFingerResult(session, resource)
+		require.Error(t, err, "locating %q", resource)
+		require.Equal(t, 404, derp.ErrorCode(err), "locating %q", resource)
+	}
+}
+
+// TestLocator_GetWebFingerResult_UserErrorIsNotSwallowed confirms that only a missing User falls
+// through to Streams; a database failure is returned as-is and the Stream lookup never runs.
+func TestLocator_GetWebFingerResult_UserErrorIsNotSwallowed(t *testing.T) {
+
+	locator, session := newLocatorWebFingerTest(newActorStream("group", "my-article"))
+	session.users.loadError = derp.Internal("test", "database unavailable")
+
+	_, err := locator.GetWebFingerResult(session, "acct:my-article@example.com")
+
+	require.Error(t, err)
+	require.Equal(t, 500, derp.ErrorCode(err))
+	require.Zero(t, session.streams.loads, "the Stream collection must not be consulted after a User load failure")
 }

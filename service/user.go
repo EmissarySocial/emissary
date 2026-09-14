@@ -679,6 +679,18 @@ func (service *User) ValidateUsername(session data.Session, userID primitive.Obj
 		return derp.BadRequest(location, "Username is already in use", username)
 	}
 
+	// RULE: Username must not match a Stream token, because both are acct: handles (see AGENTS.md)
+	stream := model.NewStream()
+	err := service.streamService.Load(session, exp.Equal("token", username), &stream, option.CaseSensitive(false))
+
+	if err == nil {
+		return derp.BadRequest(location, "Username is already in use by a page", username)
+	}
+
+	if !derp.IsNotFound(err) {
+		return derp.Wrap(err, location, "Loading Stream by token", username)
+	}
+
 	return nil
 }
 

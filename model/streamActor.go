@@ -47,7 +47,7 @@ func (actor StreamActor) JSONLD(stream *Stream) mapof.Any {
 		vocab.PropertyInbox:             stream.ActivityPubInboxURL(),
 		vocab.PropertyOutbox:            stream.ActivityPubOutboxURL(),
 		vocab.PropertyName:              stream.Label,
-		vocab.PropertyPreferredUsername: stream.Token,
+		vocab.PropertyPreferredUsername: stream.ActivityPubUsername(),
 	}
 
 	if stream.Summary != "" {

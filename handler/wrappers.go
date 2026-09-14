@@ -496,13 +496,13 @@ func WithOAuthUser(serverFactory *server.Factory, fn WithFunc2[model.OAuthUserTo
 // WithOwner handles boilerplate code for requests that are restricted to the domain owner
 func WithOwner(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 
-	const location = "handler.WithAdmin"
+	const location = "handler.WithOwner"
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 		// Guarantee that the user is signed in
 		if authorization := getAuthorization(ctx); !authorization.DomainOwner {
-			return derp.Unauthorized(location, "You must be an admin to perform this action")
+			return derp.Unauthorized(location, "You must be the domain owner to perform this action")
 		}
 
 		// Call the continuation function
@@ -594,13 +594,16 @@ func WithRegistration(serverFactory *server.Factory, fn WithFunc2[model.Domain, 
 }
 
 // WithSearchQuery handles boilerplate code for requests that load a search query
-func WithSearchQuery(serverFactory *server.Factory, fn WithFunc3[model.Template, model.Stream, model.SearchQuery]) echo.HandlerFunc {
+func WithSearchQuery(serverFactory *server.Factory, fn WithFunc1[model.SearchQuery]) echo.HandlerFunc {
 
 	const location = "handler.WithSearchQuery"
 
-	return WithTemplate(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream) error {
+	// RULE: This builds on WithFactory, NOT WithTemplate/WithStream.  A SearchQuery actor has no
+	// Stream, and these routes declare no ":stream" parameter, so WithStream resolved the absent
+	// token to "home" and redirected every request to /startup on a domain whose home page is
+	// not a Stream.  See BUG-148.
+	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
-		// Load the Stream from the database
 		searchQueryService := factory.SearchQuery()
 
 		// If we have a valid token, then use it to  look up the search query
@@ -611,7 +614,7 @@ func WithSearchQuery(serverFactory *server.Factory, fn WithFunc3[model.Template,
 			}
 
 			// Call the continuation function
-			return fn(ctx, factory, session, template, stream, &searchQuery)
+			return fn(ctx, factory, session, &searchQuery)
 		}
 
 		// Otherwise, make a new token using the URL parameters provided
@@ -622,7 +625,7 @@ func WithSearchQuery(serverFactory *server.Factory, fn WithFunc3[model.Template,
 		}
 
 		// Call the continuation function
-		return fn(ctx, factory, session, template, stream, &searchQuery)
+		return fn(ctx, factory, session, &searchQuery)
 	})
 }
 

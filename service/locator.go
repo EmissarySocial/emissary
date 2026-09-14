@@ -62,8 +62,20 @@ func (service *Locator) GetWebFingerResult(session data.Session, resource string
 		return service.streamService.WebFinger(session, token)
 
 	case model.ActorTypeUser:
-		return service.userService.WebFinger(session, token)
 
+		result, err := service.userService.WebFinger(session, token)
+
+		if err == nil {
+			return result, nil
+		}
+
+		// RULE: Users shadow Streams. A handle that names no User may still name a Stream token,
+		// because both live in the same acct: namespace (see AGENTS.md).
+		if derp.IsNotFound(err) {
+			return service.streamService.WebFinger(session, token)
+		}
+
+		return digit.Resource{}, derp.Wrap(err, location, "Loading User", token)
 	}
 
 	// RULE: An unrecognized object type means the resource named another host, or named nothing we
@@ -307,7 +319,8 @@ func locateObjectFromPath(hostname string, value string) (string, string) {
 }
 
 // locateObjectFromAccount identifies the object named by an account-type value, for example
-// "@username@example.com", "username@example.com", or a naked "username".
+// "@username@example.com", "username@example.com", or a naked "username". A value that names
+// none of the reserved actors is returned as a User; the Locator then tries it as a Stream token.
 func locateObjectFromAccount(hostname string, value string) (string, string) {
 
 	// Remove the leading "@" (if present) so that the only "@" that can remain is the one that

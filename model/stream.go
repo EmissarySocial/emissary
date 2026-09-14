@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"net/url"
+	"regexp"
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/datetime"
@@ -316,6 +317,21 @@ func (stream Stream) CircleIDs() id.Slice {
 // ActivityPubURL returns the URL that identifies this Stream to ActivityPub
 func (stream Stream) ActivityPubURL() string {
 	return stream.URL
+}
+
+// handlePattern is the username grammar that Mastodon enforces on WebFinger subjects (Account::USERNAME_RE)
+var handlePattern = regexp.MustCompile(`^[A-Za-z0-9_]+([.-]+[A-Za-z0-9_]+)*$`)
+
+// ActivityPubUsername returns the handle this Stream federates under: its Token when remote
+// servers can accept it as a username, otherwise its StreamID.
+func (stream Stream) ActivityPubUsername() string {
+
+	// RULE: A token outside Mastodon's username grammar would make every remote server reject the actor
+	if handlePattern.MatchString(stream.Token) {
+		return stream.Token
+	}
+
+	return stream.StreamID.Hex()
 }
 
 // ActivityPubInboxURL returns the URL of this Stream's ActivityPub inbox

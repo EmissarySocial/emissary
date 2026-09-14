@@ -285,3 +285,38 @@ func TestStream_RolesToGroupIDs_AuthorIsIncluded(t *testing.T) {
 
 	require.Equal(t, Permissions{author}, stream.RolesToGroupIDs(MagicRoleAuthor))
 }
+
+// TestStream_ActivityPubUsername pins which tokens may serve as a federated handle. The handle is
+// what remote servers query WebFinger for, so it must satisfy Mastodon's username grammar or the
+// actor is rejected outright; anything else falls back to the StreamID, which always qualifies.
+func TestStream_ActivityPubUsername(t *testing.T) {
+
+	stream := NewStream()
+	streamID := stream.StreamID.Hex()
+
+	// The default token IS the StreamID, and must come back unchanged
+	require.Equal(t, streamID, stream.Token)
+	require.Equal(t, streamID, stream.ActivityPubUsername())
+
+	tests := []struct {
+		token    string
+		expected string
+	}{
+		{"my-article", "my-article"},
+		{"My_Article.2", "My_Article.2"},
+		{"a-b.c", "a-b.c"},
+		{"a--b", "a--b"},
+		{"abc", "abc"},
+		{"café", streamID},
+		{"-leading", streamID},
+		{"trailing-", streamID},
+		{"a.", streamID},
+		{"with space", streamID},
+		{"", streamID},
+	}
+
+	for _, test := range tests {
+		stream.Token = test.token
+		require.Equal(t, test.expected, stream.ActivityPubUsername(), "token %q", test.token)
+	}
+}
