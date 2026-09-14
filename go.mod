@@ -149,6 +149,6 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
 
-replace github.com/benpate/toot => github.com/Lawhacknifemi/toot v0.5.1-0.20260907102547-bcac81023ae2
+replace github.com/benpate/toot => github.com/Lawhacknifemi/toot v0.5.1-0.20260908153000-faaa13b43129
 
-replace github.com/benpate/toot-echo => github.com/Lawhacknifemi/toot-echo v0.0.0-20260907105002-3ee11a70c1f6
+replace github.com/benpate/toot-echo => github.com/Lawhacknifemi/toot-echo v0.0.0-20260912150500-b8c7cdd2d7b6
