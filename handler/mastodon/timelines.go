@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/data"
+	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -59,9 +60,11 @@ func GetTimeline_Home(serverFactory *server.Factory) func(model.Authorization, t
 
 		defer cancel()
 
-		// Get NewsItems from the database
+		// Get NewsItems from the database. NewsItem.GetRank() returns "rank", not
+		// CreateDate (see queryExpressionByField), and the DESC sort must match the
+		// order getPageInfo assumes (newest first) for its MaxID/MinID to be correct.
 		newsFeedService := factory.NewsFeed()
-		newsItems, err := newsFeedService.QueryByUserID(session, auth.UserID, queryExpression(t))
+		newsItems, err := newsFeedService.QueryByUserID(session, auth.UserID, queryExpressionByField(t, "rank"), option.SortDesc("rank"), option.MaxRows(pageLimit(t.Limit)))
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Retrieving newsItems")
@@ -101,11 +104,12 @@ func GetTimeline_List(serverFactory *server.Factory) func(model.Authorization, t
 
 		defer cancel()
 
-		// Get NewsFeed items from the database
+		// Get NewsFeed items from the database. Same rank-vs-createDate note as
+		// GetTimeline_Home applies here.
 		newsFeedService := factory.NewsFeed()
-		criteria := queryExpression(t).AndEqual("folderId", folderID)
+		criteria := queryExpressionByField(t, "rank").AndEqual("folderId", folderID)
 
-		newsItems, err := newsFeedService.QueryByUserID(session, auth.UserID, criteria)
+		newsItems, err := newsFeedService.QueryByUserID(session, auth.UserID, criteria, option.SortDesc("rank"), option.MaxRows(pageLimit(t.Limit)))
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Retrieving newsItems")
