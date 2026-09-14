@@ -152,7 +152,14 @@ func GetStatus_Context(serverFactory *server.Factory) func(model.Authorization, 
 	return func(auth model.Authorization, t txn.GetStatus_Context) (object.Context, error) {
 
 		// TODO: HIGH: Implement status contexts via Hannibal
-		return object.Context{}, nil
+
+		// RULE: zero-value nil slices marshal to JSON `null`, but the Mastodon client's
+		// Codable decoder requires a real (even empty) array for both fields -- a `null`
+		// here is a hard decode failure on the client, not a harmless "no thread yet".
+		return object.Context{
+			Ancestors:   []object.Status{},
+			Descendants: []object.Status{},
+		}, nil
 	}
 }
 
