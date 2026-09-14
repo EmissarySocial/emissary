@@ -318,9 +318,8 @@ func locateObjectFromPath(hostname string, value string) (string, string) {
 	return model.ActorTypeStream, path
 }
 
-// locateObjectFromAccount identifies the object named by an account-type value, for example
-// "@username@example.com", "username@example.com", or a naked "username". A value that names
-// none of the reserved actors is returned as a User; the Locator then tries it as a Stream token.
+// locateObjectFromAccount identifies the object named by an account-type value ("@username@example.com",
+// "username@example.com", or a naked "username"); anything but a reserved actor is returned as a User.
 func locateObjectFromAccount(hostname string, value string) (string, string) {
 
 	// Remove the leading "@" (if present) so that the only "@" that can remain is the one that

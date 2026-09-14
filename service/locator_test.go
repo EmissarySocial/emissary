@@ -242,9 +242,8 @@ func newLocatorWebFingerTest(streams ...model.Stream) (Locator, webfingerSession
 	return locator, session
 }
 
-// TestLocator_GetWebFingerResult_StreamByHandle is the regression test for BUG-98: an acct: handle
-// that names no User resolves to the Stream with that token, by the token and by the StreamID, and
-// the token form's subject is the handle that was queried.
+// TestLocator_GetWebFingerResult_StreamByHandle is the regression test for BUG-98: an acct: handle that
+// names no User resolves to the Stream with that token, by token or StreamID, with the queried handle as subject.
 func TestLocator_GetWebFingerResult_StreamByHandle(t *testing.T) {
 
 	stream := newActorStream("group", "my-article")

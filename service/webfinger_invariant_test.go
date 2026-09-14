@@ -121,8 +121,8 @@ func TestWebFingerInvariant_User(t *testing.T) {
 	resource, err := service.WebFinger(session, "qapub")
 	require.NoError(t, err)
 
-	preferredUsername := user.GetJSONLD()[vocab.PropertyPreferredUsername]
-	require.Equal(t, "acct:"+preferredUsername.(string)+"@"+uri.Hostname(service.host), resource.Subject)
+	preferredUsername := user.GetJSONLD().GetString(vocab.PropertyPreferredUsername)
+	require.Equal(t, "acct:"+preferredUsername+"@"+uri.Hostname(service.host), resource.Subject)
 }
 
 // TestWebFingerInvariant_Application checks the subject against the literal that Domain.GetJSONLD

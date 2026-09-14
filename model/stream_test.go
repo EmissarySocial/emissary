@@ -286,9 +286,8 @@ func TestStream_RolesToGroupIDs_AuthorIsIncluded(t *testing.T) {
 	require.Equal(t, Permissions{author}, stream.RolesToGroupIDs(MagicRoleAuthor))
 }
 
-// TestStream_ActivityPubUsername pins which tokens may serve as a federated handle. The handle is
-// what remote servers query WebFinger for, so it must satisfy Mastodon's username grammar or the
-// actor is rejected outright; anything else falls back to the StreamID, which always qualifies.
+// TestStream_ActivityPubUsername pins which tokens may serve as a federated handle: Mastodon's
+// username grammar or the actor is rejected, so anything else falls back to the StreamID.
 func TestStream_ActivityPubUsername(t *testing.T) {
 
 	stream := NewStream()

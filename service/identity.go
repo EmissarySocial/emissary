@@ -679,10 +679,11 @@ func (service *Identity) calcActorDetails(identity *model.Identity) error {
 	return nil
 }
 
-// applyActor copies an actor's id, handle, name, and icon onto the Identity, keeping a name and icon already set.
-// This prevents a malicious WebFinger result from fraudulently claiming ownership of an account.
+// applyActor copies an actor's id, handle, name, and icon onto the Identity, keeping a name and icon already set
 func applyActor(identity *model.Identity, actor streams.Document) {
 
+	// Keeping the name and icon already set prevents a malicious WebFinger result from
+	// fraudulently claiming ownership of an account.
 	identity.ActivityPubActor = actor.ID()
 	identity.WebfingerUsername = actorHandle(actor)
 

@@ -43,9 +43,8 @@ func TestStreamActorJSONLD_Empty(t *testing.T) {
 	require.Empty(t, actor.JSONLD(&stream))
 }
 
-// TestStreamActorJSONLD_PreferredUsername confirms that the actor document carries the same handle
-// that service.Stream.WebFinger publishes as its subject. Both come from Stream.ActivityPubUsername,
-// which is what stops the two from drifting apart (BUG-98).
+// TestStreamActorJSONLD_PreferredUsername confirms that the actor document carries the handle from
+// Stream.ActivityPubUsername, the accessor service.Stream.WebFinger also uses for its subject (BUG-98).
 func TestStreamActorJSONLD_PreferredUsername(t *testing.T) {
 
 	actor := StreamActor{SocialRole: vocab.ActorTypeService}

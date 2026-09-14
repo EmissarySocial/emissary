@@ -19,9 +19,8 @@ func newUserValidateTestService(streams ...model.Stream) (*User, webfingerSessio
 	return service, session
 }
 
-// TestUser_ValidateUsername_RefusesStreamToken pins the second half of the acct: namespace rule
-// (BUG-98): a username that matches an existing Stream token, in any letter case, is refused,
-// because WebFinger would then resolve that Stream's handle to the User instead.
+// TestUser_ValidateUsername_RefusesStreamToken pins the other half of the acct: namespace rule (BUG-98):
+// a username matching a Stream token in any letter case is refused, or WebFinger would hand that handle to the User.
 func TestUser_ValidateUsername_RefusesStreamToken(t *testing.T) {
 
 	service, session := newUserValidateTestService(newActorStream("group", "alice"))

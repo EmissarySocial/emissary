@@ -179,6 +179,8 @@ func GetValidateCirclename(ctx *steranko.Context, factory *service.Factory, sess
 // GetValidateStreamToken validates a Stream.Token for uniqueness/availability
 func GetValidateStreamToken(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
+	const location = "handler.GetValidateStreamToken"
+
 	// This service can only validate the "token" field
 	if field := ctx.QueryParam("field"); field != "token" {
 		return ctx.JSON(http.StatusBadRequest, mapof.Any{
@@ -196,7 +198,7 @@ func GetValidateStreamToken(ctx *steranko.Context, factory *service.Factory, ses
 
 		// A rejected token is a normal answer for this endpoint; anything else is a real failure
 		if !derp.IsBadRequest(err) {
-			return derp.Wrap(err, "handler.GetValidateStreamToken", "Validating stream token", token)
+			return derp.Wrap(err, location, "Validating stream token", token)
 		}
 
 		return ctx.JSON(http.StatusOK, mapof.Any{

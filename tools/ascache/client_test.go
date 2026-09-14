@@ -346,9 +346,8 @@ func cachedURLs(t *testing.T, client *Client, key string) []string {
 	return value.URLs
 }
 
-// TestClient_Load_AliasesSameHostKeyOnly is BUG-01's cache rule stated directly: a lookup key becomes
-// an alias of the document only when it lives on the document's own host, so a foreign WebFinger
-// server cannot make its handle a durable name for someone else's actor.
+// TestClient_Load_AliasesSameHostKeyOnly is BUG-01's cache rule stated directly: a lookup key becomes an
+// alias only on the document's own host, so a foreign WebFinger server cannot name someone else's actor.
 func TestClient_Load_AliasesSameHostKeyOnly(t *testing.T) {
 
 	const bob = "https://good.example/@bob"

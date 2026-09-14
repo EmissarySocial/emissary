@@ -29,9 +29,8 @@ func newStreamValidateTestService(user model.User, streams ...model.Stream) (*St
 	return service, session
 }
 
-// TestStream_ValidateToken pins the rules for assigning a token (BUG-98): it must be long enough,
-// must not name a different Stream by token or by id, and must not match a username in any letter
-// case, because a User with that handle would shadow the Stream in WebFinger.
+// TestStream_ValidateToken pins the rules for assigning a token (BUG-98): long enough, not another
+// Stream's token or id, and not a username in any letter case, which would shadow the Stream in WebFinger.
 func TestStream_ValidateToken(t *testing.T) {
 
 	user := model.NewUser()

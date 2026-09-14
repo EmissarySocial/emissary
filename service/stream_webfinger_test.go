@@ -329,8 +329,7 @@ func TestStreamWebFinger_LoadErrorIsNotA404(t *testing.T) {
 }
 
 // TestStreamWebFinger_MatchesActorDocument is the invariant behind BUG-98: the WebFinger subject is
-// exactly acct:<preferredUsername>@<host>, for a token that qualifies as a handle and for one that
-// does not, because both values come from Stream.ActivityPubUsername.
+// exactly acct:<preferredUsername>@<host>, whether or not the token qualifies as a handle.
 func TestStreamWebFinger_MatchesActorDocument(t *testing.T) {
 
 	template := actorTemplate("group")
@@ -343,7 +342,7 @@ func TestStreamWebFinger_MatchesActorDocument(t *testing.T) {
 		resource, err := service.WebFinger(session, stream.Token)
 		require.NoError(t, err, "token %q", token)
 
-		preferredUsername := template.Actor.JSONLD(&stream)[vocab.PropertyPreferredUsername]
-		require.Equal(t, "acct:"+preferredUsername.(string)+"@example.com", resource.Subject, "token %q", token)
+		preferredUsername := template.Actor.JSONLD(&stream).GetString(vocab.PropertyPreferredUsername)
+		require.Equal(t, "acct:"+preferredUsername+"@example.com", resource.Subject, "token %q", token)
 	}
 }
