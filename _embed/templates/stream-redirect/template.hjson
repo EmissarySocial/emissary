@@ -78,7 +78,7 @@
 							children: [
 								{type: "text", label: "Target URL", path: "data.url", description:"Full URL that visitors will be forwarded to (e.g. https://example.com/page-here)"}
 								{type: "text", label: "Label", path: "label", description:"Displays in website navigation"}
-								{type: "text", label: "Token/Slug", path: "token", description:"Unique identifier for the redirect", options:{autocomplete:"off", validator:"/.validate/streamToken?streamId={{.StreamID}}"}}
+								{type: "text", label: "Token/Slug", path: "token", description:"Unique identifier for the redirect", options:{autocomplete:"off", validator:"/.validate/stream/token?streamId={{.StreamID}}"}}
 								{type: "select", path:"icon", label:"Icon", options:{provider:"folder-icons"}}
 								{type: "textarea", label: "Summary", path: "summary", description:"Displays in website navigation", options:{rows:4}}
 							]

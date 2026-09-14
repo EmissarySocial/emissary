@@ -168,7 +168,7 @@
 								label: "Page Setup"
 								children: [
 									{type:"text", path:"label", label:"Page Title", description:"Displays in website navigation, and at the top of the page."}
-									{type:"text", path:"token", label:"Token/Slug", description:"This page\u0027s address on your website, for example \u0022contact\u0022.  Must be unique.", options:{autocomplete:"off", validator:"/.validate/streamToken?streamId={{.StreamID}}"}}
+									{type:"text", path:"token", label:"Token/Slug", description:"This page\u0027s address on your website, for example \u0022contact\u0022.  Must be unique.", options:{autocomplete:"off", validator:"/.validate/stream/token?streamId={{.StreamID}}"}}
 									{type:"select", path:"icon", label:"Icon", description:"Displays beside the page title in website navigation.", options:{provider:"folder-icons"}}
 								]
 							}

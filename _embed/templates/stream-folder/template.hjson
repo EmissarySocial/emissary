@@ -83,7 +83,7 @@
 								type:"layout-vertical"
 								label:"Folder Info"
 								children: [
-									{type:"text", label:"Token", path:"token", options:{autocomplete:"off", validator:"/.validate/streamToken?streamId={{.StreamID}}"}}
+									{type:"text", label:"Token", path:"token", options:{autocomplete:"off", validator:"/.validate/stream/token?streamId={{.StreamID}}"}}
 									{type:"text", label:"Label", path:"label"}
 									{type:"textarea", label:"Summary", path:"summary"}
 								]
