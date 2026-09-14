@@ -785,7 +785,11 @@ func errorHandler(err error, ctx echo.Context) {
 			"Generating web page",
 			"url: "+uri.PrependProtocol(request.Host)+request.URL.String(),
 			"method: "+request.Method,
-			ctx.Request().Header,
+
+			// RULE: redact before reporting. derp stores details verbatim, and this
+			// report reaches the console AND the durable ErrorLog collection, so a raw
+			// header block publishes the caller's session cookie and bearer token.
+			derp.RedactHeader(request.Header),
 		),
 	)
 
