@@ -7,15 +7,15 @@ import (
 // RuleSummary is a trimmed down subset of the Rule object, which is used when
 // executing rules on a piece of content
 type RuleSummary struct {
-	RuleID         primitive.ObjectID `bson:"_id"`
-	UserID         primitive.ObjectID `bson:"userId"` // Owner; zero => ADMIN (domain) tier. REQUIRED for tier attribution.
-	Type           string             `bson:"type"`
-	Action         string             `bson:"action"`
-	Trigger        string             `bson:"trigger"`
-	MatchKey       string             `bson:"matchKey"` // Derived key; a document matches this rule iff its key set contains this value.
-	Label          string             `bson:"label"`
-	FollowingLabel string             `bson:"followingLabel"`
-	ExpireDate     int64              `bson:"expireDate"` // 0 = never; an expired rule is skipped by the engine.
+	RuleID         primitive.ObjectID `json:"ruleId" bson:"_id"`
+	UserID         primitive.ObjectID `json:"userId" bson:"userId"` // Owner; zero => ADMIN (domain) tier. REQUIRED for tier attribution.
+	Type           string             `json:"type" bson:"type"`
+	Action         string             `json:"action" bson:"action"`
+	Trigger        string             `json:"trigger" bson:"trigger"`
+	MatchKey       string             `json:"matchKey" bson:"matchKey"` // Derived key; a document matches this rule iff its key set contains this value.
+	Label          string             `json:"label" bson:"label"`
+	FollowingLabel string             `json:"followingLabel" bson:"followingLabel"`
+	ExpireDate     int64              `json:"expireDate" bson:"expireDate"` // 0 = never; an expired rule is skipped by the engine.
 }
 
 // RuleSummaryFields returns a list of fields that should be queried from the

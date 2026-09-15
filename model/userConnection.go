@@ -19,13 +19,13 @@ import (
 
 // UserConnection represents one User's connection to a single external service
 type UserConnection struct {
-	UserConnectionID primitive.ObjectID `bson:"_id"`      // Unique ID for this connection
-	UserID           primitive.ObjectID `bson:"userId"`   // Unique ID of the User who owns this connection
-	Type             string             `bson:"type"`     // Internal identifier of the remote service (MAILCHIMP, etc.)
-	IsActive         delta.Bool         `bson:"isActive"` // TRUE if this connection should be installed at the remote service
-	Status           string             `bson:"status"`   // Health of the connection, one of the UserConnectionStatus* constants
-	Data             mapof.String       `bson:"data"`     // Non-secret settings and remote IDs
-	Vault            Vault              `bson:"vault"`    // Secrets for this connection (encrypted at rest)
+	UserConnectionID primitive.ObjectID `json:"userConnectionId" bson:"_id"` // Unique ID for this connection
+	UserID           primitive.ObjectID `json:"userId" bson:"userId"`        // Unique ID of the User who owns this connection
+	Type             string             `json:"type" bson:"type"`            // Internal identifier of the remote service (MAILCHIMP, etc.)
+	IsActive         delta.Bool         `json:"isActive" bson:"isActive"`    // TRUE if this connection should be installed at the remote service
+	Status           string             `json:"status" bson:"status"`        // Health of the connection, one of the UserConnectionStatus* constants
+	Data             mapof.String       `json:"data" bson:"data"`            // Non-secret settings and remote IDs
+	Vault            Vault              `json:"-" bson:"vault"`              // Secrets for this connection (encrypted at rest)
 
 	// Embed journal to track changes
 	journal.Journal `json:"-" bson:",inline"`

@@ -11,12 +11,12 @@ import (
 // names exactly one remote entry: a provider that retracts and re-publishes the same block under
 // a NEW id is making a fresh assertion, and a fresh assertion imports again.
 type RuleSuppression struct {
-	RuleSuppressionID primitive.ObjectID `bson:"_id"`         // Unique identifier of this RuleSuppression
-	UserID            primitive.ObjectID `bson:"userId"`      // Owner tier of the deleted Rule; zero => ADMIN/domain tier (the only subscriber, per D9)
-	FollowingID       primitive.ObjectID `bson:"followingId"` // The provider subscription the suppressed entry arrived through
-	RemoteID          string             `bson:"remoteId"`    // Canonical id (URL) of the provider's moderation entry that must not re-import
+	RuleSuppressionID primitive.ObjectID `json:"ruleSuppressionId" bson:"_id"`   // Unique identifier of this RuleSuppression
+	UserID            primitive.ObjectID `json:"userId" bson:"userId"`           // Owner tier of the deleted Rule; zero => ADMIN/domain tier (the only subscriber, per D9)
+	FollowingID       primitive.ObjectID `json:"followingId" bson:"followingId"` // The provider subscription the suppressed entry arrived through
+	RemoteID          string             `json:"remoteId" bson:"remoteId"`       // Canonical id (URL) of the provider's moderation entry that must not re-import
 
-	journal.Journal `bson:",inline"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 // NewRuleSuppression returns a fully initialized RuleSuppression object

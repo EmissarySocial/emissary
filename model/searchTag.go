@@ -10,18 +10,18 @@ import (
 // SearchTag represents a tag that vistors can use to search
 // for Users and Streams in the database.
 type SearchTag struct {
-	SearchTagID primitive.ObjectID `bson:"_id"`     // SearchTagID is the unique identifier for a SearchTag.
-	Group       string             `bson:"group"`   // Group is the type of tag (GENRE, MOOD, ACTIVITY, etc.)
-	Name        string             `bson:"name"`    // Name used for this tag
-	Value       string             `bson:"value"`   // Value is the normalized version of the tag name.
-	Colors      sliceof.String     `bson:"colors"`  // Colors is a slice of one or more RGB Hex color to use for tags featured on search panels.
-	Related     string             `bson:"related"` // Related is a list of other tags that are related to this tag.
-	Notes       string             `bson:"notes"`   // Notes is a place for administrators to make notes about the tag.
-	Rank        int                `bson:"rank"`    // Rank is the sort order of the SearchTag.
-	StateID     int                `bson:"stateId"` // StateID represents the state that the tag is in. (FEATURED, ALLOWED, WAITING, BLOCKED)
-	ImageID     primitive.ObjectID `bson:"imageId"` // AttachmentID is the unique identifier for the attachment that is associated with this tag.
+	SearchTagID primitive.ObjectID `json:"searchTagId" bson:"_id"` // SearchTagID is the unique identifier for a SearchTag.
+	Group       string             `json:"group" bson:"group"`     // Group is the type of tag (GENRE, MOOD, ACTIVITY, etc.)
+	Name        string             `json:"name" bson:"name"`       // Name used for this tag
+	Value       string             `json:"value" bson:"value"`     // Value is the normalized version of the tag name.
+	Colors      sliceof.String     `json:"colors" bson:"colors"`   // Colors is a slice of one or more RGB Hex color to use for tags featured on search panels.
+	Related     string             `json:"related" bson:"related"` // Related is a list of other tags that are related to this tag.
+	Notes       string             `json:"notes" bson:"notes"`     // Notes is a place for administrators to make notes about the tag.
+	Rank        int                `json:"rank" bson:"rank"`       // Rank is the sort order of the SearchTag.
+	StateID     int                `json:"stateId" bson:"stateId"` // StateID represents the state that the tag is in. (FEATURED, ALLOWED, WAITING, BLOCKED)
+	ImageID     primitive.ObjectID `json:"imageId" bson:"imageId"` // AttachmentID is the unique identifier for the attachment that is associated with this tag.
 
-	journal.Journal `bson:",inline"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 // NewSearchTag returns a fully initialized SearchTag object

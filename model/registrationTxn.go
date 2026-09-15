@@ -11,19 +11,19 @@ import (
 
 // RegistrationTxn represents the data that is submitted when a User registers for a new account
 type RegistrationTxn struct {
-	DisplayName    string `form:"displayName"`    // required: User's DisplayName
-	EmailAddress   string `form:"emailAddress"`   // required: User's EmailAddress
-	Username       string `form:"username"`       // optional: User's Username
-	Password       string `form:"password"`       // optional: User's Password
-	StateID        string `form:"stateId"`        // optional: User's StateID
-	InboxTemplate  string `form:"inboxTemplate"`  // optional: User's InboxTemplate
-	OutboxTemplate string `form:"outboxTemplate"` // optional: User's OutboxTemplate
-	AddGroups      string `form:"addGroups"`      // optional: Comma-separated list of GroupIDs to add the User to
-	RemoveGroups   string `form:"removeGroups"`   // optional: Comma-separated list of GroupIDs to remove the User from
-	Secret         string `form:"secret"`         // optional: Secret key used to validate the registration
+	DisplayName    string `json:"displayName" form:"displayName"`       // required: User's DisplayName
+	EmailAddress   string `json:"emailAddress" form:"emailAddress"`     // required: User's EmailAddress
+	Username       string `json:"username" form:"username"`             // optional: User's Username
+	Password       string `json:"-" form:"password"`                    // optional: User's Password
+	StateID        string `json:"stateId" form:"stateId"`               // optional: User's StateID
+	InboxTemplate  string `json:"inboxTemplate" form:"inboxTemplate"`   // optional: User's InboxTemplate
+	OutboxTemplate string `json:"outboxTemplate" form:"outboxTemplate"` // optional: User's OutboxTemplate
+	AddGroups      string `json:"addGroups" form:"addGroups"`           // optional: Comma-separated list of GroupIDs to add the User to
+	RemoveGroups   string `json:"removeGroups" form:"removeGroups"`     // optional: Comma-separated list of GroupIDs to remove the User from
+	Secret         string `json:"-" form:"secret"`                      // optional: Secret key used to validate the registration
 
 	// Internal values assigned by the server
-	UserID string `form:"-"` // optional: Unique identifier for the User to be created.  Prevents replay/reuse attacks
+	UserID string `json:"userId" form:"-"` // optional: Unique identifier for the User to be created.  Prevents replay/reuse attacks
 }
 
 // NewRegistrationTxn returns a fully initialized RegistrationTxn object

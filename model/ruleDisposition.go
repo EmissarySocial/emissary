@@ -21,18 +21,18 @@ const RuleDispositionNone = ""
 // consumed by everything the server must DO (refuse, suppress, halt delivery, purge). Its display
 // twin is metadata.LabelSet -- lossy and never persisted -- produced ONLY by LabelSet() below.
 type RuleDisposition struct {
-	Action string             `bson:"action,omitempty"` // RuleActionBlock | RuleActionMute | RuleDispositionNone
-	Tier   string             `bson:"tier,omitempty"`   // RuleOriginAdmin | RuleOriginUser (of the winning rule; "" if none)
-	RuleID primitive.ObjectID `bson:"ruleId,omitempty"` // The winning rule, for "why am I seeing this?" UI
-	Labels []RuleLabelMatch   `bson:"labels,omitempty"` // Every LABEL match, from every tier
+	Action string             `json:"action" bson:"action,omitempty"` // RuleActionBlock | RuleActionMute | RuleDispositionNone
+	Tier   string             `json:"tier" bson:"tier,omitempty"`     // RuleOriginAdmin | RuleOriginUser (of the winning rule; "" if none)
+	RuleID primitive.ObjectID `json:"ruleId" bson:"ruleId,omitempty"` // The winning rule, for "why am I seeing this?" UI
+	Labels []RuleLabelMatch   `json:"labels" bson:"labels,omitempty"` // Every LABEL match, from every tier
 }
 
 // RuleLabelMatch is one LABEL rule that matched, carried on a RuleDisposition for display and attribution.
 type RuleLabelMatch struct {
-	RuleID primitive.ObjectID `bson:"ruleId,omitempty"` // The LABEL rule that matched
-	Tier   string             `bson:"tier,omitempty"`   // RuleOriginAdmin | RuleOriginUser (rows persisted before this field read back as "", which links nowhere)
-	Source string             `bson:"source,omitempty"` // Attribution (FollowingLabel), or "" for the user's own rule
-	Label  string             `bson:"label,omitempty"`  // Human-readable label text (Rule.Label)
+	RuleID primitive.ObjectID `json:"ruleId" bson:"ruleId,omitempty"` // The LABEL rule that matched
+	Tier   string             `json:"tier" bson:"tier,omitempty"`     // RuleOriginAdmin | RuleOriginUser (rows persisted before this field read back as "", which links nowhere)
+	Source string             `json:"source" bson:"source,omitempty"` // Attribution (FollowingLabel), or "" for the user's own rule
+	Label  string             `json:"label" bson:"label,omitempty"`   // Human-readable label text (Rule.Label)
 }
 
 // IsZero returns TRUE if this disposition filters nothing and carries no labels. The mongo driver

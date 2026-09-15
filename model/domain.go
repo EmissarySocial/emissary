@@ -11,32 +11,32 @@ import (
 
 // Domain represents an account or node on this server.
 type Domain struct {
-	DomainID             primitive.ObjectID              `bson:"_id"`                  // This is the internal ID for the domain.  It should not be available via the web service.
-	IconID               primitive.ObjectID              `bson:"iconId"`               // ID of the logo to use for this domain (as an icon on other websites, etc)
-	ImageID              primitive.ObjectID              `bson:"imageId"`              // ID of theimage to use for this domain (on sign in pages, etc)
-	StateID              string                          `bson:"stateId"`              // Empty == LIVE
-	StartupTasks         sliceof.String                  `bson:"startupTasks"`         // Completed Tasks
-	Hostname             string                          `bson:"hostname"`             // Hostname of this domain (e.g. "example.com")
-	Label                string                          `bson:"label"`                // Human-friendly name displayed at the top of this domain
-	Description          string                          `bson:"description"`          // Human-friendly description of this domain
-	ThemeID              string                          `bson:"themeId"`              // ID of the theme to use for this domain
-	RegistrationID       string                          `bson:"registrationId"`       // ID of the signup template to use for this domain
-	InboxID              string                          `bson:"inboxId"`              // ID of the default inbox template to use for this domain
-	OutboxID             string                          `bson:"outboxId"`             // ID of the default outbox template to use for this domain
-	Forward              string                          `bson:"forward"`              // If present, then all requests for this domain should be forwarded to the designated new domain.
-	ThemeData            mapof.Any                       `bson:"themeData"`            // Custom data for the Theme, defined by the Theme's own schema/form. PUBLIC: rendered into pages.
-	RegistrationData     mapof.String                    `bson:"registrationData"`     // Custom data for signup template stored in this domain
-	ColorMode            string                          `bson:"colorMode"`            // Color mode for this domain (e.g. "LIGHT", "DARK", or "AUTO")
-	MLSMode              string                          `bson:"mlsMode"`              // MLS mode for this domain (e.g. "ALL", "GROUPS", or "NONE")
-	MLSGroupIDs          sliceof.String                  `bson:"mlsGroupIds"`          // List of GroupIDs that are allowed to use MLS features (only used if MLSMode is "GROUPS")
-	DefaultAnonymous     string                          `bson:"defaultAnonymous"`     // Default page for anonymous users (defaults to "/home")
-	DefaultAuthenticated string                          `bson:"defaultAuthenticated"` // Default page for authenticated users (defaults to "/@me")
-	DefaultOwner         string                          `bson:"defaultOwner"`         // Default page for owners (defaults to "/admin")
-	Data                 mapof.String                    `bson:"data"`                 // Operational settings for this domain (VAPID keys, feature flags). SECRET: never render into a page.
-	DatabaseVersion      uint                            `bson:"databaseVersion"`      // Version of the database schema
-	Syndication          sliceof.Object[form.LookupCode] `bson:"syndication"`          // List of external services that this domain can syndicate to
-	Connections          mapof.Matchable[Connection]     `bson:"connections"`          // Map of external connections for this domain
-	PrivateKey           string                          `bson:"privateKey"`           // Private key for this domain
+	DomainID             primitive.ObjectID              `json:"domainId" bson:"_id"`                              // This is the internal ID for the domain.  It should not be available via the web service.
+	IconID               primitive.ObjectID              `json:"iconId" bson:"iconId"`                             // ID of the logo to use for this domain (as an icon on other websites, etc)
+	ImageID              primitive.ObjectID              `json:"imageId" bson:"imageId"`                           // ID of theimage to use for this domain (on sign in pages, etc)
+	StateID              string                          `json:"stateId" bson:"stateId"`                           // Empty == LIVE
+	StartupTasks         sliceof.String                  `json:"startupTasks" bson:"startupTasks"`                 // Completed Tasks
+	Hostname             string                          `json:"hostname" bson:"hostname"`                         // Hostname of this domain (e.g. "example.com")
+	Label                string                          `json:"label" bson:"label"`                               // Human-friendly name displayed at the top of this domain
+	Description          string                          `json:"description" bson:"description"`                   // Human-friendly description of this domain
+	ThemeID              string                          `json:"themeId" bson:"themeId"`                           // ID of the theme to use for this domain
+	RegistrationID       string                          `json:"registrationId" bson:"registrationId"`             // ID of the signup template to use for this domain
+	InboxID              string                          `json:"inboxId" bson:"inboxId"`                           // ID of the default inbox template to use for this domain
+	OutboxID             string                          `json:"outboxId" bson:"outboxId"`                         // ID of the default outbox template to use for this domain
+	Forward              string                          `json:"forward" bson:"forward"`                           // If present, then all requests for this domain should be forwarded to the designated new domain.
+	ThemeData            mapof.Any                       `json:"themeData" bson:"themeData"`                       // Custom data for the Theme, defined by the Theme's own schema/form. PUBLIC: rendered into pages.
+	RegistrationData     mapof.String                    `json:"registrationData" bson:"registrationData"`         // Custom data for signup template stored in this domain
+	ColorMode            string                          `json:"colorMode" bson:"colorMode"`                       // Color mode for this domain (e.g. "LIGHT", "DARK", or "AUTO")
+	MLSMode              string                          `json:"mlsMode" bson:"mlsMode"`                           // MLS mode for this domain (e.g. "ALL", "GROUPS", or "NONE")
+	MLSGroupIDs          sliceof.String                  `json:"mlsGroupIds" bson:"mlsGroupIds"`                   // List of GroupIDs that are allowed to use MLS features (only used if MLSMode is "GROUPS")
+	DefaultAnonymous     string                          `json:"defaultAnonymous" bson:"defaultAnonymous"`         // Default page for anonymous users (defaults to "/home")
+	DefaultAuthenticated string                          `json:"defaultAuthenticated" bson:"defaultAuthenticated"` // Default page for authenticated users (defaults to "/@me")
+	DefaultOwner         string                          `json:"defaultOwner" bson:"defaultOwner"`                 // Default page for owners (defaults to "/admin")
+	Data                 mapof.String                    `json:"-" bson:"data"`                                    // Operational settings for this domain (VAPID keys, feature flags). SECRET: never render into a page.
+	DatabaseVersion      uint                            `json:"databaseVersion" bson:"databaseVersion"`           // Version of the database schema
+	Syndication          sliceof.Object[form.LookupCode] `json:"syndication" bson:"syndication"`                   // List of external services that this domain can syndicate to
+	Connections          mapof.Matchable[Connection]     `json:"connections" bson:"connections"`                   // Map of external connections for this domain
+	PrivateKey           string                          `json:"-" bson:"privateKey"`                              // Private key for this domain
 	journal.Journal      `json:"-" bson:",inline"`
 }
 

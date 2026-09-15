@@ -4,9 +4,9 @@ import "github.com/benpate/hannibal/vocab"
 
 // UserResponseSummary is a summary object of the User's response(s) to a particular ActivityStream
 type UserResponseSummary struct {
-	Announce bool
-	Like     bool
-	Dislike  bool
+	Announce bool `json:"announce"`
+	Like     bool `json:"like"`
+	Dislike  bool `json:"dislike"`
 }
 
 // NewUserResponseSummary returns a fully initialized UserResponseSummary

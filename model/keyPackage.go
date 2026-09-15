@@ -8,17 +8,17 @@ import (
 
 // KeyPackage represents a published MLS KeyPackage that other actors can use to add this User to encrypted groups.
 type KeyPackage struct {
-	KeyPackageID  primitive.ObjectID `bson:"_id"`
-	UserID        primitive.ObjectID `bson:"userId"`
-	MediaType     string             `bson:"mediaType"`
-	Encoding      string             `bson:"encoding"`
-	Content       string             `bson:"content"`
-	Summary       string             `bson:"summary"`
-	GeneratorID   string             `bson:"generatorId"`
-	Ciphersuite   string             `bson:"ciphersuite"`
-	GeneratorName string             `bson:"generatorName"`
+	KeyPackageID  primitive.ObjectID `json:"keyPackageId" bson:"_id"`
+	UserID        primitive.ObjectID `json:"userId" bson:"userId"`
+	MediaType     string             `json:"mediaType" bson:"mediaType"`
+	Encoding      string             `json:"encoding" bson:"encoding"`
+	Content       string             `json:"content" bson:"content"`
+	Summary       string             `json:"summary" bson:"summary"`
+	GeneratorID   string             `json:"generatorId" bson:"generatorId"`
+	Ciphersuite   string             `json:"ciphersuite" bson:"ciphersuite"`
+	GeneratorName string             `json:"generatorName" bson:"generatorName"`
 
-	journal.Journal `bson:",inline"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 // NewKeyPackage returns a fully initialized KeyPackage
