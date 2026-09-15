@@ -248,31 +248,21 @@ func PostStatus_Favourite(serverFactory *server.Factory) func(model.Authorizatio
 		}
 
 		// Load the news feed item being favorited
-		newsFeedService := factory.NewsFeed()
 		message := model.NewNewsItem()
 
-		if err := newsFeedService.LoadByURL(session, auth.UserID, t.ID, &message); err != nil {
+		if err := loadNewsItemByStatusID(factory, session, auth.UserID, t.ID, &message); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Loading message")
 		}
 
 		// Save the Response via SetResponse, which publishes the activity, keeps Likes and Dislikes
 		// mutually exclusive, and makes this endpoint idempotent -- as the Mastodon API requires,
 		// since un-favouriting has its own endpoint (see PostStatus_Unfavourite, below).
-		responseService := factory.Response()
-
-		if err := responseService.SetResponse(session, &user, message.URL, vocab.ActivityTypeLike, "👍"); err != nil {
+		if err := factory.Response().SetResponse(session, &user, message.URL, vocab.ActivityTypeLike, "👍"); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Saving response")
 		}
 
-		// Read the active Response back, so the caller is returned the record that actually
-		// persisted -- which, for a favourite that lost a creation race, is the winner's.
-		response := model.NewResponse()
-
-		if err := responseService.LoadByUserAndObject(session, auth.UserID, message.URL, vocab.ActivityTypeLike, &response); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Loading response")
-		}
-
-		return response.Toot(), nil
+		// Reload the message so the returned Status reflects the new response
+		return reloadedStatus(factory, session, auth, message.NewsItemID, location)
 	}
 }
 
@@ -299,28 +289,26 @@ func PostStatus_Unfavourite(serverFactory *server.Factory) func(model.Authorizat
 
 		defer cancel()
 
-		// Search for the Response in the database
-		responseService := factory.Response()
-		response := model.NewResponse()
+		// Load the User
+		user := model.NewUser()
 
-		if err := responseService.LoadByUserAndObject(session, auth.UserID, t.ID, vocab.ActivityTypeLike, &response); err != nil {
-
-			// If the response doesn't exist
-			if derp.IsNotFound(err) {
-				return response.Toot(), nil
-			}
-
-			// Otherwise, return a legitimate error
-			return object.Status{}, derp.Wrap(err, location, "Loading response")
+		if err := factory.User().LoadByID(session, auth.UserID, &user); err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Loading user")
 		}
 
-		// Fall through means a response exists.  Delete it
-		if err := responseService.Delete(session, &response, "Deleted via Mastodon API"); err != nil {
+		// Load the news feed item being un-favorited
+		message := model.NewNewsItem()
+
+		if err := loadNewsItemByStatusID(factory, session, auth.UserID, t.ID, &message); err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Loading message")
+		}
+
+		// UnsetResponse is a no-op when there is no favourite, so this is idempotent
+		if err := factory.Response().UnsetResponse(session, &user, message.URL, vocab.ActivityTypeLike); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Deleting response")
 		}
 
-		// Return success
-		return response.Toot(), nil
+		return reloadedStatus(factory, session, auth, message.NewsItemID, location)
 	}
 }
 
