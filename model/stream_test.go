@@ -215,11 +215,11 @@ func TestStream_JSON(t *testing.T) {
 
 	test(Stream{
 		StartDate: datetime.DateTime{Time: time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)},
-	}, `"StartDate":"2009-11-17T20:34:58.651387237Z"`)
+	}, `"startDate":"2009-11-17T20:34:58.651387237Z"`)
 
 	test(Stream{
 		EndDate: datetime.DateTime{Time: time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)},
-	}, `"EndDate":"2009-11-17T20:34:58.651387237Z"`)
+	}, `"endDate":"2009-11-17T20:34:58.651387237Z"`)
 }
 
 // TestStreamSchema_Syndication pins how Stream.Syndication is written.  It is a delta.Slice,

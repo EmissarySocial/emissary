@@ -19,15 +19,15 @@ import (
 // GET /oauth/authorize
 // Returns: Authorization code
 type OAuthAuthorizationRequest struct {
-	ResponseType        string `query:"response_type"         form:"response_type"`
-	ClientID            string `query:"client_id"             form:"client_id"`
-	RedirectURI         string `query:"redirect_uri"          form:"redirect_uri"`
-	Scope               string `query:"scope"                 form:"scope"`
-	State               string `query:"state"                 form:"state"`
-	CodeChallenge       string `query:"code_challenge"        form:"code_challenge"`
-	CodeChallengeMethod string `query:"code_challenge_method" form:"code_challenge_method"`
-	ForceLogin          bool   `query:"force_login"           form:"force_login"`
-	Language            string `query:"language"              form:"language"`
+	ResponseType        string `json:"responseType"        query:"response_type"         form:"response_type"`
+	ClientID            string `json:"clientId"            query:"client_id"             form:"client_id"`
+	RedirectURI         string `json:"redirectUri"         query:"redirect_uri"          form:"redirect_uri"`
+	Scope               string `json:"scope"               query:"scope"                 form:"scope"`
+	State               string `json:"state"               query:"state"                 form:"state"`
+	CodeChallenge       string `json:"codeChallenge"       query:"code_challenge"        form:"code_challenge"`
+	CodeChallengeMethod string `json:"codeChallengeMethod" query:"code_challenge_method" form:"code_challenge_method"`
+	ForceLogin          bool   `json:"forceLogin"          query:"force_login"           form:"force_login"`
+	Language            string `json:"language"            query:"language"              form:"language"`
 }
 
 // NewOAuthAuthorizationRequest returns a fully initialized, empty OAuthAuthorizationRequest

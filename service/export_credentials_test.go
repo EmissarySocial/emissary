@@ -34,9 +34,12 @@ func TestExport_UserOmitsCredentials(t *testing.T) {
 	require.Contains(t, string(document), "Example Person")
 }
 
-// TestExport_FollowingOmitsSecret pins the same property for a Following, whose Secret
-// authenticates Emissary to the remote feed.
-func TestExport_FollowingOmitsSecret(t *testing.T) {
+// TestExport_FollowingCarriesSecret records that a Following's Secret travels with the export.
+//
+// RULE: This is deliberate, and the opposite of the User rule above.  The export's consumer is
+// the server a User is migrating TO, which needs this record whole.  The field is also inert --
+// it was the WebSub HMAC key, and WebSub was removed, so nothing reads it any more.
+func TestExport_FollowingCarriesSecret(t *testing.T) {
 
 	following := model.NewFollowing()
 	following.Secret = "CANARY-FEED-SECRET"
@@ -45,9 +48,26 @@ func TestExport_FollowingOmitsSecret(t *testing.T) {
 	document, err := json.Marshal(following)
 	require.Nil(t, err)
 
-	require.NotContains(t, string(document), following.Secret, "export must not carry the feed secret")
-	require.NotContains(t, string(document), `"Secret"`)
+	require.Contains(t, string(document), following.Secret, "the destination server receives this record whole")
 	require.Contains(t, string(document), "Example Feed")
+}
+
+// TestExport_MerchantAccountCarriesPlaintext pins the same allowance for a MerchantAccount.
+//
+// RULE: service.MerchantAccount.ExportDocument goes further still -- it DECRYPTS the vault and
+// writes it into an explicit map, so a User's merchant credentials move with them on purpose.
+// This test guards the struct half: Plaintext must not quietly acquire a `json:"-"`.
+func TestExport_MerchantAccountCarriesPlaintext(t *testing.T) {
+
+	merchantAccount := model.NewMerchantAccount()
+	merchantAccount.Plaintext.SetString("publishableKey", "CANARY-PUBLISHABLE-KEY")
+	merchantAccount.Name = "Example Merchant"
+
+	document, err := json.Marshal(merchantAccount)
+	require.Nil(t, err)
+
+	require.Contains(t, string(document), "CANARY-PUBLISHABLE-KEY", "merchant settings move with the User")
+	require.Contains(t, string(document), "Example Merchant")
 }
 
 // TestExport_UserImportIgnoresCredentials proves the round trip is not silently broken:

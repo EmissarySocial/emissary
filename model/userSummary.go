@@ -7,16 +7,16 @@ import (
 
 // UserSummary is used as a lightweight, read-only summary of a user record.
 type UserSummary struct {
-	UserID        primitive.ObjectID `bson:"_id"`
-	IconID        primitive.ObjectID `bson:"iconId"`
-	DisplayName   string             `bson:"displayName"`
-	EmailAddress  string             `bson:"emailAddress"`
-	Username      string             `bson:"username"`
-	ProfileURL    string             `bson:"profileUrl"`
-	StatusMessage string             `bson:"statusMessage"`
-	Hashtags      sliceof.String     `bson:"hashtags"`
-	Shuffle       int64              `bson:"shuffle"`
-	MovedTo       string             `bson:"movedTo"`
+	UserID        primitive.ObjectID `json:"userId"        bson:"_id"`
+	IconID        primitive.ObjectID `json:"iconId"        bson:"iconId"`
+	DisplayName   string             `json:"displayName"   bson:"displayName"`
+	EmailAddress  string             `json:"emailAddress"  bson:"emailAddress"`
+	Username      string             `json:"username"      bson:"username"`
+	ProfileURL    string             `json:"profileUrl"    bson:"profileUrl"`
+	StatusMessage string             `json:"statusMessage" bson:"statusMessage"`
+	Hashtags      sliceof.String     `json:"hashtags"      bson:"hashtags"`
+	Shuffle       int64              `json:"shuffle"       bson:"shuffle"`
+	MovedTo       string             `json:"movedTo"       bson:"movedTo"`
 }
 
 // NewUserSummary returns a fully initialized, empty UserSummary

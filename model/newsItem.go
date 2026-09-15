@@ -15,21 +15,21 @@ import (
 // NewsItem represents a single item in a User's news feed.
 // NewsItems are not activities, but are the aggregate result of all activities performed on a single ActivityStreams document.
 type NewsItem struct {
-	NewsItemID  primitive.ObjectID         `bson:"_id"`                   // Unique ID of the NewsItem
-	UserID      primitive.ObjectID         `bson:"userId"`                // Unique ID of the User who owns this NewsItem
-	FollowingID primitive.ObjectID         `bson:"followingId,omitempty"` // Unique ID of the Following record that generated this NewsItem
-	FolderID    primitive.ObjectID         `bson:"folderId,omitempty"`    // Unique ID of the Folder where this NewsItem is stored
-	SocialRole  string                     `bson:"socialRole,omitempty"`  // Role this message plays in social integrations ("Article", "Note", etc)
-	Origin      OriginLink                 `bson:"origin,omitempty"`      // Link to the original source of this NewsItem (the following and website that originally published it)
-	References  sliceof.Object[OriginLink] `bson:"references,omitempty"`  // Links to other references to this NewsItem - likes, reposts, or comments that informed us of its existence
-	URL         string                     `bson:"url"`                   // URL of this NewsItem
-	Context     string                     `bson:"context,omitempty"`     // The context of this NewsItem (e.g. the conversation thread)
-	InReplyTo   string                     `bson:"inReplyTo,omitempty"`   // URL this message is in reply to
-	Response    id.Map                     `bson:"response,omitempty"`    // Map of responses: Like, Dislike, Announce, etc.
-	StateID     string                     `bson:"stateId"`               // StateID of this message (UNREAD,READ,MUTED,NEW-REPLIES)
-	PublishDate int64                      `bson:"publishDate,omitempty"` // Unix epoch SECONDS when this NewsItem was published
-	ReadDate    int64                      `bson:"readDate"`              // Unix epoch SECONDS when this NewsItem was read (math.MaxInt64 = unread).
-	Rank        int64                      `bson:"rank"`                  // Sort rank for this message (publishDate * 1000 + sequence number)
+	NewsItemID  primitive.ObjectID         `json:"newsItemId"  bson:"_id"`                   // Unique ID of the NewsItem
+	UserID      primitive.ObjectID         `json:"userId"      bson:"userId"`                // Unique ID of the User who owns this NewsItem
+	FollowingID primitive.ObjectID         `json:"followingId" bson:"followingId,omitempty"` // Unique ID of the Following record that generated this NewsItem
+	FolderID    primitive.ObjectID         `json:"folderId"    bson:"folderId,omitempty"`    // Unique ID of the Folder where this NewsItem is stored
+	SocialRole  string                     `json:"socialRole"  bson:"socialRole,omitempty"`  // Role this message plays in social integrations ("Article", "Note", etc)
+	Origin      OriginLink                 `json:"origin"      bson:"origin,omitempty"`      // Link to the original source of this NewsItem (the following and website that originally published it)
+	References  sliceof.Object[OriginLink] `json:"references"  bson:"references,omitempty"`  // Links to other references to this NewsItem - likes, reposts, or comments that informed us of its existence
+	URL         string                     `json:"url"         bson:"url"`                   // URL of this NewsItem
+	Context     string                     `json:"context"     bson:"context,omitempty"`     // The context of this NewsItem (e.g. the conversation thread)
+	InReplyTo   string                     `json:"inReplyTo"   bson:"inReplyTo,omitempty"`   // URL this message is in reply to
+	Response    id.Map                     `json:"response"    bson:"response,omitempty"`    // Map of responses: Like, Dislike, Announce, etc.
+	StateID     string                     `json:"stateId"     bson:"stateId"`               // StateID of this message (UNREAD,READ,MUTED,NEW-REPLIES)
+	PublishDate int64                      `json:"publishDate" bson:"publishDate,omitempty"` // Unix epoch SECONDS when this NewsItem was published
+	ReadDate    int64                      `json:"readDate"    bson:"readDate"`              // Unix epoch SECONDS when this NewsItem was read (math.MaxInt64 = unread).
+	Rank        int64                      `json:"rank"        bson:"rank"`                  // Sort rank for this message (publishDate * 1000 + sequence number)
 
 	journal.Journal `json:"-" bson:",inline"`
 }

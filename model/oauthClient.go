@@ -13,15 +13,15 @@ import (
 
 // OAuthClient is a third-party application that has been registered to use this server's OAuth API
 type OAuthClient struct {
-	ClientID     primitive.ObjectID `bson:"_id"`          // Unique identifier for this Client record
-	ClientSecret string             `bson:"clientSecret"` // Shared secret used to retrieve OAuth Tokens
-	ClientURL    string             `bson:"clientUrl"`    // CIMD URL of the actor that created this Client
-	Name         string             `bson:"name"`         // Human-friendly name of the Client
-	Summary      string             `bson:"summary"`      // Human-friendly summary/description of the Client
-	IconURL      string             `bson:"iconUrl"`      // URL of an icon image to display with the Client's name
-	Website      string             `bson:"website"`      // Human-friendly website URL for the Client
-	RedirectURIs sliceof.String     `bson:"redirectUris"` // Slice of URLs that the Client is allowed to redirect Users to
-	Scopes       sliceof.String     `bson:"scopes"`       // OAuth authorization scopes approved for use by this Client
+	ClientID     primitive.ObjectID `json:"clientId"     bson:"_id"`          // Unique identifier for this Client record
+	ClientSecret string             `json:"-"            bson:"clientSecret"` // Shared secret used to retrieve OAuth Tokens
+	ClientURL    string             `json:"clientUrl"    bson:"clientUrl"`    // CIMD URL of the actor that created this Client
+	Name         string             `json:"name"         bson:"name"`         // Human-friendly name of the Client
+	Summary      string             `json:"summary"      bson:"summary"`      // Human-friendly summary/description of the Client
+	IconURL      string             `json:"iconUrl"      bson:"iconUrl"`      // URL of an icon image to display with the Client's name
+	Website      string             `json:"website"      bson:"website"`      // Human-friendly website URL for the Client
+	RedirectURIs sliceof.String     `json:"redirectUris" bson:"redirectUris"` // Slice of URLs that the Client is allowed to redirect Users to
+	Scopes       sliceof.String     `json:"scopes"       bson:"scopes"`       // OAuth authorization scopes approved for use by this Client
 
 	journal.Journal `json:"-" bson:",inline"`
 }

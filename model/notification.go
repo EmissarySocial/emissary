@@ -18,18 +18,18 @@ import (
 // created centrally on the inbound ActivityPub path (see
 // service.Notification.NotifyFromActivity) regardless of Following state.
 type Notification struct {
-	NotificationID primitive.ObjectID `bson:"_id"`                     // Unique ID for this Notification
-	UserID         primitive.ObjectID `bson:"userId"`                  // Recipient (local User) who owns this Notification
-	Type           string             `bson:"type"`                    // DIRECT/MENTION/REPLY/LIKE/DISLIKE/ANNOUNCE/FOLLOW
-	Subtype        string             `bson:"subtype,omitempty"`       // Per-Type discriminant: MLS/PLAINTEXT for DIRECT, otherwise FOLLOWING/NOT_FOLLOWING (see notification_constants.go)
-	Actor          PersonLink         `bson:"actor"`                   // Who did the thing
-	ActivityID     string             `bson:"activityId,omitempty"`    // AP id of the triggering activity (dedup + undo)
-	ObjectURL      string             `bson:"objectUrl,omitempty"`     // The thing acted on / the mentioning object
-	ObjectSummary  string             `bson:"objectSummary,omitempty"` // Display snapshot (title/excerpt). PLAIN TEXT ONLY.
-	StreamID       primitive.ObjectID `bson:"streamId,omitempty"`      // Local Stream involved, if any (cleanup + stream-page query)
-	InReplyTo      string             `bson:"inReplyTo,omitempty"`     // For REPLY/MENTION threading into browse view
-	ReadDate       int64              `bson:"readDate"`                // Unix epoch SECONDS when read (math.MaxInt64 = unread)
-	Labels         metadata.LabelSet  `bson:"-" json:"-"`              // The viewer's rule verdict for the Actor, stamped at render time. Never persisted (R8: derive, don't record).
+	NotificationID primitive.ObjectID `json:"notificationId" bson:"_id"`                     // Unique ID for this Notification
+	UserID         primitive.ObjectID `json:"userId"         bson:"userId"`                  // Recipient (local User) who owns this Notification
+	Type           string             `json:"type"           bson:"type"`                    // DIRECT/MENTION/REPLY/LIKE/DISLIKE/ANNOUNCE/FOLLOW
+	Subtype        string             `json:"subtype"        bson:"subtype,omitempty"`       // Per-Type discriminant: MLS/PLAINTEXT for DIRECT, otherwise FOLLOWING/NOT_FOLLOWING (see notification_constants.go)
+	Actor          PersonLink         `json:"actor"          bson:"actor"`                   // Who did the thing
+	ActivityID     string             `json:"activityId"     bson:"activityId,omitempty"`    // AP id of the triggering activity (dedup + undo)
+	ObjectURL      string             `json:"objectUrl"      bson:"objectUrl,omitempty"`     // The thing acted on / the mentioning object
+	ObjectSummary  string             `json:"objectSummary"  bson:"objectSummary,omitempty"` // Display snapshot (title/excerpt). PLAIN TEXT ONLY.
+	StreamID       primitive.ObjectID `json:"streamId"       bson:"streamId,omitempty"`      // Local Stream involved, if any (cleanup + stream-page query)
+	InReplyTo      string             `json:"inReplyTo"      bson:"inReplyTo,omitempty"`     // For REPLY/MENTION threading into browse view
+	ReadDate       int64              `json:"readDate"       bson:"readDate"`                // Unix epoch SECONDS when read (math.MaxInt64 = unread)
+	Labels         metadata.LabelSet  `bson:"-"                       json:"-"`              // The viewer's rule verdict for the Actor, stamped at render time. Never persisted (R8: derive, don't record).
 
 	journal.Journal `json:"-" bson:",inline"`
 }

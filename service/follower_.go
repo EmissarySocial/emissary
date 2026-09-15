@@ -267,7 +267,8 @@ func (service *Follower) HardDeleteByID(session data.Session, userID primitive.O
 
 	const location = "service.Follower.HardDeleteByID"
 
-	criteria := exp.Equal("userId", userID).AndEqual("_id", followerID)
+	// `parentId` is the owner field on a Follower; `_id` already makes the match unique.
+	criteria := exp.Equal("parentId", userID).AndEqual("_id", followerID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
 		return derp.Wrap(err, location, "Deleting Follower", "userID: "+userID.Hex(), "followerID: "+followerID.Hex())

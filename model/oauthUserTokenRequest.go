@@ -14,14 +14,14 @@ import (
 // Returns: Token
 // Obtain an access token, to be used during API calls that are not public
 type OAuthUserTokenRequest struct {
-	GrantType    string `form:"grant_type"`
-	Code         string `form:"code"`
-	RefreshToken string `form:"refresh_token"` // The rotating refresh token, presented for a refresh_token grant (RFC 6749 §6)
-	ClientID     string `form:"client_id"`
-	ClientSecret string `form:"client_secret"`
-	RedirectURI  string `form:"redirect_uri"`
-	Scope        string `form:"scope"`
-	CodeVerifier string `form:"code_verifier"` // PKCE (RFC 7636) verifier, presented to redeem a code bound to a code_challenge
+	GrantType    string `json:"grantType"    form:"grant_type"`
+	Code         string `json:"code"         form:"code"`
+	RefreshToken string `json:"refreshToken" form:"refresh_token"` // The rotating refresh token, presented for a refresh_token grant (RFC 6749 §6)
+	ClientID     string `json:"clientId"     form:"client_id"`
+	ClientSecret string `json:"clientSecret" form:"client_secret"`
+	RedirectURI  string `json:"redirectUri"  form:"redirect_uri"`
+	Scope        string `json:"scope"        form:"scope"`
+	CodeVerifier string `json:"codeVerifier" form:"code_verifier"` // PKCE (RFC 7636) verifier, presented to redeem a code bound to a code_challenge
 }
 
 // NewOAuthUserTokenRequest returns a fully initialized, empty OAuthUserTokenRequest

@@ -11,16 +11,16 @@ import (
 // OutboxMessage represents a single item in a User's inbox or outbox.  It is loosely modelled on the OutboxMessageStreams
 // standard, and can be converted into a strict go-fed streams.Type object.
 type OutboxMessage struct {
-	OutboxMessageID primitive.ObjectID `bson:"_id"`          // Unique ID of the OutboxMessage
-	ActorID         primitive.ObjectID `bson:"actorId"`      // Unique ID of the User who owns this OutboxMessage (in their inbox or outbox)
-	ActorType       string             `bson:"actorType"`    // Type of the parent object (User or Stream)
-	ActorURL        string             `bson:"actorUrl"`     // URL of the parent object (User or Stream)
-	ActivityType    string             `bson:"activityType"` // Type of the activity (Create, Follow, Like, Block, etc.)
-	ActivityURL     string             `bson:"activityUrl"`  // URL of the ActivityPub object (if applicable)
-	ObjectID        string             `bson:"objectId"`     // URL of the object (if applicable)
-	Permissions     Permissions        `bson:"permissions"`  // List of permissions for this OutboxMessage
+	OutboxMessageID primitive.ObjectID `json:"outboxMessageId" bson:"_id"`          // Unique ID of the OutboxMessage
+	ActorID         primitive.ObjectID `json:"actorId"         bson:"actorId"`      // Unique ID of the User who owns this OutboxMessage (in their inbox or outbox)
+	ActorType       string             `json:"actorType"       bson:"actorType"`    // Type of the parent object (User or Stream)
+	ActorURL        string             `json:"actorUrl"        bson:"actorUrl"`     // URL of the parent object (User or Stream)
+	ActivityType    string             `json:"activityType"    bson:"activityType"` // Type of the activity (Create, Follow, Like, Block, etc.)
+	ActivityURL     string             `json:"activityUrl"     bson:"activityUrl"`  // URL of the ActivityPub object (if applicable)
+	ObjectID        string             `json:"objectId"        bson:"objectId"`     // URL of the object (if applicable)
+	Permissions     Permissions        `json:"permissions"     bson:"permissions"`  // List of permissions for this OutboxMessage
 
-	journal.Journal `bson:",inline"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 // NewOutboxMessage returns a fully initialized OutboxMessage record

@@ -8,9 +8,9 @@ import (
 
 // OutboxMessageSummary is an abbreviated OutboxMessage, used when paging through an outbox
 type OutboxMessageSummary struct {
-	OutboxMessageID primitive.ObjectID `bson:"_id"`
-	ObjectID        string             `bson:"objectId"`
-	CreateDate      int64              `bson:"createDate"` // Unix epoch MILLISECONDS (journal projection; used as an opaque paging cursor)
+	OutboxMessageID primitive.ObjectID `json:"outboxMessageId" bson:"_id"`
+	ObjectID        string             `json:"objectId"        bson:"objectId"`
+	CreateDate      int64              `json:"createDate"      bson:"createDate"` // Unix epoch MILLISECONDS (journal projection; used as an opaque paging cursor)
 }
 
 // NewOutboxMessageSummary returns a fully initialized, empty OutboxMessageSummary
