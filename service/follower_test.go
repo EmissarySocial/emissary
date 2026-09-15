@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"sort"
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -24,10 +25,11 @@ import (
 
 // followerCollection is an in-memory data.Collection that holds model.Follower records
 type followerCollection struct {
-	records     []model.Follower
-	saved       []model.Follower // every record passed to Save, in order
-	deleted     []model.Follower // every record passed to Delete, in order
-	deleteError error            // when set, Delete fails with this instead of deleting
+	records         []model.Follower
+	saved           []model.Follower // every record passed to Save, in order
+	deleted         []model.Follower // every record passed to Delete, in order
+	deleteError     error            // when set, Delete fails with this instead of deleting
+	hardDeleteError error            // when set, HardDelete fails with this instead of deleting
 }
 
 // Context implements the data.Collection interface, returning a background context
@@ -38,9 +40,60 @@ func (c *followerCollection) Count(exp.Expression, ...option.Option) (int64, err
 	return 0, derp.Internal("test", "unused")
 }
 
-// Query implements the data.Collection interface. Unused by these tests.
-func (c *followerCollection) Query(any, exp.Expression, ...option.Option) error {
-	return derp.Internal("test", "unused")
+// Query fills the target with the IDs of every matching Follower, honoring a createDate sort.
+// Only []model.IDOnly is supported, which is what QueryIDOnly -- and so every export -- asks for.
+func (c *followerCollection) Query(target any, criteria exp.Expression, options ...option.Option) error {
+
+	result, ok := target.(*[]model.IDOnly)
+
+	if !ok {
+		return derp.Internal("test", "unexpected target type")
+	}
+
+	// Collect every record the criteria admits
+	matches := make([]model.Follower, 0)
+
+	for _, record := range c.records {
+		if matchesFollower(criteria, record) {
+			matches = append(matches, record)
+		}
+	}
+
+	// Apply the caller's sort order, then map down to IDs
+	sortFollowers(matches, options...)
+
+	for _, record := range matches {
+		*result = append(*result, model.IDOnly{ID: record.FollowerID})
+	}
+
+	return nil
+}
+
+// sortFollowers orders records in place using a createDate SortOption, the only
+// ordering that the Follower service asks this fake for
+func sortFollowers(records []model.Follower, options ...option.Option) {
+
+	for _, value := range options {
+
+		sortOption, ok := value.(option.SortOption)
+
+		if !ok {
+			continue
+		}
+
+		if sortOption.FieldName != "createDate" {
+			continue
+		}
+
+		sort.SliceStable(records, func(a int, b int) bool {
+
+			if sortOption.IsDescending() {
+				return records[a].CreateDate > records[b].CreateDate
+			}
+
+			return records[a].CreateDate < records[b].CreateDate
+		})
+	}
 }
 
 // Iterator returns every matching Follower, in insertion order
@@ -161,52 +214,91 @@ func (c *followerCollection) Delete(object data.Object, _ string) error {
 	return nil
 }
 
-// HardDelete implements the data.Collection interface. Unused by these tests.
-func (c *followerCollection) HardDelete(exp.Expression) error {
-	return derp.Internal("test", "unused")
+// HardDelete permanently drops every Follower that matches the criteria.  Unlike Delete,
+// nothing is left behind to find, which is the whole point of the call under test.
+func (c *followerCollection) HardDelete(criteria exp.Expression) error {
+
+	if c.hardDeleteError != nil {
+		return c.hardDeleteError
+	}
+
+	remaining := make([]model.Follower, 0, len(c.records))
+
+	for _, record := range c.records {
+		if !matchesFollower(criteria, record) {
+			remaining = append(remaining, record)
+		}
+	}
+
+	c.records = remaining
+	return nil
 }
 
-// matchesFollower reports whether a Follower satisfies a criteria on _id, parentId, method,
-// actor.emailAddress, or deleteDate -- every field that LoadBySecret and LoadByEmailAddress query
+// matchesFollower reports whether a Follower satisfies a criteria built from Equal and
+// NotEqual predicates, which is every criteria the Follower service builds
 func matchesFollower(criteria exp.Expression, record model.Follower) bool {
 
-	// Any unsupported field or operator conservatively counts as "no match".
 	return criteria.Match(func(predicate exp.Predicate) bool {
 
-		if predicate.Operator != exp.OperatorEqual {
+		equals, supported := followerFieldEquals(predicate, record)
+
+		// RULE: An unsupported field or value type is never a match, whichever
+		// operator asked.  NotEqual must not turn "I don't know" into TRUE.
+		if !supported {
 			return false
 		}
 
-		switch predicate.Field {
+		switch predicate.Operator {
 
-		case "_id":
-			value, ok := predicate.Value.(primitive.ObjectID)
-			return ok && record.FollowerID == value
+		case exp.OperatorEqual:
+			return equals
 
-		case "parentId":
-			value, ok := predicate.Value.(primitive.ObjectID)
-			return ok && record.ParentID == value
-
-		case "type":
-			value, ok := predicate.Value.(string)
-			return ok && record.ParentType == value
-
-		case "method":
-			value, ok := predicate.Value.(string)
-			return ok && record.Method == value
-
-		case "actor.emailAddress":
-			value, ok := predicate.Value.(string)
-			return ok && record.Actor.EmailAddress == value
-
-		case "deleteDate":
-			value, ok := predicate.Value.(int)
-			return ok && record.DeleteDate == int64(value)
+		case exp.OperatorNotEqual:
+			return !equals
 
 		default:
 			return false
 		}
 	})
+}
+
+// followerFieldEquals compares a Follower against a single predicate, returning whether the
+// values are equal and whether the field and value type were understood at all
+func followerFieldEquals(predicate exp.Predicate, record model.Follower) (bool, bool) {
+
+	switch predicate.Field {
+
+	case "_id":
+		value, ok := predicate.Value.(primitive.ObjectID)
+		return ok && record.FollowerID == value, ok
+
+	case "parentId":
+		value, ok := predicate.Value.(primitive.ObjectID)
+		return ok && record.ParentID == value, ok
+
+	case "type":
+		value, ok := predicate.Value.(string)
+		return ok && record.ParentType == value, ok
+
+	case "method":
+		value, ok := predicate.Value.(string)
+		return ok && record.Method == value, ok
+
+	case "stateId":
+		value, ok := predicate.Value.(string)
+		return ok && record.StateID == value, ok
+
+	case "actor.emailAddress":
+		value, ok := predicate.Value.(string)
+		return ok && record.Actor.EmailAddress == value, ok
+
+	case "deleteDate":
+		value, ok := predicate.Value.(int)
+		return ok && record.DeleteDate == int64(value), ok
+
+	default:
+		return false, false
+	}
 }
 
 // followerSession hands out a single shared followerCollection
@@ -420,4 +512,87 @@ func newEmailFollower(parentID primitive.ObjectID, emailAddress string) model.Fo
 	follower.Actor.EmailAddress = emailAddress
 
 	return follower
+}
+
+/******************************************
+ * HardDeleteByID -- the undo path for an import
+ ******************************************/
+
+// newOwnedFollower returns a User Follower belonging to the provided parent
+func newOwnedFollower(parentID primitive.ObjectID) model.Follower {
+
+	follower := model.NewFollower()
+	follower.ParentType = model.FollowerTypeUser
+	follower.ParentID = parentID
+
+	return follower
+}
+
+// TestFollower_HardDeleteByID_RemovesTheRecord is the second half of the same bug: the criteria
+// queried `userId`, so UndoImport matched nothing and reported success anyway.
+func TestFollower_HardDeleteByID_RemovesTheRecord(t *testing.T) {
+
+	userID := primitive.NewObjectID()
+	follower := newOwnedFollower(userID)
+
+	service, session := newFollowerService(follower)
+
+	require.Nil(t, service.HardDeleteByID(session, userID, follower.FollowerID))
+	require.Empty(t, session.collection.records)
+}
+
+// TestFollower_HardDeleteByID_IsScopedToTheOwner confirms a valid FollowerID alone cannot
+// reach across accounts
+func TestFollower_HardDeleteByID_IsScopedToTheOwner(t *testing.T) {
+
+	follower := newOwnedFollower(primitive.NewObjectID())
+
+	service, session := newFollowerService(follower)
+
+	require.Nil(t, service.HardDeleteByID(session, primitive.NewObjectID(), follower.FollowerID))
+	require.Len(t, session.collection.records, 1)
+}
+
+// TestFollower_HardDeleteByID_LeavesSiblingsAlone proves the criteria removes one record and
+// not every Follower the User owns
+func TestFollower_HardDeleteByID_LeavesSiblingsAlone(t *testing.T) {
+
+	userID := primitive.NewObjectID()
+	doomed := newOwnedFollower(userID)
+	survivor := newOwnedFollower(userID)
+
+	service, session := newFollowerService(doomed, survivor)
+
+	require.Nil(t, service.HardDeleteByID(session, userID, doomed.FollowerID))
+	require.Len(t, session.collection.records, 1)
+	require.Equal(t, survivor.FollowerID, session.collection.records[0].FollowerID)
+}
+
+// TestFollower_HardDeleteByID_UnknownIDIsNotAnError records that deleting a Follower that
+// isn't there succeeds quietly, which is what makes the wrong-field bug so hard to see
+func TestFollower_HardDeleteByID_UnknownIDIsNotAnError(t *testing.T) {
+
+	userID := primitive.NewObjectID()
+	follower := newOwnedFollower(userID)
+
+	service, session := newFollowerService(follower)
+
+	require.Nil(t, service.HardDeleteByID(session, userID, primitive.NewObjectID()))
+	require.Len(t, session.collection.records, 1)
+}
+
+// TestFollower_HardDeleteByID_ReportsDatabaseFailure confirms a failed delete is wrapped and
+// returned, rather than swallowed into the same silence as a query that matched nothing
+func TestFollower_HardDeleteByID_ReportsDatabaseFailure(t *testing.T) {
+
+	userID := primitive.NewObjectID()
+	follower := newOwnedFollower(userID)
+
+	service, session := newFollowerService(follower)
+	session.collection.hardDeleteError = derp.Internal("test", "database is on fire")
+
+	err := service.HardDeleteByID(session, userID, follower.FollowerID)
+
+	require.NotNil(t, err)
+	require.Len(t, session.collection.records, 1)
 }
