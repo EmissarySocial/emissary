@@ -143,7 +143,7 @@ func reloadedStatus(factory *service.Factory, session data.Session, auth model.A
 		return object.Status{}, derp.Wrap(err, location, "Reloading message")
 	}
 
-	return newsItemsToToots(factory, session, auth, []model.NewsItem{newsItem})[0], nil
+	return newsItemsToPosts(factory, session, auth, []model.NewsItem{newsItem})[0], nil
 }
 
 // getStreamFromURL is a convenience function that combines the following
