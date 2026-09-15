@@ -13,18 +13,18 @@ import (
 
 // Import tracks the progress of migrating one account from another server into this one
 type Import struct {
-	ImportID       primitive.ObjectID `json:"importId" bson:"_id"`                // Unique identifier for this Import record
-	UserID         primitive.ObjectID `json:"userId" bson:"userId"`               // User profile that we're importing INTO
-	SourceID       string             `json:"sourceId" bson:"sourceId"`           // URL or Handle of the account being migrated
-	SourceURL      string             `json:"sourceUrl" bson:"sourceUrl"`         // URL (ActivityPub ID) of the source account being migrated
-	StateID        string             `json:"stateId" bson:"stateId"`             // Current state of this import process
-	Message        string             `json:"message" bson:"message"`             // Human-friendly description of the status of this import process
-	OAuthConfig    oauth2.Config      `json:"-" bson:"oauthConfig"`               // OAuth 2.0 configuration information
-	OAuthToken     *oauth2.Token      `json:"-" bson:"oauthToken"`                // OAuth token provided by the source server
-	OAuthChallenge []byte             `json:"-" bson:"oauthChallenge"`            // OAuth challenge token used of PKCE
-	TotalItems     int                `json:"totalItems" bson:"totalItems"`       // The total number of items to be imported (available after the import plan is made)
-	CompleteItems  int                `json:"completeItems" bson:"completeItems"` // The number of items that have completed
-	PurgeDate      int64              `json:"purgeDate" bson:"purgeDate"`         // The Unix epoch (in seconds) when this Import can be purged along with all of its items.
+	ImportID       primitive.ObjectID `json:"importId"      bson:"_id"`            // Unique identifier for this Import record
+	UserID         primitive.ObjectID `json:"userId"        bson:"userId"`         // User profile that we're importing INTO
+	SourceID       string             `json:"sourceId"      bson:"sourceId"`       // URL or Handle of the account being migrated
+	SourceURL      string             `json:"sourceUrl"     bson:"sourceUrl"`      // URL (ActivityPub ID) of the source account being migrated
+	StateID        string             `json:"stateId"       bson:"stateId"`        // Current state of this import process
+	Message        string             `json:"message"       bson:"message"`        // Human-friendly description of the status of this import process
+	OAuthConfig    oauth2.Config      `json:"-"             bson:"oauthConfig"`    // OAuth 2.0 configuration information
+	OAuthToken     *oauth2.Token      `json:"-"             bson:"oauthToken"`     // OAuth token provided by the source server
+	OAuthChallenge []byte             `json:"-"             bson:"oauthChallenge"` // OAuth challenge token used of PKCE
+	TotalItems     int                `json:"totalItems"    bson:"totalItems"`     // The total number of items to be imported (available after the import plan is made)
+	CompleteItems  int                `json:"completeItems" bson:"completeItems"`  // The number of items that have completed
+	PurgeDate      int64              `json:"purgeDate"     bson:"purgeDate"`      // The Unix epoch (in seconds) when this Import can be purged along with all of its items.
 
 	journal.Journal `json:"-" bson:",inline"`
 }

@@ -5,17 +5,17 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 // FollowingSummary is an abbreviated Following, used when listing many Followings at once
 type FollowingSummary struct {
 	FollowingID primitive.ObjectID `json:"followingId" bson:"_id"`
-	Username    string             `json:"username" bson:"username"`
-	URL         string             `json:"url" bson:"url"`
-	Label       string             `json:"label" bson:"label"`
-	Folder      string             `json:"folder" bson:"folder"`
-	FolderID    primitive.ObjectID `json:"folderId" bson:"folderId"`
-	IconURL     string             `json:"iconUrl" bson:"iconUrl"`
-	Method      string             `json:"method" bson:"method"`
-	Status      string             `json:"status" bson:"status"`
-	LastPolled  int64              `json:"lastPolled" bson:"lastPolled"` // Unix epoch SECONDS when this Following was last polled (mirrors Following.LastPolled)
-	NextPoll    int64              `json:"nextPoll" bson:"nextPoll"`     // Unix epoch SECONDS when this Following is next due to be polled (mirrors Following.NextPoll)
-	CreateDate  int64              `json:"createDate" bson:"createDate"` // Unix epoch MILLISECONDS (journal projection; used only for sort rank)
+	Username    string             `json:"username"    bson:"username"`
+	URL         string             `json:"url"         bson:"url"`
+	Label       string             `json:"label"       bson:"label"`
+	Folder      string             `json:"folder"      bson:"folder"`
+	FolderID    primitive.ObjectID `json:"folderId"    bson:"folderId"`
+	IconURL     string             `json:"iconUrl"     bson:"iconUrl"`
+	Method      string             `json:"method"      bson:"method"`
+	Status      string             `json:"status"      bson:"status"`
+	LastPolled  int64              `json:"lastPolled"  bson:"lastPolled"` // Unix epoch SECONDS when this Following was last polled (mirrors Following.LastPolled)
+	NextPoll    int64              `json:"nextPoll"    bson:"nextPoll"`   // Unix epoch SECONDS when this Following is next due to be polled (mirrors Following.NextPoll)
+	CreateDate  int64              `json:"createDate"  bson:"createDate"` // Unix epoch MILLISECONDS (journal projection; used only for sort rank)
 }
 
 // FollowingSummaryFields returns a slice of all BSON field names for a FollowingSummary

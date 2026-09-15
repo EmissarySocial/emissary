@@ -20,15 +20,15 @@ import (
 
 // SearchQuery represents a saved query that visitors can follow
 type SearchQuery struct {
-	SearchQueryID primitive.ObjectID `json:"searchQueryId" bson:"_id"`        // SearchQueryID is the unique identifier for a SearchQuery
-	URL           string             `json:"url" bson:"url"`                  // The URL where this search query originated
-	Query         string             `json:"query" bson:"query"`              // The original string used in the search query
-	Types         sliceof.String     `json:"types" bson:"types,omitempty"`    // The types of results that this query is interested in (Person, Article, Album, Audio, etc)
-	Index         sliceof.String     `json:"index" bson:"index,omitempty"`    // The parsed (and normalized) index of values in the search query
-	Tags          sliceof.String     `json:"tags" bson:"tags,omitempty"`      // The parsed (and normalized) tag values
-	Polygon       geo.Polygon        `json:"polygon" bson:"polygon,omitzero"` // Polygon to search within
-	StartDate     string             `json:"startDate" bson:"startDate"`      // The start date of the search query
-	Signature     string             `json:"signature" bson:"signature"`      // The hash of this search query
+	SearchQueryID primitive.ObjectID `json:"searchQueryId" bson:"_id"`              // SearchQueryID is the unique identifier for a SearchQuery
+	URL           string             `json:"url"           bson:"url"`              // The URL where this search query originated
+	Query         string             `json:"query"         bson:"query"`            // The original string used in the search query
+	Types         sliceof.String     `json:"types"         bson:"types,omitempty"`  // The types of results that this query is interested in (Person, Article, Album, Audio, etc)
+	Index         sliceof.String     `json:"index"         bson:"index,omitempty"`  // The parsed (and normalized) index of values in the search query
+	Tags          sliceof.String     `json:"tags"          bson:"tags,omitempty"`   // The parsed (and normalized) tag values
+	Polygon       geo.Polygon        `json:"polygon"       bson:"polygon,omitzero"` // Polygon to search within
+	StartDate     string             `json:"startDate"     bson:"startDate"`        // The start date of the search query
+	Signature     string             `json:"signature"     bson:"signature"`        // The hash of this search query
 
 	journal.Journal `json:"-" bson:",inline"`
 }

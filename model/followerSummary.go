@@ -6,10 +6,10 @@ import (
 
 // FollowerSummary is an abbreviated Follower, used when listing many Followers at once
 type FollowerSummary struct {
-	FollowerID primitive.ObjectID `json:"followerId" bson:"_id"`    // Unique identifier for this Follower
-	ParentID   primitive.ObjectID `json:"parentId" bson:"parentId"` // Unique identifier for the User that is being followed
-	Actor      PersonLink         `json:"actor" bson:"actor"`       // Person who is follower the User
-	Method     string             `json:"method" bson:"method"`     // Method of follower (e.g. "POLL", "EMAIL", "ActivityPub".)
+	FollowerID primitive.ObjectID `json:"followerId" bson:"_id"`      // Unique identifier for this Follower
+	ParentID   primitive.ObjectID `json:"parentId"   bson:"parentId"` // Unique identifier for the User that is being followed
+	Actor      PersonLink         `json:"actor"      bson:"actor"`    // Person who is follower the User
+	Method     string             `json:"method"     bson:"method"`   // Method of follower (e.g. "POLL", "EMAIL", "ActivityPub".)
 }
 
 // FollowerSummaryFields returns a slice of all BSON field names for a FollowerSummary

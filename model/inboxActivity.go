@@ -17,20 +17,20 @@ import (
 // vocab.MediaTypeMLS -- those are opaque to the server and forwarded to MLS clients as
 // requested, which is what this comment used to describe as if it were the whole type.
 type InboxActivity struct {
-	InboxActivityID primitive.ObjectID `json:"inboxActivityId" bson:"_id"`               // Unique identifier for this InboxActivity
-	UserID          primitive.ObjectID `json:"userId" bson:"userId"`                     // The user that received this InboxActivity
-	ActorID         string             `json:"actorId" bson:"actorId"`                   // The ID/URL of the actor that sent this InboxActivity (e.g. "https://example.com/users/alice")
-	ActivityID      string             `json:"activityId" bson:"activityId"`             // The ID/URL of this InboxActivity
-	ActivityType    string             `json:"activityType" bson:"activityType"`         // The type of Activity received (Create, Update, Like, Follow, etc.)
-	Context         string             `json:"context" bson:"context"`                   // The ID/URL of the context of this activity (e.g. the conversation thread)
-	ObjectID        string             `json:"objectId" bson:"objectId"`                 // The ID/URL of the Object of this Activity
-	ObjectType      string             `json:"objectType" bson:"objectType"`             // The type of Object of this Activity is about (Note, Person, etc.)
-	MediaType       string             `json:"mediaType" bson:"mediaType"`               // The media type of the content (e.g. "message/mls")
-	RawActivity     mapof.Any          `json:"rawActivity" bson:"rawActivity"`           // The original, unprocessed activity received by the server
-	PublishedDate   int64              `json:"publishedDate" bson:"publishedDate"`       // Unix epoch (in milliseconds) when this InboxActivity was published
-	ReceivedDate    int64              `json:"receivedDate" bson:"receivedDate"`         // Unix epoch (in milliseconds) when this InboxActivity was received by the server
-	IsPublic        bool               `json:"isPublic" bson:"isPublic"`                 // Whether this activity was addressed to the public (i.e. "Public")
-	Disposition     RuleDisposition    `json:"disposition" bson:"disposition,omitempty"` // The sender's rule disposition at receive time (server-computed; not in the JSON schema)
+	InboxActivityID primitive.ObjectID `json:"inboxActivityId" bson:"_id"`                   // Unique identifier for this InboxActivity
+	UserID          primitive.ObjectID `json:"userId"          bson:"userId"`                // The user that received this InboxActivity
+	ActorID         string             `json:"actorId"         bson:"actorId"`               // The ID/URL of the actor that sent this InboxActivity (e.g. "https://example.com/users/alice")
+	ActivityID      string             `json:"activityId"      bson:"activityId"`            // The ID/URL of this InboxActivity
+	ActivityType    string             `json:"activityType"    bson:"activityType"`          // The type of Activity received (Create, Update, Like, Follow, etc.)
+	Context         string             `json:"context"         bson:"context"`               // The ID/URL of the context of this activity (e.g. the conversation thread)
+	ObjectID        string             `json:"objectId"        bson:"objectId"`              // The ID/URL of the Object of this Activity
+	ObjectType      string             `json:"objectType"      bson:"objectType"`            // The type of Object of this Activity is about (Note, Person, etc.)
+	MediaType       string             `json:"mediaType"       bson:"mediaType"`             // The media type of the content (e.g. "message/mls")
+	RawActivity     mapof.Any          `json:"rawActivity"     bson:"rawActivity"`           // The original, unprocessed activity received by the server
+	PublishedDate   int64              `json:"publishedDate"   bson:"publishedDate"`         // Unix epoch (in milliseconds) when this InboxActivity was published
+	ReceivedDate    int64              `json:"receivedDate"    bson:"receivedDate"`          // Unix epoch (in milliseconds) when this InboxActivity was received by the server
+	IsPublic        bool               `json:"isPublic"        bson:"isPublic"`              // Whether this activity was addressed to the public (i.e. "Public")
+	Disposition     RuleDisposition    `json:"disposition"     bson:"disposition,omitempty"` // The sender's rule disposition at receive time (server-computed; not in the JSON schema)
 
 	journal.Journal `json:"-" bson:",inline"`
 }

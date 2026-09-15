@@ -9,10 +9,10 @@ import (
 // Webhook defines an outbound webhook that can be triggered by events in the system
 type Webhook struct {
 	WebhookID       primitive.ObjectID `json:"webhookId" bson:"_id"`
-	Events          sliceof.String     `json:"events" bson:"events"`
-	Label           string             `json:"label" bson:"label"`
+	Events          sliceof.String     `json:"events"    bson:"events"`
+	Label           string             `json:"label"     bson:"label"`
 	TargetURL       string             `json:"targetUrl" bson:"targetUrl"`
-	journal.Journal `json:"-" bson:",inline"`
+	journal.Journal `json:"-"         bson:",inline"`
 }
 
 // NewWebhook returns a fully initialized Webhook object

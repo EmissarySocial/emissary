@@ -30,7 +30,7 @@ type SearchResult struct {
 	Shuffle         int64              `json:"shuffle"                bson:"shuffle"`                // Shuffle is a random number used to shuffle the search results.
 	Local           bool               `json:"local"                  bson:"local"`                  // Local is true if this SearchResult originates on the local server.  Only local SearchResults will be syndicated to external servers.
 	Labels          metadata.LabelSet  `json:"-"                      bson:"-"`                      // Labels is the viewer's rule verdict for this SearchResult. Per-viewer and display-only, so it is never persisted or serialized.
-	journal.Journal `json:"-" bson:",inline"`
+	journal.Journal `json:"-"                      bson:",inline"`
 }
 
 // NewSearchResult returns a fully initialized, empty SearchResult

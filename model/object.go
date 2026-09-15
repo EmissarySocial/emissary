@@ -9,11 +9,11 @@ import (
 
 // Object represents an unparseable ActivityPub object that is stored in the database.
 type Object struct {
-	ObjectID    primitive.ObjectID `json:"objectId" bson:"_id"`            // Unique ID of this Object (assigned by the server)
-	UserID      primitive.ObjectID `json:"userId" bson:"userId"`           // UserID who created this Object
-	Context     string             `json:"context" bson:"context"`         // ActivityPubURL of the context that this object belongs to.
+	ObjectID    primitive.ObjectID `json:"objectId"    bson:"_id"`         // Unique ID of this Object (assigned by the server)
+	UserID      primitive.ObjectID `json:"userId"      bson:"userId"`      // UserID who created this Object
+	Context     string             `json:"context"     bson:"context"`     // ActivityPubURL of the context that this object belongs to.
 	Permissions sliceof.String     `json:"permissions" bson:"permissions"` // Permissions associated with this Object
-	Value       mapof.Any          `json:"value" bson:"value"`             // Value of the object
+	Value       mapof.Any          `json:"value"       bson:"value"`       // Value of the object
 
 	journal.Journal `json:"-" bson:",inline"`
 }

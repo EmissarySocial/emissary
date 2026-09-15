@@ -10,13 +10,13 @@ import (
 // Follower is a person or service that has subscribed to a User, Stream, or SearchQuery
 type Follower struct {
 	FollowerID primitive.ObjectID `json:"followerId" bson:"_id"`        // Unique identifier for this Follower
-	ParentType string             `json:"type" bson:"type"`             // Type of record being followed (e.g. "User", "Stream", or "Search")
-	ParentID   primitive.ObjectID `json:"parentId" bson:"parentId"`     // Unique identifier for the Stream that is being followed (including user's outboxes)
-	StateID    string             `json:"stateId" bson:"stateId"`       // Unique identifier for the State of this Follower ("ACTIVE", "PENDING")
-	Method     string             `json:"method" bson:"method"`         // Method of follower (e.g. "POLL", "ACTIVITYPUB", "EMAIL")
-	Format     string             `json:"format" bson:"format"`         // Format of the data being followed (e.g. "ATOM", "HTML", "JSON", "RSS", "XML")
-	Actor      PersonLink         `json:"actor" bson:"actor"`           // Person who is follower the User
-	Data       mapof.Any          `json:"data" bson:"data"`             // Additional data about this Follower that depends on the follow method
+	ParentType string             `json:"type"       bson:"type"`       // Type of record being followed (e.g. "User", "Stream", or "Search")
+	ParentID   primitive.ObjectID `json:"parentId"   bson:"parentId"`   // Unique identifier for the Stream that is being followed (including user's outboxes)
+	StateID    string             `json:"stateId"    bson:"stateId"`    // Unique identifier for the State of this Follower ("ACTIVE", "PENDING")
+	Method     string             `json:"method"     bson:"method"`     // Method of follower (e.g. "POLL", "ACTIVITYPUB", "EMAIL")
+	Format     string             `json:"format"     bson:"format"`     // Format of the data being followed (e.g. "ATOM", "HTML", "JSON", "RSS", "XML")
+	Actor      PersonLink         `json:"actor"      bson:"actor"`      // Person who is follower the User
+	Data       mapof.Any          `json:"data"       bson:"data"`       // Additional data about this Follower that depends on the follow method
 	ExpireDate int64              `json:"expireDate" bson:"expireDate"` // Unix timestamp (in seconds) when this follower will be automatically purged.
 
 	journal.Journal `json:"-" bson:",inline"`

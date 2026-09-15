@@ -13,10 +13,10 @@ import (
 // object. https://www.w3.org/TR/activitystreams-vocabulary/#activity-types
 type OutboxItem struct {
 	ActivityID primitive.ObjectID `json:"activityId" bson:"_id"`
-	ActorID    primitive.ObjectID `json:"actorId" bson:"actorId"`       // The ID of the outbox that contains this activity (e.g. User.UserID)
-	ActorType  string             `json:"actorType" bson:"actorType"`   // The type of outbox (e.g. User, Search, etc)
-	URL        string             `json:"url" bson:"url"`               // The URL for this activity, if applicable
-	Activity   mapof.Any          `json:"activity" bson:"activity"`     // The original ActivityPub activity object
+	ActorID    primitive.ObjectID `json:"actorId"    bson:"actorId"`    // The ID of the outbox that contains this activity (e.g. User.UserID)
+	ActorType  string             `json:"actorType"  bson:"actorType"`  // The type of outbox (e.g. User, Search, etc)
+	URL        string             `json:"url"        bson:"url"`        // The URL for this activity, if applicable
+	Activity   mapof.Any          `json:"activity"   bson:"activity"`   // The original ActivityPub activity object
 	Recipients sliceof.String     `json:"recipients" bson:"recipients"` // All IDs who should receive this activity (to, cc, bto, bcc) including indirect recipients such as Public, circles, etc.
 
 	journal.Journal `json:"-" bson:",inline"`

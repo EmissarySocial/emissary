@@ -8,11 +8,11 @@ import (
 
 // Group is a named set of Users, used to grant permissions in bulk
 type Group struct {
-	GroupID     primitive.ObjectID `json:"groupId" bson:"_id"`             // Unique identifier assigned by the database
-	Token       string             `json:"token" bson:"token"`             // Uniqe token chosen by the administrator
-	Label       string             `json:"label" bson:"label"`             // Human-readable label for this group.
+	GroupID     primitive.ObjectID `json:"groupId"     bson:"_id"`         // Unique identifier assigned by the database
+	Token       string             `json:"token"       bson:"token"`       // Uniqe token chosen by the administrator
+	Label       string             `json:"label"       bson:"label"`       // Human-readable label for this group.
 	Description string             `json:"description" bson:"description"` // Human-readable description of this Group
-	Icon        string             `json:"icon" bson:"icon"`               // Icon for this Group
+	Icon        string             `json:"icon"        bson:"icon"`        // Icon for this Group
 
 	journal.Journal `json:"-" bson:",inline"`
 }

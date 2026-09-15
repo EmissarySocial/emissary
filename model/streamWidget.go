@@ -12,10 +12,10 @@ import (
 // part of its containing Stream, never on its own.
 type StreamWidget struct {
 	StreamWidgetID primitive.ObjectID `json:"streamWidgetId" bson:"streamWidgetId"`
-	Type           string             `json:"type" bson:"type"`
-	Location       string             `json:"location" bson:"location"`
-	Label          string             `json:"label" bson:"label"`
-	Data           mapof.Any          `json:"data" bson:"data"`
+	Type           string             `json:"type"           bson:"type"`
+	Location       string             `json:"location"       bson:"location"`
+	Label          string             `json:"label"          bson:"label"`
+	Data           mapof.Any          `json:"data"           bson:"data"`
 
 	journal.Journal `json:"-" bson:",inline"`
 

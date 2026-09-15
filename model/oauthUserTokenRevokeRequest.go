@@ -9,9 +9,9 @@ import "github.com/benpate/derp"
 // Returns: Empty struct
 // Revoke an access token to make it no longer valid for use
 type OAuthUserTokenRevokeRequest struct {
-	ClientID     string `json:"clientId" form:"client_id"`
+	ClientID     string `json:"clientId"     form:"client_id"`
 	ClientSecret string `json:"clientSecret" form:"client_secret"`
-	Token        string `json:"token" form:"token"`
+	Token        string `json:"token"        form:"token"`
 }
 
 // NewOAuthUserTokenRevokeRequest returns a fully initialized, empty OAuthUserTokenRevokeRequest

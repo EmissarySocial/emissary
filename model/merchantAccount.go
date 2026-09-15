@@ -10,16 +10,16 @@ import (
 // MerchantAccount represents a User's account with a specific payment service.
 // This account will be accessed on the User's behalf to charge Purchases for their merchant accounts
 type MerchantAccount struct {
-	MerchantAccountID    primitive.ObjectID `json:"merchantAccountId" bson:"_id"`                     // Unique ID for the payment processor connection
-	ConnectionID         primitive.ObjectID `json:"connectionId" bson:"connectionId"`                 // Unique ID of the Connection that this MerchantAccount uses to access the payment processor
-	UserID               primitive.ObjectID `json:"userId" bson:"userId"`                             // Unique ID of the user who owns the account with this payment processor
-	Type                 string             `json:"type" bson:"type"`                                 // Internal identifier of the payment processor (STRIPE-CONNECT, etc.)
-	Name                 string             `json:"name" bson:"name"`                                 // Human-friendly name for the payment processor account
-	Description          string             `json:"description" bson:"description"`                   // Human-friendly Description of the payment processor account
-	Vault                Vault              `json:"-" bson:"vault"`                                   // Vault data that is stored in the database (encrypted)
-	Plaintext            mapof.String       `json:"plaintext" bson:"plaintext"`                       // Plaintext data that is stored in the database (not encrypted)
+	MerchantAccountID    primitive.ObjectID `json:"merchantAccountId"    bson:"_id"`                  // Unique ID for the payment processor connection
+	ConnectionID         primitive.ObjectID `json:"connectionId"         bson:"connectionId"`         // Unique ID of the Connection that this MerchantAccount uses to access the payment processor
+	UserID               primitive.ObjectID `json:"userId"               bson:"userId"`               // Unique ID of the user who owns the account with this payment processor
+	Type                 string             `json:"type"                 bson:"type"`                 // Internal identifier of the payment processor (STRIPE-CONNECT, etc.)
+	Name                 string             `json:"name"                 bson:"name"`                 // Human-friendly name for the payment processor account
+	Description          string             `json:"description"          bson:"description"`          // Human-friendly Description of the payment processor account
+	Vault                Vault              `json:"-"                    bson:"vault"`                // Vault data that is stored in the database (encrypted)
+	Plaintext            mapof.String       `json:"plaintext"            bson:"plaintext"`            // Plaintext data that is stored in the database (not encrypted)
 	APIKeyExpirationDate int64              `json:"apiKeyExpirationDate" bson:"apiKeyExpirationDate"` // Unix epoch SECONDS when the API key expires (written as time.Now().Unix() + expires_in)
-	LiveMode             bool               `json:"liveMode" bson:"liveMode"`                         // True if this is a live account, false if it is a test/sandbox account
+	LiveMode             bool               `json:"liveMode"             bson:"liveMode"`             // True if this is a live account, false if it is a test/sandbox account
 
 	// Embed journal to track changes
 	journal.Journal `json:"-" bson:",inline"`

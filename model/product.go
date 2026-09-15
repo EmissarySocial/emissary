@@ -12,14 +12,14 @@ import (
 // a Merchant Account.  This value is not stored locally, but is passed around
 // after being retrieved by the Merchant Account's API.
 type Product struct {
-	ProductID         primitive.ObjectID `json:"productId" bson:"_id"`                       // Unique identifier for this Product
-	UserID            primitive.ObjectID `json:"userId" bson:"userId"`                       // The User that owns this Product
+	ProductID         primitive.ObjectID `json:"productId"         bson:"_id"`               // Unique identifier for this Product
+	UserID            primitive.ObjectID `json:"userId"            bson:"userId"`            // The User that owns this Product
 	MerchantAccountID primitive.ObjectID `json:"merchantAccountId" bson:"merchantAccountId"` // The Merchant Account where this Product is defined
-	RemoteID          string             `json:"remoteId" bson:"remoteId"`                   // The ID of the Product as defined by the Merchant Account
-	Name              string             `json:"name" bson:"name"`                           // The name of the Product as defined by the Merchant Account
-	Price             string             `json:"price" bson:"price"`                         // The price description of the Product as defined by the Merchant Account
-	Icon              string             `json:"icon" bson:"icon"`                           // The icon of the Product as defined by the Merchant Account
-	AdminHref         string             `json:"adminHref" bson:"adminHref"`                 // URL to the Merchant Account's admin page for this Product
+	RemoteID          string             `json:"remoteId"          bson:"remoteId"`          // The ID of the Product as defined by the Merchant Account
+	Name              string             `json:"name"              bson:"name"`              // The name of the Product as defined by the Merchant Account
+	Price             string             `json:"price"             bson:"price"`             // The price description of the Product as defined by the Merchant Account
+	Icon              string             `json:"icon"              bson:"icon"`              // The icon of the Product as defined by the Merchant Account
+	AdminHref         string             `json:"adminHref"         bson:"adminHref"`         // URL to the Merchant Account's admin page for this Product
 
 	journal.Journal `json:"-" bson:",inline"`
 }

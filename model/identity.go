@@ -10,13 +10,13 @@ import (
 // This is used to track pseud-logins by individuals who do not have a registered username on this server.
 // Identities can be tied to a Follower and to a Privilege via the two identifiers: EmailAddress and ActivityPub.
 type Identity struct {
-	IdentityID        primitive.ObjectID `json:"identityId" bson:"_id"`                      // Unique ID for the Identity
-	Name              string             `json:"name" bson:"name"`                           // Full name of the Individual ("John Connor")
-	IconURL           string             `json:"iconUrl" bson:"iconUrl"`                     // URL to an icon representing the Identity (e.g., a profile picture)
-	EmailAddress      string             `json:"emailAddress" bson:"emailAddress"`           // Email address of the Identity ("john@connor.mil")
-	WebfingerUsername string             `json:"webfingerUsername" bson:"webfingerUsername"` // Webfinger Username (e.g., "@john@connor.mil")
-	ActivityPubActor  string             `json:"activityPubActor" bson:"activityPubActor"`   // ActivityPub Actor URL (https://connor.mil/@john) possibly derived from a WebFinger handle
-	PrivilegeIDs      id.Slice           `json:"privileges" bson:"privileges,omitempty"`     // List of privileges associated with this Identity, either a circleID, or a remoteProductID
+	IdentityID        primitive.ObjectID `json:"identityId"        bson:"_id"`                  // Unique ID for the Identity
+	Name              string             `json:"name"              bson:"name"`                 // Full name of the Individual ("John Connor")
+	IconURL           string             `json:"iconUrl"           bson:"iconUrl"`              // URL to an icon representing the Identity (e.g., a profile picture)
+	EmailAddress      string             `json:"emailAddress"      bson:"emailAddress"`         // Email address of the Identity ("john@connor.mil")
+	WebfingerUsername string             `json:"webfingerUsername" bson:"webfingerUsername"`    // Webfinger Username (e.g., "@john@connor.mil")
+	ActivityPubActor  string             `json:"activityPubActor"  bson:"activityPubActor"`     // ActivityPub Actor URL (https://connor.mil/@john) possibly derived from a WebFinger handle
+	PrivilegeIDs      id.Slice           `json:"privileges"        bson:"privileges,omitempty"` // List of privileges associated with this Identity, either a circleID, or a remoteProductID
 
 	// Embed journal to track changes
 	journal.Journal `json:"-" bson:",inline"`
