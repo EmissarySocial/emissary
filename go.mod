@@ -27,7 +27,7 @@ require (
 	github.com/benpate/re v0.6.0
 	github.com/benpate/remote v0.25.0
 	github.com/benpate/rosetta v0.40.0
-	github.com/benpate/sherlock v0.14.0
+	github.com/benpate/sherlock v0.15.0
 	github.com/benpate/sniff v0.3.0
 	github.com/benpate/steranko v0.31.0
 	github.com/benpate/table v0.9.0
@@ -95,7 +95,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.39 // indirect
 	github.com/aws/smithy-go v1.27.8 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/benpate/oembed v0.2.0
+	github.com/benpate/oembed v0.3.0
 	github.com/cloudflare/ahocorasick v0.0.0-20240916140611-054963ec9396 // indirect
 	github.com/cloudflare/circl v1.6.5 // indirect
 	github.com/cyphar/filepath-securejoin v0.7.0 // indirect
