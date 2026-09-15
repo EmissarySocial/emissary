@@ -5,10 +5,131 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data"
 	mockdb "github.com/benpate/data-mock"
+	"github.com/benpate/data/option"
+	"github.com/benpate/derp"
+	"github.com/benpate/exp"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+// outboxExportCollection is an in-memory collection for export query tests.
+type outboxExportCollection struct {
+	records []model.OutboxMessage
+}
+
+// Context implements the data.Collection interface.
+func (c *outboxExportCollection) Context() context.Context { return context.Background() }
+
+// Count implements the data.Collection interface.
+func (c *outboxExportCollection) Count(exp.Expression, ...option.Option) (int64, error) {
+	return 0, derp.Internal("test", "unused")
+}
+
+// Query returns IDs for records matching the export owner criteria.
+func (c *outboxExportCollection) Query(target any, criteria exp.Expression, _ ...option.Option) error {
+	ids, ok := target.(*[]model.IDOnly)
+	if !ok {
+		return derp.Internal("test", "unexpected query target type")
+	}
+
+	for _, record := range c.records {
+		if criteria.Match(func(predicate exp.Predicate) bool {
+			switch predicate.Field {
+			case "actorId":
+				ownerID, ok := predicate.Value.(primitive.ObjectID)
+				return ok && ownerID == record.ActorID
+			case "deleteDate":
+				deleteDate, ok := predicate.Value.(int)
+				return ok && deleteDate == int(record.DeleteDate)
+			default:
+				return false
+			}
+		}) {
+			*ids = append(*ids, model.IDOnly{ID: record.OutboxMessageID})
+		}
+	}
+
+	return nil
+}
+
+// Iterator implements the data.Collection interface.
+func (c *outboxExportCollection) Iterator(exp.Expression, ...option.Option) (data.Iterator, error) {
+	return nil, derp.Internal("test", "unused")
+}
+
+// Load implements the data.Collection interface.
+func (c *outboxExportCollection) Load(exp.Expression, data.Object, ...option.Option) error {
+	return derp.Internal("test", "unused")
+}
+
+// Save implements the data.Collection interface.
+func (c *outboxExportCollection) Save(data.Object, string) error {
+	return derp.Internal("test", "unused")
+}
+
+// Delete implements the data.Collection interface.
+func (c *outboxExportCollection) Delete(data.Object, string) error {
+	return derp.Internal("test", "unused")
+}
+
+// HardDelete implements the data.Collection interface.
+func (c *outboxExportCollection) HardDelete(exp.Expression) error {
+	return derp.Internal("test", "unused")
+}
+
+// outboxExportSession hands out the in-memory export collection.
+type outboxExportSession struct {
+	collection *outboxExportCollection
+}
+
+// Collection implements the data.Session interface.
+func (s outboxExportSession) Collection(string) data.Collection { return s.collection }
+
+// Context implements the data.Session interface.
+func (s outboxExportSession) Context() context.Context { return context.Background() }
+
+// Close implements the data.Session interface.
+func (s outboxExportSession) Close() {}
+
+// TestOutbox_ExportCollectionUsesActorID verifies that export collection queries use the
+// persisted ownership field and do not return another actor's messages.
+func TestOutbox_ExportCollectionUsesActorID(t *testing.T) {
+	ownerID := primitive.NewObjectID()
+	otherOwnerID := primitive.NewObjectID()
+	ownedMessage := model.NewOutboxMessage()
+	ownedMessage.ActorID = ownerID
+	otherMessage := model.NewOutboxMessage()
+	otherMessage.ActorID = otherOwnerID
+
+	service := Outbox{}
+	session := outboxExportSession{collection: &outboxExportCollection{records: []model.OutboxMessage{
+		ownedMessage,
+		otherMessage,
+	}}}
+
+	result, err := service.ExportCollection(session, ownerID)
+
+	require.NoError(t, err)
+	require.Equal(t, []model.IDOnly{{ID: ownedMessage.OutboxMessageID}}, result)
+}
+
+// TestOutbox_ExportCollectionReturnsEmptyForUnknownActor verifies that an actor with no
+// outbox records receives an empty result without exposing another actor's records.
+func TestOutbox_ExportCollectionReturnsEmptyForUnknownActor(t *testing.T) {
+	ownerID := primitive.NewObjectID()
+	message := model.NewOutboxMessage()
+	message.ActorID = primitive.NewObjectID()
+
+	service := Outbox{}
+	session := outboxExportSession{collection: &outboxExportCollection{records: []model.OutboxMessage{message}}}
+
+	result, err := service.ExportCollection(session, ownerID)
+
+	require.NoError(t, err)
+	require.Empty(t, result)
+}
 
 // TestOutbox_getActorRejectsUnroutableTypes pins the set of Actors that may own an Outbox message.
 // Application, Search, and SearchDomain have no route that serves an Outbox item, so a message they
