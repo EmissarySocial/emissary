@@ -1,0 +1,83 @@
+{
+  "startDate": {
+    "$date": {
+      "$numberLong": "1700000000000"
+    }
+  },
+  "location": {
+    "type": "Point",
+    "coordinates": [
+      {
+        "$numberDouble": "-104.9903"
+      },
+      {
+        "$numberDouble": "39.7392"
+      },
+      {
+        "$numberDouble": "1609.0"
+      }
+    ]
+  },
+  "area": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          {
+            "$numberDouble": "-105.0"
+          },
+          {
+            "$numberDouble": "39.0"
+          }
+        ],
+        [
+          {
+            "$numberDouble": "-104.0"
+          },
+          {
+            "$numberDouble": "39.0"
+          }
+        ],
+        [
+          {
+            "$numberDouble": "-104.0"
+          },
+          {
+            "$numberDouble": "40.0"
+          }
+        ]
+      ]
+    ]
+  },
+  "where": {
+    "name": "Bluebird Theater",
+    "formatted": "3317 E Colfax Ave, Denver, CO 80206",
+    "street1": "3317 E Colfax Ave",
+    "street2": "Suite 2",
+    "locality": "Denver",
+    "region": "CO",
+    "postalCode": "80206",
+    "country": "US",
+    "plusCode": "85FPQXX5+9F",
+    "timezone": "America/Denver",
+    "latitude": {
+      "$numberDouble": "39.7392"
+    },
+    "longitude": {
+      "$numberDouble": "-104.9903"
+    }
+  },
+  "isBridged": true,
+  "folderId": {
+    "$oid": "507f1f77bcf86cd799439011"
+  },
+  "data": {
+    "scalar": "hello",
+    "number": {
+      "$numberLong": "42"
+    },
+    "nested": {
+      "inner": "value"
+    }
+  }
+}

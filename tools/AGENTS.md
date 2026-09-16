@@ -54,6 +54,10 @@ The packages under `tools/` are small, self-contained leaf libraries — see [RE
 
 - **A type that embeds an interface can pass a test without running any of its own code.** `HTTPCache` embeds `Adapter` and declared neither `Set` nor `Get`, so a test that called both had them promoted to the test's own in-memory fake — the assertion was the fake testing itself, and the package measured 0.0% coverage while looking tested. Method promotion makes a delegating call identical to a real one at the call site, and nothing in the test's text says which type answers. When a type embeds an interface, a test that exercises the promoted methods proves nothing; assert against the concrete type, and treat 0.0% coverage under a passing test as the signal it is.
 
+## datetime
+
+- **`DateTime` is persisted through `bson.ValueMarshaler`, which Go satisfies structurally.** If `MarshalBSONValue`'s signature ever stops matching the driver's interface, nothing fails to compile here — the driver falls back to the default struct codec and a stored date silently becomes `{"time": ...}` instead of a BSON datetime. `datetime_test.go` holds a compile-time assertion plus a fixture pinning the bytes a `DateTime` writes **as a struct field**; the top-level form takes the marshaller directly and cannot observe the bug. The same trap, with a data migration behind it, is documented in [../model/AGENTS.md](../model/AGENTS.md).
+
 ## derp-mongo
 
 - **The signature is computed from the LIVE error, at report time, and is never rebuilt from the stored document.** This is not a performance choice. A plain Go error with no location anywhere in its chain marshals to an empty BSON document, so a read-side reconstruction has nothing left to hash: two errors with entirely different messages were verified to produce one identity from their stored records and two from the live ones. `newRecord` derives the signature from the very values it stores beside it, so a record can never describe one error while its signature describes another.
