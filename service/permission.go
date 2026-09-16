@@ -352,8 +352,7 @@ func (service *Permission) getSignature(request *http.Request) (sigs.Signature, 
 //////////////////////////////////////////
 
 // resolveSignature separates the three cases an inbound signature can present: no signature
-// (Anonymous), a valid signature (an Actor), and one that FAILS to verify (a refusal).
-// separated for testability.
+// (Anonymous), a valid signature (an Actor), and one that FAILS to verify. separated for testability.
 func resolveSignature(request *http.Request, verify func(*http.Request) (sigs.Signature, error)) (sigs.Signature, error) {
 
 	const location = "service.resolveSignature"
@@ -388,10 +387,9 @@ func resolveSignature(request *http.Request, verify func(*http.Request) (sigs.Si
 		return sigs.Signature{}, derp.Unauthorized(location, "Invalid HTTP Signature. For local domains, use the 'Mock-Key-Id' header to simulate a signing key")
 	}
 
-	// RULE: A signature that is present but INVALID refuses the whole request. Falling through
-	// to anonymous hands the peer a normal-looking 200, or a 403 naming the wrong cause, with no
-	// hint that their signature was rejected. Nothing is logged or reported: the 401 IS the
-	// signal, and its message is fixed so verifier internals never reach a prober. (BUG-20)
+	// RULE: A signature that is present but INVALID refuses the whole request, and the refusal
+	// is neither logged nor reported -- the 401 is the only signal, and its message is fixed.
+	// See AGENTS.md, "An invalid signature refuses the request". (BUG-20)
 	return sigs.Signature{}, derp.Unauthorized(location, "Invalid HTTP Signature")
 }
 

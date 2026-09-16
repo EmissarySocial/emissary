@@ -12,12 +12,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// These tests pin the three-case signature rule that resolveSignature exists to keep apart: no
-// signature (Anonymous), a valid signature (an Actor), and a signature that FAILS to verify (a
-// refusal).  Collapsing the third into the first is BUG-20.
-//
-// resolveSignature takes its verifier as an argument, so none of these cases need a Factory, a
-// database, or real crypto -- the routing between the three cases is the whole subject.
+/******************************************
+ * Signature Resolution Tests
+ *
+ * These pin the three-case rule that resolveSignature keeps apart: no
+ * signature (Anonymous), a valid one (an Actor), and one that FAILS to
+ * verify (a refusal). Collapsing the third into the first is BUG-20.
+ *
+ * resolveSignature takes its verifier as an argument, so no case here
+ * needs a Factory, a database, or real crypto -- the routing between
+ * the three is the whole subject.
+ ******************************************/
 
 // testSignatureKeyID is the keyId carried by the signatures in these tests.
 const testSignatureKeyID = "https://remote.example/@alice#main-key"
@@ -108,9 +113,7 @@ func TestResolveSignature_Invalid(t *testing.T) {
 }
 
 // TestResolveSignature_RefusalLeaksNothing guarantees that the refusal handed to an
-// unauthenticated caller carries no verifier internals.  errorHandler writes derp.Message() into
-// the response body, so anything the verifier said about WHY it failed would tell a prober which
-// attempt got closest.
+// unauthenticated caller carries no verifier internals.
 func TestResolveSignature_RefusalLeaksNothing(t *testing.T) {
 
 	t.Parallel()
@@ -122,10 +125,8 @@ func TestResolveSignature_RefusalLeaksNothing(t *testing.T) {
 	require.NotContains(t, derp.Message(err), "SECRET-INTERNAL-DETAIL")
 }
 
-// TestResolveSignature_RefusalStaysOutOfDerp pins the cross-file invariant that BUG-20 depends
-// on: the refusal must be an Unauthorized error, because server.errorHandler answers 401s and
-// returns BEFORE derp.Report.  A refactor that changed this to any other status would silently
-// start filing every misconfigured peer into the production error log.
+// TestResolveSignature_RefusalStaysOutOfDerp pins the cross-file invariant that keeps refusals
+// out of the production error log: the refusal must be an Unauthorized error.
 func TestResolveSignature_RefusalStaysOutOfDerp(t *testing.T) {
 
 	t.Parallel()
@@ -136,9 +137,8 @@ func TestResolveSignature_RefusalStaysOutOfDerp(t *testing.T) {
 	require.True(t, derp.IsUnauthorized(err), "refusal must be Unauthorized so errorHandler skips derp.Report")
 }
 
-// TestResolveSignature_MockKeyWithoutSignature pins the trap that the BUG-20 ordering exists to
-// avoid: a local harness names its Actor with the Mock-Key-Id header and NO Signature header at
-// all, so the mock branch must sit ahead of the "unsigned means Anonymous" rule.
+// TestResolveSignature_MockKeyWithoutSignature pins the ordering trap: a local harness names its
+// Actor with the Mock-Key-Id header and NO Signature header at all.
 func TestResolveSignature_MockKeyWithoutSignature(t *testing.T) {
 
 	t.Parallel()
@@ -217,8 +217,7 @@ func TestResolveSignature_MockKeyIsLocalOnly_Unsigned(t *testing.T) {
 }
 
 // TestResolveSignature_LocalRefusalHintsAtMockKey confirms that a developer whose local signature
-// fails is told how to stand one up.  errorHandler answers a 401 with this message and nothing
-// else, so the hint has nowhere else to live.
+// fails is told how to stand a mock one up.
 func TestResolveSignature_LocalRefusalHintsAtMockKey(t *testing.T) {
 
 	t.Parallel()
