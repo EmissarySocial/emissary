@@ -316,7 +316,7 @@ func PostStatus_Unfavourite(serverFactory *server.Factory) func(model.Authorizat
 func PostStatus_Reblog(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Reblog) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Reblog) (object.Status, error) {
-		return object.Status{}, derp.NotImplemented("handler.mastodon.PostStatus_Reblog")
+		return reactToStatus(serverFactory, t.Host, auth, t.ID, vocab.ActivityTypeAnnounce, false, "handler.mastodon_PostStatus_Reblog")
 	}
 }
 
@@ -324,8 +324,55 @@ func PostStatus_Reblog(serverFactory *server.Factory) func(model.Authorization, 
 func PostStatus_Unreblog(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Unreblog) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Unreblog) (object.Status, error) {
-		return object.Status{}, derp.NotImplemented("handler.mastodon.PostStatus_Unreblog")
+		return reactToStatus(serverFactory, t.Host, auth, t.ID, vocab.ActivityTypeAnnounce, true, "handler.mastodon_PostStatus_Unreblog")
 	}
+}
+
+// reactToStatus sets (or, when undo is true, clears) the caller's response of the
+// given type on the post behind a status ID, and returns that post. SetResponse
+// and UnsetResponse publish the activity and are idempotent, as the Mastodon API
+// requires.
+func reactToStatus(serverFactory *server.Factory, host string, auth model.Authorization, statusID string, responseType string, undo bool, location string) (object.Status, error) {
+
+	factory, err := serverFactory.ByHostname(host)
+
+	if err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Unrecognized Domain")
+	}
+
+	session, cancel, err := factory.Session(time.Minute)
+
+	if err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Creating session")
+	}
+
+	defer cancel()
+
+	user := model.NewUser()
+
+	if err := factory.User().LoadByID(session, auth.UserID, &user); err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Loading user")
+	}
+
+	message := model.NewNewsItem()
+
+	if err := loadNewsItemByStatusID(factory, session, auth.UserID, statusID, &message); err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Loading message")
+	}
+
+	responseService := factory.Response()
+
+	if undo {
+		err = responseService.UnsetResponse(session, &user, message.URL, responseType)
+	} else {
+		err = responseService.SetResponse(session, &user, message.URL, responseType, "")
+	}
+
+	if err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Saving response")
+	}
+
+	return reloadedStatus(factory, session, auth, message.NewsItemID, location)
 }
 
 // https://docs.joinmastodon.org/methods/statuses/#bookmark
