@@ -26,7 +26,11 @@ func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, sessio
 		return derp.NotFound(location, "Actor not found")
 	}
 
-	permissions := factory.Permission().ParseHTTPSignature(session, ctx.Request())
+	permissions, err := factory.Permission().ParseHTTPSignature(session, ctx.Request())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid HTTP Signature")
+	}
 
 	// If the request is for the collection itself, then return a summary and the URL of the first page
 	publishDateString := ctx.QueryParam("publishDate")
@@ -84,7 +88,11 @@ func GetOutboxMessage(ctx *steranko.Context, factory *service.Factory, session d
 
 	// RULE: The permissions in the HTTP signature must satisfy the message's own permissions.
 	// The collection applies the same test as a query filter; a single item must apply it here.
-	permissions := factory.Permission().ParseHTTPSignature(session, ctx.Request())
+	permissions, err := factory.Permission().ParseHTTPSignature(session, ctx.Request())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid HTTP Signature")
+	}
 
 	if !slice.ContainsAny(outboxMessage.Permissions, permissions...) {
 		return derp.Forbidden(location, "You do not have permission to view this content")
