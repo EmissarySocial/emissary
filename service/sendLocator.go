@@ -12,7 +12,6 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/ranges"
-	"github.com/benpate/sherlock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -319,7 +318,7 @@ func (service SendLocator) resolveInboxURL(actorID string) string {
 	const location = "sender.SendLocator.resolveInboxURL"
 
 	// Retrieve the Actor document from the ActivityPub client
-	actor, err := service.activityService.AppClient().Load(actorID, sherlock.AsActor())
+	actor, err := service.activityService.AppClient().Load(actorID)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Loading actor for inbox URL", "actorID", actorID))

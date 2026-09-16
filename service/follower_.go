@@ -14,7 +14,6 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
 	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -680,7 +679,7 @@ func (service *Follower) RemoteActor(session data.Session, follower *model.Follo
 	}
 
 	// Return the remote Actor's profile document
-	return service.activityService.Client(follower.ParentType, follower.ParentID).Load(follower.Actor.ProfileURL, sherlock.AsActor())
+	return service.activityService.Client(follower.ParentType, follower.ParentID).Load(follower.Actor.ProfileURL)
 }
 
 /******************************************

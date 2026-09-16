@@ -20,7 +20,6 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/benpate/sherlock"
 	"github.com/benpate/sniff"
 	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -745,7 +744,7 @@ func (w Common) ActivityStreamCollection(url string) sliceof.String {
 // document values and rules from the server's shared cache.
 func (w Common) ActivityStreamActor(url string) streams.Document {
 	activityService := w._factory.ActivityStream()
-	result, err := activityService.UserClient(w.AuthenticatedID()).Load(url, sherlock.AsActor())
+	result, err := activityService.UserClient(w.AuthenticatedID()).Load(url)
 
 	if err != nil {
 		derp.Report(err)
