@@ -14,7 +14,6 @@ import (
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/sherlock"
 	"github.com/benpate/steranko"
 )
 
@@ -34,7 +33,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session d
 
 	// Try to load the remote Actor to be followed
 	client := factory.ActivityStream().AppClient()
-	actor, err := client.Load(transaction.Object, sherlock.AsActor())
+	actor, err := client.Load(transaction.Object)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Loading object", transaction)

@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/sherlock"
 	"github.com/benpate/uri"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -101,7 +100,7 @@ func (service *Following) Connect(session data.Session, following *model.Followi
 	// the reveal, merely MUTING an account made it impossible to follow -- and the failure surfaced as
 	// a raw 403 that took down the whole enclosing form. BLOCK is still refused, above.
 	client := service.activityService.UserClient(following.UserID)
-	actor, err := client.Load(following.URL, sherlock.AsActor(), asrules.WithReveal(true))
+	actor, err := client.Load(following.URL, asrules.WithReveal(true))
 
 	if err != nil {
 		if inner := service.SetStatusFailure(session, following, "Unable to connect to ActivityPub Actor"); inner != nil {
