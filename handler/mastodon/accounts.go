@@ -2,6 +2,8 @@ package mastodon
 
 import (
 	"net/url"
+	"slices"
+	"strconv"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -10,7 +12,10 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/toot"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
@@ -395,6 +400,11 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 
 	return func(auth model.Authorization, t txn.GetAccount_Statuses) ([]object.Status, toot.PageInfo, error) {
 
+		// Emissary has no featured (pinned) posts
+		if t.Pinned {
+			return []object.Status{}, toot.PageInfo{}, nil
+		}
+
 		// Get the Domain factory for this request
 		factory, err := serverFactory.ByHostname(t.Host)
 
@@ -417,12 +427,9 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 		if err != nil {
 
 			// Not a local account. If it still resolves to something real (a cached
-			// remote actor), the ID itself is valid -- Emissary just doesn't store a
-			// remote actor's own posts locally (that would mean fetching their outbox
-			// live via ActivityPub, a separate feature). Return an accurate empty
-			// result rather than a 404, since the account genuinely exists.
-			if _, resolveErr := resolveAccountURL(factory, session, t.ID); resolveErr == nil {
-				return []object.Status{}, toot.PageInfo{}, nil
+			// remote actor), the ID is valid -- serve what the News Feed holds.
+			if accountURL, resolveErr := resolveAccountURL(factory, session, t.ID); resolveErr == nil {
+				return remoteAccountStatuses(factory, session, auth, t, accountURL)
 			}
 
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized User")
@@ -430,17 +437,160 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 
 		// Query all posts by this user that are visible to the caller
 		streamService := factory.Stream()
-		streams, err := streamService.QueryByUser(session, auth, user.UserID, queryExpression(t), option.MaxRows(t.Limit))
+		streams, err := streamService.QueryByUser(session, auth, user.UserID, queryExpression(t), option.MaxRows(pageLimit(t.Limit)))
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Querying streams")
 		}
 
-		// TODO: HIGH: Work out how to set response headers here for additional pagination
+		// QueryByUser filters and sorts on createDate, so the paging cursors must be
+		// createDate too -- Stream.GetRank() is its "rank", which getPageInfo would use.
+		pageInfo := toot.PageInfo{}
+
+		if length := len(streams); length > 0 {
+			pageInfo.MaxID = strconv.FormatInt(streams[length-1].CreateDate, 10)
+			pageInfo.MinID = strconv.FormatInt(streams[0].CreateDate, 10)
+		}
 
 		// Return posts as toot.Status(es)
-		return getSliceOfToots(streams), getPageInfo(streams), nil
+		return getSliceOfToots(streams), pageInfo, nil
 	}
+}
+
+// remoteAccountStatuses returns a remote account's recent public posts, read live
+// from its ActivityPub outbox. It falls back to whatever the News Feed holds when
+// the outbox can't be read (a server that hides it, a network failure) or is empty.
+//
+// Posts already in the News Feed keep their NewsItem ID, so favourite/boost keep
+// working on them. Any other post is identified by its URL, which those endpoints
+// can't resolve yet.
+//
+// The outbox has no stable cursor to map onto max_id/min_id, so this returns one
+// page, newest first, with no paging info.
+func remoteAccountStatuses(factory *service.Factory, session data.Session, auth model.Authorization, t txn.GetAccount_Statuses, accountURL string) ([]object.Status, toot.PageInfo, error) {
+
+	client := factory.ActivityStream().UserClient(auth.UserID)
+	limit := int(pageLimit(t.Limit))
+
+	actor, err := client.Load(accountURL)
+
+	if err != nil {
+		return accountStatusesFromNewsFeed(factory, session, auth, t, accountURL)
+	}
+
+	account := mapDocumentToAccount(factory, session, actor)
+	outbox := actor.Outbox().LoadLink()
+	newsFeedService := factory.NewsFeed()
+	result := make([]object.Status, 0, limit)
+
+	// Replies and boosts are skipped as we go, so scan a few pages' worth
+	for item := range collections.RangeDocuments(outbox, collections.WithMaxDocuments(limit*3)) {
+
+		if len(result) >= limit {
+			break
+		}
+
+		if item.Type() != vocab.ActivityTypeCreate {
+			continue
+		}
+
+		post := item.UnwrapActivity()
+
+		if post.ID() == "" || post.Content() == "" && post.Attachment().IsNil() {
+			continue
+		}
+
+		if t.ExcludeReplies && post.InReplyTo().ID() != "" {
+			continue
+		}
+
+		var status object.Status
+
+		newsItem := model.NewNewsItem()
+
+		if err := newsFeedService.LoadByURL(session, auth.UserID, post.ID(), &newsItem); err == nil {
+			status, _ = newsItemToStatus(client, factory, session, newsItem)
+		} else {
+			status = documentToStatus(post, account)
+		}
+
+		if t.OnlyMedia && len(status.MediaAttachments) == 0 {
+			continue
+		}
+
+		result = append(result, status)
+	}
+
+	if len(result) == 0 {
+		return accountStatusesFromNewsFeed(factory, session, auth, t, accountURL)
+	}
+
+	return result, toot.PageInfo{}, nil
+}
+
+// documentToStatus builds a Status straight from a post document, for posts that
+// have no NewsItem. The ID is the post's URL.
+func documentToStatus(document streams.Document, account object.Account) object.Status {
+
+	url := document.URL()
+
+	if url == "" {
+		url = document.ID()
+	}
+
+	summary := document.Summary()
+
+	return object.Status{
+		ID:               document.ID(),
+		URI:              document.ID(),
+		URL:              url,
+		CreatedAt:        model.MastodonDate(document.Published()),
+		Visibility:       "public",
+		Account:          account,
+		Content:          document.Content(),
+		SpoilerText:      summary,
+		Sensitive:        summary != "",
+		MediaAttachments: mapDocumentToMediaAttachments(document),
+	}
+}
+
+// accountStatusesFromNewsFeed returns the posts that a remote account has authored
+// and that this User has received. Emissary keeps no remote account's post history,
+// so this is limited to what has reached the User's News Feed.
+//
+// RULE: NewsItem.Origin is whoever led us to the post -- its author for a PRIMARY or
+// REPLY, but the booster for an ANNOUNCE. Only the first two are the account's own.
+func accountStatusesFromNewsFeed(factory *service.Factory, session data.Session, auth model.Authorization, t txn.GetAccount_Statuses, accountURL string) ([]object.Status, toot.PageInfo, error) {
+
+	const location = "handler.mastodon_accountStatusesFromNewsFeed"
+
+	originTypes := []string{model.OriginTypePrimary}
+
+	if !t.ExcludeReplies {
+		originTypes = append(originTypes, model.OriginTypeReply)
+	}
+
+	criteria := queryExpressionByField(t, "rank").
+		AndEqual("origin.url", accountURL).
+		And(exp.In("origin.type", originTypes))
+
+	newsItems, err := factory.NewsFeed().QueryByUserID(session, auth.UserID, criteria, option.SortDesc("rank"), option.MaxRows(pageLimit(t.Limit)))
+
+	if err != nil {
+		return nil, toot.PageInfo{}, derp.Wrap(err, location, "Querying news feed", accountURL)
+	}
+
+	// Paging cursors come from the full page, so filtering below can't stall the client
+	pageInfo := getPageInfo(newsItems)
+	statuses := newsItemsToPosts(factory, session, auth, newsItems)
+
+	if t.OnlyMedia {
+		statuses = slices.DeleteFunc(statuses, func(status object.Status) bool {
+			return len(status.MediaAttachments) == 0
+		})
+	}
+
+	return statuses, pageInfo, nil
 }
 
 // GetAccount_Followers implements the Mastodon "get account followers" endpoint, and always returns an empty list
