@@ -43,7 +43,8 @@
 
 			<div class="widget-editor-LEFT">
 				<div class="widget-editor-sortable" data-location="LEFT">
-					<input type="hidden" name="LEFT" value="">
+					<!-- RULE: each location input carries its current widget IDs from first render, never "" (see AGENTS.md). -->
+					<input type="hidden" name="LEFT" value="{{.WidgetIDsByLocation `LEFT`}}">
 					{{- range .ListWidgetsByLocation "LEFT" -}}
 						{{- template "widget" . -}}
 					{{- end -}}
@@ -61,7 +62,7 @@
 			<div class="widget-editor-CENTER">
 				<div class="widget-editor-TOP">
 					<div class="widget-editor-sortable" data-location="TOP">
-						<input type="hidden" name="TOP" value="">
+						<input type="hidden" name="TOP" value="{{.WidgetIDsByLocation `TOP`}}">
 						{{- range .ListWidgetsByLocation "TOP" -}}
 							{{- template "widget" . -}}
 						{{- end -}}
@@ -79,7 +80,7 @@
 
 				<div class="widget-editor-BOTTOM">
 					<div class="widget-editor-sortable" data-location="BOTTOM">
-						<input type="hidden" name="BOTTOM" value="">
+						<input type="hidden" name="BOTTOM" value="{{.WidgetIDsByLocation `BOTTOM`}}">
 						{{- range .ListWidgetsByLocation "BOTTOM" -}}
 							{{- template "widget" . -}}
 						{{- end -}}
@@ -89,7 +90,7 @@
 
 			<div class="widget-editor-RIGHT">
 				<div class="widget-editor-sortable" data-location="RIGHT">
-					<input type="hidden" name="RIGHT" value="">
+					<input type="hidden" name="RIGHT" value="{{.WidgetIDsByLocation `RIGHT`}}">
 					{{- range .ListWidgetsByLocation "RIGHT" -}}
 						{{- template "widget" . -}}
 					{{- end -}}
