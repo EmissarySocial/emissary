@@ -150,7 +150,7 @@ func (service *SearchResult) Save(session data.Session, searchResult *model.Sear
 		}
 	}
 
-	// Async wait 1s, then send this SearchResult to all listeners
+	// Send this SearchResult to all listeners once the transaction commits
 	postcommit.Publish(
 		session,
 		service.queue,
@@ -159,10 +159,9 @@ func (service *SearchResult) Save(session data.Session, searchResult *model.Sear
 			"hostname":       service.hostname,
 			"searchResultId": searchResult.SearchResultID,
 		},
-		queue.WithAsyncDelay(1000),
 	)
 
-	// Syccess
+	// Success
 	return nil
 }
 
