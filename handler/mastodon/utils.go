@@ -121,13 +121,18 @@ func queryExpressionByField(queryPager txn.QueryPager, fieldName string) exp.Exp
 
 // loadNewsItemByStatusID loads the NewsItem behind a Mastodon status ID. Timeline
 // statuses are identified by their NewsItemID (see NewsItem.Toot), but a client
-// may also send the post's URL.
+// may also send the post's URL, or the encoded URL of a post that isn't in the
+// feed (see model.EncodeRemoteStatusID).
 func loadNewsItemByStatusID(factory *service.Factory, session data.Session, userID primitive.ObjectID, statusID string, newsItem *model.NewsItem) error {
 
 	newsFeedService := factory.NewsFeed()
 
 	if newsItemID, err := primitive.ObjectIDFromHex(statusID); err == nil {
 		return newsFeedService.LoadByID(session, userID, newsItemID, newsItem)
+	}
+
+	if postURL, ok := model.DecodeRemoteStatusID(statusID); ok {
+		return newsFeedService.LoadByURL(session, userID, postURL, newsItem)
 	}
 
 	return newsFeedService.LoadByURL(session, userID, statusID, newsItem)

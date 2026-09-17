@@ -462,8 +462,8 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 // the outbox can't be read (a server that hides it, a network failure) or is empty.
 //
 // Posts already in the News Feed keep their NewsItem ID, so favourite/boost keep
-// working on them. Any other post is identified by its URL, which those endpoints
-// can't resolve yet.
+// working on them. Any other post is identified by its encoded URL, which those
+// endpoints can't resolve to a NewsItem yet.
 //
 // The outbox has no stable cursor to map onto max_id/min_id, so this returns one
 // page, newest first, with no paging info.
@@ -530,7 +530,7 @@ func remoteAccountStatuses(factory *service.Factory, session data.Session, auth 
 }
 
 // documentToStatus builds a Status straight from a post document, for posts that
-// have no NewsItem. The ID is the post's URL.
+// have no NewsItem. The ID is the encoded post URL (see model.EncodeRemoteStatusID).
 func documentToStatus(document streams.Document, account object.Account) object.Status {
 
 	url := document.URL()
@@ -542,7 +542,7 @@ func documentToStatus(document streams.Document, account object.Account) object.
 	summary := document.Summary()
 
 	return object.Status{
-		ID:               document.ID(),
+		ID:               model.EncodeRemoteStatusID(document.ID()),
 		URI:              document.ID(),
 		URL:              url,
 		CreatedAt:        model.MastodonDate(document.Published()),
