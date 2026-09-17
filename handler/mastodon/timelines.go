@@ -171,7 +171,9 @@ func newsItemsToPosts(factory *service.Factory, session data.Session, auth model
 // Accounts are shared across items, so each distinct account is loaded once.
 func newsItemsToStatuses(factory *service.Factory, session data.Session, auth model.Authorization, newsItems []model.NewsItem) ([]object.Status, []*object.Account) {
 
-	const maxConcurrent = 8
+	// A page is at most 40 items, and each spends its time waiting on remote
+	// servers, so let a whole page go at once.
+	const maxConcurrent = 16
 
 	client := factory.ActivityStream().UserClient(auth.UserID)
 	accounts := newAccountMemo()

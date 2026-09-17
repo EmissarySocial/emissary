@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"slices"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -121,6 +122,16 @@ func mapDocumentToAccount(factory *service.Factory, session data.Session, docume
 	// the collection URLs, so fetch each and read its "totalItems". A failure (a
 	// server that hides these, a 404) just leaves the count at 0, which is what
 	// Mastodon itself does. ascache serves repeat profile views without refetching.
+	// The three fetches are independent, so run them together.
+	var followersCount, followingCount, statusesCount int
+	var waitGroup sync.WaitGroup
+
+	waitGroup.Add(3)
+	go func() { defer waitGroup.Done(); followersCount = document.Followers().LoadLink().TotalItems() }()
+	go func() { defer waitGroup.Done(); followingCount = document.Following().LoadLink().TotalItems() }()
+	go func() { defer waitGroup.Done(); statusesCount = document.Outbox().LoadLink().TotalItems() }()
+	waitGroup.Wait()
+
 	return object.Account{
 		ID:             resolveAccountID(factory, session, document.ID()),
 		Acct:           acct,
@@ -133,9 +144,9 @@ func mapDocumentToAccount(factory *service.Factory, session data.Session, docume
 		URL:            document.URL(),
 		Note:           document.Summary(),
 		CreatedAt:      model.MastodonDate(createdAt),
-		FollowersCount: document.Followers().LoadLink().TotalItems(),
-		FollowingCount: document.Following().LoadLink().TotalItems(),
-		StatusesCount:  document.Outbox().LoadLink().TotalItems(),
+		FollowersCount: followersCount,
+		FollowingCount: followingCount,
+		StatusesCount:  statusesCount,
 	}
 }
 
