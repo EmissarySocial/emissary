@@ -481,6 +481,7 @@ func remoteAccountStatuses(factory *service.Factory, session data.Session, auth 
 	account := mapDocumentToAccount(factory, session, actor)
 	outbox := actor.Outbox().LoadLink()
 	newsFeedService := factory.NewsFeed()
+	accounts := newAccountMemo()
 	result := make([]object.Status, 0, limit)
 
 	// Replies and boosts are skipped as we go, so scan a few pages' worth
@@ -509,7 +510,7 @@ func remoteAccountStatuses(factory *service.Factory, session data.Session, auth 
 		newsItem := model.NewNewsItem()
 
 		if err := newsFeedService.LoadByURL(session, auth.UserID, post.ID(), &newsItem); err == nil {
-			status, _ = newsItemToStatus(client, factory, session, newsItem)
+			status, _ = newsItemToStatus(client, factory, session, accounts, newsItem)
 		} else {
 			status = documentToStatus(post, account)
 		}

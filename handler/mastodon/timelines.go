@@ -2,6 +2,7 @@ package mastodon
 
 import (
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -123,12 +124,12 @@ func GetTimeline_List(serverFactory *server.Factory) func(model.Authorization, t
 // becomes the booster's own Status wrapping the original post, as Mastodon does.
 func newsItemsToToots(factory *service.Factory, session data.Session, auth model.Authorization, newsItems []model.NewsItem) []object.Status {
 
-	client := factory.ActivityStream().UserClient(auth.UserID)
+	posts, boosters := newsItemsToStatuses(factory, session, auth, newsItems)
 	result := make([]object.Status, len(newsItems))
 
 	for index, newsItem := range newsItems {
 
-		post, booster := newsItemToStatus(client, factory, session, newsItem)
+		post, booster := posts[index], boosters[index]
 
 		if booster == nil {
 			result[index] = post
@@ -158,14 +159,91 @@ func newsItemsToToots(factory *service.Factory, session data.Session, auth model
 // (favourites, the response to a favourite).
 func newsItemsToPosts(factory *service.Factory, session data.Session, auth model.Authorization, newsItems []model.NewsItem) []object.Status {
 
-	client := factory.ActivityStream().UserClient(auth.UserID)
-	result := make([]object.Status, len(newsItems))
+	posts, _ := newsItemsToStatuses(factory, session, auth, newsItems)
+	return posts
+}
 
-	for index, newsItem := range newsItems {
-		result[index], _ = newsItemToStatus(client, factory, session, newsItem)
+// newsItemsToStatuses runs newsItemToStatus over every NewsItem, concurrently.
+//
+// RULE: each item costs several remote fetches (actor, post, author, and the
+// collections behind an account's counts), so a cold cache makes them the whole
+// request. Run in parallel a cold page costs its slowest item, not the sum.
+// Accounts are shared across items, so each distinct account is loaded once.
+func newsItemsToStatuses(factory *service.Factory, session data.Session, auth model.Authorization, newsItems []model.NewsItem) ([]object.Status, []*object.Account) {
+
+	const maxConcurrent = 8
+
+	client := factory.ActivityStream().UserClient(auth.UserID)
+	accounts := newAccountMemo()
+	statuses := make([]object.Status, len(newsItems))
+	boosters := make([]*object.Account, len(newsItems))
+
+	var waitGroup sync.WaitGroup
+	slots := make(chan struct{}, maxConcurrent)
+
+	for index := range newsItems {
+
+		waitGroup.Add(1)
+		slots <- struct{}{}
+
+		go func(index int) {
+			defer waitGroup.Done()
+			defer func() { <-slots }()
+			statuses[index], boosters[index] = newsItemToStatus(client, factory, session, accounts, newsItems[index])
+		}(index)
 	}
 
-	return result
+	waitGroup.Wait()
+	return statuses, boosters
+}
+
+// accountMemo loads each distinct account once per request, however many
+// concurrent callers ask for it.
+type accountMemo struct {
+	mutex sync.Mutex
+	items map[string]*accountMemoItem
+}
+
+type accountMemoItem struct {
+	once    sync.Once
+	account object.Account
+	found   bool
+}
+
+func newAccountMemo() *accountMemo {
+	return &accountMemo{items: map[string]*accountMemoItem{}}
+}
+
+// get returns the account for a URL, calling load only for the first caller
+func (memo *accountMemo) get(url string, load func() (object.Account, bool)) (object.Account, bool) {
+
+	memo.mutex.Lock()
+	item, ok := memo.items[url]
+
+	if !ok {
+		item = &accountMemoItem{}
+		memo.items[url] = item
+	}
+
+	memo.mutex.Unlock()
+
+	item.once.Do(func() {
+		item.account, item.found = load()
+	})
+
+	return item.account, item.found
+}
+
+// loadAccount fetches an actor and maps it to an Account, reporting false on failure
+func loadAccount(client streams.Client, factory *service.Factory, session data.Session, url string) (object.Account, bool) {
+
+	document, err := client.Load(url)
+
+	if err != nil {
+		return object.Account{}, false
+	}
+
+	return mapDocumentToAccount(factory, session, document), true
 }
 
 // newsItemToStatus builds the Status for the post behind a NewsItem, live-fetching
@@ -186,12 +264,14 @@ func newsItemsToPosts(factory *service.Factory, session data.Session, auth model
 // RULE (Content): NewsItem never stores the post body -- see NewsItem.Toot().
 // This fetch is normally a cache hit, since ingesting the document is how the
 // NewsItem came to exist in the first place.
-func newsItemToStatus(client streams.Client, factory *service.Factory, session data.Session, newsItem model.NewsItem) (object.Status, *object.Account) {
+func newsItemToStatus(client streams.Client, factory *service.Factory, session data.Session, accounts *accountMemo, newsItem model.NewsItem) (object.Status, *object.Account) {
 
 	status := newsItem.Toot()
 
-	if document, err := client.Load(newsItem.Origin.URL); err == nil {
-		status.Account = mapDocumentToAccount(factory, session, document)
+	if account, found := accounts.get(newsItem.Origin.URL, func() (object.Account, bool) {
+		return loadAccount(client, factory, session, newsItem.Origin.URL)
+	}); found {
+		status.Account = account
 	}
 
 	document, err := client.Load(newsItem.URL)
@@ -221,8 +301,10 @@ func newsItemToStatus(client streams.Client, factory *service.Factory, session d
 
 	booster := status.Account
 
-	if authorDocument, err := client.Load(authorURL); err == nil {
-		status.Account = mapDocumentToAccount(factory, session, authorDocument)
+	if author, found := accounts.get(authorURL, func() (object.Account, bool) {
+		return loadAccount(client, factory, session, authorURL)
+	}); found {
+		status.Account = author
 	} else {
 		status.Account = model.RemoteActorAccount(authorURL, "", "", time.Time{})
 	}
