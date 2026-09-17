@@ -7,7 +7,7 @@
 		properties:{
 			html:{
 				type:"string"
-				format:"html"
+				format:"unsafe-any"
 				maxLength:100000
 			}
 		}
