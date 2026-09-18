@@ -12,7 +12,7 @@ import (
 // invokeHttpsRedirect runs one request through the middleware and returns the
 // response recorder plus a flag indicating whether the request was passed to
 // the next handler (true) or short-circuited by the middleware (false).
-func invokeHttpsRedirect(t *testing.T, scheme string, host string) (*httptest.ResponseRecorder, bool) {
+func invokeHttpsRedirect(t *testing.T, scheme string, host string) (httptest.ResponseRecorder, bool) {
 	t.Helper()
 
 	request := httptest.NewRequest(http.MethodGet, "http://"+host+"/path", nil)
@@ -38,7 +38,7 @@ func invokeHttpsRedirect(t *testing.T, scheme string, host string) (*httptest.Re
 	err := HttpsRedirect(next)(ctx)
 	require.NoError(t, err)
 
-	return recorder, passed
+	return *recorder, passed
 }
 
 // TestHttpsRedirect_InsecurePublic verifies that an insecure public request is redirected instead of handled
