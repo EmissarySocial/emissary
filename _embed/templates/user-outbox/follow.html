@@ -1,23 +1,109 @@
 {{- template "follow-heading" . -}}
 
-<button hx-get="/@{{.UserID}}/intent?intent=follow&object={{.Permalink}}" class="flex-row width-100%">
-	<div class="text-2xl margin-none margin-right-sm">{{icon "activitypub"}}</div>
-	<div class="flex-grow">
-		<div class="text-lg margin-none">My Fediverse Account</div>
-		<div class="text-sm text-gray">Updates via ActivityPub (better)</div>
+<div class="camper-show-if-has-accounts">
+
+	<div class="text-sm margin-vertical-sm">Follow from your signed in account:</div>
+
+	<div 
+		class="margin-bottom-sm camper-accounts" 
+		data-intent="follow" 
+		data-object="{{.Permalink}}" 
+		data-max-accounts="1"
+		hx-on:camper-hide="htmx.trigger(window, 'closeModal')">
+	</div>
+
+	<div class="margin-vertical-xl"></div>
+
+	<div class="text-sm margin-vertical-sm">Or follow from another service:</div>
+</div>
+
+<div class="camper-hide-if-has-accounts">
+
+	<div class="text-sm margin-vertical-sm">You can follow from any of these services:</div>
+
+	<button hx-get="/@{{.UserID}}/follow-activitypub" class="flex-row width-100% margin-bottom-sm">
+		<div class="text-2xl margin-none">⁂</div>
+		<div class="flex-grow">
+			<div class="text-lg bold margin-none">Fediverse</div>
+			<div class="text-sm text-gray">Using Mastodon and other ActivityPub servers (best)</div>
+		</div>
+		<div class="text-lg">{{icon "chevron-right"}}</div>
+	</button>
+
+</div>
+
+{{- if .IsBridgeBluesky -}}
+
+	<a href="https://bsky.app/profile/{{.BlueskyHandle}}" target="_blank" class="button flex-row width-100% margin-bottom-sm">
+		<div class="text-2xl margin-none">{{icon "bluesky"}}</div>
+		<div class="flex-grow">
+			<div class="text-lg bold margin-none">BlueSky</div>
+			<div class="text-sm text-gray">Via any ATProto server (better)</div>
+		</div>
+		<div class="text-lg">{{icon "chevron-right"}}</div>
+	</a>
+
+{{- end -}}
+
+<button hx-get="/@{{.UserID}}/follow-email" class="flex-row width-100% margin-bottom-sm">
+	<div class="text-2xl margin-none">{{icon "email"}}</div>
+	<div class="flex-grow flex-align-cent">
+		<div class="text-lg bold margin-none">Email</div>
+		<div class="text-sm text-gray margin-none ">Updates in your email inbox (one-way only)</div>
 	</div>
 	<div class="text-lg">{{icon "chevron-right"}}</div>
 </button>
 
-<button hx-get="/@{{.UserID}}/follow-email" class="text-lg flex-row width-100%">
-	<div class="text-2xl margin-none margin-right-sm">{{icon "email"}}</div>
-	<div class="flex-grow">
-		<div class="text-lg margin-none">My Email Account</div>
-		<div class="text-sm text-gray">Updates in your email inbox</div>
-	</div>
-	<div class="text-lg">{{icon "chevron-right"}}</div>
-</button>
+<div class="margin-top-lg">
+	<button script="on click trigger closeModal">Close Window</button>
+</div>
 
-<hr>
+<script src="/.themes/global/resources/camperjs/camper.js"></script>
 
-<button script="on click trigger closeModal">Close Window</button>
+<style>
+	.camper-account {
+		background-color: var(--gray10);
+		border-radius: var(--rhythm);
+		padding:calc(var(--rhythm) * 2);
+		display:flex;
+		gap: var(--rhythm);
+		cursor: pointer;
+
+		&:hover {
+			background-color: var(--gray20);
+		}
+
+		.camper-account-icon {
+			width:32px;
+			height:32px;
+			border-radius:16px;
+		}
+
+		.camper-account-info {
+			display:flex;
+			flex-direction:column;
+			justify-content:center;
+			flex-grow:1;
+			color:var(--text-color);
+
+			.camper-account-name {
+				font-weight:bold;
+				font-size:calc(var(--rhythm) * 2.75);
+				line-height: calc(var(--rhythm) * 4);
+				margin:0;
+			}
+
+			.camper-account-username {
+				font-size:calc(var(--rhythm) * 1.75);
+				line-height: calc(var(--rhythm) * 2.5);
+				margin:0;
+				opacity:0.66;
+			}
+		}
+
+		.camper-account-remove-button {
+			background-color: var(--gray05);
+			font-size: calc(var(--rhythm) * 3/2);
+		}
+	}
+</style>

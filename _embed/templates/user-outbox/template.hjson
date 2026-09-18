@@ -214,6 +214,21 @@
 			]
 		}
 
+		follow-email: {
+			roles:["anonymous"]
+			steps: [
+				{do:"as-modal", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+		follow-email-sent: {
+			roles:["anonymous"]
+			steps: [
+				{do:"view-html"}
+			]
+		},
+
 		follower-confirm: {
 			roles:["anonymous"]
 			steps:[
