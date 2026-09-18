@@ -30,14 +30,6 @@ func GetTimeline_Public(serverFactory *server.Factory) func(model.Authorization,
 	}
 }
 
-// https://docs.joinmastodon.org/methods/timelines/#tag
-func GetTimeline_Hashtag(serverFactory *server.Factory) func(model.Authorization, txn.GetTimeline_Hashtag) ([]object.Status, toot.PageInfo, error) {
-
-	return func(auth model.Authorization, t txn.GetTimeline_Hashtag) ([]object.Status, toot.PageInfo, error) {
-		return []object.Status{}, toot.PageInfo{}, nil
-	}
-}
-
 // https://docs.joinmastodon.org/methods/timelines/#home
 func GetTimeline_Home(serverFactory *server.Factory) func(model.Authorization, txn.GetTimeline_Home) ([]object.Status, toot.PageInfo, error) {
 

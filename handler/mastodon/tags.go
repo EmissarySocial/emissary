@@ -7,14 +7,6 @@ import (
 	"github.com/benpate/toot/txn"
 )
 
-// https://docs.joinmastodon.org/methods/tags/
-func GetTag(serverFactory *server.Factory) func(model.Authorization, txn.GetTag) (object.Tag, error) {
-
-	return func(model.Authorization, txn.GetTag) (object.Tag, error) {
-		return object.Tag{}, nil
-	}
-}
-
 // PostTag_Follow implements the Mastodon "follow a hashtag" endpoint as a no-op
 func PostTag_Follow(serverFactory *server.Factory) func(model.Authorization, txn.PostTag_Follow) (object.Tag, error) {
 
