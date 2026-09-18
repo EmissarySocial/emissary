@@ -286,6 +286,7 @@ func newsItemToStatus(client streams.Client, factory *service.Factory, session d
 	status.SpoilerText = document.Summary()
 	status.Sensitive = status.SpoilerText != ""
 	status.MediaAttachments = mapDocumentToMediaAttachments(document)
+	status.Tags = mapDocumentToTags(document)
 
 	if newsItem.Origin.Type != model.OriginTypeAnnounce {
 		return status, nil
@@ -312,6 +313,36 @@ func newsItemToStatus(client streams.Client, factory *service.Factory, session d
 	}
 
 	return status, &booster
+}
+
+// mapDocumentToTags converts the Hashtags in a post document's AS2 "tag" property
+// into Mastodon tags. Mentions and emoji share that property but are not hashtags.
+func mapDocumentToTags(document streams.Document) []object.StatusTag {
+
+	result := make([]object.StatusTag, 0)
+
+	for tag := range document.Tag().Range() {
+
+		if tag.Type() != vocab.LinkTypeHashtag {
+			continue
+		}
+
+		// AS2 names carry the leading "#"; Mastodon's do not
+		name := strings.TrimPrefix(tag.Name(), "#")
+		href := tag.Href()
+
+		if href == "" {
+			href = tag.ID()
+		}
+
+		if name == "" || href == "" {
+			continue
+		}
+
+		result = append(result, object.StatusTag{Name: name, URL: href})
+	}
+
+	return result
 }
 
 // mapDocumentToMediaAttachments converts a post document's AS2 "attachment"

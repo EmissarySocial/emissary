@@ -563,6 +563,7 @@ func documentToStatus(document streams.Document, account object.Account) object.
 		SpoilerText:      summary,
 		Sensitive:        summary != "",
 		MediaAttachments: mapDocumentToMediaAttachments(document),
+		Tags:             mapDocumentToTags(document),
 	}
 }
 
