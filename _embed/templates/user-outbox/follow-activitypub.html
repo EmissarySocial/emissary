@@ -9,7 +9,7 @@
 	</div>
 
 	<div class="margin-vertical-xl flex-column flex-align-center">
-		<a id="join-button" href="https://joinmastodon.org" class="button primary margin-none" target="_blank" style="font-size:24px;">
+		<a id="join-button" href="https://joinmastodon.org" class="button primary margin-none" target="_blank" style="font-size:24px;" tabIndex="0">
 			⁂ Join the Fediverse
 		</a>
 		<div class="align-center margin-top text-sm">
@@ -45,13 +45,13 @@
 			placeholder="@username@server.social"
 			aria-labelledby="fediverse-description"
 			autocomplete="off"
+			tabIndex="0"
 			required="true"
 			data-1p-ignore>
 
-		<button type="submit" class="primary">
+		<button type="submit" class="primary" tabIndex="0">
 			<span class="camper-loading" hidden><span class="spin">{{icon "loading"}}</span></span>
-			<span class="camper-add-first-account">Add Account</span>
-			<span class="camper-add-another-account" hidden>Add Another</span>
+			<span class="camper-add-account">&rarr;</span>
 		</button>
 	</div>
 </form>
