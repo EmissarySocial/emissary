@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/remote"
 	"github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
 	"github.com/benpate/uri"
 )
@@ -30,12 +29,15 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 	// WithMinAge(0) waives the default cooldown on both loads below. The cache is keyed by URL alone,
 	// so a cooldown here could answer an AUTHENTICATED request with the public copy that some earlier
 	// unauthenticated load left behind. (BUG-104)
+	// The bearer option is passed BARE, not wrapped: only a remote.Option survives
+	// the client stack (activitypub.Client.Load filters the bag by that type), so
+	// wrapping it in any other option type sends the request with no Authorization header.
 	client := factory.ActivityStream().AppClient()
-	withBearerAuth := sherlock.WithRemoteOptions(options.BearerAuth(record.OAuthToken.AccessToken))
+	withBearerAuth := options.BearerAuth(record.OAuthToken.AccessToken)
 	withoutCooldown := ascache.WithMinAge(0)
 
 	// Load the actor so we can make an import plan
-	actor, err := client.Load(record.SourceID, sherlock.AsActor(), ascache.WithWriteOnly(), withBearerAuth, withoutCooldown)
+	actor, err := client.Load(record.SourceID, ascache.WithWriteOnly(), withBearerAuth, withoutCooldown)
 
 	// We should have already loaded the actor when starting the Import process.
 	// If we cannot load the actor now, then just abandon the whole damned thing.

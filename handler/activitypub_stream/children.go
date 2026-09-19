@@ -18,7 +18,11 @@ func GetChildrenCollection(ctx *steranko.Context, factory *service.Factory, sess
 
 	// Calculate the caller's permissions from the HTTP signature (defaults to
 	// anonymous when the request is unsigned).
-	permissions := factory.Permission().ParseHTTPSignature(session, ctx.Request())
+	permissions, err := factory.Permission().ParseHTTPSignature(session, ctx.Request())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid HTTP Signature")
+	}
 
 	// Get an iterator of the currently-published child streams. The publish-date
 	// window is applied in the query; per-child permissions are applied below.

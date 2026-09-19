@@ -13,7 +13,6 @@ import (
 	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/ranges"
-	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
 	"github.com/rs/zerolog/log"
 )
@@ -25,7 +24,7 @@ func PollFollowing_Record(factory *service.Factory, session data.Session, user *
 
 	// Load the Actor that we're following
 	client := factory.ActivityStream().UserClient(user.UserID)
-	actor, err := client.Load(following.URL, sherlock.AsActor())
+	actor, err := client.Load(following.URL)
 
 	if err != nil {
 		return actorError(factory, session, following, err)
@@ -42,7 +41,7 @@ func PollFollowing_Record(factory *service.Factory, session data.Session, user *
 	for _, document := range documents {
 
 		// Try to load the document from the Actor's outbox
-		result, err := document.Load(sherlock.WithDefaultValue(document.Map()))
+		result, err := document.Load()
 
 		if err != nil {
 

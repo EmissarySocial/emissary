@@ -1,37 +1,75 @@
 {{- template "follow-heading" . -}}
 
-<h2>Have an Account?</h2>
+<div class="camper-add-first-account">
+	<div>
+		The Fediverse is a community websites without ads, tracking, or algorithms.
+		And it's already serving millions of people around the world.
+		They all work together, each sharing news and events with all the rest.
+		<a href="https://fediverse.info" target="_blank">Learn more {{icon "link-outbound"}}</a>
+	</div>
 
-<div class="margin-bottom">
-	Enter your Fediverse address to get automatic updates on your social inbox.
+	<div class="margin-vertical-xl flex-column flex-align-center">
+		<a id="join-button" href="https://joinmastodon.org" class="button primary margin-none" target="_blank" style="font-size:24px;" tabIndex="0">
+			⁂ Join the Fediverse
+		</a>
+		<div class="align-center margin-top text-sm">
+			<b>Mastodon.social</b> is your recommended server<br> 
+			but you can <a href="https://joinmastodon.org/servers" target="_blank">choose from many others {{icon "link-outbound"}}</a>
+		</div>
+	</div>
+
 </div>
 
-<form hx-post="/.ostatus/discover" hx-target="#htmx-response-message" hx-swap="innerHTML" class="margin-bottom">
-	<div class="flex-row" style="margin-bottom:4px;">
-		<input type="hidden" name="localAccount" value="{{.ProfileURL}}"/>
-		<input type="text" name="remoteAccount" placeholder="https://yoursite.social/@yourname" autofocus autocomplete="url"/>
-		<button class="primary nowrap">Follow from<br>my own server</button>
+<h2>Already Connected?</h2>
+
+<div 
+	class="margin-bottom-sm camper-accounts" 
+	data-intent="follow" 
+	data-object="{{.Permalink}}" 
+	data-max-accounts="1"
+	hx-on:camper-hide="htmx.trigger(window, 'closeModal')">
+</div>
+
+<form 
+	class="camper-form camper-add-account"
+	data-max-accounts="1">
+
+	<div class="margin-vertical text-sm">Use your Fediverse profile to follow <b>{{.DisplayName}}</b> from your own server.</div>
+	
+	<div class="flex-row flex-align-center">
+		<input 
+			type="text"
+			id="fediverse-handle"
+			class="camper-input flex-grow"
+			name="username"
+			placeholder="@username@server.social"
+			aria-labelledby="fediverse-description"
+			autocomplete="off"
+			tabIndex="0"
+			required="true"
+			data-1p-ignore>
+
+		<button type="submit" class="primary" tabIndex="0">
+			<span class="camper-loading" hidden><span class="spin">{{icon "loading"}}</span></span>
+			<span class="camper-add-account">&rarr;</span>
+		</button>
 	</div>
-	<div id="htmx-response-message" class="text-red">&nbsp;</div>
 </form>
 
-<div>
-	<h2>Need an Account?</h2>
+<!--
+<form hx-post="/.ostatus/discover" hx-target="#htmx-response-message" hx-swap="innerHTML" class="margin-bottom">
+	<div class="text-sm text-gray margin-bottom">
+		Enter your Fediverse address to get automatic updates on your social inbox.
+	</div>
+	<div class="flex-row margin-bottom-sm">
+		<input type="hidden" name="localAccount" value="{{.ProfileURL}}"/>
+		<input type="text" name="remoteAccount" placeholder="@fabulous@server.social" autofocus autocomplete="url"/>
+		<button class="primary nowrap">Follow from my server &rarr;</button>
+	</div>
 
-	{{- if .DomainHasRegistrationForm -}}
-		<a href="/register" class="primary button">Sign Up Now</a>
-		<a href="https://emissary.social/hosting" class="button">Find Another Host</a>
-		<button script="on click trigger closeModal">Cancel</button>
-		
-	{{- else -}}
-		Signups on this site are closed, but you can still follow {{.DisplayName}}
-		from any Fediverse host. Check out this 
-		<a href="https://emissary.social/hosting" target="_blank">list of trustworthy providers</a>
-		to get started.
-		<br>
-		<br>	
-		<button script="on click trigger closeModal">Close Window</button>
-	{{- end -}}
-</div>
+	<div id="htmx-response-message" class="text-red">&nbsp;</div>
+</form>
+-->
 
+<script src="/.themes/global/resources/camperjs/camper.js"></script>
 

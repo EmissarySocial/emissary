@@ -17,62 +17,42 @@
      above it is set to. -->
 <form id="saveForm" hx-post="/{{.StreamID}}/editor" hx-swap="none" hx-push-url="false" hx-request='{"timeout":30000}' class="flex-column flex-grow">
 
-	<!-- The Column Split picker: the same data.columns the Layout tab writes, put where the
-	     writing happens.  Three radios inside #saveForm, so the value posts with the two
-	     columns and the "editor" action reads all three fields from one form.
-
-	     The Layout tab ships this same picker, markup and rules alike -- one setting in two
-	     places rather than two controls.  What differs between the surfaces is only the
-	     TRIGGER, never the engine: the page reads a stored class, both pickers read a checked
-	     radio, and all of them end at the same flex-basis/flex-grow pair on .two-column-left
-	     and .two-column-right.  Which is why the row below carries no columns-* class of its
-	     own: a stored class would still say whatever was last saved, and the point of putting
-	     the control here is that the writing surface re-proportions on the click.
-
-	     The change handler must go through save(), not submit #saveForm directly.  save() calls
-	     beforeSave(), which is what copies the CodeMirrors into their textareas; a bare submit
-	     would post whatever the textareas last held and silently revert typing.
-
-	     It is debounced for a sharper reason than tidiness.  save() takes a lock, and a second
-	     call arriving mid-flight WAITS for the first and then exits WITHOUT saving -- so
-	     clicking quickly through the options would leave the last click unsaved.  Debouncing
-	     collapses the run into one save that reads the final state.
-
-	     RULE: each input is emitted whole, from inside its branch, and the branch decides on a
-	     BOOLEAN rather than building an attribute out of a string.  Two separate traps make
-	     that the only safe form, and neither one errors:
-
-	       - Templates are minified before they are parsed, and an action inside a TAG is read
-	         as attribute markup and lowercased -- so `{{if eq $columns "TWO-THIRDS"}}checked`
-	         written between two attributes would compare against "two-thirds" and never match.
-	       - Hoisting the attribute into a variable dodges that but hits html/template instead:
-	         a value interpolated where an attribute NAME goes is passed through htmlNameFilter,
-	         which replaces anything that is not a valid name -- the empty string included --
-	         with the literal text ZgotmplZ.  Every unselected option gets a junk attribute. -->
+	<!-- The Column Split control: five radios inside #saveForm, posting data.columns. -->
+	<!-- RULE: the debounce, the missing columns-* class, and the whole-input-per-branch emission below are each load-bearing (AGENTS.md). -->
+	{{- $checked_threequarters := false -}}
 	{{- $checked_twothirds := false -}}
 	{{- $checked_onehalf := false -}}
 	{{- $checked_onethird := false -}}
+	{{- $checked_onequarter := false -}}
 
 	{{- $columns := .DataString "columns" -}}
 
-	{{- if eq $columns "TWO-THIRDS" -}}
+	{{- if eq $columns "THREE-QUARTERS" -}}
+		{{- $checked_threequarters = true -}}
+	{{- else if eq $columns "TWO-THIRDS" -}}
 		{{- $checked_twothirds = true -}}
 	{{- else if eq $columns "ONE-THIRD" -}}
 		{{- $checked_onethird = true -}}
+	{{- else if eq $columns "ONE-QUARTER" -}}
+		{{- $checked_onequarter = true -}}
 	{{- else -}}
 		{{- $checked_onehalf = true -}}
 	{{- end -}}
 
-	<div class="two-column-split-picker" role="radiogroup" aria-labelledby="columnsPickerLabel" script="on change debounced at 300ms call save()">
+	<div class="two-column-split-picker two-column-split-stops" role="radiogroup" aria-label="Column widths" script="on change debounced at 300ms call save()">
 
-		{{if $checked_twothirds}}<input type="radio" id="columnsTwoThirds" name="data.columns" value="TWO-THIRDS" checked>{{else}}<input type="radio" id="columnsTwoThirds" name="data.columns" value="TWO-THIRDS">{{end}}
-		<label for="columnsTwoThirds" title="Two thirds, one third"><span class="hide-visual">Two thirds, one third</span></label>
-
-		{{if $checked_onehalf}}<input type="radio" id="columnsOneHalf" name="data.columns" value="ONE-HALF" checked>{{else}}<input type="radio" id="columnsOneHalf" name="data.columns" value="ONE-HALF">{{end}}
-		<label for="columnsOneHalf" title="Equal halves"><span class="hide-visual">Equal halves</span></label>
-
+		<!-- RULE: each option is placed at the dividing line it produces, so clicking one jumps straight to that ratio (AGENTS.md). -->
+		<!-- RULE: narrowest left column first.  Document order is the keyboard's path, and it has to match the order the stylesheet lays these out in. -->
+		{{if $checked_onequarter}}<input type="radio" id="columnsOneQuarter" name="data.columns" value="ONE-QUARTER" checked>{{else}}<input type="radio" id="columnsOneQuarter" name="data.columns" value="ONE-QUARTER">{{end}}
+		<label for="columnsOneQuarter" title="One quarter, three quarters"><span class="hide-visual">One quarter, three quarters</span></label>
 		{{if $checked_onethird}}<input type="radio" id="columnsOneThird" name="data.columns" value="ONE-THIRD" checked>{{else}}<input type="radio" id="columnsOneThird" name="data.columns" value="ONE-THIRD">{{end}}
 		<label for="columnsOneThird" title="One third, two thirds"><span class="hide-visual">One third, two thirds</span></label>
+		{{if $checked_onehalf}}<input type="radio" id="columnsOneHalf" name="data.columns" value="ONE-HALF" checked>{{else}}<input type="radio" id="columnsOneHalf" name="data.columns" value="ONE-HALF">{{end}}
+		<label for="columnsOneHalf" title="Equal halves"><span class="hide-visual">Equal halves</span></label>
+		{{if $checked_twothirds}}<input type="radio" id="columnsTwoThirds" name="data.columns" value="TWO-THIRDS" checked>{{else}}<input type="radio" id="columnsTwoThirds" name="data.columns" value="TWO-THIRDS">{{end}}
+		<label for="columnsTwoThirds" title="Two thirds, one third"><span class="hide-visual">Two thirds, one third</span></label>
+		{{if $checked_threequarters}}<input type="radio" id="columnsThreeQuarters" name="data.columns" value="THREE-QUARTERS" checked>{{else}}<input type="radio" id="columnsThreeQuarters" name="data.columns" value="THREE-QUARTERS">{{end}}
+		<label for="columnsThreeQuarters" title="Three quarters, one quarter"><span class="hide-visual">Three quarters, one quarter</span></label>
 	</div>
 
 	<div class="two-column two-column-editor flex-grow">
@@ -198,12 +178,9 @@
 
 <script type="text/hyperscript">
 
-	-- Overrides the no-op beforeSave() that edit-menubar.html defines, which is what the
-	-- shared save() calls before it submits #saveForm.  A later definition of the same name
-	-- wins, and this block is rendered after the menu bar.
-	--
-	-- The work itself is a plain JavaScript function, because it has to run whether or not
-	-- EasyMDE loaded -- and a call is the one thing that behaves identically either way.
+	-- Overrides the no-op beforeSave() that edit-menubar.html defines, which the shared save()
+	-- calls before it submits #saveForm.  RULE: both the ordering and the plain JS call are
+	-- load-bearing; see AGENTS.md.
 	def beforeSave()
 		call emissaryTwoColumnBeforeSave()
 	end

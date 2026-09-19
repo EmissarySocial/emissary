@@ -35,12 +35,9 @@
 				left: {type:"string", format:"unsafe-any", maxLength:1048576}
 				right: {type:"string", format:"unsafe-any", maxLength:1048576}
 
-				// NOT required, and the enum is what makes that safe -- see data.width in
-				// article-base for the whole argument.  ONE-HALF is the fallback: an absent
-				// value renders "columns-", which matches no rule and leaves the stylesheet's
-				// own equal-halves default in place, which is what the Layout tab's final
-				// "else" branch selects.
-				columns: {type:"string", enum:["TWO-THIRDS", "ONE-HALF", "ONE-THIRD"]}
+				// NOT required, and the enum is what makes that safe.  Values name the LEFT
+				// column's share, and ONE-HALF is the fallback.  See AGENTS.md.
+				columns: {type:"string", enum:["THREE-QUARTERS", "TWO-THIRDS", "ONE-HALF", "ONE-THIRD", "ONE-QUARTER"]}
 			}}
 		}
 	}

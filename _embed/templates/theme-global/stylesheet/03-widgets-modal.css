@@ -169,6 +169,6 @@
 	#modal-content {
 		background-color:var(--gray20);
 		border-color:var(--gray30);
-		color: white;
+		color: var(--gray100);
 	}
 }

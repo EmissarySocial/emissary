@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"html/template"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -457,6 +458,13 @@ func (w Stream) ListWidgetsByLocation(location string) []model.StreamWidget {
 	}
 
 	return result
+}
+
+// WidgetIDsByLocation returns the IDs of every widget in the specified location as a
+// comma-separated list, in display order
+func (w Stream) WidgetIDsByLocation(location string) string {
+	widgets := w._stream.WidgetsByLocation(location)
+	return strings.Join(slice.Map(widgets, model.StreamWidget.ID), ",")
 }
 
 // Widgets returns HTML for all the widgets in the specified location

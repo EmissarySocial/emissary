@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/benpate/rosetta/mapof"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -38,9 +37,4 @@ func Version33(ctx context.Context, session *mongo.Database) error {
 
 	fmt.Println("...... cleared " + fmt.Sprint(result.ModifiedCount) + " legacy context URLs")
 	return nil
-}
-
-// NOTE: This helper keeps the migration in the same package conventions as the other upgrades.
-func legacyContextURL(record mapof.Any) string {
-	return record.GetString("context")
 }

@@ -37,8 +37,7 @@ func (store *fakeKeyStore) load(keyID string, options ...any) (streams.Document,
 	// same cached key that just failed, and rotation would silently stop being repaired.
 	for _, option := range options {
 		if loadOption, ok := option.(ascache.LoadOption); ok {
-			config := ascache.NewLoadConfig(loadOption)
-			if config.IsWriteOnly() {
+			if config := ascache.NewLoadConfig(loadOption); config.IsWriteOnly() {
 				store.forcedLoads++
 			}
 		}

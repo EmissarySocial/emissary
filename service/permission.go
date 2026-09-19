@@ -290,77 +290,116 @@ func (service *Permission) Permissions(authorization *model.Authorization, ident
 	return result
 }
 
-// ParseHTTPSignature returns the Permissions granted by a request's (verified) HTTP Signature.
-func (service *Permission) ParseHTTPSignature(session data.Session, request *http.Request) model.Permissions {
+// ParseHTTPSignature returns the Permissions granted by a request's HTTP Signature, refusing
+// any request that carries a signature it cannot verify.
+func (service *Permission) ParseHTTPSignature(session data.Session, request *http.Request) (model.Permissions, error) {
 
 	result := model.NewAnonymousPermissions()
 
 	// RULE: Empty requests are not signed.  This should never happen..
 	if request == nil {
-		return result
+		return result, nil
 	}
 
 	// Verify the signature
 	signature, err := service.getSignature(request)
 
+	// RULE: A signature that is present but INVALID refuses the whole request. The refusal
+	// travels back unwrapped, so the peer reads its fixed message instead of a wrapper's. (BUG-20)
 	if err != nil {
-		return result
+		return result, err
 	}
 
-	// Find an Identity based on the signature
+	// RULE: A request that offers no Signature at all is Anonymous, and names no Actor to load
+	if signature.KeyID == "" {
+		return result, nil
+	}
+
+	// Find an Identity based on the signature. A signature that names no local Identity is
+	// still a valid signature; it simply carries no extra privileges here.
 	identity := model.NewIdentity()
 	if err := service.identityService.LoadByActivityPubActor(session, signature.ActorID(), &identity); err != nil {
-		return result
+		return result, nil
 	}
 
 	// If present, then add the privileges for this Identity
 	result = append(result, identity.PrivilegeIDs...)
 
 	if !identity.HasEmailAddress() {
-		return result
+		return result, nil
 	}
 
 	// If the Identity DOES have an email address, then look for a User, too
 	user := model.NewUser()
 	if err := service.userService.LoadByEmail(session, identity.EmailAddress, &user); err != nil {
-		return result
+		return result, nil
 	}
 
 	result = append(result, model.MagicGroupIDAuthenticated, user.UserID)
 	result = append(result, user.GroupIDs...)
 
-	return result
+	return result, nil
 }
 
-// getSignature verifies and returns the HTTP signature on an inbound request
+// getSignature verifies and returns the HTTP signature on an inbound request, or an empty
+// Signature when the request carries no signature at all.
 func (service *Permission) getSignature(request *http.Request) (sigs.Signature, error) {
+	return resolveSignature(request, service.activityService.VerifySignature)
+}
 
-	const location = "service.Permission.getSignature"
+//////////////////////////////////////////
+// Helper functions
+//////////////////////////////////////////
 
-	// First, try to verify the signature using the standard method
-	signature, err := service.activityService.VerifySignature(request)
+// resolveSignature separates the three cases an inbound signature can present: no signature
+// (Anonymous), a valid signature (an Actor), and one that FAILS to verify. separated for testability.
+func resolveSignature(request *http.Request, verify func(*http.Request) (sigs.Signature, error)) (sigs.Signature, error) {
 
-	if err == nil {
-		return signature, nil
-	}
+	const location = "service.resolveSignature"
 
-	// If there's an error on production servers, then fail
-	if !uri.IsLocalHostname(request.Host) {
-		return sigs.Signature{}, derp.Wrap(err, location, "Verifying signature for request")
-	}
+	isSigned := sigs.HasSignature(request)
 
-	// Fall through means we're on localhost; try the "mock" verifier
-	if mockKeyID := request.Header.Get("Mock-Key-Id"); mockKeyID != "" {
-		result := sigs.Signature{
-			KeyID:     mockKeyID,
-			Algorithm: "MOCK",
-			Headers:   make([]string, 0),
-			Signature: make([]byte, 0),
-			Expires:   math.MaxInt64,
+	// A signature that verifies speaks for its Actor. A verification FAILURE is not returned
+	// here, because the mock verifier below may still stand in for it on a local domain.
+	if isSigned {
+		if signature, err := verify(request); err == nil {
+			return signature, nil
 		}
-
-		return result, nil
 	}
 
-	return sigs.Signature{}, derp.Wrap(err, location, "No valid signature found. For local domains, use 'Mock-Key-Id' header to simulate a signing key.")
+	// RULE: A local domain accepts a mock key in place of a real signature. This branch is
+	// reached by UNSIGNED requests too, so it must sit ahead of the rules below -- a local
+	// harness names its actor with this header alone. (BUG-51)
+	if uri.IsLocalHostname(request.Host) {
+		if mockKeyID := request.Header.Get("Mock-Key-Id"); mockKeyID != "" {
+			return mockSignature(mockKeyID), nil
+		}
+	}
+
+	// RULE: A request that offers no Signature at all is Anonymous, not refused
+	if !isSigned {
+		return sigs.Signature{}, nil
+	}
+
+	// RULE: A local domain gets the mock-key hint, which is the only guidance a developer
+	// receives here -- errorHandler answers a 401 with this message and nothing else
+	if uri.IsLocalHostname(request.Host) {
+		return sigs.Signature{}, derp.Unauthorized(location, "Invalid HTTP Signature. For local domains, use the 'Mock-Key-Id' header to simulate a signing key")
+	}
+
+	// RULE: A signature that is present but INVALID refuses the whole request, and the refusal
+	// is neither logged nor reported -- the 401 is the only signal, and its message is fixed.
+	// See AGENTS.md, "An invalid signature refuses the request". (BUG-20)
+	return sigs.Signature{}, derp.Unauthorized(location, "Invalid HTTP Signature")
+}
+
+// mockSignature returns the stand-in Signature that a local domain accepts in place of a real one.
+func mockSignature(keyID string) sigs.Signature {
+	return sigs.Signature{
+		KeyID:     keyID,
+		Algorithm: "MOCK",
+		Headers:   make([]string, 0),
+		Signature: make([]byte, 0),
+		Expires:   math.MaxInt64,
+	}
 }

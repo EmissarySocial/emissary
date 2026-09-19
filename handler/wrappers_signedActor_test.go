@@ -20,10 +20,10 @@ const testKeyID = "https://remote.example/@alice#main-key"
 const testActorID = "https://remote.example/@alice"
 
 // verifierFor adapts a PublicKeyFinder into the verifier function that resolveSignedActor takes.
-// The production verifier (service.ActivityStream.VerifySignature) adds a key refresh on top of this
-// same sigs.Verify call; none of the cases below turn on that, so the plain call keeps them honest.
 func verifierFor(finder sigs.PublicKeyFinder) func(*http.Request) (sigs.Signature, error) {
 
+	// The production verifier adds a key refresh on top of this same sigs.Verify call; no case
+	// below turns on that, so the plain call keeps them honest.
 	return func(request *http.Request) (sigs.Signature, error) {
 		return sigs.Verify(request, finder)
 	}
@@ -146,9 +146,8 @@ func TestResolveSignedActor_KeyUnresolvable(t *testing.T) {
 	require.Empty(t, actorID)
 }
 
-// TestResolveSignedActor_RefusalLeaksNothing guarantees that the refusal handed to an unauthenticated
-// caller carries no verifier internals. errorHandler writes derp.Message() into the response body, so
-// anything the verifier said about WHY it failed would tell a prober which attempt got closest.
+// TestResolveSignedActor_RefusalLeaksNothing guarantees that the refusal handed to an
+// unauthenticated caller carries no verifier internals.
 func TestResolveSignedActor_RefusalLeaksNothing(t *testing.T) {
 
 	t.Parallel()
@@ -166,10 +165,8 @@ func TestResolveSignedActor_RefusalLeaksNothing(t *testing.T) {
 	require.NotContains(t, derp.Message(err), "SECRET-INTERNAL-DETAIL")
 }
 
-// TestResolveSignedActor_RefusalStaysOutOfDerp pins the cross-file invariant that BUG-20 depends on:
-// the refusal must be an Unauthorized error, because server.errorHandler answers 401s and returns
-// BEFORE derp.Report. A refactor that changed this code to any other status would silently start
-// filing every misconfigured peer into the production error log.
+// TestResolveSignedActor_RefusalStaysOutOfDerp pins the cross-file invariant that keeps refusals
+// out of the production error log: the refusal must be an Unauthorized error.
 func TestResolveSignedActor_RefusalStaysOutOfDerp(t *testing.T) {
 
 	t.Parallel()

@@ -78,6 +78,12 @@ So `{{if or .Name .Label}}` does not mean "either one is non-empty". It fails at
 
 `if`, `with`, `else if`, and `not` are unaffected: the first three are template keywords rather than functions, and `not` is not overridden. Write `{{if .Name}}`, nest, or lift the comparison into booleans first — `{{if or (ne "" .Name) (ne "" .Label)}}` is correct, because `ne` returns a real bool. Note that this last form also gives up the builtin's tolerance for missing keys, which matters wherever a template renders against a map that may not carry every key.
 
+## An inline hyperscript query literal cannot start with a class
+
+Templates are minified before they are parsed, and the minifier escapes any `<` that does not open a tag. So a `<script type="text/hyperscript">` block containing `closest <.my-class/>` ships as `&lt;.my-class/>`, and because a `<script>` body is raw text in HTML the browser never decodes it back. Hyperscript is handed the entity, fails to parse, and **every `def` and handler in that block goes undefined** — the controls it wired simply do nothing, and nothing is logged anywhere. `<input.../>` and `<div.../>` come through untouched, because `<i` and `<d` look like the start of a tag, which is what makes this look like a one-off rather than a rule.
+
+Two ways out. Qualify the selector so it begins with an element name, or query by an attribute the element already carries — `<input[name='data.columns']/>` — and accept that the query is then document-wide. The rule is only about **inline** blocks: `theme-global/hyperscript/*._hs` files are served as resources, never minified, and use `<.class/>` freely. The same goes for a `script=` attribute, whose value is attribute-escaped and decoded normally.
+
 ## An off-site hop needs `forward-to`, or a `redirect-to` that knows it is off-site
 
 Sending a visitor to another URL has two mechanisms and they are not interchangeable. An HTTP redirect is followed by whatever transport made the request: a browser navigates the whole document, but htmx's XHR follows the redirect *inside* the request and swaps the result in as a fragment — which CORS makes impossible across origins, so the click silently does nothing. The `Hx-Redirect` header is executed by htmx itself and always navigates the document, but it is inert for a plain `<a href>`, which lands on a blank 200. Neither failure raises an error anywhere.
