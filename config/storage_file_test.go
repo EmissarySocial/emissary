@@ -100,6 +100,34 @@ func awaitFileConfig(t *testing.T, storage FileStorage, timeout time.Duration, m
 	return Config{}
 }
 
+// awaitRenamedFileConfig repeats an atomic rename-save until the watcher delivers it
+func awaitRenamedFileConfig(t *testing.T, storage FileStorage, adminEmail string, timeout time.Duration) {
+
+	t.Helper()
+
+	// RULE: The save MUST be repeated, not merely awaited.  The watcher opens asynchronously, and
+	// a save landing before watchOnce has called Add produces no event at all -- so a single save
+	// can be lost outright, and only a later one is ever seen.
+	for deadline := time.Now().Add(timeout); time.Now().Before(deadline); {
+
+		renameFileConfig(t, storage, adminEmail)
+
+		for waitUntil := time.Now().Add(time.Second); time.Now().Before(waitUntil); {
+			select {
+
+			case result := <-storage.Subscribe():
+				if result.AdminEmail == adminEmail {
+					return
+				}
+
+			case <-time.After(50 * time.Millisecond):
+			}
+		}
+	}
+
+	t.Fatal("the watcher never delivered the renamed configuration: " + adminEmail)
+}
+
 // TestFileStorage_WatchDeliversChanges is the base case: an in-place write to the file is
 // noticed and published.
 func TestFileStorage_WatchDeliversChanges(t *testing.T) {
@@ -146,37 +174,12 @@ func TestFileStorage_WatchSurvivesAtomicRenameSave(t *testing.T) {
 	go storage.watch()
 
 	// First rename-save: proves the watch is live, and detaches it
-	renameFileConfig(t, storage, "first-rename@example.com")
+	awaitRenamedFileConfig(t, storage, "first-rename@example.com", 15*time.Second)
 
-	awaitFileConfig(t, storage, 10*time.Second, func(value Config) bool {
-		return value.AdminEmail == "first-rename@example.com"
-	})
-
-	// Second rename-save: everything after this point was lost under the old implementation.
-	// Retried because the reopen (with backoff) races this write, and a rename that lands
-	// while no watch is attached produces no event -- only a later one does.
-	deadline := time.Now().Add(15 * time.Second)
-
-	for attempt := 1; time.Now().Before(deadline); attempt++ {
-
-		renameFileConfig(t, storage, "second-rename@example.com")
-
-		found := false
-
-		for waitUntil := time.Now().Add(time.Second); time.Now().Before(waitUntil) && !found; {
-			select {
-			case result := <-storage.Subscribe():
-				found = result.AdminEmail == "second-rename@example.com"
-			case <-time.After(50 * time.Millisecond):
-			}
-		}
-
-		if found {
-			return
-		}
-	}
-
-	t.Fatal("the watcher never recovered from an atomic-rename save")
+	// Second rename-save: everything after this point was lost under the old implementation,
+	// because the reopen races this save and a rename that lands with no watch attached is
+	// invisible.  Delivery here is the whole regression.
+	awaitRenamedFileConfig(t, storage, "second-rename@example.com", 15*time.Second)
 }
 
 // TestFileStorage_WatchOnceErrsOnMissingPath pins the failure mode that used to end watching
