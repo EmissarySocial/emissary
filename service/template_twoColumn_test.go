@@ -9,6 +9,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/model/step"
+	"github.com/benpate/rosetta/schema"
 	"github.com/hjson/hjson-go/v4"
 	"github.com/stretchr/testify/require"
 )
@@ -245,16 +246,12 @@ func TestTwoColumn_EditorPostsBothColumns(t *testing.T) {
 		"the picker must precede the editor row: the ratio rules reach it with ~")
 }
 
-// TestTwoColumn_EditorPickerChecksExactlyOne asserts the Column Split picker for every value a
-// Stream might have stored, including none.
-//
-// Three things have to hold at once and each fails silently on its own.  Exactly one radio is
-// checked, so the field is present in every POST and the picker never renders blank.  An
-// unrecognized or missing value folds to ONE-HALF, the same fold the Layout tab's final "else"
-// makes.  And no option carries the literal text ZgotmplZ -- html/template writes that in place
-// of any value interpolated where an attribute NAME belongs, the empty string included, so a
-// conditional built by hoisting "selected" into a variable would put junk on every option that
-// is not selected.  The inputs are emitted whole from inside their branches to avoid it.
+// twoColumnLadder is data.columns in ladder order, narrowest left column first.  The chevrons
+// on the edit page walk the radios by document order, so this IS the control's direction.
+var twoColumnLadder = []string{"ONE-QUARTER", "ONE-THIRD", "ONE-HALF", "TWO-THIRDS", "THREE-QUARTERS"}
+
+// TestTwoColumn_EditorPickerChecksExactlyOne asserts the Column Split control for every value a
+// Stream might have stored, including none.  See the Template's AGENTS.md.
 func TestTwoColumn_EditorPickerChecksExactlyOne(t *testing.T) {
 
 	twoColumn := loadTwoColumnTemplate(t)
@@ -263,9 +260,11 @@ func TestTwoColumn_EditorPickerChecksExactlyOne(t *testing.T) {
 		stored   string
 		selected string
 	}{
+		{stored: "THREE-QUARTERS", selected: "THREE-QUARTERS"},
 		{stored: "TWO-THIRDS", selected: "TWO-THIRDS"},
 		{stored: "ONE-HALF", selected: "ONE-HALF"},
 		{stored: "ONE-THIRD", selected: "ONE-THIRD"},
+		{stored: "ONE-QUARTER", selected: "ONE-QUARTER"},
 		{stored: "", selected: "ONE-HALF"},
 		{stored: "garbage", selected: "ONE-HALF"},
 	}
@@ -278,19 +277,206 @@ func TestTwoColumn_EditorPickerChecksExactlyOne(t *testing.T) {
 
 		output := buffer.String()
 
-		require.Equal(t, 3, strings.Count(output, `<input type="radio"`), "stored %q", test.stored)
+		// Exactly one radio is checked, so the field is present in every POST and the control
+		// never renders blank.  An unrecognized or missing value folds to ONE-HALF.
+		require.Equal(t, len(twoColumnLadder), strings.Count(output, `<input type="radio"`), "stored %q", test.stored)
 		require.Equal(t, 1, strings.Count(output, " checked>"), "stored %q: exactly one radio", test.stored)
-		require.Contains(t, output, `value="`+test.selected+`" checked>`, "stored %q", test.stored)
-		require.NotContains(t, output, "ZgotmplZ", "stored %q", test.stored)
+		checkedValue := regexp.MustCompile(`value="([A-Z-]+)"[^>]*checked>`).FindStringSubmatch(output)
+		require.Len(t, checkedValue, 2, "stored %q: a radio must be checked", test.stored)
+		require.Equal(t, test.selected, checkedValue[1], "stored %q", test.stored)
 
-		// Each label must stay the input's NEXT sibling: every state the picker shows -- the
-		// icon, the checked treatment, the focus ring -- is drawn with "input + label".
-		//
-		// Whitespace between them is fine and the template has some, because an adjacent-sibling
-		// combinator skips text nodes.  Anything else in between is not, so this looks for an
-		// input closed and a label opened with nothing but space between.
-		labelFollowsInput := regexp.MustCompile(`<input type="radio"[^>]*>\s*<label for="columns`)
-		require.Len(t, labelFollowsInput.FindAllString(output, -1), 3, "stored %q", test.stored)
+		// ZgotmplZ is what html/template writes in place of a value interpolated where an
+		// attribute NAME belongs, so it appears the moment "checked" is hoisted into a variable
+		require.NotContains(t, output, "ZgotmplZ", "stored %q", test.stored)
+	}
+}
+
+// TestTwoColumn_EditorLadderOrder asserts that the chevrons step the split in the direction they
+// point.  Nothing else states that direction: the radios' document order is the whole ladder.
+//
+// The failure this guards is the defect the chevrons replaced.  Reorder the radios and every
+// click moves the dividing line the wrong way, while the page, the POST, and every other test
+// here stay perfectly correct.
+func TestTwoColumn_EditorLadderOrder(t *testing.T) {
+
+	twoColumn := loadTwoColumnTemplate(t)
+
+	var buffer strings.Builder
+	require.NoError(t, twoColumn.HTMLTemplate.ExecuteTemplate(&buffer, "editor",
+		twoColumnStub{"left": "L", "right": "R", "columns": "ONE-HALF"}))
+
+	output := buffer.String()
+
+	// The five radios are contiguous siblings inside .two-column-split-values, which is what
+	// makes previousElementSibling a rung of the ladder rather than whatever markup moved in
+	values := regexp.MustCompile(`(?s)<span class="two-column-split-values">(.*?)</span>`).FindStringSubmatch(output)
+	require.Len(t, values, 2, "the radios must stay wrapped in .two-column-split-values")
+	require.Len(t, regexp.MustCompile(`<input `).FindAllString(values[1], -1), len(twoColumnLadder),
+		"the wrapper holds the radios and nothing else")
+
+	// Both chevrons, and both as type="button": a bare <button> inside #saveForm submits it
+	require.Equal(t, 2, strings.Count(output, `<button type="button" class="two-column-split-arrow`))
+	require.Contains(t, output, "two-column-split-arrow-left")
+	require.Contains(t, output, "two-column-split-arrow-right")
+
+	// The chevrons are affordances for the radiogroup, which is the keyboard path
+	require.Contains(t, output, `role="radiogroup"`)
+	require.Contains(t, output, `aria-label="Column widths"`,
+		"the radiogroup carries its own name: there is no visible label to point at")
+
+	// The control tracks the dividing line by living inside the LEFT rail, whose width IS the
+	// left column's.  Lift it out and it silently stops tracking while everything else works.
+	require.Regexp(t, `two-column-split-rail-left"[^>]*>\s*<span class="two-column-split-control"`, output,
+		"the control must stay inside the left rail")
+
+	// The minifier escapes a "<" that does not open a tag, and a <script> body is raw text in
+	// HTML -- so an escaped query literal reaches hyperscript as the entity and never parses
+	hyperscript := regexp.MustCompile(`(?s)<script type="text/hyperscript">(.*?)</script>`).FindStringSubmatch(output)
+	require.Len(t, hyperscript, 2, "the editor must ship its hyperscript block")
+	require.NotContains(t, hyperscript[1], "&lt;", "a query literal was escaped on its way through the minifier")
+}
+
+// TestTwoColumn_LadderOrderOnBothSurfaces asserts that both places that set the split list it in
+// the same direction, narrowest left column first.
+//
+// On the edit page that order is executable: it is the ladder the chevrons walk, and reversing it
+// reverses every click. On the Layout tab it is only visual, and getting it backwards is the
+// original defect -- an icon row whose leftmost option put the dividing line furthest right.
+func TestTwoColumn_LadderOrderOnBothSurfaces(t *testing.T) {
+
+	twoColumn := loadTwoColumnTemplate(t)
+
+	for _, name := range []string{"editor", "layout-controls"} {
+
+		var buffer strings.Builder
+		require.NoError(t, twoColumn.HTMLTemplate.ExecuteTemplate(&buffer, name,
+			twoColumnStub{"width": "FULL", "columns": "ONE-HALF"}))
+
+		// Matched through the field name, so the width control's own options cannot be read as
+		// rungs of this ladder
+		found := regexp.MustCompile(`name="data\.columns" value="([A-Z-]+)"`).FindAllStringSubmatch(buffer.String(), -1)
+		require.Len(t, found, len(twoColumnLadder), "%s: one radio per value", name)
+
+		for index, match := range found {
+			require.Equal(t, twoColumnLadder[index], match[1],
+				"%s rung %d: narrowest left column first", name, index)
+		}
+	}
+}
+
+// TestTwoColumn_ControlStaysClickable asserts that the split control outranks the rails it is
+// laid over.  Its right half overhangs the right rail, so the stacking order decides whether the
+// right chevron receives clicks at all.
+//
+// This one has already shipped broken.  Both rails were positioned, the right rail paints after
+// the left rail's whole subtree, and it swallowed every click on the right chevron -- so the
+// divider could only travel left and then stuck, with nothing logged and every other test green.
+func TestTwoColumn_ControlStaysClickable(t *testing.T) {
+
+	stylesheet, err := os.ReadFile("../_embed/templates/stream-article-two-column/stylesheet/two-column.css")
+	require.NoError(t, err)
+
+	css := string(stylesheet)
+
+	control := regexp.MustCompile(`(?s)\.two-column-split-control \{(.*?)\}`).FindStringSubmatch(css)
+	require.Len(t, control, 2, "the split control must have a rule of its own")
+	require.Contains(t, control[1], "z-index",
+		"the control overhangs the right rail, so it has to outrank it or the right chevron is dead")
+
+	// Only the LEFT rail is the control's containing block.  Positioning the shared class puts
+	// the right rail in the same stacking pass as the control it overlaps.
+	shared := regexp.MustCompile(`(?s)\.two-column-split-rail \{(.*?)\}`).FindStringSubmatch(css)
+	require.Len(t, shared, 2, "the rails must share a rule")
+	require.NotContains(t, shared[1], "position:",
+		"position belongs on .two-column-split-rail-left alone")
+}
+
+// TestTwoColumn_FocusRingHasATarget asserts that every class the focus ring is drawn on still
+// exists in the markup of the surface it belongs to.
+//
+// The radios are invisible, so these rules are the ONLY indication of keyboard focus anywhere in
+// this control. A ring left pointing at a deleted element takes focus off the screen entirely:
+// the page renders, the control works by mouse, and a keyboard user is simply lost.
+func TestTwoColumn_FocusRingHasATarget(t *testing.T) {
+
+	twoColumn := loadTwoColumnTemplate(t)
+
+	stylesheet, err := os.ReadFile("../_embed/templates/stream-article-two-column/stylesheet/two-column.css")
+	require.NoError(t, err)
+
+	rule := regexp.MustCompile(`(?s)\n([^\n@}][^{]*):focus-visible([^{]*)\{[^}]*outline:[^}]*\}`).FindStringSubmatch(string(stylesheet))
+	require.Len(t, rule, 3, "the control must draw a focus ring somewhere")
+
+	var markup strings.Builder
+
+	for _, name := range []string{"editor", "layout-controls"} {
+		require.NoError(t, twoColumn.HTMLTemplate.ExecuteTemplate(&markup, name,
+			twoColumnStub{"width": "FULL", "columns": "ONE-HALF"}))
+	}
+
+	classes := regexp.MustCompile(`\.([a-zA-Z][\w-]*)`).FindAllStringSubmatch(rule[1]+rule[2], -1)
+	require.NotEmpty(t, classes, "the focus rule must name the element it draws on")
+
+	for _, class := range classes {
+		require.Contains(t, markup.String(), class[1],
+			"the focus ring is drawn on .%s, which nothing renders", class[1])
+	}
+}
+
+// TestTwoColumn_EveryValueIsDrawn asserts that every value the schema admits is drawn on all
+// three surfaces, and offered on both of the two that set it.
+//
+// A value that reaches the stylesheet nowhere is the quiet failure here: it validates, saves,
+// and renders as equal halves, because "columns-WHATEVER" matches no rule.
+func TestTwoColumn_EveryValueIsDrawn(t *testing.T) {
+
+	twoColumn := loadTwoColumnTemplate(t)
+
+	element, exists := twoColumn.Schema.GetElement("data.columns")
+	require.True(t, exists, "article-two-column declares no schema for data.columns")
+
+	stringElement, ok := element.(schema.String)
+	require.True(t, ok, "data.columns must be a string")
+	require.ElementsMatch(t, twoColumnLadder, stringElement.Enum,
+		"the enum and the ladder must hold the same values")
+
+	stylesheet, err := os.ReadFile("../_embed/templates/stream-article-two-column/stylesheet/two-column.css")
+	require.NoError(t, err)
+
+	css := string(stylesheet)
+
+	surfaces := map[string]string{}
+
+	for _, name := range []string{"editor", "layout-controls"} {
+
+		var buffer strings.Builder
+		require.NoError(t, twoColumn.HTMLTemplate.ExecuteTemplate(&buffer, name,
+			twoColumnStub{"width": "FULL", "columns": "ONE-HALF"}))
+
+		surfaces[name] = buffer.String()
+	}
+
+	for _, value := range stringElement.Enum {
+
+		// Both places that set the field offer every value, or one of them cannot reach it
+		for name, output := range surfaces {
+			require.Contains(t, output, `value="`+value+`"`, "%s omits %s", name, value)
+		}
+
+		// The icon each surface paints it with, and the file that icon comes from
+		require.Contains(t, css, `input[value="`+value+`"] + label::before`, "no Layout tab icon for %s", value)
+
+		_, err := os.Stat("../_embed/templates/stream-article-two-column/resources/columns-" + value + ".svg")
+		require.NoError(t, err, "no icon file for %s", value)
+
+		// ONE-HALF is drawn by the equal-halves default, so it has no ratio rule of its own
+		if value == "ONE-HALF" {
+			continue
+		}
+
+		require.Contains(t, css, ".two-column.columns-"+value+" > .two-column-", "the page never draws %s", value)
+		require.Contains(t, css, `:has([value="`+value+`"]:checked) ~ .two-column-editor > .two-column-`, "the editor never draws %s", value)
+		require.Contains(t, css, `:has([value="`+value+`"]:checked) .two-column-split-rail-`, "the control never tracks %s", value)
 	}
 }
 

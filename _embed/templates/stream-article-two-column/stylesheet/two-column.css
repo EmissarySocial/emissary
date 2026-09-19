@@ -1,45 +1,25 @@
 /******************************************
  * Two Column Layout
  *
- * ONE layout engine for both places this split is drawn -- the page and the editor -- so that
- * neither can quietly disagree with the other.  That engine is flexbox: `flex-basis: 0` plus
- * `flex-grow`, on the same two hooks.  There is no grid here, and adding one would mean the
- * writing surface is no longer a picture of the page.
+ * ONE layout engine for both surfaces that draw the split, the page and the editor: flexbox,
+ * `flex-basis: 0` plus `flex-grow`, on the same two hooks.  Only the TRIGGER differs, and the
+ * page reads a stored class where the editor reads a checked radio.
  *
- * Three triggers reach that one engine and only the TRIGGER ever differs: the page reads a
- * stored class, and the editor and the Layout tab each read a checked radio.
- *
- * WHY flex-basis MUST BE 0
- *
- * flex-grow shares out the space left OVER once every item has taken its basis, and the
- * default basis is `auto` -- the item's own content width.  Under that default a long left
- * column and a short right one split only the remainder 2:1, which is not a 2:1 layout at all,
- * and the proportion drifts with whatever the author happens to have written.  Zeroing the
- * basis makes the whole row the space being shared, so flex-grow is the true proportion no
- * matter what is in either column.  Every ratio rule below rests on that one line, and taking
- * it out bends the layout rather than breaking it -- which is the kind of wrong nobody reports.
- *
- * WHY 768px, AND WHAT IT MEASURES
- *
- * Below MEDIUM -- SMALL and EXTRA-SMALL, which the design system defines as everything under
- * 768px -- the columns reflow into rows.  Same breakpoint and same mechanism as every
- * responsive utility in theme-global (`.md\:flex-row`, `.cols-*`, `.md\:hide`): an @container
- * query resolved against `.page`, which both shipped themes declare as an inline-size
- * container.  Reading the page instead of the viewport is what keeps the article in step with
- * the theme's own chrome, and it is why nothing here declares a container of its own.
- *
- * That does mean a layout-MEDIUM or layout-SMALL article still splits on a wide page, even
- * though its own column is narrower than 768px.  Deliberate: it is how every other .cols-*
- * grid in the app behaves, and a narrowed layout is the author's choice rather than a screen
- * they are stuck with.  Measuring the article's own column instead would put the two widths in
- * charge of each other -- layout-MEDIUM could then never show an asymmetric split at all,
- * because 66% of the widest page this theme draws is still under 768px.
+ * RULE: the zero basis, the 768px breakpoint, and the fact that nothing here declares a
+ * container of its own are all load-bearing.  See AGENTS.md before changing any of them.
  ******************************************/
+
+/* The gutter, declared once for the two rows that have to agree on it: the columns themselves,
+   and the rail pair that puts the split control on their dividing line. */
+.two-column,
+.two-column-split-stepper {
+	--two-column-gap: 32px;
+}
 
 .two-column {
 	display: flex;
 	flex-direction: column;
-	gap: 32px;
+	gap: var(--two-column-gap);
 }
 
 /* RULE: a flex item's min-width is `auto`, which refuses to shrink below its own content -- so
@@ -65,12 +45,21 @@
 		flex-grow: 1;
 	}
 
+	/* The ladder, widest left column first.  Values name the LEFT column's share. */
+	.two-column.columns-THREE-QUARTERS > .two-column-left {
+		flex-grow: 3;
+	}
+
 	.two-column.columns-TWO-THIRDS > .two-column-left {
 		flex-grow: 2;
 	}
 
 	.two-column.columns-ONE-THIRD > .two-column-right {
 		flex-grow: 2;
+	}
+
+	.two-column.columns-ONE-QUARTER > .two-column-right {
+		flex-grow: 3;
 	}
 }
 
@@ -139,26 +128,16 @@
 
 
 /******************************************
- * Editor: the Column Split picker
+ * The Column Split control
  *
- * The three icons above the editors, and the third trigger for the one engine.  It reads a
- * checked radio with :has() rather than a stored class, because the control is meant to answer
- * on the click, and a class rendered by the server still says whatever was last saved.  The
- * properties it ends at are the same two, on the same two hooks, so the writing surface cannot
- * show a proportion the page would not.
+ * Two markups over one set of rules.  The Layout tab ships an icon row; the edit page adds
+ * .two-column-split-stepper and ships two chevrons that ride the dividing line.
+ * Both are driven by the same five radios, whose DOCUMENT ORDER is the ladder, and both read
+ * `:has(:checked)` so the control answers on the click instead of waiting for the round trip.
  *
- * The Layout tab ships this same picker, markup and rules alike -- the same setting in a second
- * place rather than a second control.
- *
- * The `~` is why the picker has to stay a preceding SIBLING of the editor row.  Moving it
- * inside the row, or below it, leaves these rules matching nothing -- the editors keep working
- * and simply stop responding, which is the sort of wrong that gets shipped.
- *
- * The icons are the SVGs from resources/, pulled in as a mask with background-color:
- * currentColor rather than as an <img>.  That is not a preference: an <img> loads the file as
- * its own document, where the stroke="currentColor" in it has no color to read and paints
- * black -- so the selected state, which is a color change, would not show at all.  A mask
- * takes only the alpha channel and lets this element supply the color.
+ * RULE: see AGENTS.md before reordering the radios, unwrapping .two-column-split-values, moving
+ * the picker below the editor row, hanging a stepper rule off the shared class, or reaching for
+ * an <img> instead of a mask.
  ******************************************/
 
 .two-column-split-picker {
@@ -166,9 +145,49 @@
 	display: flex;
 	flex-direction: row;
 	align-items: center;
-	justify-content: center;
 	gap: 4px;
 	margin-bottom: 12px;
+}
+
+/* The edit page's variant, where the row becomes two rails with the control on their boundary.
+   RULE: every rule that mirrors the columns hangs off THIS class, never the shared one, or it
+   reaches the Layout tab's icon row as well (AGENTS.md). */
+.two-column-split-stepper {
+	align-items: stretch;
+	justify-content: flex-start;
+	gap: 0;
+	height: 32px;
+}
+
+/* Two rails carrying the columns' own proportions.  They draw nothing; they exist so that their
+   shared boundary lands where the dividing line does. */
+.two-column-split-rail {
+	flex-basis: 0;
+	flex-grow: 1;
+}
+
+/* The control's containing block, which is the LEFT rail's job alone.  Positioning the right
+   one as well is what put it on top of the control. */
+.two-column-split-rail-left {
+	position: relative;
+}
+
+/* Centered on that boundary: the middle of the gutter above the breakpoint, and the middle of a
+   stacked pair below it, where there is no gutter to sit in.
+
+   RULE: z-index is load-bearing.  The control's right half overhangs the right rail, which
+   paints later, so without this that rail swallows every click on the right chevron (AGENTS.md). */
+.two-column-split-control {
+	position: absolute;
+	top: 0;
+	left: 100%;
+	transform: translateX(-50%);
+	z-index: 1;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 4px;
+	border-radius: 4px;
 }
 
 /* Sized and coloured like the Layout tab's own control captions, so the two places that set
@@ -177,6 +196,12 @@
 	margin-right: 8px;
 	font-size: 13px;
 	color: var(--gray60);
+}
+
+/* A DOM grouping, not a box: it makes the sibling walk the chevrons do, and the :first-child
+   and :last-child that fade them, provable without adding an item to the flex row. */
+.two-column-split-values {
+	display: contents;
 }
 
 /* Kept in the tab order and kept operable -- hidden, not removed.  Positioned inside the
@@ -192,6 +217,7 @@
 	pointer-events: none;
 }
 
+/* The Layout tab's clickable option. */
 .two-column-split-picker label {
 	display: flex;
 	align-items: center;
@@ -205,7 +231,7 @@
 	transition: color var(--motion-fast, 100ms) var(--motion-ease, ease-in-out), border-color var(--motion-fast, 100ms) var(--motion-ease, ease-in-out);
 }
 
-/* The mask goes on the pseudo-element, not the label: a mask clips the element it is set on,
+/* The mask goes on the pseudo-element, not the box: a mask clips the element it is set on,
    border and background included, so a masked label would have no chrome left to show a
    selected state with. */
 .two-column-split-picker label::before {
@@ -219,6 +245,11 @@
 	mask-size: contain;
 }
 
+/* One icon per option: the Layout tab draws the whole ladder at once. */
+.two-column-split-picker input[value="THREE-QUARTERS"] + label::before {
+	mask-image: url("/.templates/article-two-column/resources/columns-THREE-QUARTERS.svg");
+}
+
 .two-column-split-picker input[value="TWO-THIRDS"] + label::before {
 	mask-image: url("/.templates/article-two-column/resources/columns-TWO-THIRDS.svg");
 }
@@ -229,6 +260,10 @@
 
 .two-column-split-picker input[value="ONE-THIRD"] + label::before {
 	mask-image: url("/.templates/article-two-column/resources/columns-ONE-THIRD.svg");
+}
+
+.two-column-split-picker input[value="ONE-QUARTER"] + label::before {
+	mask-image: url("/.templates/article-two-column/resources/columns-ONE-QUARTER.svg");
 }
 
 .two-column-split-picker label:hover {
@@ -247,16 +282,78 @@
 	background-color: color-mix(in srgb, var(--focus-color), transparent 92%);
 }
 
-/* The input carries the focus, and the input is invisible, so the ring has to be drawn on the
-   label instead.  :focus-visible rather than :focus, so a mouse click does not leave one. */
-.two-column-split-picker input:focus-visible + label {
+/* The input carries the focus and the input is invisible, so the ring is drawn on whichever box
+   stands for it.  :focus-visible rather than :focus, so a mouse click does not leave one. */
+.two-column-split-picker input:focus-visible + label,
+.two-column-split-stepper:has(input:focus-visible) .two-column-split-control {
 	outline: solid 2px var(--focus-color);
 	outline-offset: 2px;
 }
 
+/* The chevrons are mouse affordances for the ladder the radios already are. */
+.two-column-split-arrow {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 32px;
+	padding: 0;
+	border: none;
+	border-radius: 4px;
+	font-size: 18px;
+	color: var(--gray50);
+	background-color: transparent;
+	cursor: pointer;
+	transition: color var(--motion-fast, 100ms) var(--motion-ease, ease-in-out);
+}
 
-/* The third trigger, wired to the same two properties as the page and the canvas. */
+.two-column-split-arrow:hover {
+	color: var(--gray70);
+	background-color: var(--gray10);
+}
+
+/* The ends of the range, and the whole implementation of them: there is no disabled attribute
+   to keep in step, and the chevrons are aria-hidden and untabbable, so nothing is misreported. */
+.two-column-split-picker:has(.two-column-split-values input:first-child:checked) .two-column-split-arrow-left,
+.two-column-split-picker:has(.two-column-split-values input:last-child:checked) .two-column-split-arrow-right {
+	opacity: 0.25;
+	pointer-events: none;
+}
+
+
+/* The writing surface and the control's own rails, wired to the same two properties as the page.
+   Below the breakpoint the columns stack, so the rails stay equal and the control sits centered. */
 @container (min-width:768px) {
+
+	.two-column-split-stepper {
+		gap: var(--two-column-gap);
+	}
+
+	/* Half the gutter further along, so the control centers on the dividing line itself rather
+	   than on the left column's edge. */
+	.two-column-split-control {
+		left: calc(100% + var(--two-column-gap) / 2);
+	}
+
+	.two-column-split-picker:has([value="THREE-QUARTERS"]:checked) .two-column-split-rail-left {
+		flex-grow: 3;
+	}
+
+	.two-column-split-picker:has([value="TWO-THIRDS"]:checked) .two-column-split-rail-left {
+		flex-grow: 2;
+	}
+
+	.two-column-split-picker:has([value="ONE-THIRD"]:checked) .two-column-split-rail-right {
+		flex-grow: 2;
+	}
+
+	.two-column-split-picker:has([value="ONE-QUARTER"]:checked) .two-column-split-rail-right {
+		flex-grow: 3;
+	}
+
+	.two-column-split-picker:has([value="THREE-QUARTERS"]:checked) ~ .two-column-editor > .two-column-left {
+		flex-grow: 3;
+	}
 
 	.two-column-split-picker:has([value="TWO-THIRDS"]:checked) ~ .two-column-editor > .two-column-left {
 		flex-grow: 2;
@@ -264,5 +361,9 @@
 
 	.two-column-split-picker:has([value="ONE-THIRD"]:checked) ~ .two-column-editor > .two-column-right {
 		flex-grow: 2;
+	}
+
+	.two-column-split-picker:has([value="ONE-QUARTER"]:checked) ~ .two-column-editor > .two-column-right {
+		flex-grow: 3;
 	}
 }
