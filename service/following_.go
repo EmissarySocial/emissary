@@ -665,17 +665,9 @@ func (service *Following) SetStatusFailure(session data.Session, following *mode
 	following.StatusMessage = statusMessage
 	following.ErrorCount = following.ErrorCount + 1
 
-	// On failure, compute exponential backoff
-	// Wait times are 1m, 2m, 4m, 8m, 16m, 32m, 64m, 128m, 256m (max ~4 hours)
+	// On failure, wait longer before trying again.
 	// But do not change "LastPolled" because that is the last time we were successful
-	errorBackoff := following.ErrorCount
-
-	if errorBackoff > 8 {
-		errorBackoff = 8
-	}
-
-	errorBackoff = 2 ^ errorBackoff
-	following.NextPoll = time.Now().Add(time.Duration(errorBackoff) * time.Minute).Unix()
+	following.NextPoll = time.Now().Add(followingBackoff(following.ErrorCount)).Unix()
 
 	// Save the Following to the database (no other busines rules)
 	if err := service.collection(session).Save(following, "Updating status"); err != nil {
@@ -891,4 +883,18 @@ func (service *Following) reconcileDuplicate(session data.Session, following *mo
 	following.Journal = existing.Journal
 
 	return nil
+}
+
+// followingBackoff returns how long to wait after a Following's errorCount-th consecutive
+// failure: 1m, 2m, 4m, 8m, 16m, 32m, 64m, 128m, then 256m (~4 hours) for every failure after.
+func followingBackoff(errorCount int) time.Duration {
+
+	// RULE: `1 << n` doubles.  `2 ^ n` is XOR in Go, not exponentiation -- it yields
+	// 3m, 0m, 1m, 6m, 7m, 4m, 5m, then 10m forever, retrying with no wait at all on the second
+	// consecutive failure.
+	const maximumExponent = 8
+
+	exponent := min(max(errorCount-1, 0), maximumExponent)
+
+	return time.Duration(1<<exponent) * time.Minute
 }
