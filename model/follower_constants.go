@@ -55,10 +55,10 @@ const FollowerStateDeleted = "DELETED"
 // to the Follower's server to re-follow the newly imported account.
 const FollowerStateImportPending = "IMPORT-PENDING"
 
-// FollowerStatePaused represents a Follower who is paused by a BLOCK rule -- and
-// exactly that (R8). Paused Followers are excluded from delivery fan-out; deleting
-// the block re-evaluates every paused Follower and reactivates the no-longer-blocked.
-const FollowerStatePaused = "PAUSED"
+// FollowerStateBlocked represents a Follower whose actor the user has blocked (R8).  Blocked
+// Followers are excluded from delivery fan-out; deleting the block re-evaluates every blocked
+// Follower and reactivates the no-longer-blocked.
+const FollowerStateBlocked = "BLOCKED"
 
 // FollowerStatePending represents an inactive Follower who has yet
 // to confirm their subscription status (e.g. via email confirmation)

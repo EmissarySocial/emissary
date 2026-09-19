@@ -31,19 +31,19 @@
 				<div class="text-sm margin-none">
 					{{ if eq "SUCCESS" .Status -}}
 						<span class="text-light-gray">
-							{{ icon .Icon }} 
+							{{ icon .Icon }}
 							{{.Method}}
 							{{ .LastPolled | tinyDate }}
 						</span>
-					{{- else if eq "IMPORT-PENDING" .Status -}}
-						<span class="text-light-gray">
-							{{icon "import"}}
-							Imported
-						</span>
-					{{- else if eq "ERROR" .Status -}}
-						<span class="text-red">{{.Status}}</span>
 					{{- else -}}
-						<span class="text-green">{{.Status}}</span>
+						<!-- RULE: color and wording both come from the model, so no status can fall through uncolored. -->
+						<span class="text-{{.StatusClass}}">
+							{{ icon .Icon }}
+							{{ .StatusLabel }}
+						</span>
+						{{ if ne "" .StatusDescription -}}
+							<div class="text-light-gray">{{ .StatusDescription }}</div>
+						{{- end }}
 					{{- end -}}
 				</div>
 			</div>

@@ -121,10 +121,36 @@ func (service *Following) Load(session data.Session, criteria exp.Expression, re
 	return nil
 }
 
+// reconnectsOnSave returns TRUE when saving a Following in this status should restart its
+// connection: the first connection for NEW, and a retry for every status that shows a problem
+func reconnectsOnSave(status string) bool {
+
+	switch status {
+
+	case model.FollowingStatusNew,
+		model.FollowingStatusFailure,
+		model.FollowingStatusPaused,
+		model.FollowingStatusGone:
+		return true
+	}
+
+	// RULE: SUCCESS is healthy, and reconnecting would send a fresh Follow on every folder edit.
+	// LOADING is already connecting.  IMPORT-PENDING is owned by BUG-156.  BLOCKED never
+	// reaches here, because Save refuses it first.
+	return false
+}
+
 // Save adds/updates an Following in the database
 func (service *Following) Save(session data.Session, following *model.Following, note string) error {
 
 	const location = "service.Following.Save"
+
+	// RULE: A BLOCKED Following is read-only.  R11 makes re-following an explicit decision that
+	// goes through Follow(), never a side effect of saving a folder name.  Block() writes
+	// through the collection directly, so this gate does not touch the cleanup path.
+	if following.Status == model.FollowingStatusBlocked {
+		return derp.Validation("You have blocked this account. Remove the block rule to edit or resume this follow.")
+	}
 
 	// Default following behavior
 	if following.Behavior == "" {
@@ -185,8 +211,10 @@ func (service *Following) Save(session data.Session, following *model.Following,
 	// Notify the user that their Following list has been changed
 	service.sseUpdateChannel <- realtime.NewMessage_FollowingUpdated(following.UserID)
 
-	// Done.. UNLESS creating a new Following record
-	if following.Status != model.FollowingStatusNew {
+	// RULE: If the record is showing the user a problem, saving it retries (D5).  A NEW record
+	// connects for the first time; FAILURE, PAUSED, and GONE reconnect because a save from any
+	// of them is the owner trying to fix it.  Everything else is left alone.
+	if !reconnectsOnSave(following.Status) {
 		return nil
 	}
 
@@ -383,14 +411,21 @@ func (service *Following) QueryByFolderAndExp(session data.Session, userID primi
 	return result, err
 }
 
+// pollableCriteria returns the query that selects every Following due to be polled at `now`
+func pollableCriteria(now int64) exp.Expression {
+
+	// RULE: BLOCKED and GONE are excluded by STATUS, never by a far-future NextPoll, because
+	// R8's promise (and D4's) must be a rule rather than an arithmetic side effect.
+	// RULE: PAUSED is deliberately NOT excluded -- its 90-day backoff lives in NextPoll, and
+	// that quarterly retry is what brings a source back without the owner's help.
+	return exp.LessThan("nextPoll", now).
+		AndNotEqual("status", model.FollowingStatusBlocked).
+		AndNotEqual("status", model.FollowingStatusGone)
+}
+
 // RangePollable returns an iterator of all following that are ready to be polled
 func (service *Following) RangePollable(session data.Session) (iter.Seq[model.Following], error) {
-
-	// RULE: a Following paused by a block rule is never polled (R8)
-	criteria := exp.LessThan("nextPoll", time.Now().Unix()).
-		AndNotEqual("status", model.FollowingStatusPaused)
-
-	return service.Range(session, criteria, option.SortAsc("lastPolled"))
+	return service.Range(session, pollableCriteria(time.Now().Unix()), option.SortAsc("lastPolled"))
 }
 
 // RangeByActorID returns an iterator of all following records that use the provided `ProfileURL`
@@ -656,8 +691,164 @@ func (service *Following) SetStatusSuccess(session data.Session, following *mode
 	return nil
 }
 
-// SetStatusFailure updates a Following record to the "Failure" status and
-// increments the error count.
+// defaultPollDuration is the fallback polling interval, in hours, for a Following whose own
+// PollDuration is missing or non-positive
+const defaultPollDuration = 24
+
+// pausedRecheckSeconds is how long a PAUSED Following waits before being tried again: a very
+// long cadence, NOT a graveyard
+const pausedRecheckSeconds = int64(90 * 24 * 60 * 60)
+
+// unresponsiveAfterSeconds is how long a Following must go without a successful retrieval before
+// polling backs off to PAUSED.
+const unresponsiveAfterSeconds = int64(30 * 24 * 60 * 60)
+
+// unresponsiveAfterErrors is how many consecutive failures must accompany that silence.
+const unresponsiveAfterErrors = 5
+
+// isUnresponsive returns TRUE when a Following has gone long enough, and failed often enough,
+// that polling should back off to PAUSED.
+func isUnresponsive(following *model.Following, now int64) bool {
+
+	// RULE: BOTH conditions are required.  Elapsed time alone would abandon an ActivityPub
+	// follow after ONE failed 30-day poll; the error count alone is five days for a POLL
+	// follow but 150 days for an ActivityPub one.
+	if following.ErrorCount < unresponsiveAfterErrors {
+		return false
+	}
+
+	// A Following that has never been retrieved is measured from when it was created instead.
+	// Journal dates are MILLISECONDS; LastPolled is seconds.
+	lastSuccess := following.LastPolled
+
+	if lastSuccess <= 0 {
+		lastSuccess = following.CreateDate / 1000
+	}
+
+	// With no usable baseline we cannot say how long this has been broken, so we do not guess.
+	if lastSuccess <= 0 {
+		return false
+	}
+
+	return (now - lastSuccess) > unresponsiveAfterSeconds
+}
+
+// nextPollDate returns the Unix epoch seconds at which a Following should next be polled:
+// one PollDuration after the moment it was last tried, whatever that attempt's outcome was.
+func nextPollDate(following *model.Following, lastPolled int64) int64 {
+
+	pollDuration := following.PollDuration
+
+	// A zero here would schedule NextPoll in the past and re-select the record on every sweep,
+	// which is the loop this whole path exists to prevent.  Save always writes a real value.
+	if pollDuration <= 0 {
+		pollDuration = defaultPollDuration
+	}
+
+	return lastPolled + (int64(pollDuration) * 60 * 60)
+}
+
+// SetStatusPollSuccess records a poll that succeeded: it stamps the poll time, clears the
+// error count, and schedules the next poll one PollDuration from now.
+func (service *Following) SetStatusPollSuccess(session data.Session, following *model.Following) error {
+
+	// Update Following state
+	following.Status = model.FollowingStatusSuccess
+	following.StatusMessage = ""
+	following.ErrorCount = 0
+	following.LastPolled = time.Now().Unix()
+	following.NextPoll = nextPollDate(following, following.LastPolled)
+
+	// Save the Following to the database (no other busines rules)
+	if err := service.collection(session).Save(following, "Updating status"); err != nil {
+		return derp.Wrap(err, "service.Following.SetStatusPollSuccess", "Saving Following", following)
+	}
+
+	// Notify the user that their Following list has been changed
+	service.sseUpdateChannel <- realtime.NewMessage_FollowingUpdated(following.UserID)
+
+	// Another day, another successful poll
+	return nil
+}
+
+// SetStatusGone marks a Following whose actor the remote server has declared deleted
+func (service *Following) SetStatusGone(session data.Session, following *model.Following, statusMessage string) error {
+
+	// RULE: NextPoll is deliberately NOT touched.  GONE is excluded from polling by STATUS in
+	// RangePollable, never by a far-future date -- a rule must be a rule, not an arithmetic
+	// side effect that the next NextPoll write would silently undo.
+	// RULE: LastPolled is untouched too, for the reason given in SetStatusPollFailure.
+	following.Status = model.FollowingStatusGone
+	following.StatusMessage = statusMessage
+	following.ErrorCount = following.ErrorCount + 1
+
+	// Save the Following to the database (no other busines rules)
+	if err := service.collection(session).Save(following, "Updating status"); err != nil {
+		return derp.Wrap(err, "service.Following.SetStatusGone", "Saving Following", following)
+	}
+
+	// Notify the user that their Following list has been changed
+	service.sseUpdateChannel <- realtime.NewMessage_FollowingUpdated(following.UserID)
+
+	// He's dead, Jim
+	return nil
+}
+
+// SetStatusPollFailure records a poll that failed, and escalates to PAUSED once the source has
+// been failing long enough that polling should back off.
+func (service *Following) SetStatusPollFailure(session data.Session, following *model.Following, statusMessage string) error {
+
+	now := time.Now().Unix()
+
+	// RULE: Do NOT stamp LastPolled.  It means "when this resource was last RETRIEVED", and it
+	// is the only measure of how long a source has been broken -- which is what isUnresponsive reads.
+	following.Status = model.FollowingStatusFailure
+	following.StatusMessage = statusMessage
+	following.ErrorCount = following.ErrorCount + 1
+
+	// RULE: A failure uses the SAME cadence as a success, deliberately.  Short-term retries
+	// belong to the queue; this date answers "how often do we check this source?" only.
+	following.NextPoll = nextPollDate(following, now)
+
+	// RULE: A source that has failed for long enough, and often enough, backs off to a quarterly
+	// check.  This is PAUSED, not GONE: only an explicit 410 earns GONE (D4).
+	if isUnresponsive(following, now) {
+		following.Status = model.FollowingStatusPaused
+		following.NextPoll = now + pausedRecheckSeconds
+	}
+
+	// Save the Following to the database (no other busines rules)
+	if err := service.collection(session).Save(following, "Updating status"); err != nil {
+		return derp.Wrap(err, "service.Following.SetStatusPollFailure", "Saving Following", following)
+	}
+
+	// Notify the user that their Following list has been changed
+	service.sseUpdateChannel <- realtime.NewMessage_FollowingUpdated(following.UserID)
+
+	// Try, try again
+	return nil
+}
+
+// followingBackoff returns how long to wait before re-polling a Following that has
+// failed `errorCount` times in a row: 1m, 2m, 4m ... 256m (~4 hours) at the cap.
+func followingBackoff(errorCount int) time.Duration {
+
+	exponent := errorCount - 1
+
+	// RULE: Clamp both ends.  A negative shift count panics, and 8 caps the wait at 256 minutes.
+	if exponent < 0 {
+		exponent = 0
+	}
+
+	if exponent > 8 {
+		exponent = 8
+	}
+
+	return time.Duration(1<<exponent) * time.Minute
+}
+
+// SetStatusFailure updates a Following record to the "Failure" status, increments the error
+// count, and schedules a soon-but-escalating retry.
 func (service *Following) SetStatusFailure(session data.Session, following *model.Following, statusMessage string) error {
 
 	// Update Following state
@@ -665,17 +856,10 @@ func (service *Following) SetStatusFailure(session data.Session, following *mode
 	following.StatusMessage = statusMessage
 	following.ErrorCount = following.ErrorCount + 1
 
-	// On failure, compute exponential backoff
-	// Wait times are 1m, 2m, 4m, 8m, 16m, 32m, 64m, 128m, 256m (max ~4 hours)
-	// But do not change "LastPolled" because that is the last time we were successful
-	errorBackoff := following.ErrorCount
-
-	if errorBackoff > 8 {
-		errorBackoff = 8
-	}
-
-	errorBackoff = 2 ^ errorBackoff
-	following.NextPoll = time.Now().Add(time.Duration(errorBackoff) * time.Minute).Unix()
+	// RULE: This is the CONNECT path, where someone just clicked "follow" and is watching the
+	// badge, so a failure retries in minutes rather than at the polling cadence.  A failure
+	// found while POLLING uses SetStatusPollFailure instead, and neither stamps LastPolled.
+	following.NextPoll = time.Now().Add(followingBackoff(following.ErrorCount)).Unix()
 
 	// Save the Following to the database (no other busines rules)
 	if err := service.collection(session).Save(following, "Updating status"); err != nil {
@@ -688,16 +872,16 @@ func (service *Following) SetStatusFailure(session data.Session, following *mode
 	return nil
 }
 
-// Pause suspends a Following that a BLOCK rule now covers (R8): it sends the Undo/Follow
-// (enqueued, delivered post-commit), then marks the row PAUSED so polling stops. The row is
-// kept, never auto-resumed -- the paused Following is the one-click re-follow affordance, and
+// Block suspends a Following that a BLOCK rule now covers (R8): it sends the Undo/Follow
+// (enqueued, delivered post-commit), then marks the row BLOCKED so polling stops. The row is
+// kept, never auto-resumed -- the blocked Following is the one-click re-follow affordance, and
 // re-following runs the normal Connect flow.
-func (service *Following) Pause(session data.Session, following *model.Following) error {
+func (service *Following) Block(session data.Session, following *model.Following) error {
 
-	const location = "service.Following.Pause"
+	const location = "service.Following.Block"
 
-	// A Following that is already paused has nothing more to pause
-	if following.Status == model.FollowingStatusPaused {
+	// A Following that is already blocked has nothing more to block
+	if following.Status == model.FollowingStatusBlocked {
 		return nil
 	}
 
@@ -705,11 +889,11 @@ func (service *Following) Pause(session data.Session, following *model.Following
 	service.Disconnect(session, following)
 
 	// Update Following state
-	following.Status = model.FollowingStatusPaused
-	following.StatusMessage = "Paused by a block rule"
+	following.Status = model.FollowingStatusBlocked
+	following.StatusMessage = "You blocked this account"
 
 	// Save the Following to the database (no other business rules)
-	if err := service.collection(session).Save(following, "Paused by block rule"); err != nil {
+	if err := service.collection(session).Save(following, "Blocked by rule"); err != nil {
 		return derp.Wrap(err, location, "Saving Following", following)
 	}
 

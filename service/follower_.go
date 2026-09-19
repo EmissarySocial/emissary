@@ -213,29 +213,29 @@ func (service *Follower) delete(session data.Session, follower *model.Follower, 
 	return nil
 }
 
-// Pause marks this Follower as paused by a block rule (R8): it stays out of every delivery
+// Block marks this Follower as blocked by a rule (R8): it stays out of every delivery
 // fan-out until the block is deleted and the restore pass reactivates it. Saved directly
-// (like the DELETED path) because PAUSED is server-set only and deliberately absent from the
+// (like the DELETED path) because BLOCKED is server-set only and deliberately absent from the
 // user-facing schema enum, so Save's validation would refuse it.
-func (service *Follower) Pause(session data.Session, follower *model.Follower) error {
+func (service *Follower) Block(session data.Session, follower *model.Follower) error {
 
-	const location = "service.Follower.Pause"
+	const location = "service.Follower.Block"
 
-	// A Follower that is already paused has nothing more to pause
-	if follower.StateID == model.FollowerStatePaused {
+	// A Follower that is already blocked has nothing more to block
+	if follower.StateID == model.FollowerStateBlocked {
 		return nil
 	}
 
-	follower.StateID = model.FollowerStatePaused
+	follower.StateID = model.FollowerStateBlocked
 
-	if err := service.collection(session).Save(follower, "Paused by block rule"); err != nil {
+	if err := service.collection(session).Save(follower, "Blocked by rule"); err != nil {
 		return derp.Wrap(err, location, "Saving Follower", follower)
 	}
 
 	return nil
 }
 
-// Reactivate returns a paused Follower to ACTIVE. It is the restore pass's write half: called
+// Reactivate returns a blocked Follower to ACTIVE. It is the restore pass's write half: called
 // only after the remaining rules have been re-evaluated and no block covers this actor anymore.
 func (service *Follower) Reactivate(session data.Session, follower *model.Follower) error {
 
@@ -490,13 +490,13 @@ func (service *Follower) RangeByUserID(session data.Session, userID primitive.Ob
 // RangeActivityPubByType returns an iterator containing all of the ActivityPub Followers of a specific parent
 func (service *Follower) RangeActivityPubByType(session data.Session, followerType string, userID primitive.ObjectID) iter.Seq[model.Follower] {
 
-	// RULE: Followers paused by a block rule are excluded from delivery fan-out (R8)
+	// RULE: Followers blocked by a rule are excluded from delivery fan-out (R8)
 	return service.Range(
 		session,
 		exp.Equal("parentId", userID).
 			AndEqual("type", followerType).
 			AndEqual("method", model.FollowerMethodActivityPub).
-			AndNotEqual("stateId", model.FollowerStatePaused),
+			AndNotEqual("stateId", model.FollowerStateBlocked),
 	)
 }
 
@@ -541,24 +541,24 @@ func (service *Follower) DeleteByUserID(session data.Session, userID primitive.O
 // RangeFollowers returns a rangeFunc containing all of the Followers of specific parentID
 func (service *Follower) RangeFollowers(session data.Session, parentType string, parentID primitive.ObjectID) iter.Seq[model.Follower] {
 
-	// RULE: Followers paused by a block rule are excluded from delivery fan-out (R8). Only
-	// PAUSED is excluded -- other states keep their existing delivery behavior.
+	// RULE: Followers blocked by a rule are excluded from delivery fan-out (R8). Only
+	// BLOCKED is excluded -- other states keep their existing delivery behavior.
 	return service.Range(
 		session,
 		exp.Equal("parentId", parentID).
 			AndEqual("type", parentType).
-			AndNotEqual("stateId", model.FollowerStatePaused),
+			AndNotEqual("stateId", model.FollowerStateBlocked),
 	)
 }
 
-// RangePausedByUserID returns an iterator containing every PAUSED Follower of the provided User.
+// RangeBlockedByUserID returns an iterator containing every BLOCKED Follower of the provided User.
 // This is the restore pass's source: deleting a block re-evaluates exactly these rows (R8).
-func (service *Follower) RangePausedByUserID(session data.Session, userID primitive.ObjectID) iter.Seq[model.Follower] {
+func (service *Follower) RangeBlockedByUserID(session data.Session, userID primitive.ObjectID) iter.Seq[model.Follower] {
 	return service.Range(
 		session,
 		exp.Equal("parentId", userID).
 			AndEqual("type", model.FollowerTypeUser).
-			AndEqual("stateId", model.FollowerStatePaused),
+			AndEqual("stateId", model.FollowerStateBlocked),
 	)
 }
 

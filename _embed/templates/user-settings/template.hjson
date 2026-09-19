@@ -462,6 +462,8 @@
 				{do:"as-modal", steps:[
 					{do:"with-following", steps:[
 						{do:"view-html", file:"following-edit"}
+						// A BLOCKED Following is read-only: no form on GET, no save on POST (D6, R11)
+						{do:"if", condition:"{{ne `BLOCKED` .Object.Status}}", then:[
 						{do:"set-data", from-url:["folderId"]}
 						{
 							do:"edit", 
@@ -501,6 +503,7 @@
 							}
 						},
 						{do:"save"}
+						]}
 					]}
 				]}
 				{do:"trigger-event", event:"closeModal"}

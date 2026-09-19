@@ -41,7 +41,7 @@ func MailingListAddMember(factory *service.Factory, session data.Session, args m
 		return queue.Error(derp.Wrap(err, location, "Loading Follower", args))
 	}
 
-	// RULE: re-check the state here, not only at enqueue. A Follower paused by a block rule
+	// RULE: re-check the state here, not only at enqueue. A Follower blocked by a rule
 	// between the two must not be handed to a third party (D20).
 	if follower.StateID != model.FollowerStateActive {
 		return queue.Success()
