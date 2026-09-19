@@ -613,6 +613,11 @@ func (w Common) IsIdentity() bool {
 	return authorization.IsIdentity()
 }
 
+// IsAuthenticatedOrIdentity returns TRUE if the caller is either an authenticated user or a guest identity
+func (w Common) IsAuthenticatedOrIdentity() bool {
+	return w.IsAuthenticated() || w.IsIdentity()
+}
+
 // NotAuthenticatedOrIdentity returns TRUE if the caller is neither an authenticated user nor a guest identity
 func (w Common) NotAuthenticatedOrIdentity() bool {
 
