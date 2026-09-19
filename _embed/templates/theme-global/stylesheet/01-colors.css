@@ -106,25 +106,28 @@
 
 @media (prefers-color-scheme: dark) {
 	:root {
-		--black: #ffffff;
-		--gray100: #ffffff;
-		--gray90: #f7f3f2;
-		--gray80: #e5e0df;
-		--gray70: #cac5c4;
-		--gray60: #a8a8a8;
+		/* Warm gray: every step is hue 0, so the green and blue channels are equal
+		   and only brightness changes down the ramp.  Keep G and B equal in any
+		   new or edited value; see AGENTS.md. */
+		--black: #fffafa;
+		--gray100: #fffafa;
+		--gray90: #f7f2f2;
+		--gray80: #e5dfdf;
+		--gray70: #cac4c4;
+		--gray60: #ada8a8;
 		--gray50: #8f8b8b;
 		--gray40: #726e6e;
 		--gray30: #565151;
 		--gray20: #3c3838;
-		--gray15: #31312e;
-		--gray10: #272725;
+		--gray15: #312e2e;
+		--gray10: #272525;
 		--gray05: #1f1c1c;
-		--gray04: #1e1e1b;
-		--gray03: #1c1c19;
-		--gray02: #1a1a17;
-		--gray01: #181815;
-		--gray00: #171714;
-		--white: #171714;
+		--gray04: #1e1b1b;
+		--gray03: #1c1919;
+		--gray02: #1a1717;
+		--gray01: #181515;
+		--gray00: #171414;
+		--white: #171414;
 
 		--blue100: #d0e2ff;
 		--blue90: #a6c8ff;
