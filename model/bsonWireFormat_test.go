@@ -135,10 +135,18 @@ func requireGoldenBSON(t *testing.T, name string, actual string) {
 // type Emissary persists.
 func TestBSONWireFormat(t *testing.T) {
 
+	record := fullBSONWireRecord(t)
+
+	// RULE: one key only. `mapof.Any` is a Go map, and BSON writes map keys in Go's randomized
+	// iteration order, so a multi-key map pins an order the next run will not reproduce. It rides
+	// the driver's default codec and is not what this fixture exists to pin; the other two tests
+	// keep the full map.
+	record.Data = mapof.Any{"nested": mapof.Any{"inner": "value"}}
+
 	// Marshalled as FIELDS of a record, never each at the top level: a top-level
 	// Marshal takes the Marshaler path directly and never consults the codec
 	// registry, so it cannot observe a type losing its marshaller.
-	data, err := bson.Marshal(fullBSONWireRecord(t))
+	data, err := bson.Marshal(record)
 	require.Nil(t, err)
 
 	requireGoldenBSON(t, "wireFormat.json", extendedJSON(t, data))

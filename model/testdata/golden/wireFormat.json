@@ -72,10 +72,6 @@
     "$oid": "507f1f77bcf86cd799439011"
   },
   "data": {
-    "scalar": "hello",
-    "number": {
-      "$numberLong": "42"
-    },
     "nested": {
       "inner": "value"
     }

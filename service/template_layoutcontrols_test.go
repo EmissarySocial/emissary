@@ -246,7 +246,8 @@ func TestLayoutControls_TwoColumn(t *testing.T) {
 		{width: "FULL", columns: "TWO-THIRDS", selected: "TWO-THIRDS"},
 		{width: "LARGE", columns: "ONE-HALF", selected: "ONE-HALF"},
 		{width: "MEDIUM", columns: "ONE-THIRD", selected: "ONE-THIRD"},
-		{width: "SMALL", columns: "TWO-THIRDS", selected: "TWO-THIRDS"},
+		{width: "SMALL", columns: "THREE-QUARTERS", selected: "THREE-QUARTERS"},
+		{width: "FULL", columns: "ONE-QUARTER", selected: "ONE-QUARTER"},
 		{width: "", columns: "", selected: "ONE-HALF"},
 		{width: "garbage", columns: "garbage", selected: "ONE-HALF"},
 	}
@@ -263,11 +264,11 @@ func TestLayoutControls_TwoColumn(t *testing.T) {
 		require.Contains(t, output, `name="data.width"`, "columns %q", test.columns)
 		require.Contains(t, output, `name="data.columns"`, "columns %q", test.columns)
 
-		// The width control is still a <select>; the split is the icon picker, which is radios
+		// The width control is still a <select>; the split is the icon row, which is radios
 		// because an <option> cannot hold markup.  One selection apiece, counted separately.
 		require.Equal(t, 4, strings.Count(output, "<option "), "columns %q", test.columns)
 		require.Equal(t, 1, strings.Count(output, " selected>"), "columns %q", test.columns)
-		require.Equal(t, 3, strings.Count(output, `<input type="radio"`), "columns %q", test.columns)
+		require.Equal(t, 5, strings.Count(output, `<input type="radio"`), "columns %q", test.columns)
 		require.Equal(t, 1, strings.Count(output, " checked>"), "columns %q", test.columns)
 		require.Contains(t, output, `value="`+test.selected+`" checked>`, "columns %q", test.columns)
 

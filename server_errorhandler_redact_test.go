@@ -45,7 +45,7 @@ func TestErrorHandler_RedactsCredentials(t *testing.T) {
 
 	// RULE: a 500, not a 401. Every IsUnauthorized branch returns before derp.Report,
 	// so a 401 would pass this test without exercising the reporting path at all.
-	errorHandler(derp.InternalError("test", "Something broke"), ctx)
+	errorHandler(derp.Internal("test", "Something broke"), ctx)
 
 	require.Len(t, reporter.reported, 1, "the error must actually have been reported")
 
@@ -70,7 +70,7 @@ func TestErrorHandler_DoesNotMutateTheRequest(t *testing.T) {
 
 	ctx := echo.New().NewContext(request, httptest.NewRecorder())
 
-	errorHandler(derp.InternalError("test", "Something broke"), ctx)
+	errorHandler(derp.Internal("test", "Something broke"), ctx)
 
 	require.Equal(t, "Bearer still-needed", request.Header.Get("Authorization"))
 }

@@ -16,8 +16,8 @@ func insertStreamWithContext(t *testing.T, database *mongo.Database, url string,
 
 	id := primitive.NewObjectID()
 	document := bson.M{
-		"_id":    id,
-		"url":    url,
+		"_id":     id,
+		"url":     url,
 		"context": "",
 	}
 

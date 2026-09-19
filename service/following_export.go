@@ -29,6 +29,8 @@ func (service *Following) ExportDocument(session data.Session, userID primitive.
 	}
 
 	// Marshal the following as JSON
+	// #nosec G117 -- Secret travels with the export by design (it is the inert WebSub HMAC key,
+	// and the consumer is the server this User is migrating TO). Pinned by TestExport_FollowingCarriesSecret.
 	result, err := json.Marshal(following)
 
 	if err != nil {

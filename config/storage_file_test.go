@@ -100,6 +100,32 @@ func awaitFileConfig(t *testing.T, storage FileStorage, timeout time.Duration, m
 	return Config{}
 }
 
+// awaitSavedConfig repeats `save` until the watcher publishes a configuration carrying
+// `adminEmail`, and fails with `message` if none arrives.  The repetition is required, not
+// defensive: the watcher opens asynchronously and reopens with backoff, so a save landing while
+// no watch is attached produces no event at all -- only a later save does.
+func awaitSavedConfig(t *testing.T, storage FileStorage, save func(*testing.T, FileStorage, string), adminEmail string, message string) {
+
+	t.Helper()
+
+	for deadline := time.Now().Add(15 * time.Second); time.Now().Before(deadline); {
+
+		save(t, storage, adminEmail)
+
+		for waitUntil := time.Now().Add(time.Second); time.Now().Before(waitUntil); {
+			select {
+			case result := <-storage.Subscribe():
+				if result.AdminEmail == adminEmail {
+					return
+				}
+			case <-time.After(50 * time.Millisecond):
+			}
+		}
+	}
+
+	t.Fatal(message)
+}
+
 // TestFileStorage_WatchDeliversChanges is the base case: an in-place write to the file is
 // noticed and published.
 func TestFileStorage_WatchDeliversChanges(t *testing.T) {
@@ -108,30 +134,8 @@ func TestFileStorage_WatchDeliversChanges(t *testing.T) {
 
 	go storage.watch()
 
-	// Writes repeat until delivery because the watcher opens asynchronously: a write landing
-	// before the first watchOnce has called Add produces no event at all.
-	deadline := time.Now().Add(10 * time.Second)
-
-	for attempt := 1; time.Now().Before(deadline); attempt++ {
-
-		writeFileConfig(t, storage, "changed@example.com")
-
-		found := false
-
-		for waitUntil := time.Now().Add(500 * time.Millisecond); time.Now().Before(waitUntil) && !found; {
-			select {
-			case result := <-storage.Subscribe():
-				found = result.AdminEmail == "changed@example.com"
-			case <-time.After(50 * time.Millisecond):
-			}
-		}
-
-		if found {
-			return
-		}
-	}
-
-	t.Fatal("the file watcher never delivered the changed configuration")
+	awaitSavedConfig(t, storage, writeFileConfig, "changed@example.com",
+		"the file watcher never delivered the changed configuration")
 }
 
 // TestFileStorage_WatchSurvivesAtomicRenameSave is the regression test this file exists for.
@@ -146,37 +150,12 @@ func TestFileStorage_WatchSurvivesAtomicRenameSave(t *testing.T) {
 	go storage.watch()
 
 	// First rename-save: proves the watch is live, and detaches it
-	renameFileConfig(t, storage, "first-rename@example.com")
-
-	awaitFileConfig(t, storage, 10*time.Second, func(value Config) bool {
-		return value.AdminEmail == "first-rename@example.com"
-	})
+	awaitSavedConfig(t, storage, renameFileConfig, "first-rename@example.com",
+		"the file watcher never delivered the first atomic-rename save")
 
 	// Second rename-save: everything after this point was lost under the old implementation.
-	// Retried because the reopen (with backoff) races this write, and a rename that lands
-	// while no watch is attached produces no event -- only a later one does.
-	deadline := time.Now().Add(15 * time.Second)
-
-	for attempt := 1; time.Now().Before(deadline); attempt++ {
-
-		renameFileConfig(t, storage, "second-rename@example.com")
-
-		found := false
-
-		for waitUntil := time.Now().Add(time.Second); time.Now().Before(waitUntil) && !found; {
-			select {
-			case result := <-storage.Subscribe():
-				found = result.AdminEmail == "second-rename@example.com"
-			case <-time.After(50 * time.Millisecond):
-			}
-		}
-
-		if found {
-			return
-		}
-	}
-
-	t.Fatal("the watcher never recovered from an atomic-rename save")
+	awaitSavedConfig(t, storage, renameFileConfig, "second-rename@example.com",
+		"the watcher never recovered from an atomic-rename save")
 }
 
 // TestFileStorage_WatchOnceErrsOnMissingPath pins the failure mode that used to end watching
