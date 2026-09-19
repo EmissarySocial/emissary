@@ -10,9 +10,9 @@
  ******************************************/
 
 /* The gutter, declared once for the two rows that have to agree on it: the columns themselves,
-   and the rail pair that puts the split control on their dividing line. */
+   and the option row that points at the lines between them. */
 .two-column,
-.two-column-split-stepper {
+.two-column-split-stops {
 	--two-column-gap: 32px;
 }
 
@@ -130,14 +130,13 @@
 /******************************************
  * The Column Split control
  *
- * Two markups over one set of rules.  The Layout tab ships an icon row; the edit page adds
- * .two-column-split-stepper and ships two chevrons that ride the dividing line.
+ * Two markups over one set of rules.  The Layout tab spaces the five options evenly; the edit
+ * page adds .two-column-split-stops and moves each one onto the line it produces.
  * Both are driven by the same five radios, whose DOCUMENT ORDER is the ladder, and both read
  * `:has(:checked)` so the control answers on the click instead of waiting for the round trip.
  *
- * RULE: see AGENTS.md before reordering the radios, unwrapping .two-column-split-values, moving
- * the picker below the editor row, hanging a stepper rule off the shared class, or reaching for
- * an <img> instead of a mask.
+ * RULE: see AGENTS.md before reordering the radios, moving the picker below the editor row,
+ * hanging a stops rule off the shared class, or reaching for an <img> instead of a mask.
  ******************************************/
 
 .two-column-split-picker {
@@ -149,45 +148,11 @@
 	margin-bottom: 12px;
 }
 
-/* The edit page's variant, where the row becomes two rails with the control on their boundary.
-   RULE: every rule that mirrors the columns hangs off THIS class, never the shared one, or it
-   reaches the Layout tab's icon row as well (AGENTS.md). */
-.two-column-split-stepper {
-	align-items: stretch;
-	justify-content: flex-start;
-	gap: 0;
-	height: 32px;
-}
-
-/* Two rails carrying the columns' own proportions.  They draw nothing; they exist so that their
-   shared boundary lands where the dividing line does. */
-.two-column-split-rail {
-	flex-basis: 0;
-	flex-grow: 1;
-}
-
-/* The control's containing block, which is the LEFT rail's job alone.  Positioning the right
-   one as well is what put it on top of the control. */
-.two-column-split-rail-left {
-	position: relative;
-}
-
-/* Centered on that boundary: the middle of the gutter above the breakpoint, and the middle of a
-   stacked pair below it, where there is no gutter to sit in.
-
-   RULE: z-index is load-bearing.  The control's right half overhangs the right rail, which
-   paints later, so without this that rail swallows every click on the right chevron (AGENTS.md). */
-.two-column-split-control {
-	position: absolute;
-	top: 0;
-	left: 100%;
-	transform: translateX(-50%);
-	z-index: 1;
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	gap: 4px;
-	border-radius: 4px;
+/* The edit page's variant: the same five options, each moved to the dividing line it produces.
+   RULE: every rule that positions them hangs off THIS class, never the shared one, or it reaches
+   the Layout tab's evenly spaced row as well (AGENTS.md). */
+.two-column-split-stops {
+	justify-content: center;
 }
 
 /* Sized and coloured like the Layout tab's own control captions, so the two places that set
@@ -196,12 +161,6 @@
 	margin-right: 8px;
 	font-size: 13px;
 	color: var(--gray60);
-}
-
-/* A DOM grouping, not a box: it makes the sibling walk the chevrons do, and the :first-child
-   and :last-child that fade them, provable without adding an item to the flex row. */
-.two-column-split-values {
-	display: contents;
 }
 
 /* Kept in the tab order and kept operable -- hidden, not removed.  Positioned inside the
@@ -217,7 +176,7 @@
 	pointer-events: none;
 }
 
-/* The Layout tab's clickable option. */
+/* One clickable option, on both surfaces. */
 .two-column-split-picker label {
 	display: flex;
 	align-items: center;
@@ -245,7 +204,7 @@
 	mask-size: contain;
 }
 
-/* One icon per option: the Layout tab draws the whole ladder at once. */
+/* One icon per option: both surfaces draw the whole ladder at once. */
 .two-column-split-picker input[value="THREE-QUARTERS"] + label::before {
 	mask-image: url("/.templates/article-two-column/resources/columns-THREE-QUARTERS.svg");
 }
@@ -284,71 +243,55 @@
 
 /* The input carries the focus and the input is invisible, so the ring is drawn on whichever box
    stands for it.  :focus-visible rather than :focus, so a mouse click does not leave one. */
-.two-column-split-picker input:focus-visible + label,
-.two-column-split-stepper:has(input:focus-visible) .two-column-split-control {
+.two-column-split-picker input:focus-visible + label {
 	outline: solid 2px var(--focus-color);
 	outline-offset: 2px;
 }
 
-/* The chevrons are mouse affordances for the ladder the radios already are. */
-.two-column-split-arrow {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 28px;
-	height: 32px;
-	padding: 0;
-	border: none;
-	border-radius: 4px;
-	font-size: 18px;
-	color: var(--gray50);
-	background-color: transparent;
-	cursor: pointer;
-	transition: color var(--motion-fast, 100ms) var(--motion-ease, ease-in-out);
-}
 
-.two-column-split-arrow:hover {
-	color: var(--gray70);
-	background-color: var(--gray10);
-}
-
-/* The ends of the range, and the whole implementation of them: there is no disabled attribute
-   to keep in step, and the chevrons are aria-hidden and untabbable, so nothing is misreported. */
-.two-column-split-picker:has(.two-column-split-values input:first-child:checked) .two-column-split-arrow-left,
-.two-column-split-picker:has(.two-column-split-values input:last-child:checked) .two-column-split-arrow-right {
-	opacity: 0.25;
-	pointer-events: none;
-}
-
-
-/* The writing surface and the control's own rails, wired to the same two properties as the page.
-   Below the breakpoint the columns stack, so the rails stay equal and the control sits centered. */
+/* The option row and the writing surface, both wired to the same two properties as the page.
+   Below the breakpoint the columns stack, so there are no lines to point at and the options fall
+   back to an evenly spaced row. */
 @container (min-width:768px) {
 
-	.two-column-split-stepper {
-		gap: var(--two-column-gap);
+	/* Each option sits on its own dividing line.  A column at fraction f of the row puts that
+	   line at f of the width plus half a gutter, less f gutters: hence the offsets below, all
+	   read off the one gap variable so they cannot drift from the columns they point at. */
+	.two-column-split-stops {
+		height: 32px;
 	}
 
-	/* Half the gutter further along, so the control centers on the dividing line itself rather
-	   than on the left column's edge. */
-	.two-column-split-control {
-		left: calc(100% + var(--two-column-gap) / 2);
+	.two-column-split-stops label {
+		position: absolute;
+		top: 0;
+		width: 32px;
+		transform: translateX(-50%);
 	}
 
-	.two-column-split-picker:has([value="THREE-QUARTERS"]:checked) .two-column-split-rail-left {
-		flex-grow: 3;
+	/* Trimmed to keep the two closest stops, 1/4 and 1/3, from colliding on a narrow page. */
+	.two-column-split-stops label::before {
+		width: 22px;
+		height: 22px;
 	}
 
-	.two-column-split-picker:has([value="TWO-THIRDS"]:checked) .two-column-split-rail-left {
-		flex-grow: 2;
+	.two-column-split-stops input[value="ONE-QUARTER"] + label {
+		left: calc(25% + var(--two-column-gap) / 4);
 	}
 
-	.two-column-split-picker:has([value="ONE-THIRD"]:checked) .two-column-split-rail-right {
-		flex-grow: 2;
+	.two-column-split-stops input[value="ONE-THIRD"] + label {
+		left: calc(100% / 3 + var(--two-column-gap) / 6);
 	}
 
-	.two-column-split-picker:has([value="ONE-QUARTER"]:checked) .two-column-split-rail-right {
-		flex-grow: 3;
+	.two-column-split-stops input[value="ONE-HALF"] + label {
+		left: 50%;
+	}
+
+	.two-column-split-stops input[value="TWO-THIRDS"] + label {
+		left: calc(200% / 3 - var(--two-column-gap) / 6);
+	}
+
+	.two-column-split-stops input[value="THREE-QUARTERS"] + label {
+		left: calc(75% - var(--two-column-gap) / 4);
 	}
 
 	.two-column-split-picker:has([value="THREE-QUARTERS"]:checked) ~ .two-column-editor > .two-column-left {

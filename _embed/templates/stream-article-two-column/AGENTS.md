@@ -2,43 +2,31 @@
 
 See [README.md](README.md) for what this Template is and how the split is set. These are the rules behind it that look removable and are not.
 
-## The radios' document order IS the ladder
+## Each option is placed on the dividing line it produces
 
-`data.columns` has five values, and the chevrons in [editor.html](editor.html) reach the next one with `previousElementSibling` / `nextElementSibling`. There is no lookup table anywhere: the markup order is the only statement of which split is "one step narrower". So the radios are emitted narrowest-left first (`ONE-QUARTER` through `THREE-QUARTERS`), and reordering them silently reverses the control — which is the exact defect the chevrons replaced, because the icon row they replaced was ordered the other way. `TestTwoColumn_EditorLadderOrder` is the only thing that catches it.
+The edit page positions all five options absolutely along a row above the editors, each at the point where it would put the gutter, so clicking an icon jumps straight to that ratio. An option at fraction f of the row belongs at `f` of the width, plus half a gutter, less `f` gutters — which is where the `calc()` offsets in `.two-column-split-stops` come from, all read off `--two-column-gap` so they cannot drift from the columns they point at. `TestTwoColumn_EveryValueIsDrawn` requires a stop rule per enum value, because a value with no `left` of its own does not fail visibly: it lands on another option and hides it.
 
-The `.two-column-split-values` wrapper exists for that walk. It is `display: contents`, so it adds nothing to the flex row, but it guarantees the five radios are contiguous siblings with nothing interleaved — which is what makes the walk, and the `:first-child` / `:last-child` that fade the end chevrons, correct rather than merely true today. Unwrap it and the walk starts finding buttons.
+Two consequences are worth knowing. The stops are **not** evenly spaced, so 1/4 and 1/3 sit closest; at the narrowest width that can still be in column mode (a layout-SMALL article on a 768px page, so 384px) their 32px boxes overlap by about 3px and the later one in document order takes that sliver. Below 768px the columns stack, there is no line to point at, and the options fall back to the Layout tab's evenly spaced row.
 
-## Stepper rules hang off `.two-column-split-stepper`, never off the shared class
+Clicking is plain `<label for>`: the radio selects itself, fires a native `change`, and the picker's debounced handler saves it. There is deliberately no script in that path, which is why the label must stay its input's **next sibling** — every rule that gives an option a position or an icon is written `input[value=X] + label`, so a label that moves loses both at once and lands unstyled on top of a neighbour.
 
-`.two-column-split-picker` is the chrome both surfaces share; the edit page adds `.two-column-split-stepper` for everything that mirrors the columns. The distinction is not tidiness. A `gap` put on the shared class to space the stepper's rails by a gutter's width also reaches the Layout tab, where it blows the five icons 32px apart — which shipped, and read as a spacing bug with no obvious cause. `--two-column-gap` is declared on the stepper for the same reason.
+## The radios' document order is what the keyboard walks
 
-## The control tracks the dividing line by riding a mirror of the columns
+Both files list the five values narrowest-left-first, and `TestTwoColumn_LadderOrderOnBothSurfaces` holds them to it. On the edit page that order is not merely cosmetic: the stylesheet lays the options out left to right in the same sequence, and a native radiogroup's arrow keys follow **document** order — so a reordered list leaves the arrow keys jumping around the row instead of stepping along it, while every icon still sits in the right place. On the Layout tab the order is what stops the icon row reading backwards, which is the defect that started all of this.
 
-The edit page's control is two chevrons and nothing else — no icon between them, by decision — so the five SVGs serve the Layout tab alone, and the dividing line falls in the 4px gap the chevrons straddle. The picker is a two-item flex row — `.two-column-split-rail-left` and `-right` — carrying the same `flex-basis: 0` and `flex-grow` values as the editors below it, from the same `:has(:checked)` trigger. The rails draw nothing; they exist so their shared boundary lands where the gutter does. `.two-column-split-control` then sits inside the **left** rail at `left: calc(100% + var(--two-column-gap) / 2)` with `translateX(-50%)`, which centers it on the gutter's midpoint, and that is exact at every stop rather than approximate: the left rail's width *is* the left column's width, and the half-gutter offset is read from the same variable the columns space themselves with. Lift the control out of the left rail and it silently stops tracking while every other thing on the page keeps working.
+## Every rule that positions an option hangs off `.two-column-split-stops`
 
-Only the **left** rail is positioned, and the control carries a `z-index`. Both halves of that matter: the control's right half overhangs the right rail, so a positioned right rail paints after the left rail's entire subtree and swallows every click on the right chevron. That shipped too — the divider would travel left and then stick, with nothing logged. `TestTwoColumn_ControlStaysClickable` guards it.
+`.two-column-split-picker` is the chrome both surfaces share; the edit page adds `.two-column-split-stops`. The distinction is not tidiness. A `gap` put on the shared class to space the edit page's row also reaches the Layout tab, where it blows the five icons a gutter's width apart — which shipped once, and read as a spacing bug with no obvious cause. `--two-column-gap` is declared on the stops variant for the same reason.
 
-`--two-column-gap` therefore has two consumers that must agree, which is why it is declared once on `.two-column, .two-column-split-stepper` rather than inline. Below 768px the rail ladder does not apply, so the rails stay equal and the control sits centered — correct, because the columns are stacked and there is no dividing line to sit on.
+## The radiogroup is the whole control
 
-## `twoColumnSplitStep` finds the radios document-wide, on purpose
+There is no separate mouse path: the five labels are the control, and the radios behind them are the keyboard and screen reader path. Tab lands on the checked radio, arrow keys walk the ladder natively, and the focus ring is drawn on the option's own `<label>` because the radio itself is invisible. That ring is the only focus affordance either surface has, so a rule that stops matching takes keyboard focus off the screen entirely and nothing reports it — `TestTwoColumn_FocusRingHasATarget` is what notices. It is also why the hidden radios stay focusable, and why the stylesheet parks them inside the picker rather than off-screen: focusing an off-screen radio scrolls the page to nothing.
 
-It queries `<input[name='data.columns']:checked/>` instead of reaching up to the picker it was clicked in, because an inline hyperscript query literal cannot start with a class — the minifier escapes the `<` and the whole block stops parsing, silently. The repo's root `AGENTS.md` has that rule; `TestTwoColumn_EditorLadderOrder` fails on any `&lt;` in the rendered block. The cost is the assumption that one page holds one such group, which holds here: the edit page has a single picker, and the Layout tab's copy is a separate document.
-
-## Assigning `checked` fires no `change` event
-
-Only user interaction does. `twoColumnSplitStep` therefore sends one itself, and that send is what saves the article: hyperscript's `send` builds an `Event` with `bubbles: true`, so it reaches the `on change` handler on the picker. Drop the send and the chevrons still move the divider, still re-proportion the editors, and never persist anything.
-
-## The chevrons are mouse affordances, not the control
-
-The radiogroup is the keyboard and screen reader path: Tab lands on the checked radio, arrow keys walk the ladder natively, and the focus ring is drawn on `.two-column-split-control` because the radio itself is invisible. On the edit page that ring is the *only* focus affordance, so a rule that stops matching it takes keyboard focus off the screen entirely and nothing reports that. The group carries its own `aria-label`, since the edit page has no visible caption to point at — the Layout tab's copy still has one. That is why the hidden radios stay focusable, and why the stylesheet parks them inside the picker instead of off-screen — focusing an off-screen radio scrolls the page to nothing. The chevrons carry `tabindex="-1"` and `aria-hidden="true"` so assistive tech hears one control instead of three.
-
-One consequence is visible and accepted: a native radiogroup **wraps** at the ends, so arrow keys cycle from `THREE-QUARTERS` back to `ONE-QUARTER` while the chevrons stop. Suppressing it would take a `keydown` handler that preventDefaults at both ends.
-
-The ends of the range are CSS alone — `:has(input:first-child:checked)` fades the left chevron and sets `pointer-events: none`. There is deliberately no `disabled` attribute, because an attribute would need syncing at render *and* after every step, and two implementations of one rule drift. The `if no target` guards in `twoColumnSplitStep` are what hold if `:has()` ever does not.
+One consequence is accepted rather than fixed: a native radiogroup **wraps**, so arrow keys cycle from `THREE-QUARTERS` straight back to `ONE-QUARTER`. Suppressing that would take a `keydown` handler that preventDefaults at both ends.
 
 ## Saving goes through `save()`, debounced, and both halves matter
 
-`save()` calls `beforeSave()`, which copies each CodeMirror back into the `<textarea>` that actually posts; submitting `#saveForm` directly posts whatever the textareas last held and silently reverts typing. The debounce is not tidiness either: `save()` takes a lock, and a second call arriving mid-flight waits for the first and then exits **without saving**, so a quick run of chevron clicks would leave the last one unsaved. One debounced call reads the final state.
+`save()` calls `beforeSave()`, which copies each CodeMirror back into the `<textarea>` that actually posts; submitting `#saveForm` directly posts whatever the textareas last held and silently reverts typing. The debounce is not tidiness either: `save()` takes a lock, and a second call arriving mid-flight waits for the first and then exits **without saving**, so a quick run of clicks, or a held arrow key, would leave the last change unsaved. One debounced call reads the final state.
 
 `beforeSave()` also has to be defined after [stream-article-base/edit-menubar.html](../stream-article-base/edit-menubar.html) renders its no-op of the same name, since a later definition wins, and its body is a plain JavaScript call because it must behave identically whether or not EasyMDE loaded.
 
@@ -54,9 +42,7 @@ The reflow breakpoint is 768px measured with `@container` against `.page`, match
 
 ## Both surfaces must gain a rung together
 
-[editor.html](editor.html) steps the ladder and [layout-controls.html](layout-controls.html) draws all of it, from one enum in [template.hjson](template.hjson) and one stylesheet. Adding a value means a radio in each file, a page rule, an editor rule and a rail rule in [stylesheet/two-column.css](stylesheet/two-column.css), a label rule, and an SVG in [resources/](resources) — see that folder's README for why those icons cannot be `<img>`. Miss the stylesheet and the new value saves fine and renders as equal halves.
-
-Both files list the radios in the same ladder order, narrowest left column first, and `TestTwoColumn_LadderOrderOnBothSurfaces` holds them to it. On the edit page that order is executable — it is what the chevrons walk — and on the Layout tab it is what stops the icon row reading backwards, which is the defect that started all of this.
+[editor.html](editor.html) places the options on the lines they produce and [layout-controls.html](layout-controls.html) spaces them evenly, from one enum in [template.hjson](template.hjson) and one stylesheet. Adding a value means a radio in each file, a page rule, an editor rule, a stop position and an icon rule in [stylesheet/two-column.css](stylesheet/two-column.css), and an SVG in [resources/](resources) — see that folder's README for why those icons cannot be `<img>`. Miss the stylesheet and the new value saves fine and renders as equal halves.
 
 ## Each radio is emitted whole, from inside its branch
 

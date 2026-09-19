@@ -39,28 +39,20 @@
 		{{- $checked_onehalf = true -}}
 	{{- end -}}
 
-	<div class="two-column-split-picker two-column-split-stepper" role="radiogroup" aria-label="Column widths" script="on change debounced at 300ms call save()">
+	<div class="two-column-split-picker two-column-split-stops" role="radiogroup" aria-label="Column widths" script="on change debounced at 300ms call save()">
 
-		<!-- RULE: two rails at the columns' own proportions, so the control rides the dividing line. The control must stay inside the LEFT rail (AGENTS.md). -->
-		<span class="two-column-split-rail two-column-split-rail-left">
-
-			<!-- Mouse affordances for the radiogroup, which is the keyboard and screen reader path. -->
-			<span class="two-column-split-control">
-				<button type="button" class="two-column-split-arrow two-column-split-arrow-left" tabindex="-1" aria-hidden="true" title="Narrower left column" script="on click call twoColumnSplitStep(false)"><span class="bi bi-chevron-left"></span></button>
-				<button type="button" class="two-column-split-arrow two-column-split-arrow-right" tabindex="-1" aria-hidden="true" title="Wider left column" script="on click call twoColumnSplitStep(true)"><span class="bi bi-chevron-right"></span></button>
-			</span>
-		</span>
-
-		<span class="two-column-split-rail two-column-split-rail-right"></span>
-
-		<!-- RULE: narrowest left column first.  This order IS the ladder the chevrons walk. -->
-		<span class="two-column-split-values">
-			{{if $checked_onequarter}}<input type="radio" name="data.columns" value="ONE-QUARTER" aria-label="One quarter, three quarters" checked>{{else}}<input type="radio" name="data.columns" value="ONE-QUARTER" aria-label="One quarter, three quarters">{{end}}
-			{{if $checked_onethird}}<input type="radio" name="data.columns" value="ONE-THIRD" aria-label="One third, two thirds" checked>{{else}}<input type="radio" name="data.columns" value="ONE-THIRD" aria-label="One third, two thirds">{{end}}
-			{{if $checked_onehalf}}<input type="radio" name="data.columns" value="ONE-HALF" aria-label="Equal halves" checked>{{else}}<input type="radio" name="data.columns" value="ONE-HALF" aria-label="Equal halves">{{end}}
-			{{if $checked_twothirds}}<input type="radio" name="data.columns" value="TWO-THIRDS" aria-label="Two thirds, one third" checked>{{else}}<input type="radio" name="data.columns" value="TWO-THIRDS" aria-label="Two thirds, one third">{{end}}
-			{{if $checked_threequarters}}<input type="radio" name="data.columns" value="THREE-QUARTERS" aria-label="Three quarters, one quarter" checked>{{else}}<input type="radio" name="data.columns" value="THREE-QUARTERS" aria-label="Three quarters, one quarter">{{end}}
-		</span>
+		<!-- RULE: each option is placed at the dividing line it produces, so clicking one jumps straight to that ratio (AGENTS.md). -->
+		<!-- RULE: narrowest left column first.  Document order is the keyboard's path, and it has to match the order the stylesheet lays these out in. -->
+		{{if $checked_onequarter}}<input type="radio" id="columnsOneQuarter" name="data.columns" value="ONE-QUARTER" checked>{{else}}<input type="radio" id="columnsOneQuarter" name="data.columns" value="ONE-QUARTER">{{end}}
+		<label for="columnsOneQuarter" title="One quarter, three quarters"><span class="hide-visual">One quarter, three quarters</span></label>
+		{{if $checked_onethird}}<input type="radio" id="columnsOneThird" name="data.columns" value="ONE-THIRD" checked>{{else}}<input type="radio" id="columnsOneThird" name="data.columns" value="ONE-THIRD">{{end}}
+		<label for="columnsOneThird" title="One third, two thirds"><span class="hide-visual">One third, two thirds</span></label>
+		{{if $checked_onehalf}}<input type="radio" id="columnsOneHalf" name="data.columns" value="ONE-HALF" checked>{{else}}<input type="radio" id="columnsOneHalf" name="data.columns" value="ONE-HALF">{{end}}
+		<label for="columnsOneHalf" title="Equal halves"><span class="hide-visual">Equal halves</span></label>
+		{{if $checked_twothirds}}<input type="radio" id="columnsTwoThirds" name="data.columns" value="TWO-THIRDS" checked>{{else}}<input type="radio" id="columnsTwoThirds" name="data.columns" value="TWO-THIRDS">{{end}}
+		<label for="columnsTwoThirds" title="Two thirds, one third"><span class="hide-visual">Two thirds, one third</span></label>
+		{{if $checked_threequarters}}<input type="radio" id="columnsThreeQuarters" name="data.columns" value="THREE-QUARTERS" checked>{{else}}<input type="radio" id="columnsThreeQuarters" name="data.columns" value="THREE-QUARTERS">{{end}}
+		<label for="columnsThreeQuarters" title="Three quarters, one quarter"><span class="hide-visual">Three quarters, one quarter</span></label>
 	</div>
 
 	<div class="two-column two-column-editor flex-grow">
@@ -191,32 +183,6 @@
 	-- load-bearing; see AGENTS.md.
 	def beforeSave()
 		call emissaryTwoColumnBeforeSave()
-	end
-
-	-- twoColumnSplitStep moves the Column Split one rung along the radios' document order.
-	-- RULE: assigning checked fires no change event, so this sends the one that saves, and the
-	-- query literal cannot start with a class.  Both rules are in AGENTS.md.
-	def twoColumnSplitStep(forward)
-
-		set current to the first <input[name='data.columns']:checked/>
-
-		if no current
-			exit
-		end
-
-		if forward
-			set target to current's nextElementSibling
-		otherwise
-			set target to current's previousElementSibling
-		end
-
-		-- The end of the range.  The stylesheet blocks the click too; this holds without it.
-		if no target
-			exit
-		end
-
-		set target's checked to true
-		send change to target
 	end
 
 </script>

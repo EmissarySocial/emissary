@@ -246,8 +246,8 @@ func TestTwoColumn_EditorPostsBothColumns(t *testing.T) {
 		"the picker must precede the editor row: the ratio rules reach it with ~")
 }
 
-// twoColumnLadder is data.columns in ladder order, narrowest left column first.  The chevrons
-// on the edit page walk the radios by document order, so this IS the control's direction.
+// twoColumnLadder is data.columns in ladder order, narrowest left column first.  Both surfaces
+// list the radios this way, and the keyboard walks them in document order.
 var twoColumnLadder = []string{"ONE-QUARTER", "ONE-THIRD", "ONE-HALF", "TWO-THIRDS", "THREE-QUARTERS"}
 
 // TestTwoColumn_EditorPickerChecksExactlyOne asserts the Column Split control for every value a
@@ -291,13 +291,12 @@ func TestTwoColumn_EditorPickerChecksExactlyOne(t *testing.T) {
 	}
 }
 
-// TestTwoColumn_EditorLadderOrder asserts that the chevrons step the split in the direction they
-// point.  Nothing else states that direction: the radios' document order is the whole ladder.
+// TestTwoColumn_EditorStopsAreWired asserts the markup contract the positioned options rest on.
 //
-// The failure this guards is the defect the chevrons replaced.  Reorder the radios and every
-// click moves the dividing line the wrong way, while the page, the POST, and every other test
-// here stay perfectly correct.
-func TestTwoColumn_EditorLadderOrder(t *testing.T) {
+// Every rule that places a stop, and every rule that gives it an icon, is written as
+// "input[value=X] + label" -- so a label that stops being its input's next sibling loses its
+// position and its picture at once, and lands unstyled on top of another option.
+func TestTwoColumn_EditorStopsAreWired(t *testing.T) {
 
 	twoColumn := loadTwoColumnTemplate(t)
 
@@ -307,27 +306,17 @@ func TestTwoColumn_EditorLadderOrder(t *testing.T) {
 
 	output := buffer.String()
 
-	// The five radios are contiguous siblings inside .two-column-split-values, which is what
-	// makes previousElementSibling a rung of the ladder rather than whatever markup moved in
-	values := regexp.MustCompile(`(?s)<span class="two-column-split-values">(.*?)</span>`).FindStringSubmatch(output)
-	require.Len(t, values, 2, "the radios must stay wrapped in .two-column-split-values")
-	require.Len(t, regexp.MustCompile(`<input `).FindAllString(values[1], -1), len(twoColumnLadder),
-		"the wrapper holds the radios and nothing else")
+	// Whitespace between them is fine, because an adjacent-sibling combinator skips text nodes
+	pairs := regexp.MustCompile(`<input type="radio"[^>]*>\s*<label for="columns`)
+	require.Len(t, pairs.FindAllString(output, -1), len(twoColumnLadder),
+		"every radio must be followed directly by its own label")
 
-	// Both chevrons, and both as type="button": a bare <button> inside #saveForm submits it
-	require.Equal(t, 2, strings.Count(output, `<button type="button" class="two-column-split-arrow`))
-	require.Contains(t, output, "two-column-split-arrow-left")
-	require.Contains(t, output, "two-column-split-arrow-right")
+	// The variant class is what carries the positioning; without it the stops sit in a plain row
+	require.Contains(t, output, "two-column-split-stops")
 
-	// The chevrons are affordances for the radiogroup, which is the keyboard path
+	// The radiogroup names itself, since the edit page shows no caption
 	require.Contains(t, output, `role="radiogroup"`)
-	require.Contains(t, output, `aria-label="Column widths"`,
-		"the radiogroup carries its own name: there is no visible label to point at")
-
-	// The control tracks the dividing line by living inside the LEFT rail, whose width IS the
-	// left column's.  Lift it out and it silently stops tracking while everything else works.
-	require.Regexp(t, `two-column-split-rail-left"[^>]*>\s*<span class="two-column-split-control"`, output,
-		"the control must stay inside the left rail")
+	require.Contains(t, output, `aria-label="Column widths"`)
 
 	// The minifier escapes a "<" that does not open a tag, and a <script> body is raw text in
 	// HTML -- so an escaped query literal reaches hyperscript as the entity and never parses
@@ -339,9 +328,10 @@ func TestTwoColumn_EditorLadderOrder(t *testing.T) {
 // TestTwoColumn_LadderOrderOnBothSurfaces asserts that both places that set the split list it in
 // the same direction, narrowest left column first.
 //
-// On the edit page that order is executable: it is the ladder the chevrons walk, and reversing it
-// reverses every click. On the Layout tab it is only visual, and getting it backwards is the
-// original defect -- an icon row whose leftmost option put the dividing line furthest right.
+// On the edit page that order is what the keyboard walks, and the stylesheet lays the options out
+// left to right in the same sequence -- so a reordered list makes the arrow keys jump around the
+// row instead of stepping along it. On the Layout tab it is what stops the icon row reading
+// backwards, which is the original defect.
 func TestTwoColumn_LadderOrderOnBothSurfaces(t *testing.T) {
 
 	twoColumn := loadTwoColumnTemplate(t)
@@ -362,33 +352,6 @@ func TestTwoColumn_LadderOrderOnBothSurfaces(t *testing.T) {
 				"%s rung %d: narrowest left column first", name, index)
 		}
 	}
-}
-
-// TestTwoColumn_ControlStaysClickable asserts that the split control outranks the rails it is
-// laid over.  Its right half overhangs the right rail, so the stacking order decides whether the
-// right chevron receives clicks at all.
-//
-// This one has already shipped broken.  Both rails were positioned, the right rail paints after
-// the left rail's whole subtree, and it swallowed every click on the right chevron -- so the
-// divider could only travel left and then stuck, with nothing logged and every other test green.
-func TestTwoColumn_ControlStaysClickable(t *testing.T) {
-
-	stylesheet, err := os.ReadFile("../_embed/templates/stream-article-two-column/stylesheet/two-column.css")
-	require.NoError(t, err)
-
-	css := string(stylesheet)
-
-	control := regexp.MustCompile(`(?s)\.two-column-split-control \{(.*?)\}`).FindStringSubmatch(css)
-	require.Len(t, control, 2, "the split control must have a rule of its own")
-	require.Contains(t, control[1], "z-index",
-		"the control overhangs the right rail, so it has to outrank it or the right chevron is dead")
-
-	// Only the LEFT rail is the control's containing block.  Positioning the shared class puts
-	// the right rail in the same stacking pass as the control it overlaps.
-	shared := regexp.MustCompile(`(?s)\.two-column-split-rail \{(.*?)\}`).FindStringSubmatch(css)
-	require.Len(t, shared, 2, "the rails must share a rule")
-	require.NotContains(t, shared[1], "position:",
-		"position belongs on .two-column-split-rail-left alone")
 }
 
 // TestTwoColumn_FocusRingHasATarget asserts that every class the focus ring is drawn on still
@@ -476,7 +439,8 @@ func TestTwoColumn_EveryValueIsDrawn(t *testing.T) {
 
 		require.Contains(t, css, ".two-column.columns-"+value+" > .two-column-", "the page never draws %s", value)
 		require.Contains(t, css, `:has([value="`+value+`"]:checked) ~ .two-column-editor > .two-column-`, "the editor never draws %s", value)
-		require.Contains(t, css, `:has([value="`+value+`"]:checked) .two-column-split-rail-`, "the control never tracks %s", value)
+		require.Contains(t, css, `.two-column-split-stops input[value="`+value+`"] + label`,
+			"%s has no stop of its own, so it lands on top of another option", value)
 	}
 }
 
