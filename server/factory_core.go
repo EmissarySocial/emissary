@@ -1086,7 +1086,7 @@ func (factory *factoryCore) refreshQueue(withStorage bool) {
 
 	// Configure queue options, including task consumers
 	options := []queue.Option{
-		queue.WithConsumers(consumer.New(factory).Run),
+		queue.WithConsumers(consumer.New(factory)),
 		queue.WithRunImmediatePriority(32),
 	}
 
