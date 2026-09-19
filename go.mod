@@ -18,8 +18,8 @@ require (
 	github.com/benpate/digital-dome v0.8.0
 	github.com/benpate/exp v0.11.0
 	github.com/benpate/exp-builder v0.12.0
-	github.com/benpate/form v0.29.0
-	github.com/benpate/geo v0.3.0
+	github.com/benpate/form v0.30.0
+	github.com/benpate/geo v0.4.0
 	github.com/benpate/hannibal v0.35.0
 	github.com/benpate/html v0.18.0
 	github.com/benpate/icon v0.4.0

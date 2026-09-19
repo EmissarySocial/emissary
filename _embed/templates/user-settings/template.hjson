@@ -200,7 +200,7 @@
 									label:Setup
 									children: [
 										{type:"text", path:"name", label:"Circle Name", options:{autocomplete:"off", validator:"/.validate/circle/name?circleId={{.ObjectID}}"}}
-										{type:"select", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
+										{type:"select-icons", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
 										{type:"toggle", path:"isVisible", options:{false-text:"Visible to Members?", true-text:"Visible to Members.  This circle appears on guest profile pages."}}
 									]
 								}
@@ -250,7 +250,7 @@
 										label:Setup
 										children: [
 											{type:"text", path:"name", label:"Circle Name", options:{autocomplete:"off", validator:"/.validate/circle/name?circleId={{.ObjectID}}"}}
-											{type:"select", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
+											{type:"select-icons", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
 											{type:"toggle", path:"isVisible", options:{false-text:"Visible to Members?", true-text:"Visible to Members.  This circle appears on guest profile pages."}}
 										]
 									}
