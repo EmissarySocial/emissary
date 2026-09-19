@@ -1,25 +1,5 @@
 {
-  "startDate": {
-    "$date": {
-      "$numberLong": "1700000000000"
-    }
-  },
-  "location": {
-    "type": "Point",
-    "coordinates": [
-      {
-        "$numberDouble": "-104.9903"
-      },
-      {
-        "$numberDouble": "39.7392"
-      },
-      {
-        "$numberDouble": "1609.0"
-      }
-    ]
-  },
   "area": {
-    "type": "Polygon",
     "coordinates": [
       [
         [
@@ -47,37 +27,57 @@
           }
         ]
       ]
-    ]
-  },
-  "where": {
-    "name": "Bluebird Theater",
-    "formatted": "3317 E Colfax Ave, Denver, CO 80206",
-    "street1": "3317 E Colfax Ave",
-    "street2": "Suite 2",
-    "locality": "Denver",
-    "region": "CO",
-    "postalCode": "80206",
-    "country": "US",
-    "plusCode": "85FPQXX5+9F",
-    "timezone": "America/Denver",
-    "latitude": {
-      "$numberDouble": "39.7392"
-    },
-    "longitude": {
-      "$numberDouble": "-104.9903"
-    }
-  },
-  "isBridged": true,
-  "folderId": {
-    "$oid": "507f1f77bcf86cd799439011"
+    ],
+    "type": "Polygon"
   },
   "data": {
-    "scalar": "hello",
+    "nested": {
+      "inner": "value"
+    },
     "number": {
       "$numberLong": "42"
     },
-    "nested": {
-      "inner": "value"
+    "scalar": "hello"
+  },
+  "folderId": {
+    "$oid": "507f1f77bcf86cd799439011"
+  },
+  "isBridged": true,
+  "location": {
+    "coordinates": [
+      {
+        "$numberDouble": "-104.9903"
+      },
+      {
+        "$numberDouble": "39.7392"
+      },
+      {
+        "$numberDouble": "1609.0"
+      }
+    ],
+    "type": "Point"
+  },
+  "startDate": {
+    "$date": {
+      "$numberLong": "1700000000000"
     }
+  },
+  "where": {
+    "country": "US",
+    "formatted": "3317 E Colfax Ave, Denver, CO 80206",
+    "latitude": {
+      "$numberDouble": "39.7392"
+    },
+    "locality": "Denver",
+    "longitude": {
+      "$numberDouble": "-104.9903"
+    },
+    "name": "Bluebird Theater",
+    "plusCode": "85FPQXX5+9F",
+    "postalCode": "80206",
+    "region": "CO",
+    "street1": "3317 E Colfax Ave",
+    "street2": "Suite 2",
+    "timezone": "America/Denver"
   }
 }
