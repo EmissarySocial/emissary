@@ -1,6 +1,8 @@
 package consumer
 
 import (
+	"time"
+
 	"github.com/EmissarySocial/emissary/service"
 	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/derp"
@@ -9,6 +11,7 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
 	"github.com/benpate/uri"
+	"github.com/rs/zerolog/log"
 )
 
 // CrawlContext attempts to backfill the cache for a given document by crawling all of the links
@@ -40,18 +43,26 @@ func CrawlContext(factory *service.Factory, args mapof.Any) queue.Result {
 			// Load the context collection (probably from the Interweb)
 			context, err := client.Load(contextID)
 
-			// If the context is a valid collection, then continue!
-			if context.IsCollection() {
+			switch outcome, retryAfter := classifyContext(context, err); outcome {
+
+			// A real collection is the whole point of this task
+			case contextOutcomeBackfill:
 				return backfillContext_Context(factory, context)
+
+			// A rate limit is the host's throttle, so wait out the host's own Retry-After
+			case contextOutcomeRateLimited:
+
+				log.Debug().Str("location", location).Str("context", contextID).
+					Dur("retryAfter", retryAfter).Msg("Rate limited by remote host")
+
+				return queue.Requeue(retryAfter)
 			}
 
-			// If "too many requests" then requeue later
-			if isTooMany, delay := derp.IsTooManyRequests(err); isTooMany {
-				return queue.Requeue(delay)
-			}
-
-			// Other errors are ignored
-			derp.Report(derp.Wrap(err, location, "Loading context collection"))
+			// RULE: Every other outcome is the remote's own and repeats identically on every
+			// future crawl, so it is logged and never reported (BUG-150).  The InReplyTo crawl
+			// below is this task's real answer to a context it cannot read.
+			log.Debug().Str("location", location).Str("context", contextID).
+				Int("code", derp.ErrorCode(err)).Msg("Skipping unreadable context")
 		}
 	}
 
@@ -68,6 +79,50 @@ func CrawlContext(factory *service.Factory, args mapof.Any) queue.Result {
 
 	// No error => success!
 	return queue.Success()
+}
+
+// contextOutcome names what a loaded "context" document means for the crawl
+type contextOutcome int
+
+const (
+	// contextOutcomeSkip means the context is unusable, and the InReplyTo tree is the fallback.
+	// It is first so that the zero value does the least, rather than starting a crawl.
+	contextOutcomeSkip contextOutcome = iota
+
+	// contextOutcomeBackfill means the context is a real collection, and is worth indexing
+	contextOutcomeBackfill
+
+	// contextOutcomeRateLimited means the HOST is throttling us, and nothing here is wrong
+	contextOutcomeRateLimited
+)
+
+// classifyContext decides what a loaded "context" document means for the crawl, and how long
+// to wait before trying again.  The duration is zero for every outcome except RateLimited.
+func classifyContext(context streams.Document, err error) (contextOutcome, time.Duration) {
+
+	// RULE: The error MUST be settled before the document is read.  A failed Load still
+	// returns a usable Document, so asking IsCollection first answers from an empty value.
+	if err != nil {
+
+		// RULE: The 429 test comes first, and its duration is carried out rather than
+		// recomputed.  derp reads the host's Retry-After header, falling back to one hour,
+		// and never returns zero here -- so this can not spin against a throttling host.
+		if isTooMany, retryAfter := derp.IsTooManyRequests(err); isTooMany {
+			return contextOutcomeRateLimited, retryAfter
+		}
+
+		// RULE: Every other failure is the remote's own and repeats identically on every
+		// future crawl.  A context answering HTML is reported as 500, so no class is exempt.
+		return contextOutcomeSkip, 0
+	}
+
+	// A context that is not a collection is a normal document on the open fediverse,
+	// not a failure.  There is simply nothing to backfill from it.
+	if !context.IsCollection() {
+		return contextOutcomeSkip, 0
+	}
+
+	return contextOutcomeBackfill, 0
 }
 
 // backfillContext_Context indexes every document in the collection that we haven't already seen

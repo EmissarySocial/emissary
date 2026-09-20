@@ -2,7 +2,9 @@ package consumer
 
 import (
 	"errors"
+	"io"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -84,6 +86,29 @@ func TestRequeue_WrappedTooManyRequests(t *testing.T) {
 	result := requeue(wrapped)
 	require.Equal(t, queue.ResultStatusRequeue, result.Status)
 	require.Equal(t, 30*time.Second, result.Delay.Truncate(time.Second))
+}
+
+// htmlInsteadOfActivityPub builds the error that benpate/remote returns when a remote server
+// answers an ActivityPub request with 200 and an HTML body
+func htmlInsteadOfActivityPub(url string) error {
+
+	// This mirrors remote.Transaction.decodeResponseBody's ContentTypeHTML branch.  The
+	// WithInternalError option is what makes the result a 500 even though the response was 200.
+	response := &http.Response{
+		StatusCode: http.StatusOK,
+		Status:     "200 OK",
+		Header:     http.Header{"Content-Type": []string{"text/html; charset=utf-8"}},
+		Body:       io.NopCloser(strings.NewReader("<!DOCTYPE html><html><body>Hello</body></html>")),
+	}
+
+	request, _ := http.NewRequest(http.MethodGet, url, nil)
+
+	return derp.Wrap(
+		derp.NewHTTPError(request, response),
+		"remote.Transaction.decodeResponseBody",
+		"HTML must be read into an io.Writer, *string, or *byte[]",
+		derp.WithInternalError(),
+	)
 }
 
 // tooManyRequests builds the 429 shape that benpate/remote returns, optionally carrying a
