@@ -36,6 +36,7 @@ func TestMessageForTopic(t *testing.T) {
 	test(realtime.TopicNewReplies, hex, "new replies")
 	test(realtime.TopicImportProgress, hex, "import progress")
 	test(realtime.TopicFollowingUpdated, hex, "following updated")
+	test(realtime.TopicStreamSourceUpdated, hex, "stream source updated")
 
 	// Default-event topics publish as "message"; inbox topics carry the data argument
 	test(realtime.TopicInboxActivity, "", "payload")
