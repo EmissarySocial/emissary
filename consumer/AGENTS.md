@@ -30,6 +30,12 @@ The reply graph is remote-controlled data, so the crawl tasks in [crawlContext.g
 
 The task ([publishRealtimeMessage.go](publishRealtimeMessage.go)) delivers to `factory.RealtimeBroker()`, which holds this process's live SSE sockets. A stored, retried, or cross-node run would nudge nobody. Topics travel as the integer constants from [../realtime/constants.go](../realtime/constants.go), so never renumber them.
 
+## The two StreamSource sync tasks are one handler under two names
+
+`SyncStreamSource` (webhook, 256) and `SyncStreamSourceNow` (the Sync Now button, 16) exist as separate names only so [preprocessor.go](preprocessor.go) can give them different priorities. The dispatch switch and all three lifecycle hooks must accept both, through `service.IsSyncStreamSourceTask`. A hook that tested one name by hand would stop recording status for the other path, silently — the queue reports nothing when a hook declines a task.
+
+A missing case in `PreProcessor` is just as quiet: the name falls through, `Priority` keeps its `-1` sentinel, and `prepareTask` swaps in the queue default. So a test asking "is the priority low enough?" passes against `-1` and proves nothing. Assert the exact value.
+
 ## New tasks need a case in `PreProcessor` too
 
 [preprocessor.go](preprocessor.go) assigns a priority only when `task.Priority == -1`. Priorities ≤ 32 may run immediately when the queue is idle; anything at 64 or above is always written to storage first. A delivery-style task without a case here gets no tuned priority, and a task whose name is not in the [consumer.go](consumer.go) switch returns `queue.Ignored()` silently — renaming a task name (or its argument names) strands already-queued rows unless a fallback drains them, which is exactly why the `"host"` fallback exists.
