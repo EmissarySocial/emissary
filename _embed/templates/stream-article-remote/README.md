@@ -48,12 +48,14 @@ The consequence to know: a caller that saves many `StreamSource` records in a lo
 
 ### The settings screen renders from the Stream builder, not from inside `with-stream-source`
 
-`build.Model` — the builder that `with-stream-source` switches to — returns `false` from `UserCan` and `""` from `Permalink` and `BasePath`. A settings page rendered inside the container would therefore have no working action URLs and no permission checks, and every button on it would be dead. [edit.html](edit.html) instead renders from the Stream and reaches the record through the `.StreamSource` accessor on `build.Stream`, which returns an EMPTY record when the Stream has none yet.
+`build.Model` — the builder that `with-stream-source` switches to — returns `false` from `UserCan` and `""` from `Permalink` and `BasePath`. A settings page rendered inside the container would therefore have no working action URLs and no permission checks, and every button on it would be dead. [edit.html](edit.html) and [edit-status.html](edit-status.html) instead render from the Stream and reach the record through the `.StreamSource` accessor on `build.Stream`, which returns an EMPTY record when the Stream has none yet.
+
+The status card is its own action and its own file because three things ask for it: `edit` renders it with `.View`, the SSE listener re-fetches it when a sync lands, and **Sync Now** answers with it directly. Each of those swaps it into `#edit-status` — which every one of them must name, because theme-default's `<body>` carries `hx-target="main"` and an element that inherits it replaces the whole settings screen with a status card.
 
 That empty record is deliberately not `model.NewStreamSource()`: the constructor mints a webhook token, and a BSON decode leaves alone any field the stored document does not carry, so a load target built that way can hand back a stored record wearing a token nobody installed. See [../../../model/AGENTS.md](../../../model/AGENTS.md).
 
 ### Nothing polls, so an uninstalled webhook is an article that silently stops updating
 
-A static file cannot offer a subscription, so the webhook URL on the settings screen has to be pasted into the repository by hand. Until somebody does, the article holds whatever its save-time synchronization fetched, and nothing anywhere reports that. That is why `edit.html` shows `Status` and the time of the last check at the top: a record nobody finished configuring has to read as unconfigured rather than as working.
+A static file cannot offer a subscription, so the webhook URL on the settings screen has to be pasted into the repository by hand. Until somebody does, the article holds whatever its save-time synchronization fetched, and nothing anywhere reports that. That is why `edit-status.html` shows `Status` and the time of the last check at the top of the settings screen: a record nobody finished configuring has to read as unconfigured rather than as working.
 
 The token is shared on purpose — give several articles the same token and one webhook refreshes all of them.
