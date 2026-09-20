@@ -195,6 +195,8 @@ The same wrapper as [`as-modal`](#as-modal), rendered as a tooltip instead.
 
 Adds `ETag` and `Cache-Control` headers to a `GET` response, and short-circuits with `304 Not Modified` when the browser's `If-None-Match` matches the object's ETag. Does nothing on `POST`.
 
+This step does nothing at all for a signed-in User or a guest Identity — no `304`, and no headers. The ETag tracks the object's revision, not the viewer, so it cannot distinguish a public page from the privileged rendering those callers were served, and `public` must never label such a response. They fall through to the `Cache-Control` that [`view-html`](#view-html) sets, which defaults to `private, no-cache`.
+
 **Attributes**
 
 | Attribute | Description |

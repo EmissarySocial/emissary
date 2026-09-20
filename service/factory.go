@@ -103,6 +103,7 @@ type Factory struct {
 	streamService           Stream
 	streamArchiveService    StreamArchive
 	streamDraftService      StreamDraft
+	streamSourceService     StreamSource
 	privilegeService        Privilege
 	realtimeBroker          *realtime.Broker
 	userConnectionService   UserConnection
@@ -196,6 +197,7 @@ func NewFactory(serverFactory ServerFactory, domain config.Domain, port string, 
 	factory.streamService = NewStream()
 	factory.streamArchiveService = NewStreamArchive()
 	factory.streamDraftService = NewStreamDraft()
+	factory.streamSourceService = NewStreamSource()
 	factory.privilegeService = NewPrivilege()
 	factory.userConnectionService = NewUserConnection()
 	factory.userService = NewUser()
@@ -274,6 +276,7 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	factory.streamService.Refresh(factory)
 	factory.streamArchiveService.Refresh(factory)
 	factory.streamDraftService.Refresh(factory)
+	factory.streamSourceService.Refresh(factory)
 	factory.privilegeService.Refresh(factory)
 	factory.userConnectionService.Refresh(factory)
 	factory.userService.Refresh(factory)
@@ -687,6 +690,11 @@ func (factory *Factory) StreamArchive() *StreamArchive {
 // StreamDraft returns a fully populated StreamDraft service
 func (factory *Factory) StreamDraft() *StreamDraft {
 	return &factory.streamDraftService
+}
+
+// StreamSource returns a fully populated StreamSource service
+func (factory *Factory) StreamSource() *StreamSource {
+	return &factory.streamSourceService
 }
 
 // User returns a fully populated User service
@@ -1151,6 +1159,7 @@ func (factory *Factory) Collections() []string {
 		"Stream",
 		"StreamDraft",
 		"StreamOutbox",
+		"StreamSource",
 		"User",
 		"Webhook",
 	}

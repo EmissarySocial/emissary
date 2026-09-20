@@ -856,9 +856,8 @@ func (service *Following) SetStatusFailure(session data.Session, following *mode
 	following.StatusMessage = statusMessage
 	following.ErrorCount = following.ErrorCount + 1
 
-	// RULE: This is the CONNECT path, where someone just clicked "follow" and is watching the
-	// badge, so a failure retries in minutes rather than at the polling cadence.  A failure
-	// found while POLLING uses SetStatusPollFailure instead, and neither stamps LastPolled.
+	// On failure, wait longer before trying again.
+	// But do not change "LastPolled" because that is the last time we were successful
 	following.NextPoll = time.Now().Add(followingBackoff(following.ErrorCount)).Unix()
 
 	// Save the Following to the database (no other busines rules)
@@ -1075,4 +1074,18 @@ func (service *Following) reconcileDuplicate(session data.Session, following *mo
 	following.Journal = existing.Journal
 
 	return nil
+}
+
+// followingBackoff returns how long to wait after a Following's errorCount-th consecutive
+// failure: 1m, 2m, 4m, 8m, 16m, 32m, 64m, 128m, then 256m (~4 hours) for every failure after.
+func followingBackoff(errorCount int) time.Duration {
+
+	// RULE: `1 << n` doubles.  `2 ^ n` is XOR in Go, not exponentiation -- it yields
+	// 3m, 0m, 1m, 6m, 7m, 4m, 5m, then 10m forever, retrying with no wait at all on the second
+	// consecutive failure.
+	const maximumExponent = 8
+
+	exponent := min(max(errorCount-1, 0), maximumExponent)
+
+	return time.Duration(1<<exponent) * time.Minute
 }

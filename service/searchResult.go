@@ -150,7 +150,7 @@ func (service *SearchResult) Save(session data.Session, searchResult *model.Sear
 		}
 	}
 
-	// Send this SearchResult to all listeners once the transaction commits
+	// Send this SearchResult to all listeners, once this transaction commits
 	postcommit.Publish(
 		session,
 		service.queue,
