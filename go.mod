@@ -146,11 +146,3 @@ require (
 	golang.org/x/time v0.15.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
-
-// TEMPORARY: builds against local worktrees while turbine's Consumer interface is in flight.
-// hannibal is here only because sender.Consumer implements that interface, so it cannot compile
-// against the released turbine.  Remove both lines (and run `go mod tidy`) once turbine and
-// hannibal are tagged and released.
-replace github.com/benpate/turbine => ../turbine
-
-replace github.com/benpate/hannibal => ../hannibal
