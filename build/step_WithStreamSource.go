@@ -74,16 +74,15 @@ func (step StepWithStreamSource) getStreamSource(builder Stream) (model.StreamSo
 	streamSourceService := builder.factory().StreamSource()
 	streamID := builder._stream.StreamID
 
-	// RULE: The load target is a ZERO record, never NewStreamSource().  The constructor seeds
-	// Config with a minted webhook token, and a decode MERGES into a map rather than replacing it
-	// -- so a seeded key the stored document does not name would survive into a loaded record.
-	var streamSource model.StreamSource
+	// The load target is built by the constructor, so a field that this model gains later arrives
+	// with its default instead of a zero value.  A decode overwrites every key the stored document
+	// carries, which today is all of them.
+	streamSource := model.NewStreamSource()
 
 	if err := streamSourceService.LoadByStreamID(builder.session(), streamID, &streamSource); err != nil {
 
 		// A Stream with no source yet is the CREATE case, not an error
 		if derp.IsNotFound(err) {
-			streamSource = model.NewStreamSource()
 
 			// Save refuses a record that names no Stream, so a create without this would fail
 			// validation instead of working
