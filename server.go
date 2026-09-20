@@ -394,6 +394,7 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:stream/sse/updated", handler.WithStream(factory, handler.ServerSentEvent_Stream_Updated))
 	e.GET("/:stream/sse/child-updated", handler.WithStream(factory, handler.ServerSentEvent_Stream_ChildUpdated))
 	e.GET("/:stream/sse/new-replies", handler.WithStream(factory, handler.ServerSentEvent_Stream_NewReplies))
+	e.GET("/:stream/sse/stream-source-updated", handler.WithStream(factory, handler.ServerSentEvent_Stream_StreamSourceUpdated))
 
 	e.GET("/:objectId/sse/import-progress", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Object_ImportProgress))
 
