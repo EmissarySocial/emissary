@@ -38,8 +38,11 @@ import (
 func documentClient() streams.Client {
 
 	// RULE: This MUST mirror service.ActivityStream.Client, because the error shape these
-	// tests pin is produced by the layers, not by any one of them.  The ascache layer is
-	// the only omission, because it needs a live database and wraps nothing.
+	// tests pin is produced by the layers, not by any one of them.  Three layers above this
+	// point are omitted: ascache needs a live database, and asrules and ashash sit above it.
+
+	// Of the three, only ascache changes an error, adding one more derp.Wrap.  The rate-limit
+	// test below stands in for it, because nothing here can reach a database.
 
 	// httptest serves from 127.0.0.1, which the transport's SSRF guard refuses by default
 	const allowPrivateIPs = true
@@ -120,6 +123,15 @@ func TestIntegration_RateLimitedContext(t *testing.T) {
 	require.Equal(t, contextOutcomeRateLimited, outcome)
 	require.Equal(t, 30*time.Second, retryAfter, "the host asked for 30s; 1h means the duration was lost in the chain")
 	require.Equal(t, http.StatusTooManyRequests, derp.ErrorCode(err))
+
+	// RULE: ascache is the one omitted layer that changes an error, and it adds exactly this
+	// wrap.  Classifying identically through it is what lets the stack above be left out.
+	cached := derp.Wrap(err, "ascache.Client.Load", "Loading document from inner client", url)
+
+	outcome, retryAfter = classifyContext(context, cached)
+
+	require.Equal(t, contextOutcomeRateLimited, outcome)
+	require.Equal(t, 30*time.Second, retryAfter)
 }
 
 // TestIntegration_HTMLInsteadOfActivityPub verifies that a remote answering an ActivityPub
