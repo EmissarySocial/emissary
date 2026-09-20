@@ -29,3 +29,8 @@ const TopicInboxActivity_DirectMessage_MLS = 7
 
 // TopicNotification is triggered when a User receives a new Notification (mention, reply, like, follow, etc.)
 const TopicNotification = 9
+
+// TopicStreamSourceUpdated is triggered when the StreamSource attached to a Stream is updated.
+// It is addressed by the STREAM's ID, not the StreamSource's: the settings screen that watches it
+// is a Stream page, and a Stream has at most one source.
+const TopicStreamSourceUpdated = 10

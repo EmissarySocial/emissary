@@ -1,6 +1,7 @@
 package service
 
 import (
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
@@ -25,8 +26,9 @@ func (stub dataStub) DataString(key string) string {
 	return stub[key]
 }
 
-// loadEmbeddedTemplates parses every shipped template through the real loader and resolves
-// inheritance, so a test sees the same parse trees a running server does.
+// loadEmbeddedTemplates parses every shipped template through the real loader, resolves
+// inheritance, and promotes the result to the LIVE map, so a test sees the same parse trees a
+// running server does.
 func loadEmbeddedTemplates(t *testing.T) *Template {
 	t.Helper()
 
@@ -34,6 +36,7 @@ func loadEmbeddedTemplates(t *testing.T) *Template {
 	emailService := testServerEmail()
 
 	templateService := &Template{
+		templates:    make(set.Map[model.Template]),
 		templatePrep: make(set.Map[model.Template]),
 		funcMap:      emissarytemplates.FuncMap(nullIconProvider{}),
 		emailService: &emailService,
@@ -58,6 +61,10 @@ func loadEmbeddedTemplates(t *testing.T) *Template {
 
 	require.NoError(t, templateService.calculateAllInheritance())
 	require.NoError(t, templateService.calculateAccessLists())
+
+	// The listing functions read the LIVE map, so a service left in prep answers every List
+	// call with nothing.  loadTemplates ends with this same copy.
+	maps.Copy(templateService.templates, templateService.templatePrep)
 
 	return templateService
 }

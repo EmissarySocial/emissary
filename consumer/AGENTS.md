@@ -60,6 +60,12 @@ The reply graph is remote-controlled data, so the crawl tasks in [crawlContext.g
 
 The task ([publishRealtimeMessage.go](publishRealtimeMessage.go)) delivers to `factory.RealtimeBroker()`, which holds this process's live SSE sockets. A stored, retried, or cross-node run would nudge nobody. Topics travel as the integer constants from [../realtime/constants.go](../realtime/constants.go), so never renumber them.
 
+## The two StreamSource sync tasks are one handler under two names
+
+`SyncStreamSource` (webhook, 256) and `SyncStreamSourceNow` (the Sync Now button, 16) exist as separate names only so [preprocessor.go](preprocessor.go) can give them different priorities. The dispatch switch and all three lifecycle hooks must accept both, through `service.IsSyncStreamSourceTask`. A hook that tested one name by hand would stop recording status for the other path, silently — the queue reports nothing when a hook declines a task.
+
+A missing case in `PreProcessor` is just as quiet: the name falls through, `Priority` keeps its `-1` sentinel, and `prepareTask` swaps in the queue default. So a test asking "is the priority low enough?" passes against `-1` and proves nothing. Assert the exact value.
+
 ## New tasks need a case in `PreProcessor` too
 
 [preprocessor.go](preprocessor.go) assigns a priority only when `task.Priority == -1`. Priorities ≤ 32 may run immediately when the queue is idle; anything at 64 or above is always written to storage first. A delivery-style task without a case here gets no tuned priority, and a task whose name is not in the [consumer.go](consumer.go) switch returns `queue.Ignored()` silently — renaming a task name (or its argument names) strands already-queued rows unless a fallback drains them, which is exactly why the `"host"` fallback exists.
@@ -83,3 +89,13 @@ The task ([publishRealtimeMessage.go](publishRealtimeMessage.go)) delivers to `f
 ## Outbound delivery filters through the sending actor's rules
 
 `WithSender` in [wrappers.go](wrappers.go) binds the send locator with `BoundToSender(args["actor"])` so recipient resolution respects the sender's block rules, and constructs the hannibal sender with `AllowPrivateIPs` from the server factory — FALSE in production, true only for local/dev federation on a private network. Both `Outbox:SendTo*` task names come from `hannibal/sender` constants; use the constants, not string literals.
+
+## The lifecycle hooks run for EVERY task, so each one checks the task name first
+
+`OnSuccess`, `OnError`, and `OnFailure` in [consumer.go](consumer.go) are called by turbine for every task in the system, not only the ones that care. A hook that skipped its `task.Name` check would send every success in Emissary looking for a `StreamSource` record. `SyncStreamSource` is the only task that acts on them today.
+
+Those hooks are also the **only** place a `StreamSource` status can be written, and the reason is invisible from either side: `WithSession` aborts its transaction when a handler returns an error, so a status written inside the failing attempt is rolled back with it. The hooks run after the transaction has settled and open their own session — see [../service/AGENTS.md](../service/AGENTS.md).
+
+## `consumeSafely`'s panic path reaches no hook
+
+turbine recovers a panicking task in `consumeSafely`, which has no `Consumer` value — it was lost when the stack unwound — so it passes `nil` and no lifecycle hook fires. A task that panics therefore records no status anywhere. Any handler whose status the user reads must not panic; return a `queue.Result` instead.

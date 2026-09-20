@@ -2,11 +2,23 @@
 
 See [doc.go](doc.go) for what this package is, and the project plan in `emissary-specs/projects/GIT-MARKDOWN-TO-STREAM-CONTENT.md` for why. These are the rules that are not visible in the code.
 
-## The media type is read, never assumed, and never sniffed
+## The extension decides Markdown vs HTML, and the header only decides whether to read at all
 
-A forge's file *page* and its raw file differ by one path segment, and the page answers `text/html`: `github.com/golang/go/blob/master/README.md` returns a 200 and a full HTML document. An author pasting the URL from their browser is the expected mistake, not the exotic one, and storing that page as a Stream's Markdown body fails silently and looks almost right.
+Measured against GitHub, Codeberg, GitLab, Gitea and cgit on 2026-09-20: **every one serves a raw file as `text/plain`, whatever the file holds.** A raw `.md` and a raw `.html` are indistinguishable by header, so `contentFormat` reads the extension of the **original** address, in this order:
 
-So `contentFormat` decides from the declared `Content-Type` and refuses everything else. Do NOT add byte sniffing as a fallback: an HTML page begins with plain text, so `http.DetectContentType` would wave through the exact case this guard exists to catch. A source that declares nothing is refused for the same reason.
+1. `.md` / `.markdown` → Markdown, outranking whatever the server declared.
+2. `text/html` / `application/xhtml+xml`, or `.html` / `.htm` → HTML.
+3. anything else → Markdown.
+
+The extension comes from the address the author typed, not the address after redirects: it is what an error message can quote back to them, and no forge can change it under their feet. GitHub's `/raw/` form 301s to `raw.githubusercontent.com` and both ends in `.md`, but that is not guaranteed in general.
+
+Read the URL's **path**, never the whole string — cgit serves `/plain/README.md?h=master`, where the text after the last dot is `md?h=master` and no extension ever matches. `sourceExtension` uses `url.Parse` and `path.Ext` for exactly this.
+
+**The media-type allowlist stays, and does a different job.** `text/markdown`, `text/x-markdown`, `text/plain`, `text/html` and `application/xhtml+xml` are read; everything else is refused before the body is downloaded, so a mistyped address pointing at an image or an archive cannot become somebody's article. A source that declares nothing is refused too.
+
+Do NOT add byte sniffing. A Markdown file and an HTML page both begin with plain text, so `http.DetectContentType` decides nothing here that the extension has not already decided better.
+
+**What this gave up, deliberately.** C2 in the project plan existed to catch a forge's file *page* being pasted instead of the raw file — all four forges answer `text/html` for a `.md` URL, and the old rule refused exactly that pair. Rule 1 now reads it as Markdown, so the page's own markup becomes the body: the sync succeeds, and the article renders the forge's navigation as text. That is a correctness failure, not a security one — `Content.Format` sanitizes every format through the same `markdown.Sanitize`, and `tools/markdown` already runs goldmark with `html.WithUnsafe()`, so remote Markdown could always emit the same markup an HTML file can. If the guard is ever wanted back, the narrowest form is one branch: a `.md` extension together with a `text/html` header is the contradiction, and nothing legitimate lands there.
 
 The explicit empty-header branch looks redundant — `mime.ParseMediaType("")` errors on its own — and it is kept for the message alone, because "did not declare a Content-Type" and "declared an unreadable Content-Type" send an author to different places. `TestHTTPS_Fetch_NoContentTypeSaysSo` pins the message rather than the refusal, because a test that only pins the refusal passes with the branch deleted.
 
@@ -22,11 +34,28 @@ A missing file, a private URL, a refused media type, an oversize body, and an in
 
 `parseSourceURL` replaces `url.Parse`'s own error rather than wrapping it, because that error quotes the whole address and an address can carry a password. The same reasoning keeps the address out of the credentials refusal. `TestParseSourceURL_PasswordNeverEchoed` pins it.
 
+## `Version` exists for one thing: the stored ETag that makes the next request conditional
+
+`StreamSource.Version` holds the `ETag` from the last successful sync, and `Version()` sends it back as `If-None-Match`. An unchanged source then answers `304` with no body, which is the one case this method exists to win. Its only readers are `StreamSource.Sync` and this adapter; `GetPointer` exposes the field to the schema, but no feature depends on it.
+
+`Version()` is **not** a cheap probe. It issues a full `GET`, not a `HEAD`, so on any response other than `304` it downloads the file, `closeBody` throws it away, and `Fetch` downloads the same file again. Measured second-sync cost against an httptest origin:
+
+| Origin | Requests | Body downloaded |
+| --- | --- | --- |
+| sends ETag, nothing changed | 1 | none — this is the win |
+| sends ETag, content changed | 2 | twice |
+| no ETag, nothing changed | 2 | twice |
+| no ETag, content changed | 2 | twice |
+
+So the split pays off in one case of four and doubles the download in the other three. That is accepted deliberately: a documentation file is a few kilobytes, the no-change case is the common one on a repository that changes a few times a week, and the alternative costs an interface change. **Do not repeat the old rationale that this abstraction keeps the change check "protocol-independent"** — it was written for a Git adapter that returned a commit SHA, where a cheap check really was orders of magnitude cheaper than the fetch. D12 deleted Git, and that argument went with it.
+
+If this ever needs to be cheaper, the fix is **not** to have `Version` keep the body it downloaded — that re-introduces a cache this package deliberately does not have. It is to move `If-None-Match` into `Fetch` and drop `Version` from the `Adapter` interface, which is one request in all four rows above. The cost is that `Fetch` then needs a way to say "not modified" (a third return value, or a flag on `Item`), since a `304` is not a `derp` error.
+
 ## An empty Version is a source with no validator, not a failure
 
 Five of the seven forges surveyed answer `304` to `If-None-Match`; cgit ignores it and SourceHut sends no `ETag` at all. `Version` returns `""` for those rather than erroring, which means every ping fetches and `ContentHash` decides whether anything actually changed. Do not "fix" the empty string into an error — it would take two working forges offline.
 
-`Version` costs one request and `Fetch` costs another, so a change costs two round trips and no change costs one. Collapsing them by having `Version` keep the body it already downloaded would re-introduce a cache this package deliberately does not have; the wasted body is a few kilobytes.
+`ContentHash`, not `Version`, is what guards the expensive operation. `Stream.Save` federates, notifies, and rewrites the whole document (C4), and the hash is what stops it running for unchanged bytes — on every forge, including the two that offer no validator. `Version` only ever saves bandwidth.
 
 ## Tests bind to 127.0.0.1, which the SSRF guard refuses
 

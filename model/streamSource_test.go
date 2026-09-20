@@ -41,6 +41,22 @@ func TestNewStreamSource(t *testing.T) {
 	require.Equal(t, StreamSourceStatusNew, streamSource.Status)
 	require.NotNil(t, streamSource.Config, "Config must be writable without a nil-map panic")
 	require.True(t, streamSource.StreamID.IsZero(), "a new record is not attached to any Stream")
+	require.Equal(t, StreamSourceMethodHTTPS, streamSource.Method, "the schema requires a Method and no form offers one")
+}
+
+// TestNewStreamSource_PassesValidationFromTheSettingsScreen builds a record the way the
+// `with-stream-source` step does -- the constructor, the Stream it attaches to, and a URL typed
+// into the form -- and confirms the schema accepts it.  Nothing else offers a value for `method`,
+// so a constructor that left it empty made the Add-a-Source form impossible to submit.
+func TestNewStreamSource_PassesValidationFromTheSettingsScreen(t *testing.T) {
+
+	streamSource := NewStreamSource()
+	streamSource.StreamID = primitive.NewObjectID()
+	streamSource.URL = "https://raw.githubusercontent.com/example/repo/refs/heads/main/README.md"
+
+	s := schema.New(StreamSourceSchema())
+	_, err := s.Validate(&streamSource)
+	require.Nil(t, err)
 }
 
 // TestStreamSourceSchema_Rejects verifies that the schema refuses values a record must never hold
@@ -49,10 +65,12 @@ func TestStreamSourceSchema_Rejects(t *testing.T) {
 	s := schema.New(StreamSourceSchema())
 
 	// valid returns a record that passes validation, for each case to break in one place
+	// Only the two values a caller genuinely supplies are set here.  Setting Method as well
+	// would re-hide the defect this helper once masked: the constructor left it EMPTY, so no
+	// record created through the settings screen could pass validation.
 	valid := func() StreamSource {
 		result := NewStreamSource()
 		result.StreamID = primitive.NewObjectID()
-		result.Method = StreamSourceMethodHTTPS
 		result.URL = "https://example.com/org/repo"
 		return result
 	}
@@ -90,4 +108,39 @@ func TestStreamSourceSchema_Rejects(t *testing.T) {
 		_, err := s.Validate(&streamSource)
 		require.NotNil(t, err)
 	})
+}
+
+// TestIsValidWebhookToken confirms that only a bare token is accepted, never a whole URL
+func TestIsValidWebhookToken(t *testing.T) {
+
+	require.True(t, IsValidWebhookToken(NewWebhookToken()), "a generated token must always be valid")
+
+	valid := []string{
+		"abcdefghijklmnop",       // exactly the minimum length
+		"my-shared-docs-token",   // dashes
+		"my_shared_docs_token",   // underscores
+		"docs.emissary.token.v2", // dots
+		"MixedCase0123456789",    // letters and digits
+	}
+
+	for _, token := range valid {
+		require.True(t, IsValidWebhookToken(token), token)
+	}
+
+	// RULE: the server and path are fixed, so anything shaped like an address is a pasted URL.
+	invalid := []string{
+		"",         // nothing at all
+		"tooshort", // under the minimum length
+		"https://example.com/.streamsource/webhook/abcdefgh", // the whole URL
+		"example.com/.streamsource/webhook/abcdefghijklmnop", // a host and path
+		"/.streamsource/webhook/abcdefghijklmnop",            // just the path
+		"abcdefghijklmnop/extra",                             // a stray slash
+		"abcdefghij klmnop",                                  // whitespace
+		"abcdefghijklmnop?query=1",                           // a query string
+		"abcdefghijklmnop#fragment",                          // a fragment
+	}
+
+	for _, token := range invalid {
+		require.False(t, IsValidWebhookToken(token), token)
+	}
 }

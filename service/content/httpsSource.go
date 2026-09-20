@@ -5,6 +5,7 @@ import (
 	"mime"
 	"net/http"
 	"net/url"
+	"path"
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -54,14 +55,14 @@ func parseSourceURL(value string, allowPrivateIPs bool) (string, error) {
 	return parsed.String(), nil
 }
 
-// contentFormat maps the media type a server declared onto a model ContentFormat, and refuses
-// anything this version cannot use
-func contentFormat(header string) (string, error) {
+// contentFormat decides whether a source holds Markdown or HTML, and refuses a media type that
+// this version cannot read at all.
+func contentFormat(sourceURL string, header string) (string, error) {
 
 	const location = "content.contentFormat"
 
-	// RULE: A server that declares nothing is refused rather than guessed at.  Sniffing the bytes
-	// would accept the HTML page that C2 exists to catch, because it starts with plain text.
+	// RULE: A server that declares nothing is refused rather than guessed at.  The bytes are never
+	// sniffed: a Markdown file and an HTML page both begin with plain text.
 	if header == "" {
 		return "", derp.BadRequest(location, "Source did not declare a Content-Type")
 	}
@@ -72,17 +73,59 @@ func contentFormat(header string) (string, error) {
 		return "", derp.BadRequest(location, "Source declared an unreadable Content-Type", header)
 	}
 
-	switch strings.ToLower(mediaType) {
+	mediaType = strings.ToLower(mediaType)
 
-	case mediaTypeMarkdown, "text/x-markdown":
-		return model.ContentFormatMarkdown, nil
+	// RULE: The allowlist stays, so a mistyped address pointing at an image or an archive is
+	// refused rather than stored as somebody's article.
+	switch mediaType {
 
-	// Every forge surveyed serves a raw .md file as text/plain, so this is the common case
-	case mediaTypePlain:
+	case mediaTypeMarkdown, mediaTypeXMarkdown, mediaTypePlain, mediaTypeHTML, mediaTypeXHTML:
+
+	default:
+		return "", derp.BadRequest(location, "Source is not a text document", mediaType)
+	}
+
+	extension := sourceExtension(sourceURL)
+
+	// RULE: A Markdown extension is absolute, and outranks the declared type.  Every forge serves
+	// a raw file as text/plain whatever it holds, so the header cannot separate a .md from a
+	// .html -- and the extension is what the author typed, which no forge can change.
+	switch extension {
+
+	case extensionMarkdown, extensionMarkdownLong:
 		return model.ContentFormatMarkdown, nil
 	}
 
-	return "", derp.BadRequest(location, "Source is not Markdown", mediaType)
+	switch mediaType {
+
+	case mediaTypeHTML, mediaTypeXHTML:
+		return model.ContentFormatHTML, nil
+	}
+
+	switch extension {
+
+	case extensionHTML, extensionHTMLShort:
+		return model.ContentFormatHTML, nil
+	}
+
+	// Everything left is text/plain with no opinion attached, which is Markdown by default
+	return model.ContentFormatMarkdown, nil
+}
+
+// sourceExtension returns the lowercased file extension of an address's path
+func sourceExtension(sourceURL string) string {
+
+	parsed, err := url.Parse(sourceURL)
+
+	// RULE: An unparseable address is extensionless here, not an error.  parseSourceURL has
+	// already refused it before any request was made, so this cannot be reached with one.
+	if err != nil {
+		return ""
+	}
+
+	// RULE: Read the PATH, never the whole address.  cgit serves "/plain/README.md?h=master", and
+	// the text after the last dot there is "md?h=master", which matches no extension at all.
+	return strings.ToLower(path.Ext(parsed.Path))
 }
 
 // checkStatus converts a non-200 response into an error that says whose problem it is

@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -213,44 +214,79 @@ func (service *StreamDraft) LoadByID(session data.Session, streamID primitive.Ob
  ******************************************/
 
 // Promote publishes a StreamDraft over its live Stream, moving it into the provided state
-func (service *StreamDraft) Promote(session data.Session, streamID primitive.ObjectID, stateID string) (model.Stream, error) {
+func (service *StreamDraft) Promote(session data.Session, streamID primitive.ObjectID, stateID string, omit sliceof.String) (model.Stream, error) {
+
+	const location = "service.StreamDraft.Promote"
 
 	var draft model.Stream
 	var stream model.Stream
 
 	// Try to load the draft
 	if err := service.LoadByID(session, streamID, &draft); err != nil {
-		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Loading draft")
+		return model.Stream{}, derp.Wrap(err, location, "Loading draft")
 	}
 
 	// Try to load the production stream
 	if err := service.streamService.LoadByID(session, streamID, &stream); err != nil {
-		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Loading draft")
+		return model.Stream{}, derp.Wrap(err, location, "Loading draft")
 	}
 
 	// Copy data from draft to production
-	stream.URL = draft.URL
-	stream.Token = draft.Token
-	stream.Label = draft.Label
-	stream.Summary = draft.Summary
-	stream.IconURL = draft.IconURL
-	stream.Icon = draft.Icon
-	stream.Widgets = draft.Widgets
-	stream.Content = draft.Content
-	stream.Data = draft.Data
-	stream.AttributedTo = draft.AttributedTo
-	stream.InReplyTo = draft.InReplyTo
+	if omit.NotContains("url") {
+		stream.URL = draft.URL
+	}
+
+	if omit.NotContains("token") {
+		stream.Token = draft.Token
+	}
+
+	if omit.NotContains("label") {
+		stream.Label = draft.Label
+	}
+
+	if omit.NotContains("summary") {
+		stream.Summary = draft.Summary
+	}
+
+	if omit.NotContains("content") {
+		stream.Content = draft.Content
+	}
+
+	if omit.NotContains("iconUrl") {
+		stream.IconURL = draft.IconURL
+	}
+
+	if omit.NotContains("icon") {
+		stream.Icon = draft.Icon
+	}
+
+	if omit.NotContains("widgets") {
+		stream.Widgets = draft.Widgets
+	}
+
+	if omit.NotContains("data") {
+		stream.Data = draft.Data
+	}
+
+	if omit.NotContains("attributedTo") {
+		stream.AttributedTo = draft.AttributedTo
+	}
+
+	if omit.NotContains("inReplyTo") {
+		stream.InReplyTo = draft.InReplyTo
+	}
+
 	stream.StateID = stateID
 	stream.DeleteDate = 0 // just in case...
 
 	// Try to save the updated stream back to the database
 	if err := service.streamService.Save(session, &stream, "published"); err != nil {
-		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Publishing stream")
+		return model.Stream{}, derp.Wrap(err, location, "Publishing stream")
 	}
 
 	// Try to save the updated stream back to the database
 	if err := service.Delete(session, &draft, "published"); err != nil {
-		return model.Stream{}, derp.Wrap(err, "service.StreamDraft.Publish", "Deleting draft")
+		return model.Stream{}, derp.Wrap(err, location, "Deleting draft")
 	}
 
 	return stream, nil

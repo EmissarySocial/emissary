@@ -10,10 +10,12 @@ import (
 	"unicode/utf8"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/turbine/queue"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -27,8 +29,9 @@ import (
 
 // streamSourceCollection is an in-memory data.Collection that holds model.StreamSource records
 type streamSourceCollection struct {
-	records []model.StreamSource
-	saved   []model.StreamSource // every record passed to Save, in order
+	records   []model.StreamSource
+	saved     []model.StreamSource // every record passed to Save, in order
+	saveError error                // when set, every Save fails with it
 }
 
 // Context implements the data.Collection interface, returning a background context
@@ -91,6 +94,10 @@ func (c *streamSourceCollection) Load(criteria exp.Expression, target data.Objec
 
 // Save upserts a StreamSource record, and remembers that it was asked to
 func (c *streamSourceCollection) Save(object data.Object, _ string) error {
+
+	if c.saveError != nil {
+		return c.saveError
+	}
 
 	streamSource, ok := object.(*model.StreamSource)
 
@@ -184,6 +191,10 @@ func matchesStreamSource(criteria exp.Expression, record model.StreamSource) boo
 			value, ok := predicate.Value.(primitive.ObjectID)
 			return ok && (predicate.Operator == exp.OperatorEqual) && (record.StreamID == value)
 
+		case "config." + model.StreamSourceConfigWebhookToken:
+			value, ok := predicate.Value.(string)
+			return ok && (predicate.Operator == exp.OperatorEqual) && (record.WebhookToken() == value)
+
 		case "deleteDate":
 			value, ok := predicate.Value.(int)
 			return ok && (predicate.Operator == exp.OperatorEqual) && (record.DeleteDate == int64(value))
@@ -194,16 +205,41 @@ func matchesStreamSource(criteria exp.Expression, record model.StreamSource) boo
 	})
 }
 
-// streamSourceSession hands out a single shared streamSourceCollection
+// streamSourceSession hands out a single shared streamSourceCollection, and carries a post-commit
+// task spool so that a test can see the queue tasks a service published
 type streamSourceSession struct {
 	collection *streamSourceCollection
+	tasks      *postcommit.Tasks
 }
 
 // Collection implements the data.Session interface
 func (s streamSourceSession) Collection(string) data.Collection { return s.collection }
 
-// Context implements the data.Session interface
-func (s streamSourceSession) Context() context.Context { return context.Background() }
+// Context implements the data.Session interface, carrying the spool that collects published tasks
+func (s streamSourceSession) Context() context.Context {
+	return postcommit.WithContext(context.Background(), s.tasks)
+}
+
+// publishedTasks returns the queue tasks that a service published during this session
+func (s streamSourceSession) publishedTasks() []queue.Task {
+	return s.tasks.Drain()
+}
+
+// publishedTasksNamed returns only the published tasks with the given name.  Every write also
+// publishes an SSE nudge, so a test about SYNCHRONIZATION has to say which task it means --
+// counting everything would make it fail the moment a second, unrelated task joined the path.
+func (s streamSourceSession) publishedTasksNamed(name string) []queue.Task {
+
+	result := make([]queue.Task, 0)
+
+	for _, task := range s.publishedTasks() {
+		if task.Name == name {
+			result = append(result, task)
+		}
+	}
+
+	return result
+}
 
 // Close implements the data.Session interface. The stub holds no resources to release.
 func (s streamSourceSession) Close() {}
@@ -211,7 +247,10 @@ func (s streamSourceSession) Close() {}
 // newStreamSourceService returns a StreamSource service backed by an in-memory set of records
 func newStreamSourceService(records ...model.StreamSource) (*StreamSource, streamSourceSession) {
 	service := NewStreamSource()
-	return &service, streamSourceSession{collection: &streamSourceCollection{records: records}}
+	return &service, streamSourceSession{
+		collection: &streamSourceCollection{records: records},
+		tasks:      postcommit.NewTasks(),
+	}
 }
 
 // validStreamSource returns a StreamSource record that passes validation
@@ -351,6 +390,51 @@ func TestStreamSource_Delete(t *testing.T) {
 	require.Zero(t, count)
 }
 
+// TestStreamSource_DeleteByStreamID removes every record attached to one Stream, and leaves the
+// records attached to other Streams alone
+func TestStreamSource_DeleteByStreamID(t *testing.T) {
+
+	streamID := primitive.NewObjectID()
+
+	first := validStreamSource()
+	first.StreamID = streamID
+
+	second := validStreamSource()
+	second.StreamID = streamID
+
+	other := validStreamSource()
+
+	service, session := newStreamSourceService(first, second, other)
+
+	require.NoError(t, service.DeleteByStreamID(session, streamID, "Stream deleted"))
+
+	count, err := service.Count(session, exp.Equal("streamId", streamID))
+	require.NoError(t, err)
+	require.Zero(t, count)
+
+	result := model.NewStreamSource()
+	require.NoError(t, service.LoadByID(session, other.StreamSourceID, &result))
+}
+
+// TestStreamSource_DeleteByStreamID_Refuses will not accept a zero StreamID, which would otherwise
+// match every record whose Stream was never set
+func TestStreamSource_DeleteByStreamID_Refuses(t *testing.T) {
+
+	unattached := validStreamSource()
+	unattached.StreamID = primitive.NilObjectID
+
+	service, session := newStreamSourceService(unattached)
+
+	err := service.DeleteByStreamID(session, primitive.NilObjectID, "Stream deleted")
+
+	require.Error(t, err)
+	require.True(t, derp.IsClientError(err), "got %v", err)
+
+	count, err := service.Count(session, exp.All())
+	require.NoError(t, err)
+	require.Equal(t, int64(1), count)
+}
+
 /******************************************
  * Status
  ******************************************/
@@ -383,11 +467,12 @@ func TestStreamSource_SetStatusSuccess(t *testing.T) {
 
 	service, session := newStreamSourceService(record)
 
+	before := time.Now().Unix()
 	require.NoError(t, service.SetStatusSuccess(session, &record))
 
 	require.Equal(t, model.StreamSourceStatusSuccess, record.Status)
 	require.Empty(t, record.StatusMessage)
-	require.Equal(t, int64(1_700_000_000), record.LastSynced, "success does not move LastSynced")
+	require.GreaterOrEqual(t, record.LastSynced, before, "every attempt moves LastSynced")
 	require.Len(t, session.collection.saved, 1)
 }
 
@@ -399,12 +484,46 @@ func TestStreamSource_SetStatusFailure(t *testing.T) {
 
 	service, session := newStreamSourceService(record)
 
+	before := time.Now().Unix()
 	require.NoError(t, service.SetStatusFailure(session, &record, "Repository not found"))
 
 	require.Equal(t, model.StreamSourceStatusFailure, record.Status)
 	require.Equal(t, "Repository not found", record.StatusMessage)
-	require.Equal(t, int64(1_700_000_000), record.LastSynced, "a failure does not move LastSynced")
+	require.GreaterOrEqual(t, record.LastSynced, before, "a failed attempt is still an attempt")
 	require.Len(t, session.collection.saved, 1)
+}
+
+// TestStreamSource_SetStatusMessage records why an attempt failed while leaving Status alone.  The
+// queue is still going to retry, and FAILURE here would read as broken to an author whose sync is
+// about to succeed on its own.
+func TestStreamSource_SetStatusMessage(t *testing.T) {
+
+	record := validStreamSource()
+	record.Status = model.StreamSourceStatusSuccess
+	record.LastSynced = 1_700_000_000
+
+	service, session := newStreamSourceService(record)
+
+	before := time.Now().Unix()
+	require.NoError(t, service.SetStatusMessage(session, &record, "Source server failed"))
+
+	require.Equal(t, model.StreamSourceStatusSuccess, record.Status, "a pending retry decides nothing")
+	require.Equal(t, "Source server failed", record.StatusMessage)
+	require.GreaterOrEqual(t, record.LastSynced, before, "the STATUS waits for the retry, the timestamp does not")
+	require.Len(t, session.collection.saved, 1)
+}
+
+// TestStreamSource_SetStatusMessage_TruncatesMessage keeps a long message within its schema.  A
+// derp error chain is the usual source, and it can be far longer than the field allows.
+func TestStreamSource_SetStatusMessage_TruncatesMessage(t *testing.T) {
+
+	record := validStreamSource()
+	service, session := newStreamSourceService(record)
+
+	require.NoError(t, service.SetStatusMessage(session, &record, strings.Repeat("e", 2000)))
+
+	require.Len(t, record.StatusMessage, 1024)
+	require.True(t, utf8.ValidString(record.StatusMessage))
 }
 
 // TestStreamSource_SetStatusFailure_TruncatesMessage keeps a long message within its schema, as valid UTF-8

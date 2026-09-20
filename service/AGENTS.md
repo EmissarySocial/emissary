@@ -98,12 +98,70 @@ Three rules follow. `Locator.GetWebFingerResult` tries a handle as a User first 
 
 **The `Mock-Key-Id` branch must stay ahead of the "unsigned means Anonymous" rule.** A local test harness names its actor with that header and *no* `Signature` header at all, so an early unsigned guard silently kills local signed-request testing. A real signature that verifies still wins over the header, and off a local hostname the header grants nothing (BUG-51).
 
-## `icons.go` silently disabled NilAway for this entire package
+## A StreamSource's Status is written by the queue's hooks, never inside the sync
 
-`Icons.Get()` is a 254-case alias switch that compiles to 766 CFG blocks, over NilAway's hard 500-block limit. NilAway cannot analyze it and says so as an **INTERNAL ERROR** — and that error does not just skip `Get()`, it abandons every finding in `service`, the largest package in the repo. The job then either fails with an unhelpful internal error attributed to an unrelated file (`tools/tools.go`, `tools/allocbench/doc.go` — it varies), or passes having analyzed nothing here. It had been doing both, intermittently, for months.
+`consumer.WithSession` runs a task inside `factory.WithTransaction`, and a handler that returns an error **aborts that transaction** — so a `FAILURE` status written by `StreamSource.Sync` would be rolled back along with the attempt that produced it, and the record would keep reading `SUCCESS` from last week. The three status writes therefore live in `Consumer.OnSuccess`/`OnError`/`OnFailure` ([consumer/syncStreamSource.go](../consumer/syncStreamSource.go)), which run after the transaction has already settled and open their own session.
 
-The file therefore carries a `nilaway:ignore-file` marker in a **detached** comment above its `package` clause — detached so it does not become a second package doc comment alongside [doc.go](doc.go) — and [.github/workflows/nilaway.yml](../.github/workflows/nilaway.yml) passes `-exclude-file-docstrings`. Excluding one pointer-free lookup table costs nothing; leaving it in cost the whole package. There is no flag to raise the CFG limit, so splitting `Get()` (or making it a `map[string]string`) is the only alternative.
+`Sync` itself writes only `Version`, `ContentHash`, and `LastSynced`, and only on paths that succeeded. That split is also why `LOADING` is written by `StreamSource.Save` rather than by `Sync`: a save runs in a request transaction that commits, so a human who pressed **Sync Now** sees it immediately.
 
-Turning analysis back on surfaced 18 findings that had never been reported. Fifteen were tests passing a literal `nil` Session on purpose — a deliberate technique here (`TestStream_Startup_EmptyThemeSkipsDatabase` uses it as proof that a function returns before touching the database), which is why the workflow also passes `-exclude-test-files`. Of the three real ones, `Domain.NewOAuthClient` was a live panic: it discarded `LoadOrCreateByProvider`'s error, whose failure paths return a **zero** `model.Connection` whose `Data` map is nil, and then wrote into that map. `TestNewOAuthClient_EmptyProviderID` pins it.
+## Every ping moves "Last Checked", and only a hook can record a failed one
 
-**When a NilAway run for a package reports nothing at all, check that it actually analyzed the package.** Silence and success look identical from the outside.
+`LastSynced` is what the settings screen labels **Last Checked**, and the rule is that every attempt moves it — a webhook ping and the **Sync Now** button alike, whether the attempt then worked or not. `markChecked` is the one writer; `Save`, `SetStatusLoading`, `SetStatusSuccess`, `SetStatusFailure`, and `SetStatusMessage` all call it.
+
+The three status methods are load-bearing and look redundant. `Sync` stamps the record itself, but only its three SAVING exits reach a write: the four error exits return before one, `consumer.WithSession` aborts the transaction, and the stamp is rolled back with everything else. The lifecycle hook that fires afterwards reloads the record from the database, so whatever `Sync` held in memory is gone. That hook is the **only** place a failed attempt can record that it happened.
+
+The webhook path makes this matter more than the button does. `SyncByWebhookToken` writes nothing at all — it just queues one task per matching record — so unlike **Sync Now**, which stamps the record through `Save` before the worker starts, a webhook leaves no trace until the worker's outcome is written. Before this rule a failed webhook sync showed `Failed` beside a Last Checked from days earlier, which reads as a webhook that never arrived rather than one that arrived and failed.
+
+`consumeSafely` reaches no hook (see [../consumer/AGENTS.md](../consumer/AGENTS.md)), so a task that PANICS still records nothing. That gap is unchanged and is the reason a handler whose status a human reads must return a `queue.Result` instead of panicking.
+
+## `Sync` saves through `service.save`, never through `StreamSource.Save`
+
+`StreamSource.Save` publishes a sync task — that is how a new record gets its first content and how a corrected URL is retried, since nothing polls. A sync that saved its own bookkeeping through it would queue another sync on every run, forever. `WithSignature` does not stop this, because the task that is running has already left the queue by the time its handler saves. `saveSyncState` and every `SetStatus*` method therefore write through the package-private `service.save`, and that is load-bearing rather than an optimization.
+
+The two are easy to confuse because only one letter differs. **`StreamSource.Save`** (exported) validates, stamps `LOADING`, and queues a synchronization. **`service.save`** (private) writes the row and publishes the SSE nudge, and does neither of the other two. Every write goes through one of them; nothing calls `service.collection(session).Save` any more.
+
+## `StreamSource.Version` is an ETag, and an empty one can never end a sync
+
+The field holds the `ETag` from the last successful sync, and its only purpose is to be sent back as `If-None-Match` so that an unchanged source can answer `304` with no body. `Sync` and the HTTPS adapter are its only readers. It is a bandwidth optimization, not a correctness guard — `ContentHash` is what stops `Stream.Save` running for unchanged bytes, on every forge, including the two that send no validator.
+
+Two of the seven forges surveyed offer no validator at all: cgit ignores `If-None-Match`, and SourceHut sends no `ETag`. They answer `""` every time, so `version == source.Version` is trivially true for them, and treating that as "nothing changed" would freeze those sources at whatever they held on the first run, silently and forever. The guard is `(version != "") && (version == source.Version)`.
+
+## The webhook token is deliberately not unique, and an empty one would select rather than authorize
+
+One token belongs to many `StreamSource` records, so one ping from a repository refreshes every page sourced from it. That makes a permissive match worse than it looks: an empty token would match every record whose `webhookToken` was never set and start a sync on each, which is fan-out triggered by an unauthenticated caller rather than an authorization check that merely passed. `RangeByWebhookToken` refuses anything shorter than `model.StreamSourceWebhookTokenMinLength` before it queries, and `Save` enforces the same minimum, because the field is editable by hand.
+
+The token is looked up, not compared, so there is no constant-time comparison to make here. What protects it is that [handler/streamSource.go](../handler/streamSource.go) answers `202` for every outcome — a token too short to look up, an unknown token, a known token matching nothing, and a known token matching forty records. A varying answer would confirm a guessed token and then count the pages behind it.
+
+## Saving a StreamSource reaches the network
+
+There is no step, and no flag, that triggers a synchronization: **`StreamSource.Save` queues one, every time.** Nothing polls, so a save is the only moment a human tells Emissary this record is worth reading, and a redundant one costs a single conditional GET that answers `304` — `Version` matches, `Fetch` never runs, and `Stream.Save` never fires. **Sync Now** is therefore `{do:"with-stream-source", steps:[{do:"save"}]}`.
+
+Two consequences to keep in mind. An unrelated edit made while the source is unreachable will walk the record to `FAILURE`, which the next webhook corrects. And a caller that saves MANY records in a loop fans out one outbound fetch per record with nothing at the call site saying so — `step_Sort.go` reaches `Save` through `ObjectSave` and is one hjson line away from being such a caller.
+
+Bookkeeping writes avoid all of this by design. `saveSyncState` and every `SetStatus*` method go through `service.save`, which is what stops a running sync from queueing another one. `WithSignature` would NOT save you there: the task that is running has already left the queue by the time its handler saves.
+
+## Two task names synchronize a StreamSource, and four places must know both
+
+`TaskSyncStreamSource` is the webhook's background fan-out at priority 256. `TaskSyncStreamSourceNow` is the **Sync Now** button at 16. They run the same handler and report through the same lifecycle hooks; only the priority and the signature differ.
+
+The signature is the reason there are two names rather than one publish option. turbine's `allowImmediate` refuses to run **any** signed task from memory, at any priority, because signature dedup needs a stored row to check against — so a signed task waits for the storage poller, which sleeps a minute when the queue is idle. `PublishSyncTaskNow` therefore omits the signature, and `PublishSyncTask` keeps it.
+
+What that costs: two quick presses of **Sync Now** queue two syncs, and one may overlap a webhook's background sync of the same record. A repeat is one conditional `GET` answering `304`, so the usual case is free. The case that is not free is a caller that saves many records at once — `step_Sort.go` reaches `Save` through `ObjectSave` — which now fans out immediate fetches instead of deduplicated background ones.
+
+Four registrations must accept both names: the dispatch switch in `consumer.go`, and all three lifecycle hooks. Use `service.IsSyncStreamSourceTask` rather than comparing a name by hand — a hook that knew only one name would silently stop recording status for the other path, and nothing reports a hook that declined a task. The priority table is the one place that deliberately tells them apart.
+
+## `with-stream-source` needs two registrations, and neither fails to compile
+
+`model.StreamSource` must implement `model.AccessLister`, and `*model.StreamSource` must have a case in `Factory.ModelService`. Miss either and `NewModel` returns nil and the settings screen 500s the first time it is opened.
+
+[build/step_WithStreamSource.go](../build/step_WithStreamSource.go) builds its load target with `NewStreamSource`, the same as `Range` and `ObjectLoad`, so a field the model gains later arrives with its default rather than a zero value. That is safe here only because `Save` refuses a record whose webhook token is under 16 characters, so every stored record names `Config["webhookToken"]` and the decode overwrites the minted one. A second `Config` key that is not always written would leak out of the constructor — see the decode rule in [../model/AGENTS.md](../model/AGENTS.md).
+
+## A StreamSource change is announced on its STREAM's SSE channel
+
+The settings screen shows `Status` and the time of the last check, and a synchronization finishes in the background minutes after **Sync Now** returns — so without a nudge those two fields sit stale until somebody reloads. `service.save` publishes `realtime.TopicStreamSourceUpdated` on every write, and `Delete` publishes it too, so the page can fall back to its "no source yet" state.
+
+`saveSyncState` is the one exception, and it is deliberate: every path through `Sync` is followed by a lifecycle hook that writes `Status` and `LastSynced` — the same two fields the screen shows — a few hundred milliseconds later. Nudging from both made the settings screen redraw twice for one synchronization. `Delete` is the other non-nudging write; its action ends with `refresh-page`.
+
+**Never put a modifier on an `sse:` trigger in a template.** htmx's `hx-trigger` parser handles `sse:` in its own branch and pushes the spec without parsing modifiers, so `delay`, `throttle`, `from` and `once` are ignored there — and the unparsed tokens halt the parser, so every spec after the next comma is silently dropped. `hx-trigger="sse:X delay:300ms, refreshPage from:window"` therefore registers **only** the SSE trigger, with no debounce, and deletes the `refreshPage` listener that the properties modal depends on. No error is raised. A comma straight after the event name is fine — `"sse:X, refreshPage from:window"` registers both — it is the modifier that halts the parse. There is also no other client-side brake to reach for: core's `processSSETrigger` calls `issueAjaxRequest` from the `EventSource` listener directly, skipping the queue, the throttle, and `hx-sync`. De-duplicate by writing the record fewer times, or by swapping a smaller region — never by debouncing the client.
+
+The message is addressed by the **StreamID**, not the StreamSourceID. A `StreamSource` has no page and no SSE route of its own, and a Stream has at most one source, so the Stream's channel is the one a browser can already subscribe to (`/:stream/sse/stream-source-updated`). Putting the nudge on `service.save` rather than on the four `SetStatus*` methods is what makes it impossible to add a fifth status writer that the screen never hears about.

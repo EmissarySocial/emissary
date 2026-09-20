@@ -59,6 +59,11 @@ func ServerSentEvent_Stream_NewReplies(ctx *steranko.Context, factory *service.F
 	return serverSentEvent(ctx, factory, stream.StreamID, realtime.TopicNewReplies)
 }
 
+// ServerSentEvent_Stream_StreamSourceUpdated streams "stream source updated" events for a Stream
+func ServerSentEvent_Stream_StreamSourceUpdated(ctx *steranko.Context, factory *service.Factory, _ data.Session, stream *model.Stream) error {
+	return serverSentEvent(ctx, factory, stream.StreamID, realtime.TopicStreamSourceUpdated)
+}
+
 // ServerSentEvent_Stream_Updated streams "updated" events for a Stream
 func ServerSentEvent_Stream_Updated(ctx *steranko.Context, factory *service.Factory, _ data.Session, stream *model.Stream) error {
 	return serverSentEvent(ctx, factory, stream.StreamID, realtime.TopicUpdated)

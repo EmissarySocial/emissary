@@ -76,10 +76,11 @@ func (adapter HTTPS) Fetch(ctx context.Context, source model.StreamSource, _ str
 		return Item{}, err
 	}
 
-	// RULE: The media type is read, never assumed.  A forge's file PAGE answers text/html, and
-	// it differs from the raw URL by one path segment -- so this is the guard that keeps a
-	// pasted browser URL from storing a whole HTML document as somebody's Markdown.
-	format, err := contentFormat(response.Header.Get("Content-Type"))
+	// RULE: The format comes from the ORIGINAL address first and the declared media type second.
+	// Every forge serves a raw file as text/plain whatever it holds, so only the extension
+	// separates a .md from a .html.  Decided before the body is read, so a media type this
+	// package cannot use is refused without downloading it.
+	format, err := contentFormat(source.URL, response.Header.Get("Content-Type"))
 
 	if err != nil {
 		return Item{}, derp.Wrap(err, location, "Unusable content", source.URL)

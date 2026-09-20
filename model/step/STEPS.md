@@ -820,11 +820,18 @@ Reformats a Stream's content: converts between formats, optionally strips HTML, 
 
 Copies a StreamDraft's content over its live Stream and moves the Stream into `state`. Requires the `Stream` model.
 
+Eleven properties are copied: `url`, `token`, `label`, `summary`, `content`, `iconUrl`, `icon`, `widgets`, `data`, `attributedTo`, and `inReplyTo`. Everything else on the Stream — sharing, tree position, publish dates, response counts, journal — is left alone, because a draft's copy of those goes stale the moment anything changes them outside the draft.
+
+`omit` names properties to leave alone as well. It exists for a Stream whose value is written by something other than the author: a draft is a snapshot taken when it was created, so promoting one reverts every change made since. The case this was built for is [article-remote](../../_embed/templates/stream-article-remote/), whose body belongs to a `StreamSource` — and where the revert is permanent, because the source's `ContentHash` still matches what it last wrote, so the next synchronization stops before fetching and **Sync Now** does nothing.
+
+Only the eleven names above are accepted, and nested paths (`data.tags`) are not. Anything else fails the Template at load, because a name that is merely ignored would leave the property copied — the exact mistake `omit` is there to prevent, and one that reports nothing when it happens.
+
 **Attributes**
 
 | Attribute | Description |
 | --- | --- |
 | state | State to move into. Defaults to `published`, and must be defined in the Template's `states` |
+| omit | Names of properties NOT to copy from the draft, leaving the live Stream's values in place |
 
 <br>
 
@@ -834,6 +841,15 @@ Copies a StreamDraft's content over its live Stream and moves the Stream into `s
 {
 	do: "promote-draft"
 	state: "published"
+}
+```
+
+Promote everything except the body, which some other process owns:
+
+```hjson
+{
+	do: "promote-draft"
+	omit: ["content"]
 }
 ```
 
@@ -2335,4 +2351,48 @@ Switches to the Rule named by the request and runs `steps` against its Builder.
 		{do: "save"}
 	]
 }
+```
+
+---
+
+## with-stream-source
+
+Switches to the `StreamSource` record attached to this Stream — creating one in memory when the Stream has none yet — and runs `steps` against it. This is how a Template creates, configures, and removes a remote content source: `StreamSource` is its own collection, so `set-data` and `save` on the Stream cannot reach it. Requires the `Stream` model.
+
+`save` also queues a synchronization with the remote file — every time, because nothing polls and a repeat costs one conditional GET that answers `304`. A **Sync Now** button is therefore just a `save` with nothing else in the pipeline.
+
+**Attributes**
+
+| Attribute | Description |
+| --- | --- |
+| steps | **Required.** Sub-pipeline run against the `StreamSource` Builder |
+
+<br>
+
+**Example**
+
+```hjson
+edit-source: [{do: "as-modal", steps: [
+	{do: "with-stream-source", steps: [
+		{do: "edit", form: {
+			type: layout-vertical
+			label: Remote Content Source
+			children: [
+				{type: text, path: url, label: "Markdown File URL"}
+				{type: text, path: "config.webhookToken", label: "Webhook Token"}
+			]
+		}}
+		{do: "save"}
+	]}
+]}]
+
+sync-source: [{do: "with-stream-source", steps: [
+	{do: "save"}
+	{do: "refresh-page"}
+]}]
+
+delete-source: [{do: "with-stream-source", steps: [
+	{do: "delete", title: "Stop syncing this article?"}
+	{do: "refresh-page"}
+]}]
 ```

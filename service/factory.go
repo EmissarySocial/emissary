@@ -1114,6 +1114,9 @@ func (factory *Factory) ModelService(object data.Object) ModelService {
 	case *model.Stream:
 		return factory.Stream()
 
+	case *model.StreamSource:
+		return factory.StreamSource()
+
 	case *model.Privilege:
 		return factory.Privilege()
 
