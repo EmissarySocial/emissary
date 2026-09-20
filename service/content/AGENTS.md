@@ -30,6 +30,8 @@ The explicit empty-header branch looks redundant — `mime.ParseMediaType("")` e
 
 A missing file, a private URL, a refused media type, an oversize body, and an invalid address all return a 4xx `derp` code. Only a network failure or a 5xx from the origin is a 500. The caller files 5xx errors as defects and shows 4xx errors to the Stream author as a status message, so a new failure path that forgets to classify itself files every author's typo into the production error log. `checkStatus` does this for a response; a `401` and a `403` are deliberately 4xx, because both mean the same thing to the author — this is not a public URL.
 
+**The one 4xx that is not the author's mistake is `429`, and it must keep its own code.** `consumer.requeue` tests `derp.IsTooManyRequests` before `derp.IsClientError`, so a 429 that reaches it as a 429 is requeued for the origin's own `Retry-After`; a 429 rewritten as a 400 is filed as a permanent failure and the record stops syncing until a human presses Sync Now. `checkStatus` therefore returns `derp.NewHTTPError` for that status — the only constructor that carries both the code and the header — and `TestHTTPS_TooManyRequests` pins it. This is the burst case: a repo whose pages share one webhook token fans out N fetches at once, which is exactly when a forge answers 429.
+
 ## A refusal must not echo the address back
 
 `parseSourceURL` replaces `url.Parse`'s own error rather than wrapping it, because that error quotes the whole address and an address can carry a password. The same reasoning keeps the address out of the credentials refusal. `TestParseSourceURL_PasswordNeverEchoed` pins it.

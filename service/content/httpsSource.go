@@ -141,6 +141,13 @@ func checkStatus(response *http.Response, location string) error {
 		return derp.Internal(location, "Source server failed", response.Status)
 	}
 
+	// RULE: A 429 is the origin asking for a pause, not the author's mistake.  It keeps its own
+	// code and the Retry-After it arrived with, so requeue waits the time the origin asked for
+	// instead of filing a permanent failure -- which is what every other 4xx below becomes.
+	if response.StatusCode == http.StatusTooManyRequests {
+		return derp.Wrap(derp.NewHTTPError(response.Request, response), location, "Source is rate limiting requests")
+	}
+
 	if response.StatusCode == http.StatusUnauthorized || response.StatusCode == http.StatusForbidden {
 		return derp.BadRequest(location, "Source is not public", response.Status)
 	}

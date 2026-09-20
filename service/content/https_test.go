@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
@@ -223,6 +224,43 @@ func TestHTTPS_Fetch_StatusCodes(t *testing.T) {
 	// RULE: A 5xx is Emissary's to retry, so it is filed as a defect rather than shown to the author
 	test("server error", http.StatusInternalServerError, false)
 	test("bad gateway", http.StatusBadGateway, false)
+}
+
+// TestHTTPS_TooManyRequests pins the one 4xx that is NOT the author's mistake.  Before this,
+// checkStatus rewrote a 429 as a 400, so requeue filed a permanent failure and the Retry-After
+// the origin asked for was discarded -- and a repo whose pages share one webhook token is
+// exactly the burst that draws a 429.
+func TestHTTPS_TooManyRequests(t *testing.T) {
+
+	t.Run("Fetch carries the Retry-After", func(t *testing.T) {
+
+		adapter, source := newTestSource(t, func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Retry-After", "120")
+			w.WriteHeader(http.StatusTooManyRequests)
+		})
+
+		_, err := adapter.Fetch(context.Background(), source, "")
+		require.Error(t, err)
+
+		isTooMany, delay := derp.IsTooManyRequests(err)
+		require.True(t, isTooMany, "a 429 must survive as a 429, or requeue makes it permanent")
+		require.Equal(t, 120*time.Second, delay, "the origin's own pause, not a default")
+	})
+
+	t.Run("Version is gated by the same check", func(t *testing.T) {
+
+		adapter, source := newTestSource(t, func(w http.ResponseWriter, _ *http.Request) {
+			w.WriteHeader(http.StatusTooManyRequests)
+		})
+
+		_, err := adapter.Version(context.Background(), source)
+		require.Error(t, err)
+
+		// No Retry-After falls through to derp's default, which is still a retry
+		isTooMany, delay := derp.IsTooManyRequests(err)
+		require.True(t, isTooMany)
+		require.Positive(t, delay)
+	})
 }
 
 // TestHTTPS_Fetch_UnreachableHost reports a transport failure as Emissary's problem
