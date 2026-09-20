@@ -38,6 +38,18 @@ A Go client connecting to a single-node replica set from the host will otherwise
 
 Emissary regularly consumes `benpate/*` and `EmissarySocial/*` libraries from local working copies while a fix waits for a tag. `go mod tidy` rewrites `go.sum` and the require block against those local trees, which produces a `go.mod` that cannot build for anyone else and is easy to commit by accident. If tidy is genuinely needed, drop the replaces first — and never keep its rewrite silently.
 
+## A local `replace` is a debt, and the commit that depends on it is not finished
+
+The rule above covers what `go mod tidy` does to `go.mod`. This one covers the opposite mistake: migrating code to an API that only exists in a local working copy, and committing it without the tag. It compiles for whoever holds the replace and for nobody else, and the replace itself is never in the diff, so the branch looks complete.
+
+BUG-168 is the worked example. `consumer.Consumer` was rewritten for turbine's five-method `queue.Consumer` interface in a commit that touched only `consumer/consumer.go` and its test; `go.mod` stayed on a turbine release where `Consumer` was still a function type. The merge then bumped turbine to the last version of the *old* API, so `dev` did not compile for four commits. Either finish the chain — tag the library, bump the pin, drop the replace — or do not commit the code that needs it.
+
+## A merge that compiles each side can still break the build
+
+Two branches fixing one defect can each add the same declaration and merge without a conflict, because git conflicts on overlapping hunks rather than on meaning. BUG-168's `followingBackoff` landed twice in one file, 247 lines apart, and `TestFollowingBackoff` landed in two different files. Build the merge result, not just each side: `go build ./...` stops at the first failing package, and `service` is a dependency of almost everything, so one compiler error there can be hiding several.
+
+Deleting the survivor is not arbitrary when the bodies are identical. Keep the copy whose neighbours want it — the one that survived sits directly above its only caller, while the other was stranded at the end of the file — and carry the better comment across.
+
 ## An email recipient never comes from the request
 
 A `send-email` step reaches the outside world on behalf of a visitor who may be anonymous, which makes the `To:` value the line between a contact form and an open relay. It must resolve from the Stream — `{{.Data \`emailAddress\`}}`, set only through an author-gated settings form — and never from anything the sender controls. The builder that renders those step arguments also exposes `.QueryParam` and the posted form, so writing `To: "{{.QueryParam \`email\`}}"` compiles, loads, validates, and ships a relay. Nothing in the code stops it; this rule is the whole enforcement.

@@ -654,7 +654,14 @@ func (service *Domain) NewOAuthClient(session data.Session, providerID string) (
 	const location = "service.Domain.NewOAuthClient"
 
 	// Find or Create a connection for this provider
-	connection, _ := service.connectionService.LoadOrCreateByProvider(session, providerID)
+	connection, err := service.connectionService.LoadOrCreateByProvider(session, providerID)
+
+	// RULE: The error must not be discarded.  Its failure paths return a ZERO Connection whose
+	// Data map is nil, and the assignments below write into that map -- so a dropped error here
+	// is a panic, not a degraded result.
+	if err != nil {
+		return model.Connection{}, derp.Wrap(err, location, "Loading Connection", providerID)
+	}
 
 	// Try to generate a new state
 	newState, err := random.GenerateString(32)

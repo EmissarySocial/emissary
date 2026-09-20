@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/config"
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/stretchr/testify/require"
 )
 
@@ -125,4 +126,20 @@ func TestCalcOwnerInviteMethod(t *testing.T) {
 			require.Equal(t, testCase.expected, result)
 		})
 	}
+}
+
+// TestNewOAuthClient_EmptyProviderID pins the guard on LoadOrCreateByProvider's error.  That
+// error was discarded, and its failure paths return a ZERO Connection whose Data map is nil --
+// so the "state" assignment below it panicked with "assignment to entry in nil map".
+func TestNewOAuthClient_EmptyProviderID(t *testing.T) {
+
+	domainService := Domain{connectionService: &Connection{}}
+
+	// An empty providerID is rejected by LoadOrCreateByProvider before it touches the session,
+	// so a nil session is enough to reach the guard -- and is the proof it returns rather than
+	// dereferencing anything.
+	connection, err := domainService.NewOAuthClient(nil, "")
+
+	require.Error(t, err)
+	require.Equal(t, model.Connection{}, connection)
 }
