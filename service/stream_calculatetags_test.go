@@ -166,8 +166,8 @@ func TestStream_CalculateTags_ThenLinkify_Idempotent(t *testing.T) {
 	first := stream.Content.HTML
 
 	require.Equal(t, []string{"Food2024", "travel"}, []string(stream.Hashtags))
-	require.Contains(t, first, `<a href="https://example.com/search?q=%23travel" target="_blank">#travel</a>`)
-	require.Contains(t, first, `<a href="https://example.com/search?q=%23Food2024" target="_blank">#Food2024</a>`)
+	require.Contains(t, first, `<a href="https://example.com/search?q=%23travel" target="_blank" rel="noopener noreferrer">#travel</a>`)
+	require.Contains(t, first, `<a href="https://example.com/search?q=%23Food2024" target="_blank" rel="noopener noreferrer">#Food2024</a>`)
 
 	// Second pass -- must not re-wrap or change anything
 	streamService.CalculateTags(emptyTagSession{}, &stream)

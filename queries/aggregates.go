@@ -37,24 +37,26 @@ func Aggregate[T any](ctx context.Context, collection *mongo.Collection, pipelin
 // GroupBy returns amap of counts, grouped by the provided pipeline
 func GroupBy(collection data.Collection, pipeline []bson.M) (mapof.Int, error) {
 
+	const location = "queries.GroupBy"
+
 	// Guarantee that we're using MongoDB
 	mongo := mongoCollection(collection)
 
 	if mongo == nil {
-		return nil, derp.Internal("queries.GroupBy", "Collection is not a MongoDB collection")
+		return nil, derp.Internal(location, "Collection is not a MongoDB collection")
 	}
 
 	ctx := context.TODO()
 	cursor, err := mongo.Aggregate(ctx, pipeline)
 
 	if err != nil {
-		return nil, derp.Wrap(err, "queries.GroupBy", "Counting records", pipeline)
+		return nil, derp.Wrap(err, location, "Counting records", pipeline)
 	}
 
 	// Read results into a slice of maps
 	queryResult := make([]GroupedCounter, 0)
 	if err := cursor.All(ctx, &queryResult); err != nil {
-		return nil, derp.Wrap(err, "queries.GroupBy", "Reading records from cursor", pipeline)
+		return nil, derp.Wrap(err, location, "Reading records from cursor", pipeline)
 	}
 
 	result := mapof.NewInt()

@@ -13,7 +13,7 @@
 		Sign in to 
 		{{ range $index, $merchantAccount := $merchantAccounts }}
 			{{ if gt $index 0 }} or {{ end }}
-			<a href="{{$merchantAccount.ProductURL}}" target="_blank" class="nowrap">{{$merchantAccount.Name}} {{icon "new-window"}}</a>
+			<a href="{{$merchantAccount.ProductURL}}" target="_blank" rel="noopener noreferrer" class="nowrap">{{$merchantAccount.Name}} {{icon "new-window"}}</a>
 		{{ end }}
 		to create one or more products, then return here to link them to your posts.
 		<br><br>
@@ -35,7 +35,7 @@
 	<div class="table">
 		<div>
 			{{- range $index, $merchantAccount := $merchantAccounts -}}
-				<a href="{{$merchantAccount.ProductURL}}" target="_blank">
+				<a href="{{$merchantAccount.ProductURL}}" target="_blank" rel="noopener noreferrer">
 					&plus; Add Another Product on {{$merchantAccount.Name}}
 				</a>
 				&nbsp;
@@ -46,7 +46,7 @@
 				<div class="flex-grow">{{icon $remoteProduct.Icon}} {{$remoteProduct.Name}}</div>						
 				<div class="margin-right-lg text-gray">{{$remoteProduct.Price}}</div>
 				<div>
-					<a href="{{$remoteProduct.AdminHref}}" target="_blank" class="button text-sm">Edit &rarr;</a>
+					<a href="{{$remoteProduct.AdminHref}}" target="_blank" rel="noopener noreferrer" class="button text-sm">Edit &rarr;</a>
 				</div>
 			</div>
 		{{- end -}}

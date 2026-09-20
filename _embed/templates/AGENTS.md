@@ -68,3 +68,13 @@ The theme carries partial dark-mode tokens that nothing currently activates. Thi
 `TestEmbeddedTemplates_HTMLParses` in [service/template_html_parse_test.go](../../service/template_html_parse_test.go) is the only thing that parses `*.html` here with the real funcMap, and it is **scoped to a hand-maintained `dirs` list**, not a full sweep. A directory that is not named there is never parsed by anything, so a syntax error, an undefined funcMap function, or the attribute-context lexer gotcha first appears in front of a visitor.
 
 A full sweep is not possible: some email and layout templates legitimately rely on cross-file variables like `$title` and cannot parse standalone. So every directory that *can* parse standalone has to be added by hand when it is created. `TestEmbeddedTemplates_Validate` does cover every template's `hjson`, which is why a missing directory looks covered — the two tests have very different reach.
+
+## Every `target="_blank"` carries `rel="noopener noreferrer"`, and the Go emitters do too
+
+CodeQL's `js/unsafe-external-link` flags a `_blank` anchor whose `href` is dynamic or off-site and whose `rel` lacks `noopener`, and it runs against `main` on every push. There were 75 of these across 56 template and hjson files, and two more in hjson strings that a truncated listing hid — so check with a tag-level sweep of the whole tree, never a `grep | head`. The attribute goes on **every** `_blank` anchor, not only the ones CodeQL happens to flag, so that a `href="/settings"` that later becomes `href="{{.URL}}"` does not turn into a new alert.
+
+When the anchor already carries a `rel`, **append** — `rel="me"` on the profile links in `user-outbox/sidebar.html` is the IndieWeb identity claim, and replacing it silently breaks rel-me verification for every user. The safe form there is `rel="me noopener noreferrer"`.
+
+The same rule reaches federated content by a different route. `replace.Linkify` and `Content.ApplyLinks` write `<a … target="_blank">` into `content.HTML` **after** `markdown.Sanitize` has run, so they are the last writers of the body every remote reader sees, and the `bluemonday.UGCPolicy` never gets a chance to add a `rel` for them. They emit `rel="noopener noreferrer"` themselves — the convention Mastodon uses on every outbound link — and five test files pin the exact anchor, so a change to either emitter shows up as a test failure rather than a quiet drift.
+
+Vendored `easymde.min.js` still opens three `_blank` links without it; that is upstream's file, and the fix is a version bump, not an edit.

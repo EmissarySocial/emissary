@@ -44,7 +44,7 @@ func (adapter GeocodeTimezone) ManualConfig() form.Form {
 			Children: []form.Element{
 				{
 					Type:        "html",
-					Description: "Discover timezone information from an address or map coordinates. Required for accurate event times. <a href=https://emissary.social/geocode-timezone target=_blank>Learn More &rarr;</a>",
+					Description: "Discover timezone information from an address or map coordinates. Required for accurate event times. <a href='https://emissary.social/geocode-timezone' target='_blank' rel='noopener noreferrer'>Learn More &rarr;</a>",
 				},
 				{
 					Type:    "hidden",

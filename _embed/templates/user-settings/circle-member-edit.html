@@ -21,7 +21,7 @@
 		{{- end -}}
 		{{- if $identity.HasWebfingerUsername -}}
 			{{- if ne $identity.Name $identity.WebfingerUsername -}}
-				<div class="text-gray">{{icon "globe"}} <a href="{{$identity.ActivityPubActor}}" target="_blank">{{$identity.WebfingerUsername}} &rarr;</a></div>
+				<div class="text-gray">{{icon "globe"}} <a href="{{$identity.ActivityPubActor}}" target="_blank" rel="noopener noreferrer">{{$identity.WebfingerUsername}} &rarr;</a></div>
 			{{- end -}}
 		{{- end -}}
 

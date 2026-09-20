@@ -24,7 +24,7 @@
 				<a href="/@me/settings/export" class="turboclick" hx-boost="true">Export</a>
 			</div>
 			<div class="right">
-				<a href="https://emissary.dev/migration" target="_blank" class="link">
+				<a href="https://emissary.dev/migration" target="_blank" rel="noopener noreferrer" class="link">
 					{{icon "help"}}
 					{{ if $isDesktop }} Help with Imports {{ end }}
 				</a>
@@ -71,7 +71,7 @@
 					<div class="margin-bottom-lg">
 						<i>Note: online account migration is new, and very few servers support
 						this action right now.</i>
-						<a href="https://emissary.dev/migration" target="_blank" class="nowrap">Learn More {{icon "link-outbound"}}</a>
+						<a href="https://emissary.dev/migration" target="_blank" rel="noopener noreferrer" class="nowrap">Learn More {{icon "link-outbound"}}</a>
 					</div>
 
 					<button hx-get="/@me/settings/import-authenticate" class="primary">Import My Data...</button>
@@ -258,7 +258,7 @@
 								your followers on the network.
 							</div>
 							<div>
-								<a href="{{$finishURL}}" target="_blank" class="button primary">Continue on {{$sourceDomain}} &rarr;</a>
+								<a href="{{$finishURL}}" target="_blank" rel="noopener noreferrer" class="button primary">Continue on {{$sourceDomain}} &rarr;</a>
 							</div>
 							
 							<hr class="margin-top-lg">
