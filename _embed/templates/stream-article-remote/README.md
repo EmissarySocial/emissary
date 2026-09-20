@@ -2,7 +2,7 @@
 
 A Remote Article (`templateId: article-remote`) is a Stream whose body is a Markdown file hosted somewhere else — a README in a Git repository, a gist, a file on a CDN. Emissary fetches that file over plain HTTPS and writes it into the Stream's content, so the page renders with the site's own theme, navigation, search, and URL while the text lives in version control.
 
-It extends [article-base](../stream-article-base/), so it has the same layout, widgets, stylesheet, children, properties, sharing, and publish workflow as any other article. What it does not have is a body editor: `edit` is the screen that says where the body comes from, and `edit-source`, `sync-source`, and `delete-source` each run `with-stream-source` to reach the `StreamSource` record, which lives in its own collection and cannot be reached by `set-data` or `save` on the Stream.
+It extends [article-base](../stream-article-base/), so it has the same layout, widgets, stylesheet, children, properties, sharing, and publish workflow as any other article. What it does not have is a body editor: `edit` is the screen that says where the body comes from, and `edit-source` and `sync-source` each run `with-stream-source` to reach the `StreamSource` record, which lives in its own collection and cannot be reached by `set-data` or `save` on the Stream.
 
 The subsystem behind this Template — the `StreamSource` record, the HTTPS adapter, the synchronization, and the webhook endpoint — is described in `emissary-specs/projects/GIT-MARKDOWN-TO-STREAM-CONTENT.md`.
 
@@ -12,11 +12,17 @@ The subsystem behind this Template — the `StreamSource` record, the HTTPS adap
 
 `Template.Inherit` copies a parent action only when the child has not defined one. A child can therefore override an action but can **never remove** it, which is why `editor` and `upload-image` are present here. Each names no roles, which empties its access list so the menu bar hides it, and each forwards to `edit` — because a Domain Owner passes every permission check regardless of the access list, so the empty roles alone would not stop one.
 
-The draft workflow is **not** among the overrides. A remote article takes the same route to the live web as any other: edit, then **Promote**, which is the one control that publishes. `promote-draft` inherits article-base's pipeline whole (`promote-draft`, then `save-and-publish`, `search-index`, `refresh-page`, `forward-to`), and `save-and-publish` is the only thing that moves a Stream inside `withinPublishDate()` (`publishDate < now AND unpublishDate > now`). `Common.Navigation` and `makeStreamQueryBuilder` both AND that filter in, with **no domain-owner bypass**, so an article that never promotes is missing from every auto-generated navigation list — for everyone, including the owner who created it. An earlier revision neutralized `promote-draft` here and reached exactly that dead end. `TestEmbeddedTemplates_MenubarActions` in [service/template_menubar_actions_test.go](../../../service/template_menubar_actions_test.go) pins the pipeline against being overridden away again.
+The draft workflow is **not** among the overrides. A remote article takes the same route to the live web as any other: edit, then **Promote**, which is the one control that publishes. `save-and-publish` is the only thing that moves a Stream inside `withinPublishDate()` (`publishDate < now AND unpublishDate > now`), and `promote-draft` is the only action that runs it. `Common.Navigation` and `makeStreamQueryBuilder` both AND that filter in, with **no domain-owner bypass**, so an article that never promotes is missing from every auto-generated navigation list — for everyone, including the owner who created it. An earlier revision neutralized `promote-draft` here and reached exactly that dead end. `TestEmbeddedTemplates_MenubarActions` in [service/template_menubar_actions_test.go](../../../service/template_menubar_actions_test.go) pins the pipeline against being overridden away again.
 
 This Template also renders article-base's [edit-menubar.html](../stream-article-base/edit-menubar.html) unchanged, so every tab and button added there appears here too. It once shipped a slim shadowing copy to hide Promote and Discard Draft; both that copy and the reason for it are gone.
 
-**Known defect, not yet fixed:** promoting a draft copies `content` from the draft onto the live Stream, and a draft is a snapshot taken when it was created. On a remote article the body belongs to the synchronization, so a promote can overwrite whatever the last sync fetched with older content — or with nothing at all, if the draft was made before the first sync ever ran. `edit` runs inside `with-draft`, so merely opening the settings screen is enough to create that snapshot. Nothing warns, and the page simply reverts. The sync cannot paper over this and must not try: D4 of [GIT-MARKDOWN-TO-STREAM-CONTENT.md](../../../../emissary-specs/projects/GIT-MARKDOWN-TO-STREAM-CONTENT.md) reserves every state transition to a human.
+### `promote-draft` is restated here, to add one attribute
+
+`promote-draft` is the single action this Template copies from its parent rather than inheriting, and `omit: ["content"]` is the only difference. Everything a draft carries is promoted except the body, which belongs to the `StreamSource`.
+
+Without it, promoting reverts the article. A draft is a snapshot taken when it was created — and `edit` runs inside `with-draft`, so merely *opening* the settings screen makes one — so a promote copies that snapshot over whatever the last sync fetched, or over nothing at all if the draft predates the first sync. The failure is **permanent**, which is the part worth knowing: the record's `ContentHash` still describes the content that was overwritten, so [Sync](../../../service/streamSource_sync.go) returns before fetching and **Sync Now** does nothing. It stays wrong until somebody edits the file at the origin. The sync cannot paper over this and must not try — D4 of [GIT-MARKDOWN-TO-STREAM-CONTENT.md](../../../../emissary-specs/projects/GIT-MARKDOWN-TO-STREAM-CONTENT.md) reserves every state transition to a human.
+
+Because `Template.Inherit` replaces an action wholesale, adding that one attribute meant copying the parent's six steps by hand, and a hand copy goes stale silently. `TestArticleRemoteTemplate_PromoteKeepsTheBody` compares the two pipelines step for step and checks the `omit`. Records damaged before this shipped are not repaired by it: they need `version` and `contentHash` cleared on the `StreamSource`, or an edit at the origin.
 
 ### Three properties are load-bearing, and each fails silently
 
@@ -30,9 +36,9 @@ One consequence is worth knowing before tagging a documentation page. Tags are e
 
 [../../../service/template_articleRemote_test.go](../../../service/template_articleRemote_test.go) pins all three against the **resolved** template, because reading this file alone would prove nothing — article-base declares the same properties, so only the merged result says which one won.
 
-### `widgets`, `widget`, and `style` drop article-base's `with-draft` wrapper
+### `widgets`, `widget`, `style`, and `properties` keep article-base's `with-draft` wrapper
 
-A draft reaches the live page only through `promote-draft`, which this Template neutralizes. Left inherited, a layout or stylesheet change would save into a draft, report success, and never appear. Promoting instead is not an option: a draft carries a copy of the body from when it was made, so promoting one would overwrite whatever the last sync fetched.
+All four are inherited untouched, and that is load-bearing rather than incidental. A draft reaches the live page only through `promote-draft`, so these actions are correct exactly while Promote works. An earlier revision overrode all four to drop the wrapper, because `promote-draft` had been neutralized and a layout change would otherwise have saved into a draft, reported success, and never appeared. Both halves of that are gone. `TestArticleRemoteTemplate_LayoutActionsUseDrafts` pins them against being overridden again.
 
 ### Saving the source record IS the request to synchronize
 

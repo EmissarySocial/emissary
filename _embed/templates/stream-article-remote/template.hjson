@@ -78,6 +78,13 @@
 			]
 		}
 
+		edit-status: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"view-html", file:"edit-status"}
+			]
+		}
+
 		// Sync Now.  Saving the record IS the request to synchronize, so this pipeline has
 		// nothing else in it.
 		// NO refresh-page.  `save` publishes an SSE nudge on every write, and the settings screen
@@ -90,6 +97,28 @@
 				{do:"with-stream-source", steps: [
 					{do:"save"}
 				]}
+				{do:"view-html", file:"edit-status", method:"post"}
+			]
+		}
+
+		// RULE: `content` belongs to the StreamSource, never to the draft.  A draft is a snapshot from
+		// when it was created -- and `edit` runs inside with-draft, so merely opening the settings
+		// screen makes one -- so copying it here reverts whatever the last sync fetched, to older
+		// content or to nothing at all.  Nothing repairs that: the source's ContentHash still matches
+		// what it last wrote, so the next sync stops before it fetches and Sync Now does nothing.
+		//
+		// This restates article-base's pipeline in full because Inherit replaces an action wholesale
+		// -- a child cannot add one attribute to an inherited action.  `omit` and the confirmation
+		// message are the ONLY differences; keep the rest in step with the parent.
+		promote-draft: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"as-confirmation", title:"Promote this Draft?", message:"This publishes the article to your website. Its body still comes from the remote file.", submit:"Promote"}
+				{do:"promote-draft", omit:["content"]}
+				{do:"save-and-publish", state:"published", outbox:"false"}
+				{do:"search-index"}
+				{do:"refresh-page"}
+				{do:"forward-to", url:"/{{.Token}}"}
 			]
 		}
 
