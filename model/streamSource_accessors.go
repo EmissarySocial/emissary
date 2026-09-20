@@ -20,6 +20,7 @@ func StreamSourceSchema() schema.Element {
 			"status":         schema.String{Enum: []string{StreamSourceStatusNew, StreamSourceStatusLoading, StreamSourceStatusSuccess, StreamSourceStatusFailure}},
 			"statusMessage":  schema.String{Format: "text", MaxLength: 1024},
 			"lastSynced":     schema.Integer{Minimum: null.NewInt64(0), BitSize: 64},
+			"syncNow":        schema.Boolean{},
 		},
 	}
 }
@@ -56,6 +57,9 @@ func (streamSource *StreamSource) GetPointer(name string) (any, bool) {
 
 	case "lastSynced":
 		return &streamSource.LastSynced, true
+
+	case "syncNow":
+		return &streamSource.SyncNow, true
 	}
 
 	return nil, false
