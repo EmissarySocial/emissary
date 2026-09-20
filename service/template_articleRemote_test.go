@@ -267,7 +267,9 @@ func TestArticleRemoteTemplate_SettingsAreReachable(t *testing.T) {
 
 	template := articleRemoteTemplate(t)
 
-	for _, actionID := range []string{"edit", "edit-source", "sync-source"} {
+	// `edit-status` is reachable in its own right, not only as part of `edit`: the card is rendered
+	// by `.View`, re-fetched by the SSE listener, and answered directly by Sync Now.
+	for _, actionID := range []string{"edit", "edit-source", "edit-status", "sync-source"} {
 		action, exists := template.Actions[actionID]
 		require.True(t, exists, "action %q is missing", actionID)
 		require.NotEmpty(t, action.Roles, "action %q is defined but reachable by nobody", actionID)
@@ -282,13 +284,13 @@ func TestArticleRemoteTemplate_SettingsAreReachable(t *testing.T) {
 }
 
 // TestArticleRemoteTemplate_SyncNowIsJustASave pins the mechanism behind the Sync Now button.
-// Saving the record IS the request to synchronize -- there is no step and no flag -- so this
-// pipeline must stay empty of anything that looks like it does the work.
+// Saving the record IS the request to synchronize -- there is no step and no flag -- so the work
+// half of this pipeline must stay empty of anything that looks like it does the job.
 func TestArticleRemoteTemplate_SyncNowIsJustASave(t *testing.T) {
 
 	action, exists := articleRemoteTemplate(t).Actions["sync-source"]
 	require.True(t, exists)
-	require.Len(t, action.Steps, 1)
+	require.Len(t, action.Steps, 2)
 
 	container, isContainer := action.Steps[0].(modelStep.WithStreamSource)
 	require.True(t, isContainer, "Sync Now must run against the StreamSource record")
@@ -299,9 +301,20 @@ func TestArticleRemoteTemplate_SyncNowIsJustASave(t *testing.T) {
 		names = append(names, subStep.Name())
 	}
 
-	// NOT "refresh-page": `save` publishes the SSE nudge that redraws this screen, and a second
-	// trigger for the same write swapped <main> twice per press.
 	require.Equal(t, []string{"save"}, names)
+
+	// The button swaps whatever comes back into #edit-status, so the answer has to BE that card --
+	// a pipeline that rendered nothing would blank the panel it was asked to redraw.
+	render, isRender := action.Steps[1].(modelStep.ViewHTML)
+	require.True(t, isRender, "Sync Now must answer with the status card")
+	require.Equal(t, "edit-status", render.File)
+	require.Equal(t, "post", render.Method, "a GET here would answer the SSE refresher as well, which asks for the same card")
+
+	// NOT "refresh-page": `save` already publishes the SSE nudge that redraws this screen, so a
+	// second trigger for the same write swapped <main> twice per press.
+	for _, step := range articleRemoteAllSteps(action.Steps) {
+		require.NotEqual(t, "refresh-page", step.Name(), "the SSE nudge from `save` already redraws this screen")
+	}
 }
 
 // TestArticleRemoteTemplate_ViewIsPublishedOnly confirms that an unpublished article is not
@@ -343,25 +356,50 @@ func TestArticleRemoteTemplate_IsOfferedInThePicker(t *testing.T) {
 	require.False(t, offers(templateService.ListByContainer("outbox")), "offered inside a container it does not claim")
 }
 
-// TestArticleRemoteTemplate_SyncButtonSwapsNothing pins the attribute that keeps the Sync button
-// from blanking the page.  htmx attributes INHERIT, and theme-default's <body> carries
-// hx-target="main" with hx-swap="innerHTML transition:true" -- while the sync-source pipeline
-// answers with an EMPTY body and a pair of HX-Trigger headers.  Without hx-swap="none" htmx
-// swaps that empty body into <main>, so the whole page clears, with a view transition, until the
-// refresh lands.  Nothing errors; it just looks like the screen jumped.
-func TestArticleRemoteTemplate_SyncButtonSwapsNothing(t *testing.T) {
+// articleRemoteTags returns the source of every HTML tag in one of this Template's files, with
+// whitespace collapsed, so a test can read attributes off an element written across several lines.
+func articleRemoteTags(t *testing.T, filename string) []string {
 
-	page, err := os.ReadFile("../_embed/templates/stream-article-remote/edit.html")
+	t.Helper()
+
+	page, err := os.ReadFile("../_embed/templates/stream-article-remote/" + filename)
 	require.NoError(t, err)
 
-	// Every element that POSTs from this page runs a pipeline that renders nothing
-	for _, line := range strings.Split(string(page), "\n") {
+	result := make([]string, 0)
 
-		if !strings.Contains(line, "hx-post=") {
+	for _, chunk := range strings.Split(strings.Join(strings.Fields(string(page)), " "), "<") {
+		if tag, _, isTag := strings.Cut(chunk, ">"); isTag {
+			result = append(result, tag)
+		}
+	}
+
+	return result
+}
+
+// TestArticleRemoteTemplate_StatusCardSwapsItself pins the attributes that keep this card from
+// blanking the page.  htmx attributes INHERIT, and theme-default's <body> carries hx-target="main"
+// with hx-swap="innerHTML transition:true" -- so an element here that names neither swaps a status
+// card into <main> and throws the rest of the settings screen away, with a view transition.
+// Nothing errors; the page just vanishes.
+//
+// Two elements ask for this partial back -- the Sync button and the SSE listener -- and both have
+// to redraw the card in place.
+func TestArticleRemoteTemplate_StatusCardSwapsItself(t *testing.T) {
+
+	found := 0
+
+	for _, tag := range articleRemoteTags(t, "edit-status.html") {
+
+		if !strings.Contains(tag, "/sync-source") && !strings.Contains(tag, "/edit-status") {
 			continue
 		}
 
-		require.Contains(t, line, `hx-swap="none"`, "an hx-post here must not swap its empty response into <main>: %s", strings.TrimSpace(line))
-		require.Contains(t, line, `hx-push-url="false"`, "..and must not put its action URL in the address bar: %s", strings.TrimSpace(line))
+		require.Contains(t, tag, `hx-target="#edit-status"`, "this would swap the status card into <main>: %s", tag)
+		require.Contains(t, tag, `hx-swap="outerHTML"`, "the response IS the card, so it replaces the element rather than filling it: %s", tag)
+		require.Contains(t, tag, `hx-push-url="false"`, "..and must not put its action URL in the address bar: %s", tag)
+
+		found++
 	}
+
+	require.Equal(t, 2, found, "expected the Sync button and the SSE listener to ask for this card")
 }
