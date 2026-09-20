@@ -22,11 +22,28 @@ A missing file, a private URL, a refused media type, an oversize body, and an in
 
 `parseSourceURL` replaces `url.Parse`'s own error rather than wrapping it, because that error quotes the whole address and an address can carry a password. The same reasoning keeps the address out of the credentials refusal. `TestParseSourceURL_PasswordNeverEchoed` pins it.
 
+## `Version` exists for one thing: the stored ETag that makes the next request conditional
+
+`StreamSource.Version` holds the `ETag` from the last successful sync, and `Version()` sends it back as `If-None-Match`. An unchanged source then answers `304` with no body, which is the one case this method exists to win. Its only readers are `StreamSource.Sync` and this adapter; `GetPointer` exposes the field to the schema, but no feature depends on it.
+
+`Version()` is **not** a cheap probe. It issues a full `GET`, not a `HEAD`, so on any response other than `304` it downloads the file, `closeBody` throws it away, and `Fetch` downloads the same file again. Measured second-sync cost against an httptest origin:
+
+| Origin | Requests | Body downloaded |
+| --- | --- | --- |
+| sends ETag, nothing changed | 1 | none — this is the win |
+| sends ETag, content changed | 2 | twice |
+| no ETag, nothing changed | 2 | twice |
+| no ETag, content changed | 2 | twice |
+
+So the split pays off in one case of four and doubles the download in the other three. That is accepted deliberately: a documentation file is a few kilobytes, the no-change case is the common one on a repository that changes a few times a week, and the alternative costs an interface change. **Do not repeat the old rationale that this abstraction keeps the change check "protocol-independent"** — it was written for a Git adapter that returned a commit SHA, where a cheap check really was orders of magnitude cheaper than the fetch. D12 deleted Git, and that argument went with it.
+
+If this ever needs to be cheaper, the fix is **not** to have `Version` keep the body it downloaded — that re-introduces a cache this package deliberately does not have. It is to move `If-None-Match` into `Fetch` and drop `Version` from the `Adapter` interface, which is one request in all four rows above. The cost is that `Fetch` then needs a way to say "not modified" (a third return value, or a flag on `Item`), since a `304` is not a `derp` error.
+
 ## An empty Version is a source with no validator, not a failure
 
 Five of the seven forges surveyed answer `304` to `If-None-Match`; cgit ignores it and SourceHut sends no `ETag` at all. `Version` returns `""` for those rather than erroring, which means every ping fetches and `ContentHash` decides whether anything actually changed. Do not "fix" the empty string into an error — it would take two working forges offline.
 
-`Version` costs one request and `Fetch` costs another, so a change costs two round trips and no change costs one. Collapsing them by having `Version` keep the body it already downloaded would re-introduce a cache this package deliberately does not have; the wasted body is a few kilobytes.
+`ContentHash`, not `Version`, is what guards the expensive operation. `Stream.Save` federates, notifies, and rewrites the whole document (C4), and the hash is what stops it running for unchanged bytes — on every forge, including the two that offer no validator. `Version` only ever saves bandwidth.
 
 ## Tests bind to 127.0.0.1, which the SSRF guard refuses
 

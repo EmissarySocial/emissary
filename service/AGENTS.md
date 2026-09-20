@@ -97,3 +97,39 @@ Three rules follow. `Locator.GetWebFingerResult` tries a handle as a User first 
 **The refusal message is fixed, and `err` never reaches the caller.** `errorHandler` writes `derp.Message(err)` into the response body, so anything the verifier said about *why* it failed would tell an unauthenticated prober which forgery attempt got closest. A local hostname is the one exception: it gets the `Mock-Key-Id` hint, because `errorHandler` answers a 401 with that message and nothing else, so a developer has nowhere else to read it.
 
 **The `Mock-Key-Id` branch must stay ahead of the "unsigned means Anonymous" rule.** A local test harness names its actor with that header and *no* `Signature` header at all, so an early unsigned guard silently kills local signed-request testing. A real signature that verifies still wins over the header, and off a local hostname the header grants nothing (BUG-51).
+
+## A StreamSource's Status is written by the queue's hooks, never inside the sync
+
+`consumer.WithSession` runs a task inside `factory.WithTransaction`, and a handler that returns an error **aborts that transaction** — so a `FAILURE` status written by `StreamSource.Sync` would be rolled back along with the attempt that produced it, and the record would keep reading `SUCCESS` from last week. The three status writes therefore live in `Consumer.OnSuccess`/`OnError`/`OnFailure` ([consumer/syncStreamSource.go](../consumer/syncStreamSource.go)), which run after the transaction has already settled and open their own session.
+
+`Sync` itself writes only `Version`, `ContentHash`, and `LastSynced`, and only on paths that succeeded. That split is also why `LOADING` is written by `StreamSource.Save` rather than by `Sync`: a save runs in a request transaction that commits, so a human who pressed **Sync Now** sees it immediately.
+
+## `Sync` saves through `collection.Save`, never through `StreamSource.Save`
+
+`StreamSource.Save` publishes a sync task — that is how a new record gets its first content and how a corrected URL is retried, since nothing polls. A sync that saved its own bookkeeping through it would queue another sync on every run, forever. `WithSignature` does not stop this, because the task that is running has already left the queue by the time its handler saves. `saveSyncState` and every `SetStatus*` method therefore write through `service.collection(session).Save` directly, and that is load-bearing rather than an optimization.
+
+## `StreamSource.Version` is an ETag, and an empty one can never end a sync
+
+The field holds the `ETag` from the last successful sync, and its only purpose is to be sent back as `If-None-Match` so that an unchanged source can answer `304` with no body. `Sync` and the HTTPS adapter are its only readers. It is a bandwidth optimization, not a correctness guard — `ContentHash` is what stops `Stream.Save` running for unchanged bytes, on every forge, including the two that send no validator.
+
+Two of the seven forges surveyed offer no validator at all: cgit ignores `If-None-Match`, and SourceHut sends no `ETag`. They answer `""` every time, so `version == source.Version` is trivially true for them, and treating that as "nothing changed" would freeze those sources at whatever they held on the first run, silently and forever. The guard is `(version != "") && (version == source.Version)`.
+
+## The webhook token is deliberately not unique, and an empty one would select rather than authorize
+
+One token belongs to many `StreamSource` records, so one ping from a repository refreshes every page sourced from it. That makes a permissive match worse than it looks: an empty token would match every record whose `webhookToken` was never set and start a sync on each, which is fan-out triggered by an unauthenticated caller rather than an authorization check that merely passed. `RangeByWebhookToken` refuses anything shorter than `model.StreamSourceWebhookTokenMinLength` before it queries, and `Save` enforces the same minimum, because the field is editable by hand.
+
+The token is looked up, not compared, so there is no constant-time comparison to make here. What protects it is that [handler/streamSource.go](../handler/streamSource.go) answers `202` for every outcome — a token too short to look up, an unknown token, a known token matching nothing, and a known token matching forty records. A varying answer would confirm a guessed token and then count the pages behind it.
+
+## `SyncNow` is a command on the record, and `Save` is what carries it out
+
+There is no step that triggers a synchronization. A Template asks for one by setting `syncNow` on the record — `{do:"set-data", values:{syncNow:true}}` inside `with-stream-source` — and `Save` publishes the task, writes `LOADING`, and clears the flag. The field is `bson:"-"`, so it is never stored: a persisted `syncNow` would make every record that was ever synced by hand re-sync on each later save, forever.
+
+`Save` also syncs when `IsNew()`, and that half cannot be asked for. Nothing polls, so a record that has never synced must fetch its first content on its own or the Stream stays empty until somebody happens to push. `IsNew()` reads `journal.CreateDate`, which the save itself fills in, so it is answered *before* `collection.Save` and not after.
+
+An ordinary edit — rotating a token, fixing a URL typo — deliberately does **not** sync. `Stream.Save` federates and notifies, so a refetch is a decision, not a side effect of touching the settings form.
+
+## `with-stream-source` must not load into `model.NewStreamSource()`
+
+`NewStreamSource` mints a fresh webhook token. Loading an existing record into one risks handing back a record wearing a token nobody installed, because `SyncNow` and `Config` are not fields a BSON decode is guaranteed to overwrite. [build/step_WithStreamSource.go](../build/step_WithStreamSource.go) therefore loads into a zero `model.StreamSource{}` and calls the constructor only on the not-found path, where a new record is actually wanted.
+
+Two registrations make that step work, and neither fails to compile: `model.StreamSource` implements `model.AccessLister`, and `*model.StreamSource` has a case in `Factory.ModelService`. Miss either and `NewModel` returns nil and the settings screen 500s the first time it is opened.
