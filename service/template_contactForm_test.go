@@ -134,9 +134,9 @@ func TestContactFormTemplate_ClientValuesComeFromTheBuilder(t *testing.T) {
 		}
 
 		require.NotNil(t, valueTemplate.Tree, "%q must be a parsed template", key)
-		require.NotContains(t, valueTemplate.Tree.Root.String(), "GetString",
+		require.NotContains(t, valueTemplate.Root.String(), "GetString",
 			"%q reads visitor input; sender details must come from the request", key)
-		require.NotContains(t, valueTemplate.Tree.Root.String(), "QueryParam",
+		require.NotContains(t, valueTemplate.Root.String(), "QueryParam",
 			"%q reads the query string, which the visitor also controls", key)
 	}
 }

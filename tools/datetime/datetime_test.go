@@ -101,6 +101,6 @@ func TestDateTime_FieldRoundTrip(t *testing.T) {
 
 	result := wrapper{}
 	require.Nil(t, bson.Unmarshal(data, &result))
-	require.True(t, original.StartDate.Time.Equal(result.StartDate.Time),
+	require.True(t, original.StartDate.Equal(result.StartDate.Time),
 		"want %s, got %s", original.StartDate.Time, result.StartDate.Time)
 }
