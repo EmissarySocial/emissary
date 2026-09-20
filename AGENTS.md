@@ -88,6 +88,10 @@ Navigation links routinely carry **both** attributes (`<a href="/x" hx-get="/x">
 
 Templates in [_embed/templates](_embed/templates/) are embedded at build time, but a server can also load template folders from Git or disk. Those copies are cached, so an edit to a template's actions, states, or roles may need a restart before it takes effect, and a stale external copy silently keeps serving the old pipeline. When a template change appears to do nothing, confirm which copy is actually being served before debugging the Go code.
 
+**A template directory created after startup is never watched, so edits inside it are never picked up.** `Filesystem.watchOS` ([service/filesystem.go](service/filesystem.go)) enumerates subdirectories once and recurses into the ones that exist at that moment; `Template.watch` is started only from `Refresh`, and the change handler calls `loadTemplates` directly rather than re-arming the watcher. So the watcher set is fixed at the last config change.
+
+The confusing part is that a new template still *appears*: `loadTemplates` re-reads every directory from scratch whenever any **watched** directory changes, so a new folder is picked up as a side effect of editing an old one, and then goes stale again. Symptom: you edit a new template, the server does not reload, and the browser keeps being served markup you no longer have on disk — including attributes you can see in the file. Restart the server after adding a template directory.
+
 ## `.card` carries `container-type`, so it collapses inside a shrink-to-fit box
 
 `.card` in [theme-global/stylesheet/03-widgets-card.css](_embed/templates/theme-global/stylesheet/03-widgets-card.css) sets `container-type: inline-size` so card contents can use the design system's `@container` queries. That also applies inline-size containment, which sizes the box **as if it had no contents** — its children stop contributing to its intrinsic width.
