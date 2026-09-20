@@ -1,0 +1,122 @@
+{
+	templateId: article-remote
+	category: Special
+	extends: ["article-base"]
+
+	// TagPaths deliberately does not inherit, so this repeats what every other article declares
+	tagPaths: ["data.tags"]
+	containedBy: ["top", "home", "folder", "article"]
+	label: Remote Article
+	description: An article whose body is a Markdown file hosted somewhere else.
+	icon: cloud
+	sort: 60
+
+	// Only the content properties are declared.  Everything else -- token, label, summary, icon,
+	// data.width, data.stylesheet -- is inherited from article-base.
+	schema: {
+		type: "object"
+		properties: {
+			content: {type:"object", properties: {
+				format: {type:"string", enum:["HTML","EDITORJS","MARKDOWN","TEXT"]}
+				raw: {type:"string", format:"unsafe-any", maxLength:1048576}
+
+				// unsafe-any, NOT the `html` that article-base declares.  The Markdown renderer
+				// has already sanitized this with the application's own policy; rosetta's `html`
+				// format would re-sanitize with a plain UGCPolicy that silently strips syntax
+				// highlighting and embeds.  A child's String element replaces the parent's whole.
+				html: {type:"string", format:"unsafe-any", maxLength:1048576}
+			}}
+		}
+	}
+
+	actions: {
+
+		create: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"set-data", values:{label:"New Remote Article", content.format:"MARKDOWN"}}
+				{do:"set-state", state:"default"}
+				{do:"save"}
+
+				// Straight to the settings screen: a record with no URL has nothing to show
+				{do:"forward-to", url:"/{{.StreamID}}/edit"}
+			]
+		}
+
+		// `edit` is where the content comes FROM, not a body editor.  It renders from the STREAM
+		// builder, not from inside with-stream-source: the sub-builder's UserCan always answers
+		// false and its path helpers return "", so every button on the page would be dead.  It
+		// reaches the record through the .StreamSource accessor instead.
+		edit: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"with-draft", steps:[
+					{do:"view-html"}
+				]}
+			]
+		}
+
+		edit-source: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"as-modal", steps: [
+					{do:"with-stream-source", steps: [
+						{do:"edit"
+							form: {
+								type: layout-vertical
+								label: Remote Content Source
+								children: [
+									{type:"text", path:"url", label:"URL", description:"Raw HTML or Markdown content will be loaded from this URL.", options:{autocomplete:"off"}}
+									{type:"text", path:"config.webhookToken", label:"Webhook Token", description:"Secret token use to authenticate webhooks. Can be shared by many remote articles.", options:{autocomplete:"off", pattern:"[A-Za-z0-9._-]{16,}"}}
+								]
+							}
+						}
+						{do:"save"}
+					]}
+				]}
+				{do:"refresh-page"}
+			]
+		}
+
+		// Sync Now.  Saving the record IS the request to synchronize, so this pipeline has
+		// nothing else in it.
+		// NO refresh-page.  `save` publishes an SSE nudge on every write, and the settings screen
+		// already listens for it -- so a refreshPage event here is a SECOND trigger for the same
+		// write, and the two fire far enough apart that nothing collapses them.  The result was
+		// two swaps of <main> per press.
+		sync-source: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"with-stream-source", steps: [
+					{do:"save"}
+				]}
+			]
+		}
+
+		// RULE: Actions INHERIT additively -- a child can override one but can never remove it.
+		// These four edit the body, which the next synchronization would silently discard.  Naming
+		// NO roles empties the access list, so the menu bar hides them; the `forward-to` then covers
+		// the Domain Owner, for whom every permission check answers true regardless.
+		editor: {
+			steps: [
+				{do:"forward-to", url:"/{{.StreamID}}/edit"}
+			]
+		}
+
+		upload-image: {
+			steps: [
+				{do:"forward-to", url:"/{{.StreamID}}/edit"}
+			]
+		}
+
+		// Overrides article-base only to say that the remote file survives
+		delete: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"unpublish", state:"default", outbox:"true"}
+				{do:"delete", title:"Delete '{{.Label}}'?", message:"This removes the article from your website. The remote file is untouched. There is NO UNDO."}
+				{do:"forward-to", url:"/{{.ParentID}}"}
+			]
+		}
+	}
+}

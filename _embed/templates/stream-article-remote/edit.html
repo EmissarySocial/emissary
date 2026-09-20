@@ -1,0 +1,117 @@
+{{- $source := .StreamSource -}}
+
+<div class="page flex-column">
+
+	{{- template "edit-menubar" . -}}
+
+	{{- if $source.IsNew -}}
+
+		<!-- Nothing configured yet.  This is the normal state of an article just created. -->
+		<div class="card padding max-width-640">
+			<div class="margin-bottom">
+				Remote articles let you import page content from other web services.
+				Configure the remote source below, and the content will be automatically fetched and synchronized.
+			</div>
+			<button hx-get="/{{.StreamID}}/edit-source" class="turboclick button primary">Set Up Remote Source</button>
+		</div>
+
+	{{- else -}}
+
+		<div class="card padding margin-bottom">
+			<table class="table valign-middle">
+				<tr>
+					<td class="bold nowrap">Remote URL</td>
+					<!-- .ellipsis belongs on the CELL: an inline <a> has no box to overflow, and max-width-0 is what gives the cell a width to overflow at all. -->
+					<td class="text-sm ellipsis width-100% max-width-0">
+						<a href="{{$source.URL}}" target="_blank" rel="noopener noreferrer" title="{{$source.URL}}">{{$source.URL}}</a>
+					</td>
+					<td>
+						<button hx-get="/{{.StreamID}}/edit-source" class="turboclick button text-sm margin-left-sm">Change</button>
+					</td>
+				</tr>
+				<tr>
+					<td class="bold nowrap">Status</td>
+					<td>
+						{{- if eq $source.Status "SUCCESS" -}}
+							<span class="text-green">Synchronized</span>
+						{{- else if eq $source.Status "FAILURE" -}}
+							<span class="text-red">Failed</span>
+						{{- else if eq $source.Status "LOADING" -}}
+							<span class="text-gray">Synchronizing&hellip;</span>
+						{{- else -}}
+							<span class="text-gray">Never synchronized</span>
+						{{- end -}}
+
+						<!-- The message is the author's only account of WHY a sync failed -->
+						{{- if ne "" $source.StatusMessage -}}
+							<div class="text-sm text-red">{{$source.StatusMessage}}</div>
+						{{- end -}}
+					</td>
+					<td>
+						<!-- Saving the record IS the request to synchronize, so Sync Now posts to a pipeline that does nothing else.  It must POST: `save` does no work on a GET. -->
+						<!-- RULE: htmx attributes are INHERITED, and theme-default's <body> sets hx-target="main",
+								hx-swap="innerHTML transition:true" and hx-push-url="true".  This pipeline answers with an
+								EMPTY body and HX-Trigger headers, so without hx-swap="none" htmx swaps that empty body into
+								<main> -- blanking the page, with a view transition, until the refresh lands.  Without
+								hx-push-url="false" the POST also puts /sync-source in the address bar. -->
+						{{- if eq $source.Status "LOADING" -}}
+							<button disabled class="turboclick button text-sm margin-left-sm"><span class="spin">{{icon "loading"}}</span> Sync</button>
+						{{- else -}}
+							<button hx-post="/{{.StreamID}}/sync-source" hx-swap="none" hx-push-url="false" class="turboclick button text-sm margin-left-sm"><span>{{icon "loading"}}</span> Sync</button>
+						{{- end -}}
+					</td>
+				</tr>
+				<tr>
+					<td class="bold nowrap">Checked</td>
+					<td colspan="2" class="text-sm">
+						{{- if eq $source.LastSynced 0 -}}
+							Never
+						{{- else -}}
+							<time datetime="{{isoDate $source.LastSynced}}" title="{{dateTime $source.LastSynced}}">{{humanizeTime $source.LastSynced}}</time>
+						{{- end -}}
+					</td>
+				</tr>
+				<tr>
+					<td class="bold nowrap">Format</td>
+					<td colspan="2" class="text-sm">
+						<!-- Decided by the file extension at sync time, so nothing is known until one has run. -->
+						{{- if eq $source.LastSynced 0 -}}
+							<span class="text-gray">Not yet known</span>
+						{{- else if eq .ContentFormat "HTML" -}}
+							HTML
+						{{- else if eq .ContentFormat "MARKDOWN" -}}
+							Markdown
+						{{- else -}}
+							{{.ContentFormat}}
+						{{- end -}}
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		<div class="card padding margin-bottom">
+			<div class="bold">Webhook URL</div>
+			<div class="text-sm text-gray margin-bottom">
+				Configure this webhook URL in the remote source to updates this content automatically.
+			</div>
+			<!-- The URL stays OUTSIDE .clipboard-copy-button: the behavior hides that element whole, and only the control should disappear. -->
+			<div script="install Clipboard" class="text-sm">
+				<span class="clipboard-text">{{.Host}}/.streamsource/webhook/{{$source.WebhookToken}}</span>
+				<span class="clipboard-copy-button clickable margin-left-sm">{{icon "copy"}} Copy</span>
+				<span class="clipboard-copy-feedback text-green margin-left-sm" style="display:none">{{icon "check"}} Copied</span>
+			</div>
+		</div>
+
+	{{- end -}}
+
+	<div hx-ext="sse" sse-connect="/{{.StreamID}}/sse/stream-source-updated">
+		<div
+			hx-get="/{{.StreamID}}/edit"
+			hx-trigger="sse:{{.StreamID}}, refreshPage from:window"
+			hx-target="main"
+			hx-swap="innerHTML"
+			hx-push-url="false">
+		</div>
+	</div>
+
+</div>
