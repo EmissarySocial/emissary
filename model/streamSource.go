@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"regexp"
 
 	"github.com/benpate/data/journal"
 	"github.com/benpate/rosetta/mapof"
@@ -37,6 +38,10 @@ func NewStreamSource() StreamSource {
 		StreamSourceID: primitive.NewObjectID(),
 		Config:         config,
 		Status:         StreamSourceStatusNew,
+
+		// The schema REQUIRES a Method, and HTTPS is the only one an Adapter reads, so a
+		// record that did not default it could never be saved -- no form offers the choice.
+		Method: StreamSourceMethodHTTPS,
 	}
 }
 
@@ -54,6 +59,22 @@ func NewWebhookToken() string {
 	sum := sha256.Sum256(nonce)
 
 	return hex.EncodeToString(sum[:])
+}
+
+// webhookTokenCharacters is the alphabet a webhook token may be spelled with.  Nothing links it
+// to the matching `pattern` on article-remote's form, so the two are changed together by hand.
+var webhookTokenCharacters = regexp.MustCompile(`^[A-Za-z0-9._-]+$`)
+
+// IsValidWebhookToken returns TRUE if the provided value may be used as a webhook token.
+// RULE: the token is the only part of a webhook URL that a human supplies -- the server and the
+// path are fixed -- so a value carrying a scheme, a host, or a slash is a pasted URL, not a token.
+func IsValidWebhookToken(token string) bool {
+
+	if len(token) < StreamSourceWebhookTokenMinLength {
+		return false
+	}
+
+	return webhookTokenCharacters.MatchString(token)
 }
 
 /******************************************
