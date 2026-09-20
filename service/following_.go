@@ -829,8 +829,8 @@ func (service *Following) SetStatusPollFailure(session data.Session, following *
 	return nil
 }
 
-// followingBackoff returns how long to wait before re-polling a Following that has
-// failed `errorCount` times in a row: 1m, 2m, 4m ... 256m (~4 hours) at the cap.
+// followingBackoff returns how long to wait after a Following's errorCount-th consecutive
+// failure: 1m, 2m, 4m, 8m, 16m, 32m, 64m, 128m, then 256m (~4 hours) for every failure after.
 func followingBackoff(errorCount int) time.Duration {
 
 	// RULE: `1 << n` doubles.  `2 ^ n` is XOR in Go, not exponentiation -- it yields
