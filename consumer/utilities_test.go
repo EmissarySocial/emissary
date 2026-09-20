@@ -14,12 +14,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestGetHostnameFromArgs documents the contract that every WithFactory-backed
-// task enqueue must satisfy: WithFactory resolves the tenant Factory from the
-// hostname returned here, and hard-fails the task when it is empty. A task
-// enqueued with only a "url" argument (as the reply-tree crawlers once were)
-// yields no hostname and can never run.
+// TestGetHostnameFromArgs pins the contract that every WithFactory-backed task enqueue must
+// satisfy, because a task with no resolvable hostname can never run
 func TestGetHostnameFromArgs(t *testing.T) {
+
+	// WithFactory resolves the tenant Factory from the hostname returned here, and hard-fails
+	// the task when it is empty.  A "url"-only enqueue (the reply-tree crawlers, once) yields
+	// nothing and the task dies on every attempt.
 
 	// A "hostname" argument is used directly (reduced to its hostname).
 	require.Equal(t, "example.com", getHostnameFromArgs(mapof.Any{"hostname": "https://example.com/@alice"}))
@@ -46,10 +47,12 @@ func TestGetHostnameFromArgs(t *testing.T) {
 	require.Equal(t, "", getHostnameFromArgs(mapof.Any{}))
 }
 
-// TestRequeue pins the shared retry policy that PollFollowing_Record and every HTTP-backed
-// consumer share: a 429 is rescheduled after the server's own Retry-After, any other 4xx is
-// permanent, and everything else is retryable.
+// TestRequeue pins the retry policy that every HTTP-backed consumer shares, so that no caller
+// has to re-derive which failures are worth another attempt
 func TestRequeue(t *testing.T) {
+
+	// A 429 waits for the server's own Retry-After, any other 4xx is permanent, and
+	// everything else is retryable.
 
 	// No error is a success
 	require.Equal(t, queue.ResultStatusSuccess, requeue(nil).Status)
@@ -76,11 +79,12 @@ func TestRequeue(t *testing.T) {
 	require.Equal(t, queue.ResultStatusError, requeue(errors.New("some transport failure")).Status)
 }
 
-// TestRequeue_WrappedTooManyRequests verifies that a 429 survives the derp.Wrap that every call
-// site applies. PollFollowing_Record wraps before requeueing, so an unwrapped-only check would
-// silently turn every rate limit into a permanent failure.
+// TestRequeue_WrappedTooManyRequests verifies that a 429 survives the derp.Wrap that every
+// call site applies before requeueing
 func TestRequeue_WrappedTooManyRequests(t *testing.T) {
 
+	// PollFollowing_Record wraps before requeueing, so an unwrapped-only check would turn
+	// every rate limit into a permanent failure.
 	wrapped := derp.Wrap(tooManyRequests("30"), "test", "Loading document", "following: https://x.social/@bob")
 
 	result := requeue(wrapped)

@@ -14,9 +14,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// CrawlContext attempts to backfill the cache for a given document by crawling all of the links
-// in its "context" property. If there is an error, this consumer will fall back to crawling the
-// "InReplyTo" chain, if that exists.
+// CrawlContext backfills the cache for a document by crawling the links in its "context"
+// property, falling back to the "InReplyTo" chain when the context cannot be read
 func CrawlContext(factory *service.Factory, args mapof.Any) queue.Result {
 
 	const location = "consumer.CrawlContext"

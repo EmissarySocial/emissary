@@ -13,15 +13,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// classifyOutcome returns just the outcome from classifyContext, for the tests that assert on
-// classification alone.  It also pins the invariant that only a rate limit carries a wait,
-// because any other outcome reporting one would reschedule a task no host ever asked to defer.
+// classifyOutcome returns just the outcome from classifyContext, for the tests that assert
+// on classification alone
 func classifyOutcome(t *testing.T, context streams.Document, err error) contextOutcome {
 
 	t.Helper()
 
 	outcome, retryAfter := classifyContext(context, err)
 
+	// RULE: Only a rate limit carries a wait.  Any other outcome reporting one would
+	// reschedule a task that no host ever asked to defer.
 	if outcome != contextOutcomeRateLimited {
 		require.Equal(t, time.Duration(0), retryAfter)
 	}
@@ -46,12 +47,13 @@ func TestClassifyContext_Collections(t *testing.T) {
 	}
 }
 
-// TestClassifyContext_SuccessIsNeverAnError is BUG-150's Defect A: a document that loads
-// cleanly and simply is not a collection is a normal outcome on the open fediverse.  The
-// original code fell past its IsCollection test into derp.Report, filing 301 contentless
-// records in seven days.
+// TestClassifyContext_SuccessIsNeverAnError verifies that a document which loads cleanly and
+// simply is not a collection is classified as Skip, rather than as a failure
 func TestClassifyContext_SuccessIsNeverAnError(t *testing.T) {
 
+	// BUG-150 Defect A: the original code read IsCollection before err and fell past it into
+	// derp.Report, filing 301 contentless records in seven days.  A context that is not a
+	// collection is a normal outcome on the open fediverse.
 	nonCollectionTypes := []string{
 		vocab.ObjectTypeNote,
 		vocab.ObjectTypeArticle,
@@ -69,10 +71,12 @@ func TestClassifyContext_SuccessIsNeverAnError(t *testing.T) {
 	require.Equal(t, contextOutcomeSkip, classifyOutcome(t, streams.NilDocument(), nil))
 }
 
-// TestClassifyContext_RemoteFailures is BUG-150's Defect B: every way a remote context can
-// fail is the remote's own, repeats identically on every future crawl, and must never reach
-// the error log.  The InReplyTo crawl is this task's real answer to all of them.
+// TestClassifyContext_RemoteFailures verifies that every way a remote context can fail is
+// classified as Skip, so that none of them reaches the error log
 func TestClassifyContext_RemoteFailures(t *testing.T) {
+
+	// BUG-150 Defect B: each of these is the remote's own failure and repeats identically on
+	// every future crawl, so the InReplyTo crawl is this task's real answer to all of them.
 
 	// The production case: 1,997 records in seven days, all of them a server answering
 	// an ActivityPub request with 200 and an HTML page.
@@ -136,11 +140,12 @@ func TestClassifyContext_RateLimited(t *testing.T) {
 	}
 }
 
-// TestClassifyContext_ErrorBeatsDocument pins the ordering that the original code had backwards.
-// A failed Load still returns a readable Document, so the error must be settled first or the
-// classifier answers from a value the remote never sent.
+// TestClassifyContext_ErrorBeatsDocument verifies that an error arriving alongside a readable
+// collection settles the outcome, so the document is never consulted first
 func TestClassifyContext_ErrorBeatsDocument(t *testing.T) {
 
+	// This is the ordering the original code had backwards (BUG-150).  A failed Load still
+	// returns a readable Document, so asking it first answers from a value nobody sent.
 	collection := streams.NewDocument(mapof.Any{vocab.PropertyType: vocab.CoreTypeOrderedCollection})
 
 	require.Equal(t, contextOutcomeSkip, classifyOutcome(t, collection, derp.NotFound("test", "Gone")))
@@ -151,10 +156,12 @@ func TestClassifyContext_ErrorBeatsDocument(t *testing.T) {
 	require.Equal(t, 60*time.Second, retryAfter.Truncate(time.Second))
 }
 
-// TestDerpWrapNil_IsAPhantomError pins the dependency behavior that produced BUG-150's Defect A,
-// and is the reason classifyContext tests err != nil rather than wrapping unconditionally
+// TestDerpWrapNil_IsAPhantomError pins the dependency behavior that makes classifyContext test
+// err != nil rather than wrapping unconditionally
 func TestDerpWrapNil_IsAPhantomError(t *testing.T) {
 
+	// BUG-150 Defect A was built on this: a derp.Report reached on a success path files a
+	// record with nothing in it to identify.
 	phantom := derp.Wrap(nil, "consumer.CrawlContext", "Loading context collection")
 
 	// Wrapping nil yields a NON-nil error, and derp.IsNil does not catch it either

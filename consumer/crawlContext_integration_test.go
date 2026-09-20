@@ -38,8 +38,11 @@ import (
 func documentClient() streams.Client {
 
 	// RULE: This MUST mirror service.ActivityStream.Client, because the error shape these
-	// tests pin is produced by the layers, not by any one of them.  The ascache layer is
-	// the only omission, because it needs a live database and wraps nothing.
+	// tests pin is produced by the layers, not by any one of them.  Three layers above this
+	// point are omitted: ascache needs a live database, and asrules and ashash sit above it.
+
+	// Of the three, only ascache changes an error, adding one more derp.Wrap.  The rate-limit
+	// test below stands in for it, because nothing here can reach a database.
 
 	// httptest serves from 127.0.0.1, which the transport's SSRF guard refuses by default
 	const allowPrivateIPs = true
@@ -120,15 +123,26 @@ func TestIntegration_RateLimitedContext(t *testing.T) {
 	require.Equal(t, contextOutcomeRateLimited, outcome)
 	require.Equal(t, 30*time.Second, retryAfter, "the host asked for 30s; 1h means the duration was lost in the chain")
 	require.Equal(t, http.StatusTooManyRequests, derp.ErrorCode(err))
+
+	// RULE: ascache is the one omitted layer that changes an error, and it adds exactly this
+	// wrap.  Classifying identically through it is what lets the stack above be left out.
+	cached := derp.Wrap(err, "ascache.Client.Load", "Loading document from inner client", url)
+
+	outcome, retryAfter = classifyContext(context, cached)
+
+	require.Equal(t, contextOutcomeRateLimited, outcome)
+	require.Equal(t, 30*time.Second, retryAfter)
 }
 
-// TestIntegration_HTMLInsteadOfActivityPub is BUG-150's largest error class, built by a real server:
-// a 200 response carrying an HTML page, which derp reports as 500 rather than any 4xx
+// TestIntegration_HTMLInsteadOfActivityPub verifies that a remote answering an ActivityPub
+// request with an HTML page is classified as Skip, and carries a 500 rather than a 4xx
 func TestIntegration_HTMLInsteadOfActivityPub(t *testing.T) {
 
 	if testing.Short() {
 		t.Skip("integration test: starts an HTTP server")
 	}
+
+	// BUG-150's largest error class, built here by a real server rather than a fixture
 
 	url := contextServer(t, http.StatusOK, "text/html; charset=utf-8",
 		"<!DOCTYPE html><html><body>Hello</body></html>", nil)
@@ -148,13 +162,15 @@ func TestIntegration_HTMLInsteadOfActivityPub(t *testing.T) {
 	require.False(t, derp.IsClientError(err))
 }
 
-// TestIntegration_NonCollectionContext is BUG-150's Defect A, built by a real server: a context
-// that loads perfectly well and simply is not a collection, which is a success and not an error
+// TestIntegration_NonCollectionContext verifies that a context which loads cleanly and is not
+// a collection is classified as Skip, reporting no error at all
 func TestIntegration_NonCollectionContext(t *testing.T) {
 
 	if testing.Short() {
 		t.Skip("integration test: starts an HTTP server")
 	}
+
+	// BUG-150 Defect A, built here by a real server rather than a fixture
 
 	url := contextServer(t, http.StatusOK, "application/activity+json",
 		`{"@context":"https://www.w3.org/ns/activitystreams","type":"Note","content":"Hello"}`, nil)
