@@ -31,5 +31,10 @@ jobs:
     - name: Install NilAway
       run: go install go.uber.org/nilaway/cmd/nilaway@v0.0.0-20260617211854-01ab7e30fbe0
 
+    # Two exclusions, both required.  The docstring marker drops service/icons.go, whose
+    # Get() exceeds NilAway's hard 500-block CFG limit -- reported as an INTERNAL ERROR that
+    # also abandons every other finding in the `service` package.  -exclude-test-files drops
+    # the tests that pass a literal nil Session on purpose, which NilAway traces into
+    # production code as a nil flow.  See service/AGENTS.md.
     - name: Nil panic checks
-      run: nilaway ./...
+      run: nilaway -exclude-file-docstrings="nilaway:ignore-file" -exclude-test-files ./...
