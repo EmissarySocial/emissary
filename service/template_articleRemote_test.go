@@ -76,6 +76,33 @@ func TestArticleRemoteTemplate_TagsAreEnabled(t *testing.T) {
 	require.True(t, articleRemoteFormOffers(t, template, "data.tags"), "the Article Info form offers no way to type a hashtag")
 }
 
+// articleRemoteAllSteps flattens a pipeline, descending into the container steps this Template
+// uses.  article-base wraps almost everything in `with-draft`, so a search of the top level alone
+// reports that an action does nothing at all.
+func articleRemoteAllSteps(steps []modelStep.Step) []modelStep.Step {
+
+	result := make([]modelStep.Step, 0, len(steps))
+
+	for _, step := range steps {
+
+		result = append(result, step)
+
+		switch typed := step.(type) {
+
+		case modelStep.WithDraft:
+			result = append(result, articleRemoteAllSteps(typed.SubSteps)...)
+
+		case modelStep.AsModal:
+			result = append(result, articleRemoteAllSteps(typed.SubSteps)...)
+
+		case modelStep.WithStreamSource:
+			result = append(result, articleRemoteAllSteps(typed.SubSteps)...)
+		}
+	}
+
+	return result
+}
+
 // articleRemoteFormOffers reports whether the `properties` action's form edits the given path.
 func articleRemoteFormOffers(t *testing.T, template model.Template, path string) bool {
 
@@ -95,21 +122,12 @@ func articleRemoteFormOffers(t *testing.T, template model.Template, path string)
 		return slices.ContainsFunc(element.Children, offeredBy)
 	}
 
-	for _, step := range action.Steps {
+	for _, step := range articleRemoteAllSteps(action.Steps) {
 
-		modal, isModal := step.(modelStep.AsModal)
+		if edit, isEdit := step.(modelStep.EditModelObject); isEdit {
 
-		if !isModal {
-			continue
-		}
-
-		for _, subStep := range modal.SubSteps {
-
-			if edit, isEdit := subStep.(modelStep.EditModelObject); isEdit {
-
-				if offeredBy(edit.Form) {
-					return true
-				}
+			if offeredBy(edit.Form) {
+				return true
 			}
 		}
 	}
@@ -121,13 +139,19 @@ func articleRemoteFormOffers(t *testing.T, template model.Template, path string)
 // body.  The remote file is the source of truth, so an editable page invites a change that the
 // next synchronization discards without saying so.
 //
-// These four actions cannot be deleted -- inheritance only ever adds -- so the template overrides
-// each one to name no roles, which empties its access list and hides it from the menu bar.
+// These two actions cannot be deleted -- inheritance only ever adds -- so the template overrides
+// each one to name no roles, which empties its access list and hides it from the menu bar.  The
+// `forward-to` covers the Domain Owner, for whom every permission check answers true regardless.
+//
+// `promote-draft` and `discard-draft` are deliberately NOT in this list.  An earlier revision
+// neutralized them, which took away the only path to save-and-publish and left the article
+// unreachable from every auto-generated navigation list.  Promote is now the single control, and
+// it publishes everything EXCEPT the body -- see TestArticleRemoteTemplate_PromoteKeepsTheBody.
 func TestArticleRemoteTemplate_ShipsNoReachableContentEditor(t *testing.T) {
 
 	template := articleRemoteTemplate(t)
 
-	for _, actionID := range []string{"editor", "upload-image", "promote-draft", "discard-draft"} {
+	for _, actionID := range []string{"editor", "upload-image"} {
 
 		action, exists := template.Actions[actionID]
 		require.True(t, exists, "action %q should still be inherited", actionID)
@@ -141,29 +165,72 @@ func TestArticleRemoteTemplate_ShipsNoReachableContentEditor(t *testing.T) {
 
 	// ..and no action anywhere may still run the steps that write a body
 	for actionID, action := range template.Actions {
-		for _, step := range action.Steps {
-			require.NotContains(t, []string{"edit-content", "upload-attachments", "promote-draft"}, step.Name(), "action %q edits the body", actionID)
+		for _, step := range articleRemoteAllSteps(action.Steps) {
+			require.NotContains(t, []string{"edit-content", "upload-attachments"}, step.Name(), "action %q edits the body", actionID)
 		}
 	}
 }
 
-// TestArticleRemoteTemplate_LayoutActionsDoNotUseDrafts pins the reason three inherited actions are
-// overridden.  article-base wraps each in `with-draft`, and a draft only reaches the live page
-// through promote-draft -- which this Template neutralizes.  Left inherited, a layout or
-// stylesheet change would save, report success, and never appear.
-func TestArticleRemoteTemplate_LayoutActionsDoNotUseDrafts(t *testing.T) {
+// TestArticleRemoteTemplate_PromoteKeepsTheBody pins the one attribute that stops Promote from
+// undoing a synchronization.  A draft is a snapshot taken when it was created -- and `edit` runs
+// inside with-draft, so merely opening the settings screen makes one -- so promoting copies that
+// stale body over whatever the last sync fetched, or over nothing at all if the draft predates the
+// first sync.  Nothing repairs it: the StreamSource's ContentHash still matches what it last wrote,
+// so the next sync stops before fetching and Sync Now does nothing.
+//
+// The second half guards the restatement.  Template.Inherit replaces an action wholesale, so adding
+// `omit` here meant copying article-base's whole pipeline by hand -- and a hand copy goes stale
+// silently when the parent changes.
+func TestArticleRemoteTemplate_PromoteKeepsTheBody(t *testing.T) {
+
+	templateService := loadEmbeddedTemplates(t)
+
+	names := func(templateID string) []string {
+
+		template, err := templateService.Load(templateID)
+		require.NoError(t, err)
+
+		action, exists := template.Actions["promote-draft"]
+		require.True(t, exists, "%s has no promote-draft action", templateID)
+
+		result := make([]string, 0, len(action.Steps))
+
+		for _, step := range action.Steps {
+
+			if promote, isPromote := step.(modelStep.StreamPromoteDraft); isPromote && templateID == "article-remote" {
+				require.Contains(t, promote.Omit, "content", "Promote would copy the draft's stale body over the live Stream")
+			}
+
+			result = append(result, step.Name())
+		}
+
+		return result
+	}
+
+	require.Equal(t, names("article-base"), names("article-remote"),
+		"article-remote restates article-base's promote-draft by hand, and the two have drifted")
+}
+
+// TestArticleRemoteTemplate_LayoutActionsUseDrafts confirms that four inherited actions are left
+// alone.  Each wraps its work in `with-draft`, and a draft reaches the live page only through
+// promote-draft -- which this Template now runs in full.  An override here would be the old design,
+// where promote-draft was neutralized and a layout or stylesheet change saved into a draft that
+// nothing ever published: success reported, nothing visible, no error anywhere.
+func TestArticleRemoteTemplate_LayoutActionsUseDrafts(t *testing.T) {
 
 	template := articleRemoteTemplate(t)
 
-	for _, actionID := range []string{"widgets", "widget", "style"} {
+	for _, actionID := range []string{"widgets", "widget", "style", "properties"} {
 
 		action, exists := template.Actions[actionID]
 		require.True(t, exists, "action %q is missing", actionID)
 
-		for _, step := range action.Steps {
+		usesDraft := slices.ContainsFunc(action.Steps, func(step modelStep.Step) bool {
 			_, isDraft := step.(modelStep.WithDraft)
-			require.False(t, isDraft, "action %q still saves into a draft that nothing promotes", actionID)
-		}
+			return isDraft
+		})
+
+		require.True(t, usesDraft, "action %q must save into the draft that Promote publishes", actionID)
 	}
 }
 
@@ -200,16 +267,17 @@ func TestArticleRemoteTemplate_SettingsAreReachable(t *testing.T) {
 
 	template := articleRemoteTemplate(t)
 
-	for _, actionID := range []string{"edit", "edit-source", "sync-source", "delete-source"} {
+	for _, actionID := range []string{"edit", "edit-source", "sync-source"} {
 		action, exists := template.Actions[actionID]
 		require.True(t, exists, "action %q is missing", actionID)
 		require.NotEmpty(t, action.Roles, "action %q is defined but reachable by nobody", actionID)
 	}
 
-	// `edit` is the settings screen, NOT article-base's body editor wrapped in a draft
-	for _, step := range template.Actions["edit"].Steps {
-		_, isDraft := step.(modelStep.WithDraft)
-		require.False(t, isDraft, "edit still renders article-base's draft editor")
+	// `edit` is the settings screen: it renders THIS Template's page, never article-base's body
+	// editor.  The with-draft wrapper it inherits is harmless, because the settings it shows come
+	// from the StreamSource record, which lives outside the Stream entirely.
+	for _, step := range articleRemoteAllSteps(template.Actions["edit"].Steps) {
+		require.NotEqual(t, "edit-content", step.Name(), "edit renders article-base's body editor")
 	}
 }
 

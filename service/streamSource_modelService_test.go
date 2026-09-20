@@ -250,10 +250,9 @@ func TestStreamSource_AccessLister(t *testing.T) {
 // by this test only if it is added to the list, so the point of the list is to be the place that
 // says what "every write" means.
 //
-// Delete is deliberately NOT in the list.  Its only caller, the `delete-source` action, ends with
-// `refresh-page`, so the browser that pressed Stop Syncing refetches either way.  What that gives
-// up is a SECOND browser open on the same article, which will keep showing a source that is gone
-// until something else refreshes it.
+// Two writers are deliberately NOT in the list.  `Delete` relies on its action's `refresh-page`,
+// and `saveSyncState` relies on the lifecycle hook that writes the same visible fields moments
+// after it.  Both were nudging redundantly, and each redundant nudge is one more swap of <main>.
 func TestStreamSource_EveryWriteNudgesTheStream(t *testing.T) {
 
 	writes := map[string]func(*StreamSource, streamSourceSession, *model.StreamSource) error{
@@ -272,9 +271,6 @@ func TestStreamSource_EveryWriteNudgesTheStream(t *testing.T) {
 		},
 		"SetStatusMessage": func(service *StreamSource, session streamSourceSession, streamSource *model.StreamSource) error {
 			return service.SetStatusMessage(session, streamSource, "Retrying")
-		},
-		"saveSyncState": func(service *StreamSource, session streamSourceSession, streamSource *model.StreamSource) error {
-			return service.saveSyncState(session, streamSource, "Checked: unchanged")
 		},
 	}
 
