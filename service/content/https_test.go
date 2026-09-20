@@ -118,7 +118,8 @@ func TestHTTPS_Fetch(t *testing.T) {
 	require.NotEmpty(t, item.Hash)
 }
 
-// TestHTTPS_Fetch_MediaTypes pins which media types this version accepts
+// TestHTTPS_Fetch_MediaTypes pins which media types this version will read at all.  The choice
+// BETWEEN Markdown and HTML is the address's, and belongs to TestContentFormat.
 func TestHTTPS_Fetch_MediaTypes(t *testing.T) {
 
 	test := func(name string, contentType string, expectError bool) {
@@ -152,9 +153,11 @@ func TestHTTPS_Fetch_MediaTypes(t *testing.T) {
 	test("x-markdown", "text/x-markdown", false)
 	test("uppercase", "TEXT/PLAIN", false)
 
-	// RULE: This is the C2 guard.  A forge's file PAGE answers text/html and differs from the raw
-	// URL by one path segment, so this is what stops a pasted browser URL from becoming a body.
-	test("html page", "text/html; charset=utf-8", true)
+	// RULE: text/html is READ now, not refused.  Which of the two formats it becomes is the
+	// address's business, and TestContentFormat is where that decision is pinned.
+	test("html", "text/html; charset=utf-8", false)
+	test("xhtml", "application/xhtml+xml", false)
+
 	test("json", "application/json", true)
 	test("octet stream", "application/octet-stream", true)
 	test("unparseable", "text/plain; charset=", true)

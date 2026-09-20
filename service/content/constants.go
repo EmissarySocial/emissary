@@ -22,8 +22,29 @@ const maxURLLength = 2048
 // mediaTypeMarkdown is the media type that a forge serves a .md file as when it knows what it is
 const mediaTypeMarkdown = "text/markdown"
 
-// mediaTypePlain is what every forge surveyed actually returns for a raw Markdown file
+// mediaTypeXMarkdown is the pre-standard spelling of the same thing, still served by some hosts
+const mediaTypeXMarkdown = "text/x-markdown"
+
+// mediaTypePlain is what every forge surveyed actually returns for a raw file, Markdown or not
 const mediaTypePlain = "text/plain"
+
+// mediaTypeHTML is what a web server declares for a page, including a forge's file PAGE
+const mediaTypeHTML = "text/html"
+
+// mediaTypeXHTML is the XML serialization of HTML
+const mediaTypeXHTML = "application/xhtml+xml"
+
+/******************************************
+ * File Extensions
+ ******************************************/
+
+// extensionMarkdown and extensionMarkdownLong name a Markdown file
+const extensionMarkdown = ".md"
+const extensionMarkdownLong = ".markdown"
+
+// extensionHTML and extensionHTMLShort name an HTML file
+const extensionHTML = ".html"
+const extensionHTMLShort = ".htm"
 
 /******************************************
  * Front Matter

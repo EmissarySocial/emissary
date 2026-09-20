@@ -2,11 +2,23 @@
 
 See [doc.go](doc.go) for what this package is, and the project plan in `emissary-specs/projects/GIT-MARKDOWN-TO-STREAM-CONTENT.md` for why. These are the rules that are not visible in the code.
 
-## The media type is read, never assumed, and never sniffed
+## The extension decides Markdown vs HTML, and the header only decides whether to read at all
 
-A forge's file *page* and its raw file differ by one path segment, and the page answers `text/html`: `github.com/golang/go/blob/master/README.md` returns a 200 and a full HTML document. An author pasting the URL from their browser is the expected mistake, not the exotic one, and storing that page as a Stream's Markdown body fails silently and looks almost right.
+Measured against GitHub, Codeberg, GitLab, Gitea and cgit on 2026-09-20: **every one serves a raw file as `text/plain`, whatever the file holds.** A raw `.md` and a raw `.html` are indistinguishable by header, so `contentFormat` reads the extension of the **original** address, in this order:
 
-So `contentFormat` decides from the declared `Content-Type` and refuses everything else. Do NOT add byte sniffing as a fallback: an HTML page begins with plain text, so `http.DetectContentType` would wave through the exact case this guard exists to catch. A source that declares nothing is refused for the same reason.
+1. `.md` / `.markdown` → Markdown, outranking whatever the server declared.
+2. `text/html` / `application/xhtml+xml`, or `.html` / `.htm` → HTML.
+3. anything else → Markdown.
+
+The extension comes from the address the author typed, not the address after redirects: it is what an error message can quote back to them, and no forge can change it under their feet. GitHub's `/raw/` form 301s to `raw.githubusercontent.com` and both ends in `.md`, but that is not guaranteed in general.
+
+Read the URL's **path**, never the whole string — cgit serves `/plain/README.md?h=master`, where the text after the last dot is `md?h=master` and no extension ever matches. `sourceExtension` uses `url.Parse` and `path.Ext` for exactly this.
+
+**The media-type allowlist stays, and does a different job.** `text/markdown`, `text/x-markdown`, `text/plain`, `text/html` and `application/xhtml+xml` are read; everything else is refused before the body is downloaded, so a mistyped address pointing at an image or an archive cannot become somebody's article. A source that declares nothing is refused too.
+
+Do NOT add byte sniffing. A Markdown file and an HTML page both begin with plain text, so `http.DetectContentType` decides nothing here that the extension has not already decided better.
+
+**What this gave up, deliberately.** C2 in the project plan existed to catch a forge's file *page* being pasted instead of the raw file — all four forges answer `text/html` for a `.md` URL, and the old rule refused exactly that pair. Rule 1 now reads it as Markdown, so the page's own markup becomes the body: the sync succeeds, and the article renders the forge's navigation as text. That is a correctness failure, not a security one — `Content.Format` sanitizes every format through the same `markdown.Sanitize`, and `tools/markdown` already runs goldmark with `html.WithUnsafe()`, so remote Markdown could always emit the same markup an HTML file can. If the guard is ever wanted back, the narrowest form is one branch: a `.md` extension together with a `text/html` header is the contradiction, and nothing legitimate lands there.
 
 The explicit empty-header branch looks redundant — `mime.ParseMediaType("")` errors on its own — and it is kept for the message alone, because "did not declare a Content-Type" and "declared an unreadable Content-Type" send an author to different places. `TestHTTPS_Fetch_NoContentTypeSaysSo` pins the message rather than the refusal, because a test that only pins the refusal passes with the branch deleted.
 
