@@ -56,6 +56,7 @@ type Stream struct {
 	permissionService   *Permission
 	searchResultService *SearchResult
 	searchTagService    *SearchTag
+	streamSourceService *StreamSource
 	templateService     *Template
 	followerService     *Follower
 	ruleService         *Rule
@@ -98,6 +99,7 @@ func (service *Stream) Refresh(factory *Factory) {
 	service.ruleService = factory.Rule()
 	service.searchResultService = factory.SearchResult()
 	service.searchTagService = factory.SearchTag()
+	service.streamSourceService = factory.StreamSource()
 	service.templateService = factory.Template()
 	service.userService = factory.User()
 	service.webhookService = factory.Webhook()
@@ -490,6 +492,13 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 	// RULE: Delete all related Drafts
 	if err := service.draftService.Delete(session, stream, note); err != nil {
 		derp.Report(derp.Wrap(err, location, "Deleting drafts", stream, note))
+	}
+
+	// RULE: Delete all related StreamSources.  A StreamSource is reached only through its Stream,
+	// so one left behind can never be seen or removed again -- while its webhook token keeps
+	// queueing syncs that reach the network and then fail on the Stream that is gone.
+	if err := service.streamSourceService.DeleteByStreamID(session, stream.StreamID, note); err != nil {
+		derp.Report(derp.Wrap(err, location, "Deleting stream sources", stream, note))
 	}
 
 	// RULE: Delete related Context Collection (if exists)
