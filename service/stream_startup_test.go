@@ -26,9 +26,9 @@ func TestStream_Startup_TakesNoSelection(t *testing.T) {
 
 	streamService := &Stream{}
 
-	//lint:ignore QF1011 The explicit type is the assertion -- inferring it from the
-	// right-hand side would accept any signature and silently retire this gate.
-	var startup func(data.Session, *model.Theme) error = streamService.Startup
+	// The explicit type is the assertion -- inferring it from the right-hand side would
+	// accept any signature and silently retire this gate.
+	var startup func(data.Session, *model.Theme) error = streamService.Startup //nolint:staticcheck // QF1011
 
 	require.NotNil(t, startup)
 }
