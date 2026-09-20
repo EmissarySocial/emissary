@@ -10,10 +10,12 @@ import (
 	"unicode/utf8"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/turbine/queue"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -184,6 +186,10 @@ func matchesStreamSource(criteria exp.Expression, record model.StreamSource) boo
 			value, ok := predicate.Value.(primitive.ObjectID)
 			return ok && (predicate.Operator == exp.OperatorEqual) && (record.StreamID == value)
 
+		case "config." + model.StreamSourceConfigWebhookToken:
+			value, ok := predicate.Value.(string)
+			return ok && (predicate.Operator == exp.OperatorEqual) && (record.WebhookToken() == value)
+
 		case "deleteDate":
 			value, ok := predicate.Value.(int)
 			return ok && (predicate.Operator == exp.OperatorEqual) && (record.DeleteDate == int64(value))
@@ -194,16 +200,25 @@ func matchesStreamSource(criteria exp.Expression, record model.StreamSource) boo
 	})
 }
 
-// streamSourceSession hands out a single shared streamSourceCollection
+// streamSourceSession hands out a single shared streamSourceCollection, and carries a post-commit
+// task spool so that a test can see the queue tasks a service published
 type streamSourceSession struct {
 	collection *streamSourceCollection
+	tasks      *postcommit.Tasks
 }
 
 // Collection implements the data.Session interface
 func (s streamSourceSession) Collection(string) data.Collection { return s.collection }
 
-// Context implements the data.Session interface
-func (s streamSourceSession) Context() context.Context { return context.Background() }
+// Context implements the data.Session interface, carrying the spool that collects published tasks
+func (s streamSourceSession) Context() context.Context {
+	return postcommit.WithContext(context.Background(), s.tasks)
+}
+
+// publishedTasks returns the queue tasks that a service published during this session
+func (s streamSourceSession) publishedTasks() []queue.Task {
+	return s.tasks.Drain()
+}
 
 // Close implements the data.Session interface. The stub holds no resources to release.
 func (s streamSourceSession) Close() {}
@@ -211,7 +226,10 @@ func (s streamSourceSession) Close() {}
 // newStreamSourceService returns a StreamSource service backed by an in-memory set of records
 func newStreamSourceService(records ...model.StreamSource) (*StreamSource, streamSourceSession) {
 	service := NewStreamSource()
-	return &service, streamSourceSession{collection: &streamSourceCollection{records: records}}
+	return &service, streamSourceSession{
+		collection: &streamSourceCollection{records: records},
+		tasks:      postcommit.NewTasks(),
+	}
 }
 
 // validStreamSource returns a StreamSource record that passes validation
@@ -405,6 +423,38 @@ func TestStreamSource_SetStatusFailure(t *testing.T) {
 	require.Equal(t, "Repository not found", record.StatusMessage)
 	require.Equal(t, int64(1_700_000_000), record.LastSynced, "a failure does not move LastSynced")
 	require.Len(t, session.collection.saved, 1)
+}
+
+// TestStreamSource_SetStatusMessage records why an attempt failed while leaving Status alone.  The
+// queue is still going to retry, and FAILURE here would read as broken to an author whose sync is
+// about to succeed on its own.
+func TestStreamSource_SetStatusMessage(t *testing.T) {
+
+	record := validStreamSource()
+	record.Status = model.StreamSourceStatusSuccess
+	record.LastSynced = 1_700_000_000
+
+	service, session := newStreamSourceService(record)
+
+	require.NoError(t, service.SetStatusMessage(session, &record, "Source server failed"))
+
+	require.Equal(t, model.StreamSourceStatusSuccess, record.Status, "a pending retry decides nothing")
+	require.Equal(t, "Source server failed", record.StatusMessage)
+	require.Equal(t, int64(1_700_000_000), record.LastSynced, "a retry does not move LastSynced")
+	require.Len(t, session.collection.saved, 1)
+}
+
+// TestStreamSource_SetStatusMessage_TruncatesMessage keeps a long message within its schema.  A
+// derp error chain is the usual source, and it can be far longer than the field allows.
+func TestStreamSource_SetStatusMessage_TruncatesMessage(t *testing.T) {
+
+	record := validStreamSource()
+	service, session := newStreamSourceService(record)
+
+	require.NoError(t, service.SetStatusMessage(session, &record, strings.Repeat("e", 2000)))
+
+	require.Len(t, record.StatusMessage, 1024)
+	require.True(t, utf8.ValidString(record.StatusMessage))
 }
 
 // TestStreamSource_SetStatusFailure_TruncatesMessage keeps a long message within its schema, as valid UTF-8
