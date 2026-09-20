@@ -120,16 +120,18 @@ One token belongs to many `StreamSource` records, so one ping from a repository 
 
 The token is looked up, not compared, so there is no constant-time comparison to make here. What protects it is that [handler/streamSource.go](../handler/streamSource.go) answers `202` for every outcome — a token too short to look up, an unknown token, a known token matching nothing, and a known token matching forty records. A varying answer would confirm a guessed token and then count the pages behind it.
 
-## `SyncNow` is a command on the record, and `Save` is what carries it out
+## Saving a StreamSource reaches the network
 
-There is no step that triggers a synchronization. A Template asks for one by setting `syncNow` on the record — `{do:"set-data", values:{syncNow:true}}` inside `with-stream-source` — and `Save` publishes the task, writes `LOADING`, and clears the flag. The field is `bson:"-"`, so it is never stored: a persisted `syncNow` would make every record that was ever synced by hand re-sync on each later save, forever.
+There is no step, and no flag, that triggers a synchronization: **`StreamSource.Save` queues one, every time.** Nothing polls, so a save is the only moment a human tells Emissary this record is worth reading, and a redundant one costs a single conditional GET that answers `304` — `Version` matches, `Fetch` never runs, and `Stream.Save` never fires. **Sync Now** is therefore `{do:"with-stream-source", steps:[{do:"save"}]}`.
 
-`Save` also syncs when `IsNew()`, and that half cannot be asked for. Nothing polls, so a record that has never synced must fetch its first content on its own or the Stream stays empty until somebody happens to push. `IsNew()` reads `journal.CreateDate`, which the save itself fills in, so it is answered *before* `collection.Save` and not after.
+Two consequences to keep in mind. An unrelated edit made while the source is unreachable will walk the record to `FAILURE`, which the next webhook corrects. And a caller that saves MANY records in a loop fans out one outbound fetch per record with nothing at the call site saying so — `step_Sort.go` reaches `Save` through `ObjectSave` and is one hjson line away from being such a caller.
 
-An ordinary edit — rotating a token, fixing a URL typo — deliberately does **not** sync. `Stream.Save` federates and notifies, so a refetch is a decision, not a side effect of touching the settings form.
+Bookkeeping writes avoid all of this by design. `saveSyncState` and every `SetStatus*` method go through `service.collection(session).Save` directly, which is what stops a running sync from queueing another one. `WithSignature` would NOT save you there: the task that is running has already left the queue by the time its handler saves.
 
 ## `with-stream-source` must not load into `model.NewStreamSource()`
 
-`NewStreamSource` mints a fresh webhook token. Loading an existing record into one risks handing back a record wearing a token nobody installed, because `SyncNow` and `Config` are not fields a BSON decode is guaranteed to overwrite. [build/step_WithStreamSource.go](../build/step_WithStreamSource.go) therefore loads into a zero `model.StreamSource{}` and calls the constructor only on the not-found path, where a new record is actually wanted.
+[build/step_WithStreamSource.go](../build/step_WithStreamSource.go) loads into a zero `model.StreamSource{}` and calls `NewStreamSource` only on the not-found path, where a new record is actually wanted. That is belt-and-braces rather than a live fix: `Save` refuses a record whose webhook token is under 16 characters, so every stored record carries one, and a decode overwrites the minted value with the stored one.
+
+It stays because the guarantee is one `Save` guard away from being lost, and because `Config` is a map — see the decode rule in [../model/AGENTS.md](../model/AGENTS.md), which is what makes a constructor-built load target risky in general. Elsewhere, `Range` and `ObjectLoad` use the plain constructor, and that is fine for the same reason.
 
 Two registrations make that step work, and neither fails to compile: `model.StreamSource` implements `model.AccessLister`, and `*model.StreamSource` has a case in `Factory.ModelService`. Miss either and `NewModel` returns nil and the settings screen 500s the first time it is opened.

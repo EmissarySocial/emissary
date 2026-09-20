@@ -2,7 +2,7 @@
 
 This package holds the *data* for every pipeline step that a Template can use. Each `.go` file here defines one step: a struct that holds the parsed configuration, and a `New…()` constructor that compiles the raw HJSON map into that struct. The code that actually *executes* a step lives in [/build](../../build/), in a matching `step_*.go` file.
 
-**[STEPS.md](STEPS.md) documents all 88 steps** — what each one does, its attributes, and a sample. This file covers the mechanics they share.
+**[STEPS.md](STEPS.md) documents all 92 steps** — what each one does, its attributes, and a sample. This file covers the mechanics they share.
 
 ## How Steps Are Parsed
 

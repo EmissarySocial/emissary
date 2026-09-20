@@ -67,3 +67,14 @@ It extends `http.DetectContentType`, which cannot sniff FLAC, M4A, Ogg audio, ba
 `datetime.DateTime`, `geo.Point`, `geo.Polygon`, `delta.Bool`, and `delta.ObjectID` are persisted through custom BSON marshallers. Go satisfies those interfaces *structurally*, so a type whose method signature changes does not fail to compile at its own definition — the driver simply stops recognizing it, falls back to the default struct codec, and writes a different shape. `delta.Bool` and `delta.ObjectID` hold only unexported fields, so their fallback shape is `{}`: a stored `true` becomes an empty document, with no error anywhere. This exact failure already happened once in `geo`, and cost the migration in [../queries/upgrades/v030.go](../queries/upgrades/v030.go) (BUG-139).
 
 [bsonWireFormat_test.go](bsonWireFormat_test.go) carries both guards: compile-time assertions naming every BSON interface this package depends on, and a checked-in fixture pinning the Extended JSON each type writes **as a struct field**. Every document in that fixture is sorted by key, because the record carries a `mapof.Any` and the driver writes a Go map in a different order on every run — an unsorted fixture failed about one run in six. `TestBSONWireFormat_RenderIsStable` keeps the sorting in place. Marshalling one of these types at the top level proves nothing, because that path takes the marshaller directly and never consults the codec registry. A round trip proves nothing either — it is symmetric, so it passes against a format that moved on both sides at once. After an intended format change, run `go test ./model/ -update-golden` and read the diff.
+
+## A BSON decode MERGES into a map field, and skips a field the document does not carry
+
+`x := model.NewX(); service.Load(session, criteria, &x)` is the pattern everywhere in this codebase, and it is safe only because constructors mostly set scalars that the stored document also carries. Two driver behaviours make a map field different, both measured against mongo-go-driver v1.17:
+
+- A key the **document does not have** leaves the struct field exactly as the target already had it. It is not zeroed.
+- A map the document **does** have is merged key by key into the existing map, not swapped for a fresh one. Keys the target brought that the document lacks **survive the decode**.
+
+So a constructor that seeds a map hands every load target those entries, and any of them the stored document does not name will still be there afterwards. `model.NewStreamSource` seeds `Config["webhookToken"]`; that one is harmless only because `service.StreamSource.Save` guarantees every stored record names the same key, so the stored value wins. Add a second `Config` key that is not always written, and it leaks silently from the constructor into every record anyone reads.
+
+When a model's map field can hold keys the document may omit, load into a zero struct instead of the constructor.

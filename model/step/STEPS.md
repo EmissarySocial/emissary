@@ -2336,3 +2336,46 @@ Switches to the Rule named by the request and runs `steps` against its Builder.
 	]
 }
 ```
+
+---
+
+## with-stream-source
+
+Switches to the `StreamSource` record attached to this Stream — creating one in memory when the Stream has none yet — and runs `steps` against it. This is how a Template creates, configures, and removes a remote content source: `StreamSource` is its own collection, so `set-data` and `save` on the Stream cannot reach it. Requires the `Stream` model.
+
+`save` also queues a synchronization with the remote file — every time, because nothing polls and a repeat costs one conditional GET that answers `304`. A **Sync Now** button is therefore just a `save` with nothing else in the pipeline.
+
+**Attributes**
+
+| Attribute | Description |
+| --- | --- |
+| steps | **Required.** Sub-pipeline run against the `StreamSource` Builder |
+
+<br>
+
+**Example**
+
+```hjson
+source-edit: [{do: "with-stream-source", steps: [
+	{do: "edit", form: {
+		type: layout-vertical
+		label: Remote Content Source
+		children: [
+			{type: text, path: url, label: "Markdown File URL"}
+			{type: text, path: "config.webhookToken", label: "Webhook Token"}
+		]
+	}}
+	{do: "save"}
+	{do: "refresh-page"}
+]}]
+
+source-sync: [{do: "with-stream-source", steps: [
+	{do: "save"}
+	{do: "refresh-page"}
+]}]
+
+source-delete: [{do: "with-stream-source", steps: [
+	{do: "delete", title: "Stop syncing this page?"}
+	{do: "refresh-page"}
+]}]
+```
