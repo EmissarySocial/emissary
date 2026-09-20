@@ -820,11 +820,18 @@ Reformats a Stream's content: converts between formats, optionally strips HTML, 
 
 Copies a StreamDraft's content over its live Stream and moves the Stream into `state`. Requires the `Stream` model.
 
+Eleven properties are copied: `url`, `token`, `label`, `summary`, `content`, `iconUrl`, `icon`, `widgets`, `data`, `attributedTo`, and `inReplyTo`. Everything else on the Stream — sharing, tree position, publish dates, response counts, journal — is left alone, because a draft's copy of those goes stale the moment anything changes them outside the draft.
+
+`omit` names properties to leave alone as well. It exists for a Stream whose value is written by something other than the author: a draft is a snapshot taken when it was created, so promoting one reverts every change made since. The case this was built for is [article-remote](../../_embed/templates/stream-article-remote/), whose body belongs to a `StreamSource` — and where the revert is permanent, because the source's `ContentHash` still matches what it last wrote, so the next synchronization stops before fetching and **Sync Now** does nothing.
+
+Only the eleven names above are accepted, and nested paths (`data.tags`) are not. Anything else fails the Template at load, because a name that is merely ignored would leave the property copied — the exact mistake `omit` is there to prevent, and one that reports nothing when it happens.
+
 **Attributes**
 
 | Attribute | Description |
 | --- | --- |
 | state | State to move into. Defaults to `published`, and must be defined in the Template's `states` |
+| omit | Names of properties NOT to copy from the draft, leaving the live Stream's values in place |
 
 <br>
 
@@ -834,6 +841,15 @@ Copies a StreamDraft's content over its live Stream and moves the Stream into `s
 {
 	do: "promote-draft"
 	state: "published"
+}
+```
+
+Promote everything except the body, which some other process owns:
+
+```hjson
+{
+	do: "promote-draft"
+	omit: ["content"]
 }
 ```
 
