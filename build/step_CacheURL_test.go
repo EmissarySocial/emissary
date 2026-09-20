@@ -26,7 +26,7 @@ func newCacheURLBuilderAs(t *testing.T, revision int64, ifNoneMatch string, auth
 	t.Helper()
 
 	stream := model.NewStream()
-	stream.Journal.Revision = revision
+	stream.Revision = revision
 
 	request := httptest.NewRequest(http.MethodGet, "/000000000000000000000000", nil)
 

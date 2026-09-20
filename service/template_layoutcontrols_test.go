@@ -333,7 +333,7 @@ func seededValue(steps []step.Step, path string) (string, bool) {
 
 		if setData, ok := item.(step.SetData); ok {
 			if value, exists := setData.Values[path]; exists && value.Tree != nil {
-				return value.Tree.Root.String(), true
+				return value.Root.String(), true
 			}
 		}
 

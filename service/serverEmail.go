@@ -424,7 +424,7 @@ func collectTreeFieldNames(tmpl *texttemplate.Template, result mapof.Bool) {
 		return
 	}
 
-	collectFieldNames(tmpl.Tree.Root, result)
+	collectFieldNames(tmpl.Root, result)
 }
 
 // collectFieldNames walks a parsed template and records the top-level field name of every

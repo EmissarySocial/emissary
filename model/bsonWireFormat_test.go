@@ -195,7 +195,7 @@ func TestBSONWireFormat_RoundTrip(t *testing.T) {
 	result := bsonWireRecord{}
 	require.Nil(t, bson.Unmarshal(data, &result))
 
-	require.True(t, original.StartDate.Time.Equal(result.StartDate.Time), "startDate")
+	require.True(t, original.StartDate.Equal(result.StartDate.Time), "startDate")
 	require.Equal(t, original.Location, result.Location, "location")
 	require.Equal(t, original.Area, result.Area, "area")
 	require.Equal(t, original.Where, result.Where, "where")
