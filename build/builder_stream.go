@@ -370,6 +370,31 @@ func (w Stream) Rank() int {
 	return w._stream.Rank
 }
 
+// StreamSource returns the remote content source attached to this Stream, or an EMPTY record
+// when it has none.  A Stream with no source is the normal unconfigured case, not an error.
+func (w Stream) StreamSource() (model.StreamSource, error) {
+
+	const location = "build.Stream.StreamSource"
+
+	// RULE: The load target is a ZERO record, never NewStreamSource().  The constructor mints a
+	// webhook token that belongs to a NEW record, and a BSON decode leaves alone any field the
+	// stored document does not carry -- so a load target built that way can hand back a stored
+	// record wearing a token nobody installed.  See model/AGENTS.md.
+	var result model.StreamSource
+
+	if err := w.factory().StreamSource().LoadByStreamID(w.session(), w._stream.StreamID, &result); err != nil {
+
+		// An unconfigured Stream renders the "no source yet" branch, not an error page
+		if derp.IsNotFound(err) {
+			return result, nil
+		}
+
+		return result, derp.Wrap(err, location, "Loading StreamSource", w._stream.StreamID)
+	}
+
+	return result, nil
+}
+
 // Data returns the custom data field as an "any" type
 func (w Stream) Data(value string) any {
 	return w._stream.Data[value]
