@@ -79,6 +79,12 @@ func PreProcessor(task *queue.Task) error {
 	case "syndication.create", "syndication.update", "syndication.delete":
 		task.Priority = 256
 
+	// SyncStreamSource is deliberately NOT in the <= 32 band.  Its usual trigger is an
+	// unauthenticated webhook that fans out to every record sharing a token, so an immediate
+	// priority would let one ping turn into a burst of outbound requests with nothing in between.
+	case service.TaskSyncStreamSource:
+		task.Priority = 256
+
 	// (512) System Tasks that should happen mostly on time
 	case "DeleteStream":
 		task.Priority = 512

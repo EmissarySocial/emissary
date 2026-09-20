@@ -147,6 +147,9 @@ func (consumer Consumer) Run(task queue.Task) queue.Result {
 	case "Shuffle":
 		return WithSession(consumer.serverFactory, args, Shuffle)
 
+	case service.TaskSyncStreamSource:
+		return WithSession(consumer.serverFactory, args, SyncStreamSource)
+
 	case "syndication.create", "syndication.update", "syndication.delete":
 		return StreamSyndicate(name, args)
 	}
@@ -165,20 +168,35 @@ func (consumer Consumer) OnPublish(task *queue.Task) error {
 // OnSuccess is called after an attempt that succeeded.
 // Implements the queue.Consumer interface.
 func (consumer Consumer) OnSuccess(task queue.Task) error {
-	// No task reports its successes yet.
+
+	if task.Name == service.TaskSyncStreamSource {
+		return syncStreamSourceSucceeded(consumer.serverFactory, task.Arguments)
+	}
+
+	// No other task reports its successes yet.
 	return nil
 }
 
 // OnError is called after an attempt that failed and WILL be tried again.
 // Implements the queue.Consumer interface.
 func (consumer Consumer) OnError(task queue.Task, err error) error {
-	// No task reports its retries yet.
+
+	if task.Name == service.TaskSyncStreamSource {
+		return syncStreamSourceRetrying(consumer.serverFactory, task.Arguments, err)
+	}
+
+	// No other task reports its retries yet.
 	return nil
 }
 
 // OnFailure is called when a task is abandoned and will NOT be tried again.
 // Implements the queue.Consumer interface.
 func (consumer Consumer) OnFailure(task queue.Task, err error) error {
-	// No task reports its abandonment yet.
+
+	if task.Name == service.TaskSyncStreamSource {
+		return syncStreamSourceFailed(consumer.serverFactory, task.Arguments, err)
+	}
+
+	// No other task reports its abandonment yet.
 	return nil
 }
