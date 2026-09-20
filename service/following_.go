@@ -833,16 +833,13 @@ func (service *Following) SetStatusPollFailure(session data.Session, following *
 // failed `errorCount` times in a row: 1m, 2m, 4m ... 256m (~4 hours) at the cap.
 func followingBackoff(errorCount int) time.Duration {
 
-	exponent := errorCount - 1
+	// RULE: `1 << n` doubles.  `2 ^ n` is XOR in Go, not exponentiation -- it yields
+	// 3m, 0m, 1m, 6m, 7m, 4m, 5m, then 10m forever, retrying with no wait at all on the second
+	// consecutive failure.
+	const maximumExponent = 8
 
 	// RULE: Clamp both ends.  A negative shift count panics, and 8 caps the wait at 256 minutes.
-	if exponent < 0 {
-		exponent = 0
-	}
-
-	if exponent > 8 {
-		exponent = 8
-	}
+	exponent := min(max(errorCount-1, 0), maximumExponent)
 
 	return time.Duration(1<<exponent) * time.Minute
 }
@@ -1074,18 +1071,4 @@ func (service *Following) reconcileDuplicate(session data.Session, following *mo
 	following.Journal = existing.Journal
 
 	return nil
-}
-
-// followingBackoff returns how long to wait after a Following's errorCount-th consecutive
-// failure: 1m, 2m, 4m, 8m, 16m, 32m, 64m, 128m, then 256m (~4 hours) for every failure after.
-func followingBackoff(errorCount int) time.Duration {
-
-	// RULE: `1 << n` doubles.  `2 ^ n` is XOR in Go, not exponentiation -- it yields
-	// 3m, 0m, 1m, 6m, 7m, 4m, 5m, then 10m forever, retrying with no wait at all on the second
-	// consecutive failure.
-	const maximumExponent = 8
-
-	exponent := min(max(errorCount-1, 0), maximumExponent)
-
-	return time.Duration(1<<exponent) * time.Minute
 }

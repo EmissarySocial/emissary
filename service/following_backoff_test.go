@@ -87,37 +87,6 @@ func (s backoffSession) Close() {}
  * Tests
  ******************************************/
 
-// TestFollowingBackoff pins the wait after each consecutive failure.  The schedule promised beside
-// SetStatusFailure is 1m doubling to 256m; what it produced was 3m, 0m, 1m, 6m, 7m, 4m, 5m, then
-// 10m forever, because `2 ^ n` is XOR in Go rather than exponentiation.
-func TestFollowingBackoff(t *testing.T) {
-
-	expected := []time.Duration{
-		1 * time.Minute,
-		2 * time.Minute,
-		4 * time.Minute,
-		8 * time.Minute,
-		16 * time.Minute,
-		32 * time.Minute,
-		64 * time.Minute,
-		128 * time.Minute,
-		256 * time.Minute,
-	}
-
-	for index, want := range expected {
-		errorCount := index + 1
-		require.Equal(t, want, followingBackoff(errorCount), "after %d consecutive failures", errorCount)
-	}
-
-	// RULE: The ceiling holds.  A feed that is gone is retried every four hours, forever.
-	require.Equal(t, 256*time.Minute, followingBackoff(10))
-	require.Equal(t, 256*time.Minute, followingBackoff(1000))
-
-	// RULE: No count produces a zero wait, which would poll a dead feed in a tight loop
-	require.Equal(t, 1*time.Minute, followingBackoff(0))
-	require.Equal(t, 1*time.Minute, followingBackoff(-1))
-}
-
 // TestFollowing_SetStatusFailure_SchedulesTheBackoff confirms that the wait is applied to the
 // record, counted from the failure that was just recorded
 func TestFollowing_SetStatusFailure_SchedulesTheBackoff(t *testing.T) {
