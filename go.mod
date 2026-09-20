@@ -32,7 +32,7 @@ require (
 	github.com/benpate/steranko v0.31.0
 	github.com/benpate/table v0.9.0
 	github.com/benpate/toot v0.5.0
-	github.com/benpate/turbine v0.8.0
+	github.com/benpate/turbine v0.10.0
 	github.com/benpate/uri v0.7.0
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/codingsince1985/geo-golang v1.9.0
@@ -67,7 +67,7 @@ require (
 	github.com/xhit/go-simple-mail/v2 v2.16.0
 	github.com/yeqown/go-qrcode/v2 v2.3.0
 	github.com/yeqown/go-qrcode/writer/standard v1.4.0
-	github.com/yuin/goldmark v1.8.5
+	github.com/yuin/goldmark v1.8.6
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.abhg.dev/goldmark/anchor v0.2.0
 	go.mongodb.org/mongo-driver v1.17.9
@@ -137,8 +137,8 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/exp v0.0.0-20260820142414-ca536658362e // indirect
+	go.yaml.in/yaml/v3 v3.0.5
+	golang.org/x/exp v0.0.0-20260908205506-85c1c2202aba // indirect
 	golang.org/x/image v0.45.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
@@ -146,3 +146,11 @@ require (
 	golang.org/x/time v0.15.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
+
+// TEMPORARY: builds against local worktrees while turbine's Consumer interface is in flight.
+// hannibal is here only because sender.Consumer implements that interface, so it cannot compile
+// against the released turbine.  Remove both lines (and run `go mod tidy`) once turbine and
+// hannibal are tagged and released.
+replace github.com/benpate/turbine => ../turbine
+
+replace github.com/benpate/hannibal => ../hannibal
