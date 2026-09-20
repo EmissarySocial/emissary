@@ -13,7 +13,7 @@ require (
 	github.com/benpate/data-mongo v0.34.0
 	github.com/benpate/data-slice v0.1.0
 	github.com/benpate/delta v0.1.0
-	github.com/benpate/derp v0.43.0
+	github.com/benpate/derp v0.44.0
 	github.com/benpate/digit v0.16.0
 	github.com/benpate/digital-dome v0.8.0
 	github.com/benpate/exp v0.11.0
