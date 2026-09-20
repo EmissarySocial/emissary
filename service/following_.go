@@ -1085,6 +1085,7 @@ func followingBackoff(errorCount int) time.Duration {
 	// consecutive failure.
 	const maximumExponent = 8
 
+	// The lower clamp is not cosmetic: a negative shift count panics at runtime.
 	exponent := min(max(errorCount-1, 0), maximumExponent)
 
 	return time.Duration(1<<exponent) * time.Minute

@@ -122,13 +122,15 @@ func TestIntegration_RateLimitedContext(t *testing.T) {
 	require.Equal(t, http.StatusTooManyRequests, derp.ErrorCode(err))
 }
 
-// TestIntegration_HTMLInsteadOfActivityPub is BUG-150's largest error class, built by a real server:
-// a 200 response carrying an HTML page, which derp reports as 500 rather than any 4xx
+// TestIntegration_HTMLInsteadOfActivityPub verifies that a remote answering an ActivityPub
+// request with an HTML page is classified as Skip, and carries a 500 rather than a 4xx
 func TestIntegration_HTMLInsteadOfActivityPub(t *testing.T) {
 
 	if testing.Short() {
 		t.Skip("integration test: starts an HTTP server")
 	}
+
+	// BUG-150's largest error class, built here by a real server rather than a fixture
 
 	url := contextServer(t, http.StatusOK, "text/html; charset=utf-8",
 		"<!DOCTYPE html><html><body>Hello</body></html>", nil)
@@ -148,13 +150,15 @@ func TestIntegration_HTMLInsteadOfActivityPub(t *testing.T) {
 	require.False(t, derp.IsClientError(err))
 }
 
-// TestIntegration_NonCollectionContext is BUG-150's Defect A, built by a real server: a context
-// that loads perfectly well and simply is not a collection, which is a success and not an error
+// TestIntegration_NonCollectionContext verifies that a context which loads cleanly and is not
+// a collection is classified as Skip, reporting no error at all
 func TestIntegration_NonCollectionContext(t *testing.T) {
 
 	if testing.Short() {
 		t.Skip("integration test: starts an HTTP server")
 	}
+
+	// BUG-150 Defect A, built here by a real server rather than a fixture
 
 	url := contextServer(t, http.StatusOK, "application/activity+json",
 		`{"@context":"https://www.w3.org/ns/activitystreams","type":"Note","content":"Hello"}`, nil)
