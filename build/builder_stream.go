@@ -307,6 +307,11 @@ func (w Stream) InReplyTo() streams.Document {
 	return w.ActivityStream(w._stream.InReplyTo)
 }
 
+// ContentFormat returns the format that the Stream's body content is stored in
+func (w Stream) ContentFormat() string {
+	return w._stream.Content.Format
+}
+
 // ContentHTML returns the body content as an HTML template
 func (w Stream) ContentHTML() template.HTML {
 	return template.HTML(w._stream.Content.HTML) // #nosec G203 -- Content.HTML is produced and sanitized by service.Content.New
@@ -909,6 +914,27 @@ func (w Stream) IsPublic() bool {
 	return w._stream.IsPublic()
 }
 
+// SharingStatus returns the icon and label that describe who has been granted the
+// provided role on this Stream.
+// RULE: these labels and icons mirror the choices in StepSetSimpleSharing.form, so that the
+// status a visitor reads matches the option they picked.
+func (w Stream) SharingStatus(role string) form.LookupCode {
+
+	switch w.liveStream().SharingStatus(role) {
+
+	case model.SharingStatusPublic:
+		return form.LookupCode{Value: model.SharingStatusPublic, Label: "Sharing: Everyone", Icon: "globe"}
+
+	case model.SharingStatusAuthenticated:
+		return form.LookupCode{Value: model.SharingStatusAuthenticated, Label: "Sharing: Signed-In", Icon: "person-circle"}
+
+	case model.SharingStatusCircles:
+		return form.LookupCode{Value: model.SharingStatusCircles, Label: "Sharing: Groups", Icon: "people"}
+	}
+
+	return form.LookupCode{Value: model.SharingStatusOwners, Label: "Sharing: Owners", Icon: "lock"}
+}
+
 /******************************************
  * Other Stuff
  ******************************************/
@@ -935,6 +961,26 @@ func (w Stream) Template(templateID string) (model.Template, error) {
 /******************************************
  * Helper Functions
  ******************************************/
+
+// liveStream returns the Stream that sharing actually acts on, which is not this builder's own
+// record whenever it is bound to a draft.
+// RULE: the `sharing` action runs OUTSIDE with-draft and Promote copies neither Groups nor
+// Circles, so a draft's copies of them go stale the moment anyone changes sharing.
+func (w Stream) liveStream() *model.Stream {
+
+	if _, isDraft := w._service.(*service.StreamDraft); !isDraft {
+		return w._stream
+	}
+
+	var stream model.Stream
+
+	if err := w._factory.Stream().LoadByID(w._session, w._stream.StreamID, &stream); err != nil {
+		derp.Report(derp.Wrap(err, "build.Stream.liveStream", "Loading live Stream", w._stream.StreamID))
+		return w._stream
+	}
+
+	return &stream
+}
 
 // draftBuilder returns a new build.Stream that is bound to the
 // draft service, and a draft copy of the current stream.
