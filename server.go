@@ -322,6 +322,7 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/.proxy", handler.WithAuthenticatedUser(factory, handler.PostProxyURL))
 	e.GET("/.searchTag/:searchTagId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetSearchTagAttachment))
 	e.GET("/.sso", handler.WithDomain(factory, handler.GetSingleSignOn))
+	e.POST("/.streamsource/webhook/:token", handler.WithFactory(factory, handler.PostStreamSourceWebhook))
 	// e.GET("/.stripe/connect", handler.WithAuthenticatedUser(factory, handler.GetStripe)) // Replaced with Stripe Connect
 	// e.POST("/.stripe/webhook/signup", handler.WithDomain(factory, stripe.PostSignupWebhook))
 	// e.POST("/.stripe/webhook/checkout", handler.WithMerchantAccount(factory, handler.PostStripeWebhook_Checkout))
