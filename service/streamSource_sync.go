@@ -163,8 +163,13 @@ func (service *StreamSource) saveSyncState(session data.Session, streamSource *m
 
 	const location = "service.StreamSource.saveSyncState"
 
-	// Bookkeeping skips Save's validation, which a version, a hash, and a timestamp cannot violate
-	if err := service.save(session, streamSource, note); err != nil {
+	// Bookkeeping skips Save's validation, which a version, a hash, and a timestamp cannot violate.
+	//
+	// RULE: This is the ONE write that does NOT nudge, and the reason is redundancy.  Every path
+	// through Sync is followed by a lifecycle hook that writes Status and LastSynced -- the same
+	// two fields the settings screen displays -- a few hundred milliseconds later.  Nudging here
+	// as well made that screen redraw twice for one synchronization, which reads as a flicker.
+	if err := service.collection(session).Save(streamSource, note); err != nil {
 		return derp.Wrap(err, location, "Saving StreamSource", streamSource.StreamSourceID)
 	}
 
