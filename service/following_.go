@@ -829,24 +829,6 @@ func (service *Following) SetStatusPollFailure(session data.Session, following *
 	return nil
 }
 
-// followingBackoff returns how long to wait before re-polling a Following that has
-// failed `errorCount` times in a row: 1m, 2m, 4m ... 256m (~4 hours) at the cap.
-func followingBackoff(errorCount int) time.Duration {
-
-	exponent := errorCount - 1
-
-	// RULE: Clamp both ends.  A negative shift count panics, and 8 caps the wait at 256 minutes.
-	if exponent < 0 {
-		exponent = 0
-	}
-
-	if exponent > 8 {
-		exponent = 8
-	}
-
-	return time.Duration(1<<exponent) * time.Minute
-}
-
 // SetStatusFailure updates a Following record to the "Failure" status, increments the error
 // count, and schedules a soon-but-escalating retry.
 func (service *Following) SetStatusFailure(session data.Session, following *model.Following, statusMessage string) error {
