@@ -117,10 +117,16 @@ func (service *StreamSource) Load(session data.Session, criteria exp.Expression,
 	return nil
 }
 
-// Save adds or updates a StreamSource record in the database
+// Save adds or updates a StreamSource record, and queues a synchronization with its source
 func (service *StreamSource) Save(session data.Session, streamSource *model.StreamSource, note string) error {
 
 	const location = "service.StreamSource.Save"
+
+	// RULE: Saving REACHES THE NETWORK.  Every save queues a sync, because nothing polls and a
+	// save is the only moment a human tells Emissary this record is worth reading.  A repeat
+	// costs one conditional GET that answers 304, so the cheap case is free -- but a caller that
+	// saves MANY records in a loop fans out one outbound fetch per record, with nothing at the
+	// call site to say so.  Bookkeeping writes use collection.Save directly and avoid all of this.
 
 	// RULE: A StreamSource record is always attached to a Stream
 	if streamSource.StreamID.IsZero() {
@@ -144,30 +150,17 @@ func (service *StreamSource) Save(session data.Session, streamSource *model.Stre
 		return derp.Wrap(err, location, "Validating StreamSource", streamSource.StreamSourceID)
 	}
 
-	// RULE: A sync happens when it is ASKED for, or when the record has never had one.  Nothing
-	// polls, so a brand new record must fetch its first content, and SyncNow is what the settings
-	// form sets for every other case -- a corrected URL, or the Sync Now button.
-	//
-	// IsNew() reads journal.CreateDate, which the save below fills in, so it is answered first.
-	isSyncRequested := streamSource.SyncNow || streamSource.IsNew()
-
-	if isSyncRequested {
-		streamSource.Status = model.StreamSourceStatusLoading
-		streamSource.StatusMessage = ""
-		streamSource.LastSynced = time.Now().Unix()
-	}
+	// The status is written BEFORE the save, so a human watching the settings screen sees the sync
+	// start rather than a record that looks untouched
+	streamSource.Status = model.StreamSourceStatusLoading
+	streamSource.StatusMessage = ""
+	streamSource.LastSynced = time.Now().Unix()
 
 	if err := service.collection(session).Save(streamSource, note); err != nil {
 		return derp.Wrap(err, location, "Saving StreamSource", streamSource.StreamSourceID, note)
 	}
 
-	// SyncNow is a command, and it has now been carried out.  Clearing it keeps a caller that
-	// reuses this value from asking for a second sync it never requested.
-	streamSource.SyncNow = false
-
-	if isSyncRequested {
-		service.PublishSyncTask(session, streamSource.StreamSourceID)
-	}
+	service.PublishSyncTask(session, streamSource.StreamSourceID)
 
 	return nil
 }

@@ -24,10 +24,6 @@ type StreamSource struct {
 	StatusMessage  string             `json:"statusMessage"  bson:"statusMessage"` // Operator-readable reason for the current Status
 	LastSynced     int64              `json:"lastSynced"     bson:"lastSynced"`    // Unix epoch SECONDS when the last synchronization began
 
-	// SyncNow asks the service to synchronize this record when it is saved.  It is a COMMAND, not
-	// state: it is never stored, never exported, and is consumed by Save.
-	SyncNow bool `json:"-" bson:"-"`
-
 	journal.Journal `json:"-" bson:",inline"`
 }
 
