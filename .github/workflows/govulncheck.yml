@@ -1,0 +1,41 @@
+name: Govulncheck
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+  # Unlike every other job here, this one reads a database that changes without us.  The
+  # schedule is what catches a vulnerability published during a quiet week, instead of
+  # waiting for whoever pushes next.  Offset from the CodeQL cron so they do not collide.
+  # NOTE: GitHub runs `schedule` on the DEFAULT branch only, so the daily scan covers main,
+  # never dev.  Work in progress is covered by the push/pull_request triggers above.
+  schedule:
+    - cron: '17 6 * * *'
+
+env:
+  GOFLAGS: "-buildvcs=false"
+
+jobs:
+
+  govulncheck:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+    - name: Set up Go
+      uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+      with:
+        go-version-file: go.mod
+
+    - name: Install Govulncheck
+      run: go install golang.org/x/vuln/cmd/govulncheck@v1.8.0
+
+    # Default scan: fails only on a vulnerability REACHABLE from our own call graph.  A
+    # vulnerable module we merely require is reported and does not fail -- which is what keeps
+    # GO-2026-5932 (x/crypto/openpgp, unmaintained, no fix available) from blocking every build.
+    - name: Vulnerability scan
+      run: govulncheck ./...

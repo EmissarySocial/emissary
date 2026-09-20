@@ -1,0 +1,33 @@
+name: Gosec
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [ main, dev ]
+  pull_request:
+    branches: [ main, dev ]
+
+env:
+  GOFLAGS: "-buildvcs=false"
+
+jobs:
+
+  gosec:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+    - name: Set up Go
+      uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+      with:
+        go-version-file: go.mod
+
+    - name: Install Gosec
+      run: go install github.com/securego/gosec/v2/cmd/gosec@v2.29.0
+
+    # Suppressions live inline as `// #nosec <rule> -- <reason>`, never in a config file, so
+    # the justification sits beside the code a reviewer is reading.  See go-hardening.
+    - name: Security lint
+      run: gosec ./...
