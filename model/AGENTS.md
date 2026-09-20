@@ -77,4 +77,10 @@ It extends `http.DetectContentType`, which cannot sniff FLAC, M4A, Ogg audio, ba
 
 So a constructor that seeds a map hands every load target those entries, and any of them the stored document does not name will still be there afterwards. `model.NewStreamSource` seeds `Config["webhookToken"]`; that one is harmless only because `service.StreamSource.Save` guarantees every stored record names the same key, so the stored value wins. Add a second `Config` key that is not always written, and it leaks silently from the constructor into every record anyone reads.
 
-When a model's map field can hold keys the document may omit, load into a zero struct instead of the constructor.
+Keep building load targets with the constructor — it is what gives a field added later its default instead of a zero value. The rule is about what a constructor may seed into a **map**: either guarantee that every stored record names those keys, the way `Save` does, or leave the map empty and set its keys where they are used.
+
+## A required field that no form offers must be defaulted by the constructor
+
+`StreamSourceSchema` marks `method` required with a single permitted value, `HTTPS`, and no form asks for it — there is nothing to choose. `NewStreamSource` therefore assigns it. Without that default, validation rejected every record the settings screen tried to create, and the only clue was `Validating property / method` from `schema.validate_Object`.
+
+A required field whose enum holds one value reads like something the schema handles on its own. It does not: nothing writes a default, so the constructor is the only place the value can come from. `service.StreamSource.adapterFor` then keys its table on that same value, which is why `TestStreamSource_RefreshWiresEveryDependency` asserts the constructor's Method resolves to a registered Adapter — a default with no Adapter would save and then fail on every synchronization.

@@ -62,3 +62,9 @@ Emissary was called **ghost** before it was called **whisper**. A 2022 rename co
 ## Dark mode is half-built and inert — do not re-flag it
 
 The theme carries partial dark-mode tokens that nothing currently activates. This is a known incomplete feature rather than a bug; leave it alone unless the work is explicitly being picked up.
+
+## Only four template directories are parsed by any test — add yours to the list
+
+`TestEmbeddedTemplates_HTMLParses` in [service/template_html_parse_test.go](../../service/template_html_parse_test.go) is the only thing that parses `*.html` here with the real funcMap, and it is **scoped to a hand-maintained `dirs` list**, not a full sweep. A directory that is not named there is never parsed by anything, so a syntax error, an undefined funcMap function, or the attribute-context lexer gotcha first appears in front of a visitor.
+
+A full sweep is not possible: some email and layout templates legitimately rely on cross-file variables like `$title` and cannot parse standalone. So every directory that *can* parse standalone has to be added by hand when it is created. `TestEmbeddedTemplates_Validate` does cover every template's `hjson`, which is why a missing directory looks covered — the two tests have very different reach.

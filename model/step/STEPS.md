@@ -2356,26 +2356,27 @@ Switches to the `StreamSource` record attached to this Stream — creating one i
 **Example**
 
 ```hjson
-source-edit: [{do: "with-stream-source", steps: [
-	{do: "edit", form: {
-		type: layout-vertical
-		label: Remote Content Source
-		children: [
-			{type: text, path: url, label: "Markdown File URL"}
-			{type: text, path: "config.webhookToken", label: "Webhook Token"}
-		]
-	}}
+edit-source: [{do: "as-modal", steps: [
+	{do: "with-stream-source", steps: [
+		{do: "edit", form: {
+			type: layout-vertical
+			label: Remote Content Source
+			children: [
+				{type: text, path: url, label: "Markdown File URL"}
+				{type: text, path: "config.webhookToken", label: "Webhook Token"}
+			]
+		}}
+		{do: "save"}
+	]}
+]}]
+
+sync-source: [{do: "with-stream-source", steps: [
 	{do: "save"}
 	{do: "refresh-page"}
 ]}]
 
-source-sync: [{do: "with-stream-source", steps: [
-	{do: "save"}
-	{do: "refresh-page"}
-]}]
-
-source-delete: [{do: "with-stream-source", steps: [
-	{do: "delete", title: "Stop syncing this page?"}
+delete-source: [{do: "with-stream-source", steps: [
+	{do: "delete", title: "Stop syncing this article?"}
 	{do: "refresh-page"}
 ]}]
 ```
