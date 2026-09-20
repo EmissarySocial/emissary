@@ -49,6 +49,7 @@ func modelSchemas() map[string]schema.Element {
 		"PrivilegeSchema":        PrivilegeSchema(),
 		"ProductSchema":          ProductSchema(),
 		"PushSubscriptionSchema": PushSubscriptionSchema(),
+		"StreamSourceSchema":     StreamSourceSchema(),
 		"ResponseSchema":         ResponseSchema(),
 		"RuleSchema":             RuleSchema(),
 		"SearchTagSchema":        SearchTagSchema(),

@@ -198,6 +198,10 @@ func SyncDomainIndexes(ctx context.Context, session *mongo.Database) { // NOSONA
 		derp.Report(err)
 	}
 
+	if err := sync.StreamSource(ctx, session); err != nil {
+		derp.Report(err)
+	}
+
 	if err := sync.User(ctx, session); err != nil {
 		derp.Report(err)
 	}

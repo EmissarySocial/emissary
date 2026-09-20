@@ -6,6 +6,7 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -21,9 +22,10 @@ import (
 /******************************************
  * BSON wire-format tests
  *
- * These pin the BYTES Emissary writes for the field types that
- * carry a CUSTOM BSON marshaller. Everything else rides the
- * driver's default codecs. See AGENTS.md.
+ * These pin the Extended JSON Emissary writes for the field types
+ * that carry a CUSTOM BSON marshaller, with every document sorted
+ * by key. Everything else rides the driver's default codecs.
+ * See AGENTS.md.
  ******************************************/
 
 // Every type Emissary persists through a custom BSON marshaller must keep satisfying
@@ -103,10 +105,22 @@ func extendedJSON(t *testing.T, data []byte) string {
 
 	t.Helper()
 
-	buffer := bytes.Buffer{}
-	require.NoError(t, json.Indent(&buffer, []byte(bson.Raw(data).String()), "", "  "))
+	// RULE: Every document is re-keyed in sorted order, because the driver writes a Go
+	// map in a different order on every run, and a fixture cannot pin one of them
+	decoder := json.NewDecoder(strings.NewReader(bson.Raw(data).String()))
+	decoder.UseNumber() // A number decoded as a float64 would be re-rendered, losing digits
 
-	return buffer.String() + "\n"
+	document := map[string]any{}
+	require.NoError(t, decoder.Decode(&document))
+
+	// Render it back with the values exactly as the driver wrote them
+	buffer := bytes.Buffer{}
+	encoder := json.NewEncoder(&buffer)
+	encoder.SetIndent("", "  ")
+	encoder.SetEscapeHTML(false)
+	require.NoError(t, encoder.Encode(document)) // Encode ends the document with a newline
+
+	return buffer.String()
 }
 
 // requireGoldenBSON asserts that `actual` matches the named fixture, or rewrites
@@ -131,17 +145,11 @@ func requireGoldenBSON(t *testing.T, name string, actual string) {
 		"format changed. If this is intended, run `go test ./model/ -update-golden` and review the diff")
 }
 
-// TestBSONWireFormat pins the bytes written for every custom-marshalled field
-// type Emissary persists.
+// TestBSONWireFormat pins the Extended JSON written for every custom-marshalled
+// field type Emissary persists.
 func TestBSONWireFormat(t *testing.T) {
 
 	record := fullBSONWireRecord(t)
-
-	// RULE: one key only. `mapof.Any` is a Go map, and BSON writes map keys in Go's randomized
-	// iteration order, so a multi-key map pins an order the next run will not reproduce. It rides
-	// the driver's default codec and is not what this fixture exists to pin; the other two tests
-	// keep the full map.
-	record.Data = mapof.Any{"nested": mapof.Any{"inner": "value"}}
 
 	// Marshalled as FIELDS of a record, never each at the top level: a top-level
 	// Marshal takes the Marshaler path directly and never consults the codec
@@ -150,6 +158,29 @@ func TestBSONWireFormat(t *testing.T) {
 	require.Nil(t, err)
 
 	requireGoldenBSON(t, "wireFormat.json", extendedJSON(t, data))
+}
+
+// TestBSONWireFormat_RenderIsStable proves the fixture cannot fail on a run that
+// changed nothing.  `data` is a Go map, which the driver writes in a different order
+// every time, so an unsorted rendering matches twenty times over by a chance of
+// roughly one in three billion.
+func TestBSONWireFormat_RenderIsStable(t *testing.T) {
+
+	const attempts = 20
+
+	data, err := bson.Marshal(fullBSONWireRecord(t))
+	require.Nil(t, err)
+
+	first := extendedJSON(t, data)
+
+	for attempt := range attempts {
+
+		// Marshalled again each time, because the order is chosen while the map is read
+		data, err := bson.Marshal(fullBSONWireRecord(t))
+		require.Nil(t, err)
+
+		require.Equal(t, first, extendedJSON(t, data), "rendering moved on attempt %d", attempt)
+	}
 }
 
 // TestBSONWireFormat_RoundTrip confirms the record decodes back to the value it

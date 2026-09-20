@@ -11,6 +11,10 @@ type Consumer struct {
 	serverFactory ServerFactory
 }
 
+// RULE: Every method of queue.Consumer is required, so a hook whose name or signature drifted
+// would fail to compile here rather than quietly never being called.
+var _ queue.Consumer = Consumer{}
+
 // New returns a fully initialized Consumer object
 func New(serverFactory ServerFactory) Consumer {
 	return Consumer{
@@ -18,11 +22,13 @@ func New(serverFactory ServerFactory) Consumer {
 	}
 }
 
-// Run is the actual consumer function that is called by the queue.
-// It receives a task name and a map of arguments, and returns a boolean success value and an error.
-func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
+// Run executes a single attempt of a background task.
+// Implements the queue.Consumer interface.
+func (consumer Consumer) Run(task queue.Task) queue.Result {
 
-	switch name {
+	// Unpacked in the switch itself so that the task table below reads the way it did before
+	// the queue passed the whole Task
+	switch name, args := task.Name, task.Arguments; name {
 
 	case "AddToCollection":
 		return WithSession(consumer.serverFactory, args, AddToCollection)
@@ -146,4 +152,33 @@ func (consumer Consumer) Run(name string, args map[string]any) queue.Result {
 	}
 
 	return queue.Ignored()
+}
+
+// OnPublish is called for every task on its way onto the queue.
+// Implements the queue.Consumer interface.
+func (consumer Consumer) OnPublish(task *queue.Task) error {
+	// No task changes itself on the way onto the queue yet.  This is where the priority table in
+	// PreProcessor belongs, once someone decides to turn it on -- see preprocessor.go.
+	return nil
+}
+
+// OnSuccess is called after an attempt that succeeded.
+// Implements the queue.Consumer interface.
+func (consumer Consumer) OnSuccess(task queue.Task) error {
+	// No task reports its successes yet.
+	return nil
+}
+
+// OnError is called after an attempt that failed and WILL be tried again.
+// Implements the queue.Consumer interface.
+func (consumer Consumer) OnError(task queue.Task, err error) error {
+	// No task reports its retries yet.
+	return nil
+}
+
+// OnFailure is called when a task is abandoned and will NOT be tried again.
+// Implements the queue.Consumer interface.
+func (consumer Consumer) OnFailure(task queue.Task, err error) error {
+	// No task reports its abandonment yet.
+	return nil
 }

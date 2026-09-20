@@ -109,3 +109,28 @@ Styling reached through an element selector has the mirror-image problem: a them
 htmx fires `htmx:beforeRequest` / `htmx:afterRequest` on the element that made the request, and they bubble. So a handler attached to a form — the only way a hyperscript behavior installed *inside* that form can see the form's own POST, since the events never travel downward — also fires for every button, link, and input inside it that carries an `hx-*` attribute of its own. Nothing distinguishes them but `event.target`. A save-feedback handler written without that check reports "Saved" when the visitor merely opened an editor.
 
 Reading the outcome has two traps of its own. `detail.successful` is **undefined**, not `false`, on a transport failure: htmx sets it inside `handleAjaxResponse`, which `onerror`, `onabort`, and `ontimeout` never reach, so `successful is not true` is the test that covers all four paths and `successful is false` is the test that covers one. And a *validation* failure is not a failure by that measure at all — `WrapInlineError` answers 200 so htmx will not discard it (see [build/AGENTS.md](build/AGENTS.md)), and the only trace in the event is that htmx has resolved `HX-Retarget` into `detail.target`, which by then points at `#htmx-response-message` instead of the form's own target.
+
+## Allocation baselines are recorded in counts, because the timings are noise
+
+[tools/allocbench](tools/allocbench/) pins how this toolchain allocates for a few everyday patterns, so the performance rules in the go-quality skill rest on measurements rather than folklore. Nothing imports it. Re-run it with `go test -run='^$' -bench=. -benchmem -count=5 ./tools/allocbench/`.
+
+Compare a new run against `allocs/op` and `B/op` only. Across the five runs below every allocation count was identical, while `ns/op` ranged up to 2.1x on an idle machine — so a changed count is a real finding and a changed time is almost certainly the laptop. The medians are recorded for scale, not for comparison.
+
+Baseline: go1.26.6, darwin/arm64, Apple M3 Max, 2026-09-19.
+
+| Benchmark | allocs/op | B/op | ns/op (median) |
+|---|---|---|---|
+| ReturnPointer | 1 | 24 | 52.2 |
+| ReturnValue | 0 | 0 | 2.3 |
+| AppendNoPrealloc | 12 | 25208 | 3759 |
+| AppendPrealloc | 0 | 0 | 2055 |
+| BoxSmallInt | 0 | 0 | 2.2 |
+| BoxLargeInt | 1 | 8 | 7.8 |
+| FixedConcat | 2 | 29 | 50.5 |
+| FixedBuilder | 4 | 64 | 66.4 |
+| FixedSprintf | 3 | 48 | 141.2 |
+| LoopConcat | 8 | 248 | 407.4 |
+| LoopBuilder | 4 | 120 | 138.3 |
+| LoopBuilderGrow | 1 | 64 | 55.6 |
+
+Four of these contradict advice that circulates widely, which is why they are pinned. `BoxSmallInt` costs nothing because `runtime.staticuint64s` covers 0–255, even though `-gcflags=-m` reports the value as escaping. `FixedConcat` beats `FixedBuilder` on both counts, so `strings.Builder` is the wrong reflex for a fixed set of pieces; it wins only in a loop, and only `Grow` takes it to one allocation. `FixedSprintf` costs one allocation per argument plus the result, which is the `...any` signature forcing every argument to escape. And `AppendPrealloc` reaches zero rather than one because a slice with a constant capacity that never leaves its frame stays on the stack.

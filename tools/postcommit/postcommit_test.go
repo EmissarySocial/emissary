@@ -64,6 +64,29 @@ func (s testServer) WithTransaction(ctx context.Context, fn data.TransactionCall
 	return result, s.err
 }
 
+// recordingConsumer is a turbine Consumer that forwards every task name it receives to a channel
+type recordingConsumer struct {
+	received chan string
+}
+
+// OnPublish implements the queue.Consumer interface.
+func (consumer recordingConsumer) OnPublish(*queue.Task) error { return nil }
+
+// Run forwards the task name. Implements the queue.Consumer interface.
+func (consumer recordingConsumer) Run(task queue.Task) queue.Result {
+	consumer.received <- task.Name
+	return queue.Success()
+}
+
+// OnSuccess implements the queue.Consumer interface.
+func (consumer recordingConsumer) OnSuccess(queue.Task) error { return nil }
+
+// OnError implements the queue.Consumer interface.
+func (consumer recordingConsumer) OnError(queue.Task, error) error { return nil }
+
+// OnFailure implements the queue.Consumer interface.
+func (consumer recordingConsumer) OnFailure(queue.Task, error) error { return nil }
+
 // newTestQueue returns a single-worker turbine queue whose consumer forwards every task
 // name to the returned channel, preserving publish order.
 func newTestQueue() (*queue.Queue, chan string) {
@@ -72,10 +95,7 @@ func newTestQueue() (*queue.Queue, chan string) {
 
 	q := queue.New(
 		queue.WithWorkerCount(1),
-		queue.WithConsumers(func(name string, _ map[string]any) queue.Result {
-			received <- name
-			return queue.Success()
-		}),
+		queue.WithConsumers(recordingConsumer{received: received}),
 	)
 
 	q.Start()
