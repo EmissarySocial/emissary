@@ -29,8 +29,9 @@ import (
 
 // streamSourceCollection is an in-memory data.Collection that holds model.StreamSource records
 type streamSourceCollection struct {
-	records []model.StreamSource
-	saved   []model.StreamSource // every record passed to Save, in order
+	records   []model.StreamSource
+	saved     []model.StreamSource // every record passed to Save, in order
+	saveError error                // when set, every Save fails with it
 }
 
 // Context implements the data.Collection interface, returning a background context
@@ -93,6 +94,10 @@ func (c *streamSourceCollection) Load(criteria exp.Expression, target data.Objec
 
 // Save upserts a StreamSource record, and remembers that it was asked to
 func (c *streamSourceCollection) Save(object data.Object, _ string) error {
+
+	if c.saveError != nil {
+		return c.saveError
+	}
 
 	streamSource, ok := object.(*model.StreamSource)
 
@@ -218,6 +223,22 @@ func (s streamSourceSession) Context() context.Context {
 // publishedTasks returns the queue tasks that a service published during this session
 func (s streamSourceSession) publishedTasks() []queue.Task {
 	return s.tasks.Drain()
+}
+
+// publishedTasksNamed returns only the published tasks with the given name.  Every write also
+// publishes an SSE nudge, so a test about SYNCHRONIZATION has to say which task it means --
+// counting everything would make it fail the moment a second, unrelated task joined the path.
+func (s streamSourceSession) publishedTasksNamed(name string) []queue.Task {
+
+	result := make([]queue.Task, 0)
+
+	for _, task := range s.publishedTasks() {
+		if task.Name == name {
+			result = append(result, task)
+		}
+	}
+
+	return result
 }
 
 // Close implements the data.Session interface. The stub holds no resources to release.
@@ -369,6 +390,51 @@ func TestStreamSource_Delete(t *testing.T) {
 	require.Zero(t, count)
 }
 
+// TestStreamSource_DeleteByStreamID removes every record attached to one Stream, and leaves the
+// records attached to other Streams alone
+func TestStreamSource_DeleteByStreamID(t *testing.T) {
+
+	streamID := primitive.NewObjectID()
+
+	first := validStreamSource()
+	first.StreamID = streamID
+
+	second := validStreamSource()
+	second.StreamID = streamID
+
+	other := validStreamSource()
+
+	service, session := newStreamSourceService(first, second, other)
+
+	require.NoError(t, service.DeleteByStreamID(session, streamID, "Stream deleted"))
+
+	count, err := service.Count(session, exp.Equal("streamId", streamID))
+	require.NoError(t, err)
+	require.Zero(t, count)
+
+	result := model.NewStreamSource()
+	require.NoError(t, service.LoadByID(session, other.StreamSourceID, &result))
+}
+
+// TestStreamSource_DeleteByStreamID_Refuses will not accept a zero StreamID, which would otherwise
+// match every record whose Stream was never set
+func TestStreamSource_DeleteByStreamID_Refuses(t *testing.T) {
+
+	unattached := validStreamSource()
+	unattached.StreamID = primitive.NilObjectID
+
+	service, session := newStreamSourceService(unattached)
+
+	err := service.DeleteByStreamID(session, primitive.NilObjectID, "Stream deleted")
+
+	require.Error(t, err)
+	require.True(t, derp.IsClientError(err), "got %v", err)
+
+	count, err := service.Count(session, exp.All())
+	require.NoError(t, err)
+	require.Equal(t, int64(1), count)
+}
+
 /******************************************
  * Status
  ******************************************/
@@ -401,11 +467,12 @@ func TestStreamSource_SetStatusSuccess(t *testing.T) {
 
 	service, session := newStreamSourceService(record)
 
+	before := time.Now().Unix()
 	require.NoError(t, service.SetStatusSuccess(session, &record))
 
 	require.Equal(t, model.StreamSourceStatusSuccess, record.Status)
 	require.Empty(t, record.StatusMessage)
-	require.Equal(t, int64(1_700_000_000), record.LastSynced, "success does not move LastSynced")
+	require.GreaterOrEqual(t, record.LastSynced, before, "every attempt moves LastSynced")
 	require.Len(t, session.collection.saved, 1)
 }
 
@@ -417,11 +484,12 @@ func TestStreamSource_SetStatusFailure(t *testing.T) {
 
 	service, session := newStreamSourceService(record)
 
+	before := time.Now().Unix()
 	require.NoError(t, service.SetStatusFailure(session, &record, "Repository not found"))
 
 	require.Equal(t, model.StreamSourceStatusFailure, record.Status)
 	require.Equal(t, "Repository not found", record.StatusMessage)
-	require.Equal(t, int64(1_700_000_000), record.LastSynced, "a failure does not move LastSynced")
+	require.GreaterOrEqual(t, record.LastSynced, before, "a failed attempt is still an attempt")
 	require.Len(t, session.collection.saved, 1)
 }
 
@@ -436,11 +504,12 @@ func TestStreamSource_SetStatusMessage(t *testing.T) {
 
 	service, session := newStreamSourceService(record)
 
+	before := time.Now().Unix()
 	require.NoError(t, service.SetStatusMessage(session, &record, "Source server failed"))
 
 	require.Equal(t, model.StreamSourceStatusSuccess, record.Status, "a pending retry decides nothing")
 	require.Equal(t, "Source server failed", record.StatusMessage)
-	require.Equal(t, int64(1_700_000_000), record.LastSynced, "a retry does not move LastSynced")
+	require.GreaterOrEqual(t, record.LastSynced, before, "the STATUS waits for the retry, the timestamp does not")
 	require.Len(t, session.collection.saved, 1)
 }
 

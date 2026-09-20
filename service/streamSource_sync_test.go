@@ -227,10 +227,14 @@ func TestStreamSourceSync_RecordsWhatItApplied(t *testing.T) {
 	require.NotEmpty(t, session.collection.saved)
 }
 
-// TestStreamSourceSync_EveryExitRecordsLastSynced confirms that a sync which changes nothing still
-// leaves evidence that it ran.  Under D11 that timestamp is how an operator tells a working
+// TestStreamSourceSync_EverySavingExitRecordsLastSynced confirms that a sync which changes nothing
+// still leaves evidence that it ran.  Under D11 that timestamp is how an operator tells a working
 // webhook from one nobody ever installed.
-func TestStreamSourceSync_EveryExitRecordsLastSynced(t *testing.T) {
+//
+// These are the three exits that reach a save.  Sync's four ERROR exits are not covered here and
+// cannot be: their transaction is aborted, so nothing they wrote survives.  A failed attempt is
+// stamped afterwards by the lifecycle hook, through SetStatusFailure / SetStatusMessage.
+func TestStreamSourceSync_EverySavingExitRecordsLastSynced(t *testing.T) {
 
 	item := markdownItem(t, "# Hello")
 
@@ -509,4 +513,10 @@ func TestStreamSource_RefreshWiresEveryDependency(t *testing.T) {
 	adapter, err := service.adapterFor(model.StreamSourceMethodHTTPS)
 	require.NoError(t, err)
 	require.Equal(t, model.StreamSourceMethodHTTPS, adapter.Protocol())
+
+	// ..and the Method a NEW record defaults to must be one of those keys.  Nothing else joins
+	// the constructor to this table, so a default with no Adapter would save happily and then
+	// fail on every synchronization.
+	_, err = service.adapterFor(model.NewStreamSource().Method)
+	require.NoError(t, err, "no Adapter reads the Method that NewStreamSource assigns")
 }

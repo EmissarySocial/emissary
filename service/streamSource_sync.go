@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service/content"
@@ -33,8 +32,10 @@ func (service *StreamSource) Sync(ctx context.Context, session data.Session, str
 		return derp.Wrap(err, location, "Unable to read this source", streamSource.StreamSourceID)
 	}
 
-	// Recorded now, because it marks when this attempt BEGAN, and every exit below saves it
-	streamSource.LastSynced = time.Now().Unix()
+	// Recorded now so the three SAVING exits below carry a fresh timestamp without re-reading the
+	// clock.  The four error exits never reach a save -- their transaction is aborted -- so a
+	// failed attempt is stamped by the lifecycle hook instead.  See markChecked.
+	markChecked(streamSource)
 
 	// Ask the origin for its validator, sending the stored one so that an unchanged source can
 	// answer 304 with no body at all
@@ -163,7 +164,7 @@ func (service *StreamSource) saveSyncState(session data.Session, streamSource *m
 	const location = "service.StreamSource.saveSyncState"
 
 	// Bookkeeping skips Save's validation, which a version, a hash, and a timestamp cannot violate
-	if err := service.collection(session).Save(streamSource, note); err != nil {
+	if err := service.save(session, streamSource, note); err != nil {
 		return derp.Wrap(err, location, "Saving StreamSource", streamSource.StreamSourceID)
 	}
 

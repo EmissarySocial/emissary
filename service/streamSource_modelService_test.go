@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/stretchr/testify/require"
@@ -39,17 +40,37 @@ func TestStreamSource_SaveAlwaysSyncs(t *testing.T) {
 
 			require.NoError(t, service.Save(session, &streamSource, "Saved"))
 
-			tasks := session.publishedTasks()
+			tasks := session.publishedTasksNamed(TaskSyncStreamSourceNow)
 			require.Len(t, tasks, 1, "every save queues exactly one sync")
-			require.Equal(t, TaskSyncStreamSource, tasks[0].Name)
+			require.Empty(t, tasks[0].Signature, "a signed task can never run immediately")
 			require.Equal(t, streamSource.StreamSourceID.Hex(), tasks[0].Arguments.GetString("streamSourceId"))
 		})
 	}
 }
 
-// TestStreamSource_SaveIsDeduplicated confirms that saving twice cannot double the work.  The
+// TestStreamSource_WebhookSyncIsDeduplicated confirms that two pings cannot double the work.  The
 // signature collapses a second task into the one already queued for this record.
-func TestStreamSource_SaveIsDeduplicated(t *testing.T) {
+func TestStreamSource_WebhookSyncIsDeduplicated(t *testing.T) {
+
+	streamSource := existingStreamSource()
+	service, session := newStreamSourceService(streamSource)
+
+	service.PublishSyncTask(session, streamSource.StreamSourceID)
+	service.PublishSyncTask(session, streamSource.StreamSourceID)
+
+	tasks := session.publishedTasksNamed(TaskSyncStreamSource)
+	require.Len(t, tasks, 2, "the spool holds both")
+
+	require.Equal(t, tasks[0].Signature, tasks[1].Signature,
+		"a shared signature is what collapses them at the queue")
+	require.Equal(t, "StreamSource-Sync:"+streamSource.StreamSourceID.Hex(), tasks[0].Signature)
+}
+
+// TestStreamSource_SyncNowIsNotDeduplicated pins the trade this design accepts.  The interactive
+// task carries NO signature, because turbine refuses to run a signed task from memory at any
+// priority -- so two quick presses really do queue two syncs.  Each costs one conditional GET
+// that answers 304, which is why that is affordable.
+func TestStreamSource_SyncNowIsNotDeduplicated(t *testing.T) {
 
 	streamSource := existingStreamSource()
 	service, session := newStreamSourceService(streamSource)
@@ -57,12 +78,12 @@ func TestStreamSource_SaveIsDeduplicated(t *testing.T) {
 	require.NoError(t, service.Save(session, &streamSource, "Saved"))
 	require.NoError(t, service.Save(session, &streamSource, "Saved again"))
 
-	tasks := session.publishedTasks()
-	require.Len(t, tasks, 2, "the spool holds both")
+	tasks := session.publishedTasksNamed(TaskSyncStreamSourceNow)
+	require.Len(t, tasks, 2)
 
-	require.Equal(t, tasks[0].Signature, tasks[1].Signature,
-		"a shared signature is what collapses them at the queue")
-	require.Equal(t, "StreamSource-Sync:"+streamSource.StreamSourceID.Hex(), tasks[0].Signature)
+	for _, task := range tasks {
+		require.Empty(t, task.Signature, "a signature would send this to storage and the 1-minute poller")
+	}
 }
 
 // TestStreamSource_SaveShowsLoading confirms that a sync is visible before the worker runs.  The
@@ -85,9 +106,10 @@ func TestStreamSource_SaveShowsLoading(t *testing.T) {
 }
 
 // TestStreamSource_BookkeepingNeverSyncs pins the separation that keeps a sync from feeding itself.
-// The status writers and the sync's own save go through collection.Save, so a running sync cannot
+// The status writers and the sync's own save go through service.save, so a running sync cannot
 // queue another one -- the signature would not stop it, because the first task has already left
-// the queue by the time its handler saves.
+// the queue by the time its handler saves.  They DO publish an SSE nudge, which is why this
+// counts sync tasks rather than tasks.
 func TestStreamSource_BookkeepingNeverSyncs(t *testing.T) {
 
 	streamSource := existingStreamSource()
@@ -98,7 +120,8 @@ func TestStreamSource_BookkeepingNeverSyncs(t *testing.T) {
 	require.NoError(t, service.SetStatusFailure(session, &streamSource, "Source not found"))
 	require.NoError(t, service.SetStatusMessage(session, &streamSource, "Retrying"))
 
-	require.Empty(t, session.publishedTasks(), "bookkeeping is not a request to read the source")
+	require.Empty(t, session.publishedTasksNamed(TaskSyncStreamSource), "bookkeeping is not a request to read the source")
+	require.Empty(t, session.publishedTasksNamed(TaskSyncStreamSourceNow), "..and not a request to read it right now, either")
 }
 
 /******************************************
@@ -159,7 +182,7 @@ func TestStreamSource_ObjectSaveSyncs(t *testing.T) {
 	service, session := newStreamSourceService(streamSource)
 
 	require.NoError(t, service.ObjectSave(session, &streamSource, "Updated"))
-	require.Len(t, session.publishedTasks(), 1)
+	require.Len(t, session.publishedTasksNamed(TaskSyncStreamSourceNow), 1)
 }
 
 // TestStreamSource_ObjectLoad returns the record as a data.Object
@@ -212,4 +235,77 @@ func TestStreamSource_AccessLister(t *testing.T) {
 	require.False(t, accessLister.IsMyself(primitive.NewObjectID()))
 	require.Empty(t, accessLister.RolesToGroupIDs("author", "myself"), "a StreamSource has no owner")
 	require.Empty(t, accessLister.RolesToPrivilegeIDs("author"))
+}
+
+/******************************************
+ * Realtime (SSE) Nudges
+ ******************************************/
+
+// TestStreamSource_EveryWriteNudgesTheStream pins the reason `service.save` exists.  The settings
+// screen shows Status and the time of the last check, and a synchronization finishes in the
+// BACKGROUND minutes after Sync Now returns -- so a write the screen never hears about leaves
+// those two fields stale until somebody reloads, with nothing reporting it.
+//
+// Every write path is listed here on purpose.  A fifth status writer added later would be caught
+// by this test only if it is added to the list, so the point of the list is to be the place that
+// says what "every write" means.
+//
+// Delete is deliberately NOT in the list.  Its only caller, the `delete-source` action, ends with
+// `refresh-page`, so the browser that pressed Stop Syncing refetches either way.  What that gives
+// up is a SECOND browser open on the same article, which will keep showing a source that is gone
+// until something else refreshes it.
+func TestStreamSource_EveryWriteNudgesTheStream(t *testing.T) {
+
+	writes := map[string]func(*StreamSource, streamSourceSession, *model.StreamSource) error{
+
+		"Save": func(service *StreamSource, session streamSourceSession, streamSource *model.StreamSource) error {
+			return service.Save(session, streamSource, "Saved")
+		},
+		"SetStatusLoading": func(service *StreamSource, session streamSourceSession, streamSource *model.StreamSource) error {
+			return service.SetStatusLoading(session, streamSource)
+		},
+		"SetStatusSuccess": func(service *StreamSource, session streamSourceSession, streamSource *model.StreamSource) error {
+			return service.SetStatusSuccess(session, streamSource)
+		},
+		"SetStatusFailure": func(service *StreamSource, session streamSourceSession, streamSource *model.StreamSource) error {
+			return service.SetStatusFailure(session, streamSource, "Source not found")
+		},
+		"SetStatusMessage": func(service *StreamSource, session streamSourceSession, streamSource *model.StreamSource) error {
+			return service.SetStatusMessage(session, streamSource, "Retrying")
+		},
+		"saveSyncState": func(service *StreamSource, session streamSourceSession, streamSource *model.StreamSource) error {
+			return service.saveSyncState(session, streamSource, "Checked: unchanged")
+		},
+	}
+
+	for name, write := range writes {
+		t.Run(name, func(t *testing.T) {
+
+			streamSource := existingStreamSource()
+			service, session := newStreamSourceService(streamSource)
+
+			require.NoError(t, write(service, session, &streamSource))
+
+			tasks := session.publishedTasksNamed("PublishRealtimeMessage")
+			require.Len(t, tasks, 1, "%s published no realtime nudge", name)
+
+			// RULE: Addressed by the STREAM's id.  A StreamSource has no page and no SSE route of
+			// its own, so a nudge sent to its own id would reach nobody -- and reach them silently.
+			require.Equal(t, streamSource.StreamID.Hex(), tasks[0].Arguments.GetString("objectId"))
+			require.Equal(t, realtime.TopicStreamSourceUpdated, tasks[0].Arguments.GetInt("topic"))
+		})
+	}
+}
+
+// TestStreamSource_FailedWriteNudgesNobody confirms that a nudge follows the write rather than the
+// attempt.  A browser told to refetch after a failed save would re-render the same record it
+// already had, and read that as the change having been applied.
+func TestStreamSource_FailedWriteNudgesNobody(t *testing.T) {
+
+	streamSource := existingStreamSource()
+	service, session := newStreamSourceService(streamSource)
+	session.collection.saveError = derp.Internal("test", "collection is offline")
+
+	require.Error(t, service.SetStatusSuccess(session, &streamSource))
+	require.Empty(t, session.publishedTasksNamed("PublishRealtimeMessage"))
 }

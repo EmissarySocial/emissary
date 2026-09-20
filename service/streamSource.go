@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/EmissarySocial/emissary/service/content"
 	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
@@ -19,8 +20,23 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// TaskSyncStreamSource is the queue task that synchronizes one StreamSource record
+// TaskSyncStreamSource is the BACKGROUND queue task that synchronizes one StreamSource record.
+// Its usual trigger is an unauthenticated webhook that fans out to every record sharing a token.
 const TaskSyncStreamSource = "SyncStreamSource"
+
+// TaskSyncStreamSourceNow is the INTERACTIVE queue task behind the Sync Now button.  It runs the
+// same handler, and reports through the same lifecycle hooks, as TaskSyncStreamSource: only its
+// priority and its lack of a signature differ.
+const TaskSyncStreamSourceNow = "SyncStreamSourceNow"
+
+// IsSyncStreamSourceTask returns TRUE for either synchronization task.
+//
+// RULE: Every consumer-side registration must accept BOTH names -- the dispatch switch and all
+// three lifecycle hooks.  A hook that tested only one name would silently stop recording status
+// for the other path, and nothing reports a hook that declined a task.
+func IsSyncStreamSourceTask(name string) bool {
+	return (name == TaskSyncStreamSource) || (name == TaskSyncStreamSourceNow)
+}
 
 // streamWriter is the slice of the Stream service that a synchronization uses.  The interface is
 // declared here, beside its caller, so that a test can drive a sync without assembling the
@@ -126,7 +142,7 @@ func (service *StreamSource) Save(session data.Session, streamSource *model.Stre
 	// save is the only moment a human tells Emissary this record is worth reading.  A repeat
 	// costs one conditional GET that answers 304, so the cheap case is free -- but a caller that
 	// saves MANY records in a loop fans out one outbound fetch per record, with nothing at the
-	// call site to say so.  Bookkeeping writes use collection.Save directly and avoid all of this.
+	// call site to say so.  Bookkeeping writes call service.save and avoid all of this.
 
 	// RULE: A StreamSource record is always attached to a Stream
 	if streamSource.StreamID.IsZero() {
@@ -139,10 +155,11 @@ func (service *StreamSource) Save(session data.Session, streamSource *model.Stre
 		return derp.Wrap(err, location, "Invalid URL", streamSource.StreamSourceID)
 	}
 
-	// RULE: The webhook token is editable by hand, and a short one is guessable.  The endpoint
-	// re-checks the same minimum, because a record saved by an older build could carry anything.
-	if len(streamSource.WebhookToken()) < model.StreamSourceWebhookTokenMinLength {
-		return derp.BadRequest(location, "Webhook token is too short", model.StreamSourceWebhookTokenMinLength)
+	// RULE: The webhook token is editable by hand, so a short one is guessable and a pasted URL
+	// is a token nothing can ever match -- the route matches one path segment.  The endpoint
+	// re-checks the length, because a record saved by an older build could carry anything.
+	if !model.IsValidWebhookToken(streamSource.WebhookToken()) {
+		return derp.BadRequest(location, "Webhook token must be at least 16 letters, digits, dots, dashes, or underscores", model.StreamSourceWebhookTokenMinLength)
 	}
 
 	// Validate everything else against the schema
@@ -154,15 +171,48 @@ func (service *StreamSource) Save(session data.Session, streamSource *model.Stre
 	// start rather than a record that looks untouched
 	streamSource.Status = model.StreamSourceStatusLoading
 	streamSource.StatusMessage = ""
-	streamSource.LastSynced = time.Now().Unix()
+	markChecked(streamSource)
 
-	if err := service.collection(session).Save(streamSource, note); err != nil {
+	if err := service.save(session, streamSource, note); err != nil {
 		return derp.Wrap(err, location, "Saving StreamSource", streamSource.StreamSourceID, note)
 	}
 
-	service.PublishSyncTask(session, streamSource.StreamSourceID)
+	// Every caller of Save is a human at the settings screen -- the source form, or the Sync Now
+	// button -- so this is the interactive task.  Background bookkeeping goes through service.save
+	// and queues nothing at all.
+	service.PublishSyncTaskNow(session, streamSource.StreamSourceID)
 
 	return nil
+}
+
+// save writes a StreamSource record and nudges every browser watching its Stream.  EVERY write
+// path goes through here, including the status bookkeeping that skips Save's validation: the
+// settings screen does not poll, so a status it never hears about reads as no status at all.
+func (service *StreamSource) save(session data.Session, streamSource *model.StreamSource, note string) error {
+
+	// The caller wraps this with its own location, so it travels bare
+	if err := service.collection(session).Save(streamSource, note); err != nil {
+		return err
+	}
+
+	service.publishSSE(session, streamSource.StreamID)
+
+	return nil
+}
+
+// publishSSE sends a best-effort realtime nudge to every browser watching this record's Stream.
+// It rides the post-commit spool so a nudge cannot fire before the row it describes is committed,
+// and queue.WithInline() keeps the task in this process, which is where the broker's sockets are.
+//
+// RULE: The message is addressed by the STREAM's ID, not the StreamSource's.  A StreamSource has
+// no page and no SSE route of its own; the screen that cares is a Stream page.
+func (service *StreamSource) publishSSE(session data.Session, streamID primitive.ObjectID) {
+
+	postcommit.Publish(session, service.queue, "PublishRealtimeMessage", mapof.Any{
+		"hostname": service.hostname,
+		"objectId": streamID.Hex(),
+		"topic":    realtime.TopicStreamSourceUpdated,
+	}, queue.WithInline())
 }
 
 // Delete removes a StreamSource record from the database (virtual delete)
@@ -178,6 +228,34 @@ func (service *StreamSource) Delete(session data.Session, streamSource *model.St
 	}
 
 	// Gone, but not forgotten.  Well, forgotten in a week.
+	return nil
+}
+
+// DeleteByStreamID removes every StreamSource record attached to a Stream (virtual delete)
+func (service *StreamSource) DeleteByStreamID(session data.Session, streamID primitive.ObjectID, note string) error {
+
+	const location = "service.StreamSource.DeleteByStreamID"
+
+	// RULE: A zero StreamID is refused, because it matches every record whose Stream was never
+	// set -- which selects records rather than naming one Stream's
+	if streamID.IsZero() {
+		return derp.BadRequest(location, "StreamID cannot be zero")
+	}
+
+	streamSources, err := service.Range(session, exp.Equal("streamId", streamID))
+
+	if err != nil {
+		return derp.Wrap(err, location, "Listing StreamSources", streamID)
+	}
+
+	// RULE: One failure does not strand the rest.  The Stream that reaches these records is
+	// already gone, so whatever survives this loop is an orphan nothing will delete again.
+	for streamSource := range streamSources {
+		if err := service.Delete(session, &streamSource, note); err != nil {
+			derp.Report(derp.Wrap(err, location, "Deleting StreamSource", streamSource.StreamSourceID, note))
+		}
+	}
+
 	return nil
 }
 
@@ -345,7 +423,7 @@ func (service *StreamSource) adapterFor(method string) (content.Adapter, error) 
 	return nil, derp.Internal(location, "No Adapter is registered for this Method", method)
 }
 
-// PublishSyncTask queues a synchronization for a single StreamSource record
+// PublishSyncTask queues a BACKGROUND synchronization for a single StreamSource record
 func (service *StreamSource) PublishSyncTask(session data.Session, streamSourceID primitive.ObjectID) {
 
 	// RULE: One task per record.  A ping arriving while a sync is already queued collapses into
@@ -355,17 +433,56 @@ func (service *StreamSource) PublishSyncTask(session data.Session, streamSourceI
 		session,
 		service.queue,
 		TaskSyncStreamSource,
-		mapof.Any{
-			"hostname":       service.hostname,
-			"streamSourceId": streamSourceID.Hex(),
-		},
+		service.syncTaskArguments(streamSourceID),
 		queue.WithSignature("StreamSource-Sync:"+streamSourceID.Hex()),
 	)
+}
+
+// PublishSyncTaskNow queues an INTERACTIVE synchronization for a single StreamSource record,
+// behind a human who is watching the settings screen for the answer.
+func (service *StreamSource) PublishSyncTaskNow(session data.Session, streamSourceID primitive.ObjectID) {
+
+	// RULE: NO signature, and that is the whole reason this task is named separately.  turbine's
+	// allowImmediate refuses to run ANY signed task from memory, at any priority, because
+	// signature dedup needs a stored row to check against -- so a signed task waits for the
+	// storage poller, which sleeps a minute when the queue is idle.
+	//
+	// What that costs: two quick presses queue two syncs, and one of them may overlap a webhook's
+	// background sync of the same record.  A repeat is one conditional GET answering 304, so the
+	// usual case is free.  The case that is NOT free is a caller that saves many records at once,
+	// which now fans out immediate fetches instead of deduplicated background ones.
+	postcommit.Publish(
+		session,
+		service.queue,
+		TaskSyncStreamSourceNow,
+		service.syncTaskArguments(streamSourceID),
+	)
+}
+
+// syncTaskArguments builds the arguments that both synchronization tasks carry.  One handler reads
+// both, so a key the two spelled differently would strand one path.
+func (service *StreamSource) syncTaskArguments(streamSourceID primitive.ObjectID) mapof.Any {
+	return mapof.Any{
+		"hostname":       service.hostname,
+		"streamSourceId": streamSourceID.Hex(),
+	}
 }
 
 /******************************************
  * Status
  ******************************************/
+
+// markChecked stamps the moment a synchronization attempt touched the origin.  The settings
+// screen labels this "Last Checked", and EVERY ping moves it -- a webhook and the Sync Now button
+// alike -- whether the attempt then succeeded, failed, or is about to be retried.
+//
+// RULE: The four failing exits of Sync never reach a save.  `consumer.WithSession` aborts the
+// task's transaction, so the timestamp Sync set in memory is rolled back with it, and the
+// lifecycle hook that survives reloads the record from the database.  That hook is therefore the
+// only place a failed attempt can record that it happened at all.
+func markChecked(streamSource *model.StreamSource) {
+	streamSource.LastSynced = time.Now().Unix()
+}
 
 // SetStatusLoading marks a StreamSource record as synchronizing, and saves it
 func (service *StreamSource) SetStatusLoading(session data.Session, streamSource *model.StreamSource) error {
@@ -374,10 +491,10 @@ func (service *StreamSource) SetStatusLoading(session data.Session, streamSource
 
 	streamSource.Status = model.StreamSourceStatusLoading
 	streamSource.StatusMessage = ""
-	streamSource.LastSynced = time.Now().Unix()
+	markChecked(streamSource)
 
 	// Status bookkeeping skips Save's validation, which a status change can never violate
-	if err := service.collection(session).Save(streamSource, "Synchronizing"); err != nil {
+	if err := service.save(session, streamSource, "Synchronizing"); err != nil {
 		return derp.Wrap(err, location, "Saving StreamSource", streamSource.StreamSourceID)
 	}
 
@@ -389,10 +506,13 @@ func (service *StreamSource) SetStatusSuccess(session data.Session, streamSource
 
 	const location = "service.StreamSource.SetStatusSuccess"
 
+	time.Sleep(200 * time.Millisecond)
+
 	streamSource.Status = model.StreamSourceStatusSuccess
 	streamSource.StatusMessage = ""
+	markChecked(streamSource)
 
-	if err := service.collection(session).Save(streamSource, "Synchronized"); err != nil {
+	if err := service.save(session, streamSource, "Synchronized"); err != nil {
 		return derp.Wrap(err, location, "Saving StreamSource", streamSource.StreamSourceID)
 	}
 
@@ -406,9 +526,9 @@ func (service *StreamSource) SetStatusFailure(session data.Session, streamSource
 
 	streamSource.Status = model.StreamSourceStatusFailure
 	streamSource.StatusMessage = truncateStatusMessage(statusMessage)
+	markChecked(streamSource)
 
-	// LastSynced is left alone, because it records when a sync last began, not when one last worked
-	if err := service.collection(session).Save(streamSource, "Synchronization failed"); err != nil {
+	if err := service.save(session, streamSource, "Synchronization failed"); err != nil {
 		return derp.Wrap(err, location, "Saving StreamSource", streamSource.StreamSourceID)
 	}
 
@@ -421,10 +541,12 @@ func (service *StreamSource) SetStatusMessage(session data.Session, streamSource
 	const location = "service.StreamSource.SetStatusMessage"
 
 	// RULE: Status is left alone because a retry is still queued.  FAILURE here would read as
-	// broken to an author whose sync is about to succeed on its own.
+	// broken to an author whose sync is about to succeed on its own.  The TIMESTAMP still moves:
+	// an attempt that failed is still an attempt, and the message beside it describes this one.
 	streamSource.StatusMessage = truncateStatusMessage(statusMessage)
+	markChecked(streamSource)
 
-	if err := service.collection(session).Save(streamSource, "Synchronization retrying"); err != nil {
+	if err := service.save(session, streamSource, "Synchronization retrying"); err != nil {
 		return derp.Wrap(err, location, "Saving StreamSource", streamSource.StreamSourceID)
 	}
 
