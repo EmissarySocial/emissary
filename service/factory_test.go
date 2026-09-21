@@ -5,22 +5,24 @@ import (
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
 )
 
-// Password chain mechanics (primary selection, rehash flagging, truncation, fuzz) are
-// tested in the steranko package, where the PasswordService lives.  These tests pin
-// the POLICY that Factory.Steranko configures — exercised through the real factory
-// wiring, so a config change here cannot slip through unnoticed.  Hashing never
-// touches the database, so a zero Factory and a nil session are safe.
+/******************************************
+ * Password Policy
+ *
+ * The password chain (primary selection, rehash flagging, truncation,
+ * fuzz) is tested in steranko, where the PasswordService lives.  These
+ * tests pin the POLICY that Factory.Steranko configures, through the
+ * real factory wiring, so a config change cannot slip through unseen.
+ * Hashing never touches the database, so a zero Factory and a nil
+ * session are safe.
+ ******************************************/
 
-// TestSteranko_SetPassword_StoresBCrypt12 is the regression test for the plaintext
-// password vulnerability (CWE-256): registration, password reset, and Mastodon signup
-// once stored raw passwords because they bypassed the hasher.  All password writes now
-// route through the Steranko instance built here, so this pins that a User can only
-// ever receive a bcrypt hash — at cost 12, the deliberate balance between
-// offline-cracking resistance and signin latency / failed-signin CPU cost.
+// TestSteranko_SetPassword_StoresBCrypt12 pins that a User can only ever receive a bcrypt hash at
+// cost 12, never a plaintext password (CWE-256; see AGENTS.md).
 func TestSteranko_SetPassword_StoresBCrypt12(t *testing.T) {
 
 	factory := Factory{}
@@ -37,12 +39,12 @@ func TestSteranko_SetPassword_StoresBCrypt12(t *testing.T) {
 	require.Equal(t, 12, cost)
 }
 
-// TestSteranko_PlaintextFallback pins that legacy plaintext-stored passwords still
-// verify — flagged for re-hashing — so pre-hashing accounts can sign in.  When the
-// plaintext-password migration ships, the fallback is removed from Factory.Steranko
-// and this test must be DELETED deliberately.
+// TestSteranko_PlaintextFallback pins that a legacy plaintext password still verifies, and is
+// flagged for re-hashing, so that pre-hashing accounts can sign in.
 func TestSteranko_PlaintextFallback(t *testing.T) {
 
+	// When the plaintext-password migration ships, the fallback leaves Factory.Steranko and this
+	// test must be DELETED deliberately.
 	factory := Factory{}
 	steranko := factory.Steranko(nil)
 
@@ -51,10 +53,15 @@ func TestSteranko_PlaintextFallback(t *testing.T) {
 	require.True(t, rehash, "plaintext matches must be flagged for upgrade")
 }
 
-// TestShouldStartDomainService verifies when Factory.Refresh restarts the Domain service.  Start
-// reloads the stored Domain record and stamps the configured hostname into it, so it has to run on
-// a rename as well as a reconnect -- but never before a database exists to run against, because a
-// factory built in setup mode has no connection to open a session on.
+/******************************************
+ * Lifecycle
+ *
+ * Refresh itself needs a fully wired server factory and a replica set,
+ * so its WatchDomain wiring is untested here; queries tests WatchDomain.
+ ******************************************/
+
+// TestShouldStartDomainService pins when Refresh restarts the Domain service: on a rename as well
+// as a reconnect, but never before a database exists.
 func TestShouldStartDomainService(t *testing.T) {
 
 	configured := config.Domain{
