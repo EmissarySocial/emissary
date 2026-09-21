@@ -44,11 +44,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-// factoryCore holds the state and behavior shared by every server mode
-// (live, setup, and any future mode). Mode structs embed it and add their
-// own lifecycle; see emissary-specs/FACTORY-MODES.md.
+// factoryCore holds the state and behavior shared by every server mode. Mode structs embed it
+// and add their own lifecycle (see emissary-specs/FACTORY-MODES.md).
 type factoryCore struct {
-	storage config.Storage
+	storage config.Storage // persists the configuration, and announces every change to it
 
 	// Server-level services
 	contentService      service.Content
@@ -60,53 +59,36 @@ type factoryCore struct {
 	templateService     service.Template
 	widgetService       service.Widget
 
-	embeddedFiles    embed.FS
-	workingDirectory *mediaserver.WorkingDirectory
-	digitalDome      *dome.Dome
+	embeddedFiles    embed.FS                      // files compiled into the binary
+	workingDirectory *mediaserver.WorkingDirectory // scratch space for media processing
+	digitalDome      *dome.Dome                    // guards the server against abusive traffic
 
-	// reloadLock serializes writers of `wiring` against EACH OTHER.  No reader ever takes it,
-	// so it can be held across the slow parts of a reload -- opening a mongo client, a
-	// five-second ping, a storage write, synchronizing every shared index -- without stalling a
-	// single request.
-	//
-	// RULE: Every writer of `wiring` holds this for the WHOLE decide-then-publish sequence.
-	// It is what makes the "have the settings changed?" guards sound: nothing else can rewire
-	// the server between the compare and the swap.
+	// reloadLock serializes writers of `wiring` for their whole decide-then-publish sequence.
+	// No reader ever takes it, so it may be held across slow work (see README.md).
 	reloadLock sync.Mutex
 
-	// wiring is everything a configuration reload replaces: the configuration itself, the
-	// mounted filesystems, the common database, the task queue, and the client-IP strategy.
-	// Readers load it with no lock at all and get one internally consistent generation --
-	// never the new queue alongside the old database.
-	//
-	// RULE: NEVER touch this field directly -- go through currentWiring/rewire.
+	// wiring is everything a configuration reload replaces, as one immutable generation.
+	// RULE: Never touch it directly; go through currentWiring and rewire/rewireLocked.
 	wiring atomic.Pointer[wiring]
 
-	funcMap   template.FuncMap
-	domains   *xsync.Map[string, *service.Factory]
-	httpCache httpcache.HTTPCache
+	funcMap   template.FuncMap                     // functions available to every template
+	domains   *xsync.Map[string, *service.Factory] // registry of domain factories, keyed by hostname
+	httpCache httpcache.HTTPCache                  // shared cache for outbound HTTP requests
 }
 
 /******************************************
  * Server Config Methods
  ******************************************/
 
-// Config returns an independent copy of the current configuration for the Factory.
-//
-// RULE: The copy is DEEP (config.Config.Copy).  Callers -- the setup console's form handlers
-// above all -- treat the returned value as scratch space and edit it in place; a shallow copy
-// would share its maps with the published wiring, whose configuration is immutable.
+// Config returns a deep copy of the current configuration, which the caller may edit freely.
 func (factory *factoryCore) Config() config.Config {
 	return factory.currentWiring().config.Copy()
 }
 
-// setConfigLocked replaces the server configuration.  Callers must hold reloadLock.
-//
-// The value is deep-copied on the way in: the caller usually still holds a reference to it (the
-// setup console hands over the very struct its form handler was editing), and published wiring
-// must never share map storage with anybody's scratch space.
+// setConfigLocked publishes a deep copy of the configuration. Callers must hold reloadLock.
 func (factory *factoryCore) setConfigLocked(value config.Config) {
 
+	// Copied, because the caller usually keeps editing the value it handed over
 	copied := value.Copy()
 
 	factory.rewireLocked(func(w *wiring) {
@@ -114,9 +96,8 @@ func (factory *factoryCore) setConfigLocked(value config.Config) {
 	})
 }
 
-// AllowPrivateIPs reports whether outbound ActivityPub delivery may connect to
-// non-public (private/loopback) addresses. FALSE in production; enabled only for
-// local/dev federation between machines on a private network.
+// AllowPrivateIPs reports whether outbound ActivityPub delivery may connect to private or
+// loopback addresses, which only development between machines on a private network should allow.
 func (factory *factoryCore) AllowPrivateIPs() bool {
 	return factory.currentWiring().config.AllowPrivateIPs
 }
@@ -130,24 +111,14 @@ func (factory *factoryCore) UpdateConfig(value config.Config) error {
 	return factory.updateConfigLocked(value)
 }
 
-// updateConfigLocked persists the configuration, and publishes it locally only once the write
-// succeeded.  Callers must hold reloadLock -- which is safe to hold across the storage write,
-// because no reader ever takes it, and correct to hold, because it serializes this save against
-// any reload arriving from another node.
-//
-// RULE: Write first, publish after.  Storage.Write is a compare-and-swap that can return a 409
-// when another node changed the configuration underneath this save; a rejected save must leave
-// this node running exactly what it ran before.  The STORED version (with its incremented
-// revision) is what gets published, so the next save from this node carries the right base.
-//
-// A conflict is deliberately NOT retried here: this path carries a human's form edit, made
-// against the configuration they were looking at.  Re-applying it over someone else's change
-// would be the silent overwrite the revision exists to prevent -- the human reloads, sees the
-// other change, and decides.
+// updateConfigLocked saves the configuration and then publishes the stored version, returning a
+// conflict to the caller instead of retrying it. Callers must hold reloadLock.
 func (factory *factoryCore) updateConfigLocked(value config.Config) error {
 
 	const location = "server.factory.UpdateConfig"
 
+	// RULE: Write first, publish after, so a rejected save leaves this node unchanged.  The
+	// STORED version is published because it carries the revision the next save must match.
 	stored, err := factory.storage.Write(value)
 
 	if err != nil {
@@ -158,7 +129,8 @@ func (factory *factoryCore) updateConfigLocked(value config.Config) error {
 			return err
 		}
 
-		return derp.Wrap(err, location, "Writing configuration", value)
+		// The configuration is not attached, because it carries every domain's secrets
+		return derp.Wrap(err, location, "Writing configuration")
 	}
 
 	factory.setConfigLocked(stored)
@@ -166,17 +138,8 @@ func (factory *factoryCore) updateConfigLocked(value config.Config) error {
 	return nil
 }
 
-// mutateConfigLocked persists a read-modify-write of the configuration, retrying on revision
-// conflicts.  Callers must hold reloadLock.
-//
-// It exists for the MECHANICAL mutations -- adding and removing domains -- where `fn` states an
-// intent ("this domain is in the list") that is safe to re-apply on top of whatever another node
-// changed.  Contrast updateConfigLocked, which carries a human's whole-form edit and must NOT be
-// replayed over someone else's changes.
-//
-// RULE: The rebase reads from STORAGE, not from this factory's wiring.  A conflict means the
-// wiring is stale by definition -- the winning write's echo may not have arrived yet -- so
-// rebasing on the wiring could just conflict forever.
+// mutateConfigLocked saves a read-modify-write of the configuration, re-applying `fn` to the
+// stored version after a conflict, so `fn` must be safe to re-apply. Callers must hold reloadLock.
 func (factory *factoryCore) mutateConfigLocked(fn func(*config.Config)) error {
 
 	const location = "server.factory.mutateConfigLocked"
@@ -203,7 +166,8 @@ func (factory *factoryCore) mutateConfigLocked(fn func(*config.Config)) error {
 			return derp.Wrap(err, location, "Saving configuration")
 		}
 
-		// Rebase on what is actually stored, and re-apply the mutation
+		// RULE: Rebase on what is STORED, and re-apply the mutation.  A conflict means this
+		// node's wiring is stale, so rebasing on the wiring could conflict forever.
 		fresh, readErr := factory.storage.Read()
 
 		if readErr != nil {
@@ -243,23 +207,19 @@ func (factory *factoryCore) ListDomains() []config.Domain {
 	return result
 }
 
-// TestConnection verifies that a domain's database is actually reachable.  It is used to
-// validate a domain BEFORE it is persisted, so a bad connect string fails fast with a clear
-// message instead of hanging on the driver's default (~30s) server-selection timeout and
-// leaving a broken domain in the configuration file.  mongo.Connect is lazy -- it never
-// contacts the server -- so we must Ping to actually exercise the connection.
+// TestConnection verifies that a domain's database answers within five seconds, so the setup
+// console can reject a bad connect string before it is saved.
 func (factory *factoryCore) TestConnection(configuration config.Domain) error {
 	return testDatabaseConnection(configuration, 5*time.Second)
 }
 
-// testDatabaseConnection pings the domain's database, bounding server selection and the
-// ping itself to `timeout` so an unreachable host fails in seconds.  The timeout is a
-// parameter so tests can drive the fail-fast path quickly.
+// testDatabaseConnection pings the domain's database, and fails if it does not answer in `timeout`
 func testDatabaseConnection(configuration config.Domain, timeout time.Duration) error {
 
 	const location = "server.Factory.TestConnection"
 
 	// Bound server selection so an unreachable host fails in seconds, not the ~30s default.
+	// (`timeout` is a parameter so that tests can drive this failure quickly.)
 	opts := options.Client().SetServerSelectionTimeout(timeout)
 
 	server, err := mongodb.New(configuration.ConnectString, configuration.DatabaseName, opts)
@@ -278,7 +238,7 @@ func testDatabaseConnection(configuration config.Domain, timeout time.Duration) 
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 
-	// Ping forces real server selection, surfacing an unreachable host or replica set now.
+	// mongo.Connect is lazy, so only a Ping proves that the host (or replica set) answers
 	if err := client.Ping(ctx, readpref.Primary()); err != nil {
 		return derp.Wrap(err, location, `Unable to reach the database. Check the connect string — a single-member replica set needs "?directConnection=true".`)
 	}
@@ -291,22 +251,21 @@ func (factory *factoryCore) PutDomain(configuration config.Domain) error {
 
 	const location = "server.Factory.PutDomain"
 
-	// RULE: Domains cannot be added until the common (ActivityPub Cache) database is
-	// connected, because every domain factory stores shared caches there.  Checked BEFORE
-	// the config write so a rejected domain never persists half-added (FACTORY-MODES D6),
-	// and returned UN-wrapped so the message reaches the setup console user verbatim.
+	// RULE: Domain factories keep shared caches in the common database, so no domain is added
+	// until it is connected.  Checked before the save so nothing persists half-added
+	// (FACTORY-MODES D6), and UN-wrapped so the setup console shows the message verbatim.
 	if factory.currentWiring().commonDatabase == nil {
 		return derp.BadRequest(location, "Configure the ActivityPub Cache database before adding domains")
 	}
 
-	// Save the domain info ant write a new configuration to the storage service
+	// Save the domain and build its factory.  The error names the hostname, never the
+	// configuration, which carries the domain's secrets.
 	if err := factory.putDomain(configuration); err != nil {
-		return derp.Wrap(err, location, "Adding domain", configuration)
+		return derp.Wrap(err, location, "Adding domain", configuration.Hostname)
 	}
 
-	// The storage service will trigger a new configuration via the Subscrbe() channel,
-	// But we still want to call the owner update manually.
-
+	// The storage service will echo the new configuration back through Subscribe(), but the
+	// owner is written here, directly.
 	domainFactory, err := factory.ByHostname(configuration.Hostname)
 
 	if err != nil {
@@ -348,10 +307,9 @@ func (factory *factoryCore) putDomain(configuration config.Domain) error {
 	factory.reloadLock.Lock()
 	defer factory.reloadLock.Unlock()
 
-	// Add the domain to the configuration and persist it, rebasing on conflicts.  (The D6
-	// common-database guard runs in PutDomain, before any of this.)  Put is keyed by DomainID,
-	// so re-applying it over another node's changes cannot lose anything -- least of all this
-	// domain's MasterKey, whose ONLY copy is in `configuration`.
+	// Add the domain and save it, rebasing on conflicts.  Put is keyed by DomainID, so
+	// re-applying it over another node's changes loses nothing -- least of all this domain's
+	// MasterKey, whose ONLY copy is in `configuration`.
 	if err := factory.mutateConfigLocked(func(value *config.Config) {
 		value.Domains.Put(configuration)
 	}); err != nil {
@@ -431,9 +389,8 @@ func (factory *factoryCore) refreshDomain(domainConfig config.Domain) error {
 		return nil
 	}
 
-	// RULE: Creating a domain factory requires the common database.  Callers gate on this
-	// too (putDomain, the mode lifecycles); this is defense in depth against a nil-pointer
-	// panic inside mongodb.NewServer.
+	// RULE: Domain factories exist only while the common database is connected.  PutDomain and
+	// both mode lifecycles gate on this too, so this is defense in depth.
 	if current.commonDatabase == nil {
 		return derp.Internal(location, "Common database must be connected before creating domains")
 	}
@@ -522,7 +479,7 @@ func (factory *factoryCore) ByHostname(hostname string) (*service.Factory, error
 	// Clean up the hostname before using it
 	hostname = factory.normalizeHostname(hostname)
 
-	// Try to find the domain in the configuration
+	// Try to find the domain in the registry
 	if domain, exists := factory.domains.Load(hostname); exists {
 		return domain, nil
 	}
@@ -562,8 +519,8 @@ func (factory *factoryCore) ByPersonalizedHostname(hostname string) (*service.Fa
 func (factory *factoryCore) normalizeHostname(hostname string) string {
 
 	hostname, _, _ = strings.Cut(hostname, ":")     // Remove port number
+	hostname = strings.ToLower(hostname)            // Force lowercase (first, so "WWW." is trimmed too)
 	hostname = strings.TrimPrefix(hostname, "www.") // Remove leading "www"
-	hostname = strings.ToLower(hostname)            // Force lowercase
 
 	// Now isn't that pretty?
 	return hostname
@@ -583,7 +540,7 @@ func (factory *factoryCore) Queue() *queue.Queue {
 	return factory.currentWiring().queue
 }
 
-// Registration returns the global template service
+// Registration returns the global registration service
 func (factory *factoryCore) Registration() *service.Registration {
 	return &factory.registrationService
 }
@@ -661,7 +618,7 @@ func (factory *factoryCore) Server(hostname string) (data.Server, error) {
 	// Clean up the hostname before using it
 	hostname = factory.normalizeHostname(hostname)
 
-	// Try to find the domain in the configuration
+	// Try to find the domain in the registry
 	if domain, exists := factory.domains.Load(hostname); exists {
 		return domain.Server(), nil
 	}
@@ -726,7 +683,7 @@ func (factory *factoryCore) calcClientIPStrategy(config config.Config) realclien
 		err = derp.Internal(location, "Unknown Client IP strategy", config.ClientIPStrategy)
 	}
 
-	// If there is no error, then
+	// Fall back to REMOTE-ADDR when the configured strategy cannot be built
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Creating Client IP strategy", config.ClientIPStrategy))
 		return realclientip.RemoteAddrStrategy{}
@@ -820,12 +777,8 @@ func setLogLevel(config config.Config) {
 	}
 }
 
-// openCommonDatabase validates connection settings and opens a client for them.  It publishes
-// NOTHING: the caller decides when (and whether) the new connection becomes the live one, which
-// is what lets the setup console verify a server with a Ping before committing to it.
-//
-// mongo.Connect is lazy -- it never contacts the server -- so this only fails on settings that
-// cannot produce a client at all.
+// openCommonDatabase validates connection settings and opens a client for them, publishing
+// nothing, so the caller decides whether the new connection goes live.
 func openCommonDatabase(connection mapof.String) (*mongo.Database, error) {
 
 	const location = "server.openCommonDatabase"
@@ -843,11 +796,13 @@ func openCommonDatabase(connection mapof.String) (*mongo.Database, error) {
 		return nil, derp.Internal(location, "Common database must have a database name")
 	}
 
-	// Open the connection
+	// Open the connection.  mongo.Connect is lazy (it never contacts the server), so this fails
+	// only on settings that cannot produce a client at all.
 	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(uri))
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Connecting to common database", uri)
+		// The URI is not attached, because it can carry credentials
+		return nil, derp.Wrap(err, location, "Connecting to common database", database)
 	}
 
 	return client.Database(database), nil
@@ -867,24 +822,8 @@ func disconnectCommonDatabase(database *mongo.Database) {
 	}
 }
 
-// refreshCommonDatabase updates the connection to the common database, and reports whether the
-// live connection actually changed.  It is the ONE connect path for every mode; `verify` is
-// where the modes differ:
-//
-//   - verify TRUE (setup console): the new connection must answer a Ping before it is
-//     published, and the shared indexes are synchronized once it does.  A server that does not
-//     answer never becomes the connection that requests read; the factory rolls back to "not
-//     connected" so domain management stays gated with a clear error (FACTORY-MODES D6) and a
-//     later save can retry cleanly.
-//
-//   - verify FALSE (live server): the connection is published as opened.  The live server
-//     verifies by using it -- readConfig exits the process if a session cannot be built -- and
-//     index synchronization stays the caller's job, because syncing against an unreachable
-//     server blocks ~30s per collection.
-//
-// RULE: The caller MUST hold reloadLock.  The unchanged-guard below reads the live connection
-// and then publishes a new generation based on what it read, so a second reload interleaving
-// there would decide on settings that had already been replaced.
+// refreshCommonDatabase connects the common database and reports whether the live connection
+// changed. With `verify`, a new connection must answer a Ping. Callers must hold reloadLock.
 func (factory *factoryCore) refreshCommonDatabase(connection mapof.String, verify bool) (bool, error) {
 
 	const location = "server.factory.refreshCommonDatabase"
@@ -903,14 +842,9 @@ func (factory *factoryCore) refreshCommonDatabase(connection mapof.String, verif
 		return false, derp.Internal(location, "Common database must have a database name")
 	}
 
-	// RULE: Keep the live connection when the settings are unchanged.  Every config reload runs
-	// this method, and most reloads do not touch the database settings.  Reconnecting anyway
-	// would disconnect the old client -- stranding every existing domain factory, the queue's
-	// storage, and the ActivityStream cache on a dead client ("client is disconnected").
-	//
-	// RULE: When verification is required, only a VERIFIED connection counts as unchanged.  A
-	// client that was opened but never answered a Ping is exactly the case this guard must not
-	// skip past.
+	// RULE: Keep the live connection when the settings are unchanged, because reconnecting
+	// strands everything still holding the old client.  When verifying, only a VERIFIED
+	// connection counts as unchanged.
 	current := factory.currentWiring()
 
 	if current.commonDatabase != nil &&
@@ -948,8 +882,13 @@ func (factory *factoryCore) refreshCommonDatabase(connection mapof.String, verif
 			disconnectCommonDatabase(opened)
 			disconnectCommonDatabase(current.commonDatabase)
 
-			// Any existing domain factories are bound to the previous (now closed) connection.
-			// Drop them so lookups fail cleanly instead of surfacing dark mongo errors.
+			// Drop every domain factory, so lookups fail cleanly instead of reaching a common
+			// database that is gone.  Stop each one's watchers, which never end on their own.
+			factory.domains.Range(func(_ string, domain *service.Factory) bool {
+				domain.StopWatchers()
+				return true
+			})
+
 			factory.domains.Clear()
 
 			return true, derp.Wrap(err, location, `Unable to reach the database. Check the connect string — a single-member replica set needs "?directConnection=true".`)
@@ -959,16 +898,12 @@ func (factory *factoryCore) refreshCommonDatabase(connection mapof.String, verif
 	log.Trace().Msg("Connected to common database")
 
 	// Publish the new generation, then close the client it replaces.  The disconnect happens
-	// AFTER the swap and outside every lock: no reader can still reach the old client, and
-	// Disconnect is network I/O.
+	// AFTER the swap, so no reader can still reach the old client.
 	factory.setCommonDatabase(opened, uri, database, verify)
 	disconnectCommonDatabase(current.commonDatabase)
 
-	// Synchronize shared indexes, now that the ping proved the server reachable.  On the
-	// unverified path this is the CALLER's job -- see the doc comment.
-	// NOTE: the old `go derp.Report(queries.SyncSharedIndexes(...))` here was a gotcha --
-	// `go f(g())` evaluates g() synchronously, so the "async" sync always blocked, including
-	// against unreachable servers at 30s per collection.
+	// Synchronize shared indexes, now that the Ping proved the server reachable.  Unverified
+	// callers (readConfig) synchronize for themselves.
 	if verify {
 		factory.syncCommonDatabaseIndexes()
 	}
@@ -988,12 +923,8 @@ func (factory *factoryCore) setCommonDatabase(database *mongo.Database, uri stri
 	})
 }
 
-// syncCommonDatabaseIndexes synchronizes the shared indexes on the common database, through the
-// connection the factory already holds.  Callers run this only after a connection is published
-// (boot, or an actual settings change) -- index definitions are a function of the BINARY, not
-// the configuration, so re-syncing on every reload was pure amplification: every save anywhere
-// in the cluster re-ran it on every live node, and the old helper leaked a fresh mongo client
-// per call on top.
+// syncCommonDatabaseIndexes synchronizes the shared indexes through the connection the factory
+// already holds. Callers run it only when that connection changes (see AGENTS.md).
 func (factory *factoryCore) syncCommonDatabaseIndexes() {
 
 	const location = "server.factoryCore.syncCommonDatabaseIndexes"
@@ -1025,27 +956,28 @@ func (factory *factoryCore) refreshFilesystems(config config.Config) {
 	filesystemService := factory.Filesystem()
 
 	// Mount each directory first, so that a single bad path leaves the others alone.  A mount
-	// that fails keeps whatever the previous generation had.
+	// that fails keeps whatever the previous generation had, and its report omits the
+	// configuration, which carries every domain's secrets.
 	current := factory.currentWiring()
 
 	attachmentOriginals, err := filesystemService.GetAfero(config.AttachmentOriginals)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Getting `attachment original` directory", config))
+		derp.Report(derp.Wrap(err, location, "Getting `attachment original` directory"))
 		attachmentOriginals = current.attachmentOriginals
 	}
 
 	attachmentCache, err := filesystemService.GetAfero(config.AttachmentCache)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Getting `attachment cache` directory", config))
+		derp.Report(derp.Wrap(err, location, "Getting `attachment cache` directory"))
 		attachmentCache = current.attachmentCache
 	}
 
 	exportCache, err := filesystemService.GetAfero(config.ExportCache)
 
 	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Getting `export cache` directory", config))
+		derp.Report(derp.Wrap(err, location, "Getting `export cache` directory"))
 		exportCache = current.exportCache
 	}
 
@@ -1062,13 +994,9 @@ func (factory *factoryCore) refreshFilesystems(config config.Config) {
 // Callers must hold reloadLock.
 func (factory *factoryCore) refreshQueue(withStorage bool) {
 
-	// RULE: Keep the running queue when nothing it depends on has changed.  Rebuilding stops the
-	// old queue, and every domain service that captured it -- plus any task already handed to it
-	// -- dies silently ("Turbine Queue: stopped").  The queue depends on its storage mode and,
-	// when storage is on, on the common database connection: queueDatabase is compared by pointer
-	// identity, which changes exactly when refreshCommonDatabase swaps the connection.  (Ordering:
-	// readConfig refreshes the common database BEFORE the queue, so this comparison always sees
-	// the current connection.)
+	// RULE: Keep the running queue when nothing it depends on has changed, because rebuilding
+	// stops it and silently drops every task already handed to it.  See AGENTS.md for why the
+	// database is compared by pointer, and why readConfig's order matters.
 	current := factory.currentWiring()
 
 	if current.queueReady && withStorage == current.queueWithStorage {
@@ -1078,10 +1006,8 @@ func (factory *factoryCore) refreshQueue(withStorage bool) {
 		}
 	}
 
-	// If there is already a queue in place, then close it before we open a new one.  Each queue is
-	// stopped AT MOST ONCE (a second Stop would panic on its closed `done` channel): the guard
-	// above returns early unless we are about to replace it, and the replacement drops the only
-	// long-lived reference.
+	// Stop the queue being replaced.  RULE: Each queue is stopped AT MOST ONCE, because a second
+	// Stop panics; the guard above returns early unless this queue is about to be dropped.
 	current.queue.Stop()
 
 	// Configure queue options, including task consumers
@@ -1121,10 +1047,7 @@ func (factory *factoryCore) refreshDerpPlugins(config config.Config) {
 
 	commonDatabase := factory.currentWiring().commonDatabase
 
-	// Build the new reporter list LOCALLY, and publish it with one atomic swap at the end.
-	// The old Clear-then-Add sequence mutated the global mid-reload: a data race against every
-	// concurrent derp.Report in the process, and a brief window with no reporters at all -- in
-	// which the errors most likely to fire are reload errors, the ones we most need to keep.
+	// Build the new reporter list LOCALLY, to publish in one swap at the end (see AGENTS.md)
 	reporters := make([]derp.Reporter, 0, len(config.Loggers))
 
 	for _, logger := range config.Loggers {
@@ -1154,10 +1077,8 @@ func (factory *factoryCore) refreshDerpPlugins(config config.Config) {
 		}
 	}
 
-	// RULE: The application must NEVER run without an error sink.  A config that declares no
-	// (valid) loggers — e.g. a hand-written file that omits "loggers" — would send every
-	// derp.Report() into a black hole, silently swallowing failures like a domain that cannot
-	// bootstrap.  Default to a console reporter so reported errors always reach stdout.
+	// RULE: The server must NEVER run without an error sink.  A config that declares no valid
+	// loggers (a hand-written file that omits "loggers", say) still gets a console reporter.
 	if len(reporters) == 0 {
 		log.Warn().Str("loc", location).Msg("No loggers configured; defaulting to a console error reporter so failures are visible")
 		reporters = append(reporters, derpconsole.New())
@@ -1186,18 +1107,17 @@ func (factory *factoryCore) refreshDomains(config config.Config) {
 		log.Trace().Str("loc", location).Str("domain", domainConfig.Hostname).Msg("Refreshing domain...")
 		if err := factory.refreshDomain(domainConfig); err != nil {
 
-			// RULE: A domain that fails to refresh is left OUT of the registry, so every request
-			// to it later returns "421 Hostname is invalid" with no other clue.  Log the failure
-			// on the always-on zerolog channel (not only derp.Report, which needs a configured
-			// sink) and name the unreachable hostname so the root cause is tied to the symptom.
+			// RULE: A NEW domain that fails to load stays out of the registry, so requests to it
+			// answer 421 with no other clue.  Log its hostname on the always-on zerolog channel,
+			// because derp.Report needs a configured sink.
 			log.Error().Err(err).Str("loc", location).Str("hostname", domainConfig.Hostname).Msg("Domain failed to load and will be UNREACHABLE (requests to it will return 421)")
 			derp.Report(derp.Wrap(err, location, "Refreshing domain", domainConfig.ID))
 			continue
 		}
 	}
 
-	// Actually delete any domains that are still MarkForDeletion.  Their change stream watchers
-	// never end on their own, so they must be stopped here.
+	// Actually delete any domains that are still MarkForDeletion, stopping their watchers, which
+	// never end on their own.  RULE: Never Close them here; see AGENTS.md.
 	factory.domains.Range(func(key string, domain *service.Factory) bool {
 		if domain.MarkForDeletion {
 			domain.StopWatchers()
@@ -1225,15 +1145,19 @@ func (factory *factoryCore) init(storage config.Storage, embeddedFiles embed.FS)
 		value.queue = queue.New()
 	})
 
-	// Build the in-memory cache
+	// Build the in-memory cache.  The error is discarded because Build fails only on invalid
+	// settings, and these are constant.
 	otterCache, _ := otter.MustBuilder[string, string](1000).
 		WithVariableTTL().
 		Build()
 
+	// Template functions, which render icons through the icon service
 	factory.funcMap = templates.FuncMap(factory.Icons())
 
+	// Shared cache for outbound HTTP requests
 	factory.httpCache = httpcache.NewOtterCache(otterCache, httpcache.WithTTL(1*time.Minute))
 
+	// Global Icon Service
 	factory.iconService = service.NewIcons()
 
 	// Global Registration Service
@@ -1262,14 +1186,17 @@ func (factory *factoryCore) init(storage config.Storage, embeddedFiles embed.FS)
 		sliceof.NewObject[mapof.String](),
 	)
 
+	// Global Content Service
 	factory.contentService = service.NewContent(factory.EditorJS())
 
+	// Global Email Service
 	factory.emailService = service.NewServerEmail(
 		factory.Filesystem(),
 		factory.FuncMap(),
 		sliceof.NewObject[mapof.String](),
 	)
 
+	// Digital Dome, which guards every domain against abusive traffic
 	factory.digitalDome = dome.New(
 		factory.ClientIP, // resolve client IPs using the configured trusted-proxy strategy
 		dome.LogStatusCodes(
@@ -1280,6 +1207,7 @@ func (factory *factoryCore) init(storage config.Storage, embeddedFiles embed.FS)
 		),
 	)
 
+	// Scratch space for media processing
 	factory.workingDirectory = mediaserver.NewWorkingDirectory(os.TempDir(), 4*time.Minute, 10000)
 
 	// The core is assembled; each mode's lifecycle takes it from here.
