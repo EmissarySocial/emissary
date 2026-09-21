@@ -3,73 +3,41 @@ package queries
 import (
 	"context"
 
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"github.com/rs/zerolog/log"
-	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// WatchUsers initiates a mongodb change stream to on every updates to User data objects
+// WatchUsers sends realtime updates whenever a User is inserted or replaced, until ctx is canceled
 func WatchUsers(ctx context.Context, server data.Server, result chan<- realtime.Message) {
 
 	const location = "queries.WatchUsers"
 
-	// Connect to the database for as long as our refresh context is active
-	session, err := server.Session(ctx)
+	watcher := changeWatcher{
+		collection: "User",
+		onDocument: func(ctx context.Context, document bson.Raw) {
 
-	if err != nil {
-		derp.Report(derp.Wrap(err, location, "Opening database session"))
-		return
-	}
+			// Decode only the identifier that the realtime message needs
+			var user struct {
+				UserID primitive.ObjectID `bson:"_id"`
+			}
 
-	// Confirm that we're watching a mongo database
-	m := mongoCollection(session.Collection("User"))
-
-	if m == nil {
-		return
-	}
-
-	log.Trace().Str("loc", location).Msg("Mongo Collection")
-
-	// Get a change stream
-	cs, err := m.Watch(ctx, mongo.Pipeline{})
-
-	if err != nil {
-
-		// MongoDB error 40573 indicates that we're running on a single node, not a replica set.
-		if commandError, ok := err.(mongo.CommandError); ok {
-			if commandError.Code == 40573 {
+			if err := bson.Unmarshal(document, &user); err != nil {
+				derp.Report(derp.Wrap(err, location, "Decoding User from change event"))
 				return
 			}
-		}
 
-		derp.Report(derp.Wrap(err, location, "Opening Mongodb Change User"))
-		return
+			// Skip "zero" users
+			if user.UserID.IsZero() {
+				return
+			}
+
+			// Refresh pages showing this User
+			sendMessage(ctx, result, realtime.NewMessage_Updated(user.UserID))
+		},
 	}
 
-	// Send notifications whenever a User is changed
-	for cs.Next(ctx) {
-
-		log.Trace().Str("loc", location).Msg("Next")
-
-		var event struct {
-			User model.User `bson:"fullDocument"`
-		}
-
-		if err := cs.Decode(&event); err != nil {
-			derp.Report(err)
-			continue
-		}
-
-		log.Trace().Str("loc", location).Msg("Event")
-
-		// Skip "zero" sreams
-		if event.User.UserID.IsZero() {
-			continue
-		}
-
-		result <- realtime.NewMessage_Updated(event.User.UserID)
-	}
+	watcher.run(ctx, server)
 }

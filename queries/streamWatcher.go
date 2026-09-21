@@ -3,65 +3,52 @@ package queries
 import (
 	"context"
 
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
-	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// WatchStreams initiates a mongodb change stream to on every updates to Stream data objects
+// WatchStreams sends realtime updates whenever a Stream is inserted or replaced, until ctx is canceled
 func WatchStreams(ctx context.Context, server data.Server, result chan<- realtime.Message) {
 
-	// Connect to the database for as long as our refresh context is active
-	session, err := server.Session(ctx)
+	const location = "queries.WatchStreams"
 
-	if err != nil {
-		derp.Report(derp.Wrap(err, "queries.WatchStreams", "Opening database session"))
-		return
-	}
+	watcher := changeWatcher{
+		collection: "Stream",
+		onDocument: func(ctx context.Context, document bson.Raw) {
 
-	// Confirm that we're watching a mongo database
-	m := mongoCollection(session.Collection("Stream"))
+			// Decode only the identifiers that the realtime messages need
+			var stream struct {
+				StreamID primitive.ObjectID `bson:"_id"`
+				ParentID primitive.ObjectID `bson:"parentId"`
+			}
 
-	if m == nil {
-		return
-	}
-
-	// Get a change stream
-	cs, err := m.Watch(ctx, mongo.Pipeline{})
-
-	if err != nil {
-
-		// MongoDB error 40573 indicates that we're running on a single node, not a replica set.
-		if commandError, ok := err.(mongo.CommandError); ok {
-			if commandError.Code == 40573 {
+			if err := bson.Unmarshal(document, &stream); err != nil {
+				derp.Report(derp.Wrap(err, location, "Decoding Stream from change event"))
 				return
 			}
-		}
 
-		derp.Report(derp.Wrap(err, "queries.WatchStreams", "Opening Mongodb Change Stream"))
-		return
+			// Skip "zero" streams
+			if stream.StreamID.IsZero() {
+				return
+			}
+
+			// Refresh pages showing this Stream, and pages listing its parent's children
+			sendMessage(ctx, result, realtime.NewMessage_Updated(stream.StreamID))
+			sendMessage(ctx, result, realtime.NewMessage_ChildUpdated(stream.ParentID))
+		},
 	}
 
-	// Send notifications whenever a Stream is changed
-	for cs.Next(ctx) {
+	watcher.run(ctx, server)
+}
 
-		var event struct {
-			Stream model.Stream `bson:"fullDocument"`
-		}
+// sendMessage delivers a realtime message, giving up if ctx is canceled first
+func sendMessage(ctx context.Context, result chan<- realtime.Message, message realtime.Message) {
 
-		if err := cs.Decode(&event); err != nil {
-			derp.Report(err)
-			continue
-		}
-
-		// Skip "zero" sreams
-		if event.Stream.StreamID.IsZero() {
-			continue
-		}
-
-		result <- realtime.NewMessage_Updated(event.Stream.StreamID)
-		result <- realtime.NewMessage_ChildUpdated(event.Stream.ParentID)
+	select {
+	case result <- message:
+	case <-ctx.Done():
 	}
 }
