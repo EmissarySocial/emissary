@@ -84,3 +84,34 @@ func RemoteActorAccount(profileURL string, label string, iconURL string, created
 		CreatedAt:   MastodonDate(createdAt),
 	}
 }
+
+// remoteStatusIDPrefix marks a Mastodon status ID that encodes a post's URL, for
+// posts that have no NewsItem (and so no ObjectID of their own).
+const remoteStatusIDPrefix = "p_"
+
+// EncodeRemoteStatusID turns a post's URL into an opaque, URL-path-safe Mastodon
+// status ID. A raw URL can't be used: its slashes break the route.
+func EncodeRemoteStatusID(postURL string) string {
+	return remoteStatusIDPrefix + base64.RawURLEncoding.EncodeToString([]byte(postURL))
+}
+
+// DecodeRemoteStatusID reverses EncodeRemoteStatusID. ok is false when s is not
+// one of our encoded status IDs.
+func DecodeRemoteStatusID(s string) (postURL string, ok bool) {
+
+	if !strings.HasPrefix(s, remoteStatusIDPrefix) {
+		return "", false
+	}
+
+	raw, err := base64.RawURLEncoding.DecodeString(strings.TrimPrefix(s, remoteStatusIDPrefix))
+
+	if err != nil {
+		return "", false
+	}
+
+	if parsed, err := url.Parse(string(raw)); err != nil || !parsed.IsAbs() {
+		return "", false
+	}
+
+	return string(raw), true
+}

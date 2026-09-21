@@ -12,7 +12,9 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/toot"
+	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // tootGetter is any ranked model object that can render itself as a Mastodon API object
@@ -115,6 +117,38 @@ func queryExpressionByField(queryPager txn.QueryPager, fieldName string) exp.Exp
 	}
 
 	return result
+}
+
+// loadNewsItemByStatusID loads the NewsItem behind a Mastodon status ID. Timeline
+// statuses are identified by their NewsItemID (see NewsItem.Toot), but a client
+// may also send the post's URL, or the encoded URL of a post that isn't in the
+// feed (see model.EncodeRemoteStatusID).
+func loadNewsItemByStatusID(factory *service.Factory, session data.Session, userID primitive.ObjectID, statusID string, newsItem *model.NewsItem) error {
+
+	newsFeedService := factory.NewsFeed()
+
+	if newsItemID, err := primitive.ObjectIDFromHex(statusID); err == nil {
+		return newsFeedService.LoadByID(session, userID, newsItemID, newsItem)
+	}
+
+	if postURL, ok := model.DecodeRemoteStatusID(statusID); ok {
+		return newsFeedService.LoadByURL(session, userID, postURL, newsItem)
+	}
+
+	return newsFeedService.LoadByURL(session, userID, statusID, newsItem)
+}
+
+// reloadedStatus re-reads a NewsItem and returns it as a full Status, so a write
+// endpoint (favourite, etc.) answers with the same object a timeline would.
+func reloadedStatus(factory *service.Factory, session data.Session, auth model.Authorization, newsItemID primitive.ObjectID, location string) (object.Status, error) {
+
+	newsItem := model.NewNewsItem()
+
+	if err := factory.NewsFeed().LoadByID(session, auth.UserID, newsItemID, &newsItem); err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Reloading message")
+	}
+
+	return newsItemsToPosts(factory, session, auth, []model.NewsItem{newsItem})[0], nil
 }
 
 // getStreamFromURL is a convenience function that combines the following

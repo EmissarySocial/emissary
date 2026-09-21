@@ -335,6 +335,8 @@ func (newsItem NewsItem) Toot() object.Status {
 		URL:              newsItem.URL,
 		CreatedAt:        MastodonDate(published),
 		Visibility:       "public",
+		Favourited:       newsItem.IsLiked(),
+		Reblogged:        newsItem.IsAnnounced(),
 		Account:          RemoteActorAccount(newsItem.Origin.URL, newsItem.Origin.Label, newsItem.Origin.IconURL, time.Time{}),
 		MediaAttachments: []object.MediaAttachment{},
 	}

@@ -2,6 +2,7 @@ package mastodon
 
 import (
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -25,14 +26,6 @@ import (
 func GetTimeline_Public(serverFactory *server.Factory) func(model.Authorization, txn.GetTimeline_Public) ([]object.Status, toot.PageInfo, error) {
 
 	return func(auth model.Authorization, t txn.GetTimeline_Public) ([]object.Status, toot.PageInfo, error) {
-		return []object.Status{}, toot.PageInfo{}, nil
-	}
-}
-
-// https://docs.joinmastodon.org/methods/timelines/#tag
-func GetTimeline_Hashtag(serverFactory *server.Factory) func(model.Authorization, txn.GetTimeline_Hashtag) ([]object.Status, toot.PageInfo, error) {
-
-	return func(auth model.Authorization, t txn.GetTimeline_Hashtag) ([]object.Status, toot.PageInfo, error) {
 		return []object.Status{}, toot.PageInfo{}, nil
 	}
 }
@@ -119,8 +112,138 @@ func GetTimeline_List(serverFactory *server.Factory) func(model.Authorization, t
 	}
 }
 
-// newsItemsToToots converts NewsItems into Statuses, live-fetching each item's
-// actor and post document to fill in what NewsItem itself doesn't store.
+// newsItemsToToots converts NewsItems into timeline Statuses. A boosted item
+// becomes the booster's own Status wrapping the original post, as Mastodon does.
+func newsItemsToToots(factory *service.Factory, session data.Session, auth model.Authorization, newsItems []model.NewsItem) []object.Status {
+
+	posts, boosters := newsItemsToStatuses(factory, session, auth, newsItems)
+	result := make([]object.Status, len(newsItems))
+
+	for index, newsItem := range newsItems {
+
+		post, booster := posts[index], boosters[index]
+
+		if booster == nil {
+			result[index] = post
+			continue
+		}
+
+		// RULE: the wrapper needs its own ID -- the client treats a status and its
+		// reblog with the same ID as one record. Actions (favourite, etc.) target
+		// the inner post, whose ID stays the NewsItemID.
+		wrapper := newsItem.Toot()
+		wrapper.ID = "b" + wrapper.ID
+		wrapper.URI = post.URI + "#announce"
+		wrapper.URL = wrapper.URI
+		wrapper.Favourited = false
+		wrapper.Reblogged = false
+		wrapper.Account = *booster
+		wrapper.Reblog = &post
+
+		result[index] = wrapper
+	}
+
+	return result
+}
+
+// newsItemsToPosts converts NewsItems into the Statuses of their original posts,
+// with no boost wrapper. It is for endpoints that return the post itself
+// (favourites, the response to a favourite).
+func newsItemsToPosts(factory *service.Factory, session data.Session, auth model.Authorization, newsItems []model.NewsItem) []object.Status {
+
+	posts, _ := newsItemsToStatuses(factory, session, auth, newsItems)
+	return posts
+}
+
+// newsItemsToStatuses runs newsItemToStatus over every NewsItem, concurrently.
+//
+// RULE: each item costs several remote fetches (actor, post, author, and the
+// collections behind an account's counts), so a cold cache makes them the whole
+// request. Run in parallel a cold page costs its slowest item, not the sum.
+// Accounts are shared across items, so each distinct account is loaded once.
+func newsItemsToStatuses(factory *service.Factory, session data.Session, auth model.Authorization, newsItems []model.NewsItem) ([]object.Status, []*object.Account) {
+
+	// A page is at most 40 items, and each spends its time waiting on remote
+	// servers, so let a whole page go at once.
+	const maxConcurrent = 16
+
+	client := factory.ActivityStream().UserClient(auth.UserID)
+	accounts := newAccountMemo()
+	statuses := make([]object.Status, len(newsItems))
+	boosters := make([]*object.Account, len(newsItems))
+
+	var waitGroup sync.WaitGroup
+	slots := make(chan struct{}, maxConcurrent)
+
+	for index := range newsItems {
+
+		waitGroup.Add(1)
+		slots <- struct{}{}
+
+		go func(index int) {
+			defer waitGroup.Done()
+			defer func() { <-slots }()
+			statuses[index], boosters[index] = newsItemToStatus(client, factory, session, accounts, newsItems[index])
+		}(index)
+	}
+
+	waitGroup.Wait()
+	return statuses, boosters
+}
+
+// accountMemo loads each distinct account once per request, however many
+// concurrent callers ask for it.
+type accountMemo struct {
+	mutex sync.Mutex
+	items map[string]*accountMemoItem
+}
+
+type accountMemoItem struct {
+	once    sync.Once
+	account object.Account
+	found   bool
+}
+
+func newAccountMemo() *accountMemo {
+	return &accountMemo{items: map[string]*accountMemoItem{}}
+}
+
+// get returns the account for a URL, calling load only for the first caller
+func (memo *accountMemo) get(url string, load func() (object.Account, bool)) (object.Account, bool) {
+
+	memo.mutex.Lock()
+	item, ok := memo.items[url]
+
+	if !ok {
+		item = &accountMemoItem{}
+		memo.items[url] = item
+	}
+
+	memo.mutex.Unlock()
+
+	item.once.Do(func() {
+		item.account, item.found = load()
+	})
+
+	return item.account, item.found
+}
+
+// loadAccount fetches an actor and maps it to an Account, reporting false on failure
+func loadAccount(client streams.Client, factory *service.Factory, session data.Session, url string) (object.Account, bool) {
+
+	document, err := client.Load(url)
+
+	if err != nil {
+		return object.Account{}, false
+	}
+
+	return mapDocumentToAccount(factory, session, document), true
+}
+
+// newsItemToStatus builds the Status for the post behind a NewsItem, live-fetching
+// its actor and post document to fill in what NewsItem itself doesn't store. The
+// returned booster is the account that surfaced the post, when that was a boost
+// and the post's real author could be determined; otherwise it is nil.
 //
 // RULE (Account): the official app never re-fetches the Account embedded in a
 // Status after tapping into it from a timeline post -- it reads straight from
@@ -129,30 +252,86 @@ func GetTimeline_List(serverFactory *server.Factory) func(model.Authorization, t
 // the next refresh. Falls back to NewsItem.Toot()'s placeholder on a failed
 // fetch.
 //
+// RULE (Author): NewsItem.Origin is whoever led us to the post -- the booster,
+// for an ANNOUNCE. The author is named by the post document itself.
+//
 // RULE (Content): NewsItem never stores the post body -- see NewsItem.Toot().
 // This fetch is normally a cache hit, since ingesting the document is how the
 // NewsItem came to exist in the first place.
-func newsItemsToToots(factory *service.Factory, session data.Session, auth model.Authorization, newsItems []model.NewsItem) []object.Status {
+func newsItemToStatus(client streams.Client, factory *service.Factory, session data.Session, accounts *accountMemo, newsItem model.NewsItem) (object.Status, *object.Account) {
 
-	client := factory.ActivityStream().UserClient(auth.UserID)
-	result := make([]object.Status, len(newsItems))
+	status := newsItem.Toot()
 
-	for index, newsItem := range newsItems {
+	if account, found := accounts.get(newsItem.Origin.URL, func() (object.Account, bool) {
+		return loadAccount(client, factory, session, newsItem.Origin.URL)
+	}); found {
+		status.Account = account
+	}
 
-		status := newsItem.Toot()
+	document, err := client.Load(newsItem.URL)
 
-		if document, err := client.Load(newsItem.Origin.URL); err == nil {
-			status.Account = mapDocumentToAccount(factory, session, document)
+	if err != nil {
+		return status, nil
+	}
+
+	status.Content = document.Content()
+	status.SpoilerText = document.Summary()
+	status.Sensitive = status.SpoilerText != ""
+	status.MediaAttachments = mapDocumentToMediaAttachments(document)
+	status.Tags = mapDocumentToTags(document)
+
+	if newsItem.Origin.Type != model.OriginTypeAnnounce {
+		return status, nil
+	}
+
+	authorURL := document.AttributedTo().ID()
+
+	if authorURL == "" {
+		authorURL = document.ActorID()
+	}
+
+	if authorURL == "" || authorURL == newsItem.Origin.URL {
+		return status, nil
+	}
+
+	booster := status.Account
+
+	if author, found := accounts.get(authorURL, func() (object.Account, bool) {
+		return loadAccount(client, factory, session, authorURL)
+	}); found {
+		status.Account = author
+	} else {
+		status.Account = model.RemoteActorAccount(authorURL, "", "", time.Time{})
+	}
+
+	return status, &booster
+}
+
+// mapDocumentToTags converts the Hashtags in a post document's AS2 "tag" property
+// into Mastodon tags. Mentions and emoji share that property but are not hashtags.
+func mapDocumentToTags(document streams.Document) []object.StatusTag {
+
+	result := make([]object.StatusTag, 0)
+
+	for tag := range document.Tag().Range() {
+
+		if tag.Type() != vocab.LinkTypeHashtag {
+			continue
 		}
 
-		if document, err := client.Load(newsItem.URL); err == nil {
-			status.Content = document.Content()
-			status.SpoilerText = document.Summary()
-			status.Sensitive = status.SpoilerText != ""
-			status.MediaAttachments = mapDocumentToMediaAttachments(document)
+		// AS2 names carry the leading "#"; Mastodon's do not
+		name := strings.TrimPrefix(tag.Name(), "#")
+		href := tag.Href()
+
+		if href == "" {
+			href = tag.ID()
 		}
 
-		result[index] = status
+		if name == "" || href == "" {
+			continue
+		}
+
+		result = append(result, object.StatusTag{Name: name, URL: href})
 	}
 
 	return result
