@@ -64,11 +64,37 @@ The other trap is a template one: a Go template that renders an optional header 
 
 When reading this dependency, confirm which copy you have: the module cache also holds a stale `go-simple-mail@v2.2.2+incompatible` tree under a different module path. Use `go list -m -f '{{.Dir}}' github.com/xhit/go-simple-mail/v2`.
 
+## The cached Domain record is an immutable snapshot, and every server holds its own
+
+`Domain.Get()` returns the snapshot held in an `atomic.Pointer`. `Save`, `Start`, and `queries.WatchDomain` replace it through `publish`, which is how a Domain saved on one server reaches the others ([BUG-170](../../emissary-specs/bugs/BUG-170-Domain-Record-Cached-Per-Node.md)). Two rules follow. Never write through the pointer `Get()` returns: copy the struct, clone any map or slice you change (`Connection.editableDomain` is the pattern), and `Save` the copy. And never keep that pointer beyond one call, because the next publish replaces it; this is why the Connection service reads through `Get()` every time.
+
+Three writers still modify the snapshot in place: the admin builder's `edit` step, `WebPush.vapidKeys` ([BUG-89](../../emissary-specs/bugs/BUG-89-VAPID-Keys-Cached-Before-Persist.md)), and `UpgradeMongoDB`. And `Save` is still a blind whole-document replace, so a server whose copy is stale can write it over a newer one; the watcher narrows that window to milliseconds without closing it. Without change streams (a standalone MongoDB), servers never see each other's Domain changes, so a cluster must run on a replica set.
+
+`Domain.Refresh` must never reset the snapshot. It runs on every configuration reload, but only `Start` and the watcher reload the record, so a blank published there strands an empty Domain with no `Label`, `PrivateKey`, or `CreateDate`, and its next `Save` tries to INSERT a second record. `Start` resets it next to the `Load` that refills it, and a failed `Load` leaves that blank published.
+
+## A Connection handed out by the Connection service must not share maps with the snapshot
+
+`Connection.Load`, and every `Load*` method built on it, clones `Data`, `Vault.Encrypted`, and `Vault.Nonces` before returning, because its callers write into them: the `edit-connection` step through the settings form, `NewOAuthClient`, `Vault.Encrypt` inside `Save`, and `StripeConnect.Connect`. Without the clone, a `Save` that fails leaves its rejected edits in the published record, and the next Domain save from that server stores them. The vault's unexported `plaintext` map is still shared, because only `model` can copy it. `Query`, `QueryAll`, `ActiveByType`, and `AllAsMap` return shared values, so treat them as read-only.
+
+**`Connection.Save` seals the vault before `provider.Connect` runs.** A secret that `Connect` adds, which today is `StripeConnect`'s `webhookSecret`, stays in the vault's `plaintext` map, which is `bson:"-"`, so it is never stored. It lives only in memory until the watcher republishes the stored record, milliseconds after the save (on a standalone MongoDB, until restart).
+
 ## Domain bootstrap is one transaction, and the invariant is what matters
 
 `Domain.Start()` delegates to `bootstrap(session)`, which wraps the domain-record write and `createOwner` in a single transaction. That establishes **domain record exists if and only if an owner exists** (when `CreateOwner` is set), so a failed first boot writes nothing and the next boot retries cleanly. Before this, the owner was a separate non-transactional write gated on "domain record not found": any failure stranded a domain record with no owner and the gate never re-ran, which locked every demo and fresh instance out. `persist()` is the write-only path used inside the transaction; the in-memory domain cache is published only **after** commit. Do not collapse `persist` back into `Save`.
 
-Three decisions here look like defects and are not. The `admin`/`admin` default password is set **only** under `IsLocalhost()`; that gate is the thing keeping a known credential off public hosts. `config.Owner` has no password field by design — a non-localhost owner signs in first through an emailed reset link, or the operator gets a loud warning pointing at the setup console. And `newOwnerFromConfig` falls back from a blank email to `admin@<hostname>` because `User.Save` requires a non-empty address.
+Three decisions here look like defects and are not. The `demo` default password is set **only** under `IsLocalhost()`; that gate is the thing keeping a known credential off public hosts. `config.Owner` has no password field by design — a non-localhost owner signs in first through an emailed reset link, or the operator gets a loud warning pointing at the setup console. And `newOwnerFromConfig` falls back from a blank email to `demo@<hostname>` because `User.Save` requires a non-empty address.
+
+## The server configuration owns the hostname, and the Domain record keeps a stamped copy
+
+`Domain.Host()` builds every derived URL from the record's own `Hostname` (the federation actor, OAuth client metadata, oEmbed, email links), so the record needs a copy even though an operator can rename a domain in the setup tool at any time. `bootstrap` stamps it before the first write, and `stampHostname` checks it on every `Start` and rewrites it when the two differ, which is why `shouldStartDomainService` restarts the service on a rename as well as on a reconnect. Two guards keep this safe. A blank configured hostname never overwrites a stored one (`needsHostnameStamp`), because the setup console builds factories before its configuration is complete, and a cleared hostname breaks every derived URL. And `Start` never runs before a database is configured, because it needs a session.
+
+## `Factory.Steranko` is the only place the password hashing policy is set
+
+Every password write goes through the Steranko instance it builds. A path that sets a password any other way stores it raw (CWE-256), which is how registration, password reset, and Mastodon signup went wrong; `TestSteranko_SetPassword_StoresBCrypt12` pins the policy. New hashes use BCrypt cost 12, about 200ms each: slow enough to resist offline cracking, and fast enough that signin latency and a failed-signin flood stay affordable. The Plaintext fallback lets passwords stored before hashing still sign in, and steranko re-hashes them on first use. When the plaintext-password migration ships, remove the fallback and delete `TestSteranko_PlaintextFallback` deliberately.
+
+## A captured server-level handle fails with symptoms that point elsewhere
+
+`Factory` reads the common database, the task queue, and the server email service through `serverFactory` on every call, as [server/AGENTS.md](../server/AGENTS.md) requires, because a config reload can rebuild all three. A copy captured anywhere in this package goes stale on that reload. A stale common database fails every call with `client is disconnected`, which surfaced as inbound signature verification failing with a bare 401, and a stale queue silently drops every task with `Turbine Queue: stopped`. [factory_lifecycle_test.go](factory_lifecycle_test.go) pins the read-through.
 
 ## Two geocoder response mappers are wrong, and the tests pin the bug
 

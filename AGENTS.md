@@ -2,7 +2,7 @@
 
 See [README.md](README.md) for what Emissary is and [build/README.md](build/README.md) for how templates and action pipelines fit together. These are the repo-wide rules that are not visible in the code.
 
-Package-specific notes live in the nearest `AGENTS.md` — currently [service](service/AGENTS.md), [handler/mastodon](handler/mastodon/AGENTS.md), and [tools](tools/AGENTS.md). Put a lesson in the most specific file that covers it; this one is only for rules that span packages.
+Package-specific notes live in the nearest `AGENTS.md`, and most packages now have one: [build](build/AGENTS.md), [config](config/AGENTS.md), [consumer](consumer/AGENTS.md), [handler](handler/AGENTS.md), [middleware](middleware/AGENTS.md), [model](model/AGENTS.md), [queries](queries/AGENTS.md), [realtime](realtime/AGENTS.md), [server](server/AGENTS.md), [service](service/AGENTS.md), and [tools](tools/AGENTS.md), with deeper ones under [handler/mastodon](handler/mastodon/AGENTS.md), [service/content](service/content/AGENTS.md), and [_embed/templates](_embed/templates/AGENTS.md). Put a lesson in the most specific file that covers it; this one is only for rules that span packages.
 
 Runtime errors are reported to MongoDB by [tools/derp-mongo](tools/derp-mongo/README.md). The command that works through them, [benpate/derp-triage](https://github.com/benpate/derp-triage), lives in its own module and deliberately does not depend on this one.
 

@@ -124,3 +124,25 @@ func TestFactory_StopWatchers(t *testing.T) {
 		require.Nil(t, second.Err())
 	})
 }
+
+// TestFactory_Close pins that Close stops the change stream watchers and closes the SSE channel
+func TestFactory_Close(t *testing.T) {
+
+	jwtService := NewJWT()
+	jwtService.Refresh(nil)
+
+	factory := Factory{
+		jwtService:       &jwtService,
+		sseUpdateChannel: make(chan realtime.Message),
+	}
+
+	factory.realtimeBroker = realtime.NewBroker(factory.sseUpdateChannel)
+	watchers := factory.newRefreshContext()
+
+	factory.Close()
+
+	require.Error(t, watchers.Err())
+
+	_, isOpen := <-factory.sseUpdateChannel
+	require.False(t, isOpen)
+}
