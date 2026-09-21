@@ -321,6 +321,9 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 
 		// Watch for updates to User records
 		go queries.WatchUsers(refreshContext, factory.server, factory.sseUpdateChannel)
+
+		// Watch for updates to the Domain record, which may be saved by another server
+		go queries.WatchDomain(refreshContext, factory.server, factory.domainService.publish)
 	}
 
 	return nil
@@ -354,6 +357,7 @@ func shouldStartDomainService(newConfig config.Domain, hasDatabaseChanged bool, 
 
 // Close disconnects any background processes before this factory is destroyed
 func (factory *Factory) Close() {
+	factory.StopWatchers()
 	close(factory.sseUpdateChannel)
 	factory.realtimeBroker.Close()
 	factory.jwtService.Close()
@@ -1168,12 +1172,18 @@ func (factory *Factory) Collections() []string {
 	}
 }
 
-// newRefreshContext cancels any existing refresh context and returns a new one
-func (factory *Factory) newRefreshContext() context.Context {
+// StopWatchers ends every change stream watcher that this factory started
+func (factory *Factory) StopWatchers() {
 
 	if factory.refreshContext != nil {
 		factory.refreshContext()
 	}
+}
+
+// newRefreshContext cancels any existing refresh context and returns a new one
+func (factory *Factory) newRefreshContext() context.Context {
+
+	factory.StopWatchers()
 
 	ctx, cancelFunction := context.WithCancel(context.Background())
 

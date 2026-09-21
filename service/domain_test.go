@@ -143,3 +143,73 @@ func TestNewOAuthClient_EmptyProviderID(t *testing.T) {
 	require.Error(t, err)
 	require.Equal(t, model.Connection{}, connection)
 }
+
+// TestDomain_Get_ZeroValue pins that a Domain service that has never loaded a record returns a
+// blank Domain, and the SAME blank Domain on every call.
+func TestDomain_Get_ZeroValue(t *testing.T) {
+
+	service := Domain{}
+
+	first := service.Get()
+	require.NotNil(t, first)
+	require.Equal(t, "default", first.ThemeID)
+	require.NotNil(t, first.Connections)
+	require.Same(t, first, service.Get())
+}
+
+// TestDomain_Publish pins that a published record replaces the cached one
+func TestDomain_Publish(t *testing.T) {
+
+	service := NewDomain()
+
+	domain := model.NewDomain()
+	domain.Label = "Published"
+	service.publish(domain)
+
+	require.Equal(t, "Published", service.Get().Label)
+}
+
+// TestDomain_Publish_KeepsOldSnapshots pins that publishing never modifies a record a reader
+// already holds, which is what makes a background reload safe.
+func TestDomain_Publish_KeepsOldSnapshots(t *testing.T) {
+
+	service := NewDomain()
+
+	before := model.NewDomain()
+	before.Label = "Before"
+	service.publish(before)
+
+	held := service.Get()
+
+	after := model.NewDomain()
+	after.Label = "After"
+	service.publish(after)
+
+	require.Equal(t, "Before", held.Label)
+	require.Equal(t, "After", service.Get().Label)
+	require.NotSame(t, held, service.Get())
+}
+
+// TestDomain_Publish_Concurrent pins that readers and a background publisher can run at once.
+// It proves nothing without -race.
+func TestDomain_Publish_Concurrent(t *testing.T) {
+
+	service := NewDomain()
+	done := make(chan struct{})
+
+	go func() {
+		defer close(done)
+		for index := range 1000 {
+			domain := model.NewDomain()
+			domain.DatabaseVersion = uint(index)
+			service.publish(domain)
+		}
+	}()
+
+	for range 1000 {
+		_ = service.Get().Label
+	}
+
+	<-done
+	require.Equal(t, uint(999), service.Get().DatabaseVersion)
+}

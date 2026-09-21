@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"html/template"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/EmissarySocial/emissary/config"
@@ -35,7 +36,7 @@ type Domain struct {
 	activityService     *ActivityStream
 	configuration       config.Domain
 	connectionService   *Connection
-	domain              model.Domain
+	domain              atomic.Pointer[model.Domain] // the cached Domain record.  Published values are never modified.
 	funcMap             template.FuncMap
 	database            func() *mongo.Database
 	newSession          func(time.Duration) (data.Session, context.CancelFunc, error)
@@ -51,9 +52,7 @@ type Domain struct {
 
 // NewDomain returns a fully initialized Domain service
 func NewDomain() Domain {
-	return Domain{
-		domain: model.NewDomain(),
-	}
+	return Domain{}
 }
 
 /******************************************
@@ -68,10 +67,9 @@ func (service *Domain) collection(session data.Session) data.Collection {
 // Refresh updates any stateful data that is cached inside this service.
 //
 // RULE: This method must NOT reset the cached Domain record.  Refresh runs on every configuration
-// reload, but Start (the only thing that reloads the record from the database) runs only when the
-// database connection or the hostname changes.  Blanking here therefore strands the service holding
-// an empty Domain -- no Label, no PrivateKey, and a zero DomainID that makes the next Save INSERT a
-// second record instead of updating the real one.  Start does the resetting, next to its Load.
+// reload, but only Start and the Domain watcher reload the record from the database.  Blanking here
+// therefore strands the service holding an empty Domain -- no Label, no PrivateKey, and no CreateDate,
+// so the next Save tries to INSERT a second record.  Start does the resetting, next to its Load.
 func (service *Domain) Refresh(factory *Factory) {
 
 	service.activityService = factory.ActivityStream()
@@ -107,15 +105,18 @@ func (service *Domain) Start() error {
 
 	// Reset the cached record HERE -- immediately before the Load that refills it -- so that this
 	// service is never left holding a blank Domain.  See the RULE on Refresh.
-	service.domain = model.NewDomain()
+	service.publish(model.NewDomain())
 
 	// Try to load the domain model into memory
-	err = service.collection(session).Load(exp.All(), &service.domain)
+	domain := model.NewDomain()
+	err = service.collection(session).Load(exp.All(), &domain)
 
 	switch {
 
-	// If the domain record already exists, then bring its hostname up to date.
+	// If the domain record already exists, then publish it and bring its hostname up to date.
 	case err == nil:
+		service.publish(domain)
+
 		if err := service.stampHostname(session); err != nil {
 			return derp.Wrap(err, location, "Updating domain hostname")
 		}
@@ -150,7 +151,7 @@ func (service *Domain) Start() error {
 		}
 
 		// Once we have the domain loaded, try to upgrade the database
-		if err := queries.UpgradeMongoDB(ctx, database, &service.domain); err != nil {
+		if err := queries.UpgradeMongoDB(ctx, database, service.Get()); err != nil {
 			derp.Report(derp.Wrap(err, location, "Domain Not Ready: Error upgrading domain record"))
 			return
 		}
@@ -180,7 +181,7 @@ func (service *Domain) bootstrap(session data.Session) error {
 	// The hostname must be stamped BEFORE persist(): Domain.Host() builds every derived URL from
 	// it, and persist validates iconUrl/imageUrl as absolute URLs.  Without it, the very first
 	// save of a new domain fails with "https:///..." -- a scheme and no authority.
-	domain := service.domain
+	domain := *service.Get()
 	domain.Hostname = service.hostname
 	domain.Label = service.configuration.Label
 
@@ -207,7 +208,7 @@ func (service *Domain) bootstrap(session data.Session) error {
 	}
 
 	// The transaction committed, so the in-memory cache can now reflect durable state.
-	service.domain = domain
+	service.publish(domain)
 
 	// POST-COMMIT: invite a non-localhost owner to set their password (see inviteOwner).
 	// This runs outside the transaction because sending email is an external side effect
@@ -229,11 +230,11 @@ func (service *Domain) stampHostname(session data.Session) error {
 	const location = "service.Domain.stampHostname"
 
 	// NO-OP: the stored record already agrees with the configuration
-	if !needsHostnameStamp(service.domain.Hostname, service.hostname) {
+	if !needsHostnameStamp(service.Get().Hostname, service.hostname) {
 		return nil
 	}
 
-	domain := service.domain
+	domain := *service.Get()
 	domain.Hostname = service.hostname
 
 	if err := service.Save(session, domain, "Updated Hostname"); err != nil {
@@ -368,9 +369,23 @@ func (service *Domain) inviteOwner(session data.Session, owner *model.User) {
  * Common Data Methods
  ******************************************/
 
-// Get returns a pointer to the domain model object
+// Get returns the cached Domain record.  A service that has never loaded one returns a blank Domain.
 func (service *Domain) Get() *model.Domain {
-	return &service.domain
+
+	if result := service.domain.Load(); result != nil {
+		return result
+	}
+
+	// Publish a blank record only if nothing else got there first, so every caller shares one value
+	blank := model.NewDomain()
+	service.domain.CompareAndSwap(nil, &blank)
+
+	return service.domain.Load()
+}
+
+// publish replaces the cached Domain record with the provided value
+func (service *Domain) publish(domain model.Domain) {
+	service.domain.Store(&domain)
 }
 
 // Save updates the value of this domain in the database and refreshes the in-memory cache.
@@ -382,7 +397,7 @@ func (service *Domain) Save(session data.Session, domain model.Domain, note stri
 	}
 
 	// Update the in-memory cache to match what was just written
-	service.domain = domain
+	service.publish(domain)
 
 	return nil
 }
@@ -455,7 +470,7 @@ func (service *Domain) ObjectQuery(session data.Session, result any, criteria ex
 
 // ObjectLoad retrieves a single Domain as a data.Object. Implements the ModelService interface.
 func (service *Domain) ObjectLoad(_ data.Session, _ exp.Expression) (data.Object, error) {
-	return &service.domain, nil
+	return service.Get(), nil
 }
 
 // ObjectSave adds or updates a Domain in the database. Implements the ModelService interface.
@@ -488,18 +503,18 @@ func (service *Domain) Schema() schema.Schema {
 
 // Theme returns the Theme that this Domain is displayed with
 func (service *Domain) Theme() model.Theme {
-	return service.themeService.GetTheme(service.domain.ThemeID)
+	return service.themeService.GetTheme(service.Get().ThemeID)
 }
 
 // HasRegistrationForm returns TRUE if this domain allows new users to sign up.
 func (service *Domain) HasRegistrationForm() bool {
-	return service.domain.HasRegistrationForm()
+	return service.Get().HasRegistrationForm()
 }
 
 // LoadRegistration returns the sign-up Registration configured for this Domain
 func (service *Domain) LoadRegistration() model.Registration {
 
-	if registrationID := service.domain.RegistrationID; registrationID != "" {
+	if registrationID := service.Get().RegistrationID; registrationID != "" {
 		if registration, err := service.registrationService.Load(registrationID); err == nil {
 			return registration
 		}

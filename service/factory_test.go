@@ -88,3 +88,32 @@ func TestShouldStartDomainService(t *testing.T) {
 		})
 	}
 }
+
+// TestFactory_StopWatchers pins that the change stream watchers a factory starts can be stopped,
+// since they never stop on their own.
+func TestFactory_StopWatchers(t *testing.T) {
+
+	t.Run("ZeroFactory", func(t *testing.T) {
+		factory := Factory{}
+		require.NotPanics(t, factory.StopWatchers)
+	})
+
+	t.Run("CancelsTheContext", func(t *testing.T) {
+		factory := Factory{}
+		ctx := factory.newRefreshContext()
+
+		factory.StopWatchers()
+
+		require.Error(t, ctx.Err())
+		require.NotPanics(t, factory.StopWatchers)
+	})
+
+	t.Run("NewContextStopsTheOldOne", func(t *testing.T) {
+		factory := Factory{}
+		first := factory.newRefreshContext()
+		second := factory.newRefreshContext()
+
+		require.Error(t, first.Err())
+		require.Nil(t, second.Err())
+	})
+}
