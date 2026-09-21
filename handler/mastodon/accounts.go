@@ -109,15 +109,28 @@ func mapDocumentToAccount(factory *service.Factory, session data.Session, docume
 		createdAt = time.Now()
 	}
 
+	avatar := document.Icon().URL()
+	header := document.Image().URL()
+
+	// Best-effort follower/following/post counts: the actor document only carries
+	// the collection URLs, so fetch each and read its "totalItems". A failure (a
+	// server that hides these, a 404) just leaves the count at 0, which is what
+	// Mastodon itself does. ascache serves repeat profile views without refetching.
 	return object.Account{
-		ID:          resolveAccountID(factory, session, document.ID()),
-		Acct:        acct,
-		Username:    document.PreferredUsername(),
-		DisplayName: document.Name(),
-		Avatar:      document.Icon().URL(),
-		URL:         document.URL(),
-		Note:        document.Summary(),
-		CreatedAt:   model.MastodonDate(createdAt),
+		ID:             resolveAccountID(factory, session, document.ID()),
+		Acct:           acct,
+		Username:       document.PreferredUsername(),
+		DisplayName:    document.Name(),
+		Avatar:         avatar,
+		AvatarStatic:   avatar,
+		Header:         header,
+		HeaderStatic:   header,
+		URL:            document.URL(),
+		Note:           document.Summary(),
+		CreatedAt:      model.MastodonDate(createdAt),
+		FollowersCount: document.Followers().LoadLink().TotalItems(),
+		FollowingCount: document.Following().LoadLink().TotalItems(),
+		StatusesCount:  document.Outbox().LoadLink().TotalItems(),
 	}
 }
 
@@ -267,6 +280,61 @@ func PatchAccount_UpdateCredentials(serverFactory *server.Factory) func(model.Au
 	}
 }
 
+// GetAccounts implements the Mastodon batch "get multiple accounts" endpoint
+// (GET /api/v1/accounts?id[]=...). The client uses it to refresh accounts it
+// already has on screen -- opening a profile reached from a post author or a
+// list -- so it must return the same fully-populated Account that GetAccount
+// does. An id that no longer resolves is skipped rather than failing the batch.
+func GetAccounts(serverFactory *server.Factory) func(model.Authorization, txn.GetAccounts) ([]object.Account, error) {
+
+	const location = "handler.mastodon_GetAccounts"
+
+	return func(auth model.Authorization, t txn.GetAccounts) ([]object.Account, error) {
+
+		factory, err := serverFactory.ByHostname(t.Host)
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Creating session")
+		}
+
+		defer cancel()
+
+		result := make([]object.Account, 0, len(t.IDs))
+
+		for _, id := range t.IDs {
+
+			// A local account
+			if user, err := loadUserByAccountID(factory, session, id); err == nil {
+				result = append(result, user.Toot())
+				continue
+			}
+
+			// A remote account: resolve + dereference, same as GetAccount.
+			accountURL, err := resolveAccountURL(factory, session, id)
+
+			if err != nil {
+				continue
+			}
+
+			document, err := factory.ActivityStream().UserClient(auth.UserID).Load(accountURL)
+
+			if err != nil {
+				continue
+			}
+
+			result = append(result, mapDocumentToAccount(factory, session, document))
+		}
+
+		return result, nil
+	}
+}
+
 // GetAccount implements the Mastodon "get account" endpoint
 func GetAccount(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount) (object.Account, error) {
 
@@ -308,7 +376,12 @@ func GetAccount(serverFactory *server.Factory) func(model.Authorization, txn.Get
 		document, err := client.Load(accountURL)
 
 		if err != nil {
-			return object.Account{}, derp.Wrap(err, location, "Loading remote account", accountURL)
+			// RULE: derp.Wrap inherits the wrapped error's status code by default, and
+			// a remote origin's own failure (401, 403, 429...) is not our caller's
+			// fault. Passing it through as-is would make the client think its OWN
+			// bearer token is invalid. Report it as what it actually is: we could
+			// not reach the remote account.
+			return object.Account{}, derp.Wrap(err, location, "Loading remote account", accountURL, derp.WithBadGateway())
 		}
 
 		return mapDocumentToAccount(factory, session, document), nil
@@ -380,13 +453,65 @@ func GetAccount_Followers(serverFactory *server.Factory) func(model.Authorizatio
 	}
 }
 
-// GetAccount_Following implements the Mastodon "get account following" endpoint, and always returns an empty list
+// GetAccount_Following implements the Mastodon "get account following" endpoint.
+// Emissary only knows one account's following graph -- the local User's own -- so
+// this returns that list when the caller asks for their own account, and an
+// honest empty result for anyone else (the same cross-account limit Mastodon
+// itself has).
 func GetAccount_Following(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Following) ([]object.Account, toot.PageInfo, error) {
+
+	const location = "handler.mastodon_GetAccount_Following"
 
 	return func(auth model.Authorization, t txn.GetAccount_Following) ([]object.Account, toot.PageInfo, error) {
 
-		// Emissary does not (currently?) publish following data
-		return []object.Account{}, toot.PageInfo{}, nil
+		factory, err := serverFactory.ByHostname(t.Host)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Creating session")
+		}
+
+		defer cancel()
+
+		// Only the caller's own following list is available.
+		if user, err := loadUserByAccountID(factory, session, t.ID); err != nil || user.UserID != auth.UserID {
+			return []object.Account{}, toot.PageInfo{}, nil
+		}
+
+		records, err := factory.Following().RangeByUserID(session, auth.UserID)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Querying following")
+		}
+
+		result := make([]object.Account, 0)
+		client := factory.ActivityStream().UserClient(auth.UserID)
+
+		for following := range records {
+
+			profileURL := following.ProfileURL
+			if profileURL == "" {
+				profileURL = following.URL
+			}
+
+			// Prefer a live (ascache-backed) dereference so the row carries real
+			// follower/following/post counts, same as a direct GetAccount fetch.
+			// Some origins are unreachable; fall back to the Following row's own
+			// data rather than dropping the account from the list.
+			if document, err := client.Load(profileURL); err == nil {
+				result = append(result, mapDocumentToAccount(factory, session, document))
+				continue
+			}
+
+			result = append(result, model.RemoteActorAccount(profileURL, following.Label, following.IconURL, time.UnixMilli(following.CreateDate)))
+		}
+
+		return result, toot.PageInfo{}, nil
 	}
 }
 
@@ -703,13 +828,66 @@ func PostAccount_Note(serverFactory *server.Factory) func(model.Authorization, t
 	}
 }
 
-// GetAccount_Relationships is the Mastodon "get relationships" endpoint, which Emissary does not implement
+// GetAccount_Relationships implements the Mastodon "check relationships" endpoint.
+// The client calls this for every account it shows -- profile screens, follow
+// buttons -- and expects a JSON array, so a derp.NotImplemented here breaks those
+// screens. Emissary answers "following" from a Following record and
+// "blocking"/"muting" from an ACTOR Rule; every other flag is reported false.
 func GetAccount_Relationships(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Relationships) ([]object.Relationship, error) {
 
 	const location = "handler.mastodon_GetAccount_Relationships"
 
 	return func(auth model.Authorization, t txn.GetAccount_Relationships) ([]object.Relationship, error) {
-		return nil, derp.NotImplemented(location)
+
+		factory, err := serverFactory.ByHostname(t.Host)
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Creating session")
+		}
+
+		defer cancel()
+
+		followingService := factory.Following()
+		ruleService := factory.Rule()
+		result := make([]object.Relationship, 0, len(t.IDs))
+
+		for _, id := range t.IDs {
+
+			relationship := object.Relationship{
+				ID:        id,
+				Languages: []string{},
+			}
+
+			// "following": a Following record for the resolved actor URL.
+			if accountURL, err := resolveAccountURL(factory, session, id); err == nil {
+				following := model.NewFollowing()
+				if err := followingService.LoadByURL(session, auth.UserID, accountURL, &following); err == nil {
+					relationship.Following = true
+				}
+			}
+
+			// "blocking"/"muting": an ACTOR Rule keyed by the ID the client sent,
+			// matching how PostAccount_Block / PostAccount_Mute store it.
+			rule := model.NewRule()
+			if err := ruleService.LoadByMatchKey(session, auth.UserID, model.RuleTypeActor, id, &rule); err == nil {
+				switch rule.Action {
+				case model.RuleActionBlock:
+					relationship.Blocking = true
+				case model.RuleActionMute:
+					relationship.Muting = true
+				}
+			}
+
+			result = append(result, relationship)
+		}
+
+		return result, nil
 	}
 }
 
@@ -763,7 +941,9 @@ func GetAccount_Lookup(serverFactory *server.Factory) func(model.Authorization, 
 		document, err := client.Load(t.Acct)
 
 		if err != nil {
-			return object.Account{}, derp.Wrap(err, location, "Loading document")
+			// See the matching comment in GetAccount: don't let a remote origin's own
+			// status code read to the client as its own bearer token being invalid.
+			return object.Account{}, derp.Wrap(err, location, "Loading document", derp.WithBadGateway())
 		}
 
 		// Map the ActivityStream to a Mastodon Account. The caller already told us
