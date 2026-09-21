@@ -1,6 +1,8 @@
 package service
 
 import (
+	"maps"
+
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
@@ -14,13 +16,12 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// Connection manages all interactions with the Connection collection
+// Connection manages the third-party Connections stored on the Domain record
 type Connection struct {
 	domainService   *Domain
 	providerService *Provider
 	masterKey       string
 	host            string
-	domain          *model.Domain
 }
 
 // NewConnection returns a fully populated Connection service
@@ -38,7 +39,6 @@ func (service *Connection) Refresh(factory *Factory) {
 	service.providerService = factory.Provider()
 	service.masterKey = factory.MasterKey()
 	service.host = factory.Host()
-	service.domain = factory.Domain().Get()
 }
 
 // Close stops any background processes controlled by this service
@@ -50,21 +50,27 @@ func (service *Connection) Close() {
  * Common Data Methods
  ******************************************/
 
-// Count returns the number of records that match the provided criteria
+// Count returns the number of Connections on the Domain record.  It ignores the criteria.
 func (service *Connection) Count(session data.Session, criteria exp.Expression) (int64, error) {
-	return int64(len(service.domain.Connections)), nil
+	return int64(len(service.connections())), nil
 }
 
-// Load retrieves a single Connection from the database
+// Load copies the first Connection on the cached Domain record that matches the criteria into result
 func (service *Connection) Load(session data.Session, criteria exp.Expression, result *model.Connection) error {
 	const location = "service.Connection.Load"
 
 	// Find the first Connection that matches the criteria
-	connection, found := service.domain.Connections.MatchOne(criteria)
+	connection, found := service.connections().MatchOne(criteria)
 
 	if !found {
 		return derp.NotFound(location, "No Connection found matching criteria", criteria)
 	}
+
+	// Clone the maps that callers write into, so an edit never reaches the published Domain record.
+	// The vault's unexported plaintext map is still shared (see AGENTS.md).
+	connection.Data = maps.Clone(connection.Data)
+	connection.Vault.Encrypted = maps.Clone(connection.Vault.Encrypted)
+	connection.Vault.Nonces = maps.Clone(connection.Vault.Nonces)
 
 	*result = connection
 	return nil
@@ -72,13 +78,13 @@ func (service *Connection) Load(session data.Session, criteria exp.Expression, r
 
 // Query returns every Connection that matches the provided criteria
 func (service *Connection) Query(session data.Session, criteria exp.Expression, options ...option.Option) ([]model.Connection, error) {
-	connections := service.domain.Connections.Match(criteria).Values()
+	connections := service.connections().Match(criteria).Values()
 
 	result := dataslice.ApplyOptions(connections, options...)
 	return result, nil
 }
 
-// Save adds/updates an Connection in the database
+// Save connects or disconnects a Connection through its Provider, then stores it on the Domain record
 func (service *Connection) Save(session data.Session, connection *model.Connection, note string) error {
 
 	const location = "service.Connection.Save"
@@ -136,17 +142,18 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 		}
 	}
 
-	// Save the connection to the database
-	service.domain.Connections[connection.ProviderID] = *connection
+	// Store the Connection on a copy of the Domain record, and save that
+	domain := service.editableDomain()
+	domain.Connections[connection.ProviderID] = *connection
 
-	if err := service.domainService.Save(session, *service.domain, "Updated connection: "+connection.ProviderID); err != nil {
+	if err := service.domainService.Save(session, domain, "Updated connection: "+connection.ProviderID); err != nil {
 		return derp.Wrap(err, location, "Saving Connection", connection, note)
 	}
 
 	return nil
 }
 
-// Delete removes an Connection from the database (virtual delete)
+// Delete disconnects a Connection through its Provider, then removes it from the Domain record
 func (service *Connection) Delete(session data.Session, connection *model.Connection, note string) error {
 
 	const location = "service.Connection.Delete"
@@ -170,10 +177,11 @@ func (service *Connection) Delete(session data.Session, connection *model.Connec
 		return derp.Wrap(err, location, "Installing connection")
 	}
 
-	// Delete the Connection from the domain (and save)
-	delete(service.domain.Connections, connection.ProviderID)
+	// Remove the Connection from a copy of the Domain record, and save that
+	domain := service.editableDomain()
+	delete(domain.Connections, connection.ProviderID)
 
-	if err := service.domainService.Save(session, *service.domain, "Deleted connection: "+connection.ProviderID); err != nil {
+	if err := service.domainService.Save(session, domain, "Deleted connection: "+connection.ProviderID); err != nil {
 		return derp.Wrap(err, "service.Connection.Delete", "Deleting Connection", connection, note)
 	}
 
@@ -247,21 +255,40 @@ func (service *Connection) Schema() schema.Schema {
  * Custom Queries
  ******************************************/
 
+// connections returns the Connections on the cached Domain record.  Callers must not modify it.
+func (service *Connection) connections() mapof.Matchable[model.Connection] {
+	return service.domainService.Get().Connections
+}
+
+// editableDomain returns a copy of the cached Domain record with its own Connections map, so
+// changing that map never touches the published record.
+func (service *Connection) editableDomain() model.Domain {
+
+	domain := *service.domainService.Get()
+	domain.Connections = maps.Clone(domain.Connections)
+
+	if domain.Connections == nil {
+		domain.Connections = mapof.NewMatchable[model.Connection]()
+	}
+
+	return domain
+}
+
 // QueryAll returns every Connection configured on this Domain
 func (service *Connection) QueryAll(session data.Session, options ...option.Option) ([]model.Connection, error) {
-	result := service.domain.Connections.Values()
+	result := service.connections().Values()
 	result = dataslice.ApplyOptions(result, options...)
 	return result, nil
 }
 
 // ActiveByType returns the active Connections of the provided type
 func (service *Connection) ActiveByType(typeID string) mapof.Matchable[model.Connection] {
-	return service.domain.Connections.Match(exp.Equal("type", typeID).AndEqual("active", true))
+	return service.connections().Match(exp.Equal("type", typeID).AndEqual("active", true))
 }
 
-// AllAsMap returns every Connection configured on this Domain, keyed by provider
+// AllAsMap returns every Connection configured on this Domain, keyed by provider.  Callers must not modify it.
 func (service *Connection) AllAsMap(session data.Session) mapof.Object[model.Connection] {
-	return mapof.Object[model.Connection](service.domain.Connections)
+	return mapof.Object[model.Connection](service.connections())
 }
 
 // LoadByID retrieves a single Connection using its unique ID
@@ -400,7 +427,7 @@ func (service *Connection) GetAccessToken(connection *model.Connection) (oauth2.
 		return oauth2.Token{}, derp.Internal(location, "Service cannot be nil")
 	}
 
-	// NILCHECK: connection cannot not be nil
+	// NILCHECK: connection cannot be nil
 	if connection == nil {
 		return oauth2.Token{}, derp.Internal(location, "Connection cannot be nil")
 	}
