@@ -521,11 +521,11 @@ func TestServer(t *testing.T) {
 // TestDeleteDomain covers a successful removal and a failed save
 func TestDeleteDomain(t *testing.T) {
 
-	domain := config.Domain{DomainID: "1", Hostname: "one.example.com", MasterKey: testMasterKey}
+	domain := config.Domain{DomainID: "1", Hostname: "WWW.One.example.com", MasterKey: testMasterKey}
 
 	t.Run("Success", func(t *testing.T) {
 
-		factory := testPersonalizedFactory()
+		factory := testPersonalizedFactory("one.example.com")
 		factory.storage = &stubStorage{stored: configWithDomains(domain)}
 		setTestConfig(factory, configWithDomains(domain))
 
@@ -535,17 +535,136 @@ func TestDeleteDomain(t *testing.T) {
 		require.NoError(t, err)
 		require.Empty(t, stored.Domains)
 		require.Empty(t, factory.ListDomains())
+
+		// The domain stops answering at once, without waiting for the saved configuration to echo back
+		_, err = factory.ByHostname("one.example.com")
+		require.Equal(t, http.StatusMisdirectedRequest, derp.ErrorCode(err), "a deleted domain must leave the registry")
 	})
 
 	t.Run("SaveFails", func(t *testing.T) {
 
-		factory := testPersonalizedFactory()
+		factory := testPersonalizedFactory("one.example.com")
 		factory.storage = &faultyStorage{writeError: derp.Internal("test", "Storage is down")}
 		setTestConfig(factory, configWithDomains(domain))
 
 		err := factory.DeleteDomain("1")
 		require.Error(t, err)
 		require.Len(t, factory.ListDomains(), 1, "a failed save must leave the configuration alone")
+
+		_, err = factory.ByHostname("one.example.com")
+		require.NoError(t, err, "a failed save must leave the domain serving")
+	})
+
+	t.Run("UnknownDomain", func(t *testing.T) {
+
+		factory := testPersonalizedFactory("one.example.com")
+		factory.storage = &stubStorage{stored: configWithDomains(domain)}
+		setTestConfig(factory, configWithDomains(domain))
+
+		require.NoError(t, factory.DeleteDomain("2"))
+		require.Len(t, factory.ListDomains(), 1)
+
+		_, err := factory.ByHostname("one.example.com")
+		require.NoError(t, err, "deleting another domain must not touch this one")
+	})
+}
+
+// TestDeleteDomain_StopsWatchers verifies that deleting a live domain stops its change stream
+// watchers, which never stop on their own.
+func TestDeleteDomain_StopsWatchers(t *testing.T) {
+
+	factory, domainConfig := newLiveDomainCore(t)
+	factory.storage = &stubStorage{stored: configWithDomains(domainConfig)}
+	setTestConfig(factory, configWithDomains(domainConfig))
+
+	startLiveDomain(t, factory, domainConfig)
+	require.Positive(t, countDomainWatchers(), "the live domain should be running watchers")
+
+	require.NoError(t, factory.DeleteDomain(domainConfig.DomainID))
+
+	_, err := factory.ByHostname(domainConfig.Hostname)
+	require.Equal(t, http.StatusMisdirectedRequest, derp.ErrorCode(err))
+	requireWatchersStopped(t, 0, "a deleted domain's watchers must stop")
+}
+
+// TestRefreshDomain_NormalizesRegistryKey verifies that a domain configured with a hostname that
+// is not already normalized is found by lookups, and refreshed in place by the next reload.
+func TestRefreshDomain_NormalizesRegistryKey(t *testing.T) {
+
+	factory, domainConfig := newLiveDomainCore(t)
+	normalized := domainConfig.Hostname
+	domainConfig.Hostname = "WWW." + strings.ToUpper(normalized)
+
+	domain := startLiveDomain(t, factory, domainConfig)
+
+	found, err := factory.ByHostname(normalized)
+	require.NoError(t, err)
+	require.Same(t, domain, found)
+
+	// A second reload must refresh the same factory, not build a second one beside it
+	reloadDomains(factory, configWithDomains(domainConfig))
+	waitForDomainStartup(t)
+
+	require.Equal(t, 1, factory.domains.Size())
+
+	found, err = factory.ByHostname(normalized)
+	require.NoError(t, err)
+	require.Same(t, domain, found)
+}
+
+// TestRefreshDomain_RefusesCollidingHostname verifies that a domain whose hostname normalizes to
+// another domain's registry key is refused, instead of taking over that domain's factory.
+func TestRefreshDomain_RefusesCollidingHostname(t *testing.T) {
+
+	factory := testPersonalizedFactory("one.example.com")
+	existing, _ := factory.domains.Load("one.example.com")
+
+	err := factory.refreshDomain(config.Domain{DomainID: "2", Hostname: "WWW.One.Example.com"})
+
+	require.Error(t, err)
+	require.Equal(t, http.StatusConflict, derp.ErrorCode(err))
+
+	found, loaded := factory.domains.Load("one.example.com")
+	require.True(t, loaded)
+	require.Same(t, existing, found, "the existing domain must keep its factory")
+}
+
+// TestPutDomain_RefusesCollidingHostname verifies that the setup console cannot save a domain
+// whose hostname normalizes to another domain's, while an edit to the same domain passes.
+func TestPutDomain_RefusesCollidingHostname(t *testing.T) {
+
+	existing := config.Domain{DomainID: "1", Hostname: "one.example.com"}
+
+	t.Run("OtherDomain", func(t *testing.T) {
+
+		factory := testPersonalizedFactory()
+		storage := &faultyStorage{}
+		factory.storage = storage
+		setTestConfig(factory, configWithDomains(existing))
+		setTestCommonDatabase(factory, lazyDatabase(t, "put-domain-collision"))
+
+		err := factory.PutDomain(config.Domain{DomainID: "2", Hostname: "WWW.One.Example.com:8080"})
+
+		require.Error(t, err)
+		require.Equal(t, http.StatusBadRequest, derp.ErrorCode(err))
+		require.Equal(t, "server.Factory.PutDomain", derp.Location(err), "returned un-wrapped, for the setup console")
+		require.Zero(t, storage.writes, "a refused domain must not be saved")
+	})
+
+	t.Run("SameDomain", func(t *testing.T) {
+
+		factory := testPersonalizedFactory()
+		storage := &faultyStorage{writeError: derp.Internal("test", "Storage is down")}
+		factory.storage = storage
+		setTestConfig(factory, configWithDomains(existing))
+		setTestCommonDatabase(factory, lazyDatabase(t, "put-domain-edit"))
+
+		// An edit reaches the save, whose failure is the storage error rather than a refusal
+		err := factory.PutDomain(config.Domain{DomainID: "1", Hostname: "One.Example.com"})
+
+		require.Error(t, err)
+		require.Equal(t, http.StatusInternalServerError, derp.ErrorCode(err))
+		require.Equal(t, 1, storage.writes)
 	})
 }
 

@@ -258,6 +258,12 @@ func (factory *factoryCore) PutDomain(configuration config.Domain) error {
 		return derp.BadRequest(location, "Configure the ActivityPub Cache database before adding domains")
 	}
 
+	// RULE: Refuse a hostname that another domain already uses once normalized, because the two
+	// would share one registry key.  Checked before the save, and UN-wrapped, like the rule above.
+	if factory.hostnameTaken(configuration) {
+		return derp.BadRequest(location, "Another domain already uses this hostname", configuration.Hostname)
+	}
+
 	// Save the domain and build its factory.  The error names the hostname, never the
 	// configuration, which carries the domain's secrets.
 	if err := factory.putDomain(configuration); err != nil {
@@ -343,17 +349,17 @@ func (factory *factoryCore) FindDomain(domainID string) (config.Domain, error) {
 	return config.NewDomain(), derp.NotFound(location, "Unable to find Domain", domainID)
 }
 
-// DeleteDomain removes a domain from the Factory
+// DeleteDomain removes a domain from the configuration and from the registry
 func (factory *factoryCore) DeleteDomain(domainID string) error {
 
 	const location = "server.Factory.DeleteDomain"
 
-	// Remove the domain from the cache
-	factory.domains.Delete(domainID)
-
 	// RULE: The read-modify-write runs under reloadLock; see putDomain
 	factory.reloadLock.Lock()
 	defer factory.reloadLock.Unlock()
+
+	// Find the hostname while the domain is still configured, because the registry is keyed by it
+	domainConfig, isConfigured := factory.currentWiring().config.Domains.Get(domainID)
 
 	// Delete the domain from the configuration and persist it, rebasing on conflicts.  Delete
 	// is keyed by DomainID, so re-applying it over another node's changes is always safe.
@@ -363,7 +369,43 @@ func (factory *factoryCore) DeleteDomain(domainID string) error {
 		return derp.Wrap(err, location, "Saving configuration")
 	}
 
+	// Remove the domain from the registry only after the save, so a failed save leaves it serving
+	if isConfigured {
+		factory.removeDomain(factory.normalizeHostname(domainConfig.Hostname))
+	}
+
 	return nil
+}
+
+// removeDomain drops a domain factory from the registry, stopping its change stream watchers
+// first, because they never stop on their own.  RULE: Never Close it here; see AGENTS.md.
+func (factory *factoryCore) removeDomain(key string) {
+
+	if domain, exists := factory.domains.Load(key); exists {
+		domain.StopWatchers()
+		factory.domains.Delete(key)
+	}
+}
+
+// hostnameTaken returns TRUE if another configured domain's hostname normalizes to the same
+// registry key as this one's.
+func (factory *factoryCore) hostnameTaken(configuration config.Domain) bool {
+
+	key := factory.normalizeHostname(configuration.Hostname)
+
+	for _, existing := range factory.currentWiring().config.Domains {
+
+		// A domain never collides with itself
+		if existing.DomainID == configuration.DomainID {
+			continue
+		}
+
+		if factory.normalizeHostname(existing.Hostname) == key {
+			return true
+		}
+	}
+
+	return false
 }
 
 // refreshDomain attempts to refresh an existing domain, or creates a new one if it doesn't exist
@@ -375,8 +417,17 @@ func (factory *factoryCore) refreshDomain(domainConfig config.Domain) error {
 	// built from cannot come from two different configurations.
 	current := factory.currentWiring()
 
+	// The registry key is normalized exactly as every lookup normalizes a request's hostname
+	key := factory.normalizeHostname(domainConfig.Hostname)
+
 	// Try to find the domain
-	if domain, exists := factory.domains.Load(domainConfig.Hostname); exists {
+	if domain, exists := factory.domains.Load(key); exists {
+
+		// RULE: A hostname that differs from another domain's only by case, port, or a leading
+		// "www." shares its key, and must never take over that domain's factory.
+		if domain.Config().DomainID != domainConfig.DomainID {
+			return derp.Conflict(location, "Another domain already uses this hostname", domainConfig.Hostname, domain.Config().DomainID)
+		}
 
 		// Even if there's an error "refreshing" the domain, we don't want to delete it
 		domain.MarkForDeletion = false
@@ -420,7 +471,7 @@ func (factory *factoryCore) refreshDomain(domainConfig config.Domain) error {
 	}
 
 	// If there are no errors, then add the domain to the list.
-	factory.domains.Store(newDomain.Hostname(), newDomain)
+	factory.domains.Store(key, newDomain)
 
 	return nil
 }
@@ -1116,12 +1167,10 @@ func (factory *factoryCore) refreshDomains(config config.Config) {
 		}
 	}
 
-	// Actually delete any domains that are still MarkForDeletion, stopping their watchers, which
-	// never end on their own.  RULE: Never Close them here; see AGENTS.md.
+	// Actually delete any domains that are still MarkForDeletion
 	factory.domains.Range(func(key string, domain *service.Factory) bool {
 		if domain.MarkForDeletion {
-			domain.StopWatchers()
-			factory.domains.Delete(key)
+			factory.removeDomain(key)
 		}
 		return true
 	})
