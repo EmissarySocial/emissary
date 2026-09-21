@@ -33,11 +33,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// Factory knows how to create an populate all services
-//
-// RULE: Server-level resources that a config reload can REBUILD (the common database connection,
-// the task queue) are never captured here.  They are read through serverFactory on every use --
-// see CommonDatabase() and Queue() -- so a reload can never strand this domain on a dead handle.
+// Factory creates and populates every service for one domain.  Server-level resources that a
+// reload can rebuild are read through serverFactory, never captured (see AGENTS.md).
 type Factory struct {
 	serverFactory ServerFactory
 	server        mongodb.Server
@@ -117,10 +114,8 @@ type Factory struct {
 	MarkForDeletion bool
 }
 
-// NewFactory creates a new factory tied to a MongoDB database.  The common database and the task
-// queue are NOT parameters: both can be rebuilt by a config reload, so the factory reads them
-// through serverFactory on every use instead of capturing them here.  (The server email service
-// is reached the same way -- see ServerEmail() -- so it is not a parameter either.)
+// NewFactory creates a new factory tied to a MongoDB database.  The common database, the task
+// queue, and the server email service are read through serverFactory, so none is a parameter.
 func NewFactory(serverFactory ServerFactory, domain config.Domain, port string, contentService *Content, jwtService *JWT, registrationService *Registration, templateService *Template, themeService *Theme, widgetService *Widget, attachmentOriginals afero.Fs, attachmentCache afero.Fs, exportCache afero.Fs, httpCache *httpcache.HTTPCache, workingDirectory *mediaserver.WorkingDirectory) (*Factory, error) { // NOSONAR: this constructor really needs this many arguments.
 
 	const location = "domain.factory.NewFactory"
@@ -147,10 +142,8 @@ func NewFactory(serverFactory ServerFactory, domain config.Domain, port string, 
 
 	factory.config.Hostname = domain.Hostname
 
-	// Create empty service pointers.  These will be populated in the Refresh() step.
-	// This is so we can:
-	// 1. resolve the problem of circular dependencies
-	// 2. reload service configurations separate from the services themselves.
+	// Create empty services, which Refresh populates.  This resolves circular dependencies, and lets
+	// service configurations reload separately from the services themselves.
 
 	factory.activityStream = NewActivityStream()
 	factory.annotationService = NewAnnotation()
@@ -329,11 +322,8 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	return nil
 }
 
-// shouldStartDomainService reports whether Refresh must (re)start the Domain service.  Start
-// reloads the stored Domain record and stamps the configured hostname into it, so it has to run
-// when the database connection changes AND when the hostname changes -- an operator can rename a
-// domain in the setup tool without touching its database, and the stored record still needs
-// rewriting.  It must never run before a database is configured, because it needs a session.
+// shouldStartDomainService reports whether Refresh must (re)start the Domain service: on a reconnect,
+// or on a rename once a database is configured (see AGENTS.md).
 func shouldStartDomainService(newConfig config.Domain, hasDatabaseChanged bool, hasHostnameChanged bool) bool {
 
 	// A reconnect always restarts the service.  dbConfigChanged has already proven that the
@@ -382,7 +372,7 @@ func (factory *Factory) Host() string {
 	return uri.GuessProtocolForHostname(factory.config.Hostname) + factory.config.Hostname + factory.port
 }
 
-// Hostname returns the domain name only (without a protocol) => e.g. "example.com
+// Hostname returns the domain name only (without a protocol) => e.g. "example.com"
 func (factory *Factory) Hostname() string {
 	return factory.config.Hostname
 }
@@ -401,11 +391,8 @@ func (factory *Factory) Config() config.Domain {
  * Database Connection Methods
  ******************************************/
 
-// CommonDatabase returns the CURRENT connection to the shared (ActivityPub Cache) database.  It
-// reads through the server factory on every call -- deliberately never captured -- because a
-// config reload can reconnect that database, and a captured handle would then fail every call
-// with "client is disconnected" (this stranded the ActivityStream cache, which broke inbound
-// signature verification with a bare 401).
+// CommonDatabase returns the CURRENT connection to the shared (ActivityPub Cache) database, read
+// through the server factory on every call and never captured (see AGENTS.md).
 func (factory *Factory) CommonDatabase() mongodb.Server {
 
 	commonDatabase := factory.serverFactory.CommonDatabase()
@@ -425,10 +412,8 @@ func (factory *Factory) Server() mongodb.Server {
 	return factory.server
 }
 
-// Database returns the raw mongo handle for this domain's OWN database.  It exists for the
-// maintenance paths (index sync, migrations) that need driver-level access; everything else
-// should go through Session/WithTransaction.  Reading through this method -- rather than
-// capturing the handle -- keeps callers on the CURRENT connection across database reconnects.
+// Database returns the raw mongo handle for this domain's OWN database, for maintenance paths (index
+// sync, migrations) only.  Call it on every use, because a reconnect replaces the handle.
 func (factory *Factory) Database() *mongo.Database {
 	return factory.server.Database()
 }
@@ -445,11 +430,8 @@ func (factory *Factory) Session(timeout time.Duration) (data.Session, context.Ca
 	return session, cancel, err
 }
 
-// WithTransaction executes the callback inside a database transaction, with the post-commit
-// task spool attached: tasks emitted via postcommit.Publish during the transaction are held
-// and released to the queue only after the transaction commits — a rolled-back transaction
-// publishes nothing.  This is the ONLY way transactions should be opened; do not call
-// factory.Server().WithTransaction directly.  (See emissary-specs/POST-COMMIT-TASKS-DESIGN.md)
+// WithTransaction runs the callback inside a database transaction, and publishes the tasks it spools
+// only after a commit.  Open every transaction here, never through Server() (see the root AGENTS.md).
 func (factory *Factory) WithTransaction(ctx context.Context, callback data.TransactionCallbackFunc) (any, error) {
 	return postcommit.WithTransaction(ctx, factory.server, factory.Queue(), callback)
 }
@@ -613,9 +595,7 @@ func (factory *Factory) Outbox() *Outbox {
 	return &factory.outboxService
 }
 
-// Outbox2 returns a fully populated Outbox2 service
-// This is a temporary name that will be merged into Outbox
-// once I know WTF I'm doing.
+// Outbox2 returns a fully populated Outbox2 service, under a temporary name until it merges into Outbox
 func (factory *Factory) Outbox2() *Outbox2 {
 	return &factory.outbox2Service
 }
@@ -720,7 +700,7 @@ func (factory *Factory) Webhook() *Webhook {
  * Render Objects
  ******************************************/
 
-// Theme service manages global website themes (managed globally by the server.Factory)
+// Theme returns the Theme service, which manages global website themes (managed globally by the server.Factory)
 func (factory *Factory) Theme() *Theme {
 	return factory.themeService
 }
@@ -734,12 +714,12 @@ func (factory *Factory) Template() *Template {
  * Real-Time Update Channels
  ******************************************/
 
-// RealtimeBroker returns a new RealtimeBroker that can push stream updates to connected clients.
+// RealtimeBroker returns this domain's broker, which pushes stream updates to connected clients.
 func (factory *Factory) RealtimeBroker() *realtime.Broker {
 	return factory.realtimeBroker
 }
 
-// SSEUpdateChannel initializes a background watcher and returns a channel containing any streams that have changed.
+// SSEUpdateChannel returns the channel that carries realtime updates to the broker
 func (factory *Factory) SSEUpdateChannel() chan realtime.Message {
 	return factory.sseUpdateChannel
 }
@@ -751,11 +731,8 @@ func (factory *Factory) SSEUpdateChannel() chan realtime.Message {
 // MediaServer manages all file uploads
 func (factory *Factory) MediaServer() mediaserver.MediaServer {
 
-	// Wrap the remote cache in a local filesystem cache.
-	// tempFS := afero.NewBasePathFs(afero.NewOsFs(), os.TempDir())
-	// cacheFS := afero.NewCacheOnReadFs(factory.AttachmentCache(), tempFS, 10*time.Minute)
-	// return mediaserver.New(factory.AttachmentOriginals(), cacheFS)
-
+	// A local on-read cache in front of AttachmentCache (afero.NewCacheOnReadFs over a temp
+	// directory, 10 minutes) is not wired in.
 	return mediaserver.New(factory.AttachmentOriginals(), factory.AttachmentCache(), factory.workingDirectory)
 }
 
@@ -769,13 +746,13 @@ func (factory *Factory) AttachmentCache() afero.Fs {
 	return factory.getSubFolder(factory.attachmentCache, factory.Hostname())
 }
 
-// getSubFolder guarantees that a subfolder exists within the provided afero.Fs, or panics
+// getSubFolder returns a filesystem rooted at path within base, creating the folder and reporting
+// (not returning) any failure
 func (factory *Factory) getSubFolder(base afero.Fs, path string) afero.Fs {
 
 	// Try to make a new subfolder at the chosen path (returns nil if already exists)
 	if err := base.MkdirAll(path, 0777); err != nil {
 		derp.Report(derp.Wrap(err, "domain.factory.getSubFolder", "Creating subfolder", path))
-		// panic(err)
 	}
 
 	// Return a filesystem pointing to the new subfolder.
@@ -858,14 +835,12 @@ func (factory *Factory) MasterKey() string {
 }
 
 // Queue returns the Queue service, which manages background jobs.  It reads through the server
-// factory on every call -- deliberately never captured -- because a config reload can rebuild the
-// queue, and a captured pointer would then publish tasks into a stopped queue that silently drops
-// them ("Turbine Queue: stopped").
+// factory on every call and is never captured (see AGENTS.md).
 func (factory *Factory) Queue() *queue.Queue {
 	return factory.serverFactory.Queue()
 }
 
-// Registration returns the Registration service, which managaes new user registrations
+// Registration returns the Registration service, which manages new user registrations
 func (factory *Factory) Registration() *Registration {
 	return factory.registrationService
 }
@@ -873,13 +848,8 @@ func (factory *Factory) Registration() *Registration {
 // Steranko returns a Steranko adapter for the provided database session.
 func (factory *Factory) Steranko(session data.Session) *steranko.Steranko {
 
-	// This is the ONLY place that password hashing policy is defined: BCrypt cost 12
-	// creates all new password hashes (~200ms per hash: slow enough to resist offline
-	// cracking, fast enough that signin latency and the CPU cost of a failed-signin
-	// flood stay reasonable). The Plaintext fallback exists so that passwords
-	// stored before hashing was enforced can still sign in -- steranko re-hashes
-	// them on first use.
-
+	// RULE: This is the ONLY place the password hashing policy is set: BCrypt cost 12 for every
+	// new hash, and a Plaintext fallback that steranko re-hashes on first use (see AGENTS.md).
 	return steranko.New(
 		factory.SterankoUserService(session),
 		factory.JWT(),
@@ -938,6 +908,8 @@ func (factory *Factory) ImportableLocator() ImportableLocator {
 
 	return func(name string) (Importable, error) {
 
+		// "outbox", "content", "following", and "blocked" will map to NilImporter() once other
+		// services exist to test them against.
 		switch name {
 
 		/* THESE TO BE ADDED ONCE WE HAVE OTHER SERVICES TO TEST WITH
