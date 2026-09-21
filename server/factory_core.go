@@ -1196,9 +1196,11 @@ func (factory *factoryCore) refreshDomains(config config.Config) {
 		}
 	}
 
-	// Actually delete any domains that are still MarkForDeletion
+	// Actually delete any domains that are still MarkForDeletion.  Their change stream watchers
+	// never end on their own, so they must be stopped here.
 	factory.domains.Range(func(key string, domain *service.Factory) bool {
 		if domain.MarkForDeletion {
+			domain.StopWatchers()
 			factory.domains.Delete(key)
 		}
 		return true
