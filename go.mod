@@ -39,7 +39,7 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/davidscottmills/goeditorjs v1.0.0
 	github.com/dlclark/metaphone3 v0.0.0-20190903202417-5fe87fcdd547
-	github.com/dustin/go-humanize v1.0.1
+	github.com/dustin/go-humanize v1.1.0
 	github.com/fatih/color v1.19.0
 	github.com/fclairamb/afero-s3 v0.5.0
 	github.com/fsnotify/fsnotify v1.10.1
