@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/html"
 	"github.com/benpate/steranko"
+	"github.com/benpate/uri"
 	"github.com/labstack/echo/v4"
 )
 
@@ -32,6 +33,12 @@ func GetOutboundIntent(ctx *steranko.Context, factory *service.Factory, session 
 
 	// Populate the template with data from the stream
 	nextURL := camper.PopulateTemplate(template, data)
+
+	// RULE: The template is chosen by the visitor's HOME SERVER, so the destination must be an
+	// absolute http(s) URL. A relative path would name a route on THIS server. See AGENTS.md.
+	if !uri.IsValidRedirectURL(nextURL) {
+		return outboundIntentError(ctx, intent)
+	}
 
 	// Forward the user to the correct URL on their home server
 	return ctx.Redirect(http.StatusTemporaryRedirect, nextURL)
