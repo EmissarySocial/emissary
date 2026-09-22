@@ -24,11 +24,15 @@ func (nullIconProvider) Get(name string) string { return "" }
 // Write implements the icon.Provider interface. The stub writes nothing.
 func (nullIconProvider) Write(name string, writer io.Writer) {}
 
-// TestEmbeddedTemplates_HTMLParses walks every _embed/templates directory and parses each *.html
-// file exactly the way the server does at startup (minify → html/template Parse with the real
-// funcMap).  This catches template syntax errors — including the html/template attribute-context
-// gotcha where a "-quoted string literal inside a "-quoted HTML attribute breaks the lexer — without
-// having to boot the server.
+// TestEmbeddedTemplates_HTMLParses parses each *.html file in the directories listed below exactly
+// the way the server does at startup (minify → html/template Parse with the real funcMap).  This
+// catches template syntax errors, an undefined funcMap function, and the html/template
+// attribute-context gotcha where a "-quoted string literal inside a "-quoted HTML attribute breaks
+// the lexer — without having to boot the server.
+//
+// It is NOT a full sweep, and the `dirs` list below is the whole of its coverage: a template
+// directory that is not named there is never parsed by any test, and its first parse happens in
+// front of a visitor.
 func TestEmbeddedTemplates_HTMLParses(t *testing.T) {
 
 	funcMap := emissarytemplates.FuncMap(nullIconProvider{})
@@ -63,10 +67,11 @@ func TestEmbeddedTemplates_HTMLParses(t *testing.T) {
 		}
 	}
 
-	// Scope to the template directories touched by the notifications feature.  (A full sweep trips
-	// over pre-existing email/layout templates that legitimately rely on cross-file variables like
-	// $title and therefore do not parse standalone.)
-	dirs := []string{"user-inbox", "user-settings", "theme-default"}
+	// A full sweep trips over pre-existing email/layout templates that legitimately rely on
+	// cross-file variables like $title and therefore do not parse standalone.  Every directory
+	// that CAN parse standalone belongs here — nothing else parses these files before a visitor
+	// asks for one.
+	dirs := []string{"user-inbox", "user-settings", "theme-default", "stream-article-base", "stream-article-remote"}
 
 	for _, name := range dirs {
 		dir := filepath.Join(root, name)

@@ -159,7 +159,7 @@ func TestMailchimpSubscribe_NeverOverridesABlockRule(t *testing.T) {
 	// quietly reverse the block -- and Emissary would resume emailing someone the User blocked.
 
 	paused := newEmailFollower(primitive.NilObjectID, "sarah@connor.mil")
-	paused.StateID = model.FollowerStatePaused
+	paused.StateID = model.FollowerStateBlocked
 
 	service, userConnection, session := newMailchimpWebhookService(t, paused)
 

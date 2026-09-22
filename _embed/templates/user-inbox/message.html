@@ -25,7 +25,7 @@
 				</span>
 
 				<span class="button-group">
-					<a href="{{$message.URL}}" target="_blank" class="button">{{icon "globe"}} Website</a>
+					<a href="{{$message.URL}}" target="_blank" rel="noopener noreferrer" class="button">{{icon "globe"}} Website</a>
 					<a hx-get="/@me/newsfeed/message-code?messageId={{$message.ID}}&followingId={{$followingID}}" class="button">{{icon "braces"}} Code</a>
 				</span>
 			</div>
@@ -72,7 +72,7 @@
 		</div>
 
 		{{- if ne "" $document.Name -}}
-			<h1 class="margin-top-sm margin-bottom-lg"><a href="{{$document.URLOrID}}" target="_blank" class="text-black">{{$document.Name}}</a></h1>
+			<h1 class="margin-top-sm margin-bottom-lg"><a href="{{$document.URLOrID}}" target="_blank" rel="noopener noreferrer" class="text-black">{{$document.Name}}</a></h1>
 		{{- end -}}
 
 		{{- if $attributedTo.NotEmpty -}}
@@ -99,7 +99,7 @@
 						{{- $image := $document.ImageOrIcon -}}
 						{{- if $image.NotNil -}}
 							<div class="margin-bottom">
-								<a href="{{$document.URLOrID}}" target="_blank"><img src="{{$image.URL}}" alt="{{$image.Summary}}" class="width-100%" style="{{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
+								<a href="{{$document.URLOrID}}" target="_blank" rel="noopener noreferrer"><img src="{{$image.URL}}" alt="{{$image.Summary}}" class="width-100%" style="{{- if $image.HasDimensions}} aspect-ratio:{{$image.AspectRatio}};{{end}}"/></a>
 							</div>
 						{{- end -}}
 					{{- end -}}

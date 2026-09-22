@@ -200,7 +200,7 @@
 									label:Setup
 									children: [
 										{type:"text", path:"name", label:"Circle Name", options:{autocomplete:"off", validator:"/.validate/circle/name?circleId={{.ObjectID}}"}}
-										{type:"select", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
+										{type:"select-icons", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
 										{type:"toggle", path:"isVisible", options:{false-text:"Visible to Members?", true-text:"Visible to Members.  This circle appears on guest profile pages."}}
 									]
 								}
@@ -250,7 +250,7 @@
 										label:Setup
 										children: [
 											{type:"text", path:"name", label:"Circle Name", options:{autocomplete:"off", validator:"/.validate/circle/name?circleId={{.ObjectID}}"}}
-											{type:"select", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
+											{type:"select-icons", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
 											{type:"toggle", path:"isVisible", options:{false-text:"Visible to Members?", true-text:"Visible to Members.  This circle appears on guest profile pages."}}
 										]
 									}
@@ -462,6 +462,8 @@
 				{do:"as-modal", steps:[
 					{do:"with-following", steps:[
 						{do:"view-html", file:"following-edit"}
+						// A BLOCKED Following is read-only: no form on GET, no save on POST (D6, R11)
+						{do:"if", condition:"{{ne `BLOCKED` .Object.Status}}", then:[
 						{do:"set-data", from-url:["folderId"]}
 						{
 							do:"edit", 
@@ -501,6 +503,7 @@
 							}
 						},
 						{do:"save"}
+						]}
 					]}
 				]}
 				{do:"trigger-event", event:"closeModal"}
@@ -729,9 +732,9 @@
 								type:layout-vertical
 								children:[
 									{type:"hidden", path:"type", options:{value:"MAILCHIMP"}}
-									{type:"text", path:"vault.apiKey", label:"Mailchimp API Key", description:"Go to <a href='https://admin.mailchimp.com/account/api/' target='_blank'>Account &rarr; Extras &rarr; API Keys</a> to create an API key for your MailChimp account", options:{required:true}}
+									{type:"text", path:"vault.apiKey", label:"Mailchimp API Key", description:"Go to <a href='https://admin.mailchimp.com/account/api/' target='_blank' rel='noopener noreferrer'>Account &rarr; Extras &rarr; API Keys</a> to create an API key for your MailChimp account", options:{required:true}}
 									{type:"text", path:"data.dataCenter", label:"Data Center", description:"The start of your own Mailchimp web address, such as 'us6'.", options:{required:true, placeholder:"us6"}}
-									{type:"text", path:"data.audienceId", label:"Audience ID", description:"Go to <a href='https://admin.mailchimp.com/audience/' target='_blank'>Audience &rarr; Audience Settings</a> to retrieve your Audience ID"}
+									{type:"text", path:"data.audienceId", label:"Audience ID", description:"Go to <a href='https://admin.mailchimp.com/audience/' target='_blank' rel='noopener noreferrer'>Audience &rarr; Audience Settings</a> to retrieve your Audience ID"}
 									{type:"text", path:"data.tag", label:"Tag", description:"Optional. Every contact that Emissary sends to MailChimp is tagged with this name."}
 									{type:"toggle", path:"isActive", options:{true-text:"Active. New Followers will be sent to MailChimp.", false-text:"Activate?"}}
 								]
@@ -756,7 +759,7 @@
 								type:layout-vertical
 								children:[
 									{type:"hidden", path:"type", options:{value:"MAILCHIMP"}}
-									{type:"text", path:"vault.apiKey", label:"Mailchimp API Key", description:"Go to <a href='https://admin.mailchimp.com/account/api/' target='_blank'>Account &rarr; Extras &rarr; API Keys</a> to create an API key for your MailChimp account", options:{required:true}}
+									{type:"text", path:"vault.apiKey", label:"Mailchimp API Key", description:"Go to <a href='https://admin.mailchimp.com/account/api/' target='_blank' rel='noopener noreferrer'>Account &rarr; Extras &rarr; API Keys</a> to create an API key for your MailChimp account", options:{required:true}}
 									{type:"text", path:"data.dataCenter", label:"Data Center", description:"The start of your own Mailchimp web address, such as 'us6'.", options:{required:true, placeholder:"us6"}}
 									{type:"text", path:"data.audienceId", label:"Audience ID", readOnly:true}
 									{type:"text", path:"data.tag", label:"Tag", description:"Optional. Every contact that Emissary sends to MailChimp is tagged with this name."}

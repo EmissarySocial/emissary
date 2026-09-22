@@ -43,7 +43,7 @@
 				type: layout-vertical
 				label: Stylesheet
 				children: [
-					{type: "textarea", path: "themeData.stylesheet", description: "Custom CSS stylesheet; affects every page on this domain. <a href='https://developer.mozilla.org/en-US/docs/Web/CSS' target='_blank' class='text-gray text-nocolor text-underline'>Learn more about CSS.</a>", options:{rows:12}}
+					{type: "textarea", path: "themeData.stylesheet", description: "Custom CSS stylesheet; affects every page on this domain. <a href='https://developer.mozilla.org/en-US/docs/Web/CSS' target='_blank' rel='noopener noreferrer' class='text-gray text-nocolor text-underline'>Learn more about CSS.</a>", options:{rows:12}}
 				]
 			}
 		]

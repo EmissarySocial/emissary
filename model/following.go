@@ -151,3 +151,19 @@ func (following Following) UsernameOrID() string {
 
 	return following.ProfileURL
 }
+
+// StatusClass returns the CSS color suffix that represents this Following's current status,
+// for use as "text-<class>"
+func (following Following) StatusClass() string {
+	return followingStatusClass(following.Status)
+}
+
+// StatusLabel returns the human-readable description of this Following's current status
+func (following Following) StatusLabel() string {
+	return followingStatusLabel(following.Status)
+}
+
+// StatusDescription returns one short sentence saying why this Following is in a problem status
+func (following Following) StatusDescription() string {
+	return followingStatusDescription(following.Status)
+}

@@ -57,7 +57,7 @@ func TestFollower_SaveEnqueuesNothingForEveryoneElse(t *testing.T) {
 
 	tests := map[string]func(*model.Follower){
 		"unconfirmed":        func(f *model.Follower) { f.StateID = model.FollowerStatePending },
-		"blocked by a rule":  func(f *model.Follower) { f.StateID = model.FollowerStatePaused },
+		"blocked by a rule":  func(f *model.Follower) { f.StateID = model.FollowerStateBlocked },
 		"activitypub":        func(f *model.Follower) { f.Method = model.FollowerMethodActivityPub },
 		"follows a stream":   func(f *model.Follower) { f.ParentType = model.FollowerTypeStream },
 		"follows a search":   func(f *model.Follower) { f.ParentType = model.FollowerTypeSearch },

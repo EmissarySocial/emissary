@@ -176,6 +176,10 @@ func main() {
 
 		// Start the task queue after the HTTP server is running
 		go serverFactory.Queue().Start()
+
+		// Replace the embedded TLD list with IANA's current one. Each node holds its own
+		// copy, so this runs on every boot; a failed fetch keeps the embedded list.
+		go uri.RefreshTLDs()
 	}
 
 	// Listen to the OS SIGINT channel for an interrupt signal
@@ -322,6 +326,7 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/.proxy", handler.WithAuthenticatedUser(factory, handler.PostProxyURL))
 	e.GET("/.searchTag/:searchTagId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetSearchTagAttachment))
 	e.GET("/.sso", handler.WithDomain(factory, handler.GetSingleSignOn))
+	e.POST("/.streamsource/webhook/:token", handler.WithFactory(factory, handler.PostStreamSourceWebhook))
 	// e.GET("/.stripe/connect", handler.WithAuthenticatedUser(factory, handler.GetStripe)) // Replaced with Stripe Connect
 	// e.POST("/.stripe/webhook/signup", handler.WithDomain(factory, stripe.PostSignupWebhook))
 	// e.POST("/.stripe/webhook/checkout", handler.WithMerchantAccount(factory, handler.PostStripeWebhook_Checkout))
@@ -393,6 +398,7 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.GET("/:stream/sse/updated", handler.WithStream(factory, handler.ServerSentEvent_Stream_Updated))
 	e.GET("/:stream/sse/child-updated", handler.WithStream(factory, handler.ServerSentEvent_Stream_ChildUpdated))
 	e.GET("/:stream/sse/new-replies", handler.WithStream(factory, handler.ServerSentEvent_Stream_NewReplies))
+	e.GET("/:stream/sse/stream-source-updated", handler.WithStream(factory, handler.ServerSentEvent_Stream_StreamSourceUpdated))
 
 	e.GET("/:objectId/sse/import-progress", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Object_ImportProgress))
 

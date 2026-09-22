@@ -1,6 +1,7 @@
 package service
 
 import (
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
@@ -25,8 +26,9 @@ func (stub dataStub) DataString(key string) string {
 	return stub[key]
 }
 
-// loadEmbeddedTemplates parses every shipped template through the real loader and resolves
-// inheritance, so a test sees the same parse trees a running server does.
+// loadEmbeddedTemplates parses every shipped template through the real loader, resolves
+// inheritance, and promotes the result to the LIVE map, so a test sees the same parse trees a
+// running server does.
 func loadEmbeddedTemplates(t *testing.T) *Template {
 	t.Helper()
 
@@ -34,6 +36,7 @@ func loadEmbeddedTemplates(t *testing.T) *Template {
 	emailService := testServerEmail()
 
 	templateService := &Template{
+		templates:    make(set.Map[model.Template]),
 		templatePrep: make(set.Map[model.Template]),
 		funcMap:      emissarytemplates.FuncMap(nullIconProvider{}),
 		emailService: &emailService,
@@ -58,6 +61,10 @@ func loadEmbeddedTemplates(t *testing.T) *Template {
 
 	require.NoError(t, templateService.calculateAllInheritance())
 	require.NoError(t, templateService.calculateAccessLists())
+
+	// The listing functions read the LIVE map, so a service left in prep answers every List
+	// call with nothing.  loadTemplates ends with this same copy.
+	maps.Copy(templateService.templates, templateService.templatePrep)
 
 	return templateService
 }
@@ -246,7 +253,8 @@ func TestLayoutControls_TwoColumn(t *testing.T) {
 		{width: "FULL", columns: "TWO-THIRDS", selected: "TWO-THIRDS"},
 		{width: "LARGE", columns: "ONE-HALF", selected: "ONE-HALF"},
 		{width: "MEDIUM", columns: "ONE-THIRD", selected: "ONE-THIRD"},
-		{width: "SMALL", columns: "TWO-THIRDS", selected: "TWO-THIRDS"},
+		{width: "SMALL", columns: "THREE-QUARTERS", selected: "THREE-QUARTERS"},
+		{width: "FULL", columns: "ONE-QUARTER", selected: "ONE-QUARTER"},
 		{width: "", columns: "", selected: "ONE-HALF"},
 		{width: "garbage", columns: "garbage", selected: "ONE-HALF"},
 	}
@@ -263,11 +271,11 @@ func TestLayoutControls_TwoColumn(t *testing.T) {
 		require.Contains(t, output, `name="data.width"`, "columns %q", test.columns)
 		require.Contains(t, output, `name="data.columns"`, "columns %q", test.columns)
 
-		// The width control is still a <select>; the split is the icon picker, which is radios
+		// The width control is still a <select>; the split is the icon row, which is radios
 		// because an <option> cannot hold markup.  One selection apiece, counted separately.
 		require.Equal(t, 4, strings.Count(output, "<option "), "columns %q", test.columns)
 		require.Equal(t, 1, strings.Count(output, " selected>"), "columns %q", test.columns)
-		require.Equal(t, 3, strings.Count(output, `<input type="radio"`), "columns %q", test.columns)
+		require.Equal(t, 5, strings.Count(output, `<input type="radio"`), "columns %q", test.columns)
 		require.Equal(t, 1, strings.Count(output, " checked>"), "columns %q", test.columns)
 		require.Contains(t, output, `value="`+test.selected+`" checked>`, "columns %q", test.columns)
 
@@ -332,7 +340,7 @@ func seededValue(steps []step.Step, path string) (string, bool) {
 
 		if setData, ok := item.(step.SetData); ok {
 			if value, exists := setData.Values[path]; exists && value.Tree != nil {
-				return value.Tree.Root.String(), true
+				return value.Root.String(), true
 			}
 		}
 

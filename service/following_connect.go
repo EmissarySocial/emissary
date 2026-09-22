@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/sherlock"
 	"github.com/benpate/uri"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -42,11 +41,11 @@ func (service *Following) Follow(session data.Session, userID primitive.ObjectID
 
 	if err == nil {
 
-		// RULE: a Following paused by a (since-deleted) block resumes only on an explicit
+		// RULE: a Following blocked by a (since-deleted) rule resumes only on an explicit
 		// re-follow like this one -- never automatically (R8)
-		if following.Status == model.FollowingStatusPaused {
+		if following.Status == model.FollowingStatusBlocked {
 			if err := service.Resume(session, &following); err != nil {
-				return model.NewFollowing(), derp.Wrap(err, location, "Resuming paused Following", following.FollowingID)
+				return model.NewFollowing(), derp.Wrap(err, location, "Resuming blocked Following", following.FollowingID)
 			}
 		}
 
@@ -101,7 +100,7 @@ func (service *Following) Connect(session data.Session, following *model.Followi
 	// the reveal, merely MUTING an account made it impossible to follow -- and the failure surfaced as
 	// a raw 403 that took down the whole enclosing form. BLOCK is still refused, above.
 	client := service.activityService.UserClient(following.UserID)
-	actor, err := client.Load(following.URL, sherlock.AsActor(), asrules.WithReveal(true))
+	actor, err := client.Load(following.URL, asrules.WithReveal(true))
 
 	if err != nil {
 		if inner := service.SetStatusFailure(session, following, "Unable to connect to ActivityPub Actor"); inner != nil {
@@ -169,15 +168,15 @@ func (service *Following) ConnectActivityPub(session data.Session, following *mo
 	return nil
 }
 
-// Resume re-activates a PAUSED Following on the user's explicit re-follow (R8): ActivityPub rows
-// re-send their Follow request (an Undo/Follow went out when the row was paused), poll rows simply
+// Resume re-activates a BLOCKED Following on the user's explicit re-follow (R8): ActivityPub rows
+// re-send their Follow request (an Undo/Follow went out when the row was blocked), poll rows simply
 // resume polling. Never called by the restore pass -- re-following is a user decision.
 func (service *Following) Resume(session data.Session, following *model.Following) error {
 
 	const location = "service.Following.Resume"
 
-	// RULE: only PAUSED rows can be resumed
-	if following.Status != model.FollowingStatusPaused {
+	// RULE: only BLOCKED rows can be resumed
+	if following.Status != model.FollowingStatusBlocked {
 		return nil
 	}
 

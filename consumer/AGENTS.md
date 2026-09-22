@@ -10,6 +10,34 @@ Turbine retries any task that returns `queue.Error` or `queue.Requeue`, so handl
 
 `queue.Failure` means "retrying can never help" (malformed args, invalid ObjectID); `queue.Error` means "try again later"; `queue.Ignored` means "not my task". The [utilities.go](utilities.go) `requeue(err)` helper maps derp error classes for HTTP-backed tasks: 429 → `queue.Requeue(delay)`, other 4xx → `Failure`, everything else → `Error`. Misclassifying a permanent error as retryable leaves a task looping in the queue forever.
 
+## A permanent failure ends the task SUCCESSFULLY, because `Failure` still reports
+
+`queue.Error` and `queue.Failure` both call `derp.Report` inside turbine's worker, so classifying a permanent error as `Failure` stops the *retry* but not the *reporting* — the same defect is re-filed on every cycle, which is how one signature became the largest single error class on the server (BUG-148). A failure that is understood and permanent must return `queue.Success()` after a `log.Debug`, exactly as the document loop in [pollFollowing-record.go](pollFollowing-record.go) does with `continue`. Use `requeue(err)` only where reporting is still wanted.
+
+`actorLoadResult` is the worked example: 429 → `requeue` (the host is throttling, not this record), any other 4xx → mark the Following and return Success, everything else → `queue.Error`. The 429 check must come **first**, because `derp.IsClientError` is `400 <= code < 500` and therefore covers 429 too.
+
+**`derp.Wrap(nil, …)` is NOT nil, and `derp.IsNil` does not catch it.** It builds an `Error` whose `Code` is `ErrorCode(nil)`, which is `0`, carrying no details and no wrapped value — so a `derp.Report` reached on a success path files a record with nothing in it to identify. `CrawlContext` did that 301 times in seven days (BUG-150) because it tested `context.IsCollection()` before it tested `err`. Settle `err != nil` first, and use `derp.WrapIF` anywhere the error may legitimately be nil. Status code `0` in the error log means this and nothing else.
+
+**A remote answering HTML to an ActivityPub request is a 500, not a 4xx.** `remote.Transaction.decodeResponseBody` wraps that case with `derp.WithInternalError()`, and `derp.Wrap` applies its options *after* computing the inner code, so the option wins. This is the largest single error class `CrawlContext` produced, and `derp.IsClientError` matches none of it — the same trap as the dead-domain rule below, arriving from the opposite direction.
+
+## Polling has two clocks, and they own different questions
+
+`Following.NextPoll` answers **"how often do we check this source?"** — a cadence, in hours. Turbine's task retry answers **"did that one HTTP call blip?"** — recovery, in minutes. Keeping them separate is deliberate; the two used to be conflated in an exponential backoff written onto `NextPoll`, at a 1m–256m timescale that matched neither the four-hour sweep nor the 24-hour `PollDuration` (BUG-148).
+
+So `PollFollowing_Record` ends **every** completed attempt by writing the cadence: `SetStatusPollSuccess` on success, `SetStatusPollFailure` on any failure, `SetStatusGone` on a `410`. Success and failure both set `NextPoll` one `PollDuration` ahead — a failure uses the *same* cadence as a success, on purpose. Only a `429` hands anything back to turbine, via `requeue`, because a rate limit is the host's throttle and not this record's fault. `FAILURE` exists to tell the owner the feed is broken; it never changes how often we check.
+
+**A dead domain never answers 4xx.** It answers DNS failure, connection refused, TLS handshake failure, or timeout, and `derp` reports all of those as 500. So `derp.IsClientError` is the wrong gate for "did this attempt complete?" — an earlier cut classified only client errors and left exactly the dead-domain case touching the record at all, churning an error-log entry every sweep forever. `actorError` now records **every** completed attempt and reserves `derp.Report` for the non-4xx ones, which are the unexpected ones.
+
+**Three problem states, and they are not interchangeable** (see `FOLLOWING-STATUS-LIFECYCLE.md` in emissary-specs). `FAILURE` is any failed poll, at the normal cadence. `PAUSED` is 30 days without a successful retrieval **plus** 5 consecutive failures, via `SetStatusPollFailure` → `isUnresponsive`; it backs off to a 90-day `NextPoll` and is deliberately *not* excluded from `pollableCriteria`, because that quarterly retry is the only automatic way back — BUG-148's Defect B was a run of 401s caused by *this server's* own bug, and an abandonment that could not undo itself would have made those follows unrecoverable. `GONE` is an explicit `410` only, via `SetStatusGone`; it *is* excluded from polling, by status and never by a far-future date, and nothing but a `410` earns it — a `401`/`403` is a refusal, not evidence. `LastPolled` is what measures "how long has this been broken", so **it must never be stamped on a failure**: its meaning is "last RETRIEVED", and stamping it on failure silently makes every record look freshly healthy. `BLOCKED` is the user's own block rule (R8), is also excluded from polling, and is the *only* status `Following.Save` refuses outright.
+
+Two more rules fall out of this, and both are easy to break:
+
+**A handler cannot advance `NextPoll` and return `queue.Error` in the same run.** `WithSession`'s transaction is aborted by any result carrying a non-nil `Error`, so the write is rolled back. That is *why* the permanent-failure branch returns `queue.Success()` — the mark, not the return value, is what stops the loop, and a `Failure` would discard the mark and report the error anyway.
+
+**The sweep enqueue must keep its `queue.WithSignature`.** Turbine's retry chain runs up to ~4h15m (`RetryMax` 8, `2^n` minutes) which **outlasts the four-hour sweep**, so without the signature a sweep queues a second task for a Following whose first one is still retrying. The signature is keyed on the FollowingID and nothing coarser — see `pollFollowingSignature`. Storage frees it on completion (`onTaskSucceeded` and `onTaskFailure` both `DeleteTask`), so it can never permanently block a record.
+
+The escalating backoff still exists, and still belongs to `SetStatusFailure` — but only on the **connect** path, where someone just clicked "follow" and is watching the badge. Do not reuse it for polling.
+
 ## The reply-tree crawlers must stay bounded — every safeguard is important
 
 The reply graph is remote-controlled data, so the crawl tasks in [crawlContext.go](crawlContext.go), [crawlUpReplyTree.go](crawlUpReplyTree.go), and [crawlDownReplyTree.go](crawlDownReplyTree.go) carry four defenses that all look removable and are not. (1) A `"depth"` argument capped at `maxCrawlDepth` — the only guard that makes cycles (self-replies, mutual replies, an ancestor listed inside a `replies` collection) mathematically unable to breed tasks forever; without it the production queue once accumulated millions of `CrawlDownReplyTree` rows. (2) The `ascache.FromCache` guard that stops a down-crawl at an already-seen document. (3) The `"force"` argument on the ONE seed task `CrawlUpReplyTree` enqueues — the up-crawl's own `Load` has just cached that URL, so without the exemption every crawl dies at its seed and the guard silently disables the feature (which is why it was once commented out). (4) `queue.WithSignature` on every crawl enqueue, so concurrent crawls of the same thread collapse instead of multiplying. hannibal's `RangePages` additionally caps pages per collection, because a cycle of NON-empty `next` links defeats its empty-page check from inside a single task.
@@ -29,6 +57,12 @@ The reply graph is remote-controlled data, so the crawl tasks in [crawlContext.g
 ## `PublishRealtimeMessage` only works in-process — producers must use `queue.WithInline()`
 
 The task ([publishRealtimeMessage.go](publishRealtimeMessage.go)) delivers to `factory.RealtimeBroker()`, which holds this process's live SSE sockets. A stored, retried, or cross-node run would nudge nobody. Topics travel as the integer constants from [../realtime/constants.go](../realtime/constants.go), so never renumber them.
+
+## The two StreamSource sync tasks are one handler under two names
+
+`SyncStreamSource` (webhook, 256) and `SyncStreamSourceNow` (the Sync Now button, 16) exist as separate names only so [preprocessor.go](preprocessor.go) can give them different priorities. The dispatch switch and all three lifecycle hooks must accept both, through `service.IsSyncStreamSourceTask`. A hook that tested one name by hand would stop recording status for the other path, silently — the queue reports nothing when a hook declines a task.
+
+A missing case in `PreProcessor` is just as quiet: the name falls through, `Priority` keeps its `-1` sentinel, and `prepareTask` swaps in the queue default. So a test asking "is the priority low enough?" passes against `-1` and proves nothing. Assert the exact value.
 
 ## New tasks need a case in `PreProcessor` too
 
@@ -53,3 +87,13 @@ The task ([publishRealtimeMessage.go](publishRealtimeMessage.go)) delivers to `f
 ## Outbound delivery filters through the sending actor's rules
 
 `WithSender` in [wrappers.go](wrappers.go) binds the send locator with `BoundToSender(args["actor"])` so recipient resolution respects the sender's block rules, and constructs the hannibal sender with `AllowPrivateIPs` from the server factory — FALSE in production, true only for local/dev federation on a private network. Both `Outbox:SendTo*` task names come from `hannibal/sender` constants; use the constants, not string literals.
+
+## The lifecycle hooks run for EVERY task, so each one checks the task name first
+
+`OnSuccess`, `OnError`, and `OnFailure` in [consumer.go](consumer.go) are called by turbine for every task in the system, not only the ones that care. A hook that skipped its `task.Name` check would send every success in Emissary looking for a `StreamSource` record. `SyncStreamSource` is the only task that acts on them today.
+
+Those hooks are also the **only** place a `StreamSource` status can be written, and the reason is invisible from either side: `WithSession` aborts its transaction when a handler returns an error, so a status written inside the failing attempt is rolled back with it. The hooks run after the transaction has settled and open their own session — see [../service/AGENTS.md](../service/AGENTS.md).
+
+## `consumeSafely`'s panic path reaches no hook
+
+turbine recovers a panicking task in `consumeSafely`, which has no `Consumer` value — it was lost when the stack unwound — so it passes `nil` and no lifecycle hook fires. A task that panics therefore records no status anywhere. Any handler whose status the user reads must not panic; return a `queue.Result` instead.

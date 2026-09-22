@@ -326,6 +326,8 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "with-rule":
 		return NewWithRule(stepInfo)
 
+	case "with-stream-source":
+		return NewWithStreamSource(stepInfo)
 	}
 
 	// Fall through means we have an unrecognized action

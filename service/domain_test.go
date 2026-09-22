@@ -1,15 +1,159 @@
 package service
 
 import (
+	"context"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/EmissarySocial/emissary/config"
+	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queries"
+	"github.com/benpate/data"
+	mockdb "github.com/benpate/data-mock"
+	mongodb "github.com/benpate/data-mongo"
+	"github.com/benpate/data/option"
+	"github.com/benpate/derp"
+	"github.com/benpate/exp"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// TestNewOwnerFromConfig verifies how the bootstrap owner account is populated from the
-// domain configuration, including the default fallbacks that keep User.Save from rejecting
-// a blank email and the whitespace-trimming that fixes the demo config's "admin " username.
+/******************************************
+ * Untested Paths
+ *
+ * createOwner and inviteOwner inside bootstrap need a fully wired
+ * User service and Steranko, so no test here sets CreateOwner.
+ * persist's second Validate cannot fail alone, because Schema()
+ * returns the same schema as the first.  Start's background
+ * upgrade needs a live database; queries tests UpgradeMongoDB.
+ ******************************************/
+
+// domainTestConnection is the local MongoDB replica set that the integration tests require
+const domainTestConnection = "mongodb://localhost:27017/?directConnection=true"
+
+// newTestDomainService returns a Domain service for hostname whose record lives in an in-memory
+// database.  Its background upgrade stops at once, because there is no real database to upgrade.
+func newTestDomainService(t *testing.T, hostname string) (*Domain, data.Session) {
+
+	t.Helper()
+
+	server := mockdb.New()
+	session, err := server.Session(context.Background())
+	require.NoError(t, err)
+
+	service := NewDomain()
+	service.hostname = hostname
+	service.configuration = config.Domain{Hostname: hostname, Label: "Test Domain"}
+	service.database = func() *mongo.Database { return nil }
+	service.withTransaction = server.WithTransaction
+	service.newSession = func(timeout time.Duration) (data.Session, context.CancelFunc, error) {
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		session, err := server.Session(ctx)
+		return session, cancel, err
+	}
+
+	return &service, session
+}
+
+// storeTestDomain writes a Domain record for hostname straight to the database
+func storeTestDomain(t *testing.T, session data.Session, hostname string) model.Domain {
+
+	t.Helper()
+
+	domain := model.NewDomain()
+	domain.Hostname = hostname
+	domain.Label = "Stored Label"
+	require.NoError(t, session.Collection("Domain").Save(&domain, "Stored"))
+
+	return domain
+}
+
+// loadStoredDomain returns the Domain record stored in the database that session reaches
+func loadStoredDomain(t *testing.T, session data.Session) model.Domain {
+
+	t.Helper()
+
+	result := model.NewDomain()
+	require.NoError(t, session.Collection("Domain").Load(exp.All(), &result))
+
+	return result
+}
+
+// requireNothingStored fails unless the database that session reaches holds no Domain record
+func requireNothingStored(t *testing.T, session data.Session) {
+
+	t.Helper()
+
+	result := model.NewDomain()
+	err := session.Collection("Domain").Load(exp.All(), &result)
+	require.True(t, derp.IsNotFound(err), "expected no Domain record, got %v", err)
+}
+
+// newDomainTestDatabase returns a throwaway database on the local MongoDB replica set, dropped when
+// the test ends.  The test is skipped in -short mode, or when no replica set is reachable.
+func newDomainTestDatabase(t *testing.T) *mongo.Database {
+
+	t.Helper()
+
+	if testing.Short() {
+		t.Skip("Skipping MongoDB integration test in -short mode")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(domainTestConnection))
+
+	if err != nil {
+		t.Skip("Skipping: no MongoDB at " + domainTestConnection)
+	}
+
+	// RULE: Change streams need a replica set, and a standalone server names none
+	hello := bson.M{}
+	if err := client.Database("admin").RunCommand(ctx, bson.D{{Key: "hello", Value: 1}}).Decode(&hello); err != nil || hello["setName"] == nil {
+		_ = client.Disconnect(ctx) // Nothing to report: the test is skipped either way
+		t.Skip("Skipping: no MongoDB replica set at " + domainTestConnection)
+	}
+
+	database := client.Database("emissary_domaintest_" + primitive.NewObjectID().Hex())
+
+	t.Cleanup(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		_ = database.Drop(ctx)     // A leftover test database is harmless
+		_ = client.Disconnect(ctx) // ...and so is a connection closed by process exit
+	})
+
+	return database
+}
+
+// failingSession is a data.Session whose every collection fails to load
+type failingSession struct {
+	data.Session
+}
+
+// Collection returns a collection whose Load always fails
+func (session failingSession) Collection(_ string) data.Collection {
+	return failingCollection{}
+}
+
+// failingCollection is a data.Collection whose Load always fails with an internal error
+type failingCollection struct {
+	data.Collection
+}
+
+// Load always fails with an internal error
+func (collection failingCollection) Load(_ exp.Expression, _ data.Object, _ ...option.Option) error {
+	return derp.Internal("service.failingCollection.Load", "Synthetic failure")
+}
+
+// TestNewOwnerFromConfig pins how the bootstrap owner account is built from the configuration,
+// including the defaults and the whitespace trimming.
 func TestNewOwnerFromConfig(t *testing.T) {
 
 	t.Run("FullyConfigured", func(t *testing.T) {
@@ -74,10 +218,8 @@ func TestNewOwnerFromConfig(t *testing.T) {
 	})
 }
 
-// TestNeedsHostnameStamp verifies the rule that decides when the stored Domain record's hostname
-// is rewritten from the server configuration.  The configuration is authoritative, EXCEPT that a
-// blank configured hostname never clears a stored one -- the setup console builds factories before
-// its configuration is complete, and a cleared hostname breaks every URL the domain derives.
+// TestNeedsHostnameStamp pins when the stored hostname is rewritten from the configuration, which
+// wins unless it is blank.
 func TestNeedsHostnameStamp(t *testing.T) {
 
 	testCases := []struct {
@@ -101,9 +243,8 @@ func TestNeedsHostnameStamp(t *testing.T) {
 	}
 }
 
-// TestCalcOwnerInviteMethod verifies the policy that decides how a newly-bootstrapped
-// owner receives their first password.  A known default password is only acceptable on
-// localhost; public hosts must never get one.
+// TestCalcOwnerInviteMethod pins how a new owner receives a first password.  A known default
+// password is acceptable on localhost only.
 func TestCalcOwnerInviteMethod(t *testing.T) {
 
 	testCases := []struct {
@@ -125,4 +266,354 @@ func TestCalcOwnerInviteMethod(t *testing.T) {
 			require.Equal(t, testCase.expected, result)
 		})
 	}
+}
+
+// TestNewOAuthClient_EmptyProviderID pins that a failed Connection load returns an error, rather
+// than panicking on the zero Connection's nil Data map.
+func TestNewOAuthClient_EmptyProviderID(t *testing.T) {
+
+	domainService := Domain{connectionService: &Connection{}}
+
+	// An empty providerID is rejected by LoadOrCreateByProvider before it touches the session,
+	// so a nil session is enough to reach the guard -- and is the proof it returns rather than
+	// dereferencing anything.
+	connection, err := domainService.NewOAuthClient(nil, "")
+
+	require.Error(t, err)
+	require.Equal(t, model.Connection{}, connection)
+}
+
+// TestDomain_Get_ZeroValue pins that a Domain service that has never loaded a record returns a
+// blank Domain, and the SAME blank Domain on every call.
+func TestDomain_Get_ZeroValue(t *testing.T) {
+
+	service := Domain{}
+
+	first := service.Get()
+	require.NotNil(t, first)
+	require.Equal(t, "default", first.ThemeID)
+	require.NotNil(t, first.Connections)
+	require.Same(t, first, service.Get())
+}
+
+// TestDomain_Publish pins that a published record replaces the cached one
+func TestDomain_Publish(t *testing.T) {
+
+	service := NewDomain()
+
+	domain := model.NewDomain()
+	domain.Label = "Published"
+	service.publish(domain)
+
+	require.Equal(t, "Published", service.Get().Label)
+}
+
+// TestDomain_Publish_KeepsOldSnapshots pins that publishing never modifies a record a reader
+// already holds, which is what makes a background reload safe.
+func TestDomain_Publish_KeepsOldSnapshots(t *testing.T) {
+
+	service := NewDomain()
+
+	before := model.NewDomain()
+	before.Label = "Before"
+	service.publish(before)
+
+	held := service.Get()
+
+	after := model.NewDomain()
+	after.Label = "After"
+	service.publish(after)
+
+	require.Equal(t, "Before", held.Label)
+	require.Equal(t, "After", service.Get().Label)
+	require.NotSame(t, held, service.Get())
+}
+
+// TestDomain_Publish_Concurrent pins that readers and a background publisher can run at once.
+// It proves nothing without -race.
+func TestDomain_Publish_Concurrent(t *testing.T) {
+
+	service := NewDomain()
+	done := make(chan struct{})
+
+	go func() {
+		defer close(done)
+		for index := range 1000 {
+			domain := model.NewDomain()
+			domain.DatabaseVersion = uint(index)
+			service.publish(domain)
+		}
+	}()
+
+	for range 1000 {
+		_ = service.Get().Label
+	}
+
+	<-done
+	require.Equal(t, uint(999), service.Get().DatabaseVersion)
+}
+
+// TestDomain_ObjectLoad pins that ObjectLoad returns the cached record, whatever the criteria
+func TestDomain_ObjectLoad(t *testing.T) {
+
+	service := NewDomain()
+
+	domain := model.NewDomain()
+	domain.Label = "Cached"
+	service.publish(domain)
+
+	object, err := service.ObjectLoad(nil, exp.Equal("_id", primitive.NewObjectID()))
+	require.NoError(t, err)
+	require.Same(t, service.Get(), object)
+}
+
+// TestDomain_Save pins that Save publishes exactly what persist wrote, and publishes nothing when
+// the write fails.
+func TestDomain_Save(t *testing.T) {
+
+	t.Run("PublishesWhatWasWritten", func(t *testing.T) {
+
+		service, session := newTestDomainService(t, "example.com")
+
+		domain := model.NewDomain()
+		domain.Hostname = "example.com"
+		domain.Label = "Saved"
+		domain.MLSMode = model.DomainMLSModeAll
+		domain.MLSGroupIDs = sliceof.String{"group"}
+		require.NoError(t, service.Save(session, domain, "test"))
+
+		// persist clears group IDs outside GROUPS mode, in both copies
+		stored := loadStoredDomain(t, session)
+		require.Equal(t, "Saved", stored.Label)
+		require.Empty(t, stored.MLSGroupIDs)
+		require.Equal(t, "Saved", service.Get().Label)
+		require.Empty(t, service.Get().MLSGroupIDs)
+
+		// The journal that persist stamped is published too
+		require.NotZero(t, service.Get().CreateDate)
+		require.Equal(t, stored.CreateDate, service.Get().CreateDate)
+	})
+
+	t.Run("KeepsGroupIDsInGroupsMode", func(t *testing.T) {
+
+		service, session := newTestDomainService(t, "example.com")
+
+		domain := model.NewDomain()
+		domain.MLSMode = model.DomainMLSModeGroups
+		domain.MLSGroupIDs = sliceof.String{"group"}
+		require.NoError(t, service.Save(session, domain, "test"))
+
+		require.Equal(t, sliceof.String{"group"}, loadStoredDomain(t, session).MLSGroupIDs)
+		require.Equal(t, sliceof.String{"group"}, service.Get().MLSGroupIDs)
+	})
+
+	t.Run("InvalidRecordIsNotPublished", func(t *testing.T) {
+
+		service, session := newTestDomainService(t, "example.com")
+		before := service.Get()
+
+		domain := model.NewDomain()
+		domain.ColorMode = "NOT-A-COLOR-MODE"
+		require.Error(t, service.Save(session, domain, "test"))
+
+		require.Same(t, before, service.Get())
+		requireNothingStored(t, session)
+	})
+
+	t.Run("DatabaseErrorIsNotPublished", func(t *testing.T) {
+
+		service, session := newTestDomainService(t, "example.com")
+		before := service.Get()
+
+		// data-mock refuses any save whose note starts with "ERROR"
+		require.Error(t, service.Save(session, model.NewDomain(), "ERROR: synthetic"))
+
+		require.Same(t, before, service.Get())
+		requireNothingStored(t, session)
+	})
+}
+
+// TestDomain_Start pins what Start publishes and stores for a new domain, an existing one, and a
+// renamed one, and what it leaves behind when it fails.
+func TestDomain_Start(t *testing.T) {
+
+	t.Run("FirstRunBootstraps", func(t *testing.T) {
+
+		service, session := newTestDomainService(t, "example.com")
+		require.NoError(t, service.Start())
+
+		stored := loadStoredDomain(t, session)
+		require.Equal(t, "example.com", stored.Hostname)
+		require.Equal(t, "Test Domain", stored.Label)
+		require.NotZero(t, stored.CreateDate)
+
+		require.Equal(t, "example.com", service.Get().Hostname)
+		require.Equal(t, "Test Domain", service.Get().Label)
+		require.Equal(t, stored.CreateDate, service.Get().CreateDate)
+	})
+
+	t.Run("PublishesTheStoredRecord", func(t *testing.T) {
+
+		service, session := newTestDomainService(t, "example.com")
+		before := storeTestDomain(t, session, "example.com")
+
+		require.NoError(t, service.Start())
+		require.Equal(t, "Stored Label", service.Get().Label)
+
+		// The hostname already matches, so nothing is written back
+		require.Equal(t, before.UpdateDate, loadStoredDomain(t, session).UpdateDate)
+	})
+
+	t.Run("StampsARenamedHostname", func(t *testing.T) {
+
+		service, session := newTestDomainService(t, "new.example.com")
+		storeTestDomain(t, session, "old.example.com")
+
+		require.NoError(t, service.Start())
+
+		stored := loadStoredDomain(t, session)
+		require.Equal(t, "new.example.com", stored.Hostname)
+		require.Equal(t, "Stored Label", stored.Label)
+		require.Equal(t, "new.example.com", service.Get().Hostname)
+		require.Equal(t, "Stored Label", service.Get().Label)
+	})
+
+	t.Run("BlankHostnameKeepsTheStoredOne", func(t *testing.T) {
+
+		service, session := newTestDomainService(t, "")
+		storeTestDomain(t, session, "example.com")
+
+		require.NoError(t, service.Start())
+		require.Equal(t, "example.com", loadStoredDomain(t, session).Hostname)
+		require.Equal(t, "example.com", service.Get().Hostname)
+	})
+
+	t.Run("StampFailureIsReturned", func(t *testing.T) {
+
+		service, session := newTestDomainService(t, "new.example.com")
+
+		// A stored record that fails validation cannot be saved back with its new hostname
+		stored := model.NewDomain()
+		stored.Hostname = "old.example.com"
+		stored.ColorMode = "NOT-A-COLOR-MODE"
+		require.NoError(t, session.Collection("Domain").Save(&stored, "Stored"))
+
+		require.Error(t, service.Start())
+		require.Equal(t, "old.example.com", loadStoredDomain(t, session).Hostname)
+		require.Equal(t, "old.example.com", service.Get().Hostname)
+	})
+
+	t.Run("SessionErrorChangesNothing", func(t *testing.T) {
+
+		service, _ := newTestDomainService(t, "example.com")
+		service.newSession = func(time.Duration) (data.Session, context.CancelFunc, error) {
+			return nil, nil, derp.Internal("test", "Synthetic failure")
+		}
+
+		before := service.Get()
+		require.Error(t, service.Start())
+		require.Same(t, before, service.Get())
+	})
+
+	t.Run("LoadErrorLeavesABlankRecord", func(t *testing.T) {
+
+		service, _ := newTestDomainService(t, "example.com")
+		service.newSession = func(time.Duration) (data.Session, context.CancelFunc, error) {
+			return failingSession{}, func() {}, nil
+		}
+
+		published := model.NewDomain()
+		published.Label = "Published"
+		service.publish(published)
+
+		// Pins current behavior: the reset before the Load stays published when the Load fails
+		require.Error(t, service.Start())
+		require.Empty(t, service.Get().Label)
+		require.Equal(t, "default", service.Get().ThemeID)
+	})
+
+	t.Run("TransactionErrorStoresAndPublishesNothing", func(t *testing.T) {
+
+		service, session := newTestDomainService(t, "example.com")
+		service.withTransaction = func(context.Context, data.TransactionCallbackFunc) (any, error) {
+			return nil, derp.Internal("test", "Synthetic failure")
+		}
+
+		require.Error(t, service.Start())
+		requireNothingStored(t, session)
+		require.Empty(t, service.Get().Hostname)
+	})
+
+	t.Run("InvalidRecordStoresAndPublishesNothing", func(t *testing.T) {
+
+		service, session := newTestDomainService(t, "example.com")
+		service.configuration.Label = strings.Repeat("x", 129) // longer than the schema allows
+
+		require.Error(t, service.Start())
+		requireNothingStored(t, session)
+		require.Empty(t, service.Get().Hostname)
+	})
+}
+
+// TestDomain_StampHostname pins the two paths that Start does not reach through a clean record
+func TestDomain_StampHostname(t *testing.T) {
+
+	t.Run("NoOpWhenAlreadyStamped", func(t *testing.T) {
+
+		service := NewDomain()
+		service.hostname = "example.com"
+
+		domain := model.NewDomain()
+		domain.Hostname = "example.com"
+		service.publish(domain)
+
+		// A nil session proves that nothing is written
+		require.NoError(t, service.stampHostname(nil))
+	})
+
+	t.Run("SaveErrorIsReturned", func(t *testing.T) {
+
+		service := NewDomain()
+		service.hostname = "new.example.com"
+
+		domain := model.NewDomain()
+		domain.Hostname = "old.example.com"
+		domain.ColorMode = "NOT-A-COLOR-MODE"
+		service.publish(domain)
+
+		// Validation fails before the (nil) session is touched
+		require.Error(t, service.stampHostname(nil))
+		require.Equal(t, "old.example.com", service.Get().Hostname)
+	})
+}
+
+// TestDomain_Save_ReachesAnotherServer pins BUG-170 end to end: a Domain saved by one server is
+// published on another through queries.WatchDomain, with no restart.
+func TestDomain_Save_ReachesAnotherServer(t *testing.T) {
+
+	server := mongodb.NewServer(newDomainTestDatabase(t))
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+
+	// Two Domain services stand in for two servers that share one database
+	saving := NewDomain()
+	watching := NewDomain()
+	go queries.WatchDomain(ctx, server, watching.publish)
+
+	session, err := server.Session(ctx)
+	require.NoError(t, err)
+
+	// The first save inserts the record, which the watcher reports once its stream is open
+	domain := model.NewDomain()
+	domain.Hostname = "example.com"
+	domain.Label = "First"
+	require.NoError(t, saving.Save(session, domain, "test"))
+	require.Eventually(t, func() bool { return watching.Get().Label == "First" }, 10*time.Second, 20*time.Millisecond)
+
+	// The second save replaces the record, and can only arrive as a change event
+	updated := *saving.Get()
+	updated.Label = "Second"
+	require.NoError(t, saving.Save(session, updated, "test"))
+	require.Eventually(t, func() bool { return watching.Get().Label == "Second" }, 10*time.Second, 20*time.Millisecond)
 }

@@ -61,3 +61,26 @@ The mirror-image rule is that **not every secret-shaped field is one to suppress
 ## `model.DetectContentType` may use the filename to disambiguate, never to promote
 
 It extends `http.DetectContentType`, which cannot sniff FLAC, M4A, Ogg audio, bare MP3, ADTS AAC, WMA, or AMR — all of which came back as `application/octet-stream` and failed an `audio/*` upload gate. The contract is that **the filename argument can never promote bytes into a media type**; it only picks audio-versus-video *inside a byte-confirmed container* (EBML `.weba`, ASF `.wma`/`.wmv`, ISO-BMFF `.m4a`/`.m4b`/`.3ga`). Byte-first sniffing stays the security boundary, because the serve-side inline decision is built on it. `TestDetectContentType_FilenameCannotPromote` pins this; do not relax it into a filename fallback. Known edge: `CanServeInline` also needs `mime.TypeByExtension` to recognize the extension, and `.amr`/`.3ga` return empty, so those download rather than playing inline.
+
+## A custom BSON marshaller that stops satisfying its interface fails silently
+
+`datetime.DateTime`, `geo.Point`, `geo.Polygon`, `delta.Bool`, and `delta.ObjectID` are persisted through custom BSON marshallers. Go satisfies those interfaces *structurally*, so a type whose method signature changes does not fail to compile at its own definition — the driver simply stops recognizing it, falls back to the default struct codec, and writes a different shape. `delta.Bool` and `delta.ObjectID` hold only unexported fields, so their fallback shape is `{}`: a stored `true` becomes an empty document, with no error anywhere. This exact failure already happened once in `geo`, and cost the migration in [../queries/upgrades/v030.go](../queries/upgrades/v030.go) (BUG-139).
+
+[bsonWireFormat_test.go](bsonWireFormat_test.go) carries both guards: compile-time assertions naming every BSON interface this package depends on, and a checked-in fixture pinning the Extended JSON each type writes **as a struct field**. Every document in that fixture is sorted by key, because the record carries a `mapof.Any` and the driver writes a Go map in a different order on every run — an unsorted fixture failed about one run in six. `TestBSONWireFormat_RenderIsStable` keeps the sorting in place. Marshalling one of these types at the top level proves nothing, because that path takes the marshaller directly and never consults the codec registry. A round trip proves nothing either — it is symmetric, so it passes against a format that moved on both sides at once. After an intended format change, run `go test ./model/ -update-golden` and read the diff.
+
+## A BSON decode MERGES into a map field, and skips a field the document does not carry
+
+`x := model.NewX(); service.Load(session, criteria, &x)` is the pattern everywhere in this codebase, and it is safe only because constructors mostly set scalars that the stored document also carries. Two driver behaviours make a map field different, both measured against mongo-go-driver v1.17:
+
+- A key the **document does not have** leaves the struct field exactly as the target already had it. It is not zeroed.
+- A map the document **does** have is merged key by key into the existing map, not swapped for a fresh one. Keys the target brought that the document lacks **survive the decode**.
+
+So a constructor that seeds a map hands every load target those entries, and any of them the stored document does not name will still be there afterwards. `model.NewStreamSource` seeds `Config["webhookToken"]`; that one is harmless only because `service.StreamSource.Save` guarantees every stored record names the same key, so the stored value wins. Add a second `Config` key that is not always written, and it leaks silently from the constructor into every record anyone reads.
+
+Keep building load targets with the constructor — it is what gives a field added later its default instead of a zero value. The rule is about what a constructor may seed into a **map**: either guarantee that every stored record names those keys, the way `Save` does, or leave the map empty and set its keys where they are used.
+
+## A required field that no form offers must be defaulted by the constructor
+
+`StreamSourceSchema` marks `method` required with a single permitted value, `HTTPS`, and no form asks for it — there is nothing to choose. `NewStreamSource` therefore assigns it. Without that default, validation rejected every record the settings screen tried to create, and the only clue was `Validating property / method` from `schema.validate_Object`.
+
+A required field whose enum holds one value reads like something the schema handles on its own. It does not: nothing writes a default, so the constructor is the only place the value can come from. `service.StreamSource.adapterFor` then keys its table on that same value, which is why `TestStreamSource_RefreshWiresEveryDependency` asserts the constructor's Method resolves to a registered Adapter — a default with no Adapter would save and then fail on every synchronization.

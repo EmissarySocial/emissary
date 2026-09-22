@@ -49,6 +49,16 @@ func (step StepSortWidgets) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	// Find and organize the selected widgets
 	for _, widgetLocation := range template.WidgetLocations {
 
+		// RULE: a location the form did not post at all is unchanged.  Only a location that is
+		// present, even as "", was rearranged; treating absence as empty would let a form with
+		// no placement data wipe every widget on the page.
+		if !transaction.Has(widgetLocation) {
+			for _, widget := range stream.WidgetsByLocation(widgetLocation) {
+				newWidgets.Append(widget)
+			}
+			continue
+		}
+
 		widgetTypes := strings.Split(transaction.Get(widgetLocation), ",")
 		for _, widgetType := range widgetTypes {
 			var widget model.StreamWidget

@@ -139,7 +139,6 @@ func PostSearchLookup(ctx *steranko.Context, factory *service.Factory, session d
 		}
 	}
 
-	// Redirect to the new location, using a GET request.
-	forward := ctx.QueryParam("forward") + searchQueryService.ActivityPubURL(searchQuery.SearchQueryID)
-	return ctx.Redirect(http.StatusSeeOther, forward)
+	// Redirect to this server's own Actor for the SearchQuery, using a GET request.
+	return ctx.Redirect(http.StatusSeeOther, searchQueryService.ActivityPubURL(searchQuery.SearchQueryID))
 }

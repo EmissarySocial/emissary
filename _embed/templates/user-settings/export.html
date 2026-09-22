@@ -24,7 +24,7 @@
 				<a href="/@me/settings/export" class="turboclick selected" hx-boost="true">Export</a>
 			</div>
 			<div class="right">
-				<a href="https://emissary.dev/migration" target="_blank" class="link">
+				<a href="https://emissary.dev/migration" target="_blank" rel="noopener noreferrer" class="link">
 					{{icon "help"}}
 					{{ if $isDesktop }} Help with Exports {{ end }}
 				</a>
@@ -67,7 +67,7 @@
 				<div class="margin-top">
 					<i>Note: online account migration is new, and very few servers support
 					this action right now.</i>
-					<a href="https://emissary.dev/migration" target="_blank" class="nowrap">Learn More {{icon "link-outbound"}}</a>
+					<a href="https://emissary.dev/migration" target="_blank" rel="noopener noreferrer" class="nowrap">Learn More {{icon "link-outbound"}}</a>
 				</div>
 			</div>
 
@@ -101,7 +101,7 @@
 								<div>
 									<div class="bold">{{$actor.Name}}</div>
 									<div class="text-sm">
-										<a href="{{$actor.ID}}" class="text-nocolor text-gray" target="_blank">{{$actor.UsernameOrID}} {{icon "link-outbound"}}</a>
+										<a href="{{$actor.ID}}" class="text-nocolor text-gray" target="_blank" rel="noopener noreferrer">{{$actor.UsernameOrID}} {{icon "link-outbound"}}</a>
 									</div>
 									<div class="text-sm text-gray">export date: {{$startDate | shortDate}}</div>
 								</div>

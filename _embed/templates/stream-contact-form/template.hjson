@@ -18,34 +18,16 @@
 	schema: {
 		type: "object"
 		properties: {
-			token: {type:"string", format:"token", maxLength:64, required:true}
+			token: {type:"string", format:"token", maxLength:64}
 			label: {type:"string", format:"text", maxLength:128}
 			icon: {type:"string", format:"token", maxLength:64}
 			summary: {type:"string", format:"text", maxLength:2048}
-			// RULE: the settings a send depends on are required; the prompt is not.  Without a
-			// recipient the send fails, and without a subject or confirmation the visitor gets a
-			// broken message or a blank page -- all discovered by the visitor, not the author.
-			// The prompt is optional because a form with no preamble still works; view.html
-			// renders nothing when it is empty.
-			// NOTE: these are enforced on EVERY save, not just the settings form -- Stream.Save
-			// runs template.Schema.Normalize, which rejects a missing required value rather than
-			// filling in its default.  A required field with no value therefore blocks widget
-			// sorting and sharing too, so "create" must seed every one of them.
 			data: {type:"object", properties: {
-				emailAddress: {type:"string", format:"email", maxLength:255, required:true}
+				emailAddress: {type:"string", format:"email", maxLength:255}
 				emailSubject: {type:"string", format:"text", maxLength:128, required:true}
 				promptContent: {type:"string", format:"unsafe-any", maxLength:8192}
 				headerMessage: {type:"string", format:"unsafe-any", maxLength:2048, required:true}
 				successMessage: {type:"string", format:"unsafe-any", maxLength:2048, required:true}
-				// NOT required, and the enum is what makes that safe: view.html interpolates this
-				// value straight into a class attribute, and Set rejects anything outside the list.
-				// An absent value renders "layout-", which matches no rule and fills the width --
-				// the same result as LARGE.  Marking it required would only guarantee that the
-				// default can never fire, because Normalize rejects a missing value before it
-				// would ever apply one.
-				// FULL is here because layout-controls-width offers it.  The shared control and
-				// every enum that reads from it are one contract: an option the schema cannot
-				// store is a validation error on save, from a dropdown that looked fine.
 				width: {type:"string", enum:["FULL", "LARGE", "MEDIUM", "SMALL"], default:"MEDIUM"}
 			}}
 		}
@@ -169,7 +151,7 @@
 								children: [
 									{type:"text", path:"label", label:"Page Title", description:"Displays in website navigation, and at the top of the page."}
 									{type:"text", path:"token", label:"Token/Slug", description:"This page\u0027s address on your website, for example \u0022contact\u0022.  Must be unique.", options:{autocomplete:"off", validator:"/.validate/stream/token?streamId={{.StreamID}}"}}
-									{type:"select", path:"icon", label:"Icon", description:"Displays beside the page title in website navigation.", options:{provider:"folder-icons"}}
+									{type:"select-icons", path:"icon", label:"Icon", description:"Displays beside the page title in website navigation.", options:{provider:"folder-icons"}}
 								]
 							}
 							{
@@ -183,8 +165,8 @@
 								type: "layout-vertical"
 								label: "Email"
 								children: [
-									{type:"text", path:"data.emailAddress", label:"Send Messages To", description:"Every message from this form is emailed to this address.  Nothing is stored on the server."}
-									{type:"text", path:"data.emailSubject", label:"Subject Line", description:"The subject line of every email this form sends.  Visitors cannot change it."}
+									{type:"text", path:"data.emailAddress", label:"Send Messages To", description:"Every message from this form is emailed to this address.  Nothing is stored on the server.", options:{required:true}}
+									{type:"text", path:"data.emailSubject", label:"Subject Line", description:"The subject line of every email this form sends.  Visitors cannot change it.", options:{required:true}}
 									{type:"textarea", path:"data.headerMessage", label:"Message Header", description:"Added above the visitor\u0027s message in every email this form sends.  Markdown is allowed.", options:{rows:12}}
 								]
 							}

@@ -18,7 +18,7 @@ func TestContent_ApplyTags(t *testing.T) {
 
 	service.ApplyTags(&content, "/search?q=", []string{"travel"})
 
-	require.Equal(t, `Testing hashtags <a href="/search?q=%23travel" target="_blank">#travel</a> here`, content.HTML)
+	require.Equal(t, `Testing hashtags <a href="/search?q=%23travel" target="_blank" rel="noopener noreferrer">#travel</a> here`, content.HTML)
 }
 
 // TestContent_ApplyTags_Multiple confirms that every hashtag in the list is linked.
@@ -30,7 +30,7 @@ func TestContent_ApplyTags_Multiple(t *testing.T) {
 
 	service.ApplyTags(&content, "/search?q=", []string{"travel", "Food2024"})
 
-	require.Equal(t, `<a href="/search?q=%23travel" target="_blank">#travel</a> and <a href="/search?q=%23Food2024" target="_blank">#Food2024</a>`, content.HTML)
+	require.Equal(t, `<a href="/search?q=%23travel" target="_blank" rel="noopener noreferrer">#travel</a> and <a href="/search?q=%23Food2024" target="_blank" rel="noopener noreferrer">#Food2024</a>`, content.HTML)
 }
 
 // TestContent_ApplyTags_EmptyContent confirms that empty content is left untouched.

@@ -10,26 +10,27 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// These tests pin the authorization contract that an anonymous POST action depends on:
-// roles:["anonymous"] grants an action to EVERY caller, and the grant is decided without
-// reference to the HTTP method.
-//
-// Method independence is structural, and these tests pin the half of it that is testable.
-// Both handler.GetStreamWithAction and handler.PostStreamWithAction delegate to the same
-// handler.getStreamPipeline, whose only authorization gate is build.NewStream -> Common.UserCan
-// -> Permission.UserCan. That signature takes no method, so there is nothing for a method to
-// change. build.AsHTML receives the ActionMethod afterward and uses it only to choose which
-// half of each step runs. What follows verifies the decision itself.
-//
-// A nil data.Session is safe here: the anonymous path returns before UserCan reads it.
+/******************************************
+ * Anonymous Authorization Tests
+ *
+ * These pin the contract an anonymous POST action depends on:
+ * roles:["anonymous"] grants an action to EVERY caller, and the
+ * grant is decided without reference to the HTTP method.
+ *
+ * Method independence is structural: GetStreamWithAction and
+ * PostStreamWithAction reach the same gate -- build.NewStream ->
+ * Common.UserCan -> Permission.UserCan -- which takes no method. A
+ * nil data.Session is safe here; the anonymous path returns first.
+ ******************************************/
 
 // anonymousTemplate builds a Template with the named action granted to the provided roles,
-// running CalcAccessList exactly as service.Template does at load time. The harness in
-// permission_authorization_test.go assigns AccessList directly; this one goes through the
-// calculation, because the calculation is part of what is under test.
+// running CalcAccessList exactly as service.Template does at load time.
 func anonymousTemplate(t *testing.T, actionID string, states []string, roles ...string) model.Template {
 
 	t.Helper()
+
+	// The harness in permission_authorization_test.go assigns AccessList directly; this one
+	// goes through the calculation, because the calculation is part of what is under test.
 
 	action := model.NewAction()
 	action.Roles = roles
@@ -107,8 +108,7 @@ func TestUserCan_Anonymous_GrantsEveryCaller(t *testing.T) {
 }
 
 // TestCalcAccessList_AnonymousOverridesOtherRoles verifies that "anonymous" collapses the
-// AccessList to itself. Listing it beside a narrower role opens the action to everyone, so a
-// template that means to restrict an action must not name "anonymous" at all.
+// AccessList to itself, so a template meaning to restrict an action must not name it at all.
 func TestCalcAccessList_AnonymousOverridesOtherRoles(t *testing.T) {
 
 	template := anonymousTemplate(t, "submit", nil, model.MagicRoleAuthor, model.MagicRoleAnonymous)

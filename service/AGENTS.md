@@ -64,11 +64,43 @@ The other trap is a template one: a Go template that renders an optional header 
 
 When reading this dependency, confirm which copy you have: the module cache also holds a stale `go-simple-mail@v2.2.2+incompatible` tree under a different module path. Use `go list -m -f '{{.Dir}}' github.com/xhit/go-simple-mail/v2`.
 
+## The cached Domain record is an immutable snapshot, and every server holds its own
+
+`Domain.Get()` returns the snapshot held in an `atomic.Pointer`. `Save`, `Start`, and `queries.WatchDomain` replace it through `publish`, which is how a Domain saved on one server reaches the others ([BUG-170](../../emissary-specs/bugs/BUG-170-Domain-Record-Cached-Per-Node.md)). Two rules follow. Never write through the pointer `Get()` returns: edit a `Domain.Clone()`, which owns every top-level map and slice, and `Save` that. Values nested inside those maps are still shared, so replace a Connection whole rather than writing into its `Data`. And never keep that pointer beyond one call, because the next publish replaces it; this is why the Connection service reads through `Get()` every time.
+
+Two writers still modify the snapshot in place: `WebPush.vapidKeys` ([BUG-89](../../emissary-specs/bugs/BUG-89-VAPID-Keys-Cached-Before-Persist.md)) and `UpgradeMongoDB`. And `Save` is still a blind whole-document replace, so a server whose copy is stale can write it over a newer one; the watcher narrows that window to milliseconds without closing it. Without change streams (a standalone MongoDB), servers never see each other's Domain changes, so a cluster must run on a replica set.
+
+`Domain.Refresh` must never reset the snapshot. It runs on every configuration reload, but only `Start` and the watcher reload the record, so a blank published there strands an empty Domain with no `Label`, `PrivateKey`, or `CreateDate`, and its next `Save` tries to INSERT a second record. `Start` resets it next to the `Load` that refills it, and a failed `Load` leaves that blank published.
+
+## A Connection handed out by the Connection service must not share maps with the snapshot
+
+`Connection.Load`, and every `Load*` method built on it, clones `Data`, `Vault.Encrypted`, and `Vault.Nonces` before returning, because its callers write into them: the `edit-connection` step through the settings form, `NewOAuthClient`, `Vault.Encrypt` inside `Save`, and `StripeConnect.Connect`. Without the clone, a `Save` that fails leaves its rejected edits in the published record, and the next Domain save from that server stores them. The vault's unexported `plaintext` map is still shared, because only `model` can copy it. `Query`, `QueryAll`, `ActiveByType`, and `AllAsMap` return shared values, so treat them as read-only.
+
+**`Connection.Save` seals the vault before `provider.Connect` runs.** A secret that `Connect` adds, which today is `StripeConnect`'s `webhookSecret`, stays in the vault's `plaintext` map, which is `bson:"-"`, so it is never stored. It lives only in memory until the watcher republishes the stored record, milliseconds after the save (on a standalone MongoDB, until restart).
+
 ## Domain bootstrap is one transaction, and the invariant is what matters
 
 `Domain.Start()` delegates to `bootstrap(session)`, which wraps the domain-record write and `createOwner` in a single transaction. That establishes **domain record exists if and only if an owner exists** (when `CreateOwner` is set), so a failed first boot writes nothing and the next boot retries cleanly. Before this, the owner was a separate non-transactional write gated on "domain record not found": any failure stranded a domain record with no owner and the gate never re-ran, which locked every demo and fresh instance out. `persist()` is the write-only path used inside the transaction; the in-memory domain cache is published only **after** commit. Do not collapse `persist` back into `Save`.
 
-Three decisions here look like defects and are not. The `admin`/`admin` default password is set **only** under `IsLocalhost()`; that gate is the thing keeping a known credential off public hosts. `config.Owner` has no password field by design — a non-localhost owner signs in first through an emailed reset link, or the operator gets a loud warning pointing at the setup console. And `newOwnerFromConfig` falls back from a blank email to `admin@<hostname>` because `User.Save` requires a non-empty address.
+Three decisions here look like defects and are not. The `demo` default password is set **only** under `IsLocalhost()`; that gate is the thing keeping a known credential off public hosts. `config.Owner` has no password field by design — a non-localhost owner signs in first through an emailed reset link, or the operator gets a loud warning pointing at the setup console. And `newOwnerFromConfig` falls back from a blank email to `demo@<hostname>` because `User.Save` requires a non-empty address.
+
+## The server configuration owns the hostname, and the Domain record keeps a stamped copy
+
+`Domain.Host()` builds every derived URL from the record's own `Hostname` (the federation actor, OAuth client metadata, oEmbed, email links), so the record needs a copy even though an operator can rename a domain in the setup tool at any time. `bootstrap` stamps it before the first write, and `stampHostname` checks it on every `Start` and rewrites it when the two differ, which is why `shouldStartDomainService` restarts the service on a rename as well as on a reconnect. Two guards keep this safe. A blank configured hostname never overwrites a stored one (`needsHostnameStamp`), because the setup console builds factories before its configuration is complete, and a cleared hostname breaks every derived URL. And `Start` never runs before a database is configured, because it needs a session.
+
+## `Factory.Steranko` is the only place the password hashing policy is set
+
+Every password write goes through the Steranko instance it builds. A path that sets a password any other way stores it raw (CWE-256), which is how registration, password reset, and Mastodon signup went wrong; `TestSteranko_SetPassword_StoresBCrypt12` pins the policy. New hashes use BCrypt cost 12, about 200ms each: slow enough to resist offline cracking, and fast enough that signin latency and a failed-signin flood stay affordable. The Plaintext fallback lets passwords stored before hashing still sign in, and steranko re-hashes them on first use. When the plaintext-password migration ships, remove the fallback and delete `TestSteranko_PlaintextFallback` deliberately.
+
+## A captured server-level handle fails with symptoms that point elsewhere
+
+`Factory` reads the common database, the task queue, and the server email service through `serverFactory` on every call, as [server/AGENTS.md](../server/AGENTS.md) requires, because a config reload can rebuild all three. A copy captured anywhere in this package goes stale on that reload. A stale common database fails every call with `client is disconnected`, which surfaced as inbound signature verification failing with a bare 401, and a stale queue silently drops every task with `Turbine Queue: stopped`. [factory_lifecycle_test.go](factory_lifecycle_test.go) pins the read-through.
+
+## `Factory.Close` releases what one domain owns, and nothing the server shares
+
+A domain factory owns three things that never stop on their own: its change stream watchers, its realtime broker's goroutine, and its MongoDB client, whose connection pool stays open until it is disconnected. `Close` releases all three, and the server calls it whenever a factory leaves the registry (see [../server/AGENTS.md](../server/AGENTS.md)). `NewFactory` closes a factory whose first `Refresh` fails, and a reconnect disconnects the client it replaced once the new watchers are running.
+
+Three rules keep it safe. **Never close a service the server passed in:** everything `server.refreshDomain` hands `NewFactory` by pointer (the JWT, content, registration, template, theme, and widget services, and the HTTP cache) is one instance shared by every domain, and closing the JWT service from one domain empties the key cache that every domain signs with. **Never close `sseUpdateChannel`:** a request still in progress on a dropped factory may send on it, and a send on a closed channel panics. **The disconnect runs in the background:** `Close` is called while the server holds `reloadLock`, and requests already in progress get up to 30 seconds to finish, while a query that starts after the disconnect fails.
 
 ## Two geocoder response mappers are wrong, and the tests pin the bug
 
@@ -87,3 +119,81 @@ Every actor lookup in this service goes through the package's `actorLoader` inte
 A Stream whose Template declares an `actor:` block federates under a WebFinger handle, and that handle comes from one accessor, `model.Stream.ActivityPubUsername`: the token when it satisfies Mastodon's username grammar (ASCII letters, digits, underscores, with dots and dashes only between them), otherwise the StreamID. `StreamActor.JSONLD` writes it into `preferredUsername` and `Stream.WebFinger` writes it into the subject, so the two cannot drift. Before BUG-98 they were built from different fields, and the subject was a handle the server itself answered with 404, because `locateObjectFromAccount` returns `ActorTypeUser` for every `acct:` value that is not a reserved actor. Mastodon reconstructs `acct:<preferredUsername>@<host>` for every actor it fetches and rejects the actor when that lookup fails, so no Stream actor could be followed from Mastodon.
 
 Three rules follow. `Locator.GetWebFingerResult` tries a handle as a User first and, only when that is a not-found error, as a Stream token; a User therefore shadows a Stream with the same handle, which is why `Stream.ValidateToken` refuses a token that matches a username and `User.ValidateUsername` refuses a username that matches a Stream token, both case-insensitively, because `LoadByUsername` ignores case. `Stream.WebFinger` answers 404 for a missing Stream and for a Stream whose Template has no actor, never 400, since a well-formed request for a resource this server does not publish is RFC 7033 §4.5's not-found case, and after the fall-through every unknown handle reaches it. And a token rename changes the handle: nothing keeps token history, so the old `acct:` form stops resolving at once, while the StreamID forms (`acct:<hex>@host` and the actor id `https://host/<hex>`, which `Save` always rewrites from the id) are the durable ones. Mastodon re-verifies the new handle on its next fetch and renames the account. Existing Streams whose token already matches a username are not migrated; they stay shadowed until renamed.
+
+## An invalid signature refuses the request, and three rules keep that refusal honest
+
+`resolveSignature` (in [permission.go](permission.go)) separates three cases an inbound request can present: no `Signature` header (Anonymous), a signature that verifies (an Actor), and a signature that fails to verify (a refusal). Collapsing the third into the first was BUG-20 — a peer with a misconfigured key got a normal-looking anonymous response, or a 403 naming the wrong cause, and went hunting a permissions bug that did not exist. `handler.resolveSignedActor` applies the same rule for the wrapper routes; the two are deliberate twins, so a change to one belongs in both.
+
+**Nothing on the refusal path is logged or reported, and that is load-bearing.** The 401 reaches the peer, who is the only party who can fix a broken signature. A `derp.Report` would write the same event to the production error log that `derp-mongo` persists to MongoDB, where every misconfigured peer and drive-by probe would bury the reports that represent real defects. The objection is signal pollution, not volume. This works only because [server.go](../server.go)'s `errorHandler` special-cases unauthorized errors and every branch returns *before* `derp.Report` — so the refusal must stay an `Unauthorized`, and a refactor that gave it any other status would silently start filing peers into the error log. `TestResolveSignature_RefusalStaysOutOfDerp` is what catches that.
+
+**The refusal message is fixed, and `err` never reaches the caller.** `errorHandler` writes `derp.Message(err)` into the response body, so anything the verifier said about *why* it failed would tell an unauthenticated prober which forgery attempt got closest. A local hostname is the one exception: it gets the `Mock-Key-Id` hint, because `errorHandler` answers a 401 with that message and nothing else, so a developer has nowhere else to read it.
+
+**The `Mock-Key-Id` branch must stay ahead of the "unsigned means Anonymous" rule.** A local test harness names its actor with that header and *no* `Signature` header at all, so an early unsigned guard silently kills local signed-request testing. A real signature that verifies still wins over the header, and off a local hostname the header grants nothing (BUG-51).
+
+## A StreamSource's Status is written by the queue's hooks, never inside the sync
+
+`consumer.WithSession` runs a task inside `factory.WithTransaction`, and a handler that returns an error **aborts that transaction** — so a `FAILURE` status written by `StreamSource.Sync` would be rolled back along with the attempt that produced it, and the record would keep reading `SUCCESS` from last week. The three status writes therefore live in `Consumer.OnSuccess`/`OnError`/`OnFailure` ([consumer/syncStreamSource.go](../consumer/syncStreamSource.go)), which run after the transaction has already settled and open their own session.
+
+`Sync` itself writes only `Version`, `ContentHash`, and `LastSynced`, and only on paths that succeeded. That split is also why `LOADING` is written by `StreamSource.Save` rather than by `Sync`: a save runs in a request transaction that commits, so a human who pressed **Sync Now** sees it immediately.
+
+## Every ping moves "Last Checked", and only a hook can record a failed one
+
+`LastSynced` is what the settings screen labels **Last Checked**, and the rule is that every attempt moves it — a webhook ping and the **Sync Now** button alike, whether the attempt then worked or not. `markChecked` is the one writer; `Save`, `SetStatusLoading`, `SetStatusSuccess`, `SetStatusFailure`, and `SetStatusMessage` all call it.
+
+The three status methods are load-bearing and look redundant. `Sync` stamps the record itself, but only its three SAVING exits reach a write: the four error exits return before one, `consumer.WithSession` aborts the transaction, and the stamp is rolled back with everything else. The lifecycle hook that fires afterwards reloads the record from the database, so whatever `Sync` held in memory is gone. That hook is the **only** place a failed attempt can record that it happened.
+
+The webhook path makes this matter more than the button does. `SyncByWebhookToken` writes nothing at all — it just queues one task per matching record — so unlike **Sync Now**, which stamps the record through `Save` before the worker starts, a webhook leaves no trace until the worker's outcome is written. Before this rule a failed webhook sync showed `Failed` beside a Last Checked from days earlier, which reads as a webhook that never arrived rather than one that arrived and failed.
+
+`consumeSafely` reaches no hook (see [../consumer/AGENTS.md](../consumer/AGENTS.md)), so a task that PANICS still records nothing. That gap is unchanged and is the reason a handler whose status a human reads must return a `queue.Result` instead of panicking.
+
+## `Sync` saves through `service.save`, never through `StreamSource.Save`
+
+`StreamSource.Save` publishes a sync task — that is how a new record gets its first content and how a corrected URL is retried, since nothing polls. A sync that saved its own bookkeeping through it would queue another sync on every run, forever. `WithSignature` does not stop this, because the task that is running has already left the queue by the time its handler saves. `saveSyncState` and every `SetStatus*` method therefore write through the package-private `service.save`, and that is load-bearing rather than an optimization.
+
+The two are easy to confuse because only one letter differs. **`StreamSource.Save`** (exported) validates, stamps `LOADING`, and queues a synchronization. **`service.save`** (private) writes the row and publishes the SSE nudge, and does neither of the other two. Every write goes through one of them; nothing calls `service.collection(session).Save` any more.
+
+## `StreamSource.Version` is an ETag, and an empty one can never end a sync
+
+The field holds the `ETag` from the last successful sync, and its only purpose is to be sent back as `If-None-Match` so that an unchanged source can answer `304` with no body. `Sync` and the HTTPS adapter are its only readers. It is a bandwidth optimization, not a correctness guard — `ContentHash` is what stops `Stream.Save` running for unchanged bytes, on every forge, including the two that send no validator.
+
+Two of the seven forges surveyed offer no validator at all: cgit ignores `If-None-Match`, and SourceHut sends no `ETag`. They answer `""` every time, so `version == source.Version` is trivially true for them, and treating that as "nothing changed" would freeze those sources at whatever they held on the first run, silently and forever. The guard is `(version != "") && (version == source.Version)`.
+
+## The webhook token is deliberately not unique, and an empty one would select rather than authorize
+
+One token belongs to many `StreamSource` records, so one ping from a repository refreshes every page sourced from it. That makes a permissive match worse than it looks: an empty token would match every record whose `webhookToken` was never set and start a sync on each, which is fan-out triggered by an unauthenticated caller rather than an authorization check that merely passed. `RangeByWebhookToken` refuses anything shorter than `model.StreamSourceWebhookTokenMinLength` before it queries, and `Save` enforces the same minimum, because the field is editable by hand.
+
+The token is looked up, not compared, so there is no constant-time comparison to make here. What protects it is that [handler/streamSource.go](../handler/streamSource.go) answers `202` for every outcome — a token too short to look up, an unknown token, a known token matching nothing, and a known token matching forty records. A varying answer would confirm a guessed token and then count the pages behind it.
+
+## Saving a StreamSource reaches the network
+
+There is no step, and no flag, that triggers a synchronization: **`StreamSource.Save` queues one, every time.** Nothing polls, so a save is the only moment a human tells Emissary this record is worth reading, and a redundant one costs a single conditional GET that answers `304` — `Version` matches, `Fetch` never runs, and `Stream.Save` never fires. **Sync Now** is therefore `{do:"with-stream-source", steps:[{do:"save"}]}`.
+
+Two consequences to keep in mind. An unrelated edit made while the source is unreachable will walk the record to `FAILURE`, which the next webhook corrects. And a caller that saves MANY records in a loop fans out one outbound fetch per record with nothing at the call site saying so — `step_Sort.go` reaches `Save` through `ObjectSave` and is one hjson line away from being such a caller.
+
+Bookkeeping writes avoid all of this by design. `saveSyncState` and every `SetStatus*` method go through `service.save`, which is what stops a running sync from queueing another one. `WithSignature` would NOT save you there: the task that is running has already left the queue by the time its handler saves.
+
+## Two task names synchronize a StreamSource, and four places must know both
+
+`TaskSyncStreamSource` is the webhook's background fan-out at priority 256. `TaskSyncStreamSourceNow` is the **Sync Now** button at 16. They run the same handler and report through the same lifecycle hooks; only the priority and the signature differ.
+
+The signature is the reason there are two names rather than one publish option. turbine's `allowImmediate` refuses to run **any** signed task from memory, at any priority, because signature dedup needs a stored row to check against — so a signed task waits for the storage poller, which sleeps a minute when the queue is idle. `PublishSyncTaskNow` therefore omits the signature, and `PublishSyncTask` keeps it.
+
+What that costs: two quick presses of **Sync Now** queue two syncs, and one may overlap a webhook's background sync of the same record. A repeat is one conditional `GET` answering `304`, so the usual case is free. The case that is not free is a caller that saves many records at once — `step_Sort.go` reaches `Save` through `ObjectSave` — which now fans out immediate fetches instead of deduplicated background ones.
+
+Four registrations must accept both names: the dispatch switch in `consumer.go`, and all three lifecycle hooks. Use `service.IsSyncStreamSourceTask` rather than comparing a name by hand — a hook that knew only one name would silently stop recording status for the other path, and nothing reports a hook that declined a task. The priority table is the one place that deliberately tells them apart.
+
+## `with-stream-source` needs two registrations, and neither fails to compile
+
+`model.StreamSource` must implement `model.AccessLister`, and `*model.StreamSource` must have a case in `Factory.ModelService`. Miss either and `NewModel` returns nil and the settings screen 500s the first time it is opened.
+
+[build/step_WithStreamSource.go](../build/step_WithStreamSource.go) builds its load target with `NewStreamSource`, the same as `Range` and `ObjectLoad`, so a field the model gains later arrives with its default rather than a zero value. That is safe here only because `Save` refuses a record whose webhook token is under 16 characters, so every stored record names `Config["webhookToken"]` and the decode overwrites the minted one. A second `Config` key that is not always written would leak out of the constructor — see the decode rule in [../model/AGENTS.md](../model/AGENTS.md).
+
+## A StreamSource change is announced on its STREAM's SSE channel
+
+The settings screen shows `Status` and the time of the last check, and a synchronization finishes in the background minutes after **Sync Now** returns — so without a nudge those two fields sit stale until somebody reloads. `service.save` publishes `realtime.TopicStreamSourceUpdated` on every write, and `Delete` publishes it too, so the page can fall back to its "no source yet" state.
+
+`saveSyncState` is the one exception, and it is deliberate: every path through `Sync` is followed by a lifecycle hook that writes `Status` and `LastSynced` — the same two fields the screen shows — a few hundred milliseconds later. Nudging from both made the settings screen redraw twice for one synchronization. `Delete` is the other non-nudging write; its action ends with `refresh-page`.
+
+**Never put a modifier on an `sse:` trigger in a template.** htmx's `hx-trigger` parser handles `sse:` in its own branch and pushes the spec without parsing modifiers, so `delay`, `throttle`, `from` and `once` are ignored there — and the unparsed tokens halt the parser, so every spec after the next comma is silently dropped. `hx-trigger="sse:X delay:300ms, refreshPage from:window"` therefore registers **only** the SSE trigger, with no debounce, and deletes the `refreshPage` listener that the properties modal depends on. No error is raised. A comma straight after the event name is fine — `"sse:X, refreshPage from:window"` registers both — it is the modifier that halts the parse. There is also no other client-side brake to reach for: core's `processSSETrigger` calls `issueAjaxRequest` from the `EventSource` listener directly, skipping the queue, the throttle, and `hx-sync`. De-duplicate by writing the record fewer times, or by swapping a smaller region — never by debouncing the client.
+
+The message is addressed by the **StreamID**, not the StreamSourceID. A `StreamSource` has no page and no SSE route of its own, and a Stream has at most one source, so the Stream's channel is the one a browser can already subscribe to (`/:stream/sse/stream-source-updated`). Putting the nudge on `service.save` rather than on the four `SetStatus*` methods is what makes it impossible to add a fifth status writer that the screen never hears about.

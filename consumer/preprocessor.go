@@ -45,6 +45,13 @@ func PreProcessor(task *queue.Task) error {
 	case "SendWebPushNotification":
 		task.Priority = 16
 
+	// A human pressed Sync Now and is watching the settings screen for the answer.  Its twin,
+	// TaskSyncStreamSource, is the webhook's background fan-out at 256 below.  Note that the
+	// priority alone does not make this immediate: PublishSyncTaskNow also omits the signature,
+	// because turbine will not run a signed task from memory at any priority.
+	case service.TaskSyncStreamSourceNow:
+		task.Priority = 16
+
 	// (32) User-Affecting Tasks That Should Complete Very Quickly
 
 	///////////////////////////////////////////////////
@@ -77,6 +84,13 @@ func PreProcessor(task *queue.Task) error {
 		task.Priority = 256
 
 	case "syndication.create", "syndication.update", "syndication.delete":
+		task.Priority = 256
+
+	// SyncStreamSource is deliberately NOT in the <= 32 band.  Its trigger is an unauthenticated
+	// webhook that fans out to every record sharing a token, so an immediate priority would let
+	// one ping turn into a burst of outbound requests with nothing in between.  The interactive
+	// twin, TaskSyncStreamSourceNow, is at 16 above; one caller decides which name to publish.
+	case service.TaskSyncStreamSource:
 		task.Priority = 256
 
 	// (512) System Tasks that should happen mostly on time

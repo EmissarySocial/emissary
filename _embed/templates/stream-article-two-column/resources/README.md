@@ -2,7 +2,9 @@
 
 Static files for [stream-article-two-column](../), served at `/.templates/article-two-column/resources/{filename}`. The folder needs no declaration in [template.hjson](../template.hjson) — `service.Template.Add` picks up a `resources` directory wherever it finds one.
 
-The three SVGs are the Column Split options, one per value of the `data.columns` enum, and they are named for it (`columns-TWO-THIRDS.svg`, `columns-ONE-HALF.svg`, `columns-ONE-THIRD.svg`) so a template can address one by the stored value. Each draws two rounded rectangles in the proportion its name gives to the **left** column, on a 16×16 viewBox that lines up with the Bootstrap Icons used everywhere else in the UI.
+The five SVGs are the Column Split options, one per value of the `data.columns` enum, and they are named for it (`columns-THREE-QUARTERS.svg`, `columns-TWO-THIRDS.svg`, `columns-ONE-HALF.svg`, `columns-ONE-THIRD.svg`, `columns-ONE-QUARTER.svg`) so a stylesheet can address one by the stored value. Each draws two rounded rectangles in the proportion its name gives to the **left** column, on a 16×16 viewBox that lines up with the Bootstrap Icons used everywhere else in the UI. They share one geometry: 12.5 units of content from x 1.75 to x 14.25, split by a 1.5-unit gutter, so all five read as one set.
+
+Both surfaces paint all five, one per option. The Layout tab spaces them evenly; the edit page moves each one to the dividing line it produces, which is why the icon has to read correctly at a glance — it is the only label the option has.
 
 ## They cannot take their color through an `<img>`
 

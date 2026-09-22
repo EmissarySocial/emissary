@@ -21,11 +21,12 @@ var _ = []WithFunc1[model.SearchQuery]{
 	activitypub_search.GetOutboxMessage,
 }
 
-// A route that declares no ":stream" parameter still gets a stream token, and it is the one
-// that triggers the startup redirect in WithStream.  This is why WithSearchQuery must not be
-// built on WithStream. (BUG-148)
+// TestGetStreamToken_AbsentParameterBecomesHome pins why WithSearchQuery must not be built on
+// WithStream: a route declaring no ":stream" parameter still gets a stream token.
 func TestGetStreamToken_AbsentParameterBecomesHome(t *testing.T) {
 
+	// The token it gets is "home", which is the one that triggers the startup redirect in
+	// WithStream. (BUG-148)
 	request := httptest.NewRequest(http.MethodGet, "/@search_6a4c2b5179277aea29cce04e", nil)
 	ctx := echo.New().NewContext(request, httptest.NewRecorder())
 

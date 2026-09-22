@@ -20,7 +20,7 @@ func Linkify(html string, baseURL string, tags []string) string {
 		href := baseURL + "%23" + url.QueryEscape(tag)
 		label := stdhtml.EscapeString("#" + tag)
 
-		html = Content(html, "#"+tag, `<a href="`+href+`" target="_blank">`+label+`</a>`)
+		html = Content(html, "#"+tag, `<a href="`+href+`" target="_blank" rel="noopener noreferrer">`+label+`</a>`)
 	}
 
 	return html

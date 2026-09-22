@@ -88,7 +88,7 @@
 						<button hx-get="/@me/newsfeed/browse-index?url={{$documentID}}" title="Use Index Layout" aria-label="Use Index Layout">{{icon "list"}}</button>
 						<span class="margin-horizontal-sm"></span>
 						<button hx-get="/@me/newsfeed/browse-actor?url={{$attributedTo.ID}}" title="View Profile" aria-label="View Profile">{{icon "person"}}</button>
-						<a href="{{$documentID}}" target="_blank" class="button" title="View Original Website" aria-label="Visit Original Website">{{icon "globe"}}</a>
+						<a href="{{$documentID}}" target="_blank" rel="noopener noreferrer" class="button" title="View Original Website" aria-label="Visit Original Website">{{icon "globe"}}</a>
 					</div>
 
 				</div>
@@ -151,7 +151,7 @@
 		<div class="flex-row">
 		<div class="flex-grow margin-none text-light-gray">Could Not Load Message</div>
 		<div>
-			<a href="{{$url}}" class="button text-xs margin-none" target="_blank">{{icon "globe"}}</a>
+			<a href="{{$url}}" class="button text-xs margin-none" target="_blank" rel="noopener noreferrer">{{icon "globe"}}</a>
 		</div>
 	</div>
 

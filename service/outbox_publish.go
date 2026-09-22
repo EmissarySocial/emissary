@@ -15,7 +15,6 @@ import (
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/sherlock"
 	"github.com/benpate/uri"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -455,7 +454,7 @@ func (service *Outbox) resolveInboxURL(profileURL string) string {
 		return ""
 	}
 
-	actor, err := service.activityService.AppClient().Load(profileURL, sherlock.AsActor())
+	actor, err := service.activityService.AppClient().Load(profileURL)
 
 	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Loading actor for inbox URL", profileURL))

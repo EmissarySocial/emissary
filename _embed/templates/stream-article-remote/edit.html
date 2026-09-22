@@ -1,0 +1,45 @@
+{{- $source := .StreamSource -}}
+
+<div class="page flex-column">
+
+	{{- template "edit-menubar" . -}}
+
+	{{- if $source.IsNew -}}
+
+		<!-- Nothing configured yet.  This is the normal state of an article just created. -->
+		<div class="card padding max-width-640">
+			<div class="margin-bottom">
+				Remote articles let you import page content from other web services.
+				Configure the remote source below, and the content will be automatically fetched and synchronized.
+			</div>
+			<button hx-get="/{{.StreamID}}/edit-source" class="turboclick button primary">Set Up Remote Source</button>
+		</div>
+
+	{{- else -}}
+
+		{{- .View "edit-status" -}}
+
+		<div class="card padding margin-bottom">
+			<div class="bold">Webhook URL</div>
+			<div class="text-sm text-gray margin-bottom">
+				Configure this webhook URL in the remote source to updates this content automatically.
+			</div>
+			<!-- The URL stays OUTSIDE .clipboard-copy-button: the behavior hides that element whole, and only the control should disappear. -->
+			<div script="install Clipboard" class="text-sm">
+				<span class="clipboard-text">{{.Host}}/.streamsource/webhook/{{$source.WebhookToken}}</span>
+				<span class="clipboard-copy-button clickable margin-left-sm">{{icon "copy"}} Copy</span>
+				<span class="clipboard-copy-feedback text-green margin-left-sm" style="display:none">{{icon "check"}} Copied</span>
+			</div>
+		</div>
+
+	{{- end -}}
+
+	<div
+		hx-get="/{{.StreamID}}/edit"
+		hx-trigger="refreshPage from:window"
+		hx-target="main"
+		hx-swap="innerHTML"
+		hx-push-url="false">
+	</div>
+
+</div>

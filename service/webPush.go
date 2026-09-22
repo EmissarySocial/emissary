@@ -168,6 +168,12 @@ func (service *WebPush) Send(session data.Session, endpoint string, p256dh strin
 		return 0, derp.Wrap(err, location, "Sending Web Push notification", endpoint, subscriber)
 	}
 
+	// RULE: webpush-go hands back its HTTPClient's response verbatim, so a client that breaks
+	// the (response, error) convention arrives here as a nil that the defer below dereferences.
+	if response == nil {
+		return 0, derp.Internal(location, "Push service returned no response", endpoint, subscriber)
+	}
+
 	defer func() {
 		if err := response.Body.Close(); err != nil {
 			derp.Report(derp.Wrap(err, location, "Closing response body", endpoint, subscriber))

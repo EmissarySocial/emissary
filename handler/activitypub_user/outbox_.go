@@ -37,7 +37,11 @@ func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, sessio
 	}
 
 	// Retrieve permissions from the request signature
-	permissions := factory.Permission().ParseHTTPSignature(session, ctx.Request())
+	permissions, err := factory.Permission().ParseHTTPSignature(session, ctx.Request())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid HTTP Signature")
+	}
 
 	// Fall through means that we're looking for a specific page of the collection
 	publishedDate := convert.Int64Default(publishDateString, math.MaxInt64)

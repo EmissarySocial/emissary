@@ -90,6 +90,17 @@ func NewMessage_NewReplies(objectID primitive.ObjectID) Message {
 	}
 }
 
+// NewMessage_StreamSourceUpdated creates a new SSE message sent when a Stream's remote content
+// source changes status.  The objectID is the STREAM's ID, so it reaches that Stream's watchers.
+func NewMessage_StreamSourceUpdated(objectID primitive.ObjectID) Message {
+	return Message{
+		ObjectID: objectID,
+		Topic:    TopicStreamSourceUpdated,
+		Event:    objectID.Hex(),
+		Data:     "stream source updated",
+	}
+}
+
 // NewMessage_Updated creates a new SSE message sent when a User or Stream that has been updated
 func NewMessage_Updated(objectID primitive.ObjectID) Message {
 	return Message{

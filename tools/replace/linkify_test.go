@@ -9,13 +9,13 @@ import (
 // TestLinkify wraps a single hashtag in an anchor to the base URL.
 func TestLinkify(t *testing.T) {
 	result := Linkify("Testing #travel here", "/search?q=", []string{"travel"})
-	require.Equal(t, `Testing <a href="/search?q=%23travel" target="_blank">#travel</a> here`, result)
+	require.Equal(t, `Testing <a href="/search?q=%23travel" target="_blank" rel="noopener noreferrer">#travel</a> here`, result)
 }
 
 // TestLinkify_Multiple links every hashtag in the list.
 func TestLinkify_Multiple(t *testing.T) {
 	result := Linkify("#travel and #Food2024", "/search?q=", []string{"travel", "Food2024"})
-	require.Equal(t, `<a href="/search?q=%23travel" target="_blank">#travel</a> and <a href="/search?q=%23Food2024" target="_blank">#Food2024</a>`, result)
+	require.Equal(t, `<a href="/search?q=%23travel" target="_blank" rel="noopener noreferrer">#travel</a> and <a href="/search?q=%23Food2024" target="_blank" rel="noopener noreferrer">#Food2024</a>`, result)
 }
 
 // TestLinkify_SkipsEmptyTag ignores an empty tag name.

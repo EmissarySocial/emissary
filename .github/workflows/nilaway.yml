@@ -17,19 +17,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
 
     - name: Set up Go
-      uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+      uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
       with:
         go-version-file: go.mod
 
     # Pin nilaway to an explicit version (it publishes only pseudo-versions,
     # no semver tags) so the installed tool is predictable, not @latest.
     - name: Install NilAway
-      run: go install go.uber.org/nilaway/cmd/nilaway@v0.0.0-20260617211854-01ab7e30fbe0
+      run: go install go.uber.org/nilaway/cmd/nilaway@v0.0.0-20260918162853-acb8859b9031
 
+    # -include-pkgs confines inference to first-party code.  NilAway's default include
+    # prefix is "", which matches every package, so it infers over all ~940 packages in
+    # the build graph and peaks at 15-19GB -- over the 16GB runner, which kills the step
+    # with no output.  Reporting was already scoped to this repo by the default of
+    # -include-errors-in-files, so that work was discarded anyway.
+
+    # Two exclusions, both required.  The docstring marker drops service/icons.go, whose
+    # Get() exceeds NilAway's hard 500-block CFG limit -- reported as an INTERNAL ERROR that
+    # also abandons every other finding in the `service` package.  -exclude-test-files drops
+    # the tests that pass a literal nil Session on purpose, which NilAway traces into
+    # production code as a nil flow.  See service/AGENTS.md.
     - name: Nil panic checks
-      run: nilaway ./...
+      run: nilaway -include-pkgs="github.com/EmissarySocial/emissary" -exclude-file-docstrings="nilaway:ignore-file" -exclude-test-files ./...

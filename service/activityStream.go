@@ -110,23 +110,12 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 
 	// Build a new client stack
 
-	// TODO: (oembed/TODO.md Phases 11.3 + RSS-FOLLOWING-RESTORE.md) When URL lookups
-	// return, do NOT restore this legacy path — use sherlock's new metadata package
-	// (sherlock.Client.Metadata → metadata.Card), which merges oEmbed, Open Graph,
-	// Twitter Cards, and HTML signals with SSRF/body-cap guards built in.
-	/* Removing legacy Sherlock lookups (RSS, oEmbed, OGP, etc) since these are not being used.
-	sherlockClient := sherlock.NewClient(
-		sherlock.WithKeyPairFunc(service.KeyPairFunc(actorType, actorID)),
-		sherlock.WithUserAgent(userAgent),
-	) */
-
 	// If the service is on a local/private network then allow
 	// the ActivityPub client to load documents from private IP addresses.
 	allowPrivateIPs := service.AllowPrivateIPs()
 
 	// Try ActivityPub documents directly
 	activityPubClient := activitypub.New(
-		// activitypub.WithInnerClient(sherlockClient), // Restore this to restore legacy Sherlock lookups.
 		activitypub.WithKeyPairFunc(service.KeyPairFunc(actorType, actorID)),
 		activitypub.WithUserAgent(userAgent),
 		activitypub.WithAllowPrivateIPs(allowPrivateIPs),
@@ -318,7 +307,7 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 	if service.looksLikeValidURI(queryString) {
 
 		// Try to load the actor directly from the Interwebs
-		if object, err := service.AppClient().Load(queryString, sherlock.AsActor()); err == nil {
+		if object, err := service.AppClient().Load(queryString); err == nil {
 
 			if object.IsActor() {
 
@@ -476,7 +465,7 @@ func (service *ActivityStream) GetActor(actor string) (streams.Document, error) 
 	const location = "service.ActivityStream.GetActor"
 
 	// Try to load the actor as a JSON-LD document
-	document, err := service.AppClient().Load(actor, sherlock.AsActor())
+	document, err := service.AppClient().Load(actor)
 
 	if err != nil {
 		return streams.NilDocument(), derp.Wrap(err, location, "Loading ActivityPub Actor", actor)

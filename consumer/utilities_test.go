@@ -2,7 +2,9 @@ package consumer
 
 import (
 	"errors"
+	"io"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -12,12 +14,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestGetHostnameFromArgs documents the contract that every WithFactory-backed
-// task enqueue must satisfy: WithFactory resolves the tenant Factory from the
-// hostname returned here, and hard-fails the task when it is empty. A task
-// enqueued with only a "url" argument (as the reply-tree crawlers once were)
-// yields no hostname and can never run.
+// TestGetHostnameFromArgs pins the contract that every WithFactory-backed task enqueue must
+// satisfy, because a task with no resolvable hostname can never run
 func TestGetHostnameFromArgs(t *testing.T) {
+
+	// WithFactory resolves the tenant Factory from the hostname returned here, and hard-fails
+	// the task when it is empty.  A "url"-only enqueue (the reply-tree crawlers, once) yields
+	// nothing and the task dies on every attempt.
 
 	// A "hostname" argument is used directly (reduced to its hostname).
 	require.Equal(t, "example.com", getHostnameFromArgs(mapof.Any{"hostname": "https://example.com/@alice"}))
@@ -44,10 +47,12 @@ func TestGetHostnameFromArgs(t *testing.T) {
 	require.Equal(t, "", getHostnameFromArgs(mapof.Any{}))
 }
 
-// TestRequeue pins the shared retry policy that PollFollowing_Record and every HTTP-backed
-// consumer share: a 429 is rescheduled after the server's own Retry-After, any other 4xx is
-// permanent, and everything else is retryable.
+// TestRequeue pins the retry policy that every HTTP-backed consumer shares, so that no caller
+// has to re-derive which failures are worth another attempt
 func TestRequeue(t *testing.T) {
+
+	// A 429 waits for the server's own Retry-After, any other 4xx is permanent, and
+	// everything else is retryable.
 
 	// No error is a success
 	require.Equal(t, queue.ResultStatusSuccess, requeue(nil).Status)
@@ -74,16 +79,40 @@ func TestRequeue(t *testing.T) {
 	require.Equal(t, queue.ResultStatusError, requeue(errors.New("some transport failure")).Status)
 }
 
-// TestRequeue_WrappedTooManyRequests verifies that a 429 survives the derp.Wrap that every call
-// site applies. PollFollowing_Record wraps before requeueing, so an unwrapped-only check would
-// silently turn every rate limit into a permanent failure.
+// TestRequeue_WrappedTooManyRequests verifies that a 429 survives the derp.Wrap that every
+// call site applies before requeueing
 func TestRequeue_WrappedTooManyRequests(t *testing.T) {
 
+	// PollFollowing_Record wraps before requeueing, so an unwrapped-only check would turn
+	// every rate limit into a permanent failure.
 	wrapped := derp.Wrap(tooManyRequests("30"), "test", "Loading document", "following: https://x.social/@bob")
 
 	result := requeue(wrapped)
 	require.Equal(t, queue.ResultStatusRequeue, result.Status)
 	require.Equal(t, 30*time.Second, result.Delay.Truncate(time.Second))
+}
+
+// htmlInsteadOfActivityPub builds the error that benpate/remote returns when a remote server
+// answers an ActivityPub request with 200 and an HTML body
+func htmlInsteadOfActivityPub(url string) error {
+
+	// This mirrors remote.Transaction.decodeResponseBody's ContentTypeHTML branch.  The
+	// WithInternalError option is what makes the result a 500 even though the response was 200.
+	response := &http.Response{
+		StatusCode: http.StatusOK,
+		Status:     "200 OK",
+		Header:     http.Header{"Content-Type": []string{"text/html; charset=utf-8"}},
+		Body:       io.NopCloser(strings.NewReader("<!DOCTYPE html><html><body>Hello</body></html>")),
+	}
+
+	request, _ := http.NewRequest(http.MethodGet, url, nil)
+
+	return derp.Wrap(
+		derp.NewHTTPError(request, response),
+		"remote.Transaction.decodeResponseBody",
+		"HTML must be read into an io.Writer, *string, or *byte[]",
+		derp.WithInternalError(),
+	)
 }
 
 // tooManyRequests builds the 429 shape that benpate/remote returns, optionally carrying a

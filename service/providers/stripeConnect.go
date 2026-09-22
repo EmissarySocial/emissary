@@ -61,7 +61,7 @@ func (adapter StripeConnect) ManualConfig() form.Form {
 					Type:        "text",
 					Path:        "data.clientId",
 					Label:       "Client ID",
-					Description: "Found in the <a href='https://dashboard.stripe.com/test/settings/connect/onboarding-options/oauth' target='_blank'>Stripe Connect OAuth Settings &rarr;</a>.",
+					Description: "Found in the <a href='https://dashboard.stripe.com/test/settings/connect/onboarding-options/oauth' target='_blank' rel='noopener noreferrer'>Stripe Connect OAuth Settings &rarr;</a>.",
 					Options: mapof.Any{
 						"autocomplete": "off",
 						"spellcheck":   false,
@@ -71,7 +71,7 @@ func (adapter StripeConnect) ManualConfig() form.Form {
 					Type:        "text",
 					Path:        "vault.publishableKey",
 					Label:       "Publishable Key",
-					Description: "Found in the <a href='https://dashboard.stripe.com/apikeys' target='_blank'>Stripe Dashboard &rarr;</a>.",
+					Description: "Found in the <a href='https://dashboard.stripe.com/apikeys' target='_blank' rel='noopener noreferrer'>Stripe Dashboard &rarr;</a>.",
 					Options: mapof.Any{
 						"placeholder":  "pk_live_XXXXXXXXXXXXXXXXXXXXXXXXX",
 						"autocomplete": "off",
@@ -82,7 +82,7 @@ func (adapter StripeConnect) ManualConfig() form.Form {
 					Type:        "text",
 					Path:        "vault.restrictedKey",
 					Label:       "Restricted Key",
-					Description: "Found in the <a href='https://dashboard.stripe.com/apikeys' target='_blank'>Stripe Dashboard &rarr;</a>.",
+					Description: "Found in the <a href='https://dashboard.stripe.com/apikeys' target='_blank' rel='noopener noreferrer'>Stripe Dashboard &rarr;</a>.",
 					Options: mapof.Any{
 						"placeholder":  "rk_live_XXXXXXXXXXXXXXXXXXXXXXXXX",
 						"autocomplete": "off",

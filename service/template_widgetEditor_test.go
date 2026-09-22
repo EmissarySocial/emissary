@@ -11,9 +11,11 @@ import (
 )
 
 // widgetEditorStub stands in for the Stream builder, supplying just the accessors that the
-// widget editor's own markup reads.  Every list is empty on purpose: the assertions below are
-// about the editor's fixed chrome, which is present whatever is placed in it.
-type widgetEditorStub struct{}
+// widget editor's own markup reads.  The widget lists stay empty on purpose, so the chip
+// sub-template never renders; placements is what the location inputs read, keyed by location.
+type widgetEditorStub struct {
+	placements map[string]string
+}
 
 // DataString mirrors build.Stream.DataString.  The base's layout-controls slot now ships the
 // width control by default, and that control reads one.
@@ -34,6 +36,12 @@ func (stub widgetEditorStub) ListAllWidgets() []form.LookupCode {
 // ListWidgetsByLocation returns no placed widgets, mirroring build.Stream.ListWidgetsByLocation
 func (stub widgetEditorStub) ListWidgetsByLocation(location string) []mapof.Any {
 	return nil
+}
+
+// WidgetIDsByLocation returns the stubbed placement for one location, mirroring
+// build.Stream.WidgetIDsByLocation
+func (stub widgetEditorStub) WidgetIDsByLocation(location string) string {
+	return stub.placements[location]
 }
 
 // TestWidgetEditor_Chrome renders the shared widget editor and asserts that the three pieces of
@@ -89,4 +97,35 @@ func TestWidgetEditor_SaveMarkerIsWired(t *testing.T) {
 	// non-2xx response, and the 200 that WrapInlineError returns because htmx discards a bare 422.
 	require.Contains(t, string(behavior), "successful", "the behavior must read detail.successful")
 	require.Contains(t, string(behavior), "htmx-response-message", "the behavior must recognize a retargeted error")
+}
+
+// TestWidgetEditor_LocationInputsCarryPlacement asserts that every location's hidden input is
+// rendered already holding the widgets placed there.
+//
+// StepSortWidgets rebuilds the Stream's placement from those four fields on every POST, and the
+// behavior rewrites them only after a drag.  A layout control saves through the same form with
+// no drag at all, so an input rendered as "" tells the server its location is empty, and every
+// widget on the page is deleted.  That is the defect this test pins.
+func TestWidgetEditor_LocationInputsCarryPlacement(t *testing.T) {
+
+	templateService := loadEmbeddedTemplates(t)
+
+	template, exists := templateService.templatePrep["base-widget-editor"]
+	require.True(t, exists, "base-widget-editor template not found")
+
+	stub := widgetEditorStub{placements: map[string]string{
+		"TOP":   "000000000000000000000aaa,000000000000000000000bbb",
+		"RIGHT": "000000000000000000000ccc",
+	}}
+
+	var buffer strings.Builder
+	require.NoError(t, template.HTMLTemplate.ExecuteTemplate(&buffer, "widgets-list", stub))
+
+	output := buffer.String()
+
+	require.Contains(t, output, `name="TOP" value="000000000000000000000aaa,000000000000000000000bbb"`, "TOP carries both of its widgets, in order")
+	require.Contains(t, output, `name="RIGHT" value="000000000000000000000ccc"`, "RIGHT carries its one widget")
+	require.Contains(t, output, `name="LEFT" value=""`, "an empty location still posts, as empty")
+	require.Contains(t, output, `name="BOTTOM" value=""`, "an empty location still posts, as empty")
+	require.Equal(t, 4, strings.Count(output, `type="hidden"`), "one input per location, and no more")
 }

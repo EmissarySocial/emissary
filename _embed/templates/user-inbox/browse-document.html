@@ -57,8 +57,8 @@
 			{{end}}
 			<button hx-get="/@me/newsfeed/browse-index?url={{$document.ID}}" aria-label="Use Index Layout">{{icon "list"}}</button>
 			<span class="margin-horizontal-sm"></span>
-			<a href="{{$attributedTo.ID}}" target="_blank" class="button" aria-label="Visit Actor Profile">{{icon "person"}}</a>
-			<a href="{{$document.URL}}" target="_blank" class="button" aria-label="Visit Original Website">{{icon "globe"}}</a>
+			<a href="{{$attributedTo.ID}}" target="_blank" rel="noopener noreferrer" class="button" aria-label="Visit Actor Profile">{{icon "person"}}</a>
+			<a href="{{$document.URL}}" target="_blank" rel="noopener noreferrer" class="button" aria-label="Visit Original Website">{{icon "globe"}}</a>
 		</div>
 		
 	</div>

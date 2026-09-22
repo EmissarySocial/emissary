@@ -1,6 +1,9 @@
 {{- template "follow-heading" . -}}
 
-<h2>{{icon "email"}} Updates in Your Email Inbox</h2>
+
+<div class="margin-vertical-lg">
+	Join my mailing list and get updates in your email box.
+</div>
 
 <form action="/.follower/new" method="post">
 
@@ -10,18 +13,16 @@
 	<div class="layout layout-vertical">
 		<div class="layout-elements">
 			<div class="layout-element">
-				<label>Your Name</label>
-				<input type="text" name="name" required autofocus autocomplete="name">
+				<input type="text" name="name" placeholder="Your Name" required autofocus autocomplete="name" aria-label="Your Name">
 			</div>
 			<div class="layout-element">
-				<label>Email Address</label>
-				<input type="email" name="email" required autocomplete="email">
+				<input type="email" name="email" required autocomplete="email" placeholder="Your Email Address" aria-label="Your Email Address">
 			</div>
 		</div>
 	</div>
 
 	<div>
-		<button type="submit" class="primary">Follow via Email</button>
+		<button type="submit" class="primary">Join Mailing List</button>
 		<button script="on click trigger closeModal">Cancel</button>
 	</div>
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"html/template"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -307,6 +308,11 @@ func (w Stream) InReplyTo() streams.Document {
 	return w.ActivityStream(w._stream.InReplyTo)
 }
 
+// ContentFormat returns the format that the Stream's body content is stored in
+func (w Stream) ContentFormat() string {
+	return w._stream.Content.Format
+}
+
 // ContentHTML returns the body content as an HTML template
 func (w Stream) ContentHTML() template.HTML {
 	return template.HTML(w._stream.Content.HTML) // #nosec G203 -- Content.HTML is produced and sanitized by service.Content.New
@@ -368,6 +374,31 @@ func (w Stream) IsPublished() bool {
 // Rank returns the Rank of the stream being built
 func (w Stream) Rank() int {
 	return w._stream.Rank
+}
+
+// StreamSource returns the remote content source attached to this Stream, or an EMPTY record
+// when it has none.  A Stream with no source is the normal unconfigured case, not an error.
+func (w Stream) StreamSource() (model.StreamSource, error) {
+
+	const location = "build.Stream.StreamSource"
+
+	// RULE: The load target is a ZERO record, never NewStreamSource().  The constructor mints a
+	// webhook token that belongs to a NEW record, and a BSON decode leaves alone any field the
+	// stored document does not carry -- so a load target built that way can hand back a stored
+	// record wearing a token nobody installed.  See model/AGENTS.md.
+	var result model.StreamSource
+
+	if err := w.factory().StreamSource().LoadByStreamID(w.session(), w._stream.StreamID, &result); err != nil {
+
+		// An unconfigured Stream renders the "no source yet" branch, not an error page
+		if derp.IsNotFound(err) {
+			return result, nil
+		}
+
+		return result, derp.Wrap(err, location, "Loading StreamSource", w._stream.StreamID)
+	}
+
+	return result, nil
 }
 
 // Data returns the custom data field as an "any" type
@@ -457,6 +488,13 @@ func (w Stream) ListWidgetsByLocation(location string) []model.StreamWidget {
 	}
 
 	return result
+}
+
+// WidgetIDsByLocation returns the IDs of every widget in the specified location as a
+// comma-separated list, in display order
+func (w Stream) WidgetIDsByLocation(location string) string {
+	widgets := w._stream.WidgetsByLocation(location)
+	return strings.Join(slice.Map(widgets, model.StreamWidget.ID), ",")
 }
 
 // Widgets returns HTML for all the widgets in the specified location
@@ -884,6 +922,27 @@ func (w Stream) IsPublic() bool {
 	return w._stream.IsPublic()
 }
 
+// SharingStatus returns the icon and label that describe who has been granted the
+// provided role on this Stream.
+// RULE: these labels and icons mirror the choices in StepSetSimpleSharing.form, so that the
+// status a visitor reads matches the option they picked.
+func (w Stream) SharingStatus(role string) form.LookupCode {
+
+	switch w.liveStream().SharingStatus(role) {
+
+	case model.SharingStatusPublic:
+		return form.LookupCode{Value: model.SharingStatusPublic, Label: "Sharing: Everyone", Icon: "globe"}
+
+	case model.SharingStatusAuthenticated:
+		return form.LookupCode{Value: model.SharingStatusAuthenticated, Label: "Sharing: Signed-In", Icon: "person-circle"}
+
+	case model.SharingStatusCircles:
+		return form.LookupCode{Value: model.SharingStatusCircles, Label: "Sharing: Groups", Icon: "people"}
+	}
+
+	return form.LookupCode{Value: model.SharingStatusOwners, Label: "Sharing: Owners", Icon: "lock"}
+}
+
 /******************************************
  * Other Stuff
  ******************************************/
@@ -910,6 +969,26 @@ func (w Stream) Template(templateID string) (model.Template, error) {
 /******************************************
  * Helper Functions
  ******************************************/
+
+// liveStream returns the Stream that sharing actually acts on, which is not this builder's own
+// record whenever it is bound to a draft.
+// RULE: the `sharing` action runs OUTSIDE with-draft and Promote copies neither Groups nor
+// Circles, so a draft's copies of them go stale the moment anyone changes sharing.
+func (w Stream) liveStream() *model.Stream {
+
+	if _, isDraft := w._service.(*service.StreamDraft); !isDraft {
+		return w._stream
+	}
+
+	var stream model.Stream
+
+	if err := w._factory.Stream().LoadByID(w._session, w._stream.StreamID, &stream); err != nil {
+		derp.Report(derp.Wrap(err, "build.Stream.liveStream", "Loading live Stream", w._stream.StreamID))
+		return w._stream
+	}
+
+	return &stream
+}
 
 // draftBuilder returns a new build.Stream that is bound to the
 // draft service, and a draft copy of the current stream.

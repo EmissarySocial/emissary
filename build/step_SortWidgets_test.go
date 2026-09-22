@@ -138,3 +138,89 @@ func TestStepSortWidgets_ReswapOnlyForNewWidgets(t *testing.T) {
 		require.Equal(t, 1, len(stream.Widgets))
 	})
 }
+
+// TestStepSortWidgets_PlacementProtocol pins the two halves of the form protocol that keep a
+// save from wiping the page.  Every location the form posts is authoritative, even when it is
+// empty, so a widget dragged back to the tray is removed.  A location the form does NOT post is
+// left exactly as it was, so a POST carrying no placement at all cannot delete anything.
+//
+// The editor itself always posts every location, with its current contents filled in at render
+// (see base-widget-editor/AGENTS.md); the absent-location rule is the guard for any other form.
+func TestStepSortWidgets_PlacementProtocol(t *testing.T) {
+
+	topID := primitive.NewObjectID()
+	bottomID := primitive.NewObjectID()
+
+	newStreamWithTwoWidgets := func() *model.Stream {
+		stream := model.NewStream()
+		stream.Widgets = model.NewStreamWidgets()
+		stream.Widgets.Append(model.StreamWidget{StreamWidgetID: topID, Type: "markdown", Location: "TOP", Label: "Markdown"})
+		stream.Widgets.Append(model.StreamWidget{StreamWidgetID: bottomID, Type: "markdown", Location: "BOTTOM", Label: "Markdown"})
+		return &stream
+	}
+
+	t.Run("a POST carrying no placement at all changes nothing", func(t *testing.T) {
+
+		stream := newStreamWithTwoWidgets()
+		builder := newSortWidgetsBuilder(t, stream, url.Values{
+			"data.width": {"MEDIUM"},
+		})
+
+		result := applyBehavior(StepSortWidgets{}.Post(builder, io.Discard))
+
+		require.Equal(t, "none", result.Headers["HX-Reswap"])
+		require.Equal(t, 2, len(stream.Widgets), "no location was posted, so no location may change")
+		require.Equal(t, topID, stream.Widgets[0].StreamWidgetID)
+		require.Equal(t, "TOP", stream.Widgets[0].Location)
+		require.Equal(t, bottomID, stream.Widgets[1].StreamWidgetID)
+		require.Equal(t, "BOTTOM", stream.Widgets[1].Location)
+	})
+
+	t.Run("a location missing from the POST keeps its widgets while a posted one is applied", func(t *testing.T) {
+
+		stream := newStreamWithTwoWidgets()
+		builder := newSortWidgetsBuilder(t, stream, url.Values{
+			"BOTTOM": {""},
+		})
+
+		result := applyBehavior(StepSortWidgets{}.Post(builder, io.Discard))
+
+		require.Equal(t, "none", result.Headers["HX-Reswap"])
+		require.Equal(t, 1, len(stream.Widgets), "BOTTOM was posted empty and emptied; TOP was not posted and kept")
+		require.Equal(t, topID, stream.Widgets[0].StreamWidgetID)
+		require.Equal(t, "TOP", stream.Widgets[0].Location)
+	})
+
+	t.Run("every location posted empty removes every widget", func(t *testing.T) {
+
+		stream := newStreamWithTwoWidgets()
+		builder := newSortWidgetsBuilder(t, stream, url.Values{
+			"TOP":    {""},
+			"BOTTOM": {""},
+		})
+
+		result := applyBehavior(StepSortWidgets{}.Post(builder, io.Discard))
+
+		require.Equal(t, "none", result.Headers["HX-Reswap"])
+		require.Equal(t, 0, len(stream.Widgets), "a posted location is authoritative, even when empty")
+	})
+
+	t.Run("the editor's untouched form carries every widget and changes nothing", func(t *testing.T) {
+
+		stream := newStreamWithTwoWidgets()
+		builder := newSortWidgetsBuilder(t, stream, url.Values{
+			"TOP":        {topID.Hex()},
+			"BOTTOM":     {bottomID.Hex()},
+			"data.width": {"MEDIUM"},
+		})
+
+		result := applyBehavior(StepSortWidgets{}.Post(builder, io.Discard))
+
+		require.Equal(t, "none", result.Headers["HX-Reswap"])
+		require.Equal(t, 2, len(stream.Widgets))
+		require.Equal(t, topID, stream.Widgets[0].StreamWidgetID)
+		require.Equal(t, "TOP", stream.Widgets[0].Location)
+		require.Equal(t, bottomID, stream.Widgets[1].StreamWidgetID)
+		require.Equal(t, "BOTTOM", stream.Widgets[1].Location)
+	})
+}
