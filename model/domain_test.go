@@ -2,9 +2,13 @@ package model
 
 import (
 	"net/url"
+	"reflect"
 	"testing"
 
+	"github.com/benpate/form"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -12,7 +16,7 @@ import (
 // TestDomainSchema returns the rosetta schema that describes a TestDomain
 func TestDomainSchema(t *testing.T) {
 
-	domain := NewDomain()
+	domain := NewWritableDomain()
 
 	// The virtual iconUrl/imageUrl fields derive from Host() + attachment path, so a
 	// hostname is required for them to pass the (absolute-only) "url" format.
@@ -63,7 +67,7 @@ func TestDomainSchema(t *testing.T) {
 // Writing a theme value into `data` would stage those secrets for publication.
 func TestDomainSchema_ThemeDataIsSeparateFromData(t *testing.T) {
 
-	domain := NewDomain()
+	domain := NewWritableDomain()
 	domain.Data["vapidPrivateKey"] = "SECRET"
 
 	s := schema.New(DomainSchema())
@@ -143,4 +147,131 @@ func TestDomainURLs_RequireHostname(t *testing.T) {
 		_, formatErr := urlFormat.Validate(domain.IconURL())
 		require.NotNil(t, formatErr)
 	})
+}
+
+// Every map and slice field starts out allocated, including any field added to Domain later, so a
+// record built from the constructor never needs a nil guard before a write.
+func TestNewDomain_InitializesEveryMapAndSlice(t *testing.T) {
+
+	value := reflect.ValueOf(NewDomain())
+
+	for index := range value.NumField() {
+
+		field := value.Type().Field(index)
+
+		if kind := field.Type.Kind(); kind != reflect.Map && kind != reflect.Slice {
+			continue
+		}
+
+		require.False(t, value.Field(index).IsNil(), "NewDomain must initialize %s", field.Name)
+	}
+}
+
+// newDomainCloneFixture returns a Domain with a value in every map and slice.  Each call returns a
+// new record, so one can be cloned and edited while another is kept to compare against.
+func newDomainCloneFixture() Domain {
+
+	domain := NewDomain()
+	domain.Label = "Original Label"
+	domain.Data["sso_secret"] = "original"
+	domain.ThemeData["stylesheet"] = "original"
+	domain.RegistrationData = mapof.String{"field": "original"}
+	domain.Syndication = sliceof.Object[form.LookupCode]{{Value: "bluesky", Label: "Bluesky"}}
+	domain.StartupTasks = sliceof.String{"/startup/content"}
+	domain.MLSGroupIDs = sliceof.String{"group"}
+	domain.Connections["stripe"] = Connection{ProviderID: "stripe", Data: mapof.Any{"mode": "original"}}
+
+	return domain
+}
+
+// A clone starts out equal to the Domain it was copied from.
+func TestDomain_Clone_CopiesEveryValue(t *testing.T) {
+
+	original := newDomainCloneFixture()
+	require.Equal(t, newDomainCloneFixture(), original.Clone())
+}
+
+// Writing to any map or slice on a clone leaves the original untouched.
+func TestDomain_Clone_EditsDoNotReachTheOriginal(t *testing.T) {
+
+	original := newDomainCloneFixture()
+	clone := original.Clone()
+
+	clone.Label = "Edited Label"
+	clone.Data["sso_secret"] = "edited"
+	clone.ThemeData["stylesheet"] = "edited"
+	clone.RegistrationData["field"] = "edited"
+	clone.Syndication[0].Label = "Edited"
+	clone.StartupTasks[0] = "/edited"
+	clone.MLSGroupIDs[0] = "edited"
+	clone.Connections["stripe"] = Connection{ProviderID: "edited"}
+	delete(clone.Data, "sso_secret")
+
+	require.Equal(t, newDomainCloneFixture(), original)
+}
+
+// Every map and slice field is copied, including any field added to Domain after Clone was written.
+func TestDomain_Clone_CoversEveryMapAndSliceField(t *testing.T) {
+
+	original := newDomainCloneFixture()
+	clone := original.Clone()
+
+	originalValue := reflect.ValueOf(original)
+	cloneValue := reflect.ValueOf(clone)
+
+	for index := range originalValue.NumField() {
+
+		field := originalValue.Type().Field(index)
+
+		if kind := field.Type.Kind(); kind != reflect.Map && kind != reflect.Slice {
+			continue
+		}
+
+		// A nil field would pass the pointer check below without proving anything
+		require.False(t, originalValue.Field(index).IsNil(), "the fixture must populate %s", field.Name)
+		require.NotEqual(t, originalValue.Field(index).Pointer(), cloneValue.Field(index).Pointer(), "Clone must copy %s", field.Name)
+	}
+}
+
+// A nil map or slice stays nil, so a saved clone writes the same document the original would.
+func TestDomain_Clone_KeepsNilFieldsNil(t *testing.T) {
+
+	original := Domain{Label: "Bare"}
+	clone := original.Clone()
+
+	require.Equal(t, original, clone)
+	require.Nil(t, clone.Data)
+	require.Nil(t, clone.ThemeData)
+	require.Nil(t, clone.RegistrationData)
+	require.Nil(t, clone.Connections)
+	require.Nil(t, clone.StartupTasks)
+	require.Nil(t, clone.MLSGroupIDs)
+	require.Nil(t, clone.Syndication)
+}
+
+// An empty map or slice stays empty rather than becoming nil.
+func TestDomain_Clone_KeepsEmptyFieldsEmpty(t *testing.T) {
+
+	original := NewDomain()
+	clone := original.Clone()
+
+	require.Equal(t, original, clone)
+	require.NotNil(t, clone.Data)
+	require.NotNil(t, clone.ThemeData)
+	require.NotNil(t, clone.RegistrationData)
+	require.NotNil(t, clone.Connections)
+	require.NotNil(t, clone.StartupTasks)
+	require.NotNil(t, clone.MLSGroupIDs)
+	require.NotNil(t, clone.Syndication)
+}
+
+// Values nested inside a copied map are still shared, as the Clone header states.
+func TestDomain_Clone_SharesNestedValues(t *testing.T) {
+
+	original := newDomainCloneFixture()
+	clone := original.Clone()
+
+	clone.Connections["stripe"].Data["mode"] = "edited"
+
+	require.Equal(t, "edited", original.Connections["stripe"].Data["mode"])
 }
