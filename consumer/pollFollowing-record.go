@@ -1,9 +1,11 @@
 package consumer
 
 import (
+	"errors"
 	"net/http"
 	"slices"
 	"strconv"
+	"strings"
 	"unicode/utf8"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -84,41 +86,6 @@ func PollFollowing_Record(factory *service.Factory, session data.Session, user *
 	return queue.Success()
 }
 
-// pollOutcome names what a failed poll means for the Following record it happened to
-type pollOutcome int
-
-const (
-	// pollOutcomeRateLimited means the HOST is throttling us, and this record did nothing wrong
-	pollOutcomeRateLimited pollOutcome = iota
-
-	// pollOutcomeGone means the source is gone for good, on the remote server's own say-so
-	pollOutcomeGone
-
-	// pollOutcomeFailed means "record it and try again at the normal cadence"
-	pollOutcomeFailed
-)
-
-// classifyPollError decides what a failed Actor load means for the Following record
-func classifyPollError(err error) pollOutcome {
-
-	// RULE: The 429 test MUST come first.  derp.IsClientError covers 400-499, so it covers 429
-	// too, and testing it first would turn every rate limit into the record's own failure.
-	if isTooMany, _ := derp.IsTooManyRequests(err); isTooMany {
-		return pollOutcomeRateLimited
-	}
-
-	// RULE: A 410 is the remote server stating the account is DELETED, not a guess we are
-	// making.  Mastodon answers 410 for a deleted account, so this needs no waiting period.
-	if derp.ErrorCode(err) == http.StatusGone {
-		return pollOutcomeGone
-	}
-
-	// RULE: Everything else -- 4xx, 5xx, DNS, TLS, timeout -- is RECORDED rather than retried.
-	// A dead domain never answers 4xx, so classifying only client errors left exactly the
-	// case that matters touching nothing at all.  Recording is what eventually reaches PAUSED.
-	return pollOutcomeFailed
-}
-
 // actorError records a failed Actor load on the Following itself, and maps it onto a queue.Result
 func actorError(factory *service.Factory, session data.Session, following *model.Following, err error) queue.Result {
 
@@ -145,21 +112,53 @@ func actorError(factory *service.Factory, session data.Session, following *model
 		return queue.Error(derp.Wrap(inner, location, "Marking Following as failed", "following: "+following.URL))
 	}
 
-	// RULE: A 4xx is permanent and understood, so it is not reported.  Anything else is
-	// unexpected and stays visible -- once per poll now, not once per retry (BUG-148).
-	if !derp.IsClientError(err) {
+	// Report only what nothing here can account for -- once per poll, not once per retry (BUG-148)
+	if shouldReportPollError(err) {
 		derp.Report(derp.Wrap(err, location, "Loading ActivityPub Actor", "following: "+following.URL))
 	}
 
 	return queue.Success()
 }
 
-// statusMessageMaxLength matches the "statusMessage" schema in model.Following, which rejects
-// anything longer.  A root message quoted from a transport failure has no length bound of its own.
-const statusMessageMaxLength = 1024
+// classifyPollError decides what a failed Actor load means for the Following record.
+func classifyPollError(err error) pollOutcome {
+
+	// This function is separated so that its logic can be tested externally without needing
+	// to perform an actual poll.
+
+	// RULE: The 429 test MUST come first.  derp.IsClientError covers 400-499, so it covers 429
+	// too, and testing it first would turn every rate limit into the record's own failure.
+	if isTooMany, _ := derp.IsTooManyRequests(err); isTooMany {
+		return pollOutcomeRateLimited
+	}
+
+	// RULE: A 410 is the remote server stating the account is DELETED, not a guess we are
+	// making.  Mastodon answers 410 for a deleted account, so this needs no waiting period.
+	if derp.ErrorCode(err) == http.StatusGone {
+		return pollOutcomeGone
+	}
+
+	// RULE: Everything else -- 4xx, 5xx, DNS, TLS, timeout -- is RECORDED rather than retried.
+	// A dead domain never answers 4xx, so classifying only client errors left exactly the
+	// case that matters touching nothing at all.  Recording is what eventually reaches PAUSED.
+	return pollOutcomeFailed
+}
 
 // followingStatusMessage renders a failed poll as a short sentence for the Following's owner
 func followingStatusMessage(err error) string {
+
+	// RULE: A response that arrived is never described as unreachable.  derp reports this as a
+	// 500, so without this branch the owner was told "Could not reach this server: 200 OK".
+	if status, contentType, answered := answeredWithoutActor(err); answered {
+
+		detail := strconv.Itoa(status)
+
+		if contentType != "" {
+			detail += ", " + contentType
+		}
+
+		return truncate("This address did not return an account ("+detail+"). It may be a web page or a feed rather than a fediverse account.", statusMessageMaxLength)
+	}
 
 	code := derp.ErrorCode(err)
 
@@ -182,6 +181,52 @@ func followingStatusMessage(err error) string {
 	// RULE: Everything else may be a real 5xx or a transport failure that never reached a
 	// server, and derp reports both as 500 -- so quote the reason instead of naming a code.
 	return truncate("Could not reach this server: "+derp.RootMessage(err), statusMessageMaxLength)
+}
+
+// shouldReportPollError returns TRUE for a failed Actor load that nothing here can account for,
+// and which therefore deserves a human's attention in the error log.
+func shouldReportPollError(err error) bool {
+
+	// RULE: A 4xx is permanent and understood, so it is not reported.
+	if derp.IsClientError(err) {
+		return false
+	}
+
+	// RULE: A 2xx that carried no Actor is understood too -- the server answered, and the
+	// Following record now says so.  Reporting re-files that same fact on every poll (BUG-151).
+	if _, _, answered := answeredWithoutActor(err); answered {
+		return false
+	}
+
+	// Anything else is unexpected, and stays visible
+	return true
+}
+
+// answeredWithoutActor reports whether a failed Actor load was a response that ARRIVED intact and
+// simply was not an Actor, returning the status and media type it arrived as.
+func answeredWithoutActor(err error) (int, string, bool) {
+
+	// The response that arrived is carried by the HTTPError, whatever code the wrapping added
+	var httpError derp.HTTPError
+
+	if !errors.As(err, &httpError) {
+		return 0, "", false
+	}
+
+	// RULE: Only a 2xx means the request completed.  A 4xx is a refusal, a 5xx is the server's
+	// own fault, and a transport failure never produced a response to read at all.
+	status := httpError.Response.StatusCode
+
+	if (status < http.StatusOK) || (status >= http.StatusMultipleChoices) {
+		return 0, "", false
+	}
+
+	// Strip the parameters, so a "; charset=utf-8" never reaches the owner's sentence
+	contentType, _, _ := strings.Cut(httpError.Response.Header.Get("Content-Type"), ";")
+
+	// RULE: This header is written by the remote server, so it is bounded here.  An overlong
+	// one would otherwise push the explanation out of the owner's status message.
+	return status, truncate(strings.TrimSpace(contentType), contentTypeMaxLength), true
 }
 
 // truncate shortens a string to at most `maxLength` bytes, marking any text it removed
