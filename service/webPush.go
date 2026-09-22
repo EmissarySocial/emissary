@@ -9,9 +9,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/EmissarySocial/emissary/model"
 	webpush "github.com/SherClockHolmes/webpush-go"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/uri"
 	"github.com/rs/zerolog/log"
 )
@@ -88,9 +90,20 @@ func (service *WebPush) vapidKeys(session data.Session) (publicKey string, priva
 
 	const location = "service.WebPush.vapidKeys"
 
-	domain := service.domainService.Get()
+	// Fast path: the cached record already holds a keypair
+	if public, private, ok := storedVAPIDKeys(service.domainService.Get()); ok {
+		return public, private, nil
+	}
 
-	if public, private := domain.Data.GetString(domainDataVAPIDPublicKey), domain.Data.GetString(domainDataVAPIDPrivateKey); public != "" && private != "" {
+	// Start the write from the stored record, never from the cache
+	domain := model.NewWritableDomain()
+
+	if err := service.domainService.Load(session, &domain); err != nil {
+		return "", "", derp.Wrap(err, location, "Loading Domain")
+	}
+
+	// Another request or node may have generated a keypair since the cached record was read
+	if public, private, ok := storedVAPIDKeys(&domain.Domain); ok {
 		return public, private, nil
 	}
 
@@ -101,18 +114,32 @@ func (service *WebPush) vapidKeys(session data.Session) (publicKey string, priva
 		return "", "", derp.Wrap(err, location, "Generating VAPID keys")
 	}
 
-	updated := *domain
-	if updated.Data == nil {
-		return "", "", derp.Internal(location, "Domain.Data map is not initialized")
+	// A record stored before Data existed decodes with a nil map
+	if domain.Data == nil {
+		domain.Data = mapof.NewString()
 	}
-	updated.Data[domainDataVAPIDPublicKey] = newPublic
-	updated.Data[domainDataVAPIDPrivateKey] = newPrivate
 
-	if err := service.domainService.Save(session, updated, "Generate VAPID keys"); err != nil {
+	domain.Data[domainDataVAPIDPublicKey] = newPublic
+	domain.Data[domainDataVAPIDPrivateKey] = newPrivate
+
+	if err := service.domainService.Save(session, &domain, "Generate VAPID keys"); err != nil {
 		return "", "", derp.Wrap(err, location, "Saving VAPID keys")
 	}
 
 	return newPublic, newPrivate, nil
+}
+
+// storedVAPIDKeys returns the VAPID keypair held on a Domain record, or FALSE when either half is missing
+func storedVAPIDKeys(domain *model.Domain) (publicKey string, privateKey string, ok bool) {
+
+	publicKey = domain.Data.GetString(domainDataVAPIDPublicKey)
+	privateKey = domain.Data.GetString(domainDataVAPIDPrivateKey)
+
+	if publicKey == "" || privateKey == "" {
+		return "", "", false
+	}
+
+	return publicKey, privateKey, true
 }
 
 /******************************************

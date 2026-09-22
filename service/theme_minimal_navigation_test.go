@@ -276,7 +276,7 @@ func TestMinimalTheme_Form_Toggles(t *testing.T) {
 		require.IsType(t, schema.Boolean{}, element, "%s must be a boolean", path)
 	}
 
-	domain := model.NewDomain()
+	domain := model.NewWritableDomain()
 	settingsForm := form.Form{Schema: domainSchema, Element: loadMinimalTheme(t).Form}
 
 	result, err := settingsForm.Editor(&domain, nil)
@@ -299,7 +299,8 @@ func TestMinimalTheme_Form_SavePreservesNavigation(t *testing.T) {
 
 	widget.UseAll()
 
-	domain := model.NewDomain()
+	// A form writes through the schema, which only a WritableDomain accepts
+	domain := model.NewWritableDomain()
 	settingsForm := form.Form{Schema: minimalDomainSchema(t), Element: loadMinimalTheme(t).Form}
 
 	// A toggle posts whatever it displays, and both of these display ON, so this is what

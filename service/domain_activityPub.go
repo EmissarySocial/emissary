@@ -97,28 +97,26 @@ func (service *Domain) PublicKeyPEM(session data.Session) (string, error) {
 	return publicKeyPEM, nil
 }
 
-// PrivateKey returns the private key for this domain/actor
+// PrivateKey returns the private key for this domain/actor, generating and saving one on first use
 func (service *Domain) PrivateKey(session data.Session) (*rsa.PrivateKey, error) {
 
 	const location = "service.Domain.PrivateKey"
 
-	// Get the Domain record
-	domain := *service.Get()
+	// Fast path: the cached record already holds a usable key
+	if privateKey, ok := decodeDomainPrivateKey(service.Get().PrivateKey); ok {
+		return privateKey, nil
+	}
 
-	// Try to use the existing private key
-	if domain.PrivateKey != "" {
+	// Start the write from the stored record, never from the cache
+	domain := model.NewWritableDomain()
 
-		privateKey, err := sigs.DecodePrivatePEM(domain.PrivateKey)
+	if err := service.Load(session, &domain); err != nil {
+		return nil, derp.Wrap(err, location, "Loading Domain")
+	}
 
-		if err == nil {
-			if rsaKey, ok := privateKey.(*rsa.PrivateKey); ok {
-				return rsaKey, nil
-			}
-		}
-
-		// Fall through means that we have a value for "domain.PrivateKey" but it's not
-		// valid.  So, let's log the error and try to make a new one.
-		derp.Report(derp.Wrap(err, location, "Decoding private key. Creating a new key"))
+	// Another request or node may have generated a key since the cached record was read
+	if privateKey, ok := decodeDomainPrivateKey(domain.PrivateKey); ok {
+		return privateKey, nil
 	}
 
 	// Otherwise, create a new private key, save it, and return it to the caller.
@@ -131,12 +129,40 @@ func (service *Domain) PrivateKey(session data.Session) (*rsa.PrivateKey, error)
 	// Save the new private key into the Domain record
 	domain.PrivateKey = sigs.EncodePrivatePEM(privateKey)
 
-	if err := service.Save(session, domain, "Generated Private Key"); err != nil {
+	if err := service.Save(session, &domain, "Generated Private Key"); err != nil {
 		return nil, derp.Wrap(err, location, "Saving new EncryptionKey")
 	}
 
 	// Success??
 	return privateKey, nil
+}
+
+// decodeDomainPrivateKey returns the RSA key held in a Domain record's PEM, or FALSE when the
+// record holds none, or holds one that does not decode.
+func decodeDomainPrivateKey(pem string) (*rsa.PrivateKey, bool) {
+
+	const location = "service.decodeDomainPrivateKey"
+
+	if pem == "" {
+		return nil, false
+	}
+
+	privateKey, err := sigs.DecodePrivatePEM(pem)
+
+	if err != nil {
+		// A value that does not decode is reported, and the caller makes a new key (BUG-41)
+		derp.Report(derp.Wrap(err, location, "Decoding private key. Creating a new key"))
+		return nil, false
+	}
+
+	rsaKey, ok := privateKey.(*rsa.PrivateKey)
+
+	if !ok {
+		derp.Report(derp.Internal(location, "Private key is not an RSA key. Creating a new key"))
+		return nil, false
+	}
+
+	return rsaKey, true
 }
 
 // ActivityPubActor returns an ActivityPub Actor object
