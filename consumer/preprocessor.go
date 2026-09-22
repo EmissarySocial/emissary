@@ -68,6 +68,9 @@ func PreProcessor(task *queue.Task) error {
 	case "ReceiveActivityPub-Add":
 		task.Priority = 64
 
+	case "RepairStripeConnect", "ReconcileStripeSubscriptions":
+		task.Priority = 64
+
 	// (256) Background Notifications
 	// The mailing-list sync is one HTTP call per follower against the User's own Mailchimp
 	// quota. It is never user-facing, and a minute late costs nothing.

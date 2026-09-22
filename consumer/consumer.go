@@ -117,11 +117,17 @@ func (consumer Consumer) Run(task queue.Task) queue.Result {
 	case "ReceiveActivityPub-Move":
 		return WithSession(consumer.serverFactory, args, ReceiveActivityPubMove)
 
+	case "ReconcileStripeSubscriptions":
+		return WithFactory(consumer.serverFactory, args, ReconcileStripeSubscriptions)
+
 	case "RecycleDomain":
 		return WithSession(consumer.serverFactory, args, RecycleDomain)
 
 	case "ReindexActivityStream":
 		return WithFactory(consumer.serverFactory, args, ReindexActivityStream)
+
+	case "RepairStripeConnect":
+		return WithSession(consumer.serverFactory, args, RepairStripeConnect)
 
 	case "Scheduler":
 		return Scheduler(consumer.serverFactory)

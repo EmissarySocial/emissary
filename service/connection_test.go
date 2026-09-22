@@ -17,15 +17,16 @@ import (
 /******************************************
  * Untested Paths
  *
- * Providers come from a fixed switch and cannot be faked.  No registered
- * provider's BeforeSave or Disconnect ever fails, and only StripeConnect
- * can fail in Connect (on a call to api.stripe.com), so those error
- * returns in Save and Delete are untested.  Vault.Encrypt cannot fail
- * once DecodeMasterKey has accepted the key.
+ * Providers come from a fixed switch, but a test can substitute a fake
+ * through Provider.overrides (see connection_stripeConnect_test.go, which
+ * also covers a failing Connect).  No registered provider's BeforeSave or
+ * Disconnect ever fails, so those error returns in Save and Delete are
+ * untested.  Vault.Encrypt cannot fail once DecodeMasterKey has accepted
+ * the key.
  ******************************************/
 
 // newTestConnectionDomain returns a Domain record holding one Giphy Connection that uses vault
-func newTestConnectionDomain(vault model.Vault) model.Domain {
+func newTestConnectionDomain(vault model.Vault) model.WritableDomain {
 
 	connection := model.NewConnection()
 	connection.ProviderID = model.ConnectionProviderGiphy
@@ -35,7 +36,7 @@ func newTestConnectionDomain(vault model.Vault) model.Domain {
 	connection.Data["liveMode"] = "SANDBOX"
 	connection.Vault = vault
 
-	domain := model.NewDomain()
+	domain := model.NewWritableDomain()
 	domain.Hostname = "example.com"
 	domain.Connections[connection.ProviderID] = connection
 	return domain
@@ -91,7 +92,7 @@ func newTestConnectionService(t *testing.T) (*Connection, *Domain, data.Session)
 
 	domainService := NewDomain()
 	domain := newTestConnectionDomain(newSealedVault(t, "apiKey", "original-secret"))
-	require.NoError(t, domainService.Save(session, domain, "Created"))
+	require.NoError(t, domainService.Save(session, &domain, "Created"))
 
 	connectionService := Connection{
 		domainService:   &domainService,
@@ -116,7 +117,7 @@ func TestConnection_ReadsCurrentDomain(t *testing.T) {
 	require.Zero(t, count)
 
 	// Another server connects Stripe, and the watcher publishes its record
-	domain := model.NewDomain()
+	domain := model.NewWritableDomain()
 	domain.Connections["STRIPE"] = model.Connection{ProviderID: "STRIPE", Type: "PAYMENT", Active: true}
 	domainService.publish(domain)
 
@@ -166,7 +167,7 @@ func TestConnection_Load_NilMapsStayNil(t *testing.T) {
 	domainService := NewDomain()
 	connectionService := Connection{domainService: &domainService}
 
-	domain := model.NewDomain()
+	domain := model.NewWritableDomain()
 	domain.Connections[model.ConnectionProviderGiphy] = model.Connection{ProviderID: model.ConnectionProviderGiphy}
 	domainService.publish(domain)
 
@@ -188,41 +189,91 @@ func TestConnection_Load_NotFound(t *testing.T) {
 	require.True(t, derp.IsNotFound(err), "got %v", err)
 }
 
-// TestConnection_EditableDomain pins that editing a Connection never touches the published record
-func TestConnection_EditableDomain(t *testing.T) {
+// storeInvalidDomain rewrites the stored Domain record so that its next validation fails, standing
+// in for a database error on the write that follows a Load
+func storeInvalidDomain(t *testing.T, session data.Session) {
 
-	t.Run("CopiesConnections", func(t *testing.T) {
+	t.Helper()
 
-		domainService := NewDomain()
-		connectionService := Connection{domainService: &domainService}
+	invalid := loadStoredDomain(t, session)
+	invalid.ColorMode = "NOT-A-COLOR-MODE"
+	require.NoError(t, session.Collection("Domain").Save(&invalid, "Invalid"))
+}
 
-		domain := model.NewDomain()
-		domain.Connections["STRIPE"] = model.Connection{ProviderID: "STRIPE"}
-		domainService.publish(domain)
+// TestConnection_WritesStartFromTheStoredRecord pins that Save and Delete edit the record in the
+// database, not the cached one, so a stale cache is never written back.
+func TestConnection_WritesStartFromTheStoredRecord(t *testing.T) {
 
-		editable := connectionService.editableDomain()
-		editable.Connections["PAYPAL"] = model.Connection{ProviderID: "PAYPAL"}
-		delete(editable.Connections, "STRIPE")
+	t.Run("Save", func(t *testing.T) {
 
-		require.Len(t, domainService.Get().Connections, 1)
-		require.Contains(t, domainService.Get().Connections, "STRIPE")
+		connectionService, domainService, session := newTestConnectionService(t)
+
+		// The cache falls behind the database, as it does between a save elsewhere and the watcher
+		stale := model.NewWritableDomain()
+		stale.Label = "Stale"
+		domainService.publish(stale)
+
+		connection, err := connectionService.LoadOrCreateByProvider(session, model.ConnectionProviderUnsplash)
+		require.NoError(t, err)
+
+		connection.Type = model.ConnectionTypeImage
+		require.NoError(t, connectionService.Save(session, &connection, "test"))
+
+		// The stored record keeps everything the stale cache lacked, and the cache catches up
+		stored := loadStoredDomain(t, session)
+		require.Equal(t, "example.com", stored.Hostname)
+		require.Len(t, stored.Connections, 2)
+		require.Equal(t, "example.com", domainService.Get().Hostname)
+		require.Len(t, domainService.Get().Connections, 2)
+	})
+
+	t.Run("Delete", func(t *testing.T) {
+
+		connectionService, domainService, session := newTestConnectionService(t)
+
+		stale := model.NewWritableDomain()
+		stale.Label = "Stale"
+		domainService.publish(stale)
+
+		connection := model.NewConnection()
+		connection.ProviderID = model.ConnectionProviderGiphy
+		require.NoError(t, connectionService.Delete(session, &connection, "test"))
+
+		stored := loadStoredDomain(t, session)
+		require.Equal(t, "example.com", stored.Hostname)
+		require.Empty(t, stored.Connections)
+		require.Equal(t, "example.com", domainService.Get().Hostname)
 	})
 
 	t.Run("NilConnections", func(t *testing.T) {
 
-		domainService := NewDomain()
-		connectionService := Connection{domainService: &domainService}
+		connectionService, domainService, session := newTestConnectionService(t)
 
-		domain := model.NewDomain()
-		domain.Connections = nil
-		domainService.publish(domain)
+		// A record stored before Connections existed decodes with a nil map
+		stored := loadStoredDomain(t, session)
+		stored.Connections = nil
+		require.NoError(t, session.Collection("Domain").Save(&stored, "No connections"))
 
-		editable := connectionService.editableDomain()
-		require.NotNil(t, editable.Connections)
+		connection, err := connectionService.LoadOrCreateByProvider(session, model.ConnectionProviderUnsplash)
+		require.NoError(t, err)
 
-		// Writing into the copy must not panic
-		editable.Connections["STRIPE"] = model.Connection{ProviderID: "STRIPE"}
-		require.Nil(t, domainService.Get().Connections)
+		connection.Type = model.ConnectionTypeImage
+		require.NoError(t, connectionService.Save(session, &connection, "test"))
+		require.Len(t, domainService.Get().Connections, 1)
+	})
+
+	t.Run("LoadFails", func(t *testing.T) {
+
+		connectionService, domainService, _ := newTestConnectionService(t)
+		before := domainService.Get()
+
+		connection := model.NewConnection()
+		connection.ProviderID = model.ConnectionProviderGiphy
+		connection.Type = model.ConnectionTypeImage
+
+		require.Error(t, connectionService.Save(failingSession{}, &connection, "test"))
+		require.Error(t, connectionService.Delete(failingSession{}, &connection, "test"))
+		require.Same(t, before, domainService.Get())
 	})
 }
 
@@ -321,10 +372,7 @@ func TestConnection_Save(t *testing.T) {
 
 		connectionService, domainService, session := newTestConnectionService(t)
 
-		// An invalid Domain record makes the final write fail, standing in for a database error
-		invalid := *domainService.Get()
-		invalid.ColorMode = "NOT-A-COLOR-MODE"
-		domainService.publish(invalid)
+		storeInvalidDomain(t, session)
 		before := domainService.Get()
 
 		connection, err := connectionService.LoadOrCreateByProvider(session, model.ConnectionProviderGiphy)
@@ -403,10 +451,7 @@ func TestConnection_Delete(t *testing.T) {
 
 		connectionService, domainService, session := newTestConnectionService(t)
 
-		// An invalid Domain record makes the final write fail, standing in for a database error
-		invalid := *domainService.Get()
-		invalid.ColorMode = "NOT-A-COLOR-MODE"
-		domainService.publish(invalid)
+		storeInvalidDomain(t, session)
 		before := domainService.Get()
 
 		connection, err := connectionService.LoadOrCreateByProvider(session, model.ConnectionProviderGiphy)
@@ -414,6 +459,8 @@ func TestConnection_Delete(t *testing.T) {
 
 		require.Error(t, connectionService.Delete(session, &connection, "test"))
 		require.Same(t, before, domainService.Get())
-		require.Len(t, loadStoredDomain(t, session).Connections, 1)
+
+		// The stored record is not checked here: data-mock hands Load the stored map itself
+		// (BUG-178), so TestDomain_Save/RejectedSaveLeavesTheDatabaseUnchanged covers it
 	})
 }
