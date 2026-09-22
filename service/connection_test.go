@@ -36,10 +36,10 @@ func newTestConnectionDomain(vault model.Vault) model.WritableDomain {
 	connection.Data["liveMode"] = "SANDBOX"
 	connection.Vault = vault
 
-	domain := model.NewWritableDomain()
-	domain.Hostname = "example.com"
-	domain.Connections[connection.ProviderID] = connection
-	return domain
+	writableDomain := model.NewWritableDomain()
+	writableDomain.Hostname = "example.com"
+	writableDomain.Connections[connection.ProviderID] = connection
+	return writableDomain
 }
 
 // newPlaceholderVault returns a Vault holding values that are never decrypted
@@ -91,8 +91,8 @@ func newTestConnectionService(t *testing.T) (*Connection, *Domain, data.Session)
 	require.NoError(t, err)
 
 	domainService := NewDomain()
-	domain := newTestConnectionDomain(newSealedVault(t, "apiKey", "original-secret"))
-	require.NoError(t, domainService.Save(session, &domain, "Created"))
+	writableDomain := newTestConnectionDomain(newSealedVault(t, "apiKey", "original-secret"))
+	require.NoError(t, domainService.Save(session, &writableDomain, "Created"))
 
 	connectionService := Connection{
 		domainService:   &domainService,
@@ -117,9 +117,9 @@ func TestConnection_ReadsCurrentDomain(t *testing.T) {
 	require.Zero(t, count)
 
 	// Another server connects Stripe, and the watcher publishes its record
-	domain := model.NewWritableDomain()
-	domain.Connections["STRIPE"] = model.Connection{ProviderID: "STRIPE", Type: "PAYMENT", Active: true}
-	domainService.publish(domain)
+	writableDomain := model.NewWritableDomain()
+	writableDomain.Connections["STRIPE"] = model.Connection{ProviderID: "STRIPE", Type: "PAYMENT", Active: true}
+	domainService.publish(writableDomain)
 
 	count, err = connectionService.Count(nil, exp.All())
 	require.Nil(t, err)
@@ -150,7 +150,7 @@ func TestConnection_Load_ReturnsACopy(t *testing.T) {
 	loaded.Vault.Nonces["apiKey"] = "edited-nonce"
 	delete(loaded.Data, "liveMode")
 
-	cached := domainService.Get().Connections[model.ConnectionProviderGiphy]
+	cached := domainService.Cached().Connections[model.ConnectionProviderGiphy]
 	require.Equal(t, "original", cached.Data["clientId"])
 	require.Equal(t, "SANDBOX", cached.Data["liveMode"])
 	require.Equal(t, "original-ciphertext", cached.Vault.Encrypted["apiKey"])
@@ -167,9 +167,9 @@ func TestConnection_Load_NilMapsStayNil(t *testing.T) {
 	domainService := NewDomain()
 	connectionService := Connection{domainService: &domainService}
 
-	domain := model.NewWritableDomain()
-	domain.Connections[model.ConnectionProviderGiphy] = model.Connection{ProviderID: model.ConnectionProviderGiphy}
-	domainService.publish(domain)
+	writableDomain := model.NewWritableDomain()
+	writableDomain.Connections[model.ConnectionProviderGiphy] = model.Connection{ProviderID: model.ConnectionProviderGiphy}
+	domainService.publish(writableDomain)
 
 	var loaded model.Connection
 	require.NoError(t, connectionService.LoadByProvider(nil, model.ConnectionProviderGiphy, &loaded))
@@ -195,9 +195,9 @@ func storeInvalidDomain(t *testing.T, session data.Session) {
 
 	t.Helper()
 
-	invalid := loadStoredDomain(t, session)
-	invalid.ColorMode = "NOT-A-COLOR-MODE"
-	require.NoError(t, session.Collection("Domain").Save(&invalid, "Invalid"))
+	writableDomain := loadStoredDomain(t, session)
+	writableDomain.ColorMode = "NOT-A-COLOR-MODE"
+	require.NoError(t, session.Collection("Domain").Save(&writableDomain, "Invalid"))
 }
 
 // TestConnection_WritesStartFromTheStoredRecord pins that Save and Delete edit the record in the
@@ -223,8 +223,8 @@ func TestConnection_WritesStartFromTheStoredRecord(t *testing.T) {
 		stored := loadStoredDomain(t, session)
 		require.Equal(t, "example.com", stored.Hostname)
 		require.Len(t, stored.Connections, 2)
-		require.Equal(t, "example.com", domainService.Get().Hostname)
-		require.Len(t, domainService.Get().Connections, 2)
+		require.Equal(t, "example.com", domainService.Cached().Hostname)
+		require.Len(t, domainService.Cached().Connections, 2)
 	})
 
 	t.Run("Delete", func(t *testing.T) {
@@ -242,7 +242,7 @@ func TestConnection_WritesStartFromTheStoredRecord(t *testing.T) {
 		stored := loadStoredDomain(t, session)
 		require.Equal(t, "example.com", stored.Hostname)
 		require.Empty(t, stored.Connections)
-		require.Equal(t, "example.com", domainService.Get().Hostname)
+		require.Equal(t, "example.com", domainService.Cached().Hostname)
 	})
 
 	t.Run("NilConnections", func(t *testing.T) {
@@ -250,22 +250,22 @@ func TestConnection_WritesStartFromTheStoredRecord(t *testing.T) {
 		connectionService, domainService, session := newTestConnectionService(t)
 
 		// A record stored before Connections existed decodes with a nil map
-		stored := loadStoredDomain(t, session)
-		stored.Connections = nil
-		require.NoError(t, session.Collection("Domain").Save(&stored, "No connections"))
+		writableDomain := loadStoredDomain(t, session)
+		writableDomain.Connections = nil
+		require.NoError(t, session.Collection("Domain").Save(&writableDomain, "No connections"))
 
 		connection, err := connectionService.LoadOrCreateByProvider(session, model.ConnectionProviderUnsplash)
 		require.NoError(t, err)
 
 		connection.Type = model.ConnectionTypeImage
 		require.NoError(t, connectionService.Save(session, &connection, "test"))
-		require.Len(t, domainService.Get().Connections, 1)
+		require.Len(t, domainService.Cached().Connections, 1)
 	})
 
 	t.Run("LoadFails", func(t *testing.T) {
 
 		connectionService, domainService, _ := newTestConnectionService(t)
-		before := domainService.Get()
+		readOnlyDomain := domainService.Cached()
 
 		connection := model.NewConnection()
 		connection.ProviderID = model.ConnectionProviderGiphy
@@ -273,7 +273,7 @@ func TestConnection_WritesStartFromTheStoredRecord(t *testing.T) {
 
 		require.Error(t, connectionService.Save(failingSession{}, &connection, "test"))
 		require.Error(t, connectionService.Delete(failingSession{}, &connection, "test"))
-		require.Same(t, before, domainService.Get())
+		require.Same(t, readOnlyDomain, domainService.Cached())
 	})
 }
 
@@ -298,7 +298,7 @@ func TestConnection_Save(t *testing.T) {
 		require.Equal(t, "updated-secret", openStoredVault(t, stored.Vault, "apiKey"))
 
 		// ...and so does the published record
-		cached := domainService.Get().Connections[model.ConnectionProviderGiphy]
+		cached := domainService.Cached().Connections[model.ConnectionProviderGiphy]
 		require.Equal(t, "updated", cached.Data["clientId"])
 		require.Equal(t, "updated-secret", openStoredVault(t, cached.Vault, "apiKey"))
 	})
@@ -314,11 +314,11 @@ func TestConnection_Save(t *testing.T) {
 		connection.Active = true
 		require.NoError(t, connectionService.Save(session, &connection, "test"))
 
-		stored := loadStoredDomain(t, session)
-		require.Len(t, stored.Connections, 2)
-		require.Contains(t, stored.Connections, model.ConnectionProviderUnsplash)
-		require.Contains(t, stored.Connections, model.ConnectionProviderGiphy)
-		require.Len(t, domainService.Get().Connections, 2)
+		writableDomain := loadStoredDomain(t, session)
+		require.Len(t, writableDomain.Connections, 2)
+		require.Contains(t, writableDomain.Connections, model.ConnectionProviderUnsplash)
+		require.Contains(t, writableDomain.Connections, model.ConnectionProviderGiphy)
+		require.Len(t, domainService.Cached().Connections, 2)
 	})
 
 	t.Run("InactiveConnectionIsStored", func(t *testing.T) {
@@ -332,7 +332,7 @@ func TestConnection_Save(t *testing.T) {
 		require.NoError(t, connectionService.Save(session, &connection, "test"))
 
 		require.False(t, loadStoredDomain(t, session).Connections[model.ConnectionProviderGiphy].Active)
-		require.False(t, domainService.Get().Connections[model.ConnectionProviderGiphy].Active)
+		require.False(t, domainService.Cached().Connections[model.ConnectionProviderGiphy].Active)
 	})
 
 	t.Run("RejectedEditLeavesCacheUnchanged", func(t *testing.T) {
@@ -349,7 +349,7 @@ func TestConnection_Save(t *testing.T) {
 		connection.Type = "NOT-A-TYPE"
 		require.Error(t, connectionService.Save(session, &connection, "test"))
 
-		cached := domainService.Get().Connections[model.ConnectionProviderGiphy]
+		cached := domainService.Cached().Connections[model.ConnectionProviderGiphy]
 		require.Equal(t, "original", cached.Data["clientId"])
 		require.Equal(t, "original-secret", openStoredVault(t, cached.Vault, "apiKey"))
 		require.Equal(t, "original", loadStoredDomain(t, session).Connections[model.ConnectionProviderGiphy].Data["clientId"])
@@ -358,14 +358,14 @@ func TestConnection_Save(t *testing.T) {
 	t.Run("UndecryptableVault", func(t *testing.T) {
 
 		connectionService, domainService, session := newTestConnectionService(t)
-		before := domainService.Get()
+		readOnlyDomain := domainService.Cached()
 
 		connection, err := connectionService.LoadOrCreateByProvider(session, model.ConnectionProviderGiphy)
 		require.NoError(t, err)
 
 		connection.Vault.Encrypted["apiKey"] = "not-hexadecimal"
 		require.Error(t, connectionService.Save(session, &connection, "test"))
-		require.Same(t, before, domainService.Get())
+		require.Same(t, readOnlyDomain, domainService.Cached())
 	})
 
 	t.Run("DomainWriteFails", func(t *testing.T) {
@@ -373,38 +373,38 @@ func TestConnection_Save(t *testing.T) {
 		connectionService, domainService, session := newTestConnectionService(t)
 
 		storeInvalidDomain(t, session)
-		before := domainService.Get()
+		readOnlyDomain := domainService.Cached()
 
 		connection, err := connectionService.LoadOrCreateByProvider(session, model.ConnectionProviderGiphy)
 		require.NoError(t, err)
 
 		connection.Data["clientId"] = "unsaved"
 		require.Error(t, connectionService.Save(session, &connection, "test"))
-		require.Same(t, before, domainService.Get())
-		require.Equal(t, "original", domainService.Get().Connections[model.ConnectionProviderGiphy].Data["clientId"])
+		require.Same(t, readOnlyDomain, domainService.Cached())
+		require.Equal(t, "original", domainService.Cached().Connections[model.ConnectionProviderGiphy].Data["clientId"])
 	})
 
 	t.Run("UnknownProvider", func(t *testing.T) {
 
 		connectionService, domainService, session := newTestConnectionService(t)
-		before := domainService.Get()
+		readOnlyDomain := domainService.Cached()
 
 		connection := model.NewConnection()
 		connection.ProviderID = "NOT-A-PROVIDER"
 		require.Error(t, connectionService.Save(session, &connection, "test"))
-		require.Same(t, before, domainService.Get())
+		require.Same(t, readOnlyDomain, domainService.Cached())
 	})
 
 	t.Run("MissingMasterKey", func(t *testing.T) {
 
 		connectionService, domainService, session := newTestConnectionService(t)
 		connectionService.masterKey = ""
-		before := domainService.Get()
+		readOnlyDomain := domainService.Cached()
 
 		connection := model.NewConnection()
 		connection.ProviderID = model.ConnectionProviderGiphy
 		require.Error(t, connectionService.Save(session, &connection, "test"))
-		require.Same(t, before, domainService.Get())
+		require.Same(t, readOnlyDomain, domainService.Cached())
 	})
 }
 
@@ -421,7 +421,7 @@ func TestConnection_Delete(t *testing.T) {
 
 		require.NoError(t, connectionService.Delete(session, &connection, "test"))
 		require.Empty(t, loadStoredDomain(t, session).Connections)
-		require.Empty(t, domainService.Get().Connections)
+		require.Empty(t, domainService.Cached().Connections)
 	})
 
 	t.Run("UnknownProvider", func(t *testing.T) {
@@ -431,7 +431,7 @@ func TestConnection_Delete(t *testing.T) {
 		connection := model.NewConnection()
 		connection.ProviderID = "NOT-A-PROVIDER"
 		require.Error(t, connectionService.Delete(session, &connection, "test"))
-		require.Len(t, domainService.Get().Connections, 1)
+		require.Len(t, domainService.Cached().Connections, 1)
 	})
 
 	t.Run("MissingMasterKey", func(t *testing.T) {
@@ -444,7 +444,7 @@ func TestConnection_Delete(t *testing.T) {
 
 		require.Error(t, connectionService.Delete(session, &connection, "test"))
 		require.Len(t, loadStoredDomain(t, session).Connections, 1)
-		require.Len(t, domainService.Get().Connections, 1)
+		require.Len(t, domainService.Cached().Connections, 1)
 	})
 
 	t.Run("DomainWriteFails", func(t *testing.T) {
@@ -452,13 +452,13 @@ func TestConnection_Delete(t *testing.T) {
 		connectionService, domainService, session := newTestConnectionService(t)
 
 		storeInvalidDomain(t, session)
-		before := domainService.Get()
+		readOnlyDomain := domainService.Cached()
 
 		connection, err := connectionService.LoadOrCreateByProvider(session, model.ConnectionProviderGiphy)
 		require.NoError(t, err)
 
 		require.Error(t, connectionService.Delete(session, &connection, "test"))
-		require.Same(t, before, domainService.Get())
+		require.Same(t, readOnlyDomain, domainService.Cached())
 
 		// The stored record is not checked here: data-mock hands Load the stored map itself
 		// (BUG-178), so TestDomain_Save/RejectedSaveLeavesTheDatabaseUnchanged covers it

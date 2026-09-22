@@ -450,12 +450,12 @@ func (service *SearchQuery) PublicKeyID(searchQueryID primitive.ObjectID) string
 
 // ActivityPubName returns the display name of a saved SearchQuery Actor
 func (service *SearchQuery) ActivityPubName(searchQuery *model.SearchQuery) string {
-	domain := service.domainService.Get()
+	readOnlyDomain := service.domainService.Cached()
 
 	if query := searchQuery.Query; query != "" {
-		return searchQuery.Query + " on " + domain.Label
+		return searchQuery.Query + " on " + readOnlyDomain.Label
 	} else {
-		return "Search everything " + domain.Label
+		return "Search everything " + readOnlyDomain.Label
 	}
 }
 

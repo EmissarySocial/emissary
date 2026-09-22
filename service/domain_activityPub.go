@@ -43,7 +43,7 @@ func (service *Domain) GetJSONLD(session data.Session) (mapof.Any, error) {
 
 	actorID := service.ActorID()
 
-	domain := service.Get()
+	readOnlyDomain := service.Cached()
 
 	// Return the result as a JSON-LD document
 	result := map[string]any{
@@ -52,8 +52,8 @@ func (service *Domain) GetJSONLD(session data.Session) (mapof.Any, error) {
 		vocab.PropertyID:                actorID,
 		vocab.PropertyPreferredUsername: "application",
 		vocab.PropertyName:              service.Hostname(),
-		vocab.PropertyIcon:              domain.IconURL(),
-		vocab.PropertyImage:             domain.IconURL(),
+		vocab.PropertyIcon:              readOnlyDomain.IconURL(),
+		vocab.PropertyImage:             readOnlyDomain.IconURL(),
 		vocab.PropertyFollowing:         actorID + "/following",
 		vocab.PropertyFollowers:         actorID + "/followers",
 		vocab.PropertyLiked:             actorID + "/liked",
@@ -103,19 +103,19 @@ func (service *Domain) PrivateKey(session data.Session) (*rsa.PrivateKey, error)
 	const location = "service.Domain.PrivateKey"
 
 	// Fast path: the cached record already holds a usable key
-	if privateKey, ok := decodeDomainPrivateKey(service.Get().PrivateKey); ok {
+	if privateKey, ok := decodeDomainPrivateKey(service.Cached().PrivateKey); ok {
 		return privateKey, nil
 	}
 
 	// Start the write from the stored record, never from the cache
-	domain := model.NewWritableDomain()
+	writableDomain := model.NewWritableDomain()
 
-	if err := service.Load(session, &domain); err != nil {
+	if err := service.Load(session, &writableDomain); err != nil {
 		return nil, derp.Wrap(err, location, "Loading Domain")
 	}
 
 	// Another request or node may have generated a key since the cached record was read
-	if privateKey, ok := decodeDomainPrivateKey(domain.PrivateKey); ok {
+	if privateKey, ok := decodeDomainPrivateKey(writableDomain.PrivateKey); ok {
 		return privateKey, nil
 	}
 
@@ -127,9 +127,9 @@ func (service *Domain) PrivateKey(session data.Session) (*rsa.PrivateKey, error)
 	}
 
 	// Save the new private key into the Domain record
-	domain.PrivateKey = sigs.EncodePrivatePEM(privateKey)
+	writableDomain.PrivateKey = sigs.EncodePrivatePEM(privateKey)
 
-	if err := service.Save(session, &domain, "Generated Private Key"); err != nil {
+	if err := service.Save(session, &writableDomain, "Generated Private Key"); err != nil {
 		return nil, derp.Wrap(err, location, "Saving new EncryptionKey")
 	}
 

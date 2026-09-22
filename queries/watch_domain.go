@@ -32,14 +32,14 @@ func WatchDomain(ctx context.Context, server data.Server, publish func(model.Wri
 		// RULE: Never skip a zero DomainID.  The Domain record is stored with a zero `_id`.
 		onDocument: func(_ context.Context, document bson.Raw) {
 
-			domain := model.NewWritableDomain()
+			writableDomain := model.NewWritableDomain()
 
-			if err := bson.Unmarshal(document, &domain); err != nil {
+			if err := bson.Unmarshal(document, &writableDomain); err != nil {
 				derp.Report(derp.Wrap(err, location, "Decoding Domain from change event"))
 				return
 			}
 
-			publish(domain)
+			publish(writableDomain)
 		},
 	}
 
@@ -51,9 +51,9 @@ func loadDomain(ctx context.Context, collection *mongo.Collection, publish func(
 
 	const location = "queries.loadDomain"
 
-	domain := model.NewWritableDomain()
+	writableDomain := model.NewWritableDomain()
 
-	if err := collection.FindOne(ctx, bson.M{}).Decode(&domain); err != nil {
+	if err := collection.FindOne(ctx, bson.M{}).Decode(&writableDomain); err != nil {
 
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil
@@ -62,6 +62,6 @@ func loadDomain(ctx context.Context, collection *mongo.Collection, publish func(
 		return derp.Wrap(err, location, "Loading Domain record")
 	}
 
-	publish(domain)
+	publish(writableDomain)
 	return nil
 }

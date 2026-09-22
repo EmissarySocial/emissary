@@ -144,20 +144,20 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 	}
 
 	// Store the Connection on the stored Domain record, never on the cached one
-	domain := model.NewWritableDomain()
+	writableDomain := model.NewWritableDomain()
 
-	if err := service.domainService.Load(session, &domain); err != nil {
+	if err := service.domainService.Load(session, &writableDomain); err != nil {
 		return derp.Wrap(err, location, "Loading Domain", connection.ProviderID)
 	}
 
 	// A record stored before Connections existed decodes with a nil map
-	if domain.Connections == nil {
-		domain.Connections = mapof.NewMatchable[model.Connection]()
+	if writableDomain.Connections == nil {
+		writableDomain.Connections = mapof.NewMatchable[model.Connection]()
 	}
 
-	domain.Connections[connection.ProviderID] = *connection
+	writableDomain.Connections[connection.ProviderID] = *connection
 
-	if err := service.domainService.Save(session, &domain, "Updated connection: "+connection.ProviderID); err != nil {
+	if err := service.domainService.Save(session, &writableDomain, "Updated connection: "+connection.ProviderID); err != nil {
 		return derp.Wrap(err, location, "Saving Connection", connection, note)
 	}
 
@@ -189,15 +189,15 @@ func (service *Connection) Delete(session data.Session, connection *model.Connec
 	}
 
 	// Remove the Connection from the stored Domain record, never from the cached one
-	domain := model.NewWritableDomain()
+	writableDomain := model.NewWritableDomain()
 
-	if err := service.domainService.Load(session, &domain); err != nil {
+	if err := service.domainService.Load(session, &writableDomain); err != nil {
 		return derp.Wrap(err, location, "Loading Domain", connection.ProviderID)
 	}
 
-	delete(domain.Connections, connection.ProviderID)
+	delete(writableDomain.Connections, connection.ProviderID)
 
-	if err := service.domainService.Save(session, &domain, "Deleted connection: "+connection.ProviderID); err != nil {
+	if err := service.domainService.Save(session, &writableDomain, "Deleted connection: "+connection.ProviderID); err != nil {
 		return derp.Wrap(err, location, "Deleting Connection", connection, note)
 	}
 
@@ -273,7 +273,7 @@ func (service *Connection) Schema() schema.Schema {
 
 // connections returns the Connections on the cached Domain record.  Callers must not modify it.
 func (service *Connection) connections() mapof.Matchable[model.Connection] {
-	return service.domainService.Get().Connections
+	return service.domainService.Cached().Connections
 }
 
 // QueryAll returns every Connection configured on this Domain

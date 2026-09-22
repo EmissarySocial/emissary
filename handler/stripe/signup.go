@@ -18,7 +18,7 @@ import (
 )
 
 // PostSignupWebhook receives and verifies a Stripe subscription webhook, then applies it to the signing-up User
-func PostSignupWebhook(ctx *steranko.Context, factory *service.Factory, session data.Session, domain *model.Domain) error {
+func PostSignupWebhook(ctx *steranko.Context, factory *service.Factory, session data.Session, readOnlyDomain *model.Domain) error {
 
 	const location = "handler.stripe.PostWebhook"
 
@@ -26,17 +26,17 @@ func PostSignupWebhook(ctx *steranko.Context, factory *service.Factory, session 
 	// 1. PREPARE AND VALIDATE THE REQUEST
 
 	// RULE: Require that a registration form has been defined
-	if !domain.HasRegistrationForm() {
+	if !readOnlyDomain.HasRegistrationForm() {
 		return derp.NotFound(location, "Stripe Webhook not defined (no registration form)")
 	}
 
 	// Collect Registration Metadata
-	secret := domain.RegistrationData.GetString("stripe_webhook_secret")
+	secret := readOnlyDomain.RegistrationData.GetString("stripe_webhook_secret")
 	if secret == "" {
 		return derp.Internal(location, "Stripe Webhook Secret not defined")
 	}
 
-	restrictedKey := domain.RegistrationData.GetString("stripe_restricted_key")
+	restrictedKey := readOnlyDomain.RegistrationData.GetString("stripe_restricted_key")
 	if restrictedKey == "" {
 		return derp.Internal(location, "Stripe Restricted Key not defined")
 	}

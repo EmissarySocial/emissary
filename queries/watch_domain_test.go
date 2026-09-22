@@ -31,9 +31,9 @@ func TestWatchDomain_PublishesExistingRecordOnOpen(t *testing.T) {
 
 	published := startDomainWatcher(t, database)
 
-	domain := awaitDomain(t, published)
-	require.Equal(t, "Existing", domain.Label)
-	require.True(t, domain.DomainID.IsZero())
+	writableDomain := awaitDomain(t, published)
+	require.Equal(t, "Existing", writableDomain.Label)
+	require.True(t, writableDomain.DomainID.IsZero())
 }
 
 // TestWatchDomain_PublishesReplacement pins the everyday case: a whole-document Save on another
@@ -48,9 +48,9 @@ func TestWatchDomain_PublishesReplacement(t *testing.T) {
 
 	replaceDomain(t, database, bson.M{"label": "After", "themeData": bson.M{"stylesheet": "body { color: red; }"}})
 
-	domain := awaitDomain(t, published)
-	require.Equal(t, "After", domain.Label)
-	require.Equal(t, "body { color: red; }", domain.ThemeData.GetString("stylesheet"))
+	writableDomain := awaitDomain(t, published)
+	require.Equal(t, "After", writableDomain.Label)
+	require.Equal(t, "body { color: red; }", writableDomain.ThemeData.GetString("stylesheet"))
 }
 
 // TestWatchDomain_PublishesSetUpdate pins UpdateLookup: the upgrade runner writes the Domain with
@@ -66,9 +66,9 @@ func TestWatchDomain_PublishesSetUpdate(t *testing.T) {
 	_, err := database.Collection("Domain").UpdateOne(context.Background(), bson.M{"_id": primitive.NilObjectID}, bson.M{"$set": bson.M{"databaseVersion": 35}})
 	require.Nil(t, err)
 
-	domain := awaitDomain(t, published)
-	require.Equal(t, uint(35), domain.DatabaseVersion)
-	require.Equal(t, "Unchanged", domain.Label)
+	writableDomain := awaitDomain(t, published)
+	require.Equal(t, uint(35), writableDomain.DatabaseVersion)
+	require.Equal(t, "Unchanged", writableDomain.Label)
 }
 
 // TestWatchDomain_NoRecordPublishesNothing pins that an empty collection publishes no blank Domain,
@@ -84,8 +84,8 @@ func TestWatchDomain_NoRecordPublishesNothing(t *testing.T) {
 		replaceDomain(t, database, bson.M{"label": "Inserted"})
 
 		select {
-		case domain := <-published:
-			require.Equal(t, "Inserted", domain.Label)
+		case writableDomain := <-published:
+			require.Equal(t, "Inserted", writableDomain.Label)
 			return
 		case <-time.After(250 * time.Millisecond):
 		}
@@ -119,7 +119,7 @@ func TestLoadDomain(t *testing.T) {
 		replaceDomain(t, database, bson.M{"label": "Loaded"})
 
 		var result []model.WritableDomain
-		err := loadDomain(context.Background(), database.Collection("Domain"), func(domain model.WritableDomain) { result = append(result, domain) })
+		err := loadDomain(context.Background(), database.Collection("Domain"), func(writableDomain model.WritableDomain) { result = append(result, writableDomain) })
 
 		require.Nil(t, err)
 		require.Len(t, result, 1)
@@ -130,13 +130,13 @@ func TestLoadDomain(t *testing.T) {
 		database := newWatchTestDatabase(t)
 		replaceDomain(t, database, bson.M{"label": "Sparse"})
 
-		var result model.WritableDomain
-		err := loadDomain(context.Background(), database.Collection("Domain"), func(domain model.WritableDomain) { result = domain })
+		var writableDomain model.WritableDomain
+		err := loadDomain(context.Background(), database.Collection("Domain"), func(domain model.WritableDomain) { writableDomain = domain })
 
 		require.Nil(t, err)
-		require.NotNil(t, result.ThemeData)
-		require.NotNil(t, result.Connections)
-		require.NotNil(t, result.Data)
+		require.NotNil(t, writableDomain.ThemeData)
+		require.NotNil(t, writableDomain.Connections)
+		require.NotNil(t, writableDomain.Data)
 	})
 
 	t.Run("NoRecord", func(t *testing.T) {
@@ -190,7 +190,7 @@ func startDomainWatcher(t *testing.T, database *mongo.Database) <-chan model.Wri
 
 	go func() {
 		defer close(finished)
-		WatchDomain(ctx, mongodb.NewServer(database), func(domain model.WritableDomain) { published <- domain })
+		WatchDomain(ctx, mongodb.NewServer(database), func(writableDomain model.WritableDomain) { published <- writableDomain })
 	}()
 
 	t.Cleanup(func() {
@@ -211,8 +211,8 @@ func awaitDomain(t *testing.T, published <-chan model.WritableDomain) model.Writ
 	t.Helper()
 
 	select {
-	case result := <-published:
-		return result
+	case writableDomain := <-published:
+		return writableDomain
 	case <-time.After(watchTestTimeout):
 		t.Fatal("no Domain was published")
 		return model.WritableDomain{}

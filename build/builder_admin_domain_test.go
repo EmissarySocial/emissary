@@ -24,7 +24,7 @@ import (
 
 // newSeededDomainService returns a Domain service whose record is stored in an in-memory database
 // and published, plus the session that reaches it.  Save is the only exported way to publish.
-func newSeededDomainService(t *testing.T, domain model.WritableDomain) (*service.Domain, data.Session) {
+func newSeededDomainService(t *testing.T, writableDomain model.WritableDomain) (*service.Domain, data.Session) {
 
 	t.Helper()
 
@@ -32,20 +32,20 @@ func newSeededDomainService(t *testing.T, domain model.WritableDomain) (*service
 	require.NoError(t, err)
 
 	domainService := &service.Domain{}
-	require.NoError(t, domainService.Save(session, &domain, "Seed"))
+	require.NoError(t, domainService.Save(session, &writableDomain, "Seed"))
 
 	return domainService, session
 }
 
 // storeSeededDomain overwrites the stored Domain record without publishing it, which is how the
 // cache falls behind the database between a save on another node and the watcher.
-func storeSeededDomain(t *testing.T, session data.Session, domain model.WritableDomain) {
+func storeSeededDomain(t *testing.T, session data.Session, writableDomain model.WritableDomain) {
 
 	t.Helper()
 
 	// The journal must say "existing", or the mock inserts a second record beside the first
-	domain.Journal = loadSeededDomain(t, session).Journal
-	require.NoError(t, session.Collection("Domain").Save(&domain, "Stored"))
+	writableDomain.Journal = loadSeededDomain(t, session).Journal
+	require.NoError(t, session.Collection("Domain").Save(&writableDomain, "Stored"))
 }
 
 // loadSeededDomain returns the Domain record stored in the database that session reaches
@@ -53,10 +53,10 @@ func loadSeededDomain(t *testing.T, session data.Session) model.WritableDomain {
 
 	t.Helper()
 
-	result := model.NewWritableDomain()
-	require.NoError(t, session.Collection("Domain").Load(exp.All(), &result))
+	writableDomain := model.NewWritableDomain()
+	require.NoError(t, session.Collection("Domain").Load(exp.All(), &writableDomain))
 
-	return result
+	return writableDomain
 }
 
 // failingDomainSession is a data.Session whose every collection fails to load
@@ -100,27 +100,27 @@ func (f stubAdminDomainFactory) Steranko(data.Session) *steranko.Steranko { retu
 // returns a new record, so one can be stored and another kept to compare.
 func newAdminDomainFixture() model.WritableDomain {
 
-	domain := model.NewWritableDomain()
-	domain.Label = "Original Label"
-	domain.Data["sso_secret"] = "original"
-	domain.ThemeData["stylesheet"] = "original"
-	domain.RegistrationData = mapof.String{"field": "original"}
-	domain.Syndication = sliceof.Object[form.LookupCode]{{Value: "bluesky", Label: "Bluesky"}}
-	domain.StartupTasks = sliceof.String{"/startup/content"}
-	domain.MLSMode = model.DomainMLSModeGroups
-	domain.MLSGroupIDs = sliceof.String{"group"}
-	domain.Connections["stripe"] = model.Connection{ProviderID: "stripe", Type: "payment"}
+	writableDomain := model.NewWritableDomain()
+	writableDomain.Label = "Original Label"
+	writableDomain.Data["sso_secret"] = "original"
+	writableDomain.ThemeData["stylesheet"] = "original"
+	writableDomain.RegistrationData = mapof.String{"field": "original"}
+	writableDomain.Syndication = sliceof.Object[form.LookupCode]{{Value: "bluesky", Label: "Bluesky"}}
+	writableDomain.StartupTasks = sliceof.String{"/startup/content"}
+	writableDomain.MLSMode = model.DomainMLSModeGroups
+	writableDomain.MLSGroupIDs = sliceof.String{"group"}
+	writableDomain.Connections["stripe"] = model.Connection{ProviderID: "stripe", Type: "payment"}
 
-	return domain
+	return writableDomain
 }
 
 // newAdminDomainFactory returns a stub factory whose Domain service has the provided record stored
 // and cached, plus the session the builders load it through.
-func newAdminDomainFactory(t *testing.T, domain model.WritableDomain) (stubAdminDomainFactory, data.Session) {
+func newAdminDomainFactory(t *testing.T, writableDomain model.WritableDomain) (stubAdminDomainFactory, data.Session) {
 
 	t.Helper()
 
-	domainService, session := newSeededDomainService(t, domain)
+	domainService, session := newSeededDomainService(t, writableDomain)
 
 	factory := stubAdminDomainFactory{
 		domainService: domainService,
@@ -168,15 +168,15 @@ func newAdminDomainTemplate() model.Template {
 
 // editEveryDomainField writes to every map and slice on the Domain, plus one scalar, the way
 // the edit, set-data, and edit-table steps write through a builder's object.
-func editEveryDomainField(domain *model.Domain) {
-	domain.Label = "Edited Label"
-	domain.Data["sso_secret"] = "edited"
-	domain.ThemeData["stylesheet"] = "edited"
-	domain.RegistrationData["field"] = "edited"
-	domain.Syndication[0].Label = "Edited"
-	domain.StartupTasks[0] = "/edited"
-	domain.MLSGroupIDs[0] = "edited"
-	domain.Connections["stripe"] = model.Connection{ProviderID: "edited"}
+func editEveryDomainField(readOnlyDomain *model.Domain) {
+	readOnlyDomain.Label = "Edited Label"
+	readOnlyDomain.Data["sso_secret"] = "edited"
+	readOnlyDomain.ThemeData["stylesheet"] = "edited"
+	readOnlyDomain.RegistrationData["field"] = "edited"
+	readOnlyDomain.Syndication[0].Label = "Edited"
+	readOnlyDomain.StartupTasks[0] = "/edited"
+	readOnlyDomain.MLSGroupIDs[0] = "edited"
+	readOnlyDomain.Connections["stripe"] = model.Connection{ProviderID: "edited"}
 }
 
 // requireEditsStayPrivate builds an admin builder over a stored Domain, edits the builder's object,
@@ -191,16 +191,16 @@ func requireEditsStayPrivate(t *testing.T, construct func(Factory, data.Session,
 	require.NoError(t, err)
 
 	// The builder starts from the stored values
-	edited, ok := object.(*model.WritableDomain)
+	writableDomain, ok := object.(*model.WritableDomain)
 	require.True(t, ok, "the builder's object must be a *model.WritableDomain")
-	require.Equal(t, newAdminDomainFixture().Domain, edited.Domain)
+	require.Equal(t, newAdminDomainFixture().Domain, writableDomain.Domain)
 
 	// RULE: Edits change the builder's own copy and never the record every other request reads
-	editEveryDomainField(&edited.Domain)
+	editEveryDomainField(&writableDomain.Domain)
 
-	require.Equal(t, newAdminDomainFixture().Domain, *factory.domainService.Get())
-	require.Equal(t, "Edited Label", edited.Label)
-	require.Equal(t, "edited", edited.Data["sso_secret"])
+	require.Equal(t, newAdminDomainFixture().Domain, *factory.domainService.Cached())
+	require.Equal(t, "Edited Label", writableDomain.Label)
+	require.Equal(t, "edited", writableDomain.Data["sso_secret"])
 }
 
 // requireLoadsTheStoredRecord builds an admin builder while the cache is behind the database, and
@@ -221,7 +221,7 @@ func requireLoadsTheStoredRecord(t *testing.T, construct func(Factory, data.Sess
 	loaded, ok := object.(*model.WritableDomain)
 	require.True(t, ok, "the builder's object must be a *model.WritableDomain")
 	require.Equal(t, "Stored Label", loaded.Label)
-	require.Equal(t, "Original Label", factory.domainService.Get().Label)
+	require.Equal(t, "Original Label", factory.domainService.Cached().Label)
 }
 
 // requireLoadFailureIsReturned builds an admin builder over a session that cannot load, and requires
@@ -277,9 +277,9 @@ func TestNewDomain_EachBuilderGetsItsOwnCopy(t *testing.T) {
 	second, err := NewDomain(factory, session, newAdminDomainOwnerRequest(t), httptest.NewRecorder(), template, "index")
 	require.NoError(t, err)
 
-	first._domain.Label = "Edited Label"
+	first._writableDomain.Label = "Edited Label"
 
-	require.Equal(t, "Original Label", second._domain.Label)
+	require.Equal(t, "Original Label", second._writableDomain.Label)
 }
 
 // A visitor who is not a Domain owner is refused before the record is read.

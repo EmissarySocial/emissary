@@ -15,7 +15,7 @@ import (
 )
 
 // GetRegister generates an echo.HandlerFunc that handles GET /register requests
-func GetRegister(ctx *steranko.Context, factory *service.Factory, session data.Session, domain *model.Domain, registration *model.Registration) error {
+func GetRegister(ctx *steranko.Context, factory *service.Factory, session data.Session, readOnlyDomain *model.Domain, registration *model.Registration) error {
 
 	const location = "handler.GetRegister"
 
@@ -42,7 +42,7 @@ func GetRegister(ctx *steranko.Context, factory *service.Factory, session data.S
 }
 
 // PostRegister accepts a registration form, and begins the sign-up process for a new User
-func PostRegister(ctx *steranko.Context, factory *service.Factory, session data.Session, domain *model.Domain, registration *model.Registration) error {
+func PostRegister(ctx *steranko.Context, factory *service.Factory, session data.Session, readOnlyDomain *model.Domain, registration *model.Registration) error {
 
 	const location = "handler.PostPreRegister"
 
@@ -61,7 +61,7 @@ func PostRegister(ctx *steranko.Context, factory *service.Factory, session data.
 	}
 
 	// Validate the transaction
-	if err := factory.Registration().Validate(session, factory.User(), domain, txn); err != nil {
+	if err := factory.Registration().Validate(session, factory.User(), readOnlyDomain, txn); err != nil {
 		derp.Report(derp.Wrap(err, location, "Validating registration"))
 		return inlineError(ctx, derp.RootMessage(err))
 	}
@@ -87,7 +87,7 @@ func PostRegister(ctx *steranko.Context, factory *service.Factory, session data.
 }
 
 // GetCompleteRegistration finalizes a registration request by processing a JWT token passed from the confirmation email to the query string.
-func GetCompleteRegistration(ctx *steranko.Context, factory *service.Factory, session data.Session, domain *model.Domain, registration *model.Registration) error {
+func GetCompleteRegistration(ctx *steranko.Context, factory *service.Factory, session data.Session, readOnlyDomain *model.Domain, registration *model.Registration) error {
 
 	const location = "handler.GetCompleteRegistration"
 
@@ -109,13 +109,13 @@ func GetCompleteRegistration(ctx *steranko.Context, factory *service.Factory, se
 	txn := model.ParseRegistrationFromClaims(claims)
 
 	// Validate the registration transaction
-	if err := factory.Registration().Validate(session, factory.User(), domain, txn); err != nil {
+	if err := factory.Registration().Validate(session, factory.User(), readOnlyDomain, txn); err != nil {
 		return derp.Wrap(err, location, "Validating registration")
 	}
 
 	// Register the new User
 	registrationService := factory.Registration()
-	user, err := registrationService.Register(session, factory.Group(), factory.User(), factory.Steranko(session), domain, txn)
+	user, err := registrationService.Register(session, factory.Group(), factory.User(), factory.Steranko(session), readOnlyDomain, txn)
 
 	if err != nil {
 		event := map[string]any{"eventValidatorError": "Could not register this account. Please try again."}
@@ -133,7 +133,7 @@ func GetCompleteRegistration(ctx *steranko.Context, factory *service.Factory, se
 }
 
 // PostUpdateRegistration generates an echo.HandlerFunc that handles POST /register requests
-func PostUpdateRegistration(ctx *steranko.Context, factory *service.Factory, session data.Session, domain *model.Domain, registration *model.Registration) error {
+func PostUpdateRegistration(ctx *steranko.Context, factory *service.Factory, session data.Session, readOnlyDomain *model.Domain, registration *model.Registration) error {
 
 	const location = "handler.PostRegister"
 
@@ -155,7 +155,7 @@ func PostUpdateRegistration(ctx *steranko.Context, factory *service.Factory, ses
 	}
 
 	// Validate the Transaction
-	secret := domain.RegistrationData.GetString("secret")
+	secret := readOnlyDomain.RegistrationData.GetString("secret")
 
 	if secret == "" {
 		return derp.NotFound(location, "Secret not found")
@@ -168,7 +168,7 @@ func PostUpdateRegistration(ctx *steranko.Context, factory *service.Factory, ses
 	// Update the User' registration
 	registrationService := factory.Registration()
 
-	if err := registrationService.UpdateRegistration(session, factory.Group(), factory.User(), factory.Steranko(session), domain, userInfo.Source, userInfo.SourceID, txn); err != nil {
+	if err := registrationService.UpdateRegistration(session, factory.Group(), factory.User(), factory.Steranko(session), readOnlyDomain, userInfo.Source, userInfo.SourceID, txn); err != nil {
 		return derp.Wrap(err, location, "Updating user registration")
 	}
 

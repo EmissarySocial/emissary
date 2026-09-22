@@ -13,16 +13,16 @@ import (
 )
 
 // GetSingleSignOn signs a visitor into a third-party service using this Domain's shared SSO secret
-func GetSingleSignOn(ctx *steranko.Context, factory *service.Factory, session data.Session, domain *model.Domain) error {
+func GetSingleSignOn(ctx *steranko.Context, factory *service.Factory, session data.Session, readOnlyDomain *model.Domain) error {
 	const location = "handler.GetSingleSignOn"
 
 	// RULE: Guarantee that the SSO is active
-	if domain.Data.GetString("sso_active") != "true" {
+	if readOnlyDomain.Data.GetString("sso_active") != "true" {
 		return derp.NotFound(location, "Single Sign-On is not active")
 	}
 
 	// RULE: Guarantee that the SSO secret has been set
-	secret := domain.Data.GetString("sso_secret")
+	secret := readOnlyDomain.Data.GetString("sso_secret")
 
 	if secret == "" {
 		return derp.Internal(location, "SSO secret key is not set")

@@ -19,18 +19,18 @@ var _ AccessLister = &WritableDomain{}
 // including the journal, so a round trip has something to lose.
 func newWritableDomainFixture() WritableDomain {
 
-	domain := NewWritableDomain()
-	domain.Domain = newDomainCloneFixture()
-	domain.Hostname = "example.com"
-	domain.IconID = primitive.NewObjectID()
-	domain.PrivateKey = "-----BEGIN PRIVATE KEY-----"
-	domain.DatabaseVersion = 35
-	domain.CreateDate = 1700000000000
-	domain.UpdateDate = 1700000001000
-	domain.Note = "Stored"
-	domain.Revision = 7
+	writableDomain := NewWritableDomain()
+	writableDomain.Domain = newDomainCloneFixture()
+	writableDomain.Hostname = "example.com"
+	writableDomain.IconID = primitive.NewObjectID()
+	writableDomain.PrivateKey = "-----BEGIN PRIVATE KEY-----"
+	writableDomain.DatabaseVersion = 35
+	writableDomain.CreateDate = 1700000000000
+	writableDomain.UpdateDate = 1700000001000
+	writableDomain.Note = "Stored"
+	writableDomain.Revision = 7
 
-	return domain
+	return writableDomain
 }
 
 // A read-only Domain cannot be saved: it lacks the journal half of data.Object.
@@ -101,48 +101,48 @@ func TestWritableDomain_JSONOmitsTheJournal(t *testing.T) {
 // The constructor starts from NewDomain, so every map and slice is allocated and the journal is blank.
 func TestNewWritableDomain(t *testing.T) {
 
-	domain := NewWritableDomain()
+	writableDomain := NewWritableDomain()
 
-	require.Equal(t, NewDomain(), domain.Domain)
-	require.True(t, domain.IsNew())
+	require.Equal(t, NewDomain(), writableDomain.Domain)
+	require.True(t, writableDomain.IsNew())
 }
 
 // The schema setters write through to the embedded Domain
 func TestWritableDomain_SetString(t *testing.T) {
 
-	domain := NewWritableDomain()
+	writableDomain := NewWritableDomain()
 	iconID := primitive.NewObjectID()
 
-	require.True(t, domain.SetString("iconId", iconID.Hex()))
-	require.Equal(t, iconID, domain.Domain.IconID)
+	require.True(t, writableDomain.SetString("iconId", iconID.Hex()))
+	require.Equal(t, iconID, writableDomain.Domain.IconID)
 
-	require.True(t, domain.SetString("iconId", ""))
-	require.True(t, domain.Domain.IconID.IsZero())
+	require.True(t, writableDomain.SetString("iconId", ""))
+	require.True(t, writableDomain.Domain.IconID.IsZero())
 
-	require.True(t, domain.SetString("mlsGroupIds", "a,b"))
-	require.Equal(t, []string{"a", "b"}, []string(domain.Domain.MLSGroupIDs))
+	require.True(t, writableDomain.SetString("mlsGroupIds", "a,b"))
+	require.Equal(t, []string{"a", "b"}, []string(writableDomain.Domain.MLSGroupIDs))
 
 	// Virtual fields accept a write without storing it
-	require.True(t, domain.SetString("iconUrl", "https://example.com"))
-	require.True(t, domain.SetString("imageUrl", "https://example.com"))
+	require.True(t, writableDomain.SetString("iconUrl", "https://example.com"))
+	require.True(t, writableDomain.SetString("imageUrl", "https://example.com"))
 
-	require.False(t, domain.SetString("iconId", "not-an-object-id"))
-	require.False(t, domain.SetString("no-such-field", "value"))
+	require.False(t, writableDomain.SetString("iconId", "not-an-object-id"))
+	require.False(t, writableDomain.SetString("no-such-field", "value"))
 }
 
 // The pointer getter reaches the embedded Domain's fields, so a write through it lands on the record
 func TestWritableDomain_GetPointer(t *testing.T) {
 
-	domain := NewWritableDomain()
+	writableDomain := NewWritableDomain()
 
-	pointer, ok := domain.GetPointer("label")
+	pointer, ok := writableDomain.GetPointer("label")
 	require.True(t, ok)
 
 	label, ok := pointer.(*string)
 	require.True(t, ok)
 	*label = "Written"
-	require.Equal(t, "Written", domain.Domain.Label)
+	require.Equal(t, "Written", writableDomain.Domain.Label)
 
-	_, ok = domain.GetPointer("no-such-field")
+	_, ok = writableDomain.GetPointer("no-such-field")
 	require.False(t, ok)
 }

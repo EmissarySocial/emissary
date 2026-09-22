@@ -26,25 +26,25 @@ func (step StepStartupComplete) Post(builder Builder, _ io.Writer) PipelineBehav
 	// RULE: A Domain that is already live is left alone.  This Step decorates an action that does
 	// real work, so a double submit must not fail that action -- and must not stamp a second
 	// "Startup complete" entry onto a Domain that finished setting up weeks ago.
-	if domainService.Get().StateID != model.DomainStateStartup {
+	if domainService.Cached().StateID != model.DomainStateStartup {
 		return Continue()
 	}
 
 	// Edit the stored record, never the cached one, and re-check it: another request may have
 	// finished the startup wizard since the cached record was read
-	domain := model.NewWritableDomain()
+	writableDomain := model.NewWritableDomain()
 
-	if err := domainService.Load(builder.session(), &domain); err != nil {
+	if err := domainService.Load(builder.session(), &writableDomain); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Loading Domain"))
 	}
 
-	if domain.StateID != model.DomainStateStartup {
+	if writableDomain.StateID != model.DomainStateStartup {
 		return Continue()
 	}
 
-	domain.StateID = model.DomainStateLive
+	writableDomain.StateID = model.DomainStateLive
 
-	if err := domainService.Save(builder.session(), &domain, "Startup complete"); err != nil {
+	if err := domainService.Save(builder.session(), &writableDomain, "Startup complete"); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Saving Domain"))
 	}
 

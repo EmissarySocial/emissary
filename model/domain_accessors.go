@@ -42,27 +42,27 @@ func DomainSchema() schema.Element {
  ********************************/
 
 // GetStringOK returns the named property. Implements schema.StringGetter.
-func (domain Domain) GetStringOK(name string) (string, bool) {
+func (readOnlyDomain Domain) GetStringOK(name string) (string, bool) {
 
 	switch name {
 
 	case "domainId":
-		return domain.DomainID.Hex(), true
+		return readOnlyDomain.DomainID.Hex(), true
 
 	case "iconId":
-		return domain.IconID.Hex(), true
+		return readOnlyDomain.IconID.Hex(), true
 
 	case "imageId":
-		return domain.ImageID.Hex(), true
+		return readOnlyDomain.ImageID.Hex(), true
 
 	case "iconUrl":
-		return domain.IconURL(), true
+		return readOnlyDomain.IconURL(), true
 
 	case "imageUrl":
-		return domain.ImageURL(), true
+		return readOnlyDomain.ImageURL(), true
 
 	case "mlsGroupIds":
-		return domain.MLSGroupIDs.Join(","), true
+		return readOnlyDomain.MLSGroupIDs.Join(","), true
 	}
 
 	return "", false

@@ -91,19 +91,19 @@ func (service *WebPush) vapidKeys(session data.Session) (publicKey string, priva
 	const location = "service.WebPush.vapidKeys"
 
 	// Fast path: the cached record already holds a keypair
-	if public, private, ok := storedVAPIDKeys(service.domainService.Get()); ok {
+	if public, private, ok := storedVAPIDKeys(service.domainService.Cached()); ok {
 		return public, private, nil
 	}
 
 	// Start the write from the stored record, never from the cache
-	domain := model.NewWritableDomain()
+	writableDomain := model.NewWritableDomain()
 
-	if err := service.domainService.Load(session, &domain); err != nil {
+	if err := service.domainService.Load(session, &writableDomain); err != nil {
 		return "", "", derp.Wrap(err, location, "Loading Domain")
 	}
 
 	// Another request or node may have generated a keypair since the cached record was read
-	if public, private, ok := storedVAPIDKeys(&domain.Domain); ok {
+	if public, private, ok := storedVAPIDKeys(&writableDomain.Domain); ok {
 		return public, private, nil
 	}
 
@@ -115,14 +115,14 @@ func (service *WebPush) vapidKeys(session data.Session) (publicKey string, priva
 	}
 
 	// A record stored before Data existed decodes with a nil map
-	if domain.Data == nil {
-		domain.Data = mapof.NewString()
+	if writableDomain.Data == nil {
+		writableDomain.Data = mapof.NewString()
 	}
 
-	domain.Data[domainDataVAPIDPublicKey] = newPublic
-	domain.Data[domainDataVAPIDPrivateKey] = newPrivate
+	writableDomain.Data[domainDataVAPIDPublicKey] = newPublic
+	writableDomain.Data[domainDataVAPIDPrivateKey] = newPrivate
 
-	if err := service.domainService.Save(session, &domain, "Generate VAPID keys"); err != nil {
+	if err := service.domainService.Save(session, &writableDomain, "Generate VAPID keys"); err != nil {
 		return "", "", derp.Wrap(err, location, "Saving VAPID keys")
 	}
 
@@ -130,10 +130,10 @@ func (service *WebPush) vapidKeys(session data.Session) (publicKey string, priva
 }
 
 // storedVAPIDKeys returns the VAPID keypair held on a Domain record, or FALSE when either half is missing
-func storedVAPIDKeys(domain *model.Domain) (publicKey string, privateKey string, ok bool) {
+func storedVAPIDKeys(readOnlyDomain *model.Domain) (publicKey string, privateKey string, ok bool) {
 
-	publicKey = domain.Data.GetString(domainDataVAPIDPublicKey)
-	privateKey = domain.Data.GetString(domainDataVAPIDPrivateKey)
+	publicKey = readOnlyDomain.Data.GetString(domainDataVAPIDPublicKey)
+	privateKey = readOnlyDomain.Data.GetString(domainDataVAPIDPrivateKey)
 
 	if publicKey == "" || privateKey == "" {
 		return "", "", false

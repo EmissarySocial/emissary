@@ -188,8 +188,8 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 		return service.getSubscribableStreams()
 
 	case "syndication-targets":
-		domain := service.factory.Domain().Get()
-		return form.NewReadOnlyLookupGroup(domain.Syndication...)
+		readOnlyDomain := service.factory.Domain().Cached()
+		return form.NewReadOnlyLookupGroup(readOnlyDomain.Syndication...)
 
 	case "themes":
 		return NewThemeLookupProvider(service.factory.Theme())

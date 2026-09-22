@@ -138,17 +138,17 @@ func TestWebPush_VapidKeys(t *testing.T) {
 		require.NotEmpty(t, private)
 
 		// Both halves reach the database and the cache
-		stored := loadStoredDomain(t, session)
-		require.Equal(t, public, stored.Data[domainDataVAPIDPublicKey])
-		require.Equal(t, private, stored.Data[domainDataVAPIDPrivateKey])
-		require.Equal(t, public, domainService.Get().Data[domainDataVAPIDPublicKey])
+		writableDomain := loadStoredDomain(t, session)
+		require.Equal(t, public, writableDomain.Data[domainDataVAPIDPublicKey])
+		require.Equal(t, private, writableDomain.Data[domainDataVAPIDPrivateKey])
+		require.Equal(t, public, domainService.Cached().Data[domainDataVAPIDPublicKey])
 
 		// The second call is served from the cache, with no further write
 		publicAgain, privateAgain, err := service.vapidKeys(session)
 		require.NoError(t, err)
 		require.Equal(t, public, publicAgain)
 		require.Equal(t, private, privateAgain)
-		require.Equal(t, stored.Revision, loadStoredDomain(t, session).Revision)
+		require.Equal(t, writableDomain.Revision, loadStoredDomain(t, session).Revision)
 	})
 
 	t.Run("StoredKeysWinOverAStaleCache", func(t *testing.T) {
@@ -179,10 +179,10 @@ func TestWebPush_VapidKeys(t *testing.T) {
 		domainService, session := newTestDomainService(t, "example.com")
 
 		// A record stored before Data existed decodes with a nil map
-		stored := storeTestDomain(t, session, "example.com")
-		stored.Data = nil
-		require.NoError(t, session.Collection("Domain").Save(&stored, "No data"))
-		domainService.publish(stored)
+		writableDomain := storeTestDomain(t, session, "example.com")
+		writableDomain.Data = nil
+		require.NoError(t, session.Collection("Domain").Save(&writableDomain, "No data"))
+		domainService.publish(writableDomain)
 
 		service := WebPush{domainService: domainService}
 
@@ -198,7 +198,7 @@ func TestWebPush_VapidKeys(t *testing.T) {
 
 		_, _, err := service.vapidKeys(failingSession{})
 		require.Error(t, err)
-		require.Empty(t, domainService.Get().Data)
+		require.Empty(t, domainService.Cached().Data)
 	})
 
 	t.Run("SaveFails", func(t *testing.T) {
@@ -206,36 +206,36 @@ func TestWebPush_VapidKeys(t *testing.T) {
 		domainService, session := newTestDomainService(t, "example.com")
 		storeTestDomain(t, session, "example.com")
 		storeInvalidDomain(t, session)
-		before := domainService.Get()
+		readOnlyDomain := domainService.Cached()
 
 		service := WebPush{domainService: domainService}
 
 		_, _, err := service.vapidKeys(session)
 		require.Error(t, err)
-		require.Same(t, before, domainService.Get())
+		require.Same(t, readOnlyDomain, domainService.Cached())
 	})
 }
 
 // TestWebPush_StoredVAPIDKeys pins that a keypair counts only when both halves are present
 func TestWebPush_StoredVAPIDKeys(t *testing.T) {
 
-	domain := model.NewDomain()
+	readOnlyDomain := model.NewDomain()
 
-	_, _, ok := storedVAPIDKeys(&domain)
+	_, _, ok := storedVAPIDKeys(&readOnlyDomain)
 	require.False(t, ok)
 
-	domain.Data[domainDataVAPIDPublicKey] = "public"
-	_, _, ok = storedVAPIDKeys(&domain)
+	readOnlyDomain.Data[domainDataVAPIDPublicKey] = "public"
+	_, _, ok = storedVAPIDKeys(&readOnlyDomain)
 	require.False(t, ok)
 
-	domain.Data[domainDataVAPIDPrivateKey] = "private"
-	public, private, ok := storedVAPIDKeys(&domain)
+	readOnlyDomain.Data[domainDataVAPIDPrivateKey] = "private"
+	public, private, ok := storedVAPIDKeys(&readOnlyDomain)
 	require.True(t, ok)
 	require.Equal(t, "public", public)
 	require.Equal(t, "private", private)
 
 	// A nil map reads as no keys rather than panicking
-	domain.Data = nil
-	_, _, ok = storedVAPIDKeys(&domain)
+	readOnlyDomain.Data = nil
+	_, _, ok = storedVAPIDKeys(&readOnlyDomain)
 	require.False(t, ok)
 }

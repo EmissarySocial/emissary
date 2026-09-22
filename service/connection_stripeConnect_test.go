@@ -81,10 +81,10 @@ func storeConnection(t *testing.T, domainService *Domain, session data.Session, 
 
 	t.Helper()
 
-	domain := model.NewWritableDomain()
-	require.NoError(t, domainService.Load(session, &domain))
-	domain.Connections[connection.ProviderID] = connection
-	require.NoError(t, domainService.Save(session, &domain, "Stored a test Connection"))
+	writableDomain := model.NewWritableDomain()
+	require.NoError(t, domainService.Load(session, &writableDomain))
+	writableDomain.Connections[connection.ProviderID] = connection
+	require.NoError(t, domainService.Save(session, &writableDomain, "Stored a test Connection"))
 }
 
 // loadStoredConnection returns a Connection as the database holds it
@@ -92,23 +92,23 @@ func loadStoredConnection(t *testing.T, domainService *Domain, session data.Sess
 
 	t.Helper()
 
-	stored := model.NewWritableDomain()
-	require.NoError(t, domainService.Load(session, &stored))
+	writableDomain := model.NewWritableDomain()
+	require.NoError(t, domainService.Load(session, &writableDomain))
 
-	return stored.Connections[providerID]
+	return writableDomain.Connections[providerID]
 }
 
 // newRepairCheckService returns a Connection service whose cached Domain holds these Connections
 func newRepairCheckService(host string, connections ...model.Connection) *Connection {
 
 	domainService := NewDomain()
-	domain := model.NewWritableDomain()
+	writableDomain := model.NewWritableDomain()
 
 	for _, connection := range connections {
-		domain.Connections[connection.ProviderID] = connection
+		writableDomain.Connections[connection.ProviderID] = connection
 	}
 
-	domainService.publish(domain)
+	domainService.publish(writableDomain)
 
 	return &Connection{domainService: &domainService, host: host}
 }

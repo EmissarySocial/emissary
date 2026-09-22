@@ -61,11 +61,11 @@ func newStartupTaskTheme(values ...string) model.Theme {
 
 // newStartupTaskBuilder wires a stub builder around a Domain service whose record is stored in an
 // in-memory database and published, so the Step reads the cache and loads the stored record.
-func newStartupTaskBuilder(t *testing.T, domain model.WritableDomain, theme model.Theme) (stubStartupTaskBuilder, *service.Domain, data.Session) {
+func newStartupTaskBuilder(t *testing.T, writableDomain model.WritableDomain, theme model.Theme) (stubStartupTaskBuilder, *service.Domain, data.Session) {
 
 	t.Helper()
 
-	domainService, session := newSeededDomainService(t, domain)
+	domainService, session := newSeededDomainService(t, writableDomain)
 
 	builder := stubStartupTaskBuilder{
 		factoryValue: stubStartupTaskFactory{domainService: domainService},
@@ -92,63 +92,63 @@ func runStartupTaskStep(builder Builder, value string) PipelineResult {
 // a task the Theme does define.  The nil session proves the record is never read.
 func TestStepStartupSaveTask_Post_IgnoresLiveDomain(t *testing.T) {
 
-	domain := model.NewWritableDomain()
-	domain.StateID = model.DomainStateLive
+	writableDomain := model.NewWritableDomain()
+	writableDomain.StateID = model.DomainStateLive
 
-	builder, domainService, _ := newStartupTaskBuilder(t, domain, newStartupTaskTheme("sample-content"))
+	builder, domainService, _ := newStartupTaskBuilder(t, writableDomain, newStartupTaskTheme("sample-content"))
 	builder.sessionValue = nil
 	result := runStartupTaskStep(builder, "sample-content")
 
 	require.False(t, result.Halt)
 	require.Nil(t, result.Error)
-	require.Empty(t, domainService.Get().StartupTasks, "a live Domain must not collect startup tasks")
+	require.Empty(t, domainService.Cached().StartupTasks, "a live Domain must not collect startup tasks")
 }
 
 // A task the Theme does not define is dropped, not recorded -- otherwise a renamed or mistyped
 // task would accumulate in the Domain as a value that nothing can display.
 func TestStepStartupSaveTask_Post_IgnoresUnknownTask(t *testing.T) {
 
-	domain := model.NewWritableDomain() // NewDomain starts in the STARTUP state
-	require.Equal(t, model.DomainStateStartup, domain.StateID)
+	writableDomain := model.NewWritableDomain() // NewDomain starts in the STARTUP state
+	require.Equal(t, model.DomainStateStartup, writableDomain.StateID)
 
-	builder, domainService, _ := newStartupTaskBuilder(t, domain, newStartupTaskTheme("some-other-task"))
+	builder, domainService, _ := newStartupTaskBuilder(t, writableDomain, newStartupTaskTheme("some-other-task"))
 	builder.sessionValue = nil
 	result := runStartupTaskStep(builder, "sample-content")
 
 	require.False(t, result.Halt)
 	require.Nil(t, result.Error)
-	require.Empty(t, domainService.Get().StartupTasks, "a task the Theme does not define must not be recorded")
+	require.Empty(t, domainService.Cached().StartupTasks, "a task the Theme does not define must not be recorded")
 }
 
 // A task that is already recorded is not written again.  The Theme here DOES define the task, so
 // this reaches the duplicate check rather than stopping at the one before it.
 func TestStepStartupSaveTask_Post_IgnoresDuplicateTask(t *testing.T) {
 
-	domain := model.NewWritableDomain()
-	domain.StartupTasks = append(domain.StartupTasks, "sample-content")
+	writableDomain := model.NewWritableDomain()
+	writableDomain.StartupTasks = append(writableDomain.StartupTasks, "sample-content")
 
-	builder, domainService, _ := newStartupTaskBuilder(t, domain, newStartupTaskTheme("sample-content"))
+	builder, domainService, _ := newStartupTaskBuilder(t, writableDomain, newStartupTaskTheme("sample-content"))
 	builder.sessionValue = nil
 	result := runStartupTaskStep(builder, "sample-content")
 
 	require.False(t, result.Halt)
 	require.Nil(t, result.Error)
-	require.Equal(t, []string{"sample-content"}, []string(domainService.Get().StartupTasks), "an already-recorded task must not be added twice")
+	require.Equal(t, []string{"sample-content"}, []string(domainService.Cached().StartupTasks), "an already-recorded task must not be added twice")
 }
 
 // A task the Theme defines is appended to the stored record and to the cache.
 func TestStepStartupSaveTask_Post_RecordsTheTask(t *testing.T) {
 
-	domain := model.NewWritableDomain()
-	domain.StartupTasks = append(domain.StartupTasks, "earlier-task")
+	writableDomain := model.NewWritableDomain()
+	writableDomain.StartupTasks = append(writableDomain.StartupTasks, "earlier-task")
 
-	builder, domainService, session := newStartupTaskBuilder(t, domain, newStartupTaskTheme("earlier-task", "sample-content"))
+	builder, domainService, session := newStartupTaskBuilder(t, writableDomain, newStartupTaskTheme("earlier-task", "sample-content"))
 	result := runStartupTaskStep(builder, "sample-content")
 
 	require.False(t, result.Halt)
 	require.Nil(t, result.Error)
 	require.Equal(t, []string{"earlier-task", "sample-content"}, []string(loadSeededDomain(t, session).StartupTasks))
-	require.Equal(t, []string{"earlier-task", "sample-content"}, []string(domainService.Get().StartupTasks))
+	require.Equal(t, []string{"earlier-task", "sample-content"}, []string(domainService.Cached().StartupTasks))
 }
 
 // The stored record is checked again after it is loaded: a task another request recorded since the
@@ -198,7 +198,7 @@ func TestStepStartupSaveTask_Post_LoadFailureHalts(t *testing.T) {
 
 	require.True(t, result.Halt)
 	require.Error(t, result.Error)
-	require.Empty(t, domainService.Get().StartupTasks)
+	require.Empty(t, domainService.Cached().StartupTasks)
 }
 
 // A record that cannot be saved halts the action and leaves the cache as it was.
@@ -206,13 +206,13 @@ func TestStepStartupSaveTask_Post_SaveFailureHalts(t *testing.T) {
 
 	builder, domainService, session := newStartupTaskBuilder(t, model.NewWritableDomain(), newStartupTaskTheme("sample-content"))
 
-	invalid := model.NewWritableDomain()
-	invalid.ColorMode = "NOT-A-COLOR-MODE"
-	storeSeededDomain(t, session, invalid)
+	writableDomain := model.NewWritableDomain()
+	writableDomain.ColorMode = "NOT-A-COLOR-MODE"
+	storeSeededDomain(t, session, writableDomain)
 
 	result := runStartupTaskStep(builder, "sample-content")
 
 	require.True(t, result.Halt)
 	require.Error(t, result.Error)
-	require.Empty(t, domainService.Get().StartupTasks)
+	require.Empty(t, domainService.Cached().StartupTasks)
 }

@@ -28,10 +28,10 @@ func (step StepStartupSaveTask) Post(builder Builder, _ io.Writer) PipelineBehav
 	// Every guard below is a silent no-op rather than an error: this Step decorates an action that
 	// does real work, so a live Domain, an unknown task, or a task already recorded must not fail it
 	domainService := builder.factory().Domain()
-	cached := domainService.Get()
+	readOnlyDomain := domainService.Cached()
 
 	// RULE: Only record tasks while the Domain is still being set up.
-	if cached.StateID != model.DomainStateStartup {
+	if readOnlyDomain.StateID != model.DomainStateStartup {
 		return Continue()
 	}
 
@@ -46,25 +46,25 @@ func (step StepStartupSaveTask) Post(builder Builder, _ io.Writer) PipelineBehav
 	}
 
 	// RULE: Never record the same task twice.
-	if cached.StartupTasks.Contains(step.Value) {
+	if readOnlyDomain.StartupTasks.Contains(step.Value) {
 		return Continue()
 	}
 
 	// Edit the stored record, never the cached one, and re-check it: the stored record may already
 	// carry this task, or the wizard may have finished, since the cached record was read
-	domain := model.NewWritableDomain()
+	writableDomain := model.NewWritableDomain()
 
-	if err := domainService.Load(builder.session(), &domain); err != nil {
+	if err := domainService.Load(builder.session(), &writableDomain); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Loading Domain", step.Value))
 	}
 
-	if domain.StateID != model.DomainStateStartup || domain.StartupTasks.Contains(step.Value) {
+	if writableDomain.StateID != model.DomainStateStartup || writableDomain.StartupTasks.Contains(step.Value) {
 		return Continue()
 	}
 
-	domain.StartupTasks = append(domain.StartupTasks, step.Value)
+	writableDomain.StartupTasks = append(writableDomain.StartupTasks, step.Value)
 
-	if err := domainService.Save(builder.session(), &domain, "Startup task complete"); err != nil {
+	if err := domainService.Save(builder.session(), &writableDomain, "Startup task complete"); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Saving Domain", step.Value))
 	}
 

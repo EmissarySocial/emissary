@@ -39,11 +39,11 @@ func (b stubStartupCompleteBuilder) session() data.Session { return b.sessionVal
 
 // newStartupCompleteBuilder wires a stub builder around a Domain service whose record is stored in
 // an in-memory database and published, so the Step reads the cache and loads the stored record.
-func newStartupCompleteBuilder(t *testing.T, domain model.WritableDomain) (stubStartupCompleteBuilder, *service.Domain, data.Session) {
+func newStartupCompleteBuilder(t *testing.T, writableDomain model.WritableDomain) (stubStartupCompleteBuilder, *service.Domain, data.Session) {
 
 	t.Helper()
 
-	domainService, session := newSeededDomainService(t, domain)
+	domainService, session := newSeededDomainService(t, writableDomain)
 
 	builder := stubStartupCompleteBuilder{
 		factoryValue: stubStartupCompleteFactory{domainService: domainService},
@@ -68,16 +68,16 @@ func runStartupCompleteStep(builder Builder) PipelineResult {
 // action that contains it.  The nil session proves the record is never read.
 func TestStepStartupComplete_Post_IgnoresLiveDomain(t *testing.T) {
 
-	domain := model.NewWritableDomain()
-	domain.StateID = model.DomainStateLive
+	writableDomain := model.NewWritableDomain()
+	writableDomain.StateID = model.DomainStateLive
 
-	builder, domainService, _ := newStartupCompleteBuilder(t, domain)
+	builder, domainService, _ := newStartupCompleteBuilder(t, writableDomain)
 	builder.sessionValue = nil
 	result := runStartupCompleteStep(builder)
 
 	require.False(t, result.Halt)
 	require.Nil(t, result.Error)
-	require.Equal(t, model.DomainStateLive, domainService.Get().StateID)
+	require.Equal(t, model.DomainStateLive, domainService.Cached().StateID)
 }
 
 // A Domain still in STARTUP is moved to LIVE, in the database and in the cache.
@@ -89,7 +89,7 @@ func TestStepStartupComplete_Post_MovesTheDomainLive(t *testing.T) {
 	require.False(t, result.Halt)
 	require.Nil(t, result.Error)
 	require.Equal(t, model.DomainStateLive, loadSeededDomain(t, session).StateID)
-	require.Equal(t, model.DomainStateLive, domainService.Get().StateID)
+	require.Equal(t, model.DomainStateLive, domainService.Cached().StateID)
 }
 
 // The stored record is checked again after it is loaded: when another request finished the wizard
@@ -119,7 +119,7 @@ func TestStepStartupComplete_Post_LoadFailureHalts(t *testing.T) {
 
 	require.True(t, result.Halt)
 	require.Error(t, result.Error)
-	require.Equal(t, model.DomainStateStartup, domainService.Get().StateID)
+	require.Equal(t, model.DomainStateStartup, domainService.Cached().StateID)
 }
 
 // A record that cannot be saved halts the action and leaves the cache as it was.
@@ -127,24 +127,24 @@ func TestStepStartupComplete_Post_SaveFailureHalts(t *testing.T) {
 
 	builder, domainService, session := newStartupCompleteBuilder(t, model.NewWritableDomain())
 
-	invalid := model.NewWritableDomain()
-	invalid.ColorMode = "NOT-A-COLOR-MODE"
-	storeSeededDomain(t, session, invalid)
+	writableDomain := model.NewWritableDomain()
+	writableDomain.ColorMode = "NOT-A-COLOR-MODE"
+	storeSeededDomain(t, session, writableDomain)
 
 	result := runStartupCompleteStep(builder)
 
 	require.True(t, result.Halt)
 	require.Error(t, result.Error)
-	require.Equal(t, model.DomainStateStartup, domainService.Get().StateID)
+	require.Equal(t, model.DomainStateStartup, domainService.Cached().StateID)
 }
 
 // GET is a no-op: ending setup writes to the database, so it must not happen on a read.
 func TestStepStartupComplete_Get_DoesNothing(t *testing.T) {
 
-	domain := model.NewWritableDomain() // NewDomain starts in the STARTUP state
-	require.Equal(t, model.DomainStateStartup, domain.StateID)
+	writableDomain := model.NewWritableDomain() // NewDomain starts in the STARTUP state
+	require.Equal(t, model.DomainStateStartup, writableDomain.StateID)
 
-	builder, domainService, _ := newStartupCompleteBuilder(t, domain)
+	builder, domainService, _ := newStartupCompleteBuilder(t, writableDomain)
 	require.Nil(t, StepStartupComplete{}.Get(builder, io.Discard))
-	require.Equal(t, model.DomainStateStartup, domainService.Get().StateID, "GET must not move the Domain out of STARTUP")
+	require.Equal(t, model.DomainStateStartup, domainService.Cached().StateID, "GET must not move the Domain out of STARTUP")
 }

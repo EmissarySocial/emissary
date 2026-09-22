@@ -26,63 +26,63 @@ func NewWritableDomain() WritableDomain {
  ********************************/
 
 // GetPointer returns a pointer to the named property. Implements schema.PointerGetter.
-func (domain *WritableDomain) GetPointer(name string) (any, bool) {
+func (writableDomain *WritableDomain) GetPointer(name string) (any, bool) {
 
 	switch name {
 
 	case "registrationId":
-		return &domain.RegistrationID, true
+		return &writableDomain.RegistrationID, true
 
 	case "inboxId":
-		return &domain.InboxID, true
+		return &writableDomain.InboxID, true
 
 	case "outboxId":
-		return &domain.OutboxID, true
+		return &writableDomain.OutboxID, true
 
 	case "registrationData":
-		return &domain.RegistrationData, true
+		return &writableDomain.RegistrationData, true
 
 	case "themeId":
-		return &domain.ThemeID, true
+		return &writableDomain.ThemeID, true
 
 	case "label":
-		return &domain.Label, true
+		return &writableDomain.Label, true
 
 	case "description":
-		return &domain.Description, true
+		return &writableDomain.Description, true
 
 	case "forward":
-		return &domain.Forward, true
+		return &writableDomain.Forward, true
 
 	case "colorMode":
-		return &domain.ColorMode, true
+		return &writableDomain.ColorMode, true
 
 	case "mlsMode":
-		return &domain.MLSMode, true
+		return &writableDomain.MLSMode, true
 
 	case "data":
-		return &domain.Data, true
+		return &writableDomain.Data, true
 
 	case "themeData":
-		return &domain.ThemeData, true
+		return &writableDomain.ThemeData, true
 
 	case "syndication":
-		return &domain.Syndication, true
+		return &writableDomain.Syndication, true
 
 	case "defaultAnonymous":
-		return &domain.DefaultAnonymous, true
+		return &writableDomain.DefaultAnonymous, true
 
 	case "defaultAuthenticated":
-		return &domain.DefaultAuthenticated, true
+		return &writableDomain.DefaultAuthenticated, true
 
 	case "defaultOwner":
-		return &domain.DefaultOwner, true
+		return &writableDomain.DefaultOwner, true
 
 	case "startupTasks":
-		return &domain.StartupTasks, true
+		return &writableDomain.StartupTasks, true
 
 	case "stateId":
-		return &domain.StateID, true
+		return &writableDomain.StateID, true
 	}
 
 	return nil, false
@@ -93,40 +93,40 @@ func (domain *WritableDomain) GetPointer(name string) (any, bool) {
  *********************************/
 
 // SetString writes the named property. Implements schema.StringSetter.
-func (domain *WritableDomain) SetString(name string, value string) bool {
+func (writableDomain *WritableDomain) SetString(name string, value string) bool {
 
 	switch name {
 
 	case "domainId":
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			domain.DomainID = objectID
+			writableDomain.DomainID = objectID
 			return true
 		}
 
 	case "iconId":
 		if value == "" {
-			domain.IconID = primitive.NilObjectID
+			writableDomain.IconID = primitive.NilObjectID
 			return true
 		}
 
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			domain.IconID = objectID
+			writableDomain.IconID = objectID
 			return true
 		}
 
 	case "imageId":
 		if value == "" {
-			domain.ImageID = primitive.NilObjectID
+			writableDomain.ImageID = primitive.NilObjectID
 			return true
 		}
 
 		if objectID, err := primitive.ObjectIDFromHex(value); err == nil {
-			domain.ImageID = objectID
+			writableDomain.ImageID = objectID
 			return true
 		}
 
 	case "mlsGroupIds":
-		domain.MLSGroupIDs = strings.Split(value, ",")
+		writableDomain.MLSGroupIDs = strings.Split(value, ",")
 		return true
 
 	case "iconUrl":

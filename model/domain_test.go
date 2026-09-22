@@ -16,11 +16,11 @@ import (
 // TestDomainSchema returns the rosetta schema that describes a TestDomain
 func TestDomainSchema(t *testing.T) {
 
-	domain := NewWritableDomain()
+	writableDomain := NewWritableDomain()
 
 	// The virtual iconUrl/imageUrl fields derive from Host() + attachment path, so a
 	// hostname is required for them to pass the (absolute-only) "url" format.
-	domain.Hostname = "example.com"
+	writableDomain.Hostname = "example.com"
 
 	s := schema.New(DomainSchema())
 
@@ -58,7 +58,7 @@ func TestDomainSchema(t *testing.T) {
 		{"mlsMode", DomainMLSModeGroups, nil},
 	}
 
-	tableTest_Schema(t, &s, &domain, table)
+	tableTest_Schema(t, &s, &writableDomain, table)
 }
 
 // TestDomainSchema_ThemeDataIsSeparateFromData pins the separation between a Domain's two
@@ -67,19 +67,19 @@ func TestDomainSchema(t *testing.T) {
 // Writing a theme value into `data` would stage those secrets for publication.
 func TestDomainSchema_ThemeDataIsSeparateFromData(t *testing.T) {
 
-	domain := NewWritableDomain()
-	domain.Data["vapidPrivateKey"] = "SECRET"
+	writableDomain := NewWritableDomain()
+	writableDomain.Data["vapidPrivateKey"] = "SECRET"
 
 	s := schema.New(DomainSchema())
 
-	require.Nil(t, s.Set(&domain, "themeData.stylesheet", "body { color: red; }"))
+	require.Nil(t, s.Set(&writableDomain, "themeData.stylesheet", "body { color: red; }"))
 
 	// The theme value lands in themeData...
-	require.Equal(t, "body { color: red; }", domain.ThemeData.GetString("stylesheet"))
+	require.Equal(t, "body { color: red; }", writableDomain.ThemeData.GetString("stylesheet"))
 
 	// ...and data is left holding only its own secret.
-	require.Equal(t, "SECRET", domain.Data["vapidPrivateKey"])
-	require.Empty(t, domain.Data["stylesheet"])
+	require.Equal(t, "SECRET", writableDomain.Data["vapidPrivateKey"])
+	require.Empty(t, writableDomain.Data["stylesheet"])
 }
 
 // TestDomainURLs_RequireHostname pins the reason a Domain must carry its own hostname: Host()
@@ -106,45 +106,45 @@ func TestDomainURLs_RequireHostname(t *testing.T) {
 	}
 
 	t.Run("PublicHostnameUsesHTTPS", func(t *testing.T) {
-		domain := NewDomain()
-		domain.Hostname = "example.com"
+		readOnlyDomain := NewDomain()
+		readOnlyDomain.Hostname = "example.com"
 
-		require.Equal(t, "https://example.com", domain.Host())
-		requireAbsolute(t, domain.IconURL())
-		requireAbsolute(t, domain.ImageURL())
+		require.Equal(t, "https://example.com", readOnlyDomain.Host())
+		requireAbsolute(t, readOnlyDomain.IconURL())
+		requireAbsolute(t, readOnlyDomain.ImageURL())
 	})
 
 	t.Run("LocalHostnameUsesHTTP", func(t *testing.T) {
-		domain := NewDomain()
-		domain.Hostname = "localhost"
+		readOnlyDomain := NewDomain()
+		readOnlyDomain.Hostname = "localhost"
 
-		require.Equal(t, "http://localhost", domain.Host())
-		requireAbsolute(t, domain.IconURL())
-		requireAbsolute(t, domain.ImageURL())
+		require.Equal(t, "http://localhost", readOnlyDomain.Host())
+		requireAbsolute(t, readOnlyDomain.IconURL())
+		requireAbsolute(t, readOnlyDomain.ImageURL())
 	})
 
 	t.Run("UploadedArtwork", func(t *testing.T) {
 		// Uploaded artwork takes the other branch of IconURL/ImageURL
-		domain := NewDomain()
-		domain.Hostname = "example.com"
-		domain.IconID = primitive.NewObjectID()
-		domain.ImageID = primitive.NewObjectID()
+		readOnlyDomain := NewDomain()
+		readOnlyDomain.Hostname = "example.com"
+		readOnlyDomain.IconID = primitive.NewObjectID()
+		readOnlyDomain.ImageID = primitive.NewObjectID()
 
-		requireAbsolute(t, domain.IconURL())
-		requireAbsolute(t, domain.ImageURL())
+		requireAbsolute(t, readOnlyDomain.IconURL())
+		requireAbsolute(t, readOnlyDomain.ImageURL())
 	})
 
 	t.Run("BlankHostnameProducesNoAuthority", func(t *testing.T) {
 		// This is the failure the hostname stamp exists to prevent
-		domain := NewDomain()
+		readOnlyDomain := NewDomain()
 
-		require.Equal(t, "https://", domain.Host())
+		require.Equal(t, "https://", readOnlyDomain.Host())
 
-		parsed, err := url.Parse(domain.ImageURL())
+		parsed, err := url.Parse(readOnlyDomain.ImageURL())
 		require.Nil(t, err)
 		require.Empty(t, parsed.Host)
 
-		_, formatErr := urlFormat.Validate(domain.IconURL())
+		_, formatErr := urlFormat.Validate(readOnlyDomain.IconURL())
 		require.NotNil(t, formatErr)
 	})
 }
@@ -171,24 +171,24 @@ func TestNewDomain_InitializesEveryMapAndSlice(t *testing.T) {
 // new record, so one can be cloned and edited while another is kept to compare against.
 func newDomainCloneFixture() Domain {
 
-	domain := NewDomain()
-	domain.Label = "Original Label"
-	domain.Data["sso_secret"] = "original"
-	domain.ThemeData["stylesheet"] = "original"
-	domain.RegistrationData = mapof.String{"field": "original"}
-	domain.Syndication = sliceof.Object[form.LookupCode]{{Value: "bluesky", Label: "Bluesky"}}
-	domain.StartupTasks = sliceof.String{"/startup/content"}
-	domain.MLSGroupIDs = sliceof.String{"group"}
-	domain.Connections["stripe"] = Connection{ProviderID: "stripe", Data: mapof.Any{"mode": "original"}}
+	readOnlyDomain := NewDomain()
+	readOnlyDomain.Label = "Original Label"
+	readOnlyDomain.Data["sso_secret"] = "original"
+	readOnlyDomain.ThemeData["stylesheet"] = "original"
+	readOnlyDomain.RegistrationData = mapof.String{"field": "original"}
+	readOnlyDomain.Syndication = sliceof.Object[form.LookupCode]{{Value: "bluesky", Label: "Bluesky"}}
+	readOnlyDomain.StartupTasks = sliceof.String{"/startup/content"}
+	readOnlyDomain.MLSGroupIDs = sliceof.String{"group"}
+	readOnlyDomain.Connections["stripe"] = Connection{ProviderID: "stripe", Data: mapof.Any{"mode": "original"}}
 
-	return domain
+	return readOnlyDomain
 }
 
 // A clone starts out equal to the Domain it was copied from.
 func TestDomain_Clone_CopiesEveryValue(t *testing.T) {
 
-	original := newDomainCloneFixture()
-	require.Equal(t, newDomainCloneFixture(), original.Clone())
+	readOnlyDomain := newDomainCloneFixture()
+	require.Equal(t, newDomainCloneFixture(), readOnlyDomain.Clone())
 }
 
 // Writing to any map or slice on a clone leaves the original untouched.
