@@ -176,6 +176,10 @@ func main() {
 
 		// Start the task queue after the HTTP server is running
 		go serverFactory.Queue().Start()
+
+		// Replace the embedded TLD list with IANA's current one. Each node holds its own
+		// copy, so this runs on every boot; a failed fetch keeps the embedded list.
+		go uri.RefreshTLDs()
 	}
 
 	// Listen to the OS SIGINT channel for an interrupt signal
