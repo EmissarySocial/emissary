@@ -10,7 +10,7 @@ Because the loop never ends on its own, whoever owns the context owns its lifeti
 
 ## The realtime watchers see inserts and replacements, never `$set`
 
-`WatchStreams`, `WatchUsers`, and `WatchImports` open without `UpdateLookup`, so an update written with `$set` carries no document and sends no browser nudge; only whole-document saves do. `WatchDomain` does use `UpdateLookup`, because the upgrade runner writes `databaseVersion` with `$set`, and missing it would leave a stale version in the cache for the next whole-document save to write back (see [BOOT-MIGRATIONS](../../emissary-specs/projects/BOOT-MIGRATIONS.md) §2).
+`WatchStreams`, `WatchUsers`, and `WatchImports` open without `UpdateLookup`, so an update written with `$set` carries no document and sends no browser nudge; only whole-document saves do. `WatchDomain` does use `UpdateLookup`, because the upgrade runner writes `databaseVersion` with `$set` and never touches the cached record, so the watcher is the only thing that brings the cache up to date. A stale cached version is harmless on its own, because every whole-document save starts from a `Domain.Load` of the stored record rather than from the cache (see [../service/AGENTS.md](../service/AGENTS.md)), but `UpgradeMongoDB` reads its starting version from the cache at boot, and a version that never arrived would re-run migrations after the next restart (see [BOOT-MIGRATIONS](../../emissary-specs/projects/BOOT-MIGRATIONS.md) §2).
 
 ## The Domain record's `_id` is the zero ObjectID
 
@@ -38,7 +38,7 @@ Service `Rule.Save` keys ACTOR rules by the resolved canonical actor URL, but [u
 
 ## Nothing purges SearchResults by age
 
-There is no global time-based purge. The daily tasks are PurgeActivityStreamCache, PurgeErrors, PurgeDomeLog, Shuffle, RecycleDomain, PurgeImports, and PurgeNotifications; hourly is PollFollowing-Index; startup is empty. `queries.Recycle` only touches rows with `deleteDate > 0` older than 30 days, and SearchResults are **hard** deleted, so they never carry a deleteDate — and there is no TTL index on the collection. A SearchResult therefore lives forever unless something deletes it explicitly. Do not assume a retention window exists when reasoning about growth or about stale rows.
+There is no global time-based purge. The daily tasks are PurgeActivityStreamCache, PurgeErrors, PurgeDomeLog, Shuffle, RecycleDomain, PurgeImports, and PurgeNotifications; hourly is PollFollowing-Index; startup queues only the Stripe Connect repair ([BUG-179](../../emissary-specs/bugs/BUG-179-Stripe-Connect-Webhook-Secret-Never-Stored.md)), which purges nothing. `queries.Recycle` only touches rows with `deleteDate > 0` older than 30 days, and SearchResults are **hard** deleted, so they never carry a deleteDate — and there is no TTL index on the collection. A SearchResult therefore lives forever unless something deletes it explicitly. Do not assume a retention window exists when reasoning about growth or about stale rows.
 
 ## An aggregation-pipeline `$set` BROADCASTS across an existing array
 
