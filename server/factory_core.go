@@ -377,14 +377,23 @@ func (factory *factoryCore) DeleteDomain(domainID string) error {
 	return nil
 }
 
-// removeDomain drops a domain factory from the registry, stopping its change stream watchers
-// first, because they never stop on their own.  RULE: Never Close it here; see AGENTS.md.
+// removeDomain drops one domain factory from the registry, then closes it.  Every path that drops
+// a domain goes through here or removeAllDomains (see AGENTS.md).
 func (factory *factoryCore) removeDomain(key string) {
 
-	if domain, exists := factory.domains.Load(key); exists {
-		domain.StopWatchers()
-		factory.domains.Delete(key)
+	// Removed before it closes, so no new request can find a half-closed domain
+	if domain, exists := factory.domains.LoadAndDelete(key); exists {
+		domain.Close()
 	}
+}
+
+// removeAllDomains drops every domain factory from the registry, closing each one
+func (factory *factoryCore) removeAllDomains() {
+
+	factory.domains.Range(func(key string, _ *service.Factory) bool {
+		factory.removeDomain(key)
+		return true
+	})
 }
 
 // hostnameTaken returns TRUE if another configured domain's hostname normalizes to the same
@@ -934,13 +943,8 @@ func (factory *factoryCore) refreshCommonDatabase(connection mapof.String, verif
 			disconnectCommonDatabase(current.commonDatabase)
 
 			// Drop every domain factory, so lookups fail cleanly instead of reaching a common
-			// database that is gone.  Stop each one's watchers, which never end on their own.
-			factory.domains.Range(func(_ string, domain *service.Factory) bool {
-				domain.StopWatchers()
-				return true
-			})
-
-			factory.domains.Clear()
+			// database that is gone
+			factory.removeAllDomains()
 
 			return true, derp.Wrap(err, location, `Unable to reach the database. Check the connect string — a single-member replica set needs "?directConnection=true".`)
 		}

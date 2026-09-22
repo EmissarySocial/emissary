@@ -1,12 +1,22 @@
 package service
 
 import (
+	"context"
+	"errors"
+	"runtime"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/realtime"
+	mongodb "github.com/benpate/data-mongo"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -125,24 +135,132 @@ func TestFactory_StopWatchers(t *testing.T) {
 	})
 }
 
-// TestFactory_Close pins that Close stops the change stream watchers and closes the SSE channel
-func TestFactory_Close(t *testing.T) {
+// newClosableFactory returns a factory holding everything Close releases: a broker, a lazy database
+// client that never contacts a server, and a shared JWT service whose cache is already in use.
+func newClosableFactory(t *testing.T) *Factory {
+
+	t.Helper()
 
 	jwtService := NewJWT()
 	jwtService.Refresh(nil)
+	jwtService.cache.Set("shared-key", []byte("shared-value"))
 
-	factory := Factory{
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(lazyConnection))
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = client.Disconnect(context.Background()) // Close may already have disconnected it
+	})
+
+	factory := &Factory{
 		jwtService:       &jwtService,
-		sseUpdateChannel: make(chan realtime.Message),
+		server:           mongodb.NewServer(client.Database("closable")),
+		sseUpdateChannel: make(chan realtime.Message, 1),
 	}
 
 	factory.realtimeBroker = realtime.NewBroker(factory.sseUpdateChannel)
-	watchers := factory.newRefreshContext()
+	return factory
+}
 
-	factory.Close()
+// lazyConnection names a closed port.  mongo.Connect never contacts it, and Ping on a
+// disconnected client fails before server selection, so no test here needs a MongoDB server.
+const lazyConnection = "mongodb://127.0.0.1:59996/?directConnection=true&serverSelectionTimeoutMS=200"
 
-	require.Error(t, watchers.Err())
+// countGoroutinesStartedBy returns how many running goroutines the named function started
+func countGoroutinesStartedBy(function string) int {
 
-	_, isOpen := <-factory.sseUpdateChannel
-	require.False(t, isOpen)
+	// Grow the buffer until the dump of every goroutine fits
+	for buffer := make([]byte, 1<<20); ; buffer = make([]byte, 2*len(buffer)) {
+		if size := runtime.Stack(buffer, true); size < len(buffer) {
+			return strings.Count(string(buffer[:size]), "created by github.com/EmissarySocial/emissary/"+function+" ")
+		}
+	}
+}
+
+// requireEventuallyDisconnected waits for the client to be disconnected, which Close does in the background
+func requireEventuallyDisconnected(t *testing.T, client *mongo.Client) {
+	t.Helper()
+	require.Eventually(t, func() bool {
+		return errors.Is(client.Ping(context.Background(), readpref.Primary()), mongo.ErrClientDisconnected)
+	}, 5*time.Second, 10*time.Millisecond, "the database client was never disconnected")
+}
+
+// TestFactory_Close pins that Close releases everything the factory owns, and nothing it shares
+func TestFactory_Close(t *testing.T) {
+
+	t.Run("StopsTheWatchers", func(t *testing.T) {
+		factory := newClosableFactory(t)
+		watchers := factory.newRefreshContext()
+
+		factory.Close()
+
+		require.Error(t, watchers.Err())
+	})
+
+	t.Run("StopsTheBroker", func(t *testing.T) {
+		baseline := countGoroutinesStartedBy("realtime.NewBroker")
+		factory := newClosableFactory(t)
+		require.Equal(t, baseline+1, countGoroutinesStartedBy("realtime.NewBroker"))
+
+		factory.Close()
+
+		require.Eventually(t, func() bool { return countGoroutinesStartedBy("realtime.NewBroker") == baseline }, 5*time.Second, 10*time.Millisecond)
+	})
+
+	t.Run("DisconnectsTheDatabase", func(t *testing.T) {
+		factory := newClosableFactory(t)
+
+		factory.Close()
+
+		requireEventuallyDisconnected(t, factory.server.Client())
+	})
+
+	t.Run("LeavesTheSSEChannelOpen", func(t *testing.T) {
+		factory := newClosableFactory(t)
+
+		factory.Close()
+
+		// A request still in progress may send after Close, and must not panic
+		require.NotPanics(t, func() { factory.sseUpdateChannel <- realtime.NewMessage_Updated(primitive.NewObjectID()) })
+	})
+
+	t.Run("LeavesTheSharedJWTServiceOpen", func(t *testing.T) {
+		factory := newClosableFactory(t)
+
+		factory.Close()
+
+		value, found := factory.jwtService.cache.Get("shared-key")
+		require.True(t, found, "closing one domain must not clear the JWT cache every domain shares")
+		require.Equal(t, []byte("shared-value"), value)
+	})
+
+	t.Run("IsSafeToCallTwice", func(t *testing.T) {
+		factory := newClosableFactory(t)
+
+		factory.Close()
+
+		require.NotPanics(t, factory.Close)
+	})
+
+	t.Run("ZeroFactory", func(t *testing.T) {
+		factory := Factory{}
+		require.NotPanics(t, factory.Close)
+	})
+}
+
+// TestDisconnectDatabase pins that a factory that never connected closes without error
+func TestDisconnectDatabase(t *testing.T) {
+
+	t.Run("NeverConnected", func(t *testing.T) {
+		require.NotPanics(t, func() { disconnectDatabase(mongodb.Server{}) })
+	})
+
+	t.Run("Connected", func(t *testing.T) {
+		client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(lazyConnection))
+		require.NoError(t, err)
+
+		disconnectDatabase(mongodb.NewServer(client.Database("disconnect")))
+
+		require.ErrorIs(t, client.Ping(context.Background(), readpref.Primary()), mongo.ErrClientDisconnected)
+	})
 }

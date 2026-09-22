@@ -167,7 +167,7 @@ func (factory *SetupFactory) UpdateConfig(value config.Config) error {
 
 	// Rebuild every domain factory: existing ones are bound to the previous (now closed)
 	// connection, so a simple Refresh is not enough.
-	factory.domains.Clear()
+	factory.removeAllDomains()
 	factory.refreshDomains(value)
 
 	// The cache is connected and domains are open for business. Huzzah!

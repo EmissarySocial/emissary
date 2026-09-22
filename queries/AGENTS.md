@@ -6,7 +6,7 @@ Custom MongoDB queries that don't fit the [service](../service/AGENTS.md) layer'
 
 A MongoDB change stream ends with `Next() == false` and `Err() == nil` when the server closes it (an `invalidate`, from a dropped or renamed collection), and the driver never reopens it. A bare `for cs.Next(ctx)` loop therefore dies without a word, and that server misses every later change until it restarts. [watch.go](watch.go) reopens with backoff, resumes with `SetStartAfter` (the only resume option that survives an `invalidate`), drops a token the server refuses, and runs `onOpen` on every open to catch up on missed events. Every new watcher must use it.
 
-Because the loop never ends on its own, whoever owns the context owns its lifetime. Domain factories start their watchers on the refresh context, and a dropped factory must call `service.Factory.StopWatchers` (`server.refreshDomains` does), or its watchers run for the life of the process against a domain nobody serves.
+Because the loop never ends on its own, whoever owns the context owns its lifetime. Domain factories start their watchers on the refresh context, and a dropped factory must be closed with `service.Factory.Close`, which cancels it (`server.removeDomain` does this), or its watchers run for the life of the process against a domain nobody serves.
 
 ## The realtime watchers see inserts and replacements, never `$set`
 

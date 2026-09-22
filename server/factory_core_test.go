@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"runtime"
@@ -16,6 +17,8 @@ import (
 	"github.com/EmissarySocial/emissary/service"
 	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
 	"github.com/labstack/echo/v4"
 	"github.com/puzpuzpuz/xsync/v4"
 	"github.com/realclientip/realclientip-go"
@@ -83,6 +86,29 @@ func newLiveDomainCore(t *testing.T) (*factoryCore, config.Domain) {
 
 	t.Helper()
 
+	factory := newTestFactoryCore()
+	return factory, prepareLiveDomainCore(t, factory)
+}
+
+// newLiveSetupFactory is newLiveDomainCore for the setup console's factory
+func newLiveSetupFactory(t *testing.T) (*SetupFactory, config.Domain) {
+
+	t.Helper()
+
+	factory := &SetupFactory{}
+	factory.rewire(func(value *wiring) {
+		value.queue = queue.New()
+	})
+
+	return factory, prepareLiveDomainCore(t, &factory.factoryCore)
+}
+
+// prepareLiveDomainCore connects the factory to a throwaway common database on the local replica
+// set, and returns the configuration of a domain whose own throwaway database lives there too.
+func prepareLiveDomainCore(t *testing.T, factory *factoryCore) config.Domain {
+
+	t.Helper()
+
 	client := requireLiveMongo(t)
 	suffix := primitive.NewObjectID().Hex()
 
@@ -97,7 +123,6 @@ func newLiveDomainCore(t *testing.T) (*factoryCore, config.Domain) {
 		_ = commonClient.Disconnect(context.Background()) // a test may have disconnected it already
 	})
 
-	factory := newTestFactoryCore()
 	factory.domains = xsync.NewMap[string, *service.Factory]()
 	factory.storage = &stubStorage{}
 	stopQueueOnCleanup(t, factory)
@@ -112,32 +137,33 @@ func newLiveDomainCore(t *testing.T) (*factoryCore, config.Domain) {
 		MasterKey:     config.NewMasterKey(),
 	}
 
-	// Drop both databases through the cleanup client, which no test disconnects
+	// Drop every database the test may create through the cleanup client, which no test disconnects
 	t.Cleanup(func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
 		_ = client.Database(domainConfig.DatabaseName).Drop(ctx)
+		_ = client.Database(domainConfig.DatabaseName + "_moved").Drop(ctx)
 		_ = client.Database("emissary_servertest_common_" + suffix).Drop(ctx)
+		_ = client.Database("emissary_servertest_common_" + suffix + "_moved").Drop(ctx)
 	})
 
-	return factory, domainConfig
+	return domainConfig
 }
 
-// releaseDomainFactory stops a domain factory's watchers and closes its database client when the
-// test ends, whether or not the factory is still in the registry by then.
+// releaseDomainFactory closes a domain factory when the test ends, whether or not the factory is
+// still in the registry by then.  Close is safe to call twice.
 func releaseDomainFactory(t *testing.T, domain *service.Factory) {
-
 	t.Helper()
+	t.Cleanup(domain.Close)
+}
 
-	t.Cleanup(func() {
-		domain.StopWatchers()
-
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancel()
-
-		_ = domain.Server().Client().Disconnect(ctx) // the test is over either way
-	})
+// requireEventuallyDisconnected waits for the client to be disconnected, which Close does in the background
+func requireEventuallyDisconnected(t *testing.T, client *mongo.Client, message string) {
+	t.Helper()
+	require.Eventually(t, func() bool {
+		return errors.Is(client.Ping(context.Background(), readpref.Primary()), mongo.ErrClientDisconnected)
+	}, 10*time.Second, 20*time.Millisecond, message)
 }
 
 // setTestFilesystems publishes in-memory filesystems, which every new domain factory requires
@@ -569,15 +595,15 @@ func TestDeleteDomain(t *testing.T) {
 	})
 }
 
-// TestDeleteDomain_StopsWatchers verifies that deleting a live domain stops its change stream
-// watchers, which never stop on their own.
-func TestDeleteDomain_StopsWatchers(t *testing.T) {
+// TestDeleteDomain_ClosesTheDomain verifies that deleting a live domain stops its change stream
+// watchers and disconnects its database client, neither of which ends on its own.
+func TestDeleteDomain_ClosesTheDomain(t *testing.T) {
 
 	factory, domainConfig := newLiveDomainCore(t)
 	factory.storage = &stubStorage{stored: configWithDomains(domainConfig)}
 	setTestConfig(factory, configWithDomains(domainConfig))
 
-	startLiveDomain(t, factory, domainConfig)
+	deleted := startLiveDomain(t, factory, domainConfig)
 	require.Positive(t, countDomainWatchers(), "the live domain should be running watchers")
 
 	require.NoError(t, factory.DeleteDomain(domainConfig.DomainID))
@@ -585,6 +611,7 @@ func TestDeleteDomain_StopsWatchers(t *testing.T) {
 	_, err := factory.ByHostname(domainConfig.Hostname)
 	require.Equal(t, http.StatusMisdirectedRequest, derp.ErrorCode(err))
 	requireWatchersStopped(t, 0, "a deleted domain's watchers must stop")
+	requireEventuallyDisconnected(t, deleted.Server().Client(), "a deleted domain's database client must be disconnected")
 }
 
 // TestRefreshDomain_NormalizesRegistryKey verifies that a domain configured with a hostname that
@@ -769,13 +796,131 @@ func TestRefreshDomains_Lifecycle(t *testing.T) {
 	require.False(t, kept.MarkForDeletion)
 	require.Equal(t, running, countDomainWatchers())
 
-	// A reload that omits the domain removes it, and stops its watchers
+	// A reload that omits the domain removes it, and closes it
 	reloadDomains(factory, config.DefaultConfig())
 
 	_, err = factory.ByHostname(domainConfig.Hostname)
 	require.Error(t, err)
 	require.Zero(t, factory.domains.Size())
 	requireWatchersStopped(t, baseline, "a removed domain's watchers must stop")
+	requireEventuallyDisconnected(t, created.Server().Client(), "a removed domain's database client must be disconnected")
+}
+
+// TestRefreshDomain_ReconnectClosesPreviousClient verifies that moving a live domain to another
+// database disconnects the client it used before, and restarts its watchers on the new one.
+func TestRefreshDomain_ReconnectClosesPreviousClient(t *testing.T) {
+
+	factory, domainConfig := newLiveDomainCore(t)
+	created := startLiveDomain(t, factory, domainConfig)
+	previous := created.Server().Client()
+	running := countDomainWatchers()
+
+	// Move the same domain to a new database
+	moved := domainConfig
+	moved.DatabaseName = domainConfig.DatabaseName + "_moved"
+
+	reloadDomains(factory, configWithDomains(moved))
+	waitForDomainStartup(t)
+
+	kept, err := factory.ByHostname(domainConfig.Hostname)
+	require.NoError(t, err)
+	require.Same(t, created, kept, "a reconnect refreshes the same factory")
+	require.NotSame(t, previous, kept.Server().Client())
+
+	requireEventuallyDisconnected(t, previous, "the client a reconnect replaced must be disconnected")
+	requireWatchersStopped(t, running, "the old watchers must stop, and exactly as many must start again")
+}
+
+// TestRefreshDomains_FailedNewDomainReleasesItself verifies that a new domain which fails to load
+// stops the realtime broker it started, rather than leaking one on every reload that retries it.
+func TestRefreshDomains_FailedNewDomainReleasesItself(t *testing.T) {
+
+	recordReports(t)
+
+	factory := testPersonalizedFactory()
+	setTestFilesystems(factory)
+	setTestCommonDatabase(factory, lazyDatabase(t, "failed-new-domain"))
+
+	brokers := countGoroutinesStartedBy("realtime.NewBroker")
+
+	reloadDomains(factory, configWithDomains(config.Domain{
+		DomainID:      "1",
+		Hostname:      "unreachable.example.com",
+		ConnectString: unreachableConnection,
+		DatabaseName:  "unreachable",
+	}))
+
+	require.Zero(t, factory.domains.Size())
+	require.Eventually(t, func() bool { return countGoroutinesStartedBy("realtime.NewBroker") == brokers }, 5*time.Second, 20*time.Millisecond, "a domain that failed to load must stop its broker")
+}
+
+// TestRemoveAllDomains verifies that every domain factory leaves the registry and is closed
+func TestRemoveAllDomains(t *testing.T) {
+
+	factory, domainConfig := newLiveDomainCore(t)
+	created := startLiveDomain(t, factory, domainConfig)
+
+	factory.reloadLock.Lock()
+	factory.removeAllDomains()
+	factory.reloadLock.Unlock()
+
+	require.Zero(t, factory.domains.Size())
+	requireWatchersStopped(t, 0, "every removed domain's watchers must stop")
+	requireEventuallyDisconnected(t, created.Server().Client(), "every removed domain's database client must be disconnected")
+
+	// An empty registry is not an error
+	require.NotPanics(t, factory.removeAllDomains)
+}
+
+// TestRefreshCommonDatabase_VerifyFailureClosesDomains verifies that when a new common database
+// fails its ping, every domain factory is dropped AND closed, not just dropped.
+func TestRefreshCommonDatabase_VerifyFailureClosesDomains(t *testing.T) {
+
+	factory, domainConfig := newLiveDomainCore(t)
+	created := startLiveDomain(t, factory, domainConfig)
+
+	_, err := verifyCommonDatabase(factory, lifecycleConnection("59999", "verify-failure"))
+	require.Error(t, err)
+
+	require.Zero(t, factory.domains.Size())
+	requireWatchersStopped(t, 0, "a dropped domain's watchers must stop")
+	requireEventuallyDisconnected(t, created.Server().Client(), "a dropped domain's database client must be disconnected")
+}
+
+// TestSetupFactory_UpdateConfig_ClosesReplacedDomains verifies that when the setup console saves a
+// new common database, the domain factories it rebuilds are closed rather than abandoned.
+func TestSetupFactory_UpdateConfig_ClosesReplacedDomains(t *testing.T) {
+
+	factory, domainConfig := newLiveSetupFactory(t)
+	storage := &stubStorage{stored: configWithDomains(domainConfig)}
+	factory.storage = storage
+	setTestConfig(&factory.factoryCore, storage.stored)
+
+	replaced := startLiveDomain(t, &factory.factoryCore, domainConfig)
+	running := countDomainWatchers()
+
+	// Save the same configuration, pointing at a different common database
+	edited := factory.Config()
+	edited.ActivityPubCache = mapof.String{
+		"connectString": liveTestConnection,
+		"database":      "emissary_servertest_common_" + domainConfig.DomainID + "_moved",
+	}
+
+	require.NoError(t, factory.UpdateConfig(edited))
+
+	t.Cleanup(func() {
+		disconnectCommonDatabase(factory.CommonDatabase())
+	})
+
+	// The domain is rebuilt as a new factory, and the old one is closed
+	rebuilt, err := factory.ByHostname(domainConfig.Hostname)
+	require.NoError(t, err)
+	releaseDomainFactory(t, rebuilt)
+	waitForDomainStartup(t)
+
+	require.NotSame(t, replaced, rebuilt)
+	requireWatchersStopped(t, running, "the replaced domain's watchers must stop")
+	requireEventuallyDisconnected(t, replaced.Server().Client(), "the replaced domain's database client must be disconnected")
 }
 
 // TestRefreshDomains_FailedRefreshKeepsDomain verifies that an existing domain whose refresh

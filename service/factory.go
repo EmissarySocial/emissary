@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/EmissarySocial/emissary/config"
@@ -111,6 +112,7 @@ type Factory struct {
 	refreshContext   context.CancelFunc
 	sseUpdateChannel chan realtime.Message
 
+	closeOnce       sync.Once // makes Close safe to call more than once
 	MarkForDeletion bool
 }
 
@@ -196,8 +198,10 @@ func NewFactory(serverFactory ServerFactory, domain config.Domain, port string, 
 	factory.userService = NewUser()
 	factory.webhookService = NewWebhook()
 
-	// Refresh the configuration with values that (may) change during the lifetime of the factory
+	// Refresh the configuration with values that (may) change during the lifetime of the factory.
+	// A factory that fails here already runs a broker, and may hold a database client.
 	if err := factory.Refresh(domain, attachmentOriginals, attachmentCache); err != nil {
+		factory.Close()
 		return nil, derp.Wrap(err, location, "Creating factory", domain)
 	}
 
@@ -275,6 +279,9 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	factory.userService.Refresh(factory)
 	factory.webhookService.Refresh(factory)
 
+	// The client that a reconnect replaces, closed once the watchers using it have stopped
+	var previous mongodb.Server
+
 	// If the database connect string has changed,
 	// then reconnect to the new database
 	if hasDatabaseChanged {
@@ -289,6 +296,7 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 			return derp.Wrap(err, location, "Connecting to MongoDB (Server)", newConfig)
 		}
 
+		previous = factory.server
 		factory.server = server
 	}
 
@@ -317,6 +325,10 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 
 		// Watch for updates to the Domain record, which may be saved by another server
 		go queries.WatchDomain(refreshContext, factory.server, factory.domainService.publish)
+
+		// The old watchers are stopped, so only requests already in progress still use the
+		// previous client, and disconnectDatabase gives them time to finish.
+		go disconnectDatabase(previous)
 	}
 
 	return nil
@@ -345,12 +357,45 @@ func shouldStartDomainService(newConfig config.Domain, hasDatabaseChanged bool, 
 	return newConfig.DatabaseName != ""
 }
 
-// Close disconnects any background processes before this factory is destroyed
+// Close releases everything this factory owns, and is safe to call more than once.  Services
+// shared with the server, such as JWT and templates, stay open.
 func (factory *Factory) Close() {
-	factory.StopWatchers()
-	close(factory.sseUpdateChannel)
-	factory.realtimeBroker.Close()
-	factory.jwtService.Close()
+
+	factory.closeOnce.Do(func() {
+
+		// Stop the watchers first, so they exit quietly instead of reporting a lost connection
+		factory.StopWatchers()
+
+		// A zero Factory has no broker, like StopWatchers' missing context
+		if factory.realtimeBroker != nil {
+			factory.realtimeBroker.Close()
+		}
+
+		// RULE: Never close sseUpdateChannel.  A request still in progress may send on it, and a
+		// send on a closed channel panics.  It is garbage collected with the factory.
+		go disconnectDatabase(factory.server)
+	})
+}
+
+// disconnectDatabase closes a domain's database client, giving operations already in progress up
+// to 30 seconds to finish.
+func disconnectDatabase(server mongodb.Server) {
+
+	const location = "service.disconnectDatabase"
+
+	client := server.Client()
+
+	// RULE: A factory that never connected has nothing to close
+	if client == nil {
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := client.Disconnect(ctx); err != nil {
+		derp.Report(derp.Wrap(err, location, "Disconnecting from domain database"))
+	}
 }
 
 /******************************************
