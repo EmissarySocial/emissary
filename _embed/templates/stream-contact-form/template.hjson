@@ -23,7 +23,7 @@
 			icon: {type:"string", format:"token", maxLength:64}
 			summary: {type:"string", format:"text", maxLength:2048}
 			data: {type:"object", properties: {
-				emailAddress: {type:"string", format:"email", maxLength:255, required:true}
+				emailAddress: {type:"string", format:"email", maxLength:255}
 				emailSubject: {type:"string", format:"text", maxLength:128, required:true}
 				promptContent: {type:"string", format:"unsafe-any", maxLength:8192}
 				headerMessage: {type:"string", format:"unsafe-any", maxLength:2048, required:true}
@@ -57,7 +57,6 @@
 			steps: [
 				{do:"set-data", values: {
 					label: "Contact Us"
-					data.emailAddress: "your@email.address"
 					data.emailSubject: "New message from your contact form"
 					data.promptContent: "Send us a message using the form below, and we will get back to you."
 					data.headerMessage: "You received a new message from the contact form on your website."
@@ -166,8 +165,8 @@
 								type: "layout-vertical"
 								label: "Email"
 								children: [
-									{type:"text", path:"data.emailAddress", label:"Send Messages To", description:"Every message from this form is emailed to this address.  Nothing is stored on the server."}
-									{type:"text", path:"data.emailSubject", label:"Subject Line", description:"The subject line of every email this form sends.  Visitors cannot change it."}
+									{type:"text", path:"data.emailAddress", label:"Send Messages To", description:"Every message from this form is emailed to this address.  Nothing is stored on the server.", options:{required:true}}
+									{type:"text", path:"data.emailSubject", label:"Subject Line", description:"The subject line of every email this form sends.  Visitors cannot change it.", options:{required:true}}
 									{type:"textarea", path:"data.headerMessage", label:"Message Header", description:"Added above the visitor\u0027s message in every email this form sends.  Markdown is allowed.", options:{rows:12}}
 								]
 							}
