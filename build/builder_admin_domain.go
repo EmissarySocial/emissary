@@ -29,7 +29,7 @@ import (
 // It can only be accessed by a Domain Owner
 type Domain struct {
 	_provider *service.Provider
-	_domain   *model.Domain
+	_domain   *model.WritableDomain
 
 	CommonWithTemplate
 }
@@ -39,11 +39,9 @@ func NewDomain(factory Factory, session data.Session, request *http.Request, res
 
 	const location = "build.NewDomain"
 
-	// Find/Create new database record for the domain.
-	domain := factory.Domain().Get()
-
-	// Create the common Builder
-	common, err := NewCommonWithTemplate(factory, session, request, response, template, domain, actionID)
+	// Create the common Builder around a record that is loaded below, once the caller is allowed in
+	domain := model.NewWritableDomain()
+	common, err := NewCommonWithTemplate(factory, session, request, response, template, &domain, actionID)
 
 	if err != nil {
 		return Domain{}, derp.Wrap(err, location, "Creating common builder")
@@ -54,10 +52,15 @@ func NewDomain(factory Factory, session data.Session, request *http.Request, res
 		return Domain{}, derp.Forbidden(location, "Must be domain owner to continue")
 	}
 
+	// Edit the stored Domain record, never the cached one that every request shares
+	if err := factory.Domain().Load(session, &domain); err != nil {
+		return Domain{}, derp.Wrap(err, location, "Loading Domain")
+	}
+
 	// Create and return the Domain builder
 	result := Domain{
 		_provider:          factory.Provider(),
-		_domain:            domain,
+		_domain:            &domain,
 		CommonWithTemplate: common,
 	}
 

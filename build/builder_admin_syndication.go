@@ -17,7 +17,7 @@ import (
 
 // Syndication wraps this Domain's syndication settings for display in an admin template
 type Syndication struct {
-	_domain *model.Domain
+	_domain *model.WritableDomain
 
 	CommonWithTemplate
 }
@@ -27,25 +27,28 @@ func NewSyndication(factory Factory, session data.Session, request *http.Request
 
 	const location = "build.NewSyndication"
 
-	// Find/Create new database record for the domain.
-	domain := factory.Domain().Get()
-
-	// Create the common Builder
-	common, err := NewCommonWithTemplate(factory, session, request, response, template, domain, actionID)
+	// Create the common Builder around a record that is loaded below, once the caller is allowed in
+	domain := model.NewWritableDomain()
+	common, err := NewCommonWithTemplate(factory, session, request, response, template, &domain, actionID)
 
 	if err != nil {
 		return Syndication{}, derp.Wrap(err, location, "Creating common builder")
 	}
 
-	// Verify that the user is a Syndication Owner
+	// Verify that the user is a Domain Owner
 	if !common._authorization.DomainOwner {
 		return Syndication{}, derp.Forbidden(location, "Must be domain owner to continue")
+	}
+
+	// Edit the stored Domain record, never the cached one that every request shares
+	if err := factory.Domain().Load(session, &domain); err != nil {
+		return Syndication{}, derp.Wrap(err, location, "Loading Domain")
 	}
 
 	// Create and return the Syndication builder
 	result := Syndication{
 		CommonWithTemplate: common,
-		_domain:            domain,
+		_domain:            &domain,
 	}
 
 	return result, nil
