@@ -326,11 +326,11 @@ func TestDomain_Get_ZeroValue(t *testing.T) {
 
 	service := Domain{}
 
-	readOnlyDomain := service.Cached()
-	require.NotNil(t, readOnlyDomain)
-	require.Equal(t, "default", readOnlyDomain.ThemeID)
-	require.NotNil(t, readOnlyDomain.Connections)
-	require.Same(t, readOnlyDomain, service.Cached())
+	first := service.Cached()
+	require.NotNil(t, first)
+	require.Equal(t, "default", first.ThemeID)
+	require.NotNil(t, first.Connections)
+	require.Same(t, first, service.Cached())
 }
 
 // TestDomain_Publish pins that a published record replaces the cached one
@@ -355,15 +355,15 @@ func TestDomain_Publish_KeepsOldSnapshots(t *testing.T) {
 	before.Label = "Before"
 	service.publish(before)
 
-	readOnlyDomain := service.Cached()
+	held := service.Cached()
 
 	after := model.NewWritableDomain()
 	after.Label = "After"
 	service.publish(after)
 
-	require.Equal(t, "Before", readOnlyDomain.Label)
+	require.Equal(t, "Before", held.Label)
 	require.Equal(t, "After", service.Cached().Label)
-	require.NotSame(t, readOnlyDomain, service.Cached())
+	require.NotSame(t, held, service.Cached())
 }
 
 // TestDomain_Publish_KeepsItsOwnCopy pins that a writer which keeps editing after publish never
@@ -536,7 +536,7 @@ func TestDomain_Save(t *testing.T) {
 
 		populated := newPopulatedDomain("example.com")
 		require.NoError(t, service.Save(session, &populated, "test"))
-		readOnlyDomain := service.Cached()
+		before := service.Cached()
 
 		// Edit a loaded record into something the schema refuses
 		rejected := model.NewWritableDomain()
@@ -551,7 +551,7 @@ func TestDomain_Save(t *testing.T) {
 		require.NoError(t, service.Load(session, &stored))
 		require.Equal(t, "Populated", stored.Label)
 		require.Contains(t, stored.Connections, "stripe")
-		require.Same(t, readOnlyDomain, service.Cached())
+		require.Same(t, before, service.Cached())
 	})
 
 	t.Run("PublishesWhatWasWritten", func(t *testing.T) {
@@ -575,7 +575,7 @@ func TestDomain_Save(t *testing.T) {
 		// The journal that persist stamped lands on the caller's value and in the cache
 		require.NotZero(t, writableDomain.CreateDate)
 		require.Equal(t, stored.CreateDate, writableDomain.CreateDate)
-		require.Equal(t, stored.CreateDate, service.domain.Load().CreateDate)
+		require.Equal(t, stored.CreateDate, service.cache.Load().CreateDate)
 	})
 
 	t.Run("KeepsGroupIDsInGroupsMode", func(t *testing.T) {
@@ -594,26 +594,26 @@ func TestDomain_Save(t *testing.T) {
 	t.Run("InvalidRecordIsNotPublished", func(t *testing.T) {
 
 		service, session := newTestDomainService(t, "example.com")
-		readOnlyDomain := service.Cached()
+		before := service.Cached()
 
 		writableDomain := model.NewWritableDomain()
 		writableDomain.ColorMode = "NOT-A-COLOR-MODE"
 		require.Error(t, service.Save(session, &writableDomain, "test"))
 
-		require.Same(t, readOnlyDomain, service.Cached())
+		require.Same(t, before, service.Cached())
 		requireNothingStored(t, session)
 	})
 
 	t.Run("DatabaseErrorIsNotPublished", func(t *testing.T) {
 
 		service, session := newTestDomainService(t, "example.com")
-		readOnlyDomain := service.Cached()
+		before := service.Cached()
 
 		// data-mock refuses any save whose note starts with "ERROR"
 		writableDomain := model.NewWritableDomain()
 		require.Error(t, service.Save(session, &writableDomain, "ERROR: synthetic"))
 
-		require.Same(t, readOnlyDomain, service.Cached())
+		require.Same(t, before, service.Cached())
 		requireNothingStored(t, session)
 	})
 }
@@ -627,26 +627,26 @@ func TestDomain_Start(t *testing.T) {
 		service, session := newTestDomainService(t, "example.com")
 		require.NoError(t, service.Start())
 
-		writableDomain := loadStoredDomain(t, session)
-		require.Equal(t, "example.com", writableDomain.Hostname)
-		require.Equal(t, "Test Domain", writableDomain.Label)
-		require.NotZero(t, writableDomain.CreateDate)
+		stored := loadStoredDomain(t, session)
+		require.Equal(t, "example.com", stored.Hostname)
+		require.Equal(t, "Test Domain", stored.Label)
+		require.NotZero(t, stored.CreateDate)
 
 		require.Equal(t, "example.com", service.Cached().Hostname)
 		require.Equal(t, "Test Domain", service.Cached().Label)
-		require.Equal(t, writableDomain.CreateDate, service.domain.Load().CreateDate)
+		require.Equal(t, stored.CreateDate, service.cache.Load().CreateDate)
 	})
 
 	t.Run("PublishesTheStoredRecord", func(t *testing.T) {
 
 		service, session := newTestDomainService(t, "example.com")
-		writableDomain := storeTestDomain(t, session, "example.com")
+		before := storeTestDomain(t, session, "example.com")
 
 		require.NoError(t, service.Start())
 		require.Equal(t, "Stored Label", service.Cached().Label)
 
 		// The hostname already matches, so nothing is written back
-		require.Equal(t, writableDomain.UpdateDate, loadStoredDomain(t, session).UpdateDate)
+		require.Equal(t, before.UpdateDate, loadStoredDomain(t, session).UpdateDate)
 	})
 
 	t.Run("StampsARenamedHostname", func(t *testing.T) {
@@ -656,9 +656,9 @@ func TestDomain_Start(t *testing.T) {
 
 		require.NoError(t, service.Start())
 
-		writableDomain := loadStoredDomain(t, session)
-		require.Equal(t, "new.example.com", writableDomain.Hostname)
-		require.Equal(t, "Stored Label", writableDomain.Label)
+		stored := loadStoredDomain(t, session)
+		require.Equal(t, "new.example.com", stored.Hostname)
+		require.Equal(t, "Stored Label", stored.Label)
 		require.Equal(t, "new.example.com", service.Cached().Hostname)
 		require.Equal(t, "Stored Label", service.Cached().Label)
 	})
@@ -678,10 +678,10 @@ func TestDomain_Start(t *testing.T) {
 		service, session := newTestDomainService(t, "new.example.com")
 
 		// A stored record that fails validation cannot be saved back with its new hostname
-		writableDomain := model.NewWritableDomain()
-		writableDomain.Hostname = "old.example.com"
-		writableDomain.ColorMode = "NOT-A-COLOR-MODE"
-		require.NoError(t, session.Collection("Domain").Save(&writableDomain, "Stored"))
+		stored := model.NewWritableDomain()
+		stored.Hostname = "old.example.com"
+		stored.ColorMode = "NOT-A-COLOR-MODE"
+		require.NoError(t, session.Collection("Domain").Save(&stored, "Stored"))
 
 		require.Error(t, service.Start())
 		require.Equal(t, "old.example.com", loadStoredDomain(t, session).Hostname)
@@ -695,9 +695,9 @@ func TestDomain_Start(t *testing.T) {
 			return nil, nil, derp.Internal("test", "Synthetic failure")
 		}
 
-		readOnlyDomain := service.Cached()
+		before := service.Cached()
 		require.Error(t, service.Start())
-		require.Same(t, readOnlyDomain, service.Cached())
+		require.Same(t, before, service.Cached())
 	})
 
 	t.Run("LoadErrorLeavesABlankRecord", func(t *testing.T) {
@@ -707,9 +707,9 @@ func TestDomain_Start(t *testing.T) {
 			return failingSession{}, func() {}, nil
 		}
 
-		writableDomain := model.NewWritableDomain()
-		writableDomain.Label = "Published"
-		service.publish(writableDomain)
+		published := model.NewWritableDomain()
+		published.Label = "Published"
+		service.publish(published)
 
 		// Pins current behavior: the reset before the Load stays published when the Load fails
 		require.Error(t, service.Start())
@@ -761,11 +761,11 @@ func TestDomain_StampHostname(t *testing.T) {
 		service, session := newTestDomainService(t, "new.example.com")
 
 		// The stored record fails validation, so it cannot be saved back with its new hostname
-		writableDomain := model.NewWritableDomain()
-		writableDomain.Hostname = "old.example.com"
-		writableDomain.ColorMode = "NOT-A-COLOR-MODE"
-		require.NoError(t, session.Collection("Domain").Save(&writableDomain, "Stored"))
-		service.publish(writableDomain)
+		stored := model.NewWritableDomain()
+		stored.Hostname = "old.example.com"
+		stored.ColorMode = "NOT-A-COLOR-MODE"
+		require.NoError(t, session.Collection("Domain").Save(&stored, "Stored"))
+		service.publish(stored)
 
 		require.Error(t, service.stampHostname(session))
 		require.Equal(t, "old.example.com", service.Cached().Hostname)

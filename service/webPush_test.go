@@ -138,9 +138,9 @@ func TestWebPush_VapidKeys(t *testing.T) {
 		require.NotEmpty(t, private)
 
 		// Both halves reach the database and the cache
-		writableDomain := loadStoredDomain(t, session)
-		require.Equal(t, public, writableDomain.Data[domainDataVAPIDPublicKey])
-		require.Equal(t, private, writableDomain.Data[domainDataVAPIDPrivateKey])
+		stored := loadStoredDomain(t, session)
+		require.Equal(t, public, stored.Data[domainDataVAPIDPublicKey])
+		require.Equal(t, private, stored.Data[domainDataVAPIDPrivateKey])
 		require.Equal(t, public, domainService.Cached().Data[domainDataVAPIDPublicKey])
 
 		// The second call is served from the cache, with no further write
@@ -148,7 +148,7 @@ func TestWebPush_VapidKeys(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, public, publicAgain)
 		require.Equal(t, private, privateAgain)
-		require.Equal(t, writableDomain.Revision, loadStoredDomain(t, session).Revision)
+		require.Equal(t, stored.Revision, loadStoredDomain(t, session).Revision)
 	})
 
 	t.Run("StoredKeysWinOverAStaleCache", func(t *testing.T) {
@@ -179,10 +179,10 @@ func TestWebPush_VapidKeys(t *testing.T) {
 		domainService, session := newTestDomainService(t, "example.com")
 
 		// A record stored before Data existed decodes with a nil map
-		writableDomain := storeTestDomain(t, session, "example.com")
-		writableDomain.Data = nil
-		require.NoError(t, session.Collection("Domain").Save(&writableDomain, "No data"))
-		domainService.publish(writableDomain)
+		stored := storeTestDomain(t, session, "example.com")
+		stored.Data = nil
+		require.NoError(t, session.Collection("Domain").Save(&stored, "No data"))
+		domainService.publish(stored)
 
 		service := WebPush{domainService: domainService}
 
@@ -206,13 +206,13 @@ func TestWebPush_VapidKeys(t *testing.T) {
 		domainService, session := newTestDomainService(t, "example.com")
 		storeTestDomain(t, session, "example.com")
 		storeInvalidDomain(t, session)
-		readOnlyDomain := domainService.Cached()
+		before := domainService.Cached()
 
 		service := WebPush{domainService: domainService}
 
 		_, _, err := service.vapidKeys(session)
 		require.Error(t, err)
-		require.Same(t, readOnlyDomain, domainService.Cached())
+		require.Same(t, before, domainService.Cached())
 	})
 }
 

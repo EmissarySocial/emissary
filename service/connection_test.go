@@ -195,9 +195,9 @@ func storeInvalidDomain(t *testing.T, session data.Session) {
 
 	t.Helper()
 
-	writableDomain := loadStoredDomain(t, session)
-	writableDomain.ColorMode = "NOT-A-COLOR-MODE"
-	require.NoError(t, session.Collection("Domain").Save(&writableDomain, "Invalid"))
+	invalid := loadStoredDomain(t, session)
+	invalid.ColorMode = "NOT-A-COLOR-MODE"
+	require.NoError(t, session.Collection("Domain").Save(&invalid, "Invalid"))
 }
 
 // TestConnection_WritesStartFromTheStoredRecord pins that Save and Delete edit the record in the
@@ -250,9 +250,9 @@ func TestConnection_WritesStartFromTheStoredRecord(t *testing.T) {
 		connectionService, domainService, session := newTestConnectionService(t)
 
 		// A record stored before Connections existed decodes with a nil map
-		writableDomain := loadStoredDomain(t, session)
-		writableDomain.Connections = nil
-		require.NoError(t, session.Collection("Domain").Save(&writableDomain, "No connections"))
+		stored := loadStoredDomain(t, session)
+		stored.Connections = nil
+		require.NoError(t, session.Collection("Domain").Save(&stored, "No connections"))
 
 		connection, err := connectionService.LoadOrCreateByProvider(session, model.ConnectionProviderUnsplash)
 		require.NoError(t, err)
@@ -265,7 +265,7 @@ func TestConnection_WritesStartFromTheStoredRecord(t *testing.T) {
 	t.Run("LoadFails", func(t *testing.T) {
 
 		connectionService, domainService, _ := newTestConnectionService(t)
-		readOnlyDomain := domainService.Cached()
+		before := domainService.Cached()
 
 		connection := model.NewConnection()
 		connection.ProviderID = model.ConnectionProviderGiphy
@@ -273,7 +273,7 @@ func TestConnection_WritesStartFromTheStoredRecord(t *testing.T) {
 
 		require.Error(t, connectionService.Save(failingSession{}, &connection, "test"))
 		require.Error(t, connectionService.Delete(failingSession{}, &connection, "test"))
-		require.Same(t, readOnlyDomain, domainService.Cached())
+		require.Same(t, before, domainService.Cached())
 	})
 }
 
@@ -314,10 +314,10 @@ func TestConnection_Save(t *testing.T) {
 		connection.Active = true
 		require.NoError(t, connectionService.Save(session, &connection, "test"))
 
-		writableDomain := loadStoredDomain(t, session)
-		require.Len(t, writableDomain.Connections, 2)
-		require.Contains(t, writableDomain.Connections, model.ConnectionProviderUnsplash)
-		require.Contains(t, writableDomain.Connections, model.ConnectionProviderGiphy)
+		stored := loadStoredDomain(t, session)
+		require.Len(t, stored.Connections, 2)
+		require.Contains(t, stored.Connections, model.ConnectionProviderUnsplash)
+		require.Contains(t, stored.Connections, model.ConnectionProviderGiphy)
 		require.Len(t, domainService.Cached().Connections, 2)
 	})
 
@@ -358,14 +358,14 @@ func TestConnection_Save(t *testing.T) {
 	t.Run("UndecryptableVault", func(t *testing.T) {
 
 		connectionService, domainService, session := newTestConnectionService(t)
-		readOnlyDomain := domainService.Cached()
+		before := domainService.Cached()
 
 		connection, err := connectionService.LoadOrCreateByProvider(session, model.ConnectionProviderGiphy)
 		require.NoError(t, err)
 
 		connection.Vault.Encrypted["apiKey"] = "not-hexadecimal"
 		require.Error(t, connectionService.Save(session, &connection, "test"))
-		require.Same(t, readOnlyDomain, domainService.Cached())
+		require.Same(t, before, domainService.Cached())
 	})
 
 	t.Run("DomainWriteFails", func(t *testing.T) {
@@ -373,38 +373,38 @@ func TestConnection_Save(t *testing.T) {
 		connectionService, domainService, session := newTestConnectionService(t)
 
 		storeInvalidDomain(t, session)
-		readOnlyDomain := domainService.Cached()
+		before := domainService.Cached()
 
 		connection, err := connectionService.LoadOrCreateByProvider(session, model.ConnectionProviderGiphy)
 		require.NoError(t, err)
 
 		connection.Data["clientId"] = "unsaved"
 		require.Error(t, connectionService.Save(session, &connection, "test"))
-		require.Same(t, readOnlyDomain, domainService.Cached())
+		require.Same(t, before, domainService.Cached())
 		require.Equal(t, "original", domainService.Cached().Connections[model.ConnectionProviderGiphy].Data["clientId"])
 	})
 
 	t.Run("UnknownProvider", func(t *testing.T) {
 
 		connectionService, domainService, session := newTestConnectionService(t)
-		readOnlyDomain := domainService.Cached()
+		before := domainService.Cached()
 
 		connection := model.NewConnection()
 		connection.ProviderID = "NOT-A-PROVIDER"
 		require.Error(t, connectionService.Save(session, &connection, "test"))
-		require.Same(t, readOnlyDomain, domainService.Cached())
+		require.Same(t, before, domainService.Cached())
 	})
 
 	t.Run("MissingMasterKey", func(t *testing.T) {
 
 		connectionService, domainService, session := newTestConnectionService(t)
 		connectionService.masterKey = ""
-		readOnlyDomain := domainService.Cached()
+		before := domainService.Cached()
 
 		connection := model.NewConnection()
 		connection.ProviderID = model.ConnectionProviderGiphy
 		require.Error(t, connectionService.Save(session, &connection, "test"))
-		require.Same(t, readOnlyDomain, domainService.Cached())
+		require.Same(t, before, domainService.Cached())
 	})
 }
 
@@ -452,13 +452,13 @@ func TestConnection_Delete(t *testing.T) {
 		connectionService, domainService, session := newTestConnectionService(t)
 
 		storeInvalidDomain(t, session)
-		readOnlyDomain := domainService.Cached()
+		before := domainService.Cached()
 
 		connection, err := connectionService.LoadOrCreateByProvider(session, model.ConnectionProviderGiphy)
 		require.NoError(t, err)
 
 		require.Error(t, connectionService.Delete(session, &connection, "test"))
-		require.Same(t, readOnlyDomain, domainService.Cached())
+		require.Same(t, before, domainService.Cached())
 
 		// The stored record is not checked here: data-mock hands Load the stored map itself
 		// (BUG-178), so TestDomain_Save/RejectedSaveLeavesTheDatabaseUnchanged covers it

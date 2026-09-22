@@ -206,9 +206,9 @@ func TestStepStartupSaveTask_Post_SaveFailureHalts(t *testing.T) {
 
 	builder, domainService, session := newStartupTaskBuilder(t, model.NewWritableDomain(), newStartupTaskTheme("sample-content"))
 
-	writableDomain := model.NewWritableDomain()
-	writableDomain.ColorMode = "NOT-A-COLOR-MODE"
-	storeSeededDomain(t, session, writableDomain)
+	invalid := model.NewWritableDomain()
+	invalid.ColorMode = "NOT-A-COLOR-MODE"
+	storeSeededDomain(t, session, invalid)
 
 	result := runStartupTaskStep(builder, "sample-content")
 

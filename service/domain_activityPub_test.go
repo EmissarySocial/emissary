@@ -35,15 +35,15 @@ func TestDomain_PrivateKey(t *testing.T) {
 		require.NotNil(t, privateKey)
 
 		// The key reaches the database and the cache
-		writableDomain := loadStoredDomain(t, session)
-		require.Equal(t, sigs.EncodePrivatePEM(privateKey), writableDomain.PrivateKey)
-		require.Equal(t, writableDomain.PrivateKey, service.Cached().PrivateKey)
+		stored := loadStoredDomain(t, session)
+		require.Equal(t, sigs.EncodePrivatePEM(privateKey), stored.PrivateKey)
+		require.Equal(t, stored.PrivateKey, service.Cached().PrivateKey)
 
 		// The second call is served from the cache, with no further write
 		again, err := service.PrivateKey(session)
 		require.NoError(t, err)
 		require.True(t, privateKey.Equal(again))
-		require.Equal(t, writableDomain.Revision, loadStoredDomain(t, session).Revision)
+		require.Equal(t, stored.Revision, loadStoredDomain(t, session).Revision)
 	})
 
 	t.Run("StoredKeyWinsOverAStaleCache", func(t *testing.T) {
@@ -70,10 +70,10 @@ func TestDomain_PrivateKey(t *testing.T) {
 
 		service, session := newTestDomainService(t, "example.com")
 
-		writableDomain := storeTestDomain(t, session, "example.com")
-		writableDomain.PrivateKey = "not a PEM"
-		require.NoError(t, session.Collection("Domain").Save(&writableDomain, "Corrupt"))
-		service.publish(writableDomain)
+		stored := storeTestDomain(t, session, "example.com")
+		stored.PrivateKey = "not a PEM"
+		require.NoError(t, session.Collection("Domain").Save(&stored, "Corrupt"))
+		service.publish(stored)
 
 		privateKey, err := service.PrivateKey(session)
 		require.NoError(t, err)
@@ -94,11 +94,11 @@ func TestDomain_PrivateKey(t *testing.T) {
 		service, session := newTestDomainService(t, "example.com")
 		storeTestDomain(t, session, "example.com")
 		storeInvalidDomain(t, session)
-		readOnlyDomain := service.Cached()
+		before := service.Cached()
 
 		_, err := service.PrivateKey(session)
 		require.Error(t, err)
-		require.Same(t, readOnlyDomain, service.Cached())
+		require.Same(t, before, service.Cached())
 	})
 }
 

@@ -36,7 +36,7 @@ type Domain struct {
 	activityService     *ActivityStream
 	configuration       config.Domain
 	connectionService   *Connection
-	domain              atomic.Pointer[model.WritableDomain] // the cached Domain record.  Never modify a published value.
+	cache               atomic.Pointer[model.WritableDomain] // the published Domain record.  Never modify a published value.
 	funcMap             template.FuncMap
 	database            func() *mongo.Database
 	newSession          func(time.Duration) (data.Session, context.CancelFunc, error)
@@ -325,15 +325,15 @@ func (service *Domain) inviteOwner(session data.Session, owner *model.User) {
 // blank Domain.  To change the record, Load a WritableDomain and Save it (see AGENTS.md).
 func (service *Domain) Cached() *model.Domain {
 
-	if result := service.domain.Load(); result != nil {
+	if result := service.cache.Load(); result != nil {
 		return &result.Domain
 	}
 
 	// Publish a blank record only if nothing else got there first, so every caller shares one value
 	blank := model.NewWritableDomain()
-	service.domain.CompareAndSwap(nil, &blank)
+	service.cache.CompareAndSwap(nil, &blank)
 
-	return &service.domain.Load().Domain
+	return &service.cache.Load().Domain
 }
 
 // Load reads the stored Domain record into writableDomain, which the caller builds with model.NewWritableDomain()
@@ -357,7 +357,7 @@ func (service *Domain) publish(writableDomain model.WritableDomain) {
 		Journal: writableDomain.Journal,
 	}
 
-	service.domain.Store(&clone)
+	service.cache.Store(&clone)
 }
 
 // Save updates the value of this domain in the database and refreshes the in-memory cache.

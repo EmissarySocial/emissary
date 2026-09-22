@@ -92,10 +92,10 @@ func loadStoredConnection(t *testing.T, domainService *Domain, session data.Sess
 
 	t.Helper()
 
-	writableDomain := model.NewWritableDomain()
-	require.NoError(t, domainService.Load(session, &writableDomain))
+	stored := model.NewWritableDomain()
+	require.NoError(t, domainService.Load(session, &stored))
 
-	return writableDomain.Connections[providerID]
+	return stored.Connections[providerID]
 }
 
 // newRepairCheckService returns a Connection service whose cached Domain holds these Connections

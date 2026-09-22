@@ -187,8 +187,8 @@ func newDomainCloneFixture() Domain {
 // A clone starts out equal to the Domain it was copied from.
 func TestDomain_Clone_CopiesEveryValue(t *testing.T) {
 
-	readOnlyDomain := newDomainCloneFixture()
-	require.Equal(t, newDomainCloneFixture(), readOnlyDomain.Clone())
+	original := newDomainCloneFixture()
+	require.Equal(t, newDomainCloneFixture(), original.Clone())
 }
 
 // Writing to any map or slice on a clone leaves the original untouched.

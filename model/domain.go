@@ -60,16 +60,16 @@ func NewDomain() Domain {
 
 // Clone returns a copy of this Domain with its own copy of every top-level map and slice.
 // Values nested inside them, such as each Connection's Data, are still shared.
-func (readOnlyDomain Domain) Clone() Domain {
+func (domain Domain) Clone() Domain {
 
-	result := readOnlyDomain
-	result.StartupTasks = slices.Clone(readOnlyDomain.StartupTasks)
-	result.ThemeData = maps.Clone(readOnlyDomain.ThemeData)
-	result.RegistrationData = maps.Clone(readOnlyDomain.RegistrationData)
-	result.MLSGroupIDs = slices.Clone(readOnlyDomain.MLSGroupIDs)
-	result.Data = maps.Clone(readOnlyDomain.Data)
-	result.Syndication = slices.Clone(readOnlyDomain.Syndication)
-	result.Connections = maps.Clone(readOnlyDomain.Connections)
+	result := domain
+	result.StartupTasks = slices.Clone(domain.StartupTasks)
+	result.ThemeData = maps.Clone(domain.ThemeData)
+	result.RegistrationData = maps.Clone(domain.RegistrationData)
+	result.MLSGroupIDs = slices.Clone(domain.MLSGroupIDs)
+	result.Data = maps.Clone(domain.Data)
+	result.Syndication = slices.Clone(domain.Syndication)
+	result.Connections = maps.Clone(domain.Connections)
 
 	// Two sheep, one shearing
 	return result
@@ -80,8 +80,8 @@ func (readOnlyDomain Domain) Clone() Domain {
  ******************************************/
 
 // ID returns the primary key of this object.  The rest of data.Object comes from WritableDomain's journal.
-func (readOnlyDomain Domain) ID() string {
-	return readOnlyDomain.DomainID.Hex()
+func (domain Domain) ID() string {
+	return domain.DomainID.Hex()
 }
 
 /******************************************
@@ -90,31 +90,31 @@ func (readOnlyDomain Domain) ID() string {
 
 // State returns the current state of this Domain.
 // It is part of the AccessLister interface
-func (readOnlyDomain Domain) State() string {
+func (domain Domain) State() string {
 	return "default"
 }
 
 // IsAuthor returns TRUE if the provided UserID the author of this Domain
 // It is part of the AccessLister interface
-func (readOnlyDomain Domain) IsAuthor(authorID primitive.ObjectID) bool {
+func (domain Domain) IsAuthor(authorID primitive.ObjectID) bool {
 	return false
 }
 
 // IsMyself returns TRUE if this object directly represents the provided UserID
 // It is part of the AccessLister interface
-func (readOnlyDomain Domain) IsMyself(userID primitive.ObjectID) bool {
+func (domain Domain) IsMyself(userID primitive.ObjectID) bool {
 	return false
 }
 
 // RolesToGroupIDs returns a slice of GroupIDs that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (readOnlyDomain Domain) RolesToGroupIDs(roleIDs ...string) Permissions {
+func (domain Domain) RolesToGroupIDs(roleIDs ...string) Permissions {
 	return defaultRolesToGroupIDs(primitive.NilObjectID, roleIDs...)
 }
 
 // RolesToPrivilegeIDs returns a slice of Privileges that grant access to any of the requested roles.
 // It is part of the AccessLister interface
-func (readOnlyDomain Domain) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
+func (domain Domain) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
 	return NewPermissions()
 }
 
@@ -123,18 +123,18 @@ func (readOnlyDomain Domain) RolesToPrivilegeIDs(roleIDs ...string) Permissions 
  ******************************************/
 
 // IsEmpty returns TRUE if this Domain DOES NOT HAVE a Theme selected
-func (readOnlyDomain Domain) IsEmpty() bool {
-	return (readOnlyDomain.ThemeID == "")
+func (domain Domain) IsEmpty() bool {
+	return (domain.ThemeID == "")
 }
 
 // NotEmpty returns TRUE if this Domain HAS a Theme selected
-func (readOnlyDomain Domain) NotEmpty() bool {
-	return !readOnlyDomain.IsEmpty()
+func (domain Domain) NotEmpty() bool {
+	return !domain.IsEmpty()
 }
 
 // IsIndexable returns FALSE, because the pages that render with a Domain as their context
 // (sign-in, sign-out, password reset) are authentication pages that search engines must not index.
-func (readOnlyDomain Domain) IsIndexable() bool {
+func (domain Domain) IsIndexable() bool {
 
 	// This is the same contract as the page builders' IsIndexable, so that the shared
 	// "includes-head" template can emit a "noindex" robots tag for either
@@ -142,48 +142,48 @@ func (readOnlyDomain Domain) IsIndexable() bool {
 }
 
 // HasRegistrationForm returns TRUE if this domain includes a valid signup form.
-func (readOnlyDomain Domain) HasRegistrationForm() bool {
-	return readOnlyDomain.RegistrationID != ""
+func (domain Domain) HasRegistrationForm() bool {
+	return domain.RegistrationID != ""
 }
 
 // Host returns a usable URL for this domain, including the HTTP(S) protocol and hostname
-func (readOnlyDomain Domain) Host() string {
-	return uri.GuessProtocolForHostname(readOnlyDomain.Hostname) + readOnlyDomain.Hostname
+func (domain Domain) Host() string {
+	return uri.GuessProtocolForHostname(domain.Hostname) + domain.Hostname
 }
 
 // IconURL returns the full URL for this domain's icon attachment
-func (readOnlyDomain Domain) IconURL() string {
+func (domain Domain) IconURL() string {
 
-	if readOnlyDomain.IconID.IsZero() {
-		return readOnlyDomain.Host() + "/.themes/global/resources/emissary/Emissary-Icon-Black.svg"
+	if domain.IconID.IsZero() {
+		return domain.Host() + "/.themes/global/resources/emissary/Emissary-Icon-Black.svg"
 	}
 
-	return readOnlyDomain.Host() + "/.domain/attachments/" + readOnlyDomain.IconID.Hex()
+	return domain.Host() + "/.domain/attachments/" + domain.IconID.Hex()
 }
 
 // ImageURL returns the full URL for this domain's image attachment
-func (readOnlyDomain Domain) ImageURL() string {
+func (domain Domain) ImageURL() string {
 
-	if readOnlyDomain.ImageID.IsZero() {
-		return readOnlyDomain.Host() + "/.themes/global/resources/emissary/Emissary-Icon-Black.svg"
+	if domain.ImageID.IsZero() {
+		return domain.Host() + "/.themes/global/resources/emissary/Emissary-Icon-Black.svg"
 	}
 
-	return readOnlyDomain.Host() + "/.domain/attachments/" + readOnlyDomain.ImageID.Hex()
+	return domain.Host() + "/.domain/attachments/" + domain.ImageID.Hex()
 }
 
 // Summary returns a DomainSummary object with the most commonly used fields for display purposes.
-func (readOnlyDomain Domain) Summary() DomainSummary {
+func (domain Domain) Summary() DomainSummary {
 
 	return DomainSummary{
-		Host:     readOnlyDomain.Hostname,
-		Name:     readOnlyDomain.Label,
-		IconURL:  readOnlyDomain.IconURL(),
-		ImageURL: readOnlyDomain.ImageURL(),
+		Host:     domain.Hostname,
+		Name:     domain.Label,
+		IconURL:  domain.IconURL(),
+		ImageURL: domain.ImageURL(),
 	}
 }
 
 // UserCanMLS returns TRUE if the provided user is allowed to use MLS features.
-func (readOnlyDomain Domain) UserCanMLS(user *User) bool {
+func (domain Domain) UserCanMLS(user *User) bool {
 
 	if user == nil {
 		return false
@@ -193,13 +193,13 @@ func (readOnlyDomain Domain) UserCanMLS(user *User) bool {
 		return true
 	}
 
-	switch readOnlyDomain.MLSMode {
+	switch domain.MLSMode {
 
 	case DomainMLSModeAll:
 		return true
 
 	case DomainMLSModeGroups:
-		for _, groupID := range readOnlyDomain.MLSGroupIDs {
+		for _, groupID := range domain.MLSGroupIDs {
 			if objectID, err := primitive.ObjectIDFromHex(groupID); err == nil {
 				if user.GroupIDs.Contains(objectID) {
 					return true
@@ -213,10 +213,10 @@ func (readOnlyDomain Domain) UserCanMLS(user *User) bool {
 }
 
 // UserCanBridgeToBluesky returns TRUE if the provided user is allowed to bridge to Bluesky.
-func (readOnlyDomain Domain) UserCanBridgeToBluesky(user *User) bool {
+func (domain Domain) UserCanBridgeToBluesky(user *User) bool {
 
 	// Get the BlueSky conneciton config
-	connection, exists := readOnlyDomain.Connections["BLUE-SKY"]
+	connection, exists := domain.Connections["BLUE-SKY"]
 
 	if !exists {
 		return false
@@ -245,10 +245,10 @@ func (readOnlyDomain Domain) UserCanBridgeToBluesky(user *User) bool {
 }
 
 // HasConnectionProvider returns TRUE if this domain has an active connection for the given provider
-func (readOnlyDomain Domain) HasConnectionProvider(provider string) bool {
+func (domain Domain) HasConnectionProvider(provider string) bool {
 
 	// Find the connection
-	connection, exists := readOnlyDomain.Connections[provider]
+	connection, exists := domain.Connections[provider]
 
 	// If no record exists in the map, then FALSE
 	if !exists {
@@ -260,51 +260,51 @@ func (readOnlyDomain Domain) HasConnectionProvider(provider string) bool {
 }
 
 // GetConnectionForProvider returns the Connection configured for the named provider, if one exists
-func (readOnlyDomain Domain) GetConnectionForProvider(provider string) (Connection, bool) {
-	connection, exists := readOnlyDomain.Connections[provider]
+func (domain Domain) GetConnectionForProvider(provider string) (Connection, bool) {
+	connection, exists := domain.Connections[provider]
 	return connection, exists
 }
 
 // DefaultPage returns the landing page for a visitor, based on how they are signed in
-func (readOnlyDomain Domain) DefaultPage(authorization Authorization) string {
+func (domain Domain) DefaultPage(authorization Authorization) string {
 
-	if readOnlyDomain.StateID == DomainStateStartup {
+	if domain.StateID == DomainStateStartup {
 		return "/startup"
 	}
 
 	if authorization.NotAuthenticated() {
-		return readOnlyDomain.DefaultPage_Anonymous()
+		return domain.DefaultPage_Anonymous()
 	}
 
 	if authorization.DomainOwner {
-		return readOnlyDomain.DefaultPage_Owner()
+		return domain.DefaultPage_Owner()
 	}
 
-	return readOnlyDomain.DefaultPage_Authenticated()
+	return domain.DefaultPage_Authenticated()
 }
 
 // DefaultPage_Anonymous returns the landing page for a visitor who is not signed in
-func (readOnlyDomain Domain) DefaultPage_Anonymous() string {
-	if readOnlyDomain.DefaultAnonymous != "" {
-		return readOnlyDomain.DefaultAnonymous
+func (domain Domain) DefaultPage_Anonymous() string {
+	if domain.DefaultAnonymous != "" {
+		return domain.DefaultAnonymous
 	}
 
 	return "/home"
 }
 
 // DefaultPage_Authenticated returns the landing page for a signed-in User
-func (readOnlyDomain Domain) DefaultPage_Authenticated() string {
-	if readOnlyDomain.DefaultAuthenticated != "" {
-		return readOnlyDomain.DefaultAuthenticated
+func (domain Domain) DefaultPage_Authenticated() string {
+	if domain.DefaultAuthenticated != "" {
+		return domain.DefaultAuthenticated
 	}
 
 	return "/@me/newsfeed"
 }
 
 // DefaultPage_Owner returns the landing page for a domain owner
-func (readOnlyDomain Domain) DefaultPage_Owner() string {
-	if readOnlyDomain.DefaultOwner != "" {
-		return readOnlyDomain.DefaultOwner
+func (domain Domain) DefaultPage_Owner() string {
+	if domain.DefaultOwner != "" {
+		return domain.DefaultOwner
 	}
 
 	return "/admin"

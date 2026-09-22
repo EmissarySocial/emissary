@@ -191,16 +191,16 @@ func requireEditsStayPrivate(t *testing.T, construct func(Factory, data.Session,
 	require.NoError(t, err)
 
 	// The builder starts from the stored values
-	writableDomain, ok := object.(*model.WritableDomain)
+	edited, ok := object.(*model.WritableDomain)
 	require.True(t, ok, "the builder's object must be a *model.WritableDomain")
-	require.Equal(t, newAdminDomainFixture().Domain, writableDomain.Domain)
+	require.Equal(t, newAdminDomainFixture().Domain, edited.Domain)
 
 	// RULE: Edits change the builder's own copy and never the record every other request reads
-	editEveryDomainField(&writableDomain.Domain)
+	editEveryDomainField(&edited.Domain)
 
 	require.Equal(t, newAdminDomainFixture().Domain, *factory.domainService.Cached())
-	require.Equal(t, "Edited Label", writableDomain.Label)
-	require.Equal(t, "edited", writableDomain.Data["sso_secret"])
+	require.Equal(t, "Edited Label", edited.Label)
+	require.Equal(t, "edited", edited.Data["sso_secret"])
 }
 
 // requireLoadsTheStoredRecord builds an admin builder while the cache is behind the database, and

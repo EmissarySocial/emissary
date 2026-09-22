@@ -127,9 +127,9 @@ func TestStepStartupComplete_Post_SaveFailureHalts(t *testing.T) {
 
 	builder, domainService, session := newStartupCompleteBuilder(t, model.NewWritableDomain())
 
-	writableDomain := model.NewWritableDomain()
-	writableDomain.ColorMode = "NOT-A-COLOR-MODE"
-	storeSeededDomain(t, session, writableDomain)
+	invalid := model.NewWritableDomain()
+	invalid.ColorMode = "NOT-A-COLOR-MODE"
+	storeSeededDomain(t, session, invalid)
 
 	result := runStartupCompleteStep(builder)
 
