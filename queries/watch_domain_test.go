@@ -118,8 +118,8 @@ func TestLoadDomain(t *testing.T) {
 		database := newWatchTestDatabase(t)
 		replaceDomain(t, database, bson.M{"label": "Loaded"})
 
-		var result []model.Domain
-		err := loadDomain(context.Background(), database.Collection("Domain"), func(domain model.Domain) { result = append(result, domain) })
+		var result []model.WritableDomain
+		err := loadDomain(context.Background(), database.Collection("Domain"), func(domain model.WritableDomain) { result = append(result, domain) })
 
 		require.Nil(t, err)
 		require.Len(t, result, 1)
@@ -130,8 +130,8 @@ func TestLoadDomain(t *testing.T) {
 		database := newWatchTestDatabase(t)
 		replaceDomain(t, database, bson.M{"label": "Sparse"})
 
-		var result model.Domain
-		err := loadDomain(context.Background(), database.Collection("Domain"), func(domain model.Domain) { result = domain })
+		var result model.WritableDomain
+		err := loadDomain(context.Background(), database.Collection("Domain"), func(domain model.WritableDomain) { result = domain })
 
 		require.Nil(t, err)
 		require.NotNil(t, result.ThemeData)
@@ -143,7 +143,7 @@ func TestLoadDomain(t *testing.T) {
 		database := newWatchTestDatabase(t)
 
 		called := false
-		err := loadDomain(context.Background(), database.Collection("Domain"), func(model.Domain) { called = true })
+		err := loadDomain(context.Background(), database.Collection("Domain"), func(model.WritableDomain) { called = true })
 
 		require.Nil(t, err)
 		require.False(t, called)
@@ -154,7 +154,7 @@ func TestLoadDomain(t *testing.T) {
 		replaceDomain(t, database, bson.M{"label": 12345})
 
 		called := false
-		err := loadDomain(context.Background(), database.Collection("Domain"), func(model.Domain) { called = true })
+		err := loadDomain(context.Background(), database.Collection("Domain"), func(model.WritableDomain) { called = true })
 
 		require.Error(t, err)
 		require.False(t, called)
@@ -168,7 +168,7 @@ func TestLoadDomain(t *testing.T) {
 		cancel()
 
 		called := false
-		err := loadDomain(ctx, database.Collection("Domain"), func(model.Domain) { called = true })
+		err := loadDomain(ctx, database.Collection("Domain"), func(model.WritableDomain) { called = true })
 
 		require.Error(t, err)
 		require.False(t, called)
@@ -180,17 +180,17 @@ func TestLoadDomain(t *testing.T) {
  ******************************************/
 
 // startDomainWatcher runs WatchDomain until the test ends, and returns what it publishes
-func startDomainWatcher(t *testing.T, database *mongo.Database) <-chan model.Domain {
+func startDomainWatcher(t *testing.T, database *mongo.Database) <-chan model.WritableDomain {
 
 	t.Helper()
 
-	published := make(chan model.Domain, 100)
+	published := make(chan model.WritableDomain, 100)
 	ctx, cancel := context.WithCancel(context.Background())
 	finished := make(chan struct{})
 
 	go func() {
 		defer close(finished)
-		WatchDomain(ctx, mongodb.NewServer(database), func(domain model.Domain) { published <- domain })
+		WatchDomain(ctx, mongodb.NewServer(database), func(domain model.WritableDomain) { published <- domain })
 	}()
 
 	t.Cleanup(func() {
@@ -206,7 +206,7 @@ func startDomainWatcher(t *testing.T, database *mongo.Database) <-chan model.Dom
 }
 
 // awaitDomain returns the next Domain published
-func awaitDomain(t *testing.T, published <-chan model.Domain) model.Domain {
+func awaitDomain(t *testing.T, published <-chan model.WritableDomain) model.WritableDomain {
 
 	t.Helper()
 
@@ -215,7 +215,7 @@ func awaitDomain(t *testing.T, published <-chan model.Domain) model.Domain {
 		return result
 	case <-time.After(watchTestTimeout):
 		t.Fatal("no Domain was published")
-		return model.Domain{}
+		return model.WritableDomain{}
 	}
 }
 
