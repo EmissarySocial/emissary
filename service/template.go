@@ -69,10 +69,6 @@ func NewTemplate(filesystemService Filesystem, registrationService *Registration
 // Refresh updates this service with the latest configuration values
 func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
 
-	// Reset the "Refresh" channel
-	close(service.refresh)
-	service.refresh = make(chan channel.Done)
-
 	// RULE: If the Filesystem is empty, then don't try to load
 	if len(locations) == 0 {
 		return
@@ -82,6 +78,12 @@ func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
 	if slicesAreEqual(locations, service.locations) {
 		return
 	}
+
+	// RULE: Stop the old watcher only now that the locations have really changed.  Stopping it
+	// before the checks above let every no-op reload kill it, with nothing to restart it (BUG-180)
+	close(service.refresh)
+	done := make(chan channel.Done)
+	service.refresh = done
 
 	// Add configuration to the service
 	service.locations = locations
@@ -97,7 +99,7 @@ func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
 	}
 
 	// Try to watch the template directory for changes
-	go service.watch()
+	go service.watch(locations, done)
 }
 
 /******************************************
@@ -105,15 +107,16 @@ func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
  ******************************************/
 
 // watch must be run as a goroutine, and constantly monitors the
-// "Updates" channel for news that a template has been updated.
-func (service *Template) watch() {
+// "Updates" channel for news that a template has been updated.  It takes its locations and
+// stop channel as arguments because Refresh replaces both fields while it runs.
+func (service *Template) watch(locations sliceof.Object[mapof.String], done chan channel.Done) {
 
 	changes := make(chan bool)
 	defer close(changes)
 
 	// Start new watchers.
-	for _, folder := range service.locations {
-		if err := service.filesystemService.Watch(folder, changes, service.refresh); err != nil {
+	for _, folder := range locations {
+		if err := service.filesystemService.Watch(folder, changes, done); err != nil {
 			derp.Report(derp.Wrap(err, "service.template.Watch", "Watching filesystem", folder))
 		}
 	}
@@ -129,7 +132,7 @@ func (service *Template) watch() {
 				derp.Report(derp.Wrap(err, "service.template.Watch", "Loading templates from filesystem"))
 			}
 
-		case <-service.refresh:
+		case <-done:
 			return
 		}
 	}
