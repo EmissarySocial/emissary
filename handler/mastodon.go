@@ -139,6 +139,8 @@ func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 
 		// https://docs.joinmastodon.org/methods/media/
 		PostMedia: mastodon.PostMedia(serverFactory),
+		GetMedia:  mastodon.GetMedia(serverFactory),
+		PutMedia:  mastodon.PutMedia(serverFactory),
 
 		// https://docs.joinmastodon.org/methods/mutes/
 		GetMutes: mastodon.GetMutes(serverFactory),
