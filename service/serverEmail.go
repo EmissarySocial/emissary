@@ -35,26 +35,11 @@ type ServerEmail struct {
 // NewServerEmail returns a fully initialized ServerEmail service, loaded from the provided locations
 func NewServerEmail(filesystemService Filesystem, funcMap template.FuncMap, locations []mapof.String) ServerEmail {
 
-	service := ServerEmail{
+	return ServerEmail{
 		filesystemService: filesystemService,
 		funcMap:           funcMap,
 		emails:            make(map[string]model.Email),
 	}
-
-	service.Refresh()
-
-	return service
-}
-
-/******************************************
- * Lifecycle Methods
- ******************************************/
-
-// Refresh updates this service with the latest configuration values
-func (service *ServerEmail) Refresh() {
-
-	// Reset all emails (to be reloaced by the Template service)
-	service.emails = make(map[string]model.Email)
 }
 
 /******************************************

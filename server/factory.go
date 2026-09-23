@@ -133,7 +133,6 @@ func (factory *Factory) readConfig(config config.Config) error {
 	factory.setConfigLocked(config)
 
 	// Refresh these global services with values we'll always need.
-	factory.emailService.Refresh()
 	factory.templateService.Refresh(config.Templates)
 
 	// Set timeout threshold for slow queries

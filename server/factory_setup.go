@@ -89,7 +89,6 @@ func (factory *SetupFactory) configure(config config.Config) {
 	factory.setConfigLocked(config)
 
 	// Refresh these global services with values we'll always need.
-	factory.emailService.Refresh()
 	factory.templateService.Refresh(config.Templates)
 
 	// RULE: The common database is best-effort in setup mode (FACTORY-MODES D1): connect if
