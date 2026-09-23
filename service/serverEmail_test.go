@@ -323,7 +323,7 @@ func TestServerEmailAdd_AcceptsModelOutsideTemplateRegistry(t *testing.T) {
  ******************************************/
 
 // testServerEmailWithModel returns a ServerEmail holding one "test-email" definition for modelName
-func testServerEmailWithModel(t *testing.T, modelName string) ServerEmail {
+func testServerEmailWithModel(t *testing.T, modelName string) *ServerEmail {
 
 	t.Helper()
 
@@ -337,7 +337,7 @@ func testServerEmailWithModel(t *testing.T, modelName string) ServerEmail {
 	}`)
 
 	require.NoError(t, service.Add(testFilesystem(), definition))
-	return service
+	return &service
 }
 
 // TestServerEmail_RequireModel verifies that an email declared for the caller's model is accepted
@@ -664,7 +664,7 @@ func TestServerEmailRequiredKeys_ShippedDefinition(t *testing.T) {
  ******************************************/
 
 // contactFormEmail loads the shipped contact-form definition exactly as the server does
-func contactFormEmail(t *testing.T) (ServerEmail, model.Email) {
+func contactFormEmail(t *testing.T) (*ServerEmail, model.Email) {
 
 	t.Helper()
 
@@ -678,7 +678,7 @@ func contactFormEmail(t *testing.T) (ServerEmail, model.Email) {
 	email, exists := service.emails["contact-form"]
 	require.True(t, exists, "the shipped definition must declare emailId 'contact-form'")
 
-	return service, email
+	return &service, email
 }
 
 // contactFormContract is every key the contact-form templates may reference: the six message

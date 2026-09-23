@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"sync"
 	texttemplate "text/template"
 	"text/template/parse"
 
@@ -30,6 +31,7 @@ type ServerEmail struct {
 	filesystemService Filesystem
 	funcMap           template.FuncMap
 	emails            map[string]model.Email
+	mutex             sync.RWMutex
 }
 
 // NewServerEmail returns a fully initialized ServerEmail service, loaded from the provided locations
@@ -150,13 +152,11 @@ func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 		email.Resources = resources
 	}
 
-	// RULE: a later filesystem location may deliberately override an email that an earlier one
-	// defined, so a duplicate is legal -- but an accidental collision is otherwise silent
-	if _, exists := service.emails[email.EmailID]; exists {
-		log.Warn().Str("emailId", email.EmailID).Msg("Email Service: replacing a previously-defined email")
-	}
+	// RULE: Add overwrites, and nothing ever empties this library.  Every template reload adds each
+	// email again over its live copy, so readers never see it empty (BUG-180)
+	service.mutex.Lock()
+	defer service.mutex.Unlock()
 
-	// Add the email into the prep library
 	service.emails[email.EmailID] = email
 
 	// Banana
@@ -165,6 +165,9 @@ func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 
 // Names returns the ID of every email template in this service's library, sorted
 func (service *ServerEmail) Names() []string {
+	service.mutex.RLock()
+	defer service.mutex.RUnlock()
+
 	result := maps.Keys(service.emails)
 	slices.Sort(result)
 	return result
@@ -176,6 +179,9 @@ func (service *ServerEmail) Names() []string {
 
 // Exists returns TRUE if an email with this ID is defined in this service's library
 func (service *ServerEmail) Exists(emailID string) bool {
+	service.mutex.RLock()
+	defer service.mutex.RUnlock()
+
 	_, exists := service.emails[emailID]
 	return exists
 }
@@ -190,7 +196,7 @@ func (service *ServerEmail) Exists(emailID string) bool {
 // which renders a missing key as "", and email-follower-activity depends on that.
 func (service *ServerEmail) RequiredKeys(emailID string) sliceof.String {
 
-	email, exists := service.emails[emailID]
+	email, exists := service.lookup(emailID)
 
 	if !exists {
 		return sliceof.String{}
@@ -223,10 +229,10 @@ func (service *ServerEmail) RequireModel(emailID string, modelName string) error
 
 	const location = "service.ServerEmail.RequireModel"
 
-	email, exists := service.emails[emailID]
+	email, exists := service.lookup(emailID)
 
 	if !exists {
-		return derp.BadRequest(location, "Email is not defined", emailID, maps.Keys(service.emails))
+		return derp.BadRequest(location, "Email is not defined", emailID, service.Names())
 	}
 
 	if modelName == "" {
@@ -239,6 +245,15 @@ func (service *ServerEmail) RequireModel(emailID string, modelName string) error
 
 	// A model citizen
 	return nil
+}
+
+// lookup returns the named email from the library
+func (service *ServerEmail) lookup(emailID string) (model.Email, bool) {
+	service.mutex.RLock()
+	defer service.mutex.RUnlock()
+
+	email, exists := service.emails[emailID]
+	return email, exists
 }
 
 /******************************************
@@ -254,10 +269,10 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner con
 	// that include password reset codes and, for web-form templates, whatever a visitor typed
 
 	// Find the email in the library
-	email, exists := service.emails[emailID]
+	email, exists := service.lookup(emailID)
 
 	if !exists {
-		return derp.BadRequest(location, "Email is not defined", emailID, maps.Keys(service.emails))
+		return derp.BadRequest(location, "Email is not defined", emailID, service.Names())
 	}
 
 	// If the SMTP Connection is empty, then don't try to send an email
