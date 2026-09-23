@@ -111,8 +111,9 @@ func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
 // stop channel as arguments because Refresh replaces both fields while it runs.
 func (service *Template) watch(locations sliceof.Object[mapof.String], done chan channel.Done) {
 
+	// RULE: never close this channel.  A filesystem watcher may be sending on it at the moment we
+	// stop, and a send on a closed channel panics (BUG-180).  The watchers give up on "done" instead.
 	changes := make(chan bool)
-	defer close(changes)
 
 	// Start new watchers.
 	for _, folder := range locations {
