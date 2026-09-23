@@ -37,7 +37,8 @@ type Template struct {
 	themeService        *Theme                       // Theme Service
 	widgetService       *Widget                      // Widget Service
 	funcMap             template.FuncMap             // Map of functions to use in golang templates
-	mutex               sync.RWMutex                 // Mutext that locks access to the templates structure
+	templateLock        sync.RWMutex                 // Guards the live "templates" map: readers take RLock, a finished load takes Lock to publish
+	reloadLock          sync.Mutex                   // Lets one whole load run at a time, since a file change and a config reload can both start one
 	refresh             chan channel.Done            // Channel that is used to signal that the template service should refresh
 }
 
@@ -85,6 +86,11 @@ func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
 	done := make(chan channel.Done)
 	service.refresh = done
 
+	// RULE: The old watcher may still be partway through a load of its own, so wait for it.
+	// Everything a load reads, including the locations, changes only under this lock (BUG-180)
+	service.reloadLock.Lock()
+	defer service.reloadLock.Unlock()
+
 	// Add configuration to the service
 	service.locations = locations
 
@@ -129,9 +135,11 @@ func (service *Template) watch(locations sliceof.Object[mapof.String], done chan
 		case <-changes:
 			// A watch-triggered reload must never halt the process: the previously-loaded
 			// templates are still serving, so on error we report and keep running.
+			service.reloadLock.Lock()
 			if err := service.loadTemplates(false); err != nil {
 				derp.Report(derp.Wrap(err, "service.template.Watch", "Loading templates from filesystem"))
 			}
+			service.reloadLock.Unlock()
 
 		case <-done:
 			return
@@ -140,6 +148,7 @@ func (service *Template) watch(locations sliceof.Object[mapof.String], done chan
 }
 
 // loadTemplates (re)loads every template from the configured filesystem locations.
+// The caller must hold reloadLock.
 // haltOnError controls what happens when a location fails to load: on the very first
 // load (initial boot) there are no live templates to fall back on, so an error is fatal
 // and the process exits.  On a subsequent watch-triggered reload the previously-loaded
@@ -252,8 +261,8 @@ func (service *Template) loadTemplates(haltOnError bool) error {
 	}
 
 	// Assign the prep area to live
-	service.mutex.Lock()
-	defer service.mutex.Unlock()
+	service.templateLock.Lock()
+	defer service.templateLock.Unlock()
 
 	maps.Copy(service.templates, service.templatePrep)
 
@@ -705,8 +714,8 @@ func (service *Template) List(filter func(*model.Template) bool) sliceof.Object[
 func (service *Template) Load(templateID string) (model.Template, error) {
 
 	// READ Mutex to make multi-threaded access safe.
-	service.mutex.RLock()
-	defer service.mutex.RUnlock()
+	service.templateLock.RLock()
+	defer service.templateLock.RUnlock()
 
 	// Look in the local cache first
 	if template, ok := service.templates[templateID]; ok {

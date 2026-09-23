@@ -2,8 +2,12 @@ package service
 
 import (
 	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
 	"testing"
 	"testing/fstest"
+	"time"
 
 	"github.com/EmissarySocial/emissary/config"
 	emissarytemplates "github.com/EmissarySocial/emissary/tools/templates"
@@ -75,4 +79,50 @@ func TestTemplateRefresh_ChangedLocationsReplaceWatcher(t *testing.T) {
 	}
 
 	require.NotEqual(t, watcher, templateService.refresh, "the new watcher needs a channel of its own")
+}
+
+// TestTemplateRefresh_WatcherAndReloadDoNotOverlap is BUG-180 Defect D: a file change and a
+// configuration reload could run loadTemplates at the same time, both writing the shared prep
+// area.  It depends on timing, so it proves nothing without -race.
+func TestTemplateRefresh_WatcherAndReloadDoNotOverlap(t *testing.T) {
+
+	definition, err := os.ReadFile("../_embed/templates/email-user-welcome/email.hjson")
+	require.NoError(t, err)
+
+	body, err := os.ReadFile("../_embed/templates/email-user-welcome/body.html")
+	require.NoError(t, err)
+
+	// Two watched folders on disk, so that a file change reaches the watcher's own reload.  Each
+	// holds 100 emails, so that a load lasts long enough for the other one to start during it.
+	folders := []string{t.TempDir(), t.TempDir()}
+
+	for _, folder := range folders {
+		for index := range 100 {
+			emailID := "email-" + strconv.Itoa(index)
+			directory := filepath.Join(folder, emailID)
+			require.NoError(t, os.Mkdir(directory, 0o700))
+			require.NoError(t, os.WriteFile(filepath.Join(directory, "email.hjson"), []byte(strings.Replace(string(definition), "user-welcome", emailID, 1)), 0o600))
+			require.NoError(t, os.WriteFile(filepath.Join(directory, "body.html"), body, 0o600))
+		}
+	}
+
+	location := func(index int) []mapof.String {
+		return []mapof.String{{"adapter": config.FolderAdapterFile, "location": folders[index%2]}}
+	}
+
+	funcMap := emissarytemplates.FuncMap(nullIconProvider{})
+	filesystemService := NewFilesystem(nil)
+	emailService := NewServerEmail(filesystemService, funcMap, nil)
+	templateService := NewTemplate(filesystemService, &Registration{}, &emailService, &Theme{}, &Widget{}, funcMap, location(0))
+
+	// Each round lets the new watcher start, creates a file so that it begins a reload, and then
+	// reloads to the other folder while that one is still running
+	for index := range 10 {
+		time.Sleep(100 * time.Millisecond)
+		require.NoError(t, os.WriteFile(filepath.Join(folders[index%2], "email-0", "change-"+strconv.Itoa(index)), nil, 0o600))
+		time.Sleep(time.Duration(index) * time.Millisecond)
+		templateService.Refresh(location(index + 1))
+	}
+
+	require.NoError(t, emailService.RequireModel("email-0", "User"))
 }
