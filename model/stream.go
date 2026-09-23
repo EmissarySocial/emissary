@@ -410,6 +410,12 @@ func (stream Stream) Toot() object.Status {
 		SpoilerText: stream.Label,
 		URL:         stream.URL,
 		InReplyToID: stream.InReplyTo,
+		Pinned:      stream.IsFeatured,
+
+		// Denormalized counters, kept current by the Response and reply services
+		FavouritesCount: stream.LikeCount,
+		ReblogsCount:    stream.ShareCount,
+		RepliesCount:    stream.ReplyCount,
 	}
 }
 
