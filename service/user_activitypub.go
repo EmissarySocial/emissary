@@ -80,17 +80,19 @@ func (service *User) PrivateKey(session data.Session, userID primitive.ObjectID)
 
 	const location = "service.User.PrivateKey"
 
-	// Try to load the user's keys from the database
+	// Try to load the user's keys from the database.
+	// NOTE: the error returns are `nil`, not `outbox.Actor{}` -- crypto.PrivateKey is an alias
+	// for `any`, so an Actor compiles here and is not a key.
 	encryptionKey := model.NewEncryptionKey()
 	if err := service.keyService.LoadByParentID(session, model.EncryptionKeyTypeUser, userID, &encryptionKey); err != nil {
-		return outbox.Actor{}, derp.Wrap(err, location, "Loading encryption key", userID)
+		return nil, derp.Wrap(err, location, "Loading encryption key", userID)
 	}
 
 	// Extract the Private Key from the Encryption Key
 	privateKey, err := service.keyService.GetPrivateKey(&encryptionKey)
 
 	if err != nil {
-		return outbox.Actor{}, derp.Wrap(err, location, "Extracting private key", encryptionKey)
+		return nil, derp.Wrap(err, location, "Extracting private key", encryptionKey.EncryptionKeyID)
 	}
 
 	return privateKey, nil
