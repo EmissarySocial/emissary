@@ -243,7 +243,16 @@ func (filesystem *Filesystem) watchOS(uri string, changes chan<- bool, done <-ch
 			select {
 
 			case <-watcher.Events:
-				changes <- true
+
+				// Nothing reads "changes" once the template watcher has stopped, so give up on "done"
+				select {
+				case changes <- true:
+				case <-done:
+					if err := watcher.Close(); err != nil {
+						derp.Report(derp.Wrap(err, location, "Closing watcher"))
+					}
+					return
+				}
 
 			case err := <-watcher.Errors:
 				derp.Report(derp.Wrap(err, location, "Watching directory", uri))
