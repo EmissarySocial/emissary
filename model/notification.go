@@ -249,7 +249,7 @@ func (notification Notification) Toot() object.Notification {
 	return object.Notification{
 		ID:        notification.NotificationID.Hex(),
 		Type:      notification.MastodonType(),
-		CreatedAt: time.UnixMilli(notification.CreateDate).UTC().Format(time.RFC3339),
+		CreatedAt: MastodonDate(time.UnixMilli(notification.CreateDate)),
 		Account:   notification.Actor.Toot(),
 	}
 }

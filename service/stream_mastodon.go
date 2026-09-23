@@ -18,10 +18,12 @@ import (
 // caller (identified by the Authorization) is allowed to view.
 func (service *Stream) QueryByUser(session data.Session, authorization model.Authorization, ownerID primitive.ObjectID, criteria exp.Expression, options ...option.Option) ([]model.Stream, error) {
 
-	// Limit results to Streams owned by this User AND visible to the caller
+	// Limit results to Streams owned by this User AND visible to the caller.
+	// model.Stream has no "ownerId" field -- the author is stored as "parentId"
+	// (see model.Stream.ParentID, set from authorization.UserID in PostStatus).
 	criteria = exp.And(
 		criteria,
-		exp.Equal("ownerId", ownerID),
+		exp.Equal("parentId", ownerID),
 		service.visibilityCriteria(authorization, ownerID),
 	)
 

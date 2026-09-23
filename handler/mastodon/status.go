@@ -5,6 +5,8 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/toot"
@@ -152,7 +154,14 @@ func GetStatus_Context(serverFactory *server.Factory) func(model.Authorization, 
 	return func(auth model.Authorization, t txn.GetStatus_Context) (object.Context, error) {
 
 		// TODO: HIGH: Implement status contexts via Hannibal
-		return object.Context{}, nil
+
+		// RULE: zero-value nil slices marshal to JSON `null`, but the Mastodon client's
+		// Codable decoder requires a real (even empty) array for both fields -- a `null`
+		// here is a hard decode failure on the client, not a harmless "no thread yet".
+		return object.Context{
+			Ancestors:   []object.Status{},
+			Descendants: []object.Status{},
+		}, nil
 	}
 }
 
@@ -213,107 +222,16 @@ func GetStatus_FavouritedBy(serverFactory *server.Factory) func(model.Authorizat
 // https://docs.joinmastodon.org/methods/statuses/#favourite
 func PostStatus_Favourite(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Favourite) (object.Status, error) {
 
-	const location = "handler.mastodon_PostStatus_Favourite"
-
 	return func(auth model.Authorization, t txn.PostStatus_Favourite) (object.Status, error) {
-
-		// Get the factory for this domain
-		factory, err := serverFactory.ByHostname(t.Host)
-
-		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unrecognized Domain")
-		}
-
-		// Get a database session for this request
-		session, cancel, err := factory.Session(time.Minute)
-
-		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Creating session")
-		}
-
-		defer cancel()
-
-		// Load the User
-		userService := factory.User()
-		user := model.NewUser()
-		if err := userService.LoadByID(session, auth.UserID, &user); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Loading user")
-		}
-
-		// Load the news feed item being favorited
-		newsFeedService := factory.NewsFeed()
-		message := model.NewNewsItem()
-
-		if err := newsFeedService.LoadByURL(session, auth.UserID, t.ID, &message); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Loading message")
-		}
-
-		// Save the Response via SetResponse, which publishes the activity, keeps Likes and Dislikes
-		// mutually exclusive, and makes this endpoint idempotent -- as the Mastodon API requires,
-		// since un-favouriting has its own endpoint (see PostStatus_Unfavourite, below).
-		responseService := factory.Response()
-
-		if err := responseService.SetResponse(session, &user, message.URL, vocab.ActivityTypeLike, "👍"); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Saving response")
-		}
-
-		// Read the active Response back, so the caller is returned the record that actually
-		// persisted -- which, for a favourite that lost a creation race, is the winner's.
-		response := model.NewResponse()
-
-		if err := responseService.LoadByUserAndObject(session, auth.UserID, message.URL, vocab.ActivityTypeLike, &response); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Loading response")
-		}
-
-		return response.Toot(), nil
+		return reactToStatus(serverFactory, t.Host, auth, t.ID, vocab.ActivityTypeLike, "👍", false, "handler.mastodon_PostStatus_Favourite")
 	}
 }
 
 // https://docs.joinmastodon.org/methods/statuses/#unfavourite
 func PostStatus_Unfavourite(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Unfavourite) (object.Status, error) {
 
-	const location = "handler.mastodon_PostStatus_Unfavourite"
-
 	return func(auth model.Authorization, t txn.PostStatus_Unfavourite) (object.Status, error) {
-
-		// Get the factory for this domain
-		factory, err := serverFactory.ByHostname(t.Host)
-
-		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Unrecognized Domain")
-		}
-
-		// Get a database session for this request
-		session, cancel, err := factory.Session(time.Minute)
-
-		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Creating session")
-		}
-
-		defer cancel()
-
-		// Search for the Response in the database
-		responseService := factory.Response()
-		response := model.NewResponse()
-
-		if err := responseService.LoadByUserAndObject(session, auth.UserID, t.ID, vocab.ActivityTypeLike, &response); err != nil {
-
-			// If the response doesn't exist
-			if derp.IsNotFound(err) {
-				return response.Toot(), nil
-			}
-
-			// Otherwise, return a legitimate error
-			return object.Status{}, derp.Wrap(err, location, "Loading response")
-		}
-
-		// Fall through means a response exists.  Delete it
-		if err := responseService.Delete(session, &response, "Deleted via Mastodon API"); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Deleting response")
-		}
-
-		// Return success
-		return response.Toot(), nil
+		return reactToStatus(serverFactory, t.Host, auth, t.ID, vocab.ActivityTypeLike, "", true, "handler.mastodon_PostStatus_Unfavourite")
 	}
 }
 
@@ -321,7 +239,7 @@ func PostStatus_Unfavourite(serverFactory *server.Factory) func(model.Authorizat
 func PostStatus_Reblog(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Reblog) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Reblog) (object.Status, error) {
-		return object.Status{}, derp.NotImplemented("handler.mastodon.PostStatus_Reblog")
+		return reactToStatus(serverFactory, t.Host, auth, t.ID, vocab.ActivityTypeAnnounce, "", false, "handler.mastodon_PostStatus_Reblog")
 	}
 }
 
@@ -329,8 +247,116 @@ func PostStatus_Reblog(serverFactory *server.Factory) func(model.Authorization, 
 func PostStatus_Unreblog(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Unreblog) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Unreblog) (object.Status, error) {
-		return object.Status{}, derp.NotImplemented("handler.mastodon.PostStatus_Unreblog")
+		return reactToStatus(serverFactory, t.Host, auth, t.ID, vocab.ActivityTypeAnnounce, "", true, "handler.mastodon_PostStatus_Unreblog")
 	}
+}
+
+// reactToStatus sets (or, when undo is true, clears) the caller's response of the
+// given type on the post behind a status ID, and returns that post. SetResponse
+// and UnsetResponse publish the activity and are idempotent, as the Mastodon API
+// requires.
+//
+// The post is normally a NewsItem in the caller's feed. A post reached some other
+// way (a profile's posts) has only an encoded URL for an ID; the response service
+// works from a URL alone, so such a post is reacted to directly.
+func reactToStatus(serverFactory *server.Factory, host string, auth model.Authorization, statusID string, responseType string, content string, undo bool, location string) (object.Status, error) {
+
+	factory, err := serverFactory.ByHostname(host)
+
+	if err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Unrecognized Domain")
+	}
+
+	session, cancel, err := factory.Session(time.Minute)
+
+	if err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Creating session")
+	}
+
+	defer cancel()
+
+	user := model.NewUser()
+
+	if err := factory.User().LoadByID(session, auth.UserID, &user); err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Loading user")
+	}
+
+	// Find the post: a NewsItem in the feed, or else the URL encoded in the ID
+	message := model.NewNewsItem()
+	postURL := ""
+	inFeed := false
+
+	switch err := loadNewsItemByStatusID(factory, session, auth.UserID, statusID, &message); {
+
+	case err == nil:
+		postURL = message.URL
+		inFeed = true
+
+	case derp.IsNotFound(err):
+
+		encodedURL, ok := model.DecodeRemoteStatusID(statusID)
+
+		if !ok {
+			return object.Status{}, derp.Wrap(err, location, "Loading message")
+		}
+
+		postURL = encodedURL
+
+	default:
+		return object.Status{}, derp.Wrap(err, location, "Loading message")
+	}
+
+	responseService := factory.Response()
+
+	if undo {
+		err = responseService.UnsetResponse(session, &user, postURL, responseType)
+	} else {
+		err = responseService.SetResponse(session, &user, postURL, responseType, content)
+	}
+
+	if err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Saving response")
+	}
+
+	if inFeed {
+		return reloadedStatus(factory, session, auth, message.NewsItemID, location)
+	}
+
+	return statusForPostURL(factory, session, auth, postURL, location)
+}
+
+// statusForPostURL builds the Status for a post that has no NewsItem, straight
+// from the post document, with the caller's own favourite/boost state filled in.
+func statusForPostURL(factory *service.Factory, session data.Session, auth model.Authorization, postURL string, location string) (object.Status, error) {
+
+	client := factory.ActivityStream().UserClient(auth.UserID)
+	post, err := client.Load(postURL)
+
+	if err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Loading post", postURL)
+	}
+
+	authorURL := post.AttributedTo().ID()
+
+	if authorURL == "" {
+		authorURL = post.ActorID()
+	}
+
+	account, found := loadAccount(client, factory, session, authorURL)
+
+	if !found {
+		account = model.RemoteActorAccount(authorURL, "", "", time.Time{})
+	}
+
+	status := documentToStatus(post, account)
+
+	responseService := factory.Response()
+	response := model.NewResponse()
+
+	status.Favourited = responseService.LoadByUserAndObject(session, auth.UserID, postURL, vocab.ActivityTypeLike, &response) == nil
+	status.Reblogged = responseService.LoadByUserAndObject(session, auth.UserID, postURL, vocab.ActivityTypeAnnounce, &response) == nil
+
+	return status, nil
 }
 
 // https://docs.joinmastodon.org/methods/statuses/#bookmark

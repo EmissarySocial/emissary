@@ -3,6 +3,7 @@ package model
 import (
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/toot/object"
@@ -137,10 +138,48 @@ func (person *PersonLink) UnmarshalMap(data mapof.Any) {
 
 // Toot returns this PersonLink as its Mastodon API equivalent
 func (person PersonLink) Toot() object.Account {
+
+	// Local accounts use the same short hex UserID as model.User.Toot(), so the
+	// same account is identified consistently everywhere it appears (a status's
+	// embedded author vs. that same account fetched directly). Remote/unlinked
+	// people currently fall back to their raw profile URL; resolveAccountURL in
+	// handler/mastodon/accounts.go still accepts a bare URL, so this resolves --
+	// but it is inconsistent with the "u_..." token EncodeRemoteAccountID produces
+	// for the same account via GetAccount_Lookup. Switching this to
+	// EncodeRemoteAccountID(person.ProfileURL) closes the gap (encoding needs no
+	// session/factory); left as a follow-up.
+	id := person.ProfileURL
+
+	if !person.UserID.IsZero() {
+		id = person.UserID.Hex()
+	}
+
+	// The real Account entity requires a non-null created_at (confirmed against the
+	// real client's Codable model -- unlike LastStatusAt, this field has no "?" and
+	// crashes decode if missing/empty). ActivityPub doesn't guarantee any actor
+	// publishes a reliable "account created" date (Mastodon's own Account.created_at
+	// is a Mastodon-API convention, not part of ActivityPub itself, and plenty of
+	// other software won't populate it), so rather than chase an inconsistently
+	// available value, just use now -- an honest "we don't know" rather than a
+	// crash or a lie.
 	return object.Account{
-		ID:          person.ProfileURL,
+		ID:          id,
 		URL:         person.ProfileURL,
+		Username:    person.LocalUsername(),
+		Acct:        person.Username, // Already in "user" or "user@domain.social" form -- see the field comment.
 		DisplayName: person.Name,
 		Avatar:      person.IconURL,
+		CreatedAt:   MastodonDate(time.Now()),
 	}
+}
+
+// LocalUsername returns the bare username (no "@domain" suffix), for the
+// Mastodon API's Account.Username field -- "not including domain," per spec,
+// whereas PersonLink.Username is already qualified (e.g. "user@domain.social").
+func (person PersonLink) LocalUsername() string {
+	if name, _, found := strings.Cut(person.Username, "@"); found {
+		return name
+	}
+
+	return person.Username
 }

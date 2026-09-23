@@ -73,6 +73,7 @@ func (app OAuthClient) ValidateSecret(clientSecret string) error {
 // Toot converts this object into a Mastodon-compatible Application object
 func (app OAuthClient) Toot() object.Application {
 	return object.Application{
+		ID:           app.ClientID.Hex(),
 		Name:         app.Name,
 		Website:      app.Website,
 		ClientID:     first.String(app.ClientURL, app.ClientID.Hex()),

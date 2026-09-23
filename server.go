@@ -16,6 +16,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/config"
@@ -31,12 +32,13 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
 	"github.com/benpate/derp"
-	"github.com/benpate/digital-dome/dome4echo"
+	_ "github.com/benpate/digital-dome/dome4echo" // TEMPORARILY unused -- see disabled e.Pre() call below; re-enable both before shipping
 	"github.com/benpate/form/widget"
 	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/sigs"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
+	tootecho "github.com/benpate/toot-echo"
 	"github.com/benpate/uri"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
@@ -251,7 +253,12 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.Pre(middleware.Recover())
 
 	// Web Application Firewall Middleware
-	e.Pre(dome4echo.New(factory.DigitalDome()))
+	// TEMPORARILY DISABLED for local Mastodon-API testing: dome's default
+	// SuspiciousPaths list includes the bare substring "/api", which matches
+	// every Mastodon API endpoint and masks real error messages behind a
+	// generic "Path is blocked" 403 (see conversation notes / pre-commit
+	// checklist). Must be re-enabled before this branch ships.
+	// e.Pre(dome4echo.New(factory.DigitalDome()))
 
 	// Enforce HTTPS for public traffic: redirect insecure requests, and assert HSTS
 	// on secure ones so browsers upgrade every future request themselves
@@ -286,13 +293,17 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	// once a request arrives, so a nil Factory registers the real routes safely.
 
 	// Common routes (but not .well-known)
-	e.GET("/robots.txt", handler.RobotsTxt)                 // https://developers.google.com/search/docs/advanced/robots/create-robots-txt
-	e.GET("/sitemap.xml", handler.TBD)                      // https://developers.google.com/search/docs/advanced/sitemaps/build-sitemap
-	e.GET("/humans.txt", handler.TBD)                       // http://humanstxt.org/
-	e.GET("/ads.txt", handler.TBD)                          // https://iabtechlab.com/standards/ads-txt/
-	e.GET("/security.txt", handler.TBD)                     // https://securitytxt.org/
-	e.GET("/poco", handler.TBD)                             // Friendica polls this route
-	e.GET("/api/**", handler.TBD)                           // Mastodon API?
+	e.GET("/robots.txt", handler.RobotsTxt) // https://developers.google.com/search/docs/advanced/robots/create-robots-txt
+	e.GET("/sitemap.xml", handler.TBD)      // https://developers.google.com/search/docs/advanced/sitemaps/build-sitemap
+	e.GET("/humans.txt", handler.TBD)       // http://humanstxt.org/
+	e.GET("/ads.txt", handler.TBD)          // https://iabtechlab.com/standards/ads-txt/
+	e.GET("/security.txt", handler.TBD)     // https://securitytxt.org/
+	e.GET("/poco", handler.TBD)             // Friendica polls this route
+	// NOTE: a catch-all `e.GET("/api/**", handler.TBD)` used to live here. It silently
+	// answered every unmatched /api/* GET with a fake "204 No Content" success instead
+	// of a real 404 -- including genuinely broken requests, like a client trying to
+	// load an account whose ID came back empty from another endpoint. Removed so an
+	// unmatched Mastodon API route surfaces as a real, debuggable 404 instead.
 	e.GET("/favicon.ico", handler.TBD)                      // https://developer.mozilla.org/en-US/docs/Glossary/Favicon
 	e.GET("/favicon.png", handler.TBD)                      // https://developer.mozilla.org/en-US/docs/Glossary/Favicon
 	e.GET("/apple-touch-icon.png", handler.TBD)             // https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html
@@ -599,7 +610,7 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/oauth/revoke", handler.WithFactory(factory, handler.PostOAuthRevoke))
 
 	// Mastodon API
-	// toot.Register(e, handler.Mastodon(factory))
+	tootecho.Register(e, handler.Mastodon(factory))
 }
 
 /******************************************
@@ -767,6 +778,14 @@ func errorHandler(err error, ctx echo.Context) {
 		// misconfigured Accept is exactly the population being diagnosed. (BUG-20)
 		if sigs.HasSignature(request) {
 			_ = ctx.String(derp.ErrorCode(err), derp.Message(err))
+			return
+		}
+
+		// RULE: The JSON API (Mastodon-compatible and otherwise) is a machine too. An OAuth client
+		// needs the real 401 and a JSON body to know its bearer token expired and refresh it; a 303
+		// to the HTML /signin page is something it cannot parse, and its decoder fails on the HTML.
+		if strings.HasPrefix(request.URL.Path, "/api/") {
+			_ = ctx.JSON(derp.ErrorCode(err), mapof.Any{"error": derp.Message(err)})
 			return
 		}
 

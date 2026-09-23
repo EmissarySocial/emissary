@@ -106,6 +106,7 @@ func (user User) PersonLink() PersonLink {
 	return PersonLink{
 		UserID:       user.UserID,
 		Name:         user.DisplayName,
+		Username:     user.Username,
 		ProfileURL:   user.ProfileURL,
 		InboxURL:     user.ActivityPubInboxURL(),
 		EmailAddress: user.EmailAddress,
@@ -564,17 +565,31 @@ func (user *User) JSONFeedURL() string {
  ******************************************/
 
 // Toot returns this User as a Mastodon-API Account object
+//
+// ID uses the local hex UserID, not the actor URL (user.ActivityPubURL(), which
+// still populates the separate URL field below). The official Mastodon iOS app's
+// local account cache breaks on a URL-shaped account ID -- confirmed directly
+// against a live server, not just a documentation reading -- so every local account
+// needs a short, stable, non-URL ID here. handler/mastodon/accounts.go's
+// loadUserByAccountID/resolveAccountURL/resolveAccountID accept and resolve both
+// forms (this short hex ID for local accounts, and the URL-encoded opaque ID
+// model.EncodeRemoteAccountID produces -- returned by GetAccount_Lookup -- for
+// remote ones), so the rest of the API stays consistent no matter which form a
+// client holds for a given account.
 func (user User) Toot() object.Account {
 	return object.Account{
-		ID:       user.ActivityPubURL(),
-		Username: user.Username,
-		// Acct: user.WebFingerAccount,
-		DisplayName:  user.DisplayName,
-		Note:         user.StatusMessage,
-		Avatar:       user.ActivityPubIconURL(),
-		Header:       user.ActivityPubImageURL(),
-		Discoverable: user.IsPublic,
-		CreatedAt:    time.UnixMilli(user.CreateDate).UTC().Format(time.RFC3339), // CreateDate is milliseconds (journal UnixMilli)
+		ID:             user.UserID.Hex(),
+		Username:       user.Username,
+		Acct:           user.Username, // Per the Mastodon API: "Equal to username for local users."
+		URL:            user.ActivityPubURL(),
+		DisplayName:    user.DisplayName,
+		Note:           user.StatusMessage,
+		Avatar:         user.ActivityPubIconURL(),
+		Header:         user.ActivityPubImageURL(),
+		Discoverable:   user.IsPublic,
+		CreatedAt:      MastodonDate(time.UnixMilli(user.CreateDate)), // CreateDate is milliseconds (journal UnixMilli)
+		FollowersCount: user.FollowerCount,
+		FollowingCount: user.FollowingCount,
 	}
 }
 

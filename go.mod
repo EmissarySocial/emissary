@@ -32,6 +32,7 @@ require (
 	github.com/benpate/steranko v0.31.0
 	github.com/benpate/table v0.9.0
 	github.com/benpate/toot v0.5.0
+	github.com/benpate/toot-echo v0.0.0-20260907105002-3ee11a70c1f6
 	github.com/benpate/turbine v0.10.0
 	github.com/benpate/uri v0.8.0
 	github.com/cespare/xxhash/v2 v2.3.0
@@ -108,6 +109,7 @@ require (
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.9.1 // indirect
 	github.com/go-git/go-git/v5 v5.19.2 // indirect
+	github.com/go-playground/form/v4 v4.3.0 // indirect
 	github.com/go-test/deep v1.1.1 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
@@ -146,3 +148,7 @@ require (
 	golang.org/x/time v0.15.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
+
+replace github.com/benpate/toot => github.com/Lawhacknifemi/toot v0.5.1-0.20260908153000-faaa13b43129
+
+replace github.com/benpate/toot-echo => github.com/Lawhacknifemi/toot-echo v0.0.0-20260912150500-b8c7cdd2d7b6
