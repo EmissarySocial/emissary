@@ -103,7 +103,7 @@ func (service *Following) Connect(session data.Session, following *model.Followi
 	actor, err := client.Load(following.URL, asrules.WithReveal(true))
 
 	if err != nil {
-		if inner := service.SetStatusFailure(session, following, "Unable to connect to ActivityPub Actor"); inner != nil {
+		if inner := service.SetStatusFailure(session, following, followingStatusMessage(err)); inner != nil {
 			return derp.Wrap(inner, location, "Refreshing ActivityPub Actor; Unable to mark `Following` record as `Failure`", err)
 		}
 		return derp.Wrap(err, location, "Refreshing ActivityPub Actor")
