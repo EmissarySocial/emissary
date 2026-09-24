@@ -62,10 +62,9 @@ func (s *followingStore) Iterator(exp.Expression, ...option.Option) (data.Iterat
 // Load returns the scripted result for this call index, or NotFound once the script is exhausted.
 func (s *followingStore) Load(_ exp.Expression, target data.Object, _ ...option.Option) error {
 
-	index := s.loadCalls
 	s.loadCalls++
 
-	if index < len(s.loads) && s.loads[index].found {
+	if index := s.loadCalls - 1; index < len(s.loads) && s.loads[index].found {
 		if following, ok := target.(*model.Following); ok {
 			*following = s.loads[index].record
 			return nil

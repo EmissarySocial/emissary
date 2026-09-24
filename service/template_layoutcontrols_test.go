@@ -49,9 +49,7 @@ func loadEmbeddedTemplates(t *testing.T) *Template {
 		}
 
 		filesystem := os.DirFS(filepath.Join(root, entry.Name()))
-		definitionType, definition := findDefinition(filesystem)
-
-		if definitionType == DefinitionTemplate {
+		if definitionType, definition := findDefinition(filesystem); definitionType == DefinitionTemplate {
 			require.NoError(t, templateService.Add(entry.Name(), filesystem, definition), "template %q does not load", entry.Name())
 		}
 	}
