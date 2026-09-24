@@ -167,10 +167,8 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 		ascache.WithIgnoreHeaders(),
 	)
 
-	// Share concurrent Loads of one URL with every other stack in this process that signs as the
-	// same actor.  The hostname is part of the signer, because every domain's Application actor
-	// has the same (nil) actorID.
-	carpoolClient := service.carpool.Client(cacheClient, service.hostname+" "+actorType+":"+actorID.Hex())
+	// Share concurrent Loads of one URL with every other stack in this process that signs as the same actor
+	carpoolClient := service.carpool.Client(cacheClient, carpoolSigner(service.hostname, actorType, actorID))
 
 	// Evaluate the viewer's Rules on every result. This sits ABOVE the cache so that cache hits and
 	// network fetches alike are stamped with a per-viewer verdict (hide + labels) that never touches
@@ -182,6 +180,15 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 	hashClient := ashash.New(rulesClient)
 
 	return hashClient
+}
+
+// carpoolSigner names the actor a client stack signs as, so the Carpool groups only Loads that
+// would have been signed the same way.
+func carpoolSigner(hostname string, actorType string, actorID primitive.ObjectID) string {
+
+	// RULE: The hostname is part of the signer, because every domain's Application actor has the
+	// same (nil) actorID, and each domain signs with its own key.
+	return hostname + " " + actorType + ":" + actorID.Hex()
 }
 
 // ruleChecker returns an asrules.Checker for the given actor: it evaluates a URL -- and, once it
