@@ -10,6 +10,7 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/service"
 	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
+	"github.com/EmissarySocial/emissary/tools/secretcheck"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
@@ -313,7 +314,7 @@ func TestOpenCommonDatabase(t *testing.T) {
 		})
 		require.Error(t, err)
 		require.Nil(t, database)
-		requireNoSecret(t, err, "db-password-secret")
+		secretcheck.RequireAbsent(t, err, "db-password-secret")
 	})
 
 	t.Run("OpensLazily", func(t *testing.T) {
@@ -449,7 +450,7 @@ func TestRefreshFilesystems_KeepsPreviousOnFailure(t *testing.T) {
 	require.Len(t, reported, 3)
 
 	for _, err := range reported {
-		requireNoSecret(t, err, testMasterKey)
+		secretcheck.RequireAbsent(t, err, testMasterKey)
 	}
 }
 

@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"embed"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -16,6 +15,7 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/service"
 	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
+	"github.com/EmissarySocial/emissary/tools/secretcheck"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
@@ -239,17 +239,6 @@ func waitForDomainStartup(t *testing.T) {
 func requireWatchersStopped(t *testing.T, baseline int, message string) {
 	t.Helper()
 	require.Eventually(t, func() bool { return countDomainWatchers() == baseline }, 10*time.Second, 20*time.Millisecond, message)
-}
-
-// requireNoSecret fails if the error, encoded the way an error reporter stores it, contains `secret`
-func requireNoSecret(t *testing.T, err error, secret string) {
-
-	t.Helper()
-
-	encoded, marshalErr := json.Marshal(err)
-	require.NoError(t, marshalErr)
-	require.NotContains(t, string(encoded), secret, "error details must not carry secrets")
-	require.NotContains(t, err.Error(), secret, "error messages must not carry secrets")
 }
 
 // reportRecorder is a derp.Reporter that keeps every error reported to it
@@ -731,8 +720,8 @@ func TestPutDomain_OmitsSecretsFromErrors(t *testing.T) {
 	})
 
 	require.Error(t, err)
-	requireNoSecret(t, err, testMasterKey)
-	requireNoSecret(t, err, "db-password-secret")
+	secretcheck.RequireAbsent(t, err, testMasterKey)
+	secretcheck.RequireAbsent(t, err, "db-password-secret")
 }
 
 // TestRefreshDomain_RequiresCommonDatabase verifies the guard against building a domain factory

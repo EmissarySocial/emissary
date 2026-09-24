@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/config"
+	"github.com/EmissarySocial/emissary/tools/secretcheck"
 	"github.com/benpate/derp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -340,8 +341,8 @@ func TestFactoryConfig_UpdateFailure(t *testing.T) {
 	require.Empty(t, factory.ListDomains(), "a failed save must not be published")
 
 	// The configuration it failed to save carries every domain's secrets
-	requireNoSecret(t, err, testMasterKey)
-	requireNoSecret(t, err, "db-password-secret")
+	secretcheck.RequireAbsent(t, err, testMasterKey)
+	secretcheck.RequireAbsent(t, err, "db-password-secret")
 }
 
 // TestFactoryConfig_MutateGivesUpAfterThreeConflicts pins the retry bound
