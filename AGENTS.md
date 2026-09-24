@@ -6,6 +6,16 @@ Package-specific notes live in the nearest `AGENTS.md` — currently [service](s
 
 Runtime errors are reported to MongoDB by [tools/derp-mongo](tools/derp-mongo/README.md). The command that works through them, [benpate/derp-triage](https://github.com/benpate/derp-triage), lives in its own module and deliberately does not depend on this one.
 
+## Every change must work with several servers running at once
+
+**Production runs several Emissary servers behind a load balancer, all sharing the same common and Domain databases.** Any request can land on any server, and two requests from the same client can land on different ones. Design and review every change on that basis.
+
+**State held in memory belongs to one server.** A mutex, a `singleflight` group, an in-memory cache, a rate-limit counter, or a timer coordinates only the callers inside its own process. It can reduce the load one server generates, but it cannot keep two servers from doing the same work or writing the same record at the same moment.
+
+**Only the database can arbitrate between servers.** Make concurrent writes safe with a unique index, an atomic update or upsert, or a lease document, and test them with two writers that share nothing but the database. A read-then-write, or a delete followed by an insert, is a race whenever two servers run it for the same record.
+
+**One server's restart or config reload leaves the others unchanged.** A stale template, a cached value, or an old setting can keep serving from the servers that were not restarted.
+
 ## Never re-purpose an upgrade slot number
 
 [queries/upgrade.go](queries/upgrade.go) holds an ordered slice of `upgrades.VersionN` functions, and **the slice index is the `databaseVersion` written to each Domain record**. A deployed server that already recorded version N will never re-run slot N, so changing what slot N does silently skips the migration on every existing install while running it on new ones. Only ever append a new slot; to fix a bad migration, add the correction as the next slot.

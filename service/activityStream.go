@@ -18,6 +18,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/clients"
 	"github.com/benpate/hannibal/metadata"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -39,6 +40,7 @@ type ActivityStream struct {
 	getCommonDatabase func() data.Server // read LIVE on every use (never captured): a config reload can reconnect the common database, and a captured handle would fail every call with "client is disconnected"
 	locatorService    *Locator
 	ruleService       *Rule
+	carpool           *clients.Carpool
 	hostname          string
 	queue             *queue.Queue
 	version           string
@@ -63,6 +65,7 @@ func (service *ActivityStream) Refresh(factory *Factory) {
 	service.getCommonDatabase = func() data.Server { return factory.CommonDatabase() }
 	service.locatorService = factory.Locator()
 	service.ruleService = factory.Rule()
+	service.carpool = factory.Carpool()
 	service.hostname = factory.Hostname()
 	service.version = factory.Version()
 	service.queue = factory.Queue()
@@ -164,11 +167,16 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 		ascache.WithIgnoreHeaders(),
 	)
 
+	// Share concurrent Loads of one URL with every other stack in this process that signs as the
+	// same actor.  The hostname is part of the signer, because every domain's Application actor
+	// has the same (nil) actorID.
+	carpoolClient := service.carpool.Client(cacheClient, service.hostname+" "+actorType+":"+actorID.Hex())
+
 	// Evaluate the viewer's Rules on every result. This sits ABOVE the cache so that cache hits and
 	// network fetches alike are stamped with a per-viewer verdict (hide + labels) that never touches
 	// the shared cache. A document the viewer's rules hide is refused before descending (R19);
 	// asrules.WithReveal is the render layer's click-to-reveal override (D2).
-	rulesClient := asrules.New(cacheClient, service.ruleChecker(actorType, actorID))
+	rulesClient := asrules.New(carpoolClient, service.ruleChecker(actorType, actorID))
 
 	// Find inter-page IDs (like https://yo.mama.social/@sofat#main-key)
 	hashClient := ashash.New(rulesClient)

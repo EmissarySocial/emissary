@@ -25,6 +25,7 @@ import (
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/digital-dome/dome"
+	"github.com/benpate/hannibal/clients"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/rosetta/mapof"
@@ -63,6 +64,7 @@ type factoryCore struct {
 	embeddedFiles    embed.FS
 	workingDirectory *mediaserver.WorkingDirectory
 	digitalDome      *dome.Dome
+	carpool          *clients.Carpool
 
 	// reloadLock serializes writers of `wiring` against EACH OTHER.  No reader ever takes it,
 	// so it can be held across the slow parts of a reload -- opening a mongo client, a
@@ -643,6 +645,11 @@ func (factory *factoryCore) DigitalDome() *dome.Dome {
 	return factory.digitalDome
 }
 
+// Carpool returns the process-wide Carpool that merges concurrent ActivityStream Loads
+func (factory *factoryCore) Carpool() *clients.Carpool {
+	return factory.carpool
+}
+
 // HTTPCache returns the shared HTTP cache used by outbound requests
 func (factory *factoryCore) HTTPCache() *httpcache.HTTPCache {
 	return &factory.httpCache
@@ -1215,6 +1222,10 @@ func (factory *factoryCore) init(storage config.Storage, embeddedFiles embed.FS)
 	factory.domains = xsync.NewMap[string, *service.Factory]()
 	factory.embeddedFiles = embeddedFiles
 	factory.jwtService = service.NewJWT()
+
+	// RULE: One Carpool for the whole process, never rebuilt on reload, or concurrent Loads split
+	// between the old and new Carpool and are fetched twice.
+	factory.carpool = clients.NewCarpool()
 
 	// Install an inert placeholder queue, so that a task published before the first config
 	// reload has somewhere to go instead of a nil pointer.  refreshQueue replaces it with a
