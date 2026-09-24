@@ -1,6 +1,7 @@
 package mastodon
 
 import (
+	"context"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -13,6 +14,7 @@ import (
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
 	"github.com/relvacode/iso8601"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // https://docs.joinmastodon.org/methods/statuses/#create
@@ -20,6 +22,12 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 
 	const location = "handler.mastodon_PostStatus"
 	return func(authorization model.Authorization, transaction txn.PostStatus) (object.Status, error) {
+
+		// RULE: every post made here uses a Template that is readable by anyone, so any other
+		// visibility would publish a followers-only or direct post to the world. Refuse it.
+		if transaction.Visibility != "" && transaction.Visibility != "public" {
+			return object.Status{}, derp.BadRequest(location, "Emissary can only post publicly through this API", transaction.Visibility)
+		}
 
 		// Get the factory for this domain
 		factory, err := serverFactory.ByHostname(transaction.Host)
@@ -53,7 +61,11 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		stream.ParentID = authorization.UserID
 		stream.AttributedTo = user.PersonLink()
 		stream.SocialRole = vocab.ObjectTypeNote
-		stream.InReplyTo = transaction.InReplyToID
+		// RULE: InReplyTo's schema requires a real URI (Format: "uri"). transaction.InReplyToID
+		// is whatever GetStatus handed this client back as an "id" -- a NewsItem's hex ID, a
+		// p_-encoded remote URL, or a Stream's hex ID -- none of which validates as a URI on
+		// their own; resolveStatusURL converts it back to the post's actual URL first.
+		stream.InReplyTo = resolveStatusURL(factory, session, authorization, transaction.InReplyToID)
 		stream.Label = transaction.SpoilerText
 
 		if scheduledAt, err := iso8601.ParseString(transaction.ScheduledAt); err == nil {
@@ -75,76 +87,205 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 			return object.Status{}, derp.Wrap(err, location, "Publishing stream")
 		}
 
-		return stream.Toot(), nil
+		// Re-parent any media the client uploaded first (see PostMedia) onto this new Stream.
+		if err := attachStatusMedia(factory, session, authorization, &stream, transaction.MediaIDs); err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Attaching media")
+		}
+
+		status := tootStream(factory, session, &stream)
+		return status, nil
 	}
 }
 
 // https://docs.joinmastodon.org/methods/statuses/#get
+//
+// t.ID may be an encoded remote URL, a NewsItem's hex ID, or a Stream permalink URL;
+// each shape is tried in turn.
 func GetStatus(serverFactory *server.Factory) func(model.Authorization, txn.GetStatus) (object.Status, error) {
 
 	const location = "handler.mastodon_GetStatus"
 
-	return func(authorization model.Authorization, transaction txn.GetStatus) (object.Status, error) {
+	return func(authorization model.Authorization, t txn.GetStatus) (object.Status, error) {
 
-		// Get the Stream from the URL
-		factory, _, stream, err := getStreamFromURL(serverFactory, transaction.ID)
-
-		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Loading stream")
+		if postURL, ok := model.DecodeRemoteStatusID(t.ID); ok {
+			return getRemoteStatus(serverFactory, authorization, t.Host, postURL, location)
 		}
 
-		// Get a database session for this request
-		session, cancel, err := factory.Session(time.Minute)
+		if localID, err := primitive.ObjectIDFromHex(t.ID); err == nil {
+			return getLocalStatus(serverFactory, authorization, t.Host, localID, location)
+		}
+
+		return getStatusByStreamURL(serverFactory, authorization, t.ID, location)
+	}
+}
+
+// getRemoteStatus resolves a status reached some other way than the feed (a profile's
+// posts, a hashtag timeline, a notification) -- its ID is the post's own URL, encoded
+// per model.DecodeRemoteStatusID.
+func getRemoteStatus(serverFactory *server.Factory, authorization model.Authorization, host string, postURL string, location string) (object.Status, error) {
+
+	factory, session, cancel, err := statusSession(serverFactory, host, location)
+
+	if err != nil {
+		return object.Status{}, err
+	}
+
+	defer cancel()
+
+	return statusForPostURL(factory, session, authorization, postURL, location)
+}
+
+// getLocalStatus resolves a status by a local ID -- a NewsItem in the caller's feed
+// (a timeline post) or, failing that, a Stream they own or may view directly.
+func getLocalStatus(serverFactory *server.Factory, authorization model.Authorization, host string, id primitive.ObjectID, location string) (object.Status, error) {
+
+	factory, session, cancel, err := statusSession(serverFactory, host, location)
+
+	if err != nil {
+		return object.Status{}, err
+	}
+
+	defer cancel()
+
+	newsItem := model.NewNewsItem()
+
+	if err := factory.NewsFeed().LoadByID(session, authorization.UserID, id, &newsItem); err == nil {
+		return reloadedStatus(factory, session, authorization, newsItem.NewsItemID, location)
+	}
+
+	stream := model.NewStream()
+
+	if err := factory.Stream().LoadByID(session, id, &stream); err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Loading stream", id)
+	}
+
+	if err := userCanStream(factory, session, &authorization, &stream, "view"); err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Viewing stream")
+	}
+
+	status := tootStream(factory, session, &stream)
+	return status, nil
+}
+
+// getStatusByStreamURL resolves a status from its Stream's own canonical URL -- the
+// shape GetStatus originally expected in every case.
+func getStatusByStreamURL(serverFactory *server.Factory, authorization model.Authorization, streamURL string, location string) (object.Status, error) {
+
+	factory, _, stream, err := getStreamFromURL(serverFactory, streamURL)
+
+	if err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Loading stream")
+	}
+
+	session, cancel, err := factory.Session(time.Minute)
+
+	if err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Creating session")
+	}
+
+	defer cancel()
+
+	if err := userCanStream(factory, session, &authorization, &stream, "view"); err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Viewing stream")
+	}
+
+	status := tootStream(factory, session, &stream)
+	return status, nil
+}
+
+// resolveStatusURL converts a status ID this API handed out -- a NewsItem's hex ID, an
+// encoded remote URL, or a Stream's hex ID -- back into that post's own URL. An ID this
+// can't resolve is returned as-is, on the assumption it was already a URL.
+func resolveStatusURL(factory *service.Factory, session data.Session, authorization model.Authorization, id string) string {
+
+	if id == "" {
+		return ""
+	}
+
+	if postURL, ok := model.DecodeRemoteStatusID(id); ok {
+		return postURL
+	}
+
+	localID, err := primitive.ObjectIDFromHex(id)
+
+	if err != nil {
+		return id
+	}
+
+	newsItem := model.NewNewsItem()
+
+	if err := factory.NewsFeed().LoadByID(session, authorization.UserID, localID, &newsItem); err == nil {
+		return newsItem.URL
+	}
+
+	stream := model.NewStream()
+
+	if err := factory.Stream().LoadByID(session, localID, &stream); err == nil {
+		return stream.ActivityPubURL()
+	}
+
+	return id
+}
+
+// statusSession resolves the Domain factory for the request's Host and opens a
+// session, for GetStatus's ID-based resolution paths (t.Host-scoped, unlike
+// getStreamFromURL which derives the domain from the URL itself).
+func statusSession(serverFactory *server.Factory, host string, location string) (*service.Factory, data.Session, context.CancelFunc, error) {
+
+	factory, err := serverFactory.ByHostname(host)
+
+	if err != nil {
+		return nil, nil, nil, derp.Wrap(err, location, "Unrecognized Domain")
+	}
+
+	session, cancel, err := factory.Session(time.Minute)
+
+	if err != nil {
+		return nil, nil, nil, derp.Wrap(err, location, "Creating session")
+	}
+
+	return factory, session, cancel, nil
+}
+
+// https://docs.joinmastodon.org/methods/statuses/#delete
+func DeleteStatus(serverFactory *server.Factory) func(model.Authorization, txn.DeleteStatus) (object.Status, error) {
+
+	const location = "handler.mastodon_DeleteStatus"
+
+	return func(authorization model.Authorization, transaction txn.DeleteStatus) (object.Status, error) {
+
+		// RULE: transaction.ID may be a Stream's hex ID or an older permalink URL, so resolve
+		// the domain from transaction.Host rather than parsing it as a URL.
+		factory, session, cancel, err := statusSession(serverFactory, transaction.Host, location)
 
 		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Creating session")
+			return object.Status{}, err
 		}
 
 		defer cancel()
 
-		// Validate that this user is allowed to view this Stream
-		if err := userCanStream(factory, session, &authorization, &stream, "view"); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Viewing stream")
-		}
+		stream := model.NewStream()
 
-		// Return the value
-		return stream.Toot(), nil
-	}
-}
-
-// https://docs.joinmastodon.org/methods/statuses/#delete
-func DeleteStatus(serverFactory *server.Factory) func(model.Authorization, txn.DeleteStatus) (struct{}, error) {
-
-	const location = "handler.mastodon_DeleteStatus"
-
-	return func(authorization model.Authorization, transaction txn.DeleteStatus) (struct{}, error) {
-
-		factory, streamService, stream, err := getStreamFromURL(serverFactory, transaction.ID)
-
-		if err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Loading stream")
+		if err := loadStreamByStatusID(factory, session, transaction.ID, &stream); err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Loading stream", transaction.ID)
 		}
 
 		// Validate that this user is allowed to delete this Stream.  Deleting is an
 		// author-only operation, matching the Mastodon API contract.
 		if err := userOwnsStream(&authorization, &stream); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Deleting stream")
+			return object.Status{}, derp.Wrap(err, location, "Deleting stream")
 		}
 
-		// Get a database session for this request
-		session, cancel, err := factory.Session(time.Minute)
+		// RULE: the real Mastodon API returns the deleted Status itself (its client uses this
+		// to offer "delete & redraft" -- restoring the text into a new compose box), not an
+		// empty object. Build it before Delete empties the Stream's own fields out from under us.
+		status := tootStream(factory, session, &stream)
 
-		if err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Creating session")
+		if err := factory.Stream().Delete(session, &stream, "Deleted via Mastodon API"); err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Deleting stream")
 		}
 
-		defer cancel()
-
-		if err := streamService.Delete(session, &stream, "Deleted via Mastodon API"); err != nil {
-			return struct{}{}, derp.Wrap(err, location, "Deleting stream")
-		}
-
-		return struct{}{}, nil
+		return status, nil
 	}
 }
 
@@ -251,14 +392,9 @@ func PostStatus_Unreblog(serverFactory *server.Factory) func(model.Authorization
 	}
 }
 
-// reactToStatus sets (or, when undo is true, clears) the caller's response of the
-// given type on the post behind a status ID, and returns that post. SetResponse
-// and UnsetResponse publish the activity and are idempotent, as the Mastodon API
-// requires.
-//
-// The post is normally a NewsItem in the caller's feed. A post reached some other
-// way (a profile's posts) has only an encoded URL for an ID; the response service
-// works from a URL alone, so such a post is reacted to directly.
+// reactToStatus sets (or, when undo is true, clears) the caller's response of the given
+// type on the post behind a status ID, and returns that post -- a NewsItem in the feed,
+// or else the URL encoded in the ID.
 func reactToStatus(serverFactory *server.Factory, host string, auth model.Authorization, statusID string, responseType string, content string, undo bool, location string) (object.Status, error) {
 
 	factory, err := serverFactory.ByHostname(host)
@@ -355,24 +491,9 @@ func statusForPostURL(factory *service.Factory, session data.Session, auth model
 
 	status.Favourited = responseService.LoadByUserAndObject(session, auth.UserID, postURL, vocab.ActivityTypeLike, &response) == nil
 	status.Reblogged = responseService.LoadByUserAndObject(session, auth.UserID, postURL, vocab.ActivityTypeAnnounce, &response) == nil
+	status.Bookmarked = isBookmarked(factory, session, auth.UserID, postURL)
 
 	return status, nil
-}
-
-// https://docs.joinmastodon.org/methods/statuses/#bookmark
-func PostStatus_Bookmark(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Bookmark) (object.Status, error) {
-
-	return func(auth model.Authorization, t txn.PostStatus_Bookmark) (object.Status, error) {
-		return object.Status{}, derp.NotImplemented("handler.mastodon.PostStatus_Bookmark")
-	}
-}
-
-// https://docs.joinmastodon.org/methods/statuses/#unbookmark
-func PostStatus_Unbookmark(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Unbookmark) (object.Status, error) {
-
-	return func(auth model.Authorization, t txn.PostStatus_Unbookmark) (object.Status, error) {
-		return object.Status{}, derp.NotImplemented("handler.mastodon.PostStatus_Unbookmark")
-	}
 }
 
 // https://docs.joinmastodon.org/methods/statuses/#mute
@@ -459,7 +580,7 @@ func PostStatus_Unmute(serverFactory *server.Factory) func(model.Authorization, 
 func PostStatus_Pin(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Pin) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Pin) (object.Status, error) {
-		return object.Status{}, derp.NotImplemented("handler.mastodon.PostStatus_Pin")
+		return setStatusPinned(serverFactory, auth, t.Host, t.ID, true, "handler.mastodon.PostStatus_Pin")
 	}
 }
 
@@ -467,8 +588,62 @@ func PostStatus_Pin(serverFactory *server.Factory) func(model.Authorization, txn
 func PostStatus_Unpin(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Unpin) (object.Status, error) {
 
 	return func(auth model.Authorization, t txn.PostStatus_Unpin) (object.Status, error) {
-		return object.Status{}, derp.NotImplemented("handler.mastodon.PostStatus_Unpin")
+		return setStatusPinned(serverFactory, auth, t.Host, t.ID, false, "handler.mastodon.PostStatus_Unpin")
 	}
+}
+
+// setStatusPinned features (pins) or unfeatures one of the caller's own posts. A pin is
+// Stream.IsFeatured -- the same flag that fills the user's ActivityPub "featured" collection
+// (service.Stream.QueryFeaturedByUser), so pins made here federate the same way.
+func setStatusPinned(serverFactory *server.Factory, auth model.Authorization, host string, statusID string, pinned bool, location string) (object.Status, error) {
+
+	factory, session, cancel, err := statusSession(serverFactory, host, location)
+
+	if err != nil {
+		return object.Status{}, err
+	}
+
+	defer cancel()
+
+	stream := model.NewStream()
+
+	if err := loadStreamByStatusID(factory, session, statusID, &stream); err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Loading stream", statusID)
+	}
+
+	// RULE: pinning is a write, so it is author-only (see userOwnsStream)
+	if err := userOwnsStream(&auth, &stream); err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Pinning stream")
+	}
+
+	// RULE: the featured collection is read by parentId == userId, so only a post in the
+	// caller's own outbox can be pinned (a domain owner is authorized above, not here).
+	if stream.ParentID != auth.UserID {
+		return object.Status{}, derp.BadRequest(location, "Only your own posts can be pinned")
+	}
+
+	if stream.IsFeatured != pinned {
+
+		stream.IsFeatured = pinned
+
+		if err := factory.Stream().Save(session, &stream, "Pinned via Mastodon API"); err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Saving stream")
+		}
+	}
+
+	status := tootStream(factory, session, &stream)
+	return status, nil
+}
+
+// loadStreamByStatusID loads the Stream behind a status ID -- the Stream's hex ID (what
+// Stream.Toot hands out) or, failing that, its URL.
+func loadStreamByStatusID(factory *service.Factory, session data.Session, statusID string, stream *model.Stream) error {
+
+	if streamID, err := primitive.ObjectIDFromHex(statusID); err == nil {
+		return factory.Stream().LoadByID(session, streamID, stream)
+	}
+
+	return factory.Stream().LoadByURL(session, statusID, stream)
 }
 
 // https://docs.joinmastodon.org/methods/statuses/#edit
@@ -478,28 +653,22 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 
 	return func(auth model.Authorization, t txn.PutStatus) (object.Status, error) {
 
-		// Get the factory for this Domain
-		factory, err := serverFactory.ByHostname(t.Host)
+		// RULE: t.ID is whatever this API handed the client back for the status (a Stream's
+		// hex ID, ordinarily) -- never necessarily its own URL, which LoadByURL alone required
+		// and made every edit 404 (see loadStreamByStatusID / DeleteStatus's identical fix).
+		factory, session, cancel, err := statusSession(serverFactory, t.Host, location)
 
 		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Invalid Domain")
-		}
-
-		// Get a database session for this request
-		session, cancel, err := factory.Session(time.Minute)
-
-		if err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Creating session")
+			return object.Status{}, err
 		}
 
 		defer cancel()
 
-		// Load the message from the database
 		streamService := factory.Stream()
 		stream := model.NewStream()
 
-		if err := streamService.LoadByURL(session, t.ID, &stream); err != nil {
-			return object.Status{}, derp.Wrap(err, location, "Loading stream")
+		if err := loadStreamByStatusID(factory, session, t.ID, &stream); err != nil {
+			return object.Status{}, derp.Wrap(err, location, "Loading stream", t.ID)
 		}
 
 		// Validate that this user is allowed to edit this Stream.  Editing is an
@@ -509,7 +678,11 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 		}
 
 		// Edit stream values
-		stream.Content.Raw = t.Status
+		//
+		// RULE: rebuild via contentService.New, not just .Raw -- .HTML is what every reader
+		// (tootStream, the web page, federation) actually renders.
+		contentService := factory.Content()
+		stream.Content = contentService.New(stream.Content.Format, t.Status)
 		stream.Label = t.SpoilerText
 		// t.Sensitive
 		// t.Language
@@ -522,7 +695,8 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 			return object.Status{}, derp.Wrap(err, location, "Saving stream")
 		}
 
-		return stream.Toot(), nil
+		status := tootStream(factory, session, &stream)
+		return status, nil
 	}
 }
 
@@ -541,28 +715,19 @@ func GetStatus_Source(serverFactory *server.Factory) func(model.Authorization, t
 
 	return func(auth model.Authorization, t txn.GetStatus_Source) (object.StatusSource, error) {
 
-		// Get the factory for this Domain
-		factory, err := serverFactory.ByHostname(t.Host)
+		// RULE: see PutStatus -- t.ID needs the same ID-shape resolution, not LoadByURL alone.
+		factory, session, cancel, err := statusSession(serverFactory, t.Host, location)
 
 		if err != nil {
-			return object.StatusSource{}, derp.Wrap(err, location, "Invalid Domain")
-		}
-
-		// Get a database session for this request
-		session, cancel, err := factory.Session(time.Minute)
-
-		if err != nil {
-			return object.StatusSource{}, derp.Wrap(err, location, "Creating session")
+			return object.StatusSource{}, err
 		}
 
 		defer cancel()
 
-		// Load the message from the database
-		streamService := factory.Stream()
 		stream := model.NewStream()
 
-		if err := streamService.LoadByURL(session, t.ID, &stream); err != nil {
-			return object.StatusSource{}, derp.Wrap(err, location, "Loading stream")
+		if err := loadStreamByStatusID(factory, session, t.ID, &stream); err != nil {
+			return object.StatusSource{}, derp.Wrap(err, location, "Loading stream", t.ID)
 		}
 
 		// Validate that this user is allowed to view this Stream
