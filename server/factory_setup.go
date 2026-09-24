@@ -11,21 +11,14 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// SetupFactory manages the server-level services used by the setup console.
-// Unlike the live Factory, it runs without a common (ActivityPub Cache) database:
-// the connection is attempted best-effort, and domain management stays disabled
-// (with a clear error, not a crash) until one is configured. (FACTORY-MODES D1/D7)
-//
-// It adds no state of its own -- even the "is the database verified?" flag lives in the shared
-// wiring (commonDatabaseVerified) -- so the whole difference between the modes is which
-// lifecycle methods run.
+// SetupFactory manages the server-level services used by the setup console, which
+// can run without a common (ActivityPub Cache) database.
 type SetupFactory struct {
-	factoryCore
+	factoryCore // No state of its own; the modes differ only in which lifecycle methods run
 }
 
-// NewSetupFactory uses the provided configuration data to generate a factory
-// for the setup console.  It never exits on a missing or unreachable common
-// database, because fixing the configuration is the whole point of setup.
+// NewSetupFactory returns a SetupFactory built from the first configuration.
+// A missing or unreachable common database is reported, never fatal.
 func NewSetupFactory(storage config.Storage, firstConfig config.Config, subscription <-chan config.Config, embeddedFiles embed.FS) *SetupFactory {
 
 	// Build the mode-independent core in place (see factoryCore.init for why in place matters)
@@ -48,30 +41,23 @@ func NewSetupFactory(storage config.Storage, firstConfig config.Config, subscrip
 }
 
 // start applies every configuration update published by the storage service.
-//
-// RULE: The setup console MUST drain this channel, even though it is the process that usually
-// writes the configuration rather than reading it.  The channel holds a single slot, so an
-// un-drained subscription used to wedge the storage watcher permanently AND freeze the console's
-// own view of the configuration at boot -- after which its next save would write that stale
-// snapshot back over whatever another node had changed in the meantime.
 func (factory *SetupFactory) start(subscription <-chan config.Config) {
 
+	// RULE: Always drain this single-slot channel, or the storage watcher wedges
+	// and the console's next save overwrites other nodes' changes.
 	for config := range subscription {
 		log.Info().Msg("Setup: configuration file (updated)")
 		factory.configure(config)
 	}
 }
 
-// configure applies a server configuration to the SetupFactory.  It mirrors the
-// live Factory's readConfig, minus everything that requires a working common
-// database or would touch production state (queue storage, scheduler, JWT).
-//
-// RULE: The whole reload runs under reloadLock, which serializes it against any other reload
-// (including a save posted from the console at the same moment) but is never taken by a reader.
+// configure applies a server configuration to the SetupFactory, skipping everything
+// that requires the common database or touches production state.
 func (factory *SetupFactory) configure(config config.Config) {
 
 	const location = "server.SetupFactory.configure"
 
+	// RULE: Serialize against every other reload, including a save posted from the console
 	factory.reloadLock.Lock()
 	defer factory.reloadLock.Unlock()
 
@@ -89,16 +75,10 @@ func (factory *SetupFactory) configure(config config.Config) {
 	factory.setConfigLocked(config)
 
 	// Refresh these global services with values we'll always need.
-	factory.emailService.Refresh()
 	factory.templateService.Refresh(config.Templates)
 
-	// RULE: The common database is best-effort in setup mode (FACTORY-MODES D1): connect if
-	// configured, warn if not.  Domain management stays disabled until it connects.
-	//
-	// Verification is on, so the connection is pinged before it is published.  The unchanged-
-	// guard inside refreshCommonDatabase keeps this cheap: reloads are frequent now that the
-	// console drains the subscription (its own saves echo back through the change stream), and
-	// re-pinging plus re-synchronizing every shared index on each echo would be for nothing.
+	// RULE: The common database is best-effort here: connect (with a ping) if configured,
+	// warn if not.  Domain management stays disabled until it connects.
 	if config.ActivityPubCache.IsEmpty() {
 		log.Warn().Msg("Setup: No ActivityPub Cache database configured yet. Domains cannot be added until it is.")
 	} else if _, err := factory.refreshCommonDatabase(config.ActivityPubCache, true); err != nil {
@@ -124,21 +104,18 @@ func (factory *SetupFactory) configure(config config.Config) {
 	}
 }
 
-// UpdateConfig saves the configuration, then applies whatever the setup console can
-// act on immediately: connecting the ActivityPub Cache database and (re)building
-// domain factories.  It shadows the core's UpdateConfig for setup mode only.
+// UpdateConfig saves the configuration, then connects the ActivityPub Cache database
+// and rebuilds domain factories if its settings changed.
 func (factory *SetupFactory) UpdateConfig(value config.Config) error {
 
 	const location = "server.SetupFactory.UpdateConfig"
 
-	// RULE: This is a reload in everything but name -- it connects a database and rebuilds
-	// domain factories -- so it takes reloadLock, and cannot interleave with one arriving from
-	// the storage subscription.
+	// RULE: This is a reload in everything but name, so it takes reloadLock and
+	// cannot interleave with one arriving from the storage subscription.
 	factory.reloadLock.Lock()
 	defer factory.reloadLock.Unlock()
 
-	// Save the configuration.  This is the "accept" half of accept-but-warn (FACTORY-MODES
-	// D1): the config persists even if the connection attempt below fails.
+	// Save the configuration.  It persists even if the connection attempt below fails.
 	if err := factory.updateConfigLocked(value); err != nil {
 		return derp.Wrap(err, location, "Writing configuration")
 	}
@@ -150,17 +127,15 @@ func (factory *SetupFactory) UpdateConfig(value config.Config) error {
 		return nil
 	}
 
-	// Connect + verify.  This is the "warn" half of accept-but-warn: the settings are already
-	// saved, so a failure comes back as a warning on the console form, not a rejected save.
-	// The unchanged-guard inside skips all of it when the settings match the current verified
-	// connection -- a gratuitous reconnect would strand existing domain factories on a closed
-	// mongo client.
+	// Connect and verify.  The settings are already saved, so a failure is a warning on the
+	// console form, not a rejected save.  Unchanged settings keep the current connection.
 	changed, err := factory.refreshCommonDatabase(newCache, true)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Your settings were SAVED, but Emissary could not connect to the ActivityPub Cache database. Domains cannot be added until this is fixed.")
 	}
 
+	// Existing domain factories are still valid on an unchanged connection
 	if !changed {
 		return nil
 	}

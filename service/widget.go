@@ -107,6 +107,9 @@ func (service *Widget) List() []form.LookupCode {
 
 // IsValidWidgetType returns TRUE if the provided widget type has been registered
 func (service *Widget) IsValidWidgetType(widgetType string) bool {
+	service.mutex.RLock()
+	defer service.mutex.RUnlock()
+
 	_, ok := service.widgets[widgetType]
 	return ok
 }
