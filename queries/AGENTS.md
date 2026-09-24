@@ -38,7 +38,7 @@ Service `Rule.Save` keys ACTOR rules by the resolved canonical actor URL, but [u
 
 ## Nothing purges SearchResults by age
 
-There is no global time-based purge. The daily tasks are PurgeActivityStreamCache, PurgeErrors, PurgeDomeLog, Shuffle, RecycleDomain, PurgeImports, and PurgeNotifications; hourly is PollFollowing-Index; startup queues only the Stripe Connect repair ([BUG-179](../../emissary-specs/bugs/BUG-179-Stripe-Connect-Webhook-Secret-Never-Stored.md)), which purges nothing. `queries.Recycle` only touches rows with `deleteDate > 0` older than 30 days, and SearchResults are **hard** deleted, so they never carry a deleteDate — and there is no TTL index on the collection. A SearchResult therefore lives forever unless something deletes it explicitly. Do not assume a retention window exists when reasoning about growth or about stale rows.
+There is no global time-based purge. The daily tasks are PurgeActivityStreamCache, PurgeErrors, PurgeDomeLog, Shuffle, RecycleDomain, PurgeImports, and PurgeNotifications; hourly is PollFollowing-Index; startup queues only the Stripe Connect repair ([BUG-179](../../emissary-specs/bugs/_done/BUG-179-Stripe-Connect-Webhook-Secret-Never-Stored.md)), which purges nothing. `queries.Recycle` only touches rows with `deleteDate > 0` older than 30 days, and SearchResults are **hard** deleted, so they never carry a deleteDate — and there is no TTL index on the collection. A SearchResult therefore lives forever unless something deletes it explicitly. Do not assume a retention window exists when reasoning about growth or about stale rows.
 
 ## An aggregation-pipeline `$set` BROADCASTS across an existing array
 
