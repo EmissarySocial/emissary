@@ -60,7 +60,7 @@ func loadEmbeddedTemplates(t *testing.T) *Template {
 	}
 
 	require.NoError(t, templateService.calculateAllInheritance())
-	require.NoError(t, templateService.calculateAccessLists())
+	templateService.calculateAccessLists()
 
 	// The listing functions read the LIVE map, so a service left in prep answers every List
 	// call with nothing.  loadTemplates ends with this same copy.

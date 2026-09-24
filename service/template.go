@@ -99,10 +99,7 @@ func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
 	// templates.  A later Refresh with templates already live must NOT halt.
 	haltOnError := len(service.templates) == 0
 
-	if err := service.loadTemplates(haltOnError); err != nil {
-		derp.Report(derp.Wrap(err, "service.Template.Refresh", "Loading templates from filesystem"))
-		return
-	}
+	service.loadTemplates(haltOnError)
 
 	// Try to watch the template directory for changes
 	go service.watch(locations, done)
@@ -136,9 +133,7 @@ func (service *Template) watch(locations sliceof.Object[mapof.String], done chan
 			// A watch-triggered reload must never halt the process: the previously-loaded
 			// templates are still serving, so on error we report and keep running.
 			service.reloadLock.Lock()
-			if err := service.loadTemplates(false); err != nil {
-				derp.Report(derp.Wrap(err, "service.template.Watch", "Loading templates from filesystem"))
-			}
+			service.loadTemplates(false)
 			service.reloadLock.Unlock()
 
 		case <-done:
@@ -149,12 +144,11 @@ func (service *Template) watch(locations sliceof.Object[mapof.String], done chan
 
 // loadTemplates (re)loads every template from the configured filesystem locations.
 // The caller must hold reloadLock.
-// haltOnError controls what happens when a location fails to load: on the very first
-// load (initial boot) there are no live templates to fall back on, so an error is fatal
-// and the process exits.  On a subsequent watch-triggered reload the previously-loaded
-// templates are still serving, so an error is reported and the reload is abandoned --
-// never killing the running server.
-func (service *Template) loadTemplates(haltOnError bool) error {
+// It returns nothing because nothing can abandon it partway: a location or definition that fails
+// is reported and skipped, and on the very first load (haltOnError) it exits the process instead,
+// because there are no live templates to fall back on.  Templates that fail validation are
+// reported and not published, and the previously-loaded templates keep serving (BUG-180).
+func (service *Template) loadTemplates(haltOnError bool) {
 
 	const location = "service.template.loadTemplates"
 
@@ -252,13 +246,11 @@ func (service *Template) loadTemplates(haltOnError bool) error {
 		}
 		log.Error().Msg("Finished reporting " + errorLength + " template errors.  Some templates may not function properly.")
 
-		return nil
+		return
 	}
 
 	// Calculate access lists for all Templates
-	if err := service.calculateAccessLists(); err != nil {
-		return derp.Wrap(err, location, "Calculating access lists")
-	}
+	service.calculateAccessLists()
 
 	// Assign the prep area to live
 	service.templateLock.Lock()
@@ -269,8 +261,6 @@ func (service *Template) loadTemplates(haltOnError bool) error {
 	// Clear out the existing prep area
 	service.templatePrep = make(set.Map[model.Template])
 	log.Debug().Msg("Template Service: Added/Updated " + strconv.Itoa(len(service.templates)) + " templates")
-
-	return nil
 }
 
 // maybeHalt reports an error, and exits the process if the caller asked it to be fatal
@@ -642,9 +632,7 @@ func (service *Template) calculateInheritance(template model.Template) (model.Te
 }
 
 // calculateAccessLists calculates the access lists for every Template in the prep area
-func (service *Template) calculateAccessLists() error {
-
-	const location = "service.template.calculateAccessLists"
+func (service *Template) calculateAccessLists() {
 
 	// For every template in the prep area...
 	for _, template := range service.templatePrep {
@@ -653,9 +641,7 @@ func (service *Template) calculateAccessLists() error {
 		for actionID, action := range template.Actions {
 
 			// Calculate the AccessLists for this Action
-			if err := action.CalcAccessList(&template, true); err != nil {
-				return derp.Wrap(err, location, "Invalid AccessList", template.TemplateID, actionID)
-			}
+			action.CalcAccessList(&template, true)
 
 			// Apply changes back into the Action set
 			template.Actions[actionID] = action
@@ -664,8 +650,6 @@ func (service *Template) calculateAccessLists() error {
 		// Apply changes back to the Template prep area
 		service.templatePrep[template.TemplateID] = template
 	}
-
-	return nil
 }
 
 /******************************************

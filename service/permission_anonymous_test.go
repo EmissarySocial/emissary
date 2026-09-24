@@ -46,7 +46,7 @@ func anonymousTemplate(t *testing.T, actionID string, states []string, roles ...
 	}
 
 	loaded := template.Actions[actionID]
-	require.NoError(t, loaded.CalcAccessList(&template, false))
+	loaded.CalcAccessList(&template, false)
 	template.Actions[actionID] = loaded
 
 	return template

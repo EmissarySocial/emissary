@@ -32,7 +32,7 @@ func NewAction() Action {
 
 // CalcAccessList translates the roles, states, and stateRoles settings into a compact AccessList that
 // can quickly determine if a user can perform this action on objects given their current state.
-func (action *Action) CalcAccessList(template *Template, debug bool) error {
+func (action *Action) CalcAccessList(template *Template, debug bool) {
 
 	// Initialize/Reset the AccessList
 	action.AccessList = mapof.NewObject[sliceof.String]()
@@ -53,8 +53,6 @@ func (action *Action) CalcAccessList(template *Template, debug bool) error {
 		// Set the AccessList for this State
 		action.AccessList[stateID] = action.calcAccessListForStateAndRole(stateID)
 	}
-
-	return nil
 }
 
 // calcAccessListForStateAndRole returns every role allowed to run this Action while a Stream is in the provided state
