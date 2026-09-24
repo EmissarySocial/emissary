@@ -17,12 +17,12 @@ func (service *Following) SetStatusPollError(session data.Session, following *mo
 
 	const location = "service.Following.SetStatusPollError"
 
-	// RULE: A 429 rate-limits the HOST, not this record, so callers requeue it instead of calling this.
-	// Anything that does arrive here is a fact about the Following itself.
+	// RULE: A 429 rate-limits the whole HOST, so callers requeue it and never call this method.
+	// Anything that arrives here is a fact about the Following itself.
 	statusMessage := followingStatusMessage(err)
 
-	// RULE: A 410 is the remote server stating the account is DELETED, not a guess we are
-	// making.  Mastodon answers 410 for a deleted account, so this needs no waiting period.
+	// RULE: A 410 is the remote server stating that the account was DELETED.  Mastodon answers
+	// 410 for a deleted account, so GONE needs no waiting period.
 	if derp.ErrorCode(err) == http.StatusGone {
 
 		if inner := service.SetStatusGone(session, following, statusMessage); inner != nil {
@@ -81,8 +81,8 @@ func followingStatusMessage(err error) string {
 	return "Could not reach this server: " + derp.RootMessage(err)
 }
 
-// answeredWithoutActor reports whether a failed Actor load was a response that ARRIVED intact and
-// simply was not an Actor, returning the status and media type it arrived as.
+// answeredWithoutActor reports whether a failed Actor load was a 2xx response that arrived intact
+// but held no Actor, returning the status and media type it arrived as.
 func answeredWithoutActor(err error) (int, string, bool) {
 
 	// RULE: The header is written by the remote server, so it is bounded before it is quoted.

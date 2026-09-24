@@ -90,8 +90,8 @@ func actorError(factory *service.Factory, session data.Session, following *model
 
 	log.Debug().Str("location", location).Str("following", following.URL).Int("code", derp.ErrorCode(err)).Msg("Poll failed")
 
-	// RULE: A 429 rate-limits the HOST, not this record, so it reschedules the task and
-	// leaves the Following untouched.  Recording it would count a throttle as the record's failure.
+	// RULE: A 429 rate-limits the whole HOST, so it reschedules the task and leaves the Following
+	// untouched.  Recording it would count the host's throttle as this record's failure.
 	if isTooMany, _ := derp.IsTooManyRequests(err); isTooMany {
 		return requeue(derp.Wrap(err, location, "Loading ActivityPub Actor", "following: "+following.URL))
 	}
@@ -129,7 +129,7 @@ func shouldReportPollError(err error) bool {
 }
 
 // answeredWithoutActor returns TRUE if a failed Actor load was a 2xx response that arrived intact
-// and simply was not an Actor.
+// but held no Actor.
 func answeredWithoutActor(err error) bool {
 
 	// The response that arrived is carried by the HTTPError, whatever code the wrapping added

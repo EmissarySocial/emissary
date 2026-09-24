@@ -22,18 +22,6 @@ import (
  * SetStatusPollError
  ******************************************/
 
-// newPollErrorService returns a Following service that writes into an in-memory collection
-func newPollErrorService() (Following, backoffSession, *backoffCollection) {
-
-	collection := &backoffCollection{}
-	session := backoffSession{collection: collection}
-
-	// Buffered so the service's own status broadcast does not block the test
-	updates := make(chan realtime.Message, 8)
-
-	return Following{sseUpdateChannel: updates}, session, collection
-}
-
 // TestSetStatusPollError_Gone confirms that only the remote server's own 410 marks a Following GONE
 func TestSetStatusPollError_Gone(t *testing.T) {
 
@@ -55,8 +43,8 @@ func TestSetStatusPollError_Failure(t *testing.T) {
 
 	cases := []error{
 
-		// RULE: 404 is NOT 410. A missing document is too easy to hit by misconfiguration, and
-		// BUG-148's own Defect B was a 404 on a key that this server was wrongly withholding.
+		// RULE: 404 is NOT 410. Misconfiguration produces a missing document often, and BUG-148's
+		// own Defect B was a 404 on a key that this server was wrongly withholding.
 		httpStatus(http.StatusNotFound),
 
 		// RULE: 401/403 never shortcut to dead. Defect B's 401s were OUR defect, and abandoning
@@ -88,8 +76,9 @@ func TestSetStatusPollError_Failure(t *testing.T) {
 }
 
 // TestSetStatusPollError_EveryCode confirms that 410 is the only status with special treatment.
-// A 429 is recorded too if it ever arrives here, which is why callers requeue it first.
 func TestSetStatusPollError_EveryCode(t *testing.T) {
+
+	// A 429 is recorded too if it ever arrives here, which is why callers requeue it first
 
 	for code := range 600 {
 
@@ -121,8 +110,10 @@ func TestSetStatusPollError_Pauses(t *testing.T) {
 }
 
 // TestSetStatusPollError_BoundsTheMessage confirms the message fits model.Following's
-// "statusMessage" schema, which rejects anything over 1024 -- a quoted root message has no bound.
+// "statusMessage" schema, which rejects anything over 1024 bytes.
 func TestSetStatusPollError_BoundsTheMessage(t *testing.T) {
+
+	// A quoted root message has no bound of its own
 
 	service, session, _ := newPollErrorService()
 	following := model.NewFollowing()
@@ -134,7 +125,7 @@ func TestSetStatusPollError_BoundsTheMessage(t *testing.T) {
 }
 
 // TestFollowing_StatusSetters_BoundTheMessage confirms that every setter taking a caller's message
-// enforces the schema itself, so no caller has to remember to
+// bounds it to the schema itself.
 func TestFollowing_StatusSetters_BoundTheMessage(t *testing.T) {
 
 	huge := strings.Repeat("x", 100_000)
@@ -165,9 +156,8 @@ func TestFollowing_StatusSetters_BoundTheMessage(t *testing.T) {
  * followingStatusMessage
  ******************************************/
 
-// TestFollowingStatusMessage checks the sentence that reaches the Following's owner. Until
-// BUG-148 nothing told a user their follow had stopped working, so the message is the
-// user-visible half of the fix and names the HTTP code for anyone reporting it.
+// TestFollowingStatusMessage checks the sentence that reaches the Following's owner, which names
+// the HTTP code for anyone reporting it.
 func TestFollowingStatusMessage(t *testing.T) {
 
 	// A refusal reads as a refusal, and names its code
@@ -201,9 +191,10 @@ func TestFollowingStatusMessage(t *testing.T) {
 }
 
 // TestFollowingStatusMessage_Transport covers the failures that never reach a server at all.
-// derp reports a DNS or TLS failure as 500, the same as a real server error, so naming the code
-// would tell the owner "(500)" about a domain that does not resolve.
 func TestFollowingStatusMessage_Transport(t *testing.T) {
+
+	// RULE: derp reports a DNS or TLS failure as 500, like a real server error, so naming the code
+	// would tell the owner "(500)" about a domain that does not resolve.
 
 	message := followingStatusMessage(errors.New("dial tcp: lookup gone.example: no such host"))
 	require.Contains(t, message, "Could not reach this server")
@@ -215,8 +206,7 @@ func TestFollowingStatusMessage_Transport(t *testing.T) {
 }
 
 // TestFollowingStatusMessage_AnsweredWithoutActor covers the sentence for a server that answered
-// perfectly well with something that is not an account. Saying it could not be reached is the
-// opposite of what happened, and it is what the owner of all five BUG-151 follows was told.
+// with something that is not an account.
 func TestFollowingStatusMessage_AnsweredWithoutActor(t *testing.T) {
 
 	message := followingStatusMessage(answeredWith(http.StatusOK, "text/html; charset=utf-8"))
@@ -302,9 +292,10 @@ func TestAnsweredWithoutActor(t *testing.T) {
 }
 
 // TestAnsweredWithoutActor_IsWhatRemoteProduces drives benpate/remote against a live server that
-// answers HTML, so the rule above is pinned to what the library ACTUALLY returns. Without this the
-// other tests would keep passing against a hand-built shape that remote had stopped producing.
+// answers HTML, so the rule above is pinned to what the library ACTUALLY returns.
 func TestAnsweredWithoutActor_IsWhatRemoteProduces(t *testing.T) {
+
+	// Without this, the other tests would pass against a hand-built shape remote no longer produced
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -337,6 +328,18 @@ func TestAnsweredWithoutActor_IsWhatRemoteProduces(t *testing.T) {
  * Helpers
  ******************************************/
 
+// newPollErrorService returns a Following service that writes into an in-memory collection
+func newPollErrorService() (Following, backoffSession, *backoffCollection) {
+
+	collection := &backoffCollection{}
+	session := backoffSession{collection: collection}
+
+	// Buffered so the service's own status broadcast does not block the test
+	updates := make(chan realtime.Message, 8)
+
+	return Following{sseUpdateChannel: updates}, session, collection
+}
+
 // httpStatus builds the derp.HTTPError shape that benpate/remote returns for one status code
 func httpStatus(code int) derp.HTTPError {
 	return derp.HTTPError{
@@ -345,9 +348,10 @@ func httpStatus(code int) derp.HTTPError {
 }
 
 // answeredWith builds the error that remote.Transaction.decodeResponseBody returns when a response
-// arrives intact but cannot be decoded: an HTTPError carrying the real status, wrapped with
-// WithInternalError, which is what makes the OUTER code 500 while the response underneath says 200.
+// arrives intact but cannot be decoded.
 func answeredWith(code int, contentType string) error {
+
+	// WithInternalError below makes the OUTER code 500 while the response underneath says 200
 
 	header := http.Header{}
 

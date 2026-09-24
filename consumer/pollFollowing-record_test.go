@@ -20,9 +20,9 @@ import (
 // Following.SetStatusPollError's decision, and is tested in the service package.
 
 // TestActorError_RateLimited confirms that a 429 requeues the task WITHOUT touching the Following.
-// The factory is nil on purpose: reaching the service at all would panic.
 func TestActorError_RateLimited(t *testing.T) {
 
+	// The factory is nil on purpose: reaching the service at all would panic
 	following := model.NewFollowing()
 
 	// RULE: 429 is a CLIENT error too, so it must be caught before anything records a failure
@@ -31,7 +31,7 @@ func TestActorError_RateLimited(t *testing.T) {
 		require.Equal(t, queue.ResultStatusRequeue, result.Status)
 	}
 
-	require.Equal(t, model.FollowingStatusNew, following.Status, "a rate limit is the host's throttle, not this record's failure")
+	require.Equal(t, model.FollowingStatusNew, following.Status, "a rate limit is the host's throttle, and must not count against this record")
 	require.Zero(t, following.ErrorCount)
 }
 
@@ -80,10 +80,11 @@ func TestAnsweredWithoutActor_IsWhatRemoteProduces(t *testing.T) {
 	require.False(t, shouldReportPollError(err))
 }
 
-// TestShouldReportPollError pins which failed polls reach the error log. A poll that fails for a
-// reason this code already understands is recorded on the Following, and reporting it as well
-// re-files the same fact on every cycle -- 1,891 records, 14.5% of the log, for five follows.
+// TestShouldReportPollError pins which failed polls reach the error log.
 func TestShouldReportPollError(t *testing.T) {
+
+	// An understood failure is already recorded on the Following, and reporting it as well
+	// re-filed the same fact every cycle: 1,891 records, 14.5% of the log, for five follows (BUG-151).
 
 	// RULE: A 2xx that carried no Actor is understood. The record says so; the log adds nothing.
 	require.False(t, shouldReportPollError(answeredWith(http.StatusOK, "text/html")))
@@ -107,7 +108,7 @@ func TestShouldReportPollError(t *testing.T) {
 }
 
 // httpStatus builds the derp.HTTPError shape that benpate/remote returns for one status code,
-// which is exactly how a remote refusal reaches PollFollowing_Record in production
+// which is how a remote refusal reaches PollFollowing_Record in production
 func httpStatus(code int) derp.HTTPError {
 	return derp.HTTPError{
 		Response: derp.HTTPResponseReport{StatusCode: code},
@@ -115,9 +116,10 @@ func httpStatus(code int) derp.HTTPError {
 }
 
 // answeredWith builds the error that remote.Transaction.decodeResponseBody returns when a response
-// arrives intact but cannot be decoded: an HTTPError carrying the real status, wrapped with
-// WithInternalError, which is what makes the OUTER code 500 while the response underneath says 200.
+// arrives intact but cannot be decoded.
 func answeredWith(code int, contentType string) error {
+
+	// WithInternalError below makes the OUTER code 500 while the response underneath says 200
 
 	header := http.Header{}
 
