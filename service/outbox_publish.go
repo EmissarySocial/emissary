@@ -129,10 +129,8 @@ func (service *Outbox) Deliver(session data.Session, actorType string, actorID p
 	document := streams.NewDocument(activity)
 	recipientSeq := service.publishRecipients(session, actorType, actorID, document, config)
 
-	// The OUTGOING payload strips bto/bcc, matching hannibal/sender.SendToAllRecipients: blind
-	// recipients still RECEIVE the activity (they were enumerated above) but must not SEE the
-	// blind-address list. We strip a CLONE so the enumeration above still reads the full addressing.
-	// (The former synchronous loop leaked these blind-address fields to every recipient; W3.)
+	// RULE: Deliver the stripped payload, never the original. Blind recipients still RECEIVE the
+	// activity (enumerated above from the full addressing) but must not SEE the blind-address list.
 	payload := maps.Clone(activity)
 	delete(payload, vocab.PropertyBTo)
 	delete(payload, vocab.PropertyBCC)
@@ -189,11 +187,11 @@ func (service *Outbox) Deliver(session data.Session, actorType string, actorID p
 		switch follower.Method {
 
 		case model.FollowerMethodActivityPub:
-			service.deliverActivityPub(session, actorURL, &follower, activity)
+			service.deliverActivityPub(session, actorURL, &follower, payload)
 
 		case model.FollowerMethodEmail:
 			if canSendEmail {
-				service.sendNotification_Email(&follower, activity)
+				service.sendNotification_Email(&follower, payload)
 			}
 
 		default:
