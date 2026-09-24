@@ -83,7 +83,7 @@ func (filesystem *Filesystem) GetFS(folder mapof.String) (fs.FS, error) {
 // GetFSs returns multiple fs.FS filesystems
 func (filesystem *Filesystem) GetFSs(folders ...mapof.String) []fs.FS {
 
-	result := make([]fs.FS, len(folders))
+	result := make([]fs.FS, 0, len(folders))
 
 	for _, folder := range folders {
 		if item, err := filesystem.GetFS(folder); err == nil {
@@ -146,7 +146,7 @@ func (filesystem *Filesystem) GetAfero(folder mapof.String) (afero.Fs, error) {
 // GetAferos returns multiple afero filesystems
 func (filesystem *Filesystem) GetAferos(folders ...mapof.String) []afero.Fs {
 
-	result := make([]afero.Fs, len(folders))
+	result := make([]afero.Fs, 0, len(folders))
 
 	for _, folder := range folders {
 		if item, err := filesystem.GetAfero(folder); err == nil {

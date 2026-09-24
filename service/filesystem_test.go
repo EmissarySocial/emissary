@@ -7,7 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/EmissarySocial/emissary/config"
 	"github.com/benpate/rosetta/channel"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/stretchr/testify/require"
 )
 
@@ -40,4 +42,32 @@ func TestFilesystemWatchOS_StopsWhileSending(t *testing.T) {
 		require.True(t, time.Now().Before(deadline), "the filesystem watcher did not stop while a change was pending")
 		time.Sleep(20 * time.Millisecond)
 	}
+}
+
+// TestFilesystemGetFSs_OneEntryPerFolder verifies that GetFSs returns one filesystem for each
+// folder it can open, and nothing for a folder it cannot.
+func TestFilesystemGetFSs_OneEntryPerFolder(t *testing.T) {
+
+	filesystem := Filesystem{}
+	good := mapof.String{"adapter": config.FolderAdapterFile, "location": t.TempDir()}
+	bad := mapof.String{"adapter": "UNKNOWN"}
+
+	result := filesystem.GetFSs(good, bad, good)
+
+	require.Len(t, result, 2)
+	require.NotContains(t, result, nil)
+}
+
+// TestFilesystemGetAferos_OneEntryPerFolder verifies that GetAferos returns one filesystem for
+// each folder it can open, and nothing for a folder it cannot.
+func TestFilesystemGetAferos_OneEntryPerFolder(t *testing.T) {
+
+	filesystem := Filesystem{}
+	good := mapof.String{"adapter": config.FolderAdapterFile, "location": t.TempDir()}
+	bad := mapof.String{"adapter": "UNKNOWN"}
+
+	result := filesystem.GetAferos(good, bad, good)
+
+	require.Len(t, result, 2)
+	require.NotContains(t, result, nil)
 }
