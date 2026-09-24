@@ -11,12 +11,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestFilesystemWatchOS_StopsWhileSending is BUG-180 task G: a file event that arrives as the
-// template watcher stops must not strand the filesystem watcher.  Nothing reads "changes" after
-// the stop, so a watcher blocked on that send has to give up when "done" closes.  It used to wait
-// forever, and before that the channel was closed under it, which panicked the process.
+// TestFilesystemWatchOS_StopsWhileSending verifies that a filesystem watcher blocked on
+// sending a change gives up when "done" closes
 func TestFilesystemWatchOS_StopsWhileSending(t *testing.T) {
 
+	// BUG-180 task G: nothing reads "changes" once the template watcher stops.  This send
+	// used to wait forever, and before that the channel was closed under it, which panicked.
 	directory := t.TempDir()
 	baseline := runtime.NumGoroutine()
 

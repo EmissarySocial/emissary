@@ -13,18 +13,14 @@ import (
 /******************************************
  * Anonymous Authorization Tests
  *
- * These pin the contract an anonymous POST action depends on:
  * roles:["anonymous"] grants an action to EVERY caller, and the
- * grant is decided without reference to the HTTP method.
- *
- * Method independence is structural: GetStreamWithAction and
- * PostStreamWithAction reach the same gate -- build.NewStream ->
- * Common.UserCan -> Permission.UserCan -- which takes no method. A
- * nil data.Session is safe here; the anonymous path returns first.
+ * grant ignores the HTTP method: GET and POST both reach
+ * Permission.UserCan, which takes no method.  A nil data.Session
+ * is safe here, because the anonymous path returns first.
  ******************************************/
 
 // anonymousTemplate builds a Template with the named action granted to the provided roles,
-// running CalcAccessList exactly as service.Template does at load time.
+// then runs CalcAccessList the same way service.Template does at load time.
 func anonymousTemplate(t *testing.T, actionID string, states []string, roles ...string) model.Template {
 
 	t.Helper()
@@ -60,9 +56,10 @@ func publishedStream() model.Stream {
 }
 
 // TestUserCan_Anonymous_GrantsUnauthenticatedVisitor verifies that roles:["anonymous"] admits a
-// visitor with no session at all. This is the grant a contact form's "submit" action relies on.
+// visitor with no session at all.
 func TestUserCan_Anonymous_GrantsUnauthenticatedVisitor(t *testing.T) {
 
+	// This is the grant a contact form's "submit" action relies on
 	stream := publishedStream()
 	template := anonymousTemplate(t, "submit", nil, model.MagicRoleAnonymous)
 
@@ -108,9 +105,10 @@ func TestUserCan_Anonymous_GrantsEveryCaller(t *testing.T) {
 }
 
 // TestCalcAccessList_AnonymousOverridesOtherRoles verifies that "anonymous" collapses the
-// AccessList to itself, so a template meaning to restrict an action must not name it at all.
+// AccessList to itself, whatever other roles the action names.
 func TestCalcAccessList_AnonymousOverridesOtherRoles(t *testing.T) {
 
+	// So a Template meaning to restrict an action must not name "anonymous" at all
 	template := anonymousTemplate(t, "submit", nil, model.MagicRoleAuthor, model.MagicRoleAnonymous)
 	action := template.Actions["submit"]
 
@@ -126,9 +124,10 @@ func TestCalcAccessList_AnonymousOverridesOtherRoles(t *testing.T) {
 }
 
 // TestUserCan_Anonymous_StillHonorsStates verifies that an anonymous grant is scoped to the
-// states the action declares. A contact form gated to "published" must refuse a draft page.
+// states the action declares.
 func TestUserCan_Anonymous_StillHonorsStates(t *testing.T) {
 
+	// A contact form gated to "published" must refuse a draft page
 	template := anonymousTemplate(t, "submit", []string{"published"}, model.MagicRoleAnonymous)
 	permissionService := NewPermission()
 	authorization := model.NewAuthorization()

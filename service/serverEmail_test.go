@@ -92,8 +92,7 @@ func TestApplyHeaders_NilHeaders(t *testing.T) {
 }
 
 // TestApplyHeaders_SkipsEmptyValues verifies that a header rendering empty is omitted instead
-// of poisoning the message.  go-simple-mail parses address headers with mail.ParseAddress,
-// where an empty string is an error that silently no-ops every later setter.
+// of poisoning the message
 func TestApplyHeaders_SkipsEmptyValues(t *testing.T) {
 
 	email := testEmail(t, map[string]string{"Reply-To": "{{.ReplyTo}}"})
@@ -106,11 +105,11 @@ func TestApplyHeaders_SkipsEmptyValues(t *testing.T) {
 }
 
 // TestApplyHeaders_MissingKeyIsRejected verifies that a key absent from the data map fails the
-// render outright.  Without missingkey=error, text/template renders it as the literal "<no value>",
-// which is not empty, so it survives the skip-empty rule and then fails mail.ParseAddress -- turning
-// a definition's typo into a dead send.  This also proves the option reaches sub-templates created
-// by Headers.New(), since text/template stores it on the shared template set.
+// render outright, including in sub-templates created by Headers.New()
 func TestApplyHeaders_MissingKeyIsRejected(t *testing.T) {
+
+	// Without missingkey=error this renders "<no value>", which survives the skip-empty rule and
+	// then fails mail.ParseAddress.  text/template keeps the option on the shared template set.
 
 	email := testEmail(t, map[string]string{"Reply-To": "{{.ReplyTo}}"})
 
@@ -133,10 +132,11 @@ func TestApplyHeaders_EmptyKeyIsStillAllowed(t *testing.T) {
 }
 
 // TestApplyHeaders_InjectionIsNeutralized verifies that CRLF in a rendered header value cannot
-// forge a header of its own.  Emissary does not strip those characters itself -- go-simple-mail's
-// encoder does (its secureHeader) -- so this test exists to fail loudly if a version bump ever
-// removes that guarantee.
+// forge a header of its own
 func TestApplyHeaders_InjectionIsNeutralized(t *testing.T) {
+
+	// go-simple-mail's encoder (its secureHeader) strips the CRLF, not Emissary, so this
+	// fails if a version bump ever removes that guarantee
 
 	email := testEmail(t, map[string]string{"X-Emissary-Test": "{{.Value}}"})
 
@@ -155,10 +155,11 @@ func TestApplyHeaders_InjectionIsNeutralized(t *testing.T) {
 	require.Empty(t, message.GetRecipients())
 }
 
-// TestApplyHeaders_AddressInjectionIsRejected verifies that CRLF in an address header is
-// rejected outright by mail.ParseAddress, rather than silently delivering to an unintended
-// recipient.  Like the test above, this pins a guarantee that go-simple-mail makes for us.
+// TestApplyHeaders_AddressInjectionIsRejected verifies that mail.ParseAddress rejects CRLF in an
+// address header, rather than delivering to an unintended recipient
 func TestApplyHeaders_AddressInjectionIsRejected(t *testing.T) {
+
+	// Like the test above, this pins a guarantee that go-simple-mail makes for us
 
 	email := testEmail(t, map[string]string{"Reply-To": "{{.ReplyTo}}"})
 
@@ -177,10 +178,10 @@ func TestApplyHeaders_AddressInjectionIsRejected(t *testing.T) {
  * ServerEmail.Add
  ******************************************/
 
-// testServerEmail returns a bare ServerEmail service, with no filesystem locations loaded.
-// It carries the real funcMap because shipped body.html files call helpers such as htmlMinimal.
+// testServerEmail returns a bare ServerEmail service with an empty email library
 func testServerEmail() ServerEmail {
 	return ServerEmail{
+		// The real funcMap, because shipped body.html files call helpers such as htmlMinimal
 		funcMap: emissarytemplates.FuncMap(nullIconProvider{}),
 		emails:  make(map[string]model.Email),
 	}
@@ -213,8 +214,7 @@ func TestServerEmailAdd_ParsesHeaders(t *testing.T) {
 }
 
 // TestServerEmailAdd_RejectsInvalidHeaderName verifies that a header name which could break
-// out of its own field is rejected at load time.  Names are written into the message verbatim,
-// without the encoding that protects values.
+// out of its own field is rejected at load time
 func TestServerEmailAdd_RejectsInvalidHeaderName(t *testing.T) {
 
 	table := []struct {
@@ -277,9 +277,7 @@ func TestServerEmailAdd_RequiresEmailID(t *testing.T) {
 	require.Empty(t, service.emails)
 }
 
-// TestServerEmailAdd_RequiresModel verifies that a definition must name the model it belongs to.
-// The definition is the only place this is declared, and RequireModel() is what compares a Go
-// sender's fixed data shape against it.
+// TestServerEmailAdd_RequiresModel verifies that a definition must name the model it belongs to
 func TestServerEmailAdd_RequiresModel(t *testing.T) {
 
 	service := testServerEmail()
@@ -295,9 +293,10 @@ func TestServerEmailAdd_RequiresModel(t *testing.T) {
 }
 
 // TestServerEmailAdd_AcceptsModelOutsideTemplateRegistry verifies that an email may name a model
-// the Template registry does not know.  Shipped definitions use "Follower", which is the object
-// the message is about, not a builder model -- see D16 in the CONTACT-FORM spec.
+// the Template registry does not know, such as "Follower"
 func TestServerEmailAdd_AcceptsModelOutsideTemplateRegistry(t *testing.T) {
+
+	// An email names the object the message is about, not a builder model (D16 in CONTACT-FORM)
 
 	service := testServerEmail()
 
@@ -348,9 +347,8 @@ func TestServerEmail_RequireModel(t *testing.T) {
 	require.NoError(t, service.RequireModel("test-email", "Follower"))
 }
 
-// TestServerEmail_RequireModel_Mismatch verifies that an email declared for a different object is
-// refused.  This is the case that matters in production: an administrator can override a shipped
-// definition from an external template folder, and a Go sender's data shape would not fit it.
+// TestServerEmail_RequireModel_Mismatch verifies that an email declared for a different object
+// is refused
 func TestServerEmail_RequireModel_Mismatch(t *testing.T) {
 
 	service := testServerEmailWithModel(t, "Identity")
@@ -422,8 +420,7 @@ func TestServerEmailAdd_RejectsReservedHeaderName(t *testing.T) {
 	}
 }
 
-// TestServerEmailAdd_AllowsReplyTo verifies that Reply-To is NOT reserved.  Setting it is the
-// reason the headers block exists, so a denylist that caught it would defeat the feature.
+// TestServerEmailAdd_AllowsReplyTo verifies that Reply-To is not a reserved header name
 func TestServerEmailAdd_AllowsReplyTo(t *testing.T) {
 
 	service := testServerEmail()
@@ -433,9 +430,10 @@ func TestServerEmailAdd_AllowsReplyTo(t *testing.T) {
 }
 
 // TestServerEmailAdd_DuplicateReplaces verifies that a second definition with the same emailId
-// replaces the first rather than failing.  A later filesystem location may deliberately override
-// an embedded email, so a duplicate is legal -- it only warns (D17).
+// replaces the first rather than failing
 func TestServerEmailAdd_DuplicateReplaces(t *testing.T) {
+
+	// A later filesystem location may override an embedded email, so a duplicate is legal
 
 	service := testServerEmail()
 
@@ -469,11 +467,12 @@ func loadEmbeddedEmail(t *testing.T, folder string, emailID string) model.Email 
 	return email
 }
 
-// TestFollowerActivity_ListUnsubscribe verifies that the one shipped definition using a headers:
-// block emits its List-Unsubscribe from the pre-formatted UnsubscribeWithBrackets key.  The RFC
-// 2369 bracketing itself is Follower.UnsubscribeLinkWithBrackets' job, tested in package model;
-// what this pins is the wiring.  The header was inert until applyHeaders existed.
+// TestFollowerActivity_ListUnsubscribe verifies that the shipped follower-activity email emits
+// List-Unsubscribe from the pre-formatted UnsubscribeWithBrackets key
 func TestFollowerActivity_ListUnsubscribe(t *testing.T) {
+
+	// The RFC 2369 bracketing is Follower.UnsubscribeLinkWithBrackets' job, tested in package
+	// model; this pins the wiring
 
 	email := loadEmbeddedEmail(t, "email-follower-activity", "follower-activity")
 
@@ -487,12 +486,11 @@ func TestFollowerActivity_ListUnsubscribe(t *testing.T) {
 }
 
 // TestFollowerActivity_OneClickUnsubscribe verifies the RFC 8058 header that turns a
-// List-Unsubscribe link into a one-click button in Gmail and Yahoo.
-//
-// Its value is a fixed literal, not a URL: the provider POSTs to the address already given in
-// List-Unsubscribe.  Providers only offer the button when BOTH headers are present, so a typo
-// here does not break anything visibly -- the button simply never appears.
+// List-Unsubscribe link into a one-click button in Gmail and Yahoo
 func TestFollowerActivity_OneClickUnsubscribe(t *testing.T) {
+
+	// The value is a fixed literal: the provider POSTs to the List-Unsubscribe address.  The
+	// button appears only when BOTH headers are present, so a typo here fails invisibly
 
 	email := loadEmbeddedEmail(t, "email-follower-activity", "follower-activity")
 
@@ -505,13 +503,12 @@ func TestFollowerActivity_OneClickUnsubscribe(t *testing.T) {
 	require.Contains(t, message.GetMessage(), "List-Unsubscribe-Post: List-Unsubscribe=One-Click")
 }
 
-// TestFollowerActivity_OneClickRequiresLink verifies that the two headers travel together.
-//
-// One-click announces that a POST to the List-Unsubscribe address will work, so shipping it
-// without that address would invite a POST to a URL the recipient never received.  The pairing
-// is structural rather than conditional: Follower.UnsubscribeLinkWithBrackets always returns a
-// link, which is what lets the one-click value be a fixed literal.
+// TestFollowerActivity_OneClickRequiresLink verifies that List-Unsubscribe-Post always travels
+// with a List-Unsubscribe link
 func TestFollowerActivity_OneClickRequiresLink(t *testing.T) {
+
+	// Without the link, one-click invites a POST to a URL the recipient never received.  The
+	// pairing is structural: Follower.UnsubscribeLinkWithBrackets always returns a link
 
 	email := loadEmbeddedEmail(t, "email-follower-activity", "follower-activity")
 
@@ -528,11 +525,12 @@ func TestFollowerActivity_OneClickRequiresLink(t *testing.T) {
 	require.Contains(t, message.GetMessage(), "List-Unsubscribe-Post: List-Unsubscribe=One-Click")
 }
 
-// TestEmbeddedEmails_Load loads every email definition that ships in the binary, exactly the way
-// the Template service does at startup.  This is what keeps the load-time rules in Add() honest:
-// a rule that rejects one of Emissary's own definitions fails here rather than at a customer's
-// next boot.  It is the email-definition sibling of TestEmbeddedTemplates_HTMLParses.
+// TestEmbeddedEmails_Load verifies that every email definition shipped in the binary loads
+// through Add(), the same way the Template service loads it at startup
 func TestEmbeddedEmails_Load(t *testing.T) {
+
+	// A rule in Add() that rejects one of Emissary's own definitions fails here, not at a
+	// customer's next boot.  Sibling of TestEmbeddedTemplates_HTMLParses
 
 	const root = "../_embed/templates"
 
@@ -582,7 +580,7 @@ func TestServerEmailExists(t *testing.T) {
 }
 
 // TestServerEmailRequiredKeys verifies that the keys an email's "to", "subject", and "headers"
-// templates interpolate are reported, so a step that omits one fails at load rather than at send
+// templates interpolate are reported
 func TestServerEmailRequiredKeys(t *testing.T) {
 
 	service := testServerEmail()
@@ -596,17 +594,15 @@ func TestServerEmailRequiredKeys(t *testing.T) {
 
 	require.NoError(t, service.Add(testFilesystem(), definition))
 
-	// Subject IS included.  It renders leniently rather than failing the send, but text/template
-	// writes an absent key as the literal "<no value>", which reaches the recipient in the subject
-	// line -- visible, not cosmetic.  The BODY stays excluded: it is html/template, which renders a
-	// missing key as "", and email-follower-activity relies on that.
+	// Subject IS included and the body is not; RequiredKeys explains why
 	require.Equal(t, []string{"Recipient", "ReplyEmail", "SubjectOnly"}, []string(service.RequiredKeys("test-email")))
 }
 
 // TestServerEmailRequiredKeys_ExcludesProvided verifies that the Domain_* values DomainEmail.Send
-// supplies for every email are not reported. Requiring a step to pass them would make every
-// send-email block noise, and D20 exists precisely so callers do not.
+// supplies for every email are not reported
 func TestServerEmailRequiredKeys_ExcludesProvided(t *testing.T) {
+
+	// Callers never pass these keys (D20 in CONTACT-FORM)
 
 	service := testServerEmail()
 	definition := []byte(`{
@@ -622,8 +618,10 @@ func TestServerEmailRequiredKeys_ExcludesProvided(t *testing.T) {
 }
 
 // TestServerEmailRequiredKeys_GuardedKeysCount verifies that a key inside an {{if}} is still
-// reported. Under missingkey=error an absent key fails the guard itself, so it is required.
+// reported
 func TestServerEmailRequiredKeys_GuardedKeysCount(t *testing.T) {
+
+	// Under missingkey=error an absent key fails the guard itself, so it is required
 
 	service := testServerEmail()
 	definition := []byte(`{
@@ -638,8 +636,8 @@ func TestServerEmailRequiredKeys_GuardedKeysCount(t *testing.T) {
 	require.Equal(t, []string{"Recipient", "Unsubscribe"}, []string(service.RequiredKeys("test-email")))
 }
 
-// TestServerEmailRequiredKeys_ShippedDefinition pins the keys the one shipped email with a
-// headers block actually needs, so a change to it surfaces here
+// TestServerEmailRequiredKeys_ShippedDefinition pins the keys that the shipped follower-activity
+// email requires
 func TestServerEmailRequiredKeys_ShippedDefinition(t *testing.T) {
 
 	service := testServerEmail()
@@ -663,7 +661,7 @@ func TestServerEmailRequiredKeys_ShippedDefinition(t *testing.T) {
  * references a key that nobody supplies.
  ******************************************/
 
-// contactFormEmail loads the shipped contact-form definition exactly as the server does
+// contactFormEmail loads the shipped contact-form definition the same way the server does
 func contactFormEmail(t *testing.T) (*ServerEmail, model.Email) {
 
 	t.Helper()
@@ -681,9 +679,8 @@ func contactFormEmail(t *testing.T) (*ServerEmail, model.Email) {
 	return &service, email
 }
 
-// contactFormContract is every key the contact-form templates may reference: the six message
-// keys and twelve Client_* keys the send-email step supplies, plus the four DomainEmail.Send
-// injects into every email
+// contactFormContract is every key the contact-form templates may reference: six message keys and
+// twelve Client_* keys from the send-email step, plus four from DomainEmail.Send
 var contactFormContract = []string{
 	"To", "Subject", "ReplyEmail", "Name", "Message", "HeaderMessage",
 	"Client_IP", "Client_Description", "Client_Referer", "Client_UserAgent",
@@ -692,25 +689,25 @@ var contactFormContract = []string{
 	"Domain_Owner", "Domain_URL", "Domain_Name", "Domain_Icon",
 }
 
-// TestContactFormEmail_RequiredKeys pins the contract that the Stream template's send-email step
-// must satisfy.  These are the keys whose templates carry missingkey=error, so omitting one does
-// not render a blank -- it kills the whole send.  Asserting the exact set here means a Phase 5
-// mismatch fails when Templates load, rather than the first time a visitor submits the form.
+// TestContactFormEmail_RequiredKeys pins the keys that the Stream template's send-email step
+// must supply to the contact-form email
 func TestContactFormEmail_RequiredKeys(t *testing.T) {
+
+	// Pinning the set makes a mismatch fail when Templates load, rather than the first time a
+	// visitor submits the form
 
 	service, _ := contactFormEmail(t)
 
 	require.Equal(t, []string{"ReplyEmail", "Subject", "To"}, []string(service.RequiredKeys("contact-form")))
 }
 
-// TestContactFormEmail_KeysAreInTheContract closes the gap that load-time validation structurally
-// cannot cover.  RequiredKeys walks only "to" and "headers", because only those reject a missing
-// key; "subject" and "body" are lenient by design, so a key they reference but nobody supplies
-// fails SILENTLY -- blank in the body, and the literal "<no value>" in the subject, since
-// text/template renders an absent key that way.  Extending RequiredKeys to cover them would break
-// email-follower-activity, whose body references .URL and .Actor that nothing supplies, so this
-// check is scoped to the one email whose contract is fully known.
+// TestContactFormEmail_KeysAreInTheContract verifies that every key the contact-form subject and
+// body reference is in contactFormContract
 func TestContactFormEmail_KeysAreInTheContract(t *testing.T) {
+
+	// RequiredKeys skips the body, where a missing key renders blank with no error.  Extending it
+	// would break email-follower-activity, whose body references .URL and .Actor that nothing
+	// supplies, so this covers only the email whose contract is fully known.
 
 	_, email := contactFormEmail(t)
 
@@ -728,12 +725,13 @@ func TestContactFormEmail_KeysAreInTheContract(t *testing.T) {
 	}
 }
 
-// TestContactFormEmail_EscapesVisitorInput verifies that everything an anonymous visitor writes is
-// escaped rather than rendered.  The body is html/template, so this holds as long as the visitor's
-// values stay plain interpolations: piping any of them through markdown, htmlMinimal, highlight, or
-// another helper with an HTML return type would declare the value already-safe and hand a stranger
-// script execution in the recipient's mail client.
+// TestContactFormEmail_EscapesVisitorInput verifies that everything an anonymous visitor writes
+// is escaped rather than rendered
 func TestContactFormEmail_EscapesVisitorInput(t *testing.T) {
+
+	// This holds while visitor values stay plain interpolations.  Piping one through markdown,
+	// htmlMinimal, highlight, or any helper returning template.HTML marks it safe, and hands a
+	// stranger script execution in the recipient's mail client.
 
 	_, email := contactFormEmail(t)
 
@@ -745,7 +743,7 @@ func TestContactFormEmail_EscapesVisitorInput(t *testing.T) {
 		"Domain_Icon":   "",
 		"Domain_Name":   "Example",
 
-		// The Client_* values are headers, so they are attacker-controlled in exactly the same
+		// The Client_* values are headers, so they are attacker-controlled in the same
 		// way the three fields above are -- a client chooses every byte of its own User-Agent.
 		"Client_IP":         "203.0.113.42",
 		"Client_UserAgent":  `<script>alert("ua")</script>`,

@@ -21,9 +21,9 @@ import (
 	s3 "github.com/fclairamb/afero-s3"
 )
 
-// Filesystem is a service that multiplexes between different filesystems.  Currently works with embedded filesystems and file:// URIs
+// Filesystem is a service that multiplexes between different filesystems: embedded, local, Git, and S3
 type Filesystem struct {
-	embedded fs.FS
+	embedded fs.FS // Filesystem compiled into the binary, read by the embed adapter
 }
 
 // NewFilesystem returns a fully initialized Filesystem service
@@ -38,7 +38,8 @@ func NewFilesystem(embedded fs.FS) Filesystem {
  * Read-Only Methods
  ******************************************/
 
-// GetFS returns a READONLY Filesystem.  It works with embed:// and file:// URIs
+// GetFS returns a READONLY filesystem for the embed, file, and Git adapters,
+// and for every adapter that GetAfero supports
 func (filesystem *Filesystem) GetFS(folder mapof.String) (fs.FS, error) {
 
 	const location = "service.Filesystem.GetFS"
@@ -55,10 +56,11 @@ func (filesystem *Filesystem) GetFS(folder mapof.String) (fs.FS, error) {
 
 		return result, nil
 
-	// Detect filesystem type
+	// Detect local filesystem
 	case config.FolderAdapterFile:
 		return os.DirFS(folder["location"]), nil
 
+	// Detect Git repository
 	case config.FolderAdapterGit:
 		locationURL, err := url.Parse(folder["location"])
 
@@ -98,26 +100,19 @@ func (filesystem *Filesystem) GetFSs(folders ...mapof.String) []fs.FS {
  * Read/Write Methods
  ******************************************/
 
-// GetAfero returns READ/WRITE a filesystem.  It works with file:// URIs
+// GetAfero returns a READ/WRITE filesystem for the file and S3 adapters
 func (filesystem *Filesystem) GetAfero(folder mapof.String) (afero.Fs, error) {
 
 	switch folder["adapter"] {
 
-	// Detect filesystem type
+	// Detect local filesystem
 	case config.FolderAdapterFile:
 		return afero.NewBasePathFs(afero.NewOsFs(), folder["location"]), nil
 
 	// Detect S3 filesystem type
 	case config.FolderAdapterS3:
 
-		// Requires:
-		// accessKey
-		// secretKey
-		// token
-		// region
-		// location
-		// bucket
-		// path
+		// Reads accessKey, secretKey, token, region, location, bucket, and path from the folder
 
 		// Read AWS configuration
 		awsConfig := aws.Config{
@@ -141,14 +136,9 @@ func (filesystem *Filesystem) GetAfero(folder mapof.String) (afero.Fs, error) {
 		return afero.NewBasePathFs(result, folder["path"]), nil
 	}
 
-	// TODO: Implement other Afero adapters to link to other cloud storage providers?
-	// * HTTP? https://github.com/spf13/afero/blob/master/httpFs.go
-	// * Git? https://github.com/go-git/go-git
-	// * Dropbox?  https://github.com/fclairamb/afero-dropbox
-	// * Google Cloud Storage? https://github.com/spf13/afero/tree/master/gcsfs
-	// * SFTP? https://github.com/spf13/afero/tree/master/sftpfs
-	// * Azure?
-	// * etc...
+	// TODO: Implement other Afero adapters for other cloud storage providers?  Candidates: HTTP
+	// (afero httpFs), Git (go-git), Dropbox (fclairamb/afero-dropbox), Google Cloud Storage
+	// (afero gcsfs), SFTP (afero sftpfs), Azure, etc.
 
 	return nil, derp.Internal("service.filesystem.GetAfero", "Unsupported filesystem adapter", folder)
 }
@@ -175,7 +165,8 @@ func (filesystem *Filesystem) GetAferos(folders ...mapof.String) []afero.Fs {
 
 // TODO: There should be an option to disable this feature on production systems.
 
-// Watch listens to changes to this filesystem with implementation-specific adapters.  Currently only supports file:// URIs
+// Watch sends on "changes" whenever this folder changes, until "done" is closed.
+// Only the file adapter can be watched; every other adapter returns nil.
 func (filesystem *Filesystem) Watch(folder mapof.String, changes chan<- bool, done <-chan channel.Done) error {
 
 	// If we CAN watch this adapter, then do it.
@@ -191,7 +182,8 @@ func (filesystem *Filesystem) Watch(folder mapof.String, changes chan<- bool, do
 	return nil
 }
 
-// watchOS watches a folder on the local filesystem for changes
+// watchOS watches a local folder and its current sub-directories, sending on "changes"
+// whenever one changes, until "done" is closed
 func (filesystem *Filesystem) watchOS(uri string, changes chan<- bool, done <-chan channel.Done) error {
 
 	const location = "service.Filesystem.watchOS"
@@ -211,8 +203,6 @@ func (filesystem *Filesystem) watchOS(uri string, changes chan<- bool, done <-ch
 	}
 
 	// Watch the top-level directory
-	// log.Debug().Str("loc", location).Msg("*** Watching for changes to directory: " + uri)
-
 	if err := watcher.Add(uri); err != nil {
 		return derp.Wrap(err, location, "Watching directory", uri)
 	}
@@ -236,7 +226,7 @@ func (filesystem *Filesystem) watchOS(uri string, changes chan<- bool, done <-ch
 		}
 	}
 
-	// Background: listen for changes and pass them to the "changed" channel
+	// Background: listen for changes and pass them to the "changes" channel
 	go func() {
 
 		for {

@@ -34,7 +34,7 @@ type ServerEmail struct {
 	mutex             sync.RWMutex
 }
 
-// NewServerEmail returns a fully initialized ServerEmail service, loaded from the provided locations
+// NewServerEmail returns a fully initialized ServerEmail service with an empty email library
 func NewServerEmail(filesystemService Filesystem, funcMap template.FuncMap, locations []mapof.String) ServerEmail {
 
 	return ServerEmail{
@@ -73,10 +73,9 @@ func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 	email.EmailRole = temp.GetString("emailRole")
 	email.Model = temp.GetString("model")
 
-	// RULE: every definition declares the object its data describes, which is what RequireModel()
-	// compares a Go sender's fixed data shape against.  This is deliberately not checked against
-	// templateModelRegistry: an email names the object the message is ABOUT (such as "Follower"),
-	// which is a different namespace from a Template's builder model.
+	// RULE: every definition names the object its data describes, which RequireModel() checks.
+	// Not checked against templateModelRegistry: an email names the object the message is ABOUT
+	// (such as "Follower"), a different namespace from a Template's builder model.
 	if email.Model == "" {
 		return derp.BadRequest(location, "Email definition must include a 'model'", email.EmailID)
 	}
@@ -187,15 +186,12 @@ func (service *ServerEmail) Exists(emailID string) bool {
 }
 
 // RequiredKeys returns every data key that an email's "to", "subject", and "headers" templates
-// interpolate.  Keys that Send supplies for every email are excluded, because no caller passes them.
-//
-// "to" and "headers" carry missingkey=error, so omitting one of their keys does not render a blank
-// value -- it fails the whole send.  "subject" is lenient by comparison, but text/template renders
-// an absent key as the literal "<no value>", which then ships to the recipient in the subject line,
-// so it is worth catching at load time too.  The body is deliberately excluded: it is html/template,
-// which renders a missing key as "", and email-follower-activity depends on that.
+// interpolate, except the providedKeys that DomainEmail.Send supplies for every email
 func (service *ServerEmail) RequiredKeys(emailID string) sliceof.String {
 
+	// A missing key fails "to" and "headers" outright, and ships as "<no value>" in "subject".
+	// The body is excluded: html/template renders a missing key as "", and
+	// email-follower-activity depends on that.
 	email, exists := service.lookup(emailID)
 
 	if !exists {
@@ -222,12 +218,13 @@ func (service *ServerEmail) RequiredKeys(emailID string) sliceof.String {
 	return result
 }
 
-// RequireModel returns an error unless the named email is defined for modelName.  Callers that
-// build a fixed data shape in Go use this to reject a definition -- possibly one an administrator
-// overrode on disk -- that describes some other object entirely.
+// RequireModel returns an error unless the named email is defined for modelName
 func (service *ServerEmail) RequireModel(emailID string, modelName string) error {
 
 	const location = "service.ServerEmail.RequireModel"
+
+	// Go senders build a fixed data shape, so this rejects a definition -- possibly one an
+	// administrator overrode on disk -- that describes some other object
 
 	email, exists := service.lookup(emailID)
 
@@ -355,11 +352,11 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner con
 // excluding the colon that terminates the name (%d33-57 and %d59-126)
 var headerNamePattern = regexp.MustCompile(`^[!-9;-~]+$`)
 
-// reservedHeaderNames are the headers an email definition may not set: three that decide who
-// receives the message, three that decide who it claims to be from, and four owned by the mail
-// library.  Reply-To is deliberately absent -- setting it is the reason "headers" exists.
-// Compared in canonical MIME form, since go-simple-mail canonicalizes before it stores them.
+// reservedHeaderNames are the headers an email definition may not set: who receives the message,
+// who it claims to be from, and the four owned by the mail library
 var reservedHeaderNames = []string{
+	// Reply-To is absent on purpose: setting it is the reason "headers" exists.  Names are in
+	// canonical MIME form, because go-simple-mail canonicalizes before it stores them
 	"To", "Cc", "Bcc",
 	"From", "Sender", "Return-Path",
 	"Date", "Mime-Version", "Content-Type", "Content-Transfer-Encoding",

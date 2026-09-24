@@ -46,11 +46,12 @@ func refreshTestLocation(folder string) []mapof.String {
 	return []mapof.String{{"adapter": config.FolderAdapterEmbed, "location": folder}}
 }
 
-// TestTemplateRefresh_UnchangedLocationsKeepWatcher is BUG-180 Defect B: a configuration reload
-// whose template locations had not changed stopped the file watcher and started nothing in its
-// place, so edits on disk were ignored until a restart.
+// TestTemplateRefresh_UnchangedLocationsKeepWatcher verifies that a reload whose locations
+// have not changed leaves the file watcher running
 func TestTemplateRefresh_UnchangedLocationsKeepWatcher(t *testing.T) {
 
+	// BUG-180 Defect B: this reload stopped the watcher and started nothing in its place,
+	// so edits on disk were ignored until a restart
 	templateService := refreshTestTemplate(t)
 	watcher := templateService.refresh
 
@@ -81,11 +82,12 @@ func TestTemplateRefresh_ChangedLocationsReplaceWatcher(t *testing.T) {
 	require.NotEqual(t, watcher, templateService.refresh, "the new watcher needs a channel of its own")
 }
 
-// TestTemplateRefresh_WatcherAndReloadDoNotOverlap is BUG-180 Defect D: a file change and a
-// configuration reload could run loadTemplates at the same time, both writing the shared prep
-// area.  It depends on timing, so it proves nothing without -race.
+// TestTemplateRefresh_WatcherAndReloadDoNotOverlap verifies that a file change and a
+// configuration reload never run loadTemplates at the same time
 func TestTemplateRefresh_WatcherAndReloadDoNotOverlap(t *testing.T) {
 
+	// BUG-180 Defect D: both loads wrote the shared prep area at once.  This test
+	// depends on timing, so it proves nothing without -race.
 	definition, err := os.ReadFile("../_embed/templates/email-user-welcome/email.hjson")
 	require.NoError(t, err)
 

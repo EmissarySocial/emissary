@@ -13,7 +13,7 @@ import (
 // Action holds the data for actions that can be performed on any Stream from a particular Template.
 type Action struct {
 	Roles      sliceof.String               `json:"roles"      bson:"roles"`      // List of roles required to execute this Action.  If empty, then none are required.
-	States     sliceof.String               `json:"states"     bson:"states"`     // List of states required to execute this Action.  If empty, then one are required.
+	States     sliceof.String               `json:"states"     bson:"states"`     // List of states required to execute this Action.  If empty, then none are required.
 	StateRoles mapof.Object[sliceof.String] `json:"stateRoles" bson:"stateRoles"` // Map of states -> list of roles that can perform this Action (when a stream is in the given state)
 	Steps      sliceof.Object[step.Step]    `json:"steps"      bson:"steps"`      // List of steps to execute when GET-ing or POST-ing this Action.
 	AccessList mapof.Object[sliceof.String] `json:"-"          bson:"-"`          // Map of states -> set of roles that can perform this Action.
@@ -88,7 +88,7 @@ func (action *Action) calcAccessListForStateAndRole(stateID string) sliceof.Stri
 		// No flag is required here because domain owners can already do everything.
 		case MagicRoleOwner:
 
-		// MagicRoleMyself allows Users to perform actions on their own profies
+		// MagicRoleMyself allows Users to perform actions on their own profiles
 		case MagicRoleMyself:
 			result = append(result, MagicRoleMyself)
 
@@ -108,9 +108,8 @@ func (action *Action) calcAccessListForStateAndRole(stateID string) sliceof.Stri
 	return result
 }
 
-// AllowedRoles returns a slice of roles that are allowed to perform this action,
-// based on the state of the object.  This list includes
-// system roles like "anonymous", "authenticated", "self", "author", and "owner".
+// AllowedRoles returns the roles allowed to perform this Action on an object in the provided state,
+// including the magic roles "anonymous", "authenticated", "self", and "author" (but never "owner")
 func (action *Action) AllowedRoles(stateID string) sliceof.String {
 	return action.AccessList[stateID]
 }
