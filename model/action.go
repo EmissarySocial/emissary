@@ -32,7 +32,7 @@ func NewAction() Action {
 
 // CalcAccessList translates the roles, states, and stateRoles settings into a compact AccessList that
 // can quickly determine if a user can perform this action on objects given their current state.
-func (action *Action) CalcAccessList(template *Template, debug bool) {
+func (action *Action) CalcAccessList(template *Template) {
 
 	// Initialize/Reset the AccessList
 	action.AccessList = mapof.NewObject[sliceof.String]()

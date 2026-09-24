@@ -635,7 +635,7 @@ func (service *Template) calculateAccessLists() {
 		for actionID, action := range template.Actions {
 
 			// Calculate the AccessLists for this Action
-			action.CalcAccessList(&template, true)
+			action.CalcAccessList(&template)
 
 			// Apply changes back into the Action set
 			template.Actions[actionID] = action

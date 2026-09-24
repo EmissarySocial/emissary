@@ -42,7 +42,7 @@ func anonymousTemplate(t *testing.T, actionID string, states []string, roles ...
 	}
 
 	loaded := template.Actions[actionID]
-	loaded.CalcAccessList(&template, false)
+	loaded.CalcAccessList(&template)
 	template.Actions[actionID] = loaded
 
 	return template

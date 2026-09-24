@@ -178,7 +178,7 @@ func TestContactFormTemplate_SubmitIsScopedToPublished(t *testing.T) {
 	authorization := model.NewAuthorization()
 
 	action := template.Actions["submit"]
-	action.CalcAccessList(&template, false)
+	action.CalcAccessList(&template)
 	template.Actions["submit"] = action
 
 	// Both Streams carry a real author.  A zero AttributedTo.UserID would equal
@@ -214,7 +214,7 @@ func TestContactFormTemplate_ViewMatchesSubmit(t *testing.T) {
 
 	for _, actionID := range []string{"view", "submit"} {
 		action := template.Actions[actionID]
-		action.CalcAccessList(&template, false)
+		action.CalcAccessList(&template)
 		template.Actions[actionID] = action
 	}
 
