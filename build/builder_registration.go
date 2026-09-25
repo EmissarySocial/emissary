@@ -24,12 +24,12 @@ import (
 // Registration is the builder for the admin/domain page
 // It can only be accessed by a Registration Owner
 type Registration struct {
-	_actionID     string
-	_action       model.Action
-	_domain       *model.Domain
-	_provider     *service.Provider
-	_registration *model.Registration
-	_user         model.User
+	_actionID       string
+	_action         model.Action
+	_readOnlyDomain *model.Domain
+	_provider       *service.Provider
+	_registration   *model.Registration
+	_user           model.User
 	Common
 }
 
@@ -47,12 +47,12 @@ func NewRegistration(factory Factory, session data.Session, request *http.Reques
 
 	// Create and return the Registration builder
 	result := Registration{
-		_actionID:     actionID,
-		_action:       action,
-		_domain:       factory.Domain().Get(),
-		_provider:     factory.Provider(),
-		_registration: registration,
-		_user:         model.NewUser(),
+		_actionID:       actionID,
+		_action:         action,
+		_readOnlyDomain: factory.Domain().Cached(),
+		_provider:       factory.Provider(),
+		_registration:   registration,
+		_user:           model.NewUser(),
 
 		Common: NewCommon(factory, session, request, response),
 	}
@@ -105,17 +105,17 @@ func (w Registration) Token() string {
 
 // Label returns the label of the Registration being built
 func (w Registration) Label() string {
-	return w._domain.Label
+	return w._readOnlyDomain.Label
 }
 
 // IconURL returns the icon URL of the Registration being built
 func (w Registration) IconURL() string {
-	return w._domain.IconURL()
+	return w._readOnlyDomain.IconURL()
 }
 
 // DomainData returns the domain data of the Registration being built
 func (w Registration) DomainData() mapof.String {
-	return w._domain.RegistrationData
+	return w._readOnlyDomain.RegistrationData
 }
 
 // object returns the model object being built. Implements the Builder interface.
@@ -185,12 +185,12 @@ func (w Registration) PageTitle() string {
 
 // Data returns the named value from this Domain's custom data map
 func (w Registration) Data(key string) string {
-	return w._domain.Data[key]
+	return w._readOnlyDomain.Data[key]
 }
 
 // RegistrationData returns the named value from this Domain's registration data map
 func (w Registration) RegistrationData(key string) string {
-	return w._domain.RegistrationData[key]
+	return w._readOnlyDomain.RegistrationData[key]
 }
 
 // clone returns a copy of this Builder, pointed at a different action. Implements the Builder interface.
@@ -204,8 +204,8 @@ func (w Registration) clone(action string) (Builder, error) {
 
 // Template returns the registration template selected for this domain
 func (w Registration) Template() model.Registration {
-	domain := w._factory.Domain().Get()
-	registration, _ := w._factory.Registration().Load(domain.RegistrationID)
+	readOnlyDomain := w._factory.Domain().Cached()
+	registration, _ := w._factory.Registration().Load(readOnlyDomain.RegistrationID)
 	return registration
 }
 

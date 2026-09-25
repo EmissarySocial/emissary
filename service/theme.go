@@ -49,12 +49,12 @@ func NewTheme(templateService *Template, contentService *Content, funcMap templa
 // List returns an iterator over the Theme records that match the provided criteria
 func (service *Theme) List() []model.Theme {
 
-	// Generate a slice containing all themes
-	result := make([]model.Theme, 0, len(service.themes))
-
 	// Lock the data structure
 	service.mutex.RLock()
 	defer service.mutex.RUnlock()
+
+	// Generate a slice containing all themes
+	result := make([]model.Theme, 0, len(service.themes))
 
 	for _, theme := range service.themes {
 		if theme.IsVisible {

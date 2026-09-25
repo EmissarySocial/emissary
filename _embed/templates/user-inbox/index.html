@@ -54,7 +54,7 @@
 								{{$following.Label}}
 							</h1>
 							<div class="margin-none">
-								<a href="{{$following.URL}}" target="_blank" class="text-gray">{{$following.URL}}</a>
+								<a href="{{$following.URL}}" target="_blank" rel="noopener noreferrer" class="text-gray">{{$following.URL}}</a>
 								&middot; {{$following.LastPolled | tinyDate}} ago
 								&nbsp;
 								<button class="text-xs" hx-get="/@me/settings/following-edit?followingId={{$following.FollowingID.Hex}}">Edit Source</button>

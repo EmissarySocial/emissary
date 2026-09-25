@@ -26,7 +26,7 @@ func GetDomainAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 		return ctx.NoContent(http.StatusNotModified)
 	}
 
-	domain := factory.Domain().Get()
+	readOnlyDomain := factory.Domain().Cached()
 
 	// Load the attachment in order to verify that it is valid for this stream
 	attachmentService := factory.Attachment()
@@ -37,8 +37,8 @@ func GetDomainAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 		return derp.Wrap(err, location, "Invalid attachmentID", attachmentIDString, derp.WithNotFound())
 	}
 
-	attachment := model.NewAttachment(model.AttachmentObjectTypeDomain, domain.DomainID)
-	if err := attachmentService.LoadByID(session, model.AttachmentObjectTypeDomain, domain.DomainID, attachmentID, &attachment); err != nil {
+	attachment := model.NewAttachment(model.AttachmentObjectTypeDomain, readOnlyDomain.DomainID)
+	if err := attachmentService.LoadByID(session, model.AttachmentObjectTypeDomain, readOnlyDomain.DomainID, attachmentID, &attachment); err != nil {
 		return derp.Wrap(err, location, "Loading attachment")
 	}
 

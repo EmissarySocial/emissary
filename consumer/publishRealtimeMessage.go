@@ -72,6 +72,9 @@ func messageForTopic(topic int, objectID primitive.ObjectID, data string) (realt
 
 	case realtime.TopicNotification:
 		return realtime.NewMessage_Notification(objectID), nil
+
+	case realtime.TopicStreamSourceUpdated:
+		return realtime.NewMessage_StreamSourceUpdated(objectID), nil
 	}
 
 	return realtime.Message{}, derp.Internal("consumer.messageForTopic", "Unrecognized realtime topic", topic)

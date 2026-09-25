@@ -252,8 +252,8 @@ func WithConnection(provider string, serverFactory *server.Factory, fn WithFunc1
 func WithDomain(serverFactory *server.Factory, fn WithFunc1[model.Domain]) echo.HandlerFunc {
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
-		domain := factory.Domain().Get()
-		return fn(ctx, factory, session, domain)
+		readOnlyDomain := factory.Domain().Cached()
+		return fn(ctx, factory, session, readOnlyDomain)
 	})
 }
 
@@ -569,16 +569,16 @@ func WithRegistration(serverFactory *server.Factory, fn WithFunc2[model.Domain, 
 
 	const location = "handler.WithRegistration"
 
-	return WithDomain(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, domain *model.Domain) error {
+	return WithDomain(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, readOnlyDomain *model.Domain) error {
 
 		// Require that a registration form has been defined
-		if !domain.HasRegistrationForm() {
+		if !readOnlyDomain.HasRegistrationForm() {
 			return ctx.NoContent(http.StatusNotFound)
 		}
 
 		// Try to load a (populated) Registration object from the factory
 		registrationService := factory.Registration()
-		registration, err := registrationService.Load(domain.RegistrationID)
+		registration, err := registrationService.Load(readOnlyDomain.RegistrationID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Loading Registration")
@@ -589,7 +589,7 @@ func WithRegistration(serverFactory *server.Factory, fn WithFunc2[model.Domain, 
 		}
 
 		// Call the continuation function
-		return fn(ctx, factory, session, domain, &registration)
+		return fn(ctx, factory, session, readOnlyDomain, &registration)
 	})
 }
 
@@ -599,9 +599,7 @@ func WithSearchQuery(serverFactory *server.Factory, fn WithFunc1[model.SearchQue
 	const location = "handler.WithSearchQuery"
 
 	// RULE: This builds on WithFactory, NOT WithTemplate/WithStream.  A SearchQuery actor has no
-	// Stream, and these routes declare no ":stream" parameter, so WithStream resolved the absent
-	// token to "home" and redirected every request to /startup on a domain whose home page is
-	// not a Stream.  See BUG-148.
+	// Stream, and these routes declare no ":stream" parameter for WithStream to load.  See BUG-148.
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 		searchQueryService := factory.SearchQuery()
@@ -641,6 +639,11 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 		stream := model.NewStream()
 		token := getStreamToken(ctx)
 
+		// RULE: A route that declares no ":stream" parameter is wired wrong, and has no Stream to load
+		if token == "" {
+			return derp.Internal(location, "Route declares no :stream parameter", ctx.Path())
+		}
+
 		// Try to load the Stream using a Token
 		if err := streamService.LoadByToken(session, token, &stream); err != nil {
 
@@ -649,8 +652,8 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 				return derp.Wrap(err, location, "Loading stream from database")
 			}
 
-			// If the "home" page is requested but not found, then we're in "startup" mode
-			if token == "home" {
+			// RULE: A missing home page means "startup" mode only on a Domain that is still being set up
+			if isStartupHome(token, factory.Domain().Get()) {
 				return ctx.Redirect(http.StatusTemporaryRedirect, "/startup")
 			}
 

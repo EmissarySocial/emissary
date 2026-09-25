@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"html/template"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/EmissarySocial/emissary/config"
@@ -30,12 +31,12 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// Domain service manages all access to the singleton model.Domain in the database
+// Domain service manages all access to the singleton Domain record in the database
 type Domain struct {
 	activityService     *ActivityStream
 	configuration       config.Domain
 	connectionService   *Connection
-	domain              model.Domain
+	cache               atomic.Pointer[model.WritableDomain] // the published Domain record.  Never modify a published value.
 	funcMap             template.FuncMap
 	database            func() *mongo.Database
 	newSession          func(time.Duration) (data.Session, context.CancelFunc, error)
@@ -51,9 +52,7 @@ type Domain struct {
 
 // NewDomain returns a fully initialized Domain service
 func NewDomain() Domain {
-	return Domain{
-		domain: model.NewDomain(),
-	}
+	return Domain{}
 }
 
 /******************************************
@@ -66,13 +65,11 @@ func (service *Domain) collection(session data.Session) data.Collection {
 }
 
 // Refresh updates any stateful data that is cached inside this service.
-//
-// RULE: This method must NOT reset the cached Domain record.  Refresh runs on every configuration
-// reload, but Start (the only thing that reloads the record from the database) runs only when the
-// database connection or the hostname changes.  Blanking here therefore strands the service holding
-// an empty Domain -- no Label, no PrivateKey, and a zero DomainID that makes the next Save INSERT a
-// second record instead of updating the real one.  Start does the resetting, next to its Load.
 func (service *Domain) Refresh(factory *Factory) {
+
+	// RULE: Never reset the cached Domain record here.  Refresh runs on every configuration reload,
+	// but only Start and the watcher reload the record, so a blank here strands an empty Domain.
+	// That blank has no CreateDate, so its next Save tries to INSERT a second record.
 
 	service.activityService = factory.ActivityStream()
 	service.configuration = factory.config
@@ -90,9 +87,8 @@ func (service *Domain) Refresh(factory *Factory) {
 	service.host = factory.Host()
 }
 
-// Start initializes the database, by:
-// 1. Guaranteeing that a domain record exists in the db
-// 2. synchronizing indexes
+// Start loads and publishes the Domain record, creating it on the first run, then upgrades the
+// database and syncs its indexes in the background.
 func (service *Domain) Start() error {
 
 	const location = "service.Domain.Start"
@@ -105,36 +101,36 @@ func (service *Domain) Start() error {
 
 	defer cancel()
 
-	// Reset the cached record HERE -- immediately before the Load that refills it -- so that this
-	// service is never left holding a blank Domain.  See the RULE on Refresh.
-	service.domain = model.NewDomain()
+	// Reset the cached record HERE, next to the Load that refills it, and never in Refresh.
+	// A failed Load leaves this blank published.
+	service.publish(model.NewWritableDomain())
 
-	// Try to load the domain model into memory
-	err = service.collection(session).Load(exp.All(), &service.domain)
+	// Try to load the stored Domain record into memory
+	writableDomain := model.NewWritableDomain()
 
-	switch {
+	if err := service.Load(session, &writableDomain); err != nil {
 
-	// If the domain record already exists, then bring its hostname up to date.
-	case err == nil:
-		if err := service.stampHostname(session); err != nil {
-			return derp.Wrap(err, location, "Updating domain hostname")
+		// Anything BUT a "Not Found" error is fatal.
+		if !derp.IsNotFound(err) {
+			return derp.Wrap(err, location, "Loading domain record")
 		}
 
-	// If "Not Found", then this is the first run, so bootstrap the domain and owner.
-	case derp.IsNotFound(err):
-		if err := service.bootstrap(session); err != nil {
+		// Otherwise, this is the first run, so bootstrap the domain and owner into the same record.
+		if err := service.bootstrap(session, &writableDomain); err != nil {
 			return derp.Wrap(err, location, "Bootstrapping new domain")
 		}
-
-	// Any other error is fatal.
-	default:
-		return derp.Wrap(err, location, "Loading domain record")
 	}
 
-	// ASYNC: Update database tables and indexes.  Both steps work through the connection the
-	// factory already holds (read at call time, so a reconnect is picked up) -- the old
-	// connect-string signatures dialed a fresh client per call and never disconnected it,
-	// leaking one client per domain at boot and per domain change after.
+	// Publish the loaded or bootstrapped domain record to the cache.
+	service.publish(writableDomain)
+
+	if err := service.stampHostname(session); err != nil {
+		return derp.Wrap(err, location, "Updating domain hostname")
+	}
+
+	// ASYNC: Upgrade the database and sync its indexes through the connection the factory already
+	// holds, read at call time so a reconnect is picked up.  Never dial a client here: one that is
+	// never disconnected leaks per domain, at boot and on every domain change.
 	go func() {
 
 		// RULE: Bounded.  Nothing holds a lock here, but an unreachable server must not pin
@@ -150,7 +146,8 @@ func (service *Domain) Start() error {
 		}
 
 		// Once we have the domain loaded, try to upgrade the database
-		if err := queries.UpgradeMongoDB(ctx, database, &service.domain); err != nil {
+		readOnlyDomain := service.Cached()
+		if err := queries.UpgradeMongoDB(ctx, database, readOnlyDomain.DatabaseVersion); err != nil {
 			derp.Report(derp.Wrap(err, location, "Domain Not Ready: Error upgrading domain record"))
 			return
 		}
@@ -162,34 +159,25 @@ func (service *Domain) Start() error {
 	return nil
 }
 
-// bootstrap creates the initial domain record and, when configured, the owner account.
-// Both writes happen inside a SINGLE transaction so the operation is atomic: if the owner
-// cannot be created, the domain record is rolled back too.  The next server start then
-// finds no domain record and cleanly retries the whole bootstrap, instead of stranding a
-// domain record with no owner (which would leave the operator permanently locked out).
-func (service *Domain) bootstrap(session data.Session) error {
+// bootstrap fills domain with the initial Domain record and creates it, with the configured owner
+// account, in ONE transaction.  The caller publishes the record once bootstrap returns.
+func (service *Domain) bootstrap(session data.Session, writableDomain *model.WritableDomain) error {
 
 	const location = "service.Domain.bootstrap"
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
-	// Build the new domain record locally.  We publish it to the in-memory cache only
-	// after the transaction commits, so a rollback never leaves the cache out of sync.
-	//
-	// The hostname must be stamped BEFORE persist(): Domain.Host() builds every derived URL from
-	// it, and persist validates iconUrl/imageUrl as absolute URLs.  Without it, the very first
-	// save of a new domain fails with "https:///..." -- a scheme and no authority.
-	domain := service.domain
-	domain.Hostname = service.hostname
-	domain.Label = service.configuration.Label
+	// Stamp the hostname BEFORE persist: Domain.Host() builds every derived URL from it.
+	writableDomain.Hostname = service.hostname
+	writableDomain.Label = service.configuration.Label
 
 	var owner *model.User
 
 	if _, err := service.withTransaction(ctx, func(txn data.Session) (any, error) {
 
 		// Create the singleton domain record
-		if err := service.persist(txn, &domain, "Created Domain Record"); err != nil {
+		if err := service.persist(txn, writableDomain, "Created Domain Record"); err != nil {
 			return nil, derp.Wrap(err, location, "Creating domain record")
 		}
 
@@ -202,12 +190,10 @@ func (service *Domain) bootstrap(session data.Session) error {
 
 		owner = newOwner
 		return nil, nil
+
 	}); err != nil {
 		return derp.Wrap(err, location, "Initializing domain")
 	}
-
-	// The transaction committed, so the in-memory cache can now reflect durable state.
-	service.domain = domain
 
 	// POST-COMMIT: invite a non-localhost owner to set their password (see inviteOwner).
 	// This runs outside the transaction because sending email is an external side effect
@@ -220,23 +206,31 @@ func (service *Domain) bootstrap(session data.Session) error {
 }
 
 // stampHostname writes the configured hostname into the stored Domain record whenever the two
-// disagree.  The server configuration owns the hostname -- an operator can rename a domain in the
-// setup tool at any time -- but the record needs its own copy because Domain.Host() builds every
-// derived URL (federation actor, OAuth client metadata, oEmbed, email links) from it.  Writing it
-// back on every Start is what keeps the stored copy from going stale after a rename.
+// disagree (see AGENTS.md).
 func (service *Domain) stampHostname(session data.Session) error {
 
 	const location = "service.Domain.stampHostname"
 
-	// NO-OP: the stored record already agrees with the configuration
-	if !needsHostnameStamp(service.domain.Hostname, service.hostname) {
+	// NO-OP: the cached record already agrees with the configuration
+	if !needsHostnameStamp(service.Cached().Hostname, service.hostname) {
 		return nil
 	}
 
-	domain := service.domain
-	domain.Hostname = service.hostname
+	// Start the write from the stored record, never from the cache
+	writableDomain := model.NewWritableDomain()
 
-	if err := service.Save(session, domain, "Updated Hostname"); err != nil {
+	if err := service.Load(session, &writableDomain); err != nil {
+		return derp.Wrap(err, location, "Loading Domain")
+	}
+
+	// NO-OP: another node stamped it since the cached record was read
+	if !needsHostnameStamp(writableDomain.Hostname, service.hostname) {
+		return nil
+	}
+
+	writableDomain.Hostname = service.hostname
+
+	if err := service.Save(session, &writableDomain, "Updated Hostname"); err != nil {
 		return derp.Wrap(err, location, "Saving Domain", service.hostname)
 	}
 
@@ -244,9 +238,7 @@ func (service *Domain) stampHostname(session data.Session) error {
 }
 
 // needsHostnameStamp reports whether the stored hostname must be rewritten to match the configured
-// one.  A blank configured hostname never overwrites a stored value: the setup console builds
-// factories before its configuration is complete, and clearing a good hostname would break every
-// URL the domain derives from it.
+// one.  A blank configured hostname never overwrites a stored value.
 func needsHostnameStamp(stored string, configured string) bool {
 
 	if configured == "" {
@@ -256,9 +248,8 @@ func needsHostnameStamp(stored string, configured string) bool {
 	return stored != configured
 }
 
-// createOwner creates the domain owner account when the configuration requests one,
-// returning the created User (or nil when owner creation is not configured).  It must be
-// called inside the bootstrap transaction so the owner and domain record commit together.
+// createOwner creates the configured owner account, or returns nil when none is configured.  Call it
+// inside the bootstrap transaction, so that the owner and the Domain record commit together.
 func (service *Domain) createOwner(session data.Session) (*model.User, error) {
 
 	const location = "service.Domain.createOwner"
@@ -291,10 +282,8 @@ func (service *Domain) createOwner(session data.Session) (*model.User, error) {
 	return &owner, nil
 }
 
-// newOwnerFromConfig builds a domain owner User from the configured owner details,
-// filling in default values for any field the operator left blank.  A blank email falls
-// back to "admin@<hostname>" because User.Save requires a non-empty address.  Kept as a
-// pure function (no database, no receiver) so the fallback rules are unit-testable.
+// newOwnerFromConfig builds the domain owner from the configured details, defaulting every blank
+// field.  A blank email becomes "demo@<hostname>", because User.Save requires an address.
 func newOwnerFromConfig(configured config.Owner, hostname string) model.User {
 
 	owner := model.NewUser()
@@ -307,60 +296,24 @@ func newOwnerFromConfig(configured config.Owner, hostname string) model.User {
 	return owner
 }
 
-// ownerInviteMethod decides how a newly-bootstrapped owner receives their first password.
-// Kept pure (no receiver, no database) so the policy is unit-testable.
-type ownerInviteMethod int
-
-const (
-	// ownerInviteLocalhost means the convenience password is already set, so nothing needs to be sent
-	ownerInviteLocalhost ownerInviteMethod = iota // convenience password already set; nothing to send
-	// ownerInviteEmail means a password-reset link should be emailed to the owner
-	ownerInviteEmail // public host + configured email: send a reset link
-	// ownerInviteManual means the operator must set the owner's password by hand
-	ownerInviteManual // public host + no email: operator must set one manually
-)
-
-// calcOwnerInviteMethod decides how a new Domain's owner is invited to set their password
-func calcOwnerInviteMethod(isLocalhost bool, ownerEmail string) ownerInviteMethod {
-
-	switch {
-
-	case isLocalhost:
-		return ownerInviteLocalhost
-
-	case strings.TrimSpace(ownerEmail) != "":
-		return ownerInviteEmail
-
-	default:
-		return ownerInviteManual
-	}
-}
-
-// inviteOwner delivers a first-time password to a newly-bootstrapped owner.  Localhost
-// owners already have the convenience password set in createOwner; public-host owners
-// either receive a password-reset link (when an email was configured) or a clear, loud
-// message pointing the operator at the setup console to set a password manually.
+// inviteOwner delivers a first password to a newly-bootstrapped owner: nothing on localhost, a
+// password-reset link when an email is configured, and otherwise a loud warning to the operator.
 func (service *Domain) inviteOwner(session data.Session, owner *model.User) {
 
-	switch calcOwnerInviteMethod(service.IsLocalhost(), service.configuration.Owner.EmailAddress) {
+	// Don't send emails on localhost
+	if service.IsLocalhost() {
+		return
+	}
 
-	case ownerInviteEmail:
-		// Report-and-continue: owner bootstrap must not fail because the welcome email bounced.
-		// The reset code is still issued, so the operator can recover once mail is fixed.
-		if err := service.userService.SendPasswordResetEmail(session, owner, model.PasswordResetDurationWelcome); err != nil {
-			derp.Report(derp.Wrap(err, "service.Domain.inviteOwner", "Sending owner welcome email", owner.Username))
-		}
+	// Don't send emails if there isn't an email configured
+	if service.configuration.Owner.EmailAddress == "" {
+		return
+	}
 
-	case ownerInviteManual:
-		// There is no password and no way to deliver one.  Surface a clear, loud message
-		// so the operator is not silently locked out of their own server.
-		log.Warn().
-			Str("hostname", service.hostname).
-			Str("username", owner.Username).
-			Msg("Owner account created without a password. Configure an owner email address, or set a password from the server setup console (Domains > Users).")
-
-	case ownerInviteLocalhost:
-		// Nothing to do -- the convenience password is already set (see createOwner).
+	// Report-and-continue: owner bootstrap must not fail because the welcome email bounced.
+	// The reset code is still issued, so the operator can recover once mail is fixed.
+	if err := service.userService.SendPasswordResetEmail(session, owner, model.PasswordResetDurationWelcome); err != nil {
+		derp.Report(derp.Wrap(err, "service.Domain.inviteOwner", "Sending owner welcome email", owner.Username))
 	}
 }
 
@@ -368,50 +321,82 @@ func (service *Domain) inviteOwner(session data.Session, owner *model.User) {
  * Common Data Methods
  ******************************************/
 
-// Get returns a pointer to the domain model object
-func (service *Domain) Get() *model.Domain {
-	return &service.domain
-}
+// Cached returns the cached, read-only Domain record.  A service that has never loaded one returns a
+// blank Domain.  To change the record, Load a WritableDomain and Save it (see AGENTS.md).
+func (service *Domain) Cached() *model.Domain {
 
-// Save updates the value of this domain in the database and refreshes the in-memory cache.
-func (service *Domain) Save(session data.Session, domain model.Domain, note string) error {
-
-	// Write the (validated) value to the database
-	if err := service.persist(session, &domain, note); err != nil {
-		return derp.Wrap(err, "service.Domain.Save", "Saving Domain")
+	if result := service.cache.Load(); result != nil {
+		return &result.Domain
 	}
 
-	// Update the in-memory cache to match what was just written
-	service.domain = domain
+	// Publish a blank record only if nothing else got there first, so every caller shares one value
+	blank := model.NewWritableDomain()
+	service.cache.CompareAndSwap(nil, &blank)
+
+	return &service.cache.Load().Domain
+}
+
+// Load reads the stored Domain record into writableDomain, which the caller builds with model.NewWritableDomain()
+func (service *Domain) Load(session data.Session, writableDomain *model.WritableDomain) error {
+
+	const location = "service.Domain.Load"
+
+	if err := service.collection(session).Load(exp.All(), writableDomain); err != nil {
+		return derp.Wrap(err, location, "Loading Domain record")
+	}
 
 	return nil
 }
 
-// persist validates a Domain and writes it to the database WITHOUT touching the
-// in-memory cache.  Callers that write inside a transaction use this directly and
-// publish to the cache themselves only after the transaction commits, so a rolled-back
-// write never leaves the cache holding a record that isn't in the database.
-func (service *Domain) persist(session data.Session, domain *model.Domain, note string) error {
+// publish replaces the cached Domain record with a copy of the provided value
+func (service *Domain) publish(writableDomain model.WritableDomain) {
+
+	// The caller keeps its value and may go on editing it, so the cache holds its own maps and slices
+	clone := model.WritableDomain{
+		Domain:  writableDomain.Domain.Clone(),
+		Journal: writableDomain.Journal,
+	}
+
+	service.cache.Store(&clone)
+}
+
+// Save updates the value of this domain in the database and refreshes the in-memory cache.
+func (service *Domain) Save(session data.Session, writableDomain *model.WritableDomain, note string) error {
+
+	// Write the (validated) value to the database
+	if err := service.persist(session, writableDomain, note); err != nil {
+		return derp.Wrap(err, "service.Domain.Save", "Saving Domain")
+	}
+
+	// Update the in-memory cache to match what was just written
+	service.publish(*writableDomain)
+
+	return nil
+}
+
+// persist validates a Domain and writes it to the database WITHOUT publishing it.  A caller inside
+// a transaction publishes only after the commit (see AGENTS.md).
+func (service *Domain) persist(session data.Session, writableDomain *model.WritableDomain, note string) error {
 
 	const location = "service.Domain.persist"
 
 	// Validate the value using the default domain schema
-	if _, err := schema.New(model.DomainSchema()).Validate(domain); err != nil {
+	if _, err := schema.New(model.DomainSchema()).Validate(writableDomain); err != nil {
 		return derp.Wrap(err, location, "Validating Domain with standard Domain schema")
 	}
 
-	// Validate the value using the custom schema for this domain
-	if _, err := service.Schema().Validate(domain); err != nil {
+	// Validate again with Schema(), which returns the same standard schema, not the Theme's
+	if _, err := service.Schema().Validate(writableDomain); err != nil {
 		return derp.Wrap(err, location, "Validating Domain with custom schema from Theme")
 	}
 
 	// If the MLS mode is not "Groups", then clear all group IDs
-	if domain.MLSMode != model.DomainMLSModeGroups {
-		domain.MLSGroupIDs = sliceof.NewString()
+	if writableDomain.MLSMode != model.DomainMLSModeGroups {
+		writableDomain.MLSGroupIDs = sliceof.NewString()
 	}
 
 	// Try to save the value to the database
-	if err := service.collection(session).Save(domain, note); err != nil {
+	if err := service.collection(session).Save(writableDomain, note); err != nil {
 		return derp.Wrap(err, location, "Saving Domain")
 	}
 
@@ -432,17 +417,17 @@ func (service *Domain) ObjectType() string {
 	return "Domain"
 }
 
-// ObjectNew returns a fully initialized model.Domain as a data.Object.
+// ObjectNew returns a fully initialized model.WritableDomain as a data.Object.
 func (service *Domain) ObjectNew() data.Object {
-	result := model.NewDomain()
-	return &result
+	writableDomain := model.NewWritableDomain()
+	return &writableDomain
 }
 
 // ObjectID returns the unique ID of the provided Domain. Implements the ModelService interface.
 func (service *Domain) ObjectID(object data.Object) primitive.ObjectID {
 
-	if domain, ok := object.(*model.Domain); ok {
-		return domain.DomainID
+	if writableDomain, ok := object.(*model.WritableDomain); ok {
+		return writableDomain.DomainID
 	}
 
 	return primitive.NilObjectID
@@ -453,26 +438,33 @@ func (service *Domain) ObjectQuery(session data.Session, result any, criteria ex
 	return service.collection(session).Query(result, notDeleted(criteria), options...)
 }
 
-// ObjectLoad retrieves a single Domain as a data.Object. Implements the ModelService interface.
-func (service *Domain) ObjectLoad(_ data.Session, _ exp.Expression) (data.Object, error) {
-	return &service.domain, nil
+// ObjectLoad returns a copy of the stored Domain record, whatever the criteria. Implements the ModelService interface.
+func (service *Domain) ObjectLoad(session data.Session, _ exp.Expression) (data.Object, error) {
+
+	writableDomain := model.NewWritableDomain()
+
+	if err := service.Load(session, &writableDomain); err != nil {
+		return nil, derp.Wrap(err, "service.Domain.ObjectLoad", "Loading Domain")
+	}
+
+	return &writableDomain, nil
 }
 
 // ObjectSave adds or updates a Domain in the database. Implements the ModelService interface.
 func (service *Domain) ObjectSave(session data.Session, object data.Object, note string) error {
-	if domain, ok := object.(*model.Domain); ok {
-		return service.Save(session, *domain, note)
+	if writableDomain, ok := object.(*model.WritableDomain); ok {
+		return service.Save(session, writableDomain, note)
 	}
 
 	return derp.Internal("service.Domain.ObjectSave", "Invalid Object Type", object)
 }
 
-// ObjectDelete marks a Domain as deleted. Implements the ModelService interface.
+// ObjectDelete refuses to delete the Domain. Implements the ModelService interface.
 func (service *Domain) ObjectDelete(session data.Session, object data.Object, note string) error {
 	return derp.BadRequest("service.Domain.ObjectDelete", "Unsupported")
 }
 
-// ObjectUserCan reports whether the provided Authorization may run an action on a Domain. Implements the ModelService interface.
+// ObjectUserCan refuses every action on the Domain. Implements the ModelService interface.
 func (service *Domain) ObjectUserCan(object data.Object, authorization model.Authorization, action string) error {
 	return derp.Unauthorized("service.Domain", "Not Authorized")
 }
@@ -488,18 +480,18 @@ func (service *Domain) Schema() schema.Schema {
 
 // Theme returns the Theme that this Domain is displayed with
 func (service *Domain) Theme() model.Theme {
-	return service.themeService.GetTheme(service.domain.ThemeID)
+	return service.themeService.GetTheme(service.Cached().ThemeID)
 }
 
 // HasRegistrationForm returns TRUE if this domain allows new users to sign up.
 func (service *Domain) HasRegistrationForm() bool {
-	return service.domain.HasRegistrationForm()
+	return service.Cached().HasRegistrationForm()
 }
 
 // LoadRegistration returns the sign-up Registration configured for this Domain
 func (service *Domain) LoadRegistration() model.Registration {
 
-	if registrationID := service.domain.RegistrationID; registrationID != "" {
+	if registrationID := service.Cached().RegistrationID; registrationID != "" {
 		if registration, err := service.registrationService.Load(registrationID); err == nil {
 			return registration
 		}
@@ -513,7 +505,7 @@ func (service *Domain) Provider(providerID string) (providers.Provider, bool) {
 	return service.providerService.GetProvider(providerID)
 }
 
-// ManualProvider returns the external.ManualProvider that matches the given providerID
+// ManualProvider returns the providers.ManualProvider that matches the given providerID
 func (service *Domain) ManualProvider(providerID string) (providers.ManualProvider, bool) {
 
 	if provider, ok := service.Provider(providerID); ok {
@@ -526,7 +518,7 @@ func (service *Domain) ManualProvider(providerID string) (providers.ManualProvid
 	return nil, false
 }
 
-// OAuthProvider returns the external.OAuthProvider that matches the given providerID
+// OAuthProvider returns the providers.OAuthProvider that matches the given providerID
 func (service *Domain) OAuthProvider(providerID string) (providers.OAuthProvider, bool) {
 
 	if provider, ok := service.Provider(providerID); ok {
@@ -554,7 +546,7 @@ func (service *Domain) OAuthCodeURL(session data.Session, providerID string) (st
 
 	const location = "service.Domain.OAuthCodeURL"
 
-	// Get the provider for this provider
+	// Get the OAuth provider for this providerID
 	provider, ok := service.OAuthProvider(providerID)
 
 	if !ok {
@@ -568,17 +560,14 @@ func (service *Domain) OAuthCodeURL(session data.Session, providerID string) (st
 		return "", derp.Wrap(err, location, "Generating new OAuth connection")
 	}
 
-	// Generate and return the AuthCodeURL
+	// Generate and return the AuthCodeURL.  The code challenge is hashed with S256, because the
+	// unhashed "plain" method is insecure.
 	config := provider.OAuthConfig()
 
 	config.RedirectURL = service.OAuthClientCallbackURL(providerID)
 	codeChallengeBytes := sha256.Sum256([]byte(connection.Data.GetString("code_challenge")))
 	codeChallenge := oauth2.SetAuthURLParam("code_challenge", random.Base64URLEncode(codeChallengeBytes[:]))
 	codeChallengeMethod := oauth2.SetAuthURLParam("code_challenge_method", "S256")
-
-	// INSECURE? Unhashed Code challenge method
-	// codeChallenge := oauth2.SetAuthURLParam("code_challenge", connection.Data.GetString("code_challenge"))
-	// codeChallengeMethod := oauth2.SetAuthURLParam("code_challenge_method", "plain")
 	authCodeURL := config.AuthCodeURL(connection.Data.GetString("state"), codeChallenge, codeChallengeMethod)
 
 	return authCodeURL, nil
@@ -589,14 +578,14 @@ func (service *Domain) OAuthExchange(session data.Session, providerID string, st
 
 	const location = "service.Domain.OAuthExchange"
 
-	// Get the provider for this provider
+	// Get the OAuth provider for this providerID
 	provider, ok := service.OAuthProvider(providerID)
 
 	if !ok {
 		return derp.BadRequest(location, "Unknown OAuth Provider", providerID)
 	}
 
-	// The connection must already be set up for this exchange to work.
+	// Load the Connection that holds the state and code challenge from OAuthCodeURL
 	connection, err := service.connectionService.LoadOrCreateByProvider(session, providerID)
 
 	if err != nil {
@@ -632,12 +621,8 @@ func (service *Domain) OAuthExchange(session data.Session, providerID string, st
 	return nil
 }
 
-// oauthHTTPContext returns a context carrying an SSRF-hardened HTTP client for the
-// golang.org/x/oauth2 handshake. oauth2 POSTs to the provider's TokenURL using the client
-// found in the context (else http.DefaultClient, which is UNGUARDED). Provider endpoints are
-// admin-configured (not attacker-controlled), so this is defense-in-depth, but it keeps every
-// oauth2 handshake on the same guarded transport. Private addresses are allowed only when this
-// instance allows them, matching the ActivityStream client's policy.
+// oauthHTTPContext returns a context carrying an SSRF-hardened HTTP client for the oauth2 handshake,
+// which otherwise falls back to the unguarded http.DefaultClient (see AGENTS.md).
 func (service *Domain) oauthHTTPContext() context.Context {
 	client := remote.NewHTTPClient(service.activityService.AllowPrivateIPs())
 	return context.WithValue(context.Background(), oauth2.HTTPClient, client)
@@ -654,7 +639,14 @@ func (service *Domain) NewOAuthClient(session data.Session, providerID string) (
 	const location = "service.Domain.NewOAuthClient"
 
 	// Find or Create a connection for this provider
-	connection, _ := service.connectionService.LoadOrCreateByProvider(session, providerID)
+	connection, err := service.connectionService.LoadOrCreateByProvider(session, providerID)
+
+	// RULE: The error must not be discarded.  Its failure paths return a ZERO Connection whose
+	// Data map is nil, and the assignments below write into that map -- so a dropped error here
+	// is a panic, not a degraded result.
+	if err != nil {
+		return model.Connection{}, derp.Wrap(err, location, "Loading Connection", providerID)
+	}
 
 	// Try to generate a new state
 	newState, err := random.GenerateString(32)
@@ -742,7 +734,7 @@ func (service *Domain) LoadWebFinger(username string) (digit.Resource, error) {
 
 	profileURL := uri.PrependProtocol(service.hostname) + "/@application"
 
-	// Make a WebFinger resource for this user.
+	// Make a WebFinger resource for the service actor
 	result := digit.NewResource("acct:service@"+service.hostname).
 		Alias(profileURL).
 		Link(digit.RelationTypeSelf, model.MimeTypeActivityPub, profileURL)

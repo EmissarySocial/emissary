@@ -58,6 +58,7 @@ type Factory interface {
 	Stream() *service.Stream
 	StreamArchive() *service.StreamArchive
 	StreamDraft() *service.StreamDraft
+	StreamSource() *service.StreamSource
 	Privilege() *service.Privilege
 	Template() *service.Template
 	Theme() *service.Theme

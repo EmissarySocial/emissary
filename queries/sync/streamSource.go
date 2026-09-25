@@ -30,5 +30,17 @@ func StreamSource(ctx context.Context, database *mongo.Database) error {
 				SetUnique(true).
 				SetPartialFilterExpression(bson.M{"deleteDate": 0}),
 		},
+
+		// Serves the webhook endpoint, whose whole job is "find every record with this token".
+		// That runs on an unauthenticated route, so a collection scan would be the cost of one
+		// request.  The token is deliberately NOT unique: many records share one, so that a single
+		// ping from a repository refreshes every page sourced from it.
+		"idx_StreamSource_WebhookToken": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "config.webhookToken", Value: 1},
+			},
+			Options: options.Index().
+				SetPartialFilterExpression(bson.M{"deleteDate": 0}),
+		},
 	})
 }

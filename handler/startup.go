@@ -33,7 +33,7 @@ func doStartup(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	}
 
 	// RULE: The startup checklist is only available while the Domain is still being set up.  Once the
-	if domain := factory.Domain().Get(); domain.StateID != model.DomainStateStartup {
+	if readOnlyDomain := factory.Domain().Cached(); readOnlyDomain.StateID != model.DomainStateStartup {
 		return ctx.Redirect(http.StatusPermanentRedirect, "/")
 	}
 

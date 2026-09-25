@@ -20,7 +20,7 @@ func outbox_DeleteKeyPackage(context Context, activity streams.Document) error {
 	const location = "handler.activitypub_user.outbox_DeleteKeyPackage"
 
 	// RULE: Verify that the Domain allows MLS messages for this User
-	if domain := context.factory.Domain().Get(); !domain.UserCanMLS(context.user) {
+	if readOnlyDomain := context.factory.Domain().Cached(); !readOnlyDomain.UserCanMLS(context.user) {
 		return derp.Forbidden(location, "MLS messages not allowed for this User")
 	}
 

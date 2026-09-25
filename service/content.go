@@ -103,7 +103,7 @@ func (service *Content) ApplyLinks(content *model.Content) {
 	x := regexp.MustCompile(`https?://[^\s]+`)
 
 	newHTML := x.ReplaceAllStringFunc(content.HTML, func(input string) string {
-		return `<a href="` + string(input) + `" target="_blank">` + string(input) + `</a>`
+		return `<a href="` + string(input) + `" target="_blank" rel="noopener noreferrer">` + string(input) + `</a>`
 	})
 
 	content.HTML = string(newHTML)

@@ -20,8 +20,8 @@ func TestUser_SummaryHTML(t *testing.T) {
 
 	result := user.SummaryHTML()
 
-	require.Contains(t, result, `<a href="https://example.com/search?q=%23travel" target="_blank">#travel</a>`)
-	require.Contains(t, result, `<a href="https://example.com/search?q=%23Food2024" target="_blank">#Food2024</a>`)
+	require.Contains(t, result, `<a href="https://example.com/search?q=%23travel" target="_blank" rel="noopener noreferrer">#travel</a>`)
+	require.Contains(t, result, `<a href="https://example.com/search?q=%23Food2024" target="_blank" rel="noopener noreferrer">#Food2024</a>`)
 }
 
 // TestUser_SummaryHTML_NoProfileURL confirms that a User with no ProfileURL degrades to a relative
@@ -34,7 +34,7 @@ func TestUser_SummaryHTML_NoProfileURL(t *testing.T) {
 
 	result := user.SummaryHTML()
 
-	require.Contains(t, result, `<a href="/search?q=%23travel" target="_blank">#travel</a>`)
+	require.Contains(t, result, `<a href="/search?q=%23travel" target="_blank" rel="noopener noreferrer">#travel</a>`)
 }
 
 // TestUser_SummaryHTML_NoTagURL renders Markdown but leaves hashtags as plain text when no TagURL is set.

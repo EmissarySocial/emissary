@@ -9,9 +9,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/EmissarySocial/emissary/model"
 	webpush "github.com/SherClockHolmes/webpush-go"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/uri"
 	"github.com/rs/zerolog/log"
 )
@@ -88,9 +90,20 @@ func (service *WebPush) vapidKeys(session data.Session) (publicKey string, priva
 
 	const location = "service.WebPush.vapidKeys"
 
-	domain := service.domainService.Get()
+	// Fast path: the cached record already holds a keypair
+	if public, private, ok := storedVAPIDKeys(service.domainService.Cached()); ok {
+		return public, private, nil
+	}
 
-	if public, private := domain.Data.GetString(domainDataVAPIDPublicKey), domain.Data.GetString(domainDataVAPIDPrivateKey); public != "" && private != "" {
+	// Start the write from the stored record, never from the cache
+	writableDomain := model.NewWritableDomain()
+
+	if err := service.domainService.Load(session, &writableDomain); err != nil {
+		return "", "", derp.Wrap(err, location, "Loading Domain")
+	}
+
+	// Another request or node may have generated a keypair since the cached record was read
+	if public, private, ok := storedVAPIDKeys(&writableDomain.Domain); ok {
 		return public, private, nil
 	}
 
@@ -101,18 +114,32 @@ func (service *WebPush) vapidKeys(session data.Session) (publicKey string, priva
 		return "", "", derp.Wrap(err, location, "Generating VAPID keys")
 	}
 
-	updated := *domain
-	if updated.Data == nil {
-		return "", "", derp.Internal(location, "Domain.Data map is not initialized")
+	// A record stored before Data existed decodes with a nil map
+	if writableDomain.Data == nil {
+		writableDomain.Data = mapof.NewString()
 	}
-	updated.Data[domainDataVAPIDPublicKey] = newPublic
-	updated.Data[domainDataVAPIDPrivateKey] = newPrivate
 
-	if err := service.domainService.Save(session, updated, "Generate VAPID keys"); err != nil {
+	writableDomain.Data[domainDataVAPIDPublicKey] = newPublic
+	writableDomain.Data[domainDataVAPIDPrivateKey] = newPrivate
+
+	if err := service.domainService.Save(session, &writableDomain, "Generate VAPID keys"); err != nil {
 		return "", "", derp.Wrap(err, location, "Saving VAPID keys")
 	}
 
 	return newPublic, newPrivate, nil
+}
+
+// storedVAPIDKeys returns the VAPID keypair held on a Domain record, or FALSE when either half is missing
+func storedVAPIDKeys(readOnlyDomain *model.Domain) (publicKey string, privateKey string, ok bool) {
+
+	publicKey = readOnlyDomain.Data.GetString(domainDataVAPIDPublicKey)
+	privateKey = readOnlyDomain.Data.GetString(domainDataVAPIDPrivateKey)
+
+	if publicKey == "" || privateKey == "" {
+		return "", "", false
+	}
+
+	return publicKey, privateKey, true
 }
 
 /******************************************
@@ -166,6 +193,12 @@ func (service *WebPush) Send(session data.Session, endpoint string, p256dh strin
 
 	if err != nil {
 		return 0, derp.Wrap(err, location, "Sending Web Push notification", endpoint, subscriber)
+	}
+
+	// RULE: webpush-go hands back its HTTPClient's response verbatim, so a client that breaks
+	// the (response, error) convention arrives here as a nil that the defer below dereferences.
+	if response == nil {
+		return 0, derp.Internal(location, "Push service returned no response", endpoint, subscriber)
 	}
 
 	defer func() {

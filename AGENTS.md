@@ -2,7 +2,7 @@
 
 See [README.md](README.md) for what Emissary is and [build/README.md](build/README.md) for how templates and action pipelines fit together. These are the repo-wide rules that are not visible in the code.
 
-Package-specific notes live in the nearest `AGENTS.md` — currently [service](service/AGENTS.md), [handler/mastodon](handler/mastodon/AGENTS.md), and [tools](tools/AGENTS.md). Put a lesson in the most specific file that covers it; this one is only for rules that span packages.
+Package-specific notes live in the nearest `AGENTS.md`, and most packages now have one: [build](build/AGENTS.md), [config](config/AGENTS.md), [consumer](consumer/AGENTS.md), [handler](handler/AGENTS.md), [middleware](middleware/AGENTS.md), [model](model/AGENTS.md), [queries](queries/AGENTS.md), [realtime](realtime/AGENTS.md), [server](server/AGENTS.md), [service](service/AGENTS.md), and [tools](tools/AGENTS.md), with deeper ones under [handler/mastodon](handler/mastodon/AGENTS.md), [service/content](service/content/AGENTS.md), and [_embed/templates](_embed/templates/AGENTS.md). Put a lesson in the most specific file that covers it; this one is only for rules that span packages.
 
 Runtime errors are reported to MongoDB by [tools/derp-mongo](tools/derp-mongo/README.md). The command that works through them, [benpate/derp-triage](https://github.com/benpate/derp-triage), lives in its own module and deliberately does not depend on this one.
 
@@ -47,6 +47,18 @@ A Go client connecting to a single-node replica set from the host will otherwise
 ## Never run `go mod tidy` while a local `replace` is in `go.mod`
 
 Emissary regularly consumes `benpate/*` and `EmissarySocial/*` libraries from local working copies while a fix waits for a tag. `go mod tidy` rewrites `go.sum` and the require block against those local trees, which produces a `go.mod` that cannot build for anyone else and is easy to commit by accident. If tidy is genuinely needed, drop the replaces first — and never keep its rewrite silently.
+
+## A local `replace` is a debt, and the commit that depends on it is not finished
+
+The rule above covers what `go mod tidy` does to `go.mod`. This one covers the opposite mistake: migrating code to an API that only exists in a local working copy, and committing it without the tag. It compiles for whoever holds the replace and for nobody else, and the replace itself is never in the diff, so the branch looks complete.
+
+BUG-168 is the worked example. `consumer.Consumer` was rewritten for turbine's five-method `queue.Consumer` interface in a commit that touched only `consumer/consumer.go` and its test; `go.mod` stayed on a turbine release where `Consumer` was still a function type. The merge then bumped turbine to the last version of the *old* API, so `dev` did not compile for four commits. Either finish the chain — tag the library, bump the pin, drop the replace — or do not commit the code that needs it.
+
+## A merge that compiles each side can still break the build
+
+Two branches fixing one defect can each add the same declaration and merge without a conflict, because git conflicts on overlapping hunks rather than on meaning. BUG-168's `followingBackoff` landed twice in one file, 247 lines apart, and `TestFollowingBackoff` landed in two different files. Build the merge result, not just each side: `go build ./...` stops at the first failing package, and `service` is a dependency of almost everything, so one compiler error there can be hiding several.
+
+Deleting the survivor is not arbitrary when the bodies are identical. Keep the copy whose neighbours want it — the one that survived sits directly above its only caller, while the other was stranded at the end of the file — and carry the better comment across.
 
 ## An email recipient never comes from the request
 
@@ -103,6 +115,10 @@ Navigation links routinely carry **both** attributes (`<a href="/x" hx-get="/x">
 ## Templates are data, not code — a stale copy will not announce itself
 
 Templates in [_embed/templates](_embed/templates/) are embedded at build time, but a server can also load template folders from Git or disk. Those copies are cached, so an edit to a template's actions, states, or roles may need a restart before it takes effect, and a stale external copy silently keeps serving the old pipeline. When a template change appears to do nothing, confirm which copy is actually being served before debugging the Go code.
+
+**A template directory created after startup is never watched, so edits inside it are never picked up.** `Filesystem.watchOS` ([service/filesystem.go](service/filesystem.go)) enumerates subdirectories once and recurses into the ones that exist at that moment; `Template.watch` is started only from `Refresh`, and the change handler calls `loadTemplates` directly rather than re-arming the watcher. So the watcher set is fixed at the last config change.
+
+The confusing part is that a new template still *appears*: `loadTemplates` re-reads every directory from scratch whenever any **watched** directory changes, so a new folder is picked up as a side effect of editing an old one, and then goes stale again. Symptom: you edit a new template, the server does not reload, and the browser keeps being served markup you no longer have on disk — including attributes you can see in the file. Restart the server after adding a template directory.
 
 ## `.card` carries `container-type`, so it collapses inside a shrink-to-fit box
 

@@ -103,8 +103,8 @@ func getOEmbed_record(factory *service.Factory, session data.Session, path strin
 
 // getOEmbed_Domain builds the oEmbed document that describes this domain's home page
 func getOEmbed_Domain(factory *service.Factory) oembed.Response {
-	domain := factory.Domain().Get()
-	return newOEmbedResponse(factory, domain.Label)
+	readOnlyDomain := factory.Domain().Cached()
+	return newOEmbedResponse(factory, readOnlyDomain.Label)
 }
 
 // getOEmbed_Stream builds the oEmbed document that describes a single Stream
@@ -157,8 +157,8 @@ func getOEmbed_User(factory *service.Factory, session data.Session, token string
 	}
 
 	// Describe the User
-	domain := factory.Domain().Get()
-	result := newOEmbedResponse(factory, "@"+user.Username+"@"+domain.Hostname)
+	readOnlyDomain := factory.Domain().Cached()
+	result := newOEmbedResponse(factory, "@"+user.Username+"@"+readOnlyDomain.Hostname)
 	setOEmbedThumbnail(&result, factory.Hostname(), user.ActivityPubIconURL())
 
 	return result, nil
@@ -167,14 +167,14 @@ func getOEmbed_User(factory *service.Factory, session data.Session, token string
 // newOEmbedResponse returns an oEmbed document carrying the values that every record on this domain shares
 func newOEmbedResponse(factory *service.Factory, title string) oembed.Response {
 
-	domain := factory.Domain().Get()
+	readOnlyDomain := factory.Domain().Cached()
 
 	// oembed.NewLink stamps the required version and type, so this document
 	// cannot be spec-invalid by construction.
 	result := oembed.NewLink(title)
 	result.CacheAge = oEmbedCacheAge
-	result.ProviderName = domain.Label
-	result.ProviderURL = domain.Host()
+	result.ProviderName = readOnlyDomain.Label
+	result.ProviderURL = readOnlyDomain.Host()
 
 	return result
 }

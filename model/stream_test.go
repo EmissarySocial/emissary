@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/datetime"
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
@@ -318,4 +319,49 @@ func TestStream_ActivityPubUsername(t *testing.T) {
 		stream.Token = test.token
 		require.Equal(t, test.expected, stream.ActivityPubUsername(), "token %q", test.token)
 	}
+}
+
+// TestStream_SharingStatus confirms that SharingStatus names the audience for a single role
+func TestStream_SharingStatus(t *testing.T) {
+
+	namedGroup := primitive.NewObjectID()
+	namedCircle := primitive.NewObjectID()
+
+	// sharedWith builds a Stream whose "viewer" role is granted to the provided Groups and Circles
+	sharedWith := func(groupIDs id.Slice, circleIDs id.Slice) Stream {
+		return Stream{
+			Groups:  mapof.Object[id.Slice]{"viewer": groupIDs},
+			Circles: mapof.Object[id.Slice]{"viewer": circleIDs},
+		}
+	}
+
+	tests := []struct {
+		name     string
+		stream   Stream
+		expected string
+	}{
+		{"anonymous", sharedWith(id.Slice{MagicGroupIDAnonymous}, nil), SharingStatusPublic},
+		{"authenticated", sharedWith(id.Slice{MagicGroupIDAuthenticated}, nil), SharingStatusAuthenticated},
+		{"owners", sharedWith(id.Slice{MagicGroupIDOwners}, nil), SharingStatusOwners},
+		{"named group", sharedWith(id.Slice{namedGroup}, nil), SharingStatusCircles},
+		{"named circle", sharedWith(nil, id.Slice{namedCircle}), SharingStatusCircles},
+		{"nothing at all", sharedWith(nil, nil), SharingStatusOwners},
+		{"empty stream", Stream{}, SharingStatusOwners},
+
+		// RULE: Owners always have access, so a Group alongside them still narrows the audience.
+		{"owners plus a group", sharedWith(id.Slice{MagicGroupIDOwners, namedGroup}, nil), SharingStatusCircles},
+
+		// RULE: The widest Group wins, because it already includes the narrower ones.
+		{"anonymous plus a group", sharedWith(id.Slice{namedGroup, MagicGroupIDAnonymous}, nil), SharingStatusPublic},
+		{"authenticated plus a group", sharedWith(id.Slice{namedGroup, MagicGroupIDAuthenticated}, nil), SharingStatusAuthenticated},
+	}
+
+	for _, test := range tests {
+		require.Equal(t, test.expected, test.stream.SharingStatus("viewer"), test.name)
+	}
+
+	// RULE: Roles do not leak.  A public "editor" role says nothing about who can view.
+	editorsOnly := Stream{Groups: mapof.Object[id.Slice]{"editor": {MagicGroupIDAnonymous}}}
+	require.Equal(t, SharingStatusOwners, editorsOnly.SharingStatus("viewer"), "another role's grant must not count")
+	require.Equal(t, SharingStatusPublic, editorsOnly.SharingStatus("editor"), "the named role's grant must count")
 }

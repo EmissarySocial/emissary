@@ -36,18 +36,18 @@ func Version25(ctx context.Context, session *mongo.Database) error {
 		connections[connection.ProviderID] = connection
 	}
 
-	// Load the domain
-	domain := model.NewDomain()
+	// Load the Domain record
+	readOnlyDomain := model.NewDomain()
 
-	if err := session.Collection("Domain").FindOne(ctx, bson.M{}).Decode(&domain); err != nil {
+	if err := session.Collection("Domain").FindOne(ctx, bson.M{}).Decode(&readOnlyDomain); err != nil {
 		return derp.Wrap(err, location, "Reading Domain from database")
 	}
 
 	// Update the domain with the new connections data
-	domain.Connections = connections
+	readOnlyDomain.Connections = connections
 
 	// Write the domain back to the database
-	if _, err := session.Collection("Domain").ReplaceOne(ctx, bson.M{"_id": domain.DomainID}, domain); err != nil {
+	if _, err := session.Collection("Domain").ReplaceOne(ctx, bson.M{"_id": readOnlyDomain.DomainID}, readOnlyDomain); err != nil {
 		return derp.Wrap(err, location, "Writing Domain to database")
 	}
 

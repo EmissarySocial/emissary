@@ -1,3 +1,7 @@
+// nilaway:ignore-file -- Get() is a 254-case lookup table (766 CFG blocks), over NilAway's
+// hard 500-block limit.  NilAway skips it either way, and intermittently reports that skip
+// as an INTERNAL ERROR that fails CI.  See service/AGENTS.md.
+
 package service
 
 import (

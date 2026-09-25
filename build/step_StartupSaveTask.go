@@ -7,7 +7,6 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
-	"github.com/benpate/rosetta/sliceof"
 )
 
 // StepStartupSaveTask is a Step that records one completed startup task in the Domain.
@@ -22,19 +21,17 @@ func (step StepStartupSaveTask) Get(builder Builder, _ io.Writer) PipelineBehavi
 
 // Post appends this step's Value to the Domain's list of completed startup tasks.  The Domain is
 // a per-tenant singleton reached through the Factory, so this Step works in every Template.
-//
-// Every guard below is a silent no-op rather than an error: this Step decorates an action that
-// does real work, so a Domain that is already live, a task the Theme does not define, or a task
-// that is already recorded must not fail the action that contains it.
 func (step StepStartupSaveTask) Post(builder Builder, _ io.Writer) PipelineBehavior {
 
 	const location = "build.StepStartupSaveTask.Post"
 
+	// Every guard below is a silent no-op rather than an error: this Step decorates an action that
+	// does real work, so a live Domain, an unknown task, or a task already recorded must not fail it
 	domainService := builder.factory().Domain()
-	domain := domainService.Get()
+	readOnlyDomain := domainService.Cached()
 
 	// RULE: Only record tasks while the Domain is still being set up.
-	if domain.StateID != model.DomainStateStartup {
+	if readOnlyDomain.StateID != model.DomainStateStartup {
 		return Continue()
 	}
 
@@ -49,22 +46,25 @@ func (step StepStartupSaveTask) Post(builder Builder, _ io.Writer) PipelineBehav
 	}
 
 	// RULE: Never record the same task twice.
-	if domain.StartupTasks.Contains(step.Value) {
+	if readOnlyDomain.StartupTasks.Contains(step.Value) {
 		return Continue()
 	}
 
-	// Work on a copy, including a fresh slice.  Domain.Get() hands out a pointer into the
-	// Domain service's in-memory cache, so mutating it in place would publish this change
-	// before it is written -- and leave the cache holding it even if the write fails.
-	// Domain.Save refreshes the cache itself, once the record is safely persisted.
-	startupTasks := make(sliceof.String, 0, len(domain.StartupTasks)+1)
-	startupTasks = append(startupTasks, domain.StartupTasks...)
-	startupTasks = append(startupTasks, step.Value)
+	// Edit the stored record, never the cached one, and re-check it: the stored record may already
+	// carry this task, or the wizard may have finished, since the cached record was read
+	writableDomain := model.NewWritableDomain()
 
-	updated := *domain
-	updated.StartupTasks = startupTasks
+	if err := domainService.Load(builder.session(), &writableDomain); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Loading Domain", step.Value))
+	}
 
-	if err := domainService.Save(builder.session(), updated, "Startup task complete"); err != nil {
+	if writableDomain.StateID != model.DomainStateStartup || writableDomain.StartupTasks.Contains(step.Value) {
+		return Continue()
+	}
+
+	writableDomain.StartupTasks = append(writableDomain.StartupTasks, step.Value)
+
+	if err := domainService.Save(builder.session(), &writableDomain, "Startup task complete"); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Saving Domain", step.Value))
 	}
 

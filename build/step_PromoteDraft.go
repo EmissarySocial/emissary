@@ -4,11 +4,13 @@ import (
 	"io"
 
 	"github.com/benpate/derp"
+	"github.com/benpate/rosetta/sliceof"
 )
 
 // StepStreamPromoteDraft is a Step that can copy the Container from a StreamDraft into its corresponding Stream
 type StepStreamPromoteDraft struct {
 	StateID string
+	Omit    sliceof.String
 }
 
 // Get renders this step during a GET request. Implements the Step interface.
@@ -24,7 +26,7 @@ func (step StepStreamPromoteDraft) Post(builder Builder, _ io.Writer) PipelineBe
 	factory := builder.factory()
 
 	// Try to load the draft from the database, overwriting the stream already in the builder
-	stream, err := factory.StreamDraft().Promote(builder.session(), builder.objectID(), step.StateID)
+	stream, err := factory.StreamDraft().Promote(builder.session(), builder.objectID(), step.StateID, step.Omit)
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, "builder.StepStreamPromoteDraft.Post", "Publishing draft"))

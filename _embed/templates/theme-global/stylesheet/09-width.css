@@ -199,6 +199,12 @@
 .max-width-auto {
 	max-width: auto;
 }
+/* Shrinks a TABLE CELL to the space its siblings leave over.  Auto table layout
+   otherwise widens a column to fit its longest unbreakable word, so a cell has
+   no width to overflow and .ellipsis cannot truncate anything. */
+.max-width-0 {
+	max-width: 0;
+}
 .max-width-16 {
 	max-width: 16px;
 }

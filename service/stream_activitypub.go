@@ -223,7 +223,7 @@ func (service *Stream) PrivateKey(session data.Session, streamID primitive.Objec
 	privateKey, err := service.keyService.GetPrivateKey(&encryptionKey)
 
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Extracting private key", encryptionKey)
+		return nil, derp.Wrap(err, location, "Extracting private key", encryptionKey.EncryptionKeyID)
 	}
 
 	// Success
@@ -247,7 +247,7 @@ func (service *Stream) ActivityPubActor(session data.Session, streamID primitive
 	privateKey, err := service.keyService.GetPrivateKey(&encryptionKey)
 
 	if err != nil {
-		return outbox.Actor{}, derp.Wrap(err, location, "Extracting private key", encryptionKey)
+		return outbox.Actor{}, derp.Wrap(err, location, "Extracting private key", encryptionKey.EncryptionKeyID)
 	}
 
 	// Return the ActivityPub Actor

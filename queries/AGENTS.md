@@ -2,6 +2,20 @@
 
 Custom MongoDB queries that don't fit the [service](../service/AGENTS.md) layer's standard CRUD — see [README.md](README.md). [upgrades](upgrades/) holds the per-version data migrations, [sync](sync/) holds index definitions plus the reconcile passes that make them buildable. Repo-wide rules, including the upgrade-slot rule this package enforces, are in [../AGENTS.md](../AGENTS.md).
 
+## Every change stream runs inside `changeWatcher`, and only cancellation stops it
+
+A MongoDB change stream ends with `Next() == false` and `Err() == nil` when the server closes it (an `invalidate`, from a dropped or renamed collection), and the driver never reopens it. A bare `for cs.Next(ctx)` loop therefore dies without a word, and that server misses every later change until it restarts. [watch.go](watch.go) reopens with backoff, resumes with `SetStartAfter` (the only resume option that survives an `invalidate`), drops a token the server refuses, and runs `onOpen` on every open to catch up on missed events. Every new watcher must use it.
+
+Because the loop never ends on its own, whoever owns the context owns its lifetime. Domain factories start their watchers on the refresh context, and a dropped factory must be closed with `service.Factory.Close`, which cancels it (`server.removeDomain` does this), or its watchers run for the life of the process against a domain nobody serves.
+
+## The realtime watchers see inserts and replacements, never `$set`
+
+`WatchStreams`, `WatchUsers`, and `WatchImports` open without `UpdateLookup`, so an update written with `$set` carries no document and sends no browser nudge; only whole-document saves do. `WatchDomain` does use `UpdateLookup`, because the upgrade runner writes `databaseVersion` with `$set` and never touches the cached record, so the watcher is the only thing that brings the cache up to date. A stale cached version is harmless on its own, because every whole-document save starts from a `Domain.Load` of the stored record rather than from the cache (see [../service/AGENTS.md](../service/AGENTS.md)), but `UpgradeMongoDB` reads its starting version from the cache at boot, and a version that never arrived would re-run migrations after the next restart (see [BOOT-MIGRATIONS](../../emissary-specs/projects/BOOT-MIGRATIONS.md) §2).
+
+## The Domain record's `_id` is the zero ObjectID
+
+The Domain is a singleton stored with `_id: ObjectId("000000000000000000000000")`: nothing assigns `DomainID`, and `UpgradeMongoDB` filters on `primitive.NilObjectID`. The "skip zero IDs" guard in the realtime watchers must never be copied into `WatchDomain`, which would then publish nothing at all.
+
 ## Upgrade slots are append-only, and every new migration must be idempotent
 
 [../AGENTS.md](../AGENTS.md) states the never-reuse-a-slot rule; the local mechanics live in [upgrade.go](upgrade.go), where the slice index IS the stored `databaseVersion` (slot 0 is nil). Retired migrations become no-op stubs in place (v001–v019), never deleted or renumbered. Because slot numbers were reused on dev branches in the past, version tracking is an optimization, not the safety mechanism: write every migration idempotent — plan-then-write, delete only true duplicates, backfill only nulls — so a later slot can safely re-run it on a database whose version number lies. `reconcileRules` (written for v027, re-run by v028) is the pattern.
@@ -24,7 +38,7 @@ Service `Rule.Save` keys ACTOR rules by the resolved canonical actor URL, but [u
 
 ## Nothing purges SearchResults by age
 
-There is no global time-based purge. The daily tasks are PurgeActivityStreamCache, PurgeErrors, PurgeDomeLog, Shuffle, RecycleDomain, PurgeImports, and PurgeNotifications; hourly is PollFollowing-Index; startup is empty. `queries.Recycle` only touches rows with `deleteDate > 0` older than 30 days, and SearchResults are **hard** deleted, so they never carry a deleteDate — and there is no TTL index on the collection. A SearchResult therefore lives forever unless something deletes it explicitly. Do not assume a retention window exists when reasoning about growth or about stale rows.
+There is no global time-based purge. The daily tasks are PurgeActivityStreamCache, PurgeErrors, PurgeDomeLog, Shuffle, RecycleDomain, PurgeImports, and PurgeNotifications; hourly is PollFollowing-Index; startup queues only the Stripe Connect repair ([BUG-179](../../emissary-specs/bugs/_done/BUG-179-Stripe-Connect-Webhook-Secret-Never-Stored.md)), which purges nothing. `queries.Recycle` only touches rows with `deleteDate > 0` older than 30 days, and SearchResults are **hard** deleted, so they never carry a deleteDate — and there is no TTL index on the collection. A SearchResult therefore lives forever unless something deletes it explicitly. Do not assume a retention window exists when reasoning about growth or about stale rows.
 
 ## An aggregation-pipeline `$set` BROADCASTS across an existing array
 

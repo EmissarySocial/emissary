@@ -135,23 +135,13 @@
 
 </script>
 
-<!-- NO .turboclick on anything here that LEAVES the page, and this is the whole reason why.
-
+<!-- NO .turboclick on anything here that LEAVES the page.
      turboclick fires its synthetic click on mousedown, from a capture phase listener, which
      runs before the browser's own default action moves focus.  Every editor on this menu bar
      saves on blur, so a turboclick link starts navigating while the textarea still holds
      focus: blur never fires, save() is never called, and the visitor's last edit is gone.
      There is no error, because nothing failed.  Nobody asked to save.
-
-     What keeps its .turboclick, and why it is safe to:
-
-       * the two buttons, because they call save() themselves before they go anywhere, so
-         they never depend on blur having fired first
-       * the hx-get links, because a modal or a confirmation does not unload the page, and
-         blur still fires normally underneath it
-
-     So the cost of correctness here is about 100ms of perceived latency on the tab links.
-     That is what we trade for not silently eating people's work. -->
+-->
 
 <div id="menu-bar" class="margin-bottom">
 	<a href="/admin/navigation" class="text-gray margin-none padding-horizontal-xs">Navigation &rarr;</a>
@@ -187,14 +177,22 @@
 		{{- end -}}
 
 		{{- if .UserCan "sharing" -}}
-			<a hx-get="/{{.StreamID}}/sharing" class="turboclick {{- if eq $selected `sharing` }} bold{{- end -}}">Sharing</a>
+			<!-- The label IS the sharing status, so this tab reports who can see the article without being opened. -->
+			{{- $sharing := .SharingStatus `viewer` -}}
+			<a hx-get="/{{.StreamID}}/sharing" class="turboclick {{- if eq $selected `sharing` }} bold{{- end -}}">{{icon $sharing.Icon}} {{$sharing.Label}}</a>
 		{{- end -}}
 	</div>
 
 	<div class="right">
 		<span id="htmx-response-message" class="margin-right-sm"></span>
-		<button hx-on:click="saveAndPromote()" class="turboclick button primary">Promote</button>
-		<button hx-get="/{{.StreamID}}/discard-draft" class="turboclick">Discard Draft</button>
+		<!-- Guarded because a child Template cannot REMOVE an inherited action, only override it with no roles: article-remote has no draft to promote. -->
+		{{- if .UserCan "promote-draft" -}}
+			<button hx-on:click="saveAndPromote()" class="turboclick button primary">Promote</button>
+		{{- end -}}
+
+		{{- if .UserCan "discard-draft" -}}
+			<button hx-get="/{{.StreamID}}/discard-draft" class="turboclick">Discard Draft</button>
+		{{- end -}}
 
 		{{- if .UserCan "delete" -}}
 			<a hx-get="/{{.StreamID}}/delete" class="turboclick text-red">Delete</a>

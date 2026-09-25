@@ -21,8 +21,10 @@ func TestConsumer_IgnoresUnknownTasks(t *testing.T) {
 	}
 }
 
-// TestConsumer_LifecycleHooksAreSilent pins the current state of the four lifecycle hooks:
-// declared because queue.Consumer requires them, and reporting nothing yet.
+// TestConsumer_LifecycleHooksAreSilent pins the DEFAULT of the four lifecycle hooks.  They run for
+// every task in the system, and only SyncStreamSource acts on them today -- see
+// syncStreamSource_test.go.  The nil ServerFactory is the proof: a hook that dispatched would
+// reach for it.
 func TestConsumer_LifecycleHooksAreSilent(t *testing.T) {
 
 	consumer := New(nil)

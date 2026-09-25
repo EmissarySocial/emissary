@@ -62,7 +62,7 @@
 			<!--
 			<button hx-get="/@me/newsfeed/conversation-new?actorId={{$actor.ID}}" class="primary">{{icon "chat"}} Direct Message</button>
 			-->
-			<a class="button outline" href="{{$actor.ID}}" target="_blank">{{icon "globe"}} Website</a>
+			<a class="button outline" href="{{$actor.ID}}" target="_blank" rel="noopener noreferrer">{{icon "globe"}} Website</a>
 		</div>
 	</div>
 
@@ -74,7 +74,7 @@
 	{{- else if $actor.Tag.NotEmpty -}}
 		<div class="margin-vertical text-xs">
 			{{- range $tag := $actor.Tag.Range -}}
-				<a href="{{$tag.Href}}" target="_blank" class="button">{{$tag.Name}}</a>
+				<a href="{{$tag.Href}}" target="_blank" rel="noopener noreferrer" class="button">{{$tag.Name}}</a>
 			{{- end -}}
 		</div>
 	{{- end -}}

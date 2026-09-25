@@ -87,7 +87,7 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 						Type:        "multiselect",
 						Label:       "Circles",
 						Path:        "circles." + role.RoleID,
-						Description: `<a href="/@me/settings/circles" target="_blank">Manage Circles &rarr;</a>`,
+						Description: `<a href="/@me/settings/circles" target="_blank" rel="noopener noreferrer">Manage Circles &rarr;</a>`,
 						Options: mapof.Any{
 							"rows": 6,
 							"enum": mapCirclesToLookupCodes(circles...),

@@ -55,13 +55,12 @@ func sendEmailStep(t *testing.T, template model.Template, actionID string) model
 	return modelStep.SendEmail{}
 }
 
-// TestContactFormTemplate_SuppliesEveryRequiredKey runs the same cross-check that
-// Template.validateTemplates performs at load: every key the email's "to", "subject", and
-// "headers" templates interpolate must appear in the step's values.  Those templates reject a
-// missing key rather than rendering a blank, so a gap here is a send that dies at the moment a
-// visitor presses the button.  Pinning it directly means a mismatch names its own cause.
+// TestContactFormTemplate_SuppliesEveryRequiredKey verifies that the submit action supplies every
+// key the email's "to", "subject", and "headers" templates require.
 func TestContactFormTemplate_SuppliesEveryRequiredKey(t *testing.T) {
 
+	// Mirrors Template.validateTemplates, but names the missing key directly.  Those templates
+	// reject a missing key, so a gap fails the send when a visitor presses the button.
 	emailService, _ := contactFormEmail(t)
 	step := sendEmailStep(t, contactFormTemplate(t), "submit")
 
@@ -76,11 +75,12 @@ func TestContactFormTemplate_SuppliesEveryRequiredKey(t *testing.T) {
 	}
 }
 
-// TestContactFormTemplate_SuppliesEveryBodyKey covers what load-time validation structurally
-// cannot: body.html is html/template, which renders a missing key as "", so a key the body needs
-// but the step omits produces a blank line in the recipient's email and no error anywhere.
+// TestContactFormTemplate_SuppliesEveryBodyKey verifies that the submit action supplies every key
+// that the email's body.html interpolates.
 func TestContactFormTemplate_SuppliesEveryBodyKey(t *testing.T) {
 
+	// Load-time validation cannot catch this: body.html is html/template, which renders a
+	// missing key as "", so a gap is a blank line in the email and no error anywhere.
 	step := sendEmailStep(t, contactFormTemplate(t), "submit")
 
 	// Every key body.html interpolates, minus the Domain_* values that DomainEmail.Send injects
@@ -94,13 +94,12 @@ func TestContactFormTemplate_SuppliesEveryBodyKey(t *testing.T) {
 	}
 }
 
-// TestContactFormTemplate_ClientValuesAreNotFormFields verifies that no Client_* value can be
-// posted.  These describe the browser, and their whole worth is that a sender cannot choose them:
-// a Client_IP the visitor typed is worse than none, because it looks authoritative in the footer.
-// read-form is an allowlist reading the body only (D23), so the guarantee is structural -- this
-// pins it against a future edit that "helpfully" adds one of these names to the schema.
+// TestContactFormTemplate_ClientValuesAreNotFormFields verifies that read-form declares no field
+// a visitor could use to supply a Client_* value.
 func TestContactFormTemplate_ClientValuesAreNotFormFields(t *testing.T) {
 
+	// A Client_IP the visitor typed is worse than none, because it looks authoritative in the
+	// footer.  read-form is an allowlist (D23); this guards against a name added to its schema.
 	action, exists := contactFormTemplate(t).Actions["submit"]
 	require.True(t, exists)
 
@@ -112,19 +111,19 @@ func TestContactFormTemplate_ClientValuesAreNotFormFields(t *testing.T) {
 		}
 	}
 
-	// The visitor declares exactly three fields, and none of them feeds a Client_* value
+	// RULE: No field name that could feed a Client_* value is declared to read-form
 	for _, field := range []string{"clientIP", "ip", "ipAddress", "userAgent", "referer", "platform"} {
 		_, exists := readForm.Schema.GetElement(field)
 		require.False(t, exists, "read-form declares %q, which would let a visitor forge their own sender details", field)
 	}
 }
 
-// TestContactFormTemplate_ClientValuesComeFromTheBuilder verifies that every Client_* value is
-// rendered from a Builder accessor rather than from the transient form scope.  ".GetString" reads
-// what read-form stored -- visitor input -- while the accessors read the request itself.  A step
-// that mixed them would silently publish a forged fingerprint as fact.
+// TestContactFormTemplate_ClientValuesComeFromTheBuilder verifies that no Client_* value is
+// rendered from .GetString or .QueryParam, the two accessors that read visitor input.
 func TestContactFormTemplate_ClientValuesComeFromTheBuilder(t *testing.T) {
 
+	// .GetString reads what read-form stored, while the other accessors read the request itself.
+	// A step that mixed them would publish a forged fingerprint as fact.
 	step := sendEmailStep(t, contactFormTemplate(t), "submit")
 
 	for key, valueTemplate := range step.Values {
@@ -141,11 +140,12 @@ func TestContactFormTemplate_ClientValuesComeFromTheBuilder(t *testing.T) {
 	}
 }
 
-// TestContactFormTemplate_ReadFormDeclaresEveryVisitorField verifies that every visitor value the
-// send-email step reads out of the transient scope was first declared to read-form.  The read-form
-// schema is an allowlist, so a field missing from it is never read and reaches the email empty.
+// TestContactFormTemplate_ReadFormDeclaresEveryVisitorField verifies that read-form declares every
+// visitor field the send-email step reads.
 func TestContactFormTemplate_ReadFormDeclaresEveryVisitorField(t *testing.T) {
 
+	// read-form's schema is an allowlist, so an undeclared field is never read and reaches the
+	// email empty.
 	action, exists := contactFormTemplate(t).Actions["submit"]
 	require.True(t, exists)
 
@@ -167,18 +167,18 @@ func TestContactFormTemplate_ReadFormDeclaresEveryVisitorField(t *testing.T) {
 	}
 }
 
-// TestContactFormTemplate_SubmitIsScopedToPublished verifies the authorization that the whole
-// anonymous pipeline rests on: a published form accepts a visitor, an unpublished one does not.
-// An anonymous grant is still scoped by state, and this is what enforces that -- without it, a
-// draft contact form would email its author's inbox from the moment it was created.
+// TestContactFormTemplate_SubmitIsScopedToPublished verifies that a published contact form accepts
+// an anonymous visitor and an unpublished one does not.
 func TestContactFormTemplate_SubmitIsScopedToPublished(t *testing.T) {
 
+	// An anonymous grant is still scoped by state.  Without that, a draft contact form would
+	// email its author from the moment it was created.
 	template := contactFormTemplate(t)
 	permissionService := NewPermission()
 	authorization := model.NewAuthorization()
 
 	action := template.Actions["submit"]
-	require.NoError(t, action.CalcAccessList(&template, false))
+	action.CalcAccessList(&template)
 	template.Actions["submit"] = action
 
 	// Both Streams carry a real author.  A zero AttributedTo.UserID would equal
@@ -205,16 +205,16 @@ func TestContactFormTemplate_SubmitIsScopedToPublished(t *testing.T) {
 	require.False(t, allowed, "an unpublished contact form must not accept messages")
 }
 
-// TestContactFormTemplate_ViewMatchesSubmit verifies that the form is submittable exactly when the
-// page is viewable.  A visitor who can see the form and cannot use it, or the reverse, is a bug in
-// either direction, and the two access lists are declared separately.
+// TestContactFormTemplate_ViewMatchesSubmit verifies that the view and submit actions open the
+// published state to the same audience.
 func TestContactFormTemplate_ViewMatchesSubmit(t *testing.T) {
 
+	// The two access lists are declared separately, and a mismatch in either direction is a bug
 	template := contactFormTemplate(t)
 
 	for _, actionID := range []string{"view", "submit"} {
 		action := template.Actions[actionID]
-		require.NoError(t, action.CalcAccessList(&template, false))
+		action.CalcAccessList(&template)
 		template.Actions[actionID] = action
 	}
 

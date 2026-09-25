@@ -44,7 +44,7 @@ func (adapter GeocodeAutocomplete) ManualConfig() form.Form {
 			Children: []form.Element{
 				{
 					Type:        "html",
-					Description: "Configure this service to show autocomplete search hits when entering addresses. <a href=https://emissary.social/geocode-autocomplete target=_blank>Learn More &rarr;</a>",
+					Description: "Configure this service to show autocomplete search hits when entering addresses. <a href='https://emissary.social/geocode-autocomplete' target='_blank' rel='noopener noreferrer'>Learn More &rarr;</a>",
 				},
 				{
 					Type:    "hidden",

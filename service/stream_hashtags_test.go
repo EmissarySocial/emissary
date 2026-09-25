@@ -33,7 +33,7 @@ func TestStream_applyHashtagLinks(t *testing.T) {
 
 	service.applyHashtagLinks(&template, &stream)
 
-	require.Equal(t, `Testing <a href="https://example.com/search?q=%23travel" target="_blank">#travel</a> here`, stream.Content.HTML, "anchors written into federated content must be absolute")
+	require.Equal(t, `Testing <a href="https://example.com/search?q=%23travel" target="_blank" rel="noopener noreferrer">#travel</a> here`, stream.Content.HTML, "anchors written into federated content must be absolute")
 }
 
 // TestStream_applyHashtagLinks_NoTagURL confirms that content is untouched when the Template has no TagURL.

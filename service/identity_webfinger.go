@@ -30,7 +30,7 @@ func (service *Identity) sendGuestCode_ActivityPub(session data.Session, identif
 		"<br><br>" +
 		"To continue, click the link below and you'll be linked back to your guest profile on " + hostname +
 		"<br><br>" +
-		"<a href=" + url + " target=_blank>Click here to Sign In &rarr;</a>"
+		"<a href='" + url + "' target='_blank' rel='noopener noreferrer'>Click here to Sign In &rarr;</a>"
 
 	activity := mapof.Any{
 		vocab.AtContext:         vocab.ContextTypeActivityStreams,

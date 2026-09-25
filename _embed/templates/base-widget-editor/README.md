@@ -6,7 +6,7 @@ Shared base template (category: Base, model: Stream) that provides the drag-and-
 
 The editor's form carries one hidden field per location, holding the IDs of the widgets placed there. Each field is rendered already filled in from `Stream.WidgetIDsByLocation`, and the behavior rewrites it after every drag, so a control in the layout-controls slot can save through the same form without a drag and the placement it posts is always the one on the page.
 
-A template may also ship a `layout-controls.html` into the slot the canvas reserves for controls that change the *shape* of the page. [layout-controls.html](layout-controls.html) is the empty default; [layout-controls-width.html](layout-controls-width.html) is a reusable page-width control that a template opts into by defining its own slot containing nothing but a call to it.
+The canvas reserves a `layout-controls` slot for controls that change the *shape* of the page. This template's [layout-controls.html](layout-controls.html) fills it by default with [layout-controls-width.html](layout-controls-width.html), the page-width control. A template replaces the default by shipping its own `layout-controls.html`, because `Template.Inherit` copies a parent's named templates only where the child has not defined that name. `stream-folder` does this, since a folder's page shape is how its children are listed rather than a width; a template that wants the width control alongside its own, like `stream-article-two-column`, calls `layout-controls-width` from its file.
 
 ## What the canvas asserts, and what it does not
 

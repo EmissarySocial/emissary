@@ -286,3 +286,143 @@ func TestFactoryConfig_UpdateConflictKeepsLocalConfig(t *testing.T) {
 	require.Equal(t, "winner@example.com", stored.AdminEmail)
 	require.Equal(t, "local@example.com", factory.Config().AdminEmail)
 }
+
+// faultyStorage is a stubStorage whose Read and Write fail on demand, and which counts its writes
+type faultyStorage struct {
+	stubStorage
+	writeError error // returned by every Write, when set
+	readError  error // returned by every Read, when set
+	writes     int   // how many times Write has been called
+}
+
+// Write fails with writeError when it is set, and otherwise behaves like stubStorage
+func (storage *faultyStorage) Write(value config.Config) (config.Config, error) {
+
+	storage.writes++
+
+	if storage.writeError != nil {
+		return config.Config{}, storage.writeError
+	}
+
+	return storage.stubStorage.Write(value)
+}
+
+// Read fails with readError when it is set, and otherwise behaves like stubStorage
+func (storage *faultyStorage) Read() (config.Config, error) {
+
+	if storage.readError != nil {
+		return config.Config{}, storage.readError
+	}
+
+	return storage.stubStorage.Read()
+}
+
+// TestFactoryConfig_UpdateFailure verifies that a failed save is wrapped, is not mistaken for a
+// conflict, and leaves this node's configuration alone.
+func TestFactoryConfig_UpdateFailure(t *testing.T) {
+
+	factory := &factoryCore{}
+	factory.storage = &faultyStorage{writeError: derp.Internal("test", "Storage is down")}
+	setTestConfig(factory, config.DefaultConfig())
+
+	edited := configWithDomains(config.Domain{
+		DomainID:      "1",
+		Hostname:      "one.example.com",
+		ConnectString: "mongodb://user:db-password-secret@127.0.0.1:59999/",
+		MasterKey:     testMasterKey,
+	})
+
+	err := factory.UpdateConfig(edited)
+
+	require.Error(t, err)
+	require.False(t, derp.IsConflict(err))
+	require.Equal(t, "server.factory.UpdateConfig", derp.Location(err))
+	require.Empty(t, factory.ListDomains(), "a failed save must not be published")
+
+	// The configuration it failed to save carries every domain's secrets
+	requireNoSecret(t, err, testMasterKey)
+	requireNoSecret(t, err, "db-password-secret")
+}
+
+// TestFactoryConfig_MutateGivesUpAfterThreeConflicts pins the retry bound
+func TestFactoryConfig_MutateGivesUpAfterThreeConflicts(t *testing.T) {
+
+	storage := &faultyStorage{writeError: derp.Conflict("test", "Always conflicting")}
+
+	factory := &factoryCore{}
+	factory.storage = storage
+	setTestConfig(factory, config.DefaultConfig())
+
+	err := mutateTestConfig(factory, func(value *config.Config) {
+		value.Domains.Put(config.Domain{DomainID: "1", Hostname: "one.example.com"})
+	})
+
+	require.Error(t, err)
+	require.True(t, derp.IsConflict(err))
+	require.Equal(t, 3, storage.writes)
+	require.Empty(t, factory.ListDomains())
+}
+
+// TestFactoryConfig_MutateDoesNotRetryOtherErrors verifies that only a conflict is retried
+func TestFactoryConfig_MutateDoesNotRetryOtherErrors(t *testing.T) {
+
+	storage := &faultyStorage{writeError: derp.Internal("test", "Storage is down")}
+
+	factory := &factoryCore{}
+	factory.storage = storage
+	setTestConfig(factory, config.DefaultConfig())
+
+	err := mutateTestConfig(factory, func(value *config.Config) {
+		value.AdminEmail = "changed@example.com"
+	})
+
+	require.Error(t, err)
+	require.False(t, derp.IsConflict(err))
+	require.Equal(t, 1, storage.writes)
+	require.Empty(t, factory.Config().AdminEmail)
+}
+
+// TestFactoryConfig_MutateStopsWhenTheRebaseFails verifies that a conflict followed by a failed
+// re-read returns the read error instead of retrying blind.
+func TestFactoryConfig_MutateStopsWhenTheRebaseFails(t *testing.T) {
+
+	storage := &faultyStorage{
+		writeError: derp.Conflict("test", "Conflicting"),
+		readError:  derp.Internal("test", "Storage is down"),
+	}
+
+	factory := &factoryCore{}
+	factory.storage = storage
+	setTestConfig(factory, config.DefaultConfig())
+
+	err := mutateTestConfig(factory, func(value *config.Config) {
+		value.AdminEmail = "changed@example.com"
+	})
+
+	require.Error(t, err)
+	require.False(t, derp.IsConflict(err), "the read failure, not the conflict, is what stopped the save")
+	require.Equal(t, 1, storage.writes)
+}
+
+// TestFactoryConfig_UpdateSucceeds verifies that a save publishes the STORED version, whose
+// revision the next save must match.
+func TestFactoryConfig_UpdateSucceeds(t *testing.T) {
+
+	factory := &factoryCore{}
+	factory.storage = &stubStorage{}
+	setTestConfig(factory, config.DefaultConfig())
+
+	edited := factory.Config()
+	edited.AdminEmail = "edited@example.com"
+
+	require.NoError(t, factory.UpdateConfig(edited))
+	require.Equal(t, "edited@example.com", factory.Config().AdminEmail)
+	require.Equal(t, int64(1), factory.Config().Revision)
+
+	// The next save builds on the published revision, so it does not conflict
+	again := factory.Config()
+	again.AdminEmail = "again@example.com"
+
+	require.NoError(t, factory.UpdateConfig(again))
+	require.Equal(t, int64(2), factory.Config().Revision)
+}

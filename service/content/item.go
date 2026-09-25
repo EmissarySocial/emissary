@@ -10,7 +10,7 @@ import (
 
 // Item is one piece of content, as a remote source offered it
 type Item struct {
-	Format string    // Content format of Source.  model.ContentFormatMarkdown is the only value today.
+	Format string    // Content format of Source: MARKDOWN or HTML, as contentFormat decided
 	Source []byte    // Raw content with any front matter removed.  Never pre-rendered HTML.
 	Meta   mapof.Any // Front matter values, or nil when the source carries no front matter
 	Hash   string    // Hexadecimal hash of the complete source, front matter included

@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"sync"
 	texttemplate "text/template"
 	"text/template/parse"
 
@@ -30,31 +31,17 @@ type ServerEmail struct {
 	filesystemService Filesystem
 	funcMap           template.FuncMap
 	emails            map[string]model.Email
+	mutex             sync.RWMutex
 }
 
-// NewServerEmail returns a fully initialized ServerEmail service, loaded from the provided locations
+// NewServerEmail returns a fully initialized ServerEmail service with an empty email library
 func NewServerEmail(filesystemService Filesystem, funcMap template.FuncMap, locations []mapof.String) ServerEmail {
 
-	service := ServerEmail{
+	return ServerEmail{
 		filesystemService: filesystemService,
 		funcMap:           funcMap,
 		emails:            make(map[string]model.Email),
 	}
-
-	service.Refresh()
-
-	return service
-}
-
-/******************************************
- * Lifecycle Methods
- ******************************************/
-
-// Refresh updates this service with the latest configuration values
-func (service *ServerEmail) Refresh() {
-
-	// Reset all emails (to be reloaced by the Template service)
-	service.emails = make(map[string]model.Email)
 }
 
 /******************************************
@@ -86,10 +73,9 @@ func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 	email.EmailRole = temp.GetString("emailRole")
 	email.Model = temp.GetString("model")
 
-	// RULE: every definition declares the object its data describes, which is what RequireModel()
-	// compares a Go sender's fixed data shape against.  This is deliberately not checked against
-	// templateModelRegistry: an email names the object the message is ABOUT (such as "Follower"),
-	// which is a different namespace from a Template's builder model.
+	// RULE: every definition names the object its data describes, which RequireModel() checks.
+	// Not checked against templateModelRegistry: an email names the object the message is ABOUT
+	// (such as "Follower"), a different namespace from a Template's builder model.
 	if email.Model == "" {
 		return derp.BadRequest(location, "Email definition must include a 'model'", email.EmailID)
 	}
@@ -165,13 +151,11 @@ func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 		email.Resources = resources
 	}
 
-	// RULE: a later filesystem location may deliberately override an email that an earlier one
-	// defined, so a duplicate is legal -- but an accidental collision is otherwise silent
-	if _, exists := service.emails[email.EmailID]; exists {
-		log.Warn().Str("emailId", email.EmailID).Msg("Email Service: replacing a previously-defined email")
-	}
+	// RULE: Add overwrites, and nothing ever empties this library.  Every template reload adds each
+	// email again over its live copy, so readers never see it empty (BUG-180)
+	service.mutex.Lock()
+	defer service.mutex.Unlock()
 
-	// Add the email into the prep library
 	service.emails[email.EmailID] = email
 
 	// Banana
@@ -180,6 +164,9 @@ func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 
 // Names returns the ID of every email template in this service's library, sorted
 func (service *ServerEmail) Names() []string {
+	service.mutex.RLock()
+	defer service.mutex.RUnlock()
+
 	result := maps.Keys(service.emails)
 	slices.Sort(result)
 	return result
@@ -191,21 +178,21 @@ func (service *ServerEmail) Names() []string {
 
 // Exists returns TRUE if an email with this ID is defined in this service's library
 func (service *ServerEmail) Exists(emailID string) bool {
+	service.mutex.RLock()
+	defer service.mutex.RUnlock()
+
 	_, exists := service.emails[emailID]
 	return exists
 }
 
 // RequiredKeys returns every data key that an email's "to", "subject", and "headers" templates
-// interpolate.  Keys that Send supplies for every email are excluded, because no caller passes them.
-//
-// "to" and "headers" carry missingkey=error, so omitting one of their keys does not render a blank
-// value -- it fails the whole send.  "subject" is lenient by comparison, but text/template renders
-// an absent key as the literal "<no value>", which then ships to the recipient in the subject line,
-// so it is worth catching at load time too.  The body is deliberately excluded: it is html/template,
-// which renders a missing key as "", and email-follower-activity depends on that.
+// interpolate, except the providedKeys that DomainEmail.Send supplies for every email
 func (service *ServerEmail) RequiredKeys(emailID string) sliceof.String {
 
-	email, exists := service.emails[emailID]
+	// A missing key fails "to" and "headers" outright, and ships as "<no value>" in "subject".
+	// The body is excluded: html/template renders a missing key as "", and
+	// email-follower-activity depends on that.
+	email, exists := service.lookup(emailID)
 
 	if !exists {
 		return sliceof.String{}
@@ -231,17 +218,18 @@ func (service *ServerEmail) RequiredKeys(emailID string) sliceof.String {
 	return result
 }
 
-// RequireModel returns an error unless the named email is defined for modelName.  Callers that
-// build a fixed data shape in Go use this to reject a definition -- possibly one an administrator
-// overrode on disk -- that describes some other object entirely.
+// RequireModel returns an error unless the named email is defined for modelName
 func (service *ServerEmail) RequireModel(emailID string, modelName string) error {
 
 	const location = "service.ServerEmail.RequireModel"
 
-	email, exists := service.emails[emailID]
+	// Go senders build a fixed data shape, so this rejects a definition -- possibly one an
+	// administrator overrode on disk -- that describes some other object
+
+	email, exists := service.lookup(emailID)
 
 	if !exists {
-		return derp.BadRequest(location, "Email is not defined", emailID, maps.Keys(service.emails))
+		return derp.BadRequest(location, "Email is not defined", emailID, service.Names())
 	}
 
 	if modelName == "" {
@@ -254,6 +242,15 @@ func (service *ServerEmail) RequireModel(emailID string, modelName string) error
 
 	// A model citizen
 	return nil
+}
+
+// lookup returns the named email from the library
+func (service *ServerEmail) lookup(emailID string) (model.Email, bool) {
+	service.mutex.RLock()
+	defer service.mutex.RUnlock()
+
+	email, exists := service.emails[emailID]
+	return email, exists
 }
 
 /******************************************
@@ -269,10 +266,10 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner con
 	// that include password reset codes and, for web-form templates, whatever a visitor typed
 
 	// Find the email in the library
-	email, exists := service.emails[emailID]
+	email, exists := service.lookup(emailID)
 
 	if !exists {
-		return derp.BadRequest(location, "Email is not defined", emailID, maps.Keys(service.emails))
+		return derp.BadRequest(location, "Email is not defined", emailID, service.Names())
 	}
 
 	// If the SMTP Connection is empty, then don't try to send an email
@@ -355,11 +352,11 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner con
 // excluding the colon that terminates the name (%d33-57 and %d59-126)
 var headerNamePattern = regexp.MustCompile(`^[!-9;-~]+$`)
 
-// reservedHeaderNames are the headers an email definition may not set: three that decide who
-// receives the message, three that decide who it claims to be from, and four owned by the mail
-// library.  Reply-To is deliberately absent -- setting it is the reason "headers" exists.
-// Compared in canonical MIME form, since go-simple-mail canonicalizes before it stores them.
+// reservedHeaderNames are the headers an email definition may not set: who receives the message,
+// who it claims to be from, and the four owned by the mail library
 var reservedHeaderNames = []string{
+	// Reply-To is absent on purpose: setting it is the reason "headers" exists.  Names are in
+	// canonical MIME form, because go-simple-mail canonicalizes before it stores them
 	"To", "Cc", "Bcc",
 	"From", "Sender", "Return-Path",
 	"Date", "Mime-Version", "Content-Type", "Content-Transfer-Encoding",

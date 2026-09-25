@@ -37,8 +37,9 @@ type Template struct {
 	themeService        *Theme                       // Theme Service
 	widgetService       *Widget                      // Widget Service
 	funcMap             template.FuncMap             // Map of functions to use in golang templates
-	mutex               sync.RWMutex                 // Mutext that locks access to the templates structure
-	refresh             chan channel.Done            // Channel that is used to signal that the template service should refresh
+	templateLock        sync.RWMutex                 // Guards the live "templates" map: readers take RLock, a finished load takes Lock to publish
+	reloadLock          sync.Mutex                   // Lets one whole load run at a time, since a file change and a config reload can both start one
+	refresh             chan channel.Done            // Closed to stop the current filesystem watcher
 }
 
 // NewTemplate returns a fully initialized Template service.
@@ -69,11 +70,7 @@ func NewTemplate(filesystemService Filesystem, registrationService *Registration
 // Refresh updates this service with the latest configuration values
 func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
 
-	// Reset the "Refresh" channel
-	close(service.refresh)
-	service.refresh = make(chan channel.Done)
-
-	// RULE: If the Filesystem is empty, then don't try to load
+	// RULE: If no locations are configured, then don't try to load
 	if len(locations) == 0 {
 		return
 	}
@@ -83,37 +80,47 @@ func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
 		return
 	}
 
+	// RULE: Stop the old watcher only now that the locations have really changed.  Stopping it
+	// before the checks above let every no-op reload kill it, with nothing to restart it (BUG-180)
+	close(service.refresh)
+	done := make(chan channel.Done)
+	service.refresh = done
+
+	// RULE: The old watcher may still be partway through a load of its own, so wait for it.
+	// Everything a load reads, including the locations, changes only under this lock (BUG-180)
+	service.reloadLock.Lock()
+	defer service.reloadLock.Unlock()
+
 	// Add configuration to the service
 	service.locations = locations
 
-	// Load all templates from the filesystem.  On genuine first boot (no templates loaded
-	// yet) a load failure is fatal, because the server cannot serve anything without
-	// templates.  A later Refresh with templates already live must NOT halt.
+	// Load all templates from the filesystem.  While no Templates are live, any load error
+	// exits the process, because there is nothing to serve.  Once they are live, errors are
+	// reported and the live Templates keep serving.
 	haltOnError := len(service.templates) == 0
 
-	if err := service.loadTemplates(haltOnError); err != nil {
-		derp.Report(derp.Wrap(err, "service.Template.Refresh", "Loading templates from filesystem"))
-		return
-	}
+	service.loadTemplates(haltOnError)
 
 	// Try to watch the template directory for changes
-	go service.watch()
+	go service.watch(locations, done)
 }
 
 /******************************************
  * Real-Time Updates
  ******************************************/
 
-// watch must be run as a goroutine, and constantly monitors the
-// "Updates" channel for news that a template has been updated.
-func (service *Template) watch() {
+// watch must be run as a goroutine.  It watches every location for changes and reloads
+// all templates on each one, until "done" is closed.
+func (service *Template) watch(locations sliceof.Object[mapof.String], done chan channel.Done) {
 
+	// RULE: never close this channel.  A filesystem watcher may be sending on it at the moment we
+	// stop, and a send on a closed channel panics (BUG-180).  The watchers give up on "done" instead.
 	changes := make(chan bool)
-	defer close(changes)
 
-	// Start new watchers.
-	for _, folder := range service.locations {
-		if err := service.filesystemService.Watch(folder, changes, service.refresh); err != nil {
+	// Start new watchers.  Locations and "done" arrive as arguments, not fields,
+	// because Refresh replaces both fields while this runs.
+	for _, folder := range locations {
+		if err := service.filesystemService.Watch(folder, changes, done); err != nil {
 			derp.Report(derp.Wrap(err, "service.template.Watch", "Watching filesystem", folder))
 		}
 	}
@@ -123,27 +130,26 @@ func (service *Template) watch() {
 		select {
 
 		case <-changes:
-			// A watch-triggered reload must never halt the process: the previously-loaded
-			// templates are still serving, so on error we report and keep running.
-			if err := service.loadTemplates(false); err != nil {
-				derp.Report(derp.Wrap(err, "service.template.Watch", "Loading templates from filesystem"))
-			}
+			// Reload without halting, because the live Templates are still serving.  reloadLock
+			// keeps this load from overlapping one that Refresh starts (BUG-180)
+			service.reloadLock.Lock()
+			service.loadTemplates(false)
+			service.reloadLock.Unlock()
 
-		case <-service.refresh:
+		case <-done:
 			return
 		}
 	}
 }
 
-// loadTemplates (re)loads every template from the configured filesystem locations.
-// haltOnError controls what happens when a location fails to load: on the very first
-// load (initial boot) there are no live templates to fall back on, so an error is fatal
-// and the process exits.  On a subsequent watch-triggered reload the previously-loaded
-// templates are still serving, so an error is reported and the reload is abandoned --
-// never killing the running server.
-func (service *Template) loadTemplates(haltOnError bool) error {
+// loadTemplates reads every definition in the configured locations, and publishes the
+// Templates if all of them pass validation.  The caller must hold reloadLock.
+func (service *Template) loadTemplates(haltOnError bool) {
 
 	const location = "service.template.loadTemplates"
+
+	// Each failure is reported and skipped, or exits the process when haltOnError is set.
+	// Nothing returns an error, because nothing abandons the load partway (BUG-180)
 
 	service.templatePrep = make(set.Map[model.Template])
 
@@ -228,7 +234,8 @@ func (service *Template) loadTemplates(haltOnError bool) error {
 	// Calculate inheritance for Themes
 	service.themeService.calculateAllInheritance()
 
-	// Validate required fields for all Templates
+	// Validate required fields for all Templates.  Any failure publishes none of them,
+	// so the Templates already live keep serving (BUG-180)
 	if errs := service.validateTemplates(); len(errs) > 0 {
 
 		errorLength := strconv.Itoa(len(errs))
@@ -239,25 +246,21 @@ func (service *Template) loadTemplates(haltOnError bool) error {
 		}
 		log.Error().Msg("Finished reporting " + errorLength + " template errors.  Some templates may not function properly.")
 
-		return nil
+		return
 	}
 
 	// Calculate access lists for all Templates
-	if err := service.calculateAccessLists(); err != nil {
-		return derp.Wrap(err, location, "Calculating access lists")
-	}
+	service.calculateAccessLists()
 
 	// Assign the prep area to live
-	service.mutex.Lock()
-	defer service.mutex.Unlock()
+	service.templateLock.Lock()
+	defer service.templateLock.Unlock()
 
 	maps.Copy(service.templates, service.templatePrep)
 
 	// Clear out the existing prep area
 	service.templatePrep = make(set.Map[model.Template])
 	log.Debug().Msg("Template Service: Added/Updated " + strconv.Itoa(len(service.templates)) + " templates")
-
-	return nil
 }
 
 // maybeHalt reports an error, and exits the process if the caller asked it to be fatal
@@ -351,10 +354,9 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 			))
 		} else {
 
-			// RULE: Every property declared in the Template's schema must resolve to a
-			// real accessor on the model object it builds.  An "orphaned" property looks
-			// valid at load time but blows up at runtime the first time the object is
-			// saved (Normalize walks every property).  Catch it here, at load time.
+			// RULE: Every schema property must resolve to an accessor on the model object.
+			// An orphaned property passes this load but fails the object's first save,
+			// because Normalize walks every property.
 			for _, path := range template.UnsupportedSchemaProperties() {
 				errors.Append(derp.Validation(
 					"Template schema declares a property that the model object does not support",
@@ -365,10 +367,9 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 			}
 		}
 
-		// RULE: Every format name declared in the Template's schema must resolve in the
-		// format registry.  String validation silently skips unrecognized format names
-		// (degrading to the no-html default), so a typo'd format would otherwise ship
-		// with no validation at all.  Catch it here, at load time.
+		// RULE: Every format name in the schema must be registered.  String validation skips
+		// an unknown format (degrading to the no-html default), so a typo would otherwise
+		// ship with no validation at all.
 		if err := template.Schema.ValidateFormats(); err != nil {
 			errors.Append(derp.Validation(
 				"Template schema uses an unrecognized format name",
@@ -377,7 +378,7 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 			))
 		}
 
-		// RULE: Templates MUST have at least one Action, or else permissions won't work
+		// RULE: Templates MUST have at least one State, or else permissions won't work
 		if template.States.IsEmpty() {
 			errors.Append(derp.Validation(
 				"Template must define at least one State. Use 'default' if no other states are required.",
@@ -388,7 +389,7 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 		// Scan all Actions in the Template
 		for actionID, action := range template.Actions {
 
-			// Scan all statews in the Action
+			// Scan all States in the Action
 			for _, stateID := range action.States {
 
 				// RULE: States used in action.states must be defined
@@ -403,7 +404,7 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 				}
 			}
 
-			// Scan all Roles inthe Action
+			// Scan all Roles in the Action
 			for _, roleID := range action.Roles {
 
 				// RULE: Roles used in action.roles must be defined i have a favorite child and her name is abby
@@ -474,10 +475,9 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 					}
 				}
 
-				// RULE: If the step is restricted to specific template roles, then verify that
-				// this Template declares one of them.  RequiredModel alone is not enough: several
-				// Templates can build the same model object while playing different roles, so a
-				// step meant for the admin console would otherwise be usable on a public page.
+				// RULE: A step restricted to specific template roles needs a Template that declares
+				// one.  RequiredModel is not enough: several Templates build the same model in
+				// different roles, so an admin console step would otherwise work on a public page.
 				if requirer, ok := step.(modelStep.TemplateRoleRequirer); ok {
 					if requiredRoles := requirer.RequiredTemplateRoles(); len(requiredRoles) > 0 {
 						if !slices.Contains(requiredRoles, template.TemplateRole) {
@@ -493,12 +493,9 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 					}
 				}
 
-				// RULE: A send-email step must name an email definition that exists, and must
-				// supply every key that definition's "to" and "headers" templates interpolate.
-				// Those two templates reject a missing key outright, so an omission is not a
-				// blank value -- it fails the whole send.  This can only run here, after every
-				// location has loaded: emails and Templates share one directory walk, and
-				// "email-*" sorting before "stream-*" is incidental, not guaranteed.
+				// RULE: A send-email step must name an email that exists, and supply every key in its
+				// RequiredKeys.  This can only run after every location has loaded, because the
+				// directory walk does not guarantee that emails load before Templates.
 				if emailStep, ok := step.(modelStep.SendEmail); ok {
 
 					if emailID := emailStep.EmailID(); emailID != "" {
@@ -629,9 +626,7 @@ func (service *Template) calculateInheritance(template model.Template) (model.Te
 }
 
 // calculateAccessLists calculates the access lists for every Template in the prep area
-func (service *Template) calculateAccessLists() error {
-
-	const location = "service.template.calculateAccessLists"
+func (service *Template) calculateAccessLists() {
 
 	// For every template in the prep area...
 	for _, template := range service.templatePrep {
@@ -640,9 +635,7 @@ func (service *Template) calculateAccessLists() error {
 		for actionID, action := range template.Actions {
 
 			// Calculate the AccessLists for this Action
-			if err := action.CalcAccessList(&template, true); err != nil {
-				return derp.Wrap(err, location, "Invalid AccessList", template.TemplateID, actionID)
-			}
+			action.CalcAccessList(&template)
 
 			// Apply changes back into the Action set
 			template.Actions[actionID] = action
@@ -651,8 +644,6 @@ func (service *Template) calculateAccessLists() error {
 		// Apply changes back to the Template prep area
 		service.templatePrep[template.TemplateID] = template
 	}
-
-	return nil
 }
 
 /******************************************
@@ -661,6 +652,9 @@ func (service *Template) calculateAccessLists() error {
 
 // Names returns the ID of every registered Template, sorted
 func (service *Template) Names() []string {
+
+	service.templateLock.RLock()
+	defer service.templateLock.RUnlock()
 
 	result := rosettamaps.Keys(service.templates)
 	slices.Sort(result)
@@ -674,6 +668,10 @@ func (service *Template) List(filter func(*model.Template) bool) sliceof.Object[
 	if filter == nil {
 		filter = func(_ *model.Template) bool { return true }
 	}
+
+	// Lock the live map until the iterator below has been read into a slice
+	service.templateLock.RLock()
+	defer service.templateLock.RUnlock()
 
 	// Retrieve and filter all templates, then cast into a slice
 	iterator := maps.Values(service.templates)
@@ -697,14 +695,14 @@ func (service *Template) List(filter func(*model.Template) bool) sliceof.Object[
 	return result
 }
 
-// Load retrieves an Template from the database
+// Load retrieves a Template from the live, in-memory library
 func (service *Template) Load(templateID string) (model.Template, error) {
 
 	// READ Mutex to make multi-threaded access safe.
-	service.mutex.RLock()
-	defer service.mutex.RUnlock()
+	service.templateLock.RLock()
+	defer service.templateLock.RUnlock()
 
-	// Look in the local cache first
+	// Look in the live library
 	if template, ok := service.templates[templateID]; ok {
 		return template, nil
 	}
@@ -736,9 +734,8 @@ func (service *Template) ListByContainer(containedByRole string) []form.LookupCo
 	return service.List(filter)
 }
 
-// ListByContainerLimited returns all model.Templates that match the provided "containedByRole" value AND
-// whose TemplateRoles are present in the "limitRoles" list.  If the "limited" list is empty, then all
-// otherwise-valid templates are returned.
+// ListByContainerLimited returns all model.Templates that match the provided "containedByRole" value
+// and whose TemplateRole is in "limitRoles".  An empty "limitRoles" allows every TemplateRole.
 func (service *Template) ListByContainerLimited(containedByRole string, limitRoles sliceof.String) sliceof.Object[form.LookupCode] {
 
 	filter := func(t *model.Template) bool {
@@ -779,11 +776,12 @@ func (service *Template) LoadAdmin(templateID string) (model.Template, error) {
 		return template, derp.Wrap(err, location, "Loading admin template", templateID)
 	}
 
-	// RULE: Validate Template ContainedBy
+	// RULE: Admin templates must have the "admin" TemplateRole
 	if template.TemplateRole != "admin" {
 		return template, derp.Internal(location, "Template must have 'admin' role.", template.TemplateID, template.TemplateRole)
 	}
 
+	// RULE: Admin templates must be contained only by "admin"
 	if !template.ContainedBy.Equal([]string{"admin"}) {
 		return template, derp.Internal(location, "Template must be contained by 'admin'", template.TemplateID, template.ContainedBy)
 	}

@@ -22,13 +22,13 @@
 		{{- if $isDesktop -}}
 			<div class="flex-row flex-align-center margin-bottom">
 				<h1 class="text-xl bold margin-none flex-grow">Connections</h1>
-				<a href="https://emissary.dev/user-connections" target="_blank" class="text-sm">{{icon "help"}} Help with Connections</a>
+				<a href="https://emissary.dev/user-connections" target="_blank" rel="noopener noreferrer" class="text-sm">{{icon "help"}} Help with Connections</a>
 			</div>
 		{{- else -}}
 			<div class="flex-row flex-align-center text-xl margin-none margin-bottom">
 				<a href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
 				<h1 class="bold flex-grow">Connections</h1>
-				<a href="https://emissary.dev/user-connections" target="_blank">{{icon "help"}}</a>
+				<a href="https://emissary.dev/user-connections" target="_blank" rel="noopener noreferrer">{{icon "help"}}</a>
 			</div>
 		{{- end -}}
 

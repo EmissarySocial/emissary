@@ -31,8 +31,9 @@ func (service *UserConnection) MailchimpAddMember(session data.Session, userID p
 	}
 
 	// A connection that is paused, unfinished, or gone is not an error -- it is the User
-	// having switched this off between the enqueue and the run.
-	if client == nil {
+	// having switched this off between the enqueue and the run.  The UserConnection is named
+	// alongside the Client because both calls below dereference it.
+	if (client == nil) || (userConnection == nil) {
 		return nil
 	}
 
@@ -60,7 +61,9 @@ func (service *UserConnection) MailchimpRemoveMember(session data.Session, userI
 		return derp.Wrap(err, location, "Unable to reach Mailchimp", userID)
 	}
 
-	if client == nil {
+	// RULE: Every path that returns a nil Client returns a nil UserConnection with it, but the
+	// dereference below is the UserConnection -- so it is named here rather than inferred.
+	if (client == nil) || (userConnection == nil) {
 		return nil
 	}
 

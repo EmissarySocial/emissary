@@ -19,10 +19,10 @@ func GetHome(serverFactory *server.Factory) echo.HandlerFunc {
 		// If this is a valid domain, then redirect to the user's home page. (Handles 99% of requests)
 		if factory, err := serverFactory.ByContext(ctx); err == nil {
 
-			// Load the domain from the memory cache and find the forwarding URL
-			domain := factory.Domain().Get()
+			// Read the cached Domain record and find the forwarding URL
+			readOnlyDomain := factory.Domain().Cached()
 			authorization := getAuthorization(ctx)
-			homePage := domain.DefaultPage(authorization)
+			homePage := readOnlyDomain.DefaultPage(authorization)
 
 			// Redirect the user to the appropriate home page
 			return ctx.Redirect(http.StatusTemporaryRedirect, homePage)

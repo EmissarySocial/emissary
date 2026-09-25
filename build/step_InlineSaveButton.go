@@ -39,6 +39,7 @@ func (step StepInlineSaveButton) Post(builder Builder, buffer io.Writer) Pipelin
 		Attr("form", step.Form).
 		Script("install SaveButton").
 		Class(step.Class + " success").
+		TabIndex("0").
 		InnerHTML(label)
 
 	if _, err := buffer.Write(h.Bytes()); err != nil {

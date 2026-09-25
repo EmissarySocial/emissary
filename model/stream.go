@@ -311,6 +311,38 @@ func (stream Stream) CircleIDs() id.Slice {
 }
 
 /******************************************
+ * Sharing Methods
+ ******************************************/
+
+// SharingStatus names the audience that has been granted the provided role on this Stream.
+func (stream Stream) SharingStatus(role string) string {
+
+	groupIDs := stream.Groups[role]
+
+	if groupIDs.Contains(MagicGroupIDAnonymous) {
+		return SharingStatusPublic
+	}
+
+	if groupIDs.Contains(MagicGroupIDAuthenticated) {
+		return SharingStatusAuthenticated
+	}
+
+	if stream.Circles[role].NotEmpty() {
+		return SharingStatusCircles
+	}
+
+	// RULE: owners always have access, so they never narrow the audience.  Any OTHER Group
+	// named here is a deliberate choice of who may see this Stream.
+	for _, groupID := range groupIDs {
+		if groupID != MagicGroupIDOwners {
+			return SharingStatusCircles
+		}
+	}
+
+	return SharingStatusOwners
+}
+
+/******************************************
  * ActivityStream Methods
  ******************************************/
 

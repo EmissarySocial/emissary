@@ -732,9 +732,9 @@
 								type:layout-vertical
 								children:[
 									{type:"hidden", path:"type", options:{value:"MAILCHIMP"}}
-									{type:"text", path:"vault.apiKey", label:"Mailchimp API Key", description:"Go to <a href='https://admin.mailchimp.com/account/api/' target='_blank'>Account &rarr; Extras &rarr; API Keys</a> to create an API key for your MailChimp account", options:{required:true}}
+									{type:"text", path:"vault.apiKey", label:"Mailchimp API Key", description:"Go to <a href='https://admin.mailchimp.com/account/api/' target='_blank' rel='noopener noreferrer'>Account &rarr; Extras &rarr; API Keys</a> to create an API key for your MailChimp account", options:{required:true}}
 									{type:"text", path:"data.dataCenter", label:"Data Center", description:"The start of your own Mailchimp web address, such as 'us6'.", options:{required:true, placeholder:"us6"}}
-									{type:"text", path:"data.audienceId", label:"Audience ID", description:"Go to <a href='https://admin.mailchimp.com/audience/' target='_blank'>Audience &rarr; Audience Settings</a> to retrieve your Audience ID"}
+									{type:"text", path:"data.audienceId", label:"Audience ID", description:"Go to <a href='https://admin.mailchimp.com/audience/' target='_blank' rel='noopener noreferrer'>Audience &rarr; Audience Settings</a> to retrieve your Audience ID"}
 									{type:"text", path:"data.tag", label:"Tag", description:"Optional. Every contact that Emissary sends to MailChimp is tagged with this name."}
 									{type:"toggle", path:"isActive", options:{true-text:"Active. New Followers will be sent to MailChimp.", false-text:"Activate?"}}
 								]
@@ -759,7 +759,7 @@
 								type:layout-vertical
 								children:[
 									{type:"hidden", path:"type", options:{value:"MAILCHIMP"}}
-									{type:"text", path:"vault.apiKey", label:"Mailchimp API Key", description:"Go to <a href='https://admin.mailchimp.com/account/api/' target='_blank'>Account &rarr; Extras &rarr; API Keys</a> to create an API key for your MailChimp account", options:{required:true}}
+									{type:"text", path:"vault.apiKey", label:"Mailchimp API Key", description:"Go to <a href='https://admin.mailchimp.com/account/api/' target='_blank' rel='noopener noreferrer'>Account &rarr; Extras &rarr; API Keys</a> to create an API key for your MailChimp account", options:{required:true}}
 									{type:"text", path:"data.dataCenter", label:"Data Center", description:"The start of your own Mailchimp web address, such as 'us6'.", options:{required:true, placeholder:"us6"}}
 									{type:"text", path:"data.audienceId", label:"Audience ID", readOnly:true}
 									{type:"text", path:"data.tag", label:"Tag", description:"Optional. Every contact that Emissary sends to MailChimp is tagged with this name."}

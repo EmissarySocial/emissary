@@ -28,8 +28,8 @@ import (
 // Domain is the builder for the admin/domain page
 // It can only be accessed by a Domain Owner
 type Domain struct {
-	_provider *service.Provider
-	_domain   *model.Domain
+	_provider       *service.Provider
+	_writableDomain *model.WritableDomain
 
 	CommonWithTemplate
 }
@@ -39,11 +39,9 @@ func NewDomain(factory Factory, session data.Session, request *http.Request, res
 
 	const location = "build.NewDomain"
 
-	// Find/Create new database record for the domain.
-	domain := factory.Domain().Get()
-
-	// Create the common Builder
-	common, err := NewCommonWithTemplate(factory, session, request, response, template, domain, actionID)
+	// Create the common Builder around a record that is loaded below, once the caller is allowed in
+	writableDomain := model.NewWritableDomain()
+	common, err := NewCommonWithTemplate(factory, session, request, response, template, &writableDomain, actionID)
 
 	if err != nil {
 		return Domain{}, derp.Wrap(err, location, "Creating common builder")
@@ -54,10 +52,15 @@ func NewDomain(factory Factory, session data.Session, request *http.Request, res
 		return Domain{}, derp.Forbidden(location, "Must be domain owner to continue")
 	}
 
+	// Edit the stored Domain record, never the cached one that every request shares
+	if err := factory.Domain().Load(session, &writableDomain); err != nil {
+		return Domain{}, derp.Wrap(err, location, "Loading Domain")
+	}
+
 	// Create and return the Domain builder
 	result := Domain{
 		_provider:          factory.Provider(),
-		_domain:            domain,
+		_writableDomain:    &writableDomain,
 		CommonWithTemplate: common,
 	}
 
@@ -109,12 +112,12 @@ func (w Domain) Token() string {
 
 // object returns the model object being built. Implements the Builder interface.
 func (w Domain) object() data.Object {
-	return w._domain
+	return w._writableDomain
 }
 
 // objectID returns the unique ID of the object being built. Implements the Builder interface.
 func (w Domain) objectID() primitive.ObjectID {
-	return w._domain.DomainID
+	return w._writableDomain.DomainID
 }
 
 // objectType returns the name of the model type being built. Implements the Builder interface.
@@ -166,17 +169,17 @@ func (w Domain) clone(action string) (Builder, error) {
 
 // MLSMode returns the MLS mode of the Domain being built
 func (w Domain) MLSMode() string {
-	return w._domain.MLSMode
+	return w._writableDomain.MLSMode
 }
 
 // MLSGroupIDs returns the MLS group IDs of the Domain being built
 func (w Domain) MLSGroupIDs() sliceof.String {
-	return w._domain.MLSGroupIDs
+	return w._writableDomain.MLSGroupIDs
 }
 
 // Data returns the named value from this Domain's custom data map
 func (w Domain) Data(key string) string {
-	return w._domain.Data.GetString(key)
+	return w._writableDomain.Data.GetString(key)
 }
 
 // IsAdminBuilder returns TRUE because Domain is an admin route.
@@ -186,12 +189,12 @@ func (w Domain) IsAdminBuilder() bool {
 
 // StateID returns the state ID of the Domain being built
 func (w Domain) StateID() string {
-	return w._domain.StateID
+	return w._writableDomain.StateID
 }
 
 // StartupTasks returns the startup tasks of the Domain being built
 func (w Domain) StartupTasks() sliceof.String {
-	return w._domain.StartupTasks
+	return w._writableDomain.StartupTasks
 }
 
 // PropertyForm returns the custom property form for this Domain,
