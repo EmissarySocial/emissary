@@ -154,24 +154,24 @@ func (w Navigation) IsAdminBuilder() bool {
 
 // DefaultPage returns the landing page for a visitor, based on how they are signed in
 func (w Navigation) DefaultPage() string {
-	domain := w.factory().Domain().Get()
-	return domain.DefaultPage(w._authorization)
+	readOnlyDomain := w.factory().Domain().Cached()
+	return readOnlyDomain.DefaultPage(w._authorization)
 }
 
 // DefaultPage_Anonymous returns the landing page for a visitor who is not signed in
 func (w Navigation) DefaultPage_Anonymous() string {
-	domain := w.factory().Domain().Get()
-	return domain.DefaultPage_Anonymous()
+	readOnlyDomain := w.factory().Domain().Cached()
+	return readOnlyDomain.DefaultPage_Anonymous()
 }
 
 // DefaultPage_Authenticated returns the landing page for a signed-in User
 func (w Navigation) DefaultPage_Authenticated() string {
-	domain := w.factory().Domain().Get()
-	return domain.DefaultPage_Authenticated()
+	readOnlyDomain := w.factory().Domain().Cached()
+	return readOnlyDomain.DefaultPage_Authenticated()
 }
 
 // DefaultPage_Owner returns the landing page for a domain owner
 func (w Navigation) DefaultPage_Owner() string {
-	domain := w.factory().Domain().Get()
-	return domain.DefaultPage_Owner()
+	readOnlyDomain := w.factory().Domain().Cached()
+	return readOnlyDomain.DefaultPage_Owner()
 }

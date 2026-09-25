@@ -103,12 +103,7 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 		return derp.Wrap(err, location, "Decoding encryption key")
 	}
 
-	// Encrypt plaintext values in vault
-	if err := connection.Vault.Encrypt(encryptionKey); err != nil {
-		return derp.Wrap(err, location, "Encrypting vault values")
-	}
-
-	// Decrypt the vault data
+	// Decrypt the vault data.  Values the form posted are still plaintext, and Decrypt includes them.
 	vault, err := service.DecryptVault(connection)
 
 	if err != nil {
@@ -142,11 +137,27 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 		}
 	}
 
-	// Store the Connection on a copy of the Domain record, and save that
-	domain := service.editableDomain()
-	domain.Connections[connection.ProviderID] = *connection
+	// RULE: Seal the vault only AFTER the provider runs, because Connect may add secrets of its
+	// own (StripeConnect's webhook secret).  An unsealed value is never stored.
+	if err := connection.Vault.Encrypt(encryptionKey); err != nil {
+		return derp.Wrap(err, location, "Encrypting vault values")
+	}
 
-	if err := service.domainService.Save(session, domain, "Updated connection: "+connection.ProviderID); err != nil {
+	// Store the Connection on the stored Domain record, never on the cached one
+	writableDomain := model.NewWritableDomain()
+
+	if err := service.domainService.Load(session, &writableDomain); err != nil {
+		return derp.Wrap(err, location, "Loading Domain", connection.ProviderID)
+	}
+
+	// A record stored before Connections existed decodes with a nil map
+	if writableDomain.Connections == nil {
+		writableDomain.Connections = mapof.NewMatchable[model.Connection]()
+	}
+
+	writableDomain.Connections[connection.ProviderID] = *connection
+
+	if err := service.domainService.Save(session, &writableDomain, "Updated connection: "+connection.ProviderID); err != nil {
 		return derp.Wrap(err, location, "Saving Connection", connection, note)
 	}
 
@@ -177,12 +188,17 @@ func (service *Connection) Delete(session data.Session, connection *model.Connec
 		return derp.Wrap(err, location, "Installing connection")
 	}
 
-	// Remove the Connection from a copy of the Domain record, and save that
-	domain := service.editableDomain()
-	delete(domain.Connections, connection.ProviderID)
+	// Remove the Connection from the stored Domain record, never from the cached one
+	writableDomain := model.NewWritableDomain()
 
-	if err := service.domainService.Save(session, domain, "Deleted connection: "+connection.ProviderID); err != nil {
-		return derp.Wrap(err, "service.Connection.Delete", "Deleting Connection", connection, note)
+	if err := service.domainService.Load(session, &writableDomain); err != nil {
+		return derp.Wrap(err, location, "Loading Domain", connection.ProviderID)
+	}
+
+	delete(writableDomain.Connections, connection.ProviderID)
+
+	if err := service.domainService.Save(session, &writableDomain, "Deleted connection: "+connection.ProviderID); err != nil {
+		return derp.Wrap(err, location, "Deleting Connection", connection, note)
 	}
 
 	return nil
@@ -257,21 +273,7 @@ func (service *Connection) Schema() schema.Schema {
 
 // connections returns the Connections on the cached Domain record.  Callers must not modify it.
 func (service *Connection) connections() mapof.Matchable[model.Connection] {
-	return service.domainService.Get().Connections
-}
-
-// editableDomain returns a copy of the cached Domain record with its own Connections map, so
-// changing that map never touches the published record.
-func (service *Connection) editableDomain() model.Domain {
-
-	domain := *service.domainService.Get()
-	domain.Connections = maps.Clone(domain.Connections)
-
-	if domain.Connections == nil {
-		domain.Connections = mapof.NewMatchable[model.Connection]()
-	}
-
-	return domain
+	return service.domainService.Cached().Connections
 }
 
 // QueryAll returns every Connection configured on this Domain

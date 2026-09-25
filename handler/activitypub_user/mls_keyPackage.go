@@ -28,7 +28,7 @@ func GetKeyPackageCollection(ctx *steranko.Context, factory *service.Factory, se
 	}
 
 	// RULE: Verify that the Domain allows MLS messages for this User
-	if domain := factory.Domain().Get(); !domain.UserCanMLS(user) {
+	if readOnlyDomain := factory.Domain().Cached(); !readOnlyDomain.UserCanMLS(user) {
 		return derp.Forbidden(location, "MLS messages not allowed for this User")
 	}
 
@@ -69,7 +69,7 @@ func GetKeyPackageRecord(ctx *steranko.Context, factory *service.Factory, sessio
 	}
 
 	// RULE: Verify that the Domain allows MLS messages for this User
-	if domain := factory.Domain().Get(); !domain.UserCanMLS(user) {
+	if readOnlyDomain := factory.Domain().Cached(); !readOnlyDomain.UserCanMLS(user) {
 		return derp.Forbidden(location, "MLS messages not allowed for this User")
 	}
 

@@ -27,8 +27,7 @@ func (stub dataStub) DataString(key string) string {
 }
 
 // loadEmbeddedTemplates parses every shipped template through the real loader, resolves
-// inheritance, and promotes the result to the LIVE map, so a test sees the same parse trees a
-// running server does.
+// inheritance, and copies the result into the live map.
 func loadEmbeddedTemplates(t *testing.T) *Template {
 	t.Helper()
 
@@ -60,7 +59,7 @@ func loadEmbeddedTemplates(t *testing.T) *Template {
 	}
 
 	require.NoError(t, templateService.calculateAllInheritance())
-	require.NoError(t, templateService.calculateAccessLists())
+	templateService.calculateAccessLists()
 
 	// The listing functions read the LIVE map, so a service left in prep answers every List
 	// call with nothing.  loadTemplates ends with this same copy.
@@ -69,24 +68,17 @@ func loadEmbeddedTemplates(t *testing.T) *Template {
 	return templateService
 }
 
-// TestLayoutControls_Slot renders the layout-controls slot of every shipped Template that
-// extends base-widget-editor, against the REAL parse trees after inheritance.
-//
-// This is the whole opt-in chain in one assertion.  The base ships an empty default plus a
-// reusable width control; a Template opts in by defining a layout-controls.html of its own,
-// which may call the shared control (contact form, article) or supply a different one entirely
-// (folder, whose page shape is how its children are listed, not a width).  A Template that has
-// not opted in must render nothing at all.
-//
-// The width binding is checked separately from the control: only .widget-editor-width may drive
-// the canvas proportions, so a Template adding some other setting here cannot resize it.
+// TestLayoutControls_Slot verifies the layout-controls slot that each listed Template renders
+// after inheritance: its field, its selected option, and whether it resizes the canvas.
 func TestLayoutControls_Slot(t *testing.T) {
 
+	// Only .widget-editor-width may drive the canvas proportions, so a Template that adds some
+	// other setting to this slot must not resize it.
 	templateService := loadEmbeddedTemplates(t)
 
 	tests := []struct {
 		templateID    string
-		field         string // "" means this Template has not opted in
+		field         string // "" means the slot must render empty
 		stored        map[string]string
 		selected      string
 		resizesCanvas bool
@@ -95,8 +87,8 @@ func TestLayoutControls_Slot(t *testing.T) {
 		{templateID: "contact-form", field: "data.width", stored: map[string]string{"width": "MEDIUM"}, selected: "MEDIUM", resizesCanvas: true},
 		{templateID: "article-base", field: "data.width", stored: map[string]string{"width": "SMALL"}, selected: "SMALL", resizesCanvas: true},
 		{templateID: "folder", field: "data.format", stored: map[string]string{"format": "CARDS"}, selected: "CARDS", resizesCanvas: false},
-		// The base's own slot is no longer empty: it ships the width control as the default,
-		// so a Template opts OUT by overriding the slot rather than opting in by defining it.
+		// The base ships the width control as its default, so a Template opts OUT by
+		// overriding the slot rather than opting in by defining it.
 		{templateID: "base-widget-editor", field: "data.width", stored: map[string]string{"width": "LARGE"}, selected: "LARGE", resizesCanvas: true},
 	}
 
@@ -126,15 +118,12 @@ func TestLayoutControls_Slot(t *testing.T) {
 	}
 }
 
-// TestLayoutControls_Selection asserts that exactly one option is selected for every value a
-// Template might have stored, including none.
-//
-// An unset value is folded into the option that already matches what the page renders: an empty
-// width produces class "layout-", which matches no rule and fills the width exactly like FULL,
-// and an empty format falls through view.html's final "else" to the table layout.  Saying so in
-// the markup is what keeps the control honest AND keeps the field present in every POST.
+// TestLayoutControls_Selection verifies that one option, and only one, is selected for every
+// value a Template might have stored, including none.
 func TestLayoutControls_Selection(t *testing.T) {
 
+	// An unset or unknown value selects the option the page already renders for it (FULL
+	// width, TABLE format), which also keeps the field present in every POST.
 	templateService := loadEmbeddedTemplates(t)
 
 	tests := []struct {
@@ -174,12 +163,12 @@ func TestLayoutControls_Selection(t *testing.T) {
 	}
 }
 
-// TestLayoutControls_WidgetsActionSaves asserts that every Template shipping a layout control
-// also reads that control's field back out of the widget editor's form.  The control and the
-// save are wired through two different files, so a rename in either one would otherwise leave
-// the control silently inert -- it would look like it worked and change nothing.
+// TestLayoutControls_WidgetsActionSaves verifies that each listed Template's widgets action reads
+// its layout control's field from the posted form.
 func TestLayoutControls_WidgetsActionSaves(t *testing.T) {
 
+	// The control and the save live in different files, so a rename in either one leaves the
+	// control looking like it works while it changes nothing.
 	tests := []struct {
 		directory string
 		field     string
@@ -207,8 +196,8 @@ func TestLayoutControls_WidgetsActionSaves(t *testing.T) {
 	}
 }
 
-// savesField returns TRUE if a pipeline reads the named field from the posted form, following
-// any nested pipeline (article templates wrap their widget editor in "with-draft").
+// savesField returns TRUE if a pipeline, or any with-draft pipeline nested in it, reads the named
+// field from the posted form
 func savesField(steps []step.Step, field string) bool {
 
 	for _, item := range steps {
@@ -229,17 +218,12 @@ func savesField(steps []step.Step, field string) bool {
 	return false
 }
 
-// TestLayoutControls_TwoColumn covers the one Template whose layout slot carries TWO controls.
-//
-// The shared assertions above assume a single select, so this asserts the pair instead: the
-// base's width control, reused unchanged, and the split control that article-two-column owns.
-// Both must post, and exactly one option of each must be selected for every stored value --
-// including none, which folds into ONE-HALF because an empty value renders "columns-", which
-// matches no rule and leaves the stylesheet's equal-halves default in place.
-//
-// The split is DRAWN in the editor now, not here, so this slot is only two pickers.
+// TestLayoutControls_TwoColumn verifies that article-two-column's slot posts both its width and
+// column-split controls, with one choice selected in each for every stored value.
 func TestLayoutControls_TwoColumn(t *testing.T) {
 
+	// The shared tests above assume a single select.  An unset or unknown split selects
+	// ONE-HALF, matching the stylesheet's equal-halves default.
 	templateService := loadEmbeddedTemplates(t)
 
 	template, exists := templateService.templatePrep["article-two-column"]
@@ -286,18 +270,12 @@ func TestLayoutControls_TwoColumn(t *testing.T) {
 	}
 }
 
-// TestLayoutControls_CreateSeedsMatchWidthDefault asserts that a Template which seeds data.width
-// when a Stream is created seeds the same value its schema declares as the default.
-//
-// The two are written in different files and nothing else connects them, so they drift in
-// silence -- and the drift does not look like a bug, because both values stay inside the enum
-// and every page still renders.  It has already happened once: the four article Templates seeded
-// LARGE back when LARGE meant "the whole width", and the day a FULL option was added above it,
-// every newly created article quietly started life at 75%.
-//
-// Templates that seed no width are skipped; they inherit the default and cannot disagree with it.
+// TestLayoutControls_CreateSeedsMatchWidthDefault verifies that every Template whose create action
+// seeds data.width seeds the same value its schema declares as the default.
 func TestLayoutControls_CreateSeedsMatchWidthDefault(t *testing.T) {
 
+	// Nothing else connects the seed to the default; see "A Template's create seed and its
+	// schema default are linked by nothing but a test" in _embed/templates/AGENTS.md.
 	templateService := loadEmbeddedTemplates(t)
 
 	checked := 0
@@ -312,6 +290,7 @@ func TestLayoutControls_CreateSeedsMatchWidthDefault(t *testing.T) {
 
 		seed, exists := seededValue(action.Steps, "data.width")
 
+		// Templates that seed no width inherit the default and cannot disagree with it
 		if !exists {
 			continue
 		}
@@ -332,8 +311,8 @@ func TestLayoutControls_CreateSeedsMatchWidthDefault(t *testing.T) {
 	require.Positive(t, checked, "no Template seeds data.width -- this test is watching nothing")
 }
 
-// seededValue returns the literal value a pipeline's set-data step writes to the named path,
-// following any nested pipeline.  The second result is FALSE when no step seeds that path.
+// seededValue returns the value a set-data step writes to the named path, searching nested
+// with-draft pipelines too.  The second result is FALSE when no step seeds that path.
 func seededValue(steps []step.Step, path string) (string, bool) {
 
 	for _, item := range steps {

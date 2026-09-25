@@ -17,10 +17,10 @@ var softwareNamePattern = regexp.MustCompile(`^[a-z0-9-]+$`)
 
 // testDomain returns a Domain with enough detail to build a NodeInfo document from.
 func testDomain() *model.Domain {
-	result := model.NewDomain()
-	result.Label = "Example Server"
-	result.Description = "An Emissary server"
-	return &result
+	readOnlyDomain := model.NewDomain()
+	readOnlyDomain.Label = "Example Server"
+	readOnlyDomain.Description = "An Emissary server"
+	return &readOnlyDomain
 }
 
 // testDocument builds one NodeInfo document and returns it decoded from its own JSON, so that every
@@ -194,8 +194,8 @@ func TestNodeInfo_Services(t *testing.T) {
 // server that closed its registrations -- and only from those servers.
 func TestNodeInfo_OpenRegistrations(t *testing.T) {
 
-	domain := testDomain()
-	require.False(t, domain.HasRegistrationForm())
+	readOnlyDomain := testDomain()
+	require.False(t, readOnlyDomain.HasRegistrationForm())
 
 	document := testDocument(t, "2.0")
 

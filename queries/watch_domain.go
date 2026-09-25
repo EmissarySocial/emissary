@@ -14,15 +14,15 @@ import (
 
 // WatchDomain calls publish with the stored Domain record whenever it changes, and again every
 // time the change stream (re)opens, until ctx is canceled.
-func WatchDomain(ctx context.Context, server data.Server, publish func(model.Domain)) {
+func WatchDomain(ctx context.Context, server data.Server, publish func(model.WritableDomain)) {
 
 	const location = "queries.WatchDomain"
 
 	watcher := changeWatcher{
 		collection: "Domain",
 
-		// UpdateLookup, because the upgrade runner writes the Domain with $set, and a plain
-		// update event carries no document.
+		// UpdateLookup, because the upgrade runner writes databaseVersion with $set and never
+		// touches the cache, and a plain update event carries no document.
 		fullDocument: options.UpdateLookup,
 
 		onOpen: func(ctx context.Context, collection *mongo.Collection) error {
@@ -32,14 +32,14 @@ func WatchDomain(ctx context.Context, server data.Server, publish func(model.Dom
 		// RULE: Never skip a zero DomainID.  The Domain record is stored with a zero `_id`.
 		onDocument: func(_ context.Context, document bson.Raw) {
 
-			domain := model.NewDomain()
+			writableDomain := model.NewWritableDomain()
 
-			if err := bson.Unmarshal(document, &domain); err != nil {
+			if err := bson.Unmarshal(document, &writableDomain); err != nil {
 				derp.Report(derp.Wrap(err, location, "Decoding Domain from change event"))
 				return
 			}
 
-			publish(domain)
+			publish(writableDomain)
 		},
 	}
 
@@ -47,13 +47,13 @@ func WatchDomain(ctx context.Context, server data.Server, publish func(model.Dom
 }
 
 // loadDomain reads the stored Domain record and publishes it, doing nothing when none exists yet
-func loadDomain(ctx context.Context, collection *mongo.Collection, publish func(model.Domain)) error {
+func loadDomain(ctx context.Context, collection *mongo.Collection, publish func(model.WritableDomain)) error {
 
 	const location = "queries.loadDomain"
 
-	domain := model.NewDomain()
+	writableDomain := model.NewWritableDomain()
 
-	if err := collection.FindOne(ctx, bson.M{}).Decode(&domain); err != nil {
+	if err := collection.FindOne(ctx, bson.M{}).Decode(&writableDomain); err != nil {
 
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return nil
@@ -62,6 +62,6 @@ func loadDomain(ctx context.Context, collection *mongo.Collection, publish func(
 		return derp.Wrap(err, location, "Loading Domain record")
 	}
 
-	publish(domain)
+	publish(writableDomain)
 	return nil
 }

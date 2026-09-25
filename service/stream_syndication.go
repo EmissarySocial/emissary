@@ -11,10 +11,10 @@ import (
 // whenever a stream is added or removed from syndication
 func (service *Stream) sendSyndicationMessages(session data.Session, stream *model.Stream, added []string, changed []string, removed []string) error {
 
-	domain := service.domainService.Get()
+	readOnlyDomain := service.domainService.Cached()
 	object := stream.GetWebhookData()
 
-	for _, target := range domain.Syndication {
+	for _, target := range readOnlyDomain.Syndication {
 
 		// Send syndication messages
 		for _, endpoint := range added {

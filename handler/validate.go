@@ -24,7 +24,7 @@ func GetValidateSignupCode(ctx *steranko.Context, factory *service.Factory, sess
 	}
 
 	// Validate the secret code against the registration template
-	if domain := factory.Domain().Get(); ctx.QueryParam("value") != domain.RegistrationData.GetString("secret") {
+	if readOnlyDomain := factory.Domain().Cached(); ctx.QueryParam("value") != readOnlyDomain.RegistrationData.GetString("secret") {
 		return ctx.JSON(http.StatusOK, mapof.Any{
 			"valid":   false,
 			"message": "",

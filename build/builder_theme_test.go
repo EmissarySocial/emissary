@@ -34,12 +34,12 @@ func newTestDomainFactory(themeData mapof.Any, data mapof.String) stubDomainFact
 
 	domainService := service.NewDomain()
 
-	// Get() hands back a pointer INTO the service's cached record, so writing through it
+	// Cached() hands back a pointer INTO the service's cached record, so writing through it
 	// is the only way to seed one without a database.
-	domain := domainService.Get()
-	domain.ThemeData = themeData
-	domain.Data = data
-	domain.ThemeID = "test"
+	readOnlyDomain := domainService.Cached()
+	readOnlyDomain.ThemeData = themeData
+	readOnlyDomain.Data = data
+	readOnlyDomain.ThemeID = "test"
 
 	themeService := service.NewTheme(nil, nil, nil)
 

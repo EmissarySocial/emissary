@@ -83,6 +83,10 @@ func (service *Registration) Add(registrationID string, filesystem fs.FS, defini
 // List returns all registrations that match the provided criteria
 func (service *Registration) List() []form.LookupCode {
 
+	// Lock the data structure
+	service.mutex.RLock()
+	defer service.mutex.RUnlock()
+
 	result := []form.LookupCode{}
 
 	for _, registration := range service.templates {
@@ -127,14 +131,14 @@ func (service *Registration) Load(registrationID string) (model.Registration, er
  ******************************************/
 
 // Validate confirms that a registration transaction satisfies this Domain's sign-up rules
-func (service *Registration) Validate(session data.Session, userService *User, domain *model.Domain, txn model.RegistrationTxn) error {
+func (service *Registration) Validate(session data.Session, userService *User, readOnlyDomain *model.Domain, txn model.RegistrationTxn) error {
 
 	// TODO: Once we have a single "factory" architecture, we should remove userService as an argument to this function
 
 	const location = "service.Registration.Validate"
 
 	// Validate basic transaction values (name, email, username, userID, secret)
-	if secret := domain.RegistrationData.GetString("secret"); txn.IsInvalid(secret) {
+	if secret := readOnlyDomain.RegistrationData.GetString("secret"); txn.IsInvalid(secret) {
 		return derp.BadRequest(location, "Invalid Registration. Please try again", txn)
 	}
 
@@ -158,12 +162,12 @@ func (service *Registration) Validate(session data.Session, userService *User, d
 }
 
 // Register creates a new User from a validated registration transaction, and signs them in
-func (service *Registration) Register(session data.Session, groupService *Group, userService *User, steranko *steranko.Steranko, domain *model.Domain, txn model.RegistrationTxn) (model.User, error) {
+func (service *Registration) Register(session data.Session, groupService *Group, userService *User, steranko *steranko.Steranko, readOnlyDomain *model.Domain, txn model.RegistrationTxn) (model.User, error) {
 
 	const location = "service.Registration.Register"
 
 	// Get the domain and registration information
-	registration, err := service.Load(domain.RegistrationID)
+	registration, err := service.Load(readOnlyDomain.RegistrationID)
 
 	if err != nil {
 		return model.User{}, derp.Wrap(err, location, "Loading registration")
@@ -174,23 +178,23 @@ func (service *Registration) Register(session data.Session, groupService *Group,
 	}
 
 	// Validate the transaction
-	if err := service.Validate(session, userService, domain, txn); err != nil {
+	if err := service.Validate(session, userService, readOnlyDomain, txn); err != nil {
 		return model.User{}, derp.Wrap(err, location, "Invalid Registration Transaction")
 	}
 
 	// Copy Transaction data into a new User object
 	user := model.NewUser()
-	if err := service.setUserData(session, groupService, steranko, domain, &user, txn, registration.AllowedFields); err != nil {
+	if err := service.setUserData(session, groupService, steranko, readOnlyDomain, &user, txn, registration.AllowedFields); err != nil {
 		return model.User{}, derp.Wrap(err, location, "Setting user data")
 	}
 
 	// If defined in the registration data, set the User's Inbox Template
-	if inboxTemplate := domain.RegistrationData.GetString("inboxTemplate"); inboxTemplate != "" {
+	if inboxTemplate := readOnlyDomain.RegistrationData.GetString("inboxTemplate"); inboxTemplate != "" {
 		user.InboxTemplate = inboxTemplate
 	}
 
 	// If defined in the registration data, set the User's Inbox Template
-	if outboxTemplate := domain.RegistrationData.GetString("outboxTemplate"); outboxTemplate != "" {
+	if outboxTemplate := readOnlyDomain.RegistrationData.GetString("outboxTemplate"); outboxTemplate != "" {
 		user.OutboxTemplate = outboxTemplate
 	}
 
@@ -204,12 +208,12 @@ func (service *Registration) Register(session data.Session, groupService *Group,
 }
 
 // UpdateRegistration updates an existing User with new data from a Registration Transaction
-func (service *Registration) UpdateRegistration(session data.Session, groupService *Group, userService *User, steranko *steranko.Steranko, domain *model.Domain, source string, sourceID string, txn model.RegistrationTxn) error {
+func (service *Registration) UpdateRegistration(session data.Session, groupService *Group, userService *User, steranko *steranko.Steranko, readOnlyDomain *model.Domain, source string, sourceID string, txn model.RegistrationTxn) error {
 
 	const location = "service.Registration.UpdateRegistration"
 
 	// Get the Registration object
-	registration, err := service.Load(domain.RegistrationID)
+	registration, err := service.Load(readOnlyDomain.RegistrationID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Loading registration")
@@ -220,7 +224,7 @@ func (service *Registration) UpdateRegistration(session data.Session, groupServi
 	}
 
 	// Validate the Transaction
-	if secret := domain.RegistrationData.GetString("secret"); secret == "" {
+	if secret := readOnlyDomain.RegistrationData.GetString("secret"); secret == "" {
 		return derp.NotFound(location, "This registration form requires a secret key")
 	} else if txn.IsInvalid(secret) {
 		return derp.BadRequest(location, "Invalid Registration Transaction", txn)
@@ -232,7 +236,7 @@ func (service *Registration) UpdateRegistration(session data.Session, groupServi
 
 	// If not found, then create a new User
 	if derp.IsNotFound(err) {
-		if _, inner := service.Register(session, groupService, userService, steranko, domain, txn); inner != nil {
+		if _, inner := service.Register(session, groupService, userService, steranko, readOnlyDomain, txn); inner != nil {
 			return derp.Wrap(inner, location, "Creating new User from registration transaction")
 		}
 		return nil
@@ -244,7 +248,7 @@ func (service *Registration) UpdateRegistration(session data.Session, groupServi
 	}
 
 	// Update user data from the transaction
-	if err := service.setUserData(session, groupService, steranko, domain, &user, txn, registration.AllowedFields); err != nil {
+	if err := service.setUserData(session, groupService, steranko, readOnlyDomain, &user, txn, registration.AllowedFields); err != nil {
 		return derp.Wrap(err, location, "Setting user data")
 	}
 
@@ -258,7 +262,7 @@ func (service *Registration) UpdateRegistration(session data.Session, groupServi
 }
 
 // setUserData copies all allowed fields from the Transaction into the User, and silently warns if any field names are not recognized
-func (service *Registration) setUserData(session data.Session, groupService *Group, steranko *steranko.Steranko, domain *model.Domain, user *model.User, txn model.RegistrationTxn, allowedFields []string) error {
+func (service *Registration) setUserData(session data.Session, groupService *Group, steranko *steranko.Steranko, readOnlyDomain *model.Domain, user *model.User, txn model.RegistrationTxn, allowedFields []string) error {
 
 	const location = "service.Registration.setUserData"
 
@@ -327,25 +331,25 @@ func (service *Registration) setUserData(session data.Session, groupService *Gro
 
 	// Settings from the Domain override any other settings
 
-	if stateID := domain.RegistrationData.GetString("stateId"); stateID != "" {
+	if stateID := readOnlyDomain.RegistrationData.GetString("stateId"); stateID != "" {
 		user.StateID = stateID
 	}
 
-	if inboxTemplate := domain.RegistrationData.GetString("inboxTemplate"); inboxTemplate != "" {
+	if inboxTemplate := readOnlyDomain.RegistrationData.GetString("inboxTemplate"); inboxTemplate != "" {
 		user.InboxTemplate = inboxTemplate
 	}
 
-	if outboxTemplate := domain.RegistrationData.GetString("outboxTemplate"); outboxTemplate != "" {
+	if outboxTemplate := readOnlyDomain.RegistrationData.GetString("outboxTemplate"); outboxTemplate != "" {
 		user.OutboxTemplate = outboxTemplate
 	}
 
-	if addGroups := domain.RegistrationData.GetString("addGroups"); addGroups != "" {
+	if addGroups := readOnlyDomain.RegistrationData.GetString("addGroups"); addGroups != "" {
 		if err := service.addGroups(session, groupService, user, addGroups); err != nil {
 			return derp.Wrap(err, location, "Adding user to group", addGroups)
 		}
 	}
 
-	if removeGroups := domain.RegistrationData.GetString("removeGroups"); removeGroups != "" {
+	if removeGroups := readOnlyDomain.RegistrationData.GetString("removeGroups"); removeGroups != "" {
 		if err := service.removeGroups(session, groupService, user, removeGroups); err != nil {
 			return derp.Wrap(err, location, "Adding user to group", removeGroups)
 		}

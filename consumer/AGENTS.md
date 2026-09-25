@@ -70,7 +70,7 @@ A missing case in `PreProcessor` is just as quiet: the name falls through, `Prio
 
 ## Scheduling is idempotent via task signatures
 
-`scheduler_MakeDailyTasks` / `scheduler_MakeHourlyTasks` in [schedule.go](schedule.go) publish with `queue.WithSignature("DAILY:<date>" / "HOURLY:<hour>")`, so repeated boots and the daily re-priming cannot double-schedule. Any new recurring task should either ride these batches (as the per-domain tasks in [scheduleDaily.go](scheduleDaily.go) do) or carry its own signature. `ScheduleStartup` is an intentionally empty hook, published on every boot — it is where the next one-time migration goes; do not delete it as dead code.
+`scheduler_MakeDailyTasks` / `scheduler_MakeHourlyTasks` in [schedule.go](schedule.go) publish with `queue.WithSignature("DAILY:<date>" / "HOURLY:<hour>")`, so repeated boots and the daily re-priming cannot double-schedule. Any new recurring task should either ride these batches (as the per-domain tasks in [scheduleDaily.go](scheduleDaily.go) do) or carry its own signature. `ScheduleStartup` is published on every boot, by every node, and is where one-time migrations go; today it queues the Stripe Connect repair ([BUG-179](../../emissary-specs/bugs/_done/BUG-179-Stripe-Connect-Webhook-Secret-Never-Stored.md)). It carries no signature itself, so anything it publishes must carry its own signature per domain, or two nodes booting together run the same migration twice. `RepairStripeConnect:<hostname>` is the example: two concurrent repairs would each register a Stripe webhook endpoint, and one of them would be left failing forever.
 
 ## `RecycleDomain` is a mass purge — treat it with respect
 

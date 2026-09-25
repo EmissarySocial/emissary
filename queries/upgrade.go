@@ -3,7 +3,6 @@ package queries
 import (
 	"context"
 
-	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/queries/upgrades"
 	"github.com/benpate/derp"
 	"github.com/rs/zerolog/log"
@@ -12,8 +11,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// UpgradeMongoDB runs every pending schema migration against a Domain's database, in order
-func UpgradeMongoDB(ctx context.Context, session *mongo.Database, domain *model.Domain) error {
+// UpgradeMongoDB runs every schema migration after databaseVersion against a Domain's database, in order
+func UpgradeMongoDB(ctx context.Context, session *mongo.Database, databaseVersion uint) error {
 
 	const location = "queries.UpgradeMongoDB"
 
@@ -58,7 +57,7 @@ func UpgradeMongoDB(ctx context.Context, session *mongo.Database, domain *model.
 
 	// If we're already at the target database version or higher, then skip any other work.
 	// This check runs before `session` is touched, so an up-to-date domain costs nothing here.
-	if domain.DatabaseVersion >= uint(len(upgradeFns)-1) {
+	if databaseVersion >= uint(len(upgradeFns)-1) {
 		return nil
 	}
 
@@ -78,7 +77,7 @@ func UpgradeMongoDB(ctx context.Context, session *mongo.Database, domain *model.
 		}
 
 		// Skip if this upgrade has already been run
-		if domain.DatabaseVersion >= uint(index) {
+		if databaseVersion >= uint(index) {
 			continue
 		}
 
@@ -87,7 +86,8 @@ func UpgradeMongoDB(ctx context.Context, session *mongo.Database, domain *model.
 			return derp.Wrap(err, location, "Upgrading database to version %d", index)
 		}
 
-		// Mark the Domain as "upgraded"
+		// Mark the Domain as "upgraded".  The cached record is not touched: WatchDomain republishes
+		// this write, and every whole-record save starts from the stored record (see AGENTS.md).
 		domainCollection := session.Collection("Domain")
 
 		filter := bson.M{"_id": primitive.NilObjectID}
@@ -96,13 +96,6 @@ func UpgradeMongoDB(ctx context.Context, session *mongo.Database, domain *model.
 		if _, err := domainCollection.UpdateOne(ctx, filter, update); err != nil {
 			return derp.Wrap(err, location, "Updating domain record")
 		}
-
-		// Keep the in-memory Domain record in sync with the value we just wrote to Mongo.
-		// UpgradeMongoDB holds the live *model.Domain owned by the Domain service, so if we
-		// bump the version in the database but not here, the cache keeps reporting a stale
-		// schema version -- which a later whole-document save would then persist back over
-		// the correct value, triggering a destructive re-migration on the next restart.
-		domain.DatabaseVersion = uint(index)
 	}
 
 	log.Info().Msg("DONE UPGRADING DATABASE")

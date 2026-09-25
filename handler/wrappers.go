@@ -252,8 +252,8 @@ func WithConnection(provider string, serverFactory *server.Factory, fn WithFunc1
 func WithDomain(serverFactory *server.Factory, fn WithFunc1[model.Domain]) echo.HandlerFunc {
 
 	return WithFactory(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
-		domain := factory.Domain().Get()
-		return fn(ctx, factory, session, domain)
+		readOnlyDomain := factory.Domain().Cached()
+		return fn(ctx, factory, session, readOnlyDomain)
 	})
 }
 
@@ -569,16 +569,16 @@ func WithRegistration(serverFactory *server.Factory, fn WithFunc2[model.Domain, 
 
 	const location = "handler.WithRegistration"
 
-	return WithDomain(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, domain *model.Domain) error {
+	return WithDomain(serverFactory, func(ctx *steranko.Context, factory *service.Factory, session data.Session, readOnlyDomain *model.Domain) error {
 
 		// Require that a registration form has been defined
-		if !domain.HasRegistrationForm() {
+		if !readOnlyDomain.HasRegistrationForm() {
 			return ctx.NoContent(http.StatusNotFound)
 		}
 
 		// Try to load a (populated) Registration object from the factory
 		registrationService := factory.Registration()
-		registration, err := registrationService.Load(domain.RegistrationID)
+		registration, err := registrationService.Load(readOnlyDomain.RegistrationID)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Loading Registration")
@@ -589,7 +589,7 @@ func WithRegistration(serverFactory *server.Factory, fn WithFunc2[model.Domain, 
 		}
 
 		// Call the continuation function
-		return fn(ctx, factory, session, domain, &registration)
+		return fn(ctx, factory, session, readOnlyDomain, &registration)
 	})
 }
 
