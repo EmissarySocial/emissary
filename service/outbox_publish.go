@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"iter"
 	"maps"
 	"slices"
@@ -146,6 +147,13 @@ func (service *Outbox) Deliver(session data.Session, actorType string, actorID p
 	delete(payload, vocab.PropertyBTo)
 	delete(payload, vocab.PropertyBCC)
 
+	// Serialize the payload once, so every ActivityPub delivery task shares the same string
+	serialized, err := json.Marshal(payload)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Serializing outbound activity")
+	}
+
 	// The authoritative signer URL (stamped by Publish) — the delivery tasks resolve the key from it.
 	actorURL := payload.GetString(vocab.PropertyActor)
 
@@ -197,7 +205,7 @@ func (service *Outbox) Deliver(session data.Session, actorType string, actorID p
 		switch follower.Method {
 
 		case model.FollowerMethodActivityPub:
-			service.deliverActivityPub(session, actorURL, &follower, payload)
+			service.deliverActivityPub(session, actorURL, &follower, string(serialized))
 
 		case model.FollowerMethodEmail:
 			if canSendEmail {
@@ -361,8 +369,8 @@ func (service *Outbox) publishRecipients(session data.Session, actorType string,
 }
 
 // deliverActivityPub queues one retryable OutboxSendToSingleRecipient task that delivers the
-// activity to a single ActivityPub follower.
-func (service *Outbox) deliverActivityPub(session data.Session, actorURL string, follower *model.Follower, activity mapof.Any) {
+// serialized activity to a single ActivityPub follower.
+func (service *Outbox) deliverActivityPub(session data.Session, actorURL string, follower *model.Follower, body string) {
 
 	const location = "service.Outbox.deliverActivityPub"
 
@@ -380,9 +388,9 @@ func (service *Outbox) deliverActivityPub(session data.Session, actorURL string,
 	}
 
 	postcommit.Publish(session, service.queue, sender.OutboxSendToSingleRecipient, mapof.Any{
-		"actor":    actorURL,
-		"inbox":    inboxURL,
-		"activity": activity,
+		"actor": actorURL,
+		"inbox": inboxURL,
+		"body":  body,
 	})
 }
 

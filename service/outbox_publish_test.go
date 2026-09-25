@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -9,7 +10,6 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -101,7 +101,9 @@ func TestDeliver_StripsBlindRecipients(t *testing.T) {
 	require.Equal(t, sender.OutboxSendToSingleRecipient, tasks[0].Name)
 	require.Equal(t, follower.Actor.InboxURL, tasks[0].Arguments.GetString("inbox"))
 
-	delivered := convert.MapOfAny(tasks[0].Arguments["activity"])
+	delivered := mapof.NewAny()
+	require.NoError(t, json.Unmarshal([]byte(tasks[0].Arguments.GetString("body")), &delivered))
+	require.NotContains(t, tasks[0].Arguments, "activity")
 	require.NotContains(t, delivered, vocab.PropertyBTo)
 	require.NotContains(t, delivered, vocab.PropertyBCC)
 	require.Equal(t, activity[vocab.PropertyID], delivered[vocab.PropertyID])
