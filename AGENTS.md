@@ -48,6 +48,8 @@ BUG-168 is the worked example. `consumer.Consumer` was rewritten for turbine's f
 
 Two branches fixing one defect can each add the same declaration and merge without a conflict, because git conflicts on overlapping hunks rather than on meaning. BUG-168's `followingBackoff` landed twice in one file, 247 lines apart, and `TestFollowingBackoff` landed in two different files. Build the merge result, not just each side: `go build ./...` stops at the first failing package, and `service` is a dependency of almost everything, so one compiler error there can be hiding several.
 
+The reverse also merges cleanly: one branch renames a method, and the other adds a call to the old name. BUG-187 is the worked example. `Domain.Get()` became `Cached()` on `dev` while `dev-Eugene` added a call to `Get()`, neither side failed on its own, and the merge left `dev` unable to build. Run `go build ./... && go vet ./...` on the merge result before committing it.
+
 Deleting the survivor is not arbitrary when the bodies are identical. Keep the copy whose neighbours want it — the one that survived sits directly above its only caller, while the other was stranded at the end of the file — and carry the better comment across.
 
 ## An email recipient never comes from the request
