@@ -200,8 +200,10 @@ func PostOAuthToken(ctx *steranko.Context, factory *service.Factory, session dat
 	oauthClientService := factory.OAuthClient()
 	oauthClient := model.NewOAuthClient()
 
+	// RULE: Errors name the client_id, never the transaction, which carries the client_secret,
+	// the code, the refresh_token, and the code_verifier.  Reported errors are stored verbatim.
 	if err := oauthClientService.LoadByToken(session, transaction.ClientID, &oauthClient); err != nil {
-		return derp.Wrap(err, location, "Invalid client_id", transaction)
+		return derp.Wrap(err, location, "Invalid client_id", transaction.ClientID)
 	}
 
 	// RULE: Dispatch on grant_type. An empty grant_type is treated as
@@ -230,7 +232,7 @@ func postOAuthToken_authorizationCode(ctx *steranko.Context, factory *service.Fa
 	userTokenID, err := primitive.ObjectIDFromHex(transaction.Code)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Invalid code", transaction)
+		return derp.Wrap(err, location, "Invalid code", transaction.ClientID)
 	}
 
 	// Load the grant bound to this code. This performs NO authentication -- the
@@ -239,7 +241,7 @@ func postOAuthToken_authorizationCode(ctx *steranko.Context, factory *service.Fa
 	userToken := model.NewOAuthUserToken()
 
 	if err := userTokenService.LoadByClientAndID(session, userTokenID, oauthClient.ClientID, &userToken); err != nil {
-		return derp.Wrap(err, location, "Loading OAuthUserToken", transaction)
+		return derp.Wrap(err, location, "Loading OAuthUserToken", transaction.ClientID)
 	}
 
 	// RULE: Authenticate the code redemption (RFC 8252 / OAuth 2.1).  A
@@ -248,10 +250,10 @@ func postOAuthToken_authorizationCode(ctx *steranko.Context, factory *service.Fa
 	// to a PKCE challenge, so an intercepted code is useless without the verifier.
 	if oauthClient.IsConfidential() {
 		if err := oauthClient.ValidateSecret(transaction.ClientSecret); err != nil {
-			return derp.Wrap(err, location, "Invalid client_secret", transaction)
+			return derp.Wrap(err, location, "Invalid client_secret", transaction.ClientID)
 		}
 	} else if !userToken.HasPKCEChallenge() {
-		return derp.BadRequest(location, "This client must use PKCE (a code_verifier is required)", transaction)
+		return derp.BadRequest(location, "This client must use PKCE (a code_verifier is required)", transaction.ClientID)
 	}
 
 	// RULE: PKCE (RFC 7636). If the code was issued with a code_challenge, a
@@ -288,7 +290,7 @@ func postOAuthToken_refresh(ctx *steranko.Context, factory *service.Factory, ses
 	// token itself as the possession proof (rotation + reuse detection protect it).
 	if oauthClient.IsConfidential() {
 		if err := oauthClient.ValidateSecret(transaction.ClientSecret); err != nil {
-			return derp.Wrap(err, location, "Invalid client_secret", transaction)
+			return derp.Wrap(err, location, "Invalid client_secret", transaction.ClientID)
 		}
 	}
 

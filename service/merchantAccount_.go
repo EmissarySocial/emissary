@@ -141,7 +141,7 @@ func (service *MerchantAccount) Save(session data.Session, merchantAccount *mode
 
 	// Save the merchantAccount to the database
 	if err := service.collection(session).Save(merchantAccount, note); err != nil {
-		return derp.Wrap(err, location, "Saving MerchantAccount", merchantAccount, note)
+		return derp.Wrap(err, location, "Saving MerchantAccount", merchantAccount.MerchantAccountID, note)
 	}
 
 	return nil
@@ -152,7 +152,7 @@ func (service *MerchantAccount) Delete(session data.Session, merchantAccount *mo
 
 	// Delete this MerchantAccount
 	if err := service.collection(session).Delete(merchantAccount, note); err != nil {
-		return derp.Wrap(err, "service.MerchantAccount.Delete", "Deleting MerchantAccount", merchantAccount, note)
+		return derp.Wrap(err, "service.MerchantAccount.Delete", "Deleting MerchantAccount", merchantAccount.MerchantAccountID, note)
 	}
 
 	return nil
@@ -372,7 +372,7 @@ func (service *MerchantAccount) DeleteByUserID(session data.Session, userID prim
 	// Delete each merchantAccount
 	for merchantAccount := range merchantAccounts {
 		if err := service.Delete(session, &merchantAccount, note); err != nil {
-			return derp.Wrap(err, location, "Deleting MerchantAccount", merchantAccount)
+			return derp.Wrap(err, location, "Deleting MerchantAccount", merchantAccount.MerchantAccountID)
 		}
 	}
 
@@ -514,7 +514,7 @@ func (service *MerchantAccount) RemoteProductsByUser(session data.Session, userI
 		remoteProducts, err := service.getRemoteProducts(&merchantAccount)
 
 		if err != nil {
-			return nil, nil, derp.Wrap(err, location, "Loading products for merchant account", merchantAccount)
+			return nil, nil, derp.Wrap(err, location, "Loading products for merchant account", merchantAccount.MerchantAccountID)
 		}
 
 		result = append(result, remoteProducts...)

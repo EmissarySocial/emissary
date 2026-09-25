@@ -45,15 +45,16 @@ func (req *OAuthUserTokenRequest) Validate(client OAuthClient) error {
 
 	const location = "model.OAuthUserTokenRequest.Validate"
 
-	// RULE: ClientID must match the client application
+	// RULE: ClientID must match the client application.  Errors name client IDs only, because
+	// both the client and the request carry the client_secret.
 
 	if notOneOf(req.ClientID, client.ClientURL, client.ClientID.Hex()) {
-		return derp.BadRequest(location, "Invalid client_id", client, req)
+		return derp.BadRequest(location, "Invalid client_id", client.ClientID, req.ClientID)
 	}
 
 	// RULE: ClientSecret must match the client application
 	if req.ClientSecret != client.ClientSecret {
-		return derp.BadRequest(location, "Invalid client_secret", client, req)
+		return derp.BadRequest(location, "Invalid client_secret", client.ClientID, req.ClientID)
 	}
 
 	// RULE: Client must have at least one redirect_uri
@@ -68,7 +69,7 @@ func (req *OAuthUserTokenRequest) Validate(client OAuthClient) error {
 
 	// RULE: Verify that redirect URI is valid
 	if !slice.Contains(client.RedirectURIs, req.RedirectURI) {
-		return derp.BadRequest(location, "Invalid redirect_uri", client, req)
+		return derp.BadRequest(location, "Invalid redirect_uri", client.ClientID, req.RedirectURI)
 	}
 
 	// RULE: If missing, use default value for Scope

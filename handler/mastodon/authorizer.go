@@ -43,7 +43,7 @@ func Authorizer(serverFactory *server.Factory) toot.Authorizer[model.Authorizati
 		authorization, ok := token.Claims.(*model.Authorization)
 
 		if !ok {
-			return model.Authorization{}, derp.Forbidden(location, "Invalid token: Invalid Claims", token)
+			return model.Authorization{}, derp.Forbidden(location, "Invalid token: Invalid Claims")
 		}
 
 		// Return the token to the caller.

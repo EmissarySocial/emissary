@@ -51,7 +51,7 @@ func (filesystem *Filesystem) GetFS(folder mapof.String) (fs.FS, error) {
 		result, err := fs.Sub(filesystem.embedded, "_embed/"+folder["location"])
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Getting embedded filesystem", folder)
+			return nil, derp.Wrap(err, location, "Getting embedded filesystem", folderLabel(folder))
 		}
 
 		return result, nil
@@ -65,7 +65,7 @@ func (filesystem *Filesystem) GetFS(folder mapof.String) (fs.FS, error) {
 		locationURL, err := url.Parse(folder["location"])
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Parsing Git URL", folder)
+			return nil, derp.Wrap(err, location, "Parsing Git URL", folder["adapter"])
 		}
 
 		return gitfs.New(locationURL)
@@ -77,7 +77,27 @@ func (filesystem *Filesystem) GetFS(folder mapof.String) (fs.FS, error) {
 	}
 
 	// Otherwise, fail.  Unrecognized filesystem type
-	return nil, derp.Internal(location, "Unsupported filesystem adapter", folder)
+	return nil, derp.Internal(location, "Unsupported filesystem adapter", folderLabel(folder))
+}
+
+// folderLabel names a folder in an error by its adapter and location, with any credentials
+// removed.  A folder map can hold S3 keys, and a Git location can embed a token.
+func folderLabel(folder mapof.String) string {
+
+	adapter := folder["adapter"]
+
+	// A location that does not parse is left out, because it cannot be cleaned
+	locationURL, err := url.Parse(folder["location"])
+
+	if err != nil {
+		return adapter
+	}
+
+	// RULE: Drop the whole userinfo, not just the password.  Git hosts accept a token as the
+	// username alone (https://TOKEN@host), which url.Redacted would keep.
+	locationURL.User = nil
+
+	return adapter + " " + locationURL.String()
 }
 
 // GetFSs returns multiple fs.FS filesystems
@@ -140,7 +160,7 @@ func (filesystem *Filesystem) GetAfero(folder mapof.String) (afero.Fs, error) {
 	// (afero httpFs), Git (go-git), Dropbox (fclairamb/afero-dropbox), Google Cloud Storage
 	// (afero gcsfs), SFTP (afero sftpfs), Azure, etc.
 
-	return nil, derp.Internal("service.filesystem.GetAfero", "Unsupported filesystem adapter", folder)
+	return nil, derp.Internal("service.filesystem.GetAfero", "Unsupported filesystem adapter", folderLabel(folder))
 }
 
 // GetAferos returns multiple afero filesystems
@@ -172,7 +192,7 @@ func (filesystem *Filesystem) Watch(folder mapof.String, changes chan<- bool, do
 	// If we CAN watch this adapter, then do it.
 	if folder["adapter"] == config.FolderAdapterFile {
 		if err := filesystem.watchOS(folder["location"], changes, done); err != nil {
-			return derp.Wrap(err, "service.Filesystem.Watch", "Watching filesystem", folder)
+			return derp.Wrap(err, "service.Filesystem.Watch", "Watching filesystem", folderLabel(folder))
 		}
 		return nil
 	}

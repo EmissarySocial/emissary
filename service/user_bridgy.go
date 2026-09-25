@@ -54,11 +54,11 @@ func (service *User) connectBluesky_follow(session data.Session, userID primitiv
 	// Following first therefore fails before the unblock it depends on ever runs, making the bridge
 	// impossible to re-enable once it has been turned off.
 	if err := service.ruleService.UnblockActor(session, userID, bridgyFedBlueskyActor); err != nil {
-		return derp.Wrap(err, location, "Unblocking Bridgy Fed Actor", userID, connection)
+		return derp.Wrap(err, location, "Unblocking Bridgy Fed Actor", userID, connection.ProviderID)
 	}
 
 	if _, err := service.followingService.Follow(session, userID, bridgyFedBlueskyActor); err != nil {
-		return derp.Wrap(err, location, "Following Bridgy Fed Actor", userID, connection)
+		return derp.Wrap(err, location, "Following Bridgy Fed Actor", userID, connection.ProviderID)
 	}
 
 	return nil
@@ -70,11 +70,11 @@ func (service *User) connectBluesky_unfollow(session data.Session, userID primit
 	const location = "service.User.connectBluesky_unfollow"
 
 	if err := service.followingService.Unfollow(session, userID, bridgyFedBlueskyActor); err != nil {
-		return derp.Wrap(err, location, "Unfollowing Bridgy Fed Actor", userID, connection)
+		return derp.Wrap(err, location, "Unfollowing Bridgy Fed Actor", userID, connection.ProviderID)
 	}
 
 	if err := service.ruleService.BlockActor(session, userID, bridgyFedBlueskyActor, "Blocking to stop bridge to Bluesky"); err != nil {
-		return derp.Wrap(err, location, "Blocking Bridgy Fed Actor", userID, connection)
+		return derp.Wrap(err, location, "Blocking Bridgy Fed Actor", userID, connection.ProviderID)
 	}
 
 	return nil
