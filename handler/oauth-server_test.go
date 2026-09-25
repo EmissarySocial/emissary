@@ -29,18 +29,8 @@ const (
 	oauthRefreshGeneration = 1
 )
 
-// oauthTokenRequest builds a urlencoded POST to the token endpoint
-func oauthTokenRequest(form url.Values) *steranko.Context {
-
-	request := httptest.NewRequest(http.MethodPost, "/oauth/token", strings.NewReader(form.Encode()))
-	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-
-	recorder := httptest.NewRecorder()
-	return &steranko.Context{Context: echo.New().NewContext(request, recorder)}
-}
-
 // oauthSession is a data.Session that serves one fixed record per collection, whatever the
-// criteria.  These tests pin error details, not queries, and mockdb cannot match deleteDate.
+// criteria
 type oauthSession struct {
 	data.Session
 	client *model.OAuthClient
@@ -89,43 +79,13 @@ func (collection oauthCollection) Load(_ exp.Expression, target data.Object, _ .
 	return derp.NotFound("handler.oauthCollection.Load", "Record not found")
 }
 
-// newOAuthClient returns a client with the given stored secret; an empty one makes it public
-func newOAuthClient(clientSecret string) *model.OAuthClient {
-	client := model.NewOAuthClient()
-	client.ClientSecret = clientSecret
-	return &client
-}
-
-// newOAuthGrant returns a grant issued to the client, with no PKCE challenge
-func newOAuthGrant(client *model.OAuthClient) *model.OAuthUserToken {
-	grant := model.NewOAuthUserToken()
-	grant.ClientID = client.ClientID
-	return &grant
-}
-
-// requireNoOAuthSecrets fails unless the error came from the expected site, carrying no
-// credential that the request presented
-func requireNoOAuthSecrets(t *testing.T, err error, location string, message string) {
-
-	t.Helper()
-
-	// Pinning the site proves the test reached the line it is named for
-	require.Error(t, err)
-	require.Equal(t, location, derp.Location(err))
-	require.Equal(t, message, derp.Message(err))
-
-	secretcheck.RequireAbsent(t, err, oauthPresentedSecret)
-	secretcheck.RequireAbsent(t, err, oauthStoredSecret)
-	secretcheck.RequireAbsent(t, err, oauthCodeVerifier)
-	secretcheck.RequireAbsent(t, err, oauthRefreshSecret)
-}
-
 // TestPostOAuthToken_OmitsCredentialsFromErrors drives every failure of the token endpoint,
 // and requires that none reports a credential from the request.
 func TestPostOAuthToken_OmitsCredentialsFromErrors(t *testing.T) {
 
 	// BUG-173: these six sites attached the whole OAuthUserTokenRequest, which has no json:"-"
 	// field, so the secret, code, verifier, and refresh token were printed and stored.
+	// oauthSession serves fixed records, because mockdb cannot match deleteDate.
 	factory := &service.Factory{}
 
 	// A form that presents every credential at once, for the grant being tested
@@ -182,4 +142,45 @@ func TestPostOAuthToken_OmitsCredentialsFromErrors(t *testing.T) {
 		err := PostOAuthToken(oauthTokenRequest(form(client.ClientID.Hex(), "refresh_token", "")), factory, session)
 		requireNoOAuthSecrets(t, err, "handler.postOAuthToken_refresh", "Invalid client_secret")
 	})
+}
+
+// oauthTokenRequest builds a urlencoded POST to the token endpoint
+func oauthTokenRequest(form url.Values) *steranko.Context {
+
+	request := httptest.NewRequest(http.MethodPost, "/oauth/token", strings.NewReader(form.Encode()))
+	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	recorder := httptest.NewRecorder()
+	return &steranko.Context{Context: echo.New().NewContext(request, recorder)}
+}
+
+// requireNoOAuthSecrets fails unless the error came from the expected site, carrying no
+// credential that the request presented
+func requireNoOAuthSecrets(t *testing.T, err error, location string, message string) {
+
+	t.Helper()
+
+	// Pinning the site proves the test reached the line it is named for
+	require.Error(t, err)
+	require.Equal(t, location, derp.Location(err))
+	require.Equal(t, message, derp.Message(err))
+
+	secretcheck.RequireAbsent(t, err, oauthPresentedSecret)
+	secretcheck.RequireAbsent(t, err, oauthStoredSecret)
+	secretcheck.RequireAbsent(t, err, oauthCodeVerifier)
+	secretcheck.RequireAbsent(t, err, oauthRefreshSecret)
+}
+
+// newOAuthClient returns a client with the given stored secret; an empty one makes it public
+func newOAuthClient(clientSecret string) *model.OAuthClient {
+	client := model.NewOAuthClient()
+	client.ClientSecret = clientSecret
+	return &client
+}
+
+// newOAuthGrant returns a grant issued to the client, with no PKCE challenge
+func newOAuthGrant(client *model.OAuthClient) *model.OAuthUserToken {
+	grant := model.NewOAuthUserToken()
+	grant.ClientID = client.ClientID
+	return &grant
 }

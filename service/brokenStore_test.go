@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/benpate/data"
 	mockdb "github.com/benpate/data-mock"
@@ -50,6 +51,18 @@ type brokenCollection struct {
 // Iterator lists every record, whatever the criteria
 func (collection brokenCollection) Iterator(_ exp.Expression, _ ...option.Option) (data.Iterator, error) {
 	return mockdb.NewIterator(collection.records), nil
+}
+
+// Query copies every record into target, which must point to a slice of the records' type
+func (collection brokenCollection) Query(target any, _ exp.Expression, _ ...option.Option) error {
+
+	slice := reflect.ValueOf(target).Elem()
+
+	for _, record := range collection.records {
+		slice.Set(reflect.Append(slice, reflect.ValueOf(record).Elem()))
+	}
+
+	return nil
 }
 
 // Load always fails with NotFound

@@ -30,6 +30,12 @@ The mechanism for the second is `Follower.DeleteWithoutSync`, and it has **two**
 
 The route is public, unauthenticated, and authorized only by a per-connection secret in the query string, so three more rules hold there. Bound the body before reading it (`io.LimitReader`, matching the 65535-byte cap in [handler/stripe.go](handler/stripe.go)). Answer **identically** for every authorization outcome — unknown connection, wrong secret, paused connection, success — because ObjectIDs embed a timestamp and are partly guessable, and a distinguishable answer enumerates which connections exist. And scope every lookup to the connection's owner: the email address in the payload is attacker-supplied, so `Follower.LoadByEmailAddress` takes a `parentID` and an unscoped match would let one leaked secret reach every Follower on the server.
 
+## An error names a record, and never carries one
+
+Every reported error is stored verbatim by [tools/derp-mongo](tools/derp-mongo/README.md) and printed by `derp-console`, details included. The mongo reporter encodes BSON, which follows `bson` tags, so a field hidden with `json:"-"` is still stored: `OAuthClient.ClientSecret`, `Connection.Token`, and every `Vault` reach `ErrorLog` whenever their record rides an error. Other models hide nothing at all: `config.Domain` carries the MasterKey and the database password, and `EncryptionKey` its `PrivatePEM`. So an error attaches the identifier that finds a record (a hostname, DomainID, ClientID, ProviderID, or `_id`), never the record itself, a request that carries credentials, a folder map, or a URL that can embed a token.
+
+Two traps sit below the call site. The standard library's `*url.Error` quotes the whole URL it failed to parse, so keep only `errors.Unwrap(err)` when that URL can embed a token. And rosetta's `schema` package attached the whole object it validated or set until BUG-173; it now names the type, but its field-level format, pattern, and enum errors still echo the one field that failed. [tools/secretcheck](tools/secretcheck/doc.go) checks an error in every form a reporter stores it; each fixed site has a test built on it.
+
 ## Local MongoDB requires `?directConnection=true`
 
 A Go client connecting to a single-node replica set from the host will otherwise try to reach the node by its advertised replica-set name and hang until timeout, with no useful error. Every local connect string — config, tests, `mongosh` one-liners — needs the flag.

@@ -85,8 +85,8 @@ func (service *OAuthClient) Save(session data.Session, client *model.OAuthClient
 
 	const location = "service.OAuthClient.Save"
 
-	// RULE: Errors name the ClientID, never the client, whose ClientSecret is hidden from JSON
-	// but not from BSON, so the error log would store it.
+	// Validate the value (using the global OAuthClient schema) before saving.  Errors name the
+	// ClientID, never the client, whose ClientSecret is hidden from JSON but not from BSON.
 	if _, err := service.Schema().Validate(client); err != nil {
 		return derp.Wrap(err, location, "Validating OAuthClient using OAuthClientSchema", client.ClientID)
 	}

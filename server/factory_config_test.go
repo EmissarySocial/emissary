@@ -70,14 +70,12 @@ func (stub *stubStorage) Write(value config.Config) (config.Config, error) {
 // Close does nothing; the stub holds no resources.
 func (stub *stubStorage) Close() {}
 
-// TestFactoryConfig_ConcurrentReadsAndReloads is the regression test for the unguarded field.
-// The configuration reload goroutine replaces the configuration wholesale while request
-// goroutines read it, and Config is a dozen words of slices, maps, and strings -- wide enough
-// to tear.
-//
-// Run with -race. Against an unguarded field this fails; against published wiring it is quiet.
+// TestFactoryConfig_ConcurrentReadsAndReloads reads the configuration from many goroutines while
+// a reload replaces it, and must run clean under -race
 func TestFactoryConfig_ConcurrentReadsAndReloads(t *testing.T) {
 
+	// Config is a dozen words of slices, maps, and strings, wide enough to tear.  Against an
+	// unguarded field this fails under -race; against published wiring it is quiet.
 	factory := &factoryCore{}
 	setTestConfig(factory, config.DefaultConfig())
 
@@ -125,12 +123,12 @@ func TestFactoryConfig_ConcurrentReadsAndReloads(t *testing.T) {
 	waitGroup.Wait()
 }
 
-// TestFactoryConfig_ReturnsADeepCopy is the other half of the lock.  Guarding the field is
-// pointless if the value handed out still shares its maps with the live configuration: the setup
-// console's form handlers take a Config, edit it in place, and save it.  Without a deep copy those
-// edits land in the running server immediately, unlocked, and BEFORE the operator saves.
+// TestFactoryConfig_ReturnsADeepCopy requires that a Config handed out shares no maps with the
+// live configuration
 func TestFactoryConfig_ReturnsADeepCopy(t *testing.T) {
 
+	// The setup console's handlers edit a Config in place before saving, so a shared map would
+	// change the running server, unlocked, before the operator saves.
 	original := config.DefaultConfig()
 	original.AdminEmail = "original@example.com"
 	original.Domains.Put(config.Domain{DomainID: "1", Hostname: "original.example.com"})
@@ -153,12 +151,12 @@ func TestFactoryConfig_ReturnsADeepCopy(t *testing.T) {
 	require.Equal(t, "original.example.com", live.Domains[0].Hostname)
 }
 
-// TestFactoryConfig_CopiesOnTheWayIn pins the same protection in the other direction.  The caller
-// that hands a Config to the factory usually still holds a reference to it -- the setup console
-// saves the very struct its handler was editing -- so storing it directly would leave the live
-// configuration aliased to somebody else's scratch space.
+// TestFactoryConfig_CopiesOnTheWayIn requires that a Config handed to the factory is copied, not
+// stored
 func TestFactoryConfig_CopiesOnTheWayIn(t *testing.T) {
 
+	// The caller usually keeps a reference, since the setup console saves the struct its handler
+	// was editing, so storing it would alias the live configuration to that scratch space.
 	incoming := config.DefaultConfig()
 	incoming.AdminEmail = "incoming@example.com"
 
@@ -192,12 +190,12 @@ func TestFactoryConfig_ListDomainsIsNotLive(t *testing.T) {
 	require.Equal(t, "one.example.com", factory.ListDomains()[0].Hostname)
 }
 
-// TestFactoryConfig_MutateMergesIntoTheLatest pins the read-modify-write helper that adding and
-// removing domains uses.  It must operate on whatever configuration is CURRENT, not on a
-// snapshot the caller took earlier -- otherwise adding a domain silently reverts every other
-// change that arrived from another node in the meantime.
+// TestFactoryConfig_MutateMergesIntoTheLatest requires the read-modify-write helper to edit the
+// CURRENT configuration, not a snapshot the caller took earlier
 func TestFactoryConfig_MutateMergesIntoTheLatest(t *testing.T) {
 
+	// Adding and removing domains use it, so editing a snapshot would silently revert every change
+	// that arrived from another node in the meantime.
 	factory := &factoryCore{}
 	factory.storage = &stubStorage{}
 	setTestConfig(factory, config.DefaultConfig())
@@ -217,13 +215,12 @@ func TestFactoryConfig_MutateMergesIntoTheLatest(t *testing.T) {
 	require.Equal(t, 1, len(factory.Config().Domains))
 }
 
-// TestFactoryConfig_MutateRebasesOnConflict is the regression test for the lost-update race.
-// The factory's in-memory base is STALE (another node has saved twice), so the first write
-// conflicts.  The mutation must rebase on what is actually STORED -- picking up the other
-// node's change -- and re-apply, so that the final document carries BOTH changes.  Before the
-// revision guard, this exact sequence silently destroyed the other node's change, up to and
-// including a domain's MasterKey, which lives nowhere else.
+// TestFactoryConfig_MutateRebasesOnConflict requires a mutation whose write conflicts to rebase
+// on the stored configuration and re-apply it, so the result carries both changes
 func TestFactoryConfig_MutateRebasesOnConflict(t *testing.T) {
+
+	// Before the revision guard, this sequence silently destroyed the other node's change, up to
+	// and including a domain's MasterKey, which lives nowhere else.
 
 	// The stored configuration is two revisions ahead of what this factory has seen, and
 	// carries another node's change
@@ -254,12 +251,12 @@ func TestFactoryConfig_MutateRebasesOnConflict(t *testing.T) {
 	require.Equal(t, "other-node@example.com", factory.Config().AdminEmail)
 }
 
-// TestFactoryConfig_UpdateConflictKeepsLocalConfig pins the form-save half: a whole-form save
-// (UpdateConfig) is NOT rebased -- replaying a human's edit over someone else's change is the
-// silent overwrite the revision exists to prevent -- and a rejected save must leave this node's
-// live configuration untouched, so the console re-renders current values for the human to
-// reconcile.
+// TestFactoryConfig_UpdateConflictKeepsLocalConfig requires a rejected whole-form save to leave
+// this node's live configuration untouched, and never to rebase
 func TestFactoryConfig_UpdateConflictKeepsLocalConfig(t *testing.T) {
+
+	// Replaying a human's edit over someone else's change is the silent overwrite the revision
+	// prevents.  Keeping local values lets the console re-render them for the human to reconcile.
 
 	// The store is one revision ahead of this factory
 	other := config.DefaultConfig()

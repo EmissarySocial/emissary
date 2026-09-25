@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"io/fs"
 	"net/url"
 	"os"
@@ -64,8 +65,9 @@ func (filesystem *Filesystem) GetFS(folder mapof.String) (fs.FS, error) {
 	case config.FolderAdapterGit:
 		locationURL, err := url.Parse(folder["location"])
 
+		// A url.Error quotes the whole URL, which can embed a token, so only its cause is kept
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Parsing Git URL", folder["adapter"])
+			return nil, derp.Wrap(errors.Unwrap(err), location, "Parsing Git URL", folder["adapter"])
 		}
 
 		return gitfs.New(locationURL)
@@ -78,26 +80,6 @@ func (filesystem *Filesystem) GetFS(folder mapof.String) (fs.FS, error) {
 
 	// Otherwise, fail.  Unrecognized filesystem type
 	return nil, derp.Internal(location, "Unsupported filesystem adapter", folderLabel(folder))
-}
-
-// folderLabel names a folder in an error by its adapter and location, with any credentials
-// removed.  A folder map can hold S3 keys, and a Git location can embed a token.
-func folderLabel(folder mapof.String) string {
-
-	adapter := folder["adapter"]
-
-	// A location that does not parse is left out, because it cannot be cleaned
-	locationURL, err := url.Parse(folder["location"])
-
-	if err != nil {
-		return adapter
-	}
-
-	// RULE: Drop the whole userinfo, not just the password.  Git hosts accept a token as the
-	// username alone (https://TOKEN@host), which url.Redacted would keep.
-	locationURL.User = nil
-
-	return adapter + " " + locationURL.String()
 }
 
 // GetFSs returns multiple fs.FS filesystems
@@ -278,4 +260,26 @@ func (filesystem *Filesystem) watchOS(uri string, changes chan<- bool, done <-ch
 
 	// Success!
 	return nil
+}
+
+// folderLabel names a folder for an error by its adapter and location, with any credentials
+// removed
+func folderLabel(folder mapof.String) string {
+
+	// A folder map can hold S3 keys, and a Git location can embed a token
+
+	adapter := folder["adapter"]
+
+	// A location that does not parse is left out, because it cannot be cleaned
+	locationURL, err := url.Parse(folder["location"])
+
+	if err != nil {
+		return adapter
+	}
+
+	// RULE: Drop the whole userinfo, not just the password.  Git hosts accept a token as the
+	// username alone (https://TOKEN@host), which url.Redacted would keep.
+	locationURL.User = nil
+
+	return adapter + " " + locationURL.String()
 }

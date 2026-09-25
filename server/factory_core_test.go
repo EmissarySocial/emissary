@@ -763,9 +763,12 @@ func TestRefreshDomains_UnreachableDomainIsLeftOut(t *testing.T) {
  * Domain Registry (MongoDB integration)
  ******************************************/
 
-// TestRefreshDomains_Lifecycle creates, refreshes, and removes a live domain factory.  A removed
-// factory's watchers must stop, because they reopen themselves until canceled (BUG-170).
+// TestRefreshDomains_Lifecycle creates, refreshes, and removes a live domain factory, and
+// requires the removed factory's watchers to stop
 func TestRefreshDomains_Lifecycle(t *testing.T) {
+
+	// BUG-170: watchers reopen themselves until canceled, so a factory that is not closed on
+	// removal keeps them running
 
 	factory, domainConfig := newLiveDomainCore(t)
 	baseline := countDomainWatchers()
@@ -978,8 +981,8 @@ func TestPutDomain_Live(t *testing.T) {
 
 	// BUG-173: the phone number and mailing address are never copied to the User, so only the
 	// "Setting owner" wrap could carry them.  Neither is a credential, but both are personal data.
-	requireNoSecretInChain(t, err, "+1-555-0100")
-	requireNoSecretInChain(t, err, "1 Private Lane")
+	secretcheck.RequireAbsentFromEachLayer(t, err, "+1-555-0100")
+	secretcheck.RequireAbsentFromEachLayer(t, err, "1 Private Lane")
 
 	// The same session machinery serves requests
 	session, err := factory.Session(ctx, domainConfig.Hostname)
@@ -1010,38 +1013,6 @@ func TestPutDomain_UnreachableDomain(t *testing.T) {
 	require.Error(t, err)
 	require.Zero(t, factory.domains.Size())
 	require.Len(t, factory.ListDomains(), 1)
-}
-
-// errorMessages returns the message of every layer in the error chain, outermost first
-func errorMessages(err error) []string {
-
-	result := make([]string, 0)
-
-	for ; err != nil; err = errors.Unwrap(err) {
-		result = append(result, derp.Message(err))
-	}
-
-	return result
-}
-
-// requireNoSecretInChain checks each layer of the error chain on its own.  The mongo driver's
-// errors cannot be encoded as BSON, so the whole chain can not be checked at once.
-func requireNoSecretInChain(t *testing.T, err error, secret string) {
-
-	t.Helper()
-
-	for ; err != nil; err = errors.Unwrap(err) {
-
-		// A derp layer is checked in every form, without the layers beneath it
-		if layer, isDerp := err.(derp.Error); isDerp {
-			layer.WrappedValue = nil
-			secretcheck.RequireAbsent(t, layer, secret)
-			continue
-		}
-
-		// Any other layer contributes only its message
-		require.NotContains(t, err.Error(), secret)
-	}
 }
 
 // TestPutDomain_FailedBuildOmitsSecrets verifies that a domain which cannot be built reports
@@ -1098,14 +1069,26 @@ func TestPutDomain_FailedBuildOmitsSecrets(t *testing.T) {
 			require.Contains(t, messages, test.refreshStep)
 
 			for _, secret := range secrets {
-				requireNoSecretInChain(t, err, secret)
+				secretcheck.RequireAbsentFromEachLayer(t, err, secret)
 
 				for _, reported := range recorder.reported() {
-					requireNoSecretInChain(t, reported, secret)
+					secretcheck.RequireAbsentFromEachLayer(t, reported, secret)
 				}
 			}
 		})
 	}
+}
+
+// errorMessages returns the message of every layer in the error chain, outermost first
+func errorMessages(err error) []string {
+
+	result := make([]string, 0)
+
+	for ; err != nil; err = errors.Unwrap(err) {
+		result = append(result, derp.Message(err))
+	}
+
+	return result
 }
 
 // Two paths in factory_core.go have no test.  PutDomain's ByHostname failure needs a configured

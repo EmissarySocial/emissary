@@ -7,13 +7,12 @@ import (
 	"github.com/benpate/rosetta/slice"
 )
 
-// OAuthUserTokenRequest holds the parameters of an OAuth token request
-//
-// https://docs.joinmastodon.org/methods/oauth/#token
-// POST /oauth/token
-// Returns: Token
-// Obtain an access token, to be used during API calls that are not public
+// OAuthUserTokenRequest holds the parameters of a POST to /oauth/token, which exchanges a code
+// or a refresh token for an access token
 type OAuthUserTokenRequest struct {
+
+	// Fields as documented at https://docs.joinmastodon.org/methods/oauth/#token
+
 	GrantType    string `json:"grantType"    form:"grant_type"`
 	Code         string `json:"code"         form:"code"`
 	RefreshToken string `json:"refreshToken" form:"refresh_token"` // The rotating refresh token, presented for a refresh_token grant (RFC 6749 §6)

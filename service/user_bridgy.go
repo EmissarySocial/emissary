@@ -7,10 +7,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// bridgyFedBlueskyActor is the Bridgy Fed actor that gates the Bluesky bridge: following it opts the
-// User in, blocking it opts them out. Written as a webfinger handle because that is the address
-// Bridgy Fed publishes; the Rule and Following services resolve it to its canonical URL themselves.
-const bridgyFedBlueskyActor = "@bsky.brid.gy@bsky.brid.gy"
+// bridgyFedBlueskyActor is the Bridgy Fed actor that gates the Bluesky bridge: following it opts
+// the User in, and blocking it opts them out
+const bridgyFedBlueskyActor = "@bsky.brid.gy@bsky.brid.gy" // The handle Bridgy Fed publishes; the Rule and Following services resolve it
 
 // connectBluesky follows or blocks the Bridgy Fed actor, mirroring this User's Bluesky bridge setting
 func (service *User) connectBluesky(session data.Session, user *model.User) error {

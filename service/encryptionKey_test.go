@@ -14,14 +14,6 @@ import (
 // testPrivatePEM stands in for a private key that must never reach an error
 const testPrivatePEM = "-----BEGIN RSA PRIVATE KEY-----private-pem-s3cr3t-----END RSA PRIVATE KEY-----"
 
-// newTestEncryptionKey returns a key carrying testPrivatePEM
-func newTestEncryptionKey() model.EncryptionKey {
-	encryptionKey := model.NewEncryptionKey()
-	encryptionKey.ParentID = primitive.NewObjectID()
-	encryptionKey.PrivatePEM = testPrivatePEM
-	return encryptionKey
-}
-
 // TestEncryptionKey_OmitsPrivateKeyFromErrors requires that no failure reports the private key
 func TestEncryptionKey_OmitsPrivateKeyFromErrors(t *testing.T) {
 
@@ -54,4 +46,12 @@ func TestEncryptionKey_OmitsPrivateKeyFromErrors(t *testing.T) {
 		require.Equal(t, "Deleting key", derp.Message(err))
 		secretcheck.RequireAbsent(t, err, testPrivatePEM)
 	})
+}
+
+// newTestEncryptionKey returns a key carrying testPrivatePEM
+func newTestEncryptionKey() model.EncryptionKey {
+	encryptionKey := model.NewEncryptionKey()
+	encryptionKey.ParentID = primitive.NewObjectID()
+	encryptionKey.PrivatePEM = testPrivatePEM
+	return encryptionKey
 }

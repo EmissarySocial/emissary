@@ -87,7 +87,7 @@ func (service *EncryptionKey) Load(session data.Session, criteria exp.Expression
 // Save adds/updates an EncryptionKey in the database
 func (service *EncryptionKey) Save(session data.Session, encryptionKey *model.EncryptionKey, note string) error {
 
-	// RULE: Errors name the key's ID, never the key, which carries the private key in PEM
+	// Save this EncryptionKey.  Errors name its ID, because the key carries the private key.
 	if err := service.collection(session).Save(encryptionKey, note); err != nil {
 		return derp.Wrap(err, "service.EncryptionKey.Save", "Saving EncryptionKey", encryptionKey.EncryptionKeyID, note)
 	}

@@ -199,8 +199,8 @@ func NewFactory(serverFactory ServerFactory, domain config.Domain, port string, 
 	factory.webhookService = NewWebhook()
 
 	// Refresh the configuration with values that (may) change during the lifetime of the factory.
-	// A factory that fails here already runs a broker, and may hold a database client.
-	// RULE: Errors name the hostname, never the configuration, which carries the domain's secrets.
+	// A factory that fails here already runs a broker, and may hold a database client.  Errors
+	// name the hostname, never the configuration, which carries the domain's secrets.
 	if err := factory.Refresh(domain, attachmentOriginals, attachmentCache); err != nil {
 		factory.Close()
 		return nil, derp.Wrap(err, location, "Creating factory", domain.Hostname)

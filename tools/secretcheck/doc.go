@@ -8,6 +8,7 @@
 // still reaches the database.
 //
 // Find reports every form that contains a secret, and RequireAbsent fails a test when any
-// form does. This package is for tests, but it lives outside a _test.go file so that every
+// form does. RequireAbsentFromEachLayer checks a chain that cannot be encoded whole, one
+// layer at a time. This package is for tests, but it lives outside a _test.go file so that every
 // package can share one implementation.
 package secretcheck

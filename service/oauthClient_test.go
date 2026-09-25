@@ -13,14 +13,6 @@ import (
 // testClientSecret stands in for an OAuth client secret that must never reach an error
 const testClientSecret = "oauth-client-secret-s3cr3t"
 
-// newTestOAuthClient returns a valid client carrying testClientSecret
-func newTestOAuthClient() model.OAuthClient {
-	client := model.NewOAuthClient()
-	client.Name = "Test Client"
-	client.ClientSecret = testClientSecret
-	return client
-}
-
 // TestOAuthClient_OmitsSecretFromErrors requires that no failure reports the client's secret
 func TestOAuthClient_OmitsSecretFromErrors(t *testing.T) {
 
@@ -43,15 +35,8 @@ func TestOAuthClient_OmitsSecretFromErrors(t *testing.T) {
 		client.Name = ""
 		err := service.Save(brokenSession{}, &client, "test")
 
-		require.Equal(t, "service.OAuthClient.Save", derp.Location(err))
-		require.Equal(t, "Validating OAuthClient using OAuthClientSchema", derp.Message(err))
-
-		// Only this layer is checked.  rosetta's schema.Validate attaches the whole value it
-		// validates, one layer down, and that leak is fixed upstream (BUG-173 §7).
-		layer, isDerp := err.(derp.Error)
-		require.True(t, isDerp)
-		layer.WrappedValue = nil
-		secretcheck.RequireAbsent(t, layer, testClientSecret)
+		// The whole chain is checked, including rosetta's schema error beneath this layer
+		requireSite(t, err, client, "service.OAuthClient.Save", "Validating OAuthClient using OAuthClientSchema")
 	})
 
 	t.Run("Save", func(t *testing.T) {
@@ -79,4 +64,12 @@ func TestOAuthClient_OmitsSecretFromErrors(t *testing.T) {
 		err := service.Delete(session, &client, "test")
 		requireSite(t, err, client, "service.OAuthClient.Delete", "Deleting attachments")
 	})
+}
+
+// newTestOAuthClient returns a valid client carrying testClientSecret
+func newTestOAuthClient() model.OAuthClient {
+	client := model.NewOAuthClient()
+	client.Name = "Test Client"
+	client.ClientSecret = testClientSecret
+	return client
 }

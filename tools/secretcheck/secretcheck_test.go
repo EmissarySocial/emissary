@@ -35,22 +35,6 @@ func (recorder *fatalRecorder) Fatalf(format string, args ...any) {
 	recorder.message = fmt.Sprintf(format, args...)
 }
 
-// requireForms asserts which forms Find reports
-func requireForms(t *testing.T, err error, secret string, expected ...string) {
-
-	t.Helper()
-
-	forms, findErr := Find(err, secret)
-	require.NoError(t, findErr)
-
-	if len(expected) == 0 {
-		require.Empty(t, forms)
-		return
-	}
-
-	require.Equal(t, expected, forms)
-}
-
 // TestFind_Nil verifies that a nil error carries nothing
 func TestFind_Nil(t *testing.T) {
 	requireForms(t, nil, "s3cr3t")
@@ -116,6 +100,22 @@ func TestFind_PlainError(t *testing.T) {
 	requireForms(t, errors.New("dial tcp: s3cr3t"), "s3cr3t", "message")
 }
 
+// requireForms asserts which forms Find reports
+func requireForms(t *testing.T, err error, secret string, expected ...string) {
+
+	t.Helper()
+
+	forms, findErr := Find(err, secret)
+	require.NoError(t, findErr)
+
+	if len(expected) == 0 {
+		require.Empty(t, forms)
+		return
+	}
+
+	require.Equal(t, expected, forms)
+}
+
 // TestFind_Unencodable verifies that a detail no encoder accepts is reported, not ignored
 func TestFind_Unencodable(t *testing.T) {
 
@@ -172,4 +172,63 @@ func TestRequireAbsent_Unencodable(t *testing.T) {
 	RequireAbsent(recorder, derp.Internal("test", "Bad detail", make(chan int)), "s3cr3t")
 
 	require.Contains(t, recorder.message, "unable to check")
+}
+
+// plainError is a non-derp error that encodes to nothing, like the mongo driver's errors
+type plainError struct{ message string }
+
+// Error returns the message
+func (err plainError) Error() string { return err.message }
+
+// unencodableError is a non-derp error that neither JSON nor BSON can encode
+type unencodableError struct{ Channel chan int }
+
+// Error returns a fixed message
+func (err unencodableError) Error() string { return "connection refused" }
+
+// TestRequireAbsentFromEachLayer_Passes verifies that a clean chain passes, even when it cannot
+// be encoded whole
+func TestRequireAbsentFromEachLayer_Passes(t *testing.T) {
+
+	// Like the mongo driver's errors, this layer holds a value no encoder accepts, so the whole
+	// chain would fail RequireAbsent outright
+	outer := derp.Wrap(unencodableError{Channel: make(chan int)}, "outer", "Starting", "example.com")
+
+	recorder := &fatalRecorder{}
+	RequireAbsentFromEachLayer(recorder, outer, "s3cr3t")
+	require.Empty(t, recorder.message)
+}
+
+// TestRequireAbsentFromEachLayer_FindsADerpLayer verifies that a secret in any derp layer fails
+func TestRequireAbsentFromEachLayer_FindsADerpLayer(t *testing.T) {
+
+	inner := derp.Internal("inner", "Connecting", hiddenFromJSON{Secret: "s3cr3t"})
+	outer := derp.Wrap(inner, "outer", "Starting")
+
+	recorder := &fatalRecorder{}
+	RequireAbsentFromEachLayer(recorder, outer, "s3cr3t")
+	require.Contains(t, recorder.message, "inner")
+}
+
+// TestRequireAbsentFromEachLayer_FindsAPlainMessage verifies that a secret in a non-derp message fails
+func TestRequireAbsentFromEachLayer_FindsAPlainMessage(t *testing.T) {
+
+	outer := derp.Wrap(plainError{message: "dial s3cr3t"}, "outer", "Starting")
+
+	recorder := &fatalRecorder{}
+	RequireAbsentFromEachLayer(recorder, outer, "s3cr3t")
+	require.Contains(t, recorder.message, "plainError")
+	require.NotContains(t, recorder.message, "s3cr3t")
+}
+
+// ExampleFind shows a secret hidden from JSON that is still stored as BSON
+func ExampleFind() {
+
+	// A field tagged json:"-" is left out of the console, and kept by the error log
+	err := derp.Internal("example", "Saving client", hiddenFromJSON{Name: "app", Secret: "s3cr3t"})
+
+	forms, _ := Find(err, "s3cr3t")
+	fmt.Println(forms)
+
+	// Output: [bson]
 }
