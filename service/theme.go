@@ -3,6 +3,7 @@ package service
 import (
 	"html/template"
 	"io/fs"
+	"maps"
 	"sort"
 	"sync"
 
@@ -22,6 +23,7 @@ type Theme struct {
 	contentService  *Content
 	funcMap         template.FuncMap
 	themes          mapof.Object[model.Theme]
+	themePrep       mapof.Object[model.Theme] // Themes being built by a reload, published once inheritance is done
 
 	mutex   sync.RWMutex
 	changed chan bool
@@ -36,6 +38,7 @@ func NewTheme(templateService *Template, contentService *Content, funcMap templa
 		contentService:  contentService,
 		funcMap:         funcMap,
 		themes:          mapof.NewObject[model.Theme](),
+		themePrep:       mapof.NewObject[model.Theme](),
 		mutex:           sync.RWMutex{},
 		changed:         make(chan bool),
 		closed:          make(chan bool),
@@ -110,7 +113,7 @@ func (service *Theme) GetTheme(themeID string) model.Theme {
  * Loading Themes
  ******************************************/
 
-// Add parses a theme definition and registers it under the provided themeID
+// Add parses a theme definition into the prep area, under the provided themeID
 func (service *Theme) Add(themeID string, filesystem fs.FS, definition []byte) error {
 
 	const location = "service.Theme.loadModel"
@@ -149,44 +152,71 @@ func (service *Theme) Add(themeID string, filesystem fs.FS, definition []byte) e
 		service.setStartupContent(&theme, content)
 	}
 
-	// Add the theme into the theme library
-	service.set(theme)
+	// Stage the theme until inheritance is done.  A request that executes a
+	// live theme would make html/template refuse every inherited template (BUG-203)
+	service.themePrep[theme.ThemeID] = theme
 	return nil
 }
 
-// set writes a Theme into the in-memory map, guarding against concurrent readers
-func (service *Theme) set(theme model.Theme) {
-
-	service.mutex.Lock()
-	defer service.mutex.Unlock()
-
-	service.themes[theme.ThemeID] = theme
-}
-
-// calculateAllInheritance re-applies inheritance to every registered Theme
+// calculateAllInheritance applies inheritance to every Theme in the prep area
 func (service *Theme) calculateAllInheritance() {
 
-	for _, theme := range service.themes {
+	// RULE: Report every parent that no location defines.  The theme still inherits from the rest
+	for _, err := range service.unknownParents() {
+		derp.Report(err)
+	}
+
+	// Inherit each theme from its parents
+	for _, theme := range service.themePrep {
 		service.calculateInheritance(theme)
 	}
 }
 
-// calculateInheritance fills in a Theme's empty values from each of the Themes it extends
+// unknownParents returns an error for each Theme in the prep area that extends a Theme the prep area does not contain
+func (service *Theme) unknownParents() []error {
+
+	const location = "service.Theme.unknownParents"
+
+	result := make([]error, 0)
+
+	for _, theme := range service.themePrep {
+		for _, parentID := range theme.Extends {
+			if _, exists := service.themePrep[parentID]; !exists {
+				result = append(result, derp.Internal(location, "Parent theme is not defined", "themeId: "+theme.ThemeID, "parentId: "+parentID))
+			}
+		}
+	}
+
+	return result
+}
+
+// calculateInheritance fills in a prepared Theme's empty values from each of the Themes it extends
 func (service *Theme) calculateInheritance(theme model.Theme) model.Theme {
 
 	if len(theme.Extends) == 0 {
 		return theme
 	}
 
-	for _, parentName := range theme.Extends {
-		if parent, ok := service.themes[parentName]; ok {
+	for _, parentID := range theme.Extends {
+		if parent, exists := service.themePrep[parentID]; exists {
 			parent = service.calculateInheritance(parent)
 			theme.Inherit(&parent)
 		}
 	}
 
-	service.set(theme)
+	service.themePrep[theme.ThemeID] = theme
 	return theme
+}
+
+// publish copies every prepared Theme into the live library in one step, then empties the prep area
+func (service *Theme) publish() {
+
+	service.mutex.Lock()
+	defer service.mutex.Unlock()
+
+	// Overwrite without resetting, so a reload never empties the library (BUG-180)
+	maps.Copy(service.themes, service.themePrep)
+	service.themePrep = mapof.NewObject[model.Theme]()
 }
 
 // setStartupContent loads the sample content that a new Domain is seeded with from this Theme
