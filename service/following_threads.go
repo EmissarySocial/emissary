@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
@@ -19,6 +20,34 @@ import (
 // absurdly deep thread would otherwise recurse until the stack overflows -- a remote-triggerable DoS.
 const maxReplyDepth = 32
 
+// newsItemSaveResult names what saveUniqueNewsItem did to the stored NewsItem
+type newsItemSaveResult int
+
+const (
+	// newsItemUnchanged means the NewsItem already existed and nothing about it changed.
+	// It is first so that the zero value does the least, rather than starting a crawl.
+	newsItemUnchanged newsItemSaveResult = iota
+
+	// newsItemCreated means the NewsItem did not exist, and was added
+	newsItemCreated
+
+	// newsItemOriginAdded means the NewsItem existed, and gained a new origin
+	newsItemOriginAdded
+
+	// newsItemMarkedNewReplies means the NewsItem existed, and moved from READ to NEW-REPLIES
+	newsItemMarkedNewReplies
+)
+
+// primaryPostWalk carries the state of a single provenance traversal: the rule check it applies at
+// every identity, the User it runs for, and the cycle/depth guards that bound the recursion.
+type primaryPostWalk struct {
+	ruleService *Rule
+	session     data.Session
+	userID      primitive.ObjectID
+	now         int64
+	seen        map[string]bool
+}
+
 // SaveNewsItem adds/updates a NewsItem for a followed document, after walking its provenance chain to
 // the primary post and dropping anything authored (or delivered) by a blocked or muted identity, or
 // carrying a blocked or muted hashtag (R18, D12).
@@ -28,7 +57,7 @@ func (service *Following) SaveNewsItem(session data.Session, following *model.Fo
 
 	// Walk `Create`/`Update`/`inReplyTo` back to the primary document, filtering the whole provenance
 	// chain against this User's rules along the way.
-	walk := &primaryPostWalk{
+	walk := primaryPostWalk{
 		ruleService: service.ruleService,
 		session:     session,
 		userID:      following.UserID,
@@ -61,8 +90,19 @@ func (service *Following) SaveNewsItem(session data.Session, following *model.Fo
 	newsItem.AddReference(following.Origin(originType))
 
 	// Try to save a unique version of this newsItem to the database (always collapse duplicates)
-	if err := service.saveUniqueNewsItem(session, newsItem); err != nil {
+	save, stateID, err := service.saveUniqueNewsItem(session, newsItem)
+
+	if err != nil {
 		return derp.Wrap(err, location, "Saving newsItem", newsItem)
+	}
+
+	// RULE: Crawl only when this save brought something new.  A poll re-reads the same outbox
+	// items every cycle, and re-crawling them repeats every request for nothing (BUG-183).
+	isReply := (newsItem.Origin.Type == model.OriginTypeReply) // nolint:scopeguard (readability)
+	isFresh := !ascache.FromCache(document)                    // nolint:scopeguard (readability)
+
+	if !shouldCrawl(save, stateID, isReply, isFresh) {
+		return nil
 	}
 
 	// Crawl the document's context/reply chain in the background (post-commit).  The
@@ -78,69 +118,6 @@ func (service *Following) SaveNewsItem(session data.Session, following *model.Fo
 
 	// Yee. Haw.
 	return nil
-}
-
-// saveUnique adds/updates a message in the database.  If the message.URL does not already
-// exist, then a new message is added to the Inbox.  Otherwise, the "references" data will
-// of the existing record be updated and the unique value will be re-saved.
-func (service *Following) saveUniqueNewsItem(session data.Session, message model.NewsItem) error {
-
-	const location = "service.Following.saveUnique"
-
-	// Search for a previous UNREAD message with our same UserID and URL.
-	previousNewsItem := model.NewsItem{}
-
-	if err := service.newsFeedService.LoadByURL(session, message.UserID, message.URL, &previousNewsItem); err != nil {
-		if !derp.IsNotFound(err) {
-			return derp.Wrap(err, location, "Searching for duplicate message", message)
-		}
-	}
-
-	// If no previous message was found, then save the current message as is
-	if previousNewsItem.IsNew() {
-
-		if err := service.newsFeedService.Save(session, &message, "Created"); err != nil {
-			return derp.Wrap(err, location, "Saving new message", message)
-		}
-
-		return nil
-	}
-
-	// Fall through means that we have a duplicate message.
-
-	// Try to update the previousNewsItem with a new origin (a new reply, like, etc)
-	isReferenceUpdated := previousNewsItem.AddReference(message.Origin) // nolint:scopeguard (readability)
-	isStatusUpdated := false
-
-	// Update the message status to "NEW-REPLIES" so that previously
-	// read messages will show up again in the Inbox.
-	if message.Origin.Type == model.OriginTypeReply {
-		isStatusUpdated = previousNewsItem.MarkNewReplies()
-	}
-
-	// if the message was updated (from AddReference or MarkNewReplies) then save it.
-	if isReferenceUpdated || isStatusUpdated {
-		if err := service.newsFeedService.Save(session, &previousNewsItem, "NewsItem Imported"); err != nil {
-			return derp.Wrap(err, location, "Updating previous message with new origin and status", previousNewsItem)
-		}
-	}
-
-	// Successfully updated the message, or not.  But still, it's good.
-	return nil
-}
-
-/******************************************
- * Provenance Walk
- ******************************************/
-
-// primaryPostWalk carries the state of a single provenance traversal: the rule check it applies at
-// every identity, the User it runs for, and the cycle/depth guards that bound the recursion.
-type primaryPostWalk struct {
-	ruleService *Rule
-	session     data.Session
-	userID      primitive.ObjectID
-	now         int64
-	seen        map[string]bool
 }
 
 // primaryPost traverses UP a chain of Activities and replies to the first message that was posted. It
@@ -213,6 +190,127 @@ func (w *primaryPostWalk) primaryPost(document streams.Document, originType stri
 	return w.climbReplyChain(document, originType, depth)
 }
 
+// getNewsItem returns an inbox NewsItem object based on the provided arguments.
+func getNewsItem(userID primitive.ObjectID, document streams.Document) model.NewsItem {
+
+	result := model.NewNewsItem()
+	result.UserID = userID
+	result.Context = document.Context()
+	result.SocialRole = document.Type()
+	result.URL = document.ID()
+	result.InReplyTo = document.InReplyTo().ID()
+	result.PublishDate = document.Published().Unix()
+
+	return result
+}
+
+// saveUniqueNewsItem adds a NewsItem, or merges it into the stored NewsItem with the same URL.
+// It returns what the save did, and the StateID of the stored NewsItem afterward.
+func (service *Following) saveUniqueNewsItem(session data.Session, message model.NewsItem) (newsItemSaveResult, string, error) {
+
+	const location = "service.Following.saveUniqueNewsItem"
+
+	// Search for a previous message with our same UserID and URL, in any state
+	previousNewsItem := model.NewsItem{}
+
+	if err := service.newsFeedService.LoadByURL(session, message.UserID, message.URL, &previousNewsItem); err != nil {
+		if !derp.IsNotFound(err) {
+			return newsItemUnchanged, "", derp.Wrap(err, location, "Searching for duplicate message", message)
+		}
+	}
+
+	// If no previous message was found, then save the current message as is
+	if previousNewsItem.IsNew() {
+
+		if err := service.newsFeedService.Save(session, &message, "Created"); err != nil {
+			return newsItemUnchanged, "", derp.Wrap(err, location, "Saving new message", message)
+		}
+
+		return newsItemCreated, message.StateID, nil
+	}
+
+	// Fall through means that we have a duplicate message.
+	save := mergeNewsItem(&previousNewsItem, message)
+
+	// If the message was updated (a new origin, or new replies) then save it.
+	if save != newsItemUnchanged {
+		if err := service.newsFeedService.Save(session, &previousNewsItem, "NewsItem Imported"); err != nil {
+			return newsItemUnchanged, "", derp.Wrap(err, location, "Updating previous message with new origin and status", previousNewsItem)
+		}
+	}
+
+	// Successfully updated the message, or not.  But still, it's good.
+	return save, previousNewsItem.StateID, nil
+}
+
+// shouldCrawl returns TRUE if a save brought something new enough to crawl the document's thread for
+func shouldCrawl(save newsItemSaveResult, stateID string, isReply bool, isFresh bool) bool {
+
+	// RULE: A muted thread is never crawled
+	if stateID == model.NewsItemStateMuted {
+		return false
+	}
+
+	// Anything the save changed is worth a crawl
+	if save != newsItemUnchanged {
+		return true
+	}
+
+	// RULE: An unchanged item is crawled only for a reply that is new to this server.  A poll
+	// re-reading its outbox serves every reply from the cache, which is what isFresh rules out.
+	if !isReply {
+		return false
+	}
+
+	if !isFresh {
+		return false
+	}
+
+	// A further reply on a thread that is already flagged, or not yet read, changes nothing
+	// about the stored item.  It is still new.
+	switch stateID {
+
+	case model.NewsItemStateNewReplies, model.NewsItemStateUnread:
+		return true
+	}
+
+	return false
+}
+
+// actorFiltered returns TRUE if the given actor URI is blocked or muted for this walk's User. An empty
+// URI matches nothing.
+func (w *primaryPostWalk) actorFiltered(actorID string) (bool, error) {
+
+	if actorID == "" {
+		return false, nil
+	}
+
+	disposition, err := w.ruleService.DispositionForKeys(w.session, w.userID, model.ActorMatchKeys(actorID), w.now)
+
+	if err != nil {
+		return false, err
+	}
+
+	return disposition.IsFiltered(), nil
+}
+
+// objectFiltered returns TRUE if an Object node should drop the item: its own disposition (author
+// identity or content hashtags) is blocked/muted, or it quotes blocked/muted content (R18, D12).
+func (w *primaryPostWalk) objectFiltered(document streams.Document) (bool, error) {
+
+	filtered, err := w.documentFiltered(document)
+
+	if err != nil {
+		return false, err
+	}
+
+	if filtered {
+		return true, nil
+	}
+
+	return w.quoteFiltered(document)
+}
+
 // climbReplyChain resolves the parent of a reply, returning the primary post found upthread or the
 // document itself. It propagates a `dropped` verdict from any blocked/muted ancestor -- distinct from a
 // nil-with-dropped=false result, which just means no primary was found (subtractive or depth-limited).
@@ -261,21 +359,41 @@ func (w *primaryPostWalk) climbReplyChain(document streams.Document, originType 
 	return document, originType, false, nil
 }
 
-// objectFiltered returns TRUE if an Object node should drop the item: its own disposition (author
-// identity or content hashtags) is blocked/muted, or it quotes blocked/muted content (R18, D12).
-func (w *primaryPostWalk) objectFiltered(document streams.Document) (bool, error) {
+// mergeNewsItem adds a newly arrived copy's origin and reply status to the stored NewsItem,
+// and returns what changed
+func mergeNewsItem(previous *model.NewsItem, message model.NewsItem) newsItemSaveResult {
 
-	filtered, err := w.documentFiltered(document)
+	// A new origin is the bigger news.  AddReference already marks new replies for a REPLY origin.
+	if previous.AddReference(message.Origin) {
+		return newsItemOriginAdded
+	}
+
+	// A reply marks a READ message as NEW-REPLIES, so it shows up again in the Inbox
+	if message.Origin.Type != model.OriginTypeReply {
+		return newsItemUnchanged
+	}
+
+	if previous.MarkNewReplies() {
+		return newsItemMarkedNewReplies
+	}
+
+	// Nothing new here.  Move along.
+	return newsItemUnchanged
+}
+
+// documentFiltered returns TRUE if this document's own disposition is blocked or muted: ONE indexed
+// rules query over DocumentMatchKeys, which names the document's author (`attributedTo` and `actor`)
+// AND its content (Hashtag TAG keys, D12). Reads only loaded fields -- the document is already
+// resolved by the time the walk reaches this check.
+func (w *primaryPostWalk) documentFiltered(document streams.Document) (bool, error) {
+
+	disposition, err := w.ruleService.Disposition(w.session, w.userID, document, w.now)
 
 	if err != nil {
 		return false, err
 	}
 
-	if filtered {
-		return true, nil
-	}
-
-	return w.quoteFiltered(document)
+	return disposition.IsFiltered(), nil
 }
 
 // quoteFiltered returns TRUE if any post this document quotes is blocked or muted (R18) -- otherwise a
@@ -321,6 +439,19 @@ func (w *primaryPostWalk) quoteFiltered(document streams.Document) (bool, error)
 	return false, nil
 }
 
+// hostFiltered returns TRUE if the host of the given URL is domain-blocked or domain-muted. It checks
+// DOMAIN keys only, because pre-fetch that host is the only identity known (the author is not yet loaded).
+func (w *primaryPostWalk) hostFiltered(url string) (bool, error) {
+
+	disposition, err := w.ruleService.DispositionForKeys(w.session, w.userID, model.DomainMatchKeys(url), w.now)
+
+	if err != nil {
+		return false, err
+	}
+
+	return disposition.IsFiltered(), nil
+}
+
 // quoteURLs returns the URLs a post quotes, gathered from the non-standard fields that carry
 // quote-posts across vocabularies: the Misskey/Fedibird `quoteUrl`/`quoteUri`/`_misskey_quote` string
 // fields, and FEP-e232 `Link` tags whose `rel` names a quote (the target being the tag's `href`).
@@ -344,69 +475,6 @@ func quoteURLs(document streams.Document) []string {
 			result = append(result, href)
 		}
 	}
-
-	return result
-}
-
-// actorFiltered returns TRUE if the given actor URI is blocked or muted for this walk's User. An empty
-// URI matches nothing.
-func (w *primaryPostWalk) actorFiltered(actorID string) (bool, error) {
-
-	if actorID == "" {
-		return false, nil
-	}
-
-	disposition, err := w.ruleService.DispositionForKeys(w.session, w.userID, model.ActorMatchKeys(actorID), w.now)
-
-	if err != nil {
-		return false, err
-	}
-
-	return disposition.IsFiltered(), nil
-}
-
-// documentFiltered returns TRUE if this document's own disposition is blocked or muted: ONE indexed
-// rules query over DocumentMatchKeys, which names the document's author (`attributedTo` and `actor`)
-// AND its content (Hashtag TAG keys, D12). Reads only loaded fields -- the document is already
-// resolved by the time the walk reaches this check.
-func (w *primaryPostWalk) documentFiltered(document streams.Document) (bool, error) {
-
-	disposition, err := w.ruleService.Disposition(w.session, w.userID, document, w.now)
-
-	if err != nil {
-		return false, err
-	}
-
-	return disposition.IsFiltered(), nil
-}
-
-// hostFiltered returns TRUE if the host of the given URL is domain-blocked or domain-muted. It checks
-// DOMAIN keys only, because pre-fetch that host is the only identity known (the author is not yet loaded).
-func (w *primaryPostWalk) hostFiltered(url string) (bool, error) {
-
-	disposition, err := w.ruleService.DispositionForKeys(w.session, w.userID, model.DomainMatchKeys(url), w.now)
-
-	if err != nil {
-		return false, err
-	}
-
-	return disposition.IsFiltered(), nil
-}
-
-/******************************************
- * Helper Functions
- ******************************************/
-
-// getNewsItem returns an inbox NewsItem object based on the provided arguments.
-func getNewsItem(userID primitive.ObjectID, document streams.Document) model.NewsItem {
-
-	result := model.NewNewsItem()
-	result.UserID = userID
-	result.Context = document.Context()
-	result.SocialRole = document.Type()
-	result.URL = document.ID()
-	result.InReplyTo = document.InReplyTo().ID()
-	result.PublishDate = document.Published().Unix()
 
 	return result
 }
