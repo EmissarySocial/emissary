@@ -351,9 +351,10 @@ func (service *Domain) Load(session data.Session, writableDomain *model.Writable
 // publish replaces the cached Domain record with a copy of the provided value
 func (service *Domain) publish(writableDomain model.WritableDomain) {
 
-	// The caller keeps its value and may go on editing it, so the cache holds its own maps and slices
+	// The caller keeps its value and may go on editing it, so the cache holds its own maps and slices.
+	// Clone is the embedded Domain's; the Journal holds only scalars and is copied as-is.
 	clone := model.WritableDomain{
-		Domain:  writableDomain.Domain.Clone(),
+		Domain:  writableDomain.Clone(),
 		Journal: writableDomain.Journal,
 	}
 

@@ -141,7 +141,7 @@ func TestWritableDomain_GetPointer(t *testing.T) {
 	label, ok := pointer.(*string)
 	require.True(t, ok)
 	*label = "Written"
-	require.Equal(t, "Written", writableDomain.Domain.Label)
+	require.Equal(t, "Written", writableDomain.Label)
 
 	_, ok = writableDomain.GetPointer("no-such-field")
 	require.False(t, ok)
