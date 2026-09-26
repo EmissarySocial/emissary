@@ -47,7 +47,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/gorilla/feeds v1.2.0
 	github.com/hairyhenderson/go-fsimpl v0.4.6
-	github.com/hjson/hjson-go/v4 v4.6.0
+	github.com/hjson/hjson-go/v4 v4.7.1
 	github.com/kr/jsonfeed v0.1.1
 	github.com/labstack/echo/v4 v4.15.4
 	github.com/labstack/gommon v0.5.0

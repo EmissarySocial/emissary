@@ -193,8 +193,8 @@ github.com/hairyhenderson/go-fsimpl v0.4.6 h1:KReezFCAf6a0dl5gLGEjGklKbaI7Embloq
 github.com/hairyhenderson/go-fsimpl v0.4.6/go.mod h1:bT3MxCYFMkQraH3fwV5K22y3FP1IJUJSaDuT6gTB+Tw=
 github.com/hexops/gotextdiff v1.0.3 h1:gitA9+qJrrTCsiCl7+kh75nPqQt1cx4ZkudSTLoUqJM=
 github.com/hexops/gotextdiff v1.0.3/go.mod h1:pSWU5MAI3yDq+fZBTazCSJysOMbxWL1BSow5/V2vxeg=
-github.com/hjson/hjson-go/v4 v4.6.0 h1:16e6ViyVfAANKsXo/46h8szUADez7FJs67xl/l+KHS4=
-github.com/hjson/hjson-go/v4 v4.6.0/go.mod h1:4zx6c7Y0vWcm8IRyVoQJUHAPJLXLvbG6X8nk1RLigSo=
+github.com/hjson/hjson-go/v4 v4.7.1 h1:nC/dZ7GCvcFa9KXR3YJzufloeWRLovFAI4XmiAl7jy8=
+github.com/hjson/hjson-go/v4 v4.7.1/go.mod h1:4zx6c7Y0vWcm8IRyVoQJUHAPJLXLvbG6X8nk1RLigSo=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
 github.com/kevinburke/ssh_config v1.6.0 h1:J1FBfmuVosPHf5GRdltRLhPJtJpTlMdKTBjRgTaQBFY=
