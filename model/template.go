@@ -291,7 +291,8 @@ func (template *Template) Inherit(parent *Template) {
 	// Inherit HTMLTemplates from the parent.
 	for _, templateName := range parent.HTMLTemplate.Templates() {
 		if template.HTMLTemplate.Lookup(templateName.Name()) == nil {
-			if _, err := template.HTMLTemplate.AddParseTree(templateName.Name(), templateName.Tree); err != nil {
+			// Add a copy, because html/template escapes a tree in place and each set must escape its own (BUG-203)
+			if _, err := template.HTMLTemplate.AddParseTree(templateName.Name(), templateName.Tree.Copy()); err != nil {
 				derp.Report(derp.Wrap(err, "model.Template.Inherit", "Adding template", templateName.Name()))
 			}
 		}
