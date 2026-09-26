@@ -1,6 +1,6 @@
 module github.com/EmissarySocial/emissary
 
-go 1.26.6
+go 1.27.1
 
 require (
 	github.com/SherClockHolmes/webpush-go v1.4.0
@@ -20,14 +20,15 @@ require (
 	github.com/benpate/exp-builder v0.12.0
 	github.com/benpate/form v0.30.0
 	github.com/benpate/geo v0.4.0
-	github.com/benpate/hannibal v0.36.0
+	github.com/benpate/hannibal v0.38.0
 	github.com/benpate/html v0.18.0
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.17.0
+	github.com/benpate/mediaserver v0.18.0
+	github.com/benpate/oembed v0.3.0
 	github.com/benpate/re v0.6.0
 	github.com/benpate/remote v0.25.0
-	github.com/benpate/rosetta v0.40.0
-	github.com/benpate/sherlock v0.16.0
+	github.com/benpate/rosetta v0.42.0
+	github.com/benpate/sherlock v0.17.0
 	github.com/benpate/sniff v0.3.0
 	github.com/benpate/steranko v0.31.0
 	github.com/benpate/table v0.9.0
@@ -52,7 +53,7 @@ require (
 	github.com/labstack/gommon v0.5.0
 	github.com/maypok86/otter v1.2.4
 	github.com/microcosm-cc/bluemonday v1.0.27
-	github.com/mmcdole/gofeed v1.4.2
+	github.com/mmcdole/gofeed v1.5.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/puzpuzpuz/xsync/v4 v4.5.0
 	github.com/realclientip/realclientip-go v1.0.0
@@ -71,6 +72,7 @@ require (
 	github.com/yuin/goldmark-highlighting/v2 v2.0.0-20230729083705-37449abec8cc
 	go.abhg.dev/goldmark/anchor v0.2.0
 	go.mongodb.org/mongo-driver v1.17.9
+	go.yaml.in/yaml/v3 v3.0.5
 	golang.org/x/crypto v0.57.0
 	golang.org/x/net v0.59.0
 	golang.org/x/oauth2 v0.36.0
@@ -81,9 +83,9 @@ require (
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.4.1 // indirect
-	github.com/PuerkitoBio/goquery v1.12.0 // indirect
+	github.com/PuerkitoBio/goquery v1.13.0 // indirect
 	github.com/alecthomas/chroma/v2 v2.27.0 // indirect
-	github.com/andybalholm/cascadia v1.3.4 // indirect
+	github.com/andybalholm/cascadia v1.3.5 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.18 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.22.44 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.38 // indirect
@@ -95,7 +97,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.39 // indirect
 	github.com/aws/smithy-go v1.27.8 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/benpate/oembed v0.3.0
 	github.com/cloudflare/ahocorasick v0.0.0-20240916140611-054963ec9396 // indirect
 	github.com/cloudflare/circl v1.6.5 // indirect
 	github.com/cyphar/filepath-securejoin v0.7.0 // indirect
@@ -137,7 +138,6 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	go.yaml.in/yaml/v3 v3.0.5
 	golang.org/x/exp v0.0.0-20260908205506-85c1c2202aba // indirect
 	golang.org/x/image v0.45.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
