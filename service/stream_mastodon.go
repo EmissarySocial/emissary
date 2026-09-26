@@ -32,6 +32,66 @@ func (service *Stream) QueryByUser(session data.Session, authorization model.Aut
 	return service.Query(session, criteria, options...)
 }
 
+// SummarizeByUser returns how many of a User's posts the caller may view, and the publish date
+// (Unix seconds) of the newest one -- the same set QueryByUser lists, for an account's
+// statuses_count and last_status_at.
+func (service *Stream) SummarizeByUser(session data.Session, authorization model.Authorization, ownerID primitive.ObjectID) (int64, int64, error) {
+
+	criteria := exp.And(
+		exp.Equal("parentId", ownerID),
+		service.visibilityCriteria(authorization, ownerID),
+	)
+
+	count, err := service.Count(session, criteria)
+
+	if err != nil || count == 0 {
+		return 0, 0, err
+	}
+
+	newest, err := service.Query(session, criteria, option.SortDesc("publishDate"), option.MaxRows(1), option.Fields("publishDate"))
+
+	if err != nil || len(newest) == 0 {
+		return count, 0, err
+	}
+
+	return count, newest[0].PublishDate, nil
+}
+
+// QueryPublic returns the top-level social posts on this server that the caller may view,
+// newest first -- the local public timeline.
+func (service *Stream) QueryPublic(session data.Session, authorization model.Authorization, criteria exp.Expression, options ...option.Option) ([]model.Stream, error) {
+
+	// RULE: the same visibility rule as QueryByUser, across every owner. Replies are left out.
+	criteria = exp.And(
+		criteria,
+		exp.Equal("templateId", "outbox-message"),
+		service.visibilityCriteria(authorization, primitive.NilObjectID),
+	)
+
+	options = append(options, option.SortDesc("createDate"))
+
+	return service.Query(session, criteria, options...)
+}
+
+// QueryByHashtag returns the social posts on this server tagged with any of the given tag
+// names that the caller is allowed to view, newest first. The names are alternate spellings of
+// one tag; the caller matches exact case afterward.
+func (service *Stream) QueryByHashtag(session data.Session, authorization model.Authorization, names []string, criteria exp.Expression, options ...option.Option) ([]model.Stream, error) {
+
+	// RULE: the same visibility rule as QueryByUser, with no single owner -- an anonymous
+	// or ordinary caller sees only published, shared posts.
+	criteria = exp.And(
+		criteria,
+		exp.In("tags.name", names),
+		exp.In("templateId", []string{"outbox-message", "outbox-reply"}),
+		service.visibilityCriteria(authorization, primitive.NilObjectID),
+	)
+
+	options = append(options, option.SortDesc("publishDate"))
+
+	return service.Query(session, criteria, options...)
+}
+
 // visibilityCriteria returns an expression that restricts a Stream query to the
 // records that the caller is allowed to view: owners and domain owners see all of
 // the owner's Streams, while everyone else sees only published, shared Streams.
