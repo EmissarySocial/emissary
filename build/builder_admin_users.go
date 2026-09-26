@@ -262,8 +262,8 @@ func (w User) CountIndexableUsers() (int64, error) {
 // Registration returns the signup template selected for this domain
 func (w User) Registration() model.Registration {
 
-	if domain := w._factory.Domain().Get(); domain.RegistrationID != "" {
-		if template, err := w._factory.Registration().Load(domain.RegistrationID); err == nil {
+	if readOnlyDomain := w._factory.Domain().Cached(); readOnlyDomain.RegistrationID != "" {
+		if template, err := w._factory.Registration().Load(readOnlyDomain.RegistrationID); err == nil {
 			return template
 		}
 	}

@@ -4,7 +4,7 @@
  * How much of the page a Template's main content column fills.  A Template
  * writes the class from its own "width" data value -- class="layout-{{...}}"
  * -- so an unset value renders "layout-", which matches nothing here and
- * fills the width exactly like LARGE.
+ * leaves the column at its full width, like FULL.
  *
  * Global rather than copied into each Template's own stylesheet because the
  * widget editor now draws these same proportions on its canvas, and a Template

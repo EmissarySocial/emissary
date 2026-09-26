@@ -11,12 +11,29 @@ import (
 	"github.com/benpate/uri"
 )
 
+// stripeAPIBase is the root of every Stripe API call this provider makes
+const stripeAPIBase = "https://api.stripe.com"
+
 // StripeConnect connects a Domain to the Stripe Connect payment integration, which processes payments on behalf of a merchant
-type StripeConnect struct{}
+type StripeConnect struct {
+	apiBase         string // root of the Stripe API; only tests change it
+	allowPrivateIPs bool   // lets a test reach a loopback server; never set in production
+}
 
 // NewStripeConnect returns a fully initialized StripeConnect provider
 func NewStripeConnect() StripeConnect {
-	return StripeConnect{}
+	return StripeConnect{apiBase: stripeAPIBase}
+}
+
+// endpoint returns the full URL of a Stripe API path
+func (adapter StripeConnect) endpoint(path string) string {
+
+	// A zero-value StripeConnect still calls the real Stripe API
+	if adapter.apiBase == "" {
+		return stripeAPIBase + path
+	}
+
+	return adapter.apiBase + path
 }
 
 /******************************************
@@ -122,7 +139,8 @@ func (adapter StripeConnect) BeforeSave(connection *model.Connection, vault mapo
 	return nil
 }
 
-// Connect applies any extra changes to the database after this Adapter is activated.
+// Connect registers this Domain's webhook endpoint with Stripe, replacing one whose signing
+// secret was never stored.
 func (adapter StripeConnect) Connect(connection *model.Connection, vault mapof.String, host string) error {
 
 	const location = "providers.StripeConnect.Connect"
@@ -132,15 +150,21 @@ func (adapter StripeConnect) Connect(connection *model.Connection, vault mapof.S
 		return nil
 	}
 
-	// RULE: If we already have a webhook for this MerchantAccount, then don't add another one.
-	if connection.Data.GetString("webhook") != "" {
+	// RULE: A webhook whose signing secret is stored needs nothing more.  One without its secret
+	// can verify nothing, and Stripe reveals a secret only once, so it is replaced below.
+	previousWebhookID := connection.Data.GetString("webhook")
+
+	if (previousWebhookID != "") && (vault.GetString("webhookSecret") != "") {
 		return nil
 	}
 
+	restrictedKey := vault.GetString("restrictedKey")
+
 	// Configure a new Webhook in the Stripe API
 	webhookResult := mapof.NewAny()
-	txn := remote.Post("https://api.stripe.com/v1/webhook_endpoints").
-		With(options.BearerAuth(vault.GetString("restrictedKey"))).
+	txn := remote.Post(adapter.endpoint("/v1/webhook_endpoints")).
+		AllowPrivateIPs(adapter.allowPrivateIPs).
+		With(options.BearerAuth(restrictedKey)).
 		// With(options.Debug()).
 		Query("url", host+"/.stripe-connect/webhook/checkout").
 		Query("description", uri.Hostname(host)+" supscription updates").
@@ -157,12 +181,45 @@ func (adapter StripeConnect) Connect(connection *model.Connection, vault mapof.S
 		return derp.Wrap(err, location, "Creating WebHook via Stripe API")
 	}
 
-	// Save the webhook data into the MerchantAccount
+	// RULE: An endpoint without its secret can verify nothing, so never store one
+	webhookSecret := webhookResult.GetString("secret")
+
+	if webhookSecret == "" {
+		return derp.Internal(location, "Stripe did not return a webhook signing secret", uri.Hostname(host))
+	}
+
+	// Save the webhook data into the Connection.  Connection.Save seals the secret afterward.
 	connection.Data.SetString("webhook", webhookResult.GetString("id"))
-	connection.Vault.SetString("webhookSecret", webhookResult.GetString("secret"))
+	connection.Vault.SetString("webhookSecret", webhookSecret)
+
+	// Remove the endpoint this one replaces, which Stripe would otherwise keep sending events to
+	if previousWebhookID != "" {
+		adapter.deleteWebhook(restrictedKey, previousWebhookID, host)
+	}
 
 	// Success!
 	return nil
+}
+
+// deleteWebhook removes a webhook endpoint from Stripe.  A failure is reported rather than returned,
+// because the replacement is already registered and its secret must still be saved.
+func (adapter StripeConnect) deleteWebhook(restrictedKey string, webhookID string, host string) {
+
+	const location = "providers.StripeConnect.deleteWebhook"
+
+	txn := remote.Delete(adapter.endpoint("/v1/webhook_endpoints/" + webhookID)).
+		AllowPrivateIPs(adapter.allowPrivateIPs).
+		With(options.BearerAuth(restrictedKey))
+
+	if err := txn.Send(); err != nil {
+
+		// Stripe answers 404 for an endpoint that is already gone, which is the outcome we wanted
+		if derp.IsNotFound(err) {
+			return
+		}
+
+		derp.Report(derp.Wrap(err, location, "Deleting replaced webhook endpoint", uri.Hostname(host), webhookID))
+	}
 }
 
 // Refresh updates this connection if it has changed or is out of date

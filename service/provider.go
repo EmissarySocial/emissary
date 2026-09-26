@@ -7,6 +7,7 @@ import (
 
 // Provider service manages all access to external services
 type Provider struct {
+	overrides map[string]providers.Provider // replaces a provider by ID; only tests set it
 }
 
 // NewProvider returns a fully initialized Provider service
@@ -28,6 +29,11 @@ func (service *Provider) Refresh(_ *Factory) {
 
 // GetProvider returns a populated adapter for the given provider
 func (service *Provider) GetProvider(providerID string) (providers.Provider, bool) {
+
+	// A test's stand-in wins over the real provider
+	if provider, exists := service.overrides[providerID]; exists {
+		return provider, true
+	}
 
 	// Create an adapter for known providers
 	switch providerID {

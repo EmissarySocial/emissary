@@ -69,12 +69,12 @@ func (service *DomainEmail) Send(emailID string, data mapof.Any) error {
 	maps.Copy(values, data)
 
 	// Add the Domain values that every email template may reference
-	domain := service.domainService.Get()
+	readOnlyDomain := service.domainService.Cached()
 
 	values["Domain_Owner"] = service.owner
 	values["Domain_URL"] = service.host()
-	values["Domain_Name"] = domain.Label
-	values["Domain_Icon"] = domain.IconURL()
+	values["Domain_Name"] = readOnlyDomain.Label
+	values["Domain_Icon"] = readOnlyDomain.IconURL()
 
 	if err := service.serverEmail.Send(service.smtp, service.owner, emailID, values); err != nil {
 		return derp.Wrap(err, location, "Sending email", emailID)
@@ -267,7 +267,7 @@ func (service *DomainEmail) SendFollowerActivity(follower *model.Follower, activ
 
 	const location = "service.DomainEmail.SendFollowerActivity"
 
-	domain := service.domainService.Get()
+	readOnlyDomain := service.domainService.Cached()
 
 	// Send the activity email
 	if err := service.sendModel(
@@ -276,7 +276,7 @@ func (service *DomainEmail) SendFollowerActivity(follower *model.Follower, activ
 		mapof.Any{
 
 			// Parent info available to the template
-			"ParentLink": follower.ParentURL(domain.Host()),
+			"ParentLink": follower.ParentURL(readOnlyDomain.Host()),
 
 			// Follower info available to the template
 			"FollowerID": follower.FollowerID.Hex(),
@@ -288,8 +288,8 @@ func (service *DomainEmail) SendFollowerActivity(follower *model.Follower, activ
 			"Activity": activity,
 
 			// Unsubscribe links available to the template (D18: two forms, two consumers)
-			"Unsubscribe":             follower.UnsubscribeLink(domain.Host()),
-			"UnsubscribeWithBrackets": follower.UnsubscribeLinkWithBrackets(domain.Host()),
+			"Unsubscribe":             follower.UnsubscribeLink(readOnlyDomain.Host()),
+			"UnsubscribeWithBrackets": follower.UnsubscribeLinkWithBrackets(readOnlyDomain.Host()),
 		},
 	); err != nil {
 		return derp.Wrap(err, location, "Sending follower email to user", follower.Actor.EmailAddress)

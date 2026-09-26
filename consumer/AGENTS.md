@@ -12,7 +12,7 @@ Turbine retries any task that returns `queue.Error` or `queue.Requeue`, so handl
 
 ## A permanent failure ends the task SUCCESSFULLY, because `Failure` still reports
 
-`queue.Error` and `queue.Failure` both call `derp.Report` inside turbine's worker, so classifying a permanent error as `Failure` stops the *retry* but not the *reporting* — the same defect is re-filed on every cycle, which is how one signature became the largest single error class on the server (BUG-148). A failure that is understood and permanent must return `queue.Success()` after a `log.Debug`, exactly as the document loop in [pollFollowing-record.go](pollFollowing-record.go) does with `continue`. Use `requeue(err)` only where reporting is still wanted.
+Turbine reports a task's error exactly once, when the task fails: a `queue.Failure`, or a `queue.Error` whose eight retries have run out. The retries themselves are silent. So `requeue(err)` on a transient fault costs one record only if all nine attempts fail, but classifying a permanent error as `Failure` stops the *retry* but not the *reporting* — the same defect is re-filed on every cycle, which is how one signature became the largest single error class on the server (BUG-148). A failure that is understood and permanent must return `queue.Success()` after a `log.Debug`, exactly as the document loop in [pollFollowing-record.go](pollFollowing-record.go) does with `continue`. Use `requeue(err)` only where reporting is still wanted.
 
 `actorLoadResult` is the worked example: 429 → `requeue` (the host is throttling, not this record), any other 4xx → mark the Following and return Success, everything else → `queue.Error`. The 429 check must come **first**, because `derp.IsClientError` is `400 <= code < 500` and therefore covers 429 too.
 
@@ -70,7 +70,7 @@ A missing case in `PreProcessor` is just as quiet: the name falls through, `Prio
 
 ## Scheduling is idempotent via task signatures
 
-`scheduler_MakeDailyTasks` / `scheduler_MakeHourlyTasks` in [schedule.go](schedule.go) publish with `queue.WithSignature("DAILY:<date>" / "HOURLY:<hour>")`, so repeated boots and the daily re-priming cannot double-schedule. Any new recurring task should either ride these batches (as the per-domain tasks in [scheduleDaily.go](scheduleDaily.go) do) or carry its own signature. `ScheduleStartup` is an intentionally empty hook, published on every boot — it is where the next one-time migration goes; do not delete it as dead code.
+`scheduler_MakeDailyTasks` / `scheduler_MakeHourlyTasks` in [schedule.go](schedule.go) publish with `queue.WithSignature("DAILY:<date>" / "HOURLY:<hour>")`, so repeated boots and the daily re-priming cannot double-schedule. Any new recurring task should either ride these batches (as the per-domain tasks in [scheduleDaily.go](scheduleDaily.go) do) or carry its own signature. `ScheduleStartup` is published on every boot, by every node, and is where one-time migrations go; today it queues the Stripe Connect repair ([BUG-179](../../emissary-specs/bugs/_done/BUG-179-Stripe-Connect-Webhook-Secret-Never-Stored.md)). It carries no signature itself, so anything it publishes must carry its own signature per domain, or two nodes booting together run the same migration twice. `RepairStripeConnect:<hostname>` is the example: two concurrent repairs would each register a Stripe webhook endpoint, and one of them would be left failing forever.
 
 ## `RecycleDomain` is a mass purge — treat it with respect
 

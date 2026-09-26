@@ -276,10 +276,10 @@ func TestMinimalTheme_Form_Toggles(t *testing.T) {
 		require.IsType(t, schema.Boolean{}, element, "%s must be a boolean", path)
 	}
 
-	domain := model.NewDomain()
+	writableDomain := model.NewWritableDomain()
 	settingsForm := form.Form{Schema: domainSchema, Element: loadMinimalTheme(t).Form}
 
-	result, err := settingsForm.Editor(&domain, nil)
+	result, err := settingsForm.Editor(&writableDomain, nil)
 	require.NoError(t, err)
 
 	require.Contains(t, result, `name="themeData.showNavigation"`)
@@ -299,7 +299,8 @@ func TestMinimalTheme_Form_SavePreservesNavigation(t *testing.T) {
 
 	widget.UseAll()
 
-	domain := model.NewDomain()
+	// A form writes through the schema, which only a WritableDomain accepts
+	writableDomain := model.NewWritableDomain()
 	settingsForm := form.Form{Schema: minimalDomainSchema(t), Element: loadMinimalTheme(t).Form}
 
 	// A toggle posts whatever it displays, and both of these display ON, so this is what
@@ -310,20 +311,20 @@ func TestMinimalTheme_Form_SavePreservesNavigation(t *testing.T) {
 		"themeData.showSignup":     []string{"true"},
 	}
 
-	require.NoError(t, settingsForm.SetURLValues(&domain, values, nil))
+	require.NoError(t, settingsForm.SetURLValues(&writableDomain, values, nil))
 
 	// It round-trips as a real boolean, not the string "true"
-	require.Equal(t, true, domain.ThemeData["showNavigation"])
+	require.Equal(t, true, writableDomain.ThemeData["showNavigation"])
 
-	result := renderMinimalNavigation(t, newMinimalNavigationBuilder(t, domain.ThemeData))
+	result := renderMinimalNavigation(t, newMinimalNavigationBuilder(t, writableDomain.ThemeData))
 	require.Contains(t, result, `href="/about"`)
 
 	// And switching it off still works -- the default must not override a stored FALSE
 	values.Set("themeData.showNavigation", "false")
-	require.NoError(t, settingsForm.SetURLValues(&domain, values, nil))
-	require.Equal(t, false, domain.ThemeData["showNavigation"])
+	require.NoError(t, settingsForm.SetURLValues(&writableDomain, values, nil))
+	require.Equal(t, false, writableDomain.ThemeData["showNavigation"])
 
-	result = renderMinimalNavigation(t, newMinimalNavigationBuilder(t, domain.ThemeData))
+	result = renderMinimalNavigation(t, newMinimalNavigationBuilder(t, writableDomain.ThemeData))
 	require.NotContains(t, result, `href="/about"`)
 }
 

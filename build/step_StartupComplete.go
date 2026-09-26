@@ -22,23 +22,29 @@ func (step StepStartupComplete) Post(builder Builder, _ io.Writer) PipelineBehav
 	const location = "build.StepStartupComplete.Post"
 
 	domainService := builder.factory().Domain()
-	domain := domainService.Get()
 
 	// RULE: A Domain that is already live is left alone.  This Step decorates an action that does
 	// real work, so a double submit must not fail that action -- and must not stamp a second
 	// "Startup complete" entry onto a Domain that finished setting up weeks ago.
-	if domain.StateID != model.DomainStateStartup {
+	if domainService.Cached().StateID != model.DomainStateStartup {
 		return Continue()
 	}
 
-	// Work on a copy.  Domain.Get() hands out a pointer into the Domain service's in-memory cache,
-	// so mutating it in place would publish this change before it is written -- and leave the cache
-	// holding it even if the write fails.  Domain.Save refreshes the cache itself, once the record
-	// is safely persisted.
-	updated := *domain
-	updated.StateID = model.DomainStateLive
+	// Edit the stored record, never the cached one, and re-check it: another request may have
+	// finished the startup wizard since the cached record was read
+	writableDomain := model.NewWritableDomain()
 
-	if err := domainService.Save(builder.session(), updated, "Startup complete"); err != nil {
+	if err := domainService.Load(builder.session(), &writableDomain); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Loading Domain"))
+	}
+
+	if writableDomain.StateID != model.DomainStateStartup {
+		return Continue()
+	}
+
+	writableDomain.StateID = model.DomainStateLive
+
+	if err := domainService.Save(builder.session(), &writableDomain, "Startup complete"); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Saving Domain"))
 	}
 

@@ -60,7 +60,7 @@ func requeue(err error) queue.Result {
 		return queue.Failure(err)
 	}
 
-	// Server Errors (500) can be retried. Report a retryable error.
+	// Server Errors (500) are retried with the queue's backoff, and reported only if every retry fails
 	return queue.Error(err)
 }
 

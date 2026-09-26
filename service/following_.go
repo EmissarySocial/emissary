@@ -779,7 +779,7 @@ func (service *Following) SetStatusGone(session data.Session, following *model.F
 	// side effect that the next NextPoll write would silently undo.
 	// RULE: LastPolled is untouched too, for the reason given in SetStatusPollFailure.
 	following.Status = model.FollowingStatusGone
-	following.StatusMessage = statusMessage
+	following.StatusMessage = truncateStatusMessage(statusMessage)
 	following.ErrorCount = following.ErrorCount + 1
 
 	// Save the Following to the database (no other busines rules)
@@ -803,7 +803,7 @@ func (service *Following) SetStatusPollFailure(session data.Session, following *
 	// RULE: Do NOT stamp LastPolled.  It means "when this resource was last RETRIEVED", and it
 	// is the only measure of how long a source has been broken -- which is what isUnresponsive reads.
 	following.Status = model.FollowingStatusFailure
-	following.StatusMessage = statusMessage
+	following.StatusMessage = truncateStatusMessage(statusMessage)
 	following.ErrorCount = following.ErrorCount + 1
 
 	// RULE: A failure uses the SAME cadence as a success, deliberately.  Short-term retries
@@ -829,8 +829,8 @@ func (service *Following) SetStatusPollFailure(session data.Session, following *
 	return nil
 }
 
-// followingBackoff returns how long to wait before re-polling a Following that has
-// failed `errorCount` times in a row: 1m, 2m, 4m ... 256m (~4 hours) at the cap.
+// followingBackoff returns how long to wait after a Following's errorCount-th consecutive
+// failure: 1m, 2m, 4m, 8m, 16m, 32m, 64m, 128m, then 256m (~4 hours) for every failure after.
 func followingBackoff(errorCount int) time.Duration {
 
 	// RULE: `1 << n` doubles.  `2 ^ n` is XOR in Go, not exponentiation -- it yields
@@ -850,7 +850,7 @@ func (service *Following) SetStatusFailure(session data.Session, following *mode
 
 	// Update Following state
 	following.Status = model.FollowingStatusFailure
-	following.StatusMessage = statusMessage
+	following.StatusMessage = truncateStatusMessage(statusMessage)
 	following.ErrorCount = following.ErrorCount + 1
 
 	// On failure, wait longer before trying again.

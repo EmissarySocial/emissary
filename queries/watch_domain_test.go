@@ -31,9 +31,9 @@ func TestWatchDomain_PublishesExistingRecordOnOpen(t *testing.T) {
 
 	published := startDomainWatcher(t, database)
 
-	domain := awaitDomain(t, published)
-	require.Equal(t, "Existing", domain.Label)
-	require.True(t, domain.DomainID.IsZero())
+	writableDomain := awaitDomain(t, published)
+	require.Equal(t, "Existing", writableDomain.Label)
+	require.True(t, writableDomain.DomainID.IsZero())
 }
 
 // TestWatchDomain_PublishesReplacement pins the everyday case: a whole-document Save on another
@@ -48,9 +48,9 @@ func TestWatchDomain_PublishesReplacement(t *testing.T) {
 
 	replaceDomain(t, database, bson.M{"label": "After", "themeData": bson.M{"stylesheet": "body { color: red; }"}})
 
-	domain := awaitDomain(t, published)
-	require.Equal(t, "After", domain.Label)
-	require.Equal(t, "body { color: red; }", domain.ThemeData.GetString("stylesheet"))
+	writableDomain := awaitDomain(t, published)
+	require.Equal(t, "After", writableDomain.Label)
+	require.Equal(t, "body { color: red; }", writableDomain.ThemeData.GetString("stylesheet"))
 }
 
 // TestWatchDomain_PublishesSetUpdate pins UpdateLookup: the upgrade runner writes the Domain with
@@ -66,9 +66,9 @@ func TestWatchDomain_PublishesSetUpdate(t *testing.T) {
 	_, err := database.Collection("Domain").UpdateOne(context.Background(), bson.M{"_id": primitive.NilObjectID}, bson.M{"$set": bson.M{"databaseVersion": 35}})
 	require.Nil(t, err)
 
-	domain := awaitDomain(t, published)
-	require.Equal(t, uint(35), domain.DatabaseVersion)
-	require.Equal(t, "Unchanged", domain.Label)
+	writableDomain := awaitDomain(t, published)
+	require.Equal(t, uint(35), writableDomain.DatabaseVersion)
+	require.Equal(t, "Unchanged", writableDomain.Label)
 }
 
 // TestWatchDomain_NoRecordPublishesNothing pins that an empty collection publishes no blank Domain,
@@ -84,8 +84,8 @@ func TestWatchDomain_NoRecordPublishesNothing(t *testing.T) {
 		replaceDomain(t, database, bson.M{"label": "Inserted"})
 
 		select {
-		case domain := <-published:
-			require.Equal(t, "Inserted", domain.Label)
+		case writableDomain := <-published:
+			require.Equal(t, "Inserted", writableDomain.Label)
 			return
 		case <-time.After(250 * time.Millisecond):
 		}
@@ -118,8 +118,8 @@ func TestLoadDomain(t *testing.T) {
 		database := newWatchTestDatabase(t)
 		replaceDomain(t, database, bson.M{"label": "Loaded"})
 
-		var result []model.Domain
-		err := loadDomain(context.Background(), database.Collection("Domain"), func(domain model.Domain) { result = append(result, domain) })
+		var result []model.WritableDomain
+		err := loadDomain(context.Background(), database.Collection("Domain"), func(writableDomain model.WritableDomain) { result = append(result, writableDomain) })
 
 		require.Nil(t, err)
 		require.Len(t, result, 1)
@@ -130,20 +130,20 @@ func TestLoadDomain(t *testing.T) {
 		database := newWatchTestDatabase(t)
 		replaceDomain(t, database, bson.M{"label": "Sparse"})
 
-		var result model.Domain
-		err := loadDomain(context.Background(), database.Collection("Domain"), func(domain model.Domain) { result = domain })
+		var writableDomain model.WritableDomain
+		err := loadDomain(context.Background(), database.Collection("Domain"), func(domain model.WritableDomain) { writableDomain = domain })
 
 		require.Nil(t, err)
-		require.NotNil(t, result.ThemeData)
-		require.NotNil(t, result.Connections)
-		require.NotNil(t, result.Data)
+		require.NotNil(t, writableDomain.ThemeData)
+		require.NotNil(t, writableDomain.Connections)
+		require.NotNil(t, writableDomain.Data)
 	})
 
 	t.Run("NoRecord", func(t *testing.T) {
 		database := newWatchTestDatabase(t)
 
 		called := false
-		err := loadDomain(context.Background(), database.Collection("Domain"), func(model.Domain) { called = true })
+		err := loadDomain(context.Background(), database.Collection("Domain"), func(model.WritableDomain) { called = true })
 
 		require.Nil(t, err)
 		require.False(t, called)
@@ -154,7 +154,7 @@ func TestLoadDomain(t *testing.T) {
 		replaceDomain(t, database, bson.M{"label": 12345})
 
 		called := false
-		err := loadDomain(context.Background(), database.Collection("Domain"), func(model.Domain) { called = true })
+		err := loadDomain(context.Background(), database.Collection("Domain"), func(model.WritableDomain) { called = true })
 
 		require.Error(t, err)
 		require.False(t, called)
@@ -168,7 +168,7 @@ func TestLoadDomain(t *testing.T) {
 		cancel()
 
 		called := false
-		err := loadDomain(ctx, database.Collection("Domain"), func(model.Domain) { called = true })
+		err := loadDomain(ctx, database.Collection("Domain"), func(model.WritableDomain) { called = true })
 
 		require.Error(t, err)
 		require.False(t, called)
@@ -180,17 +180,17 @@ func TestLoadDomain(t *testing.T) {
  ******************************************/
 
 // startDomainWatcher runs WatchDomain until the test ends, and returns what it publishes
-func startDomainWatcher(t *testing.T, database *mongo.Database) <-chan model.Domain {
+func startDomainWatcher(t *testing.T, database *mongo.Database) <-chan model.WritableDomain {
 
 	t.Helper()
 
-	published := make(chan model.Domain, 100)
+	published := make(chan model.WritableDomain, 100)
 	ctx, cancel := context.WithCancel(context.Background())
 	finished := make(chan struct{})
 
 	go func() {
 		defer close(finished)
-		WatchDomain(ctx, mongodb.NewServer(database), func(domain model.Domain) { published <- domain })
+		WatchDomain(ctx, mongodb.NewServer(database), func(writableDomain model.WritableDomain) { published <- writableDomain })
 	}()
 
 	t.Cleanup(func() {
@@ -206,16 +206,16 @@ func startDomainWatcher(t *testing.T, database *mongo.Database) <-chan model.Dom
 }
 
 // awaitDomain returns the next Domain published
-func awaitDomain(t *testing.T, published <-chan model.Domain) model.Domain {
+func awaitDomain(t *testing.T, published <-chan model.WritableDomain) model.WritableDomain {
 
 	t.Helper()
 
 	select {
-	case result := <-published:
-		return result
+	case writableDomain := <-published:
+		return writableDomain
 	case <-time.After(watchTestTimeout):
 		t.Fatal("no Domain was published")
-		return model.Domain{}
+		return model.WritableDomain{}
 	}
 }
 

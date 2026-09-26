@@ -244,7 +244,7 @@ func (w Common) UserCan(_ string) bool {
 // UserCanMLS returns TRUE if the current user has permission to use MLS E2EE messaging
 func (w Common) UserCanMLS() bool {
 	if user, err := w.getUser(); err == nil {
-		result := w._factory.Domain().Get().UserCanMLS(user)
+		result := w._factory.Domain().Cached().UserCanMLS(user)
 		return result
 	}
 
@@ -292,7 +292,7 @@ func (w Common) WebPushPublicKey() string {
 // UserCanBridgeToBluesky returns TRUE if the current user has permission to bridge to Bluesky
 func (w Common) UserCanBridgeToBluesky() bool {
 	if user, err := w.getUser(); err == nil {
-		result := w._factory.Domain().Get().UserCanBridgeToBluesky(user)
+		result := w._factory.Domain().Cached().UserCanBridgeToBluesky(user)
 		return result
 	}
 
@@ -301,12 +301,12 @@ func (w Common) UserCanBridgeToBluesky() bool {
 
 // HasConnectionProvider returns TRUE if this domain has an active connection for the named provider
 func (w Common) HasConnectionProvider(provider string) bool {
-	return w.factory().Domain().Get().HasConnectionProvider(provider)
+	return w.factory().Domain().Cached().HasConnectionProvider(provider)
 }
 
 // ThemeID returns the ID of the Theme that this Domain has selected.
 func (w Common) ThemeID() string {
-	return w.factory().Domain().Get().ThemeID
+	return w.factory().Domain().Cached().ThemeID
 }
 
 // Theme returns the Theme with the provided ID, or this Domain's default Theme if
@@ -323,9 +323,9 @@ func (w Common) ThemeData(token string) string {
 	// RULE: Read the Domain RECORD.  model.Theme.Data is a process-wide singleton shared
 	// by every Domain on this server, and model.Domain.Data holds secrets (the VAPID
 	// private key) that must never reach a page.
-	domain := w.factory().Domain().Get()
+	readOnlyDomain := w.factory().Domain().Cached()
 
-	if value, exists := domain.ThemeData[token]; exists {
+	if value, exists := readOnlyDomain.ThemeData[token]; exists {
 		return convert.String(value)
 	}
 
@@ -334,7 +334,7 @@ func (w Common) ThemeData(token string) string {
 	// and a settings toggle that is meant to start ON has to read as ON here too, or the page
 	// and the form that configures it disagree until the owner's first save.  The Theme's
 	// schema is the single place that default is declared; the form widget reads the same one.
-	theme := w.Theme(domain.ThemeID)
+	theme := w.Theme(readOnlyDomain.ThemeID)
 	element, exists := theme.Schema.GetElement("themeData." + token)
 
 	if !exists {
@@ -563,37 +563,37 @@ func (w Common) IsIndexable() bool {
 
 // DomainStateID returns the lifecycle state of this Domain
 func (w Common) DomainStateID() string {
-	return w._factory.Domain().Get().StateID
+	return w._factory.Domain().Cached().StateID
 }
 
 // DomainLabel returns the human-readable name of this Domain
 func (w Common) DomainLabel() string {
-	return w._factory.Domain().Get().Label
+	return w._factory.Domain().Cached().Label
 }
 
 // DomainIcon returns the URL of this Domain's icon image
 func (w Common) DomainIcon() string {
-	return w._factory.Domain().Get().IconURL()
+	return w._factory.Domain().Cached().IconURL()
 }
 
 // DomainImage returns the URL of this Domain's banner image
 func (w Common) DomainImage() string {
-	return w._factory.Domain().Get().ImageURL()
+	return w._factory.Domain().Cached().ImageURL()
 }
 
 // DomainHasRegistrationForm returns TRUE if this Domain accepts new sign-ups
 func (w Common) DomainHasRegistrationForm() bool {
-	return w._factory.Domain().Get().HasRegistrationForm()
+	return w._factory.Domain().Cached().HasRegistrationForm()
 }
 
 // IsDomainStartup returns TRUE if this Domain has not finished its first-run setup
 func (w Common) IsDomainStartup() bool {
-	return (w._factory.Domain().Get().StateID == model.DomainStateStartup)
+	return (w._factory.Domain().Cached().StateID == model.DomainStateStartup)
 }
 
 // NotDomainStartup returns TRUE if this Domain has finished its first-run setup
 func (w Common) NotDomainStartup() bool {
-	return (w._factory.Domain().Get().StateID != model.DomainStateStartup)
+	return (w._factory.Domain().Cached().StateID != model.DomainStateStartup)
 }
 
 /***************************

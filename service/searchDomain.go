@@ -62,7 +62,7 @@ func (service *SearchDomain) GetJSONLD(session data.Session) (mapof.Any, error) 
 
 	// Return the result as a JSON-LD document
 	actorID := service.ActivityPubURL()
-	domain := service.domainService.Get()
+	readOnlyDomain := service.domainService.Cached()
 	result := map[string]any{
 		vocab.AtContext:                 []any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
 		vocab.PropertyType:              vocab.ActorTypeService,
@@ -70,8 +70,8 @@ func (service *SearchDomain) GetJSONLD(session data.Session) (mapof.Any, error) 
 		vocab.PropertyURL:               service.ActivityPubProfileURL(),
 		vocab.PropertyPreferredUsername: service.ActivityPubUsername(),
 		vocab.PropertyName:              service.ActivityPubName(),
-		vocab.PropertyIcon:              domain.IconURL(),
-		vocab.PropertyImage:             domain.ImageURL(),
+		vocab.PropertyIcon:              readOnlyDomain.IconURL(),
+		vocab.PropertyImage:             readOnlyDomain.ImageURL(),
 		vocab.PropertyInbox:             service.ActivityPubInboxURL(),
 		vocab.PropertyOutbox:            service.ActivityPubOutboxURL(),
 		vocab.PropertyFollowers:         service.ActivityPubFollowersURL(),
@@ -156,8 +156,8 @@ func (service *SearchDomain) PublicKeyID() string {
 
 // ActivityPubName returns the display name of the domain-wide search Actor
 func (service *SearchDomain) ActivityPubName() string {
-	domain := service.domainService.Get()
-	return "All Search Results on " + domain.Label
+	readOnlyDomain := service.domainService.Cached()
+	return "All Search Results on " + readOnlyDomain.Label
 }
 
 // ActivityPubFollowersURL returns the URL of the domain-wide search Actor's ActivityPub followers collection
