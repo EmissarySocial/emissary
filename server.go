@@ -289,12 +289,13 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	// once a request arrives, so a nil Factory registers the real routes safely.
 
 	// Common routes (but not .well-known)
-	e.GET("/robots.txt", handler.RobotsTxt) // https://developers.google.com/search/docs/advanced/robots/create-robots-txt
-	e.GET("/sitemap.xml", handler.TBD)      // https://developers.google.com/search/docs/advanced/sitemaps/build-sitemap
-	e.GET("/humans.txt", handler.TBD)       // http://humanstxt.org/
-	e.GET("/ads.txt", handler.TBD)          // https://iabtechlab.com/standards/ads-txt/
-	e.GET("/security.txt", handler.TBD)     // https://securitytxt.org/
-	e.GET("/poco", handler.TBD)             // Friendica polls this route
+	e.GET("/robots.txt", handler.RobotsTxt)  // https://developers.google.com/search/docs/advanced/robots/create-robots-txt
+	e.GET("/sitemap.xml", handler.TBD)       // https://developers.google.com/search/docs/advanced/sitemaps/build-sitemap
+	e.GET("/humans.txt", handler.TBD)        // http://humanstxt.org/
+	e.GET("/ads.txt", handler.TBD)           // https://iabtechlab.com/standards/ads-txt/
+	e.GET("/security.txt", handler.TBD)      // https://securitytxt.org/
+	e.GET("/tags/:tag", handler.RedirectTag) // The URL Mastodon clients use for a hashtag
+	e.GET("/poco", handler.TBD)              // Friendica polls this route
 	// NOTE: a catch-all `e.GET("/api/**", handler.TBD)` used to live here. It silently
 	// answered every unmatched /api/* GET with a fake "204 No Content" success instead
 	// of a real 404 -- including genuinely broken requests, like a client trying to
