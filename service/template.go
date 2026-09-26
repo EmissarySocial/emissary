@@ -231,8 +231,10 @@ func (service *Template) loadTemplates(haltOnError bool) {
 		maybeHalt(derp.Wrap(err, location, "Calculating Template inheritance"), haltOnError)
 	}
 
-	// Calculate inheritance for Themes
+	// Calculate inheritance for Themes, then publish them.  Themes do not wait for
+	// Template validation below, because a Template failure has never held them back
 	service.themeService.calculateAllInheritance()
+	service.themeService.publish()
 
 	// Validate required fields for all Templates.  Any failure publishes none of them,
 	// so the Templates already live keep serving (BUG-180)
