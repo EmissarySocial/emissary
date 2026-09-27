@@ -172,6 +172,12 @@ func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 		DeleteProfile_Avatar: mastodon.DeleteProfile_Avatar(serverFactory),
 		DeleteProfile_Header: mastodon.DeleteProfile_Header(serverFactory),
 
+		// https://docs.joinmastodon.org/methods/push/
+		PostPushSubscription:   mastodon.PostPushSubscription(serverFactory),
+		GetPushSubscription:    mastodon.GetPushSubscription(serverFactory),
+		PutPushSubscription:    mastodon.PutPushSubscription(serverFactory),
+		DeletePushSubscription: mastodon.DeletePushSubscription(serverFactory),
+
 		// https://docs.joinmastodon.org/methods/reports/
 		PostReport: mastodon.PostReport(serverFactory),
 
