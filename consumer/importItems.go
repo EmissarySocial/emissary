@@ -75,7 +75,7 @@ func ImportItems(factory *service.Factory, session data.Session, user *model.Use
 
 	// Update the display to show the URL that we're currently working on
 	if err := importService.SetMessage(session, importRecord, importItem.ImportURL); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Updating Import status message", importRecord))
+		return queue.Error(derp.Wrap(err, location, "Updating Import status message", importRecord.ImportID))
 	}
 
 	// -----------------------------------------------

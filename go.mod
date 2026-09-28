@@ -10,7 +10,7 @@ require (
 	github.com/benpate/color v0.1.0
 	github.com/benpate/data v0.33.0
 	github.com/benpate/data-mock v0.33.0
-	github.com/benpate/data-mongo v0.34.0
+	github.com/benpate/data-mongo v0.35.0
 	github.com/benpate/data-slice v0.1.0
 	github.com/benpate/delta v0.1.0
 	github.com/benpate/derp v0.44.0
