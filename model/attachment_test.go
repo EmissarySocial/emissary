@@ -703,3 +703,19 @@ func TestAttachment_SourceURLIsOmittedWhenEmpty(t *testing.T) {
 	require.NoError(t, err)
 	require.Contains(t, string(encoded), "sourceUrl")
 }
+
+// TestAttachment_IsStored confirms that only an imported file still copying, or failed, has no file
+// behind it.  An uploaded file never sets a Status, and must count as stored.
+func TestAttachment_IsStored(t *testing.T) {
+
+	for status, expected := range map[string]bool{
+		"":                      true,
+		AttachmentStatusReady:   true,
+		AttachmentStatusWorking: false,
+		AttachmentStatusFailed:  false,
+	} {
+		attachment := NewAttachment(AttachmentObjectTypeStream, primitive.NewObjectID())
+		attachment.Status = status
+		require.Equal(t, expected, attachment.IsStored(), "status %q", status)
+	}
+}

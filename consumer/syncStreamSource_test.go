@@ -66,11 +66,6 @@ func syncTask() queue.Task {
 	}
 }
 
-// syncTaskNames returns every task name that the synchronization handler and its hooks answer to
-func syncTaskNames() []string {
-	return []string{service.TaskSyncStreamSource, service.TaskSyncStreamSourceNow}
-}
-
 // TestSyncStreamSource_MalformedID confirms that an unparseable identifier is a permanent failure.
 // No retry can repair it, and a retryable Error would leave the task looping in the queue forever.
 func TestSyncStreamSource_MalformedID(t *testing.T) {
@@ -84,44 +79,28 @@ func TestSyncStreamSource_MalformedID(t *testing.T) {
 	}
 }
 
-// TestSyncStreamSource_IsRegistered confirms that BOTH task names reach a handler.  A name that
-// falls through the switch returns Ignored, and the task is silently dropped.
-//
-// RULE: The two names differ only in the priority table.  Every consumer-side registration --
-// this switch and all three lifecycle hooks below -- must accept both, and nothing reports a
-// name that only half of them know.
+// TestSyncStreamSource_IsRegistered confirms that the task reaches a handler.  A name that falls
+// through the switch returns Ignored, and the task is silently dropped.
 func TestSyncStreamSource_IsRegistered(t *testing.T) {
 
-	for _, name := range syncTaskNames() {
+	result := New(unresolvableFactory{}).Run(syncTask())
 
-		task := syncTask()
-		task.Name = name
-
-		result := New(unresolvableFactory{}).Run(task)
-
-		require.NotEqual(t, queue.ResultStatusIgnored, result.Status, "task %q reaches no handler", name)
-		require.Equal(t, queue.ResultStatusError, result.Status, "an unknown hostname may become known later")
-	}
+	require.NotEqual(t, queue.ResultStatusIgnored, result.Status, "the task reaches no handler")
+	require.Equal(t, queue.ResultStatusError, result.Status, "an unknown hostname may become known later")
 }
 
-// TestSyncStreamSource_PrioritiesAreSplit pins the ONE thing the second task name buys.  The
-// interactive task is in the band that may run immediately; the webhook's is not, because its
-// trigger is unauthenticated and fans out across every record sharing a token.
-func TestSyncStreamSource_PrioritiesAreSplit(t *testing.T) {
+// TestSyncStreamSource_Priority confirms that every synchronization, from Sync Now or a webhook,
+// runs in the band that may run immediately.
+func TestSyncStreamSource_Priority(t *testing.T) {
 
-	priority := func(name string) int {
-		task := syncTask()
-		task.Name = name
-		task.Priority = -1
-		require.NoError(t, PreProcessor(&task))
-		return task.Priority
-	}
+	task := syncTask()
+	task.Priority = -1
 
-	// RULE: Assert the EXACT values.  A name that matches no case leaves Priority at the -1
-	// sentinel, and every "is it low enough?" comparison passes vacuously against that -- so a
-	// missing case in the table would read as an immediate task rather than a defaulted one.
-	require.Equal(t, 16, priority(service.TaskSyncStreamSourceNow), "Sync Now must be in the immediate band")
-	require.Equal(t, 256, priority(service.TaskSyncStreamSource), "a webhook fan-out must never run immediately")
+	require.NoError(t, PreProcessor(&task))
+
+	// RULE: Assert the EXACT value.  A name that matches no case leaves Priority at the -1
+	// sentinel, and every "is it low enough?" comparison passes vacuously against that.
+	require.Equal(t, 16, task.Priority)
 }
 
 // TestSyncStreamSource_HooksDispatch confirms that all three lifecycle hooks act on this task.
@@ -132,17 +111,11 @@ func TestSyncStreamSource_HooksDispatch(t *testing.T) {
 	consumer := New(unresolvableFactory{})
 	failure := errors.New("something went wrong")
 
-	// Both names, because a hook that knew only one would stop recording status for the other
-	// path -- and a declined hook is reported nowhere
-	for _, name := range syncTaskNames() {
+	task := syncTask()
 
-		task := syncTask()
-		task.Name = name
-
-		require.Error(t, consumer.OnSuccess(task), "OnSuccess must write SUCCESS for %q", name)
-		require.Error(t, consumer.OnError(task, failure), "OnError must record the retry message for %q", name)
-		require.Error(t, consumer.OnFailure(task, failure), "OnFailure must write FAILURE for %q", name)
-	}
+	require.Error(t, consumer.OnSuccess(task), "OnSuccess must write SUCCESS")
+	require.Error(t, consumer.OnError(task, failure), "OnError must record the retry message")
+	require.Error(t, consumer.OnFailure(task, failure), "OnFailure must write FAILURE")
 }
 
 // TestSyncStreamSource_HooksIgnoreOtherTasks confirms that the hooks fire for THIS task and no
@@ -153,7 +126,7 @@ func TestSyncStreamSource_HooksIgnoreOtherTasks(t *testing.T) {
 	consumer := New(unresolvableFactory{})
 	failure := errors.New("something went wrong")
 
-	for _, name := range []string{"Geocode", "DeleteStream", "", "SyncStreamSource-Extra"} {
+	for _, name := range []string{"Geocode", "DeleteStream", "", "SyncStreamSource-Extra", "SyncStreamSourceNow"} {
 
 		task := syncTask()
 		task.Name = name
@@ -162,16 +135,4 @@ func TestSyncStreamSource_HooksIgnoreOtherTasks(t *testing.T) {
 		require.NoError(t, consumer.OnError(task, failure), "task %q", name)
 		require.NoError(t, consumer.OnFailure(task, failure), "task %q", name)
 	}
-}
-
-// TestSyncStreamSource_HasAStoredPriority confirms that this task is never run immediately.  Its
-// usual trigger is an unauthenticated webhook that fans out across every record sharing a token,
-// so an immediate priority would turn one ping into a burst of outbound requests.
-func TestSyncStreamSource_HasAStoredPriority(t *testing.T) {
-
-	task := syncTask()
-	task.Priority = -1
-
-	require.NoError(t, PreProcessor(&task))
-	require.Greater(t, task.Priority, 32, "a priority of 32 or less may run immediately")
 }

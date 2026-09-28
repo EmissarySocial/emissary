@@ -6,6 +6,9 @@
 // matter off the top.  Adapters return raw bytes and never HTML, because rendering belongs to
 // service.Content, which is the only path that sanitizes.
 //
+// It also finds the links a rendered page makes into an "attachments" folder, rewrites them to
+// local copies, and downloads each linked file for the service to store.
+//
 // A source address is supplied by a Stream author, so every request passes through Emissary's
 // SSRF-guarded HTTP client, and every body is capped before it is read.  See AGENTS.md before
 // changing how a source is read.

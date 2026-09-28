@@ -188,15 +188,16 @@ Two consequences to keep in mind. An unrelated edit made while the source is unr
 
 Bookkeeping writes avoid all of this by design. `saveSyncState` and every `SetStatus*` method go through `service.save`, which is what stops a running sync from queueing another one. `WithSignature` would NOT save you there: the task that is running has already left the queue by the time its handler saves.
 
-## Two task names synchronize a StreamSource, and four places must know both
+## One task synchronizes a StreamSource, published two ways
 
-`TaskSyncStreamSource` is the webhook's background fan-out at priority 256. `TaskSyncStreamSourceNow` is the **Sync Now** button at 16. They run the same handler and report through the same lifecycle hooks; only the priority and the signature differ.
+`TaskSyncStreamSource` runs at priority 16 for every trigger. Its two publishers differ only in the signature:
 
-The signature is the reason there are two names rather than one publish option. turbine's `allowImmediate` refuses to run **any** signed task from memory, at any priority, because signature dedup needs a stored row to check against — so a signed task waits for the storage poller, which sleeps a minute when the queue is idle. `PublishSyncTaskNow` therefore omits the signature, and `PublishSyncTask` keeps it.
+- **`PublishSyncTask`** (the webhook) signs each task `StreamSource-Sync:<id>`. That collapses a ping flood into one queued sync per record, and it bounds what an unauthenticated caller can queue. It also means the task never runs from memory: turbine's `allowImmediate` refuses **any** signed task, at any priority, because signature dedup needs a stored row to check against. A webhook sync therefore waits for the storage poller, which sleeps a minute when the queue is idle, and priority 16 only moves it ahead of other stored work.
+- **`PublishSyncTaskNow`** (`Save`, and so **Sync Now**) sends no signature, so it can run at once.
 
-What that costs: two quick presses of **Sync Now** queue two syncs, and one may overlap a webhook's background sync of the same record. A repeat is one conditional `GET` answering `304`, so the usual case is free. The case that is not free is a caller that saves many records at once — `step_Sort.go` reaches `Save` through `ObjectSave` — which now fans out immediate fetches instead of deduplicated background ones.
+What the unsigned path costs: two quick presses of **Sync Now** queue two syncs, and one may overlap a webhook's sync of the same record. A repeat is one conditional `GET` answering `304`, so the usual case is free. The case that is not free is a caller that saves many records at once — `step_Sort.go` reaches `Save` through `ObjectSave` — which fans out immediate fetches instead of deduplicated ones.
 
-Four registrations must accept both names: the dispatch switch in `consumer.go`, and all three lifecycle hooks. Use `service.IsSyncStreamSourceTask` rather than comparing a name by hand — a hook that knew only one name would silently stop recording status for the other path, and nothing reports a hook that declined a task. The priority table is the one place that deliberately tells them apart.
+Until 2026-09-24 the webhook published under this name at priority 256, and `Save` under a second name, `SyncStreamSourceNow`, at 16. Every consumer registration had to accept both.
 
 ## `with-stream-source` needs two registrations, and neither fails to compile
 
@@ -213,3 +214,20 @@ The settings screen shows `Status` and the time of the last check, and a synchro
 **Never put a modifier on an `sse:` trigger in a template.** htmx's `hx-trigger` parser handles `sse:` in its own branch and pushes the spec without parsing modifiers, so `delay`, `throttle`, `from` and `once` are ignored there — and the unparsed tokens halt the parser, so every spec after the next comma is silently dropped. `hx-trigger="sse:X delay:300ms, refreshPage from:window"` therefore registers **only** the SSE trigger, with no debounce, and deletes the `refreshPage` listener that the properties modal depends on. No error is raised. A comma straight after the event name is fine — `"sse:X, refreshPage from:window"` registers both — it is the modifier that halts the parse. There is also no other client-side brake to reach for: core's `processSSETrigger` calls `issueAjaxRequest` from the `EventSource` listener directly, skipping the queue, the throttle, and `hx-sync`. De-duplicate by writing the record fewer times, or by swapping a smaller region — never by debouncing the client.
 
 The message is addressed by the **StreamID**, not the StreamSourceID. A `StreamSource` has no page and no SSE route of its own, and a Stream has at most one source, so the Stream's channel is the one a browser can already subscribe to (`/:stream/sse/stream-source-updated`). Putting the nudge on `service.save` rather than on the four `SetStatus*` methods is what makes it impossible to add a fifth status writer that the screen never hears about.
+
+## A StreamSource's linked files are copied in two stages, and only the first runs in a transaction
+
+A synchronized page's links into an `attachments` folder are copied in as Stream attachments ([streamSource_attachments.go](streamSource_attachments.go), plan `GIT-MARKDOWN-STREAM-ATTACHMENTS.md`). The split is load-bearing:
+
+- **Stage one, inside the sync's transaction:** `importAttachments` finds the links in the rendered HTML, creates a `WORKING` attachment for each new one, deletes the ones no longer linked, and rewrites the links to local URLs. It downloads nothing. An attachment's URL exists before its file does, which is what lets the page be saved first.
+- **Stage two, the `SyncStreamSourceAttachment` task, outside any transaction:** `ImportAttachment` downloads one file, checks its bytes against the kind its extension promised, stores it, and marks it `READY`. A download can outlast MongoDB's 60-second transaction limit, a retried transaction would download everything again, and the MediaServer is not transactional, so none of this can move into stage one.
+
+**Stage two writes only its own Attachment, never the `StreamSource`.** It runs without a transaction, so a blind replace of the `StreamSource` would overwrite whatever a concurrent sync on another server just wrote.
+
+**The match key is `Attachment.SourceURL`, in category `stream-source`.** Two servers syncing one record both write the Stream, so the database rejects one; its retry re-queries the Stream's attachments and reuses the other's. Reconciling never touches an attachment in any other category, so a human's uploads survive.
+
+**Every successful sync re-queues the files that are not `READY`**, including a sync that ends on a `304`, because an unchanged page stops before any rendering and a failed download would otherwise never be retried. The task is signed per attachment, so a burst of pings collapses. A `READY` file is never checked again: to change one, the author renames it.
+
+**A page links to a file before the file exists, so nothing may serve an unstored attachment.** `GetStreamAttachment` answers a `WORKING` attachment with `503` and a `FAILED` one with `404`, both uncacheable, and never hands either to the MediaServer. Before that rule a request in the gap made the MediaServer cache an empty result and serve it forever (plan §4.8).
+
+Two known gaps, both accepted. Deleting an attachment inside the transaction removes its file at once, which a rollback does not restore; every attachment delete in Emissary already works this way, and a retried sync converges. And a download that finishes seconds after its link was removed re-saves the deleted record; closing that needs a conditional update that `data.Collection` does not offer.

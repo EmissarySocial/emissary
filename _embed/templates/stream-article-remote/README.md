@@ -6,6 +6,19 @@ It extends [article-base](../stream-article-base/), so it has the same layout, w
 
 The subsystem behind this Template — the `StreamSource` record, the HTTPS adapter, the synchronization, and the webhook endpoint — is described in `emissary-specs/projects/GIT-MARKDOWN-TO-STREAM-CONTENT.md`.
 
+## Attachments
+
+Files the source links to in a folder named `attachments` are copied into the article as Stream attachments, and their links are rewritten to the copies.
+
+- **Which links:** `img[src]` and `a[href]` in the rendered HTML that resolve, against the source file's URL, to the same host and a path with an `attachments` folder in it. So `attachments/` beside the file and `../attachments/` above it both work.
+- **Which files:** `.png .jpg .jpeg .gif .webp .pdf` up to 10 MiB, and `.mp4 .m4v .webm .mov .mp3 .m4a .aac .ogg .oga .opus .wav .flac` up to 100 MiB, at most 50 per article. The bytes must match the extension. Anything else stays a remote link.
+- **Video and audio** are written as images, `![Demo](attachments/demo.mp4)`, and become a `<video>` or `<audio>` player.
+- **Two stages.** The sync saves the page with `WORKING` attachments, then a `SyncStreamSourceAttachment` task downloads each file. Until then its URL answers `503` (`404` if it failed); **Sync** retries failures.
+- **A stored file is never re-checked.** Rename a file to change it. Removing a link deletes its attachment.
+- Imported attachments carry category `stream-source` and `sourceUrl`, and federate like uploaded ones.
+
+Design and decisions: `emissary-specs/projects/GIT-MARKDOWN-STREAM-ATTACHMENTS.md`.
+
 ## Additional Information
 
 ### Inheritance is additive, so opting out means overriding

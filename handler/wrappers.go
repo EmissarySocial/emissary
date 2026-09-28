@@ -653,7 +653,7 @@ func WithStream(serverFactory *server.Factory, fn WithFunc1[model.Stream]) echo.
 			}
 
 			// RULE: A missing home page means "startup" mode only on a Domain that is still being set up
-			if isStartupHome(token, factory.Domain().Get()) {
+			if isStartupHome(token, factory.Domain().Cached()) {
 				return ctx.Redirect(http.StatusTemporaryRedirect, "/startup")
 			}
 

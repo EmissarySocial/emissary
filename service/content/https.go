@@ -36,7 +36,7 @@ func (adapter HTTPS) Version(ctx context.Context, source model.StreamSource) (st
 
 	const location = "content.HTTPS.Version"
 
-	response, err := adapter.get(ctx, source, source.Version)
+	response, err := adapter.request(ctx, source.URL, source.Version)
 
 	if err != nil {
 		return "", derp.Wrap(err, location, "Requesting source")
@@ -64,7 +64,7 @@ func (adapter HTTPS) Fetch(ctx context.Context, source model.StreamSource, _ str
 
 	const location = "content.HTTPS.Fetch"
 
-	response, err := adapter.get(ctx, source, "")
+	response, err := adapter.request(ctx, source.URL, "")
 
 	if err != nil {
 		return Item{}, derp.Wrap(err, location, "Requesting source")
@@ -100,6 +100,33 @@ func (adapter HTTPS) Fetch(ctx context.Context, source model.StreamSource, _ str
 	return NewItem(format, body)
 }
 
+// FetchFile opens one file that a source links to, such as an image in its attachments folder.
+// The type is not checked here: forges serve binaries as application/octet-stream, so the caller
+// decides from the bytes.
+func (adapter HTTPS) FetchFile(ctx context.Context, address string, maxBytes int64) (io.ReadCloser, error) {
+
+	const location = "content.HTTPS.FetchFile"
+
+	response, err := adapter.request(ctx, address, "")
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Requesting file")
+	}
+
+	if err := checkStatus(response, location); err != nil {
+		closeBody(response)
+		return nil, err
+	}
+
+	// RULE: A declared size over the cap is refused before a byte of it is read
+	if response.ContentLength > maxBytes {
+		closeBody(response)
+		return nil, derp.BadRequest(location, "File is too large", maxBytes)
+	}
+
+	return newCappedReader(response.Body, maxBytes), nil
+}
+
 // Subscribe returns a NotImplemented error, because a file cannot offer a subscription.
 // Notification is arranged by hand through the webhook instead.
 func (adapter HTTPS) Subscribe(_ context.Context, _ model.StreamSource, _ string) error {
@@ -110,13 +137,13 @@ func (adapter HTTPS) Subscribe(_ context.Context, _ model.StreamSource, _ string
  * Helper Methods
  ******************************************/
 
-// get issues a GET for the source's address, sending ifNoneMatch as a conditional header when
-// it is not empty
-func (adapter HTTPS) get(ctx context.Context, source model.StreamSource, ifNoneMatch string) (*http.Response, error) {
+// request issues a GET for an address, sending ifNoneMatch as a conditional header when it is
+// not empty.  Every address passes the same rules, whether it names the source or a file it links to.
+func (adapter HTTPS) request(ctx context.Context, sourceURL string, ifNoneMatch string) (*http.Response, error) {
 
-	const location = "content.HTTPS.get"
+	const location = "content.HTTPS.request"
 
-	address, err := parseSourceURL(source.URL, adapter.allowPrivateIPs)
+	address, err := parseSourceURL(sourceURL, adapter.allowPrivateIPs)
 
 	if err != nil {
 		return nil, derp.Wrap(err, location, "Invalid source address")

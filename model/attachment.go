@@ -121,6 +121,19 @@ func (attachment Attachment) CalcURL(host string) string {
 	}
 }
 
+// IsStored returns TRUE if this Attachment's file is in the MediaServer.  Only a file copied in
+// from a remote source can be missing: while it is WORKING, or after it FAILED.
+func (attachment Attachment) IsStored() bool {
+
+	switch attachment.Status {
+
+	case AttachmentStatusWorking, AttachmentStatusFailed:
+		return false
+	}
+
+	return true
+}
+
 // DownloadExtension returns the file extension this Attachment is served with, which may differ from the original
 func (attachment Attachment) DownloadExtension() string {
 
