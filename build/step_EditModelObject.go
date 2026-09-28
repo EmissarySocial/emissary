@@ -81,46 +81,18 @@ func (step StepEditModelObject) Post(builder Builder, _ io.Writer) PipelineBehav
 	return nil
 }
 
-// getForm returns the form this step edits with, falling back to the Builder's own PropertyForm
+// getForm returns the form this step edits with, falling back to the Builder's own PropertyForm.
+// Its option templates are rendered by the widgets, against the edited object.
 func (step StepEditModelObject) getForm(builder Builder) form.Element {
 
-	form := step.Form
-
 	// If the step does not contain a form...
-	if form.IsEmpty() {
+	if step.Form.IsEmpty() {
 		// ...see if we can get the baked-in PropertyForm from the builder
 		// (only the Domain builder, for now)
 		if getter, ok := builder.(PropertyFormGetter); ok {
-			form = getter.PropertyForm()
+			return getter.PropertyForm()
 		}
 	}
 
-	// replace all template values in the form (and its children)
-	result := step.executeOptionTemplates(builder, form)
-
-	return result
-}
-
-// executeOptionTemplates renders any template expressions in a form element's options, recursively
-func (step StepEditModelObject) executeOptionTemplates(builder Builder, element form.Element) form.Element {
-
-	// Recursively scan all child elements
-	for index, child := range element.Children {
-		element.Children[index] = step.executeOptionTemplates(builder, child)
-	}
-
-	// Scan all options in this element
-	for key, value := range element.Options {
-		switch typed := value.(type) {
-		case string:
-			if strings.Contains(typed, "{{") {
-				if template, err := template.New("option").Parse(typed); err == nil {
-					element.Options[key] = executeTemplate(template, builder)
-				}
-			}
-		}
-	}
-
-	// Return the modified element
-	return element
+	return step.Form
 }

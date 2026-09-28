@@ -44,7 +44,7 @@ func (adapter Stripe) ManualConfig() form.Form {
 				{
 					Type:    "hidden",
 					Path:    "type",
-					Options: mapof.Any{"value": model.ConnectionTypeUserPayment},
+					Options: mapof.Template{"value": model.ConnectionTypeUserPayment},
 				},
 				{
 					Type:  "toggle",

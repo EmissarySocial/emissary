@@ -50,13 +50,13 @@ func (adapter GeocodeNetwork) ManualConfig() form.Form {
 				{
 					Type:    "hidden",
 					Path:    "type",
-					Options: mapof.Any{"value": model.ConnectionTypeGeocodeNetwork},
+					Options: mapof.Template{"value": model.ConnectionTypeGeocodeNetwork},
 				},
 				{
 					Type:  "select",
 					Path:  "data.provider",
 					Label: "Service Provider",
-					Options: mapof.Any{"enum": []form.LookupCode{
+					Options: mapof.Template{"enum": []form.LookupCode{
 						{Group: "Recommended", Value: "GEOAPIFY", Label: "Geoapify"},
 						{Group: "Supported", Value: "FREEIPAPI", Label: "FreeIPAPI.com"},
 						{Group: "Supported", Value: "IPAPICOM", Label: "IP-API.COM"},
@@ -65,7 +65,7 @@ func (adapter GeocodeNetwork) ManualConfig() form.Form {
 				},
 				{
 					Type: "layout-vertical",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"show-if": "data.provider != (null)",
 					},
 					Children: []form.Element{
@@ -73,7 +73,7 @@ func (adapter GeocodeNetwork) ManualConfig() form.Form {
 							Type:  "text",
 							Path:  "data.apiKey",
 							Label: "API Key",
-							Options: mapof.Any{
+							Options: mapof.Template{
 								"autocomplete": "off",
 								"show-if":      "data.provider != STATIC",
 							},
@@ -82,7 +82,7 @@ func (adapter GeocodeNetwork) ManualConfig() form.Form {
 							Type:  "text",
 							Path:  "data.latitude",
 							Label: "Latitude",
-							Options: mapof.Any{
+							Options: mapof.Template{
 								"autocomplete": "off",
 								"show-if":      "data.provider == STATIC",
 							},
@@ -91,7 +91,7 @@ func (adapter GeocodeNetwork) ManualConfig() form.Form {
 							Type:  "text",
 							Path:  "data.longitude",
 							Label: "Longitude",
-							Options: mapof.Any{
+							Options: mapof.Template{
 								"autocomplete": "off",
 								"show-if":      "data.provider == STATIC",
 							},

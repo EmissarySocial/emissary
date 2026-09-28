@@ -132,19 +132,19 @@ func getForm_FollowingIntent() form.Form {
 					Label:       "Inbox Folder",
 					Path:        "folderId",
 					Description: "Where should messages from this source be placed?",
-					Options:     mapof.Any{"provider": "folders"},
+					Options:     mapof.Template{"provider": "folders"},
 				},
 				{
 					Type:        "select",
 					Label:       "Message Types",
 					Path:        "behavior",
 					Description: "What kinds of posts should be shown in my timeline?",
-					Options:     mapof.Any{"provider": "following-behaviors"},
+					Options:     mapof.Template{"provider": "following-behaviors"},
 				},
 				{
 					Type: "toggle",
 					Path: "isPublic",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"true-text":  "Public: This 'Follow' is visible on my profile",
 						"false-text": "Private: This 'Follow' is hidden from others",
 					},

@@ -251,7 +251,7 @@ func setupDomainForm(header string) form.Element {
 					Type:  "textarea",
 					Path:  "owner.mailingAddress",
 					Label: "Mailing Address",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"rows": "3",
 					},
 				},
