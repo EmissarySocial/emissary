@@ -115,9 +115,10 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 		return derp.Wrap(err, location, "Calling provider BeforeSave", connection.ProviderID)
 	}
 
-	// Validate the value before saving
+	// Validate the value before saving.  Errors name the provider, never the Connection, whose
+	// token and vault are hidden from JSON but not from BSON.
 	if _, err := service.Schema().Validate(connection); err != nil {
-		return derp.Wrap(err, location, "Validating Connection", connection)
+		return derp.Wrap(err, location, "Validating Connection", connection.ProviderID)
 	}
 
 	switch connection.Active {
@@ -158,7 +159,7 @@ func (service *Connection) Save(session data.Session, connection *model.Connecti
 	writableDomain.Connections[connection.ProviderID] = *connection
 
 	if err := service.domainService.Save(session, &writableDomain, "Updated connection: "+connection.ProviderID); err != nil {
-		return derp.Wrap(err, location, "Saving Connection", connection, note)
+		return derp.Wrap(err, location, "Saving Connection", connection.ProviderID, note)
 	}
 
 	return nil
@@ -198,7 +199,7 @@ func (service *Connection) Delete(session data.Session, connection *model.Connec
 	delete(writableDomain.Connections, connection.ProviderID)
 
 	if err := service.domainService.Save(session, &writableDomain, "Deleted connection: "+connection.ProviderID); err != nil {
-		return derp.Wrap(err, location, "Deleting Connection", connection, note)
+		return derp.Wrap(err, location, "Deleting Connection", connection.ProviderID, note)
 	}
 
 	return nil

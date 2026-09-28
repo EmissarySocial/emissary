@@ -9,10 +9,8 @@ import (
 	"github.com/benpate/toot"
 )
 
-// mastodon_Authorizer generates a toot.Authorizer for this serverFactory.  This
-// function validates the "Authorization" header, parses its JWT token, and returns a
-// model.Authorization object when successful.  This function also verifies that the
-// JWT token was created for a particular OAuth client and is not a regular User token
+// Authorizer returns a toot.Authorizer that parses the JWT in a request's "Authorization"
+// header, and returns the model.Authorization it carries
 func Authorizer(serverFactory *server.Factory) toot.Authorizer[model.Authorization] {
 
 	const location = "handler.mastodon.Authorizater"
@@ -43,7 +41,7 @@ func Authorizer(serverFactory *server.Factory) toot.Authorizer[model.Authorizati
 		authorization, ok := token.Claims.(*model.Authorization)
 
 		if !ok {
-			return model.Authorization{}, derp.Forbidden(location, "Invalid token: Invalid Claims", token)
+			return model.Authorization{}, derp.Forbidden(location, "Invalid token: Invalid Claims")
 		}
 
 		// Return the token to the caller.

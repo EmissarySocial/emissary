@@ -7,10 +7,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// bridgyFedBlueskyActor is the Bridgy Fed actor that gates the Bluesky bridge: following it opts the
-// User in, blocking it opts them out. Written as a webfinger handle because that is the address
-// Bridgy Fed publishes; the Rule and Following services resolve it to its canonical URL themselves.
-const bridgyFedBlueskyActor = "@bsky.brid.gy@bsky.brid.gy"
+// bridgyFedBlueskyActor is the Bridgy Fed actor that gates the Bluesky bridge: following it opts
+// the User in, and blocking it opts them out
+const bridgyFedBlueskyActor = "@bsky.brid.gy@bsky.brid.gy" // The handle Bridgy Fed publishes; the Rule and Following services resolve it
 
 // connectBluesky follows or blocks the Bridgy Fed actor, mirroring this User's Bluesky bridge setting
 func (service *User) connectBluesky(session data.Session, user *model.User) error {
@@ -54,11 +53,11 @@ func (service *User) connectBluesky_follow(session data.Session, userID primitiv
 	// Following first therefore fails before the unblock it depends on ever runs, making the bridge
 	// impossible to re-enable once it has been turned off.
 	if err := service.ruleService.UnblockActor(session, userID, bridgyFedBlueskyActor); err != nil {
-		return derp.Wrap(err, location, "Unblocking Bridgy Fed Actor", userID, connection)
+		return derp.Wrap(err, location, "Unblocking Bridgy Fed Actor", userID, connection.ProviderID)
 	}
 
 	if _, err := service.followingService.Follow(session, userID, bridgyFedBlueskyActor); err != nil {
-		return derp.Wrap(err, location, "Following Bridgy Fed Actor", userID, connection)
+		return derp.Wrap(err, location, "Following Bridgy Fed Actor", userID, connection.ProviderID)
 	}
 
 	return nil
@@ -70,11 +69,11 @@ func (service *User) connectBluesky_unfollow(session data.Session, userID primit
 	const location = "service.User.connectBluesky_unfollow"
 
 	if err := service.followingService.Unfollow(session, userID, bridgyFedBlueskyActor); err != nil {
-		return derp.Wrap(err, location, "Unfollowing Bridgy Fed Actor", userID, connection)
+		return derp.Wrap(err, location, "Unfollowing Bridgy Fed Actor", userID, connection.ProviderID)
 	}
 
 	if err := service.ruleService.BlockActor(session, userID, bridgyFedBlueskyActor, "Blocking to stop bridge to Bluesky"); err != nil {
-		return derp.Wrap(err, location, "Blocking Bridgy Fed Actor", userID, connection)
+		return derp.Wrap(err, location, "Blocking Bridgy Fed Actor", userID, connection.ProviderID)
 	}
 
 	return nil

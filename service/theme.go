@@ -158,6 +158,12 @@ func (service *Theme) Add(themeID string, filesystem fs.FS, definition []byte) e
 	return nil
 }
 
+// Publish applies inheritance to every staged Theme, then moves them all into the live library
+func (service *Theme) Publish() {
+	service.calculateAllInheritance()
+	service.publish()
+}
+
 // calculateAllInheritance applies inheritance to every Theme in the prep area
 func (service *Theme) calculateAllInheritance() {
 
@@ -170,6 +176,17 @@ func (service *Theme) calculateAllInheritance() {
 	for _, theme := range service.themePrep {
 		service.calculateInheritance(theme)
 	}
+}
+
+// publish copies every prepared Theme into the live library in one step, then empties the prep area
+func (service *Theme) publish() {
+
+	service.mutex.Lock()
+	defer service.mutex.Unlock()
+
+	// Overwrite without resetting, so a reload never empties the library (BUG-180)
+	maps.Copy(service.themes, service.themePrep)
+	service.themePrep = mapof.NewObject[model.Theme]()
 }
 
 // unknownParents returns an error for each Theme in the prep area that extends a Theme the prep area does not contain
@@ -206,17 +223,6 @@ func (service *Theme) calculateInheritance(theme model.Theme) model.Theme {
 
 	service.themePrep[theme.ThemeID] = theme
 	return theme
-}
-
-// publish copies every prepared Theme into the live library in one step, then empties the prep area
-func (service *Theme) publish() {
-
-	service.mutex.Lock()
-	defer service.mutex.Unlock()
-
-	// Overwrite without resetting, so a reload never empties the library (BUG-180)
-	maps.Copy(service.themes, service.themePrep)
-	service.themePrep = mapof.NewObject[model.Theme]()
 }
 
 // setStartupContent loads the sample content that a new Domain is seeded with from this Theme

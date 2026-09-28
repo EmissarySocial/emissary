@@ -3,13 +3,17 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"io"
+	"strings"
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service/content"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/mediaserver"
 	"github.com/davidscottmills/goeditorjs"
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -26,7 +30,11 @@ type fakeAdapter struct {
 	fetchError   error
 	versionCalls int
 	fetchCalls   int
-	ifNoneMatch  string // the stored version that Version() was asked about
+	ifNoneMatch  string            // the stored version that Version() was asked about
+	files        map[string]string // file contents that FetchFile serves, by address
+	fileError    error             // returned by FetchFile in place of any file
+	fileCalls    []string          // every address passed to FetchFile, in order
+	fileMaxBytes int64             // the cap passed with the last FetchFile
 }
 
 // Protocol implements the content.Adapter interface
@@ -45,6 +53,25 @@ func (adapter *fakeAdapter) Version(_ context.Context, source model.StreamSource
 func (adapter *fakeAdapter) Fetch(_ context.Context, _ model.StreamSource, _ string) (content.Item, error) {
 	adapter.fetchCalls++
 	return adapter.item, adapter.fetchError
+}
+
+// FetchFile implements the content.Adapter interface
+func (adapter *fakeAdapter) FetchFile(_ context.Context, address string, maxBytes int64) (io.ReadCloser, error) {
+
+	adapter.fileCalls = append(adapter.fileCalls, address)
+	adapter.fileMaxBytes = maxBytes
+
+	if adapter.fileError != nil {
+		return nil, adapter.fileError
+	}
+
+	file, exists := adapter.files[address]
+
+	if !exists {
+		return nil, derp.NotFound("test", "No such file", address)
+	}
+
+	return io.NopCloser(strings.NewReader(file)), nil
 }
 
 // Subscribe implements the content.Adapter interface
@@ -101,6 +128,8 @@ func newSyncService(adapter *fakeAdapter, writer *fakeStreamWriter) (*StreamSour
 
 	service, session := newStreamSourceService(streamSource)
 	service.streamService = writer
+	service.attachmentService = &fakeAttachments{}
+	service.mediaServer = &fakeMedia{}
 	service.contentService = newTestContentService()
 	service.adapters = map[string]content.Adapter{
 		model.StreamSourceMethodHTTPS: adapter,
@@ -492,8 +521,10 @@ func TestStreamSource_RefreshWiresEveryDependency(t *testing.T) {
 	contentService := NewContent(goeditorjs.NewHTMLEngine())
 
 	factory := Factory{
-		contentService: &contentService,
-		serverFactory:  &lifecycleServerFactory{},
+		contentService:      &contentService,
+		serverFactory:       &lifecycleServerFactory{},
+		attachmentOriginals: afero.NewMemMapFs(),
+		attachmentCache:     afero.NewMemMapFs(),
 	}
 
 	factory.config.Hostname = "example.com"
@@ -506,6 +537,8 @@ func TestStreamSource_RefreshWiresEveryDependency(t *testing.T) {
 	require.Same(t, factory.Stream(), streamService)
 
 	require.Same(t, &contentService, service.contentService)
+	require.Same(t, factory.Attachment(), service.attachmentService, "the Attachment service must satisfy attachmentWriter")
+	require.IsType(t, mediaserver.MediaServer{}, service.mediaServer, "downloads have nowhere to go without it")
 	require.Equal(t, "example.com", service.hostname, "a task cannot find its Domain without this")
 
 	// The Adapter table is keyed by the Method that a record stores, so a key which drifted from

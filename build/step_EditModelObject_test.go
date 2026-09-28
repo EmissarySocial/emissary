@@ -2,11 +2,15 @@ package build
 
 import (
 	"net/url"
+	"strings"
+	"sync"
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/form"
 	"github.com/benpate/form/widget"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/stretchr/testify/require"
 )
@@ -149,4 +153,135 @@ func TestEditModelObject_Multiselect_DeltaSlice(t *testing.T) {
 		require.Empty(t, stream.Syndication.Deleted)
 		require.False(t, stream.Syndication.IsChanged())
 	}
+}
+
+// TestEditModelObject_OptionTemplates renders one cached step for two Streams, and requires
+// that each form carries its own Stream's ID while the cached form keeps its templates
+func TestEditModelObject_OptionTemplates(t *testing.T) {
+
+	// BUG-204: rendering wrote each option back into the cached form, so the first request
+	// after a start or reload fixed every later form to its ID.
+	widget.UseAll()
+	cached := newOptionTemplateStep(t)
+
+	first, second := newOptionTemplateStream(), newOptionTemplateStream()
+	firstHTML := renderOptionTemplateStep(t, cached, &first)
+	secondHTML := renderOptionTemplateStep(t, cached, &second)
+
+	require.Contains(t, firstHTML, "/.validate/stream/token?streamId="+first.ID())
+	require.Contains(t, firstHTML, `hx-post="/`+first.ID()+`/delete-icon"`)
+	require.Contains(t, secondHTML, "/.validate/stream/token?streamId="+second.ID())
+	require.Contains(t, secondHTML, `hx-post="/`+second.ID()+`/delete-icon"`)
+	require.NotContains(t, secondHTML, first.ID())
+
+	// The cached form still holds every template
+	require.Equal(t, "/.validate/stream/token?streamId={{.ID}}", cached.Form.Children[0].Children[0].Options.GetString("validator", nil))
+	require.Equal(t, "/{{.ID}}/delete-icon", cached.Form.Children[1].Options.GetString("delete", nil))
+}
+
+// TestEditModelObject_OptionTemplates_Concurrent renders one cached step from many goroutines,
+// which the race detector reports if any render writes the shared form
+func TestEditModelObject_OptionTemplates_Concurrent(t *testing.T) {
+
+	widget.UseAll()
+	cached := newOptionTemplateStep(t)
+	mismatches := make(chan string, 20)
+
+	var wait sync.WaitGroup
+	for range 20 {
+		wait.Go(func() {
+			stream := newOptionTemplateStream()
+			result, err := form.Editor(schema.New(model.StreamSchema()), cached.getForm(optionTemplateBuilder{}), &stream, nil)
+
+			// Report a mismatch rather than failing here, because require cannot run off the test goroutine
+			if (err != nil) || !strings.Contains(result, "streamId="+stream.ID()) {
+				mismatches <- stream.ID()
+			}
+		})
+	}
+
+	wait.Wait()
+	close(mismatches)
+
+	for streamID := range mismatches {
+		t.Errorf("render for %q did not carry its own ID", streamID)
+	}
+}
+
+// TestEditModelObject_PropertyForm requires that a step without a form uses the Domain's
+// PropertyForm, and that a step with one ignores it
+func TestEditModelObject_PropertyForm(t *testing.T) {
+
+	themeForm := form.Element{Type: "layout-vertical", Children: []form.Element{{Type: "text", Path: "label"}}}
+	builder := optionTemplatePropertyBuilder{propertyForm: themeForm}
+
+	require.Equal(t, themeForm, StepEditModelObject{}.getForm(builder))
+
+	cached := newOptionTemplateStep(t)
+	require.Equal(t, cached.Form, cached.getForm(builder))
+}
+
+// TestEditModelObject_EmptyForm requires that a step with no form, and no PropertyForm to fall
+// back on, returns its empty form
+func TestEditModelObject_EmptyForm(t *testing.T) {
+	require.True(t, StepEditModelObject{}.getForm(optionTemplateBuilder{}).IsEmpty())
+}
+
+// newOptionTemplateStep parses an edit step shaped like the Stream templates that use option
+// templates, with one option one level down and one two levels down
+func newOptionTemplateStep(t *testing.T) StepEditModelObject {
+
+	t.Helper()
+
+	parsed, err := step.NewEditModelObject(mapof.Any{
+		"form": map[string]any{
+			"type": "layout-tabs",
+			"children": []any{
+				map[string]any{
+					"type": "layout-vertical",
+					"children": []any{
+						map[string]any{"type": "text", "path": "token", "options": map[string]any{"autocomplete": "off", "validator": "/.validate/stream/token?streamId={{.ID}}"}},
+					},
+				},
+				map[string]any{"type": "upload", "path": "iconUrl", "options": map[string]any{"accept": "image/*", "delete": "/{{.ID}}/delete-icon"}},
+			},
+		},
+	})
+
+	require.NoError(t, err)
+	return StepEditModelObject(parsed)
+}
+
+// newOptionTemplateStream returns a Stream with an icon, so that the upload widget draws its
+// delete button
+func newOptionTemplateStream() model.Stream {
+	stream := model.NewStream()
+	stream.IconURL = "https://example.com/icon.webp"
+	return stream
+}
+
+// renderOptionTemplateStep draws the step's form for one Stream, as StepEditModelObject.Get does
+func renderOptionTemplateStep(t *testing.T, cached StepEditModelObject, stream *model.Stream) string {
+
+	t.Helper()
+
+	result, err := form.Editor(schema.New(model.StreamSchema()), cached.getForm(optionTemplateBuilder{}), stream, nil)
+	require.NoError(t, err)
+	return result
+}
+
+// optionTemplateBuilder is a Builder with no PropertyForm
+type optionTemplateBuilder struct {
+	Builder
+}
+
+// optionTemplatePropertyBuilder is a Builder that supplies a Theme's property form
+type optionTemplatePropertyBuilder struct {
+	Builder
+	propertyForm form.Element
+}
+
+// PropertyForm returns the Theme's form, as the Domain builder does
+func (builder optionTemplatePropertyBuilder) PropertyForm() form.Element {
+	return builder.propertyForm
 }

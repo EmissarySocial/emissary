@@ -2386,9 +2386,10 @@ edit-source: [{do: "as-modal", steps: [
 	]}
 ]}]
 
+// No refresh-page: `save` already sends an SSE update that the settings screen listens for,
+// and a second trigger redraws the screen twice
 sync-source: [{do: "with-stream-source", steps: [
 	{do: "save"}
-	{do: "refresh-page"}
 ]}]
 
 delete-source: [{do: "with-stream-source", steps: [

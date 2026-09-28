@@ -418,7 +418,7 @@ func hiddenTypeValue(config form.Form) string {
 		}
 
 		if strings.EqualFold(element.Type, "hidden") {
-			return element.Options.GetString("value")
+			return element.Options.GetString("value", nil)
 		}
 	}
 

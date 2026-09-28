@@ -1,4 +1,5 @@
 {{- $source := .StreamSource -}}
+{{- $files := .StreamSourceFiles -}}
 
 <div id="edit-status" class="card padding margin-bottom">
 	<table class="table valign-middle">
@@ -70,6 +71,22 @@
 				{{- end -}}
 			</td>
 		</tr>
+		<!-- Files linked from the source's attachments folder.  Downloads finish after the page sync, and the SSE listener redraws this card as each one lands. -->
+		{{- if gt $files.Total 0 -}}
+		<tr>
+			<td class="bold nowrap">Files</td>
+			<td colspan="2" class="text-sm">
+				{{$files.Ready}} of {{$files.Total}} copied
+				{{- if gt $files.Pending 0 }}, {{$files.Pending}} in progress{{ end -}}
+				{{- if gt $files.Failed 0 -}}
+					<div class="text-red">Could not copy: {{ range $index, $name := $files.FailedNames }}{{ if $index }}, {{ end }}{{ $name }}{{ end }}</div>
+				{{- end -}}
+				{{- if $files.AtLimit -}}
+					<div class="text-gray">Only the first 50 linked files are copied.</div>
+				{{- end -}}
+			</td>
+		</tr>
+		{{- end -}}
 	</table>
 
 	<div hx-ext="sse" sse-connect="/{{.StreamID}}/sse/stream-source-updated">

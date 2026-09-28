@@ -51,13 +51,13 @@ func (adapter GeocodeAddress) ManualConfig() form.Form {
 				{
 					Type:    "hidden",
 					Path:    "type",
-					Options: mapof.Any{"value": model.ConnectionTypeGeocodeAddress},
+					Options: mapof.Template{"value": model.ConnectionTypeGeocodeAddress},
 				},
 				{
 					Type:  "select",
 					Path:  "data.provider",
 					Label: "Service Provider",
-					Options: mapof.Any{"enum": []form.LookupCode{
+					Options: mapof.Template{"enum": []form.LookupCode{
 						{Group: "Recommended", Value: "GEOAPIFY", Label: "Geoapify"},
 						{Group: "Recommended", Value: "HERE", Label: "Here"},
 						{Group: "Supported", Value: "GOOGLE-MAPS", Label: "Google Maps"},
@@ -70,7 +70,7 @@ func (adapter GeocodeAddress) ManualConfig() form.Form {
 					Type:  "text",
 					Path:  "data.apiID",
 					Label: "API ID",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"show-if":      "data.provider == HERE",
 						"autocomplete": "off",
 					},
@@ -79,7 +79,7 @@ func (adapter GeocodeAddress) ManualConfig() form.Form {
 					Type:  "text",
 					Path:  "data.apiKey",
 					Label: "API Key",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"show-if":      "data.provider != (null)",
 						"autocomplete": "off",
 					},

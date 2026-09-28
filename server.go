@@ -99,6 +99,10 @@ func main() {
 	e.HidePort = true
 	e.HTTPErrorHandler = errorHandler
 
+	// Trust X-Forwarded-Proto from any peer, as echo did before v4.16.  Load balancers that terminate
+	// TLS may connect from public addresses, which the new default ignores, and HttpsRedirect loops.
+	e.SchemeExtractor = echo.LegacySchemeExtractor()
+
 	// Global middleware
 	// TODO: HIGH: Implement echo.Secure - https://echo.labstack.com/docs/middleware/secure
 	// TODO: MEDIUM: Implement Rate Limiter - https://echo.labstack.com/docs/middleware/rate-limiter

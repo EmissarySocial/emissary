@@ -121,7 +121,7 @@ func (service *Template) watch(locations sliceof.Object[mapof.String], done chan
 	// because Refresh replaces both fields while this runs.
 	for _, folder := range locations {
 		if err := service.filesystemService.Watch(folder, changes, done); err != nil {
-			derp.Report(derp.Wrap(err, "service.template.Watch", "Watching filesystem", folder))
+			derp.Report(derp.Wrap(err, "service.template.Watch", "Watching filesystem", folderLabel(folder)))
 		}
 	}
 
@@ -233,8 +233,7 @@ func (service *Template) loadTemplates(haltOnError bool) {
 
 	// Calculate inheritance for Themes, then publish them.  Themes do not wait for
 	// Template validation below, because a Template failure has never held them back
-	service.themeService.calculateAllInheritance()
-	service.themeService.publish()
+	service.themeService.Publish()
 
 	// Validate required fields for all Templates.  Any failure publishes none of them,
 	// so the Templates already live keep serving (BUG-180)

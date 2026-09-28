@@ -68,3 +68,15 @@ Five of the seven forges surveyed answer `304` to `If-None-Match`; cgit ignores 
 An earlier build read repositories over the Git smart-HTTP protocol: upload-pack sessions, a packfile parser, a declared-size memory budget, and a shared snapshot cache — 2,711 lines to download a 47 MiB repository in order to read a 4 KB file. It was deleted in favour of one HTTPS GET. If a future adapter needs Git — a private repository is the only real candidate — recover the reasoning from D12 in the project plan first, and note that an HTTP GET with a token header is the easier path even there.
 
 The warning that rule replaced is still true and now lives only here: **never read an author-supplied address through `hairyhenderson/go-fsimpl/gitfs` or go-git's `Clone`/`Remote.List`.** gitfs authenticates with `AutoAuthenticator`, which reads `GIT_HTTP_TOKEN` and `GIT_SSH_KEY` from the process environment, so a server holding a token for private Template packages would send it to whatever host the author typed. Both also reach the network through go-git's process-wide protocol table, which has no SSRF guard. Template packages still load that way, and that is fine — their addresses come from the operator, not from a Stream author.
+
+## Attachment links are found and rewritten in the rendered HTML, with the raw tokenizer
+
+`FindAttachments` and `RewriteAttachments` ([attachments.go](attachments.go)) read the HTML that `service.Content` has already rendered and sanitized, never the Markdown. A fenced code block that mentions `attachments/foo.png` must come through untouched, and only a real `img[src]` or `a[href]` attribute can guarantee that. Those are the only two links the sanitizer lets through; `<video>` and `<audio>` are stripped, which is why an image link to a video is turned into a player here, from an address this server issued.
+
+`RewriteAttachments` writes every untouched token back with `Tokenizer.Raw()`. Re-rendering a parsed tree normalizes quoting and entities across the whole document, which would make every sync rewrite the page.
+
+A link counts when it resolves to the source's own scheme and host, its path has a segment named `attachments`, and its extension is on the list in `AttachmentKind`. The extension decides the kind and the size cap; the service then refuses a file whose sniffed bytes disagree. SVG is left off on purpose, because an SVG served from the site's own origin can carry script.
+
+## `FetchFile` fails past its cap, rather than stopping
+
+`cappedReader` returns an error once the body runs past `maxBytes`. A reader that returned EOF at the cap would store a truncated video that plays for twelve seconds and reports success. `TestHTTPS_FetchFile_UndeclaredTooLarge` pins it with a chunked response that declares no length.

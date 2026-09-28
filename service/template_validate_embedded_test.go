@@ -48,9 +48,7 @@ func TestEmbeddedTemplates_Validate(t *testing.T) {
 		}
 
 		filesystem := os.DirFS(filepath.Join(root, entry.Name()))
-		definitionType, definition := findDefinition(filesystem)
-
-		switch definitionType {
+		switch definitionType, definition := findDefinition(filesystem); definitionType {
 
 		case DefinitionTemplate:
 			require.NoError(t, templateService.Add(entry.Name(), filesystem, definition), "template %q does not load", entry.Name())

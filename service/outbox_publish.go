@@ -150,8 +150,9 @@ func (service *Outbox) Deliver(session data.Session, actorType string, actorID p
 	// Serialize the payload once, so every ActivityPub delivery task shares the same string
 	serialized, err := json.Marshal(payload)
 
+	// RULE: An activity that cannot be serialized never will be, so this is a bad request, not a retry
 	if err != nil {
-		return derp.Wrap(err, location, "Serializing outbound activity")
+		return derp.Wrap(err, location, "Serializing outbound activity", derp.WithBadRequest())
 	}
 
 	// The authoritative signer URL (stamped by Publish) — the delivery tasks resolve the key from it.
@@ -397,7 +398,7 @@ func (service *Outbox) deliverActivityPub(session data.Session, actorURL string,
 // sendNotification_Email sends an email notification of the activity to a single "email" Follower
 func (service *Outbox) sendNotification_Email(follower *model.Follower, activity mapof.Any) {
 
-	const location = "service.Outbox.sendNotifications_Email"
+	const location = "service.Outbox.sendNotification_Email"
 
 	if err := service.domainEmail.SendFollowerActivity(follower, activity); err != nil {
 		derp.Report(derp.Wrap(err, location, "Sending email", follower))

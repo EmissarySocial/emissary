@@ -153,10 +153,11 @@ func (consumer Consumer) Run(task queue.Task) queue.Result {
 	case "Shuffle":
 		return WithSession(consumer.serverFactory, args, Shuffle)
 
-	// Both synchronization tasks run the SAME handler.  They are named apart only so the
-	// priority table can tell a human pressing Sync Now from a webhook's background fan-out.
-	case service.TaskSyncStreamSource, service.TaskSyncStreamSourceNow:
+	case service.TaskSyncStreamSource:
 		return WithSession(consumer.serverFactory, args, SyncStreamSource)
+
+	case service.TaskSyncStreamSourceAttachment:
+		return WithFactory(consumer.serverFactory, args, SyncStreamSourceAttachment)
 
 	case "syndication.create", "syndication.update", "syndication.delete":
 		return StreamSyndicate(name, args)
@@ -177,7 +178,7 @@ func (consumer Consumer) OnPublish(task *queue.Task) error {
 // Implements the queue.Consumer interface.
 func (consumer Consumer) OnSuccess(task queue.Task) error {
 
-	if service.IsSyncStreamSourceTask(task.Name) {
+	if task.Name == service.TaskSyncStreamSource {
 		return syncStreamSourceSucceeded(consumer.serverFactory, task.Arguments)
 	}
 
@@ -189,7 +190,7 @@ func (consumer Consumer) OnSuccess(task queue.Task) error {
 // Implements the queue.Consumer interface.
 func (consumer Consumer) OnError(task queue.Task, err error) error {
 
-	if service.IsSyncStreamSourceTask(task.Name) {
+	if task.Name == service.TaskSyncStreamSource {
 		return syncStreamSourceRetrying(consumer.serverFactory, task.Arguments, err)
 	}
 
@@ -201,7 +202,7 @@ func (consumer Consumer) OnError(task queue.Task, err error) error {
 // Implements the queue.Consumer interface.
 func (consumer Consumer) OnFailure(task queue.Task, err error) error {
 
-	if service.IsSyncStreamSourceTask(task.Name) {
+	if task.Name == service.TaskSyncStreamSource {
 		return syncStreamSourceFailed(consumer.serverFactory, task.Arguments, err)
 	}
 

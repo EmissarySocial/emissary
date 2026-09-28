@@ -3,14 +3,19 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"io"
+	"maps"
+	"net/http"
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
+	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -111,6 +116,91 @@ func TestDeliver_StripsBlindRecipients(t *testing.T) {
 	// The caller's activity keeps its addressing
 	require.Contains(t, activity, vocab.PropertyBTo)
 	require.Contains(t, activity, vocab.PropertyBCC)
+}
+
+// TestDeliver_SendsActivityBody delivers through hannibal's sender and requires every inbox to
+// receive the stripped activity, where an older sender that ignored "body" POSTed `{}`
+func TestDeliver_SendsActivityBody(t *testing.T) {
+
+	const followerCount = 3
+	received := make(chan []byte, followerCount)
+
+	// Record the body of every delivery the inbox receives
+	fixture := newDeliverFixture(t, followerCount, func(w http.ResponseWriter, r *http.Request) {
+
+		body, err := io.ReadAll(r.Body)
+
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		received <- body
+		w.WriteHeader(http.StatusAccepted)
+	})
+
+	// Name blind recipients on another network, so they are skipped but must still be stripped
+	fixture.activity[vocab.PropertyBTo] = []any{"https://blind.example/@bto"}
+	fixture.activity[vocab.PropertyBCC] = []any{"https://blind.example/@bcc"}
+
+	// Send every queued delivery, after the same storage round trip that turbine applies
+	tasks := fixture.deliver(t)
+	require.Len(t, tasks, followerCount)
+
+	for _, task := range tasks {
+		result := fixture.sender.SendToSingleRecipient(roundTripTask(t, task).Arguments)
+		require.Equal(t, queue.ResultStatusSuccess, result.Status, result.Error)
+	}
+
+	close(received)
+
+	// Every inbox receives the whole activity, without its blind recipients
+	expected := maps.Clone(fixture.activity)
+	delete(expected, vocab.PropertyBTo)
+	delete(expected, vocab.PropertyBCC)
+
+	expectedJSON, err := json.Marshal(expected)
+	require.NoError(t, err)
+
+	require.Len(t, received, followerCount)
+	for body := range received {
+		require.JSONEq(t, string(expectedJSON), string(body))
+	}
+}
+
+// TestDeliver_UnserializableActivity confirms that an activity JSON cannot encode is a client
+// error, which consumer.OutboxPublish fails at once instead of retrying
+func TestDeliver_UnserializableActivity(t *testing.T) {
+
+	spool := postcommit.NewTasks()
+	ruleService, _ := newRuleService(&ruleStore{})
+	session := deliverSession{
+		context: postcommit.WithContext(context.Background(), spool),
+		collections: map[string]data.Collection{
+			"Follower": &followerCollection{},
+			"Rule":     &ruleStore{},
+		},
+	}
+
+	outboxService := Outbox{
+		followerService: &Follower{},
+		ruleService:     ruleService,
+		domainEmail:     &DomainEmail{},
+		host:            "http://localhost",
+	}
+
+	// A channel has no JSON encoding, so this activity can never be serialized
+	activity := mapof.Any{
+		vocab.PropertyID:    "http://localhost/@sender/pub/outbox/1",
+		vocab.PropertyActor: "http://localhost/@sender",
+		"unencodable":       make(chan int),
+	}
+
+	permissions := model.Permissions{model.MagicGroupIDAnonymous}
+	err := outboxService.Deliver(session, model.FollowerTypeUser, primitive.NewObjectID(), activity, permissions, nil, false)
+	require.Error(t, err)
+	require.True(t, derp.IsClientError(err))
+	require.Empty(t, spool.Drain())
 }
 
 // deliverSession is a data.Session that serves named in-memory collections within a fixed context

@@ -16,21 +16,22 @@ import (
 
 // Attachment represents a file that has been uploaded to the software
 type Attachment struct {
-	AttachmentID primitive.ObjectID `json:"attachmentId" bson:"_id"`               // ID of this Attachment
-	ObjectID     primitive.ObjectID `json:"objectId"     bson:"objectId"`          // ID of the object that owns this Attachment
-	ObjectType   string             `json:"objectType"   bson:"objectType"`        // Type of object that owns this Attachment
-	Original     string             `json:"original"     bson:"original"`          // Original filename uploaded by user
-	ContentType  string             `json:"contentType"  bson:"contentType"`       // Media type sniffed from the file's own bytes.  Empty on records that predate content sniffing.
-	Category     string             `json:"category"     bson:"category"`          // Category of the file (defined by the Template)
-	Label        string             `json:"label"        bson:"label"`             // User-defined label for the attachment
-	Description  string             `json:"description"  bson:"description"`       // User-defined description for the attachment
-	URL          string             `json:"url"          bson:"url"`               // URL where the file is stored
-	Status       string             `json:"status"       bson:"status"`            // Status of the attachment (READY, WORKING)
-	Rules        AttachmentRules    `json:"rules"        bson:"rules"`             // Rules for downloading this attachment
-	Height       int                `json:"height"       bson:"height,omitzero"`   // Height of the media file (if applicable)
-	Width        int                `json:"width"        bson:"width,omitzero"`    // Width of the media file (if applicable)
-	Duration     int                `json:"duration"     bson:"duration,omitzero"` // Duration of the media file (if applicable)
-	Rank         int                `json:"rank"         bson:"rank,omitzero"`     // The sort order to display the attachments in.
+	AttachmentID primitive.ObjectID `json:"attachmentId" bson:"_id"`                 // ID of this Attachment
+	ObjectID     primitive.ObjectID `json:"objectId"     bson:"objectId"`            // ID of the object that owns this Attachment
+	ObjectType   string             `json:"objectType"   bson:"objectType"`          // Type of object that owns this Attachment
+	Original     string             `json:"original"     bson:"original"`            // Original filename uploaded by user
+	ContentType  string             `json:"contentType"  bson:"contentType"`         // Media type sniffed from the file's own bytes.  Empty on records that predate content sniffing.
+	Category     string             `json:"category"     bson:"category"`            // Category of the file (defined by the Template)
+	Label        string             `json:"label"        bson:"label"`               // User-defined label for the attachment
+	Description  string             `json:"description"  bson:"description"`         // User-defined description for the attachment
+	URL          string             `json:"url"          bson:"url"`                 // URL where the file is stored
+	SourceURL    string             `json:"sourceUrl"    bson:"sourceUrl,omitempty"` // Remote address this file was copied from.  Empty for an uploaded file.
+	Status       string             `json:"status"       bson:"status"`              // Status of the attachment (READY, WORKING)
+	Rules        AttachmentRules    `json:"rules"        bson:"rules"`               // Rules for downloading this attachment
+	Height       int                `json:"height"       bson:"height,omitzero"`     // Height of the media file (if applicable)
+	Width        int                `json:"width"        bson:"width,omitzero"`      // Width of the media file (if applicable)
+	Duration     int                `json:"duration"     bson:"duration,omitzero"`   // Duration of the media file (if applicable)
+	Rank         int                `json:"rank"         bson:"rank,omitzero"`       // The sort order to display the attachments in.
 
 	journal.Journal `json:"-" bson:",inline"` // Journal entry for fetch compatability
 }
@@ -118,6 +119,19 @@ func (attachment Attachment) CalcURL(host string) string {
 	default:
 		return host + "/" + attachment.ObjectID.Hex() + "/attachments/" + attachment.AttachmentID.Hex()
 	}
+}
+
+// IsStored returns TRUE if this Attachment's file is in the MediaServer.  Only a file copied in
+// from a remote source can be missing: while it is WORKING, or after it FAILED.
+func (attachment Attachment) IsStored() bool {
+
+	switch attachment.Status {
+
+	case AttachmentStatusWorking, AttachmentStatusFailed:
+		return false
+	}
+
+	return true
 }
 
 // DownloadExtension returns the file extension this Attachment is served with, which may differ from the original

@@ -40,7 +40,7 @@ func TestStreamSource_SaveAlwaysSyncs(t *testing.T) {
 
 			require.NoError(t, service.Save(session, &streamSource, "Saved"))
 
-			tasks := session.publishedTasksNamed(TaskSyncStreamSourceNow)
+			tasks := session.publishedTasksNamed(TaskSyncStreamSource)
 			require.Len(t, tasks, 1, "every save queues exactly one sync")
 			require.Empty(t, tasks[0].Signature, "a signed task can never run immediately")
 			require.Equal(t, streamSource.StreamSourceID.Hex(), tasks[0].Arguments.GetString("streamSourceId"))
@@ -66,8 +66,8 @@ func TestStreamSource_WebhookSyncIsDeduplicated(t *testing.T) {
 	require.Equal(t, "StreamSource-Sync:"+streamSource.StreamSourceID.Hex(), tasks[0].Signature)
 }
 
-// TestStreamSource_SyncNowIsNotDeduplicated pins the trade this design accepts.  The interactive
-// task carries NO signature, because turbine refuses to run a signed task from memory at any
+// TestStreamSource_SyncNowIsNotDeduplicated pins the trade this design accepts.  A task queued by
+// Save carries NO signature, because turbine refuses to run a signed task from memory at any
 // priority -- so two quick presses really do queue two syncs.  Each costs one conditional GET
 // that answers 304, which is why that is affordable.
 func TestStreamSource_SyncNowIsNotDeduplicated(t *testing.T) {
@@ -78,7 +78,7 @@ func TestStreamSource_SyncNowIsNotDeduplicated(t *testing.T) {
 	require.NoError(t, service.Save(session, &streamSource, "Saved"))
 	require.NoError(t, service.Save(session, &streamSource, "Saved again"))
 
-	tasks := session.publishedTasksNamed(TaskSyncStreamSourceNow)
+	tasks := session.publishedTasksNamed(TaskSyncStreamSource)
 	require.Len(t, tasks, 2)
 
 	for _, task := range tasks {
@@ -121,7 +121,6 @@ func TestStreamSource_BookkeepingNeverSyncs(t *testing.T) {
 	require.NoError(t, service.SetStatusMessage(session, &streamSource, "Retrying"))
 
 	require.Empty(t, session.publishedTasksNamed(TaskSyncStreamSource), "bookkeeping is not a request to read the source")
-	require.Empty(t, session.publishedTasksNamed(TaskSyncStreamSourceNow), "..and not a request to read it right now, either")
 }
 
 /******************************************
@@ -182,7 +181,7 @@ func TestStreamSource_ObjectSaveSyncs(t *testing.T) {
 	service, session := newStreamSourceService(streamSource)
 
 	require.NoError(t, service.ObjectSave(session, &streamSource, "Updated"))
-	require.Len(t, session.publishedTasksNamed(TaskSyncStreamSourceNow), 1)
+	require.Len(t, session.publishedTasksNamed(TaskSyncStreamSource), 1)
 }
 
 // TestStreamSource_ObjectLoad returns the record as a data.Object

@@ -2,6 +2,7 @@ package content
 
 import (
 	"context"
+	"io"
 
 	"github.com/EmissarySocial/emissary/model"
 )
@@ -19,6 +20,10 @@ type Adapter interface {
 	// Fetch returns the content that the remote source holds now.  The version argument names
 	// what the caller expects, and a source that cannot serve a named version ignores it.
 	Fetch(ctx context.Context, source model.StreamSource, version string) (Item, error)
+
+	// FetchFile opens one file that the source's content links to.  The reader fails once more
+	// than maxBytes have been read, and the caller closes it.
+	FetchFile(ctx context.Context, address string, maxBytes int64) (io.ReadCloser, error)
 
 	// Subscribe asks the remote source to push change notifications to a callback URL, or returns
 	// a NotImplemented error when the source cannot push

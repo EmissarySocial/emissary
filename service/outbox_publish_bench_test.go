@@ -30,7 +30,7 @@ const benchmarkFollowerCount = 100
 // BenchmarkDeliver_Storage measures one fan-out plus the storage round trip of every delivery task it queues.
 func BenchmarkDeliver_Storage(b *testing.B) {
 
-	for fixture := newDeliverBenchmark(b); b.Loop(); {
+	for fixture := newDeliverFixture(b, benchmarkFollowerCount, acceptInbox); b.Loop(); {
 		for _, task := range fixture.deliver(b) {
 			roundTripTask(b, task)
 		}
@@ -40,7 +40,7 @@ func BenchmarkDeliver_Storage(b *testing.B) {
 // BenchmarkDeliver_EndToEnd measures one fan-out, the storage round trip, and every signed delivery POST.
 func BenchmarkDeliver_EndToEnd(b *testing.B) {
 
-	for fixture := newDeliverBenchmark(b); b.Loop(); {
+	for fixture := newDeliverFixture(b, benchmarkFollowerCount, acceptInbox); b.Loop(); {
 		for _, task := range fixture.deliver(b) {
 			stored := roundTripTask(b, task)
 			result := fixture.sender.SendToSingleRecipient(stored.Arguments)
@@ -49,8 +49,8 @@ func BenchmarkDeliver_EndToEnd(b *testing.B) {
 	}
 }
 
-// deliverBenchmark holds an Outbox wired to in-memory followers, and a Sender that signs with a real key
-type deliverBenchmark struct {
+// deliverFixture holds an Outbox wired to in-memory followers, and a Sender that signs with a real key
+type deliverFixture struct {
 	outbox   Outbox
 	sender   sender.Sender
 	userID   primitive.ObjectID
@@ -59,25 +59,24 @@ type deliverBenchmark struct {
 	spool    *postcommit.Tasks
 }
 
-// newDeliverBenchmark builds the fixture: followers whose inboxes point at a local test server
-func newDeliverBenchmark(b *testing.B) *deliverBenchmark {
+// newDeliverFixture builds the fixture: followers whose inboxes all point at a local test server
+// that answers every delivery with the provided handler
+func newDeliverFixture(t testing.TB, followerCount int, inbox http.HandlerFunc) *deliverFixture {
 
-	b.Helper()
+	t.Helper()
 
 	// Silence per-delivery debug logging, which would otherwise interleave with benchmark output
 	previousLevel := zerolog.GlobalLevel()
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	b.Cleanup(func() { zerolog.SetGlobalLevel(previousLevel) })
+	t.Cleanup(func() { zerolog.SetGlobalLevel(previousLevel) })
 
-	// Every delivery POSTs to this local inbox, which accepts everything
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusAccepted)
-	}))
-	b.Cleanup(server.Close)
+	// Every delivery POSTs to this local inbox
+	server := httptest.NewServer(inbox)
+	t.Cleanup(server.Close)
 
 	// Create the sending actor, with a real signing key
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	require.NoError(b, err)
+	require.NoError(t, err)
 
 	// The sender sits on a public host, so the same-network rule skips its own addressees
 	// (the actor and its followers collection) and only the local followers are delivered to.
@@ -85,13 +84,13 @@ func newDeliverBenchmark(b *testing.B) *deliverBenchmark {
 	locator := benchmarkLocator{actor: sender.NewActor(actorURL, actorURL+"#main-key", privateKey)}
 
 	senderQueue := queue.New()
-	b.Cleanup(senderQueue.Stop)
+	t.Cleanup(senderQueue.Stop)
 
 	// Create the followers, all on the local network and all pointing at the test inbox
 	userID := primitive.NewObjectID()
-	followers := make([]model.Follower, 0, benchmarkFollowerCount)
+	followers := make([]model.Follower, 0, followerCount)
 
-	for range benchmarkFollowerCount {
+	for range followerCount {
 		follower := model.NewFollower()
 		follower.FollowerID = primitive.NewObjectID()
 		follower.ParentID = userID
@@ -106,7 +105,7 @@ func newDeliverBenchmark(b *testing.B) *deliverBenchmark {
 	ruleService, _ := newRuleService(&ruleStore{})
 	spool := postcommit.NewTasks()
 
-	return &deliverBenchmark{
+	return &deliverFixture{
 		outbox: Outbox{
 			followerService: &Follower{},
 			ruleService:     ruleService,
@@ -128,23 +127,28 @@ func newDeliverBenchmark(b *testing.B) *deliverBenchmark {
 }
 
 // deliver runs one fan-out and returns the delivery tasks it queued
-func (fixture *deliverBenchmark) deliver(b *testing.B) []queue.Task {
+func (fixture *deliverFixture) deliver(t testing.TB) []queue.Task {
 
 	permissions := model.Permissions{model.MagicGroupIDAnonymous}
 	err := fixture.outbox.Deliver(fixture.session, model.FollowerTypeUser, fixture.userID, fixture.activity, permissions, nil, false)
-	require.NoError(b, err)
+	require.NoError(t, err)
 
 	return fixture.spool.Drain()
 }
 
+// acceptInbox is an inbox handler that accepts every delivery
+func acceptInbox(w http.ResponseWriter, _ *http.Request) {
+	w.WriteHeader(http.StatusAccepted)
+}
+
 // roundTripTask encodes a task to BSON and decodes it again, as turbine's storage does
-func roundTripTask(b *testing.B, task queue.Task) queue.Task {
+func roundTripTask(t testing.TB, task queue.Task) queue.Task {
 
 	encoded, err := bson.Marshal(task)
-	require.NoError(b, err)
+	require.NoError(t, err)
 
 	result := queue.Task{}
-	require.NoError(b, bson.Unmarshal(encoded, &result))
+	require.NoError(t, bson.Unmarshal(encoded, &result))
 
 	return result
 }

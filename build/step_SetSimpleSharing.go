@@ -159,7 +159,7 @@ func (step StepSetSimpleSharing) form() (form.Element, error) {
 			{
 				Type: "check-button-group",
 				Path: "groupIds",
-				Options: mapof.Any{
+				Options: mapof.Template{
 					"class": "simple-sharing simple-sharing-not-group",
 					"enum": []form.LookupCode{
 						{
@@ -188,7 +188,7 @@ func (step StepSetSimpleSharing) form() (form.Element, error) {
 				Type:  "check-button-group",
 				Path:  "groupIds",
 				Label: "These Groups Only",
-				Options: mapof.Any{
+				Options: mapof.Template{
 					"class":    "simple-sharing",
 					"provider": "groups",
 					"script":   "on click tell <.simple-sharing-not-group /> set your.checked to false",

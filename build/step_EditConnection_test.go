@@ -67,7 +67,7 @@ func (brokenShowIfProvider) ManualConfig() form.Form {
 				{
 					Type:    "text",
 					Path:    "data.declared",
-					Options: mapof.Any{"show-if": "data.missing == YES"},
+					Options: mapof.Template{"show-if": "data.missing == YES"},
 				},
 			},
 		},

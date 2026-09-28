@@ -59,33 +59,34 @@ func (c *searchQueryCollection) Load(criteria exp.Expression, target data.Object
 		return derp.Internal("test", "unexpected target type")
 	}
 
-	matched := criteria.Match(func(predicate exp.Predicate) bool {
-
-		if predicate.Operator != exp.OperatorEqual {
-			return false
-		}
-
-		switch predicate.Field {
-
-		case "_id":
-			value, ok := predicate.Value.(primitive.ObjectID)
-			return ok && c.record.SearchQueryID == value
-
-		case "deleteDate":
-			value, ok := predicate.Value.(int)
-			return ok && c.record.DeleteDate == int64(value)
-
-		default:
-			return false
-		}
-	})
-
-	if !matched {
+	if !criteria.Match(c.matches) {
 		return derp.NotFound("test", "not found")
 	}
 
 	*searchQuery = c.record
 	return nil
+}
+
+// matches reports whether one predicate from the criteria matches the stored SearchQuery
+func (c *searchQueryCollection) matches(predicate exp.Predicate) bool {
+
+	if predicate.Operator != exp.OperatorEqual {
+		return false
+	}
+
+	switch predicate.Field {
+
+	case "_id":
+		value, ok := predicate.Value.(primitive.ObjectID)
+		return ok && c.record.SearchQueryID == value
+
+	case "deleteDate":
+		value, ok := predicate.Value.(int)
+		return ok && c.record.DeleteDate == int64(value)
+
+	default:
+		return false
+	}
 }
 
 // Save implements the data.Collection interface. Unused by these tests.

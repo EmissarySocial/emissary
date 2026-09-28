@@ -53,20 +53,20 @@ func (adapter GeocodeTiles) ManualConfig() form.Form {
 				{
 					Type:    "hidden",
 					Path:    "type",
-					Options: mapof.Any{"value": model.ConnectionTypeGeocodeTiles},
+					Options: mapof.Template{"value": model.ConnectionTypeGeocodeTiles},
 				},
 				{
 					Type:  "select-group",
 					Path:  "data.provider",
 					Label: "Service Provider",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"provider": "geocode-tiles",
 						"children": "data.style",
 					},
 				},
 				{
 					Type:    "layout-vertical",
-					Options: mapof.Any{"show-if": "data.provider != Custom"},
+					Options: mapof.Template{"show-if": "data.provider != Custom"},
 					Children: []form.Element{
 						{
 							ID:    "geocode-tiles-style",
@@ -78,7 +78,7 @@ func (adapter GeocodeTiles) ManualConfig() form.Form {
 							Type:  "text",
 							Label: "API Key",
 							Path:  "data.apiKey",
-							Options: mapof.Any{
+							Options: mapof.Template{
 								"show-if":     "data.provider != Open Street Map",
 								"autocorrect": "false",
 								"spellcheck":  "false",
@@ -91,7 +91,7 @@ func (adapter GeocodeTiles) ManualConfig() form.Form {
 					Label:       "ZXY Tile URL",
 					Description: "Looks like: https://tile.openstreetmap.org/{z}/{x}/{y}.png",
 					Path:        "data.href",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"show-if": "data.provider == Custom",
 					},
 				},

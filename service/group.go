@@ -197,11 +197,8 @@ func (service *Group) ListByIDs(session data.Session, groupIDs ...primitive.Obje
 
 	// Read the iterator into the result.  Appending (instead of indexing a pre-sized slice)
 	// keeps a Group that no longer exists from arriving as a blank row in the result.
-	group := model.NewGroup()
-
-	for it.Next(&group) {
+	for group := model.NewGroup(); it.Next(&group); group = model.NewGroup() {
 		result = append(result, group)
-		group = model.NewGroup()
 	}
 
 	return result, nil

@@ -21,6 +21,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/digital-dome/dome"
 	"github.com/benpate/form"
+	"github.com/benpate/hannibal/clients"
 	"github.com/benpate/icon"
 	"github.com/benpate/mediaserver"
 	"github.com/benpate/steranko"
@@ -199,10 +200,11 @@ func NewFactory(serverFactory ServerFactory, domain config.Domain, port string, 
 	factory.webhookService = NewWebhook()
 
 	// Refresh the configuration with values that (may) change during the lifetime of the factory.
-	// A factory that fails here already runs a broker, and may hold a database client.
+	// A factory that fails here already runs a broker, and may hold a database client.  Errors
+	// name the hostname, never the configuration, which carries the domain's secrets.
 	if err := factory.Refresh(domain, attachmentOriginals, attachmentCache); err != nil {
 		factory.Close()
-		return nil, derp.Wrap(err, location, "Creating factory", domain)
+		return nil, derp.Wrap(err, location, "Creating factory", domain.Hostname)
 	}
 
 	// Success!
@@ -293,7 +295,7 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 		server, err := mongodb.New(newConfig.ConnectString, newConfig.DatabaseName, opts)
 
 		if err != nil {
-			return derp.Wrap(err, location, "Connecting to MongoDB (Server)", newConfig)
+			return derp.Wrap(err, location, "Connecting to MongoDB (Server)", newConfig.Hostname, newConfig.DatabaseName)
 		}
 
 		previous = factory.server
@@ -305,7 +307,7 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	// the new configuration points at.
 	if shouldStartDomainService(newConfig, hasDatabaseChanged, hasHostnameChanged) {
 		if err := factory.domainService.Start(); err != nil {
-			return derp.Wrap(err, location, "Starting domain service", newConfig)
+			return derp.Wrap(err, location, "Starting domain service", newConfig.Hostname)
 		}
 	}
 
@@ -824,6 +826,11 @@ func (factory *Factory) Camper() camper.Camper {
 // configured client-IP strategy
 func (factory *Factory) ClientIP(request *http.Request) string {
 	return factory.serverFactory.ClientIP(request)
+}
+
+// Carpool returns the server's process-wide Carpool, which merges concurrent ActivityStream Loads
+func (factory *Factory) Carpool() *clients.Carpool {
+	return factory.serverFactory.Carpool()
 }
 
 // DigitalDome returns the shared Digital Dome web-application firewall, which
