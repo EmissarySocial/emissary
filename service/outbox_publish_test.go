@@ -3,14 +3,19 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"io"
+	"maps"
+	"net/http"
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
+	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -111,6 +116,168 @@ func TestDeliver_StripsBlindRecipients(t *testing.T) {
 	// The caller's activity keeps its addressing
 	require.Contains(t, activity, vocab.PropertyBTo)
 	require.Contains(t, activity, vocab.PropertyBCC)
+}
+
+// TestDeliver_SendsActivityBody delivers through hannibal's sender and requires every inbox to
+// receive the stripped activity, where an older sender that ignored "body" POSTed `{}`
+func TestDeliver_SendsActivityBody(t *testing.T) {
+
+	const followerCount = 3
+	received := make(chan []byte, followerCount)
+
+	// Record the body of every delivery the inbox receives
+	fixture := newDeliverFixture(t, followerCount, func(w http.ResponseWriter, r *http.Request) {
+
+		body, err := io.ReadAll(r.Body)
+
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		received <- body
+		w.WriteHeader(http.StatusAccepted)
+	})
+
+	// Name blind recipients on another network, so they are skipped but must still be stripped
+	fixture.activity[vocab.PropertyBTo] = []any{"https://blind.example/@bto"}
+	fixture.activity[vocab.PropertyBCC] = []any{"https://blind.example/@bcc"}
+
+	// Send every queued delivery, after the same storage round trip that turbine applies
+	tasks := fixture.deliver(t)
+	require.Len(t, tasks, followerCount)
+
+	for _, task := range tasks {
+		result := fixture.sender.SendToSingleRecipient(roundTripTask(t, task).Arguments)
+		require.Equal(t, queue.ResultStatusSuccess, result.Status, result.Error)
+	}
+
+	close(received)
+
+	// Every inbox receives the whole activity, without its blind recipients
+	expected := maps.Clone(fixture.activity)
+	delete(expected, vocab.PropertyBTo)
+	delete(expected, vocab.PropertyBCC)
+
+	expectedJSON, err := json.Marshal(expected)
+	require.NoError(t, err)
+
+	require.Len(t, received, followerCount)
+	for body := range received {
+		require.JSONEq(t, string(expectedJSON), string(body))
+	}
+}
+
+// TestDeliver_EmailStripsBlindRecipients confirms that an email Follower is notified with the
+// stripped activity, as ActivityPub Followers are
+func TestDeliver_EmailStripsBlindRecipients(t *testing.T) {
+
+	userID := primitive.NewObjectID()
+
+	// One active email follower on the same (local) network as the sender
+	follower := model.NewFollower()
+	follower.FollowerID = primitive.NewObjectID()
+	follower.ParentID = userID
+	follower.ParentType = model.FollowerTypeUser
+	follower.Method = model.FollowerMethodEmail
+	follower.StateID = model.FollowerStateActive
+	follower.Actor.ProfileURL = "http://localhost/@email-follower"
+	follower.Actor.EmailAddress = "follower@localhost"
+
+	// A public activity that also names blind recipients on another network
+	activity := mapof.Any{
+		vocab.PropertyID:    "http://localhost/@sender/pub/outbox/1",
+		vocab.PropertyType:  vocab.ActivityTypeCreate,
+		vocab.PropertyActor: "http://localhost/@sender",
+		vocab.PropertyTo:    []any{vocab.NamespaceActivityStreamsPublic},
+		vocab.PropertyBTo:   []any{"https://blind.example/@bto"},
+		vocab.PropertyBCC:   []any{"https://blind.example/@bcc"},
+	}
+
+	// Wire an Outbox to in-memory followers and rules, and an emailer that records each send
+	ruleService, _ := newRuleService(&ruleStore{})
+	spool := postcommit.NewTasks()
+	emailer := &recordingEmailer{}
+	session := deliverSession{
+		context: postcommit.WithContext(context.Background(), spool),
+		collections: map[string]data.Collection{
+			"Follower": &followerCollection{records: []model.Follower{follower}},
+			"Rule":     &ruleStore{},
+		},
+	}
+
+	outboxService := Outbox{
+		followerService: &Follower{},
+		ruleService:     ruleService,
+		domainEmail:     emailer,
+		host:            "http://localhost",
+	}
+
+	permissions := model.Permissions{model.MagicGroupIDAnonymous}
+	err := outboxService.Deliver(session, model.FollowerTypeUser, userID, activity, permissions, nil, false)
+	require.NoError(t, err)
+
+	// Exactly one email is sent, with no blind-recipient lists, and no ActivityPub task is queued
+	require.Len(t, emailer.activities, 1)
+	require.Equal(t, activity[vocab.PropertyID], emailer.activities[0][vocab.PropertyID])
+	require.NotContains(t, emailer.activities[0], vocab.PropertyBTo)
+	require.NotContains(t, emailer.activities[0], vocab.PropertyBCC)
+	require.Empty(t, spool.Drain())
+
+	// The caller's activity keeps its addressing
+	require.Contains(t, activity, vocab.PropertyBTo)
+	require.Contains(t, activity, vocab.PropertyBCC)
+}
+
+// TestDeliver_UnserializableActivity confirms that an activity JSON cannot encode is a client
+// error, which consumer.OutboxPublish fails at once instead of retrying
+func TestDeliver_UnserializableActivity(t *testing.T) {
+
+	spool := postcommit.NewTasks()
+	ruleService, _ := newRuleService(&ruleStore{})
+	session := deliverSession{
+		context: postcommit.WithContext(context.Background(), spool),
+		collections: map[string]data.Collection{
+			"Follower": &followerCollection{},
+			"Rule":     &ruleStore{},
+		},
+	}
+
+	outboxService := Outbox{
+		followerService: &Follower{},
+		ruleService:     ruleService,
+		domainEmail:     &recordingEmailer{},
+		host:            "http://localhost",
+	}
+
+	// A channel has no JSON encoding, so this activity can never be serialized
+	activity := mapof.Any{
+		vocab.PropertyID:    "http://localhost/@sender/pub/outbox/1",
+		vocab.PropertyActor: "http://localhost/@sender",
+		"unencodable":       make(chan int),
+	}
+
+	permissions := model.Permissions{model.MagicGroupIDAnonymous}
+	err := outboxService.Deliver(session, model.FollowerTypeUser, primitive.NewObjectID(), activity, permissions, nil, false)
+	require.Error(t, err)
+	require.True(t, derp.IsClientError(err))
+	require.Empty(t, spool.Drain())
+}
+
+// recordingEmailer is a followerEmailer that records every activity it is asked to send
+type recordingEmailer struct {
+	activities []mapof.Any
+}
+
+// IsConfigured implements the followerEmailer interface. The recorder always accepts email.
+func (emailer *recordingEmailer) IsConfigured() bool {
+	return true
+}
+
+// SendFollowerActivity implements the followerEmailer interface, recording the activity it receives
+func (emailer *recordingEmailer) SendFollowerActivity(_ *model.Follower, activity mapof.Any) error {
+	emailer.activities = append(emailer.activities, activity)
+	return nil
 }
 
 // deliverSession is a data.Session that serves named in-memory collections within a fixed context
