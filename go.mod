@@ -15,7 +15,7 @@ require (
 	github.com/benpate/delta v0.1.0
 	github.com/benpate/derp v0.44.0
 	github.com/benpate/digit v0.16.0
-	github.com/benpate/digital-dome v0.8.0
+	github.com/benpate/digital-dome v0.9.0
 	github.com/benpate/exp v0.11.0
 	github.com/benpate/exp-builder v0.12.0
 	github.com/benpate/form v0.32.0
@@ -23,7 +23,7 @@ require (
 	github.com/benpate/hannibal v0.40.0
 	github.com/benpate/html v0.18.0
 	github.com/benpate/icon v0.4.0
-	github.com/benpate/mediaserver v0.18.0
+	github.com/benpate/mediaserver v0.20.0
 	github.com/benpate/oembed v0.4.0
 	github.com/benpate/re v0.6.0
 	github.com/benpate/remote v0.25.0
