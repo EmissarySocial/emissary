@@ -84,7 +84,7 @@ func TestUnsplash_NoFieldIsGated(t *testing.T) {
 	config := NewUnsplash().ManualConfig()
 
 	for _, element := range config.Element.AllElements() {
-		assert.Empty(t, element.Options.GetString("show-if"), "%s is ungated", element.Path)
+		assert.Empty(t, element.Options.GetString("show-if", nil), "%s is ungated", element.Path)
 	}
 }
 
