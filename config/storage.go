@@ -1,6 +1,8 @@
 package config
 
 import (
+	"net/url"
+
 	"github.com/benpate/derp"
 	"github.com/rs/zerolog/log"
 )
@@ -49,5 +51,20 @@ func Load(args *CommandLineArgs) (Storage, error) {
 		return NewFileStorage(args)
 	}
 
-	return nil, derp.Internal(location, "Invalid configuration location. Must be file:// or mongodb:// or mongodb+srv://", args.Location)
+	// A location can carry a password, so the error names only its scheme and host (BUG-173)
+	return nil, derp.Internal(location, "Invalid configuration location. Must be file:// or mongodb:// or mongodb+srv://", locationLabel(args.Location))
+}
+
+// locationLabel returns the scheme and host of a configuration location, or an empty string when it does not parse
+func locationLabel(location string) string {
+
+	locationURL, err := url.Parse(location)
+
+	if err != nil {
+		return ""
+	}
+
+	// Keep nothing past the host.  The userinfo holds the password, and a MongoDB
+	// query can hold more secrets, such as tlsCertificateKeyFilePassword
+	return locationURL.Scheme + "://" + locationURL.Host
 }
