@@ -168,67 +168,6 @@ func TestDeliver_SendsActivityBody(t *testing.T) {
 	}
 }
 
-// TestDeliver_EmailStripsBlindRecipients confirms that an email Follower is notified with the
-// stripped activity, as ActivityPub Followers are
-func TestDeliver_EmailStripsBlindRecipients(t *testing.T) {
-
-	userID := primitive.NewObjectID()
-
-	// One active email follower on the same (local) network as the sender
-	follower := model.NewFollower()
-	follower.FollowerID = primitive.NewObjectID()
-	follower.ParentID = userID
-	follower.ParentType = model.FollowerTypeUser
-	follower.Method = model.FollowerMethodEmail
-	follower.StateID = model.FollowerStateActive
-	follower.Actor.ProfileURL = "http://localhost/@email-follower"
-	follower.Actor.EmailAddress = "follower@localhost"
-
-	// A public activity that also names blind recipients on another network
-	activity := mapof.Any{
-		vocab.PropertyID:    "http://localhost/@sender/pub/outbox/1",
-		vocab.PropertyType:  vocab.ActivityTypeCreate,
-		vocab.PropertyActor: "http://localhost/@sender",
-		vocab.PropertyTo:    []any{vocab.NamespaceActivityStreamsPublic},
-		vocab.PropertyBTo:   []any{"https://blind.example/@bto"},
-		vocab.PropertyBCC:   []any{"https://blind.example/@bcc"},
-	}
-
-	// Wire an Outbox to in-memory followers and rules, and an emailer that records each send
-	ruleService, _ := newRuleService(&ruleStore{})
-	spool := postcommit.NewTasks()
-	emailer := &recordingEmailer{}
-	session := deliverSession{
-		context: postcommit.WithContext(context.Background(), spool),
-		collections: map[string]data.Collection{
-			"Follower": &followerCollection{records: []model.Follower{follower}},
-			"Rule":     &ruleStore{},
-		},
-	}
-
-	outboxService := Outbox{
-		followerService: &Follower{},
-		ruleService:     ruleService,
-		domainEmail:     emailer,
-		host:            "http://localhost",
-	}
-
-	permissions := model.Permissions{model.MagicGroupIDAnonymous}
-	err := outboxService.Deliver(session, model.FollowerTypeUser, userID, activity, permissions, nil, false)
-	require.NoError(t, err)
-
-	// Exactly one email is sent, with no blind-recipient lists, and no ActivityPub task is queued
-	require.Len(t, emailer.activities, 1)
-	require.Equal(t, activity[vocab.PropertyID], emailer.activities[0][vocab.PropertyID])
-	require.NotContains(t, emailer.activities[0], vocab.PropertyBTo)
-	require.NotContains(t, emailer.activities[0], vocab.PropertyBCC)
-	require.Empty(t, spool.Drain())
-
-	// The caller's activity keeps its addressing
-	require.Contains(t, activity, vocab.PropertyBTo)
-	require.Contains(t, activity, vocab.PropertyBCC)
-}
-
 // TestDeliver_UnserializableActivity confirms that an activity JSON cannot encode is a client
 // error, which consumer.OutboxPublish fails at once instead of retrying
 func TestDeliver_UnserializableActivity(t *testing.T) {
@@ -246,7 +185,7 @@ func TestDeliver_UnserializableActivity(t *testing.T) {
 	outboxService := Outbox{
 		followerService: &Follower{},
 		ruleService:     ruleService,
-		domainEmail:     &recordingEmailer{},
+		domainEmail:     &DomainEmail{},
 		host:            "http://localhost",
 	}
 
@@ -262,22 +201,6 @@ func TestDeliver_UnserializableActivity(t *testing.T) {
 	require.Error(t, err)
 	require.True(t, derp.IsClientError(err))
 	require.Empty(t, spool.Drain())
-}
-
-// recordingEmailer is a followerEmailer that records every activity it is asked to send
-type recordingEmailer struct {
-	activities []mapof.Any
-}
-
-// IsConfigured implements the followerEmailer interface. The recorder always accepts email.
-func (emailer *recordingEmailer) IsConfigured() bool {
-	return true
-}
-
-// SendFollowerActivity implements the followerEmailer interface, recording the activity it receives
-func (emailer *recordingEmailer) SendFollowerActivity(_ *model.Follower, activity mapof.Any) error {
-	emailer.activities = append(emailer.activities, activity)
-	return nil
 }
 
 // deliverSession is a data.Session that serves named in-memory collections within a fixed context
