@@ -26,5 +26,6 @@ func TestSearchQueryRoutes_DeclareNoStreamParameter(t *testing.T) {
 		require.NotContains(t, route.Path, ":stream", route.Path)
 	}
 
-	require.Equal(t, 7, found, "expected every SearchQuery actor route to be checked")
+	// Six GET routes, each with its HEAD, plus the inbox POST
+	require.Equal(t, 13, found, "expected every SearchQuery actor route to be checked")
 }

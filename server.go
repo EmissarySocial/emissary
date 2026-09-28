@@ -285,207 +285,336 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	// the route table alone.  Every handler below closes over the Factory and dereferences it only
 	// once a request arrives, so a nil Factory registers the real routes safely.
 
+	// RULE: Every GET registers a HEAD beside it (RFC 9110 s9.3.2), because Echo never derives one.
+	// Omitting HEAD does not refuse it: the request falls back into a param route at the same depth.
+	// A route that must refuse HEAD registers refuseHead explicitly.  server_routes_head_test.go checks all three.
+
 	// Common routes (but not .well-known)
-	e.GET("/robots.txt", handler.RobotsTxt)                 // https://developers.google.com/search/docs/advanced/robots/create-robots-txt
-	e.GET("/sitemap.xml", handler.TBD)                      // https://developers.google.com/search/docs/advanced/sitemaps/build-sitemap
-	e.GET("/humans.txt", handler.TBD)                       // http://humanstxt.org/
-	e.GET("/ads.txt", handler.TBD)                          // https://iabtechlab.com/standards/ads-txt/
-	e.GET("/security.txt", handler.TBD)                     // https://securitytxt.org/
-	e.GET("/poco", handler.TBD)                             // Friendica polls this route
-	e.GET("/api/**", handler.TBD)                           // Mastodon API?
-	e.GET("/favicon.ico", handler.TBD)                      // https://developer.mozilla.org/en-US/docs/Glossary/Favicon
-	e.GET("/favicon.png", handler.TBD)                      // https://developer.mozilla.org/en-US/docs/Glossary/Favicon
-	e.GET("/apple-touch-icon.png", handler.TBD)             // https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html
+	e.GET("/robots.txt", handler.RobotsTxt) // https://developers.google.com/search/docs/advanced/robots/create-robots-txt
+	e.HEAD("/robots.txt", handler.RobotsTxt)
+	e.GET("/sitemap.xml", handler.TBD) // https://developers.google.com/search/docs/advanced/sitemaps/build-sitemap
+	e.HEAD("/sitemap.xml", handler.TBD)
+	e.GET("/humans.txt", handler.TBD) // http://humanstxt.org/
+	e.HEAD("/humans.txt", handler.TBD)
+	e.GET("/ads.txt", handler.TBD) // https://iabtechlab.com/standards/ads-txt/
+	e.HEAD("/ads.txt", handler.TBD)
+	e.GET("/security.txt", handler.TBD) // https://securitytxt.org/
+	e.HEAD("/security.txt", handler.TBD)
+	e.GET("/poco", handler.TBD) // Friendica polls this route
+	e.HEAD("/poco", handler.TBD)
+	e.GET("/api/**", handler.TBD) // Mastodon API?
+	e.HEAD("/api/**", handler.TBD)
+	e.GET("/favicon.ico", handler.TBD) // https://developer.mozilla.org/en-US/docs/Glossary/Favicon
+	e.HEAD("/favicon.ico", handler.TBD)
+	e.GET("/favicon.png", handler.TBD) // https://developer.mozilla.org/en-US/docs/Glossary/Favicon
+	e.HEAD("/favicon.png", handler.TBD)
+	e.GET("/apple-touch-icon.png", handler.TBD) // https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html
+	e.HEAD("/apple-touch-icon.png", handler.TBD)
 	e.GET("/apple-touch-icon-precomposed.png", handler.TBD) // https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html
-	e.GET("/manifest.json", handler.TBD)                    // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json
+	e.HEAD("/apple-touch-icon-precomposed.png", handler.TBD)
+	e.GET("/manifest.json", handler.TBD) // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json
+	e.HEAD("/manifest.json", handler.TBD)
 
 	// NodeInfo Routes
 	e.GET("/nodeinfo/2.0", handler.WithFactory(factory, handler.GetNodeInfo20))
+	e.HEAD("/nodeinfo/2.0", handler.WithFactory(factory, handler.GetNodeInfo20))
 	e.GET("/nodeinfo/2.0.json", handler.WithFactory(factory, handler.GetNodeInfo20))
+	e.HEAD("/nodeinfo/2.0.json", handler.WithFactory(factory, handler.GetNodeInfo20))
 	e.GET("/nodeinfo/2.1", handler.WithFactory(factory, handler.GetNodeInfo21))
+	e.HEAD("/nodeinfo/2.1", handler.WithFactory(factory, handler.GetNodeInfo21))
 	e.GET("/nodeinfo/2.1.json", handler.WithFactory(factory, handler.GetNodeInfo21))
+	e.HEAD("/nodeinfo/2.1.json", handler.WithFactory(factory, handler.GetNodeInfo21))
 
 	// Built-In Service Routes
 	e.GET("/.api/actors", handler.WithAuthenticatedAPI(factory, handler.GetAPIActors))
+	e.HEAD("/.api/actors", handler.WithAuthenticatedAPI(factory, handler.GetAPIActors))
 	e.GET("/.api/collectionHeader", handler.WithAuthenticatedAPI(factory, handler.GetAPICollectionHeader))
+	e.HEAD("/.api/collectionHeader", handler.WithAuthenticatedAPI(factory, handler.GetAPICollectionHeader))
 	e.GET("/.checkout", handler.WithProduct(factory, handler.GetCheckout))
+	e.HEAD("/.checkout", handler.WithProduct(factory, handler.GetCheckout))
 	e.GET("/.checkout/response", handler.WithMerchantAccountJWT(factory, handler.GetCheckoutResponse))
+	e.HEAD("/.checkout/response", handler.WithMerchantAccountJWT(factory, handler.GetCheckoutResponse))
 	e.GET("/.echo", handler.GetEcho(factory))
+	e.HEAD("/.echo", handler.GetEcho(factory))
 	e.POST("/.follower/new", handler.WithFactory(factory, handler.PostEmailFollower))
 	e.GET("/.geocode/network", handler.WithFactory(factory, handler.GetGeocodeNetwork))
+	e.HEAD("/.geocode/network", refuseHead) // GET only: each request calls a paid IP-geolocation provider
 	e.GET("/.geocode/autocomplete", handler.WithFactory(factory, handler.GetGeocodeAutocomplete))
+	e.HEAD("/.geocode/autocomplete", handler.WithFactory(factory, handler.GetGeocodeAutocomplete))
 	e.GET("/.giphy", handler.WithFactory(factory, handler.GetGiphyWidget))
+	e.HEAD("/.giphy", handler.WithFactory(factory, handler.GetGiphyWidget))
 	e.GET("/.imported", handler.WithFactory(factory, handler.GetImportedURL))
+	e.HEAD("/.imported", handler.WithFactory(factory, handler.GetImportedURL))
 	e.GET("/.intents/discover", handler.WithFactory(factory, handler.GetIntentInfo))
+	e.HEAD("/.intents/discover", refuseHead) // GET only: each request fetches a remote actor the caller names
 	e.GET("/.intents/:intent", handler.WithFactory(factory, handler.GetOutboundIntent))
+	e.HEAD("/.intents/:intent", handler.WithFactory(factory, handler.GetOutboundIntent))
 	e.POST("/.masquerade", handler.WithOwner(factory, handler.PostMasquerade))
 	e.POST("/.mailchimp/webhook/:userConnectionId", handler.WithFactory(factory, handler.PostMailchimpWebhook))
 	e.GET("/.oembed", handler.WithFactory(factory, handler.GetOEmbed))
+	e.HEAD("/.oembed", handler.WithFactory(factory, handler.GetOEmbed))
 	e.POST("/.ostatus/discover", handler.WithFactory(factory, handler.PostOStatusDiscover))
 	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
+	e.HEAD("/.ostatus/tunnel", handler.GetFollowingTunnel)
 	e.POST("/.proxy", handler.WithAuthenticatedUser(factory, handler.PostProxyURL))
 	e.GET("/.searchTag/:searchTagId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetSearchTagAttachment))
+	e.HEAD("/.searchTag/:searchTagId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetSearchTagAttachment))
 	e.GET("/.sso", handler.WithDomain(factory, handler.GetSingleSignOn))
+	e.HEAD("/.sso", handler.WithDomain(factory, handler.GetSingleSignOn))
 	e.POST("/.streamsource/webhook/:token", handler.WithFactory(factory, handler.PostStreamSourceWebhook))
 	// e.GET("/.stripe/connect", handler.WithAuthenticatedUser(factory, handler.GetStripe)) // Replaced with Stripe Connect
 	// e.POST("/.stripe/webhook/signup", handler.WithDomain(factory, stripe.PostSignupWebhook))
 	// e.POST("/.stripe/webhook/checkout", handler.WithMerchantAccount(factory, handler.PostStripeWebhook_Checkout))
 	e.GET("/.stripe-connect/connect", handler.WithAuthenticatedUser(factory, handler.GetStripeConnect))
+	e.HEAD("/.stripe-connect/connect", handler.WithAuthenticatedUser(factory, handler.GetStripeConnect))
 	e.POST("/.stripe-connect/webhook/signup", handler.WithDomain(factory, stripe.PostSignupWebhook))
 	e.POST("/.stripe-connect/webhook/checkout", handler.WithConnection(model.ConnectionProviderStripeConnect, factory, handler.PostStripeConnectWebhook_Checkout))
 	e.GET("/.themes/:themeId/:bundleId", handler.GetThemeBundle(factory))
+	e.HEAD("/.themes/:themeId/:bundleId", handler.GetThemeBundle(factory))
 	e.GET("/.themes/:themeId/resources/:filename", handler.GetThemeResource(factory))
+	e.HEAD("/.themes/:themeId/resources/:filename", handler.GetThemeResource(factory))
 	e.GET("/.templates/:templateId/:bundleId", handler.GetTemplateBundle(factory))
+	e.HEAD("/.templates/:templateId/:bundleId", handler.GetTemplateBundle(factory))
 	e.GET("/.templates/:templateId/resources/:filename", handler.GetTemplateResource(factory))
+	e.HEAD("/.templates/:templateId/resources/:filename", handler.GetTemplateResource(factory))
 	e.GET("/.unsplash/photos/:photo", handler.WithFactory(factory, unsplash.GetPhoto))
+	e.HEAD("/.unsplash/photos/:photo", refuseHead) // GET only: each request spends Unsplash API quota
 	e.GET("/.unsplash/collections/:collection/random", handler.WithFactory(factory, unsplash.GetCollectionRandom))
+	e.HEAD("/.unsplash/collections/:collection/random", refuseHead) // GET only: each request spends Unsplash API quota
 	e.GET("/.validate/signupCode", handler.WithFactory(factory, handler.GetValidateSignupCode))
+	e.HEAD("/.validate/signupCode", handler.WithFactory(factory, handler.GetValidateSignupCode))
 	e.GET("/.validate/stream/token", handler.WithFactory(factory, handler.GetValidateStreamToken))
+	e.HEAD("/.validate/stream/token", handler.WithFactory(factory, handler.GetValidateStreamToken))
 	e.GET("/.validate/group/token", handler.WithOwner(factory, handler.GetValidateGroupToken))
+	e.HEAD("/.validate/group/token", handler.WithOwner(factory, handler.GetValidateGroupToken))
 	e.GET("/.validate/user/username", handler.WithFactory(factory, handler.GetValidateUsername))
+	e.HEAD("/.validate/user/username", handler.WithFactory(factory, handler.GetValidateUsername))
 	e.GET("/.validate/user/exists", handler.WithAuthenticatedUser(factory, handler.GetValidateUserExists))
+	e.HEAD("/.validate/user/exists", handler.WithAuthenticatedUser(factory, handler.GetValidateUserExists))
 	e.GET("/.validate/folder/name", handler.WithAuthenticatedUser(factory, handler.GetValidateFoldername))
+	e.HEAD("/.validate/folder/name", handler.WithAuthenticatedUser(factory, handler.GetValidateFoldername))
 	e.GET("/.validate/circle/name", handler.WithAuthenticatedUser(factory, handler.GetValidateCirclename))
+	e.HEAD("/.validate/circle/name", handler.WithAuthenticatedUser(factory, handler.GetValidateCirclename))
 	e.GET("/.web-push-worker.js", handler.GetWebPushWorker) // Web Push service worker (must be served from site root for full scope)
+	e.HEAD("/.web-push-worker.js", handler.GetWebPushWorker)
 	e.GET("/.widgets/:widgetId/:bundleId", handler.GetWidgetBundle(factory))
+	e.HEAD("/.widgets/:widgetId/:bundleId", handler.GetWidgetBundle(factory))
 	e.GET("/.widgets/:widgetId/resources/:filename", handler.GetWidgetResource(factory))
+	e.HEAD("/.widgets/:widgetId/resources/:filename", handler.GetWidgetResource(factory))
 
 	// Well-Known Routes https://en.wikipedia.org/wiki/List_of_/.well-known/_services_offered_by_webservers
 	e.GET("/.well-known/atproto-did", handler.GetBlueskyDID(factory))
+	e.HEAD("/.well-known/atproto-did", handler.GetBlueskyDID(factory))
 	e.GET("/.well-known/change-password", handler.GetChangePassword(factory))
+	e.HEAD("/.well-known/change-password", handler.GetChangePassword(factory))
 	e.GET("/.well-known/host-meta", handler.GetHostMeta(factory))
+	e.HEAD("/.well-known/host-meta", handler.GetHostMeta(factory))
 	e.GET("/.well-known/host-meta.json", handler.GetHostMetaJSON(factory))
+	e.HEAD("/.well-known/host-meta.json", handler.GetHostMetaJSON(factory))
 	e.GET("/.well-known/webfinger", handler.WithFactory(factory, handler.GetWebfinger))
+	e.HEAD("/.well-known/webfinger", handler.WithFactory(factory, handler.GetWebfinger))
 	e.GET("/.well-known/nodeinfo", handler.WithFactory(factory, handler.GetNodeInfo))
+	e.HEAD("/.well-known/nodeinfo", handler.WithFactory(factory, handler.GetNodeInfo))
 	e.GET("/.well-known/nodeinfo/2.0", handler.WithFactory(factory, handler.GetNodeInfo20))
+	e.HEAD("/.well-known/nodeinfo/2.0", handler.WithFactory(factory, handler.GetNodeInfo20))
 	e.GET("/.well-known/nodeinfo/2.1", handler.WithFactory(factory, handler.GetNodeInfo21))
+	e.HEAD("/.well-known/nodeinfo/2.1", handler.WithFactory(factory, handler.GetNodeInfo21))
 	e.GET("/.well-known/oauth-authorization-server", handler.WithFactory(factory, handler.GetOAuthWellKnown))
+	e.HEAD("/.well-known/oauth-authorization-server", handler.WithFactory(factory, handler.GetOAuthWellKnown))
 	e.GET("/.well-known/openid-configuration", handler.WithFactory(factory, handler.GetOAuthWellKnown))
+	e.HEAD("/.well-known/openid-configuration", handler.WithFactory(factory, handler.GetOAuthWellKnown))
 	e.GET("/.well-known/security.txt", handler.TBD) // https://securitytxt.org/
-	e.GET("/.well-known/x-nodeinfo2", handler.TBD)  // Friendica polls this route
+	e.HEAD("/.well-known/security.txt", handler.TBD)
+	e.GET("/.well-known/x-nodeinfo2", handler.TBD) // Friendica polls this route
+	e.HEAD("/.well-known/x-nodeinfo2", handler.TBD)
 
 	// Authentication Pages
 	e.GET("/signin", handler.WithFactory(factory, handler.GetSignIn))
+	e.HEAD("/signin", handler.WithFactory(factory, handler.GetSignIn))
 	e.POST("/signin", handler.WithFactory(factory, handler.PostSignIn))
 	e.GET("/signin/reset", handler.WithFactory(factory, handler.GetResetPassword))
+	e.HEAD("/signin/reset", handler.WithFactory(factory, handler.GetResetPassword))
 	e.POST("/signin/reset", handler.WithFactory(factory, handler.PostResetPassword))
 	e.GET("/signin/reset-code", handler.WithFactory(factory, handler.GetResetCode))
+	e.HEAD("/signin/reset-code", handler.WithFactory(factory, handler.GetResetCode))
 	e.POST("/signin/reset-code", handler.WithFactory(factory, handler.PostResetCode))
 	e.GET("/signout", handler.WithFactory(factory, handler.GetSignOut))
+	e.HEAD("/signout", handler.WithFactory(factory, handler.GetSignOut))
 	e.POST("/signout", handler.WithFactory(factory, handler.PostSignOut))
 	e.GET("/register", handler.WithRegistration(factory, handler.GetRegister))
+	e.HEAD("/register", handler.WithRegistration(factory, handler.GetRegister))
 	e.GET("/register/:action", handler.WithRegistration(factory, handler.GetRegister))
+	e.HEAD("/register/:action", handler.WithRegistration(factory, handler.GetRegister))
 	e.POST("/register", handler.WithRegistration(factory, handler.PostRegister))
 	e.GET("/register/complete", handler.WithRegistration(factory, handler.GetCompleteRegistration))
+	e.HEAD("/register/complete", handler.WithRegistration(factory, handler.GetCompleteRegistration))
 	e.POST("/register/update", handler.WithRegistration(factory, handler.PostRegister))
 
 	// Domain Pages
 	e.GET("/.domain/attachments/:attachmentId", handler.WithFactory(factory, handler.GetDomainAttachment))
+	e.HEAD("/.domain/attachments/:attachmentId", handler.WithFactory(factory, handler.GetDomainAttachment))
 
 	// Stream Pages
-	e.HEAD("/", handler.GetHome(factory))
 	e.GET("/", handler.GetHome(factory))
+	e.HEAD("/", handler.GetHome(factory))
 	e.HEAD("/:stream", handler.WithStream(factory, handler.HeadStream))
 	e.GET("/:stream", handler.WithTemplate(factory, handler.GetStream))
 	e.GET("/:stream/:action", handler.WithTemplate(factory, handler.GetStreamWithAction))
+	e.HEAD("/:stream/:action", handler.WithTemplate(factory, handler.GetStreamWithAction))
 	e.POST("/:stream/:action", handler.WithTemplate(factory, handler.PostStreamWithAction))
 	e.DELETE("/:stream", handler.WithTemplate(factory, handler.PostStreamWithAction))
 
 	// Hard-coded routes for additional stream services
 	e.GET("/:stream/attachments/:attachmentId", handler.WithStream(factory, handler.GetStreamAttachment))
+	e.HEAD("/:stream/attachments/:attachmentId", handler.WithStream(factory, handler.GetStreamAttachment))
 	e.GET("/:stream/qrcode", handler.WithStream(factory, handler.GetQRCode_Stream))
+	e.HEAD("/:stream/qrcode", handler.WithStream(factory, handler.GetQRCode_Stream))
 	e.GET("/:stream/sse", handler.WithStream(factory, handler.ServerSentEvent_Stream))
+	e.HEAD("/:stream/sse", handler.WithStream(factory, handler.ServerSentEvent_Stream))
 	e.GET("/:stream/sse/updated", handler.WithStream(factory, handler.ServerSentEvent_Stream_Updated))
+	e.HEAD("/:stream/sse/updated", handler.WithStream(factory, handler.ServerSentEvent_Stream_Updated))
 	e.GET("/:stream/sse/child-updated", handler.WithStream(factory, handler.ServerSentEvent_Stream_ChildUpdated))
+	e.HEAD("/:stream/sse/child-updated", handler.WithStream(factory, handler.ServerSentEvent_Stream_ChildUpdated))
 	e.GET("/:stream/sse/new-replies", handler.WithStream(factory, handler.ServerSentEvent_Stream_NewReplies))
+	e.HEAD("/:stream/sse/new-replies", handler.WithStream(factory, handler.ServerSentEvent_Stream_NewReplies))
 	e.GET("/:stream/sse/stream-source-updated", handler.WithStream(factory, handler.ServerSentEvent_Stream_StreamSourceUpdated))
+	e.HEAD("/:stream/sse/stream-source-updated", handler.WithStream(factory, handler.ServerSentEvent_Stream_StreamSourceUpdated))
 
 	e.GET("/:objectId/sse/import-progress", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Object_ImportProgress))
+	e.HEAD("/:objectId/sse/import-progress", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Object_ImportProgress))
 
 	// ActivityPub Routes for Streams
 	e.GET("/:stream/pub", handler.WithTemplate(factory, ap_stream.GetJSONLD))
+	e.HEAD("/:stream/pub", handler.WithTemplate(factory, ap_stream.GetJSONLD))
 	e.GET("/:stream/pub/children", handler.WithStream(factory, ap_stream.GetChildrenCollection))
+	e.HEAD("/:stream/pub/children", handler.WithStream(factory, ap_stream.GetChildrenCollection))
 	e.GET("/:stream/pub/dislikes", handler.WithStream(factory, ap_stream.GetDislikesCollection))
+	e.HEAD("/:stream/pub/dislikes", handler.WithStream(factory, ap_stream.GetDislikesCollection))
 	e.GET("/:stream/pub/followers", handler.WithTemplate(factory, ap_stream.GetFollowersCollection))
+	e.HEAD("/:stream/pub/followers", handler.WithTemplate(factory, ap_stream.GetFollowersCollection))
 	e.POST("/:stream/pub/inbox", handler.WithTemplate(factory, ap_stream.PostInbox))
 	e.GET("/:stream/pub/likes", handler.WithStream(factory, ap_stream.GetLikesCollection))
+	e.HEAD("/:stream/pub/likes", handler.WithStream(factory, ap_stream.GetLikesCollection))
 	e.GET("/:stream/pub/outbox", handler.WithTemplate(factory, ap_stream.GetOutboxCollection))
+	e.HEAD("/:stream/pub/outbox", handler.WithTemplate(factory, ap_stream.GetOutboxCollection))
 	e.GET("/:stream/pub/outbox/:messageId", handler.WithTemplate(factory, ap_stream.GetOutboxMessage))
+	e.HEAD("/:stream/pub/outbox/:messageId", handler.WithTemplate(factory, ap_stream.GetOutboxMessage))
 	e.GET("/:stream/pub/replies", handler.WithActorAndStream(factory, ap_stream.GetRepliesCollection))
+	e.HEAD("/:stream/pub/replies", handler.WithActorAndStream(factory, ap_stream.GetRepliesCollection))
 	e.GET("/:stream/pub/shares", handler.WithStream(factory, ap_stream.GetSharesCollection))
+	e.HEAD("/:stream/pub/shares", handler.WithStream(factory, ap_stream.GetSharesCollection))
 
 	// ActivityPub pages for the application actor
 	e.GET("/@application", handler.WithFactory(factory, handler.GetApplicationActor))
+	e.HEAD("/@application", handler.WithFactory(factory, handler.GetApplicationActor))
 	e.POST("/@application/inbox", handler.PostApplicationActor_Inbox(factory))
 	e.GET("/@application/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.HEAD("/@application/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@application/outbox", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.HEAD("/@application/outbox", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@application/following", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.HEAD("/@application/following", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@application/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.HEAD("/@application/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@application/liked", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.HEAD("/@application/liked", handler.WithFactory(factory, handler.GetEmptyCollection))
 
 	// Aliases for @service even though we use @application instead
 	e.GET("/@service", handler.WithFactory(factory, handler.GetApplicationActor))
+	e.HEAD("/@service", handler.WithFactory(factory, handler.GetApplicationActor))
 	e.POST("/@service/inbox", handler.PostApplicationActor_Inbox(factory))
 	e.GET("/@service/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.HEAD("/@service/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@service/outbox", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.HEAD("/@service/outbox", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@service/following", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.HEAD("/@service/following", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@service/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.HEAD("/@service/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@service/liked", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.HEAD("/@service/liked", handler.WithFactory(factory, handler.GetEmptyCollection))
 
 	// Profile Pages for "me" only routes
 	e.GET("/@me", handler.WithAuthenticatedUser(factory, handler.ForwardMeURLs))
+	e.HEAD("/@me", handler.WithAuthenticatedUser(factory, handler.ForwardMeURLs))
 	e.POST("/@me/delete", handler.WithAuthenticatedUser(factory, handler.PostProfileDelete))
 
 	e.GET("/@me/conversations", handler.WithAuthenticatedUser(factory, handler.GetConversations))
+	e.HEAD("/@me/conversations", handler.WithAuthenticatedUser(factory, handler.GetConversations))
 	e.POST("/@me/conversations", handler.WithAuthenticatedUser(factory, handler.PostConversations))
 	e.GET("/@me/conversations/:action", handler.WithAuthenticatedUser(factory, handler.GetConversations))
+	e.HEAD("/@me/conversations/:action", handler.WithAuthenticatedUser(factory, handler.GetConversations))
 	e.POST("/@me/conversations/:action", handler.WithAuthenticatedUser(factory, handler.PostConversations))
 	e.GET("/@me/newsfeed", handler.WithAuthenticatedUser(factory, handler.GetNewsfeed))
+	e.HEAD("/@me/newsfeed", handler.WithAuthenticatedUser(factory, handler.GetNewsfeed))
 	e.POST("/@me/newsfeed", handler.WithAuthenticatedUser(factory, handler.PostNewsfeed))
 	e.GET("/@me/newsfeed/:action", handler.WithAuthenticatedUser(factory, handler.GetNewsfeed))
+	e.HEAD("/@me/newsfeed/:action", handler.WithAuthenticatedUser(factory, handler.GetNewsfeed))
 	e.POST("/@me/newsfeed/:action", handler.WithAuthenticatedUser(factory, handler.PostNewsfeed))
 
 	e.GET("/@me/notifications", handler.WithAuthenticatedUser(factory, handler.GetNotifications))
+	e.HEAD("/@me/notifications", handler.WithAuthenticatedUser(factory, handler.GetNotifications))
 	e.POST("/@me/notifications", handler.WithAuthenticatedUser(factory, handler.PostNotifications))
 	e.GET("/@me/notifications/:action", handler.WithAuthenticatedUser(factory, handler.GetNotifications))
+	e.HEAD("/@me/notifications/:action", handler.WithAuthenticatedUser(factory, handler.GetNotifications))
 	e.POST("/@me/notifications/:action", handler.WithAuthenticatedUser(factory, handler.PostNotifications))
 
 	e.GET("/@me/outbox", handler.WithAuthenticatedUser(factory, ap_user.GetOutboxCollection))
+	e.HEAD("/@me/outbox", handler.WithAuthenticatedUser(factory, ap_user.GetOutboxCollection))
 	e.POST("/@me/outbox", handler.WithAuthenticatedUser(factory, ap_user.PostOutbox))
 	e.POST("/@me/push-subscriptions", handler.WithAuthenticatedUser(factory, handler.PostPushSubscription))
 	e.DELETE("/@me/push-subscriptions", handler.WithAuthenticatedUser(factory, handler.DeletePushSubscription))
 	e.GET("/@me/settings", handler.WithAuthenticatedUser(factory, handler.GetSettings))
+	e.HEAD("/@me/settings", handler.WithAuthenticatedUser(factory, handler.GetSettings))
 	e.POST("/@me/settings", handler.WithAuthenticatedUser(factory, handler.PostSettings))
 	e.GET("/@me/settings/:action", handler.WithAuthenticatedUser(factory, handler.GetSettings))
+	e.HEAD("/@me/settings/:action", handler.WithAuthenticatedUser(factory, handler.GetSettings))
 	e.POST("/@me/settings/:action", handler.WithAuthenticatedUser(factory, handler.PostSettings))
 
 	e.GET("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.GetIntent_Create))
+	e.HEAD("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.GetIntent_Create))
 	e.POST("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.PostIntent_Create))
 	e.GET("/@me/intent/dislike", handler.WithAuthenticatedUser(factory, handler.GetIntent_Dislike))
+	e.HEAD("/@me/intent/dislike", handler.WithAuthenticatedUser(factory, handler.GetIntent_Dislike))
 	e.POST("/@me/intent/dislike", handler.WithAuthenticatedUser(factory, handler.PostIntent_Dislike))
 	e.GET("/@me/intent/follow", handler.WithAuthenticatedUser(factory, handler.GetIntent_Follow))
+	e.HEAD("/@me/intent/follow", handler.WithAuthenticatedUser(factory, handler.GetIntent_Follow))
 	e.POST("/@me/intent/follow", handler.WithAuthenticatedUser(factory, handler.PostIntent_Follow))
 	e.GET("/@me/intent/like", handler.WithAuthenticatedUser(factory, handler.GetIntent_Like))
+	e.HEAD("/@me/intent/like", handler.WithAuthenticatedUser(factory, handler.GetIntent_Like))
 	e.POST("/@me/intent/like", handler.WithAuthenticatedUser(factory, handler.PostIntent_Like))
 	e.GET("/@me/intent/continue", handler.WithAuthenticatedUser(factory, handler.GetIntent_Continue))
+	e.HEAD("/@me/intent/continue", handler.WithAuthenticatedUser(factory, handler.GetIntent_Continue))
 
 	e.GET("/@me/sse", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me))
+	e.HEAD("/@me/sse", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me))
 	e.GET("/@me/sse/updated", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Updated))
+	e.HEAD("/@me/sse/updated", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Updated))
 	e.GET("/@me/sse/following-updated", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_FollowingUpdated))
+	e.HEAD("/@me/sse/following-updated", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_FollowingUpdated))
 	e.GET("/@me/sse/inbox", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Inbox))
+	e.HEAD("/@me/sse/inbox", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Inbox))
 	e.GET("/@me/sse/inbox/direct-messages", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Inbox_DirectMessage))
+	e.HEAD("/@me/sse/inbox/direct-messages", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Inbox_DirectMessage))
 	e.GET("/@me/sse/inbox/direct-messages/mls", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Inbox_DirectMessage_MLS))
+	e.HEAD("/@me/sse/inbox/direct-messages/mls", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Inbox_DirectMessage_MLS))
 	e.GET("/@me/sse/notifications", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Notifications))
+	e.HEAD("/@me/sse/notifications", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me_Notifications))
 
 	e.GET("/@guest", handler.WithIdentity(factory, handler.GetIdentity))
+	e.HEAD("/@guest", handler.WithIdentity(factory, handler.GetIdentity))
 	e.POST("/@guest", handler.WithIdentity(factory, handler.PostIdentity))
 	e.GET("/@guest/delete/:privilegeId", handler.WithPrivilege(factory, handler.GetPrivilegeDelete))
+	e.HEAD("/@guest/delete/:privilegeId", handler.WithPrivilege(factory, handler.GetPrivilegeDelete))
 	e.POST("/@guest/delete/:privilegeId", handler.WithPrivilege(factory, handler.PostPrivilegeDelete))
 	e.GET("/@guest/:action", handler.WithIdentity(factory, handler.GetIdentity))
+	e.HEAD("/@guest/:action", handler.WithIdentity(factory, handler.GetIdentity))
 	e.POST("/@guest/:action", handler.WithIdentity(factory, handler.PostIdentity))
 	e.GET("/@guest/signin", handler.WithFactory(factory, handler.GetIdentitySignin))
+	e.HEAD("/@guest/signin", handler.WithFactory(factory, handler.GetIdentitySignin))
 	e.POST("/@guest/signin", handler.WithFactory(factory, handler.PostIdentitySignin))
 	e.GET("/@guest/signin/:jwt", handler.WithFactory(factory, handler.GetIdentitySigninWithJWT))
+	e.HEAD("/@guest/signin/:jwt", handler.WithFactory(factory, handler.GetIdentitySigninWithJWT))
 	e.POST("/@guest/identifier", handler.WithIdentity(factory, handler.PostIdentityIdentifier))
 
 	// Global Search Actor (ActivityPub)
@@ -493,33 +622,48 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	// must answer GET.  They were registered as POST until BUG-24; GetEmptyCollection is a read
 	// handler, and a POST to a followers collection is meaningless for an actor that accepts no C2S.
 	e.GET("/@search", handler.WithFactory(factory, ap_domain.GetJSONLD))
+	e.HEAD("/@search", handler.WithFactory(factory, ap_domain.GetJSONLD))
 	e.GET("/@search/pub/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.HEAD("/@search/pub/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@search/pub/following", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.HEAD("/@search/pub/following", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@search/pub/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.HEAD("/@search/pub/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.POST("/@search/pub/inbox", handler.WithFactory(factory, ap_domain.PostInbox))
 	e.GET("/@search/pub/outbox", handler.WithFactory(factory, ap_domain.GetOutboxCollection))
+	e.HEAD("/@search/pub/outbox", handler.WithFactory(factory, ap_domain.GetOutboxCollection))
 	e.GET("/@search/pub/outbox/:searchResultId", handler.WithFactory(factory, ap_domain.GetOutboxMessage))
+	e.HEAD("/@search/pub/outbox/:searchResultId", handler.WithFactory(factory, ap_domain.GetOutboxMessage))
 
 	// Search Query Routes (ActivityPub)
 	// RULE: These routes must mirror the @search routes above, verb for verb.  The two actors are
 	// the same type and must give the same answer to the same request (BUG-24).
 	e.POST("/.searchQuery", handler.WithFactory(factory, handler.PostSearchLookup))
 	e.GET("/@search_:searchId", handler.WithSearchQuery(factory, ap_search.GetJSONLD))
+	e.HEAD("/@search_:searchId", handler.WithSearchQuery(factory, ap_search.GetJSONLD))
 	e.GET("/@search_:searchId/pub/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.HEAD("/@search_:searchId/pub/followers", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@search_:searchId/pub/following", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.HEAD("/@search_:searchId/pub/following", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.GET("/@search_:searchId/pub/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
+	e.HEAD("/@search_:searchId/pub/inbox", handler.WithFactory(factory, handler.GetEmptyCollection))
 	e.POST("/@search_:searchId/pub/inbox", handler.WithSearchQuery(factory, ap_search.PostInbox))
 	e.GET("/@search_:searchId/pub/outbox", handler.WithSearchQuery(factory, ap_search.GetOutboxCollection))
+	e.HEAD("/@search_:searchId/pub/outbox", handler.WithSearchQuery(factory, ap_search.GetOutboxCollection))
 	e.GET("/@search_:searchId/pub/outbox/:searchResultId", handler.WithSearchQuery(factory, ap_search.GetOutboxMessage))
+	e.HEAD("/@search_:searchId/pub/outbox/:searchResultId", handler.WithSearchQuery(factory, ap_search.GetOutboxMessage))
 
 	// Routes for Users
 	e.HEAD("/@:userId", handler.WithUser(factory, handler.HeadOutbox)) // NOSONAR (don't need constants for server routes.)
 	e.GET("/@:userId", handler.WithUserForwarding(factory, handler.GetOutbox))
 	e.POST("/@:userId", handler.WithUser(factory, handler.PostOutbox))
 	e.GET("/@:userId/:action", handler.WithUser(factory, handler.GetOutbox))
+	e.HEAD("/@:userId/:action", handler.WithUser(factory, handler.GetOutbox))
 	e.POST("/@:userId/:action", handler.WithUser(factory, handler.PostOutbox))
 	e.GET("/@:userId/attachments/:attachmentId", handler.WithUser(factory, handler.GetUserAttachment))
+	e.HEAD("/@:userId/attachments/:attachmentId", handler.WithUser(factory, handler.GetUserAttachment))
 	e.GET("/@:userId/qrcode", handler.WithUser(factory, handler.GetQRCode_User))
+	e.HEAD("/@:userId/qrcode", handler.WithUser(factory, handler.GetQRCode_User))
 
 	// DEPRECATED: Backwards-compatible alias for "/@me/sse".  Pages built before BUG-003234 moved
 	// the SSE routes still name the User in the URL, and they reconnect forever.  Without this
@@ -528,36 +672,60 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	// the unauthenticated-subscription hole that BUG-003234 closed.  Remove once those pages
 	// (and third-party skins) have aged out.
 	e.GET("/@:userId/sse", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me))
+	e.HEAD("/@:userId/sse", handler.WithAuthenticatedUser(factory, handler.ServerSentEvent_Me))
 
 	// Export Routes for Users
 	e.GET("/@:userId/export", handler.NotFound)
+	e.HEAD("/@:userId/export", handler.NotFound)
 	e.POST("/@:userId/export/start", handler.WithOAuthUser(factory, handler.PostUserExportStart))
 	e.POST("/@:userId/export/finish", handler.WithAuthenticatedUser(factory, handler.PostUserExportFinish))
 	e.GET("/@:userId/export/complete", handler.WithFactory(factory, handler.GetUserExportComplete))
+	e.HEAD("/@:userId/export/complete", handler.WithFactory(factory, handler.GetUserExportComplete))
 	e.GET("/@:userId/export/:collection", handler.WithOAuthUser(factory, handler.GetUserExportCollection))
+	e.HEAD("/@:userId/export/:collection", handler.WithOAuthUser(factory, handler.GetUserExportCollection))
 	e.GET("/@:userId/export/:collection/:recordId", handler.WithOAuthUser(factory, handler.GetUserExportDocument))
+	e.HEAD("/@:userId/export/:collection/:recordId", handler.WithOAuthUser(factory, handler.GetUserExportDocument))
 	e.GET("/@:userId/export/emissary-stream/:streamId/attachments", handler.WithOAuthUserStream(factory, handler.GetAttachmentsExportCollection))
+	e.HEAD("/@:userId/export/emissary-stream/:streamId/attachments", handler.WithOAuthUserStream(factory, handler.GetAttachmentsExportCollection))
 	e.GET("/@:userId/export/emissary-stream/:streamId/attachments/:attachmentId", handler.WithOAuthUserStream(factory, handler.GetAttachmentsExportDocument))
+	e.HEAD("/@:userId/export/emissary-stream/:streamId/attachments/:attachmentId", handler.WithOAuthUserStream(factory, handler.GetAttachmentsExportDocument))
+	// GET only: ServeOriginal copies the whole file, so a HEAD here would read it just to discard it
 	e.GET("/@:userId/export/emissary-stream/:streamId/attachments/:attachmentId/original", handler.WithOAuthUserStream(factory, handler.GetAttachmentsExportOriginal))
+	e.HEAD("/@:userId/export/emissary-stream/:streamId/attachments/:attachmentId/original", refuseHead)
 
 	// ActivityPub Routes for Users
 	e.GET("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))
+	e.HEAD("/@:userId/pub", handler.WithUser(factory, handler.GetOutbox))
 	e.GET("/@:userId/pub/collections/:collectionId", handler.WithActorAndUser(factory, ap_user.GetCollection))
+	e.HEAD("/@:userId/pub/collections/:collectionId", handler.WithActorAndUser(factory, ap_user.GetCollection))
 	e.GET("/@:userId/pub/featured", handler.WithUser(factory, ap_user.GetFeaturedCollection))
+	e.HEAD("/@:userId/pub/featured", handler.WithUser(factory, ap_user.GetFeaturedCollection))
 	e.GET("/@:userId/pub/followers", handler.WithUser(factory, ap_user.GetFollowersCollection))
+	e.HEAD("/@:userId/pub/followers", handler.WithUser(factory, ap_user.GetFollowersCollection))
 	e.GET("/@:userId/pub/following", handler.WithUser(factory, ap_user.GetFollowingCollection))
+	e.HEAD("/@:userId/pub/following", handler.WithUser(factory, ap_user.GetFollowingCollection))
 	e.GET("/@:userId/pub/following/:followingId", handler.WithUser(factory, ap_user.GetFollowingRecord))
+	e.HEAD("/@:userId/pub/following/:followingId", handler.WithUser(factory, ap_user.GetFollowingRecord))
 	e.GET("/@:userId/pub/inbox", handler.WithAuthenticatedUser(factory, ap_user.GetInboxCollection))
+	e.HEAD("/@:userId/pub/inbox", handler.WithAuthenticatedUser(factory, ap_user.GetInboxCollection))
 	e.GET("/@:userId/pub/inbox/direct-messages", handler.WithAuthenticatedUser(factory, ap_user.GetInboxCollection_DirectMessages))
+	e.HEAD("/@:userId/pub/inbox/direct-messages", handler.WithAuthenticatedUser(factory, ap_user.GetInboxCollection_DirectMessages))
 	e.GET("/@:userId/pub/inbox/direct-messages/mls", handler.WithAuthenticatedUser(factory, ap_user.GetInboxCollection_DirectMessages_MLS))
+	e.HEAD("/@:userId/pub/inbox/direct-messages/mls", handler.WithAuthenticatedUser(factory, ap_user.GetInboxCollection_DirectMessages_MLS))
 	e.POST("/@:userId/pub/inbox", handler.WithUser(factory, ap_user.PostInbox))
 	e.GET("/@:userId/pub/keyPackages", handler.WithUser(factory, ap_user.GetKeyPackageCollection))
+	e.HEAD("/@:userId/pub/keyPackages", handler.WithUser(factory, ap_user.GetKeyPackageCollection))
 	e.GET("/@:userId/pub/keyPackages/:keyPackageId", handler.WithUser(factory, ap_user.GetKeyPackageRecord))
+	e.HEAD("/@:userId/pub/keyPackages/:keyPackageId", handler.WithUser(factory, ap_user.GetKeyPackageRecord))
 	e.GET("/@:userId/pub/objects", handler.WithUser(factory, ap_user.GetObjectsCollection))
+	e.HEAD("/@:userId/pub/objects", handler.WithUser(factory, ap_user.GetObjectsCollection))
 	e.GET("/@:userId/pub/objects/:objectId", handler.WithActor(factory, ap_user.GetObject))
+	e.HEAD("/@:userId/pub/objects/:objectId", handler.WithActor(factory, ap_user.GetObject))
 	e.GET("/@:userId/pub/outbox", handler.WithUser(factory, ap_user.GetOutboxCollection))
+	e.HEAD("/@:userId/pub/outbox", handler.WithUser(factory, ap_user.GetOutboxCollection))
 	e.POST("/@:userId/pub/outbox", handler.WithAuthenticatedUser(factory, ap_user.PostOutbox))
 	e.GET("/@:userId/pub/outbox/:messageId", handler.WithUser(factory, ap_user.GetOutboxActivity))
+	e.HEAD("/@:userId/pub/outbox/:messageId", handler.WithUser(factory, ap_user.GetOutboxActivity))
 	e.POST("/@:userId/pub/proxy", handler.WithAuthenticatedUser(factory, handler.PostProxyURL))
 
 	// Removed these routes for now...
@@ -568,11 +736,15 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// Domain Admin Pages
 	e.GET("/admin", handler.RedirectTo("/admin/domain/index"))
+	e.HEAD("/admin", handler.RedirectTo("/admin/domain/index"))
 	e.GET("/admin/:param1", handler.WithOwner(factory, handler.GetAdmin))
+	e.HEAD("/admin/:param1", handler.WithOwner(factory, handler.GetAdmin))
 	e.POST("/admin/:param1", handler.WithOwner(factory, handler.PostAdmin))
 	e.GET("/admin/:param1/:param2", handler.WithOwner(factory, handler.GetAdmin))
+	e.HEAD("/admin/:param1/:param2", handler.WithOwner(factory, handler.GetAdmin))
 	e.POST("/admin/:param1/:param2", handler.WithOwner(factory, handler.PostAdmin))
 	e.GET("/admin/:param1/:param2/:param3", handler.WithOwner(factory, handler.GetAdmin))
+	e.HEAD("/admin/:param1/:param2/:param3", handler.WithOwner(factory, handler.GetAdmin))
 	e.POST("/admin/:param1/:param2/:param3", handler.WithOwner(factory, handler.PostAdmin))
 	e.POST("/admin/reindex-activitystream-cache", handler.WithOwner(factory, handler.ReIndexActivityStreamCache))
 	e.POST("/admin/index-all-streams", handler.WithOwner(factory, handler.IndexAllStreams))
@@ -581,25 +753,40 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 
 	// Startup Wizard
 	e.GET("/startup", handler.WithOwner(factory, handler.GetStartup))
+	e.HEAD("/startup", handler.WithOwner(factory, handler.GetStartup))
 	e.GET("/startup/:action", handler.WithOwner(factory, handler.GetStartup))
+	e.HEAD("/startup/:action", handler.WithOwner(factory, handler.GetStartup))
 	e.POST("/startup", handler.WithOwner(factory, handler.PostStartup))
 	e.POST("/startup/:action", handler.WithOwner(factory, handler.PostStartup))
 
 	// OAuth Client Connections
 	e.GET("/oauth/metadata", handler.WithFactory(factory, handler.GetOAuthClientMetadata))
+	e.HEAD("/oauth/metadata", handler.WithFactory(factory, handler.GetOAuthClientMetadata))
 	e.GET("/oauth/clients/:provider", handler.WithOwner(factory, handler.GetOAuth))
+	e.HEAD("/oauth/clients/:provider", handler.WithOwner(factory, handler.GetOAuth))
+	// GET only: the callback exchanges its one-time code, and AllowCSR special-cases GET alone
 	e.GET("/oauth/clients/:provider/callback", handler.WithOwner(factory, handler.GetOAuthCallback), mw.AllowCSR)
+	e.HEAD("/oauth/clients/:provider/callback", refuseHead)
 	e.GET("/oauth/clients/import/callback", handler.WithAuthenticatedUser(factory, handler.GetOAuthImportCallback))
+	e.HEAD("/oauth/clients/import/callback", handler.WithAuthenticatedUser(factory, handler.GetOAuthImportCallback))
 	e.GET("/oauth/clients/redirect", handler.WithOwner(factory, handler.OAuthRedirect))
+	e.HEAD("/oauth/clients/redirect", handler.WithOwner(factory, handler.OAuthRedirect))
 
 	// OAuth Server
 	e.GET("/oauth/authorize", handler.WithAuthenticatedUser(factory, handler.GetOAuthAuthorization))
+	e.HEAD("/oauth/authorize", handler.WithAuthenticatedUser(factory, handler.GetOAuthAuthorization))
 	e.POST("/oauth/authorize", handler.WithAuthenticatedUser(factory, handler.PostOAuthAuthorization))
 	e.POST("/oauth/token", handler.WithFactory(factory, handler.PostOAuthToken))
 	e.POST("/oauth/revoke", handler.WithFactory(factory, handler.PostOAuthRevoke))
 
 	// Mastodon API
 	// toot.Register(e, handler.Mastodon(factory))
+}
+
+// refuseHead answers 405 Method Not Allowed, naming GET as the method this route serves.
+func refuseHead(ctx echo.Context) error {
+	ctx.Response().Header().Set(echo.HeaderAllow, "OPTIONS, GET") // RFC 9110 s15.5.6 requires Allow on a 405
+	return echo.ErrMethodNotAllowed
 }
 
 /******************************************
@@ -784,20 +971,24 @@ func errorHandler(err error, ctx echo.Context) {
 	}
 
 	// Write the error to the console (on production and local domains)
-	derp.Report(
-		derp.Wrap(
-			err,
-			location,
-			"Generating web page",
-			"url: "+uri.PrependProtocol(request.Host)+request.URL.String(),
-			"method: "+request.Method,
+	// RULE: Echo's own routing failures are not defects. Dome already logs every 404 and 405
+	// to the DigitalDome collection, so they stay out of the ErrorLog.
+	if !isRoutingError(err) {
+		derp.Report(
+			derp.Wrap(
+				err,
+				location,
+				"Generating web page",
+				"url: "+uri.PrependProtocol(request.Host)+request.URL.String(),
+				"method: "+request.Method,
 
-			// RULE: redact before reporting. derp stores details verbatim, and this
-			// report reaches the console AND the durable ErrorLog collection, so a raw
-			// header block publishes the caller's session cookie and bearer token.
-			derp.RedactHeader(request.Header),
-		),
-	)
+				// RULE: redact before reporting. derp stores details verbatim, and this
+				// report reaches the console AND the durable ErrorLog collection, so a raw
+				// header block publishes the caller's session cookie and bearer token.
+				derp.RedactHeader(request.Header),
+			),
+		)
+	}
 
 	// If this is a local request, then show developers a full error dump
 	// X-Forwarded-Host is not needed here because this is for development only.
@@ -831,4 +1022,10 @@ func handleActivityPubError(ctx echo.Context, err error) bool {
 
 	_ = ctx.JSON(derp.ErrorCode(err), result)
 	return true
+}
+
+// isRoutingError returns TRUE if Echo's router rejected the request: no route matched
+// the path, or the route does not serve the request's method.
+func isRoutingError(err error) bool {
+	return errors.Is(err, echo.ErrNotFound) || errors.Is(err, echo.ErrMethodNotAllowed)
 }
