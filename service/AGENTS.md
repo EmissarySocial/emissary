@@ -74,6 +74,8 @@ Two locks keep a reload safe. `Template.reloadLock` lets one load run at a time,
 
 Templates and themes each build in a prep map (`templatePrep`, `themePrep`), and requests see neither until inheritance has run and the whole map is copied into the live library. Do not publish an entry early. `html/template` refuses `AddParseTree` on any set that has executed, so a request that renders a half-built theme stops it from inheriting anything. When themes were published straight from `Add`, one reload left `theme-default` and `theme-minimal` without the 13 sign-in, reset, and OAuth templates from `theme-global`, and `/signin` answered 500 until the next reload ([BUG-203](../../emissary-specs/bugs/BUG-203-A-Theme-Served-During-A-Reload-Loses-Its-Inherited-Templates.md)).
 
+So `Theme.Add` alone makes nothing visible. `Theme.Publish` is the one exported step that finishes a staged load, and any caller outside this package that adds a theme, such as a test fixture in `build`, must call it afterwards.
+
 Every `Inherit` adds a copy of the parent's parse tree (`Tree.Copy()`), never the tree itself. `html/template` escapes a tree in place the first time its set executes, under that set's own lock, so two sets that share a tree rewrite it concurrently. `go test -race` catches this, and nothing else does.
 
 ## The cached Domain record is read-only, and a writer loads its own copy from the database

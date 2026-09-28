@@ -158,6 +158,12 @@ func (service *Theme) Add(themeID string, filesystem fs.FS, definition []byte) e
 	return nil
 }
 
+// Publish applies inheritance to every staged Theme, then moves them all into the live library
+func (service *Theme) Publish() {
+	service.calculateAllInheritance()
+	service.publish()
+}
+
 // calculateAllInheritance applies inheritance to every Theme in the prep area
 func (service *Theme) calculateAllInheritance() {
 
