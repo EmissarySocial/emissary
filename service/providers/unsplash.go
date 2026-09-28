@@ -47,31 +47,31 @@ func (adapter Unsplash) ManualConfig() form.Form {
 				{
 					Type:    "hidden",
 					Path:    "type",
-					Options: mapof.Any{"value": model.ConnectionTypeImage},
+					Options: mapof.Template{"value": model.ConnectionTypeImage},
 				},
 				{
 					Type:    "text",
 					Path:    "data.applicationId",
 					Label:   "Application ID",
-					Options: mapof.Any{"autocomplete": "off"},
+					Options: mapof.Template{"autocomplete": "off"},
 				},
 				{
 					Type:    "text",
 					Path:    "data.applicationName",
 					Label:   "Application Name",
-					Options: mapof.Any{"autocomplete": "off"},
+					Options: mapof.Template{"autocomplete": "off"},
 				},
 				{
 					Type:    "text",
 					Path:    "data.accessKey",
 					Label:   "Access Key",
-					Options: mapof.Any{"autocomplete": "off"},
+					Options: mapof.Template{"autocomplete": "off"},
 				},
 				{
 					Type:    "text",
 					Path:    "data.secretKey",
 					Label:   "Secret Key",
-					Options: mapof.Any{"autocomplete": "off"},
+					Options: mapof.Template{"autocomplete": "off"},
 				},
 				{
 					Type:  "toggle",

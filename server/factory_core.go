@@ -287,9 +287,10 @@ func (factory *factoryCore) PutDomain(configuration config.Domain) error {
 		defer cancel()
 
 		_, err = domainFactory.WithTransaction(ctx, func(session data.Session) (any, error) {
+			// The error names the hostname, never the owner, whose every field is personal data
 			userService := domainFactory.User()
 			if err := userService.SetOwner(session, configuration.Owner); err != nil {
-				return nil, derp.Wrap(err, location, "Setting owner", configuration.Owner)
+				return nil, derp.Wrap(err, location, "Setting owner", configuration.Hostname)
 			}
 			return nil, nil
 		})
@@ -324,9 +325,10 @@ func (factory *factoryCore) putDomain(configuration config.Domain) error {
 		return derp.Wrap(err, location, "Writing configuration")
 	}
 
-	// Try to update the domain in the in-memory cache
+	// Try to update the domain in the in-memory cache.  The error names the hostname, never
+	// the configuration, which carries the domain's secrets.
 	if err := factory.refreshDomain(configuration); err != nil {
-		return derp.Wrap(err, location, "Refreshing domain", configuration)
+		return derp.Wrap(err, location, "Refreshing domain", configuration.Hostname)
 	}
 
 	return nil
@@ -478,7 +480,7 @@ func (factory *factoryCore) refreshDomain(domainConfig config.Domain) error {
 	)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Refreshing configuration", domainConfig)
+		return derp.Wrap(err, location, "Refreshing configuration", domainConfig.Hostname)
 	}
 
 	// If there are no errors, then add the domain to the list.

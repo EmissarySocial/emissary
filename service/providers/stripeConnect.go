@@ -72,14 +72,14 @@ func (adapter StripeConnect) ManualConfig() form.Form {
 				{
 					Type:    "hidden",
 					Path:    "type",
-					Options: mapof.Any{"value": model.ConnectionTypeUserPayment},
+					Options: mapof.Template{"value": model.ConnectionTypeUserPayment},
 				},
 				{
 					Type:        "text",
 					Path:        "data.clientId",
 					Label:       "Client ID",
 					Description: "Found in the <a href='https://dashboard.stripe.com/test/settings/connect/onboarding-options/oauth' target='_blank' rel='noopener noreferrer'>Stripe Connect OAuth Settings &rarr;</a>.",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"autocomplete": "off",
 						"spellcheck":   false,
 					},
@@ -89,7 +89,7 @@ func (adapter StripeConnect) ManualConfig() form.Form {
 					Path:        "vault.publishableKey",
 					Label:       "Publishable Key",
 					Description: "Found in the <a href='https://dashboard.stripe.com/apikeys' target='_blank' rel='noopener noreferrer'>Stripe Dashboard &rarr;</a>.",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"placeholder":  "pk_live_XXXXXXXXXXXXXXXXXXXXXXXXX",
 						"autocomplete": "off",
 						"spellcheck":   false,
@@ -100,7 +100,7 @@ func (adapter StripeConnect) ManualConfig() form.Form {
 					Path:        "vault.restrictedKey",
 					Label:       "Restricted Key",
 					Description: "Found in the <a href='https://dashboard.stripe.com/apikeys' target='_blank' rel='noopener noreferrer'>Stripe Dashboard &rarr;</a>.",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"placeholder":  "rk_live_XXXXXXXXXXXXXXXXXXXXXXXXX",
 						"autocomplete": "off",
 						"spellcheck":   false,
@@ -110,7 +110,7 @@ func (adapter StripeConnect) ManualConfig() form.Form {
 					Type:  "select",
 					Path:  "data.liveMode",
 					Label: "Live Mode?",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"enum": []form.LookupCode{
 							{Value: "SANDBOX", Label: "Sandbox (Use for Tests Only)"},
 							{Value: "LIVE", Label: "Live. (Use for Real Payments)"},
@@ -120,7 +120,7 @@ func (adapter StripeConnect) ManualConfig() form.Form {
 				{
 					Type: "toggle",
 					Path: "active",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"true-text":  "Enabled. Users can connect their Stripe accounts",
 						"false-text": "Enable?",
 					},

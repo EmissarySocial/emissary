@@ -159,20 +159,20 @@ func getSetupForm(name string) (form.Element, bool, error) {
 					{Type: "text", Label: "Database Name", Path: "activityPubCache.database"},
 				}},
 				{Type: "layout-vertical", Label: "Networking", Children: []form.Element{
-					{Type: "select", Label: "Private Network Connections?", Path: "allowPrivateIPs", Description: "Controls whether the server can connect to private IP addresses.", Options: mapof.Any{"enum": []form.LookupCode{
+					{Type: "select", Label: "Private Network Connections?", Path: "allowPrivateIPs", Description: "Controls whether the server can connect to private IP addresses.", Options: mapof.Template{"enum": []form.LookupCode{
 						{Value: "false", Label: "DISALLOWED (Required for production systems)"},
 						{Value: "true", Label: "ALLOWED (Development systems only)"},
 					}}},
-					{Type: "select", Label: "Host Header", Path: "trustForwardedHost", Description: "Enables your server to identify the domain/hostname being requested.", Options: mapof.Any{"enum": []form.LookupCode{
+					{Type: "select", Label: "Host Header", Path: "trustForwardedHost", Description: "Enables your server to identify the domain/hostname being requested.", Options: mapof.Template{"enum": []form.LookupCode{
 						{Value: "false", Label: "'Host' header. (use when NOT behind a proxy)"},
 						{Value: "true", Label: "'X-Forwarded-Host' (use when your proxy sets this value)"},
 					}}},
-					{Type: "select", Label: "Client IP Lookup", Path: "clientIPStrategy", Description: "Method used to determine the client's IP address.  Important for rate-limiting and abuse prevention.", Options: mapof.Any{"enum": []form.LookupCode{
+					{Type: "select", Label: "Client IP Lookup", Path: "clientIPStrategy", Description: "Method used to determine the client's IP address.  Important for rate-limiting and abuse prevention.", Options: mapof.Template{"enum": []form.LookupCode{
 						{Value: "REMOTE-ADDR", Label: "Remote Address (use when NOT behind a proxy)"},
 						{Value: "RIGHTMOST-TRUSTED-COUNT", Label: "Rightmost Trusted Count (use when behind a known number of proxies)"},
 						{Value: "SINGLE-IP-HEADER", Label: "Single IP Header (use when proxy sets a known header value)"},
 					}}},
-					{Type: "text", Label: "Header Value", Path: "clientIPHeader", Description: "Header field used to determine the client's IP address.  Important for rate-limiting and abuse prevention.", Options: mapof.Any{"show-if": "clientIPStrategy is SINGLE-IP-HEADER", "enum": []form.LookupCode{
+					{Type: "text", Label: "Header Value", Path: "clientIPHeader", Description: "Header field used to determine the client's IP address.  Important for rate-limiting and abuse prevention.", Options: mapof.Template{"show-if": "clientIPStrategy is SINGLE-IP-HEADER", "enum": []form.LookupCode{
 						{Value: "Cf-Connecting-IP"},
 						{Value: "Do-Connecting-IP"},
 						{Value: "Fastly-Client-IP"},
@@ -181,11 +181,11 @@ func getSetupForm(name string) (form.Element, bool, error) {
 						{Value: "X-Azure-SocketIP"},
 						{Value: "X-Real-IP"},
 					}}},
-					{Type: "text", Label: "Trusted Proxy Count", Path: "clientIPTrustedCount", Description: "Number of trusted proxies to consider when determining the client's IP address.", Options: mapof.Any{"show-if": "clientIPStrategy is RIGHTMOST-TRUSTED-COUNT"}},
+					{Type: "text", Label: "Trusted Proxy Count", Path: "clientIPTrustedCount", Description: "Number of trusted proxies to consider when determining the client's IP address.", Options: mapof.Template{"show-if": "clientIPStrategy is RIGHTMOST-TRUSTED-COUNT"}},
 				}},
 				{Type: "layout-vertical", Label: "Server Ports", Children: []form.Element{
-					{Type: "text", Label: "HTTP", Description: "Port to use for HTTP connections (standard: 80, disabled: 0)", Path: "httpPort", Options: mapof.Any{"format": "number", "min": 0, "max:": 65535}},
-					{Type: "text", Label: "HTTPS", Description: "Port to use for HTTPS connections (standard: 443, disabled: 0)", Path: "httpsPort", Options: mapof.Any{"format": "number", "min": 0, "max:": 65535}},
+					{Type: "text", Label: "HTTP", Description: "Port to use for HTTP connections (standard: 80, disabled: 0)", Path: "httpPort", Options: mapof.Template{"format": "number", "min": 0, "max:": 65535}},
+					{Type: "text", Label: "HTTPS", Description: "Port to use for HTTPS connections (standard: 443, disabled: 0)", Path: "httpsPort", Options: mapof.Template{"format": "number", "min": 0, "max:": 65535}},
 				}},
 				{Type: "layout-vertical", Label: "Testing and Development", Children: []form.Element{
 					{Type: "select", Label: "Debug Output", Path: "debugLevel"},
@@ -198,7 +198,7 @@ func getSetupForm(name string) (form.Element, bool, error) {
 			Type: "layout-vertical",
 			Children: []form.Element{
 				{Type: "select", Label: "Adapter", Path: "adapter"},
-				{Type: "text", Label: "Location", Path: "location", Options: mapof.Any{"column-width": "100%"}},
+				{Type: "text", Label: "Location", Path: "location", Options: mapof.Template{"column-width": "100%"}},
 			},
 		}, true, nil
 
@@ -210,32 +210,32 @@ func getSetupForm(name string) (form.Element, bool, error) {
 				{Type: "layout-vertical", Label: "Originals", Children: []form.Element{
 					{Type: "select", Label: "Adapter", Path: "attachmentOriginals.adapter"},
 					{Type: "text", Label: "Location / Endpoint", Path: "attachmentOriginals.location"},
-					{Type: "text", Label: "AccessKey", Path: "attachmentOriginals.accessKey", Options: mapof.Any{"show-if": "attachmentOriginals.adapter eq S3"}},
-					{Type: "text", Label: "SecretKey", Path: "attachmentOriginals.secretKey", Options: mapof.Any{"show-if": "attachmentOriginals.adapter eq S3"}},
-					{Type: "text", Label: "Token", Path: "attachmentOriginals.token", Options: mapof.Any{"show-if": "attachmentOriginals.adapter eq S3"}},
-					{Type: "text", Label: "Region", Path: "attachmentOriginals.region", Options: mapof.Any{"show-if": "attachmentOriginals.adapter eq S3"}},
-					{Type: "text", Label: "Bucket", Path: "attachmentOriginals.bucket", Options: mapof.Any{"show-if": "attachmentOriginals.adapter eq S3"}},
-					{Type: "text", Label: "Path", Path: "attachmentOriginals.path", Options: mapof.Any{"show-if": "attachmentOriginals.adapter eq S3"}},
+					{Type: "text", Label: "AccessKey", Path: "attachmentOriginals.accessKey", Options: mapof.Template{"show-if": "attachmentOriginals.adapter eq S3"}},
+					{Type: "text", Label: "SecretKey", Path: "attachmentOriginals.secretKey", Options: mapof.Template{"show-if": "attachmentOriginals.adapter eq S3"}},
+					{Type: "text", Label: "Token", Path: "attachmentOriginals.token", Options: mapof.Template{"show-if": "attachmentOriginals.adapter eq S3"}},
+					{Type: "text", Label: "Region", Path: "attachmentOriginals.region", Options: mapof.Template{"show-if": "attachmentOriginals.adapter eq S3"}},
+					{Type: "text", Label: "Bucket", Path: "attachmentOriginals.bucket", Options: mapof.Template{"show-if": "attachmentOriginals.adapter eq S3"}},
+					{Type: "text", Label: "Path", Path: "attachmentOriginals.path", Options: mapof.Template{"show-if": "attachmentOriginals.adapter eq S3"}},
 				}},
 				{Type: "layout-vertical", Label: "Cache", Children: []form.Element{
 					{Type: "select", Label: "Adapter", Path: "attachmentCache.adapter"},
 					{Type: "text", Label: "Location", Path: "attachmentCache.location"},
-					{Type: "text", Label: "AccessKey", Path: "attachmentCache.accessKey", Options: mapof.Any{"show-if": "attachmentCache.adapter eq S3"}},
-					{Type: "text", Label: "SecretKey", Path: "attachmentCache.secretKey", Options: mapof.Any{"show-if": "attachmentCache.adapter eq S3"}},
-					{Type: "text", Label: "Token", Path: "attachmentCache.token", Options: mapof.Any{"show-if": "attachmentCache.adapter eq S3"}},
-					{Type: "text", Label: "Region", Path: "attachmentCache.region", Options: mapof.Any{"show-if": "attachmentCache.adapter eq S3"}},
-					{Type: "text", Label: "Bucket", Path: "attachmentCache.bucket", Options: mapof.Any{"show-if": "attachmentCache.adapter eq S3"}},
-					{Type: "text", Label: "Path", Path: "attachmentCache.path", Options: mapof.Any{"show-if": "attachmentCache.adapter eq S3"}},
+					{Type: "text", Label: "AccessKey", Path: "attachmentCache.accessKey", Options: mapof.Template{"show-if": "attachmentCache.adapter eq S3"}},
+					{Type: "text", Label: "SecretKey", Path: "attachmentCache.secretKey", Options: mapof.Template{"show-if": "attachmentCache.adapter eq S3"}},
+					{Type: "text", Label: "Token", Path: "attachmentCache.token", Options: mapof.Template{"show-if": "attachmentCache.adapter eq S3"}},
+					{Type: "text", Label: "Region", Path: "attachmentCache.region", Options: mapof.Template{"show-if": "attachmentCache.adapter eq S3"}},
+					{Type: "text", Label: "Bucket", Path: "attachmentCache.bucket", Options: mapof.Template{"show-if": "attachmentCache.adapter eq S3"}},
+					{Type: "text", Label: "Path", Path: "attachmentCache.path", Options: mapof.Template{"show-if": "attachmentCache.adapter eq S3"}},
 				}},
 				{Type: "layout-vertical", Label: "Exports", Children: []form.Element{
 					{Type: "select", Label: "Adapter", Path: "exportCache.adapter"},
 					{Type: "text", Label: "Location", Path: "exportCache.location"},
-					{Type: "text", Label: "AccessKey", Path: "exportCache.accessKey", Options: mapof.Any{"show-if": "exportCache.adapter eq S3"}},
-					{Type: "text", Label: "SecretKey", Path: "exportCache.secretKey", Options: mapof.Any{"show-if": "exportCache.adapter eq S3"}},
-					{Type: "text", Label: "Token", Path: "exportCache.token", Options: mapof.Any{"show-if": "exportCache.adapter eq S3"}},
-					{Type: "text", Label: "Region", Path: "exportCache.region", Options: mapof.Any{"show-if": "exportCache.adapter eq S3"}},
-					{Type: "text", Label: "Bucket", Path: "exportCache.bucket", Options: mapof.Any{"show-if": "exportCache.adapter eq S3"}},
-					{Type: "text", Label: "Path", Path: "exportCache.path", Options: mapof.Any{"show-if": "exportCache.adapter eq S3"}},
+					{Type: "text", Label: "AccessKey", Path: "exportCache.accessKey", Options: mapof.Template{"show-if": "exportCache.adapter eq S3"}},
+					{Type: "text", Label: "SecretKey", Path: "exportCache.secretKey", Options: mapof.Template{"show-if": "exportCache.adapter eq S3"}},
+					{Type: "text", Label: "Token", Path: "exportCache.token", Options: mapof.Template{"show-if": "exportCache.adapter eq S3"}},
+					{Type: "text", Label: "Region", Path: "exportCache.region", Options: mapof.Template{"show-if": "exportCache.adapter eq S3"}},
+					{Type: "text", Label: "Bucket", Path: "exportCache.bucket", Options: mapof.Template{"show-if": "exportCache.adapter eq S3"}},
+					{Type: "text", Label: "Path", Path: "exportCache.path", Options: mapof.Template{"show-if": "exportCache.adapter eq S3"}},
 				}},
 			},
 		}, false, nil
@@ -247,10 +247,10 @@ func getSetupForm(name string) (form.Element, bool, error) {
 			Children: []form.Element{
 				{Type: "select", Label: "Adapter", Path: "certificates.adapter"},
 				{Type: "text", Label: "Location", Path: "certificates.location"},
-				{Type: "text", Label: "AccessKey", Path: "certificates.accessKey", Options: mapof.Any{"show-if": "certificates.adapter eq S3"}},
-				{Type: "text", Label: "SecretKey", Path: "certificates.secretKey", Options: mapof.Any{"show-if": "certificates.adapter eq S3"}},
-				{Type: "text", Label: "Bucket", Path: "certificates.bucket", Options: mapof.Any{"show-if": "certificates.adapter eq S3"}},
-				{Type: "text", Label: "Path", Path: "certificates.path", Options: mapof.Any{"show-if": "certificates.adapter eq S3"}},
+				{Type: "text", Label: "AccessKey", Path: "certificates.accessKey", Options: mapof.Template{"show-if": "certificates.adapter eq S3"}},
+				{Type: "text", Label: "SecretKey", Path: "certificates.secretKey", Options: mapof.Template{"show-if": "certificates.adapter eq S3"}},
+				{Type: "text", Label: "Bucket", Path: "certificates.bucket", Options: mapof.Template{"show-if": "certificates.adapter eq S3"}},
+				{Type: "text", Label: "Path", Path: "certificates.path", Options: mapof.Template{"show-if": "certificates.adapter eq S3"}},
 			},
 		}, false, nil
 	}

@@ -10,6 +10,7 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/service"
 	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
+	"github.com/EmissarySocial/emissary/tools/secretcheck"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
@@ -39,10 +40,10 @@ import (
 // closed ports with a short serverSelectionTimeoutMS so that any accidental real I/O fails fast
 // with a DIFFERENT error than the ones asserted here.
 
-// lifecycleConnection returns a FRESH connection map for each call.  Freshness matters: the
-// unchanged-guard must compare VALUES, never map identity, because config handlers rebuild and
-// mutate these maps in place (see the snapshot-scalars comment on factoryCore).
+// lifecycleConnection returns a new connection map on every call
 func lifecycleConnection(port string, database string) mapof.String {
+	// The unchanged-guard must compare values, never map identity, because config handlers rebuild
+	// and mutate these maps in place (see the snapshot-scalars comment on factoryCore).
 	return mapof.String{
 		"connectString": "mongodb://127.0.0.1:" + port + "/?directConnection=true&serverSelectionTimeoutMS=200",
 		"database":      database,
@@ -65,12 +66,12 @@ func lazyDatabase(t *testing.T, database string) *mongo.Database {
 	return client.Database(database)
 }
 
-// requireDisconnected asserts that the client has been disconnected: Ping on a disconnected
-// client returns mongo.ErrClientDisconnected IMMEDIATELY (closed topology short-circuits before
-// server selection).  A still-connected client would instead time out server selection (~200ms
-// per the test URI) with a different error, failing this assertion with a clear diff.
+// requireDisconnected asserts that the client has been disconnected
 func requireDisconnected(t *testing.T, client *mongo.Client) {
 	t.Helper()
+
+	// A disconnected client's Ping fails at once with mongo.ErrClientDisconnected.  A connected
+	// one times out server selection (~200ms) with a different error, which fails this clearly.
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
@@ -79,11 +80,12 @@ func requireDisconnected(t *testing.T, client *mongo.Client) {
 	require.ErrorIs(t, err, mongo.ErrClientDisconnected)
 }
 
-// requireConnected asserts that the client is still connected, by disconnecting it: the FIRST
-// Disconnect of a live client returns nil, while a client someone already disconnected returns
-// mongo.ErrClientDisconnected.  Use this only as a test's final assertion/cleanup on a client.
+// requireConnected asserts that the client is still connected, by disconnecting it, so it can
+// only be a test's final assertion on that client
 func requireConnected(t *testing.T, client *mongo.Client) {
 	t.Helper()
+
+	// The first Disconnect of a live client returns nil, and a second returns ErrClientDisconnected
 	require.NoError(t, client.Disconnect(context.Background()))
 }
 
@@ -91,11 +93,12 @@ func requireConnected(t *testing.T, client *mongo.Client) {
  * refreshCommonDatabase
  ******************************************/
 
-// TestRefreshCommonDatabase_UnchangedSettingsKeepClient pins the reload guard: reloading a config
-// whose database settings are unchanged must KEEP the live client.  Reconnecting would
-// disconnect the old client and strand every captured handle (the original incident).
+// TestRefreshCommonDatabase_UnchangedSettingsKeepClient requires a reload whose database settings
+// are unchanged to keep the live client
 func TestRefreshCommonDatabase_UnchangedSettingsKeepClient(t *testing.T) {
 
+	// Reconnecting would disconnect the old client and strand every captured handle, which was the
+	// original incident.
 	factory := &factoryCore{}
 
 	require.NoError(t, reloadCommonDatabase(factory, lifecycleConnection("59999", "lifecycle-a")))
@@ -164,13 +167,12 @@ func TestRefreshCommonDatabase_RequiresSettings(t *testing.T) {
 	}
 }
 
-// TestRefreshCommonDatabase_VerifyRollsBackOnUnreachable pins the verify half of the ONE shared
-// connect path.  When the ping fails, the factory must roll back to "not connected" -- publishing
-// the un-pinged client would bind every later domain lookup to a server that never answered, and
-// keeping the PREVIOUS connection would quietly disagree with the settings the operator just
-// saved.  The domain registry is cleared for the same reason.
+// TestRefreshCommonDatabase_VerifyRollsBackOnUnreachable requires a failed ping to roll the
+// factory back to "not connected", and to clear the domain registry
 func TestRefreshCommonDatabase_VerifyRollsBackOnUnreachable(t *testing.T) {
 
+	// Publishing the un-pinged client would bind later lookups to a server that never answered, and
+	// keeping the previous one would disagree with the settings the operator just saved.
 	factory := &factoryCore{}
 	factory.domains = xsync.NewMap[string, *service.Factory]()
 
@@ -186,12 +188,11 @@ func TestRefreshCommonDatabase_VerifyRollsBackOnUnreachable(t *testing.T) {
 	require.Empty(t, result.commonDatabaseURI)
 }
 
-// TestRefreshCommonDatabase_UnverifiedIsNotKeptWhenVerifying pins the guard's verify leg: an
-// UNVERIFIED connection with the same settings must not satisfy a caller that requires
-// verification.  Skipping there would let the setup console report "connected" against a client
-// that never answered a Ping.
+// TestRefreshCommonDatabase_UnverifiedIsNotKeptWhenVerifying requires that an unverified client
+// with the same settings does not satisfy a caller that requires verification
 func TestRefreshCommonDatabase_UnverifiedIsNotKeptWhenVerifying(t *testing.T) {
 
+	// Otherwise the setup console could report "connected" for a client that never answered a Ping
 	factory := &factoryCore{}
 	factory.domains = xsync.NewMap[string, *service.Factory]()
 
@@ -313,7 +314,7 @@ func TestOpenCommonDatabase(t *testing.T) {
 		})
 		require.Error(t, err)
 		require.Nil(t, database)
-		requireNoSecret(t, err, "db-password-secret")
+		secretcheck.RequireAbsent(t, err, "db-password-secret")
 	})
 
 	t.Run("OpensLazily", func(t *testing.T) {
@@ -449,7 +450,7 @@ func TestRefreshFilesystems_KeepsPreviousOnFailure(t *testing.T) {
 	require.Len(t, reported, 3)
 
 	for _, err := range reported {
-		requireNoSecret(t, err, testMasterKey)
+		secretcheck.RequireAbsent(t, err, testMasterKey)
 	}
 }
 
@@ -504,21 +505,23 @@ func setTestCommonDatabase(factory *factoryCore, database *mongo.Database) {
 	})
 }
 
-// stopQueueOnCleanup stops the factory's CURRENT queue when the test ends.  Queues that
-// refreshQueue already replaced were stopped by refreshQueue itself and must not be stopped
-// again (turbine's Stop panics on a second call).
+// stopQueueOnCleanup stops the factory's CURRENT queue when the test ends
 func stopQueueOnCleanup(t *testing.T, factory *factoryCore) {
 	t.Helper()
+
+	// A queue that refreshQueue replaced was already stopped there, and turbine's Stop panics on a
+	// second call.
 	t.Cleanup(func() {
 		factory.currentWiring().queue.Stop()
 	})
 }
 
-// TestRefreshQueue_UnchangedInputsKeepQueue pins the reload guard: reloading with the same
-// storage mode (and no database swap) must KEEP the running queue.  Rebuilding would stop the
-// old queue, and every captured pointer would then feed a stopped queue that drops tasks.
+// TestRefreshQueue_UnchangedInputsKeepQueue requires a reload with the same storage mode, and no
+// database swap, to keep the running queue
 func TestRefreshQueue_UnchangedInputsKeepQueue(t *testing.T) {
 
+	// Rebuilding would stop the old queue, and every captured pointer would then feed a stopped
+	// queue that drops tasks.
 	factory := newTestFactoryCore()
 	stopQueueOnCleanup(t, factory)
 	placeholder := factory.currentWiring().queue
@@ -533,9 +536,8 @@ func TestRefreshQueue_UnchangedInputsKeepQueue(t *testing.T) {
 	require.Same(t, first, factory.currentWiring().queue, "unchanged inputs must keep the same queue")
 }
 
-// TestRefreshQueue_InMemoryIgnoresDatabaseSwap pins the !withStorage leg of the guard: an
-// in-memory queue (setup mode) does not touch the common database, so swapping the database must
-// not rebuild it.
+// TestRefreshQueue_InMemoryIgnoresDatabaseSwap requires an in-memory queue, which never uses the
+// common database, to survive a swap of it
 func TestRefreshQueue_InMemoryIgnoresDatabaseSwap(t *testing.T) {
 
 	factory := newTestFactoryCore()
@@ -564,11 +566,11 @@ func TestRefreshQueue_RebuildsWhenStorageModeChanges(t *testing.T) {
 	require.NotSame(t, first, factory.currentWiring().queue, "a storage-mode change must rebuild the queue")
 }
 
-// TestRefreshQueue_RebuildsWhenCommonDatabaseSwaps pins the storage-bearing leg: when
-// refreshCommonDatabase swaps the connection, the queue's mongo storage wraps a dead client, so
-// the queue MUST be rebuilt -- and until the swap happens, it must NOT be.
+// TestRefreshQueue_RebuildsWhenCommonDatabaseSwaps requires a storage-backed queue to be rebuilt
+// when the common database swaps, and not before
 func TestRefreshQueue_RebuildsWhenCommonDatabaseSwaps(t *testing.T) {
 
+	// After a swap, the queue's mongo storage wraps a dead client
 	factory := newTestFactoryCore()
 	stopQueueOnCleanup(t, factory)
 	setTestCommonDatabase(factory, lazyDatabase(t, "lifecycle-storage-a"))
@@ -590,12 +592,12 @@ func TestRefreshQueue_RebuildsWhenCommonDatabaseSwaps(t *testing.T) {
  * The composed reload scenario
  ******************************************/
 
-// TestConfigReload_KeepsHandlesAlive replays the original incident at the factoryCore level,
-// in readConfig's call order: boot (database, then queue), then a config reload that does not
-// change either.  Both handles must survive, and the accessors that domain factories read
-// through -- CommonDatabase() and Queue() -- must return the same live values.
+// TestConfigReload_KeepsHandlesAlive requires a reload that changes neither the database nor the
+// queue to keep both handles, and the accessors to return them
 func TestConfigReload_KeepsHandlesAlive(t *testing.T) {
 
+	// This replays the original incident in readConfig's call order: boot (database, then queue),
+	// then a reload.  Domain factories read through CommonDatabase() and Queue().
 	factory := newTestFactoryCore()
 	stopQueueOnCleanup(t, factory)
 
@@ -624,11 +626,11 @@ func TestConfigReload_KeepsHandlesAlive(t *testing.T) {
  * refreshDerpPlugins
  ******************************************/
 
-// TestRefreshDerpPlugins_NeverZero pins the error-sink rule across the new atomic swap: a
-// configuration with no (usable) loggers must still leave ONE reporter installed, and the swap
-// must be the only mutation -- the registry is global, so an empty moment here would swallow
-// every concurrently reported error in the process.
+// TestRefreshDerpPlugins_NeverZero requires a configuration with no usable loggers to leave one
+// reporter installed, with the swap as the only mutation
 func TestRefreshDerpPlugins_NeverZero(t *testing.T) {
+
+	// The registry is global, so an empty moment would swallow every error reported concurrently
 
 	// Restore the global registry so other tests see what they expect
 	t.Cleanup(func() { derp.SetPlugins(derpconsole.New()) })

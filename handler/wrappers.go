@@ -758,34 +758,32 @@ func WithUserForwarding(serverFactory *server.Factory, fn WithFunc1[model.User])
 			return activitypub.RenderProfileJSONLD(ctx, factory, session, user)
 		}
 
-		// If this is actually an objectID/userID
-		if _, err := primitive.ObjectIDFromHex(userID); err == nil {
-
-			// And guarantee that the user doesn't have a wonky username that LOOKS like a hex string
-			// (for some strange reason). Then we're going to forward to the `correctURL` that uses
-			// their actual username
-			if user.Username != userID {
-
-				// Build the user's correct URL
-				correctURL := "/@" + user.Username
-
-				if action := ctx.Param("action"); action != "" {
-					correctURL += "/" + action
-				}
-
-				// If this is an HTMX request, then we can just update the header and continue without a full redirect
-				if ctx.Request().Header.Get("Hx-Request") == "true" {
-					ctx.Response().Header().Set("HX-Replace-Url", correctURL)
-
-				} else {
-					// Otherwise, we can skip the remaining code and just redirect to the correctURL
-					return ctx.Redirect(http.StatusSeeOther, correctURL)
-				}
-			}
+		// If the user token is already a username, then continue without interruption
+		if _, err := primitive.ObjectIDFromHex(userID); err != nil {
+			return fn(ctx, factory, session, user)
 		}
 
-		// Execute the continuation function
-		return fn(ctx, factory, session, user)
+		// If the user has some wonky username that LOOKS like a hex string, then we should just continue without forwarding
+		if user.Username == userID {
+			return fn(ctx, factory, session, user)
+		}
+
+		// Build the user's correct URL
+		correctURL := "/@" + user.Username
+
+		if action := ctx.Param("action"); action != "" {
+			correctURL += "/" + action
+		}
+
+		// If this is an HTMX request, then we can just update the header and continue without a full redirect
+		if ctx.Request().Header.Get("Hx-Request") == "true" {
+			ctx.Response().Header().Set("HX-Replace-Url", correctURL)
+			return fn(ctx, factory, session, user)
+		}
+
+		// Otherwise, we can skip the remaining code and just redirect to the correctURL
+		return ctx.Redirect(http.StatusSeeOther, correctURL)
+
 	})
 }
 

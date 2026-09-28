@@ -6,12 +6,14 @@ import (
 
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/secretcheck"
 	"github.com/benpate/data"
 	mockdb "github.com/benpate/data-mock"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/oauth2"
 )
 
 /******************************************
@@ -462,5 +464,63 @@ func TestConnection_Delete(t *testing.T) {
 
 		// The stored record is not checked here: data-mock hands Load the stored map itself
 		// (BUG-178), so TestDomain_Save/RejectedSaveLeavesTheDatabaseUnchanged covers it
+	})
+}
+
+// TestConnection_OmitsCredentialsFromErrors requires that no failure reports a Connection's
+// token or vault
+func TestConnection_OmitsCredentialsFromErrors(t *testing.T) {
+
+	// BUG-173: Token and Vault are json:"-" but stored by BSON, so these errors kept them off
+	// the console and wrote them into the error log.
+	loadWithToken := func(t *testing.T, connectionService *Connection, session data.Session) (model.Connection, []string) {
+		t.Helper()
+
+		connection, err := connectionService.LoadOrCreateByProvider(session, model.ConnectionProviderGiphy)
+		require.NoError(t, err)
+
+		connection.Token = &oauth2.Token{AccessToken: "access-t0ken", RefreshToken: "refresh-t0ken"}
+		secrets := []string{"access-t0ken", "refresh-t0ken", connection.Vault.Encrypted["apiKey"]}
+
+		return connection, secrets
+	}
+
+	// requireSite fails unless err came from the named site, carrying none of the secrets
+	requireSite := func(t *testing.T, err error, location string, message string, secrets []string) {
+		t.Helper()
+		require.Equal(t, location, derp.Location(err))
+		require.Equal(t, message, derp.Message(err))
+
+		for _, secret := range secrets {
+			require.NotEmpty(t, secret)
+			secretcheck.RequireAbsent(t, err, secret)
+		}
+	}
+
+	t.Run("Validate", func(t *testing.T) {
+		connectionService, _, session := newTestConnectionService(t)
+		connection, secrets := loadWithToken(t, connectionService, session)
+		connection.Type = "NOT-A-TYPE"
+
+		err := connectionService.Save(session, &connection, "test")
+		requireSite(t, err, "service.Connection.Save", "Validating Connection", secrets)
+	})
+
+	t.Run("Save", func(t *testing.T) {
+		connectionService, _, session := newTestConnectionService(t)
+		storeInvalidDomain(t, session)
+		connection, secrets := loadWithToken(t, connectionService, session)
+
+		err := connectionService.Save(session, &connection, "test")
+		requireSite(t, err, "service.Connection.Save", "Saving Connection", secrets)
+	})
+
+	t.Run("Delete", func(t *testing.T) {
+		connectionService, _, session := newTestConnectionService(t)
+		storeInvalidDomain(t, session)
+		connection, secrets := loadWithToken(t, connectionService, session)
+
+		err := connectionService.Delete(session, &connection, "test")
+		requireSite(t, err, "service.Connection.Delete", "Deleting Connection", secrets)
 	})
 }

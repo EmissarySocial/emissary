@@ -66,9 +66,17 @@ When reading this dependency, confirm which copy you have: the module cache also
 
 ## A template reload overwrites its libraries, and nothing may empty one
 
-`Template.loadTemplates` fills five libraries from the template folders: templates, themes, widgets, registrations, and server emails. Each `Add` writes a definition over its live copy, and no library is ever reset. Keep it that way. A reset in one place and a refill in another fails silently whenever the refill is skipped. `ServerEmail.Refresh` emptied the email library on every config reload, while `Template.Refresh` skipped the refill whenever the template locations were unchanged, which is almost always. Registration then failed until a restart ([BUG-180](../../emissary-specs/bugs/_done/BUG-180-Config-Reload-Empties-The-Server-Email-Registry.md)). The cost of overwriting is that a definition deleted from disk stays loaded until a restart; that gap is deferred.
+`Template.loadTemplates` fills five libraries from the template folders: templates, themes, widgets, registrations, and server emails. Each load writes every definition over its live copy, and no library is ever reset. Keep it that way. A reset in one place and a refill in another fails silently whenever the refill is skipped. `ServerEmail.Refresh` emptied the email library on every config reload, while `Template.Refresh` skipped the refill whenever the template locations were unchanged, which is almost always. Registration then failed until a restart ([BUG-180](../../emissary-specs/bugs/_done/BUG-180-Config-Reload-Empties-The-Server-Email-Registry.md)). The cost of overwriting is that a definition deleted from disk stays loaded until a restart; that gap is deferred.
 
 Two locks keep a reload safe. `Template.reloadLock` lets one load run at a time, because a file change and a config reload can each start one, and every load writes the shared prep area and the other four services. Each library also has its own lock, and every read outside a load takes it, even a `len`. A load writes these maps while requests read them, and a concurrent map read and write in Go is a fatal error that `recover` cannot catch. Code that runs inside a load, such as `Theme.calculateAllInheritance`, is already serialized by `reloadLock` and reads without it.
+
+## A library that inherits HTML is built in prep and published whole
+
+Templates and themes each build in a prep map (`templatePrep`, `themePrep`), and requests see neither until inheritance has run and the whole map is copied into the live library. Do not publish an entry early. `html/template` refuses `AddParseTree` on any set that has executed, so a request that renders a half-built theme stops it from inheriting anything. When themes were published straight from `Add`, one reload left `theme-default` and `theme-minimal` without the 13 sign-in, reset, and OAuth templates from `theme-global`, and `/signin` answered 500 until the next reload ([BUG-203](../../emissary-specs/bugs/BUG-203-A-Theme-Served-During-A-Reload-Loses-Its-Inherited-Templates.md)).
+
+So `Theme.Add` alone makes nothing visible. `Theme.Publish` is the one exported step that finishes a staged load, and any caller outside this package that adds a theme, such as a test fixture in `build`, must call it afterwards.
+
+Every `Inherit` adds a copy of the parent's parse tree (`Tree.Copy()`), never the tree itself. `html/template` escapes a tree in place the first time its set executes, under that set's own lock, so two sets that share a tree rewrite it concurrently. `go test -race` catches this, and nothing else does.
 
 ## The cached Domain record is read-only, and a writer loads its own copy from the database
 
@@ -188,16 +196,15 @@ Two consequences to keep in mind. An unrelated edit made while the source is unr
 
 Bookkeeping writes avoid all of this by design. `saveSyncState` and every `SetStatus*` method go through `service.save`, which is what stops a running sync from queueing another one. `WithSignature` would NOT save you there: the task that is running has already left the queue by the time its handler saves.
 
-## One task synchronizes a StreamSource, published two ways
+## Two task names synchronize a StreamSource, and four places must know both
 
-`TaskSyncStreamSource` runs at priority 16 for every trigger. Its two publishers differ only in the signature:
+`TaskSyncStreamSource` is the webhook's background fan-out at priority 256. `TaskSyncStreamSourceNow` is the **Sync Now** button at 16. They run the same handler and report through the same lifecycle hooks; only the priority and the signature differ.
 
-- **`PublishSyncTask`** (the webhook) signs each task `StreamSource-Sync:<id>`. That collapses a ping flood into one queued sync per record, and it bounds what an unauthenticated caller can queue. It also means the task never runs from memory: turbine's `allowImmediate` refuses **any** signed task, at any priority, because signature dedup needs a stored row to check against. A webhook sync therefore waits for the storage poller, which sleeps a minute when the queue is idle, and priority 16 only moves it ahead of other stored work.
-- **`PublishSyncTaskNow`** (`Save`, and so **Sync Now**) sends no signature, so it can run at once.
+The signature is the reason there are two names rather than one publish option. turbine's `allowImmediate` refuses to run **any** signed task from memory, at any priority, because signature dedup needs a stored row to check against — so a signed task waits for the storage poller, which sleeps a minute when the queue is idle. `PublishSyncTaskNow` therefore omits the signature, and `PublishSyncTask` keeps it.
 
-What the unsigned path costs: two quick presses of **Sync Now** queue two syncs, and one may overlap a webhook's sync of the same record. A repeat is one conditional `GET` answering `304`, so the usual case is free. The case that is not free is a caller that saves many records at once — `step_Sort.go` reaches `Save` through `ObjectSave` — which fans out immediate fetches instead of deduplicated ones.
+What that costs: two quick presses of **Sync Now** queue two syncs, and one may overlap a webhook's background sync of the same record. A repeat is one conditional `GET` answering `304`, so the usual case is free. The case that is not free is a caller that saves many records at once — `step_Sort.go` reaches `Save` through `ObjectSave` — which now fans out immediate fetches instead of deduplicated background ones.
 
-Until 2026-09-24 the webhook published under this name at priority 256, and `Save` under a second name, `SyncStreamSourceNow`, at 16. Every consumer registration had to accept both.
+Four registrations must accept both names: the dispatch switch in `consumer.go`, and all three lifecycle hooks. Use `service.IsSyncStreamSourceTask` rather than comparing a name by hand — a hook that knew only one name would silently stop recording status for the other path, and nothing reports a hook that declined a task. The priority table is the one place that deliberately tells them apart.
 
 ## `with-stream-source` needs two registrations, and neither fails to compile
 
@@ -215,19 +222,12 @@ The settings screen shows `Status` and the time of the last check, and a synchro
 
 The message is addressed by the **StreamID**, not the StreamSourceID. A `StreamSource` has no page and no SSE route of its own, and a Stream has at most one source, so the Stream's channel is the one a browser can already subscribe to (`/:stream/sse/stream-source-updated`). Putting the nudge on `service.save` rather than on the four `SetStatus*` methods is what makes it impossible to add a fifth status writer that the screen never hears about.
 
-## A StreamSource's linked files are copied in two stages, and only the first runs in a transaction
+## Publishing to followers happens in two phases, and the second reads different fields than it sends
 
-A synchronized page's links into an `attachments` folder are copied in as Stream attachments ([streamSource_attachments.go](streamSource_attachments.go), plan `GIT-MARKDOWN-STREAM-ATTACHMENTS.md`). The split is load-bearing:
+`Outbox.Publish` does only database work, inside the caller's transaction. It saves the OutboxMessage, stamps the activity's `id` and `actor`, and queues an `Outbox-Publish` task. `Outbox.Deliver` runs that task after the transaction commits, on its own session, so no signed HTTP request ever runs inside an open transaction. The design, including why Emissary owns this task rather than using hannibal's sender fan-out, is in [POST-COMMIT-FEDERATION.md](../../emissary-specs/projects/_done/POST-COMMIT-FEDERATION.md) (F1, F2).
 
-- **Stage one, inside the sync's transaction:** `importAttachments` finds the links in the rendered HTML, creates a `WORKING` attachment for each new one, deletes the ones no longer linked, and rewrites the links to local URLs. It downloads nothing. An attachment's URL exists before its file does, which is what lets the page be saved first.
-- **Stage two, the `SyncStreamSourceAttachment` task, outside any transaction:** `ImportAttachment` downloads one file, checks its bytes against the kind its extension promised, stores it, and marks it `READY`. A download can outlast MongoDB's 60-second transaction limit, a retried transaction would download everything again, and the MediaServer is not transactional, so none of this can move into stage one.
+`Deliver` builds the recipient list from the activity's **full** addressing, because blind recipients (`bto`, `bcc`) must still receive the post. It then **sends** a copy with `bto` and `bcc` removed, so no recipient sees who else was blind-copied. Passing the original to a delivery call leaks the blind lists to every follower, which happened until §4.2 of HEAP-ALLOCATIONS.md; `TestDeliver_StripsBlindRecipients` guards it.
 
-**Stage two writes only its own Attachment, never the `StreamSource`.** It runs without a transaction, so a blind replace of the `StreamSource` would overwrite whatever a concurrent sync on another server just wrote.
+That stripped copy is serialized to JSON **once per fan-out**, and every delivery task carries the same string as its `body` argument, which hannibal's sender POSTs as-is. Carrying the whole activity map per follower instead cost 233 allocations per follower once the task went through storage. Because an older Emissary reads only the `activity` map, it would POST `{}` for these tasks and drop them, so every process sharing a database must be upgraded together, and a rollback must wait until no delivery tasks are queued. See hannibal's AGENTS.md for the handler side.
 
-**The match key is `Attachment.SourceURL`, in category `stream-source`.** Two servers syncing one record both write the Stream, so the database rejects one; its retry re-queries the Stream's attachments and reuses the other's. Reconciling never touches an attachment in any other category, so a human's uploads survive.
-
-**Every successful sync re-queues the files that are not `READY`**, including a sync that ends on a `304`, because an unchanged page stops before any rendering and a failed download would otherwise never be retried. The task is signed per attachment, so a burst of pings collapses. A `READY` file is never checked again: to change one, the author renames it.
-
-**A page links to a file before the file exists, so nothing may serve an unstored attachment.** `GetStreamAttachment` answers a `WORKING` attachment with `503` and a `FAILED` one with `404`, both uncacheable, and never hands either to the MediaServer. Before that rule a request in the gap made the MediaServer cache an empty result and serve it forever (plan §4.8).
-
-Two known gaps, both accepted. Deleting an attachment inside the transaction removes its file at once, which a rollback does not restore; every attachment delete in Emissary already works this way, and a retried sync converges. And a download that finishes seconds after its link was removed re-saves the deleted record; closing that needs a conditional update that `data.Collection` does not offer.
+Two more rules from [COLLECTIONS-REDESIGN.md](../../emissary-specs/projects/_done/COLLECTIONS-REDESIGN.md) are easy to break. `UndoActivity` embeds the original activity instead of linking it, because the record behind that link is often already deleted (D7). An addressee carries only a `ProfileURL`, so any check on a recipient's host must fall back from `InboxURL` to `ProfileURL`, or author-only delivery silently breaks on a localhost domain (D8).

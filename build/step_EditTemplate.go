@@ -33,7 +33,7 @@ func (step StepEditTemplate) Get(builder Builder, buffer io.Writer) PipelineBeha
 				Type:  "select",
 				Label: step.fieldLabel(path),
 				Path:  path,
-				Options: mapof.Any{
+				Options: mapof.Template{
 					"enum": step.listTemplates(builder, path),
 				},
 			}

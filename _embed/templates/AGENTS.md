@@ -63,6 +63,10 @@ Emissary was called **ghost** before it was called **whisper**. A 2022 rename co
 
 The theme carries partial dark-mode tokens that nothing currently activates. This is a known incomplete feature rather than a bug; leave it alone unless the work is explicitly being picked up.
 
+## Form option templates render against the edited object, not the Builder
+
+A `{{...}}` inside a form element's `options:{...}` (a `validator` URL, an upload's `delete` URL) is compiled by `benpate/form` when the Template loads and rendered by the widget against the object the form edits: the `*model.Stream`, `*model.Group`, `*model.Folder`, and so on. Builder methods such as `.ObjectID` do not exist there, and an ID field such as `.StreamID` is a `primitive.ObjectID` that prints as `ObjectID("...")`. Write `{{.ID}}`, which every model implements as its hex primary key. Step-level `options:[...]` are different: they are still rendered against the Builder. [../../service/template_optionTemplates_test.go](../../service/template_optionTemplates_test.go) renders every form option template in `_embed/templates` against its object (BUG-204); a new model whose Templates use option templates needs a case in its `optionTemplateObject`.
+
 ## Only four template directories are parsed by any test — add yours to the list
 
 `TestEmbeddedTemplates_HTMLParses` in [service/template_html_parse_test.go](../../service/template_html_parse_test.go) is the only thing that parses `*.html` here with the real funcMap, and it is **scoped to a hand-maintained `dirs` list**, not a full sweep. A directory that is not named there is never parsed by anything, so a syntax error, an undefined funcMap function, or the attribute-context lexer gotcha first appears in front of a visitor.
