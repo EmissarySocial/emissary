@@ -121,7 +121,7 @@ func (service *Template) watch(locations sliceof.Object[mapof.String], done chan
 	// because Refresh replaces both fields while this runs.
 	for _, folder := range locations {
 		if err := service.filesystemService.Watch(folder, changes, done); err != nil {
-			derp.Report(derp.Wrap(err, "service.template.Watch", "Watching filesystem", folder))
+			derp.Report(derp.Wrap(err, "service.template.Watch", "Watching filesystem", folderLabel(folder)))
 		}
 	}
 

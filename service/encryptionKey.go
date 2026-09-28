@@ -87,8 +87,9 @@ func (service *EncryptionKey) Load(session data.Session, criteria exp.Expression
 // Save adds/updates an EncryptionKey in the database
 func (service *EncryptionKey) Save(session data.Session, encryptionKey *model.EncryptionKey, note string) error {
 
+	// Save this EncryptionKey.  Errors name its ID, because the key carries the private key.
 	if err := service.collection(session).Save(encryptionKey, note); err != nil {
-		return derp.Wrap(err, "service.EncryptionKey.Save", "Saving EncryptionKey", encryptionKey, note)
+		return derp.Wrap(err, "service.EncryptionKey.Save", "Saving EncryptionKey", encryptionKey.EncryptionKeyID, note)
 	}
 
 	return nil
@@ -97,9 +98,9 @@ func (service *EncryptionKey) Save(session data.Session, encryptionKey *model.En
 // Delete removes an EncryptionKey from the database (virtual delete)
 func (service *EncryptionKey) Delete(session data.Session, encryptionKey *model.EncryptionKey, note string) error {
 
-	// Delete this EncryptionKey
+	// Delete this EncryptionKey.  Errors name its ID, because the key carries the private key.
 	if err := service.collection(session).Delete(encryptionKey, note); err != nil {
-		return derp.Wrap(err, "service.EncryptionKey.Delete", "Deleting EncryptionKey", encryptionKey, note)
+		return derp.Wrap(err, "service.EncryptionKey.Delete", "Deleting EncryptionKey", encryptionKey.EncryptionKeyID, note)
 	}
 
 	return nil
@@ -186,7 +187,7 @@ func (service *EncryptionKey) DeleteByParentID(session data.Session, parentID pr
 
 	for encryptionKey := range rangeFunc {
 		if err := service.Delete(session, &encryptionKey, note); err != nil {
-			return derp.Wrap(err, location, "Deleting key", encryptionKey)
+			return derp.Wrap(err, location, "Deleting key", encryptionKey.EncryptionKeyID, parentID)
 		}
 	}
 

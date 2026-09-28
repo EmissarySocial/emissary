@@ -7,13 +7,12 @@ import (
 	"github.com/benpate/rosetta/slice"
 )
 
-// OAuthUserTokenRequest holds the parameters of an OAuth token request
-//
-// https://docs.joinmastodon.org/methods/oauth/#token
-// POST /oauth/token
-// Returns: Token
-// Obtain an access token, to be used during API calls that are not public
+// OAuthUserTokenRequest holds the parameters of a POST to /oauth/token, which exchanges a code
+// or a refresh token for an access token
 type OAuthUserTokenRequest struct {
+
+	// Fields as documented at https://docs.joinmastodon.org/methods/oauth/#token
+
 	GrantType    string `json:"grantType"    form:"grant_type"`
 	Code         string `json:"code"         form:"code"`
 	RefreshToken string `json:"refreshToken" form:"refresh_token"` // The rotating refresh token, presented for a refresh_token grant (RFC 6749 §6)
@@ -45,15 +44,16 @@ func (req *OAuthUserTokenRequest) Validate(client OAuthClient) error {
 
 	const location = "model.OAuthUserTokenRequest.Validate"
 
-	// RULE: ClientID must match the client application
+	// RULE: ClientID must match the client application.  Errors name client IDs only, because
+	// both the client and the request carry the client_secret.
 
 	if notOneOf(req.ClientID, client.ClientURL, client.ClientID.Hex()) {
-		return derp.BadRequest(location, "Invalid client_id", client, req)
+		return derp.BadRequest(location, "Invalid client_id", client.ClientID, req.ClientID)
 	}
 
 	// RULE: ClientSecret must match the client application
 	if req.ClientSecret != client.ClientSecret {
-		return derp.BadRequest(location, "Invalid client_secret", client, req)
+		return derp.BadRequest(location, "Invalid client_secret", client.ClientID, req.ClientID)
 	}
 
 	// RULE: Client must have at least one redirect_uri
@@ -68,7 +68,7 @@ func (req *OAuthUserTokenRequest) Validate(client OAuthClient) error {
 
 	// RULE: Verify that redirect URI is valid
 	if !slice.Contains(client.RedirectURIs, req.RedirectURI) {
-		return derp.BadRequest(location, "Invalid redirect_uri", client, req)
+		return derp.BadRequest(location, "Invalid redirect_uri", client.ClientID, req.RedirectURI)
 	}
 
 	// RULE: If missing, use default value for Scope
