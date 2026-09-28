@@ -57,6 +57,95 @@ func TestEmbeddedTemplates_OptionTemplates(t *testing.T) {
 	require.Equal(t, 10, rendered)
 }
 
+// TestEmbeddedForms_NoOtherOptionTemplates requires that forms rendered against something other
+// than a model object hold no option templates, until a test covers what they render against
+func TestEmbeddedForms_NoOtherOptionTemplates(t *testing.T) {
+
+	// BUG-204: a table form renders against each row, a Theme form against the Domain, a Widget
+	// form against its data map, and a Registration form against the new User's data. `{{.ID}}`
+	// means something different, or nothing, in each, so an option template there needs a test of its own.
+	found := make([]string, 0)
+
+	record := func(where string) func(data.Object, form.Element, string, loose.Template) {
+		return func(_ data.Object, element form.Element, key string, _ loose.Template) {
+			found = append(found, where+" "+element.Path+"."+key)
+		}
+	}
+
+	// Table editors in every Template action
+	templates, err := filepath.Glob("../_embed/templates/*/template.hjson")
+	require.NoError(t, err)
+	require.NotEmpty(t, templates)
+
+	for _, filename := range templates {
+
+		definition, err := os.ReadFile(filename)
+		require.NoError(t, err)
+
+		template := model.NewTemplate(filepath.Base(filepath.Dir(filename)), nil)
+		require.NoError(t, hjson.Unmarshal(definition, &template), filename)
+
+		for actionID, action := range template.Actions {
+			walkOtherStepForms(action.Steps, func(element form.Element) {
+				walkOptionTemplateElement(element, nil, record(filename+" "+actionID))
+			})
+		}
+	}
+
+	// The settings forms of every Theme, Widget, and Registration
+	definitions := 0
+
+	for _, pattern := range []string{"theme.hjson", "widget.hjson", "registration.hjson"} {
+
+		files, err := filepath.Glob("../_embed/templates/*/" + pattern)
+		require.NoError(t, err)
+
+		for _, filename := range files {
+
+			contents, err := os.ReadFile(filename)
+			require.NoError(t, err)
+
+			definition := struct {
+				Form form.Element `json:"form"`
+			}{}
+
+			require.NoError(t, hjson.Unmarshal(contents, &definition), filename)
+			walkOptionTemplateElement(definition.Form, nil, record(filename))
+			definitions++
+		}
+	}
+
+	// Every definition file was read, so that a walker that finds nothing cannot pass
+	require.Positive(t, definitions)
+	require.Empty(t, found, "option templates outside edit-model-object and add-model-object need their own render test")
+}
+
+// walkOtherStepForms calls fn with the form of every step that renders one against something other
+// than the model object, descending into container steps
+func walkOtherStepForms(steps []modelStep.Step, fn func(form.Element)) {
+
+	for _, step := range steps {
+
+		switch step.(type) {
+
+		// These render against the model object, and TestEmbeddedTemplates_OptionTemplates covers them
+		case modelStep.EditModelObject, modelStep.AddModelObject:
+
+		default:
+			if getter, ok := step.(modelStep.FormGetter); ok {
+				fn(getter.GetForm())
+			}
+		}
+
+		// Descend into any container
+		if subSteps := reflect.ValueOf(step).FieldByName("SubSteps"); subSteps.IsValid() {
+			if children, ok := subSteps.Interface().([]modelStep.Step); ok {
+				walkOtherStepForms(children, fn)
+			}
+		}
+	}
+}
+
 // walkOptionTemplateSteps calls fn for every option template in every edit step, descending
 // into container steps and switching objects where with-folder and with-circle do
 func walkOptionTemplateSteps(steps []modelStep.Step, object data.Object, fn func(data.Object, form.Element, string, loose.Template)) {
@@ -66,6 +155,10 @@ func walkOptionTemplateSteps(steps []modelStep.Step, object data.Object, fn func
 		switch typed := step.(type) {
 
 		case modelStep.EditModelObject:
+			walkOptionTemplateElement(typed.Form, object, fn)
+
+		// A new object renders its form exactly as an edited one does
+		case modelStep.AddModelObject:
 			walkOptionTemplateElement(typed.Form, object, fn)
 
 		case modelStep.WithFolder:
