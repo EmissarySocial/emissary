@@ -5,6 +5,8 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/convert"
+	"github.com/benpate/data/option"
 	"github.com/benpate/exp"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -135,4 +137,28 @@ func TestCommon_defaultAllowed_DomainOwner(t *testing.T) {
 	// The delete guard is still present (owners don't see deleted streams here).
 	_, hasDeleteGuard := findPredicate(predicates, "deleteDate", exp.OperatorEqual)
 	require.True(t, hasDeleteGuard, "must still exclude deleted streams")
+}
+
+// TestFeedListOptions verifies that a feed loads the newest feedMaxItems children, and only the fields its converters read
+func TestFeedListOptions(t *testing.T) {
+
+	var sort option.SortOption
+	var maxRows option.MaxRowsOption
+	var fields option.FieldsOption
+
+	for _, item := range feedListOptions() {
+		switch typed := item.(type) {
+		case option.SortOption:
+			sort = typed
+		case option.MaxRowsOption:
+			maxRows = typed
+		case option.FieldsOption:
+			fields = typed
+		}
+	}
+
+	require.Equal(t, "publishDate", sort.FieldName)
+	require.True(t, sort.IsDescending(), "a feed lists the newest children first")
+	require.Equal(t, int64(60), maxRows.MaxRows())
+	require.Equal(t, convert.StreamFeedFields(), fields.Fields())
 }
