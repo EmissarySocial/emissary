@@ -45,6 +45,21 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 		}
 	}()
 
+	// Collect the documents already being loaded above this one
+	config := newLoadConfig(options...)
+
+	// RULE: A document already loading above this one gets a stub. Loading it again would wait
+	// in the Carpool on its own leader, or recurse forever without one.
+	if config.contains(uri) {
+		return stub(uri), nil
+	}
+
+	// RULE: A chain of fresh URLs gets a stub once it is too deep, so no remote server can lead
+	// the normalizer from one document to the next without end.
+	if config.isTooDeep() {
+		return stub(uri), nil
+	}
+
 	// Forward request to inner client
 	result, err := client.innerClient.Load(uri, options...)
 
@@ -52,8 +67,15 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 		return streams.NilDocument(), derp.Wrap(err, location, "Loading document from inner client", uri)
 	}
 
+	// Work on a copy bound to a client that passes the history into every load it starts, including
+	// hidden loads from getters on bare-URL values. The id catches Create unwrapping and redirects.
+	originalClient := result.Client()
+	config.remember(uri, result.ID())
+	historyClient := streams.NewOptionsClient(client.rootClient, WithHistory(config.history...))
+	result = result.AddOptions(streams.WithClient(historyClient))
+
 	// Try to Normalize the document
-	if normalized := Normalize(client.rootClient, result); normalized != nil {
+	if normalized := Normalize(historyClient, result); normalized != nil {
 		result.SetValue(property.Map(normalized))
 	}
 
@@ -77,8 +99,8 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 		result.Metadata.RelationHref = relationHref
 	}
 
-	// Return the result
-	return result, nil
+	// Return the result bound to its original client, so that nothing downstream inherits the history
+	return result.AddOptions(streams.WithClient(originalClient)), nil
 }
 
 // Save implements the streams.Client interface, and passes the document to the innerClient
