@@ -164,12 +164,6 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 	// client stack and importing these constants there would make an import cycle.
 	stripCacheHeaders(result)
 
-	// RULE: Only a typed object is cached.  The normalizer answers a load cycle with an untyped
-	// stub, and caching it would serve that stub as the document to every user.
-	if result.NotTyped() {
-		return result, nil
-	}
-
 	// If we're allowed to write to the cache, then try to update it here
 
 	if config.isWriteAllowed() {
@@ -308,6 +302,12 @@ func (client *Client) collection(session data.Session) data.Collection {
 func (client *Client) save(ctx context.Context, url string, value *Value) error {
 
 	const location = "ascache.Client.save"
+
+	// RULE: A document marked NoStore is never written, whichever path reached here.  The normalizer
+	// marks its stub this way, and caching the stub would serve it as the document to every user.
+	if value.Metadata.NoStore {
+		return nil
+	}
 
 	_, err := client.commonDatabase.WithTransaction(ctx, func(session data.Session) (any, error) {
 
