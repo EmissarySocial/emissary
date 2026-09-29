@@ -63,11 +63,6 @@ func (config loadConfig) contains(url string) bool {
 	return slices.Contains(config.history, withoutFragment(url))
 }
 
-// isTooDeep returns TRUE if the history is long enough that no further documents may be loaded.
-func (config loadConfig) isTooDeep() bool {
-	return len(config.history) >= maxDepth
-}
-
 // withoutFragment returns a URL with its "#fragment" removed.
 func withoutFragment(url string) string {
 	result, _, _ := strings.Cut(url, "#")

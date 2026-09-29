@@ -54,12 +54,6 @@ func (client *Client) Load(uri string, options ...any) (streams.Document, error)
 		return stub(uri), nil
 	}
 
-	// RULE: A chain of fresh URLs gets a stub once it is too deep, so no remote server can lead
-	// the normalizer from one document to the next without end.
-	if config.isTooDeep() {
-		return stub(uri), nil
-	}
-
 	// Forward request to inner client
 	result, err := client.innerClient.Load(uri, options...)
 
