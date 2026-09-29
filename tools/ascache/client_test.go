@@ -26,6 +26,7 @@ type countingClient struct {
 	delay            time.Duration // How long this origin takes to answer, simulating a slow server
 	receivedOptions  []any         // Options this client was called with, in order
 	resolvedID       string        // When set, the id of the returned document, standing in for a resolved handle or redirect
+	value            any           // When set, the value returned in place of the Actor, bound to this client
 }
 
 // SetRootClient satisfies streams.Client.  This client makes no recursive calls, so it needs no root.
@@ -48,6 +49,11 @@ func (client *countingClient) Load(uri string, options ...any) (streams.Document
 	if client.forgeCacheHeader {
 		header.Set(HeaderHannibalCache, "true")
 		header.Set(HeaderHannibalCacheDate, time.Now().Format(time.RFC3339))
+	}
+
+	// A custom value is bound to this client, so any load it triggers is counted as a call
+	if client.value != nil {
+		return streams.NewDocument(client.value, streams.WithHTTPHeader(header), streams.WithClient(client)), nil
 	}
 
 	document := streams.NewDocument(
@@ -381,4 +387,66 @@ func TestClient_Load_AliasesSameHostKeyOnly(t *testing.T) {
 	require.NoError(t, err)
 	require.Nil(t, cachedURLs(t, client, "https://evil.example/users/bob"))
 	require.Equal(t, []string{bob}, cachedURLs(t, client, bob))
+}
+
+// TestClient_Load_StubIsNotCached confirms that the normalizer's stub for a load cycle is returned to
+// the caller but never written to the cache, even with a cacheable header.
+func TestClient_Load_StubIsNotCached(t *testing.T) {
+
+	// BUG-212: a cached stub would be served as the document to every user until it expired.
+	const url = "https://remote.example/notes/self"
+
+	client, origin := newTestClient()
+	origin.value = map[string]any{"id": url}
+
+	result, err := client.Load(url)
+	require.NoError(t, err)
+	require.Equal(t, map[string]any{"id": url}, result.Value())
+	require.Nil(t, cachedURLs(t, client, url))
+
+	// So the next load goes back to the origin
+	_, err = client.Load(url)
+	require.NoError(t, err)
+	require.Equal(t, 2, origin.calls)
+}
+
+// TestClient_Load_UntypedDocumentsAreNotCached confirms that no document without a type is cached,
+// whatever shape it takes, and that checking never triggers a load.
+func TestClient_Load_UntypedDocumentsAreNotCached(t *testing.T) {
+
+	// hannibal does not treat "remote.example" as a URL and never loads it, so this test needs a
+	// host it accepts, or its load count could never fail.
+	const url = "https://remote.social/notes/untyped"
+
+	for _, value := range []any{
+		url,
+		map[string]any{"id": url, "type": ""},
+		map[string]any{"id": url, "type": []any{}},
+		map[string]any{"id": url, "type": nil},
+		[]any{map[string]any{"id": url, "type": "Note"}},
+	} {
+		client, origin := newTestClient()
+		origin.value = value
+
+		_, err := client.Load(url)
+		require.NoError(t, err, "loading %#v", value)
+
+		// A bare string reading its own type would load itself through the origin a second time
+		require.Equal(t, 1, origin.calls, "loads for %#v", value)
+		require.Nil(t, cachedURLs(t, client, url), "cached %#v", value)
+	}
+}
+
+// TestClient_Load_ArrayTypeIsCached confirms that a type given as a list still counts as a type.
+func TestClient_Load_ArrayTypeIsCached(t *testing.T) {
+
+	const url = "https://remote.example/notes/multi"
+
+	client, origin := newTestClient()
+	origin.value = map[string]any{"id": url, "type": []any{"Note", "https://example.com/ns#Extra"}}
+
+	_, err := client.Load(url)
+	require.NoError(t, err)
+
+	require.Equal(t, []string{url}, cachedURLs(t, client, url))
 }

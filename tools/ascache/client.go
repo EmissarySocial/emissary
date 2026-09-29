@@ -164,6 +164,12 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 	// client stack and importing these constants there would make an import cycle.
 	stripCacheHeaders(result)
 
+	// RULE: Only a typed object is cached.  The normalizer answers a load cycle with an untyped
+	// stub, and caching it would serve that stub as the document to every user.
+	if result.NotTyped() {
+		return result, nil
+	}
+
 	// If we're allowed to write to the cache, then try to update it here
 
 	if config.isWriteAllowed() {
