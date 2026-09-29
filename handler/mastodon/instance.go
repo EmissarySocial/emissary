@@ -33,7 +33,7 @@ func contactAccount(factory *service.Factory, session data.Session) object.Accou
 		return object.Account{}
 	}
 
-	return user.Toot()
+	return tootUser(factory, session, model.Authorization{}, &user)
 }
 
 // https://docs.joinmastodon.org/methods/instance/
@@ -68,7 +68,7 @@ func GetInstance(serverFactory *server.Factory) func(model.Authorization, txn.Ge
 			Title:       domain.Label,
 			Version:     "Emissary v???",
 			SourceURL:   "https://github.com/EmissarySocial/emissary",
-			Description: "",
+			Description: domain.Description,
 			Contact: object.InstanceContact{
 				Account: contactAccount(factory, session),
 			},
@@ -186,7 +186,7 @@ func GetInstance_V1(serverFactory *server.Factory) func(model.Authorization, txn
 			URI:            t.Host,
 			Title:          domain.Label,
 			Version:        "Emissary v???",
-			Description:    "",
+			Description:    domain.Description,
 			ContactAccount: contactAccount(factory, session),
 		}
 

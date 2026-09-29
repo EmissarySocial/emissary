@@ -1,6 +1,7 @@
 package mastodon
 
 import (
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -25,8 +26,45 @@ import (
 // https://docs.joinmastodon.org/methods/timelines/#public
 func GetTimeline_Public(serverFactory *server.Factory) func(model.Authorization, txn.GetTimeline_Public) ([]object.Status, toot.PageInfo, error) {
 
+	const location = "handler.mastodon.GetTimeline_Public"
+
 	return func(auth model.Authorization, t txn.GetTimeline_Public) ([]object.Status, toot.PageInfo, error) {
-		return []object.Status{}, toot.PageInfo{}, nil
+
+		// Emissary keeps no index of other servers' posts, so a remote-only timeline is empty.
+		// Its own posts carry no media attachments here, so an only-media timeline is too.
+		if t.Remote || t.OnlyMedia {
+			return []object.Status{}, toot.PageInfo{}, nil
+		}
+
+		factory, session, cancel, err := statusSession(serverFactory, t.Host, location)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, err
+		}
+
+		defer cancel()
+
+		streams, err := factory.Stream().QueryPublic(session, auth, queryExpression(t), option.MaxRows(pageLimit(t.Limit)))
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Querying public posts")
+		}
+
+		statuses := make([]object.Status, len(streams))
+
+		for index := range streams {
+			statuses[index] = tootStream(factory, session, &streams[index])
+		}
+
+		// QueryPublic filters and sorts on createDate, so the paging cursors must be createDate too
+		pageInfo := toot.PageInfo{}
+
+		if length := len(streams); length > 0 {
+			pageInfo.MaxID = strconv.FormatInt(streams[length-1].CreateDate, 10)
+			pageInfo.MinID = strconv.FormatInt(streams[0].CreateDate, 10)
+		}
+
+		return statuses, pageInfo, nil
 	}
 }
 
@@ -188,6 +226,9 @@ func newsItemsToStatuses(factory *service.Factory, session data.Session, auth mo
 	}
 
 	waitGroup.Wait()
+
+	markBookmarked(factory, session, auth.UserID, statuses)
+
 	return statuses, boosters
 }
 
@@ -274,11 +315,11 @@ func newsItemToStatus(client streams.Client, factory *service.Factory, session d
 		return status, nil
 	}
 
-	status.Content = document.Content()
 	status.SpoilerText = document.Summary()
 	status.Sensitive = status.SpoilerText != ""
 	status.MediaAttachments = mapDocumentToMediaAttachments(document)
-	status.Tags = mapDocumentToTags(document)
+	status.Tags = apiHashtags(mapDocumentToTags(document))
+	status.Content = markHashtagLinks(document.Content(), status.Tags)
 
 	if newsItem.Origin.Type != model.OriginTypeAnnounce {
 		return status, nil

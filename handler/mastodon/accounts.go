@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"slices"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -68,8 +69,7 @@ func resolveAccountURL(factory *service.Factory, session data.Session, id string
 		return actorURL, nil
 	}
 
-	// A bare actor URL (e.g. the embedded author of a timeline status, before
-	// PersonLink.Toot() is switched to the encoded form).
+	// A bare actor URL, from a client that cached one before we started encoding IDs
 	if parsed, err := url.Parse(id); err == nil && parsed.IsAbs() {
 		return id, nil
 	}
@@ -247,7 +247,7 @@ func GetAccount_VerifyCredentials(serverFactory *server.Factory) func(model.Auth
 		}
 
 		// Return as a Toot
-		return user.Toot(), nil
+		return tootUser(factory, session, auth, &user), nil
 	}
 }
 
@@ -292,7 +292,7 @@ func PatchAccount_UpdateCredentials(serverFactory *server.Factory) func(model.Au
 		}
 
 		// Return updated JSON
-		return user.Toot(), nil
+		return tootUser(factory, session, auth, &user), nil
 	}
 }
 
@@ -327,7 +327,7 @@ func GetAccounts(serverFactory *server.Factory) func(model.Authorization, txn.Ge
 
 			// A local account
 			if user, err := loadUserByAccountID(factory, session, id); err == nil {
-				result = append(result, user.Toot())
+				result = append(result, tootUser(factory, session, auth, &user))
 				continue
 			}
 
@@ -376,7 +376,7 @@ func GetAccount(serverFactory *server.Factory) func(model.Authorization, txn.Get
 
 		// Load the User -- a local account, if there's a User row for this ID.
 		if user, err := loadUserByAccountID(factory, session, t.ID); err == nil {
-			return user.Toot(), nil
+			return tootUser(factory, session, auth, &user), nil
 		}
 
 		// Not local -- try resolving to a cached remote actor's real URL. This also
@@ -411,11 +411,6 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 
 	return func(auth model.Authorization, t txn.GetAccount_Statuses) ([]object.Status, toot.PageInfo, error) {
 
-		// Emissary has no featured (pinned) posts
-		if t.Pinned {
-			return []object.Status{}, toot.PageInfo{}, nil
-		}
-
 		// Get the Domain factory for this request
 		factory, err := serverFactory.ByHostname(t.Host)
 
@@ -440,15 +435,27 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 			// Not a local account. If it still resolves to something real (a cached
 			// remote actor), the ID is valid -- serve what the News Feed holds.
 			if accountURL, resolveErr := resolveAccountURL(factory, session, t.ID); resolveErr == nil {
+
+				// Remote accounts' featured collections are not read, so nothing is pinned
+				if t.Pinned {
+					return []object.Status{}, toot.PageInfo{}, nil
+				}
+
 				return remoteAccountStatuses(factory, session, auth, t, accountURL)
 			}
 
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized User")
 		}
 
-		// Query all posts by this user that are visible to the caller
+		// Query all posts by this user that are visible to the caller (only the pinned ones, if asked)
+		criteria := queryExpression(t)
+
+		if t.Pinned {
+			criteria = criteria.AndEqual("isFeatured", true)
+		}
+
 		streamService := factory.Stream()
-		streams, err := streamService.QueryByUser(session, auth, user.UserID, queryExpression(t), option.MaxRows(pageLimit(t.Limit)))
+		streams, err := streamService.QueryByUser(session, auth, user.UserID, criteria, option.MaxRows(pageLimit(t.Limit)))
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Querying streams")
@@ -464,7 +471,13 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 		}
 
 		// Return posts as toot.Status(es)
-		return getSliceOfToots(streams), pageInfo, nil
+		statuses := make([]object.Status, len(streams))
+
+		for index := range streams {
+			statuses[index] = tootStream(factory, session, &streams[index])
+		}
+
+		return statuses, pageInfo, nil
 	}
 }
 
@@ -551,6 +564,7 @@ func documentToStatus(document streams.Document, account object.Account) object.
 	}
 
 	summary := document.Summary()
+	tags := apiHashtags(mapDocumentToTags(document))
 
 	return object.Status{
 		ID:               model.EncodeRemoteStatusID(document.ID()),
@@ -559,11 +573,11 @@ func documentToStatus(document streams.Document, account object.Account) object.
 		CreatedAt:        model.MastodonDate(document.Published()),
 		Visibility:       "public",
 		Account:          account,
-		Content:          document.Content(),
+		Content:          markHashtagLinks(document.Content(), tags),
 		SpoilerText:      summary,
 		Sensitive:        summary != "",
 		MediaAttachments: mapDocumentToMediaAttachments(document),
-		Tags:             mapDocumentToTags(document),
+		Tags:             tags,
 	}
 }
 
@@ -799,6 +813,56 @@ func PostAccount_Unfollow(serverFactory *server.Factory) func(model.Authorizatio
 	}
 }
 
+// buildRelationship describes the caller's relationship to one account: who follows whom, and
+// any block, mute, or private note. The Relationship ID is always the ID the client used (id),
+// never the resolved actor URL -- the client matches responses to accounts on screen by it.
+func buildRelationship(factory *service.Factory, session data.Session, auth model.Authorization, id string) object.Relationship {
+
+	relationship := object.Relationship{
+		ID:        id,
+		Languages: []string{},
+	}
+
+	accountURL, err := resolveAccountURL(factory, session, id)
+
+	if err != nil {
+		return relationship
+	}
+
+	// "following": a Following record for the resolved actor URL.
+	following := model.NewFollowing()
+
+	if err := factory.Following().LoadByURL(session, auth.UserID, accountURL, &following); err == nil {
+		relationship.Following = true
+		relationship.Note = following.Notes
+
+		// RULE: Emissary always imports boosts from a followed account; there's no setting to hide them
+		relationship.ShowingReblogs = true
+	}
+
+	// "followed_by": an active Follower record on the caller's own account for that actor.
+	follower := model.NewFollower()
+
+	if err := factory.Follower().LoadByActor(session, auth.UserID, accountURL, &follower); err == nil && follower.StateID == model.FollowerStateActive {
+		relationship.FollowedBy = true
+	}
+
+	// "blocking"/"muting": an ACTOR Rule keyed by the resolved actor URL, matching how
+	// PostAccount_Block / PostAccount_Mute store it (never the client-facing ID itself).
+	rule := model.NewRule()
+
+	if err := factory.Rule().LoadByMatchKey(session, auth.UserID, model.RuleTypeActor, accountURL, &rule); err == nil {
+		switch rule.Action {
+		case model.RuleActionBlock:
+			relationship.Blocking = true
+		case model.RuleActionMute:
+			relationship.Muting = true
+		}
+	}
+
+	return relationship
+}
+
 // PostAccount_Block implements the Mastodon "block account" endpoint
 func PostAccount_Block(serverFactory *server.Factory) func(model.Authorization, txn.PostAccount_Block) (object.Relationship, error) {
 
@@ -822,6 +886,14 @@ func PostAccount_Block(serverFactory *server.Factory) func(model.Authorization, 
 
 		defer cancel()
 
+		// RULE: t.ID is our own encoded account ID, not the actor's real address -- see
+		// PostAccount_Mute for why Rule.Trigger needs the resolved one.
+		accountURL, err := resolveAccountURL(factory, session, t.ID)
+
+		if err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Account", t.ID)
+		}
+
 		// Create a new Rule record
 		// RULE: A Mastodon "block" is a BLOCK, not NewRule()'s MUTE default
 		ruleService := factory.Rule()
@@ -829,14 +901,16 @@ func PostAccount_Block(serverFactory *server.Factory) func(model.Authorization, 
 		rule.UserID = auth.UserID
 		rule.Type = model.RuleTypeActor
 		rule.Action = model.RuleActionBlock
-		rule.Trigger = t.ID
+		rule.Trigger = accountURL
 
 		if err := ruleService.Save(session, &rule, "Created via Mastodon API"); err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Saving rule")
 		}
 
-		// Return the Rule record as a Toot
-		return rule.Toot(), nil
+		// RULE: rule.Toot()'s ID is the resolved actor URL, not the ID the client sent
+		relationship := rule.Toot()
+		relationship.ID = t.ID
+		return relationship, nil
 	}
 }
 
@@ -863,11 +937,19 @@ func PostAccount_Unblock(serverFactory *server.Factory) func(model.Authorization
 
 		defer cancel()
 
+		// RULE: LoadByMatchKey re-derives the same key Save computed, so it needs the same
+		// resolved actor address Save used -- not the raw client-facing t.ID (see PostAccount_Mute).
+		accountURL, err := resolveAccountURL(factory, session, t.ID)
+
+		if err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Account", t.ID)
+		}
+
 		// Locate the rule record
 		ruleService := factory.Rule()
 		rule := model.NewRule()
 
-		if err := ruleService.LoadByMatchKey(session, auth.UserID, model.RuleTypeActor, t.ID, &rule); err != nil {
+		if err := ruleService.LoadByMatchKey(session, auth.UserID, model.RuleTypeActor, accountURL, &rule); err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Loading rule")
 		}
 
@@ -876,8 +958,12 @@ func PostAccount_Unblock(serverFactory *server.Factory) func(model.Authorization
 			return object.Relationship{}, derp.Wrap(err, location, "Deleting rule")
 		}
 
-		// Return success
-		return rule.Toot(), nil
+		// RULE: Delete doesn't mark this struct deleted, and its ID is still the actor URL
+		relationship := rule.Toot()
+		relationship.ID = t.ID
+		relationship.Blocking = false
+		relationship.Muting = false
+		return relationship, nil
 	}
 }
 
@@ -904,19 +990,30 @@ func PostAccount_Mute(serverFactory *server.Factory) func(model.Authorization, t
 
 		defer cancel()
 
+		// RULE: t.ID is our own encoded account ID (or a local hex UserID), never the actor's
+		// real address -- Rule.Trigger needs the latter, or Rule.Save's resolution step fails
+		// to find any actor to mute (see resolveAccountURL's own callers for the same pattern).
+		accountURL, err := resolveAccountURL(factory, session, t.ID)
+
+		if err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Account", t.ID)
+		}
+
 		// Create a new Rule record
 		ruleService := factory.Rule()
 		rule := model.NewRule()
 		rule.UserID = auth.UserID
 		rule.Type = model.RuleTypeActor
-		rule.Trigger = t.ID
+		rule.Trigger = accountURL
 
 		if err := ruleService.Save(session, &rule, "Created via Mastodon API"); err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Saving rule")
 		}
 
-		// Return the Rule record as a Toot
-		return rule.Toot(), nil
+		// RULE: rule.Toot()'s ID is the resolved actor URL, not the ID the client sent
+		relationship := rule.Toot()
+		relationship.ID = t.ID
+		return relationship, nil
 	}
 }
 
@@ -943,11 +1040,19 @@ func PostAccount_Unmute(serverFactory *server.Factory) func(model.Authorization,
 
 		defer cancel()
 
+		// RULE: LoadByMatchKey re-derives the same key Save computed, so it needs the same
+		// resolved actor address Save used -- not the raw client-facing t.ID (see PostAccount_Mute).
+		accountURL, err := resolveAccountURL(factory, session, t.ID)
+
+		if err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Account", t.ID)
+		}
+
 		// Locate the rule record
 		ruleService := factory.Rule()
 		rule := model.NewRule()
 
-		if err := ruleService.LoadByMatchKey(session, auth.UserID, model.RuleTypeActor, t.ID, &rule); err != nil {
+		if err := ruleService.LoadByMatchKey(session, auth.UserID, model.RuleTypeActor, accountURL, &rule); err != nil {
 			return object.Relationship{}, derp.Wrap(err, location, "Loading rule")
 		}
 
@@ -956,8 +1061,12 @@ func PostAccount_Unmute(serverFactory *server.Factory) func(model.Authorization,
 			return object.Relationship{}, derp.Wrap(err, location, "Deleting rule")
 		}
 
-		// Return success
-		return rule.Toot(), nil
+		// RULE: Delete doesn't mark this struct deleted, and its ID is still the actor URL
+		relationship := rule.Toot()
+		relationship.ID = t.ID
+		relationship.Blocking = false
+		relationship.Muting = false
+		return relationship, nil
 	}
 }
 
@@ -987,7 +1096,41 @@ func PostAccount_Note(serverFactory *server.Factory) func(model.Authorization, t
 	const location = "handler.mastodon_PostAccount_Note"
 
 	return func(auth model.Authorization, t txn.PostAccount_Note) (object.Relationship, error) {
-		return object.Relationship{}, derp.NotImplemented(location)
+
+		factory, session, cancel, err := statusSession(serverFactory, t.Host, location)
+
+		if err != nil {
+			return object.Relationship{}, err
+		}
+
+		defer cancel()
+
+		accountURL, err := resolveAccountURL(factory, session, t.ID)
+
+		if err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized Account", t.ID)
+		}
+
+		// RULE: Emissary stores this note on the caller's Following record (its `Notes` field), so
+		// it can only be kept for an account the caller follows.
+		following := model.NewFollowing()
+
+		if err := factory.Following().LoadByURL(session, auth.UserID, accountURL, &following); err != nil {
+
+			if derp.IsNotFound(err) {
+				return object.Relationship{}, derp.BadRequest(location, "Notes can only be added to accounts you follow", t.ID)
+			}
+
+			return object.Relationship{}, derp.Wrap(err, location, "Loading following", t.ID)
+		}
+
+		following.Notes = t.Comment
+
+		if err := factory.Following().Save(session, &following, "Note updated via Mastodon API"); err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Saving following", t.ID)
+		}
+
+		return buildRelationship(factory, session, auth, t.ID), nil
 	}
 }
 
@@ -1016,38 +1159,10 @@ func GetAccount_Relationships(serverFactory *server.Factory) func(model.Authoriz
 
 		defer cancel()
 
-		followingService := factory.Following()
-		ruleService := factory.Rule()
 		result := make([]object.Relationship, 0, len(t.IDs))
 
 		for _, id := range t.IDs {
-
-			relationship := object.Relationship{
-				ID:        id,
-				Languages: []string{},
-			}
-
-			// "following": a Following record for the resolved actor URL.
-			if accountURL, err := resolveAccountURL(factory, session, id); err == nil {
-				following := model.NewFollowing()
-				if err := followingService.LoadByURL(session, auth.UserID, accountURL, &following); err == nil {
-					relationship.Following = true
-				}
-			}
-
-			// "blocking"/"muting": an ACTOR Rule keyed by the ID the client sent,
-			// matching how PostAccount_Block / PostAccount_Mute store it.
-			rule := model.NewRule()
-			if err := ruleService.LoadByMatchKey(session, auth.UserID, model.RuleTypeActor, id, &rule); err == nil {
-				switch rule.Action {
-				case model.RuleActionBlock:
-					relationship.Blocking = true
-				case model.RuleActionMute:
-					relationship.Muting = true
-				}
-			}
-
-			result = append(result, relationship)
+			result = append(result, buildRelationship(factory, session, auth, id))
 		}
 
 		return result, nil
@@ -1067,13 +1182,147 @@ func GetAccount_FamiliarFollowers(serverFactory *server.Factory) func(model.Auth
 }
 
 // https://docs.joinmastodon.org/methods/accounts/#search
+const (
+	accountSearchDefaultLimit = 40 // Mastodon's documented default page size
+	accountSearchMaxLimit     = 80 // Mastodon's documented maximum
+)
+
+// https://docs.joinmastodon.org/methods/accounts/#search
+//
+// A type-ahead: prefix-matches local usernames, or the caller's own Following with following=true.
 func GetAccount_Search(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Search) ([]object.Account, toot.PageInfo, error) {
 
 	const location = "handler.mastodon_GetAccount_Search"
 
 	return func(auth model.Authorization, t txn.GetAccount_Search) ([]object.Account, toot.PageInfo, error) {
-		return nil, toot.PageInfo{}, derp.NotImplemented(location)
+
+		factory, session, cancel, err := statusSession(serverFactory, t.Host, location)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, err
+		}
+
+		defer cancel()
+
+		accounts, err := searchAccounts(factory, session, auth, t.Host, t.Q, t.Following, int64(t.Limit), t.Offset)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Searching accounts", t.Q)
+		}
+
+		return accounts, toot.PageInfo{}, nil
 	}
+}
+
+// searchAccounts is the shared implementation behind GetAccount_Search and GetSearch: prefix
+// matches first, then the exact-handle/URL fallback (resolveOneAccount) fills any remaining room.
+func searchAccounts(factory *service.Factory, session data.Session, auth model.Authorization, host string, q string, following bool, limit int64, offset int) ([]object.Account, error) {
+
+	query := strings.TrimSpace(strings.TrimPrefix(q, "@"))
+
+	if query == "" {
+		return []object.Account{}, nil
+	}
+
+	if limit <= 0 {
+		limit = accountSearchDefaultLimit
+	}
+
+	limit = min(limit, accountSearchMaxLimit)
+	offset = max(offset, 0)
+
+	var accounts []object.Account
+	var err error
+
+	if following {
+		accounts, err = searchFollowedAccounts(factory, session, auth, query)
+	} else {
+		accounts, err = searchLocalAccounts(factory, session, auth, query, int(limit)+offset)
+	}
+
+	if err != nil {
+		return nil, derp.Wrap(err, "handler.mastodon.searchAccounts", "Querying accounts", query)
+	}
+
+	if int64(len(accounts)) < limit+int64(offset) {
+		if account, found := resolveOneAccount(factory, session, auth, host, query); found && !accountsContainID(accounts, account.ID) {
+			accounts = append(accounts, account)
+		}
+	}
+
+	if offset >= len(accounts) {
+		return []object.Account{}, nil
+	}
+
+	accounts = accounts[offset:]
+
+	if int64(len(accounts)) > limit {
+		accounts = accounts[:limit]
+	}
+
+	return accounts, nil
+}
+
+// searchLocalAccounts prefix-matches public local usernames against the query, newest first.
+func searchLocalAccounts(factory *service.Factory, session data.Session, auth model.Authorization, query string, limit int) ([]object.Account, error) {
+
+	criteria := exp.BeginsWith("username", query).AndEqual("isPublic", true)
+	users, err := factory.User().Query(session, criteria, option.MaxRows(int64(limit)), option.CaseSensitive(false))
+
+	if err != nil {
+		return nil, derp.Wrap(err, "handler.mastodon.searchLocalAccounts", "Querying users", query)
+	}
+
+	accounts := make([]object.Account, len(users))
+
+	for index := range users {
+		accounts[index] = tootUser(factory, session, auth, &users[index])
+	}
+
+	return accounts, nil
+}
+
+// searchFollowedAccounts prefix-matches the caller's own Following records by username or label
+// -- the accounts Mastodon's `following=true` scopes this search to.
+func searchFollowedAccounts(factory *service.Factory, session data.Session, auth model.Authorization, query string) ([]object.Account, error) {
+
+	// RULE: Following.Username is stored WITH a leading "@" (per PersonLink's own convention --
+	// see model/personLink.go), so a bare-query prefix match must also try "@"+query, or every
+	// followed account misses (BeginsWith("@gargron", "gargron") is false).
+	criteria := exp.Or(
+		exp.BeginsWith("username", query),
+		exp.BeginsWith("username", "@"+query),
+		exp.BeginsWith("label", query),
+	)
+
+	followings, err := factory.Following().Query(session, exp.Equal("userId", auth.UserID).And(criteria), option.CaseSensitive(false))
+
+	if err != nil {
+		return nil, derp.Wrap(err, "handler.mastodon.searchFollowedAccounts", "Querying followings", query)
+	}
+
+	accounts := make([]object.Account, len(followings))
+
+	for index, following := range followings {
+
+		person := model.PersonLink{
+			Name:       following.Label,
+			Username:   following.Username,
+			ProfileURL: following.ProfileURL,
+			IconURL:    following.IconURL,
+		}
+
+		accounts[index] = person.Toot()
+	}
+
+	return accounts, nil
+}
+
+// accountsContainID returns TRUE if any of the given accounts already has this ID.
+func accountsContainID(accounts []object.Account, id string) bool {
+	return slices.ContainsFunc(accounts, func(account object.Account) bool {
+		return account.ID == id
+	})
 }
 
 // https://docs.joinmastodon.org/methods/accounts/#lookup

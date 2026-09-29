@@ -11,6 +11,7 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/toot"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
@@ -249,4 +250,82 @@ func userOwnsStream(authorization *model.Authorization, stream *model.Stream) er
 	}
 
 	return derp.Forbidden(location, "User is not authorized to modify this stream")
+}
+
+// tagsForStream converts a Stream's #hashtags into Mastodon tags, with the Mastodon-shaped
+// URL clients need (see apiHashtagURL).
+func tagsForStream(stream *model.Stream) []object.StatusTag {
+
+	hashtags := model.TagsOfType(stream.Tags, vocab.LinkTypeHashtag)
+	tags := make([]object.StatusTag, 0, len(hashtags))
+
+	parsed, err := url.Parse(stream.URL)
+
+	if err != nil || parsed.Host == "" {
+		return tags
+	}
+
+	origin := parsed.Scheme + "://" + parsed.Host
+
+	for _, tag := range hashtags {
+		tags = append(tags, object.StatusTag{Name: tag.Name, URL: apiHashtagURL(origin, tag.Name)})
+	}
+
+	return tags
+}
+
+// tootStream converts a Stream into a Mastodon status, adding its hashtags and the hashtag
+// link markup (see tagsForStream and markHashtagLinks).
+func tootStream(factory *service.Factory, session data.Session, stream *model.Stream) object.Status {
+
+	status := stream.Toot()
+	status.Tags = tagsForStream(stream)
+	status.Content = markHashtagLinks(status.Content, status.Tags)
+	status.MediaAttachments = streamMediaAttachments(factory, session, stream)
+
+	return status
+}
+
+// streamMediaAttachments returns a Stream's own uploaded media (see PostMedia/attachStatusMedia),
+// in the Mastodon shape. A Stream with none, or a lookup failure, yields an empty (never nil)
+// slice -- the API always returns a real array for this field.
+func streamMediaAttachments(factory *service.Factory, session data.Session, stream *model.Stream) []object.MediaAttachment {
+
+	attachments, err := factory.Attachment().QueryByObjectID(session, model.AttachmentObjectTypeStream, stream.StreamID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "handler.mastodon.streamMediaAttachments", "Querying attachments", stream.StreamID))
+		return []object.MediaAttachment{}
+	}
+
+	result := make([]object.MediaAttachment, len(attachments))
+
+	for index := range attachments {
+		result[index] = attachmentToMediaAttachment(attachments[index])
+	}
+
+	return result
+}
+
+// tootUser converts a User into a Mastodon account, adding the post count and last post date
+// that need a query (User.Toot has no database access). The counts are the posts the caller
+// may see. A failed lookup is reported and leaves them zero, since it should not fail the account.
+func tootUser(factory *service.Factory, session data.Session, auth model.Authorization, user *model.User) object.Account {
+
+	account := user.Toot()
+
+	count, newest, err := factory.Stream().SummarizeByUser(session, auth, user.UserID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "handler.mastodon.tootUser", "Counting posts", user.UserID))
+		return account
+	}
+
+	account.StatusesCount = int(count)
+
+	if newest > 0 {
+		account.LastStatusAt = time.Unix(newest, 0).UTC().Format("2006-01-02")
+	}
+
+	return account
 }
