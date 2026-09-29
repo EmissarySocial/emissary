@@ -1,10 +1,10 @@
 package asnormalizer
 
 import (
+	"strconv"
 	"sync"
 	"testing"
 
-	"github.com/EmissarySocial/emissary/tools/cacheheader"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -124,7 +124,7 @@ func TestClient_RepeatedURLReturnsStub(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, map[string]any{vocab.PropertyID: "https://example.com/note"}, result.Value())
-	require.Equal(t, cacheheader.DirectiveNoStore, result.HTTPHeader().Get(cacheheader.HeaderCacheControl))
+	require.True(t, result.Metadata.NoStore)
 	require.Zero(t, inner.totalLoads())
 }
 
@@ -147,48 +147,16 @@ func TestClient_FragmentsAreIgnored(t *testing.T) {
 	require.Zero(t, inner.totalLoads())
 }
 
-// TestClient_DepthLimit confirms that a history of maxDepth URLs returns the stub, and one URL fewer
-// still loads.
-func TestClient_DepthLimit(t *testing.T) {
-
-	inner, _, normalizer := newTestStack(map[string]map[string]any{
-		"https://example.com/d": testActor("https://example.com/d"),
-	})
-
-	result, err := normalizer.Load("https://example.com/d", WithHistory("https://example.com/a", "https://example.com/b", "https://example.com/c"))
-	require.NoError(t, err)
-	require.Equal(t, vocab.Unknown, result.Type())
-	require.Zero(t, inner.totalLoads())
-
-	result, err = normalizer.Load("https://example.com/d", WithHistory("https://example.com/a", "https://example.com/b"))
-	require.NoError(t, err)
-	require.Equal(t, vocab.ActorTypePerson, result.Type())
-	require.Equal(t, 1, inner.loads("https://example.com/d"))
-}
-
-// TestClient_RepeatsDoNotCountTowardDepth confirms that a history passed twice counts each URL once.
-func TestClient_RepeatsDoNotCountTowardDepth(t *testing.T) {
-
-	inner, _, normalizer := newTestStack(map[string]map[string]any{
-		"https://example.com/d": testActor("https://example.com/d"),
-	})
-
-	history := WithHistory("https://example.com/a", "https://example.com/b")
-
-	result, err := normalizer.Load("https://example.com/d", history, history)
-	require.NoError(t, err)
-
-	require.Equal(t, vocab.ActorTypePerson, result.Type())
-	require.Equal(t, 1, inner.loads("https://example.com/d"))
-}
-
-// TestClient_FreshURLChain confirms that a chain of Notes, each attributed to a new URL, stops once
-// the history reaches maxDepth.
+// TestClient_FreshURLChain confirms that a chain of Notes, each attributed to a new URL, is followed
+// to its end with every link fetched once.
 func TestClient_FreshURLChain(t *testing.T) {
+
+	// There is no depth limit: the history stops repeats, not long chains
+	const length = 20
 
 	documents := make(map[string]map[string]any)
 
-	for index := range 20 {
+	for index := range length {
 		documents[chainURL(index)] = testNote(chainURL(index), chainURL(index+1))
 	}
 
@@ -197,8 +165,10 @@ func TestClient_FreshURLChain(t *testing.T) {
 	_, err := root.Load(chainURL(0))
 	require.NoError(t, err)
 
-	require.Equal(t, maxDepth, inner.totalLoads())
-	require.Zero(t, inner.loads(chainURL(maxDepth)))
+	// Every link, plus the missing one that ends the chain, is requested once
+	for index := range length + 1 {
+		require.Equal(t, 1, inner.loads(chainURL(index)), "link %d", index)
+	}
 }
 
 // TestClient_ReturnsOriginalClient confirms that the returned document is bound to the client that
@@ -282,7 +252,7 @@ func testActor(id string) map[string]any {
 
 // chainURL returns the URL of one link in a chain of Notes
 func chainURL(index int) string {
-	return "https://example.com/chain/" + string(rune('a'+index))
+	return "https://example.com/chain/" + strconv.Itoa(index)
 }
 
 // recordingRoot stands in for the top of a stack: it records the history each load carries, then

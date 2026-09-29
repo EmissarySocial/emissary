@@ -12,6 +12,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"html"
 	"net/http"
 	"net/http/httptest"
 	"slices"
@@ -42,6 +43,9 @@ const cycleTimeout = 5 * time.Second
 // cycleChainLength is how many links the fresh-URL chain server will serve before answering 404
 const cycleChainLength = 50
 
+// webfingerPath is where the test server answers the WebFinger lookups that Bridgy Fed would receive
+const webfingerPath = "/.well-known/webfinger"
+
 // cycleSigner is the identity every test stack signs as, so that stacks sharing a Carpool merge
 const cycleSigner = "cycle-test"
 
@@ -67,7 +71,7 @@ func TestClientCycle_SelfAttributedNote(t *testing.T) {
 		"content":      "I wrote myself",
 	})
 
-	document := loadWithin(t, cycleStack(), noteURL)
+	document := loadWithin(t, cycleStack(server), noteURL)
 
 	require.Equal(t, noteURL, document.ID())
 	require.Equal(t, 1, server.requests("/notes/self"))
@@ -96,7 +100,7 @@ func TestClientCycle_MutuallyAttributedNotes(t *testing.T) {
 		"content":      "A wrote me",
 	})
 
-	document := loadWithin(t, cycleStack(), firstURL)
+	document := loadWithin(t, cycleStack(server), firstURL)
 
 	require.Equal(t, firstURL, document.ID())
 	require.Equal(t, 1, server.requests("/notes/a"))
@@ -121,7 +125,7 @@ func TestClientCycle_CreateOfItself(t *testing.T) {
 
 	server.serve("/actors/alice", cycleActor(server.url("/actors/alice")))
 
-	document := loadWithin(t, cycleStack(), createURL)
+	document := loadWithin(t, cycleStack(server), createURL)
 
 	require.Equal(t, createURL, document.ID())
 	require.Equal(t, 1, server.requests("/activities/self"))
@@ -140,25 +144,41 @@ func TestClientCycle_ActorWithBareKeyLink(t *testing.T) {
 	actor["publicKey"] = actorURL + "#main-key"
 	server.serve("/actors/keyself", actor)
 
-	document := loadWithin(t, cycleStack(), actorURL)
+	document := loadWithin(t, cycleStack(server), actorURL)
 
 	require.Equal(t, actorURL, document.ID())
 	require.Equal(t, 1, server.requests("/actors/keyself"))
 }
 
-// TestClientCycle_FreshURLChain confirms that a chain of Notes, each attributed to a new URL, stops
-// after a few links instead of following the chain to its end.
+// TestClientCycle_FreshURLChain confirms that a chain of Notes, each attributed to a new URL, is
+// followed to its end with every link fetched once.
 func TestClientCycle_FreshURLChain(t *testing.T) {
 
-	// BUG-212: no URL repeats, so only a depth limit can stop this. The server ends the chain
-	// at cycleChainLength so that an unbounded client still finishes.
+	// BUG-212: there is no depth limit, so only the server's end of the chain stops this.
 	server := newCycleServer(t)
 	server.serveChain(cycleChainLength)
 
-	loadWithin(t, cycleStack(), server.url("/chain/0"))
+	loadWithin(t, cycleStack(server), server.url("/chain/0"))
 
-	// The post, its author, and one level below that are all real traffic ever needs
-	require.LessOrEqual(t, server.requestsWithPrefix("/chain/"), 3)
+	// Every link, plus the missing one that ends the chain, is requested once
+	for index := range cycleChainLength + 1 {
+		require.Equal(t, 1, server.requests(fmt.Sprintf("/chain/%d", index)), "link %d", index)
+	}
+}
+
+// TestClientCycle_BridgyFedStaysLocal confirms that the Bridgy Fed lookup the stack makes for every
+// local URL reaches the test server's copy, not bsky.brid.gy.
+func TestClientCycle_BridgyFedStaysLocal(t *testing.T) {
+
+	server := newCycleServer(t)
+	noteURL := server.url("/notes/plain")
+
+	server.serve("/notes/plain", map[string]any{"id": noteURL, "type": "Note", "content": "Hello"})
+
+	document := loadWithin(t, cycleStack(server), noteURL)
+
+	require.Equal(t, noteURL, document.ID())
+	require.Positive(t, server.requests(webfingerPath))
 }
 
 // TestClientCycle_ConcurrentMutualAuthors confirms that two stacks sharing one Carpool, each loading
@@ -175,7 +195,7 @@ func TestClientCycle_ConcurrentMutualAuthors(t *testing.T) {
 	server.serve("/notes/b", map[string]any{"id": secondURL, "type": "Note", "attributedTo": firstURL})
 
 	carpool := clients.NewCarpool()
-	newStack := func() streams.Client { return cycleStackOn(carpool) }
+	newStack := func() streams.Client { return cycleStackOn(server, carpool) }
 
 	documents := loadConcurrently(t, newStack, firstURL, secondURL)
 
@@ -195,7 +215,7 @@ func TestClientCycle_ConcurrentSelfAttributedNote(t *testing.T) {
 	server.serve("/notes/self", map[string]any{"id": noteURL, "type": "Note", "attributedTo": noteURL})
 
 	carpool := clients.NewCarpool()
-	newStack := func() streams.Client { return cycleStackOn(carpool) }
+	newStack := func() streams.Client { return cycleStackOn(server, carpool) }
 
 	for _, document := range loadConcurrently(t, newStack, slices.Repeat([]string{noteURL}, cycleCallers)...) {
 		require.Equal(t, noteURL, document.ID())
@@ -218,7 +238,7 @@ func TestClientCycle_TopLevelLoadsStillMerge(t *testing.T) {
 	server.serve("/actors/alice", cycleActor(authorURL))
 
 	carpool := clients.NewCarpool()
-	newStack := func() streams.Client { return cycleStackOn(carpool) }
+	newStack := func() streams.Client { return cycleStackOn(server, carpool) }
 
 	for _, document := range loadConcurrently(t, newStack, slices.Repeat([]string{noteURL}, cycleCallers)...) {
 		require.Equal(t, noteURL, document.ID())
@@ -235,22 +255,23 @@ func TestClientCycle_TopLevelLoadsStillMerge(t *testing.T) {
 
 // cycleStack builds the client layers of service.ActivityStream.Client, in the same order, around a
 // fresh Carpool.  ascache and asrules are omitted because both need a live database.
-func cycleStack() streams.Client {
-	return cycleStackOn(clients.NewCarpool())
+func cycleStack(server *cycleServer) streams.Client {
+	return cycleStackOn(server, clients.NewCarpool())
 }
 
 // cycleStackOn builds the same stack as cycleStack around a Carpool that other stacks may share, as
 // every stack in one server process does.
-func cycleStackOn(carpool *clients.Carpool) streams.Client {
+func cycleStackOn(server *cycleServer, carpool *clients.Carpool) streams.Client {
 
 	// RULE: This MUST mirror service.ActivityStream.Client, because a cycle is made by the layers
 	// together.  Omitting ascache is the same as a cache miss, which is where every cycle begins.
-	client := carpool.Client(cycleLowerLayers(), cycleSigner)
+	client := carpool.Client(cycleLowerLayers(server), cycleSigner)
 	return ashash.New(client)
 }
 
-// cycleLowerLayers builds the layers of service.ActivityStream.Client below ascache, in the same order
-func cycleLowerLayers() streams.Client {
+// cycleLowerLayers builds the layers of service.ActivityStream.Client below ascache, in the same
+// order, with Bridgy Fed's lookups sent to the test server
+func cycleLowerLayers(server *cycleServer) streams.Client {
 
 	// httptest serves from 127.0.0.1, which the transport's SSRF guard refuses by default
 	const allowPrivateIPs = true
@@ -269,7 +290,9 @@ func cycleLowerLayers() streams.Client {
 		},
 	})
 
-	client = bridgyfed.New(client)
+	// RULE: Bridgy Fed treats every 127.0.0.1 URL as a Bluesky handle and looks it up over the
+	// internet, so the test server answers in its place, as bsky.brid.gy does
+	client = bridgyfed.New(client, bridgyfed.WithHostname(server.host()))
 	client = tagspub.New(client)
 	client = assanitizer.New(client, model.NamespaceEmissary)
 	client = asnormalizer.New(client)
@@ -397,6 +420,11 @@ func (server *cycleServer) url(path string) string {
 	return server.server.URL + path
 }
 
+// host returns this server's host and port
+func (server *cycleServer) host() string {
+	return strings.TrimPrefix(server.server.URL, "http://")
+}
+
 // serve registers a document to answer at a path
 func (server *cycleServer) serve(path string, document map[string]any) {
 	server.mutex.Lock()
@@ -460,6 +488,12 @@ func (server *cycleServer) handle(w http.ResponseWriter, r *http.Request) {
 	delay := server.delay
 	server.mutex.Unlock()
 
+	// Stand in for Bridgy Fed, which answers every lookup the stack makes here
+	if r.URL.Path == webfingerPath {
+		server.bridgyFedNotFound(w, r)
+		return
+	}
+
 	// Hold the response outside the mutex, so that concurrent requests are all counted at once
 	time.Sleep(delay)
 
@@ -472,6 +506,22 @@ func (server *cycleServer) handle(w http.ResponseWriter, r *http.Request) {
 
 	// The client may hang up early on an error; a short write says nothing about the test
 	_ = json.NewEncoder(w).Encode(document)
+}
+
+// bridgyFedNotFound answers a WebFinger lookup the way bsky.brid.gy answered one for a 127.0.0.1 URL
+// on 2026-09-29: 404, as HTML, naming the account it could not find
+func (server *cycleServer) bridgyFedNotFound(w http.ResponseWriter, r *http.Request) {
+
+	// The resource is "acct:<url>@<bridgy host>", and Bridgy Fed names only the <url>
+	account := strings.TrimPrefix(r.URL.Query().Get("resource"), "acct:")
+	account = strings.TrimSuffix(account, "@"+server.host())
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "public, max-age=3600")
+	w.WriteHeader(http.StatusNotFound)
+
+	// The client may hang up early; a short write says nothing about the test
+	_, _ = w.Write([]byte("No atproto user found for " + html.EscapeString(account)))
 }
 
 // chainLink builds the Note for one link of the fresh-URL chain.  The caller holds the mutex.

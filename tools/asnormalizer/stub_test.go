@@ -3,20 +3,19 @@ package asnormalizer
 import (
 	"testing"
 
-	"github.com/EmissarySocial/emissary/tools/cacheheader"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/stretchr/testify/require"
 )
 
 // TestStub_HoldsOnlyItsID confirms that the stub is an object whose only property is the URL it
-// stands in for, marked no-store.
+// stands in for, marked NoStore.
 func TestStub_HoldsOnlyItsID(t *testing.T) {
 
 	result := stub("https://example.com/note")
 
 	require.Equal(t, map[string]any{vocab.PropertyID: "https://example.com/note"}, result.Value())
-	require.Equal(t, cacheheader.DirectiveNoStore, result.HTTPHeader().Get(cacheheader.HeaderCacheControl))
+	require.True(t, result.Metadata.NoStore)
 }
 
 // TestStub_GettersNeverLoad confirms that reading the stub, the way the layers above the normalizer

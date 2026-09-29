@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -33,13 +34,13 @@ const cycleTestConnection = "mongodb://localhost:27017/?directConnection=true"
 // stack, and that nothing without a type is left in the cache.
 func TestClientCycle_FullStack_EveryShapeLoads(t *testing.T) {
 
-	// BUG-212: the chain's depth-limit stub is the one no later save overwrites, so without
+	// BUG-212: the cross-host shape's stub is the one no later save overwrites, so without
 	// ascache's type check it stays cached as the document for its URL.
 	database := newCycleTestDatabase(t)
 	server := newCycleShapeServer(t)
 
 	for _, url := range server.shapeURLs() {
-		loadWithin(t, fullStack(clients.NewCarpool(), database), url)
+		loadWithin(t, fullStack(server, clients.NewCarpool(), database), url)
 	}
 
 	require.Zero(t, untypedCacheEntries(t, database))
@@ -53,13 +54,20 @@ func TestClientCycle_FullStack_SecondLoadIsCached(t *testing.T) {
 	server := newCycleShapeServer(t)
 
 	for _, url := range server.shapeURLs() {
-		loadWithin(t, fullStack(clients.NewCarpool(), database), url)
+		loadWithin(t, fullStack(server, clients.NewCarpool(), database), url)
 	}
 
 	before := server.requestsWithPrefix("/")
 
 	for _, url := range server.shapeURLs() {
-		loadWithin(t, fullStack(clients.NewCarpool(), database), url)
+
+		// The cross-host Note is cached under its claimed id alone, so a load by its URL always
+		// misses, as ascache intends for a URL on another host than the document's id (BUG-01)
+		if url == server.url("/notes/crosshost") {
+			continue
+		}
+
+		loadWithin(t, fullStack(server, clients.NewCarpool(), database), url)
 	}
 
 	require.Equal(t, before, server.requestsWithPrefix("/"))
@@ -80,7 +88,7 @@ func TestClientCycle_FullStack_ConcurrentMutualAuthors(t *testing.T) {
 	server.serve("/notes/b", map[string]any{"id": secondURL, "type": "Note", "attributedTo": firstURL})
 
 	carpool := clients.NewCarpool()
-	newStack := func() streams.Client { return fullStack(carpool, database) }
+	newStack := func() streams.Client { return fullStack(server, carpool, database) }
 
 	documents := loadConcurrently(t, newStack, firstURL, secondURL)
 
@@ -95,13 +103,13 @@ func TestClientCycle_FullStack_ConcurrentMutualAuthors(t *testing.T) {
 
 // fullStack builds every layer of service.ActivityStream.Client, in the same order, with ascache over
 // the given database and a rule checker that reads what the production checker reads.
-func fullStack(carpool *clients.Carpool, database *mongo.Database) streams.Client {
+func fullStack(server *cycleServer, carpool *clients.Carpool, database *mongo.Database) streams.Client {
 
-	var server data.Server = mongodb.NewServer(database)
+	var cacheDatabase data.Server = mongodb.NewServer(database)
 
 	// RULE: This MUST mirror service.ActivityStream.Client, including WithIgnoreHeaders, so that
 	// the stub's no-store header cannot be what keeps it out of the cache.
-	var client streams.Client = ascache.New(cycleLowerLayers(), nil, server, model.ActorTypeApplication, primitive.NilObjectID, "cycle.test", ascache.WithIgnoreHeaders())
+	var client streams.Client = ascache.New(cycleLowerLayers(server), nil, cacheDatabase, model.ActorTypeApplication, primitive.NilObjectID, "cycle.test", ascache.WithIgnoreHeaders())
 	client = carpool.Client(client, cycleSigner)
 	client = asrules.New(client, cycleRuleChecker)
 
@@ -141,9 +149,19 @@ func newCycleShapeServer(t *testing.T) *cycleServer {
 	keySelf["publicKey"] = server.url("/actors/keyself") + "#main-key"
 	server.serve("/actors/keyself", keySelf)
 
+	// A Note that claims an id on another host and names its own URL as author. The Note is cached
+	// under that id alone, so the stub for its URL is the only cache entry that URL ever gets.
+	server.serve("/notes/crosshost", map[string]any{"id": server.localhostURL("/notes/crosshost"), "type": "Note", "attributedTo": server.url("/notes/crosshost")})
+
 	server.serveChain(cycleChainLength)
 
 	return server
+}
+
+// localhostURL returns the URL of a path on this server addressed as "localhost", which the cache
+// treats as a different host from 127.0.0.1
+func (server *cycleServer) localhostURL(path string) string {
+	return strings.Replace(server.url(path), "127.0.0.1", "localhost", 1)
 }
 
 // shapeURLs returns the URL that starts each cycle shape served by newCycleShapeServer
@@ -153,6 +171,7 @@ func (server *cycleServer) shapeURLs() []string {
 		server.url("/notes/a"),
 		server.url("/activities/self"),
 		server.url("/actors/keyself"),
+		server.url("/notes/crosshost"),
 		server.url("/chain/0"),
 	}
 }

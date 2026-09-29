@@ -89,20 +89,6 @@ func TestLoadConfig_Contains(t *testing.T) {
 	require.False(t, config.contains(""))
 }
 
-// TestLoadConfig_IsTooDeep confirms that the history is too deep once it holds maxDepth URLs, and not
-// one URL before.
-func TestLoadConfig_IsTooDeep(t *testing.T) {
-
-	config := loadConfig{}
-
-	for index := range maxDepth {
-		require.False(t, config.isTooDeep(), "history of %d", index)
-		config.remember("https://example.com/" + string(rune('a'+index)))
-	}
-
-	require.True(t, config.isTooDeep())
-}
-
 // TestWithoutFragment confirms that only the fragment is removed, and only from the first "#".
 func TestWithoutFragment(t *testing.T) {
 
