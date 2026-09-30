@@ -25,6 +25,7 @@ import (
 	remoteoptions "github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -303,6 +304,20 @@ func (client *Client) save(ctx context.Context, url string, value *Value) error 
 
 	const location = "ascache.Client.save"
 
+	// RULE: A document marked NoStore is never written, whichever path reached here.  The normalizer
+	// marks its stub this way, and caching the stub would serve it as the document to every user.
+	if value.Metadata.NoStore {
+		return nil
+	}
+
+	// RULE: A document is written only when the lookup key is on its id's host.  A host may speak
+	// only for its own ids, so any other key, or a document with no id, vouches for nothing. (BUG-223)
+	documentID := value.Object.GetString("id")
+
+	if uri.NotSameHost(url, documentID) {
+		return nil
+	}
+
 	_, err := client.commonDatabase.WithTransaction(ctx, func(session data.Session) (any, error) {
 
 		// Write to trace log
@@ -313,15 +328,10 @@ func (client *Client) save(ctx context.Context, url string, value *Value) error 
 			return nil, nil
 		}
 
-		// Make sure all relevant URLs are included in this value
-		documentID := value.Object.GetString("id")
+		// File the document under its id and the key that found it.  The rule above has already
+		// put both on one host, so the key is an alias the id's own host vouches for. (BUG-01)
 		value.AppendURL(documentID)
-
-		// RULE: The lookup key becomes an alias only when it lives on the document's own host.
-		// A host may say what its own names mean, never what another host's names mean.
-		if sameHost(url, documentID) {
-			value.AppendURL(url)
-		}
+		value.AppendURL(url)
 
 		// Try to load an existing/duplicate values using the object.id field.
 		// There may be multiple URLs that point to the same document, so we're

@@ -165,16 +165,9 @@ func inbox_ValidateActivity(context Context, activity streams.Document) (model.R
 		return model.RuleDisposition{}, derp.BadRequest(location, "Activity must have a Type", activity.Value())
 	}
 
-	// RULE: An activity's id must share its actor's origin (D18). This closes the dedup-poisoning
-	// primitive where an attacker pre-registers a victim's future activity id: the poisoned activity
-	// is now rejected before it can be stored under that id. Only the top-level id is bound here;
-	// cross-origin object references are legitimate and are bound separately (D19). A missing id
-	// cannot poison (inbox_SaveActivity mints a local one), so it is exempt.
-	if activityID := activity.ID(); activityID != "" {
-		if !activitypub.IsSameOrigin(activity.ActorID(), activityID) {
-			return model.RuleDisposition{}, derp.Unauthorized(location, "Activity id must share the actor's origin", activity.ActorID(), activityID)
-		}
-	}
+	// NOTE: activitypub.ReceiveRequest has already bound the activity's id to its actor's origin
+	// (D18), for every inbox. Cross-origin object references are legitimate and are bound separately
+	// by the handlers that act on them (D19).
 
 	// Compute the sender's disposition ONCE, for every type -- exceptions included -- so the gate
 	// below, storage stamping, and the served labels all read the same answer (4B/4C).

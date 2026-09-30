@@ -38,6 +38,16 @@ func ReceiveRequest(request *http.Request, client streams.Client, keys PublicKey
 		return activity, derp.Wrap(err, location, "Receiving ActivityPub request")
 	}
 
+	// RULE: An activity's id must share its actor's origin (D18). This closes the dedup-poisoning
+	// primitive where an attacker pre-registers a victim's future activity id, and keeps a delivery
+	// from filing itself under another host's id in the shared cache (BUG-223). A missing id cannot
+	// poison, so it is exempt: the user inbox mints a local one, and the cache declines to store it.
+	if activity.ID() != "" {
+		if !activity.IsSameOrigin(activity.ActorID()) {
+			return streams.NilDocument(), derp.Unauthorized(location, "Activity id must share the actor's origin", activity.ActorID(), activity.ID())
+		}
+	}
+
 	// RULE: reserved "emissary:" properties are server-generated only, so inbound ones are
 	// forgeries (fake moderation marks, fake trust annotations). Strip them here, before the
 	// activity can reach storage, caches, notifications, or SSE payloads.
