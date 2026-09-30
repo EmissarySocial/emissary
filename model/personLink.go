@@ -139,34 +139,21 @@ func (person *PersonLink) UnmarshalMap(data mapof.Any) {
 // Toot returns this PersonLink as its Mastodon API equivalent
 func (person PersonLink) Toot() object.Account {
 
-	// Local accounts use the same short hex UserID as model.User.Toot(), so the
-	// same account is identified consistently everywhere it appears (a status's
-	// embedded author vs. that same account fetched directly). Remote/unlinked
-	// people currently fall back to their raw profile URL; resolveAccountURL in
-	// handler/mastodon/accounts.go still accepts a bare URL, so this resolves --
-	// but it is inconsistent with the "u_..." token EncodeRemoteAccountID produces
-	// for the same account via GetAccount_Lookup. Switching this to
-	// EncodeRemoteAccountID(person.ProfileURL) closes the gap (encoding needs no
-	// session/factory); left as a follow-up.
-	id := person.ProfileURL
+	// A remote/unlinked person gets the same "u_..." token GetAccount_Lookup produces for
+	// the same account, so a Status's embedded account matches that account's own GetAccount.
+	id := EncodeRemoteAccountID(person.ProfileURL)
 
 	if !person.UserID.IsZero() {
 		id = person.UserID.Hex()
 	}
 
-	// The real Account entity requires a non-null created_at (confirmed against the
-	// real client's Codable model -- unlike LastStatusAt, this field has no "?" and
-	// crashes decode if missing/empty). ActivityPub doesn't guarantee any actor
-	// publishes a reliable "account created" date (Mastodon's own Account.created_at
-	// is a Mastodon-API convention, not part of ActivityPub itself, and plenty of
-	// other software won't populate it), so rather than chase an inconsistently
-	// available value, just use now -- an honest "we don't know" rather than a
-	// crash or a lie.
+	// created_at has no "?" in the client's Codable model and crashes decode if missing.
+	// ActivityPub has no reliable "account created" date, so this is an honest "unknown".
 	return object.Account{
 		ID:          id,
 		URL:         person.ProfileURL,
 		Username:    person.LocalUsername(),
-		Acct:        person.Username, // Already in "user" or "user@domain.social" form -- see the field comment.
+		Acct:        strings.TrimPrefix(person.Username, "@"), // "user" or "user@domain.social" -- never a leading "@".
 		DisplayName: person.Name,
 		Avatar:      person.IconURL,
 		CreatedAt:   MastodonDate(time.Now()),
@@ -174,12 +161,18 @@ func (person PersonLink) Toot() object.Account {
 }
 
 // LocalUsername returns the bare username (no "@domain" suffix), for the
-// Mastodon API's Account.Username field -- "not including domain," per spec,
-// whereas PersonLink.Username is already qualified (e.g. "user@domain.social").
+// Mastodon API's Account.Username field.
 func (person PersonLink) LocalUsername() string {
-	if name, _, found := strings.Cut(person.Username, "@"); found {
+
+	// RULE: Username is stored either bare ("user@domain.social") or with a leading
+	// "@" (webfinger's own "acct:@user@domain" style) -- both are seen in practice.
+	// Strip it before splitting, or a leading-"@" value's local part comes back
+	// empty (Cut splits on the first "@", which is then the leading one itself).
+	username := strings.TrimPrefix(person.Username, "@")
+
+	if name, _, found := strings.Cut(username, "@"); found {
 		return name
 	}
 
-	return person.Username
+	return username
 }

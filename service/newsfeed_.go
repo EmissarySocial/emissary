@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -522,27 +523,35 @@ func (service *NewsFeed) setResponse(session data.Session, userID primitive.Obje
 
 	const location = "service.NewsFeed.setResponse"
 
-	// Load the message that is being responded to
-	message := model.NewNewsItem()
-	if err := service.LoadByURL(session, userID, url, &message); err != nil {
+	// RULE: a User's feed can hold more than one NewsItem for the same URL (the same post
+	// arriving through several Followings), and a client may be showing any of them. Update
+	// every copy, or a reaction only lights up on whichever one happened to load first.
+	criteria := exp.Equal("userId", userID).AndEqual("url", url)
+	messages, err := service.Query(session, criteria)
 
-		// Exceptional case: If there is no message to respond to, then do not return an error.
-		if derp.IsNotFound(err) {
-			return nil
+	if err != nil {
+		return derp.Wrap(err, location, "Loading messages by URL", url)
+	}
+
+	// Exceptional case: If there is no message to respond to, then do nothing.
+	for _, message := range messages {
+
+		// RULE: Response is "omitempty", so a NewsItem with no reactions yet decodes here
+		// with a nil map (service.Query hands back zero-valued structs, unlike a load into
+		// an already-initialized NewNewsItem()) -- SetDelta assigning into that nil map panics.
+		if message.Response == nil {
+			message.Response = id.NewMap()
 		}
 
-		// Failure and Shame!
-		return derp.Wrap(err, location, "Loading message by URL", url)
-	}
+		// Set the response on the message
+		if changed := message.Response.SetDelta(responseType, responseID); !changed {
+			continue
+		}
 
-	// Set the response on the message
-	if changed := message.Response.SetDelta(responseType, responseID); !changed {
-		return nil
-	}
-
-	// Save the message
-	if err := service.Save(session, &message, "Set Response"); err != nil {
-		return derp.Wrap(err, location, "Saving message with response")
+		// Save the message
+		if err := service.Save(session, &message, "Set Response"); err != nil {
+			return derp.Wrap(err, location, "Saving message with response")
+		}
 	}
 
 	// Silence is GoLdEN.

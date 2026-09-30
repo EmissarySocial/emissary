@@ -139,15 +139,19 @@ func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 
 		// https://docs.joinmastodon.org/methods/media/
 		PostMedia: mastodon.PostMedia(serverFactory),
+		GetMedia:  mastodon.GetMedia(serverFactory),
+		PutMedia:  mastodon.PutMedia(serverFactory),
 
 		// https://docs.joinmastodon.org/methods/mutes/
 		GetMutes: mastodon.GetMutes(serverFactory),
 
 		// https://docs.joinmastodon.org/methods/notifications/
-		GetNotifications:         mastodon.GetNotifications(serverFactory),
-		GetNotification:          mastodon.GetNotification(serverFactory),
-		PostNotifications_Clear:  mastodon.PostNotifications_Clear(serverFactory),
-		PostNotification_Dismiss: mastodon.PostNotification_Dismiss(serverFactory),
+		GetNotifications:             mastodon.GetNotifications(serverFactory),
+		GetNotification:              mastodon.GetNotification(serverFactory),
+		PostNotifications_Clear:      mastodon.PostNotifications_Clear(serverFactory),
+		PostNotification_Dismiss:     mastodon.PostNotification_Dismiss(serverFactory),
+		GetNotifications_UnreadCount: mastodon.GetNotifications_UnreadCount(serverFactory),
+		GetNotificationPolicy:        mastodon.GetNotificationPolicy(serverFactory),
 
 		// https://docs.joinmastodon.org/methods/oauth/
 		// GetOAuth_Authorize: mastodon.GetOAuth_Authorize(serverFactory),
@@ -167,6 +171,12 @@ func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 		// https://docs.joinmastodon.org/methods/profile/
 		DeleteProfile_Avatar: mastodon.DeleteProfile_Avatar(serverFactory),
 		DeleteProfile_Header: mastodon.DeleteProfile_Header(serverFactory),
+
+		// https://docs.joinmastodon.org/methods/push/
+		PostPushSubscription:   mastodon.PostPushSubscription(serverFactory),
+		GetPushSubscription:    mastodon.GetPushSubscription(serverFactory),
+		PutPushSubscription:    mastodon.PutPushSubscription(serverFactory),
+		DeletePushSubscription: mastodon.DeletePushSubscription(serverFactory),
 
 		// https://docs.joinmastodon.org/methods/reports/
 		PostReport: mastodon.PostReport(serverFactory),

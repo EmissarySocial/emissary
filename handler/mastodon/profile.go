@@ -46,7 +46,7 @@ func DeleteProfile_Avatar(serverFactory *server.Factory) func(model.Authorizatio
 			return object.Account{}, derp.Wrap(err, location, "Deleting Avatar")
 		}
 
-		return user.Toot(), nil
+		return tootUser(factory, session, auth, &user), nil
 	}
 }
 
@@ -84,6 +84,6 @@ func DeleteProfile_Header(serverFactory *server.Factory) func(model.Authorizatio
 		// Nothing to do right now because Emissary doesn't track Header images.
 
 		// Return their account as a Toot...
-		return user.Toot(), nil
+		return tootUser(factory, session, auth, &user), nil
 	}
 }

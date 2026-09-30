@@ -284,18 +284,74 @@ func GetList_Accounts(serverFactory *server.Factory) func(model.Authorization, t
 	}
 }
 
-// PostList_Accounts is the Mastodon "add accounts to list" endpoint, which Emissary does not implement
+// https://docs.joinmastodon.org/methods/lists/#accounts-add
+//
+// A "list" is a Folder; adding an account moves its Following into it. Not following the
+// account is skipped, not an error.
 func PostList_Accounts(serverFactory *server.Factory) func(model.Authorization, txn.PostList_Accounts) (struct{}, error) {
 
-	return func(model.Authorization, txn.PostList_Accounts) (struct{}, error) {
-		return struct{}{}, derp.NotImplemented("handler.mastodon.PostListAccounts")
+	const location = "handler.mastodon.PostList_Accounts"
+
+	return func(auth model.Authorization, t txn.PostList_Accounts) (struct{}, error) {
+		return moveListAccounts(serverFactory, auth, t.Host, t.ID, t.AccountIDs, location)
 	}
 }
 
-// DeleteList_Accounts is the Mastodon "remove accounts from list" endpoint, which Emissary does not implement
+// https://docs.joinmastodon.org/methods/lists/#accounts-remove
+//
+// Clears the Following back to the caller's default Folder -- un-lists, doesn't unfollow.
 func DeleteList_Accounts(serverFactory *server.Factory) func(model.Authorization, txn.DeleteList_Accounts) (struct{}, error) {
 
-	return func(model.Authorization, txn.DeleteList_Accounts) (struct{}, error) {
-		return struct{}{}, derp.NotImplemented("handler.mastodon.PostListAccounts")
+	const location = "handler.mastodon.DeleteList_Accounts"
+
+	return func(auth model.Authorization, t txn.DeleteList_Accounts) (struct{}, error) {
+		return moveListAccounts(serverFactory, auth, t.Host, "", t.AccountIDs, location)
 	}
+}
+
+// moveListAccounts files each account's Following record into the named Folder (folderID), or
+// back to the caller's default Folder when folderID is empty.
+func moveListAccounts(serverFactory *server.Factory, auth model.Authorization, host string, folderID string, accountIDs []string, location string) (struct{}, error) {
+
+	factory, session, cancel, err := statusSession(serverFactory, host, location)
+
+	if err != nil {
+		return struct{}{}, err
+	}
+
+	defer cancel()
+
+	folderObjectID := primitive.NilObjectID
+
+	if folderID != "" {
+		var err error
+		if folderObjectID, err = primitive.ObjectIDFromHex(folderID); err != nil {
+			return struct{}{}, derp.Wrap(err, location, "Invalid Folder ID", folderID)
+		}
+	}
+
+	followingService := factory.Following()
+
+	for _, accountID := range accountIDs {
+
+		accountURL, err := resolveAccountURL(factory, session, accountID)
+
+		if err != nil {
+			continue
+		}
+
+		following := model.NewFollowing()
+
+		if err := followingService.LoadByURL(session, auth.UserID, accountURL, &following); err != nil {
+			continue
+		}
+
+		following.FolderID.Set(folderObjectID)
+
+		if err := followingService.Save(session, &following, "Updated via Mastodon API"); err != nil {
+			return struct{}{}, derp.Wrap(err, location, "Saving following", accountID)
+		}
+	}
+
+	return struct{}{}, nil
 }

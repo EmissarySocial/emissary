@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"html"
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/id"
@@ -590,7 +591,31 @@ func (user User) Toot() object.Account {
 		CreatedAt:      MastodonDate(time.UnixMilli(user.CreateDate)), // CreateDate is milliseconds (journal UnixMilli)
 		FollowersCount: user.FollowerCount,
 		FollowingCount: user.FollowingCount,
+		Fields:         user.tootFields(),
 	}
+}
+
+// tootFields returns this User's profile links as Mastodon account fields, each with the same
+// rel="me" link the ActivityPub profile publishes. Links missing a label or an address are skipped.
+func (user User) tootFields() []object.AccountField {
+
+	result := make([]object.AccountField, 0, len(user.Links))
+
+	for _, link := range user.Links {
+
+		if link.Name == "" || link.ProfileURL == "" {
+			continue
+		}
+
+		address := html.EscapeString(link.ProfileURL)
+
+		result = append(result, object.AccountField{
+			Name:  link.Name,
+			Value: `<a href="` + address + `" rel="me nofollow noopener" translate="no">` + address + `</a>`,
+		})
+	}
+
+	return result
 }
 
 // GetRank returns this User's sort rank for the Mastodon API (their create date)
