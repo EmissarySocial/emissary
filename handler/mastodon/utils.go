@@ -329,3 +329,50 @@ func tootUser(factory *service.Factory, session data.Session, auth model.Authori
 
 	return account
 }
+
+// markReacted sets Favourited and Reblogged on every status (matched by its URI) that the User
+// has liked or boosted, with a single query for the whole list.
+func markReacted(factory *service.Factory, session data.Session, userID primitive.ObjectID, statuses []object.Status) {
+
+	urls := make([]string, 0, len(statuses))
+
+	for _, status := range statuses {
+		if status.URI != "" {
+			urls = append(urls, status.URI)
+		}
+	}
+
+	responses, err := factory.Response().QueryByUserAndObjects(session, userID, urls)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "handler.mastodon.markReacted", "Looking up reactions"))
+		return
+	}
+
+	liked := make(map[string]bool, len(responses))
+	boosted := make(map[string]bool, len(responses))
+
+	for _, response := range responses {
+		switch response.Type {
+		case vocab.ActivityTypeLike:
+			liked[response.Object] = true
+		case vocab.ActivityTypeAnnounce:
+			boosted[response.Object] = true
+		}
+	}
+
+	for index := range statuses {
+		statuses[index].Favourited = liked[statuses[index].URI]
+		statuses[index].Reblogged = boosted[statuses[index].URI]
+	}
+}
+
+// reactedStatus converts a Stream into a Status carrying the caller's own reaction and bookmark state.
+func reactedStatus(factory *service.Factory, session data.Session, auth model.Authorization, stream *model.Stream) object.Status {
+
+	statuses := []object.Status{tootStream(factory, session, stream)}
+	markReacted(factory, session, auth.UserID, statuses)
+	markBookmarked(factory, session, auth.UserID, statuses)
+
+	return statuses[0]
+}

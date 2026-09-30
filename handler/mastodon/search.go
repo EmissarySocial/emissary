@@ -131,6 +131,9 @@ func searchStatuses(factory *service.Factory, session data.Session, auth model.A
 		statuses = append(statuses, tootStream(factory, session, &stream))
 	}
 
+	markReacted(factory, session, auth.UserID, statuses)
+	markBookmarked(factory, session, auth.UserID, statuses)
+
 	if offset >= len(statuses) {
 		return []object.Status{}, nil
 	}

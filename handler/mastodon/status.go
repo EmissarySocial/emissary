@@ -174,8 +174,7 @@ func getLocalStatus(serverFactory *server.Factory, authorization model.Authoriza
 		return object.Status{}, derp.Wrap(err, location, "Viewing stream")
 	}
 
-	status := tootStream(factory, session, &stream)
-	return status, nil
+	return reactedStatus(factory, session, authorization, &stream), nil
 }
 
 // getStatusByStreamURL resolves a status from its Stream's own canonical URL -- the
@@ -200,8 +199,7 @@ func getStatusByStreamURL(serverFactory *server.Factory, authorization model.Aut
 		return object.Status{}, derp.Wrap(err, location, "Viewing stream")
 	}
 
-	status := tootStream(factory, session, &stream)
-	return status, nil
+	return reactedStatus(factory, session, authorization, &stream), nil
 }
 
 // resolveStatusURL converts a status ID this API handed out -- a NewsItem's hex ID, an
@@ -647,8 +645,7 @@ func setStatusPinned(serverFactory *server.Factory, auth model.Authorization, ho
 		}
 	}
 
-	status := tootStream(factory, session, &stream)
-	return status, nil
+	return reactedStatus(factory, session, auth, &stream), nil
 }
 
 // loadStreamByStatusID loads the Stream behind a status ID -- the Stream's hex ID (what
@@ -713,8 +710,7 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 
 		indexStatus(factory, session, &stream)
 
-		status := tootStream(factory, session, &stream)
-		return status, nil
+		return reactedStatus(factory, session, auth, &stream), nil
 	}
 }
 
