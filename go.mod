@@ -20,7 +20,7 @@ require (
 	github.com/benpate/exp-builder v0.12.0
 	github.com/benpate/form v0.32.0
 	github.com/benpate/geo v0.4.0
-	github.com/benpate/hannibal v0.40.0
+	github.com/benpate/hannibal v0.41.0
 	github.com/benpate/html v0.18.0
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.20.0
@@ -28,13 +28,13 @@ require (
 	github.com/benpate/re v0.6.0
 	github.com/benpate/remote v0.25.0
 	github.com/benpate/rosetta v0.43.0
-	github.com/benpate/sherlock v0.18.0
+	github.com/benpate/sherlock v0.19.0
 	github.com/benpate/sniff v0.3.0
 	github.com/benpate/steranko v0.31.0
 	github.com/benpate/table v0.10.0
 	github.com/benpate/toot v0.5.0
 	github.com/benpate/turbine v0.12.0
-	github.com/benpate/uri v0.8.0
+	github.com/benpate/uri v0.9.0
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/codingsince1985/geo-golang v1.9.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
