@@ -2,6 +2,7 @@ package mastodon
 
 import (
 	"strings"
+	"time"
 
 	"github.com/EmissarySocial/emissary/build"
 	"github.com/EmissarySocial/emissary/model"
@@ -10,8 +11,10 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/rosetta/first"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
+	"github.com/benpate/uri"
 )
 
 const (
@@ -63,6 +66,17 @@ func GetSearch(serverFactory *server.Factory) func(model.Authorization, txn.GetS
 			}
 
 			result.Statuses = statuses
+		}
+
+		if t.Type == "" || t.Type == "hashtags" {
+
+			hashtags, err := searchHashtags(factory, session, auth, t.Host, query, t.Limit, t.Offset)
+
+			if err != nil {
+				return result, derp.Wrap(err, location, "Searching hashtags", query)
+			}
+
+			result.Hashtags = hashtags
 		}
 
 		return result, nil
@@ -122,6 +136,55 @@ func searchStatuses(factory *service.Factory, session data.Session, auth model.A
 	}
 
 	return statuses[offset:], nil
+}
+
+// searchHashtags prefix-matches approved tags against the query, with each tag's recent local usage.
+// Tags still awaiting review are not returned.
+func searchHashtags(factory *service.Factory, session data.Session, auth model.Authorization, host string, query string, limit int64, offset int) ([]object.Tag, error) {
+
+	const location = "handler.mastodon.searchHashtags"
+
+	// Work out which tags to look up
+	limit, offset = searchWindow(limit, offset)
+	prefix := strings.TrimPrefix(query, "#")
+
+	if prefix == "" || strings.ContainsAny(prefix, " \t") {
+		return []object.Tag{}, nil
+	}
+
+	// Find approved tags that start with the query
+	tags, err := factory.SearchTag().QueryAllowedByPrefix(session, prefix, limit+int64(offset))
+
+	if err != nil {
+		return nil, derp.Wrap(err, location, "Querying tags", prefix)
+	}
+
+	// Skip to the requested page
+	if offset >= len(tags) {
+		return []object.Tag{}, nil
+	}
+
+	// Build each tag with its recent local usage
+	origin := uri.GuessProtocolForHostname(host) + host
+	now := time.Now()
+	since := now.AddDate(0, 0, -hashtagHistoryDays).Unix()
+	result := make([]object.Tag, 0, len(tags)-offset)
+
+	for _, tag := range tags[offset:] {
+
+		name := first.String(tag.Name, tag.Value)
+
+		// The client's "people talking" figure is summed from this history
+		posts := localHashtagStatuses(factory, session, auth, name, hashtagLocalHistoryMax, exp.GreaterThan("publishDate", since))
+
+		result = append(result, object.Tag{
+			Name:    name,
+			URL:     apiHashtagURL(origin, name),
+			History: hashtagHistory(posts, now, hashtagHistoryDays),
+		})
+	}
+
+	return result, nil
 }
 
 // resolveOneAccount looks up a single account by exact webfinger handle (user@domain) or actor
