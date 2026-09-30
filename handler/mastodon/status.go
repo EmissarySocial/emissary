@@ -92,8 +92,19 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 			return object.Status{}, derp.Wrap(err, location, "Attaching media")
 		}
 
+		indexStatus(factory, session, &stream)
+
 		status := tootStream(factory, session, &stream)
 		return status, nil
+	}
+}
+
+// indexStatus brings the search index in line with a Stream, as the web pipeline's search-index step does.
+func indexStatus(factory *service.Factory, session data.Session, stream *model.Stream) {
+
+	// Reported, not returned: the post is already saved, and failing here would invite a duplicate retry
+	if err := factory.SearchResult().Sync(session, factory.Stream().SearchResult(stream)); err != nil {
+		derp.Report(derp.Wrap(err, "handler.mastodon.indexStatus", "Syncing search index", stream.URL))
 	}
 }
 
@@ -280,9 +291,14 @@ func DeleteStatus(serverFactory *server.Factory) func(model.Authorization, txn.D
 		// to offer "delete & redraft" -- restoring the text into a new compose box), not an
 		// empty object. Build it before Delete empties the Stream's own fields out from under us.
 		status := tootStream(factory, session, &stream)
+		streamURL := stream.URL
 
 		if err := factory.Stream().Delete(session, &stream, "Deleted via Mastodon API"); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Deleting stream")
+		}
+
+		if err := factory.SearchResult().DeleteByURL(session, streamURL); err != nil {
+			derp.Report(derp.Wrap(err, location, "Removing from search index", streamURL))
 		}
 
 		return status, nil
@@ -694,6 +710,8 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 		if err := streamService.Save(session, &stream, "Edited via Mastodon API"); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Saving stream")
 		}
+
+		indexStatus(factory, session, &stream)
 
 		status := tootStream(factory, session, &stream)
 		return status, nil
