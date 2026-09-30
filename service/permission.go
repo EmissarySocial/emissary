@@ -367,15 +367,6 @@ func resolveSignature(request *http.Request, verify func(*http.Request) (sigs.Si
 		}
 	}
 
-	// RULE: A local domain accepts a mock key in place of a real signature. This branch is
-	// reached by UNSIGNED requests too, so it must sit ahead of the rules below -- a local
-	// harness names its actor with this header alone. (BUG-51)
-	if uri.IsLocalHostname(request.Host) {
-		if mockKeyID := request.Header.Get("Mock-Key-Id"); mockKeyID != "" {
-			return mockSignature(mockKeyID), nil
-		}
-	}
-
 	// RULE: A request that offers no Signature at all is Anonymous, not refused
 	if !isSigned {
 		return sigs.Signature{}, nil
