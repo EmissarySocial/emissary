@@ -60,7 +60,7 @@ func (service *MerchantAccount) ExportDocument(session data.Session, userID prim
 	result, err := json.Marshal(export)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Marshaling MerchantAccount", merchantAccount)
+		return "", derp.Wrap(err, location, "Marshaling MerchantAccount", merchantAccount.MerchantAccountID)
 	}
 
 	// Success

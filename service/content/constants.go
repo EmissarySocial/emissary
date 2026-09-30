@@ -55,3 +55,20 @@ const frontMatterDelimiter = "---"
 
 // byteOrderMark is the UTF-8 byte-order mark that some editors write at the start of a file
 const byteOrderMark = "\xef\xbb\xbf"
+
+/******************************************
+ * Attachments
+ ******************************************/
+
+// attachmentFolder is the path segment that marks a link as a file to copy into Emissary
+const attachmentFolder = "attachments"
+
+// MaxAttachments is the largest number of files that one source may import.  Links beyond it
+// stay as links to the remote file.
+const MaxAttachments = 50
+
+// maxImageBytes is the largest image or document that will be downloaded
+const maxImageBytes = 10 << 20
+
+// maxMediaBytes is the largest video or audio file that will be downloaded
+const maxMediaBytes = 100 << 20

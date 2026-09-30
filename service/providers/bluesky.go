@@ -45,7 +45,7 @@ func (adapter Bluesky) ManualConfig() form.Form {
 					Type:  "select",
 					Path:  "data.allowType",
 					Label: "Who can bridge to Bluesky?",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"enum": []form.LookupCode{
 							{Value: "NONE", Label: "Nobody(Disabled)"},
 							{Value: "GROUPS", Label: "Selected Groups Only"},
@@ -57,7 +57,7 @@ func (adapter Bluesky) ManualConfig() form.Form {
 					Type:  "multiselect",
 					Path:  "data.shareGroups",
 					Label: "Members of these groups only...",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"show-if":  "data.allowType is GROUPS",
 						"provider": "groups",
 					},

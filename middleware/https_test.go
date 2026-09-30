@@ -18,9 +18,10 @@ func invokeHttpsRedirect(t *testing.T, scheme string, host string) (*httptest.Re
 	request := httptest.NewRequest(http.MethodGet, "http://"+host+"/path", nil)
 	request.Host = host
 
-	// echo.Scheme() reports "https" from X-Forwarded-Proto (httptest does not
-	// populate request.TLS), which also mirrors Emissary's real deployment
-	// behind a TLS-terminating reverse proxy.
+	// A TLS-terminating proxy on a private network, whose X-Forwarded-Proto every
+	// echo scheme extractor trusts.  httptest's default peer, 192.0.2.1, is public.
+	request.RemoteAddr = "10.0.0.1:1234"
+
 	if scheme == "https" {
 		request.Header.Set(echo.HeaderXForwardedProto, "https")
 	}

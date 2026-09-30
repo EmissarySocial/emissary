@@ -182,9 +182,8 @@ func postOAuthAuthorization_token(ctx echo.Context, userToken model.OAuthUserTok
 	return ctx.Redirect(http.StatusFound, redirectURI.String())
 }
 
-// PostOAuthToken handles the OAuth token endpoint (RFC 6749 §3.2), dispatching on
-// grant_type. The authorization_code grant exchanges a code for an access+refresh
-// pair; the refresh_token grant rotates a refresh token for a fresh pair.
+// PostOAuthToken handles the OAuth token endpoint (RFC 6749 §3.2), exchanging an authorization
+// code, or rotating a refresh token, for a new access and refresh pair
 func PostOAuthToken(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostOAuthToken"
@@ -200,8 +199,10 @@ func PostOAuthToken(ctx *steranko.Context, factory *service.Factory, session dat
 	oauthClientService := factory.OAuthClient()
 	oauthClient := model.NewOAuthClient()
 
+	// Errors name the client_id, never the transaction, which carries the client_secret, the
+	// code, the refresh_token, and the code_verifier.  Reported errors are stored verbatim.
 	if err := oauthClientService.LoadByToken(session, transaction.ClientID, &oauthClient); err != nil {
-		return derp.Wrap(err, location, "Invalid client_id", transaction)
+		return derp.Wrap(err, location, "Invalid client_id", transaction.ClientID)
 	}
 
 	// RULE: Dispatch on grant_type. An empty grant_type is treated as
@@ -218,10 +219,8 @@ func PostOAuthToken(ctx *steranko.Context, factory *service.Factory, session dat
 	return derp.BadRequest(location, "Unsupported grant_type", transaction.GrantType)
 }
 
-// postOAuthToken_authorizationCode handles the authorization_code grant: it loads
-// the grant identified by the code, authenticates the client (secret for a
-// confidential client, PKCE for a public one), then exchanges the single-use code
-// for an access+refresh pair.
+// postOAuthToken_authorizationCode exchanges a single-use authorization code for an access and
+// refresh pair, once the client proves itself by secret or by PKCE
 func postOAuthToken_authorizationCode(ctx *steranko.Context, factory *service.Factory, session data.Session, oauthClient model.OAuthClient, transaction model.OAuthUserTokenRequest) error {
 
 	const location = "handler.postOAuthToken_authorizationCode"
@@ -230,7 +229,7 @@ func postOAuthToken_authorizationCode(ctx *steranko.Context, factory *service.Fa
 	userTokenID, err := primitive.ObjectIDFromHex(transaction.Code)
 
 	if err != nil {
-		return derp.Wrap(err, location, "Invalid code", transaction)
+		return derp.Wrap(err, location, "Invalid code", transaction.ClientID)
 	}
 
 	// Load the grant bound to this code. This performs NO authentication -- the
@@ -239,7 +238,7 @@ func postOAuthToken_authorizationCode(ctx *steranko.Context, factory *service.Fa
 	userToken := model.NewOAuthUserToken()
 
 	if err := userTokenService.LoadByClientAndID(session, userTokenID, oauthClient.ClientID, &userToken); err != nil {
-		return derp.Wrap(err, location, "Loading OAuthUserToken", transaction)
+		return derp.Wrap(err, location, "Loading OAuthUserToken", transaction.ClientID)
 	}
 
 	// RULE: Authenticate the code redemption (RFC 8252 / OAuth 2.1).  A
@@ -248,10 +247,10 @@ func postOAuthToken_authorizationCode(ctx *steranko.Context, factory *service.Fa
 	// to a PKCE challenge, so an intercepted code is useless without the verifier.
 	if oauthClient.IsConfidential() {
 		if err := oauthClient.ValidateSecret(transaction.ClientSecret); err != nil {
-			return derp.Wrap(err, location, "Invalid client_secret", transaction)
+			return derp.Wrap(err, location, "Invalid client_secret", transaction.ClientID)
 		}
 	} else if !userToken.HasPKCEChallenge() {
-		return derp.BadRequest(location, "This client must use PKCE (a code_verifier is required)", transaction)
+		return derp.BadRequest(location, "This client must use PKCE (a code_verifier is required)", transaction.ClientID)
 	}
 
 	// RULE: PKCE (RFC 7636). If the code was issued with a code_challenge, a
@@ -269,9 +268,8 @@ func postOAuthToken_authorizationCode(ctx *steranko.Context, factory *service.Fa
 	return ctx.JSON(http.StatusOK, userToken.JSONResponse())
 }
 
-// postOAuthToken_refresh handles the refresh_token grant: it authenticates the
-// client, loads the grant embedded in the refresh token, and rotates it (RFC 6749
-// §6) — issuing a new access+refresh pair, or revoking the grant on reuse.
+// postOAuthToken_refresh rotates a refresh token into a new access and refresh pair (RFC 6749
+// §6), revoking the whole grant when a token is reused
 func postOAuthToken_refresh(ctx *steranko.Context, factory *service.Factory, session data.Session, oauthClient model.OAuthClient, transaction model.OAuthUserTokenRequest) error {
 
 	const location = "handler.postOAuthToken_refresh"
@@ -288,7 +286,7 @@ func postOAuthToken_refresh(ctx *steranko.Context, factory *service.Factory, ses
 	// token itself as the possession proof (rotation + reuse detection protect it).
 	if oauthClient.IsConfidential() {
 		if err := oauthClient.ValidateSecret(transaction.ClientSecret); err != nil {
-			return derp.Wrap(err, location, "Invalid client_secret", transaction)
+			return derp.Wrap(err, location, "Invalid client_secret", transaction.ClientID)
 		}
 	}
 
@@ -309,13 +307,14 @@ func postOAuthToken_refresh(ctx *steranko.Context, factory *service.Factory, ses
 	return ctx.JSON(http.StatusOK, userToken.JSONResponse())
 }
 
-// PostOAuthRevoke handles the OAuth token-revocation endpoint (RFC 7009). It
-// deletes the whole grant behind the presented token (access token OR refresh
-// token), so both stop working. Per RFC 7009, an unknown/invalid token is still a
-// successful (200) revocation.
+// PostOAuthRevoke handles the token-revocation endpoint (RFC 7009) by deleting the whole
+// grant behind the presented access or refresh token
 func PostOAuthRevoke(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
 	const location = "handler.PostOAuthRevoke"
+
+	// Deleting the grant stops both of its tokens.  Per RFC 7009, an unknown or invalid token
+	// is still a successful (200) revocation.
 
 	// Collect transaction data
 	transaction := model.NewOAuthUserTokenRevokeRequest()
@@ -367,9 +366,8 @@ func PostOAuthRevoke(ctx *steranko.Context, factory *service.Factory, session da
 	return ctx.JSON(http.StatusOK, map[string]any{})
 }
 
-// revokeGrantID resolves the grant ID behind a token presented for revocation. The
-// token may be a refresh token (which carries the grant ID directly) or an
-// access-token JWT (whose "K" claim holds the grant ID).
+// revokeGrantID returns the grant ID behind a refresh token or an access-token JWT that was
+// presented for revocation
 func revokeGrantID(factory *service.Factory, token string) (primitive.ObjectID, bool) {
 
 	// A refresh token carries the grant ID as its first segment.

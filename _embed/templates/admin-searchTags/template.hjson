@@ -103,7 +103,7 @@
 									children: [
 										{type:"colorpicker", label:"Background (Left)", path:"colors.0"}
 										{type:"colorpicker", label:"Background (Right)", path:"colors.1"}
-										{type:"upload", label:"Image", path:"imageUrl", options:{accept:"image/*", delete:"/admin/tag/{{.SearchTagID}}/delete-image"}}
+										{type:"upload", label:"Image", path:"imageUrl", options:{accept:"image/*", delete:"/admin/tag/{{.ID}}/delete-image"}}
 										{type:"text", label:"Sort/Rank", path:"rank", options:{style:"width:6em;"}}
 									]
 								}

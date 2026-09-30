@@ -1,6 +1,7 @@
 package service
 
 import (
+	"io"
 	"iter"
 	"net/url"
 	"strings"
@@ -20,23 +21,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// TaskSyncStreamSource is the BACKGROUND queue task that synchronizes one StreamSource record.
-// Its usual trigger is an unauthenticated webhook that fans out to every record sharing a token.
+// TaskSyncStreamSource is the queue task that synchronizes one StreamSource record, whether a
+// webhook or the Sync Now button asked for it
 const TaskSyncStreamSource = "SyncStreamSource"
 
-// TaskSyncStreamSourceNow is the INTERACTIVE queue task behind the Sync Now button.  It runs the
-// same handler, and reports through the same lifecycle hooks, as TaskSyncStreamSource: only its
-// priority and its lack of a signature differ.
-const TaskSyncStreamSourceNow = "SyncStreamSourceNow"
-
-// IsSyncStreamSourceTask returns TRUE for either synchronization task.
-//
-// RULE: Every consumer-side registration must accept BOTH names -- the dispatch switch and all
-// three lifecycle hooks.  A hook that tested only one name would silently stop recording status
-// for the other path, and nothing reports a hook that declined a task.
-func IsSyncStreamSourceTask(name string) bool {
-	return (name == TaskSyncStreamSource) || (name == TaskSyncStreamSourceNow)
-}
+// TaskSyncStreamSourceAttachment is the queue task that copies one file, linked from a synchronized
+// source, into the attachment that stands in for it
+const TaskSyncStreamSourceAttachment = "SyncStreamSourceAttachment"
 
 // streamWriter is the slice of the Stream service that a synchronization uses.  The interface is
 // declared here, beside its caller, so that a test can drive a sync without assembling the
@@ -47,13 +38,30 @@ type streamWriter interface {
 	Save(session data.Session, stream *model.Stream, note string) error
 }
 
+// attachmentWriter is the slice of the Attachment service that a synchronization uses, declared
+// beside its caller for the same reason as streamWriter
+type attachmentWriter interface {
+	QueryByCategory(session data.Session, objectType string, objectID primitive.ObjectID, category string) ([]model.Attachment, error)
+	LoadByID(session data.Session, objectType string, objectID primitive.ObjectID, attachmentID primitive.ObjectID, result *model.Attachment) error
+	Save(session data.Session, attachment *model.Attachment, note string) error
+	Delete(session data.Session, attachment *model.Attachment, note string) error
+}
+
+// mediaWriter is the slice of the MediaServer that stores an attachment's file
+type mediaWriter interface {
+	Put(filename string, file io.Reader) error
+	Delete(filename string) error
+}
+
 // StreamSource manages StreamSource records, which copy content from outside of Emissary into Streams
 type StreamSource struct {
-	streamService  streamWriter
-	contentService *Content
-	adapters       map[string]content.Adapter
-	queue          *queue.Queue
-	hostname       string
+	streamService     streamWriter
+	attachmentService attachmentWriter
+	mediaServer       mediaWriter
+	contentService    *Content
+	adapters          map[string]content.Adapter
+	queue             *queue.Queue
+	hostname          string
 }
 
 // NewStreamSource returns a fully initialized StreamSource service
@@ -69,6 +77,8 @@ func NewStreamSource() StreamSource {
 func (service *StreamSource) Refresh(factory *Factory) {
 
 	service.streamService = factory.Stream()
+	service.attachmentService = factory.Attachment()
+	service.mediaServer = factory.MediaServer()
 	service.contentService = factory.Content()
 	service.queue = factory.Queue()
 	service.hostname = factory.Hostname()
@@ -178,8 +188,8 @@ func (service *StreamSource) Save(session data.Session, streamSource *model.Stre
 	}
 
 	// Every caller of Save is a human at the settings screen -- the source form, or the Sync Now
-	// button -- so this is the interactive task.  Background bookkeeping goes through service.save
-	// and queues nothing at all.
+	// button -- so the task skips the signature and can run at once.  Background bookkeeping goes
+	// through service.save and queues nothing at all.
 	service.PublishSyncTaskNow(session, streamSource.StreamSourceID)
 
 	return nil
@@ -423,12 +433,12 @@ func (service *StreamSource) adapterFor(method string) (content.Adapter, error) 
 	return nil, derp.Internal(location, "No Adapter is registered for this Method", method)
 }
 
-// PublishSyncTask queues a BACKGROUND synchronization for a single StreamSource record
+// PublishSyncTask queues a deduplicated synchronization for a single StreamSource record
 func (service *StreamSource) PublishSyncTask(session data.Session, streamSourceID primitive.ObjectID) {
 
 	// RULE: One task per record.  A ping arriving while a sync is already queued collapses into
 	// it, and loses nothing: the queued sync reads the origin when it runs, so it picks up the
-	// newer commit anyway.
+	// newer commit anyway.  The signature is also what bounds an unauthenticated webhook's fan-out.
 	postcommit.Publish(
 		session,
 		service.queue,
@@ -438,29 +448,28 @@ func (service *StreamSource) PublishSyncTask(session data.Session, streamSourceI
 	)
 }
 
-// PublishSyncTaskNow queues an INTERACTIVE synchronization for a single StreamSource record,
+// PublishSyncTaskNow queues an immediate synchronization for a single StreamSource record,
 // behind a human who is watching the settings screen for the answer.
 func (service *StreamSource) PublishSyncTaskNow(session data.Session, streamSourceID primitive.ObjectID) {
 
-	// RULE: NO signature, and that is the whole reason this task is named separately.  turbine's
-	// allowImmediate refuses to run ANY signed task from memory, at any priority, because
-	// signature dedup needs a stored row to check against -- so a signed task waits for the
-	// storage poller, which sleeps a minute when the queue is idle.
+	// RULE: NO signature.  turbine's allowImmediate refuses to run ANY signed task from memory,
+	// at any priority, because signature dedup needs a stored row to check against -- so a signed
+	// task waits for the storage poller, which sleeps a minute when the queue is idle.
 	//
 	// What that costs: two quick presses queue two syncs, and one of them may overlap a webhook's
-	// background sync of the same record.  A repeat is one conditional GET answering 304, so the
-	// usual case is free.  The case that is NOT free is a caller that saves many records at once,
-	// which now fans out immediate fetches instead of deduplicated background ones.
+	// sync of the same record.  A repeat is one conditional GET answering 304, so the usual case
+	// is free.  The case that is NOT free is a caller that saves many records at once, which fans
+	// out immediate fetches instead of deduplicated ones.
 	postcommit.Publish(
 		session,
 		service.queue,
-		TaskSyncStreamSourceNow,
+		TaskSyncStreamSource,
 		service.syncTaskArguments(streamSourceID),
 	)
 }
 
-// syncTaskArguments builds the arguments that both synchronization tasks carry.  One handler reads
-// both, so a key the two spelled differently would strand one path.
+// syncTaskArguments builds the arguments that both publishers send.  One handler reads them, so a
+// key the two spelled differently would strand one path.
 func (service *StreamSource) syncTaskArguments(streamSourceID primitive.ObjectID) mapof.Any {
 	return mapof.Any{
 		"hostname":       service.hostname,
@@ -505,8 +514,6 @@ func (service *StreamSource) SetStatusLoading(session data.Session, streamSource
 func (service *StreamSource) SetStatusSuccess(session data.Session, streamSource *model.StreamSource) error {
 
 	const location = "service.StreamSource.SetStatusSuccess"
-
-	time.Sleep(200 * time.Millisecond)
 
 	streamSource.Status = model.StreamSourceStatusSuccess
 	streamSource.StatusMessage = ""

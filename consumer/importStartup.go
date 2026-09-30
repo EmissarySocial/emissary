@@ -47,7 +47,7 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 		record.Message = "Unable to load ActivityPub Actor: " + err.Error()
 
 		if inner := importService.Save(session, record, "Import Error"); inner != nil {
-			return queue.Failure(derp.Wrap(inner, location, "Saving import failure", record))
+			return queue.Failure(derp.Wrap(inner, location, "Saving import failure", record.ImportID))
 		}
 
 		return queue.Failure(derp.Wrap(err, location, "Loading ActivityPub actor", record.SourceID))
@@ -92,7 +92,7 @@ func ImportStartup(factory *service.Factory, session data.Session, user *model.U
 	record.SourceURL = actor.ID()
 
 	if err := importService.Save(session, record, "Updating item count"); err != nil {
-		return queue.Error(derp.Wrap(err, location, "Updating import record", record))
+		return queue.Error(derp.Wrap(err, location, "Updating import record", record.ImportID))
 	}
 
 	// Start a task (post-commit) to import all of the items for this source

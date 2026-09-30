@@ -265,7 +265,7 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 	// This comparison MUST happen before the assignment below, and cannot move down to the
 	// `if profileChanged` that consumes it: once ProfileFingerprint holds newFingerprint the two
 	// are equal by construction, and profile updates would silently stop federating.
-	profileChanged := (user.ProfileFingerprint != newFingerprint) && !isNew
+	profileChanged := (user.ProfileFingerprint != newFingerprint) && !isNew //nolint:scopeguard // must be read before the assignment below
 	user.ProfileFingerprint = newFingerprint
 
 	// Try to save the User record to the database

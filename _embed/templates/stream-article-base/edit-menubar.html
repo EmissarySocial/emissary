@@ -185,7 +185,7 @@
 
 	<div class="right">
 		<span id="htmx-response-message" class="margin-right-sm"></span>
-		<!-- Guarded because a child Template cannot REMOVE an inherited action, only override it with no roles: article-remote has no draft to promote. -->
+		<!-- Guarded because a child Template cannot REMOVE an inherited action, only hide it by overriding it with no roles. -->
 		{{- if .UserCan "promote-draft" -}}
 			<button hx-on:click="saveAndPromote()" class="turboclick button primary">Promote</button>
 		{{- end -}}

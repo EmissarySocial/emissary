@@ -120,3 +120,35 @@ func TestAttachmentContentDisposition(t *testing.T) {
 		require.Equal(t, row.expected, attachmentContentDisposition(row.filename), "filename=%q", row.filename)
 	}
 }
+
+// TestServeUnstoredAttachment confirms the answer for a file that is not in the MediaServer: a 503
+// the client may retry while it is being copied in, a 404 once it has failed, and neither cacheable
+func TestServeUnstoredAttachment(t *testing.T) {
+
+	tests := map[string]struct {
+		status     string
+		code       int
+		retryAfter string
+	}{
+		"still copying": {model.AttachmentStatusWorking, http.StatusServiceUnavailable, attachmentRetryAfter},
+		"failed":        {model.AttachmentStatusFailed, http.StatusNotFound, ""},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+
+			recorder := httptest.NewRecorder()
+			ctx := &steranko.Context{Context: echo.New().NewContext(httptest.NewRequest(http.MethodGet, "/stream/attachments/id", nil), recorder)}
+
+			attachment := model.NewAttachment(model.AttachmentObjectTypeStream, primitive.NewObjectID())
+			attachment.Status = test.status
+
+			require.NoError(t, serveUnstoredAttachment(ctx, attachment), "an expected miss is not an error, so it never reaches the error log")
+			require.Equal(t, test.code, recorder.Code)
+			require.Equal(t, "no-store", recorder.Header().Get("Cache-Control"))
+			require.Equal(t, test.retryAfter, recorder.Header().Get("Retry-After"))
+			require.Empty(t, recorder.Header().Get("ETag"), "an IMMUTABLE ETag would let the browser keep the miss")
+			require.Empty(t, recorder.Body.Bytes())
+		})
+	}
+}

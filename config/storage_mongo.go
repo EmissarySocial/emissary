@@ -37,8 +37,9 @@ func NewMongoStorage(args *CommandLineArgs) (MongoStorage, error) {
 	connectOptions := options.Client().ApplyURI(args.Location)
 	client, err := mongo.Connect(context.Background(), connectOptions)
 
+	// The connection string can carry a password, so the error names only its scheme and host (BUG-173)
 	if err != nil {
-		return MongoStorage{}, derp.Wrap(err, location, "The MongoDB config database could not be reached. Check the connection string and verify the database server connection.", args.Location)
+		return MongoStorage{}, derp.Wrap(err, location, "The MongoDB config database could not be reached. Check the connection string and verify the database server connection.", locationLabel(args.Location))
 	}
 
 	// RULE: The config collection is read with `primary` + `majority` so a reload can never

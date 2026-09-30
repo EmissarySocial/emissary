@@ -114,13 +114,13 @@ func TestWritableDomain_SetString(t *testing.T) {
 	iconID := primitive.NewObjectID()
 
 	require.True(t, writableDomain.SetString("iconId", iconID.Hex()))
-	require.Equal(t, iconID, writableDomain.Domain.IconID)
+	require.Equal(t, iconID, writableDomain.IconID)
 
 	require.True(t, writableDomain.SetString("iconId", ""))
-	require.True(t, writableDomain.Domain.IconID.IsZero())
+	require.True(t, writableDomain.IconID.IsZero())
 
 	require.True(t, writableDomain.SetString("mlsGroupIds", "a,b"))
-	require.Equal(t, []string{"a", "b"}, []string(writableDomain.Domain.MLSGroupIDs))
+	require.Equal(t, []string{"a", "b"}, []string(writableDomain.MLSGroupIDs))
 
 	// Virtual fields accept a write without storing it
 	require.True(t, writableDomain.SetString("iconUrl", "https://example.com"))
@@ -141,7 +141,7 @@ func TestWritableDomain_GetPointer(t *testing.T) {
 	label, ok := pointer.(*string)
 	require.True(t, ok)
 	*label = "Written"
-	require.Equal(t, "Written", writableDomain.Domain.Label)
+	require.Equal(t, "Written", writableDomain.Label)
 
 	_, ok = writableDomain.GetPointer("no-such-field")
 	require.False(t, ok)

@@ -7,10 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// RULE: The SearchQuery actor routes must carry ":searchId" and never ":stream".  They declare no
-// stream, which is exactly why they cannot be wrapped in anything that resolves one: getStreamToken
-// turns the absent parameter into "home", and WithStream answers a missing home page with a redirect
-// to /startup, which then refuses every visitor who is not a domain owner. (BUG-148)
+// RULE: The SearchQuery actor routes must carry ":searchId" and never ":stream".  A SearchQuery has
+// no Stream, so these routes cannot be wrapped in anything that resolves one. (BUG-148)
 func TestSearchQueryRoutes_DeclareNoStreamParameter(t *testing.T) {
 
 	e := makeTestRoutes()

@@ -49,13 +49,13 @@ func (adapter GeocodeTimezone) ManualConfig() form.Form {
 				{
 					Type:    "hidden",
 					Path:    "type",
-					Options: mapof.Any{"value": model.ConnectionTypeGeocodeTimezone},
+					Options: mapof.Template{"value": model.ConnectionTypeGeocodeTimezone},
 				},
 				{
 					Type:  "select",
 					Path:  "data.provider",
 					Label: "Service Provider",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"enum": []form.LookupCode{
 							{Group: "Recommended", Value: "GEOAPIFY", Label: "Geoapify"},
 							{Group: "Recommended", Value: "HERE", Label: "Here"},
@@ -68,7 +68,7 @@ func (adapter GeocodeTimezone) ManualConfig() form.Form {
 					Type:  "text",
 					Label: "API ID",
 					Path:  "data.apiID",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"show-if":     "data.provider == HERE",
 						"autocorrect": "false",
 						"spellcheck":  "false",
@@ -78,7 +78,7 @@ func (adapter GeocodeTimezone) ManualConfig() form.Form {
 					Type:  "text",
 					Label: "API Key",
 					Path:  "data.apiKey",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"autocorrect": "false",
 						"spellcheck":  "false",
 					},

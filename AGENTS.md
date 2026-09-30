@@ -6,6 +6,16 @@ Package-specific notes live in the nearest `AGENTS.md`, and most packages now ha
 
 Runtime errors are reported to MongoDB by [tools/derp-mongo](tools/derp-mongo/README.md). The command that works through them, [benpate/derp-triage](https://github.com/benpate/derp-triage), lives in its own module and deliberately does not depend on this one.
 
+## Every change must work with several servers running at once
+
+**Production runs several Emissary servers behind a load balancer, all sharing the same common and Domain databases.** Any request can land on any server, and two requests from the same client can land on different ones. Design and review every change on that basis.
+
+**State held in memory belongs to one server.** A mutex, a `singleflight` group, an in-memory cache, a rate-limit counter, or a timer coordinates only the callers inside its own process. It can reduce the load one server generates, but it cannot keep two servers from doing the same work or writing the same record at the same moment.
+
+**Only the database can arbitrate between servers.** Make concurrent writes safe with a unique index, an atomic update or upsert, or a lease document, and test them with two writers that share nothing but the database. A read-then-write, or a delete followed by an insert, is a race whenever two servers run it for the same record.
+
+**One server's restart or config reload leaves the others unchanged.** A stale template, a cached value, or an old setting can keep serving from the servers that were not restarted.
+
 ## Never re-purpose an upgrade slot number
 
 [queries/upgrade.go](queries/upgrade.go) holds an ordered slice of `upgrades.VersionN` functions, and **the slice index is the `databaseVersion` written to each Domain record**. A deployed server that already recorded version N will never re-run slot N, so changing what slot N does silently skips the migration on every existing install while running it on new ones. Only ever append a new slot; to fix a bad migration, add the correction as the next slot.
@@ -29,6 +39,12 @@ Neither loop errors. The first shows up as doubled API traffic against the User'
 The mechanism for the second is `Follower.DeleteWithoutSync`, and it has **two** callers that both need it for different reasons. The inbound webhook uses it so an unsubscribe reported by Mailchimp is not pushed back to Mailchimp. `Follower.DeleteByUserID` uses it because deleting one User would otherwise unsubscribe every one of their followers from that User's own audience — at the far end, through an API where an unsubscribe cannot be undone. `Follower.Delete` still syncs, and must: an unsubscribe made *inside* Emissary is exactly the case that should travel outward.
 
 The route is public, unauthenticated, and authorized only by a per-connection secret in the query string, so three more rules hold there. Bound the body before reading it (`io.LimitReader`, matching the 65535-byte cap in [handler/stripe.go](handler/stripe.go)). Answer **identically** for every authorization outcome — unknown connection, wrong secret, paused connection, success — because ObjectIDs embed a timestamp and are partly guessable, and a distinguishable answer enumerates which connections exist. And scope every lookup to the connection's owner: the email address in the payload is attacker-supplied, so `Follower.LoadByEmailAddress` takes a `parentID` and an unscoped match would let one leaked secret reach every Follower on the server.
+
+## An error names a record, and never carries one
+
+Every reported error is stored verbatim by [tools/derp-mongo](tools/derp-mongo/README.md) and printed by `derp-console`, details included. The mongo reporter encodes BSON, which follows `bson` tags, so a field hidden with `json:"-"` is still stored: `OAuthClient.ClientSecret`, `Connection.Token`, and every `Vault` reach `ErrorLog` whenever their record rides an error. Other models hide nothing at all: `config.Domain` carries the MasterKey and the database password, and `EncryptionKey` its `PrivatePEM`. So an error attaches the identifier that finds a record (a hostname, DomainID, ClientID, ProviderID, or `_id`), never the record itself, a request that carries credentials, a folder map, or a URL that can embed a token.
+
+Two traps sit below the call site. The standard library's `*url.Error` quotes the whole URL it failed to parse, so keep only `errors.Unwrap(err)` when that URL can embed a token. And rosetta's `schema` package attached the whole object it validated or set until BUG-173; it now names the type, but its field-level format, pattern, and enum errors still echo the one field that failed. [tools/secretcheck](tools/secretcheck/doc.go) checks an error in every form a reporter stores it; each fixed site has a test built on it.
 
 ## Local MongoDB requires `?directConnection=true`
 
@@ -130,23 +146,23 @@ Reading the outcome has two traps of its own. `detail.successful` is **undefined
 
 [tools/allocbench](tools/allocbench/) pins how this toolchain allocates for a few everyday patterns, so the performance rules in the go-quality skill rest on measurements rather than folklore. Nothing imports it. Re-run it with `go test -run='^$' -bench=. -benchmem -count=5 ./tools/allocbench/`.
 
-Compare a new run against `allocs/op` and `B/op` only. Across the five runs below every allocation count was identical, while `ns/op` ranged up to 2.1x on an idle machine — so a changed count is a real finding and a changed time is almost certainly the laptop. The medians are recorded for scale, not for comparison.
+Compare a new run against `allocs/op` and `B/op` only. Across the five runs below every allocation count was identical, while `ns/op` ranged up to 2.4x within a single benchmark — so a changed count is a real finding and a changed time is almost certainly the laptop. The medians are recorded for scale, not for comparison.
 
-Baseline: go1.26.6, darwin/arm64, Apple M3 Max, 2026-09-19.
+Baseline: go1.27.1, darwin/arm64, Apple M3 Max, 2026-09-25. Every allocation count matched the go1.26.6 run of 2026-09-19.
 
 | Benchmark | allocs/op | B/op | ns/op (median) |
 |---|---|---|---|
-| ReturnPointer | 1 | 24 | 52.2 |
-| ReturnValue | 0 | 0 | 2.3 |
-| AppendNoPrealloc | 12 | 25208 | 3759 |
-| AppendPrealloc | 0 | 0 | 2055 |
-| BoxSmallInt | 0 | 0 | 2.2 |
-| BoxLargeInt | 1 | 8 | 7.8 |
-| FixedConcat | 2 | 29 | 50.5 |
-| FixedBuilder | 4 | 64 | 66.4 |
-| FixedSprintf | 3 | 48 | 141.2 |
-| LoopConcat | 8 | 248 | 407.4 |
-| LoopBuilder | 4 | 120 | 138.3 |
-| LoopBuilderGrow | 1 | 64 | 55.6 |
+| ReturnPointer | 1 | 24 | 7.0 |
+| ReturnValue | 0 | 0 | 1.9 |
+| AppendNoPrealloc | 12 | 25208 | 3639 |
+| AppendPrealloc | 0 | 0 | 1970 |
+| BoxSmallInt | 0 | 0 | 1.9 |
+| BoxLargeInt | 1 | 8 | 6.6 |
+| FixedConcat | 2 | 29 | 37.4 |
+| FixedBuilder | 4 | 64 | 52.2 |
+| FixedSprintf | 3 | 48 | 80.8 |
+| LoopConcat | 8 | 248 | 217.0 |
+| LoopBuilder | 4 | 120 | 112.8 |
+| LoopBuilderGrow | 1 | 64 | 46.4 |
 
 Four of these contradict advice that circulates widely, which is why they are pinned. `BoxSmallInt` costs nothing because `runtime.staticuint64s` covers 0–255, even though `-gcflags=-m` reports the value as escaping. `FixedConcat` beats `FixedBuilder` on both counts, so `strings.Builder` is the wrong reflex for a fixed set of pieces; it wins only in a loop, and only `Grow` takes it to one allocation. `FixedSprintf` costs one allocation per argument plus the result, which is the `...any` signature forcing every argument to escape. And `AppendPrealloc` reaches zero rather than one because a slice with a constant capacity that never leaves its frame stays on the stack.

@@ -83,6 +83,10 @@ func (service *Registration) Add(registrationID string, filesystem fs.FS, defini
 // List returns all registrations that match the provided criteria
 func (service *Registration) List() []form.LookupCode {
 
+	// Lock the data structure
+	service.mutex.RLock()
+	defer service.mutex.RUnlock()
+
 	result := []form.LookupCode{}
 
 	for _, registration := range service.templates {

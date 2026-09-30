@@ -25,6 +25,7 @@ func TestAttachmentSchema(t *testing.T) {
 		{"label", "LABEL", nil},
 		{"description", "DESCRIPTION", nil},
 		{"url", "http://example.com", nil},
+		{"sourceUrl", "https://raw.example.com/docs/attachments/a.png", nil},
 		{"status", "READY", nil},
 		{"height", "100", 100},
 		{"width", "200", 200},
@@ -62,7 +63,7 @@ func TestAttachmentSchema_Enums(t *testing.T) {
 		require.Equal(t, objectType, attachment.ObjectType)
 	}
 
-	for _, status := range []string{AttachmentStatusReady, AttachmentStatusWorking} {
+	for _, status := range []string{AttachmentStatusReady, AttachmentStatusWorking, AttachmentStatusFailed} {
 		attachment := NewEmptyAttachment()
 		require.Nil(t, s.Set(&attachment, "status", status), "status=%q", status)
 		require.Equal(t, status, attachment.Status)
@@ -173,7 +174,7 @@ func TestAttachment_GetPointer(t *testing.T) {
 	attachment := NewAttachment(AttachmentObjectTypeStream, primitive.NewObjectID())
 
 	// Every string field, written through its pointer
-	for _, name := range []string{"objectType", "category", "label", "description", "url", "original", "contentType", "status"} {
+	for _, name := range []string{"objectType", "category", "label", "description", "url", "sourceUrl", "original", "contentType", "status"} {
 
 		pointer, ok := attachment.GetPointer(name)
 		require.True(t, ok, "property=%q", name)
@@ -189,6 +190,7 @@ func TestAttachment_GetPointer(t *testing.T) {
 	require.Equal(t, "VALUE-label", attachment.Label)
 	require.Equal(t, "VALUE-description", attachment.Description)
 	require.Equal(t, "VALUE-url", attachment.URL)
+	require.Equal(t, "VALUE-sourceUrl", attachment.SourceURL)
 	require.Equal(t, "VALUE-original", attachment.Original)
 	require.Equal(t, "VALUE-contentType", attachment.ContentType)
 	require.Equal(t, "VALUE-status", attachment.Status)

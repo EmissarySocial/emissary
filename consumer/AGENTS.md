@@ -12,7 +12,7 @@ Turbine retries any task that returns `queue.Error` or `queue.Requeue`, so handl
 
 ## A permanent failure ends the task SUCCESSFULLY, because `Failure` still reports
 
-`queue.Error` and `queue.Failure` both call `derp.Report` inside turbine's worker, so classifying a permanent error as `Failure` stops the *retry* but not the *reporting* — the same defect is re-filed on every cycle, which is how one signature became the largest single error class on the server (BUG-148). A failure that is understood and permanent must return `queue.Success()` after a `log.Debug`, exactly as the document loop in [pollFollowing-record.go](pollFollowing-record.go) does with `continue`. Use `requeue(err)` only where reporting is still wanted.
+Turbine reports a task's error exactly once, when the task fails: a `queue.Failure`, or a `queue.Error` whose eight retries have run out. The retries themselves are silent. So `requeue(err)` on a transient fault costs one record only if all nine attempts fail, but classifying a permanent error as `Failure` stops the *retry* but not the *reporting* — the same defect is re-filed on every cycle, which is how one signature became the largest single error class on the server (BUG-148). A failure that is understood and permanent must return `queue.Success()` after a `log.Debug`, exactly as the document loop in [pollFollowing-record.go](pollFollowing-record.go) does with `continue`. Use `requeue(err)` only where reporting is still wanted.
 
 `actorLoadResult` is the worked example: 429 → `requeue` (the host is throttling, not this record), any other 4xx → mark the Following and return Success, everything else → `queue.Error`. The 429 check must come **first**, because `derp.IsClientError` is `400 <= code < 500` and therefore covers 429 too.
 
@@ -58,11 +58,13 @@ The reply graph is remote-controlled data, so the crawl tasks in [crawlContext.g
 
 The task ([publishRealtimeMessage.go](publishRealtimeMessage.go)) delivers to `factory.RealtimeBroker()`, which holds this process's live SSE sockets. A stored, retried, or cross-node run would nudge nobody. Topics travel as the integer constants from [../realtime/constants.go](../realtime/constants.go), so never renumber them.
 
-## The two StreamSource sync tasks are one handler under two names
+## Every StreamSource sync is one task at priority 16
 
-`SyncStreamSource` (webhook, 256) and `SyncStreamSourceNow` (the Sync Now button, 16) exist as separate names only so [preprocessor.go](preprocessor.go) can give them different priorities. The dispatch switch and all three lifecycle hooks must accept both, through `service.IsSyncStreamSourceTask`. A hook that tested one name by hand would stop recording status for the other path, silently — the queue reports nothing when a hook declines a task.
+`SyncStreamSource` covers both triggers, the **Sync Now** button and the webhook, at priority 16. The two differ only in the signature, which is a publish option, not a task name (see [../service/AGENTS.md](../service/AGENTS.md)). So the priority alone does not make a webhook sync immediate: turbine will not run a signed task from memory, so it still waits for the storage poller. Until 2026-09-24 the webhook ran under this name at 256 and Sync Now under `SyncStreamSourceNow` at 16. A leftover `SyncStreamSourceNow` row now reaches no handler and is ignored.
 
-A missing case in `PreProcessor` is just as quiet: the name falls through, `Priority` keeps its `-1` sentinel, and `prepareTask` swaps in the queue default. So a test asking "is the priority low enough?" passes against `-1` and proves nothing. Assert the exact value.
+`SyncStreamSourceAttachment` downloads one file that a synchronized page links to. It runs through `WithFactory` and a plain session, deliberately **not** `WithSession`: a download can outlast MongoDB's 60-second transaction limit, and a retried transaction would download the file again. It is also at priority 16 and signed per attachment. The StreamSource status hooks ignore it, because it writes only its own Attachment (see [../service/AGENTS.md](../service/AGENTS.md)).
+
+A missing case in `PreProcessor` is silent: the name falls through, `Priority` keeps its `-1` sentinel, and `prepareTask` swaps in the queue default. So a test asking "is the priority low enough?" passes against `-1` and proves nothing. Assert the exact value.
 
 ## New tasks need a case in `PreProcessor` too
 
@@ -70,7 +72,7 @@ A missing case in `PreProcessor` is just as quiet: the name falls through, `Prio
 
 ## Scheduling is idempotent via task signatures
 
-`scheduler_MakeDailyTasks` / `scheduler_MakeHourlyTasks` in [schedule.go](schedule.go) publish with `queue.WithSignature("DAILY:<date>" / "HOURLY:<hour>")`, so repeated boots and the daily re-priming cannot double-schedule. Any new recurring task should either ride these batches (as the per-domain tasks in [scheduleDaily.go](scheduleDaily.go) do) or carry its own signature. `ScheduleStartup` is published on every boot, by every node, and is where one-time migrations go; today it queues the Stripe Connect repair ([BUG-179](../../emissary-specs/bugs/BUG-179-Stripe-Connect-Webhook-Secret-Never-Stored.md)). It carries no signature itself, so anything it publishes must carry its own signature per domain, or two nodes booting together run the same migration twice. `RepairStripeConnect:<hostname>` is the example: two concurrent repairs would each register a Stripe webhook endpoint, and one of them would be left failing forever.
+`scheduler_MakeDailyTasks` / `scheduler_MakeHourlyTasks` in [schedule.go](schedule.go) publish with `queue.WithSignature("DAILY:<date>" / "HOURLY:<hour>")`, so repeated boots and the daily re-priming cannot double-schedule. Any new recurring task should either ride these batches (as the per-domain tasks in [scheduleDaily.go](scheduleDaily.go) do) or carry its own signature. `ScheduleStartup` is published on every boot, by every node, and is where one-time migrations go; today it queues the Stripe Connect repair ([BUG-179](../../emissary-specs/bugs/_done/BUG-179-Stripe-Connect-Webhook-Secret-Never-Stored.md)). It carries no signature itself, so anything it publishes must carry its own signature per domain, or two nodes booting together run the same migration twice. `RepairStripeConnect:<hostname>` is the example: two concurrent repairs would each register a Stripe webhook endpoint, and one of them would be left failing forever.
 
 ## `RecycleDomain` is a mass purge — treat it with respect
 

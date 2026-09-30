@@ -44,9 +44,10 @@ func ForEachRecord(collection *mongo.Collection, fn ForEachFunc) error {
 			continue
 		}
 
-		// If the record has been changed, then update the database
+		// If the record has been changed, then update the database.  The error names the record,
+		// never its contents, because a Domain record holds private keys.
 		if _, err = collection.ReplaceOne(ctx, bson.M{"_id": value["_id"]}, value); err != nil {
-			derp.Report(derp.Wrap(err, location, "Saving record", value))
+			derp.Report(derp.Wrap(err, location, "Saving record", collection.Name(), value["_id"]))
 			continue
 		}
 

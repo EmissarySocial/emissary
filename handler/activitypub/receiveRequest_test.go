@@ -128,3 +128,35 @@ func indexOfRuleValidator(validators []router.Validator) int {
 
 	return -1
 }
+
+// TestReceiveRequest_ActivityIDMustShareActorOrigin pins D18 at the funnel every inbox shares: an
+// activity whose id is on another origin than its actor is refused, and one with no id is not.
+func TestReceiveRequest_ActivityIDMustShareActorOrigin(t *testing.T) {
+
+	// BUG-223: the Stream inbox skipped this rule, so a delivery could file itself under another
+	// host's id in the shared cache.  The signature check is replaced, so only this rule decides.
+	test := func(name string, body string, allowed bool) {
+		t.Run(name, func(t *testing.T) {
+
+			request := httptest.NewRequest(http.MethodPost, "http://localhost/inbox", strings.NewReader(body))
+
+			_, err := ReceiveRequest(request, nil, &fakeKeyFinder{}, &fakeChecker{}, nil, primitive.NilObjectID, router.WithValidators(validator.NewNone()))
+
+			if allowed {
+				require.NoError(t, err)
+				return
+			}
+
+			require.Error(t, err)
+			require.True(t, derp.IsUnauthorized(err), "want Unauthorized, got %v", err)
+		})
+	}
+
+	test("same origin", `{"id":"https://good.example/activities/1","type":"Like","actor":"https://good.example/@alice"}`, true)
+	test("no id", `{"type":"Like","actor":"https://good.example/@alice"}`, true)
+	test("another host", `{"id":"https://victim.example/@bob","type":"Like","actor":"https://good.example/@alice"}`, false)
+	test("another scheme", `{"id":"http://good.example/activities/1","type":"Like","actor":"https://good.example/@alice"}`, false)
+	test("another port", `{"id":"https://good.example:8443/activities/1","type":"Like","actor":"https://good.example/@alice"}`, false)
+	test("a urn:uuid", `{"id":"urn:uuid:550e8400-e29b-41d4-a716-446655440000","type":"Create","actor":"https://good.example/@alice"}`, false)
+	test("no actor", `{"id":"https://good.example/activities/1","type":"Like"}`, false)
+}

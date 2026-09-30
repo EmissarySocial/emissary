@@ -401,6 +401,20 @@ func (w Stream) StreamSource() (model.StreamSource, error) {
 	return result, nil
 }
 
+// StreamSourceFiles summarizes the files that this Stream's remote source has copied in
+func (w Stream) StreamSourceFiles() (StreamSourceFiles, error) {
+
+	const location = "build.Stream.StreamSourceFiles"
+
+	attachments, err := w.factory().Attachment().QueryByCategory(w.session(), model.AttachmentObjectTypeStream, w._stream.StreamID, model.AttachmentCategoryStreamSource)
+
+	if err != nil {
+		return NewStreamSourceFiles(nil), derp.Wrap(err, location, "Loading imported attachments", w._stream.StreamID)
+	}
+
+	return NewStreamSourceFiles(attachments), nil
+}
+
 // Data returns the custom data field as an "any" type
 func (w Stream) Data(value string) any {
 	return w._stream.Data[value]

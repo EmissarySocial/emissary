@@ -88,7 +88,7 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 						Label:       "Circles",
 						Path:        "circles." + role.RoleID,
 						Description: `<a href="/@me/settings/circles" target="_blank" rel="noopener noreferrer">Manage Circles &rarr;</a>`,
-						Options: mapof.Any{
+						Options: mapof.Template{
 							"rows": 6,
 							"enum": mapCirclesToLookupCodes(circles...),
 						},
@@ -98,7 +98,7 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 						Label:       "Products",
 						Path:        "products." + role.RoleID,
 						Description: editLinks.String(),
-						Options: mapof.Any{
+						Options: mapof.Template{
 							"rows": 8,
 							"enum": mapProductsToLookupCodes(products...),
 						},

@@ -20,10 +20,29 @@ import (
  * changed, and push it into a Stream.
  ******************************************/
 
-// Sync copies the remote source's current content into the Stream that this record populates
+// Sync copies the remote source's current content into the Stream that this record populates,
+// then queues a download for every linked file that is not stored yet
 func (service *StreamSource) Sync(ctx context.Context, session data.Session, streamSource *model.StreamSource) error {
 
 	const location = "service.StreamSource.Sync"
+
+	if err := service.syncContent(ctx, session, streamSource); err != nil {
+		return derp.Wrap(err, location, "Synchronizing content", streamSource.StreamSourceID)
+	}
+
+	// RULE: This runs on EVERY successful sync, including a 304, because an unchanged page ends
+	// before any rendering -- without it, a failed download could never be tried again.
+	if err := service.queueUnfinishedAttachments(session, streamSource.StreamID); err != nil {
+		return derp.Wrap(err, location, "Queueing attachment downloads", streamSource.StreamSourceID)
+	}
+
+	return nil
+}
+
+// syncContent copies the remote source's current content into the Stream, when it has changed
+func (service *StreamSource) syncContent(ctx context.Context, session data.Session, streamSource *model.StreamSource) error {
+
+	const location = "service.StreamSource.syncContent"
 
 	// Find the Adapter that reads this kind of source
 	adapter, err := service.adapterFor(streamSource.Method)
@@ -102,6 +121,11 @@ func (service *StreamSource) applyToStream(session data.Session, streamSource *m
 	// RULE: Content is built by the Content service, which renders the HTML that every remote
 	// reader sees.  Writing the raw value alone would publish an empty body to the fediverse.
 	stream.Content = service.contentService.New(item.Format, string(item.Source))
+
+	// Point the content's attachment links at local copies
+	if err := service.importAttachments(session, streamSource, &stream.Content); err != nil {
+		return derp.Wrap(err, location, "Importing attachments", streamSource.StreamSourceID)
+	}
 
 	// Save the Stream, which does whatever it would do for a human edit: no state change, no
 	// settings change, and federation decided by this Stream's own configuration.

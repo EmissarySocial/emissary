@@ -63,6 +63,9 @@ func newTestDomainFactory(themeData mapof.Any, data mapof.String) stubDomainFact
 		panic(err)
 	}
 
+	// Add only stages the theme; nothing can see it until it is published
+	themeService.Publish()
+
 	return stubDomainFactory{domainService: &domainService, themeService: &themeService}
 }
 

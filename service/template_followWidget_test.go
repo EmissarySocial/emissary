@@ -346,7 +346,7 @@ func TestFollowWidget_UsernameValidator(t *testing.T) {
 
 	username, exists := findFormElement(widget.Form, "username")
 	require.True(t, exists, "the form must offer a username field")
-	require.Equal(t, "/.validate/user/exists", username.Options.GetString("validator"))
+	require.Equal(t, "/.validate/user/exists", username.Options.GetString("validator", nil))
 
 	// The handler keys off the field name, and the field name is this path
 	require.Equal(t, "username", username.Path)

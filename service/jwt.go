@@ -127,8 +127,9 @@ func (service *JWT) ParseString(tokenString string) (*jwt.Token, error) {
 	claims := model.NewAuthorization()
 	result, err := jwt.ParseWithClaims(tokenString, &claims, service.FindKey, steranko.JWTValidMethods())
 
+	// The token is a live credential, so the error never carries it (BUG-173)
 	if err != nil {
-		return nil, derp.Wrap(err, location, "Parsing JSON Web Token", tokenString)
+		return nil, derp.Wrap(err, location, "Parsing JSON Web Token")
 	}
 
 	// Success.
@@ -303,9 +304,9 @@ func (service *JWT) ParseToken(tokenString string, claims jwt.Claims) error {
 
 	const location = "service.JWT.ParseToken"
 
-	// Try to parse the JWT token using this key service
+	// Try to parse the JWT token using this key service.  The error never carries the token (BUG-173)
 	if _, err := jwt.ParseWithClaims(tokenString, claims, service.FindKey, jwt.WithValidMethods([]string{"HS512"})); err != nil {
-		return derp.Wrap(err, location, "Parsing JSON Web Token", tokenString)
+		return derp.Wrap(err, location, "Parsing JSON Web Token")
 	}
 
 	// You're so beautiful.

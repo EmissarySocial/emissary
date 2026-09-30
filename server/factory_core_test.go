@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"embed"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -16,6 +15,7 @@ import (
 	"github.com/EmissarySocial/emissary/config"
 	"github.com/EmissarySocial/emissary/service"
 	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
+	"github.com/EmissarySocial/emissary/tools/secretcheck"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
@@ -239,17 +239,6 @@ func waitForDomainStartup(t *testing.T) {
 func requireWatchersStopped(t *testing.T, baseline int, message string) {
 	t.Helper()
 	require.Eventually(t, func() bool { return countDomainWatchers() == baseline }, 10*time.Second, 20*time.Millisecond, message)
-}
-
-// requireNoSecret fails if the error, encoded the way an error reporter stores it, contains `secret`
-func requireNoSecret(t *testing.T, err error, secret string) {
-
-	t.Helper()
-
-	encoded, marshalErr := json.Marshal(err)
-	require.NoError(t, marshalErr)
-	require.NotContains(t, string(encoded), secret, "error details must not carry secrets")
-	require.NotContains(t, err.Error(), secret, "error messages must not carry secrets")
 }
 
 // reportRecorder is a derp.Reporter that keeps every error reported to it
@@ -731,8 +720,8 @@ func TestPutDomain_OmitsSecretsFromErrors(t *testing.T) {
 	})
 
 	require.Error(t, err)
-	requireNoSecret(t, err, testMasterKey)
-	requireNoSecret(t, err, "db-password-secret")
+	secretcheck.RequireAbsent(t, err, testMasterKey)
+	secretcheck.RequireAbsent(t, err, "db-password-secret")
 }
 
 // TestRefreshDomain_RequiresCommonDatabase verifies the guard against building a domain factory
@@ -774,9 +763,12 @@ func TestRefreshDomains_UnreachableDomainIsLeftOut(t *testing.T) {
  * Domain Registry (MongoDB integration)
  ******************************************/
 
-// TestRefreshDomains_Lifecycle creates, refreshes, and removes a live domain factory.  A removed
-// factory's watchers must stop, because they reopen themselves until canceled (BUG-170).
+// TestRefreshDomains_Lifecycle creates, refreshes, and removes a live domain factory, and
+// requires the removed factory's watchers to stop
 func TestRefreshDomains_Lifecycle(t *testing.T) {
+
+	// BUG-170: watchers reopen themselves until canceled, so a factory that is not closed on
+	// removal keeps them running
 
 	factory, domainConfig := newLiveDomainCore(t)
 	baseline := countDomainWatchers()
@@ -981,10 +973,16 @@ func TestPutDomain_Live(t *testing.T) {
 	require.Equal(t, int64(1), count)
 
 	// An owner the User service rejects fails the save ("owner" is not a valid username)
-	domainConfig.Owner = config.Owner{DisplayName: "Owner", Username: "owner", EmailAddress: "owner@example.com"}
+	domainConfig.Owner = config.Owner{DisplayName: "Owner", Username: "owner", EmailAddress: "owner@example.com", PhoneNumber: "+1-555-0100", MailingAddress: "1 Private Lane"}
 	err = factory.PutDomain(domainConfig)
 	require.Error(t, err)
 	require.Equal(t, http.StatusBadRequest, derp.ErrorCode(err))
+	require.Contains(t, errorMessages(err), "Setting owner")
+
+	// BUG-173: the phone number and mailing address are never copied to the User, so only the
+	// "Setting owner" wrap could carry them.  Neither is a credential, but both are personal data.
+	secretcheck.RequireAbsentFromEachLayer(t, err, "+1-555-0100")
+	secretcheck.RequireAbsentFromEachLayer(t, err, "1 Private Lane")
 
 	// The same session machinery serves requests
 	session, err := factory.Session(ctx, domainConfig.Hostname)
@@ -1015,6 +1013,82 @@ func TestPutDomain_UnreachableDomain(t *testing.T) {
 	require.Error(t, err)
 	require.Zero(t, factory.domains.Size())
 	require.Len(t, factory.ListDomains(), 1)
+}
+
+// TestPutDomain_FailedBuildOmitsSecrets verifies that a domain which cannot be built reports
+// none of its secrets, from any of the layers its error passes through.
+func TestPutDomain_FailedBuildOmitsSecrets(t *testing.T) {
+
+	// BUG-173: putDomain, refreshDomain, NewFactory, and Refresh each attached the whole
+	// config.Domain, which marks nothing json:"-", so every layer printed and stored it.
+	secrets := []string{testMasterKey, "db-password-secret", "smtp-password-secret"}
+
+	// The domain carries a secret in every field that can hold one
+	domain := func(connectString string) config.Domain {
+		return config.Domain{
+			DomainID:       "1",
+			Hostname:       "unreachable.example.com",
+			ConnectString:  connectString,
+			DatabaseName:   "unreachable",
+			MasterKey:      testMasterKey,
+			SMTPConnection: config.SMTPConnection{Hostname: "smtp.example.com", Username: "mailer", Password: "smtp-password-secret"},
+		}
+	}
+
+	table := []struct {
+		name          string
+		connectString string
+		refreshStep   string
+	}{
+		// The database is never reached, so the domain service fails to start
+		{"Unreachable", "mongodb://owner:db-password-secret@127.0.0.1:59999/?directConnection=true&serverSelectionTimeoutMS=200", "Starting domain service"},
+
+		// The connect string does not parse, so the client is never created
+		{"Malformed", "mongodb://owner:db-password-secret@127.0.0.1:59999/?serverSelectionTimeoutMS=never", "Connecting to MongoDB (Server)"},
+	}
+
+	for _, test := range table {
+		t.Run(test.name, func(t *testing.T) {
+
+			recorder := recordReports(t)
+
+			factory := testPersonalizedFactory()
+			factory.storage = &stubStorage{}
+			setTestConfig(factory, config.DefaultConfig())
+			setTestFilesystems(factory)
+			setTestCommonDatabase(factory, lazyDatabase(t, "put-domain-failed-build"))
+
+			err := factory.PutDomain(domain(test.connectString))
+			require.Error(t, err)
+
+			// Pinning every site proves the error passed through each layer that attached the domain
+			messages := errorMessages(err)
+			require.Contains(t, messages, "Refreshing domain")
+			require.Contains(t, messages, "Refreshing configuration")
+			require.Contains(t, messages, "Creating factory")
+			require.Contains(t, messages, test.refreshStep)
+
+			for _, secret := range secrets {
+				secretcheck.RequireAbsentFromEachLayer(t, err, secret)
+
+				for _, reported := range recorder.reported() {
+					secretcheck.RequireAbsentFromEachLayer(t, reported, secret)
+				}
+			}
+		})
+	}
+}
+
+// errorMessages returns the message of every layer in the error chain, outermost first
+func errorMessages(err error) []string {
+
+	result := make([]string, 0)
+
+	for ; err != nil; err = errors.Unwrap(err) {
+		result = append(result, derp.Message(err))
+	}
+
+	return result
 }
 
 // Two paths in factory_core.go have no test.  PutDomain's ByHostname failure needs a configured
