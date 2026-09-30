@@ -290,8 +290,9 @@ func TestClient_save_ExpiredContextFails(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 0)
 	defer cancel()
 
+	// The id must match the key, or the write is refused before it reaches the database (BUG-223)
 	value := NewValue()
-	value.URLs = append(value.URLs, "https://remote.example/@alice")
+	value.Object = mapof.Any{"id": "https://remote.example/@alice"}
 	value.HTTPHeader.Set(cacheheader.HeaderCacheControl, "max-age=3600")
 
 	require.Error(t, client.save(ctx, "https://remote.example/@alice", &value))
@@ -364,10 +365,10 @@ func TestClient_Load_AliasesSameHostKeyOnly(t *testing.T) {
 	client, origin := newTestClient()
 	origin.resolvedID = bob
 
-	// A handle on another host resolves to Bob, but is NOT recorded as one of his names
+	// A handle on another host resolves to Bob, but vouches for nothing, so nothing is written (BUG-223)
 	_, err := client.Load("@alice@evil.example")
 	require.NoError(t, err)
-	require.Equal(t, []string{bob}, cachedURLs(t, client, bob))
+	require.Nil(t, cachedURLs(t, client, bob))
 	require.Nil(t, cachedURLs(t, client, "@alice@evil.example"))
 
 	// So the same lookup goes back to the origin instead of being served the cached copy
@@ -385,11 +386,35 @@ func TestClient_Load_AliasesSameHostKeyOnly(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, []string{bob, "https://good.example/users/bob"}, cachedURLs(t, client, "https://good.example/users/bob"))
 
-	// And a redirecting URL on another host is not
+	// And a URL on another host is not, and cannot replace what Bob's own host said
+	origin.publicKeyPEM = "PEM-EVIL"
+
 	_, err = client.Load("https://evil.example/users/bob")
 	require.NoError(t, err)
 	require.Nil(t, cachedURLs(t, client, "https://evil.example/users/bob"))
-	require.Equal(t, []string{bob}, cachedURLs(t, client, bob))
+	require.Equal(t, []string{bob, "https://good.example/users/bob"}, cachedURLs(t, client, bob))
+
+	cached, err := client.Load(bob)
+	require.NoError(t, err)
+	require.Equal(t, "PEM-ORIGINAL", cached.Get("publicKeyPem").String())
+}
+
+// TestClient_Save_DocumentWithNoIDIsNotCached confirms that a document with no id, which no key can
+// vouch for, is never written.
+func TestClient_Save_DocumentWithNoIDIsNotCached(t *testing.T) {
+
+	const url = "https://remote.example/notes/anonymous"
+
+	client, origin := newTestClient()
+	origin.value = map[string]any{"type": "Note", "content": "no id here"}
+
+	_, err := client.Load(url)
+	require.NoError(t, err)
+	require.Nil(t, cachedURLs(t, client, url))
+
+	_, err = client.Load(url)
+	require.NoError(t, err)
+	require.Equal(t, 2, origin.calls)
 }
 
 // TestClient_Load_StubIsNotCached confirms that the normalizer's stub for a load cycle, marked NoStore,
