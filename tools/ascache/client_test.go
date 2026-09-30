@@ -26,6 +26,8 @@ type countingClient struct {
 	delay            time.Duration // How long this origin takes to answer, simulating a slow server
 	receivedOptions  []any         // Options this client was called with, in order
 	resolvedID       string        // When set, the id of the returned document, standing in for a resolved handle or redirect
+	value            any           // When set, the value returned in place of the Actor, bound to this client
+	noStore          bool          // Whether the returned document is marked NoStore, as the normalizer marks its stub
 }
 
 // SetRootClient satisfies streams.Client.  This client makes no recursive calls, so it needs no root.
@@ -48,6 +50,13 @@ func (client *countingClient) Load(uri string, options ...any) (streams.Document
 	if client.forgeCacheHeader {
 		header.Set(HeaderHannibalCache, "true")
 		header.Set(HeaderHannibalCacheDate, time.Now().Format(time.RFC3339))
+	}
+
+	// A custom value is bound to this client, so any load it triggers is counted as a call
+	if client.value != nil {
+		result := streams.NewDocument(client.value, streams.WithHTTPHeader(header), streams.WithClient(client))
+		result.Metadata.NoStore = client.noStore
+		return result, nil
 	}
 
 	document := streams.NewDocument(
@@ -281,8 +290,9 @@ func TestClient_save_ExpiredContextFails(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 0)
 	defer cancel()
 
+	// The id must match the key, or the write is refused before it reaches the database (BUG-223)
 	value := NewValue()
-	value.URLs = append(value.URLs, "https://remote.example/@alice")
+	value.Object = mapof.Any{"id": "https://remote.example/@alice"}
 	value.HTTPHeader.Set(cacheheader.HeaderCacheControl, "max-age=3600")
 
 	require.Error(t, client.save(ctx, "https://remote.example/@alice", &value))
@@ -355,10 +365,10 @@ func TestClient_Load_AliasesSameHostKeyOnly(t *testing.T) {
 	client, origin := newTestClient()
 	origin.resolvedID = bob
 
-	// A handle on another host resolves to Bob, but is NOT recorded as one of his names
+	// A handle on another host resolves to Bob, but vouches for nothing, so nothing is written (BUG-223)
 	_, err := client.Load("@alice@evil.example")
 	require.NoError(t, err)
-	require.Equal(t, []string{bob}, cachedURLs(t, client, bob))
+	require.Nil(t, cachedURLs(t, client, bob))
 	require.Nil(t, cachedURLs(t, client, "@alice@evil.example"))
 
 	// So the same lookup goes back to the origin instead of being served the cached copy
@@ -376,9 +386,183 @@ func TestClient_Load_AliasesSameHostKeyOnly(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, []string{bob, "https://good.example/users/bob"}, cachedURLs(t, client, "https://good.example/users/bob"))
 
-	// And a redirecting URL on another host is not
+	// And a URL on another host is not, and cannot replace what Bob's own host said
+	origin.publicKeyPEM = "PEM-EVIL"
+
 	_, err = client.Load("https://evil.example/users/bob")
 	require.NoError(t, err)
 	require.Nil(t, cachedURLs(t, client, "https://evil.example/users/bob"))
-	require.Equal(t, []string{bob}, cachedURLs(t, client, bob))
+	require.Equal(t, []string{bob, "https://good.example/users/bob"}, cachedURLs(t, client, bob))
+
+	cached, err := client.Load(bob)
+	require.NoError(t, err)
+	require.Equal(t, "PEM-ORIGINAL", cached.Get("publicKeyPem").String())
+}
+
+// TestClient_Save_DocumentWithNoIDIsNotCached confirms that a document with no id, which no key can
+// vouch for, is never written.
+func TestClient_Save_DocumentWithNoIDIsNotCached(t *testing.T) {
+
+	const url = "https://remote.example/notes/anonymous"
+
+	client, origin := newTestClient()
+	origin.value = map[string]any{"type": "Note", "content": "no id here"}
+
+	_, err := client.Load(url)
+	require.NoError(t, err)
+	require.Nil(t, cachedURLs(t, client, url))
+
+	_, err = client.Load(url)
+	require.NoError(t, err)
+	require.Equal(t, 2, origin.calls)
+}
+
+// TestClient_Load_StubIsNotCached confirms that the normalizer's stub for a load cycle, marked NoStore,
+// is returned to the caller but never written to the cache, even with a cacheable header.
+func TestClient_Load_StubIsNotCached(t *testing.T) {
+
+	// BUG-212: a cached stub would be served as the document to every user until it expired.
+	const url = "https://remote.example/notes/self"
+
+	client, origin := newTestClient()
+	origin.value = map[string]any{"id": url}
+	origin.noStore = true
+
+	result, err := client.Load(url)
+	require.NoError(t, err)
+	require.Equal(t, map[string]any{"id": url}, result.Value())
+	require.Nil(t, cachedURLs(t, client, url))
+
+	// So the next load goes back to the origin
+	_, err = client.Load(url)
+	require.NoError(t, err)
+	require.Equal(t, 2, origin.calls)
+}
+
+// TestClient_Save_NoStoreIsNotCached confirms that a direct Save of a document marked NoStore
+// writes nothing.
+func TestClient_Save_NoStoreIsNotCached(t *testing.T) {
+
+	const url = "https://remote.example/notes/self"
+
+	// A cacheable header, so that only NoStore can keep the document out
+	header := make(http.Header)
+	header.Set(cacheheader.HeaderCacheControl, "max-age=3600")
+
+	client, _ := newTestClient()
+	document := streams.NewDocument(map[string]any{"id": url, "type": "Note"}, streams.WithHTTPHeader(header))
+	document.Metadata.NoStore = true
+
+	require.NoError(t, client.Save(document))
+	require.Nil(t, cachedURLs(t, client, url))
+
+	// The same document, unmarked, is stored, which shows that the check above can fail
+	document.Metadata.NoStore = false
+
+	require.NoError(t, client.Save(document))
+	require.Equal(t, []string{url}, cachedURLs(t, client, url))
+}
+
+// TestClient_Load_UntypedDocumentsAreCached confirms that a document without a type, such as a
+// standalone public key, is cached like any other.
+func TestClient_Load_UntypedDocumentsAreCached(t *testing.T) {
+
+	const url = "https://remote.example/keys/alice"
+
+	for _, value := range []any{
+		map[string]any{"id": url, "owner": "https://remote.example/users/alice", "publicKeyPem": "PEM"},
+		map[string]any{"id": url, "type": ""},
+		map[string]any{"id": url},
+	} {
+		client, origin := newTestClient()
+		origin.value = value
+
+		_, err := client.Load(url)
+		require.NoError(t, err, "loading %#v", value)
+
+		require.Equal(t, 1, origin.calls, "loads for %#v", value)
+		require.Equal(t, []string{url}, cachedURLs(t, client, url), "cached %#v", value)
+	}
+}
+
+// TestClient_Load_RemoteCannotSetNoStore confirms that a remote document naming the NoStore policy
+// in its own data is still cached.
+func TestClient_Load_RemoteCannotSetNoStore(t *testing.T) {
+
+	const url = "https://remote.example/notes/sneaky"
+
+	client, origin := newTestClient()
+	origin.value = map[string]any{
+		"id":       url,
+		"type":     "Note",
+		"NoStore":  true,
+		"noStore":  true,
+		"metadata": map[string]any{"noStore": true, "NoStore": true},
+	}
+
+	_, err := client.Load(url)
+	require.NoError(t, err)
+
+	require.Equal(t, []string{url}, cachedURLs(t, client, url))
+}
+
+// TestClient_Load_UntypedKeyRefreshIsCooledDown confirms that a forced reload of a standalone public
+// key, as a failed signature makes, is answered from the cache inside the cooldown.
+func TestClient_Load_UntypedKeyRefreshIsCooledDown(t *testing.T) {
+
+	// BUG-22: the cooldown answers only from a cached copy, so an uncached key would cost a
+	// fetch for every forged signature that names it.
+	const url = "https://remote.example/keys/alice"
+
+	client, origin := newTestClient()
+	origin.value = map[string]any{"id": url, "owner": "https://remote.example/users/alice", "publicKeyPem": "PEM"}
+
+	_, err := client.Load(url)
+	require.NoError(t, err)
+
+	refreshed, err := client.Load(url, WithWriteOnly())
+	require.NoError(t, err)
+
+	require.True(t, FromCache(refreshed))
+	require.Equal(t, 1, origin.calls)
+}
+
+// TestClient_Load_ArrayTypeIsCached confirms that a type given as a list still counts as a type.
+func TestClient_Load_ArrayTypeIsCached(t *testing.T) {
+
+	const url = "https://remote.example/notes/multi"
+
+	client, origin := newTestClient()
+	origin.value = map[string]any{"id": url, "type": []any{"Note", "https://example.com/ns#Extra"}}
+
+	_, err := client.Load(url)
+	require.NoError(t, err)
+
+	require.Equal(t, []string{url}, cachedURLs(t, client, url))
+}
+
+// TestClient_Load_ForeignDocumentCannotClaimAnotherHostsID confirms that a document served by one host,
+// claiming an id on another, is never served as the document for that id.
+func TestClient_Load_ForeignDocumentCannotClaimAnotherHostsID(t *testing.T) {
+
+	// Cache poisoning: a key planted for Bob's id would be served to signature verification,
+	// letting evil.example sign activities as Bob.
+	const bob = "https://good.example/@bob"
+
+	client, origin := newTestClient()
+
+	// evil.example answers with a document that claims to be Bob, carrying its own key
+	origin.resolvedID = bob
+	origin.publicKeyPEM = "PEM-ATTACKER"
+
+	_, err := client.Load("https://evil.example/users/bob")
+	require.NoError(t, err)
+
+	// Bob's own server answers with his real key
+	origin.resolvedID = ""
+	origin.publicKeyPEM = "PEM-GENUINE"
+
+	result, err := client.Load(bob)
+	require.NoError(t, err)
+	require.Equal(t, "PEM-GENUINE", result.Get("publicKeyPem").String())
 }
