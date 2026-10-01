@@ -1,7 +1,6 @@
 package service
 
 import (
-	"math"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -137,88 +136,9 @@ func TestResolveSignature_RefusalStaysOutOfDerp(t *testing.T) {
 	require.True(t, derp.IsUnauthorized(err), "refusal must be Unauthorized so errorHandler skips derp.Report")
 }
 
-// TestResolveSignature_MockKeyWithoutSignature pins the ordering trap: a local harness names its
-// Actor with the Mock-Key-Id header and NO Signature header at all.
-func TestResolveSignature_MockKeyWithoutSignature(t *testing.T) {
-
-	t.Parallel()
-
-	request := unsignedRequest("localhost")
-	request.Header.Set("Mock-Key-Id", testSignatureKeyID)
-
-	signature, err := resolveSignature(request, verifierUnused(t))
-
-	require.NoError(t, err)
-	require.Equal(t, testSignatureKeyID, signature.KeyID)
-	require.Equal(t, "MOCK", signature.Algorithm)
-}
-
-// TestResolveSignature_MockKeyOverridesRefusal confirms that a local domain still falls back to
-// the mock verifier when a real signature fails, rather than refusing the request.
-func TestResolveSignature_MockKeyOverridesRefusal(t *testing.T) {
-
-	t.Parallel()
-
-	request := signedRequest("localhost")
-	request.Header.Set("Mock-Key-Id", testSignatureKeyID)
-
-	signature, err := resolveSignature(request, verifierFails())
-
-	require.NoError(t, err)
-	require.Equal(t, testSignatureKeyID, signature.KeyID)
-	require.Equal(t, "MOCK", signature.Algorithm)
-}
-
-// TestResolveSignature_RealSignatureBeatsMockKey pins the precedence between the two: a signature
-// that actually verifies wins, so a stray Mock-Key-Id cannot re-label a real Actor.
-func TestResolveSignature_RealSignatureBeatsMockKey(t *testing.T) {
-
-	t.Parallel()
-
-	request := signedRequest("localhost")
-	request.Header.Set("Mock-Key-Id", "https://remote.example/@imposter#main-key")
-
-	signature, err := resolveSignature(request, verifierSucceeds())
-
-	require.NoError(t, err)
-	require.Equal(t, testSignatureKeyID, signature.KeyID)
-	require.NotEqual(t, "MOCK", signature.Algorithm)
-}
-
-// TestResolveSignature_MockKeyIsLocalOnly is the security half of the mock verifier: the header
-// is a local development affordance, and a public domain must refuse it.
-func TestResolveSignature_MockKeyIsLocalOnly(t *testing.T) {
-
-	t.Parallel()
-
-	request := signedRequest("example.com")
-	request.Header.Set("Mock-Key-Id", testSignatureKeyID)
-
-	signature, err := resolveSignature(request, verifierFails())
-
-	require.Error(t, err)
-	require.Equal(t, http.StatusUnauthorized, derp.ErrorCode(err))
-	require.Empty(t, signature.KeyID)
-}
-
-// TestResolveSignature_MockKeyIsLocalOnly_Unsigned covers the same rule for a request that offers
-// no signature at all: off a local domain, Mock-Key-Id grants nothing.
-func TestResolveSignature_MockKeyIsLocalOnly_Unsigned(t *testing.T) {
-
-	t.Parallel()
-
-	request := unsignedRequest("example.com")
-	request.Header.Set("Mock-Key-Id", testSignatureKeyID)
-
-	signature, err := resolveSignature(request, verifierUnused(t))
-
-	require.NoError(t, err)
-	require.Empty(t, signature.KeyID)
-}
-
-// TestResolveSignature_LocalRefusalHintsAtMockKey confirms that a developer whose local signature
-// fails is told how to stand a mock one up.
-func TestResolveSignature_LocalRefusalHintsAtMockKey(t *testing.T) {
+// TestResolveSignature_LocalRefusalIsFixed confirms that a local domain gets the same fixed
+// refusal as any other, with no verifier internals in it.
+func TestResolveSignature_LocalRefusalIsFixed(t *testing.T) {
 
 	t.Parallel()
 
@@ -226,25 +146,7 @@ func TestResolveSignature_LocalRefusalHintsAtMockKey(t *testing.T) {
 
 	require.Error(t, err)
 	require.True(t, derp.IsUnauthorized(err))
-	require.Contains(t, derp.Message(err), "Mock-Key-Id")
-	require.NotContains(t, derp.Message(err), "SECRET-INTERNAL-DETAIL")
-}
-
-// TestMockSignature pins the shape of the stand-in Signature, including the empty (but non-nil)
-// slices that callers range over.
-func TestMockSignature(t *testing.T) {
-
-	t.Parallel()
-
-	signature := mockSignature(testSignatureKeyID)
-
-	require.Equal(t, testSignatureKeyID, signature.KeyID)
-	require.Equal(t, "MOCK", signature.Algorithm)
-	require.Equal(t, int64(math.MaxInt64), signature.Expires)
-	require.NotNil(t, signature.Headers)
-	require.NotNil(t, signature.Signature)
-	require.Empty(t, signature.Headers)
-	require.Empty(t, signature.Signature)
+	require.Equal(t, "Invalid HTTP Signature", derp.Message(err))
 }
 
 // TestParseHTTPSignature_NilRequest pins the guard at the top of ParseHTTPSignature: a nil

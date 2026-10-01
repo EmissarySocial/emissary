@@ -40,11 +40,10 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 		return nil
 	}
 
-	// Locate the original "object" value as an actual object.  If the object is
-	// embedded inline, use it directly.  If it is a bare URL, load it from the
-	// Interwebs -- and treat a load failure as a (retryable) error, so a transient
-	// network problem does not silently drop the news item.
-	document := activity.UnwrapActivity()
+	// Locate the object of this Create or Update.  If the object is embedded inline, use it
+	// directly.  If it is a bare URL, load it from the Interwebs -- and treat a load failure as
+	// a (retryable) error, so a transient network problem does not silently drop the news item.
+	document := activity.Object()
 
 	if document.IsString() {
 
@@ -55,6 +54,12 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 		}
 
 		document = loaded
+	}
+
+	// RULE: A Create or Update must carry an object.  One that is empty, or holds another
+	// activity, is dropped without an error so that the sender does not retry it.
+	if document.IsNil() || document.IsActivity() {
+		return nil
 	}
 
 	// Place the post into the User's newsfeed IF it came from a source they Follow. A post from a

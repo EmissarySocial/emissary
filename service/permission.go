@@ -2,14 +2,12 @@ package service
 
 import (
 	"encoding/json"
-	"math"
 	"net/http"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/sigs"
-	"github.com/benpate/uri"
 )
 
 // Permission service manages user permissions and privileges
@@ -357,40 +355,18 @@ func resolveSignature(request *http.Request, verify func(*http.Request) (sigs.Si
 
 	const location = "service.resolveSignature"
 
-	isSigned := sigs.HasSignature(request)
-
-	// A signature that verifies speaks for its Actor. A verification FAILURE is not returned
-	// here, because the mock verifier below may still stand in for it on a local domain.
-	if isSigned {
-		if signature, err := verify(request); err == nil {
-			return signature, nil
-		}
-	}
-
 	// RULE: A request that offers no Signature at all is Anonymous, not refused
-	if !isSigned {
+	if !sigs.HasSignature(request) {
 		return sigs.Signature{}, nil
 	}
 
-	// RULE: A local domain gets the mock-key hint, which is the only guidance a developer
-	// receives here -- errorHandler answers a 401 with this message and nothing else
-	if uri.IsLocalHostname(request.Host) {
-		return sigs.Signature{}, derp.Unauthorized(location, "Invalid HTTP Signature. For local domains, use the 'Mock-Key-Id' header to simulate a signing key")
+	// A signature that verifies speaks for its Actor
+	if signature, err := verify(request); err == nil {
+		return signature, nil
 	}
 
 	// RULE: A signature that is present but INVALID refuses the whole request, and the refusal
 	// is neither logged nor reported -- the 401 is the only signal, and its message is fixed.
 	// See AGENTS.md, "An invalid signature refuses the request". (BUG-20)
 	return sigs.Signature{}, derp.Unauthorized(location, "Invalid HTTP Signature")
-}
-
-// mockSignature returns the stand-in Signature that a local domain accepts in place of a real one.
-func mockSignature(keyID string) sigs.Signature {
-	return sigs.Signature{
-		KeyID:     keyID,
-		Algorithm: "MOCK",
-		Headers:   make([]string, 0),
-		Signature: make([]byte, 0),
-		Expires:   math.MaxInt64,
-	}
 }
