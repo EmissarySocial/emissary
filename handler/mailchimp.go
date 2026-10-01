@@ -28,16 +28,11 @@ import (
 // Stripe webhook
 const mailchimpWebhookMaxBody = 65535
 
-// GetMailchimpWebhook validates to MailChimp that our webhook is properly configured.
+// GetMailchimpWebhook lies to MailChimp and says our webhook is properly configured (even if it's not)
 func GetMailchimpWebhook(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
-	const location = "handler.GettMailchimpWebhook"
-
-	// Load the connection named in the URL
-	if _, err := mailchimpWebhookConnection(ctx, factory, session); err != nil {
-		return derp.Wrap(err, location, "Loading MailChimp webhook connection")
-	}
-
+	// Lie to MailChimp and tell them everything is fine.  Even if we DON'T have this
+	// userConnection set up yet, that's ok.  It'll probably be created soon-ish-ly.
 	return ctx.NoContent(http.StatusOK)
 }
 
