@@ -376,3 +376,18 @@ func reactedStatus(factory *service.Factory, session data.Session, auth model.Au
 
 	return statuses[0]
 }
+
+// tootCredentialUser converts the signed-in User into the account a client edits its profile from,
+// which adds the plain-text source values the app sends back whenever it saves the profile.
+func tootCredentialUser(factory *service.Factory, session data.Session, auth model.Authorization, user *model.User) object.Account {
+
+	account := tootUser(factory, session, auth, user)
+
+	account.Source = &object.AccountSource{
+		Note:    user.StatusMessage,
+		Fields:  []object.AccountField{},
+		Privacy: "public",
+	}
+
+	return account
+}

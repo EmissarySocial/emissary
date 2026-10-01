@@ -46,7 +46,7 @@ func DeleteProfile_Avatar(serverFactory *server.Factory) func(model.Authorizatio
 			return object.Account{}, derp.Wrap(err, location, "Deleting Avatar")
 		}
 
-		return tootUser(factory, session, auth, &user), nil
+		return tootCredentialUser(factory, session, auth, &user), nil
 	}
 }
 

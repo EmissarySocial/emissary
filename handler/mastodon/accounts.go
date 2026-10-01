@@ -247,7 +247,7 @@ func GetAccount_VerifyCredentials(serverFactory *server.Factory) func(model.Auth
 		}
 
 		// Return as a Toot
-		return tootUser(factory, session, auth, &user), nil
+		return tootCredentialUser(factory, session, auth, &user), nil
 	}
 }
 
@@ -300,7 +300,7 @@ func PatchAccount_UpdateCredentials(serverFactory *server.Factory) func(model.Au
 		}
 
 		// Return updated JSON
-		return tootUser(factory, session, auth, &user), nil
+		return tootCredentialUser(factory, session, auth, &user), nil
 	}
 }
 
