@@ -282,10 +282,18 @@ func PatchAccount_UpdateCredentials(serverFactory *server.Factory) func(model.Au
 			return object.Account{}, derp.Wrap(err, location, "Unrecognized User")
 		}
 
-		// Update the User's information
-		user.DisplayName = t.DisplayName
-		user.StatusMessage = t.Note
-		user.IsPublic = t.Discoverable
+		// RULE: change only the fields the client sent -- the app leaves out what it didn't edit
+		if t.DisplayName != nil {
+			user.DisplayName = *t.DisplayName
+		}
+
+		if t.Note != nil {
+			user.StatusMessage = *t.Note
+		}
+
+		if t.Discoverable != nil {
+			user.IsPublic = *t.Discoverable
+		}
 
 		if err := userService.Save(session, &user, "Updated via Mastodon API"); err != nil {
 			return object.Account{}, derp.Wrap(err, location, "Saving user")
