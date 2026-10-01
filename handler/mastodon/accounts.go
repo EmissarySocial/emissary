@@ -284,7 +284,7 @@ func PatchAccount_UpdateCredentials(serverFactory *server.Factory) func(model.Au
 
 		// Update the User's information
 		user.DisplayName = t.DisplayName
-		user.Note = t.Note
+		user.StatusMessage = t.Note
 		user.IsPublic = t.Discoverable
 
 		if err := userService.Save(session, &user, "Updated via Mastodon API"); err != nil {
