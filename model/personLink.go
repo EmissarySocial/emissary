@@ -144,13 +144,14 @@ func (person PersonLink) Toot() object.Account {
 	// created_at has no "?" in the client's Codable model and crashes decode if missing.
 	// ActivityPub has no reliable "account created" date, so this is an honest "unknown".
 	return object.Account{
-		ID:          id,
-		URL:         person.ProfileURL,
-		Username:    person.LocalUsername(),
-		Acct:        strings.TrimPrefix(person.Username, "@"), // "user" or "user@domain.social" -- never a leading "@".
-		DisplayName: person.Name,
-		Avatar:      person.IconURL,
-		CreatedAt:   MastodonDate(time.Now()),
+		ID:           id,
+		URL:          person.ProfileURL,
+		Username:     person.LocalUsername(),
+		Acct:         strings.TrimPrefix(person.Username, "@"), // "user" or "user@domain.social" -- never a leading "@".
+		DisplayName:  person.Name,
+		Avatar:       person.IconURL,
+		AvatarStatic: person.IconURL,
+		CreatedAt:    MastodonDate(time.Now()),
 	}
 }
 
