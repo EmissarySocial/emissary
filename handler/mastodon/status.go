@@ -391,7 +391,7 @@ func PostStatus_Unreblog(serverFactory *server.Factory) func(model.Authorization
 
 // reactToStatus sets (or, when undo is true, clears) the caller's response of the given
 // type on the post behind a status ID, and returns that post -- a NewsItem in the feed,
-// or else the URL encoded in the ID.
+// an encoded remote URL, or a post made on this server.
 func reactToStatus(serverFactory *server.Factory, host string, auth model.Authorization, statusID string, responseType string, content string, undo bool, location string) (object.Status, error) {
 
 	factory, err := serverFactory.ByHostname(host)
@@ -414,10 +414,11 @@ func reactToStatus(serverFactory *server.Factory, host string, auth model.Author
 		return object.Status{}, derp.Wrap(err, location, "Loading user")
 	}
 
-	// Find the post: a NewsItem in the feed, or else the URL encoded in the ID
+	// Find the post: a NewsItem in the feed, the URL encoded in the ID, or a local Stream
 	message := model.NewNewsItem()
 	postURL := ""
 	inFeed := false
+	localStreamID := primitive.NilObjectID
 
 	switch err := loadNewsItemByStatusID(factory, session, auth.UserID, statusID, &message); {
 
@@ -427,13 +428,24 @@ func reactToStatus(serverFactory *server.Factory, host string, auth model.Author
 
 	case derp.IsNotFound(err):
 
-		encodedURL, ok := model.DecodeRemoteStatusID(statusID)
+		if encodedURL, ok := model.DecodeRemoteStatusID(statusID); ok {
+			postURL = encodedURL
+			break
+		}
 
-		if !ok {
+		// A post made on this server is reached by its own ID
+		stream := model.NewStream()
+
+		if streamErr := loadStreamByStatusID(factory, session, statusID, &stream); streamErr != nil {
 			return object.Status{}, derp.Wrap(err, location, "Loading message")
 		}
 
-		postURL = encodedURL
+		if viewErr := userCanStream(factory, session, &auth, &stream, "view"); viewErr != nil {
+			return object.Status{}, derp.Wrap(viewErr, location, "Viewing stream")
+		}
+
+		postURL = stream.ActivityPubURL()
+		localStreamID = stream.StreamID
 
 	default:
 		return object.Status{}, derp.Wrap(err, location, "Loading message")
@@ -455,7 +467,24 @@ func reactToStatus(serverFactory *server.Factory, host string, auth model.Author
 		return reloadedStatus(factory, session, auth, message.NewsItemID, location)
 	}
 
+	if !localStreamID.IsZero() {
+		return reloadedStreamStatus(factory, session, auth, localStreamID, location)
+	}
+
 	return statusForPostURL(factory, session, auth, postURL, location)
+}
+
+// reloadedStreamStatus re-reads a post made on this server and returns it as a Status with the
+// caller's own reactions, so a reaction answers with the post's updated counts.
+func reloadedStreamStatus(factory *service.Factory, session data.Session, auth model.Authorization, streamID primitive.ObjectID, location string) (object.Status, error) {
+
+	stream := model.NewStream()
+
+	if err := factory.Stream().LoadByID(session, streamID, &stream); err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Reloading stream", streamID)
+	}
+
+	return reactedStatus(factory, session, auth, &stream), nil
 }
 
 // statusForPostURL builds the Status for a post that has no NewsItem, straight
