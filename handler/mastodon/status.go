@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/toot"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
 	"github.com/relvacode/iso8601"
@@ -355,22 +354,6 @@ func PostStatus_Translate(serverFactory *server.Factory) func(model.Authorizatio
 		}
 
 		return result, nil
-	}
-}
-
-// https://docs.joinmastodon.org/methods/statuses/#reblogged_by
-func GetStatus_RebloggedBy(serverFactory *server.Factory) func(model.Authorization, txn.GetStatus_RebloggedBy) ([]object.Account, toot.PageInfo, error) {
-
-	return func(auth model.Authorization, t txn.GetStatus_RebloggedBy) ([]object.Account, toot.PageInfo, error) {
-		return []object.Account{}, toot.PageInfo{}, nil
-	}
-}
-
-// https://docs.joinmastodon.org/methods/statuses/#favourited_by
-func GetStatus_FavouritedBy(serverFactory *server.Factory) func(model.Authorization, txn.GetStatus_FavouritedBy) ([]object.Account, toot.PageInfo, error) {
-
-	return func(auth model.Authorization, t txn.GetStatus_FavouritedBy) ([]object.Account, toot.PageInfo, error) {
-		return []object.Account{}, toot.PageInfo{}, nil
 	}
 }
 
