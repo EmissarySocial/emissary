@@ -11,8 +11,8 @@ require (
 	github.com/benpate/data v0.33.0
 	github.com/benpate/data-mock v0.33.0
 	github.com/benpate/data-mongo v0.35.0
-	github.com/benpate/data-slice v0.1.0
-	github.com/benpate/delta v0.1.0
+	github.com/benpate/data-slice v0.2.0
+	github.com/benpate/delta v0.2.0
 	github.com/benpate/derp v0.44.0
 	github.com/benpate/digit v0.16.0
 	github.com/benpate/digital-dome v0.9.0
@@ -20,7 +20,7 @@ require (
 	github.com/benpate/exp-builder v0.12.0
 	github.com/benpate/form v0.32.0
 	github.com/benpate/geo v0.4.0
-	github.com/benpate/hannibal v0.41.0
+	github.com/benpate/hannibal v0.42.0
 	github.com/benpate/html v0.18.0
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.20.0
@@ -28,7 +28,7 @@ require (
 	github.com/benpate/re v0.6.0
 	github.com/benpate/remote v0.25.0
 	github.com/benpate/rosetta v0.43.0
-	github.com/benpate/sherlock v0.19.0
+	github.com/benpate/sherlock v0.20.0
 	github.com/benpate/sniff v0.3.0
 	github.com/benpate/steranko v0.31.0
 	github.com/benpate/table v0.10.0
@@ -83,9 +83,7 @@ require (
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.5.1 // indirect
-	github.com/PuerkitoBio/goquery v1.13.0 // indirect
 	github.com/alecthomas/chroma/v2 v2.27.0 // indirect
-	github.com/andybalholm/cascadia v1.3.5 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.20 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.23.10 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.4 // indirect
@@ -102,7 +100,6 @@ require (
 	github.com/cyphar/filepath-securejoin v0.7.0 // indirect
 	github.com/dlclark/regexp2/v2 v2.8.0 // indirect
 	github.com/dolthub/maphash v0.1.0 // indirect
-	github.com/dyatlov/go-opengraph/opengraph v0.0.0-20220524092352-606d7b1e5f8a // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/fogleman/gg v1.3.0 // indirect
 	github.com/gammazero/deque v1.2.1 // indirect
@@ -128,7 +125,6 @@ require (
 	github.com/skeema/knownhosts v1.3.3 // indirect
 	github.com/tdewolff/parse/v2 v2.8.16 // indirect
 	github.com/tiendc/go-deepcopy v1.7.2 // indirect
-	github.com/tomnomnom/linkheader v0.0.0-20250811210735-e5fe3b51442e // indirect
 	github.com/toorop/go-dkim v0.0.0-20250226130143-9025cce95817 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
