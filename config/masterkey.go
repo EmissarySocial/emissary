@@ -60,7 +60,7 @@ func (config Config) ReportInvalidMasterKeys() {
 	for _, domain := range config.Domains {
 
 		if _, err := DecodeMasterKey(domain.MasterKey); err != nil {
-			log.Error().Str("hostname", domain.Hostname).Msg("The domain " + domain.Label + " has a missing or invalid masterKey. External Connections and Merchant Accounts cannot be saved until a 64-character hexadecimal 'masterKey' is set in this domain's block in the server configuration.")
+			log.Error().Str("hostname", domain.Hostname).Msg("This domain has a missing or invalid masterKey. External Connections and Merchant Accounts cannot be saved until a 64-character hexadecimal 'masterKey' is set in this domain's block in the server configuration.")
 		}
 	}
 }
