@@ -279,6 +279,7 @@ func tagsForStream(stream *model.Stream) []object.StatusTag {
 func tootStream(factory *service.Factory, session data.Session, stream *model.Stream) object.Status {
 
 	status := stream.Toot()
+	status.InReplyToID, status.InReplyToAccountID = replyIDs(factory, session, stream)
 	status.Tags = tagsForStream(stream)
 	status.Content = markHashtagLinks(status.Content, status.Tags)
 	status.MediaAttachments = streamMediaAttachments(factory, session, stream)
@@ -390,4 +391,32 @@ func tootCredentialUser(factory *service.Factory, session data.Session, auth mod
 	}
 
 	return account
+}
+
+// replyIDs returns the status ID and author's account ID of the post a Stream replies to,
+// or empty values when the Stream is not a reply.
+func replyIDs(factory *service.Factory, session data.Session, stream *model.Stream) (string, string) {
+
+	if stream.InReplyTo == "" {
+		return "", ""
+	}
+
+	parent := model.NewStream()
+
+	if err := factory.Stream().LoadByURL(session, stream.InReplyTo, &parent); err != nil {
+		return replyIDsFor(stream.InReplyTo, nil)
+	}
+
+	return replyIDsFor(stream.InReplyTo, &parent)
+}
+
+// replyIDsFor builds the reply IDs from a parent post's URL and, when the parent is a Stream on
+// this server, the Stream itself. The author of any other parent is not known without fetching it.
+func replyIDsFor(parentURL string, parent *model.Stream) (string, string) {
+
+	if parent == nil {
+		return model.EncodeRemoteStatusID(parentURL), ""
+	}
+
+	return parent.StreamID.Hex(), parent.AttributedTo.Toot().ID
 }
