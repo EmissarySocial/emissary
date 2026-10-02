@@ -6,7 +6,6 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/uri"
-	"github.com/rs/zerolog/log"
 )
 
 /******************************************
@@ -27,26 +26,7 @@ const MailingListRemoveMember = "MailingList-RemoveMember"
 // User's mailing list
 func (service *Follower) publishMailingListAdd(session data.Session, follower *model.Follower) {
 
-	// TEMPORARY (Mailchimp sync diagnosis): remove once the sync is confirmed working
-	log.Info().
-		Str("trace", "MailchimpTrace").
-		Str("step", "1-publishAdd:enter").
-		Str("followerId", follower.FollowerID.Hex()).
-		Str("parentId", follower.ParentID.Hex()).
-		Str("parentType", follower.ParentType).
-		Str("method", follower.Method).
-		Str("stateId", follower.StateID).
-		Str("emailAddress", follower.Actor.EmailAddress).
-		Str("host", service.host).
-		Str("hostname", uri.Hostname(service.host)).
-		Bool("queueIsNil", service.queue == nil).
-		Bool("sessionIsNil", session == nil).
-		Msg("MailchimpTrace: Follower.Save reached publishMailingListAdd")
-
 	if !isMailingListFollower(follower) {
-		log.Info().Str("trace", "MailchimpTrace").Str("step", "1-publishAdd:skip").Str("followerId", follower.FollowerID.Hex()).
-			Str("reason", "not a mailing-list follower (parentType must be User, method must be EMAIL, email must be non-empty)").
-			Msg("MailchimpTrace: NOT enqueuing MailingList-AddMember")
 		return
 	}
 
@@ -54,15 +34,8 @@ func (service *Follower) publishMailingListAdd(session data.Session, follower *m
 	// confirmation email, and pushing before that would hand a third party an address
 	// nobody has confirmed (D5).
 	if follower.StateID != model.FollowerStateActive {
-		log.Info().Str("trace", "MailchimpTrace").Str("step", "1-publishAdd:skip").Str("followerId", follower.FollowerID.Hex()).
-			Str("stateId", follower.StateID).Str("reason", "follower is not ACTIVE").
-			Msg("MailchimpTrace: NOT enqueuing MailingList-AddMember")
 		return
 	}
-
-	log.Info().Str("trace", "MailchimpTrace").Str("step", "1-publishAdd:publish").Str("followerId", follower.FollowerID.Hex()).
-		Str("userId", follower.ParentID.Hex()).Str("hostname", uri.Hostname(service.host)).
-		Msg("MailchimpTrace: enqueuing MailingList-AddMember via postcommit.Publish")
 
 	// Save cannot see the previous state, so this fires on every save of a matching record.
 	// That is fine: the member call is an upsert, so a repeat writes the same values.
@@ -80,19 +53,6 @@ func (service *Follower) publishMailingListAdd(session data.Session, follower *m
 
 // publishMailingListRemove enqueues the outbound unsubscribe for a Follower who is going away
 func (service *Follower) publishMailingListRemove(session data.Session, follower *model.Follower) {
-
-	// TEMPORARY (Mailchimp sync diagnosis): remove once the sync is confirmed working
-	log.Info().
-		Str("trace", "MailchimpTrace").
-		Str("step", "1-publishRemove:enter").
-		Str("followerId", follower.FollowerID.Hex()).
-		Str("parentId", follower.ParentID.Hex()).
-		Str("parentType", follower.ParentType).
-		Str("method", follower.Method).
-		Str("emailAddress", follower.Actor.EmailAddress).
-		Bool("isMailingListFollower", isMailingListFollower(follower)).
-		Bool("queueIsNil", service.queue == nil).
-		Msg("MailchimpTrace: Follower.Delete reached publishMailingListRemove")
 
 	if !isMailingListFollower(follower) {
 		return

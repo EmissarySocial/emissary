@@ -40,10 +40,7 @@ func (client Client) SetMember(audienceID string, member Member) error {
 	// caring whether the member is already there.
 	path := "/lists/" + audienceID + "/members/" + SubscriberHash(member.EmailAddress)
 
-	err := client.put(path, member).Send()
-	traceRequest(location, "PUT", client.baseURL+path, err)
-
-	if err != nil {
+	if err := client.put(path, member).Send(); err != nil {
 		return describeMemberError(err, location, "Unable to add this member to Mailchimp")
 	}
 
@@ -62,10 +59,7 @@ func (client Client) UnsubscribeMember(audienceID string, emailAddress string) e
 		"status": MemberStatusUnsubscribed,
 	}
 
-	err := client.patch(path, body).Send()
-	traceRequest(location, "PATCH", client.baseURL+path, err)
-
-	if err != nil {
+	if err := client.patch(path, body).Send(); err != nil {
 
 		// RULE: an address Mailchimp does not have is the state this call exists to reach.
 		// Emissary pushes only on confirmation, so a Follower who unsubscribes before their

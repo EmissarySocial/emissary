@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
-	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -32,8 +31,6 @@ func (service *UserConnection) MailchimpAddMember(session data.Session, userID p
 	client, userConnection, err := service.mailchimp_readyClient(session, userID)
 
 	if err != nil {
-		log.Info().Str("trace", "MailchimpTrace").Str("step", "5-addMember:readyClientError").Str("userId", userID.Hex()).
-			Str("error", derp.Serialize(err)).Msg("MailchimpTrace: unable to build a Mailchimp client")
 		return derp.Wrap(err, location, "Unable to reach Mailchimp", userID)
 	}
 
@@ -41,19 +38,12 @@ func (service *UserConnection) MailchimpAddMember(session data.Session, userID p
 	// having switched this off between the enqueue and the run.  The UserConnection is named
 	// alongside the Client because both calls below dereference it.
 	if (client == nil) || (userConnection == nil) {
-		log.Info().Str("trace", "MailchimpTrace").Str("step", "5-addMember:noClient").Str("userId", userID.Hex()).
-			Msg("MailchimpTrace: no READY Mailchimp connection for this User; NOTHING SENT and no error (see 5-readyClient logs for why)")
 		return nil
 	}
 
 	if err := mailchimp_pushMember(client, userConnection, follower); err != nil {
-		log.Info().Str("trace", "MailchimpTrace").Str("step", "5-addMember:pushError").Str("userId", userID.Hex()).
-			Int("errorCode", derp.ErrorCode(err)).Str("error", derp.Serialize(err)).Msg("MailchimpTrace: pushing member failed")
 		return service.mailchimp_reportMemberError(session, userConnection, derp.Wrap(err, location, "Unable to add member"))
 	}
-
-	log.Info().Str("trace", "MailchimpTrace").Str("step", "5-addMember:success").Str("userId", userID.Hex()).
-		Str("followerId", follower.FollowerID.Hex()).Msg("MailchimpTrace: member pushed to Mailchimp with no error")
 
 	return nil
 }
@@ -103,57 +93,27 @@ func (service *UserConnection) mailchimp_readyClient(session data.Session, userI
 		// Most Users have no Mailchimp connection at all, which is the ordinary case rather
 		// than a failure worth retrying a task over.
 		if derp.IsNotFound(err) {
-			log.Info().Str("trace", "MailchimpTrace").Str("step", "5-readyClient:notFound").Str("userId", userID.Hex()).
-				Str("error", derp.Serialize(err)).Msg("MailchimpTrace: NO Mailchimp UserConnection found for this userId")
 			return nil, nil, nil
 		}
 
 		return nil, nil, derp.Wrap(err, location, "Unable to load connection", userID)
 	}
 
-	// TEMPORARY (Mailchimp sync diagnosis): remove once the sync is confirmed working
-	log.Info().Str("trace", "MailchimpTrace").Str("step", "5-readyClient:loaded").
-		Str("userId", userID.Hex()).
-		Str("userConnectionId", userConnection.UserConnectionID.Hex()).
-		Str("connectionUserId", userConnection.UserID.Hex()).
-		Str("type", userConnection.Type).
-		Str("status", userConnection.Status).
-		Bool("isActiveIsFalse", userConnection.IsActive.IsFalse()).
-		Bool("isReady", userConnection.IsReady()).
-		Str("dataCenter", userConnection.Data.GetString(model.UserConnectionDataCenter)).
-		Str("audienceId", userConnection.Data.GetString(model.UserConnectionDataAudienceID)).
-		Str("audienceName", userConnection.Data.GetString(model.UserConnectionDataAudienceName)).
-		Str("webhookId", userConnection.Data.GetString(model.UserConnectionDataWebhookID)).
-		Str("tag", userConnection.Data.GetString(model.UserConnectionDataTag)).
-		Bool("vaultHasAPIKey", userConnection.Vault.HasString(model.UserConnectionVaultAPIKey)).
-		Msg("MailchimpTrace: Mailchimp UserConnection loaded")
-
 	// RULE: IsReady() covers paused, unfinished, and credential-rejected in one predicate.
 	// A task enqueued before any of those is silently dropped rather than retried.
 	if !userConnection.IsReady() {
-		log.Info().Str("trace", "MailchimpTrace").Str("step", "5-readyClient:notReady").Str("status", userConnection.Status).
-			Bool("isActiveIsFalse", userConnection.IsActive.IsFalse()).
-			Msg("MailchimpTrace: connection is NOT READY (needs IsActive true AND status READY); task DROPPED silently")
 		return nil, nil, nil
 	}
 
 	apiKey, err := service.mailchimp_apiKey(&userConnection)
 
 	if err != nil {
-		log.Info().Str("trace", "MailchimpTrace").Str("step", "5-readyClient:apiKeyError").Str("error", derp.Serialize(err)).
-			Msg("MailchimpTrace: unable to decrypt/read the API key")
 		return nil, nil, derp.Wrap(err, location, "Unable to read the saved API key", userID)
 	}
-
-	// The key itself is never logged; its length and shape are enough to spot a decrypt failure
-	log.Info().Str("trace", "MailchimpTrace").Str("step", "5-readyClient:apiKey").Int("apiKeyLength", len(apiKey)).
-		Bool("apiKeyLooksMasked", strings.Contains(apiKey, "*")).Msg("MailchimpTrace: API key resolved")
 
 	client, err := mailchimp.New(apiKey, userConnection.Data.GetString(model.UserConnectionDataCenter))
 
 	if err != nil {
-		log.Info().Str("trace", "MailchimpTrace").Str("step", "5-readyClient:clientError").Str("error", derp.Serialize(err)).
-			Msg("MailchimpTrace: unable to build a Mailchimp client")
 		return nil, nil, derp.Wrap(err, location, "Unable to build a Mailchimp client", userID)
 	}
 
@@ -223,21 +183,10 @@ func mailchimp_pushMember(client *mailchimp.Client, userConnection *model.UserCo
 	const location = "service.mailchimp_pushMember"
 
 	audienceID := userConnection.Data.GetString(model.UserConnectionDataAudienceID)
-	member := mailchimp_member(follower)
 
-	// TEMPORARY (Mailchimp sync diagnosis): remove once the sync is confirmed working
-	log.Info().Str("trace", "MailchimpTrace").Str("step", "5-pushMember:setMember").
-		Str("audienceId", audienceID).
-		Str("subscriberHash", mailchimp.SubscriberHash(member.EmailAddress)).
-		Interface("member", member).
-		Msg("MailchimpTrace: calling Mailchimp PUT /lists/{audienceId}/members/{hash}")
-
-	if err := client.SetMember(audienceID, member); err != nil {
+	if err := client.SetMember(audienceID, mailchimp_member(follower)); err != nil {
 		return derp.Wrap(err, location, "Unable to add member to the audience")
 	}
-
-	log.Info().Str("trace", "MailchimpTrace").Str("step", "5-pushMember:setMemberOK").Str("audienceId", audienceID).
-		Msg("MailchimpTrace: SetMember succeeded")
 
 	// The tag is optional (D49), and it is a second request because the member PUT cannot
 	// carry one. It is applied on every push: the call is idempotent, and an upsert cannot
@@ -245,15 +194,12 @@ func mailchimp_pushMember(client *mailchimp.Client, userConnection *model.UserCo
 	tag := strings.TrimSpace(userConnection.Data.GetString(model.UserConnectionDataTag))
 
 	if tag == "" {
-		log.Info().Str("trace", "MailchimpTrace").Str("step", "5-pushMember:noTag").Msg("MailchimpTrace: no tag configured; skipping TagMember")
 		return nil
 	}
 
 	if err := client.TagMember(audienceID, follower.Actor.EmailAddress, tag); err != nil {
 		return derp.Wrap(err, location, "Unable to tag the member")
 	}
-
-	log.Info().Str("trace", "MailchimpTrace").Str("step", "5-pushMember:tagOK").Str("tag", tag).Msg("MailchimpTrace: TagMember succeeded")
 
 	return nil
 }
