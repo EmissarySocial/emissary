@@ -2,12 +2,16 @@ package service
 
 import (
 	"strings"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/queries"
 	"github.com/EmissarySocial/emissary/tools/mailchimp"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/exp"
 	"github.com/rs/zerolog/log"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -157,7 +161,7 @@ func (service *UserConnection) mailchimp_readyClient(session data.Session, userI
 }
 
 // mailchimp_reportMemberError flags a connection whose credential Mailchimp has rejected,
-// and returns the error unchanged
+// and returns the error only when a retry could still succeed
 func (service *UserConnection) mailchimp_reportMemberError(session data.Session, userConnection *model.UserConnection, err error) error {
 
 	const location = "service.UserConnection.mailchimp_reportMemberError"
@@ -168,16 +172,48 @@ func (service *UserConnection) mailchimp_reportMemberError(session data.Session,
 		return err
 	}
 
-	userConnection.Status = model.UserConnectionStatusReconnect
-
-	// RULE: write through the collection, NOT through Save. Save calls connect(), which would
-	// reach for Mailchimp again with the very credential that was just refused -- and would
-	// then overwrite the status this line exists to record.
-	if writeErr := service.collection(session).Save(userConnection, "Mailchimp rejected these credentials"); writeErr != nil {
-		derp.Report(derp.Wrap(writeErr, location, "Unable to flag connection for reconnect", userConnection.UserConnectionID))
+	// A failed flag is retried: the next attempt is refused again, and writes it then
+	if writeErr := service.mailchimp_markReconnect(session, userConnection); writeErr != nil {
+		return derp.Wrap(writeErr, location, "Unable to flag connection for reconnect", userConnection.UserConnectionID)
 	}
 
-	return err
+	// RULE: report, then return nil. Returning the error would roll back the flag with the
+	// consumer's transaction, and no retry can succeed with this credential; see AGENTS.md.
+	derp.Report(derp.Wrap(err, location, "Mailchimp rejected this connection's credential", userConnection.UserConnectionID))
+
+	return nil
+}
+
+// mailchimp_markReconnect records that Mailchimp has refused this connection's credential,
+// unless the User has replaced that credential since it was loaded
+func (service *UserConnection) mailchimp_markReconnect(session data.Session, userConnection *model.UserConnection) error {
+
+	const location = "service.UserConnection.mailchimp_markReconnect"
+
+	// RULE: one field, never Save. Save calls connect(), which would reach for Mailchimp again
+	// with the refused credential, and a full replace would overwrite a concurrent settings edit.
+	var criteria exp.Expression = exp.Equal("_id", userConnection.UserConnectionID)
+
+	// RULE: match the refused ciphertext, so a key replaced on another server is never flagged
+	if ciphertext := userConnection.Vault.Encrypted.GetString(model.UserConnectionVaultAPIKey); ciphertext != "" {
+		criteria = criteria.AndEqual("vault.encrypted."+model.UserConnectionVaultAPIKey, ciphertext)
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"status":     model.UserConnectionStatusReconnect,
+			"updateDate": time.Now().UnixMilli(),
+			"note":       "Mailchimp rejected these credentials",
+		},
+		"$inc": bson.M{"signature": 1},
+	}
+
+	if err := queries.RawUpdate(session.Context(), service.collection(session), criteria, update); err != nil {
+		return derp.Wrap(err, location, "Unable to save connection status", userConnection.UserConnectionID)
+	}
+
+	userConnection.Status = model.UserConnectionStatusReconnect
+	return nil
 }
 
 // mailchimp_pushMember writes a Follower into the connection's audience, then applies the
