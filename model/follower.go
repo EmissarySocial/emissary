@@ -82,6 +82,20 @@ func (follower *Follower) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
  * Other Calculations
  ******************************************/
 
+func (follower Follower) MethodLabel() string {
+
+	switch follower.Method {
+
+	case FollowerMethodActivityPub:
+		return "ActivityPub"
+
+	case FollowerMethodEmail:
+		return "Email"
+	}
+
+	return "??"
+}
+
 // ParentURL returns the URL of the parent object that this Follower is following.
 func (follower Follower) ParentURL(host string) string {
 

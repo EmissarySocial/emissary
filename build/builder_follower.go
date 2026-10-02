@@ -102,6 +102,10 @@ func (w Follower) Method() string {
 	return w._follower.Method
 }
 
+func (w Follower) MethodLabel() string {
+	return w._follower.MethodLabel()
+}
+
 // Format returns the Format property of this Follow
 func (w Follower) Format() string {
 	return w._follower.Format
