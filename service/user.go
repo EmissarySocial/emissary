@@ -795,6 +795,28 @@ func (service *User) SetOwner(session data.Session, owner config.Owner) error {
 	return nil
 }
 
+// DeleteImage removes the User's banner image and clears the reference to it.
+func (service *User) DeleteImage(session data.Session, user *model.User, note string) error {
+
+	const location = "service.User.DeleteImage"
+
+	if user.ImageID.IsZero() {
+		return nil
+	}
+
+	if err := service.attachmentService.DeleteByID(session, model.AttachmentObjectTypeUser, user.UserID, user.ImageID, note); err != nil {
+		return derp.Wrap(err, location, "Deleting banner attachment", user)
+	}
+
+	user.ImageID = primitive.NilObjectID
+
+	if err := service.Save(session, user, note); err != nil {
+		return derp.Wrap(err, location, "Saving User", user)
+	}
+
+	return nil
+}
+
 // DeleteAvatar removes the User's avatar attachment and clears its reference on the User record
 func (service *User) DeleteAvatar(session data.Session, user *model.User, note string) error {
 

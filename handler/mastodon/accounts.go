@@ -295,6 +295,18 @@ func PatchAccount_UpdateCredentials(serverFactory *server.Factory) func(model.Au
 			user.IsPublic = *t.Discoverable
 		}
 
+		if t.Avatar != nil {
+			if err := saveProfileImage(factory, session, &user, t.Avatar, profileAvatar, &user.IconID); err != nil {
+				return object.Account{}, derp.Wrap(err, location, "Saving avatar")
+			}
+		}
+
+		if t.Header != nil {
+			if err := saveProfileImage(factory, session, &user, t.Header, profileHeader, &user.ImageID); err != nil {
+				return object.Account{}, derp.Wrap(err, location, "Saving header")
+			}
+		}
+
 		if err := userService.Save(session, &user, "Updated via Mastodon API"); err != nil {
 			return object.Account{}, derp.Wrap(err, location, "Saving user")
 		}
