@@ -92,6 +92,22 @@ func (service *Stream) QueryByHashtag(session data.Session, authorization model.
 	return service.Query(session, criteria, options...)
 }
 
+// QueryReplies returns the posts on this server that reply directly to a URL and that the caller
+// is allowed to view, oldest first.
+func (service *Stream) QueryReplies(session data.Session, authorization model.Authorization, parentURL string, options ...option.Option) ([]model.Stream, error) {
+
+	// RULE: the same visibility rule as QueryByUser, with no single owner
+	criteria := exp.And(
+		exp.Equal("inReplyTo", parentURL),
+		exp.In("templateId", []string{"outbox-message", "outbox-reply"}),
+		service.visibilityCriteria(authorization, primitive.NilObjectID),
+	)
+
+	options = append(options, option.SortAsc("publishDate"))
+
+	return service.Query(session, criteria, options...)
+}
+
 // visibilityCriteria returns an expression that restricts a Stream query to the
 // records that the caller is allowed to view: owners and domain owners see all of
 // the owner's Streams, while everyone else sees only published, shared Streams.
