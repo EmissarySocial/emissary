@@ -28,6 +28,7 @@ func TestMailchimpMember_CarriesTheThreeValues(t *testing.T) {
 	// RULE: `subscribed`, never `pending`. Emissary has already run its own double opt-in,
 	// so a second confirmation from Mailchimp costs the subscriber an email and buys nothing.
 	require.Equal(t, mailchimp.MemberStatusSubscribed, member.Status)
+	require.Equal(t, mailchimp.MemberStatusSubscribed, member.StatusIfNew)
 }
 
 // TestMailchimpMember_OmitsWhatItDoesNotKnow keeps Emissary from blanking Mailchimp's data

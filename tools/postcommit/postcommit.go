@@ -11,12 +11,14 @@ package postcommit
 
 import (
 	"context"
+	"strings"
 	"sync"
 
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
+	"github.com/rs/zerolog/log"
 )
 
 // contextKey is the private key type under which a Tasks spool travels in a context.Context.
@@ -87,6 +89,9 @@ func Publish(session data.Session, q *queue.Queue, name string, args mapof.Any, 
 
 	task := queue.NewTask(name, args, options...)
 
+	// TEMPORARY (Mailchimp sync diagnosis): remove once the sync is confirmed working
+	isMailchimpTrace := strings.HasPrefix(name, "MailingList-")
+
 	// RULE: session must never be nil here — every production Builder carries a live
 	// data.Session, so a nil one is a broken invariant (a Builder assembled without a session.
 	if session == nil {
@@ -98,6 +103,10 @@ func Publish(session data.Session, q *queue.Queue, name string, args mapof.Any, 
 
 	} else if spool := From(session.Context()); spool != nil {
 		// Transactional context: spool for post-commit publication.
+		if isMailchimpTrace {
+			log.Info().Str("trace", "MailchimpTrace").Str("step", "2-postcommit:spooled").Str("task", name).Interface("args", args).
+				Msg("MailchimpTrace: task SPOOLED; it publishes only if the surrounding transaction commits")
+		}
 		spool.Add(task)
 		return
 	}
@@ -105,11 +114,23 @@ func Publish(session data.Session, q *queue.Queue, name string, args mapof.Any, 
 	// No queue configured (some test harnesses): preserve the no-op-safe behavior of the
 	// call sites this function replaces.
 	if q == nil {
+		if isMailchimpTrace {
+			log.Info().Str("trace", "MailchimpTrace").Str("step", "2-postcommit:dropped").Str("task", name).Interface("args", args).
+				Msg("MailchimpTrace: task DROPPED because the queue is nil")
+		}
 		return
 	}
 
 	// Non-transactional context: publish immediately.
-	if err := q.Publish(task); err != nil {
+	err := q.Publish(task)
+
+	if isMailchimpTrace {
+		log.Info().Str("trace", "MailchimpTrace").Str("step", "2-postcommit:published").Str("task", name).Interface("args", args).
+			Bool("publishFailed", err != nil).Str("publishError", derp.Serialize(err)).
+			Msg("MailchimpTrace: task published immediately (no transaction)")
+	}
+
+	if err != nil {
 		derp.Report(derp.Wrap(err, location, "Publishing task", name))
 	}
 }
@@ -133,13 +154,30 @@ func WithTransaction(ctx context.Context, server data.Server, q *queue.Queue, ca
 
 	// Rollback/error: spooled tasks are dropped, never published.
 	if err != nil {
+		// TEMPORARY (Mailchimp sync diagnosis): remove once the sync is confirmed working
+		for _, task := range spool.Drain() {
+			if strings.HasPrefix(task.Name, "MailingList-") {
+				log.Info().Str("trace", "MailchimpTrace").Str("step", "2-postcommit:rolledBack").Str("task", task.Name).Interface("args", task.Arguments).
+					Str("transactionError", derp.Serialize(err)).
+					Msg("MailchimpTrace: spooled task DROPPED because the transaction rolled back")
+			}
+		}
 		return result, err
 	}
 
 	// COMMIT: publish the spool in FIFO order.
 	if q != nil {
 		for _, task := range spool.Drain() {
-			if publishError := q.Publish(task); publishError != nil {
+			publishError := q.Publish(task)
+
+			// TEMPORARY (Mailchimp sync diagnosis): remove once the sync is confirmed working
+			if strings.HasPrefix(task.Name, "MailingList-") {
+				log.Info().Str("trace", "MailchimpTrace").Str("step", "2-postcommit:publishedAfterCommit").Str("task", task.Name).Interface("args", task.Arguments).
+					Bool("publishFailed", publishError != nil).Str("publishError", derp.Serialize(publishError)).
+					Msg("MailchimpTrace: spooled task published after commit")
+			}
+
+			if publishError != nil {
 				derp.Report(derp.Wrap(publishError, location, "Publishing post-commit task", task.Name))
 			}
 		}

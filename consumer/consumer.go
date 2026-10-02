@@ -2,8 +2,10 @@ package consumer
 
 import (
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/sender"
 	"github.com/benpate/turbine/queue"
+	"github.com/rs/zerolog/log"
 )
 
 // Consumer is the primary queue consumer for Emissary.  It handles background tasks that are triggered by the queue.
@@ -61,9 +63,11 @@ func (consumer Consumer) Run(task queue.Task) queue.Result {
 		return WithImport(consumer.serverFactory, args, ImportItems)
 
 	case service.MailingListAddMember:
+		traceMailchimpTask("3-run:received", task, nil)
 		return WithSession(consumer.serverFactory, args, MailingListAddMember)
 
 	case service.MailingListRemoveMember:
+		traceMailchimpTask("3-run:received", task, nil)
 		return WithSession(consumer.serverFactory, args, MailingListRemoveMember)
 
 	case "MakeStreamArchive":
@@ -178,6 +182,8 @@ func (consumer Consumer) OnPublish(task *queue.Task) error {
 // Implements the queue.Consumer interface.
 func (consumer Consumer) OnSuccess(task queue.Task) error {
 
+	traceMailchimpTask("6-hook:OnSuccess", task, nil)
+
 	if task.Name == service.TaskSyncStreamSource {
 		return syncStreamSourceSucceeded(consumer.serverFactory, task.Arguments)
 	}
@@ -189,6 +195,8 @@ func (consumer Consumer) OnSuccess(task queue.Task) error {
 // OnError is called after an attempt that failed and WILL be tried again.
 // Implements the queue.Consumer interface.
 func (consumer Consumer) OnError(task queue.Task, err error) error {
+
+	traceMailchimpTask("6-hook:OnError (will retry)", task, err)
 
 	if task.Name == service.TaskSyncStreamSource {
 		return syncStreamSourceRetrying(consumer.serverFactory, task.Arguments, err)
@@ -202,10 +210,34 @@ func (consumer Consumer) OnError(task queue.Task, err error) error {
 // Implements the queue.Consumer interface.
 func (consumer Consumer) OnFailure(task queue.Task, err error) error {
 
+	traceMailchimpTask("6-hook:OnFailure (abandoned)", task, err)
+
 	if task.Name == service.TaskSyncStreamSource {
 		return syncStreamSourceFailed(consumer.serverFactory, task.Arguments, err)
 	}
 
 	// No other task reports its abandonment yet.
 	return nil
+}
+
+// traceMailchimpTask logs one lifecycle event of a MailingList task.
+// TEMPORARY (Mailchimp sync diagnosis): remove once the sync is confirmed working
+func traceMailchimpTask(step string, task queue.Task, err error) {
+
+	if (task.Name != service.MailingListAddMember) && (task.Name != service.MailingListRemoveMember) {
+		return
+	}
+
+	log.Info().
+		Str("trace", "MailchimpTrace").
+		Str("step", step).
+		Str("task", task.Name).
+		Str("taskId", task.TaskID).
+		Interface("args", task.Arguments).
+		Int("retryCount", task.RetryCount).
+		Int("retryMax", task.RetryMax).
+		Int("priority", task.Priority).
+		Int("errorCode", derp.ErrorCode(err)).
+		Str("error", derp.Serialize(err)).
+		Msg("MailchimpTrace: queue lifecycle event")
 }

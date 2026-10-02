@@ -6,6 +6,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
+	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -29,9 +30,20 @@ func MailingListRemoveMember(factory *service.Factory, session data.Session, arg
 		return queue.Failure(derp.BadRequest(location, "Email address is required", args))
 	}
 
+	// TEMPORARY (Mailchimp sync diagnosis): remove once the sync is confirmed working
+	log.Info().Str("trace", "MailchimpTrace").Str("step", "4-consumerRemove:enter").Interface("args", args).
+		Msg("MailchimpTrace: consumer MailingListRemoveMember calling MailchimpRemoveMember")
+
 	if err := factory.UserConnection().MailchimpRemoveMember(session, userID, emailAddress); err != nil {
-		return requeue(derp.Wrap(err, location, "Removing member from mailing list", args))
+		result := requeue(derp.Wrap(err, location, "Removing member from mailing list", args))
+		log.Info().Str("trace", "MailchimpTrace").Str("step", "4-consumerRemove:error").
+			Int("errorCode", derp.ErrorCode(err)).Str("resultStatus", result.Status).Str("error", derp.Serialize(err)).
+			Msg("MailchimpTrace: MailchimpRemoveMember returned an error")
+		return result
 	}
+
+	log.Info().Str("trace", "MailchimpTrace").Str("step", "4-consumerRemove:done").
+		Msg("MailchimpTrace: MailchimpRemoveMember returned no error")
 
 	// Hasta la vista, baby
 	return queue.Success()

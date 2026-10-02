@@ -10,6 +10,7 @@ import (
 type Member struct {
 	EmailAddress string            `json:"email_address"`
 	Status       string            `json:"status,omitempty"`
+	StatusIfNew  string            `json:"status_if_new,omitempty"`
 	MergeFields  map[string]string `json:"merge_fields,omitempty"`
 	IPSignup     string            `json:"ip_signup,omitempty"`
 }
@@ -39,7 +40,10 @@ func (client Client) SetMember(audienceID string, member Member) error {
 	// caring whether the member is already there.
 	path := "/lists/" + audienceID + "/members/" + SubscriberHash(member.EmailAddress)
 
-	if err := client.put(path, member).Send(); err != nil {
+	err := client.put(path, member).Send()
+	traceRequest(location, "PUT", client.baseURL+path, err)
+
+	if err != nil {
 		return describeMemberError(err, location, "Unable to add this member to Mailchimp")
 	}
 
@@ -58,7 +62,10 @@ func (client Client) UnsubscribeMember(audienceID string, emailAddress string) e
 		"status": MemberStatusUnsubscribed,
 	}
 
-	if err := client.patch(path, body).Send(); err != nil {
+	err := client.patch(path, body).Send()
+	traceRequest(location, "PATCH", client.baseURL+path, err)
+
+	if err != nil {
 
 		// RULE: an address Mailchimp does not have is the state this call exists to reach.
 		// Emissary pushes only on confirmation, so a Follower who unsubscribes before their

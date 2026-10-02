@@ -36,7 +36,10 @@ func (client Client) TagMember(audienceID string, emailAddress string, tag strin
 		"tags": []memberTag{{Name: tag, Status: memberTagStatusActive}},
 	}
 
-	if err := client.post(path, body).Send(); err != nil {
+	err := client.post(path, body).Send()
+	traceRequest(location, "POST", client.baseURL+path, err)
+
+	if err != nil {
 		return describeMemberError(err, location, "Unable to tag this member in Mailchimp")
 	}
 
