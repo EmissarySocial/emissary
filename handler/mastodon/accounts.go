@@ -474,8 +474,24 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 			criteria = criteria.AndEqual("isFeatured", true)
 		}
 
-		streamService := factory.Stream()
-		streams, err := streamService.QueryByUser(session, auth, user.UserID, criteria, option.MaxRows(pageLimit(t.Limit)))
+		limit := pageLimit(t.Limit)
+
+		streams, statuses, err := collectFiltered(int(limit),
+			func(before int64) ([]model.Stream, error) {
+
+				batch := criteria
+
+				if before > 0 {
+					batch = batch.AndLessThan("createDate", before)
+				}
+
+				return factory.Stream().QueryByUser(session, auth, user.UserID, batch, option.MaxRows(limit))
+			},
+			func(streams []model.Stream) []object.Status {
+				return streamsToStatuses(factory, session, auth, streams)
+			},
+			statusFilter(t.ExcludeReplies, t.OnlyMedia, user.UserID.Hex()),
+		)
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Querying streams")
@@ -488,13 +504,6 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 		if length := len(streams); length > 0 {
 			pageInfo.MaxID = strconv.FormatInt(streams[length-1].CreateDate, 10)
 			pageInfo.MinID = strconv.FormatInt(streams[0].CreateDate, 10)
-		}
-
-		// Return posts as toot.Status(es)
-		statuses := make([]object.Status, len(streams))
-
-		for index := range streams {
-			statuses[index] = tootStream(factory, session, &streams[index])
 		}
 
 		return statuses, pageInfo, nil
