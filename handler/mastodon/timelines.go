@@ -31,8 +31,7 @@ func GetTimeline_Public(serverFactory *server.Factory) func(model.Authorization,
 	return func(auth model.Authorization, t txn.GetTimeline_Public) ([]object.Status, toot.PageInfo, error) {
 
 		// Emissary keeps no index of other servers' posts, so a remote-only timeline is empty.
-		// Its own posts carry no media attachments here, so an only-media timeline is too.
-		if t.Remote || t.OnlyMedia {
+		if t.Remote {
 			return []object.Status{}, toot.PageInfo{}, nil
 		}
 
@@ -44,16 +43,28 @@ func GetTimeline_Public(serverFactory *server.Factory) func(model.Authorization,
 
 		defer cancel()
 
-		streams, err := factory.Stream().QueryPublic(session, auth, queryExpression(t), option.MaxRows(pageLimit(t.Limit)))
+		limit := pageLimit(t.Limit)
+		criteria := queryExpression(t)
+
+		streams, statuses, err := collectFiltered(int(limit),
+			func(before int64) ([]model.Stream, error) {
+
+				batch := criteria
+
+				if before > 0 {
+					batch = batch.AndLessThan("createDate", before)
+				}
+
+				return factory.Stream().QueryPublic(session, auth, batch, option.MaxRows(limit))
+			},
+			func(streams []model.Stream) []object.Status {
+				return streamsToStatuses(factory, session, auth, streams)
+			},
+			statusFilter(false, t.OnlyMedia, ""),
+		)
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Querying public posts")
-		}
-
-		statuses := make([]object.Status, len(streams))
-
-		for index := range streams {
-			statuses[index] = tootStream(factory, session, &streams[index])
 		}
 
 		// QueryPublic filters and sorts on createDate, so the paging cursors must be createDate too
