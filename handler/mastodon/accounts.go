@@ -657,7 +657,7 @@ func accountStatusesFromNewsFeed(factory *service.Factory, session data.Session,
 }
 
 // GetAccount_Followers implements the Mastodon "get account followers" endpoint: the caller's own
-// followers. Other local accounts' followers are not shared.
+// followers, or a remote account's published list. Other local accounts' followers are not shared.
 func GetAccount_Followers(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Followers) ([]object.Account, toot.PageInfo, error) {
 
 	const location = "handler.mastodon_GetAccount_Followers"
@@ -688,7 +688,22 @@ func GetAccount_Followers(serverFactory *server.Factory) func(model.Authorizatio
 			return ownFollowers(factory, session, auth.UserID, pageLimit(t.Limit)), toot.PageInfo{}, nil
 		}
 
-		return []object.Account{}, toot.PageInfo{}, nil
+		// A remote account lists its followers from its own collection
+		accountURL, err := resolveAccountURL(factory, session, t.ID)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized account", t.ID)
+		}
+
+		client := factory.ActivityStream().UserClient(auth.UserID)
+		actor, err := client.Load(accountURL)
+
+		if err != nil {
+			return []object.Account{}, toot.PageInfo{}, nil
+		}
+
+		accounts, pageInfo := remoteAccountList(client, factory, session, actor.Followers(), t.MaxID, pageLimit(t.Limit))
+		return accounts, pageInfo, nil
 	}
 }
 
