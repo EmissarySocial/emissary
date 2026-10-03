@@ -412,6 +412,12 @@ func GetAccount(serverFactory *server.Factory) func(model.Authorization, txn.Get
 		document, err := client.Load(accountURL)
 
 		if err != nil {
+
+			// A person we already know (followed, or following us) can still be shown from our own records
+			if account, known := knownRemoteAccount(factory, session, auth, accountURL); known {
+				return account, nil
+			}
+
 			// RULE: derp.Wrap inherits the wrapped error's status code by default, and
 			// a remote origin's own failure (401, 403, 429...) is not our caller's
 			// fault. Passing it through as-is would make the client think its OWN
