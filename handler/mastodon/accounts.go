@@ -656,12 +656,38 @@ func accountStatusesFromNewsFeed(factory *service.Factory, session data.Session,
 	return statuses, pageInfo, nil
 }
 
-// GetAccount_Followers implements the Mastodon "get account followers" endpoint, and always returns an empty list
+// GetAccount_Followers implements the Mastodon "get account followers" endpoint: the caller's own
+// followers. Other local accounts' followers are not shared.
 func GetAccount_Followers(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Followers) ([]object.Account, toot.PageInfo, error) {
+
+	const location = "handler.mastodon_GetAccount_Followers"
 
 	return func(auth model.Authorization, t txn.GetAccount_Followers) ([]object.Account, toot.PageInfo, error) {
 
-		// Emissary does not (currently?) publish followers
+		factory, err := serverFactory.ByHostname(t.Host)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Creating session")
+		}
+
+		defer cancel()
+
+		// A local account lists its own followers to its owner, and to no one else
+		if user, err := loadUserByAccountID(factory, session, t.ID); err == nil {
+
+			if user.UserID != auth.UserID {
+				return []object.Account{}, toot.PageInfo{}, nil
+			}
+
+			return ownFollowers(factory, session, auth.UserID, pageLimit(t.Limit)), toot.PageInfo{}, nil
+		}
+
 		return []object.Account{}, toot.PageInfo{}, nil
 	}
 }
@@ -671,6 +697,25 @@ func GetAccount_Followers(serverFactory *server.Factory) func(model.Authorizatio
 // this returns that list when the caller asks for their own account, and an
 // honest empty result for anyone else (the same cross-account limit Mastodon
 // itself has).
+// ownFollowers lists the people following a local User, newest first.
+func ownFollowers(factory *service.Factory, session data.Session, userID primitive.ObjectID, limit int64) []object.Account {
+
+	criteria := exp.Equal("type", model.FollowerTypeUser).AndEqual("parentId", userID).AndEqual("stateId", model.FollowerStateActive)
+	result := make([]object.Account, 0)
+
+	for follower := range factory.Follower().Range(session, criteria, option.SortDesc("createDate"), option.MaxRows(limit)) {
+
+		// A follower with no profile (an email or feed subscriber) has no account to show
+		if follower.Actor.ProfileURL == "" {
+			continue
+		}
+
+		result = append(result, follower.Actor.Toot())
+	}
+
+	return result
+}
+
 func GetAccount_Following(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Following) ([]object.Account, toot.PageInfo, error) {
 
 	const location = "handler.mastodon_GetAccount_Following"
