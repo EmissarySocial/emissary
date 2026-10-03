@@ -281,7 +281,10 @@ func tootStream(factory *service.Factory, session data.Session, stream *model.St
 	status := stream.Toot()
 	status.InReplyToID, status.InReplyToAccountID = replyIDs(factory, session, stream)
 	status.Tags = tagsForStream(stream)
-	status.Content = markHashtagLinks(status.Content, status.Tags)
+	status.Mentions = mentionsForStream(stream, func(acct string) string {
+		return knownProfileURL(factory, session, stream.ParentID, acct)
+	})
+	status.Content = markMentionLinks(markHashtagLinks(status.Content, status.Tags), status.Mentions)
 	status.MediaAttachments = streamMediaAttachments(factory, session, stream)
 
 	return status
