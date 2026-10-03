@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/toot/object"
 	"github.com/stretchr/testify/require"
@@ -104,4 +105,44 @@ func TestMentionsForStream_Unresolved(t *testing.T) {
 
 	nobody := mentionsForStream(&stream, func(string) string { return "" })
 	require.Empty(t, nobody, "a dash is not a profile URL")
+}
+
+// TestMentionsForDocument_UsesTheLinkWrittenInTheContent covers a remote post whose mention tag points
+// at the actor URL while its content links the profile page; the tapped link is the profile page.
+func TestMentionsForDocument_UsesTheLinkWrittenInTheContent(t *testing.T) {
+
+	document := streams.NewDocument(map[string]any{
+		"id":      "https://fosstodon.org/users/davep/statuses/1",
+		"type":    "Note",
+		"content": `<p><span><a href="https://fosstodon.org/@fosstodon" rel="nofollow">@<span>fosstodon</span></a></span> hello</p>`,
+		"tag": []any{
+			map[string]any{"type": "Mention", "href": "https://fosstodon.org/users/fosstodon", "name": "@fosstodon"},
+			map[string]any{"type": "Hashtag", "href": "https://fosstodon.org/tags/go", "name": "#go"},
+		},
+	})
+
+	mentions := mentionsForDocument(document)
+
+	require.Len(t, mentions, 1)
+	require.Equal(t, "https://fosstodon.org/@fosstodon", mentions[0].URL)
+	require.Equal(t, "fosstodon", mentions[0].Username)
+	require.Equal(t, "fosstodon@fosstodon.org", mentions[0].Acct)
+	require.Equal(t, model.EncodeRemoteAccountID("https://fosstodon.org/users/fosstodon"), mentions[0].ID)
+}
+
+// TestMentionsForDocument_FallsBackToTheActorURL covers a mention that has no link in the content.
+func TestMentionsForDocument_FallsBackToTheActorURL(t *testing.T) {
+
+	document := streams.NewDocument(map[string]any{
+		"id":      "https://example.com/p/1",
+		"type":    "Note",
+		"content": "<p>hi @someone@other.net</p>",
+		"tag":     []any{map[string]any{"type": "Mention", "href": "https://other.net/users/someone", "name": "@someone@other.net"}},
+	})
+
+	mentions := mentionsForDocument(document)
+
+	require.Len(t, mentions, 1)
+	require.Equal(t, "https://other.net/users/someone", mentions[0].URL)
+	require.Equal(t, "someone@other.net", mentions[0].Acct)
 }

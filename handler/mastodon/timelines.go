@@ -330,6 +330,7 @@ func newsItemToStatus(client streams.Client, factory *service.Factory, session d
 	status.Sensitive = status.SpoilerText != ""
 	status.MediaAttachments = mapDocumentToMediaAttachments(document)
 	status.Tags = apiHashtags(mapDocumentToTags(document))
+	status.Mentions = mentionsForDocument(document)
 	status.Content = markHashtagLinks(document.Content(), status.Tags)
 
 	if newsItem.Origin.Type != model.OriginTypeAnnounce {

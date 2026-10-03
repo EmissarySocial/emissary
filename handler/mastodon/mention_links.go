@@ -7,6 +7,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/toot/object"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -265,4 +266,118 @@ func mentionNode(mention object.StatusMention) *html.Node {
 	card.AppendChild(link)
 
 	return card
+}
+
+// mentionsForDocument lists the accounts a remote post mentions. A mention's URL is the
+// link the post's own content uses for it, because clients match a tapped link against it exactly.
+func mentionsForDocument(document streams.Document) []object.StatusMention {
+
+	links := contentLinks(document.Content())
+	result := make([]object.StatusMention, 0)
+
+	for tag := range document.Tag().Range() {
+
+		if tag.Type() != vocab.LinkTypeMention {
+			continue
+		}
+
+		actorURL := tag.Href()
+		name := strings.TrimPrefix(tag.Name(), "@")
+
+		if actorURL == "" || name == "" {
+			continue
+		}
+
+		// Remote mentions often omit the domain, so take it from the actor's own address
+		username, _, hasDomain := strings.Cut(name, "@")
+		acct := name
+
+		if parsed, err := url.Parse(actorURL); err == nil && !hasDomain {
+			acct = username + "@" + parsed.Host
+		}
+
+		// Prefer the link written in the content, falling back to the actor URL
+		linkURL := actorURL
+
+		if found, ok := links["@"+strings.ToLower(username)]; ok {
+			linkURL = found
+		}
+
+		result = append(result, object.StatusMention{
+			ID:       model.EncodeRemoteAccountID(actorURL),
+			Username: username,
+			URL:      linkURL,
+			Acct:     acct,
+		})
+	}
+
+	return result
+}
+
+// contentLinks maps the lowercased text of each link in HTML content (without any domain
+// part) to its href, so a mention can be matched to the link that displays it.
+func contentLinks(content string) map[string]string {
+
+	result := make(map[string]string)
+
+	// Parse the content
+	root, err := html.Parse(strings.NewReader(content))
+
+	if err != nil {
+		return result
+	}
+
+	// Visit every link, noting where each one points
+	var walk func(node *html.Node)
+
+	walk = func(node *html.Node) {
+
+		if node.Type == html.ElementNode && node.DataAtom == atom.A {
+
+			// Read the link's address
+			href := ""
+
+			for _, attr := range node.Attr {
+				if attr.Key == "href" {
+					href = attr.Val
+				}
+			}
+
+			// Read the link's text, keeping only "@username" from a "@username@domain" display
+			text := strings.ToLower(strings.TrimSpace(nodeText(node)))
+
+			if strings.HasPrefix(text, "@") {
+				name, _, _ := strings.Cut(text[1:], "@")
+				text = "@" + name
+			}
+
+			if href != "" && text != "" {
+				result[text] = href
+			}
+		}
+
+		for child := node.FirstChild; child != nil; child = child.NextSibling {
+			walk(child)
+		}
+	}
+
+	walk(root)
+
+	return result
+}
+
+// nodeText returns all of the text inside a node.
+func nodeText(node *html.Node) string {
+
+	if node.Type == html.TextNode {
+		return node.Data
+	}
+
+	var builder strings.Builder
+
+	for child := node.FirstChild; child != nil; child = child.NextSibling {
+		builder.WriteString(nodeText(child))
+	}
+
+	return builder.String()
 }
