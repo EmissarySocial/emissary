@@ -707,11 +707,6 @@ func GetAccount_Followers(serverFactory *server.Factory) func(model.Authorizatio
 	}
 }
 
-// GetAccount_Following implements the Mastodon "get account following" endpoint.
-// Emissary only knows one account's following graph -- the local User's own -- so
-// this returns that list when the caller asks for their own account, and an
-// honest empty result for anyone else (the same cross-account limit Mastodon
-// itself has).
 // ownFollowers lists the people following a local User, newest first.
 func ownFollowers(factory *service.Factory, session data.Session, userID primitive.ObjectID, limit int64) []object.Account {
 
@@ -731,6 +726,8 @@ func ownFollowers(factory *service.Factory, session data.Session, userID primiti
 	return result
 }
 
+// GetAccount_Following implements the Mastodon "get account following" endpoint: the caller's own list,
+// or a remote account's published list. Other local accounts' lists are not shared.
 func GetAccount_Following(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Following) ([]object.Account, toot.PageInfo, error) {
 
 	const location = "handler.mastodon_GetAccount_Following"
@@ -751,9 +748,31 @@ func GetAccount_Following(serverFactory *server.Factory) func(model.Authorizatio
 
 		defer cancel()
 
-		// Only the caller's own following list is available.
-		if user, err := loadUserByAccountID(factory, session, t.ID); err != nil || user.UserID != auth.UserID {
+		// Another local account's following list is not shared
+		user, userErr := loadUserByAccountID(factory, session, t.ID)
+
+		if userErr == nil && user.UserID != auth.UserID {
 			return []object.Account{}, toot.PageInfo{}, nil
+		}
+
+		// A remote account lists who it follows from its own collection
+		if userErr != nil {
+
+			accountURL, err := resolveAccountURL(factory, session, t.ID)
+
+			if err != nil {
+				return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized account", t.ID)
+			}
+
+			remoteClient := factory.ActivityStream().UserClient(auth.UserID)
+			actor, err := remoteClient.Load(accountURL)
+
+			if err != nil {
+				return []object.Account{}, toot.PageInfo{}, nil
+			}
+
+			accounts, pageInfo := remoteAccountList(remoteClient, factory, session, actor.Following(), t.MaxID, pageLimit(t.Limit))
+			return accounts, pageInfo, nil
 		}
 
 		records, err := factory.Following().RangeByUserID(session, auth.UserID)
