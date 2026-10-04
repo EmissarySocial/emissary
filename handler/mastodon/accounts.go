@@ -147,6 +147,7 @@ func mapDocumentToAccount(factory *service.Factory, session data.Session, docume
 		FollowersCount: followersCount,
 		FollowingCount: followingCount,
 		StatusesCount:  statusesCount,
+		Emojis:         mapDocumentToEmojis(document),
 	}
 }
 
@@ -614,6 +615,7 @@ func documentToStatus(document streams.Document, account object.Account) object.
 		MediaAttachments: mapDocumentToMediaAttachments(document),
 		Tags:             tags,
 		Mentions:         mentionsForDocument(document),
+		Emojis:           mapDocumentToEmojis(document),
 	}
 }
 

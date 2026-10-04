@@ -331,6 +331,7 @@ func newsItemToStatus(client streams.Client, factory *service.Factory, session d
 	status.MediaAttachments = mapDocumentToMediaAttachments(document)
 	status.Tags = apiHashtags(mapDocumentToTags(document))
 	status.Mentions = mentionsForDocument(document)
+	status.Emojis = mapDocumentToEmojis(document)
 	status.Content = markHashtagLinks(document.Content(), status.Tags)
 
 	if newsItem.Origin.Type != model.OriginTypeAnnounce {
@@ -385,6 +386,36 @@ func mapDocumentToTags(document streams.Document) []object.StatusTag {
 		}
 
 		result = append(result, object.StatusTag{Name: name, URL: href})
+	}
+
+	return result
+}
+
+// emojiTagType is the ActivityStreams type of a custom emoji tag.
+const emojiTagType = "Emoji"
+
+// mapDocumentToEmojis converts the custom emoji in a document's AS2 "tag" property into
+// Mastodon CustomEmoji, which clients use to draw ":shortcode:" text as an image.
+func mapDocumentToEmojis(document streams.Document) []object.CustomEmoji {
+
+	result := make([]object.CustomEmoji, 0)
+
+	for tag := range document.Tag().Range() {
+
+		if tag.Type() != emojiTagType {
+			continue
+		}
+
+		// AS2 names carry the surrounding colons; Mastodon's shortcodes do not
+		shortcode := strings.Trim(tag.Name(), ":")
+
+		imageURL := tag.Icon().URL()
+
+		if shortcode == "" || imageURL == "" {
+			continue
+		}
+
+		result = append(result, object.CustomEmoji{ShortCode: shortcode, URL: imageURL, StaticURL: imageURL})
 	}
 
 	return result
