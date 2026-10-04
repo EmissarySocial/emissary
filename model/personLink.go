@@ -3,6 +3,7 @@ package model
 import (
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/toot/object"
@@ -137,10 +138,41 @@ func (person *PersonLink) UnmarshalMap(data mapof.Any) {
 
 // Toot returns this PersonLink as its Mastodon API equivalent
 func (person PersonLink) Toot() object.Account {
+
+	// A remote/unlinked person gets the same "u_..." token GetAccount_Lookup produces for
+	// the same account, so a Status's embedded account matches that account's own GetAccount.
+	id := EncodeRemoteAccountID(person.ProfileURL)
+
+	if !person.UserID.IsZero() {
+		id = person.UserID.Hex()
+	}
+
+	// created_at has no "?" in the client's Codable model and crashes decode if missing.
+	// ActivityPub has no reliable "account created" date, so this is an honest "unknown".
 	return object.Account{
-		ID:          person.ProfileURL,
+		ID:          id,
 		URL:         person.ProfileURL,
+		Username:    person.LocalUsername(),
+		Acct:        strings.TrimPrefix(person.Username, "@"), // "user" or "user@domain.social" -- never a leading "@".
 		DisplayName: person.Name,
 		Avatar:      person.IconURL,
+		CreatedAt:   MastodonDate(time.Now()),
 	}
+}
+
+// LocalUsername returns the bare username (no "@domain" suffix), for the
+// Mastodon API's Account.Username field.
+func (person PersonLink) LocalUsername() string {
+
+	// RULE: Username is stored either bare ("user@domain.social") or with a leading
+	// "@" (webfinger's own "acct:@user@domain" style) -- both are seen in practice.
+	// Strip it before splitting, or a leading-"@" value's local part comes back
+	// empty (Cut splits on the first "@", which is then the leading one itself).
+	username := strings.TrimPrefix(person.Username, "@")
+
+	if name, _, found := strings.Cut(username, "@"); found {
+		return name
+	}
+
+	return username
 }

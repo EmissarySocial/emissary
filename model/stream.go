@@ -458,13 +458,19 @@ func (stream Stream) Toot() object.Status {
 	return object.Status{
 		ID:          stream.StreamID.Hex(),
 		URI:         stream.ActivityPubURL(),
-		CreatedAt:   time.Unix(stream.PublishDate, 0).Format(time.RFC3339),
+		CreatedAt:   MastodonDate(time.Unix(stream.PublishDate, 0)),
 		Account:     stream.AttributedTo.Toot(),
 		Content:     stream.Content.HTML,
 		Visibility:  "public",
 		SpoilerText: stream.Label,
 		URL:         stream.URL,
 		InReplyToID: stream.InReplyTo,
+		Pinned:      stream.IsFeatured,
+
+		// Denormalized counters, kept current by the Response and reply services
+		FavouritesCount: stream.LikeCount,
+		ReblogsCount:    stream.ShareCount,
+		RepliesCount:    stream.ReplyCount,
 	}
 }
 

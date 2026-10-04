@@ -45,7 +45,7 @@ func Object(rootClient streams.Client, document streams.Document) map[string]any
 		vocab.PropertySummary:      actual.Summary(),
 		vocab.PropertyContent:      actual.Content(),
 		vocab.PropertyPublished:    first(actual.Published(), time.Now()),
-		vocab.PropertyTag:          Tags(document.Tag()),
+		vocab.PropertyTag:          Tags(actual.Tag()),
 	}
 
 	// Expand the "AttributedTo" actor

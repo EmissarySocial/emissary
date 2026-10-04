@@ -17,11 +17,13 @@ func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 		PostAccount:                    mastodon.PostAccount(serverFactory),
 		GetAccount_VerifyCredentials:   mastodon.GetAccount_VerifyCredentials(serverFactory),
 		PatchAccount_UpdateCredentials: mastodon.PatchAccount_UpdateCredentials(serverFactory),
+		GetAccounts:                    mastodon.GetAccounts(serverFactory),
 		GetAccount:                     mastodon.GetAccount(serverFactory),
 		GetAccount_Statuses:            mastodon.GetAccount_Statuses(serverFactory),
 		GetAccount_Followers:           mastodon.GetAccount_Followers(serverFactory),
 		GetAccount_Following:           mastodon.GetAccount_Following(serverFactory),
 		GetAccount_FeaturedTags:        mastodon.GetAccount_FeaturedTags(serverFactory),
+		GetAccount_Endorsements:        mastodon.GetAccount_Endorsements(serverFactory),
 		PostAccount_Follow:             mastodon.PostAccount_Follow(serverFactory),
 		PostAccount_Unfollow:           mastodon.PostAccount_Unfollow(serverFactory),
 		PostAccount_Block:              mastodon.PostAccount_Block(serverFactory),
@@ -137,15 +139,19 @@ func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 
 		// https://docs.joinmastodon.org/methods/media/
 		PostMedia: mastodon.PostMedia(serverFactory),
+		GetMedia:  mastodon.GetMedia(serverFactory),
+		PutMedia:  mastodon.PutMedia(serverFactory),
 
 		// https://docs.joinmastodon.org/methods/mutes/
 		GetMutes: mastodon.GetMutes(serverFactory),
 
 		// https://docs.joinmastodon.org/methods/notifications/
-		GetNotifications:         mastodon.GetNotifications(serverFactory),
-		GetNotification:          mastodon.GetNotification(serverFactory),
-		PostNotifications_Clear:  mastodon.PostNotifications_Clear(serverFactory),
-		PostNotification_Dismiss: mastodon.PostNotification_Dismiss(serverFactory),
+		GetNotifications:             mastodon.GetNotifications(serverFactory),
+		GetNotification:              mastodon.GetNotification(serverFactory),
+		PostNotifications_Clear:      mastodon.PostNotifications_Clear(serverFactory),
+		PostNotification_Dismiss:     mastodon.PostNotification_Dismiss(serverFactory),
+		GetNotifications_UnreadCount: mastodon.GetNotifications_UnreadCount(serverFactory),
+		GetNotificationPolicy:        mastodon.GetNotificationPolicy(serverFactory),
 
 		// https://docs.joinmastodon.org/methods/oauth/
 		// GetOAuth_Authorize: mastodon.GetOAuth_Authorize(serverFactory),
@@ -165,6 +171,12 @@ func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 		// https://docs.joinmastodon.org/methods/profile/
 		DeleteProfile_Avatar: mastodon.DeleteProfile_Avatar(serverFactory),
 		DeleteProfile_Header: mastodon.DeleteProfile_Header(serverFactory),
+
+		// https://docs.joinmastodon.org/methods/push/
+		PostPushSubscription:   mastodon.PostPushSubscription(serverFactory),
+		GetPushSubscription:    mastodon.GetPushSubscription(serverFactory),
+		PutPushSubscription:    mastodon.PutPushSubscription(serverFactory),
+		DeletePushSubscription: mastodon.DeletePushSubscription(serverFactory),
 
 		// https://docs.joinmastodon.org/methods/reports/
 		PostReport: mastodon.PostReport(serverFactory),

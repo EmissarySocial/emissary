@@ -6,11 +6,35 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
 )
+
+// contactAccount returns the domain owner's Account, for the Mastodon Instance
+// entity's "contact_account" (v1) / "contact.account" (v2) field. Real clients
+// fetch this account's profile when the user taps it in server info -- leaving it
+// as a zero-value Account (empty "id") produces a profile request the client can't
+// resolve to anything (see the note on the removed /api/** catch-all in server.go
+// for what that looked like from the outside).
+func contactAccount(factory *service.Factory, session data.Session) object.Account {
+
+	owners := factory.User().ListOwnersAsSlice(session)
+
+	if len(owners) == 0 {
+		return object.Account{}
+	}
+
+	var user model.User
+	if err := factory.User().LoadByID(session, owners[0].UserID, &user); err != nil {
+		return object.Account{}
+	}
+
+	return tootUser(factory, session, model.Authorization{}, &user)
+}
 
 // https://docs.joinmastodon.org/methods/instance/
 
@@ -28,6 +52,15 @@ func GetInstance(serverFactory *server.Factory) func(model.Authorization, txn.Ge
 			return object.Instance{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Instance{}, derp.Wrap(err, location, "Creating session")
+		}
+
+		defer cancel()
+
 		readOnlyDomain := factory.Domain().Cached()
 
 		result := object.Instance{
@@ -35,7 +68,10 @@ func GetInstance(serverFactory *server.Factory) func(model.Authorization, txn.Ge
 			Title:       readOnlyDomain.Label,
 			Version:     "Emissary v???",
 			SourceURL:   "https://github.com/EmissarySocial/emissary",
-			Description: "",
+			Description: readOnlyDomain.Description,
+			Contact: object.InstanceContact{
+				Account: contactAccount(factory, session),
+			},
 		}
 
 		return result, nil
@@ -135,13 +171,23 @@ func GetInstance_V1(serverFactory *server.Factory) func(model.Authorization, txn
 			return object.Instance_V1{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Instance_V1{}, derp.Wrap(err, location, "Creating session")
+		}
+
+		defer cancel()
+
 		readOnlyDomain := factory.Domain().Cached()
 
 		result := object.Instance_V1{
-			URI:         t.Host,
-			Title:       readOnlyDomain.Label,
-			Version:     "Emissary v???",
-			Description: "",
+			URI:            t.Host,
+			Title:          readOnlyDomain.Label,
+			Version:        "Emissary v???",
+			Description:    readOnlyDomain.Description,
+			ContactAccount: contactAccount(factory, session),
 		}
 
 		return result, nil

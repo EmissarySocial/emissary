@@ -49,7 +49,7 @@ func GetMarkers(serverFactory *server.Factory) func(model.Authorization, txn.Get
 			"home": {
 				LastReadID: message.NewsItemID.Hex(),
 				Version:    int(message.Revision),
-				UpdatedAt:  time.UnixMilli(message.UpdateDate).UTC().Format(time.RFC3339), // UpdateDate is milliseconds (journal UnixMilli)
+				UpdatedAt:  model.MastodonDate(time.UnixMilli(message.UpdateDate)), // UpdateDate is milliseconds (journal UnixMilli)
 			},
 		}
 
@@ -93,7 +93,7 @@ func PostMarker(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 			return nil, derp.Wrap(err, location, "Marking messages read")
 		}
 
-		now := time.Now().UTC().Format(time.RFC3339)
+		now := model.MastodonDate(time.Now())
 
 		result := map[string]object.Marker{
 			"notifications": {

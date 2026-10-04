@@ -11,8 +11,11 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/toot"
+	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // tootGetter is any ranked model object that can render itself as a Mastodon API object
@@ -39,6 +42,23 @@ func getSliceOfToots[In tootGetter[Out], Out any](slice []In) []Out {
 	return results
 }
 
+// pageLimit clamps a client-supplied "limit" to Mastodon's documented default
+// (20) and max (40) for list endpoints. A zero/omitted limit means "no limit"
+// to option.MaxRows, which defeats pagination entirely -- every page would
+// return the whole feed regardless of what the client asked for.
+func pageLimit(limit int64) int64 {
+
+	if limit <= 0 {
+		return 20
+	}
+
+	if limit > 40 {
+		return 40
+	}
+
+	return limit
+}
+
 // getPageInfo uses the GetRank() interface method to calclate
 // the MaxID and MinID values for a slice of tootGetters
 func getPageInfo[In rankGetter](slice []In) toot.PageInfo {
@@ -56,7 +76,24 @@ func getPageInfo[In rankGetter](slice []In) toot.PageInfo {
 
 // queryExpression converts data from a txn.QueryPager into an exp.Expression
 // that can be used to filter database queries.
+//
+// RULE: min_id/since_id mean "newer than" (greater); max_id means "older
+// than" (less). MinID using AndLessThan was backwards.
 func queryExpression(queryPager txn.QueryPager) exp.Expression {
+	return queryExpressionByField(queryPager, "createDate")
+}
+
+// queryExpressionByField is queryExpression's counterpart for model types whose
+// GetRank() does NOT return CreateDate. Folder/Stream/NewsItem's GetRank()
+// returns their own "rank" field instead (see rankGetter's implementations
+// across model/), independent of when the row was created -- federated
+// content can arrive with a publish date days before it's ingested.
+//
+// getPageInfo builds MaxID/MinID from whatever GetRank() returns, so filtering
+// pagination against a different field than the cursor was minted from
+// compares two unrelated numbers and can hand back items the caller already
+// has.
+func queryExpressionByField(queryPager txn.QueryPager, fieldName string) exp.Expression {
 
 	var result exp.Expression = exp.All()
 
@@ -64,23 +101,55 @@ func queryExpression(queryPager txn.QueryPager) exp.Expression {
 
 	if params.MinID != "" {
 		if minID, err := strconv.ParseInt(params.MinID, 10, 64); err == nil {
-			result = result.AndLessThan("createDate", minID)
+			result = result.AndGreaterThan(fieldName, minID)
 		}
 	}
 
 	if params.MaxID != "" {
 		if maxID, err := strconv.ParseInt(params.MaxID, 10, 64); err == nil {
-			result = result.AndLessThan("createDate", maxID)
+			result = result.AndLessThan(fieldName, maxID)
 		}
 	}
 
 	if params.SinceID != "" {
 		if sinceID, err := strconv.ParseInt(params.SinceID, 10, 64); err == nil {
-			result = result.AndGreaterThan("createDate", sinceID)
+			result = result.AndGreaterThan(fieldName, sinceID)
 		}
 	}
 
 	return result
+}
+
+// loadNewsItemByStatusID loads the NewsItem behind a Mastodon status ID. Timeline
+// statuses are identified by their NewsItemID (see NewsItem.Toot), but a client
+// may also send the post's URL, or the encoded URL of a post that isn't in the
+// feed (see model.EncodeRemoteStatusID).
+func loadNewsItemByStatusID(factory *service.Factory, session data.Session, userID primitive.ObjectID, statusID string, newsItem *model.NewsItem) error {
+
+	newsFeedService := factory.NewsFeed()
+
+	if newsItemID, err := primitive.ObjectIDFromHex(statusID); err == nil {
+		return newsFeedService.LoadByID(session, userID, newsItemID, newsItem)
+	}
+
+	if postURL, ok := model.DecodeRemoteStatusID(statusID); ok {
+		return newsFeedService.LoadByURL(session, userID, postURL, newsItem)
+	}
+
+	return newsFeedService.LoadByURL(session, userID, statusID, newsItem)
+}
+
+// reloadedStatus re-reads a NewsItem and returns it as a full Status, so a write
+// endpoint (favourite, etc.) answers with the same object a timeline would.
+func reloadedStatus(factory *service.Factory, session data.Session, auth model.Authorization, newsItemID primitive.ObjectID, location string) (object.Status, error) {
+
+	newsItem := model.NewNewsItem()
+
+	if err := factory.NewsFeed().LoadByID(session, auth.UserID, newsItemID, &newsItem); err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Reloading message")
+	}
+
+	return newsItemsToPosts(factory, session, auth, []model.NewsItem{newsItem})[0], nil
 }
 
 // getStreamFromURL is a convenience function that combines the following
@@ -181,4 +250,82 @@ func userOwnsStream(authorization *model.Authorization, stream *model.Stream) er
 	}
 
 	return derp.Forbidden(location, "User is not authorized to modify this stream")
+}
+
+// tagsForStream converts a Stream's #hashtags into Mastodon tags, with the Mastodon-shaped
+// URL clients need (see apiHashtagURL).
+func tagsForStream(stream *model.Stream) []object.StatusTag {
+
+	hashtags := model.TagsOfType(stream.Tags, vocab.LinkTypeHashtag)
+	tags := make([]object.StatusTag, 0, len(hashtags))
+
+	parsed, err := url.Parse(stream.URL)
+
+	if err != nil || parsed.Host == "" {
+		return tags
+	}
+
+	origin := parsed.Scheme + "://" + parsed.Host
+
+	for _, tag := range hashtags {
+		tags = append(tags, object.StatusTag{Name: tag.Name, URL: apiHashtagURL(origin, tag.Name)})
+	}
+
+	return tags
+}
+
+// tootStream converts a Stream into a Mastodon status, adding its hashtags and the hashtag
+// link markup (see tagsForStream and markHashtagLinks).
+func tootStream(factory *service.Factory, session data.Session, stream *model.Stream) object.Status {
+
+	status := stream.Toot()
+	status.Tags = tagsForStream(stream)
+	status.Content = markHashtagLinks(status.Content, status.Tags)
+	status.MediaAttachments = streamMediaAttachments(factory, session, stream)
+
+	return status
+}
+
+// streamMediaAttachments returns a Stream's own uploaded media (see PostMedia/attachStatusMedia),
+// in the Mastodon shape. A Stream with none, or a lookup failure, yields an empty (never nil)
+// slice -- the API always returns a real array for this field.
+func streamMediaAttachments(factory *service.Factory, session data.Session, stream *model.Stream) []object.MediaAttachment {
+
+	attachments, err := factory.Attachment().QueryByObjectID(session, model.AttachmentObjectTypeStream, stream.StreamID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "handler.mastodon.streamMediaAttachments", "Querying attachments", stream.StreamID))
+		return []object.MediaAttachment{}
+	}
+
+	result := make([]object.MediaAttachment, len(attachments))
+
+	for index := range attachments {
+		result[index] = attachmentToMediaAttachment(attachments[index])
+	}
+
+	return result
+}
+
+// tootUser converts a User into a Mastodon account, adding the post count and last post date
+// that need a query (User.Toot has no database access). The counts are the posts the caller
+// may see. A failed lookup is reported and leaves them zero, since it should not fail the account.
+func tootUser(factory *service.Factory, session data.Session, auth model.Authorization, user *model.User) object.Account {
+
+	account := user.Toot()
+
+	count, newest, err := factory.Stream().SummarizeByUser(session, auth, user.UserID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "handler.mastodon.tootUser", "Counting posts", user.UserID))
+		return account
+	}
+
+	account.StatusesCount = int(count)
+
+	if newest > 0 {
+		account.LastStatusAt = time.Unix(newest, 0).UTC().Format("2006-01-02")
+	}
+
+	return account
 }

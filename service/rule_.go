@@ -670,6 +670,22 @@ func (service *Rule) QueryBlockedActors(session data.Session, userID primitive.O
 	return service.Query(session, criteria, option.SortAsc("trigger"))
 }
 
+// QueryActorRulesByAction returns the ACTOR rules of one action (BLOCK or MUTE) that this User
+// created themselves -- not the Domain's rules on their behalf -- newest first.
+func (service *Rule) QueryActorRulesByAction(session data.Session, userID primitive.ObjectID, action string, criteria exp.Expression, options ...option.Option) ([]model.Rule, error) {
+
+	criteria = exp.And(
+		criteria,
+		exp.Equal("userId", userID),
+		exp.Equal("type", model.RuleTypeActor),
+		exp.Equal("action", action),
+	)
+
+	options = append(options, option.SortDesc("createDate"))
+
+	return service.Query(session, criteria, options...)
+}
+
 // RangeByUserID returns all Rules tha belong to a specific User (NO DOMAIN RULES)
 func (service *Rule) RangeByUserID(session data.Session, userID primitive.ObjectID) (iter.Seq[model.Rule], error) {
 	return service.Range(session, exp.Equal("userId", userID))

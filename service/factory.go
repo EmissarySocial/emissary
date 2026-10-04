@@ -91,6 +91,7 @@ type Factory struct {
 	productService          Product
 	providerService         Provider
 	pushSubscriptionService PushSubscription
+	bookmarkService         Bookmark
 	responseService         Response
 	webPushService          WebPush
 	ruleService             Rule
@@ -180,6 +181,7 @@ func NewFactory(serverFactory ServerFactory, domain config.Domain, port string, 
 	factory.productService = NewProduct()
 	factory.providerService = NewProvider()
 	factory.pushSubscriptionService = NewPushSubscription()
+	factory.bookmarkService = NewBookmark()
 	factory.webPushService = NewWebPush()
 	factory.collectionItemService = NewCollectionItem()
 	factory.responseService = NewResponse()
@@ -262,6 +264,7 @@ func (factory *Factory) Refresh(newConfig config.Domain, attachmentOriginals afe
 	factory.productService.Refresh(factory)
 	factory.providerService.Refresh(factory)
 	factory.pushSubscriptionService.Refresh(factory)
+	factory.bookmarkService.Refresh(factory)
 	factory.webPushService.Refresh(factory)
 	factory.collectionItemService.Refresh(factory)
 	factory.realtimeBroker.Refresh()
@@ -934,6 +937,11 @@ func (factory *Factory) Provider() *Provider {
 	return &factory.providerService
 }
 
+// Bookmark returns a fully populated Bookmark service
+func (factory *Factory) Bookmark() *Bookmark {
+	return &factory.bookmarkService
+}
+
 // PushSubscription returns a fully populated PushSubscription service
 func (factory *Factory) PushSubscription() *PushSubscription {
 	return &factory.pushSubscriptionService
@@ -1160,6 +1168,7 @@ func (factory *Factory) Collections() []string {
 	return []string{
 		"Annotation",
 		"Attachment",
+		"Bookmark",
 		"Circle",
 		"Connection",
 		"Collection",
