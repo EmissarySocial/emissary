@@ -9,6 +9,9 @@ import (
 	"github.com/benpate/hannibal/vocab"
 )
 
+// propertyLikes is the "likes" property, which hannibal's vocabulary does not name.
+const propertyLikes = "likes"
+
 // Object normalizes a regular document (Article, Note, etc)
 func Object(rootClient streams.Client, document streams.Document) map[string]any {
 
@@ -46,6 +49,16 @@ func Object(rootClient streams.Client, document streams.Document) map[string]any
 		vocab.PropertyContent:      actual.Content(),
 		vocab.PropertyPublished:    first(actual.Published(), time.Now()),
 		vocab.PropertyTag:          Tags(actual.Tag()),
+	}
+
+	// Keep the edit time, and how many likes and shares the post has, when the origin reports them.
+	// Totals are stored as int64 because hannibal reads back a 32-bit integer from the database as zero.
+	if likes := actual.Get(propertyLikes).TotalItems(); likes > 0 {
+		result[propertyLikes] = map[string]any{vocab.PropertyTotalItems: int64(likes)}
+	}
+
+	if shares := actual.Shares().TotalItems(); shares > 0 {
+		result[vocab.PropertyShares] = map[string]any{vocab.PropertyTotalItems: int64(shares)}
 	}
 
 	// Expand the "AttributedTo" actor

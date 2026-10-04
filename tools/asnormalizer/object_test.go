@@ -75,3 +75,25 @@ func TestObject_KeepsTheImageOfACustomEmoji(t *testing.T) {
 	require.NotContains(t, tags[1], "icon", "an emoji image that is not a web address is dropped")
 	require.NotContains(t, tags[2], "icon", "only emoji keep an image")
 }
+
+// TestObject_KeepsEditTimeTotalsAndAttachmentNames confirms the properties the Mastodon API reads survive ingest.
+func TestObject_KeepsEditTimeTotalsAndAttachmentNames(t *testing.T) {
+
+	note := streams.NewDocument(map[string]any{
+		"type":    "Note",
+		"id":      "https://example.com/notes/3",
+		"content": "hello",
+		"likes":   map[string]any{"type": "Collection", "totalItems": 7},
+		"shares":  map[string]any{"type": "Collection", "totalItems": 3},
+	})
+
+	result := Object(nil, note)
+
+	require.Equal(t, map[string]any{"totalItems": int64(7)}, result["likes"])
+	require.Equal(t, map[string]any{"totalItems": int64(3)}, result["shares"])
+
+	// A post that reports nothing stores nothing
+	plain := Object(nil, streams.NewDocument(map[string]any{"type": "Note", "id": "https://example.com/notes/4", "content": "hi"}))
+	require.NotContains(t, plain, "likes")
+	require.NotContains(t, plain, "shares")
+}
