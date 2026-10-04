@@ -53,6 +53,10 @@ func Object(rootClient streams.Client, document streams.Document) map[string]any
 
 	// Keep the edit time, and how many likes and shares the post has, when the origin reports them.
 	// Totals are stored as int64 because hannibal reads back a 32-bit integer from the database as zero.
+	if updated := actual.Updated(); !updated.IsZero() {
+		result[vocab.PropertyUpdated] = updated
+	}
+
 	if likes := actual.Get(propertyLikes).TotalItems(); likes > 0 {
 		result[propertyLikes] = map[string]any{vocab.PropertyTotalItems: int64(likes)}
 	}

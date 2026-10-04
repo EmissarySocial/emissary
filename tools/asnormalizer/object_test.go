@@ -83,12 +83,14 @@ func TestObject_KeepsEditTimeTotalsAndAttachmentNames(t *testing.T) {
 		"type":    "Note",
 		"id":      "https://example.com/notes/3",
 		"content": "hello",
+		"updated": "2026-10-01T12:30:00Z",
 		"likes":   map[string]any{"type": "Collection", "totalItems": 7},
 		"shares":  map[string]any{"type": "Collection", "totalItems": 3},
 	})
 
 	result := Object(nil, note)
 
+	require.NotNil(t, result["updated"])
 	require.Equal(t, map[string]any{"totalItems": int64(7)}, result["likes"])
 	require.Equal(t, map[string]any{"totalItems": int64(3)}, result["shares"])
 
@@ -96,4 +98,5 @@ func TestObject_KeepsEditTimeTotalsAndAttachmentNames(t *testing.T) {
 	plain := Object(nil, streams.NewDocument(map[string]any{"type": "Note", "id": "https://example.com/notes/4", "content": "hi"}))
 	require.NotContains(t, plain, "likes")
 	require.NotContains(t, plain, "shares")
+	require.NotContains(t, plain, "updated")
 }
