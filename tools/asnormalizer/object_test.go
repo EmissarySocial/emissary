@@ -44,3 +44,34 @@ func TestObject_KeepsTagsOfUnwrappedPost(t *testing.T) {
 	require.True(t, ok)
 	require.Len(t, tags, 1)
 }
+
+// emojiNote is a post whose tags include a custom emoji, a javascript: emoji, and a hashtag that carries an icon.
+func emojiNote() map[string]any {
+	return map[string]any{
+		"type":    "Note",
+		"id":      "https://example.com/notes/2",
+		"content": "hello :blobcat:",
+		"tag": []any{
+			map[string]any{"type": "Emoji", "id": "https://example.com/emojis/1", "name": ":blobcat:",
+				"icon": map[string]any{"type": "Image", "url": "https://cdn.example.com/blobcat.png"}},
+			map[string]any{"type": "Emoji", "id": "https://example.com/emojis/2", "name": ":bad:",
+				"icon": map[string]any{"type": "Image", "url": "javascript:alert(1)"}},
+			map[string]any{"type": "Hashtag", "href": "https://example.com/tags/cats", "name": "#cats",
+				"icon": map[string]any{"type": "Image", "url": "https://cdn.example.com/ignored.png"}},
+		},
+	}
+}
+
+// TestObject_KeepsTheImageOfACustomEmoji confirms an emoji tag keeps its image URL, and that nothing else does.
+func TestObject_KeepsTheImageOfACustomEmoji(t *testing.T) {
+
+	tags, ok := Object(nil, streams.NewDocument(emojiNote()))["tag"].([]map[string]any)
+
+	require.True(t, ok)
+	require.Len(t, tags, 3)
+
+	require.Equal(t, "https://cdn.example.com/blobcat.png", tags[0]["icon"])
+	require.Equal(t, "https://example.com/emojis/1", tags[0]["href"])
+	require.NotContains(t, tags[1], "icon", "an emoji image that is not a web address is dropped")
+	require.NotContains(t, tags[2], "icon", "only emoji keep an image")
+}
