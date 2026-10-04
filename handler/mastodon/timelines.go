@@ -391,6 +391,34 @@ func mapDocumentToTags(document streams.Document) []object.StatusTag {
 	return result
 }
 
+// propertyValueType is the type of a profile attachment holding one name/value field.
+const propertyValueType = "PropertyValue"
+
+// mapDocumentToFields converts the name/value pairs in an actor's "attachment" property into
+// Mastodon account fields. Attachments of any other type (files, links) are not fields.
+func mapDocumentToFields(document streams.Document) []object.AccountField {
+
+	result := make([]object.AccountField, 0)
+
+	for attachment := range document.Attachment().Range() {
+
+		if attachment.Type() != propertyValueType {
+			continue
+		}
+
+		name := attachment.Name()
+		value := attachment.Get("value").HTMLString()
+
+		if name == "" || value == "" {
+			continue
+		}
+
+		result = append(result, object.AccountField{Name: name, Value: value})
+	}
+
+	return result
+}
+
 // emojiTagType is the ActivityStreams type of a custom emoji tag.
 const emojiTagType = "Emoji"
 

@@ -148,6 +148,7 @@ func mapDocumentToAccount(factory *service.Factory, session data.Session, docume
 		FollowingCount: followingCount,
 		StatusesCount:  statusesCount,
 		Emojis:         mapDocumentToEmojis(document),
+		Fields:         mapDocumentToFields(document),
 	}
 }
 

@@ -40,3 +40,26 @@ func TestMapDocumentToEmojis_NoTagsGivesAnEmptyList(t *testing.T) {
 	require.NotNil(t, emojis)
 	require.Empty(t, emojis)
 }
+
+// TestMapDocumentToFields_KeepsOnlyNameValuePairs covers a profile with link fields, a file attachment, and unsafe markup.
+func TestMapDocumentToFields_KeepsOnlyNameValuePairs(t *testing.T) {
+
+	document := streams.NewDocument(map[string]any{
+		"type": "Person",
+		"id":   "https://example.com/users/ben",
+		"attachment": []any{
+			map[string]any{"type": "PropertyValue", "name": "GitHub", "value": `<a href="https://github.com/benpate" rel="me">github.com/benpate</a>`},
+			map[string]any{"type": "PropertyValue", "name": "Evil", "value": `<script>alert(1)</script>ok`},
+			map[string]any{"type": "PropertyValue", "name": "", "value": "no name"},
+			map[string]any{"type": "Image", "name": "banner", "url": "https://example.com/b.png"},
+		},
+	})
+
+	fields := mapDocumentToFields(document)
+
+	require.Len(t, fields, 2)
+	require.Equal(t, "GitHub", fields[0].Name)
+	require.Contains(t, fields[0].Value, `href="https://github.com/benpate"`)
+	require.Equal(t, "Evil", fields[1].Name)
+	require.NotContains(t, fields[1].Value, "<script")
+}
