@@ -80,12 +80,13 @@ func TestObject_KeepsTheImageOfACustomEmoji(t *testing.T) {
 func TestObject_KeepsEditTimeTotalsAndAttachmentNames(t *testing.T) {
 
 	note := streams.NewDocument(map[string]any{
-		"type":    "Note",
-		"id":      "https://example.com/notes/3",
-		"content": "hello",
-		"updated": "2026-10-01T12:30:00Z",
-		"likes":   map[string]any{"type": "Collection", "totalItems": 7},
-		"shares":  map[string]any{"type": "Collection", "totalItems": 3},
+		"type":       "Note",
+		"id":         "https://example.com/notes/3",
+		"content":    "hello",
+		"updated":    "2026-10-01T12:30:00Z",
+		"likes":      map[string]any{"type": "Collection", "totalItems": 7},
+		"shares":     map[string]any{"type": "Collection", "totalItems": 3},
+		"attachment": []any{map[string]any{"type": "Image", "url": "https://cdn.example.com/a.png", "name": "A cat on a sofa"}},
 	})
 
 	result := Object(nil, note)
@@ -93,6 +94,10 @@ func TestObject_KeepsEditTimeTotalsAndAttachmentNames(t *testing.T) {
 	require.NotNil(t, result["updated"])
 	require.Equal(t, map[string]any{"totalItems": int64(7)}, result["likes"])
 	require.Equal(t, map[string]any{"totalItems": int64(3)}, result["shares"])
+
+	attachments, ok := result["attachment"].([]map[string]any)
+	require.True(t, ok)
+	require.Equal(t, "A cat on a sofa", attachments[0]["name"])
 
 	// A post that reports nothing stores nothing
 	plain := Object(nil, streams.NewDocument(map[string]any{"type": "Note", "id": "https://example.com/notes/4", "content": "hi"}))
