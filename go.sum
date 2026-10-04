@@ -109,10 +109,10 @@ github.com/benpate/steranko v0.31.0 h1:sftuvIDMw4h4USqHZGG8dl4/ac2s5dYNLxqAOjpnT
 github.com/benpate/steranko v0.31.0/go.mod h1:c7U75spsiw6J8BhW5ktp6o4OQkYd9tojSqMON7V37+I=
 github.com/benpate/table v0.10.0 h1:Aj9xXtaWf/qgkYG4blJiCXao+X2njCCHaVXpBQ8dnlo=
 github.com/benpate/table v0.10.0/go.mod h1:LOjUgGCVIfMNAqFKuZA+x0+Gj4VvlBzU3R3JhKAPEZ4=
-github.com/benpate/toot v0.5.0 h1:aw4PngdhrqDlKemsAA7zhks8BcjLRsiGYhpry7Jgh7w=
-github.com/benpate/toot v0.5.0/go.mod h1:ihtqpjldJGzL0dd3S/g9dLE3HaO82P+f45kvfh1TXEc=
-github.com/benpate/toot-echo v0.3.0 h1:qJ1R3BPtYnzLKEHMgS7BKk6/O+/GihNWivVb2DGA5uc=
-github.com/benpate/toot-echo v0.3.0/go.mod h1:ARqOV6WUycIpSHc+kIBlzoly5+UnMf7shKsT/7pGP/c=
+github.com/benpate/toot v0.7.0 h1:XUM85GgcpMWR0bIrwik6uE/IW3izcZ6hCuhkZSAixEI=
+github.com/benpate/toot v0.7.0/go.mod h1:ihtqpjldJGzL0dd3S/g9dLE3HaO82P+f45kvfh1TXEc=
+github.com/benpate/toot-echo v0.5.0 h1:d6iblqxNPFKVnRlbi1Kx2zbwxknRvbMyyAB+plYWCso=
+github.com/benpate/toot-echo v0.5.0/go.mod h1:dn+ZW2onaYJihmhjAe9nig06EKW5TnxqvrI8sQaJq5s=
 github.com/benpate/turbine v0.12.0 h1:79u8oqHD8rvx4Ed3dywK24Umxac8OOqTPOwYX/pBy8A=
 github.com/benpate/turbine v0.12.0/go.mod h1:hW7ruwphfnYsZq0fVTH7M5kVvZfA/5xVIwJVK8RXRkI=
 github.com/benpate/uri v0.9.0 h1:DOjIpi+sfp1yfuXECfjT1SgPyg2x3OjDwIVOszmnotU=
@@ -167,6 +167,10 @@ github.com/go-git/go-git-fixtures/v4 v4.3.2-0.20231010084843-55a94097c399 h1:eMj
 github.com/go-git/go-git-fixtures/v4 v4.3.2-0.20231010084843-55a94097c399/go.mod h1:1OCfN199q1Jm3HZlxleg+Dw/mwps2Wbk9frAWm+4FII=
 github.com/go-git/go-git/v5 v5.19.3 h1:qHttbZ+Am7wEjdTpR1XMQ4rl42FK9SIXzZ4o9x7s6M4=
 github.com/go-git/go-git/v5 v5.19.3/go.mod h1:Ye4C8dVigkqrv9UsB4NMdSLV4yAIkLiIhW61gcOyhl4=
+github.com/go-playground/assert/v2 v2.2.0 h1:JvknZsQTYeFEAhQwI4qEt9cyV5ONwRHC+lYKSsYSR8s=
+github.com/go-playground/assert/v2 v2.2.0/go.mod h1:VDjEfimB/XKnb+ZQfWdccd7VUvScMdVu0Titje2rxJ4=
+github.com/go-playground/form/v4 v4.3.0 h1:OVttojbQv2WNCs4P+VnjPtrt/+30Ipw4890W3OaFlvk=
+github.com/go-playground/form/v4 v4.3.0/go.mod h1:Cpe1iYJKoXb1vILRXEwxpWMGWyQuqplQ/4cvPecy+Jo=
 github.com/go-test/deep v1.1.1 h1:0r/53hagsehfO4bzD2Pgr/+RgHqhmf+k1Bpse2cTu1U=
 github.com/go-test/deep v1.1.1/go.mod h1:5C2ZWiW0ErCdrYzpqxLbTX7MG14M9iiw8DgHncVwcsE=
 github.com/golang-jwt/jwt/v5 v5.2.1/go.mod h1:pqrtFR0X4osieyHYxtmOUWsAWrfe1Q5UVIyoH402zdk=

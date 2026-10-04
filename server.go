@@ -301,13 +301,13 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	// A route that must refuse HEAD registers refuseHead explicitly.  server_routes_head_test.go checks all three.
 
 	// Common routes (but not .well-known)
-	e.GET("/robots.txt", handler.RobotsTxt)  // https://developers.google.com/search/docs/advanced/robots/create-robots-txt
+	e.GET("/robots.txt", handler.RobotsTxt) // https://developers.google.com/search/docs/advanced/robots/create-robots-txt
 	e.HEAD("/robots.txt", handler.RobotsTxt)
-	e.GET("/sitemap.xml", handler.TBD)       // https://developers.google.com/search/docs/advanced/sitemaps/build-sitemap
+	e.GET("/sitemap.xml", handler.TBD) // https://developers.google.com/search/docs/advanced/sitemaps/build-sitemap
 	e.HEAD("/sitemap.xml", handler.TBD)
-	e.GET("/humans.txt", handler.TBD)        // http://humanstxt.org/
+	e.GET("/humans.txt", handler.TBD) // http://humanstxt.org/
 	e.HEAD("/humans.txt", handler.TBD)
-	e.GET("/ads.txt", handler.TBD)           // https://iabtechlab.com/standards/ads-txt/
+	e.GET("/ads.txt", handler.TBD) // https://iabtechlab.com/standards/ads-txt/
 	e.HEAD("/ads.txt", handler.TBD)
 	e.GET("/security.txt", handler.TBD) // https://securitytxt.org/
 	e.HEAD("/security.txt", handler.TBD)
