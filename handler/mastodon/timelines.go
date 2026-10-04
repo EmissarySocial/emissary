@@ -332,6 +332,7 @@ func newsItemToStatus(client streams.Client, factory *service.Factory, session d
 	status.Tags = apiHashtags(mapDocumentToTags(document))
 	status.Mentions = mentionsForDocument(document)
 	status.Emojis = mapDocumentToEmojis(document)
+	applyDocumentCounts(&status, document)
 	status.Content = markHashtagLinks(document.Content(), status.Tags)
 
 	if newsItem.Origin.Type != model.OriginTypeAnnounce {
@@ -389,6 +390,14 @@ func mapDocumentToTags(document streams.Document) []object.StatusTag {
 	}
 
 	return result
+}
+
+// applyDocumentCounts copies a post document's like and boost totals onto a Status. A document that
+// reports none leaves the Status unchanged.
+func applyDocumentCounts(status *object.Status, document streams.Document) {
+
+	status.FavouritesCount = document.Get("likes").TotalItems()
+	status.ReblogsCount = document.Shares().TotalItems()
 }
 
 // propertyValueType is the type of a profile attachment holding one name/value field.

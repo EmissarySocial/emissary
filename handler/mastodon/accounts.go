@@ -603,7 +603,7 @@ func documentToStatus(document streams.Document, account object.Account) object.
 	summary := document.Summary()
 	tags := apiHashtags(mapDocumentToTags(document))
 
-	return object.Status{
+	status := object.Status{
 		ID:               model.EncodeRemoteStatusID(document.ID()),
 		URI:              document.ID(),
 		URL:              url,
@@ -618,6 +618,9 @@ func documentToStatus(document streams.Document, account object.Account) object.
 		Mentions:         mentionsForDocument(document),
 		Emojis:           mapDocumentToEmojis(document),
 	}
+
+	applyDocumentCounts(&status, document)
+	return status
 }
 
 // accountStatusesFromNewsFeed returns the posts that a remote account has authored

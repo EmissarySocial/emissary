@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/benpate/hannibal/streams"
+	"github.com/benpate/toot/object"
 	"github.com/stretchr/testify/require"
 )
 
@@ -39,6 +40,32 @@ func TestMapDocumentToEmojis_NoTagsGivesAnEmptyList(t *testing.T) {
 
 	require.NotNil(t, emojis)
 	require.Empty(t, emojis)
+}
+
+// TestApplyDocumentCounts_ReadsTotalsAndEditTime covers a post that reports likes, shares and an edit time,
+// and one that reports none (which must stay at zero with no edit time).
+func TestApplyDocumentCounts_ReadsTotalsAndEditTime(t *testing.T) {
+
+	reported := streams.NewDocument(map[string]any{
+		"type":   "Note",
+		"id":     "https://example.com/n/1",
+		"likes":  map[string]any{"type": "Collection", "totalItems": 7},
+		"shares": map[string]any{"type": "Collection", "totalItems": 3},
+	})
+
+	status := object.Status{}
+	applyDocumentCounts(&status, reported)
+
+	require.Equal(t, 7, status.FavouritesCount)
+	require.Equal(t, 3, status.ReblogsCount)
+
+	silent := streams.NewDocument(map[string]any{"type": "Note", "id": "https://example.com/n/2", "likes": "https://example.com/n/2/likes"})
+
+	status = object.Status{}
+	applyDocumentCounts(&status, silent)
+
+	require.Equal(t, 0, status.FavouritesCount)
+	require.Equal(t, 0, status.ReblogsCount)
 }
 
 // TestMapDocumentToFields_KeepsOnlyNameValuePairs covers a profile with link fields, a file attachment, and unsafe markup.
