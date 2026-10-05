@@ -2,6 +2,7 @@ package derpmongo
 
 import (
 	"errors"
+	"syscall"
 	"testing"
 
 	"github.com/benpate/derp"
@@ -9,6 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/x/mongo/driver/topology"
 )
 
 // unencodableErrors are the two shapes production has failed to store
@@ -19,10 +21,14 @@ func unencodableErrors() map[string]error {
 		WriteErrors: mongo.WriteErrors{{Code: 11000, Message: "E11000 duplicate key error"}},
 	}
 
+	// A ServerSelectionError wrapping a syscall.Errno, as an unreachable domain database returns
+	serverSelection := topology.ServerSelectionError{Wrapped: syscall.ECONNREFUSED}
+
 	method := func() string { return "id" }
 
 	return map[string]error{
 		"empty bson.Raw": derp.Wrap(writeException, "data-mongo.Collection.Save", "Inserting object"),
+		"syscall.Errno":  derp.Wrap(serverSelection, "server.Factory.buildDomain", "Connecting to database"),
 		"func detail":    derp.Wrap(errors.New("boom"), "server.Factory.refresh", "Refreshing domain", method),
 	}
 }
@@ -67,7 +73,7 @@ func TestPluginReport_StoresUnencodableErrors(t *testing.T) {
 
 	count, err := collection.CountDocuments(t.Context(), bson.M{})
 	require.NoError(t, err)
-	require.Equal(t, int64(2), count, "every unencodable error must still be stored")
+	require.Equal(t, int64(len(unencodableErrors())), count, "every unencodable error must still be stored")
 
 	// Triage walks the chain by these names, so the rebuilt record must keep them
 	stored := bson.M{}
