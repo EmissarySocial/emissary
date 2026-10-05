@@ -8,7 +8,7 @@ Turbine retries any task that returns `queue.Error` or `queue.Requeue`, so handl
 
 ## Result semantics: Failure is permanent, Error is retryable
 
-`queue.Failure` means "retrying can never help" (malformed args, invalid ObjectID); `queue.Error` means "try again later"; `queue.Ignored` means "not my task". The [utilities.go](utilities.go) `requeue(err)` helper maps derp error classes for HTTP-backed tasks: 429 → `queue.Requeue(delay)`, other 4xx → `Failure`, everything else → `Error`. Misclassifying a permanent error as retryable leaves a task looping in the queue forever.
+`queue.Failure` means "retrying can never help" (malformed args, invalid ObjectID); `queue.Error` means "try again later"; `queue.Ignored` means "not my task". `WithSession` returns the handler's own result, status included, through `withTransactionResult`. The transaction still rolls back on any result that carries an error, but the verdict travels in a variable outside the transaction callback, never through the transaction's return value. Until 2026-10-02 the wrapper rebuilt the result from the error alone, so every `Failure` came back as an `Error` and was retried eight times over about four hours before anything was reported. The variable also means a callback the Mongo driver re-runs reports its last attempt, and a handler that succeeded but whose commit failed is retried as an `Error`. The [utilities.go](utilities.go) `requeue(err)` helper maps derp error classes for HTTP-backed tasks: 429 → `queue.Requeue(delay)`, other 4xx → `Failure`, everything else → `Error`. Misclassifying a permanent error as retryable leaves a task looping in the queue forever.
 
 ## A permanent failure ends the task SUCCESSFULLY, because `Failure` still reports
 

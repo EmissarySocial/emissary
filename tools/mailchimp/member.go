@@ -10,6 +10,7 @@ import (
 type Member struct {
 	EmailAddress string            `json:"email_address"`
 	Status       string            `json:"status,omitempty"`
+	StatusIfNew  string            `json:"status_if_new,omitempty"`
 	MergeFields  map[string]string `json:"merge_fields,omitempty"`
 	IPSignup     string            `json:"ip_signup,omitempty"`
 }
