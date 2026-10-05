@@ -93,3 +93,12 @@ func TestMapDocumentToFields_KeepsOnlyNameValuePairs(t *testing.T) {
 	require.Equal(t, "Evil", fields[1].Name)
 	require.NotContains(t, fields[1].Value, "<script")
 }
+
+// TestActorIsBot covers each actor type: only an Application or a Service is an automated account.
+func TestActorIsBot(t *testing.T) {
+
+	for actorType, expected := range map[string]bool{"Person": false, "Group": false, "Organization": false, "Service": true, "Application": true} {
+		document := streams.NewDocument(map[string]any{"type": actorType, "id": "https://example.com/users/x"})
+		require.Equal(t, expected, actorIsBot(document), actorType)
+	}
+}

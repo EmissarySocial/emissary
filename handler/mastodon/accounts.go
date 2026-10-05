@@ -91,6 +91,11 @@ func resolveAccountID(factory *service.Factory, session data.Session, actorURL s
 	return model.EncodeRemoteAccountID(actorURL)
 }
 
+// actorIsBot returns TRUE for an actor that is an automated account: an Application or a Service.
+func actorIsBot(document streams.Document) bool {
+	return document.Type() == vocab.ActorTypeApplication || document.Type() == vocab.ActorTypeService
+}
+
 // mapDocumentToAccount maps a fetched remote actor document to a Mastodon Account.
 // Shared by GetAccount (looks up by opaque ID -- no handle available) and
 // GetAccount_Lookup (looks up by handle -- caller already knows the exact "acct" to
@@ -149,6 +154,9 @@ func mapDocumentToAccount(factory *service.Factory, session data.Session, docume
 		StatusesCount:  statusesCount,
 		Emojis:         mapDocumentToEmojis(document),
 		Fields:         mapDocumentToFields(document),
+		Bot:            actorIsBot(document),
+		Group:          document.Type() == vocab.ActorTypeGroup,
+		Locked:         document.Get("manuallyApprovesFollowers").Bool(),
 	}
 }
 
