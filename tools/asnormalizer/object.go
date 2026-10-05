@@ -66,7 +66,9 @@ func Object(rootClient streams.Client, document streams.Document) map[string]any
 	}
 
 	// Expand the "AttributedTo" actor
-	if attributedToID := actual.AttributedTo().ID(); attributedToID != "" {
+	followersURL := ""
+
+	if attributedToID := actual.AttributedTo().ID(); attributedToID != "" && rootClient != nil {
 
 		attributedTo, err := rootClient.Load(attributedToID)
 
@@ -74,7 +76,13 @@ func Object(rootClient streams.Client, document streams.Document) map[string]any
 			derp.Report(derp.Wrap(err, location, "Loading attributedTo actor", attributedToID))
 		}
 
+		followersURL = attributedTo.Followers().ID()
 		result[vocab.PropertyAttributedTo] = ActorSummary(attributedTo)
+	}
+
+	// Keep who the post is for, as one word, so the recipients themselves are not stored
+	if visibility := Visibility(actual, followersURL); visibility != "" {
+		result[propertyVisibility] = visibility
 	}
 
 	// Normalize Attachments
