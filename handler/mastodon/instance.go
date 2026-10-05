@@ -2,6 +2,8 @@ package mastodon
 
 import (
 	"crypto/sha256"
+	"regexp"
+	"runtime/debug"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -36,6 +38,54 @@ func contactAccount(factory *service.Factory, session data.Session) object.Accou
 	return tootUser(factory, session, model.Authorization{}, &user)
 }
 
+// instanceVersion returns the version string reported to clients, taken from this program's build information.
+func instanceVersion() string {
+	info, ok := debug.ReadBuildInfo()
+	return versionFromBuild(info, ok)
+}
+
+// pseudoVersion matches the module version Go stamps on a build made from an untagged commit.
+var pseudoVersion = regexp.MustCompile(`[-.]\d{14}-[0-9a-f]{12}`)
+
+// versionFromBuild names the running version: the module version for a tagged release, else the short
+// commit it was built from (marked "-dirty" if the work tree had changes), else just "Emissary".
+func versionFromBuild(info *debug.BuildInfo, ok bool) string {
+
+	if !ok || info == nil {
+		return "Emissary"
+	}
+
+	if version := info.Main.Version; version != "" && version != "(devel)" && !pseudoVersion.MatchString(version) {
+		return "Emissary " + version
+	}
+
+	revision := ""
+	dirty := false
+
+	for _, setting := range info.Settings {
+		switch setting.Key {
+		case "vcs.revision":
+			revision = setting.Value
+		case "vcs.modified":
+			dirty = setting.Value == "true"
+		}
+	}
+
+	if revision == "" {
+		return "Emissary"
+	}
+
+	if len(revision) > 9 {
+		revision = revision[:9]
+	}
+
+	if dirty {
+		revision += "-dirty"
+	}
+
+	return "Emissary " + revision
+}
+
 // https://docs.joinmastodon.org/methods/instance/
 
 // https://docs.joinmastodon.org/methods/instance/#v2
@@ -66,7 +116,7 @@ func GetInstance(serverFactory *server.Factory) func(model.Authorization, txn.Ge
 		result := object.Instance{
 			Domain:      t.Host,
 			Title:       domain.Label,
-			Version:     "Emissary v???",
+			Version:     instanceVersion(),
 			SourceURL:   "https://github.com/EmissarySocial/emissary",
 			Description: domain.Description,
 			Contact: object.InstanceContact{
@@ -185,7 +235,7 @@ func GetInstance_V1(serverFactory *server.Factory) func(model.Authorization, txn
 		result := object.Instance_V1{
 			URI:            t.Host,
 			Title:          domain.Label,
-			Version:        "Emissary v???",
+			Version:        instanceVersion(),
 			Description:    domain.Description,
 			ContactAccount: contactAccount(factory, session),
 		}
