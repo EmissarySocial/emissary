@@ -74,6 +74,23 @@ func getPageInfo[In rankGetter](slice []In) toot.PageInfo {
 	return result
 }
 
+// datePageInfo builds paging cursors from the create dates of a newest-first page of records. The
+// next page is offered only when the page came back full, since a short page is the end of the list.
+func datePageInfo(dates []int64, limit int64) toot.PageInfo {
+
+	result := toot.PageInfo{}
+
+	if length := len(dates); length > 0 {
+		result.MinID = strconv.FormatInt(dates[0], 10)
+
+		if int64(length) >= limit {
+			result.MaxID = strconv.FormatInt(dates[length-1], 10)
+		}
+	}
+
+	return result
+}
+
 // queryExpression converts data from a txn.QueryPager into an exp.Expression
 // that can be used to filter database queries.
 //

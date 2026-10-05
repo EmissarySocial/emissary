@@ -120,3 +120,19 @@ func TestCollectActorURLs_ReadsItemsHeldInsideTheCollection(t *testing.T) {
 	require.Equal(t, []string{"https://b.example/users/one"}, urls)
 	require.Equal(t, "", next)
 }
+
+// TestDatePageInfo_OffersTheNextPageOnlyWhenFull confirms a full page links onward and a short page ends the list.
+func TestDatePageInfo_OffersTheNextPageOnlyWhenFull(t *testing.T) {
+
+	full := datePageInfo([]int64{300, 200, 100}, 3)
+	require.Equal(t, "300", full.MinID)
+	require.Equal(t, "100", full.MaxID)
+
+	short := datePageInfo([]int64{300, 200}, 3)
+	require.Equal(t, "300", short.MinID)
+	require.Equal(t, "", short.MaxID, "a short page is the end of the list")
+
+	empty := datePageInfo([]int64{}, 3)
+	require.Equal(t, "", empty.MinID)
+	require.Equal(t, "", empty.MaxID)
+}
