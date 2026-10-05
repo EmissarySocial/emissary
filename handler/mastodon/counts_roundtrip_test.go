@@ -39,3 +39,24 @@ func TestApplyDocumentCounts_SurvivesTheDatabase(t *testing.T) {
 func newTestStatus() object.Status {
 	return object.Status{}
 }
+
+// TestActorFlags_SurviveTheDatabase stores a normalized actor the way the cache does and reads its join date
+// and approval setting back, as the account mapping does.
+func TestActorFlags_SurviveTheDatabase(t *testing.T) {
+
+	stored, err := bson.Marshal(map[string]any{
+		"type":                      "Person",
+		"id":                        "https://example.com/users/ben",
+		"published":                 time.Date(2020, 8, 27, 0, 0, 0, 0, time.UTC),
+		"manuallyApprovesFollowers": true,
+	})
+	require.NoError(t, err)
+
+	loaded := mapof.NewAny()
+	require.NoError(t, bson.Unmarshal(stored, &loaded))
+
+	document := streams.NewDocument(loaded)
+
+	require.Equal(t, 2020, document.Published().Year())
+	require.True(t, document.Get("manuallyApprovesFollowers").Bool())
+}

@@ -105,3 +105,27 @@ func TestObject_KeepsEditTimeTotalsAndAttachmentNames(t *testing.T) {
 	require.NotContains(t, plain, "shares")
 	require.NotContains(t, plain, "updated")
 }
+
+// TestActor_KeepsJoinDateAndApprovalSetting confirms an account's creation date and its hand-approval setting survive ingest.
+func TestActor_KeepsJoinDateAndApprovalSetting(t *testing.T) {
+
+	locked := Actor(streams.NewDocument(map[string]any{
+		"type":                      "Person",
+		"id":                        "https://example.com/users/ben",
+		"preferredUsername":         "ben",
+		"published":                 "2020-08-27T00:00:00Z",
+		"manuallyApprovesFollowers": true,
+	}))
+
+	require.NotNil(t, locked["published"])
+	require.Equal(t, true, locked["manuallyApprovesFollowers"])
+
+	open := Actor(streams.NewDocument(map[string]any{
+		"type":                      "Person",
+		"id":                        "https://example.com/users/amy",
+		"manuallyApprovesFollowers": false,
+	}))
+
+	require.NotContains(t, open, "published", "no date is stored when the account has none")
+	require.NotContains(t, open, "manuallyApprovesFollowers", "only a locked account stores the setting")
+}
