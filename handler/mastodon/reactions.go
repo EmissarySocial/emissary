@@ -3,6 +3,7 @@ package mastodon
 import (
 	"math"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -89,7 +90,49 @@ func listReactors(serverFactory *server.Factory, auth model.Authorization, host 
 		pageInfo.MinID = strconv.FormatInt(responses[0].CreateDate, 10)
 	}
 
-	return actorsToAccounts(factory, session, auth, actors), pageInfo, nil
+	accounts := actorsToAccounts(factory, session, auth, actors)
+
+	// A post on another server is also asked for who reacted there, since this server only knows its own users
+	if maxID == "" {
+		accounts = mergeReactors(accounts, fetchRemoteReactors(postURL, host, remoteListName(responseType), reactorLimit(limit), factory.ActivityStream().AllowPrivateIPs()))
+	}
+
+	return accounts, pageInfo, nil
+}
+
+// remoteListName returns the Mastodon API list that holds one type of response.
+func remoteListName(responseType string) string {
+
+	if responseType == vocab.ActivityTypeAnnounce {
+		return "reblogged_by"
+	}
+
+	return "favourited_by"
+}
+
+// mergeReactors appends the other server's accounts to the ones already known, skipping anyone
+// listed twice (by their full handle, ignoring case).
+func mergeReactors(known []object.Account, others []object.Account) []object.Account {
+
+	seen := make(map[string]bool, len(known)+len(others))
+
+	for _, account := range known {
+		seen[strings.ToLower(account.Acct)] = true
+	}
+
+	for _, account := range others {
+
+		key := strings.ToLower(account.Acct)
+
+		if seen[key] {
+			continue
+		}
+
+		seen[key] = true
+		known = append(known, account)
+	}
+
+	return known
 }
 
 // reactionTargetURL returns the URL of the post behind a status ID, provided the caller may view it.
