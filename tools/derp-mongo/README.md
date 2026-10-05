@@ -17,6 +17,8 @@ Four of the fields are the error itself: the HTTP status code, the root location
 
 `newRecord` derives the signature from the very values it stores beside it, so a record can never describe one error while its signature describes another.
 
+Some errors cannot be encoded as BSON. A `mongo.WriteException` carries an empty `bson.Raw`, and a careless call can pass a method value as a detail. Such a chain is rebuilt by `makeEncodable` under the same field names: each detail that fails is replaced by its type name, and each foreign error that fails by its message. Without this, the insert would fail and the whole record would be lost.
+
 ## Why the signature is computed here
 
 It is computed at report time, from the live error, and never rebuilt from the stored document. That is not an optimization — the reconstruction is impossible. A plain Go error with no location anywhere in its chain marshals to an empty BSON document, so there is nothing left to hash: two errors with entirely different messages produce the same identity from their stored records, and different identities from the live ones.

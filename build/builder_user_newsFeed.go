@@ -562,7 +562,7 @@ func (w Inbox) Message() model.NewsItem {
 		result, err := inboxService.Query(w._session, criteria, options...)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Querying sibling newsItem", sibling, newsItem.MessageID))
+			derp.Report(derp.Wrap(err, location, "Querying sibling newsItem", sibling, newsItem.MessageID()))
 			return model.NewNewsItem()
 		}
 

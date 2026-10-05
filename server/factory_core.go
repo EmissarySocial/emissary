@@ -1175,7 +1175,7 @@ func (factory *factoryCore) refreshDomains(config config.Config) {
 			// answer 421 with no other clue.  Log its hostname on the always-on zerolog channel,
 			// because derp.Report needs a configured sink.
 			log.Error().Err(err).Str("loc", location).Str("hostname", domainConfig.Hostname).Msg("Domain failed to load and will be UNREACHABLE (requests to it will return 421)")
-			derp.Report(derp.Wrap(err, location, "Refreshing domain", domainConfig.ID))
+			derp.Report(derp.Wrap(err, location, "Refreshing domain", domainConfig.ID()))
 			continue
 		}
 	}
