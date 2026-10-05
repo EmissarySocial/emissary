@@ -47,10 +47,11 @@ func TestMapDocumentToEmojis_NoTagsGivesAnEmptyList(t *testing.T) {
 func TestApplyDocumentCounts_ReadsTotalsAndEditTime(t *testing.T) {
 
 	reported := streams.NewDocument(map[string]any{
-		"type":   "Note",
-		"id":     "https://example.com/n/1",
-		"likes":  map[string]any{"type": "Collection", "totalItems": 7},
-		"shares": map[string]any{"type": "Collection", "totalItems": 3},
+		"type":    "Note",
+		"id":      "https://example.com/n/1",
+		"likes":   map[string]any{"type": "Collection", "totalItems": 7},
+		"shares":  map[string]any{"type": "Collection", "totalItems": 3},
+		"updated": "2026-10-01T12:30:00Z",
 	})
 
 	status := object.Status{}
@@ -58,6 +59,7 @@ func TestApplyDocumentCounts_ReadsTotalsAndEditTime(t *testing.T) {
 
 	require.Equal(t, 7, status.FavouritesCount)
 	require.Equal(t, 3, status.ReblogsCount)
+	require.Equal(t, "2026-10-01T12:30:00.000Z", status.EditedAt)
 
 	silent := streams.NewDocument(map[string]any{"type": "Note", "id": "https://example.com/n/2", "likes": "https://example.com/n/2/likes"})
 
@@ -66,6 +68,7 @@ func TestApplyDocumentCounts_ReadsTotalsAndEditTime(t *testing.T) {
 
 	require.Equal(t, 0, status.FavouritesCount)
 	require.Equal(t, 0, status.ReblogsCount)
+	require.Equal(t, "", status.EditedAt)
 }
 
 // TestMapDocumentToFields_KeepsOnlyNameValuePairs covers a profile with link fields, a file attachment, and unsafe markup.

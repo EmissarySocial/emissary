@@ -392,12 +392,16 @@ func mapDocumentToTags(document streams.Document) []object.StatusTag {
 	return result
 }
 
-// applyDocumentCounts copies a post document's like and boost totals onto a Status. A document that
-// reports none leaves the Status unchanged.
+// applyDocumentCounts copies a post document's like and boost totals, and the time it was last
+// edited, onto a Status. A document that reports none of these leaves the Status unchanged.
 func applyDocumentCounts(status *object.Status, document streams.Document) {
 
 	status.FavouritesCount = document.Get("likes").TotalItems()
 	status.ReblogsCount = document.Shares().TotalItems()
+
+	if updated := document.Updated(); !updated.IsZero() {
+		status.EditedAt = model.MastodonDate(updated)
+	}
 }
 
 // propertyValueType is the type of a profile attachment holding one name/value field.

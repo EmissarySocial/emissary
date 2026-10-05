@@ -2,6 +2,7 @@ package mastodon
 
 import (
 	"testing"
+	"time"
 
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/mapof"
@@ -15,10 +16,11 @@ import (
 func TestApplyDocumentCounts_SurvivesTheDatabase(t *testing.T) {
 
 	stored, err := bson.Marshal(map[string]any{
-		"type":   "Note",
-		"id":     "https://example.com/n/1",
-		"likes":  map[string]any{"totalItems": int64(7)},
-		"shares": map[string]any{"totalItems": int64(3)},
+		"type":    "Note",
+		"id":      "https://example.com/n/1",
+		"likes":   map[string]any{"totalItems": int64(7)},
+		"shares":  map[string]any{"totalItems": int64(3)},
+		"updated": time.Date(2026, 10, 1, 12, 30, 0, 0, time.UTC),
 	})
 	require.NoError(t, err)
 
@@ -30,6 +32,7 @@ func TestApplyDocumentCounts_SurvivesTheDatabase(t *testing.T) {
 
 	require.Equal(t, 7, status.FavouritesCount)
 	require.Equal(t, 3, status.ReblogsCount)
+	require.Equal(t, "2026-10-01T12:30:00.000Z", status.EditedAt)
 }
 
 // newTestStatus returns an empty Status.
