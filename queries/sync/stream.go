@@ -63,6 +63,16 @@ func Stream(ctx context.Context, database *mongo.Database) error {
 				SetPartialFilterExpression(bson.M{"deleteDate": 0}),
 		},
 
+		// idx_Stream_AttributedTo serves the Mastodon API's profile view (articles written by a User).
+		"idx_Stream_AttributedTo": mongo.IndexModel{
+			Keys: bson.D{
+				{Key: "attributedTo.userId", Value: 1},
+				{Key: "publishDate", Value: 1},
+			},
+			Options: options.Index().
+				SetPartialFilterExpression(bson.M{"deleteDate": 0}),
+		},
+
 		"idx_Stream_Privileges": mongo.IndexModel{
 			Keys: bson.D{
 				{Key: "privilegeIds", Value: 1},
