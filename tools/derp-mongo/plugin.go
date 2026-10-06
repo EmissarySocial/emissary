@@ -27,7 +27,7 @@ func New(collection *mongo.Collection, options mapof.Any) Plugin {
 	}
 }
 
-// Report implements the derp.Plugin interface, writing the error to MongoDB unless its status code is filtered out
+// Report implements the derp.Reporter interface, writing the error to MongoDB unless its status code is filtered out
 func (plugin Plugin) Report(err error) {
 
 	// RULE: derp.IsNil also catches a typed nil inside the error interface, which "err == nil"
@@ -46,12 +46,6 @@ func (plugin Plugin) Report(err error) {
 
 	// We're gonna log the error..  I'm not scared.
 	record := newRecord(err, statusCode)
-
-	// RULE: An error that BSON cannot encode is rebuilt from encodable parts, or the insert
-	// would fail and the whole record would be lost.
-	if !isEncodable(record) {
-		record.Error = makeEncodable(record.Error)
-	}
 
 	// The Reporter interface carries no context, so there is none to inherit here
 	if _, insertErr := plugin.collection.InsertOne(context.Background(), record); insertErr != nil {

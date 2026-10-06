@@ -8,6 +8,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // hiddenFromJSON mimics the models that hide a secret from JSON but not from BSON
@@ -125,15 +126,15 @@ func TestFind_Unencodable(t *testing.T) {
 	require.Nil(t, forms)
 }
 
-// TestFind_UnencodableAsBSON verifies that a detail only JSON accepts is still reported
+// TestFind_UnencodableAsBSON verifies that a detail only JSON accepts is checked in the form
+// derp-mongo stores, which is its type name
 func TestFind_UnencodableAsBSON(t *testing.T) {
 
 	// BSON has no unsigned 64-bit type, so this value encodes as JSON and fails as BSON
-	forms, err := Find(derp.Internal("test", "Big number", uint64(math.MaxUint64)), "s3cr3t")
+	forms, err := Find(derp.Internal("test", "Big number", uint64(math.MaxUint64)), "uint64")
 
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "BSON")
-	require.Nil(t, forms)
+	require.NoError(t, err)
+	require.Equal(t, []string{"bson"}, forms, "only the stored type name names the type")
 }
 
 // TestRequireAbsent_Passes verifies that a clean error does not fail the test
@@ -174,50 +175,46 @@ func TestRequireAbsent_Unencodable(t *testing.T) {
 	require.Contains(t, recorder.message, "unable to check")
 }
 
-// plainError is a non-derp error that encodes to nothing, like the mongo driver's errors
+// plainError is a non-derp error whose unexported message encodes to nothing
 type plainError struct{ message string }
 
 // Error returns the message
 func (err plainError) Error() string { return err.message }
 
-// unencodableError is a non-derp error that neither JSON nor BSON can encode
-type unencodableError struct{ Channel chan int }
+// TestRequireAbsent_DriverErrorPasses verifies that a clean chain holding a mongo driver error,
+// which BSON cannot encode as it is, is checked whole
+func TestRequireAbsent_DriverErrorPasses(t *testing.T) {
 
-// Error returns a fixed message
-func (err unencodableError) Error() string { return "connection refused" }
-
-// TestRequireAbsentFromEachLayer_Passes verifies that a clean chain passes, even when it cannot
-// be encoded whole
-func TestRequireAbsentFromEachLayer_Passes(t *testing.T) {
-
-	// Like the mongo driver's errors, this layer holds a value no encoder accepts, so the whole
-	// chain would fail RequireAbsent outright
-	outer := derp.Wrap(unencodableError{Channel: make(chan int)}, "outer", "Starting", "example.com")
+	writeException := mongo.WriteException{WriteErrors: mongo.WriteErrors{{Code: 11000, Message: "E11000"}}}
+	outer := derp.Wrap(writeException, "outer", "Saving", "example.com")
 
 	recorder := &fatalRecorder{}
-	RequireAbsentFromEachLayer(recorder, outer, "s3cr3t")
+	RequireAbsent(recorder, outer, "s3cr3t")
 	require.Empty(t, recorder.message)
 }
 
-// TestRequireAbsentFromEachLayer_FindsADerpLayer verifies that a secret in any derp layer fails
-func TestRequireAbsentFromEachLayer_FindsADerpLayer(t *testing.T) {
+// TestRequireAbsent_DriverErrorFindsADerpLayer verifies that a secret in a derp layer above a
+// driver error still fails
+func TestRequireAbsent_DriverErrorFindsADerpLayer(t *testing.T) {
 
-	inner := derp.Internal("inner", "Connecting", hiddenFromJSON{Secret: "s3cr3t"})
+	writeException := mongo.WriteException{WriteErrors: mongo.WriteErrors{{Code: 11000, Message: "E11000"}}}
+	inner := derp.Wrap(writeException, "inner", "Saving", hiddenFromJSON{Secret: "s3cr3t"})
 	outer := derp.Wrap(inner, "outer", "Starting")
 
 	recorder := &fatalRecorder{}
-	RequireAbsentFromEachLayer(recorder, outer, "s3cr3t")
-	require.Contains(t, recorder.message, "inner")
+	RequireAbsent(recorder, outer, "s3cr3t")
+	require.Contains(t, recorder.message, "bson")
 }
 
-// TestRequireAbsentFromEachLayer_FindsAPlainMessage verifies that a secret in a non-derp message fails
-func TestRequireAbsentFromEachLayer_FindsAPlainMessage(t *testing.T) {
+// TestRequireAbsent_FindsAPlainMessage verifies that a secret in a non-derp message fails,
+// without the secret reaching the test log
+func TestRequireAbsent_FindsAPlainMessage(t *testing.T) {
 
 	outer := derp.Wrap(plainError{message: "dial s3cr3t"}, "outer", "Starting")
 
 	recorder := &fatalRecorder{}
-	RequireAbsentFromEachLayer(recorder, outer, "s3cr3t")
-	require.Contains(t, recorder.message, "plainError")
+	RequireAbsent(recorder, outer, "s3cr3t")
+	require.NotEmpty(t, recorder.message)
 	require.NotContains(t, recorder.message, "s3cr3t")
 }
 

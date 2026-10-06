@@ -21,7 +21,7 @@ func TestNewRecord(t *testing.T) {
 	assert.Equal(t, 404, record.StatusCode)
 	assert.Equal(t, "service.Inner.Load", record.Location, "the record stores the ROOT location")
 	assert.Equal(t, "record not found", record.Message, "the record stores the ROOT message")
-	assert.Equal(t, err, record.Error)
+	assert.Equal(t, StoredError(err), record.Error, "the record stores the rebuilt chain")
 	assert.Equal(t, StatusNew, record.Status)
 	assert.NotEqual(t, primitive.NilObjectID, record.RecordID)
 	assert.NotZero(t, record.CreateDate)
