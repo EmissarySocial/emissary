@@ -472,9 +472,9 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 			// remote actor), the ID is valid -- serve what the News Feed holds.
 			if accountURL, resolveErr := resolveAccountURL(factory, session, t.ID); resolveErr == nil {
 
-				// Remote accounts' featured collections are not read, so nothing is pinned
+				// A remote account's pinned posts come from its own featured collection
 				if t.Pinned {
-					return []object.Status{}, toot.PageInfo{}, nil
+					return remoteFeaturedStatuses(factory, session, auth, accountURL)
 				}
 
 				return remoteAccountStatuses(factory, session, auth, t, accountURL)
@@ -549,7 +549,6 @@ func remoteAccountStatuses(factory *service.Factory, session data.Session, auth 
 
 	account := mapDocumentToAccount(factory, session, actor)
 	outbox := actor.Outbox().LoadLink()
-	newsFeedService := factory.NewsFeed()
 	accounts := newAccountMemo()
 	result := make([]object.Status, 0, limit)
 
@@ -574,16 +573,7 @@ func remoteAccountStatuses(factory *service.Factory, session data.Session, auth 
 			continue
 		}
 
-		var status object.Status
-
-		newsItem := model.NewNewsItem()
-
-		if err := newsFeedService.LoadByURL(session, auth.UserID, post.ID(), &newsItem); err == nil {
-			status, _ = newsItemToStatus(client, factory, session, accounts, newsItem)
-		} else {
-			status = documentToStatus(post, account)
-			applyRemoteReply(&status, client, factory, session, post)
-		}
+		status := remotePostStatus(client, factory, session, auth, accounts, post, account)
 
 		if t.OnlyMedia && len(status.MediaAttachments) == 0 {
 			continue
