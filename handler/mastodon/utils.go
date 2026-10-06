@@ -304,6 +304,10 @@ func tootStream(factory *service.Factory, session data.Session, stream *model.St
 	status.Content = markMentionLinks(markHashtagLinks(status.Content, status.Tags), status.Mentions)
 	status.MediaAttachments = streamMediaAttachments(factory, session, stream)
 
+	if isArticle(stream) {
+		applyArticle(&status, stream)
+	}
+
 	return status
 }
 
