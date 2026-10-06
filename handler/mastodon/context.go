@@ -39,10 +39,20 @@ func GetStatus_Context(serverFactory *server.Factory) func(model.Authorization, 
 
 		defer cancel()
 
-		// A post that isn't one of this server's own has no thread to show
+		client := factory.ActivityStream().UserClient(auth.UserID)
+
+		// A post from another server shows what it replies to
 		stream := model.NewStream()
 
 		if err := loadStreamByStatusID(factory, session, t.ID, &stream); err != nil {
+
+			if postURL := resolveStatusURL(factory, session, auth, t.ID); webURL(postURL) {
+
+				if post, err := client.Load(postURL); err == nil {
+					result.Ancestors = remoteAncestorsOf(client, factory, session, auth, post.InReplyTo().ID())
+				}
+			}
+
 			return result, nil
 		}
 
@@ -81,6 +91,17 @@ func GetStatus_Context(serverFactory *server.Factory) func(model.Authorization, 
 		descendants := flattenReplies(stream.URL, repliesOf, contextMaxDescendants, contextMaxDepth)
 
 		result.Ancestors = streamsToStatuses(factory, session, auth, ancestors)
+
+		// When the thread climbs out of this server, carry on upward on the other one
+		top := &stream
+
+		if len(ancestors) > 0 {
+			top = &ancestors[0]
+		}
+
+		if top.InReplyTo != "" && len(ancestors) < contextMaxAncestors {
+			result.Ancestors = append(remoteAncestorsOf(client, factory, session, auth, top.InReplyTo), result.Ancestors...)
+		}
 
 		result.Descendants = streamsToStatuses(factory, session, auth, descendants)
 
