@@ -2727,8 +2727,8 @@
 						"related": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (218 bytes, sha256 0873815ff013)"
 					},
 					"types": {
-						"colors.0": "unreadable",
-						"colors.1": "unreadable",
+						"colors.0": "string",
+						"colors.1": "string",
 						"group": "string",
 						"name": "string",
 						"notes": "string",
@@ -2818,8 +2818,8 @@
 						"related": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (218 bytes, sha256 0873815ff013)"
 					},
 					"types": {
-						"colors.0": "unreadable",
-						"colors.1": "unreadable",
+						"colors.0": "string",
+						"colors.1": "string",
 						"group": "string",
 						"imageUrl": "string",
 						"name": "string",
