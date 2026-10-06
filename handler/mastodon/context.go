@@ -41,7 +41,7 @@ func GetStatus_Context(serverFactory *server.Factory) func(model.Authorization, 
 
 		client := factory.ActivityStream().UserClient(auth.UserID)
 
-		// A post from another server shows what it replies to
+		// A post from another server shows what it replies to, and the replies under it
 		stream := model.NewStream()
 
 		if err := loadStreamByStatusID(factory, session, t.ID, &stream); err != nil {
@@ -50,6 +50,7 @@ func GetStatus_Context(serverFactory *server.Factory) func(model.Authorization, 
 
 				if post, err := client.Load(postURL); err == nil {
 					result.Ancestors = remoteAncestorsOf(client, factory, session, auth, post.InReplyTo().ID())
+					result.Descendants = remoteDescendantsOf(client, factory, session, auth, post)
 				}
 			}
 
