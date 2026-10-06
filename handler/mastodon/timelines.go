@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/asnormalizer"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -333,6 +334,7 @@ func newsItemToStatus(client streams.Client, factory *service.Factory, session d
 	status.Mentions = mentionsForDocument(document)
 	status.Emojis = mapDocumentToEmojis(document)
 	applyDocumentCounts(&status, document)
+	status.Visibility = documentVisibility(document)
 	status.Content = markHashtagLinks(document.Content(), status.Tags)
 
 	if newsItem.Origin.Type != model.OriginTypeAnnounce {
@@ -402,6 +404,24 @@ func applyDocumentCounts(status *object.Status, document streams.Document) {
 	if updated := document.Updated(); !updated.IsZero() {
 		status.EditedAt = model.MastodonDate(updated)
 	}
+}
+
+// documentVisibility returns who a post is for, as the Mastodon word clients expect. It reads the stored
+// audience, else works it out from the post's own addressing, and treats a post naming nobody as public.
+func documentVisibility(document streams.Document) string {
+
+	visibility := document.Get("visibility").String()
+
+	if visibility == "" {
+		visibility = asnormalizer.Visibility(document, "")
+	}
+
+	switch visibility {
+	case "public", "unlisted", "private", "direct":
+		return visibility
+	}
+
+	return "public"
 }
 
 // propertyValueType is the type of a profile attachment holding one name/value field.

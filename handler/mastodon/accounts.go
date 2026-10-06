@@ -616,7 +616,7 @@ func documentToStatus(document streams.Document, account object.Account) object.
 		URI:              document.ID(),
 		URL:              url,
 		CreatedAt:        model.MastodonDate(document.Published()),
-		Visibility:       "public",
+		Visibility:       documentVisibility(document),
 		Account:          account,
 		Content:          markHashtagLinks(document.Content(), tags),
 		SpoilerText:      summary,

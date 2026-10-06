@@ -102,3 +102,19 @@ func TestActorIsBot(t *testing.T) {
 		require.Equal(t, expected, actorIsBot(document), actorType)
 	}
 }
+
+// TestDocumentVisibility covers a stored audience, a post not yet normalized, an unknown value, and no audience at all.
+func TestDocumentVisibility(t *testing.T) {
+
+	stored := streams.NewDocument(map[string]any{"type": "Note", "id": "https://example.com/n/1", "visibility": "private"})
+	require.Equal(t, "private", documentVisibility(stored))
+
+	raw := streams.NewDocument(map[string]any{"type": "Note", "id": "https://example.com/n/2", "to": []any{"https://other.example/users/amy"}})
+	require.Equal(t, "direct", documentVisibility(raw))
+
+	unknown := streams.NewDocument(map[string]any{"type": "Note", "id": "https://example.com/n/3", "visibility": "friends-only"})
+	require.Equal(t, "public", documentVisibility(unknown), "a value clients would not understand is not passed on")
+
+	none := streams.NewDocument(map[string]any{"type": "Note", "id": "https://example.com/n/4"})
+	require.Equal(t, "public", documentVisibility(none))
+}
