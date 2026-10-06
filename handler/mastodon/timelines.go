@@ -335,6 +335,7 @@ func newsItemToStatus(client streams.Client, factory *service.Factory, session d
 	status.Emojis = mapDocumentToEmojis(document)
 	applyDocumentCounts(&status, document)
 	status.Visibility = documentVisibility(document)
+	applyRemoteReply(&status, client, factory, session, document)
 	status.Content = markHashtagLinks(document.Content(), status.Tags)
 
 	if newsItem.Origin.Type != model.OriginTypeAnnounce {

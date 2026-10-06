@@ -582,6 +582,7 @@ func remoteAccountStatuses(factory *service.Factory, session data.Session, auth 
 			status, _ = newsItemToStatus(client, factory, session, accounts, newsItem)
 		} else {
 			status = documentToStatus(post, account)
+			applyRemoteReply(&status, client, factory, session, post)
 		}
 
 		if t.OnlyMedia && len(status.MediaAttachments) == 0 {
