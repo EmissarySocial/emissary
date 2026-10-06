@@ -287,6 +287,11 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 		return derp.Wrap(err, location, "Loading Schema", templateID)
 	}
 
+	// RULE: A socialSchema describes a whole document, so it must be an object
+	if !result.SocialSchemaIsValid() {
+		return derp.Validation("socialSchema must be an object", location, templateID)
+	}
+
 	// All template schemas (except kludged registrations) also inherit the base schema of the model object they build
 	if result.TemplateRole != "registration" {
 		result.Schema.Inherit(schema.New(result.BaseSchema()))
