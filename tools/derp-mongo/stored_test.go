@@ -2,6 +2,7 @@ package derpmongo
 
 import (
 	"errors"
+	"net/url"
 	"syscall"
 	"testing"
 
@@ -132,4 +133,22 @@ func TestCutDupKey(t *testing.T) {
 	require.Equal(t, "index: k_1", cutDupKey("index: k_1 dup key: { k: 1 }"))
 	require.Equal(t, "no key here", cutDupKey("no key here"))
 	require.Equal(t, "", cutDupKey("dup key: { k: 1 }"))
+}
+
+func TestStoredError_TypedNilDerpLayer(t *testing.T) {
+
+	var inner *derp.Error
+	err := derp.Wrap(inner, "outer.Location", "outer message")
+
+	require.NotPanics(t, func() { newRecord(err, 500) })
+	require.Nil(t, StoredError(inner))
+}
+
+func TestStoredError_TypedNilForeignLayer(t *testing.T) {
+
+	var inner *url.Error
+	err := derp.Wrap(inner, "outer.Location", "outer message")
+
+	require.NotPanics(t, func() { newRecord(err, 500) })
+	require.Nil(t, StoredError(inner))
 }

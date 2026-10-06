@@ -32,7 +32,9 @@ func (err encodableError) Error() string {
 // duplicated key cut away.  The original chain is never modified.
 func StoredError(err error) error {
 
-	if err == nil {
+	// RULE: derp.IsNil catches a typed nil, which derp.Wrap stores as a WrappedValue and whose
+	// Error() would panic below.  The second check is the one nilaway can see.
+	if derp.IsNil(err) || err == nil {
 		return nil
 	}
 

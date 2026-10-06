@@ -27,7 +27,7 @@ func New(collection *mongo.Collection, options mapof.Any) Plugin {
 	}
 }
 
-// Report implements the derp.Plugin interface, writing the error to MongoDB unless its status code is filtered out
+// Report implements the derp.Reporter interface, writing the error to MongoDB unless its status code is filtered out
 func (plugin Plugin) Report(err error) {
 
 	// RULE: derp.IsNil also catches a typed nil inside the error interface, which "err == nil"
