@@ -94,6 +94,9 @@ func allSteps(steps []modelStep.Step) []modelStep.Step {
 
 		case modelStep.WithUserConnection:
 			result = append(result, allSteps(typed.SubSteps)...)
+
+		case modelStep.WithRule:
+			result = append(result, allSteps(typed.SubSteps)...)
 		}
 	}
 
