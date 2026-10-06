@@ -17,7 +17,7 @@ Four of the fields are the error itself: the HTTP status code, the root location
 
 `newRecord` derives the signature from the very values it stores beside it, so a record can never describe one error while its signature describes another.
 
-Some errors cannot be encoded as BSON. A `mongo.WriteException` carries an empty `bson.Raw`, and a careless call can pass a method value as a detail. Such a chain is rebuilt by `makeEncodable` under the same field names: each detail that fails is replaced by its type name, and each foreign error that fails by its message. Without this, the insert would fail and the whole record would be lost.
+Some errors cannot be encoded as BSON. A `mongo.WriteException` carries an empty `bson.Raw`, and a careless call can pass a method value as a detail. Such a chain is rebuilt by `StoredError` under the same field names: each detail that fails is replaced by its type name, and each foreign error that fails by its message. Without this, the insert would fail and the whole record would be lost.
 
 ## Why the signature is computed here
 

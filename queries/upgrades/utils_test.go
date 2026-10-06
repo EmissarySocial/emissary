@@ -62,6 +62,6 @@ func TestForEachRecord_FailedSaveOmitsTheRecord(t *testing.T) {
 	require.Len(t, reports.errors, 1)
 	require.Equal(t, "Saving record", derp.Message(reports.errors[0]))
 	// The driver's write error cannot be encoded as BSON, so each layer is checked on its own
-	secretcheck.RequireAbsentFromEachLayer(t, reports.errors[0], "fake-key-one")
-	secretcheck.RequireAbsentFromEachLayer(t, reports.errors[0], "fake-key-two")
+	secretcheck.RequireAbsent(t, reports.errors[0], "fake-key-one")
+	secretcheck.RequireAbsent(t, reports.errors[0], "fake-key-two")
 }

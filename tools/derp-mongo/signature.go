@@ -36,7 +36,7 @@ const (
 // SignatureOf returns the stable identity of an error, so that every occurrence of one
 // defect is recognized as a single item of work.
 func SignatureOf(err error) string {
-	return signature(derp.ErrorCode(err), derp.Location(err), derp.RootLocation(err), derp.RootMessage(err))
+	return signature(derp.ErrorCode(err), derp.Location(err), derp.RootLocation(err), cutDupKey(derp.RootMessage(err)))
 }
 
 // signature builds the stable identity of an error from the four values that describe it

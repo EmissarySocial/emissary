@@ -2,10 +2,14 @@ package derpmongo
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/benpate/derp"
 	"go.mongodb.org/mongo-driver/bson"
 )
+
+// dupKeyMarker begins the part of a MongoDB duplicate-key message that quotes the key's value
+const dupKeyMarker = "dup key:"
 
 // encodableError is a derp.Error rebuilt from parts that BSON can always encode.  Its field
 // names match derp.Error's default BSON names, so triage reads both shapes the same way.
@@ -24,8 +28,9 @@ func (err encodableError) Error() string {
 	return err.Message
 }
 
-// makeEncodable rebuilds an error chain, replacing any value that BSON cannot encode
-func makeEncodable(err error) error {
+// StoredError returns the error chain exactly as Report stores it: encodable, and with every
+// duplicated key cut away.  The original chain is never modified.
+func StoredError(err error) error {
 
 	if err == nil {
 		return nil
@@ -34,40 +39,47 @@ func makeEncodable(err error) error {
 	// A derp.Error is rebuilt field by field, so one bad detail costs only that detail
 	switch typed := err.(type) {
 	case derp.Error:
-		return encodableDerpError(typed)
+		return storedDerpError(typed)
 	case *derp.Error:
 		if typed != nil {
-			return encodableDerpError(*typed)
+			return storedDerpError(*typed)
 		}
 	}
 
-	// Any other error is kept whole when it encodes, and reduced to its message when it does not
-	if isEncodable(err) {
+	// RULE: A foreign layer is kept whole only when it encodes and quotes no key.  Anything
+	// else is reduced to its message, which is all that triage reads from it.
+	if isEncodable(err) && !strings.Contains(err.Error(), dupKeyMarker) {
 		return err
 	}
 
-	return encodableError{Message: err.Error()}
+	return encodableError{Message: cutDupKey(err.Error())}
 }
 
-// encodableDerpError rebuilds one derp.Error, and the chain beneath it
-func encodableDerpError(err derp.Error) encodableError {
+// storedDerpError rebuilds one derp.Error, and the chain beneath it
+func storedDerpError(err derp.Error) encodableError {
 	return encodableError{
 		Code:         err.Code,
 		Location:     err.Location,
-		Message:      err.Message,
+		Message:      cutDupKey(err.Message),
 		URL:          err.URL,
-		Details:      encodableDetails(err.Details),
+		Details:      storedDetails(err.Details),
 		TimeStamp:    err.TimeStamp,
-		WrappedValue: makeEncodable(err.WrappedValue),
+		WrappedValue: StoredError(err.WrappedValue),
 	}
 }
 
-// encodableDetails replaces each detail that BSON cannot encode with the name of its type
-func encodableDetails(details []any) []any {
+// storedDetails cuts every string detail, and replaces each unencodable one with its type name
+func storedDetails(details []any) []any {
 
 	result := make([]any, 0, len(details))
 
 	for _, detail := range details {
+
+		// derp.Wrap appends a foreign inner error's message as a string detail
+		if text, isString := detail.(string); isString {
+			result = append(result, cutDupKey(text))
+			continue
+		}
 
 		if isEncodable(detail) {
 			result = append(result, detail)
@@ -79,6 +91,17 @@ func encodableDetails(details []any) []any {
 	}
 
 	return result
+}
+
+// cutDupKey removes the duplicated key that a MongoDB E11000 message quotes, which may be
+// personal data or a secret
+func cutDupKey(message string) string {
+
+	if index := strings.Index(message, dupKeyMarker); index >= 0 {
+		return strings.TrimSpace(message[:index])
+	}
+
+	return message
 }
 
 // isEncodable reports whether BSON can encode the value

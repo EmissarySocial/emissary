@@ -981,8 +981,8 @@ func TestPutDomain_Live(t *testing.T) {
 
 	// BUG-173: the phone number and mailing address are never copied to the User, so only the
 	// "Setting owner" wrap could carry them.  Neither is a credential, but both are personal data.
-	secretcheck.RequireAbsentFromEachLayer(t, err, "+1-555-0100")
-	secretcheck.RequireAbsentFromEachLayer(t, err, "1 Private Lane")
+	secretcheck.RequireAbsent(t, err, "+1-555-0100")
+	secretcheck.RequireAbsent(t, err, "1 Private Lane")
 
 	// The same session machinery serves requests
 	session, err := factory.Session(ctx, domainConfig.Hostname)
@@ -1069,10 +1069,10 @@ func TestPutDomain_FailedBuildOmitsSecrets(t *testing.T) {
 			require.Contains(t, messages, test.refreshStep)
 
 			for _, secret := range secrets {
-				secretcheck.RequireAbsentFromEachLayer(t, err, secret)
+				secretcheck.RequireAbsent(t, err, secret)
 
 				for _, reported := range recorder.reported() {
-					secretcheck.RequireAbsentFromEachLayer(t, reported, secret)
+					secretcheck.RequireAbsent(t, reported, secret)
 				}
 			}
 		})
