@@ -192,18 +192,85 @@ func GetConversations(serverFactory *server.Factory) func(model.Authorization, t
 	}
 }
 
-// DeleteConversation implements the Mastodon "delete conversation" endpoint as a no-op
+// conversationMessages returns the User's direct messages from the person a conversation ID names.
+func conversationMessages(factory *service.Factory, session data.Session, auth model.Authorization, conversationID string) ([]model.Notification, error) {
+
+	actorURL, ok := decodeConversationID(conversationID)
+
+	if !ok {
+		return nil, derp.NotFound("handler.mastodon.conversationMessages", "Unrecognized conversation", conversationID)
+	}
+
+	criteria := exp.Equal("type", model.NotificationTypeDirect).AndEqual("actor.profileUrl", actorURL)
+	return factory.Notification().QueryByUserID(session, auth.UserID, criteria)
+}
+
+// DeleteConversation implements the Mastodon "remove conversation" endpoint, which removes the User's
+// direct messages from that person. One that is already gone counts as done.
 func DeleteConversation(serverFactory *server.Factory) func(model.Authorization, txn.DeleteConversation) (struct{}, error) {
 
+	const location = "handler.mastodon.DeleteConversation"
+
 	return func(auth model.Authorization, t txn.DeleteConversation) (struct{}, error) {
+
+		factory, session, cancel, err := statusSession(serverFactory, t.Host, location)
+
+		if err != nil {
+			return struct{}{}, err
+		}
+
+		defer cancel()
+
+		messages, err := conversationMessages(factory, session, auth, t.ID)
+
+		if err != nil {
+			return struct{}{}, derp.Wrap(err, location, "Finding conversation", t.ID, derp.WithBadRequest())
+		}
+
+		for index := range messages {
+			if err := factory.Notification().Delete(session, &messages[index], "Removed via Mastodon API"); err != nil {
+				return struct{}{}, derp.Wrap(err, location, "Removing message", t.ID)
+			}
+		}
+
 		return struct{}{}, nil
 	}
 }
 
-// PostConversationRead implements the Mastodon "mark conversation read" endpoint as a no-op
+// PostConversationRead implements the Mastodon "mark conversation read" endpoint.
 func PostConversationRead(serverFactory *server.Factory) func(model.Authorization, txn.PostConversationRead) (struct{}, error) {
 
+	const location = "handler.mastodon.PostConversationRead"
+
 	return func(auth model.Authorization, t txn.PostConversationRead) (struct{}, error) {
+
+		factory, session, cancel, err := statusSession(serverFactory, t.Host, location)
+
+		if err != nil {
+			return struct{}{}, err
+		}
+
+		defer cancel()
+
+		messages, err := conversationMessages(factory, session, auth, t.ID)
+
+		if err != nil {
+			return struct{}{}, derp.Wrap(err, location, "Finding conversation", t.ID, derp.WithBadRequest())
+		}
+
+		for index := range messages {
+
+			if messages[index].IsRead() {
+				continue
+			}
+
+			messages[index].MarkRead()
+
+			if err := factory.Notification().Save(session, &messages[index], "Read via Mastodon API"); err != nil {
+				return struct{}{}, derp.Wrap(err, location, "Marking message read", t.ID)
+			}
+		}
+
 		return struct{}{}, nil
 	}
 }
