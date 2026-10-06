@@ -7,7 +7,7 @@ import (
 	"github.com/benpate/derp"
 )
 
-// StepWithChildren is a Step that can update the data.DataMap custom data stored in a Stream
+// StepWithChildren is a Step that runs a sub-pipeline on every child of the current Stream
 type StepWithChildren struct {
 	SubSteps []step.Step
 }
@@ -17,7 +17,7 @@ func (step StepWithChildren) Get(builder Builder, buffer io.Writer) PipelineBeha
 	return nil
 }
 
-// Post updates the stream with approved data from the request body.
+// Post runs the sub-pipeline on each child, and stops at the first child that halts
 func (step StepWithChildren) Post(builder Builder, buffer io.Writer) PipelineBehavior {
 
 	const location = "build.StepWithChildren.Post"
@@ -29,7 +29,8 @@ func (step StepWithChildren) Post(builder Builder, buffer io.Writer) PipelineBeh
 		return Halt().WithError(derp.Internal(location, "This step can only be used by Stream builders"))
 	}
 
-	children, err := factory.Stream().RangeByParent(builder.session(), streamBuilder._stream.ParentID)
+	// Walk this Stream's own children, not its siblings
+	children, err := factory.Stream().RangeByParent(builder.session(), streamBuilder._stream.StreamID)
 
 	if err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Listing children"))
