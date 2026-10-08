@@ -10,11 +10,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Version36 restores the journal dates that Version25 stripped from the Domain record, without
-// which every admin save tries to INSERT a second Domain and fails with a duplicate key.
+// Version36 restores the createDate and updateDate of any Domain record that is missing them
 func Version36(ctx context.Context, session *mongo.Database) error {
 
 	const location = "queries.upgrades.Version36"
+
+	// Version25 once stripped these dates, and without a createDate every admin save
+	// tries to INSERT a second Domain and fails with a duplicate key
 
 	fmt.Println("... Version 36")
 

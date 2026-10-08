@@ -39,7 +39,7 @@ func MaxRank(ctx context.Context, collection data.Collection, parentID primitive
 		return 1, nil
 	}
 
-	// Otherwise, return the count returned by mongo.
+	// Otherwise, rank the new child one after its highest-ranked sibling
 	return result[0].MaxRank + 1, nil
 }
 

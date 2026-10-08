@@ -111,14 +111,11 @@ func (storage FileStorage) Close() {
  ******************************************/
 
 // watch supervises a filesystem watcher on the configuration file for the whole life of the
-// process, reopening it whenever it dies.  It is the same supervision that MongoStorage.watch
-// applies to its change stream, for the same reason:
+// process, reopening it whenever it dies
 func (storage FileStorage) watch() {
 
-	// RULE: This loop MUST NOT be able to end except by Close().  A single-shot watcher has several
-	// quiet deaths -- fsnotify construction can fail, Add can fail, and the watched directory can be
-	// removed or renamed, after which no event ever arrives again.  Any of those used to leave the
-	// process running on a frozen configuration, with nothing in the log, until reboot.
+	// RULE: This loop MUST NOT end except by Close().  The watcher dies quietly when fsnotify fails
+	// or the directory is removed, which would leave the node on a frozen configuration (AGENTS.md)
 
 	const location = "config.FileStorage.watch"
 
