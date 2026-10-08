@@ -29,6 +29,7 @@ func Schema() schema.Schema {
 				"clientIPHeader":       schema.String{Default: "X-Real-IP"},
 				"trustForwardedHost":   schema.Boolean{},
 				"allowPrivateIPs":      schema.Boolean{},
+				"hotReloadTemplates":   schema.Boolean{},
 			},
 		},
 	}
@@ -90,6 +91,9 @@ func (config *Config) GetPointer(name string) (any, bool) {
 
 	case "allowPrivateIPs":
 		return &config.AllowPrivateIPs, true
+
+	case "hotReloadTemplates":
+		return &config.HotReloadTemplates, true
 	}
 
 	return nil, false

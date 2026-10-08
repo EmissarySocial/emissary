@@ -138,8 +138,8 @@ func (service *User) rangeActivityPubFollowers(session data.Session, userID prim
 	}
 }
 
-// ActivityPubProfile returns the User's complete actor document: User.GetJSONLD() plus the
-// publicKey block and, when the domain allows it, the MLS messaging properties.
+// ActivityPubProfile returns the User's complete actor document: User.GetJSONLD() shaped by the
+// outbox Template's social rules, plus the publicKey block and any MLS messaging properties.
 func (service *User) ActivityPubProfile(session data.Session, user *model.User) (mapof.Any, error) {
 
 	const location = "service.User.ActivityPubProfile"
@@ -151,8 +151,11 @@ func (service *User) ActivityPubProfile(session data.Session, user *model.User) 
 		return nil, derp.Wrap(err, location, "Loading encryption key", user.UserID)
 	}
 
-	// Combine the profile and the public key
+	// Shape the profile with the outbox Template's social rules
 	result := user.GetJSONLD()
+	service.applySocialRules(user, &result)
+
+	// RULE: Add the public key after the social rules, so that no rule can replace it
 	result[vocab.PropertyPublicKey] = mapof.Any{
 		vocab.PropertyID:           user.ActivityPubPublicKeyURL(),
 		vocab.PropertyOwner:        user.ActivityPubURL(),
@@ -167,6 +170,29 @@ func (service *User) ActivityPubProfile(session data.Session, user *model.User) 
 
 	// Success!
 	return result, nil
+}
+
+// applySocialRules runs the social rules of the User's outbox Template over the actor document,
+// reading the User through the Template's schema and writing through its social schema
+func (service *User) applySocialRules(user *model.User, result *mapof.Any) {
+
+	const location = "service.User.applySocialRules"
+
+	// A User whose outbox Template is not loaded has no social rules to apply
+	template, err := service.templateService.Load(user.OutboxTemplate)
+
+	if err != nil {
+		return
+	}
+
+	if template.SocialRules.IsEmpty() {
+		return
+	}
+
+	// A failed rule is reported, and the profile is served without its output
+	if err := template.SocialRules.Execute(template.Schema, user, template.SocialTargetSchema(), result); err != nil {
+		derp.Report(derp.Wrap(err, location, "Applying social rules to User", user.UserID, template.TemplateID))
+	}
 }
 
 // sendProfileUpdate federates a changed profile: it wraps the User's complete actor document

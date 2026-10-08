@@ -1,0 +1,4471 @@
+{
+	"uses": {
+		"template:admin-domain/themes@theme=bandwagon/0:as-modal.SubSteps/1:set-data": {
+			"fields": [
+				"themeId (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"changes": {
+						"themeId": "string "
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/hostile": {
+					"changes": {
+						"themeId": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"themeId": "string "
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"themeId": "string "
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"themeId": "string Sample themeId"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				}
+			}
+		},
+		"template:admin-domain/themes@theme=default/0:as-modal.SubSteps/1:set-data": {
+			"fields": [
+				"themeId (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"changes": {
+						"themeId": "string "
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/hostile": {
+					"changes": {
+						"themeId": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"themeId": "string "
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"themeId": "string "
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"themeId": "string Sample themeId"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				}
+			}
+		},
+		"template:admin-domain/themes@theme=minimal/0:as-modal.SubSteps/1:set-data": {
+			"fields": [
+				"themeId (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"changes": {
+						"themeId": "string "
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/hostile": {
+					"changes": {
+						"themeId": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"themeId": "string "
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"themeId": "string "
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"themeId": "string Sample themeId"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				}
+			}
+		},
+		"template:admin-mls/index@theme=bandwagon/0:set-data": {
+			"fields": [
+				"data.mls-active (defaults, schema.String)"
+			],
+			"defaults": {
+				"data.mls-active": "\"NONE\""
+			},
+			"results": {
+				"GET/empty": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"GET/hostile": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"GET/literal": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"data.mls-active": "string NONE"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"POST/empty": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"POST/hostile": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.mls-active": "string NONE"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				}
+			}
+		},
+		"template:admin-mls/index@theme=bandwagon/2:set-data": {
+			"fields": [
+				"mlsGroupIds (from-form, schema.String)",
+				"mlsMode (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"changes": {
+						"mlsGroupIds": "removed",
+						"mlsGroupIds[0]": "string "
+					},
+					"types": {
+						"mlsGroupIds": "string",
+						"mlsMode": "string"
+					}
+				},
+				"POST/hostile": {
+					"error": ": mlsMode: Must be one of the specified values",
+					"types": {
+						"mlsGroupIds": "string",
+						"mlsMode": "string"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"mlsGroupIds": "removed",
+						"mlsGroupIds[0]": "string "
+					},
+					"types": {
+						"mlsGroupIds": "string",
+						"mlsMode": "string"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"mlsGroupIds[0]": "string ",
+						"mlsMode": "string "
+					},
+					"types": {
+						"mlsGroupIds": "string",
+						"mlsMode": "string"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"mlsGroupIds": "removed",
+						"mlsGroupIds[0]": "string Sample mlsGroupIds",
+						"mlsMode": "string ALL"
+					},
+					"types": {
+						"mlsGroupIds": "string",
+						"mlsMode": "string"
+					}
+				}
+			}
+		},
+		"template:admin-mls/index@theme=default/0:set-data": {
+			"fields": [
+				"data.mls-active (defaults, schema.String)"
+			],
+			"defaults": {
+				"data.mls-active": "\"NONE\""
+			},
+			"results": {
+				"GET/empty": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"GET/hostile": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"GET/literal": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"data.mls-active": "string NONE"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"POST/empty": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"POST/hostile": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.mls-active": "string NONE"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				}
+			}
+		},
+		"template:admin-mls/index@theme=default/2:set-data": {
+			"fields": [
+				"mlsGroupIds (from-form, schema.String)",
+				"mlsMode (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"changes": {
+						"mlsGroupIds": "removed",
+						"mlsGroupIds[0]": "string "
+					},
+					"types": {
+						"mlsGroupIds": "string",
+						"mlsMode": "string"
+					}
+				},
+				"POST/hostile": {
+					"error": ": mlsMode: Must be one of the specified values",
+					"types": {
+						"mlsGroupIds": "string",
+						"mlsMode": "string"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"mlsGroupIds": "removed",
+						"mlsGroupIds[0]": "string "
+					},
+					"types": {
+						"mlsGroupIds": "string",
+						"mlsMode": "string"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"mlsGroupIds[0]": "string ",
+						"mlsMode": "string "
+					},
+					"types": {
+						"mlsGroupIds": "string",
+						"mlsMode": "string"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"mlsGroupIds": "removed",
+						"mlsGroupIds[0]": "string Sample mlsGroupIds",
+						"mlsMode": "string ALL"
+					},
+					"types": {
+						"mlsGroupIds": "string",
+						"mlsMode": "string"
+					}
+				}
+			}
+		},
+		"template:admin-mls/index@theme=minimal/0:set-data": {
+			"fields": [
+				"data.mls-active (defaults, schema.String)"
+			],
+			"defaults": {
+				"data.mls-active": "\"NONE\""
+			},
+			"results": {
+				"GET/empty": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"GET/hostile": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"GET/literal": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"data.mls-active": "string NONE"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"POST/empty": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"POST/hostile": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.mls-active": "string NONE"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data": "removed",
+						"data.mls-active": "string NONE"
+					}
+				}
+			}
+		},
+		"template:admin-mls/index@theme=minimal/2:set-data": {
+			"fields": [
+				"mlsGroupIds (from-form, schema.String)",
+				"mlsMode (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"changes": {
+						"mlsGroupIds": "removed",
+						"mlsGroupIds[0]": "string "
+					},
+					"types": {
+						"mlsGroupIds": "string",
+						"mlsMode": "string"
+					}
+				},
+				"POST/hostile": {
+					"error": ": mlsMode: Must be one of the specified values",
+					"types": {
+						"mlsGroupIds": "string",
+						"mlsMode": "string"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"mlsGroupIds": "removed",
+						"mlsGroupIds[0]": "string "
+					},
+					"types": {
+						"mlsGroupIds": "string",
+						"mlsMode": "string"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"mlsGroupIds[0]": "string ",
+						"mlsMode": "string "
+					},
+					"types": {
+						"mlsGroupIds": "string",
+						"mlsMode": "string"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"mlsGroupIds": "removed",
+						"mlsGroupIds[0]": "string Sample mlsGroupIds",
+						"mlsMode": "string ALL"
+					},
+					"types": {
+						"mlsGroupIds": "string",
+						"mlsMode": "string"
+					}
+				}
+			}
+		},
+		"template:admin-sso/themes@theme=bandwagon/0:as-modal.SubSteps/1:set-data": {
+			"fields": [
+				"themeId (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"changes": {
+						"themeId": "string "
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/hostile": {
+					"changes": {
+						"themeId": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"themeId": "string "
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"themeId": "string "
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"themeId": "string Sample themeId"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				}
+			}
+		},
+		"template:admin-sso/themes@theme=default/0:as-modal.SubSteps/1:set-data": {
+			"fields": [
+				"themeId (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"changes": {
+						"themeId": "string "
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/hostile": {
+					"changes": {
+						"themeId": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"themeId": "string "
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"themeId": "string "
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"themeId": "string Sample themeId"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				}
+			}
+		},
+		"template:admin-sso/themes@theme=minimal/0:as-modal.SubSteps/1:set-data": {
+			"fields": [
+				"themeId (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"changes": {
+						"themeId": "string "
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/hostile": {
+					"changes": {
+						"themeId": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"themeId": "string "
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"themeId": "string "
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"themeId": "string Sample themeId"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				}
+			}
+		},
+		"template:admin-startup/choose-theme@theme=bandwagon/0:as-modal.SubSteps/1:set-data": {
+			"fields": [
+				"themeId (from-url, schema.String)"
+			],
+			"results": {
+				"GET/empty": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/hostile": {
+					"changes": {
+						"themeId": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/literal": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/prefilled": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"themeId": "string Sample themeId"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/empty": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/hostile": {
+					"changes": {
+						"themeId": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/prefilled": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"themeId": "string Sample themeId"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				}
+			}
+		},
+		"template:admin-startup/choose-theme@theme=default/0:as-modal.SubSteps/1:set-data": {
+			"fields": [
+				"themeId (from-url, schema.String)"
+			],
+			"results": {
+				"GET/empty": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/hostile": {
+					"changes": {
+						"themeId": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/literal": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/prefilled": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"themeId": "string Sample themeId"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/empty": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/hostile": {
+					"changes": {
+						"themeId": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/prefilled": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"themeId": "string Sample themeId"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				}
+			}
+		},
+		"template:admin-startup/choose-theme@theme=minimal/0:as-modal.SubSteps/1:set-data": {
+			"fields": [
+				"themeId (from-url, schema.String)"
+			],
+			"results": {
+				"GET/empty": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/hostile": {
+					"changes": {
+						"themeId": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/literal": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/prefilled": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"themeId": "string Sample themeId"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/empty": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/hostile": {
+					"changes": {
+						"themeId": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/prefilled": {
+					"types": {
+						"themeId": "string"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"themeId": "string Sample themeId"
+					},
+					"types": {
+						"themeId": "string"
+					}
+				}
+			}
+		},
+		"template:article-base/create/0:set-data": {
+			"fields": [
+				"label (values, schema.String)"
+			],
+			"values": {
+				"label": "New Article (WYSIWYG) (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"changes": {
+						"label": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (218 bytes, sha256 e075764e9107)"
+					}
+				},
+				"GET/literal": {
+					"changes": {
+						"label": "string New Article (WYSIWYG)"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"label": "string New Article (WYSIWYG)"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"label": "string Sample label"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"changes": {
+						"label": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (218 bytes, sha256 e075764e9107)"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"label": "string New Article (WYSIWYG)"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"label": "string New Article (WYSIWYG)"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"label": "string Sample label"
+					}
+				}
+			}
+		},
+		"template:article-base/style/0:with-draft.SubSteps/1:set-data": {
+			"fields": [
+				"data.stylesheet (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.stylesheet": "removed"
+					},
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.stylesheet": "string body { color: #336699; }\n"
+					},
+					"types": {
+						"data.stylesheet": "string"
+					}
+				}
+			}
+		},
+		"template:article-base/widgets/0:with-draft.SubSteps/0:set-data": {
+			"fields": [
+				"data.width (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"error": ": data.width: Must be one of the specified values",
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.width": "removed"
+					},
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.width": "string FULL"
+					},
+					"types": {
+						"data.width": "string"
+					}
+				}
+			}
+		},
+		"template:article-editorjs/create/0:set-data": {
+			"fields": [
+				"content.format (values, schema.String)",
+				"content.raw (values, schema.String)",
+				"data.width (values, schema.String)",
+				"label (values, schema.String)"
+			],
+			"values": {
+				"content.format": "EDITORJS (literal)",
+				"content.raw": "{} (literal)",
+				"data.width": "FULL (literal)",
+				"label": "New Article (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"GET/literal": {
+					"changes": {
+						"content.format": "string EDITORJS",
+						"content.raw": "string {}",
+						"data.width": "string FULL",
+						"label": "string New Article"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"content.format": "string EDITORJS",
+						"content.raw": "string {}",
+						"label": "string New Article"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"content.format": "string HTML",
+						"content.raw": "string Sample content.raw",
+						"data.width": "string FULL",
+						"label": "string Sample label"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"POST/literal": {
+					"changes": {
+						"content.format": "string EDITORJS",
+						"content.raw": "string {}",
+						"data.width": "string FULL",
+						"label": "string New Article"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"content.format": "string EDITORJS",
+						"content.raw": "string {}",
+						"label": "string New Article"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"content.format": "string HTML",
+						"content.raw": "string Sample content.raw",
+						"data.width": "string FULL",
+						"label": "string Sample label"
+					}
+				}
+			}
+		},
+		"template:article-editorjs/style/0:with-draft.SubSteps/1:set-data": {
+			"fields": [
+				"data.stylesheet (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.stylesheet": "removed"
+					},
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.stylesheet": "string body { color: #336699; }\n"
+					},
+					"types": {
+						"data.stylesheet": "string"
+					}
+				}
+			}
+		},
+		"template:article-editorjs/widgets/0:with-draft.SubSteps/0:set-data": {
+			"fields": [
+				"data.width (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"error": ": data.width: Must be one of the specified values",
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.width": "removed"
+					},
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.width": "string FULL"
+					},
+					"types": {
+						"data.width": "string"
+					}
+				}
+			}
+		},
+		"template:article-html/create/0:set-data": {
+			"fields": [
+				"content.format (values, schema.String)",
+				"content.raw (values, schema.String)",
+				"data.width (values, schema.String)",
+				"label (values, schema.String)"
+			],
+			"values": {
+				"content.format": "HTML (literal)",
+				"content.raw": "\u003ch1\u003eNew Article\u003c/h1\u003e (literal)",
+				"data.width": "FULL (literal)",
+				"label": "New Article (HTML Code) (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"GET/literal": {
+					"changes": {
+						"content.format": "string HTML",
+						"content.raw": "string \u003ch1\u003eNew Article\u003c/h1\u003e",
+						"data.width": "string FULL",
+						"label": "string New Article (HTML Code)"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"content.raw": "string \u003ch1\u003eNew Article\u003c/h1\u003e",
+						"label": "string New Article (HTML Code)"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"content.format": "string HTML",
+						"content.raw": "string Sample content.raw",
+						"data.width": "string FULL",
+						"label": "string Sample label"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"POST/literal": {
+					"changes": {
+						"content.format": "string HTML",
+						"content.raw": "string \u003ch1\u003eNew Article\u003c/h1\u003e",
+						"data.width": "string FULL",
+						"label": "string New Article (HTML Code)"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"content.raw": "string \u003ch1\u003eNew Article\u003c/h1\u003e",
+						"label": "string New Article (HTML Code)"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"content.format": "string HTML",
+						"content.raw": "string Sample content.raw",
+						"data.width": "string FULL",
+						"label": "string Sample label"
+					}
+				}
+			}
+		},
+		"template:article-html/style/0:with-draft.SubSteps/1:set-data": {
+			"fields": [
+				"data.stylesheet (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.stylesheet": "removed"
+					},
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.stylesheet": "string body { color: #336699; }\n"
+					},
+					"types": {
+						"data.stylesheet": "string"
+					}
+				}
+			}
+		},
+		"template:article-html/widgets/0:with-draft.SubSteps/0:set-data": {
+			"fields": [
+				"data.width (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"error": ": data.width: Must be one of the specified values",
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.width": "removed"
+					},
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.width": "string FULL"
+					},
+					"types": {
+						"data.width": "string"
+					}
+				}
+			}
+		},
+		"template:article-markdown/create/0:set-data": {
+			"fields": [
+				"content.format (values, schema.String)",
+				"content.raw (values, schema.String)",
+				"data.width (values, schema.String)",
+				"label (values, schema.String)"
+			],
+			"values": {
+				"content.format": "MARKDOWN (literal)",
+				"content.raw": "# New Article (literal)",
+				"data.width": "FULL (literal)",
+				"label": "New Article (Markdown) (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"GET/literal": {
+					"changes": {
+						"content.format": "string MARKDOWN",
+						"content.raw": "string # New Article",
+						"data.width": "string FULL",
+						"label": "string New Article (Markdown)"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"content.format": "string MARKDOWN",
+						"content.raw": "string # New Article",
+						"label": "string New Article (Markdown)"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"content.format": "string HTML",
+						"content.raw": "string Sample content.raw",
+						"data.width": "string FULL",
+						"label": "string Sample label"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"POST/literal": {
+					"changes": {
+						"content.format": "string MARKDOWN",
+						"content.raw": "string # New Article",
+						"data.width": "string FULL",
+						"label": "string New Article (Markdown)"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"content.format": "string MARKDOWN",
+						"content.raw": "string # New Article",
+						"label": "string New Article (Markdown)"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"content.format": "string HTML",
+						"content.raw": "string Sample content.raw",
+						"data.width": "string FULL",
+						"label": "string Sample label"
+					}
+				}
+			}
+		},
+		"template:article-markdown/style/0:with-draft.SubSteps/1:set-data": {
+			"fields": [
+				"data.stylesheet (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.stylesheet": "removed"
+					},
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.stylesheet": "string body { color: #336699; }\n"
+					},
+					"types": {
+						"data.stylesheet": "string"
+					}
+				}
+			}
+		},
+		"template:article-markdown/widgets/0:with-draft.SubSteps/0:set-data": {
+			"fields": [
+				"data.width (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"error": ": data.width: Must be one of the specified values",
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.width": "removed"
+					},
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.width": "string FULL"
+					},
+					"types": {
+						"data.width": "string"
+					}
+				}
+			}
+		},
+		"template:article-remote/create/0:set-data": {
+			"fields": [
+				"content.format (values, schema.String)",
+				"label (values, schema.String)"
+			],
+			"values": {
+				"content.format": "MARKDOWN (literal)",
+				"label": "New Remote Article (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"error": ": content.format: Must be one of the specified values",
+					"orderDependent": true
+				},
+				"GET/literal": {
+					"changes": {
+						"content.format": "string MARKDOWN",
+						"label": "string New Remote Article"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"content.format": "string MARKDOWN",
+						"label": "string New Remote Article"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"content.format": "string HTML",
+						"label": "string Sample label"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"error": ": content.format: Must be one of the specified values",
+					"orderDependent": true
+				},
+				"POST/literal": {
+					"changes": {
+						"content.format": "string MARKDOWN",
+						"label": "string New Remote Article"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"content.format": "string MARKDOWN",
+						"label": "string New Remote Article"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"content.format": "string HTML",
+						"label": "string Sample label"
+					}
+				}
+			}
+		},
+		"template:article-remote/style/0:with-draft.SubSteps/1:set-data": {
+			"fields": [
+				"data.stylesheet (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.stylesheet": "removed"
+					},
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.stylesheet": "string body { color: #336699; }\n"
+					},
+					"types": {
+						"data.stylesheet": "string"
+					}
+				}
+			}
+		},
+		"template:article-remote/widgets/0:with-draft.SubSteps/0:set-data": {
+			"fields": [
+				"data.width (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"error": ": data.width: Must be one of the specified values",
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.width": "removed"
+					},
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.width": "string FULL"
+					},
+					"types": {
+						"data.width": "string"
+					}
+				}
+			}
+		},
+		"template:article-two-column/create/0:set-data": {
+			"fields": [
+				"data.columns (values, schema.String)",
+				"data.left (values, schema.String)",
+				"data.width (values, schema.String)",
+				"label (values, schema.String)"
+			],
+			"values": {
+				"data.columns": "ONE-HALF (literal)",
+				"data.left": "# New Article (literal)",
+				"data.width": "FULL (literal)",
+				"label": "New Article (Two Column) (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"GET/literal": {
+					"changes": {
+						"data.columns": "string ONE-HALF",
+						"data.left": "string # New Article",
+						"data.width": "string FULL",
+						"label": "string New Article (Two Column)"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"data.columns": "string ONE-HALF",
+						"data.left": "string # New Article",
+						"label": "string New Article (Two Column)"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"data.columns": "string THREE-QUARTERS",
+						"data.left": "string Sample data.left",
+						"data.width": "string FULL",
+						"label": "string Sample label"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"POST/literal": {
+					"changes": {
+						"data.columns": "string ONE-HALF",
+						"data.left": "string # New Article",
+						"data.width": "string FULL",
+						"label": "string New Article (Two Column)"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.columns": "string ONE-HALF",
+						"data.left": "string # New Article",
+						"label": "string New Article (Two Column)"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.columns": "string THREE-QUARTERS",
+						"data.left": "string Sample data.left",
+						"data.width": "string FULL",
+						"label": "string Sample label"
+					}
+				}
+			}
+		},
+		"template:article-two-column/editor/0:with-draft.SubSteps/0:set-data": {
+			"fields": [
+				"data.columns (from-form, schema.String)",
+				"data.left (from-form, schema.String)",
+				"data.right (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.columns": "unreadable",
+						"data.left": "unreadable",
+						"data.right": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"error": ": data.columns: Must be one of the specified values",
+					"changes": {
+						"data.left": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (1048578 bytes, sha256 0ac4d76d7883)",
+						"data.right": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (1048578 bytes, sha256 0ac4d76d7883)"
+					},
+					"types": {
+						"data.columns": "unreadable",
+						"data.left": "string",
+						"data.right": "string"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.columns": "unreadable",
+						"data.left": "unreadable",
+						"data.right": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.columns": "removed",
+						"data.left": "removed",
+						"data.right": "removed"
+					},
+					"types": {
+						"data.columns": "unreadable",
+						"data.left": "unreadable",
+						"data.right": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.columns": "string THREE-QUARTERS",
+						"data.left": "string Sample data.left",
+						"data.right": "string Sample data.right"
+					},
+					"types": {
+						"data.columns": "string",
+						"data.left": "string",
+						"data.right": "string"
+					}
+				}
+			}
+		},
+		"template:article-two-column/style/0:with-draft.SubSteps/1:set-data": {
+			"fields": [
+				"data.stylesheet (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.stylesheet": "removed"
+					},
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.stylesheet": "string body { color: #336699; }\n"
+					},
+					"types": {
+						"data.stylesheet": "string"
+					}
+				}
+			}
+		},
+		"template:article-two-column/widgets/0:with-draft.SubSteps/0:set-data": {
+			"fields": [
+				"data.columns (from-form, schema.String)",
+				"data.width (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.columns": "unreadable",
+						"data.width": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"error": ": data.width: Must be one of the specified values",
+					"types": {
+						"data.columns": "unreadable",
+						"data.width": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.columns": "unreadable",
+						"data.width": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.columns": "removed",
+						"data.width": "removed"
+					},
+					"types": {
+						"data.columns": "unreadable",
+						"data.width": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.columns": "string THREE-QUARTERS",
+						"data.width": "string FULL"
+					},
+					"types": {
+						"data.columns": "string",
+						"data.width": "string"
+					}
+				}
+			}
+		},
+		"template:bandwagon-album/btn-social-outline/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:bandwagon-album/create/0:as-modal.SubSteps/0:set-data": {
+			"fields": [
+				"isFeatured (from-url, schema.Boolean)"
+			],
+			"results": {
+				"GET/empty": {
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"GET/hostile": {
+					"error": ": isFeatured: Value must be a boolean",
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"GET/literal": {
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"GET/prefilled": {
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"isFeatured": "bool true"
+					},
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"POST/empty": {
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"POST/hostile": {
+					"error": ": isFeatured: Value must be a boolean",
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"POST/prefilled": {
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"isFeatured": "bool true"
+					},
+					"types": {
+						"isFeatured": "bool"
+					}
+				}
+			}
+		},
+		"template:bandwagon-album/delete-icon/1:set-data": {
+			"fields": [
+				"iconUrl (values, schema.String)"
+			],
+			"values": {
+				"iconUrl": " (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)"
+				},
+				"GET/literal": {},
+				"GET/prefilled": {
+					"changes": {
+						"iconUrl": "removed"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"iconUrl": "string https://example.com/iconUrl"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)"
+				},
+				"POST/literal": {},
+				"POST/prefilled": {
+					"changes": {
+						"iconUrl": "removed"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"iconUrl": "string https://example.com/iconUrl"
+					}
+				}
+			}
+		},
+		"template:bandwagon-album/like-button/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:bandwagon-event/btn-social-outline/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:bandwagon-event/create/0:as-modal.SubSteps/0:set-data": {
+			"fields": [
+				"isFeatured (from-url, schema.Boolean)"
+			],
+			"results": {
+				"GET/empty": {
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"GET/hostile": {
+					"error": ": isFeatured: Value must be a boolean",
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"GET/literal": {
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"GET/prefilled": {
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"isFeatured": "bool true"
+					},
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"POST/empty": {
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"POST/hostile": {
+					"error": ": isFeatured: Value must be a boolean",
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"POST/prefilled": {
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"isFeatured": "bool true"
+					},
+					"types": {
+						"isFeatured": "bool"
+					}
+				}
+			}
+		},
+		"template:bandwagon-event/like-button/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:bandwagon-news/btn-social-outline/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:bandwagon-news/create/0:as-modal.SubSteps/0:set-data": {
+			"fields": [
+				"isFeatured (from-url, schema.Boolean)"
+			],
+			"results": {
+				"GET/empty": {
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"GET/hostile": {
+					"error": ": isFeatured: Value must be a boolean",
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"GET/literal": {
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"GET/prefilled": {
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"isFeatured": "bool true"
+					},
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"POST/empty": {
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"POST/hostile": {
+					"error": ": isFeatured: Value must be a boolean",
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"POST/prefilled": {
+					"types": {
+						"isFeatured": "bool"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"isFeatured": "bool true"
+					},
+					"types": {
+						"isFeatured": "bool"
+					}
+				}
+			}
+		},
+		"template:bandwagon-news/like-button/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:bandwagon-outbox/add-album/1:set-data": {
+			"fields": [
+				"data.show-albums (values, schema.String)"
+			],
+			"values": {
+				"data.show-albums": "true (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"changes": {
+						"data": "removed",
+						"data.show-albums": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)"
+					}
+				},
+				"GET/literal": {
+					"changes": {
+						"data": "removed",
+						"data.show-albums": "string true"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"data.show-albums": "string true"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"data": "removed",
+						"data.show-albums": "string Sample data.show-albums"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"changes": {
+						"data": "removed",
+						"data.show-albums": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"data": "removed",
+						"data.show-albums": "string true"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.show-albums": "string true"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data": "removed",
+						"data.show-albums": "string Sample data.show-albums"
+					}
+				}
+			}
+		},
+		"template:bandwagon-outbox/add-event/1:set-data": {
+			"fields": [
+				"data.show-events (values, schema.String)"
+			],
+			"values": {
+				"data.show-events": "true (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"changes": {
+						"data": "removed",
+						"data.show-events": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)"
+					}
+				},
+				"GET/literal": {
+					"changes": {
+						"data": "removed",
+						"data.show-events": "string true"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"data.show-events": "string true"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"data": "removed",
+						"data.show-events": "string Sample data.show-events"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"changes": {
+						"data": "removed",
+						"data.show-events": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"data": "removed",
+						"data.show-events": "string true"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.show-events": "string true"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data": "removed",
+						"data.show-events": "string Sample data.show-events"
+					}
+				}
+			}
+		},
+		"template:bandwagon-outbox/add-news/1:set-data": {
+			"fields": [
+				"data.show-news (values, schema.String)"
+			],
+			"values": {
+				"data.show-news": "true (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"changes": {
+						"data": "removed",
+						"data.show-news": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)"
+					}
+				},
+				"GET/literal": {
+					"changes": {
+						"data": "removed",
+						"data.show-news": "string true"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"data.show-news": "string true"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"data": "removed",
+						"data.show-news": "string Sample data.show-news"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"changes": {
+						"data": "removed",
+						"data.show-news": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"data": "removed",
+						"data.show-news": "string true"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.show-news": "string true"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data": "removed",
+						"data.show-news": "string Sample data.show-news"
+					}
+				}
+			}
+		},
+		"template:bandwagon-outbox/btn-social-outline/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:bandwagon-outbox/create/0:set-data": {
+			"fields": [
+				"data.label-albums (values, schema.String)",
+				"data.label-events (values, schema.String)",
+				"data.label-news (values, schema.String)",
+				"data.label-shop (values, schema.String)"
+			],
+			"values": {
+				"data.label-albums": "Releases (literal)",
+				"data.label-events": "Events (literal)",
+				"data.label-news": "News (literal)",
+				"data.label-shop": "Shop (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"changes": {
+						"data": "removed",
+						"data.label-albums": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
+						"data.label-events": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
+						"data.label-news": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
+						"data.label-shop": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)"
+					}
+				},
+				"GET/literal": {
+					"changes": {
+						"data": "removed",
+						"data.label-albums": "string Releases",
+						"data.label-events": "string Events",
+						"data.label-news": "string News",
+						"data.label-shop": "string Shop"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"data.label-albums": "string Releases",
+						"data.label-events": "string Events",
+						"data.label-news": "string News",
+						"data.label-shop": "string Shop"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"data": "removed",
+						"data.label-albums": "string Sample data.label-albums",
+						"data.label-events": "string Sample data.label-events",
+						"data.label-news": "string Sample data.label-news",
+						"data.label-shop": "string Sample data.label-shop"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"changes": {
+						"data": "removed",
+						"data.label-albums": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
+						"data.label-events": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
+						"data.label-news": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
+						"data.label-shop": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"data": "removed",
+						"data.label-albums": "string Releases",
+						"data.label-events": "string Events",
+						"data.label-news": "string News",
+						"data.label-shop": "string Shop"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.label-albums": "string Releases",
+						"data.label-events": "string Events",
+						"data.label-news": "string News",
+						"data.label-shop": "string Shop"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data": "removed",
+						"data.label-albums": "string Sample data.label-albums",
+						"data.label-events": "string Sample data.label-events",
+						"data.label-news": "string Sample data.label-news",
+						"data.label-shop": "string Sample data.label-shop"
+					}
+				}
+			}
+		},
+		"template:bandwagon-outbox/delete-background/0:set-data": {
+			"fields": [
+				"data.background-body (values, schema.String)"
+			],
+			"values": {
+				"data.background-body": " (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"changes": {
+						"data": "removed",
+						"data.background-body": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)"
+					}
+				},
+				"GET/literal": {},
+				"GET/prefilled": {
+					"changes": {
+						"data": "document {}",
+						"data.background-body": "removed"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"data": "removed",
+						"data.background-body": "string Sample data.background-body"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"changes": {
+						"data": "removed",
+						"data.background-body": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)"
+					}
+				},
+				"POST/literal": {},
+				"POST/prefilled": {
+					"changes": {
+						"data": "document {}",
+						"data.background-body": "removed"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data": "removed",
+						"data.background-body": "string Sample data.background-body"
+					}
+				}
+			}
+		},
+		"template:bandwagon-outbox/follower-confirm/0:with-follower.SubSteps@with-follower/0:set-data": {
+			"fields": [
+				"stateId (values, schema.String)"
+			],
+			"values": {
+				"stateId": "ACTIVE (literal)"
+			},
+			"results": {
+				"GET/empty": {
+					"changes": {
+						"stateId": "string "
+					}
+				},
+				"GET/hostile": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"GET/literal": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				},
+				"GET/prefilled": {},
+				"GET/typical": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				},
+				"POST/empty": {
+					"changes": {
+						"stateId": "string "
+					}
+				},
+				"POST/hostile": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"POST/literal": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				},
+				"POST/prefilled": {},
+				"POST/typical": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				}
+			}
+		},
+		"template:bandwagon-outbox/like-button/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:bandwagon-search-albums/create/0:set-data": {
+			"fields": [
+				"label (defaults, schema.String)"
+			],
+			"defaults": {
+				"label": "\"New Page\""
+			},
+			"results": {
+				"GET/empty": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/hostile": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/literal": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/empty": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/hostile": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"label": "string New Page"
+					}
+				}
+			}
+		},
+		"template:bandwagon-search-events/create/0:set-data": {
+			"fields": [
+				"label (defaults, schema.String)"
+			],
+			"defaults": {
+				"label": "\"New Page\""
+			},
+			"results": {
+				"GET/empty": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/hostile": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/literal": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/empty": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/hostile": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"label": "string New Page"
+					}
+				}
+			}
+		},
+		"template:bandwagon-search-news/create/0:set-data": {
+			"fields": [
+				"label (defaults, schema.String)"
+			],
+			"defaults": {
+				"label": "\"New Page\""
+			},
+			"results": {
+				"GET/empty": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/hostile": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/literal": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/empty": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/hostile": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"label": "string New Page"
+					}
+				}
+			}
+		},
+		"template:bandwagon-search-tracks/create/0:set-data": {
+			"fields": [
+				"label (defaults, schema.String)"
+			],
+			"defaults": {
+				"label": "\"New Page\""
+			},
+			"results": {
+				"GET/empty": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/hostile": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/literal": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/empty": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/hostile": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"label": "string New Page"
+					}
+				}
+			}
+		},
+		"template:bandwagon-search-users/create/0:set-data": {
+			"fields": [
+				"label (defaults, schema.String)"
+			],
+			"defaults": {
+				"label": "\"New Page\""
+			},
+			"results": {
+				"GET/empty": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/hostile": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/literal": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/empty": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/hostile": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"label": "string New Page"
+					}
+				}
+			}
+		},
+		"template:bandwagon-search/create/0:set-data": {
+			"fields": [
+				"label (defaults, schema.String)"
+			],
+			"defaults": {
+				"label": "\"New Page\""
+			},
+			"results": {
+				"GET/empty": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/hostile": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/literal": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/empty": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/hostile": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"label": "string New Page"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"label": "string New Page"
+					}
+				}
+			}
+		},
+		"template:bandwagon-song/btn-social-outline/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:bandwagon-song/delete-icon/1:set-data": {
+			"fields": [
+				"iconUrl (values, schema.String)"
+			],
+			"values": {
+				"iconUrl": " (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)"
+				},
+				"GET/literal": {},
+				"GET/prefilled": {
+					"changes": {
+						"iconUrl": "removed"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"iconUrl": "string https://example.com/iconUrl"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)"
+				},
+				"POST/literal": {},
+				"POST/prefilled": {
+					"changes": {
+						"iconUrl": "removed"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"iconUrl": "string https://example.com/iconUrl"
+					}
+				}
+			}
+		},
+		"template:bandwagon-song/like-button/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:base-social/btn-social-outline/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:base-social/like-button/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:contact-form/create/0:set-data": {
+			"fields": [
+				"data.emailSubject (values, schema.String)",
+				"data.headerMessage (values, schema.String)",
+				"data.promptContent (values, schema.String)",
+				"data.successMessage (values, schema.String)",
+				"label (values, schema.String)"
+			],
+			"values": {
+				"data.emailSubject": "New message from your contact form (literal)",
+				"data.headerMessage": "You received a new message from the contact form on your website. (literal)",
+				"data.promptContent": "Send us a message using the form below, and we will get back to you. (literal)",
+				"data.successMessage": "Thank you.  Your message has been sent. (literal)",
+				"label": "Contact Us (literal)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"GET/hostile": {
+					"changes": {
+						"data.emailSubject": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"data.headerMessage": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (2050 bytes, sha256 2eaea600e2c2)",
+						"data.promptContent": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (8194 bytes, sha256 ddc53dd27ee4)",
+						"data.successMessage": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (2050 bytes, sha256 2eaea600e2c2)",
+						"label": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)"
+					}
+				},
+				"GET/literal": {
+					"changes": {
+						"data.emailSubject": "string New message from your contact form",
+						"data.headerMessage": "string You received a new message from the contact form on your website.",
+						"data.promptContent": "string Send us a message using the form below, and we will get back to you.",
+						"data.successMessage": "string Thank you.  Your message has been sent.",
+						"label": "string Contact Us"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"data.emailSubject": "string New message from your contact form",
+						"data.headerMessage": "string You received a new message from the contact form on your website.",
+						"data.promptContent": "string Send us a message using the form below, and we will get back to you.",
+						"data.successMessage": "string Thank you.  Your message has been sent.",
+						"label": "string Contact Us"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"data.emailSubject": "string Sample data.emailSubject",
+						"data.headerMessage": "string Sample data.headerMessage",
+						"data.promptContent": "string Sample data.promptContent",
+						"data.successMessage": "string Sample data.successMessage",
+						"label": "string Sample label"
+					}
+				},
+				"POST/empty": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"POST/hostile": {
+					"changes": {
+						"data.emailSubject": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"data.headerMessage": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (2050 bytes, sha256 2eaea600e2c2)",
+						"data.promptContent": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (8194 bytes, sha256 ddc53dd27ee4)",
+						"data.successMessage": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (2050 bytes, sha256 2eaea600e2c2)",
+						"label": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"data.emailSubject": "string New message from your contact form",
+						"data.headerMessage": "string You received a new message from the contact form on your website.",
+						"data.promptContent": "string Send us a message using the form below, and we will get back to you.",
+						"data.successMessage": "string Thank you.  Your message has been sent.",
+						"label": "string Contact Us"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.emailSubject": "string New message from your contact form",
+						"data.headerMessage": "string You received a new message from the contact form on your website.",
+						"data.promptContent": "string Send us a message using the form below, and we will get back to you.",
+						"data.successMessage": "string Thank you.  Your message has been sent.",
+						"label": "string Contact Us"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.emailSubject": "string Sample data.emailSubject",
+						"data.headerMessage": "string Sample data.headerMessage",
+						"data.promptContent": "string Sample data.promptContent",
+						"data.successMessage": "string Sample data.successMessage",
+						"label": "string Sample label"
+					}
+				}
+			}
+		},
+		"template:contact-form/widgets/0:set-data": {
+			"fields": [
+				"data.width (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"error": ": data.width: Must be one of the specified values",
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.width": "removed"
+					},
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.width": "string FULL"
+					},
+					"types": {
+						"data.width": "string"
+					}
+				}
+			}
+		},
+		"template:folder/create/0:set-data": {
+			"fields": [
+				"data.format (values, schema.String)",
+				"label (values, schema.String)"
+			],
+			"values": {
+				"data.format": "TABLE (literal)",
+				"label": "New Folder (literal)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": ": data.format: Value is required"
+				},
+				"GET/hostile": {
+					"error": ": data.format: Must be one of the specified values",
+					"orderDependent": true
+				},
+				"GET/literal": {
+					"changes": {
+						"data.format": "string TABLE",
+						"label": "string New Folder"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"label": "string New Folder"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"data.format": "string TABLE",
+						"label": "string Sample label"
+					}
+				},
+				"POST/empty": {
+					"error": ": data.format: Value is required"
+				},
+				"POST/hostile": {
+					"error": ": data.format: Must be one of the specified values",
+					"orderDependent": true
+				},
+				"POST/literal": {
+					"changes": {
+						"data.format": "string TABLE",
+						"label": "string New Folder"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"label": "string New Folder"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.format": "string TABLE",
+						"label": "string Sample label"
+					}
+				}
+			}
+		},
+		"template:folder/widgets/0:set-data": {
+			"fields": [
+				"data.format (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"error": ": data.format: Value is required",
+					"types": {
+						"data.format": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"error": ": data.format: Must be one of the specified values",
+					"types": {
+						"data.format": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"error": ": data.format: Value is required",
+					"types": {
+						"data.format": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"error": ": data.format: Value is required",
+					"types": {
+						"data.format": "string"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.format": "string TABLE"
+					},
+					"types": {
+						"data.format": "string"
+					}
+				}
+			}
+		},
+		"template:outbox-message/btn-social-outline/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:outbox-message/like-button/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:outbox-reply/btn-social-outline/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:outbox-reply/like-button/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:redirect/create/0:set-data": {
+			"fields": [
+				"label (values, schema.String)"
+			],
+			"values": {
+				"label": "New Redirect (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"changes": {
+						"label": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (218 bytes, sha256 e075764e9107)"
+					}
+				},
+				"GET/literal": {
+					"changes": {
+						"label": "string New Redirect"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"label": "string New Redirect"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"label": "string Sample label"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"changes": {
+						"label": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (218 bytes, sha256 e075764e9107)"
+					}
+				},
+				"POST/literal": {
+					"changes": {
+						"label": "string New Redirect"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"label": "string New Redirect"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"label": "string Sample label"
+					}
+				}
+			}
+		},
+		"template:user-inbox/actor-button-block-update/0:with-rule.SubSteps@with-rule/0:set-data": {
+			"fields": [
+				"comment (from-form, not in schema)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"error": ": Unknown field: comment"
+				},
+				"POST/hostile": {
+					"error": ": Unknown field: comment"
+				},
+				"POST/literal": {
+					"error": ": Unknown field: comment"
+				},
+				"POST/prefilled": {
+					"error": ": Unknown field: comment"
+				},
+				"POST/typical": {
+					"error": ": Unknown field: comment"
+				}
+			}
+		},
+		"template:user-inbox/actor-button-block/0:with-rule.SubSteps@with-rule/0:set-data": {
+			"fields": [
+				"action (values, schema.String)",
+				"trigger (values, schema.String)",
+				"type (values, schema.String)"
+			],
+			"values": {
+				"action": "BLOCK (literal)",
+				"trigger": "{{.QueryParam `url`}} (renders against the builder; mocked)",
+				"type": "ACTOR (literal)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"GET/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"GET/literal": {
+					"error": ": trigger: Value is required",
+					"orderDependent": true
+				},
+				"GET/prefilled": {
+					"error": ": trigger: Value is required",
+					"orderDependent": true
+				},
+				"GET/typical": {
+					"changes": {
+						"action": "string BLOCK",
+						"trigger": "string Sample trigger",
+						"type": "string DOMAIN"
+					}
+				},
+				"POST/empty": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"POST/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"POST/literal": {
+					"error": ": trigger: Value is required",
+					"orderDependent": true
+				},
+				"POST/prefilled": {
+					"error": ": trigger: Value is required",
+					"orderDependent": true
+				},
+				"POST/typical": {
+					"changes": {
+						"action": "string BLOCK",
+						"trigger": "string Sample trigger",
+						"type": "string DOMAIN"
+					}
+				}
+			}
+		},
+		"template:user-inbox/actor-button-follow-update/0:with-following.SubSteps@with-following/0:set-data": {
+			"fields": [
+				"behavior (from-form, schema.String)",
+				"isPublic (from-form, schema.Boolean)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"error": ": behavior: Value is required",
+					"types": {
+						"behavior": "string",
+						"isPublic": "bool"
+					}
+				},
+				"POST/hostile": {
+					"error": ": behavior: Must be one of the specified values",
+					"types": {
+						"behavior": "string",
+						"isPublic": "bool"
+					}
+				},
+				"POST/literal": {
+					"error": ": behavior: Value is required",
+					"types": {
+						"behavior": "string",
+						"isPublic": "bool"
+					}
+				},
+				"POST/prefilled": {
+					"error": ": behavior: Value is required",
+					"types": {
+						"behavior": "string",
+						"isPublic": "bool"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"behavior": "string POSTS",
+						"isPublic": "bool true"
+					},
+					"types": {
+						"behavior": "string",
+						"isPublic": "bool"
+					}
+				}
+			}
+		},
+		"template:user-inbox/actor-button-follow/0:with-following.SubSteps@with-following/0:set-data": {
+			"fields": [
+				"behavior (values, schema.String)",
+				"folderId (from-url, schema.String)",
+				"url (from-url, schema.String)"
+			],
+			"values": {
+				"behavior": "POSTS+REPLIES (literal)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": ": behavior: Value is required",
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				},
+				"GET/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.ObjectID: Value is not a valid ObjectID",
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				},
+				"GET/literal": {
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"behavior": "string POSTS+REPLIES"
+					},
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"behavior": "string POSTS",
+						"folderId": "objectId 0123456789abcdef01234567",
+						"url": "string https://example.com/url"
+					},
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				},
+				"POST/empty": {
+					"error": ": behavior: Value is required",
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				},
+				"POST/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.ObjectID: Value is not a valid ObjectID",
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"behavior": "string POSTS+REPLIES"
+					},
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"behavior": "string POSTS",
+						"folderId": "objectId 0123456789abcdef01234567",
+						"url": "string https://example.com/url"
+					},
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				}
+			}
+		},
+		"template:user-inbox/actor-button-mute/0:with-rule.SubSteps@with-rule/0:set-data": {
+			"fields": [
+				"action (values, schema.String)",
+				"trigger (values, schema.String)",
+				"type (values, schema.String)"
+			],
+			"values": {
+				"action": "MUTE (literal)",
+				"trigger": "{{.QueryParam `url`}} (renders against the builder; mocked)",
+				"type": "ACTOR (literal)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"GET/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"GET/literal": {
+					"error": ": trigger: Value is required"
+				},
+				"GET/prefilled": {
+					"error": ": trigger: Value is required",
+					"orderDependent": true
+				},
+				"GET/typical": {
+					"changes": {
+						"action": "string BLOCK",
+						"trigger": "string Sample trigger",
+						"type": "string DOMAIN"
+					}
+				},
+				"POST/empty": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"POST/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"POST/literal": {
+					"error": ": trigger: Value is required"
+				},
+				"POST/prefilled": {
+					"error": ": trigger: Value is required",
+					"orderDependent": true
+				},
+				"POST/typical": {
+					"changes": {
+						"action": "string BLOCK",
+						"trigger": "string Sample trigger",
+						"type": "string DOMAIN"
+					}
+				}
+			}
+		},
+		"template:user-inbox/btn-social-outline/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:user-inbox/like-button/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:user-notifications/btn-social-outline/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:user-notifications/like-button/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:user-outbox/btn-social-outline/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:user-outbox/follower-confirm/0:with-follower.SubSteps@with-follower/0:set-data": {
+			"fields": [
+				"stateId (values, schema.String)"
+			],
+			"values": {
+				"stateId": "ACTIVE (literal)"
+			},
+			"results": {
+				"GET/empty": {
+					"changes": {
+						"stateId": "string "
+					}
+				},
+				"GET/hostile": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"GET/literal": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				},
+				"GET/prefilled": {},
+				"GET/typical": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				},
+				"POST/empty": {
+					"changes": {
+						"stateId": "string "
+					}
+				},
+				"POST/hostile": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"POST/literal": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				},
+				"POST/prefilled": {},
+				"POST/typical": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				}
+			}
+		},
+		"template:user-outbox/like-button/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:user-settings/actor-button-block-update/0:with-rule.SubSteps@with-rule/0:set-data": {
+			"fields": [
+				"comment (from-form, not in schema)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"error": ": Unknown field: comment"
+				},
+				"POST/hostile": {
+					"error": ": Unknown field: comment"
+				},
+				"POST/literal": {
+					"error": ": Unknown field: comment"
+				},
+				"POST/prefilled": {
+					"error": ": Unknown field: comment"
+				},
+				"POST/typical": {
+					"error": ": Unknown field: comment"
+				}
+			}
+		},
+		"template:user-settings/actor-button-block/0:with-rule.SubSteps@with-rule/0:set-data": {
+			"fields": [
+				"action (values, schema.String)",
+				"trigger (values, schema.String)",
+				"type (values, schema.String)"
+			],
+			"values": {
+				"action": "BLOCK (literal)",
+				"trigger": "{{.QueryParam `url`}} (renders against the builder; mocked)",
+				"type": "ACTOR (literal)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"GET/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"GET/literal": {
+					"error": ": trigger: Value is required",
+					"orderDependent": true
+				},
+				"GET/prefilled": {
+					"error": ": trigger: Value is required",
+					"orderDependent": true
+				},
+				"GET/typical": {
+					"changes": {
+						"action": "string BLOCK",
+						"trigger": "string Sample trigger",
+						"type": "string DOMAIN"
+					}
+				},
+				"POST/empty": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"POST/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"POST/literal": {
+					"error": ": trigger: Value is required",
+					"orderDependent": true
+				},
+				"POST/prefilled": {
+					"error": ": trigger: Value is required",
+					"orderDependent": true
+				},
+				"POST/typical": {
+					"changes": {
+						"action": "string BLOCK",
+						"trigger": "string Sample trigger",
+						"type": "string DOMAIN"
+					}
+				}
+			}
+		},
+		"template:user-settings/actor-button-follow-update/0:with-following.SubSteps@with-following/1:set-data": {
+			"fields": [
+				"behavior (from-form, schema.String)",
+				"isPublic (from-form, schema.Boolean)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"error": ": behavior: Value is required",
+					"types": {
+						"behavior": "string",
+						"isPublic": "bool"
+					}
+				},
+				"POST/hostile": {
+					"error": ": behavior: Must be one of the specified values",
+					"types": {
+						"behavior": "string",
+						"isPublic": "bool"
+					}
+				},
+				"POST/literal": {
+					"error": ": behavior: Value is required",
+					"types": {
+						"behavior": "string",
+						"isPublic": "bool"
+					}
+				},
+				"POST/prefilled": {
+					"error": ": behavior: Value is required",
+					"types": {
+						"behavior": "string",
+						"isPublic": "bool"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"behavior": "string POSTS",
+						"isPublic": "bool true"
+					},
+					"types": {
+						"behavior": "string",
+						"isPublic": "bool"
+					}
+				}
+			}
+		},
+		"template:user-settings/actor-button-follow/0:with-following.SubSteps@with-following/1:set-data": {
+			"fields": [
+				"behavior (values, schema.String)",
+				"folderId (from-url, schema.String)",
+				"url (from-url, schema.String)"
+			],
+			"values": {
+				"behavior": "POSTS+REPLIES (literal)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": ": behavior: Value is required",
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				},
+				"GET/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.ObjectID: Value is not a valid ObjectID",
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				},
+				"GET/literal": {
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"behavior": "string POSTS+REPLIES"
+					},
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"behavior": "string POSTS",
+						"folderId": "objectId 0123456789abcdef01234567",
+						"url": "string https://example.com/url"
+					},
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				},
+				"POST/empty": {
+					"error": ": behavior: Value is required",
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				},
+				"POST/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.ObjectID: Value is not a valid ObjectID",
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"behavior": "string POSTS+REPLIES"
+					},
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"behavior": "string POSTS",
+						"folderId": "objectId 0123456789abcdef01234567",
+						"url": "string https://example.com/url"
+					},
+					"types": {
+						"folderId": "string",
+						"url": "string"
+					}
+				}
+			}
+		},
+		"template:user-settings/actor-button-mute/0:with-rule.SubSteps@with-rule/0:set-data": {
+			"fields": [
+				"action (values, schema.String)",
+				"trigger (values, schema.String)",
+				"type (values, schema.String)"
+			],
+			"values": {
+				"action": "MUTE (literal)",
+				"trigger": "{{.QueryParam `url`}} (renders against the builder; mocked)",
+				"type": "ACTOR (literal)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"GET/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"GET/literal": {
+					"error": ": trigger: Value is required"
+				},
+				"GET/prefilled": {
+					"error": ": trigger: Value is required",
+					"orderDependent": true
+				},
+				"GET/typical": {
+					"changes": {
+						"action": "string BLOCK",
+						"trigger": "string Sample trigger",
+						"type": "string DOMAIN"
+					}
+				},
+				"POST/empty": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"POST/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"POST/literal": {
+					"error": ": trigger: Value is required"
+				},
+				"POST/prefilled": {
+					"error": ": trigger: Value is required",
+					"orderDependent": true
+				},
+				"POST/typical": {
+					"changes": {
+						"action": "string BLOCK",
+						"trigger": "string Sample trigger",
+						"type": "string DOMAIN"
+					}
+				}
+			}
+		},
+		"template:user-settings/circle-add/0:with-circle.SubSteps@with-circle/0:set-data": {
+			"fields": [
+				"icon (values, schema.String)"
+			],
+			"values": {
+				"icon": "circle (literal)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": ": icon: Value is required"
+				},
+				"GET/hostile": {
+					"error": ": icon: Value must be a valid Token"
+				},
+				"GET/literal": {
+					"changes": {
+						"icon": "string circle"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"icon": "string circle"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"icon": "string sample-token"
+					}
+				},
+				"POST/empty": {
+					"error": ": icon: Value is required"
+				},
+				"POST/hostile": {
+					"error": ": icon: Value must be a valid Token"
+				},
+				"POST/literal": {
+					"changes": {
+						"icon": "string circle"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"icon": "string circle"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"icon": "string sample-token"
+					}
+				}
+			}
+		},
+		"template:user-settings/circle-member-add/0:with-privilege.SubSteps@with-privilege/0:as-modal.SubSteps/1:set-data": {
+			"fields": [
+				"circleId (from-url, schema.String)"
+			],
+			"results": {
+				"GET/empty": {
+					"types": {
+						"circleId": "string"
+					}
+				},
+				"GET/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.ObjectID: Value is not a valid ObjectID",
+					"types": {
+						"circleId": "string"
+					}
+				},
+				"GET/literal": {
+					"types": {
+						"circleId": "string"
+					}
+				},
+				"GET/prefilled": {
+					"types": {
+						"circleId": "string"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"circleId": "objectId 0123456789abcdef01234567"
+					},
+					"types": {
+						"circleId": "string"
+					}
+				},
+				"POST/empty": {
+					"types": {
+						"circleId": "string"
+					}
+				},
+				"POST/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.ObjectID: Value is not a valid ObjectID",
+					"types": {
+						"circleId": "string"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"circleId": "string"
+					}
+				},
+				"POST/prefilled": {
+					"types": {
+						"circleId": "string"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"circleId": "objectId 0123456789abcdef01234567"
+					},
+					"types": {
+						"circleId": "string"
+					}
+				}
+			}
+		},
+		"template:user-settings/following-edit/0:as-modal.SubSteps/0:with-following.SubSteps@with-following/1:if.Then/0:set-data": {
+			"fields": [
+				"folderId (from-url, schema.String)"
+			],
+			"results": {
+				"GET/empty": {
+					"types": {
+						"folderId": "string"
+					}
+				},
+				"GET/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.ObjectID: Value is not a valid ObjectID",
+					"types": {
+						"folderId": "string"
+					}
+				},
+				"GET/literal": {
+					"types": {
+						"folderId": "string"
+					}
+				},
+				"GET/prefilled": {
+					"types": {
+						"folderId": "string"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"folderId": "objectId 0123456789abcdef01234567"
+					},
+					"types": {
+						"folderId": "string"
+					}
+				},
+				"POST/empty": {
+					"types": {
+						"folderId": "string"
+					}
+				},
+				"POST/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.ObjectID: Value is not a valid ObjectID",
+					"types": {
+						"folderId": "string"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"folderId": "string"
+					}
+				},
+				"POST/prefilled": {
+					"types": {
+						"folderId": "string"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"folderId": "objectId 0123456789abcdef01234567"
+					},
+					"types": {
+						"folderId": "string"
+					}
+				}
+			}
+		},
+		"template:user-settings/import-start/0:with-import.SubSteps@with-import/0:set-data": {
+			"fields": [
+				"stateId (values, schema.String)"
+			],
+			"values": {
+				"stateId": "DO-IMPORT (literal)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": ": stateId: Value is required"
+				},
+				"GET/hostile": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"GET/literal": {
+					"changes": {
+						"stateId": "string DO-IMPORT"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"stateId": "string DO-IMPORT"
+					}
+				},
+				"GET/typical": {},
+				"POST/empty": {
+					"error": ": stateId: Value is required"
+				},
+				"POST/hostile": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"POST/literal": {
+					"changes": {
+						"stateId": "string DO-IMPORT"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"stateId": "string DO-IMPORT"
+					}
+				},
+				"POST/typical": {}
+			}
+		},
+		"template:user-settings/import-undo/0:with-import.SubSteps@with-import/0:set-data": {
+			"fields": [
+				"stateId (values, schema.String)"
+			],
+			"values": {
+				"stateId": "DO-UNDO (literal)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": ": stateId: Value is required"
+				},
+				"GET/hostile": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"GET/literal": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"GET/prefilled": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"GET/typical": {},
+				"POST/empty": {
+					"error": ": stateId: Value is required"
+				},
+				"POST/hostile": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"POST/literal": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"POST/prefilled": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"POST/typical": {}
+			}
+		},
+		"widget:markdown/saveSteps/0:set-data": {
+			"fields": [
+				"data.html (values, schema.String)"
+			],
+			"values": {
+				"data.html": "{{.Data.markdown | markdown}} (renders against the builder; mocked)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"changes": {
+						"data": "removed",
+						"data.html": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (200002 bytes, sha256 4b4ce57d73c8)"
+					}
+				},
+				"GET/literal": {},
+				"GET/prefilled": {
+					"changes": {
+						"data": "document {}",
+						"data.html": "removed"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"data": "removed",
+						"data.html": "string Sample data.html"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"changes": {
+						"data": "removed",
+						"data.html": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (200002 bytes, sha256 4b4ce57d73c8)"
+					}
+				},
+				"POST/literal": {},
+				"POST/prefilled": {
+					"changes": {
+						"data": "document {}",
+						"data.html": "removed"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data": "removed",
+						"data.html": "string Sample data.html"
+					}
+				}
+			}
+		}
+	}
+}

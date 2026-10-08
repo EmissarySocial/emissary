@@ -40,6 +40,7 @@ type Template struct {
 	templateLock        sync.RWMutex                 // Guards the live "templates" map: readers take RLock, a finished load takes Lock to publish
 	reloadLock          sync.Mutex                   // Lets one whole load run at a time, since a file change and a config reload can both start one
 	refresh             chan channel.Done            // Closed to stop the current filesystem watcher
+	hotReload           bool                         // When TRUE, watch the template locations and reload on every change
 }
 
 // NewTemplate returns a fully initialized Template service.
@@ -58,7 +59,8 @@ func NewTemplate(filesystemService Filesystem, registrationService *Registration
 		refresh:             make(chan channel.Done),
 	}
 
-	service.Refresh(locations)
+	// Hot reload stays off until the factory refreshes with the server configuration
+	service.Refresh(locations, false)
 
 	return service
 }
@@ -67,8 +69,9 @@ func NewTemplate(filesystemService Filesystem, registrationService *Registration
  * Lifecycle Methods
  ******************************************/
 
-// Refresh updates this service with the latest configuration values
-func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
+// Refresh updates this service with the latest configuration values.  When hotReload is
+// TRUE, it also watches the template locations and reloads on every change.
+func (service *Template) Refresh(locations sliceof.Object[mapof.String], hotReload bool) {
 
 	// RULE: If no locations are configured, then don't try to load
 	if len(locations) == 0 {
@@ -76,11 +79,14 @@ func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
 	}
 
 	// RULE: If nothing has changed since the last time we refreshed, then we're done.
-	if slicesAreEqual(locations, service.locations) {
+	// The flag counts as a change, or toggling it would wait for a new location.
+	locationsChanged := !slicesAreEqual(locations, service.locations)
+
+	if !locationsChanged && (hotReload == service.hotReload) {
 		return
 	}
 
-	// RULE: Stop the old watcher only now that the locations have really changed.  Stopping it
+	// RULE: Stop the old watcher only now that something has really changed.  Stopping it
 	// before the checks above let every no-op reload kill it, with nothing to restart it (BUG-180)
 	close(service.refresh)
 	done := make(chan channel.Done)
@@ -93,16 +99,20 @@ func (service *Template) Refresh(locations sliceof.Object[mapof.String]) {
 
 	// Add configuration to the service
 	service.locations = locations
+	service.hotReload = hotReload
 
 	// Load all templates from the filesystem.  While no Templates are live, any load error
 	// exits the process, because there is nothing to serve.  Once they are live, errors are
-	// reported and the live Templates keep serving.
-	haltOnError := len(service.templates) == 0
+	// reported and the live Templates keep serving.  Toggling hotReload alone needs no load.
+	if locationsChanged {
+		haltOnError := len(service.templates) == 0
+		service.loadTemplates(haltOnError)
+	}
 
-	service.loadTemplates(haltOnError)
-
-	// Try to watch the template directory for changes
-	go service.watch(locations, done)
+	// RULE: Watch the template locations only when hot reload is on (development machines)
+	if hotReload {
+		go service.watch(locations, done)
+	}
 }
 
 /******************************************
@@ -285,6 +295,11 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 	// Unmarshal the file into the schema.
 	if err := hjson.Unmarshal(definition, &result); err != nil {
 		return derp.Wrap(err, location, "Loading Schema", templateID)
+	}
+
+	// RULE: A socialSchema describes a whole document, so it must be an object
+	if !result.SocialSchemaIsValid() {
+		return derp.Validation("socialSchema must be an object", location, templateID)
 	}
 
 	// All template schemas (except kludged registrations) also inherit the base schema of the model object they build

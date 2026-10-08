@@ -45,3 +45,7 @@ There is no global time-based purge. The daily tasks are PurgeActivityStreamCach
 An update pipeline whose new value references the field it is replacing (`{$set: {loc: {type: "Point", coordinates: "$loc"}}}`) does **not** replace an array-valued field. It produces an array of N identical documents, one per original element. Only a real MongoDB shows this — reasoning about it does not. Use a plain, non-pipeline `$set` with a literal document computed in Go.
 
 Related and still open: `idx_SearchResult_Notified` indexes `notifiedDate`, which nothing writes, so the compound index is unusable for the lock query (its leading field is always missing). It looks copied from the SearchQuery index set where the field is real. By contrast `lockId` and `timeoutDate` ARE real despite being absent from `model.SearchResult` — `queries.LockSearchResults` writes them, bypassing the model on purpose. All three are recorded in the allow-list in `sync/searchResult_test.go`.
+
+## A Stream's rank starts at 1, and 0 means "not set"
+
+`build.StepSort` numbers children from 1, and `Stream.Save` gives any Stream ranked 0 the rank `MaxRank` returns, which is one after its highest-ranked sibling. `MaxRank` returns 1 for a parent with no children; it used to return 0, so the first song of every album was ranked "not set", federated as track 0, and moved after its siblings the next time it was saved. Bandwagon publishes `rank` as a song's `position` and ID3 track number, so keep ranks counting from 1 (`TestMaxRank`).
