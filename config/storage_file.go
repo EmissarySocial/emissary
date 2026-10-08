@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -115,10 +116,9 @@ func (storage FileStorage) Close() {
 func (storage FileStorage) watch() {
 
 	// RULE: This loop MUST NOT be able to end except by Close().  A single-shot watcher has several
-	// quiet deaths -- fsnotify construction can fail, Add can fail, and an atomic-rename save (vim
-	// and many other editors write a temp file and rename it over the original) detaches the watch
-	// from the file's new inode, after which no event ever arrives again.  Any of those used to
-	// leave the process running on a frozen configuration, with nothing in the log, until reboot.
+	// quiet deaths -- fsnotify construction can fail, Add can fail, and the watched directory can be
+	// removed or renamed, after which no event ever arrives again.  Any of those used to leave the
+	// process running on a frozen configuration, with nothing in the log, until reboot.
 
 	const location = "config.FileStorage.watch"
 
@@ -148,7 +148,7 @@ func (storage FileStorage) watch() {
 		case err != nil:
 			derp.Report(derp.Wrap(err, location, "Configuration file watcher failed. Reopening."))
 
-		// The quiet case: the watch detached (rename save) or its channel closed, with no error.
+		// The quiet case: the directory went away or the channel closed, with no error.
 		default:
 			log.Debug().Str("loc", location).Msg("Configuration file watcher ended. Reopening.")
 		}
@@ -178,8 +178,13 @@ func (storage FileStorage) watchOnce(resynchronize bool) (bool, error) {
 
 	defer derp.ReportFunc(watcher.Close)
 
-	if err := watcher.Add(storage.location); err != nil {
-		return false, derp.Wrap(err, location, "Watching for changes to configuration", storage.location)
+	// RULE: Watch the DIRECTORY, never the file.  A file watch is attached to one inode, and a
+	// rename-save that lands while it is being attached (kqueue opens, then registers) leaves it
+	// on a deleted inode that never fires.  The directory outlives every save.
+	directory := filepath.Dir(storage.location)
+
+	if err := watcher.Add(directory); err != nil {
+		return false, derp.Wrap(err, location, "Watching for changes to configuration", directory)
 	}
 
 	// A reopened watcher may have missed changes while it was down, so re-read the file now.
@@ -202,13 +207,16 @@ func (storage FileStorage) watchOnce(resynchronize bool) (bool, error) {
 			}
 
 			progressed = true
-			storage.reload()
 
-			// RULE: A Remove or Rename means the path we are watching no longer names the file
-			// -- the classic atomic-rename save.  The watch is now attached to a dead inode, so
-			// return and let the supervisor re-Add the path, or no later save is ever seen.
-			if event.Op&(fsnotify.Remove|fsnotify.Rename) != 0 {
+			// RULE: A removed or renamed directory takes the watch with it, so reopen
+			if isSamePath(event.Name, directory) && event.Has(fsnotify.Remove|fsnotify.Rename) {
 				return progressed, nil
+			}
+
+			// RULE: Only the configuration file reloads.  Every publish rebuilds the server
+			// factory, so a sibling file's churn must not reach the update channel.
+			if isSamePath(event.Name, storage.location) {
+				storage.reload()
 			}
 
 		case err, ok := <-watcher.Errors:
@@ -241,6 +249,12 @@ func (storage FileStorage) reload() {
 	}
 
 	storage.updateChannel.notify(config)
+}
+
+// isSamePath reports whether two filesystem paths name the same location, ignoring
+// differences in how they are written (such as "./config.json" and "config.json")
+func isSamePath(first string, second string) bool {
+	return filepath.Clean(first) == filepath.Clean(second)
 }
 
 // isClosed reports whether Close has been called on this storage

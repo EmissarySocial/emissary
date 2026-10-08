@@ -98,7 +98,7 @@ func loadGroup(t testing.TB, group templateGroup) *loadedGroup {
 		locations = append(locations, mapof.String{"adapter": config.FolderAdapterFile, "location": absolute})
 	}
 
-	result.Templates.Refresh(locations)
+	result.Templates.Refresh(locations, false)
 
 	// A silent zero would let every test below pass without pinning anything
 	require.NotEmpty(t, result.Templates.Names(), "no templates loaded for %s", group.Name)
