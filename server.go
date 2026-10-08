@@ -355,6 +355,7 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.HEAD("/.intents/:intent", handler.WithFactory(factory, handler.GetOutboundIntent))
 	e.POST("/.masquerade", handler.WithOwner(factory, handler.PostMasquerade))
 	e.GET("/.mailchimp/webhook/:userConnectionId", handler.WithFactory(factory, handler.GetMailchimpWebhook))
+	e.HEAD("/.mailchimp/webhook/:userConnectionId", handler.WithFactory(factory, handler.GetMailchimpWebhook))
 	e.POST("/.mailchimp/webhook/:userConnectionId", handler.WithFactory(factory, handler.PostMailchimpWebhook))
 	e.GET("/.oembed", handler.WithFactory(factory, handler.GetOEmbed))
 	e.HEAD("/.oembed", handler.WithFactory(factory, handler.GetOEmbed))
