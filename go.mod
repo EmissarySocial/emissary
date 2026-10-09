@@ -1,6 +1,6 @@
 module github.com/EmissarySocial/emissary
 
-go 1.27.1
+go 1.27.2
 
 require (
 	github.com/SherClockHolmes/webpush-go v1.4.0
@@ -74,7 +74,7 @@ require (
 	go.mongodb.org/mongo-driver v1.17.10
 	go.yaml.in/yaml/v3 v3.0.5
 	golang.org/x/crypto v0.57.0
-	golang.org/x/net v0.59.0
+	golang.org/x/net v0.60.0
 	golang.org/x/oauth2 v0.37.0
 	willnorris.com/go/microformats v1.2.0
 )
