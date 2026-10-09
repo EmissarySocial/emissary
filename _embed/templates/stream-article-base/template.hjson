@@ -225,7 +225,7 @@
 									{type:"text", path:"name", label:"Name"}
 									{type:"textarea", path:"summary", label:"Description"}
 									{type:"textarea", path:"data.tags", label:"Hashtags", description:"List hashtags here to categorize this article."}
-									{type:"select-icons", path:"icon", label:"Icon", options:{provider:"folder-icons"}}
+									{type:"select-icons", path:"icon", label:"Icon", options:{provider:"navigation-icons"}}
 									{type:"text", path:"token", label:"Token", options:{autocomplete:"off", validator:"/.validate/stream/token?streamId={{.ID}}"}}
 								]
 							}
