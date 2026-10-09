@@ -49,7 +49,7 @@ func (step StepWithChildren) Post(builder Builder, buffer io.Writer) PipelineBeh
 		}
 
 		// Execute the POST build pipeline on the child
-		childResult := Pipeline(step.SubSteps).Post(factory, &childStream, buffer)
+		childResult := Pipeline(step.SubSteps).Post(factory, childStream, buffer)
 		childResult.Error = derp.WrapIF(childResult.Error, location, "Executing steps for child")
 
 		// Collect this child's results (including its Error and Halt) into the accumulator
