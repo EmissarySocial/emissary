@@ -44,7 +44,7 @@ Two further notes on the write paths. `Save` is reached *only* from the settings
 
 ## `User.GetJSONLD()` output is fingerprinted — keep it deterministic
 
-Every `User.Save` hashes `GetJSONLD()` into `ProfileFingerprint`; a changed hash federates an ActivityPub `Update` to all followers ([user.go](user.go) Save, [user_activitypub.go](user_activitypub.go) `sendProfileUpdate`, spec PROFILE-UPDATE-FEDERATION.md). Adding anything volatile or per-save (timestamps, counters, random values) to `User.GetJSONLD()` makes every save — including signin bookkeeping — spam followers with Updates. `TestUser_CalcProfileFingerprint` pins which fields participate; update it when the actor document gains a field.
+Every `User.Save` hashes `GetJSONLD()` into `ProfileFingerprint`; a changed hash federates an ActivityPub `Update` to all followers ([user.go](user.go) Save, [user_activitypub.go](user_activitypub.go) `sendProfileUpdate`, spec PROFILE-UPDATE-FEDERATION.md). Adding anything volatile or per-save (timestamps, counters, random values) to `User.GetJSONLD()` makes every save — including signin bookkeeping — spam followers with Updates. `TestUser_CalcProfileFingerprint` pins which fields participate; update it when the actor document gains a field. The outbox Template's social rules are applied in `ActivityPubProfile`, after `GetJSONLD()` and before `publicKey`, and are deliberately left out of the fingerprint: including them would send an Update to every follower of every user whenever a template changes (FUNKWHALE D12). A template edit therefore reaches a follower only when it next fetches the actor.
 
 ## TAG rules only exist in the full-document key set
 

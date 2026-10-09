@@ -165,8 +165,6 @@ func (filesystem *Filesystem) GetAferos(folders ...mapof.String) []afero.Fs {
  * Real-Time Filesystem Watcher
  ******************************************/
 
-// TODO: There should be an option to disable this feature on production systems.
-
 // Watch sends on "changes" whenever this folder changes, until "done" is closed.
 // Only the file adapter can be watched; every other adapter returns nil.
 func (filesystem *Filesystem) Watch(folder mapof.String, changes chan<- bool, done <-chan channel.Done) error {

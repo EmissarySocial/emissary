@@ -14,8 +14,8 @@ import (
 
 // These tests cover the supervised half of FileStorage: the filesystem watcher that tells a
 // running process its configuration file changed.  The behavior that matters is not "does one
-// write land on disk" -- it is "does the process still see changes after the watch dies," which
-// on the file engine happens quietly on every atomic-rename save (vim and most editors).
+// write land on disk" -- it is "does the process still see changes after an atomic-rename save"
+// (vim and most editors), which quietly killed the watch when it was attached to the file.
 
 // newFileTestStorage builds a FileStorage around a real config file in a temp directory, without
 // calling NewFileStorage (which exits the process on failure and is therefore untestable).
@@ -58,8 +58,7 @@ func writeFileConfig(t *testing.T, storage FileStorage, adminEmail string) {
 }
 
 // renameFileConfig writes the configuration the way editors do: a temp file, atomically renamed
-// over the original.  This REPLACES the inode the watcher is attached to, which is the quiet
-// death the supervisor exists to survive.
+// over the original.  This REPLACES the file's inode, which detached the old file watch.
 func renameFileConfig(t *testing.T, storage FileStorage, adminEmail string) {
 
 	t.Helper()
@@ -163,10 +162,8 @@ func TestFileStorage_WatchDeliversChanges(t *testing.T) {
 }
 
 // TestFileStorage_WatchSurvivesAtomicRenameSave is the regression test this file exists for.
-// Editors (vim, VS Code, sed -i) save by writing a temp file and renaming it over the original,
-// which detaches an fsnotify watch from the file: the OLD single-shot watcher received the
-// Rename event, kept watching a dead inode, and never saw another change for the life of the
-// process.  The supervised loop must reopen the watch on the new inode and keep delivering.
+// Editors (vim, VS Code, sed -i) save by writing a temp file and renaming it over the original.
+// A watch on the FILE detaches on every such save, so the watcher must keep delivering after one.
 func TestFileStorage_WatchSurvivesAtomicRenameSave(t *testing.T) {
 
 	storage := newFileTestStorage(t)
@@ -176,10 +173,125 @@ func TestFileStorage_WatchSurvivesAtomicRenameSave(t *testing.T) {
 	// First rename-save: proves the watch is live, and detaches it
 	awaitRenamedFileConfig(t, storage, "first-rename@example.com", 15*time.Second)
 
-	// Second rename-save: everything after this point was lost under the old implementation,
-	// because the reopen races this save and a rename that lands with no watch attached is
-	// invisible.  Delivery here is the whole regression.
+	// Second rename-save: everything after this point was lost under the single-shot watcher.
+	// Delivery here is the whole regression.
 	awaitRenamedFileConfig(t, storage, "second-rename@example.com", 15*time.Second)
+}
+
+// TestFileStorage_WatchOnceStaysAttachedAcrossRenames pins the directory watch: one watchOnce
+// delivers rename-save after rename-save without returning.  A file watch had to return and
+// reopen after each one, and a save racing that reopen froze the watcher for good.
+func TestFileStorage_WatchOnceStaysAttachedAcrossRenames(t *testing.T) {
+
+	storage := newFileTestStorage(t)
+	finished := startWatchOnce(storage)
+
+	for _, adminEmail := range []string{"first@example.com", "second@example.com", "third@example.com"} {
+		awaitRenamedFileConfig(t, storage, adminEmail, 10*time.Second)
+	}
+
+	select {
+	case <-finished:
+		t.Fatal("watchOnce returned after a rename-save; the watch must stay on the directory")
+	default:
+	}
+}
+
+// TestFileStorage_WatchIgnoresSiblingFiles pins the filter: every publish rebuilds the server
+// factory, so changes to other files in the configuration's directory must publish nothing.
+func TestFileStorage_WatchIgnoresSiblingFiles(t *testing.T) {
+
+	storage := newFileTestStorage(t)
+	startWatchOnce(storage)
+
+	// Prove the watch is live before testing what it ignores
+	awaitRenamedFileConfig(t, storage, "live@example.com", 10*time.Second)
+
+	sibling := filepath.Join(filepath.Dir(storage.location), "sibling.json")
+
+	for range 5 {
+		require.NoError(t, os.WriteFile(sibling, []byte(`{}`), 0600))
+		require.NoError(t, os.Rename(sibling, sibling+".moved"))
+	}
+
+	// Anything published now came from a sibling event; a late duplicate of "live" is allowed
+	for deadline := time.Now().Add(500 * time.Millisecond); time.Now().Before(deadline); {
+		select {
+		case result := <-storage.Subscribe():
+			require.Equal(t, "live@example.com", result.AdminEmail)
+		case <-time.After(50 * time.Millisecond):
+		}
+	}
+}
+
+// TestFileStorage_WatchOnceReturnsWhenDirectoryRemoved pins the one quiet death a directory watch
+// still has: the directory itself going away.  watchOnce must hand control back for a reopen.
+func TestFileStorage_WatchOnceReturnsWhenDirectoryRemoved(t *testing.T) {
+
+	// A directory of its own, so removing it leaves t.TempDir's cleanup intact
+	directory := filepath.Join(t.TempDir(), "config")
+	require.NoError(t, os.Mkdir(directory, 0700))
+
+	storage := FileStorage{
+		source:        ConfigSourceCommandLine,
+		location:      filepath.Join(directory, "config.json"),
+		updateChannel: newUpdateChannel(),
+		closeChannel:  make(chan struct{}),
+		closeOnce:     &sync.Once{},
+	}
+
+	t.Cleanup(storage.Close)
+	writeFileConfig(t, storage, "initial@example.com")
+
+	finished := startWatchOnce(storage)
+
+	// Prove the watch is live before removing its directory
+	awaitRenamedFileConfig(t, storage, "live@example.com", 10*time.Second)
+
+	require.NoError(t, os.RemoveAll(directory))
+
+	select {
+	case <-finished:
+	case <-time.After(10 * time.Second):
+		t.Fatal("watchOnce did not return after its directory was removed")
+	}
+}
+
+// startWatchOnce runs watchOnce in the background, and returns a channel that closes when a
+// watch that has attached returns
+func startWatchOnce(storage FileStorage) <-chan struct{} {
+
+	finished := make(chan struct{})
+
+	go func() {
+		defer close(finished)
+
+		// RULE: Retry an Add that fails before attaching, as watch() does.  kqueue's directory
+		// Add stats every entry it lists, so an entry renamed away mid-Add fails the whole Add.
+		for !storage.isClosed() {
+
+			if progressed, err := storage.watchOnce(false); progressed || (err == nil) {
+				return
+			}
+
+			time.Sleep(10 * time.Millisecond)
+		}
+	}()
+
+	return finished
+}
+
+// TestIsSamePath pins the comparison that filters directory events down to the configuration file
+func TestIsSamePath(t *testing.T) {
+
+	require.True(t, isSamePath("/etc/emissary/config.json", "/etc/emissary/config.json"))
+	require.True(t, isSamePath("./config.json", "config.json"))
+	require.True(t, isSamePath("/etc/emissary/../emissary/config.json", "/etc/emissary/config.json"))
+	require.True(t, isSamePath("/etc/emissary/", "/etc/emissary"))
+
+	require.False(t, isSamePath("/etc/emissary/config.json", "/etc/emissary/config.json.tmp"))
+	require.False(t, isSamePath("/etc/emissary/config.json", "/etc/emissary"))
+	require.False(t, isSamePath("", "config.json"))
 }
 
 // TestFileStorage_WatchOnceErrsOnMissingPath pins the failure mode that used to end watching
@@ -187,9 +299,10 @@ func TestFileStorage_WatchSurvivesAtomicRenameSave(t *testing.T) {
 // supervisor can back off and retry), never swallow it.
 func TestFileStorage_WatchOnceErrsOnMissingPath(t *testing.T) {
 
+	// The watch is on the directory, so only a missing DIRECTORY makes Add fail
 	storage := FileStorage{
 		source:        ConfigSourceCommandLine,
-		location:      filepath.Join(t.TempDir(), "does-not-exist.json"),
+		location:      filepath.Join(t.TempDir(), "does-not-exist", "config.json"),
 		updateChannel: newUpdateChannel(),
 		closeChannel:  make(chan struct{}),
 		closeOnce:     &sync.Once{},

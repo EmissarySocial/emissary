@@ -25,6 +25,7 @@ type Template struct {
 	TemplateRole       string               `json:"templateRole"       bson:"templateRole"`       // Role that this Template performs in the system.  Used to match which streams can be contained by which other streams.
 	SocialRole         string               `json:"socialRole"         bson:"socialRole"`         // Role to use for this Template in social integrations (Article, Note, etc)
 	SocialRules        translate.Pipeline   `json:"socialRules"        bson:"socialRules"`        // List of rules to convert this Template into a social object
+	SocialSchema       schema.Schema        `json:"socialSchema"       bson:"socialSchema"`       // JSON Schema of the properties that SocialRules write, on top of ActivityStreamSchema
 	Model              string               `json:"model"              bson:"model"`              // Type of model object that this template works with. (Stream, User, Group, Domain, etc.)
 	Extends            sliceof.String       `json:"extends"            bson:"extends"`            // List of templates that this template extends.  The first template in the list is the most important, and the last template in the list is the least important.
 	ContainedBy        sliceof.String       `json:"containedBy"        bson:"containedBy"`        // Slice of Templates that can contain Streams that use this Template.
@@ -217,6 +218,7 @@ func (template *Template) Inherit(parent *Template) {
 
 	// Inherit schema items from the parent.
 	template.Schema.Inherit(parent.Schema)
+	template.SocialSchema.Inherit(parent.SocialSchema)
 
 	// Inherit WidgetLocations.
 	if len(template.WidgetLocations) == 0 {
@@ -441,6 +443,59 @@ func TemplateModelNames() []string {
 // as identified by this Template's "Model" property.
 func (template Template) BaseSchema() schema.Element {
 	return templateModelForName(template.Model).schema()
+}
+
+// SocialTargetSchema returns the schema of the document that this Template's SocialRules write:
+// ActivityStreamSchema, with this Template's SocialSchema properties in place of its own
+func (template Template) SocialTargetSchema() schema.Schema {
+
+	base := ActivityStreamSchema()
+
+	// A Template with no socialSchema writes into the base schema alone
+	social, isObject := template.SocialSchema.Element.(schema.Object)
+
+	if !isObject {
+		return schema.New(base)
+	}
+
+	// The Template's own properties win, and any other property stays allowed
+	for name, element := range social.Properties {
+		base.Properties[name] = element
+	}
+
+	if social.Wildcard != nil {
+		base.Wildcard = social.Wildcard
+	}
+
+	return schema.New(base)
+}
+
+// SocialSchemaIsValid returns TRUE if this Template has no socialSchema, or one that is an object
+func (template Template) SocialSchemaIsValid() bool {
+
+	if template.SocialSchema.Element == nil {
+		return true
+	}
+
+	_, isObject := template.SocialSchema.Element.(schema.Object)
+	return isObject
+}
+
+// ActivityStreamSchema returns the base schema of every social document: the common
+// ActivityStreams terms, with any other property allowed
+func ActivityStreamSchema() schema.Object {
+
+	// RULE: Every Array has a MaxLength, because rosetta bounds lists only through the schema
+	return schema.Object{
+		Properties: schema.ElementMap{
+			"@context":   schema.Array{Items: schema.Any{}, MaxLength: 16},
+			"to":         schema.Array{Items: schema.Any{}, MaxLength: 256},
+			"cc":         schema.Array{Items: schema.Any{}, MaxLength: 256},
+			"tag":        schema.Array{Items: schema.Any{}, MaxLength: 256},
+			"attachment": schema.Array{Items: schema.Any{}, MaxLength: 64},
+		},
+		Wildcard: schema.Any{},
+	}
 }
 
 // NewObject returns a fresh, zero-value instance of the model object that this
