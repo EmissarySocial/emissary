@@ -3,38 +3,13 @@ package secretcheck
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"strings"
 	"testing"
 
+	derpmongo "github.com/EmissarySocial/emissary/tools/derp-mongo"
 	"github.com/benpate/derp"
 	"go.mongodb.org/mongo-driver/bson"
 )
-
-// RequireAbsentFromEachLayer is RequireAbsent for an error chain that cannot be encoded whole.
-// It checks every derp layer in every form, and every other layer by its message.
-func RequireAbsentFromEachLayer(t testing.TB, err error, secret string) {
-
-	t.Helper()
-
-	// A mongo driver error anywhere in a chain is the usual reason it cannot be encoded
-
-	for ; err != nil; err = errors.Unwrap(err) {
-
-		// A derp layer is encoded on its own, so an unencodable layer beneath it cannot hide it
-		if layer, isDerp := err.(derp.Error); isDerp {
-			layer.WrappedValue = nil
-			RequireAbsent(t, layer, secret)
-			continue
-		}
-
-		// Any other layer is reported by its message, so that is all it can carry
-		if strings.Contains(err.Error(), secret) {
-			t.Fatalf("secretcheck: a %T in the chain carries a secret in its message", err)
-			return
-		}
-	}
-}
 
 // RequireAbsent fails the test immediately if `secret` appears in any form of `err` that an
 // error reporter would print or store.
@@ -96,9 +71,9 @@ func Find(err error, secret string) ([]string, error) {
 		result = append(result, "json")
 	}
 
-	// RULE: This MUST mirror derp-mongo, which stores the error in a field of a document.
-	// BSON follows bson tags, so this is the form that catches a `json:"-"` field.
-	stored, bsonErr := bson.Marshal(bson.M{"error": err})
+	// RULE: Encode exactly what derp-mongo stores.  BSON follows bson tags, so this is the
+	// form that catches a `json:"-"` field.
+	stored, bsonErr := bson.Marshal(bson.M{"error": derpmongo.StoredError(err)})
 
 	if bsonErr != nil {
 		return nil, derp.Wrap(bsonErr, location, "Encoding error as BSON")

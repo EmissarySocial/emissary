@@ -113,15 +113,7 @@ func serverSentEvent(ctx *steranko.Context, factory *service.Factory, objectID p
 
 	const location = "handler.serverSentEvent"
 
-	// Cap the lifetime of an SSE connection at 30 days.  This is effectively "never time
-	// out" for a normal session; it exists only as a backstop so a permanently-abandoned
-	// connection is eventually reclaimed.
-	timeoutContext, cancel := context.WithTimeout(ctx.Request().Context(), 30*24*time.Hour)
-	defer cancel()
-
-	b := factory.RealtimeBroker()
 	w := ctx.Response().Writer
-	done := timeoutContext.Done() // nolint:scopeguard
 
 	// Make sure that the writer supports flushing.
 	f, ok := w.(http.Flusher)
@@ -130,6 +122,27 @@ func serverSentEvent(ctx *steranko.Context, factory *service.Factory, objectID p
 		return derp.Internal(location, "Streaming Not Supported")
 	}
 
+	// Set the headers related to event streaming.
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", model.MimeTypeEventStream)
+	w.Header().Set("Cache-Control", "no-store")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Transfer-Encoding", "chunked")
+
+	// RULE: HEAD gets the stream's headers and no stream. Go discards a HEAD body without
+	// ending the request, so opening the stream would hold the connection for 30 days.
+	if ctx.Request().Method == http.MethodHead {
+		return ctx.NoContent(http.StatusOK)
+	}
+
+	// Cap the lifetime of an SSE connection at 30 days.  This is effectively "never time
+	// out" for a normal session; it exists only as a backstop so a permanently-abandoned
+	// connection is eventually reclaimed.
+	timeoutContext, cancel := context.WithTimeout(ctx.Request().Context(), 30*24*time.Hour)
+	defer cancel()
+
+	b := factory.RealtimeBroker()
+	done := timeoutContext.Done() // nolint:scopeguard
 	client := realtime.NewClient(ctx.Request(), objectID, topic)
 
 	// Add this client to the map of those that should
@@ -141,12 +154,7 @@ func serverSentEvent(ctx *steranko.Context, factory *service.Factory, objectID p
 		b.RemoveClient <- client
 	}()
 
-	// Set the headers related to event streaming.
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Content-Type", model.MimeTypeEventStream)
-	w.Header().Set("Cache-Control", "no-store")
-	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("Transfer-Encoding", "chunked")
+	// Start the stream
 	f.Flush()
 
 	// Don't close the connection, instead loop until the client closes it (via <-done).
