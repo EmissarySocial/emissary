@@ -143,3 +143,7 @@ require (
 	golang.org/x/time v0.16.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
+
+replace github.com/benpate/toot => github.com/Lawhacknifemi/toot v0.5.1-0.20261005130953-16e67ddfae57
+
+replace github.com/benpate/toot-echo => github.com/Lawhacknifemi/toot-echo v0.0.0-20261005141736-b741284f9326

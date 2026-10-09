@@ -74,6 +74,23 @@ func getPageInfo[In rankGetter](slice []In) toot.PageInfo {
 	return result
 }
 
+// datePageInfo builds paging cursors from the create dates of a newest-first page of records. The
+// next page is offered only when the page came back full, since a short page is the end of the list.
+func datePageInfo(dates []int64, limit int64) toot.PageInfo {
+
+	result := toot.PageInfo{}
+
+	if length := len(dates); length > 0 {
+		result.MinID = strconv.FormatInt(dates[0], 10)
+
+		if int64(length) >= limit {
+			result.MaxID = strconv.FormatInt(dates[length-1], 10)
+		}
+	}
+
+	return result
+}
+
 // queryExpression converts data from a txn.QueryPager into an exp.Expression
 // that can be used to filter database queries.
 //
@@ -279,9 +296,17 @@ func tagsForStream(stream *model.Stream) []object.StatusTag {
 func tootStream(factory *service.Factory, session data.Session, stream *model.Stream) object.Status {
 
 	status := stream.Toot()
+	status.InReplyToID, status.InReplyToAccountID = replyIDs(factory, session, stream)
 	status.Tags = tagsForStream(stream)
-	status.Content = markHashtagLinks(status.Content, status.Tags)
+	status.Mentions = mentionsForStream(stream, func(acct string) string {
+		return knownProfileURL(factory, session, stream.ParentID, acct)
+	})
+	status.Content = markMentionLinks(markHashtagLinks(status.Content, status.Tags), status.Mentions)
 	status.MediaAttachments = streamMediaAttachments(factory, session, stream)
+
+	if isArticle(stream) {
+		applyArticle(&status, stream)
+	}
 
 	return status
 }
@@ -328,4 +353,94 @@ func tootUser(factory *service.Factory, session data.Session, auth model.Authori
 	}
 
 	return account
+}
+
+// markReacted sets Favourited and Reblogged on every status (matched by its URI) that the User
+// has liked or boosted, with a single query for the whole list.
+func markReacted(factory *service.Factory, session data.Session, userID primitive.ObjectID, statuses []object.Status) {
+
+	urls := make([]string, 0, len(statuses))
+
+	for _, status := range statuses {
+		if status.URI != "" {
+			urls = append(urls, status.URI)
+		}
+	}
+
+	responses, err := factory.Response().QueryByUserAndObjects(session, userID, urls)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, "handler.mastodon.markReacted", "Looking up reactions"))
+		return
+	}
+
+	liked := make(map[string]bool, len(responses))
+	boosted := make(map[string]bool, len(responses))
+
+	for _, response := range responses {
+		switch response.Type {
+		case vocab.ActivityTypeLike:
+			liked[response.Object] = true
+		case vocab.ActivityTypeAnnounce:
+			boosted[response.Object] = true
+		}
+	}
+
+	for index := range statuses {
+		statuses[index].Favourited = liked[statuses[index].URI]
+		statuses[index].Reblogged = boosted[statuses[index].URI]
+	}
+}
+
+// reactedStatus converts a Stream into a Status carrying the caller's own reaction and bookmark state.
+func reactedStatus(factory *service.Factory, session data.Session, auth model.Authorization, stream *model.Stream) object.Status {
+
+	statuses := []object.Status{tootStream(factory, session, stream)}
+	markReacted(factory, session, auth.UserID, statuses)
+	markBookmarked(factory, session, auth.UserID, statuses)
+
+	return statuses[0]
+}
+
+// tootCredentialUser converts the signed-in User into the account a client edits its profile from,
+// which adds the plain-text source values the app sends back whenever it saves the profile.
+func tootCredentialUser(factory *service.Factory, session data.Session, auth model.Authorization, user *model.User) object.Account {
+
+	account := tootUser(factory, session, auth, user)
+
+	account.Source = &object.AccountSource{
+		Note:    user.StatusMessage,
+		Fields:  []object.AccountField{},
+		Privacy: "public",
+	}
+
+	return account
+}
+
+// replyIDs returns the status ID and author's account ID of the post a Stream replies to,
+// or empty values when the Stream is not a reply.
+func replyIDs(factory *service.Factory, session data.Session, stream *model.Stream) (string, string) {
+
+	if stream.InReplyTo == "" {
+		return "", ""
+	}
+
+	parent := model.NewStream()
+
+	if err := factory.Stream().LoadByURL(session, stream.InReplyTo, &parent); err != nil {
+		return replyIDsFor(stream.InReplyTo, nil)
+	}
+
+	return replyIDsFor(stream.InReplyTo, &parent)
+}
+
+// replyIDsFor builds the reply IDs from a parent post's URL and, when the parent is a Stream on
+// this server, the Stream itself. The author of any other parent is not known without fetching it.
+func replyIDsFor(parentURL string, parent *model.Stream) (string, string) {
+
+	if parent == nil {
+		return model.EncodeRemoteStatusID(parentURL), ""
+	}
+
+	return parent.StreamID.Hex(), parent.AttributedTo.Toot().ID
 }

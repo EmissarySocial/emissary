@@ -99,6 +99,8 @@ func GetTimeline_Hashtag(serverFactory *server.Factory) func(model.Authorization
 
 		// Local posts and the caller's own feed come first, so they win over a remote copy
 		own := localHashtagStatuses(factory, session, auth, hashtag, int64(limit), exp.All())
+		markReacted(factory, session, auth.UserID, own)
+		markBookmarked(factory, session, auth.UserID, own)
 
 		<-feedDone
 		own = append(own, feed...)

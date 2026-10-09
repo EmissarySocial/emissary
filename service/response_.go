@@ -319,6 +319,19 @@ func (service *Response) QueryByUserAndObject(session data.Session, userID primi
 	return service.Query(session, criteria, options...)
 }
 
+// QueryByUserAndObjects returns every Response that a User made to any of the provided objects
+func (service *Response) QueryByUserAndObjects(session data.Session, userID primitive.ObjectID, objects []string) ([]model.Response, error) {
+
+	if len(objects) == 0 {
+		return []model.Response{}, nil
+	}
+
+	criteria := exp.Equal("userId", userID).
+		AndIn("object", objects)
+
+	return service.Query(session, criteria)
+}
+
 // LoadByUserAndObject retrieves the Response of the provided type that a User made to an object
 func (service *Response) LoadByUserAndObject(session data.Session, userID primitive.ObjectID, object string, responseType string, response *model.Response) error {
 

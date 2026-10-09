@@ -586,7 +586,9 @@ func (user User) Toot() object.Account {
 		DisplayName:    user.DisplayName,
 		Note:           user.StatusMessage,
 		Avatar:         user.ActivityPubIconURL(),
+		AvatarStatic:   user.ActivityPubIconURL(),
 		Header:         user.ActivityPubImageURL(),
+		HeaderStatic:   user.ActivityPubImageURL(),
 		Discoverable:   user.IsPublic,
 		CreatedAt:      MastodonDate(time.UnixMilli(user.CreateDate)), // CreateDate is milliseconds (journal UnixMilli)
 		FollowersCount: user.FollowerCount,

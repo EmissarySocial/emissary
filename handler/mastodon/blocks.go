@@ -3,6 +3,7 @@ package mastodon
 import (
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
@@ -13,7 +14,6 @@ import (
 	"github.com/benpate/toot"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
-	"time"
 )
 
 // https://docs.joinmastodon.org/methods/blocks/
@@ -52,19 +52,37 @@ func listActorRuleAccounts(serverFactory *server.Factory, auth model.Authorizati
 	return ruleActorsToAccounts(factory, session, auth, rules), pageInfo, nil
 }
 
-// ruleActorsToAccounts turns each rule's actor address into an account, concurrently: a local
-// User, else the actor as fetched (usually from cache), else a basic account built from the URL
-// alone so an unreachable actor can still be found in the list and un-blocked or un-muted.
+// actorRef names an actor by URL, with the date to show if it can only be listed by that URL.
+type actorRef struct {
+	url   string
+	since time.Time
+}
+
+// ruleActorsToAccounts turns each rule's actor address into an account (see actorsToAccounts), so an
+// unreachable actor can still be found in the list and un-blocked or un-muted.
 func ruleActorsToAccounts(factory *service.Factory, session data.Session, auth model.Authorization, rules []model.Rule) []object.Account {
+
+	actors := make([]actorRef, len(rules))
+
+	for index, rule := range rules {
+		actors[index] = actorRef{url: rule.Trigger, since: time.UnixMilli(rule.CreateDate)}
+	}
+
+	return actorsToAccounts(factory, session, auth, actors)
+}
+
+// actorsToAccounts turns each actor into an account, concurrently: a local User, else the actor
+// as fetched (usually from cache), else a basic account built from the URL alone.
+func actorsToAccounts(factory *service.Factory, session data.Session, auth model.Authorization, actors []actorRef) []object.Account {
 
 	const maxConcurrent = 16
 
-	accounts := make([]object.Account, len(rules))
+	accounts := make([]object.Account, len(actors))
 
 	var waitGroup sync.WaitGroup
 	slots := make(chan struct{}, maxConcurrent)
 
-	for index := range rules {
+	for index := range actors {
 
 		waitGroup.Add(1)
 		slots <- struct{}{}
@@ -72,7 +90,7 @@ func ruleActorsToAccounts(factory *service.Factory, session data.Session, auth m
 		go func(index int) {
 			defer waitGroup.Done()
 			defer func() { <-slots }()
-			accounts[index] = ruleActorToAccount(factory, session, auth, rules[index])
+			accounts[index] = actorToAccount(factory, session, auth, actors[index])
 		}(index)
 	}
 
@@ -80,20 +98,20 @@ func ruleActorsToAccounts(factory *service.Factory, session data.Session, auth m
 	return accounts
 }
 
-// ruleActorToAccount converts one rule's actor address into an account (see ruleActorsToAccounts).
-func ruleActorToAccount(factory *service.Factory, session data.Session, auth model.Authorization, rule model.Rule) object.Account {
+// actorToAccount converts one actor into an account (see actorsToAccounts).
+func actorToAccount(factory *service.Factory, session data.Session, auth model.Authorization, actor actorRef) object.Account {
 
 	user := model.NewUser()
 
-	if err := factory.User().LoadByProfileURL(session, rule.Trigger, &user); err == nil {
+	if err := factory.User().LoadByProfileURL(session, actor.url, &user); err == nil {
 		return tootUser(factory, session, auth, &user)
 	}
 
 	client := factory.ActivityStream().UserClient(auth.UserID)
 
-	if document, err := client.Load(rule.Trigger); err == nil && document.IsActor() {
+	if document, err := client.Load(actor.url); err == nil && document.IsActor() {
 		return mapDocumentToAccount(factory, session, document)
 	}
 
-	return model.RemoteActorAccount(rule.Trigger, "", "", time.UnixMilli(rule.CreateDate))
+	return model.RemoteActorAccount(actor.url, "", "", actor.since)
 }

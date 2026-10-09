@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/asnormalizer"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -31,8 +32,7 @@ func GetTimeline_Public(serverFactory *server.Factory) func(model.Authorization,
 	return func(auth model.Authorization, t txn.GetTimeline_Public) ([]object.Status, toot.PageInfo, error) {
 
 		// Emissary keeps no index of other servers' posts, so a remote-only timeline is empty.
-		// Its own posts carry no media attachments here, so an only-media timeline is too.
-		if t.Remote || t.OnlyMedia {
+		if t.Remote {
 			return []object.Status{}, toot.PageInfo{}, nil
 		}
 
@@ -44,16 +44,28 @@ func GetTimeline_Public(serverFactory *server.Factory) func(model.Authorization,
 
 		defer cancel()
 
-		streams, err := factory.Stream().QueryPublic(session, auth, queryExpression(t), option.MaxRows(pageLimit(t.Limit)))
+		limit := pageLimit(t.Limit)
+		criteria := queryExpression(t)
+
+		streams, statuses, err := collectFiltered(int(limit),
+			func(before int64) ([]model.Stream, error) {
+
+				batch := criteria
+
+				if before > 0 {
+					batch = batch.AndLessThan("createDate", before)
+				}
+
+				return factory.Stream().QueryPublic(session, auth, batch, option.MaxRows(limit))
+			},
+			func(streams []model.Stream) []object.Status {
+				return streamsToStatuses(factory, session, auth, streams)
+			},
+			statusFilter(false, t.OnlyMedia, ""),
+		)
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Querying public posts")
-		}
-
-		statuses := make([]object.Status, len(streams))
-
-		for index := range streams {
-			statuses[index] = tootStream(factory, session, &streams[index])
 		}
 
 		// QueryPublic filters and sorts on createDate, so the paging cursors must be createDate too
@@ -319,6 +331,11 @@ func newsItemToStatus(client streams.Client, factory *service.Factory, session d
 	status.Sensitive = status.SpoilerText != ""
 	status.MediaAttachments = mapDocumentToMediaAttachments(document)
 	status.Tags = apiHashtags(mapDocumentToTags(document))
+	status.Mentions = mentionsForDocument(document)
+	status.Emojis = mapDocumentToEmojis(document)
+	applyDocumentCounts(&status, document)
+	status.Visibility = documentVisibility(document)
+	applyRemoteReply(&status, client, factory, session, document)
 	status.Content = markHashtagLinks(document.Content(), status.Tags)
 
 	if newsItem.Origin.Type != model.OriginTypeAnnounce {
@@ -373,6 +390,94 @@ func mapDocumentToTags(document streams.Document) []object.StatusTag {
 		}
 
 		result = append(result, object.StatusTag{Name: name, URL: href})
+	}
+
+	return result
+}
+
+// applyDocumentCounts copies a post document's like and boost totals, and the time it was last
+// edited, onto a Status. A document that reports none of these leaves the Status unchanged.
+func applyDocumentCounts(status *object.Status, document streams.Document) {
+
+	status.FavouritesCount = document.Get("likes").TotalItems()
+	status.ReblogsCount = document.Shares().TotalItems()
+
+	if updated := document.Updated(); !updated.IsZero() {
+		status.EditedAt = model.MastodonDate(updated)
+	}
+}
+
+// documentVisibility returns who a post is for, as the Mastodon word clients expect. It reads the stored
+// audience, else works it out from the post's own addressing, and treats a post naming nobody as public.
+func documentVisibility(document streams.Document) string {
+
+	visibility := document.Get("visibility").String()
+
+	if visibility == "" {
+		visibility = asnormalizer.Visibility(document, "")
+	}
+
+	switch visibility {
+	case "public", "unlisted", "private", "direct":
+		return visibility
+	}
+
+	return "public"
+}
+
+// propertyValueType is the type of a profile attachment holding one name/value field.
+const propertyValueType = "PropertyValue"
+
+// mapDocumentToFields converts the name/value pairs in an actor's "attachment" property into
+// Mastodon account fields. Attachments of any other type (files, links) are not fields.
+func mapDocumentToFields(document streams.Document) []object.AccountField {
+
+	result := make([]object.AccountField, 0)
+
+	for attachment := range document.Attachment().Range() {
+
+		if attachment.Type() != propertyValueType {
+			continue
+		}
+
+		name := attachment.Name()
+		value := attachment.Get("value").HTMLString()
+
+		if name == "" || value == "" {
+			continue
+		}
+
+		result = append(result, object.AccountField{Name: name, Value: value})
+	}
+
+	return result
+}
+
+// emojiTagType is the ActivityStreams type of a custom emoji tag.
+const emojiTagType = "Emoji"
+
+// mapDocumentToEmojis converts the custom emoji in a document's AS2 "tag" property into
+// Mastodon CustomEmoji, which clients use to draw ":shortcode:" text as an image.
+func mapDocumentToEmojis(document streams.Document) []object.CustomEmoji {
+
+	result := make([]object.CustomEmoji, 0)
+
+	for tag := range document.Tag().Range() {
+
+		if tag.Type() != emojiTagType {
+			continue
+		}
+
+		// AS2 names carry the surrounding colons; Mastodon's shortcodes do not
+		shortcode := strings.Trim(tag.Name(), ":")
+
+		imageURL := tag.Icon().URL()
+
+		if shortcode == "" || imageURL == "" {
+			continue
+		}
+
+		result = append(result, object.CustomEmoji{ShortCode: shortcode, URL: imageURL, StaticURL: imageURL})
 	}
 
 	return result

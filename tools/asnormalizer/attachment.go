@@ -14,6 +14,7 @@ func Attachment(document streams.Document) []map[string]any {
 
 		file := map[string]any{
 			vocab.PropertyType:      attachment.Type(),
+			vocab.PropertyName:      attachment.Name(),
 			vocab.PropertyMediaType: attachment.MediaType(),
 			vocab.PropertyURL:       first(attachment.URL(), attachment.Href()),
 			vocab.PropertyHeight:    attachment.Height(),

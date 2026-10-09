@@ -10,7 +10,6 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/toot"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
 	"github.com/relvacode/iso8601"
@@ -92,8 +91,19 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 			return object.Status{}, derp.Wrap(err, location, "Attaching media")
 		}
 
+		indexStatus(factory, session, &stream)
+
 		status := tootStream(factory, session, &stream)
 		return status, nil
+	}
+}
+
+// indexStatus brings the search index in line with a Stream, as the web pipeline's search-index step does.
+func indexStatus(factory *service.Factory, session data.Session, stream *model.Stream) {
+
+	// Reported, not returned: the post is already saved, and failing here would invite a duplicate retry
+	if err := factory.SearchResult().Sync(session, factory.Stream().SearchResult(stream)); err != nil {
+		derp.Report(derp.Wrap(err, "handler.mastodon.indexStatus", "Syncing search index", stream.URL))
 	}
 }
 
@@ -163,8 +173,7 @@ func getLocalStatus(serverFactory *server.Factory, authorization model.Authoriza
 		return object.Status{}, derp.Wrap(err, location, "Viewing stream")
 	}
 
-	status := tootStream(factory, session, &stream)
-	return status, nil
+	return reactedStatus(factory, session, authorization, &stream), nil
 }
 
 // getStatusByStreamURL resolves a status from its Stream's own canonical URL -- the
@@ -189,8 +198,7 @@ func getStatusByStreamURL(serverFactory *server.Factory, authorization model.Aut
 		return object.Status{}, derp.Wrap(err, location, "Viewing stream")
 	}
 
-	status := tootStream(factory, session, &stream)
-	return status, nil
+	return reactedStatus(factory, session, authorization, &stream), nil
 }
 
 // resolveStatusURL converts a status ID this API handed out -- a NewsItem's hex ID, an
@@ -280,29 +288,17 @@ func DeleteStatus(serverFactory *server.Factory) func(model.Authorization, txn.D
 		// to offer "delete & redraft" -- restoring the text into a new compose box), not an
 		// empty object. Build it before Delete empties the Stream's own fields out from under us.
 		status := tootStream(factory, session, &stream)
+		streamURL := stream.URL
 
 		if err := factory.Stream().Delete(session, &stream, "Deleted via Mastodon API"); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Deleting stream")
 		}
 
+		if err := factory.SearchResult().DeleteByURL(session, streamURL); err != nil {
+			derp.Report(derp.Wrap(err, location, "Removing from search index", streamURL))
+		}
+
 		return status, nil
-	}
-}
-
-// https://docs.joinmastodon.org/methods/statuses/#context
-func GetStatus_Context(serverFactory *server.Factory) func(model.Authorization, txn.GetStatus_Context) (object.Context, error) {
-
-	return func(auth model.Authorization, t txn.GetStatus_Context) (object.Context, error) {
-
-		// TODO: HIGH: Implement status contexts via Hannibal
-
-		// RULE: zero-value nil slices marshal to JSON `null`, but the Mastodon client's
-		// Codable decoder requires a real (even empty) array for both fields -- a `null`
-		// here is a hard decode failure on the client, not a harmless "no thread yet".
-		return object.Context{
-			Ancestors:   []object.Status{},
-			Descendants: []object.Status{},
-		}, nil
 	}
 }
 
@@ -344,22 +340,6 @@ func PostStatus_Translate(serverFactory *server.Factory) func(model.Authorizatio
 	}
 }
 
-// https://docs.joinmastodon.org/methods/statuses/#reblogged_by
-func GetStatus_RebloggedBy(serverFactory *server.Factory) func(model.Authorization, txn.GetStatus_RebloggedBy) ([]object.Account, toot.PageInfo, error) {
-
-	return func(auth model.Authorization, t txn.GetStatus_RebloggedBy) ([]object.Account, toot.PageInfo, error) {
-		return []object.Account{}, toot.PageInfo{}, nil
-	}
-}
-
-// https://docs.joinmastodon.org/methods/statuses/#favourited_by
-func GetStatus_FavouritedBy(serverFactory *server.Factory) func(model.Authorization, txn.GetStatus_FavouritedBy) ([]object.Account, toot.PageInfo, error) {
-
-	return func(auth model.Authorization, t txn.GetStatus_FavouritedBy) ([]object.Account, toot.PageInfo, error) {
-		return []object.Account{}, toot.PageInfo{}, nil
-	}
-}
-
 // https://docs.joinmastodon.org/methods/statuses/#favourite
 func PostStatus_Favourite(serverFactory *server.Factory) func(model.Authorization, txn.PostStatus_Favourite) (object.Status, error) {
 
@@ -394,7 +374,7 @@ func PostStatus_Unreblog(serverFactory *server.Factory) func(model.Authorization
 
 // reactToStatus sets (or, when undo is true, clears) the caller's response of the given
 // type on the post behind a status ID, and returns that post -- a NewsItem in the feed,
-// or else the URL encoded in the ID.
+// an encoded remote URL, or a post made on this server.
 func reactToStatus(serverFactory *server.Factory, host string, auth model.Authorization, statusID string, responseType string, content string, undo bool, location string) (object.Status, error) {
 
 	factory, err := serverFactory.ByHostname(host)
@@ -417,10 +397,11 @@ func reactToStatus(serverFactory *server.Factory, host string, auth model.Author
 		return object.Status{}, derp.Wrap(err, location, "Loading user")
 	}
 
-	// Find the post: a NewsItem in the feed, or else the URL encoded in the ID
+	// Find the post: a NewsItem in the feed, the URL encoded in the ID, or a local Stream
 	message := model.NewNewsItem()
 	postURL := ""
 	inFeed := false
+	localStreamID := primitive.NilObjectID
 
 	switch err := loadNewsItemByStatusID(factory, session, auth.UserID, statusID, &message); {
 
@@ -430,13 +411,24 @@ func reactToStatus(serverFactory *server.Factory, host string, auth model.Author
 
 	case derp.IsNotFound(err):
 
-		encodedURL, ok := model.DecodeRemoteStatusID(statusID)
+		if encodedURL, ok := model.DecodeRemoteStatusID(statusID); ok {
+			postURL = encodedURL
+			break
+		}
 
-		if !ok {
+		// A post made on this server is reached by its own ID
+		stream := model.NewStream()
+
+		if streamErr := loadStreamByStatusID(factory, session, statusID, &stream); streamErr != nil {
 			return object.Status{}, derp.Wrap(err, location, "Loading message")
 		}
 
-		postURL = encodedURL
+		if viewErr := userCanStream(factory, session, &auth, &stream, "view"); viewErr != nil {
+			return object.Status{}, derp.Wrap(viewErr, location, "Viewing stream")
+		}
+
+		postURL = stream.ActivityPubURL()
+		localStreamID = stream.StreamID
 
 	default:
 		return object.Status{}, derp.Wrap(err, location, "Loading message")
@@ -458,7 +450,24 @@ func reactToStatus(serverFactory *server.Factory, host string, auth model.Author
 		return reloadedStatus(factory, session, auth, message.NewsItemID, location)
 	}
 
+	if !localStreamID.IsZero() {
+		return reloadedStreamStatus(factory, session, auth, localStreamID, location)
+	}
+
 	return statusForPostURL(factory, session, auth, postURL, location)
+}
+
+// reloadedStreamStatus re-reads a post made on this server and returns it as a Status with the
+// caller's own reactions, so a reaction answers with the post's updated counts.
+func reloadedStreamStatus(factory *service.Factory, session data.Session, auth model.Authorization, streamID primitive.ObjectID, location string) (object.Status, error) {
+
+	stream := model.NewStream()
+
+	if err := factory.Stream().LoadByID(session, streamID, &stream); err != nil {
+		return object.Status{}, derp.Wrap(err, location, "Reloading stream", streamID)
+	}
+
+	return reactedStatus(factory, session, auth, &stream), nil
 }
 
 // statusForPostURL builds the Status for a post that has no NewsItem, straight
@@ -485,6 +494,7 @@ func statusForPostURL(factory *service.Factory, session data.Session, auth model
 	}
 
 	status := documentToStatus(post, account)
+	applyRemoteReply(&status, client, factory, session, post)
 
 	responseService := factory.Response()
 	response := model.NewResponse()
@@ -631,8 +641,7 @@ func setStatusPinned(serverFactory *server.Factory, auth model.Authorization, ho
 		}
 	}
 
-	status := tootStream(factory, session, &stream)
-	return status, nil
+	return reactedStatus(factory, session, auth, &stream), nil
 }
 
 // loadStreamByStatusID loads the Stream behind a status ID -- the Stream's hex ID (what
@@ -695,8 +704,9 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 			return object.Status{}, derp.Wrap(err, location, "Saving stream")
 		}
 
-		status := tootStream(factory, session, &stream)
-		return status, nil
+		indexStatus(factory, session, &stream)
+
+		return reactedStatus(factory, session, auth, &stream), nil
 	}
 }
 

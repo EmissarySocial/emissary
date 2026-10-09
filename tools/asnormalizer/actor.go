@@ -6,6 +6,10 @@ import (
 	"github.com/benpate/rosetta/convert"
 )
 
+// propertyManuallyApprovesFollowers is the ActivityPub "manuallyApprovesFollowers" property, which
+// hannibal's vocabulary does not name.
+const propertyManuallyApprovesFollowers = "manuallyApprovesFollowers"
+
 // Actor normalizes an Actor document
 func Actor(document streams.Document) map[string]any {
 
@@ -32,6 +36,15 @@ func Actor(document streams.Document) map[string]any {
 		vocab.PropertyFollowers:  document.Followers().String(),
 		vocab.PropertyFollowing:  document.Following().String(),
 		vocab.PropertyPublicKey:  document.PublicKey().Value(),
+	}
+
+	// When the account was created, and whether it approves followers by hand
+	if published := document.Published(); !published.IsZero() {
+		result[vocab.PropertyPublished] = published
+	}
+
+	if document.Get(propertyManuallyApprovesFollowers).Bool() {
+		result[propertyManuallyApprovesFollowers] = true
 	}
 
 	// Cryptography
