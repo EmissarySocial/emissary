@@ -161,9 +161,15 @@ func (step StepAddStream) getInline(builder Builder, buffer io.Writer) error {
 	// Create a new child stream
 	streamService := factory.Stream()
 	child := streamService.New()
+	child.StateID = step.StateID
 
 	if user, err := builder.getUser(); err == nil {
 		child.SetAttributedTo(user.PersonLink())
+	}
+
+	// Place the child exactly as Post will, so its "create" steps can read .Parent
+	if err := step.setLocation(builder, &newTemplate, &child); err != nil {
+		return derp.Wrap(err, location, "Getting location for new stream")
 	}
 
 	// Apply custom stream data from the "with-data" map
