@@ -265,7 +265,10 @@ func (user User) GetJSONLD() mapof.Any {
 		vocab.ContextTypeActivityStreams,
 		vocab.ContextTypeSecurity,
 		vocab.ContextTypeToot,
-		vocab.ContextTypeSocialWebMLS,
+		// TEMPORARY: the MLS context (0.4.0) has an invalid "@type": "id" that fails strict
+		// JSON-LD expansion, so Funkwhale cannot follow any Emissary actor. Restore once
+		// swicg/activitypub-e2ee fixes it. See model/AGENTS.md.
+		// vocab.ContextTypeSocialWebMLS,
 	}
 
 	exportURL := user.ActivityPubURL() + "/export"
