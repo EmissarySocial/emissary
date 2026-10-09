@@ -74,6 +74,9 @@ func (service LookupProvider) Group(path string) form.LookupGroup {
 	case "merchantAccounts-all-products":
 		return service.getMerchantAccountsAllProducts()
 
+	case "navigation-icons":
+		return form.NewReadOnlyLookupGroup(dataset.NavigationIcons()...)
+
 	case "notification-channels":
 		return form.NewReadOnlyLookupGroup(
 			form.LookupCode{Value: model.NotificationChannelDirectMessage, Label: "Direct Messages", Description: "Someone sends you a private message.", Icon: "envelope"},
