@@ -153,10 +153,14 @@ func TestTemplateRefresh_HotReloadOnWatchesChanges(t *testing.T) {
 	templateService.Refresh(hotReloadTestLocation(folder), true)
 	require.NotEqual(t, watcher, templateService.refresh, "turning hot reload on must start a watcher")
 
-	// Retry the write, because the watcher starts asynchronously and misses changes made before it does
-	for deadline := time.Now().Add(10 * time.Second); time.Now().Before(deadline); time.Sleep(100 * time.Millisecond) {
+	writeHotReloadEmail(t, folder, "email-added")
 
-		writeHotReloadEmail(t, folder, "email-added")
+	// Retry a change in the top-level folder, because the watcher starts asynchronously and misses
+	// changes made before it does.  A directory made before then is never watched, so touch the top.
+	for attempt := 0; attempt < 100; attempt++ {
+
+		require.NoError(t, os.WriteFile(filepath.Join(folder, "touch-"+strconv.Itoa(attempt)), nil, 0o600))
+		time.Sleep(100 * time.Millisecond)
 
 		if emailService.RequireModel("email-added", "User") == nil {
 			return
