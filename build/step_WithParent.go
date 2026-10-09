@@ -49,7 +49,7 @@ func (step StepWithParent) Post(builder Builder, buffer io.Writer) PipelineBehav
 	}
 
 	// Execute the POST build pipeline on the parent
-	result := Pipeline(step.SubSteps).Post(factory, &parentStream, buffer)
+	result := Pipeline(step.SubSteps).Post(factory, parentStream, buffer)
 	result.Error = derp.WrapIF(result.Error, location, "Executing steps for parent")
 
 	return UseResult(result)
@@ -80,7 +80,7 @@ func (step StepWithParent) postUser(streamBuilder Stream, buffer io.Writer) Pipe
 	}
 
 	// Execute the POST build pipeline on the parent
-	result := Pipeline(step.SubSteps).Post(factory, &outbox, buffer)
+	result := Pipeline(step.SubSteps).Post(factory, outbox, buffer)
 	result.Error = derp.WrapIF(result.Error, location, "Executing steps for parent")
 
 	return UseResult(result)
