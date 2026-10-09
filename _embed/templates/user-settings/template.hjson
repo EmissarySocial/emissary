@@ -125,7 +125,7 @@
 			roles:["self"]
 			steps:[
 				{do:"with-rule", steps:[
-					{do:"set-data", from-form:["comment"]}
+					{do:"set-data", from-form:["summary"]}
 					{do:"set-header", name:"Cache-Control", value:"no-store"}
 					{do:"save"}
 					{do:"trigger-event", event:"refreshPeers"}

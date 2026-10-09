@@ -16,7 +16,7 @@ import (
 )
 
 // refreshTestTemplate returns a Template service loaded from the "first" of two embedded
-// template folders, each holding the shipped user-welcome email
+// template folders, each holding the shipped user-welcome email, with hot reload on
 func refreshTestTemplate(t *testing.T) *Template {
 
 	t.Helper()
@@ -38,7 +38,10 @@ func refreshTestTemplate(t *testing.T) *Template {
 	filesystemService := NewFilesystem(embedded)
 	emailService := NewServerEmail(filesystemService, funcMap, nil)
 
-	return NewTemplate(filesystemService, &Registration{}, &emailService, &Theme{}, &Widget{}, funcMap, refreshTestLocation("first"))
+	result := NewTemplate(filesystemService, &Registration{}, &emailService, &Theme{}, &Widget{}, funcMap, refreshTestLocation("first"))
+	result.Refresh(refreshTestLocation("first"), true)
+
+	return result
 }
 
 // refreshTestLocation returns the template configuration for one embedded test folder
@@ -55,7 +58,7 @@ func TestTemplateRefresh_UnchangedLocationsKeepWatcher(t *testing.T) {
 	templateService := refreshTestTemplate(t)
 	watcher := templateService.refresh
 
-	templateService.Refresh(refreshTestLocation("first"))
+	templateService.Refresh(refreshTestLocation("first"), true)
 
 	select {
 	case <-watcher:
@@ -71,7 +74,7 @@ func TestTemplateRefresh_ChangedLocationsReplaceWatcher(t *testing.T) {
 	templateService := refreshTestTemplate(t)
 	watcher := templateService.refresh
 
-	templateService.Refresh(refreshTestLocation("second"))
+	templateService.Refresh(refreshTestLocation("second"), true)
 
 	select {
 	case <-watcher:
@@ -123,8 +126,117 @@ func TestTemplateRefresh_WatcherAndReloadDoNotOverlap(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 		require.NoError(t, os.WriteFile(filepath.Join(folders[index%2], "email-0", "change-"+strconv.Itoa(index)), nil, 0o600))
 		time.Sleep(time.Duration(index) * time.Millisecond)
-		templateService.Refresh(location(index + 1))
+		templateService.Refresh(location(index+1), true)
 	}
 
 	require.NoError(t, emailService.RequireModel("email-0", "User"))
+}
+
+// TestTemplateRefresh_HotReloadOffIgnoresChanges verifies that templates on disk are not
+// watched unless hot reload is on, which is the default
+func TestTemplateRefresh_HotReloadOffIgnoresChanges(t *testing.T) {
+
+	templateService, emailService, folder := hotReloadTestTemplate(t)
+	templateService.Refresh(hotReloadTestLocation(folder), false)
+
+	writeHotReloadEmail(t, folder, "email-added")
+	requireNoHotReload(t, emailService, "email-added")
+}
+
+// TestTemplateRefresh_HotReloadOnWatchesChanges verifies that turning hot reload on, with the
+// locations unchanged, starts a watcher that reloads templates when a file changes
+func TestTemplateRefresh_HotReloadOnWatchesChanges(t *testing.T) {
+
+	templateService, emailService, folder := hotReloadTestTemplate(t)
+	watcher := templateService.refresh
+
+	templateService.Refresh(hotReloadTestLocation(folder), true)
+	require.NotEqual(t, watcher, templateService.refresh, "turning hot reload on must start a watcher")
+
+	// Retry the write, because the watcher starts asynchronously and misses changes made before it does
+	for deadline := time.Now().Add(10 * time.Second); time.Now().Before(deadline); time.Sleep(100 * time.Millisecond) {
+
+		writeHotReloadEmail(t, folder, "email-added")
+
+		if emailService.RequireModel("email-added", "User") == nil {
+			return
+		}
+	}
+
+	t.Fatal("hot reload never loaded the new template")
+}
+
+// TestTemplateRefresh_HotReloadOffStopsWatcher verifies that turning hot reload off, with the
+// locations unchanged, stops the running watcher
+func TestTemplateRefresh_HotReloadOffStopsWatcher(t *testing.T) {
+
+	templateService, emailService, folder := hotReloadTestTemplate(t)
+	templateService.Refresh(hotReloadTestLocation(folder), true)
+	watcher := templateService.refresh
+
+	templateService.Refresh(hotReloadTestLocation(folder), false)
+
+	select {
+	case <-watcher:
+	default:
+		t.Fatal("turning hot reload off left the watcher running")
+	}
+
+	// Give the stopped watcher's goroutines time to exit before changing the folder
+	time.Sleep(100 * time.Millisecond)
+
+	writeHotReloadEmail(t, folder, "email-added")
+	requireNoHotReload(t, emailService, "email-added")
+}
+
+// hotReloadTestTemplate returns a Template service loaded from a temporary folder on disk,
+// with hot reload off, along with its email service and the folder
+func hotReloadTestTemplate(t *testing.T) (*Template, *ServerEmail, string) {
+
+	t.Helper()
+
+	folder := t.TempDir()
+	writeHotReloadEmail(t, folder, "email-initial")
+
+	funcMap := emissarytemplates.FuncMap(nullIconProvider{})
+	filesystemService := NewFilesystem(nil)
+	emailService := NewServerEmail(filesystemService, funcMap, nil)
+	templateService := NewTemplate(filesystemService, &Registration{}, &emailService, &Theme{}, &Widget{}, funcMap, hotReloadTestLocation(folder))
+
+	// Stop the current watcher when the test ends, so that it does not outlive the folder
+	t.Cleanup(func() { close(templateService.refresh) })
+
+	require.NoError(t, emailService.RequireModel("email-initial", "User"))
+	return templateService, &emailService, folder
+}
+
+// hotReloadTestLocation returns the template configuration for one folder on disk
+func hotReloadTestLocation(folder string) []mapof.String {
+	return []mapof.String{{"adapter": config.FolderAdapterFile, "location": folder}}
+}
+
+// writeHotReloadEmail writes a copy of the shipped user-welcome email into the folder, as emailID
+func writeHotReloadEmail(t *testing.T, folder string, emailID string) {
+
+	t.Helper()
+
+	definition, err := os.ReadFile("../_embed/templates/email-user-welcome/email.hjson")
+	require.NoError(t, err)
+
+	body, err := os.ReadFile("../_embed/templates/email-user-welcome/body.html")
+	require.NoError(t, err)
+
+	directory := filepath.Join(folder, emailID)
+	require.NoError(t, os.MkdirAll(directory, 0o700))
+	require.NoError(t, os.WriteFile(filepath.Join(directory, "email.hjson"), []byte(strings.Replace(string(definition), "user-welcome", emailID, 1)), 0o600))
+	require.NoError(t, os.WriteFile(filepath.Join(directory, "body.html"), body, 0o600))
+}
+
+// requireNoHotReload fails if the email template is loaded within half a second
+func requireNoHotReload(t *testing.T, emailService *ServerEmail, emailID string) {
+
+	t.Helper()
+
+	time.Sleep(500 * time.Millisecond)
+	require.Error(t, emailService.RequireModel(emailID, "User"), "the template was reloaded without hot reload")
 }

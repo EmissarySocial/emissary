@@ -86,3 +86,7 @@ When the anchor already carries a `rel`, **append** — `rel="me"` on the profil
 The same rule reaches federated content by a different route. `replace.Linkify` and `Content.ApplyLinks` write `<a … target="_blank">` into `content.HTML` **after** `markdown.Sanitize` has run, so they are the last writers of the body every remote reader sees, and the `bluemonday.UGCPolicy` never gets a chance to add a `rel` for them. They emit `rel="noopener noreferrer"` themselves — the convention Mastodon uses on every outbound link — and five test files pin the exact anchor, so a change to either emitter shows up as a test failure rather than a quiet drift.
 
 Vendored `easymde.min.js` still opens three `_blank` links without it; that is upstream's file, and the fix is a version bump, not an edit.
+
+## Every `type: array` in a schema needs a `maxLength`
+
+Rosetta bounds a list's length only through the schema, never in its accessors (decided 2026-10-05; see rosetta's AGENTS.md). An array with no `maxLength` lets one form field such as `feeds.5000000` build a list of 5,000,001 items. Give every array in a template's `schema` or `socialSchema` a `maxLength` sized to its real use.

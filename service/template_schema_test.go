@@ -5,8 +5,10 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"testing/fstest"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/schema"
 	"github.com/hjson/hjson-go/v4"
 	"github.com/stretchr/testify/require"
@@ -91,4 +93,17 @@ func TestEmbeddedTemplates_ValidSchemaFormats(t *testing.T) {
 		require.NoError(t, tmpl.Schema.ValidateFormats(),
 			"template %q declares an unrecognized schema format name", templateID)
 	})
+}
+
+// TestTemplate_Add_SocialSchemaMustBeAnObject requires the loader to refuse a socialSchema
+// that is not an object, which SocialTargetSchema would otherwise ignore
+func TestTemplate_Add_SocialSchemaMustBeAnObject(t *testing.T) {
+
+	templateService := &Template{}
+	definition := []byte(`{templateId: "social-string", socialSchema: {type: "string"}}`)
+
+	err := templateService.Add("social-string", fstest.MapFS{}, definition)
+	require.Error(t, err)
+	require.True(t, derp.IsValidationError(err))
+	require.Equal(t, "socialSchema must be an object", derp.RootMessage(err))
 }

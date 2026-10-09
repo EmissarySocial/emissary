@@ -75,7 +75,7 @@ func (factory *SetupFactory) configure(config config.Config) {
 	factory.setConfigLocked(config)
 
 	// Refresh these global services with values we'll always need.
-	factory.templateService.Refresh(config.Templates)
+	factory.templateService.Refresh(config.Templates, config.HotReloadTemplates)
 
 	// RULE: The common database is best-effort here: connect (with a ping) if configured,
 	// warn if not.  Domain management stays disabled until it connects.
