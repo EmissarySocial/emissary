@@ -1,7 +1,7 @@
 package model
 
 import (
-	"crypto/md5"
+	"crypto/md5" // #nosec G501 -- the SearchQuery signature is a dedup key over public query parameters, not a security primitive
 	"encoding/base64"
 	"io"
 	"slices"
@@ -20,17 +20,17 @@ import (
 
 // SearchQuery represents a saved query that visitors can follow
 type SearchQuery struct {
-	SearchQueryID primitive.ObjectID `bson:"_id"`              // SearchQueryID is the unique identifier for a SearchQuery
-	URL           string             `bson:"url"`              // The URL where this search query originated
-	Query         string             `bson:"query"`            // The original string used in the search query
-	Types         sliceof.String     `bson:"types,omitempty"`  // The types of results that this query is interested in (Person, Article, Album, Audio, etc)
-	Index         sliceof.String     `bson:"index,omitempty"`  // The parsed (and normalized) index of values in the search query
-	Tags          sliceof.String     `bson:"tags,omitempty"`   // The parsed (and normalized) tag values
-	Polygon       geo.Polygon        `bson:"polygon,omitzero"` // Polygon to search within
-	StartDate     string             `bson:"startDate"`        // The start date of the search query
-	Signature     string             `bson:"signature"`        // The hash of this search query
+	SearchQueryID primitive.ObjectID `json:"searchQueryId" bson:"_id"`              // SearchQueryID is the unique identifier for a SearchQuery
+	URL           string             `json:"url"           bson:"url"`              // The URL where this search query originated
+	Query         string             `json:"query"         bson:"query"`            // The original string used in the search query
+	Types         sliceof.String     `json:"types"         bson:"types,omitempty"`  // The types of results that this query is interested in (Person, Article, Album, Audio, etc)
+	Index         sliceof.String     `json:"index"         bson:"index,omitempty"`  // The parsed (and normalized) index of values in the search query
+	Tags          sliceof.String     `json:"tags"          bson:"tags,omitempty"`   // The parsed (and normalized) tag values
+	Polygon       geo.Polygon        `json:"polygon"       bson:"polygon,omitzero"` // Polygon to search within
+	StartDate     string             `json:"startDate"     bson:"startDate"`        // The start date of the search query
+	Signature     string             `json:"signature"     bson:"signature"`        // The hash of this search query
 
-	journal.Journal `bson:",inline"`
+	journal.Journal `json:"-" bson:",inline"`
 }
 
 // NewSearchQuery returns a fully initialized, empty SearchQuery
@@ -227,7 +227,7 @@ func (searchQuery *SearchQuery) MakeSignature() {
 	}
 
 	// Make a hash of the plaintext for easy indexing
-	h := md5.New()
+	h := md5.New()                               // #nosec G401 -- see the import comment
 	_, _ = io.WriteString(h, plaintext.String()) // hash.Hash.Write is documented never to return an error
 	signature := base64.StdEncoding.EncodeToString(h.Sum(nil))
 

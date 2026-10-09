@@ -105,7 +105,7 @@ func WrapModal(response http.ResponseWriter, content string, options ...string) 
 
 	// Contents
 	b.Grow(len(content))
-	b.WriteString(content)
+	b.WriteString(content) // #nosec G104 -- html.Builder embeds *strings.Builder, whose WriteString is documented to always return a nil error
 
 	// Done
 	b.CloseAll()
@@ -134,7 +134,7 @@ func WrapTooltip(response http.ResponseWriter, content string) string {
 	b := html.New()
 
 	b.Span().ID("tooltip").Script("install tooltip").EndBracket()
-	b.WriteString(content)
+	b.WriteString(content) // #nosec G104 -- html.Builder embeds *strings.Builder, whose WriteString is documented to always return a nil error
 	b.CloseAll()
 
 	return b.String()
@@ -165,7 +165,7 @@ func WrapForm(endpoint string, content string, encoding string, options ...strin
 
 	// Contents
 	b.Grow(len(content))
-	b.WriteString(content)
+	b.WriteString(content) // #nosec G104 -- html.Builder embeds *strings.Builder, whose WriteString is documented to always return a nil error
 
 	// Controls
 	b.Div().Class("flex-row", "flex-align-center")
@@ -295,6 +295,21 @@ func executeTemplate(template TemplateLike, data any) string {
 	return buffer.String()
 }
 
+// truncateRunes shortens a value to at most maxLength runes, marking the cut with an ellipsis so
+// that a shortened value cannot be read as the whole one.  Counted in runes rather than bytes to
+// match schema.Set and the rest of the codebase, and so that a multi-byte character is never cut
+// in half into invalid UTF-8.
+func truncateRunes(value string, maxLength int) string {
+
+	runes := []rune(value)
+
+	if len(runes) <= maxLength {
+		return value
+	}
+
+	return string(runes[:maxLength]) + "\u2026"
+}
+
 // Returns TRUE if the value is either empty or "new" (case insensitive)
 func isNewOrEmpty(value string) bool {
 
@@ -392,13 +407,6 @@ func multipartForm(request *http.Request) (*multipart.Form, error) {
 	}
 
 	return request.MultipartForm, nil
-}
-
-// redirect replicates the echo.Context.Redirect() function without using an echo.Context
-func redirect(response http.ResponseWriter, statusCode int, location string) error {
-	response.Header().Add("Location", location)
-	response.WriteHeader(statusCode)
-	return nil
 }
 
 // getTemplate returns the model.Template from a Builder, if it exists

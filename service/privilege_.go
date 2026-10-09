@@ -194,7 +194,7 @@ func (service *Privilege) ObjectType() string {
 	return "Privilege"
 }
 
-// New returns a fully initialized model.Privilege as a data.Object.
+// ObjectNew returns a fully initialized model.Privilege as a data.Object.
 func (service *Privilege) ObjectNew() data.Object {
 	result := model.NewPrivilege()
 	return &result
@@ -323,23 +323,28 @@ func (service *Privilege) RangeByIdentity(session data.Session, identityID primi
 // RangeByIdentifiers returns an iterator containing all of the Privileges that match the provided identifiers (email, webfinger, activitypub)
 func (service *Privilege) RangeByIdentifiers(session data.Session, emailAddress string, webfingerUsername string, activityPubActor string) (iter.Seq[model.Privilege], error) {
 
-	// Create a criteria to find the Identity by any of the identifiers
-	criteria := exp.Or(
-		exp.And(
-			exp.Equal("identifierType", model.IdentifierTypeEmail),
-			exp.Equal("identifierValue", emailAddress),
-		),
-		exp.And(
-			exp.Equal("identifierType", model.IdentifierTypeWebfinger),
-			exp.Equal("identifierValue", webfingerUsername),
-		),
-		exp.And(
-			exp.Equal("identifierType", model.IdentifierTypeActivityPub),
-			exp.Equal("identifierValue", activityPubActor),
-		),
-	)
+	// RULE: Only identifiers that are present take part. An empty value would match every
+	// Privilege whose identifier is blank.
+	clauses := make([]exp.Expression, 0, 3)
 
-	return service.Range(session, criteria)
+	if emailAddress != "" {
+		clauses = append(clauses, exp.Equal("identifierType", model.IdentifierTypeEmail).AndEqual("identifierValue", emailAddress))
+	}
+
+	if webfingerUsername != "" {
+		clauses = append(clauses, exp.Equal("identifierType", model.IdentifierTypeWebfinger).AndEqual("identifierValue", webfingerUsername))
+	}
+
+	if activityPubActor != "" {
+		clauses = append(clauses, exp.Equal("identifierType", model.IdentifierTypeActivityPub).AndEqual("identifierValue", activityPubActor))
+	}
+
+	// Nothing to match means nothing matches
+	if len(clauses) == 0 {
+		return func(func(model.Privilege) bool) { /* nothing to iterate */ }, nil
+	}
+
+	return service.Range(session, exp.Or(clauses...))
 }
 
 // RangeByCircle returns an iterator containing all of the Privileges that match the provided CircleID
@@ -415,13 +420,13 @@ func (service *Privilege) QueryByIdentity(session data.Session, identityID primi
 	return service.Query(session, criteria, options...)
 }
 
-// CountByIdentityAndCircle returns the number of privileges are granted to a particular Circle
+// CountByCircle returns the number of Privileges that are granted to a particular Circle
 func (service *Privilege) CountByCircle(session data.Session, circleID primitive.ObjectID) (int64, error) {
 	criteria := exp.Equal("circleId", circleID)
 	return service.Count(session, criteria)
 }
 
-// LoadByRemoteIDs retrieves a privilege using the remote IDs for the user, product, and privilege
+// LoadByRemotePurchaseID retrieves a Privilege using the remote purchase ID reported by the merchant
 func (service *Privilege) LoadByRemotePurchaseID(session data.Session, remotePurchaseID string, privilege *model.Privilege) error {
 	criteria := exp.Equal("remotePurchaseId", remotePurchaseID)
 

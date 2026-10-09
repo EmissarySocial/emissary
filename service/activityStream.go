@@ -18,6 +18,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/clients"
 	"github.com/benpate/hannibal/metadata"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
@@ -39,6 +40,7 @@ type ActivityStream struct {
 	getCommonDatabase func() data.Server // read LIVE on every use (never captured): a config reload can reconnect the common database, and a captured handle would fail every call with "client is disconnected"
 	locatorService    *Locator
 	ruleService       *Rule
+	carpool           *clients.Carpool
 	hostname          string
 	queue             *queue.Queue
 	version           string
@@ -63,6 +65,7 @@ func (service *ActivityStream) Refresh(factory *Factory) {
 	service.getCommonDatabase = func() data.Server { return factory.CommonDatabase() }
 	service.locatorService = factory.Locator()
 	service.ruleService = factory.Rule()
+	service.carpool = factory.Carpool()
 	service.hostname = factory.Hostname()
 	service.version = factory.Version()
 	service.queue = factory.Queue()
@@ -110,23 +113,12 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 
 	// Build a new client stack
 
-	// TODO: (oembed/TODO.md Phases 11.3 + RSS-FOLLOWING-RESTORE.md) When URL lookups
-	// return, do NOT restore this legacy path — use sherlock's new metadata package
-	// (sherlock.Client.Metadata → metadata.Card), which merges oEmbed, Open Graph,
-	// Twitter Cards, and HTML signals with SSRF/body-cap guards built in.
-	/* Removing legacy Sherlock lookups (RSS, oEmbed, OGP, etc) since these are not being used.
-	sherlockClient := sherlock.NewClient(
-		sherlock.WithKeyPairFunc(service.KeyPairFunc(actorType, actorID)),
-		sherlock.WithUserAgent(userAgent),
-	) */
-
 	// If the service is on a local/private network then allow
 	// the ActivityPub client to load documents from private IP addresses.
 	allowPrivateIPs := service.AllowPrivateIPs()
 
 	// Try ActivityPub documents directly
 	activityPubClient := activitypub.New(
-		// activitypub.WithInnerClient(sherlockClient), // Restore this to restore legacy Sherlock lookups.
 		activitypub.WithKeyPairFunc(service.KeyPairFunc(actorType, actorID)),
 		activitypub.WithUserAgent(userAgent),
 		activitypub.WithAllowPrivateIPs(allowPrivateIPs),
@@ -175,16 +167,28 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 		ascache.WithIgnoreHeaders(),
 	)
 
+	// Share concurrent Loads of one URL with every other stack in this process that signs as the same actor
+	carpoolClient := service.carpool.Client(cacheClient, carpoolSigner(service.hostname, actorType, actorID))
+
 	// Evaluate the viewer's Rules on every result. This sits ABOVE the cache so that cache hits and
 	// network fetches alike are stamped with a per-viewer verdict (hide + labels) that never touches
 	// the shared cache. A document the viewer's rules hide is refused before descending (R19);
 	// asrules.WithReveal is the render layer's click-to-reveal override (D2).
-	rulesClient := asrules.New(cacheClient, service.ruleChecker(actorType, actorID))
+	rulesClient := asrules.New(carpoolClient, service.ruleChecker(actorType, actorID))
 
 	// Find inter-page IDs (like https://yo.mama.social/@sofat#main-key)
 	hashClient := ashash.New(rulesClient)
 
 	return hashClient
+}
+
+// carpoolSigner names the actor a client stack signs as, so the Carpool groups only Loads that
+// would have been signed the same way.
+func carpoolSigner(hostname string, actorType string, actorID primitive.ObjectID) string {
+
+	// RULE: The hostname is part of the signer, because every domain's Application actor has the
+	// same (nil) actorID, and each domain signs with its own key.
+	return hostname + " " + actorType + ":" + actorID.Hex()
 }
 
 // ruleChecker returns an asrules.Checker for the given actor: it evaluates a URL -- and, once it
@@ -318,7 +322,7 @@ func (service *ActivityStream) QueryActors(queryString string) ([]model.ActorSum
 	if service.looksLikeValidURI(queryString) {
 
 		// Try to load the actor directly from the Interwebs
-		if object, err := service.AppClient().Load(queryString, sherlock.AsActor()); err == nil {
+		if object, err := service.AppClient().Load(queryString); err == nil {
 
 			if object.IsActor() {
 
@@ -476,7 +480,7 @@ func (service *ActivityStream) GetActor(actor string) (streams.Document, error) 
 	const location = "service.ActivityStream.GetActor"
 
 	// Try to load the actor as a JSON-LD document
-	document, err := service.AppClient().Load(actor, sherlock.AsActor())
+	document, err := service.AppClient().Load(actor)
 
 	if err != nil {
 		return streams.NilDocument(), derp.Wrap(err, location, "Loading ActivityPub Actor", actor)

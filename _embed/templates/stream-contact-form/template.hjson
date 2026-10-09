@@ -1,0 +1,225 @@
+{
+	templateId: contact-form
+	templateRole: article
+	category: Special
+	model: Stream
+	containedBy: ["top", "folder", "article"]
+	extends: ["base-widget-editor"]
+	bundles: {
+		stylesheet: {
+			content-type:"text/css"
+		}
+	}
+	label: Contact Form
+	description: "Lets visitors send you a message by email."
+	icon: message
+	sort: 60
+
+	schema: {
+		type: "object"
+		properties: {
+			token: {type:"string", format:"token", maxLength:64}
+			label: {type:"string", format:"text", maxLength:128}
+			icon: {type:"string", format:"token", maxLength:64}
+			summary: {type:"string", format:"text", maxLength:2048}
+			data: {type:"object", properties: {
+				emailAddress: {type:"string", format:"email", maxLength:255}
+				emailSubject: {type:"string", format:"text", maxLength:128, required:true}
+				promptContent: {type:"string", format:"unsafe-any", maxLength:8192}
+				headerMessage: {type:"string", format:"unsafe-any", maxLength:2048, required:true}
+				successMessage: {type:"string", format:"unsafe-any", maxLength:2048, required:true}
+				width: {type:"string", enum:["FULL", "LARGE", "MEDIUM", "SMALL"], default:"MEDIUM"}
+			}}
+		}
+	}
+
+	states: {
+		default: {
+			label: "Default"
+			description: "Visible only to Authors and Owners"
+		}
+		published: {
+			label: "Published"
+			description: "The form is live and accepting messages"
+		}
+	}
+
+	roles: {
+		editor: {
+			label: "Editor"
+			description: "Can make changes to this contact form."
+		}
+	}
+
+	actions: {
+		create: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"set-data", values: {
+					label: "Contact Us"
+					data.emailSubject: "New message from your contact form"
+					data.promptContent: "Send us a message using the form below, and we will get back to you."
+					data.headerMessage: "You received a new message from the contact form on your website."
+					data.successMessage: "Thank you.  Your message has been sent."
+				}}
+				{do:"save"}
+				{do:"forward-to", url:"/{{.StreamID}}/edit"}
+			]
+		}
+
+		view: {
+			roles: ["author", "editor"]
+			stateRoles: {
+				"published": ["anonymous"]
+			}
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		// RULE: submit mirrors "view" exactly, so the form is submittable precisely when the page
+		// is visible.  An anonymous grant is still scoped by state, which is what keeps a form
+		// that has been created but never saved from accepting messages; "author" in the base
+		// roles lets the page author exercise it in that window.
+		submit: {
+			roles: ["author"]
+			stateRoles: {
+				"published": ["anonymous"]
+			}
+			steps: [
+				{do:"read-form", schema: {
+					type: "object"
+					properties: {
+						name: {type:"string", format:"text", maxLength:128, required:true}
+						email: {type:"string", format:"email", maxLength:255, required:true}
+						message: {type:"string", format:"text", maxLength:8192, required:true}
+					}
+				}}
+				// The Client_* values come off the REQUEST, not the form, which is why none of them
+				// appears in the read-form schema above.  A visitor cannot post them: read-form is
+				// an allowlist and reads the body only (D23), so the only way into these keys is
+				// the header the browser actually sent.  They are the message's only forensic
+				// record -- nothing here is stored (D1) -- and they are bounded in Go, because a
+				// header has no length limit of its own.
+				{do:"send-email", email:"contact-form", values: {
+					To: "{{.Data `emailAddress`}}"
+					Subject: "{{.Data `emailSubject`}}"
+					ReplyEmail: "{{.GetString `email`}}"
+					Name: "{{.GetString `name`}}"
+					Message: "{{.GetString `message`}}"
+					HeaderMessage: "{{.Data `headerMessage`}}"
+					Client_IP: "{{.ClientIP}}"
+					Client_Description: "{{.ClientDescription}}"
+					Client_Referer: "{{.ClientReferer}}"
+					Client_UserAgent: "{{.ClientUserAgent}}"
+					Client_Brands: "{{.ClientBrands}}"
+					Client_Platform: "{{.ClientPlatform}}"
+					Client_Mobile: "{{.ClientMobile}}"
+					Client_AcceptLanguage: "{{.ClientAcceptLanguage}}"
+					Client_Accept: "{{.ClientAccept}}"
+					Client_AcceptEncoding: "{{.ClientAcceptEncoding}}"
+					Client_DoNotTrack: "{{.ClientDoNotTrack}}"
+					Client_PrivacyControl: "{{.ClientPrivacyControl}}"
+				}}
+				{do:"view-html", method:"post", file:"success"}
+			]
+		}
+
+		edit: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"view-html"}
+			]
+		}
+
+		// The settings form is rendered INLINE by edit.html (via {{.View "edit-form"}}), not in a
+		// modal, so the author edits the form and previews the result on one page.  The Save button
+		// lives in edit.html's menu bar, which is why the form hides its own.
+		edit-form: {
+			roles: ["author", "editor"]
+			steps: [
+				{
+					do: "edit"
+					// Grouped by WHO reads each value: the visitor before they submit, the
+					// recipient who gets the email, and the visitor again afterward.
+					form: {
+						type: "layout-tabs"
+						children: [
+							{
+								type: "layout-vertical"
+								label: "Page Setup"
+								children: [
+									{type:"text", path:"label", label:"Page Title", description:"Displays in website navigation, and at the top of the page."}
+									{type:"text", path:"token", label:"Token", description:"This page\u0027s address on your website, for example \u0022contact\u0022.  Must be unique.", options:{autocomplete:"off", validator:"/.validate/stream/token?streamId={{.ID}}"}}
+									{type:"select-icons", path:"icon", label:"Icon", description:"Displays beside the page title in website navigation.", options:{provider:"folder-icons"}}
+								]
+							}
+							{
+								type: "layout-vertical"
+								label: "Content"
+								children: [
+									{type:"textarea", path:"data.promptContent", description:"Shown to visitors above the form.  Markdown is allowed.", options:{rows:12}}
+								]
+							}
+							{
+								type: "layout-vertical"
+								label: "Email"
+								children: [
+									{type:"text", path:"data.emailAddress", label:"Send Messages To", description:"Every message from this form is emailed to this address.  Nothing is stored on the server.", options:{required:true}}
+									{type:"text", path:"data.emailSubject", label:"Subject Line", description:"The subject line of every email this form sends.  Visitors cannot change it.", options:{required:true}}
+									{type:"textarea", path:"data.headerMessage", label:"Message Header", description:"Added above the visitor\u0027s message in every email this form sends.  Markdown is allowed.", options:{rows:12}}
+								]
+							}
+							{
+								type: "layout-vertical"
+								label: "Confirmation"
+								children: [
+									{type:"textarea", path:"data.successMessage", description:"Replaces the form once the visitor\u0027s message is sent.  Markdown is allowed.", options:{rows:12}}
+								]
+							}
+						]
+					}
+					options: [
+						"id:edit-form"
+						"submit-button:hide"
+						"cancel-button:hide"
+						"endpoint:/{{.StreamID}}/edit-form"
+					]
+				}
+				{do:"save-and-publish", state:"published", outbox:"false", comment:"Contact form updated by {{.Author}}"}
+				{do:"refresh-page"}
+				{do:"inline-save-button", form:"edit-form"}
+			]
+		}
+
+		widgets: {
+			roles: ["author", "editor"]
+			steps: [
+				// The layout controls post inside the widget editor's own form, so page shape and
+				// widget placement save together in one request.  Both steps re-read the same
+				// cached form values; formdata.Parse caches on the Request and re-reads nothing.
+				{do:"set-data", from-form:["data.width"]}
+				{do:"sort-widgets"}
+				{do:"save", message:"Widgets updated by {{.Author}}"}
+				{do:"view-html", method:"both"}
+			]
+		}
+
+		widget: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"edit-widget"}
+				{do:"save", comment:"Widget updated by {{.Author}}"}
+			]
+		}
+
+		delete: {
+			roles: ["author", "editor"]
+			steps: [
+				{do:"unpublish", state:"default", outbox:"false"}
+				{do:"delete", title:"Delete '{{.Label}}'?", message:"This contact form will be permanently removed.  There is NO UNDO."}
+				{do:"forward-to", url:"/{{.ParentID}}"}
+			]
+		}
+	}
+}

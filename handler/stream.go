@@ -66,7 +66,7 @@ func getStreamJSONLD(ctx *steranko.Context, factory *service.Factory, session da
 		}
 
 		// Return JSON-LD for this search query
-		return activitypub_search.GetJSONLD(ctx, factory, session, template, stream, &searchQuery)
+		return activitypub_search.GetJSONLD(ctx, factory, session, &searchQuery)
 	}
 
 	// All other templates are "stream" templates
@@ -97,16 +97,24 @@ func getStreamPipeline(ctx *steranko.Context, factory *service.Factory, session 
 	return nil
 }
 
-// getStreamToken returns the :stream token from the Request (or a default)
+// getStreamToken returns the :stream token from the Request, which is empty when the route declares none
 func getStreamToken(ctx echo.Context) string {
 	token := ctx.Param("stream")
 
-	switch token {
-
-	// Empty, or "zero" tokens just go to the home page instead
-	case "", "000000000000000000000000":
+	// The "zero" ObjectID is another spelling of the home page
+	if token == "000000000000000000000000" {
 		return "home"
 	}
 
 	return token
+}
+
+// isStartupHome returns TRUE if the token names the home page of a Domain that is still being set up
+func isStartupHome(token string, domain *model.Domain) bool {
+
+	if token != "home" {
+		return false
+	}
+
+	return domain.StateID == model.DomainStateStartup
 }

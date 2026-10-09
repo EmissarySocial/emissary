@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/EmissarySocial/emissary/model"
+
 	"github.com/EmissarySocial/emissary/tools/headers"
 	"github.com/benpate/data"
 	"github.com/stretchr/testify/require"
@@ -27,8 +29,10 @@ func (b stubViewHTMLBuilder) response() http.ResponseWriter { return b.recorder 
 // actionID implements the Builder interface, returning a fixed "view" action
 func (b stubViewHTMLBuilder) actionID() string { return "view" }
 
-// object implements the Builder interface. The stub owns no object, so the validator branch is skipped.
-func (b stubViewHTMLBuilder) object() data.Object { return nil }
+// object implements the Builder interface. The stub owns no object, so the validator branch
+// is skipped. This returns a TYPED nil, which is what a builder with no record actually
+// yields, and which compare.NotNil still reports as nil.
+func (b stubViewHTMLBuilder) object() data.Object { return (*model.Stream)(nil) }
 
 // execute implements the Builder interface. The stub renders nothing.
 func (b stubViewHTMLBuilder) execute(_ io.Writer, _ string, _ any) error { return nil }

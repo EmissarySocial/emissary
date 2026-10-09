@@ -14,7 +14,6 @@ import (
 	"github.com/benpate/html"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
-	"github.com/benpate/sherlock"
 	"github.com/benpate/steranko"
 )
 
@@ -34,7 +33,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session d
 
 	// Try to load the remote Actor to be followed
 	client := factory.ActivityStream().AppClient()
-	actor, err := client.Load(transaction.Object, sherlock.AsActor())
+	actor, err := client.Load(transaction.Object)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Loading object", transaction)
@@ -100,7 +99,7 @@ func GetIntent_Follow(ctx *steranko.Context, factory *service.Factory, session d
 			b.Close()
 
 			b.Div().Class("flex-grow-1").EndBracket()
-			b.WriteString(formHTML)
+			b.WriteString(formHTML) // #nosec G104 -- html.Builder embeds *strings.Builder, whose WriteString is documented to always return a nil error
 			b.Close()
 		}
 		b.Close()
@@ -133,19 +132,19 @@ func getForm_FollowingIntent() form.Form {
 					Label:       "Inbox Folder",
 					Path:        "folderId",
 					Description: "Where should messages from this source be placed?",
-					Options:     mapof.Any{"provider": "folders"},
+					Options:     mapof.Template{"provider": "folders"},
 				},
 				{
 					Type:        "select",
 					Label:       "Message Types",
 					Path:        "behavior",
 					Description: "What kinds of posts should be shown in my timeline?",
-					Options:     mapof.Any{"provider": "following-behaviors"},
+					Options:     mapof.Template{"provider": "following-behaviors"},
 				},
 				{
 					Type: "toggle",
 					Path: "isPublic",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"true-text":  "Public: This 'Follow' is visible on my profile",
 						"false-text": "Private: This 'Follow' is hidden from others",
 					},

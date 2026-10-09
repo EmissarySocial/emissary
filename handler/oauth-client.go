@@ -51,15 +51,15 @@ func GetOAuthCallback(ctx *steranko.Context, factory *service.Factory, session d
 // https://client.dev
 func GetOAuthClientMetadata(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
-	domain := factory.Domain().Get()
+	readOnlyDomain := factory.Domain().Cached()
 
 	metadata := cimd.Metadata{
-		ClientID:   domain.Host() + "/oauth/metadata",
-		ClientName: domain.Label,
-		ClientURI:  domain.Host(),
-		LogoURI:    domain.IconURL(),
+		ClientID:   readOnlyDomain.Host() + "/oauth/metadata",
+		ClientName: readOnlyDomain.Label,
+		ClientURI:  readOnlyDomain.Host(),
+		LogoURI:    readOnlyDomain.IconURL(),
 		RedirectURIs: sliceof.String{
-			domain.Host() + "/oauth/clients/import/callback",
+			readOnlyDomain.Host() + "/oauth/clients/import/callback",
 		},
 		GrantTypes: sliceof.String{
 			"authorization_code",

@@ -7,10 +7,10 @@ import (
 
 // JWTKey represents
 type JWTKey struct {
-	JWTKeyID  primitive.ObjectID `bson:"_id"`       // Unique identifier for this key (used by MongoDB)
-	KeyName   string             `bson:"keyName"`   // Name of this key (used by the application)
-	Algorithm string             `bson:"algorithm"` // Algorithm used to generate this key (AES)
-	Encrypted string             `bson:"encrypted"` // Encrypted value
+	JWTKeyID  primitive.ObjectID `json:"jwtKeyId"  bson:"_id"`       // Unique identifier for this key (used by MongoDB)
+	KeyName   string             `json:"keyName"   bson:"keyName"`   // Name of this key (used by the application)
+	Algorithm string             `json:"algorithm" bson:"algorithm"` // Algorithm used to generate this key (AES)
+	Encrypted string             `json:"encrypted" bson:"encrypted"` // Encrypted value
 
 	journal.Journal `json:"-" bson:",inline"`
 }

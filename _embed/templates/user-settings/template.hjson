@@ -199,8 +199,8 @@
 									type:layout-vertical
 									label:Setup
 									children: [
-										{type:"text", path:"name", label:"Circle Name", options:{autocomplete:"off", validator:"/.validate/circle/name?circleId={{.ObjectID}}"}}
-										{type:"select", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
+										{type:"text", path:"name", label:"Circle Name", options:{autocomplete:"off", validator:"/.validate/circle/name?circleId={{.ID}}"}}
+										{type:"select-icons", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
 										{type:"toggle", path:"isVisible", options:{false-text:"Visible to Members?", true-text:"Visible to Members.  This circle appears on guest profile pages."}}
 									]
 								}
@@ -249,8 +249,8 @@
 										type:layout-vertical
 										label:Setup
 										children: [
-											{type:"text", path:"name", label:"Circle Name", options:{autocomplete:"off", validator:"/.validate/circle/name?circleId={{.ObjectID}}"}}
-											{type:"select", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
+											{type:"text", path:"name", label:"Circle Name", options:{autocomplete:"off", validator:"/.validate/circle/name?circleId={{.ID}}"}}
+											{type:"select-icons", path:"icon", label:"Icon", options:{provider:"circle-icons"}}
 											{type:"toggle", path:"isVisible", options:{false-text:"Visible to Members?", true-text:"Visible to Members.  This circle appears on guest profile pages."}}
 										]
 									}
@@ -462,6 +462,8 @@
 				{do:"as-modal", steps:[
 					{do:"with-following", steps:[
 						{do:"view-html", file:"following-edit"}
+						// A BLOCKED Following is read-only: no form on GET, no save on POST (D6, R11)
+						{do:"if", condition:"{{ne `BLOCKED` .Object.Status}}", then:[
 						{do:"set-data", from-url:["folderId"]}
 						{
 							do:"edit", 
@@ -501,6 +503,7 @@
 							}
 						},
 						{do:"save"}
+						]}
 					]}
 				]}
 				{do:"trigger-event", event:"closeModal"}
@@ -704,6 +707,84 @@
 			]
 		}
 
+		// A User's own connections to external services. `with-user-connection` scopes the
+		// standard edit/save/delete ceremony to one UserConnection record, which owns the
+		// credential and the IsActive switch that installs or removes it at that service.
+		connections: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		// The connection form exists twice, and the ONLY difference is that the Audience ID is
+		// editable when creating and read-only when editing (D43). The webhook lives inside one
+		// audience, so letting it move in place would strand it with nothing able to address it.
+		connections-new-mailchimp: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"with-user-connection", steps:[
+						{do:"view-html", file:"connections-edit-mailchimp"}
+						{
+							do:edit
+							form:{
+								type:layout-vertical
+								children:[
+									{type:"hidden", path:"type", options:{value:"MAILCHIMP"}}
+									{type:"text", path:"vault.apiKey", label:"Mailchimp API Key", description:"Go to <a href='https://admin.mailchimp.com/account/api/' target='_blank' rel='noopener noreferrer'>Account &rarr; Extras &rarr; API Keys</a> to create an API key for your MailChimp account", options:{required:true}}
+									{type:"text", path:"data.dataCenter", label:"Data Center", description:"The start of your own Mailchimp web address, such as 'us6'.", options:{required:true, placeholder:"us6"}}
+									{type:"text", path:"data.audienceId", label:"Audience ID", description:"Go to <a href='https://admin.mailchimp.com/audience/' target='_blank' rel='noopener noreferrer'>Audience &rarr; Audience Settings</a> to retrieve your Audience ID"}
+									{type:"text", path:"data.tag", label:"Tag", description:"Optional. Every contact that Emissary sends to MailChimp is tagged with this name."}
+									{type:"toggle", path:"isActive", options:{true-text:"Active. New Followers will be sent to MailChimp.", false-text:"Activate?"}}
+								]
+							}
+						}
+						{do:"save"}
+						{do:"refresh-page"}
+					]}
+				]}
+			]
+		}
+
+		connections-edit-mailchimp: {
+			roles:["self"]
+			steps:[
+				{do:"as-modal", steps:[
+					{do:"with-user-connection", steps:[
+						{do:"view-html", file:"connections-edit-mailchimp"}
+						{
+							do:edit
+							form:{
+								type:layout-vertical
+								children:[
+									{type:"hidden", path:"type", options:{value:"MAILCHIMP"}}
+									{type:"text", path:"vault.apiKey", label:"Mailchimp API Key", description:"Go to <a href='https://admin.mailchimp.com/account/api/' target='_blank' rel='noopener noreferrer'>Account &rarr; Extras &rarr; API Keys</a> to create an API key for your MailChimp account", options:{required:true}}
+									{type:"text", path:"data.dataCenter", label:"Data Center", description:"The start of your own Mailchimp web address, such as 'us6'.", options:{required:true, placeholder:"us6"}}
+									{type:"text", path:"data.audienceId", label:"Audience ID", readOnly:true}
+									{type:"text", path:"data.tag", label:"Tag", description:"Optional. Every contact that Emissary sends to MailChimp is tagged with this name."}
+									{type:"toggle", path:"isActive", options:{true-text:"Active. New Followers will be sent to MailChimp.", false-text:"Activate?"}}
+								]
+							}
+							options:["delete:/@me/settings/connections-delete?userConnectionId={{.ObjectID}}"]
+						}
+						{do:"save"}
+						{do:"refresh-page"}
+					]}
+				]}
+			]
+		}
+
+		connections-delete: {
+			roles:["self"]
+			steps:[
+				{do:"with-user-connection", steps:[
+					{do:"delete", title:"Remove this Connection?", message:"This deletes your credentials from this server and removes everything it installed in your account at that service. Your account there is left alone."}
+					{do:"refresh-page"}
+				]}
+			]
+		}
+
 		merchantAccounts: {
 			roles:["self"]
 			steps:[
@@ -731,31 +812,6 @@
 			roles:["self"]
 			steps:[
 					{do:"view-html"}
-			]
-		}
-
-		merchantAccount-edit-paypal: {
-			roles:["self"]
-			steps: [
-				{do:"as-modal", steps:[
-					{do:"with-merchant-account", steps:[
-						{do:"view-html", file:"merchantAccount-edit-paypal"}
-						{
-							do:edit
-							form:{
-								type:layout-vertical
-								children:[
-									{type:"hidden", path:"type", options:{value:"PAYPAL"}}
-									{type:"text", path:"name", label:"Account Label", description:"(PRIVATE) A label for you to recognize this account", options:{required:true}}
-									{type:"toggle", path:"liveMode", options:{true-text:"Live Mode (Yes. Use for Actual Payments)", false-text:"Live Mode (No. Sandbox Only)"}}
-								]
-							}
-							options:["delete:/@me/settings/merchantAccount-delete?merchantAccountId={{.ObjectID}}"]
-						}
-						{do:"save"}
-						{do:"refresh-page"}
-					]}
-				]}
 			]
 		}
 

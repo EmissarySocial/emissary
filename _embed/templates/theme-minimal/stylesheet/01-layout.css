@@ -1,0 +1,440 @@
+/******************************************
+ * PAGE LAYOUT CLASSES
+ ******************************************/
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	display:flex;
+	flex-direction:column;
+	background-color: var(--body-background);
+	color: var(--text-color);
+	margin:0px;
+	min-height:100dvh;
+	overflow-x:hidden;
+	overscroll-behavior: none;
+}
+
+nav {
+	display: flex;
+	align-items:stretch;
+	justify-content: center;
+
+	color: var(--gray80);
+	font-weight:400;
+	font-size:14px;
+	background-color: var(--white);
+	height:48px;
+	flex-shrink:0;
+	flex-grow:0;
+	padding-left:16px;
+	padding-right:16px;
+	overflow-x:auto;
+	overflow-y:hidden;
+	overscroll-behavior: none;
+
+	@media print {
+		display:none;
+	}
+
+	@media screen {
+
+		/* RULE: hide the bar wholesale below 640px and restyle nothing inside it. The mobile
+		   layout is .nav-menu further down, which shares no markup with this (see AGENTS.md). */
+		@media (width < 640px) {
+			& {display: none;}
+		}
+
+		@media (width >= 640px) {
+			& {border-bottom: solid 1px var(--gray15);}
+		}
+	}
+
+	.framed {
+		display: flex;
+		justify-content: space-evenly;
+
+		@media screen and (width >= 640px) {
+			& {
+				flex-grow:1;
+
+				/* RULE: `safe center`, not `center`. A centered track that overflows this scroll
+				   container spills past both edges, and the start is unreachable (see AGENTS.md). */
+				justify-content: safe center;
+			}
+		}
+	}
+
+	a, button {
+		display:flex;
+		align-items:center;
+
+		color: var(--gray80);
+		background-color: var(--white);
+		padding:6px 12px;
+		line-height:1.5em;
+		border-radius: var(--border-radius);
+		margin:6px 0px;
+		white-space: nowrap;
+
+		&.primary {
+			background-color: var(--button-primary-background);
+			color: var(--button-primary-color);
+
+			&:hover,
+			&:focus {
+				background-color: var(--button-primary-background-hover);
+				color: var(--button-primary-color-hover);
+			}
+		}
+
+		&:hover,
+		&:focus {
+			color: var(--gray90);
+			background-color:var(--gray10);
+		}
+
+		&.selected,
+		&.selected:hover,
+		&.selected:focus {
+			background-color: var(--gray20);
+			color: var(--black);
+		}
+	}
+
+	b {
+		display:inline-block;
+		color: var(--black);
+		font-weight: 700;
+		padding: 8px 0px;
+		margin:10px 10px 10px 0px;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+}
+
+main {
+	flex-grow:1;
+	display: flex;
+	flex-direction:row;
+	justify-content: center;
+	container-type:inline-size;
+	overscroll-behavior: none;
+}
+
+body:has(> main > .app) {
+	height:100dvh;
+	width:100dvw;
+	overflow-x:hidden;
+	overflow-y:hidden;
+	overscroll-behavior: none;
+}
+
+main:has(> .app) {
+	height:100%;
+	overflow-x:hidden;
+	overflow-y:hidden;
+	overscroll-behavior:none;
+}
+
+/* Desktop bar links are inline. Below 640px the bar does not render at all (see .nav-menu). */
+@media screen and (width >= 640px) {
+
+	nav a {
+		display:inline;
+	}
+}
+
+/******************************************
+ * Mobile Navigation Menu (below 640px)
+ *
+ * A control fixed to the top-right corner of the screen, and the full-screen sheet it opens.
+ * Both live outside <nav>, so none of the `nav a` rules above reach them and this block
+ * restates everything it needs. Never rebuild this as a second <nav> (see AGENTS.md).
+ ******************************************/
+
+/* Desktop: display:none, not hide-visual, or the checkbox is a dead tab stop (see AGENTS.md). */
+.nav-menu {
+	display: none;
+}
+
+@media screen and (width < 640px) {
+
+	/* The landmark, and the one switch that turns the mobile layout on. Both children are
+	   position:fixed, so this is a zero-height flex item in <body>. */
+	.nav-menu {
+		display: block;
+	}
+
+	/* RULE: position:fixed, never absolute, because this is also the close button over a fixed
+	   sheet. z-index sits above the sheet and below the 1000 tier of modals (see AGENTS.md). */
+	.nav-menu-button {
+		position: fixed;
+		top: var(--rhythm);
+		right: var(--rhythm);
+		z-index: 901;
+
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		/* 44px, the smallest target both mobile platforms treat as reliably tappable.
+		   --rhythm is 8px at every breakpoint, so this is not a responsive multiple. */
+		width: calc(var(--rhythm) * 5.5);
+		height: calc(var(--rhythm) * 5.5);
+
+		border-radius: var(--border-radius);
+		color: var(--gray80);
+		cursor: pointer;
+
+		/* RULE: opaque, and --gray10 rather than --white. Nothing reserves space for this control,
+		   so the backdrop is its only contrast, and the grays invert in dark mode (see AGENTS.md). */
+		background-color: var(--gray10);
+		box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
+
+		& > .icon {
+			font-size: calc(var(--rhythm) * 3);
+			line-height: 1;
+		}
+	}
+
+	/* Closed shows the hamburger, open shows the X: one control with two glyphs, so one tab stop
+	   and one focus ring. `+` reaches the label because the whitespace between them is a text
+	   node, which the adjacent sibling combinator skips. */
+	.nav-menu-button > .nav-menu-close {
+		display: none;
+	}
+
+	.nav-menu-toggle:checked + .nav-menu-button > .nav-menu-open {
+		display: none;
+	}
+
+	.nav-menu-toggle:checked + .nav-menu-button > .nav-menu-close {
+		display: block;
+	}
+
+	/* The focused element is the off-screen checkbox, so the ring is drawn on its label. */
+	.nav-menu-toggle:focus-visible + .nav-menu-button {
+		outline: solid 2px var(--focus-color);
+		outline-offset: 2px;
+	}
+
+	/* The sheet. Hidden until the checkbox is checked: `:checked` is a selector, so it lives inside
+	   this media query and does not exist above 640px (see AGENTS.md). */
+	.nav-menu-panel {
+		position: fixed;
+		inset: 0px;
+		z-index: 900;
+
+		display: flex;
+		flex-direction: column;
+
+		/* RULE: visibility, not display. `display` cannot transition, and @starting-style animates
+		   the entry only, so the sheet would fade in and then vanish on exit (see AGENTS.md). */
+		visibility: hidden;
+		opacity: 0;
+		transform: scale(0.98);
+		transition: opacity var(--motion-base) var(--motion-ease), transform var(--motion-base) var(--motion-ease), visibility 0s linear var(--motion-base);
+
+		background-color: var(--white);
+
+		/* Clears the control, which is fixed over this sheet's own top-right corner */
+		padding-top: calc(var(--rhythm) * 9);
+
+		/* RULE: `contain`, not `none`, or a swipe scrolls the document behind the sheet (see AGENTS.md). */
+		overflow-y: auto;
+		overscroll-behavior: contain;
+	}
+
+	.nav-menu-toggle:checked ~ .nav-menu-panel {
+		visibility: visible;
+		opacity: 1;
+		transform: scale(1);
+
+		/* Same durations, but the visibility delay drops to zero: the sheet has to be visible at
+		   the start of the fade-in and stay visible until the end of the fade-out. */
+		transition: opacity var(--motion-base) var(--motion-ease), transform var(--motion-base) var(--motion-ease), visibility 0s linear 0s;
+	}
+
+	/* RULE: zero the delay as well as the duration. The global reduced-motion switch overrides
+	   duration only, and a lingering delay leaves an invisible sheet swallowing taps (see AGENTS.md). */
+	@media (prefers-reduced-motion: reduce) {
+
+		.nav-menu-panel,
+		.nav-menu-toggle:checked ~ .nav-menu-panel {
+			transition-delay: 0s;
+		}
+	}
+
+	/* RULE: .floating-menu is z-index 1000 and would paint over the sheet. It sits outside .nav-menu,
+	   so :has on <body> is the only selector that reaches it. */
+	body:has(.nav-menu-toggle:checked) .floating-menu {
+		display: none;
+	}
+
+	/* Sheet rows: a row with a leading glyph, sized to match the Inbox's own mobile menu in
+	   user-inbox/mobile.html. A stacked icon-over-caption layout only reads when an icon is
+	   present, and a stream's icon is usually absent. */
+	.nav-menu-panel a {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: var(--rhythm);
+
+		padding: calc(var(--rhythm) * 2);
+		border-bottom: solid 1px var(--gray15);
+
+		color: var(--gray80);
+		font-size: calc(var(--rhythm) * 2.5);
+		line-height: 1.4;
+		text-decoration: none;
+
+		&:hover,
+		&:focus {
+			color: var(--gray90);
+			background-color: var(--gray10);
+		}
+
+		/* Set server-side from .NavigationID, not by SelectNav (see AGENTS.md). */
+		&.selected {
+			background-color: var(--gray20);
+			color: var(--black);
+		}
+
+		& > .icon {
+			font-size: calc(var(--rhythm) * 3);
+			line-height: 1;
+			flex-shrink: 0;
+		}
+
+		& > .label {
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+	}
+
+	/* Join Now is a call to action, not a destination, so it reads as a button rather than as
+	   one more row in the list. */
+	.nav-menu-panel a.primary {
+		justify-content: center;
+		margin: calc(var(--rhythm) * 2);
+		padding: calc(var(--rhythm) * 1.5) calc(var(--rhythm) * 2);
+		border-bottom: none;
+		border-radius: var(--border-radius);
+		background-color: var(--button-primary-background);
+		color: var(--button-primary-color);
+
+		&:hover,
+		&:focus {
+			background-color: var(--button-primary-background-hover);
+			color: var(--button-primary-color-hover);
+		}
+	}
+}
+
+/******************************************
+ * Notification Badge (overlaid on the Notifications bell icon)
+ ******************************************/
+
+/* The anchor is the positioning context, so the badge overlays the icon without occupying
+   layout space and the button never changes size. */
+#nav-notifications {
+	position: relative;
+}
+
+/* A red dot pinned near the top-right of the icon, positioned from the anchor's horizontal
+   center so the label's width never shifts it. Tweak `top`, `margin-left` and `font-size`. */
+#nav-notifications .nav-badge {
+	position: absolute;
+	top: 4px;
+	left: 50%;
+	margin: 0 0 0 4px;
+	font-size: 8px;
+	line-height: 1;
+	color: var(--red60);
+	pointer-events: none;
+}
+
+/******************************************
+ * Floating Menu
+ *
+ * The signed-in user's own links, pinned to the bottom-right corner outside <nav>, so none
+ * of the `nav a` rules above reach them. This block mirrors those rules so the two sets of
+ * items stay visually identical: change one, change the other. Nothing selects `.nav-item`.
+ * Pair it with `card padding-xs` for the visual treatment.
+ ******************************************/
+
+.floating-menu {
+
+	position: fixed;
+	bottom: var(--rhythm);
+	right: var(--rhythm);
+
+	/* Float above the Inbox and Conversations apps, which fill the viewport. */
+	z-index: 1000;
+
+	/* RULE: turn off the query container that .card switches on, or this shrink-to-fit card
+	   collapses to its own padding. `width:max-content` does not rescue it (see the root AGENTS.md). */
+	container-type: normal;
+
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+
+	/* A corner-pinned menu must degrade by wrapping, never by pushing its links off the
+	   edge of the viewport where they cannot be seen or reached. */
+	flex-wrap: wrap;
+	justify-content: flex-end;
+
+	a {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+
+		color: var(--gray80);
+		padding: 6px 12px;
+		line-height: 1.5em;
+		border-radius: var(--border-radius);
+		white-space: nowrap;
+		text-overflow: ellipsis;
+
+		&:hover,
+		&:focus {
+			color: var(--gray90);
+			background-color: var(--gray10);
+		}
+
+		&.selected,
+		&.selected:hover,
+		&.selected:focus {
+			background-color: var(--gray20);
+			color: var(--black);
+		}
+
+		& > .icon {
+			font-size: 24px;
+		}
+
+		& > .label {
+			font-size: 10px;
+			line-height: 14px;
+		}
+	}
+}
+
+/* Desktop drops the stacked label exactly as the nav bar does: .mobile-show hides the label,
+   leaving only the icon. The anchor stays a centered column, which holds the badge over the icon. */
+@media screen and (width >= 640px) {
+
+	.floating-menu a > .icon {
+		font-size: unset;
+	}
+
+	.floating-menu a > .label {
+		font-size: unset;
+		line-height: unset;
+	}
+}

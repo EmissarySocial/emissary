@@ -92,7 +92,7 @@ func (w Follower) ParentID() primitive.ObjectID {
 	return w._follower.ParentID
 }
 
-// ActorID returns the ActorID property of this Follow
+// StateID returns the StateID of this Follower
 func (w Follower) StateID() string {
 	return w._follower.StateID
 }
@@ -102,12 +102,16 @@ func (w Follower) Method() string {
 	return w._follower.Method
 }
 
+func (w Follower) MethodLabel() string {
+	return w._follower.MethodLabel()
+}
+
 // Format returns the Format property of this Follow
 func (w Follower) Format() string {
 	return w._follower.Format
 }
 
-// ActorID returns the ActorID property of this Follow
+// Actor returns the actor being followed
 func (w Follower) Actor() model.PersonLink {
 	return w._follower.Actor
 }
@@ -212,7 +216,7 @@ func (w Follower) Render() (template.HTML, error) {
 
 	// Success!
 	status.Apply(w._response)
-	return template.HTML(buffer.String()), nil
+	return template.HTML(buffer.String()), nil // #nosec G203 -- buffer holds the action pipeline's own rendered output, already escaped by html/template
 }
 
 // View executes a separate view for this Stream

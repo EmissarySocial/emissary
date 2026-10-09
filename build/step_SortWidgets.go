@@ -44,9 +44,20 @@ func (step StepSortWidgets) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	stream := streamBuilder._stream
 	template := streamBuilder._template
 	newWidgets := model.NewStreamWidgets()
+	addedWidget := false
 
 	// Find and organize the selected widgets
 	for _, widgetLocation := range template.WidgetLocations {
+
+		// RULE: a location the form did not post at all is unchanged.  Only a location that is
+		// present, even as "", was rearranged; treating absence as empty would let a form with
+		// no placement data wipe every widget on the page.
+		if !transaction.Has(widgetLocation) {
+			for _, widget := range stream.WidgetsByLocation(widgetLocation) {
+				newWidgets.Append(widget)
+			}
+			continue
+		}
 
 		widgetTypes := strings.Split(transaction.Get(widgetLocation), ",")
 		for _, widgetType := range widgetTypes {
@@ -70,6 +81,7 @@ func (step StepSortWidgets) Post(builder Builder, _ io.Writer) PipelineBehavior 
 					widget.Label = widgetDefinition.Label
 
 					newWidgets.Append(widget)
+					addedWidget = true
 				}
 			}
 		}
@@ -78,6 +90,19 @@ func (step StepSortWidgets) Post(builder Builder, _ io.Writer) PipelineBehavior 
 	// Apply the new data structure to the stream
 	stream.Widgets = newWidgets
 
-	// Success!
-	return nil
+	// RULE: only a widget that was just CREATED needs the editor redrawn.  The browser is
+	// still showing the chip it cloned out of the tray, which carries the widget type where
+	// its permanent ID belongs and has no Edit button; leave that in place and the next save
+	// reads the type again and creates a second copy of the same widget.
+	if addedWidget {
+		return nil
+	}
+
+	// Everything else already matches what was saved -- a reorder, a move between locations, or
+	// a layout control the visitor just changed.  Redrawing would destroy the drag still in
+	// flight and cut off the animation the control started, so tell htmx to keep what it has.
+	// Safe against a later step failing: AsHTML returns down the error path BEFORE it applies
+	// these headers, so WrapInlineError's own HX-Reswap still reaches the browser.
+	// Nothing to see here, move along.
+	return Continue().WithHeader("HX-Reswap", "none")
 }

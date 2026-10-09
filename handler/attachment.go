@@ -26,7 +26,7 @@ func GetDomainAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 		return ctx.NoContent(http.StatusNotModified)
 	}
 
-	domain := factory.Domain().Get()
+	readOnlyDomain := factory.Domain().Cached()
 
 	// Load the attachment in order to verify that it is valid for this stream
 	attachmentService := factory.Attachment()
@@ -37,8 +37,8 @@ func GetDomainAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 		return derp.Wrap(err, location, "Invalid attachmentID", attachmentIDString, derp.WithNotFound())
 	}
 
-	attachment := model.NewAttachment(model.AttachmentObjectTypeDomain, domain.DomainID)
-	if err := attachmentService.LoadByID(session, model.AttachmentObjectTypeDomain, domain.DomainID, attachmentID, &attachment); err != nil {
+	attachment := model.NewAttachment(model.AttachmentObjectTypeDomain, readOnlyDomain.DomainID)
+	if err := attachmentService.LoadByID(session, model.AttachmentObjectTypeDomain, readOnlyDomain.DomainID, attachmentID, &attachment); err != nil {
 		return derp.Wrap(err, location, "Loading attachment")
 	}
 
@@ -125,6 +125,12 @@ func GetStreamAttachment(ctx *steranko.Context, factory *service.Factory, sessio
 	attachment := model.NewEmptyAttachment()
 	if err := attachmentService.LoadByToken(session, model.AttachmentObjectTypeStream, stream.StreamID, attachmentToken, &attachment); err != nil {
 		return derp.Wrap(err, location, "Loading attachment")
+	}
+
+	// RULE: A file that is not stored yet is never handed to the MediaServer, which would cache
+	// an empty result for it.  A page links to an imported file before the file arrives.
+	if !attachment.IsStored() {
+		return serveUnstoredAttachment(ctx, attachment)
 	}
 
 	// Retrieve the file from the mediaserver
@@ -245,4 +251,26 @@ func attachmentContentDisposition(filename string) string {
 // fault -- the browser simply renders its normal broken-image state instead.
 func serveAttachmentError(err error, location string, attachment model.Attachment) error {
 	return derp.Wrap(err, location, "Serving attachment file", attachment.AttachmentID.Hex(), derp.WithNotFound())
+}
+
+// attachmentRetryAfter is how many seconds a client is asked to wait for a file still being copied
+// in.  A download waits for the queue's storage poller, which checks once a minute when idle.
+const attachmentRetryAfter = "30"
+
+// serveUnstoredAttachment answers for an attachment whose file is not in the MediaServer: 503 while
+// it is being copied in, and 404 once it has failed.  It writes the response itself rather than
+// returning an error, because every request for a page's images would otherwise be filed in the
+// error log.
+func serveUnstoredAttachment(ctx *steranko.Context, attachment model.Attachment) error {
+
+	// RULE: Nothing may keep this answer.  The file may arrive in seconds, or on the next sync,
+	// and a cached miss would outlive it.
+	ctx.Response().Header().Set("Cache-Control", "no-store")
+
+	if attachment.Status == model.AttachmentStatusWorking {
+		ctx.Response().Header().Set("Retry-After", attachmentRetryAfter)
+		return ctx.NoContent(http.StatusServiceUnavailable)
+	}
+
+	return ctx.NoContent(http.StatusNotFound)
 }

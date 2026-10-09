@@ -4,18 +4,18 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 
 // FollowingSummary is an abbreviated Following, used when listing many Followings at once
 type FollowingSummary struct {
-	FollowingID primitive.ObjectID `bson:"_id"`
-	Username    string             `bson:"username"`
-	URL         string             `bson:"url"`
-	Label       string             `bson:"label"`
-	Folder      string             `bson:"folder"`
-	FolderID    primitive.ObjectID `bson:"folderId"`
-	IconURL     string             `bson:"iconUrl"`
-	Method      string             `bson:"method"`
-	Status      string             `bson:"status"`
-	LastPolled  int64              `bson:"lastPolled"` // Unix epoch SECONDS when this Following was last polled (mirrors Following.LastPolled)
-	NextPoll    int64              `bson:"nextPoll"`   // Unix epoch SECONDS when this Following is next due to be polled (mirrors Following.NextPoll)
-	CreateDate  int64              `bson:"createDate"` // Unix epoch MILLISECONDS (journal projection; used only for sort rank)
+	FollowingID primitive.ObjectID `json:"followingId" bson:"_id"`
+	Username    string             `json:"username"    bson:"username"`
+	URL         string             `json:"url"         bson:"url"`
+	Label       string             `json:"label"       bson:"label"`
+	Folder      string             `json:"folder"      bson:"folder"`
+	FolderID    primitive.ObjectID `json:"folderId"    bson:"folderId"`
+	IconURL     string             `json:"iconUrl"     bson:"iconUrl"`
+	Method      string             `json:"method"      bson:"method"`
+	Status      string             `json:"status"      bson:"status"`
+	LastPolled  int64              `json:"lastPolled"  bson:"lastPolled"` // Unix epoch SECONDS when this Following was last polled (mirrors Following.LastPolled)
+	NextPoll    int64              `json:"nextPoll"    bson:"nextPoll"`   // Unix epoch SECONDS when this Following is next due to be polled (mirrors Following.NextPoll)
+	CreateDate  int64              `json:"createDate"  bson:"createDate"` // Unix epoch MILLISECONDS (journal projection; used only for sort rank)
 }
 
 // FollowingSummaryFields returns a slice of all BSON field names for a FollowingSummary
@@ -28,10 +28,23 @@ func (summary FollowingSummary) Fields() []string {
 	return FollowingSummaryFields()
 }
 
-// Icon returns the name of the icon that represents this Following's polling method
+// Icon returns the name of the icon that represents this Following's status and polling method
 func (summary FollowingSummary) Icon() string {
 
-	var icon string
+	// RULE: Every status the model paints red shows the SAME alert icon.  The three problem
+	// states differ in how long we keep trying, never in how loudly they say something broke.
+	if followingStatusClass(summary.Status) == "red" {
+		return "alert-fill"
+	}
+
+	// A Following that is still connecting has nothing to report yet, so it spins
+	if summary.Status == FollowingStatusLoading {
+		return "loading"
+	}
+
+	// Name the protocol.  A Following that has not connected yet carries no Method, and an
+	// empty name renders as an invisible icon, so fall back to a neutral account glyph.
+	icon := "person"
 
 	switch summary.Method {
 
@@ -42,36 +55,28 @@ func (summary FollowingSummary) Icon() string {
 		icon = "rss"
 	}
 
-	switch summary.Status {
-
-	case FollowingStatusLoading:
-		return "loading"
-
-	case FollowingStatusSuccess:
+	// A working follow fills its protocol icon in
+	if summary.Status == FollowingStatusSuccess {
 		return icon + "-fill"
-
-	default:
-		return icon
 	}
+
+	return icon
 }
 
-// StatusClass returns the CSS class that represents this Following's current status
+// StatusClass returns the CSS color suffix that represents this Following's current status,
+// for use as "text-<class>"
 func (summary FollowingSummary) StatusClass() string {
+	return followingStatusClass(summary.Status)
+}
 
-	switch summary.Status {
+// StatusLabel returns the human-readable description of this Following's current status
+func (summary FollowingSummary) StatusLabel() string {
+	return followingStatusLabel(summary.Status)
+}
 
-	case FollowingStatusLoading:
-		return "spin"
-
-	case FollowingStatusFailure:
-		return "red"
-
-	case FollowingStatusSuccess:
-		return "green"
-
-	default:
-		return ""
-	}
+// StatusDescription returns one short sentence saying why this Following is in a problem status
+func (summary FollowingSummary) StatusDescription() string {
+	return followingStatusDescription(summary.Status)
 }
 
 // GetRank returns the sort rank of this FollowingSummary

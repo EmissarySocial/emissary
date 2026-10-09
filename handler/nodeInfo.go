@@ -60,10 +60,10 @@ func GetNodeInfo(ctx *steranko.Context, factory *service.Factory, session data.S
 // http://nodeinfo.diaspora.software/docson/index.html#/ns/schema/2.0#$$expand
 func GetNodeInfo20(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
-	domain := factory.Domain().Get()
+	readOnlyDomain := factory.Domain().Cached()
 	userCount := nodeInfoUserCount(factory, session)
 
-	return ctx.JSON(http.StatusOK, nodeInfoDocument("2.0", factory.Version(), domain, userCount))
+	return ctx.JSON(http.StatusOK, nodeInfoDocument("2.0", factory.Version(), readOnlyDomain, userCount))
 }
 
 // GetNodeInfo21 returns the nodeInfo 2.1 document for this server
@@ -71,10 +71,10 @@ func GetNodeInfo20(ctx *steranko.Context, factory *service.Factory, session data
 // http://nodeinfo.diaspora.software/docson/index.html#/ns/schema/2.1#$$expand
 func GetNodeInfo21(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
-	domain := factory.Domain().Get()
+	readOnlyDomain := factory.Domain().Cached()
 	userCount := nodeInfoUserCount(factory, session)
 
-	result := nodeInfoDocument("2.1", factory.Version(), domain, userCount)
+	result := nodeInfoDocument("2.1", factory.Version(), readOnlyDomain, userCount)
 
 	// Only 2.1 defines these two properties
 	result.Software.Repository = softwareRepository
@@ -102,7 +102,7 @@ func nodeInfoUserCount(factory *service.Factory, session data.Session) *int64 {
 
 // nodeInfoDocument builds the NodeInfo properties that the 2.0 and 2.1 documents share. Callers add
 // the properties that only their own version defines.
-func nodeInfoDocument(version string, softwareVersion string, domain *model.Domain, userCount *int64) nodeinfo.NodeInfo {
+func nodeInfoDocument(version string, softwareVersion string, readOnlyDomain *model.Domain, userCount *int64) nodeinfo.NodeInfo {
 
 	result := nodeinfo.NewNodeInfo()
 	result.Version = version
@@ -119,7 +119,7 @@ func nodeInfoDocument(version string, softwareVersion string, domain *model.Doma
 		Inbound:  []string{"atom1.0", "rss2.0"},
 		Outbound: []string{"atom1.0", "rss2.0"},
 	}
-	result.OpenRegistrations = domain.HasRegistrationForm()
+	result.OpenRegistrations = readOnlyDomain.HasRegistrationForm()
 
 	// RULE: FEP-0151 forbids publishing skewed statistics, so a counter this server does not actually
 	// compute is omitted rather than published as a fabricated zero. Omission says "not disclosed";
@@ -132,8 +132,8 @@ func nodeInfoDocument(version string, softwareVersion string, domain *model.Doma
 	}
 
 	// Describe this Domain to humans
-	result.Metadata["nodeName"] = domain.Label
-	result.Metadata["nodeDescription"] = domain.Description
+	result.Metadata["nodeName"] = readOnlyDomain.Label
+	result.Metadata["nodeDescription"] = readOnlyDomain.Description
 
 	return result
 }

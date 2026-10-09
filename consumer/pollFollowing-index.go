@@ -7,6 +7,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // PollFollowing_Index begins the background scheduler that scans all Following records
@@ -25,12 +26,25 @@ func PollFollowing_Index(factory *service.Factory, session data.Session, args ma
 
 	for following := range followings {
 
+		// RULE: The signature makes a sweep unable to duplicate a task that is still in flight.
+		// A poll that returns queue.Error keeps its own task alive through turbine's retry
+		// chain (up to ~4h15m), which outlasts the four-hour sweep interval.  See BUG-148.
 		postcommit.Publish(session, factory.Queue(), "PollFollowing-Record", mapof.Any{
 			"hostname":    factory.Hostname(),
 			"userId":      following.UserID.Hex(),
 			"followingId": following.FollowingID.Hex(),
-		})
+		}, queue.WithSignature(pollFollowingSignature(following.FollowingID)))
 	}
 
 	return queue.Success()
+}
+
+// pollFollowingSignature returns the queue signature that collapses duplicate polls of ONE
+// Following record
+func pollFollowingSignature(followingID primitive.ObjectID) string {
+
+	// RULE: This must key on the FollowingID and nothing coarser.  A signature built from the
+	// UserID would make every Following of one User collapse into a single task, silently
+	// leaving all but one of their follows unpolled.
+	return "PollFollowing-Record:" + followingID.Hex()
 }

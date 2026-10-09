@@ -21,7 +21,7 @@ const WebhookEventStreamDelete = "stream:delete"
 // WebhookEventStreamPublish is triggered when a Stream is published
 const WebhookEventStreamPublish = "stream:publish"
 
-// WebhookEventStreamUnpublish is triggered when a Stream is unpublished
+// WebhookEventStreamPublishUndo is triggered when a Stream is unpublished
 const WebhookEventStreamPublishUndo = "stream:publish:undo"
 
 // WebhookEventStreamSyndicate is triggered when a Stream is syndicated

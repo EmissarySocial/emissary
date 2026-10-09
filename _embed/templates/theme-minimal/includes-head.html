@@ -1,0 +1,15 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="https://emissary.social">
+{{- if not .IsIndexable }}
+<meta name="robots" content="noindex">
+{{- end }}
+<link rel="stylesheet" href="/.themes/global/resources/bootstrap-icons-1.13.1/bootstrap-icons.min.css" rel="preload">
+<link rel="stylesheet" href="/.themes/global/stylesheet" rel="preload">
+<link rel="stylesheet" href="/.themes/minimal/stylesheet" rel="preload">
+
+<!-- Custom Stylesheet -->
+{{- $stylesheet := .ThemeData "stylesheet" -}}
+{{- if ne "" $stylesheet -}}
+	<style>{{- $stylesheet |css -}}</style>
+{{- end -}}

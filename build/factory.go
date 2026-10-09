@@ -41,6 +41,7 @@ type Factory interface {
 	Import() *service.Import
 	ImportItem() *service.ImportItem
 	MerchantAccount() *service.MerchantAccount
+	UserConnection() *service.UserConnection
 	KeyPackage() *service.KeyPackage
 	NewsFeed() *service.NewsFeed
 	Notification() *service.Notification
@@ -57,6 +58,7 @@ type Factory interface {
 	Stream() *service.Stream
 	StreamArchive() *service.StreamArchive
 	StreamDraft() *service.StreamDraft
+	StreamSource() *service.StreamSource
 	Privilege() *service.Privilege
 	Template() *service.Template
 	Theme() *service.Theme
@@ -66,6 +68,7 @@ type Factory interface {
 	Widget() *service.Widget
 
 	// Other data services
+	ClientIP(*http.Request) string
 	Config() config.Domain
 	Content() *service.Content
 	Domain() *service.Domain

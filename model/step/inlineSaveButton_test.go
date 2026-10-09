@@ -33,6 +33,19 @@ func TestInlineSaveButton(t *testing.T) {
 	require.Equal(t, []string{}, step.RequiredRoles())
 }
 
+// TestInlineSaveButton_Form verifies that the optional "form" association is parsed
+func TestInlineSaveButton_Form(t *testing.T) {
+
+	step, err := NewInlineSaveButton(mapof.Any{"form": "edit-form"})
+	require.Nil(t, err)
+	require.Equal(t, "edit-form", step.Form)
+
+	// Unset is empty, which the build step renders as no attribute at all
+	step, err = NewInlineSaveButton(mapof.Any{})
+	require.Nil(t, err)
+	require.Equal(t, "", step.Form)
+}
+
 // TestInlineSaveButton_InvalidTemplate verifies that an invalid template is rejected
 func TestInlineSaveButton_InvalidTemplate(t *testing.T) {
 	_, err := NewInlineSaveButton(mapof.Any{"label": "{{ .Unclosed"})

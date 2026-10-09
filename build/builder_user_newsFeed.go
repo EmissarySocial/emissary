@@ -82,7 +82,7 @@ func (w Inbox) Render() (template.HTML, error) {
 
 	// Success!
 	status.Apply(w._response)
-	return template.HTML(buffer.String()), nil
+	return template.HTML(buffer.String()), nil // #nosec G203 -- buffer holds the action pipeline's own rendered output, already escaped by html/template
 }
 
 // View executes a separate view for this Inbox
@@ -562,7 +562,7 @@ func (w Inbox) Message() model.NewsItem {
 		result, err := inboxService.Query(w._session, criteria, options...)
 
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Querying sibling newsItem", sibling, newsItem.MessageID))
+			derp.Report(derp.Wrap(err, location, "Querying sibling newsItem", sibling, newsItem.MessageID()))
 			return model.NewNewsItem()
 		}
 

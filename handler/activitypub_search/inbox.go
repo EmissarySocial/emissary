@@ -14,7 +14,7 @@ import (
 
 // PostInbox receives an inbound ActivityPub activity in a SearchQuery's inbox, verifies it, and
 // routes it to the matching handler.
-func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream, searchQuery *model.SearchQuery) error {
+func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Session, searchQuery *model.SearchQuery) error {
 
 	const location = "handler.activitypub_search.PostInbox"
 
@@ -26,7 +26,6 @@ func PostInbox(ctx *steranko.Context, factory *service.Factory, session data.Ses
 	context := Context{
 		factory:     factory,
 		session:     session,
-		stream:      stream,
 		searchQuery: searchQuery,
 	}
 

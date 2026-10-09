@@ -40,9 +40,15 @@ func NewSave(stepInfo mapof.Any) (Save, error) {
 	}
 
 	// Create the new Save step
+	method, err := parseMethod(stepInfo, "post")
+
+	if err != nil {
+		return Save{}, derp.Wrap(err, location, "Invalid 'method'", stepInfo)
+	}
+
 	return Save{
 		Comment: comment,
-		Method:  first(stepInfo.GetString("method"), "post"),
+		Method:  method,
 		OnError: onError,
 	}, nil
 }

@@ -20,7 +20,6 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
 	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -179,7 +178,7 @@ func (service *Import) ObjectType() string {
 	return "Import"
 }
 
-// New returns a fully initialized model.Import as a data.Object.
+// ObjectNew returns a fully initialized model.Import as a data.Object.
 func (service *Import) ObjectNew() data.Object {
 	result := model.NewImport()
 	return &result
@@ -332,7 +331,7 @@ func (service *Import) doAuthorize(record *model.Import) error {
 
 	// Find the remote actor identified as the Source account
 	client := service.activityService.AppClient()
-	actor, err := client.Load(record.SourceID, sherlock.AsActor())
+	actor, err := client.Load(record.SourceID)
 
 	if err != nil {
 		record.StateID = model.ImportStateAuthorizationError

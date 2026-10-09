@@ -35,28 +35,30 @@ import (
 
 // User manages all interactions with the User collection
 type User struct {
-	activityService   *ActivityStream
-	attachmentService *Attachment
-	connectionService *Connection
-	emailService      *DomainEmail
-	domainService     *Domain
-	folderService     *Folder
-	followerService   *Follower
-	followingService  *Following
-	keyService        *EncryptionKey
-	newsFeedService   *NewsFeed
-	outboxService     *Outbox
-	outbox2Service    *Outbox2
-	responseService   *Response
-	ruleService       *Rule
-	searchTagService  *SearchTag
-	steranko          func(data.Session) *steranko.Steranko
-	streamService     *Stream
-	templateService   *Template
-	webhookService    *Webhook
-	queue             *queue.Queue
-	sseUpdateChannel  chan<- realtime.Message
-	host              string
+	activityService       *ActivityStream
+	attachmentService     *Attachment
+	connectionService     *Connection
+	emailService          *DomainEmail
+	domainService         *Domain
+	folderService         *Folder
+	followerService       *Follower
+	followingService      *Following
+	keyService            *EncryptionKey
+	newsFeedService       *NewsFeed
+	outboxService         *Outbox
+	outbox2Service        *Outbox2
+	responseService       *Response
+	ruleService           *Rule
+	searchResultService   *SearchResult
+	searchTagService      *SearchTag
+	steranko              func(data.Session) *steranko.Steranko
+	streamService         *Stream
+	userConnectionService *UserConnection
+	templateService       *Template
+	webhookService        *Webhook
+	queue                 *queue.Queue
+	sseUpdateChannel      chan<- realtime.Message
+	host                  string
 }
 
 // NewUser returns a fully populated User service
@@ -85,14 +87,17 @@ func (service *User) Refresh(factory *Factory) {
 	service.outbox2Service = factory.Outbox2()
 	service.responseService = factory.Response()
 	service.ruleService = factory.Rule()
+	service.searchResultService = factory.SearchResult()
 	service.steranko = factory.Steranko
 	service.streamService = factory.Stream()
+	service.userConnectionService = factory.UserConnection()
 	service.templateService = factory.Template()
 	service.webhookService = factory.Webhook()
 	service.sseUpdateChannel = factory.SSEUpdateChannel()
 	service.queue = factory.Queue()
 
 	service.host = factory.Host()
+
 }
 
 // Hostname returns the domain-only name (no protocol)
@@ -222,15 +227,9 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 		}
 	}
 
-	// Normalize the value before saving.  Values are rewritten in place (formatted,
-	// clamped, truncated) to conform to the schema, so that legacy data written under
-	// older rules is repaired progressively as records are saved.
-	//
-	// This runs BEFORE ValidateUsername so that uniqueness and formatting rules are
-	// checked against the username as it will actually be stored (e.g. after truncation
-	// to the schema's max length), not the raw client-supplied value.  Otherwise an
-	// over-length username could pass uniqueness against its full form, then be truncated
-	// into a collision with an existing account.
+	// RULE: normalize BEFORE ValidateUsername, so uniqueness is checked against the
+	// username as it will be STORED. Otherwise an over-length name could pass against
+	// its full form, then truncate into a collision with an existing account.
 	rewrites, err := service.Schema().Normalize(user)
 
 	if err != nil {
@@ -266,7 +265,7 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 	// This comparison MUST happen before the assignment below, and cannot move down to the
 	// `if profileChanged` that consumes it: once ProfileFingerprint holds newFingerprint the two
 	// are equal by construction, and profile updates would silently stop federating.
-	profileChanged := (user.ProfileFingerprint != newFingerprint) && !isNew
+	profileChanged := (user.ProfileFingerprint != newFingerprint) && !isNew //nolint:scopeguard // must be read before the assignment below
 	user.ProfileFingerprint = newFingerprint
 
 	// Try to save the User record to the database
@@ -361,9 +360,22 @@ func (service *User) Delete(session data.Session, user *model.User, note string)
 		return derp.Wrap(err, location, "Deleting User's rules", user, note)
 	}
 
+	// RULE: Remove this User from the search index.  Keyed by ProfileURL, which is what
+	// SearchResult() indexes them under -- the index holds no ID that a User can name.
+	if err := service.searchResultService.DeleteByURL(session, user.ProfileURL); err != nil {
+		return derp.Wrap(err, location, "Deleting User's search result", user, note)
+	}
+
 	// Delete related Streams
 	if err := service.streamService.DeleteByParent(session, user.UserID, "Deleted with owner"); err != nil {
 		return derp.Wrap(err, location, "Deleting User's streams", user, note)
+	}
+
+	// Delete related connections to external services.  This removes what Emissary installed
+	// at each service and erases the credential, but never touches the account itself -- see
+	// MAILING-LISTS.md D14 for why a deleted User must not unsubscribe their own followers.
+	if err := service.userConnectionService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, location, "Deleting User's external connections", user, note)
 	}
 
 	// Delete the User from the database
@@ -516,9 +528,8 @@ func (service *User) LoadByEmail(session data.Session, email string, result *mod
 	return err
 }
 
-// LoadByToken loads a single model.User object that matches the provided token.
-// If the "token" is a valid ObjectID, then it attempts to load by that userID.
-// If the "token" is not a valid ObjectID (or if the first attempt fails), then it tries to load by username.
+// LoadByToken loads the single model.User that matches the provided token, which
+// may be either an ObjectID or a username
 func (service *User) LoadByToken(session data.Session, token string, result *model.User) error {
 
 	// If the token is an ObjectID then try that first.
@@ -666,6 +677,18 @@ func (service *User) ValidateUsername(session data.Session, userID primitive.Obj
 	// RULE: Username must be unique
 	if service.UsernameExists(session, userID, username) {
 		return derp.BadRequest(location, "Username is already in use", username)
+	}
+
+	// RULE: Username must not match a Stream token, because both are acct: handles (see AGENTS.md)
+	stream := model.NewStream()
+	err := service.streamService.Load(session, exp.Equal("token", username), &stream, option.CaseSensitive(false))
+
+	if err == nil {
+		return derp.BadRequest(location, "Username is already in use by a page", username)
+	}
+
+	if !derp.IsNotFound(err) {
+		return derp.Wrap(err, location, "Loading Stream by token", username)
 	}
 
 	return nil
@@ -845,14 +868,15 @@ func (service *User) DeleteAvatar(session data.Session, user *model.User, note s
  * Email Methods
  ******************************************/
 
-// SendPasswordResetEmail generates a new password reset code (valid for the provided duration) and
-// emails it to the user.  The error is RETURNED (not swallowed) so callers on member-facing flows can
-// tell the member the email could not be sent, instead of pointing them at an inbox that will never
-// receive it.  NOTE: the reset code is persisted by MakeNewPasswordResetCode BEFORE the email is sent,
-// and a send failure does NOT roll it back -- so a code issued here stays valid for a later retry.
+// SendPasswordResetEmail generates a password reset code valid for the provided
+// duration, and emails it to the User
 func (service *User) SendPasswordResetEmail(session data.Session, user *model.User, duration time.Duration) error {
 
 	const location = "service.User.SendPasswordResetEmail"
+
+	// The error is RETURNED, not swallowed, so member-facing callers can say the mail
+	// failed instead of pointing someone at an inbox that will never receive it. The
+	// code is persisted before sending and is NOT rolled back, so it survives a retry.
 
 	if err := service.MakeNewPasswordResetCode(session, user, duration); err != nil {
 		return derp.Wrap(err, location, "Making password reset", user)
@@ -865,18 +889,15 @@ func (service *User) SendPasswordResetEmail(session data.Session, user *model.Us
 	return nil
 }
 
-// NotifySigninLockout emails the account owner that their account has been
-// temporarily locked after repeated failed signin attempts. This method swallows
-// errors so it can run inline on the signin path.
-//
-// RULE: it MUST NOT change the stored password. A failed-login lockout is triggered
-// by unauthenticated input against a known username, so resetting the credential
-// here would hand an attacker a one-request account-takeover-disruption primitive
-// (the original CWE-645 bug). The lock is temporary and clears on its own; the owner
-// signs in normally once the window passes.
+// NotifySigninLockout emails the account owner that their account was temporarily
+// locked after repeated failed signin attempts
 func (service *User) NotifySigninLockout(session data.Session, username string) {
 
 	const location = "service.User.NotifySigninLockout"
+
+	// RULE: this MUST NOT change the stored password, and swallows errors so it can run
+	// inline on signin. The lockout comes from unauthenticated input against a known
+	// username, so resetting a credential here would be CWE-645 all over again.
 
 	user := model.NewUser()
 	if err := service.LoadByUsername(session, username, &user); err != nil {
@@ -934,10 +955,9 @@ func (service *User) WebFinger(session data.Session, token string) (digit.Resour
 		return digit.Resource{}, derp.Wrap(err, location, "Loading user", token)
 	}
 
-	// RULE: Non-public profiles are hidden from public discovery. WebFinger is unauthenticated,
-	// so there is no requester to exempt (the owner discovers themselves via the app, not WebFinger).
-	// This keeps "Hidden from Public Servers" true at the discovery layer, matching the hidden
-	// actor document and every sibling ActivityPub endpoint.
+	// RULE: non-public profiles are hidden from public discovery. WebFinger is
+	// unauthenticated, so there is no requester to exempt -- this keeps "Hidden from
+	// Public Servers" true at the discovery layer, like every sibling endpoint.
 	if !user.IsPublic {
 		return digit.Resource{}, derp.NotFound(location, "User not found", token)
 	}

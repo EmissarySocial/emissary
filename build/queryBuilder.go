@@ -19,6 +19,7 @@ type QueryBuilder[T model.FieldLister] struct {
 	sortDirection string
 	maxRows       int64
 	caseSensitive null.Bool
+	isEmpty       bool
 }
 
 // NewQueryBuilder returns a QueryBuilder seeded with the provided criteria, sorted by rank, capped at 60 rows
@@ -32,6 +33,19 @@ func NewQueryBuilder[T model.FieldLister](service service.ModelService, session 
 		sortDirection: "asc",
 		maxRows:       60,
 		caseSensitive: null.Bool{},
+	}
+}
+
+// NewEmptyQueryBuilder returns a QueryBuilder that yields no results, without touching the database
+func NewEmptyQueryBuilder[T model.FieldLister]() QueryBuilder[T] {
+
+	// An empty QueryBuilder is the honest answer when a relationship does not exist at all -- for
+	// instance, the ancestors of a top-level Stream.  It carries no service or session, so only
+	// Slice() and Count() need to know about it.  The criteria must still be a real Expression,
+	// because a Template is free to chain Where() and friends onto whatever it is handed.
+	return QueryBuilder[T]{
+		criteria: exp.Empty(),
+		isEmpty:  true,
 	}
 }
 
@@ -273,15 +287,27 @@ func (builder QueryBuilder[T]) CaseInsensitive() QueryBuilder[T] {
 
 // Slice returns the results of the query as a slice of objects
 func (builder QueryBuilder[T]) Slice() (sliceof.Object[T], error) {
+
 	result := make([]T, 0)
+
+	// RULE: An empty QueryBuilder has no service to query, so it returns an empty (not nil) slice
+	if builder.isEmpty {
+		return result, nil
+	}
+
 	err := builder.service.ObjectQuery(builder.session, &result, builder.criteria, builder.makeOptions()...)
 	return result, err
 }
 
 // Count returns the number of records that match the query criteria
 func (builder QueryBuilder[T]) Count() (int64, error) {
-	return builder.service.Count(builder.session, builder.criteria)
 
+	// RULE: An empty QueryBuilder has no service to query, so it always counts zero
+	if builder.isEmpty {
+		return 0, nil
+	}
+
+	return builder.service.Count(builder.session, builder.criteria)
 }
 
 /********************************

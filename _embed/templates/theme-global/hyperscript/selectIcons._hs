@@ -1,0 +1,43 @@
+-- Drives the select-icons form widget. Open, close, Escape, and light-dismiss
+-- all belong to the native popover API; this only mirrors the choice onto the button.
+behavior selectIcons
+
+	init
+		set :button to the first <.select-icons-button/> in me
+		set :popover to the first <.select-icons-popover/> in me
+		set :buttonIcon to the first <.select-icons-button-icon/> in :button
+		set :buttonLabel to the first <.select-icons-button-label/> in :button
+	end
+
+	on change from <input[type=radio]/> in me
+
+		set tile to the closest <label.select-icons-tile/> to the target
+
+		if tile is null then
+			exit
+		end
+
+		-- RULE: Read the icon from data-icon, never from the radio's value.
+		-- A Value may be an emoji, and it is not always the icon name.
+		set iconName to tile's @data-icon
+
+		if iconName is null then
+			set :buttonIcon's @class to "select-icons-button-icon select-icons-blank"
+		else
+			set :buttonIcon's @class to "bi bi-" + iconName + " select-icons-button-icon"
+		end
+
+		-- RULE: The tile carries no text now, so its @title is the Label.
+		-- innerText, not innerHTML: a Label may hold whatever an end user typed.
+		set label to tile's @title
+
+		if label is null then
+			set :buttonLabel's innerText to ""
+		else
+			set :buttonLabel's innerText to label
+		end
+
+		call :popover's hidePopover()
+	end
+
+end

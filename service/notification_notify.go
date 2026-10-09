@@ -403,7 +403,7 @@ func actorPersonLink(actor streams.Document) model.PersonLink {
 // isDirectMessage returns TRUE if this activity is a private message TO this user: non-public, and
 // addressed to them BY NAME.
 //
-// Both halves are load-bearing.  Non-public alone would also match a followers-only post, which is
+// Both halves are important.  Non-public alone would also match a followers-only post, which is
 // a timeline post that belongs in the public viewer, not a conversation.  The distinction is exact
 // rather than heuristic: a followers-only post addresses the author's *followers collection* URL,
 // while a direct message addresses this user's *actor* URL, so only a real DM names them.

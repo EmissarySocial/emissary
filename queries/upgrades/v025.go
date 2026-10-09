@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Version25...
+// Version25 denormalizes the Connection collection into the Domain's Connections map
 func Version25(ctx context.Context, session *mongo.Database) error {
 
 	const location = "upgrade.Version25"
@@ -36,18 +36,18 @@ func Version25(ctx context.Context, session *mongo.Database) error {
 		connections[connection.ProviderID] = connection
 	}
 
-	// Load the domain
-	domain := model.NewDomain()
+	// Load the Domain record
+	readOnlyDomain := model.NewDomain()
 
-	if err := session.Collection("Domain").FindOne(ctx, bson.M{}).Decode(&domain); err != nil {
+	if err := session.Collection("Domain").FindOne(ctx, bson.M{}).Decode(&readOnlyDomain); err != nil {
 		return derp.Wrap(err, location, "Reading Domain from database")
 	}
 
-	// Update the domain with the new connections data
-	domain.Connections = connections
+	// RULE: $set only the connections.  A whole-record replace from model.Domain, which has no
+	// journal, strips createDate, and every later admin save then INSERTs a duplicate.
+	update := bson.M{"$set": bson.M{"connections": connections}}
 
-	// Write the domain back to the database
-	if _, err := session.Collection("Domain").ReplaceOne(ctx, bson.M{"_id": domain.DomainID}, domain); err != nil {
+	if _, err := session.Collection("Domain").UpdateOne(ctx, bson.M{"_id": readOnlyDomain.DomainID}, update); err != nil {
 		return derp.Wrap(err, location, "Writing Domain to database")
 	}
 

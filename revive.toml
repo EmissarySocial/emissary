@@ -21,14 +21,13 @@ warningCode = 1
 
 # Every exported symbol needs a doc comment that starts with its own name.
 #
-# This is the single largest source of findings in the tree (~1,700 as of 2026-08-12), and it is
-# deliberately left ON.  The backlog is paid down as a RATCHET, not in one sweep: any file you
+# This backlog is now PAID OFF: `exported` and `package-comments` both report zero as of
+# 2026-09-12 (they were ~1,700 on 2026-08-12).  Keep it that way as a ratchet -- any file you
 # touch comes out fully documented before the change lands.  See the go-comments skill.
 #
 # NOTE: the house standard is stricter than this rule -- go-comments requires a comment on EVERY
 # symbol, exported or not, which revive cannot check (`checkPrivateReceivers` covers only private
-# receivers on exported methods).  Measured against the house rule the real backlog is ~2,800.
-# Treat a clean `exported` run as necessary, not sufficient.
+# receivers on exported methods).  Treat a clean `exported` run as necessary, not sufficient.
 [rule.exported]
 
 # Every package that others import gets a package doc comment, conventionally in doc.go.
@@ -93,3 +92,12 @@ warningCode = 1
 #   [rule.bare-return]        -- naked returns in long functions
 #   [rule.deep-exit]          -- os.Exit outside main
 #   [rule.unhandled-error]    -- overlaps Gate 7 (errcheck), which already runs clean
+#
+# What still fires, as of 2026-09-12 (308 findings, none of them documentation):
+#   var-naming (252)     -- almost all `don't use underscores in Go names`.  These are deliberate:
+#                           Mastodon handlers mirror their endpoint (GetStatus_Source), and service
+#                           methods group by provider (stripe_Connect).  Renaming them is a policy
+#                           decision, not lint cleanup, so do not "fix" them piecemeal.
+#   receiver-naming (24) -- inconsistent receiver names on a few types
+#   early-return (21)    -- genuine, and safe to pay down file by file
+#   redefines-builtin-id (7), exported stutter (5)

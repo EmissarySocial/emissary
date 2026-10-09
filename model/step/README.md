@@ -2,7 +2,7 @@
 
 This package holds the *data* for every pipeline step that a Template can use. Each `.go` file here defines one step: a struct that holds the parsed configuration, and a `New…()` constructor that compiles the raw HJSON map into that struct. The code that actually *executes* a step lives in [/build](../../build/), in a matching `step_*.go` file.
 
-**[STEPS.md](STEPS.md) documents all 88 steps** — what each one does, its attributes, and a sample. This file covers the mechanics they share.
+**[STEPS.md](STEPS.md) documents all 92 steps** — what each one does, its attributes, and a sample. This file covers the mechanics they share.
 
 ## How Steps Are Parsed
 
@@ -19,6 +19,10 @@ To hold a pipeline on your own type, declare the field as [Pipeline](step.go) ra
 ## GET vs. POST
 
 Every step is executed twice over its lifetime — once for `GET` (build the page) and once for `POST` (handle the submission) — and most steps only do work in one of the two. A step like `edit-content` renders a form on `GET` and saves it on `POST`; a step like `save` does nothing on `GET`. Steps that could reasonably fire in either phase take a `method` property (`get`, `post`, or `both`) to pin down which.
+
+Every step that takes one reads it through [parseMethod](utils.go), which lower-cases the value and rejects anything outside those three words at Template load time. That validation is not cosmetic: the build-side steps guard on the parsed value with hand-written comparisons, and the two shapes of that guard read an unknown value in opposite directions — an allow-list (`method == "post"`) runs the step for *nothing*, a deny-list (`method != "post"`) runs it for *everything*. Neither reports anything, so before the check a typo silently moved when a step fired. Rejecting the typo up front is what lets both shapes coexist.
+
+Note also that a step's `method` does **not** stop the pipeline. `as-modal` and the `edit` steps return without halting on a `GET`, so a pipeline that renders a form keeps running through the steps that follow it; those steps skip themselves because of their own `method`, not because the pipeline stopped. Widening a `method` can therefore fire a step in a phase its author never considered.
 
 ## Template Requirements
 

@@ -185,7 +185,7 @@ func (service *Folder) ObjectType() string {
 	return "Folder"
 }
 
-// New returns a fully initialized model.Folder as a data.Object.
+// ObjectNew returns a fully initialized model.Folder as a data.Object.
 func (service *Folder) ObjectNew() data.Object {
 	result := model.NewFolder()
 	return &result
@@ -372,8 +372,8 @@ func (service *Folder) CalculateUnreadCount(session data.Session, userID primiti
 // CreateDefaultFolders creates the starter Folders that a new User begins with, as defined by this Domain's Theme
 func (service *Folder) CreateDefaultFolders(session data.Session, userID primitive.ObjectID) error {
 
-	domain := service.domainService.Get()
-	theme := service.themeService.GetTheme(domain.ThemeID)
+	readOnlyDomain := service.domainService.Cached()
+	theme := service.themeService.GetTheme(readOnlyDomain.ThemeID)
 
 	for index, data := range theme.DefaultFolders {
 		folder := model.NewFolder()

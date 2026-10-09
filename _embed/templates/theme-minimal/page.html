@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>{{.DomainLabel}} - {{.PageTitle}}</title>
+	{{ template "includes-head" .}}
+</head>
+
+<body hx-target="main" hx-swap="innerHTML transition:true show:none" hx-push-url="true" hx-ext="a11y" script="install SelectNav">
+
+	{{- $header := .ThemeData "header" -}}
+	{{- if ne "" $header -}}
+		<header>
+			{{- $header | html -}}
+		</header>
+	{{- end -}}
+
+	{{- template "navigation" . -}}
+
+	<main id="main">
+		{{- .GetContent -}}
+	</main>
+	
+	{{- $footer := .ThemeData "footer" -}}
+	{{- if ne "" $footer -}}
+		<footer>
+			{{- $footer | html -}}
+		</footer>
+	{{- end -}}
+
+	<aside></aside>
+
+</body>
+
+{{ template "includes-foot" .}}
+
+</html>

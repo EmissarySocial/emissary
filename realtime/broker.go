@@ -7,9 +7,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// realtime.Broker is a singleton. It is responsible
-// for keeping a list of which clients (browsers) are currently attached
-// and broadcasting events (messages) to those clients.
+// Broker keeps the list of clients (browsers) currently attached, and broadcasts
+// events to them.  It is a singleton.
 //
 // TODO: MEDIUM: Should the realtime broker be a service?
 // Is there a reason to have multiple instances of the realtime broker, or should it be a GLOBAL service?
@@ -66,7 +65,7 @@ func NewBroker(updateChannel chan Message) *Broker {
 func (b *Broker) Refresh() {
 }
 
-// Stop closes the broker
+// Close shuts down the Broker and detaches every client
 func (b *Broker) Close() {
 	close(b.close)
 }

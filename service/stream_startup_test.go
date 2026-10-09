@@ -26,7 +26,9 @@ func TestStream_Startup_TakesNoSelection(t *testing.T) {
 
 	streamService := &Stream{}
 
-	var startup func(data.Session, *model.Theme) error = streamService.Startup
+	// The explicit type is the assertion -- inferring it from the right-hand side would
+	// accept any signature and silently retire this gate.
+	var startup func(data.Session, *model.Theme) error = streamService.Startup //nolint:staticcheck // QF1011
 
 	require.NotNil(t, startup)
 }
@@ -193,7 +195,7 @@ func TestStream_newStartupStream_ExcludesContentObject(t *testing.T) {
 }
 
 // TestStream_newStartupStream_DoesNotMutateTheme covers a hazard that the all-or-nothing design
-// makes load-bearing: Themes are parsed once and shared across every request, and newStartupStream
+// makes important: Themes are parsed once and shared across every request, and newStartupStream
 // has to strip the "content" key before calling SetAll.  Copying the map (rather than deleting the
 // key) is what keeps the second domain to start up from getting content-less Streams.
 func TestStream_newStartupStream_DoesNotMutateTheme(t *testing.T) {

@@ -12,7 +12,7 @@
 
 	{{- $stripeID := index .MapIDs "STRIPE" -}}
 	{{- if ne "" $stripeID -}}
-		<a href="https://dashboard.stripe.com/test/customers/{{$stripeID}}" target="_blank" class="button">{{icon "credit-card"}} Stripe Info</a>
+		<a href="https://dashboard.stripe.com/test/customers/{{$stripeID}}" target="_blank" rel="noopener noreferrer" class="button">{{icon "credit-card"}} Stripe Info</a>
 	{{- end -}}
 
 	<form hx-post="/admin/users/{{.UserID}}/send-welcome" class="inline-block">

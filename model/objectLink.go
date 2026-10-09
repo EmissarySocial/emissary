@@ -9,11 +9,11 @@ import (
 // ObjectLink defines a single member of a conversation objectLink.  The actor may be a local or remote user, and the
 // Object may be a local stream or an inbox message.
 type ObjectLink struct {
-	ObjectLinkID primitive.ObjectID `bson:"_id"`        // Unique identifier for this ObjectLink record
-	Context      string             `bson:"objectLink"` // ActivityPubURL of the context that this linked object belongs to.
-	InReplyTo    string             `bson:"inReplyTo"`  // ActivityPubURL of the resource that the linked object replies to.
-	Object       string             `bson:"object"`     // ActivityPubURL of the Object being linked to
-	Recipients   sliceof.String     `bson:"recipients"` // ActivityPubURLs of the intended recipients of the linked object
+	ObjectLinkID primitive.ObjectID `json:"objectLinkId" bson:"_id"`        // Unique identifier for this ObjectLink record
+	Context      string             `json:"context"      bson:"objectLink"` // ActivityPubURL of the context that this linked object belongs to.
+	InReplyTo    string             `json:"inReplyTo"    bson:"inReplyTo"`  // ActivityPubURL of the resource that the linked object replies to.
+	Object       string             `json:"object"       bson:"object"`     // ActivityPubURL of the Object being linked to
+	Recipients   sliceof.String     `json:"recipients"   bson:"recipients"` // ActivityPubURLs of the intended recipients of the linked object
 
 	journal.Journal `json:"-" bson:",inline"`
 }

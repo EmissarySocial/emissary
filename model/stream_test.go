@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/datetime"
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
@@ -215,11 +216,11 @@ func TestStream_JSON(t *testing.T) {
 
 	test(Stream{
 		StartDate: datetime.DateTime{Time: time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)},
-	}, `"StartDate":"2009-11-17T20:34:58.651387237Z"`)
+	}, `"startDate":"2009-11-17T20:34:58.651387237Z"`)
 
 	test(Stream{
 		EndDate: datetime.DateTime{Time: time.Date(2009, 11, 17, 20, 34, 58, 651387237, time.UTC)},
-	}, `"EndDate":"2009-11-17T20:34:58.651387237Z"`)
+	}, `"endDate":"2009-11-17T20:34:58.651387237Z"`)
 }
 
 // TestStreamSchema_Syndication pins how Stream.Syndication is written.  It is a delta.Slice,
@@ -255,4 +256,112 @@ func TestStreamSchema_Syndication(t *testing.T) {
 		stream := NewStream()
 		require.Error(t, s.Set(&stream, "syndication.0", "bandwagon"))
 	}
+}
+
+// TestStream_RolesToGroupIDs_ZeroAuthorIsNotAnonymous verifies that a Stream with no author does
+// not hand its author-gated actions to the entire internet.  MagicGroupIDAnonymous IS the zero
+// ObjectID, so mapping the "author" role straight through to an unset AttributedTo.UserID produces
+// a Permissions slice that IsAnonymous() reports as true -- turning "only the author may do this"
+// into "anyone may do this".  Every Stream created through add-stream carries a real author, so
+// this guards an invariant that lives in a different file from the code depending on it.
+func TestStream_RolesToGroupIDs_ZeroAuthorIsNotAnonymous(t *testing.T) {
+
+	stream := NewStream()
+	require.True(t, stream.AttributedTo.UserID.IsZero(), "a new Stream must start with no author")
+
+	permissions := stream.RolesToGroupIDs(MagicRoleAuthor)
+
+	require.False(t, permissions.IsAnonymous(), "an unset author must never read as anonymous access")
+	require.Empty(t, permissions, "an unset author grants nothing at all")
+}
+
+// TestStream_RolesToGroupIDs_AuthorIsIncluded verifies that a real author still resolves, so the
+// guard above cannot be satisfied by dropping the role entirely
+func TestStream_RolesToGroupIDs_AuthorIsIncluded(t *testing.T) {
+
+	author := primitive.NewObjectID()
+
+	stream := NewStream()
+	stream.AttributedTo = PersonLink{UserID: author}
+
+	require.Equal(t, Permissions{author}, stream.RolesToGroupIDs(MagicRoleAuthor))
+}
+
+// TestStream_ActivityPubUsername pins which tokens may serve as a federated handle: Mastodon's
+// username grammar or the actor is rejected, so anything else falls back to the StreamID.
+func TestStream_ActivityPubUsername(t *testing.T) {
+
+	stream := NewStream()
+	streamID := stream.StreamID.Hex()
+
+	// The default token IS the StreamID, and must come back unchanged
+	require.Equal(t, streamID, stream.Token)
+	require.Equal(t, streamID, stream.ActivityPubUsername())
+
+	tests := []struct {
+		token    string
+		expected string
+	}{
+		{"my-article", "my-article"},
+		{"My_Article.2", "My_Article.2"},
+		{"a-b.c", "a-b.c"},
+		{"a--b", "a--b"},
+		{"abc", "abc"},
+		{"café", streamID},
+		{"-leading", streamID},
+		{"trailing-", streamID},
+		{"a.", streamID},
+		{"with space", streamID},
+		{"", streamID},
+	}
+
+	for _, test := range tests {
+		stream.Token = test.token
+		require.Equal(t, test.expected, stream.ActivityPubUsername(), "token %q", test.token)
+	}
+}
+
+// TestStream_SharingStatus confirms that SharingStatus names the audience for a single role
+func TestStream_SharingStatus(t *testing.T) {
+
+	namedGroup := primitive.NewObjectID()
+	namedCircle := primitive.NewObjectID()
+
+	// sharedWith builds a Stream whose "viewer" role is granted to the provided Groups and Circles
+	sharedWith := func(groupIDs id.Slice, circleIDs id.Slice) Stream {
+		return Stream{
+			Groups:  mapof.Object[id.Slice]{"viewer": groupIDs},
+			Circles: mapof.Object[id.Slice]{"viewer": circleIDs},
+		}
+	}
+
+	tests := []struct {
+		name     string
+		stream   Stream
+		expected string
+	}{
+		{"anonymous", sharedWith(id.Slice{MagicGroupIDAnonymous}, nil), SharingStatusPublic},
+		{"authenticated", sharedWith(id.Slice{MagicGroupIDAuthenticated}, nil), SharingStatusAuthenticated},
+		{"owners", sharedWith(id.Slice{MagicGroupIDOwners}, nil), SharingStatusOwners},
+		{"named group", sharedWith(id.Slice{namedGroup}, nil), SharingStatusCircles},
+		{"named circle", sharedWith(nil, id.Slice{namedCircle}), SharingStatusCircles},
+		{"nothing at all", sharedWith(nil, nil), SharingStatusOwners},
+		{"empty stream", Stream{}, SharingStatusOwners},
+
+		// RULE: Owners always have access, so a Group alongside them still narrows the audience.
+		{"owners plus a group", sharedWith(id.Slice{MagicGroupIDOwners, namedGroup}, nil), SharingStatusCircles},
+
+		// RULE: The widest Group wins, because it already includes the narrower ones.
+		{"anonymous plus a group", sharedWith(id.Slice{namedGroup, MagicGroupIDAnonymous}, nil), SharingStatusPublic},
+		{"authenticated plus a group", sharedWith(id.Slice{namedGroup, MagicGroupIDAuthenticated}, nil), SharingStatusAuthenticated},
+	}
+
+	for _, test := range tests {
+		require.Equal(t, test.expected, test.stream.SharingStatus("viewer"), test.name)
+	}
+
+	// RULE: Roles do not leak.  A public "editor" role says nothing about who can view.
+	editorsOnly := Stream{Groups: mapof.Object[id.Slice]{"editor": {MagicGroupIDAnonymous}}}
+	require.Equal(t, SharingStatusOwners, editorsOnly.SharingStatus("viewer"), "another role's grant must not count")
+	require.Equal(t, SharingStatusPublic, editorsOnly.SharingStatus("editor"), "the named role's grant must count")
 }

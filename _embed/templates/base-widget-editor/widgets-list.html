@@ -8,8 +8,19 @@
 
 	<div class="widget-editor" script="install widgetEditor(url:'/{{$streamID}}/widgets')">
 
+		<!-- Save feedback.  A reorder, a move, or a layout change answers with HX-Reswap:none
+		     precisely so the canvas is NOT redrawn mid-drag, which leaves the author with no
+		     sign that anything was saved at all.  This marker is what the hyperscript behavior
+		     writes into; it is always present and always the same height, so painting it can
+		     never move a drop zone out from under the cursor.
+
+		     It does NOT cover creating a widget: that is the one path StepSortWidgets still
+		     redraws, and the swap that redraws it destroys this element.  Creation says so for
+		     itself -- the canvas visibly changes and the new chip arrives carrying an Edit
+		     button that the tray chip it replaced did not have. -->
+		<div class="widget-editor-status" aria-live="polite"></div>
+
 		<div class="widget-editor-NONE">
-			<div class="widget-label">Available Widgets</div>
 			<div class="widget-editor-sortable" data-location="NONE">
 				{{- range .ListAllWidgets -}}
 					<div class="widget" data-widgetId="{{.Value}}">
@@ -18,25 +29,40 @@
 					</div>
 				{{- end -}}
 			</div>
+
+			<!-- Covers the tray during a drag instead of replacing it: Sortable hit-tests the
+			     chips underneath, so they have to keep their geometry.  See the CSS for why
+			     pointer-events must stay off. -->
+			<div class="widget-editor-drop-hint" aria-hidden="true">
+				<span class="widget-editor-drop-cancel">Drop Here to Cancel</span>
+				<span class="widget-editor-drop-remove">Drop Here to Remove</span>
+			</div>
 		</div>
 
 		<div class="widget-editor-layout">
 
 			<div class="widget-editor-LEFT">
-				<div class="widget-label">Left</div>
 				<div class="widget-editor-sortable" data-location="LEFT">
-					<input type="hidden" name="LEFT" value="">
+					<!-- RULE: each location input carries its current widget IDs from first render, never "" (see AGENTS.md). -->
+					<input type="hidden" name="LEFT" value="{{.WidgetIDsByLocation `LEFT`}}">
 					{{- range .ListWidgetsByLocation "LEFT" -}}
 						{{- template "widget" . -}}
 					{{- end -}}
 				</div>
+
+				<!-- The canvas is a three-column row at every width, but the PAGE only becomes
+				     three columns above 768px; below it the regions stack in DOM order, LEFT
+				     above the content and RIGHT below it.  Nothing in a desktop editing session
+				     shows that, so the sidebars say it themselves.  The note is always in the
+				     markup and revealed by :has() -- the sidebar gains and loses widgets by drag,
+				     with no round trip to re-render a conditional. -->
+				<div class="widget-editor-note">On narrow screens, these widgets stack above the page content.</div>
 			</div>
 
 			<div class="widget-editor-CENTER">
 				<div class="widget-editor-TOP">
-					<div class="widget-label">Top</div>
 					<div class="widget-editor-sortable" data-location="TOP">
-						<input type="hidden" name="TOP" value="">
+						<input type="hidden" name="TOP" value="{{.WidgetIDsByLocation `TOP`}}">
 						{{- range .ListWidgetsByLocation "TOP" -}}
 							{{- template "widget" . -}}
 						{{- end -}}
@@ -44,13 +70,17 @@
 				</div>
 				
 				<div class="widget-editor-MAIN">
-					<div class="widget-label">... Stream Content Here ...</div>
+					<!-- Wraps the slot so the editor's save handler has a container to scope to.
+					     Sortable fires its own bubbling "change" event on every ghost reposition,
+					     so a handler on the editor as a whole would save in the middle of a drag. -->
+					<div class="widget-editor-controls">
+						{{- template "layout-controls" . -}}
+					</div>
 				</div>
 
 				<div class="widget-editor-BOTTOM">
-					<div class="widget-label">Bottom</div>
 					<div class="widget-editor-sortable" data-location="BOTTOM">
-						<input type="hidden" name="BOTTOM" value="">
+						<input type="hidden" name="BOTTOM" value="{{.WidgetIDsByLocation `BOTTOM`}}">
 						{{- range .ListWidgetsByLocation "BOTTOM" -}}
 							{{- template "widget" . -}}
 						{{- end -}}
@@ -59,13 +89,15 @@
 			</div>
 
 			<div class="widget-editor-RIGHT">
-				<div class="widget-label">Right</div>
 				<div class="widget-editor-sortable" data-location="RIGHT">
-					<input type="hidden" name="RIGHT" value="">
+					<input type="hidden" name="RIGHT" value="{{.WidgetIDsByLocation `RIGHT`}}">
 					{{- range .ListWidgetsByLocation "RIGHT" -}}
 						{{- template "widget" . -}}
 					{{- end -}}
 				</div>
+
+				<!-- See the LEFT sidebar above: same note, opposite side of the stack. -->
+				<div class="widget-editor-note">On narrow screens, these widgets stack below the page content.</div>
 			</div>
 		</div>
 	</div>

@@ -25,7 +25,11 @@ func GetJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Ses
 
 	// RULE: The permissions in the HTTP signature must satisfy the Stream's required permissions
 	permissionService := factory.Permission()
-	permissions := permissionService.ParseHTTPSignature(session, ctx.Request()) // nolint:scopeguard
+	permissions, err := permissionService.ParseHTTPSignature(session, ctx.Request()) // nolint:scopeguard
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid HTTP Signature")
+	}
 
 	if !slice.ContainsAny(stream.DefaultAllow, permissions...) {
 		return derp.Forbidden(location, "You do not have permission to view this content")

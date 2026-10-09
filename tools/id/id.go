@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Converts a value into an ObjectID.  If the value cannot be converted, then a new ObjectID is returned
+// ID converts a value into an ObjectID, returning a new ObjectID if the value cannot be converted
 func ID(value any) primitive.ObjectID {
 
 	if id, ok := value.(primitive.ObjectID); ok {

@@ -7,7 +7,9 @@ import (
 	"strings"
 )
 
-// // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
+// Header holds the parsed values of an HTTP Cache-Control header
+//
+// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
 type Header struct {
 	MaxAge               int64 `bson:"maxAge,omitempty"`               // indicates that the response remains fresh until N seconds after the response is generated.
 	SMaxAge              int64 `bson:"sMaxAge,omitempty"`              // indicates how long the response remains fresh in a shared cache.

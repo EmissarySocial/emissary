@@ -98,6 +98,8 @@ Creates a new Stream. `style` decides how the user picks a Template: `chooser` s
 }
 ```
 
+The `redirect-to` property navigates exactly like the [`redirect-to`](#redirect-to) step, including its safety check and its off-site handling, but its template is evaluated against the **new** Stream so that `{{.StreamID}}` names the record that was just created.
+
 ---
 
 ## as-confirmation
@@ -192,6 +194,8 @@ The same wrapper as [`as-modal`](#as-modal), rendered as a tooltip instead.
 ## cache-url
 
 Adds `ETag` and `Cache-Control` headers to a `GET` response, and short-circuits with `304 Not Modified` when the browser's `If-None-Match` matches the object's ETag. Does nothing on `POST`.
+
+This step does nothing at all for a signed-in User or a guest Identity — no `304`, and no headers. The ETag tracks the object's revision, not the viewer, so it cannot distinguish a public page from the privileged rendering those callers were served, and `public` must never label such a response. They fall through to the `Cache-Control` that [`view-html`](#view-html) sets, which defaults to `private, no-cache`.
 
 **Attributes**
 
@@ -498,14 +502,18 @@ Opens the settings form for the Widget named by the request, using that Widget d
 
 ## forward-to
 
-Sends the browser to a new URL via the `Hx-Redirect` header, and closes any open modal. The target is validated with `uri.IsSafeRedirectURL`, so a `javascript:` or protocol-relative URL built from remote data is rejected rather than followed.
+Sends the visitor somewhere else because they are finished with this page — after a save, a delete, or a checkout. Inside an htmx request this is the `Hx-Redirect` header, which moves the whole browser and closes any open modal; outside one it is an HTTP `303 See Other`, because `Hx-Redirect` means nothing to a browser following a plain link. Either way the visitor's whole document navigates.
+
+Use [`redirect-to`](#redirect-to) instead when the *content* lives at another URL and an htmx caller should swap the new fragment into the page rather than reload it.
+
+The target is validated with `uri.IsSafeRedirectURL`, so a `javascript:` or protocol-relative URL built from remote data is rejected rather than followed.
 
 **Attributes**
 
 | Attribute | Description |
 | --- | --- |
 | url | **Required.** Template URL to forward to |
-| method | `get`, `post`, or `both`. Defaults to `post` |
+| method | `get`, `post`, or `both`. Defaults to `post`; an unrecognized value fails at Template load. Think before widening this one — a pipeline that renders a form on `GET` keeps running past the form, so a `forward-to` set to `both` navigates away before the visitor ever sees it. |
 
 <br>
 
@@ -812,11 +820,18 @@ Reformats a Stream's content: converts between formats, optionally strips HTML, 
 
 Copies a StreamDraft's content over its live Stream and moves the Stream into `state`. Requires the `Stream` model.
 
+Eleven properties are copied: `url`, `token`, `label`, `summary`, `content`, `iconUrl`, `icon`, `widgets`, `data`, `attributedTo`, and `inReplyTo`. Everything else on the Stream — sharing, tree position, publish dates, response counts, journal — is left alone, because a draft's copy of those goes stale the moment anything changes them outside the draft.
+
+`omit` names properties to leave alone as well. It exists for a Stream whose value is written by something other than the author: a draft is a snapshot taken when it was created, so promoting one reverts every change made since. The case this was built for is [article-remote](../../_embed/templates/stream-article-remote/), whose body belongs to a `StreamSource` — and where the revert is permanent, because the source's `ContentHash` still matches what it last wrote, so the next synchronization stops before fetching and **Sync Now** does nothing.
+
+Only the eleven names above are accepted, and nested paths (`data.tags`) are not. Anything else fails the Template at load, because a name that is merely ignored would leave the property copied — the exact mistake `omit` is there to prevent, and one that reports nothing when it happens.
+
 **Attributes**
 
 | Attribute | Description |
 | --- | --- |
 | state | State to move into. Defaults to `published`, and must be defined in the Template's `states` |
+| omit | Names of properties NOT to copy from the draft, leaving the live Stream's values in place |
 
 <br>
 
@@ -829,19 +844,70 @@ Copies a StreamDraft's content over its live Stream and moves the Stream into `s
 }
 ```
 
+Promote everything except the body, which some other process owns:
+
+```hjson
+{
+	do: "promote-draft"
+	omit: ["content"]
+}
+```
+
+---
+
+## read-form
+
+Reads named fields from a form POST into the Builder's temporary data scope, where later steps read them with `.GetString`. Visitor input never reaches the object being built — for a Stream, that is the page record itself.
+
+Values come from the request **body** only. Unlike most steps, `read-form` ignores the URL query string, so a crafted link cannot supply or append to a field.
+
+Does nothing on `GET`.
+
+**Attributes**
+
+| Attribute | Description |
+| --- | --- |
+| schema | **Required.** A JSON-Schema object describing every field this step accepts |
+
+<br>
+
+The schema is an allowlist, not a suggestion: a field the template did not declare is never read, and a declared field that fails validation halts the pipeline. A value longer than its `maxLength` is **rejected**, not shortened — the same rule [`edit-content`](#edit-content) uses, and for the same reason. `maxLength` counts characters, not bytes.
+
+**Example**
+
+```hjson
+{
+	do: "read-form"
+	schema: {
+		type: "object"
+		properties: {
+			name: {type:"string", maxLength:128, required:true}
+			email: {type:"string", format:"email", maxLength:255, required:true}
+			message: {type:"string", maxLength:4096, required:true}
+		}
+	}
+}
+```
+
 ---
 
 ## redirect-to
 
-A real HTTP redirect, for non-HTMX navigation. Use [`forward-to`](#forward-to) inside an HTMX request.
+Sends the visitor to a new URL because the content they asked for lives there. This is a real HTTP redirect, which means an htmx caller follows it inside its own request and swaps the result into the page — a same-site `redirect-to` does not reload the browser, and that is usually what you want for a `view` action that normalizes its own URL.
+
+An **off-site** target is the exception, and it is handled automatically: htmx cannot read a cross-origin response, so the step emits `Hx-Redirect` instead and lets htmx navigate the whole browser. A Redirect stream therefore behaves the same whether a visitor opens it through a plain `<a href>` or through an `hx-get`, with no branch in the Template.
+
+Use [`forward-to`](#forward-to) instead when the visitor is finished with this page rather than being sent to the rest of it.
+
+The target is validated with `uri.IsSafeRedirectURL`, so a `javascript:` or protocol-relative URL built from remote data is rejected rather than followed.
 
 **Attributes**
 
 | Attribute | Description |
 | --- | --- |
 | url | **Required.** Template URL to redirect to |
-| method | `get`, `post`, or `both`. Defaults to `both` |
-| status | HTTP status code. Defaults to `307` |
+| method | `get`, `post`, or `both`. Defaults to `both`; an unrecognized value fails at Template load |
+| status | HTTP status code. Defaults to `307`. Ignored on the off-site path, where htmx acts on the header instead |
 
 <br>
 
@@ -1055,22 +1121,31 @@ Synchronizes the object's search record on `POST`. When `if` evaluates false the
 
 ## send-email
 
-Sends one of the domain's named emails to the current user.
+Sends one of the domain's named emails. The email definition names its own recipient, subject, headers, and the model object its data describes; this step only names the email and supplies the values it interpolates.
+
+`welcome` and `password-reset` are special: each mints a password-reset credential before it sends, so they route through the User service and take no `values`.
 
 **Attributes**
 
 | Attribute | Description |
 | --- | --- |
-| email | **Required.** Name of the email template to send |
+| email | **Required.** Name of the email definition to send |
+| values | Key/value pairs passed into the email's data. Each value is compiled as a template. |
 
 <br>
+
+Every key that the email's `to` and `headers` templates interpolate must appear in `values` — those templates reject a missing key outright, and the check runs when Templates are loaded, not when the email is sent.
 
 **Example**
 
 ```hjson
 {
 	do: "send-email"
-	email: "welcome"
+	email: "stream-contact-form"
+	values: {
+		To: "{{.Data `emailAddress`}}"
+		ReplyEmail: "{{.GetString `email`}}"
+	}
 }
 ```
 
@@ -2276,4 +2351,49 @@ Switches to the Rule named by the request and runs `steps` against its Builder.
 		{do: "save"}
 	]
 }
+```
+
+---
+
+## with-stream-source
+
+Switches to the `StreamSource` record attached to this Stream — creating one in memory when the Stream has none yet — and runs `steps` against it. This is how a Template creates, configures, and removes a remote content source: `StreamSource` is its own collection, so `set-data` and `save` on the Stream cannot reach it. Requires the `Stream` model.
+
+`save` also queues a synchronization with the remote file — every time, because nothing polls and a repeat costs one conditional GET that answers `304`. A **Sync Now** button is therefore just a `save` with nothing else in the pipeline.
+
+**Attributes**
+
+| Attribute | Description |
+| --- | --- |
+| steps | **Required.** Sub-pipeline run against the `StreamSource` Builder |
+
+<br>
+
+**Example**
+
+```hjson
+edit-source: [{do: "as-modal", steps: [
+	{do: "with-stream-source", steps: [
+		{do: "edit", form: {
+			type: layout-vertical
+			label: Remote Content Source
+			children: [
+				{type: text, path: url, label: "Markdown File URL"}
+				{type: text, path: "config.webhookToken", label: "Webhook Token"}
+			]
+		}}
+		{do: "save"}
+	]}
+]}]
+
+// No refresh-page: `save` already sends an SSE update that the settings screen listens for,
+// and a second trigger redraws the screen twice
+sync-source: [{do: "with-stream-source", steps: [
+	{do: "save"}
+]}]
+
+delete-source: [{do: "with-stream-source", steps: [
+	{do: "delete", title: "Stop syncing this article?"}
+	{do: "refresh-page"}
+]}]
 ```

@@ -18,7 +18,7 @@ import (
 )
 
 // GetOutboxCollection serves the outbox of the actor that represents a saved SearchQuery
-func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, _ *model.Stream, searchQuery *model.SearchQuery) error {
+func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, session data.Session, searchQuery *model.SearchQuery) error {
 
 	const location = "handler.activitypub_search.GetOutboxCollection"
 
@@ -61,7 +61,7 @@ func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, sessio
 }
 
 // GetOutboxMessage serves a single Announce activity from a SearchQuery actor's outbox
-func GetOutboxMessage(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, _ *model.Stream, searchQuery *model.SearchQuery) error {
+func GetOutboxMessage(ctx *steranko.Context, factory *service.Factory, session data.Session, searchQuery *model.SearchQuery) error {
 
 	const location = "handler.activitypub_domain.GetOutboxMessage"
 

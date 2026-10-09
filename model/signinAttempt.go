@@ -7,11 +7,11 @@ import (
 
 // SigninAttempt logs a failed signin attempt for a specific username.
 type SigninAttempt struct {
-	SigninAttemptID primitive.ObjectID `bson:"_id"`
-	Username        string             `bson:"username"`  // Username that was used in the signin attempt
-	IPAddress       string             `bson:"ipAddress"` // Resolved client IP that made the attempt (forensics; the lockout window counts by username across all IPs)
-	UserAgent       string             `bson:"userAgent"` // User-Agent header of the attempt (forensics only)
-	journal.Journal `bson:",inline"`   // Embedded journal fields for tracking creation and updates
+	SigninAttemptID primitive.ObjectID                      `json:"signinAttemptId" bson:"_id"`
+	Username        string                                  `json:"username"        bson:"username"`  // Username that was used in the signin attempt
+	IPAddress       string                                  `json:"ipAddress"       bson:"ipAddress"` // Resolved client IP that made the attempt (forensics; the lockout window counts by username across all IPs)
+	UserAgent       string                                  `json:"userAgent"       bson:"userAgent"` // User-Agent header of the attempt (forensics only)
+	journal.Journal `json:"-"               bson:",inline"` // Embedded journal fields for tracking creation and updates
 }
 
 // NewSigninAttempt returns a SigninAttempt for the given username, recording the

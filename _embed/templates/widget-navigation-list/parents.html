@@ -1,47 +1,40 @@
 {{- $root := . -}}
 {{- $configParents := .Widget.Data.GetString "parents" -}}
+{{- $hasParentTier := false -}}
 
-{{- if eq $configParents "All"  -}}
+<!-- RULE: Both display modes need a parent.  A top-level Stream has none, so this whole
+     tier is skipped for them.  Without the guard, "All" would list the children of the
+     zero ObjectID, which is this Stream's OWN generation, and then match nothing in it. -->
+{{- if .HasParent -}}
 
-	{{- $ancestors := .Ancestors.Slice -}}
-	{{- $parentID := .ParentID -}}
-	{{- $streamID := .StreamID -}}
+	{{- if eq $configParents "All" -}}
 
-	{{- range $index, $ancestor := $ancestors -}}
+		{{- $parentID := .ParentID -}}
 
-		{{- if eq $parentID $ancestor.StreamID -}}
+		{{- range $index, $ancestor := .Ancestors.Slice -}}
 
 			<div class="ellipsis"><a href="/{{$ancestor.Token}}" hx-get="/{{$ancestor.Token}}" class="turboclick">{{$ancestor.Label}}</a></div>
 
-			{{- if not ($root.Widget.Data.IsZeroValue "siblings")  -}}
+			{{- if eq $parentID $ancestor.StreamID -}}
+				{{- $hasParentTier = true -}}
 				<div style="padding-left:8px; font-size:0.9em;">{{- template "siblings" $root -}}</div>
-			{{- else if not ($root.Widget.Data.IsZeroValue "children") -}}
-				<div style="padding-left:8px; font-size:0.9em;">{{- template "children" $root -}}</div>
 			{{- end -}}
-			
-		{{- else -}}
-			<div class="ellipsis"><a href="/{{$ancestor.Token}}" hx-get="/{{$ancestor.Token}}" class="turboclick">{{$ancestor.Label}}</a></div>
+
 		{{- end -}}
 
-	{{- end -}}
+	{{- else if eq $configParents "Parent Only" -}}
 
-{{- else -}} 
-
-	{{- if eq $configParents "Parent Only" -}}
-
-		{{- if .HasParent -}}
-			{{- $parent := .Parent "view" -}}
-			<div class="ellipsis">
-				<a href="/{{$parent.Token}}" hx-get="/{{$parent.Token}}" class="turboclick">{{- $parent.Label -}}</a>
-			</div>
-		{{- end -}}
-
-	{{- end -}}
-
-	{{- if not (.Widget.Data.IsZeroValue "siblings") -}}
+		{{- $parent := .Parent "view" -}}
+		{{- $hasParentTier = true -}}
+		<div class="ellipsis"><a href="/{{$parent.Token}}" hx-get="/{{$parent.Token}}" class="turboclick">{{- $parent.Label -}}</a></div>
 		<div style="padding-left:8px; font-size:0.9em;">{{- template "siblings" $root -}}</div>
-	{{- else if not (.Widget.Data.IsZeroValue "children") -}}
-		<div style="padding-left:8px; font-size:0.9em;">{{- template "children" $root -}}</div>
+
 	{{- end -}}
 
+{{- end -}}
+
+<!-- RULE: Hand off to the next tier whenever this one rendered nothing to nest it under.
+     A parent that is filtered out of the ancestor list must not swallow the rest of the menu. -->
+{{- if not $hasParentTier -}}
+	{{- template "siblings" $root -}}
 {{- end -}}

@@ -111,14 +111,14 @@ func GetInstance(serverFactory *server.Factory) func(model.Authorization, txn.Ge
 
 		defer cancel()
 
-		domain := factory.Domain().Get()
+		readOnlyDomain := factory.Domain().Cached()
 
 		result := object.Instance{
 			Domain:      t.Host,
-			Title:       domain.Label,
+			Title:       readOnlyDomain.Label,
 			Version:     instanceVersion(),
 			SourceURL:   "https://github.com/EmissarySocial/emissary",
-			Description: domain.Description,
+			Description: readOnlyDomain.Description,
 			Contact: object.InstanceContact{
 				Account: contactAccount(factory, session),
 			},
@@ -230,13 +230,13 @@ func GetInstance_V1(serverFactory *server.Factory) func(model.Authorization, txn
 
 		defer cancel()
 
-		domain := factory.Domain().Get()
+		readOnlyDomain := factory.Domain().Cached()
 
 		result := object.Instance_V1{
 			URI:            t.Host,
-			Title:          domain.Label,
+			Title:          readOnlyDomain.Label,
 			Version:        instanceVersion(),
-			Description:    domain.Description,
+			Description:    readOnlyDomain.Description,
 			ContactAccount: contactAccount(factory, session),
 		}
 

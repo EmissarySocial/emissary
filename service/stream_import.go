@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ImportSave is a part of the "Importable" interface, and saves an imported Stream to the new profile.
+// Import is a part of the "Importable" interface, and saves an imported Stream to the new profile.
 func (service *Stream) Import(session data.Session, importRecord *model.Import, importItem *model.ImportItem, user *model.User, document []byte) error {
 
 	const location = "service.Stream.Import"

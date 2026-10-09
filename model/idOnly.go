@@ -7,7 +7,7 @@ import (
 
 // IDOnly is a helper function for querying ONLY the ID of a batch of documents
 type IDOnly struct {
-	ID primitive.ObjectID `bson:"_id"`
+	ID primitive.ObjectID `json:"id" bson:"_id"`
 }
 
 // GetIDOnly extracts the ObjectIDs from a slice of IDOnly records

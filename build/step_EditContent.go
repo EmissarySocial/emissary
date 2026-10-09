@@ -14,10 +14,11 @@ import (
 	"github.com/benpate/rosetta/html"
 )
 
-// editContentFallbackMaxLength bounds content (in runes) when a StepEditContent is
-// somehow built without a MaxLength.  The normal configuration path (model/step.NewEditContent)
-// always sets a limit; this only guards against a zero-valued struct.
-const editContentFallbackMaxLength = 64 << 10 // 64 KiB
+// editContentFallbackMaxLength bounds content (in runes -- every length limit in this
+// codebase counts characters) when a StepEditContent is somehow built without a MaxLength.
+// The normal configuration path (model/step.NewEditContent) always sets a limit; this only
+// guards against a zero-valued struct, and mirrors that package's default.
+const editContentFallbackMaxLength = 64 << 10 // 65,536 runes
 
 // StepEditContent is a Step that can edit/update Container in a streamDraft.
 type StepEditContent struct {

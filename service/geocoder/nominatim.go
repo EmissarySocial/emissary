@@ -9,6 +9,8 @@ import (
 	"github.com/benpate/rosetta/sliceof"
 )
 
+// Nominatim geocodes addresses using the OpenStreetMap Nominatim service
+//
 // https://nominatim.org
 type Nominatim struct {
 	searchURL string

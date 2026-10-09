@@ -1,0 +1,102 @@
+{{- $source := .StreamSource -}}
+{{- $files := .StreamSourceFiles -}}
+
+<div id="edit-status" class="card padding margin-bottom">
+	<table class="table valign-middle">
+		<tr>
+			<td class="bold nowrap">Remote URL</td>
+			<!-- .ellipsis belongs on the CELL: an inline <a> has no box to overflow, and max-width-0 is what gives the cell a width to overflow at all. -->
+			<td class="text-sm ellipsis width-100% max-width-0">
+				<a href="{{$source.URL}}" target="_blank" rel="noopener noreferrer" title="{{$source.URL}}">{{$source.URL}}</a>
+			</td>
+			<td>
+				<button hx-get="/{{.StreamID}}/edit-source" class="turboclick button text-sm margin-left-sm">Change</button>
+			</td>
+		</tr>
+		<tr>
+			<td class="bold nowrap">Status</td>
+			<td>
+				{{- if eq $source.Status "SUCCESS" -}}
+					<span class="text-green">Synchronized</span>
+				{{- else if eq $source.Status "FAILURE" -}}
+					<span class="text-red">Failed</span>
+				{{- else if eq $source.Status "LOADING" -}}
+					<span class="text-gray">Synchronizing&hellip;</span>
+				{{- else -}}
+					<span class="text-gray">Never synchronized</span>
+				{{- end -}}
+
+				<!-- The message is the author's only account of WHY a sync failed -->
+				{{- if ne "" $source.StatusMessage -}}
+					<div class="text-sm text-red">{{$source.StatusMessage}}</div>
+				{{- end -}}
+			</td>
+			<td>
+				{{- if eq $source.Status "LOADING" -}}
+					<button disabled class="turboclick button text-sm margin-left-sm"><span class="spin">{{icon "loading"}}</span> Sync</button>
+				{{- else -}}
+					<button 
+						hx-post="/{{.StreamID}}/sync-source" 
+						hx-target="#edit-status" 
+						hx-swap="outerHTML" 
+						hx-push-url="false" 
+						class="turboclick button text-sm margin-left-sm">
+						<span>{{icon "loading"}}</span> Sync
+					</button>
+				{{- end -}}
+			</td>
+		</tr>
+		<tr>
+			<td class="bold nowrap">Checked</td>
+			<td colspan="2" class="text-sm">
+				{{- if eq $source.LastSynced 0 -}}
+					Never
+				{{- else -}}
+					<time datetime="{{isoDate $source.LastSynced}}" title="{{dateTime $source.LastSynced}}">{{humanizeTime $source.LastSynced}}</time>
+				{{- end -}}
+			</td>
+		</tr>
+		<tr>
+			<td class="bold nowrap">Format</td>
+			<td colspan="2" class="text-sm">
+				<!-- Decided by the file extension at sync time, so nothing is known until one has run. -->
+				{{- if eq $source.LastSynced 0 -}}
+					<span class="text-gray">Not yet known</span>
+				{{- else if eq .ContentFormat "HTML" -}}
+					HTML
+				{{- else if eq .ContentFormat "MARKDOWN" -}}
+					Markdown
+				{{- else -}}
+					{{.ContentFormat}}
+				{{- end -}}
+			</td>
+		</tr>
+		<!-- Files linked from the source's attachments folder.  Downloads finish after the page sync, and the SSE listener redraws this card as each one lands. -->
+		{{- if gt $files.Total 0 -}}
+		<tr>
+			<td class="bold nowrap">Files</td>
+			<td colspan="2" class="text-sm">
+				{{$files.Ready}} of {{$files.Total}} copied
+				{{- if gt $files.Pending 0 }}, {{$files.Pending}} in progress{{ end -}}
+				{{- if gt $files.Failed 0 -}}
+					<div class="text-red">Could not copy: {{ range $index, $name := $files.FailedNames }}{{ if $index }}, {{ end }}{{ $name }}{{ end }}</div>
+				{{- end -}}
+				{{- if $files.AtLimit -}}
+					<div class="text-gray">Only the first 50 linked files are copied.</div>
+				{{- end -}}
+			</td>
+		</tr>
+		{{- end -}}
+	</table>
+
+	<div hx-ext="sse" sse-connect="/{{.StreamID}}/sse/stream-source-updated">
+		<div
+			hx-get="/{{.StreamID}}/edit-status"
+			hx-trigger="sse:{{.StreamID}}"
+			hx-target="#edit-status"
+			hx-swap="outerHTML"
+			hx-push-url="false">
+		</div>
+	</div>
+
+</div>

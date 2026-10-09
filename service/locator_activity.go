@@ -33,7 +33,8 @@ func (service *Locator) ActivityURL(actorType string, actorID primitive.ObjectID
 	}
 }
 
-// This only works for Users at the moment
+// ParseActivity splits an activity URL into its actor type, actor ID, and activity ID.
+// This only works for Users at the moment.
 func (service *Locator) ParseActivity(url string) (string, primitive.ObjectID, primitive.ObjectID, error) {
 	const location = "service.Locator.ParseActivity"
 

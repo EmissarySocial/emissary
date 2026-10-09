@@ -1,0 +1,312 @@
+/******************************************
+ * Two Column Layout
+ *
+ * ONE layout engine for both surfaces that draw the split, the page and the editor: flexbox,
+ * `flex-basis: 0` plus `flex-grow`, on the same two hooks.  Only the TRIGGER differs, and the
+ * page reads a stored class where the editor reads a checked radio.
+ *
+ * RULE: the zero basis, the 768px breakpoint, and the fact that nothing here declares a
+ * container of its own are all load-bearing.  See AGENTS.md before changing any of them.
+ ******************************************/
+
+/* The gutter, declared once for the two rows that have to agree on it: the columns themselves,
+   and the option row that points at the lines between them. */
+.two-column,
+.two-column-split-stops {
+	--two-column-gap: 32px;
+}
+
+.two-column {
+	display: flex;
+	flex-direction: column;
+	gap: var(--two-column-gap);
+}
+
+/* RULE: a flex item's min-width is `auto`, which refuses to shrink below its own content -- so
+   one long URL, wide table, or code block widens the whole row and pushes the other column off
+   the side of the page, where the reader cannot reach it.  0 lets the item shrink and the
+   content overflow inside its own column instead.  Needed stacked as well as side by side. */
+.two-column > * {
+	min-width: 0;
+}
+
+
+/* MEDIUM Screens (tablet) and up */
+@container (min-width:768px) {
+
+	.two-column {
+		flex-direction: row;
+	}
+
+	/* Equal columns, and the landing place for an unset value: that renders "columns-", which
+	   matches neither rule below -- the same fold the Layout tab's final "else" makes. */
+	.two-column > * {
+		flex-basis: 0;
+		flex-grow: 1;
+	}
+
+	/* The ladder, widest left column first.  Values name the LEFT column's share. */
+	.two-column.columns-THREE-QUARTERS > .two-column-left {
+		flex-grow: 3;
+	}
+
+	.two-column.columns-TWO-THIRDS > .two-column-left {
+		flex-grow: 2;
+	}
+
+	.two-column.columns-ONE-THIRD > .two-column-right {
+		flex-grow: 2;
+	}
+
+	.two-column.columns-ONE-QUARTER > .two-column-right {
+		flex-grow: 3;
+	}
+}
+
+
+/******************************************
+ * Editor
+ *
+ * The two editors sit in the same flex row at the same proportion as the page, so the writing
+ * surface is a preview of the result.  Reflowed, they are read and edited in the same order
+ * the page renders them: left above right.
+ ******************************************/
+
+.two-column-editor label {
+	display: block;
+	margin-bottom: 4px;
+}
+
+/* EasyMDE sizes itself to its content, which starts a new column one line tall.  A floor keeps
+   both columns usable before anything is typed into them.
+
+   Reflowed, the two editors sit one above the other and their heights ADD UP, so the floor has
+   to be small enough that both fit on a phone with the menu bar above them.  Side by side they
+   share one row, and the taller floor is free. */
+.two-column-editor .CodeMirror {
+	min-height: 180px;
+}
+
+@container (min-width:768px) {
+	.two-column-editor .CodeMirror {
+		min-height: 320px;
+	}
+}
+
+.EasyMDEContainer {
+
+	.CodeMirror {
+		color: var(--black);
+		background-color: var(--gray10);
+		caret-color: var(--black);
+
+		.CodeMirror-cursor {
+			border-left: 1px solid var(--black)!important;
+		}
+	}
+
+	.editor-toolbar {
+
+		/* The toolbar is a row of inline-block buttons, so it wraps on its own -- but only if
+		   it is allowed to.  Reflowed on a phone the column is barely wider than the toolbar,
+		   and without this a rounding error puts the last button under a horizontal scrollbar
+		   that nothing else on the page has. */
+		white-space: normal;
+
+		button {
+			&.active {
+				color:var(--white);
+				background-color:var(--gray50);
+				border-color:var(--gray60);
+			}
+			&:hover {
+				background-color: var(--gray20);
+			}
+		}
+	}
+}
+
+
+/******************************************
+ * The Column Split control
+ *
+ * Two markups over one set of rules.  The Layout tab spaces the five options evenly; the edit
+ * page adds .two-column-split-stops and moves each one onto the line it produces.
+ * Both are driven by the same five radios, whose DOCUMENT ORDER is the ladder, and both read
+ * `:has(:checked)` so the control answers on the click instead of waiting for the round trip.
+ *
+ * RULE: see AGENTS.md before reordering the radios, moving the picker below the editor row,
+ * hanging a stops rule off the shared class, or reaching for an <img> instead of a mask.
+ ******************************************/
+
+.two-column-split-picker {
+	position: relative;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 4px;
+	margin-bottom: 12px;
+}
+
+/* The edit page's variant: the same five options, each moved to the dividing line it produces.
+   RULE: every rule that positions them hangs off THIS class, never the shared one, or it reaches
+   the Layout tab's evenly spaced row as well (AGENTS.md). */
+.two-column-split-stops {
+	justify-content: center;
+}
+
+/* Sized and coloured like the Layout tab's own control captions, so the two places that set
+   this field read as the same control in two locations rather than as two controls. */
+.two-column-split-picker-label {
+	margin-right: 8px;
+	font-size: 13px;
+	color: var(--gray60);
+}
+
+/* Kept in the tab order and kept operable -- hidden, not removed.  Positioned inside the
+   picker rather than parked off-screen the way .hide-visual does it, so that focusing one by
+   keyboard cannot scroll the page to an element nobody can see. */
+.two-column-split-picker input {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+	pointer-events: none;
+}
+
+/* One clickable option, on both surfaces. */
+.two-column-split-picker label {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 32px;
+	border: solid 1px var(--gray20);
+	border-radius: 4px;
+	color: var(--gray50);
+	cursor: pointer;
+	transition: color var(--motion-fast, 100ms) var(--motion-ease, ease-in-out), border-color var(--motion-fast, 100ms) var(--motion-ease, ease-in-out);
+}
+
+/* The mask goes on the pseudo-element, not the box: a mask clips the element it is set on,
+   border and background included, so a masked label would have no chrome left to show a
+   selected state with. */
+.two-column-split-picker label::before {
+	content: "";
+	display: block;
+	width: 26px;
+	height: 26px;
+	background-color: currentColor;
+	mask-repeat: no-repeat;
+	mask-position: center;
+	mask-size: contain;
+}
+
+/* One icon per option: both surfaces draw the whole ladder at once. */
+.two-column-split-picker input[value="THREE-QUARTERS"] + label::before {
+	mask-image: url("/.templates/article-two-column/resources/columns-THREE-QUARTERS.svg");
+}
+
+.two-column-split-picker input[value="TWO-THIRDS"] + label::before {
+	mask-image: url("/.templates/article-two-column/resources/columns-TWO-THIRDS.svg");
+}
+
+.two-column-split-picker input[value="ONE-HALF"] + label::before {
+	mask-image: url("/.templates/article-two-column/resources/columns-ONE-HALF.svg");
+}
+
+.two-column-split-picker input[value="ONE-THIRD"] + label::before {
+	mask-image: url("/.templates/article-two-column/resources/columns-ONE-THIRD.svg");
+}
+
+.two-column-split-picker input[value="ONE-QUARTER"] + label::before {
+	mask-image: url("/.templates/article-two-column/resources/columns-ONE-QUARTER.svg");
+}
+
+.two-column-split-picker label:hover {
+	color: var(--gray70);
+	border-color: var(--gray40);
+}
+
+/* --focus-color, not a literal blue: 01-colors.css defines it as the accent for focus rings,
+   primary buttons, "and other interactive accents", which is what a selected state is.  It is
+   remapped for dark mode, and a page that scopes its own accent re-themes this for free.  The
+   wash is mixed from the same token rather than picked from the blue ramp, so it follows any
+   such override instead of staying blue underneath a re-themed border. */
+.two-column-split-picker input:checked + label {
+	color: var(--focus-color);
+	border-color: var(--focus-color);
+	background-color: color-mix(in srgb, var(--focus-color), transparent 92%);
+}
+
+/* The input carries the focus and the input is invisible, so the ring is drawn on whichever box
+   stands for it.  :focus-visible rather than :focus, so a mouse click does not leave one. */
+.two-column-split-picker input:focus-visible + label {
+	outline: solid 2px var(--focus-color);
+	outline-offset: 2px;
+}
+
+
+/* The option row and the writing surface, both wired to the same two properties as the page.
+   Below the breakpoint the columns stack, so there are no lines to point at and the options fall
+   back to an evenly spaced row. */
+@container (min-width:768px) {
+
+	/* Each option sits on its own dividing line.  A column at fraction f of the row puts that
+	   line at f of the width plus half a gutter, less f gutters: hence the offsets below, all
+	   read off the one gap variable so they cannot drift from the columns they point at. */
+	.two-column-split-stops {
+		height: 32px;
+	}
+
+	.two-column-split-stops label {
+		position: absolute;
+		top: 0;
+		width: 32px;
+		transform: translateX(-50%);
+	}
+
+	/* Trimmed to keep the two closest stops, 1/4 and 1/3, from colliding on a narrow page. */
+	.two-column-split-stops label::before {
+		width: 22px;
+		height: 22px;
+	}
+
+	.two-column-split-stops input[value="ONE-QUARTER"] + label {
+		left: calc(25% + var(--two-column-gap) / 4);
+	}
+
+	.two-column-split-stops input[value="ONE-THIRD"] + label {
+		left: calc(100% / 3 + var(--two-column-gap) / 6);
+	}
+
+	.two-column-split-stops input[value="ONE-HALF"] + label {
+		left: 50%;
+	}
+
+	.two-column-split-stops input[value="TWO-THIRDS"] + label {
+		left: calc(200% / 3 - var(--two-column-gap) / 6);
+	}
+
+	.two-column-split-stops input[value="THREE-QUARTERS"] + label {
+		left: calc(75% - var(--two-column-gap) / 4);
+	}
+
+	.two-column-split-picker:has([value="THREE-QUARTERS"]:checked) ~ .two-column-editor > .two-column-left {
+		flex-grow: 3;
+	}
+
+	.two-column-split-picker:has([value="TWO-THIRDS"]:checked) ~ .two-column-editor > .two-column-left {
+		flex-grow: 2;
+	}
+
+	.two-column-split-picker:has([value="ONE-THIRD"]:checked) ~ .two-column-editor > .two-column-right {
+		flex-grow: 2;
+	}
+
+	.two-column-split-picker:has([value="ONE-QUARTER"]:checked) ~ .two-column-editor > .two-column-right {
+		flex-grow: 3;
+	}
+}

@@ -87,8 +87,8 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 						Type:        "multiselect",
 						Label:       "Circles",
 						Path:        "circles." + role.RoleID,
-						Description: `<a href="/@me/settings/circles" target="_blank">Manage Circles &rarr;</a>`,
-						Options: mapof.Any{
+						Description: `<a href="/@me/settings/circles" target="_blank" rel="noopener noreferrer">Manage Circles &rarr;</a>`,
+						Options: mapof.Template{
 							"rows": 6,
 							"enum": mapCirclesToLookupCodes(circles...),
 						},
@@ -98,7 +98,7 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 						Label:       "Products",
 						Path:        "products." + role.RoleID,
 						Description: editLinks.String(),
-						Options: mapof.Any{
+						Options: mapof.Template{
 							"rows": 8,
 							"enum": mapProductsToLookupCodes(products...),
 						},
@@ -131,7 +131,7 @@ func (step StepSetPrivileges) Get(builder Builder, buffer io.Writer) PipelineBeh
 		Script("init send checkFormRules(changed:me as Values)").
 		EndBracket()
 
-	b.WriteString(formHTML)
+	b.WriteString(formHTML) // #nosec G104 -- html.Builder embeds *strings.Builder, whose WriteString is documented to always return a nil error
 	b.Div()
 	b.Button().Type("submit").Class("primary").InnerText("Save Changes").Close()
 	b.A(streamBuilder._stream.URL).Class("button").InnerText("Cancel").Close()

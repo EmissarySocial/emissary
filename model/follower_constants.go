@@ -18,7 +18,7 @@ const FollowerTypeUser = "User"
 // ActorTypeApplication represents the domain service actor
 const ActorTypeApplication = "Application"
 
-// ActorTypeSearch represents a domain-level Search Query
+// ActorTypeSearchDomain represents a domain-level Search Query
 const ActorTypeSearchDomain = "SearchDomain"
 
 // ActorTypeSearchQuery represents a Search Query
@@ -55,11 +55,23 @@ const FollowerStateDeleted = "DELETED"
 // to the Follower's server to re-follow the newly imported account.
 const FollowerStateImportPending = "IMPORT-PENDING"
 
-// FollowerStatePaused represents a Follower who is paused by a BLOCK rule -- and
-// exactly that (R8). Paused Followers are excluded from delivery fan-out; deleting
-// the block re-evaluates every paused Follower and reactivates the no-longer-blocked.
-const FollowerStatePaused = "PAUSED"
+// FollowerStateBlocked represents a Follower whose actor the user has blocked (R8).  Blocked
+// Followers are excluded from delivery fan-out; deleting the block re-evaluates every blocked
+// Follower and reactivates the no-longer-blocked.
+const FollowerStateBlocked = "BLOCKED"
 
 // FollowerStatePending represents an inactive Follower who has yet
 // to confirm their subscription status (e.g. via email confirmation)
 const FollowerStatePending = "PENDING"
+
+/******************************************
+ * Follower Data Keys
+ ******************************************/
+
+// FollowerDataSecret is the Data key holding the unlisted secret that authorizes an EMAIL
+// Follower's own confirmation and unsubscribe links
+const FollowerDataSecret = "secret" // #nosec G101 -- this is the NAME of a Data key, not a credential
+
+// FollowerDataIPSignup is the Data key holding the IP address that an EMAIL Follower
+// subscribed from, captured at signup because the request is long gone by confirmation
+const FollowerDataIPSignup = "ipSignup"

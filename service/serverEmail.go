@@ -4,8 +4,13 @@ import (
 	"bytes"
 	"html/template"
 	"io/fs"
+	"net/textproto"
+	"regexp"
 	"slices"
 	"strings"
+	"sync"
+	texttemplate "text/template"
+	"text/template/parse"
 
 	"github.com/benpate/rosetta/maps"
 
@@ -14,6 +19,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/sliceof"
 	"github.com/hjson/hjson-go/v4"
 	"github.com/rs/zerolog/log"
 
@@ -25,31 +31,17 @@ type ServerEmail struct {
 	filesystemService Filesystem
 	funcMap           template.FuncMap
 	emails            map[string]model.Email
+	mutex             sync.RWMutex
 }
 
-// NewServerEmail returns a fully initialized ServerEmail service, loaded from the provided locations
+// NewServerEmail returns a fully initialized ServerEmail service with an empty email library
 func NewServerEmail(filesystemService Filesystem, funcMap template.FuncMap, locations []mapof.String) ServerEmail {
 
-	service := ServerEmail{
+	return ServerEmail{
 		filesystemService: filesystemService,
 		funcMap:           funcMap,
 		emails:            make(map[string]model.Email),
 	}
-
-	service.Refresh()
-
-	return service
-}
-
-/******************************************
- * Lifecycle Methods
- ******************************************/
-
-// Refresh updates this service with the latest configuration values
-func (service *ServerEmail) Refresh() {
-
-	// Reset all emails (to be reloaced by the Template service)
-	service.emails = make(map[string]model.Email)
 }
 
 /******************************************
@@ -67,55 +59,103 @@ func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 		return derp.Wrap(err, location, "Loading Schema")
 	}
 
-	email := model.NewEmail(temp.GetString("emailId"), service.funcMap)
+	// RULE: an email definition must identify itself, because the ID is how Send() finds it
+	emailID := temp.GetString("emailId")
+
+	if emailID == "" {
+		return derp.BadRequest(location, "Email definition must include an 'emailId'")
+	}
+
+	email := model.NewEmail(emailID, service.funcMap)
 	log.Debug().Msg("Email Service: adding " + email.EmailID)
 
 	// Read simple properties
 	email.EmailRole = temp.GetString("emailRole")
 	email.Model = temp.GetString("model")
 
+	// RULE: every definition names the object its data describes, which RequireModel() checks.
+	// Not checked against templateModelRegistry: an email names the object the message is ABOUT
+	// (such as "Follower"), a different namespace from a Template's builder model.
+	if email.Model == "" {
+		return derp.BadRequest(location, "Email definition must include a 'model'", email.EmailID)
+	}
+
+	// RULE: a definition with no recipient renders an empty address, which fails at send time
+	// -- once per attempted delivery -- rather than here, once, at startup
+	to := temp.GetString("to")
+
+	if to == "" {
+		return derp.BadRequest(location, "Email definition must include a 'to' address", email.EmailID)
+	}
+
 	// Read "to"  template
-	if toTemplate, err := email.To.Parse(temp.GetString("to")); err == nil {
-		email.To = toTemplate
-	} else {
+	toTemplate, err := email.To.Parse(to)
+
+	if err != nil {
 		return derp.Wrap(err, location, "Parsing 'to' template", email.EmailID)
 	}
 
+	email.To = toTemplate
+
 	// Read "subject" template
-	if subjectTemplate, err := email.Subject.Parse(temp.GetString("subject")); err == nil {
-		email.Subject = subjectTemplate
-	} else {
+	subjectTemplate, err := email.Subject.Parse(temp.GetString("subject"))
+
+	if err != nil {
 		return derp.Wrap(err, location, "Parsing 'subject' template", email.EmailID)
 	}
 
+	email.Subject = subjectTemplate
+
 	// Read "headers" templates
 	for name, value := range temp.GetMap("headers") {
-		if headerTemplate, err := email.Headers.New(name).Parse(convert.String(value)); err == nil {
-			email.Headers = headerTemplate
-		} else {
+
+		// RULE: header names are written into the message verbatim, without the encoding that
+		// protects values, so a name carrying CRLF or a colon would forge headers of its own
+		if !headerNamePattern.MatchString(name) {
+			return derp.BadRequest(location, "Invalid email header name", email.EmailID, name)
+		}
+
+		// RULE: reserved headers are owned by Send() or by the mail library.  A definition that
+		// set one could redirect the message to another recipient, disguise who it is from, or
+		// corrupt the MIME structure that carries the body.
+		if slices.Contains(reservedHeaderNames, textproto.CanonicalMIMEHeaderKey(name)) {
+			return derp.BadRequest(location, "Email header name is reserved", email.EmailID, name)
+		}
+
+		headerTemplate, err := email.Headers.New(name).Parse(convert.String(value))
+
+		if err != nil {
 			return derp.Wrap(err, location, "Parsing 'headers' template", email.EmailID, name)
 		}
+
+		email.Headers = headerTemplate
 	}
 
 	// Read "body" template
 	content, err := fs.ReadFile(filesystem, "body.html")
 
 	if err != nil {
-		return derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Cannot read body.html file")
+		return derp.Wrap(err, location, "Cannot read body.html file", email.EmailID)
 	}
 
-	if bodyTemplate, err := email.Body.Parse(string(content)); err == nil {
-		email.Body = bodyTemplate
-	} else {
-		return derp.Wrap(err, "service.loadHTMLTemplateFromFilesystem", "Parsing template HTML")
+	bodyTemplate, err := email.Body.Parse(string(content))
+
+	if err != nil {
+		return derp.Wrap(err, location, "Parsing 'body' template", email.EmailID)
 	}
+
+	email.Body = bodyTemplate
 
 	// Keep a pointer to the filesystem resources (if present)
 	if resources, err := fs.Sub(filesystem, "resources"); err == nil {
 		email.Resources = resources
 	}
 
-	// Add the email into the prep library
+	// RULE: Add overwrites, and nothing ever empties this library.  Every template reload adds each
+	// email again over its live copy, so readers never see it empty (BUG-180)
+	service.mutex.Lock()
+	defer service.mutex.Unlock()
+
 	service.emails[email.EmailID] = email
 
 	// Banana
@@ -124,9 +164,93 @@ func (service *ServerEmail) Add(filesystem fs.FS, definition []byte) error {
 
 // Names returns the ID of every email template in this service's library, sorted
 func (service *ServerEmail) Names() []string {
+	service.mutex.RLock()
+	defer service.mutex.RUnlock()
+
 	result := maps.Keys(service.emails)
 	slices.Sort(result)
 	return result
+}
+
+/******************************************
+ * Load-Time Queries
+ ******************************************/
+
+// Exists returns TRUE if an email with this ID is defined in this service's library
+func (service *ServerEmail) Exists(emailID string) bool {
+	service.mutex.RLock()
+	defer service.mutex.RUnlock()
+
+	_, exists := service.emails[emailID]
+	return exists
+}
+
+// RequiredKeys returns every data key that an email's "to", "subject", and "headers" templates
+// interpolate, except the providedKeys that DomainEmail.Send supplies for every email
+func (service *ServerEmail) RequiredKeys(emailID string) sliceof.String {
+
+	// A missing key fails "to" and "headers" outright, and ships as "<no value>" in "subject".
+	// The body is excluded: html/template renders a missing key as "", and
+	// email-follower-activity depends on that.
+	email, exists := service.lookup(emailID)
+
+	if !exists {
+		return sliceof.String{}
+	}
+
+	found := make(mapof.Bool)
+	collectTreeFieldNames(email.To, found)
+	collectTreeFieldNames(email.Subject, found)
+
+	for _, headerTemplate := range email.Headers.Templates() {
+		collectTreeFieldNames(headerTemplate, found)
+	}
+
+	result := make(sliceof.String, 0, len(found))
+
+	for name := range found {
+		if !slices.Contains(providedKeys, name) {
+			result = append(result, name)
+		}
+	}
+
+	slices.Sort(result)
+	return result
+}
+
+// RequireModel returns an error unless the named email is defined for modelName
+func (service *ServerEmail) RequireModel(emailID string, modelName string) error {
+
+	const location = "service.ServerEmail.RequireModel"
+
+	// Go senders build a fixed data shape, so this rejects a definition -- possibly one an
+	// administrator overrode on disk -- that describes some other object
+
+	email, exists := service.lookup(emailID)
+
+	if !exists {
+		return derp.BadRequest(location, "Email is not defined", emailID, service.Names())
+	}
+
+	if modelName == "" {
+		return derp.BadRequest(location, "Model is required", emailID)
+	}
+
+	if email.Model != modelName {
+		return derp.BadRequest(location, "Email requires a different model object", "email: "+emailID, "required model: "+email.Model, "requested model: "+modelName)
+	}
+
+	// A model citizen
+	return nil
+}
+
+// lookup returns the named email from the library
+func (service *ServerEmail) lookup(emailID string) (model.Email, bool) {
+	service.mutex.RLock()
+	defer service.mutex.RUnlock()
+
+	email, exists := service.emails[emailID]
+	return email, exists
 }
 
 /******************************************
@@ -134,25 +258,18 @@ func (service *ServerEmail) Names() []string {
  ******************************************/
 
 // Send renders the named email template and delivers it over the provided SMTP connection
-func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner config.Owner, emailID string, model string, data mapof.Any) error {
+func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner config.Owner, emailID string, data mapof.Any) error {
 
 	const location = "service.ServerEmail.Send"
 
+	// RULE: `data` never appears in an error report below -- it holds interpolation values
+	// that include password reset codes and, for web-form templates, whatever a visitor typed
+
 	// Find the email in the library
-	email, exists := service.emails[emailID]
+	email, exists := service.lookup(emailID)
 
 	if !exists {
-		return derp.BadRequest(location, "Email is not defined", emailID, maps.Keys(service.emails))
-	}
-
-	// "Model" must be set
-	if model == "" {
-		return derp.BadRequest(location, "Model is required", emailID)
-	}
-
-	// Require that the email is defined for the correct model
-	if email.Model != model {
-		return derp.BadRequest(location, "Email requires a different model object", "email: "+emailID, "required model: "+email.Model, "requested model: "+model)
+		return derp.BadRequest(location, "Email is not defined", emailID, service.Names())
 	}
 
 	// If the SMTP Connection is empty, then don't try to send an email
@@ -171,8 +288,14 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner con
 	client, err := server.Connect()
 
 	if err != nil {
-		return derp.Wrap(err, location, "Connecting to SMTP server", emailID, data, smtpConnection.Hostname, smtpConnection.Username, strings.Repeat("*", len(smtpConnection.Password)), smtpConnection.Port, smtpConnection.TLS)
+		return derp.Wrap(err, location, "Connecting to SMTP server", emailID, smtpConnection.Hostname, smtpConnection.Username, strings.Repeat("*", len(smtpConnection.Password)), smtpConnection.Port, smtpConnection.TLS)
 	}
+
+	// RULE: go-simple-mail closes this connection only from inside message.Send(), so every
+	// error return before that point would leak it.  A double close is harmless
+	defer func() {
+		_ = client.Close()
+	}()
 
 	message := mail.NewMSG()
 	message.SetFrom(owner.DisplayName + " <" + owner.EmailAddress + ">")
@@ -180,22 +303,33 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner con
 	// Generate the "to" address
 	buffer := bytes.Buffer{}
 	if err := email.To.Execute(&buffer, data); err != nil {
-		return derp.Wrap(err, location, "Executing 'to' template", emailID, data)
+		return derp.Wrap(err, location, "Executing 'to' template", emailID)
 	}
 	message.AddTo(buffer.String())
 	buffer.Reset()
 
 	// Generate the "subject" line
 	if err := email.Subject.Execute(&buffer, data); err != nil {
-		return derp.Wrap(err, location, "Executing 'subject' template", emailID, data)
+		return derp.Wrap(err, location, "Executing 'subject' template", emailID)
 	}
 
 	message.SetSubject(buffer.String())
 	buffer.Reset()
 
+	// Generate the custom headers (such as Reply-To) that this Email defines
+	if err := applyHeaders(message, email, data); err != nil {
+		return derp.Wrap(err, location, "Applying 'headers' templates", emailID)
+	}
+
+	// RULE: go-simple-mail keeps its first error and no-ops every later setter, so a bad
+	// address is otherwise only reported by Send(), without naming the header that failed
+	if err := message.GetError(); err != nil {
+		return derp.Wrap(err, location, "Invalid email header", emailID)
+	}
+
 	// Generate the email body
 	if err := email.Body.Execute(&buffer, data); err != nil {
-		return derp.Wrap(err, location, "Executing template", emailID, data)
+		return derp.Wrap(err, location, "Executing 'body' template", emailID)
 	}
 
 	message.SetBody(mail.TextHTML, buffer.String())
@@ -203,8 +337,140 @@ func (service *ServerEmail) Send(smtpConnection config.SMTPConnection, owner con
 
 	// Try to send the email
 	if err := message.Send(client); err != nil {
-		return derp.Wrap(err, location, "Sending email", emailID, data)
+		return derp.Wrap(err, location, "Sending email", emailID)
 	}
 
+	// You've got mail
 	return nil
+}
+
+/******************************************
+ * Header Utilities
+ ******************************************/
+
+// headerNamePattern matches an RFC 5322 field name: printable US-ASCII,
+// excluding the colon that terminates the name (%d33-57 and %d59-126)
+var headerNamePattern = regexp.MustCompile(`^[!-9;-~]+$`)
+
+// reservedHeaderNames are the headers an email definition may not set: who receives the message,
+// who it claims to be from, and the four owned by the mail library
+var reservedHeaderNames = []string{
+	// Reply-To is absent on purpose: setting it is the reason "headers" exists.  Names are in
+	// canonical MIME form, because go-simple-mail canonicalizes before it stores them
+	"To", "Cc", "Bcc",
+	"From", "Sender", "Return-Path",
+	"Date", "Mime-Version", "Content-Type", "Content-Transfer-Encoding",
+}
+
+// applyHeaders renders every custom header that an Email defines, and adds it to the message
+func applyHeaders(message *mail.Email, email model.Email, data mapof.Any) error {
+
+	const location = "service.applyHeaders"
+
+	// An Email that declares no headers has nothing to apply
+	if email.Headers == nil {
+		return nil
+	}
+
+	// Collect the header names, skipping the set's unnamed root template, which holds no value
+	templates := email.Headers.Templates()
+	names := make([]string, 0, len(templates))
+
+	for _, headerTemplate := range templates {
+		if name := headerTemplate.Name(); name != "" {
+			names = append(names, name)
+		}
+	}
+
+	// Sort the names so that a message's headers are emitted in a stable order
+	slices.Sort(names)
+
+	// Render each header in turn
+	buffer := bytes.Buffer{}
+
+	for _, name := range names {
+
+		buffer.Reset()
+
+		if err := email.Headers.ExecuteTemplate(&buffer, name, data); err != nil {
+			return derp.Wrap(err, location, "Executing 'headers' template", email.EmailID, name)
+		}
+
+		// Headers that render empty are skipped: go-simple-mail parses address headers with
+		// mail.ParseAddress, where an empty string is an error that fails the whole send
+		value := strings.TrimSpace(buffer.String())
+
+		if value == "" {
+			continue
+		}
+
+		message.AddHeader(name, value)
+	}
+
+	// Return to sender.  Address unknown
+	return nil
+}
+
+// providedKeys are supplied by DomainEmail.Send for every email, so no caller passes them
+var providedKeys = []string{"Domain_Owner", "Domain_URL", "Domain_Name", "Domain_Icon"}
+
+// collectTreeFieldNames walks one template's parse tree, skipping templates that never parsed
+func collectTreeFieldNames(tmpl *texttemplate.Template, result mapof.Bool) {
+
+	if (tmpl == nil) || (tmpl.Tree == nil) {
+		return
+	}
+
+	collectFieldNames(tmpl.Root, result)
+}
+
+// collectFieldNames walks a parsed template and records the top-level field name of every
+// value it interpolates, so that "{{.ReplyEmail}}" and "{{if .Unsubscribe}}" both yield one name
+func collectFieldNames(node parse.Node, result mapof.Bool) {
+
+	switch typed := node.(type) {
+
+	case *parse.ListNode:
+		if typed != nil {
+			for _, child := range typed.Nodes {
+				collectFieldNames(child, result)
+			}
+		}
+
+	case *parse.ActionNode:
+		collectFieldNames(typed.Pipe, result)
+
+	case *parse.PipeNode:
+		if typed != nil {
+			for _, command := range typed.Cmds {
+				collectFieldNames(command, result)
+			}
+		}
+
+	case *parse.CommandNode:
+		for _, argument := range typed.Args {
+			collectFieldNames(argument, result)
+		}
+
+	case *parse.IfNode:
+		collectFieldNames(typed.Pipe, result)
+		collectFieldNames(typed.List, result)
+		collectFieldNames(typed.ElseList, result)
+
+	case *parse.RangeNode:
+		collectFieldNames(typed.Pipe, result)
+		collectFieldNames(typed.List, result)
+		collectFieldNames(typed.ElseList, result)
+
+	case *parse.WithNode:
+		collectFieldNames(typed.Pipe, result)
+		collectFieldNames(typed.List, result)
+		collectFieldNames(typed.ElseList, result)
+
+	case *parse.FieldNode:
+		// Only the FIRST identifier is a data key: "{{.Actor.Name}}" requires "Actor"
+		if len(typed.Ident) > 0 {
+			result[typed.Ident[0]] = true
+		}
+	}
 }

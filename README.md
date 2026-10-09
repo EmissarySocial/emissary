@@ -63,8 +63,6 @@ A complete list can be found in the [Go module file](https://github.com/Emissary
 
 Emissary is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). See [LICENSE](LICENSE) for the full text.
 
-&copy; Copyright 2026 [Social Web Foundation](https://socialwebfoundation.org)
-
 ## Everyone Welcome
 
 I welcome your thoughts, ideas, feedback, criticisms, and mockery if it will help create a more realistic and workable way for people to use the Internet *as originally intended*.

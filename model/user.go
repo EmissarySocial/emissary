@@ -25,39 +25,39 @@ import (
 
 // User represents a person or machine account that can own pages and sections.
 type User struct {
-	UserID               primitive.ObjectID         `bson:"_id"`                  // Unique identifier for this user.
-	MapIDs               mapof.String               `bson:"mapIds"`               // Map of IDs for this user on other web services.
-	GroupIDs             id.Slice                   `bson:"groupIds"`             // Slice of IDs for the groups that this user belongs to.
-	IconID               primitive.ObjectID         `bson:"iconId"`               // AttachmentID of this user's avatar/icon image.
-	ImageID              primitive.ObjectID         `bson:"imageId"`              // AttachmentID of this user's banner image.
-	DisplayName          string                     `bson:"displayName"`          // Name to be displayed for this user
-	StatusMessage        string                     `bson:"statusMessage"`        // Status summary for this user
-	Location             string                     `bson:"location"`             // Human-friendly description of this user's physical location.
-	ProfileURL           string                     `bson:"profileUrl"`           // Fully Qualified profile URL for this user (including domain name)
-	EmailAddress         string                     `bson:"emailAddress"`         // Email address for this user
-	Username             string                     `bson:"username"`             // This is the primary public identifier for the user.
-	Password             string                     `bson:"password"`             // Hashed password. Only ever written via a PasswordHasher (see steranko.SetPassword); never contains plaintext.
-	Locale               string                     `bson:"locale"`               // Language code for this user's preferred language.
-	SignupNote           string                     `bson:"signupNote,omitempty"` // Note that was included when this user signed up.
-	StateID              string                     `bson:"stateId"`              // State ID for this user
-	InboxTemplate        string                     `bson:"inboxTemplate"`        // Template for the user's inbox
-	OutboxTemplate       string                     `bson:"outboxTemplate"`       // Template for the user's outbox
-	NoteTemplate         string                     `bson:"noteTemplate"`         // Template for generically created notes
-	Hashtags             sliceof.String             `bson:"hashtags"`             // Slice of tags that can be used to categorize this user.
-	TagURL               string                     `bson:"tagUrl"`               // URL prefix for hashtag links, denormalized from the outbox Template ("%23" + tag is appended).
-	Links                sliceof.Object[PersonLink] `bson:"links"`                // Slice of links to profiles on other web services.
-	NotificationChannels sliceof.String             `bson:"notificationChannels"` // Slice of ENABLED notification channel keys (see model.NotificationChannel* constants). Empty = all notifications off.
-	PasswordReset        PasswordReset              `bson:"passwordReset"`        // Most recent password reset information.
-	Data                 mapof.String               `bson:"data"`                 // Custom profile data that can be stored with this User.
-	ProfileFingerprint   string                     `bson:"profileFingerprint"`   // Hash of the last-saved actor document (GetJSONLD). User.Save compares it to detect profile changes that must federate as an ActivityPub Update.
-	MovedTo              string                     `bson:"movedTo,omitempty"`    // If present, this user has been moved to a new URL, and cannot sign in to this profile anymore.
-	FollowerCount        int                        `bson:"followerCount"`        // Number of followers for this user
-	FollowingCount       int                        `bson:"followingCount"`       // Number of actors that this user is following
-	RuleCount            int                        `bson:"ruleCount"`            // Number of rules (blocks) that this user has implemented
-	IsOwner              bool                       `bson:"isOwner"`              // If TRUE, then this user is a website owner with FULL privileges.
-	IsPublic             bool                       `bson:"isPublic"`             // If TRUE, then this user's profile is publicly visible
-	IsBridgeBluesky      delta.Bool                 `bson:"isBridgeBluesky"`      // If TRUE, then allow this user to be bridged to Bluesky
-	IsIndexable          bool                       `bson:"isIndexable"`          // If TRUE, then this user's profile can be indexed by search engines.
+	UserID               primitive.ObjectID         `json:"userId"               bson:"_id"`                  // Unique identifier for this user.
+	MapIDs               mapof.String               `json:"mapIds"               bson:"mapIds"`               // Map of IDs for this user on other web services.
+	GroupIDs             id.Slice                   `json:"groupIds"             bson:"groupIds"`             // Slice of IDs for the groups that this user belongs to.
+	IconID               primitive.ObjectID         `json:"iconId"               bson:"iconId"`               // AttachmentID of this user's avatar/icon image.
+	ImageID              primitive.ObjectID         `json:"imageId"              bson:"imageId"`              // AttachmentID of this user's banner image.
+	DisplayName          string                     `json:"displayName"          bson:"displayName"`          // Name to be displayed for this user
+	StatusMessage        string                     `json:"statusMessage"        bson:"statusMessage"`        // Status summary for this user
+	Location             string                     `json:"location"             bson:"location"`             // Human-friendly description of this user's physical location.
+	ProfileURL           string                     `json:"profileUrl"           bson:"profileUrl"`           // Fully Qualified profile URL for this user (including domain name)
+	EmailAddress         string                     `json:"emailAddress"         bson:"emailAddress"`         // Email address for this user
+	Username             string                     `json:"username"             bson:"username"`             // This is the primary public identifier for the user.
+	Password             string                     `json:"-"                    bson:"password"`             // Hashed password. Only ever written via a PasswordHasher (see steranko.SetPassword); never contains plaintext.
+	Locale               string                     `json:"locale"               bson:"locale"`               // Language code for this user's preferred language.
+	SignupNote           string                     `json:"signupNote"           bson:"signupNote,omitempty"` // Note that was included when this user signed up.
+	StateID              string                     `json:"stateId"              bson:"stateId"`              // State ID for this user
+	InboxTemplate        string                     `json:"inboxTemplate"        bson:"inboxTemplate"`        // Template for the user's inbox
+	OutboxTemplate       string                     `json:"outboxTemplate"       bson:"outboxTemplate"`       // Template for the user's outbox
+	NoteTemplate         string                     `json:"noteTemplate"         bson:"noteTemplate"`         // Template for generically created notes
+	Hashtags             sliceof.String             `json:"hashtags"             bson:"hashtags"`             // Slice of tags that can be used to categorize this user.
+	TagURL               string                     `json:"tagUrl"               bson:"tagUrl"`               // URL prefix for hashtag links, denormalized from the outbox Template ("%23" + tag is appended).
+	Links                sliceof.Object[PersonLink] `json:"links"                bson:"links"`                // Slice of links to profiles on other web services.
+	NotificationChannels sliceof.String             `json:"notificationChannels" bson:"notificationChannels"` // Slice of ENABLED notification channel keys (see model.NotificationChannel* constants). Empty = all notifications off.
+	PasswordReset        PasswordReset              `json:"-"                    bson:"passwordReset"`        // Most recent password reset information.
+	Data                 mapof.String               `json:"data"                 bson:"data"`                 // Custom profile data that can be stored with this User.
+	ProfileFingerprint   string                     `json:"profileFingerprint"   bson:"profileFingerprint"`   // Hash of the last-saved actor document (GetJSONLD). User.Save compares it to detect profile changes that must federate as an ActivityPub Update.
+	MovedTo              string                     `json:"movedTo"              bson:"movedTo,omitempty"`    // If present, this user has been moved to a new URL, and cannot sign in to this profile anymore.
+	FollowerCount        int                        `json:"followerCount"        bson:"followerCount"`        // Number of followers for this user
+	FollowingCount       int                        `json:"followingCount"       bson:"followingCount"`       // Number of actors that this user is following
+	RuleCount            int                        `json:"ruleCount"            bson:"ruleCount"`            // Number of rules (blocks) that this user has implemented
+	IsOwner              bool                       `json:"isOwner"              bson:"isOwner"`              // If TRUE, then this user is a website owner with FULL privileges.
+	IsPublic             bool                       `json:"isPublic"             bson:"isPublic"`             // If TRUE, then this user's profile is publicly visible
+	IsBridgeBluesky      delta.Bool                 `json:"isBridgeBluesky"      bson:"isBridgeBluesky"`      // If TRUE, then allow this user to be bridged to Bluesky
+	IsIndexable          bool                       `json:"isIndexable"          bson:"isIndexable"`          // If TRUE, then this user's profile can be indexed by search engines.
 
 	journal.Journal `json:"-" bson:",inline"`
 }
@@ -186,10 +186,12 @@ func (user *User) SetUsername(username string) {
 	user.Username = username
 }
 
-// SetHashedPassword updates the password for this User.  A part of the "steranko.User" interface.
-// The value must already be hashed; to set a password from plaintext, use steranko's SetPassword,
-// which hashes with the configured PasswordHasher first.
+// SetHashedPassword updates the already-hashed password for this User.
+// Part of the "steranko.User" interface.
 func (user *User) SetHashedPassword(hashedValue string) {
+
+	// To set a password from plaintext, use steranko's SetPassword, which hashes
+	// with the configured PasswordHasher first.
 	user.Password = hashedValue
 }
 
@@ -238,13 +240,12 @@ func (user *User) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
 	return NewPermissions()
 }
 
-// SummaryHTML renders the user's StatusMessage from Markdown to HTML, and linkifies any #hashtags
-// using the tag URL denormalized from the outbox Template.  The shared converter sanitizes its
-// output with bluemonday, so raw HTML in a bio is filtered down to safe markup (not escaped) and
-// the result is safe to render on our own origin.  The hashtag links are absolute, because this
-// HTML is also published as the ActivityPub summary.
+// SummaryHTML renders the User's StatusMessage from Markdown to HTML, linkifying
+// any #hashtags with the tag URL denormalized from the outbox Template
 func (user User) SummaryHTML() string {
 
+	// The shared converter sanitizes with bluemonday, so raw HTML in a bio is filtered
+	// down to safe markup (not escaped) and is safe to render on our own origin.
 	result := markdown.ToHTML(user.StatusMessage)
 
 	// RULE: Only linkify when the outbox Template defines a tag URL
@@ -383,12 +384,14 @@ func (user *User) ActivityPubURL() string {
 	return user.ProfileURL
 }
 
-// CalcProfileFingerprint returns a hex-encoded SHA-256 of this User's public actor document
-// (GetJSONLD). Identical profiles always produce identical fingerprints because json.Marshal
-// serializes map keys in sorted order.
+// CalcProfileFingerprint returns a hex-encoded SHA-256 of this User's public actor
+// document (GetJSONLD)
 func (user User) CalcProfileFingerprint() (string, error) {
 
 	const location = "model.User.CalcProfileFingerprint"
+
+	// Identical profiles always produce identical fingerprints, because json.Marshal
+	// serializes map keys in sorted order.
 
 	asJSON, err := json.Marshal(user.GetJSONLD())
 

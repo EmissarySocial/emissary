@@ -89,6 +89,6 @@ func TestIsAuthor_StubsReturnFalse(t *testing.T) {
 	folder := NewFolder()
 	require.False(t, folder.IsAuthor(id))
 
-	domain := NewDomain()
-	require.False(t, domain.IsAuthor(id))
+	readOnlyDomain := NewDomain()
+	require.False(t, readOnlyDomain.IsAuthor(id))
 }

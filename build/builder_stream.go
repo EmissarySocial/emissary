@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"html/template"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -112,7 +113,7 @@ func (w Stream) Render() (template.HTML, error) {
 
 	// Success!
 	status.Apply(w._response)
-	return template.HTML(buffer.String()), nil
+	return template.HTML(buffer.String()), nil // #nosec G203 -- buffer holds the action pipeline's own rendered output, already escaped by html/template
 }
 
 // object returns the model object associated with this builder
@@ -183,7 +184,7 @@ func (w Stream) StreamID() string {
 	return w._stream.StreamID.Hex()
 }
 
-// StreamID returns the unique ID for the stream being built
+// ParentID returns the unique ID of this Stream's parent
 func (w Stream) ParentID() string {
 	return w._stream.ParentID.Hex()
 }
@@ -243,10 +244,10 @@ func (w Stream) Summary() string {
 
 // SummaryHTML returns the description of the stream being built
 func (w Stream) SummaryHTML() template.HTML {
-	return template.HTML(w._stream.Summary)
+	return template.HTML(w._stream.Summary) // #nosec G203 -- Stream.Summary is written through schema.String{Format: "html"}, which sanitizes with bluemonday
 }
 
-// SummarySummary returns a plaintext summary (<200 characters) of the stream's description
+// ShortSummary returns a plaintext summary (<200 characters) of the stream's description
 func (w Stream) ShortSummary() string {
 	return htmlconv.Summary(w._stream.Summary)
 }
@@ -307,9 +308,14 @@ func (w Stream) InReplyTo() streams.Document {
 	return w.ActivityStream(w._stream.InReplyTo)
 }
 
-// Returns the body content as an HTML template
+// ContentFormat returns the format that the Stream's body content is stored in
+func (w Stream) ContentFormat() string {
+	return w._stream.Content.Format
+}
+
+// ContentHTML returns the body content as an HTML template
 func (w Stream) ContentHTML() template.HTML {
-	return template.HTML(w._stream.Content.HTML)
+	return template.HTML(w._stream.Content.HTML) // #nosec G203 -- Content.HTML is produced and sanitized by service.Content.New
 }
 
 // Location returns the location of the Stream being built
@@ -368,6 +374,45 @@ func (w Stream) IsPublished() bool {
 // Rank returns the Rank of the stream being built
 func (w Stream) Rank() int {
 	return w._stream.Rank
+}
+
+// StreamSource returns the remote content source attached to this Stream, or an EMPTY record
+// when it has none.  A Stream with no source is the normal unconfigured case, not an error.
+func (w Stream) StreamSource() (model.StreamSource, error) {
+
+	const location = "build.Stream.StreamSource"
+
+	// RULE: The load target is a ZERO record, never NewStreamSource().  The constructor mints a
+	// webhook token that belongs to a NEW record, and a BSON decode leaves alone any field the
+	// stored document does not carry -- so a load target built that way can hand back a stored
+	// record wearing a token nobody installed.  See model/AGENTS.md.
+	var result model.StreamSource
+
+	if err := w.factory().StreamSource().LoadByStreamID(w.session(), w._stream.StreamID, &result); err != nil {
+
+		// An unconfigured Stream renders the "no source yet" branch, not an error page
+		if derp.IsNotFound(err) {
+			return result, nil
+		}
+
+		return result, derp.Wrap(err, location, "Loading StreamSource", w._stream.StreamID)
+	}
+
+	return result, nil
+}
+
+// StreamSourceFiles summarizes the files that this Stream's remote source has copied in
+func (w Stream) StreamSourceFiles() (StreamSourceFiles, error) {
+
+	const location = "build.Stream.StreamSourceFiles"
+
+	attachments, err := w.factory().Attachment().QueryByCategory(w.session(), model.AttachmentObjectTypeStream, w._stream.StreamID, model.AttachmentCategoryStreamSource)
+
+	if err != nil {
+		return NewStreamSourceFiles(nil), derp.Wrap(err, location, "Loading imported attachments", w._stream.StreamID)
+	}
+
+	return NewStreamSourceFiles(attachments), nil
 }
 
 // Data returns the custom data field as an "any" type
@@ -459,6 +504,13 @@ func (w Stream) ListWidgetsByLocation(location string) []model.StreamWidget {
 	return result
 }
 
+// WidgetIDsByLocation returns the IDs of every widget in the specified location as a
+// comma-separated list, in display order
+func (w Stream) WidgetIDsByLocation(location string) string {
+	widgets := w._stream.WidgetsByLocation(location)
+	return strings.Join(slice.Map(widgets, model.StreamWidget.ID), ",")
+}
+
 // Widgets returns HTML for all the widgets in the specified location
 func (w Stream) Widgets(location string) (template.HTML, error) {
 
@@ -482,7 +534,7 @@ func (w Stream) Widgets(location string) (template.HTML, error) {
 	}
 	buffer.WriteString(`</div>`)
 
-	return template.HTML(buffer.String()), nil
+	return template.HTML(buffer.String()), nil // #nosec G203 -- buffer holds the action pipeline's own rendered output, already escaped by html/template
 }
 
 /******************************************
@@ -494,13 +546,24 @@ func (w Stream) Grandparent(actionID string) (Stream, error) {
 
 	const location = "build.Stream.Grandparent"
 
+	// RULE: Streams in the top two levels of the hierarchy have no grandparent to load
+	if !w.HasGrandparent() {
+		return Stream{}, derp.NotFound(location, "Stream does not have a grandparent", w._stream.StreamID)
+	}
+
 	parent, err := w.Parent(actionID)
 
 	if err != nil {
 		return Stream{}, derp.Wrap(err, location, "Loading Parent")
 	}
 
-	return parent.Parent(actionID)
+	grandparent, err := parent.Parent(actionID)
+
+	if err != nil {
+		return Stream{}, derp.Wrap(err, location, "Loading Grandparent")
+	}
+
+	return grandparent, nil
 }
 
 // ParentOutbox returns an Outbox builder containing the parent of the current stream
@@ -529,6 +592,11 @@ func (w Stream) ParentOutbox(actionID string) (Outbox, error) {
 func (w Stream) Parent(actionID string) (Stream, error) {
 
 	const location = "build.Stream.Parent"
+
+	// RULE: A top-level Stream has no parent to load
+	if !w.HasParent() {
+		return Stream{}, derp.NotFound(location, "Stream does not have a parent", w._stream.StreamID)
+	}
 
 	var parent model.Stream
 
@@ -578,7 +646,7 @@ func (w Stream) FirstChild(sort string, action string) (Stream, error) {
 	return w.getFirstStream(criteria, sortOption, action), nil
 }
 
-// FirstChild returns the first child Stream underneath this one, based on the provided sort field
+// LastChild returns the last child Stream underneath this one, based on the provided sort field
 func (w Stream) LastChild(sort string, action string) (Stream, error) {
 
 	criteria := exp.Equal("parentId", w._stream.StreamID)
@@ -741,19 +809,32 @@ func (w Stream) Breadcrumbs() ([]model.StreamSummary, error) {
 
 // Ancestors returns all Streams that have the same "parent" as the current Stream's parent
 func (w Stream) Ancestors() QueryBuilder[model.StreamSummary] {
+
+	const location = "build.Stream.Ancestors"
+
+	// RULE: A top-level Stream has no parent, and therefore no ancestor generation to list.
+	// Without this guard the query below would search for the children of NilObjectID, which
+	// is this Stream's OWN generation -- a list that callers cannot tell apart from a real one.
+	if !w.HasParent() {
+		return NewEmptyQueryBuilder[model.StreamSummary]()
+	}
+
+	// Load the parent, whose own parent defines the generation to list
 	var parent model.Stream
 
 	streamService := w._factory.Stream()
 
 	if err := streamService.LoadByID(w._session, w._stream.ParentID, &parent); err != nil {
-		derp.Report(derp.Wrap(err, "build.Stream.Ancestors", "Loading parent"))
+
+		// RULE: A parent we cannot read yields nothing.  Falling through with a zero-valued
+		// parent would list this Stream's own generation instead, which is a silent lie.
+		derp.Report(derp.Wrap(err, location, "Loading parent", w._stream.ParentID))
+		return NewEmptyQueryBuilder[model.StreamSummary]()
 	}
 
-	criteria := exp.Equal("parentId", parent.ParentID).
-		And(w.defaultAllowed()).
-		And(w.withinPublishDate())
-
-	return w.makeStreamQueryBuilder(criteria)
+	// Collect the parent and all of the parent's siblings.  makeStreamQueryBuilder applies
+	// the permission and publish-date filters, so they are not repeated here.
+	return w.makeStreamQueryBuilder(exp.Equal("parentId", parent.ParentID))
 }
 
 // Siblings returns all Streams that have the same "parent" as the current Stream
@@ -797,7 +878,7 @@ func (w Stream) makeStreamQueryBuilder(criteria exp.Expression) QueryBuilder[mod
  * Attachments
  ******************************************/
 
-// Reference to the first file attached to this stream
+// Attachment returns the first file attached to this stream
 func (w Stream) Attachment() (model.Attachment, error) {
 	return w._factory.Attachment().LoadFirstByObjectID(w._session, model.AttachmentObjectTypeStream, w._stream.StreamID)
 }
@@ -807,7 +888,7 @@ func (w Stream) Attachments() (sliceof.Object[model.Attachment], error) {
 	return w._factory.Attachment().QueryByObjectID(w._session, model.AttachmentObjectTypeStream, w._stream.StreamID)
 }
 
-// AttachmentByType lists all attachments for this stream.
+// AttachmentsByCategory lists this stream's attachments in the named category.
 func (w Stream) AttachmentsByCategory(category string) (sliceof.Object[model.Attachment], error) {
 	return w._factory.Attachment().QueryByCategory(w._session, model.AttachmentObjectTypeStream, w._stream.StreamID, category)
 }
@@ -855,6 +936,27 @@ func (w Stream) IsPublic() bool {
 	return w._stream.IsPublic()
 }
 
+// SharingStatus returns the icon and label that describe who has been granted the
+// provided role on this Stream.
+// RULE: these labels and icons mirror the choices in StepSetSimpleSharing.form, so that the
+// status a visitor reads matches the option they picked.
+func (w Stream) SharingStatus(role string) form.LookupCode {
+
+	switch w.liveStream().SharingStatus(role) {
+
+	case model.SharingStatusPublic:
+		return form.LookupCode{Value: model.SharingStatusPublic, Label: "Sharing: Everyone", Icon: "globe"}
+
+	case model.SharingStatusAuthenticated:
+		return form.LookupCode{Value: model.SharingStatusAuthenticated, Label: "Sharing: Signed-In", Icon: "person-circle"}
+
+	case model.SharingStatusCircles:
+		return form.LookupCode{Value: model.SharingStatusCircles, Label: "Sharing: Groups", Icon: "people"}
+	}
+
+	return form.LookupCode{Value: model.SharingStatusOwners, Label: "Sharing: Owners", Icon: "lock"}
+}
+
 /******************************************
  * Other Stuff
  ******************************************/
@@ -881,6 +983,26 @@ func (w Stream) Template(templateID string) (model.Template, error) {
 /******************************************
  * Helper Functions
  ******************************************/
+
+// liveStream returns the Stream that sharing actually acts on, which is not this builder's own
+// record whenever it is bound to a draft.
+// RULE: the `sharing` action runs OUTSIDE with-draft and Promote copies neither Groups nor
+// Circles, so a draft's copies of them go stale the moment anyone changes sharing.
+func (w Stream) liveStream() *model.Stream {
+
+	if _, isDraft := w._service.(*service.StreamDraft); !isDraft {
+		return w._stream
+	}
+
+	var stream model.Stream
+
+	if err := w._factory.Stream().LoadByID(w._session, w._stream.StreamID, &stream); err != nil {
+		derp.Report(derp.Wrap(err, "build.Stream.liveStream", "Loading live Stream", w._stream.StreamID))
+		return w._stream
+	}
+
+	return &stream
+}
 
 // draftBuilder returns a new build.Stream that is bound to the
 // draft service, and a draft copy of the current stream.

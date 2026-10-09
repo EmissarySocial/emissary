@@ -10,6 +10,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	"github.com/benpate/digital-dome/dome"
+	"github.com/benpate/hannibal/clients"
 	"github.com/benpate/turbine/queue"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -23,6 +24,10 @@ type ServerFactory interface {
 	Email() *ServerEmail
 	ClientIP(request *http.Request) string
 	DigitalDome() *dome.Dome
+
+	// Carpool returns the process-wide Carpool that merges concurrent ActivityStream Loads.  It
+	// is created once and never replaced, so it is safe to capture.
+	Carpool() *clients.Carpool
 
 	// Queue returns the CURRENT task queue.  Domain factories must read it through this getter on
 	// every use -- never capture the pointer -- because a config reload can rebuild the queue,
@@ -51,7 +56,7 @@ type TemplateLike interface {
 	Execute(writer io.Writer, data any) error
 }
 
-// MerchantAccountAdapter abstracts one payment provider (Stripe, PayPal, ...) behind the
+// MerchantAccountAdapter abstracts one payment provider (Stripe Connect, ...) behind the
 // MerchantAccount service: signup, API-key refresh, checkout, and webhook parsing.
 type MerchantAccountAdapter interface {
 	GetSignupURL(*model.Connection) (string, error)

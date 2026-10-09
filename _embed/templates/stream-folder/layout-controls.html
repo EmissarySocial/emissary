@@ -1,0 +1,33 @@
+<!-- Fills the "layout-controls" slot that base-widget-editor leaves inside the Page Content
+     block.  Template.Inherit copies a parent's named templates only where the child has not
+     defined that name, so defining this file at all IS the opt-in.
+
+     A folder's page shape is not a width -- it is how the child items are listed -- so this
+     uses its own control rather than the base's layout-controls-width.
+
+     RULE: templates are minified before they are parsed, and the minifier knows nothing about
+     Go actions.  Two traps shape the markup below, and neither one raises an error:
+
+       - An action inside a TAG is read as attribute markup and lowercased, so a conditional
+         written between two attributes has its own string literals lowercased and then never
+         matches.  Hence no conditional "selected" attribute.
+       - An action inside a <select> is read as a stray text node in an element that admits
+         only <option>, and is DELETED outright.  Hence the whole <select> repeated per branch.
+
+     TestEmbeddedTemplates_ActionsSurviveMinification catches both.
+
+     TABLE is the final "else" rather than a case of its own, so an unset or unrecognized value
+     selects it -- which mirrors view.html, whose own final "else" renders the table layout.  It
+     also keeps one option always selected, so the field is present in every POST. -->
+{{- $format := .DataString "format" -}}
+
+<div class="widget-editor-control">
+	<label for="widget-editor-format">Show Items As</label>
+	{{- if eq $format "CARDS" -}}
+		<select id="widget-editor-format" name="data.format"><option value="TABLE">Table</option><option value="CARDS" selected>Cards</option><option value="COLUMNS">Columns</option></select>
+	{{- else if eq $format "COLUMNS" -}}
+		<select id="widget-editor-format" name="data.format"><option value="TABLE">Table</option><option value="CARDS">Cards</option><option value="COLUMNS" selected>Columns</option></select>
+	{{- else -}}
+		<select id="widget-editor-format" name="data.format"><option value="TABLE" selected>Table</option><option value="CARDS">Cards</option><option value="COLUMNS">Columns</option></select>
+	{{- end -}}
+</div>

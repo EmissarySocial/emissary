@@ -10,18 +10,18 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// These tests lock in the authorization decision that the Mastodon-compat status
-// handlers rely on (GetStatus, GetStatus_Source, PostStatus_Translate). Each of
-// those handlers loads a Stream by URL and then calls Permission.UserCan(..., "view")
-// before returning any content. The regression we are guarding against is an IDOR:
-// a token belonging to user A must NOT be able to read a Stream authored by user B
-// when the Stream's "view" action is gated to its author.
-//
-// UserCan is exercised directly (rather than through the handler) because the mastodon
-// handlers build a full domain Factory with no injection seam. The author/anonymous/
-// group paths through UserCan never touch the data.Session, so a nil session is safe
-// here; the identity-privilege path (IsIdentity) is the only branch that reads it, and
-// a plain user Authorization never reaches it.
+/******************************************
+ * Authorization Tests
+ *
+ * These lock in the decision the Mastodon-compat status handlers rely
+ * on: each loads a Stream by URL, then calls UserCan(..., "view"). The
+ * regression being guarded is an IDOR -- user A's token must NOT read
+ * user B's Stream when "view" is gated to its author.
+ *
+ * UserCan is exercised directly because the mastodon handlers build a
+ * full Factory with no injection seam. A nil data.Session is safe; only
+ * the IsIdentity branch reads it, and a plain user never reaches it.
+ ******************************************/
 
 // authorStream builds a Stream authored by authorID whose "view" action is granted
 // only to the "author" role in the stream's current state.
@@ -39,10 +39,11 @@ func viewTemplate(roles ...string) model.Template {
 }
 
 // actionTemplate builds a Template whose named action grants the provided roles
-// in the "default" state. AccessList is normally computed by Action.CalcAccessList
-// from Roles/States/StateRoles; here we set it directly, which is exactly what
-// UserCan consumes.
+// in the "default" state.
 func actionTemplate(actionID string, roles ...string) model.Template {
+
+	// AccessList is normally computed by Action.CalcAccessList from Roles/States/StateRoles;
+	// here we set it directly, which is exactly what UserCan consumes.
 	action := model.NewAction()
 	action.AccessList = mapof.Object[sliceof.String]{
 		"default": sliceof.String(roles),
@@ -84,14 +85,12 @@ func TestUserCan_View_AuthorOnly_DeniesOtherUser(t *testing.T) {
 	require.False(t, allowed, "a non-author user must NOT be allowed to view an author-gated stream")
 }
 
-// TestUserCan_AuthorGatedActions verifies that UserCan honors an author-only access
-// list for any action, allowing the author and denying every other user. The Mastodon
-// READ handlers (GetStatus, GetStatus_Source, PostStatus_Translate) rely on this for
-// the "view" action; the "edit"/"delete" cases here document the same property for
-// completeness. (The Mastodon WRITE handlers do NOT use UserCan — they are author-only
-// via userOwnsStream; see handler/mastodon/status_authorization_test.go.)
+// TestUserCan_AuthorGatedActions verifies that UserCan honors an author-only access list for
+// any action, allowing the author and denying every other user.
 func TestUserCan_AuthorGatedActions(t *testing.T) {
 
+	// The Mastodon READ handlers rely on this for "view"; the edit/delete cases document the
+	// same property. The WRITE handlers do NOT use UserCan -- they gate on userOwnsStream.
 	permissionService := NewPermission()
 
 	author := primitive.NewObjectID()
@@ -204,12 +203,8 @@ func TestUserCan_View_MissingAction_Denies(t *testing.T) {
 	require.False(t, allowed, "a missing view action must deny access")
 }
 
-// TestStream_IsMyself_AlwaysFalse documents a trap: Stream.IsMyself is part of the
-// AccessLister interface and, for a Stream, ALWAYS returns false (a Stream never
-// directly represents a User the way a User profile object does). It must never be
-// used as an "is this the author?" check in a handler — doing so would reject the
-// real author too. Author checks go through UserCan with the relevant action (whose
-// AccessList grants the "author" role), or model.Stream.IsAuthor.
+// TestStream_IsMyself_AlwaysFalse pins the trap that Stream.IsMyself, part of the AccessLister
+// interface, ALWAYS returns false for a Stream and is never an author check (model/AGENTS.md).
 func TestStream_IsMyself_AlwaysFalse(t *testing.T) {
 
 	author := primitive.NewObjectID()

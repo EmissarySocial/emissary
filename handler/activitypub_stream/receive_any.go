@@ -34,6 +34,12 @@ func BoostAny(context Context, activity streams.Document) error {
 		return derp.NotFound("activitypub_stream.inboxRouter", "Actor does not have an Inbox")
 	}
 
+	// RULE: A Create or Update carries only its actor's own objects, checked before any other work
+	// so a forgery costs no rule lookups.  The activity's own id was bound in ReceiveRequest (D18).
+	if err := requireOwnObject(activity); err != nil {
+		return derp.Wrap(err, location, "Validating object origin", activity.ActorID())
+	}
+
 	// RULE: If "followers-only" is set, then only accept activities from followers
 	if context.actor.BoostFollowersOnly {
 		if !context.factory.Follower().IsActivityPubFollower(context.session, model.FollowerTypeStream, context.stream.StreamID, activity.ActorID()) {
@@ -75,10 +81,15 @@ func BoostAny(context Context, activity streams.Document) error {
 		return nil
 
 	case vocab.ActivityTypeAnnounce:
-		object := activity.Object()
-		if err := activityService.Save(object); err != nil {
-			return derp.Wrap(err, location, "Saving object", object.ID())
+
+		// RULE: An announced object usually lives on another origin, so the embedded copy is never
+		// trusted.  Loading it by id fetches the copy its own host serves, and caches that one.
+		object, err := activityService.AppClient().Load(activity.Object().ID())
+
+		if err != nil {
+			return derp.Wrap(err, location, "Loading announced object", activity.Object().ID())
 		}
+
 		return announce(context, object)
 
 	default:
@@ -87,6 +98,27 @@ func BoostAny(context Context, activity streams.Document) error {
 		}
 		return announce(context, activity)
 	}
+}
+
+// requireOwnObject returns a Forbidden error when a Create or Update carries an object whose id does
+// not share its actor's origin, including an object with no id or a urn:uuid.
+func requireOwnObject(activity streams.Document) error {
+
+	const location = "handler.activitypub_stream.requireOwnObject"
+
+	// Only Create and Update speak for their objects.  An Announce names someone else's, and is
+	// loaded from its own host instead of trusted. (BUG-223)
+	switch activity.Type() {
+	case vocab.ActivityTypeCreate, vocab.ActivityTypeUpdate:
+	default:
+		return nil
+	}
+
+	if object := activity.Object(); !object.IsSameOrigin(activity.ActorID()) {
+		return derp.Forbidden(location, "Object must share the actor's origin", activity.ActorID(), object.ID())
+	}
+
+	return nil
 }
 
 // announce saves the activity into the Stream's outbox
@@ -102,9 +134,12 @@ func announce(context Context, activity streams.Document) error {
 	}
 
 	// Convert the Activity into an Inbox Message
+	// RULE: ActorURL is the Actor's own canonical URL, never just its ID.  It is what the
+	// published activity's `actor` property carries, and what its `id` is built from.
 	message := model.NewOutboxMessage()
 	message.ActorID = context.stream.StreamID
 	message.ActorType = model.FollowerTypeStream
+	message.ActorURL = actor.ActorID()
 	message.ActivityType = activity.Type()
 	message.ObjectID = activity.ID()
 

@@ -27,7 +27,7 @@ const ConnectionTypeNetwork = "NETWORK"
 // ConnectionTypeImage represents a connection that can be used to generate images
 const ConnectionTypeImage = "IMAGE"
 
-// ConnectionTypeUserUserPayment represents a connection that can take payments for users
+// ConnectionTypeUserPayment represents a connection that can take payments for users
 const ConnectionTypeUserPayment = "USER-PAYMENT"
 
 /******************************************

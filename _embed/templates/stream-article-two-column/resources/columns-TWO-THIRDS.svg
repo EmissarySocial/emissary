@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="0.5" role="img">
+	<title>Two thirds, one third</title>
+	<rect x="1.75" y="2.75" width="7.5" height="10.5" rx="1"/>
+	<rect x="10.75" y="2.75" width="3.5" height="10.5" rx="1"/>
+</svg>

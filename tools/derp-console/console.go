@@ -1,4 +1,3 @@
-// Package console is a derp.Reporter that reports errors to the console in a pretty format.
 package derpconsole
 
 import (

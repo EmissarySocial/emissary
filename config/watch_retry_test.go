@@ -8,7 +8,7 @@ import (
 )
 
 // TestWatchRetryDelay pins the backoff schedule for reopening a dead watcher: it doubles, and it
-// is capped.  The cap is the load-bearing part -- an uncapped backoff eventually schedules the
+// is capped.  The cap is the important part -- an uncapped backoff eventually schedules the
 // next attempt so far out that a node is functionally dead anyway.
 func TestWatchRetryDelay(t *testing.T) {
 

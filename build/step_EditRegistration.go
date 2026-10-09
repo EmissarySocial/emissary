@@ -74,7 +74,7 @@ func (step StepEditRegistration) Get(builder Builder, buffer io.Writer) Pipeline
 		lookupProvider := factory.LookupProvider(builder.request(), builder.session(), userID)
 
 		f := form.New(registration.Schema, registration.Form)
-		formHTML, err := f.Editor(domainBuilder._domain.RegistrationData, lookupProvider)
+		formHTML, err := f.Editor(domainBuilder._writableDomain.RegistrationData, lookupProvider)
 
 		if err != nil {
 			return Halt().WithError(derp.Wrap(err, "builder.StepEditRegistration", "Building registration form"))
@@ -111,8 +111,8 @@ func (step StepEditRegistration) Post(builder Builder, _ io.Writer) PipelineBeha
 
 	// If the registrationID is empty, then we are disabling signups
 	if registrationID == "" {
-		domainBuilder._domain.RegistrationID = ""
-		domainBuilder._domain.RegistrationData = mapof.NewString()
+		domainBuilder._writableDomain.RegistrationID = ""
+		domainBuilder._writableDomain.RegistrationData = mapof.NewString()
 		return Continue().WithHeader("Hx-Push-Url", "false").WithEvent("closeModal", "true").WithEvent("refreshPage", "true")
 	}
 
@@ -146,8 +146,8 @@ func (step StepEditRegistration) Post(builder Builder, _ io.Writer) PipelineBeha
 	}
 
 	// Apply the new values to the domain object
-	domainBuilder._domain.RegistrationID = registrationID
-	domainBuilder._domain.RegistrationData = data
+	domainBuilder._writableDomain.RegistrationID = registrationID
+	domainBuilder._writableDomain.RegistrationData = data
 
 	// Success. (close the modal)
 	return Continue().WithHeader("Hx-Push-Url", "false").WithEvent("closeModal", "true").WithEvent("refreshPage", "true")

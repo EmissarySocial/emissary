@@ -1,7 +1,3 @@
-// Package Step encapsulates the DATA required for each pipeline step in the builder.
-// This package does not contain any building functions (that's in /build) but these
-// objects know how to parse and "compile" raw data into the arguments required to execute
-// each step.
 package step
 
 import (
@@ -180,6 +176,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "search-index":
 		return NewSearchIndex(stepInfo)
 
+	case "read-form":
+		return NewReadForm(stepInfo)
+
 	case "send-email":
 		return NewSendEmail(stepInfo)
 
@@ -297,6 +296,9 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "with-merchant-account":
 		return NewWithMerchantAccount(stepInfo)
 
+	case "with-user-connection":
+		return NewWithUserConnection(stepInfo)
+
 	case "with-message":
 		return NewWithMessage(stepInfo)
 
@@ -324,6 +326,8 @@ func New(stepInfo mapof.Any) (Step, error) {
 	case "with-rule":
 		return NewWithRule(stepInfo)
 
+	case "with-stream-source":
+		return NewWithStreamSource(stepInfo)
 	}
 
 	// Fall through means we have an unrecognized action

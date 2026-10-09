@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ImportSave is a part of the "Importable" interface, and saves an imported OutboxMessage to the new profile.
+// Import is a part of the "Importable" interface, and saves an imported OutboxMessage to the new profile.
 func (service *Outbox) Import(session data.Session, _ *model.Import, importItem *model.ImportItem, user *model.User, document []byte) error {
 
 	const location = "service.OutboxMessage.Import"
@@ -26,6 +26,11 @@ func (service *Outbox) Import(session data.Session, _ *model.Import, importItem 
 
 	// Map values from the original OutboxMessage into the new, local OutboxMessage
 	outboxMessage.OutboxMessageID = importItem.LocalID // Use the new localID for this record
+
+	// RULE: Discard the exporting server's Actor and Activity URLs.  They name a host that no
+	// longer owns this message, so Save re-mints both against the importing User's own Actor.
+	outboxMessage.ActorURL = ""
+	outboxMessage.ActivityURL = ""
 
 	// Map the UserID
 	if err := service.importItemService.mapRemoteID(session, user.UserID, &outboxMessage.ActorID); err != nil {

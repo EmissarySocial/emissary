@@ -15,7 +15,7 @@ import (
 )
 
 // GetJSONLD generates JSON-LD for the actor that represents a saved SearchQuery
-func GetJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Session, template *model.Template, stream *model.Stream, searchQuery *model.SearchQuery) error {
+func GetJSONLD(ctx *steranko.Context, factory *service.Factory, session data.Session, searchQuery *model.SearchQuery) error {
 
 	const location = "handler.activitypub_search.GetJSONLD"
 

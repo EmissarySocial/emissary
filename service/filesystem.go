@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"io/fs"
 	"net/url"
 	"os"
@@ -21,12 +22,12 @@ import (
 	s3 "github.com/fclairamb/afero-s3"
 )
 
-// Filesystem is a service that multiplexes between different filesystems.  Currently works with embedded filesystems and file:// URIs
+// Filesystem is a service that multiplexes between different filesystems: embedded, local, Git, and S3
 type Filesystem struct {
-	embedded fs.FS
+	embedded fs.FS // Filesystem compiled into the binary, read by the embed adapter
 }
 
-// NewFilesytem returns a fully initialized Filesystem service
+// NewFilesystem returns a fully initialized Filesystem service
 func NewFilesystem(embedded fs.FS) Filesystem {
 
 	return Filesystem{
@@ -38,7 +39,8 @@ func NewFilesystem(embedded fs.FS) Filesystem {
  * Read-Only Methods
  ******************************************/
 
-// GetFS returns a READONLY Filesystem.  It works with embed:// and file:// URIs
+// GetFS returns a READONLY filesystem for the embed, file, and Git adapters,
+// and for every adapter that GetAfero supports
 func (filesystem *Filesystem) GetFS(folder mapof.String) (fs.FS, error) {
 
 	const location = "service.Filesystem.GetFS"
@@ -50,20 +52,22 @@ func (filesystem *Filesystem) GetFS(folder mapof.String) (fs.FS, error) {
 		result, err := fs.Sub(filesystem.embedded, "_embed/"+folder["location"])
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Getting embedded filesystem", folder)
+			return nil, derp.Wrap(err, location, "Getting embedded filesystem", folderLabel(folder))
 		}
 
 		return result, nil
 
-	// Detect filesystem type
+	// Detect local filesystem
 	case config.FolderAdapterFile:
 		return os.DirFS(folder["location"]), nil
 
+	// Detect Git repository
 	case config.FolderAdapterGit:
 		locationURL, err := url.Parse(folder["location"])
 
+		// A url.Error quotes the whole URL, which can embed a token, so only its cause is kept
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Parsing Git URL", folder)
+			return nil, derp.Wrap(errors.Unwrap(err), location, "Parsing Git URL", folder["adapter"])
 		}
 
 		return gitfs.New(locationURL)
@@ -75,13 +79,13 @@ func (filesystem *Filesystem) GetFS(folder mapof.String) (fs.FS, error) {
 	}
 
 	// Otherwise, fail.  Unrecognized filesystem type
-	return nil, derp.Internal(location, "Unsupported filesystem adapter", folder)
+	return nil, derp.Internal(location, "Unsupported filesystem adapter", folderLabel(folder))
 }
 
 // GetFSs returns multiple fs.FS filesystems
 func (filesystem *Filesystem) GetFSs(folders ...mapof.String) []fs.FS {
 
-	result := make([]fs.FS, len(folders))
+	result := make([]fs.FS, 0, len(folders))
 
 	for _, folder := range folders {
 		if item, err := filesystem.GetFS(folder); err == nil {
@@ -98,26 +102,19 @@ func (filesystem *Filesystem) GetFSs(folders ...mapof.String) []fs.FS {
  * Read/Write Methods
  ******************************************/
 
-// GetAfero returns READ/WRITE a filesystem.  It works with file:// URIs
+// GetAfero returns a READ/WRITE filesystem for the file and S3 adapters
 func (filesystem *Filesystem) GetAfero(folder mapof.String) (afero.Fs, error) {
 
 	switch folder["adapter"] {
 
-	// Detect filesystem type
+	// Detect local filesystem
 	case config.FolderAdapterFile:
 		return afero.NewBasePathFs(afero.NewOsFs(), folder["location"]), nil
 
 	// Detect S3 filesystem type
 	case config.FolderAdapterS3:
 
-		// Requires:
-		// accessKey
-		// secretKey
-		// token
-		// region
-		// location
-		// bucket
-		// path
+		// Reads accessKey, secretKey, token, region, location, bucket, and path from the folder
 
 		// Read AWS configuration
 		awsConfig := aws.Config{
@@ -141,22 +138,17 @@ func (filesystem *Filesystem) GetAfero(folder mapof.String) (afero.Fs, error) {
 		return afero.NewBasePathFs(result, folder["path"]), nil
 	}
 
-	// TODO: Implement other Afero adapters to link to other cloud storage providers?
-	// * HTTP? https://github.com/spf13/afero/blob/master/httpFs.go
-	// * Git? https://github.com/go-git/go-git
-	// * Dropbox?  https://github.com/fclairamb/afero-dropbox
-	// * Google Cloud Storage? https://github.com/spf13/afero/tree/master/gcsfs
-	// * SFTP? https://github.com/spf13/afero/tree/master/sftpfs
-	// * Azure?
-	// * etc...
+	// TODO: Implement other Afero adapters for other cloud storage providers?  Candidates: HTTP
+	// (afero httpFs), Git (go-git), Dropbox (fclairamb/afero-dropbox), Google Cloud Storage
+	// (afero gcsfs), SFTP (afero sftpfs), Azure, etc.
 
-	return nil, derp.Internal("service.filesystem.GetAfero", "Unsupported filesystem adapter", folder)
+	return nil, derp.Internal("service.filesystem.GetAfero", "Unsupported filesystem adapter", folderLabel(folder))
 }
 
 // GetAferos returns multiple afero filesystems
 func (filesystem *Filesystem) GetAferos(folders ...mapof.String) []afero.Fs {
 
-	result := make([]afero.Fs, len(folders))
+	result := make([]afero.Fs, 0, len(folders))
 
 	for _, folder := range folders {
 		if item, err := filesystem.GetAfero(folder); err == nil {
@@ -175,13 +167,14 @@ func (filesystem *Filesystem) GetAferos(folders ...mapof.String) []afero.Fs {
 
 // TODO: There should be an option to disable this feature on production systems.
 
-// Watch listens to changes to this filesystem with implementation-specific adapters.  Currently only supports file:// URIs
+// Watch sends on "changes" whenever this folder changes, until "done" is closed.
+// Only the file adapter can be watched; every other adapter returns nil.
 func (filesystem *Filesystem) Watch(folder mapof.String, changes chan<- bool, done <-chan channel.Done) error {
 
 	// If we CAN watch this adapter, then do it.
 	if folder["adapter"] == config.FolderAdapterFile {
 		if err := filesystem.watchOS(folder["location"], changes, done); err != nil {
-			return derp.Wrap(err, "service.Filesystem.Watch", "Watching filesystem", folder)
+			return derp.Wrap(err, "service.Filesystem.Watch", "Watching filesystem", folderLabel(folder))
 		}
 		return nil
 	}
@@ -191,7 +184,8 @@ func (filesystem *Filesystem) Watch(folder mapof.String, changes chan<- bool, do
 	return nil
 }
 
-// watchOS watches a folder on the local filesystem for changes
+// watchOS watches a local folder and its current sub-directories, sending on "changes"
+// whenever one changes, until "done" is closed
 func (filesystem *Filesystem) watchOS(uri string, changes chan<- bool, done <-chan channel.Done) error {
 
 	const location = "service.Filesystem.watchOS"
@@ -211,8 +205,6 @@ func (filesystem *Filesystem) watchOS(uri string, changes chan<- bool, done <-ch
 	}
 
 	// Watch the top-level directory
-	// log.Debug().Str("loc", location).Msg("*** Watching for changes to directory: " + uri)
-
 	if err := watcher.Add(uri); err != nil {
 		return derp.Wrap(err, location, "Watching directory", uri)
 	}
@@ -236,14 +228,23 @@ func (filesystem *Filesystem) watchOS(uri string, changes chan<- bool, done <-ch
 		}
 	}
 
-	// Background: listen for changes and pass them to the "changed" channel
+	// Background: listen for changes and pass them to the "changes" channel
 	go func() {
 
 		for {
 			select {
 
 			case <-watcher.Events:
-				changes <- true
+
+				// Nothing reads "changes" once the template watcher has stopped, so give up on "done"
+				select {
+				case changes <- true:
+				case <-done:
+					if err := watcher.Close(); err != nil {
+						derp.Report(derp.Wrap(err, location, "Closing watcher"))
+					}
+					return
+				}
 
 			case err := <-watcher.Errors:
 				derp.Report(derp.Wrap(err, location, "Watching directory", uri))
@@ -259,4 +260,26 @@ func (filesystem *Filesystem) watchOS(uri string, changes chan<- bool, done <-ch
 
 	// Success!
 	return nil
+}
+
+// folderLabel names a folder for an error by its adapter and location, with any credentials
+// removed
+func folderLabel(folder mapof.String) string {
+
+	// A folder map can hold S3 keys, and a Git location can embed a token
+
+	adapter := folder["adapter"]
+
+	// A location that does not parse is left out, because it cannot be cleaned
+	locationURL, err := url.Parse(folder["location"])
+
+	if err != nil {
+		return adapter
+	}
+
+	// RULE: Drop the whole userinfo, not just the password.  Git hosts accept a token as the
+	// username alone (https://TOKEN@host), which url.Redacted would keep.
+	locationURL.User = nil
+
+	return adapter + " " + locationURL.String()
 }

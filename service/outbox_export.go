@@ -13,7 +13,7 @@ import (
 
 // ExportCollection returns the IDs of every Outbox to include in a User's data export
 func (service *Outbox) ExportCollection(session data.Session, userID primitive.ObjectID) ([]model.IDOnly, error) {
-	criteria := exp.Equal("userId", userID)
+	criteria := exp.Equal("actorId", userID)
 	return service.QueryIDOnly(session, criteria, option.SortAsc("createDate"))
 }
 

@@ -4,7 +4,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
-	"github.com/benpate/sherlock"
 )
 
 // init registers the handlers for a remote actor's profile Update, one per Actor type
@@ -41,7 +40,7 @@ func receive_UpdateActor(context Context, activity streams.Document) error {
 	// trusted here; the origin document is authoritative. A refetch failure is reported but
 	// not returned: the purge already guarantees correctness (the next read refetches), and
 	// failing the inbox POST would make the sender retry a delivery we have fully processed.
-	if _, err := context.factory.ActivityStream().AppClient().Load(objectID, sherlock.AsActor()); err != nil {
+	if _, err := context.factory.ActivityStream().AppClient().Load(objectID); err != nil {
 		derp.Report(derp.Wrap(err, location, "Refreshing actor", objectID))
 	}
 

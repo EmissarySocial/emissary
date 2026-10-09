@@ -11,7 +11,6 @@ import (
 type Context struct {
 	factory     *service.Factory
 	session     data.Session
-	stream      *model.Stream
 	searchQuery *model.SearchQuery
 }
 

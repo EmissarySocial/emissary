@@ -43,14 +43,14 @@ func Recycle(session data.Session, collectionName string) error {
 func recycleFilter(now time.Time) bson.M {
 
 	// This is factored out of Recycle so its bounds can be tested without a live database. Getting it
-	// wrong is unrecoverable, so both bounds below are load-bearing.
+	// wrong is unrecoverable, so both bounds below are important.
 
 	// RULE: `deleteDate` is a Unix epoch in MILLISECONDS (see journal.SetDeleted), so the cutoff
 	// must be UnixMilli too. A seconds-based cutoff is ~1000x too small, which would match nothing
 	// and leave this task silently purging nothing, forever.
 	cutoff := now.Add(-recycleDelay).UnixMilli()
 
-	// RULE: BOTH bounds are required, and `$gt: 0` is the load-bearing one. `deleteDate` is ZERO on
+	// RULE: BOTH bounds are required, and `$gt: 0` is the important one. `deleteDate` is ZERO on
 	// every LIVE record, so `$lt: cutoff` on its own matches every live record in the collection and
 	// would purge the entire database. Only ever purge records that are deleted (> 0) AND expired.
 	return bson.M{

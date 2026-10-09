@@ -1,0 +1,158 @@
+/******************************************
+ * Select Icons Widget
+ *
+ * A <select>-shaped button that opens a popover grid of icon tiles.
+ * The Go widget is benpate/form/widget/select-icons.go; the behavior
+ * is theme-global/hyperscript/selectIcons._hs. The tiles deliberately
+ * match the emoji picker in conversations-mls.
+ ******************************************/
+
+.select-icons {
+	display: block;
+	position: relative;
+}
+
+/* The trigger carries .input, so padding, border, background, and radius all come
+   from the shared input rule in 02-forms.css. Only the row layout belongs here. */
+.select-icons-button {
+	align-items: center;
+	display: flex;
+	gap: var(--rhythm);
+	text-align: left;
+}
+
+.select-icons-button-label {
+	flex: 1 1 auto;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.select-icons-button-icon {
+	font-size: calc(var(--rhythm) * 2.5);
+	line-height: 1;
+}
+
+/* Keeps the row height stable when the selection has no icon */
+.select-icons-blank {
+	display: inline-block;
+	height: calc(var(--rhythm) * 2.5);
+	width: calc(var(--rhythm) * 2.5);
+}
+
+/******************************************
+ * The Popover Panel
+ ******************************************/
+
+/* A popover lives in the top layer, so it is positioned against the viewport
+   and cannot be clipped by an overflow or container ancestor. */
+.select-icons-popover {
+	background-color: var(--gray15);
+	border: solid 1px var(--gray20);
+	border-radius: calc(var(--rhythm) / 2);
+	box-shadow: 0px var(--rhythm) var(--rhythm) 0px rgba(0, 0, 0, 0.2);
+	color: var(--black);
+	padding: var(--rhythm);
+
+	/* RULE: The panel is the ONE scroll container. The UA stylesheet already gives
+	   [popover] overflow:auto, so a second scroller inside it nests two. */
+	max-height: min(50vh, 400px);
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+.select-icons-popover:not(:popover-open) {
+	display: none;
+}
+
+/* Anchored under the button where supported */
+@supports (anchor-name: --x) {
+	.select-icons-popover {
+		margin: 0px;
+		min-width: 320px;
+		position-area: bottom span-right;
+		position-try-fallbacks: flip-block, flip-inline;
+		width: anchor-size(width);
+	}
+}
+
+/* RULE: Without anchor positioning the panel is centered, not mispositioned. */
+@supports not (anchor-name: --x) {
+	.select-icons-popover {
+		margin: auto;
+		max-width: 480px;
+		width: calc(100vw - (var(--rhythm) * 4));
+	}
+}
+
+/******************************************
+ * The Tile Grid
+ ******************************************/
+
+.select-icons-grid {
+	display: grid;
+	gap: 2px;
+	grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+}
+
+/* Spans the full row so a group reads as a section heading. The top margin is
+   what separates one group from the tiles of the group above it. */
+.select-icons-header {
+	color: var(--gray40);
+	font-size: 14px;
+	font-weight: 500;
+	grid-column: 1 / -1;
+	margin: calc(var(--rhythm) * 4) 0px calc(var(--rhythm) / 2) 0px;
+	padding: 0px 4px;
+}
+
+.select-icons-header:first-child {
+	margin-top: 0px;
+}
+
+/* Built from .emoji in conversations-mls: square, padded, own background and border.
+   The padding is doubled from the emoji picker's 4px, which needs a wider track
+   below, or the extra padding just eats into the glyph. */
+.select-icons-tile {
+	align-items: center;
+	aspect-ratio: 1;
+	background: var(--gray05);
+	border: solid 1px var(--gray10);
+	border-radius: 4px;
+	cursor: pointer;
+	display: flex;
+	justify-content: center;
+	padding: 8px;
+	width: 100%;
+}
+
+/* The radio stays focusable, so it is hidden without display:none or visibility */
+.select-icons-tile > input[type="radio"] {
+	height: 1px;
+	margin: 0px;
+	opacity: 0;
+	position: absolute;
+	width: 1px;
+}
+
+.select-icons-tile-icon {
+	font-size: 24px;
+	line-height: 1;
+}
+
+.select-icons-tile:hover {
+	background-color: var(--blue10);
+	border-color: var(--blue50);
+}
+
+/* :has() because the radio is visually hidden and cannot be styled directly */
+.select-icons-tile:has(input:checked) {
+	background-color: var(--blue50);
+	border-color: var(--blue50);
+	color: var(--white);
+}
+
+.select-icons-tile:has(input:focus-visible) {
+	outline: solid 2px var(--focus-color);
+	outline-offset: 1px;
+}

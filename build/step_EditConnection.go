@@ -5,6 +5,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/service/providers"
 	"github.com/benpate/derp"
+	"github.com/benpate/form"
 )
 
 // StepEditConnection is a Step that edits a Domain's connection to a third-party service
@@ -30,18 +31,15 @@ func (step StepEditConnection) Get(builder Builder, buffer io.Writer) PipelineBe
 		return Halt().WithError(derp.Wrap(err, location, "Loading connection", providerID))
 	}
 
-	// Try to find a Manual Provider for this Provider
-	manualProvider, ok := adapter.(providers.ManualProvider)
+	// Retrieve the custom form for this Manual Provider
+	settingsForm, err := providerSettingsForm(adapter)
 
-	if !ok {
-		return Halt().WithError(derp.Internal(location, "Provider does not implement ManualProvider interface", adapter))
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Getting settings form", providerID))
 	}
 
-	// Retrieve the custom form for this Manual Provider
-	form := manualProvider.ManualConfig()
-
 	// Write the form data
-	formHTML, err := form.Editor(
+	formHTML, err := settingsForm.Editor(
 		&connection,
 		factory.LookupProvider(
 			builder.request(),
@@ -55,7 +53,7 @@ func (step StepEditConnection) Get(builder Builder, buffer io.Writer) PipelineBe
 	}
 
 	// Wrap the form as a ModalForm and return
-	formHTML = WrapModalForm(builder.response(), builder.RelativeURL(), formHTML, form.Encoding())
+	formHTML = WrapModalForm(builder.response(), builder.RelativeURL(), formHTML, settingsForm.Encoding())
 
 	if _, err := buffer.Write([]byte(formHTML)); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Writing form HTML to buffer"))
@@ -85,16 +83,12 @@ func (step StepEditConnection) Post(builder Builder, _ io.Writer) PipelineBehavi
 		return Halt().WithError(derp.Wrap(err, location, "Loading connection", providerID))
 	}
 
-	// To manually configure a connection, it must be a "ManualProvider".  Other types,
-	// like OAuth Providers are handled separately
-	manualProvider, ok := adapter.(providers.ManualProvider)
-
-	if !ok {
-		return Halt().WithError(derp.Internal(location, "Provider does not implement ManualProvider interface", adapter))
-	}
-
 	// Retrieve the custom form for this Manual Provider
-	form := manualProvider.ManualConfig()
+	settingsForm, err := providerSettingsForm(adapter)
+
+	if err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Getting settings form", providerID))
+	}
 
 	// Parse the data in the Form post
 	if err := builder.request().ParseForm(); err != nil {
@@ -102,7 +96,7 @@ func (step StepEditConnection) Post(builder Builder, _ io.Writer) PipelineBehavi
 	}
 
 	// Apply the form data to the domain object
-	if err := form.SetURLValues(&connection, builder.request().Form, nil); err != nil {
+	if err := settingsForm.SetURLValues(&connection, builder.request().Form, nil); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Updating domain object with form data"))
 	}
 
@@ -112,4 +106,27 @@ func (step StepEditConnection) Post(builder Builder, _ io.Writer) PipelineBehavi
 	}
 
 	return Halt().WithEvent("closeModal", "").WithEvent("refreshPage", "").AsFullPage()
+}
+
+// providerSettingsForm returns the settings form for a Provider, refusing one whose elements and
+// schema disagree. A form that writes a path its schema omits drops that field on save, silently.
+func providerSettingsForm(adapter providers.Provider) (form.Form, error) {
+
+	const location = "build.providerSettingsForm"
+
+	// To manually configure a connection, it must be a "ManualProvider".  Other types,
+	// like OAuth Providers are handled separately
+	manualProvider, isManualProvider := adapter.(providers.ManualProvider)
+
+	if !isManualProvider {
+		return form.Form{}, derp.Internal(location, "Provider does not implement ManualProvider interface", adapter)
+	}
+
+	result := manualProvider.ManualConfig()
+
+	if err := result.Validate(); err != nil {
+		return form.Form{}, derp.Wrap(err, location, "Provider settings form does not match its own schema")
+	}
+
+	return result, nil
 }

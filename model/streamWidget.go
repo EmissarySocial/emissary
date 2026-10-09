@@ -11,17 +11,17 @@ import (
 // StreamWidget as a first-class object.  A StreamWidget is still saved only as
 // part of its containing Stream, never on its own.
 type StreamWidget struct {
-	StreamWidgetID primitive.ObjectID `bson:"streamWidgetId"`
-	Type           string             `bson:"type"`
-	Location       string             `bson:"location"`
-	Label          string             `bson:"label"`
-	Data           mapof.Any          `bson:"data"`
+	StreamWidgetID primitive.ObjectID `json:"streamWidgetId" bson:"streamWidgetId"`
+	Type           string             `json:"type"           bson:"type"`
+	Location       string             `json:"location"       bson:"location"`
+	Label          string             `json:"label"          bson:"label"`
+	Data           mapof.Any          `json:"data"           bson:"data"`
 
 	journal.Journal `json:"-" bson:",inline"`
 
 	// These values are not stored in the database, but injected during building
-	Stream *Stream `bson:"-"`
-	Widget Widget  `bson:"-"`
+	Stream *Stream `json:"-" bson:"-"`
+	Widget Widget  `json:"-" bson:"-"`
 }
 
 // NewStreamWidget returns a fully initialized StreamWidget of the provided type

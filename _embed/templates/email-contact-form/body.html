@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        a {color: #ff5522;}
+
+        /* Markdown wraps the author's note in <p>, whose default margins would
+           double up on the padding around it. */
+        .header-message > :first-child {margin-top:0;}
+        .header-message > :last-child {margin-bottom:0;}
+
+        @media (prefers-color-scheme: dark) {
+            a { color: #ca4319; }
+            body, .email-canvas {
+                background-color:#000!important;
+                color:#CCC!important;
+            }
+            .email-content {
+                background-color:#222!important;
+                color: #DDD!important;
+            }
+            .visitor-message {
+                background-color:#1a1a1a!important;
+                border-color:#444!important;
+            }
+            .field-label {color:#999!important;}
+            .email-footer {color:#888!important;}
+            .sender-details {border-color:#333!important;}
+            .sender-details, .sender-details a {color:#888!important;}
+        }
+    </style>
+</head>
+<body style="padding:0px; margin:0px; background-color:#F2F2F2;">
+
+    {{/* An outer table is the only centering that every mail client honors, and its cell
+         padding is what keeps the card off the top and side edges of the window. */}}
+    <table class="email-canvas" role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="
+        border-collapse:collapse;
+        background-color:#F2F2F2;
+        font-size:14px;
+        font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;">
+
+        <tr><td align="center" style="padding:32px 16px;">
+
+            <table class="email-content" role="presentation" border="0" cellpadding="0" cellspacing="0" style="
+                border-collapse:collapse;
+                width:100%;
+                max-width:800px;
+                background-color:white;
+                border-radius:8px;">
+
+                <tr><td style="padding:32px;">
+
+                    {{/* The page author's standing note, prepended to every message this form
+                         sends.  Markdown, through the one funcMap helper that sanitizes its
+                         own output. */}}
+                    {{- if ne "" .HeaderMessage -}}
+                        <div class="header-message" style="margin-bottom:24px; font-size:18px; line-height:1.5em;">{{.HeaderMessage | markdown}}</div>
+                    {{- end -}}
+
+                    {{/* Everything below is written by an anonymous visitor.  It is interpolated
+                         plainly so that html/template escapes it, and must NEVER be piped through
+                         markdown, htmlMinimal, highlight, or any other helper returning template.HTML. */}}
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse; margin-bottom:20px; font-size:14px; line-height:1.5em;">
+                        <tr>
+                            <td class="field-label" style="padding:0px 16px 6px 0px; white-space:nowrap; color:#767676;">From</td>
+                            <td style="padding:0px 0px 6px 0px;">{{.Name}}</td>
+                        </tr>
+                        <tr>
+                            <td class="field-label" style="padding:0px 16px 0px 0px; white-space:nowrap; color:#767676;">Email</td>
+                            <td style="padding:0px;"><a href="mailto:{{.ReplyEmail}}">{{.ReplyEmail}}</a></td>
+                        </tr>
+                    </table>
+
+                    <div class="visitor-message" style="
+                        white-space:pre-wrap;
+                        padding:20px;
+                        border:solid 1px #DDD;
+                        border-radius:6px;
+                        background-color:#FAFAFA;
+                        font-size:16px;
+                        line-height:1.6em;">{{.Message}}</div>
+
+                </td></tr>
+            </table>
+
+            {{/* Held to the card's width so the two edges line up, and muted so it reads as
+                 provenance rather than as part of the message. */}}
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse; width:100%; max-width:800px;">
+                <tr><td class="email-footer" style="padding:16px 8px 0px 8px; text-align:center; font-size:13px; line-height:1.5em; color:#666;">
+                    Sent from the contact form on <b>{{.Domain_Name}}</b>.
+                    Replying to this message will reach {{.Name}} directly.
+                </td></tr>
+
+                {{/* Everything below describes the BROWSER that submitted the form: the visitor's
+                     IP, resolved through the server's trusted-proxy strategy, and the headers
+                     their client volunteered.  It is here so that a message can be attributed or
+                     reported; nothing is stored, so this email is the only place it exists.
+
+                     Every value is client-controlled, so each is interpolated plainly and escaped
+                     by html/template.  The IP is the ONE that may appear in an href, and only
+                     because every realclientip strategy returns "" for anything it cannot parse
+                     as an address.  Client_Referer is deliberately NOT a link -- see the RULE on
+                     Common.ClientReferer.
+
+                     Each row is wrapped in "with", which skips an empty value, so a client that
+                     sent nothing simply contributes no row.  The IP row uses "if" and always
+                     renders, so the block can never be an empty heading -- and so that a missing
+                     IP is stated rather than left to look like an omission.
+
+                     RULE: do NOT guard this block with "or".  Emissary's funcMap inherits
+                     rosetta/funcmap.All(), which SHADOWS the "and"/"or" builtins with
+                     func(...bool) bool -- so "or .Client_IP .Client_UserAgent" fails at render
+                     time with "expected bool; got string", and fails on an absent key with
+                     "invalid value; expected bool".  "if" and "with" are template keywords, not
+                     functions, so they still take any type and still tolerate a missing key --
+                     which the body relies on, since only "to" and "headers" carry
+                     missingkey=error (CONTACT-FORM D15). */}}
+                <tr><td style="padding:16px 8px 0px 8px;">
+                    <div class="sender-details" style="border-top:solid 1px #DDD; padding-top:12px; font-size:12px; line-height:1.5em; color:#666;">
+
+                        <div class="field-label" style="margin-bottom:8px; text-transform:uppercase; letter-spacing:0.06em; color:#767676;">Sender details</div>
+
+                        <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="border-collapse:collapse; font-size:12px; line-height:1.5em;">
+                            <tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">IP Address</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-all;">{{if .Client_IP}}<a href="https://ipinfo.io/{{.Client_IP}}">{{.Client_IP}}</a>{{else}}Unavailable{{end}}</td>
+                            </tr>
+                            {{with .Client_Description}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Device</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_Referer}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Came From</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-all;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_UserAgent}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">User-Agent</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_Brands}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Browser</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_Platform}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Platform</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_Mobile}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Mobile</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_AcceptLanguage}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Languages</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_Accept}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Accepts</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_AcceptEncoding}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Encodings</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_DoNotTrack}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Do Not Track</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                            {{with .Client_PrivacyControl}}<tr>
+                                <td class="field-label" style="padding:0px 16px 4px 0px; white-space:nowrap; vertical-align:top; color:#767676;">Global Privacy Control</td>
+                                <td style="padding:0px 0px 4px 0px; word-break:break-word;">{{.}}</td>
+                            </tr>{{end}}
+                        </table>
+
+                    </div>
+                </td></tr>
+            </table>
+
+        </td></tr>
+    </table>
+
+</body>
+</html>

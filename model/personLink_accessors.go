@@ -13,7 +13,7 @@ func PersonLinkSchema() schema.Element {
 			"userId":       schema.String{Format: "objectId"},
 			"name":         schema.String{Format: "text", MaxLength: 128},
 			"username":     schema.String{Format: "text", MaxLength: 128},
-			"profileUrl":   schema.String{Format: "url"},
+			"profileUrl":   schema.String{MaxLength: 2048}, // An EMAIL Follower stores a bare email address here, so this field cannot be a full URL
 			"inboxUrl":     schema.String{Format: "url"},
 			"iconUrl":      schema.String{Format: "url"},
 			"emailAddress": schema.String{Format: "email", MaxLength: 128},

@@ -83,7 +83,7 @@ func requireNonEnumerable(t *testing.T, body map[string]any, collectionID string
 	require.Equal(t, "OrderedCollection", body["type"])
 	require.Equal(t, totalItems, body["totalItems"])
 
-	// The absence of `first` is load-bearing -- it is what Mastodon reads as "hidden"
+	// The absence of `first` is important -- it is what Mastodon reads as "hidden"
 	require.NotContains(t, body, "first")
 	require.NotContains(t, body, "orderedItems")
 	require.NotContains(t, body, "items")

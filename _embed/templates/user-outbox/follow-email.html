@@ -1,0 +1,29 @@
+{{- template "follow-heading" . -}}
+
+
+<div class="margin-vertical-lg">
+	Join my mailing list and get updates in your email box.
+</div>
+
+<form action="/.follower/new" method="post">
+
+	<input type="hidden" name="type" value="User">
+	<input type="hidden" name="parentId" value="{{.UserID}}">
+
+	<div class="layout layout-vertical">
+		<div class="layout-elements">
+			<div class="layout-element">
+				<input type="text" name="name" placeholder="Your Name" required autofocus autocomplete="name" aria-label="Your Name">
+			</div>
+			<div class="layout-element">
+				<input type="email" name="email" required autocomplete="email" placeholder="Your Email Address" aria-label="Your Email Address">
+			</div>
+		</div>
+	</div>
+
+	<div>
+		<button type="submit" class="primary">Join Mailing List</button>
+		<button script="on click trigger closeModal">Cancel</button>
+	</div>
+
+</form>

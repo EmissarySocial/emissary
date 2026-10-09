@@ -1,6 +1,7 @@
 package consumer
 
 import (
+	"github.com/EmissarySocial/emissary/service"
 	"github.com/benpate/turbine/queue"
 )
 
@@ -44,6 +45,17 @@ func PreProcessor(task *queue.Task) error {
 	case "SendWebPushNotification":
 		task.Priority = 16
 
+	// Every StreamSource sync runs here, whether Sync Now or a webhook asked for it.  The priority
+	// alone does not make one immediate: turbine will not run a SIGNED task from memory, so a
+	// webhook's deduplicated task still waits for the storage poller.
+	case service.TaskSyncStreamSource:
+		task.Priority = 16
+
+	// A file linked from a synchronized source.  Signed per attachment, so it waits for the
+	// storage poller as a webhook sync does.
+	case service.TaskSyncStreamSourceAttachment:
+		task.Priority = 16
+
 	// (32) User-Affecting Tasks That Should Complete Very Quickly
 
 	///////////////////////////////////////////////////
@@ -60,7 +72,15 @@ func PreProcessor(task *queue.Task) error {
 	case "ReceiveActivityPub-Add":
 		task.Priority = 64
 
+	case "RepairStripeConnect", "ReconcileStripeSubscriptions":
+		task.Priority = 64
+
 	// (256) Background Notifications
+	// The mailing-list sync is one HTTP call per follower against the User's own Mailchimp
+	// quota. It is never user-facing, and a minute late costs nothing.
+	case service.MailingListAddMember, service.MailingListRemoveMember:
+		task.Priority = 256
+
 	case "MakeStreamArchive":
 		task.Priority = 256
 

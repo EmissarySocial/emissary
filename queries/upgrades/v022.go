@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Version22...
+// Version22 moves every record from the Inbox collection into the NewsFeed collection
 func Version22(ctx context.Context, session *mongo.Database) error {
 
 	const location = "upgrade.Version22"

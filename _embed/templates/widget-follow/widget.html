@@ -1,0 +1,24 @@
+{{- $username := .Widget.Data.GetString "username" -}}
+
+{{- if eq "" $username -}}
+
+	{{- if .UserCan "edit" -}}
+		<div class="widget widget-follow text-sm text-gray">
+			{{icon "alert"}} This Follow Button is not displayed because no username has been set for it.
+		</div>
+	{{- end -}}
+
+{{- else -}}
+
+	{{- $label := .Widget.Data.GetString "label" -}}
+	{{- $label = firstNonZero $label "Follow" -}}
+
+	<!-- style MUST go through `css`: html/template reads a style attribute as CSS context, and
+	     its value filter replaces a plain declaration list with ZgotmplZ.  The cast is safe --
+	     the schema's "css-declarations" format has already sanitized the value, and attribute
+	     escaping still applies to a template.CSS value. -->
+	<div class="widget widget-follow {{.Widget.Data.GetString `class`}}" style="{{.Widget.Data.GetString `style` | css}}">
+		<button hx-get="/@{{$username}}/follow" hx-push-url="false" class="primary">{{$label}}</button>
+	</div>
+
+{{- end -}}

@@ -22,13 +22,8 @@ type Factory struct {
 	setup bool // If TRUE, then the factory is in setup mode. This value cannot be changed
 }
 
-// NewFactory uses the provided configuration data to generate a new Factory.  If there are any
-// errors connecting to a domain's datasource, NewFactory will derp.Report the error, but will
-// continue loading without those domains.
-//
-// RULE: A FIRST configuration that cannot be applied is an error -- a server that never had a
-// working configuration has nothing to keep serving, so main refuses to start.  Configurations
-// that fail to apply LATER are handled by start(), which keeps the last-known-good instead.
+// NewFactory returns a Factory built from the first configuration, or an error if that configuration
+// cannot be applied. Domains that fail to connect are reported and skipped.
 func NewFactory(storage config.Storage, firstConfig config.Config, subscription <-chan config.Config, embeddedFiles embed.FS) (*Factory, error) {
 
 	const location = "server.NewFactory"
@@ -40,7 +35,8 @@ func NewFactory(storage config.Storage, firstConfig config.Config, subscription 
 		value.clientIPStrategy = realclientip.RemoteAddrStrategy{}
 	})
 
-	// Apply the first configuration read by main
+	// RULE: The first configuration must apply; a server that never had a working
+	// configuration has nothing to keep serving, so main refuses to start.
 	log.Info().Msg("Factory: reading configuration file (first time)")
 
 	if err := factory.readConfig(firstConfig); err != nil {
@@ -54,14 +50,8 @@ func NewFactory(storage config.Storage, firstConfig config.Config, subscription 
 	return &factory, nil
 }
 
-// start listens for configuration updates for the rest of the process lifetime.
-//
-// RULE: A configuration that fails to apply at runtime is reported, and the node KEEPS SERVING
-// on its last-known-good configuration.  The alternative -- exiting, as boot does -- would let
-// one bad save take down every node in a cluster at once, and then crash-loop them all against
-// the same stored document.  A running node one moment before the reload was serving perfectly
-// well; the bad NEW configuration changes nothing about that.  The next good save (delivered by
-// the same subscription) recovers the node with no restart.
+// start applies every configuration update published by the storage service,
+// for the rest of the process lifetime.
 func (factory *Factory) start(subscription <-chan config.Config) {
 
 	const location = "server.Factory.start"
@@ -71,6 +61,8 @@ func (factory *Factory) start(subscription <-chan config.Config) {
 
 		log.Info().Msg("Factory: configuration file (updated)")
 
+		// RULE: A rejected update is reported, and the node keeps serving its last-known-good
+		// configuration.  Exiting would crash-loop every node in the cluster on one bad save.
 		if err := factory.readConfig(config); err != nil {
 			derp.Report(derp.Wrap(err, location, "Unable to apply the updated configuration. KEEPING the last working configuration. Fix and re-save the server configuration."))
 			log.Error().Msg("Configuration update REJECTED. This node is still running on its previous configuration.")
@@ -79,39 +71,28 @@ func (factory *Factory) start(subscription <-chan config.Config) {
 }
 
 // readConfig applies a new configuration to this Factory and every service that depends on it,
-// or returns an error having applied NOTHING.
-//
-// RULE: The whole reload runs under reloadLock, which serializes it against any other reload but
-// is never taken by a reader.  Requests keep running throughout -- they read the CURRENT
-// generation of wiring, and see the new one the moment each step publishes it.
-//
-// RULE: Everything that can FAIL runs before anything is published.  The only fallible step is
-// the common database; it is validated first, so a rejected configuration leaves the previous
-// one fully intact -- config, log level, filesystems, queue, everything.  A caller that gets an
-// error back is guaranteed the factory still runs its last-known-good configuration.
+// or returns an error having applied nothing.
 func (factory *Factory) readConfig(config config.Config) error {
 
 	const location = "server.Factory.readConfig"
 
+	// RULE: Serialize against every other reload.  Readers never take this lock, so
+	// requests keep running on the current wiring throughout.
 	factory.reloadLock.Lock()
 	defer factory.reloadLock.Unlock()
 
 	log.Info().Msg("Factory: received new configuration...")
 
-	// RULE: MUST be able to connect to the common database, BEFORE anything else applies.
-	// Unverified (no ping): the session check just below is this mode's verification.  On
-	// failure the previous connection (and everything else) is untouched.
+	// RULE: The common database is the only fallible step, so it runs before anything is
+	// published.  No ping here: the session check below is live mode's verification.
 	changed, err := factory.refreshCommonDatabase(config.ActivityPubCache, false)
 
 	if err != nil {
 		return derp.Wrap(err, location, "The common database is not properly defined in the configuration")
 	}
 
-	// RULE: Synchronize shared indexes only when the connection actually changed (which
-	// includes boot: the first refresh always changes nil -> connection).  Index definitions
-	// are a function of the binary, not the configuration, so an unchanged connection has
-	// nothing new to sync -- and re-syncing here on every reload ran on every live node for
-	// every save anywhere in the cluster.
+	// RULE: Synchronize shared indexes only when the connection changed (including boot).
+	// Index definitions come from the binary, so an unchanged connection has nothing to sync.
 	if changed {
 		factory.syncCommonDatabaseIndexes()
 	}
@@ -123,8 +104,7 @@ func (factory *Factory) readConfig(config config.Config) error {
 		return derp.Wrap(err, location, "Unable to connect to the common database")
 	}
 
-	// The configuration is applicable.  Everything from here down is infallible-by-design, so
-	// the reload can no longer end half-applied.
+	// Everything below cannot fail, so the reload can no longer end half-applied.
 
 	// Set logging level from the configuration file
 	setLogLevel(config)
@@ -133,7 +113,6 @@ func (factory *Factory) readConfig(config config.Config) error {
 	factory.setConfigLocked(config)
 
 	// Refresh these global services with values we'll always need.
-	factory.emailService.Refresh()
 	factory.templateService.Refresh(config.Templates)
 
 	// Set timeout threshold for slow queries
@@ -152,8 +131,7 @@ func (factory *Factory) readConfig(config config.Config) error {
 	// Insert/Update/Delete Domains in the domain list
 	factory.refreshDomains(config)
 
-	// RULE: If we're running the setup console, then
-	// do not run the remaining updates
+	// RULE: The setup console skips the remaining updates
 	if factory.IsSetupMode() {
 		log.Trace().Msg("Factory.readConfig: In setup mode, so skipping domain updates")
 		return nil
@@ -172,7 +150,7 @@ func (factory *Factory) readConfig(config config.Config) error {
 		derp.Report(derp.Wrap(err, location, "Starting scheduler"))
 	}
 
-	// Derive the strategy for calculating the client's real ip address
+	// Publish the strategy for calculating the client's real IP address
 	clientIPStrategy := factory.calcClientIPStrategy(config)
 
 	factory.rewireLocked(func(value *wiring) {

@@ -12,12 +12,12 @@ const TagHrefUnresolvable = "-"
 // or (in future) a custom emoji.  See projects/TAGS-UNIFICATION.md.
 type Tag struct {
 	// Type is an AS2 link type: vocab.LinkTypeHashtag or vocab.LinkTypeMention.
-	Type string `bson:"type"`
+	Type string `json:"type" bson:"type"`
 
 	// Name is the BARE token, with no "#" or "@" prefix -- "Food2024", "bob@server.social".
 	// Roughly ten call sites (search indexing, rule matching, linkification) want the bare
 	// value; only the emission sites want the prefix, and they use DisplayName().
-	Name string `bson:"name"`
+	Name string `json:"name" bson:"name"`
 
 	// Href is stored ONLY for tag types whose link target cannot be derived locally.
 	//
@@ -29,7 +29,7 @@ type Tag struct {
 	// An @mention's target is NOT derivable: turning "bob@server.social" into an Actor URL
 	// requires asking that server.  Mention entries carry the resolved value, or
 	// TagHrefUnresolvable once a lookup has failed.
-	Href string `bson:"href,omitempty"`
+	Href string `json:"href" bson:"href,omitempty"`
 }
 
 // NewTag returns a fully initialized Tag of the given type.

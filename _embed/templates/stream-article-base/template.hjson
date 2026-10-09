@@ -17,10 +17,10 @@
 	schema: {
 		type:"object"
 		properties: {
+			name: {type:"string", maxLength:128}
+			summary: {type:"string", maxLength:2048}
 			icon:{type:"string", format:"token", maxLength:64}
 			token: {type:"string", format:"token", maxLength:64, required:true}
-			label: {type:"string", maxLength:128}
-			summary: {type:"string", maxLength:2048}
 			content: {type:"object", properties: {
 				format: {type:"string", enum:["HTML","EDITORJS","MARKDOWN","TEXT"]}
 				raw: {type:"string", format:"unsafe-any", maxLength:1048576}
@@ -28,19 +28,11 @@
 			}}
 			data: {type:"object", properties: {
 				tags: {type:"string", maxLength:2048}
-				width: {type:"string", enum:["LARGE", "MEDIUM", "SMALL"], required:true}
+				width: {type:"string", enum:["FULL", "LARGE", "MEDIUM", "SMALL"], default:"FULL"}
 				stylesheet: {type:"string", format:"css", maxLength:1048576}
 			}}
 		}
 	}
-	datasets: {
-		"layouts": [
-			{value:"LARGE", label:"Large (full page width)"}
-			{value:"MEDIUM", label:"Medium (about 2/3 page width)"}
-			{value:"SMALL", label:"Small (about 1/2 page width)"}
-		]
-	}
-
 	states: {
 		default: {
 			label:"Default State"
@@ -108,7 +100,7 @@
 			roles: ["author", "editor"]
 			steps: [
 				{do:"with-draft", steps: [
-					{do:"edit-content", file:"edit", format:"EDITORJS", max-length:1024}
+					{do:"edit-content", file:"edit", format:"EDITORJS", max-length:1048576}
 				]}
 			]
 		}
@@ -128,6 +120,10 @@
 			roles: ["author", "editor"]
 			steps: [
 				{do:"with-draft", steps: [
+					// The layout controls post inside the widget editor's own form, so page shape and
+					// widget placement save together in one request.  Both steps re-read the same
+					// cached form values; formdata.Parse caches on the Request and re-reads nothing.
+					{do:"set-data", from-form:["data.width"]}
 					{do:"sort-widgets"}
 					{do:"save", message:"Widgets updated by {{.Author}}"}
 					{do:"view-html", method:"both"}
@@ -168,6 +164,7 @@
 				{do:"as-modal", steps: [
 					{do:"set-simple-sharing", role: "viewer", title:"Who Can See This Article?", message:"Select who can view and comment on this article."}
 					{do:"save", message:"Sharing updated by {{.Author}}"}
+					{do:"refresh-page"}
 				]}
 			]
 		}
@@ -225,17 +222,19 @@
 								type:"layout-vertical"
 								label:"Article Info"
 								children: [
-									{type:"text", path:"token", label:"Token/Slug"}
-									{type:"select", path:"icon", label:"Icon", options:{provider:"folder-icons"}}
-									{type:"text", path:"label", label:"Label"}
-									{type:"textarea", path:"summary", label:"Summary"}
-									{type:"select", path:"data.width", label:"Content Width", options:{provider:"article-base.layouts"}}
+									{type:"text", path:"name", label:"Name"}
+									{type:"textarea", path:"summary", label:"Description"}
 									{type:"textarea", path:"data.tags", label:"Hashtags", description:"List hashtags here to categorize this article."}
+									{type:"select-icons", path:"icon", label:"Icon", options:{provider:"folder-icons"}}
+									{type:"text", path:"token", label:"Token", options:{autocomplete:"off", validator:"/.validate/stream/token?streamId={{.ID}}"}}
 								]
 							}
 						}]
 					}
 					{do:"save", comment:"Properties updated by {{.Author}}"}
+					// Info edits the label, token and summary that the editing chrome displays,
+					// so the page behind the modal has to redraw to show them.
+					{do:"refresh-page"}
 				]
 			}]
 		}

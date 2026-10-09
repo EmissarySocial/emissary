@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Version24...
+// Version24 defaults each Domain's empty mlsMode to "NONE"
 func Version24(ctx context.Context, session *mongo.Database) error {
 
 	fmt.Println("... Version 24")

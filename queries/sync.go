@@ -134,6 +134,10 @@ func SyncDomainIndexes(ctx context.Context, session *mongo.Database) { // NOSONA
 		derp.Report(err)
 	}
 
+	if err := sync.UserConnection(ctx, session); err != nil {
+		derp.Report(err)
+	}
+
 	if err := sync.NewsFeed(ctx, session); err != nil {
 		derp.Report(err)
 	}
@@ -195,6 +199,10 @@ func SyncDomainIndexes(ctx context.Context, session *mongo.Database) { // NOSONA
 	}
 
 	if err := sync.StreamDraft(ctx, session); err != nil {
+		derp.Report(err)
+	}
+
+	if err := sync.StreamSource(ctx, session); err != nil {
 		derp.Report(err)
 	}
 

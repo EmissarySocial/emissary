@@ -58,7 +58,7 @@ func (step StepSetSimpleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 		return Halt().WithError(derp.Wrap(err, location, "Rendering form for StepSetSimpleSharing"))
 	}
 
-	b.WriteString(formHTML)
+	b.WriteString(formHTML) // #nosec G104 -- html.Builder embeds *strings.Builder, whose WriteString is documented to always return a nil error
 	b.CloseAll()
 
 	options := []string{}
@@ -159,7 +159,7 @@ func (step StepSetSimpleSharing) form() (form.Element, error) {
 			{
 				Type: "check-button-group",
 				Path: "groupIds",
-				Options: mapof.Any{
+				Options: mapof.Template{
 					"class": "simple-sharing simple-sharing-not-group",
 					"enum": []form.LookupCode{
 						{
@@ -188,7 +188,7 @@ func (step StepSetSimpleSharing) form() (form.Element, error) {
 				Type:  "check-button-group",
 				Path:  "groupIds",
 				Label: "These Groups Only",
-				Options: mapof.Any{
+				Options: mapof.Template{
 					"class":    "simple-sharing",
 					"provider": "groups",
 					"script":   "on click tell <.simple-sharing-not-group /> set your.checked to false",
@@ -198,9 +198,12 @@ func (step StepSetSimpleSharing) form() (form.Element, error) {
 	}, nil
 }
 
-// calculateValue returns the Groups this Stream is shared with, defaulting to "anonymous" when it has none
+// calculateValue returns the Groups this Stream is shared with, defaulting to owners-only when it has none
 func (step StepSetSimpleSharing) calculateValue(stream *model.Stream) mapof.Object[id.Slice] {
 
+	// An unshared Stream opens this form on "owners only", so accepting the default cannot
+	// publish something the author meant to keep private.  StepSetCircleSharing deliberately
+	// defaults the other way, because a Circle is already a deliberate act of sharing.
 	if groupIds := stream.Groups[step.Role]; groupIds.NotEmpty() {
 		return mapof.Object[id.Slice]{
 			"groupIds": groupIds,

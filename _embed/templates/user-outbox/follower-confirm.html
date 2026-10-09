@@ -5,26 +5,33 @@
 
 <div class="page">
 
-	<h1 class="margin-bottom-xl">{{icon "thumbs-up"}} Your Email Product is Confirmed</h1>
+	<div class="layout-SMALL">
 
-	{{- $iconURL := $actor.Icon.Href -}}
-	<div class="flex-row flex-align-center margin-bottom-xl">
-		{{- if ne "" $iconURL -}}
-			<img src="{{$iconURL}}" alt="" class="circle width-64">
-		{{- else -}}
-			<div class="circle width-64 flex-center">{{icon "person"}}</div>
-		{{- end -}}
-		<div>
-			<div class="margin-none text-lg bold">{{$actor.Name}}</div>
-			<div class="margin-none text-gray">Receiving updates via email</div>
+		<h1 class="align-center margin-bottom-xl">Your Subscription is Ready&nbsp;{{icon "thumbs-up"}} </h1>
+
+		<!--
+		{{- $iconURL := $actor.Icon.Href -}}
+		<div class="flex-row flex-align-center margin-bottom-xl">
+			{{- if ne "" $iconURL -}}
+				<img src="{{$iconURL}}" alt="" class="circle width-64">
+			{{- else -}}
+				<div class="circle width-64 flex-center">{{icon "person"}}</div>
+			{{- end -}}
+			<div>
+				<div class="margin-none text-lg bold">{{$actor.Name}}</div>
+				<div class="margin-none text-gray">Receiving updates via email</div>
+			</div>
 		</div>
-	</div>
+		-->
 
-	<p>Updates will be sent to your email inbox whenever <b>{{$actor.Name}}</b> posts.</p>
-	<p>You can <a href="{{$parentURL}}/follower-unsubscribe?followerId={{$follower.FollowerID.Hex}}&secret={{$secret}}">unsubscribe any time</a> using links in the emails you receive.</p>
-	
-	<div class="margin-vertical-xl">
-		<a href="{{$parentURL}}" class="button primary">Continue to Profile Page {{icon "arrow-right"}}</a>
-	</div>
+		<p>You'll get updates in your email box inbox whenever <b>{{$actor.Name}}</b> posts.</p>
+		<p>You can <a href="{{$parentURL}}/follower-unsubscribe?followerId={{$follower.FollowerID.Hex}}&secret={{$secret}}">unsubscribe any time</a> using links in the emails you receive.</p>
+		
+		<!--
+			<div class="margin-vertical-xl">
+				<a href="{{$parentURL}}" class="button primary">Continue to Profile Page {{icon "arrow-right"}}</a>
+			</div>
+		-->
 
+	</div>
 </div>

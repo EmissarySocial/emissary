@@ -37,7 +37,11 @@ func GetOutboxCollection(ctx *steranko.Context, factory *service.Factory, sessio
 	}
 
 	// Retrieve permissions from the request signature
-	permissions := factory.Permission().ParseHTTPSignature(session, ctx.Request())
+	permissions, err := factory.Permission().ParseHTTPSignature(session, ctx.Request())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid HTTP Signature")
+	}
 
 	// Fall through means that we're looking for a specific page of the collection
 	publishedDate := convert.Int64Default(publishDateString, math.MaxInt64)
@@ -83,7 +87,12 @@ func GetOutboxActivity(ctx *steranko.Context, factory *service.Factory, session 
 		return derp.Wrap(err, location, "Loading outbox message", outboxMessageID)
 	}
 
-	// Return results as an OrderedCollectionPage
+	// RULE: A message with no Actor has no `id` to answer with, so there is nothing here to serve
+	if outboxMessage.ActivityPubURL() == "" {
+		return derp.NotFound(location, "Outbox message cannot be identified", outboxMessageID)
+	}
+
+	// Return the activity as a JSON-LD document
 	ctx.Response().Header().Set("Content-Type", "application/activity+json")
 	return ctx.JSON(http.StatusOK, outboxMessage.GetJSONLD())
 }

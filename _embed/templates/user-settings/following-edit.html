@@ -50,16 +50,45 @@
 	</div>
 
 	{{- if not $following.IsNew -}}
-		<div class="flex-row">
-			<div class="width-64"></div>
-			<div class="text-green bold margin-top">
-				{{ if eq "ACTIVITYPUB" $following.Method -}}
-					{{icon "check-badge-fill"}} Following via ActivityPub
-				{{ else if eq "POLL" $following.Method -}}
-					{{icon "rss-fill"}} Following via RSS/Atom
-				{{- end -}}
+		{{ if eq "BLOCKED" $following.Status -}}
+			<!-- RULE: a blocked follow is read-only; the pipeline skips the form and Save refuses it (D6, R11). -->
+			<div class="flex-row">
+				<div class="width-64"></div>
+				<div class="margin-top">
+					<div class="bold">{{icon "cancel"}} {{$following.StatusLabel}}</div>
+					<div class="text-sm">{{$following.StatusDescription}}</div>
+					<div class="text-sm text-light-gray">Remove the block rule to follow this account again.</div>
+				</div>
 			</div>
-		</div>
+		{{- else -}}
+			<div class="flex-row">
+				<div class="width-64"></div>
+				<div class="text-green bold margin-top">
+					{{ if eq "ACTIVITYPUB" $following.Method -}}
+						{{icon "check-badge-fill"}} Following via ActivityPub
+					{{ else if eq "POLL" $following.Method -}}
+						{{icon "rss-fill"}} Following via RSS/Atom
+					{{- end -}}
+				</div>
+			</div>
+
+			<!-- RULE: a problem status must say WHY here, or the red badge in the list is unexplained. -->
+			{{ if eq "red" $following.StatusClass -}}
+				<div class="flex-row">
+					<div class="width-64"></div>
+					<div class="text-red margin-top">
+						<div class="bold">{{icon "alert-fill"}} {{$following.StatusLabel}}</div>
+						<div class="text-sm">{{$following.StatusDescription}}</div>
+						<div class="text-sm">{{$following.StatusMessage}}</div>
+						{{ if eq "PAUSED" $following.Status -}}
+							<div class="text-sm text-light-gray">We will keep checking occasionally. Save this form to try again now.</div>
+						{{- else if eq "GONE" $following.Status -}}
+							<div class="text-sm text-light-gray">We have stopped checking. Save this form to try again.</div>
+						{{- end }}
+					</div>
+				</div>
+			{{- end }}
+		{{- end }}
 	{{- end -}}
 
 	<div class="margin-bottom-lg"></div>

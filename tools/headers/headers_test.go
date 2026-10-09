@@ -151,7 +151,7 @@ func TestLastModified(t *testing.T) {
 // it can never be reused without asking the origin first.
 func TestDefaultCacheControlHTML(t *testing.T) {
 
-	// `no-cache` is the load-bearing directive -- it permits storage but forbids reuse without
+	// `no-cache` is the important directive -- it permits storage but forbids reuse without
 	// revalidation, which is exactly what denies a browser its heuristic freshness calculation.
 	directives := cacheheader.ParseString(DefaultCacheControlHTML)
 

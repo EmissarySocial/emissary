@@ -6,10 +6,15 @@
 // Two load options change what "answer" means.  WithWriteOnly forces a reload past the cached copy,
 // and WithMinAge bounds how often that forced reload may actually reach the origin -- a cooldown that
 // is on by default, because a remote peer can provoke a forced reload at a URL of its choosing.
+//
+// A load has three phases on three separate budgets: the cache read and the cache write each get
+// WithDatabaseTimeout, and the HTTP fetch between them gets WithFetchTimeout, carried down to
+// remote as a context.  One budget across all three is the defect in BUG-140.
 package ascache
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/cacheheader"
@@ -17,8 +22,10 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
+	remoteoptions "github.com/benpate/remote/options"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -87,7 +94,7 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 	config := NewLoadConfig(options...)
 
 	// Create a new database session and connect to the document cach collection
-	session, cancel, err := client.timeoutSession(config.timeoutSeconds)
+	session, cancel, err := client.timeoutSession(config.databaseTimeout)
 
 	if err != nil {
 		return streams.NilDocument(), derp.Wrap(err, location, "Connecting to database")
@@ -129,8 +136,15 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 		}
 	}
 
-	// Pass the request to the inner client
-	result, err := client.innerClient.Load(url, options...)
+	// Pass the request to the inner client, bounding the fetch by its own budget. Our context
+	// goes FIRST: remote applies each hook in order and WithContext assigns, so a caller who
+	// supplies a context of their own lands after ours and wins.
+	fetchCtx, fetchCancel := timeoutContext(config.fetchTimeout)
+	defer fetchCancel()
+
+	fetchOptions := slices.Concat([]any{remoteoptions.WithContext(fetchCtx)}, options)
+
+	result, err := client.innerClient.Load(url, fetchOptions...)
 
 	if err != nil {
 
@@ -156,7 +170,12 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 	if config.isWriteAllowed() {
 		value := asValue(result)
 
-		if err := client.save(session.Context(), url, &value); err != nil {
+		// RULE: the write gets a budget of its own. The session context has been running since
+		// before the fetch above, which does not share this deadline, so it may already be spent.
+		writeCtx, writeCancel := timeoutContext(config.databaseTimeout)
+		defer writeCancel()
+
+		if err := client.save(writeCtx, url, &value); err != nil {
 			derp.Report(derp.Wrap(err, location, "Writing document to cache.. continuing process.."))
 		}
 
@@ -173,7 +192,7 @@ func (client *Client) Save(document streams.Document) error {
 	const location = "ascache.Client.Save"
 
 	// Get a new database session
-	ctx, cancel := timeoutContext(60)
+	ctx, cancel := timeoutContext(directWriteTimeout)
 	defer cancel()
 
 	// Save the document/value to the database
@@ -192,7 +211,7 @@ func (client *Client) Delete(url string) error {
 	const location = "ascache.Client.Delete"
 
 	// Connect to the database; get a session and collection
-	ctx, cancel := timeoutContext(10)
+	ctx, cancel := timeoutContext(directDeleteTimeout)
 	defer cancel()
 
 	session, err := client.commonDatabase.Session(ctx)
@@ -254,12 +273,12 @@ func (client *Client) session(ctx context.Context) (data.Session, error) {
 	return session, nil
 }
 
-// timeoutSession opens a database session that cancels itself after the provided number of seconds
-func (client *Client) timeoutSession(seconds int) (data.Session, context.CancelFunc, error) {
+// timeoutSession opens a database session that cancels itself after the provided duration
+func (client *Client) timeoutSession(timeout time.Duration) (data.Session, context.CancelFunc, error) {
 
 	const location = "ascache.Client.timeoutSession"
 
-	ctx, cancel := timeoutContext(seconds)
+	ctx, cancel := timeoutContext(timeout)
 	session, err := client.session(ctx)
 
 	if err != nil {
@@ -285,6 +304,20 @@ func (client *Client) save(ctx context.Context, url string, value *Value) error 
 
 	const location = "ascache.Client.save"
 
+	// RULE: A document marked NoStore is never written, whichever path reached here.  The normalizer
+	// marks its stub this way, and caching the stub would serve it as the document to every user.
+	if value.Metadata.NoStore {
+		return nil
+	}
+
+	// RULE: A document is written only when the lookup key is on its id's host.  A host may speak
+	// only for its own ids, so any other key, or a document with no id, vouches for nothing. (BUG-223)
+	documentID := value.Object.GetString("id")
+
+	if uri.NotSameHost(url, documentID) {
+		return nil
+	}
+
 	_, err := client.commonDatabase.WithTransaction(ctx, func(session data.Session) (any, error) {
 
 		// Write to trace log
@@ -295,8 +328,9 @@ func (client *Client) save(ctx context.Context, url string, value *Value) error 
 			return nil, nil
 		}
 
-		// Make sure all relevant URLs are included in this value
-		value.AppendURL(value.Object.GetString("id"))
+		// File the document under its id and the key that found it.  The rule above has already
+		// put both on one host, so the key is an alias the id's own host vouches for. (BUG-01)
+		value.AppendURL(documentID)
 		value.AppendURL(url)
 
 		// Try to load an existing/duplicate values using the object.id field.

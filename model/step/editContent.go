@@ -6,26 +6,24 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// The `max-length` step setting is configured in KILOBYTES for developer ergonomics
-// (e.g. `max-length:64`), then converted to runes internally.  One "kilobyte" here is
-// 1024 characters.
+// The `max-length` step setting counts CHARACTERS (runes), which is what every other
+// length limit in this codebase counts -- schema `maxLength`, model.ContentMaxLength, and
+// the rune count the step itself enforces.  It was briefly denominated in kilobytes, which
+// read well in a template but meant the same word measured two different things depending
+// on which file you were in.  A template now writes the same number the schema does.
 const (
-	// editContentDefaultMaxLengthKB is the per-step content limit (in KB) applied when a
+	// editContentDefaultMaxLength is the per-step content limit (in runes) applied when a
 	// template does not specify its own `max-length`.  It is generous enough for long-form
 	// articles while still rejecting the multi-megabyte bodies that a storage-exhaustion
 	// attack relies on.
-	editContentDefaultMaxLengthKB = 64 // 64 KB
+	editContentDefaultMaxLength = 64 << 10 // 65,536 runes
 
-	// editContentMaxLengthCeilingKB is the largest `max-length` (in KB) a template may
+	// editContentMaxLengthCeiling is the largest `max-length` (in runes) a template may
 	// configure.  A template cannot allow more content than the system will actually store,
 	// so this is kept in sync with model.ContentMaxLength (the schema-level cap on
 	// `content.raw`/`content.html`).  It is duplicated here rather than imported because
 	// model imports model/step, so model/step cannot import model without creating a cycle.
-	editContentMaxLengthCeilingKB = 1024 // 1024 KB == model.ContentMaxLength (1 MiB)
-
-	// runesPerKilobyte converts the KB-denominated `max-length` setting into the rune count
-	// used for enforcement.
-	runesPerKilobyte = 1024
+	editContentMaxLengthCeiling = 1 << 20 // 1,048,576 runes == model.ContentMaxLength (1 MiB)
 )
 
 // EditContent is a Step that can edit/update Container in a streamDraft.
@@ -39,7 +37,7 @@ type EditContent struct {
 
 // NewEditContent parses and validates the configuration for an "edit-content" step,
 // applying the default content limit and clamping it to the storage ceiling.  The
-// `max-length` setting is expressed in kilobytes and converted to runes here.
+// `max-length` setting counts characters, and is used verbatim.
 func NewEditContent(stepInfo mapof.Any) (EditContent, error) {
 
 	const location = "model.step.NewEditContent"
@@ -50,18 +48,18 @@ func NewEditContent(stepInfo mapof.Any) (EditContent, error) {
 	}
 
 	// RULE: Apply the default limit when a template does not configure one.
-	maxLengthKB := stepInfo.GetInt("max-length")
+	maxLength := stepInfo.GetInt("max-length")
 
-	if maxLengthKB <= 0 {
-		maxLengthKB = editContentDefaultMaxLengthKB
+	if maxLength <= 0 {
+		maxLength = editContentDefaultMaxLength
 	}
 
 	// RULE: Clamp to the storage ceiling.  A template must never allow more content than
 	// the underlying schema can persist, so an over-large value is capped (not rejected)
 	// and the misconfiguration is logged.
-	if maxLengthKB > editContentMaxLengthCeilingKB {
-		log.Warn().Str("location", location).Int("configuredKB", maxLengthKB).Int("ceilingKB", editContentMaxLengthCeilingKB).Msg("edit-content max-length exceeds storage ceiling; clamping")
-		maxLengthKB = editContentMaxLengthCeilingKB
+	if maxLength > editContentMaxLengthCeiling {
+		log.Warn().Str("location", location).Int("configured", maxLength).Int("ceiling", editContentMaxLengthCeiling).Msg("edit-content max-length exceeds storage ceiling; clamping")
+		maxLength = editContentMaxLengthCeiling
 	}
 
 	// Create the new "edit-content" step
@@ -69,7 +67,7 @@ func NewEditContent(stepInfo mapof.Any) (EditContent, error) {
 		Filename:       first(stepInfo.GetString("file"), stepInfo.GetString("actionId")),
 		Fieldname:      first(stepInfo.GetString("field"), "content"),
 		Format:         first(stepInfo.GetString("format"), "editorjs"),
-		MaxLength:      maxLengthKB * runesPerKilobyte,
+		MaxLength:      maxLength,
 		RequireContent: stepInfo.GetBool("require-content"),
 	}, nil
 }

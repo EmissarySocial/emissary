@@ -2,7 +2,7 @@
 	templateId: redirect
 	category: Special
 	model: Stream
-	containedBy: ["top", "folder"]
+	containedBy: ["top", "folder", "article"]
 	label: Redirect
 	description: Forwards requests to another web address
 	icon: forward
@@ -10,6 +10,7 @@
 		type: object
 		properties: {
 			label: {type:"string", format:"text", maxLength:256}
+			token: {type:"string", format:"text", maxLength:256}
 			icon: {type:"string", format:"token", maxLength:64}
 			summary: {type:"string", format:"html", maxLength:2048}
 			data: {type: "object", properties: {
@@ -54,6 +55,9 @@
 			}
 			roles: ["author", "editor"]
 			steps:[
+				// "redirect-to" detects the off-origin target on its own and hands the navigation
+				// to htmx when htmx is asking, so this works whether the visitor arrived through a
+				// plain <a href> or through the sidebar's hx-get.  See build/navigation.go.
 				{do:"redirect-to", url:"{{.Data `url`}}"}
 			]
 		}
@@ -72,10 +76,11 @@
 						form: {
 							type: layout-vertical
 							children: [
+								{type: "text", label: "Target URL", path: "data.url", description:"Full URL that visitors will be forwarded to (e.g. https://example.com/page-here)"}
 								{type: "text", label: "Label", path: "label", description:"Displays in website navigation"}
-								{type: "select", path:"icon", label:"Icon", options:{provider:"folder-icons"}}
-								{type: "text", label: "URL", path: "data.url", description:"Full URL that visitors will be forwarded to (e.g. https://example.com/page-here)"}
-								{type: "textarea", label: "Summary", path: "summary", options:{rows:4}}
+								{type: "text", label: "Token", path: "token", description:"Unique identifier for the redirect", options:{autocomplete:"off", validator:"/.validate/stream/token?streamId={{.ID}}"}}
+								{type: "select-icons", path:"icon", label:"Icon", options:{provider:"folder-icons"}}
+								{type: "textarea", label: "Summary", path: "summary", description:"Displays in website navigation", options:{rows:4}}
 							]
 						}
 						options:[
@@ -86,7 +91,8 @@
 						]
 					},
 					{do:"save-and-publish", comment: "Updated Redirect"}
-					{do:"reload-page"}
+					{do:"refresh-page"}
+					{do:"inline-save-button", form:"edit-form"}
 				]
 		}
 		delete: {

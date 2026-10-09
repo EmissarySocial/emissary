@@ -141,7 +141,7 @@ func (service *MerchantAccount) Save(session data.Session, merchantAccount *mode
 
 	// Save the merchantAccount to the database
 	if err := service.collection(session).Save(merchantAccount, note); err != nil {
-		return derp.Wrap(err, location, "Saving MerchantAccount", merchantAccount, note)
+		return derp.Wrap(err, location, "Saving MerchantAccount", merchantAccount.MerchantAccountID, note)
 	}
 
 	return nil
@@ -152,7 +152,7 @@ func (service *MerchantAccount) Delete(session data.Session, merchantAccount *mo
 
 	// Delete this MerchantAccount
 	if err := service.collection(session).Delete(merchantAccount, note); err != nil {
-		return derp.Wrap(err, "service.MerchantAccount.Delete", "Deleting MerchantAccount", merchantAccount, note)
+		return derp.Wrap(err, "service.MerchantAccount.Delete", "Deleting MerchantAccount", merchantAccount.MerchantAccountID, note)
 	}
 
 	return nil
@@ -178,7 +178,7 @@ func (service *MerchantAccount) ObjectType() string {
 	return "MerchantAccount"
 }
 
-// New returns a fully initialized model.MerchantAccount as a data.Object.
+// ObjectNew returns a fully initialized model.MerchantAccount as a data.Object.
 func (service *MerchantAccount) ObjectNew() data.Object {
 	result := model.NewMerchantAccount()
 	return &result
@@ -372,7 +372,7 @@ func (service *MerchantAccount) DeleteByUserID(session data.Session, userID prim
 	// Delete each merchantAccount
 	for merchantAccount := range merchantAccounts {
 		if err := service.Delete(session, &merchantAccount, note); err != nil {
-			return derp.Wrap(err, location, "Deleting MerchantAccount", merchantAccount)
+			return derp.Wrap(err, location, "Deleting MerchantAccount", merchantAccount.MerchantAccountID)
 		}
 	}
 
@@ -423,9 +423,6 @@ func (service *MerchantAccount) GetCheckoutURL(merchantAccount *model.MerchantAc
 
 	switch merchantAccount.Type {
 
-	// case model.ConnectionProviderPayPal:
-	//	return service.paypal_getCheckoutURL(merchantAccount, remoteProductID, returnURL, customerEmail)
-
 	// case model.ConnectionProviderStripe:
 	//	return service.stripe_getCheckoutURL(merchantAccount, product, returnURL, customerEmail)
 
@@ -446,9 +443,6 @@ func (service *MerchantAccount) ParseCheckoutResponse(session data.Session, merc
 	// Find the appropriate getter function for this MerchantAccount type
 	switch merchantAccount.Type {
 
-	// case model.ConnectionProviderPayPal:
-	//	getter = service.paypal_getPrivilegeFromCheckoutResponse
-
 	// case model.ConnectionProviderStripe:
 	//	getter = service.stripe_getPrivilegeFromCheckoutResponse
 
@@ -456,7 +450,7 @@ func (service *MerchantAccount) ParseCheckoutResponse(session data.Session, merc
 		getter = service.stripe_getPrivilegeFromCheckoutResponse
 
 	default:
-		return model.Privilege{}, derp.BadRequest(location, "MerchantAccount must be PAYPAL or STRIPE", merchantAccount.Type)
+		return model.Privilege{}, derp.BadRequest(location, "Invalid MerchantAccount Type", merchantAccount.Type)
 	}
 
 	// Retrieve the Privilege record from the checkout response
@@ -496,7 +490,7 @@ func (service *MerchantAccount) Connect(merchantAccount *model.MerchantAccount) 
 
 }
 
-// ProductsByUser retrieves all available products configured in the remote MerchantAccount(s) of a specific User
+// RemoteProductsByUser retrieves all available products configured in the remote MerchantAccount(s) of a specific User
 func (service *MerchantAccount) RemoteProductsByUser(session data.Session, userID primitive.ObjectID) (sliceof.Object[model.MerchantAccount], sliceof.Object[model.Product], error) {
 
 	const location = "service.MerchantAccount.RemoteProductsByUser"
@@ -520,7 +514,7 @@ func (service *MerchantAccount) RemoteProductsByUser(session data.Session, userI
 		remoteProducts, err := service.getRemoteProducts(&merchantAccount)
 
 		if err != nil {
-			return nil, nil, derp.Wrap(err, location, "Loading products for merchant account", merchantAccount)
+			return nil, nil, derp.Wrap(err, location, "Loading products for merchant account", merchantAccount.MerchantAccountID)
 		}
 
 		result = append(result, remoteProducts...)
@@ -538,9 +532,6 @@ func (service *MerchantAccount) getRemoteProducts(merchantAccount *model.Merchan
 	const location = "service.MerchantAccount.getRemoteProducts"
 
 	switch merchantAccount.Type {
-
-	// case model.ConnectionProviderPayPal:
-	//	return service.paypal_getProducts(merchantAccount, productIDs...)
 
 	// case model.ConnectionProviderStripe:
 	//	return service.stripe_getPrices(merchantAccount, productIDs...)

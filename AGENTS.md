@@ -2,7 +2,19 @@
 
 See [README.md](README.md) for what Emissary is and [build/README.md](build/README.md) for how templates and action pipelines fit together. These are the repo-wide rules that are not visible in the code.
 
-Package-specific notes live in the nearest `AGENTS.md` — currently [service](service/AGENTS.md) and [handler/mastodon](handler/mastodon/AGENTS.md). Put a lesson in the most specific file that covers it; this one is only for rules that span packages.
+Package-specific notes live in the nearest `AGENTS.md`, and most packages now have one: [build](build/AGENTS.md), [config](config/AGENTS.md), [consumer](consumer/AGENTS.md), [handler](handler/AGENTS.md), [middleware](middleware/AGENTS.md), [model](model/AGENTS.md), [queries](queries/AGENTS.md), [realtime](realtime/AGENTS.md), [server](server/AGENTS.md), [service](service/AGENTS.md), and [tools](tools/AGENTS.md), with deeper ones under [handler/mastodon](handler/mastodon/AGENTS.md), [service/content](service/content/AGENTS.md), and [_embed/templates](_embed/templates/AGENTS.md). Put a lesson in the most specific file that covers it; this one is only for rules that span packages.
+
+Runtime errors are reported to MongoDB by [tools/derp-mongo](tools/derp-mongo/README.md). The command that works through them, [benpate/derp-triage](https://github.com/benpate/derp-triage), lives in its own module and deliberately does not depend on this one.
+
+## Every change must work with several servers running at once
+
+**Production runs several Emissary servers behind a load balancer, all sharing the same common and Domain databases.** Any request can land on any server, and two requests from the same client can land on different ones. Design and review every change on that basis.
+
+**State held in memory belongs to one server.** A mutex, a `singleflight` group, an in-memory cache, a rate-limit counter, or a timer coordinates only the callers inside its own process. It can reduce the load one server generates, but it cannot keep two servers from doing the same work or writing the same record at the same moment.
+
+**Only the database can arbitrate between servers.** Make concurrent writes safe with a unique index, an atomic update or upsert, or a lease document, and test them with two writers that share nothing but the database. A read-then-write, or a delete followed by an insert, is a race whenever two servers run it for the same record.
+
+**One server's restart or config reload leaves the others unchanged.** A stale template, a cached value, or an old setting can keep serving from the servers that were not restarted.
 
 ## Never re-purpose an upgrade slot number
 
@@ -16,6 +28,24 @@ Inside a transaction, a task published directly to the queue can be consumed bef
 
 [service/response_.go](service/response_.go) centralizes the create/update/delete decision for likes, dislikes, and other responses, plus the target resolution and counter bookkeeping that go with it. There are two entry paths into it (a remote activity and a self-loopback), but still one writer. Writing a `model.Response` from anywhere else desynchronizes the counters and defeats the unique index that keeps duplicates out.
 
+## The Mailchimp webhook must never echo its own changes back out
+
+Two independent loops meet at [handler/mailchimp.go](handler/mailchimp.go), and both are silent when they go wrong.
+
+The first is Mailchimp's. A webhook registers `sources`, and `api` is one of them — so a member Emissary *adds* fires a delivery straight back at Emissary's own handler. The registration therefore lists `user` and `admin` and never `api`. The second is Emissary's. An inbound `unsubscribe` deletes a Follower through `Follower.Delete`, which is also where the outbound sync hook lives, so the inbound path must skip that hook or every unsubscribe Mailchimp reports is pushed back to Mailchimp as an unsubscribe. Note that the matching suppression is **per path, not per direction**: an inbound `subscribe` writes through `Follower.Save`, where echoing back out is harmless (the member call upserts the same values). A blanket "inbound changes never echo" flag would be the wrong mechanism.
+
+Neither loop errors. The first shows up as doubled API traffic against the User's own quota; the second as an unsubscribe that appears to work and then repeats.
+
+The mechanism for the second is `Follower.DeleteWithoutSync`, and it has **two** callers that both need it for different reasons. The inbound webhook uses it so an unsubscribe reported by Mailchimp is not pushed back to Mailchimp. `Follower.DeleteByUserID` uses it because deleting one User would otherwise unsubscribe every one of their followers from that User's own audience — at the far end, through an API where an unsubscribe cannot be undone. `Follower.Delete` still syncs, and must: an unsubscribe made *inside* Emissary is exactly the case that should travel outward.
+
+The route is public, unauthenticated, and authorized only by a per-connection secret in the query string, so three more rules hold there. Bound the body before reading it (`io.LimitReader`, matching the 65535-byte cap in [handler/stripe.go](handler/stripe.go)). Answer **identically** for every authorization outcome — unknown connection, wrong secret, paused connection, success — because ObjectIDs embed a timestamp and are partly guessable, and a distinguishable answer enumerates which connections exist. And scope every lookup to the connection's owner: the email address in the payload is attacker-supplied, so `Follower.LoadByEmailAddress` takes a `parentID` and an unscoped match would let one leaked secret reach every Follower on the server.
+
+## An error names a record, and never carries one
+
+Every reported error is stored verbatim by [tools/derp-mongo](tools/derp-mongo/README.md) and printed by `derp-console`, details included. The mongo reporter encodes BSON, which follows `bson` tags, so a field hidden with `json:"-"` is still stored: `OAuthClient.ClientSecret`, `Connection.Token`, and every `Vault` reach `ErrorLog` whenever their record rides an error. Other models hide nothing at all: `config.Domain` carries the MasterKey and the database password, and `EncryptionKey` its `PrivatePEM`. So an error attaches the identifier that finds a record (a hostname, DomainID, ClientID, ProviderID, or `_id`), never the record itself, a request that carries credentials, a folder map, or a URL that can embed a token.
+
+Two traps sit below the call site. The standard library's `*url.Error` quotes the whole URL it failed to parse, so keep only `errors.Unwrap(err)` when that URL can embed a token. And rosetta's `schema` package attached the whole object it validated or set until BUG-173; it now names the type, but its field-level format, pattern, and enum errors still echo the one field that failed. [tools/secretcheck](tools/secretcheck/doc.go) checks an error in every form a reporter stores it; each fixed site has a test built on it.
+
 ## Local MongoDB requires `?directConnection=true`
 
 A Go client connecting to a single-node replica set from the host will otherwise try to reach the node by its advertised replica-set name and hang until timeout, with no useful error. Every local connect string — config, tests, `mongosh` one-liners — needs the flag.
@@ -24,10 +54,117 @@ A Go client connecting to a single-node replica set from the host will otherwise
 
 Emissary regularly consumes `benpate/*` and `EmissarySocial/*` libraries from local working copies while a fix waits for a tag. `go mod tidy` rewrites `go.sum` and the require block against those local trees, which produces a `go.mod` that cannot build for anyone else and is easy to commit by accident. If tidy is genuinely needed, drop the replaces first — and never keep its rewrite silently.
 
+## A local `replace` is a debt, and the commit that depends on it is not finished
+
+The rule above covers what `go mod tidy` does to `go.mod`. This one covers the opposite mistake: migrating code to an API that only exists in a local working copy, and committing it without the tag. It compiles for whoever holds the replace and for nobody else, and the replace itself is never in the diff, so the branch looks complete.
+
+BUG-168 is the worked example. `consumer.Consumer` was rewritten for turbine's five-method `queue.Consumer` interface in a commit that touched only `consumer/consumer.go` and its test; `go.mod` stayed on a turbine release where `Consumer` was still a function type. The merge then bumped turbine to the last version of the *old* API, so `dev` did not compile for four commits. Either finish the chain — tag the library, bump the pin, drop the replace — or do not commit the code that needs it.
+
+## A merge that compiles each side can still break the build
+
+Two branches fixing one defect can each add the same declaration and merge without a conflict, because git conflicts on overlapping hunks rather than on meaning. BUG-168's `followingBackoff` landed twice in one file, 247 lines apart, and `TestFollowingBackoff` landed in two different files. Build the merge result, not just each side: `go build ./...` stops at the first failing package, and `service` is a dependency of almost everything, so one compiler error there can be hiding several.
+
+The reverse also merges cleanly: one branch renames a method, and the other adds a call to the old name. BUG-187 is the worked example. `Domain.Get()` became `Cached()` on `dev` while `dev-Eugene` added a call to `Get()`, neither side failed on its own, and the merge left `dev` unable to build. Run `go build ./... && go vet ./...` on the merge result before committing it.
+
+Deleting the survivor is not arbitrary when the bodies are identical. Keep the copy whose neighbours want it — the one that survived sits directly above its only caller, while the other was stranded at the end of the file — and carry the better comment across.
+
+## An email recipient never comes from the request
+
+A `send-email` step reaches the outside world on behalf of a visitor who may be anonymous, which makes the `To:` value the line between a contact form and an open relay. It must resolve from the Stream — `{{.Data \`emailAddress\`}}`, set only through an author-gated settings form — and never from anything the sender controls. The builder that renders those step arguments also exposes `.QueryParam` and the posted form, so writing `To: "{{.QueryParam \`email\`}}"` compiles, loads, validates, and ships a relay. Nothing in the code stops it; this rule is the whole enforcement.
+
+The same reasoning covers `ReplyEmail`, which *does* carry visitor input: it is a reply-to hint on a message going to a fixed recipient, not a destination. Anything that selects a destination stays on the Stream.
+
+[StepSendEmail](build/step_SendEmail.go) also halts the pipeline when a send fails, rather than reporting and continuing. A web-form message exists only in flight — nothing is written and nothing is queued — so a swallowed error returns a success page to a visitor whose message reached nobody. `DomainEmail.Send` treats an unconfigured SMTP connection the same way, for the same reason.
+
+## `content.HTML` is the only body a remote reader ever sees
+
+A Stream's rendered page is not its published body. [service/stream_activitypub.go](service/stream_activitypub.go) writes `content.HTML` into the JSON-LD, `Stream.Toot` puts it in the Mastodon API status, and `SummaryOrContent` is what link previews and oEmbed fall back to. Nothing in that chain looks at a Template's HTML.
+
+So a Template that keeps its text somewhere other than `content.*` -- a custom `data.*` field, because a Stream has only one content area -- publishes a blank body, however complete its page looks. [stream-article-two-column](_embed/templates/stream-article-two-column/) is the worked example and accepts that deliberately: it is a website page, its two Markdown blocks live in `data.left`/`data.right`, and its Summary is what a preview shows. Know which trade a new Template is making before it ships.
+
+Writing `content.raw` through `set-data` does not fix it, which is the part that surprises people. `content.HTML` is produced by `service.Content.New`, and nothing but the `edit-content` step calls it -- no `save` path re-renders content -- so a `set-data` on `content.raw` stores a body that is never converted, never sanitized, and never published.
+
+## Repairing federated data takes two steps, and the second one is the cache
+
+Emissary reads its own published output back through the same `tools/ascache` layer a remote peer would, so a Domain-database repair to anything served over ActivityPub is invisible to Emissary's own consumers until the cached copy expires. Cached documents live in the **common** database's `Document` collection with `expires` and `revalidates` both set to `received + 604800` — a flat seven days and no revalidation window, so nothing re-fetches early.
+
+That makes a data fix two steps: repair the records, then purge the cached pages carrying the old copy. Verifying against the live HTTP endpoint proves only the first step; the poller keeps failing on the cached page for up to a week (BUG-146, where 455 stale pages kept a completed repair invisible). Filter the purge by the SHAPE of the defect rather than a list of IDs, so it stays correct as the cache turns over:
+
+```js
+db.collection("Document").deleteMany({ "object.orderedItems.id": { $regex: "^/pub/outbox/" } })
+```
+
+Note that the repair and its cleanup run against two different connections — the records are in the Domain database, the cache and the error log are in the common one.
+
 ## The template funcmap has helpers that emit unescaped HTML
 
 `markdown`, `highlight`, `icon`, and their siblings in [tools/templates/functions.go](tools/templates/functions.go) return `template.HTML`, which tells `html/template` the value is already safe. `markdown` earns that by sanitizing; `highlight` does **not** — it returns its input verbatim. Any new helper with an `HTML`/`CSS`/`HTMLAttr` return type is a trust boundary, so sanitize inside the helper and check every call site before pointing one at federated or user-supplied content.
 
+## The funcMap shadows `and` and `or` with strict-bool versions
+
+Emissary's template funcMap is built on `rosetta/funcmap.All()` ([tools/templates/functions.go](tools/templates/functions.go)), which defines `and` and `or` as `func(values ...bool) bool` — **replacing the `text/template` builtins**, which accept any type and short-circuit on truthiness. Every Emissary template is affected: page templates, widgets, and email bodies alike.
+
+So `{{if or .Name .Label}}` does not mean "either one is non-empty". It fails at render with `wrong type for value; expected bool; got string`, and on a key that is absent from the data map with `invalid value; expected bool`. Neither is caught at parse time, so the template loads, ships, and breaks the first time the branch is reached — on a page nobody was looking at, or in an email nobody sees fail.
+
+`if`, `with`, `else if`, and `not` are unaffected: the first three are template keywords rather than functions, and `not` is not overridden. Write `{{if .Name}}`, nest, or lift the comparison into booleans first — `{{if or (ne "" .Name) (ne "" .Label)}}` is correct, because `ne` returns a real bool. Note that this last form also gives up the builtin's tolerance for missing keys, which matters wherever a template renders against a map that may not carry every key.
+
+## An inline hyperscript query literal cannot start with a class
+
+Templates are minified before they are parsed, and the minifier escapes any `<` that does not open a tag. So a `<script type="text/hyperscript">` block containing `closest <.my-class/>` ships as `&lt;.my-class/>`, and because a `<script>` body is raw text in HTML the browser never decodes it back. Hyperscript is handed the entity, fails to parse, and **every `def` and handler in that block goes undefined** — the controls it wired simply do nothing, and nothing is logged anywhere. `<input.../>` and `<div.../>` come through untouched, because `<i` and `<d` look like the start of a tag, which is what makes this look like a one-off rather than a rule.
+
+Two ways out. Qualify the selector so it begins with an element name, or query by an attribute the element already carries — `<input[name='data.columns']/>` — and accept that the query is then document-wide. The rule is only about **inline** blocks: `theme-global/hyperscript/*._hs` files are served as resources, never minified, and use `<.class/>` freely. The same goes for a `script=` attribute, whose value is attribute-escaped and decoded normally.
+
+## An off-site hop needs `forward-to`, or a `redirect-to` that knows it is off-site
+
+Sending a visitor to another URL has two mechanisms and they are not interchangeable. An HTTP redirect is followed by whatever transport made the request: a browser navigates the whole document, but htmx's XHR follows the redirect *inside* the request and swaps the result in as a fragment — which CORS makes impossible across origins, so the click silently does nothing. The `Hx-Redirect` header is executed by htmx itself and always navigates the document, but it is inert for a plain `<a href>`, which lands on a blank 200. Neither failure raises an error anywhere.
+
+Navigation links routinely carry **both** attributes (`<a href="/x" hx-get="/x">`), so both paths must work. [build/navigation.go](build/navigation.go) owns that decision for every step — `redirect-to` means "the content lives at another URL" and `forward-to` means "the visitor goes somewhere else", and each falls back to the other's mechanism where its own cannot work. A Template must never branch on `.IsPartialRequest` to work around this; if a case is not handled, fix the helper.
+
 ## Templates are data, not code — a stale copy will not announce itself
 
 Templates in [_embed/templates](_embed/templates/) are embedded at build time, but a server can also load template folders from Git or disk. Those copies are cached, so an edit to a template's actions, states, or roles may need a restart before it takes effect, and a stale external copy silently keeps serving the old pipeline. When a template change appears to do nothing, confirm which copy is actually being served before debugging the Go code.
+
+**A template directory created after startup is never watched, so edits inside it are never picked up.** `Filesystem.watchOS` ([service/filesystem.go](service/filesystem.go)) enumerates subdirectories once and recurses into the ones that exist at that moment; `Template.watch` is started only from `Refresh`, and the change handler calls `loadTemplates` directly rather than re-arming the watcher. So the watcher set is fixed at the last config change.
+
+The confusing part is that a new template still *appears*: `loadTemplates` re-reads every directory from scratch whenever any **watched** directory changes, so a new folder is picked up as a side effect of editing an old one, and then goes stale again. Symptom: you edit a new template, the server does not reload, and the browser keeps being served markup you no longer have on disk — including attributes you can see in the file. Restart the server after adding a template directory.
+
+## `.card` carries `container-type`, so it collapses inside a shrink-to-fit box
+
+`.card` in [theme-global/stylesheet/03-widgets-card.css](_embed/templates/theme-global/stylesheet/03-widgets-card.css) sets `container-type: inline-size` so card contents can use the design system's `@container` queries. That also applies inline-size containment, which sizes the box **as if it had no contents** — its children stop contributing to its intrinsic width.
+
+Put a `.card` inside anything that sizes shrink-to-fit (an absolutely positioned box with only `right`/`bottom` set, a float, an inline-block, a grid/flex item sized to content) and the parent has nothing to size around: the card collapses to its own padding. Nothing errors — a block card renders as a narrow vertical ribbon, and a flex card is worse, because its row does not wrap and simply runs off the edge of the screen where it cannot be seen or reached.
+
+**`width: max-content` does not fix it.** Containment zeroes the very intrinsic sizes that `max-content` resolves against, so the card stays collapsed — the circularity is what container queries have to forbid, not an oversight. The fix is `container-type: normal` on that specific card, which is safe whenever nothing inside it queries its own size — see `.floating-menu` in [theme-minimal/stylesheet/01-layout.css](_embed/templates/theme-minimal/stylesheet/01-layout.css). Do not remove `container-type` from `.card` itself; the `@container` queries throughout `05-*.css` depend on it.
+
+Styling reached through an element selector has the mirror-image problem: a theme that styles its nav items as `nav a { … }` silently loses all of it the moment those links move outside `<nav>`. Check where a rule's scope actually starts before relocating markup — `.nav-item` looks like the hook for this and is not; no stylesheet selects it.
+
+## A listener on a form hears every htmx request made inside it
+
+htmx fires `htmx:beforeRequest` / `htmx:afterRequest` on the element that made the request, and they bubble. So a handler attached to a form — the only way a hyperscript behavior installed *inside* that form can see the form's own POST, since the events never travel downward — also fires for every button, link, and input inside it that carries an `hx-*` attribute of its own. Nothing distinguishes them but `event.target`. A save-feedback handler written without that check reports "Saved" when the visitor merely opened an editor.
+
+Reading the outcome has two traps of its own. `detail.successful` is **undefined**, not `false`, on a transport failure: htmx sets it inside `handleAjaxResponse`, which `onerror`, `onabort`, and `ontimeout` never reach, so `successful is not true` is the test that covers all four paths and `successful is false` is the test that covers one. And a *validation* failure is not a failure by that measure at all — `WrapInlineError` answers 200 so htmx will not discard it (see [build/AGENTS.md](build/AGENTS.md)), and the only trace in the event is that htmx has resolved `HX-Retarget` into `detail.target`, which by then points at `#htmx-response-message` instead of the form's own target.
+
+## Allocation baselines are recorded in counts, because the timings are noise
+
+[tools/allocbench](tools/allocbench/) pins how this toolchain allocates for a few everyday patterns, so the performance rules in the go-quality skill rest on measurements rather than folklore. Nothing imports it. Re-run it with `go test -run='^$' -bench=. -benchmem -count=5 ./tools/allocbench/`.
+
+Compare a new run against `allocs/op` and `B/op` only. Across the five runs below every allocation count was identical, while `ns/op` ranged up to 2.4x within a single benchmark — so a changed count is a real finding and a changed time is almost certainly the laptop. The medians are recorded for scale, not for comparison.
+
+Baseline: go1.27.1, darwin/arm64, Apple M3 Max, 2026-09-25. Every allocation count matched the go1.26.6 run of 2026-09-19.
+
+| Benchmark | allocs/op | B/op | ns/op (median) |
+|---|---|---|---|
+| ReturnPointer | 1 | 24 | 7.0 |
+| ReturnValue | 0 | 0 | 1.9 |
+| AppendNoPrealloc | 12 | 25208 | 3639 |
+| AppendPrealloc | 0 | 0 | 1970 |
+| BoxSmallInt | 0 | 0 | 1.9 |
+| BoxLargeInt | 1 | 8 | 6.6 |
+| FixedConcat | 2 | 29 | 37.4 |
+| FixedBuilder | 4 | 64 | 52.2 |
+| FixedSprintf | 3 | 48 | 80.8 |
+| LoopConcat | 8 | 248 | 217.0 |
+| LoopBuilder | 4 | 120 | 112.8 |
+| LoopBuilderGrow | 1 | 64 | 46.4 |
+
+Four of these contradict advice that circulates widely, which is why they are pinned. `BoxSmallInt` costs nothing because `runtime.staticuint64s` covers 0–255, even though `-gcflags=-m` reports the value as escaping. `FixedConcat` beats `FixedBuilder` on both counts, so `strings.Builder` is the wrong reflex for a fixed set of pieces; it wins only in a loop, and only `Grow` takes it to one allocation. `FixedSprintf` costs one allocation per argument plus the result, which is the `...any` signature forcing every argument to escape. And `AppendPrealloc` reaches zero rather than one because a slice with a constant capacity that never leaves its frame stays on the stack.

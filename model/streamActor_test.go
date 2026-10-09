@@ -42,3 +42,21 @@ func TestStreamActorJSONLD_Empty(t *testing.T) {
 	require.True(t, actor.IsNil())
 	require.Empty(t, actor.JSONLD(&stream))
 }
+
+// TestStreamActorJSONLD_PreferredUsername confirms that the actor document carries the handle from
+// Stream.ActivityPubUsername, the accessor service.Stream.WebFinger also uses for its subject (BUG-98).
+func TestStreamActorJSONLD_PreferredUsername(t *testing.T) {
+
+	actor := StreamActor{SocialRole: vocab.ActorTypeService}
+
+	stream := NewStream()
+	stream.URL = "https://example.com/" + stream.StreamID.Hex()
+
+	// A token that qualifies as a handle is published as-is
+	stream.Token = "my-article"
+	require.Equal(t, "my-article", actor.JSONLD(&stream)[vocab.PropertyPreferredUsername])
+
+	// A token that does not qualify falls back to the StreamID
+	stream.Token = "café"
+	require.Equal(t, stream.StreamID.Hex(), actor.JSONLD(&stream)[vocab.PropertyPreferredUsername])
+}

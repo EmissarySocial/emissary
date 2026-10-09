@@ -14,7 +14,6 @@ import (
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
 	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -119,6 +118,15 @@ func (service *Follower) Save(session data.Session, follower *model.Follower, no
 
 	const location = "service.Follower.Save"
 
+	// RULE: an email address is stored in ONE form, trimmed and lowercased, so that every
+	// lookup can normalize its argument and match. An EMAIL Follower carries the same address
+	// in ProfileURL; for anyone else ProfileURL is a real URL, whose path is case-sensitive.
+	follower.Actor.EmailAddress = model.NormalizeEmailAddress(follower.Actor.EmailAddress)
+
+	if follower.Method == model.FollowerMethodEmail {
+		follower.Actor.ProfileURL = model.NormalizeEmailAddress(follower.Actor.ProfileURL)
+	}
+
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(follower); err != nil {
 		return derp.Wrap(err, location, "Invalid Follower record", follower)
@@ -134,6 +142,9 @@ func (service *Follower) Save(session data.Session, follower *model.Follower, no
 		return derp.Wrap(err, location, "Re-calculating follower count", follower)
 	}
 
+	// Mirror this Follower into the User's mailing-list connection, if they have one
+	service.publishMailingListAdd(session, follower)
+
 	return nil
 }
 
@@ -141,6 +152,32 @@ func (service *Follower) Save(session data.Session, follower *model.Follower, no
 func (service *Follower) Delete(session data.Session, follower *model.Follower, note string) error {
 
 	const location = "service.Follower.Delete"
+
+	if err := service.delete(session, follower, note); err != nil {
+		return derp.Wrap(err, location, "Removing Follower", follower.FollowerID)
+	}
+
+	// RULE: publish AFTER the delete succeeds, never before. Outside a transaction the publish
+	// is immediate, so publishing first would unsubscribe a Follower who still exists whenever
+	// the delete then failed. This removal is Emissary's own decision, so it travels out (D9).
+	service.publishMailingListRemove(session, follower)
+
+	return nil
+}
+
+// DeleteWithoutSync removes a Follower WITHOUT telling the User's mailing list about it
+func (service *Follower) DeleteWithoutSync(session data.Session, follower *model.Follower, note string) error {
+
+	// Two callers need this: an unsubscribe that ARRIVED from Mailchimp must not be pushed
+	// back (a loop), and deleting a User must not unsubscribe all of their followers from
+	// that User's own audience (D14). The full reasoning is in AGENTS.md.
+	return service.delete(session, follower, note)
+}
+
+// delete performs the deletion itself, and is the single funnel every path reaches
+func (service *Follower) delete(session data.Session, follower *model.Follower, note string) error {
+
+	const location = "service.Follower.delete"
 
 	// Mark the Follower as deleted
 	follower.StateID = model.FollowerStateDeleted
@@ -175,29 +212,29 @@ func (service *Follower) Delete(session data.Session, follower *model.Follower, 
 	return nil
 }
 
-// Pause marks this Follower as paused by a block rule (R8): it stays out of every delivery
+// Block marks this Follower as blocked by a rule (R8): it stays out of every delivery
 // fan-out until the block is deleted and the restore pass reactivates it. Saved directly
-// (like the DELETED path) because PAUSED is server-set only and deliberately absent from the
+// (like the DELETED path) because BLOCKED is server-set only and deliberately absent from the
 // user-facing schema enum, so Save's validation would refuse it.
-func (service *Follower) Pause(session data.Session, follower *model.Follower) error {
+func (service *Follower) Block(session data.Session, follower *model.Follower) error {
 
-	const location = "service.Follower.Pause"
+	const location = "service.Follower.Block"
 
-	// A Follower that is already paused has nothing more to pause
-	if follower.StateID == model.FollowerStatePaused {
+	// A Follower that is already blocked has nothing more to block
+	if follower.StateID == model.FollowerStateBlocked {
 		return nil
 	}
 
-	follower.StateID = model.FollowerStatePaused
+	follower.StateID = model.FollowerStateBlocked
 
-	if err := service.collection(session).Save(follower, "Paused by block rule"); err != nil {
+	if err := service.collection(session).Save(follower, "Blocked by rule"); err != nil {
 		return derp.Wrap(err, location, "Saving Follower", follower)
 	}
 
 	return nil
 }
 
-// Reactivate returns a paused Follower to ACTIVE. It is the restore pass's write half: called
+// Reactivate returns a blocked Follower to ACTIVE. It is the restore pass's write half: called
 // only after the remaining rules have been re-evaluated and no block covers this actor anymore.
 func (service *Follower) Reactivate(session data.Session, follower *model.Follower) error {
 
@@ -229,7 +266,8 @@ func (service *Follower) HardDeleteByID(session data.Session, userID primitive.O
 
 	const location = "service.Follower.HardDeleteByID"
 
-	criteria := exp.Equal("userId", userID).AndEqual("_id", followerID)
+	// `parentId` is the owner field on a Follower; `_id` already makes the match unique.
+	criteria := exp.Equal("parentId", userID).AndEqual("_id", followerID)
 
 	if err := service.collection(session).HardDelete(criteria); err != nil {
 		return derp.Wrap(err, location, "Deleting Follower", "userID: "+userID.Hex(), "followerID: "+followerID.Hex())
@@ -355,7 +393,9 @@ func (service *Follower) LoadByToken(session data.Session, parentID primitive.Ob
 	return service.Load(session, criteria, follower)
 }
 
-// LoadBySecret loads a follower based on the FollowerID.  It confirms that the secret value matches
+// LoadBySecret loads an email Follower using the unlisted secret from their confirmation or
+// unsubscribe link.  It is the only path that an anonymous visitor can use to reach a Follower
+// record, so it carries the whole authorization for those two actions.
 func (service *Follower) LoadBySecret(session data.Session, followerID primitive.ObjectID, secret string, follower *model.Follower) error {
 
 	const location = "service.Follower.LoadBySecret"
@@ -365,8 +405,13 @@ func (service *Follower) LoadBySecret(session data.Session, followerID primitive
 		return derp.Forbidden(location, "Secret cannot be empty", followerID)
 	}
 
-	// Load the Follower using the FollowerID
-	criteria := exp.Equal("_id", followerID)
+	// RULE: Only EMAIL Followers can be reached by secret.  The email flow is the only one that
+	// issues a secret, so the method belongs in the query rather than in an assumption about who
+	// is holding the link.
+	criteria := exp.
+		Equal("_id", followerID).
+		AndEqual("method", model.FollowerMethodEmail)
+
 	if err := service.Load(session, criteria, follower); err != nil {
 		return derp.Wrap(err, location, "Loading follower", followerID)
 	}
@@ -377,6 +422,35 @@ func (service *Follower) LoadBySecret(session data.Session, followerID primitive
 	}
 
 	// Success
+	return nil
+}
+
+// LoadByEmailAddress retrieves the EMAIL Follower that a parent has for the provided address
+func (service *Follower) LoadByEmailAddress(session data.Session, parentID primitive.ObjectID, emailAddress string, follower *model.Follower) error {
+
+	const location = "service.Follower.LoadByEmailAddress"
+
+	// Stored addresses are lowercased by Save, so the argument is matched in the same form
+	emailAddress = model.NormalizeEmailAddress(emailAddress)
+
+	// RULE: The email address must not be empty.  An empty value here would match the first
+	// Follower whose address was never recorded, which is a different person.
+	if emailAddress == "" {
+		return derp.BadRequest(location, "Email address cannot be empty", parentID)
+	}
+
+	// RULE: scope by parentID as well as address. This is reached from an unauthenticated
+	// webhook whose payload names the address, so an unscoped match would let one forged
+	// request remove any Follower on the server (MAILING-LISTS.md D27).
+	criteria := exp.
+		Equal("parentId", parentID).
+		AndEqual("method", model.FollowerMethodEmail).
+		AndEqual("actor.emailAddress", emailAddress)
+
+	if err := service.Load(session, criteria, follower); err != nil {
+		return derp.Wrap(err, location, "Loading Follower by email address", parentID)
+	}
+
 	return nil
 }
 
@@ -415,13 +489,13 @@ func (service *Follower) RangeByUserID(session data.Session, userID primitive.Ob
 // RangeActivityPubByType returns an iterator containing all of the ActivityPub Followers of a specific parent
 func (service *Follower) RangeActivityPubByType(session data.Session, followerType string, userID primitive.ObjectID) iter.Seq[model.Follower] {
 
-	// RULE: Followers paused by a block rule are excluded from delivery fan-out (R8)
+	// RULE: Followers blocked by a rule are excluded from delivery fan-out (R8)
 	return service.Range(
 		session,
 		exp.Equal("parentId", userID).
 			AndEqual("type", followerType).
 			AndEqual("method", model.FollowerMethodActivityPub).
-			AndNotEqual("stateId", model.FollowerStatePaused),
+			AndNotEqual("stateId", model.FollowerStateBlocked),
 	)
 }
 
@@ -450,9 +524,12 @@ func (service *Follower) DeleteByUserID(session data.Session, userID primitive.O
 
 	const location = "service.Follower.DeleteByUserID"
 
+	// RULE: DeleteWithoutSync, never Delete. Removing a User must not push an unsubscribe for
+	// every one of their followers into that same User's own mailing list -- which is silent,
+	// happens at the far end, and cannot be undone through the API (D14).
 	for follower := range service.RangeByUserID(session, userID) {
 
-		if err := service.Delete(session, &follower, comment); err != nil {
+		if err := service.DeleteWithoutSync(session, &follower, comment); err != nil {
 			return derp.Wrap(err, location, "Deleting follower", follower)
 		}
 	}
@@ -463,24 +540,24 @@ func (service *Follower) DeleteByUserID(session data.Session, userID primitive.O
 // RangeFollowers returns a rangeFunc containing all of the Followers of specific parentID
 func (service *Follower) RangeFollowers(session data.Session, parentType string, parentID primitive.ObjectID) iter.Seq[model.Follower] {
 
-	// RULE: Followers paused by a block rule are excluded from delivery fan-out (R8). Only
-	// PAUSED is excluded -- other states keep their existing delivery behavior.
+	// RULE: Followers blocked by a rule are excluded from delivery fan-out (R8). Only
+	// BLOCKED is excluded -- other states keep their existing delivery behavior.
 	return service.Range(
 		session,
 		exp.Equal("parentId", parentID).
 			AndEqual("type", parentType).
-			AndNotEqual("stateId", model.FollowerStatePaused),
+			AndNotEqual("stateId", model.FollowerStateBlocked),
 	)
 }
 
-// RangePausedByUserID returns an iterator containing every PAUSED Follower of the provided User.
+// RangeBlockedByUserID returns an iterator containing every BLOCKED Follower of the provided User.
 // This is the restore pass's source: deleting a block re-evaluates exactly these rows (R8).
-func (service *Follower) RangePausedByUserID(session data.Session, userID primitive.ObjectID) iter.Seq[model.Follower] {
+func (service *Follower) RangeBlockedByUserID(session data.Session, userID primitive.ObjectID) iter.Seq[model.Follower] {
 	return service.Range(
 		session,
 		exp.Equal("parentId", userID).
 			AndEqual("type", model.FollowerTypeUser).
-			AndEqual("stateId", model.FollowerStatePaused),
+			AndEqual("stateId", model.FollowerStateBlocked),
 	)
 }
 
@@ -603,7 +680,7 @@ func (service *Follower) RemoteActor(session data.Session, follower *model.Follo
 	}
 
 	// Return the remote Actor's profile document
-	return service.activityService.Client(follower.ParentType, follower.ParentID).Load(follower.Actor.ProfileURL, sherlock.AsActor())
+	return service.activityService.Client(follower.ParentType, follower.ParentID).Load(follower.Actor.ProfileURL)
 }
 
 /******************************************

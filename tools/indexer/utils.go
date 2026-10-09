@@ -161,7 +161,7 @@ func convertMapValue(value any) any {
 	switch typedValue := value.(type) {
 
 	case int:
-		return int32(typedValue)
+		return int32(typedValue) // #nosec G115 -- index specs are developer-supplied direction/flag values (1, -1), never attacker-controlled
 	case string:
 		return typedValue
 	case bool:

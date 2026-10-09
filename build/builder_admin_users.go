@@ -70,7 +70,7 @@ func (w User) Render() (template.HTML, error) {
 
 	// Success!
 	status.Apply(w._response)
-	return template.HTML(buffer.String()), nil
+	return template.HTML(buffer.String()), nil // #nosec G203 -- buffer holds the action pipeline's own rendered output, already escaped by html/template
 }
 
 // View executes a separate view for this User
@@ -262,8 +262,8 @@ func (w User) CountIndexableUsers() (int64, error) {
 // Registration returns the signup template selected for this domain
 func (w User) Registration() model.Registration {
 
-	if domain := w._factory.Domain().Get(); domain.RegistrationID != "" {
-		if template, err := w._factory.Registration().Load(domain.RegistrationID); err == nil {
+	if readOnlyDomain := w._factory.Domain().Cached(); readOnlyDomain.RegistrationID != "" {
+		if template, err := w._factory.Registration().Load(readOnlyDomain.RegistrationID); err == nil {
 			return template
 		}
 	}

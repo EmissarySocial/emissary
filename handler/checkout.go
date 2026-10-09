@@ -58,9 +58,7 @@ func GetCheckoutResponse(ctx *steranko.Context, factory *service.Factory, sessio
 
 	// RULE: If the buyer is already signed in as this Identity, then they have already proven that
 	// they own its email. Send them to their profile to see the newly purchased Privilege.
-	authorization := getAuthorization(ctx)
-
-	if authorization.IdentityID == privilege.IdentityID {
+	if authorization := getAuthorization(ctx); authorization.IdentityID == privilege.IdentityID {
 		return ctx.Redirect(http.StatusSeeOther, "/@guest")
 	}
 

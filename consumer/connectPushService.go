@@ -7,7 +7,6 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/sherlock"
 	"github.com/benpate/turbine/queue"
 	"github.com/benpate/uri"
 )
@@ -31,7 +30,7 @@ func ConnectPushService(factory *service.Factory, session data.Session, user *mo
 	if uri.IsLocalHostname(factory.Host()) == uri.IsLocalHostname(following.ProfileURL) {
 
 		// Load the Actor that we're trying to Follow
-		actor, err := factory.ActivityStream().UserClient(user.UserID).Load(following.URL, sherlock.AsActor())
+		actor, err := factory.ActivityStream().UserClient(user.UserID).Load(following.URL)
 
 		if err != nil {
 			return queue.Error(derp.Wrap(err, location, "Loading ActivityPub Actor", "url: "+following.URL))

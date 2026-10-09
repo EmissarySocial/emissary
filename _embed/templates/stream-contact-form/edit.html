@@ -1,0 +1,20 @@
+<div class="page">
+
+	{{- template "edit-menubar" . -}}
+
+	<div class="margin-top max-width-640 margin-horizontal-auto">
+		{{.View "edit-form"}}
+	</div>
+
+	<!-- Reloads the editor when a step fires "refreshPage", using the same pattern
+	     stream-folder uses, so the breadcrumb reflects a rename and the form shows any
+	     value the server normalized on save.  The save button opts out via hx-preserve. -->
+	<div
+		hx-get="/{{.StreamID}}/edit"
+		hx-trigger="refreshPage from:window"
+		hx-target="main"
+		hx-swap="innerHTML"
+		hx-push-url="true">
+	</div>
+
+</div>

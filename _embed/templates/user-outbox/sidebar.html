@@ -33,7 +33,7 @@
 			</div>
 		{{- else -}}
 			<div class="margin-top-lg">
-				<button type="button" class="primary width-100% ellipsis" hx-get="/@{{.UserID}}/intent?intent=follow&object={{.Permalink}}">{{icon "add-circle"}} Follow {{.DisplayName}}</button>
+				<button type="button" class="primary width-100% ellipsis" hx-get="/@{{.UserID}}/follow">{{icon "add-circle"}} Follow {{.DisplayName}}</button>
 			</div>
 		{{- end -}}
 
@@ -53,7 +53,7 @@
 
 		{{- if $links.NotEmpty -}}
 			{{- range $links -}}
-				<div class="margin-top-xs"><a rel="me" class="text-plain u-url" href="{{.ProfileURL}}" target="_blank">{{icon "globe"}} {{.Name}}</a></div>
+				<div class="margin-top-xs"><a rel="me noopener noreferrer" class="text-plain u-url" href="{{.ProfileURL}}" target="_blank">{{icon "globe"}} {{.Name}}</a></div>
 			{{- end -}}
 		{{- end -}}
 

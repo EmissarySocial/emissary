@@ -58,7 +58,7 @@ func NewOAuthAuthorization(factory Factory, session data.Session, request *http.
 
 // Domain returns a summary of the current Domain
 func (builder OAuthAuthorization) Domain() model.DomainSummary {
-	return builder._factory.Domain().Get().Summary()
+	return builder._factory.Domain().Cached().Summary()
 }
 
 // User returns a summary of the Authenticated User

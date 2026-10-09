@@ -11,7 +11,7 @@
 
 		<div class="card" style="width:clamp(540px, 50%, 720px); margin:auto; padding:16px 32px; line-height:150%;">
 			
-			<form hx-post="/signin?next={{.QueryParam `next` | urlquery}}" hx-trigger="submit" hx-target="#message">
+			<form hx-post="/signin?next={{.QueryParam `next` | queryEscape}}" hx-trigger="submit" hx-target="#message">
 
 				<div class="layout-vertical margin-bottom">
 
@@ -28,7 +28,7 @@
 					<div class="layout-elements">
 						<div class="layout-element">
 							<label for="username">Email / Username</label>
-							<input type="text" name="username" id="username" required="true" value="{{.QueryParam "username"}}" maxlength="50" autofocus autocomplete="username">
+							<input type="text" name="username" id="username" required="true" value="{{.QueryParam `username`}}" maxlength="50" autofocus autocomplete="username">
 						</div>
 					</div>
 

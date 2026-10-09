@@ -149,7 +149,7 @@ func (service *Product) ObjectType() string {
 	return "Product"
 }
 
-// New returns a fully initialized model.Product as a data.Object.
+// ObjectNew returns a fully initialized model.Product as a data.Object.
 func (service *Product) ObjectNew() data.Object {
 	result := model.NewProduct()
 	return &result

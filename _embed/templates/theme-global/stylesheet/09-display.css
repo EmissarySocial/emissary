@@ -97,17 +97,9 @@
 	.lg\:object-fit-cover {object-fit:cover}
 }
 
-.desktop {
-
-	.show-mobile,
-	.hide-desktop {
-		display:none;
-	}
-}
-
-.mobile {
-	.show-desktop,
-	.hide-mobile {
-		display:none;
-	}
-}
+/* The `.desktop { .show-mobile … }` / `.mobile { .show-desktop … }` blocks that used to sit
+   here were dead: no template in _embed/ has ever emitted a `.desktop` or `.mobile` class on
+   any element, so neither block could match.  The LIVE mechanism is the 640px media query in
+   10-responsive.css -- `.mobile-show` / `.mobile-hide` / `.desktop-show` / `.desktop-hide`.
+   Note that the `.sm:` / `.md:` / `.lg:` utilities above are @container queries, not media
+   queries, so they resolve against the nearest size container rather than the viewport. */

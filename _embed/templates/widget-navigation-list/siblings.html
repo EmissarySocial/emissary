@@ -1,31 +1,34 @@
-{{- $configSiblings := .Widget.Data.GetString "siblings" -}}
-{{- $configChildren := .Widget.Data.GetString "children" -}}
 {{- $root := . -}}
+{{- $configSiblings := .Widget.Data.GetString "siblings" -}}
+{{- $hasSiblingTier := false -}}
 
 {{- if eq $configSiblings "All" -}}
 
 	{{- $streamID := .StreamID -}}
-	{{- $siblings := .Siblings.Slice -}}
 
-	{{- range $index, $sibling := $siblings -}}
+	{{- range $index, $sibling := .Siblings.Slice -}}
+
 		{{- if eq $streamID $sibling.StreamID -}}
+			{{- $hasSiblingTier = true -}}
 			<div class="bold ellipsis">{{$sibling.Label}}</div>
-
-			{{- if ne "Hidden" $configChildren -}}
-				<div style="padding-left:8px; font-size:0.9em;">{{- template "children" $root -}}</div>
-			{{- end -}}
-
+			<div style="padding-left:8px; font-size:0.9em;">{{- template "children" $root -}}</div>
 		{{- else -}}
 			<div class="ellipsis"><a href="/{{$sibling.Token}}" hx-get="/{{$sibling.Token}}" class="turboclick">{{$sibling.Label}}</a></div>
 		{{- end -}}
+
 	{{- end -}}
 
 {{- else if eq $configSiblings "Self Only" -}}
 
+	{{- $hasSiblingTier = true -}}
 	<div class="bold ellipsis">{{.Label}}</div>
+	<div style="padding-left:8px; font-size:0.9em;">{{- template "children" $root -}}</div>
 
-	{{- if ne "Hidden" $configChildren -}}
-		<div style="padding-left:8px; font-size:0.9em;">{{- template "children" $root -}}</div>
-	{{- end -}}
-	
+{{- end -}}
+
+<!-- RULE: Hand off to the next tier whenever this one rendered nothing to nest it under.
+     A Stream can be absent from its own sibling list when it is unpublished or hidden by
+     permissions, and that must not swallow its children. -->
+{{- if not $hasSiblingTier -}}
+	{{- template "children" $root -}}
 {{- end -}}

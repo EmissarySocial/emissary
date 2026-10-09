@@ -57,20 +57,9 @@ func (step StepDelete) Post(builder Builder, _ io.Writer) PipelineBehavior {
 		return Continue()
 	}
 
-	// Delete the object via the model service.
+	// Delete the object via the model service, which also removes it from the search index.
 	if err := builder.service().ObjectDelete(builder.session(), builder.object(), "Deleted"); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Deleting object"))
-	}
-
-	// If this object is also a SearchResulter, then we're gonna remove it from the search index
-	if searchResult := getSearchResult(builder); searchResult.URL != "" {
-
-		searchResultService := builder.factory().SearchResult()
-
-		// Delete step here
-		if err := searchResultService.Delete(builder.session(), &searchResult, "unpublished"); err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Deleting search result", searchResult))
-		}
 	}
 
 	return Continue().WithEvent("closeModal", "true")

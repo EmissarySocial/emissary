@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Version23...
+// Version23 appends "/pub/context" to each Stream whose context still equals its own URL
 func Version23(ctx context.Context, session *mongo.Database) error {
 
 	fmt.Println("... Version 23")

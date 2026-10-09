@@ -71,10 +71,10 @@ func RuleCleanup(factory *service.Factory, session data.Session, args mapof.Any)
 		}
 	}
 
-	// Restore pass: a deleted (or re-aimed) BLOCK re-evaluates every paused Follower
+	// Restore pass: a deleted (or re-aimed) BLOCK re-evaluates every blocked Follower
 	if args.GetBool("restore") {
 		if err := ruleCleanup_restoreFollowers(factory, session, userID); err != nil {
-			return queue.Error(derp.Wrap(err, location, "Restoring paused Followers"))
+			return queue.Error(derp.Wrap(err, location, "Restoring blocked Followers"))
 		}
 	}
 
@@ -244,14 +244,14 @@ func ruleCleanup_collectionItems(factory *service.Factory, session data.Session,
 	return nil
 }
 
-// ruleCleanup_pauseRelationships pauses this User's relationships with the blocked actor:
-// Followers move to PAUSED (delivery fan-out skips them), and Following rows send their
+// ruleCleanup_pauseRelationships suspends this User's relationships with the blocked actor:
+// Followers move to BLOCKED (delivery fan-out skips them), and Following rows send their
 // Undo/Follow, stop polling, and wait for a manual re-follow (R8).
 func ruleCleanup_pauseRelationships(factory *service.Factory, session data.Session, userID primitive.ObjectID, matchKey string) error {
 
 	const location = "consumer.ruleCleanup_pauseRelationships"
 
-	// Followers -> PAUSED
+	// Followers -> BLOCKED
 	followerService := factory.Follower()
 
 	for follower := range followerService.RangeFollowers(session, model.FollowerTypeUser, userID) {
@@ -260,12 +260,12 @@ func ruleCleanup_pauseRelationships(factory *service.Factory, session data.Sessi
 			continue
 		}
 
-		if err := followerService.Pause(session, &follower); err != nil {
-			return derp.Wrap(err, location, "Pausing Follower", follower.FollowerID)
+		if err := followerService.Block(session, &follower); err != nil {
+			return derp.Wrap(err, location, "Blocking Follower", follower.FollowerID)
 		}
 	}
 
-	// Following -> paused (Undo/Follow sent, polling stops)
+	// Following -> BLOCKED (Undo/Follow sent, polling stops)
 	followingService := factory.Following()
 	rangeFunc, err := followingService.RangeByUserID(session, userID)
 
@@ -279,18 +279,18 @@ func ruleCleanup_pauseRelationships(factory *service.Factory, session data.Sessi
 			continue
 		}
 
-		if err := followingService.Pause(session, &following); err != nil {
-			return derp.Wrap(err, location, "Pausing Following", following.FollowingID)
+		if err := followingService.Block(session, &following); err != nil {
+			return derp.Wrap(err, location, "Blocking Following", following.FollowingID)
 		}
 	}
 
 	return nil
 }
 
-// ruleCleanup_restoreFollowers re-evaluates every PAUSED Follower against the REMAINING rules and
+// ruleCleanup_restoreFollowers re-evaluates every BLOCKED Follower against the REMAINING rules and
 // reactivates the no-longer-blocked. Re-derivation (not a back-pointer) is what makes overlapping
-// rules safe: a Follower covered by two blocks stays paused until the last one is gone. Followers
-// who sent Undo(Follow) while paused were already soft-deleted (D6), so they never resurrect.
+// rules safe: a Follower covered by two blocks stays blocked until the last one is gone. Followers
+// who sent Undo(Follow) while blocked were already soft-deleted (D6), so they never resurrect.
 // Following rows are deliberately NOT auto-resumed -- we sent their Undo/Follow, so re-following
 // is the user's one-click decision, never an automatic side effect.
 func ruleCleanup_restoreFollowers(factory *service.Factory, session data.Session, userID primitive.ObjectID) error {
@@ -301,14 +301,14 @@ func ruleCleanup_restoreFollowers(factory *service.Factory, session data.Session
 	ruleService := factory.Rule()
 	now := time.Now().Unix()
 
-	for follower := range followerService.RangePausedByUserID(session, userID) {
+	for follower := range followerService.RangeBlockedByUserID(session, userID) {
 
 		disposition, err := ruleService.DispositionForKeys(session, userID, model.ActorMatchKeys(follower.Actor.ProfileURL), now)
 
-		// RULE: on a rules-query failure the Follower STAYS paused -- wrongly resuming delivery
+		// RULE: on a rules-query failure the Follower STAYS blocked -- wrongly resuming delivery
 		// to a blocked actor is the unrecoverable direction (the P5-2 posture).
 		if err != nil {
-			derp.Report(derp.Wrap(err, location, "Checking rules for paused Follower; leaving paused", follower.FollowerID))
+			derp.Report(derp.Wrap(err, location, "Checking rules for blocked Follower; leaving blocked", follower.FollowerID))
 			continue
 		}
 

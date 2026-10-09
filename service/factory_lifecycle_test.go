@@ -8,6 +8,7 @@ import (
 	mongodb "github.com/benpate/data-mongo"
 	"github.com/benpate/derp"
 	"github.com/benpate/digital-dome/dome"
+	"github.com/benpate/hannibal/clients"
 	"github.com/benpate/turbine/queue"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -46,6 +47,11 @@ func (factory *lifecycleServerFactory) ClientIP(_ *http.Request) string {
 // DigitalDome implements the ServerFactory interface. Unused by these tests.
 func (factory *lifecycleServerFactory) DigitalDome() *dome.Dome {
 	return nil
+}
+
+// Carpool implements the ServerFactory interface, returning a new, unshared Carpool
+func (factory *lifecycleServerFactory) Carpool() *clients.Carpool {
+	return clients.NewCarpool()
 }
 
 // Queue implements the ServerFactory interface, returning this stub's queue

@@ -17,7 +17,7 @@ func (client *Client) Revalidate(url string, options ...any) error {
 	}
 
 	// Connect to the database
-	ctx, cancel := timeoutContext(60)
+	ctx, cancel := timeoutContext(directWriteTimeout)
 	defer cancel()
 
 	// Save the updated document to the database

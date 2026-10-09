@@ -34,17 +34,17 @@ func TestEditContent_Defaults(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, "content", step.Fieldname)
 
-	// "max-length" defaults to the per-step default (in KB, converted to runes) when unset.
-	require.Equal(t, editContentDefaultMaxLengthKB*runesPerKilobyte, step.MaxLength)
+	// "max-length" defaults to the per-step default when unset.
+	require.Equal(t, editContentDefaultMaxLength, step.MaxLength)
 }
 
-// TestEditContent_MaxLength verifies that an explicit "max-length" in kilobytes is converted to runes
+// TestEditContent_MaxLength verifies that an explicit "max-length" is used verbatim, as a count of characters
 func TestEditContent_MaxLength(t *testing.T) {
 
-	// An explicit, in-range "max-length" (in KB) is converted to runes.
+	// An explicit, in-range "max-length" is a rune count, and is not scaled.
 	step, err := NewEditContent(mapof.Any{"format": "HTML", "max-length": 100})
 	require.Nil(t, err)
-	require.Equal(t, 100*runesPerKilobyte, step.MaxLength)
+	require.Equal(t, 100, step.MaxLength)
 }
 
 // TestEditContent_MaxLength_DefaultsWhenZeroOrNegative verifies that a zero or negative "max-length" falls back to the default
@@ -53,21 +53,21 @@ func TestEditContent_MaxLength_DefaultsWhenZeroOrNegative(t *testing.T) {
 	// A zero or negative "max-length" falls back to the default.
 	step, err := NewEditContent(mapof.Any{"format": "HTML", "max-length": 0})
 	require.Nil(t, err)
-	require.Equal(t, editContentDefaultMaxLengthKB*runesPerKilobyte, step.MaxLength)
+	require.Equal(t, editContentDefaultMaxLength, step.MaxLength)
 
 	step, err = NewEditContent(mapof.Any{"format": "HTML", "max-length": -5})
 	require.Nil(t, err)
-	require.Equal(t, editContentDefaultMaxLengthKB*runesPerKilobyte, step.MaxLength)
+	require.Equal(t, editContentDefaultMaxLength, step.MaxLength)
 }
 
 // TestEditContent_MaxLength_ClampedToCeiling verifies that a "max-length" above the storage ceiling is clamped down
 func TestEditContent_MaxLength_ClampedToCeiling(t *testing.T) {
 
-	// A "max-length" (KB) larger than the storage ceiling is clamped down, so a template
+	// A "max-length" larger than the storage ceiling is clamped down, so a template
 	// can never allow more content than the schema will persist.
-	step, err := NewEditContent(mapof.Any{"format": "HTML", "max-length": editContentMaxLengthCeilingKB + 1})
+	step, err := NewEditContent(mapof.Any{"format": "HTML", "max-length": editContentMaxLengthCeiling + 1})
 	require.Nil(t, err)
-	require.Equal(t, editContentMaxLengthCeilingKB*runesPerKilobyte, step.MaxLength)
+	require.Equal(t, editContentMaxLengthCeiling, step.MaxLength)
 }
 
 // TestEditContent_InvalidFormat verifies that an invalid format is rejected

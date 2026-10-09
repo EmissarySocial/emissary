@@ -1,6 +1,9 @@
 package model
 
 import (
+	"os"
+	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/benpate/rosetta/schema"
@@ -33,10 +36,12 @@ func TestNotification(t *testing.T) {
 	tableTest_Schema(t, &s, &notification, table)
 }
 
-// TestNotification_Channels pins the POLICY mapping from notification facts (Type, Subtype)
-// to user settings channels.  This is the single source of channel policy — every
-// (Type, Subtype) combination is covered, including the empty-subtype fail-open rule.
+// TestNotification_Channels pins the POLICY mapping from notification facts
+// (Type, Subtype) to user settings channels
 func TestNotification_Channels(t *testing.T) {
+
+	// Every (Type, Subtype) combination is covered here, including the empty-subtype
+	// fail-open rule. This is the single source of channel policy.
 
 	table := []struct {
 		name     string
@@ -67,10 +72,12 @@ func TestNotification_Channels(t *testing.T) {
 	}
 }
 
-// TestNotification_IsConversation pins the ROUTING rule that decides which app a Notification
-// opens.  Only the DIRECT type routes to the Conversations app; records written before DIRECT
-// existed are typed MENTION and must keep opening the public viewer.
+// TestNotification_IsConversation pins the ROUTING rule that decides which app a
+// Notification opens
 func TestNotification_IsConversation(t *testing.T) {
+
+	// Only DIRECT routes to the Conversations app. Records written before DIRECT existed
+	// are typed MENTION and must keep opening the public viewer.
 
 	table := []struct {
 		name     string
@@ -118,11 +125,13 @@ func TestNotification_IsEncrypted(t *testing.T) {
 	}
 }
 
-// TestNotification_Channels_Direct guards the single most dangerous omission in this file.  A type
-// that falls through Channels() to the default returns NO channels, which makes
-// service.Notification.notify mark it born-read: no unread dot, no SSE nudge, no Web Push.  A
-// direct message that silently disappears is worse than one that links to the wrong place.
+// TestNotification_Channels_Direct guards the single most dangerous omission in this
+// file: a DIRECT notification that yields no channels
 func TestNotification_Channels_Direct(t *testing.T) {
+
+	// A type falling through Channels() to the default returns NO channels, which makes
+	// service.Notification.notify mark it born-read: no unread dot, no SSE, no Web Push.
+	// A direct message that silently disappears is worse than a misrouted one.
 
 	// The direct-message channel is the sole authority: no fallback to the mention channels, and
 	// no follow-state split (DIRECT's Subtype carries the codec instead).
@@ -144,25 +153,16 @@ func TestDefaultNotificationChannels_IncludesDirectMessage(t *testing.T) {
 	require.Contains(t, DefaultNotificationChannels(), NotificationChannelDirectMessage)
 }
 
-// TestUserSchema_AllowsEveryNotificationChannel guards a silent data-loss path: the settings form
-// writes notificationChannels through the User schema, and rosetta validates against that enum.  A
-// channel offered by the "notification-channels" lookup provider but missing from the enum would
-// let the user tick the box and watch the save quietly drop it.  Every constant here must appear in
-// both places -- see service.LookupProvider for the other half.
+// TestUserSchema_AllowsEveryNotificationChannel confirms the User schema accepts every
+// channel, and writes it into the slice
 func TestUserSchema_AllowsEveryNotificationChannel(t *testing.T) {
 
-	channels := []string{
-		NotificationChannelDirectMessage,
-		NotificationChannelMentionFollowing,
-		NotificationChannelMentionNotFollowing,
-		NotificationChannelReply,
-		NotificationChannelFollow,
-		NotificationChannelReaction,
-	}
-
+	// The settings form writes notificationChannels through this schema, so a channel the
+	// enum rejects lets a user tick the box and watch the save quietly drop it. See
+	// service.LookupProvider for the other half of the pairing.
 	s := schema.New(UserSchema())
 
-	for _, channel := range channels {
+	for _, channel := range AllNotificationChannels() {
 		user := NewUser()
 		user.NotificationChannels = nil
 
@@ -181,4 +181,56 @@ func TestNotification_MastodonType_Direct(t *testing.T) {
 	notification := NewNotification()
 	notification.Type = NotificationTypeDirect
 	require.Equal(t, "mention", notification.MastodonType())
+}
+
+// TestNotificationChannels_SourceSweep fails if a NotificationChannel constant is
+// declared without being added to AllNotificationChannels()
+func TestNotificationChannels_SourceSweep(t *testing.T) {
+
+	// The omission is silent and one-directional: the constant compiles, Channels() can
+	// return it, but the User schema's enum rejects it, so the settings form refuses a
+	// value the rest of the code considers legitimate.
+	declaration := regexp.MustCompile(`(?m)^const (NotificationChannel[A-Za-z0-9]+) = "([A-Z_]+)"`)
+
+	all := AllNotificationChannels()
+
+	entries, err := os.ReadDir(".")
+	require.NoError(t, err)
+
+	found := 0
+
+	for _, entry := range entries {
+
+		if entry.IsDir() {
+			continue
+		}
+
+		if !strings.HasSuffix(entry.Name(), ".go") || strings.HasSuffix(entry.Name(), "_test.go") {
+			continue
+		}
+
+		source, err := os.ReadFile(entry.Name())
+		require.NoError(t, err, entry.Name())
+
+		for _, match := range declaration.FindAllStringSubmatch(string(source), -1) {
+			found++
+			require.Contains(t, all, match[2],
+				"constant %s is not listed in AllNotificationChannels(); the User schema enum will reject it", match[1])
+		}
+	}
+
+	// If the sweep finds nothing, the regex has drifted from the code, not the reverse.
+	require.Positive(t, found, "expected to find at least one NotificationChannel constant")
+	require.Len(t, all, found, "AllNotificationChannels() must list every declared channel, and nothing else")
+}
+
+// TestNotificationChannels_DefaultsAreASubset confirms every default channel is a
+// channel the schema will accept
+func TestNotificationChannels_DefaultsAreASubset(t *testing.T) {
+
+	all := AllNotificationChannels()
+
+	for _, channel := range DefaultNotificationChannels() {
+		require.Contains(t, all, channel, "default channel %q is not a valid channel", channel)
+	}
 }

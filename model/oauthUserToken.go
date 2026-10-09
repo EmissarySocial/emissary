@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// UserOAuthToken represents an application-specific token that
+// OAuthUserToken represents an application-specific token that
 // a remote API can use to access a user's account on their behalf
 type OAuthUserToken struct {
 	OAuthUserTokenID primitive.ObjectID `json:"I" bson:"_id"`             // Unique identifier for this OAuthUserToken (also the authorization code)

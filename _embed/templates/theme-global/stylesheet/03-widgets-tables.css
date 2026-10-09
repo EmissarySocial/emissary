@@ -102,6 +102,13 @@ div.table + div.table {
 	border-bottom: none;
 }
 
+/* Opt-in modifier.  It repeats the selector's element+class shape because
+   "table.table th" outranks the .valign-middle utility on a cell. */
+.table.valign-middle th,
+.table.valign-middle td {
+	vertical-align: middle;
+}
+
 /** EDITABLE GRIDS ***********************/
 
 table.grid {

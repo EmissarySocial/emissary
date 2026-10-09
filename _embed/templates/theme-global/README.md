@@ -57,11 +57,12 @@ A larger Spectrum-style set (`--color-gray-50`…`--color-gray-900` and 13-step 
 
 ### Dark mode
 
-Dark mode is handled entirely through `@media (prefers-color-scheme: dark)`. Rather than swapping every rule, the palettes **invert their own ramps** — in dark mode `--gray00` becomes near-black and `--gray100` becomes white, and `--white` itself flips to a near-black. Because components reference semantic tokens and ramp steps rather than literal hex, they adapt automatically.
+Dark mode is handled entirely through `@media (prefers-color-scheme: dark)`. Rather than swapping every rule, the palettes **invert their own ramps** — in dark mode `--gray00` becomes near-black and `--gray100` becomes a warm white, and `--white` itself flips to a near-black. Because components reference semantic tokens and ramp steps rather than literal hex, they adapt automatically.
 
-There are two consequences to remember:
+There are three consequences to remember:
 
 - A few values must **not** flip. `--button-primary-color` is a literal `#ffffff` (not `var(--white)`), because a primary button keeps a dark accent background in dark mode and its label must stay light.
+- The two gray ramps are different families. Light mode is IBM's **neutral** gray (fully desaturated); dark mode is IBM's **warm** gray, where every step holds hue 0 — red above green, and green equal to blue — so the ramp varies only in brightness. New or edited dark grays must keep `G == B`; see [AGENTS.md](AGENTS.md).
 - Font weight bumps up one step in dark mode (`--weight` 300 → 400) to hold legibility against dark backgrounds.
 
 Dark mode is partly a work in progress — a block of semantic-token overrides in [01-colors.css](01-colors.css) is currently commented out. Treat the ramp inversion as the live mechanism.

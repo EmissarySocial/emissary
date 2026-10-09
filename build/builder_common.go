@@ -20,7 +20,6 @@ import (
 	"github.com/benpate/rosetta/list"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/benpate/sherlock"
 	"github.com/benpate/sniff"
 	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -217,7 +216,7 @@ func (w Common) QueryParam(param string) string {
 // QueryString returns the raw query string (encoded as a template.URL)
 // to be re-embedded in a template link.
 func (w Common) QueryString() template.URL {
-	return template.URL(w._request.URL.RawQuery)
+	return template.URL(w._request.URL.RawQuery) // #nosec G203 -- every call site appends this after a fixed path and "?", where html/template still escapes it for the surrounding context
 }
 
 // RawQuery returns the raw query string (encoded as a string)
@@ -245,7 +244,7 @@ func (w Common) UserCan(_ string) bool {
 // UserCanMLS returns TRUE if the current user has permission to use MLS E2EE messaging
 func (w Common) UserCanMLS() bool {
 	if user, err := w.getUser(); err == nil {
-		result := w._factory.Domain().Get().UserCanMLS(user)
+		result := w._factory.Domain().Cached().UserCanMLS(user)
 		return result
 	}
 
@@ -293,7 +292,7 @@ func (w Common) WebPushPublicKey() string {
 // UserCanBridgeToBluesky returns TRUE if the current user has permission to bridge to Bluesky
 func (w Common) UserCanBridgeToBluesky() bool {
 	if user, err := w.getUser(); err == nil {
-		result := w._factory.Domain().Get().UserCanBridgeToBluesky(user)
+		result := w._factory.Domain().Cached().UserCanBridgeToBluesky(user)
 		return result
 	}
 
@@ -302,12 +301,12 @@ func (w Common) UserCanBridgeToBluesky() bool {
 
 // HasConnectionProvider returns TRUE if this domain has an active connection for the named provider
 func (w Common) HasConnectionProvider(provider string) bool {
-	return w.factory().Domain().Get().HasConnectionProvider(provider)
+	return w.factory().Domain().Cached().HasConnectionProvider(provider)
 }
 
 // ThemeID returns the ID of the Theme that this Domain has selected.
 func (w Common) ThemeID() string {
-	return w.factory().Domain().Get().ThemeID
+	return w.factory().Domain().Cached().ThemeID
 }
 
 // Theme returns the Theme with the provided ID, or this Domain's default Theme if
@@ -317,13 +316,32 @@ func (w Common) Theme(themeID string) model.Theme {
 }
 
 // ThemeData returns a single custom value from this Domain's theme data.
-// If the token does not exist, it returns an empty string.
+// If the Domain has no value for the token, the Theme's declared default is used instead,
+// and if the Theme does not declare the token either, it returns an empty string.
 func (w Common) ThemeData(token string) string {
 
 	// RULE: Read the Domain RECORD.  model.Theme.Data is a process-wide singleton shared
 	// by every Domain on this server, and model.Domain.Data holds secrets (the VAPID
 	// private key) that must never reach a page.
-	return w.factory().Domain().Get().ThemeData.GetString(token)
+	readOnlyDomain := w.factory().Domain().Cached()
+
+	if value, exists := readOnlyDomain.ThemeData[token]; exists {
+		return convert.String(value)
+	}
+
+	// RULE: Fall back to the SCHEMA default, not to the empty string.  A Domain begins with
+	// no themeData keys at all, so a setting that has never been saved has no stored value --
+	// and a settings toggle that is meant to start ON has to read as ON here too, or the page
+	// and the form that configures it disagree until the owner's first save.  The Theme's
+	// schema is the single place that default is declared; the form widget reads the same one.
+	theme := w.Theme(readOnlyDomain.ThemeID)
+	element, exists := theme.Schema.GetElement("themeData." + token)
+
+	if !exists {
+		return ""
+	}
+
+	return convert.String(element.DefaultValue())
 }
 
 // Now returns the current time in milliseconds since the Unix epoch
@@ -336,6 +354,138 @@ func (w Common) Now() int64 {
 // other builders should override.
 func (w Common) NavigationID() string {
 	return ""
+}
+
+/******************************************
+ * Client Fingerprint
+ ******************************************/
+
+// clientHeaderMaxLength bounds every value in this section.  Nothing in Go's HTTP server caps an
+// individual header -- only the ~1MB total -- so a hostile client can hand us a megabyte of
+// User-Agent, which would otherwise be copied verbatim into an email.
+//
+// RULE: these values are TRUNCATED, not rejected, which is the opposite of the rule governing a
+// visitor's message (CONTACT-FORM D10).  That rule protects content, where silent shortening is
+// undetectable and unrecoverable by the person who wrote it.  These are metadata ABOUT the
+// request, and discarding a legitimate submission because a browser sent a long header is exactly
+// the false positive that FORM-SPAM-PREVENTION D3 forbids.
+const clientHeaderMaxLength = 256
+
+// RULE: this section is a CLOSED set of accessors, and must stay closed.  A general
+// `.RequestHeader "name"` would also reach Cookie and Authorization, and a `send-email` step
+// renders whatever a template asks for into a message body whose recipient is configured
+// per-page -- so one template line would exfiltrate a visitor's session token to an address the
+// visitor never sees.  Same reasoning as the `To:`/`.QueryParam` rule in AGENTS.md: nothing in
+// the code stops it, so the shape of the API has to.
+
+// ClientIP returns the IP address of the visitor making this request, resolved through the
+// trusted-proxy strategy named in the server configuration.  Never read RemoteAddr directly:
+// behind a reverse proxy that is the proxy's own address, identical for every visitor.
+//
+// The result is either "" or an address that netip parsed -- every realclientip strategy returns
+// "" for anything it cannot validate -- so it is safe to interpolate into a URL.
+func (w Common) ClientIP() string {
+
+	if w._request == nil {
+		return ""
+	}
+
+	return w._factory.ClientIP(w._request)
+}
+
+// ClientDescription returns a human-readable guess at the visitor's device and browser, for
+// example "Macintosh PC / Safari".  User-Agent sniffing is unreliable by nature, so this is a
+// convenience for display beside the raw values below, never a value to make a decision from.
+func (w Common) ClientDescription() string {
+
+	userAgent := w.ClientUserAgent()
+
+	// RULE: an absent User-Agent must read as absent.  sniff answers every string, so it maps ""
+	// onto "Unrecognized Device / Unknown" -- a confident-looking guess about nothing.
+	if userAgent == "" {
+		return ""
+	}
+
+	info := sniff.UserAgent(userAgent)
+
+	return info.Description + " / " + info.Browser
+}
+
+// ClientUserAgent returns the visitor's User-Agent header.
+func (w Common) ClientUserAgent() string {
+	return w.clientHeader("User-Agent")
+}
+
+// ClientAccept returns the visitor's Accept header -- the content types their browser will take.
+func (w Common) ClientAccept() string {
+	return w.clientHeader("Accept")
+}
+
+// ClientAcceptLanguage returns the visitor's Accept-Language header -- the languages their
+// browser is configured for, and one of the higher-entropy values a browser volunteers.
+func (w Common) ClientAcceptLanguage() string {
+	return w.clientHeader("Accept-Language")
+}
+
+// ClientAcceptEncoding returns the visitor's Accept-Encoding header -- the compression formats
+// their browser will take.
+func (w Common) ClientAcceptEncoding() string {
+	return w.clientHeader("Accept-Encoding")
+}
+
+// ClientBrands returns the visitor's Sec-CH-UA header: the browser brand list from the Client
+// Hints family, which is what User-Agent was meant to be replaced by.  Chromium-only -- Firefox
+// and Safari send nothing, and that absence is itself a signal.
+func (w Common) ClientBrands() string {
+	return w.clientHeader("Sec-CH-UA")
+}
+
+// ClientPlatform returns the visitor's Sec-CH-UA-Platform header, naming their operating system
+// (Chromium only; see ClientBrands).
+func (w Common) ClientPlatform() string {
+	return w.clientHeader("Sec-CH-UA-Platform")
+}
+
+// ClientMobile returns the visitor's Sec-CH-UA-Mobile header: "?1" on a mobile device and "?0"
+// otherwise (Chromium only; see ClientBrands).
+func (w Common) ClientMobile() string {
+	return w.clientHeader("Sec-CH-UA-Mobile")
+}
+
+// ClientDoNotTrack returns the visitor's DNT header.  Recorded as one more thing the browser
+// volunteered, and as entropy -- most browsers stopped sending it, so a value here is unusual.
+func (w Common) ClientDoNotTrack() string {
+	return w.clientHeader("DNT")
+}
+
+// ClientPrivacyControl returns the visitor's Sec-GPC header, the Global Privacy Control signal.
+// Recorded for the same reason as ClientDoNotTrack.
+func (w Common) ClientPrivacyControl() string {
+	return w.clientHeader("Sec-GPC")
+}
+
+// ClientReferer returns the page the visitor came from, per their Referer header.  Provenance
+// rather than fingerprint, and frequently suppressed or trimmed to a bare origin by the browser.
+//
+// RULE: display this as TEXT, never as a link.  The value is whatever the client typed, so
+// "javascript:..." is a legal thing for it to contain.  html/template neutralizes that in a URL
+// context, but it does so by replacing the value with "#ZgotmplZ" -- which hides from the reader
+// the one thing they were being shown.
+func (w Common) ClientReferer() string {
+	return w.clientHeader("Referer")
+}
+
+// clientHeader returns the named request header, bounded at clientHeaderMaxLength.  Every
+// accessor above funnels through it so that the bound cannot be forgotten by the next one added,
+// and so that a nil request -- tests, and builders assembled outside a handler -- reads as
+// absent rather than panicking.
+func (w Common) clientHeader(name string) string {
+
+	if w._request == nil {
+		return ""
+	}
+
+	return truncateRunes(w._request.Header.Get(name), clientHeaderMaxLength)
 }
 
 /******************************************
@@ -366,7 +516,7 @@ func (w Common) GetFloat(name string) float64 {
 
 // GetHTML returns the named argument as trusted HTML. Implements the Builder interface.
 func (w Common) GetHTML(name string) template.HTML {
-	return template.HTML(w.GetString(name))
+	return template.HTML(w.GetString(name)) // #nosec G203 -- see build/AGENTS.md: the only writer of the "content" argument is SetContent, which passes rendered pipeline output
 }
 
 // GetInt returns the named argument as an integer. Implements the Builder interface.
@@ -413,37 +563,37 @@ func (w Common) IsIndexable() bool {
 
 // DomainStateID returns the lifecycle state of this Domain
 func (w Common) DomainStateID() string {
-	return w._factory.Domain().Get().StateID
+	return w._factory.Domain().Cached().StateID
 }
 
 // DomainLabel returns the human-readable name of this Domain
 func (w Common) DomainLabel() string {
-	return w._factory.Domain().Get().Label
+	return w._factory.Domain().Cached().Label
 }
 
 // DomainIcon returns the URL of this Domain's icon image
 func (w Common) DomainIcon() string {
-	return w._factory.Domain().Get().IconURL()
+	return w._factory.Domain().Cached().IconURL()
 }
 
 // DomainImage returns the URL of this Domain's banner image
 func (w Common) DomainImage() string {
-	return w._factory.Domain().Get().ImageURL()
+	return w._factory.Domain().Cached().ImageURL()
 }
 
 // DomainHasRegistrationForm returns TRUE if this Domain accepts new sign-ups
 func (w Common) DomainHasRegistrationForm() bool {
-	return w._factory.Domain().Get().HasRegistrationForm()
+	return w._factory.Domain().Cached().HasRegistrationForm()
 }
 
 // IsDomainStartup returns TRUE if this Domain has not finished its first-run setup
 func (w Common) IsDomainStartup() bool {
-	return (w._factory.Domain().Get().StateID == model.DomainStateStartup)
+	return (w._factory.Domain().Cached().StateID == model.DomainStateStartup)
 }
 
 // NotDomainStartup returns TRUE if this Domain has finished its first-run setup
 func (w Common) NotDomainStartup() bool {
-	return (w._factory.Domain().Get().StateID != model.DomainStateStartup)
+	return (w._factory.Domain().Cached().StateID != model.DomainStateStartup)
 }
 
 /***************************
@@ -460,6 +610,25 @@ func (w Common) IsAuthenticated() bool {
 func (w Common) IsIdentity() bool {
 	authorization := w.authorization()
 	return authorization.IsIdentity()
+}
+
+// IsAuthenticatedOrIdentity returns TRUE if the caller is either an authenticated user or a guest identity
+func (w Common) IsAuthenticatedOrIdentity() bool {
+	return w.IsAuthenticated() || w.IsIdentity()
+}
+
+// NotAuthenticatedOrIdentity returns TRUE if the caller is neither an authenticated user nor a guest identity
+func (w Common) NotAuthenticatedOrIdentity() bool {
+
+	if w.IsAuthenticated() {
+		return false
+	}
+
+	if w.IsIdentity() {
+		return false
+	}
+
+	return true
 }
 
 // IsOwner returns TRUE if the user is a Domain Owner
@@ -580,7 +749,7 @@ func (w Common) ActivityStreamCollection(url string) sliceof.String {
 // document values and rules from the server's shared cache.
 func (w Common) ActivityStreamActor(url string) streams.Document {
 	activityService := w._factory.ActivityStream()
-	result, err := activityService.UserClient(w.AuthenticatedID()).Load(url, sherlock.AsActor())
+	result, err := activityService.UserClient(w.AuthenticatedID()).Load(url)
 
 	if err != nil {
 		derp.Report(err)

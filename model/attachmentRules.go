@@ -14,10 +14,10 @@ import (
 
 // AttachmentRules defines the rules for downloading an attachment
 type AttachmentRules struct {
-	Extensions sliceof.String // Allowed extensions.  The first value is used as the default.
-	Width      int            // Fixed width for all (image, video) downloads
-	Height     int            // Fixed height for all (image, video) downloads
-	Bitrate    int            // Fixed bitrate for all (audio, vido) downloads
+	Extensions sliceof.String `json:"extensions"` // Allowed extensions.  The first value is used as the default.
+	Width      int            `json:"width"`      // Fixed width for all (image, video) downloads
+	Height     int            `json:"height"`     // Fixed height for all (image, video) downloads
+	Bitrate    int            `json:"bitrate"`    // Fixed bitrate for all (audio, vido) downloads
 }
 
 // NewAttachmentRules returns a fully initialized AttachmentRules object

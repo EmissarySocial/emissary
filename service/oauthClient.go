@@ -85,9 +85,10 @@ func (service *OAuthClient) Save(session data.Session, client *model.OAuthClient
 
 	const location = "service.OAuthClient.Save"
 
-	// Validate the value (using the global OAuthClient schema) before saving
+	// Validate the value (using the global OAuthClient schema) before saving.  Errors name the
+	// ClientID, never the client, whose ClientSecret is hidden from JSON but not from BSON.
 	if _, err := service.Schema().Validate(client); err != nil {
-		return derp.Wrap(err, location, "Validating OAuthClient using OAuthClientSchema", client)
+		return derp.Wrap(err, location, "Validating OAuthClient using OAuthClientSchema", client.ClientID)
 	}
 
 	// Generate secrets for new clients that weren't created via "Client ID Metadata Documents"
@@ -105,7 +106,7 @@ func (service *OAuthClient) Save(session data.Session, client *model.OAuthClient
 
 	// Try to save the OAuthClient to the database
 	if err := service.collection(session).Save(client, note); err != nil {
-		return derp.Wrap(err, location, "Saving OAuthClient", client, note)
+		return derp.Wrap(err, location, "Saving OAuthClient", client.ClientID, note)
 	}
 
 	return nil
@@ -116,14 +117,14 @@ func (service *OAuthClient) Delete(session data.Session, client *model.OAuthClie
 
 	const location = "service.OAuthClient.Delete"
 
-	// Delete this OAuthClient
+	// Delete this OAuthClient.  Errors name its ClientID, because the client carries its secret.
 	if err := service.collection(session).Delete(client, note); err != nil {
-		return derp.Wrap(err, location, "Deleting OAuthClient", client, note)
+		return derp.Wrap(err, location, "Deleting OAuthClient", client.ClientID, note)
 	}
 
 	// Delete related records -- this can happen in the background
 	if err := service.oauthUserTokenService.DeleteByClient(session, client.ClientID, note); err != nil {
-		return derp.Wrap(err, location, "Deleting attachments", client, note)
+		return derp.Wrap(err, location, "Deleting attachments", client.ClientID, note)
 	}
 
 	// Bueno!!

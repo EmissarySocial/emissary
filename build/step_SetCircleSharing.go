@@ -61,7 +61,7 @@ func (step StepSetCircleSharing) Get(builder Builder, buffer io.Writer) Pipeline
 		return Halt().WithError(derp.Wrap(err, location, "Rendering form for StepSetCircleSharing"))
 	}
 
-	b.WriteString(formHTML)
+	b.WriteString(formHTML) // #nosec G104 -- html.Builder embeds *strings.Builder, whose WriteString is documented to always return a nil error
 	b.CloseAll()
 
 	result := WrapForm(
@@ -160,7 +160,7 @@ func (step StepSetCircleSharing) form(lookupProvider form.LookupProvider) (form.
 				Path:        "circles",
 				Label:       "Share with Everyone",
 				Description: "Publicly visible to everyone on the Internet, signed in or not.",
-				Options: mapof.Any{
+				Options: mapof.Template{
 					"icon":   "globe",
 					"class":  "checkbutton-public",
 					"value":  model.MagicGroupIDAnonymous,
@@ -176,7 +176,7 @@ func (step StepSetCircleSharing) form(lookupProvider form.LookupProvider) (form.
 			Type:  "check-button-group",
 			Path:  "circles",
 			Label: "These Circles Only",
-			Options: mapof.Any{
+			Options: mapof.Template{
 				"class":    "checkbutton-circle",
 				"provider": "circles",
 				"script":   "on change if my.checked then set .checkbutton-public.checked to false",
@@ -191,7 +191,7 @@ func (step StepSetCircleSharing) form(lookupProvider form.LookupProvider) (form.
 		Type:        "check-button",
 		Label:       "No Circles Defined",
 		Description: "Create circles to share this content with specific groups of people.",
-		Options: mapof.Any{
+		Options: mapof.Template{
 			"icon":     "circle",
 			"disabled": true,
 		},

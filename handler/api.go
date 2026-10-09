@@ -8,7 +8,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/collections"
 	"github.com/benpate/hannibal/streams"
-	"github.com/benpate/sherlock"
 	"github.com/benpate/steranko"
 )
 
@@ -39,7 +38,7 @@ func GetAPICollectionHeader(ctx *steranko.Context, factory *service.Factory, ses
 	// Retrieve the collection from the network/cache
 	url := ctx.QueryParam("url")
 	activityService := factory.ActivityStream()
-	document, err := activityService.AppClient().Load(url, sherlock.AsCollection())
+	document, err := activityService.AppClient().Load(url)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Loading collection", "url: "+url)

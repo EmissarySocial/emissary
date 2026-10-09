@@ -44,18 +44,18 @@ func (adapter GeocodeAutocomplete) ManualConfig() form.Form {
 			Children: []form.Element{
 				{
 					Type:        "html",
-					Description: "Configure this service to show autocomplete search hits when entering addresses. <a href=https://emissary.social/geocode-autocomplete target=_blank>Learn More &rarr;</a>",
+					Description: "Configure this service to show autocomplete search hits when entering addresses. <a href='https://emissary.social/geocode-autocomplete' target='_blank' rel='noopener noreferrer'>Learn More &rarr;</a>",
 				},
 				{
 					Type:    "hidden",
 					Path:    "type",
-					Options: mapof.Any{"value": model.ConnectionTypeGeocodeAutocomplete},
+					Options: mapof.Template{"value": model.ConnectionTypeGeocodeAutocomplete},
 				},
 				{
 					Type:  "select",
 					Path:  "data.provider",
 					Label: "Service Provider",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"enum": []form.LookupCode{
 							{Group: "Recommended", Value: "GEOAPIFY", Label: "Geoapify"},
 							{Group: "Recommended", Value: "HERE", Label: "Here"},
@@ -69,7 +69,7 @@ func (adapter GeocodeAutocomplete) ManualConfig() form.Form {
 					Type:  "text",
 					Path:  "data.apiID",
 					Label: "API ID",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"show-if":      "data.provider == HERE",
 						"autocomplete": "off",
 					},
@@ -78,7 +78,7 @@ func (adapter GeocodeAutocomplete) ManualConfig() form.Form {
 					Type:  "text",
 					Path:  "data.apiKey",
 					Label: "API Key",
-					Options: mapof.Any{
+					Options: mapof.Template{
 						"show-if":      "data.provider != (null)",
 						"autocomplete": "off",
 					},

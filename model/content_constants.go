@@ -8,7 +8,7 @@ const ContentFormatHTML = "HTML"
 // This content must be converted into HTML before being used in a browser
 const ContentFormatText = "TEXT"
 
-// ContentFormatContentJS represents a content object whose Raw value is defined in Markdown
+// ContentFormatMarkdown represents a content object whose Raw value is defined in Markdown
 // This content must be converted into HTML before being used in a browser
 // See: https://commonmark.org
 const ContentFormatMarkdown = "MARKDOWN"

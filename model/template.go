@@ -291,7 +291,8 @@ func (template *Template) Inherit(parent *Template) {
 	// Inherit HTMLTemplates from the parent.
 	for _, templateName := range parent.HTMLTemplate.Templates() {
 		if template.HTMLTemplate.Lookup(templateName.Name()) == nil {
-			if _, err := template.HTMLTemplate.AddParseTree(templateName.Name(), templateName.Tree); err != nil {
+			// Add a copy, because html/template escapes a tree in place and each set must escape its own (BUG-203)
+			if _, err := template.HTMLTemplate.AddParseTree(templateName.Name(), templateName.Tree.Copy()); err != nil {
 				derp.Report(derp.Wrap(err, "model.Template.Inherit", "Adding template", templateName.Name()))
 			}
 		}
@@ -381,13 +382,14 @@ var templateModelRegistry = map[string]templateModel{
 	"Conversations": {schema: UserSchema, newObject: newObjectPointer(NewUser)},
 	"Notifications": {schema: UserSchema, newObject: newObjectPointer(NewUser)},
 
-	// The Domain, Search, SSO, Followers, Following, and Syndication builders all build Domain objects
-	"Domain":      {schema: DomainSchema, newObject: newObjectPointer(NewDomain)},
-	"Search":      {schema: DomainSchema, newObject: newObjectPointer(NewDomain)},
-	"SSO":         {schema: DomainSchema, newObject: newObjectPointer(NewDomain)},
-	"Followers":   {schema: DomainSchema, newObject: newObjectPointer(NewDomain)},
-	"Following":   {schema: DomainSchema, newObject: newObjectPointer(NewDomain)},
-	"Syndication": {schema: DomainSchema, newObject: newObjectPointer(NewDomain)},
+	// The Domain, Search, SSO, Followers, Following, and Syndication builders all build Domain
+	// objects, and only a WritableDomain can be written through the schema
+	"Domain":      {schema: DomainSchema, newObject: newObjectPointer(NewWritableDomain)},
+	"Search":      {schema: DomainSchema, newObject: newObjectPointer(NewWritableDomain)},
+	"SSO":         {schema: DomainSchema, newObject: newObjectPointer(NewWritableDomain)},
+	"Followers":   {schema: DomainSchema, newObject: newObjectPointer(NewWritableDomain)},
+	"Following":   {schema: DomainSchema, newObject: newObjectPointer(NewWritableDomain)},
+	"Syndication": {schema: DomainSchema, newObject: newObjectPointer(NewWritableDomain)},
 
 	"Group":    {schema: GroupSchema, newObject: newObjectPointer(NewGroup)},
 	"Identity": {schema: IdentitySchema, newObject: newObjectPointer(NewIdentity)},

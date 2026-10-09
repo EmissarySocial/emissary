@@ -21,7 +21,11 @@ func GetFollowersCollection(ctx *steranko.Context, factory *service.Factory, ses
 
 	// Verify permissions by checking the required permissions (stream.DefaultAllow) against the permissions in the request signature
 	permissionService := factory.Permission()
-	permissions := permissionService.ParseHTTPSignature(session, ctx.Request()) // nolint:scopeguard
+	permissions, err := permissionService.ParseHTTPSignature(session, ctx.Request()) // nolint:scopeguard
+
+	if err != nil {
+		return derp.Wrap(err, location, "Invalid HTTP Signature")
+	}
 
 	if !slice.ContainsAny(stream.DefaultAllow, permissions...) {
 		return derp.Forbidden(location, "You do not have permission to view this content")

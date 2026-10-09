@@ -7,6 +7,7 @@ import (
 
 	"github.com/benpate/hannibal/vocab"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -685,4 +686,36 @@ func FuzzAttachment_AspectRatio(f *testing.F) {
 			require.NotContains(t, ratio, "Inf")
 		}
 	})
+}
+
+// TestAttachment_SourceURLIsOmittedWhenEmpty confirms that an uploaded file's record carries no
+// sourceUrl at all, so that the field reaches no existing record
+func TestAttachment_SourceURLIsOmittedWhenEmpty(t *testing.T) {
+
+	uploaded, err := bson.Marshal(NewAttachment(AttachmentObjectTypeStream, primitive.NewObjectID()))
+	require.NoError(t, err)
+	require.NotContains(t, string(uploaded), "sourceUrl")
+
+	imported := NewAttachment(AttachmentObjectTypeStream, primitive.NewObjectID())
+	imported.SourceURL = "https://raw.example.com/docs/attachments/a.png"
+
+	encoded, err := bson.Marshal(imported)
+	require.NoError(t, err)
+	require.Contains(t, string(encoded), "sourceUrl")
+}
+
+// TestAttachment_IsStored confirms that only an imported file still copying, or failed, has no file
+// behind it.  An uploaded file never sets a Status, and must count as stored.
+func TestAttachment_IsStored(t *testing.T) {
+
+	for status, expected := range map[string]bool{
+		"":                      true,
+		AttachmentStatusReady:   true,
+		AttachmentStatusWorking: false,
+		AttachmentStatusFailed:  false,
+	} {
+		attachment := NewAttachment(AttachmentObjectTypeStream, primitive.NewObjectID())
+		attachment.Status = status
+		require.Equal(t, expected, attachment.IsStored(), "status %q", status)
+	}
 }

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -25,8 +26,9 @@ import (
 // userCollection is an in-memory data.Collection that holds a single model.User record,
 // matched on the fields LoadByUsername + notDeleted build: username and deleteDate.
 type userCollection struct {
-	record model.User
-	found  bool
+	record    model.User
+	found     bool
+	loadError error // When set, every Load fails with this error
 }
 
 // Context implements the interface, returning a background context
@@ -48,13 +50,17 @@ func (c *userCollection) Iterator(exp.Expression, ...option.Option) (data.Iterat
 }
 
 // Load copies the stored User into the target when the criteria match.
-func (c *userCollection) Load(criteria exp.Expression, target data.Object, _ ...option.Option) error {
+func (c *userCollection) Load(criteria exp.Expression, target data.Object, options ...option.Option) error {
+
+	if c.loadError != nil {
+		return c.loadError
+	}
 
 	if !c.found {
 		return derp.NotFound("test", "not found")
 	}
 
-	if !matchesUser(criteria, c.record) {
+	if !matchesUser(criteria, c.record, isCaseSensitive(options)) {
 		return derp.NotFound("test", "not found")
 	}
 
@@ -79,7 +85,7 @@ func (c *userCollection) HardDelete(exp.Expression) error { return derp.Internal
 
 // matchesUser reports whether the stored User satisfies a criteria on username/deleteDate,
 // which is exactly what LoadByUsername (wrapped in notDeleted) builds.
-func matchesUser(criteria exp.Expression, record model.User) bool {
+func matchesUser(criteria exp.Expression, record model.User, caseSensitive bool) bool {
 
 	return criteria.Match(func(predicate exp.Predicate) bool {
 
@@ -87,7 +93,16 @@ func matchesUser(criteria exp.Expression, record model.User) bool {
 
 		case "username":
 			value, ok := predicate.Value.(string)
-			return ok && predicate.Operator == exp.OperatorEqual && record.Username == value
+
+			if !ok || predicate.Operator != exp.OperatorEqual {
+				return false
+			}
+
+			if caseSensitive {
+				return record.Username == value
+			}
+
+			return strings.EqualFold(record.Username, value)
 
 		case "deleteDate":
 			value, ok := predicate.Value.(int)

@@ -16,7 +16,7 @@
 	form: {
 		type: "layout-vertical",
 		children: [
-			{type:"label", description:'Copy the following configuration values from your Stripe Dashboard.<br><a href="https://emissary.dev/registration-stripe" target="_blank">Learn More &rarr;</a>'}
+			{type:"label", description:'Copy the following configuration values from your Stripe Dashboard.<br><a href="https://emissary.dev/registration-stripe" target="_blank" rel="noopener noreferrer">Learn More &rarr;</a>'}
 			{type:"text", path:"stripe_publishable_key", label:"Publishable Key", description:"Find in: Developers > API Keys.", options:{placeholder:"pk_live_xxxxxxxxxxxxxxxxxxxxxxxx"}},
 			{type:"text", path:"stripe_restricted_key", label:"Restricted Key", description:"Find in: Developers > API Keys.", options:{placeholder:"rk_live_xxxxxxxxxx"}},
 			{type:"text", path:"stripe_webhook_secret", label:"Webhook Secret", description:"Find in: Devlopers > Webhooks.", options:{placeholder:"whsec_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}},

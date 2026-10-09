@@ -13,7 +13,12 @@ import (
 
 // ExportCollection returns the IDs of every Follower to include in a User's data export
 func (service *Follower) ExportCollection(session data.Session, userID primitive.ObjectID) ([]model.IDOnly, error) {
-	criteria := exp.Equal("userId", userID)
+
+	// The owner field is `parentId`, which Stream and Search Followers use too,
+	// so the `type` discriminator is what keeps them out of a User's export.
+	criteria := exp.Equal("parentId", userID).
+		AndEqual("type", model.FollowerTypeUser)
+
 	return service.QueryIDOnly(session, criteria, option.SortAsc("createDate"))
 }
 

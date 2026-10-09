@@ -16,12 +16,12 @@ func TestRegistration_SetUserData_PasswordIsHashed(t *testing.T) {
 
 	service := Registration{}
 	steranko := (&Factory{}).Steranko(nil)
-	domain := model.NewDomain()
+	readOnlyDomain := model.NewDomain()
 	user := model.NewUser()
 	require.True(t, user.IsNew())
 
 	txn := model.RegistrationTxn{Password: "TestPass123!"}
-	require.Nil(t, service.setUserData(nil, nil, steranko, &domain, &user, txn, []string{"password"}))
+	require.Nil(t, service.setUserData(nil, nil, steranko, &readOnlyDomain, &user, txn, []string{"password"}))
 
 	// The stored value is a bcrypt hash of the submitted password, never the plaintext
 	require.NotEqual(t, "TestPass123!", user.Password)
@@ -37,7 +37,7 @@ func TestRegistration_SetUserData_PasswordIgnoredForExistingUser(t *testing.T) {
 
 	service := Registration{}
 	steranko := (&Factory{}).Steranko(nil)
-	domain := model.NewDomain()
+	readOnlyDomain := model.NewDomain()
 
 	user := model.NewUser()
 	user.CreateDate = 1234567890 // saved => not new
@@ -45,7 +45,7 @@ func TestRegistration_SetUserData_PasswordIgnoredForExistingUser(t *testing.T) {
 	require.False(t, user.IsNew())
 
 	txn := model.RegistrationTxn{Password: "NewPass456!"}
-	require.Nil(t, service.setUserData(nil, nil, steranko, &domain, &user, txn, []string{"password"}))
+	require.Nil(t, service.setUserData(nil, nil, steranko, &readOnlyDomain, &user, txn, []string{"password"}))
 
 	require.Equal(t, "$2a$12$existing-hash-value", user.Password)
 }
@@ -56,11 +56,11 @@ func TestRegistration_SetUserData_EmptyPasswordIgnored(t *testing.T) {
 
 	service := Registration{}
 	steranko := (&Factory{}).Steranko(nil)
-	domain := model.NewDomain()
+	readOnlyDomain := model.NewDomain()
 	user := model.NewUser()
 
 	txn := model.RegistrationTxn{Password: ""}
-	require.Nil(t, service.setUserData(nil, nil, steranko, &domain, &user, txn, []string{"password"}))
+	require.Nil(t, service.setUserData(nil, nil, steranko, &readOnlyDomain, &user, txn, []string{"password"}))
 
 	require.Empty(t, user.Password)
 }

@@ -9,15 +9,15 @@ import (
 
 // Follower is a person or service that has subscribed to a User, Stream, or SearchQuery
 type Follower struct {
-	FollowerID primitive.ObjectID `bson:"_id"`        // Unique identifier for this Follower
-	ParentType string             `bson:"type"`       // Type of record being followed (e.g. "User", "Stream", or "Search")
-	ParentID   primitive.ObjectID `bson:"parentId"`   // Unique identifier for the Stream that is being followed (including user's outboxes)
-	StateID    string             `bson:"stateId"`    // Unique identifier for the State of this Follower ("ACTIVE", "PENDING")
-	Method     string             `bson:"method"`     // Method of follower (e.g. "POLL", "ACTIVITYPUB", "EMAIL")
-	Format     string             `bson:"format"`     // Format of the data being followed (e.g. "ATOM", "HTML", "JSON", "RSS", "XML")
-	Actor      PersonLink         `bson:"actor"`      // Person who is follower the User
-	Data       mapof.Any          `bson:"data"`       // Additional data about this Follower that depends on the follow method
-	ExpireDate int64              `bson:"expireDate"` // Unix timestamp (in seconds) when this follower will be automatically purged.
+	FollowerID primitive.ObjectID `json:"followerId" bson:"_id"`        // Unique identifier for this Follower
+	ParentType string             `json:"type"       bson:"type"`       // Type of record being followed (e.g. "User", "Stream", or "Search")
+	ParentID   primitive.ObjectID `json:"parentId"   bson:"parentId"`   // Unique identifier for the Stream that is being followed (including user's outboxes)
+	StateID    string             `json:"stateId"    bson:"stateId"`    // Unique identifier for the State of this Follower ("ACTIVE", "PENDING")
+	Method     string             `json:"method"     bson:"method"`     // Method of follower (e.g. "POLL", "ACTIVITYPUB", "EMAIL")
+	Format     string             `json:"format"     bson:"format"`     // Format of the data being followed (e.g. "ATOM", "HTML", "JSON", "RSS", "XML")
+	Actor      PersonLink         `json:"actor"      bson:"actor"`      // Person who is follower the User
+	Data       mapof.Any          `json:"data"       bson:"data"`       // Additional data about this Follower that depends on the follow method
+	ExpireDate int64              `json:"expireDate" bson:"expireDate"` // Unix timestamp (in seconds) when this follower will be automatically purged.
 
 	journal.Journal `json:"-" bson:",inline"`
 }
@@ -82,6 +82,20 @@ func (follower *Follower) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
  * Other Calculations
  ******************************************/
 
+func (follower Follower) MethodLabel() string {
+
+	switch follower.Method {
+
+	case FollowerMethodActivityPub:
+		return "ActivityPub"
+
+	case FollowerMethodEmail:
+		return "Email"
+	}
+
+	return "??"
+}
+
 // ParentURL returns the URL of the parent object that this Follower is following.
 func (follower Follower) ParentURL(host string) string {
 
@@ -92,15 +106,22 @@ func (follower Follower) ParentURL(host string) string {
 	return host + "/" + follower.ParentID.Hex()
 }
 
-// UnsubscribeLink returns a URL where an Email Follower can unsubscribe.
-// It returns an empty string for all other follower types (ActivityPub, etc.)
+// UnsubscribeLink returns the URL where an email Follower unsubscribes.
+//
+// RULE: The link is built for every Follower, including methods that will never receive one.
+// Withholding the string would look like an authorization check without being one -- the URL is
+// public, and anyone can type it.  The actual gate is service.Follower.LoadBySecret, which loads
+// EMAIL-method records only, and only for a caller who already holds the secret.
 func (follower Follower) UnsubscribeLink(host string) string {
+	// The literal key and the plaintext value are both deliberate; see AGENTS.md
+	return follower.ParentURL(host) + "/follower-unsubscribe?followerId=" + follower.FollowerID.Hex() + "&secret=" + follower.Data.GetString("secret")
+}
 
-	if follower.Method == FollowerMethodEmail {
-		return follower.ParentURL(host) + "/follower-unsubscribe?followerId=" + follower.FollowerID.Hex() + "&secret=" + follower.Data.GetString("secret")
-	}
-
-	return ""
+// UnsubscribeLinkWithBrackets returns the unsubscribe URL inside the angle brackets that RFC 2369
+// requires of a List-Unsubscribe header.  It is derived from UnsubscribeLink so that the two can
+// never disagree about the URL itself.
+func (follower Follower) UnsubscribeLinkWithBrackets(host string) string {
+	return "<" + follower.UnsubscribeLink(host) + ">"
 }
 
 /******************************************

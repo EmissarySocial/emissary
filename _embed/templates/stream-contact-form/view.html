@@ -1,0 +1,70 @@
+<div class="page h-entry" script="init send SelectNav(id:'{{.NavigationID}}')">
+
+	<!-- .widgets and .layout-* live here, copied from article-base, because widgets must
+	     lay out the same way on every template that hosts them. -->
+	<link rel="stylesheet" href="/.templates/contact-form/stylesheet"/>
+
+	<article class="content margin-bottom">
+		{{- .Widgets "LEFT" -}}
+		<div class="content-main">
+			<div class="layout-{{.Data `width`}}">
+			{{- .Widgets "TOP" -}}
+
+			<!-- The form replaces itself with success.html, so a sent message cannot be resubmitted by pressing the button again. -->
+			<form hx-post="/{{.StreamID}}/submit" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
+
+				{{- $prompt := .Data "promptContent" | string -}}
+				{{- if ne "" $prompt -}}
+					<div class="margin-bottom-lg">{{$prompt | markdown}}</div>
+				{{- end -}}
+
+				<div class="layout-vertical margin-bottom-lg">
+
+					<div class="layout-elements">
+						<div class="layout-element">
+							<input type="text" id="contact-name" name="name" placeholder="Your Name" maxlength="128" required autocomplete="name" aria-label="Your Name">
+						</div>
+					</div>
+
+					<div class="layout-elements">
+						<div class="layout-element">
+							<input type="email" id="contact-email" name="email" placeholder="Email Address" maxlength="255" required autocomplete="email" aria-label="Email Address">
+						</div>
+					</div>
+
+					<div class="layout-elements">
+						<div class="layout-element">
+							<textarea id="contact-message" name="message" placeholder="Type Your Message Here" rows="10" maxlength="8192" required aria-label="Type Your Message Here"></textarea>
+							<div class="text-sm text-gray">
+								Your IP address and browser details are sent along with this message.
+							</div>
+						</div>
+					</div>
+
+				</div>
+
+				<div>
+					<button class="htmx-request-show primary" disabled>
+						<span class="spin">{{icon "loading"}}</span> Sending
+					</button>
+
+					<button type="submit" class="primary htmx-request-hide" tabindex="0">Send Message &rarr;</button>
+
+					<span id="htmx-response-message" class="text-red"></span>
+				</div>
+
+			</form>
+
+			{{- .Widgets "BOTTOM" -}}
+			</div>
+		</div>
+		{{- .Widgets "RIGHT" -}}
+	</article>
+
+	{{- if .UserCan "edit" -}}
+		<div style="position:absolute; top:4px; right:8px;">
+			<a class="text-xs button" href="/{{.StreamID}}/edit">Edit &rarr;</a>
+		</div>
+	{{- end -}}
+
+</div>

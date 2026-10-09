@@ -10,12 +10,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestErrorHandler_EchoHTTPError confirms that Echo's own routing errors
-// (*echo.HTTPError) are surfaced with their real status code instead of being
-// flattened to a generic 500. See BUG-003209 family: unsupported HTTP methods
-// (PUT/PATCH/TRACE) previously returned 500 instead of 405.
+// TestErrorHandler_EchoHTTPError confirms that Echo's own routing errors (*echo.HTTPError) are
+// surfaced with their real status code instead of being flattened to a generic 500.
 func TestErrorHandler_EchoHTTPError(t *testing.T) {
 
+	// The BUG-003209 family: unsupported methods (PUT/PATCH/TRACE) answered 500, not 405.
 	testCases := []struct {
 		name       string
 		err        error
@@ -42,9 +41,8 @@ func TestErrorHandler_EchoHTTPError(t *testing.T) {
 	}
 }
 
-// TestErrorHandler_SignedRequestIsNotRedirected pins the second half of BUG-20. Refusing an invalid
-// signature only helps if the refusal REACHES the peer: a 303 to /signin is meaningless to a machine
-// and reads as success, which would re-hide the failure the 401 exists to surface.
+// TestErrorHandler_SignedRequestIsNotRedirected pins the second half of BUG-20: a refusal only
+// helps if it REACHES the peer, and a 303 to /signin reads as success to a machine.
 func TestErrorHandler_SignedRequestIsNotRedirected(t *testing.T) {
 
 	testCases := []struct {

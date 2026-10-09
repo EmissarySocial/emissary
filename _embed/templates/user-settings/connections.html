@@ -1,0 +1,71 @@
+{{- $isDesktop := .IsDesktop -}}
+{{- $mailchimp := .UserConnection "MAILCHIMP" -}}
+
+<!-- The Audience ID is editable only while creating a connection (D43), so the row has to
+     choose which of the two forms to open. -->
+{{- $mailchimpAction := "connections-new-mailchimp" -}}
+{{- if not $mailchimp.IsNew -}}
+	{{- $mailchimpAction = "connections-edit-mailchimp" -}}
+{{- end -}}
+
+<div class="app" script="init send SelectNav(id:'settings')">
+	<title>Connections</title>
+
+	{{- if $isDesktop -}}
+		<div id="app-sidebar" class="expanded">
+			{{- template "menu" "connections" -}}
+		</div>
+	{{- end -}}
+
+	<div class="app-content padding">
+
+		{{- if $isDesktop -}}
+			<div class="flex-row flex-align-center margin-bottom">
+				<h1 class="text-xl bold margin-none flex-grow">Connections</h1>
+				<a href="https://emissary.dev/user-connections" target="_blank" rel="noopener noreferrer" class="text-sm">{{icon "help"}} Help with Connections</a>
+			</div>
+		{{- else -}}
+			<div class="flex-row flex-align-center text-xl margin-none margin-bottom">
+				<a href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
+				<h1 class="bold flex-grow">Connections</h1>
+				<a href="https://emissary.dev/user-connections" target="_blank" rel="noopener noreferrer">{{icon "help"}}</a>
+			</div>
+		{{- end -}}
+
+		<div class="table">
+			<div role="button" class="flex-row turboclick">
+				<div hx-get="/@me/settings/{{$mailchimpAction}}?type=MAILCHIMP" class="flex-row flex-grow">
+					<div>{{- icon $mailchimp.Icon -}}</div>
+					<div class="flex-grow">
+						{{$mailchimp.Label}}
+						{{- if $mailchimp.IsConfigured -}}
+							&nbsp;
+							<span class="text-sm gray50">{{index $mailchimp.Data `audienceName`}}</span>
+						{{- end -}}
+					</div>
+					<!-- Two states only, matching the Domain Connections page (D44). Green means the
+					     connection is switched on AND finished setting up (IsReady, D39); every other
+					     state (new, paused, unfinished, rejected credential) invites a click. -->
+					<div class="text-sm nowrap">
+						&nbsp;
+						{{- if $mailchimp.IsReady -}}
+							<button class="success">{{icon "check"}} Connected</button>
+						{{- else -}}
+							<button>Connect</button>
+						{{- end -}}
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+
+	<div
+		hx-get="{{.RelativeURL}}"
+		hx-trigger="refreshPage from:window"
+		hx-target="main"
+		hx-swap="innerHTML"
+		hx-push-url="false">
+	</div>
+
+</div>

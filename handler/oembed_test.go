@@ -11,7 +11,7 @@ import (
 
 	"github.com/benpate/derp"
 	"github.com/benpate/oembed"
-	"github.com/benpate/rosetta/lenient"
+	"github.com/benpate/rosetta/loose"
 	"github.com/stretchr/testify/require"
 )
 
@@ -275,8 +275,8 @@ func TestOEmbedResponse_setThumbnail(t *testing.T) {
 		setOEmbedThumbnail(&response, hostname, "https://bandwagon.fm/@user/attachments/123")
 
 		require.Equal(t, "https://bandwagon.fm/@user/attachments/123.webp?height=300&width=300", response.ThumbnailURL)
-		require.Equal(t, lenient.Int64(oEmbedThumbnailSize), response.ThumbnailHeight)
-		require.Equal(t, lenient.Int64(oEmbedThumbnailSize), response.ThumbnailWidth)
+		require.Equal(t, loose.Int64(oEmbedThumbnailSize), response.ThumbnailHeight)
+		require.Equal(t, loose.Int64(oEmbedThumbnailSize), response.ThumbnailWidth)
 	}
 
 	// A remote icon is published untouched -- its server cannot answer a resize request
@@ -285,8 +285,8 @@ func TestOEmbedResponse_setThumbnail(t *testing.T) {
 		setOEmbedThumbnail(&response, hostname, "https://mastodon.social/media/abc.jpg")
 
 		require.Equal(t, "https://mastodon.social/media/abc.jpg", response.ThumbnailURL)
-		require.Equal(t, lenient.Int64(oEmbedThumbnailSize), response.ThumbnailHeight)
-		require.Equal(t, lenient.Int64(oEmbedThumbnailSize), response.ThumbnailWidth)
+		require.Equal(t, loose.Int64(oEmbedThumbnailSize), response.ThumbnailHeight)
+		require.Equal(t, loose.Int64(oEmbedThumbnailSize), response.ThumbnailWidth)
 	}
 
 	// The decorated URL must remain parseable, with exactly one query string

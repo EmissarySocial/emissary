@@ -138,6 +138,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.SearchIndex:
 		return StepSearchIndex(s)
 
+	case step.ReadForm:
+		return StepReadForm(s)
+
 	case step.SendEmail:
 		return StepSendEmail(s)
 
@@ -261,6 +264,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 	case step.WithMerchantAccount:
 		return StepWithMerchantAccount(s)
 
+	case step.WithUserConnection:
+		return StepWithUserConnection(s)
+
 	case step.WithMessage:
 		return StepWithMessage(s)
 
@@ -287,6 +293,9 @@ func ExecutableStep(stepInfo step.Step) Step {
 
 	case step.WithRule:
 		return StepWithRule(s)
+
+	case step.WithStreamSource:
+		return StepWithStreamSource(s)
 
 	}
 

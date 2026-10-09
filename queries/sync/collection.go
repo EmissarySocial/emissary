@@ -24,7 +24,7 @@ func Collection(ctx context.Context, database *mongo.Database) error {
 		// creation concurrency-safe: service.Collection.loadOrCreateByParent inserts
 		// optimistically and relies on this index to reject the loser of a create race.
 		//
-		// The partial filter carries TWO conditions, and both are load-bearing:
+		// The partial filter carries TWO conditions, and both are important:
 		//
 		//  1. deleteDate == 0 scopes uniqueness to live rows, mirroring service.notDeleted(), so a
 		//     soft-deleted collection does not block re-creation of a fresh one with the same key.

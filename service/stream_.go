@@ -54,7 +54,9 @@ type Stream struct {
 	notificationService *Notification
 	outboxService       *Outbox
 	permissionService   *Permission
+	searchResultService *SearchResult
 	searchTagService    *SearchTag
+	streamSourceService *StreamSource
 	templateService     *Template
 	followerService     *Follower
 	ruleService         *Rule
@@ -95,7 +97,9 @@ func (service *Stream) Refresh(factory *Factory) {
 	service.outboxService = factory.Outbox()
 	service.permissionService = factory.Permission()
 	service.ruleService = factory.Rule()
+	service.searchResultService = factory.SearchResult()
 	service.searchTagService = factory.SearchTag()
+	service.streamSourceService = factory.StreamSource()
 	service.templateService = factory.Template()
 	service.userService = factory.User()
 	service.webhookService = factory.Webhook()
@@ -295,7 +299,7 @@ func (service *Stream) List(session data.Session, criteria exp.Expression, optio
 }
 
 // Load retrieves an Stream from the database
-func (service *Stream) Load(session data.Session, criteria exp.Expression, stream *model.Stream) error {
+func (service *Stream) Load(session data.Session, criteria exp.Expression, stream *model.Stream, options ...option.Option) error {
 
 	const location = "service.Stream.Load"
 
@@ -310,7 +314,7 @@ func (service *Stream) Load(session data.Session, criteria exp.Expression, strea
 	}
 
 	// Load the Stream from the database
-	if err := service.collection(session).Load(notDeleted(criteria), stream); err != nil {
+	if err := service.collection(session).Load(notDeleted(criteria), stream, options...); err != nil {
 		return derp.Wrap(err, location, "Loading Stream", criteria)
 	}
 
@@ -469,6 +473,12 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 		}
 	}
 
+	// RULE: Remove this Stream from the search index.  Keyed by URL, never by SearchResultID:
+	// the index is a projection of the Stream, so it holds no ID that a Stream can name.
+	if err := service.searchResultService.DeleteByURL(session, stream.URL); err != nil {
+		derp.Report(derp.Wrap(err, location, "Deleting search result", stream, note))
+	}
+
 	// RULE: Delete all related Children
 	if err := service.DeleteByParent(session, stream.StreamID, note); err != nil {
 		derp.Report(derp.Wrap(err, location, "Deleting child streams", stream, note))
@@ -482,6 +492,13 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 	// RULE: Delete all related Drafts
 	if err := service.draftService.Delete(session, stream, note); err != nil {
 		derp.Report(derp.Wrap(err, location, "Deleting drafts", stream, note))
+	}
+
+	// RULE: Delete all related StreamSources.  A StreamSource is reached only through its Stream,
+	// so one left behind can never be seen or removed again -- while its webhook token keeps
+	// queueing syncs that reach the network and then fail on the Stream that is gone.
+	if err := service.streamSourceService.DeleteByStreamID(session, stream.StreamID, note); err != nil {
+		derp.Report(derp.Wrap(err, location, "Deleting stream sources", stream, note))
 	}
 
 	// RULE: Delete related Context Collection (if exists)
@@ -777,6 +794,47 @@ func (service *Stream) LoadByToken(session data.Session, token string, result *m
 
 	// Default to Load by Token
 	return service.Load(session, exp.Equal("token", token), result)
+}
+
+// ValidateToken returns an error if the provided token cannot be assigned to the identified Stream
+func (service *Stream) ValidateToken(session data.Session, streamID primitive.ObjectID, token string) error {
+
+	const location = "service.Stream.ValidateToken"
+
+	// RULE: Token must be at least 3 characters
+	if len(token) < 3 {
+		return derp.BadRequest(location, "Token must be at least 3 characters", token)
+	}
+
+	// Find any Stream this token already names. LoadByToken also matches StreamIDs, so a
+	// token that spells another Stream's id counts as taken.
+	other := model.NewStream()
+	err := service.LoadByToken(session, token, &other)
+
+	// A database failure must not read as "available"
+	if (err != nil) && !derp.IsNotFound(err) {
+		return derp.Wrap(err, location, "Loading Stream by token", token)
+	}
+
+	// RULE: Token must not identify a different Stream
+	if (err == nil) && (other.StreamID != streamID) {
+		return derp.BadRequest(location, "This token is already in use by another stream", token)
+	}
+
+	// RULE: Token must not match a username, because both are acct: handles (see AGENTS.md)
+	user := model.NewUser()
+	err = service.userService.LoadByUsername(session, token, &user)
+
+	if err == nil {
+		return derp.BadRequest(location, "This token is already in use as a username", token)
+	}
+
+	if !derp.IsNotFound(err) {
+		return derp.Wrap(err, location, "Loading User by username", token)
+	}
+
+	// The token is all yours
+	return nil
 }
 
 // LoadByID returns a single `Stream` that matches the provided streamID

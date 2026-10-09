@@ -3,7 +3,7 @@ package hmac
 
 import (
 	"crypto/hmac"
-	"crypto/sha1"
+	"crypto/sha1" // #nosec G505 -- HMAC-SHA1 is required by senders that specify it; SHA-1 collision attacks do not apply to HMAC
 	"crypto/sha256"
 	"crypto/sha512"
 	"hash"

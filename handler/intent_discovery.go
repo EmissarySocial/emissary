@@ -9,7 +9,6 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/sherlock"
 	"github.com/benpate/steranko"
 	"github.com/benpate/uri"
 )
@@ -33,7 +32,7 @@ func GetIntentInfo(ctx *steranko.Context, factory *service.Factory, session data
 
 	// Look up the account via the ActivityService
 	client := factory.ActivityStream().AppClient()
-	actor, err := client.Load(accountID, sherlock.AsActor())
+	actor, err := client.Load(accountID)
 
 	if err != nil {
 		return derp.Wrap(err, location, "Loading account from ActivityService")
