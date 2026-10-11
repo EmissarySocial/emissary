@@ -14,3 +14,8 @@ const FolderListSectionFolder = "FOLDER"
 // of the inbox UX is the Notifications view (mentions, replies, likes,
 // follows), which is a pinned section separate from the folder list.
 const FolderListSectionNotifications = "NOTIFICATIONS"
+
+// FolderListSectionAnnotations indicates that the highlighted section
+// of the inbox UX is the Notes page, which lists the User's private
+// annotations, so no folder is selected.
+const FolderListSectionAnnotations = "ANNOTATIONS"
