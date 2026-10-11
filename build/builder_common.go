@@ -1031,6 +1031,35 @@ func (w Common) GetResponseSummary(url string) model.UserResponseSummary {
 	return result
 }
 
+// Annotation returns the signed-in User's Annotation of the provided URL, or an empty Annotation if there is none
+func (w Common) Annotation(url string) model.Annotation {
+
+	result := model.NewAnnotation()
+
+	// Anonymous visitors have no annotations
+	if !w.IsAuthenticated() {
+		return result
+	}
+
+	if url == "" {
+		return result
+	}
+
+	// "Not Found" means "not annotated", but a real database error is reported
+	annotationService := w._factory.Annotation()
+
+	if err := annotationService.LoadByURL(w._session, w.AuthenticatedID(), url, &result); err != nil {
+
+		if !derp.IsNotFound(err) {
+			derp.Report(derp.Wrap(err, "build.Common.Annotation", "Loading Annotation", url))
+		}
+
+		return model.NewAnnotation()
+	}
+
+	return result
+}
+
 // AvailableMerchantAccounts returns the payment providers this Domain has connected, as LookupCodes
 func (w Common) AvailableMerchantAccounts() (sliceof.Object[form.LookupCode], error) {
 	merchantAccountService := w._factory.MerchantAccount()

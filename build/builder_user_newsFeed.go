@@ -360,6 +360,44 @@ func (w Inbox) Inbox() (QueryBuilder[model.NewsItem], error) {
 	return NewQueryBuilder[model.NewsItem](w._factory.NewsFeed(), w._session, criteria), nil
 }
 
+// Annotations returns a QueryBuilder for the signed-in User's annotations, newest first.
+// ?type=actor or ?type=document narrows the list, and ?createDate=LT:n pages through it.
+func (w Inbox) Annotations() (QueryBuilder[model.Annotation], error) {
+
+	const location = "build.NewsFeed.Annotations"
+
+	// Must be signed in to view annotations
+	if w.AuthenticatedID().IsZero() {
+		return QueryBuilder[model.Annotation]{}, derp.Unauthorized(location, "Must be signed in to view annotations")
+	}
+
+	queryString := w._request.URL.Query()
+
+	expBuilder := builder.NewBuilder().
+		Int("createDate")
+
+	var criteria exp.Expression = exp.And(
+		exp.Equal("userId", w.AuthenticatedID()),
+		expBuilder.Evaluate(queryString),
+	)
+
+	// Narrow the list to actors or documents
+	switch queryString.Get("type") {
+
+	case "actor":
+		criteria = criteria.AndEqual("type", model.AnnotationTypeActor)
+
+	case "document":
+		criteria = criteria.AndEqual("type", model.AnnotationTypeDocument)
+	}
+
+	result := NewQueryBuilder[model.Annotation](w._factory.Annotation(), w._session, criteria).
+		ByCreateDate().
+		Reverse()
+
+	return result, nil
+}
+
 // IsInboxEmpty returns TRUE if the inbox has no results and there are no filters applied
 // This corresponds to there being NOTHING in the inbox, instead of just being filtered out.
 func (w Inbox) IsInboxEmpty(inbox []model.NewsItem) bool {
@@ -439,6 +477,12 @@ func (w Inbox) FoldersWithSelection(section string) (model.FolderList, error) {
 
 	// If the "Notifications" section is selected, then we are done.
 	if section == model.FolderListSectionNotifications {
+		result.Section = section
+		return result, nil
+	}
+
+	// If the "Annotations" section is selected, then no folder is.
+	if section == model.FolderListSectionAnnotations {
 		result.Section = section
 		return result, nil
 	}
