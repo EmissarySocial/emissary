@@ -12,6 +12,7 @@ func AnnotationSchema() schema.Element {
 			"annotationId": schema.String{Format: "objectId"},
 			"userId":       schema.String{Format: "objectId"},
 			"url":          schema.String{Format: "url"},
+			"type":         schema.String{Enum: []string{AnnotationTypeActor, AnnotationTypeDocument}},
 			"name":         schema.String{Format: "text", MaxLength: 256},
 			"icon":         schema.String{Format: "text", MaxLength: 256},
 			"content":      schema.String{Format: "text", MaxLength: 10000},
@@ -31,6 +32,9 @@ func (annotation *Annotation) GetPointer(name string) (any, bool) {
 
 	case "url":
 		return &annotation.URL, true
+
+	case "type":
+		return &annotation.Type, true
 
 	case "name":
 		return &annotation.Name, true
