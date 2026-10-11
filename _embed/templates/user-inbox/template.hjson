@@ -160,30 +160,16 @@
 
 					// An actor's notes are a tab of the standard-size actor modal; a document's use the
 					// large modal of the document browser.  Actor links pass ?type=ACTOR for a new record.
-					{do: "if", condition:"{{.Object.IsActor}}", then:[
-						{do: "as-modal", steps: [
-							{do: "view-html"}
-							{do:"edit", options:["delete:/@me/newsfeed/annotation-delete?annotationId={{.ObjectID}}", "delete-label:Delete"], form: {
-								type: layout-vertical
-								children:[
-									{type:"textarea", path:"content", description:"(PRIVATE) These notes are not shared with anyone", options:{rows:12, autocomplete:"off"}}
-								]
-							}}
-							{do: "save"}
-							{do: "trigger-event", event:"annotationChanged", value:"{{.Object.URL}}"}
-						]}
-					], else:[
-						{do: "as-modal", options:["class:large"], steps: [
-							{do: "view-html"}
-							{do:"edit", options:["delete:/@me/newsfeed/annotation-delete?annotationId={{.ObjectID}}", "delete-label:Delete"], form: {
-								type: layout-vertical
-								children:[
-									{type:"textarea", path:"content", description:"(PRIVATE) These notes are not shared with anyone", options:{rows:12, autocomplete:"off"}}
-								]
-							}}
-							{do: "save"}
-							{do: "trigger-event", event:"annotationChanged", value:"{{.Object.URL}}"}
-						]}
+					{do: "as-modal", options:["class:{{iif .Object.IsActor `` `large`}}"], steps: [
+						{do: "view-html"}
+						{do:"edit", options:["delete:/@me/newsfeed/annotation-delete?annotationId={{.ObjectID}}", "delete-label:Delete"], form: {
+							type: layout-vertical
+							children:[
+								{type:"textarea", path:"content", description:"(PRIVATE) These notes are not shared with anyone", options:{rows:12, autocomplete:"off"}}
+							]
+						}}
+						{do: "save"}
+						{do: "trigger-event", event:"annotationChanged", value:"{{.Object.URL}}"}
 					]}
 				]}
 			]
