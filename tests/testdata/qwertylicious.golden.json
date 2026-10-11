@@ -234,21 +234,9 @@
 					"orderDependent": true
 				},
 				"hostile": {
-					"changes": {
-						"": "removed",
-						"stripe_portal_url": "string javascript:alert(1)",
-						"stripe_pricing_table": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (302 bytes, sha256 ccc62627a67b)",
-						"stripe_publishable_key": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (302 bytes, sha256 ccc62627a67b)",
-						"stripe_restricted_key": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (302 bytes, sha256 ccc62627a67b)",
-						"stripe_webhook_secret": "string \"\u003cscript\u003ealert(1)\u003c/script\u003e\u003cimg src=x oner\"... (302 bytes, sha256 ccc62627a67b)"
-					},
-					"types": {
-						"stripe_portal_url": "string",
-						"stripe_pricing_table": "string",
-						"stripe_publishable_key": "string",
-						"stripe_restricted_key": "string",
-						"stripe_webhook_secret": "string"
-					}
+					"error": "schema.Schema.SetURLValues: Setting value",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)",
+					"orderDependent": true
 				},
 				"typical": {
 					"changes": {

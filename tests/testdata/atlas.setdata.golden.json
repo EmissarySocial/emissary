@@ -2626,7 +2626,7 @@
 		},
 		"template:user-inbox/actor-button-block-update/0:with-rule.SubSteps@with-rule/0:set-data": {
 			"fields": [
-				"comment (from-form, not in schema)"
+				"summary (from-form, schema.String)"
 			],
 			"results": {
 				"GET/empty": {},
@@ -2635,19 +2635,38 @@
 				"GET/prefilled": {},
 				"GET/typical": {},
 				"POST/empty": {
-					"error": ": Unknown field: comment"
+					"types": {
+						"summary": "string"
+					}
 				},
 				"POST/hostile": {
-					"error": ": Unknown field: comment"
+					"changes": {
+						"summary": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (218 bytes, sha256 e075764e9107)"
+					},
+					"types": {
+						"summary": "string"
+					}
 				},
 				"POST/literal": {
-					"error": ": Unknown field: comment"
+					"types": {
+						"summary": "string"
+					}
 				},
 				"POST/prefilled": {
-					"error": ": Unknown field: comment"
+					"changes": {
+						"summary": "string "
+					},
+					"types": {
+						"summary": "string"
+					}
 				},
 				"POST/typical": {
-					"error": ": Unknown field: comment"
+					"changes": {
+						"summary": "string Sample summary"
+					},
+					"types": {
+						"summary": "string"
+					}
 				}
 			}
 		},
@@ -3054,7 +3073,7 @@
 		},
 		"template:user-settings/actor-button-block-update/0:with-rule.SubSteps@with-rule/0:set-data": {
 			"fields": [
-				"comment (from-form, not in schema)"
+				"summary (from-form, schema.String)"
 			],
 			"results": {
 				"GET/empty": {},
@@ -3063,19 +3082,38 @@
 				"GET/prefilled": {},
 				"GET/typical": {},
 				"POST/empty": {
-					"error": ": Unknown field: comment"
+					"types": {
+						"summary": "string"
+					}
 				},
 				"POST/hostile": {
-					"error": ": Unknown field: comment"
+					"changes": {
+						"summary": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (218 bytes, sha256 e075764e9107)"
+					},
+					"types": {
+						"summary": "string"
+					}
 				},
 				"POST/literal": {
-					"error": ": Unknown field: comment"
+					"types": {
+						"summary": "string"
+					}
 				},
 				"POST/prefilled": {
-					"error": ": Unknown field: comment"
+					"changes": {
+						"summary": "string "
+					},
+					"types": {
+						"summary": "string"
+					}
 				},
 				"POST/typical": {
-					"error": ": Unknown field: comment"
+					"changes": {
+						"summary": "string Sample summary"
+					},
+					"types": {
+						"summary": "string"
+					}
 				}
 			}
 		},

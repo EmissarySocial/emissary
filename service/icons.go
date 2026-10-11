@@ -77,7 +77,7 @@ func (service Icons) Get(name string) string {
 	case "calendar":
 		return service.get("calendar3")
 	case "calendar-fill":
-		return service.get("calendar3-week-fill")
+		return service.get("calendar3-fill")
 	case "cancel":
 		return service.get("x-lg")
 	case "card":
