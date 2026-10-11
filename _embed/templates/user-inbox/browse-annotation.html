@@ -7,7 +7,7 @@
 
 <div id="modal-body" class="turboclick padding-top" hx-target="#modal-window" hx-swap="innerHTML" hx-push-url="false">
 
-	{{- template "browse-parent" (array . $document "") -}}
+	{{- template "browse-parent" (array . $document "annotation") -}}
 
 	<div id="scroll-bottom" class="margin-top-lg" script="init scrollIntoView() me"></div>
 

@@ -162,7 +162,7 @@
 					// large modal of the document browser.  Actor links pass ?type=ACTOR for a new record.
 					{do: "as-modal", options:["class:{{iif .Object.IsActor `` `large`}}"], steps: [
 						{do: "view-html"}
-						{do:"edit", options:["delete:/@me/newsfeed/annotation-delete?annotationId={{.ObjectID}}", "delete-label:Delete"], form: {
+						{do:"edit", options:["delete:/@me/newsfeed/annotation-delete?annotationId={{.ObjectID}}", "delete-label:Delete", "submit-label:{{if .IsNew}}Add a Note{{else}}Update Note{{end}}"], form: {
 							type: layout-vertical
 							children:[
 								{type:"textarea", path:"content", description:"(PRIVATE) These notes are not shared with anyone", options:{rows:12, autocomplete:"off"}}
@@ -605,7 +605,7 @@
 			steps: [
 				{do: "set-query-param", type:"DOCUMENT"}
 				{do: "with-annotation", steps: [
-					{do:"edit", options:["endpoint:/@me/newsfeed/annotation-editor?url={{.QueryParam `url` | urlquery}}", "delete:/@me/newsfeed/annotation-delete?annotationId={{.ObjectID}}&url={{.QueryParam `url` | urlquery}}", "delete-label:Delete"], form: {
+					{do:"edit", options:["endpoint:/@me/newsfeed/annotation-editor?url={{.QueryParam `url` | urlquery}}", "delete:/@me/newsfeed/annotation-delete?annotationId={{.ObjectID}}&url={{.QueryParam `url` | urlquery}}", "delete-label:Delete", "submit-label:{{if .IsNew}}Add a Note{{else}}Update Note{{end}}"], form: {
 						type: layout-vertical
 						children:[
 							{type:"textarea", path:"content", options:{rows:6, autocomplete:"off", focus:true}}

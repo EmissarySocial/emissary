@@ -1,5 +1,7 @@
 {{- $builder := index . 0 -}}
 {{- $document := index . 1 -}}
+{{- $panel := index . 2 -}}
+{{- $notesOpen := eq "annotation" $panel -}}
 
 {{- if ne "" $document.ID -}}
 
@@ -38,7 +40,12 @@
 
 		</div>
 		<div class="margin-top-lg text-xs">
-			{{template "reply-button" $document.ID }}
+			<!-- The Reply or Notes button is selected while its panel is open below this card -->
+			{{- if eq "reply" $panel -}}
+				<button class="turboclick selected" hx-target="main" hx-swap="outerHTML" hx-get="/@me/newsfeed/browse-reply?url={{$document.ID}}">{{icon "reply"}} Reply</button>
+			{{- else -}}
+				{{template "reply-button" $document.ID }}
+			{{- end -}}
 			<span 
 				hx-get="/@me/newsfeed/like-button?url={{$document.ID}}" 
 				hx-trigger="intersect once"
@@ -46,7 +53,7 @@
 				hx-swap="innerHTML" 
 				hx-push-url="false">
 			</span>
-			<span hx-get="/@me/newsfeed/annotation-button?url={{$document.ID}}" hx-trigger="intersect once" hx-target="this" hx-swap="outerHTML" hx-push-url="false"></span>
+			<span hx-get="/@me/newsfeed/annotation-button?url={{$document.ID}}{{if $notesOpen}}&selected=true{{end}}" hx-trigger="intersect once" hx-target="this" hx-swap="outerHTML" hx-push-url="false"></span>
 		</div>
 
 		<div class="pos-absolute-top-right text-sm" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML">
