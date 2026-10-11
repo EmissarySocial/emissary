@@ -19,6 +19,20 @@ const vendoredIconsFile = "../../_embed/templates/theme-global/resources/bootstr
 // glyphPattern pulls the bootstrap class name back out of the icon service's markup.
 var glyphPattern = regexp.MustCompile(`bi bi-([a-z0-9-]+)`)
 
+// sameWhenSelected are legacy Values with no filled glyph. They stay in the list,
+// and look unchanged when selected, because records already store them.
+var sameWhenSelected = []string{"globe"}
+
+// belongsInNavigation reports whether a value is offered by NavigationIcons.
+func belongsInNavigation(icons service.Icons, available map[string]any, value string) bool {
+
+	if slices.Contains(sameWhenSelected, value) {
+		return true
+	}
+
+	return hasBothVariants(icons, available, value)
+}
+
 // hasBothVariants reports whether navigation templates draw a distinct, existing
 // filled glyph for this value, matching {{icon $icon}} and {{icon (join $icon "-fill")}}.
 func hasBothVariants(icons service.Icons, available map[string]any, value string) bool {
@@ -61,6 +75,11 @@ func TestNavigationIcons_EveryIconHasBothVariants(t *testing.T) {
 	available := vendoredIcons(t)
 
 	for _, lookupCode := range dataset.NavigationIcons() {
+
+		if slices.Contains(sameWhenSelected, lookupCode.Value) {
+			continue
+		}
+
 		require.True(t, hasBothVariants(icons, available, lookupCode.Value),
 			"value %q lacks a matching filled variant", lookupCode.Value)
 	}
@@ -74,7 +93,7 @@ func TestNavigationIcons_IsTheCompleteSubsetOfIcons(t *testing.T) {
 	// Every qualifying icon, in the same order and with the same fields
 	expected := make([]string, 0)
 	for _, lookupCode := range dataset.Icons() {
-		if hasBothVariants(icons, available, lookupCode.Value) {
+		if belongsInNavigation(icons, available, lookupCode.Value) {
 			expected = append(expected, lookupCode.Value)
 		}
 	}
@@ -85,6 +104,26 @@ func TestNavigationIcons_IsTheCompleteSubsetOfIcons(t *testing.T) {
 	}
 
 	require.Equal(t, expected, actual, "NavigationIcons must be every icon in Icons() that has both variants")
+}
+
+func TestNavigationIcons_ExceptionsStillDrawAnIcon(t *testing.T) {
+
+	icons := service.NewIcons()
+	available := vendoredIcons(t)
+
+	for _, value := range sameWhenSelected {
+
+		// An exception that gains a real filled glyph belongs in the normal rule
+		require.False(t, hasBothVariants(icons, available, value), "%q now has a filled variant; remove it from sameWhenSelected", value)
+
+		regular := glyphPattern.FindStringSubmatch(icons.Get(value))
+		filled := glyphPattern.FindStringSubmatch(icons.Get(value + "-fill"))
+		require.Len(t, regular, 2, "%q draws no icon", value)
+		require.Len(t, filled, 2, "%q draws no icon when selected", value)
+
+		_, exists := available[filled[1]]
+		require.True(t, exists, "%q draws %q when selected, which the icon set lacks", value, filled[1])
+	}
 }
 
 func TestNavigationIcons_MatchTheirEntryInIcons(t *testing.T) {
