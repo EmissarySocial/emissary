@@ -8,6 +8,7 @@ import (
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -89,20 +90,26 @@ func (service *Annotation) Load(session data.Session, criteria exp.Expression, r
 	return nil
 }
 
-// Save adds/updates an Annotation in the database
+// Save adds/updates an Annotation in the database, keeping one Annotation per User and URL
 func (service *Annotation) Save(session data.Session, annotation *model.Annotation, note string) error {
+	client := service.activityService.UserClient(annotation.UserID)
+	return service.save(session, client, annotation, note)
+}
 
-	const location = "service.Annotation.Save"
+// save describes the Annotation using the provided client, then writes it to the database
+func (service *Annotation) save(session data.Session, client streams.Client, annotation *model.Annotation, note string) error {
+
+	const location = "service.Annotation.save"
 
 	// Copy values from the annotated document
-	document, err := service.activityService.UserClient(annotation.UserID).Load(annotation.URL)
+	if err := describeAnnotation(client, annotation); err != nil {
 
-	if err != nil {
-		return derp.Wrap(err, location, "Loading annotated document", annotation.URL)
+		// RULE: A new annotation needs a reachable document. An existing one keeps its stored
+		// description, so its note can still be edited after the document disappears.
+		if annotation.IsNew() {
+			return derp.Wrap(err, location, "Loading annotated document", annotation.URL)
+		}
 	}
-
-	annotation.Name = document.Name()
-	annotation.Icon = document.Icon().Href()
 
 	// Validate the value before saving
 	if _, err := service.Schema().Validate(annotation); err != nil {
@@ -111,8 +118,40 @@ func (service *Annotation) Save(session data.Session, annotation *model.Annotati
 
 	// Save the value to the database
 	if err := service.collection(session).Save(annotation, note); err != nil {
-		return derp.Wrap(err, location, "Saving Annotation", annotation, note)
+
+		// RULE: A lost race trips idx_Annotation_User_URL_Unique, which data-mongo reports as a
+		// Conflict. Fold onto the winner's record and retry once, so both saves land on one row.
+		if !derp.IsConflict(err) {
+			return derp.Wrap(err, location, "Saving Annotation", annotation, note)
+		}
+
+		if err := service.adoptExisting(session, annotation); err != nil {
+			return derp.Wrap(err, location, "Loading the Annotation that won the race", annotation.URL)
+		}
+
+		if err := service.collection(session).Save(annotation, note); err != nil {
+			return derp.Wrap(err, location, "Saving Annotation after conflict", annotation, note)
+		}
 	}
+
+	// There can be only one.
+	return nil
+}
+
+// adoptExisting gives the Annotation the identity of the stored record for the same User and URL,
+// so that the next save updates that record instead of inserting a second one.
+func (service *Annotation) adoptExisting(session data.Session, annotation *model.Annotation) error {
+
+	const location = "service.Annotation.adoptExisting"
+
+	existing := model.NewAnnotation()
+
+	if err := service.LoadByURL(session, annotation.UserID, annotation.URL, &existing); err != nil {
+		return derp.Wrap(err, location, "Loading existing Annotation", annotation.URL)
+	}
+
+	annotation.AnnotationID = existing.AnnotationID
+	annotation.Journal = existing.Journal
 
 	return nil
 }
@@ -231,7 +270,7 @@ func (service *Annotation) QueryByUser(session data.Session, userID primitive.Ob
 	}
 
 	// Query the database
-	criteria := exp.In("_id", userID)
+	criteria := exp.Equal("userId", userID)
 	return service.Query(session, criteria, options...)
 }
 
