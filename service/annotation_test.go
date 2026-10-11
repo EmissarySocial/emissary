@@ -199,6 +199,13 @@ func TestAnnotation_Save_TypeIsStampedOnlyOnCreate(t *testing.T) {
 	require.NoError(t, service.save(annotationSession{store: store}, actor, &created, "test"))
 	require.Equal(t, model.AnnotationTypeActor, store.saved[0].Type)
 
+	// A new Annotation keeps the type its linking page already set
+	linked := newTestAnnotation()
+	linked.Type = model.AnnotationTypeDocument
+	store = &annotationStore{}
+	require.NoError(t, service.save(annotationSession{store: store}, actor, &linked, "test"))
+	require.Equal(t, model.AnnotationTypeDocument, store.saved[0].Type)
+
 	// An existing Annotation keeps its type, whatever the live document now says
 	existing := newTestAnnotation()
 	existing.CreateDate = 1

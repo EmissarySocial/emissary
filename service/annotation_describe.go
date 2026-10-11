@@ -12,7 +12,7 @@ import (
 const annotationMaxLength = 256
 
 // describeAnnotation copies the annotated document's name and icon onto the Annotation,
-// and stamps its type when the Annotation is new
+// and stamps its type when the Annotation is new and does not have one yet
 func describeAnnotation(client streams.Client, annotation *model.Annotation) error {
 
 	const location = "service.describeAnnotation"
@@ -23,8 +23,9 @@ func describeAnnotation(client streams.Client, annotation *model.Annotation) err
 		return derp.Wrap(err, location, "Loading annotated document", annotation.URL)
 	}
 
-	// RULE: The type is decided once, when the Annotation is created, and never re-read
-	if annotation.IsNew() {
+	// RULE: The type is decided once, when the Annotation is created, and never re-read.
+	// A type the linking page already set is kept.
+	if annotation.IsNew() && annotation.Type == "" {
 		annotation.Type = annotationType(document)
 	}
 
