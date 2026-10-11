@@ -9,28 +9,37 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// Version37 marks every Annotation with no type as an ACTOR annotation
+// Version37 sets every Annotation's type to ACTOR or DOCUMENT
 func Version37(ctx context.Context, session *mongo.Database) error {
 
 	const location = "queries.upgrades.Version37"
 
-	// The actor profile was the only way to create an Annotation before the Notes button,
-	// so every existing record points at an actor, and no fetch is needed to say so
+	// The actor profile was the only way to create an Annotation before the Notes button, so a
+	// missing type means an actor.  Dev builds also wrote raw ActivityStreams types, which map
+	// onto the same two values.  Both passes are safe to run again.
 
 	fmt.Println("... Version 37")
 
-	// RULE: Match only a missing or empty type, so a record that has one is never touched
-	filter := bson.M{"$or": bson.A{
+	collection := session.Collection("Annotation")
+	known := bson.A{"ACTOR", "DOCUMENT"}
+
+	// A missing, empty, or ActivityStreams actor type becomes ACTOR
+	actorFilter := bson.M{"$or": bson.A{
 		bson.M{"type": bson.M{"$exists": false}},
-		bson.M{"type": ""},
+		bson.M{"type": bson.M{"$in": bson.A{"", "Application", "Group", "Organization", "Person", "Service"}}},
 	}}
 
-	update := bson.M{"$set": bson.M{"type": "ACTOR"}}
-
-	if _, err := session.Collection("Annotation").UpdateMany(ctx, filter, update); err != nil {
-		return derp.Wrap(err, location, "Backfilling Annotation types")
+	if _, err := collection.UpdateMany(ctx, actorFilter, bson.M{"$set": bson.M{"type": "ACTOR"}}); err != nil {
+		return derp.Wrap(err, location, "Marking actor Annotations")
 	}
 
-	// Everybody's an actor. Even the bots. Especially the bots.
+	// Every other type left over is a document
+	documentFilter := bson.M{"type": bson.M{"$nin": known}}
+
+	if _, err := collection.UpdateMany(ctx, documentFilter, bson.M{"$set": bson.M{"type": "DOCUMENT"}}); err != nil {
+		return derp.Wrap(err, location, "Marking document Annotations")
+	}
+
+	// Two kinds of people in this world: actors, and everything else.
 	return nil
 }

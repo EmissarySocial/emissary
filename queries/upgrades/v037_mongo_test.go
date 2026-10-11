@@ -9,38 +9,41 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// TestVersion37_BackfillsOnlyMissingTypes runs the migration twice against a real MongoDB,
-// and confirms that records with no type become ACTOR while a known type is left alone.
-func TestVersion37_BackfillsOnlyMissingTypes(t *testing.T) {
+// TestVersion37_NormalizesEveryType runs the migration twice against a real MongoDB, starting from
+// a missing type, an empty one, raw ActivityStreams types, and the two values it writes.
+func TestVersion37_NormalizesEveryType(t *testing.T) {
 
 	database := newUpgradeTestDatabase(t)
 	ctx := context.Background()
 	collection := database.Collection("Annotation")
 
-	missing := primitive.NewObjectID()
-	empty := primitive.NewObjectID()
-	note := primitive.NewObjectID()
+	expected := map[primitive.ObjectID]string{}
+	insert := func(document bson.M, want string) {
+		annotationID := primitive.NewObjectID()
+		document["_id"] = annotationID
+		_, err := collection.InsertOne(ctx, document)
+		require.NoError(t, err)
+		expected[annotationID] = want
+	}
 
-	_, err := collection.InsertMany(ctx, []any{
-		bson.M{"_id": missing, "url": "https://example.test/@alice"},
-		bson.M{"_id": empty, "url": "https://example.test/@bob", "type": ""},
-		bson.M{"_id": note, "url": "https://example.test/notes/1", "type": "DOCUMENT"},
-	})
-	require.NoError(t, err)
+	insert(bson.M{}, "ACTOR")
+	insert(bson.M{"type": ""}, "ACTOR")
+	insert(bson.M{"type": "Person"}, "ACTOR")
+	insert(bson.M{"type": "Group"}, "ACTOR")
+	insert(bson.M{"type": "ACTOR"}, "ACTOR")
+	insert(bson.M{"type": "Note"}, "DOCUMENT")
+	insert(bson.M{"type": "Article"}, "DOCUMENT")
+	insert(bson.M{"type": "DOCUMENT"}, "DOCUMENT")
 
 	// Running twice must be harmless
 	require.NoError(t, Version37(ctx, database))
 	require.NoError(t, Version37(ctx, database))
 
-	typeOf := func(annotationID primitive.ObjectID) string {
+	for annotationID, want := range expected {
 		record := struct {
 			Type string `bson:"type"`
 		}{}
 		require.NoError(t, collection.FindOne(ctx, bson.M{"_id": annotationID}).Decode(&record))
-		return record.Type
+		require.Equal(t, want, record.Type)
 	}
-
-	require.Equal(t, "ACTOR", typeOf(missing))
-	require.Equal(t, "ACTOR", typeOf(empty))
-	require.Equal(t, "DOCUMENT", typeOf(note))
 }
