@@ -8,3 +8,6 @@ const ActionMethodGet ActionMethod = 0
 
 // ActionMethodPost signifies a POST operation on an action
 const ActionMethodPost ActionMethod = 1
+
+// feedMaxItems is the number of child streams in an RSS, Atom, or JSON feed, matching the HTML child list
+const feedMaxItems = 60
