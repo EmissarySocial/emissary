@@ -5,6 +5,7 @@
 {{- $follower := $builder.IsFollower $actor.ID -}}
 {{- $search := $builder.QueryParam "search" -}}
 {{- $folderID := $builder.QueryParam "folderId" -}}
+{{- $annotation := $builder.Annotation $actor.ID -}}
 
 <div id="modal-header" class="flex-row">
 	<div role="tablist" class="pills margin-bottom-none">
@@ -16,7 +17,9 @@
 		{{- end -}}
 
 		<button role="tab" hx-get="/@me/newsfeed/browse-actor?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "person"}} Profile</button>
-		<button role="tab" aria-selected="true" hx-get="/@me/newsfeed/notes?followingId={{$following.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "note"}} Notes</button>
+		<button role="tab" aria-selected="true" hx-get="/@me/newsfeed/annotation?url={{$actor.ID}}&type=ACTOR&search={{$search}}&folderId={{$folderID}}">
+			{{- if $annotation.IsNew -}}{{icon "bookmark"}} Notes{{- else -}}{{iconFilled "bookmark"}} Noted{{- end -}}
+		</button>
 		<button role="tab" hx-get="/@me/settings/actor-rule?actor={{$actor.ID}}">{{icon "rule"}} Rule</button>
 
 		{{ if $following.IsNew -}}

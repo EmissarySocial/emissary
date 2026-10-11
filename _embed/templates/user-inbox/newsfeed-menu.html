@@ -1,10 +1,11 @@
-{{- /* newsfeed-menu.html renders the News Feed folder list: the "all folders" entry, the
-       sortable per-folder links, and "Add a Folder".  The dot (".") is a FolderList (via
+{{- /* newsfeed-menu.html renders the News Feed folder list: the "all folders" entry, Notes,
+       the sortable per-folder links, and "Add a Folder".  The dot (".") is a FolderList (via
        .FoldersWithSelection "FOLDER").  Rendered inside newsfeed-sidebar.html on desktop,
        and full-page by mobile.html.  Notifications live in their own template now (see
        the user-notifications template and the global nav item in theme-default/navigation.html). */ -}}
 {{- $selectedID := .SelectedID -}}
-{{- $allFolders := $selectedID.IsZero -}}
+{{- $isAnnotations := eq .Section "ANNOTATIONS" -}}
+{{- $allFolders := and (not $isAnnotations) $selectedID.IsZero -}}
 
 <a href="/@me/newsfeed/feed" class="turboclick menu-item ellipsis hover-trigger folder {{if $allFolders}}selected{{end}}">
 	<span>
@@ -45,7 +46,18 @@
 
 </form>
 
-<div class="margin-vertical"></div>
+<div class="margin-vertical-lg"></div>
+
+<a href="/@me/newsfeed/annotations" class="turboclick menu-item ellipsis hover-trigger folder {{if $isAnnotations}}selected{{end}}">
+	<span>
+		{{- if $isAnnotations -}}
+			{{- iconFilled "bookmark" -}}
+		{{- else -}}
+			{{- icon "bookmark" -}}
+		{{- end }}
+	</span>
+	<span>Notes</span>
+</a>
 
 <div role="button" hx-get="/@me/newsfeed/folder-add" class="menu-item link turboclick" style="border:none;">
 	<span style="view-transition-name:app-sidebar-add-folder-icon;">{{icon "add"}}</span>

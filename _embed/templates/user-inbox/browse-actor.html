@@ -7,6 +7,8 @@
 {{- $folderID := .QueryParam "folderId" -}}
 {{- $url := $actor.ID -}}
 
+{{- $annotation := .Annotation $actor.ID -}}
+
 <div id="modal-header" class="turboclick" hx-target="#modal" hx-swap="innerHTML">
 	<div role="tablist" class="pills margin-bottom-none">
 
@@ -17,7 +19,9 @@
 		{{- end -}}
 
 		<button role="tab" hx-get="/@me/newsfeed/browse-actor?url={{$url}}&search={{$search}}&folderId={{$folderID}}" aria-selected="true">{{icon "person"}} Profile</button>
-		<button role="tab" hx-get="/@me/newsfeed/annotation?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "note"}} Notes</button>
+		<button role="tab" hx-get="/@me/newsfeed/annotation?url={{$actor.ID}}&type=ACTOR&search={{$search}}&folderId={{$folderID}}">
+			{{- if $annotation.IsNew -}}{{icon "bookmark"}} Notes{{- else -}}{{iconFilled "bookmark"}} Noted{{- end -}}
+		</button>
 		<button role="tab" hx-get="/@me/settings/actor-rule?actor={{$actor.ID}}">{{icon "rule"}} Rule</button>
 
 		{{ if $following.IsNew -}}

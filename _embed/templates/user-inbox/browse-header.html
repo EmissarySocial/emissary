@@ -1,56 +1,45 @@
-{{- $url := index . 0 -}}
-{{- $selected := index . 1 -}}
+{{- $builder := index . 0 -}}
+{{- $url := index . 1 -}}
+{{- $selected := index . 2 -}}
+{{- $annotation := $builder.Annotation $url -}}
 
-<div id="modal-header" class="turboclick" hx-target="#modal-window" hx-swap="innerHTML" hx-push-url="false">
+<div id="modal-header" class="turboclick flex-row" hx-target="#modal-window" hx-swap="innerHTML" hx-push-url="false">
+
+	<div role="tablist" class="pills margin-bottom-none flex-grow-1">
+
+		{{- if eq "tree" $selected -}}
+			<button role="tab" id="nestedButton" aria-selected="true">{{icon "list-nested-fill"}} Nested</button>
+		{{- else -}}
+			<button role="tab" hx-get="/@me/newsfeed/browse-tree?url={{$url}}">{{icon "list-nested"}} Nested</button>
+		{{- end -}}
+
+		{{- if eq "index" $selected -}}
+			<button role="tab" hx-get="/@me/newsfeed/browse-index?url={{$url}}" aria-selected="true">{{icon "list-fill"}} Index</button>
+		{{- else -}}
+			<button role="tab" hx-get="/@me/newsfeed/browse-index?url={{$url}}">{{icon "list"}} Index</button>
+		{{- end -}}
+
+		<!-- The icon and label show whether a note exists, not which tab is selected -->
+		{{- if eq "annotation" $selected -}}
+			<button role="tab" hx-get="/@me/newsfeed/browse-annotation?url={{$url}}" aria-selected="true">
+				{{- if $annotation.IsNew -}}{{icon "bookmark"}} Notes{{- else -}}{{iconFilled "bookmark"}} Noted{{- end -}}
+			</button>
+		{{- else -}}
+			<button role="tab" hx-get="/@me/newsfeed/browse-annotation?url={{$url}}">
+				{{- if $annotation.IsNew -}}{{icon "bookmark"}} Notes{{- else -}}{{iconFilled "bookmark"}} Noted{{- end -}}
+			</button>
+		{{- end -}}
+
+		{{- if eq "code" $selected -}}
+			<button role="tab" hx-get="/@me/newsfeed/browse-code?url={{$url}}" aria-selected="true">{{icon "code-fill"}} Code</button>
+		{{- else -}}
+			<button role="tab" hx-get="/@me/newsfeed/browse-code?url={{$url}}">{{icon "code"}} Code</button>
+		{{- end -}}
+
+	</div>
 
 	<div>
-		<div class="flex-row text-xs">
-
-			<div class="flex-grow-1">
-				<span class="button-group">
-
-					{{- if eq "tree" $selected -}}
-						<button id="nestedButton" class="selected">
-							{{icon "list-nested-fill"}} Nested
-						</button>
-					{{- else -}}
-						<button hx-get="/@me/newsfeed/browse-tree?url={{$url}}">
-							{{icon "list-nested"}} Nested
-						</button>
-					{{- end -}}
-
-					{{- if eq "index" $selected -}}
-						<button hx-get="/@me/newsfeed/browse-index?url={{$url}}" class="selected">
-							{{icon "list-fill"}} Index
-						</button>
-					{{- else -}}
-						<button hx-get="/@me/newsfeed/browse-index?url={{$url}}">
-							{{icon "list"}} Index
-						</button>
-					{{- end -}}
-
-					{{- if eq "code" $selected -}}
-						<button hx-get="/@me/newsfeed/browse-code?url={{$url}}" class="selected">
-							{{icon "code-fill"}} Code
-						</button>
-					{{- else -}}
-						<button hx-get="/@me/newsfeed/browse-code?url={{$url}}">
-							{{icon "code"}} Code
-						</button>
-					{{- end -}}
-
-				</span>
-
-			</div>
-
-			<div>
-				<span class="button-group margin-none">	
-					<button script="on click send closeModal">Close</button>
-				</span>
-			</div>
-		
-		</div>
-
+		<button script="on click send closeModal">Close</button>
 	</div>
 
 </div>

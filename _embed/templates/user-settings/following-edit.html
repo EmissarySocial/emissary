@@ -6,6 +6,8 @@
 {{- $actor := .ActivityStreamActor $url -}}
 {{- $follower := .IsFollower $actor.ID -}}
 
+{{- $annotation := .Annotation $actor.ID -}}
+
 <div id="modal-header" class="flex-row">
 	<div role="tablist" class="pills margin-bottom-none">
 
@@ -16,7 +18,9 @@
 		{{- end -}}
 
 		<button hx-get="/@me/newsfeed/browse-actor?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}" role="tab">{{icon "person"}} Profile</button>
-		<button role="tab" hx-get="/@me/newsfeed/annotation?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "note"}} Notes</button>
+		<button role="tab" hx-get="/@me/newsfeed/annotation?url={{$actor.ID}}&type=ACTOR&search={{$search}}&folderId={{$folderID}}">
+			{{- if $annotation.IsNew -}}{{icon "bookmark"}} Notes{{- else -}}{{iconFilled "bookmark"}} Noted{{- end -}}
+		</button>
 		<button role="tab" hx-get="/@me/settings/actor-rule?actor={{$actor.ID}}">{{icon "rule"}} Rule</button>
 
 		{{ if $following.IsNew -}}

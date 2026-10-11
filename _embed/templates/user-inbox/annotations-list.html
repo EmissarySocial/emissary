@@ -1,0 +1,67 @@
+<!-- One page of notes.  A row opens its annotation: the Notes tab of an actor, or a post with
+     its note editor below.  Pages after the first load on scroll with ?createDate=LT:n. -->
+{{- $type := .QueryParam "type" -}}
+{{- $isFirstPage := eq "" (.QueryParam "createDate") -}}
+{{- $annotations := .Annotations.Top30.Slice -}}
+
+{{- if $annotations.NotEmpty -}}
+
+	{{- range $annotation := $annotations -}}
+
+		{{- $action := "browse-annotation" -}}
+		{{- if $annotation.IsActor -}}
+			{{- $action = "annotation" -}}
+		{{- end -}}
+
+		<div
+			role="button"
+			tabIndex="0"
+			class="flex-row flex-align-center padding-vertical-sm clickable max-width-640"
+			hx-get="/@me/newsfeed/{{$action}}?url={{$annotation.URL | urlquery}}&type={{$annotation.Type}}"
+			hx-push-url="false">
+
+			<div class="width-32 flex-shrink-0">
+				{{- if ne "" $annotation.Icon -}}
+					<img src="{{$annotation.Icon}}" class="circle width-32" alt="">
+				{{- else -}}
+					<div class="circle width-32 flex-center">{{icon "bookmark"}}</div>
+				{{- end -}}
+			</div>
+
+			<div class="flex-grow-1 ellipsis">
+				<div class="bold ellipsis">
+					{{- if ne "" $annotation.Name -}}
+						{{$annotation.Name}}
+					{{- else -}}
+						{{$annotation.URL}}
+					{{- end -}}
+				</div>
+				{{- if ne "" $annotation.Content -}}
+					<div class="text-sm text-gray ellipsis">{{$annotation.Content}}</div>
+				{{- end -}}
+			</div>
+
+			<div class="text-sm text-light-gray nowrap">{{$annotation.CreateDate | tinyDate}}</div>
+
+		</div>
+
+		<hr>
+
+	{{- end -}}
+
+	{{- if $annotations.IsLength 30 -}}
+		<div
+			hx-get="/@me/newsfeed/annotations-list?type={{$type | urlquery}}&createDate=LT:{{$annotations.Last.CreateDate}}"
+			hx-trigger="intersect once"
+			hx-target="this"
+			hx-swap="outerHTML"
+			hx-push-url="false">
+			<div><span class="spin">{{icon "loading"}}</span> Loading...</div>
+		</div>
+	{{- end -}}
+
+{{- else if $isFirstPage -}}
+
+	<h2 class="text-gray">No notes yet. Click {{icon "bookmark"}} on any post, or the Notes tab on someone's profile, to save it here.</h2>
+
+{{- end -}}

@@ -1,0 +1,21 @@
+<!-- The annotation button for one URL: either state opens the post with its note editor (browse-annotation).
+     Every copy for the same URL re-fetches itself on annotationChanged (theme-global annotationPeer). -->
+{{- $url := .QueryParam "url" -}}
+{{- $annotation := .Annotation $url -}}
+
+<span
+	hx-get="/@me/newsfeed/annotation-button?url={{$url | urlquery}}"
+	hx-trigger="refresh"
+	hx-target="this"
+	hx-swap="outerHTML"
+	hx-push-url="false"
+	data-annotation-url="{{$url}}"
+	script="install annotationPeer">
+
+	{{- if $annotation.IsNew -}}
+		<button class="turboclick" hx-get="/@me/newsfeed/browse-annotation?url={{$url | urlquery}}">{{icon "bookmark"}} Notes</button>
+	{{- else -}}
+		<button class="turboclick selected" hx-get="/@me/newsfeed/browse-annotation?url={{$url | urlquery}}">{{iconFilled "bookmark"}} Noted</button>
+	{{- end -}}
+
+</span>

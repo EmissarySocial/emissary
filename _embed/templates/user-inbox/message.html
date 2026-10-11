@@ -115,6 +115,7 @@
 					<div class="text-xs margin-top">
 						{{ template "reply-button" $document.ID }}
 						{{.View "like-button"}}
+						<span hx-get="/@me/newsfeed/annotation-button?url={{$document.ID}}" hx-trigger="intersect once" hx-target="this" hx-swap="outerHTML" hx-push-url="false"></span>
 					</div>
 				</div>
 			</div>

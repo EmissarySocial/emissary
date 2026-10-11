@@ -22,7 +22,7 @@ The Domain is a singleton stored with `_id: ObjectId("000000000000000000000000")
 
 ## Uncommitted is not unrun
 
-A slot runs the first time any server boots with it, and a dev server started from a worktree boots with whatever is on disk. Slot 37 was changed in place on 2026-10-11 because it was uncommitted, but the local dev databases had already run the first version at boot and recorded version 37, so they kept its `Person` values and the corrected slot never reached them; slot 38 had to repair both versions. Once a slot exists on disk, treat it as run: correct it in the next slot.
+A slot runs the first time any server boots with it, and a dev server started from a worktree boots with whatever is on disk. Slot 37 was changed in place on 2026-10-11 because it was uncommitted, but the local dev databases had already run the first version at boot and recorded version 37, so they kept its `Person` values and the corrected slot never reached them; slot 38 had to repair both versions. Once a slot exists on disk, treat it as run: correct it in the next slot. Folding the correction back is possible only before release, and only by also resetting `databaseVersion` on every local database that ran the later slot, as was done when slot 38 was merged into 37.
 
 ## A new unique index must ship with the reconcile that clears its violations
 

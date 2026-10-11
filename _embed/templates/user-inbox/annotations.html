@@ -1,0 +1,56 @@
+<!-- The Notes page: the signed-in User's private notes, newest first, filtered by
+     ?type=actor|document.  The annotations action sets ?section=ANNOTATIONS so the sidebar highlights it. -->
+{{- $isMobile := .IsMobile -}}
+{{- $isDesktop := not $isMobile -}}
+{{- $type := .QueryParam "type" -}}
+{{- $isActors := eq $type "actor" -}}
+{{- $isDocuments := eq $type "document" -}}
+{{- $isAll := not (or $isActors $isDocuments) -}}
+
+<div class="app width-100%" script="init send SelectNav(id:'inbox')">
+
+	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
+
+	<!-- Sidebar Content -->
+	{{- if $isDesktop -}}
+		{{- template "newsfeed-sidebar" . -}}
+	{{- end -}}
+
+	<!-- Main App Content -->
+	<div class="app-content padding-top">
+
+		<h1 class="text-xl bold margin-top-none margin-bottom">
+			{{- if $isMobile -}}
+				<a href="/@me/newsfeed/mobile">{{icon "back"}}</a>
+			{{- else -}}
+				{{iconFilled "bookmark"}}
+			{{- end }}
+			Notes
+		</h1>
+
+		<div role="tablist" class="pills margin-bottom-lg">
+			<a role="tab" href="/@me/newsfeed/annotations" class="turboclick" aria-selected="{{$isAll}}">All</a>
+			<a role="tab" href="/@me/newsfeed/annotations?type=actor" class="turboclick" aria-selected="{{$isActors}}">{{icon "person"}} Actors</a>
+			<a role="tab" href="/@me/newsfeed/annotations?type=document" class="turboclick" aria-selected="{{$isDocuments}}">{{icon "file"}} Documents</a>
+		</div>
+
+		<div
+			hx-get="/@me/newsfeed/annotations-list?type={{$type | urlquery}}"
+			hx-trigger="load"
+			hx-target="this"
+			hx-swap="outerHTML"
+			hx-push-url="false">
+			<div><span class="spin">{{icon "loading"}}</span> Loading Notes...</div>
+		</div>
+
+	</div>
+
+	<div
+		hx-get="{{.RelativeURL}}"
+		hx-trigger="refreshPage from:window"
+		hx-target="main"
+		hx-swap="innerHTML"
+		hx-push-url="false">
+	</div>
+
+</div>

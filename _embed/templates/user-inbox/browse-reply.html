@@ -1,7 +1,7 @@
 {{- $url := .QueryParam "url" -}}
 {{- $document := .ActivityStream $url -}}
 
-{{- template "browse-header" (array $url "reply") -}}
+{{- template "browse-header" (array . $url "reply") -}}
 
 <div id="modal-body" class="turboclick padding-top" hx-target="#modal-window" hx-swap="innerHTML" hx-push-url="false">
 

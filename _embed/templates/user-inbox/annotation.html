@@ -3,7 +3,7 @@
 {{- $args := array . $document -}}
 
 {{- if $document.IsActor -}}
-	{{- template "annotation-actor" $args -}}
+	{{- template "browse-actor-annotation" $args -}}
 {{- else -}}
-	{{ template "annotation-document" $args -}}
+	{{ template "browse-document-annotation" $args -}}
 {{- end -}}

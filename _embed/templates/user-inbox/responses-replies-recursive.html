@@ -56,6 +56,7 @@
 				hx-target="this"
 				hx-trigger="load">
 			</span>
+			<span hx-get="/@me/newsfeed/annotation-button?url={{$object.ID}}" hx-trigger="load" hx-target="this" hx-swap="outerHTML" hx-push-url="false"></span>
 			{{- if $object.Actor.NotNil -}}
 				{{- if $builder.IsMe $object.Actor.ID -}}
 					<span class="button" disabled>{{icon "more-horizontal"}}</span>
