@@ -52,7 +52,7 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 			And(builder.defaultAllowed()).
 			And(builder.withinPublishDate())
 
-		children, err := builder.factory().Stream().List(builder.session(), criteria, option.SortDesc("publishDate"))
+		children, err := builder.factory().Stream().List(builder.session(), criteria, feedListOptions()...)
 
 		if err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Querying child streams"))
@@ -82,9 +82,8 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 		result.Items = slice.Map(queryResults, convert.SearchResultToGorillaFeed)
 	}
 
-	// Now write the feed into the requested format
+	// Now write the feed straight into the buffer, in the requested format
 	{
-		var xml string
 		var err error
 
 		// Thank you gorilla/feeds for this awesome API.
@@ -92,18 +91,14 @@ func (step StepViewFeed) Get(builder Builder, buffer io.Writer) PipelineBehavior
 
 		case model.MimeTypeAtom:
 			mimeType = "application/atom+xml; charset=UTF-8"
-			xml, err = result.ToAtom()
+			err = result.WriteAtom(buffer)
 
 		default:
 			mimeType = "application/rss+xml; charset=UTF-8"
-			xml, err = result.ToRss()
+			err = result.WriteRss(buffer)
 		}
 
 		if err != nil {
-			return Halt().WithError(derp.Wrap(err, location, "Generating feed. This should never happen"))
-		}
-
-		if _, err := buffer.Write([]byte(xml)); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Writing feed to buffer"))
 		}
 
@@ -143,6 +138,16 @@ func (step StepViewFeed) detectMimeType(builder Builder) string {
 	return model.MimeTypeRSS
 }
 
+// feedListOptions returns the query options for a feed's child streams: the newest
+// feedMaxItems, loading only the fields the feed converters read
+func feedListOptions() []option.Option {
+	return []option.Option{
+		option.SortDesc("publishDate"),
+		option.MaxRows(feedMaxItems),
+		option.Fields(convert.StreamFeedFields()...),
+	}
+}
+
 // asJSONFeed renders the provided children as a JSONFeed document
 func (step StepViewFeed) asJSONFeed(builder Builder, buffer io.Writer, children data.Iterator) PipelineBehavior {
 
@@ -160,13 +165,7 @@ func (step StepViewFeed) asJSONFeed(builder Builder, buffer io.Writer, children 
 
 	builder.response().Header().Add("Content-Type", model.MimeTypeJSONFeed)
 
-	bytes, err := json.Marshal(feed)
-
-	if err != nil {
-		return Halt().WithError(derp.Wrap(err, location, "Generating JSONFeed"))
-	}
-
-	if _, err := buffer.Write(bytes); err != nil {
+	if err := json.NewEncoder(buffer).Encode(feed); err != nil {
 		return Halt().WithError(derp.Wrap(err, location, "Writing JSONFeed to buffer"))
 	}
 

@@ -34,8 +34,8 @@ func TestNewMongoStorage_ConnectErrorOmitsCredentials(t *testing.T) {
 	_, err := NewMongoStorage(&args)
 	require.Error(t, err)
 
-	secretcheck.RequireAbsentFromEachLayer(t, err, storageTestPassword)
-	secretcheck.RequireAbsentFromEachLayer(t, err, storageTestKeyPassword)
+	secretcheck.RequireAbsent(t, err, storageTestPassword)
+	secretcheck.RequireAbsent(t, err, storageTestKeyPassword)
 }
 
 // TestLocationLabel confirms a location is named by its scheme and host alone

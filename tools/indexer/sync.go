@@ -56,8 +56,8 @@ func Sync(ctx context.Context, collection *mongo.Collection, newIndexes map[stri
 		}
 
 		// Fall through means that the index has been changed or deleted.  Drop the old index
-		if bsonRaw, err := collection.Indexes().DropOne(ctx, name); err != nil {
-			derp.Report(derp.Wrap(err, location, "Dropping index", "index", name, bsonRaw))
+		if _, err := collection.Indexes().DropOne(ctx, name); err != nil {
+			derp.Report(derp.Wrap(err, location, "Dropping index", "index", name))
 		}
 	}
 

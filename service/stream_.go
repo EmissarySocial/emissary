@@ -964,7 +964,8 @@ func (service *Stream) LoadFirstAttachment(session data.Session, streamID primit
 	return service.attachmentService.LoadFirstByObjectID(session, model.AttachmentObjectTypeStream, streamID)
 }
 
-// MaxRank returns the maximum rank of all children of a stream
+// MaxRank returns the rank for a new child of a stream: one more than its highest-ranked living
+// child, or 1 when it has none
 func (service *Stream) MaxRank(session data.Session, parentID primitive.ObjectID) (int, error) {
 	collection := service.collection(session)
 	return queries.MaxRank(session.Context(), collection, parentID)

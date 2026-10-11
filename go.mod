@@ -1,6 +1,6 @@
 module github.com/EmissarySocial/emissary
 
-go 1.27.1
+go 1.27.2
 
 require (
 	github.com/SherClockHolmes/webpush-go v1.4.0
@@ -20,14 +20,14 @@ require (
 	github.com/benpate/exp-builder v0.12.0
 	github.com/benpate/form v0.32.0
 	github.com/benpate/geo v0.4.0
-	github.com/benpate/hannibal v0.42.0
+	github.com/benpate/hannibal v0.44.0
 	github.com/benpate/html v0.18.0
 	github.com/benpate/icon v0.4.0
 	github.com/benpate/mediaserver v0.20.0
 	github.com/benpate/oembed v0.4.0
 	github.com/benpate/re v0.6.0
 	github.com/benpate/remote v0.25.0
-	github.com/benpate/rosetta v0.43.0
+	github.com/benpate/rosetta v0.45.0
 	github.com/benpate/sherlock v0.20.0
 	github.com/benpate/sniff v0.3.0
 	github.com/benpate/steranko v0.31.0
@@ -74,7 +74,7 @@ require (
 	go.mongodb.org/mongo-driver v1.17.10
 	go.yaml.in/yaml/v3 v3.0.5
 	golang.org/x/crypto v0.57.0
-	golang.org/x/net v0.59.0
+	golang.org/x/net v0.60.0
 	golang.org/x/oauth2 v0.37.0
 	willnorris.com/go/microformats v1.2.0
 )
@@ -115,7 +115,7 @@ require (
 	github.com/kevinburke/ssh_config v1.6.0 // indirect
 	github.com/klauspost/compress v1.20.1 // indirect
 	github.com/klauspost/cpuid/v2 v2.4.0 // indirect
-	github.com/mattn/go-colorable v0.1.15 // indirect
+	github.com/mattn/go-colorable v0.1.16 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mmcdole/goxpp/v2 v2.0.0 // indirect
 	github.com/montanaflynn/stats v0.12.7 // indirect
@@ -134,7 +134,7 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/yeqown/reedsolomon v1.0.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
-	golang.org/x/exp v0.0.0-20260908205506-85c1c2202aba // indirect
+	golang.org/x/exp v0.0.0-20261007192929-f45ad48fbe92 // indirect
 	golang.org/x/image v0.46.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect

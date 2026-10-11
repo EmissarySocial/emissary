@@ -107,30 +107,55 @@ func WithSender(serverFactory ServerFactory, args mapof.Any, handler func(sender
 // WithSession wraps a queue consumer function, and creates new database transaction that is passed to the wrapped handler
 func WithSession(serverFactory ServerFactory, args mapof.Any, handler func(factory *service.Factory, session data.Session, args mapof.Any) queue.Result) queue.Result {
 
-	const location = "consumer.WithFactoryAndSession"
-
 	return WithFactory(serverFactory, args, func(factory *service.Factory, args mapof.Any) queue.Result {
 
 		// Execute the handler as a transaction.  factory.WithTransaction attaches the
 		// post-commit task spool: tasks that consumers publish (e.g. chained follow-up
 		// tasks) are released to the queue only after this transaction commits.
-		result, err := factory.WithTransaction(context.Background(), func(session data.Session) (any, error) {
-			result := handler(factory, session, args)
-			return result, result.Error
+		return withTransactionResult(factory.WithTransaction, func(session data.Session) queue.Result {
+			return handler(factory, session, args)
 		})
-
-		if err != nil {
-			return queue.Error(derp.Wrap(err, location, "Executing transaction."))
-		}
-
-		// Return the queue result
-		if result, isQueueResult := result.(queue.Result); isQueueResult {
-			return result
-		}
-
-		// Guard against panics if developers do bad things.  This should never happen.
-		return queue.Failure(derp.Internal(location, "Handler did not return a queue.Result.  This should never happen", result))
 	})
+}
+
+// withTransactionResult runs a handler inside a transaction, and returns the handler's own
+// queue.Result unless the transaction itself failed
+func withTransactionResult(withTransaction func(context.Context, data.TransactionCallbackFunc) (any, error), handler func(data.Session) queue.Result) queue.Result {
+
+	const location = "consumer.withTransactionResult"
+
+	// RULE: the verdict travels in this variable, never through the transaction's return value.
+	// Returning the error rolls the transaction back, but a Failure must stay a Failure; see AGENTS.md.
+	var result queue.Result
+	var handlerRan bool
+
+	_, err := withTransaction(context.Background(), func(session data.Session) (any, error) {
+		result = handler(session)
+		handlerRan = true
+		return nil, result.Error
+	})
+
+	// The transaction never reached the handler (e.g. no session), so a retry may succeed
+	if !handlerRan {
+
+		if err == nil {
+			return queue.Error(derp.Internal(location, "Transaction ended without running the handler"))
+		}
+
+		return queue.Error(derp.Wrap(err, location, "Starting transaction"))
+	}
+
+	// The handler's own error rolled the transaction back, and its verdict stands
+	if result.Error != nil {
+		return result
+	}
+
+	// The handler succeeded but the commit did not, so nothing it did was kept
+	if err != nil {
+		return queue.Error(derp.Wrap(err, location, "Committing transaction"))
+	}
+
+	return result
 }
 
 // WithStream wraps a consumer function, using the "streamId" argument to load a Stream object from the database.

@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// StepWithChildren.Post walks a Stream's siblings and runs a sub-pipeline against each one, which
+// StepWithChildren.Post walks a Stream's children and runs a sub-pipeline against each one, which
 // needs a live Factory, session, and Stream records -- none of which this package can assemble.
 // What IS reachable here is the builder-type guard in front of that loop, plus the PipelineResult
 // contract the loop depends on to notice a child that failed.  Both are covered below.

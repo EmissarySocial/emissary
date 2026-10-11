@@ -39,7 +39,7 @@ func newRecord(err error, statusCode int) Record {
 
 	// Dig out the deepest location and message in the chain, which name the actual defect
 	rootLocation := derp.RootLocation(err)
-	rootMessage := derp.RootMessage(err)
+	rootMessage := cutDupKey(derp.RootMessage(err))
 
 	// Build the record, signing it from the very values stored beside it, so that a record
 	// can never describe one error while its signature describes another.
@@ -48,7 +48,7 @@ func newRecord(err error, statusCode int) Record {
 		StatusCode: statusCode,
 		Location:   rootLocation,
 		Message:    rootMessage,
-		Error:      err,
+		Error:      StoredError(err),
 		Signature:  signature(statusCode, derp.Location(err), rootLocation, rootMessage),
 		Status:     StatusNew,
 		CreateDate: primitive.NewDateTimeFromTime(time.Now()),

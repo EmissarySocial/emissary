@@ -92,3 +92,17 @@ Keep building load targets with the constructor — it is what gives a field add
 `StreamSourceSchema` marks `method` required with a single permitted value, `HTTPS`, and no form asks for it — there is nothing to choose. `NewStreamSource` therefore assigns it. Without that default, validation rejected every record the settings screen tried to create, and the only clue was `Validating property / method` from `schema.validate_Object`.
 
 A required field whose enum holds one value reads like something the schema handles on its own. It does not: nothing writes a default, so the constructor is the only place the value can come from. `service.StreamSource.adapterFor` then keys its table on that same value, which is why `TestStreamSource_RefreshWiresEveryDependency` asserts the constructor's Method resolves to a registered Adapter — a default with no Adapter would save and then fail on every synchronization.
+
+## Every `schema.Array` that a request can write into needs a `MaxLength`
+
+Rosetta bounds a list's length only through the schema, never in its accessors (decided 2026-10-05; see rosetta's AGENTS.md). An Array with no `MaxLength` lets one path such as `tags.5000000` build a list of 5,000,001 items. Set `MaxLength` on any Array that a form post, request key, or socialRules mapping can reach. Apart from `ActivityStreamSchema`, whose every Array has one, `UserSchema`'s `links` (6) and `DomainSchema`'s `startupTasks` (16) are the only two that set one today (BUG-244).
+
+## Social rules read through `schema` and write through `SocialTargetSchema`
+
+`Stream.JSONLD` runs a Template's `socialRules` from `template.Schema`, which describes the Stream, into `SocialTargetSchema()`, which is `ActivityStreamSchema()` with the Template's `socialSchema` properties laid over it (FUNKWHALE D11). The two must stay separate: a property declared in `schema` can be saved by an edit form, so a social-only term such as `artists` belongs in `socialSchema`. `Schema.Inherit` does not carry an Object's `Wildcard`, which is why `SocialTargetSchema` merges the properties itself and keeps the base wildcard. A `socialSchema` that is not an object is refused at load, because it would otherwise be ignored. Every rule `path` must be declared in `schema`, and beneath a typed Array, rules write items by index rather than with `value: []` and `append` (see rosetta's AGENTS.md).
+
+## The MLS `@context` is temporarily out of the User actor
+
+`User.GetJSONLD` normally lists `vocab.ContextTypeSocialWebMLS` (`https://purl.archive.org/socialweb/mls`). That address now redirects to `swicg.github.io/activitypub-e2ee/context/0.4.0.jsonld`, which declares `"Topology": {"@type": "id"}` where JSON-LD requires `"@id"`. A strict processor rejects the whole context, so the whole actor fails to expand. Funkwhale expands every actor with pyld, which throws `invalid type mapping`, so no Funkwhale user can follow any Emissary actor. Mastodon reads the actor as plain JSON and does not notice. The bad line arrived upstream on 2026-08-25; 0.3.0 is clean.
+
+The actor uses no `mls:` terms, so dropping the context costs nothing. Restore it once upstream fixes 0.4.0, and verify first by expanding a live actor with pyld 2.0.4. `service/keyPackage.go` still carries the context, so KeyPackage documents are equally unexpandable until then. `CalcProfileFingerprint` hashes the whole actor including `@context`, so either change federates one `Update` per User on their next profile save.

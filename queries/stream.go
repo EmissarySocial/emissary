@@ -16,7 +16,8 @@ type MaxRankResult struct {
 	MaxRank int `bson:"maxRank"`
 }
 
-// MaxRank returns the maximum rank of all children of the parent stream
+// MaxRank returns the rank for a new child of the parent stream: one more than its highest-ranked
+// living child, or 1 when it has none
 func MaxRank(ctx context.Context, collection data.Collection, parentID primitive.ObjectID) (int, error) {
 
 	// Set up the mongodb pipeline query and result
@@ -32,12 +33,13 @@ func MaxRank(ctx context.Context, collection data.Collection, parentID primitive
 		return 0, derp.Wrap(err, "queries.CountRecords", "Counting records")
 	}
 
-	// If there are no results, then the collection is empty.
+	// RULE: Ranks start at 1, because 0 means "not set" (see build.StepSort), so the first
+	// child of an empty parent is ranked 1
 	if len(result) == 0 {
-		return 0, nil
+		return 1, nil
 	}
 
-	// Otherwise, return the count returned by mongo.
+	// Otherwise, rank the new child one after its highest-ranked sibling
 	return result[0].MaxRank + 1, nil
 }
 
