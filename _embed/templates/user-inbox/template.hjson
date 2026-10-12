@@ -162,12 +162,20 @@
 					// large modal of the document browser.  Actor links pass ?type=ACTOR for a new record.
 					{do: "as-modal", options:["class:{{iif .Object.IsActor `` `large`}}"], steps: [
 						{do: "view-html"}
-						{do:"edit", options:["delete:/@me/newsfeed/annotation-delete?annotationId={{.ObjectID}}", "delete-label:Delete", "submit-label:{{if .IsNew}}Add a Note{{else}}Update Note{{end}}"], form: {
-							type: layout-vertical
-							children:[
-								{type:"textarea", path:"content", description:"(PRIVATE) These notes are not shared with anyone", options:{rows:12, autocomplete:"off"}}
-							]
-						}}
+						{
+							do:"edit", 
+							options:[
+								"submit-label:{{iif .IsNew `Add a Note` `Update Note`}}",
+								"delete:/@me/newsfeed/annotation-delete?annotationId={{.ObjectID}}", 
+								"delete-label:Delete", 
+							], 
+							form: {
+								type: layout-vertical
+								children:[
+									{type:"textarea", path:"content", description:"(PRIVATE) These notes are not shared with anyone", options:{rows:12, autocomplete:"off"}}
+								]
+							}
+						}
 						{do: "save"}
 						{do: "trigger-event", event:"annotationChanged", value:"{{.Object.URL}}"}
 					]}
