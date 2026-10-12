@@ -437,7 +437,7 @@
 				// explicit /folder route.
 				{do:"if", condition:"{{eq `` (.QueryParam `folderId`)}}", then:[
 					{do:"redirect-to", url:"/@me/newsfeed/feed"}
-				], otherwise:[
+				], else:[
 					{do:"redirect-to", url:"/@me/newsfeed/folder?folderId={{.QueryParam `folderId`}}"}
 				]}
 			]
@@ -555,13 +555,13 @@
 			steps:[
 				{do:"if", condition:"{{eq `ANNOUNCE` (.QueryParam `type`)}}", then:[
 					{do:"redirect-to", url:"/@me/notifications/shares"}
-				], otherwise:[
+				], else:[
 					{do:"if", condition:"{{eq `LIKE` (.QueryParam `type`)}}", then:[
 						{do:"redirect-to", url:"/@me/notifications/likes"}
-					], otherwise:[
+					], else:[
 						{do:"if", condition:"{{eq `FOLLOW` (.QueryParam `type`)}}", then:[
 							{do:"redirect-to", url:"/@me/notifications/followers"}
-						], otherwise:[
+						], else:[
 							{do:"redirect-to", url:"/@me/notifications/replies"}
 						]}
 					]}
