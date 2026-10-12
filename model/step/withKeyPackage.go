@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -12,11 +14,11 @@ type WithKeyPackage struct {
 }
 
 // NewWithKeyPackage returns a fully initialized WithKeyPackage object
-func NewWithKeyPackage(stepInfo mapof.Any) (WithKeyPackage, error) {
+func NewWithKeyPackage(stepInfo mapof.Any, funcMap template.FuncMap) (WithKeyPackage, error) {
 
 	const location = "NewWithKeyPackage"
 
-	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
+	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]), funcMap)
 
 	if err != nil {
 		return WithKeyPackage{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)

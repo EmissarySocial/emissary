@@ -17,7 +17,7 @@ import (
 func newSocialUserService(t *testing.T, definition string) *User {
 	t.Helper()
 
-	template := model.NewTemplate("social-outbox", nil)
+	template := model.NewTemplate("social-outbox", testFuncMap())
 	require.NoError(t, hjson.Unmarshal([]byte(definition), &template))
 	template.Schema.Inherit(schema.New(template.BaseSchema()))
 

@@ -7,7 +7,7 @@ import (
 	"text/template"
 
 	"github.com/EmissarySocial/emissary/model"
-	"github.com/EmissarySocial/emissary/model/step"
+	emissarytemplates "github.com/EmissarySocial/emissary/tools/templates"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/hjson/hjson-go/v4"
 	"github.com/stretchr/testify/require"
@@ -23,7 +23,7 @@ func markdownWidgetBuilder(t *testing.T, source string) (Widget, *model.StreamWi
 	definition, err := os.ReadFile("../_embed/templates/widget-markdown/widget.hjson")
 	require.NoError(t, err)
 
-	widget := model.Widget{}
+	widget := model.NewWidget("widget-markdown", emissarytemplates.FuncMap(nil))
 	require.NoError(t, hjson.Unmarshal(definition, &widget))
 
 	streamWidget := model.NewStreamWidget("markdown", "Label", "TOP")
@@ -78,7 +78,7 @@ func TestWidgetBuilder_MarkdownPipeline(t *testing.T) {
 	widgetBuilder, streamWidget := markdownWidgetBuilder(t, "# Title\n\n**bold** <script>alert(1)</script>")
 
 	// Render the same template that widget.hjson declares
-	valueTemplate, err := template.New("value").Funcs(step.FuncMap()).Parse("{{.Data.markdown | markdown}}")
+	valueTemplate, err := template.New("value").Funcs(template.FuncMap(emissarytemplates.FuncMap(nil))).Parse("{{.Data.markdown | markdown}}")
 	require.NoError(t, err)
 
 	var buffer bytes.Buffer
@@ -106,7 +106,7 @@ func TestWidgetBuilder_MarkdownPipeline_KeepsEmbeds(t *testing.T) {
 
 	widgetBuilder, streamWidget := markdownWidgetBuilder(t, source)
 
-	valueTemplate, err := template.New("value").Funcs(step.FuncMap()).Parse("{{.Data.markdown | markdown}}")
+	valueTemplate, err := template.New("value").Funcs(template.FuncMap(emissarytemplates.FuncMap(nil))).Parse("{{.Data.markdown | markdown}}")
 	require.NoError(t, err)
 
 	var buffer bytes.Buffer
@@ -125,7 +125,7 @@ func TestWidgetBuilder_MarkdownPipeline_EmptySource(t *testing.T) {
 
 	widgetBuilder, streamWidget := markdownWidgetBuilder(t, "")
 
-	valueTemplate, err := template.New("value").Funcs(step.FuncMap()).Parse("{{.Data.markdown | markdown}}")
+	valueTemplate, err := template.New("value").Funcs(template.FuncMap(emissarytemplates.FuncMap(nil))).Parse("{{.Data.markdown | markdown}}")
 	require.NoError(t, err)
 
 	var buffer bytes.Buffer
@@ -144,7 +144,7 @@ func TestWidgetBuilder_Data_NilMap(t *testing.T) {
 
 	require.Empty(t, widgetBuilder.Data())
 
-	valueTemplate, err := template.New("value").Funcs(step.FuncMap()).Parse("{{.Data.markdown | markdown}}")
+	valueTemplate, err := template.New("value").Funcs(template.FuncMap(emissarytemplates.FuncMap(nil))).Parse("{{.Data.markdown | markdown}}")
 	require.NoError(t, err)
 
 	var buffer bytes.Buffer

@@ -15,7 +15,7 @@ func TestSetData(t *testing.T) {
 		"from-form": []string{"name"},
 		"values":    map[string]any{"label": "{{.Label}}"},
 		"defaults":  map[string]any{"color": "blue"},
-	})
+	}, nil)
 	require.Nil(t, err)
 	require.Equal(t, []string{"token"}, step.FromURL)
 	require.Equal(t, []string{"name"}, step.FromForm)
@@ -30,6 +30,6 @@ func TestSetData(t *testing.T) {
 
 // TestSetData_InvalidTemplate verifies that an invalid template is rejected
 func TestSetData_InvalidTemplate(t *testing.T) {
-	_, err := NewSetData(mapof.Any{"values": map[string]any{"bad": "{{ .Unclosed"}})
+	_, err := NewSetData(mapof.Any{"values": map[string]any{"bad": "{{ .Unclosed"}}, nil)
 	require.NotNil(t, err)
 }

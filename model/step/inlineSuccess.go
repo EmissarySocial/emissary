@@ -14,15 +14,15 @@ type InlineSuccess struct {
 }
 
 // NewInlineSuccess returns a fully initialized InlineSuccess step, or an error if its configuration is invalid
-func NewInlineSuccess(stepInfo mapof.Any) (InlineSuccess, error) {
+func NewInlineSuccess(stepInfo mapof.Any, funcMap template.FuncMap) (InlineSuccess, error) {
 
-	message, err := template.New("").Funcs(FuncMap()).Parse(stepInfo.GetString("message"))
+	message, err := template.New("").Funcs(funcMap).Parse(stepInfo.GetString("message"))
 
 	if err != nil {
 		return InlineSuccess{}, derp.Wrap(err, "model.step.NewInlineSuccess", "Parsing message template")
 	}
 
-	href, err := template.New("").Funcs(FuncMap()).Parse(stepInfo.GetString("href"))
+	href, err := template.New("").Funcs(funcMap).Parse(stepInfo.GetString("href"))
 
 	if err != nil {
 		return InlineSuccess{}, derp.Wrap(err, "model.step.NewInlineSuccess", "Parsing href template")

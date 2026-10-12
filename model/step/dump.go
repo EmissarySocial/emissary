@@ -13,12 +13,12 @@ type Dump struct {
 }
 
 // NewDump returns a fully initialized Dump object
-func NewDump(stepInfo mapof.Any) (Dump, error) {
+func NewDump(stepInfo mapof.Any, funcMap template.FuncMap) (Dump, error) {
 
 	const location = "model.step.NewDump"
 
 	// Parse "value" property
-	value, err := template.New("").Parse(stepInfo.GetString("value"))
+	value, err := template.New("").Funcs(funcMap).Parse(stepInfo.GetString("value"))
 
 	if err != nil {
 		return Dump{}, derp.Wrap(err, location, "Invalid 'condition'", stepInfo)

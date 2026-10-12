@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
@@ -13,7 +15,7 @@ type AddModelObject struct {
 }
 
 // NewAddModelObject returns a fully initialized AddModelObject record
-func NewAddModelObject(stepInfo mapof.Any) (AddModelObject, error) {
+func NewAddModelObject(stepInfo mapof.Any, funcMap template.FuncMap) (AddModelObject, error) {
 
 	// Parse form
 	f, err := form.Parse(stepInfo.GetAny("form"))
@@ -23,7 +25,7 @@ func NewAddModelObject(stepInfo mapof.Any) (AddModelObject, error) {
 	}
 
 	// Parse default pipeline
-	defaults, err := NewPipeline(stepInfo.GetSliceOfMap("defaults"))
+	defaults, err := NewPipeline(stepInfo.GetSliceOfMap("defaults"), funcMap)
 
 	if err != nil {
 		return AddModelObject{}, derp.Wrap(err, "model.step.NewAddModelObject", "Invalid defaults", stepInfo["defaults"])

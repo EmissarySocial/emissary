@@ -9,7 +9,7 @@ import (
 
 // TestInlineSuccess verifies that an "inline-success" step parses its configuration
 func TestInlineSuccess(t *testing.T) {
-	step, err := NewInlineSuccess(mapof.Any{"message": "Saved!"})
+	step, err := NewInlineSuccess(mapof.Any{"message": "Saved!"}, nil)
 	require.Nil(t, err)
 	require.NotNil(t, step.Message)
 
@@ -21,6 +21,6 @@ func TestInlineSuccess(t *testing.T) {
 
 // TestInlineSuccess_InvalidTemplate verifies that an invalid template is rejected
 func TestInlineSuccess_InvalidTemplate(t *testing.T) {
-	_, err := NewInlineSuccess(mapof.Any{"message": "{{ .Unclosed"})
+	_, err := NewInlineSuccess(mapof.Any{"message": "{{ .Unclosed"}, nil)
 	require.NotNil(t, err)
 }

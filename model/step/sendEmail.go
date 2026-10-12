@@ -15,14 +15,14 @@ type SendEmail struct {
 }
 
 // NewSendEmail returns a fully initialized SendEmail object
-func NewSendEmail(stepInfo mapof.Any) (SendEmail, error) {
+func NewSendEmail(stepInfo mapof.Any, funcMap template.FuncMap) (SendEmail, error) {
 
 	// Parse each value template
 	valuesMap := stepInfo.GetMap("values")
 	values := make(map[string]*template.Template, len(valuesMap))
 
 	for key := range valuesMap {
-		valueTemplate, err := template.New(key).Funcs(FuncMap()).Parse(valuesMap.GetString(key))
+		valueTemplate, err := template.New(key).Funcs(funcMap).Parse(valuesMap.GetString(key))
 
 		if err != nil {
 			return SendEmail{}, err

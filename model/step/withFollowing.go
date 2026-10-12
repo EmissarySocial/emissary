@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -12,11 +14,11 @@ type WithFollowing struct {
 }
 
 // NewWithFollowing returns a fully initialized WithFollowing object
-func NewWithFollowing(stepInfo mapof.Any) (WithFollowing, error) {
+func NewWithFollowing(stepInfo mapof.Any, funcMap template.FuncMap) (WithFollowing, error) {
 
 	const location = "NewWithFollowing"
 
-	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
+	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]), funcMap)
 
 	if err != nil {
 		return WithFollowing{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)

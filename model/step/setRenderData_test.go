@@ -10,7 +10,7 @@ import (
 // TestSetRenderData verifies that a "set-args" step parses its configuration
 func TestSetRenderData(t *testing.T) {
 
-	step, err := NewSetRenderData(mapof.Any{"do": "set-args", "title": "{{.Label}}", "count": "5"})
+	step, err := NewSetRenderData(mapof.Any{"do": "set-args", "title": "{{.Label}}", "count": "5"}, nil)
 	require.Nil(t, err)
 	require.Contains(t, step.Values, "title")
 	require.Contains(t, step.Values, "count")
@@ -25,6 +25,6 @@ func TestSetRenderData(t *testing.T) {
 
 // TestSetRenderData_InvalidTemplate verifies that an invalid template is rejected
 func TestSetRenderData_InvalidTemplate(t *testing.T) {
-	_, err := NewSetRenderData(mapof.Any{"bad": "{{ .Unclosed"})
+	_, err := NewSetRenderData(mapof.Any{"bad": "{{ .Unclosed"}, nil)
 	require.NotNil(t, err)
 }

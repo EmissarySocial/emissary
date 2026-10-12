@@ -246,7 +246,7 @@ func newOptionTemplateStep(t *testing.T) StepEditModelObject {
 				map[string]any{"type": "upload", "path": "iconUrl", "options": map[string]any{"accept": "image/*", "delete": "/{{.ID}}/delete-icon"}},
 			},
 		},
-	})
+	}, nil)
 
 	require.NoError(t, err)
 	return StepEditModelObject(parsed)

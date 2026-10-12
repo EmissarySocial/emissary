@@ -9,7 +9,7 @@ import (
 
 // TestTriggerEvent verifies that a "trigger-event" step parses its configuration
 func TestTriggerEvent(t *testing.T) {
-	step, err := NewTriggerEvent(mapof.Any{"event": "saved", "value": "{{.ID}}"})
+	step, err := NewTriggerEvent(mapof.Any{"event": "saved", "value": "{{.ID}}"}, nil)
 	require.Nil(t, err)
 	require.Equal(t, "saved", step.Event)
 	require.NotNil(t, step.Value)
@@ -22,6 +22,6 @@ func TestTriggerEvent(t *testing.T) {
 
 // TestTriggerEvent_InvalidTemplate verifies that an invalid template is rejected
 func TestTriggerEvent_InvalidTemplate(t *testing.T) {
-	_, err := NewTriggerEvent(mapof.Any{"value": "{{ .Unclosed"})
+	_, err := NewTriggerEvent(mapof.Any{"value": "{{ .Unclosed"}, nil)
 	require.NotNil(t, err)
 }

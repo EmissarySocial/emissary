@@ -24,7 +24,7 @@ const multiParameterURL = "/.checkout?productId=123&return=/@me"
 
 func TestRedirectTo_URLIsNotHTMLEscaped(t *testing.T) {
 
-	step, err := NewRedirectTo(mapof.Any{"url": multiParameterURL})
+	step, err := NewRedirectTo(mapof.Any{"url": multiParameterURL}, nil)
 	require.NoError(t, err)
 
 	var result bytes.Buffer
@@ -35,7 +35,7 @@ func TestRedirectTo_URLIsNotHTMLEscaped(t *testing.T) {
 
 func TestForwardTo_URLIsNotHTMLEscaped(t *testing.T) {
 
-	step, err := NewForwardTo(mapof.Any{"url": multiParameterURL})
+	step, err := NewForwardTo(mapof.Any{"url": multiParameterURL}, nil)
 	require.NoError(t, err)
 
 	var result bytes.Buffer
@@ -47,7 +47,7 @@ func TestForwardTo_URLIsNotHTMLEscaped(t *testing.T) {
 // purpose: "redirect-to" answers a view, while "forward-to" ends a submission.
 func TestRedirectTo_Defaults(t *testing.T) {
 
-	step, err := NewRedirectTo(mapof.Any{"url": "/somewhere"})
+	step, err := NewRedirectTo(mapof.Any{"url": "/somewhere"}, nil)
 	require.NoError(t, err)
 	require.Equal(t, "both", step.Method)
 	require.Equal(t, 307, step.StatusCode)
@@ -59,7 +59,7 @@ func TestRedirectTo_Defaults(t *testing.T) {
 // and only this default keeps that GET from navigating away before the modal renders.
 func TestForwardTo_DefaultMethodIsPost(t *testing.T) {
 
-	step, err := NewForwardTo(mapof.Any{"url": "/somewhere"})
+	step, err := NewForwardTo(mapof.Any{"url": "/somewhere"}, nil)
 	require.NoError(t, err)
 	require.Equal(t, "post", step.Method)
 }

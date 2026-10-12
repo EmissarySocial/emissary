@@ -1,8 +1,14 @@
 package step
 
 import (
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
 	"testing"
+	"text/template"
 
+	"github.com/EmissarySocial/emissary/tools/templates"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/stretchr/testify/require"
 )
@@ -115,7 +121,7 @@ func TestNew_Dispatch(t *testing.T) {
 			config := testCase.config
 			config["do"] = testCase.do
 
-			step, err := New(config)
+			step, err := New(config, testFuncMap())
 			require.Nil(t, err, "New(%q) should not error", testCase.do)
 			require.NotNil(t, step)
 			require.Equal(t, testCase.expectedName, step.Name(), "do %q dispatched to the wrong step type", testCase.do)
@@ -125,13 +131,43 @@ func TestNew_Dispatch(t *testing.T) {
 
 // TestNew_UnrecognizedStep verifies that an unknown step name is rejected
 func TestNew_UnrecognizedStep(t *testing.T) {
-	_, err := New(mapof.Any{"do": "this-step-does-not-exist"})
+	_, err := New(mapof.Any{"do": "this-step-does-not-exist"}, nil)
 	require.NotNil(t, err)
 }
 
 // TestNew_MissingDo verifies that a step with no "do" key is rejected
 func TestNew_MissingDo(t *testing.T) {
 	// An empty "do" is unrecognized and returns an error.
-	_, err := New(mapof.Any{})
+	_, err := New(mapof.Any{}, nil)
 	require.NotNil(t, err)
+}
+
+// testFuncMap returns the helper functions that the template services pass to every step
+func testFuncMap() template.FuncMap {
+	return template.FuncMap(templates.FuncMap(nil))
+}
+
+// TestStepTemplates_UseFuncMap verifies that every template parsed in this package is given
+// the helper functions passed into its constructor (BUG-268)
+func TestStepTemplates_UseFuncMap(t *testing.T) {
+
+	allCalls := regexp.MustCompile(`template\.New\(`)
+	withFuncMap := regexp.MustCompile(`template\.New\([^)]*\)\.Funcs\(funcMap\)`)
+
+	filenames, err := filepath.Glob("*.go")
+	require.NoError(t, err)
+
+	for _, filename := range filenames {
+
+		if strings.HasSuffix(filename, "_test.go") {
+			continue
+		}
+
+		source, err := os.ReadFile(filename) // #nosec G304 -- the names come from this package's own directory
+		require.NoError(t, err)
+
+		all := len(allCalls.FindAll(source, -1))
+		with := len(withFuncMap.FindAll(source, -1))
+		require.Equal(t, all, with, "%s: every template.New must call .Funcs(funcMap)", filename)
+	}
 }

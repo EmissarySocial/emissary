@@ -19,7 +19,7 @@ func TestAddStream(t *testing.T) {
 		"template":  "my-template",
 		"roles":     []string{"editor", "owner"},
 		"with-data": mapof.Any{"label": "{{.Label}}"},
-	})
+	}, nil)
 	require.Nil(t, err)
 	require.Equal(t, "modal", step.Style)
 	require.Equal(t, "Create Page", step.Title)
@@ -36,7 +36,7 @@ func TestAddStream(t *testing.T) {
 // TestAddStream_Defaults verifies the values an "add-stream" step falls back to when its configuration is empty
 func TestAddStream_Defaults(t *testing.T) {
 
-	step, err := NewAddStream(mapof.Any{})
+	step, err := NewAddStream(mapof.Any{}, nil)
 	require.Nil(t, err)
 	require.Equal(t, "chooser", step.Style)      // default style
 	require.Equal(t, "+ Add a Page", step.Title) // default title
@@ -51,7 +51,7 @@ func TestAddStream_Defaults(t *testing.T) {
 func TestAddStream_InvalidLocation(t *testing.T) {
 
 	// An out-of-enum location is coerced to the first allowed value ("top").
-	step, err := NewAddStream(mapof.Any{"location": "not-valid"})
+	step, err := NewAddStream(mapof.Any{"location": "not-valid"}, nil)
 	require.Nil(t, err)
 	require.Equal(t, "top", step.Location)
 }
@@ -60,10 +60,10 @@ func TestAddStream_InvalidLocation(t *testing.T) {
 func TestAddStream_InvalidTemplate(t *testing.T) {
 
 	// A malformed with-data template returns an error.
-	_, err := NewAddStream(mapof.Any{"with-data": mapof.Any{"bad": "{{ .Unclosed"}})
+	_, err := NewAddStream(mapof.Any{"with-data": mapof.Any{"bad": "{{ .Unclosed"}}, nil)
 	require.NotNil(t, err)
 
 	// A malformed redirect-to template returns an error.
-	_, err = NewAddStream(mapof.Any{"redirect-to": "{{ .Unclosed"})
+	_, err = NewAddStream(mapof.Any{"redirect-to": "{{ .Unclosed"}, nil)
 	require.NotNil(t, err)
 }

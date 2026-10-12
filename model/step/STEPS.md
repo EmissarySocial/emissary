@@ -140,7 +140,7 @@ Wraps the sub-pipeline's output in a modal window. On a partial (HTMX) request �
 | Attribute | Description |
 | --- | --- |
 | steps | **Required.** Sub-pipeline rendered inside the modal |
-| options | Modal options passed to the modal wrapper (size, dismissal behavior, …) |
+| options | Modal options passed to the modal wrapper (size, dismissal behavior, …), each evaluated as a template |
 | background | Name of the action to render behind the modal on a full-page request |
 
 <br>
@@ -644,7 +644,7 @@ Writes an error message into a form without navigating away. Typically used insi
 
 | Attribute | Description |
 | --- | --- |
-| message | **Required.** Template message. Has access to the step helper functions in [functions.go](functions.go) |
+| message | **Required.** Template message |
 
 <br>
 

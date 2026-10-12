@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -12,11 +14,11 @@ type WithParent struct {
 }
 
 // NewWithParent returns a fully initialized WithParent object
-func NewWithParent(stepInfo mapof.Any) (WithParent, error) {
+func NewWithParent(stepInfo mapof.Any, funcMap template.FuncMap) (WithParent, error) {
 
 	const location = "build.NewWithParent"
 
-	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
+	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]), funcMap)
 
 	if err != nil {
 		return WithParent{}, derp.Wrap(err, location, "Invalid 'steps'")

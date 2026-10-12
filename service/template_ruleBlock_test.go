@@ -22,7 +22,7 @@ func TestActorButtonBlockUpdate_PostsRuleFields(t *testing.T) {
 			definition, err := os.ReadFile("../_embed/templates/" + templateID + "/template.hjson")
 			require.NoError(t, err)
 
-			template := model.NewTemplate(templateID, nil)
+			template := model.NewTemplate(templateID, testFuncMap())
 			require.NoError(t, hjson.Unmarshal(definition, &template))
 
 			action, exists := template.Actions["actor-button-block-update"]

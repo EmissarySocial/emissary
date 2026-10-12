@@ -16,7 +16,7 @@ func TestAddModelObject(t *testing.T) {
 		"defaults": []mapof.Any{
 			{"do": "set-state", "state": "published"},
 		},
-	})
+	}, nil)
 	require.Nil(t, err)
 	require.Len(t, step.Defaults, 1)
 	require.Equal(t, step.Form, step.GetForm()) // GetForm returns the parsed form
@@ -38,6 +38,6 @@ func TestAddModelObject_InvalidDefaults(t *testing.T) {
 		"defaults": []mapof.Any{
 			{"do": "this-step-does-not-exist"},
 		},
-	})
+	}, nil)
 	require.NotNil(t, err)
 }

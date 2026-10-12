@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/EmissarySocial/emissary/tools/templates"
 	"github.com/hjson/hjson-go/v4"
 	"github.com/stretchr/testify/require"
 )
@@ -21,7 +22,7 @@ func TestWidget_UnmarshalJSON(t *testing.T) {
 		]
 	}`)
 
-	widget := Widget{}
+	widget := NewWidget("test", templates.FuncMap(nil))
 	require.NoError(t, hjson.Unmarshal(definition, &widget))
 
 	require.Equal(t, "test", widget.WidgetID)
@@ -76,7 +77,7 @@ func TestWidget_EmbeddedMarkdownDefinition(t *testing.T) {
 	definition, err := os.ReadFile("../_embed/templates/widget-markdown/widget.hjson")
 	require.NoError(t, err)
 
-	widget := Widget{}
+	widget := NewWidget("test", templates.FuncMap(nil))
 	require.NoError(t, hjson.Unmarshal(definition, &widget))
 
 	require.Equal(t, "markdown", widget.WidgetID)

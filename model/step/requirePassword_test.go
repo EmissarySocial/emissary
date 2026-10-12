@@ -16,7 +16,7 @@ func TestRequirePassword(t *testing.T) {
 		"submit":      "OK",
 		"submitClass": "danger",
 		"cancel":      "Back",
-	})
+	}, nil)
 	require.Nil(t, err)
 	require.NotNil(t, step.Title)
 	require.NotNil(t, step.Message)
@@ -33,7 +33,7 @@ func TestRequirePassword(t *testing.T) {
 
 // TestRequirePassword_Defaults verifies the values a "requirePassword" step falls back to when its configuration is empty
 func TestRequirePassword_Defaults(t *testing.T) {
-	step, err := NewRequirePassword(mapof.Any{})
+	step, err := NewRequirePassword(mapof.Any{}, nil)
 	require.Nil(t, err)
 	require.Equal(t, "Confirm", step.Submit)
 	require.Equal(t, "warning", step.SubmitClass)

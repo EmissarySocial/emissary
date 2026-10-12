@@ -21,7 +21,7 @@ func newStepRestrictionTemplate(templateID string, templateRole string, modelNam
 	action.Steps = sliceof.NewObject[modelStep.Step]()
 	action.Steps = append(action.Steps, step)
 
-	result := model.NewTemplate(templateID, nil)
+	result := model.NewTemplate(templateID, testFuncMap())
 	result.Category = "Test"
 	result.TemplateRole = templateRole
 	result.Model = modelName
@@ -66,7 +66,7 @@ func TestStartupCreateStreams_RequiresAdminTemplate(t *testing.T) {
 	const roleMessage = "Step can only be used in Templates with a specific templateRole"
 	const modelMessage = "Step can only be used in specific Templates"
 
-	step, err := modelStep.New(map[string]any{"do": "startup-create-streams"})
+	step, err := modelStep.New(map[string]any{"do": "startup-create-streams"}, nil)
 	require.Nil(t, err)
 
 	// An admin Template that builds the Domain model is the one permitted combination.
@@ -98,7 +98,7 @@ func TestStartupComplete_RequiresAdminTemplate(t *testing.T) {
 	const roleMessage = "Step can only be used in Templates with a specific templateRole"
 	const modelMessage = "Step can only be used in specific Templates"
 
-	step, err := modelStep.New(map[string]any{"do": "startup-complete"})
+	step, err := modelStep.New(map[string]any{"do": "startup-complete"}, nil)
 	require.Nil(t, err)
 
 	// An admin Template that builds the Domain model is the one permitted combination.

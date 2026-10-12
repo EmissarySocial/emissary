@@ -14,10 +14,11 @@ func TestAsModal(t *testing.T) {
 		"steps":      []mapof.Any{{"do": "set-state", "state": "published"}},
 		"options":    []string{"size:large"},
 		"background": "refresh",
-	})
+	}, nil)
 	require.Nil(t, err)
 	require.Len(t, step.SubSteps, 1)
-	require.Equal(t, []string{"size:large"}, step.Options)
+	require.Len(t, step.Options, 1)
+	require.Equal(t, "size:large", step.Options[0].Root.String())
 	require.Equal(t, "refresh", step.Background)
 
 	// Required states/roles bubble up from the sub-steps.
@@ -29,6 +30,6 @@ func TestAsModal(t *testing.T) {
 
 // TestAsModal_InvalidSteps verifies that an invalid steps is rejected
 func TestAsModal_InvalidSteps(t *testing.T) {
-	_, err := NewAsModal(mapof.Any{"steps": []mapof.Any{{"do": "nonexistent-step"}}})
+	_, err := NewAsModal(mapof.Any{"steps": []mapof.Any{{"do": "nonexistent-step"}}}, nil)
 	require.NotNil(t, err)
 }

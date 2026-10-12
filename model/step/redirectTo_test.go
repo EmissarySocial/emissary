@@ -11,14 +11,14 @@ import (
 // TestRedirectTo verifies that a "redirect-to" step parses its configuration
 func TestRedirectTo(t *testing.T) {
 
-	step, err := NewRedirectTo(mapof.Any{"url": "/home", "method": "GET", "status": http.StatusFound})
+	step, err := NewRedirectTo(mapof.Any{"url": "/home", "method": "GET", "status": http.StatusFound}, nil)
 	require.Nil(t, err)
 	require.NotNil(t, step.URL)
 	require.Equal(t, "get", step.Method) // lower-cased
 	require.Equal(t, http.StatusFound, step.StatusCode)
 
 	// Defaults: method "both", status 307.
-	step, err = NewRedirectTo(mapof.Any{"url": "/home"})
+	step, err = NewRedirectTo(mapof.Any{"url": "/home"}, nil)
 	require.Nil(t, err)
 	require.Equal(t, "both", step.Method)
 	require.Equal(t, http.StatusTemporaryRedirect, step.StatusCode)
@@ -31,6 +31,6 @@ func TestRedirectTo(t *testing.T) {
 
 // TestRedirectTo_InvalidTemplate verifies that an invalid template is rejected
 func TestRedirectTo_InvalidTemplate(t *testing.T) {
-	_, err := NewRedirectTo(mapof.Any{"url": "{{ .Unclosed"})
+	_, err := NewRedirectTo(mapof.Any{"url": "{{ .Unclosed"}, nil)
 	require.NotNil(t, err)
 }

@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"testing"
+	"text/template"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/model/step"
+	emissarytemplates "github.com/EmissarySocial/emissary/tools/templates"
 	"github.com/benpate/data"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
@@ -39,7 +41,7 @@ func newViewJSONStep(t *testing.T, definition string) StepViewJSON {
 	stepInfo := mapof.Any{}
 	require.NoError(t, hjson.Unmarshal([]byte(definition), &stepInfo))
 
-	parsed, err := step.NewViewJSON(stepInfo)
+	parsed, err := step.NewViewJSON(stepInfo, template.FuncMap(emissarytemplates.FuncMap(nil)))
 	require.NoError(t, err)
 
 	return StepViewJSON(parsed)

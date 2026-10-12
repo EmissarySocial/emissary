@@ -12,7 +12,7 @@ func TestAsTooltip(t *testing.T) {
 
 	step, err := NewAsTooltip(mapof.Any{
 		"steps": []mapof.Any{{"do": "set-state", "state": "published"}},
-	})
+	}, nil)
 	require.Nil(t, err)
 	require.Len(t, step.SubSteps, 1)
 	require.Contains(t, step.RequiredStates(), "published")
@@ -23,6 +23,6 @@ func TestAsTooltip(t *testing.T) {
 
 // TestAsTooltip_InvalidSteps verifies that an invalid steps is rejected
 func TestAsTooltip_InvalidSteps(t *testing.T) {
-	_, err := NewAsTooltip(mapof.Any{"steps": []mapof.Any{{"do": "nonexistent-step"}}})
+	_, err := NewAsTooltip(mapof.Any{"steps": []mapof.Any{{"do": "nonexistent-step"}}}, nil)
 	require.NotNil(t, err)
 }
