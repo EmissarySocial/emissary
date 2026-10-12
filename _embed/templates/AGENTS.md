@@ -73,7 +73,7 @@ A `{{...}}` inside a form element's `options:{...}` (a `validator` URL, an uploa
 
 ## The `if` step's second branch is `else`, and an unknown key is ignored
 
-`model/step/ifCondition.go` reads `condition`, `then`, and `else`. A branch written as `otherwise:` parses without error and is dropped, so a false condition runs nothing and the action answers `200` with an empty body. That is how the `annotation` action showed a blank modal for every annotation whose type was not `ACTOR`. `index` and `notifications` in user-inbox still use `otherwise:` and have the same defect.
+`model/step/ifCondition.go` reads `condition`, `then`, and `else`. A branch written as `otherwise:` parses without error and is dropped, so a false condition runs nothing and the action answers `200` with an empty body. That is how the `annotation` action showed a blank modal for every annotation whose type was not `ACTOR`. `index` and `notifications` in user-inbox had the same defect until 2026-10-11, so their legacy redirects ran only the `then` branch.
 
 ## A click on an icon inside a button has the icon as its target
 
