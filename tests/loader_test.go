@@ -31,7 +31,6 @@ var templateGroups = []templateGroup{
 	{Name: "atlas", Locations: []string{emissaryTemplates, "../../atlas"}},
 	{Name: "bandwagon", Locations: []string{emissaryTemplates, "../../bandwagon"}},
 	{Name: "qwertylicious", Locations: []string{emissaryTemplates, "../../qwertylicious"}},
-	{Name: "qwertylicious-v2", Locations: []string{emissaryTemplates, "../../qwertylicious-v2"}},
 }
 
 // emissaryTemplates is the folder that holds every template that ships in the binary

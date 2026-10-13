@@ -20,7 +20,7 @@ Each **template group** is one deployment: Emissary's own templates, plus one pa
 | Group | Locations, in load order |
 | --- | --- |
 | `emissary` | `_embed/templates` |
-| `atlas`, `bandwagon`, `qwertylicious`, `qwertylicious-v2` | `_embed/templates`, then `../<package>` |
+| `atlas`, `bandwagon`, `qwertylicious` | `_embed/templates`, then `../<package>` |
 
 Each group is loaded by the production `service.Template`, `Theme`, `Widget`, and `Registration` services, wired the way `server/factory_core.go` wires them, so inheritance and overrides match a running server.
 
