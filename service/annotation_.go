@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"iter"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -101,6 +102,38 @@ func (service *Annotation) save(session data.Session, client streams.Client, ann
 
 	const location = "service.Annotation.save"
 
+	// Describe and validate the Annotation
+	if err := service.prepare(client, annotation); err != nil {
+		return derp.Wrap(err, location, "Preparing Annotation", annotation.AnnotationID)
+	}
+
+	// Save the value to the database
+	if err := service.collection(session).Save(annotation, note); err != nil {
+
+		// RULE: A lost race trips idx_Annotation_User_URL_Unique, which data-mongo reports as a
+		// Conflict. Fold onto the winner's record and retry once, so both saves land on one row.
+		if !derp.IsConflict(err) {
+			return derp.Wrap(err, location, "Saving Annotation", annotation.AnnotationID)
+		}
+
+		if err := service.adoptExisting(session, annotation); err != nil {
+			return derp.Wrap(err, location, "Loading the Annotation that won the race", annotation.AnnotationID)
+		}
+
+		if err := service.collection(session).Save(annotation, note); err != nil {
+			return derp.Wrap(err, location, "Saving Annotation after conflict", annotation.AnnotationID)
+		}
+	}
+
+	// There can be only one.
+	return nil
+}
+
+// prepare copies values from the annotated document into the Annotation, then validates it
+func (service *Annotation) prepare(client streams.Client, annotation *model.Annotation) error {
+
+	const location = "service.Annotation.prepare"
+
 	// Copy values from the annotated document
 	if err := describeAnnotation(client, annotation); err != nil {
 
@@ -111,30 +144,12 @@ func (service *Annotation) save(session data.Session, client streams.Client, ann
 		}
 	}
 
-	// Validate the value before saving
+	// RULE: rosetta's validation error quotes every value it rewrote, which here is the User's
+	// private note, so keep only its message
 	if _, err := service.Schema().Validate(annotation); err != nil {
-		return derp.Wrap(err, location, "Validating Annotation", annotation)
+		return derp.Wrap(derp.Validation(derp.RootMessage(err)), location, "Validating Annotation", annotation.AnnotationID)
 	}
 
-	// Save the value to the database
-	if err := service.collection(session).Save(annotation, note); err != nil {
-
-		// RULE: A lost race trips idx_Annotation_User_URL_Unique, which data-mongo reports as a
-		// Conflict. Fold onto the winner's record and retry once, so both saves land on one row.
-		if !derp.IsConflict(err) {
-			return derp.Wrap(err, location, "Saving Annotation", annotation, note)
-		}
-
-		if err := service.adoptExisting(session, annotation); err != nil {
-			return derp.Wrap(err, location, "Loading the Annotation that won the race", annotation.URL)
-		}
-
-		if err := service.collection(session).Save(annotation, note); err != nil {
-			return derp.Wrap(err, location, "Saving Annotation after conflict", annotation, note)
-		}
-	}
-
-	// There can be only one.
 	return nil
 }
 
@@ -156,13 +171,44 @@ func (service *Annotation) adoptExisting(session data.Session, annotation *model
 	return nil
 }
 
+// saveImported writes an imported Annotation, and fails if this User already annotated its URL
+func (service *Annotation) saveImported(session data.Session, client streams.Client, annotation *model.Annotation, note string) error {
+
+	const location = "service.Annotation.saveImported"
+
+	// RULE: An import never replaces the User's own note. Checking before the write keeps the
+	// import's transaction alive, so the import can record this item as failed and move on.
+	existing := model.NewAnnotation()
+	err := service.LoadByURL(session, annotation.UserID, annotation.URL, &existing)
+
+	if err == nil {
+		return derp.Conflict(location, "An Annotation already exists for this URL", existing.AnnotationID)
+	}
+
+	if !derp.IsNotFound(err) {
+		return derp.Wrap(err, location, "Checking for an existing Annotation", annotation.AnnotationID)
+	}
+
+	// Describe and validate the Annotation
+	if err := service.prepare(client, annotation); err != nil {
+		return derp.Wrap(err, location, "Preparing imported Annotation", annotation.AnnotationID)
+	}
+
+	// RULE: Never fold a lost race onto the winner, which would overwrite the User's own note
+	if err := service.collection(session).Save(annotation, note); err != nil {
+		return derp.Wrap(err, location, "Saving imported Annotation", annotation.AnnotationID)
+	}
+
+	return nil
+}
+
 // Delete removes an Annotation from the database (virtual delete)
 func (service *Annotation) Delete(session data.Session, annotation *model.Annotation, note string) error {
 
 	const location = "service.Annotation.Delete"
 
 	if err := service.collection(session).Delete(annotation, note); err != nil {
-		return derp.Wrap(err, location, "Deleting Annotation", annotation, note)
+		return derp.Wrap(err, location, "Deleting Annotation", annotation.AnnotationID)
 	}
 
 	return nil
@@ -236,7 +282,7 @@ func (service *Annotation) ObjectSave(session data.Session, object data.Object, 
 	if annotation, ok := object.(*model.Annotation); ok {
 		return service.Save(session, annotation, comment)
 	}
-	return derp.Internal("service.Annotation.ObjectSave", "Invalid Object Type", object)
+	return derp.Internal("service.Annotation.ObjectSave", "Invalid Object Type", fmt.Sprintf("%T", object))
 }
 
 // ObjectDelete marks a Annotation as deleted. Implements the ModelService interface.
@@ -244,7 +290,7 @@ func (service *Annotation) ObjectDelete(session data.Session, object data.Object
 	if annotation, ok := object.(*model.Annotation); ok {
 		return service.Delete(session, annotation, comment)
 	}
-	return derp.Internal("service.Annotation.ObjectDelete", "Invalid Object Type", object)
+	return derp.Internal("service.Annotation.ObjectDelete", "Invalid Object Type", fmt.Sprintf("%T", object))
 }
 
 // ObjectUserCan reports whether the provided Authorization may run an action on a Annotation. Implements the ModelService interface.
@@ -351,7 +397,7 @@ func (service *Annotation) DeleteByUserID(session data.Session, userID primitive
 	// Delete each annotation
 	for annotation := range annotations {
 		if err := service.Delete(session, &annotation, note); err != nil {
-			return derp.Wrap(err, location, "Deleting Annotation", annotation)
+			return derp.Wrap(err, location, "Deleting Annotation", annotation.AnnotationID)
 		}
 	}
 

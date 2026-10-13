@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/secretcheck"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -47,6 +48,8 @@ func (client annotationClient) Delete(string) error { return nil }
 // annotationStore is a data.Collection fake whose first Save can lose a race to a stored winner.
 type annotationStore struct {
 	winner    *model.Annotation // when set, the first Save fails with a Conflict and Load returns this
+	late      bool              // when set, Load misses the winner, as if it arrived after the check
+	saveErr   error             // when set, every Save fails with this error
 	saveCalls int
 	saved     []model.Annotation
 	criteria  exp.Expression
@@ -74,7 +77,7 @@ func (store *annotationStore) Iterator(exp.Expression, ...option.Option) (data.I
 // Load returns the winner of the race, if there is one
 func (store *annotationStore) Load(_ exp.Expression, target data.Object, _ ...option.Option) error {
 
-	if store.winner == nil {
+	if store.winner == nil || store.late {
 		return derp.NotFound("test", "not found")
 	}
 
@@ -90,6 +93,10 @@ func (store *annotationStore) Load(_ exp.Expression, target data.Object, _ ...op
 func (store *annotationStore) Save(object data.Object, _ string) error {
 
 	store.saveCalls++
+
+	if store.saveErr != nil {
+		return store.saveErr
+	}
 
 	if store.winner != nil && store.saveCalls == 1 {
 		return derp.Wrap(derp.Internal("test", "E11000"), "test", "duplicate", derp.WithConflict())
@@ -250,6 +257,83 @@ func TestAnnotation_Save_ConflictFoldsOntoTheWinner(t *testing.T) {
 	require.Equal(t, winner.AnnotationID, store.saved[0].AnnotationID)
 	require.Equal(t, int64(42), store.saved[0].CreateDate)
 	require.Equal(t, "my note", store.saved[0].Content, "the incoming note wins")
+}
+
+func TestAnnotation_Save_ErrorsNameTheRecordNotItsNote(t *testing.T) {
+
+	const note = "my private note about this account"
+	service := NewAnnotation()
+	client := annotationClient{document: map[string]any{"id": "https://example.test/notes/1", "type": "Person", "name": "Alice"}}
+
+	t.Run("validation", func(t *testing.T) {
+		annotation := newTestAnnotation()
+		annotation.Content = note + strings.Repeat("x", 10000)
+		err := service.save(annotationSession{store: &annotationStore{}}, client, &annotation, "test")
+		require.Error(t, err)
+		secretcheck.RequireAbsent(t, err, note)
+	})
+
+	t.Run("database", func(t *testing.T) {
+		annotation := newTestAnnotation()
+		annotation.Content = note
+		store := &annotationStore{saveErr: derp.Internal("test", "database is down")}
+		err := service.save(annotationSession{store: store}, client, &annotation, "test")
+		require.Error(t, err)
+		secretcheck.RequireAbsent(t, err, note)
+	})
+}
+
+/******************************************
+ * saveImported
+ ******************************************/
+
+func TestAnnotation_SaveImported_FailsWhenTheURLIsAnnotated(t *testing.T) {
+
+	annotation := newTestAnnotation()
+	annotation.Content = "imported note"
+
+	existing := model.NewAnnotation()
+	existing.UserID = annotation.UserID
+	existing.URL = annotation.URL
+	existing.Content = "my own note"
+
+	store := &annotationStore{winner: &existing}
+	service := NewAnnotation()
+	client := annotationClient{document: map[string]any{"id": annotation.URL, "type": "Person", "name": "Alice"}}
+
+	err := service.saveImported(annotationSession{store: store}, client, &annotation, "test")
+	require.True(t, derp.IsConflict(err), "a duplicate import fails as a conflict")
+	require.Zero(t, store.saveCalls, "nothing is written, so the import's transaction survives")
+}
+
+func TestAnnotation_SaveImported_LostRaceDoesNotFold(t *testing.T) {
+
+	annotation := newTestAnnotation()
+	annotation.Content = "imported note"
+
+	winner := model.NewAnnotation()
+	winner.UserID = annotation.UserID
+	winner.URL = annotation.URL
+
+	store := &annotationStore{winner: &winner, late: true}
+	service := NewAnnotation()
+	client := annotationClient{document: map[string]any{"id": annotation.URL, "type": "Person", "name": "Alice"}}
+
+	err := service.saveImported(annotationSession{store: store}, client, &annotation, "test")
+	require.True(t, derp.IsConflict(err), "the lost insert is returned, not folded")
+	require.Equal(t, 1, store.saveCalls)
+	require.Empty(t, store.saved, "the winner's note is never overwritten")
+}
+
+func TestAnnotation_SaveImported_SavesANewURL(t *testing.T) {
+
+	annotation := newTestAnnotation()
+	store := &annotationStore{}
+	service := NewAnnotation()
+	client := annotationClient{document: map[string]any{"id": annotation.URL, "type": "Person", "name": "Alice"}}
+
+	require.NoError(t, service.saveImported(annotationSession{store: store}, client, &annotation, "test"))
+	require.Len(t, store.saved, 1)
 }
 
 /******************************************
