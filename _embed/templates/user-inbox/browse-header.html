@@ -10,30 +10,30 @@
 		{{- if eq "tree" $selected -}}
 			<button role="tab" id="nestedButton" aria-selected="true">{{icon "list-nested-fill"}} Nested</button>
 		{{- else -}}
-			<button role="tab" hx-get="/@me/newsfeed/browse-tree?url={{$url}}">{{icon "list-nested"}} Nested</button>
+			<button role="tab" hx-get="/@me/newsfeed/browse-tree?url={{$url | urlquery}}">{{icon "list-nested"}} Nested</button>
 		{{- end -}}
 
 		{{- if eq "index" $selected -}}
-			<button role="tab" hx-get="/@me/newsfeed/browse-index?url={{$url}}" aria-selected="true">{{icon "list-fill"}} Index</button>
+			<button role="tab" hx-get="/@me/newsfeed/browse-index?url={{$url | urlquery}}" aria-selected="true">{{icon "list-fill"}} Index</button>
 		{{- else -}}
-			<button role="tab" hx-get="/@me/newsfeed/browse-index?url={{$url}}">{{icon "list"}} Index</button>
+			<button role="tab" hx-get="/@me/newsfeed/browse-index?url={{$url | urlquery}}">{{icon "list"}} Index</button>
 		{{- end -}}
 
 		<!-- The icon and label show whether a note exists, not which tab is selected -->
 		{{- if eq "annotation" $selected -}}
-			<button role="tab" hx-get="/@me/newsfeed/browse-annotation?url={{$url}}" aria-selected="true">
+			<button role="tab" hx-get="/@me/newsfeed/browse-annotation?url={{$url | urlquery}}" aria-selected="true">
 				{{- if $annotation.IsNew -}}{{icon "bookmark"}} Notes{{- else -}}{{iconFilled "bookmark"}} Noted{{- end -}}
 			</button>
 		{{- else -}}
-			<button role="tab" hx-get="/@me/newsfeed/browse-annotation?url={{$url}}">
+			<button role="tab" hx-get="/@me/newsfeed/browse-annotation?url={{$url | urlquery}}">
 				{{- if $annotation.IsNew -}}{{icon "bookmark"}} Notes{{- else -}}{{iconFilled "bookmark"}} Noted{{- end -}}
 			</button>
 		{{- end -}}
 
 		{{- if eq "code" $selected -}}
-			<button role="tab" hx-get="/@me/newsfeed/browse-code?url={{$url}}" aria-selected="true">{{icon "code-fill"}} Code</button>
+			<button role="tab" hx-get="/@me/newsfeed/browse-code?url={{$url | urlquery}}" aria-selected="true">{{icon "code-fill"}} Code</button>
 		{{- else -}}
-			<button role="tab" hx-get="/@me/newsfeed/browse-code?url={{$url}}">{{icon "code"}} Code</button>
+			<button role="tab" hx-get="/@me/newsfeed/browse-code?url={{$url | urlquery}}">{{icon "code"}} Code</button>
 		{{- end -}}
 
 	</div>

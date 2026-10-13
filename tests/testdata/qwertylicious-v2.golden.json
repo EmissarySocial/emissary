@@ -4371,6 +4371,39 @@
 				}
 			}
 		},
+		"template:user-inbox/annotation-editor/1:with-annotation.SubSteps@with-annotation/0:edit": {
+			"fields": [
+				"content (textarea, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"content": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"content": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"content": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (9962 bytes, sha256 3fcb2919a327)"
+					},
+					"types": {
+						"content": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"content": "string Sample content"
+					},
+					"types": {
+						"content": "string"
+					}
+				}
+			}
+		},
 		"template:user-inbox/annotation/0:with-annotation.SubSteps@with-annotation/0:as-modal.SubSteps/1:edit": {
 			"fields": [
 				"content (textarea, schema.String)"
