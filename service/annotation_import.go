@@ -17,7 +17,7 @@ func (service *Annotation) Import(session data.Session, _ *model.Import, importI
 	// Unmarshal the JSON document into a new Annotation
 	annotation := model.NewAnnotation()
 	if err := json.Unmarshal(document, &annotation); err != nil {
-		return derp.Wrap(err, location, "Parsing remote document", document)
+		return derp.Wrap(err, location, "Parsing remote document", importItem.ImportItemID)
 	}
 
 	// Update mapping values in the importItem
@@ -32,8 +32,9 @@ func (service *Annotation) Import(session data.Session, _ *model.Import, importI
 		return derp.ReportAndReturn(derp.Wrap(err, location, "Mapping UserID", "UserID: "+user.UserID.Hex()+", AnnotationID: "+annotation.AnnotationID.Hex()))
 	}
 
-	// Save the Annotation to the database
-	if err := service.Save(session, &annotation, "Imported"); err != nil {
+	// Save the Annotation to the database, failing if the User already annotated this URL
+	client := service.activityService.UserClient(annotation.UserID)
+	if err := service.saveImported(session, client, &annotation, "Imported"); err != nil {
 		return derp.Wrap(err, location, "Saving imported Annotation")
 	}
 

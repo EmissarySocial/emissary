@@ -322,7 +322,7 @@ func (service *User) Delete(session data.Session, user *model.User, note string)
 
 	// Delete related Annotations, which hold the User's private notes
 	if err := service.annotationService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
-		return derp.Wrap(err, location, "Deleting User's annotations", user, note)
+		return derp.Wrap(err, location, "Deleting User's annotations", user.UserID)
 	}
 
 	// Delete related Folders
