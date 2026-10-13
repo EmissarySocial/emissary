@@ -164,8 +164,7 @@ func nestedSteps(current step.Step) map[string][]step.Step {
 	stepSlice := reflect.TypeOf([]step.Step{})
 
 	for index := range value.NumField() {
-		field := value.Type().Field(index)
-		if field.IsExported() && (field.Type == stepSlice) {
+		if field := value.Type().Field(index); field.IsExported() && (field.Type == stepSlice) {
 			if subSteps := value.Field(index).Interface().([]step.Step); len(subSteps) > 0 {
 				result[field.Name] = subSteps
 			}
@@ -382,8 +381,7 @@ func editTemplateCase(group *loadedGroup, name string, current step.EditTemplate
 		NewObject: context.NewObject,
 		Apply: func(object any, values url.Values) error {
 			for _, path := range current.Paths {
-				newTemplateID := values.Get(path)
-				if containsString(allowedTemplates(group, path, object), newTemplateID) {
+				if newTemplateID := values.Get(path); containsString(allowedTemplates(group, path, object), newTemplateID) {
 					if err := context.Schema.Set(object, path, newTemplateID); err != nil {
 						return err
 					}

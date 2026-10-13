@@ -196,9 +196,8 @@ func (use setDataUse) apply(method string, scenario setDataScenario, object any,
 	// Defaults read the current value through the BUILDER, which implements none of the
 	// schema getter interfaces, so the read always fails and every default is applied
 	for _, name := range defaultsOrder {
-		value := use.Step.Defaults[name]
 		if currentValue, _ := s.Get(builderStandIn{}, name); compare.IsZero(currentValue) {
-			if err := s.Set(object, name, value); err != nil {
+			if err := s.Set(object, name, use.Step.Defaults[name]); err != nil {
 				return err
 			}
 		}

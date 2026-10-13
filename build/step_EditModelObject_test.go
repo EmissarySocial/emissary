@@ -191,10 +191,9 @@ func TestEditModelObject_OptionTemplates_Concurrent(t *testing.T) {
 	for range 20 {
 		wait.Go(func() {
 			stream := newOptionTemplateStream()
-			result, err := form.Editor(schema.New(model.StreamSchema()), cached.getForm(optionTemplateBuilder{}), &stream, nil)
 
 			// Report a mismatch rather than failing here, because require cannot run off the test goroutine
-			if (err != nil) || !strings.Contains(result, "streamId="+stream.ID()) {
+			if result, err := form.Editor(schema.New(model.StreamSchema()), cached.getForm(optionTemplateBuilder{}), &stream, nil); (err != nil) || !strings.Contains(result, "streamId="+stream.ID()) {
 				mismatches <- stream.ID()
 			}
 		})
