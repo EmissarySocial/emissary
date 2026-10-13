@@ -23,6 +23,9 @@ jobs:
       uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
       with:
         go-version-file: go.mod
+        # gosec reads export data from the build cache, and the shared setup-go cache has held
+        # data its x/tools cannot decode since go 1.27.2, so build from a cold cache instead
+        cache: false
 
     - name: Install Gosec
       run: go install github.com/securego/gosec/v2/cmd/gosec@v2.29.0
