@@ -1175,7 +1175,7 @@ func (factory *factoryCore) refreshDomains(config config.Config) {
 			// answer 421 with no other clue.  Log its hostname on the always-on zerolog channel,
 			// because derp.Report needs a configured sink.
 			log.Error().Err(err).Str("loc", location).Str("hostname", domainConfig.Hostname).Msg("Domain failed to load and will be UNREACHABLE (requests to it will return 421)")
-			derp.Report(derp.Wrap(err, location, "Refreshing domain", domainConfig.ID))
+			derp.Report(derp.Wrap(err, location, "Refreshing domain", domainConfig.ID()))
 			continue
 		}
 	}
@@ -1270,6 +1270,10 @@ func (factory *factoryCore) init(storage config.Storage, embeddedFiles embed.FS)
 			http.StatusNotFound,
 			http.StatusMethodNotAllowed,
 			http.StatusInternalServerError,
+		),
+		dome.BlockStatusCodes( // replaces Dome's default list, so 403 is restated here
+			http.StatusForbidden,
+			http.StatusMethodNotAllowed, // safe only because every GET route also answers HEAD (BUG-143)
 		),
 	)
 

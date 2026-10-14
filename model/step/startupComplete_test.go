@@ -24,7 +24,7 @@ func TestStartupComplete(t *testing.T) {
 // Asserting the method alone would still pass if the interface were renamed.
 func TestStartupComplete_TemplateRoles(t *testing.T) {
 
-	step, err := New(mapof.Any{"do": "startup-complete"})
+	step, err := New(mapof.Any{"do": "startup-complete"}, nil)
 	require.Nil(t, err)
 
 	requirer, ok := step.(TemplateRoleRequirer)

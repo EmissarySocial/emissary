@@ -24,7 +24,7 @@
 		     follow modal's "Inbox Folder" dropdown defaults to the user's first folder.  Filter and
 		     Folder Settings are folder-specific, so they only appear when a folder is selected. -->
 		{{- $selectedFolder := ne $folderID nilObjectID.Hex -}}
-		<div class="{{if $isDesktop}}text-sm{{end}} margin-none nowrap pos-sticky float-right" style="top:0px; padding:0px 0px 8px 16px; border-radius:4px; background-color:var(--page-background); view-transition-name:sticky-buttons; z-index:1000">
+		<div class="{{if $isDesktop}}text-sm{{end}} margin-none nowrap pos-sticky float-right" style="top:0px; padding:0px 0px 8px 16px; border-radius:4px; background-color:var(--page-background); z-index:1000">
 			<button hx-get="/@me/settings/following-search{{if $selectedFolder}}?folderId={{$folderID}}{{end}}" class="primary turboclick">{{icon "add"}}{{if $isDesktop}} Follow Someone{{end}}</button>
 			{{- if $selectedFolder -}}
 				{{- if $filter.IsZero -}}

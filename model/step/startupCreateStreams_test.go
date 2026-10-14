@@ -24,7 +24,7 @@ func TestStartupCreateStreams(t *testing.T) {
 // type-asserts.  Asserting the method alone would still pass if the interface were renamed.
 func TestStartupCreateStreams_TemplateRoles(t *testing.T) {
 
-	step, err := New(mapof.Any{"do": "startup-create-streams"})
+	step, err := New(mapof.Any{"do": "startup-create-streams"}, nil)
 	require.Nil(t, err)
 
 	requirer, ok := step.(TemplateRoleRequirer)

@@ -111,13 +111,13 @@ func serveMockSMTP(conn net.Conn) {
 	defer func() { _ = conn.Close() }() // A mock server has nowhere to report a close failure
 
 	writer := bufio.NewWriter(conn)
-	reader := bufio.NewReader(conn)
 
 	// Greeting.
 	_, _ = writer.WriteString("220 mock.smtp ready\r\n")
 	_ = writer.Flush()
 
-	for {
+	// The reader is built once, in the loop's init, so its buffer survives between lines
+	for reader := bufio.NewReader(conn); ; {
 		line, err := reader.ReadString('\n')
 
 		if err != nil {

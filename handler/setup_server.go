@@ -189,6 +189,10 @@ func getSetupForm(name string) (form.Element, bool, error) {
 				}},
 				{Type: "layout-vertical", Label: "Testing and Development", Children: []form.Element{
 					{Type: "select", Label: "Debug Output", Path: "debugLevel"},
+					{Type: "select", Label: "Hot Reload Templates?", Path: "hotReloadTemplates", Description: "Watches local template folders and reloads templates whenever a file changes.", Options: mapof.Template{"enum": []form.LookupCode{
+						{Value: "false", Label: "DISABLED (Recommended for production systems)"},
+						{Value: "true", Label: "ENABLED (Development systems only)"},
+					}}},
 				}},
 			},
 		}, false, nil

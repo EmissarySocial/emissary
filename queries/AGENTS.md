@@ -20,6 +20,10 @@ The Domain is a singleton stored with `_id: ObjectId("000000000000000000000000")
 
 [../AGENTS.md](../AGENTS.md) states the never-reuse-a-slot rule; the local mechanics live in [upgrade.go](upgrade.go), where the slice index IS the stored `databaseVersion` (slot 0 is nil). Retired migrations become no-op stubs in place (v001–v019), never deleted or renumbered. Because slot numbers were reused on dev branches in the past, version tracking is an optimization, not the safety mechanism: write every migration idempotent — plan-then-write, delete only true duplicates, backfill only nulls — so a later slot can safely re-run it on a database whose version number lies. `reconcileRules` (written for v027, re-run by v028) is the pattern.
 
+## Uncommitted is not unrun
+
+A slot runs the first time any server boots with it, and a dev server started from a worktree boots with whatever is on disk. Slot 37 was changed in place on 2026-10-11 because it was uncommitted, but the local dev databases had already run the first version at boot and recorded version 37, so they kept its `Person` values and the corrected slot never reached them; slot 38 had to repair both versions. Once a slot exists on disk, treat it as run: correct it in the next slot. Folding the correction back is possible only before release, and only by also resetting `databaseVersion` on every local database that ran the later slot, as was done when slot 38 was merged into 37.
+
 ## A new unique index must ship with the reconcile that clears its violations
 
 `indexer.Sync` builds indexes at boot; a unique index over legacy data E11000s on every start and never builds, with no path to recovery except code. Either clean the data in a new upgrade slot before the index first ships (v027/v028), or dedupe inside the sync function itself immediately before `indexer.Sync` (`deduplicateResponses`, `deduplicateFollowing` in [sync](sync/)) with the dedupe failure reported, not fatal, so the query indexes still build.
@@ -45,3 +49,7 @@ There is no global time-based purge. The daily tasks are PurgeActivityStreamCach
 An update pipeline whose new value references the field it is replacing (`{$set: {loc: {type: "Point", coordinates: "$loc"}}}`) does **not** replace an array-valued field. It produces an array of N identical documents, one per original element. Only a real MongoDB shows this — reasoning about it does not. Use a plain, non-pipeline `$set` with a literal document computed in Go.
 
 Related and still open: `idx_SearchResult_Notified` indexes `notifiedDate`, which nothing writes, so the compound index is unusable for the lock query (its leading field is always missing). It looks copied from the SearchQuery index set where the field is real. By contrast `lockId` and `timeoutDate` ARE real despite being absent from `model.SearchResult` — `queries.LockSearchResults` writes them, bypassing the model on purpose. All three are recorded in the allow-list in `sync/searchResult_test.go`.
+
+## A Stream's rank starts at 1, and 0 means "not set"
+
+`build.StepSort` numbers children from 1, and `Stream.Save` gives any Stream ranked 0 the rank `MaxRank` returns, which is one after its highest-ranked sibling. `MaxRank` returns 1 for a parent with no children; it used to return 0, so the first song of every album was ranked "not set", federated as track 0, and moved after its siblings the next time it was saved. Bandwagon publishes `rank` as a song's `position` and ID3 track number, so keep ranks counting from 1 (`TestMaxRank`).

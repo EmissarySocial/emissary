@@ -37,9 +37,7 @@ func (step StepStartupSaveTask) Post(builder Builder, _ io.Writer) PipelineBehav
 
 	// RULE: Only record tasks that this Domain's Theme actually defines.  Without this, a
 	// renamed or mistyped task would accumulate in the Domain as a value nothing can display.
-	theme := builder.Theme(builder.ThemeID())
-
-	if !slices.ContainsFunc(theme.StartupTasks, func(task form.LookupCode) bool {
+	if theme := builder.Theme(builder.ThemeID()); !slices.ContainsFunc(theme.StartupTasks, func(task form.LookupCode) bool {
 		return task.Value == step.Value
 	}) {
 		return Continue()

@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -12,11 +14,11 @@ type WithUserConnection struct {
 }
 
 // NewWithUserConnection returns a fully initialized WithUserConnection object
-func NewWithUserConnection(stepInfo mapof.Any) (WithUserConnection, error) {
+func NewWithUserConnection(stepInfo mapof.Any, funcMap template.FuncMap) (WithUserConnection, error) {
 
 	const location = "model.step.NewWithUserConnection"
 
-	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
+	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]), funcMap)
 
 	if err != nil {
 		return WithUserConnection{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)

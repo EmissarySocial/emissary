@@ -43,11 +43,11 @@ func Version25(ctx context.Context, session *mongo.Database) error {
 		return derp.Wrap(err, location, "Reading Domain from database")
 	}
 
-	// Update the domain with the new connections data
-	readOnlyDomain.Connections = connections
+	// RULE: $set only the connections.  A whole-record replace from model.Domain, which has no
+	// journal, strips createDate, and every later admin save then INSERTs a duplicate.
+	update := bson.M{"$set": bson.M{"connections": connections}}
 
-	// Write the domain back to the database
-	if _, err := session.Collection("Domain").ReplaceOne(ctx, bson.M{"_id": readOnlyDomain.DomainID}, readOnlyDomain); err != nil {
+	if _, err := session.Collection("Domain").UpdateOne(ctx, bson.M{"_id": readOnlyDomain.DomainID}, update); err != nil {
 		return derp.Wrap(err, location, "Writing Domain to database")
 	}
 

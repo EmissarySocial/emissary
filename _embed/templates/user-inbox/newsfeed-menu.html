@@ -1,12 +1,17 @@
-{{- /* newsfeed-menu.html renders the News Feed folder list: the "all folders" entry, the
-       sortable per-folder links, and "Add a Folder".  The dot (".") is a FolderList (via
+{{- /* newsfeed-menu.html renders the News Feed folder list: the "all folders" entry, Notes,
+       the sortable per-folder links, and "Add a Folder".  The dot (".") is a FolderList (via
        .FoldersWithSelection "FOLDER").  Rendered inside newsfeed-sidebar.html on desktop,
        and full-page by mobile.html.  Notifications live in their own template now (see
        the user-notifications template and the global nav item in theme-default/navigation.html). */ -}}
 {{- $selectedID := .SelectedID -}}
-{{- $allFolders := $selectedID.IsZero -}}
+{{- $isAnnotations := eq .Section "ANNOTATIONS" -}}
+{{- $allFolders := and (not $isAnnotations) $selectedID.IsZero -}}
 
-<a href="/@me/newsfeed/feed" class="turboclick menu-item ellipsis hover-trigger folder {{if $allFolders}}selected{{end}}">
+<!-- Each link swaps <main> as a boosted request, so changing folders keeps the page and its view
+     transitions.  The target, swap and push are written out because this menu sits inside the
+     sidebar's own hx-target and the sort form's hx-swap="none", which would otherwise win. -->
+
+<a href="/@me/newsfeed/feed" hx-boost="true" hx-target="main" hx-swap="innerHTML transition:true show:none" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder {{if $allFolders}}selected{{end}}">
 	<span>
 		{{- if $allFolders -}}
 			{{- iconFilled "folder" -}}
@@ -21,7 +26,7 @@
 
 	{{- range .Folders -}}
 		{{- $folderID := .FolderID.Hex -}}
-		<a href="/@me/newsfeed/folder?folderId={{$folderID}}" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
+		<a href="/@me/newsfeed/folder?folderId={{$folderID}}" hx-boost="true" hx-target="main" hx-swap="innerHTML transition:true show:none" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder {{if eq $selectedID .FolderID}}selected{{end}}">
 			<span>
 				{{- if eq $selectedID .FolderID -}}
 					{{- iconFilled .Icon -}}
@@ -45,7 +50,18 @@
 
 </form>
 
-<div class="margin-vertical"></div>
+<div class="margin-vertical-lg"></div>
+
+<a href="/@me/newsfeed/annotations" hx-boost="true" hx-target="main" hx-swap="innerHTML transition:true show:none" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder {{if $isAnnotations}}selected{{end}}">
+	<span>
+		{{- if $isAnnotations -}}
+			{{- iconFilled "bookmark" -}}
+		{{- else -}}
+			{{- icon "bookmark" -}}
+		{{- end }}
+	</span>
+	<span>Notes</span>
+</a>
 
 <div role="button" hx-get="/@me/newsfeed/folder-add" class="menu-item link turboclick" style="border:none;">
 	<span style="view-transition-name:app-sidebar-add-folder-icon;">{{icon "add"}}</span>

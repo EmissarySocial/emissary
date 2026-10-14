@@ -2,7 +2,7 @@
 
 See [README.md](README.md) for what Emissary is and [build/README.md](build/README.md) for how templates and action pipelines fit together. These are the repo-wide rules that are not visible in the code.
 
-Package-specific notes live in the nearest `AGENTS.md`, and most packages now have one: [build](build/AGENTS.md), [config](config/AGENTS.md), [consumer](consumer/AGENTS.md), [handler](handler/AGENTS.md), [middleware](middleware/AGENTS.md), [model](model/AGENTS.md), [queries](queries/AGENTS.md), [realtime](realtime/AGENTS.md), [server](server/AGENTS.md), [service](service/AGENTS.md), and [tools](tools/AGENTS.md), with deeper ones under [handler/mastodon](handler/mastodon/AGENTS.md), [service/content](service/content/AGENTS.md), and [_embed/templates](_embed/templates/AGENTS.md). Put a lesson in the most specific file that covers it; this one is only for rules that span packages.
+Package-specific notes live in the nearest `AGENTS.md`, and most packages now have one: [build](build/AGENTS.md), [config](config/AGENTS.md), [consumer](consumer/AGENTS.md), [handler](handler/AGENTS.md), [middleware](middleware/AGENTS.md), [model](model/AGENTS.md), [queries](queries/AGENTS.md), [realtime](realtime/AGENTS.md), [server](server/AGENTS.md), [service](service/AGENTS.md), [tests](tests/AGENTS.md), and [tools](tools/AGENTS.md), with deeper ones under [handler/mastodon](handler/mastodon/AGENTS.md), [service/content](service/content/AGENTS.md), and [_embed/templates](_embed/templates/AGENTS.md). Put a lesson in the most specific file that covers it; this one is only for rules that span packages.
 
 Runtime errors are reported to MongoDB by [tools/derp-mongo](tools/derp-mongo/README.md). The command that works through them, [benpate/derp-triage](https://github.com/benpate/derp-triage), lives in its own module and deliberately does not depend on this one.
 
@@ -64,6 +64,8 @@ BUG-168 is the worked example. `consumer.Consumer` was rewritten for turbine's f
 
 Two branches fixing one defect can each add the same declaration and merge without a conflict, because git conflicts on overlapping hunks rather than on meaning. BUG-168's `followingBackoff` landed twice in one file, 247 lines apart, and `TestFollowingBackoff` landed in two different files. Build the merge result, not just each side: `go build ./...` stops at the first failing package, and `service` is a dependency of almost everything, so one compiler error there can be hiding several.
 
+The reverse also merges cleanly: one branch renames a method, and the other adds a call to the old name. BUG-187 is the worked example. `Domain.Get()` became `Cached()` on `dev` while `dev-Eugene` added a call to `Get()`, neither side failed on its own, and the merge left `dev` unable to build. Run `go build ./... && go vet ./...` on the merge result before committing it.
+
 Deleting the survivor is not arbitrary when the bodies are identical. Keep the copy whose neighbours want it — the one that survived sits directly above its only caller, while the other was stranded at the end of the file — and carry the better comment across.
 
 ## An email recipient never comes from the request
@@ -121,6 +123,8 @@ Navigation links routinely carry **both** attributes (`<a href="/x" hx-get="/x">
 ## Templates are data, not code — a stale copy will not announce itself
 
 Templates in [_embed/templates](_embed/templates/) are embedded at build time, but a server can also load template folders from Git or disk. Those copies are cached, so an edit to a template's actions, states, or roles may need a restart before it takes effect, and a stale external copy silently keeps serving the old pipeline. When a template change appears to do nothing, confirm which copy is actually being served before debugging the Go code.
+
+**Template folders on disk are watched only when `hotReloadTemplates` is on.** It is a server setting (the setup console's General tab, under Testing and Development), off by default, and meant for development machines only. With it off, every template edit needs a restart or a change to the template locations. Toggling it takes effect on the next config reload: `Template.Refresh` counts the flag as a change, so it starts or stops the watcher without reloading any templates.
 
 **A template directory created after startup is never watched, so edits inside it are never picked up.** `Filesystem.watchOS` ([service/filesystem.go](service/filesystem.go)) enumerates subdirectories once and recurses into the ones that exist at that moment; `Template.watch` is started only from `Refresh`, and the change handler calls `loadTemplates` directly rather than re-arming the watcher. So the watcher set is fixed at the last config change.
 

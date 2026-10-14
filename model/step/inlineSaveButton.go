@@ -16,13 +16,13 @@ type InlineSaveButton struct {
 }
 
 // NewInlineSaveButton returns a fully initialized InlineSaveButton step, or an error if its configuration is invalid
-func NewInlineSaveButton(stepInfo mapof.Any) (InlineSaveButton, error) {
+func NewInlineSaveButton(stepInfo mapof.Any, funcMap template.FuncMap) (InlineSaveButton, error) {
 
 	const location = "model.step.NewInlineSaveButton"
 
 	// Get the ID.  Default is "inline-save-button"
 	id := first(stepInfo.GetString("id"), "inline-save-button")
-	idTemplate, err := template.New("").Funcs(FuncMap()).Parse(id)
+	idTemplate, err := template.New("").Funcs(funcMap).Parse(id)
 
 	if err != nil {
 		return InlineSaveButton{}, derp.Wrap(err, location, "Parsing template")
@@ -30,7 +30,7 @@ func NewInlineSaveButton(stepInfo mapof.Any) (InlineSaveButton, error) {
 
 	// Get the Label.  Default is "Save Changes"
 	label := first(stepInfo.GetString("label"), "Save Changes")
-	labelTemplate, err := template.New("").Funcs(FuncMap()).Parse(label)
+	labelTemplate, err := template.New("").Funcs(funcMap).Parse(label)
 
 	if err != nil {
 		return InlineSaveButton{}, derp.Wrap(err, location, "Parsing template")

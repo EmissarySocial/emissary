@@ -4,17 +4,21 @@
 {{- $following := .AmFollowing $url -}}
 {{- $actor := .ActivityStreamActor $url -}}
 
+{{- $annotation := .Annotation $actor.ID -}}
+
 <div id="modal-header" class="flex-row">
 	<div role="tablist" class="pills margin-bottom-none">
 
 		{{- if ne "" $search -}}
 			<span role="link" class="link margin-right" hx-get="/@me/settings/following-search?search={{$search}}&folderId={{$folderID}}">
-				&larr; Search
+				<i class="text-lg bi bi-arrow-left-circle-fill"></i>
 			</span>
 		{{- end -}}
 
 		<button role="tab" hx-get="/@me/newsfeed/browse-actor?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "person"}} Profile</button>
-		<button role="tab" hx-get="/@me/newsfeed/annotation?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "note"}} Notes</button>
+		<button role="tab" hx-get="/@me/newsfeed/annotation?url={{$actor.ID}}&type=ACTOR&search={{$search}}&folderId={{$folderID}}">
+			{{- if $annotation.IsNew -}}{{icon "bookmark"}} Notes{{- else -}}{{iconFilled "bookmark"}} Noted{{- end -}}
+		</button>
 		<button role="tab" hx-get="/@me/settings/actor-rule?actor={{$actor.ID}}">{{icon "rule"}} Rule</button>
 
 		{{ if $following.IsNew -}}
@@ -46,7 +50,7 @@
 	<div class="flex-row margin-bottom-lg">
 		<div class="width-64"></div>
 		<div class="text-green bold margin-top">
-			{{icon "check-badge-fill"}} Follows You via ActivityPub
+			{{icon "check-badge-fill"}} Follows you via {{ .MethodLabel}}
 		</div>
 	</div>
 

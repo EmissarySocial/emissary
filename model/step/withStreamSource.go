@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -13,11 +15,11 @@ type WithStreamSource struct {
 }
 
 // NewWithStreamSource returns a fully initialized WithStreamSource object
-func NewWithStreamSource(stepInfo mapof.Any) (WithStreamSource, error) {
+func NewWithStreamSource(stepInfo mapof.Any, funcMap template.FuncMap) (WithStreamSource, error) {
 
 	const location = "step.NewWithStreamSource"
 
-	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
+	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]), funcMap)
 
 	if err != nil {
 		return WithStreamSource{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)

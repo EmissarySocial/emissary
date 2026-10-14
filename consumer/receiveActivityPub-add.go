@@ -18,7 +18,6 @@ func ReceiveActivityPubAdd(factory *service.Factory, session data.Session, args 
 	const location = "consumer.ReceiveActivityPubMove"
 
 	// Collect arguments
-	actorID := args.GetString("actor")
 	objectID := args.GetString("object")
 	contextID := args.GetString("target")
 
@@ -44,7 +43,7 @@ func ReceiveActivityPubAdd(factory *service.Factory, session data.Session, args 
 	}
 
 	// RULE: The context document must be AttributedTo the provided ActorID
-	if context.AttributedTo().ID() != actorID {
+	if actorID := args.GetString("actor"); context.AttributedTo().ID() != actorID {
 		return queue.Failure(derp.BadRequest(location, "Context must be attributed to the provided ActorID", "context: "+contextID, "actor: "+actorID))
 	}
 

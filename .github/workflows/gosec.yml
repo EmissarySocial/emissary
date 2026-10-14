@@ -23,9 +23,21 @@ jobs:
       uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
       with:
         go-version-file: go.mod
+        # gosec reads export data from the build cache, and the shared setup-go cache has held
+        # data its x/tools cannot decode since go 1.27.2, so build from a cold cache instead
+        cache: false
 
+    # gosec v2.29.0 ships golang.org/x/tools v0.49.0, which cannot read Go 1.27's export data,
+    # so it loses type information on a third of the files and still reports "0 issues".  Build
+    # it against a newer x/tools instead.  Drop this once a gosec release requires x/tools >= v0.51.0.
     - name: Install Gosec
-      run: go install github.com/securego/gosec/v2/cmd/gosec@v2.29.0
+      working-directory: ${{ runner.temp }}
+      run: |
+        mkdir gosec-build && cd gosec-build
+        printf 'module gosecbuild\n\ngo 1.27.2\n' > go.mod
+        printf '//go:build tools\n\npackage tools\n\nimport _ "github.com/securego/gosec/v2/cmd/gosec"\n' > tools.go
+        GOFLAGS=-mod=mod go get github.com/securego/gosec/v2/cmd/gosec@v2.29.0 golang.org/x/tools@v0.51.0
+        GOFLAGS=-mod=mod go build -o "$(go env GOPATH)/bin/gosec" github.com/securego/gosec/v2/cmd/gosec
 
     # Suppressions live inline as `// #nosec <rule> -- <reason>`, never in a config file, so
     # the justification sits beside the code a reviewer is reading.  See go-hardening.

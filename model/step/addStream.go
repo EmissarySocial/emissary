@@ -26,7 +26,7 @@ type AddStream struct {
 }
 
 // NewAddStream returns a fully initialized AddStream record
-func NewAddStream(stepInfo mapof.Any) (AddStream, error) {
+func NewAddStream(stepInfo mapof.Any, funcMap template.FuncMap) (AddStream, error) {
 
 	// Parse the "with-data" map
 	templates := stepInfo.GetMap("with-data")
@@ -34,7 +34,7 @@ func NewAddStream(stepInfo mapof.Any) (AddStream, error) {
 
 	for key := range templates {
 		valueTemplate := templates.GetString(key)
-		value, err := template.New("value").Parse(valueTemplate)
+		value, err := template.New("value").Funcs(funcMap).Parse(valueTemplate)
 
 		if err != nil {
 			return AddStream{}, derp.Wrap(err, "model.step.NewAddStream", "Parsing template", key, valueTemplate)
@@ -55,7 +55,7 @@ func NewAddStream(stepInfo mapof.Any) (AddStream, error) {
 	}
 
 	if redirectTo := stepInfo.GetString("redirect-to"); redirectTo != "" {
-		redirectTemplate, err := template.New("redirect-to").Parse(redirectTo)
+		redirectTemplate, err := template.New("redirect-to").Funcs(funcMap).Parse(redirectTo)
 		result.RedirectTo = redirectTemplate
 
 		if err != nil {

@@ -1,13 +1,13 @@
-behavior refreshPeers(id)
+behavior refreshPeers
 
-	init
-		set @data-peer to id
+	-- The peer URL is read from data-peer, never written into this script,
+	-- because a remote URL could carry a quote that ends the string
 
 	on refreshPeers
 
-		repeat for peer in <[data-peer=`${id}`]/>
+		repeat for peer in <[data-peer]/>
 
-			if the peer is not me
+			if the peer is not me and the peer's @data-peer is my @data-peer
 				send refresh to peer
 			end
 

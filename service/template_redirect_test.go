@@ -31,7 +31,7 @@ func redirectTemplate(t *testing.T) model.Template {
 	definition, err := os.ReadFile("../_embed/templates/stream-redirect/template.hjson")
 	require.NoError(t, err)
 
-	result := model.NewTemplate("redirect", nil)
+	result := model.NewTemplate("redirect", testFuncMap())
 	require.NoError(t, hjson.Unmarshal(definition, &result))
 
 	return result

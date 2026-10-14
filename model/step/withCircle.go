@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -12,11 +14,11 @@ type WithCircle struct {
 }
 
 // NewWithCircle returns a fully initialized WithCircle object
-func NewWithCircle(stepInfo mapof.Any) (WithCircle, error) {
+func NewWithCircle(stepInfo mapof.Any, funcMap template.FuncMap) (WithCircle, error) {
 
 	const location = "NewWithCircle"
 
-	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
+	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]), funcMap)
 
 	if err != nil {
 		return WithCircle{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)

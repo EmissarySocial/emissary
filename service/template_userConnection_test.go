@@ -28,7 +28,7 @@ func userSettingsTemplate(t *testing.T) model.Template {
 	definition, err := os.ReadFile("../_embed/templates/user-settings/template.hjson")
 	require.NoError(t, err)
 
-	result := model.NewTemplate("user-settings", nil)
+	result := model.NewTemplate("user-settings", testFuncMap())
 	require.NoError(t, hjson.Unmarshal(definition, &result))
 
 	return result
@@ -93,6 +93,9 @@ func allSteps(steps []modelStep.Step) []modelStep.Step {
 			result = append(result, allSteps(typed.SubSteps)...)
 
 		case modelStep.WithUserConnection:
+			result = append(result, allSteps(typed.SubSteps)...)
+
+		case modelStep.WithRule:
 			result = append(result, allSteps(typed.SubSteps)...)
 		}
 	}

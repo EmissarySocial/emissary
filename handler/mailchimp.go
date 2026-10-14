@@ -28,6 +28,14 @@ import (
 // Stripe webhook
 const mailchimpWebhookMaxBody = 65535
 
+// GetMailchimpWebhook lies to MailChimp and says our webhook is properly configured (even if it's not)
+func GetMailchimpWebhook(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
+
+	// Lie to MailChimp and tell them everything is fine.  Even if we DON'T have this
+	// userConnection set up yet, that's ok.  It'll probably be created soon-ish-ly.
+	return ctx.NoContent(http.StatusOK)
+}
+
 // PostMailchimpWebhook applies an inbound Mailchimp event to the connection named in the URL
 func PostMailchimpWebhook(ctx *steranko.Context, factory *service.Factory, session data.Session) error {
 
@@ -38,7 +46,8 @@ func PostMailchimpWebhook(ctx *steranko.Context, factory *service.Factory, sessi
 	body, err := io.ReadAll(io.LimitReader(ctx.Request().Body, mailchimpWebhookMaxBody))
 
 	if err != nil {
-		return mailchimpWebhookResponse(ctx)
+		// Return 200/Ok on errors so we don't leak information to attackers.
+		return ctx.NoContent(http.StatusOK)
 	}
 
 	defer derp.ReportFunc(ctx.Request().Body.Close)
@@ -47,14 +56,16 @@ func PostMailchimpWebhook(ctx *steranko.Context, factory *service.Factory, sessi
 	userConnection, err := mailchimpWebhookConnection(ctx, factory, session)
 
 	if err != nil {
-		return mailchimpWebhookResponse(ctx)
+		// Return 200/Ok on errors so we don't leak information to attackers.
+		return ctx.NoContent(http.StatusOK)
 	}
 
 	// RULE: the presented secret is the authorization. VerifyWebhookSecret also refuses a
 	// connection that is switched off or flagged for reconnection, so a webhook that outlived
 	// its connection cannot act.
 	if !factory.UserConnection().VerifyWebhookSecret(&userConnection, ctx.QueryParam("secret")) {
-		return mailchimpWebhookResponse(ctx)
+		// Return 200/Ok on errors so we don't leak information to attackers.
+		return ctx.NoContent(http.StatusOK)
 	}
 
 	// Past this point the caller has PROVEN they hold the secret, so a real failure can be
@@ -79,7 +90,7 @@ func PostMailchimpWebhook(ctx *steranko.Context, factory *service.Factory, sessi
 		return derp.Wrap(err, location, "Applying Mailchimp webhook", userConnection.UserConnectionID)
 	}
 
-	return mailchimpWebhookResponse(ctx)
+	return ctx.NoContent(http.StatusOK)
 }
 
 // mailchimpWebhookConnection loads the UserConnection named in the request URL
@@ -106,14 +117,4 @@ func mailchimpWebhookConnection(ctx *steranko.Context, factory *service.Factory,
 	}
 
 	return result, nil
-}
-
-// mailchimpWebhookResponse answers every delivery identically, whatever happened
-func mailchimpWebhookResponse(ctx *steranko.Context) error {
-
-	// RULE: one response for every AUTHORIZATION outcome -- unknown connection, wrong secret,
-	// paused connection, or success. ObjectIDs carry a timestamp and are partly predictable,
-	// so a distinguishable answer would let someone enumerate which connections exist and
-	// which are live. Failures after the secret is verified are reported normally.
-	return ctx.NoContent(http.StatusOK)
 }

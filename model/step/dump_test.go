@@ -10,7 +10,7 @@ import (
 // TestDump verifies that a "dump" step parses its configuration
 func TestDump(t *testing.T) {
 
-	step, err := NewDump(mapof.Any{"value": "{{.Label}}"})
+	step, err := NewDump(mapof.Any{"value": "{{.Label}}"}, nil)
 	require.Nil(t, err)
 	require.NotNil(t, step.Value)
 
@@ -22,6 +22,6 @@ func TestDump(t *testing.T) {
 
 // TestDump_InvalidTemplate verifies that an invalid template is rejected
 func TestDump_InvalidTemplate(t *testing.T) {
-	_, err := NewDump(mapof.Any{"value": "{{ .Unclosed"})
+	_, err := NewDump(mapof.Any{"value": "{{ .Unclosed"}, nil)
 	require.NotNil(t, err)
 }

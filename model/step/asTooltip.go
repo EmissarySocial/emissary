@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 )
@@ -11,9 +13,9 @@ type AsTooltip struct {
 }
 
 // NewAsTooltip returns a fully initialized AsTooltip object
-func NewAsTooltip(stepInfo mapof.Any) (AsTooltip, error) {
+func NewAsTooltip(stepInfo mapof.Any, funcMap template.FuncMap) (AsTooltip, error) {
 
-	subSteps, err := NewPipeline(stepInfo.GetSliceOfMap("steps"))
+	subSteps, err := NewPipeline(stepInfo.GetSliceOfMap("steps"), funcMap)
 
 	if err != nil {
 		return AsTooltip{}, derp.Wrap(err, "model.step.NewAsTooltip", "Invalid 'steps'", stepInfo)

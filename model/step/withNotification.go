@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -12,11 +14,11 @@ type WithNotification struct {
 }
 
 // NewWithNotification returns a fully initialized WithNotification object
-func NewWithNotification(stepInfo mapof.Any) (WithNotification, error) {
+func NewWithNotification(stepInfo mapof.Any, funcMap template.FuncMap) (WithNotification, error) {
 
 	const location = "NewWithNotification"
 
-	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
+	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]), funcMap)
 
 	if err != nil {
 		return WithNotification{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)

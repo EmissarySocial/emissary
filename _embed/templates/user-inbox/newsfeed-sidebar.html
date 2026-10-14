@@ -4,12 +4,13 @@
 	can be re-fetched standalone via the "newsfeed-sidebar" action.
 
 	The "refreshSidebar" event — fired by message-read and scroll-read — re-fetches this
-	fragment so the folder unread dots stay current without a reload.
+	fragment so the folder unread dots stay current without a reload.  ?section=ANNOTATIONS
+	keeps the Notes item selected instead of All Folders.
 */ -}}
-{{- $folders := .FoldersWithSelection "FOLDER" -}}
+{{- $folders := .FoldersWithSelection (first (.QueryParam "section") "FOLDER") -}}
 
 <div id="app-sidebar" class="expanded"
-	hx-get="/@me/newsfeed/newsfeed-sidebar?folderId={{$folders.SelectedID.Hex}}"
+	hx-get="/@me/newsfeed/newsfeed-sidebar?folderId={{$folders.SelectedID.Hex}}&section={{$folders.Section}}"
 	hx-trigger="refreshSidebar from:window"
 	hx-target="#app-sidebar"
 	hx-swap="outerHTML"

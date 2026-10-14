@@ -1,0 +1,54 @@
+<!-- The annotation action's page for a document: the post as a card, above the note form that
+     the annotation action's edit step appends.  Annotation buttons open browse-annotation instead. -->
+{{- $builder := index . 0 -}}
+{{- $document := index . 1 -}}
+{{- $url := $builder.QueryParam "url" -}}
+{{- $attributedTo := $document.AttributedTo -}}
+
+{{- template "browse-header" (array $builder $url "annotation") -}}
+
+<div id="modal-body" class="pos-relative">
+
+	{{- if ne "" $document.ID -}}
+
+		<div class="card padding margin-bottom-lg">
+
+			{{- if $attributedTo.NotEmpty -}}
+				<div class="flex-row flex-align-center margin-bottom">
+					{{- if $attributedTo.Icon.NotNil -}}
+						<img src="{{$attributedTo.Icon.Href}}" class="circle width-32" alt="">
+					{{- else -}}
+						<div class="circle width-32"></div>
+					{{- end -}}
+					<div>
+						<span class="bold">{{$attributedTo.Name}}</span>
+						<span class="text-light-gray">{{$attributedTo.UsernameOrID}}</span>
+					</div>
+				</div>
+			{{- end -}}
+
+			{{- if ne "" $document.Name -}}
+				<div class="text-lg bold margin-bottom-sm">{{$document.Name}}</div>
+			{{- end -}}
+
+			<div style="max-height:160px; overflow-y:hidden;">
+				{{- if $document.HasContent -}}
+					{{- $document.Content | htmlMinimal -}}
+				{{- else if $document.HasSummary -}}
+					{{- $document.Summary -}}
+				{{- end -}}
+			</div>
+
+			<div class="text-sm text-light-gray margin-top-sm">{{$document.Published | shortDate}}</div>
+
+		</div>
+
+	{{- else -}}
+
+		<div class="card padding margin-bottom-lg pos-relative">
+			<div class="pos-absolute-four-corners bg-stripes flex-center"></div>
+			<div class="bold">This post could not be loaded</div>
+			<div class="text-sm text-light-gray">{{$url}}</div>
+		</div>
+
+	{{- end -}}

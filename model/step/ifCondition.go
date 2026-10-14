@@ -15,26 +15,26 @@ type IfCondition struct {
 }
 
 // NewIfCondition returns a fully initialized IfCondition step, or an error if its configuration is invalid
-func NewIfCondition(stepInfo mapof.Any) (IfCondition, error) {
+func NewIfCondition(stepInfo mapof.Any, funcMap template.FuncMap) (IfCondition, error) {
 
 	const location = "model.step.NewIfCondition"
 
 	// Parse "condition" property
-	condition, err := template.New("").Parse(stepInfo.GetString("condition"))
+	condition, err := template.New("").Funcs(funcMap).Parse(stepInfo.GetString("condition"))
 
 	if err != nil {
 		return IfCondition{}, derp.Wrap(err, location, "Invalid 'condition'", stepInfo)
 	}
 
 	// Parse "then" property
-	then, err := NewPipeline(stepInfo.GetSliceOfMap("then"))
+	then, err := NewPipeline(stepInfo.GetSliceOfMap("then"), funcMap)
 
 	if err != nil {
 		return IfCondition{}, derp.Wrap(err, location, "Invalid 'then'", stepInfo)
 	}
 
 	// Parse "else" property
-	otherwise, err := NewPipeline(stepInfo.GetSliceOfMap("else"))
+	otherwise, err := NewPipeline(stepInfo.GetSliceOfMap("else"), funcMap)
 
 	if err != nil {
 		return IfCondition{}, derp.Wrap(err, location, "Invalid 'else'", stepInfo)

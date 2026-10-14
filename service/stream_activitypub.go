@@ -14,7 +14,6 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/first"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -188,8 +187,9 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 	if templateErr == nil {
 		result[vocab.PropertyType] = template.SocialRole
 		if template.SocialRules.NotEmpty() {
-			schma := service.activityStreamSchema()
-			if err := template.SocialRules.Execute(schma, stream, schma, &result); err != nil {
+
+			// Rules read the Stream through the Template's schema, and write through its social schema
+			if err := template.SocialRules.Execute(template.Schema, stream, template.SocialTargetSchema(), &result); err != nil {
 				derp.Report(derp.Wrap(err, location, "Applying social rules to stream", stream.StreamID, template.SocialRules))
 			}
 		}
@@ -276,19 +276,6 @@ func (service *Stream) RangeActivityPubFollowers(session data.Session, streamID 
 			}
 		}
 	}
-}
-
-// activityStreamSchema returns a permissive schema that preserves an ActivityStreams document's @context
-func (service *Stream) activityStreamSchema() schema.Schema {
-
-	return schema.New(
-		schema.Object{
-			Properties: schema.ElementMap{
-				"@context": schema.Array{Items: schema.Any{}},
-			},
-			Wildcard: schema.Any{},
-		},
-	)
 }
 
 // CalcContext attaches a new Context Collection to the Stream, if it does not already have one

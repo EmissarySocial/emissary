@@ -272,10 +272,10 @@ func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 		}
 
 		/////////////////////////////////////////////////////////
-		// GET requests use a simple "read only" database session
+		// GET and HEAD requests use a simple "read only" database session
 
 		// Call the continuation function
-		if ctx.Request().Method == http.MethodGet {
+		if isReadOnlyMethod(ctx.Request().Method) {
 
 			// Create a Read only database session
 			session, err := factory.Server().Session(ctx.Request().Context())
@@ -315,6 +315,12 @@ func WithFactory(serverFactory *server.Factory, fn WithFunc0) echo.HandlerFunc {
 		// Success alleged.
 		return nil
 	}
+}
+
+// isReadOnlyMethod returns TRUE for the HTTP methods that WithFactory serves from a
+// read-only database session instead of a transaction.
+func isReadOnlyMethod(method string) bool {
+	return method == http.MethodGet || method == http.MethodHead
 }
 
 // WithFollowing handles boilerplate code for requests that load a Following object

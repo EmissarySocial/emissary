@@ -71,6 +71,18 @@ A `{{...}}` inside a form element's `options:{...}` (a `validator` URL, an uploa
 
 **An option template may reference only IDs and other values that cannot contain a quote.** `benpate/form` builds `install validator(url:'…')` and `show-if` by concatenating the rendered value into a single-quoted hyperscript string. The HTML builder escapes the attribute, but the browser decodes that escaping before hyperscript parses the string, so a `'` in a rendered value ends the string early and injects hyperscript. A hex ID is safe. A field a user can edit, such as a Stream's `Token` or `Name`, is not: pipe it through `urlquery`, which encodes the quote.
 
+## The `if` step's second branch is `else`, and an unknown key is ignored
+
+`model/step/ifCondition.go` reads `condition`, `then`, and `else`. A branch written as `otherwise:` parses without error and is dropped, so a false condition runs nothing and the action answers `200` with an empty body. That is how the `annotation` action showed a blank modal for every annotation whose type was not `ACTOR`. `index` and `notifications` in user-inbox had the same defect until 2026-10-11, so their legacy redirects ran only the `then` branch.
+
+## A click on an icon inside a button has the icon as its target
+
+`event.target` is the innermost element pressed, so a click on an icon-only button lands on the `<i>`, not the `<button>`. `blockselect` used to test only `event.target` for `hx-get`, so a click on the icon of an annotation button inside a newsfeed row also opened the row's `browse` modal, and the two modal requests raced: the Notes view appeared for some posts and not others. Test with `event.target.closest(…)`, limited to elements inside the behavior's own element.
+
+## Never write a remote value into a `script` attribute
+
+`html/template` escapes a `script="…"` attribute as plain HTML, not as hyperscript, and the browser decodes that escaping before hyperscript parses it. A URL from a remote document can hold a `'`, so `install refreshPeers(id:'{{$url}}')` let a remote actor's ID end the string and inject hyperscript. Put the value in a `data-` attribute and have the behavior read it with `@data-…`, as `refreshPeers` and `annotationPeer` in theme-global do. Compare those values in hyperscript rather than building a CSS selector from them, which breaks on `]` and quotes.
+
 ## Only four template directories are parsed by any test — add yours to the list
 
 `TestEmbeddedTemplates_HTMLParses` in [service/template_html_parse_test.go](../../service/template_html_parse_test.go) is the only thing that parses `*.html` here with the real funcMap, and it is **scoped to a hand-maintained `dirs` list**, not a full sweep. A directory that is not named there is never parsed by anything, so a syntax error, an undefined funcMap function, or the attribute-context lexer gotcha first appears in front of a visitor.
@@ -86,3 +98,7 @@ When the anchor already carries a `rel`, **append** — `rel="me"` on the profil
 The same rule reaches federated content by a different route. `replace.Linkify` and `Content.ApplyLinks` write `<a … target="_blank">` into `content.HTML` **after** `markdown.Sanitize` has run, so they are the last writers of the body every remote reader sees, and the `bluemonday.UGCPolicy` never gets a chance to add a `rel` for them. They emit `rel="noopener noreferrer"` themselves — the convention Mastodon uses on every outbound link — and five test files pin the exact anchor, so a change to either emitter shows up as a test failure rather than a quiet drift.
 
 Vendored `easymde.min.js` still opens three `_blank` links without it; that is upstream's file, and the fix is a version bump, not an edit.
+
+## Every `type: array` in a schema needs a `maxLength`
+
+Rosetta bounds a list's length only through the schema, never in its accessors (decided 2026-10-05; see rosetta's AGENTS.md). An array with no `maxLength` lets one form field such as `feeds.5000000` build a list of 5,000,001 items. Give every array in a template's `schema` or `socialSchema` a `maxLength` sized to its real use.

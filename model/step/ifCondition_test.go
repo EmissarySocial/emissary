@@ -14,7 +14,7 @@ func TestIfCondition(t *testing.T) {
 		"condition": "{{.IsAuthor}}",
 		"then":      []mapof.Any{{"do": "set-state", "state": "published"}},
 		"else":      []mapof.Any{{"do": "set-state", "state": "draft"}},
-	})
+	}, nil)
 	require.Nil(t, err)
 	require.NotNil(t, step.Condition)
 	require.Len(t, step.Then, 1)
@@ -30,18 +30,18 @@ func TestIfCondition(t *testing.T) {
 
 // TestIfCondition_InvalidCondition verifies that an invalid condition is rejected
 func TestIfCondition_InvalidCondition(t *testing.T) {
-	_, err := NewIfCondition(mapof.Any{"condition": "{{ .Unclosed"})
+	_, err := NewIfCondition(mapof.Any{"condition": "{{ .Unclosed"}, nil)
 	require.NotNil(t, err)
 }
 
 // TestIfCondition_InvalidThen verifies that an invalid then is rejected
 func TestIfCondition_InvalidThen(t *testing.T) {
-	_, err := NewIfCondition(mapof.Any{"then": []mapof.Any{{"do": "nonexistent-step"}}})
+	_, err := NewIfCondition(mapof.Any{"then": []mapof.Any{{"do": "nonexistent-step"}}}, nil)
 	require.NotNil(t, err)
 }
 
 // TestIfCondition_InvalidElse verifies that an invalid else is rejected
 func TestIfCondition_InvalidElse(t *testing.T) {
-	_, err := NewIfCondition(mapof.Any{"else": []mapof.Any{{"do": "nonexistent-step"}}})
+	_, err := NewIfCondition(mapof.Any{"else": []mapof.Any{{"do": "nonexistent-step"}}}, nil)
 	require.NotNil(t, err)
 }

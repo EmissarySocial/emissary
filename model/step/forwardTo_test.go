@@ -10,13 +10,13 @@ import (
 // TestForwardTo verifies that a "forward-to" step parses its configuration
 func TestForwardTo(t *testing.T) {
 
-	step, err := NewForwardTo(mapof.Any{"url": "/next/{{.Token}}", "method": "GET"})
+	step, err := NewForwardTo(mapof.Any{"url": "/next/{{.Token}}", "method": "GET"}, nil)
 	require.Nil(t, err)
 	require.NotNil(t, step.URL)
 	require.Equal(t, "get", step.Method) // lower-cased
 
 	// "method" defaults to "post".
-	step, err = NewForwardTo(mapof.Any{"url": "/next"})
+	step, err = NewForwardTo(mapof.Any{"url": "/next"}, nil)
 	require.Nil(t, err)
 	require.Equal(t, "post", step.Method)
 
@@ -28,6 +28,6 @@ func TestForwardTo(t *testing.T) {
 
 // TestForwardTo_InvalidTemplate verifies that an invalid template is rejected
 func TestForwardTo_InvalidTemplate(t *testing.T) {
-	_, err := NewForwardTo(mapof.Any{"url": "{{ .Unclosed"})
+	_, err := NewForwardTo(mapof.Any{"url": "{{ .Unclosed"}, nil)
 	require.NotNil(t, err)
 }

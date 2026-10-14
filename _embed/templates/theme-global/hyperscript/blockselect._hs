@@ -5,6 +5,14 @@ behavior blockselect(link)
 	end
 
 	on click
+
+		-- A click inside a link or button belongs to it, even when it lands on an icon
+		-- inside the control rather than on the control itself
+		set control to event.target.closest("a, button, [href], [hx-get], [hx-post]")
+		if control is not null and control is not me and me.contains(control) then
+			exit
+		end
+
 		if event.target.hasAttribute("href") then
 			exit
 		end

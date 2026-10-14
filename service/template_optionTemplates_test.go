@@ -34,7 +34,7 @@ func TestEmbeddedTemplates_OptionTemplates(t *testing.T) {
 		definition, err := os.ReadFile(filename)
 		require.NoError(t, err)
 
-		template := model.NewTemplate(filepath.Base(filepath.Dir(filename)), nil)
+		template := model.NewTemplate(filepath.Base(filepath.Dir(filename)), testFuncMap())
 		require.NoError(t, hjson.Unmarshal(definition, &template), filename)
 
 		for actionID, action := range template.Actions {
@@ -82,7 +82,7 @@ func TestEmbeddedForms_NoOtherOptionTemplates(t *testing.T) {
 		definition, err := os.ReadFile(filename)
 		require.NoError(t, err)
 
-		template := model.NewTemplate(filepath.Base(filepath.Dir(filename)), nil)
+		template := model.NewTemplate(filepath.Base(filepath.Dir(filename)), testFuncMap())
 		require.NoError(t, hjson.Unmarshal(definition, &template), filename)
 
 		for actionID, action := range template.Actions {
