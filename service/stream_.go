@@ -457,6 +457,10 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 
 	const location = "service.Stream.Delete"
 
+	// RULE: Read the published state first.  Deleting marks the Stream deleted, which IsPublished
+	// then reports as unpublished, so a check after the delete can never pass (BUG-241).
+	wasPublished := stream.IsPublished() //nolint:scopeguard // must be read before the delete below
+
 	// Delete this Stream
 	if err := service.collection(session).Delete(stream, note); err != nil {
 		return derp.Wrap(err, location, "Deleting Stream from database", stream, note)
@@ -465,12 +469,17 @@ func (service *Stream) Delete(session data.Session, stream *model.Stream, note s
 	// Send Webhooks (if configured)
 	service.webhookService.Send(stream, model.WebhookEventStreamDelete)
 
-	if stream.IsPublished() {
+	if wasPublished {
 		service.webhookService.Send(stream, model.WebhookEventStreamPublishUndo)
 
 		if err := service.sendSyndicationMessages(session, stream, nil, nil, stream.Syndication.Values); err != nil {
 			derp.Report(derp.Wrap(err, location, "Sending syndication messages", stream))
 		}
+	}
+
+	// RULE: Tell followers who received this Stream that it is gone, whichever path deleted it (BUG-259)
+	if err := service.federateDelete(session, stream); err != nil {
+		derp.Report(derp.Wrap(err, location, "Federating Delete", stream))
 	}
 
 	// RULE: Remove this Stream from the search index.  Keyed by URL, never by SearchResultID:
