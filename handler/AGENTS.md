@@ -69,6 +69,10 @@ Setup routes (`setup_*.go`) are registered only in setup mode, behind `mw.Localh
 
 `factory.Camper()` and `factory.ActivityStream()` thread the domain's `AllowPrivateIPs` setting into the remote transport, whose resolved-IP dial guard is the authoritative SSRF defense. Never call `digit.Lookup` (or build a bare remote client) directly from a handler — a bare lookup silently loses both the private-IP policy and the HTTP cache, which breaks every local-dev federation flow and weakens production. `PostProxyURL`'s `uri.IsLocalURL` check ([proxy.go](proxy.go)) is only a fast, friendly reject; it does no DNS resolution and must not be treated as the guard.
 
+## Reading a property of a bare-URL Document fetches it
+
+hannibal's `Document.Get` on a string value treats the string as an id and loads it through the document's client before reading the key; only `Get("id")` is exempt. So `activity.Object().Actor()`, `.ActorID()`, `.Type()` and the like each make an outbound request whenever the object arrived as a URL rather than embedded. A validator that only means to look at what the client sent must skip string values first (`IsString()`), as `requireUndoActorMatches` ([activitypub_user/outbox_wildcard.go](activitypub_user/outbox_wildcard.go)) does, or it fetches on behalf of whoever posted the activity. Its test proves this with a client that counts every `Load`.
+
 ## HEAD and GET derive their headers from the same place
 
 Content negotiation (HTML page vs. ActivityStreams document from one URL) and the headers it implies live in [../tools/headers](../tools/headers/headers.go); hannibal owns the ActivityPub reading of the Accept header. [headers_parity_test.go](headers_parity_test.go) pins RFC 9110 §9.3.2 parity across an Accept matrix — new dual-representation handlers must route through `headers.SetAll`/`headers.SetVariant`, not hand-set Content-Type/Vary.
