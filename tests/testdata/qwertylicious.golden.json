@@ -3188,8 +3188,8 @@
 		"template:article-base/properties/0:with-draft.SubSteps/0:as-modal.SubSteps/0:edit": {
 			"fields": [
 				"data.tags (textarea, schema.String)",
-				"icon (select-icons, schema.String)",
-				"name (text, schema.String)",
+				"icon (select, schema.String)",
+				"label (text, schema.String)",
 				"summary (textarea, schema.String)",
 				"token (text, schema.String)"
 			],
@@ -3198,7 +3198,7 @@
 					"types": {
 						"data.tags": "unreadable",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3207,7 +3207,7 @@
 					"types": {
 						"data.tags": "unreadable",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3221,7 +3221,7 @@
 					"types": {
 						"data.tags": "string",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3230,14 +3230,14 @@
 					"changes": {
 						"data.tags": "string Sample data.tags",
 						"icon": "string sample-token",
-						"label": "string Sample name",
+						"label": "string Sample label",
 						"summary": "string Sample summary",
 						"token": "string sample-token"
 					},
 					"types": {
 						"data.tags": "string",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3247,8 +3247,8 @@
 		"template:article-editorjs/properties/0:with-draft.SubSteps/0:as-modal.SubSteps/0:edit": {
 			"fields": [
 				"data.tags (textarea, schema.String)",
-				"icon (select-icons, schema.String)",
-				"name (text, schema.String)",
+				"icon (select, schema.String)",
+				"label (text, schema.String)",
 				"summary (textarea, schema.String)",
 				"token (text, schema.String)"
 			],
@@ -3260,7 +3260,7 @@
 					"types": {
 						"data.tags": "unreadable",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3272,7 +3272,7 @@
 					"types": {
 						"data.tags": "unreadable",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3286,7 +3286,7 @@
 					"types": {
 						"data.tags": "string",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3295,14 +3295,14 @@
 					"changes": {
 						"data.tags": "string Sample data.tags",
 						"icon": "string sample-token",
-						"label": "string Sample name",
+						"label": "string Sample label",
 						"summary": "string \u003cp\u003eSample \u003cb\u003esummary\u003c/b\u003e\u003c/p\u003e",
 						"token": "string sample-token"
 					},
 					"types": {
 						"data.tags": "string",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3312,8 +3312,8 @@
 		"template:article-html/properties/0:with-draft.SubSteps/0:as-modal.SubSteps/0:edit": {
 			"fields": [
 				"data.tags (textarea, schema.String)",
-				"icon (select-icons, schema.String)",
-				"name (text, schema.String)",
+				"icon (select, schema.String)",
+				"label (text, schema.String)",
 				"summary (textarea, schema.String)",
 				"token (text, schema.String)"
 			],
@@ -3325,7 +3325,7 @@
 					"types": {
 						"data.tags": "unreadable",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3337,7 +3337,7 @@
 					"types": {
 						"data.tags": "unreadable",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3351,7 +3351,7 @@
 					"types": {
 						"data.tags": "string",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3360,14 +3360,14 @@
 					"changes": {
 						"data.tags": "string Sample data.tags",
 						"icon": "string sample-token",
-						"label": "string Sample name",
+						"label": "string Sample label",
 						"summary": "string \u003cp\u003eSample \u003cb\u003esummary\u003c/b\u003e\u003c/p\u003e",
 						"token": "string sample-token"
 					},
 					"types": {
 						"data.tags": "string",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3377,8 +3377,8 @@
 		"template:article-markdown/properties/0:with-draft.SubSteps/0:as-modal.SubSteps/0:edit": {
 			"fields": [
 				"data.tags (textarea, schema.String)",
-				"icon (select-icons, schema.String)",
-				"name (text, schema.String)",
+				"icon (select, schema.String)",
+				"label (text, schema.String)",
 				"summary (textarea, schema.String)",
 				"token (text, schema.String)"
 			],
@@ -3390,7 +3390,7 @@
 					"types": {
 						"data.tags": "unreadable",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3402,7 +3402,7 @@
 					"types": {
 						"data.tags": "unreadable",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3416,7 +3416,7 @@
 					"types": {
 						"data.tags": "string",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3425,14 +3425,14 @@
 					"changes": {
 						"data.tags": "string Sample data.tags",
 						"icon": "string sample-token",
-						"label": "string Sample name",
+						"label": "string Sample label",
 						"summary": "string \u003cp\u003eSample \u003cb\u003esummary\u003c/b\u003e\u003c/p\u003e",
 						"token": "string sample-token"
 					},
 					"types": {
 						"data.tags": "string",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3489,8 +3489,8 @@
 		"template:article-remote/properties/0:with-draft.SubSteps/0:as-modal.SubSteps/0:edit": {
 			"fields": [
 				"data.tags (textarea, schema.String)",
-				"icon (select-icons, schema.String)",
-				"name (text, schema.String)",
+				"icon (select, schema.String)",
+				"label (text, schema.String)",
 				"summary (textarea, schema.String)",
 				"token (text, schema.String)"
 			],
@@ -3502,7 +3502,7 @@
 					"types": {
 						"data.tags": "unreadable",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3514,7 +3514,7 @@
 					"types": {
 						"data.tags": "unreadable",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3528,7 +3528,7 @@
 					"types": {
 						"data.tags": "string",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3537,14 +3537,14 @@
 					"changes": {
 						"data.tags": "string Sample data.tags",
 						"icon": "string sample-token",
-						"label": "string Sample name",
+						"label": "string Sample label",
 						"summary": "string \u003cp\u003eSample \u003cb\u003esummary\u003c/b\u003e\u003c/p\u003e",
 						"token": "string sample-token"
 					},
 					"types": {
 						"data.tags": "string",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3554,8 +3554,8 @@
 		"template:article-two-column/properties/0:with-draft.SubSteps/0:as-modal.SubSteps/0:edit": {
 			"fields": [
 				"data.tags (textarea, schema.String)",
-				"icon (select-icons, schema.String)",
-				"name (text, schema.String)",
+				"icon (select, schema.String)",
+				"label (text, schema.String)",
 				"summary (textarea, schema.String)",
 				"token (text, schema.String)"
 			],
@@ -3567,7 +3567,7 @@
 					"types": {
 						"data.tags": "unreadable",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3579,7 +3579,7 @@
 					"types": {
 						"data.tags": "unreadable",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3593,7 +3593,7 @@
 					"types": {
 						"data.tags": "string",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3602,14 +3602,14 @@
 					"changes": {
 						"data.tags": "string Sample data.tags",
 						"icon": "string sample-token",
-						"label": "string Sample name",
+						"label": "string Sample label",
 						"summary": "string \u003cp\u003eSample \u003cb\u003esummary\u003c/b\u003e\u003c/p\u003e",
 						"token": "string sample-token"
 					},
 					"types": {
 						"data.tags": "string",
 						"icon": "string",
-						"name": "string",
+						"label": "string",
 						"summary": "string",
 						"token": "string"
 					}
@@ -3914,6 +3914,143 @@
 				}
 			}
 		},
+		"template:qwerty-inbox/annotation/0:with-annotation.SubSteps@with-annotation/0:as-modal.SubSteps/1:edit": {
+			"fields": [
+				"content (textarea, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"content": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"content": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"content": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (9962 bytes, sha256 3fcb2919a327)"
+					},
+					"types": {
+						"content": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"content": "string Sample content"
+					},
+					"types": {
+						"content": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-inbox/folder-add/1:with-folder.SubSteps@with-folder/0:as-modal.SubSteps/0:edit": {
+			"fields": [
+				"icon (select, schema.String)",
+				"label (text, schema.String)",
+				"layout (select, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"icon": "string "
+					},
+					"types": {
+						"icon": "string",
+						"label": "string",
+						"layout": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"icon": "string "
+					},
+					"types": {
+						"icon": "string",
+						"label": "string",
+						"layout": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"label": "string alert(1)‮\txxxxxxxxxxxxxx",
+						"layout": "string alert(1)‮\txxxxxxxxxxxxxx"
+					},
+					"types": {
+						"icon": "string",
+						"label": "string",
+						"layout": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"icon": "string sample-token",
+						"label": "string Sample label",
+						"layout": "string Sample layout"
+					},
+					"types": {
+						"icon": "string",
+						"label": "string",
+						"layout": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-inbox/folder-edit/0:with-folder.SubSteps@with-folder/0:as-modal.SubSteps/0:edit": {
+			"fields": [
+				"icon (select, schema.String)",
+				"label (text, schema.String)",
+				"layout (select, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"icon": "string "
+					},
+					"types": {
+						"icon": "string",
+						"label": "string",
+						"layout": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"icon": "string "
+					},
+					"types": {
+						"icon": "string",
+						"label": "string",
+						"layout": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"label": "string alert(1)‮\txxxxxxxxxxxxxx",
+						"layout": "string alert(1)‮\txxxxxxxxxxxxxx"
+					},
+					"types": {
+						"icon": "string",
+						"label": "string",
+						"layout": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"icon": "string sample-token",
+						"label": "string Sample label",
+						"layout": "string Sample layout"
+					},
+					"types": {
+						"icon": "string",
+						"label": "string",
+						"layout": "string"
+					}
+				}
+			}
+		},
 		"template:qwerty-outbox/edit-banner/0:as-modal.SubSteps/0:edit": {
 			"fields": [
 				"data.color-banner (colorpicker, schema.String)",
@@ -4022,42 +4159,6 @@
 				}
 			}
 		},
-		"template:qwerty-outbox/edit-template/0:as-modal.SubSteps/0:edit-template": {
-			"fields": [
-				"inboxTemplate (edit-template, schema.String)",
-				"outboxTemplate (edit-template, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"inboxTemplate": "string",
-						"outboxTemplate": "string"
-					}
-				},
-				"empty": {
-					"types": {
-						"inboxTemplate": "string",
-						"outboxTemplate": "string"
-					}
-				},
-				"hostile": {
-					"types": {
-						"inboxTemplate": "string",
-						"outboxTemplate": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"inboxTemplate": "string user-inbox",
-						"outboxTemplate": "string qwerty-outbox"
-					},
-					"types": {
-						"inboxTemplate": "string",
-						"outboxTemplate": "string"
-					}
-				}
-			}
-		},
 		"template:qwerty-outbox/edit/0:as-modal.SubSteps/0:edit": {
 			"fields": [
 				"data.tags (text, schema.String)",
@@ -4121,626 +4222,6 @@
 						"location": "string",
 						"statusMessage": "string"
 					}
-				}
-			}
-		},
-		"template:qwerty-outbox/links-table/0:edit-table?edit=-1": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": "build.StepTableEditor.Post: Edit index out of range"
-				},
-				"empty": {
-					"error": "build.StepTableEditor.Post: Edit index out of range"
-				},
-				"hostile": {
-					"error": "build.StepTableEditor.Post: Edit index out of range"
-				},
-				"typical": {
-					"error": "build.StepTableEditor.Post: Edit index out of range"
-				}
-			}
-		},
-		"template:qwerty-outbox/links-table/0:edit-table?edit=0": {
-			"fields": [
-				"name (text, schema.String)",
-				"profileUrl (text, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}"
-					},
-					"types": {
-						"links.0.name": "string",
-						"links.0.profileUrl": "string"
-					}
-				},
-				"empty": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}"
-					},
-					"types": {
-						"links.0.name": "string",
-						"links.0.profileUrl": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"links": "removed",
-						"links[0].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
-						"links[0].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"links.0.name": "string",
-						"links.0.profileUrl": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"links": "removed",
-						"links[0].name": "string Sample name",
-						"links[0].profileUrl": "string Sample profileUrl"
-					},
-					"types": {
-						"links.0.name": "string",
-						"links.0.profileUrl": "string"
-					}
-				}
-			}
-		},
-		"template:qwerty-outbox/links-table/0:edit-table?edit=1": {
-			"fields": [
-				"name (text, schema.String)",
-				"profileUrl (text, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}"
-					},
-					"types": {
-						"links.1.name": "string",
-						"links.1.profileUrl": "string"
-					}
-				},
-				"empty": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}"
-					},
-					"types": {
-						"links.1.name": "string",
-						"links.1.profileUrl": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
-						"links[1].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"links.1.name": "string",
-						"links.1.profileUrl": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1].name": "string Sample name",
-						"links[1].profileUrl": "string Sample profileUrl"
-					},
-					"types": {
-						"links.1.name": "string",
-						"links.1.profileUrl": "string"
-					}
-				}
-			}
-		},
-		"template:qwerty-outbox/links-table/0:edit-table?edit=10": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.10.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.10.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.10.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.10.name"
-				}
-			}
-		},
-		"template:qwerty-outbox/links-table/0:edit-table?edit=11": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.11.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.11.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.11.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.11.name"
-				}
-			}
-		},
-		"template:qwerty-outbox/links-table/0:edit-table?edit=12": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.12.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.12.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.12.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.12.name"
-				}
-			}
-		},
-		"template:qwerty-outbox/links-table/0:edit-table?edit=13": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.13.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.13.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.13.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.13.name"
-				}
-			}
-		},
-		"template:qwerty-outbox/links-table/0:edit-table?edit=14": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.14.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.14.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.14.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.14.name"
-				}
-			}
-		},
-		"template:qwerty-outbox/links-table/0:edit-table?edit=15": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.15.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.15.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.15.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.15.name"
-				}
-			}
-		},
-		"template:qwerty-outbox/links-table/0:edit-table?edit=16": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.16.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.16.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.16.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.16.name"
-				}
-			}
-		},
-		"template:qwerty-outbox/links-table/0:edit-table?edit=2": {
-			"fields": [
-				"name (text, schema.String)",
-				"profileUrl (text, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}"
-					},
-					"types": {
-						"links.2.name": "string",
-						"links.2.profileUrl": "string"
-					}
-				},
-				"empty": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}"
-					},
-					"types": {
-						"links.2.name": "string",
-						"links.2.profileUrl": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
-						"links[2].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"links.2.name": "string",
-						"links.2.profileUrl": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2].name": "string Sample name",
-						"links[2].profileUrl": "string Sample profileUrl"
-					},
-					"types": {
-						"links.2.name": "string",
-						"links.2.profileUrl": "string"
-					}
-				}
-			}
-		},
-		"template:qwerty-outbox/links-table/0:edit-table?edit=3": {
-			"fields": [
-				"name (text, schema.String)",
-				"profileUrl (text, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}"
-					},
-					"types": {
-						"links.3.name": "string",
-						"links.3.profileUrl": "string"
-					}
-				},
-				"empty": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}"
-					},
-					"types": {
-						"links.3.name": "string",
-						"links.3.profileUrl": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
-						"links[3].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"links.3.name": "string",
-						"links.3.profileUrl": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3].name": "string Sample name",
-						"links[3].profileUrl": "string Sample profileUrl"
-					},
-					"types": {
-						"links.3.name": "string",
-						"links.3.profileUrl": "string"
-					}
-				}
-			}
-		},
-		"template:qwerty-outbox/links-table/0:edit-table?edit=4": {
-			"fields": [
-				"name (text, schema.String)",
-				"profileUrl (text, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}",
-						"links[4]": "document {}"
-					},
-					"types": {
-						"links.4.name": "string",
-						"links.4.profileUrl": "string"
-					}
-				},
-				"empty": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}",
-						"links[4]": "document {}"
-					},
-					"types": {
-						"links.4.name": "string",
-						"links.4.profileUrl": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}",
-						"links[4].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
-						"links[4].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"links.4.name": "string",
-						"links.4.profileUrl": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}",
-						"links[4].name": "string Sample name",
-						"links[4].profileUrl": "string Sample profileUrl"
-					},
-					"types": {
-						"links.4.name": "string",
-						"links.4.profileUrl": "string"
-					}
-				}
-			}
-		},
-		"template:qwerty-outbox/links-table/0:edit-table?edit=5": {
-			"fields": [
-				"name (text, schema.String)",
-				"profileUrl (text, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}",
-						"links[4]": "document {}",
-						"links[5]": "document {}"
-					},
-					"types": {
-						"links.5.name": "string",
-						"links.5.profileUrl": "string"
-					}
-				},
-				"empty": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}",
-						"links[4]": "document {}",
-						"links[5]": "document {}"
-					},
-					"types": {
-						"links.5.name": "string",
-						"links.5.profileUrl": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}",
-						"links[4]": "document {}",
-						"links[5].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
-						"links[5].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"links.5.name": "string",
-						"links.5.profileUrl": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}",
-						"links[4]": "document {}",
-						"links[5].name": "string Sample name",
-						"links[5].profileUrl": "string Sample profileUrl"
-					},
-					"types": {
-						"links.5.name": "string",
-						"links.5.profileUrl": "string"
-					}
-				}
-			}
-		},
-		"template:qwerty-outbox/links-table/0:edit-table?edit=6": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.6.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.6.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.6.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.6.name"
-				}
-			}
-		},
-		"template:qwerty-outbox/links-table/0:edit-table?edit=7": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.7.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.7.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.7.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.7.name"
-				}
-			}
-		},
-		"template:qwerty-outbox/links-table/0:edit-table?edit=8": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.8.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.8.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.8.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.8.name"
-				}
-			}
-		},
-		"template:qwerty-outbox/links-table/0:edit-table?edit=9": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.9.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.9.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.9.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.9.name"
-				}
-			}
-		},
-		"template:qwerty-outbox/links-table/0:edit-table?edit=first": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": "build.StepTableEditor.Post: Failed to convert edit index"
-				},
-				"empty": {
-					"error": "build.StepTableEditor.Post: Failed to convert edit index"
-				},
-				"hostile": {
-					"error": "build.StepTableEditor.Post: Failed to convert edit index"
-				},
-				"typical": {
-					"error": "build.StepTableEditor.Post: Failed to convert edit index"
 				}
 			}
 		},
@@ -4886,6 +4367,39 @@
 						"label": "string",
 						"summary": "string",
 						"token": "string"
+					}
+				}
+			}
+		},
+		"template:user-inbox/annotation-editor/1:with-annotation.SubSteps@with-annotation/0:edit": {
+			"fields": [
+				"content (textarea, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"content": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"content": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"content": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (9962 bytes, sha256 3fcb2919a327)"
+					},
+					"types": {
+						"content": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"content": "string Sample content"
+					},
+					"types": {
+						"content": "string"
 					}
 				}
 			}
@@ -5053,7 +4567,7 @@
 				},
 				"typical": {
 					"changes": {
-						"inboxTemplate": "string user-inbox",
+						"inboxTemplate": "string qwerty-inbox",
 						"outboxTemplate": "string qwerty-outbox"
 					},
 					"types": {
@@ -5835,7 +5349,7 @@
 		},
 		"template:user-settings/circle-add/0:with-circle.SubSteps@with-circle/1:as-modal.SubSteps/1:edit": {
 			"fields": [
-				"icon (select-icons, schema.String)",
+				"icon (select, schema.String)",
 				"isFeatured (toggle, schema.Boolean)",
 				"isVisible (toggle, schema.Boolean)",
 				"name (text, schema.String)",
@@ -5898,7 +5412,7 @@
 		"template:user-settings/circle-edit/0:with-circle.SubSteps@with-circle/0:as-modal.SubSteps/1:edit": {
 			"fields": [
 				"description (textarea, schema.String)",
-				"icon (select-icons, schema.String)",
+				"icon (select, schema.String)",
 				"isFeatured (toggle, schema.Boolean)",
 				"isVisible (toggle, schema.Boolean)",
 				"name (text, schema.String)",
@@ -5997,131 +5511,6 @@
 				}
 			}
 		},
-		"template:user-settings/connections-edit-mailchimp/0:as-modal.SubSteps/0:with-user-connection.SubSteps@with-user-connection/1:edit": {
-			"fields": [
-				"data.dataCenter (text, schema.String)",
-				"data.tag (text, schema.String)",
-				"isActive (toggle, schema.Boolean)",
-				"type (hidden, schema.String)",
-				"vault.apiKey (text, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"data.dataCenter": "unreadable",
-						"data.tag": "unreadable",
-						"isActive": "bool",
-						"type": "string",
-						"vault.apiKey": "unreadable"
-					}
-				},
-				"empty": {
-					"types": {
-						"data.dataCenter": "unreadable",
-						"data.tag": "unreadable",
-						"isActive": "bool",
-						"type": "string",
-						"vault.apiKey": "unreadable"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"data": "removed",
-						"data.dataCenter": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
-						"data.tag": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)"
-					},
-					"types": {
-						"data.dataCenter": "string",
-						"data.tag": "string",
-						"isActive": "bool",
-						"type": "string",
-						"vault.apiKey": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"data": "removed",
-						"data.dataCenter": "string Sample data.dataCenter",
-						"data.tag": "string Sample data.tag",
-						"isActive": "bool true",
-						"type": "string MAILCHIMP"
-					},
-					"types": {
-						"data.dataCenter": "string",
-						"data.tag": "string",
-						"isActive": "bool",
-						"type": "string",
-						"vault.apiKey": "string"
-					}
-				}
-			}
-		},
-		"template:user-settings/connections-new-mailchimp/0:as-modal.SubSteps/0:with-user-connection.SubSteps@with-user-connection/1:edit": {
-			"fields": [
-				"data.audienceId (text, schema.String)",
-				"data.dataCenter (text, schema.String)",
-				"data.tag (text, schema.String)",
-				"isActive (toggle, schema.Boolean)",
-				"type (hidden, schema.String)",
-				"vault.apiKey (text, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"data.audienceId": "unreadable",
-						"data.dataCenter": "unreadable",
-						"data.tag": "unreadable",
-						"isActive": "bool",
-						"type": "string",
-						"vault.apiKey": "unreadable"
-					}
-				},
-				"empty": {
-					"types": {
-						"data.audienceId": "unreadable",
-						"data.dataCenter": "unreadable",
-						"data.tag": "unreadable",
-						"isActive": "bool",
-						"type": "string",
-						"vault.apiKey": "unreadable"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"data": "removed",
-						"data.audienceId": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
-						"data.dataCenter": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)",
-						"data.tag": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (986 bytes, sha256 c45824669b2e)"
-					},
-					"types": {
-						"data.audienceId": "string",
-						"data.dataCenter": "string",
-						"data.tag": "string",
-						"isActive": "bool",
-						"type": "string",
-						"vault.apiKey": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"data": "removed",
-						"data.audienceId": "string Sample data.audienceId",
-						"data.dataCenter": "string Sample data.dataCenter",
-						"data.tag": "string Sample data.tag",
-						"isActive": "bool true",
-						"type": "string MAILCHIMP"
-					},
-					"types": {
-						"data.audienceId": "string",
-						"data.dataCenter": "string",
-						"data.tag": "string",
-						"isActive": "bool",
-						"type": "string",
-						"vault.apiKey": "string"
-					}
-				}
-			}
-		},
 		"template:user-settings/follower-add/0:as-modal.SubSteps/0:edit": {
 			"fields": [
 				"url (text, not in schema)"
@@ -6133,7 +5522,7 @@
 				"typical": {}
 			}
 		},
-		"template:user-settings/following-edit/0:as-modal.SubSteps/0:with-following.SubSteps@with-following/1:if.Then/1:edit": {
+		"template:user-settings/following-edit/0:as-modal.SubSteps/0:with-following.SubSteps@with-following/2:edit": {
 			"fields": [
 				"behavior (select, schema.String)",
 				"folderId (select, schema.String)",
@@ -6933,6 +6322,51 @@
 				}
 			}
 		},
+		"template:user-settings/merchantAccount-edit-paypal/0:as-modal.SubSteps/0:with-merchant-account.SubSteps@with-merchant-account/1:edit": {
+			"fields": [
+				"liveMode (toggle, schema.Boolean)",
+				"name (text, schema.String)",
+				"type (hidden, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"liveMode": "bool",
+						"name": "string",
+						"type": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"liveMode": "bool",
+						"name": "string",
+						"type": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"name": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					},
+					"types": {
+						"liveMode": "bool",
+						"name": "string",
+						"type": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"liveMode": "bool true",
+						"name": "string Sample name",
+						"type": "string STRIPE-CONNECT"
+					},
+					"types": {
+						"liveMode": "bool",
+						"name": "string",
+						"type": "string"
+					}
+				}
+			}
+		},
 		"template:user-settings/merchantAccount-edit-stripe/0:as-modal.SubSteps/0:with-merchant-account.SubSteps@with-merchant-account/1:edit": {
 			"fields": [
 				"liveMode (toggle, schema.Boolean)",
@@ -7568,29 +7002,29 @@
 		"template:article-base/editor/0:with-draft.SubSteps/0:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
 		"template:article-base/sharing/0:as-modal.SubSteps/0:set-simple-sharing": "not pinned: reads group IDs that must exist in the database",
 		"template:article-base/upload-image/0:with-draft.SubSteps/0:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:article-base/widgets/0:with-draft.SubSteps/1:sort-widgets": "not pinned: POST keys are widget IDs on a stored Stream",
+		"template:article-base/widgets/0:with-draft.SubSteps/0:sort-widgets": "not pinned: POST keys are widget IDs on a stored Stream",
 		"template:article-editorjs/add-child/0:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
 		"template:article-editorjs/children/1:sort": "not pinned: POST keys are database record IDs",
 		"template:article-editorjs/editor/0:with-draft.SubSteps/0:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
 		"template:article-editorjs/sharing/0:as-modal.SubSteps/0:set-simple-sharing": "not pinned: reads group IDs that must exist in the database",
 		"template:article-editorjs/upload-image/0:with-draft.SubSteps/0:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:article-editorjs/widgets/0:with-draft.SubSteps/1:sort-widgets": "not pinned: POST keys are widget IDs on a stored Stream",
+		"template:article-editorjs/widgets/0:with-draft.SubSteps/0:sort-widgets": "not pinned: POST keys are widget IDs on a stored Stream",
 		"template:article-html/add-child/0:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
 		"template:article-html/children/1:sort": "not pinned: POST keys are database record IDs",
 		"template:article-html/editor/0:with-draft.SubSteps/0:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
 		"template:article-html/sharing/0:as-modal.SubSteps/0:set-simple-sharing": "not pinned: reads group IDs that must exist in the database",
 		"template:article-html/upload-image/0:with-draft.SubSteps/0:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:article-html/widgets/0:with-draft.SubSteps/1:sort-widgets": "not pinned: POST keys are widget IDs on a stored Stream",
+		"template:article-html/widgets/0:with-draft.SubSteps/0:sort-widgets": "not pinned: POST keys are widget IDs on a stored Stream",
 		"template:article-markdown/add-child/0:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
 		"template:article-markdown/children/1:sort": "not pinned: POST keys are database record IDs",
 		"template:article-markdown/editor/0:with-draft.SubSteps/0:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
 		"template:article-markdown/sharing/0:as-modal.SubSteps/0:set-simple-sharing": "not pinned: reads group IDs that must exist in the database",
 		"template:article-markdown/upload-image/0:with-draft.SubSteps/0:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:article-markdown/widgets/0:with-draft.SubSteps/1:sort-widgets": "not pinned: POST keys are widget IDs on a stored Stream",
+		"template:article-markdown/widgets/0:with-draft.SubSteps/0:sort-widgets": "not pinned: POST keys are widget IDs on a stored Stream",
 		"template:article-remote/add-child/0:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
 		"template:article-remote/children/1:sort": "not pinned: POST keys are database record IDs",
 		"template:article-remote/sharing/0:as-modal.SubSteps/0:set-simple-sharing": "not pinned: reads group IDs that must exist in the database",
-		"template:article-remote/widgets/0:with-draft.SubSteps/1:sort-widgets": "not pinned: POST keys are widget IDs on a stored Stream",
+		"template:article-remote/widgets/0:with-draft.SubSteps/0:sort-widgets": "not pinned: POST keys are widget IDs on a stored Stream",
 		"template:article-two-column/add-child/0:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
 		"template:article-two-column/children/1:sort": "not pinned: POST keys are database record IDs",
 		"template:article-two-column/sharing/0:as-modal.SubSteps/0:set-simple-sharing": "not pinned: reads group IDs that must exist in the database",
@@ -7622,8 +7056,12 @@
 		"template:qwerty-article/sharing/0:as-modal.SubSteps/0:set-circle-sharing": "not pinned: reads circle IDs that must exist in the database",
 		"template:qwerty-article/upload-banner/0:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-article/upload-image/0:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:qwerty-inbox/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
+		"template:qwerty-inbox/folder-sort/0:with-folder.SubSteps@with-folder/0:sort": "not pinned: POST keys are database record IDs",
+		"template:qwerty-inbox/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
+		"template:qwerty-inbox/message-set-response/0:with-message.SubSteps@with-message/0:set-response": "not pinned: writes a Response record through service.Response",
+		"template:qwerty-inbox/reply/1:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
 		"template:qwerty-outbox/add/0:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
-		"template:qwerty-outbox/banner-delete/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
 		"template:qwerty-outbox/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:qwerty-outbox/delete-background/1:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
 		"template:qwerty-outbox/delete-icon/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
@@ -7633,10 +7071,7 @@
 		"template:qwerty-outbox/edit/0:as-modal.SubSteps/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-outbox/edit/0:as-modal.SubSteps/3:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-outbox/edit/0:as-modal.SubSteps/5:set-password": "not pinned: hashes and stores a password through the User service",
-		"template:qwerty-outbox/icon-delete/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
-		"template:qwerty-outbox/icon-edit/0:as-modal.SubSteps/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-outbox/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
-		"template:qwerty-outbox/outbox-add/1:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
 		"template:qwerty-outbox/sort-children/0:sort": "not pinned: POST keys are database record IDs",
 		"template:qwerty-outbox/sort-featured/0:sort": "not pinned: POST keys are database record IDs",
 		"template:qwerty-outbox/wizard-1/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",

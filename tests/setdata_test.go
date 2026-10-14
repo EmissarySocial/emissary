@@ -102,16 +102,7 @@ func pinSetData(group *loadedGroup) setDataGolden {
 			Results: map[string]result{},
 		}
 
-		for _, key := range sortedKeys(use.Step.Values) {
-			if pinned.Values == nil {
-				pinned.Values = map[string]string{}
-			}
-			kind := " (renders against the builder; mocked)"
-			if isLiteral(use.Step.Values[key]) {
-				kind = " (literal)"
-			}
-			pinned.Values[key] = use.Step.Values[key].Root.String() + kind
-		}
+		pinned.Values = pinValues(use.Step.Values)
 
 		for _, key := range sortedKeys(use.Step.Defaults) {
 			if pinned.Defaults == nil {
@@ -131,6 +122,33 @@ func pinSetData(group *loadedGroup) setDataGolden {
 	}
 
 	return pinnedGroup
+}
+
+// pinValues describes the template source of each "values" entry, or returns nil when there are none
+func pinValues(values map[string]*template.Template) map[string]string {
+
+	if len(values) == 0 {
+		return nil
+	}
+
+	result := make(map[string]string, len(values))
+
+	for key, source := range values {
+
+		// RULE: NewSetData parses every entry, so a nil template means the step was built some other way
+		if (source == nil) || (source.Root == nil) {
+			result[key] = "(no template)"
+			continue
+		}
+
+		kind := " (renders against the builder; mocked)"
+		if isLiteral(source) {
+			kind = " (literal)"
+		}
+		result[key] = source.Root.String() + kind
+	}
+
+	return result
 }
 
 // postCase adapts one method and scenario of a set-data step to the shared runner
