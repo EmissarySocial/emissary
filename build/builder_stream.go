@@ -847,8 +847,30 @@ func (w Stream) Children() QueryBuilder[model.StreamSummary] {
 	return w.makeStreamQueryBuilder(exp.Equal("parentId", w._stream.StreamID))
 }
 
-// makeStreamQueryBuilder returns a fully initialized RenderBuilder
+// ChildrenWithDrafts returns the current Stream's children for an editing view.  The Stream's
+// author also sees the children that are not published yet, or no longer are.  Everyone else
+// gets exactly what Children returns, so calling this from a public view leaks nothing.
+// Permissions apply either way: a draft appears only to the people allowed to view it.
+func (w Stream) ChildrenWithDrafts() QueryBuilder[model.StreamSummary] {
+
+	criteria := exp.Equal("parentId", w._stream.StreamID)
+
+	if !w.IsAuthor() {
+		return w.makeStreamQueryBuilder(criteria)
+	}
+
+	return w.makeStreamQueryBuilderAnyDate(criteria)
+}
+
+// makeStreamQueryBuilder returns a fully initialized RenderBuilder for the published Streams
+// that match the criteria
 func (w Stream) makeStreamQueryBuilder(criteria exp.Expression) QueryBuilder[model.StreamSummary] {
+	return w.makeStreamQueryBuilderAnyDate(criteria.And(w.withinPublishDate()))
+}
+
+// makeStreamQueryBuilderAnyDate returns a fully initialized RenderBuilder for the Streams that
+// match the criteria, whatever their publish dates
+func (w Stream) makeStreamQueryBuilderAnyDate(criteria exp.Expression) QueryBuilder[model.StreamSummary] {
 
 	queryBuilder := builder.NewBuilder().
 		Int("createDate").
@@ -862,8 +884,7 @@ func (w Stream) makeStreamQueryBuilder(criteria exp.Expression) QueryBuilder[mod
 	query := queryBuilder.Evaluate(queryValues)
 	criteria = criteria.
 		And(query).
-		And(w.defaultAllowed()).
-		And(w.withinPublishDate())
+		And(w.defaultAllowed())
 
 	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), w._session, criteria)
 	result.By(w._template.ChildSortType)
