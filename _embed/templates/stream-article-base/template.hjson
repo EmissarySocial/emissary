@@ -24,7 +24,9 @@
 			content: {type:"object", properties: {
 				format: {type:"string", enum:["HTML","EDITORJS","MARKDOWN","TEXT"]}
 				raw: {type:"string", format:"unsafe-any", maxLength:1048576}
-				html: {type:"string", format:"html", maxLength:1048576}
+				// No content.html here: every template inherits it from model.ContentSchema, which
+				// sanitizes with the application's own policy.  An override here reaches no
+				// child template, and a looser one removes the save-time gate (BUG-278).
 			}}
 			data: {type:"object", properties: {
 				tags: {type:"string", maxLength:2048}

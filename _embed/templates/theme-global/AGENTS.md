@@ -19,3 +19,14 @@ Both flip in the dark block: `--white` becomes the near-black page color (and mu
 ## The extended palette is a second, unrelated ramp
 
 [stylesheet/01-more-colors.css](stylesheet/01-more-colors.css) defines `--color-gray-50`…`--color-gray-900` in a Spectrum-style scale, and those grays are **neutral in both schemes**. They are not the same family as `--gray00`…`--gray100` and do not follow the warm-gray rule above. Mixing the two ramps in one component is what makes a panel look subtly cold against its own page; pick one ramp per surface.
+
+## Every file in `javascript/` ends with a semicolon
+
+The `javascript` bundle joins its files with nothing between them, and the minifier then reads the result as one program. A file ending in `})()` followed by one starting with `(function` becomes `…})()(function…`, a call on the first file's return value: it throws, and every script after it in the bundle (turboclick, for one) silently never runs. `prism.js` was first written this way during EMISSARY-DEV-WEBSITE §1.7, and only running the minified bundle caught it. [service/theme_javascript_bundle_test.go](../../../service/theme_javascript_bundle_test.go) checks every bundled javascript file under `_embed/templates`.
+
+## A `def` that waits makes its caller wait, and an `on` handler queues behind it
+
+Hyperscript's `call` awaits an async `def`, and a `def` becomes async as soon as it contains `wait`. An `on click` handler that calls one stays busy until the wait ends, and hyperscript queues every later click on that element behind it, so a second click looks ignored for seconds. 0.9.93 has no `async` command to detach the wait. [hyperscript/highlight._hs](hyperscript/highlight._hs) avoids waiting at all: its animation runs once and ends on the normal background, so `.flash-highlight` can stay on the element, and removing and re-adding it (with a layout read between) replays the flash.
+
+Two more traps found on the way. `wait for animationend or 3s from node` parses without error but never times out; the timeout works only with an argument list, as in `wait for animationend(animationName) or 3s from node`. And `02-accessibility.css` shortens every animation to 0.01ms under `prefers-reduced-motion`, so an animation that carries meaning needs its own reduced-motion rule: `.flash-highlight` uses a class selector with `!important`, which outranks the universal one, and a `step-end` timing that holds the color without fading.
+

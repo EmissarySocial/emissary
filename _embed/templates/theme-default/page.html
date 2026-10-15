@@ -7,9 +7,8 @@
 
 <body hx-target="main" hx-swap="innerHTML transition:true show:none" hx-push-url="true" hx-ext="a11y" script="install SelectNav">
 
-	<nav>
-		{{template "navigation" . }}
-	</nav>
+	<!-- navigation.html emits its own nav bar and the mobile menu beside it -->
+	{{- template "navigation" . -}}
 
 	<main id="main">
 		{{- .GetContent -}}

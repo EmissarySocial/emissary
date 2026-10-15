@@ -1,7 +1,7 @@
 <div class="widget widget-navigation" hx-target="main" hx-swap="innerHTML" hx-push-url="true">
 
 	{{- if ne "" (.Widget.Data.GetString "title") -}}
-		<div class="bold">{{- .Widget.Data.GetString "title" -}}</div>
+		<div class="bold navigation-title">{{- .Widget.Data.GetString "title" -}}</div>
 	{{- end -}}
 
 	<!-- Enter the tier chain at the top of the family tree.  Each tier decides for itself
