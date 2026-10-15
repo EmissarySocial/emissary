@@ -16,7 +16,7 @@ Despite the name, the Stream builder's `Ancestors()` (build/builder_stream.go) d
 
 ### Tier nesting and the lineage match
 
-In "All" mode each template must decide which one peer in its list sits on the current stream's lineage, because that is where the next tier nests. Each file matches by hex-string ID comparison ([`StreamSummary.StreamID()`](../../../model/streamSummary.go) and the builder's `ParentID()` both return hex strings): grandparents.html compares each `$ancestor.StreamID` against `$parentBuilder.ParentID` (the grandparent's ID), parents.html compares against `.ParentID` (the parent's ID), and siblings.html compares against `.StreamID` (the current stream itself). Off-lineage peers render as plain `ellipsis`-classed links; the matching peer renders its link (or, in siblings.html, bold non-link text marking the page you are on) followed immediately by the next tier inside an indented `<div style="padding-left:8px; font-size:0.9em;">`. In "* Only" modes there is no list to search, so the next tier nests unconditionally after the single item.
+In "All" mode each template must decide which one peer in its list sits on the current stream's lineage, because that is where the next tier nests. Each file matches by hex-string ID comparison ([`StreamSummary.StreamID()`](../../../model/streamSummary.go) and the builder's `ParentID()` both return hex strings): grandparents.html compares each `$ancestor.StreamID` against `$parentBuilder.ParentID` (the grandparent's ID), parents.html compares against `.ParentID` (the parent's ID), and siblings.html compares against `.StreamID` (the current stream itself). Off-lineage peers render as `navigation-item` links; the matching peer renders its link (or, in siblings.html, bold non-link text with `navigation-current` and `aria-current="page"`, marking the page you are on) followed immediately by the next tier inside a `<div class="navigation-children">`. In "* Only" modes there is no list to search, so the next tier nests unconditionally after the single item.
 
 ### Why every tier is guarded
 
@@ -25,3 +25,16 @@ The settings are chosen by whoever places the widget, and nothing ties them to w
 Each tier then ends with an unconditional hand-off: if it rendered nothing to nest the next tier *under*, it invokes the next tier anyway, un-indented. This matters because a lineage match can fail even when the relative exists — `Ancestors()` and `Siblings()` both filter by permissions and publish date, so a parent the visitor cannot see, or a stream its own author is previewing before its publish date, drops out of the list that the match searches. Without the hand-off, one missing row would swallow every tier below it and the menu would end early with no error anywhere.
 
 The builder side carries the matching guard: `Ancestors()` returns an empty query for a stream with no parent instead of falling through to the zero ObjectID, which would return the stream's *own* generation — a list no caller can tell apart from a real ancestor generation.
+
+### Classes, for themes
+
+The markup carries classes and no inline styles, so a theme can restyle the menu without fighting `style` attributes. `theme-global`'s [03-widgets-navigation.css](../theme-global/stylesheet/03-widgets-navigation.css) gives the default look, which used to be inline.
+
+| Class | On |
+| --- | --- |
+| `navigation-title` | The optional title |
+| `navigation-item` | Every entry, linked or not |
+| `navigation-current` | The entry for the page being viewed, which is not a link and carries `aria-current="page"` |
+| `navigation-children` | The block that nests the next tier under its relative |
+
+Do not name these `nav-item`: `SelectNav` takes `.selected` and `aria-current` from every `.nav-item` on the page (see `theme-minimal/AGENTS.md`).
