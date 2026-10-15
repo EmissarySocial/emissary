@@ -19,12 +19,9 @@
 			content: {type:"object", properties: {
 				format: {type:"string", enum:["HTML","EDITORJS","MARKDOWN","TEXT"]}
 				raw: {type:"string", format:"unsafe-any", maxLength:1048576}
-
-				// unsafe-any, NOT the `html` that article-base declares.  The Markdown renderer
-				// has already sanitized this with the application's own policy; rosetta's `html`
-				// format would re-sanitize with a plain UGCPolicy that silently strips syntax
-				// highlighting and embeds.  A child's String element replaces the parent's whole.
-				html: {type:"string", format:"unsafe-any", maxLength:1048576}
+				// No content.html here: every template inherits it from model.ContentSchema, which
+				// sanitizes with the application's own policy.  This template once overrode it
+				// with unsafe-any, which kept embeds but removed the save-time gate (BUG-278).
 			}}
 		}
 	}
