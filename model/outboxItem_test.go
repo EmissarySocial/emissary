@@ -1,9 +1,14 @@
 package model
 
 import (
+	"strconv"
 	"testing"
 
+	"github.com/benpate/data/journal"
+	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
+	"github.com/stretchr/testify/require"
 )
 
 // TestOutboxItemSchema returns the rosetta schema that describes a TestOutboxItem
@@ -24,7 +29,78 @@ func TestOutboxItemSchema(t *testing.T) {
 		{"activity.attributedTo", "http://example.com/users/alice", nil},
 		{"activity.content", "<p>Hello, world!</p>", nil},
 		{"url", "https://example.com/outbox/1", nil},
+		{"activityType", "Create", nil},
+		{"objectId", "https://example.com/notes/1", nil},
+		{"permissions.0", "086753090867530908675309", nil},
+		{"permissions.1", "086753090867530908675309", nil},
 	}
 
 	tableTest_Schema(t, &s, &annotation, table)
+}
+
+// TestOutboxItemSchema_ArrayLimits verifies that the lists refuse an index at their MaxLength
+func TestOutboxItemSchema_ArrayLimits(t *testing.T) {
+
+	// BUG-244: an unbounded index made the server allocate a list of any length
+	s := schema.New(OutboxItemSchema())
+
+	for path, limit := range map[string]int{"recipients": 1024, "permissions": 256} {
+		item := NewOutboxItem()
+		require.NoError(t, s.Set(&item, path+"."+strconv.Itoa(limit-1), "086753090867530908675309"), path)
+		require.Error(t, s.Set(&item, path+"."+strconv.Itoa(limit), "086753090867530908675309"), path)
+		require.Error(t, s.Set(&item, path+".5000000", "086753090867530908675309"), path)
+	}
+}
+
+// TestNewOutboxItem_PermissionsAreEmpty verifies that a new item is readable by no one until permissions are set
+func TestNewOutboxItem_PermissionsAreEmpty(t *testing.T) {
+	item := NewOutboxItem()
+	require.NotNil(t, item.Permissions)
+	require.Empty(t, item.Permissions)
+	require.False(t, item.Permissions.IsAnonymous())
+}
+
+// TestOutboxItem_GetJSONLD verifies that blind recipients are removed at every level, from a copy
+func TestOutboxItem_GetJSONLD(t *testing.T) {
+
+	// BUG-07: bto and bcc must never be disclosed to another party
+	item := NewOutboxItem()
+	item.Activity = mapof.Any{
+		vocab.PropertyID:   "https://example.com/activities/1",
+		vocab.PropertyType: vocab.ActivityTypeCreate,
+		vocab.PropertyTo:   []any{"https://example.com/users/visible"},
+		vocab.PropertyBTo:  []any{"https://example.com/users/secret"},
+		vocab.PropertyBCC:  "https://example.com/users/secret",
+		vocab.PropertyObject: map[string]any{
+			vocab.PropertyType: vocab.ObjectTypeNote,
+			vocab.PropertyBCC:  "https://example.com/users/deeperSecret",
+		},
+	}
+
+	result := item.GetJSONLD()
+
+	// The result carries everything but the blind fields...
+	require.Equal(t, "https://example.com/activities/1", result[vocab.PropertyID])
+	require.Equal(t, []any{"https://example.com/users/visible"}, result[vocab.PropertyTo])
+	require.NotContains(t, result, vocab.PropertyBTo)
+	require.NotContains(t, result, vocab.PropertyBCC)
+	require.NotContains(t, result[vocab.PropertyObject], vocab.PropertyBCC)
+
+	// ...and the stored activity keeps them, because delivery reads them
+	require.Contains(t, item.Activity, vocab.PropertyBTo)
+	require.Contains(t, item.Activity, vocab.PropertyBCC)
+	require.Contains(t, item.Activity[vocab.PropertyObject], vocab.PropertyBCC)
+}
+
+// TestOutboxItem_GetJSONLD_Empty verifies that an item with no activity returns an empty document
+func TestOutboxItem_GetJSONLD_Empty(t *testing.T) {
+	require.Empty(t, NewOutboxItem().GetJSONLD())
+	require.Empty(t, OutboxItem{}.GetJSONLD())
+}
+
+// TestOutboxItem_Created verifies that Created returns the journal's CreateDate
+func TestOutboxItem_Created(t *testing.T) {
+	item := OutboxItem{Journal: journal.Journal{CreateDate: 1700000000123}}
+	require.Equal(t, int64(1700000000123), item.Created())
+	require.Zero(t, NewOutboxItem().Created())
 }
