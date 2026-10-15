@@ -257,6 +257,11 @@ func (w Stream) SummaryOrContent() string {
 	return w._stream.SummaryOrContent()
 }
 
+// Icon returns the icon name of the stream being built
+func (w Stream) Icon() string {
+	return w._stream.Icon
+}
+
 // IconURL returns the thumbnail image URL of the stream being built
 func (w Stream) IconURL() string {
 	return w._stream.IconURL
@@ -527,7 +532,7 @@ func (w Stream) Widgets(location string) (template.HTML, error) {
 		if widget, ok := widgetService.Get(streamWidget.Type); ok {
 			widgetBuilder := NewWidget(&w, &streamWidget)
 
-			if err := widget.HTMLTemplate.ExecuteTemplate(&buffer, "widget", widgetBuilder); err != nil {
+			if err := appendWidget(&buffer, widget.HTMLTemplate, widgetBuilder); err != nil {
 				derp.Report(derp.Wrap(err, "build.Stream.Widgets", "Executing widget template", widget))
 			}
 		}
@@ -535,6 +540,22 @@ func (w Stream) Widgets(location string) (template.HTML, error) {
 	buffer.WriteString(`</div>`)
 
 	return template.HTML(buffer.String()), nil // #nosec G203 -- buffer holds the action pipeline's own rendered output, already escaped by html/template
+}
+
+// appendWidget renders one widget's "widget" template and appends the result to buffer,
+// appending nothing when the template fails
+func appendWidget(buffer *bytes.Buffer, widgetTemplate *template.Template, data any) error {
+
+	// A template that fails partway has already written its opening tags, which would
+	// leave the page unbalanced (BUG-279), so render into a buffer of its own first
+	var widgetBuffer bytes.Buffer
+
+	if err := widgetTemplate.ExecuteTemplate(&widgetBuffer, "widget", data); err != nil {
+		return err
+	}
+
+	buffer.Write(widgetBuffer.Bytes())
+	return nil // Nothing to see here
 }
 
 /******************************************
