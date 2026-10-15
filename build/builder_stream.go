@@ -879,6 +879,24 @@ func (w Stream) Breadcrumbs() ([]model.StreamSummary, error) {
 	return w._factory.Stream().QuerySummary(w._session, criteria, option.SortAsc("depth"))
 }
 
+// ParentSummary returns a one-row query for this Stream's parent, which a public view can read
+// safely.  Parent fails the whole page when the requester may not see the parent, so this
+// applies the permission filter instead, and a hidden parent yields an empty result.  So does a
+// parent that is not a Stream at all, such as a User's outbox.  It ignores the publish window,
+// because some parents are never published (QWERTY-COLLECTIONS: a qwertylicious collection).
+func (w Stream) ParentSummary() QueryBuilder[model.StreamSummary] {
+
+	// RULE: A top-level Stream has no parent to read
+	if !w.HasParent() {
+		return NewEmptyQueryBuilder[model.StreamSummary]()
+	}
+
+	criteria := exp.Equal("_id", w._stream.ParentID).
+		And(w.defaultAllowed())
+
+	return NewQueryBuilder[model.StreamSummary](w._factory.Stream(), w._session, criteria)
+}
+
 // Ancestors returns all Streams that have the same "parent" as the current Stream's parent
 func (w Stream) Ancestors() QueryBuilder[model.StreamSummary] {
 

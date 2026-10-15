@@ -1,5 +1,5 @@
 {{- /* newsfeed-menu.html renders the News Feed folder list: the "all folders" entry, Notes,
-       the sortable per-folder links, and "Add a Folder".  The dot (".") is a FolderList (via
+       a gap, the sortable per-folder links, and "New Folder".  The dot (".") is a FolderList (via
        .FoldersWithSelection "FOLDER").  Rendered inside newsfeed-sidebar.html on desktop,
        and full-page by mobile.html.  Notifications live in their own template now (see
        the user-notifications template and the global nav item in theme-default/navigation.html). */ -}}
@@ -14,13 +14,27 @@
 <a href="/@me/newsfeed/feed" hx-boost="true" hx-target="main" hx-swap="innerHTML transition:true show:none" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder {{if $allFolders}}selected{{end}}">
 	<span>
 		{{- if $allFolders -}}
-			{{- iconFilled "folder" -}}
+			{{- iconFilled "inbox" -}}
 		{{- else -}}
-			{{- icon "folder" -}}
+			{{- icon "inbox" -}}
 		{{- end }}
 	</span>
-	<span>All Folders</span>
+	<span>My Inbox</span>
 </a>
+
+<a href="/@me/newsfeed/annotations" hx-boost="true" hx-target="main" hx-swap="innerHTML transition:true show:none" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder {{if $isAnnotations}}selected{{end}}">
+	<span>
+		{{- if $isAnnotations -}}
+			{{- iconFilled "bookmark" -}}
+		{{- else -}}
+			{{- icon "bookmark" -}}
+		{{- end }}
+	</span>
+	<span>Notes</span>
+</a>
+
+<!-- An extra line between Notes and the named folders -->
+<br>
 
 <form class="sortable" hx-post="/@me/newsfeed/folder-sort" hx-push-url="false" hx-trigger="end" hx-swap="none">
 
@@ -50,22 +64,12 @@
 
 </form>
 
-<div class="margin-vertical-lg"></div>
 
-<a href="/@me/newsfeed/annotations" hx-boost="true" hx-target="main" hx-swap="innerHTML transition:true show:none" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder {{if $isAnnotations}}selected{{end}}">
-	<span>
-		{{- if $isAnnotations -}}
-			{{- iconFilled "bookmark" -}}
-		{{- else -}}
-			{{- icon "bookmark" -}}
-		{{- end }}
-	</span>
-	<span>Notes</span>
-</a>
-
-<div role="button" hx-get="/@me/newsfeed/folder-add" class="menu-item link turboclick" style="border:none;">
+<!-- New Folder: a menu row like the folders above it, so it spans the sidebar and its icon lines
+     up with theirs, colored as a link -->
+<div role="button" tabIndex="0" hx-get="/@me/newsfeed/folder-add" class="turboclick menu-item link">
 	<span style="view-transition-name:app-sidebar-add-folder-icon;">{{icon "add"}}</span>
-	<span style="view-transition-name:app-sidebar-add-folder-label">Add a Folder</span>
+	<span style="view-transition-name:app-sidebar-add-folder-label">New Folder</span>
 </div>
 
 <script>

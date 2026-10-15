@@ -1,0 +1,20 @@
+{{- /* newsfeed-welcome-folder.html greets a visitor whose selected folder has no messages at all.
+       It is styled and placed as admin-rules/welcome.html, and newsfeed-welcome-inbox.html is its
+       counterpart for My Inbox.  The dot (".") is the Inbox builder.  list.html and
+       list-social.html render it when index.html passes ?welcome=folder, and index.html then
+       drops the page's own heading and its Follow Someone button, because this carries both. */ -}}
+{{- $folder := (.FoldersWithSelection "FOLDER").Selected -}}
+
+<div class="align-center margin-vertical-xl">
+	<div class="text-light-gray" style="font-size:96px;">
+		{{icon $folder.Icon}}
+	</div>
+	<div class="text-2xl margin-none">
+		This is the {{$folder.Label}} Folder
+	</div>
+	<div class="margin-vertical max-width-512 margin-horizontal-auto">
+		Folders are a part of your inbox.
+		Organize your communities into folders and switch between them easily.
+	</div>
+	<button hx-get="/@me/settings/following-search?folderId={{$folder.FolderID.Hex}}" class="primary turboclick margin-top-lg">{{icon "add"}} Follow Someone</button>
+</div>

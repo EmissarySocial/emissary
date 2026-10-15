@@ -364,7 +364,7 @@
 					{do: "as-modal", steps: [
 						{do: "edit", form: {
 							type: layout-vertical
-							label: Add a Folder
+							label: New Folder
 							children: [
 								{type: "text", path: "label", label: "Name", options:{autocomplete:"off", validator:"/.validate/folder/name?folderId={{.ID}}"}}
 								{type: "select-icons", path: "icon", label: "Icon", options: {provider: "navigation-icons"}}

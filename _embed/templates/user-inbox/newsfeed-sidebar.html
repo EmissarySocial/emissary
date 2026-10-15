@@ -5,7 +5,7 @@
 
 	The "refreshSidebar" event — fired by message-read and scroll-read — re-fetches this
 	fragment so the folder unread dots stay current without a reload.  ?section=ANNOTATIONS
-	keeps the Notes item selected instead of All Folders.
+	keeps the Notes item selected instead of My Inbox.
 */ -}}
 {{- $folders := .FoldersWithSelection (first (.QueryParam "section") "FOLDER") -}}
 

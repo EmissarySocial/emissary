@@ -89,6 +89,9 @@
 	--button-primary-background-hover:color-mix(in srgb, var(--blue50), black 12%);
 	--heading-color:var(--black);
 	--text-color:var(--gray80);
+	/* Quieter text, such as a sidebar's menu items, as qwertylicious defines it.  Its gray inverts
+	   in dark mode, so it needs no dark-mode value of its own. */
+	--text-color-secondary:var(--gray60);
 	--grid-highlight-background:var(--blue20);
 
 	/* The background .flash-highlight starts from (02-animations.css): pale yellow here, amber in dark mode */

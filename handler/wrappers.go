@@ -775,11 +775,7 @@ func WithUserForwarding(serverFactory *server.Factory, fn WithFunc1[model.User])
 		}
 
 		// Build the user's correct URL
-		correctURL := "/@" + user.Username
-
-		if action := ctx.Param("action"); action != "" {
-			correctURL += "/" + action
-		}
+		correctURL := canonicalProfileURL(user.Username, ctx.Param("action"), ctx.Request().URL.RawQuery)
 
 		// If this is an HTMX request, then we can just update the header and continue without a full redirect
 		if ctx.Request().Header.Get("Hx-Request") == "true" {
@@ -791,6 +787,25 @@ func WithUserForwarding(serverFactory *server.Factory, fn WithFunc1[model.User])
 		return ctx.Redirect(http.StatusSeeOther, correctURL)
 
 	})
+}
+
+// canonicalProfileURL returns the address that a profile request made by UserID forwards to: the
+// same request, addressed by username.  It keeps the query string, which a template may use to
+// carry state across the forward (QWERTY-COLLECTIONS: a collection redirects to its owner's
+// /@{userId}?tab={collectionId}, and loses its tab without it).
+func canonicalProfileURL(username string, action string, rawQuery string) string {
+
+	result := "/@" + username
+
+	if action != "" {
+		result += "/" + action
+	}
+
+	if rawQuery != "" {
+		result += "?" + rawQuery
+	}
+
+	return result
 }
 
 // WithOAuthUserStream handles boilerplate code for requests that load both a User and a Stream,

@@ -7,6 +7,16 @@
 {{- $folderID := $folder.FolderID.Hex -}}
 {{- $followingID := .QueryParam "origin.followingId" -}}
 
+{{- /* An unfiltered inbox or folder with no messages shows a welcome, newsfeed-welcome-inbox.html
+       or newsfeed-welcome-folder.html, which carries its own heading and Follow Someone button.
+       So the page drops its Follow Someone button and, on desktop, its heading, and tells the
+       list which welcome to show with ?welcome=inbox or ?welcome=folder.
+       Both return once there is a message.  This one-row query is the only test for it. */ -}}
+{{- $isWelcome := false -}}
+{{- if $filter.IsZero -}}
+	{{- $isWelcome = .Inbox.Top1.Slice.IsEmpty -}}
+{{- end -}}
+
 <div class="app width-100%" script="init send SelectNav(id:'inbox')">
 
 	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
@@ -24,8 +34,11 @@
 		     follow modal's "Inbox Folder" dropdown defaults to the user's first folder.  Filter and
 		     Folder Settings are folder-specific, so they only appear when a folder is selected. -->
 		{{- $selectedFolder := ne $folderID nilObjectID.Hex -}}
+		{{- if or $selectedFolder (not $isWelcome) -}}
 		<div class="{{if $isDesktop}}text-sm{{end}} margin-none nowrap pos-sticky float-right" style="top:0px; padding:0px 0px 8px 16px; border-radius:4px; background-color:var(--page-background); z-index:1000">
-			<button hx-get="/@me/settings/following-search{{if $selectedFolder}}?folderId={{$folderID}}{{end}}" class="primary turboclick">{{icon "add"}}{{if $isDesktop}} Follow Someone{{end}}</button>
+			{{- if not $isWelcome -}}
+				<button hx-get="/@me/settings/following-search{{if $selectedFolder}}?folderId={{$folderID}}{{end}}" class="primary turboclick">{{icon "add"}}{{if $isDesktop}} Follow Someone{{end}}</button>
+			{{- end -}}
 			{{- if $selectedFolder -}}
 				{{- if $filter.IsZero -}}
 					<button hx-get="/@me/newsfeed/filter?folderId={{$folderID}}" class="turboclick">{{icon "filter"}}{{if $isDesktop}} Filter{{end}}</button>
@@ -35,7 +48,10 @@
 				<button hx-get="/@me/newsfeed/folder-edit?folderId={{$folderID}}" class="turboclick">{{icon "settings"}}{{ if $isDesktop }} Folder Settings{{end}}</button>
 			{{- end -}}
 		</div>
+		{{- end -}}
 
+		<!-- On mobile the heading stays in the welcome too, because it holds the back link to the folder menu -->
+		{{- if or $isMobile (not $isWelcome) -}}
 		<div class="flex-row margin-bottom-lg">
 
 			{{- if $filter.NotZero -}}
@@ -73,9 +89,10 @@
 				</h1>
 			{{- end -}}
 		</div>
+		{{- end -}}
 
 		<div 
-			hx-get="/@me/newsfeed/list?folderId={{$folderID}}&origin.followingId={{$followingID}}"
+			hx-get="/@me/newsfeed/list?folderId={{$folderID}}&origin.followingId={{$followingID}}{{if $isWelcome}}&welcome={{if $selectedFolder}}folder{{else}}inbox{{end}}{{end}}"
 			hx-trigger="revealed"
 			hx-target="this"
 			hx-swap="outerHTML"

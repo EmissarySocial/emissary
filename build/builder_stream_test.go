@@ -108,6 +108,38 @@ func TestStream_Children_HidesDrafts(t *testing.T) {
 	require.True(t, hasUnpublishDate)
 }
 
+// TestStream_ParentSummary_AppliesPermissions pins that ParentSummary reads only this Stream's
+// parent, only when the requester may see it, and whatever its publish dates, since a public
+// view uses it where Parent would fail the whole page (QWERTY-COLLECTIONS).
+func TestStream_ParentSummary_AppliesPermissions(t *testing.T) {
+
+	child := newChildrenTestStream(primitive.NewObjectID(), primitive.NewObjectID())
+	child._stream.ParentID = primitive.NewObjectID()
+
+	query := child.ParentSummary()
+	require.False(t, query.isEmpty)
+
+	predicates := collectPredicates(query.criteria)
+
+	idPredicate, hasID := findPredicate(predicates, "_id", exp.OperatorEqual)
+	require.True(t, hasID, "must read only the parent")
+	require.Equal(t, child._stream.ParentID, idPredicate.Value)
+
+	_, hasPermissions := findPredicate(predicates, "defaultAllow", exp.OperatorIn)
+	require.True(t, hasPermissions, "a parent the requester may not see must yield nothing")
+
+	_, hasPublishDate := findPredicate(predicates, "publishDate", exp.OperatorLessThan)
+	require.False(t, hasPublishDate, "a parent that is never published must still be found")
+}
+
+// TestStream_ParentSummary_NoParent pins that a top-level Stream yields an empty query, not one
+// that matches the zero ID.
+func TestStream_ParentSummary_NoParent(t *testing.T) {
+
+	topLevel := newChildrenTestStream(primitive.NewObjectID(), primitive.NewObjectID())
+	require.True(t, topLevel.ParentSummary().isEmpty)
+}
+
 // newChildrenTestStream returns a Stream builder for a Stream written by authorID and viewed by
 // viewerID, with only what the child queries read.  No query runs, so no database is needed.
 func newChildrenTestStream(authorID primitive.ObjectID, viewerID primitive.ObjectID) Stream {
