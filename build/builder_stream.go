@@ -676,6 +676,57 @@ func (w Stream) LastChild(sort string, action string) (Stream, error) {
 	return w.getFirstStream(criteria, sortOption, action), nil
 }
 
+// NextAfterParent returns the next sibling, by rank, of the nearest ancestor that has one.
+// It returns an empty builder at the end of the tree.
+func (w Stream) NextAfterParent(action string) (Stream, error) {
+
+	loadParent := func(parentID primitive.ObjectID, parent *model.Stream) error {
+		return w._factory.Stream().LoadByID(w._session, parentID, parent)
+	}
+
+	nextSibling := func(stream *model.Stream) Stream {
+		criteria := exp.Equal("parentId", stream.ParentID).AndGreaterThan("rank", stream.Rank)
+		return w.getFirstStream(criteria, option.SortAsc("rank"), action)
+	}
+
+	return nextAfterParent(w._stream, loadParent, nextSibling), nil
+}
+
+// nextAfterParent climbs from stream through its ancestors, returning the first ancestor's next sibling found
+func nextAfterParent(stream *model.Stream, loadParent func(primitive.ObjectID, *model.Stream) error, nextSibling func(*model.Stream) Stream) Stream {
+
+	const location = "build.nextAfterParent"
+
+	// The depth limit stops a corrupt parentId loop from spinning forever
+	current := stream
+	for range maxTreeDepth {
+
+		// RULE: A top-level Stream ends the walk
+		if !current.HasParent() {
+			return Stream{}
+		}
+
+		// Load the parent. A top-level Stream's parentId names its owner, which is not a Stream
+		parent := model.NewStream()
+		if err := loadParent(current.ParentID, &parent); err != nil {
+			if !derp.IsNotFound(err) {
+				derp.Report(derp.Wrap(err, location, "Loading parent", current.ParentID))
+			}
+			return Stream{}
+		}
+
+		// Use the parent's next sibling, if it has one
+		if next := nextSibling(&parent); !next.IsEmpty() {
+			return next
+		}
+
+		current = &parent
+	}
+
+	// Lost in the woods
+	return Stream{}
+}
+
 // getFirstStream scans an iterator for the first stream allowed to this user.
 // It is used internally by PrevSibling, NextSibling, FirstChild, and LastChild
 func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option, actionID string) Stream {

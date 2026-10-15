@@ -53,7 +53,9 @@ type prevNextFakeBuilder struct {
 	next       prevNextFakeStream
 	parent     prevNextFakeStream
 	firstChild prevNextFakeStream
+	ancestor   prevNextFakeStream
 	sorts      *[]string
+	walks      *int
 }
 
 // HasParent returns TRUE when the Stream has a parent, matching build.Stream
@@ -84,15 +86,23 @@ func (builder prevNextFakeBuilder) NextSibling(sortField string, _ string) (prev
 	return builder.next, nil
 }
 
+// NextAfterParent returns the nearest ancestor's next sibling, and counts the walk
+func (builder prevNextFakeBuilder) NextAfterParent(_ string) (prevNextFakeStream, error) {
+	*builder.walks++
+	return builder.ancestor, nil
+}
+
 // renderPrevNextWidget parses the real widget-prev-next folder the way the server does, then
 // renders it, returning the output and the sort fields the template asked for.
 func renderPrevNextWidget(t *testing.T, settings mapof.Any, previous prevNextFakeStream, next prevNextFakeStream) (string, []string) {
 	t.Helper()
-	return renderPrevNextFamily(t, settings, previous, next, prevNextNone, prevNextNone)
+	result, sorts, _ := renderPrevNextFamily(t, settings, previous, next, prevNextNone, prevNextNone, prevNextNone)
+	return result, sorts
 }
 
-// renderPrevNextFamily renders the widget for a Stream with the given siblings, parent, and first child.
-func renderPrevNextFamily(t *testing.T, settings mapof.Any, previous prevNextFakeStream, next prevNextFakeStream, parent prevNextFakeStream, firstChild prevNextFakeStream) (string, []string) {
+// renderPrevNextFamily renders the widget for a Stream with the given siblings, parent, first child, and
+// nearest ancestor's next sibling, returning the output, the sort fields, and the number of tree walks.
+func renderPrevNextFamily(t *testing.T, settings mapof.Any, previous prevNextFakeStream, next prevNextFakeStream, parent prevNextFakeStream, firstChild prevNextFakeStream, ancestor prevNextFakeStream) (string, []string, int) {
 
 	t.Helper()
 
@@ -101,12 +111,13 @@ func renderPrevNextFamily(t *testing.T, settings mapof.Any, previous prevNextFak
 	require.NoError(t, loadHTMLTemplateFromFilesystem(os.DirFS("../_embed/templates/widget-prev-next"), widgetTemplate, funcMap))
 
 	sorts := []string{}
-	context := prevNextFakeBuilder{Widget: navFakeWidget{Data: settings}, previous: previous, next: next, parent: parent, firstChild: firstChild, sorts: &sorts}
+	walks := 0
+	context := prevNextFakeBuilder{Widget: navFakeWidget{Data: settings}, previous: previous, next: next, parent: parent, firstChild: firstChild, ancestor: ancestor, sorts: &sorts, walks: &walks}
 
 	var buffer strings.Builder
 	require.NoError(t, widgetTemplate.ExecuteTemplate(&buffer, "widget", context))
 
-	return buffer.String(), sorts
+	return buffer.String(), sorts, walks
 }
 
 // prevNextNone stands for a relative that does not exist
@@ -115,6 +126,9 @@ var prevNextNone = prevNextFakeStream{absent: true}
 // prevNextParent and prevNextChild are a parent and a first child, for the family fallback
 var prevNextParent = prevNextFakeStream{token: "docs", label: "Docs"}
 var prevNextChild = prevNextFakeStream{token: "chapter-1", label: "Chapter 1"}
+
+// prevNextAncestor is the next sibling of the nearest ancestor that has one
+var prevNextAncestor = prevNextFakeStream{token: "appendix", label: "Appendix"}
 
 // prevNextAbout and prevNextContact are two siblings with every optional field filled
 var prevNextAbout = prevNextFakeStream{token: "about", label: "About Me", summary: "Who I am", icon: "person"}
@@ -125,7 +139,7 @@ func TestPrevNextWidget_BothSiblings(t *testing.T) {
 
 	result, sorts := renderPrevNextWidget(t, mapof.Any{}, prevNextAbout, prevNextContact)
 
-	require.Equal(t, []string{"rank", "rank"}, sorts, "an unset sort reads siblings in rank order")
+	require.Equal(t, []string{"rank", "rank", "rank"}, sorts, "siblings and children are read in rank order")
 	require.Contains(t, result, `prev-next-link previous sibling`)
 	require.Contains(t, result, `prev-next-link next sibling`)
 	require.Contains(t, result, `<a href="/about" hx-get="/about" rel="prev" class="turboclick prev-next-link previous sibling">`)
@@ -138,15 +152,22 @@ func TestPrevNextWidget_BothSiblings(t *testing.T) {
 	require.NotContains(t, result, "<nav", "a <nav> would pick up the site bar's styles")
 }
 
-// TestPrevNextWidget_AllOptions renders titles, summaries, and icons, with a chosen sort.
+// TestPrevNextWidget_AllOptions renders titles, summaries, and icons.
 func TestPrevNextWidget_AllOptions(t *testing.T) {
 
-	result, sorts := renderPrevNextWidget(t, mapof.Any{"sort": "label", "showSummary": true, "showIcon": true}, prevNextAbout, prevNextContact)
+	result, _ := renderPrevNextWidget(t, mapof.Any{"showSummary": true, "showIcon": true}, prevNextAbout, prevNextContact)
 
-	require.Equal(t, []string{"label", "label"}, sorts)
 	require.Contains(t, result, `<span class="prev-next-summary">Who I am</span>`)
 	require.Contains(t, result, `<span class="prev-next-summary">Say hello</span>`)
 	require.Equal(t, 2, strings.Count(result, `<span class="prev-next-icon">`))
+}
+
+// TestPrevNextWidget_IgnoresSavedSort always uses rank, even for a widget saved with the retired sort setting.
+func TestPrevNextWidget_IgnoresSavedSort(t *testing.T) {
+
+	_, sorts := renderPrevNextWidget(t, mapof.Any{"sort": "label"}, prevNextAbout, prevNextContact)
+
+	require.Equal(t, []string{"rank", "rank", "rank"}, sorts)
 }
 
 // TestPrevNextWidget_LabelsOffByDefault leaves out the direction labels for a widget that never set them.
@@ -225,36 +246,69 @@ func TestPrevNextWidget_EscapesLabels(t *testing.T) {
 // option was never saved, which is how every widget placed before the option existed reads.
 func TestPrevNextWidget_FamilyOnByDefault(t *testing.T) {
 
-	result, sorts := renderPrevNextFamily(t, mapof.Any{"sort": "label"}, prevNextNone, prevNextNone, prevNextParent, prevNextChild)
+	result, _, _ := renderPrevNextFamily(t, mapof.Any{}, prevNextNone, prevNextNone, prevNextParent, prevNextChild, prevNextNone)
 
 	require.Contains(t, result, `<a href="/docs" hx-get="/docs" rel="prev" class="turboclick prev-next-link previous parent">`)
 	require.Contains(t, result, `<a href="/chapter-1" hx-get="/chapter-1" rel="next" class="turboclick prev-next-link next child">`)
-	require.Equal(t, []string{"label", "label", "label"}, sorts, "the first child is found with the same sort")
 }
 
-// TestPrevNextWidget_SiblingsWinOverFamily keeps siblings when they exist.
-func TestPrevNextWidget_SiblingsWinOverFamily(t *testing.T) {
+// TestPrevNextWidget_ChildBeatsNextSibling goes forward into the first child even when a next sibling
+// exists, while Previous keeps the previous sibling over the parent.
+func TestPrevNextWidget_ChildBeatsNextSibling(t *testing.T) {
 
-	result, _ := renderPrevNextFamily(t, mapof.Any{"includeFamily": true}, prevNextAbout, prevNextContact, prevNextParent, prevNextChild)
+	result, _, walks := renderPrevNextFamily(t, mapof.Any{"includeFamily": true}, prevNextAbout, prevNextContact, prevNextParent, prevNextChild, prevNextAncestor)
 
 	require.Contains(t, result, `href="/about"`)
-	require.Contains(t, result, `href="/contact"`)
+	require.Contains(t, result, `<a href="/chapter-1" hx-get="/chapter-1" rel="next" class="turboclick prev-next-link next child">`)
+	require.NotContains(t, result, `href="/contact"`)
 	require.NotContains(t, result, `href="/docs"`)
-	require.NotContains(t, result, `href="/chapter-1"`)
+	require.Zero(t, walks, "a Stream with children never climbs the tree")
 }
 
-// TestPrevNextWidget_FamilyOff ignores the parent and children when the option is turned off.
+// TestPrevNextWidget_NextSiblingWithoutChildren goes to the next sibling when there is no child.
+func TestPrevNextWidget_NextSiblingWithoutChildren(t *testing.T) {
+
+	result, _, walks := renderPrevNextFamily(t, mapof.Any{}, prevNextAbout, prevNextContact, prevNextParent, prevNextNone, prevNextAncestor)
+
+	require.Contains(t, result, `<a href="/contact" hx-get="/contact" rel="next" class="turboclick prev-next-link next sibling">`)
+	require.NotContains(t, result, `href="/appendix"`)
+	require.Zero(t, walks)
+}
+
+// TestPrevNextWidget_AncestorSibling climbs to the nearest ancestor's next sibling at the end of a branch.
+func TestPrevNextWidget_AncestorSibling(t *testing.T) {
+
+	result, _, walks := renderPrevNextFamily(t, mapof.Any{}, prevNextAbout, prevNextNone, prevNextParent, prevNextNone, prevNextAncestor)
+
+	require.Contains(t, result, `<a href="/appendix" hx-get="/appendix" rel="next" class="turboclick prev-next-link next ancestor-sibling">`)
+	require.Equal(t, 1, walks)
+}
+
+// TestPrevNextWidget_EndOfTree renders only Previous on the last page of the site map.
+func TestPrevNextWidget_EndOfTree(t *testing.T) {
+
+	result, _, _ := renderPrevNextFamily(t, mapof.Any{}, prevNextAbout, prevNextNone, prevNextParent, prevNextNone, prevNextNone)
+
+	require.Contains(t, result, `href="/about"`)
+	require.NotContains(t, result, `rel="next"`)
+}
+
+// TestPrevNextWidget_FamilyOff ignores the parent, children, and ancestors when the option is turned off.
 func TestPrevNextWidget_FamilyOff(t *testing.T) {
 
-	result, _ := renderPrevNextFamily(t, mapof.Any{"includeFamily": false}, prevNextNone, prevNextNone, prevNextParent, prevNextChild)
-
+	result, _, walks := renderPrevNextFamily(t, mapof.Any{"includeFamily": false}, prevNextNone, prevNextNone, prevNextParent, prevNextChild, prevNextAncestor)
 	require.Equal(t, "", strings.TrimSpace(result))
+	require.Zero(t, walks)
+
+	result, _, _ = renderPrevNextFamily(t, mapof.Any{"includeFamily": false}, prevNextAbout, prevNextContact, prevNextParent, prevNextChild, prevNextAncestor)
+	require.Contains(t, result, `href="/contact"`, "siblings only, even when there are children")
+	require.NotContains(t, result, `href="/chapter-1"`)
 }
 
 // TestPrevNextWidget_TopLevelNoParent never asks for the parent of a Stream that has none.
 func TestPrevNextWidget_TopLevelNoParent(t *testing.T) {
 
-	result, _ := renderPrevNextFamily(t, mapof.Any{}, prevNextNone, prevNextContact, prevNextNone, prevNextNone)
+	result, _, _ := renderPrevNextFamily(t, mapof.Any{}, prevNextNone, prevNextContact, prevNextNone, prevNextNone, prevNextNone)
 
 	require.NotContains(t, result, `rel="prev"`)
 	require.Contains(t, result, `href="/contact"`)
@@ -310,13 +364,13 @@ func renderPrevNextEditor(t *testing.T, data mapof.Any) string {
 	return result
 }
 
-// TestPrevNextWidget_EditorSortIsLastAndRadio puts "Order Siblings By" last, as radio buttons.
-func TestPrevNextWidget_EditorSortIsLastAndRadio(t *testing.T) {
+// TestPrevNextWidget_EditorHasNoSort offers no sort order; siblings always follow the site map.
+func TestPrevNextWidget_EditorHasNoSort(t *testing.T) {
 
 	result := renderPrevNextEditor(t, mapof.Any{"sort": "label"})
 
-	require.NotContains(t, result, "<select", "the sort order is not a select box")
-	require.Equal(t, 3, strings.Count(result, `type="radio"`))
-	require.Greater(t, strings.Index(result, "Order Siblings By"), strings.Index(result, "Include Parent and Children"), "the sort order is the last option")
-	require.Regexp(t, `value="label"[^>]*checked`, result, "a saved sort is selected")
+	require.NotContains(t, result, "Order Siblings By")
+	require.NotContains(t, result, `type="radio"`)
+	require.Contains(t, result, "Navigate Full Tree (Parents &amp; Children)")
+	require.NotContains(t, result, "With no previous sibling")
 }
