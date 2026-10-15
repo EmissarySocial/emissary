@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -12,11 +14,11 @@ type WithResponse struct {
 }
 
 // NewWithResponse returns a fully initialized WithResponse object
-func NewWithResponse(stepInfo mapof.Any) (WithResponse, error) {
+func NewWithResponse(stepInfo mapof.Any, funcMap template.FuncMap) (WithResponse, error) {
 
 	const location = "NewWithResponse"
 
-	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
+	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]), funcMap)
 
 	if err != nil {
 		return WithResponse{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)

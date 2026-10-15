@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -12,11 +14,11 @@ type WithAttachment struct {
 }
 
 // NewWithAttachment returns a fully initialized WithAttachment object
-func NewWithAttachment(stepInfo mapof.Any) (WithAttachment, error) {
+func NewWithAttachment(stepInfo mapof.Any, funcMap template.FuncMap) (WithAttachment, error) {
 
 	const location = "NewWithAttachment"
 
-	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
+	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]), funcMap)
 
 	if err != nil {
 		return WithAttachment{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)

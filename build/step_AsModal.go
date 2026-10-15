@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"strings"
+	"text/template"
 
 	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
@@ -12,7 +13,7 @@ import (
 // StepAsModal is a Step that can update the data.DataMap custom data stored in a Stream
 type StepAsModal struct {
 	SubSteps   []step.Step
-	Options    []string
+	Options    []*template.Template
 	Background string
 }
 
@@ -119,5 +120,17 @@ func (step StepAsModal) getModalContent(builder Builder) (string, PipelineResult
 		return "", result
 	}
 
-	return WrapModal(builder.response(), buffer.String(), step.Options...), result
+	return WrapModal(builder.response(), buffer.String(), step.options(builder)...), result
+}
+
+// options executes each option template against the builder
+func (step StepAsModal) options(builder Builder) []string {
+
+	result := make([]string, len(step.Options))
+
+	for index, option := range step.Options {
+		result[index] = executeTemplate(option, builder)
+	}
+
+	return result
 }

@@ -17,7 +17,7 @@ func TestRegistrationStripe_PortalURLIsAWebLink(t *testing.T) {
 	definition, err := os.ReadFile("../_embed/templates/registration-stripe/registration.hjson")
 	require.NoError(t, err)
 
-	registration := model.NewRegistration("register-stripe", nil)
+	registration := model.NewRegistration("register-stripe", testFuncMap())
 	require.NoError(t, hjson.Unmarshal(definition, &registration))
 
 	// The placeholder shown in the form is a valid value

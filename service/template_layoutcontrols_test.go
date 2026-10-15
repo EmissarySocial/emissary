@@ -183,7 +183,7 @@ func TestLayoutControls_WidgetsActionSaves(t *testing.T) {
 		definition, err := os.ReadFile("../_embed/templates/" + test.directory + "/template.hjson")
 		require.NoError(t, err)
 
-		template := model.NewTemplate(test.directory, nil)
+		template := model.NewTemplate(test.directory, testFuncMap())
 		require.NoError(t, hjson.Unmarshal(definition, &template))
 
 		action, exists := template.Action("widgets")

@@ -3705,6 +3705,17 @@
 				"hostile": {
 					"changes": {
 						"data.license": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
+						"data.links.AMAZON": "string javascript:alert(1)",
+						"data.links.APPLE": "string javascript:alert(1)",
+						"data.links.BANDCAMP": "string javascript:alert(1)",
+						"data.links.GOOGLE": "string javascript:alert(1)",
+						"data.links.OTHER1": "string javascript:alert(1)",
+						"data.links.OTHER2": "string javascript:alert(1)",
+						"data.links.OTHER3": "string javascript:alert(1)",
+						"data.links.SOUNDCLOUD": "string javascript:alert(1)",
+						"data.links.SPOTIFY": "string javascript:alert(1)",
+						"data.links.TIDAL": "string javascript:alert(1)",
+						"data.links.YOUTUBE": "string javascript:alert(1)",
 						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
 						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
 						"summary": "string \"\u003cimg src=\\\"x\\\"\u003e\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxx\"... (2015 bytes, sha256 b20ccdf3f808)"
@@ -3714,17 +3725,17 @@
 						"data.color.button": "unreadable",
 						"data.color.page": "unreadable",
 						"data.license": "string",
-						"data.links.AMAZON": "unreadable",
-						"data.links.APPLE": "unreadable",
-						"data.links.BANDCAMP": "unreadable",
-						"data.links.GOOGLE": "unreadable",
-						"data.links.OTHER1": "unreadable",
-						"data.links.OTHER2": "unreadable",
-						"data.links.OTHER3": "unreadable",
-						"data.links.SOUNDCLOUD": "unreadable",
-						"data.links.SPOTIFY": "unreadable",
-						"data.links.TIDAL": "unreadable",
-						"data.links.YOUTUBE": "unreadable",
+						"data.links.AMAZON": "string",
+						"data.links.APPLE": "string",
+						"data.links.BANDCAMP": "string",
+						"data.links.GOOGLE": "string",
+						"data.links.OTHER1": "string",
+						"data.links.OTHER2": "string",
+						"data.links.OTHER3": "string",
+						"data.links.SOUNDCLOUD": "string",
+						"data.links.SPOTIFY": "string",
+						"data.links.TIDAL": "string",
+						"data.links.YOUTUBE": "string",
 						"data.musicbrainzReleaseId": "unreadable",
 						"data.releaseDate": "unreadable",
 						"data.tags": "string",
@@ -3959,6 +3970,17 @@
 				"hostile": {
 					"changes": {
 						"data.license": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
+						"data.links.AMAZON": "string javascript:alert(1)",
+						"data.links.APPLE": "string javascript:alert(1)",
+						"data.links.BANDCAMP": "string javascript:alert(1)",
+						"data.links.GOOGLE": "string javascript:alert(1)",
+						"data.links.OTHER1": "string javascript:alert(1)",
+						"data.links.OTHER2": "string javascript:alert(1)",
+						"data.links.OTHER3": "string javascript:alert(1)",
+						"data.links.SOUNDCLOUD": "string javascript:alert(1)",
+						"data.links.SPOTIFY": "string javascript:alert(1)",
+						"data.links.TIDAL": "string javascript:alert(1)",
+						"data.links.YOUTUBE": "string javascript:alert(1)",
 						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
 						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (257 bytes, sha256 2c99eebabccc)",
 						"summary": "string \"\u003cimg src=\\\"x\\\"\u003e\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxx\"... (2015 bytes, sha256 b20ccdf3f808)",
@@ -3972,17 +3994,17 @@
 						"data.color.button": "unreadable",
 						"data.color.page": "unreadable",
 						"data.license": "string",
-						"data.links.AMAZON": "unreadable",
-						"data.links.APPLE": "unreadable",
-						"data.links.BANDCAMP": "unreadable",
-						"data.links.GOOGLE": "unreadable",
-						"data.links.OTHER1": "unreadable",
-						"data.links.OTHER2": "unreadable",
-						"data.links.OTHER3": "unreadable",
-						"data.links.SOUNDCLOUD": "unreadable",
-						"data.links.SPOTIFY": "unreadable",
-						"data.links.TIDAL": "unreadable",
-						"data.links.YOUTUBE": "unreadable",
+						"data.links.AMAZON": "string",
+						"data.links.APPLE": "string",
+						"data.links.BANDCAMP": "string",
+						"data.links.GOOGLE": "string",
+						"data.links.OTHER1": "string",
+						"data.links.OTHER2": "string",
+						"data.links.OTHER3": "string",
+						"data.links.SOUNDCLOUD": "string",
+						"data.links.SPOTIFY": "string",
+						"data.links.TIDAL": "string",
+						"data.links.YOUTUBE": "string",
 						"data.musicbrainzReleaseId": "unreadable",
 						"data.releaseDate": "unreadable",
 						"data.tags": "string",
@@ -7404,6 +7426,39 @@
 						"label": "string",
 						"summary": "string",
 						"token": "string"
+					}
+				}
+			}
+		},
+		"template:user-inbox/annotation-editor/1:with-annotation.SubSteps@with-annotation/0:edit": {
+			"fields": [
+				"content (textarea, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"content": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"content": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"content": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (9962 bytes, sha256 3fcb2919a327)"
+					},
+					"types": {
+						"content": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"content": "string Sample content"
+					},
+					"types": {
+						"content": "string"
 					}
 				}
 			}

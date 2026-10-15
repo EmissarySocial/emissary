@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -12,11 +14,11 @@ type WithFolder struct {
 }
 
 // NewWithFolder returns a fully initialized WithFolder object
-func NewWithFolder(stepInfo mapof.Any) (WithFolder, error) {
+func NewWithFolder(stepInfo mapof.Any, funcMap template.FuncMap) (WithFolder, error) {
 
 	const location = "model.step.NewWithFolder"
 
-	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
+	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]), funcMap)
 
 	if err != nil {
 		return WithFolder{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)

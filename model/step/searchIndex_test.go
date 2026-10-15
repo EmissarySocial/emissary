@@ -10,12 +10,12 @@ import (
 // TestSearchIndex verifies that a "search-index" step parses its configuration
 func TestSearchIndex(t *testing.T) {
 
-	step, err := NewSearchIndex(mapof.Any{"if": "{{.IsPublic}}"})
+	step, err := NewSearchIndex(mapof.Any{"if": "{{.IsPublic}}"}, nil)
 	require.Nil(t, err)
 	require.NotNil(t, step.If)
 
 	// "if" defaults to a parseable "true" template.
-	step, err = NewSearchIndex(mapof.Any{})
+	step, err = NewSearchIndex(mapof.Any{}, nil)
 	require.Nil(t, err)
 	require.NotNil(t, step.If)
 
@@ -27,6 +27,6 @@ func TestSearchIndex(t *testing.T) {
 
 // TestSearchIndex_InvalidTemplate verifies that an invalid template is rejected
 func TestSearchIndex_InvalidTemplate(t *testing.T) {
-	_, err := NewSearchIndex(mapof.Any{"if": "{{ .Unclosed"})
+	_, err := NewSearchIndex(mapof.Any{"if": "{{ .Unclosed"}, nil)
 	require.NotNil(t, err)
 }

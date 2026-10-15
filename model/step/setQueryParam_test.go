@@ -11,7 +11,7 @@ import (
 func TestSetQueryParam(t *testing.T) {
 
 	// All keys except "do" become value templates.
-	step, err := NewSetQueryParam(mapof.Any{"do": "set-query-param", "page": "2", "sort": "{{.Sort}}"})
+	step, err := NewSetQueryParam(mapof.Any{"do": "set-query-param", "page": "2", "sort": "{{.Sort}}"}, nil)
 	require.Nil(t, err)
 	require.Contains(t, step.Values, "page")
 	require.Contains(t, step.Values, "sort")
@@ -25,6 +25,6 @@ func TestSetQueryParam(t *testing.T) {
 
 // TestSetQueryParam_InvalidTemplate verifies that an invalid template is rejected
 func TestSetQueryParam_InvalidTemplate(t *testing.T) {
-	_, err := NewSetQueryParam(mapof.Any{"bad": "{{ .Unclosed"})
+	_, err := NewSetQueryParam(mapof.Any{"bad": "{{ .Unclosed"}, nil)
 	require.NotNil(t, err)
 }

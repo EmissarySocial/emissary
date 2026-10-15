@@ -44,9 +44,6 @@ func write_intentObjectContent(b *html.Builder, summary string, content string) 
 // write_intent_header renders the "signed in as" banner shown at the top of every Activity Intent page
 func write_intent_header(ctx *steranko.Context, b *html.Builder, user *model.User) {
 
-	currentURL := ctx.Request().URL.String()
-	hostname := uri.Hostname(user.ProfileURL)
-
 	b.Div().Class("flex-shrink-0", "flex-row", "flex-align-stretch", "margin-bottom")
 	{
 		b.Div().Class("width-32")
@@ -54,10 +51,12 @@ func write_intent_header(ctx *steranko.Context, b *html.Builder, user *model.Use
 		b.Close()
 		b.Div().Class("flex-grow")
 		{
+			hostname := uri.Hostname(user.ProfileURL)
 			b.Div().Class("text-xs", "text-gray", "margin-none").InnerText("Signed In As:")
 			b.A(user.ProfileURL).Attr("target", "_blank").Class("bold", "text-plain", "text-sm").InnerText("@" + user.Username + "@" + hostname)
 		}
 		b.Close()
+		currentURL := ctx.Request().URL.String()
 		b.Span().
 			Class("button", "text-sm").
 			Data("hx-post", "/signout?next="+url.QueryEscape(currentURL)).

@@ -20,7 +20,7 @@ type ViewJSON struct {
 }
 
 // NewViewJSON generates a fully initialized ViewJSON step.
-func NewViewJSON(stepInfo mapof.Any) (ViewJSON, error) {
+func NewViewJSON(stepInfo mapof.Any, funcMap template.FuncMap) (ViewJSON, error) {
 
 	const location = "build.NewViewJSON"
 
@@ -67,7 +67,7 @@ func NewViewJSON(stepInfo mapof.Any) (ViewJSON, error) {
 		value = jsonp + "(" + value + ");"
 	}
 
-	valueTemplate, err := template.New("").Funcs(FuncMap()).Parse(value)
+	valueTemplate, err := template.New("").Funcs(funcMap).Parse(value)
 
 	if err != nil {
 		return ViewJSON{}, derp.Wrap(err, location, "Parsing JSON query template")

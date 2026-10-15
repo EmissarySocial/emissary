@@ -16,33 +16,33 @@ type ScheduleDelete struct {
 }
 
 // NewScheduleDelete returns a fully initialized ScheduleDelete object
-func NewScheduleDelete(stepInfo mapof.Any) (ScheduleDelete, error) {
+func NewScheduleDelete(stepInfo mapof.Any, funcMap template.FuncMap) (ScheduleDelete, error) {
 
 	const location = "model.step.NewScheduleDelete"
 
 	// Days template
-	days, err := template.New("").Parse(stepInfo.GetString("days"))
+	days, err := template.New("").Funcs(funcMap).Parse(stepInfo.GetString("days"))
 
 	if err != nil {
 		return ScheduleDelete{}, derp.Wrap(err, location, "Parsing 'days' template", stepInfo)
 	}
 
 	// Hours template
-	hours, err := template.New("").Parse(stepInfo.GetString("hours"))
+	hours, err := template.New("").Funcs(funcMap).Parse(stepInfo.GetString("hours"))
 
 	if err != nil {
 		return ScheduleDelete{}, derp.Wrap(err, location, "Parsing 'hours' template", stepInfo)
 	}
 
 	// Minutes template
-	minutes, err := template.New("").Parse(stepInfo.GetString("minutes"))
+	minutes, err := template.New("").Funcs(funcMap).Parse(stepInfo.GetString("minutes"))
 
 	if err != nil {
 		return ScheduleDelete{}, derp.Wrap(err, location, "Parsing 'minutes' template", stepInfo)
 	}
 
 	// Seconds template
-	seconds, err := template.New("").Parse(stepInfo.GetString("seconds"))
+	seconds, err := template.New("").Funcs(funcMap).Parse(stepInfo.GetString("seconds"))
 
 	if err != nil {
 		return ScheduleDelete{}, derp.Wrap(err, location, "Parsing 'seconds' template", stepInfo)

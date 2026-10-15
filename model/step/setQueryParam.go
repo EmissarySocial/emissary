@@ -14,7 +14,7 @@ type SetQueryParam struct {
 }
 
 // NewSetQueryParam returns a fully initialized SetQueryParam object
-func NewSetQueryParam(stepInfo mapof.Any) (SetQueryParam, error) {
+func NewSetQueryParam(stepInfo mapof.Any, funcMap template.FuncMap) (SetQueryParam, error) {
 
 	result := SetQueryParam{
 		Values: make(map[string]*template.Template),
@@ -22,7 +22,7 @@ func NewSetQueryParam(stepInfo mapof.Any) (SetQueryParam, error) {
 
 	for key, value := range stepInfo {
 		if key != "do" {
-			valueTemplate, err := template.New("value").Parse(convert.String(value))
+			valueTemplate, err := template.New("value").Funcs(funcMap).Parse(convert.String(value))
 
 			if err != nil {
 				return SetQueryParam{}, derp.Wrap(err, "model.step.NewSetQueryParam", "Parsing template", key, value)

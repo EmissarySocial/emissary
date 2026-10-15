@@ -16,11 +16,11 @@ type RedirectTo struct {
 }
 
 // NewRedirectTo returns a fully initialized RedirectTo object
-func NewRedirectTo(stepInfo mapof.Any) (RedirectTo, error) {
+func NewRedirectTo(stepInfo mapof.Any, funcMap template.FuncMap) (RedirectTo, error) {
 
 	const location = "model.step.NewRedirectTo"
 
-	url, err := template.New("").Parse(stepInfo.GetString("url"))
+	url, err := template.New("").Funcs(funcMap).Parse(stepInfo.GetString("url"))
 
 	if err != nil {
 		return RedirectTo{}, derp.Wrap(err, location, "Invalid 'url' template", stepInfo)

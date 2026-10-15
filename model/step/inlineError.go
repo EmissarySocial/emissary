@@ -13,9 +13,9 @@ type InlineError struct {
 }
 
 // NewInlineError returns a fully initialized InlineError step, or an error if its configuration is invalid
-func NewInlineError(stepInfo mapof.Any) (InlineError, error) {
+func NewInlineError(stepInfo mapof.Any, funcMap template.FuncMap) (InlineError, error) {
 
-	message, err := template.New("").Funcs(FuncMap()).Parse(stepInfo.GetString("message"))
+	message, err := template.New("").Funcs(funcMap).Parse(stepInfo.GetString("message"))
 
 	if err != nil {
 		return InlineError{}, derp.Wrap(err, "model.step.NewInlineError", "Parsing template")

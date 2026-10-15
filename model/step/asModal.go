@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 )
@@ -8,22 +10,40 @@ import (
 // AsModal is a Step that can update the data.DataMap custom data stored in a Stream
 type AsModal struct {
 	SubSteps   []Step
-	Options    []string
+	Options    []*template.Template // Each option, like "class:large", executed against the builder
 	Background string
 }
 
 // NewAsModal returns a fully initialized AsModal object
-func NewAsModal(stepInfo mapof.Any) (AsModal, error) {
+func NewAsModal(stepInfo mapof.Any, funcMap template.FuncMap) (AsModal, error) {
 
-	subSteps, err := NewPipeline(stepInfo.GetSliceOfMap("steps"))
+	const location = "model.step.NewAsModal"
+
+	// Parse the steps that build the modal's content
+	subSteps, err := NewPipeline(stepInfo.GetSliceOfMap("steps"), funcMap)
 
 	if err != nil {
-		return AsModal{}, derp.Wrap(err, "model.step.NewAsModal", "Invalid 'steps'", stepInfo)
+		return AsModal{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)
+	}
+
+	// Parse each option as a template
+	options := stepInfo.GetSliceOfString("options")
+	optionTemplates := make([]*template.Template, len(options))
+
+	for index, option := range options {
+
+		optionTemplate, err := template.New("option").Funcs(funcMap).Parse(option)
+
+		if err != nil {
+			return AsModal{}, derp.Wrap(err, location, "Invalid 'options'", stepInfo)
+		}
+
+		optionTemplates[index] = optionTemplate
 	}
 
 	return AsModal{
 		SubSteps:   subSteps,
-		Options:    stepInfo.GetSliceOfString("options"),
+		Options:    optionTemplates,
 		Background: stepInfo.GetString("background"),
 	}, nil
 }

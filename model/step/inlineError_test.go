@@ -9,7 +9,7 @@ import (
 
 // TestInlineError verifies that an "inline-error" step parses its configuration
 func TestInlineError(t *testing.T) {
-	step, err := NewInlineError(mapof.Any{"message": "Something went wrong"})
+	step, err := NewInlineError(mapof.Any{"message": "Something went wrong"}, nil)
 	require.Nil(t, err)
 	require.NotNil(t, step.Message)
 
@@ -21,6 +21,6 @@ func TestInlineError(t *testing.T) {
 
 // TestInlineError_InvalidTemplate verifies that an invalid template is rejected
 func TestInlineError_InvalidTemplate(t *testing.T) {
-	_, err := NewInlineError(mapof.Any{"message": "{{ .Unclosed"})
+	_, err := NewInlineError(mapof.Any{"message": "{{ .Unclosed"}, nil)
 	require.NotNil(t, err)
 }

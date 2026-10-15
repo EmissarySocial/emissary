@@ -52,7 +52,7 @@ func forEachEmbeddedTemplate(t *testing.T, fn func(t *testing.T, templateID stri
 		checked++
 
 		t.Run(templateID, func(t *testing.T) {
-			tmpl := model.NewTemplate(templateID, nil)
+			tmpl := model.NewTemplate(templateID, testFuncMap())
 			require.NoError(t, hjson.Unmarshal(definition, &tmpl), "unable to unmarshal %s", templateID)
 			fn(t, templateID, tmpl)
 		})

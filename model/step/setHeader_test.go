@@ -10,14 +10,14 @@ import (
 // TestSetHeader verifies that a "set-header" step parses its configuration
 func TestSetHeader(t *testing.T) {
 
-	step, err := NewSetHeader(mapof.Any{"method": "post", "name": "HX-Trigger", "value": "{{.Event}}"})
+	step, err := NewSetHeader(mapof.Any{"method": "post", "name": "HX-Trigger", "value": "{{.Event}}"}, nil)
 	require.Nil(t, err)
 	require.Equal(t, "post", step.Method)
 	require.Equal(t, "HX-Trigger", step.HeaderName)
 	require.NotNil(t, step.Value)
 
 	// "method" defaults to "both".
-	step, err = NewSetHeader(mapof.Any{"name": "X-Test", "value": "x"})
+	step, err = NewSetHeader(mapof.Any{"name": "X-Test", "value": "x"}, nil)
 	require.Nil(t, err)
 	require.Equal(t, "both", step.Method)
 
@@ -29,6 +29,6 @@ func TestSetHeader(t *testing.T) {
 
 // TestSetHeader_InvalidTemplate verifies that an invalid template is rejected
 func TestSetHeader_InvalidTemplate(t *testing.T) {
-	_, err := NewSetHeader(mapof.Any{"value": "{{ .Unclosed"})
+	_, err := NewSetHeader(mapof.Any{"value": "{{ .Unclosed"}, nil)
 	require.NotNil(t, err)
 }

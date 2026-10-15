@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -12,11 +14,11 @@ type WithAnnotation struct {
 }
 
 // NewWithAnnotation returns a fully initialized WithAnnotation object
-func NewWithAnnotation(stepInfo mapof.Any) (WithAnnotation, error) {
+func NewWithAnnotation(stepInfo mapof.Any, funcMap template.FuncMap) (WithAnnotation, error) {
 
 	const location = "NewWithAnnotation"
 
-	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
+	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]), funcMap)
 
 	if err != nil {
 		return WithAnnotation{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)

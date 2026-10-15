@@ -52,7 +52,7 @@ func TestStepWithStreamSource_CarriesItsSubSteps(t *testing.T) {
 
 	parsed, err := step.NewWithStreamSource(mapof.Any{
 		"steps": []mapof.Any{{"do": "edit"}, {"do": "save"}},
-	})
+	}, nil)
 
 	require.Nil(t, err)
 

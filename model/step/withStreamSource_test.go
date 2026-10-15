@@ -15,7 +15,7 @@ func TestWithStreamSource(t *testing.T) {
 			{"do": "edit"},
 			{"do": "save"},
 		},
-	})
+	}, nil)
 
 	require.Nil(t, err)
 	require.Len(t, step.SubSteps, 2)
@@ -26,7 +26,7 @@ func TestWithStreamSource(t *testing.T) {
 // Stream it populates, so there is nothing to switch to from any other builder.
 func TestWithStreamSource_RequiresAStream(t *testing.T) {
 
-	step, err := NewWithStreamSource(mapof.Any{})
+	step, err := NewWithStreamSource(mapof.Any{}, nil)
 	require.Nil(t, err)
 	require.Equal(t, "Stream", step.RequiredModel())
 }
@@ -39,7 +39,7 @@ func TestWithStreamSource_RollsUpRoles(t *testing.T) {
 		"steps": []mapof.Any{
 			{"do": "set-simple-sharing", "role": "editor"},
 		},
-	})
+	}, nil)
 
 	require.Nil(t, err)
 	require.Contains(t, step.RequiredRoles(), "editor")
@@ -54,7 +54,7 @@ func TestWithStreamSource_DropsStateRequirements(t *testing.T) {
 		"steps": []mapof.Any{
 			{"do": "save-and-publish", "state": "published"},
 		},
-	})
+	}, nil)
 
 	require.Nil(t, err)
 	require.Empty(t, step.RequiredStates())
@@ -68,7 +68,7 @@ func TestWithStreamSource_InvalidSubStep(t *testing.T) {
 		"steps": []mapof.Any{
 			{"do": "not-a-real-step"},
 		},
-	})
+	}, nil)
 
 	require.NotNil(t, err)
 }
@@ -77,7 +77,7 @@ func TestWithStreamSource_InvalidSubStep(t *testing.T) {
 // is the only thing that makes it usable from a Template
 func TestWithStreamSource_IsRegistered(t *testing.T) {
 
-	step, err := New(mapof.Any{"do": "with-stream-source", "steps": []mapof.Any{{"do": "save"}}})
+	step, err := New(mapof.Any{"do": "with-stream-source", "steps": []mapof.Any{{"do": "save"}}}, nil)
 
 	require.Nil(t, err)
 	require.Equal(t, "with-stream-source", step.Name())
@@ -88,6 +88,6 @@ func TestWithStreamSource_IsRegistered(t *testing.T) {
 // Template still naming it would fail to load, which is the loud failure we want.
 func TestWithStreamSource_ReplacedSyncStreamSource(t *testing.T) {
 
-	_, err := New(mapof.Any{"do": "sync-stream-source"})
+	_, err := New(mapof.Any{"do": "sync-stream-source"}, nil)
 	require.NotNil(t, err)
 }

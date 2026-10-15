@@ -15,7 +15,7 @@ type SetData struct {
 }
 
 // NewSetData returns a fully initialized SetData object
-func NewSetData(stepInfo mapof.Any) (SetData, error) {
+func NewSetData(stepInfo mapof.Any, funcMap template.FuncMap) (SetData, error) {
 
 	// Read all value templates from the stepInfo map
 	valuesMap := stepInfo.GetMap("values")
@@ -23,7 +23,7 @@ func NewSetData(stepInfo mapof.Any) (SetData, error) {
 
 	// Parse each template
 	for key := range stepInfo.GetMap("values") {
-		valueTemplate, err := template.New(key).Funcs(FuncMap()).Parse(valuesMap.GetString(key))
+		valueTemplate, err := template.New(key).Funcs(funcMap).Parse(valuesMap.GetString(key))
 		if err != nil {
 			return SetData{}, err
 		}

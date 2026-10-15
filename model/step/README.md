@@ -14,7 +14,7 @@ A step is a JSON/HJSON object whose `do` property names the step. [New()](step.g
 
 Several steps take a nested pipeline (usually under `steps`, sometimes `then`/`else`/`defaults`/`on-error`), which is parsed recursively by [NewPipeline()](step.go).
 
-To hold a pipeline on your own type, declare the field as [Pipeline](step.go) rather than `[]Step`. `Step` is an interface whose concrete type is chosen at parse time by the `do` property, so a plain slice of them cannot be unmarshalled — `Pipeline` is a named `[]Step` that implements `UnmarshalJSON`, which lets the containing type decode declaratively instead of hand-parsing its steps. `model.Widget.SaveSteps` is the simplest example.
+To hold a pipeline on your own type, declare the field as [Pipeline](step.go) rather than `[]Step`, and build it with `NewPipeline` from your type's own `UnmarshalJSON`, passing the helper functions your type was constructed with. `Step` is an interface whose concrete type is chosen at parse time by the `do` property, so a plain slice of them cannot be unmarshalled. `model.Widget.SaveSteps` is the simplest example.
 
 ## GET vs. POST
 
@@ -37,7 +37,7 @@ Container steps (`if`, `as-modal`, `with-*`, and friends) roll their sub-steps' 
 
 ## Value Templates
 
-Many properties are compiled as Go `text/template` values and evaluated against the Builder at runtime — [STEPS.md](STEPS.md) marks these as *template*. That is what makes `{{.Label}}`, `{{.StreamID}}`, and similar expressions work inside step configuration. A handful of steps ([inlineError](inlineError.go), [inlineSuccess](inlineSuccess.go), [inlineSaveButton](inlineSaveButton.go), [setData](setData.go), [triggerEvent](triggerEvent.go), [viewJSON](viewJSON.go)) also install the helper [FuncMap()](functions.go).
+Many properties are compiled as Go `text/template` values and evaluated against the Builder at runtime — [STEPS.md](STEPS.md) marks these as *template*. That is what makes `{{.Label}}`, `{{.StreamID}}`, and similar expressions work inside step configuration. Every one of them is parsed with the helper functions that the template services pass into `NewTemplate`, `NewWidget`, and `NewRegistration`, so `iif`, `icon`, and the rest work in any step property that takes a template. `New` and `NewPipeline` take that `funcMap`, and the containing Template, Widget, or Registration supplies it from its own `UnmarshalJSON`, because JSON decoding cannot carry an argument. A constructor that parses a template must call `.Funcs(funcMap)`; `TestStepTemplates_UseFuncMap` fails if one does not (BUG-268).
 
 ## Adding a New Step
 

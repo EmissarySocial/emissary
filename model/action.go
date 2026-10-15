@@ -1,13 +1,15 @@
 package model
 
 import (
+	"html/template"
+	texttemplate "text/template"
+
 	"github.com/EmissarySocial/emissary/model/step"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/rosetta/sliceof"
-	"github.com/hjson/hjson-go/v4"
 )
 
 // Action holds the data for actions that can be performed on any Stream from a particular Template.
@@ -133,19 +135,9 @@ func (action *Action) Debug() mapof.Any {
  * Marshalling Methods
  ******************************************/
 
-// UnmarshalJSON unmarshals the JSON data into this Action object.
-func (action *Action) UnmarshalJSON(data []byte) error {
-	var asMap map[string]any
-
-	if err := hjson.Unmarshal(data, &asMap); err != nil {
-		return derp.Wrap(err, "model.Action.UnmarshalJSON", "Invalid JSON")
-	}
-
-	return action.UnmarshalMap(asMap)
-}
-
-// UnmarshalMap unmarshals the provided map into this Action object.
-func (action *Action) UnmarshalMap(data map[string]any) error {
+// UnmarshalMap unmarshals the provided map into this Action object, parsing every
+// step template with funcMap
+func (action *Action) UnmarshalMap(data map[string]any, funcMap template.FuncMap) error {
 
 	const location = "model.Action.UnmarshalMap"
 
@@ -162,7 +154,7 @@ func (action *Action) UnmarshalMap(data map[string]any) error {
 
 	// Import steps
 	stepsInfo := convert.SliceOfMap(data["steps"])
-	if pipeline, err := step.NewPipeline(stepsInfo); err == nil {
+	if pipeline, err := step.NewPipeline(stepsInfo, texttemplate.FuncMap(funcMap)); err == nil {
 		action.Steps = pipeline
 	} else {
 		return derp.Wrap(err, location, "Reading steps", stepsInfo)
@@ -176,5 +168,23 @@ func (action *Action) UnmarshalMap(data map[string]any) error {
 	// NOT VALIDATING INCORRECT ROLES
 	// NOT VALIDATING INCORRECT STATES
 
+	return nil
+}
+
+// unmarshalActions adds each action in data to actions, parsing every step template with funcMap
+func unmarshalActions(actions mapof.Object[Action], data map[string]map[string]any, funcMap template.FuncMap) error {
+
+	for actionID, actionData := range data {
+
+		action := NewAction()
+
+		if err := action.UnmarshalMap(actionData, funcMap); err != nil {
+			return derp.Wrap(err, "model.unmarshalActions", "Invalid action", actionID)
+		}
+
+		actions[actionID] = action
+	}
+
+	// Lights, camera, actions
 	return nil
 }

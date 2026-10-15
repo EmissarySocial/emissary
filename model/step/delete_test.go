@@ -16,7 +16,7 @@ func TestDelete(t *testing.T) {
 		"submit":  "Yes",
 		"cancel":  "No",
 		"method":  "post",
-	})
+	}, nil)
 	require.Nil(t, err)
 	require.NotNil(t, step.Title)
 	require.NotNil(t, step.Message)
@@ -33,7 +33,7 @@ func TestDelete(t *testing.T) {
 // TestDelete_Defaults verifies the values a "delete" step falls back to when its configuration is empty
 func TestDelete_Defaults(t *testing.T) {
 
-	step, err := NewDelete(mapof.Any{})
+	step, err := NewDelete(mapof.Any{}, nil)
 	require.Nil(t, err)
 	require.Equal(t, "Delete", step.Submit)
 	require.Equal(t, "Cancel", step.Cancel)
@@ -46,6 +46,6 @@ func TestDelete_Defaults(t *testing.T) {
 func TestDelete_InvalidConfig(t *testing.T) {
 
 	// "method" outside the schema enum fails validation.
-	_, err := NewDelete(mapof.Any{"method": "not-a-method"})
+	_, err := NewDelete(mapof.Any{"method": "not-a-method"}, nil)
 	require.NotNil(t, err)
 }

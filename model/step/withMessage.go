@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -12,11 +14,11 @@ type WithMessage struct {
 }
 
 // NewWithMessage returns a fully initialized WithMessage object
-func NewWithMessage(stepInfo mapof.Any) (WithMessage, error) {
+func NewWithMessage(stepInfo mapof.Any, funcMap template.FuncMap) (WithMessage, error) {
 
 	const location = "NewWithMessage"
 
-	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
+	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]), funcMap)
 
 	if err != nil {
 		return WithMessage{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)

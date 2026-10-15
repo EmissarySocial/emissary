@@ -18,7 +18,7 @@ type Delete struct {
 }
 
 // NewDelete returns a fully populated Delete object
-func NewDelete(stepInfo mapof.Any) (Delete, error) {
+func NewDelete(stepInfo mapof.Any, funcMap template.FuncMap) (Delete, error) {
 
 	const location = "model.step.NewDelete"
 
@@ -28,14 +28,14 @@ func NewDelete(stepInfo mapof.Any) (Delete, error) {
 	}
 
 	// Create the "title" template
-	titleTemplate, err := template.New("").Parse(first(stepInfo.GetString("title"), "Delete '{{.Label}}'?"))
+	titleTemplate, err := template.New("").Funcs(funcMap).Parse(first(stepInfo.GetString("title"), "Delete '{{.Label}}'?"))
 
 	if err != nil {
 		return Delete{}, derp.Wrap(err, location, "Invalid 'title' template", stepInfo)
 	}
 
 	// Create the "message" template
-	messageTemplate, err := template.New("").Parse(first(stepInfo.GetString("message"), "Are you sure you want to delete {{.Label}}? There is NO UNDO."))
+	messageTemplate, err := template.New("").Funcs(funcMap).Parse(first(stepInfo.GetString("message"), "Are you sure you want to delete {{.Label}}? There is NO UNDO."))
 
 	if err != nil {
 		return Delete{}, derp.Wrap(err, location, "Invalid 'message' template", stepInfo)
