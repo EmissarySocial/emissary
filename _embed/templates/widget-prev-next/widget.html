@@ -1,0 +1,56 @@
+{{- $sort := .Widget.Data.GetString "sort" -}}
+{{- if eq "" $sort -}}{{- $sort = "rank" -}}{{- end -}}
+
+<!-- Options that are on by default read as strings: "" when never saved, "false" when turned off -->
+{{- $includeFamily := ne "false" (.Widget.Data.GetString "includeFamily") -}}
+{{- $showLabels := .Widget.Data.GetBool "showLabels" -}}
+{{- $showSummary := .Widget.Data.GetBool "showSummary" -}}
+{{- $showIcon := .Widget.Data.GetBool "showIcon" -}}
+
+<!-- Previous is the previous sibling, or else (when allowed) this Stream's parent -->
+{{- $previous := .PrevSibling $sort "view" -}}
+{{- $previousKind := "sibling" -}}
+{{- if and $previous.IsEmpty $includeFamily .HasParent -}}
+	{{- $previous = .Parent "view" -}}
+	{{- $previousKind = "parent" -}}
+{{- end -}}
+
+<!-- Next is the next sibling, or else (when allowed) this Stream's first child -->
+{{- $next := .NextSibling $sort "view" -}}
+{{- $nextKind := "sibling" -}}
+{{- if and $next.IsEmpty $includeFamily -}}
+	{{- $next = .FirstChild $sort "view" -}}
+	{{- $nextKind = "child" -}}
+{{- end -}}
+
+<!-- RULE: Render nothing when there is no neighbor on either side.
+     A div with role="navigation", never <nav>: theme stylesheets style every nav as the site bar -->
+{{- if or (not $previous.IsEmpty) (not $next.IsEmpty) -}}
+<div role="navigation" aria-label="Adjacent pages" class="widget widget-prev-next" hx-target="main" hx-swap="innerHTML" hx-push-url="true">
+
+	{{- if not $previous.IsEmpty -}}
+		<a href="/{{$previous.Token}}" hx-get="/{{$previous.Token}}" rel="prev" class="turboclick prev-next-link previous {{$previousKind}}">
+			{{- if $showLabels -}}<span class="prev-next-direction">Previous</span>{{- end -}}
+			<span class="prev-next-heading">
+				<span class="prev-next-arrow" aria-hidden="true">&lsaquo;</span>
+				{{- if $showIcon -}}{{- if ne "" $previous.Icon -}}<span class="prev-next-icon">{{icon $previous.Icon}}</span>{{- end -}}{{- end -}}
+				<span class="prev-next-title">{{$previous.Label}}</span>
+			</span>
+			{{- if $showSummary -}}{{- if ne "" $previous.Summary -}}<span class="prev-next-summary">{{$previous.Summary}}</span>{{- end -}}{{- end -}}
+		</a>
+	{{- end -}}
+
+	{{- if not $next.IsEmpty -}}
+		<a href="/{{$next.Token}}" hx-get="/{{$next.Token}}" rel="next" class="turboclick prev-next-link next {{$nextKind}}">
+			{{- if $showLabels -}}<span class="prev-next-direction">Next</span>{{- end -}}
+			<span class="prev-next-heading">
+				<span class="prev-next-title">{{$next.Label}}</span>
+				{{- if $showIcon -}}{{- if ne "" $next.Icon -}}<span class="prev-next-icon">{{icon $next.Icon}}</span>{{- end -}}{{- end -}}
+				<span class="prev-next-arrow" aria-hidden="true">&rsaquo;</span>
+			</span>
+			{{- if $showSummary -}}{{- if ne "" $next.Summary -}}<span class="prev-next-summary">{{$next.Summary}}</span>{{- end -}}{{- end -}}
+		</a>
+	{{- end -}}
+
+</div>
+{{- end -}}
