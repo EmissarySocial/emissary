@@ -1,6 +1,3 @@
-{{- $sort := .Widget.Data.GetString "sort" -}}
-{{- if eq "" $sort -}}{{- $sort = "rank" -}}{{- end -}}
-
 <!-- Options that are on by default read as strings: "" when never saved, "false" when turned off -->
 {{- $includeFamily := ne "false" (.Widget.Data.GetString "includeFamily") -}}
 {{- $showLabels := .Widget.Data.GetBool "showLabels" -}}
@@ -8,23 +5,29 @@
 {{- $showIcon := .Widget.Data.GetBool "showIcon" -}}
 
 <!-- Previous is the previous sibling, or else (when allowed) this Stream's parent -->
-{{- $previous := .PrevSibling $sort "view" -}}
+{{- $previous := .PrevSibling "rank" "view" -}}
 {{- $previousKind := "sibling" -}}
 {{- if and $previous.IsEmpty $includeFamily .HasParent -}}
 	{{- $previous = .Parent "view" -}}
 	{{- $previousKind = "parent" -}}
 {{- end -}}
 
-<!-- Next is the next sibling, or else (when allowed) this Stream's first child -->
-{{- $next := .NextSibling $sort "view" -}}
+<!-- Next walks the tree when allowed: first child, then next sibling, then the nearest ancestor's next sibling -->
+{{- $next := .NextSibling "rank" "view" -}}
 {{- $nextKind := "sibling" -}}
-{{- if and $next.IsEmpty $includeFamily -}}
-	{{- $next = .FirstChild $sort "view" -}}
-	{{- $nextKind = "child" -}}
+{{- if $includeFamily -}}
+	{{- $child := .FirstChild "rank" "view" -}}
+	{{- if not $child.IsEmpty -}}
+		{{- $next = $child -}}
+		{{- $nextKind = "child" -}}
+	{{- else if $next.IsEmpty -}}
+		{{- $next = .NextAfterParent "view" -}}
+		{{- $nextKind = "ancestor-sibling" -}}
+	{{- end -}}
 {{- end -}}
 
-<!-- RULE: Render nothing when there is no neighbor on either side.
-     A div with role="navigation", never <nav>: theme stylesheets style every nav as the site bar -->
+<!-- RULE: Render nothing when there is no neighbor on either side -->
+<!-- RULE: A div with role="navigation", never <nav> (see README.md) -->
 {{- if or (not $previous.IsEmpty) (not $next.IsEmpty) -}}
 <div role="navigation" aria-label="Adjacent pages" class="widget widget-prev-next" hx-target="main" hx-swap="innerHTML" hx-push-url="true">
 

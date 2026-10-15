@@ -1,11 +1,10 @@
 {
 	widgetId:"prev-next"
 	label:"Previous/Next Buttons"
-	description:"Displays buttons that link to this stream's previous and next siblings."
+	description:"Displays buttons that link to the previous and next pages in the site map."
 	schema:{
 		type:"object"
 		properties:{
-			sort: {type:"string", enum:["rank", "label", "publishDate"], default:"rank"}
 			showLabels: {type:"boolean", default:false}
 			showSummary: {type:"boolean", default:false}
 			showIcon: {type:"boolean", default:false}
@@ -15,17 +14,12 @@
 	form:{
 		type:"layout-vertical"
 		label:"Edit Previous/Next Buttons"
-		description:"Choose how siblings are ordered, and what each button shows."
+		description:"Choose what each button shows."
 		children:[
 			{type:"toggle", path:"showLabels", options:{true-text:"Show \"Previous\" and \"Next\" Labels", false-text:"Show \"Previous\" and \"Next\" Labels"}}
 			{type:"toggle", path:"showSummary", options:{true-text:"Show Summary", false-text:"Show Summary"}}
 			{type:"toggle", path:"showIcon", options:{true-text:"Show Icon", false-text:"Show Icon"}}
-			{type:"toggle", path:"includeFamily", description:"With no previous sibling, link to the parent.  With no next sibling, link to the first child.", options:{true-text:"Include Parent and Children", false-text:"Include Parent and Children"}}
-			{type:"radio", path:"sort", label:"Order Siblings By", options:{enum:[
-				{value:"rank", label:"Site map order"}
-				{value:"label", label:"Title"}
-				{value:"publishDate", label:"Publish date"}
-			]}}
+			{type:"toggle", path:"includeFamily", options:{true-text:"Navigate Full Tree (Parents & Children)", false-text:"Navigate Full Tree (Parents & Children)"}}
 		]
 	}
 }
