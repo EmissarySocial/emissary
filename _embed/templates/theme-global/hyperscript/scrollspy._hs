@@ -35,8 +35,15 @@ behavior Scrollspy
 		call scrollspy_select(me)
 	end
 
+	-- A clicked entry flashes its heading, which is otherwise hard to spot when it was already in view.
+	-- The raw href, not .hash, because .hash percent-encodes an id with non-ASCII letters
 	on click
 		call scrollspy_select(me)
+		set item to the closest <a.scrollspy-item /> to the target
+		if no item then
+			exit
+		end
+		call flash_highlight(document.getElementById(item.getAttribute("href").substring(1)))
 	end
 
 end
