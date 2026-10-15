@@ -209,6 +209,13 @@ func (service *Outbox) Deliver(session data.Session, actorType string, actorID p
 			service.deliverActivityPub(session, actorURL, &follower, string(serialized))
 
 		case model.FollowerMethodEmail:
+
+			// RULE: Email only confirmed Followers. Anyone can type an address into the follow form,
+			// so mailing an unconfirmed one defeats double opt-in (BUG-207 item 2).
+			if !follower.IsActive() {
+				continue
+			}
+
 			if canSendEmail {
 				service.sendNotification_Email(&follower, payload)
 			}
