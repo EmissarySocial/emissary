@@ -6,7 +6,7 @@
 <div class="app" script="init send SelectNav(id:'settings')">
 
 	{{- if and $isDesktop .IsAuthenticated -}}
-		<div id="app-sidebar" class="expanded">
+		<div id="app-sidebar">
 			<a href="/@me" hx-boost="true" class="menu-item ellipsis link">&larr; My Profile</a>
 			<br>
 			<a href="/@me/settings/general" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name:nav-general;">{{icon "settings"}} Profile</a>
