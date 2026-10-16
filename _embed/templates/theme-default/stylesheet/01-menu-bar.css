@@ -87,6 +87,47 @@
 }
 
 /******************************************
+ * Form Tabs on a Page
+ *
+ * A form's tabs (benpate/form's layout-tabs: .tabs > [role=tablist] > button[role=tab]) inside a page's content
+ * look like the #menu-bar tabs above, as on the admin console's General page, whose form comes from the theme.
+ * The form library writes this markup, so the style lives here and not in a class.  Modals sit outside
+ * .app-content, so their tabs keep theme-global's default look.
+ ******************************************/
+
+.app-content .tabs > [role="tablist"] {
+	border-bottom: solid 1px var(--gray20);
+	margin-bottom: 32px;
+	padding: 4px 0px 12px 0px;
+	line-height: 100%;
+}
+
+.app-content .tabs > [role="tablist"] > [role="tab"] {
+	display: inline-block;
+	padding: 8px 12px;
+	margin: 0px;
+	border: none;
+	border-radius: calc(var(--rhythm) / 2);
+	background-color: inherit;
+	color: var(--gray90);
+	font-size: 14px;
+
+	&:hover:not([disabled]),
+	&:focus-visible:not([disabled]) {
+		border: none;
+		background-color: var(--gray10);
+		color: var(--gray90);
+	}
+
+	&[aria-selected="true"]:not([disabled]),
+	&[aria-selected="true"]:not([disabled]):hover {
+		border: none;
+		background-color: var(--gray20);
+		color: var(--black);
+	}
+}
+
+/******************************************
  * Sub-Menu Bar
  ******************************************/
 
