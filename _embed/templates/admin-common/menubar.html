@@ -1,92 +1,56 @@
-<div id="menu-bar" hx-push-url="true" script="init send SelectNav(id:'admin')">
-	<div class="center">
-		<a href="/admin/domain/index" hx-boost="true" class="turboclick {{if eq .Token `domain`}}selected{{end}}">
-			General
-		</a>
+{{- /* menubar lays out every admin page as user-settings lays out its pages: the primary sections in a left-hand
+       sidebar (admin-menu.html), and the open section's pages as tabs across the top of the content.  On mobile the
+       sidebar is left out, and a back arrow opens the full-page menu (admin-domain/mobile.html) instead.
 
-		<a href="/admin/navigation/index" hx-boost="true" class="turboclick {{if eq .Token `navigation`}}selected{{end}}">
-			Navigation
-		</a>
+       It OPENS .app and .app-content and leaves both open: a page calls it first, and the page's own closing </div>
+       closes .app-content.  The browser closes .app at the end of <main>, as it already closed the pages (such as
+       admin-domain/index.html) whose later steps render below this one. */ -}}
+{{- $token := .Token -}}
+<div class="app" script="init send SelectNav(id:'admin')">
 
-		<a href="/admin/rules/index" hx-boost="true" class="turboclick {{if eq .Token `rules`}}selected{{end}}">
-			Rules
-		</a>
+	{{- if .IsDesktop -}}
+		<div id="app-sidebar" class="expanded">
+			{{- template "admin-menu" $token -}}
+		</div>
+	{{- end -}}
 
-		<a href="/admin/users/index" hx-boost="true" class="turboclick {{if in .Token `users` `groups`}}selected{{end}}">
-			People
-		</a>
+	<div class="app-content padding">
 
-		<a href="/admin/tags/index" hx-boost="true" class="turboclick {{if in .Token `search` `followers` `following` `tags`}}selected{{end}}">
-			Search
-		</a>
+		{{- /* Only People, Search, and External have pages of their own, so only they draw tabs.  On mobile, every
+		       section draws the bar, because its back arrow is the only way to the admin menu. */ -}}
+		{{- $hasTabs := in $token "users" "groups" "search" "followers" "following" "tags" "connections" "mls" "webhooks" "syndication" "sso" -}}
+		{{- if or $hasTabs .IsMobile -}}
+		<div id="menu-bar" hx-push-url="true">
+			<div class="left">
 
-		<a href="/admin/connections/index" hx-boost="true" class="turboclick {{if in .Token `connections` `mls` `webhooks` `syndication` `sso`}}selected{{end}}">
-			External
-		</a>
+				{{- if .IsMobile -}}
+					<a href="/admin/domain/mobile" class="turboclick" hx-boost="true" aria-label="Admin Menu">{{icon "back"}}</a>
+				{{- end -}}
 
-	</div>
+				{{- if in $token "users" "groups" -}}
 
-</div>
+					<a href="/admin/users/index" hx-boost="true" class="turboclick {{if eq `users` $token}}selected{{end}}">Users</a>
+					<a href="/admin/groups/index" hx-boost="true" class="turboclick {{if eq `groups` $token}}selected{{end}}">Groups</a>
 
-{{- if in .Token "users" "groups" -}}
+				{{- else if in $token "search" "followers" "following" "tags" -}}
 
-	<div id="menu-bar-sub">
-		<a href="/admin/users/index" hx-boost="true" class="turboclick {{if eq `users` .Token}}selected{{end}}">
-			Users
-		</a>
-		<a href="/admin/groups/index" hx-boost="true" class="turboclick {{if eq `groups` .Token}}selected{{end}}">
-			Groups
-		</a>
-	</div>
+					<a href="/admin/tags/index" hx-boost="true" class="turboclick {{if eq `tags` $token}}selected{{end}}">Tags</a>
+					<a href="/admin/following/index" hx-boost="true" class="turboclick {{if eq `following` $token}}selected{{end}}">Sources</a>
+					<a href="/admin/followers/index" hx-boost="true" class="turboclick {{if eq `followers` $token}}selected{{end}}">Followers</a>
+					<a href="/admin/search/index" hx-boost="true" class="turboclick {{if eq `search` $token}}selected{{end}}">Indexes</a>
 
-{{- else if in .Token "search" "followers" "following" "tags" -}}
+				{{- else if in $token "connections" "mls" "webhooks" "syndication" "sso" -}}
 
-	<div id="menu-bar-sub">
-	
-		<a href="/admin/tags/index" hx-boost="true" class="turboclick {{if eq `tags` .Token}}selected{{end}}">
-			Tags
-		</a>
+					<a href="/admin/connections/index" hx-boost="true" class="turboclick {{if eq `connections` $token}}selected{{end}}">API Keys</a>
+					<a href="/admin/mls/index" hx-boost="true" class="turboclick {{if eq `mls` $token}}selected{{end}}">Encrypted Messaging</a>
+					<a href="/admin/webhooks/index" hx-boost="true" class="turboclick {{if eq `webhooks` $token}}selected{{end}}">Webhooks</a>
+					<a href="/admin/sso/index" hx-boost="true" class="turboclick {{if eq `sso` $token}}selected{{end}}">Single Sign On</a>
+					<a href="/admin/syndication/index" hx-boost="true" class="turboclick {{if eq `syndication` $token}}selected{{end}}">Syndication</a>
 
-		<a href="/admin/following/index" hx-boost="true" class="turboclick {{if eq `following` .Token}}selected{{end}}">
-			Sources
-		</a>
+				{{- end -}}
 
-		<a href="/admin/followers/index" hx-boost="true" class="turboclick {{if eq `followers` .Token}}selected{{end}}">
-			Followers
-		</a>
+			</div>
+		</div>
+		{{- end -}}
 
-		<a href="/admin/search/index" hx-boost="true" class="turboclick {{if eq `search` .Token}}selected{{end}}">
-			Indexes
-		</a>
-
-	</div>
-
-{{- else if in .Token "connections" "mls" "webhooks" "syndication" "sso" -}}
-
-	<span id="menu-bar-sub">
-
-		<a href="/admin/connections/index" hx-boost="true" class="turboclick {{if eq .Token `connections`}}selected{{end}}">
-			API Keys
-		</a>
-	
-		<a href="/admin/mls/index" hx-boost="true" class="turboclick {{if eq .Token `mls`}}selected{{end}}">
-			Encrypted Messaging
-		</a>
-
-		<a href="/admin/webhooks/index" hx-boost="true" class="turboclick {{if eq .Token `webhooks`}}selected{{end}}">
-			Webhooks
-		</a>
-
-		<a href="/admin/sso/index" hx-boost="true" class="turboclick {{if eq .Token `sso`}}selected{{end}}">
-			Single Sign On
-		</a>
-	
-		<a href="/admin/syndication/index" hx-boost="true" class="turboclick {{if eq .Token `syndication`}}selected{{end}}">
-			Syndication
-		</a>
-
-	</span>
-
-{{- end -}}
-
-{{- template "startup" . -}}
+		{{- template "startup" . -}}
