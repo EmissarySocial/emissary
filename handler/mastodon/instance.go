@@ -86,6 +86,87 @@ func versionFromBuild(info *debug.BuildInfo, ok bool) string {
 	return "Emissary " + revision
 }
 
+// Limits advertised to clients, matching Mastodon's defaults (clients are built around these values)
+const (
+	instanceMaxCharacters          = 500
+	instanceMaxMediaAttachments    = 4
+	instanceCharactersPerURL       = 23
+	instanceDescriptionLimit       = 1500
+	instanceImageSizeLimit         = 16 << 20
+	instanceImageMatrixLimit       = 33177600 // 7680 x 4320 pixels
+	instanceVideoSizeLimit         = 99 << 20
+	instanceVideoFrameRateLimit    = 120
+	instanceVideoMatrixLimit       = 8294400 // 3840 x 2160 pixels
+	instancePollMaxOptions         = 4
+	instancePollMaxOptionCharacter = 50
+	instancePollMinExpiration      = 5 * 60
+	instancePollMaxExpiration      = 2629746 // one month, in seconds
+)
+
+// instanceMimeTypes lists the upload formats advertised to clients.
+var instanceMimeTypes = []string{
+	"image/jpeg", "image/png", "image/gif", "image/webp", "image/heic", "image/heif",
+	"video/mp4", "video/quicktime", "video/webm",
+	"audio/mpeg", "audio/mp4", "audio/ogg", "audio/wav",
+}
+
+// instanceConfiguration returns the v2 configuration block that clients read their posting limits from.
+func instanceConfiguration() object.InstanceConfiguration {
+
+	// Polls are advertised but not implemented yet (GetPoll returns NotImplemented, PostStatus ignores t.Poll)
+	return object.InstanceConfiguration{
+		Statuses: object.InstanceConfigurationStatus{
+			MaxCharacters:            instanceMaxCharacters,
+			MaxMediaAttachments:      instanceMaxMediaAttachments,
+			CharactersReservedPerURL: instanceCharactersPerURL,
+		},
+		MediaAttachments: object.InstanceConfigurationMediaAttachments{
+			SupportedMimeTypes:  instanceMimeTypes,
+			DescriptionLimit:    instanceDescriptionLimit,
+			ImageSizeLimit:      instanceImageSizeLimit,
+			ImageMatrixLimit:    instanceImageMatrixLimit,
+			VideoSizeLimit:      instanceVideoSizeLimit,
+			VideoFrameRateLimit: instanceVideoFrameRateLimit,
+			VideoMatrixLimit:    instanceVideoMatrixLimit,
+		},
+		Polls: object.InstanceConfigurationPolls{
+			MaxOptions:             instancePollMaxOptions,
+			MaxCharactersPerOption: instancePollMaxOptionCharacter,
+			MinExpiration:          instancePollMinExpiration,
+			MaxExpiration:          instancePollMaxExpiration,
+		},
+	}
+}
+
+// instanceConfigurationV1 returns the same limits as instanceConfiguration, in the deprecated v1 shape.
+func instanceConfigurationV1() object.Instance_Configuration_V1 {
+
+	// Built from the v2 block so the two endpoints can never disagree
+	v2 := instanceConfiguration()
+
+	return object.Instance_Configuration_V1{
+		Statuses: object.Instance_Statuses_V1{
+			MaxCharacters:            v2.Statuses.MaxCharacters,
+			MaxMediaAttachments:      v2.Statuses.MaxMediaAttachments,
+			CharactersReservedPerURL: v2.Statuses.CharactersReservedPerURL,
+		},
+		MediaAttachments: object.Instance_Media_V1{
+			SupportedMimeTypes:  v2.MediaAttachments.SupportedMimeTypes,
+			ImageSizeLimit:      v2.MediaAttachments.ImageSizeLimit,
+			ImageMatrixLimit:    v2.MediaAttachments.ImageMatrixLimit,
+			VideoSizeLimit:      v2.MediaAttachments.VideoSizeLimit,
+			VideoFrameRateLimit: v2.MediaAttachments.VideoFrameRateLimit,
+			VideoMatrixLimit:    v2.MediaAttachments.VideoMatrixLimit,
+		},
+		Polls: object.Instance_Polls_V1{
+			MaxOptions:             v2.Polls.MaxOptions,
+			MaxCharactersPerOption: v2.Polls.MaxCharactersPerOption,
+			MinExpiration:          v2.Polls.MinExpiration,
+			MaxExpiration:          v2.Polls.MaxExpiration,
+		},
+	}
+}
+
 // https://docs.joinmastodon.org/methods/instance/
 
 // https://docs.joinmastodon.org/methods/instance/#v2
@@ -119,6 +200,10 @@ func GetInstance(serverFactory *server.Factory) func(model.Authorization, txn.Ge
 			Version:     instanceVersion(),
 			SourceURL:   "https://github.com/EmissarySocial/emissary",
 			Description: readOnlyDomain.Description,
+			Thumbnail: object.InstanceThumbnail{
+				URL: readOnlyDomain.ImageURL(),
+			},
+			Configuration: instanceConfiguration(),
 			Contact: object.InstanceContact{
 				Account: contactAccount(factory, session),
 			},
@@ -237,6 +322,8 @@ func GetInstance_V1(serverFactory *server.Factory) func(model.Authorization, txn
 			Title:          readOnlyDomain.Label,
 			Version:        instanceVersion(),
 			Description:    readOnlyDomain.Description,
+			Thumbnail:      readOnlyDomain.ImageURL(),
+			Configuration:  instanceConfigurationV1(),
 			ContactAccount: contactAccount(factory, session),
 		}
 
