@@ -5,7 +5,7 @@
 	<link rel="stylesheet" href="/.templates/user-settings/stylesheet">
 
 	{{- if $isDesktop -}}
-		<div id="app-sidebar" class="expanded">
+		<div id="app-sidebar" class="flex-column flex-justify-between expanded">
 			{{- template "menu" "social" -}}
 		</div>
 	{{- end -}}
@@ -15,18 +15,18 @@
 		<div id="menu-bar">
 			<div class="left">
 				{{ if not $isDesktop }}
-					<a href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
+					<a class="turboclick" href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
 				{{ end }}
-				<a href="/@me/settings/following" hx-boost="true">Following</a>
-				<a href="/@me/settings/followers" hx-boost="true">Followers</a>
-				<a href="/@me/settings/circles" hx-boost="true">Circles</a>
-				<a href="/@me/settings/rules" class="selected" hx-boost="true">Rules</a>
-				<a href="/@me/settings/notifications" hx-boost="true">Notifications</a>
+				<a class="turboclick" href="/@me/settings/following" hx-boost="true">Following</a>
+				<a class="turboclick" href="/@me/settings/followers" hx-boost="true">Followers</a>
+				<a class="turboclick" href="/@me/settings/circles" hx-boost="true">Circles</a>
+				<a href="/@me/settings/rules" class="selected turboclick" hx-boost="true">Rules</a>
+				<a class="turboclick" href="/@me/settings/notifications" hx-boost="true">Notifications</a>
 			</div>
 			<div class="right">
 				<a href="https://emissary.dev/rules" target="_blank" rel="noopener noreferrer" class="link">
 					{{icon "help"}}
-					{{ if $isDesktop }} Help with Rules {{ end }}
+					{{ if $isDesktop }} Help {{ end }}
 				</a>
 			</div>
 		</div>
@@ -51,7 +51,7 @@
 		</div>
 
 		<div class="table margin-top" style="border-bottom:none;">
-			<div hx-get="/@me/settings/rule-add" role="button" class="link">
+			<div hx-get="/@me/settings/rule-add" role="button" class="link turboclick">
 				{{icon "add"}} Add an Inbox Rule
 			</div>
 		</div>

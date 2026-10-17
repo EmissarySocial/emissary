@@ -10,21 +10,21 @@
 	<div role="tablist" class="pills margin-bottom-none">
 
 		{{- if ne "" $search -}}
-			<span role="link" class="link margin-right" hx-get="/@me/settings/following-search?search={{$search}}&folderId={{$folderID}}">
+			<span role="link" class="link margin-right turboclick" hx-get="/@me/settings/following-search?search={{$search}}&folderId={{$folderID}}">
 				<i class="text-lg bi bi-arrow-left-circle-fill"></i>
 			</span>
 		{{- end -}}
 
-		<button role="tab" hx-get="/@me/newsfeed/browse-actor?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "person"}} Profile</button>
-		<button role="tab" hx-get="/@me/newsfeed/annotation?url={{$actor.ID}}&type=ACTOR&search={{$search}}&folderId={{$folderID}}">
+		<button class="turboclick" role="tab" hx-get="/@me/newsfeed/browse-actor?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "person"}} Profile</button>
+		<button class="turboclick" role="tab" hx-get="/@me/newsfeed/annotation?url={{$actor.ID}}&type=ACTOR&search={{$search}}&folderId={{$folderID}}">
 			{{- if $annotation.IsNew -}}{{icon "bookmark"}} Notes{{- else -}}{{iconFilled "bookmark"}} Noted{{- end -}}
 		</button>
-		<button role="tab" hx-get="/@me/settings/actor-rule?actor={{$actor.ID}}">{{icon "rule"}} Rule</button>
+		<button class="turboclick" role="tab" hx-get="/@me/settings/actor-rule?actor={{$actor.ID}}">{{icon "rule"}} Rule</button>
 
 		{{ if $following.IsNew -}}
-			<button role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "add"}} Follow</button>
+			<button class="turboclick" role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "add"}} Follow</button>
 		{{- else -}}
-			<button role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "check"}} Following</button>
+			<button class="turboclick" role="tab" hx-get="/@me/settings/following-edit?url={{$actor.ID}}&search={{$search}}&folderId={{$folderID}}">{{icon "check"}} Following</button>
 		{{- end }}
 
 		<button role="tab" aria-selected="true">{{icon "check"}} Follows You</button>
@@ -58,7 +58,7 @@
         <button script="on click trigger closeModal">Close Window</button>
 
 		<div class="flex-grow-1 align-right">
-			<button hx-get="/@me/settings/follower-delete?followerId={{.FollowerID.Hex}}" class="text-red">Remove Follower</button>
+			<button hx-get="/@me/settings/follower-delete?followerId={{.FollowerID.Hex}}" class="text-red turboclick">Remove Follower</button>
 		</div>
 	</div>
     

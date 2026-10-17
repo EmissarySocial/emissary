@@ -4,7 +4,7 @@
 	<title>Profile | General</title>
 
 	{{- if $isDesktop -}}
-		<div id="app-sidebar" class="expanded">
+		<div id="app-sidebar" class="flex-column flex-justify-between expanded">
 			{{- template "menu" "general" -}}
 		</div>
 	{{- end -}}
@@ -19,18 +19,16 @@
 				<a href="/@me/settings/general" class="turboclick selected" hx-boost="true">General</a>
 				<a href="/@me/settings/images" class="turboclick" hx-boost="true">Images</a>
 				<a href="/@me/settings/links" class="turboclick" hx-boost="true">Links</a>
-				<a href="/@me/settings/import" class="turboclick" hx-boost="true">Import</a>
-				<a href="/@me/settings/export" class="turboclick" hx-boost="true">Export</a>
 			</div>
 			<div class="right">
 				<a href="https://emissary.dev/user-profile" target="_blank" rel="noopener noreferrer" class="link">
 					{{icon "help"}}
-					{{ if $isDesktop }} Help with My Profile {{ end }}
+					{{ if $isDesktop }} Help {{ end }}
 				</a>
 			</div>
 		</div>
 
-		<div class="card padding max-width-640 transition-main-card">
+		<div class="card border padding transition-main-card">
 			{{.View "general-form"}}
 		</div>
 	</div>
