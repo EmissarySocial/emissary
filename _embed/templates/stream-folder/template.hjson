@@ -8,7 +8,7 @@
 	label: Folder
 	description: Contains other web pages
 	icon: folder
-	childSortType: label
+	childSortType: rank
 	childSortOrder: ASC
 	schema: {
 		type: object
