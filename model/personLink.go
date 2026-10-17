@@ -136,8 +136,8 @@ func (person *PersonLink) UnmarshalMap(data mapof.Any) {
  * Mastodon API Methods
  ******************************************/
 
-// Toot returns this PersonLink as its Mastodon API equivalent
-func (person PersonLink) Toot() object.Account {
+// Toot returns this PersonLink as its Mastodon API equivalent, with default images from host (e.g. "https://example.com")
+func (person PersonLink) Toot(host string) object.Account {
 
 	// A remote/unlinked person gets the same "u_..." token GetAccount_Lookup produces for
 	// the same account, so a Status's embedded account matches that account's own GetAccount.
@@ -149,7 +149,7 @@ func (person PersonLink) Toot() object.Account {
 
 	// created_at has no "?" in the client's Codable model and crashes decode if missing.
 	// ActivityPub has no reliable "account created" date, so this is an honest "unknown".
-	return object.Account{
+	return WithMastodonDefaultImages(object.Account{
 		ID:           id,
 		URL:          person.ProfileURL,
 		Username:     person.LocalUsername(),
@@ -158,7 +158,7 @@ func (person PersonLink) Toot() object.Account {
 		Avatar:       person.IconURL,
 		AvatarStatic: person.IconURL,
 		CreatedAt:    MastodonDate(time.Now()),
-	}
+	}, host)
 }
 
 // LocalUsername returns the bare username (no "@domain" suffix), for the
