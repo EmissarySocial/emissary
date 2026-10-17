@@ -45,7 +45,7 @@ func PostPushSubscription(serverFactory *server.Factory) func(model.Authorizatio
 		// RULE: Emissary has nowhere to persist per-type alert preferences, so every notification
 		// that clears the recipient's rules generates a push regardless. Echo the requested
 		// alerts back rather than silently ignore them.
-		return pushSubscriptionToot(factory, session, endpoint, requestedAlerts(t.Data.Alerts)), nil
+		return pushSubscriptionToot(factory, session, endpoint, requestedAlerts(t)), nil
 	}
 }
 
@@ -160,20 +160,10 @@ func pushSubscriptionToot(factory *service.Factory, session data.Session, endpoi
 }
 
 // requestedAlerts copies a PostPushSubscription's requested alert flags into the response shape.
-func requestedAlerts(alerts struct {
-	Mention       bool `form:"mention"`
-	Quote         bool `form:"quote"`
-	Status        bool `form:"status"`
-	Reblog        bool `form:"reblog"`
-	Follow        bool `form:"follow"`
-	FollowRequest bool `form:"follow_request"`
-	Favourite     bool `form:"favourite"`
-	Poll          bool `form:"poll"`
-	Update        bool `form:"update"`
-	QuotedUpdate  bool `form:"quoted_update"`
-	AdminSignUp   bool `form:"admin.sign_up"`
-	AdminReport   bool `form:"admin.report"`
-}) object.WebPushSubscriptionAlerts {
+func requestedAlerts(t txn.PostPushSubscription) object.WebPushSubscriptionAlerts {
+
+	// Read through the transaction, so this never restates toot's anonymous struct and its tags
+	alerts := t.Data.Alerts
 
 	return object.WebPushSubscriptionAlerts{
 		Mention:       alerts.Mention,
