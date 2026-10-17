@@ -59,7 +59,7 @@ div.table {
 
 div.table > * {
 	border-top: solid 1px var(--gray20);
-	padding: 10px 0px;
+	padding: 10px 6px;
 }
 
 div.table > .table-header {
@@ -72,7 +72,7 @@ div.table > [role=button]:hover,
 div.table > [role=button]:focus,
 div.table > .clickable:hover,
 div.table > .clickable:focus {
-	background-color:var(--gray15);
+	background-color:var(--gray10);
 	cursor:pointer;
 }
 
