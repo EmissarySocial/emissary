@@ -13,14 +13,15 @@ type OAuthUserTokenRequest struct {
 
 	// Fields as documented at https://docs.joinmastodon.org/methods/oauth/#token
 
-	GrantType    string `json:"grantType"    form:"grant_type"`
-	Code         string `json:"code"         form:"code"`
-	RefreshToken string `json:"refreshToken" form:"refresh_token"` // The rotating refresh token, presented for a refresh_token grant (RFC 6749 §6)
-	ClientID     string `json:"clientId"     form:"client_id"`
-	ClientSecret string `json:"clientSecret" form:"client_secret"`
-	RedirectURI  string `json:"redirectUri"  form:"redirect_uri"`
-	Scope        string `json:"scope"        form:"scope"`
-	CodeVerifier string `json:"codeVerifier" form:"code_verifier"` // PKCE (RFC 7636) verifier, presented to redeem a code bound to a code_challenge
+	// JSON names match the form names, because clients such as Ice Cubes post this as a JSON body
+	GrantType    string `json:"grant_type"    form:"grant_type"`
+	Code         string `json:"code"          form:"code"`
+	RefreshToken string `json:"refresh_token" form:"refresh_token"` // The rotating refresh token, presented for a refresh_token grant (RFC 6749 §6)
+	ClientID     string `json:"client_id"     form:"client_id"`
+	ClientSecret string `json:"client_secret" form:"client_secret"`
+	RedirectURI  string `json:"redirect_uri"  form:"redirect_uri"`
+	Scope        string `json:"scope"         form:"scope"`
+	CodeVerifier string `json:"code_verifier" form:"code_verifier"` // PKCE (RFC 7636) verifier, presented to redeem a code bound to a code_challenge
 }
 
 // NewOAuthUserTokenRequest returns a fully initialized, empty OAuthUserTokenRequest
