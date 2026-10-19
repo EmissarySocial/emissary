@@ -29,7 +29,7 @@ type emulatedSource struct {
 var emulatedSources = []emulatedSource{
 	{Pattern: "../build/step_EditModelObject.go", Names: []string{"StepEditModelObject.Post", "StepEditModelObject.getForm"}, UsedBy: "editModelObjectCase"},
 	{Pattern: "../build/step_AddModelObject.go", Names: []string{"StepAddModelObject.Post"}, UsedBy: "addModelObjectCase"},
-	{Pattern: "../build/step_SetData.go", Names: []string{"StepSetData.Get", "StepSetData.Post", "StepSetData.setURLPaths"}, UsedBy: "setDataUse.apply"},
+	{Pattern: "../build/step_SetData.go", Names: []string{"StepSetData.Get", "StepSetData.Post", "StepSetData.setURLPaths", "StepSetData.setDefaults"}, UsedBy: "setDataUse.apply"},
 	{Pattern: "../build/step_EditTable.go", Names: []string{"StepTableEditor.Post"}, UsedBy: "editTableCase"},
 	{Pattern: "../build/step_ReadForm.go", Names: []string{"StepReadForm.Post"}, UsedBy: "readFormCase"},
 	{Pattern: "../build/step_EditTemplate.go", Names: []string{"StepEditTemplate.Post", "StepEditTemplate.isTemplateAllowed", "StepEditTemplate.listTemplates"}, UsedBy: "editTemplateCase, allowedTemplates"},
@@ -37,7 +37,6 @@ var emulatedSources = []emulatedSource{
 	{Pattern: "../build/step_EditRegistration.go", Names: []string{"StepEditRegistration.Post"}, UsedBy: "editRegistrationCase"},
 	{Pattern: "../build/step_With*.go", Names: []string{"*"}, UsedBy: "subContext"},
 	{Pattern: "../build/builder_*.go", Names: []string{"*.schema", "*.object", "*.PropertyForm"}, UsedBy: "templateContexts, subContext, widgetContext"},
-	{Pattern: "../build/*.go", Names: []string{"*.GetPointer", "*.GetStringOK", "*.GetBoolOK", "*.GetIntOK", "*.GetInt64OK", "*.GetFloatOK"}, UsedBy: "builderStandIn (set-data defaults)"},
 	{Pattern: "../build/utilities.go", Names: []string{"executeTemplate"}, UsedBy: "renderLiteral"},
 	{Pattern: "../build/widget_save.go", Names: []string{"*"}, UsedBy: "widgetContext"},
 	{Pattern: "../handler/admin.go", Names: []string{"buildAdmin_GetBuilder"}, UsedBy: "templateContexts"},

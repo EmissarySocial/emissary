@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -12,11 +14,11 @@ type WithMerchantAccount struct {
 }
 
 // NewWithMerchantAccount returns a fully initialized WithMerchantAccount object
-func NewWithMerchantAccount(stepInfo mapof.Any) (WithMerchantAccount, error) {
+func NewWithMerchantAccount(stepInfo mapof.Any, funcMap template.FuncMap) (WithMerchantAccount, error) {
 
 	const location = "NewNewWithMerchantAccount"
 
-	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
+	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]), funcMap)
 
 	if err != nil {
 		return WithMerchantAccount{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)

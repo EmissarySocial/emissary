@@ -81,6 +81,12 @@ func (step StepWithAnnotation) getAnnotation(builder Builder) (model.Annotation,
 		}
 
 		annotation.URL = url
+
+		// The page that links here knows what it is annotating, and passes it as ?type=
+		if annotation.IsNew() {
+			annotation.Type = annotationTypeParam(builder.QueryParam("type"))
+		}
+
 		return annotation, nil
 	}
 
@@ -94,4 +100,16 @@ func (step StepWithAnnotation) getAnnotation(builder Builder) (model.Annotation,
 
 	// Success.
 	return annotation, nil
+}
+
+// annotationTypeParam returns the Annotation type named in a query parameter, or "" if it names none
+func annotationTypeParam(value string) string {
+
+	switch value {
+
+	case model.AnnotationTypeActor, model.AnnotationTypeDocument:
+		return value
+	}
+
+	return ""
 }

@@ -51,10 +51,10 @@ func TestParseMethod_RejectsUnknownValues(t *testing.T) {
 // time through the Steps that read the property, not just the helper.
 func TestParseMethod_RejectedByConstructors(t *testing.T) {
 
-	_, err := NewForwardTo(mapof.Any{"url": "/somewhere", "method": "boht"})
+	_, err := NewForwardTo(mapof.Any{"url": "/somewhere", "method": "boht"}, nil)
 	require.Error(t, err)
 
-	_, err = NewRedirectTo(mapof.Any{"url": "/somewhere", "method": "boht"})
+	_, err = NewRedirectTo(mapof.Any{"url": "/somewhere", "method": "boht"}, nil)
 	require.Error(t, err)
 
 	_, err = NewViewHTML(mapof.Any{"file": "detail", "method": "boht"})
@@ -63,6 +63,6 @@ func TestParseMethod_RejectedByConstructors(t *testing.T) {
 	_, err = NewAddEvent(mapof.Any{"event": "refreshPage", "method": "boht"})
 	require.Error(t, err)
 
-	_, err = NewSetHeader(mapof.Any{"name": "X-Test", "value": "1", "method": "boht"})
+	_, err = NewSetHeader(mapof.Any{"name": "X-Test", "value": "1", "method": "boht"}, nil)
 	require.Error(t, err)
 }

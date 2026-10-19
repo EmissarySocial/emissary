@@ -15,9 +15,9 @@ type SetHeader struct {
 }
 
 // NewSetHeader returns a fully initialized SetHeader object
-func NewSetHeader(stepInfo mapof.Any) (SetHeader, error) {
+func NewSetHeader(stepInfo mapof.Any, funcMap template.FuncMap) (SetHeader, error) {
 
-	value, err := template.New("").Parse(stepInfo.GetString("value"))
+	value, err := template.New("").Funcs(funcMap).Parse(stepInfo.GetString("value"))
 
 	if err != nil {
 		return SetHeader{}, derp.Wrap(err, "step.NewSetHeader", "Parsing value template", value)

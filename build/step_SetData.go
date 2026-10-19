@@ -9,6 +9,7 @@ import (
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/compare"
 	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/rosetta/schema"
 )
 
 // StepSetData is a Step that can update the custom data stored in a Stream
@@ -41,13 +42,8 @@ func (step StepSetData) Get(builder Builder, buffer io.Writer) PipelineBehavior 
 	}
 
 	// Set default values (only if no value already exists)
-	for name, value := range step.Defaults {
-		if currentValue, _ := schema.Get(builder, name); compare.IsZero(currentValue) {
-			if err := schema.Set(object, name, value); err != nil {
-				result := derp.Wrap(err, location, "Setting default value", name, value, derp.WithBadRequest())
-				return Halt().WithError(result)
-			}
-		}
+	if err := step.setDefaults(schema, object); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Setting default values"))
 	}
 
 	return nil
@@ -95,13 +91,8 @@ func (step StepSetData) Post(builder Builder, _ io.Writer) PipelineBehavior {
 	}
 
 	// Set default values (only if no value already exists)
-	for name, value := range step.Defaults {
-		if currentValue, _ := schema.Get(builder, name); compare.IsZero(currentValue) {
-			if err := schema.Set(object, name, value); err != nil {
-				result := derp.Wrap(err, location, "Setting default value", name, value, derp.WithBadRequest())
-				return Halt().WithError(result)
-			}
-		}
+	if err := step.setDefaults(schema, object); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Setting default values"))
 	}
 
 	// Silence is AU-some
@@ -125,5 +116,25 @@ func (step StepSetData) setURLPaths(builder Builder) error {
 		}
 	}
 
+	return nil
+}
+
+// setDefaults copies each configured default onto the object, wherever the object's current value is empty
+func (step StepSetData) setDefaults(objectSchema schema.Schema, object any) error {
+
+	for name, value := range step.Defaults {
+
+		// A path that cannot be read yet (such as a nil data map) counts as empty;
+		// schema.Set reports any real problem with the path
+		if currentValue, _ := objectSchema.Get(object, name); !compare.IsZero(currentValue) {
+			continue
+		}
+
+		if err := objectSchema.Set(object, name, value); err != nil {
+			return derp.Wrap(err, "build.StepSetData.setDefaults", "Setting default value", name, value, derp.WithBadRequest())
+		}
+	}
+
+	// Nothing overwritten, nothing lost
 	return nil
 }

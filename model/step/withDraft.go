@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -12,11 +14,11 @@ type WithDraft struct {
 }
 
 // NewWithDraft returns a fully initialized WithDraft object
-func NewWithDraft(stepInfo mapof.Any) (WithDraft, error) {
+func NewWithDraft(stepInfo mapof.Any, funcMap template.FuncMap) (WithDraft, error) {
 
 	const location = "build.NewWithDraft"
 
-	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
+	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]), funcMap)
 
 	if err != nil {
 		return WithDraft{}, derp.Wrap(err, location, "Invalid 'steps'")

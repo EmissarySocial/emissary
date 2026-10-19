@@ -24,6 +24,11 @@ func (nullIconProvider) Get(name string) string { return "" }
 // Write implements the icon.Provider interface. The stub writes nothing.
 func (nullIconProvider) Write(name string, writer io.Writer) {}
 
+// testFuncMap returns the helper functions that the server passes to every template service
+func testFuncMap() template.FuncMap {
+	return emissarytemplates.FuncMap(nullIconProvider{})
+}
+
 // TestEmbeddedTemplates_HTMLParses parses each *.html file in the directories listed below exactly
 // the way the server does at startup (minify → html/template Parse with the real funcMap).  This
 // catches template syntax errors, an undefined funcMap function, and the html/template

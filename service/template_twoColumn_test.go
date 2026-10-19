@@ -460,7 +460,7 @@ func TestTwoColumn_EditorActionSavesBothColumns(t *testing.T) {
 	definition, err := os.ReadFile("../_embed/templates/stream-article-two-column/template.hjson")
 	require.NoError(t, err)
 
-	twoColumn := model.NewTemplate("stream-article-two-column", nil)
+	twoColumn := model.NewTemplate("stream-article-two-column", testFuncMap())
 	require.NoError(t, hjson.Unmarshal(definition, &twoColumn))
 
 	action, exists := twoColumn.Action("editor")

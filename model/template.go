@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"html/template"
 	"io/fs"
 	"slices"
@@ -50,6 +51,7 @@ type Template struct {
 	Datasets           DatasetMap           `json:"datasets"           bson:"-"`                  // Lookup codes defined by this template
 	DefaultAction      string               `json:"defaultAction"      bson:"defaultAction"`      // Name of the action to be used when none is provided.  Also serves as the permissions for viewing a Stream.  If this is empty, it is assumed to be "view"
 	Actor              StreamActor          `json:"actor"              bson:"actor"`              // ActivityPub Actor operated on behalf of this Template/Stream
+	funcMap            template.FuncMap     // Helper functions for the HTML template and every step template
 }
 
 // DatasetMap is the set of lookup-code groups that a Template makes available to its forms
@@ -74,12 +76,42 @@ func NewTemplate(templateID string, funcMap template.FuncMap) Template {
 		SearchOptions:      make(templatemap.Map),
 		Bundles:            make(map[string]Bundle),
 		Datasets:           make(DatasetMap),
+		funcMap:            funcMap,
 	}
 }
 
 // ID implements the set.Value interface
 func (template Template) ID() string {
 	return template.TemplateID
+}
+
+// UnmarshalJSON decodes a Template, parsing every step template with the Template's helper functions
+func (template *Template) UnmarshalJSON(data []byte) error {
+
+	const location = "model.Template.UnmarshalJSON"
+
+	// Decode every field except "actions", which needs the helper functions
+	type templateFields Template
+	wrapper := struct {
+		*templateFields
+		Actions map[string]map[string]any `json:"actions"`
+	}{templateFields: (*templateFields)(template)}
+
+	if err := json.Unmarshal(data, &wrapper); err != nil {
+		return derp.Wrap(err, location, "Invalid JSON")
+	}
+
+	// Build each Action with the helper functions
+	if template.Actions == nil {
+		template.Actions = make(mapof.Object[Action])
+	}
+
+	if err := unmarshalActions(template.Actions, wrapper.Actions, template.funcMap); err != nil {
+		return derp.Wrap(err, location, "Invalid actions", template.TemplateID)
+	}
+
+	// Some assembly required
+	return nil
 }
 
 // AfterUnmarshal performs some post-processing on the Template object

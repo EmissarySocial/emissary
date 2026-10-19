@@ -32,7 +32,7 @@ func (service *Annotation) ExportDocument(session data.Session, userID primitive
 	result, err := json.Marshal(annotation)
 
 	if err != nil {
-		return "", derp.Wrap(err, location, "Marshaling Annotation", annotation)
+		return "", derp.Wrap(err, location, "Marshaling Annotation", annotation.AnnotationID)
 	}
 
 	// Success

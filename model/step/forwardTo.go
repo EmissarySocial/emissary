@@ -14,11 +14,11 @@ type ForwardTo struct {
 }
 
 // NewForwardTo returns a fully initialized ForwardTo object
-func NewForwardTo(stepInfo mapof.Any) (ForwardTo, error) {
+func NewForwardTo(stepInfo mapof.Any, funcMap template.FuncMap) (ForwardTo, error) {
 
 	const location = "model.step.NewForwardTo"
 
-	url, err := template.New("").Parse(stepInfo.GetString("url"))
+	url, err := template.New("").Funcs(funcMap).Parse(stepInfo.GetString("url"))
 
 	if err != nil {
 		return ForwardTo{}, derp.Wrap(err, location, "Invalid 'url' template", stepInfo)

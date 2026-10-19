@@ -151,21 +151,80 @@
 			]
 		}
 
+		// The private annotation editor for ?url=.  Saving with an empty note keeps the
+		// annotation; only annotation-delete removes it.
 		annotation: {
 			roles: ["self"]
 			steps: [
 				{do: "with-annotation", steps: [
-					{do: "as-modal", options:["xclass:large"], steps: [
+
+					// An actor's notes are a tab of the standard-size actor modal; a document's use the
+					// large modal of the document browser.  Actor links pass ?type=ACTOR for a new record.
+					{do: "as-modal", options:["class:{{iif .Object.IsActor `` `large`}}"], steps: [
 						{do: "view-html"}
-						{do:"edit", form: {
-							type: layout-vertical
-							children:[
-								{type:"textarea", path:"content", description:"(PRIVATE) These notes are not shared with anyone", options:{rows:12, autocomplete:"off"}}
-							]
-						}}
+						{
+							do:"edit", 
+							options:[
+								"submit-label:{{iif .IsNew `Add a Note` `Update Note`}}",
+								"delete:/@me/newsfeed/annotation-delete?annotationId={{.ObjectID}}", 
+								"delete-label:Delete", 
+							], 
+							form: {
+								type: layout-vertical
+								children:[
+									{type:"textarea", path:"content", description:"(PRIVATE) These notes are not shared with anyone", options:{rows:12, autocomplete:"off"}}
+								]
+							}
+						}
 						{do: "save"}
+						{do: "trigger-event", event:"annotationChanged", value:"{{.Object.URL}}"}
 					]}
 				]}
+			]
+		}
+
+		// A document's notes redraw the browse modal after the delete, so its Notes tab updates;
+		// an actor's notes close the modal.  remove-event must share a pipeline with delete.
+		annotation-delete: {
+			roles: ["self"]
+			steps: [
+				{do: "with-annotation", steps: [
+					{do: "if", condition:"{{.Object.IsDocument}}", then:[
+						{do: "delete", title:"Delete these Notes?", message:"Your private notes on this will be deleted.", submit:"Delete"}
+						{do: "trigger-event", event:"annotationChanged", value:"{{.Object.URL}}"}
+						{do: "remove-event", event:"closeModal"}
+						{do: "view-html", method:"post", file:"browse-annotation-modal"}
+					], else:[
+						{do: "delete", title:"Delete these Notes?", message:"Your private notes on this will be deleted.", submit:"Delete"}
+						{do: "trigger-event", event:"annotationChanged", value:"{{.Object.URL}}"}
+					]}
+				]}
+			]
+		}
+
+		annotation-button: {
+			roles: ["self"]
+			steps: [
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
+				{do:"view-html"}
+			]
+		}
+
+		// The Notes page: renders in the same frame as the folders, with the sidebar's
+		// Notes item selected.  ?type=actor|document narrows the list.
+		annotations: {
+			roles: ["self"]
+			steps: [
+				{do:"set-query-param", section:"ANNOTATIONS"}
+				{do:"view-html"}
+			]
+		}
+
+		annotations-list: {
+			roles: ["self"]
+			steps: [
+				{do:"set-header", name:"Cache-Control", value:"no-store"}
+				{do:"view-html"}
 			]
 		}
 
@@ -218,6 +277,18 @@
 			steps: [
 				{do:"set-header", name:"Cache-Control", value:"no-store"}
 				{do:"view-html"}
+			]
+		}
+
+		// The Notes view of the browse modal, opened by every annotation button and by the Notes tab.
+		// The editor below the thread is the annotation-editor action.
+		browse-annotation: {
+			roles: ["self"]
+			steps: [
+				{do:"as-modal", options:["class:large"], steps:[
+					{do:"set-header", name:"Cache-Control", value:"no-store"}
+					{do:"view-html"}
+				]}
 			]
 		}
 
@@ -296,7 +367,7 @@
 							label: Add a Folder
 							children: [
 								{type: "text", path: "label", label: "Name", options:{autocomplete:"off", validator:"/.validate/folder/name?folderId={{.ID}}"}}
-								{type: "select-icons", path: "icon", label: "Icon", options: {provider: "folder-icons"}}
+								{type: "select-icons", path: "icon", label: "Icon", options: {provider: "navigation-icons"}}
 								{type: "select", path: "layout", label: "Layout", options: {enum: "SOCIAL,NEWSPAPER,MAGAZINE"}}
 							]}
 						}
@@ -317,7 +388,7 @@
 							label: Folder Settings
 							children:[
 								{type:"text", path:"label", label:"Name", options:{autocomplete:"off", validator:"/.validate/folder/name?folderId={{.ID}}"}}
-								{type:"select-icons", path:"icon", label:"Icon", options:{provider:"folder-icons"}}
+								{type:"select-icons", path:"icon", label:"Icon", options:{provider:"navigation-icons"}}
 								{type:"select", path:"layout", label:"Layout", options:{enum:"SOCIAL,NEWSPAPER,MAGAZINE"}}
 							]}
 						}
@@ -374,7 +445,7 @@
 				// explicit /folder route.
 				{do:"if", condition:"{{eq `` (.QueryParam `folderId`)}}", then:[
 					{do:"redirect-to", url:"/@me/newsfeed/feed"}
-				], otherwise:[
+				], else:[
 					{do:"redirect-to", url:"/@me/newsfeed/folder?folderId={{.QueryParam `folderId`}}"}
 				]}
 			]
@@ -492,13 +563,13 @@
 			steps:[
 				{do:"if", condition:"{{eq `ANNOUNCE` (.QueryParam `type`)}}", then:[
 					{do:"redirect-to", url:"/@me/notifications/shares"}
-				], otherwise:[
+				], else:[
 					{do:"if", condition:"{{eq `LIKE` (.QueryParam `type`)}}", then:[
 						{do:"redirect-to", url:"/@me/notifications/likes"}
-					], otherwise:[
+					], else:[
 						{do:"if", condition:"{{eq `FOLLOW` (.QueryParam `type`)}}", then:[
 							{do:"redirect-to", url:"/@me/notifications/followers"}
-						], otherwise:[
+						], else:[
 							{do:"redirect-to", url:"/@me/notifications/replies"}
 						]}
 					]}
@@ -531,6 +602,27 @@
 			roles:["self"]
 			steps:[
 				{do:"view-html"}
+			]
+		}
+
+		// The private note form for ?url=, rendered under the thread by browse-annotation.  It posts
+		// to itself, not to the modal, then redraws the whole modal so the Notes tab updates.  An
+		// empty note still keeps the annotation; only Delete removes it.
+		annotation-editor: {
+			roles: ["self"]
+			steps: [
+				{do: "set-query-param", type:"DOCUMENT"}
+				{do: "with-annotation", steps: [
+					{do:"edit", options:["endpoint:/@me/newsfeed/annotation-editor?url={{.QueryParam `url` | urlquery}}", "delete:/@me/newsfeed/annotation-delete?annotationId={{.ObjectID}}&url={{.QueryParam `url` | urlquery}}", "delete-label:Delete", "submit-label:{{if .IsNew}}Add a Note{{else}}Update Note{{end}}"], form: {
+						type: layout-vertical
+						children:[
+							{type:"textarea", path:"content", options:{rows:6, autocomplete:"off", focus:true}}
+						]
+					}}
+					{do: "save"}
+					{do: "trigger-event", event:"annotationChanged", value:"{{.Object.URL}}"}
+					{do: "view-html", method:"post", file:"browse-annotation-modal"}
+				]}
 			]
 		}
 

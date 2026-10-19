@@ -18,7 +18,7 @@ type RequirePassword struct {
 }
 
 // NewRequirePassword returns a fully populated RequirePassword object
-func NewRequirePassword(stepInfo mapof.Any) (RequirePassword, error) {
+func NewRequirePassword(stepInfo mapof.Any, funcMap template.FuncMap) (RequirePassword, error) {
 
 	const location = "model.step.NewRequirePassword"
 
@@ -28,14 +28,14 @@ func NewRequirePassword(stepInfo mapof.Any) (RequirePassword, error) {
 	}
 
 	// Create the "title" template
-	titleTemplate, err := template.New("").Parse(first(stepInfo.GetString("title"), "Delete '{{.Label}}'?"))
+	titleTemplate, err := template.New("").Funcs(funcMap).Parse(first(stepInfo.GetString("title"), "Delete '{{.Label}}'?"))
 
 	if err != nil {
 		return RequirePassword{}, derp.Wrap(err, location, "Invalid 'title' template", stepInfo)
 	}
 
 	// Create the "message" template
-	messageTemplate, err := template.New("").Parse(first(stepInfo.GetString("message"), "Are you sure you want to delete {{.Label}}? There is NO UNDO."))
+	messageTemplate, err := template.New("").Funcs(funcMap).Parse(first(stepInfo.GetString("message"), "Are you sure you want to delete {{.Label}}? There is NO UNDO."))
 
 	if err != nil {
 		return RequirePassword{}, derp.Wrap(err, location, "Invalid 'message' template", stepInfo)

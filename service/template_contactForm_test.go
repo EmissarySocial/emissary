@@ -31,7 +31,7 @@ func contactFormTemplate(t *testing.T) model.Template {
 	definition, err := os.ReadFile("../_embed/templates/stream-contact-form/template.hjson")
 	require.NoError(t, err)
 
-	result := model.NewTemplate("contact-form", nil)
+	result := model.NewTemplate("contact-form", testFuncMap())
 	require.NoError(t, hjson.Unmarshal(definition, &result))
 
 	return result

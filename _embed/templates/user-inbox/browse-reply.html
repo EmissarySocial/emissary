@@ -1,11 +1,11 @@
 {{- $url := .QueryParam "url" -}}
 {{- $document := .ActivityStream $url -}}
 
-{{- template "browse-header" (array $url "reply") -}}
+{{- template "browse-header" (array . $url "reply") -}}
 
 <div id="modal-body" class="turboclick padding-top" hx-target="#modal-window" hx-swap="innerHTML" hx-push-url="false">
 
-	{{- template "browse-parent" (array . $document "") -}}
+	{{- template "browse-parent" (array . $document "reply") -}}
 
 	<div id="scroll-bottom" class="margin-top-lg" script="init scrollIntoView() me"></div>
 </div>

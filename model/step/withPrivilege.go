@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -12,11 +14,11 @@ type WithPrivilege struct {
 }
 
 // NewWithPrivilege returns a fully initialized WithPrivilege object
-func NewWithPrivilege(stepInfo mapof.Any) (WithPrivilege, error) {
+func NewWithPrivilege(stepInfo mapof.Any, funcMap template.FuncMap) (WithPrivilege, error) {
 
 	const location = "NewWithPrivilege"
 
-	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
+	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]), funcMap)
 
 	if err != nil {
 		return WithPrivilege{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)

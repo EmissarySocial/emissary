@@ -14,9 +14,9 @@ type TriggerEvent struct {
 }
 
 // NewTriggerEvent returns a fully initialized TriggerEvent object
-func NewTriggerEvent(stepInfo mapof.Any) (TriggerEvent, error) {
+func NewTriggerEvent(stepInfo mapof.Any, funcMap template.FuncMap) (TriggerEvent, error) {
 
-	value, err := template.New("").Funcs(FuncMap()).Parse(stepInfo.GetString("value"))
+	value, err := template.New("").Funcs(funcMap).Parse(stepInfo.GetString("value"))
 
 	if err != nil {
 		return TriggerEvent{}, derp.Wrap(err, "model.step.NewTriggerEvent", "Parsing template")

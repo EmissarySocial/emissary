@@ -5,11 +5,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Annotation is a grouping of people that is created/defined by a single UserID.
+// Annotation is one User's private record of an ActivityPub object, with an optional note.
+// It is never federated, and every User has at most one per URL.
 type Annotation struct {
 	AnnotationID primitive.ObjectID `json:"annotationId" bson:"_id"`     // Unique identifier assigned by the database
 	UserID       primitive.ObjectID `json:"userId"       bson:"userId"`  // UserID of owner of this Annotation
 	URL          string             `json:"url"          bson:"url"`     // URL of this Annotation.
+	Type         string             `json:"type"         bson:"type"`    // ACTOR or DOCUMENT, stamped when the Annotation is created
 	Name         string             `json:"name"         bson:"name"`    // Name of the document being annotated.
 	Icon         string             `json:"icon"         bson:"icon"`    // Icon of the document being annotated.
 	Content      string             `json:"content"      bson:"content"` // Content of this Annotation
@@ -26,12 +28,33 @@ func NewAnnotation() Annotation {
 
 // AnnotationFields returns the database fields required to populate a Annotation
 func AnnotationFields() []string {
-	return []string{"_id", "url", "name", "icon", "content"}
+	return []string{"_id", "userId", "url", "type", "name", "icon", "content", "createDate"}
 }
 
 // Fields returns the database fields required to populate a Annotation
 func (annotation Annotation) Fields() []string {
 	return AnnotationFields()
+}
+
+// IsActor returns TRUE if this Annotation points at an ActivityPub actor.
+// The annotations list uses it to open a profile instead of a post.
+func (annotation Annotation) IsActor() bool {
+	return annotation.Type == AnnotationTypeActor
+}
+
+// NotActor returns TRUE if this Annotation does not point at an ActivityPub actor.
+func (annotation Annotation) NotActor() bool {
+	return !annotation.IsActor()
+}
+
+// IsDocument returns TRUE if this Annotation points at a document (anything that is not an actor).
+func (annotation Annotation) IsDocument() bool {
+	return annotation.Type == AnnotationTypeDocument
+}
+
+// NotDocument returns TRUE if this Annotation does not point at a document.
+func (annotation Annotation) NotDocument() bool {
+	return !annotation.IsDocument()
 }
 
 /******************************************

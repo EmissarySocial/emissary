@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"html/template"
 	"io/fs"
 
@@ -26,6 +27,7 @@ type Registration struct {
 	Bundles        mapof.Object[Bundle] `json:"bundles"        bson:"bundles"`        // Additional resources (JS, HS, CSS) reqired tp remder this Registration.
 	Resources      fs.FS                `json:"-"              bson:"-"`              // File system containing the registration resources
 	AllowedFields  []string             `json:"allowedFields"  bson:"allowedFields"`  // List of fields that are allowed to be set by the user
+	funcMap        template.FuncMap     // Helper functions for the HTML template and every step template
 }
 
 // NewRegistration creates a new, fully initialized Registration object
@@ -38,7 +40,37 @@ func NewRegistration(registrationID string, funcMap template.FuncMap) Registrati
 		Actions:        make(map[string]Action),
 		HTMLTemplate:   template.New("").Funcs(funcMap),
 		AllowedFields:  make([]string, 0),
+		funcMap:        funcMap,
 	}
+}
+
+// UnmarshalJSON decodes a Registration, parsing every step template with the Registration's helper functions
+func (registration *Registration) UnmarshalJSON(data []byte) error {
+
+	const location = "model.Registration.UnmarshalJSON"
+
+	// Decode every field except "actions", which needs the helper functions
+	type registrationFields Registration
+	wrapper := struct {
+		*registrationFields
+		Actions map[string]map[string]any `json:"actions"`
+	}{registrationFields: (*registrationFields)(registration)}
+
+	if err := json.Unmarshal(data, &wrapper); err != nil {
+		return derp.Wrap(err, location, "Invalid JSON")
+	}
+
+	// Build each Action with the helper functions
+	if registration.Actions == nil {
+		registration.Actions = make(mapof.Object[Action])
+	}
+
+	if err := unmarshalActions(registration.Actions, wrapper.Actions, registration.funcMap); err != nil {
+		return derp.Wrap(err, location, "Invalid actions", registration.RegistrationID)
+	}
+
+	// Batteries included
+	return nil
 }
 
 // ID implements the set.Value interface

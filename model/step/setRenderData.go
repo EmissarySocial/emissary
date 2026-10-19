@@ -14,7 +14,7 @@ type SetRenderData struct {
 }
 
 // NewSetRenderData returns a fully initialized SetRenderData object
-func NewSetRenderData(stepInfo mapof.Any) (SetRenderData, error) {
+func NewSetRenderData(stepInfo mapof.Any, funcMap template.FuncMap) (SetRenderData, error) {
 
 	result := SetRenderData{
 		Values: make(map[string]*template.Template, len(stepInfo)),
@@ -22,7 +22,7 @@ func NewSetRenderData(stepInfo mapof.Any) (SetRenderData, error) {
 
 	for key, value := range stepInfo {
 		if key != "do" {
-			valueTemplate, err := template.New("value").Parse(convert.String(value))
+			valueTemplate, err := template.New("value").Funcs(funcMap).Parse(convert.String(value))
 
 			if err != nil {
 				return SetRenderData{}, derp.Wrap(err, "model.step.NewSetQueryParam", "Parsing template", key, value)

@@ -15,7 +15,7 @@ type EditModelObject struct {
 }
 
 // NewEditModelObject returns a fully initialized EditModelObject record
-func NewEditModelObject(stepInfo mapof.Any) (EditModelObject, error) {
+func NewEditModelObject(stepInfo mapof.Any, funcMap template.FuncMap) (EditModelObject, error) {
 
 	formElement := form.NewElement()
 
@@ -36,7 +36,7 @@ func NewEditModelObject(stepInfo mapof.Any) (EditModelObject, error) {
 	optionTemplates := make([]*template.Template, len(options))
 
 	for index, option := range options {
-		template, err := template.New("option").Parse(option)
+		template, err := template.New("option").Funcs(funcMap).Parse(option)
 
 		if err != nil {
 			return EditModelObject{}, derp.Wrap(err, "model.step.NewEditModelObject", "Invalid 'options'", stepInfo)

@@ -15,7 +15,7 @@ func TestScheduleDelete(t *testing.T) {
 		"hours":   "{{.Hours}}",
 		"minutes": "30",
 		"seconds": "0",
-	})
+	}, nil)
 	require.Nil(t, err)
 	require.NotNil(t, step.Days)
 	require.NotNil(t, step.Hours)
@@ -30,6 +30,6 @@ func TestScheduleDelete(t *testing.T) {
 
 // TestScheduleDelete_InvalidTemplate verifies that an invalid template is rejected
 func TestScheduleDelete_InvalidTemplate(t *testing.T) {
-	_, err := NewScheduleDelete(mapof.Any{"days": "{{ .Unclosed"})
+	_, err := NewScheduleDelete(mapof.Any{"days": "{{ .Unclosed"}, nil)
 	require.NotNil(t, err)
 }

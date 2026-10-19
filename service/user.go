@@ -36,6 +36,7 @@ import (
 // User manages all interactions with the User collection
 type User struct {
 	activityService       *ActivityStream
+	annotationService     *Annotation
 	attachmentService     *Attachment
 	connectionService     *Connection
 	emailService          *DomainEmail
@@ -74,6 +75,7 @@ func NewUser() User {
 func (service *User) Refresh(factory *Factory) {
 
 	service.activityService = factory.ActivityStream()
+	service.annotationService = factory.Annotation()
 	service.attachmentService = factory.Attachment()
 	service.connectionService = factory.Connection()
 	service.domainService = factory.Domain()
@@ -317,6 +319,11 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 func (service *User) Delete(session data.Session, user *model.User, note string) error {
 
 	const location = "service.User.Delete"
+
+	// Delete related Annotations, which hold the User's private notes
+	if err := service.annotationService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {
+		return derp.Wrap(err, location, "Deleting User's annotations", user.UserID)
+	}
 
 	// Delete related Folders
 	if err := service.folderService.DeleteByUserID(session, user.UserID, "Deleted with owner"); err != nil {

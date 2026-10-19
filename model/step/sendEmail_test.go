@@ -9,7 +9,7 @@ import (
 
 // TestSendEmail verifies that a "send-email" step parses its configuration
 func TestSendEmail(t *testing.T) {
-	step, err := NewSendEmail(mapof.Any{"email": "welcome"})
+	step, err := NewSendEmail(mapof.Any{"email": "welcome"}, nil)
 	require.Nil(t, err)
 	require.Equal(t, "welcome", step.Email)
 
@@ -29,7 +29,7 @@ func TestSendEmail_TemplateEmail(t *testing.T) {
 			"To":         "{{.Data \"emailAddress\"}}",
 			"ReplyEmail": "{{.GetString \"email\"}}",
 		},
-	})
+	}, nil)
 
 	require.NoError(t, err)
 	require.False(t, IsBuiltInEmail(step.Email))
@@ -57,7 +57,7 @@ func TestSendEmail_BuiltInsAreNotValidated(t *testing.T) {
 
 	for _, name := range builtInEmails {
 
-		step, err := NewSendEmail(mapof.Any{"email": name})
+		step, err := NewSendEmail(mapof.Any{"email": name}, nil)
 
 		require.NoError(t, err)
 		require.Equal(t, "", step.EmailID())

@@ -47,7 +47,7 @@ type Response struct {
 	UserID     primitive.ObjectID `json:"userId"     bson:"userId"`            // ID of the User who made this response
 	Actor      string             `json:"actor"      bson:"actor"`             // ActivityPubURL of the User who made the response
 	Object     string             `json:"object"     bson:"object"`            // ActivityPubURL of the Object that the actor responded to
-	Type       string             `json:"type"       bson:"type"`              // Type of Response (e.g. "Announce", "Bookmark", "Like", "Dislike", etc...)
+	Type       string             `json:"type"       bson:"type"`              // Type of Response (e.g. "Announce", "Like", "Dislike", etc...)
 	Summary    string             `json:"summary"    bson:"summary,omitempty"` // Summary of the response (e.g. "I liked this post because...")
 	Content    string             `json:"content"    bson:"content,omitempty"` // Custom value assigned to the response (emoji, vote, etc.)
 

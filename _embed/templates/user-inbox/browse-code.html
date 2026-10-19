@@ -1,6 +1,6 @@
 {{- $url := .QueryParam "url" -}}
 {{- $document := .ActivityStream $url -}}
-{{- template "browse-header" (array $url "code") -}}
+{{- template "browse-header" (array . $url "code") -}}
 
 <div id="modal-body" class="padding-top">
 	<h3>{{$url}}</h3>

@@ -17,7 +17,7 @@ type Save struct {
 }
 
 // NewSave returns a fully initialized Save object
-func NewSave(stepInfo mapof.Any) (Save, error) {
+func NewSave(stepInfo mapof.Any, funcMap template.FuncMap) (Save, error) {
 
 	const location = "model.step.NewSave"
 
@@ -27,13 +27,13 @@ func NewSave(stepInfo mapof.Any) (Save, error) {
 	}
 
 	// Get the "comment" template
-	comment, err := template.New("").Parse(stepInfo.GetString("comment"))
+	comment, err := template.New("").Funcs(funcMap).Parse(stepInfo.GetString("comment"))
 
 	if err != nil {
 		return Save{}, derp.Wrap(err, location, "Parsing comment template")
 	}
 
-	onError, err := NewPipeline(convert.SliceOfMap(stepInfo["on-error"]))
+	onError, err := NewPipeline(convert.SliceOfMap(stepInfo["on-error"]), funcMap)
 
 	if err != nil {
 		return Save{}, derp.Wrap(err, location, "Invalid 'steps'")

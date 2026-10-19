@@ -11,13 +11,13 @@ import (
 // TestViewJSON verifies that a "view-json" step parses its configuration
 func TestViewJSON(t *testing.T) {
 
-	step, err := NewViewJSON(mapof.Any{"value": ".Object"})
+	step, err := NewViewJSON(mapof.Any{"value": ".Object"}, testFuncMap())
 	require.Nil(t, err)
 	require.NotNil(t, step.Value)
 	require.Equal(t, "application/json", step.ContentType)
 
 	// A jsonp wrapper is also accepted.
-	step, err = NewViewJSON(mapof.Any{"value": ".Object", "jsonp": "callback"})
+	step, err = NewViewJSON(mapof.Any{"value": ".Object", "jsonp": "callback"}, testFuncMap())
 	require.Nil(t, err)
 	require.NotNil(t, step.Value)
 
@@ -30,7 +30,7 @@ func TestViewJSON(t *testing.T) {
 // TestViewJSON_RequiresValue verifies that a "view-json" step requires a value
 func TestViewJSON_RequiresValue(t *testing.T) {
 	// A query template is required.
-	_, err := NewViewJSON(mapof.Any{})
+	_, err := NewViewJSON(mapof.Any{}, testFuncMap())
 	require.NotNil(t, err)
 }
 
@@ -45,7 +45,7 @@ func TestViewJSON_Rules(t *testing.T) {
 	t.Run("without a schema, every property is Any", func(t *testing.T) {
 
 		// FUNKWHALE D17: an empty schema must not fail every rule
-		step, err := NewViewJSON(mapof.Any{"rules": rules, "content-type": "application/activity+json"})
+		step, err := NewViewJSON(mapof.Any{"rules": rules, "content-type": "application/activity+json"}, testFuncMap())
 		require.NoError(t, err)
 		require.Nil(t, step.Value)
 		require.Len(t, step.Rules, 2)
@@ -57,7 +57,7 @@ func TestViewJSON_Rules(t *testing.T) {
 		step, err := NewViewJSON(mapof.Any{"rules": rules, "schema": map[string]any{
 			"type":       "object",
 			"properties": map[string]any{"index": map[string]any{"type": "integer"}},
-		}})
+		}}, testFuncMap())
 		require.NoError(t, err)
 
 		object, isObject := step.Schema.Element.(schema.Object)
@@ -70,7 +70,7 @@ func TestViewJSON_Rules(t *testing.T) {
 		step, err := NewViewJSON(mapof.Any{"rules": rules, "schema": mapof.Any{
 			"type":     "object",
 			"wildcard": map[string]any{"type": "string"},
-		}})
+		}}, testFuncMap())
 		require.NoError(t, err)
 
 		object, isObject := step.Schema.Element.(schema.Object)
@@ -79,7 +79,7 @@ func TestViewJSON_Rules(t *testing.T) {
 	})
 
 	t.Run("an empty list of rules is allowed", func(t *testing.T) {
-		step, err := NewViewJSON(mapof.Any{"rules": []any{}})
+		step, err := NewViewJSON(mapof.Any{"rules": []any{}}, testFuncMap())
 		require.NoError(t, err)
 		require.Empty(t, step.Rules)
 	})
@@ -92,7 +92,7 @@ func TestViewJSON_RulesErrors(t *testing.T) {
 
 	invalid := func(name string, stepInfo mapof.Any) {
 		t.Run(name, func(t *testing.T) {
-			_, err := NewViewJSON(stepInfo)
+			_, err := NewViewJSON(stepInfo, testFuncMap())
 			require.Error(t, err)
 		})
 	}

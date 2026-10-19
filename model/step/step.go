@@ -1,10 +1,11 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/form"
 	"github.com/benpate/rosetta/mapof"
-	"github.com/hjson/hjson-go/v4"
 )
 
 // Step interface is used here to bind together the structs in this package
@@ -45,8 +46,9 @@ type FormGetter interface {
 	GetForm() form.Element
 }
 
-// New uses an Step object to create a new action
-func New(stepInfo mapof.Any) (Step, error) {
+// New uses an Step object to create a new action.  Every template the step declares
+// is parsed with funcMap, the helper functions of the Template that holds the step.
+func New(stepInfo mapof.Any, funcMap template.FuncMap) (Step, error) {
 
 	// Populate the action with the data from
 	switch stepInfo["do"] { // NOSONAR - there is no clean way to handle this without a big switch statement.
@@ -54,28 +56,28 @@ func New(stepInfo mapof.Any) (Step, error) {
 	// STEPS THAT WORK ON ALL MODEL OBJECTS
 
 	case "add":
-		return NewAddModelObject(stepInfo)
+		return NewAddModelObject(stepInfo, funcMap)
 
 	case "add-event":
 		return NewAddEvent(stepInfo)
 
 	case "add-stream":
-		return NewAddStream(stepInfo)
+		return NewAddStream(stepInfo, funcMap)
 
 	case "as-confirmation":
 		return NewAsConfirmation(stepInfo)
 
 	case "as-modal":
-		return NewAsModal(stepInfo)
+		return NewAsModal(stepInfo, funcMap)
 
 	case "as-tooltip":
-		return NewAsTooltip(stepInfo)
+		return NewAsTooltip(stepInfo, funcMap)
 
 	case "cache-url":
 		return NewCacheURL(stepInfo)
 
 	case "delete":
-		return NewDelete(stepInfo)
+		return NewDelete(stepInfo, funcMap)
 
 	case "delete-archive":
 		return NewDeleteArchive(stepInfo)
@@ -84,10 +86,10 @@ func New(stepInfo mapof.Any) (Step, error) {
 		return NewDeleteAttachments(stepInfo)
 
 	case "dump":
-		return NewDump(stepInfo)
+		return NewDump(stepInfo, funcMap)
 
 	case "edit":
-		return NewEditModelObject(stepInfo)
+		return NewEditModelObject(stepInfo, funcMap)
 
 	case "edit-connection":
 		return NewEditConnection(stepInfo)
@@ -108,7 +110,7 @@ func New(stepInfo mapof.Any) (Step, error) {
 		return NewEditWidget(stepInfo)
 
 	case "forward-to":
-		return NewForwardTo(stepInfo)
+		return NewForwardTo(stepInfo, funcMap)
 
 	case "get-archive":
 		return NewGetArchive(stepInfo)
@@ -117,19 +119,19 @@ func New(stepInfo mapof.Any) (Step, error) {
 		return NewHalt(stepInfo)
 
 	case "if":
-		return NewIfCondition(stepInfo)
+		return NewIfCondition(stepInfo, funcMap)
 
 	case "include":
 		return NewInclude(stepInfo)
 
 	case "inline-error":
-		return NewInlineError(stepInfo)
+		return NewInlineError(stepInfo, funcMap)
 
 	case "inline-save-button":
-		return NewInlineSaveButton(stepInfo)
+		return NewInlineSaveButton(stepInfo, funcMap)
 
 	case "inline-success":
-		return NewInlineSuccess(stepInfo)
+		return NewInlineSuccess(stepInfo, funcMap)
 
 	case "make-archive":
 		return NewMakeArchive(stepInfo)
@@ -150,7 +152,7 @@ func New(stepInfo mapof.Any) (Step, error) {
 		return NewStreamPromoteDraft(stepInfo)
 
 	case "redirect-to":
-		return NewRedirectTo(stepInfo)
+		return NewRedirectTo(stepInfo, funcMap)
 
 	case "refresh-page":
 		return NewRefreshPage(stepInfo)
@@ -162,37 +164,37 @@ func New(stepInfo mapof.Any) (Step, error) {
 		return NewRemoveEvent(stepInfo)
 
 	case "require-password":
-		return NewRequirePassword(stepInfo)
+		return NewRequirePassword(stepInfo, funcMap)
 
 	case "save":
-		return NewSave(stepInfo)
+		return NewSave(stepInfo, funcMap)
 
 	case "save-and-publish":
 		return NewSaveAndPublish(stepInfo)
 
 	case "schedule-delete":
-		return NewScheduleDelete(stepInfo)
+		return NewScheduleDelete(stepInfo, funcMap)
 
 	case "search-index":
-		return NewSearchIndex(stepInfo)
+		return NewSearchIndex(stepInfo, funcMap)
 
 	case "read-form":
 		return NewReadForm(stepInfo)
 
 	case "send-email":
-		return NewSendEmail(stepInfo)
+		return NewSendEmail(stepInfo, funcMap)
 
 	case "set-args":
-		return NewSetRenderData(stepInfo)
+		return NewSetRenderData(stepInfo, funcMap)
 
 	case "set-circle-sharing":
 		return NewSetCircleSharing(stepInfo)
 
 	case "set-data":
-		return NewSetData(stepInfo)
+		return NewSetData(stepInfo, funcMap)
 
 	case "set-header":
-		return NewSetHeader(stepInfo)
+		return NewSetHeader(stepInfo, funcMap)
 
 	case "set-password":
 		return NewSetPassword(stepInfo)
@@ -201,7 +203,7 @@ func New(stepInfo mapof.Any) (Step, error) {
 		return NewSetPrivileges(stepInfo)
 
 	case "set-query-param":
-		return NewSetQueryParam(stepInfo)
+		return NewSetQueryParam(stepInfo, funcMap)
 
 	case "set-response":
 		return NewSetResponse(stepInfo)
@@ -240,7 +242,7 @@ func New(stepInfo mapof.Any) (Step, error) {
 		return NewStartupSaveTask(stepInfo)
 
 	case "trigger-event":
-		return NewTriggerEvent(stepInfo)
+		return NewTriggerEvent(stepInfo, funcMap)
 
 	case "unpublish":
 		return NewUnPublish(stepInfo)
@@ -261,110 +263,85 @@ func New(stepInfo mapof.Any) (Step, error) {
 		return NewViewHTML(stepInfo)
 
 	case "view-json":
-		return NewViewJSON(stepInfo)
+		return NewViewJSON(stepInfo, funcMap)
 
 	case "with-annotation":
-		return NewWithAnnotation(stepInfo)
+		return NewWithAnnotation(stepInfo, funcMap)
 
 	case "with-attachment":
-		return NewWithAttachment(stepInfo)
+		return NewWithAttachment(stepInfo, funcMap)
 
 	case "with-children":
-		return NewWithChildren(stepInfo)
+		return NewWithChildren(stepInfo, funcMap)
 
 	case "with-circle":
-		return NewWithCircle(stepInfo)
+		return NewWithCircle(stepInfo, funcMap)
 
 	case "with-draft":
-		return NewWithDraft(stepInfo)
+		return NewWithDraft(stepInfo, funcMap)
 
 	case "with-folder":
-		return NewWithFolder(stepInfo)
+		return NewWithFolder(stepInfo, funcMap)
 
 	case "with-following":
-		return NewWithFollowing(stepInfo)
+		return NewWithFollowing(stepInfo, funcMap)
 
 	case "with-follower":
-		return NewWithFollower(stepInfo)
+		return NewWithFollower(stepInfo, funcMap)
 
 	case "with-import":
-		return NewWithImport(stepInfo)
+		return NewWithImport(stepInfo, funcMap)
 
 	case "with-keypackage":
-		return NewWithKeyPackage(stepInfo)
+		return NewWithKeyPackage(stepInfo, funcMap)
 
 	case "with-merchant-account":
-		return NewWithMerchantAccount(stepInfo)
+		return NewWithMerchantAccount(stepInfo, funcMap)
 
 	case "with-user-connection":
-		return NewWithUserConnection(stepInfo)
+		return NewWithUserConnection(stepInfo, funcMap)
 
 	case "with-message":
-		return NewWithMessage(stepInfo)
+		return NewWithMessage(stepInfo, funcMap)
 
 	case "with-next-sibling":
-		return NewWithNextSibling(stepInfo)
+		return NewWithNextSibling(stepInfo, funcMap)
 
 	case "with-notification":
-		return NewWithNotification(stepInfo)
+		return NewWithNotification(stepInfo, funcMap)
 
 	case "with-oauth-token":
-		return NewWithOAuthToken(stepInfo)
+		return NewWithOAuthToken(stepInfo, funcMap)
 
 	case "with-parent":
-		return NewWithParent(stepInfo)
+		return NewWithParent(stepInfo, funcMap)
 
 	case "with-prev-sibling":
-		return NewWithPrevSibling(stepInfo)
+		return NewWithPrevSibling(stepInfo, funcMap)
 
 	case "with-privilege":
-		return NewWithPrivilege(stepInfo)
+		return NewWithPrivilege(stepInfo, funcMap)
 
 	case "with-response":
-		return NewWithResponse(stepInfo)
+		return NewWithResponse(stepInfo, funcMap)
 
 	case "with-rule":
-		return NewWithRule(stepInfo)
+		return NewWithRule(stepInfo, funcMap)
 
 	case "with-stream-source":
-		return NewWithStreamSource(stepInfo)
+		return NewWithStreamSource(stepInfo, funcMap)
 	}
 
 	// Fall through means we have an unrecognized action
 	return nil, derp.Internal("model.step.New", "Unrecognized step type", stepInfo.GetString("do"), stepInfo)
 }
 
-// Pipeline is an ordered list of Steps that knows how to load itself from
-// JSON/HJSON.  Because Step is an interface whose concrete type is chosen by the
-// "do" property, a plain []Step cannot be unmarshalled directly -- declaring a
-// field as a Pipeline lets the encoder resolve each step without the containing
-// type needing an UnmarshalJSON of its own.
+// Pipeline is an ordered list of Steps.  Steps are built with their Template's helper
+// functions, so a Pipeline is decoded by the type that holds it (see NewPipeline).
 type Pipeline []Step
 
-// UnmarshalJSON loads a list of Steps from its JSON/HJSON source.
-func (pipeline *Pipeline) UnmarshalJSON(data []byte) error {
-
-	const location = "model.step.Pipeline.UnmarshalJSON"
-
-	var stepsInfo []mapof.Any
-
-	if err := hjson.Unmarshal(data, &stepsInfo); err != nil {
-		return derp.Wrap(err, location, "Invalid JSON")
-	}
-
-	result, err := NewPipeline(stepsInfo)
-
-	if err != nil {
-		return derp.Wrap(err, location, "Invalid pipeline")
-	}
-
-	*pipeline = result
-
-	return nil
-}
-
-// NewPipeline parses a series of build steps into a new array
-func NewPipeline[T ~map[string]any](stepInfo []T) ([]Step, error) {
+// NewPipeline parses a series of build steps into a new array, using funcMap for every template
+func NewPipeline[T ~map[string]any](stepInfo []T, funcMap template.FuncMap) ([]Step, error) {
 
 	const location = "model.step.NewPipeline"
 
@@ -372,7 +349,7 @@ func NewPipeline[T ~map[string]any](stepInfo []T) ([]Step, error) {
 
 	for index := range stepInfo {
 
-		if step, err := New(mapof.Any(stepInfo[index])); err != nil {
+		if step, err := New(mapof.Any(stepInfo[index]), funcMap); err != nil {
 			return result, derp.Wrap(err, location, "Parsing step", stepInfo)
 		} else {
 			result[index] = step

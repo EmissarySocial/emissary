@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -12,11 +14,11 @@ type WithOAuthToken struct {
 }
 
 // NewWithOAuthToken returns a fully initialized WithOAuthToken object
-func NewWithOAuthToken(stepInfo mapof.Any) (WithOAuthToken, error) {
+func NewWithOAuthToken(stepInfo mapof.Any, funcMap template.FuncMap) (WithOAuthToken, error) {
 
 	const location = "NewWithOAuthToken"
 
-	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
+	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]), funcMap)
 
 	if err != nil {
 		return WithOAuthToken{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)

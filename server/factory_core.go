@@ -1271,6 +1271,10 @@ func (factory *factoryCore) init(storage config.Storage, embeddedFiles embed.FS)
 			http.StatusMethodNotAllowed,
 			http.StatusInternalServerError,
 		),
+		dome.BlockStatusCodes( // replaces Dome's default list, so 403 is restated here
+			http.StatusForbidden,
+			http.StatusMethodNotAllowed, // safe only because every GET route also answers HEAD (BUG-143)
+		),
 	)
 
 	// Scratch space for media processing

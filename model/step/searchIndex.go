@@ -13,11 +13,11 @@ type SearchIndex struct {
 }
 
 // NewSearchIndex returns a fully initialized SearchIndex step, or an error if its configuration is invalid
-func NewSearchIndex(stepInfo mapof.Any) (SearchIndex, error) {
+func NewSearchIndex(stepInfo mapof.Any, funcMap template.FuncMap) (SearchIndex, error) {
 
 	// Default "if" condition to "true" if none is provided
 	ifString := first(stepInfo.GetString("if"), "true")
-	ifTemplate, err := template.New("").Parse(ifString)
+	ifTemplate, err := template.New("").Funcs(funcMap).Parse(ifString)
 
 	if err != nil {
 		return SearchIndex{}, derp.Wrap(err, "step.NewSearchIndex", "Parsing `if` template")

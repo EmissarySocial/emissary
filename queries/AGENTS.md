@@ -20,6 +20,10 @@ The Domain is a singleton stored with `_id: ObjectId("000000000000000000000000")
 
 [../AGENTS.md](../AGENTS.md) states the never-reuse-a-slot rule; the local mechanics live in [upgrade.go](upgrade.go), where the slice index IS the stored `databaseVersion` (slot 0 is nil). Retired migrations become no-op stubs in place (v001–v019), never deleted or renumbered. Because slot numbers were reused on dev branches in the past, version tracking is an optimization, not the safety mechanism: write every migration idempotent — plan-then-write, delete only true duplicates, backfill only nulls — so a later slot can safely re-run it on a database whose version number lies. `reconcileRules` (written for v027, re-run by v028) is the pattern.
 
+## Uncommitted is not unrun
+
+A slot runs the first time any server boots with it, and a dev server started from a worktree boots with whatever is on disk. Slot 37 was changed in place on 2026-10-11 because it was uncommitted, but the local dev databases had already run the first version at boot and recorded version 37, so they kept its `Person` values and the corrected slot never reached them; slot 38 had to repair both versions. Once a slot exists on disk, treat it as run: correct it in the next slot. Folding the correction back is possible only before release, and only by also resetting `databaseVersion` on every local database that ran the later slot, as was done when slot 38 was merged into 37.
+
 ## A new unique index must ship with the reconcile that clears its violations
 
 `indexer.Sync` builds indexes at boot; a unique index over legacy data E11000s on every start and never builds, with no path to recovery except code. Either clean the data in a new upgrade slot before the index first ships (v027/v028), or dedupe inside the sync function itself immediately before `indexer.Sync` (`deduplicateResponses`, `deduplicateFollowing` in [sync](sync/)) with the dedupe failure reported, not fatal, so the query indexes still build.

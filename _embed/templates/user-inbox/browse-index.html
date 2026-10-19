@@ -2,7 +2,7 @@
 {{- $document := .ActivityStream $url -}}
 {{- $timeline := .QueryByContext $document.Context 0 512 -}}
 
-{{- template "browse-header" (array $url "index") -}}
+{{- template "browse-header" (array . $url "index") -}}
 
 <div id="modal-body" class="turboclick padding-top" hx-target="#modal-window" hx-swap="innerHTML" hx-push-url="false">
 

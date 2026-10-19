@@ -1,6 +1,8 @@
 package step
 
 import (
+	"text/template"
+
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/convert"
 	"github.com/benpate/rosetta/mapof"
@@ -12,11 +14,11 @@ type WithRule struct {
 }
 
 // NewWithRule returns a fully initialized WithRule object
-func NewWithRule(stepInfo mapof.Any) (WithRule, error) {
+func NewWithRule(stepInfo mapof.Any, funcMap template.FuncMap) (WithRule, error) {
 
 	const location = "NewWithRule"
 
-	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]))
+	subSteps, err := NewPipeline(convert.SliceOfMap(stepInfo["steps"]), funcMap)
 
 	if err != nil {
 		return WithRule{}, derp.Wrap(err, location, "Invalid 'steps'", stepInfo)

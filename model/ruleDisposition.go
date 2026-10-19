@@ -264,10 +264,9 @@ func NewRuleDispositionForKeys(keys []string, rules []RuleSummary, now int64) Ru
 		// Higher severity always wins. On a tie, the USER tier wins over ADMIN (D14) -- attribution
 		// only, since the Action is identical either way.
 		tier := rule.tier()
-		beatsWinner := (severity > bestSeverity) ||
-			((severity == bestSeverity) && (tier == RuleOriginUser) && (result.Tier == RuleOriginAdmin))
 
-		if beatsWinner {
+		if beatsWinner := (severity > bestSeverity) ||
+			((severity == bestSeverity) && (tier == RuleOriginUser) && (result.Tier == RuleOriginAdmin)); beatsWinner {
 			bestSeverity = severity
 			result.Action = rule.Action
 			result.Tier = tier

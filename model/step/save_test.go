@@ -14,14 +14,14 @@ func TestSave(t *testing.T) {
 		"comment":  "Updated by {{.Author}}",
 		"method":   "post",
 		"on-error": []mapof.Any{{"do": "inline-error", "message": "oops"}},
-	})
+	}, nil)
 	require.Nil(t, err)
 	require.NotNil(t, step.Comment)
 	require.Equal(t, "post", step.Method)
 	require.Len(t, step.OnError, 1)
 
 	// "method" defaults to "post".
-	step, err = NewSave(mapof.Any{})
+	step, err = NewSave(mapof.Any{}, nil)
 	require.Nil(t, err)
 	require.Equal(t, "post", step.Method)
 
@@ -34,12 +34,12 @@ func TestSave(t *testing.T) {
 // TestSave_InvalidConfig verifies that an invalid config is rejected
 func TestSave_InvalidConfig(t *testing.T) {
 	// "method" outside the schema enum fails validation.
-	_, err := NewSave(mapof.Any{"method": "not-a-method"})
+	_, err := NewSave(mapof.Any{"method": "not-a-method"}, nil)
 	require.NotNil(t, err)
 }
 
 // TestSave_InvalidOnError verifies that an invalid on error is rejected
 func TestSave_InvalidOnError(t *testing.T) {
-	_, err := NewSave(mapof.Any{"on-error": []mapof.Any{{"do": "nonexistent-step"}}})
+	_, err := NewSave(mapof.Any{"on-error": []mapof.Any{{"do": "nonexistent-step"}}}, nil)
 	require.NotNil(t, err)
 }
