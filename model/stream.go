@@ -463,6 +463,7 @@ func (stream Stream) Toot() object.Status {
 		Content:     stream.Content.HTML,
 		Visibility:  "public",
 		SpoilerText: stream.Label,
+		Sensitive:   stream.Label != "",
 		URL:         stream.URL,
 		InReplyToID: stream.InReplyTo,
 		Pinned:      stream.IsFeatured,

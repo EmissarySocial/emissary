@@ -91,6 +91,11 @@ func resolveAccountID(factory *service.Factory, session data.Session, actorURL s
 	return model.EncodeRemoteAccountID(actorURL)
 }
 
+// actorIsBot returns TRUE for an actor that is an automated account: an Application or a Service.
+func actorIsBot(document streams.Document) bool {
+	return document.Type() == vocab.ActorTypeApplication || document.Type() == vocab.ActorTypeService
+}
+
 // mapDocumentToAccount maps a fetched remote actor document to a Mastodon Account.
 // Shared by GetAccount (looks up by opaque ID -- no handle available) and
 // GetAccount_Lookup (looks up by handle -- caller already knows the exact "acct" to
@@ -147,6 +152,11 @@ func mapDocumentToAccount(factory *service.Factory, session data.Session, docume
 		FollowersCount: followersCount,
 		FollowingCount: followingCount,
 		StatusesCount:  statusesCount,
+		Emojis:         mapDocumentToEmojis(document),
+		Fields:         mapDocumentToFields(document),
+		Bot:            actorIsBot(document),
+		Group:          document.Type() == vocab.ActorTypeGroup,
+		Locked:         document.Get("manuallyApprovesFollowers").Bool(),
 	}
 }
 
@@ -247,7 +257,7 @@ func GetAccount_VerifyCredentials(serverFactory *server.Factory) func(model.Auth
 		}
 
 		// Return as a Toot
-		return tootUser(factory, session, auth, &user), nil
+		return tootCredentialUser(factory, session, auth, &user), nil
 	}
 }
 
@@ -282,17 +292,37 @@ func PatchAccount_UpdateCredentials(serverFactory *server.Factory) func(model.Au
 			return object.Account{}, derp.Wrap(err, location, "Unrecognized User")
 		}
 
-		// Update the User's information
-		user.DisplayName = t.DisplayName
-		user.Note = t.Note
-		user.IsPublic = t.Discoverable
+		// RULE: change only the fields the client sent -- the app leaves out what it didn't edit
+		if t.DisplayName != nil {
+			user.DisplayName = *t.DisplayName
+		}
+
+		if t.Note != nil {
+			user.StatusMessage = *t.Note
+		}
+
+		if t.Discoverable != nil {
+			user.IsPublic = *t.Discoverable
+		}
+
+		if t.Avatar != nil {
+			if err := saveProfileImage(factory, session, &user, t.Avatar, profileAvatar, &user.IconID); err != nil {
+				return object.Account{}, derp.Wrap(err, location, "Saving avatar")
+			}
+		}
+
+		if t.Header != nil {
+			if err := saveProfileImage(factory, session, &user, t.Header, profileHeader, &user.ImageID); err != nil {
+				return object.Account{}, derp.Wrap(err, location, "Saving header")
+			}
+		}
 
 		if err := userService.Save(session, &user, "Updated via Mastodon API"); err != nil {
 			return object.Account{}, derp.Wrap(err, location, "Saving user")
 		}
 
 		// Return updated JSON
-		return tootUser(factory, session, auth, &user), nil
+		return tootCredentialUser(factory, session, auth, &user), nil
 	}
 }
 
@@ -392,6 +422,12 @@ func GetAccount(serverFactory *server.Factory) func(model.Authorization, txn.Get
 		document, err := client.Load(accountURL)
 
 		if err != nil {
+
+			// A person we already know (followed, or following us) can still be shown from our own records
+			if account, known := knownRemoteAccount(factory, session, auth, accountURL); known {
+				return account, nil
+			}
+
 			// RULE: derp.Wrap inherits the wrapped error's status code by default, and
 			// a remote origin's own failure (401, 403, 429...) is not our caller's
 			// fault. Passing it through as-is would make the client think its OWN
@@ -436,9 +472,9 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 			// remote actor), the ID is valid -- serve what the News Feed holds.
 			if accountURL, resolveErr := resolveAccountURL(factory, session, t.ID); resolveErr == nil {
 
-				// Remote accounts' featured collections are not read, so nothing is pinned
+				// A remote account's pinned posts come from its own featured collection
 				if t.Pinned {
-					return []object.Status{}, toot.PageInfo{}, nil
+					return remoteFeaturedStatuses(factory, session, auth, accountURL)
 				}
 
 				return remoteAccountStatuses(factory, session, auth, t, accountURL)
@@ -454,8 +490,24 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 			criteria = criteria.AndEqual("isFeatured", true)
 		}
 
-		streamService := factory.Stream()
-		streams, err := streamService.QueryByUser(session, auth, user.UserID, criteria, option.MaxRows(pageLimit(t.Limit)))
+		limit := pageLimit(t.Limit)
+
+		streams, statuses, err := collectFiltered(int(limit),
+			func(before int64) ([]model.Stream, error) {
+
+				batch := criteria
+
+				if before > 0 {
+					batch = batch.AndLessThan("createDate", before)
+				}
+
+				return factory.Stream().QueryByUser(session, auth, user.UserID, batch, option.MaxRows(limit))
+			},
+			func(streams []model.Stream) []object.Status {
+				return streamsToStatuses(factory, session, auth, streams)
+			},
+			statusFilter(t.ExcludeReplies, t.OnlyMedia, user.UserID.Hex()),
+		)
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Querying streams")
@@ -468,13 +520,6 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 		if length := len(streams); length > 0 {
 			pageInfo.MaxID = strconv.FormatInt(streams[length-1].CreateDate, 10)
 			pageInfo.MinID = strconv.FormatInt(streams[0].CreateDate, 10)
-		}
-
-		// Return posts as toot.Status(es)
-		statuses := make([]object.Status, len(streams))
-
-		for index := range streams {
-			statuses[index] = tootStream(factory, session, &streams[index])
 		}
 
 		return statuses, pageInfo, nil
@@ -504,7 +549,6 @@ func remoteAccountStatuses(factory *service.Factory, session data.Session, auth 
 
 	account := mapDocumentToAccount(factory, session, actor)
 	outbox := actor.Outbox().LoadLink()
-	newsFeedService := factory.NewsFeed()
 	accounts := newAccountMemo()
 	result := make([]object.Status, 0, limit)
 
@@ -529,15 +573,7 @@ func remoteAccountStatuses(factory *service.Factory, session data.Session, auth 
 			continue
 		}
 
-		var status object.Status
-
-		newsItem := model.NewNewsItem()
-
-		if err := newsFeedService.LoadByURL(session, auth.UserID, post.ID(), &newsItem); err == nil {
-			status, _ = newsItemToStatus(client, factory, session, accounts, newsItem)
-		} else {
-			status = documentToStatus(post, account)
-		}
+		status := remotePostStatus(client, factory, session, auth, accounts, post, account)
 
 		if t.OnlyMedia && len(status.MediaAttachments) == 0 {
 			continue
@@ -566,19 +602,24 @@ func documentToStatus(document streams.Document, account object.Account) object.
 	summary := document.Summary()
 	tags := apiHashtags(mapDocumentToTags(document))
 
-	return object.Status{
+	status := object.Status{
 		ID:               model.EncodeRemoteStatusID(document.ID()),
 		URI:              document.ID(),
 		URL:              url,
 		CreatedAt:        model.MastodonDate(document.Published()),
-		Visibility:       "public",
+		Visibility:       documentVisibility(document),
 		Account:          account,
 		Content:          markHashtagLinks(document.Content(), tags),
 		SpoilerText:      summary,
 		Sensitive:        summary != "",
 		MediaAttachments: mapDocumentToMediaAttachments(document),
 		Tags:             tags,
+		Mentions:         mentionsForDocument(document),
+		Emojis:           mapDocumentToEmojis(document),
 	}
+
+	applyDocumentCounts(&status, document)
+	return status
 }
 
 // accountStatusesFromNewsFeed returns the posts that a remote account has authored
@@ -620,21 +661,78 @@ func accountStatusesFromNewsFeed(factory *service.Factory, session data.Session,
 	return statuses, pageInfo, nil
 }
 
-// GetAccount_Followers implements the Mastodon "get account followers" endpoint, and always returns an empty list
+// GetAccount_Followers implements the Mastodon "get account followers" endpoint: the caller's own
+// followers, or a remote account's published list. Other local accounts' followers are not shared.
 func GetAccount_Followers(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Followers) ([]object.Account, toot.PageInfo, error) {
+
+	const location = "handler.mastodon_GetAccount_Followers"
 
 	return func(auth model.Authorization, t txn.GetAccount_Followers) ([]object.Account, toot.PageInfo, error) {
 
-		// Emissary does not (currently?) publish followers
-		return []object.Account{}, toot.PageInfo{}, nil
+		factory, err := serverFactory.ByHostname(t.Host)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Creating session")
+		}
+
+		defer cancel()
+
+		// A local account lists its own followers to its owner, and to no one else
+		if user, err := loadUserByAccountID(factory, session, t.ID); err == nil {
+
+			if user.UserID != auth.UserID {
+				return []object.Account{}, toot.PageInfo{}, nil
+			}
+
+			return ownFollowers(factory, session, auth.UserID, pageLimit(t.Limit)), toot.PageInfo{}, nil
+		}
+
+		// A remote account lists its followers from its own collection
+		accountURL, err := resolveAccountURL(factory, session, t.ID)
+
+		if err != nil {
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized account", t.ID)
+		}
+
+		client := factory.ActivityStream().UserClient(auth.UserID)
+		actor, err := client.Load(accountURL)
+
+		if err != nil {
+			return []object.Account{}, toot.PageInfo{}, nil
+		}
+
+		accounts, pageInfo := remoteAccountList(client, factory, session, actor.Followers(), t.MaxID, pageLimit(t.Limit))
+		return accounts, pageInfo, nil
 	}
 }
 
-// GetAccount_Following implements the Mastodon "get account following" endpoint.
-// Emissary only knows one account's following graph -- the local User's own -- so
-// this returns that list when the caller asks for their own account, and an
-// honest empty result for anyone else (the same cross-account limit Mastodon
-// itself has).
+// ownFollowers lists the people following a local User, newest first.
+func ownFollowers(factory *service.Factory, session data.Session, userID primitive.ObjectID, limit int64) []object.Account {
+
+	criteria := exp.Equal("type", model.FollowerTypeUser).AndEqual("parentId", userID).AndEqual("stateId", model.FollowerStateActive)
+	result := make([]object.Account, 0)
+
+	for follower := range factory.Follower().Range(session, criteria, option.SortDesc("createDate"), option.MaxRows(limit)) {
+
+		// A follower with no profile (an email or feed subscriber) has no account to show
+		if follower.Actor.ProfileURL == "" {
+			continue
+		}
+
+		result = append(result, follower.Actor.Toot())
+	}
+
+	return result
+}
+
+// GetAccount_Following implements the Mastodon "get account following" endpoint: the caller's own list,
+// or a remote account's published list. Other local accounts' lists are not shared.
 func GetAccount_Following(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Following) ([]object.Account, toot.PageInfo, error) {
 
 	const location = "handler.mastodon_GetAccount_Following"
@@ -655,9 +753,31 @@ func GetAccount_Following(serverFactory *server.Factory) func(model.Authorizatio
 
 		defer cancel()
 
-		// Only the caller's own following list is available.
-		if user, err := loadUserByAccountID(factory, session, t.ID); err != nil || user.UserID != auth.UserID {
+		// Another local account's following list is not shared
+		user, userErr := loadUserByAccountID(factory, session, t.ID)
+
+		if userErr == nil && user.UserID != auth.UserID {
 			return []object.Account{}, toot.PageInfo{}, nil
+		}
+
+		// A remote account lists who it follows from its own collection
+		if userErr != nil {
+
+			accountURL, err := resolveAccountURL(factory, session, t.ID)
+
+			if err != nil {
+				return nil, toot.PageInfo{}, derp.Wrap(err, location, "Unrecognized account", t.ID)
+			}
+
+			remoteClient := factory.ActivityStream().UserClient(auth.UserID)
+			actor, err := remoteClient.Load(accountURL)
+
+			if err != nil {
+				return []object.Account{}, toot.PageInfo{}, nil
+			}
+
+			accounts, pageInfo := remoteAccountList(remoteClient, factory, session, actor.Following(), t.MaxID, pageLimit(t.Limit))
+			return accounts, pageInfo, nil
 		}
 
 		records, err := factory.Following().RangeByUserID(session, auth.UserID)

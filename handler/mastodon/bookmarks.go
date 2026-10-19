@@ -10,33 +10,45 @@ import (
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
+	"github.com/benpate/toot"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// GetBookmarks implements the Mastodon "get bookmarks" endpoint, newest first.
 // https://docs.joinmastodon.org/methods/bookmarks/
-func GetBookmarks(serverFactory *server.Factory) func(model.Authorization, txn.GetBookmarks) ([]object.Status, error) {
+func GetBookmarks(serverFactory *server.Factory) func(model.Authorization, txn.GetBookmarks) ([]object.Status, toot.PageInfo, error) {
 
 	const location = "handler.mastodon.GetBookmarks"
 
-	return func(auth model.Authorization, t txn.GetBookmarks) ([]object.Status, error) {
+	return func(auth model.Authorization, t txn.GetBookmarks) ([]object.Status, toot.PageInfo, error) {
 
 		factory, session, cancel, err := statusSession(serverFactory, t.Host, location)
 
 		if err != nil {
-			return nil, err
+			return nil, toot.PageInfo{}, err
 		}
 
 		defer cancel()
 
-		bookmarks, err := factory.Bookmark().QueryByUser(session, auth.UserID, queryExpression(t), option.MaxRows(pageLimit(t.Limit)))
+		limit := pageLimit(t.Limit)
+		bookmarks, err := factory.Bookmark().QueryByUser(session, auth.UserID, queryExpression(t), option.MaxRows(limit))
 
 		if err != nil {
-			return nil, derp.Wrap(err, location, "Querying bookmarks")
+			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Querying bookmarks")
 		}
 
-		return bookmarksToStatuses(factory, session, auth, bookmarks), nil
+		// Paging cursors come from the bookmarks found, so posts that cannot be loaded do not stall the client
+		dates := make([]int64, len(bookmarks))
+
+		for index, bookmark := range bookmarks {
+			dates[index] = bookmark.CreateDate
+		}
+
+		pageInfo := datePageInfo(dates, limit)
+
+		return bookmarksToStatuses(factory, session, auth, bookmarks), pageInfo, nil
 	}
 }
 
