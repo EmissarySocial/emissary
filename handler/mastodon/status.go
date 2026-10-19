@@ -719,11 +719,60 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 	}
 }
 
+// GetStatus_History returns a status's current version as its only revision
 // https://docs.joinmastodon.org/methods/statuses/#history
 func GetStatus_History(serverFactory *server.Factory) func(model.Authorization, txn.GetStatus_History) ([]object.StatusEdit, error) {
 
+	// Emissary keeps no earlier versions of a post
+
+	const location = "handler.mastodon.GetStatus_History"
+
+	// GetStatus resolves every kind of status ID and applies the same view permissions
+	getStatus := GetStatus(serverFactory)
+
 	return func(auth model.Authorization, t txn.GetStatus_History) ([]object.StatusEdit, error) {
-		return []object.StatusEdit{}, nil
+
+		status, err := getStatus(auth, txn.GetStatus(t))
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Loading status", t.ID)
+		}
+
+		return []object.StatusEdit{statusEdit(status)}, nil
+	}
+}
+
+// statusEdit describes a status as one revision, dated by its last edit when it has one.
+func statusEdit(status object.Status) object.StatusEdit {
+
+	createdAt := status.EditedAt
+
+	if createdAt == "" {
+		createdAt = status.CreatedAt
+	}
+
+	// Clients decode these as arrays, so an absent list is sent as an empty one
+	media := []object.MediaAttachment(status.MediaAttachments)
+
+	if media == nil {
+		media = []object.MediaAttachment{}
+	}
+
+	emojis := []object.CustomEmoji(status.Emojis)
+
+	if emojis == nil {
+		emojis = []object.CustomEmoji{}
+	}
+
+	return object.StatusEdit{
+		Content:          status.Content,
+		SpoilerText:      status.SpoilerText,
+		Sensitive:        status.Sensitive,
+		CreatedAt:        createdAt,
+		Account:          status.Account,
+		Poll:             status.Poll,
+		MediaAttachments: media,
+		Emojis:           emojis,
 	}
 }
 
