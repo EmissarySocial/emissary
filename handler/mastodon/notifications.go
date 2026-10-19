@@ -275,6 +275,12 @@ func notificationToToot(factory *service.Factory, session data.Session, auth mod
 
 	result := notification.Toot(factory.Host())
 
+	// RULE: A follow names a person, not a post, so it never carries a status. Its ObjectURL is the
+	// followed account, which would otherwise be loaded as an empty post that clients fail to decode
+	if !notificationCarriesStatus(notification) {
+		return result
+	}
+
 	switch {
 
 	// REPLY/LIKE/DISLIKE/ANNOUNCE always carry a StreamID for one of the recipient's own Streams
@@ -296,6 +302,11 @@ func notificationToToot(factory *service.Factory, session data.Session, auth mod
 	}
 
 	return result
+}
+
+// notificationCarriesStatus reports whether a Notification's Mastodon form includes the status it is about.
+func notificationCarriesStatus(notification model.Notification) bool {
+	return notification.Type != model.NotificationTypeFollow
 }
 
 // mastodonNotificationTypesToInternal maps Mastodon type names from types[]/exclude_types[]
