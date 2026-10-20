@@ -36,6 +36,7 @@ type Template struct {
 	Icon               string               `json:"icon"               bson:"icon"`               // Icon image used in management UI.
 	Sort               int                  `json:"sort"               bson:"sort"`               // Sort order used in management UI.
 	ChildSortType      string               `json:"childSortType"      bson:"childSortType"`      // SortType used to display children
+	InheritPermissions bool                 `json:"inheritPermissions" bson:"inheritPermissions"` // TRUE if Streams using this Template take their sharing (Groups, Circles, and Products) from their parent Stream
 	ChildSortDirection string               `json:"childSortDirection" bson:"childSortDirection"` // Sort direction "asc" or "desc" (Default is ascending)
 	WidgetLocations    sliceof.String       `json:"widget-locations"   bson:"widgetLocations"`    // List of locations where widgets can be placed.  Common values are: "TOP", "BOTTOM", "LEFT", "RIGHT"
 	Schema             schema.Schema        `json:"schema"             bson:"schema"`             // JSON Schema that describes the data required to populate this Template.
