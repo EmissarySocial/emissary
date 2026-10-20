@@ -8,6 +8,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/tools/datetime"
 	"github.com/EmissarySocial/emissary/tools/id"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
@@ -364,4 +365,137 @@ func TestStream_SharingStatus(t *testing.T) {
 	editorsOnly := Stream{Groups: mapof.Object[id.Slice]{"editor": {MagicGroupIDAnonymous}}}
 	require.Equal(t, SharingStatusOwners, editorsOnly.SharingStatus("viewer"), "another role's grant must not count")
 	require.Equal(t, SharingStatusPublic, editorsOnly.SharingStatus("editor"), "the named role's grant must count")
+}
+
+// TestStream_AcceptsReplies pins which Streams record an inbound reply: public ones whose author
+// has not closed replies.  An empty policy is open, so Streams saved before the field existed still accept replies.
+func TestStream_AcceptsReplies(t *testing.T) {
+
+	public := Permissions{MagicGroupIDAnonymous}
+	private := Permissions{MagicGroupIDAuthenticated}
+
+	table := []struct {
+		policy   string
+		allow    Permissions
+		expected bool
+	}{
+		{"", public, true},
+		{ReplyPolicyEveryone, public, true},
+		{ReplyPolicyNobody, public, false},
+		{"", private, false},
+		{ReplyPolicyEveryone, private, false},
+	}
+
+	for _, row := range table {
+		stream := NewStream()
+		stream.ReplyPolicy = row.policy
+		stream.DefaultAllow = row.allow
+		require.Equal(t, row.expected, stream.AcceptsReplies(), "policy=%q allow=%v", row.policy, row.allow)
+	}
+}
+
+// TestStream_ReplyPolicySchema pins that a form can write replyPolicy, and only its known values
+func TestStream_ReplyPolicySchema(t *testing.T) {
+
+	stream := NewStream()
+	s := schema.New(StreamSchema())
+
+	require.Nil(t, s.Set(&stream, "replyPolicy", ReplyPolicyNobody))
+	require.Equal(t, ReplyPolicyNobody, stream.ReplyPolicy)
+
+	require.NotNil(t, s.Set(&stream, "replyPolicy", "sometimes"), "an unknown policy is refused")
+	require.Equal(t, ReplyPolicyNobody, stream.ReplyPolicy)
+}
+
+// TestStream_AcceptsReplyFrom pins the actor-aware rule: a closed policy still admits the author and the
+// actors the Stream mentions (as GoToSocial does), and a private Stream admits nobody.
+func TestStream_AcceptsReplyFrom(t *testing.T) {
+
+	const author = "https://local.example/@author"
+	const mentioned = "https://remote.example/users/mentioned"
+	const stranger = "https://remote.example/users/stranger"
+
+	stream := NewStream()
+	stream.DefaultAllow = Permissions{MagicGroupIDAnonymous}
+	stream.AttributedTo = PersonLink{ProfileURL: author}
+	stream.Tags = TagList{
+		{Type: vocab.LinkTypeMention, Name: "mentioned@remote.example", Href: mentioned},
+		{Type: vocab.LinkTypeMention, Name: "unknown@remote.example", Href: TagHrefUnresolvable},
+		{Type: vocab.LinkTypeHashtag, Name: "food"},
+	}
+
+	// Open: everyone
+	require.True(t, stream.AcceptsReplyFrom(stranger))
+
+	// Closed: only the author and the resolved mentions
+	stream.ReplyPolicy = ReplyPolicyNobody
+	require.True(t, stream.AcceptsReplyFrom(author))
+	require.True(t, stream.AcceptsReplyFrom(mentioned))
+	require.False(t, stream.AcceptsReplyFrom(stranger))
+	require.False(t, stream.AcceptsReplyFrom(TagHrefUnresolvable), "an unresolved mention admits no one")
+	require.False(t, stream.AcceptsReplyFrom(""))
+
+	// Private: not even the author, because a private Stream exposes no Replies collection
+	stream.DefaultAllow = Permissions{MagicGroupIDAuthenticated}
+	require.False(t, stream.AcceptsReplyFrom(author))
+}
+
+// TestStream_ReplyApprovedActors pins the list published as "automaticApproval" when replies are closed:
+// the author first, then each resolved mention once.
+func TestStream_ReplyApprovedActors(t *testing.T) {
+
+	stream := NewStream()
+	stream.AttributedTo = PersonLink{ProfileURL: "https://local.example/@author"}
+	stream.Tags = TagList{
+		{Type: vocab.LinkTypeMention, Name: "a@remote.example", Href: "https://remote.example/users/a"},
+		{Type: vocab.LinkTypeMention, Name: "a@remote.example", Href: "https://remote.example/users/a"},
+		{Type: vocab.LinkTypeMention, Name: "b@remote.example", Href: TagHrefUnresolvable},
+	}
+
+	require.Equal(t, []string{"https://local.example/@author", "https://remote.example/users/a"}, stream.ReplyApprovedActors())
+	require.Empty(t, NewStream().ReplyApprovedActors())
+}
+
+// TestStream_InteractionPolicyJSONLD pins the published policy: Public when open, and the author and
+// mentions when closed or private, never an empty list (which JSON-LD reads as Public)
+func TestStream_InteractionPolicyJSONLD(t *testing.T) {
+
+	automaticApproval := func(stream Stream) any {
+		return stream.InteractionPolicyJSONLD().GetMap(PropertyCanReply)[PropertyAutomaticApproval]
+	}
+
+	stream := NewStream()
+	stream.DefaultAllow = Permissions{MagicGroupIDAnonymous}
+	stream.AttributedTo = PersonLink{ProfileURL: "https://local.example/@author"}
+	require.Equal(t, []string{vocab.NamespacePublic}, automaticApproval(stream))
+
+	stream.ReplyPolicy = ReplyPolicyNobody
+	require.Equal(t, []string{"https://local.example/@author"}, automaticApproval(stream))
+
+	stream.ReplyPolicy = ""
+	stream.DefaultAllow = Permissions{MagicGroupIDAuthenticated}
+	require.Equal(t, []string{"https://local.example/@author"}, automaticApproval(stream), "a private Stream accepts no replies from strangers")
+}
+
+// TestStream_AllowReplies pins the virtual "allowReplies" toggle: it reads TRUE unless replies are closed,
+// including for a Stream saved before the policy existed, and writes the matching ReplyPolicy
+func TestStream_AllowReplies(t *testing.T) {
+
+	stream := NewStream()
+	s := schema.New(StreamSchema())
+
+	value, err := s.Get(&stream, "allowReplies")
+	require.Nil(t, err)
+	require.Equal(t, true, value, "an empty policy is open")
+
+	require.Nil(t, s.Set(&stream, "allowReplies", false))
+	require.Equal(t, ReplyPolicyNobody, stream.ReplyPolicy)
+
+	value, err = s.Get(&stream, "allowReplies")
+	require.Nil(t, err)
+	require.Equal(t, false, value)
+
+	// A toggle posts strings
+	require.Nil(t, s.Set(&stream, "allowReplies", "true"))
+	require.Equal(t, ReplyPolicyEveryone, stream.ReplyPolicy)
 }

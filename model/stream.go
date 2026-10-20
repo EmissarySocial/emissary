@@ -5,6 +5,7 @@ import (
 	"math"
 	"net/url"
 	"regexp"
+	"slices"
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/datetime"
@@ -62,6 +63,7 @@ type Stream struct {
 	UnPublishDate    int64                   `json:"unpublishDate,omitzero"    bson:"unpublishDate"`          // Unix epoch SECONDS when this document will no longer be available on the domain (math.MaxInt64 = never).
 	IsFeatured       bool                    `json:"isFeatured,omitzero"       bson:"isFeatured"`             // TRUE if this Stream is featured by its parent container.
 	IsSubscribable   bool                    `json:"isSubscribable,omitzero"   bson:"isSubscribable"`         // TRUE if this Stream uses the Products service to determine access rights.
+	ReplyPolicy      string                  `json:"replyPolicy,omitzero"      bson:"replyPolicy,omitempty"`  // Who may reply: ReplyPolicyEveryone (or empty) or ReplyPolicyNobody.  Enforced when an inbound reply is recorded.
 	ReplyCount       int                     `json:"replyCount"                bson:"replyCount"`             // Denormalized count of replies to this Stream (maintained by the Stream service's reply funnel).
 	LikeCount        int                     `json:"likeCount"                 bson:"likeCount"`              // Denormalized count of "Like" responses to this Stream (maintained by the Response service).
 	DislikeCount     int                     `json:"dislikeCount"              bson:"dislikeCount"`           // Denormalized count of "Dislike" responses to this Stream (maintained by the Response service).
@@ -259,6 +261,75 @@ func (stream Stream) RolesToPrivilegeIDs(roles ...string) Permissions {
 /******************************************
  * Permission Methods
  ******************************************/
+
+// AcceptsReplies returns TRUE if anyone may reply to this Stream: it is public, and its author has
+// not closed replies.  Templates use it to offer a Reply button.  AcceptsReplyFrom is the rule
+// for one replying actor.
+func (stream Stream) AcceptsReplies() bool {
+
+	// RULE: The author can close replies
+	if stream.ReplyPolicy == ReplyPolicyNobody {
+		return false
+	}
+
+	// RULE: Only public Streams expose a Replies collection (mirrors CalcContext)
+	return stream.DefaultAllowAnonymous()
+}
+
+// AcceptsReplyFrom returns TRUE if a reply from the actor may be recorded in this Stream's Replies
+// collection.  On a public Stream, a closed policy still admits its author and the actors it mentions,
+// as GoToSocial's interaction policies do (REPLY-CONTROLS §1.1).
+func (stream Stream) AcceptsReplyFrom(actorID string) bool {
+
+	// RULE: Only public Streams expose a Replies collection (mirrors CalcContext)
+	if !stream.DefaultAllowAnonymous() {
+		return false
+	}
+
+	if stream.ReplyPolicy != ReplyPolicyNobody {
+		return true
+	}
+
+	return slices.Contains(stream.ReplyApprovedActors(), actorID)
+}
+
+// InteractionPolicyJSONLD returns this Stream's reply policy as GoToSocial's "interactionPolicy":
+// Public when anyone may reply, and otherwise its author and the actors it mentions.  Closed is never
+// an empty list, which JSON-LD canonicalization would read as a missing policy, meaning Public.
+func (stream Stream) InteractionPolicyJSONLD() mapof.Any {
+
+	automaticApproval := []string{vocab.NamespacePublic}
+
+	if !stream.AcceptsReplies() {
+		automaticApproval = stream.ReplyApprovedActors()
+	}
+
+	return mapof.Any{
+		PropertyCanReply: mapof.Any{
+			PropertyAutomaticApproval: automaticApproval,
+		},
+	}
+}
+
+// ReplyApprovedActors returns the actors who may always reply to this Stream, whatever its policy:
+// its author, then each actor it mentions.  This is the "automaticApproval" list it publishes
+// when its replies are closed.
+func (stream Stream) ReplyApprovedActors() []string {
+
+	result := make([]string, 0, len(stream.Tags)+1)
+
+	if stream.AttributedTo.ProfileURL != "" {
+		result = append(result, stream.AttributedTo.ProfileURL)
+	}
+
+	for _, tag := range stream.Tags {
+		if tag.Type == vocab.LinkTypeMention && tag.IsResolved() && !slices.Contains(result, tag.Href) {
+			result = append(result, tag.Href)
+		}
+	}
+
+	return result
+}
 
 // DefaultAllowAnonymous returns TRUE if a Stream's default action (VIEW)
 // is visible to anonymous visitors
@@ -614,5 +685,6 @@ func (stream *Stream) Update(other Stream) {
 	stream.PublishDate = other.PublishDate
 	stream.UnPublishDate = other.UnPublishDate
 	stream.IsFeatured = other.IsFeatured
+	stream.ReplyPolicy = other.ReplyPolicy
 	stream.Journal = other.Journal
 }
