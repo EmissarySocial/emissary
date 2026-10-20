@@ -5,6 +5,7 @@ import (
 	"iter"
 	"math"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
 
@@ -388,6 +389,14 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	stream.IsSubscribable = template.IsSubscribable()
 	stream.URL = service.host + "/" + stream.StreamID.Hex()
 
+	// RULE: A Stream whose Template inherits permissions takes its sharing from its parent Stream,
+	// before its "defaultAllow" groups are calculated from that sharing
+	if template.InheritPermissions {
+		if err := service.inheritPermissions(session, stream); err != nil {
+			return derp.Wrap(err, location, "Inheriting permissions from parent", stream.ParentID)
+		}
+	}
+
 	// RULE: Calculate "defaultAllow" groups for this stream.
 	service.calcDefaultAllow(&template, stream)
 
@@ -548,6 +557,40 @@ func (service *Stream) DeleteMany(session data.Session, criteria exp.Expression,
 	for stream := model.NewStream(); it.Next(&stream); stream = model.NewStream() {
 		if err := service.Delete(session, &stream, note); err != nil {
 			return derp.Wrap(err, location, "Deleting stream", stream)
+		}
+	}
+
+	return nil
+}
+
+// SaveChildPermissions re-saves each child of the parent Stream whose Template inherits permissions, so
+// that every one takes up the parent's current sharing.  Run it after the parent's sharing changes.
+// Save writes the whole document, so a child that another server edits at this same moment could
+// lose one of the two writes.
+func (service *Stream) SaveChildPermissions(session data.Session, parentID primitive.ObjectID) error {
+
+	const location = "service.Stream.SaveChildPermissions"
+
+	it, err := service.List(session, exp.Equal("parentId", parentID).AndEqual("deleteDate", 0))
+
+	if err != nil {
+		return derp.Wrap(err, location, "Listing child streams", parentID)
+	}
+
+	for child := model.NewStream(); it.Next(&child); child = model.NewStream() {
+
+		template, err := service.templateService.Load(child.TemplateID)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Loading child template", child.TemplateID)
+		}
+
+		if !template.InheritPermissions {
+			continue
+		}
+
+		if err := service.Save(session, &child, "Sharing inherited from parent"); err != nil {
+			return derp.Wrap(err, location, "Saving child stream", child.StreamID)
 		}
 	}
 
@@ -1238,6 +1281,54 @@ func (service *Stream) calcParentIDs(session data.Session, stream *model.Stream)
 
 	// Fall through: Just use the Parent (probably a User)
 	stream.ParentIDs = []primitive.ObjectID{stream.ParentID}
+}
+
+// inheritPermissions copies the parent Stream's sharing (its Groups, Circles, and Products) onto this Stream.
+// A Stream whose parent is not a Stream, such as a User's outbox, keeps its own sharing.
+func (service *Stream) inheritPermissions(session data.Session, stream *model.Stream) error {
+
+	const location = "service.Stream.inheritPermissions"
+
+	if stream.ParentID.IsZero() {
+		return nil
+	}
+
+	parent := model.NewStream()
+
+	if err := service.LoadByID(session, stream.ParentID, &parent); err != nil {
+
+		if derp.IsNotFound(err) {
+			return nil
+		}
+
+		return derp.Wrap(err, location, "Loading parent stream", stream.ParentID)
+	}
+
+	applyInheritedPermissions(stream, &parent)
+	return nil
+}
+
+// applyInheritedPermissions gives the child its parent's Groups, Circles, and Products, as copies that share
+// no slices with the parent.  All three are needed: set-circle-sharing records "Share with Everyone" in
+// Groups (the anonymous group), and specific circles in Circles.  The child also takes its parent's
+// ReplyPolicy, so a collection decides whether its items accept replies.
+func applyInheritedPermissions(child *model.Stream, parent *model.Stream) {
+	child.Groups = cloneRoleMap(parent.Groups)
+	child.Circles = cloneRoleMap(parent.Circles)
+	child.Products = cloneRoleMap(parent.Products)
+	child.ReplyPolicy = parent.ReplyPolicy
+}
+
+// cloneRoleMap copies a map of roles to IDs, so that a child Stream never shares its parent's slices
+func cloneRoleMap(value mapof.Object[id.Slice]) mapof.Object[id.Slice] {
+
+	result := make(mapof.Object[id.Slice], len(value))
+
+	for role, ids := range value {
+		result[role] = slices.Clone(ids)
+	}
+
+	return result
 }
 
 // calcDefaultAllow denormalizes the permissions that grant the Stream's default (VIEW) action
