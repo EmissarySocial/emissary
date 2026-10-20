@@ -15,6 +15,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"github.com/EmissarySocial/emissary/tools/datetime"
 	"github.com/EmissarySocial/emissary/tools/groupie"
 	"github.com/EmissarySocial/emissary/tools/markdown"
 	"github.com/EmissarySocial/emissary/tools/parse"
@@ -32,6 +33,25 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 	// converter, instead of rosetta's unsanitized one.
 	result["markdown"] = func(value any) template.HTML {
 		return template.HTML(markdown.ToHTML(convert.String(value))) // #nosec G203 -- markdown.ToHTML sanitizes its output
+	}
+
+	// inTimezone shows a time in a named IANA timezone, such as an event's location.  An empty or
+	// unknown name leaves the time as it is.
+	result["inTimezone"] = func(value any, timezone string) time.Time {
+
+		valueTime := toTime(value)
+
+		if timezone == "" {
+			return valueTime
+		}
+
+		location, err := time.LoadLocation(timezone)
+
+		if err != nil {
+			return valueTime
+		}
+
+		return valueTime.In(location)
 	}
 
 	result["humanizeTime"] = func(value any) string {
@@ -126,4 +146,23 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 	}
 
 	return result
+}
+
+// toTime reads a time from a datetime.DateTime (which convert.Time does not recognize) or from
+// anything that convert.Time understands
+func toTime(value any) time.Time {
+
+	switch typed := value.(type) {
+
+	case datetime.DateTime:
+		return typed.Time
+
+	case *datetime.DateTime:
+		if typed == nil {
+			return time.Time{}
+		}
+		return typed.Time
+	}
+
+	return convert.Time(value)
 }
