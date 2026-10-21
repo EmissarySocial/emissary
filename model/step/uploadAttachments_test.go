@@ -50,3 +50,19 @@ func TestUploadAttachments_Defaults(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, "append", step.Action)
 }
+
+// TestUploadAttachments_Actions verifies that only "replace" and "fill" survive parsing, and every other action becomes "append"
+func TestUploadAttachments_Actions(t *testing.T) {
+
+	for action, expected := range map[string]string{
+		"replace": "replace",
+		"fill":    "fill",
+		"append":  "append",
+		"":        "append",
+		"unknown": "append",
+	} {
+		step, err := NewUploadAttachments(mapof.Any{"action": action})
+		require.Nil(t, err)
+		require.Equal(t, expected, step.Action, "action=%q", action)
+	}
+}
