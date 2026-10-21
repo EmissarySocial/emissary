@@ -35,24 +35,8 @@ func FuncMap(icons icon.Provider) template.FuncMap {
 		return template.HTML(markdown.ToHTML(convert.String(value))) // #nosec G203 -- markdown.ToHTML sanitizes its output
 	}
 
-	// inTimezone shows a time in a named IANA timezone, such as an event's location.  An empty or
-	// unknown name leaves the time as it is.
-	result["inTimezone"] = func(value any, timezone string) time.Time {
-
-		valueTime := toTime(value)
-
-		if timezone == "" {
-			return valueTime
-		}
-
-		location, err := time.LoadLocation(timezone)
-
-		if err != nil {
-			return valueTime
-		}
-
-		return valueTime.In(location)
-	}
+	// toTime reads a time, including an Emissary DateTime or a "2006-01-02" string, for templates to format
+	result["toTime"] = toTime
 
 	result["humanizeTime"] = func(value any) string {
 		valueTime := convert.Time(value)
