@@ -8,7 +8,7 @@ behavior Clipboard
 		end
 
 		set the clippedValue to the textElement's innerText
-		call navigator.clipboard.writeText(clippedValue)
+		call copyToClipboard(clippedValue)
 
 		tell <.clipboard-copy-button /> in me
 			hide yourself
