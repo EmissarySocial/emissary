@@ -1,9 +1,9 @@
 <script type="text/hyperscript">
 
-	def previewUploads()
-		set #file-preview.innerHTML to ""
-		repeat for file in #file-upload.files
-			append '<div><img src="' + URL.createObjectURL(file) + '"></div>' to #file-preview.innerHTML
+	def previewEditNoteUploads()
+		set #edit-note-preview.innerHTML to ""
+		repeat for file in #edit-note-upload.files
+			append '<div><img src="' + URL.createObjectURL(file) + '"></div>' to #edit-note-preview.innerHTML
 		end
 	end
 
@@ -11,7 +11,7 @@
 
 {{- $targetURL := .GetString "postTo" | addQueryParams "templateId=outbox-message" -}}
 
-<form id="outbox-message" hx-post="{{$targetURL}}" hx-encoding="multipart/form-data" hx-push-url="false"
+<form id="edit-note-form" hx-post="{{$targetURL}}" hx-encoding="multipart/form-data" hx-push-url="false"
 	data-script="
 		on htmx:configRequest(parameters)
 			set contentHtml to the first <.input/> in me
@@ -19,7 +19,7 @@
 		">
 
 	{{if not .IsNew}}
-		<h2>Edit Outbox Message</h2>
+		<h2>Edit Note</h2>
 	{{end}}
 
 	<div class="margin-bottom">
@@ -27,6 +27,7 @@
 			tabIndex="0"
 			class="input"
 			contenteditable="true"
+			style="height:16em; min-height:6em; overflow-y:auto; resize:vertical;"
 			data-script="
 				on keydown[key=='ArrowLeft']
 					halt the event's bubbling
@@ -37,12 +38,27 @@
 				">{{.ContentHTML}}</div>
 	</div>
 
-	<div id="file-preview"></div>
+	<!-- The note's photos.  Each one's button removes it at once (delete-attachment), without the form's fields -->
+	{{- if not .IsNew -}}
+		<div id="note-photos">
+			{{- range .Attachments -}}
+				{{- if eq "image" .MimeCategory -}}
+					<div class="note-photo">
+						<img src="/{{$.StreamID}}/attachments/{{.AttachmentID.Hex}}?width=300" alt="">
+						<button type="button" class="edit-circle" hx-post="/{{$.StreamID}}/delete-attachment?attachmentId={{.AttachmentID.Hex}}" hx-params="none" hx-confirm="Remove this photo?" hx-target="closest .note-photo" hx-swap="outerHTML" aria-label="Remove photo" title="Remove photo">{{icon "x"}}</button>
+					</div>
+				{{- end -}}
+			{{- end -}}
+		</div>
+	{{- end -}}
+
+	<div id="edit-note-preview"></div>
 	<input 
-		script="on change call previewUploads()" 
-		id="file-upload" 
+		script="on change call previewEditNoteUploads()" 
+		id="edit-note-upload" 
 		type="file" 
-		accept="image"
+		accept="image/*"
+		multiple
 		name="file" 
 		class="hide">
 
@@ -53,38 +69,50 @@
 			<button type="button" class="primary htmx-request-show text-sm" disabled>Posting...</button>
 			<span class="text-lg">
 				&nbsp;
-				<label for="file-upload" class="link" role="button" tabIndex="0">{{icon "image"}}</label>
+				<label for="edit-note-upload" class="link" role="button" tabIndex="0">{{icon "image"}}</label>
 			</span>
 		{{- else -}}
+			<!-- Save is edit-pencil's, top right, and submits this form by its id -->
 			<span hx-get="/{{.StreamID}}/delete" class="clickable float-right text-red">Delete</span>
-			<button type="submit" class="primary htmx-request-hide">Edit Post</button>
-			<button type="button" class="primary htmx-request-show" disabled>Saving Changed...</button>
-			<button type="button" script="on click trigger closeModal">Cancel</button>
+			<label for="edit-note-upload" class="button" role="button" tabIndex="0">{{icon "image"}} Add Photos</label>
 		{{- end -}}
 	</div>
 </form>
 
 <style>
-	#file-preview {
+	#note-photos,
+	#edit-note-preview {
 		display:flex;
 		flex-direction:row;
 		flex-wrap:wrap;
 	}
 
-	#file-preview > div {
+	#note-photos > .note-photo,
+	#edit-note-preview > div {
 		display:block;
 		width:20%;
 		aspect-ratio: 1;
 		padding:0px 10px 10px 0px;
 	}
 
-	#file-preview > div > img {
+	#note-photos > .note-photo > img,
+	#edit-note-preview > div > img {
 		padding:2px 2px 10px 2px;
 		border:solid 1px var(--gray20);
 		border-radius:4px;
 		width: 100%;
 		height:100%;
 		object-fit: cover;
+	}
+
+	#note-photos > .note-photo {
+		position:relative;
+	}
+
+	#note-photos > .note-photo > button {
+		position:absolute;
+		top:6px;
+		right:16px;
 	}
 
 </style>

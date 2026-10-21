@@ -72,8 +72,8 @@
 			</span>
 		{{- else -}}
 			<span hx-get="/{{.StreamID}}/delete" class="clickable float-right text-red">Delete</span>
-			<button type="submit" class="primary htmx-request-hide">Edit Post</button>
-			<button type="button" class="primary htmx-request-show" disabled>Saving Changed...</button>
+			<button type="submit" class="primary htmx-request-hide">Save Changes</button>
+			<button type="button" class="primary htmx-request-show" disabled>Saving Changes...</button>
 			<button type="button" script="on click trigger closeModal">Cancel</button>
 		{{- end -}}
 	</div>

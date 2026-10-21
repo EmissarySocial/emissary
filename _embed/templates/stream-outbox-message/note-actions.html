@@ -1,0 +1,10 @@
+<!-- The note's Like and Share buttons, drawn beside the Replies, Likes, and Shares tabs in each responses-*.html -->
+<span class="text-sm nowrap">
+	{{- if .UserCan "like-button" -}}
+		{{.View "like-button"}}
+	{{- else -}}
+		<button hx-get="/{{.StreamID}}/intent?intent=like&object={{.Permalink}}"><span aria-hidden="true" class="margin-left-xs">{{icon "thumbs-up"}}</span> Like</button>
+		<button hx-get="/{{.StreamID}}/intent?intent=create&content={{.Label | queryEscape}} {{.Permalink}}"><span aria-hidden="true" class="margin-left-xs">{{icon "share"}}</span> Share</button>
+		<button hx-get="/{{.StreamID}}/intent" aria-label="Manage Accounts">{{icon "more-horizontal"}}</button>
+	{{- end -}}
+</span>

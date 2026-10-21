@@ -46,11 +46,40 @@
 			]
 		}
 
+		// A note's own URL opens it as a modal over its owner's Notes, and the address bar shows /{id} until it closes
 		view: {
 			roles:["anonymous"]
 			steps:[
+				{do:"include", action:"modal"}
+			]
+		}
+
+		// A theme without a Notes tab ignores ?tab=notes and draws the profile; a hidden profile falls back to page
+		modal: {
+			roles:["anonymous"]
+			steps:[
 				{do:"set-query-param", url:"{{.Permalink}}"}
-				{do:"view-html"}
+				{
+					do: "as-modal"
+					background-url: "/@{{.ParentID}}?tab=notes"
+					background: "page"
+					replace-url: "/{{.StreamID}}"
+					head: [
+						{do:"view-html", file:"head"}
+					]
+					steps: [
+						{do:"view-html", file:"modal"}
+					]
+				}
+			]
+		}
+
+		// The note as a page of its own, behind the modal when its owner's profile cannot be drawn
+		page: {
+			roles:["anonymous"]
+			steps:[
+				{do:"set-query-param", url:"{{.Permalink}}"}
+				{do:"view-html", file:"view"}
 			]
 		}
 		
@@ -58,15 +87,30 @@
 			roles:["author"]
 			steps: [
 				{do:"as-modal", steps:[
+					// The selected pencil, which toggles back to the note's modal
+					{do:"view-html", file:"edit-pencil"}
 					{do:"set-args", postTo:"/{{.StreamID}}/edit"}
 					{do:"edit-content", file:"edit", format:"HTML", require-content:true}
 					{do:"process-content", remove-html:true, add-links:true}
+					// New photos join the ones already here; "fill" never deletes one to make room
+					{do:"upload-attachments", maximum:10, action:"fill", accept-type:"image/*"}
+					{do:"set-thumbnail", path:"iconUrl"}
 					{do:"save-and-publish", state:"default", outbox:true}
 					{do:"refresh-page"}
 				]}
 			]
 		}
 		
+		// Removes one photo, named by ?attachmentId, from the edit modal.  Without that parameter it removes nothing.
+		delete-attachment: {
+			roles:["author"]
+			steps: [
+				{do:"delete-attachments"}
+				{do:"set-thumbnail", path:"iconUrl"}
+				{do:"save-and-publish", state:"default", outbox:true}
+			]
+		}
+
 		delete: {
 			roles:["author"]
 			steps: [

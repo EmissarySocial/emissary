@@ -7,18 +7,21 @@
 
 	<hr class="margin-bottom-sm"/>
 
-	<div>
-		<span hx-get="{{.BasePath}}/responses-replies?url={{.Permalink}}" role="button" class="margin-right-xs clickable">
-			{{- .ReplyCount }} {{pluralize .ReplyCount "Reply" "Replies" -}}
-		</span>
-		&middot;
-		<span hx-get="{{.BasePath}}/responses-likes?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable bold">
-			{{- .LikeCount }} {{pluralize .LikeCount "Like" "Likes" -}}
-		</span>
-		&middot;
-		<span hx-get="{{.BasePath}}/responses-announces?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable">
-			{{- .ShareCount }} {{pluralize .ShareCount "Share" "Shares" -}}
-		</span>
+	<div class="flex-row flex-align-center flex-wrap">
+		<div class="flex-grow-1">
+			<span hx-get="{{.BasePath}}/responses-replies?url={{.Permalink}}" role="button" class="margin-right-xs clickable">
+				{{- .ReplyCount }} {{pluralize .ReplyCount "Reply" "Replies" -}}
+			</span>
+			&middot;
+			<span hx-get="{{.BasePath}}/responses-likes?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable bold">
+				{{- .LikeCount }} {{pluralize .LikeCount "Like" "Likes" -}}
+			</span>
+			&middot;
+			<span hx-get="{{.BasePath}}/responses-announces?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable">
+				{{- .ShareCount }} {{pluralize .ShareCount "Share" "Shares" -}}
+			</span>
+		</div>
+		{{- template "note-actions" . -}}
 	</div>
 
 	<hr class="margin-top-sm"/>
