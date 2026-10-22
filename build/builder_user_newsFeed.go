@@ -6,6 +6,7 @@ import (
 	"math"
 	"net/http"
 	"slices"
+	"sync"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
@@ -728,27 +729,50 @@ func (w Inbox) CanReplyTo(url string) bool {
 	}
 
 	document := w.ActivityStream(url)
+	request := newReplyRequest(document, w._user.ActivityPubURL(), w.followsActor, w.isFollowedBy)
+
+	return document.InteractionPolicy().CanInteract(vocab.PropertyCanReply, request) != streams.InteractionDenied
+}
+
+// newReplyRequest describes the actor's reply to the document, for its InteractionPolicy.  The follow
+// checks receive the author's ID, and each runs at most once per collection.
+func newReplyRequest(document streams.Document, actorID string, followsAuthor func(string) bool, followedByAuthor func(string) bool) streams.InteractionRequest {
+
 	author := document.AttributedTo()
 	authorID := author.ID()
 
-	request := streams.InteractionRequest{
-		ActorID:   w._user.ActivityPubURL(),
+	// RULE: Load the author at most once, and only when the policy names an IRI that might be one of its collections
+	collections := sync.OnceValues(func() (string, string) {
+		loaded := author.LoadLink()
+		return loaded.Followers().ID(), loaded.Following().ID()
+	})
+
+	// Remember each answer, because a policy may list one IRI many times.  CanInteract asks one at a time.
+	answers := make(map[string]bool)
+
+	return streams.InteractionRequest{
+		ActorID:   actorID,
 		AuthorID:  authorID,
 		Mentioned: slices.Collect(document.RangeMentions()),
-
-		// The author's collections are loaded only when the policy names an IRI that might be one
 		IsMember: func(collectionID string) bool {
-			switch collectionID {
-			case author.Followers().ID():
-				return w.followsActor(authorID)
-			case author.Following().ID():
-				return w.isFollowedBy(authorID)
+
+			if answer, asked := answers[collectionID]; asked {
+				return answer
 			}
-			return false
+
+			answer := false
+
+			switch followersID, followingID := collections(); collectionID {
+			case followersID:
+				answer = followsAuthor(authorID)
+			case followingID:
+				answer = followedByAuthor(authorID)
+			}
+
+			answers[collectionID] = answer
+			return answer
 		},
 	}
-
-	return document.InteractionPolicy().CanInteract(vocab.PropertyCanReply, request) != streams.InteractionDenied
 }
 
 // followsActor returns TRUE if this User follows the actor over ActivityPub.  Emissary does not record
