@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/data/option"
 	"github.com/benpate/exp"
 
 	"github.com/benpate/derp"
@@ -326,4 +327,61 @@ func TestNextAfterParent(t *testing.T) {
 		require.Equal(t, maxTreeDepth, fixture.loads)
 	})
 
+}
+
+// TestStream_ChildrenWithDrafts_TemplateSort pins that the children query sorts as the Template's
+// childSortType and childSortDirection say.  Both were dropped until 2026-10-15, because QueryBuilder's
+// By and Reverse return a new value, and the old code discarded it, so every list sorted by rank.
+func TestStream_ChildrenWithDrafts_TemplateSort(t *testing.T) {
+
+	authorID := primitive.NewObjectID()
+	parent := newChildrenTestStream(authorID, authorID)
+
+	parent._template.ChildSortType = "label"
+	parent._template.ChildSortDirection = "desc"
+
+	query := parent.ChildrenWithDrafts()
+	require.Equal(t, "label", query.sortField)
+	require.Equal(t, option.SortDirectionDescending, query.sortDirection)
+
+	parent._template.ChildSortDirection = "asc"
+	require.Equal(t, "asc", parent.ChildrenWithDrafts().sortDirection)
+}
+
+// TestStream_RepliesClosed pins a method that only templates call (qwertylicious' collection menu and
+// Replies panel), so no Go caller keeps it alive.  It went missing once, and broke the Calendar's tab.
+func TestStream_RepliesClosed(t *testing.T) {
+
+	builder := newChildrenTestStream(primitive.NewObjectID(), primitive.NewObjectID())
+	require.False(t, builder.RepliesClosed())
+
+	builder._stream.ReplyPolicy = model.ReplyPolicyEveryone
+	require.False(t, builder.RepliesClosed())
+
+	builder._stream.ReplyPolicy = model.ReplyPolicyNobody
+	require.True(t, builder.RepliesClosed())
+}
+
+// TestStream_ClosedRepliesAreHidden pins the read gate: a Stream with closed replies shows no replies and a
+// zero count, and reopening shows the stored count again, because closing deletes nothing (REPLY-CONTROLS §1.2)
+func TestStream_ClosedRepliesAreHidden(t *testing.T) {
+
+	builder := newChildrenTestStream(primitive.NewObjectID(), primitive.NewObjectID())
+	builder._stream.DefaultAllow = model.Permissions{model.MagicGroupIDAnonymous}
+	builder._stream.ReplyCount = 3
+
+	// Open: the stored count
+	require.Equal(t, 3, builder.ReplyCount())
+
+	// Closed: nothing, without reading the collection
+	builder._stream.ReplyPolicy = model.ReplyPolicyNobody
+	require.Equal(t, 0, builder.ReplyCount())
+
+	links, err := builder.ReplyLinksAfter("0", 12)
+	require.NoError(t, err)
+	require.Empty(t, links)
+
+	// Reopened: the stored count is back
+	builder._stream.ReplyPolicy = model.ReplyPolicyEveryone
+	require.Equal(t, 3, builder.ReplyCount())
 }

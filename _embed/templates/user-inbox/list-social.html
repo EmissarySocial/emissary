@@ -131,7 +131,7 @@
 				<div class="flex-row">
 					<div class="width-32 flex-shrink-0"></div>
 					<div>
-						{{- $args := array $message $document $folderID $internalID -}}
+						{{- $args := array $message $document $folderID $internalID $ -}}
 						{{- template "message-responses" $args -}}
 					</div>
 				</div>

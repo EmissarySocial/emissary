@@ -766,3 +766,16 @@ button.button-invisible {
 	animation-iteration-count: infinite;
 	animation-timing-function: linear;
 }
+
+/* An icon-only button drawn as a circle: a fixed square, not padding, sets its shape */
+button.edit-circle,
+.button.edit-circle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	width: calc(var(--rhythm) * 4);
+	height: calc(var(--rhythm) * 4);
+	padding: 0;
+	border-radius: 50%;
+}

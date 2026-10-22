@@ -133,7 +133,13 @@ Shows a confirmation dialog on `GET`. The rest of the pipeline runs only after t
 
 ## as-modal
 
-Wraps the sub-pipeline's output in a modal window. On a partial (HTMX) request — the common case — only the modal is built, and it is retargeted into the page's `<aside>`. A full-page request needs `background` to know what page to draw underneath; without it, opening the route directly is a `400`. The sub-pipeline's `POST` fires a `closeModal` event when it finishes.
+Wraps the sub-pipeline's output in a modal window. On a partial (HTMX) request — the common case — only the modal is built, and it is retargeted into the page's `<aside>`. A full-page request needs `background-url` or `background` to know what page to draw underneath; without either, opening the route directly is a `400`. The sub-pipeline's `POST` fires a `closeModal` event when it finishes.
+
+`background-url` draws another object's page behind the modal, such as the profile a photo's gallery sits on, which `background` cannot, because it names an action of the same builder. It is a local path, `/@{user}` or `/{stream}`, each with an optional `/{action}` and a query string, and it is built with the visitor's own session, so it checks permissions as if the visitor had opened it. When it cannot be drawn (the visitor cannot see it, it redirects, or it names anything else), `background` is drawn instead. A page drawn as a background cannot open a modal of its own.
+
+`replace-url` gives the modal a shareable address. On a partial request, the address bar shows it while the modal is open (`HX-Replace-Url`), and the global theme's `modal-url.js` puts the page's own address back when the modal closes. A modal opened directly over a `background-url` carries that URL in `data-return-url`, which closing the modal restores.
+
+`head` steps render into the full page's `<head>`, so a shared link previews the modal and not its background. When their output holds a `<title>`, it replaces the page's own.
 
 **Attributes**
 
@@ -142,6 +148,9 @@ Wraps the sub-pipeline's output in a modal window. On a partial (HTMX) request �
 | steps | **Required.** Sub-pipeline rendered inside the modal |
 | options | Modal options passed to the modal wrapper (size, dismissal behavior, …), each evaluated as a template |
 | background | Name of the action to render behind the modal on a full-page request |
+| background-url | Local URL of a page to render behind the modal on a full-page request, evaluated as a template. Tried before `background` |
+| replace-url | Local URL to show in the address bar while the modal is open, evaluated as a template |
+| head | Sub-pipeline rendered into the full page's `<head>` |
 
 <br>
 
@@ -158,6 +167,20 @@ Wraps the sub-pipeline's output in a modal window. On a partial (HTMX) request �
 			file: "settings"
 		}
 	]
+}
+```
+
+A photo whose own URL opens over its gallery, on its owner's profile:
+
+```hjson
+{
+	do: "as-modal"
+	options: ["class:large"]
+	background-url: "/@{{(.Parent `view`).ParentID}}?tab={{.ParentID}}"
+	background: "page"
+	replace-url: "/{{.StreamID}}"
+	head: [{do:"view-html", file:"head"}]
+	steps: [{do:"view-html", file:"modal"}]
 }
 ```
 
@@ -277,7 +300,7 @@ Removes attachments from the current object. The `attachmentId` query parameter,
 | Attribute | Description |
 | --- | --- |
 | all | Delete every attachment on this object |
-| field | Delete only the attachment named by this property |
+| field | Delete only the attachment named by this property, which holds its AttachmentID or its URL (as `set-thumbnail` writes into `iconUrl`), and clear the property |
 | category | Delete every attachment in this category |
 
 <br>
@@ -1181,6 +1204,8 @@ Every property except `do` is treated as a key, and every value is compiled as a
 
 The richer sharing dialog, sharing with named Circles and purchased Products. Requires the `Stream` model.
 
+It offers three choices, in this order: Everyone, Not Shared, and These Circles Only. Not Shared grants the role to no Group, so only the author keeps access, and a Stream that is neither public nor shared with Circles opens with it checked. A form saved with nothing checked is shared with Everyone.
+
 **Attributes**
 
 | Attribute | Description |
@@ -1190,6 +1215,8 @@ The richer sharing dialog, sharing with named Circles and purchased Products. Re
 | title | Dialog heading. Defaults to `Sharing Settings` |
 | message | Body text. Defaults to `Public Settings` |
 | button | Label on the submit button. Defaults to `Save Changes` |
+
+A menu that names the current sharing should read the Stream builder's `CircleSharingStatus`, which uses these terms (Everyone, a Circle's name, a count of Circles, or "Not Shared"), rather than `SharingStatus`, which mirrors `set-simple-sharing`.
 
 <br>
 
@@ -1662,7 +1689,7 @@ Accepts file uploads and attaches them to the current object. The optional `*-pa
 
 | Attribute | Description |
 | --- | --- |
-| action | `append` or `replace`. Anything other than `replace` is treated as `append` |
+| action | `append` deletes the oldest attachments in the category to make room beneath `maximum`, `replace` deletes them all, and `fill` deletes none, so it accepts only as many new files as fit. Anything else is treated as `append` |
 | fieldname | Form field holding the file data. Defaults to `file` |
 | attachment&#8209;path | Schema path that receives the AttachmentID |
 | download&#8209;path | Schema path that receives the download URL |

@@ -11,7 +11,12 @@
 </div>
 
 <div id="modal-footer" hx-target="#modal-window" hx-swap="innerHTML" hx-push-url="false">
-	{{.View "reply"}}
+	<!-- The composer is offered only when the post's own reply policy accepts this User (REPLY-CONTROLS §3.2) -->
+	{{- if .CanReplyTo $url -}}
+		{{.View "reply"}}
+	{{- else -}}
+		<div class="padding text-gray">{{icon "lock"}} This post does not accept replies from you.</div>
+	{{- end -}}
 </div>
 
 <script type="text/hyperscript">

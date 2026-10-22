@@ -44,7 +44,7 @@
 			{{- if eq "reply" $panel -}}
 				<button class="turboclick selected" hx-target="main" hx-swap="outerHTML" hx-get="/@me/newsfeed/browse-reply?url={{$document.ID}}">{{icon "reply"}} Reply</button>
 			{{- else -}}
-				{{template "reply-button" $document.ID }}
+				{{template "reply-button" (array $builder $document.ID) }}
 			{{- end -}}
 			<span 
 				hx-get="/@me/newsfeed/like-button?url={{$document.ID}}" 

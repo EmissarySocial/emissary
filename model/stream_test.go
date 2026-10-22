@@ -407,74 +407,45 @@ func TestStream_ReplyPolicySchema(t *testing.T) {
 	require.Equal(t, ReplyPolicyNobody, stream.ReplyPolicy)
 }
 
-// TestStream_AcceptsReplyFrom pins the actor-aware rule: a closed policy still admits the author and the
-// actors the Stream mentions (as GoToSocial does), and a private Stream admits nobody.
-func TestStream_AcceptsReplyFrom(t *testing.T) {
-
-	const author = "https://local.example/@author"
-	const mentioned = "https://remote.example/users/mentioned"
-	const stranger = "https://remote.example/users/stranger"
+// TestStream_RefusesReplies pins the refusal the inbox acts on: a public Stream with closed replies refuses
+// every reply, and a private Stream refuses nothing, because it records no replies at all.
+func TestStream_RefusesReplies(t *testing.T) {
 
 	stream := NewStream()
 	stream.DefaultAllow = Permissions{MagicGroupIDAnonymous}
-	stream.AttributedTo = PersonLink{ProfileURL: author}
-	stream.Tags = TagList{
-		{Type: vocab.LinkTypeMention, Name: "mentioned@remote.example", Href: mentioned},
-		{Type: vocab.LinkTypeMention, Name: "unknown@remote.example", Href: TagHrefUnresolvable},
-		{Type: vocab.LinkTypeHashtag, Name: "food"},
-	}
 
-	// Open: everyone
-	require.True(t, stream.AcceptsReplyFrom(stranger))
+	// Open: nothing is refused
+	require.False(t, stream.RefusesReplies())
 
-	// Closed: only the author and the resolved mentions
+	// Closed: everything is refused
 	stream.ReplyPolicy = ReplyPolicyNobody
-	require.True(t, stream.AcceptsReplyFrom(author))
-	require.True(t, stream.AcceptsReplyFrom(mentioned))
-	require.False(t, stream.AcceptsReplyFrom(stranger))
-	require.False(t, stream.AcceptsReplyFrom(TagHrefUnresolvable), "an unresolved mention admits no one")
-	require.False(t, stream.AcceptsReplyFrom(""))
+	require.True(t, stream.RefusesReplies())
 
-	// Private: not even the author, because a private Stream exposes no Replies collection
+	// Private: nothing is refused, even with replies closed
 	stream.DefaultAllow = Permissions{MagicGroupIDAuthenticated}
-	require.False(t, stream.AcceptsReplyFrom(author))
+	require.False(t, stream.RefusesReplies())
 }
 
-// TestStream_ReplyApprovedActors pins the list published as "automaticApproval" when replies are closed:
-// the author first, then each resolved mention once.
-func TestStream_ReplyApprovedActors(t *testing.T) {
-
-	stream := NewStream()
-	stream.AttributedTo = PersonLink{ProfileURL: "https://local.example/@author"}
-	stream.Tags = TagList{
-		{Type: vocab.LinkTypeMention, Name: "a@remote.example", Href: "https://remote.example/users/a"},
-		{Type: vocab.LinkTypeMention, Name: "a@remote.example", Href: "https://remote.example/users/a"},
-		{Type: vocab.LinkTypeMention, Name: "b@remote.example", Href: TagHrefUnresolvable},
-	}
-
-	require.Equal(t, []string{"https://local.example/@author", "https://remote.example/users/a"}, stream.ReplyApprovedActors())
-	require.Empty(t, NewStream().ReplyApprovedActors())
-}
-
-// TestStream_InteractionPolicyJSONLD pins the published policy: Public when open, and the author and
-// mentions when closed or private, never an empty list (which JSON-LD reads as Public)
+// TestStream_InteractionPolicyJSONLD pins the published policy: Public when open, and only the author when
+// closed or private, never an empty list (which JSON-LD reads as Public).  Mentions are not approved.
 func TestStream_InteractionPolicyJSONLD(t *testing.T) {
 
 	automaticApproval := func(stream Stream) any {
-		return stream.InteractionPolicyJSONLD().GetMap(PropertyCanReply)[PropertyAutomaticApproval]
+		return stream.InteractionPolicyJSONLD().GetMap(vocab.PropertyCanReply)[vocab.PropertyAutomaticApproval]
 	}
 
 	stream := NewStream()
 	stream.DefaultAllow = Permissions{MagicGroupIDAnonymous}
 	stream.AttributedTo = PersonLink{ProfileURL: "https://local.example/@author"}
-	require.Equal(t, []string{vocab.NamespacePublic}, automaticApproval(stream))
+	stream.Tags = TagList{{Type: vocab.LinkTypeMention, Name: "a@remote.example", Href: "https://remote.example/users/a"}}
+	require.Equal(t, []string{vocab.NamespaceActivityStreamsPublic}, automaticApproval(stream))
 
 	stream.ReplyPolicy = ReplyPolicyNobody
 	require.Equal(t, []string{"https://local.example/@author"}, automaticApproval(stream))
 
 	stream.ReplyPolicy = ""
 	stream.DefaultAllow = Permissions{MagicGroupIDAuthenticated}
-	require.Equal(t, []string{"https://local.example/@author"}, automaticApproval(stream), "a private Stream accepts no replies from strangers")
+	require.Equal(t, []string{"https://local.example/@author"}, automaticApproval(stream), "a private Stream accepts no replies")
 }
 
 // TestStream_AllowReplies pins the virtual "allowReplies" toggle: it reads TRUE unless replies are closed,

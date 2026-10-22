@@ -131,7 +131,7 @@
 	"../build/utilities.go executeTemplate (used by renderLiteral)": "5f5d5ae105752a1e",
 	"../build/widget_save.go executeWidgetSaveSteps (used by widgetContext)": "939cee866f44dd89",
 	"../handler/admin.go buildAdmin_GetBuilder (used by templateContexts)": "4c68fd818d25a9b8",
-	"../model/step/step.go New (used by nestedSteps, newPostCase, unpinnedPostReaders)": "d1d782d8e02c7c63",
+	"../model/step/step.go New (used by nestedSteps, newPostCase, unpinnedPostReaders)": "2f84f50287a756bb",
 	"../model/template.go Template.BaseSchema (used by templateContexts, isStreamModel)": "66b5ee5e9a18d8f4",
 	"../model/template.go Template.NewObject (used by templateContexts, isStreamModel)": "a321cc325ebba897",
 	"../model/template.go templateModelForName (used by templateContexts, isStreamModel)": "65ce549ef158fd29",

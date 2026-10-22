@@ -82,6 +82,12 @@ func (service *Notification) notifyFromCreateOrUpdate(session data.Session, user
 	if activity.Type() == vocab.ActivityTypeCreate {
 		if inReplyTo := object.InReplyTo().ID(); inReplyTo != "" {
 			if stream := model.NewStream(); service.loadLocalStreamOwnedBy(session, inReplyTo, user, &stream) {
+
+				// RULE: A reply the Stream's policy refuses notifies no one (REPLY-CONTROLS §1.2)
+				if stream.RefusesReplies() {
+					return nil
+				}
+
 				return service.NotifyReply(session, user, activity, object, &stream)
 			}
 		}

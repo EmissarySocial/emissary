@@ -113,7 +113,7 @@
 					<div class="margin-bottom text-sm text-light-gray">{{ $document.Published | shortDate -}}</div>
 
 					<div class="text-xs margin-top">
-						{{ template "reply-button" $document.ID }}
+						{{ template "reply-button" (array $ $document.ID) }}
 						{{.View "like-button"}}
 						<span hx-get="/@me/newsfeed/annotation-button?url={{$document.ID | urlquery}}" hx-trigger="intersect once" hx-target="this" hx-swap="outerHTML" hx-push-url="false"></span>
 					</div>

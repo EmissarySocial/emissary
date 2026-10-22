@@ -5,7 +5,6 @@ import (
 	"math"
 	"net/url"
 	"regexp"
-	"slices"
 	"time"
 
 	"github.com/EmissarySocial/emissary/tools/datetime"
@@ -262,9 +261,8 @@ func (stream Stream) RolesToPrivilegeIDs(roles ...string) Permissions {
  * Permission Methods
  ******************************************/
 
-// AcceptsReplies returns TRUE if anyone may reply to this Stream: it is public, and its author has
-// not closed replies.  Templates use it to offer a Reply button.  AcceptsReplyFrom is the rule
-// for one replying actor.
+// AcceptsReplies returns TRUE if this Stream records and shows replies: it is public, and its author
+// has not closed replies.  A closed Stream refuses every reply, its author's included (REPLY-CONTROLS §1.1).
 func (stream Stream) AcceptsReplies() bool {
 
 	// RULE: The author can close replies
@@ -276,59 +274,34 @@ func (stream Stream) AcceptsReplies() bool {
 	return stream.DefaultAllowAnonymous()
 }
 
-// AcceptsReplyFrom returns TRUE if a reply from the actor may be recorded in this Stream's Replies
-// collection.  On a public Stream, a closed policy still admits its author and the actors it mentions,
-// as GoToSocial's interaction policies do (REPLY-CONTROLS §1.1).
-func (stream Stream) AcceptsReplyFrom(actorID string) bool {
+// RefusesReplies returns TRUE when this public Stream's author has closed replies.  A private Stream
+// refuses nothing, because it records no replies at all.
+func (stream Stream) RefusesReplies() bool {
 
-	// RULE: Only public Streams expose a Replies collection (mirrors CalcContext)
 	if !stream.DefaultAllowAnonymous() {
 		return false
 	}
 
-	if stream.ReplyPolicy != ReplyPolicyNobody {
-		return true
-	}
-
-	return slices.Contains(stream.ReplyApprovedActors(), actorID)
+	return stream.ReplyPolicy == ReplyPolicyNobody
 }
 
 // InteractionPolicyJSONLD returns this Stream's reply policy as GoToSocial's "interactionPolicy":
-// Public when anyone may reply, and otherwise its author and the actors it mentions.  Closed is never
-// an empty list, which JSON-LD canonicalization would read as a missing policy, meaning Public.
+// Public when anyone may reply, and otherwise only its author.  Closed is never an empty list, which
+// JSON-LD canonicalization would read as a missing policy, meaning Public.
+// RULE: Public is the full IRI, because GoToSocial matches no compact form (REPLY-CONTROLS §1.3)
 func (stream Stream) InteractionPolicyJSONLD() mapof.Any {
 
-	automaticApproval := []string{vocab.NamespacePublic}
+	automaticApproval := []string{vocab.NamespaceActivityStreamsPublic}
 
 	if !stream.AcceptsReplies() {
-		automaticApproval = stream.ReplyApprovedActors()
+		automaticApproval = []string{stream.AttributedTo.ProfileURL}
 	}
 
 	return mapof.Any{
-		PropertyCanReply: mapof.Any{
-			PropertyAutomaticApproval: automaticApproval,
+		vocab.PropertyCanReply: mapof.Any{
+			vocab.PropertyAutomaticApproval: automaticApproval,
 		},
 	}
-}
-
-// ReplyApprovedActors returns the actors who may always reply to this Stream, whatever its policy:
-// its author, then each actor it mentions.  This is the "automaticApproval" list it publishes
-// when its replies are closed.
-func (stream Stream) ReplyApprovedActors() []string {
-
-	result := make([]string, 0, len(stream.Tags)+1)
-
-	if stream.AttributedTo.ProfileURL != "" {
-		result = append(result, stream.AttributedTo.ProfileURL)
-	}
-
-	for _, tag := range stream.Tags {
-		if tag.Type == vocab.LinkTypeMention && tag.IsResolved() && !slices.Contains(result, tag.Href) {
-			result = append(result, tag.Href)
-		}
-	}
-
-	return result
 }
 
 // DefaultAllowAnonymous returns TRUE if a Stream's default action (VIEW)

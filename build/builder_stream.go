@@ -9,6 +9,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -777,6 +778,12 @@ func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[stre
 
 // ReplyLinksAfter returns the reply links in this Stream's Replies collection created after the provided date
 func (w Stream) ReplyLinksAfter(dateString string, maxRows int) (sliceof.Object[model.CollectionItem], error) {
+
+	// RULE: A Stream with closed replies shows none, but keeps them, so reopening restores them
+	if !w._stream.AcceptsReplies() {
+		return sliceof.NewObject[model.CollectionItem](), nil
+	}
+
 	collectionItemService := w._factory.CollectionItem()
 	minDate := convert.Int64(dateString)
 	criteria := exp.GreaterThan("createDate", minDate)
@@ -804,9 +811,27 @@ func (w Stream) ShareLinksAfter(dateString string, maxRows int) (sliceof.Object[
 	return collectionItemService.QueryByCollectionType(w._session, w._stream.StreamID, model.CollectionTypeShares, criteria, option.MaxRows(int64(maxRows)), option.SortAsc("createDate"))
 }
 
-// ReplyCount returns the denormalized count of replies to this Stream.
+// ReplyCount returns the denormalized count of replies to this Stream, or zero while its replies are closed.
 func (w Stream) ReplyCount() int {
+
+	// RULE: A Stream with closed replies shows none; the stored count stays, so reopening restores it
+	if !w._stream.AcceptsReplies() {
+		return 0
+	}
+
 	return w._stream.ReplyCount
+}
+
+// AcceptsReplies returns TRUE if a new reply to this Stream would be recorded: it is public, and
+// its author has not closed replies.  Templates use it to decide whether to offer a Reply button.
+func (w Stream) AcceptsReplies() bool {
+	return w._stream.AcceptsReplies()
+}
+
+// RepliesClosed returns TRUE if this Stream's author has closed replies (ReplyPolicyNobody).
+// Only templates call it, to label a reply-policy menu item and to explain a missing Reply button.
+func (w Stream) RepliesClosed() bool {
+	return w._stream.ReplyPolicy == model.ReplyPolicyNobody
 }
 
 // LikeCount returns the denormalized count of "Like" responses to this Stream.
@@ -976,10 +1001,10 @@ func (w Stream) makeStreamQueryBuilderAnyDate(criteria exp.Expression) QueryBuil
 		And(query).
 		And(w.defaultAllowed())
 
-	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), w._session, criteria)
-	result.By(w._template.ChildSortType)
+	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), w._session, criteria).By(w._template.ChildSortType)
+
 	if w._template.ChildSortDirection == "desc" {
-		result.Reverse()
+		result = result.Reverse()
 	}
 
 	return result
@@ -1066,6 +1091,75 @@ func (w Stream) SharingStatus(role string) form.LookupCode {
 	}
 
 	return form.LookupCode{Value: model.SharingStatusOwners, Label: "Sharing: Owners", Icon: "lock"}
+}
+
+// CircleSharingStatus returns the icon and label that describe who has been granted the provided
+// role on this Stream, in the terms of the set-circle-sharing step: Everyone, the Circles chosen
+// (named when there is one), or Not Shared, for a Stream that grants the role to no one.
+// RULE: these labels mirror the choices in StepSetCircleSharing.form, as SharingStatus mirrors
+// StepSetSimpleSharing.form.  A template that shares through set-circle-sharing reads this one.
+func (w Stream) CircleSharingStatus(role string) form.LookupCode {
+
+	switch stream := w.liveStream(); stream.SharingStatus(role) {
+
+	case model.SharingStatusPublic:
+		return form.LookupCode{Value: model.SharingStatusPublic, Label: "Sharing: Everyone", Icon: "globe"}
+
+	case model.SharingStatusAuthenticated:
+		return form.LookupCode{Value: model.SharingStatusAuthenticated, Label: "Sharing: Signed-In", Icon: "person-circle"}
+
+	case model.SharingStatusCircles:
+		return circleSharingStatus(stream.Circles[role], w.circleLookupCodes())
+	}
+
+	return form.LookupCode{Value: model.SharingStatusOwners, Label: "Not Shared", Icon: "lock"}
+}
+
+// circleLookupCodes returns the signed-in user's Circles, by ID and name
+func (w Stream) circleLookupCodes() []form.LookupCode {
+
+	if group := w.lookupProvider().Group("circles"); group != nil {
+		return group.Get()
+	}
+
+	return nil
+}
+
+// circleSharingStatus names the Circles a Stream is shared with: the Circle's own name and icon when
+// there is one, or how many there are.  circles are the user's Circles, from the "circles" lookup.
+// A Circle that is not among them (deleted, or another user's) is still counted.
+func circleSharingStatus(circleIDs id.Slice, circles []form.LookupCode) form.LookupCode {
+
+	result := form.LookupCode{Value: model.SharingStatusCircles, Label: "Sharing: " + convert.String(len(circleIDs)) + " Circles", Icon: "people"}
+
+	// A Stream can be shared with a named Group but no Circles, which set-circle-sharing never writes
+	if len(circleIDs) == 0 {
+		result.Label = "Sharing: Groups"
+		return result
+	}
+
+	if len(circleIDs) > 1 {
+		return result
+	}
+
+	result.Label = "Sharing: 1 Circle"
+
+	for _, circle := range circles {
+
+		if circle.Value != circleIDs[0].Hex() {
+			continue
+		}
+
+		result.Label = "Sharing: " + circle.Label
+
+		if circle.Icon != "" {
+			result.Icon = circle.Icon
+		}
+
+		return result
+	}
+
+	return result
 }
 
 /******************************************

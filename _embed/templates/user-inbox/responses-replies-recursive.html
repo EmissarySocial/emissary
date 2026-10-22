@@ -50,7 +50,7 @@
 		</div>
 
 		<div class="align-right text-xs nowrap">
-			{{template "reply-button" $object.ID }}
+			{{template "reply-button" (array $ $object.ID) }}
 			<span
 				hx-get="/@me/newsfeed/like-button?url={{$object.ID}}"
 				hx-target="this"

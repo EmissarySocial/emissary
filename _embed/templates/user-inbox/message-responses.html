@@ -2,13 +2,14 @@
 {{- $document := index . 1 -}}
 {{- $folderID := index . 2 -}}
 {{- $internalID := index . 3 -}}
+{{- $builder := index . 4 -}}
 
 {{- $metadata := $document.Metadata -}}
 {{- $url := $document.ID -}}
 
 <div class="margin-top text-sm noselect" hx-target="this" hx-swap="outerHTML" hx-push-url="false">
 
-	{{template "reply-button" $message.URL }}
+	{{template "reply-button" (array $builder $message.URL) }}
 	<span hx-get="/@me/newsfeed/like-button?url={{$message.URL}}" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML" hx-push-url="false"></span>
 	<span hx-get="/@me/newsfeed/annotation-button?url={{$message.URL | urlquery}}" hx-trigger="revealed" hx-target="this" hx-swap="outerHTML" hx-push-url="false"></span>
 
