@@ -389,12 +389,17 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	stream.IsSubscribable = template.IsSubscribable()
 	stream.URL = service.host + "/" + stream.StreamID.Hex()
 
-	// RULE: A Stream whose Template inherits permissions takes its sharing from its parent Stream,
+	// RULE: A Stream whose parent's Template shares with children takes the parent's sharing,
 	// before its "defaultAllow" groups are calculated from that sharing
-	if template.InheritPermissions {
-		if err := service.inheritPermissions(session, stream); err != nil {
-			return derp.Wrap(err, location, "Inheriting permissions from parent", stream.ParentID)
-		}
+	if err := service.inheritPermissions(session, stream); err != nil {
+		return derp.Wrap(err, location, "Inheriting permissions from parent", stream.ParentID)
+	}
+
+	// A Template that shares with children pushes its sharing down, but only when that sharing changed
+	shareWithChildren, err := service.sharingChanged(session, &template, stream, wasNew)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Comparing sharing with the saved Stream", stream.StreamID)
 	}
 
 	// RULE: Calculate "defaultAllow" groups for this stream.
@@ -435,6 +440,13 @@ func (service *Stream) Save(session data.Session, stream *model.Stream, note str
 	// Try to save the Stream to the database
 	if err := service.collection(session).Save(stream, note); err != nil {
 		return derp.Wrap(err, location, "Saving Stream", stream, note)
+	}
+
+	// Stamp the new sharing on every child, after the parent is saved so that each child reads it
+	if shareWithChildren {
+		if err := service.saveChildPermissions(session, stream.StreamID); err != nil {
+			return derp.Wrap(err, location, "Sharing with child streams", stream.StreamID)
+		}
 	}
 
 	// Send SSE notifications to `InReplyTo` streams (if possible)
@@ -563,13 +575,11 @@ func (service *Stream) DeleteMany(session data.Session, criteria exp.Expression,
 	return nil
 }
 
-// SaveChildPermissions re-saves each child of the parent Stream whose Template inherits permissions, so
-// that every one takes up the parent's current sharing.  Run it after the parent's sharing changes.
-// Save writes the whole document, so a child that another server edits at this same moment could
-// lose one of the two writes.
-func (service *Stream) SaveChildPermissions(session data.Session, parentID primitive.ObjectID) error {
+// saveChildPermissions re-saves every child of the parent Stream, so that each one takes up the parent's sharing
+// when Save calls inheritPermissions.  Save writes the whole document, so a concurrent edit to a child can lose.
+func (service *Stream) saveChildPermissions(session data.Session, parentID primitive.ObjectID) error {
 
-	const location = "service.Stream.SaveChildPermissions"
+	const location = "service.Stream.saveChildPermissions"
 
 	it, err := service.List(session, exp.Equal("parentId", parentID).AndEqual("deleteDate", 0))
 
@@ -578,22 +588,12 @@ func (service *Stream) SaveChildPermissions(session data.Session, parentID primi
 	}
 
 	for child := model.NewStream(); it.Next(&child); child = model.NewStream() {
-
-		template, err := service.templateService.Load(child.TemplateID)
-
-		if err != nil {
-			return derp.Wrap(err, location, "Loading child template", child.TemplateID)
-		}
-
-		if !template.InheritPermissions {
-			continue
-		}
-
 		if err := service.Save(session, &child, "Sharing inherited from parent"); err != nil {
 			return derp.Wrap(err, location, "Saving child stream", child.StreamID)
 		}
 	}
 
+	// I'm sharing!
 	return nil
 }
 
@@ -1283,16 +1283,28 @@ func (service *Stream) calcParentIDs(session data.Session, stream *model.Stream)
 	stream.ParentIDs = []primitive.ObjectID{stream.ParentID}
 }
 
-// inheritPermissions copies the parent Stream's sharing (its Groups, Circles, and Products) onto this Stream.
-// A Stream whose parent is not a Stream, such as a User's outbox, keeps its own sharing.
+// inheritPermissions copies the parent Stream's sharing onto this Stream when the parent's Template shares with
+// its children.  A Stream with no parent Stream, such as a User's outbox item, keeps its own sharing.
 func (service *Stream) inheritPermissions(session data.Session, stream *model.Stream) error {
 
 	const location = "service.Stream.inheritPermissions"
 
-	if stream.ParentID.IsZero() {
+	// RULE: Only a child of a Stream whose Template shares with children inherits; ParentTemplateID avoids a read
+	if stream.ParentID.IsZero() || (stream.ParentTemplateID == "") {
 		return nil
 	}
 
+	parentTemplate, err := service.templateService.Load(stream.ParentTemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Loading parent template", stream.ParentTemplateID)
+	}
+
+	if !parentTemplate.ShareWithChildren {
+		return nil
+	}
+
+	// Load the parent, whose sharing the child takes
 	parent := model.NewStream()
 
 	if err := service.LoadByID(session, stream.ParentID, &parent); err != nil {
@@ -1306,6 +1318,57 @@ func (service *Stream) inheritPermissions(session data.Session, stream *model.St
 
 	applyInheritedPermissions(stream, &parent)
 	return nil
+}
+
+// sharingChanged returns TRUE if this Stream's Template shares with children and its sharing differs from the
+// saved copy.  A new Stream has no children yet, so it never needs to push.
+func (service *Stream) sharingChanged(session data.Session, template *model.Template, stream *model.Stream, wasNew bool) (bool, error) {
+
+	const location = "service.Stream.sharingChanged"
+
+	if !template.ShareWithChildren || wasNew {
+		return false, nil
+	}
+
+	// Compare against the copy in the database, before this Save overwrites it
+	saved := model.NewStream()
+
+	if err := service.LoadByID(session, stream.StreamID, &saved); err != nil {
+
+		if derp.IsNotFound(err) {
+			return false, nil
+		}
+
+		return false, derp.Wrap(err, location, "Loading saved stream", stream.StreamID)
+	}
+
+	return !sameSharing(stream, &saved), nil
+}
+
+// sameSharing returns TRUE if two Streams grant the same Groups, Circles, and Products, and have the same ReplyPolicy
+func sameSharing(a *model.Stream, b *model.Stream) bool {
+	return (a.ReplyPolicy == b.ReplyPolicy) &&
+		sameRoleMap(a.Groups, b.Groups) &&
+		sameRoleMap(a.Circles, b.Circles) &&
+		sameRoleMap(a.Products, b.Products)
+}
+
+// sameRoleMap returns TRUE if two role maps grant the same IDs to every role, treating a missing role as empty
+func sameRoleMap(a mapof.Object[id.Slice], b mapof.Object[id.Slice]) bool {
+
+	for role, ids := range a {
+		if !slices.Equal(ids, b[role]) {
+			return false
+		}
+	}
+
+	for role, ids := range b {
+		if !slices.Equal(ids, a[role]) {
+			return false
+		}
+	}
+
+	return true
 }
 
 // applyInheritedPermissions gives the child its parent's Groups, Circles, and Products, as copies that share

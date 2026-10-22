@@ -55,8 +55,8 @@ func TestApplyInheritedPermissions_ReplyPolicy(t *testing.T) {
 	require.Equal(t, "", child.ReplyPolicy, "an open parent reopens a closed child")
 }
 
-// TestStreamInheritPermissions_NoParentStream pins that a Stream whose parent is not a Stream (a
-// User's outbox, or a missing record) keeps its own sharing rather than failing to save.
+// TestStreamInheritPermissions_NoParentStream pins that a Stream with no parent Template recorded (a User's
+// outbox item, or a top-level Stream) keeps its own sharing, without reading any parent.
 func TestStreamInheritPermissions_NoParentStream(t *testing.T) {
 
 	session, err := mockdb.New().Session(context.Background())
@@ -74,4 +74,61 @@ func TestStreamInheritPermissions_NoParentStream(t *testing.T) {
 
 	topLevel := model.NewStream()
 	require.Nil(t, service.inheritPermissions(session, &topLevel))
+}
+
+// TestSameSharing pins which differences push a parent's sharing down: any change to Groups, Circles,
+// Products, or ReplyPolicy does, and a role that is missing compares equal to one that is empty.
+func TestSameSharing(t *testing.T) {
+
+	circleID := primitive.NewObjectID()
+
+	newParent := func() model.Stream {
+		result := model.NewStream()
+		result.Groups = mapof.Object[id.Slice]{"viewer": {model.MagicGroupIDAnonymous}}
+		result.Circles = mapof.Object[id.Slice]{"viewer": {circleID}}
+		return result
+	}
+
+	a, b := newParent(), newParent()
+	require.True(t, sameSharing(&a, &b))
+
+	// A missing role is the same as an empty one
+	b.Products = mapof.Object[id.Slice]{"viewer": {}}
+	require.True(t, sameSharing(&a, &b))
+
+	// Each of the four fields is compared
+	b = newParent()
+	b.Circles["viewer"] = id.Slice{primitive.NewObjectID()}
+	require.False(t, sameSharing(&a, &b), "a different circle")
+
+	b = newParent()
+	b.Groups = mapof.Object[id.Slice]{}
+	require.False(t, sameSharing(&a, &b), "no longer shared with everyone")
+
+	b = newParent()
+	b.Products = mapof.Object[id.Slice]{"viewer": {primitive.NewObjectID()}}
+	require.False(t, sameSharing(&a, &b), "a new product")
+
+	b = newParent()
+	b.ReplyPolicy = model.ReplyPolicyNobody
+	require.False(t, sameSharing(&a, &b), "replies closed")
+}
+
+// TestStreamSharingChanged_SkipsWithoutAComparison pins that a new Stream, or one whose Template does not
+// share with children, never reads its saved copy and never pushes.
+func TestStreamSharingChanged_SkipsWithoutAComparison(t *testing.T) {
+
+	session, err := mockdb.New().Session(context.Background())
+	require.Nil(t, err)
+
+	service := NewStream()
+	stream := model.NewStream()
+
+	changed, err := service.sharingChanged(session, &model.Template{}, &stream, false)
+	require.Nil(t, err)
+	require.False(t, changed, "a Template without shareWithChildren")
+
+	changed, err = service.sharingChanged(session, &model.Template{ShareWithChildren: true}, &stream, true)
+	require.Nil(t, err)
+	require.False(t, changed, "a new Stream has no children")
 }
