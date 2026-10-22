@@ -30,6 +30,7 @@ import (
 type Template struct {
 	templates           set.Map[model.Template]      // map of all templates available within this domain
 	templatePrep        set.Map[model.Template]      // temporary map of templates that are being prepared
+	templateFolders     map[string]string            // folder each prepared template was loaded from, keyed by templateId
 	locations           sliceof.Object[mapof.String] // Configuration for template directory
 	filesystemService   Filesystem                   // Filesystem service
 	registrationService *Registration                // Registration Service
@@ -49,6 +50,7 @@ func NewTemplate(filesystemService Filesystem, registrationService *Registration
 	service := &Template{
 		templates:           make(set.Map[model.Template]),
 		templatePrep:        make(set.Map[model.Template]),
+		templateFolders:     make(map[string]string),
 		locations:           make(sliceof.Object[mapof.String], 0),
 		filesystemService:   filesystemService,
 		registrationService: registrationService,
@@ -162,6 +164,7 @@ func (service *Template) loadTemplates(haltOnError bool) {
 	// Nothing returns an error, because nothing abandons the load partway (BUG-180)
 
 	service.templatePrep = make(set.Map[model.Template])
+	service.templateFolders = make(map[string]string)
 
 	// For each configured file location...
 	for _, fileLocation := range service.locations {
@@ -241,6 +244,11 @@ func (service *Template) loadTemplates(haltOnError bool) {
 		maybeHalt(derp.Wrap(err, location, "Calculating Template inheritance"), haltOnError)
 	}
 
+	// Report outboxes without the Profile tabs.  This never halts, unlike validateTemplates
+	for _, err := range service.missingProfileTabs() {
+		derp.Report(err)
+	}
+
 	// Calculate inheritance for Themes, then publish them.  Themes do not wait for
 	// Template validation below, because a Template failure has never held them back
 	service.themeService.Publish()
@@ -271,6 +279,7 @@ func (service *Template) loadTemplates(haltOnError bool) {
 
 	// Clear out the existing prep area
 	service.templatePrep = make(set.Map[model.Template])
+	service.templateFolders = make(map[string]string)
 	log.Debug().Msg("Template Service: Added/Updated " + strconv.Itoa(len(service.templates)) + " templates")
 }
 
@@ -325,7 +334,23 @@ func (service *Template) Add(templateID string, filesystem fs.FS, definition []b
 	// Handle post-processing steps for the Template
 	result.AfterUnmarshal()
 
+	// RULE: A second definition of one templateId replaces the first, so report it but never refuse it
+	if service.templateFolders == nil {
+		service.templateFolders = make(map[string]string)
+	}
+
+	if previousFolder, exists := service.templateFolders[result.TemplateID]; exists {
+		derp.Report(derp.Conflict(
+			location,
+			"Template is defined more than once. The later definition replaces the earlier one",
+			"templateId: "+result.TemplateID,
+			"replaced: "+previousFolder,
+			"replacedBy: "+templateID,
+		))
+	}
+
 	// Add the template into the prep library
+	service.templateFolders[result.TemplateID] = templateID
 	service.templatePrep[result.TemplateID] = result
 
 	return nil
@@ -593,6 +618,52 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 
 	// Phew.  Hopefully everything is valid.
 	return errors
+}
+
+// profileTabsTemplateID names the base Template that every outbox Template extends for its Profile tabs
+const profileTabsTemplateID = "base-outbox"
+
+// missingProfileTabs returns one error for each outbox Template in the prep area that lacks
+// an action defined by base-outbox.  Run it after inheritance has been calculated.
+func (service *Template) missingProfileTabs() []error {
+
+	const location = "service.template.missingProfileTabs"
+
+	baseOutbox, exists := service.templatePrep[profileTabsTemplateID]
+
+	if !exists {
+		return nil
+	}
+
+	result := make([]error, 0)
+
+	for templateID, template := range service.templatePrep {
+
+		if template.TemplateRole != "user-outbox" {
+			continue
+		}
+
+		// Collect every base-outbox action that this outbox does not have
+		missing := make([]string, 0)
+
+		for actionID := range baseOutbox.Actions {
+			if _, exists := template.Actions[actionID]; !exists {
+				missing = append(missing, actionID)
+			}
+		}
+
+		if len(missing) > 0 {
+			slices.Sort(missing)
+			result = append(result, derp.Internal(
+				location,
+				"Outbox template has no Profile tabs. Add base-outbox to its extends",
+				"templateId: "+templateID,
+				"missing: "+strings.Join(missing, ", "),
+			))
+		}
+	}
+
+	return result
 }
 
 // calculateAllInheritance calls calculateInheritance for each Template in the prep area
