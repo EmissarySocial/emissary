@@ -23,6 +23,7 @@
 			id="outbox-message-content"
 			name="content"
 			rows="3"
+			placeholder="Post a note to the Fediverse..."
 			data-script="
 				on keydown[key=='ArrowLeft']
 					halt the event's bubbling
@@ -41,7 +42,7 @@
 						show #outbox-message-image-disabled
 						hide #outbox-message-image
 					end
-				">{{.ContentRaw}}</textarea>
+				">{{.ContentSource}}</textarea>
 	</div>
 
 	<div id="outbox-message-error" class="margin-bottom"></div>
