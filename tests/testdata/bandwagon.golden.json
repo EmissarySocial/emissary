@@ -8781,6 +8781,38 @@
 				}
 			}
 		},
+		"template:outbox-message/edit/0:as-modal.SubSteps/3:read-form": {
+			"fields": [
+				"isFeatured (read-form, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"isFeatured": "unreadable"
+					}
+				},
+				"empty": {
+					"types": {
+						"isFeatured": "unreadable"
+					}
+				},
+				"hostile": {
+					"error": ": isFeatured: Must be one of the specified values",
+					"types": {
+						"isFeatured": "unreadable"
+					}
+				},
+				"typical": {
+					"changes": {
+						"": "removed",
+						"isFeatured": "string true"
+					},
+					"types": {
+						"isFeatured": "string"
+					}
+				}
+			}
+		},
 		"template:redirect/edit-form/0:edit": {
 			"fields": [
 				"data.url (text, schema.String)",
@@ -11719,13 +11751,13 @@
 		"template:folder/widgets/1:sort-widgets": "not pinned: POST keys are widget IDs on a stored Stream",
 		"template:outbox-message/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:outbox-message/create/0:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
-		"template:outbox-message/create/3:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:outbox-message/create/4:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
+		"template:outbox-message/create/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:outbox-message/create/3:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
 		"template:outbox-message/delete-attachment/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
 		"template:outbox-message/delete-attachment/1:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
 		"template:outbox-message/edit/0:as-modal.SubSteps/2:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
-		"template:outbox-message/edit/0:as-modal.SubSteps/4:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:outbox-message/edit/0:as-modal.SubSteps/5:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
+		"template:outbox-message/edit/0:as-modal.SubSteps/5:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:outbox-message/edit/0:as-modal.SubSteps/6:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
 		"template:outbox-message/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:outbox-reply/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:outbox-reply/create/0:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",

@@ -186,13 +186,20 @@ func TestProfileTabs_SettingsShell(t *testing.T) {
 	templateService := loadProfileTabsTemplates(t, nil)
 	userSettings := templateService.templatePrep["user-settings"]
 
-	// The shell loads the outbox's General tab, and carries no tabs or forms of its own
+	// The shell renders the outbox's General tab, and carries no tabs or forms of its own
 	general, err := os.ReadFile("../_embed/templates/user-settings/general.html")
 	require.NoError(t, err)
 
-	require.Contains(t, string(general), `hx-get="/@me/settings-general"`)
+	require.Contains(t, string(general), `{{- .OutboxView "settings-general" -}}`)
 	require.NotContains(t, string(general), "menu-bar")
-	require.NotContains(t, string(general), ".View")
+	require.NotContains(t, string(general), ".View ")
+
+	// RULE: Neither the shell nor the tabs set hx-swap, so tab swaps inherit the page's view transition
+	tabs, err := os.ReadFile("../_embed/templates/base-outbox/settings-tabs.html")
+	require.NoError(t, err)
+
+	require.NotContains(t, string(general), "hx-swap")
+	require.NotContains(t, string(tabs), "hx-swap")
 
 	// The old forms are gone, and the old tabs redirect to the shell
 	for _, actionID := range []string{"general-form", "images-form", "links-form"} {

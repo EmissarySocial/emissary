@@ -4541,6 +4541,38 @@
 				}
 			}
 		},
+		"template:outbox-message/edit/0:as-modal.SubSteps/3:read-form": {
+			"fields": [
+				"isFeatured (read-form, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"isFeatured": "unreadable"
+					}
+				},
+				"empty": {
+					"types": {
+						"isFeatured": "unreadable"
+					}
+				},
+				"hostile": {
+					"error": ": isFeatured: Must be one of the specified values",
+					"types": {
+						"isFeatured": "unreadable"
+					}
+				},
+				"typical": {
+					"changes": {
+						"": "removed",
+						"isFeatured": "string true"
+					},
+					"types": {
+						"isFeatured": "string"
+					}
+				}
+			}
+		},
 		"template:qwerty-article/properties/0:as-modal.SubSteps/0:edit": {
 			"fields": [
 				"data.bannerDescription (textarea, schema.Any)",
@@ -6092,6 +6124,726 @@
 						"isIndexable": "bool",
 						"isPublic": "bool"
 					}
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-general-form/0:edit": {
+			"fields": [
+				"data.tags (text, schema.String)",
+				"displayName (text, schema.String)",
+				"emailAddress (text, schema.String)",
+				"location (text, schema.String)",
+				"statusMessage (textarea, schema.String)",
+				"username (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"data.tags": "unreadable",
+						"displayName": "string",
+						"emailAddress": "string",
+						"location": "string",
+						"statusMessage": "string",
+						"username": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"data.tags": "unreadable",
+						"displayName": "string",
+						"emailAddress": "string",
+						"location": "string",
+						"statusMessage": "string",
+						"username": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"data": "removed",
+						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
+						"displayName": "string alert(1)‮ xxxxxxxxxxxxxx",
+						"location": "string alert(1)‮\txxxxxxxxxxxxxx",
+						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 da7a3d8994d4)"
+					},
+					"types": {
+						"data.tags": "string",
+						"displayName": "string",
+						"emailAddress": "string",
+						"location": "string",
+						"statusMessage": "string",
+						"username": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"data": "removed",
+						"data.tags": "string Sample data.tags",
+						"displayName": "string Sample displayName",
+						"emailAddress": "string visitor@example.com",
+						"location": "string Sample location",
+						"statusMessage": "string Sample statusMessage",
+						"username": "string visitor_name"
+					},
+					"types": {
+						"data.tags": "string",
+						"displayName": "string",
+						"emailAddress": "string",
+						"location": "string",
+						"statusMessage": "string",
+						"username": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-images-form/0:edit": {
+			"fields": [
+				"iconUrl (upload, schema.String)",
+				"imageUrl (upload, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"iconUrl": "string",
+						"imageUrl": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"iconUrl": "string",
+						"imageUrl": "string"
+					}
+				},
+				"hostile": {
+					"types": {
+						"iconUrl": "string",
+						"imageUrl": "string"
+					}
+				},
+				"typical": {
+					"types": {
+						"iconUrl": "string",
+						"imageUrl": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-links-form/0:edit-table?edit=-1": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": "build.StepTableEditor.Post: Edit index out of range"
+				},
+				"empty": {
+					"error": "build.StepTableEditor.Post: Edit index out of range"
+				},
+				"hostile": {
+					"error": "build.StepTableEditor.Post: Edit index out of range"
+				},
+				"typical": {
+					"error": "build.StepTableEditor.Post: Edit index out of range"
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-links-form/0:edit-table?edit=0": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}"
+					},
+					"types": {
+						"links.0.name": "string",
+						"links.0.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}"
+					},
+					"types": {
+						"links.0.name": "string",
+						"links.0.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[0].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.0.name": "string",
+						"links.0.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0].name": "string Sample name",
+						"links[0].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.0.name": "string",
+						"links.0.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-links-form/0:edit-table?edit=1": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}"
+					},
+					"types": {
+						"links.1.name": "string",
+						"links.1.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}"
+					},
+					"types": {
+						"links.1.name": "string",
+						"links.1.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[1].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.1.name": "string",
+						"links.1.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1].name": "string Sample name",
+						"links[1].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.1.name": "string",
+						"links.1.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-links-form/0:edit-table?edit=10": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.10.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.10.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.10.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.10.name"
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-links-form/0:edit-table?edit=11": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.11.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.11.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.11.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.11.name"
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-links-form/0:edit-table?edit=12": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.12.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.12.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.12.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.12.name"
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-links-form/0:edit-table?edit=13": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.13.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.13.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.13.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.13.name"
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-links-form/0:edit-table?edit=14": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.14.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.14.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.14.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.14.name"
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-links-form/0:edit-table?edit=15": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.15.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.15.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.15.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.15.name"
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-links-form/0:edit-table?edit=16": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.16.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.16.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.16.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.16.name"
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-links-form/0:edit-table?edit=2": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}"
+					},
+					"types": {
+						"links.2.name": "string",
+						"links.2.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}"
+					},
+					"types": {
+						"links.2.name": "string",
+						"links.2.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[2].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.2.name": "string",
+						"links.2.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2].name": "string Sample name",
+						"links[2].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.2.name": "string",
+						"links.2.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-links-form/0:edit-table?edit=3": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}"
+					},
+					"types": {
+						"links.3.name": "string",
+						"links.3.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}"
+					},
+					"types": {
+						"links.3.name": "string",
+						"links.3.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[3].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.3.name": "string",
+						"links.3.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3].name": "string Sample name",
+						"links[3].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.3.name": "string",
+						"links.3.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-links-form/0:edit-table?edit=4": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}"
+					},
+					"types": {
+						"links.4.name": "string",
+						"links.4.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}"
+					},
+					"types": {
+						"links.4.name": "string",
+						"links.4.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[4].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.4.name": "string",
+						"links.4.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4].name": "string Sample name",
+						"links[4].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.4.name": "string",
+						"links.4.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-links-form/0:edit-table?edit=5": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}",
+						"links[5]": "document {}"
+					},
+					"types": {
+						"links.5.name": "string",
+						"links.5.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}",
+						"links[5]": "document {}"
+					},
+					"types": {
+						"links.5.name": "string",
+						"links.5.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}",
+						"links[5].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[5].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.5.name": "string",
+						"links.5.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}",
+						"links[5].name": "string Sample name",
+						"links[5].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.5.name": "string",
+						"links.5.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-links-form/0:edit-table?edit=6": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.6.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.6.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.6.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.6.name"
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-links-form/0:edit-table?edit=7": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.7.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.7.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.7.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.7.name"
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-links-form/0:edit-table?edit=8": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.8.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.8.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.8.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.8.name"
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-links-form/0:edit-table?edit=9": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.9.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.9.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.9.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.9.name"
+				}
+			}
+		},
+		"template:qwerty-outbox/settings-links-form/0:edit-table?edit=first": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": "build.StepTableEditor.Post: Failed to convert edit index"
+				},
+				"empty": {
+					"error": "build.StepTableEditor.Post: Failed to convert edit index"
+				},
+				"hostile": {
+					"error": "build.StepTableEditor.Post: Failed to convert edit index"
+				},
+				"typical": {
+					"error": "build.StepTableEditor.Post: Failed to convert edit index"
 				}
 			}
 		},
@@ -9105,13 +9857,13 @@
 		"template:folder/widgets/1:sort-widgets": "not pinned: POST keys are widget IDs on a stored Stream",
 		"template:outbox-message/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:outbox-message/create/0:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
-		"template:outbox-message/create/3:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:outbox-message/create/4:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
+		"template:outbox-message/create/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:outbox-message/create/3:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
 		"template:outbox-message/delete-attachment/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
 		"template:outbox-message/delete-attachment/1:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
 		"template:outbox-message/edit/0:as-modal.SubSteps/2:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
-		"template:outbox-message/edit/0:as-modal.SubSteps/4:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:outbox-message/edit/0:as-modal.SubSteps/5:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
+		"template:outbox-message/edit/0:as-modal.SubSteps/5:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:outbox-message/edit/0:as-modal.SubSteps/6:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
 		"template:outbox-message/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:outbox-reply/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:outbox-reply/create/0:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
@@ -9169,6 +9921,10 @@
 		"template:qwerty-outbox/edit/0:as-modal.SubSteps/5:set-password": "not pinned: hashes and stores a password through the User service",
 		"template:qwerty-outbox/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:qwerty-outbox/manage-collections/1:sort": "not pinned: POST keys are database record IDs",
+		"template:qwerty-outbox/settings-icon-delete/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
+		"template:qwerty-outbox/settings-image-delete/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
+		"template:qwerty-outbox/settings-images-form/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:qwerty-outbox/settings-images-form/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-outbox/sort-children/0:sort": "not pinned: POST keys are database record IDs",
 		"template:qwerty-outbox/sort-featured/0:sort": "not pinned: POST keys are database record IDs",
 		"template:qwerty-outbox/upload-banner/0:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",

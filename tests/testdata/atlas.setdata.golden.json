@@ -2485,6 +2485,50 @@
 				"POST/typical": {}
 			}
 		},
+		"template:outbox-message/edit/0:as-modal.SubSteps/4:set-data": {
+			"fields": [
+				"isFeatured (values, schema.Boolean)"
+			],
+			"values": {
+				"isFeatured": "{{eq (.GetString `isFeatured`) `true`}} (renders against the builder; mocked)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": ": isFeatured: Value must be a boolean"
+				},
+				"GET/hostile": {
+					"error": ": isFeatured: Value must be a boolean"
+				},
+				"GET/literal": {},
+				"GET/prefilled": {
+					"changes": {
+						"isFeatured": "bool false"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"isFeatured": "bool true"
+					}
+				},
+				"POST/empty": {
+					"error": ": isFeatured: Value must be a boolean"
+				},
+				"POST/hostile": {
+					"error": ": isFeatured: Value must be a boolean"
+				},
+				"POST/literal": {},
+				"POST/prefilled": {
+					"changes": {
+						"isFeatured": "bool false"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"isFeatured": "bool true"
+					}
+				}
+			}
+		},
 		"template:outbox-message/like-button/1:set-data": {
 			"fields": [],
 			"results": {
