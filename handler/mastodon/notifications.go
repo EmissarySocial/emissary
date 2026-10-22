@@ -272,7 +272,7 @@ func notificationNeedsStatus(notificationType string) bool {
 // there is one.
 func notificationToToot(factory *service.Factory, session data.Session, auth model.Authorization, notification model.Notification) object.Notification {
 
-	result := notification.Toot()
+	result := notification.Toot(factory.Host())
 
 	switch {
 

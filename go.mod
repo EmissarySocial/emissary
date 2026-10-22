@@ -116,6 +116,7 @@ require (
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/kevinburke/ssh_config v1.6.0 // indirect
 	github.com/klauspost/compress v1.20.1 // indirect
+	github.com/klauspost/cpuid/v2 v2.4.0 // indirect
 	github.com/mattn/go-colorable v0.1.16 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mmcdole/goxpp/v2 v2.0.0 // indirect
@@ -143,7 +144,3 @@ require (
 	golang.org/x/time v0.16.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 )
-
-replace github.com/benpate/toot => github.com/Lawhacknifemi/toot v0.5.1-0.20261005130953-16e67ddfae57
-
-replace github.com/benpate/toot-echo => github.com/Lawhacknifemi/toot-echo v0.0.0-20261005141736-b741284f9326

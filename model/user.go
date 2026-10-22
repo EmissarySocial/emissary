@@ -579,9 +579,9 @@ func (user *User) JSONFeedURL() string {
 // forms (this short hex ID for local accounts, and the URL-encoded opaque ID
 // model.EncodeRemoteAccountID produces -- returned by GetAccount_Lookup -- for
 // remote ones), so the rest of the API stays consistent no matter which form a
-// client holds for a given account.
-func (user User) Toot() object.Account {
-	return object.Account{
+// client holds for a given account. host (e.g. "https://example.com") supplies the default images.
+func (user User) Toot(host string) object.Account {
+	return WithMastodonDefaultImages(object.Account{
 		ID:             user.UserID.Hex(),
 		Username:       user.Username,
 		Acct:           user.Username, // Per the Mastodon API: "Equal to username for local users."
@@ -597,7 +597,7 @@ func (user User) Toot() object.Account {
 		FollowersCount: user.FollowerCount,
 		FollowingCount: user.FollowingCount,
 		Fields:         user.tootFields(),
-	}
+	}, host)
 }
 
 // tootFields returns this User's profile links as Mastodon account fields, each with the same

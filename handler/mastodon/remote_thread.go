@@ -73,7 +73,7 @@ func accountForActor(client streams.Client, factory *service.Factory, session da
 			return loaded, true
 		}
 
-		return model.RemoteActorAccount(authorURL, "", "", time.Time{}), true
+		return model.RemoteActorAccount(authorURL, "", "", time.Time{}, factory.Host()), true
 	})
 
 	return account

@@ -181,7 +181,7 @@ func newsItemsToToots(factory *service.Factory, session data.Session, auth model
 		// RULE: the wrapper needs its own ID -- the client treats a status and its
 		// reblog with the same ID as one record. Actions (favourite, etc.) target
 		// the inner post, whose ID stays the NewsItemID.
-		wrapper := newsItem.Toot()
+		wrapper := newsItem.Toot(factory.Host())
 		wrapper.ID = "b" + wrapper.ID
 		wrapper.URI = post.URI + "#announce"
 		wrapper.URL = wrapper.URI
@@ -313,7 +313,7 @@ func loadAccount(client streams.Client, factory *service.Factory, session data.S
 // NewsItem came to exist in the first place.
 func newsItemToStatus(client streams.Client, factory *service.Factory, session data.Session, accounts *accountMemo, newsItem model.NewsItem) (object.Status, *object.Account) {
 
-	status := newsItem.Toot()
+	status := newsItem.Toot(factory.Host())
 
 	if account, found := accounts.get(newsItem.Origin.URL, func() (object.Account, bool) {
 		return loadAccount(client, factory, session, newsItem.Origin.URL)
@@ -359,7 +359,7 @@ func newsItemToStatus(client streams.Client, factory *service.Factory, session d
 	}); found {
 		status.Account = author
 	} else {
-		status.Account = model.RemoteActorAccount(authorURL, "", "", time.Time{})
+		status.Account = model.RemoteActorAccount(authorURL, "", "", time.Time{}, factory.Host())
 	}
 
 	return status, &booster

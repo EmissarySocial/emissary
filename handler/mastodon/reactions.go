@@ -94,7 +94,13 @@ func listReactors(serverFactory *server.Factory, auth model.Authorization, host 
 
 	// A post on another server is also asked for who reacted there, since this server only knows its own users
 	if maxID == "" {
-		accounts = mergeReactors(accounts, fetchRemoteReactors(postURL, host, remoteListName(responseType), reactorLimit(limit), factory.ActivityStream().AllowPrivateIPs()))
+		remote := fetchRemoteReactors(postURL, host, remoteListName(responseType), reactorLimit(limit), factory.ActivityStream().AllowPrivateIPs())
+
+		for index := range remote {
+			remote[index] = model.WithMastodonDefaultImages(remote[index], factory.Host())
+		}
+
+		accounts = mergeReactors(accounts, remote)
 	}
 
 	return accounts, pageInfo, nil

@@ -244,12 +244,12 @@ func (notification Notification) MastodonType() string {
 	}
 }
 
-// Toot returns this Notification represented as a Mastodon API Notification object.
-func (notification Notification) Toot() object.Notification {
+// Toot returns this Notification represented as a Mastodon API Notification object, with default images from host.
+func (notification Notification) Toot(host string) object.Notification {
 	return object.Notification{
 		ID:        notification.NotificationID.Hex(),
 		Type:      notification.MastodonType(),
 		CreatedAt: MastodonDate(time.UnixMilli(notification.CreateDate)),
-		Account:   notification.Actor.Toot(),
+		Account:   notification.Actor.Toot(host),
 	}
 }

@@ -313,8 +313,8 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.HEAD("/security.txt", handler.TBD)
 	e.GET("/poco", handler.TBD) // Friendica polls this route
 	e.HEAD("/poco", handler.TBD)
-	e.GET("/api/**", handler.TBD) // Mastodon API?
-	e.HEAD("/api/**", handler.TBD)
+	e.GET("/api/**", handler.APINotFound) // API paths with no Mastodon handler
+	e.HEAD("/api/**", handler.APINotFound)
 	e.GET("/favicon.ico", handler.TBD) // https://developer.mozilla.org/en-US/docs/Glossary/Favicon
 	e.HEAD("/favicon.ico", handler.TBD)
 	e.GET("/favicon.png", handler.TBD) // https://developer.mozilla.org/en-US/docs/Glossary/Favicon

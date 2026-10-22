@@ -318,7 +318,7 @@ func (newsItem *NewsItem) AddReference(reference OriginLink) bool {
 // handler is expected to fill it in from the ActivityStream cache. Without a
 // valid Account the whole Status fails to decode in the client, so this must
 // always return one.
-func (newsItem NewsItem) Toot() object.Status {
+func (newsItem NewsItem) Toot(host string) object.Status {
 
 	// PublishDate is the post's own time (Unix SECONDS); fall back to the ingest
 	// time when it is missing.
@@ -335,7 +335,7 @@ func (newsItem NewsItem) Toot() object.Status {
 		Visibility:       "public",
 		Favourited:       newsItem.IsLiked(),
 		Reblogged:        newsItem.IsAnnounced(),
-		Account:          RemoteActorAccount(newsItem.Origin.URL, newsItem.Origin.Label, newsItem.Origin.IconURL, time.Time{}),
+		Account:          RemoteActorAccount(newsItem.Origin.URL, newsItem.Origin.Label, newsItem.Origin.IconURL, time.Time{}, host),
 		MediaAttachments: []object.MediaAttachment{},
 	}
 }

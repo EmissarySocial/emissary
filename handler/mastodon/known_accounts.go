@@ -16,20 +16,20 @@ func knownRemoteAccount(factory *service.Factory, session data.Session, auth mod
 	following := model.NewFollowing()
 
 	if err := factory.Following().LoadByURL(session, auth.UserID, accountURL, &following); err == nil {
-		return accountFromFollowing(&following), true
+		return accountFromFollowing(&following, factory.Host()), true
 	}
 
 	follower := model.NewFollower()
 
 	if err := factory.Follower().LoadByActor(session, auth.UserID, accountURL, &follower); err == nil {
-		return follower.Actor.Toot(), true
+		return follower.Actor.Toot(factory.Host()), true
 	}
 
 	return object.Account{}, false
 }
 
-// accountFromFollowing builds a basic account from a Following record.
-func accountFromFollowing(following *model.Following) object.Account {
+// accountFromFollowing builds a basic account from a Following record, with default images from host.
+func accountFromFollowing(following *model.Following, host string) object.Account {
 
 	person := model.PersonLink{
 		Name:       following.Label,
@@ -38,7 +38,7 @@ func accountFromFollowing(following *model.Following) object.Account {
 		IconURL:    following.IconURL,
 	}
 
-	return person.Toot()
+	return person.Toot(host)
 }
 
 // knownProfileURL finds the profile URL of an "@user@domain" handle from the User's own records of

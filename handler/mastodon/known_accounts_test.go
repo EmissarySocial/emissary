@@ -16,7 +16,7 @@ func TestAccountFromFollowing(t *testing.T) {
 	following.ProfileURL = "https://mastodon.social/ap/users/117111409165181205"
 	following.IconURL = "https://mastodon.social/avatar.png"
 
-	account := accountFromFollowing(&following)
+	account := accountFromFollowing(&following, "https://example.com")
 
 	require.Equal(t, "devInTheVoid", account.Username)
 	require.Equal(t, "devInTheVoid@mastodon.social", account.Acct)

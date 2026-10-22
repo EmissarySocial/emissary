@@ -137,7 +137,7 @@ func mapDocumentToAccount(factory *service.Factory, session data.Session, docume
 	go func() { defer waitGroup.Done(); statusesCount = document.Outbox().LoadLink().TotalItems() }()
 	waitGroup.Wait()
 
-	return object.Account{
+	return model.WithMastodonDefaultImages(object.Account{
 		ID:             resolveAccountID(factory, session, document.ID()),
 		Acct:           acct,
 		Username:       document.PreferredUsername(),
@@ -157,7 +157,7 @@ func mapDocumentToAccount(factory *service.Factory, session data.Session, docume
 		Bot:            actorIsBot(document),
 		Group:          document.Type() == vocab.ActorTypeGroup,
 		Locked:         document.Get("manuallyApprovesFollowers").Bool(),
-	}
+	}, factory.Host())
 }
 
 /*******************************************
@@ -725,7 +725,7 @@ func ownFollowers(factory *service.Factory, session data.Session, userID primiti
 			continue
 		}
 
-		result = append(result, follower.Actor.Toot())
+		result = append(result, follower.Actor.Toot(factory.Host()))
 	}
 
 	return result
@@ -805,7 +805,7 @@ func GetAccount_Following(serverFactory *server.Factory) func(model.Authorizatio
 				continue
 			}
 
-			result = append(result, model.RemoteActorAccount(profileURL, following.Label, following.IconURL, time.UnixMilli(following.CreateDate)))
+			result = append(result, model.RemoteActorAccount(profileURL, following.Label, following.IconURL, time.UnixMilli(following.CreateDate), factory.Host()))
 		}
 
 		return result, toot.PageInfo{}, nil
@@ -1432,7 +1432,7 @@ func searchFollowedAccounts(factory *service.Factory, session data.Session, auth
 			IconURL:    following.IconURL,
 		}
 
-		accounts[index] = person.Toot()
+		accounts[index] = person.Toot(factory.Host())
 	}
 
 	return accounts, nil

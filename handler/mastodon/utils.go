@@ -295,7 +295,7 @@ func tagsForStream(stream *model.Stream) []object.StatusTag {
 // link markup (see tagsForStream and markHashtagLinks).
 func tootStream(factory *service.Factory, session data.Session, stream *model.Stream) object.Status {
 
-	status := stream.Toot()
+	status := stream.Toot(factory.Host())
 	status.InReplyToID, status.InReplyToAccountID = replyIDs(factory, session, stream)
 	status.Tags = tagsForStream(stream)
 	status.Mentions = mentionsForStream(stream, func(acct string) string {
@@ -337,7 +337,7 @@ func streamMediaAttachments(factory *service.Factory, session data.Session, stre
 // may see. A failed lookup is reported and leaves them zero, since it should not fail the account.
 func tootUser(factory *service.Factory, session data.Session, auth model.Authorization, user *model.User) object.Account {
 
-	account := user.Toot()
+	account := user.Toot(factory.Host())
 
 	count, newest, err := factory.Stream().SummarizeByUser(session, auth, user.UserID)
 
@@ -442,5 +442,6 @@ func replyIDsFor(parentURL string, parent *model.Stream) (string, string) {
 		return model.EncodeRemoteStatusID(parentURL), ""
 	}
 
-	return parent.StreamID.Hex(), parent.AttributedTo.Toot().ID
+	// Only the account ID is read here, which never depends on the host
+	return parent.StreamID.Hex(), parent.AttributedTo.Toot("").ID
 }

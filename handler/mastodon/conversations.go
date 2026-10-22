@@ -119,7 +119,7 @@ func conversationToToot(factory *service.Factory, session data.Session, auth mod
 			return loaded, true
 		}
 
-		return group.Latest.Actor.Toot(), true
+		return group.Latest.Actor.Toot(factory.Host()), true
 	})
 
 	status, err := statusForPostURL(factory, session, auth, group.Latest.ObjectURL, "handler.mastodon_conversationToToot")

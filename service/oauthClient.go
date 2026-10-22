@@ -157,6 +157,13 @@ func (service *OAuthClient) LoadByClientID(session data.Session, clientID primit
 // field.  Otherwise, it searches on the ActorID field
 func (service *OAuthClient) LoadByToken(session data.Session, token string, client *model.OAuthClient) error {
 
+	const location = "service.OAuthClient.LoadByToken"
+
+	// RULE: An empty token names no client. Without this, it matches every client whose clientUrl is empty
+	if token == "" {
+		return derp.BadRequest(location, "client_id is required")
+	}
+
 	// If the token is an ObjectID, then load using ClientID
 	if clientID, err := primitive.ObjectIDFromHex(token); err == nil {
 		return service.LoadByClientID(session, clientID, client)
