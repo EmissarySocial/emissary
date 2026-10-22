@@ -21,6 +21,12 @@ type builderContext struct {
 // handler/admin.go buildAdmin_GetBuilder and each builder's schema() method choose them
 func templateContexts(group *loadedGroup, template model.Template) []builderContext {
 
+	// build.Outbox renders every outbox template, whatever its model: the User schema, plus
+	// the string rules the template declares for `data`
+	if (template.TemplateRole == "user-outbox") || (template.Model == "Outbox") {
+		return []builderContext{{Schema: schema.New(model.UserSchemaForTemplate(template.Schema)), NewObject: template.NewObject}}
+	}
+
 	switch template.Model {
 
 	// build.Domain: the Domain schema extended by the current Theme, with the Theme's form
@@ -45,6 +51,7 @@ func templateContexts(group *loadedGroup, template model.Template) []builderCont
 	// build.Syndication: the plain Domain schema
 	case "Syndication":
 		return []builderContext{{Schema: schema.New(model.DomainSchema()), NewObject: newPointer(model.NewWritableDomain)}}
+
 	}
 
 	// Only build.Stream and build.Navigation use the template's own schema.  Every other

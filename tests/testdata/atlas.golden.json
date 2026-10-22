@@ -4325,6 +4325,726 @@
 				}
 			}
 		},
+		"template:atlas-outbox/settings-general-form/0:edit": {
+			"fields": [
+				"data.tags (text, schema.String)",
+				"displayName (text, schema.String)",
+				"emailAddress (text, schema.String)",
+				"location (text, schema.String)",
+				"statusMessage (textarea, schema.String)",
+				"username (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"data.tags": "unreadable",
+						"displayName": "string",
+						"emailAddress": "string",
+						"location": "string",
+						"statusMessage": "string",
+						"username": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"data.tags": "unreadable",
+						"displayName": "string",
+						"emailAddress": "string",
+						"location": "string",
+						"statusMessage": "string",
+						"username": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"data": "removed",
+						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
+						"displayName": "string alert(1)‮ xxxxxxxxxxxxxx",
+						"location": "string alert(1)‮\txxxxxxxxxxxxxx",
+						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 da7a3d8994d4)"
+					},
+					"types": {
+						"data.tags": "string",
+						"displayName": "string",
+						"emailAddress": "string",
+						"location": "string",
+						"statusMessage": "string",
+						"username": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"data": "removed",
+						"data.tags": "string Sample data.tags",
+						"displayName": "string Sample displayName",
+						"emailAddress": "string visitor@example.com",
+						"location": "string Sample location",
+						"statusMessage": "string Sample statusMessage",
+						"username": "string visitor_name"
+					},
+					"types": {
+						"data.tags": "string",
+						"displayName": "string",
+						"emailAddress": "string",
+						"location": "string",
+						"statusMessage": "string",
+						"username": "string"
+					}
+				}
+			}
+		},
+		"template:atlas-outbox/settings-images-form/0:edit": {
+			"fields": [
+				"iconUrl (upload, schema.String)",
+				"imageUrl (upload, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"iconUrl": "string",
+						"imageUrl": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"iconUrl": "string",
+						"imageUrl": "string"
+					}
+				},
+				"hostile": {
+					"types": {
+						"iconUrl": "string",
+						"imageUrl": "string"
+					}
+				},
+				"typical": {
+					"types": {
+						"iconUrl": "string",
+						"imageUrl": "string"
+					}
+				}
+			}
+		},
+		"template:atlas-outbox/settings-links-form/0:edit-table?edit=-1": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": "build.StepTableEditor.Post: Edit index out of range"
+				},
+				"empty": {
+					"error": "build.StepTableEditor.Post: Edit index out of range"
+				},
+				"hostile": {
+					"error": "build.StepTableEditor.Post: Edit index out of range"
+				},
+				"typical": {
+					"error": "build.StepTableEditor.Post: Edit index out of range"
+				}
+			}
+		},
+		"template:atlas-outbox/settings-links-form/0:edit-table?edit=0": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}"
+					},
+					"types": {
+						"links.0.name": "string",
+						"links.0.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}"
+					},
+					"types": {
+						"links.0.name": "string",
+						"links.0.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[0].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.0.name": "string",
+						"links.0.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0].name": "string Sample name",
+						"links[0].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.0.name": "string",
+						"links.0.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:atlas-outbox/settings-links-form/0:edit-table?edit=1": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}"
+					},
+					"types": {
+						"links.1.name": "string",
+						"links.1.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}"
+					},
+					"types": {
+						"links.1.name": "string",
+						"links.1.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[1].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.1.name": "string",
+						"links.1.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1].name": "string Sample name",
+						"links[1].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.1.name": "string",
+						"links.1.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:atlas-outbox/settings-links-form/0:edit-table?edit=10": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.10.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.10.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.10.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.10.name"
+				}
+			}
+		},
+		"template:atlas-outbox/settings-links-form/0:edit-table?edit=11": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.11.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.11.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.11.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.11.name"
+				}
+			}
+		},
+		"template:atlas-outbox/settings-links-form/0:edit-table?edit=12": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.12.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.12.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.12.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.12.name"
+				}
+			}
+		},
+		"template:atlas-outbox/settings-links-form/0:edit-table?edit=13": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.13.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.13.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.13.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.13.name"
+				}
+			}
+		},
+		"template:atlas-outbox/settings-links-form/0:edit-table?edit=14": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.14.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.14.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.14.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.14.name"
+				}
+			}
+		},
+		"template:atlas-outbox/settings-links-form/0:edit-table?edit=15": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.15.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.15.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.15.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.15.name"
+				}
+			}
+		},
+		"template:atlas-outbox/settings-links-form/0:edit-table?edit=16": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.16.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.16.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.16.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.16.name"
+				}
+			}
+		},
+		"template:atlas-outbox/settings-links-form/0:edit-table?edit=2": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}"
+					},
+					"types": {
+						"links.2.name": "string",
+						"links.2.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}"
+					},
+					"types": {
+						"links.2.name": "string",
+						"links.2.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[2].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.2.name": "string",
+						"links.2.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2].name": "string Sample name",
+						"links[2].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.2.name": "string",
+						"links.2.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:atlas-outbox/settings-links-form/0:edit-table?edit=3": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}"
+					},
+					"types": {
+						"links.3.name": "string",
+						"links.3.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}"
+					},
+					"types": {
+						"links.3.name": "string",
+						"links.3.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[3].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.3.name": "string",
+						"links.3.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3].name": "string Sample name",
+						"links[3].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.3.name": "string",
+						"links.3.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:atlas-outbox/settings-links-form/0:edit-table?edit=4": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}"
+					},
+					"types": {
+						"links.4.name": "string",
+						"links.4.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}"
+					},
+					"types": {
+						"links.4.name": "string",
+						"links.4.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[4].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.4.name": "string",
+						"links.4.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4].name": "string Sample name",
+						"links[4].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.4.name": "string",
+						"links.4.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:atlas-outbox/settings-links-form/0:edit-table?edit=5": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}",
+						"links[5]": "document {}"
+					},
+					"types": {
+						"links.5.name": "string",
+						"links.5.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}",
+						"links[5]": "document {}"
+					},
+					"types": {
+						"links.5.name": "string",
+						"links.5.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}",
+						"links[5].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[5].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.5.name": "string",
+						"links.5.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}",
+						"links[5].name": "string Sample name",
+						"links[5].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.5.name": "string",
+						"links.5.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:atlas-outbox/settings-links-form/0:edit-table?edit=6": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.6.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.6.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.6.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.6.name"
+				}
+			}
+		},
+		"template:atlas-outbox/settings-links-form/0:edit-table?edit=7": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.7.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.7.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.7.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.7.name"
+				}
+			}
+		},
+		"template:atlas-outbox/settings-links-form/0:edit-table?edit=8": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.8.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.8.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.8.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.8.name"
+				}
+			}
+		},
+		"template:atlas-outbox/settings-links-form/0:edit-table?edit=9": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.9.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.9.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.9.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.9.name"
+				}
+			}
+		},
+		"template:atlas-outbox/settings-links-form/0:edit-table?edit=first": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": "build.StepTableEditor.Post: Failed to convert edit index"
+				},
+				"empty": {
+					"error": "build.StepTableEditor.Post: Failed to convert edit index"
+				},
+				"hostile": {
+					"error": "build.StepTableEditor.Post: Failed to convert edit index"
+				},
+				"typical": {
+					"error": "build.StepTableEditor.Post: Failed to convert edit index"
+				}
+			}
+		},
 		"template:atlas-outbox/wizard-1/0:edit": {
 			"fields": [
 				"displayName (text, schema.String)",
@@ -4672,6 +5392,726 @@
 						"summary": "string",
 						"token": "string"
 					}
+				}
+			}
+		},
+		"template:base-outbox/settings-general-form/0:edit": {
+			"fields": [
+				"data.tags (text, schema.String)",
+				"displayName (text, schema.String)",
+				"emailAddress (text, schema.String)",
+				"location (text, schema.String)",
+				"statusMessage (textarea, schema.String)",
+				"username (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"data.tags": "unreadable",
+						"displayName": "string",
+						"emailAddress": "string",
+						"location": "string",
+						"statusMessage": "string",
+						"username": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"data.tags": "unreadable",
+						"displayName": "string",
+						"emailAddress": "string",
+						"location": "string",
+						"statusMessage": "string",
+						"username": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"data": "removed",
+						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
+						"displayName": "string alert(1)‮ xxxxxxxxxxxxxx",
+						"location": "string alert(1)‮\txxxxxxxxxxxxxx",
+						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 da7a3d8994d4)"
+					},
+					"types": {
+						"data.tags": "string",
+						"displayName": "string",
+						"emailAddress": "string",
+						"location": "string",
+						"statusMessage": "string",
+						"username": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"data": "removed",
+						"data.tags": "string Sample data.tags",
+						"displayName": "string Sample displayName",
+						"emailAddress": "string visitor@example.com",
+						"location": "string Sample location",
+						"statusMessage": "string Sample statusMessage",
+						"username": "string visitor_name"
+					},
+					"types": {
+						"data.tags": "string",
+						"displayName": "string",
+						"emailAddress": "string",
+						"location": "string",
+						"statusMessage": "string",
+						"username": "string"
+					}
+				}
+			}
+		},
+		"template:base-outbox/settings-images-form/0:edit": {
+			"fields": [
+				"iconUrl (upload, schema.String)",
+				"imageUrl (upload, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"iconUrl": "string",
+						"imageUrl": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"iconUrl": "string",
+						"imageUrl": "string"
+					}
+				},
+				"hostile": {
+					"types": {
+						"iconUrl": "string",
+						"imageUrl": "string"
+					}
+				},
+				"typical": {
+					"types": {
+						"iconUrl": "string",
+						"imageUrl": "string"
+					}
+				}
+			}
+		},
+		"template:base-outbox/settings-links-form/0:edit-table?edit=-1": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": "build.StepTableEditor.Post: Edit index out of range"
+				},
+				"empty": {
+					"error": "build.StepTableEditor.Post: Edit index out of range"
+				},
+				"hostile": {
+					"error": "build.StepTableEditor.Post: Edit index out of range"
+				},
+				"typical": {
+					"error": "build.StepTableEditor.Post: Edit index out of range"
+				}
+			}
+		},
+		"template:base-outbox/settings-links-form/0:edit-table?edit=0": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}"
+					},
+					"types": {
+						"links.0.name": "string",
+						"links.0.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}"
+					},
+					"types": {
+						"links.0.name": "string",
+						"links.0.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[0].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.0.name": "string",
+						"links.0.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0].name": "string Sample name",
+						"links[0].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.0.name": "string",
+						"links.0.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:base-outbox/settings-links-form/0:edit-table?edit=1": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}"
+					},
+					"types": {
+						"links.1.name": "string",
+						"links.1.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}"
+					},
+					"types": {
+						"links.1.name": "string",
+						"links.1.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[1].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.1.name": "string",
+						"links.1.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1].name": "string Sample name",
+						"links[1].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.1.name": "string",
+						"links.1.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:base-outbox/settings-links-form/0:edit-table?edit=10": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.10.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.10.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.10.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.10.name"
+				}
+			}
+		},
+		"template:base-outbox/settings-links-form/0:edit-table?edit=11": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.11.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.11.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.11.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.11.name"
+				}
+			}
+		},
+		"template:base-outbox/settings-links-form/0:edit-table?edit=12": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.12.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.12.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.12.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.12.name"
+				}
+			}
+		},
+		"template:base-outbox/settings-links-form/0:edit-table?edit=13": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.13.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.13.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.13.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.13.name"
+				}
+			}
+		},
+		"template:base-outbox/settings-links-form/0:edit-table?edit=14": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.14.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.14.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.14.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.14.name"
+				}
+			}
+		},
+		"template:base-outbox/settings-links-form/0:edit-table?edit=15": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.15.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.15.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.15.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.15.name"
+				}
+			}
+		},
+		"template:base-outbox/settings-links-form/0:edit-table?edit=16": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.16.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.16.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.16.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.16.name"
+				}
+			}
+		},
+		"template:base-outbox/settings-links-form/0:edit-table?edit=2": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}"
+					},
+					"types": {
+						"links.2.name": "string",
+						"links.2.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}"
+					},
+					"types": {
+						"links.2.name": "string",
+						"links.2.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[2].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.2.name": "string",
+						"links.2.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2].name": "string Sample name",
+						"links[2].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.2.name": "string",
+						"links.2.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:base-outbox/settings-links-form/0:edit-table?edit=3": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}"
+					},
+					"types": {
+						"links.3.name": "string",
+						"links.3.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}"
+					},
+					"types": {
+						"links.3.name": "string",
+						"links.3.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[3].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.3.name": "string",
+						"links.3.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3].name": "string Sample name",
+						"links[3].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.3.name": "string",
+						"links.3.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:base-outbox/settings-links-form/0:edit-table?edit=4": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}"
+					},
+					"types": {
+						"links.4.name": "string",
+						"links.4.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}"
+					},
+					"types": {
+						"links.4.name": "string",
+						"links.4.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[4].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.4.name": "string",
+						"links.4.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4].name": "string Sample name",
+						"links[4].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.4.name": "string",
+						"links.4.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:base-outbox/settings-links-form/0:edit-table?edit=5": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}",
+						"links[5]": "document {}"
+					},
+					"types": {
+						"links.5.name": "string",
+						"links.5.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}",
+						"links[5]": "document {}"
+					},
+					"types": {
+						"links.5.name": "string",
+						"links.5.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}",
+						"links[5].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[5].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.5.name": "string",
+						"links.5.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}",
+						"links[5].name": "string Sample name",
+						"links[5].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.5.name": "string",
+						"links.5.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:base-outbox/settings-links-form/0:edit-table?edit=6": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.6.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.6.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.6.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.6.name"
+				}
+			}
+		},
+		"template:base-outbox/settings-links-form/0:edit-table?edit=7": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.7.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.7.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.7.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.7.name"
+				}
+			}
+		},
+		"template:base-outbox/settings-links-form/0:edit-table?edit=8": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.8.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.8.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.8.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.8.name"
+				}
+			}
+		},
+		"template:base-outbox/settings-links-form/0:edit-table?edit=9": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.9.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.9.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.9.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.9.name"
+				}
+			}
+		},
+		"template:base-outbox/settings-links-form/0:edit-table?edit=first": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": "build.StepTableEditor.Post: Failed to convert edit index"
+				},
+				"empty": {
+					"error": "build.StepTableEditor.Post: Failed to convert edit index"
+				},
+				"hostile": {
+					"error": "build.StepTableEditor.Post: Failed to convert edit index"
+				},
+				"typical": {
+					"error": "build.StepTableEditor.Post: Failed to convert edit index"
 				}
 			}
 		},
@@ -5824,6 +7264,726 @@
 				}
 			}
 		},
+		"template:user-outbox/settings-general-form/0:edit": {
+			"fields": [
+				"data.tags (text, schema.String)",
+				"displayName (text, schema.String)",
+				"emailAddress (text, schema.String)",
+				"location (text, schema.String)",
+				"statusMessage (textarea, schema.String)",
+				"username (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"data.tags": "unreadable",
+						"displayName": "string",
+						"emailAddress": "string",
+						"location": "string",
+						"statusMessage": "string",
+						"username": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"data.tags": "unreadable",
+						"displayName": "string",
+						"emailAddress": "string",
+						"location": "string",
+						"statusMessage": "string",
+						"username": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"data": "removed",
+						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
+						"displayName": "string alert(1)‮ xxxxxxxxxxxxxx",
+						"location": "string alert(1)‮\txxxxxxxxxxxxxx",
+						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 da7a3d8994d4)"
+					},
+					"types": {
+						"data.tags": "string",
+						"displayName": "string",
+						"emailAddress": "string",
+						"location": "string",
+						"statusMessage": "string",
+						"username": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"data": "removed",
+						"data.tags": "string Sample data.tags",
+						"displayName": "string Sample displayName",
+						"emailAddress": "string visitor@example.com",
+						"location": "string Sample location",
+						"statusMessage": "string Sample statusMessage",
+						"username": "string visitor_name"
+					},
+					"types": {
+						"data.tags": "string",
+						"displayName": "string",
+						"emailAddress": "string",
+						"location": "string",
+						"statusMessage": "string",
+						"username": "string"
+					}
+				}
+			}
+		},
+		"template:user-outbox/settings-images-form/0:edit": {
+			"fields": [
+				"iconUrl (upload, schema.String)",
+				"imageUrl (upload, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"iconUrl": "string",
+						"imageUrl": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"iconUrl": "string",
+						"imageUrl": "string"
+					}
+				},
+				"hostile": {
+					"types": {
+						"iconUrl": "string",
+						"imageUrl": "string"
+					}
+				},
+				"typical": {
+					"types": {
+						"iconUrl": "string",
+						"imageUrl": "string"
+					}
+				}
+			}
+		},
+		"template:user-outbox/settings-links-form/0:edit-table?edit=-1": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": "build.StepTableEditor.Post: Edit index out of range"
+				},
+				"empty": {
+					"error": "build.StepTableEditor.Post: Edit index out of range"
+				},
+				"hostile": {
+					"error": "build.StepTableEditor.Post: Edit index out of range"
+				},
+				"typical": {
+					"error": "build.StepTableEditor.Post: Edit index out of range"
+				}
+			}
+		},
+		"template:user-outbox/settings-links-form/0:edit-table?edit=0": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}"
+					},
+					"types": {
+						"links.0.name": "string",
+						"links.0.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}"
+					},
+					"types": {
+						"links.0.name": "string",
+						"links.0.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[0].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.0.name": "string",
+						"links.0.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0].name": "string Sample name",
+						"links[0].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.0.name": "string",
+						"links.0.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:user-outbox/settings-links-form/0:edit-table?edit=1": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}"
+					},
+					"types": {
+						"links.1.name": "string",
+						"links.1.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}"
+					},
+					"types": {
+						"links.1.name": "string",
+						"links.1.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[1].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.1.name": "string",
+						"links.1.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1].name": "string Sample name",
+						"links[1].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.1.name": "string",
+						"links.1.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:user-outbox/settings-links-form/0:edit-table?edit=10": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.10.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.10.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.10.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.10.name"
+				}
+			}
+		},
+		"template:user-outbox/settings-links-form/0:edit-table?edit=11": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.11.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.11.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.11.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.11.name"
+				}
+			}
+		},
+		"template:user-outbox/settings-links-form/0:edit-table?edit=12": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.12.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.12.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.12.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.12.name"
+				}
+			}
+		},
+		"template:user-outbox/settings-links-form/0:edit-table?edit=13": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.13.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.13.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.13.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.13.name"
+				}
+			}
+		},
+		"template:user-outbox/settings-links-form/0:edit-table?edit=14": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.14.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.14.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.14.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.14.name"
+				}
+			}
+		},
+		"template:user-outbox/settings-links-form/0:edit-table?edit=15": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.15.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.15.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.15.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.15.name"
+				}
+			}
+		},
+		"template:user-outbox/settings-links-form/0:edit-table?edit=16": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.16.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.16.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.16.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.16.name"
+				}
+			}
+		},
+		"template:user-outbox/settings-links-form/0:edit-table?edit=2": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}"
+					},
+					"types": {
+						"links.2.name": "string",
+						"links.2.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}"
+					},
+					"types": {
+						"links.2.name": "string",
+						"links.2.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[2].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.2.name": "string",
+						"links.2.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2].name": "string Sample name",
+						"links[2].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.2.name": "string",
+						"links.2.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:user-outbox/settings-links-form/0:edit-table?edit=3": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}"
+					},
+					"types": {
+						"links.3.name": "string",
+						"links.3.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}"
+					},
+					"types": {
+						"links.3.name": "string",
+						"links.3.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[3].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.3.name": "string",
+						"links.3.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3].name": "string Sample name",
+						"links[3].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.3.name": "string",
+						"links.3.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:user-outbox/settings-links-form/0:edit-table?edit=4": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}"
+					},
+					"types": {
+						"links.4.name": "string",
+						"links.4.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}"
+					},
+					"types": {
+						"links.4.name": "string",
+						"links.4.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[4].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.4.name": "string",
+						"links.4.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4].name": "string Sample name",
+						"links[4].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.4.name": "string",
+						"links.4.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:user-outbox/settings-links-form/0:edit-table?edit=5": {
+			"fields": [
+				"name (text, schema.String)",
+				"profileUrl (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}",
+						"links[5]": "document {}"
+					},
+					"types": {
+						"links.5.name": "string",
+						"links.5.profileUrl": "string"
+					}
+				},
+				"empty": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}",
+						"links[5]": "document {}"
+					},
+					"types": {
+						"links.5.name": "string",
+						"links.5.profileUrl": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}",
+						"links[5].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
+						"links[5].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
+					},
+					"types": {
+						"links.5.name": "string",
+						"links.5.profileUrl": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"links": "removed",
+						"links[0]": "document {}",
+						"links[1]": "document {}",
+						"links[2]": "document {}",
+						"links[3]": "document {}",
+						"links[4]": "document {}",
+						"links[5].name": "string Sample name",
+						"links[5].profileUrl": "string Sample profileUrl"
+					},
+					"types": {
+						"links.5.name": "string",
+						"links.5.profileUrl": "string"
+					}
+				}
+			}
+		},
+		"template:user-outbox/settings-links-form/0:edit-table?edit=6": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.6.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.6.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.6.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.6.name"
+				}
+			}
+		},
+		"template:user-outbox/settings-links-form/0:edit-table?edit=7": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.7.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.7.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.7.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.7.name"
+				}
+			}
+		},
+		"template:user-outbox/settings-links-form/0:edit-table?edit=8": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.8.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.8.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.8.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.8.name"
+				}
+			}
+		},
+		"template:user-outbox/settings-links-form/0:edit-table?edit=9": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": ": Unknown field: links.9.name"
+				},
+				"empty": {
+					"error": ": Unknown field: links.9.name"
+				},
+				"hostile": {
+					"error": ": Unknown field: links.9.name"
+				},
+				"typical": {
+					"error": ": Unknown field: links.9.name"
+				}
+			}
+		},
+		"template:user-outbox/settings-links-form/0:edit-table?edit=first": {
+			"fields": [
+				"name (text, not in schema)",
+				"profileUrl (text, not in schema)"
+			],
+			"scenarios": {
+				"absent": {
+					"error": "build.StepTableEditor.Post: Failed to convert edit index"
+				},
+				"empty": {
+					"error": "build.StepTableEditor.Post: Failed to convert edit index"
+				},
+				"hostile": {
+					"error": "build.StepTableEditor.Post: Failed to convert edit index"
+				},
+				"typical": {
+					"error": "build.StepTableEditor.Post: Failed to convert edit index"
+				}
+			}
+		},
 		"template:user-outbox/wizard-1/0:edit": {
 			"fields": [
 				"displayName (text, schema.String)",
@@ -6263,106 +8423,6 @@
 				}
 			}
 		},
-		"template:user-settings/general-form/0:edit": {
-			"fields": [
-				"data.tags (text, schema.String)",
-				"displayName (text, schema.String)",
-				"emailAddress (text, schema.String)",
-				"location (text, schema.String)",
-				"statusMessage (textarea, schema.String)",
-				"username (text, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"data.tags": "unreadable",
-						"displayName": "string",
-						"emailAddress": "string",
-						"location": "string",
-						"statusMessage": "string",
-						"username": "string"
-					}
-				},
-				"empty": {
-					"types": {
-						"data.tags": "unreadable",
-						"displayName": "string",
-						"emailAddress": "string",
-						"location": "string",
-						"statusMessage": "string",
-						"username": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"data": "removed",
-						"data.tags": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)",
-						"displayName": "string alert(1)‮ xxxxxxxxxxxxxx",
-						"location": "string alert(1)‮\txxxxxxxxxxxxxx",
-						"statusMessage": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 da7a3d8994d4)"
-					},
-					"types": {
-						"data.tags": "string",
-						"displayName": "string",
-						"emailAddress": "string",
-						"location": "string",
-						"statusMessage": "string",
-						"username": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"data": "removed",
-						"data.tags": "string Sample data.tags",
-						"displayName": "string Sample displayName",
-						"emailAddress": "string visitor@example.com",
-						"location": "string Sample location",
-						"statusMessage": "string Sample statusMessage",
-						"username": "string visitor_name"
-					},
-					"types": {
-						"data.tags": "string",
-						"displayName": "string",
-						"emailAddress": "string",
-						"location": "string",
-						"statusMessage": "string",
-						"username": "string"
-					}
-				}
-			}
-		},
-		"template:user-settings/images-form/0:edit": {
-			"fields": [
-				"iconUrl (upload, schema.String)",
-				"imageUrl (upload, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"iconUrl": "string",
-						"imageUrl": "string"
-					}
-				},
-				"empty": {
-					"types": {
-						"iconUrl": "string",
-						"imageUrl": "string"
-					}
-				},
-				"hostile": {
-					"types": {
-						"iconUrl": "string",
-						"imageUrl": "string"
-					}
-				},
-				"typical": {
-					"types": {
-						"iconUrl": "string",
-						"imageUrl": "string"
-					}
-				}
-			}
-		},
 		"template:user-settings/import-authenticate/0:with-import.SubSteps@with-import/0:as-modal.SubSteps/1:edit": {
 			"fields": [
 				"sourceId (text, schema.String)",
@@ -6398,626 +8458,6 @@
 						"sourceId": "string",
 						"stateId": "string"
 					}
-				}
-			}
-		},
-		"template:user-settings/links-form/0:edit-table?edit=-1": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": "build.StepTableEditor.Post: Edit index out of range"
-				},
-				"empty": {
-					"error": "build.StepTableEditor.Post: Edit index out of range"
-				},
-				"hostile": {
-					"error": "build.StepTableEditor.Post: Edit index out of range"
-				},
-				"typical": {
-					"error": "build.StepTableEditor.Post: Edit index out of range"
-				}
-			}
-		},
-		"template:user-settings/links-form/0:edit-table?edit=0": {
-			"fields": [
-				"name (text, schema.String)",
-				"profileUrl (text, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}"
-					},
-					"types": {
-						"links.0.name": "string",
-						"links.0.profileUrl": "string"
-					}
-				},
-				"empty": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}"
-					},
-					"types": {
-						"links.0.name": "string",
-						"links.0.profileUrl": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"links": "removed",
-						"links[0].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
-						"links[0].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"links.0.name": "string",
-						"links.0.profileUrl": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"links": "removed",
-						"links[0].name": "string Sample name",
-						"links[0].profileUrl": "string Sample profileUrl"
-					},
-					"types": {
-						"links.0.name": "string",
-						"links.0.profileUrl": "string"
-					}
-				}
-			}
-		},
-		"template:user-settings/links-form/0:edit-table?edit=1": {
-			"fields": [
-				"name (text, schema.String)",
-				"profileUrl (text, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}"
-					},
-					"types": {
-						"links.1.name": "string",
-						"links.1.profileUrl": "string"
-					}
-				},
-				"empty": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}"
-					},
-					"types": {
-						"links.1.name": "string",
-						"links.1.profileUrl": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
-						"links[1].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"links.1.name": "string",
-						"links.1.profileUrl": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1].name": "string Sample name",
-						"links[1].profileUrl": "string Sample profileUrl"
-					},
-					"types": {
-						"links.1.name": "string",
-						"links.1.profileUrl": "string"
-					}
-				}
-			}
-		},
-		"template:user-settings/links-form/0:edit-table?edit=10": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.10.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.10.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.10.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.10.name"
-				}
-			}
-		},
-		"template:user-settings/links-form/0:edit-table?edit=11": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.11.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.11.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.11.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.11.name"
-				}
-			}
-		},
-		"template:user-settings/links-form/0:edit-table?edit=12": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.12.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.12.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.12.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.12.name"
-				}
-			}
-		},
-		"template:user-settings/links-form/0:edit-table?edit=13": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.13.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.13.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.13.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.13.name"
-				}
-			}
-		},
-		"template:user-settings/links-form/0:edit-table?edit=14": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.14.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.14.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.14.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.14.name"
-				}
-			}
-		},
-		"template:user-settings/links-form/0:edit-table?edit=15": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.15.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.15.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.15.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.15.name"
-				}
-			}
-		},
-		"template:user-settings/links-form/0:edit-table?edit=16": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.16.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.16.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.16.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.16.name"
-				}
-			}
-		},
-		"template:user-settings/links-form/0:edit-table?edit=2": {
-			"fields": [
-				"name (text, schema.String)",
-				"profileUrl (text, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}"
-					},
-					"types": {
-						"links.2.name": "string",
-						"links.2.profileUrl": "string"
-					}
-				},
-				"empty": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}"
-					},
-					"types": {
-						"links.2.name": "string",
-						"links.2.profileUrl": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
-						"links[2].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"links.2.name": "string",
-						"links.2.profileUrl": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2].name": "string Sample name",
-						"links[2].profileUrl": "string Sample profileUrl"
-					},
-					"types": {
-						"links.2.name": "string",
-						"links.2.profileUrl": "string"
-					}
-				}
-			}
-		},
-		"template:user-settings/links-form/0:edit-table?edit=3": {
-			"fields": [
-				"name (text, schema.String)",
-				"profileUrl (text, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}"
-					},
-					"types": {
-						"links.3.name": "string",
-						"links.3.profileUrl": "string"
-					}
-				},
-				"empty": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}"
-					},
-					"types": {
-						"links.3.name": "string",
-						"links.3.profileUrl": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
-						"links[3].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"links.3.name": "string",
-						"links.3.profileUrl": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3].name": "string Sample name",
-						"links[3].profileUrl": "string Sample profileUrl"
-					},
-					"types": {
-						"links.3.name": "string",
-						"links.3.profileUrl": "string"
-					}
-				}
-			}
-		},
-		"template:user-settings/links-form/0:edit-table?edit=4": {
-			"fields": [
-				"name (text, schema.String)",
-				"profileUrl (text, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}",
-						"links[4]": "document {}"
-					},
-					"types": {
-						"links.4.name": "string",
-						"links.4.profileUrl": "string"
-					}
-				},
-				"empty": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}",
-						"links[4]": "document {}"
-					},
-					"types": {
-						"links.4.name": "string",
-						"links.4.profileUrl": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}",
-						"links[4].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
-						"links[4].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"links.4.name": "string",
-						"links.4.profileUrl": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}",
-						"links[4].name": "string Sample name",
-						"links[4].profileUrl": "string Sample profileUrl"
-					},
-					"types": {
-						"links.4.name": "string",
-						"links.4.profileUrl": "string"
-					}
-				}
-			}
-		},
-		"template:user-settings/links-form/0:edit-table?edit=5": {
-			"fields": [
-				"name (text, schema.String)",
-				"profileUrl (text, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}",
-						"links[4]": "document {}",
-						"links[5]": "document {}"
-					},
-					"types": {
-						"links.5.name": "string",
-						"links.5.profileUrl": "string"
-					}
-				},
-				"empty": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}",
-						"links[4]": "document {}",
-						"links[5]": "document {}"
-					},
-					"types": {
-						"links.5.name": "string",
-						"links.5.profileUrl": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}",
-						"links[4]": "document {}",
-						"links[5].name": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 9dbda0c95955)",
-						"links[5].profileUrl": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (2010 bytes, sha256 b5e65bae62d2)"
-					},
-					"types": {
-						"links.5.name": "string",
-						"links.5.profileUrl": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"links": "removed",
-						"links[0]": "document {}",
-						"links[1]": "document {}",
-						"links[2]": "document {}",
-						"links[3]": "document {}",
-						"links[4]": "document {}",
-						"links[5].name": "string Sample name",
-						"links[5].profileUrl": "string Sample profileUrl"
-					},
-					"types": {
-						"links.5.name": "string",
-						"links.5.profileUrl": "string"
-					}
-				}
-			}
-		},
-		"template:user-settings/links-form/0:edit-table?edit=6": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.6.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.6.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.6.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.6.name"
-				}
-			}
-		},
-		"template:user-settings/links-form/0:edit-table?edit=7": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.7.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.7.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.7.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.7.name"
-				}
-			}
-		},
-		"template:user-settings/links-form/0:edit-table?edit=8": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.8.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.8.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.8.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.8.name"
-				}
-			}
-		},
-		"template:user-settings/links-form/0:edit-table?edit=9": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": ": Unknown field: links.9.name"
-				},
-				"empty": {
-					"error": ": Unknown field: links.9.name"
-				},
-				"hostile": {
-					"error": ": Unknown field: links.9.name"
-				},
-				"typical": {
-					"error": ": Unknown field: links.9.name"
-				}
-			}
-		},
-		"template:user-settings/links-form/0:edit-table?edit=first": {
-			"fields": [
-				"name (text, not in schema)",
-				"profileUrl (text, not in schema)"
-			],
-			"scenarios": {
-				"absent": {
-					"error": "build.StepTableEditor.Post: Failed to convert edit index"
-				},
-				"empty": {
-					"error": "build.StepTableEditor.Post: Failed to convert edit index"
-				},
-				"hostile": {
-					"error": "build.StepTableEditor.Post: Failed to convert edit index"
-				},
-				"typical": {
-					"error": "build.StepTableEditor.Post: Failed to convert edit index"
 				}
 			}
 		},
@@ -7739,6 +9179,10 @@
 		"template:atlas-outbox/icon-edit/0:as-modal.SubSteps/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:atlas-outbox/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:atlas-outbox/outbox-add/0:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
+		"template:atlas-outbox/settings-icon-delete/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
+		"template:atlas-outbox/settings-image-delete/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
+		"template:atlas-outbox/settings-images-form/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:atlas-outbox/settings-images-form/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:atlas-outbox/wizard-1/3:set-password": "not pinned: hashes and stores a password through the User service",
 		"template:atlas-post/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:atlas-post/create/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
@@ -7748,6 +9192,10 @@
 		"template:atlas-post/edit/3:set-circle-sharing": "not pinned: reads circle IDs that must exist in the database",
 		"template:atlas-post/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:base-checkout/edit-products/0:set-privileges": "not pinned: reads privilege IDs that must exist in the database",
+		"template:base-outbox/settings-icon-delete/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
+		"template:base-outbox/settings-image-delete/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
+		"template:base-outbox/settings-images-form/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:base-outbox/settings-images-form/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:base-social/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:base-social/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:contact-form/widgets/1:sort-widgets": "not pinned: POST keys are widget IDs on a stored Stream",
@@ -7759,10 +9207,16 @@
 		"template:outbox-message/create/0:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
 		"template:outbox-message/create/3:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:outbox-message/create/4:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
-		"template:outbox-message/edit/0:as-modal.SubSteps/1:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
+		"template:outbox-message/delete-attachment/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
+		"template:outbox-message/delete-attachment/1:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
+		"template:outbox-message/edit/0:as-modal.SubSteps/2:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
+		"template:outbox-message/edit/0:as-modal.SubSteps/4:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:outbox-message/edit/0:as-modal.SubSteps/5:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
 		"template:outbox-message/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:outbox-reply/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:outbox-reply/create/0:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
+		"template:outbox-reply/delete-attachment/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
+		"template:outbox-reply/delete-attachment/1:set-thumbnail": "not pinned: writes the ID or URL of a stored attachment",
 		"template:outbox-reply/edit/0:as-modal.SubSteps/1:edit-content": "not pinned: content is converted by service.Content, not set through form or schema",
 		"template:outbox-reply/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:redirect/sharing/0:as-modal.SubSteps/0:set-simple-sharing": "not pinned: reads group IDs that must exist in the database",
@@ -7779,9 +9233,11 @@
 		"template:user-outbox/icon-edit/0:as-modal.SubSteps/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:user-outbox/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
 		"template:user-outbox/outbox-add/1:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
+		"template:user-outbox/settings-icon-delete/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
+		"template:user-outbox/settings-image-delete/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
+		"template:user-outbox/settings-images-form/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
+		"template:user-outbox/settings-images-form/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:user-outbox/wizard-1/3:set-password": "not pinned: hashes and stores a password through the User service",
-		"template:user-settings/images-form/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
-		"template:user-settings/images-form/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:user-settings/password-form/1:set-password": "not pinned: hashes and stores a password through the User service"
 	}
 }

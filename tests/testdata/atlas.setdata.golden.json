@@ -2033,44 +2033,44 @@
 			"results": {
 				"GET/empty": {
 					"changes": {
-						"data.deleteAfter": "string 0.00"
+						"data.deleteAfter": "string 0"
 					}
 				},
 				"GET/hostile": {
 					"changes": {
-						"data.deleteAfter": "string 0.00"
+						"data.deleteAfter": "string 0"
 					}
 				},
 				"GET/literal": {
 					"changes": {
-						"data.deleteAfter": "string 0.00"
+						"data.deleteAfter": "string 0"
 					}
 				},
 				"GET/prefilled": {},
 				"GET/typical": {
 					"changes": {
-						"data.deleteAfter": "string 0.00"
+						"data.deleteAfter": "string 0"
 					}
 				},
 				"POST/empty": {
 					"changes": {
-						"data.deleteAfter": "string 0.00"
+						"data.deleteAfter": "string 0"
 					}
 				},
 				"POST/hostile": {
 					"changes": {
-						"data.deleteAfter": "string 0.00"
+						"data.deleteAfter": "string 0"
 					}
 				},
 				"POST/literal": {
 					"changes": {
-						"data.deleteAfter": "string 0.00"
+						"data.deleteAfter": "string 0"
 					}
 				},
 				"POST/prefilled": {},
 				"POST/typical": {
 					"changes": {
-						"data.deleteAfter": "string 0.00"
+						"data.deleteAfter": "string 0"
 					}
 				}
 			}
