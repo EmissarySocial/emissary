@@ -25,4 +25,4 @@ window.copyToClipboard = function(text) {
 	}
 
 	return Promise.resolve()
-}
+};

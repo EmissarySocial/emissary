@@ -1491,6 +1491,26 @@ Ends the startup wizard, moving the Domain out of its `STARTUP` state and into p
 
 ---
 
+## share-reply-policy
+
+Copies the current Stream's `replyPolicy` onto every Stream in its User's outbox that uses `template`, on `POST`. It is how a collection that does not hold its items passes its policy on, such as a Notes collection passing it to the User's notes. A collection's own children get its policy through the Template's `shareWithChildren` instead. Requires the `Stream` model. It does nothing for a Stream that is not in an outbox, and it halts when the signed-in User does not own that outbox. Only the Streams whose policy differs are saved, and nothing is republished.
+
+**Attributes**
+
+| Attribute | Description |
+| --- | --- |
+| template | **Required.** The TemplateID of the outbox Streams to update |
+
+<br>
+
+**Example**
+
+```hjson
+{do: "share-reply-policy", template: "outbox-message"}
+```
+
+---
+
 ## sleep
 
 Pauses the pipeline in both phases. Debugging only.

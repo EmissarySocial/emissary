@@ -597,6 +597,38 @@ func (service *Stream) saveChildPermissions(session data.Session, parentID primi
 	return nil
 }
 
+// SetOutboxReplyPolicy stamps a ReplyPolicy on every Stream in a User's outbox that uses the Template,
+// saving only the Streams whose policy differs.
+func (service *Stream) SetOutboxReplyPolicy(session data.Session, userID primitive.ObjectID, templateID string, replyPolicy string) error {
+
+	const location = "service.Stream.SetOutboxReplyPolicy"
+
+	criteria := exp.Equal("parentId", userID).
+		AndEqual("templateId", templateID).
+		AndEqual("deleteDate", 0)
+
+	it, err := service.List(session, criteria)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Listing outbox streams", userID, templateID)
+	}
+
+	for stream := model.NewStream(); it.Next(&stream); stream = model.NewStream() {
+
+		if stream.ReplyPolicy == replyPolicy {
+			continue
+		}
+
+		stream.ReplyPolicy = replyPolicy
+
+		if err := service.Save(session, &stream, "Reply policy shared from the outbox"); err != nil {
+			return derp.Wrap(err, location, "Saving outbox stream", stream.StreamID)
+		}
+	}
+
+	return nil
+}
+
 /******************************************
  * Generic Data Methods
  ******************************************/
