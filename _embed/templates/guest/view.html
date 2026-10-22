@@ -6,18 +6,20 @@
 <div class="app" script="init send SelectNav(id:'settings')">
 
 	{{- if and $isDesktop .IsAuthenticated -}}
-		<div id="app-sidebar">
-			<a href="/@me" hx-boost="true" class="menu-item ellipsis link">&larr; My Profile</a>
-			<br>
-			<a href="/@me/settings/general" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name:nav-general;">{{icon "settings"}} Profile</a>
-			<a href="/@me/settings/visibility" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name:nav-security;">{{icon "shield"}} Security</a>
-			<a href="/@me/settings/following" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name:nav-following;">{{icon "people"}} Social</a>
-			<a href="/@me/settings/payments" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name:nav-payments;">{{icon "credit-card"}} Payments</a>
-			<a href="/@me/settings/connections" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name:nav-connections;">{{icon "cloud"}} Connections</a>
-			<a href="/@me/settings/import" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name:nav-migration;">{{icon "truck"}} Migration</a>
-			<a href="/@guest" class="turboclick menu-item ellipsis selected" style="view-transition-name:nav-guest;">{{icon "user"}} Guest Profile</a>
-			<br>
-			<a hx-post="/signout" class="menu-item ellipsis">{{icon "logout"}} Sign Out</a>
+		<!-- RULE: a copy of user-settings/menu.html with "guest" selected; keep the two in step (see README.md). -->
+		<div id="app-sidebar" class="flex-column flex-justify-between expanded">
+			<div class="top">
+				<a href="/@me/settings/general" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name:nav-general;">{{icon "settings"}}<span class="label"> Profile</span></a>
+				<a href="/@me/settings/visibility" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name:nav-security;">{{icon "shield"}}<span class="label"> Security</span></a>
+				<a href="/@me/settings/following" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name:nav-following;">{{icon "people"}}<span class="label"> Social</span></a>
+				<a href="/@me/settings/payments" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name:nav-payments;">{{icon "credit-card"}}<span class="label"> Payments</span></a>
+				<a href="/@me/settings/connections" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name:nav-connections;">{{icon "cloud"}}<span class="label"> Connections</span></a>
+				<a href="/@me/settings/import" hx-boost="true" class="turboclick menu-item ellipsis" style="view-transition-name:nav-migration;">{{icon "truck"}}<span class="label"> Migration</span></a>
+				<a href="/@guest" class="turboclick menu-item ellipsis selected" style="view-transition-name:nav-guest;">{{icon "user"}}<span class="label"> Guest Profile</span></a>
+			</div>
+			<div class="bottom">
+				<a hx-post="/signout" class="menu-item ellipsis">{{icon "logout"}}<span class="label"> Sign Out</span></a>
+			</div>
 		</div>
 	{{- end -}}
 

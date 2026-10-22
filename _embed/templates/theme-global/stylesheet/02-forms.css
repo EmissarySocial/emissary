@@ -779,3 +779,11 @@ button.edit-circle,
 	padding: 0;
 	border-radius: 50%;
 }
+
+/* A modal's top right buttons, such as an item's pencil and X; its parent must be positioned, as #modal-window is */
+.corner-pencil {
+	position: absolute;
+	top: calc(var(--rhythm) * 2);
+	right: calc(var(--rhythm) * 2);
+	z-index: 1;
+}

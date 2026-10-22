@@ -1,0 +1,13 @@
+{{- template "settings-tabs" . -}}
+
+<div class="card border padding transition-main-card">
+
+	<div class="alert-gray">
+		Links display on your profile as
+		<b>rel="me" links</b> that help verify your ownership of related pages.<br>
+		Enter <i>up to six</i> other web addresses that point to your other
+		home pages on the Internet.
+	</div>
+
+	{{- .View "settings-links-form" -}}
+</div>

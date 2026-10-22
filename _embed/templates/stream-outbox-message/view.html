@@ -1,5 +1,12 @@
 <div class="page pos-relative h-entry">
 
+	<!-- The author's pencil opens the edit modal; its pair is edit-pencil.html -->
+	{{- if .UserCan "edit" -}}
+		<div class="corner-pencil">
+			<button type="button" hx-get="/{{.StreamID}}/edit" hx-push-url="false" class="edit-circle turboclick" aria-label="Edit" title="Edit">{{icon "pencil"}}</button>
+		</div>
+	{{- end -}}
+
 	{{- template "note" . -}}
 
 	<div 

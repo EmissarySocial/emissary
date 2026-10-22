@@ -52,13 +52,6 @@
 		</div>
 	</div>
 
-	<!-- The author's pencil opens the edit modal in its place; its pair is edit-pencil.html -->
-	{{- if .UserCan "edit" -}}
-		<div>
-			<button type="button" hx-get="/{{.StreamID}}/edit" hx-push-url="false" class="edit-circle corner-pencil turboclick" aria-label="Edit" title="Edit">{{icon "pencil"}}</button>
-		</div>
-	{{- end -}}
-	
 </div>
 
 <!-- The text and photos sit beneath the author's name, past the same spacer as the buttons above -->

@@ -1,4 +1,13 @@
 <!-- A note opened over its owner's profile, from its own URL or from a list of notes -->
 <div class="h-entry">
+
+	<!-- The author's pencil opens the edit modal in its place (its pair is edit-pencil.html); X closes the modal -->
+	<div class="corner-pencil flex-row flex-align-start">
+		{{- if .UserCan "edit" -}}
+			<button type="button" hx-get="/{{.StreamID}}/edit" hx-push-url="false" class="edit-circle turboclick" aria-label="Edit" title="Edit">{{icon "pencil"}}</button>
+		{{- end -}}
+		<button type="button" class="edit-circle turboclick" script="on click trigger closeModal" aria-label="Close" title="Close"><i class="bi bi-x-lg"></i></button>
+	</div>
+
 	{{- template "note" . -}}
 </div>

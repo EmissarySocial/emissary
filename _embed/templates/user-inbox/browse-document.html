@@ -42,7 +42,9 @@
 		<div class="margin-top-lg text-xs">
 			<!-- The Reply or Notes button is selected while its panel is open below this card -->
 			{{- if eq "reply" $panel -}}
-				<button class="turboclick selected" hx-target="main" hx-swap="outerHTML" hx-get="/@me/newsfeed/browse-reply?url={{$document.ID}}">{{icon "reply"}} Reply</button>
+				{{- if $builder.CanReplyTo $document.ID -}}
+					<button class="turboclick selected" hx-target="main" hx-swap="outerHTML" hx-get="/@me/newsfeed/browse-reply?url={{$document.ID}}">{{icon "reply"}} Reply</button>
+				{{- end -}}
 			{{- else -}}
 				{{template "reply-button" (array $builder $document.ID) }}
 			{{- end -}}

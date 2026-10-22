@@ -8,35 +8,16 @@
 			{{- template "menu" "general" -}}
 		</div>
 	{{- end -}}
-	
-	<div class="app-content padding">
 
-		<div id="menu-bar">
-			<div class="left">
-				{{ if not $isDesktop }}
-					<a href="/@me/settings/mobile" class="turboclick" hx-boost="true">{{icon "back"}}</a>
-				{{ end }}
-				<a href="/@me/settings/general" class="turboclick selected" hx-boost="true">General</a>
-				<a href="/@me/settings/images" class="turboclick" hx-boost="true">Images</a>
-				<a href="/@me/settings/links" class="turboclick" hx-boost="true">Links</a>
-			</div>
-			<div class="right">
-				<a href="https://emissary.dev/user-profile" target="_blank" rel="noopener noreferrer" class="link">
-					{{icon "help"}}
-					{{ if $isDesktop }} Help {{ end }}
-				</a>
-			</div>
-		</div>
-
-		<div class="card border padding transition-main-card">
-			{{.View "general-form"}}
-		</div>
+	<!-- The tabs and forms come from the user's outbox template (see base-outbox) -->
+	<div
+		id="profile-settings"
+		class="app-content padding"
+		hx-get="/@me/settings-general"
+		hx-trigger="load"
+		hx-target="this"
+		hx-swap="innerHTML"
+		hx-push-url="false">
+		<div class="card border padding transition-main-card text-gray">Loading...</div>
 	</div>
 </div>
-
-<script>
-[...document.styleSheets].forEach((s,i)=>console.log(i, s.href||'(inline)', s.cssRules?.length??'CORS'));
-const f=document.querySelector('.transition-main-card form');
-console.log('form rect', JSON.stringify(f.getBoundingClientRect()));
-console.log('textarea rect', JSON.stringify(document.querySelector('#statusMessage_textarea').getBoundingClientRect()));
-</script>

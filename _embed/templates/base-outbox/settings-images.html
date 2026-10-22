@@ -1,0 +1,18 @@
+{{- template "settings-tabs" . -}}
+
+<div class="card border padding transition-main-card">
+
+	<div class="alert-gray">
+		Images are shared everywhere your profile appears on the Internet.
+		Your icon displays next to your name, and your banner appears at the top of your profile page.
+	</div>
+
+	<div
+		hx-get="/@me/settings-images-form"
+		hx-trigger="refreshPage from:window"
+		hx-target="this"
+		hx-swap="innerHTML"
+		hx-push-url="false">
+		{{- .View "settings-images-form" -}}
+	</div>
+</div>

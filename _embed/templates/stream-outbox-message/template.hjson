@@ -96,8 +96,10 @@
 					{do:"upload-attachments", maximum:10, action:"fill", accept-type:"image/*"}
 					{do:"set-thumbnail", path:"iconUrl"}
 					{do:"save-and-publish", state:"default", outbox:true}
-					{do:"refresh-page"}
 				]}
+				// Saving returns to the updated note in its modal; the 303 makes the browser GET it
+				{do:"remove-event", event:"closeModal"}
+				{do:"redirect-to", method:"post", status:303, url:"/{{.StreamID}}/modal"}
 			]
 		}
 		
