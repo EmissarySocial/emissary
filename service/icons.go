@@ -1,7 +1,3 @@
-// nilaway:ignore-file -- Get() is a 254-case lookup table (766 CFG blocks), over NilAway's
-// hard 500-block limit.  NilAway skips it either way, and intermittently reports that skip
-// as an INTERNAL ERROR that fails CI.  See service/AGENTS.md.
-
 package service
 
 import (
@@ -19,564 +15,321 @@ func NewIcons() Icons {
 // Get returns the HTML markup for the named icon
 func (service Icons) Get(name string) string {
 
-	switch name {
-
-	// App Actions and Behaviors
-	case "add":
-		return service.get("plus-lg")
-	case "add-circle":
-		return service.get("plus-circle")
-	case "add-square":
-		return service.get("plus-square")
-	case "add-emoji":
-		return service.get("emoji-smile")
-	case "album":
-		return service.get("cassette")
-	case "album-fill":
-		return service.get("cassette-fill")
-	case "alert":
-		return service.get("exclamation-triangle")
-	case "alert-fill":
-		return service.get("exclamation-triangle-fill")
-	case "announce":
-		return service.get("arrow-up-right-square")
-	case "announce-fill":
-		return service.get("arrow-up-right-square-fill")
-	case "archive":
-		return service.get("archive")
-	case "archive-fill":
-		return service.get("archive-fill")
-	case "at":
-		return service.get("at")
-	case "at-fill":
-		return service.get("at")
-	case "autocomplete":
-		return service.get("menu-down")
-	case "back":
-		return service.get("chevron-left")
-	case "bell":
-		return service.get("bell")
-	case "bell-fill":
-		return service.get("bell-fill")
-	case "bluesky":
-		return service.bluesky()
-	case "braces":
-		return service.get("braces")
-	case "book":
-		return service.get("book")
-	case "book-fill":
-		return service.get("book-fill")
-	case "bookmark":
-		return service.get("bookmark")
-	case "bookmark-fill":
-		return service.get("bookmark-fill")
-	case "box":
-		return service.get("box")
-	case "box-fill":
-		return service.get("box-fill")
-	case "calendar":
-		return service.get("calendar3")
-	case "calendar-fill":
-		return service.get("calendar3-fill")
-	case "cancel":
-		return service.get("x-lg")
-	case "card":
-		return service.get("postcard")
-	case "card-fill":
-		return service.get("postcard-fill")
-	case "cassette":
-		return service.get("cassette")
-	case "cassette-fill":
-		return service.get("cassette-fill")
-	case "chat":
-		return service.get("chat")
-	case "chat-fill":
-		return service.get("chat-fill")
-	case "chat-square":
-		return service.get("chat-square-dots")
-	case "chat-square-fill":
-		return service.get("chat-square-dots-fill")
-	case "check-badge":
-		return service.get("patch-check")
-	case "check-badge-fill":
-		return service.get("patch-check-fill")
-	case "check-circle":
-		return service.get("check-circle")
-	case "check-circle-fill":
-		return service.get("check-circle-fill")
-	case "check-shield":
-		return service.get("shield-check")
-	case "check-shield-fill":
-		return service.get("shield-check-fill")
-	case "chevron-left":
-		return service.get("chevron-left")
-	case "chevron-right":
-		return service.get("chevron-right")
-	case "circle":
-		return service.get("circle")
-	case "circle-fill":
-		return service.get("circle-fill")
-	case "clipboard":
-		return service.get("clipboard")
-	case "clipboard-fill":
-		return service.get("clipboard-fill")
-	case "clock":
-		return service.get("clock")
-	case "clock-fill":
-		return service.get("clock-fill")
-	case "cloud":
-		return service.get("cloud")
-	case "cloud-fill":
-		return service.get("cloud-fill")
-	case "credit-card":
-		return service.get("credit-card")
-	case "credit-card-fill":
-		return service.get("credit-card-fill")
-	case "database":
-		return service.get("database")
-	case "database-fill":
-		return service.get("database-fill")
-	case "delete":
-		return service.get("x-lg")
-	case "delete-fill":
-		return service.get("x-lg")
-	case "dislike":
-		return service.get("thumbs-down")
-	case "dislike-fill":
-		return service.get("thumbs-down-fill")
-	case "drag-handle":
-		return service.get("grip-vertical")
-	case "edit":
-		return service.get("pencil-square")
-	case "edit-fill":
-		return service.get("pencil-square-fill")
-	case "email":
-		return service.get("envelope")
-	case "email-fill":
-		return service.get("envelope-fill")
-	case "explicit":
-		return service.get("explicit")
-	case "explicit-fill":
-		return service.get("explicit-fill")
-	case "file":
-		return service.get("file-earmark")
-	case "file-fill":
-		return service.get("file-earmark-fill")
-	case "filter":
-		return service.get("filter-circle")
-	case "filter-fill":
-		return service.get("filter-circle-fill")
-	case "flag":
-		return service.get("flag")
-	case "flag-fill":
-		return service.get("flag-fill")
-	case "focus":
-		return service.get("crosshair")
-	case "focus-fill":
-		return service.get("crosshair2")
-	case "folder":
-		return service.get("folder")
-	case "folder-fill":
-		return service.get("folder-fill")
-	case "geolocate":
-		return service.get("pin-map")
-	case "globe":
-		return service.get("globe2")
-	case "globe-fill":
-		return service.get("globe2")
-	case "grip-vertical":
-		return service.get("grip-vertical")
-	case "grip-horizontal":
-		return service.get("grip-horizontal")
-	case "hashtag":
-		return service.get("hash")
-	case "heart":
-		return service.get("heart")
-	case "heart-fill":
-		return service.get("heart-fill")
-	case "help":
-		return service.get("question-circle")
-	case "help-fill":
-		return service.get("question-circle-fill")
-	case "home":
-		return service.get("house")
-	case "home-fill":
-		return service.get("house-fill")
-	case "info":
-		return service.get("info-circle")
-	case "info-fill":
-		return service.get("info-circle-fill")
-	case "invisible":
-		return service.get("eye-slash")
-	case "invisible-fill":
-		return service.get("eye-slash-fill")
-	case "journal":
-		return service.get("journal")
-	case "key":
-		return service.get("key")
-	case "key-fill":
-		return service.get("key-fill")
-	case "label":
-		return service.get("tag")
-	case "label-fill":
-		return service.get("tag-fill")
-	case "like":
-		return service.get("heart")
-	case "like-fill":
-		return service.get("heart-fill")
-	case "link":
-		return service.get("link-45deg")
-	case "link-outbound":
-		return service.get("arrow-up-right-square")
-	case "list":
-		return service.get("list")
-	case "list-fill":
-		return service.get("list")
-	case "list-nested":
-		return service.get("list-nested")
-	case "list-nested-fill":
-		return service.get("list-nested")
-	case "location":
-		return service.get("geo-alt")
-	case "location-fill":
-		return service.get("geo-alt-fill")
-	case "lock":
-		return service.get("lock")
-	case "lock-fill":
-		return service.get("lock-fill")
-	case "loading":
-		return service.get("arrow-clockwise")
-	case "login":
-		return service.get("box-arrow-in-right")
-	case "logout":
-		return service.get("box-arrow-right")
-	case "map":
-		return service.get("map")
-	case "megaphone":
-		return service.get("megaphone")
-	case "megaphone-fill":
-		return service.get("megaphone-fill")
-	case "mention":
-		return service.get("at")
-	case "menu":
-		return service.get("list")
-	case "mls":
-		return service.get("chat-text")
-	case "more-horizontal":
-		return service.get("three-dots")
-	case "more-vertical":
-		return service.get("three-dots-vertical")
-	case "music":
-		return service.get("music-note-beamed")
-	case "music-fill":
-		return service.get("music-note-beamed")
-	case "mute":
-		return service.get("mic-mute")
-	case "mute-fill":
-		return service.get("mic-mute-fill")
-	case "network":
-		return service.get("diagram-2")
-	case "new-window":
-		return service.get("arrow-up-right-square")
-	case "newspaper":
-		return service.get("newspaper")
-	case "none":
-		return service.get("ban")
-	case "note":
-		return service.get("sticky")
-	case "note-fill":
-		return service.get("sticky-fill")
-	case "notes":
-		return service.get("stickies")
-	case "notes-fill":
-		return service.get("stickies-fill")
-	case "pause":
-		return service.get("pause")
-	case "pause-fill":
-		return service.get("pause-fill")
-	case "person":
-		return service.get("person")
-	case "person-fill":
-		return service.get("person-fill")
-	case "person-add":
-		return service.get("person-add")
-	case "person-add-fill":
-		return service.get("person-add-fill")
-	case "person-card":
-		return service.get("person-vcard")
-	case "person-card-fill":
-		return service.get("person-vcard-fill")
-	case "people":
-		return service.get("people")
-	case "people-fill":
-		return service.get("people-fill")
-	case "play":
-		return service.get("play")
-	case "play-fill":
-		return service.get("play-fill")
-	case "reload":
-		return service.get("arrow-repeat")
-	case "reply":
-		return service.get("reply")
-	case "reply-fill":
-		return service.get("reply-fill")
-	case "repost":
-		return service.get("repeat")
-	case "rocket":
-		return service.get("rocket-takeoff")
-	case "rocket-fill":
-		return service.get("rocket-takeoff-fill")
-	case "rule":
-		return service.get("funnel")
-	case "rule-fill":
-		return service.get("funnel-fill")
-	case "save":
-		return service.get("check-lg")
-	case "search":
-		return service.get("search")
-	case "search-fill":
-		return service.get("search")
-	case "settings":
-		return service.get("gear")
-	case "settings-fill":
-		return service.get("gear-fill")
-	case "server":
-		return service.get("hdd-stack")
-	case "server-fill":
-		return service.get("hdd-stack-fill")
-	case "share":
-		return service.get("arrow-up-right-square")
-	case "share-fill":
-		return service.get("arrow-up-right-square-fill")
-	case "shield":
-		return service.get("shield")
-	case "shield-fill":
-		return service.get("shield-fill")
-	case "shield-lock":
-		return service.get("shield-lock")
-	case "skip-backward":
-		return service.get("skip-backward")
-	case "skip-backward-fill":
-		return service.get("skip-backward-fill")
-	case "skip-forward":
-		return service.get("skip-forward")
-	case "skip-forward-fill":
-		return service.get("skip-forward-fill")
-	case "star":
-		return service.get("star")
-	case "star-fill":
-		return service.get("star-fill")
-	case "template":
-		return service.get("layout-text-sidebar-reverse")
-	case "thumbs-down":
-		return service.get("hand-thumbs-down")
-	case "thumbs-down-fill":
-		return service.get("hand-thumbs-down-fill")
-	case "thumbs-up":
-		return service.get("hand-thumbs-up")
-	case "thumbs-up-fill":
-		return service.get("hand-thumbs-up-fill")
-	case "timeline":
-		return service.get("clock")
-	case "timeline-fill":
-		return service.get("clock-fill")
-	case "unlink":
-		return service.get("link-45deg")
-	case "upload":
-		return service.get("cloud-arrow-up")
-	case "upload-fill":
-		return service.get("cloud-arrow-up-fill")
-	case "user":
-		return service.get("person-circle")
-	case "user-fill":
-		return service.get("person-circle")
-	case "users":
-		return service.get("people")
-	case "users-fill":
-		return service.get("people-fill")
-	case "visible":
-		return service.get("eye")
-	case "visible-fill":
-		return service.get("eye-fill")
-	case "volume-up":
-		return service.get("volume-up")
-	case "volume-up-fill":
-		return service.get("volume-up-fill")
-	case "volume-down":
-		return service.get("volume-down")
-	case "volume-down-fill":
-		return service.get("volume-down-fill")
-	case "volume-mute":
-		return service.get("volume-mute")
-	case "volume-mute-fill":
-		return service.get("volume-mute-fill")
-
-		// Layouts
-	case "layout-social":
-		return service.get("list-ul")
-	case "layout-social-fill":
-		return service.get("list-ul")
-
-	case "layout-chat":
-		return service.get("chat-text")
-	case "layout-chat-fill":
-		return service.get("chat-text")
-
-	case "layout-newspaper":
-		return service.get("postcard")
-	case "layout-newspaper-fill":
-		return service.get("postcard")
-
-	case "layout-magazine":
-		return service.get("view-stacked")
-	case "layout-magazine-fill":
-		return service.get("view-stacked")
-
-	// Services
-	case "activitypub":
-		return service.activityPub()
-	case "activitypub-fill":
-		return service.activityPub()
-	case "facebook":
-		return service.get("facebook")
-	case "fediverse":
-		return service.fediverse()
-	case "fediverse-fill":
-		return service.fediverse()
-	case "github":
-		return service.get("github")
-	case "google":
-		return service.get("google")
-	case "json":
-		return service.get("braces")
-	case "json-fill":
-		return service.get("braces")
-	case "instagram":
-		return service.get("instagram")
-	case "twitter":
-		return service.get("twitter")
-	case "remove-square":
-		return service.get("dash-square")
-	case "rss":
-		return service.get("rss")
-	case "rss-fill":
-		return service.get("rss-fill")
-
-	// Content Types
-	case "article":
-		return service.get("file-text")
-	case "article-fill":
-		return service.get("file-text-fill")
-	case "block":
-		return service.get("ban")
-	case "block-fill":
-		return service.get("ban-fill")
-	case "code":
-		return service.get("code-slash")
-	case "code-fill":
-		return service.get("code-slash")
-	case "collection":
-		return service.get("view-stacked")
-	case "forward":
-		return service.get("forward")
-	case "forward-fill":
-		return service.get("forward-fill")
-	case "html":
-		return service.get("code-slash")
-	case "html-fill":
-		return service.get("code-slash")
-	case "import-export":
-		return service.get("arrow-left-right")
-	case "inbox":
-		return service.get("inbox")
-	case "inbox-fill":
-		return service.get("inbox-fill")
-	case "markdown":
-		return service.get("markdown")
-	case "markdown-fill":
-		return service.get("markdown-fill")
-	case "message":
-		return service.get("chat-left-text")
-	case "message-fill":
-		return service.get("chat-left-text-fill")
-	case "outbox":
-		return service.get("envelope")
-	case "outbox-fill":
-		return service.get("envelope-fill")
-	case "picture":
-		return service.get("image")
-	case "picture-fill":
-		return service.get("image-fill")
-	case "pictures":
-		return service.get("images")
-	case "shopping-cart":
-		return service.get("cart")
-	case "shopping-cart-fill":
-		return service.get("cart-fill")
-	case "webhooks":
-		return service.webhooks()
-	case "video":
-		return service.get("camera-video")
-	case "video-fill":
-		return service.get("camera-video-fill")
-
-	// License Types
-	case "copyright":
-		return service.copyright()
-
-	case "cc-by":
-		return service.ccCC() + " " + service.ccBy()
-
-	case "cc-by-sa":
-		return service.ccCC() + " " + service.ccBy() + " " + service.ccSa()
-
-	case "cc-by-nc":
-		return service.ccCC() + " " + service.ccBy() + " " + service.ccNc()
-
-	case "cc-by-nc-sa":
-		return service.ccCC() + " " + service.ccBy() + " " + service.ccNc() + " " + service.ccSa()
-
-	case "cc-by-nd":
-		return service.ccCC() + " " + service.ccBy() + " " + service.ccNd()
-
-	case "cc-by-nc-nd":
-		return service.ccCC() + " " + service.ccBy() + " " + service.ccNc() + " " + service.ccNd()
-
-	case "cc0":
-		return service.cc0()
-
-	case "public-domain":
-		return service.publicDomain()
-
-	// Services
-	case "stripe", "STRIPE":
-		return service.get("stripe")
-
+	// Known names return markup that was built once, at startup
+	if markup, exists := iconMarkup[name]; exists {
+		return markup
 	}
 
-	return service.get(name)
-}
-
-// get returns the markup for a Bootstrap icon of the provided name
-func (service Icons) get(name string) string {
-	return `<i class="bi bi-` + name + `"></i>`
+	// Any other name is treated as a Bootstrap icon name
+	return bootstrapIcon(name)
 }
 
 // Write renders the named icon directly to the provided Writer
 func (service Icons) Write(name string, writer io.Writer) {
 	// The writer here is a template buffer or an already-committed HTTP response, so there is
 	// nothing useful to do with a write error at this point.
-	_, _ = writer.Write([]byte(service.Get(name)))
+	_, _ = io.WriteString(writer, service.Get(name))
 }
 
-// copyright returns the copyright symbol
-func (service Icons) copyright() string {
-	return "©"
+// bootstrapIcon returns the markup for a Bootstrap icon of the provided name
+func bootstrapIcon(name string) string {
+	return `<i class="bi bi-` + name + `"></i>`
 }
 
-// ccCC returns the Creative Commons "CC" badge
-func (service Icons) ccCC() string {
-	return `<svg viewBox="5.5 -3.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em; vertical-align:text-bottom;">
+// iconMarkup maps every known icon name to its finished HTML markup
+var iconMarkup = buildIconMarkup()
+
+// buildIconMarkup merges the Bootstrap aliases and the inline SVG icons into one table
+func buildIconMarkup() map[string]string {
+
+	result := make(map[string]string, len(iconAliases)+len(iconSVGs))
+
+	for name, alias := range iconAliases {
+		result[name] = bootstrapIcon(alias)
+	}
+
+	for name, markup := range iconSVGs {
+		result[name] = markup
+	}
+
+	return result
+}
+
+// iconAliases maps Emissary icon names to the Bootstrap icons that draw them
+var iconAliases = map[string]string{
+	// App Actions and Behaviors
+	"add":                "plus-lg",
+	"add-circle":         "plus-circle",
+	"add-square":         "plus-square",
+	"add-emoji":          "emoji-smile",
+	"album":              "cassette",
+	"album-fill":         "cassette-fill",
+	"alert":              "exclamation-triangle",
+	"alert-fill":         "exclamation-triangle-fill",
+	"announce":           "arrow-up-right-square",
+	"announce-fill":      "arrow-up-right-square-fill",
+	"archive":            "archive",
+	"archive-fill":       "archive-fill",
+	"at":                 "at",
+	"at-fill":            "at",
+	"autocomplete":       "menu-down",
+	"back":               "chevron-left",
+	"bell":               "bell",
+	"bell-fill":          "bell-fill",
+	"braces":             "braces",
+	"book":               "book",
+	"book-fill":          "book-fill",
+	"bookmark":           "bookmark",
+	"bookmark-fill":      "bookmark-fill",
+	"box":                "box",
+	"box-fill":           "box-fill",
+	"calendar":           "calendar3",
+	"calendar-fill":      "calendar3-fill",
+	"cancel":             "x-lg",
+	"card":               "postcard",
+	"card-fill":          "postcard-fill",
+	"cassette":           "cassette",
+	"cassette-fill":      "cassette-fill",
+	"chat":               "chat",
+	"chat-fill":          "chat-fill",
+	"chat-square":        "chat-square-dots",
+	"chat-square-fill":   "chat-square-dots-fill",
+	"check-badge":        "patch-check",
+	"check-badge-fill":   "patch-check-fill",
+	"check-circle":       "check-circle",
+	"check-circle-fill":  "check-circle-fill",
+	"check-shield":       "shield-check",
+	"check-shield-fill":  "shield-check-fill",
+	"chevron-left":       "chevron-left",
+	"chevron-right":      "chevron-right",
+	"circle":             "circle",
+	"circle-fill":        "circle-fill",
+	"clipboard":          "clipboard",
+	"clipboard-fill":     "clipboard-fill",
+	"clock":              "clock",
+	"clock-fill":         "clock-fill",
+	"cloud":              "cloud",
+	"cloud-fill":         "cloud-fill",
+	"credit-card":        "credit-card",
+	"credit-card-fill":   "credit-card-fill",
+	"database":           "database",
+	"database-fill":      "database-fill",
+	"delete":             "x-lg",
+	"delete-fill":        "x-lg",
+	"dislike":            "thumbs-down",
+	"dislike-fill":       "thumbs-down-fill",
+	"drag-handle":        "grip-vertical",
+	"edit":               "pencil-square",
+	"edit-fill":          "pencil-square-fill",
+	"email":              "envelope",
+	"email-fill":         "envelope-fill",
+	"explicit":           "explicit",
+	"explicit-fill":      "explicit-fill",
+	"file":               "file-earmark",
+	"file-fill":          "file-earmark-fill",
+	"filter":             "filter-circle",
+	"filter-fill":        "filter-circle-fill",
+	"flag":               "flag",
+	"flag-fill":          "flag-fill",
+	"focus":              "crosshair",
+	"focus-fill":         "crosshair2",
+	"folder":             "folder",
+	"folder-fill":        "folder-fill",
+	"geolocate":          "pin-map",
+	"globe":              "globe2",
+	"globe-fill":         "globe2",
+	"grip-vertical":      "grip-vertical",
+	"grip-horizontal":    "grip-horizontal",
+	"hashtag":            "hash",
+	"heart":              "heart",
+	"heart-fill":         "heart-fill",
+	"help":               "question-circle",
+	"help-fill":          "question-circle-fill",
+	"home":               "house",
+	"home-fill":          "house-fill",
+	"info":               "info-circle",
+	"info-fill":          "info-circle-fill",
+	"invisible":          "eye-slash",
+	"invisible-fill":     "eye-slash-fill",
+	"journal":            "journal",
+	"key":                "key",
+	"key-fill":           "key-fill",
+	"label":              "tag",
+	"label-fill":         "tag-fill",
+	"like":               "heart",
+	"like-fill":          "heart-fill",
+	"link":               "link-45deg",
+	"link-outbound":      "arrow-up-right-square",
+	"list":               "list",
+	"list-fill":          "list",
+	"list-nested":        "list-nested",
+	"list-nested-fill":   "list-nested",
+	"location":           "geo-alt",
+	"location-fill":      "geo-alt-fill",
+	"lock":               "lock",
+	"lock-fill":          "lock-fill",
+	"loading":            "arrow-clockwise",
+	"login":              "box-arrow-in-right",
+	"logout":             "box-arrow-right",
+	"map":                "map",
+	"megaphone":          "megaphone",
+	"megaphone-fill":     "megaphone-fill",
+	"mention":            "at",
+	"menu":               "list",
+	"mls":                "chat-text",
+	"more-horizontal":    "three-dots",
+	"more-vertical":      "three-dots-vertical",
+	"music":              "music-note-beamed",
+	"music-fill":         "music-note-beamed",
+	"mute":               "mic-mute",
+	"mute-fill":          "mic-mute-fill",
+	"network":            "diagram-2",
+	"new-window":         "arrow-up-right-square",
+	"newspaper":          "newspaper",
+	"none":               "ban",
+	"note":               "sticky",
+	"note-fill":          "sticky-fill",
+	"notes":              "stickies",
+	"notes-fill":         "stickies-fill",
+	"pause":              "pause",
+	"pause-fill":         "pause-fill",
+	"person":             "person",
+	"person-fill":        "person-fill",
+	"person-add":         "person-add",
+	"person-add-fill":    "person-add-fill",
+	"person-card":        "person-vcard",
+	"person-card-fill":   "person-vcard-fill",
+	"people":             "people",
+	"people-fill":        "people-fill",
+	"play":               "play",
+	"play-fill":          "play-fill",
+	"reload":             "arrow-repeat",
+	"reply":              "reply",
+	"reply-fill":         "reply-fill",
+	"repost":             "repeat",
+	"rocket":             "rocket-takeoff",
+	"rocket-fill":        "rocket-takeoff-fill",
+	"rule":               "funnel",
+	"rule-fill":          "funnel-fill",
+	"save":               "check-lg",
+	"search":             "search",
+	"search-fill":        "search",
+	"settings":           "gear",
+	"settings-fill":      "gear-fill",
+	"server":             "hdd-stack",
+	"server-fill":        "hdd-stack-fill",
+	"share":              "arrow-up-right-square",
+	"share-fill":         "arrow-up-right-square-fill",
+	"shield":             "shield",
+	"shield-fill":        "shield-fill",
+	"shield-lock":        "shield-lock",
+	"skip-backward":      "skip-backward",
+	"skip-backward-fill": "skip-backward-fill",
+	"skip-forward":       "skip-forward",
+	"skip-forward-fill":  "skip-forward-fill",
+	"star":               "star",
+	"star-fill":          "star-fill",
+	"template":           "layout-text-sidebar-reverse",
+	"thumbs-down":        "hand-thumbs-down",
+	"thumbs-down-fill":   "hand-thumbs-down-fill",
+	"thumbs-up":          "hand-thumbs-up",
+	"thumbs-up-fill":     "hand-thumbs-up-fill",
+	"timeline":           "clock",
+	"timeline-fill":      "clock-fill",
+	"unlink":             "link-45deg",
+	"upload":             "cloud-arrow-up",
+	"upload-fill":        "cloud-arrow-up-fill",
+	"user":               "person-circle",
+	"user-fill":          "person-circle",
+	"users":              "people",
+	"users-fill":         "people-fill",
+	"visible":            "eye",
+	"visible-fill":       "eye-fill",
+	"volume-up":          "volume-up",
+	"volume-up-fill":     "volume-up-fill",
+	"volume-down":        "volume-down",
+	"volume-down-fill":   "volume-down-fill",
+	"volume-mute":        "volume-mute",
+	"volume-mute-fill":   "volume-mute-fill",
+
+	// Layouts
+	"layout-social":         "list-ul",
+	"layout-social-fill":    "list-ul",
+	"layout-chat":           "chat-text",
+	"layout-chat-fill":      "chat-text",
+	"layout-newspaper":      "postcard",
+	"layout-newspaper-fill": "postcard",
+	"layout-magazine":       "view-stacked",
+	"layout-magazine-fill":  "view-stacked",
+
+	// Services
+	"facebook":      "facebook",
+	"github":        "github",
+	"google":        "google",
+	"json":          "braces",
+	"json-fill":     "braces",
+	"instagram":     "instagram",
+	"twitter":       "twitter",
+	"remove-square": "dash-square",
+	"rss":           "rss",
+	"rss-fill":      "rss-fill",
+	"stripe":        "stripe",
+	"STRIPE":        "stripe",
+
+	// Content Types
+	"article":            "file-text",
+	"article-fill":       "file-text-fill",
+	"block":              "ban",
+	"block-fill":         "ban-fill",
+	"code":               "code-slash",
+	"code-fill":          "code-slash",
+	"collection":         "view-stacked",
+	"forward":            "forward",
+	"forward-fill":       "forward-fill",
+	"html":               "code-slash",
+	"html-fill":          "code-slash",
+	"import-export":      "arrow-left-right",
+	"inbox":              "inbox",
+	"inbox-fill":         "inbox-fill",
+	"markdown":           "markdown",
+	"markdown-fill":      "markdown-fill",
+	"message":            "chat-left-text",
+	"message-fill":       "chat-left-text-fill",
+	"outbox":             "envelope",
+	"outbox-fill":        "envelope-fill",
+	"picture":            "image",
+	"picture-fill":       "image-fill",
+	"pictures":           "images",
+	"shopping-cart":      "cart",
+	"shopping-cart-fill": "cart-fill",
+	"video":              "camera-video",
+	"video-fill":         "camera-video-fill",
+}
+
+// iconSVGs maps icon names to inline markup that has no Bootstrap equivalent
+var iconSVGs = map[string]string{
+	"bluesky":          iconBluesky,
+	"activitypub":      iconActivityPub,
+	"activitypub-fill": iconActivityPub,
+	"fediverse":        iconFediverse,
+	"fediverse-fill":   iconFediverse,
+	"webhooks":         iconWebhooks,
+	"copyright":        iconCopyright,
+	"cc-by":            iconCC + " " + iconCCBy,
+	"cc-by-sa":         iconCC + " " + iconCCBy + " " + iconCCSa,
+	"cc-by-nc":         iconCC + " " + iconCCBy + " " + iconCCNc,
+	"cc-by-nc-sa":      iconCC + " " + iconCCBy + " " + iconCCNc + " " + iconCCSa,
+	"cc-by-nd":         iconCC + " " + iconCCBy + " " + iconCCNd,
+	"cc-by-nc-nd":      iconCC + " " + iconCCBy + " " + iconCCNc + " " + iconCCNd,
+	"cc0":              iconCC0,
+	"public-domain":    iconPublicDomain,
+}
+
+// iconCopyright is the copyright symbol
+const iconCopyright = "©"
+
+// iconCC is the Creative Commons "CC" badge
+const iconCC = `<svg viewBox="5.5 -3.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em; vertical-align:text-bottom;">
 <circle stroke="currentColor" fill-opacity="0" cx="37.47" cy="28.736" r="29.471"/>
 <path fill="currentColor" d="M37.441-3.5c8.951,0,16.572,3.125,22.857,9.372c3.008,3.009,5.295,6.448,6.857,10.314
 c1.561,3.867,2.344,7.971,2.344,12.314c0,4.381-0.773,8.486-2.314,12.313c-1.543,3.828-3.82,7.21-6.828,10.143
@@ -598,11 +351,9 @@ c-1.486,0.896-3.105,1.343-4.857,1.343c-2.896,0-5.209-0.875-6.941-2.629c-1.736-1.
 c0-3.048,0.885-5.466,2.658-7.257c1.77-1.79,4.008-2.686,6.713-2.686C51.117,18.558,53.938,20.101,55.613,23.187z"/>
 </svg>
 `
-}
 
-// ccBy returns the Creative Commons "Attribution" badge
-func (service Icons) ccBy() string {
-	return `<svg viewBox="5.5 -3.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em; vertical-align:text-bottom;">
+// iconCCBy is the Creative Commons "Attribution" badge
+const iconCCBy = `<svg viewBox="5.5 -3.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em; vertical-align:text-bottom;">
 <circle stroke="currentColor" fill-opacity="0" cx="37.47" cy="28.736" r="29.471"/>
 <path fill="currentColor" d="M37.443-3.5c8.988,0,16.57,3.085,22.742,9.257C66.393,11.967,69.5,19.548,69.5,28.5c0,8.991-3.049,16.476-9.145,22.456
 C53.879,57.319,46.242,60.5,37.443,60.5c-8.649,0-16.153-3.144-22.514-9.43C8.644,44.784,5.5,37.262,5.5,28.5
@@ -615,11 +366,9 @@ C45.918,19.5,46.129,19.986,46.129,20.557z M33.042,12.329c0-3.008,1.485-4.514,4.4
 c0,2.971-1.486,4.457-4.457,4.457S33.042,15.3,33.042,12.329z"/>
 </svg>
 `
-}
 
-// ccSa returns the Creative Commons "Share Alike" badge
-func (service Icons) ccSa() string {
-	return `<svg viewBox="5.5 -3.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em; vertical-align:text-bottom;">
+// iconCCSa is the Creative Commons "Share Alike" badge
+const iconCCSa = `<svg viewBox="5.5 -3.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em; vertical-align:text-bottom;">
 <circle stroke="currentColor" fill-opacity="0" cx="37.47" cy="28.736" r="29.471"/>
 <path fill="currentColor" d="M37.443-3.5c8.951,0,16.531,3.105,22.742,9.315C66.393,11.987,69.5,19.548,69.5,28.5c0,8.954-3.049,16.457-9.145,22.514
 C53.918,57.338,46.279,60.5,37.443,60.5c-8.649,0-16.153-3.143-22.514-9.429C8.644,44.786,5.5,37.264,5.5,28.501
@@ -634,11 +383,9 @@ c1.373-1.942,2.059-4.534,2.059-7.771c0-3.391-0.629-5.971-1.885-7.743c-1.258-1.77
 c-4.268,0-6.667,1.885-7.2,5.656h2.343l-6.342,6.343l-6.343-6.343L23.271,23.985L23.271,23.985z"/>
 </svg>
 `
-}
 
-// ccNc returns the Creative Commons "Non-Commercial" badge
-func (service Icons) ccNc() string {
-	return `<svg viewBox="5.5 -3.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em; vertical-align:text-bottom;">
+// iconCCNc is the Creative Commons "Non-Commercial" badge
+const iconCCNc = `<svg viewBox="5.5 -3.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em; vertical-align:text-bottom;">
 <circle stroke="currentColor" fill-opacity="0" cx="37.47" cy="28.736" r="29.471"/>
 <path fill="currentColor" d="M37.442-3.5c8.99,0,16.571,3.085,22.743,9.256C66.393,11.928,69.5,19.509,69.5,28.5c0,8.992-3.048,16.476-9.145,22.458
 C53.88,57.32,46.241,60.5,37.442,60.5c-8.686,0-16.19-3.162-22.513-9.485C8.644,44.728,5.5,37.225,5.5,28.5
@@ -654,11 +401,9 @@ c0,0.267,0.095,0.533,0.285,0.8l4.057,1.83l2.8,1.257l5.144,2.285l16.397,7.314c0.5
 c0-7.353-2.552-13.543-7.656-18.573C51.005,4.785,44.831,2.214,37.557,2.214z"/>
 </svg>
 `
-}
 
-// ccNd returns the Creative Commons "No Derivatives" badge
-func (service Icons) ccNd() string {
-	return `<svg viewBox="5.5 -3.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"  version="1.1" style="height:1em; vertical-align:text-bottom;">
+// iconCCNd is the Creative Commons "No Derivatives" badge
+const iconCCNd = `<svg viewBox="5.5 -3.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"  version="1.1" style="height:1em; vertical-align:text-bottom;">
 <circle stroke="currentColor" fill-opacity="0" cx="37.47" cy="28.736" r="29.471"/>
 <path fill="currentColor" d="M37.443-3.5c8.951,0,16.531,3.105,22.742,9.315C66.393,11.987,69.5,19.548,69.5,28.5c0,8.954-3.049,16.457-9.145,22.514
 C53.918,57.338,46.279,60.5,37.443,60.5c-8.649,0-16.153-3.143-22.514-9.43C8.644,44.786,5.5,37.264,5.5,28.501
@@ -669,11 +414,9 @@ C51.004,4.842,44.832,2.272,37.557,2.272z M49.615,20.956v5.486H26.358v-5.486H49.6
 z"/>
 </svg>
 `
-}
 
-// cc0 returns the Creative Commons "CC0" badge
-func (service Icons) cc0() string {
-	return `<svg viewBox="-0.5 0.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"  version="1.1" style="height:1em; vertical-align:text-bottom;">
+// iconCC0 is the Creative Commons "CC0" badge
+const iconCC0 = `<svg viewBox="-0.5 0.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"  version="1.1" style="height:1em; vertical-align:text-bottom;">
 <circle stroke="currentColor" fill-opacity="0" cx="31.325" cy="32.873" r="30.096"/>
 <path fill="currentColor" id="text2809_1_" d="M31.5,14.08c-10.565,0-13.222,9.969-13.222,18.42c0,8.452,2.656,18.42,13.222,18.42
 c10.564,0,13.221-9.968,13.221-18.42C44.721,24.049,42.064,14.08,31.5,14.08z M31.5,21.026c0.429,0,0.82,0.066,1.188,0.157
@@ -692,11 +435,9 @@ c-1.333-3.199-2.017-6.498-2.017-9.927c0-3.467,0.684-6.787,2.017-9.949c1.371-3.2,
 C18.092,8.818,24.252,6.259,31.567,6.259z"/>
 </svg>
 `
-}
 
-// publicDomain returns the Public Domain badge
-func (service Icons) publicDomain() string {
-	return `<svg viewBox="5.5 -3.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em; vertical-align:text-bottom;">
+// iconPublicDomain is the Public Domain badge
+const iconPublicDomain = `<svg viewBox="5.5 -3.5 64 64" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em; vertical-align:text-bottom;">
 <circle stroke="currentColor" fill-opacity="0" cx="37.47" cy="28.736" r="29.471"/>
 <path fill="currentColor" d="M37.443-3.5c8.988,0,16.58,3.096,22.77,9.286C66.404,11.976,69.5,19.547,69.5,28.5c0,8.954-3.049,16.437-9.145,22.456
 C53.918,57.319,46.279,60.5,37.443,60.5c-8.687,0-16.182-3.144-22.486-9.43C8.651,44.784,5.5,37.262,5.5,28.5
@@ -713,11 +454,9 @@ c0.705-0.933,1.057-2.179,1.057-3.742c0-1.562-0.352-2.809-1.057-3.743c-0.705-0.93
 L43.387,23.186z"/>
 </svg>
 `
-}
 
-// fediverse returns the Fediverse logo
-func (service Icons) fediverse() string {
-	return `<svg viewBox="-10 -5 1034 1034" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em;">
+// iconFediverse is the Fediverse logo
+const iconFediverse = `<svg viewBox="-10 -5 1034 1034" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em;">
 <path fill="currentColor"
 d="M539 176q-32 0 -55 22t-25 55t20.5 58t56 27t58.5 -20.5t27 -56t-20.5 -59t-56.5 -26.5h-5zM452 271l-232 118q20 20 25 48l231 -118q-19 -20 -24 -48zM619 298q-13 25 -38 38l183 184q13 -25 39 -38zM477 320l-135 265l40 40l143 -280q-28 -5 -48 -25zM581 336
 q-22 11 -46 10l-8 -1l21 132l56 9zM155 370q-32 0 -55 22.5t-25 55t20.5 58t56.5 27t59 -21t26.5 -56t-21 -58.5t-55.5 -27h-6zM245 438q1 9 1 18q-1 19 -10 35l132 21l26 -50zM470 474l-26 51l311 49q-1 -8 -1 -17q1 -19 10 -36zM842 480q-32 1 -55 23t-24.5 55t21 58
@@ -725,21 +464,17 @@ t56 27t58.5 -20.5t27 -56.5t-20.5 -59t-56.5 -27h-6zM236 493q-13 25 -39 38l210 210
 q28 5 48 25l119 -231q-28 -5 -48 -25zM306 654l-68 134q28 5 48 25l60 -119zM568 671l-281 143q19 20 24 48l265 -135zM513 771l-51 25l106 107q13 -25 39 -38zM222 795q-32 0 -55.5 22.5t-25 55t21 57.5t56 27t58.5 -20.5t27 -56t-20.5 -58.5t-56.5 -27h-5zM311 863
 q2 9 1 18q-1 19 -9 35l256 41q-1 -9 -1 -18q1 -18 10 -35zM646 863q-32 0 -55 22.5t-24.5 55t20.5 58t56 27t59 -21t27 -56t-20.5 -58.5t-56.5 -27h-6z" />
 </svg>`
-}
 
-// activityPub returns the ActivityPub logo
-func (service Icons) activityPub() string {
-	return `<svg viewBox="0 0 1034 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="height:1em;">
+// iconActivityPub is the ActivityPub logo
+const iconActivityPub = `<svg viewBox="0 0 1034 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="height:1em;">
 <g transform="matrix(1,0,0,1,17,-128)">
 <path fill="currentColor" d="M457,341L25,590L25,690L370,491L370,890L457,939L457,341ZM543,341L543,441L889,640L543,840L543,939L975,690L975,590L543,341ZM543,541L543,740L716,640L543,541ZM284,640L111,740L284,840L284,640Z"/>
 </g>
 </svg>
 `
-}
 
-// webhooks returns the Webhooks logo
-func (service Icons) webhooks() string {
-	return `<svg viewBox="-10 -5 1034 1034" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em;">
+// iconWebhooks is the Webhooks logo
+const iconWebhooks = `<svg viewBox="-10 -5 1034 1034" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" style="height:1em;">
 <path fill="currentColor"
 d="M482 226h-1l-10 2q-33 4 -64.5 18.5t-55.5 38.5q-41 37 -57 91q-9 30 -8 63t12 63q17 45 52 78l13 12l-83 135q-26 -1 -45 7q-30 13 -45 40q-7 15 -9 31t2 32q8 30 33 48q15 10 33 14.5t36 2t34.5 -12.5t27.5 -25q12 -17 14.5 -39t-5.5 -41q-1 -5 -7 -14l-3 -6l118 -192
 q6 -9 8 -14l-10 -3q-9 -2 -13 -4q-23 -10 -41.5 -27.5t-28.5 -39.5q-17 -36 -9 -75q4 -23 17 -43t31 -34q37 -27 82 -27q27 -1 52.5 9.5t44.5 30.5q17 16 26.5 38.5t10.5 45.5q0 17 -6 42l70 19l8 1q14 -43 7 -86q-4 -33 -19.5 -63.5t-39.5 -53.5q-42 -42 -103 -56
@@ -748,11 +483,8 @@ q-4 -3 -13 -10l-5 -6q-4 3 -11 10l-47 46q23 23 52 38.5t61 21.5l22 4h39l28 -5q64 -
 q-17 -6 -35 -6zM218 614q-58 13 -100 53q-47 44 -61 105l-4 24v37l2 11q2 13 4 20q7 31 24.5 59t42.5 49q50 41 115 49q38 4 76 -4.5t70 -28.5q53 -34 78 -91q7 -17 14 -45q6 -1 18 0l125 2q14 0 20 1q11 20 25 31t31.5 16t35.5 4q28 -3 50 -20q27 -21 32 -54
 q2 -17 -1.5 -33t-13.5 -30q-16 -22 -41 -32q-17 -7 -35.5 -6.5t-35.5 7.5q-28 12 -43 37l-3 6q-14 0 -42 -1l-113 -1q-15 -1 -43 -1l-50 -1l3 17q8 43 -13 81q-14 27 -40 45t-57 22q-35 6 -70 -7.5t-57 -42.5q-28 -35 -27 -79q1 -37 23 -69q13 -19 32 -32t41 -19l9 -3z" />
 </svg>`
-}
 
-// bluesky returns the Bluesky logo
-func (service Icons) bluesky() string {
-	return `<svg xmlns="http://www.w3.org/2000/svg" style="height:1em;" fill="currentColor" class="bi bi-bluesky" viewBox="0 0 16 16">
+// iconBluesky is the Bluesky logo
+const iconBluesky = `<svg xmlns="http://www.w3.org/2000/svg" style="height:1em;" fill="currentColor" class="bi bi-bluesky" viewBox="0 0 16 16">
   <path d="M3.468 1.948C5.303 3.325 7.276 6.118 8 7.616c.725-1.498 2.698-4.29 4.532-5.668C13.855.955 16 .186 16 2.632c0 .489-.28 4.105-.444 4.692-.572 2.04-2.653 2.561-4.504 2.246 3.236.551 4.06 2.375 2.281 4.2-3.376 3.464-4.852-.87-5.23-1.98-.07-.204-.103-.3-.103-.218 0-.081-.033.014-.102.218-.379 1.11-1.855 5.444-5.231 1.98-1.778-1.825-.955-3.65 2.28-4.2-1.85.315-3.932-.205-4.503-2.246C.28 6.737 0 3.12 0 2.632 0 .186 2.145.955 3.468 1.948"/>
 </svg>`
-}
