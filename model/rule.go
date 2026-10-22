@@ -102,10 +102,16 @@ func (rule *Rule) RolesToPrivilegeIDs(roleIDs ...string) Permissions {
  ******************************************/
 
 // Toot returns this Rule as its Mastodon API equivalent
+//
+// RULE: Blocking and Muting each reflect this Rule's own Action, never both at once.
 func (rule Rule) Toot() object.Relationship {
+
+	active := !rule.IsDeleted()
+
 	return object.Relationship{
 		ID:       rule.Trigger,
-		Blocking: !rule.IsDeleted(),
+		Blocking: active && rule.Action == RuleActionBlock,
+		Muting:   active && rule.Action == RuleActionMute,
 	}
 }
 

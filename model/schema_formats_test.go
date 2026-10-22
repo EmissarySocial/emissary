@@ -48,6 +48,7 @@ func modelSchemas() map[string]schema.Element {
 		"PersonLinkSchema":       PersonLinkSchema(),
 		"PrivilegeSchema":        PrivilegeSchema(),
 		"ProductSchema":          ProductSchema(),
+		"BookmarkSchema":         BookmarkSchema(),
 		"PushSubscriptionSchema": PushSubscriptionSchema(),
 		"StreamSourceSchema":     StreamSourceSchema(),
 		"ResponseSchema":         ResponseSchema(),

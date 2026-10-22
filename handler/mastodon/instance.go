@@ -2,15 +2,89 @@ package mastodon
 
 import (
 	"crypto/sha256"
+	"regexp"
+	"runtime/debug"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
+	"github.com/EmissarySocial/emissary/service"
+	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/slice"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
 )
+
+// contactAccount returns the domain owner's Account, for the Mastodon Instance
+// entity's "contact_account" (v1) / "contact.account" (v2) field. Real clients
+// fetch this account's profile when the user taps it in server info -- leaving it
+// as a zero-value Account (empty "id") produces a profile request the client can't
+// resolve to anything (see the note on the removed /api/** catch-all in server.go
+// for what that looked like from the outside).
+func contactAccount(factory *service.Factory, session data.Session) object.Account {
+
+	owners := factory.User().ListOwnersAsSlice(session)
+
+	if len(owners) == 0 {
+		return object.Account{}
+	}
+
+	var user model.User
+	if err := factory.User().LoadByID(session, owners[0].UserID, &user); err != nil {
+		return object.Account{}
+	}
+
+	return tootUser(factory, session, model.Authorization{}, &user)
+}
+
+// instanceVersion returns the version string reported to clients, taken from this program's build information.
+func instanceVersion() string {
+	info, ok := debug.ReadBuildInfo()
+	return versionFromBuild(info, ok)
+}
+
+// pseudoVersion matches the module version Go stamps on a build made from an untagged commit.
+var pseudoVersion = regexp.MustCompile(`[-.]\d{14}-[0-9a-f]{12}`)
+
+// versionFromBuild names the running version: the module version for a tagged release, else the short
+// commit it was built from (marked "-dirty" if the work tree had changes), else just "Emissary".
+func versionFromBuild(info *debug.BuildInfo, ok bool) string {
+
+	if !ok || info == nil {
+		return "Emissary"
+	}
+
+	if version := info.Main.Version; version != "" && version != "(devel)" && !pseudoVersion.MatchString(version) {
+		return "Emissary " + version
+	}
+
+	revision := ""
+	dirty := false
+
+	for _, setting := range info.Settings {
+		switch setting.Key {
+		case "vcs.revision":
+			revision = setting.Value
+		case "vcs.modified":
+			dirty = setting.Value == "true"
+		}
+	}
+
+	if revision == "" {
+		return "Emissary"
+	}
+
+	if len(revision) > 9 {
+		revision = revision[:9]
+	}
+
+	if dirty {
+		revision += "-dirty"
+	}
+
+	return "Emissary " + revision
+}
 
 // https://docs.joinmastodon.org/methods/instance/
 
@@ -28,14 +102,26 @@ func GetInstance(serverFactory *server.Factory) func(model.Authorization, txn.Ge
 			return object.Instance{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Instance{}, derp.Wrap(err, location, "Creating session")
+		}
+
+		defer cancel()
+
 		readOnlyDomain := factory.Domain().Cached()
 
 		result := object.Instance{
 			Domain:      t.Host,
 			Title:       readOnlyDomain.Label,
-			Version:     "Emissary v???",
+			Version:     instanceVersion(),
 			SourceURL:   "https://github.com/EmissarySocial/emissary",
-			Description: "",
+			Description: readOnlyDomain.Description,
+			Contact: object.InstanceContact{
+				Account: contactAccount(factory, session),
+			},
 		}
 
 		return result, nil
@@ -135,13 +221,23 @@ func GetInstance_V1(serverFactory *server.Factory) func(model.Authorization, txn
 			return object.Instance_V1{}, derp.Wrap(err, location, "Unrecognized Domain")
 		}
 
+		// Get a database session for this request
+		session, cancel, err := factory.Session(time.Minute)
+
+		if err != nil {
+			return object.Instance_V1{}, derp.Wrap(err, location, "Creating session")
+		}
+
+		defer cancel()
+
 		readOnlyDomain := factory.Domain().Cached()
 
 		result := object.Instance_V1{
-			URI:         t.Host,
-			Title:       readOnlyDomain.Label,
-			Version:     "Emissary v???",
-			Description: "",
+			URI:            t.Host,
+			Title:          readOnlyDomain.Label,
+			Version:        instanceVersion(),
+			Description:    readOnlyDomain.Description,
+			ContactAccount: contactAccount(factory, session),
 		}
 
 		return result, nil
