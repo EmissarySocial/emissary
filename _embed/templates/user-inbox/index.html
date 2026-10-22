@@ -7,11 +7,7 @@
 {{- $folderID := $folder.FolderID.Hex -}}
 {{- $followingID := .QueryParam "origin.followingId" -}}
 
-{{- /* An unfiltered inbox or folder with no messages shows a welcome, newsfeed-welcome-inbox.html
-       or newsfeed-welcome-folder.html, which carries its own heading and Follow Someone button.
-       So the page drops its Follow Someone button and, on desktop, its heading, and tells the
-       list which welcome to show with ?welcome=inbox or ?welcome=folder.
-       Both return once there is a message.  This one-row query is the only test for it. */ -}}
+<!-- RULE: an empty, unfiltered inbox or folder shows a welcome instead of the heading and Follow button (see AGENTS.md). -->
 {{- $isWelcome := false -}}
 {{- if $filter.IsZero -}}
 	{{- $isWelcome = .Inbox.Top1.Slice.IsEmpty -}}
@@ -29,10 +25,7 @@
 	<!-- Main App Content -->
 	<div class="app-content padding-top">
 
-		<!-- Floating Menu Bar.  "Follow Someone" shows on every folder view, including the All Folders
-		     (News Feed) view where no single folder is selected; there it omits the folderId so the
-		     follow modal's "Inbox Folder" dropdown defaults to the user's first folder.  Filter and
-		     Folder Settings are folder-specific, so they only appear when a folder is selected. -->
+		<!-- Follow Someone on every view; Filter and Folder Settings only when a folder is selected. -->
 		{{- $selectedFolder := ne $folderID nilObjectID.Hex -}}
 		{{- if or $selectedFolder (not $isWelcome) -}}
 		<div class="{{if $isDesktop}}text-sm{{end}} margin-none nowrap pos-sticky float-right" style="top:0px; padding:0px 0px 8px 16px; border-radius:4px; background-color:var(--page-background); z-index:1000">
@@ -110,7 +103,7 @@
 			</div>
 
 		</div>
-	
+
 	</div>
 
 	<script src="/.templates/user-inbox/hyperscript" type="text/hyperscript"></script>
@@ -123,9 +116,7 @@
 		hx-push-url="false">
 	</div>
 
-	<!-- Mark this folder's messages read once it is opened (Mastodon-style).  This clears the
-	     folder's unread dot via refreshSidebar; rows keep their unread styling for this render.
-	     Skipped on the News Feed (all-folders) view, where no single folder is selected. -->
+	<!-- Mark the open folder read after it loads (not on All Folders). -->
 	{{- if ne $folderID nilObjectID.Hex -}}
 	<div
 		hx-post="/@me/newsfeed/folder-read?folderId={{$folderID}}"

@@ -14,7 +14,7 @@
 	{{- $folderID := .QueryParam "folderId" -}}
 	{{- $internalID := .QueryParam "origin.followingId" -}}
 
-	{{- /* The Older Posts divider is for a folder with read posts, so the welcome drops it */ -}}
+	<!-- The welcome has no read posts, so it drops the Older Posts divider. -->
 	{{- if and (eq "" (.QueryParam "remote")) (eq "" (.QueryParam "welcome")) -}}
 
 		<div 
@@ -33,7 +33,7 @@
 				&darr; New Posts
 			</div>
 		</div>
-		
+
 	{{- end -}}
 
 	{{- if gt (len  $inbox) 0 -}}
@@ -58,9 +58,9 @@
 				{{- else -}}
 					{{- template "list-social" (array $inboxBuilder $message) -}}
 				{{- end -}}
-				
+
 			</div>
-			
+
 			<hr>
 
 		{{- end -}}

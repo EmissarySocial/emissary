@@ -4,9 +4,8 @@
 
 {{- if and $document.Metadata.IsRuleHidden (not $reveal) -}}
 
-	{{- /* D2 placeholder: this reply is hidden by the viewer's rules. Selecting it re-fetches
-	       this same card with ?reveal=true and swaps it in place. */ -}}
-	<div class="card padding margin-bottom" role="button"
+	<!-- Placeholder for a reply hidden by the viewer's rules; click to reveal it in place. -->
+	<div class="card padding margin-bottom turboclick" role="button"
 		hx-get="/@me/newsfeed/browse-tree-reply?url={{$url}}&reveal=true"
 		hx-target="this"
 		hx-swap="outerHTML"
@@ -118,7 +117,7 @@
 								{{$replies.Length}} 
 								{{pluralize $replies.Length "Reply" "Replies"}}
 							</div>
-							
+
 							<div class="ToggleContent" style="display:none;">
 								{{- range $index, $replyURL := $replies -}}
 									<div 
@@ -137,7 +136,7 @@
 									</div>
 								{{- end -}}
 							</div>
-							
+
 						</div>
 
 					{{- end -}}

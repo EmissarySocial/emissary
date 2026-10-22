@@ -10,8 +10,8 @@
 
 		{{- if $document.Metadata.IsRuleHidden -}}
 
-		{{- /* D2 placeholder: hidden by the viewer's rules; select to open its tree revealed */ -}}
-		<div class="card text-sm padding-xs margin-bottom-sm" role="button"
+		<!-- Placeholder for a document hidden by the viewer's rules; click to open its tree revealed. -->
+		<div class="card text-sm padding-xs margin-bottom-sm turboclick" role="button"
 			hx-get="/@me/newsfeed/browse-tree?url={{$document.ID}}&reveal=true">
 			{{- template "hidden-placeholder" $document -}}
 		</div>

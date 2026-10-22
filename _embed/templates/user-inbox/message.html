@@ -47,9 +47,8 @@
 	{{- $reveal := eq (.QueryParam "reveal") "true" -}}
 	{{- if and $document.Metadata.IsRuleHidden (not $reveal) -}}
 
-	{{- /* D2 placeholder: the message is hidden by the viewer's rules. Selecting it re-renders
-	       this view with ?reveal=true; the replies below stay, gated one-by-one on their own. */ -}}
-	<div class="card padding-vertical-sm padding-horizontal" role="button"
+	<!-- Placeholder for a message hidden by the viewer's rules; click to reveal it. -->
+	<div class="card padding-vertical-sm padding-horizontal turboclick" role="button"
 		hx-get="/@me/newsfeed/message?messageId={{$message.ID}}&url={{$url}}&folderId={{$folderID}}&origin.followingId={{$followingID}}&reveal=true"
 		hx-target="#modal-window"
 		hx-swap="innerHTML"

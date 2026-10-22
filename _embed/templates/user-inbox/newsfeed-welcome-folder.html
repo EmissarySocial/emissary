@@ -1,8 +1,4 @@
-{{- /* newsfeed-welcome-folder.html greets a visitor whose selected folder has no messages at all.
-       It is styled and placed as admin-rules/welcome.html, and newsfeed-welcome-inbox.html is its
-       counterpart for My Inbox.  The dot (".") is the Inbox builder.  list.html and
-       list-social.html render it when index.html passes ?welcome=folder, and index.html then
-       drops the page's own heading and its Follow Someone button, because this carries both. */ -}}
+<!-- Welcome for an empty folder; index.html passes ?welcome=folder (see AGENTS.md). -->
 {{- $folder := (.FoldersWithSelection "FOLDER").Selected -}}
 
 <div class="align-center margin-vertical-xl">

@@ -151,15 +151,13 @@
 			]
 		}
 
-		// The private annotation editor for ?url=.  Saving with an empty note keeps the
-		// annotation; only annotation-delete removes it.
+		// The private annotation editor for ?url=; an empty note keeps the annotation
 		annotation: {
 			roles: ["self"]
 			steps: [
 				{do: "with-annotation", steps: [
 
-					// An actor's notes are a tab of the standard-size actor modal; a document's use the
-					// large modal of the document browser.  Actor links pass ?type=ACTOR for a new record.
+					// Actor notes use the standard modal, document notes the large one; actor links pass ?type=ACTOR
 					{do: "as-modal", options:["class:{{iif .Object.IsActor `` `large`}}"], steps: [
 						{do: "view-html"}
 						{
@@ -183,8 +181,7 @@
 			]
 		}
 
-		// A document's notes redraw the browse modal after the delete, so its Notes tab updates;
-		// an actor's notes close the modal.  remove-event must share a pipeline with delete.
+		// RULE: remove-event must share a pipeline with delete (see AGENTS.md)
 		annotation-delete: {
 			roles: ["self"]
 			steps: [
@@ -210,8 +207,7 @@
 			]
 		}
 
-		// The Notes page: renders in the same frame as the folders, with the sidebar's
-		// Notes item selected.  ?type=actor|document narrows the list.
+		// The Notes page, with the sidebar's Notes item selected; ?type=actor|document narrows the list
 		annotations: {
 			roles: ["self"]
 			steps: [
@@ -280,8 +276,7 @@
 			]
 		}
 
-		// The Notes view of the browse modal, opened by every annotation button and by the Notes tab.
-		// The editor below the thread is the annotation-editor action.
+		// The Notes view of the browse modal; its editor is the annotation-editor action
 		browse-annotation: {
 			roles: ["self"]
 			steps: [
@@ -337,8 +332,7 @@
 		}
 
 
-		// Explicit News Feed (all folders) view.  The zero folderId selects the synthetic
-		// "all folders" entry; without it, the folder view defaults to the first folder.
+		// News Feed: the zero folderId selects the "all folders" entry
 		feed: {
 			roles: ["self"]
 			steps:[
@@ -409,8 +403,7 @@
 			]
 		}
 		
-		// Marks every unread message in the folder (from ?folderId=) as read.  Posted by
-		// the folder view on load (Mastodon-style), clearing the folder's unread dot.
+		// Marks every message in ?folderId= as read; index.html posts it on load
 		folder-read:{
 			roles:["self"]
 			steps:[
@@ -428,8 +421,7 @@
 			]
 		}
 		
-		// Explicit folder view: /@me/newsfeed/folder shows the News Feed (all folders);
-		// /@me/newsfeed/folder?folderId=xxx shows one folder.  Renders index.html.
+		// Shows the folder named by ?folderId=, or the News Feed without one
 		folder: {
 			roles: ["self"]
 			steps:[
@@ -440,9 +432,7 @@
 		index: {
 			roles: ["self"]
 			steps:[
-				// Bare /@me/newsfeed lands on the News Feed (all folders); Notifications is
-				// its own top-level nav section now.  Legacy ?folderId= URLs redirect to the
-				// explicit /folder route.
+				// Redirects to the News Feed, or to /folder when ?folderId= is set
 				{do:"if", condition:"{{eq `` (.QueryParam `folderId`)}}", then:[
 					{do:"redirect-to", url:"/@me/newsfeed/feed"}
 				], else:[
@@ -555,9 +545,7 @@
 			]
 		}
 
-		// LEGACY entry point.  Notifications live in their own template/route now
-		// (/@me/notifications — see the user-notifications template); redirect old
-		// /@me/notifications(?type=xxx) URLs to the matching section page.
+		// Redirects old notifications URLs (?type=) to the user-notifications pages
 		notifications: {
 			roles:["self"]
 			steps:[
@@ -605,9 +593,7 @@
 			]
 		}
 
-		// The private note form for ?url=, rendered under the thread by browse-annotation.  It posts
-		// to itself, not to the modal, then redraws the whole modal so the Notes tab updates.  An
-		// empty note still keeps the annotation; only Delete removes it.
+		// RULE: the note form posts to itself, not the modal, then redraws the modal (see AGENTS.md)
 		annotation-editor: {
 			roles: ["self"]
 			steps: [
@@ -642,8 +628,7 @@
 			]
 		}
 
-		// Standalone News Feed sidebar fragment, re-fetched on refreshSidebar
-		// (?folderId= keeps the selected folder).
+		// News Feed sidebar fragment, re-fetched on refreshSidebar; ?folderId= keeps the selection
 		newsfeed-sidebar: {
 			roles: ["self"]
 			steps:[

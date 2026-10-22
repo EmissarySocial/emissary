@@ -15,9 +15,8 @@
 
 	{{- if and $document.Metadata.IsRuleHidden (not $reveal) -}}
 
-	{{- /* D2 placeholder: this reply is hidden by the viewer's rules. Selecting it re-renders
-	       this page of replies with ?reveal=true. */ -}}
-	<div class="margin-top-xs" role="button"
+	<!-- Placeholder for a reply hidden by the viewer's rules; click to reveal this page of replies. -->
+	<div class="margin-top-xs turboclick" role="button"
 		hx-get="/@me/newsfeed/responses-replies-recursive?url={{$url}}&messageId={{$messageID}}&folderId={{$folderID}}&origin.followingId={{$followingID}}&reveal=true"
 		hx-target="closest .recursive-replies-page"
 		hx-swap="outerHTML"

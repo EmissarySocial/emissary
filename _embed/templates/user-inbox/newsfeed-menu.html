@@ -1,15 +1,9 @@
-{{- /* newsfeed-menu.html renders the News Feed folder list: the "all folders" entry, Notes,
-       a gap, the sortable per-folder links, and "New Folder".  The dot (".") is a FolderList (via
-       .FoldersWithSelection "FOLDER").  Rendered inside newsfeed-sidebar.html on desktop,
-       and full-page by mobile.html.  Notifications live in their own template now (see
-       the user-notifications template and the global nav item in theme-default/navigation.html). */ -}}
+<!-- News Feed folder list: All Folders, Notes, the sortable folders, and New Folder. The dot is a FolderList. -->
 {{- $selectedID := .SelectedID -}}
 {{- $isAnnotations := eq .Section "ANNOTATIONS" -}}
 {{- $allFolders := and (not $isAnnotations) $selectedID.IsZero -}}
 
-<!-- Each link swaps <main> as a boosted request, so changing folders keeps the page and its view
-     transitions.  The target, swap and push are written out because this menu sits inside the
-     sidebar's own hx-target and the sort form's hx-swap="none", which would otherwise win. -->
+<!-- RULE: each link spells out hx-target, hx-swap and hx-push-url (see AGENTS.md). -->
 
 <a href="/@me/newsfeed/feed" hx-boost="true" hx-target="main" hx-swap="innerHTML transition:true show:none" hx-push-url="true" class="turboclick menu-item ellipsis hover-trigger folder {{if $allFolders}}selected{{end}}">
 	<span>
@@ -65,8 +59,7 @@
 </form>
 
 
-<!-- New Folder: a menu row like the folders above it, so it spans the sidebar and its icon lines
-     up with theirs, colored as a link -->
+<!-- New Folder: a menu row like the folders above it, colored as a link. -->
 <div role="button" tabIndex="0" hx-get="/@me/newsfeed/folder-add" class="turboclick menu-item link">
 	<span style="view-transition-name:app-sidebar-add-folder-icon;">{{icon "add"}}</span>
 	<span style="view-transition-name:app-sidebar-add-folder-label">New Folder</span>

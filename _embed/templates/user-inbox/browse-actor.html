@@ -65,9 +65,6 @@
 	<div class="flex-row">
 		<div class="width-64 flex-shrink-0"></div>
 		<div class="text-sm">
-			<!--
-			<button hx-get="/@me/newsfeed/conversation-new?actorId={{$actor.ID}}" class="primary">{{icon "chat"}} Direct Message</button>
-			-->
 			<a class="button outline" href="{{$actor.ID}}" target="_blank" rel="noopener noreferrer">{{icon "globe"}} Website</a>
 		</div>
 	</div>
@@ -90,10 +87,7 @@
 			{{range $attachment := $actor.Attachment.Range}}
 				{{- $attachmentValue := $attachment.Get "value" -}}
 				{{- $attachmentValue := $attachmentValue.String -}}
-				{{- /* $attachmentValue is remote actor metadata. Rendering it as an
-				       href lets html/template's URL-context autoescaping neutralize
-				       dangerous schemes (javascript:, data:), instead of templating
-				       an attacker-influenced value into hyperscript navigation. */ -}}
+				<!-- RULE: remote URLs render only in href, where html/template filters unsafe schemes (see AGENTS.md). -->
 				<tr>
 					<td nowrap>{{$attachment.Name}}</td>
 					<td style="width:100%"><a href="{{$attachmentValue}}" target="_blank" rel="noopener noreferrer nofollow">{{$attachmentValue}}</a></td>
@@ -113,6 +107,6 @@
 			<div class="margin-top bold"><span class="spin">{{icon "loading"}}</span> Loading Featured Posts...</div>
 		</div>
 	{{- end -}}
-	
+
 </div>
-	
+

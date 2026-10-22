@@ -1,5 +1,4 @@
-<!-- One page of notes.  A row opens its annotation: the Notes tab of an actor, or a post with
-     its note editor below.  Pages after the first load on scroll with ?createDate=LT:n. -->
+<!-- One page of notes; later pages load on scroll with ?createDate=LT:n. -->
 {{- $type := .QueryParam "type" -}}
 {{- $isFirstPage := eq "" (.QueryParam "createDate") -}}
 {{- $annotations := .Annotations.Top30.Slice -}}
@@ -62,8 +61,7 @@
 
 {{- else if $isFirstPage -}}
 
-	<!-- No notes yet: a welcome for the selected tab, styled and placed as newsfeed-welcome-inbox.html.
-	     The page's heading and tabs stay, so the visitor can switch tabs from here. -->
+	<!-- No notes yet: a welcome for the selected tab, under the page's own heading and tabs. -->
 	<div class="align-center margin-vertical-xl">
 		{{- if eq $type "actor" -}}
 
