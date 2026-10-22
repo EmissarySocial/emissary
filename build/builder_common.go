@@ -229,6 +229,12 @@ func (w Common) IsPartialRequest() bool {
 	return w._request.Header.Get("HX-Request") != ""
 }
 
+// IsBackground returns TRUE if this page is being drawn behind a modal (as-modal's background-url).
+// A page uses it to leave out what belongs to the modal instead, such as its link-preview tags.
+func (w Common) IsBackground() bool {
+	return isBackgroundRequest(w._request)
+}
+
 // templateRole returns the the role that the current Template performs in the system.
 // Used for selecting eligible child templates.
 func (w Common) templateRole() string {
