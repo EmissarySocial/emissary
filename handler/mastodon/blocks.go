@@ -113,5 +113,5 @@ func actorToAccount(factory *service.Factory, session data.Session, auth model.A
 		return mapDocumentToAccount(factory, session, document)
 	}
 
-	return model.RemoteActorAccount(actor.url, "", "", actor.since)
+	return model.RemoteActorAccount(actor.url, "", "", actor.since, factory.Host())
 }

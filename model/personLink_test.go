@@ -55,7 +55,7 @@ func TestPersonLink_Toot_RemoteAccount(t *testing.T) {
 		IconURL:    "https://mastodon.social/icon.png",
 	}
 
-	account := person.Toot()
+	account := person.Toot("https://example.com")
 
 	// The same ID scheme GetAccount_Lookup hands out for the same account -- not
 	// the raw profile URL (which contains slashes and breaks a route if echoed
@@ -79,7 +79,7 @@ func TestPersonLink_Toot_LocalAccount(t *testing.T) {
 		ProfileURL: "https://example.com/@localuser",
 	}
 
-	account := person.Toot()
+	account := person.Toot("https://example.com")
 
 	// A local account keeps its short hex UserID -- unaffected by the remote-ID fix
 	require.Equal(t, userID.Hex(), account.ID)

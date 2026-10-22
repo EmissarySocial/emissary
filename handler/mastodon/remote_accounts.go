@@ -191,7 +191,7 @@ func loadRemoteAccounts(client streams.Client, factory *service.Factory, session
 	for index, actorURL := range actorURLs {
 
 		if !loaded[index] {
-			result[index] = model.RemoteActorAccount(actorURL, "", "", time.Time{})
+			result[index] = model.RemoteActorAccount(actorURL, "", "", time.Time{}, factory.Host())
 			continue
 		}
 

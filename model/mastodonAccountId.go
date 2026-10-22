@@ -48,8 +48,9 @@ func DecodeRemoteAccountID(s string) (actorURL string, ok bool) {
 // minimal data Emissary keeps about one it has not fully dereferenced -- a
 // Following row, a news-feed origin. profileURL is required; label and iconURL
 // are best-effort. The "acct" (user@domain) is derived from the URL, and the
-// account ID is the encoded URL so it matches every other surface.
-func RemoteActorAccount(profileURL string, label string, iconURL string, createdAt time.Time) object.Account {
+// account ID is the encoded URL so it matches every other surface. host (e.g.
+// "https://example.com") supplies the default images.
+func RemoteActorAccount(profileURL string, label string, iconURL string, createdAt time.Time, host string) object.Account {
 
 	username := label
 	acct := label
@@ -74,7 +75,7 @@ func RemoteActorAccount(profileURL string, label string, iconURL string, created
 		createdAt = time.Now()
 	}
 
-	return object.Account{
+	return WithMastodonDefaultImages(object.Account{
 		ID:          EncodeRemoteAccountID(profileURL),
 		Username:    username,
 		Acct:        acct,
@@ -82,7 +83,7 @@ func RemoteActorAccount(profileURL string, label string, iconURL string, created
 		DisplayName: label,
 		Avatar:      iconURL,
 		CreatedAt:   MastodonDate(createdAt),
-	}
+	}, host)
 }
 
 // remoteStatusIDPrefix marks a Mastodon status ID that encodes a post's URL, for

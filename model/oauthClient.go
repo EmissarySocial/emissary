@@ -2,6 +2,7 @@ package model
 
 import (
 	"crypto/subtle"
+	"strings"
 
 	"github.com/benpate/data/journal"
 	"github.com/benpate/derp"
@@ -76,6 +77,9 @@ func (app OAuthClient) Toot() object.Application {
 		ID:           app.ClientID.Hex(),
 		Name:         app.Name,
 		Website:      app.Website,
+		Scopes:       app.Scopes,
+		RedirectURIs: app.RedirectURIs,
+		RedirectURI:  strings.Join(app.RedirectURIs, "\n"),
 		ClientID:     first.String(app.ClientURL, app.ClientID.Hex()),
 		ClientSecret: app.ClientSecret,
 	}

@@ -143,4 +143,12 @@ require (
 	golang.org/x/text v0.42.0 // indirect
 	golang.org/x/time v0.16.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
+<<<<<<< HEAD
 )
+=======
+)
+
+replace github.com/benpate/toot => github.com/Lawhacknifemi/toot v0.5.1-0.20261017091500-c17bef504d94
+
+replace github.com/benpate/toot-echo => github.com/Lawhacknifemi/toot-echo v0.0.0-20261005141736-b741284f9326
+>>>>>>> pullrequests/Lawhacknifemi/Mastodon_API

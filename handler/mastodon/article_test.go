@@ -49,7 +49,7 @@ func TestIsArticle(t *testing.T) {
 func TestApplyArticle_BuildsAPostAndACard(t *testing.T) {
 
 	stream := newTestArticle()
-	status := stream.Toot()
+	status := stream.Toot("https://example.com")
 
 	require.Equal(t, "Why <Emissary> & friends", status.SpoilerText, "the plain conversion treats a label as a content warning")
 
@@ -83,7 +83,7 @@ func TestApplyArticle_FallsBackWhenThePiecesAreMissing(t *testing.T) {
 	stream.IconURL = "not a web address"
 	stream.AttributedTo = model.PersonLink{}
 
-	status := stream.Toot()
+	status := stream.Toot("https://example.com")
 	status.MediaAttachments = []object.MediaAttachment{
 		{Type: "video", URL: "https://cdn.example.com/clip.mp4"},
 		{Type: "image", URL: "https://cdn.example.com/first.png"},

@@ -490,7 +490,7 @@ func statusForPostURL(factory *service.Factory, session data.Session, auth model
 	account, found := loadAccount(client, factory, session, authorURL)
 
 	if !found {
-		account = model.RemoteActorAccount(authorURL, "", "", time.Time{})
+		account = model.RemoteActorAccount(authorURL, "", "", time.Time{}, factory.Host())
 	}
 
 	status := documentToStatus(post, account)
@@ -542,7 +542,7 @@ func PostStatus_Mute(serverFactory *server.Factory) func(model.Authorization, tx
 			return object.Status{}, derp.Wrap(err, location, "Muting message")
 		}
 
-		return message.Toot(), nil
+		return message.Toot(factory.Host()), nil
 	}
 }
 
@@ -582,7 +582,7 @@ func PostStatus_Unmute(serverFactory *server.Factory) func(model.Authorization, 
 			return object.Status{}, derp.Wrap(err, location, "Muting message")
 		}
 
-		return message.Toot(), nil
+		return message.Toot(factory.Host()), nil
 	}
 }
 

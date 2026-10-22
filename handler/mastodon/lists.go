@@ -272,11 +272,11 @@ func GetList_Accounts(serverFactory *server.Factory) func(model.Authorization, t
 		// Convert the results to a slice of objects
 		result := slice.Map(followingSummaries, func(following model.FollowingSummary) object.Account {
 
-			return object.Account{
+			return model.WithMastodonDefaultImages(object.Account{
 				ID:     following.FollowingID.Hex(),
 				URL:    following.URL,
 				Avatar: following.IconURL,
-			}
+			}, factory.Host())
 		})
 
 		// Return results to caller
