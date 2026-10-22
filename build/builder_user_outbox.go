@@ -149,7 +149,7 @@ func (w Outbox) objectType() string {
 
 // schema returns the JSON-Schema that validates writes to this builder's object
 func (w Outbox) schema() schema.Schema {
-	return schema.New(model.UserSchema())
+	return schema.New(model.UserSchemaForTemplate(w._template.Schema))
 }
 
 // service returns the ModelService that loads and saves this builder's object
