@@ -4,7 +4,7 @@ Shared base template (category: Base, model: Outbox, no `templateRole`) that sup
 
 ## How the tabs load
 
-The settings page at `/@me/settings/general` ([../user-settings/general.html](../user-settings/general.html)) draws only the settings sidebar and an empty `#profile-settings` area. That area loads `/@me/settings-general` from the user's own outbox with htmx. Each tab is its own outbox action, and clicking one swaps the area for that action with `hx-push-url="false"`, so the address stays `/@me/settings/general` and a reload returns to General.
+The settings page at `/@me/settings/general` ([../user-settings/general.html](../user-settings/general.html)) draws the settings sidebar and a `#profile-settings` area, and renders the General tab into that area on the server through the Settings builder's `.OutboxView "settings-general"`, which runs the action from the user's own outbox template. So the page arrives complete, and the navigation's view transition goes straight to real content. Each tab is its own outbox action, and clicking one swaps the area for that action with `hx-push-url="false"`, so the address stays `/@me/settings/general` and a reload returns to General. The swap inherits the page's `hx-swap="innerHTML transition:true"`, so moving between tabs runs a view transition too.
 
 Each tab is a pair of actions:
 
@@ -22,6 +22,6 @@ Inheritance works by name, so an outbox overrides exactly what it defines:
 - **The tab bar:** add a `settings-tabs.html` file. Every inherited tab then draws it. It renders against the Outbox builder, so `.IsAction` marks the selected tab and `.IsDesktop` picks a layout.
 - **A new tab:** add a `settings-<tab>` page, a `settings-<tab>-form` action, and a link to it in your own `settings-tabs.html`.
 
-A tab link is an `hx-get` to `/@me/settings-<tab>` with `hx-target="#profile-settings"` and `hx-push-url="false"`, never a boosted link. Each tab renders inside the settings page, so it uses the settings page's markup (`#menu-bar`, then a `card` with `transition-main-card`) rather than the outbox theme's.
+A tab link is an `hx-get` to `/@me/settings-<tab>` with `hx-target="#profile-settings"` and `hx-push-url="false"`, never a boosted link, and it sets no `hx-swap`, so it keeps the page's view transition. Each tab renders inside the settings page, so it uses the settings page's markup (`#menu-bar`, then a `card` with `transition-main-card`) rather than the outbox theme's.
 
 Import and Export are not Profile tabs. They are a Migration section of their own in [../user-settings](../user-settings/README.md), so no outbox can remove them.

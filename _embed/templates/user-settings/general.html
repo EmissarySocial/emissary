@@ -10,14 +10,7 @@
 	{{- end -}}
 
 	<!-- The tabs and forms come from the user's outbox template (see base-outbox) -->
-	<div
-		id="profile-settings"
-		class="app-content padding"
-		hx-get="/@me/settings-general"
-		hx-trigger="load"
-		hx-target="this"
-		hx-swap="innerHTML"
-		hx-push-url="false">
-		<div class="card border padding transition-main-card text-gray">Loading...</div>
+	<div id="profile-settings" class="app-content padding">
+		{{- .OutboxView "settings-general" -}}
 	</div>
 </div>

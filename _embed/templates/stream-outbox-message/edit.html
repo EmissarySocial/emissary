@@ -11,56 +11,77 @@
 
 {{- $targetURL := .GetString "postTo" | addQueryParams "templateId=outbox-message" -}}
 
-<form id="edit-note-form" hx-post="{{$targetURL}}" hx-encoding="multipart/form-data" hx-push-url="false"
-	data-script="
-		on htmx:configRequest(parameters)
-			set contentHtml to the first <.input/> in me
-			set parameters['content'] to contentHtml.innerHTML
-		">
+<form id="edit-note-form" hx-post="{{$targetURL}}" hx-encoding="multipart/form-data" hx-push-url="false">
 
 	{{if not .IsNew}}
 		<h2>Edit Note</h2>
 	{{end}}
 
-	<div class="margin-bottom">
-		<div
-			tabIndex="0"
-			class="input"
-			contenteditable="true"
-			style="height:16em; min-height:6em; overflow-y:auto; resize:vertical;"
-			data-script="
-				on keydown[key=='ArrowLeft']
-					halt the event's bubbling
+	<!-- General holds the text and the pin; Photo holds the photos.  A hidden panel's fields still submit -->
+	<div script="install TabContainer">
+		<div role="tablist" class="margin-bottom">
+			<div role="tab" aria-controls="edit-note-general" aria-selected="true">General</div>
+			<div role="tab" aria-controls="edit-note-photo">Photo</div>
+		</div>
 
-				on keydown[key=='ArrowRight']
-					halt the event's bubbling
-					
-				">{{.ContentHTML}}</div>
-	</div>
+		<div id="edit-note-general" role="tabpanel">
+			<div class="margin-bottom">
+				<!-- The note's text, in Markdown (edit-content format MARKDOWN) -->
+				<textarea
+					name="content"
+					rows="10"
+					style="min-height:6em; resize:vertical;"
+					data-script="
+						on keydown[key=='ArrowLeft']
+							halt the event's bubbling
 
-	<!-- The note's photos.  Each one's button removes it at once (delete-attachment), without the form's fields -->
-	{{- if not .IsNew -}}
-		<div id="note-photos">
-			{{- range .Attachments -}}
-				{{- if eq "image" .MimeCategory -}}
-					<div class="note-photo">
-						<img src="/{{$.StreamID}}/attachments/{{.AttachmentID.Hex}}?width=300" alt="">
-						<button type="button" class="edit-circle" hx-post="/{{$.StreamID}}/delete-attachment?attachmentId={{.AttachmentID.Hex}}" hx-params="none" hx-confirm="Remove this photo?" hx-target="closest .note-photo" hx-swap="outerHTML" aria-label="Remove photo" title="Remove photo">{{icon "x"}}</button>
-					</div>
-				{{- end -}}
+						on keydown[key=='ArrowRight']
+							halt the event's bubbling
+						">{{.ContentRaw}}</textarea>
+				<div class="text-sm gray40">Your note text goes here.  Markdown is okay. (PUBLIC)</div>
+			</div>
+
+			<!-- Pinned notes lead the Notes tab, as pinned photos lead a gallery; the span is drawn whole in each branch -->
+			{{- if not .IsNew -}}
+				<div class="margin-vertical">
+					{{- if .IsFeatured -}}
+						<span script="install toggle" name="isFeatured" value="true" true-text="Pinned to top" false-text="Pin to top"></span>
+					{{- else -}}
+						<span script="install toggle" name="isFeatured" true-text="Pinned to top" false-text="Pin to top"></span>
+					{{- end -}}
+				</div>
 			{{- end -}}
 		</div>
-	{{- end -}}
 
-	<div id="edit-note-preview"></div>
-	<input 
-		script="on change call previewEditNoteUploads()" 
-		id="edit-note-upload" 
-		type="file" 
-		accept="image/*"
-		multiple
-		name="file" 
-		class="hide">
+		<div id="edit-note-photo" role="tabpanel" hidden>
+			<!-- The note's photos.  Each one's button removes it at once (delete-attachment), without the form's fields -->
+			{{- if not .IsNew -}}
+				<div id="note-photos">
+					{{- range .Attachments -}}
+						{{- if eq "image" .MimeCategory -}}
+							<div class="note-photo">
+								<img src="/{{$.StreamID}}/attachments/{{.AttachmentID.Hex}}?width=300" alt="">
+								<button type="button" class="edit-circle" hx-post="/{{$.StreamID}}/delete-attachment?attachmentId={{.AttachmentID.Hex}}" hx-params="none" hx-confirm="Remove this photo?" hx-target="closest .note-photo" hx-swap="outerHTML" aria-label="Remove photo" title="Remove photo">{{icon "x"}}</button>
+							</div>
+						{{- end -}}
+					{{- end -}}
+				</div>
+			{{- end -}}
+
+			<div id="edit-note-preview"></div>
+			<input 
+				script="on change call previewEditNoteUploads()" 
+				id="edit-note-upload" 
+				type="file" 
+				accept="image/*"
+				multiple
+				name="file" 
+				class="hide">
+			{{- if not .IsNew -}}
+				<label for="edit-note-upload" class="button" role="button" tabIndex="0">{{icon "image"}} Add Photos</label>
+			{{- end -}}
+		</div>
+	</div>
 
 	<div>
 		{{- if .IsNew -}}
@@ -74,7 +95,6 @@
 		{{- else -}}
 			<!-- Save is edit-pencil's, top right, and submits this form by its id -->
 			<span hx-get="/{{.StreamID}}/delete" class="clickable float-right text-red">Delete</span>
-			<label for="edit-note-upload" class="button" role="button" tabIndex="0">{{icon "image"}} Add Photos</label>
 		{{- end -}}
 	</div>
 </form>

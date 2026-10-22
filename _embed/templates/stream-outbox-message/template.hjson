@@ -36,8 +36,8 @@
 		create:{
 			roles:["author"]
 			steps: [
-				{do:"edit-content", file:"create", format:"HTML", require-content:true}
-				{do:"process-content", remove-html:true, add-links:true}
+				// Markdown renders and links bare URLs itself (goldmark Linkify), so there is no process-content step
+				{do:"edit-content", file:"create", format:"MARKDOWN", require-content:true}
 				{do:"save"}
 				{do:"upload-attachments", maximum:10, accept-type:"image/*,video/*,audio/*,application/pdf"}
 				{do:"set-thumbnail", path:"iconUrl"}
@@ -90,8 +90,10 @@
 					// The selected pencil, which toggles back to the note's modal
 					{do:"view-html", file:"edit-pencil"}
 					{do:"set-args", postTo:"/{{.StreamID}}/edit"}
-					{do:"edit-content", file:"edit", format:"HTML", require-content:true}
-					{do:"process-content", remove-html:true, add-links:true}
+					{do:"edit-content", file:"edit", format:"MARKDOWN", require-content:true}
+					// The "Pin to top" toggle: read from the form, then written as a real boolean
+					{do:"read-form", schema:{type:"object", properties:{isFeatured:{type:"string", enum:["true", "false"]}}}}
+					{do:"set-data", values:{"isFeatured":"{{eq (.GetString `isFeatured`) `true`}}"}}
 					// New photos join the ones already here; "fill" never deletes one to make room
 					{do:"upload-attachments", maximum:10, action:"fill", accept-type:"image/*"}
 					{do:"set-thumbnail", path:"iconUrl"}
