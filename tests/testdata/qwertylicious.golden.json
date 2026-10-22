@@ -5815,143 +5815,6 @@
 				}
 			}
 		},
-		"template:qwerty-inbox/annotation/0:with-annotation.SubSteps@with-annotation/0:as-modal.SubSteps/1:edit": {
-			"fields": [
-				"content (textarea, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"types": {
-						"content": "string"
-					}
-				},
-				"empty": {
-					"types": {
-						"content": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"content": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (9962 bytes, sha256 3fcb2919a327)"
-					},
-					"types": {
-						"content": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"content": "string Sample content"
-					},
-					"types": {
-						"content": "string"
-					}
-				}
-			}
-		},
-		"template:qwerty-inbox/folder-add/1:with-folder.SubSteps@with-folder/0:as-modal.SubSteps/0:edit": {
-			"fields": [
-				"icon (select, schema.String)",
-				"label (text, schema.String)",
-				"layout (select, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"changes": {
-						"icon": "string "
-					},
-					"types": {
-						"icon": "string",
-						"label": "string",
-						"layout": "string"
-					}
-				},
-				"empty": {
-					"changes": {
-						"icon": "string "
-					},
-					"types": {
-						"icon": "string",
-						"label": "string",
-						"layout": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"label": "string alert(1)‮\txxxxxxxxxxxxxx",
-						"layout": "string alert(1)‮\txxxxxxxxxxxxxx"
-					},
-					"types": {
-						"icon": "string",
-						"label": "string",
-						"layout": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"icon": "string sample-token",
-						"label": "string Sample label",
-						"layout": "string Sample layout"
-					},
-					"types": {
-						"icon": "string",
-						"label": "string",
-						"layout": "string"
-					}
-				}
-			}
-		},
-		"template:qwerty-inbox/folder-edit/0:with-folder.SubSteps@with-folder/0:as-modal.SubSteps/0:edit": {
-			"fields": [
-				"icon (select, schema.String)",
-				"label (text, schema.String)",
-				"layout (select, schema.String)"
-			],
-			"scenarios": {
-				"absent": {
-					"changes": {
-						"icon": "string "
-					},
-					"types": {
-						"icon": "string",
-						"label": "string",
-						"layout": "string"
-					}
-				},
-				"empty": {
-					"changes": {
-						"icon": "string "
-					},
-					"types": {
-						"icon": "string",
-						"label": "string",
-						"layout": "string"
-					}
-				},
-				"hostile": {
-					"changes": {
-						"label": "string alert(1)‮\txxxxxxxxxxxxxx",
-						"layout": "string alert(1)‮\txxxxxxxxxxxxxx"
-					},
-					"types": {
-						"icon": "string",
-						"label": "string",
-						"layout": "string"
-					}
-				},
-				"typical": {
-					"changes": {
-						"icon": "string sample-token",
-						"label": "string Sample label",
-						"layout": "string Sample layout"
-					},
-					"types": {
-						"icon": "string",
-						"label": "string",
-						"layout": "string"
-					}
-				}
-			}
-		},
 		"template:qwerty-outbox/edit-banner/0:as-modal.SubSteps/0:edit": {
 			"fields": [
 				"data.color-banner (colorpicker, schema.String)",
@@ -7251,7 +7114,7 @@
 				},
 				"typical": {
 					"changes": {
-						"inboxTemplate": "string qwerty-inbox",
+						"inboxTemplate": "string user-inbox",
 						"outboxTemplate": "string qwerty-outbox"
 					},
 					"types": {
@@ -9903,11 +9766,6 @@
 		"template:qwerty-episode/edit/0:as-modal.SubSteps/2:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-episode/edit/0:as-modal.SubSteps/3:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-episode/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
-		"template:qwerty-inbox/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
-		"template:qwerty-inbox/folder-sort/0:with-folder.SubSteps@with-folder/0:sort": "not pinned: POST keys are database record IDs",
-		"template:qwerty-inbox/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
-		"template:qwerty-inbox/message-set-response/0:with-message.SubSteps@with-message/0:set-response": "not pinned: writes a Response record through service.Response",
-		"template:qwerty-inbox/reply/1:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
 		"template:qwerty-outbox/add-collection/1:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
 		"template:qwerty-outbox/add-note/2:add-stream": "not pinned: sets with-data values rendered from templates, not POSTed fields",
 		"template:qwerty-outbox/btn-social-outline/0:set-response": "not pinned: writes a Response record through service.Response",
