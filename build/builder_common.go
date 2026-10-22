@@ -1130,9 +1130,7 @@ func (w Common) FeaturedSearchTags() *QueryBuilder[model.SearchTag] {
 		exp.Equal("deleteDate", 0),
 	)
 
-	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), w._session, criteria)
-	result.CaseInsensitive()
-	result.ByRank()
+	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), w._session, criteria).CaseInsensitive().ByRank()
 
 	return &result
 }
@@ -1150,9 +1148,7 @@ func (w Common) AllowedSearchTags() *QueryBuilder[model.SearchTag] {
 		exp.Equal("deleteDate", 0),
 	)
 
-	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), w._session, criteria)
-	result.CaseInsensitive()
-	result.ByName()
+	result := NewQueryBuilder[model.SearchTag](w._factory.SearchTag(), w._session, criteria).CaseInsensitive().ByName()
 
 	return &result
 }
