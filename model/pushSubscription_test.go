@@ -20,6 +20,8 @@ func TestPushSubscription(t *testing.T) {
 		{"p256dh", "BNNL5ZaTfK81qhXOx23-wewhigUeFb632jN6LvRWCFH1ubQr77FE", nil},
 		{"auth", "tBHItJI5svbpez7KI4CCXg", nil},
 		{"userAgent", "Mozilla/5.0", nil},
+		{"format", PushSubscriptionFormatMobile, nil},
+		{"oauthUserTokenId", "6ad9127ea62129923157497c", nil},
 	}
 
 	tableTest_Schema(t, &s, &sub, table)
