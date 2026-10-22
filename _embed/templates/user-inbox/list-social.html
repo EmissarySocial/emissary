@@ -21,10 +21,9 @@
 
 		{{- if $document.Metadata.IsRuleHidden -}}
 
-			{{- /* D2 placeholder: this message is hidden by the viewer's rules. Selecting it opens
-			       the message view with ?reveal=true (the one click-to-reveal mechanism). */ -}}
+			<!-- Placeholder for a message hidden by the viewer's rules; click to open it revealed. -->
 			<div class="message max-width-640 card padding margin-bottom">
-				<div role="button" class="padding-vertical-sm"
+				<div role="button" class="padding-vertical-sm turboclick"
 					hx-get="/@me/newsfeed/message?messageId={{$message.ID}}&folderId={{$folderID}}&origin.followingId={{$internalID}}&reveal=true"
 					hx-push-url="false">
 					{{- template "hidden-placeholder" $document -}}
@@ -43,7 +42,7 @@
 
 				<div script="install listItem(messageId:'{{$message.ID}}')">
 
-					<span hx-get="/@me/newsfeed/browse?url={{$document.ID}}" hidden></span>
+					<span class="turboclick" hx-get="/@me/newsfeed/browse?url={{$document.ID}}" hidden></span>
 
 					{{- if eq "NEW-REPLIES" $message.StateID -}}
 						<div class="flex-row">
@@ -161,7 +160,7 @@
 			{{- template "newsfeed-welcome-folder" . -}}
 
 		{{- else -}}
-			<h2 class="text-gray">This inbox is empty. When you <span hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="nowrap link">follow someone</span> then their posts will show up here.</h2>
+			<h2 class="text-gray">This inbox is empty. When you <span hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="nowrap link turboclick">follow someone</span> then their posts will show up here.</h2>
 			<div style="height:100vw"></div>
 		{{- end -}}
 

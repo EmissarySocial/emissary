@@ -19,7 +19,7 @@
 		{{- else -}}
 		<div class="flex-row clickable card text-sm padding-xs margin-bottom-sm {{ if eq $url $document.ID}}selected{{end}}">
 
-			<div hx-get="/@me/newsfeed/browse-tree?url={{$document.ID}}" class="flex-row flex-grow flex-align-center">
+			<div hx-get="/@me/newsfeed/browse-tree?url={{$document.ID}}" class="flex-row flex-grow flex-align-center turboclick">
 				{{- $iconURL := $document.AttributedTo.Icon.Href -}}
 				{{- if ne "" $iconURL -}}
 					<img src="{{$iconURL}}" alt="" class="circle width-32">

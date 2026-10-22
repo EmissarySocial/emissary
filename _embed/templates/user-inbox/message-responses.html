@@ -19,7 +19,7 @@
 			hx-get="/@me/newsfeed/message?messageId={{$message.ID}}&url={{$message.URL}}&folderId={{$folderID}}&origin.followingId={{$internalID}}"
 			hx-push-url="false"
 			tabIndex="0"
-			class="text-gray margin-left">{{$metadata.Replies}} {{pluralize $metadata.Replies "Reply" "Replies"}}</span>
+			class="text-gray margin-left turboclick">{{$metadata.Replies}} {{pluralize $metadata.Replies "Reply" "Replies"}}</span>
 	{{ end }}
 
 	{{ if gt $metadata.Announces 0 }}

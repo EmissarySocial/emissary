@@ -50,7 +50,7 @@
 			{{- if $filter.NotZero -}}
 				{{- $following := .FollowingByToken $followingID -}}
 				<div class="flex-grow-1 margin-top-sm">
-					<div class="bold"><a href="/@me/newsfeed/folder?folderId={{$folderID}}" hx-get="/@me/newsfeed/folder?folderId={{$folderID}}">{{iconFilled $folder.Icon}} {{$folder.Label}}</a></div>
+					<div class="bold"><a class="turboclick" href="/@me/newsfeed/folder?folderId={{$folderID}}" hx-get="/@me/newsfeed/folder?folderId={{$folderID}}">{{iconFilled $folder.Icon}} {{$folder.Label}}</a></div>
 					<div class="flex-row margin-vertical">
 						{{- if ne "" $following.IconURL -}}
 							<div class="margin-top-xs">
@@ -66,7 +66,7 @@
 								<a href="{{$following.URL}}" target="_blank" rel="noopener noreferrer" class="text-gray">{{$following.URL}}</a>
 								&middot; {{$following.LastPolled | tinyDate}} ago
 								&nbsp;
-								<button class="text-xs" hx-get="/@me/settings/following-edit?followingId={{$following.FollowingID.Hex}}">Edit Source</button>
+								<button class="text-xs turboclick" hx-get="/@me/settings/following-edit?followingId={{$following.FollowingID.Hex}}">Edit Source</button>
 							</div>
 						</div>
 					</div>
@@ -74,7 +74,7 @@
 			{{- else -}}
 				<h1 class="text-xl bold margin-none flex-grow">
 					{{- if $isMobile -}}
-						<a href="/@me/newsfeed/mobile">{{icon "back"}}</a>
+						<a class="turboclick" href="/@me/newsfeed/mobile">{{icon "back"}}</a>
 					{{- else -}}
 						{{iconFilled $folder.Icon}} 
 					{{- end }}

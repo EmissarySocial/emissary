@@ -84,10 +84,10 @@
 					</div>
 
 					<div class="pos-absolute-top-right text-sm" hx-target="#modal-window" hx-push-url="false" hx-swap="innerHTML">
-						<button hx-get="/@me/newsfeed/browse-tree?url={{$documentID}}" title="Focus on this post" aria-label="Focus on this post">{{icon "focus"}}</button>
-						<button hx-get="/@me/newsfeed/browse-index?url={{$documentID}}" title="Use Index Layout" aria-label="Use Index Layout">{{icon "list"}}</button>
+						<button class="turboclick" hx-get="/@me/newsfeed/browse-tree?url={{$documentID}}" title="Focus on this post" aria-label="Focus on this post">{{icon "focus"}}</button>
+						<button class="turboclick" hx-get="/@me/newsfeed/browse-index?url={{$documentID}}" title="Use Index Layout" aria-label="Use Index Layout">{{icon "list"}}</button>
 						<span class="margin-horizontal-sm"></span>
-						<button hx-get="/@me/newsfeed/browse-actor?url={{$attributedTo.ID}}" title="View Profile" aria-label="View Profile">{{icon "person"}}</button>
+						<button class="turboclick" hx-get="/@me/newsfeed/browse-actor?url={{$attributedTo.ID}}" title="View Profile" aria-label="View Profile">{{icon "person"}}</button>
 						<a href="{{$documentID}}" target="_blank" rel="noopener noreferrer" class="button" title="View Original Website" aria-label="Visit Original Website">{{icon "globe"}}</a>
 					</div>
 

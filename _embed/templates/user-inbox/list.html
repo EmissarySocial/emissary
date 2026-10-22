@@ -84,7 +84,7 @@
 			{{- else if eq "folder" (.QueryParam "welcome") -}}
 				{{- template "newsfeed-welcome-folder" . -}}
 			{{- else -}}
-				<h2 class="text-gray">This inbox is empty. When you <span hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="nowrap link">follow someone</span> then their posts will show up here.</h2>
+				<h2 class="text-gray">This inbox is empty. When you <span hx-get="/@me/settings/following-search?folderId={{$folderID}}" class="nowrap link turboclick">follow someone</span> then their posts will show up here.</h2>
 				<div style="height:100dvh"></div>
 			{{- end -}}
 		{{- else -}}

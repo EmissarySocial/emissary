@@ -16,8 +16,8 @@
 
 			<div class="flex-grow-1">
 				<span class="button-group" script="install message(messageId:'{{$message.ID}}')">
-					<button id="previous" hx-get="/@me/newsfeed/message?messageId={{$message.ID}}&sibling=prev&followingId={{$followingID}}&folderId={{$folderID}}" script="install hotkey" aria-key-shortcuts="ArrowLeft">&laquo; Prev</button>
-					<button id="next" hx-get="/@me/newsfeed/message?messageId={{$message.ID}}&sibling=next&followingId={{$followingID}}&folderId={{$folderID}}" script="install hotkey" aria-key-shortcuts="ArrowLeft">Next &raquo;</button>
+					<button class="turboclick" id="previous" hx-get="/@me/newsfeed/message?messageId={{$message.ID}}&sibling=prev&followingId={{$followingID}}&folderId={{$folderID}}" script="install hotkey" aria-key-shortcuts="ArrowLeft">&laquo; Prev</button>
+					<button class="turboclick" id="next" hx-get="/@me/newsfeed/message?messageId={{$message.ID}}&sibling=next&followingId={{$followingID}}&folderId={{$folderID}}" script="install hotkey" aria-key-shortcuts="ArrowLeft">Next &raquo;</button>
 				</span>
 
 				<span class="button-group">
@@ -26,7 +26,7 @@
 
 				<span class="button-group">
 					<a href="{{$message.URL}}" target="_blank" rel="noopener noreferrer" class="button">{{icon "globe"}} Website</a>
-					<a hx-get="/@me/newsfeed/message-code?messageId={{$message.ID}}&followingId={{$followingID}}" class="button">{{icon "braces"}} Code</a>
+					<a hx-get="/@me/newsfeed/message-code?messageId={{$message.ID}}&followingId={{$followingID}}" class="button turboclick">{{icon "braces"}} Code</a>
 				</span>
 			</div>
 
@@ -35,7 +35,7 @@
 					<button type="button" class="edit-circle" script="on click trigger closeModal" aria-label="Close" title="Close">{{icon "cancel"}}</button>
 				</span>
 			</div>
-		
+
 		</div>
 
 	</div>
@@ -62,7 +62,7 @@
 
 		<div class="margin-bottom">
 			{{- if $inReplyTo.NotNil -}}
-				<div role="link" class="italics text-sm link" hx-get="/@me/newsfeed/message?messageId={{$message.ID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$inReplyTo.ID}}">
+				<div role="link" class="italics text-sm link turboclick" hx-get="/@me/newsfeed/message?messageId={{$message.ID}}&folderID={{$folderID}}&origin.followingId={{$followingID}}&url={{$inReplyTo.ID}}">
 					{{icon "reply-fill"}} Replying to {{$inReplyToAttributedTo.Name}}...
 				</div>
 			{{- else -}}
@@ -76,7 +76,7 @@
 
 		{{- if $attributedTo.NotEmpty -}}
 
-			<div hx-get="/@me/newsfeed/browse-actor?url={{$attributedTo.ID}}" class="flex-row flex-align-center margin-bottom clickable">
+			<div hx-get="/@me/newsfeed/browse-actor?url={{$attributedTo.ID}}" class="flex-row flex-align-center margin-bottom clickable turboclick">
 				{{- if $attributedTo.Icon.NotNil -}}
 					<img src="{{$attributedTo.Icon.Href}}" class="circle width-48">
 				{{- end -}}
@@ -89,7 +89,7 @@
 		{{- end -}}
 
 		<div class="flex-row">
-					
+
 			<div>
 
 				<div class="content">
@@ -118,7 +118,7 @@
 					</div>
 				</div>
 			</div>
-			
+
 		</div>
 
 	</div>
