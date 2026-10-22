@@ -349,6 +349,12 @@ func (w Stream) ContentRaw() string {
 	return w._stream.Content.Raw
 }
 
+// ContentSource returns this Stream's content in its source format, or an empty string.  Text editors use
+// it instead of ContentRaw, whose empty JSON object is meant for EditorJS.
+func (w Stream) ContentSource() string {
+	return w._stream.Content.Raw
+}
+
 // CreateDate returns the CreateDate of the stream being built
 func (w Stream) CreateDate() int64 {
 	return w._stream.CreateDate

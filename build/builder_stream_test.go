@@ -385,3 +385,16 @@ func TestStream_ClosedRepliesAreHidden(t *testing.T) {
 	builder._stream.ReplyPolicy = model.ReplyPolicyEveryone
 	require.Equal(t, 3, builder.ReplyCount())
 }
+
+// TestStream_ContentSource pins that text editors get an empty string for empty content, where ContentRaw
+// gives EditorJS its empty JSON object
+func TestStream_ContentSource(t *testing.T) {
+
+	builder := newChildrenTestStream(primitive.NewObjectID(), primitive.NewObjectID())
+	require.Equal(t, "", builder.ContentSource())
+	require.Equal(t, "{}", builder.ContentRaw())
+
+	builder._stream.Content.Raw = "Hello **world**"
+	require.Equal(t, "Hello **world**", builder.ContentSource())
+	require.Equal(t, "Hello **world**", builder.ContentRaw())
+}
