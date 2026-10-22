@@ -39,6 +39,7 @@ func AddToCollection(factory *service.Factory, session data.Session, args mapof.
 	// Record this reply in the LOCAL parent's Replies collection, if the parent
 	// is a Stream we own. This is independent of context ownership: we track
 	// replies to our own Streams even when the thread's context is remote.
+	// A reply the parent's policy refuses never gets here: the inbox drops it (RefusesReply).
 	if err := factory.Stream().AddReply(session, document.InReplyTo().String(), document.ID()); err != nil {
 		return requeue(derp.Wrap(err, location, "Adding reply to parent collection", "url: "+objectID))
 	}
