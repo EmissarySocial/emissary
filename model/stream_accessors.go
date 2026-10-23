@@ -62,7 +62,8 @@ func StreamSchema() schema.Element {
 // WidgetSchema defines the "widgets" list, which holds one StreamWidget per item
 func WidgetSchema() schema.Element {
 	return schema.Array{
-		Items: StreamWidgetSchema(),
+		Items:     StreamWidgetSchema(),
+		MaxLength: 128,
 	}
 }
 
