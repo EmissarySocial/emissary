@@ -71,9 +71,9 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 			stream.PublishDate = scheduledAt.Unix()
 		}
 
-		// Add the content into the stream
+		// Add the content into the stream. Clients post plain text, which the TEXT format keeps as the source.
 		contentService := factory.Content()
-		stream.Content = contentService.New(model.ContentFormatHTML, transaction.Status)
+		stream.Content = contentService.New(model.ContentFormatText, transaction.Status)
 
 		// Save the stream
 		streamService := factory.Stream()
@@ -686,12 +686,13 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 			return object.Status{}, derp.Wrap(err, location, "Editing stream")
 		}
 
-		// Edit stream values
-		//
-		// RULE: rebuild via contentService.New, not just .Raw -- .HTML is what every reader
+		// RULE: Rebuild via contentService.New, not just .Raw -- .HTML is what every reader
 		// (tootStream, the web page, federation) actually renders.
+
+		// RULE: Clients edit in plain text, so the edited post is stored as TEXT whatever its format
+		// was. Writing their text into an EditorJS or Markdown body would corrupt it.
 		contentService := factory.Content()
-		stream.Content = contentService.New(stream.Content.Format, t.Status)
+		stream.Content = contentService.New(model.ContentFormatText, t.Status)
 		stream.Label = t.SpoilerText
 		// t.Sensitive
 		// t.Language
