@@ -22,12 +22,6 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 	const location = "handler.mastodon_PostStatus"
 	return func(authorization model.Authorization, transaction txn.PostStatus) (object.Status, error) {
 
-		// RULE: every post made here uses a Template that is readable by anyone, so any other
-		// visibility would publish a followers-only or direct post to the world. Refuse it.
-		if transaction.Visibility != "" && transaction.Visibility != "public" {
-			return object.Status{}, derp.BadRequest(location, "Emissary can only post publicly through this API", transaction.Visibility)
-		}
-
 		// Get the factory for this domain
 		factory, err := serverFactory.ByHostname(transaction.Host)
 
@@ -50,6 +44,20 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 
 		if err := userSerivce.LoadByID(session, authorization.UserID, &user); err != nil {
 			return object.Status{}, derp.Wrap(err, location, "Loading user")
+		}
+
+		// RULE: Public posts become Streams that anyone can read. A direct message is addressed only to the
+		// people it mentions. Anything else is refused, so a restricted post is never published to everyone.
+		switch transaction.Visibility {
+
+		case "", "public":
+			// Continue below with the public Stream
+
+		case "direct":
+			return postDirectStatus(factory, session, authorization, &user, transaction)
+
+		default:
+			return object.Status{}, derp.BadRequest(location, "Emissary can only post public or direct statuses through this API", transaction.Visibility)
 		}
 
 		// Create the stream for the new mastodon "Status"
