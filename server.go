@@ -973,7 +973,8 @@ func errorHandler(err error, ctx echo.Context) {
 	// error is just noise (HTMX aborts in-flight requests when the user navigates).
 	// Log quietly and move on.
 	if request.Context().Err() != nil {
-		log.Debug().Str("url", request.URL.String()).Msg("Request canceled by client")
+		// The cause and the handler's own error tell a dropped connection from a server-side cancel
+		log.Debug().Err(err).AnErr("cause", context.Cause(request.Context())).Str("url", request.URL.String()).Msg("Request canceled by client")
 		return
 	}
 
