@@ -146,12 +146,17 @@ func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 		GetMutes: mastodon.GetMutes(serverFactory),
 
 		// https://docs.joinmastodon.org/methods/notifications/
-		GetNotifications:             mastodon.GetNotifications(serverFactory),
-		GetNotification:              mastodon.GetNotification(serverFactory),
-		PostNotifications_Clear:      mastodon.PostNotifications_Clear(serverFactory),
-		PostNotification_Dismiss:     mastodon.PostNotification_Dismiss(serverFactory),
-		GetNotifications_UnreadCount: mastodon.GetNotifications_UnreadCount(serverFactory),
-		GetNotificationPolicy:        mastodon.GetNotificationPolicy(serverFactory),
+		GetNotifications:                 mastodon.GetNotifications(serverFactory),
+		GetNotification:                  mastodon.GetNotification(serverFactory),
+		GetNotificationRequests:          mastodon.GetNotificationRequests(serverFactory),
+		PostNotificationRequest_Accept:   mastodon.PostNotificationRequest_Accept(serverFactory),
+		PostNotificationRequest_Dismiss:  mastodon.PostNotificationRequest_Dismiss(serverFactory),
+		PostNotificationRequests_Accept:  mastodon.PostNotificationRequests_Accept(serverFactory),
+		PostNotificationRequests_Dismiss: mastodon.PostNotificationRequests_Dismiss(serverFactory),
+		PostNotifications_Clear:          mastodon.PostNotifications_Clear(serverFactory),
+		PostNotification_Dismiss:         mastodon.PostNotification_Dismiss(serverFactory),
+		GetNotifications_UnreadCount:     mastodon.GetNotifications_UnreadCount(serverFactory),
+		GetNotificationPolicy:            mastodon.GetNotificationPolicy(serverFactory),
 
 		// https://docs.joinmastodon.org/methods/oauth/
 		// GetOAuth_Authorize: mastodon.GetOAuth_Authorize(serverFactory),
