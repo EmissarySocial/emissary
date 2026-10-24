@@ -1,0 +1,86 @@
+-- Scrollspy builds an outline of the article's headings inside this element, and highlights
+-- the entry for the section in view.  Installed on the element (not loaded by a script src),
+-- so it runs again after every htmx swap that brings in a new outline
+behavior Scrollspy
+
+	init
+		set contentNode to first from < .e-content />
+		if no contentNode then
+			exit
+		end
+
+		for node in <h1, h2, h3, h4 /> in contentNode
+			if node.id is "" then
+				set node.id to "scrollspy-" + Math.random()
+			end
+			-- Build the link as an element and assign its text: put inserts a string as HTML, and
+			-- textContent is the decoded heading, so escaped markup there would become live (BUG-277)
+			set anchor to document.createElement("a")
+			set anchor.className to "scrollspy-item " + scrollspy_indent(node)
+			set anchor.href to "#" + node.id
+			set anchor.textContent to node.textContent
+			put anchor at the end of me
+		end
+
+		call scrollspy_select(me)
+	end
+
+	-- An htmx swap removes this element without cleaning up its window listener,
+	-- so the first scroll after the outline leaves the page removes the listener
+	on scroll from window debounced at 20ms
+		if not my isConnected then
+			call _hyperscript.cleanup(me)
+			exit
+		end
+		call scrollspy_select(me)
+	end
+
+	-- A clicked entry flashes its heading, which is otherwise hard to spot when it was already in view.
+	-- The raw href, not .hash, because .hash percent-encodes an id with non-ASCII letters
+	on click
+		call scrollspy_select(me)
+		set item to the closest <a.scrollspy-item /> to the target
+		if no item then
+			exit
+		end
+		call flash_highlight(document.getElementById(item.getAttribute("href").substring(1)))
+	end
+
+end
+
+-- scrollspy_select highlights the outline entry for the first heading inside the viewport
+def scrollspy_select(outline)
+
+	set contentNode to first from < .e-content />
+	if no contentNode then
+		exit
+	end
+
+	for node in <h1, h2, h3, h4 /> in contentNode
+		measure the node
+		if (result.top < window.innerHeight) and (result.bottom >= 0)
+			set hash to "#" + node.id
+			set item to first from <a.scrollspy-item[href="${hash}"] /> in outline
+			take .selected from <.scrollspy-item /> in outline for item
+			exit
+		end
+	end
+end
+
+-- scrollspy_indent returns the outline class for a heading's level
+def scrollspy_indent(node)
+
+	if node.tagName is "H1"
+		return "level-1"
+	end
+
+	if node.tagName is "H2"
+		return "level-2"
+	end
+
+	if node.tagName is "H3"
+		return "level-3"
+	end
+
+	return "level-4"
+end

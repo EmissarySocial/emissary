@@ -6394,6 +6394,55 @@
 				}
 			}
 		},
+		"widget:prev-next/edit-widget": {
+			"fields": [
+				"includeFamily (toggle, schema.Boolean)",
+				"showIcon (toggle, schema.Boolean)",
+				"showLabels (toggle, schema.Boolean)",
+				"showSummary (toggle, schema.Boolean)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"includeFamily": "unreadable",
+						"showIcon": "unreadable",
+						"showLabels": "unreadable",
+						"showSummary": "unreadable"
+					}
+				},
+				"empty": {
+					"types": {
+						"includeFamily": "unreadable",
+						"showIcon": "unreadable",
+						"showLabels": "unreadable",
+						"showSummary": "unreadable"
+					}
+				},
+				"hostile": {
+					"types": {
+						"includeFamily": "unreadable",
+						"showIcon": "unreadable",
+						"showLabels": "unreadable",
+						"showSummary": "unreadable"
+					}
+				},
+				"typical": {
+					"changes": {
+						"": "removed",
+						"includeFamily": "bool true",
+						"showIcon": "bool true",
+						"showLabels": "bool true",
+						"showSummary": "bool true"
+					},
+					"types": {
+						"includeFamily": "bool",
+						"showIcon": "bool",
+						"showLabels": "bool",
+						"showSummary": "bool"
+					}
+				}
+			}
+		},
 		"widget:scrollspy/edit-widget": {
 			"fields": [],
 			"scenarios": {

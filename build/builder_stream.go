@@ -257,6 +257,11 @@ func (w Stream) SummaryOrContent() string {
 	return w._stream.SummaryOrContent()
 }
 
+// Icon returns the icon name of the stream being built
+func (w Stream) Icon() string {
+	return w._stream.Icon
+}
+
 // IconURL returns the thumbnail image URL of the stream being built
 func (w Stream) IconURL() string {
 	return w._stream.IconURL
@@ -527,7 +532,7 @@ func (w Stream) Widgets(location string) (template.HTML, error) {
 		if widget, ok := widgetService.Get(streamWidget.Type); ok {
 			widgetBuilder := NewWidget(&w, &streamWidget)
 
-			if err := widget.HTMLTemplate.ExecuteTemplate(&buffer, "widget", widgetBuilder); err != nil {
+			if err := appendWidget(&buffer, widget.HTMLTemplate, widgetBuilder); err != nil {
 				derp.Report(derp.Wrap(err, "build.Stream.Widgets", "Executing widget template", widget))
 			}
 		}
@@ -535,6 +540,22 @@ func (w Stream) Widgets(location string) (template.HTML, error) {
 	buffer.WriteString(`</div>`)
 
 	return template.HTML(buffer.String()), nil // #nosec G203 -- buffer holds the action pipeline's own rendered output, already escaped by html/template
+}
+
+// appendWidget renders one widget's "widget" template and appends the result to buffer,
+// appending nothing when the template fails
+func appendWidget(buffer *bytes.Buffer, widgetTemplate *template.Template, data any) error {
+
+	// A template that fails partway has already written its opening tags, which would
+	// leave the page unbalanced (BUG-279), so render into a buffer of its own first
+	var widgetBuffer bytes.Buffer
+
+	if err := widgetTemplate.ExecuteTemplate(&widgetBuffer, "widget", data); err != nil {
+		return err
+	}
+
+	buffer.Write(widgetBuffer.Bytes())
+	return nil // Nothing to see here
 }
 
 /******************************************
@@ -653,6 +674,57 @@ func (w Stream) LastChild(sort string, action string) (Stream, error) {
 	sortOption := option.SortDesc(sort)
 
 	return w.getFirstStream(criteria, sortOption, action), nil
+}
+
+// NextAfterParent returns the next sibling, by rank, of the nearest ancestor that has one.
+// It returns an empty builder at the end of the tree.
+func (w Stream) NextAfterParent(action string) (Stream, error) {
+
+	loadParent := func(parentID primitive.ObjectID, parent *model.Stream) error {
+		return w._factory.Stream().LoadByID(w._session, parentID, parent)
+	}
+
+	nextSibling := func(stream *model.Stream) Stream {
+		criteria := exp.Equal("parentId", stream.ParentID).AndGreaterThan("rank", stream.Rank)
+		return w.getFirstStream(criteria, option.SortAsc("rank"), action)
+	}
+
+	return nextAfterParent(w._stream, loadParent, nextSibling), nil
+}
+
+// nextAfterParent climbs from stream through its ancestors, returning the first ancestor's next sibling found
+func nextAfterParent(stream *model.Stream, loadParent func(primitive.ObjectID, *model.Stream) error, nextSibling func(*model.Stream) Stream) Stream {
+
+	const location = "build.nextAfterParent"
+
+	// The depth limit stops a corrupt parentId loop from spinning forever
+	current := stream
+	for range maxTreeDepth {
+
+		// RULE: A top-level Stream ends the walk
+		if !current.HasParent() {
+			return Stream{}
+		}
+
+		// Load the parent. A top-level Stream's parentId names its owner, which is not a Stream
+		parent := model.NewStream()
+		if err := loadParent(current.ParentID, &parent); err != nil {
+			if !derp.IsNotFound(err) {
+				derp.Report(derp.Wrap(err, location, "Loading parent", current.ParentID))
+			}
+			return Stream{}
+		}
+
+		// Use the parent's next sibling, if it has one
+		if next := nextSibling(&parent); !next.IsEmpty() {
+			return next
+		}
+
+		current = &parent
+	}
+
+	// Lost in the woods
+	return Stream{}
 }
 
 // getFirstStream scans an iterator for the first stream allowed to this user.

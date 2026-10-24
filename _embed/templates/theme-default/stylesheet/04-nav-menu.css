@@ -1,0 +1,199 @@
+/******************************************
+ * Mobile Navigation Menu (below 640px)
+ *
+ * theme-minimal's mobile menu: a control fixed to the
+ * top-right corner and the full-screen sheet it opens.
+ * The rules behind each choice are in
+ * theme-minimal/AGENTS.md.
+ ******************************************/
+
+/* Desktop: display:none, not hide-visual, or the checkbox is a dead tab stop (see theme-minimal/AGENTS.md). */
+.nav-menu {
+	display: none;
+}
+
+@media screen and (width < 640px) {
+
+	/* RULE: hide the bar only where the sheet replaces it.  qwertylicious loads this stylesheet
+	   too, and its desktop sidebar is a <nav> with no .nav-menu beside it */
+	body:has(> .nav-menu) > nav {
+		display: none;
+	}
+
+	/* The landmark, and the one switch that turns the mobile layout on. Both children are
+	   position:fixed, so this is a zero-height flex item in <body>. */
+	.nav-menu {
+		display: block;
+	}
+
+	/* RULE: position:fixed, never absolute, because this is also the close button over a fixed
+	   sheet. z-index sits above the sheet and below the 1000 tier of modals (see theme-minimal/AGENTS.md). */
+	.nav-menu-button {
+		position: fixed;
+		top: var(--rhythm);
+		right: var(--rhythm);
+		z-index: 901;
+
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		/* 44px, the smallest target both mobile platforms treat as reliably tappable.
+		   --rhythm is 8px at every breakpoint, so this is not a responsive multiple. */
+		width: calc(var(--rhythm) * 5.5);
+		height: calc(var(--rhythm) * 5.5);
+
+		border-radius: var(--border-radius);
+		color: var(--gray80);
+		cursor: pointer;
+
+		/* RULE: opaque, and --gray10 rather than --white. Nothing reserves space for this control,
+		   so the backdrop is its only contrast, and the grays invert in dark mode (see theme-minimal/AGENTS.md). */
+		background-color: var(--gray10);
+		box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
+
+		& > .icon {
+			font-size: calc(var(--rhythm) * 3);
+			line-height: 1;
+		}
+	}
+
+	/* Closed shows the hamburger, open shows the X: one control with two glyphs, so one tab stop
+	   and one focus ring. `+` reaches the label because the whitespace between them is a text
+	   node, which the adjacent sibling combinator skips. */
+	.nav-menu-button > .nav-menu-close {
+		display: none;
+	}
+
+	.nav-menu-toggle:checked + .nav-menu-button > .nav-menu-open {
+		display: none;
+	}
+
+	.nav-menu-toggle:checked + .nav-menu-button > .nav-menu-close {
+		display: block;
+	}
+
+	/* The focused element is the off-screen checkbox, so the ring is drawn on its label. */
+	.nav-menu-toggle:focus-visible + .nav-menu-button {
+		outline: solid 2px var(--focus-color);
+		outline-offset: 2px;
+	}
+
+	/* The sheet. Hidden until the checkbox is checked: `:checked` is a selector, so it lives inside
+	   this media query and does not exist above 640px (see theme-minimal/AGENTS.md). */
+	.nav-menu-panel {
+		position: fixed;
+		inset: 0px;
+		z-index: 900;
+
+		display: flex;
+		flex-direction: column;
+
+		/* RULE: visibility, not display. `display` cannot transition, and @starting-style animates
+		   the entry only, so the sheet would fade in and then vanish on exit (see theme-minimal/AGENTS.md). */
+		visibility: hidden;
+		opacity: 0;
+		transform: scale(0.98);
+		transition: opacity var(--motion-base) var(--motion-ease), transform var(--motion-base) var(--motion-ease), visibility 0s linear var(--motion-base);
+
+		background-color: var(--white);
+
+		/* Clears the control, which is fixed over this sheet's own top-right corner */
+		padding-top: calc(var(--rhythm) * 9);
+
+		/* RULE: `contain`, not `none`, or a swipe scrolls the document behind the sheet (see theme-minimal/AGENTS.md). */
+		overflow-y: auto;
+		overscroll-behavior: contain;
+	}
+
+	.nav-menu-toggle:checked ~ .nav-menu-panel {
+		visibility: visible;
+		opacity: 1;
+		transform: scale(1);
+
+		/* Same durations, but the visibility delay drops to zero: the sheet has to be visible at
+		   the start of the fade-in and stay visible until the end of the fade-out. */
+		transition: opacity var(--motion-base) var(--motion-ease), transform var(--motion-base) var(--motion-ease), visibility 0s linear 0s;
+	}
+
+	/* RULE: zero the delay as well as the duration. The global reduced-motion switch overrides
+	   duration only, and a lingering delay leaves an invisible sheet swallowing taps (see theme-minimal/AGENTS.md). */
+	@media (prefers-reduced-motion: reduce) {
+
+		.nav-menu-panel,
+		.nav-menu-toggle:checked ~ .nav-menu-panel {
+			transition-delay: 0s;
+		}
+	}
+
+	/* RULE: .floating-menu is z-index 1000 and would paint over the sheet. It sits outside .nav-menu,
+	   so :has on <body> is the only selector that reaches it. */
+	body:has(.nav-menu-toggle:checked) .floating-menu {
+		display: none;
+	}
+
+	/* Sheet rows: a row with a leading glyph, sized to match the Inbox's own mobile menu in
+	   user-inbox/mobile.html. A stacked icon-over-caption layout only reads when an icon is
+	   present, and a stream's icon is usually absent. */
+	.nav-menu-panel a {
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		gap: var(--rhythm);
+
+		padding: calc(var(--rhythm) * 2);
+		border-bottom: solid 1px var(--gray15);
+
+		color: var(--gray80);
+		font-size: calc(var(--rhythm) * 2.5);
+		line-height: 1.4;
+		text-decoration: none;
+
+		&:hover,
+		&:focus {
+			color: var(--gray90);
+			background-color: var(--gray10);
+		}
+
+		/* Set server-side from .NavigationID, not by SelectNav (see theme-minimal/AGENTS.md). */
+		&.selected {
+			background-color: var(--gray20);
+			color: var(--black);
+		}
+
+		& > .icon {
+			font-size: calc(var(--rhythm) * 3);
+			line-height: 1;
+			flex-shrink: 0;
+		}
+
+		& > .label {
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+	}
+
+	/* The bar's account links, repeated in the sheet because the bar is hidden here */
+	.nav-menu-account {
+		margin-top: calc(var(--rhythm) * 2);
+		border-top: solid 1px var(--gray15);
+	}
+
+	/* Join Now is a call to action, not a destination, so it reads as a button rather than as
+	   one more row in the list. */
+	.nav-menu-panel a.primary {
+		justify-content: center;
+		margin: calc(var(--rhythm) * 2);
+		padding: calc(var(--rhythm) * 1.5) calc(var(--rhythm) * 2);
+		border-bottom: none;
+		border-radius: var(--border-radius);
+		background-color: var(--button-primary-background);
+		color: var(--button-primary-color);
+
+		&:hover,
+		&:focus {
+			background-color: var(--button-primary-background-hover);
+			color: var(--button-primary-color-hover);
+		}
+	}
+}

@@ -1,0 +1,25 @@
+{
+	widgetId:"prev-next"
+	label:"Previous/Next Buttons"
+	description:"Displays buttons that link to the previous and next pages in the site map."
+	schema:{
+		type:"object"
+		properties:{
+			showLabels: {type:"boolean", default:false}
+			showSummary: {type:"boolean", default:false}
+			showIcon: {type:"boolean", default:false}
+			includeFamily: {type:"boolean", default:true}
+		}
+	}
+	form:{
+		type:"layout-vertical"
+		label:"Edit Previous/Next Buttons"
+		description:"Choose what each button shows."
+		children:[
+			{type:"toggle", path:"showLabels", options:{true-text:"Show \"Previous\" and \"Next\" Labels", false-text:"Show \"Previous\" and \"Next\" Labels"}}
+			{type:"toggle", path:"showSummary", options:{true-text:"Show Summary", false-text:"Show Summary"}}
+			{type:"toggle", path:"showIcon", options:{true-text:"Show Icon", false-text:"Show Icon"}}
+			{type:"toggle", path:"includeFamily", options:{true-text:"Navigate Full Tree (Parents & Children)", false-text:"Navigate Full Tree (Parents & Children)"}}
+		]
+	}
+}

@@ -78,3 +78,37 @@
 		background-position: 100% 0;
 	}
 }
+
+/******************************************
+ * Flash Highlight
+ *
+ * Points the reader at one element for a moment, through
+ * flash_highlight() in hyperscript/highlight._hs.  Holds
+ * --flash-highlight-color, then fades it out.  1.8s is a
+ * signal to notice, not a transition, so it is outside the
+ * two motion durations above.
+ ******************************************/
+
+@keyframes flash-highlight {
+	0%, 15% {background-color: var(--flash-highlight-color);}
+	100% {background-color: transparent;}
+}
+
+/* Holds the color without fading, then drops it: the reduced-motion version */
+@keyframes flash-highlight-steady {
+	0% {background-color: var(--flash-highlight-color);}
+	100% {background-color: transparent;}
+}
+
+.flash-highlight {
+	border-radius: 4px;
+	animation: flash-highlight 1.8s var(--motion-ease);
+}
+
+/* RULE: !important on a class outranks 02-accessibility.css's universal reduced-motion rule, which
+   would otherwise end the flash in 0.01ms.  step-end holds the color and never fades it */
+@media (prefers-reduced-motion: reduce) {
+	.flash-highlight {
+		animation: flash-highlight-steady 1.8s step-end !important;
+	}
+}

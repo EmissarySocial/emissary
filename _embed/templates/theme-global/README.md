@@ -168,7 +168,11 @@ The breakpoint ladder is consistent across the codebase:
 
 ## Accessibility and motion
 
-[02-accessibility.css](02-accessibility.css) provides `.hide-visual` for screen-reader-only content (visually clipped, still in the accessibility tree). [02-animations.css](02-animations.css) defines the shared keyframes (`fadeIn`, `fadeOut`, `zoomIn`, `spin`, `barberpole`, etc.). Both animation-heavy files respect `@media (prefers-reduced-motion: reduce)`, which globally collapses animation and transition durations — honor it in anything new you add. Interactive components are keyed off ARIA roles and attributes (`[role="tab"]`, `[aria-selected]`, `[role="menuitem"]`), so keeping markup semantic is what makes the styling work.
+[02-accessibility.css](02-accessibility.css) provides `.hide-visual` for screen-reader-only content (visually clipped, still in the accessibility tree). [02-animations.css](02-animations.css) defines the shared keyframes (`fadeIn`, `fadeOut`, `zoomIn`, `spin`, `barberpole`, etc.). The **flash highlight** points the reader at one element: `call flash_highlight(element)` from any hyperscript ([hyperscript/highlight._hs](hyperscript/highlight._hs)) adds `.flash-highlight`, which holds `--flash-highlight-color` (pale yellow, amber in dark mode, and overridable by a theme) and fades it out over 1.8s. Calling it again restarts the flash; the scrollspy outline uses it on the heading a reader clicks. Both animation-heavy files respect `@media (prefers-reduced-motion: reduce)`, which globally collapses animation and transition durations — honor it in anything new you add. Interactive components are keyed off ARIA roles and attributes (`[role="tab"]`, `[aria-selected]`, `[role="menuitem"]`), so keeping markup semantic is what makes the styling work.
+
+## Code highlighting
+
+Prism 1.30.0 is vendored in [resources/prism-1.30.0/](resources/prism-1.30.0/README.md), with the languages listed in its README. A theme opts in by loading `/.themes/global/resources/prism-1.30.0/prism.min.js` before `/.themes/global/javascript`. That bundle's [javascript/prism.js](javascript/prism.js) then defines HJSON and highlights every page htmx swaps in; on a theme without Prism it does nothing. This folder ships no colors for Prism's `.token` classes, so each theme that loads it brings its own palette.
 
 ## Extending the system
 

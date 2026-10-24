@@ -1,5 +1,3 @@
-<script type="text/hyperscript" src="/.widgets/scrollspy/hyperscript"></script>
-
 <style>
 	#scrollspy {
 		position:sticky;
@@ -45,4 +43,5 @@
 
 </style>
 
-<div id="scrollspy"></div>
+<!-- install, not a script src: hyperscript fetches a src only on the first page load, so an htmx swap never ran it -->
+<div id="scrollspy" script="install Scrollspy"></div>
