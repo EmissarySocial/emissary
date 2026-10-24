@@ -32,7 +32,7 @@ import (
 	"github.com/EmissarySocial/emissary/server"
 	derpconsole "github.com/EmissarySocial/emissary/tools/derp-console"
 	"github.com/benpate/derp"
-	_ "github.com/benpate/digital-dome/dome4echo" // TEMPORARILY unused -- see disabled e.Pre() call below; re-enable both before shipping
+	"github.com/benpate/digital-dome/dome4echo"
 	"github.com/benpate/form/widget"
 	"github.com/benpate/hannibal"
 	"github.com/benpate/hannibal/sigs"
@@ -257,12 +257,7 @@ func makeStandardRoutes(factory *server.Factory, e *echo.Echo) {
 	e.Pre(middleware.Recover())
 
 	// Web Application Firewall Middleware
-	// TEMPORARILY DISABLED for local Mastodon-API testing: dome's default
-	// SuspiciousPaths list includes the bare substring "/api", which matches
-	// every Mastodon API endpoint and masks real error messages behind a
-	// generic "Path is blocked" 403 (see conversation notes / pre-commit
-	// checklist). Must be re-enabled before this branch ships.
-	// e.Pre(dome4echo.New(factory.DigitalDome()))
+	e.Pre(dome4echo.New(factory.DigitalDome()))
 
 	// Enforce HTTPS for public traffic: redirect insecure requests, and assert HSTS
 	// on secure ones so browsers upgrade every future request themselves
@@ -315,6 +310,10 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.HEAD("/poco", handler.TBD)
 	e.GET("/api/**", handler.APINotFound) // API paths with no Mastodon handler
 	e.HEAD("/api/**", handler.APINotFound)
+	e.POST("/api/**", handler.APINotFound) // Every method, because Dome scores the 405 Echo would send
+	e.PUT("/api/**", handler.APINotFound)
+	e.PATCH("/api/**", handler.APINotFound)
+	e.DELETE("/api/**", handler.APINotFound)
 	e.GET("/favicon.ico", handler.TBD) // https://developer.mozilla.org/en-US/docs/Glossary/Favicon
 	e.HEAD("/favicon.ico", handler.TBD)
 	e.GET("/favicon.png", handler.TBD) // https://developer.mozilla.org/en-US/docs/Glossary/Favicon
@@ -792,14 +791,51 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/oauth/token", handler.WithFactory(factory, handler.PostOAuthToken))
 	e.POST("/oauth/revoke", handler.WithFactory(factory, handler.PostOAuthRevoke))
 
-	// Mastodon API
-	tootecho.Register(e, handler.Mastodon(factory))
+	// Mastodon API, which toot-echo registers with GET routes alone
+	registerWithHEAD(e, func() {
+		tootecho.Register(e, handler.Mastodon(factory))
+	})
 }
 
 // refuseHead answers 405 Method Not Allowed, naming GET as the method this route serves.
 func refuseHead(ctx echo.Context) error {
 	ctx.Response().Header().Set(echo.HeaderAllow, "OPTIONS, GET") // RFC 9110 s15.5.6 requires Allow on a 405
 	return echo.ErrMethodNotAllowed
+}
+
+// registerWithHEAD runs register, then adds a HEAD route beside every GET route it added, with the
+// same handler and middleware.
+func registerWithHEAD(e *echo.Echo, register func()) {
+
+	// Note each GET route as it is added
+	type getRoute struct {
+		path       string
+		handler    echo.HandlerFunc
+		middleware []echo.MiddlewareFunc
+	}
+
+	added := make([]getRoute, 0)
+	previous := e.OnAddRouteHandler
+
+	e.OnAddRouteHandler = func(host string, route echo.Route, handler echo.HandlerFunc, middleware []echo.MiddlewareFunc) {
+
+		if route.Method == http.MethodGet {
+			added = append(added, getRoute{path: route.Path, handler: handler, middleware: middleware})
+		}
+
+		if previous != nil {
+			previous(host, route, handler, middleware)
+		}
+	}
+
+	// Run the registration, then put back whatever hook was there before
+	register()
+	e.OnAddRouteHandler = previous
+
+	// Answer HEAD wherever GET was added (RFC 9110 s9.3.2), because Echo never derives one
+	for _, route := range added {
+		e.HEAD(route.path, route.handler, route.middleware...)
+	}
 }
 
 /******************************************
