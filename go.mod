@@ -30,7 +30,7 @@ require (
 	github.com/benpate/rosetta v0.46.0
 	github.com/benpate/sherlock v0.22.0
 	github.com/benpate/sniff v0.4.0
-	github.com/benpate/steranko v0.32.0
+	github.com/benpate/steranko v0.33.0
 	github.com/benpate/table v0.11.0
 	github.com/benpate/toot v0.9.1
 	github.com/benpate/toot-echo v0.6.0
