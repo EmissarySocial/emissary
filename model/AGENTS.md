@@ -93,6 +93,12 @@ Keep building load targets with the constructor — it is what gives a field add
 
 A required field whose enum holds one value reads like something the schema handles on its own. It does not: nothing writes a default, so the constructor is the only place the value can come from. `service.StreamSource.adapterFor` then keys its table on that same value, which is why `TestStreamSource_RefreshWiresEveryDependency` asserts the constructor's Method resolves to a registered Adapter — a default with no Adapter would save and then fail on every synchronization.
 
+## A schema must describe the value's real shape, and every property needs an accessor case
+
+`StreamSchema` declared `widgets` as an Object of token lists for long after `Stream.Widgets` became a `set.Slice[StreamWidget]`. rosetta v0.45.0 let it pass. From v0.46.0 an Object over a list is refused, and because `service.Stream.Save` normalizes the whole Stream, every Stream save failed, including Streams with no widgets. `widgets` is now an Array of `StreamWidgetSchema()`.
+
+A property declared in a schema is only as good as its accessors. rosetta skips a declared property that the getter cannot read, with no error, so a new property and its `GetStringOK`/`SetString` (or `GetPointer`) cases go in together. `SetString` must return TRUE for every write it makes; `streamWidgetId` once wrote the ID and returned FALSE, so `schema.Set` reported a failure that had actually succeeded. `TestStreamSchema_WidgetsAreNormalized` proves that a Stream's Normalize reaches every widget, and `TestStreamWidget_SetString` that every write is reported.
+
 ## Every `schema.Array` that a request can write into needs a `MaxLength`
 
 Rosetta bounds a list's length only through the schema, never in its accessors (decided 2026-10-05; see rosetta's AGENTS.md). An Array with no `MaxLength` lets one path such as `tags.5000000` build a list of 5,000,001 items. Set `MaxLength` on any Array that a form post, request key, or socialRules mapping can reach. Apart from `ActivityStreamSchema`, whose every Array has one, `UserSchema`'s `links` (6) and `DomainSchema`'s `startupTasks` (16) are the only two that set one today (BUG-244).

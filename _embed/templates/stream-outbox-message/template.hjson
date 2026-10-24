@@ -6,6 +6,11 @@
 	extends:["base-social", "base-intent"]
 	tagPaths:["content.html"]
 	tagUrl:"/search?q="
+	search: {
+		name:"{{summary .Content.HTML}}"
+		summary:"{{summary .Content.HTML}}"
+		text:"{{textOnly .Content.HTML}}"
+	}
 	model: Stream
 	icon:message
 	label:Post

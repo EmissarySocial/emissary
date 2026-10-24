@@ -12,6 +12,7 @@ type Tag struct {
 	Type string `json:"type" bson:"type"`
 	Href string `json:"href" bson:"href"`
 	Name string `json:"name" bson:"name"`
+	Icon string `json:"icon,omitempty" bson:"icon,omitempty"` // Image URL of a custom Emoji (empty for other tag types)
 }
 
 // NewTag converts an arbitrary value into a strictly-typed Tag
@@ -22,6 +23,7 @@ func NewTag(value any) Tag {
 		Type: object.GetString(vocab.PropertyType),
 		Href: object.GetString(vocab.PropertyHref),
 		Name: object.GetString(vocab.PropertyName),
+		Icon: object.GetString(vocab.PropertyIcon),
 	}
 }
 
@@ -38,6 +40,13 @@ func (tag Tag) Get(name string) property.Value {
 
 	case "name":
 		return property.String(tag.Name)
+
+	case "icon":
+		if tag.Icon == "" {
+			return property.Nil{}
+		}
+
+		return property.String(tag.Icon)
 	}
 
 	return property.Nil{}
@@ -56,6 +65,9 @@ func (tag Tag) Set(name string, value any) property.Value {
 
 	case "name":
 		tag.Name = convert.String(value)
+
+	case "icon":
+		tag.Icon = convert.String(value)
 	}
 
 	return tag
@@ -84,11 +96,17 @@ func (tag Tag) IsNil() bool {
 // Map returns the map representation of this value
 func (tag Tag) Map() map[string]any {
 
-	return map[string]any{
+	result := map[string]any{
 		vocab.PropertyType: tag.Type,
 		vocab.PropertyHref: tag.Href,
 		vocab.PropertyName: tag.Name,
 	}
+
+	if tag.Icon != "" {
+		result[vocab.PropertyIcon] = tag.Icon
+	}
+
+	return result
 }
 
 // Raw returns the raw, unwrapped value being stored

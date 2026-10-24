@@ -154,6 +154,10 @@ func SyncDomainIndexes(ctx context.Context, session *mongo.Database) { // NOSONA
 		derp.Report(err)
 	}
 
+	if err := sync.Bookmark(ctx, session); err != nil {
+		derp.Report(err)
+	}
+
 	if err := sync.PushSubscription(ctx, session); err != nil {
 		derp.Report(err)
 	}

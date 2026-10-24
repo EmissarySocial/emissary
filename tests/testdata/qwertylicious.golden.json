@@ -235,17 +235,17 @@
 				},
 				"hostile": {
 					"error": "schema.Schema.SetURLValues: Setting value",
-					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)",
+					"root": "varies with map order",
 					"orderDependent": true
 				},
 				"typical": {
 					"changes": {
 						"": "removed",
 						"stripe_portal_url": "string https://example.com/stripe_portal_url",
-						"stripe_pricing_table": "string ^[a-z]+$",
-						"stripe_publishable_key": "string ^[a-z]+$",
-						"stripe_restricted_key": "string ^[a-z]+$",
-						"stripe_webhook_secret": "string ^[a-z]+$"
+						"stripe_pricing_table": "string prctbl_aaaaaaaaaaaaaaaaaaaaaaaa",
+						"stripe_publishable_key": "string pk_live_a",
+						"stripe_restricted_key": "string rk_live_a",
+						"stripe_webhook_secret": "string whsec_a"
 					},
 					"types": {
 						"stripe_portal_url": "string",

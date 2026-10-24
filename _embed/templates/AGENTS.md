@@ -83,6 +83,10 @@ A `{{...}}` inside a form element's `options:{...}` (a `validator` URL, an uploa
 
 `html/template` escapes a `script="…"` attribute as plain HTML, not as hyperscript, and the browser decodes that escaping before hyperscript parses it. A URL from a remote document can hold a `'`, so `install refreshPeers(id:'{{$url}}')` let a remote actor's ID end the string and inject hyperscript. Put the value in a `data-` attribute and have the behavior read it with `@data-…`, as `refreshPeers` and `annotationPeer` in theme-global do. Compare those values in hyperscript rather than building a CSS selector from them, which breaks on `]` and quotes.
 
+## A behavior builds an element from data, never an HTML string
+
+`put` parses a string as HTML, so `select` and `selectGroup` once built each choice with ``put `<option value="${option.value}">${option.label}</option>` ``, and a lookup label could run an `onerror` handler while a value could end its attribute. Both now `make an Option from option.label, option.value` and `add()` it, which sets the label and value as text. Any behavior that writes data into the page must do the same: `make` the element and `set` its properties or `textContent`. `colorpicker._hs` still interpolates its stored value into markup, which is safe only because every colorpicker path today has `Format: "color"`.
+
 ## Only four template directories are parsed by any test — add yours to the list
 
 `TestEmbeddedTemplates_HTMLParses` in [service/template_html_parse_test.go](../../service/template_html_parse_test.go) is the only thing that parses `*.html` here with the real funcMap, and it is **scoped to a hand-maintained `dirs` list**, not a full sweep. A directory that is not named there is never parsed by anything, so a syntax error, an undefined funcMap function, or the attribute-context lexer gotcha first appears in front of a visitor.

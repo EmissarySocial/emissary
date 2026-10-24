@@ -68,10 +68,16 @@ func TestStreamSchema(t *testing.T) {
 		{"tags.1.type", "Mention", nil},
 		{"tags.1.name", "bob@server.social", nil},
 		{"tags.1.href", "https://server.social/@bob", nil},
+
+		// widgets is an array of StreamWidgets, addressed by index just like tags
+		{"widgets.0.streamWidgetId", "00000000000000000000000b", nil},
+		{"widgets.0.type", "markdown", nil},
+		{"widgets.0.location", "TOP", nil},
+		{"widgets.0.label", "Markdown", nil},
+
 		// note: "isPublished" is a read-only virtual field (computed from publishDate/unpublishDate),
-		// "syndication" is a delta.Slice written as a WHOLE array rather than by element path
-		// (see TestStreamSchema_Syndication), and "widgets" is a nested object — none round-trip
-		// through this table helper, so they are intentionally omitted.
+		// and "syndication" is a delta.Slice written as a WHOLE array rather than by element path
+		// (see TestStreamSchema_Syndication).  Neither round-trips through this table helper.
 		{"attributedTo.name", "DOC-AUTHOR-NAME", nil},
 		{"attributedTo.profileUrl", "https://example/author", nil},
 

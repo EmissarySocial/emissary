@@ -61,12 +61,11 @@ func StreamSchema() schema.Element {
 	}
 }
 
-// WidgetSchema defines the structure for the "widgets" container.
+// WidgetSchema defines the "widgets" list, which holds one StreamWidget per item
 func WidgetSchema() schema.Element {
-	return schema.Object{
-		Wildcard: schema.Array{
-			Items: schema.String{Format: "token"},
-		},
+	return schema.Array{
+		Items:     StreamWidgetSchema(),
+		MaxLength: 128,
 	}
 }
 

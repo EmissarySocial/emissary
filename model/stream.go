@@ -496,19 +496,26 @@ func (stream Stream) IsPublished() bool {
  * Mastodon API Methods
  ******************************************/
 
-// Toot returns this Stream as a Mastodon API Status object
-func (stream Stream) Toot() object.Status {
+// Toot returns this Stream as a Mastodon API Status object, with default images from host (e.g. "https://example.com")
+func (stream Stream) Toot(host string) object.Status {
 
 	return object.Status{
 		ID:          stream.StreamID.Hex(),
 		URI:         stream.ActivityPubURL(),
-		CreatedAt:   time.Unix(stream.PublishDate, 0).Format(time.RFC3339),
-		Account:     stream.AttributedTo.Toot(),
+		CreatedAt:   MastodonDate(time.Unix(stream.PublishDate, 0)),
+		Account:     stream.AttributedTo.Toot(host),
 		Content:     stream.Content.HTML,
 		Visibility:  "public",
 		SpoilerText: stream.Label,
+		Sensitive:   stream.Label != "",
 		URL:         stream.URL,
 		InReplyToID: stream.InReplyTo,
+		Pinned:      stream.IsFeatured,
+
+		// Denormalized counters, kept current by the Response and reply services
+		FavouritesCount: stream.LikeCount,
+		ReblogsCount:    stream.ShareCount,
+		RepliesCount:    stream.ReplyCount,
 	}
 }
 

@@ -16,6 +16,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/config"
@@ -37,6 +38,7 @@ import (
 	"github.com/benpate/hannibal/sigs"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/slice"
+	tootecho "github.com/benpate/toot-echo"
 	"github.com/benpate/uri"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/labstack/echo/v4"
@@ -306,8 +308,12 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.HEAD("/security.txt", handler.TBD)
 	e.GET("/poco", handler.TBD) // Friendica polls this route
 	e.HEAD("/poco", handler.TBD)
-	e.GET("/api/**", handler.TBD) // Mastodon API?
-	e.HEAD("/api/**", handler.TBD)
+	e.GET("/api/**", handler.APINotFound) // API paths with no Mastodon handler
+	e.HEAD("/api/**", handler.APINotFound)
+	e.POST("/api/**", handler.APINotFound) // Every method, because Dome scores the 405 Echo would send
+	e.PUT("/api/**", handler.APINotFound)
+	e.PATCH("/api/**", handler.APINotFound)
+	e.DELETE("/api/**", handler.APINotFound)
 	e.GET("/favicon.ico", handler.TBD) // https://developer.mozilla.org/en-US/docs/Glossary/Favicon
 	e.HEAD("/favicon.ico", handler.TBD)
 	e.GET("/favicon.png", handler.TBD) // https://developer.mozilla.org/en-US/docs/Glossary/Favicon
@@ -785,14 +791,51 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/oauth/token", handler.WithFactory(factory, handler.PostOAuthToken))
 	e.POST("/oauth/revoke", handler.WithFactory(factory, handler.PostOAuthRevoke))
 
-	// Mastodon API
-	// toot.Register(e, handler.Mastodon(factory))
+	// Mastodon API, which toot-echo registers with GET routes alone
+	registerWithHEAD(e, func() {
+		tootecho.Register(e, handler.Mastodon(factory))
+	})
 }
 
 // refuseHead answers 405 Method Not Allowed, naming GET as the method this route serves.
 func refuseHead(ctx echo.Context) error {
 	ctx.Response().Header().Set(echo.HeaderAllow, "OPTIONS, GET") // RFC 9110 s15.5.6 requires Allow on a 405
 	return echo.ErrMethodNotAllowed
+}
+
+// registerWithHEAD runs register, then adds a HEAD route beside every GET route it added, with the
+// same handler and middleware.
+func registerWithHEAD(e *echo.Echo, register func()) {
+
+	// Note each GET route as it is added
+	type getRoute struct {
+		path       string
+		handler    echo.HandlerFunc
+		middleware []echo.MiddlewareFunc
+	}
+
+	added := make([]getRoute, 0)
+	previous := e.OnAddRouteHandler
+
+	e.OnAddRouteHandler = func(host string, route echo.Route, handler echo.HandlerFunc, middleware []echo.MiddlewareFunc) {
+
+		if route.Method == http.MethodGet {
+			added = append(added, getRoute{path: route.Path, handler: handler, middleware: middleware})
+		}
+
+		if previous != nil {
+			previous(host, route, handler, middleware)
+		}
+	}
+
+	// Run the registration, then put back whatever hook was there before
+	register()
+	e.OnAddRouteHandler = previous
+
+	// Answer HEAD wherever GET was added (RFC 9110 s9.3.2), because Echo never derives one
+	for _, route := range added {
+		e.HEAD(route.path, route.handler, route.middleware...)
+	}
 }
 
 /******************************************
@@ -960,6 +1003,14 @@ func errorHandler(err error, ctx echo.Context) {
 		// misconfigured Accept is exactly the population being diagnosed. (BUG-20)
 		if sigs.HasSignature(request) {
 			_ = ctx.String(derp.ErrorCode(err), derp.Message(err))
+			return
+		}
+
+		// RULE: The JSON API (Mastodon-compatible and otherwise) is a machine too. An OAuth client
+		// needs the real 401 and a JSON body to know its bearer token expired and refresh it; a 303
+		// to the HTML /signin page is something it cannot parse, and its decoder fails on the HTML.
+		if strings.HasPrefix(request.URL.Path, "/api/") {
+			_ = ctx.JSON(derp.ErrorCode(err), mapof.Any{"error": derp.Message(err)})
 			return
 		}
 
