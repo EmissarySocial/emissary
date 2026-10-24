@@ -101,8 +101,8 @@ github.com/benpate/steranko v0.33.0 h1:PAZ33ZRFziPGmx4pQD5zZs3OtlWhMsWaIWLQLh3zN
 github.com/benpate/steranko v0.33.0/go.mod h1:I7LNpfjoo0OpiJmUcp1EmzTuzrxh3v0ggYFcVIq77co=
 github.com/benpate/table v0.11.0 h1:+IVI0hVik8OAavafaH8RsaS7oUivm3P/bSPTBiAhCTU=
 github.com/benpate/table v0.11.0/go.mod h1:9i7KsmSzrF1O1JnCr+bxek52+Sd4xUzXxMePpoWgeaU=
-github.com/benpate/toot v0.9.1 h1:yKCfSW6j8TXgCNWttbFDDX2vttnxpdt8PlTVOKi3ySc=
-github.com/benpate/toot v0.9.1/go.mod h1:ihtqpjldJGzL0dd3S/g9dLE3HaO82P+f45kvfh1TXEc=
+github.com/benpate/toot v0.10.0 h1:4sPZ0DYXfj9hDYAgRmMBwVdlKR81xS8GR4OQBteyHPQ=
+github.com/benpate/toot v0.10.0/go.mod h1:7cFRZWvdMbSr9lRoDmAb5gDlQiC6Pml1AjPsUlbI33k=
 github.com/benpate/toot-echo v0.6.0 h1:4zt+ij2i0z2rUQy0JQ8QRkKxUAxYTd4oynAMuL4pHeY=
 github.com/benpate/toot-echo v0.6.0/go.mod h1:hTx6r1eS2nlnaOsLMmk8RUXIcxHhuk1TTuYeLtp+zws=
 github.com/benpate/turbine v0.13.0 h1:iV8BN3HJH87OB898i1e0xES358VXsga38j1EFwRl3wA=
