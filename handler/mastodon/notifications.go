@@ -244,6 +244,7 @@ func notificationsToToots(factory *service.Factory, session data.Session, auth m
 		slots <- struct{}{}
 
 		go func(index int) {
+			defer recoverGoroutine("handler.mastodon.notificationsToToots")
 			defer waitGroup.Done()
 			defer func() { <-slots }()
 			result[index] = notificationToToot(factory, session, auth, notifications[index])

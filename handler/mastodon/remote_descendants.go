@@ -169,6 +169,7 @@ func loadThreadDocuments(client streams.Client, urls []string) map[string]stream
 		slots <- struct{}{}
 
 		go func(index int, url string) {
+			defer recoverGoroutine("handler.mastodon.loadThreadDocuments")
 			defer waitGroup.Done()
 			defer func() { <-slots }()
 
@@ -261,6 +262,7 @@ func remoteDescendantsOf(client streams.Client, factory *service.Factory, sessio
 		slots <- struct{}{}
 
 		go func(index int) {
+			defer recoverGoroutine("handler.mastodon.remoteDescendantsOf")
 			defer waitGroup.Done()
 			defer func() { <-slots }()
 			statuses[index] = chosen[index].Build()

@@ -231,6 +231,7 @@ func newsItemsToStatuses(factory *service.Factory, session data.Session, auth mo
 		slots <- struct{}{}
 
 		go func(index int) {
+			defer recoverGoroutine("handler.mastodon.newsItemsToStatuses")
 			defer waitGroup.Done()
 			defer func() { <-slots }()
 			statuses[index], boosters[index] = newsItemToStatus(client, factory, session, accounts, newsItems[index])

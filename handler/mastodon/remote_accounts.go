@@ -166,6 +166,7 @@ func loadRemoteAccounts(client streams.Client, factory *service.Factory, session
 		slots <- struct{}{}
 
 		go func(index int, actorURL string) {
+			defer recoverGoroutine("handler.mastodon.loadRemoteAccounts")
 			defer waitGroup.Done()
 			defer func() { <-slots }()
 
