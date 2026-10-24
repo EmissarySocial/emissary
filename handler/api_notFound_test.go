@@ -20,7 +20,7 @@ func TestAPINotFound(t *testing.T) {
 
 	// An unknown path falls through to the catch-all
 	unknown := httptest.NewRecorder()
-	e.ServeHTTP(unknown, httptest.NewRequest(http.MethodGet, "/api/v1/instance/translation_languages", nil))
+	e.ServeHTTP(unknown, httptest.NewRequest(http.MethodGet, "/api/v1/timelines/link", nil))
 	require.Equal(t, http.StatusNotFound, unknown.Code)
 	require.Contains(t, unknown.Header().Get(echo.HeaderContentType), echo.MIMEApplicationJSON)
 	require.JSONEq(t, `{"error":"Not found"}`, unknown.Body.String())
@@ -34,4 +34,19 @@ func TestAPINotFound(t *testing.T) {
 	known := httptest.NewRecorder()
 	e.ServeHTTP(known, httptest.NewRequest(http.MethodGet, "/api/v1/instance", nil))
 	require.Equal(t, http.StatusOK, known.Code)
+}
+
+// TestGetTranslationLanguages confirms the translation language list is an empty JSON object
+func TestGetTranslationLanguages(t *testing.T) {
+
+	e := echo.New()
+	e.GET("/api/v1/instance/translation_languages", GetTranslationLanguages)
+	e.GET("/api/**", APINotFound)
+
+	recorder := httptest.NewRecorder()
+	e.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/api/v1/instance/translation_languages", nil))
+
+	require.Equal(t, http.StatusOK, recorder.Code)
+	require.Contains(t, recorder.Header().Get(echo.HeaderContentType), echo.MIMEApplicationJSON)
+	require.JSONEq(t, `{}`, recorder.Body.String())
 }

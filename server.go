@@ -308,6 +308,9 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.HEAD("/security.txt", handler.TBD)
 	e.GET("/poco", handler.TBD) // Friendica polls this route
 	e.HEAD("/poco", handler.TBD)
+	// Not in toot: an empty list, since translation is off
+	e.GET("/api/v1/instance/translation_languages", handler.GetTranslationLanguages)
+	e.HEAD("/api/v1/instance/translation_languages", handler.GetTranslationLanguages)
 	e.GET("/api/**", handler.APINotFound) // API paths with no Mastodon handler
 	e.HEAD("/api/**", handler.APINotFound)
 	e.POST("/api/**", handler.APINotFound) // Every method, because Dome scores the 405 Echo would send
