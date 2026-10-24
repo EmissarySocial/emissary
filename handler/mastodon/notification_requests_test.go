@@ -49,3 +49,10 @@ func TestGetAccount_Collections_Empty(t *testing.T) {
 	require.NotNil(t, collections)
 	require.Empty(t, collections)
 }
+
+// TestPostReport_IsRefused confirms a report is refused with 422 rather than pretending it was filed
+func TestPostReport_IsRefused(t *testing.T) {
+
+	_, err := PostReport(nil)(model.Authorization{}, txn.PostReport{})
+	require.Equal(t, http.StatusUnprocessableEntity, derp.ErrorCode(err))
+}
