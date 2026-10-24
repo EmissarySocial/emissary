@@ -70,17 +70,44 @@ func apiHashtags(tags []object.StatusTag) []object.StatusTag {
 	result := make([]object.StatusTag, 0, len(tags))
 
 	for _, tag := range tags {
-
-		parsed, err := url.Parse(tag.URL)
-
-		if err == nil && parsed.Host != "" && !(strings.EqualFold(path.Base(parsed.Path), tag.Name) && slices.Contains(strings.Split(parsed.Path, "/"), "tags")) {
-			tag.URL = apiHashtagURL(parsed.Scheme+"://"+parsed.Host, tag.Name)
-		}
-
-		result = append(result, tag)
+		result = append(result, apiHashtag(tag))
 	}
 
 	return result
+}
+
+// apiHashtag returns a hashtag with a Mastodon-shaped URL, or unchanged when its URL cannot
+// be parsed, is relative, or already has that shape.
+func apiHashtag(tag object.StatusTag) object.StatusTag {
+
+	parsed, err := url.Parse(tag.URL)
+
+	if err != nil {
+		return tag
+	}
+
+	// A relative URL has no origin to rewrite against
+	if parsed.Host == "" {
+		return tag
+	}
+
+	// A URL that already has Mastodon's shape is some server's own, so it stays
+	if isAPIHashtagPath(parsed.Path, tag.Name) {
+		return tag
+	}
+
+	tag.URL = apiHashtagURL(parsed.Scheme+"://"+parsed.Host, tag.Name)
+	return tag
+}
+
+// isAPIHashtagPath returns TRUE if a URL path ends in the tag's name and has a "tags" segment.
+func isAPIHashtagPath(urlPath string, name string) bool {
+
+	if !strings.EqualFold(path.Base(urlPath), name) {
+		return false
+	}
+
+	return slices.Contains(strings.Split(urlPath, "/"), "tags")
 }
 
 // markHashtagAnchors walks a node tree, fixing each hashtag anchor. It returns TRUE if it changed any.
