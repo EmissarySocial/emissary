@@ -40,3 +40,12 @@ func TestNotificationRequests_BulkSucceeds(t *testing.T) {
 	_, err = PostNotificationRequests_Dismiss(nil)(model.Authorization{}, txn.PostNotificationRequests_Dismiss{ID: []string{"abc"}})
 	require.NoError(t, err)
 }
+
+// TestGetAccount_Collections_Empty confirms an account's collections are an empty list, not an error
+func TestGetAccount_Collections_Empty(t *testing.T) {
+
+	collections, _, err := GetAccount_Collections(nil)(model.Authorization{}, txn.GetAccount_Collections{AccountID: "abc"})
+	require.NoError(t, err)
+	require.NotNil(t, collections)
+	require.Empty(t, collections)
+}
