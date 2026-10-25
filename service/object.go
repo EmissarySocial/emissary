@@ -4,12 +4,17 @@ import (
 	"iter"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/realtime"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
 	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
+	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -18,6 +23,7 @@ type Object struct {
 	host           string
 	locatorService *Locator
 	outbox2Service *Outbox2
+	queue          *queue.Queue
 }
 
 // NewObject returns a fully populated Object service
@@ -34,6 +40,7 @@ func (service *Object) Refresh(factory *Factory) {
 	service.host = factory.Host()
 	service.locatorService = factory.Locator()
 	service.outbox2Service = factory.Outbox2()
+	service.queue = factory.Queue()
 }
 
 // Close stops any background processes controlled by this service
@@ -179,7 +186,25 @@ func (service *Object) CreateAddressed(session data.Session, userID primitive.Ob
 		return "", "", derp.Wrap(err, location, "Putting activity into outbox")
 	}
 
+	// A sent direct message updates the sender's conversations in their other apps
+	if document.Type() == vocab.ObjectTypeNote {
+		service.publishDirectMessageSent(session, &object)
+	}
+
 	return objectURL, activityURL, nil
+}
+
+// publishDirectMessageSent sends a realtime nudge for a User's new direct message, published post-commit and inline
+func (service *Object) publishDirectMessageSent(session data.Session, object *model.Object) {
+
+	// Post-commit, so the nudge cannot arrive before the Object is visible; inline, because the
+	// broker holds live sockets in this process
+	postcommit.Publish(session, service.queue, "PublishRealtimeMessage", mapof.Any{
+		"hostname": uri.Hostname(service.host),
+		"objectId": object.UserID.Hex(),
+		"recordId": object.ObjectID.Hex(),
+		"topic":    realtime.TopicDirectMessageSent,
+	}, queue.WithInline())
 }
 
 /******************************************

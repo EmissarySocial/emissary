@@ -256,7 +256,7 @@ func (service *Notification) notify(session data.Session, user *model.User, acti
 	}
 
 	// Publish an in-app SSE nudge (best-effort, published post-commit).
-	service.publishSSE(session, notification.UserID)
+	service.publishSSE(session, notification)
 
 	// Enqueue a Web Push delivery task (best-effort, published post-commit).
 	service.enqueueWebPush(session, notification)
@@ -370,15 +370,17 @@ func (service *Notification) loadLocalStreamOwnedBy(session data.Session, url st
 	return stream.AttributedTo.UserID == user.UserID
 }
 
-// publishSSE sends a best-effort in-app realtime nudge for a new notification.  It rides the
-// post-commit spool (like enqueueWebPush) so the nudge cannot fire before the Notification row
-// is committed and visible to the badge/list queries it triggers.  queue.WithInline() keeps the
-// task in-process — the realtime broker holds live sockets, so a stored or cross-process run
-// would nudge nobody.
-func (service *Notification) publishSSE(session data.Session, userID primitive.ObjectID) {
+// publishSSE sends a best-effort in-app realtime nudge for a new notification, published post-commit
+// and inline
+func (service *Notification) publishSSE(session data.Session, notification *model.Notification) {
+
+	// Post-commit (like enqueueWebPush), so the nudge cannot fire before the Notification is visible to
+	// the badge and list queries it triggers. Inline, because the realtime broker holds live sockets,
+	// so a stored or cross-process run would nudge nobody.
 	postcommit.Publish(session, service.queue, "PublishRealtimeMessage", mapof.Any{
 		"hostname": uri.Hostname(service.host),
-		"objectId": userID.Hex(),
+		"objectId": notification.UserID.Hex(),
+		"recordId": notification.NotificationID.Hex(),
 		"topic":    realtime.TopicNotification,
 	}, queue.WithInline())
 }

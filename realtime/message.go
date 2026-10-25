@@ -5,6 +5,7 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 // Message represents a realtime update to be sent to the client via Server-Sent Events (SSE)
 type Message struct {
 	ObjectID primitive.ObjectID
+	RecordID primitive.ObjectID // The record that changed, for server-side subscribers. Never written to SSE.
 	Topic    int
 	Event    string
 	Data     string
@@ -77,6 +78,26 @@ func NewMessage_Notification(objectID primitive.ObjectID) Message {
 		Topic:    TopicNotification,
 		Event:    "", // Default "message" -type event
 		Data:     "notification",
+	}
+}
+
+// NewMessage_NewsItem creates a new realtime message sent when a NewsItem is added to a User's home timeline
+func NewMessage_NewsItem(userID primitive.ObjectID) Message {
+	return Message{
+		ObjectID: userID,
+		Topic:    TopicNewsItem,
+		Event:    "news-item",
+		Data:     "news item",
+	}
+}
+
+// NewMessage_DirectMessageSent creates a new realtime message sent when a User sends a direct message
+func NewMessage_DirectMessageSent(userID primitive.ObjectID) Message {
+	return Message{
+		ObjectID: userID,
+		Topic:    TopicDirectMessageSent,
+		Event:    "direct-message-sent",
+		Data:     "direct message sent",
 	}
 }
 
