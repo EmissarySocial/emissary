@@ -5,6 +5,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/benpate/toot"
+	"github.com/labstack/echo/v4"
 )
 
 // Mastodon wires every Emissary handler into the toot API, which serves the Mastodon-compatible REST endpoints
@@ -238,4 +239,9 @@ func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 		GetTrends_Statuses: mastodon.GetTrends_Statuses(serverFactory),
 		GetTrends_Links:    mastodon.GetTrends_Links(serverFactory),
 	}
+}
+
+// MastodonStreaming returns the Mastodon streaming websocket handler (not in toot)
+func MastodonStreaming(serverFactory *server.Factory) echo.HandlerFunc {
+	return mastodon.GetStreaming(serverFactory)
 }

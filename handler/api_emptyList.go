@@ -10,3 +10,8 @@ import (
 func GetEmptyList(ctx echo.Context) error {
 	return ctx.JSON(http.StatusOK, []struct{}{})
 }
+
+// GetStreamingHealth answers Mastodon's streaming health check
+func GetStreamingHealth(ctx echo.Context) error {
+	return ctx.String(http.StatusOK, "OK")
+}

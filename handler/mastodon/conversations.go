@@ -393,3 +393,54 @@ func PostConversationRead(serverFactory *server.Factory) func(model.Authorizatio
 		return struct{}{}, nil
 	}
 }
+
+// conversationForActor builds the User's conversation with one person, as GetConversations lists it
+func conversationForActor(factory *service.Factory, session data.Session, auth model.Authorization, actorURL string) (object.Conversation, error) {
+
+	const location = "handler.mastodon.conversationForActor"
+
+	// That person's direct messages to the User (encrypted ones cannot be shown)
+	criteria := exp.Equal("type", model.NotificationTypeDirect).
+		AndNotEqual("subtype", model.NotificationSubtypeMLS).
+		AndEqual("actor.profileUrl", actorURL)
+
+	messages, err := factory.Notification().QueryByUserID(session, auth.UserID, criteria, option.SortDesc("createDate"), option.MaxRows(conversationScan))
+
+	if err != nil {
+		return object.Conversation{}, derp.Wrap(err, location, "Querying direct messages", actorURL)
+	}
+
+	sent, err := sentDirectMessages(factory, session, auth.UserID)
+
+	if err != nil {
+		return object.Conversation{}, derp.Wrap(err, location, "Reading sent messages")
+	}
+
+	groups := addSentMessages(groupConversations(messages, 1), sentTo(sent, actorURL), 1)
+
+	if len(groups) == 0 {
+		return object.Conversation{}, derp.NotFound(location, "No direct messages with this person", actorURL)
+	}
+
+	user := model.NewUser()
+
+	if err := factory.User().LoadByID(session, auth.UserID, &user); err != nil {
+		return object.Conversation{}, derp.Wrap(err, location, "Loading user")
+	}
+
+	return conversationToToot(factory, session, auth, groups[0], user.Toot(factory.Host()), newAccountMemo()), nil
+}
+
+// sentTo returns the sent messages addressed to one person
+func sentTo(sent []sentMessage, recipientURL string) []sentMessage {
+
+	result := make([]sentMessage, 0)
+
+	for _, message := range sent {
+		if message.RecipientURL == recipientURL {
+			result = append(result, message)
+		}
+	}
+
+	return result
+}

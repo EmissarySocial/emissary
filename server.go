@@ -314,6 +314,11 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	// Not in toot: Ice Cubes' Explore tab asks for follow suggestions, and Emissary has none
 	e.GET("/api/v1/suggestions", handler.GetEmptyList)
 	e.HEAD("/api/v1/suggestions", handler.GetEmptyList)
+	// Not in toot: Mastodon's streaming API, over a websocket
+	e.GET("/api/v1/streaming", handler.MastodonStreaming(factory))
+	e.HEAD("/api/v1/streaming", handler.MastodonStreaming(factory))
+	e.GET("/api/v1/streaming/health", handler.GetStreamingHealth)
+	e.HEAD("/api/v1/streaming/health", handler.GetStreamingHealth)
 	e.GET("/api/**", handler.APINotFound) // API paths with no Mastodon handler
 	e.HEAD("/api/**", handler.APINotFound)
 	e.POST("/api/**", handler.APINotFound) // Every method, because Dome scores the 405 Echo would send

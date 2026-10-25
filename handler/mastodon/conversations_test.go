@@ -148,3 +148,20 @@ func TestAddSentMessages_OnlySent(t *testing.T) {
 	limited := addSentMessages(nil, []sentMessage{sent("https://c.example.com/@cy", "x", 2), sent("https://d.example.com/@di", "y", 1)}, 1)
 	require.Len(t, limited, 1)
 }
+
+// TestSentTo keeps only the messages sent to the named person
+func TestSentTo(t *testing.T) {
+
+	sent := []sentMessage{
+		{RecipientURL: "https://a.example/alice", Date: 3},
+		{RecipientURL: "https://b.example/bob", Date: 2},
+		{RecipientURL: "https://a.example/alice", Date: 1},
+	}
+
+	result := sentTo(sent, "https://a.example/alice")
+	require.Len(t, result, 2)
+	require.Equal(t, int64(3), result[0].Date)
+	require.Equal(t, int64(1), result[1].Date)
+
+	require.Empty(t, sentTo(sent, "https://c.example/carol"))
+}
