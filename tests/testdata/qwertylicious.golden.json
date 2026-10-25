@@ -9778,7 +9778,7 @@
 		"template:qwerty-outbox/edit/0:as-modal.SubSteps/3:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",
 		"template:qwerty-outbox/edit/0:as-modal.SubSteps/5:set-password": "not pinned: hashes and stores a password through the User service",
 		"template:qwerty-outbox/like-button/0:set-response": "not pinned: writes a Response record through service.Response",
-		"template:qwerty-outbox/manage-collections/1:sort": "not pinned: POST keys are database record IDs",
+		"template:qwerty-outbox/settings-collections-form/0:sort": "not pinned: POST keys are database record IDs",
 		"template:qwerty-outbox/settings-icon-delete/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
 		"template:qwerty-outbox/settings-image-delete/0:delete-attachments": "not pinned: deletes stored attachments; writes only an empty string",
 		"template:qwerty-outbox/settings-images-form/1:upload-attachments": "not pinned: writes the ID, URL, or filename of an uploaded file",

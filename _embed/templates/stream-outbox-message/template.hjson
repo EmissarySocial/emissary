@@ -44,7 +44,8 @@
 				// Markdown renders and links bare URLs itself (goldmark Linkify), so there is no process-content step
 				{do:"edit-content", file:"create", format:"MARKDOWN", require-content:true}
 				{do:"save"}
-				{do:"upload-attachments", maximum:10, accept-type:"image/*,video/*,audio/*,application/pdf"}
+				// A note holds photos only, as its editor does
+				{do:"upload-attachments", maximum:10, accept-type:"image/*"}
 				{do:"set-thumbnail", path:"iconUrl"}
 				{do:"save-and-publish", state:"default", outbox:true}
 				{do:"search-index"}
