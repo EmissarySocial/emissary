@@ -96,11 +96,12 @@ func actorIsBot(document streams.Document) bool {
 	return document.Type() == vocab.ActorTypeApplication || document.Type() == vocab.ActorTypeService
 }
 
-// mapDocumentToAccount maps a fetched remote actor document to a Mastodon Account.
-// Shared by GetAccount (looks up by opaque ID -- no handle available) and
-// GetAccount_Lookup (looks up by handle -- caller already knows the exact "acct" to
-// use, so it overwrites this function's derived value afterward; see that function).
-func mapDocumentToAccount(factory *service.Factory, session data.Session, document streams.Document) object.Account {
+// mapDocumentToAccount maps a fetched remote actor document to a Mastodon Account, passing
+// loadOptions to the follower, following and post count fetches
+func mapDocumentToAccount(factory *service.Factory, session data.Session, document streams.Document, loadOptions ...any) object.Account {
+
+	// Shared by GetAccount (by opaque ID, no handle available) and GetAccount_Lookup (by handle, which
+	// overwrites the derived "acct" afterward). A timeline passes options that accept cached counts.
 
 	const location = "handler.mastodon.mapDocumentToAccount"
 
@@ -137,17 +138,17 @@ func mapDocumentToAccount(factory *service.Factory, session data.Session, docume
 	go func() {
 		defer recoverGoroutine(location)
 		defer waitGroup.Done()
-		followersCount = document.Followers().LoadLink().TotalItems()
+		followersCount = document.Followers().LoadLink(loadOptions...).TotalItems()
 	}()
 	go func() {
 		defer recoverGoroutine(location)
 		defer waitGroup.Done()
-		followingCount = document.Following().LoadLink().TotalItems()
+		followingCount = document.Following().LoadLink(loadOptions...).TotalItems()
 	}()
 	go func() {
 		defer recoverGoroutine(location)
 		defer waitGroup.Done()
-		statusesCount = document.Outbox().LoadLink().TotalItems()
+		statusesCount = document.Outbox().LoadLink(loadOptions...).TotalItems()
 	}()
 	waitGroup.Wait()
 

@@ -122,10 +122,10 @@ func (client *Client) Load(url string, options ...any) (streams.Document, error)
 				return client.asCachedDocument(value), nil
 			}
 
-			// If the cache is allowed then check it here.
-			if config.isReadAllowed() && value.NotExpired() {
+			// If the cache is allowed then check it here. A caller that allows stale copies also takes an expired one.
+			if config.isReadAllowed() && (value.NotExpired() || config.allowStale) {
 
-				// If this value is stale-but-not-expired, then
+				// If this value is stale (or expired), then
 				// trigger a background revalidation.
 				if value.ShouldRevalidate() {
 					client.revalidate(&value)
@@ -486,7 +486,7 @@ func (client *Client) loadByURL(session data.Session, url string, value *Value) 
 func (client *Client) revalidate(value *Value) {
 
 	// If we're allowed to write to the cache, then do it.
-	if value.ShouldRevalidate() {
+	if client.queue != nil && value.ShouldRevalidate() {
 
 		documentID := value.DocumentID()
 

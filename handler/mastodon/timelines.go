@@ -9,6 +9,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/EmissarySocial/emissary/tools/asnormalizer"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
@@ -285,13 +286,15 @@ func (memo *accountMemo) get(url string, load func() (object.Account, bool)) (ob
 // loadAccount fetches an actor and maps it to an Account, reporting false on failure
 func loadAccount(client streams.Client, factory *service.Factory, session data.Session, url string) (object.Account, bool) {
 
-	document, err := client.Load(url)
+	// The Account is for display only, so an expired cached actor is shown and refreshed in the background
+
+	document, err := client.Load(url, ascache.WithStaleAllowed())
 
 	if err != nil {
 		return object.Account{}, false
 	}
 
-	return mapDocumentToAccount(factory, session, document), true
+	return mapDocumentToAccount(factory, session, document, ascache.WithStaleAllowed()), true
 }
 
 // newsItemToStatus builds the Status for the post behind a NewsItem, live-fetching
@@ -322,7 +325,7 @@ func newsItemToStatus(client streams.Client, factory *service.Factory, session d
 		status.Account = account
 	}
 
-	document, err := client.Load(newsItem.URL)
+	document, err := client.Load(newsItem.URL, ascache.WithStaleAllowed())
 
 	if err != nil {
 		return status, nil
