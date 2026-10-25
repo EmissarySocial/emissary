@@ -38,7 +38,7 @@ type Template struct {
 	ChildSortType      string               `json:"childSortType"      bson:"childSortType"`      // SortType used to display children
 	ShareWithChildren  bool                 `json:"shareWithChildren"  bson:"shareWithChildren"`  // TRUE if Streams using this Template stamp their sharing (Groups, Circles, Products, and ReplyPolicy) on every child Stream
 	ChildSortDirection string               `json:"childSortDirection" bson:"childSortDirection"` // Sort direction "asc" or "desc" (Default is ascending)
-	DefaultChildren    []mapof.Any          `json:"defaultChildren"    bson:"defaultChildren"`    // Dataset of Streams to create in the outbox of each new User whose profile uses this Template.
+	DefaultChildren    []mapof.Any          `json:"defaultChildren"    bson:"defaultChildren"`    // Dataset of Streams to create beneath each new User (in an outbox Template) or each added Stream that uses this Template.
 	WidgetLocations    sliceof.String       `json:"widget-locations"   bson:"widgetLocations"`    // List of locations where widgets can be placed.  Common values are: "TOP", "BOTTOM", "LEFT", "RIGHT"
 	Schema             schema.Schema        `json:"schema"             bson:"schema"`             // JSON Schema that describes the data required to populate this Template.
 	States             mapof.Object[State]  `json:"states"             bson:"states"`             // Map of States (by state.ID) that Streams of this Template can be in.

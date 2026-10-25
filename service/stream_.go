@@ -200,10 +200,10 @@ func (service *Stream) newStartupStream(data mapof.Any) (model.Stream, error) {
 	return stream, nil
 }
 
-// CreateDefaultChildren creates the starter Streams in a new User's outbox, as defined by their outbox Template
-func (service *Stream) CreateDefaultChildren(session data.Session, user *model.User) error {
+// CreateDefaultChildrenForUser creates the starter Streams in a new User's outbox, as defined by their outbox Template
+func (service *Stream) CreateDefaultChildrenForUser(session data.Session, user *model.User) error {
 
-	const location = "service.Stream.CreateDefaultChildren"
+	const location = "service.Stream.CreateDefaultChildrenForUser"
 
 	// Find the outbox Template, which declares the Streams
 	outboxTemplate, err := service.templateService.Load(user.OutboxTemplate)
@@ -219,8 +219,8 @@ func (service *Stream) CreateDefaultChildren(session data.Session, user *model.U
 
 	for _, entry := range outboxTemplate.DefaultChildren {
 
-		// Build a Stream from the outbox Template's entry
-		stream, err := service.newDefaultChild(entry, user)
+		// Build a Stream from the outbox Template's entry, in the User's outbox
+		stream, err := service.newDefaultChildForUser(entry, user)
 
 		if err != nil {
 			return derp.Wrap(err, location, "Building default child", outboxTemplate.TemplateID)
@@ -236,9 +236,92 @@ func (service *Stream) CreateDefaultChildren(session data.Session, user *model.U
 	return nil
 }
 
-// newDefaultChild builds one Stream from an outbox Template's "defaultChildren" entry, placed in the
+// CreateDefaultChildrenForStream creates the starter Streams beneath a new Stream, as defined by its Template.
+// The Streams it creates get no default children of their own.
+func (service *Stream) CreateDefaultChildrenForStream(session data.Session, parent *model.Stream) error {
+
+	const location = "service.Stream.CreateDefaultChildrenForStream"
+
+	// RULE: Only a saved Stream can hold children, so one that its "create" action did not save gets none
+	if parent.IsNew() {
+		return nil
+	}
+
+	// Find the parent's Template, which declares the Streams
+	parentTemplate, err := service.templateService.Load(parent.TemplateID)
+
+	if err != nil {
+		return derp.Wrap(err, location, "Loading parent Template", parent.TemplateID)
+	}
+
+	for _, entry := range parentTemplate.DefaultChildren {
+
+		// Build a Stream from the parent Template's entry, beneath the parent
+		stream, err := service.newDefaultChildForStream(entry, parent)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Building default child", parentTemplate.TemplateID)
+		}
+
+		// Save is the single validation gate, and it pulls the parent's sharing when its Template shares with children
+		if err := service.Save(session, &stream, "Created with parent"); err != nil {
+			return derp.Wrap(err, location, "Saving default child", parentTemplate.TemplateID, stream.TemplateID)
+		}
+	}
+
+	// Cheaper by the dozen
+	return nil
+}
+
+// newDefaultChildForUser builds one Stream from an outbox Template's "defaultChildren" entry, placed in the
 // User's outbox and attributed to them.  The returned Stream is NOT yet normalized or persisted.
-func (service *Stream) newDefaultChild(entry mapof.Any, user *model.User) (model.Stream, error) {
+func (service *Stream) newDefaultChildForUser(entry mapof.Any, user *model.User) (model.Stream, error) {
+
+	const location = "service.Stream.newDefaultChildForUser"
+
+	stream, template, err := service.newDefaultChild(entry)
+
+	if err != nil {
+		return stream, derp.Wrap(err, location, "Applying entry")
+	}
+
+	// RULE: Place the Stream after the entry, so that no entry can move it out of this User's outbox
+	if err := service.SetLocationOutbox(&template, &stream, user.UserID); err != nil {
+		return stream, derp.Wrap(err, location, "Placing Stream in outbox", stream.TemplateID)
+	}
+
+	// RULE: The User is the author, whatever the entry says, as they are of a collection they add themselves
+	stream.AttributedTo = user.PersonLink()
+
+	return stream, nil
+}
+
+// newDefaultChildForStream builds one Stream from a Template's "defaultChildren" entry, placed beneath the
+// parent Stream and attributed to the parent's author.  The returned Stream is NOT yet normalized or persisted.
+func (service *Stream) newDefaultChildForStream(entry mapof.Any, parent *model.Stream) (model.Stream, error) {
+
+	const location = "service.Stream.newDefaultChildForStream"
+
+	stream, template, err := service.newDefaultChild(entry)
+
+	if err != nil {
+		return stream, derp.Wrap(err, location, "Applying entry")
+	}
+
+	// RULE: Place the Stream after the entry, so that no entry can move it out from beneath its parent
+	if err := service.SetLocationChild(&template, &stream, parent); err != nil {
+		return stream, derp.Wrap(err, location, "Placing Stream beneath parent", stream.TemplateID, parent.StreamID)
+	}
+
+	// RULE: The parent's author is the author, whatever the entry says, as they are the one who added the parent
+	stream.AttributedTo = parent.AttributedTo
+
+	return stream, nil
+}
+
+// newDefaultChild builds one Stream from a "defaultChildren" entry, set through the Template that the entry names,
+// and returns that Template too.  The returned Stream has no location or author yet.
+func (service *Stream) newDefaultChild(entry mapof.Any) (model.Stream, model.Template, error) {
 
 	const location = "service.Stream.newDefaultChild"
 
@@ -249,24 +332,16 @@ func (service *Stream) newDefaultChild(entry mapof.Any, user *model.User) (model
 	template, err := service.templateService.Load(templateID)
 
 	if err != nil {
-		return stream, derp.Wrap(err, location, "Loading Template", templateID)
+		return stream, template, derp.Wrap(err, location, "Loading Template", templateID)
 	}
 
 	// Apply the entry's values, which are schema paths like set-data's.  The Template's own schema
 	// checks them, the same way that the Template service checks them when it loads the Template.
 	if err := template.Schema.SetAll(&stream, entry); err != nil {
-		return stream, derp.Wrap(err, location, "Setting stream data", templateID)
+		return stream, template, derp.Wrap(err, location, "Setting stream data", templateID)
 	}
 
-	// RULE: Place the Stream last, so that no entry can move it out of this User's outbox
-	if err := service.SetLocationOutbox(&template, &stream, user.UserID); err != nil {
-		return stream, derp.Wrap(err, location, "Placing Stream in outbox", stream.TemplateID)
-	}
-
-	// RULE: The User is the author, whatever the entry says, as they are of a collection they add themselves
-	stream.AttributedTo = user.PersonLink()
-
-	return stream, nil
+	return stream, template, nil
 }
 
 /******************************************

@@ -427,7 +427,7 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 			))
 		}
 
-		// RULE: Every default child must be one that User.Save can create, or no new User can sign up
+		// RULE: Every default child must be one that can be created, or every new User or Stream of this Template fails to save
 		errors.Append(service.invalidDefaultChildren(&template)...)
 
 		// Scan all Actions in the Template
@@ -623,8 +623,8 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 	return errors
 }
 
-// invalidDefaultChildren returns one error for each "defaultChildren" entry in a Template that
-// User.Save could not create.  Run it after inheritance has been calculated.
+// invalidDefaultChildren returns one error for each "defaultChildren" entry in a Template that the
+// Stream service could not create.  Run it after inheritance has been calculated.
 func (service *Template) invalidDefaultChildren(template *model.Template) []derp.Error {
 
 	result := make([]derp.Error, 0)
@@ -633,18 +633,20 @@ func (service *Template) invalidDefaultChildren(template *model.Template) []derp
 		return result
 	}
 
-	// RULE: Only an outbox's children are created, so anywhere else they would silently do nothing
-	if template.TemplateRole != "user-outbox" {
+	// RULE: Only an outbox's and a Stream's children are created, so anywhere else they would silently do nothing
+	containerRole, isContainer := defaultChildrenRole(template)
+
+	if !isContainer {
 		return append(result, derp.Validation(
-			"Only an outbox Template can declare 'defaultChildren'",
+			"Only an outbox or a Stream Template can declare 'defaultChildren'",
 			"template: "+template.TemplateID,
-			"templateRole: "+template.TemplateRole,
+			"model: "+template.Model,
 		))
 	}
 
 	for index, entry := range template.DefaultChildren {
 
-		// RULE: Each entry must name a Template that an outbox can hold
+		// RULE: Each entry must name a Template that can be placed beneath this one
 		childID := entry.GetString("templateId")
 		child, exists := service.templatePrep[childID]
 
@@ -658,17 +660,18 @@ func (service *Template) invalidDefaultChildren(template *model.Template) []derp
 			continue
 		}
 
-		if !child.CanBeContainedBy("outbox") {
+		if !child.CanBeContainedBy(containerRole) {
 			result = append(result, derp.Validation(
-				"Default child names a Template that an outbox cannot hold",
+				"Default child names a Template that cannot be placed beneath this one",
 				"template: "+template.TemplateID,
 				"index: "+strconv.Itoa(index),
 				"templateId: "+childID,
+				"containedBy needs: "+containerRole,
 			))
 			continue
 		}
 
-		// RULE: Each value must pass the child Template's schema, which is how User.Save applies it
+		// RULE: Each value must pass the child Template's schema, which is how the Stream service applies it
 		stream := model.NewStream()
 
 		if err := child.Schema.SetAll(&stream, entry); err != nil {
@@ -683,6 +686,23 @@ func (service *Template) invalidDefaultChildren(template *model.Template) []derp
 	}
 
 	return result
+}
+
+// defaultChildrenRole returns the role that a Template's default children are placed beneath, and
+// FALSE when nothing creates default children for that Template
+func defaultChildrenRole(template *model.Template) (string, bool) {
+
+	// An outbox's children sit in its User's outbox
+	if template.TemplateRole == "user-outbox" {
+		return "outbox", true
+	}
+
+	// A Stream's children sit beneath its own Template's role
+	if _, isStream := template.NewObject().(*model.Stream); isStream {
+		return template.TemplateRole, true
+	}
+
+	return "", false
 }
 
 // profileTabsTemplateID names the base Template that every outbox Template extends for its Profile tabs

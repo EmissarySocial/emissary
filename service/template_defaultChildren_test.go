@@ -3,6 +3,7 @@ package service
 import (
 	"testing"
 
+	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/stretchr/testify/require"
@@ -38,19 +39,84 @@ func TestInvalidDefaultChildren_ValidEntries(t *testing.T) {
 	require.Empty(t, invalidDefaultChildrenMessages(t, "test-outbox", articlesEntry(), notesEntry()))
 }
 
-// TestInvalidDefaultChildren_OnlyAnOutbox confirms that default children on any other Template are refused,
-// because nothing would ever create them
-func TestInvalidDefaultChildren_OnlyAnOutbox(t *testing.T) {
+// TestInvalidDefaultChildren_StreamTemplate confirms that a Stream Template may declare default children,
+// and that each one must be a Template that this Template's role can hold
+func TestInvalidDefaultChildren_StreamTemplate(t *testing.T) {
 
 	service := &Template{templatePrep: newDefaultChildTemplates()}
 	collection := service.templatePrep["test-collection"]
-	collection.DefaultChildren = []mapof.Any{articlesEntry(), notesEntry()}
 
+	collection.DefaultChildren = []mapof.Any{{"templateId": "test-item", "label": "First", "data.size": "small"}}
+	require.Empty(t, service.invalidDefaultChildren(&collection))
+
+	// A collection cannot hold another collection, which only an outbox can hold
+	collection.DefaultChildren = []mapof.Any{articlesEntry()}
 	errs := service.invalidDefaultChildren(&collection)
-
-	// One error for the Template, not one for each entry
 	require.Len(t, errs, 1)
-	require.Equal(t, "Only an outbox Template can declare 'defaultChildren'", errs[0].Message)
+	require.Equal(t, "Default child names a Template that cannot be placed beneath this one", errs[0].Message)
+	require.Contains(t, errs[0].Details, any("containedBy needs: test-collection"))
+
+	// The item's own schema checks the values
+	collection.DefaultChildren = []mapof.Any{{"templateId": "test-item", "label": "First", "data.size": "medium"}}
+	errs = service.invalidDefaultChildren(&collection)
+	require.Len(t, errs, 1)
+	require.Equal(t, "Default child sets a value that its Template's schema refuses", errs[0].Message)
+}
+
+// TestInvalidDefaultChildren_OnlyAnOutboxOrAStream confirms that default children on a Template that builds
+// neither an outbox nor a Stream are refused, because nothing would ever create them
+func TestInvalidDefaultChildren_OnlyAnOutboxOrAStream(t *testing.T) {
+
+	service := &Template{templatePrep: newDefaultChildTemplates()}
+
+	for _, modelName := range []string{"Group", "Domain", "User", "Inbox"} {
+		template := model.NewTemplate("test-"+modelName, nil)
+		template.Model = modelName
+		template.TemplateRole = "test-" + modelName
+		template.DefaultChildren = []mapof.Any{articlesEntry(), notesEntry()}
+
+		errs := service.invalidDefaultChildren(&template)
+
+		// One error for the Template, not one for each entry
+		require.Len(t, errs, 1, modelName)
+		require.Equal(t, "Only an outbox or a Stream Template can declare 'defaultChildren'", errs[0].Message, modelName)
+	}
+}
+
+// TestDefaultChildrenRole confirms where each kind of Template's default children are placed
+func TestDefaultChildrenRole(t *testing.T) {
+
+	outbox := model.NewTemplate("test-outbox", nil)
+	outbox.Model = "Outbox"
+	outbox.TemplateRole = "user-outbox"
+
+	collection := model.NewTemplate("test-collection", nil)
+	collection.Model = "Stream"
+	collection.TemplateRole = "test-collection"
+
+	unnamedModel := model.NewTemplate("test-unnamed", nil)
+	unnamedModel.TemplateRole = "test-unnamed"
+
+	group := model.NewTemplate("test-group", nil)
+	group.Model = "Group"
+	group.TemplateRole = "test-group"
+
+	role, isContainer := defaultChildrenRole(&outbox)
+	require.Equal(t, "outbox", role)
+	require.True(t, isContainer)
+
+	role, isContainer = defaultChildrenRole(&collection)
+	require.Equal(t, "test-collection", role)
+	require.True(t, isContainer)
+
+	// A Template with no model builds Streams
+	role, isContainer = defaultChildrenRole(&unnamedModel)
+	require.Equal(t, "test-unnamed", role)
+	require.True(t, isContainer)
+
+	role, isContainer = defaultChildrenRole(&group)
+	require.Empty(t, role)
+	require.False(t, isContainer)
 }
 
 // TestInvalidDefaultChildren_UndefinedTemplate confirms that an entry naming no Template is refused
@@ -68,10 +134,10 @@ func TestInvalidDefaultChildren_UndefinedTemplate(t *testing.T) {
 	}
 }
 
-// TestInvalidDefaultChildren_TemplateOutsideTheOutbox confirms that a Template an outbox cannot hold is refused
+// TestInvalidDefaultChildren_TemplateOutsideTheOutbox confirms that a Template an outbox cannot hold is refused from an outbox
 func TestInvalidDefaultChildren_TemplateOutsideTheOutbox(t *testing.T) {
 	require.Equal(t,
-		[]string{"Default child names a Template that an outbox cannot hold"},
+		[]string{"Default child names a Template that cannot be placed beneath this one"},
 		invalidDefaultChildrenMessages(t, "test-outbox", mapof.Any{"templateId": "test-page", "label": "Page"}),
 	)
 }
@@ -108,7 +174,7 @@ func TestInvalidDefaultChildren_ReportsEveryBadEntry(t *testing.T) {
 	require.Equal(t,
 		[]string{
 			"Default child names a Template that is not defined",
-			"Default child names a Template that an outbox cannot hold",
+			"Default child names a Template that cannot be placed beneath this one",
 			"Default child sets a value that its Template's schema refuses",
 		},
 		invalidDefaultChildrenMessages(t, "test-outbox",

@@ -100,6 +100,8 @@ Creates a new Stream. `style` decides how the user picks a Template: `chooser` s
 
 The `redirect-to` property navigates exactly like the [`redirect-to`](#redirect-to) step, including its safety check and its off-site handling, but its template is evaluated against the **new** Stream so that `{{.StreamID}}` names the record that was just created.
 
+Once the new Stream's `create` action has saved it, `add-stream` creates the Streams that its Template lists in `defaultChildren`, beneath it and in the same transaction. A `create` that halts before its `save` gets none. The children get no default children of their own.
+
 ---
 
 ## as-confirmation

@@ -260,6 +260,11 @@ func (step StepAddStream) Post(builder Builder, buffer io.Writer) PipelineBehavi
 		return Halt().WithError(result.Error)
 	}
 
+	// Create the new Stream's default children, which does nothing unless the "create" action saved it
+	if err := streamService.CreateDefaultChildrenForStream(builder.session(), &newStream); err != nil {
+		return Halt().WithError(derp.Wrap(err, location, "Creating default children", newStream.StreamID))
+	}
+
 	// If this step includes a redirect, then do that.
 	if step.RedirectTo != nil {
 

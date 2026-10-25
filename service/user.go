@@ -289,7 +289,7 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 		}
 
 		// RULE: Create the Streams that this user's outbox Template starts every profile with
-		if err := service.streamService.CreateDefaultChildren(session, user); err != nil {
+		if err := service.streamService.CreateDefaultChildrenForUser(session, user); err != nil {
 			return derp.Wrap(err, location, "Creating default children for User", user.UserID)
 		}
 	}
