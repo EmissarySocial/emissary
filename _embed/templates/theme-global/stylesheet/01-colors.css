@@ -55,7 +55,7 @@
 	--green100: #072d09;
 
 	--body-background: var(--gray10);
-	--page-background: var(--white);
+	--page-background: var(--gray00);
 	--page-border: var(--gray15);
 	--input-border: var(--gray20);
 	--input-background: var(--gray03);
@@ -75,10 +75,7 @@
 	   color (such as a conversation's group color). */
 	--focus-color:var(--link-color);
 
-	/* Literal white, NOT var(--white): the primary button background (--focus-color)
-	   stays a dark accent in dark mode, but --white flips to near-black there, which
-	   would make the label vanish.  Unlike warning/success buttons, whose flipped
-	   color ramps keep contrast with a flipped --white, this text must never flip. */
+	/* Literal white, so a theme that still flips --white per scheme cannot flip this label */
 	--button-primary-color:#ffffff;
 	--button-primary-color-hover:#ffffff;
 	/* NOTE: primary buttons read --focus-color directly (see 02-forms.css) so they
@@ -87,7 +84,7 @@
 	   --focus-color, which would resolve eagerly here in :root and ignore overrides). */
 	--button-primary-background:var(--blue50);
 	--button-primary-background-hover:color-mix(in srgb, var(--blue50), black 12%);
-	--heading-color:var(--black);
+	--heading-color:var(--gray100);
 	--text-color:var(--gray80);
 	/* Quieter text, such as a sidebar's menu items, as qwertylicious defines it.  Its gray inverts
 	   in dark mode, so it needs no dark-mode value of its own. */
@@ -115,7 +112,6 @@
 		/* Warm gray: every step is hue 0, so the green and blue channels are equal
 		   and only brightness changes down the ramp.  Keep G and B equal in any
 		   new or edited value; see AGENTS.md. */
-		--black: #fffafa;
 		--gray100: #fffafa;
 		--gray90: #f7f2f2;
 		--gray80: #e5dfdf;
@@ -133,7 +129,6 @@
 		--gray02: #1a1717;
 		--gray01: #181515;
 		--gray00: #171414;
-		--white: #171414;
 
 		--blue100: #d0e2ff;
 		--blue90: #a6c8ff;

@@ -25,7 +25,7 @@ nav {
 	color: var(--gray80);
 	font-weight:400;
 	font-size:14px;
-	background-color: var(--white);
+	background-color: var(--gray00);
 	height:48px;
 	flex-shrink:0;
 	flex-grow:0;
@@ -71,7 +71,7 @@ nav {
 		align-items:center;
 
 		color: var(--gray80);
-		background-color: var(--white);
+		background-color: var(--gray00);
 		padding:6px 12px;
 		line-height:1.5em;
 		border-radius: var(--border-radius);
@@ -100,7 +100,7 @@ nav {
 		&.selected:hover,
 		&.selected:focus {
 			background-color: var(--gray20);
-			color: var(--black);
+			color: var(--gray100);
 		}
 
 		& > .icon {
@@ -115,7 +115,7 @@ nav {
 
 	b {
 		display:inline-block;
-		color: var(--black);
+		color: var(--gray100);
 		font-weight: 700;
 		padding: 8px 0px;
 		margin:10px 10px 10px 0px;

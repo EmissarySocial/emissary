@@ -113,7 +113,7 @@ div.table + div.table {
 
 table.grid {
 	width:100%;
-	background-color:var(--white);
+	background-color:var(--gray00);
 	border-top: solid 1px var(--gray20);
 	border-collapse: collapse;
 	border-spacing: 0px;

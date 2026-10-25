@@ -34,7 +34,7 @@
 
 	&:hover {
 		background-color:var(--gray40);
-		color:var(--black)!important;
+		color:var(--gray100)!important;
 	}
 
 	&.warning,

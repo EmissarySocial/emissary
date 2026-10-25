@@ -423,14 +423,14 @@ button:focus,
 .button:hover,
 .button:focus {
 	background-color: var(--gray20);
-	color: var(--black);
+	color: var(--gray100);
 }
 
 button.text-red:hover,
 button.text-red:focus,
 .button.text-red:hover,
 .button.text-red:focus {
-	color: var(--white);
+	color: var(--gray00);
 	background-color: var(--red60);
 	border-radius: 4px;
 }
@@ -458,7 +458,7 @@ button.highlight:hover,
 .button.highlight,
 .button.highlight:hover {
 	background-color: var(--gray60);
-	color: var(--white);
+	color: var(--gray00);
 }
 
 button.outline,
@@ -480,7 +480,7 @@ button.outline:hover,
 button.selected,
 .button.selected {
 	background-color: var(--gray40);
-	color: var(--black);
+	color: var(--gray100);
 }
 
 button.selected:hover,
@@ -488,13 +488,13 @@ button.selected:hover,
 button.selected:focus,
 .button.selected:focus {
 	background-color: var(--gray50);
-	color: var(--black);
+	color: var(--gray100);
 }
 
 button.warning,
 .button.warning {
 	background-color: var(--red70);
-	color: var(--white);
+	color: var(--gray00);
 }
 
 button.warning:hover,
@@ -502,7 +502,7 @@ button.warning:focus,
 .button.warning:hover,
 .button.warning:focus {
 	background-color: var(--red60);
-	color: var(--white);
+	color: var(--gray00);
 }
 
 button.success,
@@ -510,7 +510,7 @@ button.primary.success,
 .button.success,
 .button.primary.success {
 	background-color: var(--green70);
-	color: var(--white);
+	color: var(--gray00);
 }
 
 button.success:hover,
@@ -522,7 +522,7 @@ button.primary.success:focus,
 .button.primary.success:hover,
 .button.primary.success:focus {
 	background-color: var(--green60);
-	color: var(--white);
+	color: var(--gray00);
 }
 
 input[disabled],
@@ -736,7 +736,7 @@ button.button-invisible {
 	top: calc(var(--rhythm) * 1);
 	right: var(--rhythm);
 	display: inline-block;
-	color: var(--white);
+	color: var(--gray00);
 	font-size: calc(var(--rhythm) * 1.5);
 	line-height: calc(var(--rhythm) * 2);
 	height: calc(var(--rhythm) * 3);

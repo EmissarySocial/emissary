@@ -25,7 +25,7 @@ nav {
 	color: var(--gray80);
 	font-weight:400;
 	font-size:14px;
-	background-color: var(--white);
+	background-color: var(--gray00);
 	height:48px;
 	flex-shrink:0;
 	flex-grow:0;
@@ -72,7 +72,7 @@ nav {
 		align-items:center;
 
 		color: var(--gray80);
-		background-color: var(--white);
+		background-color: var(--gray00);
 		padding:6px 12px;
 		line-height:1.5em;
 		border-radius: var(--border-radius);
@@ -100,13 +100,13 @@ nav {
 		&.selected:hover,
 		&.selected:focus {
 			background-color: var(--gray20);
-			color: var(--black);
+			color: var(--gray100);
 		}
 	}
 
 	b {
 		display:inline-block;
-		color: var(--black);
+		color: var(--gray100);
 		font-weight: 700;
 		padding: 8px 0px;
 		margin:10px 10px 10px 0px;
@@ -190,7 +190,7 @@ main:has(> .app) {
 		color: var(--gray80);
 		cursor: pointer;
 
-		/* RULE: opaque, and --gray10 rather than --white. Nothing reserves space for this control,
+		/* RULE: opaque, and --gray10 rather than --gray00. Nothing reserves space for this control,
 		   so the backdrop is its only contrast, and the grays invert in dark mode (see AGENTS.md). */
 		background-color: var(--gray10);
 		box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.25);
@@ -239,7 +239,7 @@ main:has(> .app) {
 		transform: scale(0.98);
 		transition: opacity var(--motion-base) var(--motion-ease), transform var(--motion-base) var(--motion-ease), visibility 0s linear var(--motion-base);
 
-		background-color: var(--white);
+		background-color: var(--gray00);
 
 		/* Clears the control, which is fixed over this sheet's own top-right corner */
 		padding-top: calc(var(--rhythm) * 9);
@@ -301,7 +301,7 @@ main:has(> .app) {
 		/* Set server-side from .NavigationID, not by SelectNav (see AGENTS.md). */
 		&.selected {
 			background-color: var(--gray20);
-			color: var(--black);
+			color: var(--gray100);
 		}
 
 		& > .icon {
@@ -411,7 +411,7 @@ main:has(> .app) {
 		&.selected:hover,
 		&.selected:focus {
 			background-color: var(--gray20);
-			color: var(--black);
+			color: var(--gray100);
 		}
 
 		& > .icon {

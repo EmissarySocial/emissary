@@ -53,7 +53,7 @@
 	}
 
 	&.selected {
-		background-color: var(--white);
+		background-color: var(--gray00);
 	}
 
 	+ .menu-item {
@@ -74,7 +74,7 @@
 
 #app-sidebar .selected {
 	font-weight: 600;
-	color: var(--black);
+	color: var(--gray100);
 }
 
 #app-sidebar button {

@@ -1,5 +1,5 @@
 .menu {
-	color: var(--black);
+	color: var(--gray100);
 	min-width: 160px;
 
 	font-size:calc(var(--rhythm) * 2);

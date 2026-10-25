@@ -8,7 +8,7 @@
 	<div class="flex-row" role="button">
 		<div hx-get="/@me/settings/follower?followerId={{.FollowerID.Hex}}&amp;url={{$actor.ProfileURL}}" class="margin-right-sm turboclick">
 			{{- if eq "EMAIL" .Method -}}
-				<div class="circle width-48 text-lg margin-none flex-center text-white">{{icon "email"}}</div>
+				<div class="circle width-48 text-lg margin-none flex-center">{{icon "email"}}</div>
 			{{- else if eq "" $actor.IconURL -}}
 				<div class="circle width-48"></div>
 			{{- else -}}
