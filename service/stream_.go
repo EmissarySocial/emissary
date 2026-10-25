@@ -200,6 +200,75 @@ func (service *Stream) newStartupStream(data mapof.Any) (model.Stream, error) {
 	return stream, nil
 }
 
+// CreateDefaultChildren creates the starter Streams in a new User's outbox, as defined by their outbox Template
+func (service *Stream) CreateDefaultChildren(session data.Session, user *model.User) error {
+
+	const location = "service.Stream.CreateDefaultChildren"
+
+	// Find the outbox Template, which declares the Streams
+	outboxTemplate, err := service.templateService.Load(user.OutboxTemplate)
+
+	// A missing outbox Template declares nothing, and User.Save tolerates it for the tag settings too
+	if derp.IsNotFound(err) {
+		return nil
+	}
+
+	if err != nil {
+		return derp.Wrap(err, location, "Loading outbox Template", user.OutboxTemplate)
+	}
+
+	for _, entry := range outboxTemplate.DefaultChildren {
+
+		// Build a Stream from the outbox Template's entry
+		stream, err := service.newDefaultChild(entry, user)
+
+		if err != nil {
+			return derp.Wrap(err, location, "Building default child", outboxTemplate.TemplateID)
+		}
+
+		// Save is the single validation gate, the same as for startup Streams
+		if err := service.Save(session, &stream, "Created with profile"); err != nil {
+			return derp.Wrap(err, location, "Saving default child", outboxTemplate.TemplateID, stream.TemplateID)
+		}
+	}
+
+	// Welcome to the neighborhood
+	return nil
+}
+
+// newDefaultChild builds one Stream from an outbox Template's "defaultChildren" entry, placed in the
+// User's outbox and attributed to them.  The returned Stream is NOT yet normalized or persisted.
+func (service *Stream) newDefaultChild(entry mapof.Any, user *model.User) (model.Stream, error) {
+
+	const location = "service.Stream.newDefaultChild"
+
+	stream := model.NewStream()
+
+	// Load the Template that the entry names
+	templateID := entry.GetString("templateId")
+	template, err := service.templateService.Load(templateID)
+
+	if err != nil {
+		return stream, derp.Wrap(err, location, "Loading Template", templateID)
+	}
+
+	// Apply the entry's values, which are schema paths like set-data's.  The Template's own schema
+	// checks them, the same way that the Template service checks them when it loads the Template.
+	if err := template.Schema.SetAll(&stream, entry); err != nil {
+		return stream, derp.Wrap(err, location, "Setting stream data", templateID)
+	}
+
+	// RULE: Place the Stream last, so that no entry can move it out of this User's outbox
+	if err := service.SetLocationOutbox(&template, &stream, user.UserID); err != nil {
+		return stream, derp.Wrap(err, location, "Placing Stream in outbox", stream.TemplateID)
+	}
+
+	// RULE: The User is the author, whatever the entry says, as they are of a collection they add themselves
+	stream.AttributedTo = user.PersonLink()
+
+	return stream, nil
+}
+
 /******************************************
  * Common Methods
  ******************************************/

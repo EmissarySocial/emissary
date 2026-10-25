@@ -427,6 +427,9 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 			))
 		}
 
+		// RULE: Every default child must be one that User.Save can create, or no new User can sign up
+		errors.Append(service.invalidDefaultChildren(&template)...)
+
 		// Scan all Actions in the Template
 		for actionID, action := range template.Actions {
 
@@ -618,6 +621,68 @@ func (service *Template) validateTemplates() sliceof.Object[derp.Error] {
 
 	// Phew.  Hopefully everything is valid.
 	return errors
+}
+
+// invalidDefaultChildren returns one error for each "defaultChildren" entry in a Template that
+// User.Save could not create.  Run it after inheritance has been calculated.
+func (service *Template) invalidDefaultChildren(template *model.Template) []derp.Error {
+
+	result := make([]derp.Error, 0)
+
+	if len(template.DefaultChildren) == 0 {
+		return result
+	}
+
+	// RULE: Only an outbox's children are created, so anywhere else they would silently do nothing
+	if template.TemplateRole != "user-outbox" {
+		return append(result, derp.Validation(
+			"Only an outbox Template can declare 'defaultChildren'",
+			"template: "+template.TemplateID,
+			"templateRole: "+template.TemplateRole,
+		))
+	}
+
+	for index, entry := range template.DefaultChildren {
+
+		// RULE: Each entry must name a Template that an outbox can hold
+		childID := entry.GetString("templateId")
+		child, exists := service.templatePrep[childID]
+
+		if !exists {
+			result = append(result, derp.Validation(
+				"Default child names a Template that is not defined",
+				"template: "+template.TemplateID,
+				"index: "+strconv.Itoa(index),
+				"templateId: "+childID,
+			))
+			continue
+		}
+
+		if !child.CanBeContainedBy("outbox") {
+			result = append(result, derp.Validation(
+				"Default child names a Template that an outbox cannot hold",
+				"template: "+template.TemplateID,
+				"index: "+strconv.Itoa(index),
+				"templateId: "+childID,
+			))
+			continue
+		}
+
+		// RULE: Each value must pass the child Template's schema, which is how User.Save applies it
+		stream := model.NewStream()
+
+		if err := child.Schema.SetAll(&stream, entry); err != nil {
+			result = append(result, derp.Validation(
+				"Default child sets a value that its Template's schema refuses",
+				"template: "+template.TemplateID,
+				"index: "+strconv.Itoa(index),
+				"templateId: "+childID,
+				derp.WithWrappedValue(err),
+			))
+		}
+	}
+
+	return result
 }
 
 // profileTabsTemplateID names the base Template that every outbox Template extends for its Profile tabs
