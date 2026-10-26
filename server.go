@@ -311,6 +311,9 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	// Not in toot: an empty list, since translation is off
 	e.GET("/api/v1/instance/translation_languages", handler.GetTranslationLanguages)
 	e.HEAD("/api/v1/instance/translation_languages", handler.GetTranslationLanguages)
+	// Not in toot: Ice Cubes' Explore tab asks for follow suggestions, and Emissary has none
+	e.GET("/api/v1/suggestions", handler.GetEmptyList)
+	e.HEAD("/api/v1/suggestions", handler.GetEmptyList)
 	e.GET("/api/**", handler.APINotFound) // API paths with no Mastodon handler
 	e.HEAD("/api/**", handler.APINotFound)
 	e.POST("/api/**", handler.APINotFound) // Every method, because Dome scores the 405 Echo would send

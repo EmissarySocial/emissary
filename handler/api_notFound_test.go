@@ -50,3 +50,20 @@ func TestGetTranslationLanguages(t *testing.T) {
 	require.Contains(t, recorder.Header().Get(echo.HeaderContentType), echo.MIMEApplicationJSON)
 	require.JSONEq(t, `{}`, recorder.Body.String())
 }
+
+// TestGetEmptyList confirms the routes toot lacks answer an empty JSON array
+func TestGetEmptyList(t *testing.T) {
+
+	e := echo.New()
+	e.GET("/api/v1/trends/tags", GetEmptyList)
+	e.GET("/api/v1/suggestions", GetEmptyList)
+	e.GET("/api/**", APINotFound)
+
+	for _, path := range []string{"/api/v1/trends/tags", "/api/v1/suggestions"} {
+		recorder := httptest.NewRecorder()
+		e.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, path, nil))
+
+		require.Equal(t, http.StatusOK, recorder.Code, path)
+		require.JSONEq(t, `[]`, recorder.Body.String(), path)
+	}
+}
