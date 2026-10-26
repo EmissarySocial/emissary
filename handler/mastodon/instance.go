@@ -204,6 +204,7 @@ func GetInstance(serverFactory *server.Factory) func(model.Authorization, txn.Ge
 				URL: readOnlyDomain.ImageURL(),
 			},
 			Configuration: instanceConfiguration(),
+			Rules:         []object.Rule{},
 			Contact: object.InstanceContact{
 				Account: contactAccount(factory, session),
 			},
@@ -325,6 +326,7 @@ func GetInstance_V1(serverFactory *server.Factory) func(model.Authorization, txn
 			Thumbnail:      readOnlyDomain.ImageURL(),
 			Configuration:  instanceConfigurationV1(),
 			ContactAccount: contactAccount(factory, session),
+			Rules:          []object.Rule{},
 		}
 
 		return result, nil
