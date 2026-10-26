@@ -1504,3 +1504,65 @@ func GetAccount_Lookup(serverFactory *server.Factory) func(model.Authorization, 
 		return result, nil
 	}
 }
+
+// PostAccount_RemoveFromFollowers stops an account following the User, and sends its server a Reject
+// https://docs.joinmastodon.org/methods/accounts/#remove_from_followers
+func PostAccount_RemoveFromFollowers(serverFactory *server.Factory) func(model.Authorization, txn.PostAccount_RemoveFromFollowers) (object.Relationship, error) {
+
+	// Removing someone who is not a follower counts as done
+
+	const location = "handler.mastodon.PostAccount_RemoveFromFollowers"
+
+	return func(auth model.Authorization, t txn.PostAccount_RemoveFromFollowers) (object.Relationship, error) {
+
+		factory, session, cancel, err := statusSession(serverFactory, t.Host, location)
+
+		if err != nil {
+			return object.Relationship{}, err
+		}
+
+		defer cancel()
+
+		accountURL, err := resolveAccountURL(factory, session, t.ID)
+
+		if err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Unrecognized account", t.ID, derp.WithNotFound())
+		}
+
+		followerService := factory.Follower()
+		follower := model.NewFollower()
+
+		if err := followerService.LoadByActor(session, auth.UserID, accountURL, &follower); err != nil {
+
+			if derp.IsNotFound(err) {
+				return buildRelationship(factory, session, auth, t.ID), nil
+			}
+
+			return object.Relationship{}, derp.Wrap(err, location, "Loading follower", accountURL)
+		}
+
+		// RULE: Only a follower of the User themself, not of one of their Streams
+		if follower.ParentType != model.FollowerTypeUser {
+			return buildRelationship(factory, session, auth, t.ID), nil
+		}
+
+		if err := followerService.Delete(session, &follower, "Removed via Mastodon API"); err != nil {
+			return object.Relationship{}, derp.Wrap(err, location, "Removing follower", accountURL)
+		}
+
+		// Tell the follower's server, which otherwise still thinks the follow stands
+		if follower.Method == model.FollowerMethodActivityPub {
+
+			user := model.NewUser()
+
+			if err := factory.User().LoadByID(session, auth.UserID, &user); err != nil {
+				return object.Relationship{}, derp.Wrap(err, location, "Loading user")
+			}
+
+			rejectID := followerService.ActivityPubID(&follower) + "#reject"
+			factory.Outbox().SendRejectFollow(session, user.ActivityPubURL(), rejectID, accountURL)
+		}
+
+		return buildRelationship(factory, session, auth, t.ID), nil
+	}
+}
