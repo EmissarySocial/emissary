@@ -21,6 +21,7 @@ func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 		GetAccounts:                    mastodon.GetAccounts(serverFactory),
 		GetAccount:                     mastodon.GetAccount(serverFactory),
 		GetAccount_Statuses:            mastodon.GetAccount_Statuses(serverFactory),
+		GetAccount_Lists:               mastodon.GetAccount_Lists(serverFactory),
 		GetAccount_Collections:         mastodon.GetAccount_Collections(serverFactory),
 		GetAccount_Followers:           mastodon.GetAccount_Followers(serverFactory),
 		GetAccount_Following:           mastodon.GetAccount_Following(serverFactory),
