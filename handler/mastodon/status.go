@@ -7,6 +7,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
@@ -483,7 +484,7 @@ func reloadedStreamStatus(factory *service.Factory, session data.Session, auth m
 func statusForPostURL(factory *service.Factory, session data.Session, auth model.Authorization, postURL string, location string) (object.Status, error) {
 
 	client := factory.ActivityStream().UserClient(auth.UserID)
-	post, err := client.Load(postURL)
+	post, err := client.Load(postURL, ascache.WithStaleAllowed())
 
 	if err != nil {
 		return object.Status{}, derp.Wrap(err, location, "Loading post", postURL)
