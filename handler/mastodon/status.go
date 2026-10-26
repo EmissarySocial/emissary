@@ -30,6 +30,11 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 			return object.Status{}, derp.BadRequest(location, "Scheduled posts are not supported on this server yet", transaction.ScheduledAt, derp.WithCode(http.StatusUnprocessableEntity))
 		}
 
+		// RULE: Emissary has no polls, so a post with one is refused rather than published without it
+		if len(transaction.Poll.Options) > 0 {
+			return object.Status{}, errPollsNotSupported(location)
+		}
+
 		// Get the factory for this domain
 		factory, err := serverFactory.ByHostname(transaction.Host)
 
@@ -674,6 +679,11 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 
 	return func(auth model.Authorization, t txn.PutStatus) (object.Status, error) {
 
+		// RULE: Emissary has no polls, so an edit that adds one is refused rather than saved without it
+		if len(t.Poll.Options) > 0 {
+			return object.Status{}, errPollsNotSupported(location)
+		}
+
 		// RULE: t.ID is whatever this API handed the client back for the status (a Stream's
 		// hex ID, ordinarily) -- never necessarily its own URL, which LoadByURL alone required
 		// and made every edit 404 (see loadStreamByStatusID / DeleteStatus's identical fix).
@@ -815,4 +825,11 @@ func GetStatus_Source(serverFactory *server.Factory) func(model.Authorization, t
 
 		return result, nil
 	}
+}
+
+// errPollsNotSupported is the 422 that a post or edit with a poll gets
+func errPollsNotSupported(location string) error {
+
+	// The app shows this message, instead of the post going out without its poll
+	return derp.BadRequest(location, "Polls are not supported on this server yet", derp.WithCode(http.StatusUnprocessableEntity))
 }
