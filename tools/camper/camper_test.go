@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"sync"
 	"testing"
 
 	"github.com/benpate/digit"
@@ -125,9 +127,15 @@ func TestGetTemplateFromKnownSoftware(t *testing.T) {
 	require.Equal(t, "/share?text={content}", camper.getTemplateFromKnownSoftware(vocab.ActivityTypeCreate, "mastodon"))
 	require.Equal(t, "/share?text={content}", camper.getTemplateFromKnownSoftware(vocab.ActivityTypeCreate, "misskey"))
 
-	// RULE: Only Create intents resolve through the known-software list
+	// Mastodon-family servers open a remote object on their remote-interaction page
+	require.Equal(t, "/authorize_interaction?uri={object}", camper.getTemplateFromKnownSoftware(intentNameObject, "mastodon"))
+	require.Equal(t, "/authorize_interaction?uri={object}", camper.getTemplateFromKnownSoftware(intentNameObject, "Hometown"))
+	require.Equal(t, "", camper.getTemplateFromKnownSoftware(intentNameObject, "misskey"))
+
+	// RULE: Only Create and Object intents resolve through the known-software list
 	require.Equal(t, "", camper.getTemplateFromKnownSoftware(vocab.ActivityTypeFollow, "emissary"))
 	require.Equal(t, "", camper.getTemplateFromKnownSoftware(vocab.ActivityTypeLike, "mastodon"))
+	require.False(t, isKnownSoftwareIntent(vocab.ActivityTypeLike))
 
 	// Unknown software resolves to nothing
 	require.Equal(t, "", camper.getTemplateFromKnownSoftware(vocab.ActivityTypeCreate, "friendster"))
@@ -149,4 +157,214 @@ func TestGetServername(t *testing.T) {
 	// Degenerate inputs fall through without panicking
 	require.Equal(t, "", camper.getServername(""))
 	require.Equal(t, "alice", camper.getServername("alice"))
+}
+
+// mastodonLinks are the three intent links mastodon.social published on 2026-10-23
+var mastodonLinks = []digit.Link{
+	{RelationType: digit.RelationTypeSubscribeRequest, Template: "https://mastodon.social/authorize_interaction?uri={uri}"},
+	{RelationType: IntentTypeCreate, Template: "https://mastodon.social/share?text={content}"},
+	{RelationType: IntentTypeObject, Template: "https://mastodon.social/authorize_interaction?uri={object}"},
+}
+
+// TestGetTemplate_ObjectFallback verifies that every intent but Create falls back to the Object intent
+func TestGetTemplate_ObjectFallback(t *testing.T) {
+
+	account := newWebFingerServer(t, mastodonLinks) + "/@alice"
+	camper := New(WithAllowPrivateIPs(true))
+
+	// Like, Announce, and Dislike are not published, so each opens the object instead
+	for _, intent := range []string{"like", "announce", "dislike"} {
+		require.Equal(t, "https://mastodon.social/authorize_interaction?uri={object}", camper.GetTemplate(intent, account), intent)
+	}
+
+	// RULE: The legacy "subscribe" link still wins for Follow, because it completes the follow
+	require.Equal(t, "https://mastodon.social/authorize_interaction?uri={object}", camper.GetTemplate("follow", account))
+
+	// Create uses its own template
+	require.Equal(t, "https://mastodon.social/share?text={content}", camper.GetTemplate("create", account))
+}
+
+// TestGetTemplate_ObjectFallbackPrefersFollow verifies that the subscribe link is chosen over the Object link for Follow
+func TestGetTemplate_ObjectFallbackPrefersFollow(t *testing.T) {
+
+	account := newWebFingerServer(t, []digit.Link{
+		{RelationType: IntentTypeObject, Template: "https://example.com/open?object={object}"},
+		{RelationType: digit.RelationTypeSubscribeRequest, Template: "https://example.com/follow?uri={uri}"},
+	}) + "/@alice"
+
+	camper := New(WithAllowPrivateIPs(true))
+	require.Equal(t, "https://example.com/follow?uri={object}", camper.GetTemplate("follow", account))
+}
+
+// TestGetTemplate_CreateNeverFallsBackToObject verifies that an Object link alone gives no Create template
+func TestGetTemplate_CreateNeverFallsBackToObject(t *testing.T) {
+
+	account := newWebFingerServer(t, []digit.Link{
+		{RelationType: IntentTypeObject, Template: "https://example.com/open?object={object}"},
+	}) + "/@alice"
+
+	camper := New(WithAllowPrivateIPs(true))
+	require.Equal(t, "", camper.GetTemplate("create", account))
+	require.Equal(t, "https://example.com/open?object={object}", camper.GetTemplate("like", account))
+}
+
+// TestGetTemplate_AssumeSharePath verifies that the /share probe asks the account's server, and fills {content}
+func TestGetTemplate_AssumeSharePath(t *testing.T) {
+
+	// A server with no intents and no NodeInfo, but a working /share page
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/.well-known/webfinger":
+			w.Header().Set("Content-Type", "application/jrd+json")
+			require.NoError(t, json.NewEncoder(w).Encode(digit.Resource{Subject: r.URL.Query().Get("resource")}))
+		case "/share":
+			w.WriteHeader(http.StatusOK)
+		default:
+			http.NotFound(w, r)
+		}
+	})
+
+	server := httptest.NewServer(handler)
+	t.Cleanup(server.Close)
+
+	camper := New(WithAllowPrivateIPs(true))
+	require.Equal(t, server.URL+"/share?text={content}", camper.GetTemplate("create", server.URL+"/@alice"))
+}
+
+// requestCounter counts the requests a test server receives for each path
+type requestCounter struct {
+	lock  sync.Mutex
+	paths map[string]int
+}
+
+// count returns the number of requests received for a path
+func (counter *requestCounter) count(path string) int {
+	counter.lock.Lock()
+	defer counter.lock.Unlock()
+	return counter.paths[path]
+}
+
+// add records one request for a path
+func (counter *requestCounter) add(path string) {
+	counter.lock.Lock()
+	defer counter.lock.Unlock()
+	counter.paths[path]++
+}
+
+// newSniffedServer starts a loopback home server whose WebFinger publishes the provided links,
+// names its software through NodeInfo, and counts the requests made for each path
+func newSniffedServer(t *testing.T, software string, links []digit.Link) (string, *requestCounter) {
+	t.Helper()
+
+	requests := &requestCounter{paths: map[string]int{}}
+	var serverURL string
+
+	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		requests.add(r.URL.Path)
+		w.Header().Set("Content-Type", "application/json")
+
+		switch r.URL.Path {
+
+		case "/.well-known/webfinger":
+			require.NoError(t, json.NewEncoder(w).Encode(digit.Resource{Subject: r.URL.Query().Get("resource"), Links: links}))
+
+		case "/.well-known/nodeinfo":
+			require.NoError(t, json.NewEncoder(w).Encode(map[string]any{"links": []map[string]string{
+				{"rel": "http://nodeinfo.diaspora.software/ns/schema/2.0", "href": serverURL + "/nodeinfo/2.0"},
+			}}))
+
+		case "/nodeinfo/2.0":
+			require.NoError(t, json.NewEncoder(w).Encode(map[string]any{"software": map[string]string{"name": software}}))
+
+		default:
+			http.NotFound(w, r)
+		}
+	})
+
+	server := httptest.NewServer(handler)
+	t.Cleanup(server.Close)
+	serverURL = server.URL
+
+	return serverURL, requests
+}
+
+// TestGetTemplate_SniffedObjectFallback verifies that a server known only by its software still
+// gets the Object intent for every intent but Create
+func TestGetTemplate_SniffedObjectFallback(t *testing.T) {
+
+	serverURL, _ := newSniffedServer(t, "mastodon", nil)
+	account := serverURL + "/@alice"
+	camper := New(WithAllowPrivateIPs(true))
+
+	for _, intent := range []string{"like", "announce", "dislike", "follow", "undo"} {
+		require.Equal(t, serverURL+"/authorize_interaction?uri={object}", camper.GetTemplate(intent, account), intent)
+	}
+
+	require.Equal(t, serverURL+"/share?text={content}", camper.GetTemplate("create", account))
+}
+
+// TestGetTemplate_SniffedUnknownSoftware verifies that software with no known templates gives nothing
+func TestGetTemplate_SniffedUnknownSoftware(t *testing.T) {
+
+	serverURL, _ := newSniffedServer(t, "friendster", nil)
+	camper := New(WithAllowPrivateIPs(true))
+
+	require.Equal(t, "", camper.GetTemplate("like", serverURL+"/@alice"))
+}
+
+// TestGetTemplate_RequestsEachDocumentOnce verifies that falling back to Object does not repeat
+// the WebFinger or NodeInfo requests
+func TestGetTemplate_RequestsEachDocumentOnce(t *testing.T) {
+
+	serverURL, requests := newSniffedServer(t, "mastodon", nil)
+	camper := New(WithAllowPrivateIPs(true))
+
+	require.NotEqual(t, "", camper.GetTemplate("like", serverURL+"/@alice"))
+	require.Equal(t, 1, requests.count("/.well-known/webfinger"))
+	require.Equal(t, 1, requests.count("/.well-known/nodeinfo"))
+	require.Equal(t, 1, requests.count("/nodeinfo/2.0"))
+}
+
+// TestGetTemplate_WebFingerObjectSkipsNodeInfo verifies that a published Object intent is used
+// without asking NodeInfo
+func TestGetTemplate_WebFingerObjectSkipsNodeInfo(t *testing.T) {
+
+	serverURL, requests := newSniffedServer(t, "mastodon", mastodonLinks)
+	camper := New(WithAllowPrivateIPs(true))
+
+	require.Equal(t, "https://mastodon.social/authorize_interaction?uri={object}", camper.GetTemplate("like", serverURL+"/@alice"))
+	require.Equal(t, 0, requests.count("/.well-known/nodeinfo"))
+}
+
+// TestGetTemplate_Reply verifies that Reply uses a Create that names the post being answered, or else Object
+func TestGetTemplate_Reply(t *testing.T) {
+
+	camper := New(WithAllowPrivateIPs(true))
+
+	// A Create that takes {inReplyTo} answers the post directly
+	emissary := newWebFingerServer(t, []digit.Link{
+		{RelationType: IntentTypeCreate, Template: "https://example.com/@me/intent/create?content={content}&inReplyTo={inReplyTo}"},
+		{RelationType: IntentTypeObject, Template: "https://example.com/open?object={object}"},
+	}) + "/@alice"
+	require.Equal(t, "https://example.com/@me/intent/create?content={content}&inReplyTo={inReplyTo}", camper.GetTemplate("reply", emissary))
+
+	// A Create that cannot name the post gives way to Object, which opens the post to reply there
+	mastodon := newWebFingerServer(t, mastodonLinks) + "/@alice"
+	require.Equal(t, "https://mastodon.social/authorize_interaction?uri={object}", camper.GetTemplate("reply", mastodon))
+
+	// With neither, there is nothing to offer
+	nothing := newWebFingerServer(t, nil) + "/@alice"
+	require.Equal(t, "", camper.GetTemplate("reply", nothing))
+}
+
+// TestPopulateTemplate verifies that every copy of a placeholder is filled, and spaces are encoded as %20
+func TestPopulateTemplate(t *testing.T) {
+
+	camper := New()
+	data := url.Values{"content": {"hello world + more"}, "object": {"https://example.social/post/1"}}
+
+	result := camper.PopulateTemplate("https://home.example/share?text={content}&again={content}&o={object}&missing={name}", data)
+
+	require.Equal(t, "https://home.example/share?text=hello%20world%20%2B%20more&again=hello%20world%20%2B%20more&o=https%3A%2F%2Fexample.social%2Fpost%2F1&missing=", result)
 }

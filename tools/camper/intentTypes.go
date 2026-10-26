@@ -36,3 +36,9 @@ const (
 
 // IntentTypeObject is a special case for opening an Object without sending a "View" activity
 const IntentTypeObject = "https://w3id.org/fep/3b86/Object"
+
+// intentNameObject names the Object intent, the fallback for every intent but Create
+const intentNameObject = "Object"
+
+// intentNameReply names a pseudo-intent: a Create that names the post being answered, or else Object
+const intentNameReply = "Reply"

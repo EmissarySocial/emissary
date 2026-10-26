@@ -47,6 +47,22 @@ The packages under `tools/` are small, self-contained leaf libraries — see [RE
 ## camper
 
 - **Camper makes outbound WebFinger/NodeInfo fetches, so it is SSRF surface.** Private-IP lookups are refused by default; the factory threads `WithAllowPrivateIPs` and the caching `WithRoundTripper` middleware at construction ([../service/factory.go](../service/factory.go)). Any new outbound call inside camper must ride `camper.options` so those policies apply. The Option API is `WithRemoteOption` / `WithRoundTripper` / `WithAllowPrivateIPs`; the `WithClient` example in [camper/README.md](camper/README.md) predates it.
+- **Every intent but Create falls back to the Object intent, after the whole lookup has run for the intent itself.** `GetTemplate` tries WebFinger, known services, the server's software, and the `/share` path for the requested intent, then all of them again for Object. Mastodon and Mitra publish no Like intent, so without this every Like, Announce, and Dislike from their visitors was a dead end (EmissarySocial BUG-301). Create never falls back, because its template takes `{content}`, not `{object}`. Reply is a Create that takes `{inReplyTo}`, or else Object. `accountLookup` ([camper/accountLookup.go](camper/accountLookup.go)) requests WebFinger and NodeInfo at most once per call, so the second pass costs nothing; `TestGetTemplate_RequestsEachDocumentOnce` pins it. NodeInfo is asked only for an intent `isKnownSoftwareIntent` names, which sits beside the switch it summarizes.
+- **CamperJS keeps the same software list, and the two must change together.** Its copy is `Intents.knownSoftware` in `EmissarySocial/camperjs`, which carries this table too. Every path is appended to the server's origin.
+
+  | Software | Create | Object |
+  | --- | --- | --- |
+  | calckey, fedibird, firefish, foundkey, glitchcafe, meisskey, misskey | `/share?text={content}` | |
+  | diaspora | `/bookmarklet?title={name}&notes={content}&url={inReplyTo}` | |
+  | emissary | `/@me/intent/create?type={type}&name={name}&summary={summary}&content={content}&inReplyTo={inReplyTo}&on-success={on-success}&on-cancel={on-cancel}` | |
+  | friendica | `/compose?title={name}&body={content}` | |
+  | gnusocial | `/notice/new?status_textarea={content}` | |
+  | hometown, mastodon | `/share?text={content}` | `/authorize_interaction?uri={object}` |
+  | hubzilla | `/rpost?title={name}&body={content}` | |
+  | kbin | `/new/link?url={inReplyTo}` | |
+  | microdotblog | `/post?text=[{name}]({inReplyTo})%0A%0A{content}` | |
+
+  Two sources are Go-only, because a browser cannot use them: the `twitter.com` known service, which CamperJS never reaches since it adds no account without WebFinger, and the `/share` probe, which needs a CORS header that `/share` pages do not send.
 
 ## stripeapi
 
