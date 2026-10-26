@@ -649,6 +649,7 @@ func documentToStatus(document streams.Document, account object.Account) object.
 		Tags:             tags,
 		Mentions:         mentionsForDocument(document),
 		Emojis:           mapDocumentToEmojis(document),
+		Filtered:         labelFilterResults(document.Metadata.Labels),
 	}
 
 	applyDocumentCounts(&status, document)

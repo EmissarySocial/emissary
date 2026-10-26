@@ -353,6 +353,7 @@ func newsItemToStatus(client streams.Client, factory *service.Factory, session d
 	status.Emojis = mapDocumentToEmojis(document)
 	applyDocumentCounts(&status, document)
 	status.Visibility = documentVisibility(document)
+	status.Filtered = labelFilterResults(document.Metadata.Labels)
 	applyRemoteReply(&status, client, factory, session, document)
 	status.Content = markHashtagLinks(document.Content(), status.Tags)
 
