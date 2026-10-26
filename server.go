@@ -311,7 +311,9 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	// Not in toot: an empty list, since translation is off
 	e.GET("/api/v1/instance/translation_languages", handler.GetTranslationLanguages)
 	e.HEAD("/api/v1/instance/translation_languages", handler.GetTranslationLanguages)
-	// Not in toot: Ice Cubes' Explore tab asks for follow suggestions, and Emissary has none
+	// Not in toot: Ice Cubes' Explore tab reads these. Trending tags are the admins' featured tags
+	e.GET("/api/v1/trends/tags", handler.MastodonTrendsTags(factory))
+	e.HEAD("/api/v1/trends/tags", handler.MastodonTrendsTags(factory))
 	e.GET("/api/v1/suggestions", handler.GetEmptyList)
 	e.HEAD("/api/v1/suggestions", handler.GetEmptyList)
 	// Not in toot: Mastodon's streaming API, over a websocket

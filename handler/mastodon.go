@@ -247,3 +247,8 @@ func Mastodon(serverFactory *server.Factory) toot.API[model.Authorization] {
 func MastodonStreaming(serverFactory *server.Factory) echo.HandlerFunc {
 	return mastodon.GetStreaming(serverFactory)
 }
+
+// MastodonTrendsTags returns the Mastodon trending-tags handler, which lists featured tags (not in toot)
+func MastodonTrendsTags(serverFactory *server.Factory) echo.HandlerFunc {
+	return mastodon.GetTrends_Tags(serverFactory)
+}

@@ -10,6 +10,28 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestTrendingTagsLimit keeps the limit within Mastodon's bounds
+func TestTrendingTagsLimit(t *testing.T) {
+	require.Equal(t, trendingTagsDefault, trendingTagsLimit(""))
+	require.Equal(t, trendingTagsDefault, trendingTagsLimit("nope"))
+	require.Equal(t, trendingTagsDefault, trendingTagsLimit("-3"))
+	require.Equal(t, 5, trendingTagsLimit("5"))
+	require.Equal(t, trendingTagsMax, trendingTagsLimit("500"))
+}
+
+// TestSearchTagToTag names the hashtag by its normalized value and links it on this server
+func TestSearchTagToTag(t *testing.T) {
+
+	tag, ok := searchTagToTag(model.SearchTag{Name: "Indie Rock", Value: "indierock"}, "social.example")
+	require.True(t, ok)
+	require.Equal(t, "indierock", tag.Name)
+	require.Equal(t, "https://social.example/tags/indierock", tag.URL)
+	require.NotNil(t, tag.History, "history is an empty list, not null")
+
+	_, ok = searchTagToTag(model.SearchTag{Name: "Nothing"}, "social.example")
+	require.False(t, ok)
+}
+
 // TestStubsRefuseInsteadOfFaking confirms the endpoints for things Emissary lacks refuse instead of answering success
 func TestStubsRefuseInsteadOfFaking(t *testing.T) {
 
