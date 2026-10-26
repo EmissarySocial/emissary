@@ -33,3 +33,4 @@ config-env.json
 config.json
 .local-native-config.json
 /service/geocoder/apikeys_test.go
+/.npmrc
