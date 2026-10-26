@@ -2,6 +2,8 @@ package mastodon
 
 import (
 	"context"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -13,7 +15,6 @@ import (
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
-	"github.com/relvacode/iso8601"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -22,6 +23,12 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 
 	const location = "handler.mastodon_PostStatus"
 	return func(authorization model.Authorization, transaction txn.PostStatus) (object.Status, error) {
+
+		// RULE: Emissary has no job that publishes a post later, so a scheduled post is refused
+		// rather than published at once. Checked first, so nothing is saved.
+		if strings.TrimSpace(transaction.ScheduledAt) != "" {
+			return object.Status{}, derp.BadRequest(location, "Scheduled posts are not supported on this server yet", transaction.ScheduledAt, derp.WithCode(http.StatusUnprocessableEntity))
+		}
 
 		// Get the factory for this domain
 		factory, err := serverFactory.ByHostname(transaction.Host)
@@ -75,10 +82,6 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		// their own; resolveStatusURL converts it back to the post's actual URL first.
 		stream.InReplyTo = resolveStatusURL(factory, session, authorization, transaction.InReplyToID)
 		stream.Label = transaction.SpoilerText
-
-		if scheduledAt, err := iso8601.ParseString(transaction.ScheduledAt); err == nil {
-			stream.PublishDate = scheduledAt.Unix()
-		}
 
 		// Add the content into the stream. Clients post plain text, which the TEXT format keeps as the source.
 		contentService := factory.Content()
