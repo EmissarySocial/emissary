@@ -10,6 +10,9 @@ import (
 // hannibal's vocabulary does not name.
 const propertyManuallyApprovesFollowers = "manuallyApprovesFollowers"
 
+// propertyMovedTo is the ActivityPub "movedTo" property: the account this one has moved to
+const propertyMovedTo = "movedTo"
+
 // Actor normalizes an Actor document
 func Actor(document streams.Document) map[string]any {
 
@@ -45,6 +48,15 @@ func Actor(document streams.Document) map[string]any {
 
 	if document.Get(propertyManuallyApprovesFollowers).Bool() {
 		result[propertyManuallyApprovesFollowers] = true
+	}
+
+	// Whether the account opted into discovery, and where it moved to, if it has
+	if document.Get(vocab.PropertyTootDiscoverable).Bool() {
+		result[vocab.PropertyTootDiscoverable] = true
+	}
+
+	if movedTo := document.Get(propertyMovedTo).String(); movedTo != "" {
+		result[propertyMovedTo] = movedTo
 	}
 
 	// Cryptography

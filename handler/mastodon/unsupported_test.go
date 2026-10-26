@@ -6,6 +6,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/toot/txn"
 	"github.com/stretchr/testify/require"
 )
@@ -42,4 +43,16 @@ func TestPostStatus_RefusesPolls(t *testing.T) {
 	edit.Poll.Options = []string{"a", "b"}
 	_, err = PutStatus(nil)(model.Authorization{}, edit)
 	require.Equal(t, http.StatusUnprocessableEntity, derp.ErrorCode(err))
+}
+
+// TestMovedAccount confirms a moved actor points at a placeholder for its new account, and others at nothing
+func TestMovedAccount(t *testing.T) {
+
+	require.Nil(t, movedAccount("https://my.example", streams.NewDocument(map[string]any{"id": "https://a.example/users/x"})))
+	require.Nil(t, movedAccount("https://my.example", streams.NewDocument(map[string]any{"movedTo": "not a url"})))
+
+	moved := movedAccount("https://my.example", streams.NewDocument(map[string]any{"movedTo": "https://new.example/users/ben"}))
+	require.NotNil(t, moved)
+	require.Equal(t, "https://new.example/users/ben", moved.URL)
+	require.NotEmpty(t, moved.Avatar, "the placeholder carries a default avatar, so apps can decode it")
 }

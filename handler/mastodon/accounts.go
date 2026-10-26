@@ -172,7 +172,24 @@ func mapDocumentToAccount(factory *service.Factory, session data.Session, docume
 		Bot:            actorIsBot(document),
 		Group:          document.Type() == vocab.ActorTypeGroup,
 		Locked:         document.Get("manuallyApprovesFollowers").Bool(),
+		Discoverable:   document.Get(vocab.PropertyTootDiscoverable).Bool(),
+		Moved:          movedAccount(factory.Host(), document),
 	}, factory.Host())
+}
+
+// movedAccount returns a placeholder for the account an actor has moved to, or nil when it has not moved
+func movedAccount(host string, document streams.Document) *object.Account {
+
+	// Built without fetching it, since apps only show its name and link
+
+	movedTo := document.Get("movedTo").String()
+
+	if !webURL(movedTo) {
+		return nil
+	}
+
+	account := model.RemoteActorAccount(movedTo, "", "", time.Time{}, host)
+	return &account
 }
 
 /*******************************************
