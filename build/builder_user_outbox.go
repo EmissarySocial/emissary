@@ -217,6 +217,11 @@ func (w Outbox) StateID() string {
 	return w._user.StateID
 }
 
+// HasPassword returns TRUE if the User being built has a password, without revealing it
+func (w Outbox) HasPassword() bool {
+	return w._user.Password != ""
+}
+
 // IsPublic returns TRUE if this User's profile is visible to anonymous visitors
 func (w Outbox) IsPublic() bool {
 	return w._user.IsPublic

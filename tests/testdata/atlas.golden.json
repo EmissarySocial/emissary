@@ -5045,11 +5045,56 @@
 				}
 			}
 		},
-		"template:atlas-outbox/wizard-1/0:edit": {
+		"template:atlas-outbox/wizard-1/0:if.Otherwise/0:edit": {
 			"fields": [
 				"displayName (text, schema.String)",
 				"emailAddress (text, schema.String)",
 				"new_password (password, not in schema)",
+				"username (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"displayName": "string",
+						"emailAddress": "string",
+						"username": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"displayName": "string",
+						"emailAddress": "string",
+						"username": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"displayName": "string alert(1)‮ xxxxxxxxxxxxxx"
+					},
+					"types": {
+						"displayName": "string",
+						"emailAddress": "string",
+						"username": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"displayName": "string Sample displayName",
+						"emailAddress": "string visitor@example.com",
+						"username": "string visitor_name"
+					},
+					"types": {
+						"displayName": "string",
+						"emailAddress": "string",
+						"username": "string"
+					}
+				}
+			}
+		},
+		"template:atlas-outbox/wizard-1/0:if.Then/0:edit": {
+			"fields": [
+				"displayName (text, schema.String)",
+				"emailAddress (text, schema.String)",
 				"username (text, schema.String)"
 			],
 			"scenarios": {
@@ -8016,11 +8061,56 @@
 				}
 			}
 		},
-		"template:user-outbox/wizard-1/0:edit": {
+		"template:user-outbox/wizard-1/0:if.Otherwise/0:edit": {
 			"fields": [
 				"displayName (text, schema.String)",
 				"emailAddress (text, schema.String)",
 				"new_password (password, not in schema)",
+				"username (text, schema.String)"
+			],
+			"scenarios": {
+				"absent": {
+					"types": {
+						"displayName": "string",
+						"emailAddress": "string",
+						"username": "string"
+					}
+				},
+				"empty": {
+					"types": {
+						"displayName": "string",
+						"emailAddress": "string",
+						"username": "string"
+					}
+				},
+				"hostile": {
+					"changes": {
+						"displayName": "string alert(1)‮ xxxxxxxxxxxxxx"
+					},
+					"types": {
+						"displayName": "string",
+						"emailAddress": "string",
+						"username": "string"
+					}
+				},
+				"typical": {
+					"changes": {
+						"displayName": "string Sample displayName",
+						"emailAddress": "string visitor@example.com",
+						"username": "string visitor_name"
+					},
+					"types": {
+						"displayName": "string",
+						"emailAddress": "string",
+						"username": "string"
+					}
+				}
+			}
+		},
+		"template:user-outbox/wizard-1/0:if.Then/0:edit": {
+			"fields": [
+				"displayName (text, schema.String)",
+				"emailAddress (text, schema.String)",
 				"username (text, schema.String)"
 			],
 			"scenarios": {
