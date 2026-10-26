@@ -440,7 +440,7 @@ func tootCredentialUser(factory *service.Factory, session data.Session, auth mod
 
 	account.Source = &object.AccountSource{
 		Note:    user.StatusMessage,
-		Fields:  []object.AccountField{},
+		Fields:  user.TootSourceFields(),
 		Privacy: "public",
 	}
 

@@ -320,6 +320,24 @@ func PatchAccount_UpdateCredentials(serverFactory *server.Factory) func(model.Au
 			user.IsPublic = *t.Discoverable
 		}
 
+		// Profile fields replace the User's profile links, in the order the client sent them
+		if t.FieldsAttributes != nil {
+
+			fields := make(map[string]profileField, len(t.FieldsAttributes))
+
+			for key, field := range t.FieldsAttributes {
+				fields[key] = profileField{Name: field.Name, Value: field.Value}
+			}
+
+			links, err := profileLinksFromFields(user.Links, sortedProfileFields(fields))
+
+			if err != nil {
+				return object.Account{}, derp.Wrap(err, location, "Reading profile fields")
+			}
+
+			user.Links = links
+		}
+
 		if t.Avatar != nil {
 			if err := saveProfileImage(factory, session, &user, t.Avatar, profileAvatar, &user.IconID); err != nil {
 				return object.Account{}, derp.Wrap(err, location, "Saving avatar")
