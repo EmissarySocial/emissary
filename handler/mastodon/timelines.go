@@ -108,7 +108,7 @@ func GetTimeline_Home(serverFactory *server.Factory) func(model.Authorization, t
 		// CreateDate (see queryExpressionByField), and the DESC sort must match the
 		// order getPageInfo assumes (newest first) for its MaxID/MinID to be correct.
 		newsFeedService := factory.NewsFeed()
-		newsItems, err := newsFeedService.QueryByUserID(session, auth.UserID, queryExpressionByField(t, "rank"), option.SortDesc("rank"), option.MaxRows(pageLimit(t.Limit)))
+		newsItems, err := newsFeedService.QueryByUserID(session, auth.UserID, queryExpressionWithCursors(t, "rank", newsItemCursor(factory, session, auth.UserID)), option.SortDesc("rank"), option.MaxRows(pageLimit(t.Limit)))
 
 		if err != nil {
 			return nil, toot.PageInfo{}, derp.Wrap(err, location, "Retrieving newsItems")
@@ -151,7 +151,7 @@ func GetTimeline_List(serverFactory *server.Factory) func(model.Authorization, t
 		// Get NewsFeed items from the database. Same rank-vs-createDate note as
 		// GetTimeline_Home applies here.
 		newsFeedService := factory.NewsFeed()
-		criteria := queryExpressionByField(t, "rank").AndEqual("folderId", folderID)
+		criteria := queryExpressionWithCursors(t, "rank", newsItemCursor(factory, session, auth.UserID)).AndEqual("folderId", folderID)
 
 		newsItems, err := newsFeedService.QueryByUserID(session, auth.UserID, criteria, option.SortDesc("rank"), option.MaxRows(pageLimit(t.Limit)))
 
@@ -204,6 +204,20 @@ func newsItemsToPosts(factory *service.Factory, session data.Session, auth model
 
 	posts, _ := newsItemsToStatuses(factory, session, auth, newsItems)
 	return posts
+}
+
+// newsItemCursor resolves a status ID used as a paging cursor into its NewsItem's rank
+func newsItemCursor(factory *service.Factory, session data.Session, userID primitive.ObjectID) cursorResolver {
+	return func(id primitive.ObjectID) (int64, bool) {
+
+		newsItem := model.NewNewsItem()
+
+		if err := factory.NewsFeed().LoadByID(session, userID, id, &newsItem); err != nil {
+			return 0, false
+		}
+
+		return newsItem.Rank, true
+	}
 }
 
 // newsItemsToStatuses runs newsItemToStatus over every NewsItem, concurrently.

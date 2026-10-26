@@ -43,7 +43,7 @@ func GetNotifications(serverFactory *server.Factory) func(model.Authorization, t
 
 		// Query this user's notifications with Mastodon paging.  DISLIKE has no Mastodon equivalent,
 		// so it is excluded from this API.
-		criteria := queryExpression(t).AndNotEqual("type", model.NotificationTypeDislike)
+		criteria := queryExpressionWithCursors(t, "createDate", notificationCursor(factory, session, auth.UserID)).AndNotEqual("type", model.NotificationTypeDislike)
 		criteria = withNotificationTypeFilters(criteria, t.Types, t.ExcludeTypes)
 
 		notifications, err := factory.Notification().QueryByUserID(session, auth.UserID, criteria, option.MaxRows(pageLimit(t.Limit)))
@@ -382,4 +382,18 @@ func unreadCountTypes(types []string, excludeTypes []string) []string {
 	}
 
 	return result
+}
+
+// notificationCursor resolves a notification ID used as a paging cursor into its createDate
+func notificationCursor(factory *service.Factory, session data.Session, userID primitive.ObjectID) cursorResolver {
+	return func(id primitive.ObjectID) (int64, bool) {
+
+		notification := model.NewNotification()
+
+		if err := factory.Notification().LoadByID(session, userID, id, &notification); err != nil {
+			return 0, false
+		}
+
+		return notification.CreateDate, true
+	}
 }
