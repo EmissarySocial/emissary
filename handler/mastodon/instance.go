@@ -285,11 +285,30 @@ func GetInstance_DomainBlocks(serverFactory *server.Factory) func(model.Authoriz
 	}
 }
 
+// GetInstance_ExtendedDescription answers the instance's About text with the domain's description
 // https://docs.joinmastodon.org/methods/instance/#extended_description
 func GetInstance_ExtendedDescription(serverFactory *server.Factory) func(model.Authorization, txn.GetInstance_ExtendedDescription) (object.ExtendedDescription, error) {
 
-	return func(model.Authorization, txn.GetInstance_ExtendedDescription) (object.ExtendedDescription, error) {
-		return object.ExtendedDescription{}, nil
+	// Emissary keeps no edit date for the description, so updated_at is the time of the request
+
+	const location = "handler.mastodon.GetInstance_ExtendedDescription"
+
+	return func(_ model.Authorization, t txn.GetInstance_ExtendedDescription) (object.ExtendedDescription, error) {
+
+		factory, err := serverFactory.ByHostname(t.Host)
+
+		if err != nil {
+			return object.ExtendedDescription{}, derp.Wrap(err, location, "Unrecognized Domain")
+		}
+
+		// The description is plain text, so it is escaped and split into paragraphs like a post
+		description := factory.Domain().Cached().Description
+		content := factory.Content().New(model.ContentFormatText, description)
+
+		return object.ExtendedDescription{
+			UpdatedAt: model.MastodonDate(time.Now()),
+			Content:   content.HTML,
+		}, nil
 	}
 }
 
