@@ -1224,23 +1224,23 @@ func PostAccount_Unmute(serverFactory *server.Factory) func(model.Authorization,
 	}
 }
 
-// PostAccount_Pin is the Mastodon "pin account" endpoint, which Emissary does not implement
+// PostAccount_Pin is the Mastodon "feature account on profile" endpoint, which Emissary does not have
 func PostAccount_Pin(serverFactory *server.Factory) func(model.Authorization, txn.PostAccount_Pin) (object.Relationship, error) {
 
 	const location = "handler.mastodon_PostAccount_Pin"
 
 	return func(auth model.Authorization, t txn.PostAccount_Pin) (object.Relationship, error) {
-		return object.Relationship{}, derp.NotImplemented(location)
+		return object.Relationship{}, errNotSupported(location, "Featured accounts")
 	}
 }
 
-// PostAccount_Unpin is the Mastodon "unpin account" endpoint, which Emissary does not implement
+// PostAccount_Unpin is the Mastodon "unfeature account" endpoint, which Emissary does not have
 func PostAccount_Unpin(serverFactory *server.Factory) func(model.Authorization, txn.PostAccount_Unpin) (object.Relationship, error) {
 
 	const location = "handler.mastodon_PostAccount_Unpin"
 
 	return func(auth model.Authorization, t txn.PostAccount_Unpin) (object.Relationship, error) {
-		return object.Relationship{}, derp.NotImplemented(location)
+		return object.Relationship{}, errNotSupported(location, "Featured accounts")
 	}
 }
 

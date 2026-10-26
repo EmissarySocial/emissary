@@ -10,6 +10,26 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestUnsupportedErrors confirms creating something Emissary lacks is a 422, and asking for one is a 404
+func TestUnsupportedErrors(t *testing.T) {
+
+	require.Equal(t, http.StatusUnprocessableEntity, derp.ErrorCode(errNotSupported("test", "Filters")))
+	require.Equal(t, http.StatusNotFound, derp.ErrorCode(errNoSuch("test", "Poll")))
+
+	// The handlers reach these before any database work, so a nil server factory is enough
+	_, err := PostFilter(nil)(model.Authorization{}, txn.PostFilter{})
+	require.Equal(t, http.StatusUnprocessableEntity, derp.ErrorCode(err))
+
+	_, err = GetPoll(nil)(model.Authorization{}, txn.GetPoll{})
+	require.Equal(t, http.StatusNotFound, derp.ErrorCode(err))
+
+	_, err = PostFollowRequest_Authorize(nil)(model.Authorization{}, txn.PostFollowRequest_Authorize{})
+	require.Equal(t, http.StatusNotFound, derp.ErrorCode(err))
+
+	_, err = PostAccount_Pin(nil)(model.Authorization{}, txn.PostAccount_Pin{})
+	require.Equal(t, http.StatusUnprocessableEntity, derp.ErrorCode(err))
+}
+
 // TestPostStatus_RefusesPolls confirms a post or edit carrying a poll is refused before anything is saved
 func TestPostStatus_RefusesPolls(t *testing.T) {
 
