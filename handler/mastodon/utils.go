@@ -111,30 +111,60 @@ func queryExpression(queryPager txn.QueryPager) exp.Expression {
 // compares two unrelated numbers and can hand back items the caller already
 // has.
 func queryExpressionByField(queryPager txn.QueryPager, fieldName string) exp.Expression {
+	return queryExpressionWithCursors(queryPager, fieldName, nil)
+}
+
+// cursorResolver returns the paging field's value for the record with this ID, or false when there is none
+type cursorResolver func(id primitive.ObjectID) (int64, bool)
+
+// queryExpressionWithCursors is queryExpressionByField for lists whose clients page by record ID,
+// resolving an ObjectID cursor to that record's own field value with resolve
+func queryExpressionWithCursors(queryPager txn.QueryPager, fieldName string, resolve cursorResolver) exp.Expression {
+
+	// Clients such as Ice Cubes send the newest item's own ID as min_id
 
 	var result exp.Expression = exp.All()
 
 	params := queryPager.QueryPage()
 
-	if params.MinID != "" {
-		if minID, err := strconv.ParseInt(params.MinID, 10, 64); err == nil {
-			result = result.AndGreaterThan(fieldName, minID)
-		}
+	if minID, ok := cursorValue(params.MinID, resolve); ok {
+		result = result.AndGreaterThan(fieldName, minID)
 	}
 
-	if params.MaxID != "" {
-		if maxID, err := strconv.ParseInt(params.MaxID, 10, 64); err == nil {
-			result = result.AndLessThan(fieldName, maxID)
-		}
+	if maxID, ok := cursorValue(params.MaxID, resolve); ok {
+		result = result.AndLessThan(fieldName, maxID)
 	}
 
-	if params.SinceID != "" {
-		if sinceID, err := strconv.ParseInt(params.SinceID, 10, 64); err == nil {
-			result = result.AndGreaterThan(fieldName, sinceID)
-		}
+	if sinceID, ok := cursorValue(params.SinceID, resolve); ok {
+		result = result.AndGreaterThan(fieldName, sinceID)
 	}
 
 	return result
+}
+
+// cursorValue converts one paging cursor into the paging field's value. A number is used as-is; an
+// ObjectID is resolved when a resolver is given. An empty or unusable cursor reports false.
+func cursorValue(cursor string, resolve cursorResolver) (int64, bool) {
+
+	if cursor == "" {
+		return 0, false
+	}
+
+	if value, err := strconv.ParseInt(cursor, 10, 64); err == nil {
+		return value, true
+	}
+
+	if resolve == nil {
+		return 0, false
+	}
+
+	id, err := primitive.ObjectIDFromHex(cursor)
+
+	if err != nil {
+		return 0, false
+	}
+
+	return resolve(id)
 }
 
 // loadNewsItemByStatusID loads the NewsItem behind a Mastodon status ID. Timeline
@@ -410,7 +440,7 @@ func tootCredentialUser(factory *service.Factory, session data.Session, auth mod
 
 	account.Source = &object.AccountSource{
 		Note:    user.StatusMessage,
-		Fields:  []object.AccountField{},
+		Fields:  user.TootSourceFields(),
 		Privacy: "public",
 	}
 

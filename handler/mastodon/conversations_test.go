@@ -4,6 +4,8 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/benpate/hannibal/vocab"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/toot/object"
 	"github.com/stretchr/testify/require"
 )
@@ -98,4 +100,68 @@ func TestDirectMessageStatus_UsesTheSavedText(t *testing.T) {
 	require.Equal(t, "<b>hi</b> & bye", status.Text)
 	require.Equal(t, account, status.Account)
 	require.Equal(t, "2026-09-21T14:13:20.000Z", status.CreatedAt)
+}
+
+// sent builds a direct message the User sent to a recipient
+func sent(recipientURL string, text string, created int64) sentMessage {
+	return sentMessage{RecipientURL: recipientURL, Date: created, Note: mapof.Any{vocab.PropertyContent: text}}
+}
+
+// TestAddSentMessages_NewerSentMessageLeads confirms a reply the User sent after the last received
+// message stands for the conversation, and an older one does not
+func TestAddSentMessages_NewerSentMessageLeads(t *testing.T) {
+
+	groups := groupConversations([]model.Notification{
+		message("https://a.example.com/@amy", "amy-2", 200, true),
+		message("https://b.example.com/@bo", "bo-1", 100, true),
+	}, 20)
+
+	groups = addSentMessages(groups, []sentMessage{
+		sent("https://b.example.com/@bo", "to-bo-3", 300),
+		sent("https://a.example.com/@amy", "to-amy-0", 50),
+	}, 20)
+
+	require.Len(t, groups, 2)
+	require.Equal(t, "https://b.example.com/@bo", groups[0].ActorURL, "the conversation with the newest message comes first")
+	require.NotNil(t, groups[0].Sent)
+	require.Equal(t, "to-bo-3", groups[0].Sent.Note[vocab.PropertyContent])
+	require.Equal(t, "https://a.example.com/@amy", groups[1].ActorURL)
+	require.Nil(t, groups[1].Sent, "an older sent message does not replace the latest received one")
+}
+
+// TestAddSentMessages_OnlySent confirms a person the User has only messaged gets a conversation,
+// within the page limit
+func TestAddSentMessages_OnlySent(t *testing.T) {
+
+	groups := addSentMessages(nil, []sentMessage{
+		sent("https://c.example.com/@cy", "to-cy-2", 200),
+		sent("https://c.example.com/@cy", "to-cy-1", 100),
+		sent("https://d.example.com/@di", "to-di-1", 150),
+	}, 20)
+
+	require.Len(t, groups, 2)
+	require.Equal(t, "https://c.example.com/@cy", groups[0].ActorURL)
+	require.Equal(t, "to-cy-2", groups[0].Sent.Note[vocab.PropertyContent], "the newest sent message stands for the conversation")
+	require.False(t, groups[0].Unread, "a sent message is never unread")
+	require.Equal(t, "https://d.example.com/@di", groups[1].ActorURL)
+
+	limited := addSentMessages(nil, []sentMessage{sent("https://c.example.com/@cy", "x", 2), sent("https://d.example.com/@di", "y", 1)}, 1)
+	require.Len(t, limited, 1)
+}
+
+// TestSentTo keeps only the messages sent to the named person
+func TestSentTo(t *testing.T) {
+
+	sent := []sentMessage{
+		{RecipientURL: "https://a.example/alice", Date: 3},
+		{RecipientURL: "https://b.example/bob", Date: 2},
+		{RecipientURL: "https://a.example/alice", Date: 1},
+	}
+
+	result := sentTo(sent, "https://a.example/alice")
+	require.Len(t, result, 2)
+	require.Equal(t, int64(3), result[0].Date)
+	require.Equal(t, int64(1), result[1].Date)
+
+	require.Empty(t, sentTo(sent, "https://c.example/carol"))
 }

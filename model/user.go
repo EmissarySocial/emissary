@@ -623,6 +623,24 @@ func (user User) tootFields() []object.AccountField {
 	return result
 }
 
+// TootSourceFields returns this User's profile links as the plain-text fields a Mastodon client
+// edits and sends back: the label and the address, without the link markup. Skips the same links tootFields does.
+func (user User) TootSourceFields() []object.AccountField {
+
+	result := make([]object.AccountField, 0, len(user.Links))
+
+	for _, link := range user.Links {
+
+		if link.Name == "" || link.ProfileURL == "" {
+			continue
+		}
+
+		result = append(result, object.AccountField{Name: link.Name, Value: link.ProfileURL})
+	}
+
+	return result
+}
+
 // GetRank returns this User's sort rank for the Mastodon API (their create date)
 func (user User) GetRank() int64 {
 	return user.CreateDate

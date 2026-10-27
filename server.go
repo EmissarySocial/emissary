@@ -308,6 +308,19 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.HEAD("/security.txt", handler.TBD)
 	e.GET("/poco", handler.TBD) // Friendica polls this route
 	e.HEAD("/poco", handler.TBD)
+	// Not in toot: an empty list, since translation is off
+	e.GET("/api/v1/instance/translation_languages", handler.GetTranslationLanguages)
+	e.HEAD("/api/v1/instance/translation_languages", handler.GetTranslationLanguages)
+	// Not in toot: Ice Cubes' Explore tab reads these. Trending tags are the admins' featured tags
+	e.GET("/api/v1/trends/tags", handler.MastodonTrendsTags(factory))
+	e.HEAD("/api/v1/trends/tags", handler.MastodonTrendsTags(factory))
+	e.GET("/api/v1/suggestions", handler.GetEmptyList)
+	e.HEAD("/api/v1/suggestions", handler.GetEmptyList)
+	// Not in toot: Mastodon's streaming API, over a websocket
+	e.GET("/api/v1/streaming", handler.MastodonStreaming(factory))
+	e.HEAD("/api/v1/streaming", handler.MastodonStreaming(factory))
+	e.GET("/api/v1/streaming/health", handler.GetStreamingHealth)
+	e.HEAD("/api/v1/streaming/health", handler.GetStreamingHealth)
 	e.GET("/api/**", handler.APINotFound) // API paths with no Mastodon handler
 	e.HEAD("/api/**", handler.APINotFound)
 	e.POST("/api/**", handler.APINotFound) // Every method, because Dome scores the 405 Echo would send
@@ -966,6 +979,12 @@ func errorHandler(err error, ctx echo.Context) {
 
 	const location = "server.errorHandler"
 
+	// RULE: An error can reach this handler more than once (a middleware that handles errors passes
+	// it on too). Once a response has been sent, a second body would corrupt it, so stop here.
+	if ctx.Response().Committed {
+		return
+	}
+
 	// Special handling of permisssion errors
 	request := ctx.Request()
 
@@ -1011,7 +1030,7 @@ func errorHandler(err error, ctx echo.Context) {
 		// needs the real 401 and a JSON body to know its bearer token expired and refresh it; a 303
 		// to the HTML /signin page is something it cannot parse, and its decoder fails on the HTML.
 		if strings.HasPrefix(request.URL.Path, "/api/") {
-			_ = ctx.JSON(derp.ErrorCode(err), mapof.Any{"error": derp.Message(err)})
+			_ = ctx.JSON(derp.ErrorCode(err), mapof.Any{"error": apiErrorMessage(err)})
 			return
 		}
 
@@ -1048,6 +1067,13 @@ func errorHandler(err error, ctx echo.Context) {
 		)
 	}
 
+	// RULE: Mastodon clients show the "error" text of a JSON body, and fall back to a generic
+	// failure for anything else, so every JSON API error answers in that shape
+	if strings.HasPrefix(request.URL.Path, "/api/") {
+		_ = ctx.JSON(derp.ErrorCode(err), mapof.Any{"error": apiErrorMessage(err)})
+		return
+	}
+
 	// If this is a local request, then show developers a full error dump
 	// X-Forwarded-Host is not needed here because this is for development only.
 	if uri.IsLocalHostname(request.Host) {
@@ -1062,6 +1088,17 @@ func errorHandler(err error, ctx echo.Context) {
 
 	// Fall through to general error handler that only returns the error code and message
 	_ = ctx.String(derp.ErrorCode(err), derp.Message(err))
+}
+
+// apiErrorMessage returns the text an API client is shown for an error: the original message for a
+// 4xx, and a generic one for a server failure, whose details stay in the error log
+func apiErrorMessage(err error) string {
+
+	if derp.ErrorCode(err) >= http.StatusInternalServerError {
+		return http.StatusText(http.StatusInternalServerError)
+	}
+
+	return derp.RootMessage(err)
 }
 
 // handleActivityPubError displays a simple JSON error message for ActivityPub requests
