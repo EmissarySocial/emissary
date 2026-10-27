@@ -534,7 +534,7 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 		}
 
 		// Query all posts by this user that are visible to the caller (only the pinned ones, if asked)
-		criteria := queryExpression(t)
+		criteria := queryExpressionWithCursors(t, "createDate", streamCursor(factory, session))
 
 		if t.Pinned {
 			criteria = criteria.AndEqual("isFeatured", true)
@@ -587,6 +587,11 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 // The outbox has no stable cursor to map onto max_id/min_id, so this returns one
 // page, newest first, with no paging info.
 func remoteAccountStatuses(factory *service.Factory, session data.Session, auth model.Authorization, t txn.GetAccount_Statuses, accountURL string) ([]object.Status, toot.PageInfo, error) {
+
+	// RULE: this one page is all there is, so asking for older or newer posts must not repeat it
+	if hasPageCursor(t) {
+		return []object.Status{}, toot.PageInfo{}, nil
+	}
 
 	client := factory.ActivityStream().UserClient(auth.UserID)
 	limit := int(pageLimit(t.Limit))

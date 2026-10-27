@@ -46,7 +46,7 @@ func GetTimeline_Public(serverFactory *server.Factory) func(model.Authorization,
 		defer cancel()
 
 		limit := pageLimit(t.Limit)
-		criteria := queryExpression(t)
+		criteria := queryExpressionWithCursors(t, "createDate", streamCursor(factory, session))
 
 		streams, statuses, err := collectFiltered(int(limit),
 			func(before int64) ([]model.Stream, error) {
@@ -217,6 +217,20 @@ func newsItemCursor(factory *service.Factory, session data.Session, userID primi
 		}
 
 		return newsItem.Rank, true
+	}
+}
+
+// streamCursor resolves a status ID used as a paging cursor into its Stream's createDate
+func streamCursor(factory *service.Factory, session data.Session) cursorResolver {
+	return func(id primitive.ObjectID) (int64, bool) {
+
+		stream := model.NewStream()
+
+		if err := factory.Stream().LoadByID(session, id, &stream); err != nil {
+			return 0, false
+		}
+
+		return stream.CreateDate, true
 	}
 }
 
