@@ -369,7 +369,7 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/.ostatus/discover", handler.WithFactory(factory, handler.PostOStatusDiscover))
 	e.GET("/.ostatus/tunnel", handler.GetFollowingTunnel)
 	e.HEAD("/.ostatus/tunnel", handler.GetFollowingTunnel)
-	e.POST("/.proxy", handler.WithAuthenticatedUser(factory, handler.PostProxyURL))
+	e.POST("/.proxy", handler.WithFactory(factory, handler.PostProxyURL))
 	e.GET("/.searchTag/:searchTagId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetSearchTagAttachment))
 	e.HEAD("/.searchTag/:searchTagId/attachments/:attachmentId", handler.WithFactory(factory, handler.GetSearchTagAttachment))
 	e.GET("/.sso", handler.WithDomain(factory, handler.GetSingleSignOn))
@@ -739,7 +739,6 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.POST("/@:userId/pub/outbox", handler.WithAuthenticatedUser(factory, ap_user.PostOutbox))
 	e.GET("/@:userId/pub/outbox/:messageId", handler.WithUser(factory, ap_user.GetOutboxActivity))
 	e.HEAD("/@:userId/pub/outbox/:messageId", handler.WithUser(factory, ap_user.GetOutboxActivity))
-	e.POST("/@:userId/pub/proxy", handler.WithAuthenticatedUser(factory, handler.PostProxyURL))
 
 	// Removed these routes for now...
 	// e.GET("/@:userId/pub/disliked", handler.WithUser(factory, ap_user.GetResponseCollection))
