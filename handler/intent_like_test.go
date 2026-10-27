@@ -43,7 +43,8 @@ func TestPostIntent_Like_RejectsInvalidTarget(t *testing.T) {
 	factory := &service.Factory{}
 	user := model.NewUser()
 
-	err := PostIntent_Like(ctx, factory, nil, &user)
+	// unusedSession panics on any database work, which the rejection must come before
+	err := PostIntent_Like(ctx, factory, unusedSession{}, &user)
 
 	require.NotNil(t, err, "an invalid reaction target must be rejected")
 }
@@ -55,7 +56,8 @@ func TestPostIntent_Dislike_RejectsInvalidTarget(t *testing.T) {
 	factory := &service.Factory{}
 	user := model.NewUser()
 
-	err := PostIntent_Dislike(ctx, factory, nil, &user)
+	// unusedSession panics on any database work, which the rejection must come before
+	err := PostIntent_Dislike(ctx, factory, unusedSession{}, &user)
 
 	require.NotNil(t, err, "an invalid reaction target must be rejected")
 }
