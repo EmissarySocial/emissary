@@ -11,7 +11,7 @@ import (
 // TestLabelFilterResults confirms annotating labels become "warn" filter results and hiding ones are left out
 func TestLabelFilterResults(t *testing.T) {
 
-	require.Nil(t, labelFilterResults(nil))
+	require.Empty(t, labelFilterResults(nil))
 
 	labels := metadata.LabelSet{
 		{Value: "Politics", Href: "https://my.example/@me/rules/1"},
