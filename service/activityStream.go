@@ -117,11 +117,13 @@ func (service *ActivityStream) Client(actorType string, actorID primitive.Object
 	// the ActivityPub client to load documents from private IP addresses.
 	allowPrivateIPs := service.AllowPrivateIPs()
 
-	// Try ActivityPub documents directly
+	// Try ActivityPub documents directly, reading at most 1 MB of each, which is Mastodon's own limit.
+	// Every caller of this stack inherits the cap, the anonymous /.proxy included.
 	activityPubClient := activitypub.New(
 		activitypub.WithKeyPairFunc(service.KeyPairFunc(actorType, actorID)),
 		activitypub.WithUserAgent(userAgent),
 		activitypub.WithAllowPrivateIPs(allowPrivateIPs),
+		activitypub.WithMaxResponseSize(streams.MaxResponseSize),
 	)
 
 	// Replace 410 Gone errors with "Tombstone" documents
