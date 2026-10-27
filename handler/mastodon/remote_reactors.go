@@ -6,6 +6,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -18,11 +19,34 @@ import (
 const (
 	remoteReactorTimeout     = 6 * time.Second // longest wait for another server's answer
 	remoteReactorMaxResponse = 2 << 20         // largest answer accepted, in bytes
+	remoteReactorCacheWindow = 2 * time.Minute // how long another server's answer is reused
+	remoteReactorCacheLimit  = 1000            // most answers remembered at once
 )
 
-// fetchRemoteReactors asks a post's own server which accounts liked ("favourited_by") or boosted
-// ("reblogged_by") it, returning nothing when the server cannot say.
+// remoteReactorCache remembers recent answers to fetchRemoteReactors
+var remoteReactorCache = newReactorMemo(remoteReactorCacheWindow)
+
+// fetchRemoteReactors returns fetchRemoteReactorsLive's answer, reusing one from the last few minutes
 func fetchRemoteReactors(postURL string, ownHost string, listName string, limit int, allowPrivateIPs bool) []object.Account {
+
+	// An empty answer is reused too, so a server that cannot say is not asked on every open
+
+	// RULE: Each answer is mapped in one domain's terms, so the domain is part of the key
+	key := ownHost + " " + postURL + " " + listName + " " + strconv.Itoa(limit)
+
+	if accounts, found := remoteReactorCache.get(key); found {
+		return accounts
+	}
+
+	accounts := fetchRemoteReactorsLive(postURL, ownHost, listName, limit, allowPrivateIPs)
+	remoteReactorCache.set(key, accounts)
+
+	return accounts
+}
+
+// fetchRemoteReactorsLive asks a post's own server which accounts liked ("favourited_by") or boosted
+// ("reblogged_by") it, returning nothing when the server cannot say.
+func fetchRemoteReactorsLive(postURL string, ownHost string, listName string, limit int, allowPrivateIPs bool) []object.Account {
 
 	// RULE: only a post on another server is asked about; this server already knows its own
 	parsed, err := url.Parse(postURL)
@@ -128,4 +152,61 @@ func webURLOrEmpty(address string) string {
 // sameDomain returns TRUE if two hosts name the same domain, ignoring case and any port.
 func sameDomain(left string, right string) bool {
 	return strings.EqualFold(strings.Split(left, ":")[0], strings.Split(right, ":")[0])
+}
+
+// reactorMemo is a small, short-lived, concurrency-safe memory of reactor lists by key
+type reactorMemo struct {
+	mutex  sync.Mutex
+	items  map[string]reactorMemoItem
+	window time.Duration
+}
+
+// reactorMemoItem is one remembered answer and the time it expires
+type reactorMemoItem struct {
+	accounts []object.Account
+	expires  time.Time
+}
+
+// newReactorMemo returns an empty reactorMemo that keeps each answer for the window
+func newReactorMemo(window time.Duration) *reactorMemo {
+	return &reactorMemo{items: map[string]reactorMemoItem{}, window: window}
+}
+
+// get returns a remembered answer that has not expired
+func (memo *reactorMemo) get(key string) ([]object.Account, bool) {
+
+	memo.mutex.Lock()
+	defer memo.mutex.Unlock()
+
+	item, found := memo.items[key]
+
+	if !found || time.Now().After(item.expires) {
+		return nil, false
+	}
+
+	return item.accounts, true
+}
+
+// set remembers an answer, dropping expired ones first when full, and starting over if that is not enough
+func (memo *reactorMemo) set(key string, accounts []object.Account) {
+
+	memo.mutex.Lock()
+	defer memo.mutex.Unlock()
+
+	if len(memo.items) >= remoteReactorCacheLimit {
+
+		now := time.Now()
+
+		for itemKey, item := range memo.items {
+			if now.After(item.expires) {
+				delete(memo.items, itemKey)
+			}
+		}
+
+		if len(memo.items) >= remoteReactorCacheLimit {
+			memo.items = map[string]reactorMemoItem{}
+		}
+	}
+
+	memo.items[key] = reactorMemoItem{accounts: accounts, expires: time.Now().Add(memo.window)}
 }

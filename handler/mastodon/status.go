@@ -2,17 +2,19 @@ package mastodon
 
 import (
 	"context"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/ascache"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
-	"github.com/relvacode/iso8601"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -22,10 +24,15 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 	const location = "handler.mastodon_PostStatus"
 	return func(authorization model.Authorization, transaction txn.PostStatus) (object.Status, error) {
 
-		// RULE: every post made here uses a Template that is readable by anyone, so any other
-		// visibility would publish a followers-only or direct post to the world. Refuse it.
-		if transaction.Visibility != "" && transaction.Visibility != "public" {
-			return object.Status{}, derp.BadRequest(location, "Emissary can only post publicly through this API", transaction.Visibility)
+		// RULE: Emissary has no job that publishes a post later, so a scheduled post is refused
+		// rather than published at once. Checked first, so nothing is saved.
+		if strings.TrimSpace(transaction.ScheduledAt) != "" {
+			return object.Status{}, derp.BadRequest(location, "Scheduled posts are not supported on this server yet", transaction.ScheduledAt, derp.WithCode(http.StatusUnprocessableEntity))
+		}
+
+		// RULE: Emissary has no polls, so a post with one is refused rather than published without it
+		if len(transaction.Poll.Options) > 0 {
+			return object.Status{}, errPollsNotSupported(location)
 		}
 
 		// Get the factory for this domain
@@ -52,6 +59,20 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 			return object.Status{}, derp.Wrap(err, location, "Loading user")
 		}
 
+		// RULE: Public posts become Streams that anyone can read. A direct message is addressed only to the
+		// people it mentions. Anything else is refused, so a restricted post is never published to everyone.
+		switch transaction.Visibility {
+
+		case "", "public":
+			// Continue below with the public Stream
+
+		case "direct":
+			return postDirectStatus(factory, session, authorization, &user, transaction)
+
+		default:
+			return object.Status{}, derp.BadRequest(location, "Emissary can only post public or direct statuses through this API", transaction.Visibility)
+		}
+
 		// Create the stream for the new mastodon "Status"
 		stream := model.NewStream()
 		// Hard-coded default Template, matching service.Stream.Import (service/stream_import.go).
@@ -67,13 +88,9 @@ func PostStatus(serverFactory *server.Factory) func(model.Authorization, txn.Pos
 		stream.InReplyTo = resolveStatusURL(factory, session, authorization, transaction.InReplyToID)
 		stream.Label = transaction.SpoilerText
 
-		if scheduledAt, err := iso8601.ParseString(transaction.ScheduledAt); err == nil {
-			stream.PublishDate = scheduledAt.Unix()
-		}
-
-		// Add the content into the stream
+		// Add the content into the stream. Clients post plain text, which the TEXT format keeps as the source.
 		contentService := factory.Content()
-		stream.Content = contentService.New(model.ContentFormatHTML, transaction.Status)
+		stream.Content = contentService.New(model.ContentFormatText, transaction.Status)
 
 		// Save the stream
 		streamService := factory.Stream()
@@ -475,7 +492,7 @@ func reloadedStreamStatus(factory *service.Factory, session data.Session, auth m
 func statusForPostURL(factory *service.Factory, session data.Session, auth model.Authorization, postURL string, location string) (object.Status, error) {
 
 	client := factory.ActivityStream().UserClient(auth.UserID)
-	post, err := client.Load(postURL)
+	post, err := client.Load(postURL, ascache.WithStaleAllowed())
 
 	if err != nil {
 		return object.Status{}, derp.Wrap(err, location, "Loading post", postURL)
@@ -662,6 +679,11 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 
 	return func(auth model.Authorization, t txn.PutStatus) (object.Status, error) {
 
+		// RULE: Emissary has no polls, so an edit that adds one is refused rather than saved without it
+		if len(t.Poll.Options) > 0 {
+			return object.Status{}, errPollsNotSupported(location)
+		}
+
 		// RULE: t.ID is whatever this API handed the client back for the status (a Stream's
 		// hex ID, ordinarily) -- never necessarily its own URL, which LoadByURL alone required
 		// and made every edit 404 (see loadStreamByStatusID / DeleteStatus's identical fix).
@@ -686,12 +708,13 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 			return object.Status{}, derp.Wrap(err, location, "Editing stream")
 		}
 
-		// Edit stream values
-		//
-		// RULE: rebuild via contentService.New, not just .Raw -- .HTML is what every reader
+		// RULE: Rebuild via contentService.New, not just .Raw -- .HTML is what every reader
 		// (tootStream, the web page, federation) actually renders.
+
+		// RULE: Clients edit in plain text, so the edited post is stored as TEXT whatever its format
+		// was. Writing their text into an EditorJS or Markdown body would corrupt it.
 		contentService := factory.Content()
-		stream.Content = contentService.New(stream.Content.Format, t.Status)
+		stream.Content = contentService.New(model.ContentFormatText, t.Status)
 		stream.Label = t.SpoilerText
 		// t.Sensitive
 		// t.Language
@@ -710,11 +733,60 @@ func PutStatus(serverFactory *server.Factory) func(model.Authorization, txn.PutS
 	}
 }
 
+// GetStatus_History returns a status's current version as its only revision
 // https://docs.joinmastodon.org/methods/statuses/#history
 func GetStatus_History(serverFactory *server.Factory) func(model.Authorization, txn.GetStatus_History) ([]object.StatusEdit, error) {
 
+	// Emissary keeps no earlier versions of a post
+
+	const location = "handler.mastodon.GetStatus_History"
+
+	// GetStatus resolves every kind of status ID and applies the same view permissions
+	getStatus := GetStatus(serverFactory)
+
 	return func(auth model.Authorization, t txn.GetStatus_History) ([]object.StatusEdit, error) {
-		return []object.StatusEdit{}, nil
+
+		status, err := getStatus(auth, txn.GetStatus(t))
+
+		if err != nil {
+			return nil, derp.Wrap(err, location, "Loading status", t.ID)
+		}
+
+		return []object.StatusEdit{statusEdit(status)}, nil
+	}
+}
+
+// statusEdit describes a status as one revision, dated by its last edit when it has one.
+func statusEdit(status object.Status) object.StatusEdit {
+
+	createdAt := status.EditedAt
+
+	if createdAt == "" {
+		createdAt = status.CreatedAt
+	}
+
+	// Clients decode these as arrays, so an absent list is sent as an empty one
+	media := []object.MediaAttachment(status.MediaAttachments)
+
+	if media == nil {
+		media = []object.MediaAttachment{}
+	}
+
+	emojis := []object.CustomEmoji(status.Emojis)
+
+	if emojis == nil {
+		emojis = []object.CustomEmoji{}
+	}
+
+	return object.StatusEdit{
+		Content:          status.Content,
+		SpoilerText:      status.SpoilerText,
+		Sensitive:        status.Sensitive,
+		CreatedAt:        createdAt,
+		Account:          status.Account,
+		Poll:             status.Poll,
+		MediaAttachments: media,
+		Emojis:           emojis,
 	}
 }
 
@@ -753,4 +825,11 @@ func GetStatus_Source(serverFactory *server.Factory) func(model.Authorization, t
 
 		return result, nil
 	}
+}
+
+// errPollsNotSupported is the 422 that a post or edit with a poll gets
+func errPollsNotSupported(location string) error {
+
+	// The app shows this message, instead of the post going out without its poll
+	return derp.BadRequest(location, "Polls are not supported on this server yet", derp.WithCode(http.StatusUnprocessableEntity))
 }

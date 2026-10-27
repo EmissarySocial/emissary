@@ -3,7 +3,6 @@ package mastodon
 import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/server"
-	"github.com/benpate/derp"
 	"github.com/benpate/toot/object"
 	"github.com/benpate/toot/txn"
 )
@@ -12,7 +11,7 @@ import (
 func GetPoll(serverFactory *server.Factory) func(model.Authorization, txn.GetPoll) ([]object.Poll, error) {
 
 	return func(model.Authorization, txn.GetPoll) ([]object.Poll, error) {
-		return nil, derp.NotImplemented("handler.mastodon.GetPoll")
+		return nil, errNoSuch("handler.mastodon.GetPoll", "Poll")
 	}
 }
 
@@ -20,6 +19,6 @@ func GetPoll(serverFactory *server.Factory) func(model.Authorization, txn.GetPol
 func PostPoll_Votes(serverFactory *server.Factory) func(model.Authorization, txn.PostPoll_Votes) ([]object.Poll, error) {
 
 	return func(model.Authorization, txn.PostPoll_Votes) ([]object.Poll, error) {
-		return nil, derp.NotImplemented("handler.mastodon.PostPoll_Votes")
+		return nil, errNoSuch("handler.mastodon.PostPoll_Votes", "Poll")
 	}
 }

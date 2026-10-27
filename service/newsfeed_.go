@@ -7,13 +7,18 @@ import (
 	"time"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/realtime"
 	"github.com/EmissarySocial/emissary/tools/id"
+	"github.com/EmissarySocial/emissary/tools/postcommit"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
 	"github.com/benpate/exp"
+	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
+	"github.com/benpate/turbine/queue"
+	"github.com/benpate/uri"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -22,6 +27,7 @@ type NewsFeed struct {
 	importItemService *ImportItem
 	folderService     *Folder
 	ruleService       *Rule
+	queue             *queue.Queue
 	host              string
 	counter           int
 	mutex             *sync.Mutex
@@ -43,6 +49,7 @@ func (service *NewsFeed) Refresh(factory *Factory) {
 	service.importItemService = factory.ImportItem()
 	service.folderService = factory.Folder()
 	service.ruleService = factory.Rule()
+	service.queue = factory.Queue()
 	service.host = factory.Host()
 }
 
@@ -120,6 +127,9 @@ func (service *NewsFeed) Save(session data.Session, message *model.NewsItem, not
 	// Calculate a (hopefully unique) rank for this message
 	service.CalculateRank(message)
 
+	// Saving sets the CreateDate, so check for a new item first
+	isNew := message.IsNew()
+
 	// Save the value to the database
 	if err := service.collection(session).Save(message, note); err != nil {
 		return derp.Wrap(err, location, "Saving NewsFeed", message, note)
@@ -130,10 +140,28 @@ func (service *NewsFeed) Save(session data.Session, message *model.NewsItem, not
 		return derp.Wrap(err, location, "Recalculating unread count", message)
 	}
 
+	// Publish a realtime nudge for new items only (best-effort, published post-commit)
+	if isNew {
+		service.publishRealtime(session, message)
+	}
+
 	// Wait 1 millisecond between each document to guarantee sorting by CreateDate
 	time.Sleep(1 * time.Millisecond)
 
 	return nil
+}
+
+// publishRealtime sends a realtime nudge for a new NewsItem, published post-commit and inline
+func (service *NewsFeed) publishRealtime(session data.Session, newsItem *model.NewsItem) {
+
+	// Post-commit, so the nudge cannot arrive before the NewsItem is visible; inline, because the
+	// broker holds live sockets in this process
+	postcommit.Publish(session, service.queue, "PublishRealtimeMessage", mapof.Any{
+		"hostname": uri.Hostname(service.host),
+		"objectId": newsItem.UserID.Hex(),
+		"recordId": newsItem.NewsItemID.Hex(),
+		"topic":    realtime.TopicNewsItem,
+	}, queue.WithInline())
 }
 
 // Delete removes an NewsFeed from the database (virtual delete)

@@ -40,6 +40,29 @@ func (service *Outbox) SendAccept(session data.Session, actorURL string, acceptI
 	postcommit.Publish(session, service.queue, sender.OutboxSendToAllRecipients, accept)
 }
 
+// SendRejectFollow queues a "Reject" of a follower's Follow, addressed to that follower, so their server
+// knows the follow has ended. actorURL is the local actor being followed.
+func (service *Outbox) SendRejectFollow(session data.Session, actorURL string, rejectID string, followerURL string) {
+
+	// The Follow is described by its actor and object, which is what Mastodon matches a Reject on,
+	// so the original Follow's id is not needed
+
+	reject := mapof.Any{
+		vocab.AtContext:     vocab.ContextTypeActivityStreams,
+		vocab.PropertyID:    rejectID,
+		vocab.PropertyType:  vocab.ActivityTypeReject,
+		vocab.PropertyActor: actorURL,
+		vocab.PropertyObject: mapof.Any{
+			vocab.PropertyType:   vocab.ActivityTypeFollow,
+			vocab.PropertyActor:  followerURL,
+			vocab.PropertyObject: actorURL,
+		},
+		vocab.PropertyTo: []string{followerURL},
+	}
+
+	postcommit.Publish(session, service.queue, sender.OutboxSendToAllRecipients, reject)
+}
+
 // SendFollow queues a "Follow" activity addressed to remoteActorID (the actor being followed).
 // actorURL is the following local actor's canonical URL (actor.ActorID()).
 func (service *Outbox) SendFollow(session data.Session, actorURL string, followID string, remoteActorID string) {

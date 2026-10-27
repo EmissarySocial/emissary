@@ -355,3 +355,47 @@ func moveListAccounts(serverFactory *server.Factory, auth model.Authorization, h
 
 	return struct{}{}, nil
 }
+
+// GetAccount_Lists answers the lists that contain an account: the Folder it is followed into, or none
+// https://docs.joinmastodon.org/methods/accounts/#lists
+func GetAccount_Lists(serverFactory *server.Factory) func(model.Authorization, txn.GetAccount_Lists) ([]object.List, error) {
+
+	// A followed account sits in exactly one Folder
+
+	const location = "handler.mastodon.GetAccount_Lists"
+
+	return func(auth model.Authorization, t txn.GetAccount_Lists) ([]object.List, error) {
+
+		factory, session, cancel, err := statusSession(serverFactory, t.Host, location)
+
+		if err != nil {
+			return []object.List{}, err
+		}
+
+		defer cancel()
+
+		accountURL, err := resolveAccountURL(factory, session, t.ID)
+
+		if err != nil {
+			return []object.List{}, nil
+		}
+
+		following := model.NewFollowing()
+
+		if err := factory.Following().LoadByURL(session, auth.UserID, accountURL, &following); err != nil {
+			return []object.List{}, nil
+		}
+
+		if following.FolderID.IsZero() {
+			return []object.List{}, nil
+		}
+
+		folder := model.NewFolder()
+
+		if err := factory.Folder().LoadByID(session, auth.UserID, following.FolderID.Value(), &folder); err != nil {
+			return []object.List{}, nil
+		}
+
+		return []object.List{folder.Toot()}, nil
+	}
+}

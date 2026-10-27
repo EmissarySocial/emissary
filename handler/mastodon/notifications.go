@@ -43,7 +43,7 @@ func GetNotifications(serverFactory *server.Factory) func(model.Authorization, t
 
 		// Query this user's notifications with Mastodon paging.  DISLIKE has no Mastodon equivalent,
 		// so it is excluded from this API.
-		criteria := queryExpression(t).AndNotEqual("type", model.NotificationTypeDislike)
+		criteria := queryExpressionWithCursors(t, "createDate", notificationCursor(factory, session, auth.UserID)).AndNotEqual("type", model.NotificationTypeDislike)
 		criteria = withNotificationTypeFilters(criteria, t.Types, t.ExcludeTypes)
 
 		notifications, err := factory.Notification().QueryByUserID(session, auth.UserID, criteria, option.MaxRows(pageLimit(t.Limit)))
@@ -275,6 +275,12 @@ func notificationToToot(factory *service.Factory, session data.Session, auth mod
 
 	result := notification.Toot(factory.Host())
 
+	// RULE: A follow names a person, not a post, so it never carries a status. Its ObjectURL is the
+	// followed account, which would otherwise be loaded as an empty post that clients fail to decode
+	if !notificationCarriesStatus(notification) {
+		return result
+	}
+
 	switch {
 
 	// REPLY/LIKE/DISLIKE/ANNOUNCE always carry a StreamID for one of the recipient's own Streams
@@ -296,6 +302,11 @@ func notificationToToot(factory *service.Factory, session data.Session, auth mod
 	}
 
 	return result
+}
+
+// notificationCarriesStatus reports whether a Notification's Mastodon form includes the status it is about.
+func notificationCarriesStatus(notification model.Notification) bool {
+	return notification.Type != model.NotificationTypeFollow
 }
 
 // mastodonNotificationTypesToInternal maps Mastodon type names from types[]/exclude_types[]
@@ -371,4 +382,18 @@ func unreadCountTypes(types []string, excludeTypes []string) []string {
 	}
 
 	return result
+}
+
+// notificationCursor resolves a notification ID used as a paging cursor into its createDate
+func notificationCursor(factory *service.Factory, session data.Session, userID primitive.ObjectID) cursorResolver {
+	return func(id primitive.ObjectID) (int64, bool) {
+
+		notification := model.NewNotification()
+
+		if err := factory.Notification().LoadByID(session, userID, id, &notification); err != nil {
+			return 0, false
+		}
+
+		return notification.CreateDate, true
+	}
 }
