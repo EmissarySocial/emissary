@@ -42,6 +42,37 @@ func TestCursorValue(t *testing.T) {
 	require.False(t, ok)
 }
 
+// TestHasPageCursor confirms any of max_id, min_id or since_id marks a request for another page
+func TestHasPageCursor(t *testing.T) {
+
+	require.False(t, hasPageCursor(txn.GetAccount_Statuses{ID: "123"}), "a first page has no cursor")
+
+	for _, request := range []txn.GetAccount_Statuses{
+		{MaxID: primitive.NewObjectID().Hex()},
+		{MinID: "1792993144292"},
+		{SinceID: "https%3A%2F%2Fexample.com%2Fposts%2F1"},
+	} {
+		require.True(t, hasPageCursor(request), "%+v", request)
+	}
+}
+
+// TestQueryExpressionWithCursors_CreateDate confirms a status ID cursor pages a createDate list, as
+// the public timeline and account posts do
+func TestQueryExpressionWithCursors_CreateDate(t *testing.T) {
+
+	oldest := primitive.NewObjectID()
+
+	resolve := func(id primitive.ObjectID) (int64, bool) {
+		return 1792993144292, id == oldest
+	}
+
+	result := queryExpressionWithCursors(txn.GetTimeline_Public{MaxID: oldest.Hex()}, "createDate", resolve)
+	require.Equal(t, exp.All().AndLessThan("createDate", int64(1792993144292)), result)
+
+	// The old helper drops the same cursor, which returned the newest page again
+	require.Equal(t, exp.All(), queryExpression(txn.GetTimeline_Public{MaxID: oldest.Hex()}))
+}
+
 // TestQueryExpressionWithCursors confirms an ObjectID cursor pages on the record's own field
 func TestQueryExpressionWithCursors(t *testing.T) {
 

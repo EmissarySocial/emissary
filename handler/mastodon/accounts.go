@@ -534,7 +534,7 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 		}
 
 		// Query all posts by this user that are visible to the caller (only the pinned ones, if asked)
-		criteria := queryExpression(t)
+		criteria := queryExpressionWithCursors(t, "createDate", streamCursor(factory, session))
 
 		if t.Pinned {
 			criteria = criteria.AndEqual("isFeatured", true)
@@ -576,17 +576,14 @@ func GetAccount_Statuses(serverFactory *server.Factory) func(model.Authorization
 	}
 }
 
-// remoteAccountStatuses returns a remote account's recent public posts, read live
-// from its ActivityPub outbox. It falls back to whatever the News Feed holds when
-// the outbox can't be read (a server that hides it, a network failure) or is empty.
-//
-// Posts already in the News Feed keep their NewsItem ID, so favourite/boost keep
-// working on them. Any other post is identified by its encoded URL, which those
-// endpoints can't resolve to a NewsItem yet.
-//
-// The outbox has no stable cursor to map onto max_id/min_id, so this returns one
-// page, newest first, with no paging info.
+// remoteAccountStatuses returns one page of a remote account's recent public posts from its ActivityPub
+// outbox, or from the News Feed when the outbox cannot be read or is empty
 func remoteAccountStatuses(factory *service.Factory, session data.Session, auth model.Authorization, t txn.GetAccount_Statuses, accountURL string) ([]object.Status, toot.PageInfo, error) {
+
+	// RULE: this one page is all there is, so asking for older or newer posts must not repeat it
+	if hasPageCursor(t) {
+		return []object.Status{}, toot.PageInfo{}, nil
+	}
 
 	client := factory.ActivityStream().UserClient(auth.UserID)
 	limit := int(pageLimit(t.Limit))
@@ -623,6 +620,8 @@ func remoteAccountStatuses(factory *service.Factory, session data.Session, auth 
 			continue
 		}
 
+		// A post already in the News Feed keeps its NewsItem ID, so favourite and boost work on it. Any
+		// other post is identified by its encoded URL, which those endpoints cannot resolve yet.
 		status := remotePostStatus(client, factory, session, auth, accounts, post, account)
 
 		if t.OnlyMedia && len(status.MediaAttachments) == 0 {

@@ -142,6 +142,12 @@ func queryExpressionWithCursors(queryPager txn.QueryPager, fieldName string, res
 	return result
 }
 
+// hasPageCursor reports whether a request asks for a page relative to one it already has
+func hasPageCursor(queryPager txn.QueryPager) bool {
+	params := queryPager.QueryPage()
+	return params.MaxID != "" || params.MinID != "" || params.SinceID != ""
+}
+
 // cursorValue converts one paging cursor into the paging field's value. A number is used as-is; an
 // ObjectID is resolved when a resolver is given. An empty or unusable cursor reports false.
 func cursorValue(cursor string, resolve cursorResolver) (int64, bool) {

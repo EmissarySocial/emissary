@@ -17,7 +17,7 @@ func labelFilterResults(labels metadata.LabelSet) []object.FilterResult {
 	annotations := labels.Annotations()
 
 	if len(annotations) == 0 {
-		return nil
+		return []object.FilterResult{}
 	}
 
 	result := make([]object.FilterResult, 0, len(annotations))

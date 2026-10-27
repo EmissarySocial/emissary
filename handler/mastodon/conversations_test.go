@@ -133,7 +133,7 @@ func TestAddSentMessages_NewerSentMessageLeads(t *testing.T) {
 // within the page limit
 func TestAddSentMessages_OnlySent(t *testing.T) {
 
-	groups := addSentMessages(nil, []sentMessage{
+	groups := addSentMessages([]conversationGroup{}, []sentMessage{
 		sent("https://c.example.com/@cy", "to-cy-2", 200),
 		sent("https://c.example.com/@cy", "to-cy-1", 100),
 		sent("https://d.example.com/@di", "to-di-1", 150),
@@ -145,7 +145,7 @@ func TestAddSentMessages_OnlySent(t *testing.T) {
 	require.False(t, groups[0].Unread, "a sent message is never unread")
 	require.Equal(t, "https://d.example.com/@di", groups[1].ActorURL)
 
-	limited := addSentMessages(nil, []sentMessage{sent("https://c.example.com/@cy", "x", 2), sent("https://d.example.com/@di", "y", 1)}, 1)
+	limited := addSentMessages([]conversationGroup{}, []sentMessage{sent("https://c.example.com/@cy", "x", 2), sent("https://d.example.com/@di", "y", 1)}, 1)
 	require.Len(t, limited, 1)
 }
 
