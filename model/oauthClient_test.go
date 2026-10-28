@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/benpate/rosetta/schema"
@@ -87,4 +88,18 @@ func TestOAuthClient_Toot(t *testing.T) {
 	require.Equal(t, []string{"icecubesapp://", "https://example.com/callback"}, application.RedirectURIs)
 	require.Equal(t, "icecubesapp://\nhttps://example.com/callback", application.RedirectURI)
 	require.Equal(t, []string{"read", "write"}, application.Scopes)
+}
+
+// TestOAuthClient_MastodonAppJSON confirms the flag is stored under "mastodonApp" and kept off the schema
+func TestOAuthClient_MastodonAppJSON(t *testing.T) {
+
+	client := NewOAuthClient()
+	client.MastodonApp = true
+
+	encoded, err := json.Marshal(client)
+	require.Nil(t, err)
+	require.Contains(t, string(encoded), `"mastodonApp":true`)
+
+	_, onSchema := client.GetPointer("mastodonApp")
+	require.False(t, onSchema)
 }

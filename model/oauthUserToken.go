@@ -24,6 +24,7 @@ type OAuthUserToken struct {
 	Generation       int                `json:"-" bson:"generation"`      // Monotonic refresh-token generation counter (1 on first issuance)
 	RotatedAt        int64              `json:"-" bson:"rotatedAt"`       // Unix seconds of the last refresh rotation, for the grace window
 	CodeRedeemed     bool               `json:"-" bson:"codeRedeemed"`    // TRUE once the authorization code has been exchanged (single-use)
+	MastodonApp      bool               `json:"-" bson:"mastodonApp"`     // TRUE if this grant was issued to a Mastodon app's Client (copied from OAuthClient.MastodonApp)
 	Data             mapof.Any          `json:"D" bson:"data"`            // Additional data associated with this token
 
 	// Token (the access-token JWT) and RefreshToken (the "grantID.gen.secret"

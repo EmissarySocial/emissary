@@ -311,6 +311,7 @@ func (service *OAuthUserToken) Create(session data.Session, client model.OAuthCl
 	result.UserID = authorization.UserID
 	result.Scopes = transaction.Scopes()
 	result.APIUser = true
+	result.MastodonApp = client.MastodonApp
 
 	// Bind the PKCE challenge (if any) so the code can only be redeemed with the
 	// matching verifier. No-op when the client did not use PKCE.

@@ -8,6 +8,7 @@ import (
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/benpate/data"
 	mockdb "github.com/benpate/data-mock"
+	"github.com/benpate/exp"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -175,4 +176,32 @@ func TestRefreshGrant_ScopeNarrowing(t *testing.T) {
 
 		require.NotNil(t, service.RefreshGrant(session, &grant, 1, secret, "read write"))
 	})
+}
+
+// TestCreate_CopiesMastodonApp confirms a grant records whether its Client is a Mastodon app
+func TestCreate_CopiesMastodonApp(t *testing.T) {
+
+	for _, mastodonApp := range []bool{true, false} {
+
+		service, session := newTestOAuthUserTokenService(t)
+
+		client := model.NewOAuthClient()
+		client.ClientSecret = "secret"
+		client.RedirectURIs = append(client.RedirectURIs, "icecubesapp://oauth")
+		client.Scopes = append(client.Scopes, "read", "write")
+		client.MastodonApp = mastodonApp
+
+		authorization := model.Authorization{UserID: primitive.NewObjectID()}
+		request := model.OAuthAuthorizationRequest{ResponseType: "code", ClientID: client.ClientID.Hex()}
+
+		grant, err := service.Create(session, client, authorization, request)
+		require.Nil(t, err)
+		require.Equal(t, mastodonApp, grant.MastodonApp)
+
+		// The flag is saved with the grant, so token minting can read it later. The mock database
+		// cannot match the inlined deleteDate, so this reads the record by _id directly.
+		saved := model.NewOAuthUserToken()
+		require.Nil(t, service.collection(session).Load(exp.Equal("_id", grant.OAuthUserTokenID), &saved))
+		require.Equal(t, mastodonApp, saved.MastodonApp)
+	}
 }
