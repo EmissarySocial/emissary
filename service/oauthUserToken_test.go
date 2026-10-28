@@ -205,3 +205,33 @@ func TestCreate_CopiesMastodonApp(t *testing.T) {
 		require.Equal(t, mastodonApp, saved.MastodonApp)
 	}
 }
+
+// TestExchangeCode_MastodonAppTokenHasNoExpiry confirms a Mastodon app's access token carries no
+// "exp" claim and still parses as valid, while other grants keep theirs
+func TestExchangeCode_MastodonAppTokenHasNoExpiry(t *testing.T) {
+
+	service, session := newTestOAuthUserTokenService(t)
+
+	for _, mastodonApp := range []bool{true, false} {
+
+		grant := newTestGrant()
+		grant.MastodonApp = mastodonApp
+		require.Nil(t, service.Save(session, &grant, "create"))
+		require.Nil(t, service.ExchangeCode(session, &grant))
+
+		parsed, err := service.jwtService.ParseString(grant.Token)
+		require.Nil(t, err)
+		require.True(t, parsed.Valid)
+
+		expiry, err := parsed.Claims.GetExpirationTime()
+		require.Nil(t, err)
+
+		if mastodonApp {
+			require.Nil(t, expiry, "a Mastodon app's token does not expire")
+			continue
+		}
+
+		require.NotNil(t, expiry)
+		require.WithinDuration(t, time.Now().Add(model.OAuthAccessTokenLifetime), expiry.Time, time.Minute)
+	}
+}

@@ -321,7 +321,7 @@ func (service *OAuthUserToken) Create(session data.Session, client model.OAuthCl
 	// authorization endpoint, so it is minted now. The code grant defers minting to
 	// ExchangeCode.
 	if transaction.ResponseType == "token" {
-		token, err := service.JWT(result.OAuthUserTokenID, result.UserID, strings.Join(result.Scopes, " "))
+		token, err := service.JWT(result.OAuthUserTokenID, result.UserID, strings.Join(result.Scopes, " "), result.AccessTokenLifetime())
 
 		if err != nil {
 			return model.OAuthUserToken{}, derp.Wrap(err, location, "Generating access token")
@@ -382,7 +382,7 @@ func (service *OAuthUserToken) mintInitialTokens(grant *model.OAuthUserToken, no
 
 	const location = "service.OAuthUserToken.mintInitialTokens"
 
-	token, err := service.JWT(grant.OAuthUserTokenID, grant.UserID, strings.Join(grant.Scopes, " "))
+	token, err := service.JWT(grant.OAuthUserTokenID, grant.UserID, strings.Join(grant.Scopes, " "), grant.AccessTokenLifetime())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Generating access token")
@@ -452,7 +452,7 @@ func (service *OAuthUserToken) RefreshGrant(session data.Session, grant *model.O
 	// Mint the response pair. issuedScopes applies to THIS access token only; the
 	// grant.Scopes assignment below is an in-memory-only mutation to drive the
 	// response (the record was already saved with the full granted scopes).
-	token, err := service.JWT(grant.OAuthUserTokenID, grant.UserID, strings.Join(issuedScopes, " "))
+	token, err := service.JWT(grant.OAuthUserTokenID, grant.UserID, strings.Join(issuedScopes, " "), grant.AccessTokenLifetime())
 
 	if err != nil {
 		return derp.Wrap(err, location, "Generating access token")
@@ -494,22 +494,26 @@ func (service *OAuthUserToken) DeleteByClient(session data.Session, clientID pri
 	return service.DeleteMany(session, criteria, note)
 }
 
-// JWT encodes an access token for the provided grant as a new, short-lived JWT.
-// The token carries a 1-hour expiry (RFC 6749) and the grant ID, so OAuth API
-// routes can load the grant record and revocation is effective.
-func (service *OAuthUserToken) JWT(grantID primitive.ObjectID, userID primitive.ObjectID, scopes string) (string, error) {
+// JWT encodes an access token that carries the provided grant's ID, valid for lifetime (no expiry
+// when zero)
+func (service *OAuthUserToken) JWT(grantID primitive.ObjectID, userID primitive.ObjectID, scopes string, lifetime time.Duration) (string, error) {
 
 	now := time.Now()
 
 	// Collect claims
 	claims := jwt.MapClaims{
-		"A":   true,                                                        // apiUser
-		"U":   userID,                                                      // UserID
-		"S":   scopes,                                                      // Scopes
-		"K":   grantID,                                                     // OAuthUserTokenID (the grant this token was issued from)
-		"sub": userID.Hex(),                                                // Standard subject (the user), for revalidation
-		"iat": jwt.NewNumericDate(now),                                     // Issued-at
-		"exp": jwt.NewNumericDate(now.Add(model.OAuthAccessTokenLifetime)), // Expiry (RFC 6749 — access tokens age out)
+		"A":   true,                    // apiUser
+		"U":   userID,                  // UserID
+		"S":   scopes,                  // Scopes
+		"K":   grantID,                 // OAuthUserTokenID (the grant this token was issued from)
+		"sub": userID.Hex(),            // Standard subject (the user), for revalidation
+		"iat": jwt.NewNumericDate(now), // Issued-at
+	}
+
+	// Most access tokens age out (RFC 6749). A Mastodon app's has no expiry, because those apps
+	// never refresh and revocation works through the per-request grant check instead.
+	if lifetime > 0 {
+		claims["exp"] = jwt.NewNumericDate(now.Add(lifetime))
 	}
 
 	// Create the token
