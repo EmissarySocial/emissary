@@ -13,6 +13,10 @@ const (
 	// The client refreshes before this elapses. Not configurable by design.
 	OAuthAccessTokenLifetime = 1 * time.Hour
 
+	// OAuthMastodonAppTokenLifetime is how long an access token issued to a Mastodon app is valid,
+	// where zero means it never expires
+	OAuthMastodonAppTokenLifetime time.Duration = 0
+
 	// OAuthRefreshGracePeriod is the window after a rotation during which the
 	// immediately-prior refresh secret is still tolerated (absorbs a client that
 	// lost the token-endpoint response and retried). It is also the theft-tolerance

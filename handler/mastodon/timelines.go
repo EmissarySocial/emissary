@@ -25,6 +25,7 @@ import (
 
 // https://docs.joinmastodon.org/methods/timelines/
 
+// GetTimeline_Public returns the local or federated timeline of public posts
 // https://docs.joinmastodon.org/methods/timelines/#public
 func GetTimeline_Public(serverFactory *server.Factory) func(model.Authorization, txn.GetTimeline_Public) ([]object.Status, toot.PageInfo, error) {
 
@@ -37,6 +38,7 @@ func GetTimeline_Public(serverFactory *server.Factory) func(model.Authorization,
 			return []object.Status{}, toot.PageInfo{}, nil
 		}
 
+		// Get the factory and a database session for this Domain
 		factory, session, cancel, err := statusSession(serverFactory, t.Host, location)
 
 		if err != nil {
@@ -45,9 +47,11 @@ func GetTimeline_Public(serverFactory *server.Factory) func(model.Authorization,
 
 		defer cancel()
 
+		// Page on createDate, resolving a post ID cursor to that post's own createDate
 		limit := pageLimit(t.Limit)
-		criteria := queryExpression(t)
+		criteria := queryExpressionWithCursors(t, "createDate", streamCursor(factory, session))
 
+		// Collect public posts, newest first, until the page is full
 		streams, statuses, err := collectFiltered(int(limit),
 			func(before int64) ([]model.Stream, error) {
 
@@ -217,6 +221,20 @@ func newsItemCursor(factory *service.Factory, session data.Session, userID primi
 		}
 
 		return newsItem.Rank, true
+	}
+}
+
+// streamCursor resolves a status ID used as a paging cursor into its Stream's createDate
+func streamCursor(factory *service.Factory, session data.Session) cursorResolver {
+	return func(id primitive.ObjectID) (int64, bool) {
+
+		stream := model.NewStream()
+
+		if err := factory.Stream().LoadByID(session, id, &stream); err != nil {
+			return 0, false
+		}
+
+		return stream.CreateDate, true
 	}
 }
 
