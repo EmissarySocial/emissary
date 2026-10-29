@@ -434,24 +434,34 @@ func TestStream_RefusesReplies(t *testing.T) {
 
 // TestStream_InteractionPolicyJSONLD pins the published policy: Public when open, and only the author when
 // closed or private, never an empty list (which JSON-LD reads as Public).  Mentions are not approved.
+// canQuote always publishes the same list as canReply, and no other sub-policy or key is published.
 func TestStream_InteractionPolicyJSONLD(t *testing.T) {
 
-	automaticApproval := func(stream Stream) any {
-		return stream.InteractionPolicyJSONLD().GetMap(vocab.PropertyCanReply)[vocab.PropertyAutomaticApproval]
+	// requirePolicy asserts that canReply and canQuote each approve exactly the expected actors
+	requirePolicy := func(stream Stream, expected []string, message string) {
+		t.Helper()
+
+		policy := stream.InteractionPolicyJSONLD()
+		require.ElementsMatch(t, []string{vocab.PropertyCanReply, vocab.PropertyCanQuote}, policy.Keys(), message)
+
+		for _, permission := range []string{vocab.PropertyCanReply, vocab.PropertyCanQuote} {
+			subPolicy := policy.GetMap(permission)
+			require.Equal(t, mapof.Any{vocab.PropertyAutomaticApproval: expected}, subPolicy, "%s: %s", message, permission)
+		}
 	}
 
 	stream := NewStream()
 	stream.DefaultAllow = Permissions{MagicGroupIDAnonymous}
 	stream.AttributedTo = PersonLink{ProfileURL: "https://local.example/@author"}
 	stream.Tags = TagList{{Type: vocab.LinkTypeMention, Name: "a@remote.example", Href: "https://remote.example/users/a"}}
-	require.Equal(t, []string{vocab.NamespaceActivityStreamsPublic}, automaticApproval(stream))
+	requirePolicy(stream, []string{vocab.NamespaceActivityStreamsPublic}, "an open Stream")
 
 	stream.ReplyPolicy = ReplyPolicyNobody
-	require.Equal(t, []string{"https://local.example/@author"}, automaticApproval(stream))
+	requirePolicy(stream, []string{"https://local.example/@author"}, "a closed Stream")
 
 	stream.ReplyPolicy = ""
 	stream.DefaultAllow = Permissions{MagicGroupIDAuthenticated}
-	require.Equal(t, []string{"https://local.example/@author"}, automaticApproval(stream), "a private Stream accepts no replies")
+	requirePolicy(stream, []string{"https://local.example/@author"}, "a private Stream accepts no replies")
 }
 
 // TestStream_AllowReplies pins the virtual "allowReplies" toggle: it reads TRUE unless replies are closed,

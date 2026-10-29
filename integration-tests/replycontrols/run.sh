@@ -264,8 +264,8 @@ log "S1 = $S1_URL (author $ALICE_ID)"
 echo
 echo "== 1. Publish the policy"
 
-if out=$("$HELPER" check-policy "$S1_URL" public 2>&1); then pass "1a open: canReply is Public" "$out"
-else fail "1a open: canReply is Public" "$out"; fi
+if out=$("$HELPER" check-policy "$S1_URL" public 2>&1); then pass "1a open: canReply and canQuote are Public" "$out"
+else fail "1a open: canReply and canQuote are Public" "$out"; fi
 
 #############################################
 # 3 and 4 while OPEN
@@ -302,8 +302,8 @@ echo "== Replies CLOSED on S1 (replyPolicy=nobody in the DB, then republished th
 
 set_policy "$S1" nobody "<p>$NOTE_TEXT</p>"
 
-if out=$("$HELPER" check-policy "$S1_URL" "$ALICE_ID" 2>&1); then pass "1b closed: canReply is the author" "$out"
-else fail "1b closed: canReply is the author" "$out"; fi
+if out=$("$HELPER" check-policy "$S1_URL" "$ALICE_ID" 2>&1); then pass "1b closed: canReply and canQuote are the author" "$out"
+else fail "1b closed: canReply and canQuote are the author" "$out"; fi
 
 got=$(wait_replies "$S1_URL/pub/replies" "0")
 check "3d closed: replies hidden" "/replies = [$got]" test "$got" == "0"
@@ -354,8 +354,8 @@ echo "== Replies REOPENED on S1"
 
 set_policy "$S1" everyone "<p>$NOTE_TEXT</p>"
 
-if out=$("$HELPER" check-policy "$S1_URL" public 2>&1); then pass "1c reopened: canReply is Public" "$out"
-else fail "1c reopened: canReply is Public" "$out"; fi
+if out=$("$HELPER" check-policy "$S1_URL" public 2>&1); then pass "1c reopened: canReply and canQuote are Public" "$out"
+else fail "1c reopened: canReply and canQuote are Public" "$out"; fi
 
 got=$(wait_replies "$S1_URL/pub/replies" "1 $R1")
 check "3g reopened: reply listed again" "/replies = [$got]" test "$got" == "1 $R1"

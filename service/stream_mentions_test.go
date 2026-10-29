@@ -312,8 +312,8 @@ func TestStream_JSONLD_CCIsPlainStringSlice(t *testing.T) {
 	require.Equal(t, []string{"https://mastodon.social/users/sarah", "https://example.com/@author"}, cc)
 }
 
-// TestStream_JSONLD_ReplyControls pins that every published Stream states who may reply as GoToSocial's
-// interactionPolicy, and declares its terms in its @context (REPLY-CONTROLS §1.3)
+// TestStream_JSONLD_ReplyControls pins that every published Stream states who may reply and quote as
+// GoToSocial's interactionPolicy, and declares its terms in its @context (REPLY-CONTROLS §1.3)
 func TestStream_JSONLD_ReplyControls(t *testing.T) {
 	streamService := newMentionStreamService()
 	stream := newTagStream("Replies are closed, @sarah@mastodon.social")
@@ -327,4 +327,9 @@ func TestStream_JSONLD_ReplyControls(t *testing.T) {
 	require.Equal(t, stream.InteractionPolicyJSONLD(), document[vocab.PropertyInteractionPolicy])
 	require.Contains(t, document[vocab.AtContext], vocab.ContextTypeGoToSocial)
 	require.NotContains(t, document, "commentsEnabled", "only GoToSocial's vocabulary is published")
+
+	// Every sub-policy published must be declared, or a JSON-LD reader drops it as an undefined term
+	for _, term := range []string{vocab.PropertyCanReply, vocab.PropertyCanQuote, vocab.PropertyAutomaticApproval} {
+		require.Contains(t, vocab.ContextTypeGoToSocial, term, "the gts: context declares %s", term)
+	}
 }

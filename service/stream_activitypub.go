@@ -131,7 +131,7 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 		result[vocab.PropertyLocation] = stream.Location.JSONLD()
 	}
 
-	// Who may reply, as GoToSocial's interactionPolicy (REPLY-CONTROLS §1.3)
+	// Who may reply and quote, as GoToSocial's interactionPolicy (REPLY-CONTROLS §1.3)
 	result[vocab.PropertyInteractionPolicy] = stream.InteractionPolicyJSONLD()
 
 	// NOTE: According to Mastodon ActivityPub guide (https://docs.joinmastodon.org/spec/activitypub/)

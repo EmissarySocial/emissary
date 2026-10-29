@@ -321,8 +321,8 @@ func getJSON(url string) mapof.Any {
 	return result
 }
 
-// checkPolicy verifies the published JSON-LD: automaticApproval is exactly the expected IRI, the
-// gts: terms are declared, and commentsEnabled is absent.  It prints the evidence either way.
+// checkPolicy verifies the published JSON-LD: canReply and canQuote each approve exactly the expected
+// IRI, the gts: terms are declared, and commentsEnabled is absent.  It prints the evidence either way.
 func checkPolicy(url string, expected string) {
 
 	if expected == "public" {
@@ -331,24 +331,29 @@ func checkPolicy(url string, expected string) {
 
 	document := getJSON(url)
 	problems := make([]string, 0)
+	evidence := make([]string, 0, 2)
 
-	// automaticApproval must be exactly [expected]
+	// Each automaticApproval must be exactly [expected], because anyone who may reply may also quote
 	policy, _ := document["interactionPolicy"].(map[string]any)
-	canReply, _ := policy["canReply"].(map[string]any)
-	approval, _ := canReply["automaticApproval"].([]any)
-	approvalJSON, _ := json.Marshal(canReply["automaticApproval"])
 
-	if (len(approval) != 1) || (approval[0] != expected) {
-		problems = append(problems, "automaticApproval is "+string(approvalJSON)+", want [\""+expected+"\"]")
-	}
+	for _, permission := range []string{"canReply", "canQuote"} {
+		subPolicy, _ := policy[permission].(map[string]any)
+		approval, _ := subPolicy["automaticApproval"].([]any)
+		approvalJSON, _ := json.Marshal(subPolicy["automaticApproval"])
+		evidence = append(evidence, permission+"="+string(approvalJSON))
 
-	if _, exists := canReply["manualApproval"]; exists {
-		problems = append(problems, "manualApproval is published")
+		if (len(approval) != 1) || (approval[0] != expected) {
+			problems = append(problems, permission+".automaticApproval is "+string(approvalJSON)+", want [\""+expected+"\"]")
+		}
+
+		if _, exists := subPolicy["manualApproval"]; exists {
+			problems = append(problems, permission+".manualApproval is published")
+		}
 	}
 
 	// The @context must declare gts: and the terms it uses
 	contextJSON, _ := json.Marshal(document["@context"])
-	for _, term := range []string{`"gts":"https://gotosocial.org/ns#"`, `"interactionPolicy":{"@id":"gts:interactionPolicy"`, `"canReply":{"@id":"gts:canReply"`, `"automaticApproval":{"@id":"gts:automaticApproval"`} {
+	for _, term := range []string{`"gts":"https://gotosocial.org/ns#"`, `"interactionPolicy":{"@id":"gts:interactionPolicy"`, `"canReply":{"@id":"gts:canReply"`, `"canQuote":{"@id":"gts:canQuote"`, `"automaticApproval":{"@id":"gts:automaticApproval"`} {
 		if !strings.Contains(string(contextJSON), term) {
 			problems = append(problems, "@context lacks "+term)
 		}
@@ -367,7 +372,7 @@ func checkPolicy(url string, expected string) {
 		fail(strings.Join(problems, "; "))
 	}
 
-	fmt.Println("automaticApproval=" + string(approvalJSON) + ", gts terms declared, no commentsEnabled")
+	fmt.Println(strings.Join(evidence, ", ") + ", gts terms declared, no commentsEnabled")
 }
 
 // replies prints a Replies collection as "<totalItems> <item> <item>..."

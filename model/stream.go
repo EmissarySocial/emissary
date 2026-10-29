@@ -285,7 +285,7 @@ func (stream Stream) RefusesReplies() bool {
 	return stream.ReplyPolicy == ReplyPolicyNobody
 }
 
-// InteractionPolicyJSONLD returns this Stream's reply policy as GoToSocial's "interactionPolicy":
+// InteractionPolicyJSONLD returns this Stream's reply and quote policy as GoToSocial's "interactionPolicy":
 // Public when anyone may reply, and otherwise only its author.  Closed is never an empty list, which
 // JSON-LD canonicalization would read as a missing policy, meaning Public.
 // RULE: Public is the full IRI, because GoToSocial matches no compact form (REPLY-CONTROLS §1.3)
@@ -297,8 +297,12 @@ func (stream Stream) InteractionPolicyJSONLD() mapof.Any {
 		automaticApproval = []string{stream.AttributedTo.ProfileURL}
 	}
 
+	// RULE: Anyone who may reply may also quote (FEP-044f's canQuote)
 	return mapof.Any{
 		vocab.PropertyCanReply: mapof.Any{
+			vocab.PropertyAutomaticApproval: automaticApproval,
+		},
+		vocab.PropertyCanQuote: mapof.Any{
 			vocab.PropertyAutomaticApproval: automaticApproval,
 		},
 	}
