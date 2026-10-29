@@ -85,6 +85,10 @@ Content negotiation (HTML page vs. ActivityStreams document from one URL) and th
 - `PostOAuthRevoke` deliberately lets a public client revoke with no secret: possessing the token string is itself the proof, and RFC 7009 treats an unknown token as a successful revocation.
 - `model.OAuthUserTokenRequest.Validate` is never called from these handlers; don't assume it gates anything.
 
+## An intent's confirmation form posts every value its POST reads
+
+Each `/@me/intent/*` GET draws a page whose form posts to a fixed path with no query string, so the POST sees only what the form carries in its own inputs. `GetIntent_Announce` ([intent_announce.go](intent_announce.go)) posts `object` as a hidden input, and `TestGetIntent_Announce_FormPostsTheObject` fails without it. The Like and Dislike pages post only `on-success` and `on-cancel`, so their POST hands `SetResponse` an empty target, which it refuses: as of 2026-10-29 neither intent can succeed, and the fix waits for Ben's approval (CAMPERJS-MIGRATION §3.5). The page is built by `getIntent_Announce` apart from its handler, so a test can draw it without a Factory or the network.
+
 ## Assorted facts that look wrong but aren't
 
 - The Mastodon API routes are registered by `tootecho.Register` in [../server.go](../server.go), inside `registerWithHEAD`, because toot-echo adds GET routes without a HEAD. [mastodon.go](mastodon.go) is the glue that builds the `toot.API` it registers.
