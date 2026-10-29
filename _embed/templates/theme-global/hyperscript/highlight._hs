@@ -1,0 +1,15 @@
+-- flash_highlight briefly flashes an element's background, to point the reader at it.  Calling it
+-- again while a flash is running restarts the flash.  Styled by .flash-highlight in 02-animations.css
+def flash_highlight(node)
+
+	if no node then
+		exit
+	end
+
+	-- The animation runs once and ends on the normal background, so the class can stay afterwards.
+	-- RULE: never wait for animationend here; a waiting `on click` queues every later click behind it.
+	-- Removing the class and reading a layout property restarts the animation on a second call
+	remove .flash-highlight from node
+	get node.offsetWidth
+	add .flash-highlight to node
+end

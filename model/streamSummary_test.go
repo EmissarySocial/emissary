@@ -15,6 +15,7 @@ func TestStreamSummaryFields(t *testing.T) {
 
 	require.Contains(t, fields, "tags", "Tags would silently load as empty without this")
 	require.Contains(t, fields, "hashtags", "still dual-written; see projects/TAGS-UNIFICATION.md")
+	require.Contains(t, fields, "endDate", "an event's end would silently load as zero in collection lists without this")
 }
 
 // TestStreamSummary_TagsRoundTrip confirms the Tags field carries mixed tag types intact, and that

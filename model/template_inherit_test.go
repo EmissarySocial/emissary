@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/benpate/rosetta/mapof"
 	"github.com/hjson/hjson-go/v4"
 	"github.com/stretchr/testify/require"
 )
@@ -52,6 +53,48 @@ func TestTemplate_Inherit_TagPathsNotInherited(t *testing.T) {
 	child.Inherit(&parent)
 
 	require.Empty(t, child.TagPaths)
+}
+
+// TestTemplate_ParseDefaultChildren confirms that each entry's quoted, dotted keys and values reach DefaultChildren unchanged.
+func TestTemplate_ParseDefaultChildren(t *testing.T) {
+	template := NewTemplate("test", nil)
+
+	err := hjson.Unmarshal([]byte(`{defaultChildren:[
+		{templateId:"qwerty-collection", label:"Articles", "data.layout":"column-3"}
+		{templateId:"qwerty-collection", label:"Notes", "data.zoom":"11", "groups.viewer.0":"000000000000000000000000"}
+	]}`), &template)
+
+	require.Nil(t, err)
+	require.Len(t, template.DefaultChildren, 2)
+	require.Equal(t, "Articles", template.DefaultChildren[0]["label"])
+	require.Equal(t, "column-3", template.DefaultChildren[0]["data.layout"])
+	require.Equal(t, "Notes", template.DefaultChildren[1]["label"])
+	require.Equal(t, "11", template.DefaultChildren[1]["data.zoom"])
+	require.Equal(t, "000000000000000000000000", template.DefaultChildren[1]["groups.viewer.0"])
+}
+
+// TestTemplate_Inherit_DefaultChildren confirms that an empty child inherits the parent's DefaultChildren.
+func TestTemplate_Inherit_DefaultChildren(t *testing.T) {
+	parent := NewTemplate("parent", nil)
+	parent.DefaultChildren = []mapof.Any{{"templateId": "from-parent"}}
+
+	child := NewTemplate("child", nil)
+	child.Inherit(&parent)
+
+	require.Equal(t, []mapof.Any{{"templateId": "from-parent"}}, child.DefaultChildren)
+}
+
+// TestTemplate_Inherit_DefaultChildren_ChildOverride confirms that a child's own DefaultChildren replace the
+// parent's whole list, rather than adding to it.
+func TestTemplate_Inherit_DefaultChildren_ChildOverride(t *testing.T) {
+	parent := NewTemplate("parent", nil)
+	parent.DefaultChildren = []mapof.Any{{"templateId": "from-parent"}, {"templateId": "also-from-parent"}}
+
+	child := NewTemplate("child", nil)
+	child.DefaultChildren = []mapof.Any{{"templateId": "from-child"}}
+	child.Inherit(&parent)
+
+	require.Equal(t, []mapof.Any{{"templateId": "from-child"}}, child.DefaultChildren)
 }
 
 // TestTemplate_Inherit_HTMLTemplate confirms a child receives the parent's named templates.

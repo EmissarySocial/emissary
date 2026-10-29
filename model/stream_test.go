@@ -8,6 +8,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/tools/datetime"
 	"github.com/EmissarySocial/emissary/tools/id"
+	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/rosetta/mapof"
 	"github.com/benpate/rosetta/schema"
 	"github.com/benpate/rosetta/sliceof"
@@ -67,10 +68,16 @@ func TestStreamSchema(t *testing.T) {
 		{"tags.1.type", "Mention", nil},
 		{"tags.1.name", "bob@server.social", nil},
 		{"tags.1.href", "https://server.social/@bob", nil},
+
+		// widgets is an array of StreamWidgets, addressed by index just like tags
+		{"widgets.0.streamWidgetId", "00000000000000000000000b", nil},
+		{"widgets.0.type", "markdown", nil},
+		{"widgets.0.location", "TOP", nil},
+		{"widgets.0.label", "Markdown", nil},
+
 		// note: "isPublished" is a read-only virtual field (computed from publishDate/unpublishDate),
-		// "syndication" is a delta.Slice written as a WHOLE array rather than by element path
-		// (see TestStreamSchema_Syndication), and "widgets" is a nested object — none round-trip
-		// through this table helper, so they are intentionally omitted.
+		// and "syndication" is a delta.Slice written as a WHOLE array rather than by element path
+		// (see TestStreamSchema_Syndication).  Neither round-trips through this table helper.
 		{"attributedTo.name", "DOC-AUTHOR-NAME", nil},
 		{"attributedTo.profileUrl", "https://example/author", nil},
 
@@ -364,4 +371,108 @@ func TestStream_SharingStatus(t *testing.T) {
 	editorsOnly := Stream{Groups: mapof.Object[id.Slice]{"editor": {MagicGroupIDAnonymous}}}
 	require.Equal(t, SharingStatusOwners, editorsOnly.SharingStatus("viewer"), "another role's grant must not count")
 	require.Equal(t, SharingStatusPublic, editorsOnly.SharingStatus("editor"), "the named role's grant must count")
+}
+
+// TestStream_AcceptsReplies pins which Streams record an inbound reply: public ones whose author
+// has not closed replies.  An empty policy is open, so Streams saved before the field existed still accept replies.
+func TestStream_AcceptsReplies(t *testing.T) {
+
+	public := Permissions{MagicGroupIDAnonymous}
+	private := Permissions{MagicGroupIDAuthenticated}
+
+	table := []struct {
+		policy   string
+		allow    Permissions
+		expected bool
+	}{
+		{"", public, true},
+		{ReplyPolicyEveryone, public, true},
+		{ReplyPolicyNobody, public, false},
+		{"", private, false},
+		{ReplyPolicyEveryone, private, false},
+	}
+
+	for _, row := range table {
+		stream := NewStream()
+		stream.ReplyPolicy = row.policy
+		stream.DefaultAllow = row.allow
+		require.Equal(t, row.expected, stream.AcceptsReplies(), "policy=%q allow=%v", row.policy, row.allow)
+	}
+}
+
+// TestStream_ReplyPolicySchema pins that a form can write replyPolicy, and only its known values
+func TestStream_ReplyPolicySchema(t *testing.T) {
+
+	stream := NewStream()
+	s := schema.New(StreamSchema())
+
+	require.Nil(t, s.Set(&stream, "replyPolicy", ReplyPolicyNobody))
+	require.Equal(t, ReplyPolicyNobody, stream.ReplyPolicy)
+
+	require.NotNil(t, s.Set(&stream, "replyPolicy", "sometimes"), "an unknown policy is refused")
+	require.Equal(t, ReplyPolicyNobody, stream.ReplyPolicy)
+}
+
+// TestStream_RefusesReplies pins the refusal the inbox acts on: a public Stream with closed replies refuses
+// every reply, and a private Stream refuses nothing, because it records no replies at all.
+func TestStream_RefusesReplies(t *testing.T) {
+
+	stream := NewStream()
+	stream.DefaultAllow = Permissions{MagicGroupIDAnonymous}
+
+	// Open: nothing is refused
+	require.False(t, stream.RefusesReplies())
+
+	// Closed: everything is refused
+	stream.ReplyPolicy = ReplyPolicyNobody
+	require.True(t, stream.RefusesReplies())
+
+	// Private: nothing is refused, even with replies closed
+	stream.DefaultAllow = Permissions{MagicGroupIDAuthenticated}
+	require.False(t, stream.RefusesReplies())
+}
+
+// TestStream_InteractionPolicyJSONLD pins the published policy: Public when open, and only the author when
+// closed or private, never an empty list (which JSON-LD reads as Public).  Mentions are not approved.
+func TestStream_InteractionPolicyJSONLD(t *testing.T) {
+
+	automaticApproval := func(stream Stream) any {
+		return stream.InteractionPolicyJSONLD().GetMap(vocab.PropertyCanReply)[vocab.PropertyAutomaticApproval]
+	}
+
+	stream := NewStream()
+	stream.DefaultAllow = Permissions{MagicGroupIDAnonymous}
+	stream.AttributedTo = PersonLink{ProfileURL: "https://local.example/@author"}
+	stream.Tags = TagList{{Type: vocab.LinkTypeMention, Name: "a@remote.example", Href: "https://remote.example/users/a"}}
+	require.Equal(t, []string{vocab.NamespaceActivityStreamsPublic}, automaticApproval(stream))
+
+	stream.ReplyPolicy = ReplyPolicyNobody
+	require.Equal(t, []string{"https://local.example/@author"}, automaticApproval(stream))
+
+	stream.ReplyPolicy = ""
+	stream.DefaultAllow = Permissions{MagicGroupIDAuthenticated}
+	require.Equal(t, []string{"https://local.example/@author"}, automaticApproval(stream), "a private Stream accepts no replies")
+}
+
+// TestStream_AllowReplies pins the virtual "allowReplies" toggle: it reads TRUE unless replies are closed,
+// including for a Stream saved before the policy existed, and writes the matching ReplyPolicy
+func TestStream_AllowReplies(t *testing.T) {
+
+	stream := NewStream()
+	s := schema.New(StreamSchema())
+
+	value, err := s.Get(&stream, "allowReplies")
+	require.Nil(t, err)
+	require.Equal(t, true, value, "an empty policy is open")
+
+	require.Nil(t, s.Set(&stream, "allowReplies", false))
+	require.Equal(t, ReplyPolicyNobody, stream.ReplyPolicy)
+
+	value, err = s.Get(&stream, "allowReplies")
+	require.Nil(t, err)
+	require.Equal(t, false, value)
+
+	// A toggle posts strings
+	require.Nil(t, s.Set(&stream, "allowReplies", "true"))
+	require.Equal(t, ReplyPolicyEveryone, stream.ReplyPolicy)
 }

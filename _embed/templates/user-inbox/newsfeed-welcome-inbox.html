@@ -1,0 +1,16 @@
+<!-- Welcome for an empty My Inbox; index.html passes ?welcome=inbox (see AGENTS.md). -->
+
+<div class="align-center margin-vertical-xl">
+	<div class="text-light-gray" style="font-size:96px;">
+		{{icon "inbox"}}
+	</div>
+	<div class="text-2xl margin-none">
+		Welcome to Your Inbox
+	</div>
+	<div class="margin-vertical max-width-512 margin-horizontal-auto">
+		Your inbox is how you join the social web.
+		When you <span hx-get="/@me/settings/following-search" role="button" class="turboclick nowrap link">follow someone</span> then their posts will show up here.
+		No ads. No tracking. No algorithms.
+	</div>
+	<button hx-get="/@me/settings/following-search" class="primary turboclick margin-top-lg">{{icon "add"}} Follow Someone</button>
+</div>

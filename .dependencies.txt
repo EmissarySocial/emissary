@@ -3,10 +3,14 @@ List of dependencies.  Promote/tag all large updates from the bottom up:
 NO DEPENDENTS
 
 - sniff
+- color
+- icon
 - digital-dome
 - toot-echo
 - sherlock
 - data-mongo
+- data-slice
+- delta
 - table
 - steranko
 - mediaserver

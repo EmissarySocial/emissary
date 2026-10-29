@@ -7,6 +7,12 @@
 {{- $folderID := $folder.FolderID.Hex -}}
 {{- $followingID := .QueryParam "origin.followingId" -}}
 
+<!-- RULE: an empty, unfiltered inbox or folder shows a welcome instead of the heading and Follow button (see AGENTS.md). -->
+{{- $isWelcome := false -}}
+{{- if $filter.IsZero -}}
+	{{- $isWelcome = .Inbox.Top1.Slice.IsEmpty -}}
+{{- end -}}
+
 <div class="app width-100%" script="init send SelectNav(id:'inbox')">
 
 	<link rel="stylesheet" href="/.templates/user-inbox/stylesheet">
@@ -19,13 +25,13 @@
 	<!-- Main App Content -->
 	<div class="app-content padding-top">
 
-		<!-- Floating Menu Bar.  "Follow Someone" shows on every folder view, including the All Folders
-		     (News Feed) view where no single folder is selected; there it omits the folderId so the
-		     follow modal's "Inbox Folder" dropdown defaults to the user's first folder.  Filter and
-		     Folder Settings are folder-specific, so they only appear when a folder is selected. -->
+		<!-- Follow Someone on every view; Filter and Folder Settings only when a folder is selected. -->
 		{{- $selectedFolder := ne $folderID nilObjectID.Hex -}}
+		{{- if or $selectedFolder (not $isWelcome) -}}
 		<div class="{{if $isDesktop}}text-sm{{end}} margin-none nowrap pos-sticky float-right" style="top:0px; padding:0px 0px 8px 16px; border-radius:4px; background-color:var(--page-background); z-index:1000">
-			<button hx-get="/@me/settings/following-search{{if $selectedFolder}}?folderId={{$folderID}}{{end}}" class="primary turboclick">{{icon "add"}}{{if $isDesktop}} Follow Someone{{end}}</button>
+			{{- if not $isWelcome -}}
+				<button hx-get="/@me/settings/following-search{{if $selectedFolder}}?folderId={{$folderID}}{{end}}" class="primary turboclick">{{icon "add"}}{{if $isDesktop}} Follow Someone{{end}}</button>
+			{{- end -}}
 			{{- if $selectedFolder -}}
 				{{- if $filter.IsZero -}}
 					<button hx-get="/@me/newsfeed/filter?folderId={{$folderID}}" class="turboclick">{{icon "filter"}}{{if $isDesktop}} Filter{{end}}</button>
@@ -35,13 +41,16 @@
 				<button hx-get="/@me/newsfeed/folder-edit?folderId={{$folderID}}" class="turboclick">{{icon "settings"}}{{ if $isDesktop }} Folder Settings{{end}}</button>
 			{{- end -}}
 		</div>
+		{{- end -}}
 
+		<!-- On mobile the heading stays in the welcome too, because it holds the back link to the folder menu -->
+		{{- if or $isMobile (not $isWelcome) -}}
 		<div class="flex-row margin-bottom-lg">
 
 			{{- if $filter.NotZero -}}
 				{{- $following := .FollowingByToken $followingID -}}
 				<div class="flex-grow-1 margin-top-sm">
-					<div class="bold"><a href="/@me/newsfeed/folder?folderId={{$folderID}}" hx-get="/@me/newsfeed/folder?folderId={{$folderID}}">{{iconFilled $folder.Icon}} {{$folder.Label}}</a></div>
+					<div class="bold"><a class="turboclick" href="/@me/newsfeed/folder?folderId={{$folderID}}" hx-get="/@me/newsfeed/folder?folderId={{$folderID}}">{{iconFilled $folder.Icon}} {{$folder.Label}}</a></div>
 					<div class="flex-row margin-vertical">
 						{{- if ne "" $following.IconURL -}}
 							<div class="margin-top-xs">
@@ -57,7 +66,7 @@
 								<a href="{{$following.URL}}" target="_blank" rel="noopener noreferrer" class="text-gray">{{$following.URL}}</a>
 								&middot; {{$following.LastPolled | tinyDate}} ago
 								&nbsp;
-								<button class="text-xs" hx-get="/@me/settings/following-edit?followingId={{$following.FollowingID.Hex}}">Edit Source</button>
+								<button class="text-xs turboclick" hx-get="/@me/settings/following-edit?followingId={{$following.FollowingID.Hex}}">Edit Source</button>
 							</div>
 						</div>
 					</div>
@@ -65,7 +74,7 @@
 			{{- else -}}
 				<h1 class="text-xl bold margin-none flex-grow">
 					{{- if $isMobile -}}
-						<a href="/@me/newsfeed/mobile">{{icon "back"}}</a>
+						<a class="turboclick" href="/@me/newsfeed/mobile">{{icon "back"}}</a>
 					{{- else -}}
 						{{iconFilled $folder.Icon}} 
 					{{- end }}
@@ -73,9 +82,10 @@
 				</h1>
 			{{- end -}}
 		</div>
+		{{- end -}}
 
 		<div 
-			hx-get="/@me/newsfeed/list?folderId={{$folderID}}&origin.followingId={{$followingID}}"
+			hx-get="/@me/newsfeed/list?folderId={{$folderID}}&origin.followingId={{$followingID}}{{if $isWelcome}}&welcome={{if $selectedFolder}}folder{{else}}inbox{{end}}{{end}}"
 			hx-trigger="revealed"
 			hx-target="this"
 			hx-swap="outerHTML"
@@ -93,7 +103,7 @@
 			</div>
 
 		</div>
-	
+
 	</div>
 
 	<script src="/.templates/user-inbox/hyperscript" type="text/hyperscript"></script>
@@ -106,9 +116,7 @@
 		hx-push-url="false">
 	</div>
 
-	<!-- Mark this folder's messages read once it is opened (Mastodon-style).  This clears the
-	     folder's unread dot via refreshSidebar; rows keep their unread styling for this render.
-	     Skipped on the News Feed (all-folders) view, where no single folder is selected. -->
+	<!-- Mark the open folder read after it loads (not on All Folders). -->
 	{{- if ne $folderID nilObjectID.Hex -}}
 	<div
 		hx-post="/@me/newsfeed/folder-read?folderId={{$folderID}}"

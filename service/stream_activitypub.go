@@ -47,7 +47,7 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 	}
 
 	result := mapof.Any{
-		vocab.AtContext:       sliceof.Any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot},
+		vocab.AtContext:       sliceof.Any{vocab.ContextTypeActivityStreams, vocab.ContextTypeSecurity, vocab.ContextTypeToot, vocab.ContextTypeGoToSocial},
 		vocab.PropertyID:      stream.ActivityPubURL(),
 		vocab.PropertyType:    stream.SocialRole,
 		vocab.PropertyURL:     stream.URL,
@@ -130,6 +130,9 @@ func (service *Stream) JSONLD(session data.Session, stream *model.Stream) mapof.
 	if stream.Location.NotZero() {
 		result[vocab.PropertyLocation] = stream.Location.JSONLD()
 	}
+
+	// Who may reply, as GoToSocial's interactionPolicy (REPLY-CONTROLS §1.3)
+	result[vocab.PropertyInteractionPolicy] = stream.InteractionPolicyJSONLD()
 
 	// NOTE: According to Mastodon ActivityPub guide (https://docs.joinmastodon.org/spec/activitypub/)
 	// putting as:public in the To field means that this mesage is public, and "listed"
@@ -356,8 +359,8 @@ func (service *Stream) CalcContext(session data.Session, stream *model.Stream) e
 	return nil
 }
 
-// AddReply records replyURL in the JIT Replies collection of the local Stream that
-// inReplyToURL points to. No-op when inReplyToURL is empty or not a local Stream.
+// AddReply records replyURL in the JIT Replies collection of the local Stream that inReplyToURL
+// points to. No-op when inReplyToURL is empty, not a local Stream, or does not accept replies.
 func (service *Stream) AddReply(session data.Session, inReplyToURL string, replyURL string) error {
 
 	const location = "service.Stream.AddReply"
@@ -387,7 +390,13 @@ func (service *Stream) AddReply(session data.Session, inReplyToURL string, reply
 	}
 
 	// RULE: Only public streams expose reply collections (mirrors CalcContext).
-	if !parent.DefaultAllow.IsAnonymous() {
+	if !parent.DefaultAllowAnonymous() {
+		return nil
+	}
+
+	// RULE: A Stream with closed replies records none (REPLY-CONTROLS §1.2).  The inbox already
+	// refused such a reply (RefusesReply); this keeps a policy closed since then from recording it.
+	if !parent.AcceptsReplies() {
 		return nil
 	}
 
@@ -410,6 +419,32 @@ func (service *Stream) AddReply(session data.Session, inReplyToURL string, reply
 
 	// Station.
 	return nil
+}
+
+// RefusesReply returns TRUE when inReplyToURL is a local, public Stream with closed replies
+// (REPLY-CONTROLS §1.2).  The inbox checks this before a reply is notified or recorded.
+func (service *Stream) RefusesReply(session data.Session, inReplyToURL string) (bool, error) {
+
+	const location = "service.Stream.RefusesReply"
+
+	// RULE: A non-reply (empty inReplyTo) has no parent to refuse it.
+	if inReplyToURL == "" {
+		return false, nil
+	}
+
+	parent := model.NewStream()
+
+	if err := service.LoadByURL(session, inReplyToURL, &parent); err != nil {
+
+		// A parent that is not a local Stream has no policy for us to apply
+		if derp.IsNotFound(err) {
+			return false, nil
+		}
+
+		return false, derp.Wrap(err, location, "Loading parent Stream", "inReplyTo: "+inReplyToURL)
+	}
+
+	return parent.RefusesReplies(), nil
 }
 
 // ReindexReplies re-projects every reply Stream into its parent's Replies collection

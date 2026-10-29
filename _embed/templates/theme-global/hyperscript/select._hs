@@ -9,7 +9,9 @@ behavior select(value, options, prefix)
 					set option.value to prefix + option.value
 				end
 				
-				put `<option value="${option.value}">${option.label}</option>` at the end of me
+				-- The label and value are data, so build a node rather than parsing them as HTML
+				make an Option from option.label, option.value called optionElement
+				call me.add(optionElement)
 			end
 		end
 

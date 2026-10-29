@@ -38,7 +38,6 @@
 	   opacity composites its filtered backdrop back toward the unfiltered original, so an
 	   `opacity: 0.6` here throws away roughly 40% of the blur and the page behind reads as
 	   dimmed-but-sharp -- which looks exactly like backdrop-filter not being supported.
-	   color-mix keeps --black / --white doing the dark-mode inversion.
 
 	   backdrop-filter is declared here at blur(0px) rather than left off, so the transition
 	   has a real FROM value; interpolating out of the keyword `none` is not dependable. */

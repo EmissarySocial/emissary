@@ -2,8 +2,8 @@
 {{- $stateID := .QueryParam "stateId" -}}
 {{- $groupID := .QueryParam "group" -}}
 
-<div class="page">
    	
+	{{- /* menubar opens .app and .app-content; this page's closing </div> closes .app-content */ -}}
 	{{template "menubar" .}}
 
     <form hx-get="/admin/tags/list" hx-trigger="refreshPage from:window, change, keyup throttle:500ms" hx-target="#results" hx-swap="innerHTML" hx-push-url="false">

@@ -27,6 +27,15 @@
 	{{- $currentLabel = "Followers" -}}
 {{- end -}}
 
+{{- /* An empty section shows its list's welcome (replies-list.html and the others), which names the section itself,
+       so on desktop this header draws nothing until the section has a notification.  On mobile it stays: it holds
+       the section tabs.  The header is re-fetched on every new notification, so the title returns on its own. */ -}}
+{{- $showHeader := true -}}
+{{- if not $isMobile -}}
+	{{- $showHeader = .Notifications.Top1.Slice.NotEmpty -}}
+{{- end -}}
+
+{{- if $showHeader -}}
 <div class="flex-row">
 	{{- if $isMobile -}}
 		<div role="tablist" class="underlined margin-bottom" hx-boost="true" hx-target="main" hx-push-url="true">
@@ -45,3 +54,4 @@
 		{{- end }}
 	</div>
 </div>
+{{- end -}}

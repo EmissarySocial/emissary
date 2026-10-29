@@ -86,6 +86,32 @@ func (w Settings) View(actionID string) (template.HTML, error) {
 	return builder.Render()
 }
 
+// OutboxView renders an action from the user's own outbox template, such as a Profile tab.
+// A failure is reported, and renders a short notice instead of failing the whole page.
+func (w Settings) OutboxView(actionID string) template.HTML {
+
+	const location = "build.Settings.OutboxView"
+
+	builder, err := NewOutbox(w._factory, w._session, w._request, w._response, w._user, actionID)
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Creating Outbox builder", w._user.OutboxTemplate, actionID))
+		return outboxViewUnavailable
+	}
+
+	result, err := builder.Render()
+
+	if err != nil {
+		derp.Report(derp.Wrap(err, location, "Rendering Outbox action", w._user.OutboxTemplate, actionID))
+		return outboxViewUnavailable
+	}
+
+	return result
+}
+
+// outboxViewUnavailable is what OutboxView renders when the user's outbox cannot render the action
+const outboxViewUnavailable = template.HTML(`<div class="card border padding transition-main-card"><div class="alert-gray">Profile settings are not available for this profile template.</div></div>`)
+
 // NavigationID returns the ID to use for highlighing navigation menus
 func (w Settings) NavigationID() string {
 	return "settings"

@@ -1,6 +1,4 @@
-<!-- The annotation button for one URL: either state opens the post with its note editor (browse-annotation).
-     Every copy for the same URL re-fetches itself on annotationChanged (theme-global annotationPeer).
-     ?selected=true marks the button whose Notes panel is open, and survives the refresh. -->
+<!-- The annotation button for one URL; every copy re-fetches itself on annotationChanged (see README). -->
 {{- $url := .QueryParam "url" -}}
 {{- $annotation := .Annotation $url -}}
 {{- $selected := eq "true" (.QueryParam "selected") -}}

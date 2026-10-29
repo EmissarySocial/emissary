@@ -7,6 +7,9 @@
 	{{- else if eq "announce" $intent -}}
 		{{icon "announce"}}
 		Share on the Fediverse
+	{{- else if and (eq "create" $intent) (ne "" (.QueryParam "inReplyTo")) -}}
+		{{icon "reply"}}
+		Reply on the Fediverse
 	{{- else if eq "create" $intent -}}
 		{{icon "share"}}
 		Share on the Fediverse

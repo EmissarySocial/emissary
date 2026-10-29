@@ -1,6 +1,7 @@
 package step
 
 import (
+	"slices"
 	"text/template"
 
 	"github.com/benpate/derp"
@@ -9,9 +10,12 @@ import (
 
 // AsModal is a Step that can update the data.DataMap custom data stored in a Stream
 type AsModal struct {
-	SubSteps   []Step
-	Options    []*template.Template // Each option, like "class:large", executed against the builder
-	Background string
+	SubSteps      []Step
+	Options       []*template.Template // Each option, like "class:large", executed against the builder
+	Background    string               // An action of this same builder, drawn behind the modal on a full-page request
+	BackgroundURL *template.Template   // A local URL, drawn behind the modal on a full-page request.  Tried before Background
+	ReplaceURL    *template.Template   // A local URL written into the address bar (HX-Replace-Url) when the modal opens
+	Head          []Step               // Steps whose output goes into the full page's <head>, replacing its <title>
 }
 
 // NewAsModal returns a fully initialized AsModal object
@@ -41,11 +45,44 @@ func NewAsModal(stepInfo mapof.Any, funcMap template.FuncMap) (AsModal, error) {
 		optionTemplates[index] = optionTemplate
 	}
 
+	// Parse the optional URL templates
+	backgroundURL, err := optionalTemplate(stepInfo.GetString("background-url"), funcMap)
+
+	if err != nil {
+		return AsModal{}, derp.Wrap(err, location, "Invalid 'background-url'", stepInfo)
+	}
+
+	replaceURL, err := optionalTemplate(stepInfo.GetString("replace-url"), funcMap)
+
+	if err != nil {
+		return AsModal{}, derp.Wrap(err, location, "Invalid 'replace-url'", stepInfo)
+	}
+
+	// Parse the steps that build the full page's <head>
+	head, err := NewPipeline(stepInfo.GetSliceOfMap("head"), funcMap)
+
+	if err != nil {
+		return AsModal{}, derp.Wrap(err, location, "Invalid 'head'", stepInfo)
+	}
+
 	return AsModal{
-		SubSteps:   subSteps,
-		Options:    optionTemplates,
-		Background: stepInfo.GetString("background"),
+		SubSteps:      subSteps,
+		Options:       optionTemplates,
+		Background:    stepInfo.GetString("background"),
+		BackgroundURL: backgroundURL,
+		ReplaceURL:    replaceURL,
+		Head:          head,
 	}, nil
+}
+
+// optionalTemplate parses a template, or returns nil when there is no text to parse
+func optionalTemplate(text string, funcMap template.FuncMap) (*template.Template, error) {
+
+	if text == "" {
+		return nil, nil
+	}
+
+	return template.New("").Funcs(funcMap).Parse(text)
 }
 
 // Name returns the name of the step, which is used in debugging.
@@ -61,10 +98,10 @@ func (step AsModal) RequiredModel() string {
 
 // RequiredStates returns a slice of states that must be defined any Template that uses this Step
 func (step AsModal) RequiredStates() []string {
-	return requiredStates(step.SubSteps...)
+	return requiredStates(append(slices.Clone(step.SubSteps), step.Head...)...)
 }
 
 // RequiredRoles returns a slice of roles that must be defined by any Template that uses this Step
 func (step AsModal) RequiredRoles() []string {
-	return requiredRoles(step.SubSteps...)
+	return requiredRoles(append(slices.Clone(step.SubSteps), step.Head...)...)
 }

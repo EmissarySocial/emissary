@@ -1,12 +1,4 @@
-{{- /*
-	newsfeed-sidebar.html is the desktop sidebar for the News Feed section.  The dot (".") is the
-	Inbox builder; it computes the FolderList itself (via .FoldersWithSelection) so the fragment
-	can be re-fetched standalone via the "newsfeed-sidebar" action.
-
-	The "refreshSidebar" event — fired by message-read and scroll-read — re-fetches this
-	fragment so the folder unread dots stay current without a reload.  ?section=ANNOTATIONS
-	keeps the Notes item selected instead of All Folders.
-*/ -}}
+<!-- News Feed sidebar; re-fetches itself on refreshSidebar to keep the unread dots current. -->
 {{- $folders := .FoldersWithSelection (first (.QueryParam "section") "FOLDER") -}}
 
 <div id="app-sidebar" class="expanded"

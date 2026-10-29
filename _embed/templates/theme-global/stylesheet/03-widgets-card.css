@@ -23,7 +23,7 @@
 	}
 
 	&.selected {
-		border: solid 2px var(--black);
+		border: solid 2px var(--gray100);
 		margin:-1px;
 	}
 }

@@ -86,6 +86,17 @@ func inbox_CreateOrUpdate(context Context, activity streams.Document) error {
 		return derp.Wrap(err, location, "Loading `Following` record", context.user.UserID)
 	}
 
+	// RULE: A reply to our own Stream with closed replies joins neither its Replies nor its thread
+	refused, err := context.factory.Stream().RefusesReply(context.session, document.InReplyTo().ID())
+
+	if err != nil {
+		return derp.Wrap(err, location, "Checking the reply policy of the parent Stream", document.ID())
+	}
+
+	if refused {
+		return nil
+	}
+
 	// Add this document to a context (if necessary)
 	if hasLocalReplyOrContext(document, context.factory.Host()) {
 

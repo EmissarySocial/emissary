@@ -5,7 +5,7 @@
 	$connection.Value -}} {{- if eq "OAUTH" $connection.Group -}}
 	<a
 		href="/.{{$token}}/connect"
-		class="clickable card padding hover-outline text-nocolor margin-bottom"
+		class="clickable card padding hover-outline text-nocolor margin-bottom turboclick"
 		role="button"
 	>
 		<div class="align-center margin-bottom flex-grow">
@@ -16,7 +16,7 @@
 	{{- else -}}
 	<div
 		hx-get="/@me/settings/merchantAccount-edit-{{$token}}"
-		class="clickable card padding hover-outline text-nocolor margin-bottom"
+		class="clickable card padding hover-outline text-nocolor margin-bottom turboclick"
 		role="button"
 	>
 		<div class="align-center margin-bottom flex-grow">

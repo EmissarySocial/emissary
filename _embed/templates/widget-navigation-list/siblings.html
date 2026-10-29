@@ -10,10 +10,10 @@
 
 		{{- if eq $streamID $sibling.StreamID -}}
 			{{- $hasSiblingTier = true -}}
-			<div class="bold ellipsis">{{$sibling.Label}}</div>
-			<div style="padding-left:8px; font-size:0.9em;">{{- template "children" $root -}}</div>
+			<div class="bold ellipsis navigation-item navigation-current" aria-current="page">{{$sibling.Label}}</div>
+			<div class="navigation-children">{{- template "children" $root -}}</div>
 		{{- else -}}
-			<div class="ellipsis"><a href="/{{$sibling.Token}}" hx-get="/{{$sibling.Token}}" class="turboclick">{{$sibling.Label}}</a></div>
+			<div class="ellipsis navigation-item"><a href="/{{$sibling.Token}}" hx-get="/{{$sibling.Token}}" class="turboclick">{{$sibling.Label}}</a></div>
 		{{- end -}}
 
 	{{- end -}}
@@ -21,8 +21,8 @@
 {{- else if eq $configSiblings "Self Only" -}}
 
 	{{- $hasSiblingTier = true -}}
-	<div class="bold ellipsis">{{.Label}}</div>
-	<div style="padding-left:8px; font-size:0.9em;">{{- template "children" $root -}}</div>
+	<div class="bold ellipsis navigation-item navigation-current" aria-current="page">{{.Label}}</div>
+	<div class="navigation-children">{{- template "children" $root -}}</div>
 
 {{- end -}}
 

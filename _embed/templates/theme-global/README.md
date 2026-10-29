@@ -57,11 +57,11 @@ A larger Spectrum-style set (`--color-gray-50`…`--color-gray-900` and 13-step 
 
 ### Dark mode
 
-Dark mode is handled entirely through `@media (prefers-color-scheme: dark)`. Rather than swapping every rule, the palettes **invert their own ramps** — in dark mode `--gray00` becomes near-black and `--gray100` becomes a warm white, and `--white` itself flips to a near-black. Because components reference semantic tokens and ramp steps rather than literal hex, they adapt automatically.
+Dark mode is handled entirely through `@media (prefers-color-scheme: dark)`. Rather than swapping every rule, the palettes **invert their own ramps** — in dark mode `--gray00` becomes near-black and `--gray100` becomes a warm white. `--white` and `--black` do not flip; they stay pure white and pure black for color on photos and saturated accents. Because components reference semantic tokens and ramp steps rather than literal hex, they adapt automatically.
 
 There are three consequences to remember:
 
-- A few values must **not** flip. `--button-primary-color` is a literal `#ffffff` (not `var(--white)`), because a primary button keeps a dark accent background in dark mode and its label must stay light.
+- Page surfaces and the text on them use `--gray00` and `--gray100`, which flip. `--white` and `--black` are for color that must not flip, such as a label on a saturated accent.
 - The two gray ramps are different families. Light mode is IBM's **neutral** gray (fully desaturated); dark mode is IBM's **warm** gray, where every step holds hue 0 — red above green, and green equal to blue — so the ramp varies only in brightness. New or edited dark grays must keep `G == B`; see [AGENTS.md](AGENTS.md).
 - Font weight bumps up one step in dark mode (`--weight` 300 → 400) to hold legibility against dark backgrounds.
 
@@ -168,7 +168,11 @@ The breakpoint ladder is consistent across the codebase:
 
 ## Accessibility and motion
 
-[02-accessibility.css](02-accessibility.css) provides `.hide-visual` for screen-reader-only content (visually clipped, still in the accessibility tree). [02-animations.css](02-animations.css) defines the shared keyframes (`fadeIn`, `fadeOut`, `zoomIn`, `spin`, `barberpole`, etc.). Both animation-heavy files respect `@media (prefers-reduced-motion: reduce)`, which globally collapses animation and transition durations — honor it in anything new you add. Interactive components are keyed off ARIA roles and attributes (`[role="tab"]`, `[aria-selected]`, `[role="menuitem"]`), so keeping markup semantic is what makes the styling work.
+[02-accessibility.css](02-accessibility.css) provides `.hide-visual` for screen-reader-only content (visually clipped, still in the accessibility tree). [02-animations.css](02-animations.css) defines the shared keyframes (`fadeIn`, `fadeOut`, `zoomIn`, `spin`, `barberpole`, etc.). The **flash highlight** points the reader at one element: `call flash_highlight(element)` from any hyperscript ([hyperscript/highlight._hs](hyperscript/highlight._hs)) adds `.flash-highlight`, which holds `--flash-highlight-color` (pale yellow, amber in dark mode, and overridable by a theme) and fades it out over 1.8s. Calling it again restarts the flash; the scrollspy outline uses it on the heading a reader clicks. Both animation-heavy files respect `@media (prefers-reduced-motion: reduce)`, which globally collapses animation and transition durations — honor it in anything new you add. Interactive components are keyed off ARIA roles and attributes (`[role="tab"]`, `[aria-selected]`, `[role="menuitem"]`), so keeping markup semantic is what makes the styling work.
+
+## Code highlighting
+
+Prism 1.30.0 is vendored in [resources/prism-1.30.0/](resources/prism-1.30.0/README.md), with the languages listed in its README. A theme opts in by loading `/.themes/global/resources/prism-1.30.0/prism.min.js` before `/.themes/global/javascript`. That bundle's [javascript/prism.js](javascript/prism.js) then defines HJSON and highlights every page htmx swaps in; on a theme without Prism it does nothing. This folder ships no colors for Prism's `.token` classes, so each theme that loads it brings its own palette.
 
 ## Extending the system
 

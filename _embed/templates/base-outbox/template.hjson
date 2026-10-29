@@ -1,0 +1,121 @@
+## Base-Outbox template defines the Profile tabs that the settings
+## shell at /@me/settings/general loads from the user's own outbox.
+## Every outbox template lists it in `extends`.
+
+{
+	templateId: base-outbox
+	category: Base
+	// Outbox, so its forms validate against UserSchema. No templateRole keeps it unselectable
+	model: Outbox
+
+	states: {
+		default: {
+			label: Default State
+			description: Initial state for this template
+		}
+	}
+
+	actions: {
+
+		settings-general: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		settings-general-form: {
+			roles:["self"]
+			steps:[
+				{
+					do:"edit"
+					options:["endpoint:/@me/settings-general-form", "cancel-button:hide"]
+					form:{
+						type:layout-vertical
+						children:[
+							{type:"text", path:"displayName", label:"Name", description:"Displayed wherever someone sees your profile. (PUBLIC)"}
+							{type:"text", path:"username", label:"Username", description:"How others will identify you online. (PUBLIC)", options:{autocomplete:"off", validator:"/.validate/user/username"}}
+							{type:"text", path:"emailAddress", label:"Email Address", description:"Used to sign in and support your account. Not shared. (PRIVATE)"}
+							{type:"textarea", path:"statusMessage", label:"About Me", description:"Displayed on your profile page. Markdown is allowed. (PUBLIC)", options:{rows:4, showLimit:true}}
+							{type:"text", path:"location", label:"Location", description:"City, State, or whatever you want. (PUBLIC)"}
+							{type:"text", path:"data.tags", label:"Hashtags", description:"Enter #Hashtags separated by spaces.  (PUBLIC)"}
+						]
+					}
+				}
+				{do:"save"}
+				{do:"search-index"}
+				{do:"inline-save-button"}
+			]
+		}
+
+		settings-images: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		settings-images-form: {
+			roles:["self"]
+			steps:[
+				{
+					do:"edit"
+					options:["endpoint:/@me/settings-images-form", "cancel-button:hide"]
+					form:{
+						type:layout-vertical
+						children:[
+							{type:"upload", path:"iconUrl", label:"Avatar Image", description:"Displayed next to your name as an icon. (PUBLIC)", options:{accept:"image/*", delete:"/@me/settings-icon-delete"}}
+							{type:"upload", path:"imageUrl", label:"Banner Image", description:"Displays at the top of your profile page. (PUBLIC)", options:{accept:"image/*", delete:"/@me/settings-image-delete"}}
+						]
+					}
+				}
+				{do:"upload-attachments", category:"icon", fieldname:"iconUrl", attachment-path:"iconId", accept-type:"image/*", rules:{width:400, height:400, types:["webp"]}}
+				{do:"upload-attachments", category:"image", fieldname:"imageUrl", attachment-path:"imageId", accept-type:"image/*", rules:{types:["webp"]}}
+				{do:"save"}
+				{do:"search-index"}
+				{do:"refresh-page"}
+			]
+		}
+
+		settings-icon-delete: {
+			roles:["self"]
+			steps:[
+				{do:"delete-attachments", field:"iconId"}
+				{do:"save", comment:"Profile photo deleted by me"}
+				{do:"search-index"}
+				{do:"refresh-page"}
+			]
+		}
+
+		settings-image-delete: {
+			roles:["self"]
+			steps:[
+				{do:"delete-attachments", field:"imageId"}
+				{do:"save", comment:"Banner image deleted by me"}
+				{do:"search-index"}
+				{do:"refresh-page"}
+			]
+		}
+
+		settings-links: {
+			roles:["self"]
+			steps:[
+				{do:"view-html"}
+			]
+		}
+
+		settings-links-form: {
+			roles:["self"]
+			steps:[
+				{do:"edit-table", path:"links", form:{
+					type:"layout-table"
+					children:[
+						{type:"text", path:"name", label:"Label"}
+						{type:"text", path:"profileUrl", label:"URL"}
+					]
+				}}
+				{do:"save", comment:"Links updated by me"}
+			]
+		}
+	}
+}

@@ -52,7 +52,10 @@ func PostMedia(serverFactory *server.Factory) func(model.Authorization, txn.Post
 			return object.MediaAttachment{}, derp.Wrap(err, location, "Opening uploaded file")
 		}
 
-		defer source.Close()
+		// Closing a read-only upload has nothing to flush, so its error changes nothing
+		defer func() {
+			_ = source.Close()
+		}()
 
 		reader, contentType, width, height, err := sniffMedia(source)
 

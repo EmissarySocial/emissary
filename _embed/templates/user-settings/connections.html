@@ -12,29 +12,31 @@
 	<title>Connections</title>
 
 	{{- if $isDesktop -}}
-		<div id="app-sidebar" class="expanded">
+		<div id="app-sidebar" class="flex-column flex-justify-between expanded">
 			{{- template "menu" "connections" -}}
 		</div>
 	{{- end -}}
 
 	<div class="app-content padding">
 
-		{{- if $isDesktop -}}
-			<div class="flex-row flex-align-center margin-bottom">
-				<h1 class="text-xl bold margin-none flex-grow">Connections</h1>
-				<a href="https://emissary.dev/user-connections" target="_blank" rel="noopener noreferrer" class="text-sm">{{icon "help"}} Help with Connections</a>
+		<div id="menu-bar">
+			<div class="left">
+				{{ if not $isDesktop }}
+					<a class="turboclick" href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
+				{{ end }}
+				<a href="/@me/settings/connections" class="selected turboclick" hx-boost="true">Connections</a>
 			</div>
-		{{- else -}}
-			<div class="flex-row flex-align-center text-xl margin-none margin-bottom">
-				<a href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
-				<h1 class="bold flex-grow">Connections</h1>
-				<a href="https://emissary.dev/user-connections" target="_blank" rel="noopener noreferrer">{{icon "help"}}</a>
+			<div class="right">
+				<a href="https://emissary.dev/user-connections" target="_blank" rel="noopener noreferrer" class="link">
+					{{icon "help"}}
+					{{ if $isDesktop }} Help {{ end }}
+				</a>
 			</div>
-		{{- end -}}
+		</div>
 
 		<div class="table">
 			<div role="button" class="flex-row turboclick">
-				<div hx-get="/@me/settings/{{$mailchimpAction}}?type=MAILCHIMP" class="flex-row flex-grow">
+				<div hx-get="/@me/settings/{{$mailchimpAction}}?type=MAILCHIMP" class="flex-row flex-grow turboclick">
 					<div>{{- icon $mailchimp.Icon -}}</div>
 					<div class="flex-grow">
 						{{$mailchimp.Label}}

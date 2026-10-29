@@ -1263,19 +1263,7 @@ func (factory *factoryCore) init(storage config.Storage, embeddedFiles embed.FS)
 	)
 
 	// Digital Dome, which guards every domain against abusive traffic
-	factory.digitalDome = dome.New(
-		factory.ClientIP, // resolve client IPs using the configured trusted-proxy strategy
-		dome.LogStatusCodes(
-			http.StatusBadRequest,
-			http.StatusNotFound,
-			http.StatusMethodNotAllowed,
-			http.StatusInternalServerError,
-		),
-		dome.BlockStatusCodes( // replaces Dome's default list, so 403 is restated here
-			http.StatusForbidden,
-			http.StatusMethodNotAllowed, // safe only because every GET route also answers HEAD (BUG-143)
-		),
-	)
+	factory.digitalDome = NewDigitalDome(factory.ClientIP)
 
 	// Scratch space for media processing
 	factory.workingDirectory = mediaserver.NewWorkingDirectory(os.TempDir(), 4*time.Minute, 10000)

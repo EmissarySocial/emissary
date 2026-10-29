@@ -1,84 +1,16 @@
-{{- $document := .ActivityStream .Permalink -}}
-{{- $inReplyTo := .InReplyTo -}}
+<div class="page pos-relative h-entry">
 
-<div class="page h-entry">
-
-	<link rel="alternate" type="application/activity+json" href="/{{.StreamID}}"/>
-
-	{{- if $inReplyTo.NotNil -}}
-		{{- $attributedTo := $inReplyTo.AttributedTo -}}
-		<div>
-			<a href="{{$inReplyTo.ID}}" class="u-in-reply-to text-plain" tabIndex="0">
-				<span class="text-sm bold">
-					{{icon "reply"}} Replying to {{$attributedTo.Name}} &nbsp;
-				</span>
-				<span class="link text-xs">View Original</span>
-			</a>
-		</div>
-		<hr>
-	{{- end -}}
-
-	<div class="flex-row width-100%">
-
-		<div class="flex-grow-1 margin-top-sm">
-		
-			<a href="{{.Author.ProfileURL}}" class="text-plain inline-block turboclick" tabIndex="0">
-				<div class="flex-row">
-					<div class="margin-right">
-						{{- if eq .Author.IconURL "" -}}
-							<div class="circle width-64"></div>
-						{{- else -}}
-							<img src="{{.Author.IconURL}}" alt="" class="circle width-64">
-						{{- end -}}
-					</div>
-
-					<div>
-						<div class="p-author text-xl bold margin-vertical-none">{{.Author.Name}}</div>
-						<div class="text-light-gray">
-							<span class="p-username">{{$document.AttributedTo.UsernameOrID}}</span> &middot;
-							<span class="dt-published" datetime="{{.PublishDate | isoDate}}">{{ .PublishDate | humanizeTime }}</span>
-						</div>
-					</div>
-				</div>
-			</a>
-
-			<div class="flex-row margin-vertical-sm text-sm">
-				<div class="flex-shrink-0 width-64 margin-right"></div>
-				<div>
-					{{- if .UserCan "like-button" -}}
-						{{.View "like-button"}}
-					{{- else -}}
-						<button hx-get="/{{.StreamID}}/intent?intent=like&object={{.Permalink}}"><span aria-hidden="true" class="margin-left-xs">{{icon "thumbs-up"}}</span> Like</button>
-						<!--button hx-get="/{{.StreamID}}/intent?intent=dislike&object={{.Permalink}}"><span aria-hidden="true" class="margin-left-xs">{{icon "thumbs-down"}}</span> Dislike</button-->
-						<button hx-get="/{{.StreamID}}/intent?intent=create&content={{.Label | queryEscape}} {{.Permalink}}"><span aria-hidden="true" class="margin-left-xs">{{icon "share"}}</span> Share</button>
-						<button hx-get="/{{.StreamID}}/intent" aria-label="Manage Accounts">{{icon "more-horizontal"}}</button>
-					{{- end -}}
-				</div>
-			</div>
-		</div>
-
-		{{- if .UserCan "edit" -}}
-			<div>
-				<button hx-get="/{{.StreamID}}/edit" class="text-xs">Edit Post</button>
-			</div>
-		{{- end -}}
-		
-	</div>
-
-	{{- if ne .IconURL "" -}}
-		<div class="margin-vertical">
-			<img src="{{.IconURL}}?width=600" class="u-photo" style="width:clamp(400px, 90%, 800px)">
+	<!-- The author's pencil opens the edit modal; its pair is edit-pencil.html -->
+	{{- if .UserCan "edit" -}}
+		<div class="corner-pencil">
+			<button type="button" hx-get="/{{.StreamID}}/edit" hx-push-url="false" class="edit-circle turboclick" aria-label="Edit" title="Edit">{{icon "pencil"}}</button>
 		</div>
 	{{- end -}}
 
-	<div class="text-lg margin-vertical-lg" style="width:clamp(400px, 90%, 800px)">
-		{{.ContentHTML}}
-	</div>
-
-	{{- .View "responses-replies" -}}
+	{{- template "note" . -}}
 
 	<div 
-		hx-get="/{{.StreamID}}" 
+		hx-get="/{{.StreamID}}/page" 
 		hx-trigger="refreshPage from:window" 
 		hx-target="main" 
 		hx-swap="innerHTML" 

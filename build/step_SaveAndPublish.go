@@ -57,7 +57,8 @@ func (step StepSaveAndPublish) Post(builder Builder, _ io.Writer) PipelineBehavi
 			return Halt().WithError(derp.Wrap(err, location, "Calculating context for stream", stream))
 		}
 
-		// If this Stream is a reply, record it in the local parent's Replies collection.
+		// If this Stream is a reply, record it in the local parent's Replies collection.  A parent
+		// with closed replies simply leaves it out; publishing still goes ahead.
 		if err := streamService.AddReply(session, stream.InReplyTo, stream.ActivityPubURL()); err != nil {
 			return Halt().WithError(derp.Wrap(err, location, "Adding reply to parent's collection", stream))
 		}

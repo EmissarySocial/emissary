@@ -7,7 +7,7 @@
 	<title> {{.Name}} | Circles</title>
 
 	{{- if $isDesktop -}}
-		<div id="app-sidebar" class="expanded">
+		<div id="app-sidebar" class="flex-column flex-justify-between expanded">
 			{{- template "menu" "social" -}}
 		</div>
 	{{- end -}}
@@ -17,30 +17,30 @@
 		<div id="menu-bar">
 			<div class="left">
 				{{ if not $isDesktop }}
-					<a href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
+					<a class="turboclick" href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
 				{{ end }}
-				<a href="/@me/settings/following" hx-boost="true">Following</a>
-				<a href="/@me/settings/followers" hx-boost="true">Followers</a>
-				<a href="/@me/settings/circles" class="selected" hx-boost="true">Circles</a>
-				<a href="/@me/settings/notifications" hx-boost="true">Notifications</a>
-				<a href="/@me/settings/rules" hx-boost="true">Rules</a>
+				<a class="turboclick" href="/@me/settings/following" hx-boost="true">Following</a>
+				<a class="turboclick" href="/@me/settings/followers" hx-boost="true">Followers</a>
+				<a href="/@me/settings/circles" class="selected turboclick" hx-boost="true">Circles</a>
+				<a class="turboclick" href="/@me/settings/notifications" hx-boost="true">Notifications</a>
+				<a class="turboclick" href="/@me/settings/rules" hx-boost="true">Rules</a>
 			</div>
 			<div class="right">
 				<a href="https://emissary.dev/circles" target="_blank" rel="noopener noreferrer" class="link">
 					{{icon "help"}}
-					{{ if $isDesktop }} Help with Circles {{ end }}
+					{{ if $isDesktop }} Help {{ end }}
 				</a>
 			</div>
 		</div>
 
 		<h1 class="text-md bold margin-none margin-bottom flex-grow">
-			<a href="/@me/settings/circles" hx-boost="true">All Circles</a>  &middot;
+			<a class="turboclick" href="/@me/settings/circles" hx-boost="true">All Circles</a>  &middot;
 			{{.Name}}
 		</h1>
 
 		<div class="md:flex-row width-100% margin-top margin-bottom-lg">
 
-			<div class="clickable card flex-grow flex-column padding margin-bottom md:width-1-2" hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}">
+			<div class="clickable card flex-grow flex-column padding margin-bottom md:width-1-2 turboclick" hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}">
 
 				<div class="text-sm text-gray margin-bottom">{{icon "circle"}} CIRCLE DESCRIPTION</div>
 				<div class="flex-grow margin-bottom">{{$circle.Description}}</div>
@@ -56,7 +56,7 @@
 					<button class="text-xs">Edit Circle</button>
 				</div>
 			</div>
-			<div class="clickable card flex-grow flex-column padding align-center margin-bottom md:width-1-4" hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}&selected-tab=2">
+			<div class="clickable card flex-grow flex-column padding align-center margin-bottom md:width-1-4 turboclick" hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}&selected-tab=2">
 				<div class="text-sm text-gray">{{icon "box-fill"}} SELL ONLINE</div>
 				<div class="flex-grow text-2xl margin-none bold">
 					{{- if $circle.ProductIDs.IsEmpty -}}
@@ -69,7 +69,7 @@
 					<button class="text-xs">Edit Products</button>
 				</div>
 			</div>
-			<div class="clickable card flex-grow flex-column padding align-center margin-bottom md:width-1-4" hx-get="/@me/settings/circle-member-add?circleId={{$circle.ID}}">
+			<div class="clickable card flex-grow flex-column padding align-center margin-bottom md:width-1-4 turboclick" hx-get="/@me/settings/circle-member-add?circleId={{$circle.ID}}">
 				<div class="text-sm text-gray">{{icon "person-fill"}} MEMBERS</div>
 				<div class="flex-grow text-2xl margin-none bold">{{$circle.MemberCount}}</div>
 				<div class="align-center">
@@ -79,13 +79,13 @@
 		</div>
 
 		{{- if $members.IsEmpty -}}
-			This circle is empty.  Click here to <span hx-get="/@me/settings/circle-member-add?circleId={{$circle.ID}}" class="link">add the first member</span> manually,
+			This circle is empty.  Click here to <span hx-get="/@me/settings/circle-member-add?circleId={{$circle.ID}}" class="link turboclick">add the first member</span> manually,
 			or set up a merchant account to let people purchase membership.
 		{{- else -}}
 
 			<div class="table">
 				{{- range $index, $member := $members -}}
-					<div hx-get="/@me/settings/circle-member-edit?identityId={{$member.ID}}&circleId={{$circle.ID}}" class="flex-row flex-align-center" role="button">
+					<div hx-get="/@me/settings/circle-member-edit?identityId={{$member.ID}}&circleId={{$circle.ID}}" class="flex-row flex-align-center turboclick" role="button">
 						<div class="margin-none">
 							{{- if $member.IconURL -}}
 								<img src="{{$member.IconURL}}" class="circle width-32">

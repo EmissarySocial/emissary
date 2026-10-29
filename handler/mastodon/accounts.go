@@ -102,6 +102,8 @@ func actorIsBot(document streams.Document) bool {
 // use, so it overwrites this function's derived value afterward; see that function).
 func mapDocumentToAccount(factory *service.Factory, session data.Session, document streams.Document) object.Account {
 
+	const location = "handler.mastodon.mapDocumentToAccount"
+
 	// Acct has no client-supplied value here, so derive "username@domain" from the
 	// document itself, matching the Mastodon spec's format for a remote account.
 	acct := document.PreferredUsername()
@@ -132,9 +134,21 @@ func mapDocumentToAccount(factory *service.Factory, session data.Session, docume
 	var waitGroup sync.WaitGroup
 
 	waitGroup.Add(3)
-	go func() { defer waitGroup.Done(); followersCount = document.Followers().LoadLink().TotalItems() }()
-	go func() { defer waitGroup.Done(); followingCount = document.Following().LoadLink().TotalItems() }()
-	go func() { defer waitGroup.Done(); statusesCount = document.Outbox().LoadLink().TotalItems() }()
+	go func() {
+		defer recoverGoroutine(location)
+		defer waitGroup.Done()
+		followersCount = document.Followers().LoadLink().TotalItems()
+	}()
+	go func() {
+		defer recoverGoroutine(location)
+		defer waitGroup.Done()
+		followingCount = document.Following().LoadLink().TotalItems()
+	}()
+	go func() {
+		defer recoverGoroutine(location)
+		defer waitGroup.Done()
+		statusesCount = document.Outbox().LoadLink().TotalItems()
+	}()
 	waitGroup.Wait()
 
 	return model.WithMastodonDefaultImages(object.Account{

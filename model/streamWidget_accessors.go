@@ -12,6 +12,8 @@ func StreamWidgetSchema() schema.Element {
 		Properties: schema.ElementMap{
 			"streamWidgetId": schema.String{Format: "objectId", Required: true},
 			"type":           schema.String{Required: true},
+			"location":       schema.String{Format: "token", MaxLength: 64},
+			"label":          schema.String{Format: "text", MaxLength: 256},
 			"data": schema.Object{
 				Wildcard: schema.Any{},
 			},
@@ -29,6 +31,12 @@ func (x StreamWidget) GetStringOK(key string) (string, bool) {
 
 	case "type":
 		return convert.String(x.Type), true
+
+	case "location":
+		return convert.String(x.Location), true
+
+	case "label":
+		return convert.String(x.Label), true
 	}
 
 	return "", false
@@ -42,10 +50,19 @@ func (x *StreamWidget) SetString(key string, value string) bool {
 	case "streamWidgetId":
 		if streamWidgetID, err := primitive.ObjectIDFromHex(value); err == nil {
 			x.StreamWidgetID = streamWidgetID
+			return true
 		}
 
 	case "type":
 		x.Type = value
+		return true
+
+	case "location":
+		x.Location = value
+		return true
+
+	case "label":
+		x.Label = value
 		return true
 	}
 

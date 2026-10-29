@@ -123,6 +123,7 @@ func bookmarksToStatuses(factory *service.Factory, session data.Session, auth mo
 		slots <- struct{}{}
 
 		go func(index int) {
+			defer recoverGoroutine("handler.mastodon.bookmarksToStatuses")
 			defer waitGroup.Done()
 			defer func() { <-slots }()
 

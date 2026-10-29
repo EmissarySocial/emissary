@@ -28,7 +28,7 @@ The shape of every refresh step is *decide → do the slow work → publish → 
 
 These used to be `autocert.HostWhitelist(domains...)` and `autocert.DirCache(location)`, both built from a boot-time snapshot. The consequence was a real and confusing bug: a non-local domain added through the setup console could not obtain a TLS certificate until the process was restarted. The domain factory was created, the domain answered over HTTP, and HTTPS failed — which read as "configuration changes need a reboot," but had nothing to do with how the configuration was propagated.
 
-The idiom is the one the digital dome already uses: `dome.New(factory.ClientIP, ...)` passes a method value bound to the factory, so it reads through to the live configuration instead of copying a value out of it. Both types take a `ConfigProvider`, which is all they need and what makes them testable with a stub.
+The idiom is the one the digital dome already uses: `NewDigitalDome(factory.ClientIP)` passes a method value bound to the factory, so it reads through to the live configuration instead of copying a value out of it. Both types take a `ConfigProvider`, which is all they need and what makes them testable with a stub.
 
 Two things are still frozen at boot, by design or by bug: `startHTTPS` will not bind `:443` with zero non-local domains (binding unconditionally would break every developer on a privileged port), so the *first* such domain still needs a restart; and `autocert` reads the ACME contact email once, when it registers the account (BUG-137).
 

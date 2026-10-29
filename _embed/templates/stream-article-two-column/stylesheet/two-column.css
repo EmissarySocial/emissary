@@ -96,12 +96,12 @@
 .EasyMDEContainer {
 
 	.CodeMirror {
-		color: var(--black);
+		color: var(--gray100);
 		background-color: var(--gray10);
-		caret-color: var(--black);
+		caret-color: var(--gray100);
 
 		.CodeMirror-cursor {
-			border-left: 1px solid var(--black)!important;
+			border-left: 1px solid var(--gray100)!important;
 		}
 	}
 
@@ -115,7 +115,7 @@
 
 		button {
 			&.active {
-				color:var(--white);
+				color:var(--gray00);
 				background-color:var(--gray50);
 				border-color:var(--gray60);
 			}

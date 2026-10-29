@@ -88,6 +88,7 @@ func actorsToAccounts(factory *service.Factory, session data.Session, auth model
 		slots <- struct{}{}
 
 		go func(index int) {
+			defer recoverGoroutine("handler.mastodon.actorsToAccounts")
 			defer waitGroup.Done()
 			defer func() { <-slots }()
 			accounts[index] = actorToAccount(factory, session, auth, actors[index])

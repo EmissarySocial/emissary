@@ -11,12 +11,12 @@
 		{{- if eq 0 (len $following) -}}
 
 			This folder is empty and has no sources.
-			<span role="button" class="link" hx-get="/@me/settings/following-search">Follow Someone</span> to continue.
+			<span role="button" class="link turboclick" hx-get="/@me/settings/following-search">Follow Someone</span> to continue.
 
 		{{- else -}}
 
 			{{$selected := eq "" $followingID}}
-			<div role="button" class="menu-option flex-row {{ if $selected }}selected{{ end }}" hx-get="/@me/newsfeed/folder?folderId={{$folderID}}" hx-target="main" hx-swap="innerHTML" script="on click send closeModal">
+			<div role="button" class="menu-option flex-row {{ if $selected }}selected{{ end }} turboclick" hx-get="/@me/newsfeed/folder?folderId={{$folderID}}" hx-target="main" hx-swap="innerHTML" script="on click send closeModal">
 				<span class="circle width-32 margin-right-sm inline-block"></span>
 				<span>All Sources</span>
 			</div>
@@ -25,7 +25,7 @@
 				{{- $selected := eq $followingID .FollowingID.Hex -}}
 
 				<div role="button" class="menu-option flex-row {{ if $selected }}selected{{ end }}">
-					<div class="flex-row flex-grow-1" hx-get="/@me/newsfeed/folder?folderId={{$folderID}}&origin.followingId={{.FollowingID.Hex}}" hx-target="main" hx-swap="innerHTML" script="on click send closeModal">
+					<div class="flex-row flex-grow-1 turboclick" hx-get="/@me/newsfeed/folder?folderId={{$folderID}}&origin.followingId={{.FollowingID.Hex}}" hx-target="main" hx-swap="innerHTML" script="on click send closeModal">
 						<div class="width-32">
 							{{- if eq "" .IconURL -}}
 								<span class="circle width-32 margin-right-sm inline-block"></span>
@@ -38,7 +38,7 @@
 							<div class="margin-vertical-none text-xs text-gray">{{.URL}}</div>
 						</div>
 					</div>
-					<button class="text-xs nowrap" hx-get="/@me/settings/following-edit?followingId={{.FollowingID.Hex}}">Edit Source</button>
+					<button class="text-xs nowrap turboclick" hx-get="/@me/settings/following-edit?followingId={{.FollowingID.Hex}}">Edit Source</button>
 				</div>
 			{{- end -}}
 	

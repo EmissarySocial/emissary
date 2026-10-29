@@ -87,7 +87,7 @@ Content negotiation (HTML page vs. ActivityStreams document from one URL) and th
 
 ## Assorted facts that look wrong but aren't
 
-- The Mastodon API routes are not registered: `toot.Register` in [../server.go](../server.go) is commented out. [mastodon.go](mastodon.go) is the glue that builds the `toot.API` when it is re-enabled.
+- The Mastodon API routes are registered by `tootecho.Register` in [../server.go](../server.go), inside `registerWithHEAD`, because toot-echo adds GET routes without a HEAD. [mastodon.go](mastodon.go) is the glue that builds the `toot.API` it registers.
 - Discovery/intent failure pages (`PostOStatusDiscover`, `outboundIntentError`) return HTTP 200 with a human-readable message — they are htmx/user-facing response targets, not API errors.
 - `GetSignOut` renders a confirmation page only; the actual sign-out happens in `PostSignOut`, so state never changes on GET. `PostSignOut` may pop a stacked admin "backup" session (masquerade, see [signin_masquerade.go](signin_masquerade.go)) instead of fully signing out.
 - `PostResetPassword` returns a uniform success page for "email sent" and "user not found", but an honest error page when the account exists and SMTP fails — a mild enumeration signal accepted on purpose so locked-out members aren't stranded by a broken mail server.

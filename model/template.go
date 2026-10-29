@@ -36,7 +36,9 @@ type Template struct {
 	Icon               string               `json:"icon"               bson:"icon"`               // Icon image used in management UI.
 	Sort               int                  `json:"sort"               bson:"sort"`               // Sort order used in management UI.
 	ChildSortType      string               `json:"childSortType"      bson:"childSortType"`      // SortType used to display children
+	ShareWithChildren  bool                 `json:"shareWithChildren"  bson:"shareWithChildren"`  // TRUE if Streams using this Template stamp their sharing (Groups, Circles, Products, and ReplyPolicy) on every child Stream
 	ChildSortDirection string               `json:"childSortDirection" bson:"childSortDirection"` // Sort direction "asc" or "desc" (Default is ascending)
+	DefaultChildren    []mapof.Any          `json:"defaultChildren"    bson:"defaultChildren"`    // Dataset of Streams to create beneath each new User (in an outbox Template) or each added Stream that uses this Template.
 	WidgetLocations    sliceof.String       `json:"widget-locations"   bson:"widgetLocations"`    // List of locations where widgets can be placed.  Common values are: "TOP", "BOTTOM", "LEFT", "RIGHT"
 	Schema             schema.Schema        `json:"schema"             bson:"schema"`             // JSON Schema that describes the data required to populate this Template.
 	States             mapof.Object[State]  `json:"states"             bson:"states"`             // Map of States (by state.ID) that Streams of this Template can be in.
@@ -67,6 +69,7 @@ func NewTemplate(templateID string, funcMap template.FuncMap) Template {
 		ContainedBy:        make([]string, 0),
 		ChildSortType:      "rank",
 		ChildSortDirection: option.SortDirectionAscending,
+		DefaultChildren:    make([]mapof.Any, 0),
 		WidgetLocations:    make(sliceof.String, 0),
 		States:             make(map[string]State),
 		AccessRoles:        make(map[string]Role),
@@ -280,6 +283,11 @@ func (template *Template) Inherit(parent *Template) {
 	// Inherit TagURL. (TagPaths deliberately does NOT inherit; external template packages depend on that.)
 	if template.TagURL == "" {
 		template.TagURL = parent.TagURL
+	}
+
+	// Inherit DefaultChildren.
+	if len(template.DefaultChildren) == 0 {
+		template.DefaultChildren = parent.DefaultChildren
 	}
 
 	// Apply SocialRules

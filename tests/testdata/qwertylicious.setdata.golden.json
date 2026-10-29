@@ -893,7 +893,7 @@
 				"GET/empty": {},
 				"GET/hostile": {
 					"changes": {
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+						"label": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (218 bytes, sha256 e075764e9107)"
 					}
 				},
 				"GET/literal": {
@@ -914,7 +914,7 @@
 				"POST/empty": {},
 				"POST/hostile": {
 					"changes": {
-						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+						"label": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (218 bytes, sha256 e075764e9107)"
 					}
 				},
 				"POST/literal": {
@@ -930,6 +930,93 @@
 				"POST/typical": {
 					"changes": {
 						"label": "string Sample label"
+					}
+				}
+			}
+		},
+		"template:article-base/style/0:with-draft.SubSteps/1:set-data": {
+			"fields": [
+				"data.stylesheet (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.stylesheet": "removed"
+					},
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.stylesheet": "string body { color: #336699; }\n"
+					},
+					"types": {
+						"data.stylesheet": "string"
+					}
+				}
+			}
+		},
+		"template:article-base/widgets/0:with-draft.SubSteps/0:set-data": {
+			"fields": [
+				"data.width (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"error": ": data.width: Must be one of the specified values",
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.width": "removed"
+					},
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.width": "string FULL"
+					},
+					"types": {
+						"data.width": "string"
 					}
 				}
 			}
@@ -938,23 +1025,26 @@
 			"fields": [
 				"content.format (values, schema.String)",
 				"content.raw (values, schema.String)",
+				"data.width (values, schema.String)",
 				"label (values, schema.String)"
 			],
 			"values": {
 				"content.format": "EDITORJS (literal)",
 				"content.raw": "{} (literal)",
+				"data.width": "FULL (literal)",
 				"label": "New Article (literal)"
 			},
 			"results": {
 				"GET/empty": {},
 				"GET/hostile": {
-					"error": ": content.format: Must be one of the specified values",
+					"error": "varies with map order",
 					"orderDependent": true
 				},
 				"GET/literal": {
 					"changes": {
 						"content.format": "string EDITORJS",
 						"content.raw": "string {}",
+						"data.width": "string FULL",
 						"label": "string New Article"
 					}
 				},
@@ -969,18 +1059,20 @@
 					"changes": {
 						"content.format": "string HTML",
 						"content.raw": "string Sample content.raw",
+						"data.width": "string FULL",
 						"label": "string Sample label"
 					}
 				},
 				"POST/empty": {},
 				"POST/hostile": {
-					"error": ": content.format: Must be one of the specified values",
+					"error": "varies with map order",
 					"orderDependent": true
 				},
 				"POST/literal": {
 					"changes": {
 						"content.format": "string EDITORJS",
 						"content.raw": "string {}",
+						"data.width": "string FULL",
 						"label": "string New Article"
 					}
 				},
@@ -995,7 +1087,95 @@
 					"changes": {
 						"content.format": "string HTML",
 						"content.raw": "string Sample content.raw",
+						"data.width": "string FULL",
 						"label": "string Sample label"
+					}
+				}
+			}
+		},
+		"template:article-editorjs/style/0:with-draft.SubSteps/1:set-data": {
+			"fields": [
+				"data.stylesheet (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.stylesheet": "removed"
+					},
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.stylesheet": "string body { color: #336699; }\n"
+					},
+					"types": {
+						"data.stylesheet": "string"
+					}
+				}
+			}
+		},
+		"template:article-editorjs/widgets/0:with-draft.SubSteps/0:set-data": {
+			"fields": [
+				"data.width (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"error": ": data.width: Must be one of the specified values",
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.width": "removed"
+					},
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.width": "string FULL"
+					},
+					"types": {
+						"data.width": "string"
 					}
 				}
 			}
@@ -1004,7 +1184,7 @@
 			"fields": [
 				"content.format (values, schema.String)",
 				"content.raw (values, schema.String)",
-				"data.width (values, schema.Any)",
+				"data.width (values, schema.String)",
 				"label (values, schema.String)"
 			],
 			"values": {
@@ -1014,13 +1194,9 @@
 				"label": "New Article (HTML Code) (literal)"
 			},
 			"results": {
-				"GET/empty": {
-					"changes": {
-						"data.width": "string "
-					}
-				},
+				"GET/empty": {},
 				"GET/hostile": {
-					"error": ": content.format: Must be one of the specified values",
+					"error": "varies with map order",
 					"orderDependent": true
 				},
 				"GET/literal": {
@@ -1034,7 +1210,6 @@
 				"GET/prefilled": {
 					"changes": {
 						"content.raw": "string \u003ch1\u003eNew Article\u003c/h1\u003e",
-						"data.width": "string FULL",
 						"label": "string New Article (HTML Code)"
 					}
 				},
@@ -1042,17 +1217,13 @@
 					"changes": {
 						"content.format": "string HTML",
 						"content.raw": "string Sample content.raw",
-						"data.width": "string Sample data.width",
+						"data.width": "string FULL",
 						"label": "string Sample label"
 					}
 				},
-				"POST/empty": {
-					"changes": {
-						"data.width": "string "
-					}
-				},
+				"POST/empty": {},
 				"POST/hostile": {
-					"error": ": content.format: Must be one of the specified values",
+					"error": "varies with map order",
 					"orderDependent": true
 				},
 				"POST/literal": {
@@ -1066,7 +1237,6 @@
 				"POST/prefilled": {
 					"changes": {
 						"content.raw": "string \u003ch1\u003eNew Article\u003c/h1\u003e",
-						"data.width": "string FULL",
 						"label": "string New Article (HTML Code)"
 					}
 				},
@@ -1074,8 +1244,95 @@
 					"changes": {
 						"content.format": "string HTML",
 						"content.raw": "string Sample content.raw",
-						"data.width": "string Sample data.width",
+						"data.width": "string FULL",
 						"label": "string Sample label"
+					}
+				}
+			}
+		},
+		"template:article-html/style/0:with-draft.SubSteps/1:set-data": {
+			"fields": [
+				"data.stylesheet (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.stylesheet": "removed"
+					},
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.stylesheet": "string body { color: #336699; }\n"
+					},
+					"types": {
+						"data.stylesheet": "string"
+					}
+				}
+			}
+		},
+		"template:article-html/widgets/0:with-draft.SubSteps/0:set-data": {
+			"fields": [
+				"data.width (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"error": ": data.width: Must be one of the specified values",
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.width": "removed"
+					},
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.width": "string FULL"
+					},
+					"types": {
+						"data.width": "string"
 					}
 				}
 			}
@@ -1084,23 +1341,26 @@
 			"fields": [
 				"content.format (values, schema.String)",
 				"content.raw (values, schema.String)",
+				"data.width (values, schema.String)",
 				"label (values, schema.String)"
 			],
 			"values": {
 				"content.format": "MARKDOWN (literal)",
 				"content.raw": "# New Article (literal)",
+				"data.width": "FULL (literal)",
 				"label": "New Article (Markdown) (literal)"
 			},
 			"results": {
 				"GET/empty": {},
 				"GET/hostile": {
-					"error": ": content.format: Must be one of the specified values",
+					"error": "varies with map order",
 					"orderDependent": true
 				},
 				"GET/literal": {
 					"changes": {
 						"content.format": "string MARKDOWN",
 						"content.raw": "string # New Article",
+						"data.width": "string FULL",
 						"label": "string New Article (Markdown)"
 					}
 				},
@@ -1115,18 +1375,20 @@
 					"changes": {
 						"content.format": "string HTML",
 						"content.raw": "string Sample content.raw",
+						"data.width": "string FULL",
 						"label": "string Sample label"
 					}
 				},
 				"POST/empty": {},
 				"POST/hostile": {
-					"error": ": content.format: Must be one of the specified values",
+					"error": "varies with map order",
 					"orderDependent": true
 				},
 				"POST/literal": {
 					"changes": {
 						"content.format": "string MARKDOWN",
 						"content.raw": "string # New Article",
+						"data.width": "string FULL",
 						"label": "string New Article (Markdown)"
 					}
 				},
@@ -1141,7 +1403,95 @@
 					"changes": {
 						"content.format": "string HTML",
 						"content.raw": "string Sample content.raw",
+						"data.width": "string FULL",
 						"label": "string Sample label"
+					}
+				}
+			}
+		},
+		"template:article-markdown/style/0:with-draft.SubSteps/1:set-data": {
+			"fields": [
+				"data.stylesheet (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.stylesheet": "removed"
+					},
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.stylesheet": "string body { color: #336699; }\n"
+					},
+					"types": {
+						"data.stylesheet": "string"
+					}
+				}
+			}
+		},
+		"template:article-markdown/widgets/0:with-draft.SubSteps/0:set-data": {
+			"fields": [
+				"data.width (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"error": ": data.width: Must be one of the specified values",
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.width": "removed"
+					},
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.width": "string FULL"
+					},
+					"types": {
+						"data.width": "string"
 					}
 				}
 			}
@@ -1204,11 +1554,98 @@
 				}
 			}
 		},
+		"template:article-remote/style/0:with-draft.SubSteps/1:set-data": {
+			"fields": [
+				"data.stylesheet (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.stylesheet": "removed"
+					},
+					"types": {
+						"data.stylesheet": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.stylesheet": "string body { color: #336699; }\n"
+					},
+					"types": {
+						"data.stylesheet": "string"
+					}
+				}
+			}
+		},
+		"template:article-remote/widgets/0:with-draft.SubSteps/0:set-data": {
+			"fields": [
+				"data.width (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"error": ": data.width: Must be one of the specified values",
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.width": "removed"
+					},
+					"types": {
+						"data.width": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.width": "string FULL"
+					},
+					"types": {
+						"data.width": "string"
+					}
+				}
+			}
+		},
 		"template:article-two-column/create/0:set-data": {
 			"fields": [
 				"data.columns (values, schema.String)",
 				"data.left (values, schema.String)",
-				"data.width (values, not in schema)",
+				"data.width (values, schema.String)",
 				"label (values, schema.String)"
 			],
 			"values": {
@@ -1218,43 +1655,61 @@
 				"label": "New Article (Two Column) (literal)"
 			},
 			"results": {
-				"GET/empty": {
-					"error": ": Unknown field: data.width"
-				},
+				"GET/empty": {},
 				"GET/hostile": {
 					"error": "varies with map order",
 					"orderDependent": true
 				},
 				"GET/literal": {
-					"error": ": Unknown field: data.width",
-					"orderDependent": true
+					"changes": {
+						"data.columns": "string ONE-HALF",
+						"data.left": "string # New Article",
+						"data.width": "string FULL",
+						"label": "string New Article (Two Column)"
+					}
 				},
 				"GET/prefilled": {
-					"error": ": Unknown field: data.width",
-					"orderDependent": true
+					"changes": {
+						"data.columns": "string ONE-HALF",
+						"data.left": "string # New Article",
+						"label": "string New Article (Two Column)"
+					}
 				},
 				"GET/typical": {
-					"error": ": Unknown field: data.width",
-					"orderDependent": true
+					"changes": {
+						"data.columns": "string THREE-QUARTERS",
+						"data.left": "string Sample data.left",
+						"data.width": "string FULL",
+						"label": "string Sample label"
+					}
 				},
-				"POST/empty": {
-					"error": ": Unknown field: data.width"
-				},
+				"POST/empty": {},
 				"POST/hostile": {
 					"error": "varies with map order",
 					"orderDependent": true
 				},
 				"POST/literal": {
-					"error": ": Unknown field: data.width",
-					"orderDependent": true
+					"changes": {
+						"data.columns": "string ONE-HALF",
+						"data.left": "string # New Article",
+						"data.width": "string FULL",
+						"label": "string New Article (Two Column)"
+					}
 				},
 				"POST/prefilled": {
-					"error": ": Unknown field: data.width",
-					"orderDependent": true
+					"changes": {
+						"data.columns": "string ONE-HALF",
+						"data.left": "string # New Article",
+						"label": "string New Article (Two Column)"
+					}
 				},
 				"POST/typical": {
-					"error": ": Unknown field: data.width",
-					"orderDependent": true
+					"changes": {
+						"data.columns": "string THREE-QUARTERS",
+						"data.left": "string Sample data.left",
+						"data.width": "string FULL",
+						"label": "string Sample label"
+					}
 				}
 			}
 		},
@@ -1322,10 +1777,9 @@
 				}
 			}
 		},
-		"template:article-two-column/widgets/0:with-draft.SubSteps/0:set-data": {
+		"template:article-two-column/style/0:with-draft.SubSteps/1:set-data": {
 			"fields": [
-				"data.columns (from-form, schema.String)",
-				"data.width (from-form, not in schema)"
+				"data.stylesheet (from-form, schema.String)"
 			],
 			"results": {
 				"GET/empty": {},
@@ -1334,33 +1788,86 @@
 				"GET/prefilled": {},
 				"GET/typical": {},
 				"POST/empty": {
-					"error": ": Unknown field: data.width",
 					"types": {
-						"data.columns": "unreadable"
+						"data.stylesheet": "unreadable"
 					}
 				},
 				"POST/hostile": {
-					"error": ": Unknown field: data.width",
 					"types": {
-						"data.columns": "unreadable"
+						"data.stylesheet": "unreadable"
 					}
 				},
 				"POST/literal": {
-					"error": ": Unknown field: data.width",
 					"types": {
-						"data.columns": "unreadable"
+						"data.stylesheet": "unreadable"
 					}
 				},
 				"POST/prefilled": {
-					"error": ": Unknown field: data.width",
+					"changes": {
+						"data.stylesheet": "removed"
+					},
 					"types": {
-						"data.columns": "string"
+						"data.stylesheet": "unreadable"
 					}
 				},
 				"POST/typical": {
-					"error": ": Unknown field: data.width",
+					"changes": {
+						"data.stylesheet": "string body { color: #336699; }\n"
+					},
 					"types": {
-						"data.columns": "unreadable"
+						"data.stylesheet": "string"
+					}
+				}
+			}
+		},
+		"template:article-two-column/widgets/0:with-draft.SubSteps/0:set-data": {
+			"fields": [
+				"data.columns (from-form, schema.String)",
+				"data.width (from-form, schema.String)"
+			],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {
+					"types": {
+						"data.columns": "unreadable",
+						"data.width": "unreadable"
+					}
+				},
+				"POST/hostile": {
+					"error": ": data.width: Must be one of the specified values",
+					"types": {
+						"data.columns": "unreadable",
+						"data.width": "unreadable"
+					}
+				},
+				"POST/literal": {
+					"types": {
+						"data.columns": "unreadable",
+						"data.width": "unreadable"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.columns": "removed",
+						"data.width": "removed"
+					},
+					"types": {
+						"data.columns": "unreadable",
+						"data.width": "unreadable"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.columns": "string THREE-QUARTERS",
+						"data.width": "string FULL"
+					},
+					"types": {
+						"data.columns": "string",
+						"data.width": "string"
 					}
 				}
 			}
@@ -1656,6 +2163,50 @@
 				"POST/typical": {}
 			}
 		},
+		"template:outbox-message/edit/0:as-modal.SubSteps/4:set-data": {
+			"fields": [
+				"isFeatured (values, schema.Boolean)"
+			],
+			"values": {
+				"isFeatured": "{{eq (.GetString `isFeatured`) `true`}} (renders against the builder; mocked)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": ": isFeatured: Value must be a boolean"
+				},
+				"GET/hostile": {
+					"error": ": isFeatured: Value must be a boolean"
+				},
+				"GET/literal": {},
+				"GET/prefilled": {
+					"changes": {
+						"isFeatured": "bool false"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"isFeatured": "bool true"
+					}
+				},
+				"POST/empty": {
+					"error": ": isFeatured: Value must be a boolean"
+				},
+				"POST/hostile": {
+					"error": ": isFeatured: Value must be a boolean"
+				},
+				"POST/literal": {},
+				"POST/prefilled": {
+					"changes": {
+						"isFeatured": "bool false"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"isFeatured": "bool true"
+					}
+				}
+			}
+		},
 		"template:outbox-message/like-button/1:set-data": {
 			"fields": [],
 			"results": {
@@ -1687,6 +2238,21 @@
 			}
 		},
 		"template:outbox-reply/like-button/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:qwerty-article/btn-social-outline/1:set-data": {
 			"fields": [],
 			"results": {
 				"GET/empty": {},
@@ -1875,316 +2441,7 @@
 				}
 			}
 		},
-		"template:qwerty-inbox/actor-button-block-update/0:with-rule.SubSteps@with-rule/0:set-data": {
-			"fields": [
-				"summary (from-form, schema.String)"
-			],
-			"results": {
-				"GET/empty": {},
-				"GET/hostile": {},
-				"GET/literal": {},
-				"GET/prefilled": {},
-				"GET/typical": {},
-				"POST/empty": {
-					"types": {
-						"summary": "string"
-					}
-				},
-				"POST/hostile": {
-					"changes": {
-						"summary": "string \"alert(1)\\u202e\\txxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (218 bytes, sha256 e075764e9107)"
-					},
-					"types": {
-						"summary": "string"
-					}
-				},
-				"POST/literal": {
-					"types": {
-						"summary": "string"
-					}
-				},
-				"POST/prefilled": {
-					"changes": {
-						"summary": "string "
-					},
-					"types": {
-						"summary": "string"
-					}
-				},
-				"POST/typical": {
-					"changes": {
-						"summary": "string Sample summary"
-					},
-					"types": {
-						"summary": "string"
-					}
-				}
-			}
-		},
-		"template:qwerty-inbox/actor-button-block/0:with-rule.SubSteps@with-rule/0:set-data": {
-			"fields": [
-				"action (values, schema.String)",
-				"trigger (values, schema.String)",
-				"type (values, schema.String)"
-			],
-			"values": {
-				"action": "BLOCK (literal)",
-				"trigger": "{{.QueryParam `url`}} (renders against the builder; mocked)",
-				"type": "ACTOR (literal)"
-			},
-			"results": {
-				"GET/empty": {
-					"error": "varies with map order",
-					"orderDependent": true
-				},
-				"GET/hostile": {
-					"error": "varies with map order",
-					"orderDependent": true
-				},
-				"GET/literal": {
-					"error": ": trigger: Value is required",
-					"orderDependent": true
-				},
-				"GET/prefilled": {
-					"error": ": trigger: Value is required",
-					"orderDependent": true
-				},
-				"GET/typical": {
-					"changes": {
-						"action": "string BLOCK",
-						"trigger": "string Sample trigger",
-						"type": "string DOMAIN"
-					}
-				},
-				"POST/empty": {
-					"error": "varies with map order",
-					"orderDependent": true
-				},
-				"POST/hostile": {
-					"error": "varies with map order",
-					"orderDependent": true
-				},
-				"POST/literal": {
-					"error": ": trigger: Value is required",
-					"orderDependent": true
-				},
-				"POST/prefilled": {
-					"error": ": trigger: Value is required",
-					"orderDependent": true
-				},
-				"POST/typical": {
-					"changes": {
-						"action": "string BLOCK",
-						"trigger": "string Sample trigger",
-						"type": "string DOMAIN"
-					}
-				}
-			}
-		},
-		"template:qwerty-inbox/actor-button-follow-update/0:with-following.SubSteps@with-following/0:set-data": {
-			"fields": [
-				"behavior (from-form, schema.String)",
-				"isPublic (from-form, schema.Boolean)"
-			],
-			"results": {
-				"GET/empty": {},
-				"GET/hostile": {},
-				"GET/literal": {},
-				"GET/prefilled": {},
-				"GET/typical": {},
-				"POST/empty": {
-					"error": ": behavior: Value is required",
-					"types": {
-						"behavior": "string",
-						"isPublic": "bool"
-					}
-				},
-				"POST/hostile": {
-					"error": ": behavior: Must be one of the specified values",
-					"types": {
-						"behavior": "string",
-						"isPublic": "bool"
-					}
-				},
-				"POST/literal": {
-					"error": ": behavior: Value is required",
-					"types": {
-						"behavior": "string",
-						"isPublic": "bool"
-					}
-				},
-				"POST/prefilled": {
-					"error": ": behavior: Value is required",
-					"types": {
-						"behavior": "string",
-						"isPublic": "bool"
-					}
-				},
-				"POST/typical": {
-					"changes": {
-						"behavior": "string POSTS",
-						"isPublic": "bool true"
-					},
-					"types": {
-						"behavior": "string",
-						"isPublic": "bool"
-					}
-				}
-			}
-		},
-		"template:qwerty-inbox/actor-button-follow/0:with-following.SubSteps@with-following/0:set-data": {
-			"fields": [
-				"behavior (values, schema.String)",
-				"folderId (from-url, schema.String)",
-				"url (from-url, schema.String)"
-			],
-			"values": {
-				"behavior": "POSTS+REPLIES (literal)"
-			},
-			"results": {
-				"GET/empty": {
-					"error": ": behavior: Value is required",
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				},
-				"GET/hostile": {
-					"error": "schema.Schema.Set: Value is not valid for this schema",
-					"root": "schema.format.ObjectID: Value is not a valid ObjectID",
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				},
-				"GET/literal": {
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				},
-				"GET/prefilled": {
-					"changes": {
-						"behavior": "string POSTS+REPLIES"
-					},
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				},
-				"GET/typical": {
-					"changes": {
-						"behavior": "string POSTS",
-						"folderId": "objectId 0123456789abcdef01234567",
-						"url": "string https://example.com/url"
-					},
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				},
-				"POST/empty": {
-					"error": ": behavior: Value is required",
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				},
-				"POST/hostile": {
-					"error": "schema.Schema.Set: Value is not valid for this schema",
-					"root": "schema.format.ObjectID: Value is not a valid ObjectID",
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				},
-				"POST/literal": {
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				},
-				"POST/prefilled": {
-					"changes": {
-						"behavior": "string POSTS+REPLIES"
-					},
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				},
-				"POST/typical": {
-					"changes": {
-						"behavior": "string POSTS",
-						"folderId": "objectId 0123456789abcdef01234567",
-						"url": "string https://example.com/url"
-					},
-					"types": {
-						"folderId": "string",
-						"url": "string"
-					}
-				}
-			}
-		},
-		"template:qwerty-inbox/actor-button-mute/0:with-rule.SubSteps@with-rule/0:set-data": {
-			"fields": [
-				"action (values, schema.String)",
-				"trigger (values, schema.String)",
-				"type (values, schema.String)"
-			],
-			"values": {
-				"action": "MUTE (literal)",
-				"trigger": "{{.QueryParam `url`}} (renders against the builder; mocked)",
-				"type": "ACTOR (literal)"
-			},
-			"results": {
-				"GET/empty": {
-					"error": "varies with map order",
-					"orderDependent": true
-				},
-				"GET/hostile": {
-					"error": "varies with map order",
-					"orderDependent": true
-				},
-				"GET/literal": {
-					"error": ": trigger: Value is required"
-				},
-				"GET/prefilled": {
-					"error": ": trigger: Value is required",
-					"orderDependent": true
-				},
-				"GET/typical": {
-					"changes": {
-						"action": "string BLOCK",
-						"trigger": "string Sample trigger",
-						"type": "string DOMAIN"
-					}
-				},
-				"POST/empty": {
-					"error": "varies with map order",
-					"orderDependent": true
-				},
-				"POST/hostile": {
-					"error": "varies with map order",
-					"orderDependent": true
-				},
-				"POST/literal": {
-					"error": ": trigger: Value is required"
-				},
-				"POST/prefilled": {
-					"error": ": trigger: Value is required",
-					"orderDependent": true
-				},
-				"POST/typical": {
-					"changes": {
-						"action": "string BLOCK",
-						"trigger": "string Sample trigger",
-						"type": "string DOMAIN"
-					}
-				}
-			}
-		},
-		"template:qwerty-inbox/btn-social-outline/1:set-data": {
+		"template:qwerty-article/like-button/1:set-data": {
 			"fields": [],
 			"results": {
 				"GET/empty": {},
@@ -2199,7 +2456,370 @@
 				"POST/typical": {}
 			}
 		},
-		"template:qwerty-inbox/like-button/1:set-data": {
+		"template:qwerty-collection/create/0:set-data": {
+			"fields": [
+				"data.calendarView (values, schema.String)",
+				"data.layout (values, schema.String)",
+				"data.zoom (values, schema.Integer)",
+				"replyPolicy (values, schema.String)"
+			],
+			"values": {
+				"data.calendarView": "list (literal)",
+				"data.layout": "column-3 (literal)",
+				"data.zoom": "11 (literal)",
+				"replyPolicy": "everyone (literal)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": ": data.zoom: Value must be an integer"
+				},
+				"GET/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"GET/literal": {
+					"changes": {
+						"data.calendarView": "string list",
+						"data.layout": "string column-3",
+						"data.zoom": "int32 11",
+						"replyPolicy": "string everyone"
+					}
+				},
+				"GET/prefilled": {
+					"changes": {
+						"data.calendarView": "string list",
+						"data.layout": "string column-3",
+						"data.zoom": "int32 11",
+						"replyPolicy": "string everyone"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"data.layout": "string column-1",
+						"data.zoom": "int32 7"
+					}
+				},
+				"POST/empty": {
+					"error": ": data.zoom: Value must be an integer"
+				},
+				"POST/hostile": {
+					"error": "varies with map order",
+					"orderDependent": true
+				},
+				"POST/literal": {
+					"changes": {
+						"data.calendarView": "string list",
+						"data.layout": "string column-3",
+						"data.zoom": "int32 11",
+						"replyPolicy": "string everyone"
+					}
+				},
+				"POST/prefilled": {
+					"changes": {
+						"data.calendarView": "string list",
+						"data.layout": "string column-3",
+						"data.zoom": "int32 11",
+						"replyPolicy": "string everyone"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"data.layout": "string column-1",
+						"data.zoom": "int32 7"
+					}
+				}
+			}
+		},
+		"template:qwerty-collection/create/1:as-modal.SubSteps/1:set-data": {
+			"fields": [
+				"label (values, schema.String)"
+			],
+			"values": {
+				"label": "{{with .Data `layout`}}{{if eq . `gallery`}}Photos{{else}}{{if eq . `podcast`}}Podcast{{else}}{{if eq . `timeline`}}Timeline{{else}}{{if eq . `calendar`}}Calendar{{else}}{{if eq . `map`}}Map{{else}}{{if eq . `notes`}}Notes{{else}}Articles{{end}}{{end}}{{end}}{{end}}{{end}}{{end}}{{end}} (renders against the builder; mocked)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": ": label: Value is required"
+				},
+				"GET/hostile": {
+					"changes": {
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					}
+				},
+				"GET/literal": {
+					"error": ": label: Value is required"
+				},
+				"GET/prefilled": {
+					"error": ": label: Value is required"
+				},
+				"GET/typical": {
+					"changes": {
+						"label": "string Sample label"
+					}
+				},
+				"POST/empty": {
+					"error": ": label: Value is required"
+				},
+				"POST/hostile": {
+					"changes": {
+						"label": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (90 bytes, sha256 046860082884)"
+					}
+				},
+				"POST/literal": {
+					"error": ": label: Value is required"
+				},
+				"POST/prefilled": {
+					"error": ": label: Value is required"
+				},
+				"POST/typical": {
+					"changes": {
+						"label": "string Sample label"
+					}
+				}
+			}
+		},
+		"template:qwerty-entry/btn-social-outline/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:qwerty-entry/delete-icon/1:set-data": {
+			"fields": [
+				"iconUrl (values, schema.String)"
+			],
+			"values": {
+				"iconUrl": " (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)"
+				},
+				"GET/literal": {},
+				"GET/prefilled": {
+					"changes": {
+						"iconUrl": "removed"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"iconUrl": "string https://example.com/iconUrl"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)"
+				},
+				"POST/literal": {},
+				"POST/prefilled": {
+					"changes": {
+						"iconUrl": "removed"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"iconUrl": "string https://example.com/iconUrl"
+					}
+				}
+			}
+		},
+		"template:qwerty-entry/like-button/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:qwerty-episode/btn-social-outline/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:qwerty-episode/create/0:as-modal.SubSteps/3:set-data": {
+			"fields": [
+				"data.enclosureType (values, schema.String)",
+				"data.enclosureUrl (values, schema.String)"
+			],
+			"values": {
+				"data.enclosureType": "audio/mpeg (literal)",
+				"data.enclosureUrl": "{{if ne `` (.DataString `attachmentId`)}}{{.Permalink}}/audio?format=mp3{{end}} (renders against the builder; mocked)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)",
+					"orderDependent": true
+				},
+				"GET/literal": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must be an absolute URL (with a scheme and domain)",
+					"orderDependent": true
+				},
+				"GET/prefilled": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must be an absolute URL (with a scheme and domain)",
+					"orderDependent": true
+				},
+				"GET/typical": {
+					"changes": {
+						"data.enclosureType": "string Sample data.enclosureType",
+						"data.enclosureUrl": "string https://example.com/data-enclosureUrl"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)",
+					"orderDependent": true
+				},
+				"POST/literal": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must be an absolute URL (with a scheme and domain)",
+					"orderDependent": true
+				},
+				"POST/prefilled": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must be an absolute URL (with a scheme and domain)",
+					"orderDependent": true
+				},
+				"POST/typical": {
+					"changes": {
+						"data.enclosureType": "string Sample data.enclosureType",
+						"data.enclosureUrl": "string https://example.com/data-enclosureUrl"
+					}
+				}
+			}
+		},
+		"template:qwerty-episode/delete-icon/1:set-data": {
+			"fields": [
+				"iconUrl (values, schema.String)"
+			],
+			"values": {
+				"iconUrl": " (literal)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)"
+				},
+				"GET/literal": {},
+				"GET/prefilled": {
+					"changes": {
+						"iconUrl": "removed"
+					}
+				},
+				"GET/typical": {
+					"changes": {
+						"iconUrl": "string https://example.com/iconUrl"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)"
+				},
+				"POST/literal": {},
+				"POST/prefilled": {
+					"changes": {
+						"iconUrl": "removed"
+					}
+				},
+				"POST/typical": {
+					"changes": {
+						"iconUrl": "string https://example.com/iconUrl"
+					}
+				}
+			}
+		},
+		"template:qwerty-episode/edit/0:as-modal.SubSteps/4:set-data": {
+			"fields": [
+				"data.enclosureType (values, schema.String)",
+				"data.enclosureUrl (values, schema.String)"
+			],
+			"values": {
+				"data.enclosureType": "audio/mpeg (literal)",
+				"data.enclosureUrl": "{{if ne `` (.DataString `attachmentId`)}}{{.Permalink}}/audio?format=mp3{{end}} (renders against the builder; mocked)"
+			},
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)",
+					"orderDependent": true
+				},
+				"GET/literal": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must be an absolute URL (with a scheme and domain)",
+					"orderDependent": true
+				},
+				"GET/prefilled": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must be an absolute URL (with a scheme and domain)",
+					"orderDependent": true
+				},
+				"GET/typical": {
+					"changes": {
+						"data.enclosureType": "string Sample data.enclosureType",
+						"data.enclosureUrl": "string https://example.com/data-enclosureUrl"
+					}
+				},
+				"POST/empty": {},
+				"POST/hostile": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must have a valid protocol scheme (http or https only)",
+					"orderDependent": true
+				},
+				"POST/literal": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must be an absolute URL (with a scheme and domain)",
+					"orderDependent": true
+				},
+				"POST/prefilled": {
+					"error": "schema.Schema.Set: Value is not valid for this schema",
+					"root": "schema.format.URL: Value must be an absolute URL (with a scheme and domain)",
+					"orderDependent": true
+				},
+				"POST/typical": {
+					"changes": {
+						"data.enclosureType": "string Sample data.enclosureType",
+						"data.enclosureUrl": "string https://example.com/data-enclosureUrl"
+					}
+				}
+			}
+		},
+		"template:qwerty-episode/like-button/1:set-data": {
 			"fields": [],
 			"results": {
 				"GET/empty": {},
@@ -2256,7 +2876,7 @@
 				"GET/hostile": {
 					"changes": {
 						"data": "removed",
-						"data.background-body": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)"
+						"data.background-body": "string javascript:alert(1)"
 					}
 				},
 				"GET/literal": {},
@@ -2269,14 +2889,14 @@
 				"GET/typical": {
 					"changes": {
 						"data": "removed",
-						"data.background-body": "string Sample data.background-body"
+						"data.background-body": "string https://example.com/data-background-body"
 					}
 				},
 				"POST/empty": {},
 				"POST/hostile": {
 					"changes": {
 						"data": "removed",
-						"data.background-body": "string \"alert(1)\\u202e xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\"... (4058 bytes, sha256 2b48a69ac117)"
+						"data.background-body": "string javascript:alert(1)"
 					}
 				},
 				"POST/literal": {},
@@ -2289,12 +2909,160 @@
 				"POST/typical": {
 					"changes": {
 						"data": "removed",
-						"data.background-body": "string Sample data.background-body"
+						"data.background-body": "string https://example.com/data-background-body"
 					}
 				}
 			}
 		},
 		"template:qwerty-outbox/like-button/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:qwerty-photo/btn-social-outline/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:qwerty-photo/create/0:as-modal.SubSteps/3:set-data": {
+			"fields": [
+				"data.photoCount (values, schema.Integer)"
+			],
+			"values": {
+				"data.photoCount": "{{len (.AttachmentsByCategory `photo`)}} (renders against the builder; mocked)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"GET/hostile": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"GET/literal": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"GET/prefilled": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"GET/typical": {
+					"changes": {
+						"data.photoCount": "int32 7"
+					}
+				},
+				"POST/empty": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"POST/hostile": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"POST/literal": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"POST/prefilled": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"POST/typical": {
+					"changes": {
+						"data.photoCount": "int32 7"
+					}
+				}
+			}
+		},
+		"template:qwerty-photo/edit/0:as-modal.SubSteps/4:set-data": {
+			"fields": [
+				"data.photoCount (values, schema.Integer)"
+			],
+			"values": {
+				"data.photoCount": "{{len (.AttachmentsByCategory `photo`)}} (renders against the builder; mocked)"
+			},
+			"results": {
+				"GET/empty": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"GET/hostile": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"GET/literal": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"GET/prefilled": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"GET/typical": {
+					"changes": {
+						"data.photoCount": "int32 7"
+					}
+				},
+				"POST/empty": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"POST/hostile": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"POST/literal": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"POST/prefilled": {
+					"error": ": data.photoCount: Value must be an integer"
+				},
+				"POST/typical": {
+					"changes": {
+						"data.photoCount": "int32 7"
+					}
+				}
+			}
+		},
+		"template:qwerty-photo/like-button/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:qwerty-replies/btn-social-outline/1:set-data": {
+			"fields": [],
+			"results": {
+				"GET/empty": {},
+				"GET/hostile": {},
+				"GET/literal": {},
+				"GET/prefilled": {},
+				"GET/typical": {},
+				"POST/empty": {},
+				"POST/hostile": {},
+				"POST/literal": {},
+				"POST/prefilled": {},
+				"POST/typical": {}
+			}
+		},
+		"template:qwerty-replies/like-button/1:set-data": {
 			"fields": [],
 			"results": {
 				"GET/empty": {},
@@ -3236,7 +4004,7 @@
 				}
 			}
 		},
-		"template:user-settings/following-edit/0:as-modal.SubSteps/0:with-following.SubSteps@with-following/1:set-data": {
+		"template:user-settings/following-edit/0:as-modal.SubSteps/0:with-following.SubSteps@with-following/1:if.Then/0:set-data": {
 			"fields": [
 				"folderId (from-url, schema.String)"
 			],

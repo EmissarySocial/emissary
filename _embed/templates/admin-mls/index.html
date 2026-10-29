@@ -1,8 +1,8 @@
 {{- $mode := .MLSMode -}}
 {{- $groups := .MLSGroupIDs -}}
 
-<div class="page">
 	
+	{{- /* menubar opens .app and .app-content; this page's closing </div> closes .app-content */ -}}
 	{{template "menubar" .}}
 
 	<div class="text-lg bold">Encrypted Messaging Setup</div>

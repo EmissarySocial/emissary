@@ -150,3 +150,24 @@ func TestVerifyContentType_ShortFile(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, payload, roundTrip)
 }
+
+// TestRoomLeft verifies how many new attachments a "fill" upload accepts, so that it never
+// deletes an existing one to make room (QWERTY-COLLECTIONS: a photo carousel holds up to 64)
+func TestRoomLeft(t *testing.T) {
+
+	table := []struct {
+		maximum  int
+		existing int
+		expected int
+	}{
+		{64, 0, 64}, // An empty post takes the whole maximum
+		{64, 60, 4}, // Only the room that is left
+		{64, 64, 0}, // A full post takes no more
+		{10, 64, 0}, // A maximum lowered beneath what exists is never negative
+		{1, 0, 1},   // The default maximum
+	}
+
+	for _, row := range table {
+		require.Equal(t, row.expected, roomLeft(row.maximum, row.existing), "maximum=%d existing=%d", row.maximum, row.existing)
+	}
+}

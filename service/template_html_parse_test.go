@@ -76,7 +76,7 @@ func TestEmbeddedTemplates_HTMLParses(t *testing.T) {
 	// cross-file variables like $title and therefore do not parse standalone.  Every directory
 	// that CAN parse standalone belongs here — nothing else parses these files before a visitor
 	// asks for one.
-	dirs := []string{"user-inbox", "user-settings", "user-outbox", "base-intent", "theme-default", "stream-article-base", "stream-article-remote"}
+	dirs := []string{"base-outbox", "user-inbox", "user-settings", "user-outbox", "base-intent", "theme-default", "stream-article-base", "stream-article-remote"}
 
 	for _, name := range dirs {
 		dir := filepath.Join(root, name)

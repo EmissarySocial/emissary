@@ -287,6 +287,11 @@ func (service *User) Save(session data.Session, user *model.User, note string) e
 		if err := service.folderService.CreateDefaultFolders(session, user.UserID); err != nil {
 			return derp.Wrap(err, location, "Creating default folders for User", user, note)
 		}
+
+		// RULE: Create the Streams that this user's outbox Template starts every profile with
+		if err := service.streamService.CreateDefaultChildrenForUser(session, user); err != nil {
+			return derp.Wrap(err, location, "Creating default children for User", user.UserID)
+		}
 	}
 
 	// Handle Bluesky bridging opt-in/out

@@ -1,0 +1,32 @@
+/******************************************
+ * Folder Sidebar
+ *
+ * The sidebar's look comes from theme-default (stylesheet/03-app.css).
+ * These rules add only what this menu's own structure needs: the gaps
+ * between its sections, and room for each folder's unread dot and drag
+ * handle.
+ ******************************************/
+
+/* The menu has three sections: My Inbox and Notes, the named folders, and New Folder.  Here
+   they are separated by margins 1.5x the <br>'s one line (24px), so the <br> is hidden.  The
+   full-page mobile menu has no #app-sidebar, so it keeps the <br>. */
+#app-sidebar > br {
+	display: none;
+}
+
+#app-sidebar > .sortable,
+#app-sidebar > .sortable + .menu-item {
+	margin-top: calc(var(--rhythm) * 4.5);
+}
+
+/* A folder's unread dot and drag handle sit at the right of its row, centered on the row's
+   height, so the label leaves room for them */
+#app-sidebar .folder {
+	padding-right: calc(var(--rhythm) * 4);
+}
+
+#app-sidebar .folder-handle {
+	top: 50%;
+	right: var(--rhythm);
+	transform: translateY(-50%);
+}

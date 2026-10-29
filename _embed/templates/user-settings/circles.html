@@ -5,7 +5,7 @@
 	<title>Social | Circles ({{$circles.Length}})</title>
 
 	{{- if $isDesktop -}}
-		<div id="app-sidebar" class="expanded">
+		<div id="app-sidebar" class="flex-column flex-justify-between expanded">
 			{{- template "menu" "social" -}}
 		</div>
 	{{- end -}}
@@ -15,46 +15,46 @@
 		<div id="menu-bar">
 			<div class="left">
 				{{ if not $isDesktop }}
-					<a href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
+					<a class="turboclick" href="/@me/settings/mobile" hx-boost="true">{{icon "back"}}</a>
 				{{ end }}
-				<a href="/@me/settings/following" hx-boost="true">Following</a>
-				<a href="/@me/settings/followers" hx-boost="true">Followers</a>
-				<a href="/@me/settings/circles" class="selected" hx-boost="true">Circles</a>
-				<a href="/@me/settings/rules" hx-boost="true">Rules</a>
-				<a href="/@me/settings/notifications" hx-boost="true">Notifications</a>
+				<a class="turboclick" href="/@me/settings/following" hx-boost="true">Following</a>
+				<a class="turboclick" href="/@me/settings/followers" hx-boost="true">Followers</a>
+				<a href="/@me/settings/circles" class="selected turboclick" hx-boost="true">Circles</a>
+				<a class="turboclick" href="/@me/settings/rules" hx-boost="true">Rules</a>
+				<a class="turboclick" href="/@me/settings/notifications" hx-boost="true">Notifications</a>
 			</div>
 			<div class="right">
 				<a href="https://emissary.dev/circles" target="_blank" rel="noopener noreferrer" class="link">
 					{{icon "help"}}
-					{{ if $isDesktop }} Help with Circles {{ end }}
+					{{ if $isDesktop }} Help {{ end }}
 				</a>
 			</div>
 		</div>
 
-		<div class="alert-gray">
+		<div class="card border padding margin-bottom-sm">
 			Circles enable you to limit the visibility of your posts. Every post can be public (visible to everyone), 
 			or limited to the people in the circles you select.<br><br>
-			You can add people to circles manually, or <a href="/@me/settings/payments" class="nowrap">set up payments</a>
+			You can add people to circles manually, or <a href="/@me/settings/payments" class="nowrap turboclick">set up payments</a>
 			to charge for access to circles.
 		</div>
 
 		<table class="table">
-			<tr hx-get="/@me/settings/circle-add" role="button"><td class="link" colspan="5">
+			<tr class="turboclick" hx-get="/@me/settings/circle-add" role="button"><td class="link" colspan="5">
 				<span class="margin-right-xs">{{icon "add"}}</span>
 				Add a Circle
 			</td></tr>
 			
 			{{- range $index, $circle := $circles -}}
 				<tr role="button">
-					<td hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}">
+					<td class="turboclick" hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}">
 						<span class="margin-right-xs xtext-light-gray">{{icon $circle.Icon}}</span>
 						{{$circle.Name}}
 					</td>
-					<td hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}" nowrap>
+					<td class="turboclick" hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}" nowrap>
 						<span class="text-light-gray">{{icon "person-fill"}}</span> 
 						{{$circle.MemberCount}}
 					</td>
-					<td hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}" nowrap>
+					<td class="turboclick" hx-get="/@me/settings/circle-members?circleId={{$circle.ID}}" nowrap>
 						{{- if $circle.HasProducts -}}
 							<span class="text-light-gray">{{icon "box-fill"}}</span> 
 							{{$circle.ProductCount -}}
@@ -62,7 +62,7 @@
 					</td>
 					</td>
 					<td class="align-right" nowrap>
-						<button hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}" role="button" class="text-xs">Edit Circle</button>
+						<button hx-get="/@me/settings/circle-edit?circleId={{$circle.ID}}" role="button" class="text-xs turboclick">Edit Circle</button>
 					</td>
 				</tr>
 			{{- end}}

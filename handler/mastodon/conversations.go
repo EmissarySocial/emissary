@@ -180,6 +180,7 @@ func GetConversations(serverFactory *server.Factory) func(model.Authorization, t
 			slots <- struct{}{}
 
 			go func(index int) {
+				defer recoverGoroutine(location)
 				defer waitGroup.Done()
 				defer func() { <-slots }()
 				result[index] = conversationToToot(factory, session, auth, groups[index], accounts)

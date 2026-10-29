@@ -9,6 +9,7 @@ import (
 
 	"github.com/EmissarySocial/emissary/model"
 	"github.com/EmissarySocial/emissary/service"
+	"github.com/EmissarySocial/emissary/tools/id"
 	"github.com/benpate/data"
 	"github.com/benpate/data/option"
 	"github.com/benpate/derp"
@@ -257,6 +258,11 @@ func (w Stream) SummaryOrContent() string {
 	return w._stream.SummaryOrContent()
 }
 
+// Icon returns the icon name of the stream being built
+func (w Stream) Icon() string {
+	return w._stream.Icon
+}
+
 // IconURL returns the thumbnail image URL of the stream being built
 func (w Stream) IconURL() string {
 	return w._stream.IconURL
@@ -340,6 +346,12 @@ func (w Stream) ContentRaw() string {
 		return "{}"
 	}
 
+	return w._stream.Content.Raw
+}
+
+// ContentSource returns this Stream's content in its source format, or an empty string.  Text editors use
+// it instead of ContentRaw, whose empty JSON object is meant for EditorJS.
+func (w Stream) ContentSource() string {
 	return w._stream.Content.Raw
 }
 
@@ -527,7 +539,7 @@ func (w Stream) Widgets(location string) (template.HTML, error) {
 		if widget, ok := widgetService.Get(streamWidget.Type); ok {
 			widgetBuilder := NewWidget(&w, &streamWidget)
 
-			if err := widget.HTMLTemplate.ExecuteTemplate(&buffer, "widget", widgetBuilder); err != nil {
+			if err := appendWidget(&buffer, widget.HTMLTemplate, widgetBuilder); err != nil {
 				derp.Report(derp.Wrap(err, "build.Stream.Widgets", "Executing widget template", widget))
 			}
 		}
@@ -535,6 +547,22 @@ func (w Stream) Widgets(location string) (template.HTML, error) {
 	buffer.WriteString(`</div>`)
 
 	return template.HTML(buffer.String()), nil // #nosec G203 -- buffer holds the action pipeline's own rendered output, already escaped by html/template
+}
+
+// appendWidget renders one widget's "widget" template and appends the result to buffer,
+// appending nothing when the template fails
+func appendWidget(buffer *bytes.Buffer, widgetTemplate *template.Template, data any) error {
+
+	// A template that fails partway has already written its opening tags, which would
+	// leave the page unbalanced (BUG-279), so render into a buffer of its own first
+	var widgetBuffer bytes.Buffer
+
+	if err := widgetTemplate.ExecuteTemplate(&widgetBuffer, "widget", data); err != nil {
+		return err
+	}
+
+	buffer.Write(widgetBuffer.Bytes())
+	return nil // Nothing to see here
 }
 
 /******************************************
@@ -655,6 +683,57 @@ func (w Stream) LastChild(sort string, action string) (Stream, error) {
 	return w.getFirstStream(criteria, sortOption, action), nil
 }
 
+// NextAfterParent returns the next sibling, by rank, of the nearest ancestor that has one.
+// It returns an empty builder at the end of the tree.
+func (w Stream) NextAfterParent(action string) (Stream, error) {
+
+	loadParent := func(parentID primitive.ObjectID, parent *model.Stream) error {
+		return w._factory.Stream().LoadByID(w._session, parentID, parent)
+	}
+
+	nextSibling := func(stream *model.Stream) Stream {
+		criteria := exp.Equal("parentId", stream.ParentID).AndGreaterThan("rank", stream.Rank)
+		return w.getFirstStream(criteria, option.SortAsc("rank"), action)
+	}
+
+	return nextAfterParent(w._stream, loadParent, nextSibling), nil
+}
+
+// nextAfterParent climbs from stream through its ancestors, returning the first ancestor's next sibling found
+func nextAfterParent(stream *model.Stream, loadParent func(primitive.ObjectID, *model.Stream) error, nextSibling func(*model.Stream) Stream) Stream {
+
+	const location = "build.nextAfterParent"
+
+	// The depth limit stops a corrupt parentId loop from spinning forever
+	current := stream
+	for range maxTreeDepth {
+
+		// RULE: A top-level Stream ends the walk
+		if !current.HasParent() {
+			return Stream{}
+		}
+
+		// Load the parent. A top-level Stream's parentId names its owner, which is not a Stream
+		parent := model.NewStream()
+		if err := loadParent(current.ParentID, &parent); err != nil {
+			if !derp.IsNotFound(err) {
+				derp.Report(derp.Wrap(err, location, "Loading parent", current.ParentID))
+			}
+			return Stream{}
+		}
+
+		// Use the parent's next sibling, if it has one
+		if next := nextSibling(&parent); !next.IsEmpty() {
+			return next
+		}
+
+		current = &parent
+	}
+
+	// Lost in the woods
+	return Stream{}
+}
+
 // getFirstStream scans an iterator for the first stream allowed to this user.
 // It is used internally by PrevSibling, NextSibling, FirstChild, and LastChild
 func (w Stream) getFirstStream(criteria exp.Expression, sortOption option.Option, actionID string) Stream {
@@ -705,6 +784,12 @@ func (w Stream) RepliesAfter(dateString string, maxRows int) sliceof.Object[stre
 
 // ReplyLinksAfter returns the reply links in this Stream's Replies collection created after the provided date
 func (w Stream) ReplyLinksAfter(dateString string, maxRows int) (sliceof.Object[model.CollectionItem], error) {
+
+	// RULE: A Stream with closed replies shows none, but keeps them, so reopening restores them
+	if !w._stream.AcceptsReplies() {
+		return sliceof.NewObject[model.CollectionItem](), nil
+	}
+
 	collectionItemService := w._factory.CollectionItem()
 	minDate := convert.Int64(dateString)
 	criteria := exp.GreaterThan("createDate", minDate)
@@ -732,9 +817,27 @@ func (w Stream) ShareLinksAfter(dateString string, maxRows int) (sliceof.Object[
 	return collectionItemService.QueryByCollectionType(w._session, w._stream.StreamID, model.CollectionTypeShares, criteria, option.MaxRows(int64(maxRows)), option.SortAsc("createDate"))
 }
 
-// ReplyCount returns the denormalized count of replies to this Stream.
+// ReplyCount returns the denormalized count of replies to this Stream, or zero while its replies are closed.
 func (w Stream) ReplyCount() int {
+
+	// RULE: A Stream with closed replies shows none; the stored count stays, so reopening restores it
+	if !w._stream.AcceptsReplies() {
+		return 0
+	}
+
 	return w._stream.ReplyCount
+}
+
+// AcceptsReplies returns TRUE if a new reply to this Stream would be recorded: it is public, and
+// its author has not closed replies.  Templates use it to decide whether to offer a Reply button.
+func (w Stream) AcceptsReplies() bool {
+	return w._stream.AcceptsReplies()
+}
+
+// RepliesClosed returns TRUE if this Stream's author has closed replies (ReplyPolicyNobody).
+// Only templates call it, to label a reply-policy menu item and to explain a missing Reply button.
+func (w Stream) RepliesClosed() bool {
+	return w._stream.ReplyPolicy == model.ReplyPolicyNobody
 }
 
 // LikeCount returns the denormalized count of "Like" responses to this Stream.
@@ -807,6 +910,24 @@ func (w Stream) Breadcrumbs() ([]model.StreamSummary, error) {
 	return w._factory.Stream().QuerySummary(w._session, criteria, option.SortAsc("depth"))
 }
 
+// ParentSummary returns a one-row query for this Stream's parent, which a public view can read
+// safely.  Parent fails the whole page when the requester may not see the parent, so this
+// applies the permission filter instead, and a hidden parent yields an empty result.  So does a
+// parent that is not a Stream at all, such as a User's outbox.  It ignores the publish window,
+// because some parents are never published (QWERTY-COLLECTIONS: a qwertylicious collection).
+func (w Stream) ParentSummary() QueryBuilder[model.StreamSummary] {
+
+	// RULE: A top-level Stream has no parent to read
+	if !w.HasParent() {
+		return NewEmptyQueryBuilder[model.StreamSummary]()
+	}
+
+	criteria := exp.Equal("_id", w._stream.ParentID).
+		And(w.defaultAllowed())
+
+	return NewQueryBuilder[model.StreamSummary](w._factory.Stream(), w._session, criteria)
+}
+
 // Ancestors returns all Streams that have the same "parent" as the current Stream's parent
 func (w Stream) Ancestors() QueryBuilder[model.StreamSummary] {
 
@@ -847,8 +968,30 @@ func (w Stream) Children() QueryBuilder[model.StreamSummary] {
 	return w.makeStreamQueryBuilder(exp.Equal("parentId", w._stream.StreamID))
 }
 
-// makeStreamQueryBuilder returns a fully initialized RenderBuilder
+// ChildrenWithDrafts returns the current Stream's children for an editing view.  The Stream's
+// author also sees the children that are not published yet, or no longer are.  Everyone else
+// gets exactly what Children returns, so calling this from a public view leaks nothing.
+// Permissions apply either way: a draft appears only to the people allowed to view it.
+func (w Stream) ChildrenWithDrafts() QueryBuilder[model.StreamSummary] {
+
+	criteria := exp.Equal("parentId", w._stream.StreamID)
+
+	if !w.IsAuthor() {
+		return w.makeStreamQueryBuilder(criteria)
+	}
+
+	return w.makeStreamQueryBuilderAnyDate(criteria)
+}
+
+// makeStreamQueryBuilder returns a fully initialized RenderBuilder for the published Streams
+// that match the criteria
 func (w Stream) makeStreamQueryBuilder(criteria exp.Expression) QueryBuilder[model.StreamSummary] {
+	return w.makeStreamQueryBuilderAnyDate(criteria.And(w.withinPublishDate()))
+}
+
+// makeStreamQueryBuilderAnyDate returns a fully initialized RenderBuilder for the Streams that
+// match the criteria, whatever their publish dates
+func (w Stream) makeStreamQueryBuilderAnyDate(criteria exp.Expression) QueryBuilder[model.StreamSummary] {
 
 	queryBuilder := builder.NewBuilder().
 		Int("createDate").
@@ -862,13 +1005,12 @@ func (w Stream) makeStreamQueryBuilder(criteria exp.Expression) QueryBuilder[mod
 	query := queryBuilder.Evaluate(queryValues)
 	criteria = criteria.
 		And(query).
-		And(w.defaultAllowed()).
-		And(w.withinPublishDate())
+		And(w.defaultAllowed())
 
-	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), w._session, criteria)
-	result.By(w._template.ChildSortType)
+	result := NewQueryBuilder[model.StreamSummary](w._factory.Stream(), w._session, criteria).By(w._template.ChildSortType)
+
 	if w._template.ChildSortDirection == "desc" {
-		result.Reverse()
+		result = result.Reverse()
 	}
 
 	return result
@@ -955,6 +1097,75 @@ func (w Stream) SharingStatus(role string) form.LookupCode {
 	}
 
 	return form.LookupCode{Value: model.SharingStatusOwners, Label: "Sharing: Owners", Icon: "lock"}
+}
+
+// CircleSharingStatus returns the icon and label that describe who has been granted the provided
+// role on this Stream, in the terms of the set-circle-sharing step: Everyone, the Circles chosen
+// (named when there is one), or Not Shared, for a Stream that grants the role to no one.
+// RULE: these labels mirror the choices in StepSetCircleSharing.form, as SharingStatus mirrors
+// StepSetSimpleSharing.form.  A template that shares through set-circle-sharing reads this one.
+func (w Stream) CircleSharingStatus(role string) form.LookupCode {
+
+	switch stream := w.liveStream(); stream.SharingStatus(role) {
+
+	case model.SharingStatusPublic:
+		return form.LookupCode{Value: model.SharingStatusPublic, Label: "Sharing: Everyone", Icon: "globe"}
+
+	case model.SharingStatusAuthenticated:
+		return form.LookupCode{Value: model.SharingStatusAuthenticated, Label: "Sharing: Signed-In", Icon: "person-circle"}
+
+	case model.SharingStatusCircles:
+		return circleSharingStatus(stream.Circles[role], w.circleLookupCodes())
+	}
+
+	return form.LookupCode{Value: model.SharingStatusOwners, Label: "Not Shared", Icon: "lock"}
+}
+
+// circleLookupCodes returns the signed-in user's Circles, by ID and name
+func (w Stream) circleLookupCodes() []form.LookupCode {
+
+	if group := w.lookupProvider().Group("circles"); group != nil {
+		return group.Get()
+	}
+
+	return nil
+}
+
+// circleSharingStatus names the Circles a Stream is shared with: the Circle's own name and icon when
+// there is one, or how many there are.  circles are the user's Circles, from the "circles" lookup.
+// A Circle that is not among them (deleted, or another user's) is still counted.
+func circleSharingStatus(circleIDs id.Slice, circles []form.LookupCode) form.LookupCode {
+
+	result := form.LookupCode{Value: model.SharingStatusCircles, Label: "Sharing: " + convert.String(len(circleIDs)) + " Circles", Icon: "people"}
+
+	// A Stream can be shared with a named Group but no Circles, which set-circle-sharing never writes
+	if len(circleIDs) == 0 {
+		result.Label = "Sharing: Groups"
+		return result
+	}
+
+	if len(circleIDs) > 1 {
+		return result
+	}
+
+	result.Label = "Sharing: 1 Circle"
+
+	for _, circle := range circles {
+
+		if circle.Value != circleIDs[0].Hex() {
+			continue
+		}
+
+		result.Label = "Sharing: " + circle.Label
+
+		if circle.Icon != "" {
+			result.Icon = circle.Icon
+		}
+
+		return result
+	}
+
+	return result
 }
 
 /******************************************

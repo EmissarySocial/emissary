@@ -83,6 +83,10 @@ A `{{...}}` inside a form element's `options:{...}` (a `validator` URL, an uploa
 
 `html/template` escapes a `script="…"` attribute as plain HTML, not as hyperscript, and the browser decodes that escaping before hyperscript parses it. A URL from a remote document can hold a `'`, so `install refreshPeers(id:'{{$url}}')` let a remote actor's ID end the string and inject hyperscript. Put the value in a `data-` attribute and have the behavior read it with `@data-…`, as `refreshPeers` and `annotationPeer` in theme-global do. Compare those values in hyperscript rather than building a CSS selector from them, which breaks on `]` and quotes.
 
+## A behavior builds an element from data, never an HTML string
+
+`put` parses a string as HTML, so `select` and `selectGroup` once built each choice with ``put `<option value="${option.value}">${option.label}</option>` ``, and a lookup label could run an `onerror` handler while a value could end its attribute. Both now `make an Option from option.label, option.value` and `add()` it, which sets the label and value as text. Any behavior that writes data into the page must do the same: `make` the element and `set` its properties or `textContent`. `colorpicker._hs` still interpolates its stored value into markup, which is safe only because every colorpicker path today has `Format: "color"`.
+
 ## Only four template directories are parsed by any test — add yours to the list
 
 `TestEmbeddedTemplates_HTMLParses` in [service/template_html_parse_test.go](../../service/template_html_parse_test.go) is the only thing that parses `*.html` here with the real funcMap, and it is **scoped to a hand-maintained `dirs` list**, not a full sweep. A directory that is not named there is never parsed by anything, so a syntax error, an undefined funcMap function, or the attribute-context lexer gotcha first appears in front of a visitor.
@@ -102,3 +106,23 @@ Vendored `easymde.min.js` still opens three `_blank` links without it; that is u
 ## Every `type: array` in a schema needs a `maxLength`
 
 Rosetta bounds a list's length only through the schema, never in its accessors (decided 2026-10-05; see rosetta's AGENTS.md). An array with no `maxLength` lets one form field such as `feeds.5000000` build a list of 5,000,001 items. Give every array in a template's `schema` or `socialSchema` a `maxLength` sized to its real use.
+
+## Profile settings come from the user's outbox, so every outbox extends `base-outbox`
+
+`/@me/settings/general` renders `settings-general` from the user's own outbox template through the Settings builder's `.OutboxView`, so an outbox without `base-outbox` in its `extends` shows only a "not available" notice where the Profile tabs belong. `service.Template.missingProfileTabs` reports such an outbox on every load, and never halts. List `base-outbox` in every outbox's own `extends`, even one that already gets it through `user-outbox`, so a reader sees it without following the chain.
+
+**Never ship a package that names `base-outbox` before the Emissary release that defines it.** An `extends` that names an unknown template stops the template load and halts first boot.
+
+**Customize Profile through the outbox, never by reusing the ID `user-settings`.** The last definition of an ID wins for every user on the server. `Template.Add` reports a replaced ID, but it still replaces it.
+
+## A Profile tab is an htmx swap, never a boosted link
+
+Each tab in `settings-tabs.html` is an `hx-get` to `/@me/settings-<tab>` with `hx-target="#profile-settings"` and `hx-push-url="false"`. Neither the tab nor `#profile-settings` may set `hx-swap`: the swap inherits the body's `innerHTML transition:true`, and a plain `hx-swap="innerHTML"` on either silently turns off the view transition between tabs. A boosted link pushes `/@me/settings-<tab>` into the address bar, and reloading that URL renders a bare fragment inside the outbox's page layout. A form that refreshes after a save must reload only its own card, as `settings-images` does, or the user is sent back to General.
+
+## `base-outbox` declares `model: Outbox` on purpose
+
+Template validation checks every form path against the template's own schema. Under `model: None` its schema has no User fields, so the Profile forms fail validation. `Outbox` gives it `UserSchema`, and leaving out `templateRole` keeps it out of the profile template picker, which lists by `templateRole: user-outbox`.
+
+## An outbox's schema validates profile saves, and only its `data` strings count
+
+The Outbox builder validates against `model.UserSchemaForTemplate`, which is `UserSchema` plus the String rules the outbox declares under `data`. Every other field keeps `UserSchema`'s rules, even where the outbox redeclares it, and every `data` value stays capped at 4096 characters. A non-String `data` rule is ignored, because `User.Data` holds only strings. An invalid value is dropped, not refused: `form.SetURLValues` logs a field that fails and saves the rest.

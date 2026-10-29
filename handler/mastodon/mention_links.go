@@ -151,9 +151,9 @@ func replaceMentionText(node *html.Node, mentions []object.StatusMention) bool {
 	position := 0
 
 	// Split the text around each mention, matching without regard to case
-	for lower := strings.ToLower(text); position < len(text); {
+	for position < len(text) {
 
-		start, length, mention := nextMention(text, lower, position, mentions)
+		start, length, mention := nextMention(text, position, mentions)
 
 		if start < 0 {
 			break
@@ -186,39 +186,85 @@ func replaceMentionText(node *html.Node, mentions []object.StatusMention) bool {
 	return true
 }
 
-// nextMention finds the earliest mention in text at or after position, as a whole "@name".
-func nextMention(text string, lower string, position int, mentions []object.StatusMention) (int, int, object.StatusMention) {
+// nextMention finds the earliest mention in text at or after position, as a whole "@name", and
+// returns its offset and length in bytes.
+func nextMention(text string, position int, mentions []object.StatusMention) (int, int, object.StatusMention) {
 
-	bestStart := -1
+	// RULE: Match within text itself, never a lowercased copy. Changing case can change a string's
+	// length in bytes, so an offset found in a copy can fall outside the original.
+	for offset := position; offset < len(text); {
+
+		// Every mention begins with an "@", a byte that never occurs inside a multi-byte character
+		found := strings.IndexByte(text[offset:], '@')
+
+		if found < 0 {
+			break
+		}
+
+		start := offset + found
+
+		if length, mention := mentionAt(text, start, mentions); length > 0 {
+			return start, length, mention
+		}
+
+		offset = start + 1
+	}
+
+	return -1, 0, object.StatusMention{}
+}
+
+// mentionAt returns the length in bytes of the longest whole mention beginning with the "@" at start,
+// and the account it names, or zero when no mention begins there.
+func mentionAt(text string, start int, mentions []object.StatusMention) (int, object.StatusMention) {
+
 	bestLength := 0
 	best := object.StatusMention{}
 
 	for _, mention := range mentions {
 
-		for needle, offset := "@"+strings.ToLower(mention.Acct), position; offset <= len(lower)-len(needle); {
+		nameLength := foldPrefixLength(text[start+1:], mention.Acct)
 
-			found := strings.Index(lower[offset:], needle)
+		if nameLength < 0 {
+			continue
+		}
 
-			if found < 0 {
-				break
-			}
+		if !mentionBoundary(text, start, start+1+nameLength) {
+			continue
+		}
 
-			start := offset + found
-
-			if end := start + len(needle); mentionBoundary(text, start, end) {
-
-				if bestStart < 0 || start < bestStart || (start == bestStart && len(needle) > bestLength) {
-					bestStart, bestLength, best = start, len(needle), mention
-				}
-
-				break
-			}
-
-			offset = start + 1
+		if 1+nameLength > bestLength {
+			bestLength, best = 1+nameLength, mention
 		}
 	}
 
-	return bestStart, bestLength, best
+	return bestLength, best
+}
+
+// foldPrefixLength returns how many bytes at the start of text spell prefix without regard to case,
+// or -1 when text does not start with prefix.
+func foldPrefixLength(text string, prefix string) int {
+
+	length := 0
+
+	for offset := 0; offset < len(prefix); {
+
+		// Text that ends first cannot hold the whole prefix
+		if length >= len(text) {
+			return -1
+		}
+
+		_, wantSize := utf8.DecodeRuneInString(prefix[offset:])
+		_, gotSize := utf8.DecodeRuneInString(text[length:])
+
+		if !sameCharacter(prefix[offset:offset+wantSize], text[length:length+gotSize]) {
+			return -1
+		}
+
+		offset += wantSize
+		length += gotSize
+	}
+
+	return length
 }
 
 // mentionBoundary confirms a match is a whole mention: not the tail of a longer word or address.
@@ -246,6 +292,26 @@ func mentionBoundary(text string, start int, end int) bool {
 	}
 
 	return true
+}
+
+// sameCharacter reports whether two encoded characters are the same without regard to case.
+func sameCharacter(first string, second string) bool {
+
+	// Identical bytes always match
+	if first == second {
+		return true
+	}
+
+	// RULE: Different bytes that do not decode never match, though EqualFold reads them all as U+FFFD
+	if decoded, _ := utf8.DecodeRuneInString(first); decoded == utf8.RuneError {
+		return false
+	}
+
+	if decoded, _ := utf8.DecodeRuneInString(second); decoded == utf8.RuneError {
+		return false
+	}
+
+	return strings.EqualFold(first, second)
 }
 
 // mentionNode builds Mastodon's markup for one mention: a link around the short "@username" form.

@@ -1,0 +1,5 @@
+<!-- edit-pencil is the edit modal's Save and X, top right; Save submits #edit-note-form from outside it, X returns to the note's modal -->
+<div class="corner-pencil flex-row flex-align-start">
+	<button type="submit" form="edit-note-form" class="primary" script="install SaveButton">Save</button>
+	<button type="button" class="edit-circle turboclick" hx-get="/{{.StreamID}}/modal" hx-push-url="false" aria-label="Cancel" title="Cancel"><i class="bi bi-x-lg"></i></button>
+</div>

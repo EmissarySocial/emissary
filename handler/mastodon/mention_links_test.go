@@ -1,6 +1,7 @@
 package mastodon
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
@@ -50,6 +51,71 @@ func TestMarkMentionLinks(t *testing.T) {
 
 	// Text that needs escaping stays safe
 	require.Equal(t, "1 &lt; 2 "+devLink+" &amp; more", markMentionLinks("1 &lt; 2 @devInTheVoid@mastodon.social &amp; more", testMentions))
+}
+
+// TestMarkMentionLinks_CaseChangesByteLength pins mentions after text whose lowercase form has a
+// different length in bytes. Offsets from a lowercased copy once overran the text and panicked.
+func TestMarkMentionLinks_CaseChangesByteLength(t *testing.T) {
+
+	// "Ⱥ" is 2 bytes and lowercases to the 3-byte "ⱥ", so 20 of them push an offset past the end
+	grows := strings.Repeat("Ⱥ", 20)
+	require.Equal(t, grows+" "+bobLink, markMentionLinks(grows+" @bob@example.com", testMentions))
+	require.Equal(t, grows+" "+bobLink+" "+grows, markMentionLinks(grows+" @bob@example.com "+grows, testMentions))
+
+	// The 3-byte Kelvin sign lowercases to a 1-byte "k", which once cut the text mid-character
+	require.Equal(t, "K "+bobLink, markMentionLinks("K @bob@example.com", testMentions))
+	require.Equal(t, "KKK "+bobLink+" KKK", markMentionLinks("KKK @bob@example.com KKK", testMentions))
+
+	// The mention itself can change length when its case does
+	alice := []object.StatusMention{{ID: "alice", Username: "ⱥlice", URL: "https://example.com/@alice", Acct: "ⱥlice@example.com"}}
+	aliceLink := `<span class="h-card"><a href="https://example.com/@alice" class="u-url mention">@<span>ⱥlice</span></a></span>`
+	require.Equal(t, "hi "+aliceLink+"!", markMentionLinks("hi @ȺLICE@example.com!", alice))
+}
+
+// TestMarkMentionLinks_InvalidUTF8 pins that malformed text never panics. Lowercasing turned each
+// invalid byte into a 3-byte replacement character, which also overran the text.
+func TestMarkMentionLinks_InvalidUTF8(t *testing.T) {
+
+	require.NotPanics(t, func() {
+		result := markMentionLinks(strings.Repeat("\xff", 20)+" @bob@example.com", testMentions)
+		require.Contains(t, result, bobLink)
+	})
+
+	require.NotPanics(t, func() {
+		markMentionLinks("@bob@example.com\xff\xfe", testMentions)
+	})
+
+	// An invalid byte in an address matches only the same byte, never a different invalid one
+	broken := []object.StatusMention{{ID: "x", Username: "x", URL: "https://example.com/@x", Acct: "x\xff@example.com"}}
+	require.Equal(t, "@x\xfe@example.com", markMentionLinks("@x\xfe@example.com", broken))
+}
+
+// FuzzMarkMentionLinks asserts that no post content or mention address can panic the mention
+// linker, and that content with nothing to link comes back unchanged.
+func FuzzMarkMentionLinks(f *testing.F) {
+
+	f.Add("@devInTheVoid@mastodon.social hello", "bob@example.com")
+	f.Add(strings.Repeat("Ⱥ", 20)+" @bob@example.com", "bob@example.com")
+	f.Add("K @bob@example.com", "bob@example.com")
+	f.Add("hi @ȺLICE@example.com!", "ⱥlice@example.com")
+	f.Add("\xff\xfe @bob@example.com", "bob@example.com")
+	f.Add("<p>@bob@example.com</p><a>@bob@example.com</a>", "bob@example.com")
+	f.Add("@", "")
+
+	f.Fuzz(func(t *testing.T, content string, acct string) {
+
+		mentions := []object.StatusMention{{ID: "x", Username: "x", URL: "https://example.com/@x", Acct: acct}}
+
+		// Every input must come back without a panic
+		result := markMentionLinks(content, mentions)
+
+		// Content with an "@" may gain links; content without one has nothing to link
+		if strings.Contains(content, "@") {
+			return
+		}
+
+		require.Equal(t, content, result)
+	})
 }
 
 // TestMentionsForStream confirms a post's Mention tags become the API's mentions list

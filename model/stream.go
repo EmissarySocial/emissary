@@ -62,6 +62,7 @@ type Stream struct {
 	UnPublishDate    int64                   `json:"unpublishDate,omitzero"    bson:"unpublishDate"`          // Unix epoch SECONDS when this document will no longer be available on the domain (math.MaxInt64 = never).
 	IsFeatured       bool                    `json:"isFeatured,omitzero"       bson:"isFeatured"`             // TRUE if this Stream is featured by its parent container.
 	IsSubscribable   bool                    `json:"isSubscribable,omitzero"   bson:"isSubscribable"`         // TRUE if this Stream uses the Products service to determine access rights.
+	ReplyPolicy      string                  `json:"replyPolicy,omitzero"      bson:"replyPolicy,omitempty"`  // Who may reply: ReplyPolicyEveryone (or empty) or ReplyPolicyNobody.  Enforced when an inbound reply is recorded.
 	ReplyCount       int                     `json:"replyCount"                bson:"replyCount"`             // Denormalized count of replies to this Stream (maintained by the Stream service's reply funnel).
 	LikeCount        int                     `json:"likeCount"                 bson:"likeCount"`              // Denormalized count of "Like" responses to this Stream (maintained by the Response service).
 	DislikeCount     int                     `json:"dislikeCount"              bson:"dislikeCount"`           // Denormalized count of "Dislike" responses to this Stream (maintained by the Response service).
@@ -259,6 +260,49 @@ func (stream Stream) RolesToPrivilegeIDs(roles ...string) Permissions {
 /******************************************
  * Permission Methods
  ******************************************/
+
+// AcceptsReplies returns TRUE if this Stream records and shows replies: it is public, and its author
+// has not closed replies.  A closed Stream refuses every reply, its author's included (REPLY-CONTROLS §1.1).
+func (stream Stream) AcceptsReplies() bool {
+
+	// RULE: The author can close replies
+	if stream.ReplyPolicy == ReplyPolicyNobody {
+		return false
+	}
+
+	// RULE: Only public Streams expose a Replies collection (mirrors CalcContext)
+	return stream.DefaultAllowAnonymous()
+}
+
+// RefusesReplies returns TRUE when this public Stream's author has closed replies.  A private Stream
+// refuses nothing, because it records no replies at all.
+func (stream Stream) RefusesReplies() bool {
+
+	if !stream.DefaultAllowAnonymous() {
+		return false
+	}
+
+	return stream.ReplyPolicy == ReplyPolicyNobody
+}
+
+// InteractionPolicyJSONLD returns this Stream's reply policy as GoToSocial's "interactionPolicy":
+// Public when anyone may reply, and otherwise only its author.  Closed is never an empty list, which
+// JSON-LD canonicalization would read as a missing policy, meaning Public.
+// RULE: Public is the full IRI, because GoToSocial matches no compact form (REPLY-CONTROLS §1.3)
+func (stream Stream) InteractionPolicyJSONLD() mapof.Any {
+
+	automaticApproval := []string{vocab.NamespaceActivityStreamsPublic}
+
+	if !stream.AcceptsReplies() {
+		automaticApproval = []string{stream.AttributedTo.ProfileURL}
+	}
+
+	return mapof.Any{
+		vocab.PropertyCanReply: mapof.Any{
+			vocab.PropertyAutomaticApproval: automaticApproval,
+		},
+	}
+}
 
 // DefaultAllowAnonymous returns TRUE if a Stream's default action (VIEW)
 // is visible to anonymous visitors
@@ -621,5 +665,6 @@ func (stream *Stream) Update(other Stream) {
 	stream.PublishDate = other.PublishDate
 	stream.UnPublishDate = other.UnPublishDate
 	stream.IsFeatured = other.IsFeatured
+	stream.ReplyPolicy = other.ReplyPolicy
 	stream.Journal = other.Journal
 }

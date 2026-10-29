@@ -84,6 +84,7 @@ func GetTimeline_Hashtag(serverFactory *server.Factory) func(model.Authorization
 		feedDone := make(chan struct{})
 
 		go func() {
+			defer recoverGoroutine(location)
 			defer close(feedDone)
 			feed = feedHashtagStatuses(factory, session, auth, hashtag, limit)
 		}()
@@ -241,6 +242,7 @@ func feedHashtagStatuses(factory *service.Factory, session data.Session, auth mo
 
 	go func() {
 
+		defer recoverGoroutine(location)
 		defer close(done)
 
 		var waitGroup sync.WaitGroup
@@ -252,6 +254,7 @@ func feedHashtagStatuses(factory *service.Factory, session data.Session, auth mo
 			slots <- struct{}{}
 
 			go func(item model.NewsItem) {
+				defer recoverGoroutine(location)
 				defer waitGroup.Done()
 				defer func() { <-slots }()
 
@@ -366,6 +369,7 @@ func fetchHashtagResults(factory *service.Factory, session data.Session, userID 
 		waitGroup.Add(1)
 
 		go func(index int, host string) {
+			defer recoverGoroutine("handler.mastodon.fetchHashtagResults")
 			defer waitGroup.Done()
 			results[index] = fetchHashtagStatuses(host, hashtag, limit, allowPrivateIPs)
 		}(index, host)
@@ -394,6 +398,7 @@ func fetchHashtagHistories(factory *service.Factory, session data.Session, userI
 		waitGroup.Add(1)
 
 		go func(index int, host string) {
+			defer recoverGoroutine("handler.mastodon.fetchHashtagHistories")
 			defer waitGroup.Done()
 			results[index] = fetchHashtagHistory(host, hashtag, allowPrivateIPs)
 		}(index, host)

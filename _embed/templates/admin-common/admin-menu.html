@@ -1,0 +1,10 @@
+{{- /* admin-menu lists the admin console's primary sections, as user-settings/menu.html lists the settings
+       sections.  The dot is the current page's Token (a string), which selects the section that owns it; the
+       mobile menu passes "" so that nothing is selected.  Rendered in the desktop sidebar by menubar.html, and
+       full-page by admin-domain/mobile.html. */ -}}
+<a href="/admin/domain/index" hx-boost="true" class="turboclick menu-item ellipsis {{if eq . `domain`}}selected{{end}}">{{icon "settings"}} General</a>
+<a href="/admin/navigation/index" hx-boost="true" class="turboclick menu-item ellipsis {{if eq . `navigation`}}selected{{end}}">{{icon "menu"}} Content</a>
+<a href="/admin/rules/index" hx-boost="true" class="turboclick menu-item ellipsis {{if eq . `rules`}}selected{{end}}">{{icon "filter"}} Rules</a>
+<a href="/admin/users/index" hx-boost="true" class="turboclick menu-item ellipsis {{if in . `users` `groups`}}selected{{end}}">{{icon "people"}} People</a>
+<a href="/admin/tags/index" hx-boost="true" class="turboclick menu-item ellipsis {{if in . `search` `followers` `following` `tags`}}selected{{end}}">{{icon "search"}} Search</a>
+<a href="/admin/connections/index" hx-boost="true" class="turboclick menu-item ellipsis {{if in . `connections` `mls` `webhooks` `syndication` `sso`}}selected{{end}}">{{icon "cloud"}} External</a>

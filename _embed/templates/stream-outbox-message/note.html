@@ -1,0 +1,74 @@
+<!-- The note itself and its replies, likes, and shares, shared by view.html and modal.html -->
+{{- $document := .ActivityStream .Permalink -}}
+{{- $inReplyTo := .InReplyTo -}}
+
+<link rel="alternate" type="application/activity+json" href="/{{.StreamID}}"/>
+
+{{- if $inReplyTo.NotNil -}}
+	{{- $attributedTo := $inReplyTo.AttributedTo -}}
+	<div>
+		<a href="{{$inReplyTo.ID}}" class="u-in-reply-to text-plain" tabIndex="0">
+			<span class="text-sm bold">
+				{{icon "reply"}} Replying to {{$attributedTo.Name}} &nbsp;
+			</span>
+			<span class="link text-xs">View Original</span>
+		</a>
+	</div>
+	<hr>
+{{- end -}}
+
+<div class="flex-row width-100%">
+
+	<div class="flex-grow-1 margin-top-sm">
+	
+		{{- $username := $document.AttributedTo.UsernameOrID -}}
+		<div class="flex-row">
+			<a href="{{.Author.ProfileURL}}" class="margin-right turboclick" tabIndex="-1" aria-hidden="true">
+				{{- if eq .Author.IconURL "" -}}
+					<div class="circle width-64"></div>
+				{{- else -}}
+					<img src="{{.Author.IconURL}}" alt="" class="circle width-64">
+				{{- end -}}
+			</a>
+
+			<div>
+				<a href="{{.Author.ProfileURL}}" class="p-author text-lg bold text-nocolor turboclick">{{.Author.Name}}</a>
+				<div class="text-light-gray">
+					<!-- The author's handle, copied by the Clipboard behavior, as on the profile page -->
+					<span script="install Clipboard">
+						<span class="clipboard-text" hidden>{{$username}}</span>
+						<span class="p-username clickable clipboard-copy-button" role="button" tabIndex="0" title="Copy to clipboard">
+							{{$username}} <span class="text-xs">{{icon "copy"}}</span>
+						</span>
+						<span class="clipboard-copy-feedback" style="display:none;">
+							{{$username}} <span class="text-xs text-green">{{icon "check"}} Copied</span>
+						</span>
+					</span>
+				</div>
+				<div class="text-light-gray">
+					<span class="dt-published" datetime="{{.PublishDate | isoDate}}">{{ .PublishDate | humanizeTime }}</span>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</div>
+
+<!-- The text and photos sit beneath the author's name, past the same spacer as the buttons above -->
+<div class="flex-row">
+	<div class="flex-shrink-0 width-64 margin-right"></div>
+	<div class="flex-grow-1">
+		<div class="margin-vertical">
+			{{.ContentHTML}}
+		</div>
+		{{- range .Attachments -}}
+			{{- if eq "image" .MimeCategory -}}
+				<div class="margin-vertical">
+					<img src="/{{$.StreamID}}/attachments/{{.AttachmentID.Hex}}?width=600" alt="{{.Description}}" class="u-photo width-100%">
+				</div>
+			{{- end -}}
+		{{- end -}}
+	</div>
+</div>
+
+{{- .View "responses-replies" -}}

@@ -11,23 +11,19 @@
 
 {{- $targetURL := .GetString "postTo" | addQueryParams "templateId=outbox-message" -}}
 
-<form id="outbox-message" hx-post="{{$targetURL}}" hx-encoding="multipart/form-data" hx-push-url="false"
-	data-script="
-		on htmx:configRequest(parameters)
-			set contentHtml to the first <.input/> in me
-			set parameters['content'] to contentHtml.innerHTML
-		">
+<form id="outbox-message" hx-post="{{$targetURL}}" hx-encoding="multipart/form-data" hx-push-url="false">
 
 	{{if not .IsNew}}
 		<h1>Edit Post...</h1>
 	{{end}}
 
 	<div class="margin-bottom">
-		<div
+		<!-- The note's text, in Markdown (edit-content format MARKDOWN) -->
+		<textarea
 			id="outbox-message-content"
-			tabIndex="0"
-			class="input"
-			contenteditable="true"
+			name="content"
+			rows="3"
+			placeholder="Post a note to the Fediverse..."
 			data-script="
 				on keydown[key=='ArrowLeft']
 					halt the event's bubbling
@@ -37,7 +33,7 @@
 
 				on input or load
 					set #outbox-message-error.innerHTML to ''
-					if my innerText.trim() is not ''
+					if my value.trim() is not ''
 						remove @disabled from #outbox-message-submit
 						show #outbox-message-image
 						hide #outbox-message-image-disabled
@@ -46,7 +42,7 @@
 						show #outbox-message-image-disabled
 						hide #outbox-message-image
 					end
-				">{{.ContentHTML}}</div>
+				">{{.ContentSource}}</textarea>
 	</div>
 
 	<div id="outbox-message-error" class="margin-bottom"></div>
@@ -56,7 +52,7 @@
 		script="on change call previewUploads()" 
 		id="file-upload" 
 		type="file" 
-		accept="image"
+		accept="image/*"
 		name="file" 
 		class="hide">
 
@@ -72,8 +68,8 @@
 			</span>
 		{{- else -}}
 			<span hx-get="/{{.StreamID}}/delete" class="clickable float-right text-red">Delete</span>
-			<button type="submit" class="primary htmx-request-hide">Edit Post</button>
-			<button type="button" class="primary htmx-request-show" disabled>Saving Changed...</button>
+			<button type="submit" class="primary htmx-request-hide">Save Changes</button>
+			<button type="button" class="primary htmx-request-show" disabled>Saving Changes...</button>
 			<button type="button" script="on click trigger closeModal">Cancel</button>
 		{{- end -}}
 	</div>

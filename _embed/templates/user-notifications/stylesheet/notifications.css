@@ -25,9 +25,15 @@
 	position: relative;
 }
 
+/* The sidebar's look comes from theme-default (stylesheet/03-app.css).  Its rows take extra
+   right padding here, so a label never runs under the count. */
+#app-sidebar .menu-item {
+	padding-right: calc(var(--rhythm) * 5);
+}
+
 .menu-item .menu-count {
 	position: absolute;
-	right: 6px;
+	right: var(--rhythm);
 	top: 50%;
 	transform: translateY(-50%);
 }

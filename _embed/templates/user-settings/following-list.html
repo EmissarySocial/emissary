@@ -2,7 +2,7 @@
 {{- $following := .Following.Top12.ByLabel.Slice -}}
 
 {{- range $following -}}
-	<div  hx-get="/@me/settings/following-edit?followingId={{.FollowingID.Hex}}" class="flex-row flex-align-center" role="button" tabIndex="0">
+	<div  hx-get="/@me/settings/following-edit?followingId={{.FollowingID.Hex}}" class="flex-row flex-align-center turboclick" role="button" tabIndex="0">
 
 		<div class="flex-row flex-grow-1">
 

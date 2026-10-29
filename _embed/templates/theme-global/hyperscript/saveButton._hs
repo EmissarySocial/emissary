@@ -25,12 +25,15 @@ behavior SaveButton
 		`
 	end
 
+	-- .htmx-request lands on the form, so a button outside it (form="...") marks itself to show "Saving..."
 	on htmx:xhr:loadstart from me.form
 		add @disabled to me
+		add .htmx-request to me
 	end
 
 	on htmx:xhr:loadend from me.form
 		remove @disabled from me
+		remove .htmx-request from me
 	end
 
 	on htmx:xhr:progress from me.form

@@ -14,43 +14,66 @@
 	width: 100%;
 }
 
+/* The sidebar takes qwertylicious' look, matching theme-default: a step darker than the page,
+   each menu item a rounded button, and the selected one a white pill.  Both grays invert in
+   dark mode, so the sidebar stays a step off the page there too. */
 #app-sidebar {
 	flex-grow: 0;
 	flex-shrink: 0;
 	box-sizing: border-box;
-	background-color: var(--gray04);
+	background-color: var(--gray10);
 	border-right: solid 1px var(--gray15);
 	color: var(--gray80);
-	padding: calc(var(--rhythm) * 2) var(--rhythm);
-	min-width: 200px;
-	max-width: 300px;
+	padding: calc(var(--rhythm) * 2);
+	min-width: 160px;
+	max-width: 240px;
 	width:25%;
 	view-transition-name: app-sidebar;
 }
 
 #app-sidebar .menu-item {
-	display: block;
-	padding: 4px 32px 4px 8px;
-	border-radius: 4px;
-	color: var(--gray80);
+	display: flex;
+	align-items: center;
+	gap: var(--rhythm);
+	padding: var(--rhythm) calc(var(--rhythm) * 2);
+	border-radius: var(--border-radius);
+	color: var(--text-color-secondary);
+	font-weight: 400;
+	text-decoration: none;
+
+	/* Icons are a step lighter than their labels, as qwertylicious' --text-color-tertiary is */
+	i {
+		color: var(--gray50);
+	}
+
+	&:hover {
+		background-color: var(--input-background);
+		color: inherit;
+	}
+
+	&.selected {
+		background-color: var(--gray00);
+	}
+
+	+ .menu-item {
+		margin-top: var(--rhythm);
+	}
 }
 
-#app-sidebar .menu-item:hover {
-	background-color: var(--gray15);
-	color: var(--gray90);
-}
-
-#app-sidebar .menu-item.link {
+/* A link item's icon keeps the link color, so "+ New Folder" reads as one link */
+#app-sidebar .menu-item.link,
+#app-sidebar .menu-item.link i {
 	color: var(--link-color);
 }
 
-#app-sidebar .menu-item.link:hover {
+#app-sidebar .menu-item.link:hover,
+#app-sidebar .menu-item.link:hover i {
 	color: var(--link-color-hover);
 }
 
 #app-sidebar .selected {
-	font-weight: bold;
-	color: var(--black);
+	font-weight: 600;
+	color: var(--gray100);
 }
 
 #app-sidebar button {
