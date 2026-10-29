@@ -122,7 +122,7 @@ Text inputs, `textarea`, `select`, and anything with `.input` or `[role="textbox
 Each `03-` file is one component. Reach for these before building your own:
 
 - **[Card](03-widgets-card.css)** (`.card`) — bordered, subtly shadowed container; `.clickable` adds a hover border, `.selected` a heavy border. It is a container query context, so children can respond to the card's own width.
-- **[Modal](03-widgets-modal.css)** (`#modal`) — a full-screen centered dialog with a blurred underlay. Supports fixed `#modal-header` / `#modal-body` / `#modal-footer` regions and `.large` / `.huge` sizes. Animates in on the `.ready` class.
+- **[Modal](03-widgets-modal.css)** (`#modal`) — a full-screen centered dialog with a blurred underlay. Supports fixed `#modal-header` / `#modal-body` / `#modal-footer` regions and three sizes beyond the default 600px: `.medium` (up to 800px), `.large` (up to 1024px), and `.huge` (96% of the window). Animates in on the `.ready` class.
 - **[Tabs](03-widgets-tabs.css)** — driven by ARIA (`[role="tablist"]` / `[role="tab"]` / `[aria-selected]`). Five visual styles via a modifier class: default folder tabs, `.underlined`, `.pills`, `.wizard` (numbered stepper with done/disabled states), and `.vertical`.
 - **[Tables](03-widgets-tables.css)** — `table.table` for read views, `table.grid` for inline-editable grids, and `div.table` for flexbox row layouts that behave like tables. Clickable rows use `[role=link]` / `.clickable`.
 - **[Alerts](03-widgets-alert.css)** — `.alert-red`, `.alert-blue`, `.alert-green`, `.alert-gray` banner messages.

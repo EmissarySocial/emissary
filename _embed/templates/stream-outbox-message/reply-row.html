@@ -1,0 +1,63 @@
+<!-- reply-row: one reply, called as (array $builder $url) by replies.html for each reply and by reply.html for one -->
+{{- $builder := index . 0 -}}
+{{- $url := index . 1 -}}
+{{- $reveal := eq ($builder.QueryParam "reveal") "true" -}}
+{{- $stream := $builder.ActivityStream $url -}}
+
+{{- if and $stream.Metadata.IsRuleHidden (not $reveal) -}}
+
+	<!-- A reply the viewer's rules hide; selecting it fetches this row again with ?reveal=true and swaps it in place -->
+	<div class="margin-vertical-sm" role="button"
+		hx-get="/{{$builder.StreamID}}/reply?id={{$url | urlquery}}&reveal=true"
+		hx-target="this"
+		hx-swap="outerHTML"
+		hx-push-url="false">
+		{{- template "hidden-placeholder" $stream -}}
+	</div>
+
+{{- else -}}
+
+	<!-- RULE: Load the author through .ActivityStream, never AttributedTo.Load, whose error would abort every reply in the list -->
+	{{- $actor := $stream.AttributedTo -}}
+	{{- if ne "" $actor.ID -}}
+		{{- $actor = $builder.ActivityStream $actor.ID -}}
+	{{- end -}}
+
+	<div class="flex-row hover-trigger">
+
+		<div class="flex-row flex-grow-1">
+			<div class="flex-shrink-0 margin-right-sm" style="margin-left:12px;">
+				{{- if $actor.Icon.IsNil -}}
+					<div class="circle width-48"></div>
+				{{- else -}}
+					<div class="clickable width-48" script="on click goToUrl(me, {{$builder.IsAuthenticated}})" data-url="{{$actor.ID | safeURL}}">
+						<img class="circle width-48" src="{{$actor.Icon.Href}}" alt="Profile for {{$actor.Name}}">
+					</div>
+				{{- end -}}
+			</div>
+
+			<a script="on click goToUrl(me, {{$builder.IsAuthenticated}})" data-url="{{$stream.ID | safeURL}}" class="flex-grow-1 text-nocolor">
+
+				<div class="margin-bottom-xs">
+					{{- if $actor.NotNil -}}
+						<span class="bold margin-right-xs">{{$actor.Name}}</span>
+						<span class="flex-grow-1 text-light-gray">{{ $stream.Published | tinyDate}} ago</span>
+					{{- end -}}
+				</div>
+
+				{{- if ne "" $stream.Name -}}
+					<div class="bold">{{$stream.Name}}</div>
+				{{- end -}}
+
+				{{- $streamImage := $stream.Image -}}
+				{{- if $streamImage.NotNil -}}
+					<div class="margin-vertical"><img src="{{$streamImage.Href}}" alt="{{$streamImage.Summary}}" class="width-100%"></div>
+				{{- end -}}
+
+				<div class="margin-bottom">{{$stream.Content | htmlMinimal}}</div>
+			</a>
+		</div>
+
+	</div>
+
+{{- end -}}

@@ -1,0 +1,14 @@
+<!-- follow-button opens the Follow modal, or follows in one click as the visitor's default saved account; see README.md -->
+<div class="follow-button" data-camper-intent="follow" data-camper-object="{{.Permalink}}">
+
+	<!-- No saved account can follow yet, so this opens the Follow modal, which works without CamperJS too -->
+	<button type="button" class="primary turboclick camper-hide-if-ready" hx-get="/@{{.UserID}}/follow" hx-push-url="false">⁂ Follow {{.DisplayName}}</button>
+
+	<!-- RULE: Hidden until CamperJS finds a default account that can follow -->
+	<div class="camper-show-if-ready flex-align-center" hidden>
+		<button type="button" class="primary" data-camper-action="intent">⁂ Follow {{.DisplayName}}</button>
+		<button hx-get="/@{{.UserID}}/intent" hx-push-url="false">{{icon "more-horizontal"}}</button>
+	</div>
+</div>
+
+<script src="/.themes/global/resources/camperjs-0.2.0/camper.js"></script>

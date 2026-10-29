@@ -1,10 +1,30 @@
-<!-- The note's Like and Share buttons, drawn beside the Replies, Likes, and Shares tabs in each responses-*.html -->
+<!-- The note's Reply, Like, and Share buttons, drawn beside the Replies, Likes, and Shares tabs in each responses-*.html -->
 <span class="text-sm nowrap">
-	{{- if .UserCan "like-button" -}}
+	<!-- Signed in, Reply opens the visitor's own inbox at this note with its reply form; otherwise an Activity Intent -->
+	{{if .AcceptsReplies}}
+		{{if .IsAuthenticated}}
+			<button class="primary turboclick" hx-target="main" hx-swap="outerHTML" hx-get="/@me/newsfeed/browse-reply?url={{.Permalink | urlquery}}"><span aria-hidden="true" class="margin-left-xs">{{icon "reply"}}</span> Reply</button>
+		{{else}}
+			<span data-camper-intent="reply" data-camper-inreplyto="{{.Permalink}}" data-camper-object="{{.Permalink}}">
+				<button class="primary turboclick camper-hide-if-ready" hx-get="/{{.StreamID}}/intent?intent=create&inReplyTo={{.Permalink | urlquery}}"><span aria-hidden="true" class="margin-left-xs">{{icon "reply"}}</span> Reply</button>
+				<button class="primary camper-show-if-ready" data-camper-action="intent" hidden><span aria-hidden="true" class="margin-left-xs">{{icon "reply"}}</span> Reply</button>
+			</span>
+		{{end}}
+	{{end}}
+	{{if .UserCan "like-button" -}}
 		{{.View "like-button"}}
 	{{- else -}}
-		<button hx-get="/{{.StreamID}}/intent?intent=like&object={{.Permalink}}"><span aria-hidden="true" class="margin-left-xs">{{icon "thumbs-up"}}</span> Like</button>
-		<button hx-get="/{{.StreamID}}/intent?intent=create&content={{.Label | queryEscape}} {{.Permalink}}"><span aria-hidden="true" class="margin-left-xs">{{icon "share"}}</span> Share</button>
-		<button hx-get="/{{.StreamID}}/intent" aria-label="Manage Accounts">{{icon "more-horizontal"}}</button>
+		<!-- Each button opens base-intent's modal until CamperJS finds a default saved account that can run its own intent; then its twin runs it in one click -->
+		<span data-camper-intent="like" data-camper-object="{{.Permalink}}">
+			<button class="camper-hide-if-ready" hx-get="/{{.StreamID}}/intent?intent=like&object={{.Permalink}}"><span aria-hidden="true" class="margin-left-xs">{{icon "thumbs-up"}}</span> Like</button>
+			<button class="camper-show-if-ready" data-camper-action="intent" hidden><span aria-hidden="true" class="margin-left-xs">{{icon "thumbs-up"}}</span> Like</button>
+		</span>
+		<span data-camper-intent="announce" data-camper-object="{{.Permalink}}">
+			<button class="camper-hide-if-ready" hx-get="/{{.StreamID}}/intent?intent=announce&object={{.Permalink}}"><span aria-hidden="true" class="margin-left-xs">{{icon "share"}}</span> Share</button>
+			<button class="camper-show-if-ready" data-camper-action="intent" hidden><span aria-hidden="true" class="margin-left-xs">{{icon "share"}}</span> Share</button>
+		</span>
+		<!-- RULE: "..." manages saved accounts, so it is hidden until CamperJS finds one -->
+		<button class="camper-show-if-has-accounts" hx-get="/{{.StreamID}}/intent" aria-label="Manage Accounts" hidden>{{icon "more-horizontal"}}</button>
+		<script src="/.themes/global/resources/camperjs-0.2.0/camper.js"></script>
 	{{- end -}}
 </span>

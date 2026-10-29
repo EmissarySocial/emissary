@@ -1,9 +1,27 @@
-{{- $intent := .QueryParam "intent" -}}
+{{- $intent := lowerCase (.QueryParam "intent") -}}
+{{- $object := .QueryParam "object" -}}
+{{- $inreplyto := .QueryParam "inReplyTo" -}}
+{{- $content := .QueryParam "content" -}}
+{{- $name := .QueryParam "name" -}}
+{{- $summary := .QueryParam "summary" -}}
+{{- $type := .QueryParam "type" -}}
 
-<h1 class="modal-title" class="margin-none margin-bottom">
-	{{- if eq "" $intent -}}
-		{{icon "fediverse"}}
-		Add/Edit Fediverse Accounts
+<!-- RULE: A Create that answers a post is a Reply, which opens the post itself where Create takes no inReplyTo -->
+{{- if and (eq "create" $intent) (ne "" $inreplyto) -}}
+	{{- $intent = "reply" -}}
+{{- end -}}
+
+{{- if and (eq "reply" $intent) (eq "" $object) -}}
+	{{- $object = $inreplyto -}}
+{{- end -}}
+
+<!-- With no intent, the modal only lists, adds, and removes the visitor's saved accounts -->
+{{- $manage := eq "" $intent -}}
+{{- $valid := or $manage (eq "announce" $intent) (eq "create" $intent) (eq "dislike" $intent) (eq "follow" $intent) (eq "like" $intent) (eq "reply" $intent) -}}
+
+<h1 class="modal-title margin-none margin-bottom">
+	{{- if $manage -}}
+		⁂ Your Fediverse Account
 	{{- else if eq "announce" $intent -}}
 		{{icon "announce"}}
 		Share on the Fediverse
@@ -22,198 +40,166 @@
 	{{- else if eq "like" $intent -}}
 		{{icon "like"}}
 		Like on the Fediverse
+	{{- else if eq "reply" $intent -}}
+		{{icon "reply"}}
+		Reply on the Fediverse
 	{{- else -}}
 		{{icon "info"}}
 		Invalid Intent
 	{{- end -}}
 </h1>
 
-<div id="empty-header">
-	<h2>Have an Account?</h2>
-</div>
+{{- if not $valid -}}
 
-<div id="full-header">
-	<div class="bold text-gray text-lg margin-bottom-lg">
-		{{- if ne "" $intent -}}
-			Choose an account and be redirected to your home server.
-		{{- end -}}
-	</div>
+	<div class="margin-vertical">This button asked for an action that Emissary does not know.</div>
+	<button script="on click trigger closeModal">Close</button>
 
-	<div id="accountList"></div>
-</div>
+{{- else -}}
 
-<form id="NewAccountForm" hx-get="/.intents/discover" hx-target="#newAccount" hx-swap="innerHTML" hx-push-url="false">
-	<div id="var_queryString" hidden>{{.QueryString}}</div>
-	<div id="newAccount" hidden></div>
+	<!-- With no saved account, the modal introduces the Fediverse first, as the Follow modal's follow-activitypub.html does -->
+	<div class="camper-hide-if-has-accounts">
+		<div>
+			The Fediverse is a community of websites without ads, tracking, or algorithms.
+			And it's already serving millions of people around the world.
+			They all work together, each sharing news and events with all the rest.
+			<a href="https://fediverse.info" target="_blank" rel="noopener noreferrer">Learn more {{icon "link-outbound"}}</a>
+		</div>
 
-	<input type="hidden" name="intent" value="Create">
-
-	<div id="addAnotherButton" class="flex-row button width-100% margin-bottom-xs" role="button" script="on click hide me then show #addAnotherForm then focus the #addAnotherAccountID">
-		<div class="circle width-48 flex-center text-xl margin-none">{{icon "activitypub"}}</div>
-		<div class="flex-grow">
-			<div class="bold">Add Fediverse Account</div>
-			<div class="text-sm text-gray">Your username from any site on the social web</div>
+		<div class="margin-vertical-xl flex-column flex-align-center">
+			<a href="https://joinmastodon.org" class="button primary margin-none" target="_blank" rel="noopener noreferrer" style="font-size:24px;">
+				⁂ Join the Fediverse
+			</a>
+			<div class="align-center margin-top text-sm">
+				<b>Mastodon.social</b> is your recommended server<br>
+				but you can <a href="https://joinmastodon.org/servers" target="_blank" rel="noopener noreferrer">choose from many others {{icon "link-outbound"}}</a>
+			</div>
 		</div>
 	</div>
-	
-	<div id="addAnotherForm" class="flex-row button width-100% margin-bottom-xs" role="button">
-		<div id="addAnotherIcon" class="circle width-48 flex-center text-xl margin-none">{{icon "activitypub"}}</div>
-		<input type="text" id="addAnotherAccountID" name="account" placeholder="@yourname@yourserver.social" autocomplete="off" class="flex-grow">
-		<button class="primary nowrap htmx-request-hide">Add Fediverse Account</button>
-		<button class="primary nowrap htmx-request-show">
-			<span class="spin">{{icon "loading"}}</span>
-			Adding
-		</button>
-	</div>
+
+	<h2 class="camper-hide-if-has-accounts">Already Connected?</h2>
+
+	{{- if $manage -}}
+
+		<div class="camper-show-if-has-accounts bold text-gray text-lg margin-bottom" hidden>
+			This account is saved only in your browser.<br>Click "remove" to add a different one instead.
+		</div>
+
+		<!-- RULE: Managing accounts runs no intent, so a click on an account row makes it the default, and closes the manager -->
+		<div
+			class="margin-bottom camper-accounts"
+			data-camper-account-action="select-account"
+			hx-on:camper:select-account="htmx.trigger(window, 'closeModal')">
+		</div>
+
+	{{- else -}}
+
+		<div class="camper-show-if-has-accounts bold text-gray text-lg margin-bottom" hidden>
+			Choose an account to continue on your home server.
+		</div>
+
+		<!-- CamperJS fills each placeholder of the visitor's intent template from these attributes -->
+		<div
+			class="margin-bottom camper-accounts"
+			data-camper-intent="{{$intent}}"
+			data-camper-object="{{$object}}"
+			data-camper-inreplyto="{{$inreplyto}}"
+			data-camper-content="{{$content}}"
+			data-camper-name="{{$name}}"
+			data-camper-summary="{{$summary}}"
+			data-camper-type="{{$type}}"
+			hx-on:camper:hide="htmx.trigger(window, 'closeModal')">
+		</div>
+
+	{{- end -}}
+
+	<form class="camper-form camper-hide-if-has-accounts camper-add-account margin-bottom-xs" data-camper-proxy-url="/.proxy">
+
+		<div class="margin-vertical text-sm">
+			{{- if $manage -}}
+				Add your existing Fediverse profile to save it in this browser.
+			{{- else -}}
+				Use your existing Fediverse profile to continue on your own server.
+			{{- end -}}
+		</div>
+
+		<div class="input flex-row flex-align-center">
+			<input
+				type="text"
+				class="camper-input flex-grow"
+				name="username"
+				placeholder="@username@server.social"
+				aria-label="Your Fediverse username"
+				autocomplete="off"
+				required="true"
+				data-1p-ignore>
+
+			<button type="submit" class="primary" aria-label="Add Account">
+				<span class="camper-loading" hidden><span class="spin">{{icon "loading"}}</span></span>
+				<span class="camper-add-account">&rarr;</span>
+			</button>
+		</div>
+	</form>
 
 	{{- if eq "follow" $intent -}}
-		<div class="flex-row button width-100% margin-bottom-xs" role="button" hx-get="{{.BasePath}}/follow-email">
+		<button type="button" class="flex-row width-100% margin-vertical-xs" hx-get="{{.BasePath}}/follow-email">
 			<div class="circle width-48 flex-center text-xl margin-none flex-shrink-0">{{icon "email"}}</div>
 			<div class="flex-grow">
 				<div class="bold">Add Email Address</div>
 				<div class="text-sm text-gray">Receive updates in your email box</div>
 			</div>
-		</div>
+		</button>
 	{{- end -}}
 
-</form>
+	<script src="/.themes/global/resources/camperjs-0.2.0/camper.js"></script>
 
-<div id="empty-footer" class="margin-top-lg">
-	<h2>Need an Account?</h2>
+	<style>
+		.camper-account {
+			background-color: var(--gray10);
+			border-radius: var(--rhythm);
+			padding:calc(var(--rhythm) * 2);
+			margin-bottom: var(--rhythm);
+			display:flex;
+			align-items: center;
+			gap: var(--rhythm);
+			cursor: pointer;
 
-	<!--
-	{{- if .DomainHasRegistrationForm -}}
-		<a href="/register" class="primary button">Sign Up Here</a>
-		<a href="https://emissary.social/hosting" class="button">Find a Fediverse Host</a>
-		<button script="on click trigger closeModal">Cancel</button>
-		
-	{{- else -}}
-	-->
-		<div class="margin-top">
-			<a href="https://emissary.social/hosting" target="_blank" rel="noopener noreferrer" class="primary button">Find a Fediverse Host</a>
-			<button script="on click trigger closeModal">Cancel</button>
-		</div>
-	<!--{{- end -}}-->
-</div>
+			&:hover {
+				background-color: var(--gray20);
+			}
 
+			.camper-account-icon {
+				width:48px;
+				height:48px;
+				border-radius:24px;
+			}
 
-<script type="text/hyperscript">
+			.camper-account-info {
+				display:flex;
+				flex-direction:column;
+				justify-content:center;
+				flex-grow:1;
+				color:var(--text-color);
 
-	init
-		if "{{$intent}}" is not "" then
-			set accounts to getAccounts()
-			if accounts.length is 1 then
-				hide #modal
-				goToIntent(accounts[0].id)
-				exit
-			end
-		end
+				.camper-account-name {
+					font-weight:bold;
+					font-size:calc(var(--rhythm) * 2.75);
+					line-height: calc(var(--rhythm) * 4);
+					margin:0;
+				}
 
-		displayAccounts()
-	end
+				.camper-account-username {
+					font-size:calc(var(--rhythm) * 1.75);
+					line-height: calc(var(--rhythm) * 2.5);
+					margin:0;
+					opacity:0.66;
+				}
+			}
 
-	on htmx:afterSwap from #NewAccountForm
-		set data to #newAccount's innerText
-		set account to JSON.parse(data)
+			.camper-account-remove-button {
+				background-color: var(--gray05);
+				font-size: calc(var(--rhythm) * 3/2);
+			}
+		}
+	</style>
 
-		if account is null then 
-			exit
-		end
-
-		call addAccount(account)
-
-		set the #addAnotherAccountID's value to ""
-		show #addAnotherButton
-		hide #addAnotherForm
-	end
-
-	def getAccounts()
-		set accountString to window.localStorage.getItem("accounts")
-		set result to JSON.parse(accountString)
-
-		if result is not null then 
-			return result
-		end
-
-		return []
-	end
-
-	def addAccount(account)
-		set accounts to getAccounts()
-		call accounts.push(account)
-		call setAccounts(accounts)
-	end
-
-	def deleteAccount(index)
-		set accounts to getAccounts()
-		if confirm('Remove this account?') then
-			accounts.splice(index, 1)
-			setAccounts(accounts)
-		end
-	end
-
-	def setAccounts(accounts)
-		window.localStorage.setItem("accounts", JSON.stringify(accounts))
-		trigger "storage" on window
-		displayAccounts()
-	end
-
-	def goToIntent(username)
-
-		set intent to "{{$intent}}"
-		if intent is "" then
-			exit
-		end
-
-		trigger closeModal
-		set queryString to the #var_queryString's innerText
-		set nextUrl to "/.intents/" + intent + "?account=" + username + "&" + queryString
-
-		window.open(nextUrl, "_blank", "width=600,height=750")
-	end
-
-	def displayAccounts()
-		set intent to "{{$intent}}"
-		set accounts to getAccounts()
-
-		if accounts.length is 0 then
-			show #empty-header
-			show #empty-footer
-			show #addAnotherButton
-			hide #addAnotherForm
-			hide #addAnotherIcon
-			hide #full-header
-
-		else
-			hide #empty-header
-			hide #empty-footer
-			show #addAnotherButton
-			hide #addAnotherForm
-			hide #addAnotherIcon
-			show #full-header
-
-			set the accountList's innerHTML to ""
-
-			repeat for account in accounts index idx
-				set row to `
-					<div class="flex-row button width-100% margin-bottom-xs {{if eq "" $intent}}inactive{{end}}" {{if ne "" $intent}}tabindex="0"{{end}} role="link" onclick="goToIntent('${account.id}')">
-						<div class="width-48 flex-shrink-0">
-							<img class="circle width-48" src="${account.icon}">
-						</div>
-						<div class="flex-grow">
-							<div class="bold">${account.name}</div>
-							<div class="text-sm text-gray">${account.preferredUsername}</div>
-						</div>
-						<div class="clickable padding-horizontal padding-vertical-sm text-lg" role="button" onclick="deleteAccount(${idx})" tabIndex="0">
-							<span class="bi bi-x"></span>
-						</div>
-					</div>
-				` 
-				put row at the end of accountList
-			end
-
-		end
-
-	end
-
-</script>
+{{- end -}}

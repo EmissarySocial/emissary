@@ -8,20 +8,19 @@
 	<hr class="margin-bottom-sm"/>
 
 	<div class="flex-row flex-align-center flex-wrap">
-		<div class="flex-grow-1">
-			<span hx-get="{{.BasePath}}/responses-replies?url={{.Permalink}}" role="button" class="margin-right-xs clickable">
+		{{- template "note-actions" . -}}
+		<!-- The buttons lead and the pill tabs sit at the right, as under a Qwertylicious photo, episode, or place -->
+		<div role="tablist" class="pills margin-bottom-none flex-grow-1 align-right">
+			<span role="tab" hx-get="{{.BasePath}}/responses-replies?url={{.Permalink}}" aria-selected="false">
 				{{- .ReplyCount }} {{pluralize .ReplyCount "Reply" "Replies" -}}
 			</span>
-			&middot;
-			<span hx-get="{{.BasePath}}/responses-likes?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable bold">
+			<span role="tab" hx-get="{{.BasePath}}/responses-likes?url={{.Permalink}}" aria-selected="true">
 				{{- .LikeCount }} {{pluralize .LikeCount "Like" "Likes" -}}
 			</span>
-			&middot;
-			<span hx-get="{{.BasePath}}/responses-announces?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable">
+			<span role="tab" hx-get="{{.BasePath}}/responses-announces?url={{.Permalink}}" aria-selected="false">
 				{{- .ShareCount }} {{pluralize .ShareCount "Share" "Shares" -}}
 			</span>
 		</div>
-		{{- template "note-actions" . -}}
 	</div>
 
 	<hr class="margin-top-sm"/>

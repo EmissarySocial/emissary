@@ -114,6 +114,10 @@
 
 /* Additional Sizes */
 
+#modal-window.medium {
+	width: clamp(480px, 96%, 800px);
+}
+
 #modal-window.large {
 	width: clamp(480px, 96%, 1024px);}
 

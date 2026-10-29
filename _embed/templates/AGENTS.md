@@ -29,7 +29,9 @@ In hyperscript 0.9.93, on a fresh element `:foo is nil` is FALSE and `:foo is no
 
 ## Legacy resource folders still ship, and a stale reference fails silently
 
-`theme-global/resources/` carries both the current versioned folders (`hyperscript-0.9.93/`, `htmx-1.9.12/`, `sortable-1.15.7/`) and unversioned or older legacy ones. A theme referencing a legacy path gets the old engine, which cannot parse the shared behaviors bundle — bare `focus` is 0.9.93+ — so the whole bundle dies with "Expected 'end' but found 'focus'" and every behavior (Modal, tabs, menu, multiselect) stops installing. The legacy folders are kept deliberately, because **database-stored themes cannot be scanned** and a missing folder 404s into `Sortable is not defined`. Check which folder a theme actually references before debugging a dead behavior.
+`theme-global/resources/` carries both the current versioned folders (`hyperscript-0.9.93/`, `htmx-1.9.12/`, `sortable-1.15.7/`, `camperjs-0.2.0/`) and unversioned or older legacy ones. A theme referencing a legacy path gets the old engine, which cannot parse the shared behaviors bundle — bare `focus` is 0.9.93+ — so the whole bundle dies with "Expected 'end' but found 'focus'" and every behavior (Modal, tabs, menu, multiselect) stops installing. The legacy folders are kept deliberately, because **database-stored themes cannot be scanned** and a missing folder 404s into `Sortable is not defined`. Check which folder a theme actually references before debugging a dead behavior.
+
+**A bundle whose markup contract changes needs a new folder, not a new file in the old one.** `handler/resources.go` serves every resource with `Cache-Control: public, max-age=2592000` and no `ETag`, so a browser reuses its copy for 30 days without asking, even across a server restart. `camperjs/` holds CamperJS from before its `data-camper-*` rename and `camperjs-0.2.0/` holds the current one; a browser that kept the old bundle while the templates changed filled every intent placeholder empty, so Follow opened `/@me/intent/follow?object=`. `TestEmbeddedTemplates_LoadVersionedCamperJS` fails if an embedded template names `resources/camperjs/` again.
 
 ## Third-party bundles are not self-contained just because they are vendored
 
@@ -114,6 +116,12 @@ Rosetta bounds a list's length only through the schema, never in its accessors (
 **Never ship a package that names `base-outbox` before the Emissary release that defines it.** An `extends` that names an unknown template stops the template load and halts first boot.
 
 **Customize Profile through the outbox, never by reusing the ID `user-settings`.** The last definition of an ID wins for every user on the server. `Template.Add` reports a replaced ID, but it still replaces it.
+
+## Go builds the URLs of three email pages, so every outbox gets them from `base-outbox`
+
+Three actions are opened by URLs written in Go, never by a link in a template: the redirect after `/.follower/new` saves a follower (`follow-email-sent`), the link in the confirmation email (`follower-confirm`), and the unsubscribe link and `List-Unsubscribe` header of every email a follower receives (`follower-unsubscribe`). An outbox without them answers each one with 400 "Action is not valid", and nothing reports it. Qwertylicious's outbox defined only its own `follow` until 2026-10-29, so its email signup ended on that 400, and so did both email links. These actions now live in `base-outbox` with the rest of the Follow modal, and `missingProfileTabs` names any outbox that lacks one.
+
+**The Follow modal belongs in `base-outbox`, not `base-intent`.** Stream templates extend `base-intent` too, and these views call Outbox builder methods (`.UserID`, `.DisplayName`, `.IsBridgeBluesky`) that the Stream builder lacks, so every Stream would inherit actions that fail when they render. `follow-email` and `follow-email-sent` were in `base-intent` until 2026-09-17.
 
 ## A Profile tab is an htmx swap, never a boosted link
 

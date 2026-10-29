@@ -1,6 +1,6 @@
 # Base Outbox
 
-Shared base template (category: Base, model: Outbox, no `templateRole`) that supplies the Profile tabs of the settings area. Every outbox template lists `base-outbox` in its `extends`, so each outbox decides what its users see under Settings → Profile. Embedded consumers are `user-outbox`, and the external Atlas, Bandwagon, and Qwerty outboxes extend it too. It declares the `Outbox` model so that its forms validate against the User schema, and it has no `templateRole`, so no user can choose it as a profile template.
+Shared base template (category: Base, model: Outbox, no `templateRole`) that supplies what every outbox shares: the Profile tabs of the settings area, and the Follow modal with the email pages it leads to. Every outbox template lists `base-outbox` in its `extends`, so each outbox decides what its users see under Settings → Profile and when a visitor follows them. Embedded consumers are `user-outbox`, and the external Atlas, Bandwagon, and Qwerty outboxes extend it too. It declares the `Outbox` model so that its forms validate against the User schema, and it has no `templateRole`, so no user can choose it as a profile template.
 
 ## How the tabs load
 
@@ -25,3 +25,25 @@ Inheritance works by name, so an outbox overrides exactly what it defines:
 A tab link is an `hx-get` to `/@me/settings-<tab>` with `hx-target="#profile-settings"` and `hx-push-url="false"`, never a boosted link, and it sets no `hx-swap`, so it keeps the page's view transition. Each tab renders inside the settings page, so it uses the settings page's markup (`#menu-bar`, then a `card` with `transition-main-card`) rather than the outbox theme's.
 
 Import and Export are not Profile tabs. They are a Migration section of their own in [../user-settings](../user-settings/README.md), so no outbox can remove them.
+
+## The Follow modal
+
+The default profile's Follow button and the follow widget open `/@{user}/follow`, which draws [follow.html](follow.html). It lists the visitor's saved Fediverse account through CamperJS, then a button for each way to follow:
+
+- **Fediverse,** [follow-activitypub.html](follow-activitypub.html), where the visitor adds their account by its handle. It shows only while no account is saved, because a visitor keeps one at a time.
+- **Bluesky,** a link to the profile's bridged account, shown only when the Bluesky bridge is on.
+- **Email,** [follow-email.html](follow-email.html), a name and address form that posts to `/.follower/new`.
+
+[follow-heading.html](follow-heading.html) heads each view. [follow-styles.html](follow-styles.html) draws the account rows, and every view that lists accounts includes it, because each view replaces the modal and takes the last one's styles with it.
+
+Three email pages are reached from URLs that Go builds, never from a link in these views:
+
+| Action | Reached from |
+| --- | --- |
+| `follow-email-sent` | The redirect after `/.follower/new` saves the follower ([handler/follow_email.go](../../../handler/follow_email.go)) |
+| `follower-confirm` | The link in the confirmation email ([email-follower-confirmation/body.html](../email-follower-confirmation/body.html)) |
+| `follower-unsubscribe` | The unsubscribe link and `List-Unsubscribe` header of every email a follower receives (`Follower.UnsubscribeLink` in [model/follower.go](../../../model/follower.go)) |
+
+[follow-button.html](follow-button.html) is a Follow button for an outbox to draw with `{{template "follow-button" .}}`. It holds two copies that look the same. One opens the modal. The other follows in one click as the visitor's saved account, with a "..." button beside it that opens `base-intent`'s account manager. CamperJS shows the one-click copy only when the default account can follow (`camper-show-if-ready`), and the server sends it hidden, so the modal's copy works without CamperJS. Qwertylicious's profile card draws it, and the default sidebar does not yet.
+
+An outbox restyles any view by adding one with the same name, as Atlas does for `follow.html`, `follow-activitypub.html`, and `follow-heading.html`. A `follow` action of its own replaces only that action, and the email pages stay.

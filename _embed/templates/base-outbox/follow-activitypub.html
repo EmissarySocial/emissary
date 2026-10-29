@@ -2,7 +2,7 @@
 
 <div class="camper-add-first-account">
 	<div>
-		The Fediverse is a community websites without ads, tracking, or algorithms.
+		The Fediverse is a community of websites without ads, tracking, or algorithms.
 		And it's already serving millions of people around the world.
 		They all work together, each sharing news and events with all the rest.
 		<a href="https://fediverse.info" target="_blank" rel="noopener noreferrer">Learn more {{icon "link-outbound"}}</a>
@@ -24,19 +24,18 @@
 
 <div 
 	class="margin-bottom-sm camper-accounts" 
-	data-intent="follow" 
-	data-object="{{.Permalink}}" 
-	data-max-accounts="1"
-	hx-on:camper-hide="htmx.trigger(window, 'closeModal')">
+	data-camper-intent="follow"
+	data-camper-object="{{.Permalink}}"
+	hx-on:camper:hide="htmx.trigger(window, 'closeModal')">
 </div>
 
 <form 
 	class="camper-form camper-add-account"
-	data-max-accounts="1">
+	data-camper-proxy-url="/.proxy">
 
-	<div class="margin-vertical text-sm">Use your Fediverse profile to follow <b>{{.DisplayName}}</b> from your own server.</div>
+	<div class="margin-vertical text-sm">Use your existing Fediverse profile to follow <b>{{.DisplayName}}</b>.</div>
 	
-	<div class="flex-row flex-align-center">
+	<div class="input flex-row flex-align-center">
 		<input 
 			type="text"
 			id="fediverse-handle"
@@ -71,5 +70,7 @@
 </form>
 -->
 
-<script src="/.themes/global/resources/camperjs/camper.js"></script>
+<script src="/.themes/global/resources/camperjs-0.2.0/camper.js"></script>
+
+{{- template "follow-styles" -}}
 

@@ -6,10 +6,9 @@
 
 	<div 
 		class="margin-bottom-sm camper-accounts" 
-		data-intent="follow" 
-		data-object="{{.Permalink}}" 
-		data-max-accounts="1"
-		hx-on:camper-hide="htmx.trigger(window, 'closeModal')">
+		data-camper-intent="follow"
+		data-camper-object="{{.Permalink}}"
+		hx-on:camper:hide="htmx.trigger(window, 'closeModal')">
 	</div>
 
 	<div class="margin-vertical-xl"></div>
@@ -54,52 +53,6 @@
 	<div class="text-lg">{{icon "chevron-right"}}</div>
 </button>
 
-<script src="/.themes/global/resources/camperjs/camper.js"></script>
+<script src="/.themes/global/resources/camperjs-0.2.0/camper.js"></script>
 
-<style>
-	.camper-account {
-		background-color: var(--gray10);
-		border-radius: var(--rhythm);
-		padding:calc(var(--rhythm) * 2);
-		display:flex;
-		gap: var(--rhythm);
-		cursor: pointer;
-
-		&:hover {
-			background-color: var(--gray20);
-		}
-
-		.camper-account-icon {
-			width:32px;
-			height:32px;
-			border-radius:16px;
-		}
-
-		.camper-account-info {
-			display:flex;
-			flex-direction:column;
-			justify-content:center;
-			flex-grow:1;
-			color:var(--text-color);
-
-			.camper-account-name {
-				font-weight:bold;
-				font-size:calc(var(--rhythm) * 2.75);
-				line-height: calc(var(--rhythm) * 4);
-				margin:0;
-			}
-
-			.camper-account-username {
-				font-size:calc(var(--rhythm) * 1.75);
-				line-height: calc(var(--rhythm) * 2.5);
-				margin:0;
-				opacity:0.66;
-			}
-		}
-
-		.camper-account-remove-button {
-			background-color: var(--gray05);
-			font-size: calc(var(--rhythm) * 3/2);
-		}
-	}
-</style>
+{{- template "follow-styles" -}}

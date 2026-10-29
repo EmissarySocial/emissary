@@ -3,35 +3,25 @@
 	<hr class="margin-bottom-sm"/>
 
 	<div class="flex-row flex-align-center flex-wrap">
-		<div class="flex-grow-1">
-			<span hx-get="{{.BasePath}}/responses-replies?url={{.Permalink}}" role="button" class="margin-right-xs clickable bold">
+		{{- template "note-actions" . -}}
+		<!-- The buttons lead and the pill tabs sit at the right, as under a Qwertylicious photo, episode, or place -->
+		<div role="tablist" class="pills margin-bottom-none flex-grow-1 align-right">
+			<span role="tab" hx-get="{{.BasePath}}/responses-replies?url={{.Permalink}}" aria-selected="true">
 				{{- .ReplyCount }} {{pluralize .ReplyCount "Reply" "Replies" -}}
 			</span>
-			&middot;
-			<span hx-get="{{.BasePath}}/responses-likes?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable">
+			<span role="tab" hx-get="{{.BasePath}}/responses-likes?url={{.Permalink}}" aria-selected="false">
 				{{- .LikeCount }} {{pluralize .LikeCount "Like" "Likes" -}}
 			</span>
-			&middot;
-			<span hx-get="{{.BasePath}}/responses-announces?url={{.Permalink}}" role="button" class="margin-horizontal-xs clickable">
+			<span role="tab" hx-get="{{.BasePath}}/responses-announces?url={{.Permalink}}" aria-selected="false">
 				{{- .ShareCount }} {{pluralize .ShareCount "Share" "Shares" -}}
 			</span>
 		</div>
-		{{- template "note-actions" . -}}
 	</div>
 
 	<hr class="margin-top-sm"/>
 
+	<!-- Reply sits in note-actions.html, beside Like and Share -->
 	<div id="replies" class="margin-vertical">
-		<!-- Signed in, Reply opens the visitor's own inbox at this note with its reply form; otherwise an Activity Intent -->
-		{{- if .AcceptsReplies -}}
-			<div class="margin-bottom">
-				{{- if .IsAuthenticated -}}
-					<button class="primary turboclick" hx-target="main" hx-swap="outerHTML" hx-get="/@me/newsfeed/browse-reply?url={{.Permalink | urlquery}}">{{icon "reply"}} Reply</button>
-				{{- else -}}
-					<button class="primary turboclick" hx-get="/{{.StreamID}}/intent?intent=create&inReplyTo={{.Permalink | urlquery}}">{{icon "reply"}} Reply</button>
-				{{- end -}}
-			</div>
-		{{- end -}}
 		{{.View "replies"}}
 	</div>
 

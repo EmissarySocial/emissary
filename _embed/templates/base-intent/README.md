@@ -1,19 +1,30 @@
 # Base Intent
 
-Shared base template (category: Base, model: None) that provides the modal dialogs for outbound Activity Intents: an anonymous visitor on this server wants to like, share, or follow something, so Emissary discovers the visitor's home Fediverse server and redirects them there to complete the action. Templates absorb these actions by listing `base-intent` in their `extends` array; embedded consumers are `user-outbox` and `stream-outbox-message`, and external packages (bandwagon-album/-song/-event/-news/-search, qwerty-article, qwerty-search) extend it too.
+Shared base template (category: Base, model: None) that provides the modal for outbound Activity Intents: a visitor wants to like, share, reply to, or follow something here from their own Fediverse account. Templates take its `intent` action by listing `base-intent` in their `extends` array. Embedded consumers are `user-outbox` and `stream-outbox-message`, and the Atlas, Bandwagon, and Qwertylicious packages extend it too.
 
+<<<<<<< Updated upstream
 The `intent` action in [template.hjson](template.hjson) opens [intent.html](intent.html) as a modal: it switches its heading on the `?intent=` query parameter (announce, create, dislike, follow, like; a `create` with an `?inReplyTo=` is headed as a reply), remembers previously used Fediverse accounts in browser localStorage via hyperscript, and submits new handles to `/.intents/discover` to locate the account's home server before redirecting. The `follow-email` action offers the non-Fediverse alternative — [follow-email.html](follow-email.html) posts a name/email form to `/.follower/new` — and `follow-email-sent` renders the double-opt-in confirmation page. Note that [follow-email.html](follow-email.html) invokes a `follow-heading` partial it does not define; the extending template must supply it (the embedded `user-outbox` template does).
+=======
+The `intent` action in [template.hjson](template.hjson) opens [intent.html](intent.html) as a modal. The modal runs on [CamperJS](https://github.com/EmissarySocial/camperjs), in the visitor's browser: it lists the accounts saved on this device, adds new ones, and opens the chosen intent on the visitor's home server.
+>>>>>>> Stashed changes
 
 ## Additional Information
 
-### Client state machinery in intent.html
+### Query parameters
 
-The modal in [intent.html](intent.html) is a small hyperscript state machine over one piece of persistent state: a JSON array of Fediverse accounts stored under the localStorage key `accounts`, managed by the `getAccounts`/`addAccount`/`deleteAccount`/`setAccounts` functions (`setAccounts` also triggers a synthetic `storage` event on `window` so other listeners can react, then re-renders). `displayAccounts` toggles the page between two layouts — `#empty-header`/`#empty-footer` when no accounts are stored, `#full-header` with the `#accountList` when some are — and rebuilds the list rows as interpolated HTML strings, each row wired to `goToIntent(account.id)` plus a delete control. The `init` block implements a zero-click fast path: when an `?intent=` parameter is present and exactly one account is stored, it hides the modal and calls `goToIntent` immediately instead of showing any UI. A hidden `#var_queryString` div carries the builder's `.QueryString` so the original page's parameters (the object being liked/shared/followed) survive into the redirect.
+The button that opens the modal names the intent and its values in the query string, and the modal copies each into a `data-camper-*` attribute for CamperJS.
 
-### The /.intents/discover round-trip
+| Parameter | Use |
+| --- | --- |
+| `intent` | `announce`, `create`, `dislike`, `follow`, `like`, or `reply`, in any case. Empty opens the account list alone; anything else shows "Invalid Intent" |
+| `object` | The URL of the thing being liked, shared, or followed |
+| `inReplyTo` | The post being answered. A `create` that names one is treated as a `reply` |
+| `content`, `name`, `summary`, `type` | Values for a `create` |
 
-Adding an account submits `#NewAccountForm` as `hx-get /.intents/discover`, handled by `GetIntentInfo` in [handler/intent_discovery.go](../../../handler/intent_discovery.go): it resolves the typed handle to an ActivityPub actor through the ActivityStream client and returns a JSON object with `id`, `name`, `icon`, `url`, and `preferredUsername`. Because the client later interpolates these fields into HTML without escaping, the handler neutralizes every value at the source — `SanitizeText` strips markup from the display fields and `uri.SafeURL` rejects non-http(s) schemes and encodes attribute-breakout characters in the URL fields. The response lands in the hidden `#newAccount` div; the `htmx:afterSwap` listener parses it, appends it to localStorage via `addAccount`, and resets the form.
+A `reply` falls back to the visitor's Object intent when their server's Create takes no `{inReplyTo}`, which opens the post on their own server, where a reply threads.
 
-### Per-intent redirect building
+### What the browser needs from the server
 
-`goToIntent` closes the modal and opens a 600x750 popup at `/.intents/{intent}?account={id}&{original query string}`. That route is handled by `GetOutboundIntent` in [handler/intent_outbound.go](../../../handler/intent_outbound.go), which delegates to the Camper client ([tools/camper](../../../tools/camper/camper.go), constructed in `service/factory.go` with the outbound-request middleware and the AllowPrivateIPs setting): `GetTemplate` WebFingers the account to find a URL template for the requested intent published by the account's home server, with fallbacks for the legacy remote-follow link and for known server software, then `PopulateTemplate` fills the template's tokens from the query string after `on-success`/`on-cancel` are set to `(close)` so the popup closes itself when done. The handler 307-redirects the popup to the resulting home-server URL, or renders an inline "your home server doesn't support this action" page when no template can be found.
+Adding an account loads the visitor's actor through `/.proxy`, which answers anonymous visitors for actor documents only (see [handler/AGENTS.md](../../../handler/AGENTS.md)). Nothing else in the modal calls Emissary. The Go handlers this modal used before 2026-10-29, `/.intents/discover` and `/.intents/:intent`, are kept until the CAMPERJS-MIGRATION plan retires them.
+
+Accounts that the older modal saved under the localStorage key `accounts` are copied into CamperJS's `camper` key the first time CamperJS loads, so a returning visitor keeps them.
