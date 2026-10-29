@@ -31,3 +31,10 @@ type LikeIntent struct {
 	OnSuccess string `query:"on-success" form:"on-success"`
 	OnCancel  string `query:"on-cancel"  form:"on-cancel"`
 }
+
+// AnnounceIntent defines the structure for an "Announce" intent
+type AnnounceIntent struct {
+	Object    string `query:"object"     form:"object"`
+	OnSuccess string `query:"on-success" form:"on-success"`
+	OnCancel  string `query:"on-cancel"  form:"on-cancel"`
+}
