@@ -583,6 +583,9 @@ func makeApplicationRoutes(factory *server.Factory, e *echo.Echo) {
 	e.HEAD("/@me/settings/:action", handler.WithAuthenticatedUser(factory, handler.GetSettings))
 	e.POST("/@me/settings/:action", handler.WithAuthenticatedUser(factory, handler.PostSettings))
 
+	e.GET("/@me/intent/announce", handler.WithAuthenticatedUser(factory, handler.GetIntent_Announce))
+	e.HEAD("/@me/intent/announce", handler.WithAuthenticatedUser(factory, handler.GetIntent_Announce))
+	e.POST("/@me/intent/announce", handler.WithAuthenticatedUser(factory, handler.PostIntent_Announce))
 	e.GET("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.GetIntent_Create))
 	e.HEAD("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.GetIntent_Create))
 	e.POST("/@me/intent/create", handler.WithAuthenticatedUser(factory, handler.PostIntent_Create))

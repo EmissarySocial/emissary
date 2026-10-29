@@ -984,12 +984,18 @@ func (service *User) WebFinger(session data.Session, token string) (digit.Resour
 		Link(digit.RelationTypeAvatar, model.MimeTypeImage, user.ActivityPubIconURL()).
 		Link(digit.RelationTypeSubscribeRequest, "", service.RemoteFollowURL()).
 		Link(digit.RelationTypeOpenIDIssuer, "", service.host).
+		Link(camper.IntentTypeAnnounce, "", service.AnnounceIntentURL()).
 		Link(camper.IntentTypeCreate, "", service.CreateIntentURL()).
 		Link(camper.IntentTypeDislike, "", service.DislikeIntentURL()).
 		Link(camper.IntentTypeFollow, "", service.FollowIntentURL()).
 		Link(camper.IntentTypeLike, "", service.LikeIntentURL())
 
 	return result, nil
+}
+
+// AnnounceIntentURL returns the URL template for this server's "announce" Activity Intent endpoint
+func (service *User) AnnounceIntentURL() string {
+	return service.host + "/@me/intent/announce?object={object}&on-success={on-success}&on-cancel={on-cancel}"
 }
 
 // RemoteFollowURL returns the URL template for this server's remote-follow ("subscribe request") endpoint

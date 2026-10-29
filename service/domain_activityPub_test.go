@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/EmissarySocial/emissary/model"
+	"github.com/EmissarySocial/emissary/tools/camper"
 	"github.com/benpate/hannibal/sigs"
 	"github.com/stretchr/testify/require"
 )
@@ -121,4 +122,16 @@ func TestDecodeDomainPrivateKey(t *testing.T) {
 		require.True(t, ok)
 		require.True(t, expected.Equal(privateKey))
 	})
+}
+
+// TestDomain_WebFinger_AnnounceIntent confirms that the Domain's service Actor publishes its Announce intent beside the others.
+func TestDomain_WebFinger_AnnounceIntent(t *testing.T) {
+
+	service := &Domain{host: "https://example.com", hostname: "example.com"}
+
+	resource := service.WebFinger()
+
+	link := resource.FindLink(camper.IntentTypeAnnounce)
+	require.Equal(t, "https://example.com/@me/intent/announce?object={object}&on-success={on-success}&on-cancel={on-cancel}", link.Template)
+	require.Equal(t, "acct:application@example.com", resource.Subject)
 }

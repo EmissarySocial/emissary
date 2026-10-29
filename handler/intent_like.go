@@ -100,7 +100,7 @@ func PostIntent_Like(ctx *steranko.Context, factory *service.Factory, session da
 	return postIntent_Response(ctx, factory, session, user, vocab.ActivityTypeLike)
 }
 
-// postIntent_Response records a Like or Dislike from an Activity Intent form, idempotently
+// postIntent_Response records a Like, Dislike, or Announce from an Activity Intent form, idempotently
 func postIntent_Response(ctx *steranko.Context, factory *service.Factory, session data.Session, user *model.User, responseType string) error {
 
 	const location = "handler.postIntent_Response"
