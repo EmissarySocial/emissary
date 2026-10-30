@@ -1,4 +1,3 @@
-
 /******************************************
 * Modal Dialog
 ******************************************/
@@ -8,19 +7,19 @@
 	position: fixed;
 	top: 0px;
 	left: 0px;
-	right:0px;
-	bottom:0px;
+	right: 0px;
+	bottom: 0px;
 	z-index: 1000;
 
 	/* Flexbox centers the .modal-content vertically and horizontally */
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	justify-content:flex-start;
+	justify-content: flex-start;
 
 	/* Opacity updated by animations */
 	opacity: 0;
-	transition:opacity;
+	transition: opacity;
 	transition-duration: var(--motion-base);
 	transition-timing-function: var(--motion-ease);
 }
@@ -50,38 +49,38 @@
 
 #modal-window {
 	/* Sizing for visible dialog */
-	width:600px;
-	max-width:95vw;
-	max-height:99vh;
+	width: 600px;
+	max-width: 95vw;
+	max-height: 99vh;
 
 	/* Scrolling behavior */
-	display:flow-root;
-	overflow-x:hidden;
-	overflow-y:auto;
-	overscroll-behavior:none;
+	display: flow-root;
+	overflow-x: hidden;
+	overflow-y: auto;
+	overscroll-behavior: none;
 
 	/* Display properties for visible dialog */
-	position:relative;
+	position: relative;
 	border: solid 1px var(--gray40);
 	border-radius: 8px;
-	box-shadow: 0px 0px 20px 0px rgba(0,0,0,0.3);
+	box-shadow: 0px 0px 20px 0px rgba(0, 0, 0, 0.3);
 	background-color: var(--page-background);
 	padding: calc(var(--rhythm) * 2);
 	line-height: 150%;
-	margin-top:24px;
+	margin-top: 24px;
 
-	opacity:0;
-	transform:scale(0.8);
-	transition:transform, opacity;
+	opacity: 0;
+	transform: scale(0.8);
+	transition: transform, opacity;
 	transition-duration: var(--motion-base);
-	transition-timing-function: var(--motion-ease)
+	transition-timing-function: var(--motion-ease);
 }
 
 /* Enhanced Modals with Fixed Header/Footer */
 
 #modal-window:has(#modal-body) {
-	display:flex;
-	flex-direction:column;
+	display: flex;
+	flex-direction: column;
 	padding: 0px;
 }
 
@@ -92,23 +91,23 @@
 }
 
 #modal-body {
-	flex-grow:1;
+	flex-grow: 1;
 	padding: calc(var(--rhythm) * 2);
-	overflow-x:hidden;
-	overflow-y:auto;
-	overscroll-behavior:none;
+	overflow-x: hidden;
+	overflow-y: auto;
+	overscroll-behavior: none;
 }
 
-#modal-header + #modal-body {
+#modal-header+#modal-body {
 	padding-top: calc(var(--rhythm) * 1);
 	background-color: var(--gray10);
 }
 
 #modal-footer {
 	padding: calc(var(--rhythm) * 2);
-	padding-bottom:12px;
-	margin:0px;
-	border-top:solid 1px var(--gray30);
+	padding-bottom: 12px;
+	margin: 0px;
+	border-top: solid 1px var(--gray30);
 	background-color: var(--gray20);
 }
 
@@ -119,11 +118,12 @@
 }
 
 #modal-window.large {
-	width: clamp(480px, 96%, 1024px);}
+	width: clamp(480px, 96%, 1024px);
+}
 
 #modal-window.huge {
-	width:96%;
-	height:96%;
+	width: 96%;
+	height: 96%;
 }
 
 
@@ -131,15 +131,15 @@
 
 #modal.ready {
 	opacity: 1;
-	transition:opacity;
+	transition: opacity;
 	transition-duration: var(--motion-base);
 	transition-timing-function: var(--motion-ease)
 }
 
 #modal.ready #modal-window {
-	opacity:1;
-	transform:scale(1);
-	transition:transform, opacity;
+	opacity: 1;
+	transform: scale(1);
+	transition: transform, opacity;
 	transition-duration: var(--motion-base);
 	transition-timing-function: var(--motion-ease)
 }
@@ -158,11 +158,11 @@
 
 #modal .layout-title,
 #modal #modal-title {
-    font-weight:calc(var(--weight) + 100);
-    font-size: calc(var(--rhythm) * 4);
-    line-height:calc(var(--rhythm) * 5);
-    margin-top:calc(var(--rhythm) * 1);
-    margin-bottom:calc(var(--rhythm) * 3);
+	font-weight: calc(var(--weight) + 100);
+	font-size: calc(var(--rhythm) * 4);
+	line-height: calc(var(--rhythm) * 5);
+	margin-top: calc(var(--rhythm) * 1);
+	margin-bottom: calc(var(--rhythm) * 3);
 }
 
 
@@ -170,8 +170,8 @@
 
 @media (prefers-color-scheme: dark) {
 	#modal-content {
-		background-color:var(--gray20);
-		border-color:var(--gray30);
+		background-color: var(--gray20);
+		border-color: var(--gray30);
 		color: var(--gray100);
 	}
 }
