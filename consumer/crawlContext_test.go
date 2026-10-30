@@ -83,8 +83,8 @@ func TestClassifyContext_RemoteFailures(t *testing.T) {
 	require.Equal(t, contextOutcomeSkip, classifyOutcome(t, streams.NilDocument(), htmlInsteadOfActivityPub("https://xxx.azyobuzi.net/contexts/1")))
 
 	// RULE: This is why the classifier gates on err != nil and NOT on derp.IsClientError.
-	// The HTML failure carries 500, so a client-error gate would have silenced none of it.
-	require.Equal(t, http.StatusInternalServerError, derp.ErrorCode(htmlInsteadOfActivityPub("https://xxx.azyobuzi.net/contexts/1")))
+	// The HTML failure carries 502, so a client-error gate would have silenced none of it.
+	require.Equal(t, http.StatusBadGateway, derp.ErrorCode(htmlInsteadOfActivityPub("https://xxx.azyobuzi.net/contexts/1")))
 
 	// Every other class of failure is skipped too
 	require.Equal(t, contextOutcomeSkip, classifyOutcome(t, streams.NilDocument(), derp.NotFound("test", "No such context")))

@@ -312,9 +312,9 @@ func TestAnsweredWithoutActor_IsWhatRemoteProduces(t *testing.T) {
 	err := transaction.Send()
 	require.NotNil(t, err, "a parked domain answering HTML must still be an error")
 
-	// PRECONDITION: remote reports this as a 500 that is not a client error, which is why the
-	// poller could not tell it apart from a dead server, and why the status alone is not enough.
-	require.Equal(t, 500, derp.ErrorCode(err))
+	// PRECONDITION: remote reports this as a 502 that is not a client error, so the code alone
+	// cannot tell it from a proxy whose origin is down. The response status is what can.
+	require.Equal(t, http.StatusBadGateway, derp.ErrorCode(err))
 	require.False(t, derp.IsClientError(err))
 
 	// The response that arrived is still in the chain, and it says 200
@@ -351,12 +351,14 @@ func httpStatus(code int) derp.HTTPError {
 // arrives intact but cannot be decoded.
 func answeredWith(code int, contentType string) error {
 
-	// WithInternalError below makes the OUTER code 500 while the response underneath says 200
+	// WithBadGateway below makes the OUTER code 502 while the response underneath says 200
 
 	header := http.Header{}
+	answered := "with no Content-Type"
 
 	if contentType != "" {
 		header.Set("Content-Type", contentType)
+		answered = contentType
 	}
 
 	inner := derp.HTTPError{
@@ -365,7 +367,8 @@ func answeredWith(code int, contentType string) error {
 			Status:     strconv.Itoa(code) + " " + http.StatusText(code),
 			Header:     header,
 		},
+		Message: "Server answered " + answered + ", which cannot be decoded into the requested result",
 	}
 
-	return derp.Wrap(inner, "remote.Transaction.decodeResponseBody", "HTML must be read into an io.Writer, *string, or *byte[]", derp.WithInternalError())
+	return derp.Wrap(inner, "remote.Transaction.decodeResponseBody", inner.Message, derp.WithBadGateway())
 }

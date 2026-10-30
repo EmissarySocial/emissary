@@ -45,8 +45,8 @@ func (service *Following) SetStatusPollError(session data.Session, following *mo
 // followingStatusMessage renders a failed Actor load as a short sentence for the Following's owner
 func followingStatusMessage(err error) string {
 
-	// RULE: A response that arrived is never described as unreachable.  derp reports this as a
-	// 500, so without this branch the owner was told "Could not reach this server: 200 OK".
+	// RULE: A response that arrived is never described as unreachable.  remote reports it as a
+	// 502, so without this branch it falls through to "Could not reach this server" below.
 	if status, contentType, answered := answeredWithoutActor(err); answered {
 
 		detail := strconv.Itoa(status)
@@ -76,8 +76,8 @@ func followingStatusMessage(err error) string {
 		return "Unable to read this account (" + strconv.Itoa(code) + ")."
 	}
 
-	// RULE: Everything else may be a real 5xx or a transport failure that never reached a
-	// server, and derp reports both as 500 -- so quote the reason instead of naming a code.
+	// RULE: Everything else may be a 5xx or a transport failure that never reached a server.
+	// derp reports a transport failure as 500, so quote the reason instead of naming a code.
 	return "Could not reach this server: " + derp.RootMessage(err)
 }
 

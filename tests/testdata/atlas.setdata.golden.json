@@ -2194,6 +2194,54 @@
 				}
 			}
 		},
+		"template:base-outbox/follower-confirm/0:with-follower.SubSteps@with-follower/0:set-data": {
+			"fields": [
+				"stateId (values, schema.String)"
+			],
+			"values": {
+				"stateId": "ACTIVE (literal)"
+			},
+			"results": {
+				"GET/empty": {
+					"changes": {
+						"stateId": "string "
+					}
+				},
+				"GET/hostile": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"GET/literal": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				},
+				"GET/prefilled": {},
+				"GET/typical": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				},
+				"POST/empty": {
+					"changes": {
+						"stateId": "string "
+					}
+				},
+				"POST/hostile": {
+					"error": ": stateId: Must be one of the specified values"
+				},
+				"POST/literal": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				},
+				"POST/prefilled": {},
+				"POST/typical": {
+					"changes": {
+						"stateId": "string ACTIVE"
+					}
+				}
+			}
+		},
 		"template:base-social/btn-social-outline/1:set-data": {
 			"fields": [],
 			"results": {

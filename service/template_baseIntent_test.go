@@ -144,14 +144,14 @@ func TestBaseIntentModal_NoAccountLayout(t *testing.T) {
 		result := renderIntentModal(t, query)
 
 		// The introduction and the join link hide once CamperJS finds a saved account
-		require.Regexp(t, `<div class="camper-hide-if-has-accounts">\s*<div>\s*The Fediverse is a community of websites`, result, query)
+		require.Regexp(t, `<div class="camper-hide-if-has-accounts">\s*<div>\s*The Fediverse is an online community`, result, query)
 		require.Contains(t, result, `href="https://joinmastodon.org"`, query)
 		require.Contains(t, result, `<h2 class="camper-hide-if-has-accounts">Already Connected?</h2>`, query)
 		require.NotContains(t, result, "emissary.social/hosting", "the old host-finding section is gone")
 		require.NotContains(t, result, "max-accounts", "a visitor keeps one account, so nothing declares a limit")
 
 		// The order follows the Follow modal: introduction, join, Already Connected, then the form
-		intro := strings.Index(result, "The Fediverse is a community")
+		intro := strings.Index(result, "The Fediverse is an online community")
 		join := strings.Index(result, "Join the Fediverse")
 		connected := strings.Index(result, "Already Connected?")
 		form := strings.Index(result, `class="camper-form`)
