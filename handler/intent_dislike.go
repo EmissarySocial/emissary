@@ -9,8 +9,10 @@ import (
 	"github.com/EmissarySocial/emissary/tools/camper"
 	"github.com/benpate/data"
 	"github.com/benpate/derp"
+	"github.com/benpate/hannibal/streams"
 	"github.com/benpate/hannibal/vocab"
 	"github.com/benpate/html"
+	"github.com/benpate/icon"
 	"github.com/benpate/steranko"
 )
 
@@ -25,9 +27,7 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *service.Factory, session 
 		return derp.Wrap(err, location, "Reading form data")
 	}
 
-	// Default values here
-	onCancel := firstOf(transaction.OnCancel, "/@me") // nolint:scopeguard
-
+	// Load the object to be disliked
 	client := factory.ActivityStream().AppClient()
 	object, err := client.Load(transaction.Object)
 
@@ -35,7 +35,14 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *service.Factory, session 
 		return derp.Wrap(err, location, "Loading object", ctx.Request().URL.String(), ctx.Request().URL, transaction)
 	}
 
-	// Buiild HTML response
+	// Ask the User to confirm
+	return ctx.HTML(http.StatusOK, getIntent_Dislike(ctx, user, factory.Icons(), transaction, object))
+}
+
+// getIntent_Dislike returns the confirmation page, whose form posts the object to PostIntent_Dislike
+func getIntent_Dislike(ctx *steranko.Context, user *model.User, icons icon.Provider, transaction camper.DislikeIntent, object streams.Document) string {
+
+	// Build the page's head
 	b := html.New()
 
 	b.HTML()
@@ -48,7 +55,9 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *service.Factory, session 
 
 	b.Body().Style("overflow-y:hidden")
 
+	// RULE: The form carries the object itself, because its action has no query string to carry it
 	b.Form("POST", "/@me/intent/dislike")
+	b.Input("hidden", "object").Value(transaction.Object)
 	b.Input("hidden", "on-success").Value(transaction.OnSuccess)
 	b.Input("hidden", "on-cancel").Value(transaction.OnCancel)
 
@@ -56,6 +65,7 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *service.Factory, session 
 	{
 		write_intent_header(ctx, b, user)
 
+		// Show the object being disliked
 		b.Div().Class("flex-column", "flex-grow-1", "card", "padding").Style("overflow-y:scroll")
 		{
 			if name := object.Name(); name != "" {
@@ -83,9 +93,10 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *service.Factory, session 
 		}
 		b.Close()
 
+		// Confirm, or cancel
 		b.Div().Class("margin-top")
 		{
-			icons := factory.Icons()
+			onCancel := firstOf(transaction.OnCancel, "/@me")
 			b.Button().Type("submit").Class("primary").InnerHTML(icons.Get("thumbs-down-fill") + " Dislike This").Close()
 			b.A("/@me/intent/continue?url=" + url.QueryEscape(onCancel)).Class("button").TabIndex("0").InnerText("Cancel")
 		}
@@ -93,7 +104,8 @@ func GetIntent_Dislike(ctx *steranko.Context, factory *service.Factory, session 
 	}
 	b.CloseAll()
 
-	return ctx.HTML(http.StatusOK, b.String())
+	// Thumbs down, chin up
+	return b.String()
 }
 
 // PostIntent_Dislike records a Dislike from the Activity Intent form

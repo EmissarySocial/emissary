@@ -79,3 +79,10 @@ func TestGetIntent_Announce_EscapesTheName(t *testing.T) {
 
 	require.Contains(t, body, `<div class="margin-top-none text-lg bold">a &lt; b &amp; &#34;c&#34;</div>`)
 }
+
+// The Announce page passes every check a confirmation page shares (intent_confirmation_test.go).
+func TestGetIntent_Announce_ConfirmationPage(t *testing.T) {
+	checkConfirmationPage(t, "/@me/intent/announce", func(transaction camper.LikeIntent, object streams.Document) string {
+		return announcePage(camper.AnnounceIntent(transaction), object)
+	})
+}
