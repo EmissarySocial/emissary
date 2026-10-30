@@ -59,9 +59,9 @@
 	<!-- With no saved account, the modal introduces the Fediverse first, as the Follow modal's follow-activitypub.html does -->
 	<div class="camper-hide-if-has-accounts">
 		<div>
-			The Fediverse is a community of websites without ads, tracking, or algorithms.
-			And it's already serving millions of people around the world.
-			They all work together, each sharing news and events with all the rest.
+			The Fediverse is an online community without ads, tracking, or algorithms.
+			It's made up of many websites, each sharing news and events with the rest. (we call it "federating")
+		
 			<a href="https://fediverse.info" target="_blank" rel="noopener noreferrer">Learn more {{icon "link-outbound"}}</a>
 		</div>
 
@@ -115,11 +115,21 @@
 	<form class="camper-form camper-hide-if-has-accounts camper-add-account margin-bottom-xs" data-camper-proxy-url="/.proxy">
 
 		<div class="margin-vertical text-sm">
-			{{- if $manage -}}
-				Add your existing Fediverse profile to save it in this browser.
+			{{- if eq "announce" $intent -}}
+				Use your existing Fediverse profile to <b>share this post</b>.
+			{{- else if eq "reply" $intent -}}
+				Use your existing Fediverse profile to <b>reply to this post</b>.
+			{{- else if eq "create" $intent -}}
+				Use your existing Fediverse profile to <b>share this post</b>.
+			{{- else if eq "dislike" $intent -}}
+				Use your existing Fediverse profile to <b>dislike this post</b>.
+			{{- else if eq "follow" $intent -}}
+				Use your existing Fediverse profile to <b>follow this page</b>.
+			{{- else if eq "like" $intent -}}
+				Use your existing Fediverse profile to <b>like this post</b>.
 			{{- else -}}
-				Use your existing Fediverse profile to continue on your own server.
-			{{- end -}}
+				Save your existing Fediverse profile in this browser. It is not shared with this server.
+			{{- end -}}			
 		</div>
 
 		<div class="input flex-row flex-align-center">
