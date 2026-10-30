@@ -20,7 +20,7 @@ require (
 	github.com/benpate/exp-builder v0.13.0
 	github.com/benpate/form v0.33.0
 	github.com/benpate/geo v0.5.0
-	github.com/benpate/hannibal v0.46.0
+	github.com/benpate/hannibal v0.47.0
 	github.com/benpate/html v0.19.0
 	github.com/benpate/icon v0.6.0
 	github.com/benpate/mediaserver v0.21.0
@@ -28,7 +28,7 @@ require (
 	github.com/benpate/re v0.7.0
 	github.com/benpate/remote v0.27.0
 	github.com/benpate/rosetta v0.46.0
-	github.com/benpate/sherlock v0.22.0
+	github.com/benpate/sherlock v0.23.0
 	github.com/benpate/sniff v0.4.0
 	github.com/benpate/steranko v0.33.0
 	github.com/benpate/table v0.11.0
